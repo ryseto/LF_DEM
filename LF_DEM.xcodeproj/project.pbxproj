@@ -7,8 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D9878877165545680047A87E /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* System.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
+		D988E398165443160009949F /* Particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E396165443160009949F /* Particle.cpp */; };
+		D988E39C1654A18D0009949F /* State.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* State.cpp */; };
+		D988E39F1654A7410009949F /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39D1654A7410009949F /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,9 +29,18 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D9878875165545680047A87E /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
+		D9878876165545680047A87E /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D988E389165441750009949F /* LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D988E38D165441750009949F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D988E38F165441750009949F /* LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = LF_DEM.1; sourceTree = "<group>"; };
+		D988E396165443160009949F /* Particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Particle.cpp; sourceTree = "<group>"; };
+		D988E397165443160009949F /* Particle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Particle.h; sourceTree = "<group>"; };
+		D988E399165443C10009949F /* vec3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec3d.h; sourceTree = "<group>"; };
+		D988E39A1654A18D0009949F /* State.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = State.cpp; sourceTree = "<group>"; };
+		D988E39B1654A18D0009949F /* State.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = State.h; sourceTree = "<group>"; };
+		D988E39D1654A7410009949F /* Interaction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Interaction.cpp; sourceTree = "<group>"; };
+		D988E39E1654A7410009949F /* Interaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Interaction.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +74,15 @@
 			isa = PBXGroup;
 			children = (
 				D988E38D165441750009949F /* main.cpp */,
+				D988E39A1654A18D0009949F /* State.cpp */,
+				D988E39B1654A18D0009949F /* State.h */,
+				D988E396165443160009949F /* Particle.cpp */,
+				D988E397165443160009949F /* Particle.h */,
+				D988E39D1654A7410009949F /* Interaction.cpp */,
+				D988E39E1654A7410009949F /* Interaction.h */,
+				D9878875165545680047A87E /* System.cpp */,
+				D9878876165545680047A87E /* System.h */,
+				D988E399165443C10009949F /* vec3d.h */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
@@ -118,6 +140,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				D988E38E165441750009949F /* main.cpp in Sources */,
+				D988E398165443160009949F /* Particle.cpp in Sources */,
+				D988E39C1654A18D0009949F /* State.cpp in Sources */,
+				D988E39F1654A7410009949F /* Interaction.cpp in Sources */,
+				D9878877165545680047A87E /* System.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,6 +236,7 @@
 				D988E395165441750009949F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

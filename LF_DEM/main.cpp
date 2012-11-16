@@ -7,12 +7,35 @@
 //
 
 #include <iostream>
+#include <iomanip>
+#include <cstdlib>
+#include "vec3d.h"
+#include "State.h"
+#include "System.h"
+using namespace std;
 
 int main(int argc, const char * argv[])
 {
-
-	// insert code here...
-	std::cout << "Hello, World!\n";
+	System sys;
+	sys.simulation();
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
