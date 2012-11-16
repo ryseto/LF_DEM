@@ -6,8 +6,8 @@
 //  Copyright (c) 2012 Ryohei Seto. All rights reserved.
 //
 
-#ifndef __LF_DEM__State__
-#define __LF_DEM__State__
+#ifndef __LF_DEM__System__
+#define __LF_DEM__System__
 
 #include <iostream>
 #include <iomanip>
@@ -27,14 +27,7 @@ public:
     /* For DEMsystem
      */
 	System(){
-		kn = 100;
-		lx = 10;
-		ly = 10;
-		lz = 10;
-		lx2 =lx/2;
-		ly2 =ly/2;
-		lz2 =lz/2;
-		
+	
 	};
 	~System(){
 		delete [] position;
@@ -45,8 +38,12 @@ public:
 	vec3d *velocity;
 	vec3d *ang_velocity;
 	vec3d *force;
+	vec3d *torque;
 	double kn;
 	double kt;
+	double mu_static; // static friction coefficient.
+	double mu_dynamic;// dynamic friction coefficient.
+	
 	double lx;
 	double ly;
 	double lz;
@@ -54,74 +51,16 @@ public:
 	double ly2;
 	double lz2;
 	double x_shift;
-//	void hello();
+	double shear_rate;
 
-	double sq_distance(vec3d &pos , int i){
-		double dx = position[i].x - pos.x;
-		double dy = position[i].y - pos.y;
-		double dz = position[i].z - pos.z;
-		if (dz > lz2 ){
-			dz -= lz;
-			dx -= x_shift;
-		} else if (dz < -lz2){
-			dz += lz;
-			dx += x_shift;
-			
-		}
-		if (dx > lx2 ){
-			dx -= lx;
-		} else if (dx < -lx2){
-			dx += lx;
-		}
-		
-		if (dy > ly2 ){
-			dy -= ly;
-		} else if (dy < -ly2){
-			dy += ly;
-		}
-		return dx*dx + dy*dy + dz*dz;
-		//		return sq_dist(position[i], position[j]);
-	}
-	double  sq_distance(int i, int j){
-		double dx = position[i].x - position[j].x;
-		double dy = position[i].y - position[j].y;
-		double dz = position[i].z - position[j].z;
-		if (dz > lz2 ){
-			dz -= lz;
-			dx -= x_shift;
-		} else if (dz < -lz2){
-			dz += lz;
-			dx += x_shift;
-		}
-		
-		if (dx > lx2 ){
-			dx -= lx;
-		} else if (dx < -lx2){
-			dx += lx;
-		}
-		
-		if (dy > ly2 ){
-			dy -= ly;
-		} else if (dy < -ly2){
-			dy += ly;
-		}
-		return dx*dx + dy*dy + dz*dz;
-	}
-	
-	double  distance(int i, int j){
-		return sqrt(sq_distance(i,j));
-	}
-	
-	
-	void setNumberParticle(int num_particle_){
-		num_particle = num_particle_;
-		position = new vec3d [num_particle];
-		velocity = new vec3d [num_particle];
-		ang_velocity = new vec3d [num_particle];
-		force = new vec3d [num_particle];
-			}
-
-	void setRandomPosition();
+	/*************************************************************/
+	void setNumberParticle(int num_particle_);
+	void init();
+	double sq_norm(double &dx, double &dy, double &dz);
+	double sq_distance(vec3d &pos , int i);
+	double sq_distance(int i, int j);
+	double distance(int i, int j);
+	void setRandomPosition(int dimension);
 };
 
 
