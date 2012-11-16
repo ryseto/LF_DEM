@@ -8,9 +8,9 @@
 
 #include "Interaction.h"
 
-void Interaction::init(State *state_){
+void Interaction::init(System *sys_){
 	active = false;
-	state = state_;
+	sys = sys_;
 }
 
 void  Interaction::create(int i, int j){
@@ -25,29 +25,29 @@ void Interaction::calcInteraction(){
 		// 
 		// p0 ---> p1
 		
-		r_vec = state->position[ particle_num[1] ] - state->position[ particle_num[0] ];
+		r_vec = sys->position[ particle_num[1] ] - sys->position[ particle_num[0] ];
 
-		if (abs(r_vec.z) > state->lz2){
+		if (abs(r_vec.z) > sys->lz2){
 			if (r_vec.z > 0){
-				r_vec.z -= state->lz;
-				r_vec.x -= state->x_shift;
+				r_vec.z -= sys->lz;
+				r_vec.x -= sys->x_shift;
 			}else{
-				r_vec.z += state->lz;
-				r_vec.x += state->x_shift;
+				r_vec.z += sys->lz;
+				r_vec.x += sys->x_shift;
 			}
 		}
 		
-		if (abs(r_vec.x) > state->lx2){
+		if (abs(r_vec.x) > sys->lx2){
 			if (r_vec.x > 0)
-				r_vec.x -= state->lx;
+				r_vec.x -= sys->lx;
 			else
-				r_vec.x += state->lx;
+				r_vec.x += sys->lx;
 		}
-		if (abs(r_vec.y) > state->ly2){
+		if (abs(r_vec.y) > sys->ly2){
 			if (r_vec.y > 0)
-				r_vec.y -= state->ly;
+				r_vec.y -= sys->ly;
 			else
-				r_vec.y += state->ly;
+				r_vec.y += sys->ly;
 		}
 		
 		r = r_vec.norm();
@@ -55,10 +55,10 @@ void Interaction::calcInteraction(){
 
 		double force;
 		if ( r < 2){
-			force = state->kn*(r - 2); // force < 0
+			force = sys->kn*(r - 2); // force < 0
 		}
-		state->force[  particle_num[0] ] += force * nr_vec;
-		state->force[  particle_num[1] ] -= force * nr_vec;
+		sys->force[  particle_num[0] ] += force * nr_vec;
+		sys->force[  particle_num[1] ] -= force * nr_vec;
 	}
 }
 

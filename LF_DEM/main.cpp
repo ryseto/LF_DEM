@@ -7,35 +7,11 @@
 //
 
 #include <iostream>
-#include <iomanip>
-#include <cstdlib>
-#include "vec3d.h"
-#include "State.h"
-#include "System.h"
+#include "Simulation.h"
 using namespace std;
-
 int main(int argc, const char * argv[])
 {
-	System sys;
-	sys.simulation();
+	Simulation simulation;
+	simulation.run();
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

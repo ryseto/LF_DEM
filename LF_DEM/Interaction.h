@@ -14,14 +14,13 @@
 #include <fstream>
 #include "vec3d.h"
 #include "Interaction.h"
-#include "State.h"
+#include "System.h"
 using namespace std;
-//class Interaction;
-class State;
+class System;
 
 class Interaction{
 private:
-	State *state;
+	System *sys;
 	vec3d r_vec;
 	
 protected:
@@ -36,7 +35,7 @@ public:
 	int particle_num[2];
 	vec3d nr_vec;
 	
-	void init(State *st_);
+	void init(System *sys_);
 	void create(int i, int j);
 	void calcInteraction();
 
