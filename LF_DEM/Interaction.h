@@ -21,22 +21,25 @@ class Interaction{
 private:
 	System *sys;
 	vec3d r_vec; // vector center to center
-	vec3d rs_velocity; // relative surface velocity
-	vec3d vel_ij_t;
-	vec3d unit_tang_vel_contact;
+	vec3d contact_velocity;
+	vec3d contact_velocity_tan;
+	vec3d unit_contact_velocity_tan;
 protected:
-	
+	void calcStaticFriction();
+	void calcDynamicFriction();
 public:
  	Interaction(){};
 	~Interaction(){};
 	void init(System *sys_);
 	void create(int i, int j);
 	void calcInteraction();
-	void incrementTangentialDisplacement(double dt);
+	void makeNormalVector();
+	void incrementTangentialDisplacement();
 
 /*********************************************/
 	bool active;
 	bool static_friction;
+	double sqnorm_contact_velocity;
 	int particle_num[2];
 	double r; // center-center distance
 	double f_normal;

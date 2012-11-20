@@ -7,35 +7,71 @@
 //
 
 #include "Simulation.h"
+#include <cmath>
 
 Simulation::Simulation(){
-	dimension = 3;
-	num_particle = 80;
-	sys.lx = 10;
-	sys.ly = 10;
-	sys.lz = 10;
-	eta = 1;
-	dt = 0.002;
-	ts_max = 100000;
-	max_num_interaction = 6* num_particle;
-	cutoff_distance = 2.5;
-	sys.shear_rate = 0.1;
+	sys.dimension = 2;
+	sys.lx = 50;
+	sys.ly = 5;
+	sys.lz = 50;
+	sys.volume_fraction = 0.54;
+	sys.eta = 1.0;
+	cutoff_distance =2.5;
+	sys.shear_rate = 100;
+	shear_strain = 100;
 	sys.kn = 100;
 	sys.kt = 100;
-	sys.mu_static = 10;
-	sys.mu_dynamic = 9;
-
+	/*
+	 * More friction
+	 */
+	sys.mu_static = 0.3;
+	sys.mu_dynamic = 0.2;
+	/*
+	 * Less friction
+	 */
+	//	sys.mu_static = 0.03;
+	//	sys.mu_dynamic = 0.02;
+	sys.dynamic_friction_critical_velocity = 0.01;
+//	sys.dt = 0.001;
+	sys.dt = 0.001 / sys.shear_rate;
+	draw_rotation_2d = true;
+	
+	//////////////////////////////////////////////////////////////////////////
+	//
+	ts_max = (int)(shear_strain / sys.dt);
+	if (sys.volume_fraction < 0){
+		num_particle = 1000;
+	} else {
+		if (sys.dimension == 2){
+			num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
+		} else {
+			num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
+		}
+		cerr << "N = " << num_particle << endl;
+	}
+	max_num_interaction = 6* num_particle;
 	sys.init();
+	string yap_filename = "yap_" + sys.simu_name + ".yap";
+	string vel_filename = "vel_" + sys.simu_name + ".dat";
+	fout_yap.open(yap_filename.c_str());
+	fout_vel.open(vel_filename.c_str());
 };
 
 Simulation::~Simulation(){
+	fout_yap.close();
+	fout_vel.close();
 	delete [] interaction;
+	for (int i=0; i < num_particle; i++){
+		delete [] interacting_pair[i];
+	}
+	delete [] interacting_pair;
+	
 };
 
 /*
  * Main simulation
  */
-void Simulation::run(){
+void Simulation::SimulationMain(){
 	sys.setNumberParticle(num_particle);
 	initInteractingPair();
 	interaction = new Interaction [max_num_interaction];
@@ -43,7 +79,7 @@ void Simulation::run(){
 		interaction[i].init( &sys );
 	}
 	cerr << "set initial positions" << endl;
-	sys.setRandomPosition(dimension);
+	sys.setRandomPosition();		
 	cerr << "done" << endl;
 	cerr << "start simulation" << endl;
 	timeEvolution();
@@ -71,91 +107,66 @@ void Simulation::initInteractingPair(){
  */
 void Simulation::checkBreak(){
 	for (int k = 0; k < num_interaction; k++){
-		if ( interaction[k].active ){
-			if (interaction[k].r > cutoff_distance ){
-				interaction[k].active = false;
-				interacting_pair[ interaction[k].particle_num[0]][ interaction[k].particle_num[1]] = -1;
-				deactivated_interaction.push(k);
-			}
+		if ( interaction[k].active
+			&& interaction[k].r > cutoff_distance){
+			interaction[k].active = false;
+			interacting_pair[interaction[k].particle_num[0]][interaction[k].particle_num[1]] = -1;
+			deactivated_interaction.push(k);
 		}
 	}
 }
 
-
 /* Check the distance between separating particles.
  * i < j 
+ *
+ * A patch-up prescription to aboid 
+ * interacting_pair[i][j] < 0 indicates separating particles to be checked.
+ * interacting_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
+ * interacting_pair[i][j] < -1, the particles have some distance.
  */
 void Simulation::checkContact(){
 	for (int i=0; i < num_particle-1; i++){
 		for (int j=i+1; j < num_particle; j++){
-			if ( interacting_pair[i][j] == -1){
-				double sq_distance = sys.sq_distance(i, j);
-				if ( sq_distance < 4){
-					int new_num_interaction;
-					if (deactivated_interaction.empty()){
-						// add an interaction object.
-						new_num_interaction = num_interaction;
-						num_interaction ++;
-					} else {
-						// fill a deactivated interaction object.
-						new_num_interaction = deactivated_interaction.front();
-						deactivated_interaction.pop();
+			if (interacting_pair[i][j] < 0 ){
+				if ( interacting_pair[i][j] == -1){
+					//double sq_distance = sys.sq_distance(i, j);
+					double sq_distance = sys.checkContact(i, j);
+					if ( sq_distance < 4){
+						int new_num_interaction;
+						if (deactivated_interaction.empty()){
+							// add an interaction object.
+							new_num_interaction = num_interaction;
+							num_interaction ++;
+						} else {
+							// fill a deactivated interaction object.
+							new_num_interaction = deactivated_interaction.front();
+							deactivated_interaction.pop();
+						}
+						interaction[new_num_interaction].create(i,j);
+						interacting_pair[i][j] = new_num_interaction;
+					} else if ( sq_distance > 9){
+						interacting_pair[i][j] = -100;
 					}
-					interaction[new_num_interaction].create(i,j);
-					interacting_pair[i][j] = new_num_interaction;
+				} else {
+					interacting_pair[i][j] ++;
 				}
 			}
 		}
 	}
 }
 
-
-/* Periodic boundary condition for simple shear.
- * x : x <--> x+lx 
- * y : y <--> y+ly
- * z : (x,z) <--> (x + gammadot*t, z+lz)
- */
-void Simulation::checkPeriodicBoundary(){
-	if (sys.x_shift > sys.lx){
-		sys.x_shift -= sys.lx;
-	}
-	
-	for (int i=0; i < num_particle; i++){
-		if ( sys.position[i].z > sys.lz ){
-			sys.position[i].z -= sys.lz;
-			sys.position[i].x -= sys.x_shift;
-			
-		} else if ( sys.position[i].z < 0 ){
-			sys.position[i].z += sys.lz;
-			sys.position[i].x += sys.x_shift;
-		}
-		
-		if ( sys.position[i].x > sys.lx ){
-			sys.position[i].x -= sys.lx;
-		} else if (sys.position[i].x < 0 ){
-			sys.position[i].x += sys.lx;
-		}
-		
-		if ( sys.position[i].y > sys.ly ){
-			sys.position[i].y -= sys.ly;
-		} else if (sys.position[i].y < 0 ){
-			sys.position[i].y += sys.ly;
-		}
-	}
-}
-
-
-
 /* Simulation for the time evolution.
  *
  */
 void Simulation::timeEvolution(){
-	fout_tmp.open("tmp.yap");
 	sys.x_shift = 0;
 	for (int ts = 0 ; ts < ts_max ; ts ++){
-		if (ts % 30 == 0)
-			output_tmp();
-		
+		if (ts % 30 == 0){
+			output_yap();
+		}
+		if (ts % 300 == 0){
+			output_vel();
+		}
 		checkContact();
 		for (int i=0; i < num_particle; i++){
 			sys.force[i].reset();
@@ -164,115 +175,151 @@ void Simulation::timeEvolution(){
 		for (int k=0; k < num_interaction; k++){
 			interaction[k].calcInteraction();
 		}
+		sys.updateVelocity();
+		sys.deltaTimeEvolution();
 		
-		for (int i=0; i < num_particle; i++){
-			vec3d U_inf(sys.shear_rate*sys.position[i].z, 0, 0);
-			vec3d O_inf(0, 0.5*sys.shear_rate, 0);
-			sys.velocity[i] = (1.0/eta)*sys.force[i] + U_inf;
-			sys.ang_velocity[i] = (1.33333/eta)*sys.torque[i] + O_inf;
-		}
-		
-		sys.x_shift += sys.shear_rate*sys.lz*dt;
-		for (int i=0; i < num_particle; i++){
-			sys.position[i] += sys.velocity[i]*dt;
-		}
 		for (int k=0; k < num_interaction; k++){
-			interaction[k].incrementTangentialDisplacement(dt);
+			interaction[k].incrementTangentialDisplacement();
 		}
 		checkBreak();
-		checkPeriodicBoundary();
+		
 	}
-	fout_tmp.close();
+}
+
+vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
+	z += sys.lz2;
+	if (z > sys.lz2){
+		x += - sys.x_shift;
+		if ( x < - sys.lx2)
+			x += sys.lx;
+		z -=  sys.lz;
+	}
+	return vec3d(x,y,z);
+}
+
+
+void drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
+	fout << type << ' ';
+	fout << pos.x << ' '<< pos.y << ' '<< pos.z << ' ';
+	fout << pos.x + vec.x << ' '<< pos.y + vec.y << ' '<< pos.z + vec.z << endl;
+}
+
+void drawLine(double x0, double y0, double z0,
+			  double x1, double y1, double z1,
+			  ofstream &fout){
+	fout << 'l' << ' ';
+	fout << x0 << ' ' << y0 << ' ' << z0 << ' ';
+	fout << x1 << ' ' << y1 << ' ' << z1 << endl;
 }
 
 /* Output data for yaplot visualization.
  *
  */
-void Simulation::output_tmp(){
-	fout_tmp << "y 1\n";
-	fout_tmp << "@ 2\n";
+void Simulation::output_yap(){
+	/*
+	 * yaplot color
+	 *
+	 * int color_black = 0;
+	 * int color_gray = 1;
+	 */
+	int color_white = 2;
+	int color_green = 3;
+	int color_yellow = 4;
+	int color_orange = 5;
+	int color_blue = 6;
+	double force_factor = 0.2;
+	/* Layer 1: Circles for particles
+	 */
+	fout_yap << "y 1\n";
+	fout_yap << "@ " << color_white << endl;
+	vec3d pos;
 	for (int i=0; i < num_particle; i++){
-		fout_tmp << "c " << sys.position[i].x - sys.lx2<< ' ';
-		fout_tmp << sys.position[i].y - sys.ly2<< ' ';
-		fout_tmp << sys.position[i].z - sys.lz2<< endl;
+		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+								sys.position[i].y - sys.ly2,
+								sys.position[i].z - sys.lz2);
+		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
 	}
-	fout_tmp << "y 2\n";
-
+	/* Layer 4: Orientation of particle (2D simulation)
+	 */
+	if (draw_rotation_2d){
+		fout_yap << "y 4\n";
+		fout_yap << "@ " << color_white << endl;
+		for (int i=0; i < num_particle; i++){
+			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+									sys.position[i].y - sys.ly2,
+									sys.position[i].z - sys.lz2);
+			drawLine('l', pos-u, 2*u, fout_yap);
+			u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
+			drawLine('l', pos-u, 2*u, fout_yap);
+		}
+	}
+	/* Layer 2: Friction
+	 */
+	fout_yap << "y 2\n";
 	for (int k=0; k < num_interaction; k++){
-		
 		if ( interaction[k].active && interaction[k].r < 2 ){
 			if (interaction[k].static_friction)
-				fout_tmp << "@ 3\n";
+				fout_yap << "@ " << color_green << endl;
 			else
-				fout_tmp << "@ 4\n";
-			fout_tmp << "r " << interaction[k].f_tangent.norm() << endl;
+				fout_yap << "@ " << color_orange << endl;
+
 			int i = interaction[k].particle_num[0];
-			fout_tmp << "s " << sys.position[i].x - sys.lx2<< ' ';
-			fout_tmp << sys.position[i].y - sys.ly2 -0.1<< ' ';
-			fout_tmp << sys.position[i].z - sys.lz2 << ' ';
-			fout_tmp << sys.position[i].x - sys.lx2 + interaction[k].nr_vec.x << ' ';
-			fout_tmp << sys.position[i].y - sys.ly2 + interaction[k].nr_vec.y -0.1<< ' ';
-			fout_tmp << sys.position[i].z - sys.lz2 + interaction[k].nr_vec.z << endl;
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+									sys.position[i].y - sys.ly2,
+									sys.position[i].z - sys.lz2);
+			fout_yap << "r " << force_factor*interaction[k].f_tangent.norm()  << endl;
+			drawLine('s', pos, interaction[k].nr_vec, fout_yap);
 			int j = interaction[k].particle_num[1];
-			fout_tmp << "s " << sys.position[j].x - sys.lx2<< ' ';
-			fout_tmp << sys.position[j].y - sys.ly2 -0.1<< ' ';
-			fout_tmp << sys.position[j].z - sys.lz2<< ' ';
-			fout_tmp << sys.position[j].x - sys.lx2 - interaction[k].nr_vec.x << ' ';
-			fout_tmp << sys.position[j].y - sys.ly2 - interaction[k].nr_vec.y -0.1<< ' ';
-			fout_tmp << sys.position[j].z - sys.lz2 - interaction[k].nr_vec.z << endl;
+			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
+									sys.position[j].y - sys.ly2,
+									sys.position[j].z - sys.lz2);
+			drawLine('s', pos, -interaction[k].nr_vec, fout_yap);
+		}
+	}
+	/* Layer 3: Normal
+	 */
+	fout_yap << "y 3\n";
+	fout_yap << "@ " << color_yellow << endl;
+	for (int k=0; k < num_interaction; k++){
+		if ( interaction[k].active && interaction[k].r < 2 ){
+			int i = interaction[k].particle_num[0];
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+									sys.position[i].y - sys.ly2,
+									sys.position[i].z - sys.lz2);
+			fout_yap << "r " << force_factor*abs(interaction[k].f_normal) << endl;
+			drawLine('s', pos, interaction[k].nr_vec, fout_yap);
+			int j = interaction[k].particle_num[1];
+			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
+									sys.position[j].y - sys.ly2,
+									sys.position[j].z - sys.lz2);
+			drawLine('s', pos, -interaction[k].nr_vec, fout_yap);
 		}
 	}
 	
-	fout_tmp << "y 3\n";
-	fout_tmp << "@ 6\n";
+	/* Layer 6: Box and guide lines
+	 */
+	fout_yap << "y 6\n";
+	fout_yap << "@ " << color_blue << endl;
+	drawLine(- sys.lx2,0, - sys.lz2,  sys.lx2, 0, - sys.lz2,  fout_yap);
+	drawLine(- sys.lx2,0, + sys.lz2, -sys.lx2, 0, - sys.lz2,  fout_yap);
+	drawLine(- sys.lx2,0, + sys.lz2,  sys.lx2, 0, + sys.lz2,  fout_yap);
+	drawLine(  sys.lx2,0, - sys.lz2,  sys.lx2, 0, +sys.lz2,  fout_yap);
+	for (int i = 0 ; i < 10; i ++){
+		drawLine(- sys.lx2, 0, - sys.lz2 + i * 0.2 * sys.lz2,
+				 -sys.lx2 + (i * 0.2 * sys.lz2), 0, - sys.lz2, fout_yap);
+		drawLine(sys.lx2, 0, sys.lz2 - i * 0.2 * sys.lz2,
+				 sys.lx2 - (i * 0.2 * sys.lz2), 0, sys.lz2, fout_yap);
+	}
+	drawLine(- sys.lx2, 0, sys.lz2, sys.lx2 , 0, -sys.lz2, fout_yap);
+	fout_yap << endl;
+}
+
+void Simulation::output_vel(){
 	for (int k=0; k < num_interaction; k++){
-		if ( interaction[k].active && interaction[k].r < 2 ){
-			fout_tmp << "r " << abs(interaction[k].f_normal) << endl;
-			int i = interaction[k].particle_num[0];
-			fout_tmp << "s " << sys.position[i].x - sys.lx2<< ' ';
-			fout_tmp << sys.position[i].y - sys.ly2 -0.1<< ' ';
-			fout_tmp << sys.position[i].z - sys.lz2 << ' ';
-			fout_tmp << sys.position[i].x - sys.lx2 + interaction[k].nr_vec.x << ' ';
-			fout_tmp << sys.position[i].y - sys.ly2 + interaction[k].nr_vec.y -0.1<< ' ';
-			fout_tmp << sys.position[i].z - sys.lz2 + interaction[k].nr_vec.z << endl;
-			int j = interaction[k].particle_num[1];
-			fout_tmp << "s " << sys.position[j].x - sys.lx2<< ' ';
-			fout_tmp << sys.position[j].y - sys.ly2 -0.1<< ' ';
-			fout_tmp << sys.position[j].z - sys.lz2<< ' ';
-			fout_tmp << sys.position[j].x - sys.lx2 - interaction[k].nr_vec.x << ' ';
-			fout_tmp << sys.position[j].y - sys.ly2 - interaction[k].nr_vec.y -0.1<< ' ';
-			fout_tmp << sys.position[j].z - sys.lz2 - interaction[k].nr_vec.z << endl;
+		if ( interaction[k].active && interaction[k].static_friction == false ){
+			fout_vel << sqrt(interaction[k].sqnorm_contact_velocity) << ' ';
 		}
 	}
-
-//	fout_tmp << "@ 5" << endl;
-//	for (int k=0; k < num_interaction; k++){
-//		if ( interaction[k].active && interaction[k].r < 2){
-//			int i = interaction[k].particle_num[0];
-//			int j = interaction[k].particle_num[1];
-//			vec3d p_mid = 0.5*(sys.position[i] +sys.position[j]);
-//			
-//			p_mid.x += interaction[k].pd_x*sys.lx2 + 0.5*interaction[k].pd_z*sys.x_shift;
-//			p_mid.y += interaction[k].pd_y*sys.ly2;
-//			
-//			p_mid.z += interaction[k].pd_z*sys.lz2;
-//			
-//			
-//			fout_tmp << "r " << interaction[k].xi.norm() << endl;
-//			fout_tmp << "c " << p_mid.x - sys.lx2 << ' ' << p_mid.y - sys.ly2 << ' ' << p_mid.z - sys.lz2 <<endl;
-//		}
-//	}
-	fout_tmp << "y 3\n";
-	fout_tmp << "@ 5\n";
-	fout_tmp << "l " << sys.x_shift - sys.lx2 << ' ' << 0 << ' ' << sys.lz2 ;
-	fout_tmp << ' '  << sys.x_shift - sys.lx2 << ' ' << 0 << ' ' << sys.lz2 +2 << endl;
-	fout_tmp << "l " << - sys.lx2 << ' ' << 0 << ' ' << - sys.lz2 ;
-	fout_tmp << ' '  << sys.lx2 << ' ' << 0 << ' ' << - sys.lz2 << endl;
-	fout_tmp << "l " << - sys.lx2 << ' ' << 0 << ' ' << sys.lz2 ;
-	fout_tmp << ' '  << sys.lx2 << ' ' << 0 << ' ' << sys.lz2 << endl;
-	fout_tmp << "l " << - sys.lx2 << ' ' << 0 << ' ' << - sys.lz2 ;
-	fout_tmp << ' '  << - sys.lx2 << ' ' << 0 << ' ' << + sys.lz2 << endl;
-	fout_tmp << "l " << sys.lx2 << ' ' << 0 << ' ' << - sys.lz2 ;
-	fout_tmp << ' '  << sys.lx2 << ' ' << 0 << ' ' << + sys.lz2 << endl;
-	fout_tmp << endl;
+	fout_vel << endl;
 }

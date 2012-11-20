@@ -18,11 +18,10 @@
 class Simulation{
 private:
 	System sys;
-	int dimension;
 	int num_particle;
 	int ts_max;
-	double eta;
-	double dt;
+	double shear_strain;
+
 	/*
 	 * Interparticle interactions
 	 */
@@ -38,22 +37,29 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_tmp;
+	bool draw_rotation_2d;
+	ofstream fout_yap;
+	ofstream fout_vel;
+
 
 	/*********************************************/
-	void output_tmp();
+	void output_yap();
+	void output_vel();
+
 	void initInteractingPair();
 	void checkBreak();
 	void checkContact();
 	void timeEvolution();
-	void checkPeriodicBoundary();
+//	void checkPeriodicBoundary();
+	vec3d shiftUpCoordinate(double x, double y, double z);
+
 
 public:
     /* For DEMsystem
      */
 	Simulation();
 	~Simulation();
-	void run();
+	void SimulationMain();
 
 };
 

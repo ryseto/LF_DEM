@@ -11,7 +11,8 @@
 using namespace std;
 int main(int argc, const char * argv[])
 {
+    
 	Simulation simulation;
-	simulation.run();
+	simulation.SimulationMain();
     return 0;
 }
