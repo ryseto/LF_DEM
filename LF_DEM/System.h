@@ -22,7 +22,12 @@ class Interaction;
 
 class System{
 private:
-	int num_particle;
+	int n;
+	int n3;
+	double dx;
+	double dy;
+	double dz;
+	
 protected:
 public:
     /* For DEMsystem
@@ -48,10 +53,14 @@ public:
 	double kn;
 	double kt;
 	double eta;
+	double sq_lub_max;
 	double mu_static; // static friction coefficient.
 	double mu_dynamic;// dynamic friction coefficient.
 	double dynamic_friction_critical_velocity;
 	double sq_critical_velocity;
+	bool friction;
+	bool lub;
+	double lubcore;
 	/*************************************************************/
 	double lx;
 	double ly;
@@ -62,19 +71,37 @@ public:
 	double x_shift;
 	double shear_rate;
 	double volume_fraction;
+	double vel_difference;
 	double dt;
+	string simu_name;
 	/*************************************************************/
 	void setNumberParticle(int num_particle_);
 	void init();
-	double sq_norm(double &dx, double &dy, double &dz);
+	double sq_norm();
 	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);
+	double sq_neardistance(int i, int j);
+
+	void displacement(int i, const double &dx_, const double &dy, const double &dz);
+
 	double checkContact(int i, int j);
 	double distance(int i, int j);
 	void setRandomPosition();
+
+
 	void updateVelocity();
+	void updateVelocityLubrication();
 
 	void deltaTimeEvolution();
-	string simu_name;
+	void forceReset();
+	void torqueReset();
+	bool nooverlap();
+
+	
+	double *res;
+	double *mov;
+	vector <int> lubparticle;
+	vector <double> lubparticle_vec[3];
+	
 };
 #endif /* defined(__LF_DEM__State__) */

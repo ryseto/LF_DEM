@@ -21,7 +21,6 @@ private:
 	int num_particle;
 	int ts_max;
 	double shear_strain;
-
 	/*
 	 * Interparticle interactions
 	 */
@@ -43,23 +42,20 @@ private:
 
 
 	/*********************************************/
+	void SetParameters(int argc, const char * argv[]);
 	void output_yap();
 	void output_vel();
-
 	void initInteractingPair();
 	void checkBreak();
 	void checkContact();
 	void timeEvolution();
-//	void checkPeriodicBoundary();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-
-
 public:
     /* For DEMsystem
      */
 	Simulation();
 	~Simulation();
-	void SimulationMain();
+	void SimulationMain(int argc, const char * argv[]);
 
 };
 

@@ -13,6 +13,6 @@ int main(int argc, const char * argv[])
 {
     
 	Simulation simulation;
-	simulation.SimulationMain();
+	simulation.SimulationMain(argc, argv);
     return 0;
 }

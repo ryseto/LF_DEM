@@ -31,41 +31,45 @@ void  Interaction::create(int i, int j){
  * pd_x, pd_y, pd_z : Periodic boundary condition
  */
 void Interaction::makeNormalVector(){
+
 	r_vec = sys->position[ particle_num[1] ] - sys->position[ particle_num[0] ];
-	if (abs(r_vec.z) > sys->lz2){
-		if (r_vec.z > 0){
-			pd_z = 1; //  p1 (z = lz), p0 (z = 0)
-			r_vec.z -= sys->lz;
-			r_vec.x -= sys->x_shift;
-		}else{
-			pd_z = -1; //  p1 (z = 0), p0 (z = lz)
-			r_vec.z += sys->lz;
-			r_vec.x += sys->x_shift;
-		}
+
+	if (r_vec.z > sys->lz2){
+		pd_z = 1; //  p1 (z = lz), p0 (z = 0)
+		r_vec.z -= sys->lz;
+		r_vec.x -= sys->x_shift;
+	} else if (r_vec.z < - sys->lz2){
+		pd_z = -1; //  p1 (z = 0), p0 (z = lz)
+		r_vec.z += sys->lz;
+		r_vec.x += sys->x_shift;
 	} else{
 		pd_z = 0;
 	}
-	if (abs(r_vec.x) > sys->lx2){
-		if (r_vec.x > 0){
-			pd_x = 1;  // p1 (x = lx), p0 (x = 0)
-			r_vec.x -= sys->lx;
-		}else{
-			pd_x = -1;  // p1 (x = 0), p0 (x = lx)
-			r_vec.x += sys->lx;
-		}
-	} else {
-		pd_x = 0;
+	
+//	pd_x = 0;
+
+	while (r_vec.x > sys->lx2){
+		//pd_x += 1;  // p1 (x = lx), p0 (x = 0)
+		r_vec.x -= sys->lx;
 	}
-	if ( abs(r_vec.y) > sys->ly2 ){
-		if ( r_vec.y > 0 ){
-			pd_y = 1;  // p1 (y = ly), p0 (y = 0)
-			r_vec.y -= sys->ly;
-		} else {
-			pd_y = -1;  // p1 (y = ly), p0 (y = 0)
-			r_vec.y += sys->ly;
+	while (r_vec.x < -sys->lx2){
+		//pd_x += -1;  // p1 (x = 0), p0 (x = lx)
+		r_vec.x += sys->lx;
+	}
+	
+	if (sys->dimension == 3){
+		if ( abs(r_vec.y) > sys->ly2 ){
+			if ( r_vec.y > 0 ){
+				//pd_y = 1;  // p1 (y = ly), p0 (y = 0)
+				r_vec.y -= sys->ly;
+			} else {
+				//pd_y = -1;  // p1 (y = ly), p0 (y = 0)
+				r_vec.y += sys->ly;
+			}
 		}
-	} else {
-		pd_y = 0;
+		//else {
+		//	pd_y = 0;
+		//}
 	}
 }
 
@@ -118,11 +122,31 @@ void Interaction::calcInteraction(){
 	}
 }
 
+void Interaction::calcInteractionNoFriction(){
+	if (active){
+		makeNormalVector();
+		r = r_vec.norm();
+		if (r < 2){
+			nr_vec = r_vec / r;
+			f_normal = sys->kn*(r - 2);
+			sys->force[ particle_num[0] ] += f_normal * nr_vec;
+			sys->force[ particle_num[1] ] -= f_normal * nr_vec;
+		} else {
+			static_friction = true;
+		}
+	}
+}
+
+
 void Interaction::incrementTangentialDisplacement(){
 	// relative velocity particle 0 from particle 1.
 	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
-	contact_velocity.x +=  pd_z*sys->lz*sys->shear_rate;
-	contact_velocity += cross(sys->ang_velocity[particle_num[0]], nr_vec) + cross(sys->ang_velocity[particle_num[1]], nr_vec);
+	if (pd_z != 0){
+		contact_velocity.x += pd_z * sys->vel_difference;
+	}
+
+//	contact_velocity  += cross(sys->ang_velocity[particle_num[0]], nr_vec) + cross(sys->ang_velocity[particle_num[1]], nr_vec);
+	contact_velocity  += cross(sys->ang_velocity[particle_num[0]] + sys->ang_velocity[particle_num[1]], nr_vec);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
 	if (static_friction){
 		xi += contact_velocity_tan*sys->dt;
@@ -137,3 +161,11 @@ void Interaction::incrementTangentialDisplacement(){
 		}
 	}
 }
+
+
+
+
+
+
+
+
