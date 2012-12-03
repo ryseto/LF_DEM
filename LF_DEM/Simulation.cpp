@@ -23,10 +23,10 @@ Simulation::~Simulation(){
 
 void Simulation::SetParameters(int argc, const char * argv[]){
 	cerr << argc << endl;
-	sys.dimension = 3;
-	sys.lx = 15;
-	sys.ly = 15;
-	sys.lz = 15;
+	sys.dimension = 2;
+	sys.lx = 20;
+	sys.ly = 20;
+	sys.lz = 20;
 	if ( argc == 1){
 		sys.volume_fraction = 0.70;
 		sys.lubcore = 2.0;
@@ -63,9 +63,11 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	//	sys.mu_dynamic = 0.02;
 	sys.dynamic_friction_critical_velocity = 0.01;
 	//	sys.dt = 0.001;
-	sys.dt = 0.0002 / sys.shear_rate;
-	draw_rotation_2d = false;
-	
+	sys.dt = 1e-4 / sys.shear_rate;
+	if (sys.dimension ==2)
+		draw_rotation_2d = true;
+	else
+		draw_rotation_2d = false;
 	//////////////////////////////////////////////////////////////////////////
 	//
 	ts_max = (int)(shear_strain / sys.dt);

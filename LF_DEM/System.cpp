@@ -333,17 +333,14 @@ void System::updateVelocityLubrication(){
 	}
 	int nrhs=1;
 	int ipiv[n3];
-
 	int lda,ldb,info;
 	lda = n3;
 	ldb = n3;
 	//	n=N,lda=N, ldb=N;
 	//	double A[N*N],b[N]
 	// LU
-	//	dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
-	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
-
-
+	dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
+	//dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		velocity[i].x = b_vector[i3] + shear_rate*position[i].z;
