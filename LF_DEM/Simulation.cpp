@@ -10,7 +10,6 @@
 #include <cmath>
 
 Simulation::Simulation(){};
-
 Simulation::~Simulation(){
 	fout_yap.close();
 	fout_vel.close();
@@ -24,10 +23,10 @@ Simulation::~Simulation(){
 
 void Simulation::SetParameters(int argc, const char * argv[]){
 	cerr << argc << endl;
-	sys.dimension = 2;
-	sys.lx = 20;
-	sys.ly = 20;
-	sys.lz = 20;
+	sys.dimension = 3;
+	sys.lx = 15;
+	sys.ly = 15;
+	sys.lz = 15;
 	if ( argc == 1){
 		sys.volume_fraction = 0.70;
 		sys.lubcore = 2.0;
@@ -50,8 +49,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	sys.lub = true;
 	//	sys.lubcore = 1.999;
 
-	sys.kn = 1000;
-	sys.kt = 100;
+	sys.kn = 200;
+	sys.kt = 200;
 	/*
 	 * More friction
 	 */
@@ -64,8 +63,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	//	sys.mu_dynamic = 0.02;
 	sys.dynamic_friction_critical_velocity = 0.01;
 	//	sys.dt = 0.001;
-	sys.dt = 0.0005 / sys.shear_rate;
-	draw_rotation_2d = true;
+	sys.dt = 0.0002 / sys.shear_rate;
+	draw_rotation_2d = false;
 	
 	//////////////////////////////////////////////////////////////////////////
 	//
@@ -138,8 +137,6 @@ void Simulation::checkBreak(){
 			deactivated_interaction.push(k);
 		}
 	}
-	
-	
 }
 
 /* Check the distance between separating particles.
@@ -181,14 +178,13 @@ void Simulation::checkContact(){
 void Simulation::timeEvolution(){
 	sys.x_shift = 0;
 	for (int ts = 0 ; ts < ts_max ; ts ++){
-
 		if (ts % 100 == 0){
 			output_yap();
 		}
 		/*
-		if (ts % 300 == 0){
-			output_vel();
-		}
+		 if (ts % 300 == 0){
+		 output_vel();
+		 }
 		 */
 		checkContact();
 		sys.forceReset();
@@ -267,7 +263,7 @@ void Simulation::output_yap(){
 	int color_orange = 5;
 	int color_blue = 6;
 
-	double force_factor = 0.1;
+	double force_factor = 0.01;
 	/* Layer 1: Circles for particles
 	 */
 	fout_yap << "y 1\n";

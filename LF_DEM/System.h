@@ -27,7 +27,12 @@ private:
 	double dx;
 	double dy;
 	double dz;
-	
+	double *b_vector;
+	double *x_vector;
+	int lwork;
+	double *work;
+	char UPLO;
+
 protected:
 public:
     /* For DEMsystem

@@ -14,40 +14,42 @@
 //#include "f2c.h"
 //#include "clapack.h"
 
-/**
- *  M x M 行列の逆行列を計算する
- *  @param[in]  pM     対象のM x N行列（列行の順である点に注意）
- *  @param[in]  mCou   行列Mの行数
- *  @param[in]  nCou   行列Mの列数
- *  @param[out] pRetM  計算後の行列要素が返る配列（列行の順である点に注意）
- *  @return 処理に成功すればtrueが返る
- */
-bool MatrixInverse(double *pM, const int mCou, const int nCou, double *pRetM)
-{
-	int m, n, lda, info;
-	int piv[500];
-	int lwork;
-	double *pMat;
-	double work[500];
-	if(mCou != nCou) return false;
-	
-	m     = mCou;
-	n     = nCou;
-	lda   = m;
-	lwork = 500;
-	
-	pMat = (double *)alloca(sizeof(double) * mCou * nCou);
-	
-	memcpy(pMat, pM, sizeof(double) * mCou * nCou);
-	dgetrf_(&m, &n, pMat, &lda, piv, &info);
-	
-	if(info != 0) return false;
-	dgetri_(&n, pMat, &lda, piv, work, &lwork, &info);
-	if(info != 0) return false;
-	memcpy(pRetM, pMat, sizeof(double) * mCou * nCou);
-	
-	return true;
-}
+///**
+// *  M x M 行列の逆行列を計算する
+// *  @param[in]  pM     対象のM x N行列（列行の順である点に注意）
+// *  @param[in]  mCou   行列Mの行数
+// *  @param[in]  nCou   行列Mの列数
+// *  @param[out] pRetM  計算後の行列要素が返る配列（列行の順である点に注意）
+// *  @return 処理に成功すればtrueが返る
+// */
+//bool MatrixInverse(double *pM, const int mCou, const int nCou, double *pRetM)
+//{
+//	int m, n, lda, info;
+//	int piv[500];
+//	int lwork;
+//	double *pMat;
+//	double work[500];
+//	if(mCou != nCou) return false;
+//	
+//	m     = mCou;
+//	n     = nCou;
+//	lda   = m;
+//	lwork = 500;
+//	
+//	pMat = (double *)alloca(sizeof(double) * mCou * nCou);
+//	
+//	memcpy(pMat, pM, sizeof(double) * mCou * nCou);
+//	dgetrf_(&m, &n, pMat, &lda, piv, &info);
+//	
+//	if(info != 0) return false;
+//	dgetri_(&n, pMat, &lda, piv, work, &lwork, &info);
+//	if(info != 0) return false;
+//	memcpy(pRetM, pMat, sizeof(double) * mCou * nCou);
+//	
+//	return true;
+//}
+
+
 
 
 void System::init(){
@@ -83,6 +85,13 @@ void System::setNumberParticle(int num_particle){
 	torque = new vec3d [num_particle];
 	res = new double [9*num_particle*num_particle];
 	mov = new double [9*num_particle*num_particle];
+	
+	b_vector = new double [n3];
+	x_vector = new double [n3];
+	int lwork = n3*4;
+	double *work;
+	work = new double [lwork];
+	UPLO = 'L';
 }
 
 void System::forceReset(){
@@ -212,37 +221,37 @@ void System::updateVelocity(){
 void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int ii3 = 3*ii;
 	int jj3 = 3*jj;
-//	double alpha_n1n0 = alpha*nvec[1]*nvec[0]; // A
-//	double alpha_n2n0 = alpha*nvec[2]*nvec[0]; // B
-//	double alpha_n2n1 = alpha*nvec[2]*nvec[1]; // C
+	int jj3_1 = jj3+1;
+	int jj3_2 = jj3+2;
+	double alpha_n1n0 = alpha*nvec[1]*nvec[0]; // A
+	double alpha_n2n0 = alpha*nvec[2]*nvec[0]; // B
+	double alpha_n2n1 = alpha*nvec[2]*nvec[1]; // C
 	res[ n3*ii3   + jj3   ]   += alpha*nvec[0]*nvec[0];
-	res[ n3*ii3   + jj3+1 ]   += alpha*nvec[1]*nvec[0]; // A
-	//res[ n3*ii3   + jj3+1 ]   += alpha_n1n0; // A
-	res[ n3*ii3   + jj3+2 ]   += alpha*nvec[2]*nvec[0]; // B
-	//res[ n3*ii3   + jj3+2 ]   += alpha_n2n0; // B
-	res[ n3*(ii3+1) + jj3   ] += alpha*nvec[0]*nvec[1]; // A
-	//res[ n3*(ii3+1) + jj3   ] += alpha_n1n0; // A
-	res[ n3*(ii3+1) + jj3+1 ] += alpha*nvec[1]*nvec[1]; //
-	res[ n3*(ii3+1) + jj3+2 ] += alpha*nvec[2]*nvec[1]; // C
-	//res[ n3*(ii3+1) + jj3+2 ] += alpha_n2n1; // C
-	res[ n3*(ii3+2) + jj3   ] += alpha*nvec[0]*nvec[2]; // B
-	//res[ n3*(ii3+2) + jj3   ] += alpha_n2n0; // B
-	res[ n3*(ii3+2) + jj3+1 ] += alpha*nvec[1]*nvec[2]; // C
-	//res[ n3*(ii3+2) + jj3+1 ] += alpha_n2n1; // C
-	res[ n3*(ii3+2) + jj3+2 ] += alpha*nvec[2]*nvec[2];
+	//	res[ n3*ii3   + jj3+1 ]   += alpha*nvec[1]*nvec[0]; // A
+	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0; // A
+	//res[ n3*ii3   + jj3+2 ]   += alpha*nvec[2]*nvec[0]; // B
+	res[ n3*ii3   + jj3_2 ]   += alpha_n2n0; // B
+	//res[ n3*(ii3+1) + jj3   ] += alpha*nvec[0]*nvec[1]; // A
+	res[ n3*(ii3+1) + jj3   ] += alpha_n1n0; // A
+	res[ n3*(ii3+1) + jj3_1 ] += alpha*nvec[1]*nvec[1]; //
+	//res[ n3*(ii3+1) + jj3+2 ] += alpha*nvec[2]*nvec[1]; // C
+	res[ n3*(ii3+1) + jj3_2 ] += alpha_n2n1; // C
+	//res[ n3*(ii3+2) + jj3   ] += alpha*nvec[0]*nvec[2]; // B
+	res[ n3*(ii3+2) + jj3   ] += alpha_n2n0; // B
+	//res[ n3*(ii3+2) + jj3+1 ] += alpha*nvec[1]*nvec[2]; // C
+	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1; // C
+	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2];
 }
 
 void System::updateVelocityLubrication(){
 	double tmp[3];
 	double *nvec;
 	nvec = new double [3];
-	double *vec_rest;
-	vec_rest = new double [n3];
 	for (int k = 0; k < n3*n3; k++){
 		res[k]=0;
 	}
 	for (int k = 0;k < n3; k++){
-		vec_rest[k] = 0;
+		b_vector[k] = 0;
 	}
 	
 	for (int i = 0 ; i < n; i ++){
@@ -267,59 +276,80 @@ void System::updateVelocityLubrication(){
 					if ( h > 0){
 						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
 						// (i, i) (k,l)
+						// i < j
+						//  (i1, i2)
+						//
 						resmatrix(res, nvec, i, i, -alpha, n3);
 						resmatrix(res, nvec, i, j, +alpha, n3);
 						resmatrix(res, nvec, j, j, -alpha, n3);
 						resmatrix(res, nvec, j, i, +alpha, n3);
+						
 						double tmp1 = alpha*shear_rate*dz*nvec[0];
 						tmp[0] = tmp1*nvec[0];
 						tmp[1] = tmp1*nvec[1];
 						tmp[2] = tmp1*nvec[2];
-						vec_rest[3*i]   += tmp[0];
-						vec_rest[3*i+1] += tmp[1];
-						vec_rest[3*i+2] += tmp[2];
-						vec_rest[3*j]   -= tmp[0];
-						vec_rest[3*j+1] -= tmp[1];
-						vec_rest[3*j+2] -= tmp[2];
+						b_vector[3*i]   += tmp[0];
+						b_vector[3*i+1] += tmp[1];
+						b_vector[3*i+2] += tmp[2];
+						b_vector[3*j]   -= tmp[0];
+						b_vector[3*j+1] -= tmp[1];
+						b_vector[3*j+2] -= tmp[2];
 					}
 				}
 			}
 		}
 	}
 	
-
-//	if (min_h < 0 )
-//		exit(1);
-	
-	/**
-	 *  M x M 行列の逆行列を計算する
-	 *  @param[in]  pM     対象のM x N行列（列行の順である点に注意）
-	 *  @param[in]  mCou   行列Mの行数
-	 *  @param[in]  nCou   行列Mの列数
-	 *  @param[out] pRetM  計算後の行列要素が返る配列（列行の順である点に注意）
-	 *  @return 処理に成功すればtrueが返る
-	 */
-	if (MatrixInverse(res, n3, n3, mov) != true){
+	/*
+	static int cnt = 0;
+	if (cnt ++  == 10000){
+		for (int i=0; i < n3; i ++){
+			for (int j=0; j < n3; j ++){
+				cout << res[n3*i + j] << ' ';
+				
+			}
+			cout << endl;
+		}
 		exit(1);
 	}
+	 */
+	
+	/* F = R (V - V_inf)
+	 *
+	 * (V - V_inf) = M F
+	 * A.x = b_vector
+	 * b_vector[n] : r-h-s vector
+	 * atimes (int n, static double *x, double *b, void *param) :
+	 *        calc matrix-vector product A.x = b.
+	 *
+	 *
+	 *
+	 */
 	for (int i = 0; i < n; i++){
-		force[i].x += vec_rest[3*i];
-		force[i].y += vec_rest[3*i+1];
-		force[i].z += vec_rest[3*i+2];
+		int i3 = 3*i;
+		b_vector[i3] += force[i].x;
+		b_vector[i3+1] += force[i].y;
+		b_vector[i3+2] += force[i].z;
 	}
-	for (int i = 0; i < n; i++){
-		velocity[i].x = shear_rate*position[i].z;
-		velocity[i].y = 0;
-		velocity[i].z = 0;
-		int i3 = i*3;
-		for (int j = 0; j < n; j++){
-			int j3 = j*3;
-			velocity[i].x += mov[n3*i3     +j3]*force[j].x + mov[n3*i3    +j3+1]*force[j].y + mov[n3*i3    +j3+2]*force[j].z;
-			velocity[i].y += mov[n3*(i3+1) +j3]*force[j].x + mov[n3*(i3+1)+j3+1]*force[j].y + mov[n3*(i3+1)+j3+2]*force[j].z;
-			velocity[i].z += mov[n3*(i3+2) +j3]*force[j].x + mov[n3*(i3+2)+j3+1]*force[j].y + mov[n3*(i3+2)+j3+2]*force[j].z;
-		}
-	}
+	int nrhs=1;
+	int ipiv[n3];
 
+	int lda,ldb,info;
+	lda = n3;
+	ldb = n3;
+	//	n=N,lda=N, ldb=N;
+	//	double A[N*N],b[N]
+	// LU
+	//	dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
+	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
+
+
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		velocity[i].x = b_vector[i3] + shear_rate*position[i].z;
+		velocity[i].y = b_vector[i3+1];
+		velocity[i].z = b_vector[i3+2];
+	}
 	if(friction){
 		double delta_omega =  0.5*shear_rate;
 		for (int i=0; i < n; i++){
@@ -327,8 +357,6 @@ void System::updateVelocityLubrication(){
 			ang_velocity[i].y += delta_omega;
 		}
 	}
-	
-	delete [] vec_rest;
 	delete [] nvec;
 	
 }
