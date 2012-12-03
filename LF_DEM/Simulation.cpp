@@ -22,73 +22,71 @@ Simulation::~Simulation(){
 
 
 void Simulation::SetParameters(int argc, const char * argv[]){
-	cerr << argc << endl;
+	sys.friction = true;
+	sys.lub = true;
+	
 	sys.dimension = 2;
 	sys.lx = 20;
 	sys.ly = 20;
 	sys.lz = 20;
-	if ( argc == 1){
-		sys.volume_fraction = 0.70;
-		sys.lubcore = 2.0;
-	} else if ( argc == 2){
-		cerr << argv[1] << endl;
+	sys.volume_fraction = 0.70;
+	sys.lubcore = 2.0;
+	if ( argc == 2){
 		sys.volume_fraction = atof(argv[1]);
-		sys.lubcore = 2.0;
 	} else if ( argc == 3){
-		cerr << argv[1] << endl;
-		cerr << argv[2] << endl;
 		sys.volume_fraction = atof(argv[1]);
 		sys.lubcore = atof(argv[2]);
+	} else if ( argc == 4){
+		sys.volume_fraction = atof(argv[1]);
+		sys.lubcore = atof(argv[2]);
+		double l = atof(argv[3]);
+		sys.lx = l;
+		sys.ly = l;
+		sys.lz = l;
 	}
-	sys.eta = 1.0;
-	cutoff_distance = 2.5;
-	sys.sq_lub_max = 2.5*2.5;
-	sys.shear_rate = 1;
-	shear_strain = 100;
-	sys.friction = true;
-	sys.lub = true;
-	//	sys.lubcore = 1.999;
 
-	sys.kn = 200;
-	sys.kt = 200;
 	/*
-	 * More friction
+	 * Simulation parameters
 	 */
-	sys.mu_static = 0.3;
-	sys.mu_dynamic = 0.2;
+	sys.eta = 1.0; // viscosity
+	sys.shear_rate = 1; // shear rate
+	shear_strain = 100; // shear strain
+	cutoff_distance = 2.5; // to delete possible neighbor
+	sys.sq_lub_max = 2.5*2.5; // square of lubrication cutoff length.
+	sys.dt = 1e-4 / sys.shear_rate; //time step.
+	ts_max = (int)(shear_strain / sys.dt); // time step max
+
 	/*
-	 * Less friction
+	 * Contact force parameters
 	 */
-	//	sys.mu_static = 0.03;
-	//	sys.mu_dynamic = 0.02;
+	sys.kn = 200; // normal spring constant
+	sys.kt = 200; // tangential spring constant
+	sys.mu_static = 0.3; // static friction coeffient
+	sys.mu_dynamic = 0.2; // dynamic friction coeffient
 	sys.dynamic_friction_critical_velocity = 0.01;
-	//	sys.dt = 0.001;
-	sys.dt = 1e-4 / sys.shear_rate;
+	/*
+	 * Visualization
+	 */
 	if (sys.dimension ==2)
 		draw_rotation_2d = true;
 	else
 		draw_rotation_2d = false;
-	//////////////////////////////////////////////////////////////////////////
-	//
-	ts_max = (int)(shear_strain / sys.dt);
-	if (sys.volume_fraction < 0){
-		num_particle = 1000;
+	interval_snapshot = 100;
+	yap_force_factor = 0.01;
+	origin_zero_flow = true;
+	/********************************************************************************************/
+	if (sys.dimension == 2){
+		num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
 	} else {
-		if (sys.dimension == 2){
-			num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
-		} else {
-			num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
-		}
-		cerr << "N = " << num_particle << endl;
+		num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
 	}
-	max_num_interaction = 6* num_particle;
+	cerr << "N = " << num_particle << endl;
+	max_num_interaction = 6 * num_particle;
 	sys.init();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "vel_" + sys.simu_name + ".dat";
 	fout_yap.open(yap_filename.c_str());
 	fout_vel.open(vel_filename.c_str());
-
-	
 }
 
 /*
@@ -104,8 +102,6 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 	cerr << "set initial positions" << endl;
 	sys.setRandomPosition();
-
-	cerr << "done" << endl;
 	cerr << "start simulation" << endl;
 	timeEvolution();
 	cerr << "finished" << endl;
@@ -180,14 +176,9 @@ void Simulation::checkContact(){
 void Simulation::timeEvolution(){
 	sys.x_shift = 0;
 	for (int ts = 0 ; ts < ts_max ; ts ++){
-		if (ts % 100 == 0){
+		if (ts % interval_snapshot == 0){
 			output_yap();
 		}
-		/*
-		 if (ts % 300 == 0){
-		 output_vel();
-		 }
-		 */
 		checkContact();
 		sys.forceReset();
 		sys.torqueReset();
@@ -216,15 +207,15 @@ void Simulation::timeEvolution(){
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
-	/*
-	z += sys.lz2;
-	if (z > sys.lz2){
-		x += - sys.x_shift;
+	if (origin_zero_flow){
+		z += sys.lz2;
+		if (z > sys.lz2){
+			x += - sys.x_shift;
 		if ( x < - sys.lx2)
 			x += sys.lx;
-		z -=  sys.lz;
+			z -=  sys.lz;
+		}
 	}
-	 */
 	return vec3d(x,y,z);
 }
 
@@ -264,12 +255,9 @@ void Simulation::output_yap(){
 	int color_yellow = 4;
 	int color_orange = 5;
 	int color_blue = 6;
-
-	double force_factor = 0.01;
 	/* Layer 1: Circles for particles
 	 */
 	fout_yap << "y 1\n";
-//	fout_yap << "r 1\n";
 	fout_yap << "@ " << color_white << endl;
 	vec3d pos;
 	for (int i=0; i < num_particle; i++){
@@ -277,9 +265,8 @@ void Simulation::output_yap(){
 								sys.position[i].y - sys.ly2,
 								sys.position[i].z - sys.lz2);
 		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-//		cout <<  pos.x << ' ' << pos.z  << endl;
 	}
-//	cout << endl;
+
 	/* Layer 4: Orientation of particle (2D simulation)
 	 */
 	if (draw_rotation_2d){
@@ -310,7 +297,7 @@ void Simulation::output_yap(){
 				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
 										sys.position[i].y - sys.ly2,
 										sys.position[i].z - sys.lz2);
-				fout_yap << "r " << force_factor*interaction[k].f_tangent.norm()  << endl;
+				fout_yap << "r " << yap_force_factor*interaction[k].f_tangent.norm()  << endl;
 				drawLine('s', pos, interaction[k].nr_vec, fout_yap);
 				int j = interaction[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
@@ -330,7 +317,7 @@ void Simulation::output_yap(){
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
 									sys.position[i].y - sys.ly2,
 									sys.position[i].z - sys.lz2);
-			fout_yap << "r " << force_factor*abs(interaction[k].f_normal) << endl;
+			fout_yap << "r " << yap_force_factor*abs(interaction[k].f_normal) << endl;
 			drawLine('s', pos, interaction[k].nr_vec, fout_yap);
 			int j = interaction[k].particle_num[1];
 			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
@@ -376,51 +363,6 @@ void Simulation::output_yap(){
 		drawLine(-sys.lx2, -sys.ly2,  sys.lz2, -sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
 		drawLine( sys.lx2, -sys.ly2,  sys.lz2,  sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
 	}
-	
-	
-//	fout_yap << "y 7\n";
-//	fout_yap << "r 1" << endl;
-//
-//	for (int k=0; k < num_interaction; k++){
-//		if ( interaction[k].active && interaction[k].r < 2.0 ){
-//			
-//			if (interaction[k].pd_x != 0 ){
-//				int i = interaction[k].particle_num[0];
-//				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-//										sys.position[i].y - sys.ly2,
-//										sys.position[i].z - sys.lz2);
-//				fout_yap << "t " << pos.x << ' ' << pos.y << ' ' << pos.z << ' ' << interaction[k].r_vec.x << endl;
-//				fout_yap << "@ " << color_green << endl;
-//
-//				fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-//				fout_yap << "c " << pos.x + interaction[k].pd_x* sys.lx << ' ' << pos.y << ' ' << pos.z << endl;
-//				i = interaction[k].particle_num[1];
-//			
-//				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-//										sys.position[i].y - sys.ly2,
-//										sys.position[i].z - sys.lz2);
-//				fout_yap << "@ " << color_yellow << endl;
-//				fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-//				fout_yap << "c " << pos.x - interaction[k].pd_x* sys.lx << ' ' << pos.y << ' ' << pos.z << endl;
-//				
-//			}
-//		}
-//	}
-	
-//	fout_yap << "@ " << color_green << endl;
-//	for(int k=0 ; k < sys.lubparticle.size(); k++){
-//		int i = sys.lubparticle[k];
-//		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-//								sys.position[i].y - sys.ly2,
-//								sys.position[i].z - sys.lz2);
-//		vec3d lub_vec((sys.lubparticle_vec[0])[k],
-//					  (sys.lubparticle_vec[1])[k],
-//					  (sys.lubparticle_vec[2])[k]);
-//		drawLine('l', pos, lub_vec, fout_yap);
-//
-//	}
-	
-	
 }
 
 void Simulation::output_vel(){

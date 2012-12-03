@@ -10,54 +10,11 @@
 #include <sstream>
 #include <Accelerate/Accelerate.h>
 
-
-//#include "f2c.h"
-//#include "clapack.h"
-
-///**
-// *  M x M 行列の逆行列を計算する
-// *  @param[in]  pM     対象のM x N行列（列行の順である点に注意）
-// *  @param[in]  mCou   行列Mの行数
-// *  @param[in]  nCou   行列Mの列数
-// *  @param[out] pRetM  計算後の行列要素が返る配列（列行の順である点に注意）
-// *  @return 処理に成功すればtrueが返る
-// */
-//bool MatrixInverse(double *pM, const int mCou, const int nCou, double *pRetM)
-//{
-//	int m, n, lda, info;
-//	int piv[500];
-//	int lwork;
-//	double *pMat;
-//	double work[500];
-//	if(mCou != nCou) return false;
-//	
-//	m     = mCou;
-//	n     = nCou;
-//	lda   = m;
-//	lwork = 500;
-//	
-//	pMat = (double *)alloca(sizeof(double) * mCou * nCou);
-//	
-//	memcpy(pMat, pM, sizeof(double) * mCou * nCou);
-//	dgetrf_(&m, &n, pMat, &lda, piv, &info);
-//	
-//	if(info != 0) return false;
-//	dgetri_(&n, pMat, &lda, piv, work, &lwork, &info);
-//	if(info != 0) return false;
-//	memcpy(pRetM, pMat, sizeof(double) * mCou * nCou);
-//	
-//	return true;
-//}
-
-
-
-
 void System::init(){
 	lx2 = 0.5*lx;
 	ly2 = 0.5*ly;
 	lz2 = 0.5*lz;
 	ostringstream ss_simu_name;
-	
 	ss_simu_name << "D" << dimension << "L" << lz << "vf" << volume_fraction <<  "ms" << mu_static << "md" << mu_dynamic << "lub" << lubcore ;
 	
 	simu_name = ss_simu_name.str();
@@ -65,8 +22,8 @@ void System::init(){
 	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
 	
 	vel_difference = shear_rate*lz;
-
 }
+
 /* Set number of particles.
  * Allocate vectors for the state.
  */
@@ -139,7 +96,8 @@ bool System::nooverlap(){
 }
 
 
-/* Set positions of particles randomly.
+/*
+ * To prepare an initial configuration.
  */
 void System::setRandomPosition(){
 	vec3d trial_pos;
@@ -185,11 +143,9 @@ void System::setRandomPosition(){
 			}
 		}
 		if (overlap == -1){
-			
 			if (cc > 10000){
 				if (cc % 1000 == 0 ){
 					if (nooverlap()){
-						cerr << "cc = " << cc << endl;
 						break;
 					}
 				}
@@ -200,7 +156,6 @@ void System::setRandomPosition(){
 			displacement(overlap, -dd*dx, -dd*dy, -dd*dz);
 		}
 	}
-	cerr << " done " << endl;
 }
 
 
@@ -223,30 +178,23 @@ void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int jj3 = 3*jj;
 	int jj3_1 = jj3+1;
 	int jj3_2 = jj3+2;
-	double alpha_n1n0 = alpha*nvec[1]*nvec[0]; // A
-	double alpha_n2n0 = alpha*nvec[2]*nvec[0]; // B
-	double alpha_n2n1 = alpha*nvec[2]*nvec[1]; // C
+	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
+	double alpha_n2n0 = alpha*nvec[2]*nvec[0];
+	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
 	res[ n3*ii3   + jj3   ]   += alpha*nvec[0]*nvec[0];
-	//	res[ n3*ii3   + jj3+1 ]   += alpha*nvec[1]*nvec[0]; // A
-	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0; // A
-	//res[ n3*ii3   + jj3+2 ]   += alpha*nvec[2]*nvec[0]; // B
-	res[ n3*ii3   + jj3_2 ]   += alpha_n2n0; // B
-	//res[ n3*(ii3+1) + jj3   ] += alpha*nvec[0]*nvec[1]; // A
-	res[ n3*(ii3+1) + jj3   ] += alpha_n1n0; // A
-	res[ n3*(ii3+1) + jj3_1 ] += alpha*nvec[1]*nvec[1]; //
-	//res[ n3*(ii3+1) + jj3+2 ] += alpha*nvec[2]*nvec[1]; // C
-	res[ n3*(ii3+1) + jj3_2 ] += alpha_n2n1; // C
-	//res[ n3*(ii3+2) + jj3   ] += alpha*nvec[0]*nvec[2]; // B
-	res[ n3*(ii3+2) + jj3   ] += alpha_n2n0; // B
-	//res[ n3*(ii3+2) + jj3+1 ] += alpha*nvec[1]*nvec[2]; // C
-	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1; // C
+	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0;
+	res[ n3*ii3   + jj3_2 ]   += alpha_n2n0;
+	res[ n3*(ii3+1) + jj3   ] += alpha_n1n0;
+	res[ n3*(ii3+1) + jj3_1 ] += alpha*nvec[1]*nvec[1];
+	res[ n3*(ii3+1) + jj3_2 ] += alpha_n2n1;
+	res[ n3*(ii3+2) + jj3   ] += alpha_n2n0;
+	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1;
 	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2];
 }
 
 void System::updateVelocityLubrication(){
 	double tmp[3];
-	double *nvec;
-	nvec = new double [3];
+	double nvec[3];
 	for (int k = 0; k < n3*n3; k++){
 		res[k]=0;
 	}
@@ -275,15 +223,10 @@ void System::updateVelocityLubrication(){
 					double alpha = - 1/(4*h);
 					if ( h > 0){
 						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-						// (i, i) (k,l)
-						// i < j
-						//  (i1, i2)
-						//
 						resmatrix(res, nvec, i, i, -alpha, n3);
 						resmatrix(res, nvec, i, j, +alpha, n3);
 						resmatrix(res, nvec, j, j, -alpha, n3);
 						resmatrix(res, nvec, j, i, +alpha, n3);
-						
 						double tmp1 = alpha*shear_rate*dz*nvec[0];
 						tmp[0] = tmp1*nvec[0];
 						tmp[1] = tmp1*nvec[1];
@@ -299,21 +242,6 @@ void System::updateVelocityLubrication(){
 			}
 		}
 	}
-	
-	/*
-	static int cnt = 0;
-	if (cnt ++  == 10000){
-		for (int i=0; i < n3; i ++){
-			for (int j=0; j < n3; j ++){
-				cout << res[n3*i + j] << ' ';
-				
-			}
-			cout << endl;
-		}
-		exit(1);
-	}
-	 */
-	
 	/* F = R (V - V_inf)
 	 *
 	 * (V - V_inf) = M F
@@ -321,9 +249,6 @@ void System::updateVelocityLubrication(){
 	 * b_vector[n] : r-h-s vector
 	 * atimes (int n, static double *x, double *b, void *param) :
 	 *        calc matrix-vector product A.x = b.
-	 *
-	 *
-	 *
 	 */
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -336,8 +261,6 @@ void System::updateVelocityLubrication(){
 	int lda,ldb,info;
 	lda = n3;
 	ldb = n3;
-	//	n=N,lda=N, ldb=N;
-	//	double A[N*N],b[N]
 	// LU
 	dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
 	//dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
@@ -354,8 +277,6 @@ void System::updateVelocityLubrication(){
 			ang_velocity[i].y += delta_omega;
 		}
 	}
-	delete [] nvec;
-	
 }
 
 void System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){

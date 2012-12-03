@@ -39,8 +39,9 @@ private:
 	bool draw_rotation_2d;
 	ofstream fout_yap;
 	ofstream fout_vel;
-
-
+	int interval_snapshot;
+	double yap_force_factor;
+	bool origin_zero_flow;
 	/*********************************************/
 	void SetParameters(int argc, const char * argv[]);
 	void output_yap();
