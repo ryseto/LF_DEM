@@ -20,7 +20,6 @@ class System;
 class Interaction{
 private:
 	System *sys;
-
 	vec3d contact_velocity;
 	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
@@ -36,9 +35,6 @@ public:
 	void calcInteractionNoFriction();
 	void makeNormalVector();
 	void incrementTangentialDisplacement();
-
-
-/*********************************************/
 	bool active;
 	bool static_friction;
 	double sqnorm_contact_velocity;
@@ -50,8 +46,6 @@ public:
 	vec3d r_vec; // vector center to center
 	vec3d nr_vec; // normal vector
 	vec3d xi; // tangential displacement
-	int pd_x;
-	int pd_y;
 	int pd_z;
 };
 

@@ -73,7 +73,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 		draw_rotation_2d = false;
 	interval_snapshot = 100;
 	yap_force_factor = 0.01;
-	origin_zero_flow = true;
+	origin_zero_flow = false;
 	/********************************************************************************************/
 	if (sys.dimension == 2){
 		num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
@@ -220,13 +220,45 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
 }
 
 
-void drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
+void Simulation::drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
 	fout << type << ' ';
 	fout << pos.x << ' '<< pos.y << ' '<< pos.z << ' ';
 	fout << pos.x + vec.x << ' '<< pos.y + vec.y << ' '<< pos.z + vec.z << endl;
 }
 
-void drawLine(double x0, double y0, double z0,
+void Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
+	vec3d seg = pos2 - pos1;
+	fout << type << ' ';
+	if (seg.z > sys.lz2){
+		pos2.z -= sys.lz;
+		pos2.x -= sys.x_shift;
+		seg = pos2 - pos1;
+	} else if (seg.z < -sys.lz2){
+		pos2.z += sys.lz;
+		pos2.x += sys.x_shift;
+		seg = pos2 - pos1;
+	}
+		
+	while (seg.x > sys.lx2){
+		pos2.x -= sys.lx;
+		seg = pos2 - pos1;
+	}
+	while (seg.x < -sys.lx2){
+		pos2.x += sys.lx;
+		seg = pos2 - pos1;
+	}
+	
+	if (seg.y > sys.ly2){
+		pos2.y -= sys.ly;
+	} else if (seg.y < -sys.ly2){
+		pos2.y += sys.ly;
+	}
+	
+	fout << pos1.x << ' '<< pos1.y << ' '<< pos1.z << ' ';
+	fout << pos2.x << ' '<< pos2.y << ' '<< pos2.z << endl;
+}
+
+void Simulation::drawLine(double x0, double y0, double z0,
 			  double x1, double y1, double z1,
 			  ofstream &fout){
 	fout << 'l' << ' ';
@@ -324,6 +356,26 @@ void Simulation::output_yap(){
 									sys.position[j].y - sys.ly2,
 									sys.position[j].z - sys.lz2);
 			drawLine('s', pos, -interaction[k].nr_vec, fout_yap);
+		}
+	}
+
+	fout_yap << "y 8\n";
+	fout_yap << "@ " << color_orange << endl;
+	for (int i=0; i < num_particle; i++){
+		for (int j=i+1; j < num_particle; j++){
+			double f_ij = sys.lubricationForceFactor(i, j);
+			if (f_ij != 0){
+				fout_yap << "r " << yap_force_factor*f_ij << endl;
+				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+											   sys.position[i].y - sys.ly2,
+											   sys.position[i].z - sys.lz2);
+				vec3d pos2 = shiftUpCoordinate(sys.position[j].x - sys.lx2,
+											   sys.position[j].y - sys.ly2,
+											   sys.position[j].z - sys.lz2);
+				
+				drawLine2('s', pos1, pos2, fout_yap);
+			}
+				
 		}
 	}
 	

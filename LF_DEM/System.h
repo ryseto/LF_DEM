@@ -27,6 +27,16 @@ private:
 	double dx;
 	double dy;
 	double dz;
+
+	/*
+	 * for 
+	 */
+	
+	int nrhs;
+	int *ipiv;
+	int lda;
+	int ldb;
+	int info;
 	double *b_vector;
 	double *x_vector;
 	int lwork;
@@ -38,14 +48,7 @@ public:
     /* For DEMsystem
      */
 	System(){};
-	~System(){
-		delete [] position;
-		delete [] angle;
-		delete [] velocity;
-		delete [] ang_velocity;
-		delete [] force;
-		delete [] torque;
-	};
+	~System();
 	int dimension;
 	vec3d *position;
 	int **i_position;
@@ -86,6 +89,7 @@ public:
 	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);
 	double sq_neardistance(int i, int j);
+	double lubricationForceFactor(int i, int j);
 
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
 
@@ -101,7 +105,7 @@ public:
 	void forceReset();
 	void torqueReset();
 	bool nooverlap();
-
+	
 	
 	double *res;
 	double *mov;

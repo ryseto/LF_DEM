@@ -10,6 +10,19 @@
 #include <sstream>
 #include <Accelerate/Accelerate.h>
 
+
+System::~System(){
+	delete [] position;
+	delete [] angle;
+	delete [] velocity;
+	delete [] ang_velocity;
+	delete [] force;
+	delete [] torque;
+	delete [] work;
+	delete [] ipiv;
+};
+
+
 void System::init(){
 	lx2 = 0.5*lx;
 	ly2 = 0.5*ly;
@@ -43,12 +56,18 @@ void System::setNumberParticle(int num_particle){
 	res = new double [9*num_particle*num_particle];
 	mov = new double [9*num_particle*num_particle];
 	
+	/* for dgesv_ or dsysv_
+	 */
 	b_vector = new double [n3];
 	x_vector = new double [n3];
-	int lwork = n3*4;
-	double *work;
-	work = new double [lwork];
-	UPLO = 'L';
+	lwork =n3*4;
+	work = new double [n3*4];
+	ipiv= new int [n3];
+	UPLO = 'U';
+	nrhs= 1;
+
+	lda = n3;
+	ldb = n3;
 }
 
 void System::forceReset(){
@@ -179,18 +198,42 @@ void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int jj3_1 = jj3+1;
 	int jj3_2 = jj3+2;
 	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
-	double alpha_n2n0 = alpha*nvec[2]*nvec[0];
 	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
-	res[ n3*ii3   + jj3   ]   += alpha*nvec[0]*nvec[0];
-	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0;
-	res[ n3*ii3   + jj3_2 ]   += alpha_n2n0;
-	res[ n3*(ii3+1) + jj3   ] += alpha_n1n0;
-	res[ n3*(ii3+1) + jj3_1 ] += alpha*nvec[1]*nvec[1];
-	res[ n3*(ii3+1) + jj3_2 ] += alpha_n2n1;
-	res[ n3*(ii3+2) + jj3   ] += alpha_n2n0;
-	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1;
-	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2];
+	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
+
+	res[ n3*ii3   + jj3   ]   += alpha*nvec[0]*nvec[0]; // 00
+	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0; // 10
+	res[ n3*ii3   + jj3_2 ]   += alpha_n0n2; // 20
+	
+	res[ n3*(ii3+1) + jj3   ] += alpha_n1n0; // 01
+	res[ n3*(ii3+1) + jj3_1 ] += alpha*nvec[1]*nvec[1]; //11
+	res[ n3*(ii3+1) + jj3_2 ] += alpha_n2n1; // 21
+	res[ n3*(ii3+2) + jj3   ] += alpha_n0n2; // 02
+	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1; // 12
+	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2]; //22
 }
+
+
+double System::lubricationForceFactor(int i, int j){
+	double r_sq = sq_distance(i,j);
+	if( r_sq < sq_lub_max){
+		double r = sqrt(r_sq);
+		double h = r - lubcore;
+		vec3d nv(dx/r, dy/r, dz/r);
+		vec3d rel_vel = velocity[j] - velocity[i];
+		if (position[i].z -position[j].z > lz2){
+			rel_vel.x += vel_difference;
+		} else if (position[i].z -position[j].z < -lz2){
+			rel_vel.x -= vel_difference;
+		}
+		double alpha = 1.0/(4*h);
+		double force = abs(alpha*dot( rel_vel , nv));
+		return force;
+	} else {
+		return 0;
+	}
+}
+
 
 void System::updateVelocityLubrication(){
 	double tmp[3];
@@ -256,14 +299,9 @@ void System::updateVelocityLubrication(){
 		b_vector[i3+1] += force[i].y;
 		b_vector[i3+2] += force[i].z;
 	}
-	int nrhs=1;
-	int ipiv[n3];
-	int lda,ldb,info;
-	lda = n3;
-	ldb = n3;
 	// LU
 	dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
-	//dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
+	//	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		velocity[i].x = b_vector[i3] + shear_rate*position[i].z;
@@ -278,6 +316,7 @@ void System::updateVelocityLubrication(){
 		}
 	}
 }
+
 
 void System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
 	position[i].x += dx_;

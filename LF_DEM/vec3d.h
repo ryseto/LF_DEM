@@ -74,7 +74,7 @@ public:
 	
 	/* scalar product */
 	inline friend double dot(const vec3d &a1, const vec3d &a2){
-	return a1.x*a2.x + a1.y*a2.y + a1.z*a2.z;
+		return a1.x*a2.x + a1.y*a2.y + a1.z*a2.z;
 	}
 	
 	

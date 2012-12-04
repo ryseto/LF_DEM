@@ -74,7 +74,6 @@
 			isa = PBXGroup;
 			children = (
 				D988E38D165441750009949F /* main.cpp */,
-				D9A506D016682B75007E3574 /* Accelerate.framework */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
@@ -82,6 +81,7 @@
 				D988E39D1654A7410009949F /* Interaction.cpp */,
 				D988E39E1654A7410009949F /* Interaction.h */,
 				D988E399165443C10009949F /* vec3d.h */,
+				D9A506D016682B75007E3574 /* Accelerate.framework */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
