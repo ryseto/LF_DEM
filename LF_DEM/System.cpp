@@ -58,21 +58,19 @@ void System::setNumberParticle(int num_particle){
 	ang_velocity = new vec3d [num_particle];
 	force = new vec3d [num_particle];
 	torque = new vec3d [num_particle];
-	res = new double [9*num_particle*num_particle];
-	mov = new double [9*num_particle*num_particle];
-	
 	
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
-	stype=-1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
-	sorted=0;		/* TRUE if columns sorted, FALSE otherwise*/
-	packed=1;		/* TRUE if matrix packed, FALSE otherwise */
+	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
+	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
+	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
+
 #else
 	/* for dgesv_ or dsysv_
 	 */
-	b_vector = new double [n3];
-	x_vector = new double [n3];
+	res = new double [9*num_particle*num_particle];
+	rhs_b = new double [n3];
 	lwork =n3*4;
 	work = new double [n3*4];
 	ipiv= new int [n3];
@@ -81,8 +79,6 @@ void System::setNumberParticle(int num_particle){
 	lda = n3;
 	ldb = n3;
 #endif
-	
-	
 }
 
 void System::forceReset(){
@@ -90,6 +86,7 @@ void System::forceReset(){
 		force[i].reset();
 	}
 }
+
 void System::torqueReset(){
 	if (friction){
 		for (int i=0; i < n; i++){
@@ -129,7 +126,6 @@ bool System::nooverlap(){
 	
 }
 
-
 /*
  * To prepare an initial configuration.
  */
@@ -150,11 +146,11 @@ void System::setRandomPosition(){
 	int cc = 0;
 	vector<int> previous_overlap;
 	previous_overlap.resize(n);
-	double dd=0.01;
+	double dd = 0.01;
 	while (true){
 		int i = lrand48() % n;
 		if (dimension == 2){
-			double rand_angle = 2 * M_PI * drand48();
+			double rand_angle = 2*M_PI*drand48();
 			vec3d shift(dd*cos(rand_angle), 0, dd*sin(rand_angle));
 			displacement(i, shift.x ,0,shift.z );
 		} else {
@@ -217,7 +213,7 @@ void append_to_column(vector <int> *rows, vector <double> *values, double *nvec,
 	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
 	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
 	
-	rows->push_back(jj3);
+	rows->push_back(jj3  );
 	rows->push_back(jj3_1);
 	rows->push_back(jj3_2);
 	
@@ -230,7 +226,6 @@ void append_to_column(vector <int> *rows, vector <double> *values, double *nvec,
 	values[2].push_back(alpha_n0n2); // 02
 	values[2].push_back(alpha_n2n1); // 12
 	values[2].push_back(alpha*nvec[2]*nvec[2]); //22
-	
 }
 
 // diagonal terms
@@ -258,8 +253,6 @@ void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
 						   vector <int> rows,
 						   vector <double> *off_diag_values,
 						   int *ploc, int n){
-	
-	
 	// fill
 	for(int j=0; j<n; j++){
 		int j3=3*j;
@@ -283,7 +276,6 @@ void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
 		
 		((int*)sparse_res->i)[ pj3_2 ]     = j3+2;
 		
-		
 		// diagonal blocks row values
 		((double*)sparse_res->x)[ pj3 ]       = diag_values[j6];
 		((double*)sparse_res->x)[ pj3 + 1 ]   = diag_values[j6+1];
@@ -298,21 +290,20 @@ void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
 		
 		// off-diagonal blocks row indices and values
 		for(int k=ploc[j]; k<ploc[j+1]; k++){
-			int u=k-ploc[j];
-			((int*)sparse_res->i)[ pj3 + u + 3 ]   = rows[k];
-			((int*)sparse_res->i)[ pj3_1 + u + 2 ]   = rows[k];
-			((int*)sparse_res->i)[ pj3_2 + u + 1 ]   = rows[k];
+			int u = k-ploc[j];
+			((int*)sparse_res->i)[ pj3   + u + 3 ] = rows[k];
+			((int*)sparse_res->i)[ pj3_1 + u + 2 ] = rows[k];
+			((int*)sparse_res->i)[ pj3_2 + u + 1 ] = rows[k];
 			
-			((double*)sparse_res->x)[ pj3 + u + 3 ]   = off_diag_values[0][k];
-			((double*)sparse_res->x)[ pj3_1 + u + 2 ]   = off_diag_values[1][k];
-			((double*)sparse_res->x)[ pj3_2 + u + 1 ]   = off_diag_values[2][k];
+			((double*)sparse_res->x)[ pj3   + u + 3 ] = off_diag_values[0][k];
+			((double*)sparse_res->x)[ pj3_1 + u + 2 ] = off_diag_values[1][k];
+			((double*)sparse_res->x)[ pj3_2 + u + 1 ] = off_diag_values[2][k];
 		}
 	}
 	((int*)sparse_res->p)[3*n]=((int*)sparse_res->p)[3*n-1]+1;
 }
-
-#else 
-void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
+#else
+void fill_resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int ii3 = 3*ii;
 	int jj3 = 3*jj;
 	int jj3_1 = jj3+1;
@@ -332,8 +323,6 @@ void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1; // 12
 	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2]; //22
 }
-
-
 #endif
 
 double System::lubricationForceFactor(int i, int j){
@@ -359,9 +348,6 @@ double System::lubricationForceFactor(int i, int j){
 void System::updateVelocityLubrication(){
 	double tmp[3];
 	double nvec[3];
-	for (int k = 0; k < n3*n3; k++){
-		res[k]=0;
-	}
 
 #ifdef CHOLMOD
 	double *diag_blocks=new double [6*n];
@@ -371,23 +357,25 @@ void System::updateVelocityLubrication(){
 	vector <int> rows;
 	vector <double> *off_diag_values = new vector <double> [3];
 	int *ploc = new int [n+1];
-	
 	for (int i = 0 ; i < n; i ++){
 		int i6=6*i;
-		diag_blocks[i6]=1.;
-		diag_blocks[i6+3]=1.;
-		diag_blocks[i6+5]=1.;
+		diag_blocks[i6  ] = 1.;
+		diag_blocks[i6+3] = 1.;
+		diag_blocks[i6+5] = 1.;
 	}
 	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
 #else
+	for (int k = 0; k < n3*n3; k++){
+		res[k] = 0.;
+	}
 	for (int k = 0;k < n3; k++){
-		b_vector[k] = 0;
+		rhs_b[k] = 0.;
 	}
 	for (int i = 0 ; i < n; i ++){
 		int i3 = 3*i;
-		res[n3*(i3  ) + i3  ] = 1;
-		res[n3*(i3+1) + i3+1] = 1;
-		res[n3*(i3+2) + i3+2] = 1;
+		res[n3*(i3  ) + i3  ] = 1.;
+		res[n3*(i3+1) + i3+1] = 1.;
+		res[n3*(i3+2) + i3+2] = 1.;
 	}
 #endif
 	
@@ -434,12 +422,12 @@ void System::updateVelocityLubrication(){
 
 						
 #else
-						b_vector[3*i]   += tmp[0];
-						b_vector[3*i+1] += tmp[1];
-						b_vector[3*i+2] += tmp[2];
-						b_vector[3*j]   -= tmp[0];
-						b_vector[3*j+1] -= tmp[1];
-						b_vector[3*j+2] -= tmp[2];
+						rhs_b[3*i]   += tmp[0];
+						rhs_b[3*i+1] += tmp[1];
+						rhs_b[3*i+2] += tmp[2];
+						rhs_b[3*j]   -= tmp[0];
+						rhs_b[3*j+1] -= tmp[1];
+						rhs_b[3*j+2] -= tmp[2];
 #endif
 						
 										}
@@ -483,18 +471,18 @@ void System::updateVelocityLubrication(){
 #else
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		b_vector[i3] += force[i].x;
-		b_vector[i3+1] += force[i].y;
-		b_vector[i3+2] += force[i].z;
+		rhs_b[i3] += force[i].x;
+		rhs_b[i3+1] += force[i].y;
+		rhs_b[i3+2] += force[i].z;
 	}
 	// LU
 	//dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
-	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
+	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		velocity[i].x = b_vector[i3] + shear_rate*position[i].z;
-		velocity[i].y = b_vector[i3+1];
-		velocity[i].z = b_vector[i3+2];
+		velocity[i].x = rhs_b[i3] + shear_rate*position[i].z;
+		velocity[i].y = rhs_b[i3+1];
+		velocity[i].z = rhs_b[i3+2];
 	}
 
 #endif

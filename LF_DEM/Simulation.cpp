@@ -82,7 +82,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 		num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
 	}
 	cerr << "N = " << num_particle << endl;
-	max_num_interaction = 6 * num_particle;
+	max_num_interaction = 20 * num_particle;
 	sys.init();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "force_" + sys.simu_name + ".dat";

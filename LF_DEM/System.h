@@ -34,20 +34,21 @@ private:
 	double dy;
 	double dz;
 #ifdef CHOLMOD
-	cholmod_sparse *sparse_res ;
+	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *rhs_b;
 	cholmod_factor *L ;
 	cholmod_common c ;
 	int max_lub_int;
 	int stype, sorted, packed, xtype;
 #else
+	double *res;
+//	double *mov;
 	int nrhs;
 	int *ipiv;
 	int lda;
 	int ldb;
 	int info;
-	double *b_vector;
-	double *x_vector;
+	double *rhs_b;
 	int lwork;
 	double *work;
 	char UPLO;
@@ -116,11 +117,7 @@ public:
 	void forceReset();
 	void torqueReset();
 	bool nooverlap();
-	
 
-//	cholmod_sparse *res;
-	double *res;
-	double *mov;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	
