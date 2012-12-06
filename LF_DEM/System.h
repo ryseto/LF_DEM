@@ -3,11 +3,13 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto. All rights reserved.
+//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
+
+#define CHOLMOD 1
 
 #include <iostream>
 #include <iomanip>
@@ -16,6 +18,10 @@
 #include "Interaction.h"
 #include <queue>
 #include <string>
+#include <Accelerate/Accelerate.h>
+#ifdef CHOLMOD
+#include "cholmod.h"
+#endif
 
 using namespace std;
 class Interaction;
@@ -27,11 +33,14 @@ private:
 	double dx;
 	double dy;
 	double dz;
-
-	/*
-	 * for 
-	 */
-	
+#ifdef CHOLMOD
+	cholmod_sparse *sparse_res ;
+	cholmod_dense *v, *rhs_b;
+	cholmod_factor *L ;
+	cholmod_common c ;
+	int max_lub_int;
+	int stype, sorted, packed, xtype;
+#else
 	int nrhs;
 	int *ipiv;
 	int lda;
@@ -42,6 +51,7 @@ private:
 	int lwork;
 	double *work;
 	char UPLO;
+#endif
 
 protected:
 public:
@@ -49,10 +59,11 @@ public:
      */
 	System(){};
 	~System();
+	int ts; // time steps
 	int dimension;
 	vec3d *position;
 	int **i_position;
-	
+
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vec3d *ang_velocity;
@@ -106,7 +117,8 @@ public:
 	void torqueReset();
 	bool nooverlap();
 	
-	
+
+//	cholmod_sparse *res;
 	double *res;
 	double *mov;
 	vector <int> lubparticle;

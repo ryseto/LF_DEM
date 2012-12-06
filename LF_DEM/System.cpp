@@ -2,13 +2,12 @@
 //  System.cpp
 //  LF_DEM
 //
-//  Created by Ryohei Seto on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto. All rights reserved.
+//  Created by Ryohei Seto and Romain Mari on 11/14/12.
+//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #include "System.h"
 #include <sstream>
-#include <Accelerate/Accelerate.h>
 
 
 System::~System(){
@@ -18,8 +17,13 @@ System::~System(){
 	delete [] ang_velocity;
 	delete [] force;
 	delete [] torque;
+#ifdef CHOLMOD
+
+#else 
 	delete [] work;
 	delete [] ipiv;
+#endif
+	
 };
 
 
@@ -41,6 +45,7 @@ void System::init(){
  * Allocate vectors for the state.
  */
 void System::setNumberParticle(int num_particle){
+		
 	n = num_particle;
 	position = new vec3d [num_particle];
 	n3 = 3*n;
@@ -56,6 +61,14 @@ void System::setNumberParticle(int num_particle){
 	res = new double [9*num_particle*num_particle];
 	mov = new double [9*num_particle*num_particle];
 	
+	
+#ifdef CHOLMOD
+	cholmod_start (&c) ;
+	stype=-1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
+	sorted=0;		/* TRUE if columns sorted, FALSE otherwise*/
+	packed=1;		/* TRUE if matrix packed, FALSE otherwise */
+	xtype = CHOLMOD_REAL;
+#else
 	/* for dgesv_ or dsysv_
 	 */
 	b_vector = new double [n3];
@@ -65,9 +78,11 @@ void System::setNumberParticle(int num_particle){
 	ipiv= new int [n3];
 	UPLO = 'U';
 	nrhs= 1;
-
 	lda = n3;
 	ldb = n3;
+#endif
+	
+	
 }
 
 void System::forceReset(){
@@ -177,7 +192,6 @@ void System::setRandomPosition(){
 	}
 }
 
-
 void System::updateVelocity(){
 	vec3d U_inf(0, 0, 0);
 	for (int i=0; i < n; i++){
@@ -192,6 +206,112 @@ void System::updateVelocity(){
 	}
 }
 
+#ifdef CHOLMOD
+//off-diagonal terms
+void append_to_column(vector <int> *rows, vector <double> *values, double *nvec, int jj, double alpha){
+	int jj3 = 3*jj;
+	int jj3_1 = jj3+1;
+	int jj3_2 = jj3+2;
+	
+	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
+	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
+	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
+	
+	rows->push_back(jj3);
+	rows->push_back(jj3_1);
+	rows->push_back(jj3_2);
+	
+	values[0].push_back(alpha*nvec[0]*nvec[0]); // 00
+	values[0].push_back(alpha_n1n0); // 10
+	values[0].push_back(alpha_n0n2); // 20
+	values[1].push_back(alpha_n1n0); // 01
+	values[1].push_back(alpha*nvec[1]*nvec[1]); //11
+	values[1].push_back(alpha_n2n1); // 21
+	values[2].push_back(alpha_n0n2); // 02
+	values[2].push_back(alpha_n2n1); // 12
+	values[2].push_back(alpha*nvec[2]*nvec[2]); //22
+	
+}
+
+// diagonal terms
+void add_to_diag(double *diag_values, double *nvec, int ii, double alpha){
+	int ii6 = 6*ii;
+	
+	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
+	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
+	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
+	
+	diag_values[ii6]   += alpha*nvec[0]*nvec[0]; // 00
+	diag_values[ii6+1] += alpha_n1n0; // 10
+	diag_values[ii6+2] += alpha_n0n2; // 20
+	
+	diag_values[ii6+3] += alpha*nvec[1]*nvec[1]; //11
+	diag_values[ii6+4] += alpha_n2n1; // 21
+	
+	diag_values[ii6+5] += alpha*nvec[2]*nvec[2]; //22
+	
+}
+
+void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
+						   cholmod_common *c,
+						   double *diag_values,
+						   vector <int> rows,
+						   vector <double> *off_diag_values,
+						   int *ploc, int n){
+	
+	
+	// fill
+	for(int j=0; j<n; j++){
+		int j3=3*j;
+		int j6=6*j;
+		
+		((int*)sparse_res->p)[j3] = j6 + 3*ploc[j];
+		((int*)sparse_res->p)[j3+1] = (j6+3) + 2*ploc[j] + ploc[j+1];
+		((int*)sparse_res->p)[j3+2] = (j6+5) + ploc[j] + 2*ploc[j+1];
+		
+		int pj3=((int*)sparse_res->p)[j3];
+		int pj3_1=((int*)sparse_res->p)[j3+1];
+		int pj3_2=((int*)sparse_res->p)[j3+2];
+		
+		// diagonal blocks row indices
+		((int*)sparse_res->i)[ pj3 ]       = j3;
+		((int*)sparse_res->i)[ pj3 + 1 ]   = j3+1;
+		((int*)sparse_res->i)[ pj3 + 2 ]   = j3+2;
+		
+		((int*)sparse_res->i)[ pj3_1 ]     = j3+1;
+		((int*)sparse_res->i)[ pj3_1 + 1 ] = j3+2;
+		
+		((int*)sparse_res->i)[ pj3_2 ]     = j3+2;
+		
+		
+		// diagonal blocks row values
+		((double*)sparse_res->x)[ pj3 ]       = diag_values[j6];
+		((double*)sparse_res->x)[ pj3 + 1 ]   = diag_values[j6+1];
+		((double*)sparse_res->x)[ pj3 + 2 ]   = diag_values[j6+2];
+		
+		((double*)sparse_res->x)[ pj3_1 ]     = diag_values[j6+3];
+		((double*)sparse_res->x)[ pj3_1 + 1 ] = diag_values[j6+4];
+		
+		((double*)sparse_res->x)[ pj3_2 ]     = diag_values[j6+5];
+		
+		//    cout << j3+2 <<" " << diag_values[j6+5]<< " " << ((int*)sparse_res->p)[j3] << " " << ((int*)sparse_res->p)[j3+1] << " " << ((int*)sparse_res->p)[j3+2] <<endl;
+		
+		// off-diagonal blocks row indices and values
+		for(int k=ploc[j]; k<ploc[j+1]; k++){
+			int u=k-ploc[j];
+			((int*)sparse_res->i)[ pj3 + u + 3 ]   = rows[k];
+			((int*)sparse_res->i)[ pj3_1 + u + 2 ]   = rows[k];
+			((int*)sparse_res->i)[ pj3_2 + u + 1 ]   = rows[k];
+			
+			((double*)sparse_res->x)[ pj3 + u + 3 ]   = off_diag_values[0][k];
+			((double*)sparse_res->x)[ pj3_1 + u + 2 ]   = off_diag_values[1][k];
+			((double*)sparse_res->x)[ pj3_2 + u + 1 ]   = off_diag_values[2][k];
+		}
+	}
+	((int*)sparse_res->p)[3*n]=((int*)sparse_res->p)[3*n-1]+1;
+}
+
+#else 
 void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int ii3 = 3*ii;
 	int jj3 = 3*jj;
@@ -200,7 +320,7 @@ void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
 	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
 	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
-
+	
 	res[ n3*ii3   + jj3   ]   += alpha*nvec[0]*nvec[0]; // 00
 	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0; // 10
 	res[ n3*ii3   + jj3_2 ]   += alpha_n0n2; // 20
@@ -213,6 +333,8 @@ void resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2]; //22
 }
 
+
+#endif
 
 double System::lubricationForceFactor(int i, int j){
 	double r_sq = sq_distance(i,j);
@@ -234,27 +356,47 @@ double System::lubricationForceFactor(int i, int j){
 	}
 }
 
-
 void System::updateVelocityLubrication(){
 	double tmp[3];
 	double nvec[3];
 	for (int k = 0; k < n3*n3; k++){
 		res[k]=0;
 	}
+
+#ifdef CHOLMOD
+	double *diag_blocks=new double [6*n];
+	for (int k = 0;k < 6*n; k++){
+		diag_blocks[k]=0.;
+	}
+	vector <int> rows;
+	vector <double> *off_diag_values = new vector <double> [3];
+	int *ploc = new int [n+1];
+	
+	for (int i = 0 ; i < n; i ++){
+		int i6=6*i;
+		diag_blocks[i6]=1.;
+		diag_blocks[i6+3]=1.;
+		diag_blocks[i6+5]=1.;
+	}
+	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+#else
 	for (int k = 0;k < n3; k++){
 		b_vector[k] = 0;
 	}
-	
 	for (int i = 0 ; i < n; i ++){
 		int i3 = 3*i;
 		res[n3*(i3  ) + i3  ] = 1;
 		res[n3*(i3+1) + i3+1] = 1;
 		res[n3*(i3+2) + i3+2] = 1;
 	}
-
+#endif
+	
 	double r, r_sq;
 	if (lub){
 		for (int i = 0 ; i < n - 1; i ++){
+#ifdef CHOLMOD
+			ploc[i] = (unsigned int)rows.size();
+#endif
 			for (int j = i+1 ; j < n; j ++){
 				r_sq = sq_distance(i,j);
 				if( r_sq < sq_lub_max){
@@ -265,22 +407,42 @@ void System::updateVelocityLubrication(){
 					double h = r - lubcore;
 					double alpha = - 1/(4*h);
 					if ( h > 0){
+						
+#ifdef CHOLMOD
+
+						add_to_diag(diag_blocks, nvec, i, -alpha);
+						add_to_diag(diag_blocks, nvec, j, -alpha);
+						append_to_column(&rows, off_diag_values, nvec, j, +alpha);
+#else
 						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
 						resmatrix(res, nvec, i, i, -alpha, n3);
 						resmatrix(res, nvec, i, j, +alpha, n3);
 						resmatrix(res, nvec, j, j, -alpha, n3);
 						resmatrix(res, nvec, j, i, +alpha, n3);
+#endif
 						double tmp1 = alpha*shear_rate*dz*nvec[0];
 						tmp[0] = tmp1*nvec[0];
 						tmp[1] = tmp1*nvec[1];
 						tmp[2] = tmp1*nvec[2];
+#ifdef CHOLMOD
+						((double*)rhs_b->x)[3*i] += tmp[0];
+						((double*)rhs_b->x)[3*i+1] += tmp[1];
+						((double*)rhs_b->x)[3*i+2] += tmp[2];
+						((double*)rhs_b->x)[3*j] -= tmp[0];
+						((double*)rhs_b->x)[3*j+1] -= tmp[1];
+						((double*)rhs_b->x)[3*j+2] -= tmp[2];
+
+						
+#else
 						b_vector[3*i]   += tmp[0];
 						b_vector[3*i+1] += tmp[1];
 						b_vector[3*i+2] += tmp[2];
 						b_vector[3*j]   -= tmp[0];
 						b_vector[3*j+1] -= tmp[1];
 						b_vector[3*j+2] -= tmp[2];
-					}
+#endif
+						
+										}
 				}
 			}
 		}
@@ -293,6 +455,32 @@ void System::updateVelocityLubrication(){
 	 * atimes (int n, static double *x, double *b, void *param) :
 	 *        calc matrix-vector product A.x = b.
 	 */
+	
+#ifdef CHOLMOD
+	ploc[n-1] = (unsigned int)rows.size();
+	ploc[n] = (unsigned int)rows.size();
+	// allocate
+	int nzmax;  // non-zero values
+	nzmax=6*n; // diagonal blocks
+	for(int s=0; s<3; s++){
+		nzmax+=off_diag_values[s].size();  // off-diagonal
+	}
+	
+	sparse_res=cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
+	
+	fill_sparse_resmatrix(sparse_res, &c, diag_blocks, rows, off_diag_values, ploc, n);
+	delete [] diag_blocks;
+	delete [] off_diag_values;
+	delete [] ploc;
+	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		velocity[i].x = ((double*)v->x)[i3] + shear_rate*position[i].z;
+		velocity[i].y = ((double*)v->x)[i3+1];
+		velocity[i].z = ((double*)v->x)[i3+2];
+	}
+	
+#else
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		b_vector[i3] += force[i].x;
@@ -300,14 +488,25 @@ void System::updateVelocityLubrication(){
 		b_vector[i3+2] += force[i].z;
 	}
 	// LU
-	dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
-	//	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
+	//dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
+	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		velocity[i].x = b_vector[i3] + shear_rate*position[i].z;
 		velocity[i].y = b_vector[i3+1];
 		velocity[i].z = b_vector[i3+2];
 	}
+
+#endif
+
+	
+	
+#ifdef CHOLMOD
+	cholmod_free_sparse(&sparse_res,&c);
+	cholmod_free_factor(&L,&c);
+	cholmod_free_dense(&rhs_b,&c);
+#endif
+	
 	if(friction){
 		double delta_omega =  0.5*shear_rate;
 		for (int i=0; i < n; i++){
@@ -353,7 +552,6 @@ void System::deltaTimeEvolution(){
 		x_shift -= lx;
 	}
 	for (int i=0; i < n; i++){
-		
 		displacement(i, velocity[i].x*dt,velocity[i].y*dt,velocity[i].z*dt);
 	}
 

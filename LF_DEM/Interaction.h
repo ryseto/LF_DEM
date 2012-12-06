@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto. All rights reserved.
+//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #ifndef __LF_DEM__Interaction__

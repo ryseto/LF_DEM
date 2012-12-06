@@ -2,8 +2,8 @@
 //  Simulation.cpp
 //  LF_DEM
 //
-//  Created by Ryohei Seto on 11/15/12.
-//  Copyright (c) 2012 Ryohei Seto. All rights reserved.
+//  Created by Ryohei Seto and Romain Mari on 11/15/12.
+//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #include "Simulation.h"
@@ -12,7 +12,7 @@
 Simulation::Simulation(){};
 Simulation::~Simulation(){
 	fout_yap.close();
-	fout_vel.close();
+	fout_force.close();
 	delete [] interaction;
 	for (int i=0; i < num_particle; i++){
 		delete [] interacting_pair[i];
@@ -24,7 +24,6 @@ Simulation::~Simulation(){
 void Simulation::SetParameters(int argc, const char * argv[]){
 	sys.friction = true;
 	sys.lub = true;
-	
 	sys.dimension = 2;
 	sys.lx = 20;
 	sys.ly = 20;
@@ -61,8 +60,10 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 */
 	sys.kn = 200; // normal spring constant
 	sys.kt = 200; // tangential spring constant
-	sys.mu_static = 0.3; // static friction coeffient
-	sys.mu_dynamic = 0.2; // dynamic friction coeffient
+//	sys.mu_static = 0.3; // static friction coeffient
+//	sys.mu_dynamic = 0.2; // dynamic friction coeffient
+	sys.mu_static = 0.6; // static friction coeffient
+	sys.mu_dynamic = 0.4; // dynamic friction coeffient
 	sys.dynamic_friction_critical_velocity = 0.01;
 	/*
 	 * Visualization
@@ -84,9 +85,9 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	max_num_interaction = 6 * num_particle;
 	sys.init();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
-	string vel_filename = "vel_" + sys.simu_name + ".dat";
+	string vel_filename = "force_" + sys.simu_name + ".dat";
 	fout_yap.open(yap_filename.c_str());
-	fout_vel.open(vel_filename.c_str());
+	fout_force.open(vel_filename.c_str());
 }
 
 /*
@@ -175,10 +176,8 @@ void Simulation::checkContact(){
  */
 void Simulation::timeEvolution(){
 	sys.x_shift = 0;
-	for (int ts = 0 ; ts < ts_max ; ts ++){
-		if (ts % interval_snapshot == 0){
-			output_yap();
-		}
+	sys.ts = 0;
+	while (sys.ts < ts_max){
 		checkContact();
 		sys.forceReset();
 		sys.torqueReset();
@@ -202,7 +201,10 @@ void Simulation::timeEvolution(){
 			}
 		}
 		checkBreak();
-		
+		if (sys.ts % interval_snapshot == 0){
+			output_yap();
+		}
+		sys.ts ++;
 	}
 }
 
@@ -340,32 +342,20 @@ void Simulation::output_yap(){
 		}
 	}
 	/* Layer 3: Normal
+	 * Lubrication + contact force
 	 */
 	fout_yap << "y 3\n";
 	fout_yap << "@ " << color_yellow << endl;
-	for (int k=0; k < num_interaction; k++){
-		if ( interaction[k].active && interaction[k].r < 2 ){
-			int i = interaction[k].particle_num[0];
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-									sys.position[i].y - sys.ly2,
-									sys.position[i].z - sys.lz2);
-			fout_yap << "r " << yap_force_factor*abs(interaction[k].f_normal) << endl;
-			drawLine('s', pos, interaction[k].nr_vec, fout_yap);
-			int j = interaction[k].particle_num[1];
-			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
-									sys.position[j].y - sys.ly2,
-									sys.position[j].z - sys.lz2);
-			drawLine('s', pos, -interaction[k].nr_vec, fout_yap);
-		}
-	}
-
-	fout_yap << "y 8\n";
-	fout_yap << "@ " << color_orange << endl;
+	double total_normal_force = 0;
 	for (int i=0; i < num_particle; i++){
 		for (int j=i+1; j < num_particle; j++){
 			double f_ij = sys.lubricationForceFactor(i, j);
 			if (f_ij != 0){
+				if (interacting_pair[i][j] != 0){
+					f_ij += -interaction[interacting_pair[i][j]].f_normal;
+				}
 				fout_yap << "r " << yap_force_factor*f_ij << endl;
+				total_normal_force += f_ij;
 				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
 											   sys.position[i].y - sys.ly2,
 											   sys.position[i].z - sys.lz2);
@@ -375,9 +365,12 @@ void Simulation::output_yap(){
 				
 				drawLine2('s', pos1, pos2, fout_yap);
 			}
-				
 		}
 	}
+	/*
+	 * Output the sum of the normal forces.
+	 */
+	fout_force << sys.dt * sys.ts << ' ' << total_normal_force << endl;
 	
 	/* Layer 6: Box and guide lines
 	 */
@@ -417,11 +410,3 @@ void Simulation::output_yap(){
 	}
 }
 
-void Simulation::output_vel(){
-	for (int k=0; k < num_interaction; k++){
-		if ( interaction[k].active && interaction[k].static_friction == false ){
-			fout_vel << sqrt(interaction[k].sqnorm_contact_velocity) << ' ';
-		}
-	}
-	fout_vel << endl;
-}

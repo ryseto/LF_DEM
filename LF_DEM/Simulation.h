@@ -2,8 +2,8 @@
 //  Simulation.h
 //  LF_DEM
 //
-//  Created by Ryohei Seto on 11/15/12.
-//  Copyright (c) 2012 Ryohei Seto. All rights reserved.
+//  Created by Ryohei Seto and Romain Mari on 11/15/12.
+//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #ifndef __LF_DEM__Simulation__
@@ -38,7 +38,7 @@ private:
 	 */
 	bool draw_rotation_2d;
 	ofstream fout_yap;
-	ofstream fout_vel;
+	ofstream fout_force;
 	int interval_snapshot;
 	double yap_force_factor;
 	bool origin_zero_flow;
