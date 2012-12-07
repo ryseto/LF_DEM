@@ -91,7 +91,7 @@ public:
 	double lx2; // =lx/2
 	double ly2; // =ly/2
 	double lz2; // =lz/2
-	double x_shift;
+	double shear_disp;
 	double shear_rate;
 	double volume_fraction;
 	double vel_difference;

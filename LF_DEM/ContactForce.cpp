@@ -35,11 +35,11 @@ void ContactForce::makeNormalVector(){
 	if (r_vec.z > sys->lz2){
 		pd_z = 1; //  p1 (z = lz), p0 (z = 0)
 		r_vec.z -= sys->lz;
-		r_vec.x -= sys->x_shift;
+		r_vec.x -= sys->shear_disp;
 	} else if (r_vec.z < - sys->lz2){
 		pd_z = -1; //  p1 (z = 0), p0 (z = lz)
 		r_vec.z += sys->lz;
-		r_vec.x += sys->x_shift;
+		r_vec.x += sys->shear_disp;
 	} else{
 		pd_z = 0;
 	}

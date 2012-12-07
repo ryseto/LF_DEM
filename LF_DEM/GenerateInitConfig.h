@@ -110,6 +110,10 @@ void solveOverlap(){
 			delta_translation = randUniformSphere(dd);
 		}
 		position[i] += delta_translation;
+		position[i].periodicBoundaryBox(lx, ly, lz);
+
+		
+		
 		int overlap = -1;
 		if (sqContactDistance(i, previous_overlap[i]) < 4){
 			overlap =  previous_overlap[i];
@@ -135,7 +139,9 @@ void solveOverlap(){
 			cc ++;
 		} else {
 			position[i] += dd*dr;
+			position[i].periodicBoundaryBox(lx, ly, lz);
 			position[overlap] -= dd*dr;
+			position[overlap].periodicBoundaryBox(lx, ly, lz);
 		}
 	}
 }
@@ -159,6 +165,7 @@ void outputPositionData(){
 	}
 	fout.close();
 }
+
 void setParameters(int argc, const char * argv[]){
 	if (argc == 6){
 		dimension = 2;
@@ -189,7 +196,6 @@ void setParameters(int argc, const char * argv[]){
 	cerr << "np = " << np << endl;
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
-
 }
 
 int generateInitialConfiguration(int argc, const char * argv[]){

@@ -60,7 +60,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 */
 	sys.eta = 1.0; // viscosity
 	sys.shear_rate = 1; // shear rate
-	shear_strain = 1; // shear strain
+	shear_strain = 100; // shear strain
 	cutoff_distance = 2.5; // to delete possible neighbor
 	sys.sq_lub_max = 2.5*2.5; // square of lubrication cutoff length.
 	sys.dt = 1e-4 / sys.shear_rate; //time step.
@@ -84,7 +84,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	else
 		draw_rotation_2d = false;
 	interval_snapshot = 100;
-	yap_force_factor = 0.01;
+	yap_force_factor = 0.05;
 	origin_zero_flow = false;
 	/********************************************************************************************/
 	if (sys.dimension == 2){
@@ -122,6 +122,7 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.prepareSimulation(num_of_particles);
 	for (int i=0; i < initial_positions.size(); i++){
 		sys.position[i] = initial_positions[i];
+		sys.angle[i] = 0;
 	}
 	initContactPair();
 	fc = new ContactForce [max_num_contactforce];
@@ -200,7 +201,6 @@ void Simulation::checkContact(){
  *
  */
 void Simulation::timeEvolution(){
-	sys.x_shift = 0;
 	sys.ts = 0;
 	while (sys.ts < ts_max){
 		checkContact();
@@ -222,6 +222,9 @@ void Simulation::timeEvolution(){
 			// Free-draining approximation
 			sys.updateVelocity();
 		}
+		if (sys.ts % interval_snapshot == 0){
+			output_yap();
+		}
 		sys.deltaTimeEvolution();
 		if (sys.friction){
 			for (int k = 0; k < num_contactforce; k++){
@@ -229,9 +232,7 @@ void Simulation::timeEvolution(){
 			}
 		}
 		checkBreak();
-		if (sys.ts % interval_snapshot == 0){
-			output_yap();
-		}
+
 		sys.ts ++;
 	}
 }
@@ -240,7 +241,7 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
 	if (origin_zero_flow){
 		z += sys.lz2;
 		if (z > sys.lz2){
-			x += - sys.x_shift;
+			x += - sys.shear_disp;
 		if ( x < - sys.lx2)
 			x += sys.lx;
 			z -=  sys.lz;
@@ -261,11 +262,11 @@ void Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
 	fout << type << ' ';
 	if (seg.z > sys.lz2){
 		pos2.z -= sys.lz;
-		pos2.x -= sys.x_shift;
+		pos2.x -= sys.shear_disp;
 		seg = pos2 - pos1;
 	} else if (seg.z < -sys.lz2){
 		pos2.z += sys.lz;
-		pos2.x += sys.x_shift;
+		pos2.x += sys.shear_disp;
 		seg = pos2 - pos1;
 	}
 		
@@ -402,7 +403,6 @@ void Simulation::output_yap(){
 	
 	/* Layer 6: Box and guide lines
 	 */
-	
 	fout_yap << "y 6\n";
 	fout_yap << "@ " << color_blue << endl;
 	if (sys.dimension == 2){

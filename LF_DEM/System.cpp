@@ -30,6 +30,7 @@ void System::init(){
 	lx2 = 0.5*lx;
 	ly2 = 0.5*ly;
 	lz2 = 0.5*lz;
+	shear_disp = 0;
 	ostringstream ss_simu_name;
 	ss_simu_name << "D" << dimension << "L" << lz << "vf" << volume_fraction <<  "ms" << mu_static << "md" << mu_dynamic << "lub" << lubcore ;
 	simu_name = ss_simu_name.str();
@@ -145,9 +146,8 @@ void appendToColumn(vector <int> *rows,
 // diagonal terms
 //void System::addToDiag(double *diag_values, double *nvec, int ii, double alpha);
 void System::addToDiag(double *nvec, int ii, double alpha){
-
 	int ii6 = 6*ii;
-	
+
 	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
 	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
 	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
@@ -249,18 +249,19 @@ void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int 
 
 double System::lubricationForceFactor(int i, int j){
 	double r_sq = sq_distance(i,j);
-	if( r_sq < sq_lub_max){
+	if(r_sq < sq_lub_max){
 		double r = sqrt(r_sq);
 		double h = r - lubcore;
 		vec3d nv(dx/r, dy/r, dz/r);
 		vec3d rel_vel = velocity[j] - velocity[i];
-		if (position[i].z -position[j].z > lz2){
+		double zi_zj = position[i].z - position[j].z;
+		if (zi_zj > lz2){
 			rel_vel.x += vel_difference;
-		} else if (position[i].z -position[j].z < -lz2){
+		} else if (zi_zj < -lz2){
 			rel_vel.x -= vel_difference;
 		}
 		double alpha = 1.0/(4*h);
-		double force = abs(alpha*dot( rel_vel , nv));
+		double force = abs(alpha*dot(rel_vel , nv));
 		return force;
 	} else {
 		return 0;
@@ -417,7 +418,6 @@ void System::updateVelocityLubrication(){
 	}
 }
 
-
 void System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
 	position[i].x += dx_;
 	position[i].y += dy_;
@@ -425,10 +425,10 @@ void System::displacement(int i, const double &dx_, const double &dy_, const dou
 	
 	if (position[i].z > lz ){
 		position[i].z -= lz;
-		position[i].x -= x_shift;
+		position[i].x -= shear_disp;
 	} else if ( position[i].z < 0 ){
 		position[i].z += lz;
-		position[i].x += x_shift;
+		position[i].x += shear_disp;
 	}
 	if ( position[i].x > lx ){
 		position[i].x -= lx;
@@ -444,11 +444,10 @@ void System::displacement(int i, const double &dx_, const double &dy_, const dou
 	}
 }
 
-
 void System::deltaTimeEvolution(){
-	x_shift += vel_difference*dt;
-	if (x_shift > lx){
-		x_shift -= lx;
+	shear_disp += vel_difference*dt;
+	if (shear_disp > lx){
+		shear_disp -= lx;
 	}
 	for (int i=0; i < n; i++){
 		displacement(i, velocity[i].x*dt,velocity[i].y*dt,velocity[i].z*dt);
@@ -461,29 +460,26 @@ void System::deltaTimeEvolution(){
 			}
 		}
 	}
-	
 }
 
-
-
-/* 
+/*
  * Distance between particle i and particle j
  */
 double System::distance(int i, int j){
 	return sqrt(sq_distance(i,j));
 }
 
-/* Square norm of vector (dx, dy, dz)
+/*
+ * Square norm of vector (dx, dy, dz)
  */
 double System::sq_norm(){
 	if (dz > lz2 ){
 		dz -= lz;
-		dx -= x_shift;
+		dx -= shear_disp;
 	} else if (dz < -lz2){
 		dz += lz;
-		dx += x_shift;
+		dx += shear_disp;
 	}
-	
 	while(dx > lx2){
 		dx -= lx;
 	}
@@ -499,7 +495,6 @@ double System::sq_norm(){
 		return dx*dx + dy*dy + dz*dz;
 	} else {
 		return dx*dx + dz*dz;
-		
 	}
 }
 
@@ -528,10 +523,10 @@ double System::sq_distanceToCheckContact(int i, int j){
 	dz = position[i].z - position[j].z;
 	if (dz > lz2 ){
 		dz -= lz;
-		dx -= x_shift;
+		dx -= shear_disp;
 	} else if (dz < -lz2){
 		dz += lz;
-		dx += x_shift;
+		dx += shear_disp;
 	}
 	if (abs(dz) < 2){
 		while(dx > lx2){

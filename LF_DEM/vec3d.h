@@ -160,8 +160,34 @@ public:
 		
 		return product;
 	}
+	
+	void periodicBoundaryBox(const double &lx,
+							 const double &ly,
+							 const double &lz){
+		if ( x < 0 ){
+			x += lx;
+		} else if ( x > lx ){
+			x -= lx;
+		}
+		if ( y < 0 ){
+			y += ly;
+		} else if ( x > ly ){
+			y -= ly;
+		}
+		if ( z < 0 ){
+			z += lz;
+		} else if ( z > lz ){
+			z -= lz;
+		}
+	
+	}
 	void cerr(){
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
 	}	
 };
 #endif	
+
+
+
+
+
