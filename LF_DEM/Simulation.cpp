@@ -93,7 +93,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 		num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
 	}
 	cerr << "N = " << num_particle << endl;
-	max_num_interaction = 20 * num_particle;
+	max_num_contactforce = 20 * num_particle;
 	sys.init();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "force_" + sys.simu_name + ".dat";
@@ -113,8 +113,6 @@ void Simulation::importInitialPositionFile(){
 	file_import.close();
 }
 
-
-
 /*
  * Main simulation
  */
@@ -127,12 +125,11 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 		sys.position[i] = initial_positions[i];
 	}
 	initContactPair();
-	fc = new ContactForce [max_num_interaction];
-	for (int i = 0; i < max_num_interaction; i++){
+	fc = new ContactForce [max_num_contactforce];
+	for (int i = 0; i < max_num_contactforce; i++){
 		fc[i].init( &sys );
 	}
 	cerr << "set initial positions" << endl;
-	//sys.setRandomPosition();
 	importInitialPositionFile();
 	cerr << "start simulation" << endl;
 	timeEvolution();
@@ -158,7 +155,7 @@ void Simulation::initContactPair(){
  *
  */
 void Simulation::checkBreak(){
-	for (int k = 0; k < num_interaction; k++){
+	for (int k = 0; k < num_contactforce; k++){
 		if ( fc[k].active
 			&& fc[k].r > cutoff_distance){
 			fc[k].active = false;
@@ -180,21 +177,20 @@ void Simulation::checkContact(){
 	for (int i=0; i < num_particle-1; i++){
 		for (int j=i+1; j < num_particle; j++){
 			if ( contact_pair[i][j] == -1){
-				//double sq_distance = sys.sq_distance(i, j);
-				double sq_distance = sys.checkContact(i, j);
+				double sq_distance = sys.sq_distanceToCheckContact(i, j);
 				if ( sq_distance < 4){
-					int new_num_interaction;
+					int new_num_contactforce;
 					if (deactivated_interaction.empty()){
 						// add an interaction object.
-						new_num_interaction = num_interaction;
-						num_interaction ++;
+						new_num_contactforce = num_contactforce;
+						num_contactforce ++;
 					} else {
 						// fill a deactivated interaction object.
-						new_num_interaction = deactivated_interaction.front();
+						new_num_contactforce = deactivated_interaction.front();
 						deactivated_interaction.pop();
 					}
-					fc[new_num_interaction].create(i,j);
-					contact_pair[i][j] = new_num_interaction;
+					fc[new_num_contactforce].create(i,j);
+					contact_pair[i][j] = new_num_contactforce;
 				}
 			}
 		}
@@ -212,11 +208,11 @@ void Simulation::timeEvolution(){
 		sys.forceReset();
 		sys.torqueReset();
 		if (sys.friction){
-			for (int k=0; k < num_interaction; k++){
+			for (int k=0; k < num_contactforce; k++){
 				fc[k].calcInteraction();
 			}
 		} else {
-			for (int k=0; k < num_interaction; k++){
+			for (int k=0; k < num_contactforce; k++){
 				fc[k].calcInteractionNoFriction();
 			}
 		}
@@ -229,7 +225,7 @@ void Simulation::timeEvolution(){
 		}
 		sys.deltaTimeEvolution();
 		if (sys.friction){
-			for (int k = 0; k < num_interaction; k++){
+			for (int k = 0; k < num_contactforce; k++){
 				fc[k].incrementTangentialDisplacement();
 			}
 		}
@@ -353,7 +349,7 @@ void Simulation::output_yap(){
 	 */
 	if (sys.friction){
 		fout_yap << "y 2\n";
-		for (int k=0; k < num_interaction; k++){
+		for (int k=0; k < num_contactforce; k++){
 			if ( fc[k].active && fc[k].r < 2 ){
 				if (fc[k].static_friction)
 					fout_yap << "@ " << color_green << endl;

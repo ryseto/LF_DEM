@@ -68,7 +68,7 @@ void System::prepareSimulation(unsigned long number_of_particles){
 #else
 	/* for dgesv_ or dsysv_
 	 */
-	res = new double [9*num_particle*num_particle];
+	res = new double [9*n*n];
 	rhs_b = new double [n3];
 	lwork =n3*4;
 	work = new double [n3*4];
@@ -222,9 +222,11 @@ void System::fillSparseResmatrix(){
 }
 
 #else
-
 void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int ii3 = 3*ii;
+	int n3ii3   =n3*ii3;
+	int n3ii3_1 = n3*(ii3+1);
+	int n3ii3_2 = n3*(ii3+2);
 	int jj3 = 3*jj;
 	int jj3_1 = jj3+1;
 	int jj3_2 = jj3+2;
@@ -232,16 +234,16 @@ void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int 
 	double alpha_n2n1 = alpha*nvec[2]*nvec[1];
 	double alpha_n0n2 = alpha*nvec[0]*nvec[2];
 	
-	res[ n3*ii3   + jj3   ]   += alpha*nvec[0]*nvec[0]; // 00
-	res[ n3*ii3   + jj3_1 ]   += alpha_n1n0; // 10
-	res[ n3*ii3   + jj3_2 ]   += alpha_n0n2; // 20
+	res[ n3ii3   + jj3   ]   += alpha*nvec[0]*nvec[0]; // 00
+	res[ n3ii3   + jj3_1 ]   += alpha_n1n0; // 10
+	res[ n3ii3   + jj3_2 ]   += alpha_n0n2; // 20
 	
-	res[ n3*(ii3+1) + jj3   ] += alpha_n1n0; // 01
-	res[ n3*(ii3+1) + jj3_1 ] += alpha*nvec[1]*nvec[1]; //11
-	res[ n3*(ii3+1) + jj3_2 ] += alpha_n2n1; // 21
-	res[ n3*(ii3+2) + jj3   ] += alpha_n0n2; // 02
-	res[ n3*(ii3+2) + jj3_1 ] += alpha_n2n1; // 12
-	res[ n3*(ii3+2) + jj3_2 ] += alpha*nvec[2]*nvec[2]; //22
+	res[ n3ii3_1 + jj3   ] += alpha_n1n0; // 01
+	res[ n3ii3_1 + jj3_1 ] += alpha*nvec[1]*nvec[1]; //11
+	res[ n3ii3_1 + jj3_2 ] += alpha_n2n1; // 21
+	res[ n3ii3_2 + jj3   ] += alpha_n0n2; // 02
+	res[ n3ii3_2 + jj3_1 ] += alpha_n2n1; // 12
+	res[ n3ii3_2 + jj3_2 ] += alpha*nvec[2]*nvec[2]; //22
 }
 #endif
 
@@ -358,18 +360,13 @@ void System::updateVelocityLubrication(){
 #ifdef CHOLMOD
 	ploc[n-1] = (unsigned int)rows.size();
 	ploc[n] = (unsigned int)rows.size();
-	// allocate
 	int nzmax;  // non-zero values
 	nzmax = 6*n; // diagonal blocks
 	for(int s=0; s<3; s++){
 		nzmax += off_diag_values[s].size();  // off-diagonal
 	}
 	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
-//	fillSparseResmatrix(sparse_res, &c, diag_blocks, rows, off_diag_values, ploc, n);
 	fillSparseResmatrix();
-//	delete [] diag_blocks;
-//	delete [] off_diag_values;
-//	delete [] ploc;
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
 	
@@ -384,7 +381,6 @@ void System::updateVelocityLubrication(){
 //		//	    cout << ((double*)L->x)[ ((int*)L->p) [i] ] << endl;
 //		cout << "pause " << endl; getchar();
 //	}
-
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -392,6 +388,9 @@ void System::updateVelocityLubrication(){
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
 	}
+	cholmod_free_sparse(&sparse_res,&c);
+	cholmod_free_factor(&L,&c);
+	cholmod_free_dense(&rhs_b,&c);
 #else
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -409,13 +408,6 @@ void System::updateVelocityLubrication(){
 		velocity[i].z = rhs_b[i3+2];
 	}
 #endif
-
-#ifdef CHOLMOD
-	cholmod_free_sparse(&sparse_res,&c);
-	cholmod_free_factor(&L,&c);
-	cholmod_free_dense(&rhs_b,&c);
-#endif
-	
 	if(friction){
 		double delta_omega =  0.5*shear_rate;
 		for (int i=0; i < n; i++){
@@ -450,8 +442,6 @@ void System::displacement(int i, const double &dx_, const double &dy_, const dou
 			position[i].y += ly;
 		}
 	}
-	
-	
 }
 
 
@@ -533,11 +523,11 @@ double System::sq_distance(vec3d &pos , int i){
 	return sq_norm();
 }
 
-double System::checkContact(int i, int j){
+double System::sq_distanceToCheckContact(int i, int j){
 	dx = position[i].x - position[j].x;
 	dz = position[i].z - position[j].z;
 	if (dz > lz2 ){
-		dz -= lz;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+		dz -= lz;
 		dx -= x_shift;
 	} else if (dz < -lz2){
 		dz += lz;
@@ -547,7 +537,7 @@ double System::checkContact(int i, int j){
 		while(dx > lx2){
 			dx -= lx;
 		}
-		while(dx < - lx2){
+		while(dx < -lx2){
 			dx += lx;
 		}
 		if (abs(dx) < 2){

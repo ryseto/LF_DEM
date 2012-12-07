@@ -21,15 +21,14 @@ private:
 	double shear_strain;
 	bool import_positions;
 	vector< vec3d> initial_positions;
-
 	string filename_import_positions;
 	/*
 	 * Interparticle interactions
 	 */
 	ContactForce *fc;
 	int **contact_pair; // Table
-	int max_num_interaction; // Allowed length of interaction array.
-	int num_interaction; // Length of used interaction array.
+	int max_num_contactforce; // Allowed length of interaction array.
+	int num_contactforce; // Length of used interaction array.
 	queue<int> deactivated_interaction;
 	/*
 	 *  Simulation parameters
@@ -44,14 +43,11 @@ private:
 	int interval_snapshot;
 	double yap_force_factor;
 	bool origin_zero_flow;
-
-
 	/*
 	 *
 	 */
 	void SetParameters(int argc, const char * argv[]);
 	void importInitialPositionFile();
-
 	void output_yap();
 	void output_vel();
 	void initContactPair();
@@ -74,7 +70,5 @@ public:
 	Simulation();
 	~Simulation();
 	void SimulationMain(int argc, const char * argv[]);
-	
-
 };
 #endif /* defined(__LF_DEM__Simulation__) */

@@ -68,7 +68,6 @@ bool checkOverlap(){
 	static int i_previous = 0;
 	static int j_previous = 1;
 	if ( sqContactDistance(i_previous, j_previous) < 4){
-		cerr << "." ;
 		return true;
 	}
 	for (int i = 0; i < np ; i++){
@@ -81,9 +80,7 @@ bool checkOverlap(){
 		}
 	}
 	return false;
-	
 }
-
 
 void putRandom(){
 	srand48(random_seed);

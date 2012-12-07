@@ -30,7 +30,6 @@ void  ContactForce::create(int i, int j){
  * pd_x, pd_y, pd_z : Periodic boundary condition
  */
 void ContactForce::makeNormalVector(){
-
 	r_vec = sys->position[ particle_num[1] ] - sys->position[ particle_num[0] ];
 
 	if (r_vec.z > sys->lz2){
@@ -44,31 +43,22 @@ void ContactForce::makeNormalVector(){
 	} else{
 		pd_z = 0;
 	}
-	
-//	pd_x = 0;
 
 	while (r_vec.x > sys->lx2){
-		//pd_x += 1;  // p1 (x = lx), p0 (x = 0)
 		r_vec.x -= sys->lx;
 	}
 	while (r_vec.x < -sys->lx2){
-		//pd_x += -1;  // p1 (x = 0), p0 (x = lx)
 		r_vec.x += sys->lx;
 	}
 	
 	if (sys->dimension == 3){
 		if ( abs(r_vec.y) > sys->ly2 ){
 			if ( r_vec.y > 0 ){
-				//pd_y = 1;  // p1 (y = ly), p0 (y = 0)
 				r_vec.y -= sys->ly;
 			} else {
-				//pd_y = -1;  // p1 (y = ly), p0 (y = 0)
 				r_vec.y += sys->ly;
 			}
 		}
-		//else {
-		//	pd_y = 0;
-		//}
 	}
 }
 
@@ -91,8 +81,8 @@ void ContactForce::calcDynamicFriction(){
 	f_tangent = -f_dynamic*unit_contact_velocity_tan;
 }
 
-
-/* Calculate interaction.
+/* 
+ * Calculate interaction.
  * Force acts on particle 0 from particle 1.
  *
  */
@@ -136,7 +126,6 @@ void ContactForce::calcInteractionNoFriction(){
 	}
 }
 
-
 void ContactForce::incrementTangentialDisplacement(){
 	// relative velocity particle 0 from particle 1.
 	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
@@ -144,7 +133,6 @@ void ContactForce::incrementTangentialDisplacement(){
 		contact_velocity.x += pd_z * sys->vel_difference;
 	}
 
-//	contact_velocity  += cross(sys->ang_velocity[particle_num[0]], nr_vec) + cross(sys->ang_velocity[particle_num[1]], nr_vec);
 	contact_velocity  += cross(sys->ang_velocity[particle_num[0]] + sys->ang_velocity[particle_num[1]], nr_vec);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
 	if (static_friction){
@@ -160,11 +148,3 @@ void ContactForce::incrementTangentialDisplacement(){
 		}
 	}
 }
-
-
-
-
-
-
-
-
