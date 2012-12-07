@@ -14,11 +14,11 @@ Simulation::Simulation(){};
 Simulation::~Simulation(){
 	fout_yap.close();
 	fout_force.close();
-	delete [] interaction;
+	delete [] fc;
 	for (int i=0; i < num_particle; i++){
-		delete [] interacting_pair[i];
+		delete [] contact_pair[i];
 	}
-	delete [] interacting_pair;
+	delete [] contact_pair;
 };
 
 void Simulation::SetParameters(int argc, const char * argv[]){
@@ -126,10 +126,10 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	for (int i=0; i < initial_positions.size(); i++){
 		sys.position[i] = initial_positions[i];
 	}
-	initInteractingPair();
-	interaction = new Interaction [max_num_interaction];
+	initContactPair();
+	fc = new ContactForce [max_num_interaction];
 	for (int i = 0; i < max_num_interaction; i++){
-		interaction[i].init( &sys );
+		fc[i].init( &sys );
 	}
 	cerr << "set initial positions" << endl;
 	//sys.setRandomPosition();
@@ -140,17 +140,16 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 }
 
 /*
- * Initialize interacting_pair object.
  * only elements of j > i will be used.
  */
-void Simulation::initInteractingPair(){
-	interacting_pair = new int * [num_particle];
+void Simulation::initContactPair(){
+	contact_pair = new int * [num_particle];
 	for (int i=0; i < num_particle; i++){
-		interacting_pair[i] = new int [num_particle];
+		contact_pair[i] = new int [num_particle];
 	}
 	for (int i=0; i < num_particle-1; i++){
 		for (int j=i+1; j < num_particle; j++){
-			interacting_pair[i][j] = -1;
+			contact_pair[i][j] = -1;
 		}
 	}
 }
@@ -160,10 +159,10 @@ void Simulation::initInteractingPair(){
  */
 void Simulation::checkBreak(){
 	for (int k = 0; k < num_interaction; k++){
-		if ( interaction[k].active
-			&& interaction[k].r > cutoff_distance){
-			interaction[k].active = false;
-			interacting_pair[interaction[k].particle_num[0]][interaction[k].particle_num[1]] = -1;
+		if ( fc[k].active
+			&& fc[k].r > cutoff_distance){
+			fc[k].active = false;
+			contact_pair[fc[k].particle_num[0]][fc[k].particle_num[1]] = -1;
 			deactivated_interaction.push(k);
 		}
 	}
@@ -173,14 +172,14 @@ void Simulation::checkBreak(){
  * i < j 
  *
  * A patch-up prescription to aboid 
- * interacting_pair[i][j] < 0 indicates separating particles to be checked.
- * interacting_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
- * interacting_pair[i][j] < -1, the particles have some distance.
+ * contact_pair[i][j] < 0 indicates separating particles to be checked.
+ * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
+ * contact_pair[i][j] < -1, the particles have some distance.
  */
 void Simulation::checkContact(){
 	for (int i=0; i < num_particle-1; i++){
 		for (int j=i+1; j < num_particle; j++){
-			if ( interacting_pair[i][j] == -1){
+			if ( contact_pair[i][j] == -1){
 				//double sq_distance = sys.sq_distance(i, j);
 				double sq_distance = sys.checkContact(i, j);
 				if ( sq_distance < 4){
@@ -194,8 +193,8 @@ void Simulation::checkContact(){
 						new_num_interaction = deactivated_interaction.front();
 						deactivated_interaction.pop();
 					}
-					interaction[new_num_interaction].create(i,j);
-					interacting_pair[i][j] = new_num_interaction;
+					fc[new_num_interaction].create(i,j);
+					contact_pair[i][j] = new_num_interaction;
 				}
 			}
 		}
@@ -214,11 +213,11 @@ void Simulation::timeEvolution(){
 		sys.torqueReset();
 		if (sys.friction){
 			for (int k=0; k < num_interaction; k++){
-				interaction[k].calcInteraction();
+				fc[k].calcInteraction();
 			}
 		} else {
 			for (int k=0; k < num_interaction; k++){
-				interaction[k].calcInteractionNoFriction();
+				fc[k].calcInteractionNoFriction();
 			}
 		}
 		if (sys.lub){
@@ -231,7 +230,7 @@ void Simulation::timeEvolution(){
 		sys.deltaTimeEvolution();
 		if (sys.friction){
 			for (int k = 0; k < num_interaction; k++){
-				interaction[k].incrementTangentialDisplacement();
+				fc[k].incrementTangentialDisplacement();
 			}
 		}
 		checkBreak();
@@ -355,23 +354,23 @@ void Simulation::output_yap(){
 	if (sys.friction){
 		fout_yap << "y 2\n";
 		for (int k=0; k < num_interaction; k++){
-			if ( interaction[k].active && interaction[k].r < 2 ){
-				if (interaction[k].static_friction)
+			if ( fc[k].active && fc[k].r < 2 ){
+				if (fc[k].static_friction)
 					fout_yap << "@ " << color_green << endl;
 				else
 					fout_yap << "@ " << color_orange << endl;
 				
-				int i = interaction[k].particle_num[0];
+				int i = fc[k].particle_num[0];
 				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
 										sys.position[i].y - sys.ly2,
 										sys.position[i].z - sys.lz2);
-				fout_yap << "r " << yap_force_factor*interaction[k].f_tangent.norm()  << endl;
-				drawLine('s', pos, interaction[k].nr_vec, fout_yap);
-				int j = interaction[k].particle_num[1];
+				fout_yap << "r " << yap_force_factor*fc[k].f_tangent.norm()  << endl;
+				drawLine('s', pos, fc[k].nr_vec, fout_yap);
+				int j = fc[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
 										sys.position[j].y - sys.ly2,
 										sys.position[j].z - sys.lz2);
-				drawLine('s', pos, -interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, -fc[k].nr_vec, fout_yap);
 			}
 		}
 	}
@@ -385,8 +384,8 @@ void Simulation::output_yap(){
 		for (int j=i+1; j < num_particle; j++){
 			double f_ij = sys.lubricationForceFactor(i, j);
 			if (f_ij != 0){
-				if (interacting_pair[i][j] != 0){
-					f_ij += -interaction[interacting_pair[i][j]].f_normal;
+				if (contact_pair[i][j] != 0){
+					f_ij += -fc[contact_pair[i][j]].f_normal;
 				}
 				fout_yap << "r " << yap_force_factor*f_ij << endl;
 				total_normal_force += f_ij;

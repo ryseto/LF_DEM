@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
-#include "Interaction.h"
+#include "ContactForce.h"
 #include "System.h"
 
 class Simulation{
@@ -26,8 +26,8 @@ private:
 	/*
 	 * Interparticle interactions
 	 */
-	Interaction *interaction;
-	int **interacting_pair; // Table
+	ContactForce *fc;
+	int **contact_pair; // Table
 	int max_num_interaction; // Allowed length of interaction array.
 	int num_interaction; // Length of used interaction array.
 	queue<int> deactivated_interaction;
@@ -54,7 +54,7 @@ private:
 
 	void output_yap();
 	void output_vel();
-	void initInteractingPair();
+	void initContactPair();
 	void checkBreak();
 	void checkContact();
 	void timeEvolution();

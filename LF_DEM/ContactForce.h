@@ -1,5 +1,5 @@
 //
-//  Interaction.h
+//  ContactForce.h
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
@@ -12,12 +12,12 @@
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
-#include "Interaction.h"
+#include "ContactForce.h"
 #include "System.h"
 using namespace std;
 class System;
 
-class Interaction{
+class ContactForce{
 private:
 	System *sys;
 	vec3d contact_velocity;
@@ -27,8 +27,8 @@ protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
 public:
- 	Interaction(){};
-	~Interaction(){};
+ 	ContactForce(){};
+	~ContactForce(){};
 	void init(System *sys_);
 	void create(int i, int j);
 	void calcInteraction();

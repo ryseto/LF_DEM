@@ -24,7 +24,6 @@ System::~System(){
 	delete [] work;
 	delete [] ipiv;
 #endif
-	
 };
 
 void System::init(){
@@ -62,7 +61,6 @@ void System::prepareSimulation(unsigned long number_of_particles){
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
-	
 	diag_values = new double [6*n];
 	off_diag_values = new vector <double> [3];
 	ploc = new int [n+1];
@@ -95,16 +93,6 @@ void System::torqueReset(){
 		}
 	}
 }
-
-
-
-
-/*
- * To prepare an initial configuration.
- */
-//void System::setRandomPosition(){
-//	}
-
 
 /*
  * Free-draining approximation

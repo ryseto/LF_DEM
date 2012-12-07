@@ -1,22 +1,21 @@
 //
-//  Interaction.cpp
+//  ContactForce.cpp
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
-#include "Interaction.h"
-/* Initialize interaction object.
- */
-void Interaction::init(System *sys_){
+#include "ContactForce.h"
+
+void ContactForce::init(System *sys_){
 	active = false;
 	sys = sys_;
 }
 
 /* Activate interaction between particles i and j.
  */
-void  Interaction::create(int i, int j){
+void  ContactForce::create(int i, int j){
 	active = true;
 	static_friction = true;
 	xi.reset();
@@ -30,7 +29,7 @@ void  Interaction::create(int i, int j){
  * vector from particle 0 to particle 1.
  * pd_x, pd_y, pd_z : Periodic boundary condition
  */
-void Interaction::makeNormalVector(){
+void ContactForce::makeNormalVector(){
 
 	r_vec = sys->position[ particle_num[1] ] - sys->position[ particle_num[0] ];
 
@@ -73,7 +72,7 @@ void Interaction::makeNormalVector(){
 	}
 }
 
-void Interaction::calcStaticFriction(){
+void ContactForce::calcStaticFriction(){
 	double f_static = -sys->mu_static*f_normal;
 	double f_spring = sys->kt*xi.norm();
 	if (f_spring < f_static){
@@ -85,7 +84,7 @@ void Interaction::calcStaticFriction(){
 	}
 }
 
-void Interaction::calcDynamicFriction(){
+void ContactForce::calcDynamicFriction(){
 	double f_dynamic = -sys->mu_dynamic*f_normal;
 	/* Use the velocity of one time step before as approximation. */
 	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
@@ -97,7 +96,7 @@ void Interaction::calcDynamicFriction(){
  * Force acts on particle 0 from particle 1.
  *
  */
-void Interaction::calcInteraction(){
+void ContactForce::calcInteraction(){
 	if (active){
 		makeNormalVector();
 		r = r_vec.norm();
@@ -122,7 +121,7 @@ void Interaction::calcInteraction(){
 	}
 }
 
-void Interaction::calcInteractionNoFriction(){
+void ContactForce::calcInteractionNoFriction(){
 	if (active){
 		makeNormalVector();
 		r = r_vec.norm();
@@ -138,7 +137,7 @@ void Interaction::calcInteractionNoFriction(){
 }
 
 
-void Interaction::incrementTangentialDisplacement(){
+void ContactForce::incrementTangentialDisplacement(){
 	// relative velocity particle 0 from particle 1.
 	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
 	if (pd_z != 0){

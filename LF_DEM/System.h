@@ -14,14 +14,15 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include "vec3d.h"
-#include "Interaction.h"
 #include <queue>
 #include <string>
 #include <Accelerate/Accelerate.h>
 #ifdef CHOLMOD
 #include "cholmod.h"
 #endif
+#include "vec3d.h"
+#include "ContactForce.h"
+
 using namespace std;
 class Interaction;
 
