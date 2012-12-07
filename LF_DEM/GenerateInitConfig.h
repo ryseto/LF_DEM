@@ -65,25 +65,22 @@ double sqContactDistance(int i, int j){
 }
 
 bool checkOverlap(){
-	bool overlap = false;
-	static int i_previous = 1;
-	static int j_previous = 5;
+	static int i_previous = 0;
+	static int j_previous = 1;
 	if ( sqContactDistance(i_previous, j_previous) < 4){
 		cerr << "." ;
-		return false;
+		return true;
 	}
-	
 	for (int i = 0; i < np ; i++){
 		for (int j = i+1; j < np ; j++){
 			if ( sqContactDistance(i, j) < 4){
-				overlap = true;
 				i_previous = i ;
 				j_previous = j ;
-				break;
+				return true;
 			}
 		}
 	}
-	return overlap;
+	return false;
 	
 }
 
