@@ -37,7 +37,6 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 		int j_lx = (int)filename_import_positions.find( "_" );
 		int j_lz = (int)filename_import_positions.find( "vf", j_lx);
 		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-		cerr << i_lx << ' ' << j_lx << ' ' << j_lz << endl;
 		sys.lx = atoi( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() );
 		sys.ly = 0;
 		sys.lz = atoi( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() );
@@ -54,7 +53,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 		sys.lz = atoi( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() );
 		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf-j_lz-2).c_str() );
 	}
-	cerr << sys.lx << ' ' << sys.ly << ' ' << sys.lz << ' ' << sys.volume_fraction << endl;
+	cerr << "L = " << sys.lx << ' ' << sys.ly << ' ' << sys.lz << endl;
+	cerr << "VF = " << sys.volume_fraction << endl;
 	/*
 	 * Simulation parameters
 	 */
@@ -107,7 +107,6 @@ void Simulation::importInitialPositionFile(){
 	vec3d pos;
 	while ( !file_import.eof() ){
 		file_import >> pos.x >> pos.y >> pos.z;
-		cerr << pos.x << ' '<< pos.y << ' '<< pos.z << endl;
 		initial_positions.push_back(pos);
 	}
 	file_import.close();
