@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */; };
 		D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */; };
 		D91B041C166EF09F00DC63CA /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */; };
@@ -32,6 +33,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
+		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.0.1.a; path = ../../../../../../usr/local/lib/libcholmod.2.0.1.a; sourceTree = "<group>"; };
 		D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = ../../../../../../usr/local/lib/libamd.2.3.1.a; sourceTree = "<group>"; };
 		D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = ../../../../../../usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<group>"; };
@@ -91,6 +94,8 @@
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
+				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
+				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D988E39D1654A7410009949F /* Interaction.cpp */,
 				D988E39E1654A7410009949F /* Interaction.h */,
 				D988E399165443C10009949F /* vec3d.h */,
@@ -154,6 +159,7 @@
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
 				D988E39F1654A7410009949F /* Interaction.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
+				D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,7 +9,6 @@
 #include "System.h"
 #include <sstream>
 
-
 System::~System(){
 	delete [] position;
 	delete [] angle;
@@ -18,14 +17,15 @@ System::~System(){
 	delete [] force;
 	delete [] torque;
 #ifdef CHOLMOD
-
-#else 
+	delete [] diag_values;
+	delete [] off_diag_values;
+	delete [] ploc;
+#else
 	delete [] work;
 	delete [] ipiv;
 #endif
 	
 };
-
 
 void System::init(){
 	lx2 = 0.5*lx;
@@ -33,31 +33,28 @@ void System::init(){
 	lz2 = 0.5*lz;
 	ostringstream ss_simu_name;
 	ss_simu_name << "D" << dimension << "L" << lz << "vf" << volume_fraction <<  "ms" << mu_static << "md" << mu_dynamic << "lub" << lubcore ;
-	
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
 	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
-	
 	vel_difference = shear_rate*lz;
 }
 
 /* Set number of particles.
  * Allocate vectors for the state.
  */
-void System::setNumberParticle(int num_particle){
-		
-	n = num_particle;
-	position = new vec3d [num_particle];
+void System::prepareSimulation(unsigned long number_of_particles){
+	n = (int)number_of_particles;
+	position = new vec3d [n];
 	n3 = 3*n;
-	i_position = new int * [num_particle];
-	for (int i = 0; i<num_particle; i++ ){
+	i_position = new int * [n];
+	for (int i = 0; i<n; i++ ){
 		i_position[i] = new int [3];
 	}
-	angle = new double [num_particle];
-	velocity = new vec3d [num_particle];
-	ang_velocity = new vec3d [num_particle];
-	force = new vec3d [num_particle];
-	torque = new vec3d [num_particle];
+	angle = new double [n];
+	velocity = new vec3d [n];
+	ang_velocity = new vec3d [n];
+	force = new vec3d [n];
+	torque = new vec3d [n];
 	
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
@@ -65,6 +62,10 @@ void System::setNumberParticle(int num_particle){
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
+	
+	diag_values = new double [6*n];
+	off_diag_values = new vector <double> [3];
+	ploc = new int [n+1];
 
 #else
 	/* for dgesv_ or dsysv_
@@ -95,99 +96,19 @@ void System::torqueReset(){
 	}
 }
 
-inline vec3d randUniformSphere(double r){
-	double z = 2*drand48() - 1.0;
-	double phi = 2*M_PI*drand48();
-	double sin_theta = sqrt(1.0-z*z);
-	return vec3d( r*sin_theta*cos(phi),  r*sin_theta*sin(phi), r*z);
-}
 
-bool System::nooverlap(){
-	bool no_overlap = true;
-	static int i_previous = 1;
-	static int j_previous = 5;
-	if ( checkContact(i_previous, j_previous) < 4){
-		cerr << "." ;
-		return false;
-	}
-		
-	for (int i = 0; i < n ; i++){
-		for (int j = i+1; j < n ; j++){
-			if ( checkContact(i, j) < 4){
-				no_overlap = false;
-				i_previous = i ;
-				j_previous = j ;
-				
-				break;
-			}
-		}
-	}
-	return no_overlap;
-	
-}
+
 
 /*
  * To prepare an initial configuration.
  */
-void System::setRandomPosition(){
-	vec3d trial_pos;
-	for (int i=0; i < n; i++){
-		trial_pos.x = lx*drand48();
-		trial_pos.z = lz*drand48();
-		if (dimension == 2){
-			trial_pos.y = ly2;
-		} else {
-			trial_pos.y = ly*drand48();
-		}
-		position[i] = trial_pos;
-		angle[i] = 0;
-	}
+//void System::setRandomPosition(){
+//	}
 
-	int cc = 0;
-	vector<int> previous_overlap;
-	previous_overlap.resize(n);
-	double dd = 0.01;
-	while (true){
-		int i = lrand48() % n;
-		if (dimension == 2){
-			double rand_angle = 2*M_PI*drand48();
-			vec3d shift(dd*cos(rand_angle), 0, dd*sin(rand_angle));
-			displacement(i, shift.x ,0,shift.z );
-		} else {
-			vec3d shift = randUniformSphere(dd);
-			displacement(i, shift.x ,shift.y ,shift.z );
-		}
-		int overlap = -1;
-		
-		if (checkContact(i, previous_overlap[i]) < 4){
-			overlap =  previous_overlap[i];
-		} else {
-			for (int j = 0; j < n ; j++){
-				if (j != i){
-					if ( checkContact(i, j) < 4){
-						previous_overlap[i] = j;
-						overlap = j;
-						break;
-					}
-				}
-			}
-		}
-		if (overlap == -1){
-			if (cc > 10000){
-				if (cc % 1000 == 0 ){
-					if (nooverlap()){
-						break;
-					}
-				}
-			}
-			cc ++;
-		} else {
-			displacement(i, dd*dx, dd*dy, dd*dz);
-			displacement(overlap, -dd*dx, -dd*dy, -dd*dz);
-		}
-	}
-}
 
+/*
+ * Free-draining approximation
+ */
 void System::updateVelocity(){
 	vec3d U_inf(0, 0, 0);
 	for (int i=0; i < n; i++){
@@ -202,10 +123,15 @@ void System::updateVelocity(){
 	}
 }
 
+
 #ifdef CHOLMOD
 //off-diagonal terms
-void append_to_column(vector <int> *rows, vector <double> *values, double *nvec, int jj, double alpha){
-	int jj3 = 3*jj;
+void appendToColumn(vector <int> *rows,
+					vector <double> *values,
+					double *nvec,
+					int jj,
+					double alpha){
+	int jj3   = 3*jj;
 	int jj3_1 = jj3+1;
 	int jj3_2 = jj3+2;
 	
@@ -229,7 +155,9 @@ void append_to_column(vector <int> *rows, vector <double> *values, double *nvec,
 }
 
 // diagonal terms
-void add_to_diag(double *diag_values, double *nvec, int ii, double alpha){
+//void System::addToDiag(double *diag_values, double *nvec, int ii, double alpha);
+void System::addToDiag(double *nvec, int ii, double alpha){
+
 	int ii6 = 6*ii;
 	
 	double alpha_n1n0 = alpha*nvec[1]*nvec[0];
@@ -247,24 +175,26 @@ void add_to_diag(double *diag_values, double *nvec, int ii, double alpha){
 	
 }
 
-void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
-						   cholmod_common *c,
-						   double *diag_values,
-						   vector <int> rows,
-						   vector <double> *off_diag_values,
-						   int *ploc, int n){
+//void fillSparseResmatrix(cholmod_sparse *sparse_res,
+//						 cholmod_common *c,
+//						 double *diag_values,
+//						 vector <int> rows,
+//						 vector <double> *off_diag_values,
+//						 int *ploc, int n)
+
+void System::fillSparseResmatrix(){
 	// fill
-	for(int j=0; j<n; j++){
-		int j3=3*j;
-		int j6=6*j;
+	for(int j = 0; j < n; j++){
+		int j3 = 3*j;
+		int j6 = 6*j;
 		
-		((int*)sparse_res->p)[j3] = j6 + 3*ploc[j];
+		((int*)sparse_res->p)[j3  ] = j6 + 3*ploc[j];
 		((int*)sparse_res->p)[j3+1] = (j6+3) + 2*ploc[j] + ploc[j+1];
 		((int*)sparse_res->p)[j3+2] = (j6+5) + ploc[j] + 2*ploc[j+1];
 		
-		int pj3=((int*)sparse_res->p)[j3];
-		int pj3_1=((int*)sparse_res->p)[j3+1];
-		int pj3_2=((int*)sparse_res->p)[j3+2];
+		int pj3   = ((int*)sparse_res->p)[j3];
+		int pj3_1 = ((int*)sparse_res->p)[j3+1];
+		int pj3_2 = ((int*)sparse_res->p)[j3+2];
 		
 		// diagonal blocks row indices
 		((int*)sparse_res->i)[ pj3 ]       = j3;
@@ -289,8 +219,8 @@ void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
 		//    cout << j3+2 <<" " << diag_values[j6+5]<< " " << ((int*)sparse_res->p)[j3] << " " << ((int*)sparse_res->p)[j3+1] << " " << ((int*)sparse_res->p)[j3+2] <<endl;
 		
 		// off-diagonal blocks row indices and values
-		for(int k=ploc[j]; k<ploc[j+1]; k++){
-			int u = k-ploc[j];
+		for(int k = ploc[j]; k < ploc[j+1]; k++){
+			int u = k - ploc[j];
 			((int*)sparse_res->i)[ pj3   + u + 3 ] = rows[k];
 			((int*)sparse_res->i)[ pj3_1 + u + 2 ] = rows[k];
 			((int*)sparse_res->i)[ pj3_2 + u + 1 ] = rows[k];
@@ -300,10 +230,12 @@ void fill_sparse_resmatrix(cholmod_sparse *sparse_res,
 			((double*)sparse_res->x)[ pj3_2 + u + 1 ] = off_diag_values[2][k];
 		}
 	}
-	((int*)sparse_res->p)[3*n]=((int*)sparse_res->p)[3*n-1]+1;
+	((int*)sparse_res->p)[3*n] = ((int*)sparse_res->p)[3*n-1] + 1;
 }
+
 #else
-void fill_resmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
+
+void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 	int ii3 = 3*ii;
 	int jj3 = 3*jj;
 	int jj3_1 = jj3+1;
@@ -346,30 +278,27 @@ double System::lubricationForceFactor(int i, int j){
 }
 
 void System::updateVelocityLubrication(){
-	double tmp[3];
-	double nvec[3];
-
 #ifdef CHOLMOD
-	double *diag_blocks=new double [6*n];
 	for (int k = 0;k < 6*n; k++){
-		diag_blocks[k]=0.;
+		diag_values[k]=0.;
 	}
-	vector <int> rows;
-	vector <double> *off_diag_values = new vector <double> [3];
-	int *ploc = new int [n+1];
+	rows.clear();
+	off_diag_values[0].clear();
+	off_diag_values[1].clear();
+	off_diag_values[2].clear();
 	for (int i = 0 ; i < n; i ++){
 		int i6=6*i;
-		diag_blocks[i6  ] = 1.;
-		diag_blocks[i6+3] = 1.;
-		diag_blocks[i6+5] = 1.;
+		diag_values[i6  ] = 1.;
+		diag_values[i6+3] = 1.;
+		diag_values[i6+5] = 1.;
 	}
 	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
 #else
-	for (int k = 0; k < n3*n3; k++){
-		res[k] = 0.;
-	}
 	for (int k = 0;k < n3; k++){
 		rhs_b[k] = 0.;
+	}
+	for (int k = 0; k < n3*n3; k++){
+		res[k] = 0.;
 	}
 	for (int i = 0 ; i < n; i ++){
 		int i3 = 3*i;
@@ -378,59 +307,53 @@ void System::updateVelocityLubrication(){
 		res[n3*(i3+2) + i3+2] = 1.;
 	}
 #endif
-	
-	double r, r_sq;
 	if (lub){
 		for (int i = 0 ; i < n - 1; i ++){
 #ifdef CHOLMOD
 			ploc[i] = (unsigned int)rows.size();
 #endif
 			for (int j = i+1 ; j < n; j ++){
-				r_sq = sq_distance(i,j);
+				double r_sq = sq_distance(i,j);
+				double r;
 				if( r_sq < sq_lub_max){
 					r = sqrt(r_sq);
-					nvec[0] = dx/r;
-					nvec[1] = dy/r;
-					nvec[2] = dz/r;
+					double nvec[] = {dx/r, dy/r, dz/r};
 					double h = r - lubcore;
 					double alpha = - 1/(4*h);
 					if ( h > 0){
-						
-#ifdef CHOLMOD
-
-						add_to_diag(diag_blocks, nvec, i, -alpha);
-						add_to_diag(diag_blocks, nvec, j, -alpha);
-						append_to_column(&rows, off_diag_values, nvec, j, +alpha);
-#else
 						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-						resmatrix(res, nvec, i, i, -alpha, n3);
-						resmatrix(res, nvec, i, j, +alpha, n3);
-						resmatrix(res, nvec, j, j, -alpha, n3);
-						resmatrix(res, nvec, j, i, +alpha, n3);
-#endif
-						double tmp1 = alpha*shear_rate*dz*nvec[0];
-						tmp[0] = tmp1*nvec[0];
-						tmp[1] = tmp1*nvec[1];
-						tmp[2] = tmp1*nvec[2];
 #ifdef CHOLMOD
-						((double*)rhs_b->x)[3*i] += tmp[0];
-						((double*)rhs_b->x)[3*i+1] += tmp[1];
-						((double*)rhs_b->x)[3*i+2] += tmp[2];
-						((double*)rhs_b->x)[3*j] -= tmp[0];
-						((double*)rhs_b->x)[3*j+1] -= tmp[1];
-						((double*)rhs_b->x)[3*j+2] -= tmp[2];
-
-						
+						addToDiag(nvec, i, -alpha);
+						addToDiag(nvec, j, -alpha);
+						appendToColumn(&rows, off_diag_values, nvec, j, +alpha);
 #else
-						rhs_b[3*i]   += tmp[0];
-						rhs_b[3*i+1] += tmp[1];
-						rhs_b[3*i+2] += tmp[2];
-						rhs_b[3*j]   -= tmp[0];
-						rhs_b[3*j+1] -= tmp[1];
-						rhs_b[3*j+2] -= tmp[2];
+						fillResmatrix(res, nvec, i, i, -alpha, n3);
+						fillResmatrix(res, nvec, i, j, +alpha, n3);
+						fillResmatrix(res, nvec, j, j, -alpha, n3);
+						fillResmatrix(res, nvec, j, i, +alpha, n3);
 #endif
-						
-										}
+						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
+						double alpha_gd_dz_n0_n[] = { \
+							alpha_gd_dz_n0*nvec[0],
+							alpha_gd_dz_n0*nvec[1],
+							alpha_gd_dz_n0*nvec[2]};
+
+#ifdef CHOLMOD
+						((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
+						((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
+						((double*)rhs_b->x)[3*i+2] += alpha_gd_dz_n0_n[2];
+						((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
+						((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
+						((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
+#else
+						rhs_b[3*i  ] += alpha_gd_dz_n0_n[0];
+						rhs_b[3*i+1] += alpha_gd_dz_n0_n[1];
+						rhs_b[3*i+2] += alpha_gd_dz_n0_n[2];
+						rhs_b[3*j  ] -= alpha_gd_dz_n0_n[0];
+						rhs_b[3*j+1] -= alpha_gd_dz_n0_n[1];
+						rhs_b[3*j+2] -= alpha_gd_dz_n0_n[2];
+#endif
+					}
 				}
 			}
 		}
@@ -449,17 +372,31 @@ void System::updateVelocityLubrication(){
 	ploc[n] = (unsigned int)rows.size();
 	// allocate
 	int nzmax;  // non-zero values
-	nzmax=6*n; // diagonal blocks
+	nzmax = 6*n; // diagonal blocks
 	for(int s=0; s<3; s++){
-		nzmax+=off_diag_values[s].size();  // off-diagonal
+		nzmax += off_diag_values[s].size();  // off-diagonal
 	}
+	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
+//	fillSparseResmatrix(sparse_res, &c, diag_blocks, rows, off_diag_values, ploc, n);
+	fillSparseResmatrix();
+//	delete [] diag_blocks;
+//	delete [] off_diag_values;
+//	delete [] ploc;
+	L = cholmod_analyze (sparse_res, &c);
+	cholmod_factorize (sparse_res, L, &c);
 	
-	sparse_res=cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
-	
-	fill_sparse_resmatrix(sparse_res, &c, diag_blocks, rows, off_diag_values, ploc, n);
-	delete [] diag_blocks;
-	delete [] off_diag_values;
-	delete [] ploc;
+//	if(c.status){ // debug
+//		cout << " factorization failed. forcing simplicial algorithm... " << endl;
+//		c.supernodal = CHOLMOD_SIMPLICIAL;
+//		L = cholmod_analyze (sparse_res, &c);
+//		cholmod_factorize (sparse_res, L, &c) ;
+//		cout << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL " <<  c.final_ll <<endl;
+//		
+//		//	  for (int i = 0; i < n3; i++)
+//		//	    cout << ((double*)L->x)[ ((int*)L->p) [i] ] << endl;
+//		cout << "pause " << endl; getchar();
+//	}
+
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -467,7 +404,6 @@ void System::updateVelocityLubrication(){
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
 	}
-	
 #else
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -484,11 +420,8 @@ void System::updateVelocityLubrication(){
 		velocity[i].y = rhs_b[i3+1];
 		velocity[i].z = rhs_b[i3+2];
 	}
-
 #endif
 
-	
-	
 #ifdef CHOLMOD
 	cholmod_free_sparse(&sparse_res,&c);
 	cholmod_free_factor(&L,&c);
@@ -555,7 +488,8 @@ void System::deltaTimeEvolution(){
 
 
 
-/* Distance between particle i and particle j
+/* 
+ * Distance between particle i and particle j
  */
 double System::distance(int i, int j){
 	return sqrt(sq_distance(i,j));
@@ -591,7 +525,8 @@ double System::sq_norm(){
 	}
 }
 
-/* Square distance between particle i and particle j
+/*
+ * Square distance between particle i and particle j
  */
 double System::sq_distance(int i, int j){
 	dx = position[i].x - position[j].x;

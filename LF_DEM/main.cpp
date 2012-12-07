@@ -8,9 +8,15 @@
 
 #include <iostream>
 #include "Simulation.h"
+#include "GenerateInitConfig.h"
+
 int main(int argc, const char * argv[])
 {
-	Simulation simulation;
-	simulation.SimulationMain(argc, argv);
+	if (argv[1][0] == 'g'){
+		generateInitialConfiguration(argc, argv);
+	} else {
+		Simulation simulation;
+		simulation.SimulationMain(argc, argv);
+	}
     return 0;
 }

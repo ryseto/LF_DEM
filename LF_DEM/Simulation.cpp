@@ -10,6 +10,7 @@
 #include <cmath>
 
 Simulation::Simulation(){};
+
 Simulation::~Simulation(){
 	fout_yap.close();
 	fout_force.close();
@@ -20,36 +21,46 @@ Simulation::~Simulation(){
 	delete [] interacting_pair;
 };
 
-
 void Simulation::SetParameters(int argc, const char * argv[]){
 	sys.friction = true;
 	sys.lub = true;
-	sys.dimension = 2;
-	sys.lx = 20;
-	sys.ly = 20;
-	sys.lz = 20;
-	sys.volume_fraction = 0.70;
-	sys.lubcore = 2.0;
-	if ( argc == 2){
-		sys.volume_fraction = atof(argv[1]);
-	} else if ( argc == 3){
-		sys.volume_fraction = atof(argv[1]);
-		sys.lubcore = atof(argv[2]);
-	} else if ( argc == 4){
-		sys.volume_fraction = atof(argv[1]);
-		sys.lubcore = atof(argv[2]);
-		double l = atof(argv[3]);
-		sys.lx = l;
-		sys.ly = l;
-		sys.lz = l;
+	filename_import_positions = argv[1];
+	sys.lubcore = atof(argv[2]);
+	/* take parameters from import file name.
+	 *
+	 */ 
+	int i_D = (int)filename_import_positions.find( "D") + 1;
+	sys.dimension = atoi( filename_import_positions.substr(i_D, 1).c_str() );
+	if (sys.dimension == 2 ){
+		// example: D2L10_10vf0.8.dat
+		int i_lx = (int)filename_import_positions.find( "L") + 1;
+		int j_lx = (int)filename_import_positions.find( "_" );
+		int j_lz = (int)filename_import_positions.find( "vf", j_lx);
+		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
+		cerr << i_lx << ' ' << j_lx << ' ' << j_lz << endl;
+		sys.lx = atoi( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() );
+		sys.ly = 0;
+		sys.lz = atoi( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() );
+		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf - j_lz-2).c_str() );
+	} else {
+		// example: D3L10_10_10vf0.5.dat
+		int i_lx = (int)filename_import_positions.find( "L") + 1;
+		int j_lx = (int)filename_import_positions.find( "_", i_lx);
+		int j_ly = (int)filename_import_positions.find( "_", j_lx+1);
+		int j_lz = (int)filename_import_positions.find( "vf", j_ly+1);
+		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
+		sys.lx = atoi( filename_import_positions.substr(i_lx  , j_lx - i_lx).c_str() );
+		sys.ly = atoi( filename_import_positions.substr(j_lx+1, j_ly - j_lx-1).c_str() );
+		sys.lz = atoi( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() );
+		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf-j_lz-2).c_str() );
 	}
-
+	cerr << sys.lx << ' ' << sys.ly << ' ' << sys.lz << ' ' << sys.volume_fraction << endl;
 	/*
 	 * Simulation parameters
 	 */
 	sys.eta = 1.0; // viscosity
 	sys.shear_rate = 1; // shear rate
-	shear_strain = 100; // shear strain
+	shear_strain = 1; // shear strain
 	cutoff_distance = 2.5; // to delete possible neighbor
 	sys.sq_lub_max = 2.5*2.5; // square of lubrication cutoff length.
 	sys.dt = 1e-4 / sys.shear_rate; //time step.
@@ -90,19 +101,39 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	fout_force.open(vel_filename.c_str());
 }
 
+void Simulation::importInitialPositionFile(){
+	fstream file_import;
+	file_import.open( filename_import_positions.c_str());
+	vec3d pos;
+	while ( !file_import.eof() ){
+		file_import >> pos.x >> pos.y >> pos.z;
+		cerr << pos.x << ' '<< pos.y << ' '<< pos.z << endl;
+		initial_positions.push_back(pos);
+	}
+	file_import.close();
+}
+
+
+
 /*
  * Main simulation
  */
 void Simulation::SimulationMain(int argc, const char * argv[]){
 	SetParameters(argc, argv);
-	sys.setNumberParticle(num_particle);
+	importInitialPositionFile();
+	unsigned long num_of_particles = initial_positions.size();
+	sys.prepareSimulation(num_of_particles);
+	for (int i=0; i < initial_positions.size(); i++){
+		sys.position[i] = initial_positions[i];
+	}
 	initInteractingPair();
 	interaction = new Interaction [max_num_interaction];
 	for (int i = 0; i < max_num_interaction; i++){
 		interaction[i].init( &sys );
 	}
 	cerr << "set initial positions" << endl;
-	sys.setRandomPosition();
+	//sys.setRandomPosition();
+	importInitialPositionFile();
 	cerr << "start simulation" << endl;
 	timeEvolution();
 	cerr << "finished" << endl;
@@ -190,10 +221,13 @@ void Simulation::timeEvolution(){
 				interaction[k].calcInteractionNoFriction();
 			}
 		}
-		
-		// Free-draining approximation
-		//sys.updateVelocity();
-		sys.updateVelocityLubrication();
+		if (sys.lub){
+			// Lubrication dynamics
+			sys.updateVelocityLubrication();
+		} else {
+			// Free-draining approximation
+			sys.updateVelocity();
+		}
 		sys.deltaTimeEvolution();
 		if (sys.friction){
 			for (int k = 0; k < num_interaction; k++){
