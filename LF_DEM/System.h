@@ -68,12 +68,13 @@ public:
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
-	int **i_position;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vec3d *ang_velocity;
 	vec3d *force;
 	vec3d *torque;
+	double **stress; // S_xx S_xy S_xz S_yz S_yy
+	double mean_stress[5];
 	double kn;
 	double kt;
 	double eta;
@@ -97,6 +98,7 @@ public:
 	double volume_fraction;
 	double vel_difference;
 	double dt;
+
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
@@ -121,7 +123,13 @@ public:
 	void deltaTimeEvolution();
 	void forceReset();
 	void torqueReset();
+	void stressReset();
 	bool noOverlap();
+	void calcHydrodynamicStress();
+	void calcStressAverage();
+
+	void lubricationStress(int i, int j);
+
 		
 };
 #endif /* defined(__LF_DEM__State__) */

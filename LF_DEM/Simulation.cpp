@@ -72,7 +72,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	sys.shear_rate = 1.0; // shear rate
 	shear_strain = 100.0; // shear strain
 	cutoff_distance = 2.5; // to delete possible neighbor
-	sys.sq_lub_max = 2.5*2.5; // square of lubrication cutoff length.
+	double lub_max = 2.5;
+	sys.sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	sys.dt = 1e-4 / sys.shear_rate; //time step.
 	ts_max = (int)(shear_strain / sys.dt); // time step max
 
@@ -99,15 +100,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	else
 		sys.draw_rotation_2d = false;
 	interval_snapshot = 100;
-	yap_force_factor = 0.2;
+	yap_force_factor = 0.05;
 	origin_zero_flow = true;
-	/********************************************************************************************/
-//	if (sys.dimension == 2){
-//		num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
-//	} else {
-//		num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
-//	}
-//	cerr << "N = " << num_particle << endl;
 	sys.init();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "force_" + sys.simu_name + ".dat";
@@ -214,6 +208,24 @@ void Simulation::checkContact(){
 	}
 }
 
+/*
+ *
+ */
+void Simulation::calcStress(){
+	sys.stressReset();
+	for (int k=0; k < num_contactforce; k++){
+		fc[k].calcStress();
+	}
+	if (sys.lub == true){
+		for (int i=0; i < num_particle; i++){
+			for (int j=i+1; j < num_particle; j++){
+				sys.lubricationStress(i,j );
+			}
+		}
+	}
+	sys.calcStressAverage();
+}
+
 /* Simulation for the time evolution.
  *
  */
@@ -241,6 +253,7 @@ void Simulation::timeEvolution(){
 			sys.updateVelocity();
 		}
 		if (sys.ts % interval_snapshot == 0){
+			calcStress();
 			output_yap();
 		}
 		sys.deltaTimeEvolution();
@@ -446,8 +459,15 @@ void Simulation::output_yap(){
 	/*
 	 * Output the sum of the normal forces.
 	 */
-	fout_force << sys.dt * sys.ts << ' ' << total_normal_force << ' ';
-	fout_force << total_tangential_force << ' ' << total_normal_force + total_tangential_force << endl;
+	fout_force << sys.dt * sys.ts << ' ';// 1
+	fout_force << total_normal_force << ' '; // 2
+	fout_force << total_tangential_force << ' '; //3
+	fout_force << total_normal_force + total_tangential_force << ' ';//4
+	fout_force << sys.mean_stress[0] << ' ' ; //5
+	fout_force << sys.mean_stress[1] << ' ' ; //6
+	fout_force << sys.mean_stress[2] << ' ' ; //7
+	fout_force << sys.mean_stress[3] << ' ' ; //8
+	fout_force << sys.mean_stress[4] << endl; //9
 	
 	/* Layer 6: Box and guide lines
 	 */

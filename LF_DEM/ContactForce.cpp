@@ -62,6 +62,30 @@ void ContactForce::makeNormalVector(){
 	}
 }
 
+void ContactForce::calcStress(){
+	// S_xx
+	vec3d f_contact = f_tangent + f_normal* nr_vec;
+	double Sxx = f_contact.x * nr_vec.x + f_contact.x * nr_vec.x ;;
+	double Sxy = f_contact.x * nr_vec.y + f_contact.y * nr_vec.x ;
+	double Sxz = f_contact.x * nr_vec.z + f_contact.z * nr_vec.x ;
+	double Syz = f_contact.y * nr_vec.z + f_contact.z * nr_vec.y ;
+	double Syy = f_contact.y * nr_vec.y + f_contact.y * nr_vec.y ;
+	sys->stress[particle_num[0]][0] += Sxx;
+	sys->stress[particle_num[1]][0] += Sxx;
+
+	sys->stress[particle_num[0]][1] += Sxy;
+	sys->stress[particle_num[1]][1] += Sxy;
+	
+	sys->stress[particle_num[0]][2] += Sxz;
+	sys->stress[particle_num[1]][2] += Sxz;
+	
+	sys->stress[particle_num[0]][3] += Syz;
+	sys->stress[particle_num[1]][3] += Syz;
+	
+	sys->stress[particle_num[0]][4] += Syy;
+	sys->stress[particle_num[1]][4] += Syy;
+}
+
 void ContactForce::calcStaticFriction(){
 	double f_static = -sys->mu_static*f_normal;
 	double f_spring = sys->kt*xi.norm();
@@ -73,6 +97,7 @@ void ContactForce::calcStaticFriction(){
 		calcDynamicFriction();
 	}
 }
+
 
 void ContactForce::calcDynamicFriction(){
 	double f_dynamic = -sys->mu_dynamic*f_normal;

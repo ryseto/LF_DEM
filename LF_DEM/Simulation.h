@@ -37,7 +37,6 @@ private:
 	/*
 	 * For output data.
 	 */
-//	bool draw_rotation_2d;
 	ofstream fout_yap;
 	ofstream fout_force;
 	int interval_snapshot;
@@ -53,7 +52,9 @@ private:
 	void initContactPair();
 	void checkBreak();
 	void checkContact();
+	void calcStress();
 	void timeEvolution();
+	
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout);
 	void drawLine(char type , vec3d pos, vec3d vec, ofstream &fout);

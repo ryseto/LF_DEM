@@ -32,6 +32,7 @@ public:
 	void create(int i, int j);
 	void calcInteraction();
 	void calcInteractionNoFriction();
+	void calcStress();
 	void makeNormalVector();
 	void incrementTangentialDisplacement();
 	bool active;

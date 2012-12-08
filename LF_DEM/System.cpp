@@ -31,8 +31,9 @@ void System::init(){
 	ly2 = 0.5*ly;
 	lz2 = 0.5*lz;
 	shear_disp = 0;
+	vel_difference = shear_rate*lz;
+	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
 	ostringstream ss_simu_name;
-
 	if (dimension == 2){
 		ss_simu_name << "D" << dimension << "L" << lx << "_" <<lz ;
 	} else {
@@ -49,8 +50,6 @@ void System::init(){
 	}
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
-	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
-	vel_difference = shear_rate*lz;
 }
 
 /* Set number of particles.
@@ -58,18 +57,18 @@ void System::init(){
  */
 void System::prepareSimulation(unsigned long number_of_particles){
 	n = (int)number_of_particles;
-
 	position = new vec3d [n];
 	n3 = 3*n;
-	i_position = new int * [n];
-	for (int i = 0; i < n; i++ ){
-		i_position[i] = new int [3];
-	}
 	angle = new double [n];
 	velocity = new vec3d [n];
 	ang_velocity = new vec3d [n];
 	force = new vec3d [n];
 	torque = new vec3d [n];
+	stress = new double* [n];
+	for (int i=0; i < n; i++){
+		stress[i] = new double [5];
+	}
+	
 	double O_inf_y = 0.5*shear_rate/2.0;
 	for (int i=0; i < n; i++){
 		ang_velocity[i].set(0, O_inf_y, 0);
@@ -112,6 +111,14 @@ void System::torqueReset(){
 	if (friction){
 		for (int i=0; i < n; i++){
 			torque[i].reset();
+		}
+	}
+}
+
+void System::stressReset(){
+	for (int i=0; i < n; i++){
+		for (int j=0; j < 5; j++){
+			stress[i][j]=0;
 		}
 	}
 }
@@ -263,26 +270,6 @@ void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int 
 }
 #endif
 
-double System::lubricationForceFactor(int i, int j){
-	double r_sq = sq_distance(i,j);
-	if(r_sq < sq_lub_max){
-		double r = sqrt(r_sq);
-		double h = r - lubcore;
-		vec3d nv(dx/r, dy/r, dz/r);
-		vec3d rel_vel = velocity[j] - velocity[i];
-		double zi_zj = position[i].z - position[j].z;
-		if (zi_zj > lz2){
-			rel_vel.x += vel_difference;
-		} else if (zi_zj < -lz2){
-			rel_vel.x -= vel_difference;
-		}
-		double alpha = 1.0/(4*h);
-		return abs(alpha*dot(rel_vel , nv));
-	} else {
-		return 0;
-	}
-}
-
 #ifdef CHOLMOD
 void System::updateVelocityLubrication(){
 	for (int k = 0; k < 6*n; k++){
@@ -384,7 +371,9 @@ void System::updateVelocityLubrication(){
 }
 
 #else
-
+/*
+ * By using lapack
+ */
 void System::updateVelocityLubrication(){
 	for (int k = 0;k < n3; k++){
 		rhs_b[k] = 0.;
@@ -436,8 +425,6 @@ void System::updateVelocityLubrication(){
 		rhs_b[i3+1] += force[i].y;
 		rhs_b[i3+2] += force[i].z;
 	}
-	// LU
-	//dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
 	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -454,8 +441,6 @@ void System::updateVelocityLubrication(){
 	}
 }
 #endif
-
-
 
 void System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
 	position[i].x += dx_;
@@ -590,3 +575,87 @@ double System::sq_distanceToCheckContact(int i, int j){
 	}
 	return 100;
 }
+
+
+double System::lubricationForceFactor(int i, int j){
+	double r_sq = sq_distance(i,j);
+	if(r_sq < sq_lub_max){
+		double r = sqrt(r_sq);
+		double h = r - lubcore;
+		vec3d nv(dx/r, dy/r, dz/r);
+		vec3d rel_vel = velocity[j] - velocity[i];
+		double zi_zj = position[i].z - position[j].z;
+		if (zi_zj > lz2){
+			rel_vel.x += vel_difference;
+		} else if (zi_zj < -lz2){
+			rel_vel.x -= vel_difference;
+		}
+		double alpha = 1.0/(4*h);
+		return abs(alpha*dot(rel_vel , nv));
+	} else {
+		return 0;
+	}
+}
+
+void System::lubricationStress(int i, int j){
+	double r_sq = sq_distance(i, j);
+	if(r_sq < sq_lub_max){
+		double r = sqrt(r_sq);
+		double h = r - lubcore;
+		vec3d nv(dx/r, dy/r, dz/r);
+		vec3d rel_vel = velocity[j] - velocity[i];
+		double zi_zj = position[i].z - position[j].z;
+		if (zi_zj > lz2){
+			rel_vel.x += vel_difference;
+		} else if (zi_zj < -lz2){
+			rel_vel.x -= vel_difference;
+		}
+		double alpha = 1.0/(4*h);
+		vec3d f_lub_ij = -alpha*dot(rel_vel , nv)*nv;
+		
+		double Sxx = 2*(f_lub_ij.x * nv.x);
+		double Sxy = f_lub_ij.x * nv.y + f_lub_ij.y * nv.x ;
+		double Sxz = f_lub_ij.x * nv.z + f_lub_ij.z * nv.x ;
+		double Syz = f_lub_ij.y * nv.z + f_lub_ij.z * nv.y ;
+		double Syy = 2*(f_lub_ij.y * nv.y);
+		stress[i][0] += Sxx;
+		stress[j][0] += Sxx;
+		
+		stress[i][1] += Sxy;
+		stress[j][1] += Sxy;
+		
+		stress[i][2] += Sxz;
+		stress[j][2] += Sxz;
+		
+		stress[i][3] += Syz;
+		stress[j][3] += Syz;
+		
+		stress[i][4] += Syy;
+		stress[j][4] += Syy;
+	}
+}
+
+
+
+
+void System::calcStressAverage(){
+	double totalStress[5] = {0,0,0,0,0};
+	for (int i=0; i< n ; i++){
+		for (int k=0; k < 5; k++){
+			totalStress[k] += stress[i][k];
+		}
+	}
+	for (int k=0; k < 5; k++){
+		mean_stress[k] = totalStress[k]/n;
+	}
+}
+
+
+
+
+
+
+
+
+
+
