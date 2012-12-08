@@ -32,7 +32,16 @@ void System::init(){
 	lz2 = 0.5*lz;
 	shear_disp = 0;
 	ostringstream ss_simu_name;
-	ss_simu_name << "D" << dimension << "L" << lz << "vf" << volume_fraction <<  "ms" << mu_static << "md" << mu_dynamic << "lub" << lubcore ;
+
+	if (friction == true){
+		ss_simu_name << "D" << dimension << "L" << lz ;
+		ss_simu_name << "vf" << volume_fraction ;
+		ss_simu_name << "ms" << mu_static << "md" << mu_dynamic << "lub" << lubcore ;
+	} else {
+		ss_simu_name << "D" << dimension << "L" << lz ;
+		ss_simu_name << "vf" << volume_fraction ;
+		ss_simu_name << "lub" << lubcore ;
+	}
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
 	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
@@ -57,7 +66,7 @@ void System::prepareSimulation(unsigned long number_of_particles){
 	torque = new vec3d [n];
 	double O_inf_y = 0.5*shear_rate/2.0;
 	for (int i=0; i < n; i++){
-		ang_velocity[i].set(0,O_inf_y,0);
+		ang_velocity[i].set(0, O_inf_y, 0);
 		torque[i].reset();
 	}
 	
@@ -262,8 +271,7 @@ double System::lubricationForceFactor(int i, int j){
 			rel_vel.x -= vel_difference;
 		}
 		double alpha = 1.0/(4*h);
-		double force = abs(alpha*dot(rel_vel , nv));
-		return force;
+		return abs(alpha*dot(rel_vel , nv));
 	} else {
 		return 0;
 	}
@@ -369,6 +377,12 @@ void System::updateVelocityLubrication(){
 	}
 	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
 	fillSparseResmatrix();
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		((double*)rhs_b->x)[i3] += force[i].x;
+		((double*)rhs_b->x)[i3+1] += force[i].y;
+		((double*)rhs_b->x)[i3+2] += force[i].z;
+	}
 	L = cholmod_analyze(sparse_res, &c);
 	cholmod_factorize(sparse_res, L, &c);
 //	if(c.status){ // debug

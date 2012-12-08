@@ -22,10 +22,20 @@ Simulation::~Simulation(){
 };
 
 void Simulation::SetParameters(int argc, const char * argv[]){
-	sys.friction = true;
 	sys.lub = true;
 	filename_import_positions = argv[1];
 	sys.lubcore = atof(argv[2]);
+	string arg3 =argv[3];
+	if (arg3 == "f" ){
+		sys.friction = true;
+		cerr <<  sys.friction << endl;
+	} else if (arg3 == "nf"){
+		sys.friction = false;
+	} else {
+		cerr << "arg3 'f' for friction / 'nf' for no friction" << endl;
+		exit(1);
+	}
+
 	/* take parameters from import file name.
 	 *
 	 */ 
@@ -85,7 +95,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 		draw_rotation_2d = false;
 	interval_snapshot = 100;
 	yap_force_factor = 0.05;
-	origin_zero_flow = false;
+	origin_zero_flow = true;
 	/********************************************************************************************/
 	if (sys.dimension == 2){
 		num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
