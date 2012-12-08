@@ -37,7 +37,7 @@ private:
 	/*
 	 * For output data.
 	 */
-	bool draw_rotation_2d;
+//	bool draw_rotation_2d;
 	ofstream fout_yap;
 	ofstream fout_force;
 	int interval_snapshot;

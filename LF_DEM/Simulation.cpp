@@ -68,9 +68,9 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	/*
 	 * Simulation parameters
 	 */
-	sys.eta = 1.0; // viscosity
-	sys.shear_rate = 1; // shear rate
-	shear_strain = 100; // shear strain
+	sys.eta = 1.0; // viscosity *** not using yet
+	sys.shear_rate = 1.0; // shear rate
+	shear_strain = 100.0; // shear strain
 	cutoff_distance = 2.5; // to delete possible neighbor
 	sys.sq_lub_max = 2.5*2.5; // square of lubrication cutoff length.
 	sys.dt = 1e-4 / sys.shear_rate; //time step.
@@ -79,31 +79,35 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	/*
 	 * Contact force parameters
 	 */
-	sys.kn = 200; // normal spring constant
-	sys.kt = 200; // tangential spring constant
-//	sys.mu_static = 0.3; // static friction coeffient
-//	sys.mu_dynamic = 0.2; // dynamic friction coeffient
+	sys.kn = 100; // normal spring constant
+	sys.kt = 100; // tangential spring constant
+	/*
+	 * Particles are spined by the background vorticity.
+	 * Small friction coeffient may not stop the sliding between surfaces
+	 * of spinning particles, when normal force is small.
+	 * We should also estimate the effect of lubrication torque.
+	 *
+	 */
 	sys.mu_static = 0.6; // static friction coeffient
-	sys.mu_dynamic = 0.4; // dynamic friction coeffient
+	sys.mu_dynamic = 0.3; // dynamic friction coeffient
 	sys.dynamic_friction_critical_velocity = 0.01;
 	/*
 	 * Visualization
 	 */
 	if (sys.dimension ==2)
-		draw_rotation_2d = true;
+		sys.draw_rotation_2d = true;
 	else
-		draw_rotation_2d = false;
+		sys.draw_rotation_2d = false;
 	interval_snapshot = 100;
-	yap_force_factor = 0.05;
+	yap_force_factor = 0.2;
 	origin_zero_flow = true;
 	/********************************************************************************************/
-	if (sys.dimension == 2){
-		num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
-	} else {
-		num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
-	}
-	cerr << "N = " << num_particle << endl;
-	max_num_contactforce = 20 * num_particle;
+//	if (sys.dimension == 2){
+//		num_particle = (int)(sys.lx*sys.lz*sys.volume_fraction/M_PI);
+//	} else {
+//		num_particle = (int)(sys.lx*sys.ly*sys.lz*sys.volume_fraction/(4.0*M_PI/3.0));
+//	}
+//	cerr << "N = " << num_particle << endl;
 	sys.init();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "force_" + sys.simu_name + ".dat";
@@ -115,8 +119,10 @@ void Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open( filename_import_positions.c_str());
 	vec3d pos;
-	while ( !file_import.eof() ){
+	while (true){
 		file_import >> pos.x >> pos.y >> pos.z;
+		if (file_import.eof())
+			break;
 		initial_positions.push_back(pos);
 	}
 	file_import.close();
@@ -126,11 +132,14 @@ void Simulation::importInitialPositionFile(){
  * Main simulation
  */
 void Simulation::SimulationMain(int argc, const char * argv[]){
+
 	SetParameters(argc, argv);
 	importInitialPositionFile();
-	unsigned long num_of_particles = initial_positions.size();
-	sys.prepareSimulation(num_of_particles);
-	for (int i=0; i < initial_positions.size(); i++){
+	num_particle = (int)initial_positions.size();
+	max_num_contactforce = (int)(12*num_particle);
+	cerr << "num_of_particles " << num_particle << endl;
+	sys.prepareSimulation(num_particle);
+	for (int i=0; i < num_particle; i++){
 		sys.position[i] = initial_positions[i];
 		sys.angle[i] = 0;
 	}
@@ -139,8 +148,6 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	for (int i = 0; i < max_num_contactforce; i++){
 		fc[i].init( &sys );
 	}
-	cerr << "set initial positions" << endl;
-	importInitialPositionFile();
 	cerr << "start simulation" << endl;
 	timeEvolution();
 	cerr << "finished" << endl;
@@ -216,6 +223,7 @@ void Simulation::timeEvolution(){
 		checkContact();
 		sys.forceReset();
 		sys.torqueReset();
+
 		if (sys.friction){
 			for (int k=0; k < num_contactforce; k++){
 				fc[k].calcInteraction();
@@ -342,8 +350,9 @@ void Simulation::output_yap(){
 
 	/* Layer 4: Orientation of particle (2D simulation)
 	 */
-	if (draw_rotation_2d){
-		fout_yap << "y 4\n";
+	
+	if (sys.draw_rotation_2d){
+		fout_yap << "y 5\n";
 		fout_yap << "@ " << color_white << endl;
 		for (int i=0; i < num_particle; i++){
 			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
@@ -357,6 +366,7 @@ void Simulation::output_yap(){
 	}
 	/* Layer 2: Friction
 	 */
+	double total_tangential_force = 0;
 	if (sys.friction){
 		fout_yap << "y 2\n";
 		for (int k=0; k < num_contactforce; k++){
@@ -371,6 +381,7 @@ void Simulation::output_yap(){
 										sys.position[i].y - sys.ly2,
 										sys.position[i].z - sys.lz2);
 				fout_yap << "r " << yap_force_factor*fc[k].f_tangent.norm()  << endl;
+				total_tangential_force += fc[k].f_tangent.norm();
 				drawLine('s', pos, fc[k].nr_vec, fout_yap);
 				int j = fc[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
@@ -384,6 +395,28 @@ void Simulation::output_yap(){
 	 * Lubrication + contact force
 	 */
 	fout_yap << "y 3\n";
+	fout_yap << "@ " << color_white << endl;
+	for (int i=0; i < num_particle; i++){
+		for (int j=i+1; j < num_particle; j++){
+			if (contact_pair[i][j] != -1){
+				double f_ij = -fc[contact_pair[i][j]].f_normal;
+				
+				fout_yap << "r " << yap_force_factor*f_ij << endl;
+				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+											   sys.position[i].y - sys.ly2,
+											   sys.position[i].z - sys.lz2);
+				vec3d pos2 = shiftUpCoordinate(sys.position[j].x - sys.lx2,
+											   sys.position[j].y - sys.ly2,
+											   sys.position[j].z - sys.lz2);
+				
+				drawLine2('s', pos1, pos2, fout_yap);
+			}
+		}
+	}
+	/* Layer 3: Normal
+	 * Lubrication + contact force
+	 */
+	fout_yap << "y 4\n";
 	fout_yap << "@ " << color_yellow << endl;
 	double total_normal_force = 0;
 	for (int i=0; i < num_particle; i++){
@@ -409,10 +442,12 @@ void Simulation::output_yap(){
 			}
 		}
 	}
+
 	/*
 	 * Output the sum of the normal forces.
 	 */
-	fout_force << sys.dt * sys.ts << ' ' << total_normal_force << endl;
+	fout_force << sys.dt * sys.ts << ' ' << total_normal_force << ' ';
+	fout_force << total_tangential_force << ' ' << total_normal_force + total_tangential_force << endl;
 	
 	/* Layer 6: Box and guide lines
 	 */

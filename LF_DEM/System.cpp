@@ -33,13 +33,18 @@ void System::init(){
 	shear_disp = 0;
 	ostringstream ss_simu_name;
 
-	if (friction == true){
-		ss_simu_name << "D" << dimension << "L" << lz ;
-		ss_simu_name << "vf" << volume_fraction ;
-		ss_simu_name << "ms" << mu_static << "md" << mu_dynamic << "lub" << lubcore ;
+	if (dimension == 2){
+		ss_simu_name << "D" << dimension << "L" << lx << "_" <<lz ;
 	} else {
-		ss_simu_name << "D" << dimension << "L" << lz ;
+		ss_simu_name << "D" << dimension << "L" << lx << "_" << ly << "_" << lz ;
+	}
+	if (friction == true){
 		ss_simu_name << "vf" << volume_fraction ;
+		ss_simu_name << "fs" << mu_static << "fd" << mu_dynamic;
+	} else {
+		ss_simu_name << "vf" << volume_fraction ;
+	}
+	if (lub == true){
 		ss_simu_name << "lub" << lubcore ;
 	}
 	simu_name = ss_simu_name.str();
@@ -53,6 +58,7 @@ void System::init(){
  */
 void System::prepareSimulation(unsigned long number_of_particles){
 	n = (int)number_of_particles;
+
 	position = new vec3d [n];
 	n3 = 3*n;
 	i_position = new int * [n];
@@ -277,10 +283,10 @@ double System::lubricationForceFactor(int i, int j){
 	}
 }
 
-void System::updateVelocityLubrication(){
 #ifdef CHOLMOD
+void System::updateVelocityLubrication(){
 	for (int k = 0; k < 6*n; k++){
-		diag_values[k]=0.;
+		diag_values[k] = 0.;
 	}
 	rows.clear();
 	off_diag_values[0].clear();
@@ -293,25 +299,9 @@ void System::updateVelocityLubrication(){
 		diag_values[i6+5] = 1.;
 	}
 	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
-#else
-	for (int k = 0;k < n3; k++){
-		rhs_b[k] = 0.;
-	}
-	for (int k = 0; k < n3*n3; k++){
-		res[k] = 0.;
-	}
-	for (int i = 0 ; i < n; i ++){
-		int i3 = 3*i;
-		res[n3*(i3  ) + i3  ] = 1.;
-		res[n3*(i3+1) + i3+1] = 1.;
-		res[n3*(i3+2) + i3+2] = 1.;
-	}
-#endif
 	if (lub){
-		for (int i = 0 ; i < n - 1; i ++){
-#ifdef CHOLMOD
+		for (int i = 0; i < n - 1; i ++){
 			ploc[i] = (unsigned int)rows.size();
-#endif
 			for (int j = i+1 ; j < n; j ++){
 				double r_sq = sq_distance(i,j);
 				double r;
@@ -322,52 +312,30 @@ void System::updateVelocityLubrication(){
 					double alpha = - 1/(4*h);
 					if (h > 0){
 						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-#ifdef CHOLMOD
 						addToDiag(nvec, i, -alpha);
-						addToDiag(nvec, j, -alpha);						
+						addToDiag(nvec, j, -alpha);
 						appendToColumn(nvec, j, +alpha);
-#else
-						fillResmatrix(res, nvec, i, i, -alpha, n3);
-						fillResmatrix(res, nvec, i, j, +alpha, n3);
-						fillResmatrix(res, nvec, j, j, -alpha, n3);
-						fillResmatrix(res, nvec, j, i, +alpha, n3);
-#endif
 						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
 						double alpha_gd_dz_n0_n[] = { \
 							alpha_gd_dz_n0*nvec[0],
 							alpha_gd_dz_n0*nvec[1],
 							alpha_gd_dz_n0*nvec[2]};
 
-#ifdef CHOLMOD
 						((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
 						((double*)rhs_b->x)[3*i+2] += alpha_gd_dz_n0_n[2];
 						((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 						((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
-#else
-						rhs_b[3*i  ] += alpha_gd_dz_n0_n[0];
-						rhs_b[3*i+1] += alpha_gd_dz_n0_n[1];
-						rhs_b[3*i+2] += alpha_gd_dz_n0_n[2];
-						rhs_b[3*j  ] -= alpha_gd_dz_n0_n[0];
-						rhs_b[3*j+1] -= alpha_gd_dz_n0_n[1];
-						rhs_b[3*j+2] -= alpha_gd_dz_n0_n[2];
-#endif
 					}
 				}
 			}
 		}
 	}
-	/* F = R (V - V_inf)
-	 *
+	/*
+	 * F = R (V - V_inf)
 	 * (V - V_inf) = M F
-	 * A.x = b_vector
-	 * b_vector[n] : r-h-s vector
-	 * atimes (int n, static double *x, double *b, void *param) :
-	 *        calc matrix-vector product A.x = b.
 	 */
-	
-#ifdef CHOLMOD
 	ploc[n-1] = (unsigned int)rows.size();
 	ploc[n] = (unsigned int)rows.size();
 	int nzmax;  // non-zero values
@@ -385,17 +353,17 @@ void System::updateVelocityLubrication(){
 	}
 	L = cholmod_analyze(sparse_res, &c);
 	cholmod_factorize(sparse_res, L, &c);
-//	if(c.status){ // debug
-//		cout << " factorization failed. forcing simplicial algorithm... " << endl;
-//		c.supernodal = CHOLMOD_SIMPLICIAL;
-//		L = cholmod_analyze (sparse_res, &c);
-//		cholmod_factorize (sparse_res, L, &c) ;
-//		cout << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL " <<  c.final_ll <<endl;
-//		
-//		//	  for (int i = 0; i < n3; i++)
-//		//	    cout << ((double*)L->x)[ ((int*)L->p) [i] ] << endl;
-//		cout << "pause " << endl; getchar();
-//	}
+	//	if(c.status){ // debug
+	//		cout << " factorization failed. forcing simplicial algorithm... " << endl;
+	//		c.supernodal = CHOLMOD_SIMPLICIAL;
+	//		L = cholmod_analyze (sparse_res, &c);
+	//		cholmod_factorize (sparse_res, L, &c) ;
+	//		cout << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL " <<  c.final_ll <<endl;
+	//
+	//		//	  for (int i = 0; i < n3; i++)
+	//		//	    cout << ((double*)L->x)[ ((int*)L->p) [i] ] << endl;
+	//		cout << "pause " << endl; getchar();
+	//	}
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -406,7 +374,62 @@ void System::updateVelocityLubrication(){
 	cholmod_free_sparse(&sparse_res,&c);
 	cholmod_free_factor(&L,&c);
 	cholmod_free_dense(&rhs_b,&c);
+	if(friction){
+		double O_inf_y = 0.5*shear_rate;
+		for (int i=0; i < n; i++){
+			ang_velocity[i] = (1.33333/eta)*torque[i];
+			ang_velocity[i].y += O_inf_y;
+		}
+	}
+}
+
 #else
+
+void System::updateVelocityLubrication(){
+	for (int k = 0;k < n3; k++){
+		rhs_b[k] = 0.;
+	}
+	for (int k = 0; k < n3*n3; k++){
+		res[k] = 0.;
+	}
+	for (int i = 0 ; i < n; i ++){
+		int i3 = 3*i;
+		res[n3*(i3  ) + i3  ] = 1.;
+		res[n3*(i3+1) + i3+1] = 1.;
+		res[n3*(i3+2) + i3+2] = 1.;
+	}
+	if (lub){
+		for (int i = 0 ; i < n - 1; i ++){
+			for (int j = i+1 ; j < n; j ++){
+				double r_sq = sq_distance(i,j);
+				double r;
+				if( r_sq < sq_lub_max){
+					r = sqrt(r_sq);
+					double nvec[] = {dx/r, dy/r, dz/r};
+					double h = r - lubcore;
+					double alpha = - 1/(4*h);
+					if (h > 0){
+						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
+						fillResmatrix(res, nvec, i, i, -alpha, n3);
+						fillResmatrix(res, nvec, i, j, +alpha, n3);
+						fillResmatrix(res, nvec, j, j, -alpha, n3);
+						fillResmatrix(res, nvec, j, i, +alpha, n3);
+						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
+						double alpha_gd_dz_n0_n[] = { \
+							alpha_gd_dz_n0*nvec[0],
+							alpha_gd_dz_n0*nvec[1],
+							alpha_gd_dz_n0*nvec[2]};
+						rhs_b[3*i  ] += alpha_gd_dz_n0_n[0];
+						rhs_b[3*i+1] += alpha_gd_dz_n0_n[1];
+						rhs_b[3*i+2] += alpha_gd_dz_n0_n[2];
+						rhs_b[3*j  ] -= alpha_gd_dz_n0_n[0];
+						rhs_b[3*j+1] -= alpha_gd_dz_n0_n[1];
+						rhs_b[3*j+2] -= alpha_gd_dz_n0_n[2];
+					}
+				}
+			}
+		}
+	}
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		rhs_b[i3  ] += force[i].x;
@@ -422,15 +445,17 @@ void System::updateVelocityLubrication(){
 		velocity[i].y = rhs_b[i3+1];
 		velocity[i].z = rhs_b[i3+2];
 	}
-#endif
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
-			ang_velocity[i] = (1.33333/eta)*torque[i];
-			ang_velocity[i].y += O_inf_y;
+			ang_velocity[i] = 1.33333*torque[i];
+			 ang_velocity[i].y += O_inf_y;
 		}
 	}
 }
+#endif
+
+
 
 void System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
 	position[i].x += dx_;
@@ -464,10 +489,10 @@ void System::deltaTimeEvolution(){
 		shear_disp -= lx;
 	}
 	for (int i=0; i < n; i++){
-		displacement(i, velocity[i].x*dt,velocity[i].y*dt,velocity[i].z*dt);
+		displacement(i, velocity[i].x*dt, velocity[i].y*dt, velocity[i].z*dt);
 	}
 	
-	if (dimension == 2){
+	if (draw_rotation_2d){
 		for (int i=0; i < n; i++){
 			angle[i] += ang_velocity[i].y*dt;
 		}

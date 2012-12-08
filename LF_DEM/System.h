@@ -97,6 +97,7 @@ public:
 	double volume_fraction;
 	double vel_difference;
 	double dt;
+	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 #ifdef CHOLMOD
