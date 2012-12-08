@@ -46,6 +46,7 @@ private:
 	int *ploc;
 	void fillSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
+	void appendToColumn(double *nvec, int jj, double alpha);
 #else
 	double *res;
 	int nrhs;

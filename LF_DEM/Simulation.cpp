@@ -378,11 +378,14 @@ void Simulation::output_yap(){
 	double total_normal_force = 0;
 	for (int i=0; i < num_particle; i++){
 		for (int j=i+1; j < num_particle; j++){
-			double f_ij = sys.lubricationForceFactor(i, j);
-			if (f_ij != 0){
-				if (contact_pair[i][j] != 0){
-					f_ij += -fc[contact_pair[i][j]].f_normal;
-				}
+			double f_ij = 0;
+			if (sys.lub == true){
+				f_ij += sys.lubricationForceFactor(i, j);
+			}
+			if (contact_pair[i][j] != -1){
+				f_ij += -fc[contact_pair[i][j]].f_normal;
+			}
+			if (f_ij > 0){
 				fout_yap << "r " << yap_force_factor*f_ij << endl;
 				total_normal_force += f_ij;
 				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
