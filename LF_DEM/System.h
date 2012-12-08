@@ -8,7 +8,7 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-//#define CHOLMOD 1
+#define CHOLMOD 1
 #include <iostream>
 #include <iomanip>
 #include <fstream>
