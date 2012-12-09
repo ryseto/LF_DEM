@@ -26,13 +26,7 @@ System::~System(){
 #endif
 };
 
-void System::init(){
-	lx2 = 0.5*lx;
-	ly2 = 0.5*ly;
-	lz2 = 0.5*lz;
-	shear_disp = 0;
-	vel_difference = shear_rate*lz;
-	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
+void System::prepareSimulationName(){
 	ostringstream ss_simu_name;
 	if (dimension == 2){
 		ss_simu_name << "D" << dimension << "L" << lx << "_" <<lz ;
@@ -55,8 +49,13 @@ void System::init(){
 /* Set number of particles.
  * Allocate vectors for the state.
  */
-void System::prepareSimulation(unsigned long number_of_particles){
-	n = (int)number_of_particles;
+void System::prepareSimulation(){
+	lx2 = 0.5*lx;
+	ly2 = 0.5*ly;
+	lz2 = 0.5*lz;
+	shear_disp = 0;
+	vel_difference = shear_rate*lz;
+	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
 	position = new vec3d [n];
 	n3 = 3*n;
 	angle = new double [n];
@@ -582,16 +581,20 @@ double System::lubricationForceFactor(int i, int j){
 	if(r_sq < sq_lub_max){
 		double r = sqrt(r_sq);
 		double h = r - lubcore;
-		vec3d nv(dx/r, dy/r, dz/r);
-		vec3d rel_vel = velocity[j] - velocity[i];
-		double zi_zj = position[i].z - position[j].z;
-		if (zi_zj > lz2){
-			rel_vel.x += vel_difference;
-		} else if (zi_zj < -lz2){
-			rel_vel.x -= vel_difference;
+		if ( h > 0){
+			vec3d nv(dx/r, dy/r, dz/r);
+			vec3d rel_vel = velocity[j] - velocity[i];
+			double zi_zj = position[i].z - position[j].z;
+			if (zi_zj > lz2){
+				rel_vel.x += vel_difference;
+			} else if (zi_zj < -lz2){
+				rel_vel.x -= vel_difference;
+			}
+			double alpha = 1.0/(4*h);
+			return abs(alpha*dot(rel_vel , nv));
+		} else {
+			return 0;
 		}
-		double alpha = 1.0/(4*h);
-		return abs(alpha*dot(rel_vel , nv));
 	} else {
 		return 0;
 	}
@@ -600,6 +603,7 @@ double System::lubricationForceFactor(int i, int j){
 void System::lubricationStress(int i, int j){
 	double r_sq = sq_distance(i, j);
 	if(r_sq < sq_lub_max){
+
 		double r = sqrt(r_sq);
 		double h = r - lubcore;
 		vec3d nv(dx/r, dy/r, dz/r);
@@ -610,32 +614,35 @@ void System::lubricationStress(int i, int j){
 		} else if (zi_zj < -lz2){
 			rel_vel.x -= vel_difference;
 		}
-		double alpha = 1.0/(4*h);
-		vec3d f_lub_ij = -alpha*dot(rel_vel , nv)*nv;
+		double alpha;
+		if (h > 0){
+			alpha = 1.0/(4*h);
+			vec3d f_lub_ij = -alpha*dot(rel_vel , nv)*nv;
+			
+			double Sxx = 2*(f_lub_ij.x * nv.x);
+			double Sxy = f_lub_ij.x * nv.y + f_lub_ij.y * nv.x ;
+			double Sxz = f_lub_ij.x * nv.z + f_lub_ij.z * nv.x ;
+			double Syz = f_lub_ij.y * nv.z + f_lub_ij.z * nv.y ;
+			double Syy = 2*(f_lub_ij.y * nv.y);
+			stress[i][0] += Sxx;
+			stress[j][0] += Sxx;
+			
+			stress[i][1] += Sxy;
+			stress[j][1] += Sxy;
+			
+			stress[i][2] += Sxz;
+			stress[j][2] += Sxz;
+			
+			stress[i][3] += Syz;
+			stress[j][3] += Syz;
+			
+			stress[i][4] += Syy;
+			stress[j][4] += Syy;
+		}
 		
-		double Sxx = 2*(f_lub_ij.x * nv.x);
-		double Sxy = f_lub_ij.x * nv.y + f_lub_ij.y * nv.x ;
-		double Sxz = f_lub_ij.x * nv.z + f_lub_ij.z * nv.x ;
-		double Syz = f_lub_ij.y * nv.z + f_lub_ij.z * nv.y ;
-		double Syy = 2*(f_lub_ij.y * nv.y);
-		stress[i][0] += Sxx;
-		stress[j][0] += Sxx;
-		
-		stress[i][1] += Sxy;
-		stress[j][1] += Sxy;
-		
-		stress[i][2] += Sxz;
-		stress[j][2] += Sxz;
-		
-		stress[i][3] += Syz;
-		stress[j][3] += Syz;
-		
-		stress[i][4] += Syy;
-		stress[j][4] += Syy;
+
 	}
 }
-
-
 
 
 void System::calcStressAverage(){

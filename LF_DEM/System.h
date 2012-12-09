@@ -26,7 +26,6 @@ class Interaction;
 
 class System{
 private:
-	int n;
 	int n3;
 	double dx;
 	double dy;
@@ -65,6 +64,7 @@ public:
      */
 	System(){};
 	~System();
+	int n; // number of particles
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
@@ -85,8 +85,15 @@ public:
 	double sq_critical_velocity;
 	bool friction;
 	bool lub;
-	double lubcore;  // = 2a'
-	/*************************************************************/
+	/*
+	 * Leading term of lubrication force is 1/(r-2a).
+	 * This can be weakened by using a'<a.
+	 * lubcore = 2a'.
+	 * lubcore = 2 means full lubrication force.
+	 * lubcore < 2 gives weaker lubriaction force that allows particle contact.
+	 */
+	double lubcore;
+	
 	double lx;
 	double ly;
 	double lz;
@@ -98,7 +105,6 @@ public:
 	double volume_fraction;
 	double vel_difference;
 	double dt;
-
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
@@ -106,9 +112,9 @@ public:
 	cholmod_factor *L ;
 #endif
 	string simu_name;
-	/*************************************************************/
-	void prepareSimulation(unsigned long number_of_particles);
-	void init();
+	void prepareSimulationName();
+	void prepareSimulation();
+
 	double sq_norm();
 	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);

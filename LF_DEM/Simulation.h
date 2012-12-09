@@ -16,7 +16,6 @@
 class Simulation{
 private:
 	System sys;
-	int num_particle;
 	int ts_max;
 	double shear_strain;
 	bool import_positions;
@@ -38,7 +37,7 @@ private:
 	 * For output data.
 	 */
 	ofstream fout_yap;
-	ofstream fout_force;
+	ofstream fout_rheo;
 	int interval_snapshot;
 	double yap_force_factor;
 	bool origin_zero_flow;
@@ -52,7 +51,7 @@ private:
 	void initContactPair();
 	void checkBreak();
 	void checkContact();
-	void calcStress();
+	void outputRheologyData();
 	void timeEvolution();
 	
 	vec3d shiftUpCoordinate(double x, double y, double z);
