@@ -16,7 +16,6 @@
 #include "System.h"
 using namespace std;
 class System;
-
 class ContactForce{
 private:
 	System *sys;
@@ -33,6 +32,7 @@ public:
 	void create(int i, int j);
 	void calcInteraction();
 	void calcInteractionNoFriction();
+	void calcStress();
 	void makeNormalVector();
 	void incrementTangentialDisplacement();
 	bool active;
@@ -48,5 +48,4 @@ public:
 	vec3d xi; // tangential displacement
 	int pd_z;
 };
-
 #endif /* defined(__LF_DEM__Interaction__) */

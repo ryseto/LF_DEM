@@ -16,20 +16,18 @@
 class Simulation{
 private:
 	System sys;
-	int num_particle;
 	int ts_max;
 	double shear_strain;
 	bool import_positions;
 	vector< vec3d> initial_positions;
-
 	string filename_import_positions;
 	/*
 	 * Interparticle interactions
 	 */
 	ContactForce *fc;
 	int **contact_pair; // Table
-	int max_num_interaction; // Allowed length of interaction array.
-	int num_interaction; // Length of used interaction array.
+	int max_num_contactforce; // Allowed length of interaction array.
+	int num_contactforce; // Length of used interaction array.
 	queue<int> deactivated_interaction;
 	/*
 	 *  Simulation parameters
@@ -38,26 +36,24 @@ private:
 	/*
 	 * For output data.
 	 */
-	bool draw_rotation_2d;
 	ofstream fout_yap;
-	ofstream fout_force;
+	ofstream fout_rheo;
 	int interval_snapshot;
 	double yap_force_factor;
 	bool origin_zero_flow;
-
-
 	/*
 	 *
 	 */
 	void SetParameters(int argc, const char * argv[]);
 	void importInitialPositionFile();
-
 	void output_yap();
 	void output_vel();
 	void initContactPair();
 	void checkBreak();
 	void checkContact();
+	void outputRheologyData();
 	void timeEvolution();
+	
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout);
 	void drawLine(char type , vec3d pos, vec3d vec, ofstream &fout);
@@ -74,7 +70,5 @@ public:
 	Simulation();
 	~Simulation();
 	void SimulationMain(int argc, const char * argv[]);
-	
-
 };
 #endif /* defined(__LF_DEM__Simulation__) */

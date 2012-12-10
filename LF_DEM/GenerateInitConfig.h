@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 12/6/12.
-//  Copyright (c) 2012 Ryohei Seto. All rights reserved.
+//  Copyright (c) 2012 Ryohei Seto and  Romain Mari. All rights reserved.
 //
 
 #ifndef __LF_DEM__GenerateInitConfig__
@@ -68,7 +68,6 @@ bool checkOverlap(){
 	static int i_previous = 0;
 	static int j_previous = 1;
 	if ( sqContactDistance(i_previous, j_previous) < 4){
-		cerr << "." ;
 		return true;
 	}
 	for (int i = 0; i < np ; i++){
@@ -81,9 +80,7 @@ bool checkOverlap(){
 		}
 	}
 	return false;
-	
 }
-
 
 void putRandom(){
 	srand48(random_seed);
@@ -113,6 +110,10 @@ void solveOverlap(){
 			delta_translation = randUniformSphere(dd);
 		}
 		position[i] += delta_translation;
+		position[i].periodicBoundaryBox(lx, ly, lz);
+
+		
+		
 		int overlap = -1;
 		if (sqContactDistance(i, previous_overlap[i]) < 4){
 			overlap =  previous_overlap[i];
@@ -138,7 +139,9 @@ void solveOverlap(){
 			cc ++;
 		} else {
 			position[i] += dd*dr;
+			position[i].periodicBoundaryBox(lx, ly, lz);
 			position[overlap] -= dd*dr;
+			position[overlap].periodicBoundaryBox(lx, ly, lz);
 		}
 	}
 }
@@ -162,6 +165,7 @@ void outputPositionData(){
 	}
 	fout.close();
 }
+
 void setParameters(int argc, const char * argv[]){
 	if (argc == 6){
 		dimension = 2;
@@ -192,7 +196,6 @@ void setParameters(int argc, const char * argv[]){
 	cerr << "np = " << np << endl;
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
-
 }
 
 int generateInitialConfiguration(int argc, const char * argv[]){

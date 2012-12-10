@@ -33,6 +33,7 @@ class BrownianForce{
 
 	cholmod_sparse *L_sparse;
 	cholmod_common *c;
+	void generate();
  protected:
  public:
         
@@ -42,8 +43,10 @@ class BrownianForce{
 
 	void init(); // once SuiteSparse algebra cholmod_common object is allocated
 
-	cholmod_dense* generate();
+	//	cholmod_dense* generate();
+	void add_to(cholmod_dense*);
 	void generate(double*);
+
 };
 
 #endif /* defined(__LF_DEM__BrownianForce__) */

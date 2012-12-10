@@ -8,9 +8,7 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-
 #define CHOLMOD 1
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -30,7 +28,6 @@ class BrownianForce;
 
 class System{
 private:
-	int n;
 	int n3;
 	double dx;
 	double dy;
@@ -43,13 +40,13 @@ private:
 	int sorted;
 	int packed;
 	int xtype;
-
 	vector <int> rows;
 	double *diag_values;
 	vector <double> *off_diag_values;
 	int *ploc;
 	void fillSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
+	void appendToColumn(double *nvec, int jj, double alpha);
 #else
 	double *res;
 	int nrhs;
@@ -62,8 +59,9 @@ private:
 	double *work;
 	char UPLO;
 #endif
-	void buildResistanceMatrix();
-	void buildRHSVector();
+	void buildLubricationTerms();
+	void buildBrownianTerms();
+	void buildContactTerms();
 
 protected:
 public:
@@ -71,15 +69,17 @@ public:
      */
 	System(){};
 	~System();
+	int n; // number of particles
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
-	int **i_position;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vec3d *ang_velocity;
 	vec3d *force;
 	vec3d *torque;
+	double **stress; // S_xx S_xy S_xz S_yz S_yy
+	double mean_stress[5];
 	double kn;
 	double kt;
 	double eta;
@@ -90,46 +90,56 @@ public:
 	double sq_critical_velocity;
 	bool friction;
 	bool lub;
+	/*
+	 * Leading term of lubrication force is 1/(r-2a).
+	 * This can be weakened by using a'<a.
+	 * lubcore = 2a'.
+	 * lubcore = 2 means full lubrication force.
+	 * lubcore < 2 gives weaker lubriaction force that allows particle contact.
+	 */
 	double lubcore;
 	BrownianForce *fb;
 	/*************************************************************/
+
 	double lx;
 	double ly;
 	double lz;
-	double lx2;
-	double ly2;
-	double lz2;
-	double x_shift;
+	double lx2; // =lx/2
+	double ly2; // =ly/2
+	double lz2; // =lz/2
+	double shear_disp;
 	double shear_rate;
 	double kb_T;
 	double volume_fraction;
 	double vel_difference;
 	double dt;
+	bool draw_rotation_2d;
+	vector <int> lubparticle;
+	vector <double> lubparticle_vec[3];
+
 	string simu_name;
-	/*************************************************************/
-	void prepareSimulation(unsigned long number_of_particles);
-	void init();
+	void prepareSimulationName();
+	void prepareSimulation();
+
 	double sq_norm();
 	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);
+	double sq_distanceToCheckContact(int i, int j);
 	double sq_neardistance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
-	double checkContact(int i, int j);
-	double distance(int i, int j);
-	void setRandomPosition();
 
+	double distance(int i, int j);
 	void updateVelocity();
 	void updateVelocityLubrication();
-
 	void deltaTimeEvolution();
 	void forceReset();
 	void torqueReset();
+	void stressReset();
 	bool noOverlap();
+	void calcHydrodynamicStress();
+	void calcStressAverage();
 
-	vector <int> lubparticle;
-	vector <double> lubparticle_vec[3];
-	
 	int numpart(){
 	  return n;
 	}
@@ -141,5 +151,8 @@ public:
 	
 #endif
 	
+	void lubricationStress(int i, int j);
+
+
 };
 #endif /* defined(__LF_DEM__State__) */

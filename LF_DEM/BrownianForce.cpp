@@ -29,7 +29,17 @@ BrownianForce::init(){
 	forces = cholmod_zeros(3*sys->numpart(), 1, CHOLMOD_REAL, c);
 }
 
-cholmod_dense*
+void
+BrownianForce::add_to(cholmod_dense *force_vec){
+	generate();
+  
+	int n3=3*sys->numpart();
+	for(int i=0; i<n3;i++){
+	  ((double*)force_vec->x)[i] += ((double*)force_vec->x)[i];
+	}
+}
+
+void
 BrownianForce::generate(){
 
 	cholmod_factor* L_copy = cholmod_copy_factor(sys->L, c); // sadly it seems we have to make a copy. Is there a way to avoid this?
@@ -39,8 +49,9 @@ BrownianForce::generate(){
 	double zero [2] = {0,0};
 	cholmod_sdmult(L_sparse, 0, temperature, zero, random_vector(), forces, c);
 	cholmod_free_factor(&L_copy, c);
-	return forces;
+
 }
+
 
 void
 BrownianForce::generate(double* f){

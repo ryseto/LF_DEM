@@ -30,46 +30,60 @@ void  ContactForce::create(int i, int j){
  * pd_x, pd_y, pd_z : Periodic boundary condition
  */
 void ContactForce::makeNormalVector(){
-
 	r_vec = sys->position[ particle_num[1] ] - sys->position[ particle_num[0] ];
 
 	if (r_vec.z > sys->lz2){
 		pd_z = 1; //  p1 (z = lz), p0 (z = 0)
 		r_vec.z -= sys->lz;
-		r_vec.x -= sys->x_shift;
+		r_vec.x -= sys->shear_disp;
 	} else if (r_vec.z < - sys->lz2){
 		pd_z = -1; //  p1 (z = 0), p0 (z = lz)
 		r_vec.z += sys->lz;
-		r_vec.x += sys->x_shift;
+		r_vec.x += sys->shear_disp;
 	} else{
 		pd_z = 0;
 	}
-	
-//	pd_x = 0;
 
 	while (r_vec.x > sys->lx2){
-		//pd_x += 1;  // p1 (x = lx), p0 (x = 0)
 		r_vec.x -= sys->lx;
 	}
 	while (r_vec.x < -sys->lx2){
-		//pd_x += -1;  // p1 (x = 0), p0 (x = lx)
 		r_vec.x += sys->lx;
 	}
 	
 	if (sys->dimension == 3){
 		if ( abs(r_vec.y) > sys->ly2 ){
 			if ( r_vec.y > 0 ){
-				//pd_y = 1;  // p1 (y = ly), p0 (y = 0)
 				r_vec.y -= sys->ly;
 			} else {
-				//pd_y = -1;  // p1 (y = ly), p0 (y = 0)
 				r_vec.y += sys->ly;
 			}
 		}
-		//else {
-		//	pd_y = 0;
-		//}
 	}
+}
+
+void ContactForce::calcStress(){
+	// S_xx
+	vec3d f_contact = f_tangent + f_normal* nr_vec;
+	double Sxx = f_contact.x * nr_vec.x + f_contact.x * nr_vec.x ;;
+	double Sxy = f_contact.x * nr_vec.y + f_contact.y * nr_vec.x ;
+	double Sxz = f_contact.x * nr_vec.z + f_contact.z * nr_vec.x ;
+	double Syz = f_contact.y * nr_vec.z + f_contact.z * nr_vec.y ;
+	double Syy = f_contact.y * nr_vec.y + f_contact.y * nr_vec.y ;
+	sys->stress[particle_num[0]][0] += Sxx;
+	sys->stress[particle_num[1]][0] += Sxx;
+
+	sys->stress[particle_num[0]][1] += Sxy;
+	sys->stress[particle_num[1]][1] += Sxy;
+	
+	sys->stress[particle_num[0]][2] += Sxz;
+	sys->stress[particle_num[1]][2] += Sxz;
+	
+	sys->stress[particle_num[0]][3] += Syz;
+	sys->stress[particle_num[1]][3] += Syz;
+	
+	sys->stress[particle_num[0]][4] += Syy;
+	sys->stress[particle_num[1]][4] += Syy;
 }
 
 void ContactForce::calcStaticFriction(){
@@ -84,6 +98,7 @@ void ContactForce::calcStaticFriction(){
 	}
 }
 
+
 void ContactForce::calcDynamicFriction(){
 	double f_dynamic = -sys->mu_dynamic*f_normal;
 	/* Use the velocity of one time step before as approximation. */
@@ -91,8 +106,8 @@ void ContactForce::calcDynamicFriction(){
 	f_tangent = -f_dynamic*unit_contact_velocity_tan;
 }
 
-
-/* Calculate interaction.
+/* 
+ * Calculate interaction.
  * Force acts on particle 0 from particle 1.
  *
  */
@@ -136,7 +151,6 @@ void ContactForce::calcInteractionNoFriction(){
 	}
 }
 
-
 void ContactForce::incrementTangentialDisplacement(){
 	// relative velocity particle 0 from particle 1.
 	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
@@ -144,7 +158,6 @@ void ContactForce::incrementTangentialDisplacement(){
 		contact_velocity.x += pd_z * sys->vel_difference;
 	}
 
-//	contact_velocity  += cross(sys->ang_velocity[particle_num[0]], nr_vec) + cross(sys->ang_velocity[particle_num[1]], nr_vec);
 	contact_velocity  += cross(sys->ang_velocity[particle_num[0]] + sys->ang_velocity[particle_num[1]], nr_vec);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
 	if (static_friction){
@@ -160,11 +173,3 @@ void ContactForce::incrementTangentialDisplacement(){
 		}
 	}
 }
-
-
-
-
-
-
-
-

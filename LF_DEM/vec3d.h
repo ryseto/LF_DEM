@@ -3,7 +3,7 @@
  *  CCN_3D
  *
  *  Created by seto on 09/08/11.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009 Ryohei Seto. All rights reserved.
  *
  */
 #ifndef vec3d_h
@@ -19,9 +19,9 @@ public:
 
 	/* constructor/destructor */
 	inline vec3d (void){}
-	inline vec3d (const double &_x, 
-								const double &_y, 
-								const double &_z): x(_x), y(_y), z(_z) {}
+	inline vec3d (const double &_x,
+				  const double &_y,
+				  const double &_z): x(_x), y(_y), z(_z) {}
 	inline ~vec3d(void){}
 		
 	/* operators */
@@ -138,7 +138,7 @@ public:
 	inline void reset(){ x = 0, y = 0, z = 0;}
     inline void add(const double &_dx, const double &_dy, const double &_dz){
         x += _dx, y += + _dy, z += _dz;}
-	inline void unitvector(){(*this) = (*this) / norm();} 
+	inline void unitvector(){(*this) = (*this) / norm();}
 	inline void sign_reverse(){ (*this) = -(*this);}
 	inline double sq_norm(){return x*x + y*y + z*z; }
 	inline double sq_norm_xy(){return x*x + y*y;}
@@ -160,8 +160,34 @@ public:
 		
 		return product;
 	}
+	
+	void periodicBoundaryBox(const double &lx,
+							 const double &ly,
+							 const double &lz){
+		if ( x < 0 ){
+			x += lx;
+		} else if ( x > lx ){
+			x -= lx;
+		}
+		if ( y < 0 ){
+			y += ly;
+		} else if ( y > ly ){
+			y -= ly;
+		}
+		if ( z < 0 ){
+			z += lz;
+		} else if ( z > lz ){
+			z -= lz;
+		}
+	
+	}
 	void cerr(){
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
 	}	
 };
 #endif	
+
+
+
+
+
