@@ -12,6 +12,7 @@
 		D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */; };
 		D91B041C166EF09F00DC63CA /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */; };
 		D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
+		D92F19C31676450800411650 /* BrownianForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92F19C01676450800411650 /* BrownianForce.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
@@ -39,6 +40,9 @@
 		D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = ../../../../../../usr/local/lib/libamd.2.3.1.a; sourceTree = "<group>"; };
 		D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = ../../../../../../usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<group>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		D92F19C01676450800411650 /* BrownianForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrownianForce.cpp; sourceTree = "<group>"; };
+		D92F19C11676450800411650 /* BrownianForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrownianForce.h; sourceTree = "<group>"; };
+		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Simulation.cpp; sourceTree = "<group>"; };
 		D9878876165545680047A87E /* Simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Simulation.h; sourceTree = "<group>"; };
 		D988E389165441750009949F /* LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -89,6 +93,9 @@
 		D988E38C165441750009949F /* LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
+				D92F19C01676450800411650 /* BrownianForce.cpp */,
+				D92F19C11676450800411650 /* BrownianForce.h */,
+				D92F19C21676450800411650 /* MersenneTwister.h */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
@@ -160,6 +167,7 @@
 				D988E39F1654A7410009949F /* ContactForce.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
 				D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */,
+				D92F19C31676450800411650 /* BrownianForce.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

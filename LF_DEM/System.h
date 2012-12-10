@@ -98,6 +98,9 @@ public:
 	 * lubcore < 2 gives weaker lubriaction force that allows particle contact.
 	 */
 	double lubcore;
+	BrownianForce *fb;
+	/*************************************************************/
+
 	double lx;
 	double ly;
 	double lz;
@@ -134,6 +137,20 @@ public:
 	bool noOverlap();
 	void calcHydrodynamicStress();
 	void calcStressAverage();
+
+	int numpart(){
+	  return n;
+	}
+
+
+#ifdef CHOLMOD
+	cholmod_factor *L ;
+	cholmod_common c ;
+	
+#endif
+	
 	void lubricationStress(int i, int j);
+
+
 };
 #endif /* defined(__LF_DEM__State__) */

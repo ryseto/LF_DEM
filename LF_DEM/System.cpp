@@ -337,9 +337,8 @@ diag_values[k] = 0.;
 
 #ifdef CHOLMOD
 void System::buildBrownianTerms(){
-
 	// add Brownian force
-fb->add_to(rhs_b);
+	fb->add_to(rhs_b);
 }
 // #else
 // void System::buildBrownianTerms(){
@@ -373,10 +372,7 @@ void System::buildContactTerms(){
 
 #ifdef CHOLMOD
 void System::updateVelocityLubrication(){
-
 	buildLubricationTerms();
-
-
 // allocate
 	int nzmax;  // non-zero values
 	nzmax = 6*n; // diagonal blocks
