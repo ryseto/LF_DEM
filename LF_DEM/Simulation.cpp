@@ -8,9 +8,7 @@
 
 #include "Simulation.h"
 #include <cmath>
-
 Simulation::Simulation(){};
-
 Simulation::~Simulation(){
 	fout_yap.close();
 	fout_rheo.close();
@@ -82,10 +80,10 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 */
 	shear_strain = 100.0;
 	/*
-	 * Time step.
-	 * We need to check this value.
+	 * dt: the time step to integrate the equation of motion.
+	 * We need to give a good criterion to give.
 	 */
-	sys.dt = 1e-4 / sys.shear_rate; //time step.
+	sys.dt = 1e-4 / sys.shear_rate;
 	/*
 	 * The time steps finishing simulation.
 	 */

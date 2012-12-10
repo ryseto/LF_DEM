@@ -93,7 +93,6 @@ public:
 	 * lubcore < 2 gives weaker lubriaction force that allows particle contact.
 	 */
 	double lubcore;
-	
 	double lx;
 	double ly;
 	double lz;
@@ -114,7 +113,6 @@ public:
 	string simu_name;
 	void prepareSimulationName();
 	void prepareSimulation();
-
 	double sq_norm();
 	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);
@@ -122,7 +120,6 @@ public:
 	double sq_neardistance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
-
 	double distance(int i, int j);
 	void updateVelocity();
 	void updateVelocityLubrication();
@@ -133,9 +130,6 @@ public:
 	bool noOverlap();
 	void calcHydrodynamicStress();
 	void calcStressAverage();
-
 	void lubricationStress(int i, int j);
-
-		
 };
 #endif /* defined(__LF_DEM__State__) */
