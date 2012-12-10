@@ -277,8 +277,11 @@ void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int 
 
 
 #ifdef CHOLMOD
-void System::buildLubricationTerms(){ // fills resistance matrix and part of the rhs force coming from lubrication
-
+/*
+ * fills resistance matrix and part of the rhs force coming from lubrication
+ *
+ */
+void System::buildLubricationTerms(){
 	for (int k = 0; k < 6*n; k++){
 		diag_values[k] = 0.;
 	}
@@ -292,7 +295,6 @@ void System::buildLubricationTerms(){ // fills resistance matrix and part of the
 		diag_values[i6+3] = 1.;
 		diag_values[i6+5] = 1.;
 	}
-
 
 	if (lub){
 		for (int i = 0; i < n - 1; i ++){
@@ -312,16 +314,19 @@ void System::buildLubricationTerms(){ // fills resistance matrix and part of the
 						appendToColumn(nvec, j, +alpha);
 						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
 						double alpha_gd_dz_n0_n[] = { \
-						  alpha_gd_dz_n0*nvec[0],
-						  alpha_gd_dz_n0*nvec[1],
-						  alpha_gd_dz_n0*nvec[2]};
-
+							alpha_gd_dz_n0*nvec[0],
+							alpha_gd_dz_n0*nvec[1],
+							alpha_gd_dz_n0*nvec[2]};
+						
 						((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
 						((double*)rhs_b->x)[3*i+2] += alpha_gd_dz_n0_n[2];
 						((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 						((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
+					} else {
+						cerr << "h<0" << endl;
+						exit(1);
 					}
 				}
 			}
@@ -372,6 +377,7 @@ void System::buildContactTerms(){
 
 #ifdef CHOLMOD
 void System::updateVelocityLubrication(){
+	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
 	buildLubricationTerms();
 // allocate
 	int nzmax;  // non-zero values
@@ -386,9 +392,8 @@ void System::updateVelocityLubrication(){
 	cholmod_factorize (sparse_res, L, &c);
 	
 	buildContactTerms();
-
 	buildBrownianTerms();
-
+	
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -396,11 +401,10 @@ void System::updateVelocityLubrication(){
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
 	}
-	cholmod_free_sparse(&sparse_res,&c);
-	cholmod_free_factor(&L,&c);
-	cholmod_free_dense(&rhs_b,&c);
-	cholmod_free_dense(&v,&c);
-
+	cholmod_free_sparse(&sparse_res, &c);
+	cholmod_free_factor(&L, &c);
+	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_dense(&v, &c);
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){

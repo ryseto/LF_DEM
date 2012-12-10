@@ -93,19 +93,19 @@
 		D988E38C165441750009949F /* LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
-				D92F19C01676450800411650 /* BrownianForce.cpp */,
-				D92F19C11676450800411650 /* BrownianForce.h */,
-				D92F19C21676450800411650 /* MersenneTwister.h */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
+				D92F19C01676450800411650 /* BrownianForce.cpp */,
+				D92F19C11676450800411650 /* BrownianForce.h */,
 				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
 				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D988E39D1654A7410009949F /* ContactForce.cpp */,
 				D988E39E1654A7410009949F /* ContactForce.h */,
 				D988E399165443C10009949F /* vec3d.h */,
+				D92F19C21676450800411650 /* MersenneTwister.h */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
