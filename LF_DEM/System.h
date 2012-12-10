@@ -22,9 +22,11 @@
 #endif
 #include "vec3d.h"
 #include "ContactForce.h"
+#include "BrownianForce.h"
 
 using namespace std;
 class Interaction;
+class BrownianForce;
 
 class System{
 private:
@@ -36,7 +38,6 @@ private:
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *rhs_b;
-	cholmod_common c ;
 	int max_lub_int;
 	int stype;
 	int sorted;
@@ -61,6 +62,9 @@ private:
 	double *work;
 	char UPLO;
 #endif
+	void buildResistanceMatrix();
+	void buildRHSVector();
+
 protected:
 public:
     /* For DEMsystem
@@ -87,6 +91,7 @@ public:
 	bool friction;
 	bool lub;
 	double lubcore;
+	BrownianForce *fb;
 	/*************************************************************/
 	double lx;
 	double ly;
@@ -96,6 +101,7 @@ public:
 	double lz2;
 	double x_shift;
 	double shear_rate;
+	double kb_T;
 	double volume_fraction;
 	double vel_difference;
 	double dt;
@@ -123,8 +129,16 @@ public:
 
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
+	
+	int numpart(){
+	  return n;
+	}
+
+
 #ifdef CHOLMOD
 	cholmod_factor *L ;
+	cholmod_common c ;
+	
 #endif
 	
 };

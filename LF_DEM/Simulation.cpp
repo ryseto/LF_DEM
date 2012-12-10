@@ -15,6 +15,7 @@ Simulation::~Simulation(){
 	fout_yap.close();
 	fout_force.close();
 	delete [] fc;
+
 	for (int i=0; i < num_particle; i++){
 		delete [] contact_pair[i];
 	}
@@ -60,7 +61,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 */
 	sys.eta = 1.0; // viscosity
 	sys.shear_rate = 1; // shear rate
-	shear_strain = 1; // shear strain
+	shear_strain = 0.02; // shear strain
+	sys.kb_T=1.;
 	cutoff_distance = 2.5; // to delete possible neighbor
 	sys.sq_lub_max = 2.5*2.5; // square of lubrication cutoff length.
 	sys.dt = 1e-4 / sys.shear_rate; //time step.
@@ -128,6 +130,8 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 	initContactPair();
 	fc = new ContactForce [max_num_interaction];
+
+	
 	for (int i = 0; i < max_num_interaction; i++){
 		fc[i].init( &sys );
 	}
@@ -227,6 +231,9 @@ void Simulation::timeEvolution(){
 			// Free-draining approximation
 			sys.updateVelocity();
 		}
+		if (sys.ts % interval_snapshot == 0){
+			output_yap();
+		}
 		sys.deltaTimeEvolution();
 		if (sys.friction){
 			for (int k = 0; k < num_interaction; k++){
@@ -234,9 +241,7 @@ void Simulation::timeEvolution(){
 			}
 		}
 		checkBreak();
-		if (sys.ts % interval_snapshot == 0){
-			output_yap();
-		}
+
 		sys.ts ++;
 	}
 }

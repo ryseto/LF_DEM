@@ -20,6 +20,10 @@ System::~System(){
 	delete [] diag_values;
 	delete [] off_diag_values;
 	delete [] ploc;
+	cholmod_free_dense(&v, &c);
+	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_sparse(&sparse_res, &c);
+	cholmod_finish(&c);
 #else
 	delete [] work;
 	delete [] ipiv;
@@ -36,6 +40,8 @@ void System::init(){
 	cerr << simu_name << endl;
 	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
 	vel_difference = shear_rate*lz;
+	fb = new BrownianForce(this);
+
 }
 
 /* Set number of particles.
@@ -64,7 +70,7 @@ void System::prepareSimulation(unsigned long number_of_particles){
 	diag_values = new double [6*n];
 	off_diag_values = new vector <double> [3];
 	ploc = new int [n+1];
-
+	fb->init();
 #else
 	/* for dgesv_ or dsysv_
 	 */
@@ -265,7 +271,10 @@ double System::lubricationForceFactor(int i, int j){
 	}
 }
 
-void System::updateVelocityLubrication(){
+
+
+void System::buildResistanceMatrix(){
+
 #ifdef CHOLMOD
 	for (int k = 0;k < 6*n; k++){
 		diag_values[k]=0.;
@@ -346,6 +355,45 @@ void System::updateVelocityLubrication(){
 			}
 		}
 	}
+
+#ifdef CHOLMOD
+	ploc[n-1] = (unsigned int)rows.size();
+	ploc[n] = (unsigned int)rows.size();
+#endif
+
+}
+
+void System::buildRHSVector(){
+#ifdef CHOLMOD
+	// add Brownian force
+	//	rhs_b = fb->generate();
+
+	// add contact force
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		((double*)rhs_b->x)[i3] += force[i].x;
+		((double*)rhs_b->x)[i3+1] += force[i].y;
+		((double*)rhs_b->x)[i3+2] += force[i].z;
+	}
+#else
+	// add Brownian force
+	//	fb->generate(rhs_b); // right now not working, as it relies on Cholesky factor
+
+	// add contact force
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		rhs_b[i3] += force[i].x;
+		rhs_b[i3+1] += force[i].y;
+		rhs_b[i3+2] += force[i].z;
+	}
+#endif
+}
+
+void System::updateVelocityLubrication(){
+
+	buildResistanceMatrix();
+
+
 	/* F = R (V - V_inf)
 	 *
 	 * (V - V_inf) = M F
@@ -356,8 +404,9 @@ void System::updateVelocityLubrication(){
 	 */
 	
 #ifdef CHOLMOD
-	ploc[n-1] = (unsigned int)rows.size();
-	ploc[n] = (unsigned int)rows.size();
+
+
+
 	// allocate
 	int nzmax;  // non-zero values
 	nzmax = 6*n; // diagonal blocks
@@ -384,7 +433,11 @@ void System::updateVelocityLubrication(){
 //		//	    cout << ((double*)L->x)[ ((int*)L->p) [i] ] << endl;
 //		cout << "pause " << endl; getchar();
 //	}
+#endif
 
+	buildRHSVector();
+
+#ifdef CHOLMOD
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -393,12 +446,6 @@ void System::updateVelocityLubrication(){
 		velocity[i].z = ((double*)v->x)[i3+2];
 	}
 #else
-	for (int i = 0; i < n; i++){
-		int i3 = 3*i;
-		rhs_b[i3] += force[i].x;
-		rhs_b[i3+1] += force[i].y;
-		rhs_b[i3+2] += force[i].z;
-	}
 	// LU
 	//dgesv_(&n3, &nrhs, res, &lda, ipiv, b_vector, &ldb, &info);
 	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
