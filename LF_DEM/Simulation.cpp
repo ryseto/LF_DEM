@@ -13,6 +13,7 @@ Simulation::~Simulation(){
 	fout_yap.close();
 	fout_rheo.close();
 	delete [] fc;
+
 	for (int i=0; i < sys.n; i++){
 		delete [] contact_pair[i];
 	}
@@ -66,6 +67,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	/*
 	 * Simulation parameters
 	 */
+
 	/*
 	 * Viscosity is not implemented in the simulation.
 	 * eta = 1.0 is assumed.

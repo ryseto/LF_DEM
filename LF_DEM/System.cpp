@@ -20,6 +20,10 @@ System::~System(){
 	delete [] diag_values;
 	delete [] off_diag_values;
 	delete [] ploc;
+	cholmod_free_dense(&v, &c);
+	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_sparse(&sparse_res, &c);
+	cholmod_finish(&c);
 #else
 	delete [] work;
 	delete [] ipiv;
@@ -44,6 +48,7 @@ void System::prepareSimulationName(){
 	}
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
+
 }
 
 /* Set number of particles.
@@ -74,7 +79,8 @@ void System::prepareSimulation(){
 		torque[i].reset();
 	}
 	
-	
+	fb = new BrownianForce(this);	
+
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
@@ -84,7 +90,7 @@ void System::prepareSimulation(){
 	diag_values = new double [6*n];
 	off_diag_values = new vector <double> [3];
 	ploc = new int [n+1];
-
+	fb->init();
 #else
 	/* for dgesv_ or dsysv_
 	 */
@@ -269,10 +275,12 @@ void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int 
 }
 #endif
 
+
 #ifdef CHOLMOD
-void System::updateVelocityLubrication(){
-	for (int k = 0; k < 6*n; k++){
-		diag_values[k] = 0.;
+void System::buildLubricationTerms(){ // fills resistance matrix and part of the rhs force coming from lubrication
+
+for (int k = 0; k < 6*n; k++){
+diag_values[k] = 0.;
 	}
 	rows.clear();
 	off_diag_values[0].clear();
@@ -285,6 +293,7 @@ void System::updateVelocityLubrication(){
 		diag_values[i6+5] = 1.;
 	}
 	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+
 	if (lub){
 		for (int i = 0; i < n - 1; i ++){
 			ploc[i] = (unsigned int)rows.size();
@@ -303,9 +312,9 @@ void System::updateVelocityLubrication(){
 						appendToColumn(nvec, j, +alpha);
 						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
 						double alpha_gd_dz_n0_n[] = { \
-							alpha_gd_dz_n0*nvec[0],
-							alpha_gd_dz_n0*nvec[1],
-							alpha_gd_dz_n0*nvec[2]};
+						  alpha_gd_dz_n0*nvec[0],
+						  alpha_gd_dz_n0*nvec[1],
+						  alpha_gd_dz_n0*nvec[2]};
 
 						((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
@@ -313,17 +322,62 @@ void System::updateVelocityLubrication(){
 						((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 						((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
-					}
-				}
-			}
-		}
-	}
-	/*
-	 * F = R (V - V_inf)
-	 * (V - V_inf) = M F
-	 */
+}
+}
+}
+}
+}
+
+
 	ploc[n-1] = (unsigned int)rows.size();
 	ploc[n] = (unsigned int)rows.size();
+
+}
+#endif
+
+#ifdef CHOLMOD
+void System::buildBrownianTerms(){
+
+	// add Brownian force
+fb->add_to(rhs_b);
+}
+// #else
+// void System::buildBrownianTerms(){
+// 	// add Brownian force
+// 	//	fb->generate(rhs_b); // right now not working, as it relies on Cholesky factor
+// }
+#endif
+
+#ifdef CHOLMOD
+void System::buildContactTerms(){
+
+	// add contact force
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		((double*)rhs_b->x)[i3] += force[i].x;
+		((double*)rhs_b->x)[i3+1] += force[i].y;
+		((double*)rhs_b->x)[i3+2] += force[i].z;
+	}
+}
+// #else
+// void System::buildContactTerms(){
+// 	// add contact force
+// 	for (int i = 0; i < n; i++){
+// 		int i3 = 3*i;
+// 		rhs_b[i3] += force[i].x;
+// 		rhs_b[i3+1] += force[i].y;
+// 		rhs_b[i3+2] += force[i].z;
+// 	}
+// }
+#endif
+
+#ifdef CHOLMOD
+void System::updateVelocityLubrication(){
+
+	buildLubricationTerms();
+
+
+// allocate
 	int nzmax;  // non-zero values
 	nzmax = 6*n; // diagonal blocks
 	for(int s=0; s<3; s++){
@@ -331,25 +385,14 @@ void System::updateVelocityLubrication(){
 	}
 	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
 	fillSparseResmatrix();
-	for (int i = 0; i < n; i++){
-		int i3 = 3*i;
-		((double*)rhs_b->x)[i3] += force[i].x;
-		((double*)rhs_b->x)[i3+1] += force[i].y;
-		((double*)rhs_b->x)[i3+2] += force[i].z;
-	}
-	L = cholmod_analyze(sparse_res, &c);
-	cholmod_factorize(sparse_res, L, &c);
-	//	if(c.status){ // debug
-	//		cout << " factorization failed. forcing simplicial algorithm... " << endl;
-	//		c.supernodal = CHOLMOD_SIMPLICIAL;
-	//		L = cholmod_analyze (sparse_res, &c);
-	//		cholmod_factorize (sparse_res, L, &c) ;
-	//		cout << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL " <<  c.final_ll <<endl;
-	//
-	//		//	  for (int i = 0; i < n3; i++)
-	//		//	    cout << ((double*)L->x)[ ((int*)L->p) [i] ] << endl;
-	//		cout << "pause " << endl; getchar();
-	//	}
+
+	L = cholmod_analyze (sparse_res, &c);
+	cholmod_factorize (sparse_res, L, &c);
+	
+
+	buildBrownianTerms();
+	buildContactTerms();
+
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -370,6 +413,7 @@ void System::updateVelocityLubrication(){
 }
 
 #else
+
 /*
  * By using lapack
  */
@@ -424,6 +468,7 @@ void System::updateVelocityLubrication(){
 		rhs_b[i3+1] += force[i].y;
 		rhs_b[i3+2] += force[i].z;
 	}
+
 	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
