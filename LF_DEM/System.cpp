@@ -392,7 +392,9 @@ void System::updateVelocityLubrication(){
 	cholmod_factorize (sparse_res, L, &c);
 	
 	buildContactTerms();
-	buildBrownianTerms();
+	if (brownian){
+		buildBrownianTerms();
+	}
 	
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){

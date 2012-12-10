@@ -111,8 +111,6 @@ void solveOverlap(){
 		}
 		position[i] += delta_translation;
 		position[i].periodicBoundaryBox(lx, ly, lz);
-
-		
 		
 		int overlap = -1;
 		if (sqContactDistance(i, previous_overlap[i]) < 4){

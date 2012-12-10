@@ -22,6 +22,7 @@ Simulation::~Simulation(){
 
 void Simulation::SetParameters(int argc, const char * argv[]){
 	sys.lub = true;
+	sys.brownian = true;
 	filename_import_positions = argv[1];
 	sys.lubcore = atof(argv[2]);
 	string arg3 =argv[3];

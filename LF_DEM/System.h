@@ -90,6 +90,7 @@ public:
 	double sq_critical_velocity;
 	bool friction;
 	bool lub;
+	bool brownian;
 	/*
 	 * Leading term of lubrication force is 1/(r-2a).
 	 * This can be weakened by using a'<a.
