@@ -78,9 +78,13 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 */
 	sys.shear_rate = 1.0;
 	/*
+	 * Temperature
+	 */
+	sys.kb_T=1.0;
+	/*
 	 * Simulation terminate at this value
 	 */
-	shear_strain = 100.0;
+	shear_strain = 100.;
 	/*
 	 * dt: the time step to integrate the equation of motion.
 	 * We need to give a good criterion to give.

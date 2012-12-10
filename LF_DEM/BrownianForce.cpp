@@ -35,7 +35,7 @@ BrownianForce::add_to(cholmod_dense *force_vec){
   
 	int n3=3*sys->numpart();
 	for(int i=0; i<n3;i++){
-	  ((double*)force_vec->x)[i] += ((double*)force_vec->x)[i];
+	  ((double*)force_vec->x)[i] += ((double*)forces->x)[i];
 	}
 }
 
@@ -48,6 +48,14 @@ BrownianForce::generate(){
 	double temperature [2] = {kb_T2,0};
 	double zero [2] = {0,0};
 	cholmod_sdmult(L_sparse, 0, temperature, zero, random_vector(), forces, c);
+
+	// cout << endl<< endl << " brownian force "<< endl<< endl;
+	// cout << " kbt " << kb_T2 << endl;
+	// for (int i = 0; i < 20; i++){
+	// 	cout << ((double*)forces->x)[i] << endl;
+	// }
+
+	cholmod_free_sparse(&L_sparse, c);
 	cholmod_free_factor(&L_copy, c);
 
 }
@@ -68,5 +76,6 @@ BrownianForce::random_vector(){
 	for(int i=0; i<n3; i++){
 		((double*)rand_vec->x)[i] = GRANDOM;
 	}
+
 	return rand_vec;
 }

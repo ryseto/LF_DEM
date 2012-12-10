@@ -279,8 +279,8 @@ void fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int 
 #ifdef CHOLMOD
 void System::buildLubricationTerms(){ // fills resistance matrix and part of the rhs force coming from lubrication
 
-for (int k = 0; k < 6*n; k++){
-diag_values[k] = 0.;
+	for (int k = 0; k < 6*n; k++){
+		diag_values[k] = 0.;
 	}
 	rows.clear();
 	off_diag_values[0].clear();
@@ -292,7 +292,7 @@ diag_values[k] = 0.;
 		diag_values[i6+3] = 1.;
 		diag_values[i6+5] = 1.;
 	}
-	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+
 
 	if (lub){
 		for (int i = 0; i < n - 1; i ++){
@@ -322,11 +322,11 @@ diag_values[k] = 0.;
 						((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
 						((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 						((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
-}
-}
-}
-}
-}
+					}
+				}
+			}
+		}
+	}
 
 
 	ploc[n-1] = (unsigned int)rows.size();
@@ -385,9 +385,9 @@ void System::updateVelocityLubrication(){
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
 	
+	buildContactTerms();
 
 	buildBrownianTerms();
-	buildContactTerms();
 
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 	for (int i = 0; i < n; i++){
@@ -399,6 +399,8 @@ void System::updateVelocityLubrication(){
 	cholmod_free_sparse(&sparse_res,&c);
 	cholmod_free_factor(&L,&c);
 	cholmod_free_dense(&rhs_b,&c);
+	cholmod_free_dense(&v,&c);
+
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
