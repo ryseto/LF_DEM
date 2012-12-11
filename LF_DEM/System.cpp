@@ -226,16 +226,11 @@ void System::calcContactForces(){
 	}
 }
 
-
-
 void System::updateContactForceConfig(){
-	
 	for (int k = 0; k < num_interaction; k++){
 		interaction[k].incrementContactTangentialDisplacement();
 	}
 }
-
-
 
 void System::forceReset(){
 	for (int i=0; i < n; i++){
@@ -679,10 +674,6 @@ double System::distance(int i, int j){
 }
 
 /*
- * Square norm of vector (dx, dy, dz)
- */
-
-/*
  * Square distance between particle i and particle j
  */
 double System::sq_distance(int i, int j){
@@ -719,8 +710,6 @@ double System::sq_distance(int i, int j){
  * Otherwize it returns 1000.
  */
 double System::sq_distanceToCheckContact(int i, int j){
-	
-	
 	double dx = position[i].x - position[j].x;
 	double dz = position[i].z - position[j].z;
 	if (dz > lz2 ){
@@ -755,7 +744,6 @@ double System::sq_distanceToCheckContact(int i, int j){
 	}
 	return 1000;
 }
-
 
 double System::lubricationForceFactor(int i, int j){
 	//double r_sq = sq_distance(i,j);
@@ -823,12 +811,9 @@ void System::lubricationStress(int i, int j){
 			
 			stress[i][4] += Syy;
 			stress[j][4] += Syy;
-		}
-		
-		
+		}				
 	}
 }
-
 
 void System::calcStressAverage(){
 	double totalStress[5] = {0,0,0,0,0};

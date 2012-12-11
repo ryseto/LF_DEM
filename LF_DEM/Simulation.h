@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
-//#include "ContactForce.h"
 #include "System.h"
 
 class Simulation{
@@ -21,20 +20,10 @@ private:
 	vector< vec3d> initial_positions;
 	string filename_import_positions;
 	/*
-	 * Interparticle interactions
-	 */
-//	ContactForce *fc;
-	
-//	int **contact_pair; // Table
-//	int max_num_contactforce; // Allowed length of interaction array.
-//	int num_contactforce; // Length of used interaction array.
-//	int maxnum_contactforce;
-	/*
 	 *  Simulation parameters
 	 */
 	int ts_max;
 	int interval_snapshot;
-//	double cutoff_distance;
 	/*
 	 * For output data.
 	 */
@@ -42,19 +31,13 @@ private:
 	ofstream fout_rheo;
 	double yap_force_factor;
 	bool origin_zero_flow;
-	/*
-	 *
-	 */
 	void SetParameters(int argc, const char * argv[]);
 	void importInitialPositionFile();
 	void output_yap();
 	void output_vel();
 	void initContactPair();
-//	void checkBreak();
-//	void checkNewInteraction();
 	void outputRheologyData();
 	void timeEvolution();
-	
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout);
 	void drawLine(char type , vec3d pos, vec3d vec, ofstream &fout);

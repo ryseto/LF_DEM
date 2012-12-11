@@ -34,6 +34,10 @@ private:
 	int maxnum_interactionpair;
 	int **interaction_pair; // Table
 	queue<int> deactivated_interaction;
+	void initInteractionPair();
+	void buildLubricationTerms();
+	void buildBrownianTerms();
+	void buildContactTerms();
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *rhs_b;
@@ -49,8 +53,6 @@ private:
 	void fillSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
 	void appendToColumn(double *nvec, int jj, double alpha);
-	void initInteractionPair();
-
 #else
 	double *res;
 	int nrhs;
@@ -63,9 +65,6 @@ private:
 	double *work;
 	char UPLO;
 #endif
-	void buildLubricationTerms();
-	void buildBrownianTerms();
-	void buildContactTerms();
 
 protected:
 public:
@@ -97,6 +96,7 @@ public:
 	bool lub;
 	bool brownian;
 	Interaction *interaction;
+	int num_interaction;
 	/*
 	 * Leading term of lubrication force is 1/(r-2a).
 	 * This can be weakened by using a'<a.
@@ -106,11 +106,7 @@ public:
 	 */
 	double lubcore;
 	BrownianForce *fb;
-
-
 	/*************************************************************/
-	int num_interaction;
-
 	double lx;
 	double ly;
 	double lz;
@@ -126,52 +122,34 @@ public:
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
-
 	string simu_name;
-	
-	
 	
 	void prepareSimulationName();
 	void prepareSimulation();
 	void timeEvolution(int time_step);
-	
-	// new interaction
 	void checkNewInteraction();
-	// interaction ends
 	void checkInteractionEnd();
-	// calc contact forces;
 	void calcContactForces();
-	double sq_norm();
-	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);
 	double sq_distanceToCheckContact(int i, int j);
-	double sq_neardistance(int i, int j);
+	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
-	double distance(int i, int j);
 	void updateVelocity();
 	void updateVelocityLubrication();
 	void deltaTimeEvolution();
 	void forceReset();
 	void torqueReset();
 	void stressReset();
-	bool noOverlap();
-	void calcHydrodynamicStress();
 	void calcStressAverage();
 	void updateContactForceConfig();
 	int numpart(){
-	  return n;
+		return n;
 	}
-	
-
 #ifdef CHOLMOD
 	cholmod_factor *L ;
 	cholmod_common c ;
-	
 #endif
-	
 	void lubricationStress(int i, int j);
-
-
 };
 #endif /* defined(__LF_DEM__State__) */
