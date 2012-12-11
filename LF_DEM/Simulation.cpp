@@ -12,12 +12,6 @@ Simulation::Simulation(){};
 Simulation::~Simulation(){
 	fout_yap.close();
 	fout_rheo.close();
-	//delete [] fc;
-
-//	for (int i=0; i < sys.n; i++){
-//		delete [] contact_pair[i];
-//	}
-//	delete [] contact_pair;
 };
 
 void Simulation::SetParameters(int argc, const char * argv[]){
@@ -95,13 +89,6 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 * The time steps finishing simulation.
 	 */
 	ts_max = (int)(shear_strain / sys.dt);
-
-	/*
-	 * No contact force acts if h > 0.
-	 * But the contact force object is kept it
-	 * as long as r_ij < cutoff_distance
-	 */
-//	cutoff_distance = 2.5; // to delete possible neighbor
 	/*
 	 * Range of lubrication force
 	 */
@@ -138,7 +125,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	if (sys.dimension == 2)
 		sys.draw_rotation_2d = true;
 	else
-		sys.draw_rotation_2d = true;
+		sys.draw_rotation_2d = false;
 	/*
 	 * snapshot for yaplot data.
 	 */
@@ -196,102 +183,27 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 
 }
-
-/*
- * only elements of j > i will be used.
- */
-//void Simulation::initContactPair(){
-//	contact_pair = new int * [sys.n];
-//	for (int i=0; i < sys.n; i++){
-//		contact_pair[i] = new int [sys.n];
-//	}
-//	for (int i=0; i < sys.n-1; i++){
-//		for (int j=i+1; j < sys.n; j++){
-//			contact_pair[i][j] = -1;
-//		}
-//	}
-//}
-
-
-/* Check the distance between separating particles.
- * i < j 
- *
- * A patch-up prescription to aboid 
- * contact_pair[i][j] < 0 indicates separating particles to be checked.
- * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
- * contact_pair[i][j] < -1, the particles have some distance.
- */
-/*
-void Simulation::checkNewInteraction(){
-	for (int i=0; i < sys.n-1; i++){
-		for (int j=i+1; j < sys.n; j++){
-			if ( contact_pair[i][j] == -1){
-				double sq_distance = sys.sq_distanceToCheckContact(i, j);
-				if ( sq_distance < sys.sq_lub_max){
-					int new_num_contactforce;
-					if (deactivated_interaction.empty()){
-						// add an interaction object.
-						new_num_contactforce = num_contactforce;
-						num_contactforce ++;
-					} else {
-						// fill a deactivated interaction object.
-						new_num_contactforce = deactivated_interaction.front();
-						deactivated_interaction.pop();
-					}
-					fc[new_num_contactforce].create(i,j);
-					contact_pair[i][j] = new_num_contactforce;
-				}
-			}
-		}
-	}
-}
-*/
 /*
  *
  */
 void Simulation::outputRheologyData(){
-	sys.stressReset();
-//	for (int k=0; k < num_contactforce; k++){
-//		fc[k].calcStress();
-//	}
-	if (sys.lub == true){
-		for (int i=0; i < sys.n; i++){
-			for (int j=i+1; j < sys.n; j++){
-				sys.lubricationStress(i,j );
-			}
-		}
-	}
-	sys.calcStressAverage();
+	sys.calcStress();
 	/*
 	 * Output the sum of the normal forces.
 	 */
-	double total_normal_force = 0;
-	int cnt = 0;
-//	for (int i=0; i < sys.n; i++){
-//		for (int j=i+1; j < sys.n; j++){
-//			double f_ij = 0;
-//			if (sys.lub == true){
-//				f_ij += sys.lubricationForceFactor(i, j);
-//			}
-//			if (contact_pair[i][j] != -1){
-//				f_ij += -fc[contact_pair[i][j]].f_normal;
-//			}
-//			if (f_ij > 0){
-//				total_normal_force += f_ij;
-//				cnt ++;
-//			}
-//		}
-//	}
-	
 	fout_rheo << sys.dt * sys.ts << ' ';// 1
-	fout_rheo << sys.mean_stress[0] << ' ' ; //5
-	fout_rheo << sys.mean_stress[1] << ' ' ; //6
-	fout_rheo << sys.mean_stress[2] << ' ' ; //7
-	fout_rheo << sys.mean_stress[3] << ' ' ; //8
-	fout_rheo << sys.mean_stress[4] << ' ' ;
-	fout_rheo << total_normal_force / cnt << endl; //9
-
-	
+	fout_rheo << sys.mean_lub_stress[2] + sys.mean_contact_stress[2]  << ' ' ; //2
+	fout_rheo << sys.mean_lub_stress[0] << ' ' ; //3
+	fout_rheo << sys.mean_lub_stress[1] << ' ' ; //4
+	fout_rheo << sys.mean_lub_stress[2] << ' ' ; //5
+	fout_rheo << sys.mean_lub_stress[3] << ' ' ; //6
+	fout_rheo << sys.mean_lub_stress[4] << ' ' ; //7
+	fout_rheo << sys.mean_contact_stress[0] << ' ' ; //8
+	fout_rheo << sys.mean_contact_stress[1] << ' ' ; //9
+	fout_rheo << sys.mean_contact_stress[2] << ' ' ; //10
+	fout_rheo << sys.mean_contact_stress[3] << ' ' ; //11
+	fout_rheo << sys.mean_contact_stress[4] << ' ' ; //12
+	fout_rheo << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
@@ -432,12 +344,12 @@ void Simulation::output_yap(){
 	 * Lubrication + contact force
 	 */
 	fout_yap << "y 3\n";
-	fout_yap << "@ " << color_white << endl;
+	fout_yap << "@ " << color_yellow << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if ( sys.interaction[k].active ){
 			int i = sys.interaction[k].particle_num[0];
 			int j = sys.interaction[k].particle_num[1];
-			fout_yap << "r " << yap_force_factor << endl;
+			fout_yap << "r " << yap_force_factor*sys.interaction[k].valNormalForce() << endl;
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
 									sys.position[i].y - sys.ly2,
 									sys.position[i].z - sys.lz2);

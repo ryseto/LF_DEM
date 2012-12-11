@@ -38,6 +38,9 @@ public:
 	void calcContactStress();
 	void calcDistanceNormalVector();
 	void calcContactVelocity();
+	void addLubricationStress();
+	void addContactStress();
+	double valNormalForce();
 	void incrementContactTangentialDisplacement();
 	bool active;
 	bool contact;

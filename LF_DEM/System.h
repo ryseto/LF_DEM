@@ -81,8 +81,10 @@ public:
 	vec3d *ang_velocity;
 	vec3d *force;
 	vec3d *torque;
-	double **stress; // S_xx S_xy S_xz S_yz S_yy
-	double mean_stress[5];
+	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
+	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
+	double mean_lub_stress[5];
+	double mean_contact_stress[5];
 	double kn;
 	double kt;
 	double eta;
@@ -143,7 +145,7 @@ public:
 	void forceReset();
 	void torqueReset();
 	void stressReset();
-	void calcStressAverage();
+	void calcStress();
 	void incrementContactTangentialDisplacement();
 	int numpart(){
 		return n;

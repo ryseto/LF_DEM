@@ -69,9 +69,14 @@ void System::prepareSimulation(){
 	ang_velocity = new vec3d [n];
 	force = new vec3d [n];
 	torque = new vec3d [n];
-	stress = new double* [n];
+	contactstress = new double* [n];
 	for (int i=0; i < n; i++){
-		stress[i] = new double [5];
+		contactstress[i] = new double [5];
+	}
+
+	lubstress = new double* [n];
+	for (int i=0; i < n; i++){
+		lubstress[i] = new double [5];
 	}
 	
 	double O_inf_y = 0.5*shear_rate/2.0;
@@ -148,7 +153,6 @@ void System::timeEvolution(int time_step){
 		}
 		deltaTimeEvolution();
 		incrementContactTangentialDisplacement();
-	
 		ts ++;
 	}
 }
@@ -200,7 +204,6 @@ void System::updateInteraction(){
 						interaction[k].contact = false;
 					}
 				} else {
-					
 					// contact false:
 					if (interaction[k].r < 2){
 						interaction[k].newContact();
@@ -247,7 +250,8 @@ void System::torqueReset(){
 void System::stressReset(){
 	for (int i=0; i < n; i++){
 		for (int j=0; j < 5; j++){
-			stress[i][j]=0;
+			lubstress[i][j]=0;
+			contactstress[i][j]=0;
 		}
 	}
 }
@@ -431,7 +435,6 @@ void System::buildLubricationTerms(){
 				nvec[1] = interaction[k].nr_vec.y;
 				nvec[2] = interaction[k].nr_vec.z;
 				h = interaction[k].r - lubcore;
-				
 				if(h > 0){
 					double alpha = - 1/(4*h);
 					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
@@ -458,8 +461,6 @@ void System::buildLubricationTerms(){
 					cerr << "r = " << interaction[k].r << endl;
 					position[i].cerr();
 					position[j].cerr();
-					//				interaction[k].nr_vec.cerr();
-					
 					exit(1);
 				}
 			}
@@ -742,85 +743,71 @@ double System::sq_distanceToCheckContact(int i, int j){
 	return 1000;
 }
 
-double System::lubricationForceFactor(int i, int j){
-	//double r_sq = sq_distance(i,j);
-	int k = interaction_pair[i][j];
-	if(interaction[k].active){
-		double h = interaction[k].r  - lubcore;
-		if ( h > 0){
-			vec3d nv = interaction[k].nr_vec;
-			vec3d rel_vel = velocity[j] - velocity[i];
-			double zi_zj = position[i].z - position[j].z;
-			if (zi_zj > lz2){
-				rel_vel.x += vel_difference;
-			} else if (zi_zj < -lz2){
-				rel_vel.x -= vel_difference;
+//void System::lubricationStress(int i, int j){
+//	//	double r_sq = sq_distance(i, j);
+//	int k = interaction_pair[i][j];
+//	if(interaction[k].active){
+//		double h = interaction[k].r  - lubcore;
+//		//		vec3d nv(dx/r, dy/r, dz/r);
+//		vec3d nv =interaction[k].nr_vec;
+//		vec3d rel_vel = velocity[j] - velocity[i];
+//		double zi_zj = position[i].z - position[j].z;
+//		if (zi_zj > lz2){
+//			rel_vel.x += vel_difference;
+//		} else if (zi_zj < -lz2){
+//			rel_vel.x -= vel_difference;
+//		}
+//		double alpha;
+//		if (h > 0){
+//			alpha = 1.0/(4*h);
+//			vec3d f_lub_ij = -alpha*dot(rel_vel , nv)*nv;
+//			
+//			double Sxx = 2*(f_lub_ij.x * nv.x);
+//			double Sxy = f_lub_ij.x * nv.y + f_lub_ij.y * nv.x ;
+//			double Sxz = f_lub_ij.x * nv.z + f_lub_ij.z * nv.x ;
+//			double Syz = f_lub_ij.y * nv.z + f_lub_ij.z * nv.y ;
+//			double Syy = 2*(f_lub_ij.y * nv.y);
+//			stress[i][0] += Sxx;
+//			stress[j][0] += Sxx;
+//			
+//			stress[i][1] += Sxy;
+//			stress[j][1] += Sxy;
+//			
+//			stress[i][2] += Sxz;
+//			stress[j][2] += Sxz;
+//			
+//			stress[i][3] += Syz;
+//			stress[j][3] += Syz;
+//			
+//			stress[i][4] += Syy;
+//			stress[j][4] += Syy;
+//		}				
+//	}
+//}
+
+void System::calcStress(){
+	stressReset();
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].addLubricationStress();
+			if (interaction[k].contact){
+				interaction[k].addContactStress();
 			}
-			double alpha = 1.0/(4*h);
-			return abs(alpha*dot(rel_vel , nv));
-		} else {
-			return 0;
 		}
-	} else {
-		return 0;
 	}
-}
-
-void System::lubricationStress(int i, int j){
-	//	double r_sq = sq_distance(i, j);
-	int k = interaction_pair[i][j];
-	if(interaction[k].active){
-		
-		//		double r = sqrt(r_sq);
-		//		double h = r - lubcore;
-		double h = interaction[k].r  - lubcore;
-		//		vec3d nv(dx/r, dy/r, dz/r);
-		vec3d nv =interaction[k].nr_vec;
-		
-		vec3d rel_vel = velocity[j] - velocity[i];
-		double zi_zj = position[i].z - position[j].z;
-		if (zi_zj > lz2){
-			rel_vel.x += vel_difference;
-		} else if (zi_zj < -lz2){
-			rel_vel.x -= vel_difference;
-		}
-		double alpha;
-		if (h > 0){
-			alpha = 1.0/(4*h);
-			vec3d f_lub_ij = -alpha*dot(rel_vel , nv)*nv;
-			
-			double Sxx = 2*(f_lub_ij.x * nv.x);
-			double Sxy = f_lub_ij.x * nv.y + f_lub_ij.y * nv.x ;
-			double Sxz = f_lub_ij.x * nv.z + f_lub_ij.z * nv.x ;
-			double Syz = f_lub_ij.y * nv.z + f_lub_ij.z * nv.y ;
-			double Syy = 2*(f_lub_ij.y * nv.y);
-			stress[i][0] += Sxx;
-			stress[j][0] += Sxx;
-			
-			stress[i][1] += Sxy;
-			stress[j][1] += Sxy;
-			
-			stress[i][2] += Sxz;
-			stress[j][2] += Sxz;
-			
-			stress[i][3] += Syz;
-			stress[j][3] += Syz;
-			
-			stress[i][4] += Syy;
-			stress[j][4] += Syy;
-		}				
-	}
-}
-
-void System::calcStressAverage(){
-	double totalStress[5] = {0,0,0,0,0};
+	
+	
+	double total_lub_stress[5] = {0,0,0,0,0};
+	double total_contact_stress[5] = {0,0,0,0,0};
 	for (int i=0; i< n ; i++){
 		for (int k=0; k < 5; k++){
-			totalStress[k] += stress[i][k];
+			total_lub_stress[k] += lubstress[i][k];
+			total_contact_stress[k] += contactstress[i][k];
 		}
 	}
 	for (int k=0; k < 5; k++){
-		mean_stress[k] = totalStress[k]/n;
+		mean_lub_stress[k] = total_lub_stress[k] / n;
+		mean_contact_stress[k] = total_contact_stress[k] / n;
 	}
 }
 

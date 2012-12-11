@@ -12,6 +12,8 @@ void Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
+	f_normal = 0;
+
 }
 
 /* Activate interaction between particles i and j.
@@ -75,29 +77,29 @@ void Interaction::calcDistanceNormalVector(){
 	}
 }
 
-void Interaction::calcContactStress(){
-	// S_xx
-	vec3d f_contact = f_tangent + f_normal* nr_vec;
-	double Sxx = f_contact.x * nr_vec.x + f_contact.x * nr_vec.x ;;
-	double Sxy = f_contact.x * nr_vec.y + f_contact.y * nr_vec.x ;
-	double Sxz = f_contact.x * nr_vec.z + f_contact.z * nr_vec.x ;
-	double Syz = f_contact.y * nr_vec.z + f_contact.z * nr_vec.y ;
-	double Syy = f_contact.y * nr_vec.y + f_contact.y * nr_vec.y ;
-	sys->stress[particle_num[0]][0] += Sxx;
-	sys->stress[particle_num[1]][0] += Sxx;
-	
-	sys->stress[particle_num[0]][1] += Sxy;
-	sys->stress[particle_num[1]][1] += Sxy;
-	
-	sys->stress[particle_num[0]][2] += Sxz;
-	sys->stress[particle_num[1]][2] += Sxz;
-	
-	sys->stress[particle_num[0]][3] += Syz;
-	sys->stress[particle_num[1]][3] += Syz;
-	
-	sys->stress[particle_num[0]][4] += Syy;
-	sys->stress[particle_num[1]][4] += Syy;
-}
+//void Interaction::calcContactStress(){
+//	// S_xx
+//	vec3d f_contact = f_tangent + f_normal* nr_vec;
+//	double Sxx = f_contact.x * nr_vec.x + f_contact.x * nr_vec.x ;;
+//	double Sxy = f_contact.x * nr_vec.y + f_contact.y * nr_vec.x ;
+//	double Sxz = f_contact.x * nr_vec.z + f_contact.z * nr_vec.x ;
+//	double Syz = f_contact.y * nr_vec.z + f_contact.z * nr_vec.y ;
+//	double Syy = f_contact.y * nr_vec.y + f_contact.y * nr_vec.y ;
+//	sys->stress[particle_num[0]][0] += Sxx;
+//	sys->stress[particle_num[1]][0] += Sxx;
+//	
+//	sys->stress[particle_num[0]][1] += Sxy;
+//	sys->stress[particle_num[1]][1] += Sxy;
+//	
+//	sys->stress[particle_num[0]][2] += Sxz;
+//	sys->stress[particle_num[1]][2] += Sxz;
+//	
+//	sys->stress[particle_num[0]][3] += Syz;
+//	sys->stress[particle_num[1]][3] += Syz;
+//	
+//	sys->stress[particle_num[0]][4] += Syy;
+//	sys->stress[particle_num[1]][4] += Syy;
+//}
 
 void Interaction::calcStaticFriction(){
 	double f_static = sys->mu_static*f_normal;
@@ -189,3 +191,100 @@ void Interaction::incrementContactTangentialDisplacement(){
 		}
 	}
 }
+
+double Interaction::valNormalForce(){
+	double h = r  - sys->lubcore;
+	double f_normal_total = 0;
+	if ( h > 0){
+		int i = particle_num[0];
+		int j = particle_num[1];
+		vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
+		rel_vel.x += pd_z * sys->vel_difference;
+		double alpha = 1.0/(4*h);
+		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
+		
+		if ( abs(alpha*dot(rel_vel , nr_vec)) > 100){
+			cerr << "rel_vel" << endl;
+			rel_vel.cerr();
+			exit(1);
+			
+		}
+		
+	}
+	if (contact){
+		f_normal_total += f_normal;
+	}
+	return f_normal_total;
+}
+
+void Interaction::addLubricationStress(){
+	double h = r  - sys->lubcore;
+	int i = particle_num[0];
+	int j = particle_num[1];
+	vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
+	double alpha;
+	if (h > 0){
+		alpha = 1.0/(4*h);
+		rel_vel.x += pd_z * sys->vel_difference;
+		double alpha = 1.0/(4*h);
+		vec3d force = alpha*dot(rel_vel, nr_vec)*nr_vec;
+		double Sxx = 2*(force.x * nr_vec.x);
+		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
+		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
+		double Syz = force.y * nr_vec.z + force.z * nr_vec.y ;
+		double Syy = 2*(force.y * nr_vec.y);
+		sys->lubstress[i][0] += Sxx;
+		sys->lubstress[j][0] += Sxx;
+		
+		sys->lubstress[i][1] += Sxy;
+		sys->lubstress[j][1] += Sxy;
+		
+		sys->lubstress[i][2] += Sxz;
+		sys->lubstress[j][2] += Sxz;
+		
+		sys->lubstress[i][3] += Syz;
+		sys->lubstress[j][3] += Syz;
+		
+		sys->lubstress[i][4] += Syy;
+		sys->lubstress[j][4] += Syy;
+	}
+}
+
+
+void Interaction::addContactStress(){
+	double h = r  - sys->lubcore;
+	int i = particle_num[0];
+	int j = particle_num[1];
+	vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
+	double alpha;
+	if (h > 0){
+		alpha = 1.0/(4*h);
+		rel_vel.x += pd_z * sys->vel_difference;
+		double alpha = 1.0/(4*h);
+		vec3d force = - (f_normal * nr_vec + f_tangent);
+		double Sxx = 2*(force.x * nr_vec.x);
+		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
+		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
+		double Syz = force.y * nr_vec.z + force.z * nr_vec.y ;
+		double Syy = 2*(force.y * nr_vec.y);
+		sys->contactstress[i][0] += Sxx;
+		sys->contactstress[j][0] += Sxx;
+		
+		sys->contactstress[i][1] += Sxy;
+		sys->contactstress[j][1] += Sxy;
+		
+		sys->contactstress[i][2] += Sxz;
+		sys->contactstress[j][2] += Sxz;
+		
+		sys->contactstress[i][3] += Syz;
+		sys->contactstress[j][3] += Syz;
+		
+		sys->contactstress[i][4] += Syy;
+		sys->contactstress[j][4] += Syy;
+	}
+}
+
+
+
+
+
