@@ -48,13 +48,14 @@ void System::prepareSimulationName(){
 	}
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
-
+	
 }
 
 /* Set number of particles.
  * Allocate vectors for the state.
  */
 void System::prepareSimulation(){
+	ts = 0;
 	lx2 = 0.5*lx;
 	ly2 = 0.5*ly;
 	lz2 = 0.5*lz;
@@ -79,8 +80,17 @@ void System::prepareSimulation(){
 		torque[i].reset();
 	}
 	
-	fb = new BrownianForce(this);	
-
+	fb = new BrownianForce(this);
+	maxnum_interactionpair = (int)(12*n);
+	
+	num_interaction = 0;
+	interaction = new Interaction [maxnum_interactionpair];
+	for (int k=0; k < maxnum_interactionpair ; k++){
+		interaction[k].init(this);
+	}
+	
+	initInteractionPair();
+	
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
@@ -105,6 +115,127 @@ void System::prepareSimulation(){
 	ldb = n3;
 #endif
 }
+
+void System::initInteractionPair(){
+	interaction_pair = new int * [n];
+	for (int i=0; i < n; i++){
+		interaction_pair[i] = new int [n];
+	}
+	for (int i=0; i < n-1; i++){
+		for (int j=i+1; j < n; j++){
+			interaction_pair[i][j] = -1;
+		}
+	}
+}
+
+void System::timeEvolution(int time_step){
+	int ts_next = ts + time_step;
+	while (ts < ts_next){
+		checkNewInteraction();
+		for (int k = 0; k < num_interaction; k++){
+			
+			interaction[k].normalElement();
+		}
+		forceReset();
+		torqueReset();
+		calcContactForces();
+		if (lub){
+			// Lubrication dynamics
+			updateVelocityLubrication();
+		} else {
+			// Free-draining approximation
+			updateVelocity();
+		}
+		
+		deltaTimeEvolution();
+		if (friction){
+			updateContactForceConfig();
+		}
+		//		sys.checkInteractionEnd();
+		
+		ts ++;
+	}
+}
+
+/* Check the distance between separating particles.
+ * i < j
+ *
+ * A patch-up prescription to aboid
+ * contact_pair[i][j] < 0 indicates separating particles to be checked.
+ * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
+ * contact_pair[i][j] < -1, the particles have some distance.
+ */
+void System::checkNewInteraction(){
+	//	for (int k = 0; k < num_interaction; k++){
+	//		int i = interaction[k].particle_num[0];
+	//		int j = interaction[k].particle_num[1];
+	//		double sq_distance = sq_distanceToCheckContact(i, j);
+	//		interaction[k].r = sqrt(sq_distance);
+	//		//		cerr << interaction[k].r << endl;
+	//	}
+	for (int k = 0; k < num_interaction; k++){
+		if ( interaction[k].active ){
+			if( interaction[k].r > lub_max){
+				interaction[k].active = false;
+				interaction_pair[interaction[k].particle_num[0]][interaction[k].particle_num[1]] = -1;
+				deactivated_interaction.push(k);
+			}else if( interaction[k].contact == true ){
+				if ( interaction[k].r > 2){
+					interaction[k].contact = false;
+				}
+			} else {
+				if ( interaction[k].r < 2){
+					// activate new contact
+					interaction[k].newContact();
+				}
+			}
+		}
+	}
+	for (int i=0; i < n-1; i++){
+		for (int j=i+1; j < n; j++){
+			if ( interaction_pair[i][j] == -1){
+				double sq_distance = sq_distanceToCheckContact(i, j);
+				if ( sq_distance < sq_lub_max){
+					int interaction_new;
+					if (deactivated_interaction.empty()){
+						// add an interaction object.
+						interaction_new = num_interaction;
+						num_interaction ++;
+					} else {
+						// fill a deactivated interaction object.
+						interaction_new = deactivated_interaction.front();
+						deactivated_interaction.pop();
+					}
+					interaction[interaction_new].create(i, j);
+					interaction_pair[i][j] = interaction_new;
+				}
+			}
+		}
+	}
+}
+
+void System::calcContactForces(){
+	if (friction){
+		for (int k = 0; k < num_interaction; k++){
+			interaction[k].calcContactInteraction();
+		}
+	} else {
+		for (int k=0; k < num_interaction; k++){
+			interaction[k].calcContactInteractionNoFriction();
+		}
+	}
+}
+
+
+
+void System::updateContactForceConfig(){
+	
+	for (int k = 0; k < num_interaction; k++){
+		interaction[k].incrementContactTangentialDisplacement();
+	}
+}
+
+
 
 void System::forceReset(){
 	for (int i=0; i < n; i++){
@@ -159,7 +290,7 @@ void System::appendToColumn(double *nvec, int jj, double alpha){
 	double alpha_n1n0 = alpha_n0*nvec[1];
 	double alpha_n2n1 = alpha_n1*nvec[2];
 	double alpha_n0n2 = alpha_n2*nvec[0];
-
+	
 	rows.push_back(jj3);
 	rows.push_back(jj3_1);
 	rows.push_back(jj3_2);
@@ -295,48 +426,54 @@ void System::buildLubricationTerms(){
 		diag_values[i6+3] = 1.;
 		diag_values[i6+5] = 1.;
 	}
-
-	if (lub){
-		for (int i = 0; i < n - 1; i ++){
-			ploc[i] = (unsigned int)rows.size();
-			for (int j = i+1 ; j < n; j ++){
-				double r_sq = sq_distance(i,j);
-				double r;
-				if( r_sq < sq_lub_max){
-					r = sqrt(r_sq);
-					double nvec[] = {dx/r, dy/r, dz/r};
-					double h = r - lubcore;
+	
+	for (int i = 0; i < n - 1; i ++){
+		ploc[i] = (unsigned int)rows.size();
+		for (int j = i+1 ; j < n; j ++){
+			double h = 0;
+			double nvec[3];
+			int k = interaction_pair[i][j];
+			if( k != -1){
+				nvec[0] = interaction[k].nr_vec.x;
+				nvec[1] = interaction[k].nr_vec.y;
+				nvec[2] = interaction[k].nr_vec.z;
+				h = interaction[k].r - lubcore;
+				if(h > 0){
 					double alpha = - 1/(4*h);
-					if (h > 0){
-						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-						addToDiag(nvec, i, -alpha);
-						addToDiag(nvec, j, -alpha);
-						appendToColumn(nvec, j, +alpha);
-						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
-						double alpha_gd_dz_n0_n[] = { \
-							alpha_gd_dz_n0*nvec[0],
-							alpha_gd_dz_n0*nvec[1],
-							alpha_gd_dz_n0*nvec[2]};
-						
-						((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
-						((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
-						((double*)rhs_b->x)[3*i+2] += alpha_gd_dz_n0_n[2];
-						((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
-						((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
-						((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
-					} else {
-						cerr << "h<0" << endl;
-						exit(1);
-					}
+					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
+					addToDiag(nvec, i, -alpha);
+					addToDiag(nvec, j, -alpha);
+					appendToColumn(nvec, j, +alpha);
+					double alpha_gd_dz_n0 = alpha*shear_rate*interaction[k].r_vec.z*nvec[0];
+					
+					
+					double alpha_gd_dz_n0_n[] = { \
+						alpha_gd_dz_n0*nvec[0],
+						alpha_gd_dz_n0*nvec[1],
+						alpha_gd_dz_n0*nvec[2]};
+					
+					((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
+					((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
+					((double*)rhs_b->x)[3*i+2] += alpha_gd_dz_n0_n[2];
+					((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
+					((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
+					((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
+				} else {
+					cerr << i << ' ' << j << ' ' << endl;
+					cerr << "h<0 : " << h <<   endl;
+					//				cerr << "r = " << interaction[k].r << endl;
+					position[i].cerr();
+					position[j].cerr();
+					//				interaction[k].nr_vec.cerr();
+					
+					exit(1);
 				}
 			}
 		}
 	}
-
-
 	ploc[n-1] = (unsigned int)rows.size();
 	ploc[n] = (unsigned int)rows.size();
-
+	
 }
 #endif
 
@@ -354,7 +491,6 @@ void System::buildBrownianTerms(){
 
 #ifdef CHOLMOD
 void System::buildContactTerms(){
-
 	// add contact force
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -379,7 +515,7 @@ void System::buildContactTerms(){
 void System::updateVelocityLubrication(){
 	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
 	buildLubricationTerms();
-// allocate
+	// allocate
 	int nzmax;  // non-zero values
 	nzmax = 6*n; // diagonal blocks
 	for(int s=0; s<3; s++){
@@ -387,11 +523,12 @@ void System::updateVelocityLubrication(){
 	}
 	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
 	fillSparseResmatrix();
-
+	
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
 	
 	buildContactTerms();
+	
 	if (brownian){
 		buildBrownianTerms();
 	}
@@ -402,11 +539,8 @@ void System::updateVelocityLubrication(){
 		velocity[i].x = ((double*)v->x)[i3] + shear_rate*position[i].z;
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
+		//velocity[i].cerr();
 	}
-	cholmod_free_sparse(&sparse_res, &c);
-	cholmod_free_factor(&L, &c);
-	cholmod_free_dense(&rhs_b, &c);
-	cholmod_free_dense(&v, &c);
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
@@ -414,6 +548,11 @@ void System::updateVelocityLubrication(){
 			ang_velocity[i].y += O_inf_y;
 		}
 	}
+	
+	cholmod_free_sparse(&sparse_res, &c);
+	cholmod_free_factor(&L, &c);
+	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_dense(&v, &c);
 }
 
 #else
@@ -472,7 +611,7 @@ void System::updateVelocityLubrication(){
 		rhs_b[i3+1] += force[i].y;
 		rhs_b[i3+2] += force[i].z;
 	}
-
+	
 	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
@@ -484,7 +623,7 @@ void System::updateVelocityLubrication(){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
 			ang_velocity[i] = 1.33333*torque[i];
-			 ang_velocity[i].y += O_inf_y;
+			ang_velocity[i].y += O_inf_y;
 		}
 	}
 }
@@ -542,7 +681,14 @@ double System::distance(int i, int j){
 /*
  * Square norm of vector (dx, dy, dz)
  */
-double System::sq_norm(){
+
+/*
+ * Square distance between particle i and particle j
+ */
+double System::sq_distance(int i, int j){
+	double dx = position[i].x - position[j].x;
+	double dy = position[i].y - position[j].y;
+	double dz = position[i].z - position[j].z;
 	if (dz > lz2 ){
 		dz -= lz;
 		dx -= shear_disp;
@@ -569,28 +715,14 @@ double System::sq_norm(){
 }
 
 /*
- * Square distance between particle i and particle j
+ * Distance less than 'lub_max' can be calculated.
+ * Otherwize it returns 1000.
  */
-double System::sq_distance(int i, int j){
-	dx = position[i].x - position[j].x;
-	dy = position[i].y - position[j].y;
-	dz = position[i].z - position[j].z;
-	return sq_norm();
-}
-
-/* 
- * Square distance between position pos and particle i
- */
-double System::sq_distance(vec3d &pos , int i){
-	dx = position[i].x - pos.x;
-	dy = position[i].y - pos.y;
-	dz = position[i].z - pos.z;
-	return sq_norm();
-}
-
 double System::sq_distanceToCheckContact(int i, int j){
-	dx = position[i].x - position[j].x;
-	dz = position[i].z - position[j].z;
+	
+	
+	double dx = position[i].x - position[j].x;
+	double dz = position[i].z - position[j].z;
 	if (dz > lz2 ){
 		dz -= lz;
 		dx -= shear_disp;
@@ -598,22 +730,22 @@ double System::sq_distanceToCheckContact(int i, int j){
 		dz += lz;
 		dx += shear_disp;
 	}
-	if (abs(dz) < 2){
+	if (abs(dz) < lub_max){
 		while(dx > lx2){
 			dx -= lx;
 		}
 		while(dx < -lx2){
 			dx += lx;
 		}
-		if (abs(dx) < 2){
+		if (abs(dx) < lub_max){
 			if (dimension == 3){
-				dy = position[i].y - position[j].y;
+				double dy = position[i].y - position[j].y;
 				if (dy > ly2 ){
 					dy -= ly;
 				} else if (dy < -ly2){
 					dy += ly;
 				}
-				if (abs(dy) < 2){
+				if (abs(dy) < lub_max){
 					return dx*dx + dy*dy + dz*dz;
 				}
 			} else {
@@ -621,17 +753,17 @@ double System::sq_distanceToCheckContact(int i, int j){
 			}
 		}
 	}
-	return 100;
+	return 1000;
 }
 
 
 double System::lubricationForceFactor(int i, int j){
-	double r_sq = sq_distance(i,j);
-	if(r_sq < sq_lub_max){
-		double r = sqrt(r_sq);
-		double h = r - lubcore;
+	//double r_sq = sq_distance(i,j);
+	int k = interaction_pair[i][j];
+	if(interaction[k].active){
+		double h = interaction[k].r  - lubcore;
 		if ( h > 0){
-			vec3d nv(dx/r, dy/r, dz/r);
+			vec3d nv = interaction[k].nr_vec;
 			vec3d rel_vel = velocity[j] - velocity[i];
 			double zi_zj = position[i].z - position[j].z;
 			if (zi_zj > lz2){
@@ -650,12 +782,16 @@ double System::lubricationForceFactor(int i, int j){
 }
 
 void System::lubricationStress(int i, int j){
-	double r_sq = sq_distance(i, j);
-	if(r_sq < sq_lub_max){
-
-		double r = sqrt(r_sq);
-		double h = r - lubcore;
-		vec3d nv(dx/r, dy/r, dz/r);
+	//	double r_sq = sq_distance(i, j);
+	int k = interaction_pair[i][j];
+	if(interaction[k].active){
+		
+		//		double r = sqrt(r_sq);
+		//		double h = r - lubcore;
+		double h = interaction[k].r  - lubcore;
+		//		vec3d nv(dx/r, dy/r, dz/r);
+		vec3d nv =interaction[k].nr_vec;
+		
 		vec3d rel_vel = velocity[j] - velocity[i];
 		double zi_zj = position[i].z - position[j].z;
 		if (zi_zj > lz2){
@@ -689,7 +825,7 @@ void System::lubricationStress(int i, int j){
 			stress[j][4] += Syy;
 		}
 		
-
+		
 	}
 }
 

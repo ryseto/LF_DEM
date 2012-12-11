@@ -15,23 +15,25 @@
 #include <queue>
 #include <string>
 #include <Accelerate/Accelerate.h>
+#include "Interaction.h"
 #ifdef CHOLMOD
 #include "cholmod.h"
 #endif
 #include "vec3d.h"
-#include "ContactForce.h"
+//#include "ContactForce.h"
 #include "BrownianForce.h"
 
 using namespace std;
+class Simulation;
 class Interaction;
 class BrownianForce;
 
 class System{
 private:
 	int n3;
-	double dx;
-	double dy;
-	double dz;
+	int maxnum_interactionpair;
+	int **interaction_pair; // Table
+	queue<int> deactivated_interaction;
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *rhs_b;
@@ -47,6 +49,8 @@ private:
 	void fillSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
 	void appendToColumn(double *nvec, int jj, double alpha);
+	void initInteractionPair();
+
 #else
 	double *res;
 	int nrhs;
@@ -83,6 +87,7 @@ public:
 	double kn;
 	double kt;
 	double eta;
+	double lub_max;
 	double sq_lub_max;
 	double mu_static; // static friction coefficient.
 	double mu_dynamic;// dynamic friction coefficient.
@@ -91,6 +96,7 @@ public:
 	bool friction;
 	bool lub;
 	bool brownian;
+	Interaction *interaction;
 	/*
 	 * Leading term of lubrication force is 1/(r-2a).
 	 * This can be weakened by using a'<a.
@@ -100,7 +106,10 @@ public:
 	 */
 	double lubcore;
 	BrownianForce *fb;
+
+
 	/*************************************************************/
+	int num_interaction;
 
 	double lx;
 	double ly;
@@ -119,8 +128,19 @@ public:
 	vector <double> lubparticle_vec[3];
 
 	string simu_name;
+	
+	
+	
 	void prepareSimulationName();
 	void prepareSimulation();
+	void timeEvolution(int time_step);
+	
+	// new interaction
+	void checkNewInteraction();
+	// interaction ends
+	void checkInteractionEnd();
+	// calc contact forces;
+	void calcContactForces();
 	double sq_norm();
 	double sq_distance(vec3d &pos , int i);
 	double sq_distance(int i, int j);
@@ -138,11 +158,11 @@ public:
 	bool noOverlap();
 	void calcHydrodynamicStress();
 	void calcStressAverage();
-
+	void updateContactForceConfig();
 	int numpart(){
 	  return n;
 	}
-
+	
 
 #ifdef CHOLMOD
 	cholmod_factor *L ;
