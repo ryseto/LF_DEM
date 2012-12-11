@@ -9,18 +9,16 @@
 #include "Interaction.h"
 
 void Interaction::init(System *sys_){
-	contact = false;
 	sys = sys_;
+	contact = false;
 	active = false;
-	//xi.reset();
-	//static_friction = true;
 }
-
 
 /* Activate interaction between particles i and j.
  */
 void  Interaction::create(int i, int j){
 	active = true;
+	contact = false;
 	particle_num[0] = i;
 	particle_num[1] = j;
 	return;
@@ -28,8 +26,8 @@ void  Interaction::create(int i, int j){
 
 void Interaction::newContact(){
 	contact = true;
-	xi.reset();
 	static_friction = true;
+	xi.reset();
 }
 
 /* Make a normal vector
@@ -37,16 +35,16 @@ void Interaction::newContact(){
  * vector from particle 1 to particle 0. ( i --> j)
  * pd_x, pd_y, pd_z : Periodic boundary condition
  */
-void Interaction::makeNormalVector(){
-	r_vec = sys->position[ particle_num[0]] - sys->position[ particle_num[1]  ];
-	if (r_vec.z > sys->lz2){
+void Interaction::calcNormalVector(){
+	r_vec = sys->position[particle_num[0]] - sys->position[particle_num[1]];
+	if (r_vec.z < -sys->lz2){
 		pd_z = 1; //  p1 (z = lz), p0 (z = 0)
-		r_vec.z -= sys->lz;
-		r_vec.x -= sys->shear_disp;
-	} else if (r_vec.z < - sys->lz2){
-		pd_z = -1; //  p1 (z = 0), p0 (z = lz)
 		r_vec.z += sys->lz;
 		r_vec.x += sys->shear_disp;
+	} else if (r_vec.z > sys->lz2){
+		pd_z = -1; //  p1 (z = 0), p0 (z = lz)
+		r_vec.z -= sys->lz;
+		r_vec.x -= sys->shear_disp;
 	} else{
 		pd_z = 0;
 	}
@@ -66,6 +64,14 @@ void Interaction::makeNormalVector(){
 				r_vec.y += sys->ly;
 			}
 		}
+	}
+}
+
+void Interaction::calcDistanceNormalVector(){
+	if (active){
+		calcNormalVector();
+		r = r_vec.norm();
+		nr_vec = r_vec / r;
 	}
 }
 
@@ -94,95 +100,92 @@ void Interaction::calcContactStress(){
 }
 
 void Interaction::calcStaticFriction(){
-	double f_static = -sys->mu_static*f_normal;
+	double f_static = sys->mu_static*f_normal;
 	double f_spring = sys->kt*xi.norm();
-	if (f_spring < f_static){
-		f_tangent = -sys->kt*xi; //
-	} else {
-		/* switch to dynamic friction */
-		static_friction = false;
-		calcDynamicFriction();
+	if ( xi.x != 0){
+		if (f_spring < f_static){
+			/*
+			 * f_tangent is force acting on particle 0 from particle 1
+			 * xi = r0' - r1'
+			 */
+			f_tangent = -sys->kt*xi;
+		} else {
+			/* switch to dynamic friction */
+			static_friction = false;
+			calcDynamicFriction();
+		}
 	}
 }
 
-
 void Interaction::calcDynamicFriction(){
-	double f_dynamic = -sys->mu_dynamic*f_normal;
+	double f_dynamic = sys->mu_dynamic*f_normal;
 	/* Use the velocity of one time step before as approximation. */
 	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
+
 	f_tangent = -f_dynamic*unit_contact_velocity_tan;
 }
+
 
 /*
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
- *
+ * r_vec = p[0] - p[1]
+ * f_normal is positive (by overlapping particles r < 2)
  */
 void Interaction::calcContactInteraction(){
-	if (active){
-		if (r < 2){
-			contact = true;
-//			nr_vec = r_vec / r;
-//			cerr << "r " << r << endl;
-//			exit(1);
-			f_normal = sys->kn*(r - 2);
-			if (static_friction){
-				calcStaticFriction();
-			} else {
-				calcDynamicFriction();
-			}
-			sys->force[particle_num[0]] += f_tangent;
-			sys->force[particle_num[1]] -= f_tangent;
-			t_tangent = cross(nr_vec, f_tangent);
-			sys->torque[particle_num[0]] -= t_tangent;
-			sys->torque[particle_num[1]] -= t_tangent;
-			sys->force[particle_num[0]] -= f_normal * nr_vec;
-			sys->force[particle_num[1]] += f_normal * nr_vec;
+	if (contact){
+		f_normal = sys->kn*(2.0 - r);
+		if (static_friction){
+			calcStaticFriction();
 		} else {
-			static_friction = true;
-			contact = false;
+			calcDynamicFriction();
 		}
+		vec3d f_ij = f_normal * nr_vec + f_tangent; // acting on p0
+		vec3d t_ij = cross(-nr_vec, f_tangent); // acting on p0
+		sys->force[particle_num[0]] += f_ij;
+		sys->force[particle_num[1]] -= f_ij;
+		sys->torque[particle_num[0]] = t_ij;
+		sys->torque[particle_num[1]] = t_ij;
 	}
 }
 
 void Interaction::calcContactInteractionNoFriction(){
-	if (active){
-		if (r < 2){
-			//nr_vec = r_vec / r;
-			f_normal = sys->kn*(r - 2);
-			sys->force[ particle_num[0] ] -= f_normal * nr_vec;
-			sys->force[ particle_num[1] ] += f_normal * nr_vec;
-		} else {
-			static_friction = true;
-		}
+	if (contact){
+		f_normal = sys->kn*(2-r);
+		sys->force[ particle_num[0] ] += f_normal * nr_vec;
+		sys->force[ particle_num[1] ] -= f_normal * nr_vec;
 	}
 }
 
-void Interaction::normalElement(){
-	makeNormalVector();
-	r = r_vec.norm();
-	nr_vec = r_vec / r;
-}
-
-void Interaction::incrementContactTangentialDisplacement(){
+/* Relative velocity of particle 0 from particle 1.
+ *
+ */
+void Interaction::calcContactVelocity(){
 	// relative velocity particle 0 from particle 1.
 	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
 	if (pd_z != 0){
+		// v0 - v1
+		//	pd_z = 1; //  p1 (z = lz), p0 (z = 0)
+		// v0 - v1
 		contact_velocity.x += pd_z * sys->vel_difference;
 	}
-	
-	contact_velocity  += cross(sys->ang_velocity[particle_num[0]] + sys->ang_velocity[particle_num[1]], nr_vec);
+	contact_velocity += cross(nr_vec, sys->ang_velocity[particle_num[0]] + sys->ang_velocity[particle_num[1]]);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
-	if (static_friction){
-		xi += contact_velocity_tan*sys->dt;
-		// projection
-		xi -= dot(xi,nr_vec)*nr_vec;
-	} else {
-		sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
-		if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
-			cerr << "contact_velocity.norm()  = " << contact_velocity.norm()  << endl;
-			static_friction = true;
-			xi = -(1.0/sys->kt) * f_tangent;
+}
+
+void Interaction::incrementContactTangentialDisplacement(){
+	if (active){
+		calcContactVelocity();
+		if (static_friction){
+			xi += contact_velocity_tan*sys->dt;
+			// projection
+			xi -= dot(xi,nr_vec)*nr_vec;
+		} else {
+			sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
+			if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
+				static_friction = true;
+				xi = -(1.0/sys->kt) * f_tangent;
+			}
 		}
 	}
 }

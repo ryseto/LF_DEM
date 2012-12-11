@@ -129,6 +129,8 @@ public:
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
+	void updateInteraction();
+
 	void calcContactForces();
 	double sq_distance(int i, int j);
 	double sq_distanceToCheckContact(int i, int j);
@@ -142,7 +144,7 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStressAverage();
-	void updateContactForceConfig();
+	void incrementContactTangentialDisplacement();
 	int numpart(){
 		return n;
 	}

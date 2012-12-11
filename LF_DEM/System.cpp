@@ -133,9 +133,9 @@ void System::timeEvolution(int time_step){
 	while (ts < ts_next){
 		checkNewInteraction();
 		for (int k = 0; k < num_interaction; k++){
-			
-			interaction[k].normalElement();
+			interaction[k].calcDistanceNormalVector();
 		}
+		updateInteraction();
 		forceReset();
 		torqueReset();
 		calcContactForces();
@@ -146,51 +146,14 @@ void System::timeEvolution(int time_step){
 			// Free-draining approximation
 			updateVelocity();
 		}
-		
 		deltaTimeEvolution();
-		if (friction){
-			updateContactForceConfig();
-		}
-		//		sys.checkInteractionEnd();
-		
+		incrementContactTangentialDisplacement();
+	
 		ts ++;
 	}
 }
 
-/* Check the distance between separating particles.
- * i < j
- *
- * A patch-up prescription to aboid
- * contact_pair[i][j] < 0 indicates separating particles to be checked.
- * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
- * contact_pair[i][j] < -1, the particles have some distance.
- */
 void System::checkNewInteraction(){
-	//	for (int k = 0; k < num_interaction; k++){
-	//		int i = interaction[k].particle_num[0];
-	//		int j = interaction[k].particle_num[1];
-	//		double sq_distance = sq_distanceToCheckContact(i, j);
-	//		interaction[k].r = sqrt(sq_distance);
-	//		//		cerr << interaction[k].r << endl;
-	//	}
-	for (int k = 0; k < num_interaction; k++){
-		if ( interaction[k].active ){
-			if( interaction[k].r > lub_max){
-				interaction[k].active = false;
-				interaction_pair[interaction[k].particle_num[0]][interaction[k].particle_num[1]] = -1;
-				deactivated_interaction.push(k);
-			}else if( interaction[k].contact == true ){
-				if ( interaction[k].r > 2){
-					interaction[k].contact = false;
-				}
-			} else {
-				if ( interaction[k].r < 2){
-					// activate new contact
-					interaction[k].newContact();
-				}
-			}
-		}
-	}
 	for (int i=0; i < n-1; i++){
 		for (int j=i+1; j < n; j++){
 			if ( interaction_pair[i][j] == -1){
@@ -207,7 +170,42 @@ void System::checkNewInteraction(){
 						deactivated_interaction.pop();
 					}
 					interaction[interaction_new].create(i, j);
+					interaction[interaction_new].calcDistanceNormalVector();
 					interaction_pair[i][j] = interaction_new;
+				}
+			}
+		}
+	}
+}
+
+/* Check the distance between separating particles.
+ * i < j
+ *
+ * A patch-up prescription to aboid
+ * contact_pair[i][j] < 0 indicates separating particles to be checked.
+ * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
+ * contact_pair[i][j] < -1, the particles have some distance.
+ */
+void System::updateInteraction(){
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active ){
+			if(interaction[k].r > lub_max){
+				// r > lub_max
+				interaction[k].active = false;
+				interaction_pair[interaction[k].particle_num[0]][interaction[k].particle_num[1]] = -1;
+				deactivated_interaction.push(k);
+			} else {
+				if (interaction[k].contact){
+					if (interaction[k].r > 2){			
+						interaction[k].contact = false;
+					}
+				} else {
+					
+					// contact false:
+					if (interaction[k].r < 2){
+						interaction[k].newContact();
+						interaction[k].calcContactVelocity();
+					}
 				}
 			}
 		}
@@ -226,9 +224,11 @@ void System::calcContactForces(){
 	}
 }
 
-void System::updateContactForceConfig(){
-	for (int k = 0; k < num_interaction; k++){
-		interaction[k].incrementContactTangentialDisplacement();
+void System::incrementContactTangentialDisplacement(){
+	if (friction) {
+		for (int k = 0; k < num_interaction; k++){
+			interaction[k].incrementContactTangentialDisplacement();
+		}
 	}
 }
 
@@ -239,10 +239,8 @@ void System::forceReset(){
 }
 
 void System::torqueReset(){
-	if (friction){
-		for (int i=0; i < n; i++){
-			torque[i].reset();
-		}
+	for (int i=0; i < n; i++){
+		torque[i].reset();
 	}
 }
 
@@ -433,6 +431,7 @@ void System::buildLubricationTerms(){
 				nvec[1] = interaction[k].nr_vec.y;
 				nvec[2] = interaction[k].nr_vec.z;
 				h = interaction[k].r - lubcore;
+				
 				if(h > 0){
 					double alpha = - 1/(4*h);
 					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
@@ -440,8 +439,6 @@ void System::buildLubricationTerms(){
 					addToDiag(nvec, j, -alpha);
 					appendToColumn(nvec, j, +alpha);
 					double alpha_gd_dz_n0 = alpha*shear_rate*interaction[k].r_vec.z*nvec[0];
-					
-					
 					double alpha_gd_dz_n0_n[] = { \
 						alpha_gd_dz_n0*nvec[0],
 						alpha_gd_dz_n0*nvec[1],
@@ -454,9 +451,11 @@ void System::buildLubricationTerms(){
 					((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 					((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
 				} else {
+					cerr << "k = " << k << endl;
+					cerr << "interaction[k].r " << interaction[k].r << endl;
 					cerr << i << ' ' << j << ' ' << endl;
 					cerr << "h<0 : " << h <<   endl;
-					//				cerr << "r = " << interaction[k].r << endl;
+					cerr << "r = " << interaction[k].r << endl;
 					position[i].cerr();
 					position[j].cerr();
 					//				interaction[k].nr_vec.cerr();
@@ -539,11 +538,10 @@ void System::updateVelocityLubrication(){
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
-			ang_velocity[i] = (1.33333/eta)*torque[i];
+			ang_velocity[i] = 1.33333*torque[i];
 			ang_velocity[i].y += O_inf_y;
 		}
 	}
-	
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_free_factor(&L, &c);
 	cholmod_free_dense(&rhs_b, &c);
@@ -658,7 +656,6 @@ void System::deltaTimeEvolution(){
 	for (int i=0; i < n; i++){
 		displacement(i, velocity[i].x*dt, velocity[i].y*dt, velocity[i].z*dt);
 	}
-	
 	if (draw_rotation_2d){
 		for (int i=0; i < n; i++){
 			angle[i] += ang_velocity[i].y*dt;

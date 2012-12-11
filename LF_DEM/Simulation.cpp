@@ -120,8 +120,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 * We should also estimate the effect of lubrication torque.
 	 *
 	 */
-	sys.mu_static = 0.6; // static friction coeffient
-	sys.mu_dynamic = 0.3; // dynamic friction coeffient
+	sys.mu_static = 1; // static friction coeffient
+	sys.mu_dynamic = 0.8; // dynamic friction coeffient
 	/*
 	 * This is a threshold velocity to swich from dynamic friction to
 	 * static friction. But this is a temporal provísional.
@@ -135,10 +135,10 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	 * For yaplot output data,
 	 * rotation of disk (2D) is visualized by cross.
 	 */
-	if (sys.dimension ==2)
+	if (sys.dimension == 2)
 		sys.draw_rotation_2d = true;
 	else
-		sys.draw_rotation_2d = false;
+		sys.draw_rotation_2d = true;
 	/*
 	 * snapshot for yaplot data.
 	 */
@@ -188,9 +188,7 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 		sys.angle[i] = 0;
 	}
 
-	//if (ts % interval_snapshot == 0){
-
-	//}
+	sys.checkNewInteraction();
 	while(true){
 		sys.timeEvolution(interval_snapshot);
 		outputRheologyData();
@@ -421,12 +419,12 @@ void Simulation::output_yap(){
 										sys.position[i].y - sys.ly2,
 										sys.position[i].z - sys.lz2);
 				fout_yap << "r " << yap_force_factor*sys.interaction[k].f_tangent.norm()  << endl;
-				drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
 										sys.position[j].y - sys.ly2,
 										sys.position[j].z - sys.lz2);
-				drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
 			}
 		}
 	}
@@ -435,22 +433,22 @@ void Simulation::output_yap(){
 	 */
 	fout_yap << "y 3\n";
 	fout_yap << "@ " << color_white << endl;
-//	for (int i=0; i < sys.n; i++){
-//		for (int j = i+1; j < sys.n; j++){
-//			if (contact_pair[i][j] != -1){
-//				double f_ij = -fc[contact_pair[i][j]].f_normal;
-//				fout_yap << "r " << yap_force_factor*f_ij << endl;
-//				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-//											   sys.position[i].y - sys.ly2,
-//											   sys.position[i].z - sys.lz2);
-//				vec3d pos2 = shiftUpCoordinate(sys.position[j].x - sys.lx2,
-//											   sys.position[j].y - sys.ly2,
-//											   sys.position[j].z - sys.lz2);
-//				
-//				drawLine2('s', pos1, pos2, fout_yap);
-//			}
-//		}
-//	}
+	for (int k=0; k < sys.num_interaction; k++){
+		if ( sys.interaction[k].active ){
+			int i = sys.interaction[k].particle_num[0];
+			int j = sys.interaction[k].particle_num[1];
+			fout_yap << "r " << yap_force_factor << endl;
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+									sys.position[i].y - sys.ly2,
+									sys.position[i].z - sys.lz2);
+			drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
+			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
+									sys.position[j].y - sys.ly2,
+									sys.position[j].z - sys.lz2);
+			drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
+		}
+	}
+
 	/* Layer 3: Normal
 	 * Lubrication + contact force
 	 */
