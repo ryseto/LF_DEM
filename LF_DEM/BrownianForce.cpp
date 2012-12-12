@@ -32,16 +32,15 @@ BrownianForce::init(){
 void
 BrownianForce::add_to(cholmod_dense *force_vec){
 	generate();
-  
+
 	int n3=3*sys->numpart();
 	for(int i=0; i<n3;i++){
-	  ((double*)force_vec->x)[i] += ((double*)forces->x)[i];
+		((double*)force_vec->x)[i] += ((double*)forces->x)[i];
 	}
 }
 
 void
 BrownianForce::generate(){
-
 	cholmod_factor* L_copy = cholmod_copy_factor(sys->L, c); // sadly it seems we have to make a copy. Is there a way to avoid this?
 	L_sparse = cholmod_factor_to_sparse(L_copy, c);
 	
@@ -57,9 +56,7 @@ BrownianForce::generate(){
 
 	cholmod_free_sparse(&L_sparse, c);
 	cholmod_free_factor(&L_copy, c);
-
 }
-
 
 void
 BrownianForce::generate(double* f){
@@ -76,6 +73,5 @@ BrownianForce::random_vector(){
 	for(int i=0; i<n3; i++){
 		((double*)rand_vec->x)[i] = GRANDOM;
 	}
-
 	return rand_vec;
 }

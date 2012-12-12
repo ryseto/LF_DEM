@@ -15,21 +15,28 @@
 #include <queue>
 #include <string>
 #include <Accelerate/Accelerate.h>
+#include "Interaction.h"
+#ifdef CHOLMOD
 #include "cholmod.h"
 #include "vec3d.h"
-#include "ContactForce.h"
+//#include "ContactForce.h"
 #include "BrownianForce.h"
 
 using namespace std;
+class Simulation;
 class Interaction;
 class BrownianForce;
 
 class System{
 private:
 	int n3;
-	double dx;
-	double dy;
-	double dz;
+	int maxnum_interactionpair;
+	int **interaction_pair; // Table
+	queue<int> deactivated_interaction;
+	void initInteractionPair();
+	void buildLubricationTerms();
+	void buildBrownianTerms();
+	void buildContactTerms();
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *rhs_b;
@@ -58,9 +65,6 @@ private:
 	double *work;
 	char UPLO;
 #endif
-	void buildLubricationTerms();
-	void buildBrownianTerms();
-	void buildContactTerms();
 
 protected:
 public:
@@ -77,11 +81,14 @@ public:
 	vec3d *ang_velocity;
 	vec3d *force;
 	vec3d *torque;
-	double **stress; // S_xx S_xy S_xz S_yz S_yy
-	double mean_stress[5];
+	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
+	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
+	double mean_lub_stress[5];
+	double mean_contact_stress[5];
 	double kn;
 	double kt;
 	double eta;
+	double lub_max;
 	double sq_lub_max;
 	double mu_static; // static friction coefficient.
 	double mu_dynamic;// dynamic friction coefficient.
@@ -89,6 +96,9 @@ public:
 	double sq_critical_velocity;
 	bool friction;
 	bool lub;
+	bool brownian;
+	Interaction *interaction;
+	int num_interaction;
 	/*
 	 * Leading term of lubrication force is 1/(r-2a).
 	 * This can be weakened by using a'<a.
@@ -99,7 +109,6 @@ public:
 	double lubcore;
 	BrownianForce *fb;
 	/*************************************************************/
-
 	double lx;
 	double ly;
 	double lz;
@@ -115,19 +124,21 @@ public:
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
-
 	string simu_name;
+	
 	void prepareSimulationName();
 	void prepareSimulation();
+	void timeEvolution(int time_step);
+	void checkNewInteraction();
+	void checkInteractionEnd();
+	void updateInteraction();
 
-	double sq_norm();
-	double sq_distance(vec3d &pos , int i);
+	void calcContactForces();
 	double sq_distance(int i, int j);
 	double sq_distanceToCheckContact(int i, int j);
-	double sq_neardistance(int i, int j);
+	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
-
 	void periodize(vec3d*);
 	double distance(int i, int j);
 	void updateVelocity();
@@ -136,20 +147,17 @@ public:
 	void forceReset();
 	void torqueReset();
 	void stressReset();
-	bool noOverlap();
-	void calcHydrodynamicStress();
-	void calcStressAverage();
-
+	void calcStress();
+	void incrementContactTangentialDisplacement();
 	int numpart(){
-	  return n;
+		return n;
 	}
 
-
+#ifdef CHOLMOD
 	cholmod_factor *L ;
 	cholmod_common c ;
-	
+#endif
+
 	void lubricationStress(int i, int j);
-
-
 };
 #endif /* defined(__LF_DEM__State__) */

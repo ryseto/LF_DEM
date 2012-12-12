@@ -85,6 +85,10 @@
             argument = "2"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "f"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
