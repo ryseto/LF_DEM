@@ -77,30 +77,6 @@ void Interaction::calcDistanceNormalVector(){
 	}
 }
 
-//void Interaction::calcContactStress(){
-//	// S_xx
-//	vec3d f_contact = f_tangent + f_normal* nr_vec;
-//	double Sxx = f_contact.x * nr_vec.x + f_contact.x * nr_vec.x ;;
-//	double Sxy = f_contact.x * nr_vec.y + f_contact.y * nr_vec.x ;
-//	double Sxz = f_contact.x * nr_vec.z + f_contact.z * nr_vec.x ;
-//	double Syz = f_contact.y * nr_vec.z + f_contact.z * nr_vec.y ;
-//	double Syy = f_contact.y * nr_vec.y + f_contact.y * nr_vec.y ;
-//	sys->stress[particle_num[0]][0] += Sxx;
-//	sys->stress[particle_num[1]][0] += Sxx;
-//	
-//	sys->stress[particle_num[0]][1] += Sxy;
-//	sys->stress[particle_num[1]][1] += Sxy;
-//	
-//	sys->stress[particle_num[0]][2] += Sxz;
-//	sys->stress[particle_num[1]][2] += Sxz;
-//	
-//	sys->stress[particle_num[0]][3] += Syz;
-//	sys->stress[particle_num[1]][3] += Syz;
-//	
-//	sys->stress[particle_num[0]][4] += Syy;
-//	sys->stress[particle_num[1]][4] += Syy;
-//}
-
 void Interaction::calcStaticFriction(){
 	double f_static = sys->mu_static*f_normal;
 	double f_spring = sys->kt*xi.norm();
@@ -202,14 +178,6 @@ double Interaction::valNormalForce(){
 		rel_vel.x += pd_z * sys->vel_difference;
 		double alpha = 1.0/(4*h);
 		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
-		
-		if ( abs(alpha*dot(rel_vel , nr_vec)) > 100){
-			cerr << "rel_vel" << endl;
-			rel_vel.cerr();
-			exit(1);
-			
-		}
-		
 	}
 	if (contact){
 		f_normal_total += f_normal;
@@ -250,17 +218,10 @@ void Interaction::addLubricationStress(){
 	}
 }
 
-
 void Interaction::addContactStress(){
-	double h = r  - sys->lubcore;
 	int i = particle_num[0];
 	int j = particle_num[1];
-	vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
-	double alpha;
-	if (h > 0){
-		alpha = 1.0/(4*h);
-		rel_vel.x += pd_z * sys->vel_difference;
-		double alpha = 1.0/(4*h);
+	if (contact){
 		vec3d force = - (f_normal * nr_vec + f_tangent);
 		double Sxx = 2*(force.x * nr_vec.x);
 		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;

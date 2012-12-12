@@ -46,6 +46,9 @@ void System::prepareSimulationName(){
 	if (lub == true){
 		ss_simu_name << "lub" << lubcore ;
 	}
+	if (brownian == true){
+		ss_simu_name << "kT" << kb_T ;
+	}		
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
 	

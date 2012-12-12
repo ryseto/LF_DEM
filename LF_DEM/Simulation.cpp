@@ -75,7 +75,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	/*
 	 * Temperature
 	 */
-	sys.kb_T=1.0;
+	sys.kb_T=0.01;
 	/*
 	 * Simulation terminate at this value
 	 */
@@ -290,6 +290,7 @@ void Simulation::output_yap(){
 	/* Layer 1: Circles for particles
 	 */
 	fout_yap << "y 1\n";
+	fout_yap << "r 1\n";
 	fout_yap << "@ " << color_white << endl;
 	vec3d pos;
 	for (int i=0; i < sys.n; i++){
