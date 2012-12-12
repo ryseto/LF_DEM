@@ -1,0 +1,250 @@
+%#BIBTEX semiautotex.sh -b note_LF_DEM
+\documentclass[12pt]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+%\usepackage{hyperref}
+\usepackage[pdftex]{graphicx}	% required for `\includegraphics' (yatex added)
+\usepackage{datetime}
+\usepackage{natbib}
+
+\oddsidemargin -1.2cm
+\evensidemargin -1.2cm
+\textwidth 18cm
+\headheight 1.0in
+\topmargin -3.5cm
+\textheight 22cm
+\bibliographystyle{unsrtnat}
+\newcommand{\figref}[1]{\figurename ~\ref{#1}}
+\title{Title}
+\date{\shortdate\today \, \ampmtime }
+\author{R. Seto, R. Mari}
+\begin{document}
+\maketitle
+
+
+\subsection*{Hydrodynamic force}
+
+One-body limit:
+\begin{align}
+ \bm{F}_i^{\mathrm{self}} &= 
+-6 \pi \mu a ( \bm{v}_i - \bm{U}^{\infty} (\bm{r}_i) ) \\
+ \bm{T}_i^{\mathrm{self}} &= 
+-8 \pi \mu a^3 ( \bm{\omega}_i - \bm{\Omega}^{\infty})
+\end{align}
+
+\citet{Melrose_2004a} uses 
+the leading squeeze mode of lubrication force:
+\begin{align}
+ \bm{F}_{ij}^{\mathrm{pair}}
+&=
+- \alpha_{\mathrm{n}}(h_{ij})
+\bigl\{
+(\bm{v}_i - \bm{v}_j)
+\cdot \bm{n}_{ij}
+\bigr\}
+\bm{n}_{ij} \\
+ \bm{T}_{ij}^{\mathrm{pair}}
+&=
+\bm{0},
+\end{align}
+where
+\begin{equation}
+ \alpha_{\mathrm{n}}(h_{ij}) = 
+\frac{3 \pi \mu a^2}{2 h_{\ij}}.
+\end{equation}
+Note: We should check the model of \citet{Melrose_2004a} 
+is correct.
+
+
+Hydrodynamic interaction acting on particle $i$
+is given by
+\begin{align}
+\bm{F}_i^{\mathrm{H}}
+&=
+\bm{F}_i^{\mathrm{self}}
++
+\sum_j
+\bm{F}_{ij}^{\mathrm{pair}} \\
+\bm{T}_i^{\mathrm{H}}
+&=
+\bm{T}_i^{\mathrm{self}}
+\end{align}
+\newpage
+\subsection*{Dimensionless equations}
+
+The unit of length, velocity and force 
+are given:
+$L_0 = a$,  $v_0 = a \dot{\gamma}$, and $F_0 \equiv 6 \pi \mu a v_0$.
+
+The dimensionless variables are introduced:
+$\tilde{h}_{ij} = h_{ij} / L_0$,
+$\tilde{\bm{v}}_i = \bm{v}_i / U_0$,
+and $\tilde{\bm{F}}_{ij}^{\mathrm{pair}} = \bm{F}_{ij}^{\mathrm{pair}} / F_0$.
+
+The relations are written as follows:
+\begin{equation}
+ \tilde{\bm{F}}_i^{\mathrm{self}} = 
+-( \tilde{\bm{v}}_i - 
+\tilde{\bm{U}}^{\infty} 
+(\tilde{\bm{r}}_i) )
+\end{equation}
+\begin{equation}
+ \tilde{\bm{F}}_{ij}^{\mathrm{pair}}
+= 
+- \frac{1}{4 \tilde{h}_{ij}}
+\bigl\{
+(\tilde{\bm{v}}_i-
+\tilde{\bm{v}}_i)\cdot
+\bm{n}_{ij}
+\bigr\}\bm{n}_{ij}
+\end{equation}
+
+\begin{equation}
+ \bm{U}^{\infty}(\bm{r})
+ = 
+ \dot{\gamma} z \bm{e}_{x}
+\end{equation}
+\begin{equation}
+\Longrightarrow
+  \tilde{\bm{U}}^{\infty}(\tilde{\bm{r}})
+ = 
+ \dot{\gamma} z \bm{e}_{x} / U_0
+=  \dot{\gamma} z \bm{e}_{x} / (\dot{\gamma} a)
+= \tilde{z} \bm{e}_{x} 
+\end{equation}
+
+
+\newpage
+\subsection*{Matrix form}
+\begin{align}
+ \bm{F}_{ij}^{\mathrm{pair}}
+&= 
+- \frac{1}{4 h_{ij}}
+\bigl\{
+(\bm{v}_i-
+\bm{v}_j)\cdot
+\bm{n}_{ij}
+\bigr\}\bm{n}_{ij} \\
+&=
+- \frac{1}{4 h_{ij}}
+\Bigl[
+\bigl\{
+(\bm{v}_i- \bm{U}^{\infty}_i)-
+(\bm{v}_j- \bm{U}^{\infty}_j)
++ \bm{U}^{\infty}_i 
+- \bm{U}^{\infty}_j
+\bigr\}\cdot
+\bm{n}_{ij}
+\Bigr]
+\bm{n}_{ij}
+\end{align}
+
+$\Delta \bm{v} \equiv (\bm{v}- \bm{U}^{\infty})$
+\begin{align}
+\Delta \bm{v} \cdot
+\bm{n} \bm{n}
+= &
+(\Delta v_x n_x 
++\Delta v_y n_y
++\Delta v_z n_z) n_x \bm{i}\\
+& 
++ (\Delta v_x n_x 
++\Delta v_y n_y
++\Delta v_z n_z) n_y \bm{j}\\
+&
++ (\Delta v_x n_x 
++\Delta v_y n_y
++\Delta v_z n_z) n_z \bm{k} \\
+=&
+\begin{pmatrix}
+ n_x n_x &   n_y n_x &   n_z n_x \\
+ n_x n_y &   n_y n_y &   n_z n_y \\
+ n_x n_z &   n_y n_z &   n_z n_z 
+\end{pmatrix}
+\begin{pmatrix}
+ \Delta v_x \\
+ \Delta v_y \\
+ \Delta v_z 
+\end{pmatrix} 
+\\
+=&\bm{n} \otimes \bm{n} \Delta \bm{v}
+\end{align}
+
+\begin{align}
+  \bm{F}_i  &= 
+  -  \Delta \bm{v}_i 
+  - \sum_j
+  \left(
+    \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
+    - \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j 
+    + \frac{1}{4h_{ij}}  
+    (\bm{U}_i^{\infty} -\bm{U}_j^{\infty} 
+    ) \cdot \bm{n}_{ij}\bm{n}_{ij} 
+  \right) \\
+  &=
+  q -  \Delta \bm{v}_i 
+  - \sum_j
+  \left(
+    \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
+    - \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j
+    + \frac{1}{4h_{ij}}
+    \frac{(z_i - z_j )(x_i-x_j)}{r_{ij}} \bm{n}_{ij} \right)
+  \end{align}
+
+
+\begin{align}
+\begin{pmatrix}
+\vdots \\ \bm{F}_i \\ \vdots \\ \bm{F}_j \\  \vdots  
+\end{pmatrix}
+& =
+\begin{pmatrix}
+\vdots \\
+\bm{F}_{i}^{\mathrm{self}} +  \bm{F}_{ij}^{\mathrm{pair}}  
+\\ \vdots \\ 
+\bm{F}_{j}^{\mathrm{self}} +  \bm{F}_{ji}^{\mathrm{pair}}  
+\\  \vdots  
+\end{pmatrix} \\
+&=
+-
+\begin{pmatrix}
+\cdots & \cdots & \cdots & \cdots & \cdots\\
+\cdots & 1 + \frac{1}{4h_{ij}}\bm{n}_{ij} \otimes \bm{n}_{ij}  
+& \cdots & -\frac{1}{4h_{ij}}\bm{n}_{ij} \otimes \bm{n}_{ij}   & \cdots\\
+\cdots & \cdots & \cdots & \cdots & \cdots\\
+\cdots & -\frac{1}{4h_{ji}}\bm{n}_{ji} \otimes \bm{n}_{ji} & \cdots 
+& 1 + \frac{1}{4h_{ji}}\bm{n}_{ji} \otimes \bm{n}_{ji} 
+ & \cdots \\
+\cdots & \cdots & \cdots & \cdots & \cdots 
+\end{pmatrix}
+\begin{pmatrix}
+\vdots \\
+\Delta \bm{v}_i \\ 
+\vdots \\
+\Delta \bm{v}_j \\
+\vdots 
+\end{pmatrix} \\
+& \quad 
++ 
+\begin{pmatrix}
+\vdots \\
+-\frac{1}{4h_{ij}}
+ \frac{(z_i - z_j )(x_i-x_j)}{r_{ij}} 
+ \bm{n}_{ij} \\
+\vdots \\
+-\frac{1}{4h_{ji}} 
+ \frac{(z_j - z_i )(x_j - x_i)}{r_{ji}} 
+\bm{n}_{ji} \\
+\vdots 
+\end{pmatrix} 
+\end{align}
+
+\newpage
+\subsection*{Force balance equation}
+
+
+
+
+
+\newpage
+\bibliography{/Users/seto/Dropbox/Papers/rse}
+\end{document}
