@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2012)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: note_LF_DEM.aux
+The style file: unsrtnat.bst
+Database file #1: /Users/seto/Dropbox/Papers/rse.bib
+You've used 1 entry,
+            2481 wiz_defined-function locations,
+            559 strings with 4640 characters,
+and the built_in function-call counts, 421 in all, are:
+= -- 37
+> -- 15
+< -- 1
++ -- 6
+- -- 4
+* -- 30
+:= -- 70
+add.period$ -- 3
+call.type$ -- 1
+change.case$ -- 2
+chr.to.int$ -- 1
+cite$ -- 1
+duplicate$ -- 19
+empty$ -- 38
+format.name$ -- 7
+if$ -- 84
+int.to.chr$ -- 1
+int.to.str$ -- 2
+missing$ -- 1
+newline$ -- 13
+num.names$ -- 3
+pop$ -- 7
+preamble$ -- 1
+purify$ -- 1
+quote$ -- 0
+skip$ -- 13
+stack$ -- 0
+substring$ -- 27
+swap$ -- 2
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 7
+warning$ -- 0
+while$ -- 4
+width$ -- 0
+write$ -- 20

@@ -53,6 +53,13 @@
 		D988E399165443C10009949F /* vec3d.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec3d.h; sourceTree = "<group>"; };
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.aux; sourceTree = "<group>"; };
+		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
+		D9DA50D81678F61E00E864E4 /* note_LF_DEM.blg */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.blg; sourceTree = "<group>"; };
+		D9DA50D91678F61E00E864E4 /* note_LF_DEM.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.log; sourceTree = "<group>"; };
+		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
+		D9DA50DB1678F61E00E864E4 /* note_LF_DEM.synctex.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = note_LF_DEM.synctex.gz; sourceTree = "<group>"; };
+		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +84,7 @@
 				D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */,
 				D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */,
 				D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */,
+				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D988E38A165441750009949F /* Products */,
 			);
@@ -109,6 +117,20 @@
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
+			sourceTree = "<group>";
+		};
+		D9DA50D51678F61E00E864E4 /* note_LF_DEM */ = {
+			isa = PBXGroup;
+			children = (
+				D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */,
+				D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */,
+				D9DA50D81678F61E00E864E4 /* note_LF_DEM.blg */,
+				D9DA50D91678F61E00E864E4 /* note_LF_DEM.log */,
+				D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */,
+				D9DA50DB1678F61E00E864E4 /* note_LF_DEM.synctex.gz */,
+				D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */,
+			);
+			path = note_LF_DEM;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
