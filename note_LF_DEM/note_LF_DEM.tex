@@ -32,8 +32,8 @@ One-body limit:
 -8 \pi \mu a^3 ( \bm{\omega}_i - \bm{\Omega}^{\infty})
 \end{align}
 
-\citet{Melrose_2004a} uses the leading 
-squeeze mode of lubrication force:
+\citet{Melrose_2004a} uses 
+the leading squeeze mode of lubrication force:
 \begin{align}
  \bm{F}_{ij}^{\mathrm{pair}}
 &=
@@ -50,8 +50,10 @@ squeeze mode of lubrication force:
 where
 \begin{equation}
  \alpha_{\mathrm{n}}(h_{ij}) = 
-\frac{3 \pi \mu a^2}{2 h_{\ij}}
+\frac{3 \pi \mu a^2}{2 h_{\ij}}.
 \end{equation}
+
+
 
 Hydrodynamic interaction acting on particle $i$
 is given by
@@ -167,18 +169,27 @@ $\Delta \bm{v} \equiv (\bm{v}- \bm{U}^{\infty})$
 =&\bm{n} \otimes \bm{n} \Delta \bm{v}
 \end{align}
 
-\begin{equation}
-\bm{F}_i  = 
- -  \Delta \bm{v}_i 
-- \sum_j
-\left(
- \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
-- \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j 
- + \frac{1}{4h_{ij}}  
-(\bm{U}_i^{\infty} -\bm{U}_j^{\infty} 
-) \cdot \bm{n}_{ij}\bm{n}_{ij} 
-\right)
-\end{equation}
+\begin{align}
+  \bm{F}_i  &= 
+  -  \Delta \bm{v}_i 
+  - \sum_j
+  \left(
+    \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
+    - \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j 
+    + \frac{1}{4h_{ij}}  
+    (\bm{U}_i^{\infty} -\bm{U}_j^{\infty} 
+    ) \cdot \bm{n}_{ij}\bm{n}_{ij} 
+  \right) \\
+  &=
+  q -  \Delta \bm{v}_i 
+  - \sum_j
+  \left(
+    \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
+    - \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j
+    + \frac{1}{4h_{ij}}
+    \frac{(z_i - z_j )(x_i-x_j)}{r_{ij}} \bm{n}_{ij} \right)
+  \end{align}
+
 
 \begin{align}
 \begin{pmatrix}
@@ -215,13 +226,19 @@ $\Delta \bm{v} \equiv (\bm{v}- \bm{U}^{\infty})$
 + 
 \begin{pmatrix}
 \vdots \\
--\frac{1}{4h_{ij}} (\bm{U}_i^{\infty}-\bm{U}_j^{\infty})\cdot\bm{n}_{ij} \bm{n}_{ij} \\
+-\frac{1}{4h_{ij}}
+ \frac{(z_i - z_j )(x_i-x_j)}{r_{ij}} 
+ \bm{n}_{ij} \\
 \vdots \\
--\frac{1}{4h_{ji}} (\bm{U}_j^{\infty}-\bm{U}_i^{\infty})\cdot\bm{n}_{ji} \bm{n}_{ji} \\
+-\frac{1}{4h_{ji}} 
+ \frac{(z_j - z_i )(x_j - x_i)}{r_{ji}} 
+\bm{n}_{ji} \\
 \vdots 
 \end{pmatrix} 
 \end{align}
 
+\newpage
+\subsection*{Force balance equation}
 
 
 
