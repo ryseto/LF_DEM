@@ -146,6 +146,7 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	fout_yap.open(yap_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
+
 }
 
 void Simulation::importInitialPositionFile(){

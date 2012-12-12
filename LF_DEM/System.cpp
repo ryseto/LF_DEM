@@ -122,6 +122,9 @@ void System::prepareSimulation(){
 	lda = n3;
 	ldb = n3;
 #endif
+
+	boxset = new BoxSet(2.5, this);
+
 }
 
 void System::initInteractionPair(){
@@ -138,7 +141,10 @@ void System::initInteractionPair(){
 
 void System::timeEvolution(int time_step){
 	int ts_next = ts + time_step;
+
+
 	while (ts < ts_next){
+		boxset->update();
 		checkNewInteraction();
 		for (int k = 0; k < num_interaction; k++){
 			interaction[k].calcDistanceNormalVector();

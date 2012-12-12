@@ -16,16 +16,17 @@
 #include <string>
 #include <Accelerate/Accelerate.h>
 #include "Interaction.h"
-#ifdef CHOLMOD
 #include "cholmod.h"
 #include "vec3d.h"
 //#include "ContactForce.h"
 #include "BrownianForce.h"
+#include "BoxSet.h"
 
 using namespace std;
 class Simulation;
 class Interaction;
 class BrownianForce;
+class BoxSet;
 
 class System{
 private:
@@ -65,6 +66,8 @@ private:
 	double *work;
 	char UPLO;
 #endif
+
+	BoxSet* boxset;
 
 protected:
 public:
@@ -140,7 +143,6 @@ public:
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
 	void periodize(vec3d*);
-	double distance(int i, int j);
 	void updateVelocity();
 	void updateVelocityLubrication();
 	void deltaTimeEvolution();

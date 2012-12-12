@@ -1,8 +1,8 @@
 #Makefile Romain Mari 06/2010
 CXX=g++ # -cxxlib-icc-abr
 
-CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS
-#CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS debug
+#CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS
+CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS debug
 #CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/ # linux
 #CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/
 LINKLIBS = -llapack -lblas -lcholmod
