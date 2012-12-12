@@ -15,9 +15,7 @@
 #include <queue>
 #include <string>
 #include <Accelerate/Accelerate.h>
-#ifdef CHOLMOD
 #include "cholmod.h"
-#endif
 #include "vec3d.h"
 #include "ContactForce.h"
 #include "BrownianForce.h"
@@ -45,6 +43,7 @@ private:
 	vector <double> *off_diag_values;
 	int *ploc;
 	void fillSparseResmatrix();
+	void allocateSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
 	void appendToColumn(double *nvec, int jj, double alpha);
 #else
@@ -129,6 +128,7 @@ public:
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
 
+	void periodize(vec3d*);
 	double distance(int i, int j);
 	void updateVelocity();
 	void updateVelocityLubrication();
@@ -145,11 +145,8 @@ public:
 	}
 
 
-#ifdef CHOLMOD
 	cholmod_factor *L ;
 	cholmod_common c ;
-	
-#endif
 	
 	void lubricationStress(int i, int j);
 

@@ -198,6 +198,9 @@ void System::addToDiag(double *nvec, int ii, double alpha){
 }
 
 void System::fillSparseResmatrix(){
+
+	allocateSparseResmatrix();
+	
 	// fill
 	for(int j = 0; j < n; j++){
 		int j3 = 3*j;
@@ -333,9 +336,7 @@ void System::buildLubricationTerms(){ // fills resistance matrix and part of the
 	ploc[n] = (unsigned int)rows.size();
 
 }
-#endif
 
-#ifdef CHOLMOD
 void System::buildBrownianTerms(){
 
 	// add Brownian force
@@ -346,9 +347,7 @@ void System::buildBrownianTerms(){
 // 	// add Brownian force
 // 	//	fb->generate(rhs_b); // right now not working, as it relies on Cholesky factor
 // }
-#endif
 
-#ifdef CHOLMOD
 void System::buildContactTerms(){
 
 	// add contact force
@@ -369,13 +368,9 @@ void System::buildContactTerms(){
 // 		rhs_b[i3+2] += force[i].z;
 // 	}
 // }
-#endif
 
-#ifdef CHOLMOD
-void System::updateVelocityLubrication(){
-	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
-	buildLubricationTerms();
-
+void
+System::allocateSparseResmatrix(){
 // allocate
 	int nzmax;  // non-zero values
 	nzmax = 6*n; // diagonal blocks
@@ -383,8 +378,17 @@ void System::updateVelocityLubrication(){
 		nzmax += off_diag_values[s].size();  // off-diagonal
 	}
 	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
-	fillSparseResmatrix();
 
+}
+
+
+void System::updateVelocityLubrication(){
+
+	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+	buildLubricationTerms();
+
+	fillSparseResmatrix();
+	
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
 	
@@ -393,16 +397,22 @@ void System::updateVelocityLubrication(){
 	buildBrownianTerms();
 
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
+
+	/********** testing *
+	double m1 [2] = {-1,0};
+	double p1 [2] = {1,0};
+	cholmod_dense *r = cholmod_copy_dense(rhs_b, &c);
+	cholmod_sdmult(sparse_res, 0, m1, p1, v, r, &c);
+	cout << " cholmod residu " << cholmod_norm_dense(r,0, &c) << endl;
+	cholmod_free_dense(&r, &c);
+	* end testing *************/
+
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		velocity[i].x = ((double*)v->x)[i3] + shear_rate*position[i].z;
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
 	}
-	cholmod_free_sparse(&sparse_res,&c);
-	cholmod_free_factor(&L,&c);
-	cholmod_free_dense(&rhs_b,&c);
-	cholmod_free_dense(&v,&c);
 
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
@@ -411,6 +421,13 @@ void System::updateVelocityLubrication(){
 			ang_velocity[i].y += O_inf_y;
 		}
 	}
+
+	cholmod_free_sparse(&sparse_res,&c);
+	cholmod_free_factor(&L,&c);
+	cholmod_free_dense(&rhs_b,&c);
+	cholmod_free_dense(&v,&c);
+
+
 }
 
 #else
@@ -470,7 +487,31 @@ void System::updateVelocityLubrication(){
 		rhs_b[i3+2] += force[i].z;
 	}
 
+	double * rhs_b_cpy = new double [n3];
+	for (int i = 0; i < n3; i++){
+		rhs_b_cpy[i]= rhs_b[i];
+	}
 	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
+
+	/********** testing *
+	int inc=1;
+	double beta=-1.;
+	double alpha=1.;
+	enum CBLAS_ORDER order=CblasRowMajor;
+	enum CBLAS_UPLO ul=CblasUpper;
+	cblas_dsymv(order, ul, n3, alpha, res, lda, rhs_b, inc, beta, rhs_b_cpy,inc);
+	double infty_norm=0.;
+	for (int i = 0; i < n3; i++){
+		cout << rhs_b_cpy[i] << endl;
+		if(fabs(rhs_b_cpy[i])>infty_norm)
+			infty_norm=fabs(rhs_b_cpy[i]);
+	}
+	
+	cout << " lapack residu " << infty_norm << endl;
+	getchar();
+	delete [] rhs_b_cpy;
+	* end testing ***********/
+
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
 		velocity[i].x = rhs_b[i3] + shear_rate*position[i].z;
@@ -511,6 +552,29 @@ void System::displacement(int i, const double &dx_, const double &dy_, const dou
 			position[i].y += ly;
 		}
 	}
+}
+
+void System::periodize(vec3d *pos){
+	if (pos->z > lz ){
+		pos->z -= lz;
+		pos->x -= shear_disp;
+	} else if ( pos->z < 0 ){
+		pos->z += lz;
+		pos->x += shear_disp;
+	}
+	if ( pos->x > lx ){
+		pos->x -= lx;
+	} else if (pos->x < 0 ){
+		pos->x += lx;
+	}
+	if (dimension == 3){
+		if ( pos->y > ly ){
+			pos->y -= ly;
+		} else if (pos->y < 0 ){
+			pos->y += ly;
+		}
+	}
+
 }
 
 void System::deltaTimeEvolution(){
