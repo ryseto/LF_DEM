@@ -14,7 +14,8 @@ Simulation::~Simulation(){
 	fout_rheo.close();
 };
 
-void Simulation::SetParameters(int argc, const char * argv[]){
+void
+Simulation::SetParameters(int argc, const char * argv[]){
 	sys.lub = true;
 	sys.brownian = true;
 	filename_import_positions = argv[1];
@@ -157,7 +158,8 @@ void Simulation::SetParameters(int argc, const char * argv[]){
 
 }
 
-void Simulation::importInitialPositionFile(){
+void
+Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open( filename_import_positions.c_str());
 	vec3d pos;
@@ -173,7 +175,8 @@ void Simulation::importInitialPositionFile(){
 /*
  * Main simulation
  */
-void Simulation::SimulationMain(int argc, const char * argv[]){
+void
+Simulation::SimulationMain(int argc, const char * argv[]){
 	SetParameters(argc, argv);
 	importInitialPositionFile();
 	sys.n = (int)initial_positions.size();
@@ -194,10 +197,12 @@ void Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 
 }
+
 /*
  *
  */
-void Simulation::outputRheologyData(){
+void
+Simulation::outputRheologyData(){
 	sys.calcStress();
 	/*
 	 * Output the sum of the normal forces.
@@ -217,7 +222,8 @@ void Simulation::outputRheologyData(){
 	fout_rheo << endl;
 }
 
-vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
+vec3d
+Simulation::shiftUpCoordinate(double x, double y, double z){
 	if (origin_zero_flow){
 		z += sys.lz2;
 		if (z > sys.lz2){
@@ -230,14 +236,15 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z){
 	return vec3d(x,y,z);
 }
 
-
-void Simulation::drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
+void
+Simulation::drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
 	fout << type << ' ';
 	fout << pos.x << ' '<< pos.y << ' '<< pos.z << ' ';
 	fout << pos.x + vec.x << ' '<< pos.y + vec.y << ' '<< pos.z + vec.z << endl;
 }
 
-void Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
+void
+Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
 	vec3d seg = pos2 - pos1;
 	fout << type << ' ';
 	if (seg.z > sys.lz2){
@@ -269,7 +276,8 @@ void Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
 	fout << pos2.x << ' '<< pos2.y << ' '<< pos2.z << endl;
 }
 
-void Simulation::drawLine(double x0, double y0, double z0,
+void
+Simulation::drawLine(double x0, double y0, double z0,
 			  double x1, double y1, double z1,
 			  ofstream &fout){
 	fout << 'l' << ' ';
@@ -280,7 +288,8 @@ void Simulation::drawLine(double x0, double y0, double z0,
 /* Output data for yaplot visualization.
  *
  */
-void Simulation::output_yap(){
+void
+Simulation::output_yap(){
 	static bool fasttime = true;
 	if (fasttime){
 		fasttime = false;
@@ -438,4 +447,3 @@ void Simulation::output_yap(){
 		drawLine( sys.lx2, -sys.ly2,  sys.lz2,  sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
 	}
 }
-

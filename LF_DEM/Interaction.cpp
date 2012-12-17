@@ -8,7 +8,8 @@
 
 #include "Interaction.h"
 
-void Interaction::init(System *sys_){
+void
+Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
@@ -18,7 +19,8 @@ void Interaction::init(System *sys_){
 
 /* Activate interaction between particles i and j.
  */
-void  Interaction::create(int i, int j){
+void
+Interaction::create(int i, int j){
 	active = true;
 	contact = false;
 	particle_num[0] = i;
@@ -26,7 +28,8 @@ void  Interaction::create(int i, int j){
 	return;
 }
 
-void Interaction::newContact(){
+void
+Interaction::newContact(){
 	contact = true;
 	static_friction = true;
 	xi.reset();
@@ -37,7 +40,8 @@ void Interaction::newContact(){
  * vector from particle 1 to particle 0. ( i --> j)
  * pd_x, pd_y, pd_z : Periodic boundary condition
  */
-void Interaction::calcNormalVector(){
+void
+Interaction::calcNormalVector(){
 	r_vec = sys->position[particle_num[0]] - sys->position[particle_num[1]];
 	if (r_vec.z < -sys->lz2){
 		pd_z = 1; //  p1 (z = lz), p0 (z = 0)
@@ -69,7 +73,8 @@ void Interaction::calcNormalVector(){
 	}
 }
 
-void Interaction::calcDistanceNormalVector(){
+void
+Interaction::calcDistanceNormalVector(){
 	if (active){
 		calcNormalVector();
 		r = r_vec.norm();
@@ -77,7 +82,8 @@ void Interaction::calcDistanceNormalVector(){
 	}
 }
 
-void Interaction::calcStaticFriction(){
+void
+Interaction::calcStaticFriction(){
 	double f_static = sys->mu_static*f_normal;
 	double f_spring = sys->kt*xi.norm();
 	if ( xi.x != 0){
@@ -95,7 +101,8 @@ void Interaction::calcStaticFriction(){
 	}
 }
 
-void Interaction::calcDynamicFriction(){
+void
+Interaction::calcDynamicFriction(){
 	double f_dynamic = sys->mu_dynamic*f_normal;
 	/* Use the velocity of one time step before as approximation. */
 	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
@@ -110,7 +117,8 @@ void Interaction::calcDynamicFriction(){
  * r_vec = p[0] - p[1]
  * f_normal is positive (by overlapping particles r < 2)
  */
-void Interaction::calcContactInteraction(){
+void
+Interaction::calcContactInteraction(){
 	if (contact){
 		f_normal = sys->kn*(2.0 - r);
 		if (static_friction){
@@ -127,7 +135,8 @@ void Interaction::calcContactInteraction(){
 	}
 }
 
-void Interaction::calcContactInteractionNoFriction(){
+void
+Interaction::calcContactInteractionNoFriction(){
 	if (contact){
 		f_normal = sys->kn*(2-r);
 		sys->force[ particle_num[0] ] += f_normal * nr_vec;
@@ -138,7 +147,8 @@ void Interaction::calcContactInteractionNoFriction(){
 /* Relative velocity of particle 0 from particle 1.
  *
  */
-void Interaction::calcContactVelocity(){
+void
+Interaction::calcContactVelocity(){
 	// relative velocity particle 0 from particle 1.
 	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
 	if (pd_z != 0){
@@ -151,7 +161,8 @@ void Interaction::calcContactVelocity(){
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
 }
 
-void Interaction::incrementContactTangentialDisplacement(){
+void
+Interaction::incrementContactTangentialDisplacement(){
 	if (active){
 		calcContactVelocity();
 		if (static_friction){
@@ -168,7 +179,8 @@ void Interaction::incrementContactTangentialDisplacement(){
 	}
 }
 
-double Interaction::valNormalForce(){
+double
+Interaction::valNormalForce(){
 	double h = r  - sys->lubcore;
 	double f_normal_total = 0;
 	if ( h > 0){
@@ -185,7 +197,8 @@ double Interaction::valNormalForce(){
 	return f_normal_total;
 }
 
-void Interaction::addLubricationStress(){
+void
+Interaction::addLubricationStress(){
 	double h = r  - sys->lubcore;
 	int i = particle_num[0];
 	int j = particle_num[1];
@@ -218,7 +231,8 @@ void Interaction::addLubricationStress(){
 	}
 }
 
-void Interaction::addContactStress(){
+void
+Interaction::addContactStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
 	if (contact){

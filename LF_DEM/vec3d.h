@@ -93,7 +93,6 @@ public:
                      v1.x*(*(v2p+1)) - v1.y*(*v2p));
 	}	
 
-    
 	/* division */
 	inline friend vec3d operator / (const vec3d &v, const double &d){
 		double d_tmp = 1.0/d;
@@ -179,7 +178,6 @@ public:
 		} else if ( z > lz ){
 			z -= lz;
 		}
-	
 	}
 	void cerr(){
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
