@@ -553,10 +553,6 @@ System::updateVelocityLubrication(){
 	
 	buildContactTerms();
 	
-	if (brownian){
-		buildBrownianTerms();
-	}
-	
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
 
 	/********** testing *
@@ -589,6 +585,77 @@ System::updateVelocityLubrication(){
 	cholmod_free_dense(&rhs_b, &c);
 	cholmod_free_dense(&v, &c);
 }
+
+void System::updateVelocityLubricationBrownian(){
+
+	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+	buildLubricationTerms();
+
+	fillSparseResmatrix();
+	
+	L = cholmod_analyze (sparse_res, &c);
+	cholmod_factorize (sparse_res, L, &c);
+	
+	buildContactTerms();
+	
+	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
+
+	// now the Brownian part of the velocity:
+	// mid-point algortithm a la Banchio & Brady
+	brownian_force = fb->generate();
+	v_Brownian_init = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
+
+	// move particles to intermediate point
+	for (int i=0; i < n; i++){
+	  int i3 = 3*i;
+	  displacement(i, ((double*)v_Brownian_init->x)[i3]*dt_mid, ((double*)v_Brownian_init->x)[i3+1]*dt_mid, ((double*)v_Brownian_init->x)[i3+2]*dt_mid);
+	}
+
+	// rebuild new R_FU
+	cholmod_free_factor(&L, &c);
+	cholmod_free_sparse(&sparse_res, &c);
+	buildLubricationTerms();
+	fillSparseResmatrix();
+	L = cholmod_analyze (sparse_res, &c);
+	cholmod_factorize (sparse_res, L, &c);
+
+	// get the intermediate brownian velocity
+	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
+	
+	// move particles back to initial point
+	for (int i=0; i < n; i++){
+	  int i3 = 3*i;
+	  displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
+	}
+
+	// update total velocity
+	// first term is hydrodynamic + contact velocities
+	// second term is Brownian velocities
+	// third term is Brownian drift
+	// fourth term for vx is the shear rate
+	for (int i = 0; i < n; i++){
+		int i3 = 3*i;
+		velocity[i].x = ((double*)v_nonBrownian->x)[i3] + ((double*)v_Brownian_init->x)[i3] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3] - ((double*)v_Brownian_init->x)[i3] ) + shear_rate*position[i].z;
+		velocity[i].y = ((double*)v_nonBrownian->x)[i3+1] + ((double*)v_Brownian_init->x)[i3+1] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+1] - ((double*)v_Brownian_init->x)[i3+1] );
+		velocity[i].z = ((double*)v_nonBrownian->x)[i3+2] + ((double*)v_Brownian_init->x)[i3+2] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+2] - ((double*)v_Brownian_init->x)[i3+2] );
+	}
+
+	if(friction){
+		double O_inf_y = 0.5*shear_rate;
+		for (int i=0; i < n; i++){
+			ang_velocity[i] = 1.33333*torque[i];
+			ang_velocity[i].y += O_inf_y;
+		}
+	}
+
+	cholmod_free_sparse(&sparse_res, &c);
+	cholmod_free_factor(&L, &c);
+	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_dense(&v_nonBrownian, &c);
+	cholmod_free_dense(&v_Brownian_init, &c);
+	cholmod_free_dense(&v_Brownian_mid, &c);
+}
+	
 
 #else
 

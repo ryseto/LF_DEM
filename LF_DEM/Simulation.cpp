@@ -86,6 +86,14 @@ Simulation::SetParameters(int argc, const char * argv[]){
 	 * We need to give a good criterion to give.
 	 */
 	sys.dt = 1e-4 / sys.shear_rate;
+	/* 
+	 * dt_mid: the intermediate time step for the mid-point 
+	 * algortithm. dt/dt_mid = dt_ratio
+	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
+	 * ASD code from Brady has dt_ratio=150
+	 */
+	sys.dt_ratio = 100;
+	sys.dt_mid = sys.dt/sys.dt_ratio;
 	/*
 	 * The time steps finishing simulation.
 	 */
