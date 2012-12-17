@@ -34,7 +34,7 @@ private:
 	
 	cholmod_sparse *L_sparse;
 	cholmod_common *c;
-	void generate();
+	void generate_local();
 protected:
 public:
 	
@@ -44,8 +44,9 @@ public:
 	
 	void init(); // once SuiteSparse algebra cholmod_common object is allocated
 	
-	//	cholmod_dense* generate();
+	
 	void add_to(cholmod_dense*);
+	cholmod_dense* generate();
 	void generate(double*);
 	
 };

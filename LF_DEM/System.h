@@ -14,7 +14,7 @@
 #include <fstream>
 #include <queue>
 #include <string>
-#include <Accelerate/Accelerate.h>
+//#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
 #include "cholmod.h"
 #include "vec3d.h"
@@ -40,7 +40,9 @@ private:
 	void buildContactTerms();
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
-	cholmod_dense *v, *rhs_b;
+	cholmod_dense *v;
+	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
+	cholmod_dense *rhs_b, *brownian_force;
 	int max_lub_int;
 	int stype;
 	int sorted;
@@ -61,7 +63,7 @@ private:
 	int lda;
 	int ldb;
 	int info;
-	double *rhs_b;
+	double *strain_term;
 	int lwork;
 	double *work;
 	char UPLO;
@@ -124,6 +126,7 @@ public:
 	double volume_fraction;
 	double vel_difference;
 	double dt;
+	double dt_mid, dt_ratio;
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
@@ -145,6 +148,7 @@ public:
 	void periodize(vec3d*);
 	void updateVelocity();
 	void updateVelocityLubrication();
+	void updateVelocityLubricationBrownian();
 	void deltaTimeEvolution();
 	void forceReset();
 	void torqueReset();
