@@ -38,7 +38,7 @@ class Box{
 
   vector <int> neighborhood_container;
 
-  void build_neighborhood_container();
+
  protected:
   
  public:
@@ -83,10 +83,19 @@ class Box{
 	return container->end();
   }
 
+  vector<int>::iterator neighborhood_begin(){
+	return neighborhood_container.begin();
+  }
+  vector<int>::iterator neighborhood_end(){
+	return neighborhood_container.end();
+  }
+
+
   int container_size(){
 	return container->size();
   }
 
+  void build_neighborhood_container();
 
   Box();
   ~Box();

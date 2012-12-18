@@ -309,6 +309,11 @@ BoxSet::assignNeighbors(){
 BoxSet::BoxSet(double interaction_dist, System *sys_){
 	
 	sys=sys_;
+
+	boxMap = new Box* [sys->n];
+	for(int i=0; i<sys->n;i++)
+	  boxMap[i]=NULL;
+
 	double xratio=sys->lx/interaction_dist;
 	double yratio=sys->lx/interaction_dist;
 	double zratio=sys->lx/interaction_dist;
@@ -372,18 +377,19 @@ BoxSet::~BoxSet(){
 		delete [] BulkBoxes;
 	delete [] TopBoxes;
 	delete [] BottomBoxes;
+	delete [] boxMap;
 }
 
 
 void
-BoxSet::updateNeighbors(Box* box){
-	box->reset_moving_neighbors();
-	vec3d *probes = box->probing_positions();
-	int probes_nb = box->probe_nb();
+BoxSet::updateNeighbors(Box* b){
+	b->reset_moving_neighbors();
+	vec3d *probes = b->probing_positions();
+	int probes_nb = b->probe_nb();
 	int moving_label = 0;
 	for(int i=0; i < probes_nb; i++){
-		//	  cout <<  i << " " << box->position.x << " " << box->position.y<< " " << box->position.z << " "<< (WhichBox(probes[i]))->position.x << " " << (WhichBox(probes[i]))->position.y<< " " << (WhichBox(probes[i]))->position.z << endl;
-		bool successful_add = box->moving_neighbor(moving_label, WhichBox(probes[i]) );
+		//	  cout <<  i << " " << b->position.x << " " << b->position.y<< " " << b->position.z << " "<< (WhichBox(probes[i]))->position.x << " " << (WhichBox(probes[i]))->position.y<< " " << (WhichBox(probes[i]))->position.z << endl;
+		bool successful_add = b->moving_neighbor(moving_label, WhichBox(probes[i]) );
 		if(successful_add)
 			moving_label++;
 	} 
@@ -431,11 +437,16 @@ bool
 
 Box*
 BoxSet::WhichBox(vec3d pos){
+  return WhichBox(&pos);
+}
+
+Box*
+BoxSet::WhichBox(vec3d* pos){
 	
-	sys->periodize(&pos);
-	int ix=(int)(pos.x/box_xsize);
-	int iy=(int)(pos.y/box_ysize);
-	int iz=(int)(pos.z/box_zsize);
+	sys->periodize(pos);
+	int ix=(int)(pos->x/box_xsize);
+	int iy=(int)(pos->y/box_ysize);
+	int iz=(int)(pos->z/box_zsize);
 
 
 	int label= ix*y_box_nb*z_box_nb + iy*z_box_nb + iz;
@@ -446,6 +457,27 @@ BoxSet::WhichBox(vec3d pos){
 	return Boxes[label];
 }
 
+
+void
+BoxSet::box(int i){
+  Box *b = WhichBox( sys->position[i] );
+  if( b != boxMap[i] ){
+	b->add(i);
+	if( boxMap[i] != NULL)
+	  boxMap[i]->remove(i);
+	boxMap[i]=b;
+  }
+}
+
+vector<int>::iterator
+BoxSet::neighborhood_begin(int i){
+  return (boxMap[i])->neighborhood_begin();
+}
+
+vector<int>::iterator
+BoxSet::neighborhood_end(int i){
+  return (boxMap[i])->neighborhood_end();
+}
 
 void
 BoxSet::printBoxNetwork(){
