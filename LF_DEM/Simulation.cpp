@@ -17,7 +17,7 @@ Simulation::~Simulation(){
 void
 Simulation::SetParameters(int argc, const char * argv[]){
 	sys.lub = true;
-	sys.brownian = true;
+	sys.brownian = false;
 	filename_import_positions = argv[1];
 	sys.lubcore = atof(argv[2]);
 	string arg3 =argv[3];
@@ -153,9 +153,10 @@ Simulation::SetParameters(int argc, const char * argv[]){
 	sys.prepareSimulationName();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
+	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
 	fout_yap.open(yap_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
-
+	fout_vpy.open(vpy_filename.c_str());
 }
 
 void
@@ -190,10 +191,13 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.checkNewInteraction();
 	//	int count = 0;
 	//	while(count++<3){
+	double time=0;
 	while(true){
 		sys.timeEvolution(interval_snapshot);
 		outputRheologyData();
 		output_yap();
+		time+=(double)interval_snapshot;
+		output_vpython(time);
 	}
 
 }
@@ -446,4 +450,22 @@ Simulation::output_yap(){
 		drawLine(-sys.lx2, -sys.ly2,  sys.lz2, -sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
 		drawLine( sys.lx2, -sys.ly2,  sys.lz2,  sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
 	}
+}
+
+
+
+/* Output data for vpython visualization.
+ *
+ */
+void
+Simulation::output_vpython(double time){
+	vec3d pos;
+	fout_vpy << "time: " << time << endl;
+	for (int i=0; i < sys.n; i++){
+		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
+								sys.position[i].y - sys.ly2,
+								sys.position[i].z - sys.lz2);
+		fout_vpy << i << ' ' << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+	}
+	fout_vpy << endl;
 }

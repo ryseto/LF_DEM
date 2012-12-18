@@ -29,12 +29,14 @@ private:
 	 * For output data.
 	 */
 	ofstream fout_yap;
+	ofstream fout_vpy;
 	ofstream fout_rheo;
 	double yap_force_factor;
 	bool origin_zero_flow;
 	void SetParameters(int argc, const char * argv[]);
 	void importInitialPositionFile();
 	void output_yap();
+	void output_vpython(double);
 	void output_vel();
 	void initContactPair();
 	void outputRheologyData();
