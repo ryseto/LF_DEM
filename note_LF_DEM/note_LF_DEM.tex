@@ -25,6 +25,9 @@
 
 \subsection*{The leading lubrication forces}
 
+
+Interaction between particles $\alpha$ and $\beta$
+can be written in a linear form:
 \begin{equation}
  \begin{pmatrix}
   \bm{F} \\ \bm{T} \\ \bm{S}
@@ -41,6 +44,7 @@
  \\ -\bm{E}_{\infty}
  \end{pmatrix}
 \end{equation}
+The vectors consist of two elements.
 \begin{equation}
  \bm{F}
 = 
@@ -72,19 +76,135 @@
  \bm{\Omega}_\alpha \\  \bm{\Omega}_\beta
 \end{pmatrix}
 \end{equation}
+The explicit form of the matrix $\tens{A}$ 
+is as follows
 \begin{equation}
  \tens{A}
  =
 \begin{pmatrix}
   \tens{A}_{\alpha\alpha} & \tens{A}_{\alpha\beta} \\
   \tens{A}_{\beta\alpha} & \tens{A}_{\beta\beta} 
+\end{pmatrix}.
+\end{equation}
+%
+If we consider only the leading terms for the nearly contacting particles,
+only $\tens{A}$ and $\tens{G}$ give the leading contribution to the forces.
+\begin{equation}
+ \begin{pmatrix}
+  \bm{F}_{\alpha} \\
+  \bm{F}_{\beta} 
+ \end{pmatrix}
+\approx
+- \mu
+\begin{pmatrix}
+\tens{A}_{\alpha\alpha} &
+\tens{A}_{\alpha\beta}  \\
+\tens{A}_{\beta\alpha}  &
+\tens{A}_{\beta\beta}  
+\end{pmatrix}
+ \begin{pmatrix}
+  \bm{U}_{\alpha} -  \bm{U}_{\alpha}^{\infty}\\
+  \bm{U}_{\beta} -  \bm{U}_{\beta}^{\infty}
+ \end{pmatrix}
+ + \mu
+\begin{pmatrix}
+\tilde{\tens{G}}_{\alpha\alpha} &
+\tilde{\tens{G}}_{\alpha\beta}  \\
+\tilde{\tens{G}}_{\beta\alpha}  &
+\tilde{\tens{G}}_{\beta\beta}  
+\end{pmatrix}
+ \begin{pmatrix}
+\bm{E}_{\infty} \\ \bm{E}_{\infty}
 \end{pmatrix}
 \end{equation}
-Similarly for 
-$\tens{B}$, $\tens{C}$, $\tens{G}$,
-$\tens{H}$, $\tens{M}$, 
-$\tilde{\tens{B}}$, $\tilde{\tens{C}}$, $\tilde{\tens{H}}$.
-%
+
+
+\begin{align*}
+F^{\alpha}_i
+&= 
+- \mu A^{\alpha\alpha}_{ij}
+(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
+- \mu A^{\alpha\beta}_{ij}
+(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j
++ \mu \tilde{G}^{\alpha\alpha}_{ijk} \bm{E}^{\infty}_{jk}
++ \mu \tilde{G}^{\alpha\beta}_{ijk} \bm{E}^{\infty}_{jk} \\
+&=
+- 6 \pi\mu a_{\alpha} \hat{A}^{\alpha\alpha}_{ij}
+(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
+- 3 \pi\mu (a_{\alpha}+a_{\beta})\hat{A}^{\alpha\beta}_{ij}
+(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j \\
+&\quad
++ 6 \pi\mu a_{\alpha} \hat{\tilde{G}}^{\alpha\alpha}_{ijk} \bm{E}^{\infty}_{jk}
++ 3 \pi\mu (a_{\alpha}+a_{\beta}) \hat{\tilde{G}}^{\alpha\beta}_{ijk} \bm{E}^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+- 6 \pi\mu a_{\alpha} X_{\alpha\alpha}^{A} n_i n_j
+(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
+- 3 \pi\mu (a_{\alpha}+a_{\beta}) X_{\alpha\beta}^{A} n_i n_j
+(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j \\
+&\quad
++ 6 \pi\mu a_{\alpha} X_{\alpha\alpha}^{G} 
+\left(n_i n_j - \frac{\delta_{ij}}{3}  \right)n_k \bm{E}^{\infty}_{jk}
++ 3 \pi\mu (a_{\alpha}+a_{\beta}) 
+X_{\alpha\beta}^{G} \left(n_i n_j - \frac{\delta_{ij}}{3} \right)n_k \bm{E}^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+- 6 \pi\mu a_{\alpha} \frac{g_1(\lambda)}{\xi} n_i n_j
+(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
++ \frac{6}{1+\lambda} \pi\mu (a_{\alpha}+a_{\beta})\frac{g_1(\lambda)}{\xi} n_i n_j
+(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
+\\
+&\quad
++ 9 \pi \mu a_{\alpha} \frac{g_1(\lambda)}{\xi} 
+\left(n_i n_j - \frac{\delta_{ij}}{3} \right)n_k \bm{E}^{\infty}_{jk}
+-  
+\frac{18 \pi}{(1+\lambda)^2} 
+\mu (a_{\alpha}+ a_{\beta})
+\frac{g_1(\lambda)}{\xi} 
+\left(n_i n_j - \frac{\delta_{ij}}{3} \right) n_k \bm{E}^{\infty}_{jk} 
+\end{align*}
+
+monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
+\begin{align*}
+ F^{\alpha}_i
+&= 
+- 6 \pi\mu a \frac{1}{4\xi} n_i n_j
+(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
++ 6 \pi\mu a\frac{1}{4\xi} n_i n_j
+(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
+\\
+&\quad
++ \frac{9}{4} \pi \mu a \frac{1}{\xi} 
+\left(n_i n_j - \frac{\delta_{ij}}{3} \right) n_k \bm{E}^{\infty}_{jk}
+-  
+\frac{9}{4} \pi \mu a
+\frac{1}{\xi} 
+\left(n_i n_j - \frac{\delta_{ij}}{3} \right)n_k \bm{E}^{\infty}_{jk} \\
+&= 
+- \frac{3}{2} \pi\mu a \frac{1}{\xi} n_i n_j
+(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
++ \frac{3}{2} \pi\mu a\frac{1}{\xi} n_i n_j
+(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
++ 0 \Leftarrow ???
+\end{align*}
+
+
+%\begin{align}
+%\frac{ F^{\alpha}_i}{F_0}
+%&= 
+%-  \frac{1}{4\xi} n_i n_j
+%(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
+%+ \frac{1}{4\xi} n_i n_j
+%(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
+%\\
+%&\quad
+%+ \frac{3}{8\xi}
+%(n_i n_j - 1/3 \delta_{ij}) \bm{E}^{\infty}_{jk}
+%-  
+%\frac{3}{8\xi}
+%(n_i n_j - 1/3 \delta_{ij}) \bm{E}^{\infty}_{jk} 
+%\end{align}
+
 
 \paragraph{Symmetries:}
 2-indeces:
@@ -130,60 +250,70 @@ $\tilde{\tens{B}}$, $\tilde{\tens{C}}$, $\tilde{\tens{H}}$.
 \paragraph{Variables:}
 \begin{equation}
  \bm{r} = \bm{r}_\alpha - \bm{r}_\beta, \quad
- \bm{e} = \frac{\bm{r}}{r}
+ \bm{n} = \frac{\bm{r}}{r}
 \end{equation}
 \begin{equation}
-  s = \frac{2r}{a_{\alpha}+ a_{\beta}}, \quad
- \lambda = \frac{a_\beta}{a_\alpha}, \quad
-\xi \equiv \frac{r -  (a_\alpha + a_\beta)}{(a_{\alpha}+ a_{\beta})/2} 
+  s \equiv \frac{2r}{a_{\alpha}+ a_{\beta}}, \quad
+ \lambda \equiv \frac{a_\beta}{a_\alpha}, \quad
+\xi \equiv s - 2
 \end{equation}
+
 
 
 \paragraph{Scalar functions}
 
-\begin{equation}
+\begin{equation*}
   \hat{A}_{ij}^{\alpha \beta}
   = 
-  X_{\alpha \beta}^{A} \bm{e}_i \bm{e}_j
+  X_{\alpha \beta}^{A} n_i n_j
   +
-  Y_{\alpha \beta}^{A} (\delta_{ij} - e_i e_j)
-\end{equation}
+  Y_{\alpha \beta}^{A} (\delta_{ij} - n_i n_j)
+ \approx   X_{\alpha \beta}^{A} n_i n_j
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
   \hat{B}_{ij}^{\alpha \beta}
   = 
-  Y_{\alpha \beta}^{B}   \varepsilon_{ijk} e_k
-\end{equation}
+  Y_{\alpha \beta}^{B}   \varepsilon_{ijk} n_k
+\approx 0
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
   \hat{C}_{ij}^{\alpha \beta}
   = 
-  X_{\alpha \beta}^{C} \bm{e}_i \bm{e}_j
+  X_{\alpha \beta}^{C} n_i n_j
   +
-  Y_{\alpha \beta}^{C} (\delta_{ij} - e_i e_j)
-\end{equation}
+  Y_{\alpha \beta}^{C} (\delta_{ij} - n_i n_j)
+ \approx
+  X_{\alpha \beta}^{C} n_i n_j
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
  \hat{G}_{ijk}^{\alpha \beta}
  = 
 X_{\alpha\beta}^{G} 
-\left(e_ie_j - \frac{1}{3}\delta_{ij}\right)
+\left(n_i n_j - \frac{1}{3}\delta_{ij}\right)n_k
 +
 Y_{\alpha\beta}^{G}
 \left(
-e_i \delta_{jk} + e_j \delta_{ik} - 2 e_i e_j e_k
+n_i \delta_{jk} + n_j \delta_{ik} - 2 n_i n_j n_k
 \right)
-\end{equation}
-\begin{equation}
+\approx
+X_{\alpha\beta}^{G} 
+\left(n_in_j - \frac{1}{3}\delta_{ij}\right)n_k
+\end{equation*}
+\begin{equation*}
  \hat{H}_{ij}^{\alpha\beta}
  = Y_{\alpha\beta}^{H}
-(e_i \varepsilon_{jkm} e_m 
-+ e_j \varepsilon_{ikm} e_m )
-\end{equation}
-\begin{align}
+(n_i \varepsilon_{jkm} n_m 
++ n_j \varepsilon_{ikm} n_m )
+ \approx 0
+\end{equation*}
+\begin{align*}
  \hat{M}_{ijkl}^{\alpha\beta}
-& = X_{\alpha\beta}^{M}
+& = 
 \frac{3}{2}
+X_{\alpha\beta}^{M}
  \left(e_i e_j
  - \frac{1}{3} \delta_{ij}
 \right)
@@ -191,9 +321,9 @@ e_i \delta_{jk} + e_j \delta_{ik} - 2 e_i e_j e_k
  - \frac{1}{3} \delta_{kl}
 \right) \\
 & \quad
-+ 
++
+\frac{1}{2} 
 Y_{\alpha\beta}^{M}
-\frac{1}{2}
 \left(
 e_i \delta_{jl} e_k
 +
@@ -206,8 +336,9 @@ e_j \delta_{ik} e_l
 4 e_i e_j e_k e_l
 \right) \\
 &\quad
-+ Z_{\alpha\beta}^{M}
++ 
 \frac{1}{2}
+Z_{\alpha\beta}^{M}
 \left(
 \delta_{ik}\delta_{jl}
 +
@@ -230,8 +361,17 @@ e_j \delta_{il} e_k
 e_i \delta_{jk} e_l
 -
 e_j \delta_{ik} e_l
+\right) \\
+&\approx
+\frac{3}{2}
+ X_{\alpha\beta}^{M}
+ \left(e_i e_j
+ - \frac{1}{3} \delta_{ij}
 \right)
-\end{align}
+ \left(e_k e_l
+ - \frac{1}{3} \delta_{kl}
+\right)
+\end{align*}
 
 \paragraph{Leading terms}
 
@@ -245,48 +385,112 @@ These are only $X$ functions.
 $Y$ functions scale as $\ln \xi^{-1}$.
 
 
-\begin{equation}
+\begin{equation*}
  g_1 (\lambda)
 = \frac{2\lambda^2}{(1+\lambda)^3}
-\end{equation}
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
  X_{\alpha\alpha}^{A}
-= 
-g_1(\lambda) \xi^{-1}, \quad
+\approx 
+g_1(\lambda) \xi^{-1}
+\end{equation*}
+\begin{equation*}
  X_{\alpha\beta}^{A}
-= 
+\approx
 -\frac{2}{1+\lambda}g_1(\lambda) \xi^{-1}
-\end{equation}
+ = 
+-\frac{2}{1+\lambda} X_{\alpha\alpha}^{A} 
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
  X_{\alpha\alpha}^{C} 
 \sim
  X_{\alpha\beta}^{C}
 \sim
 \mathcal{O}(1) + \mathcal{O}(\xi \ln \xi^{-1}).
-\end{equation}
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
  X_{\alpha\alpha}^{G}
 = \frac{3}{2}g_1(\lambda) \xi^{-1}
-\quad 
+= \frac{3}{2} X_{\alpha\alpha}^{A} 
+\end{equation*}
+\begin{equation*}
  X_{\alpha \beta}^{G}
-= \frac{-6}{(1+\lambda)^2}
+=
+\frac{-6}{(1+\lambda)^2}
 g_1 (\lambda) \xi^{-1}
-\end{equation}
+= 
+\frac{-6}{(1+\lambda)^2} X_{\alpha\alpha}^{A}
+\end{equation*}
 
-\begin{equation}
+\begin{equation*}
  X_{\alpha \alpha}^{M}
 =
-\frac{3}{5} g_1(\lambda) \xi^{-1},
-\quad
+\frac{3}{5} g_1(\lambda) \xi^{-1}
+= \frac{3}{5} X_{\alpha\alpha}^{A}
+\end{equation*}
+\begin{equation}
  X_{\alpha \beta}^{M}
 =
-\frac{8\lambda}{(1+\lambda)^3} g_1(\lambda) \xi^{-1}.
+\frac{8\lambda}{(1+\lambda)^3} g_1(\lambda) \xi^{-1}
+= 
+\frac{8\lambda}{(1+\lambda)^3} X_{\alpha\alpha}^{A}
+= 
+\frac{4g_1}{\lambda} X_{\alpha\alpha}^{A}
 \end{equation}
 
 
+\newpage
+
+$\bm{E}_{\infty} = 
+(E_{xx}^{\infty},
+E_{xy}^{\infty},
+E_{xz}^{\infty},
+E_{yz}^{\infty},
+E_{yy}^{\infty}
+)
+=
+(0, 0, \dot{\gamma}/2, 0, 0) $
+
+
+
+\begin{align}
+ \tilde{\tens{G}}_{\alpha\alpha} \bm{E}_{\infty}
+&= 
+\begin{pmatrix}
+ \tilde{G}^{\alpha\alpha}_{x xx} E_{xx}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{x xy} E_{xy}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{x xz} E_{xz}^{\infty}
++  \tilde{G}^{\alpha\alpha}_{x yy} E_{yy}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{x yz} E_{yz}^{\infty}
++  \tilde{G}^{\alpha\alpha}_{x zz} E_{zz}^{\infty} 
+\\
+\tilde{G}^{\alpha\alpha}_{y xx} E_{xx}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{y xy} E_{xy}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{y xz} E_{xz}^{\infty}
++  \tilde{G}^{\alpha\alpha}_{y yy} E_{yy}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{y yz} E_{yz}^{\infty}
++  \tilde{G}^{\alpha\alpha}_{y zz} E_{zz}^{\infty} 
+\\
+ \tilde{G}^{\alpha\alpha}_{z xx} E_{xx}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{z xy} E_{xy}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{z xz} E_{xz}^{\infty}
++  \tilde{G}^{\alpha\alpha}_{z yy} E_{yy}^{\infty}
++ 2\tilde{G}^{\alpha\alpha}_{z yz} E_{yz}^{\infty}
++  \tilde{G}^{\alpha\alpha}_{z zz} E_{zz}^{\infty} 
+\end{pmatrix}
+\\
+&=
+\begin{pmatrix}
+ 2\tilde{G}^{\alpha\alpha}_{x xz} E_{xz}^{\infty}
+\\
+ 2\tilde{G}^{\alpha\alpha}_{y xz} E_{xz}^{\infty}
+\\
+ 2\tilde{G}^{\alpha\alpha}_{z xz} E_{xz}^{\infty}
+\end{pmatrix}
+\end{align}
 
 \newpage
 
@@ -389,31 +593,32 @@ The relations are written as follows:
 
 \newpage
 \subsection*{Matrix form}
-\begin{align}
- \bm{F}_{ij}^{\mathrm{pair}}
+\begin{align*}
+ \bm{F}_{\alpha\beta}^{\mathrm{pair}}
 &= 
-- \frac{1}{4 h_{ij}}
+- \frac{1}{4 h_{\alpha\beta}}
 \bigl\{
-(\bm{v}_i-
-\bm{v}_j)\cdot
-\bm{n}_{ij}
-\bigr\}\bm{n}_{ij} \\
+(\bm{v}_\alpha-
+\bm{v}_\beta)\cdot
+\bm{n}_{\alpha\beta}
+\bigr\}\bm{n}_{\alpha\beta} \\
 &=
-- \frac{1}{4 h_{ij}}
+- \frac{1}{4 h_{\alpha\beta}}
 \Bigl[
 \bigl\{
-(\bm{v}_i- \bm{U}^{\infty}_i)-
-(\bm{v}_j- \bm{U}^{\infty}_j)
-+ \bm{U}^{\infty}_i 
-- \bm{U}^{\infty}_j
+(\bm{v}_\alpha- \bm{U}^{\infty}_\alpha)-
+(\bm{v}_\beta- \bm{U}^{\infty}_\beta)
++ \bm{U}^{\infty}_\alpha
+- \bm{U}^{\infty}_\beta
 \bigr\}\cdot
-\bm{n}_{ij}
+\bm{n}_{\alpha\beta}
 \Bigr]
-\bm{n}_{ij}
-\end{align}
+\bm{n}_{\alpha\beta}
+\end{align*}
+
 
 $\Delta \bm{v} \equiv (\bm{v}- \bm{U}^{\infty})$
-\begin{align}
+\begin{align*}
 \Delta \bm{v} \cdot
 \bm{n} \bm{n}
 = &
@@ -439,30 +644,95 @@ $\Delta \bm{v} \equiv (\bm{v}- \bm{U}^{\infty})$
  \Delta v_y \\
  \Delta v_z 
 \end{pmatrix} 
-\\
-=&\bm{n} \otimes \bm{n} \Delta \bm{v}
-\end{align}
+\end{align*}
+\begin{equation*}
+(\Delta \bm{v} \cdot
+\bm{n} \bm{n})_i
+= n_i n_j \Delta v_j
+\end{equation*}
 
-\begin{align}
-  \bm{F}_i  &= 
-  -  \Delta \bm{v}_i 
-  - \sum_j
+
+\begin{align*}
+  \bm{F}_\alpha  &= 
+  -  \Delta \bm{v}_\alpha
+  - \sum_{\beta}
+  \frac{1}{4h_{\alpha\beta}}
   \left(
-    \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
-    - \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j 
-    + \frac{1}{4h_{ij}}  
- \bm{n}_{ij} \otimes \bm{n}_{ij} (\bm{U}_i^{\infty}-\bm{U}_j^{\infty})
+    \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_{\alpha})
+    - 
+    \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_\beta )
+    +
+    \bm{n}_{\alpha\beta}
+    \left\{
+      \bm{n}_{\alpha\beta}  \cdot
+      (\bm{U}_{\alpha}^{\infty}-\bm{U}_{\beta}^{\infty})
+    \right\}
+  \right)  \\
+&=  -  \Delta \bm{v}_\alpha 
+ - \sum_{\beta}
+  \frac{1}{4h_{\alpha\beta}}
+  \left(
+    \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_{\alpha})
+    - 
+    \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_\beta )
+    +
+    \bm{n}_{\alpha\beta}
+    \left\{
+  ....
+    \right\}
   \right) \\
-  &=
- -  \Delta \bm{v}_i 
-  - \sum_j
+&=  -  \Delta \bm{v}_\alpha 
+ - \sum_{\beta}
+  \frac{1}{4h_{\alpha\beta}}
   \left(
-    \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_i
-    - \frac{1}{4h_{ij}} \bm{n}_{ij} \otimes \bm{n}_{ij} \Delta \bm{v}_j
-    + \frac{1}{4h_{ij}}  
- \bm{n}_{ij} \otimes \bm{n}_{ij} (\bm{U}_i^{\infty}-\bm{U}_j^{\infty})
-\right)
-  \end{align}
+    \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_{\alpha})
+    - 
+    \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_\beta )
+    +
+r_{\alpha\beta}
+  \bm{n}_{\alpha\beta}
+  \left\{
+\bm{n}_{\alpha\beta} \cdot
+(\tens{E}^{\infty} \bm{n}_{\alpha\beta})
+    \right\} 
+  \right) 
+\end{align*}
+
+\begin{align*}
+    \bm{n}_{\alpha\beta}    \left\{
+  ....
+    \right\} &= 
+  \bm{n}_{\alpha\beta}
+  \left\{
+    \bm{n}_{\alpha\beta}  \cdot
+      (
+\Omega^{\infty} \times (\bm{r}^{\alpha}-\bm{r}^{\beta})
++ 
+\tens{E}^{\infty}
+(\bm{r}^{\alpha}-\bm{r}^{\beta}))
+)
+    \right\} \\
+&= 
+r_{\alpha\beta}
+  \bm{n}_{\alpha\beta}
+  \left\{
+      (
+\bm{n}_{\alpha\beta} \cdot \Omega^{\infty} \times \bm{n}_{\alpha\beta}
++ 
+\bm{n}_{\alpha\beta} \cdot
+(\tens{E}^{\infty} \bm{n}_{\alpha\beta})
+)
+    \right\} \\
+&= 
+r_{\alpha\beta}
+  \bm{n}_{\alpha\beta}
+  \left\{
+\bm{n}_{\alpha\beta} \cdot
+(\tens{E}^{\infty} \bm{n}_{\alpha\beta})
+    \right\} 
+\end{align*}
+
+
 
 
 \begin{align}

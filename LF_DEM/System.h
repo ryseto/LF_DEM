@@ -36,6 +36,8 @@ private:
 	queue<int> deactivated_interaction;
 	void initInteractionPair();
 	void buildLubricationTerms();
+	void buildLubricationTerms_new();
+
 	void buildBrownianTerms();
 	void buildContactTerms();
 #ifdef CHOLMOD

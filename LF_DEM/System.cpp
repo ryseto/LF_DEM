@@ -539,7 +539,50 @@ System::allocateSparseResmatrix(){
 		nzmax += off_diag_values[s].size();  // off-diagonal
 	}
 	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
+	
 }
+
+
+void
+System::buildLubricationTerms_new(){
+	/*
+	 * interaction between particle i and particle j
+	 * l: lambda = a_j / a_i
+	 *
+	 */
+	double ai = 1;
+	double aj = 1;
+	double r ; // distance
+	double l = aj/ai; // 1 is monodisperse
+	double l1 = 1.0 + l;
+	double l13 = l1 * l1 * l1;
+	double g1;
+	
+	double s = 2*r / (ai + aj);
+	double xi = s - 2;
+
+	double XAii;
+	double XAij;
+	double XGii;
+	double XGij;
+	double XMii;
+	double XMij;
+	
+	g1 = 2.0 * l * l / l13;
+	
+	XAii = g1 / xi;
+	XAij = - 2 / l1 * XAii;
+
+	XGii = 1.5 * XAii;
+	XGij = - 6 / (l1*l1) * XAii;
+	
+	XMii = 0.6 * XAii;
+	XMij = 4 * g1 * XAii / l;
+	
+	
+	// under construction.
+}
+
 
 void
 System::updateVelocityLubrication(){
