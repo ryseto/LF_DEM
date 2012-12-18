@@ -158,7 +158,12 @@ System::timeEvolution(int time_step){
 		calcContactForces();
 		if (lub){
 			// Lubrication dynamics
-			updateVelocityLubrication();
+		  if(brownian){
+		    updateVelocityLubricationBrownian();
+		  }
+		  else{
+		    updateVelocityLubrication();
+		  }
 		} else {
 			// Free-draining approximation
 			updateVelocity();
@@ -653,6 +658,10 @@ void System::updateVelocityLubricationBrownian(){
 	  int i3 = 3*i;
 	  displacement(i, ((double*)v_Brownian_init->x)[i3]*dt_mid, ((double*)v_Brownian_init->x)[i3+1]*dt_mid, ((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
+	for (int k = 0; k < num_interaction; k++){
+	  interaction[k].calcDistanceNormalVector();
+	}
+	updateInteraction();
 
 	// rebuild new R_FU
 	cholmod_free_factor(&L, &c);
@@ -665,11 +674,23 @@ void System::updateVelocityLubricationBrownian(){
 	// get the intermediate brownian velocity
 	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
 	
+	/* testing
+	for (int i=0; i < n; i++){
+	  int i3 = 3*i;
+	  cout << ((double*)v_Brownian_init->x)[i3] << " " << ((double*)v_Brownian_init->x)[i3+1] << " " << ((double*)v_Brownian_init->x)[i3+2] << " "  <<0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3] - ((double*)v_Brownian_init->x)[i3] ) << " " << 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+1] - ((double*)v_Brownian_init->x)[i3+1] ) << " " << 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+2] - ((double*)v_Brownian_init->x)[i3+2] ) << " "  << ((double*)v_nonBrownian->x)[i3] << " " << ((double*)v_nonBrownian->x)[i3+1] << " " << ((double*)v_nonBrownian->x)[i3+2] <<endl;
+	}
+	getchar();
+	*/
+
 	// move particles back to initial point
 	for (int i=0; i < n; i++){
 	  int i3 = 3*i;
 	  displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
+	for (int k = 0; k < num_interaction; k++){
+	  interaction[k].calcDistanceNormalVector();
+	}
+	updateInteraction();
 
 	// update total velocity
 	// first term is hydrodynamic + contact velocities

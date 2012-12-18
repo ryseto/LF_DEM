@@ -17,7 +17,7 @@ Simulation::~Simulation(){
 void
 Simulation::SetParameters(int argc, const char * argv[]){
 	sys.lub = true;
-	sys.brownian = false;
+	sys.brownian = true;
 	filename_import_positions = argv[1];
 	sys.lubcore = atof(argv[2]);
 	string arg3 =argv[3];
@@ -76,7 +76,7 @@ Simulation::SetParameters(int argc, const char * argv[]){
 	/*
 	 * Temperature
 	 */
-	sys.kb_T=0.01;
+	sys.kb_T=1.0;
 	/*
 	 * Simulation terminate at this value
 	 */
@@ -85,7 +85,7 @@ Simulation::SetParameters(int argc, const char * argv[]){
 	 * dt: the time step to integrate the equation of motion.
 	 * We need to give a good criterion to give.
 	 */
-	sys.dt = 1e-4 / sys.shear_rate;
+	sys.dt = 1e-5 / sys.shear_rate;
 	/* 
 	 * dt_mid: the intermediate time step for the mid-point 
 	 * algortithm. dt/dt_mid = dt_ratio
@@ -188,6 +188,8 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 
 	sys.checkNewInteraction();
+	//	int count = 0;
+	//	while(count++<3){
 	while(true){
 		sys.timeEvolution(interval_snapshot);
 		outputRheologyData();
