@@ -75,6 +75,17 @@ System::prepareSimulation(){
 	force = new vec3d [n];
 	torque = new vec3d [n];
 	contactstress = new double* [n];
+
+
+	for (int i=0; i < n; i++){
+		position[i].x=0.;
+		position[i].y=0.;
+		position[i].z=0.;
+		velocity[i].x=0.;
+		velocity[i].y=0.;
+		velocity[i].z=0.;
+	}
+
 	for (int i=0; i < n; i++){
 		contactstress[i] = new double [5];
 	}
@@ -841,26 +852,7 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 	position[i].y += dy_;
 	position[i].z += dz_;
 	
-	if (position[i].z > lz ){
-		position[i].z -= lz;
-		position[i].x -= shear_disp;
-	} else if ( position[i].z < 0 ){
-		position[i].z += lz;
-		position[i].x += shear_disp;
-	}
-	if ( position[i].x > lx ){
-		position[i].x -= lx;
-	} else if (position[i].x < 0 ){
-		position[i].x += lx;
-	}
-	if (dimension == 3){
-		if ( position[i].y > ly ){
-			position[i].y -= ly;
-		} else if (position[i].y < 0 ){
-			position[i].y += ly;
-		}
-	}
-	
+	periodize(&(position[i]));
 	boxset->box(i);
 }
 
@@ -873,9 +865,10 @@ System::periodize(vec3d *pos){
 		pos->z += lz;
 		pos->x += shear_disp;
 	}
-	if ( pos->x > lx ){
+	while ( pos->x > lx ){
 		pos->x -= lx;
-	} else if (pos->x < 0 ){
+	} 
+	while (pos->x < 0 ){
 		pos->x += lx;
 	}
 	if (dimension == 3){
