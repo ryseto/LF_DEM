@@ -126,6 +126,9 @@ System::prepareSimulation(){
 #endif
 	
 	boxset = new BoxSet(2.5, this);
+	for (int i=0; i < n; i++){
+		boxset->box(i);
+	}
 }
 
 void
@@ -176,24 +179,34 @@ System::timeEvolution(int time_step){
 
 void
 System::checkNewInteraction(){
+	vector<int>::iterator it;
+	vector<int>::iterator it_beg;
+	vector<int>::iterator it_end;
 	for (int i=0; i < n-1; i++){
-		for (int j=i+1; j < n; j++){
-			if ( interaction_pair[i][j] == -1){
-				double sq_distance = sq_distanceToCheckContact(i, j);
-				if ( sq_distance < sq_lub_max){
-					int interaction_new;
-					if (deactivated_interaction.empty()){
-						// add an interaction object.
-						interaction_new = num_interaction;
-						num_interaction ++;
-					} else {
-						// fill a deactivated interaction object.
-						interaction_new = deactivated_interaction.front();
-						deactivated_interaction.pop();
+		
+		it_beg = boxset->neighborhood_begin(i);
+		it_end = boxset->neighborhood_end(i);
+
+		for (it = it_beg; it != it_end; it++){
+			int j=*it;
+			if(j>i){
+				if ( interaction_pair[i][j] == -1){
+					double sq_distance = sq_distanceToCheckContact(i, j);
+					if ( sq_distance < sq_lub_max){
+						int interaction_new;
+						if (deactivated_interaction.empty()){
+							// add an interaction object.
+							interaction_new = num_interaction;
+							num_interaction ++;
+						} else {
+							// fill a deactivated interaction object.
+							interaction_new = deactivated_interaction.front();
+							deactivated_interaction.pop();
+						}
+						interaction[interaction_new].create(i, j);
+						interaction[interaction_new].calcDistanceNormalVector();
+						interaction_pair[i][j] = interaction_new;
 					}
-					interaction[interaction_new].create(i, j);
-					interaction[interaction_new].calcDistanceNormalVector();
-					interaction_pair[i][j] = interaction_new;
 				}
 			}
 		}
@@ -847,6 +860,8 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 			position[i].y += ly;
 		}
 	}
+	
+	boxset->box(i);
 }
 
 void
