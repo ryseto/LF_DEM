@@ -6,6 +6,8 @@
 \usepackage[pdftex]{graphicx}	% required for `\includegraphics' (yatex added)
 \usepackage{datetime}
 \usepackage{natbib}
+%\usepackage{bm}% bold math
+\usepackage[pdftex,bookmarks,colorlinks]{hyperref}
 
 \oddsidemargin -1.2cm
 \evensidemargin -1.2cm
@@ -16,12 +18,210 @@
 \bibliographystyle{unsrtnat}
 \newcommand{\figref}[1]{\figurename ~\ref{#1}}
 \newcommand{\tens}[1]{\bm{\mathsf{#1}}}
-\title{Title}
+\title{Simulation model for concentrated suspension\\
+\emph{lubrication} and \emph{contact force}}
 \date{\shortdate\today \, \ampmtime }
 \author{R. Seto, R. Mari}
 \begin{document}
 \maketitle
 
+\section{Motivation}
+\subsection*{Ball and Merlose model}
+
+\subsubsection*{Ball-1995}
+
+\citet{Ball_1995} ``Lubrication breakdown in hydrodynamic simulations of concentrated colloids''
+reported the difficulty of the simulation including lubrication force.
+Their model is FT-level ($6N$-vectors).
+\begin{equation}
+ \bm{F}_{\mathrm{H}} = - \tens{R} \bm{V}
+\end{equation}
+is used for the over damped motion.
+\begin{equation}
+ \bm{F}_{\mathrm{H}} = \bm{F}_{\mathrm{C}} = 0.
+\end{equation}
+%
+The leading order of the pair-wise squeeze hydrodynamic force
+was used.
+\begin{equation}
+ \bm{f}_i = 
+- \sum_j \frac{3 \pi \mu}{8 h_{ij}} 
+\left\{
+(\bm{v}_i - \bm{v}_j)\cdot \bm{n}_{ij}
+\right\} \bm{n}_{ij}\label{125344_18Dec12}
+\end{equation}
+%
+They reported the singular results obtained by this model.
+%
+The minimum gap and viscosity 
+depend on simulation detal, such as time step.
+%
+They concluded
+``The ideal problem of smooth hard spheres
+in a Newtonian fluid under simple shear appears
+to be singular in nature''.
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We are dubious about their modeling.
+%
+Their lubrication model \eqref{125344_18Dec12}
+is not the same as the leading order of \citet{Jeffrey_1992}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In \citet{Ball_1995}, 
+the torque is not written explicitly.
+%
+
+\subsubsection*{Melrose-1995}
+
+The article by \citet{Melrose_1995}
+titled ``\emph{The Pathological Behaviour of Sheared Hard Spheres with Hydrodynamic Interactions}'' also discussed the difficulty with the same level.
+
+\begin{quote}
+\emph{The divergent squeeze terms in principle prevent overlap of particles,
+ but computations with fured time steps lead to overlap. }
+\end{quote}
+
+\subsubsection*{Melrose-1996}
+
+In \citet{Melrose_1996}
+titled ``\emph{Continuous shear thickening and colloid surfaces}'',
+they moved on the problem of rheology 
+by using the model.  
+
+
+
+\subsubsection*{Ball-1997}
+
+Simulation method was reviewed  
+by \citet{Ball_1997},
+titled 
+``\emph{A simulation technique for many spheres 
+in quasi-static motion under frame-invariant pair drag and Brownian forces}''.
+
+The equation (12) in the paper is 
+\begin{equation}
+ - \tens{R} (\bm{V}-\bm{V}_0)
+ + \bm{F}^{\mathrm{C}}
+ + \bm{F}^{\mathrm{B}}
+ - \tens{R} \bm{V}_0 = 0
+\end{equation}
+
+\begin{quotation}
+\emph{
+ The final term in Eq.~(12) is often termed the shear tensor. 
+Here it is evaluated at the frame-invariant pair level of the basic approximation. 
+(If the shear tensor and the matrix R are formulated separately,
+ as, for example, in moment expansions, 
+it may be that frame invariance is broken and this should be checked for in practice.)
+}
+\end{quotation}
+
+\subsubsection*{Farr-1997}
+
+\citet{Farr_1997} 
+``\emph{Kinetic theory of jamming in hard-sphere startup flows}''
+discussed the physics.
+
+\subsubsection*{Silbert-1997}
+\citet{Silbert_1997}
+``Colloidal microdynamics: Pair-drag simulations of model-concentrated aggregated systems''
+
+
+\subsubsection*{Silbert-1999-1}
+\citet{Silbert_1999}
+``\emph{A structural analysis of concentrated, aggregated colloids under flow}''
+added an attractive force to cause 
+aggregation and analyzed the structure.
+
+\subsubsection*{Silbert-1999-2}
+\citet{Silbert_1999a}
+``Stress distributions in flowing aggregated colloidal suspensions''
+also include the attractive force.
+%
+They studied force correlations.
+
+\subsubsection*{Catherall-2000}
+
+\citet{Catherall_2000}
+``Shear thickening and order-disorder effects in concentrated colloids at high shear rates''
+discussed the order formation and the stability.
+
+\subsubsection*{Melrose-2004-1}
+
+\citet{Melrose_2004a}
+\emph{Continuous shear thickening transitions in model concentrated colloids
+--The role of interparticle forces}
+
+They still used \eqref{125344_18Dec12}.
+
+\subsubsection*{Melrose-2004-2}
+
+\citet{Melrose_2004}
+\emph{``Contact networks'' in continuously shear thickening colloids}
+
+\subsection*{Stokesian dynamics}
+
+\begin{itemize}
+  \item 
+  \citet{Bossis_1984}:
+  Dynamic simulation of sheared suspensions. I. General method
+  \item
+  \citet{Brady_1985}:
+  The rheology of concentrated suspensions of spheres in simple shear flow by numerical simulation
+  \item 
+  \citet{Brady_1988}:
+  Stokesian dynamics
+  \item
+  \citet{Bossis_1988}:
+  Shear-induced structure in colloidal suspensions I. numerical simulation
+
+  \item \citet{Phung_1996}:
+  Stokesian dynamics simulation of Brownian suspensions
+  \item \citet{Brady_1997}: 
+  Microstructure of strongly sheared suspensions and its impact on rheology and diffusion
+
+  \item \citet{Foss_2000}:
+  Structure, diffusion and rheology of {B}rownian suspensions by {S}tokesian dynamics simulation
+  \item \citet{Sierou_2002}:
+  Rheology and microstructure in concentrated noncolloidal suspensions
+  \item \citet{Morris_2002}:
+  Microstructure from simulated Brownian suspension flows at large shear rate
+  \item \citet{Sierou_2004}:
+  Shearinduced selfdiffusion in noncolloidal suspensions
+  \item \citet{Wagner_2009}:
+  Shear thickening in colloidal dispersions
+  \item \citet{Morris_2009}:
+  A review of microstructure in concentrated suspensions 
+  and its implications for rheology and bulk flow
+ \item 
+\end{itemize}
+
+\subsection*{Experiments}
+
+\begin{itemize}
+ \item \citet{Bender_1996}:
+Reversible shear thickening in monodisperse and bidisperse colloidal dispersions
+ \item \citet{Melrose_1996}:
+Continuous shear thickening and colloid surfaces
+ \item \citet{Maranzano_2001}:
+The effects of particle size on reversible shear thickening of concentrated colloidal dispersions
+ \item \citet{Maranzano_2001a}:
+The effects of interparticle interactions and particle size 
+on reversible shear thickening: Hard-sphere colloidal dispersions
+ \item \citet{Maranzano_2002}
+Flow-small angle neutron scattering measurements 
+of colloidal dispersion microstructure evolution through the shear thickening 
+ \item \cite{Lee_2003}
+Dynamic properties of shear thickening colloidal suspensions
+
+ \end{itemize}
+
+
+\section{Leading terms of two-body exact solution}
 
 \subsection*{The leading lubrication forces}
 
@@ -375,14 +575,11 @@ e_j \delta_{ik} e_l
 
 \paragraph{Leading terms}
 
-The leading terms are $\xi^{-1}$ with 
+The leading terms include the factor $\xi^{-1}$.
+%
+It can be found in $X^{A}$, $X^{G}$ and $X^{M}$.
+%
 
-
-
-
-These are only $X$ functions.
-
-$Y$ functions scale as $\ln \xi^{-1}$.
 
 
 \begin{equation*}
@@ -492,9 +689,94 @@ E_{yy}^{\infty}
 \end{pmatrix}
 \end{align}
 
+\subsubsection*{Ichiki-san's code}
+$s_1 = 2 s / (s^2-4)$, $s_4 = 4 / (s^2-4)$ , $s-2 = \xi $
+\begin{align*}
+ X^{G}_{\alpha\alpha} &= g_1 s_1 = \frac{2g_1 s }{(s-2)(s+2)} = 
+\frac{2g_1 (\xi+2) }{\xi(\xi+4)} \approx  \frac{g_1  }{\xi }  \\
+ X^{G}_{\alpha\beta} &= -g_1 s_4 = - \frac{4g_1  }{(s-2)(s+2)}
+= - \frac{4g_1  }{\xi(\xi+4)} 
+\approx - \frac{ g_1  }{\xi} 
+\end{align*}
+
+A crib sheet $\rightarrow$ \texttt{libstokes} written by Ichiki-san
+{\footnotesize
+\begin{verbatim}
+/* calc XG11 and XG12 for lubrication form
+ * INPUT
+ *  n : max order
+ *  l := a2 / a1
+ *  s := 2 * r / (a1 + a2)
+ * OUTPUT
+ *  YC11
+ *  YC12
+ */
+void twobody_XG_lub (int n, double l, double s,
+		     double *XG11, double *XG12)
+{
+  if (n%2 != 0) n--; // make n even for fail-safe
+
+  double *f = (double *)malloc (sizeof (double) * (n + 1));
+  CHECK_MALLOC (f, "twobody_XG_lub");
+
+  twobody_XG (n, l, f);
+
+  *XG11 = 0.0;
+  *XG12 = 0.0;
+
+  double l1 = 1.0 + l;
+  double l13 = l1 * l1 * l1;
+  double g1, g2, g3;
+  g1 = 3.0 * l * l / l13;
+  g2 = 0.3 * l * (1.0 + l * (12.0 - 4.0 * l)) / l13;
+  g3 = (5.0 + l*(181.0 + l*(-453.0 + l*(566.0 - 65.0 *l)))) / 140.0 / l13;
+
+  double s1, s2, s3, s4, s5;
+  double ls2, ls5;
+  s1 = 2.0 * s / (s * s - 4.0);
+  s2 = (s + 2.0) / (s - 2.0);
+  s3 = (s * s - 4.0) / 4.0;
+  s4 = 4.0 / (s * s - 4.0);
+  s5 = s * s / (s * s - 4.0);
+  ls2 = log (s2);
+  ls5 = log (s5);
+  
+  *XG11 = g1*s1 + (g2 + g3*s3)*ls2 - g3*s;
+  // next is m = 1
+
+  *XG12 = -g1*s4 - (g2 + g3*s3)*ls5 + g3;
+  // next is m = 2
+
+  double s1l = s * (1.0 + l);
+  double s1lm = s1l;
+
+  double s21  = 2.0 / s;
+  double s2m  = s21;
+
+  double a;
+  int m;
+  for (m = 1; m < n; m ++){
+      if (m%2 == 0){
+        a = - g1 - 2.0 * g2 / (double)m + 4.0 * g3 / (double)(m*(m+2));
+        *XG12 -= f[m] / s1lm + a * s2m;
+      }else{
+        a = - g1 - 2.0 * g2 / (double)m + 4.0 * g3 / (double)(m*(m+2));
+        *XG11 += f[m] / s1lm + a * s2m;
+      }
+      s1lm *= s1l;
+      s2m  *= s21;
+    }
+
+  *XG12 *= 4.0 / l1 / l1;
+
+  free (f);
+}
+\end{verbatim}
+}
+
 \newpage
 
-\subsection*{Hydrodynamic force}
+\section{Ball\&Melrose model}
 
 One-body limit:
 \begin{align}
@@ -544,9 +826,6 @@ is given by
 \end{align}
 
 
-
-
-\newpage
 \subsection*{Dimensionless equations}
 
 The unit of length, velocity and force 
@@ -591,7 +870,6 @@ The relations are written as follows:
 \end{equation}
 
 
-\newpage
 \subsection*{Matrix form}
 \begin{align*}
  \bm{F}_{\alpha\beta}^{\mathrm{pair}}
@@ -732,6 +1010,45 @@ r_{\alpha\beta}
     \right\} 
 \end{align*}
 
+\begin{align*}
+ F^{\alpha}_i
+&=
+- \Delta v^{\alpha}_i
+- \frac{1}{4 h}
+\left(
+n_{i} n_j \Delta v^{\alpha}_j
+- n_{i} n_j \Delta v^{\beta}_j
++ r n_i n_j n_k E_{jk}
+\right) \\
+&=
+- \Delta v^{\alpha}_i
+- \frac{1}{4 h}
+\left(
+n_{i} n_j \Delta v^{\alpha}_j
+- n_{i} n_j \Delta v^{\beta}_j
++ r n_i n_j n_k E_{jk}
+\right) \\
+&=
+- \Delta v^{\alpha}_i
+- \frac{1}{4 h}
+\left(
+n_{i} n_j \Delta v^{\alpha}_j
+- n_{i} n_j \Delta v^{\beta}_j
++  r n_i n_x n_z 
+\right)
+\end{align*}
+In the last line,
+$E_{xz}=E_{zx}=1/2$ is used.
+
+\begin{equation}
+ \bm{F}^{\alpha} = - \Delta \bm{v}^{\alpha}
+- \frac{1}{4h} (\bm{n}\bm{n}\cdot\Delta \bm{v}^{\alpha}
+- \bm{n}\bm{n}\cdot\Delta \bm{v}^{\beta}
+ + r  n_x n_z \bm{n}
+)
+\end{equation}
+
+
 
 
 
@@ -781,13 +1098,5 @@ r_{\alpha\beta}
 \end{pmatrix} 
 \end{align}
 
-\newpage
-\subsection*{Force balance equation}
-
-
-
-
-
-\newpage
 \bibliography{/Users/seto/Dropbox/Papers/rse}
 \end{document}
