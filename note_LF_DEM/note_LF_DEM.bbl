@@ -1,14 +1,174 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{29}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
-\bibitem[Melrose and Ball(2004)]{Melrose_2004a}
+\bibitem[Ball and Melrose(1995)]{Ball_1995}
+R.~C. Ball and J.~R. Melrose.
+\newblock Lubrication breakdown in hydrodynamic simulations of concentrated
+  colloids.
+\newblock \emph{Adv. Colloid Interface Sci.}, 59:\penalty0 19--30, 1995.
+
+\bibitem[Jeffrey(1992)]{Jeffrey_1992}
+D.~J. Jeffrey.
+\newblock The calculation of the low reynolds number resistance functions for
+  two unequal spheres.
+\newblock \emph{Physics of Fluids A: Fluid Dynamics}, 4:\penalty0 16, 1992.
+
+\bibitem[Melrose and Ball(1995)]{Melrose_1995}
+J.~R. Melrose and R.~C. Ball.
+\newblock The pathological behaviour of sheared hard spheres with hydrodynamic
+  interactions.
+\newblock \emph{Europhys. Lett.}, 32:\penalty0 535--540, 1995.
+
+\bibitem[Melrose et~al.(1996)Melrose, van Vliet, and Ball]{Melrose_1996}
+J.~R. Melrose, J.~H. van Vliet, and R.~C. Ball.
+\newblock Continuous shear thickening and colloid surfaces.
+\newblock \emph{Phys. Rev. Lett.}, 77:\penalty0 4660--4663, 1996.
+
+\bibitem[Ball and Melrose(1997)]{Ball_1997}
+R.~C. Ball and J.~R. Melrose.
+\newblock A simulation technique for many spheres in quasi-static motion under
+  frame-invariant pair drag and brownian forces.
+\newblock \emph{Physica A}, 247:\penalty0 444--472, 1997.
+
+\bibitem[Farr et~al.(1997)Farr, Melrose, and Ball]{Farr_1997}
+R.~S. Farr, J.~R. Melrose, and R.~C. Ball.
+\newblock Kinetic theory of jamming in hard-sphere startup flows.
+\newblock \emph{Phys. Rev. E}, 55:\penalty0 7203--7211, 1997.
+
+\bibitem[Silbert et~al.(1997)Silbert, Melrose, and Ball]{Silbert_1997}
+L.~E. Silbert, J.~R. Melrose, and R.~C. Ball.
+\newblock Colloidal microdynamics: Pair-drag simulations of model-concentrated
+  aggregated systems.
+\newblock \emph{Phys. Rev. E}, 56:\penalty0 7067--7077, 1997.
+
+\bibitem[Silbert et~al.(1999{\natexlab{a}})Silbert, Melrose, and
+  Ball]{Silbert_1999}
+L.~E. Silbert, J.~R. Melrose, and R.~C. Ball.
+\newblock A structural analysis of concentrated, aggregated colloids under
+  flow.
+\newblock \emph{Molecular Physics}, 96:\penalty0 1667--1675,
+  1999{\natexlab{a}}.
+
+\bibitem[Silbert et~al.(1999{\natexlab{b}})Silbert, Farr, Melrose, and
+  Ball]{Silbert_1999a}
+L.~E. Silbert, R.~S. Farr, J.~R. Melrose, and R.~C. Ball.
+\newblock Stress distributions in flowing aggregated colloidal suspensions.
+\newblock \emph{J. Chem. Phys.}, 111:\penalty0 4780--4789, 1999{\natexlab{b}}.
+
+\bibitem[Catherall et~al.(2000)Catherall, Melrose, and Ball]{Catherall_2000}
+A.~A. Catherall, J.~R. Melrose, and R.~C. Ball.
+\newblock Shear thickening and order-disorder effects in concentrated colloids
+  at high shear rates.
+\newblock \emph{J. Rheol.}, 44:\penalty0 1--25, 2000.
+
+\bibitem[Melrose and Ball(2004{\natexlab{a}})]{Melrose_2004a}
 J.~R. Melrose and R.~C. Ball.
 \newblock Continuous shear thickening transitions in model concentrated
-  colloids---the role of interparticle forces.
-\newblock \emph{J. Rheol.}, 48:\penalty0 937--960, 2004.
+  colloids--the role of interparticle forces.
+\newblock \emph{J. Rheol.}, 48:\penalty0 937--960, 2004{\natexlab{a}}.
+
+\bibitem[Melrose and Ball(2004{\natexlab{b}})]{Melrose_2004}
+J.~R. Melrose and R.~C. Ball.
+\newblock ``contact networks'' in continuously shear thickening colloids.
+\newblock \emph{J. Rheol.}, 48:\penalty0 961--978, 2004{\natexlab{b}}.
+
+\bibitem[Bossis and Brady(1984)]{Bossis_1984}
+G.~Bossis and J.~F. Brady.
+\newblock Dynamic simulation of sheared suspensions. i. general method.
+\newblock \emph{J. Chem. Phys.}, 80:\penalty0 5141--5154, 1984.
+
+\bibitem[Brady and Bossis(1985)]{Brady_1985}
+J.~F. Brady and G.~Bossis.
+\newblock The rheology of concentrated suspensions of spheres in simple shear
+  flow by numerical simulation.
+\newblock \emph{J. Fluid Mech.}, 155:\penalty0 105--129, 1985.
+
+\bibitem[Brady and Bossis(1988)]{Brady_1988}
+J.~F. Brady and G.~Bossis.
+\newblock Stokesian dynamics.
+\newblock \emph{Ann. Rev. Fluid Mech.}, 20:\penalty0 111--157, 1988.
+
+\bibitem[Bossis et~al.(1988)Bossis, Brady, and Mathis]{Bossis_1988}
+Georges Bossis, John~F. Brady, and C.~Mathis.
+\newblock Shear-induced structure in colloidal suspensions {I}. numerical
+  simulation.
+\newblock \emph{J. Colloid Interface Sci.}, 126:\penalty0 1--15, 1988.
+
+\bibitem[Phung and Brady(1996)]{Phung_1996}
+T.~N. Phung and J.~F. Brady.
+\newblock {Stokesian dynamics} simulation of {Brownian} suspensions.
+\newblock \emph{J. Fluid Mech.}, 313:\penalty0 181--207, 1996.
+
+\bibitem[Brady and Morris(1997)]{Brady_1997}
+J.~F. Brady and J.~F. Morris.
+\newblock Microstructure of strongly sheared suspensions and its impact on
+  rheology and diffusion.
+\newblock \emph{J. Fluid Mech.}, 348:\penalty0 103--139, 1997.
+
+\bibitem[Foss and Brady(2000)]{Foss_2000}
+D.~R. Foss and J.~F. Brady.
+\newblock Structure, diffusion and rheology of {B}rownian suspensions by
+  {S}tokesian dynamics simulation.
+\newblock \emph{J. Fluid Mech.}, 407:\penalty0 167--200, 2000.
+
+\bibitem[Sierou and Brady(2002)]{Sierou_2002}
+A.~Sierou and J.~F. Brady.
+\newblock Rheology and microstructure in concentrated noncolloidal suspensions.
+\newblock \emph{J. Rheol.}, 46:\penalty0 1031--1056, 2002.
+
+\bibitem[Morris and Katyal(2002)]{Morris_2002}
+J.~F. Morris and B.~Katyal.
+\newblock Microstructure from simulated brownian suspension flows at large
+  shear rate.
+\newblock \emph{Phys. Fluids}, 14:\penalty0 1920, 2002.
+
+\bibitem[Sierou and Brady(2004)]{Sierou_2004}
+A.~Sierou and J.~F. Brady.
+\newblock Shearinduced selfdiffusion in noncolloidal suspensions.
+\newblock \emph{J. Fluid Mech.}, 506:\penalty0 285--314, 2004.
+
+\bibitem[Wagner and Brady(2009)]{Wagner_2009}
+N.~J. Wagner and J.~F. Brady.
+\newblock Shear thickening in colloidal dispersions.
+\newblock \emph{Phys. Today}, 62:\penalty0 27, 2009.
+
+\bibitem[Morris(2009)]{Morris_2009}
+J.~F. Morris.
+\newblock A review of microstructure in concentrated suspensions and its
+  implications for rheology and bulk flow.
+\newblock \emph{Rheol Acta}, 48:\penalty0 909--923, 2009.
+
+\bibitem[Bender and Wagner(1996)]{Bender_1996}
+J.~Bender and N.~J. Wagner.
+\newblock Reversible shear thickening in monodisperse and bidisperse colloidal
+  dispersions.
+\newblock \emph{J. Rheol.}, 40:\penalty0 899--916, 1996.
+
+\bibitem[Maranzano and Wagner(2001{\natexlab{a}})]{Maranzano_2001}
+B.~J. Maranzano and N.~J. Wagner.
+\newblock The effects of particle size on reversible shear thickening of
+  concentrated colloidal dispersions.
+\newblock \emph{J. Chem. Phys.}, 114:\penalty0 10514--527, 2001{\natexlab{a}}.
+
+\bibitem[Maranzano and Wagner(2001{\natexlab{b}})]{Maranzano_2001a}
+B.~J. Maranzano and N.~J. Wagner.
+\newblock The effects of interparticle interactions and particle size on
+  reversible shear thickening: Hard-sphere colloidal dispersions.
+\newblock \emph{J. Rheol.}, 45:\penalty0 1205--1222, 2001{\natexlab{b}}.
+
+\bibitem[Maranzano and Wagner(2002)]{Maranzano_2002}
+B.~J. Maranzano and N.~J. Wagner.
+\newblock Flow-small angle neutron scattering measurements of colloidal
+  dispersion microstructure evolution through the shear thickening transition.
+\newblock \emph{J. Chem. Phys.}, 117:\penalty0 10291--302, 2002.
+
+\bibitem[Lee and Wagner(2003)]{Lee_2003}
+Y.~S. Lee and N.~J. Wagner.
+\newblock Dynamic properties of shear thickening colloidal suspensions.
+\newblock \emph{Rheol Acta}, 42:\penalty0 199--208, 2003.
 
 \end{thebibliography}
