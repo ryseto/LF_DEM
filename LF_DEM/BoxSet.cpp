@@ -420,6 +420,8 @@ void
   if(is_boxed()){
 		updateNeighbors();
   }
+  for(int i=0; i<box_nb;i++)
+	Boxes[i]->build_neighborhood_container();
 }
 
 bool
