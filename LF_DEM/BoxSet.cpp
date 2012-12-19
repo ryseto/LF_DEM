@@ -17,7 +17,7 @@ BoxSet::allocateBoxes(){
 			bottom_box_nb=0;
 		}
 
-		cerr << "allocating :" << endl;
+		cerr << endl << "Boxer allocating :" << endl;
 		cerr << box_nb << " boxes" << endl;
 		cerr << top_box_nb << " top_boxes" << endl;
 		cerr << bottom_box_nb << " bottom_boxes" << endl;
@@ -465,6 +465,7 @@ BoxSet::box(int i){
 	b->add(i);
 	if( boxMap[i] != NULL)
 	  boxMap[i]->remove(i);
+
 	boxMap[i]=b;
   }
 }
