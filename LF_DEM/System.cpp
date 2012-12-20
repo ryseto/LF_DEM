@@ -622,7 +622,17 @@ System::updateVelocityLubrication(){
 	
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
-	
+	if(c.status){ 
+	  // Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
+	  // It is very often enough to force another preconditioner to solve the problem.
+	  cerr << " factorization failed. forcing simplicial algorithm... " << endl;
+	  c.supernodal = CHOLMOD_SIMPLICIAL;
+	  L = cholmod_analyze (sparse_res, &c);
+	  cholmod_factorize (sparse_res, L, &c) ;
+	  cerr << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  c.final_ll <<endl;
+	  c.supernodal = CHOLMOD_SUPERNODAL;
+	}
+
 	buildContactTerms();
 	
 	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
@@ -667,11 +677,21 @@ void System::updateVelocityLubricationBrownian(){
 	
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
+	if(c.status){ 
+	  // Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
+	  // It is very often enough to force another preconditioner to solve the problem.
+	  cerr << " factorization failed. forcing simplicial algorithm... " << endl;
+	  c.supernodal = CHOLMOD_SIMPLICIAL;
+	  L = cholmod_analyze (sparse_res, &c);
+	  cholmod_factorize (sparse_res, L, &c) ;
+	  cerr << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  c.final_ll <<endl;
+	  c.supernodal = CHOLMOD_SUPERNODAL;
+	}
+
 	
 	buildContactTerms();
 	
 	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
-
 	// now the Brownian part of the velocity:
 	// mid-point algortithm a la Banchio & Brady
 	brownian_force = fb->generate();
@@ -694,6 +714,18 @@ void System::updateVelocityLubricationBrownian(){
 	fillSparseResmatrix();
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
+	if(c.status){ 
+	  // Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
+	  // It is very often enough to force another preconditioner to solve the problem.
+	  cerr << " factorization failed. forcing simplicial algorithm... " << endl;
+	  c.supernodal = CHOLMOD_SIMPLICIAL;
+	  L = cholmod_analyze (sparse_res, &c);
+	  cholmod_factorize (sparse_res, L, &c) ;
+	  cerr << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  c.final_ll <<endl;
+	  c.supernodal = CHOLMOD_SUPERNODAL;
+	}
+
+
 
 	// get the intermediate brownian velocity
 	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
