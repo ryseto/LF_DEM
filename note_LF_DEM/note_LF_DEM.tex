@@ -6,6 +6,7 @@
 \usepackage[pdftex]{graphicx}	% required for `\includegraphics' (yatex added)
 \usepackage{datetime}
 \usepackage{natbib}
+\usepackage{tabularx}
 %\usepackage{bm}% bold math
 \usepackage[pdftex,bookmarks,colorlinks]{hyperref}
 
@@ -25,7 +26,7 @@
 \begin{document}
 \maketitle
 
-\section{Motivation}
+\section{Previous works}
 \subsection*{Ball and Merlose model}
 
 \subsubsection*{Ball-1995}
@@ -71,8 +72,7 @@ is not the same as the leading order of \citet{Jeffrey_1992}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-In \citet{Ball_1995}, 
-the torque is not written explicitly.
+
 %
 
 \subsubsection*{Melrose-1995}
@@ -120,6 +120,71 @@ it may be that frame invariance is broken and this should be checked for in prac
 }
 \end{quotation}
 
+In Appendix A, more explicit calculations are give.
+$\bm{f}_i$ and $\bm{g}_i$ are force and torque acting on particle $i = 1,2$.
+\begin{align*}
+ \bm{f}_1 & =  -\bm{f}_2 \\
+&=- a_{\mathrm{sq}} \tens{N}  (\bm{v}_1 - \bm{v}_2)
+- a_{\mathrm{sh}} \left(\frac{2}{r}\right)^2
+\tens{P} (\bm{v}_1 - \bm{v}_2)
++ \left(\frac{2}{r}\right) a_{\mathrm{sh}}
+\bm{n} \times \tens{P} (\bm{w}_1 + \bm{w}_2) \\
+\bm{g}_1 &= 
+-\left(\frac{2}{r}\right) a_{\mathrm{sh}}
+\bm{n} \times \tens{P}(\bm{v}_1-\bm{v}_2)
+- a_{\mathrm{sh}} \tens{P}(\bm{\omega}_1+\bm{\omega}_2)
+- a_{\mathrm{pu}} \tens{P}(\bm{\omega}_1-\bm{\omega}_2)
+- a_{\mathrm{tw}} \tens{N}(\bm{\omega}_1-\bm{\omega}_2) \\
+\bm{g}_2 &= 
+-\left(\frac{2}{r}\right) a_{\mathrm{sh}}
+\bm{n} \times \tens{P}(\bm{v}_1-\bm{v}_2)
+- a_{\mathrm{sh}} \tens{P}(\bm{\omega}_1+\bm{\omega}_2)
++ a_{\mathrm{pu}} \tens{P}(\bm{\omega}_1-\bm{\omega}_2)
++ a_{\mathrm{tw}} \tens{N}(\bm{\omega}_1-\bm{\omega}_2)
+\end{align*}
+where $\tens{N} = \bm{n}\bm{n}$,
+$\tens{P} =1- \bm{n}\bm{n}$,
+and 
+$r = d + h$.
+\begin{align*}
+ a_{\mathrm{sq}}& = \frac{3 \pi \mu d}{2}
+\left(
+\frac{d}{4h} 
++ \frac{18}{40} \ln\Bigl( \frac{d}{2h}\Bigr)
++ \frac{9}{84} \frac{h}{d} \ln\Bigl( \frac{d}{2h}\Bigr)
+\right)\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ a_{\mathrm{sh}}
+&= 
+\frac{\pi \mu d }{2}
+\ln\Bigl( \frac{d}{2h}\Bigr) \frac{(d+h)^2}{4}\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ a_{\mathrm{pu}}& = 
+\frac{\pi \mu d^3 }{8}
+\left\{
+\frac{3}{20}\ln\Bigl(\frac{d}{2h}\Bigr)
++
+\frac{63}{250}\frac{h}{d}\ln\Bigl(\frac{d}{2h}\Bigr)
+\right\}\\
+& = 
+8 \pi \mu a^3 
+\left\{
+\frac{3}{160}\ln\Bigl(\frac{a}{h}\Bigr)
++
+\frac{63}{4000}\frac{h}{a}\ln\Bigl(\frac{a}{h}\Bigr)
+\right\} \\
+&\quad (\Uparrow
+\text{$3/160$ should be $3/40$ according to Kumar's thesis})
+\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+a_{\mathrm{tw}}
+ &= 
+\frac{\pi \mu d^3 }{4}
+\frac{h}{d}
+\ln\Bigl(\frac{2}{2h}\Bigr) \quad (\Longleftarrow\text{$2d/2h$?})
+\end{align*}
+
+
 \subsubsection*{Farr-1997}
 
 \citet{Farr_1997} 
@@ -153,15 +218,25 @@ discussed the order formation and the stability.
 \subsubsection*{Melrose-2004-1}
 
 \citet{Melrose_2004a}
-\emph{Continuous shear thickening transitions in model concentrated colloids
---The role of interparticle forces}
+``Continuous shear thickening transitions in model concentrated colloids
+--The role of interparticle forces''
 
 They still used \eqref{125344_18Dec12}.
 
 \subsubsection*{Melrose-2004-2}
 
 \citet{Melrose_2004}
-\emph{``Contact networks'' in continuously shear thickening colloids}
+``\emph{Contact networks} in continuously shear thickening colloids''
+
+
+\subsection*{Kumer}
+
+\citet{Kumar_2010}:
+Origins of the anomalous stress behavior in charged colloidal suspensions under shear
+
+He followed the same approach with Melrose and Ball.
+The detail description is in his thesis (\citet{Kumar_2010a})
+
 
 \subsection*{Stokesian dynamics}
 
@@ -197,7 +272,6 @@ They still used \eqref{125344_18Dec12}.
   \item \citet{Morris_2009}:
   A review of microstructure in concentrated suspensions 
   and its implications for rheology and bulk flow
- \item 
 \end{itemize}
 
 \subsection*{Experiments}
@@ -220,17 +294,87 @@ Dynamic properties of shear thickening colloidal suspensions
 
  \end{itemize}
 
+\section{Questions}
 
-\section{Leading terms of two-body exact solution}
+\paragraph{Anisotropy}
+Does the leading order of lubrication force depend 
+on the orientation of two particles in shear flow?
+%
+$\Longrightarrow$ 
+Leading terms of lubrication force
+has no orientation dependence.
+%
+\begin{center}
+\includegraphics[width=7cm]{Lub_orientation_dependence.pdf} 
+\end{center}
 
-\subsection*{The leading lubrication forces}
+\paragraph{Leading order or higher order?}
+
+For near touching particles,
+the leading terms including the $1/h$ factor
+dominate to determine the particle velocities.
+%
+However, there seems
+to be some significant differences
+between the leading order lubrication force 
+and full order lubrication force.
+
+\begin{itemize}
+  \item The simplified lubrication model
+  includes only the squeezed mode lubrication force.
+  \item 
+  In the full lubrication model,
+  the tangential force and torque
+  diverge as $\log h^{-1}$
+  \item 
+  In the full lubrication model,
+  the lubrication forces are depend on
+  the orientation of two particles.
+  \end{itemize}
 
 
-Interaction between particles $\alpha$ and $\beta$
+\paragraph{Ball\&Melrose model}
+
+The lubrication force used in \cite{Ball_1997}
+is the leading order terms of 
+the full expression given by \citet{Jeffrey_1992}.
+%
+In order to simulate  polydisperse system,
+we need to derive 
+the leading terms from \citet{Jeffrey_1992}.
+
+
+\paragraph{What is singularity at $\mathrm{Pe}\to \infty$?}
+
+\citet{Ball_1995}
+and \citet{Melrose_1995}
+reported singularity of pure hydrodynamic limit.
+%
+What is the reason for that?
+%
+This affects the physics?
+%
+
+\paragraph{Avoiding ordering}
+
+Shear induces layering or latticed chains \citep{Catherall_2000}.
+%
+How polydispersity
+
+
+\newpage
+
+
+\section{Lubrication forces}
+
+\subsection*{Jeffery's paper (1992)}
+
+
+Interaction between particles $1$ and $2$
 can be written in a linear form:
 \begin{equation}
  \begin{pmatrix}
-  \bm{F} \\ \bm{T} \\ \bm{S}
+  \bm{F} \\ \bm{T} \\ \tens{S}
  \end{pmatrix}
  =
 - \mu
@@ -241,169 +385,70 @@ can be written in a linear form:
 \end{pmatrix}
  \begin{pmatrix}
   \bm{U}-\bm{U}_{\infty} \\ \bm{\Omega} - \bm{\Omega}_{\infty}
- \\ -\bm{E}_{\infty}
+ \\ -\tens{E}_{\infty}
  \end{pmatrix}
 \end{equation}
-The vectors consist of two elements.
+Two particles are included in the expression:
 \begin{equation}
  \bm{F}
 = 
 \begin{pmatrix}
- \bm{F}_\alpha \\  \bm{F}_\beta
+ \bm{F}_1 \\  \bm{F}_2
 \end{pmatrix}
 ,\quad
  \bm{T}
 = 
 \begin{pmatrix}
- \bm{T}_\alpha \\  \bm{T}_\beta
+ \bm{T}_1 \\  \bm{T}_2
 \end{pmatrix}
 ,\quad
- \bm{S}
+ \tens{S}
 = 
 \begin{pmatrix}
- \bm{S}_\alpha \\  \bm{S}_\beta
+ \tens{S}_1 \\  \tens{S}_2
 \end{pmatrix}
 ,\quad
  \bm{U}
 = 
 \begin{pmatrix}
- \bm{U}_\alpha \\  \bm{U}_\beta
+ \bm{U}_1 \\  \bm{U}_2
 \end{pmatrix}
 ,\quad
  \bm{\Omega}
 = 
 \begin{pmatrix}
- \bm{\Omega}_\alpha \\  \bm{\Omega}_\beta
+ \bm{\Omega}_1 \\  \bm{\Omega}_2
+\end{pmatrix}
+,\quad
+ \tens{E}^{\infty}
+= 
+\begin{pmatrix}
+  \tens{E}^{\infty} \\   \tens{E}^{\infty}
 \end{pmatrix}
 \end{equation}
-The explicit form of the matrix $\tens{A}$ 
-is as follows
+The matrices also consist of submatrices,
+e.g.~$\tens{A}$ is written as
 \begin{equation}
  \tens{A}
  =
 \begin{pmatrix}
-  \tens{A}_{\alpha\alpha} & \tens{A}_{\alpha\beta} \\
-  \tens{A}_{\beta\alpha} & \tens{A}_{\beta\beta} 
+  \tens{A}_{11} & \tens{A}_{12} \\
+  \tens{A}_{21} & \tens{A}_{22} 
 \end{pmatrix}.
 \end{equation}
 %
-If we consider only the leading terms for the nearly contacting particles,
-only $\tens{A}$ and $\tens{G}$ give the leading contribution to the forces.
+\paragraph{Variables:}
 \begin{equation}
- \begin{pmatrix}
-  \bm{F}_{\alpha} \\
-  \bm{F}_{\beta} 
- \end{pmatrix}
-\approx
-- \mu
-\begin{pmatrix}
-\tens{A}_{\alpha\alpha} &
-\tens{A}_{\alpha\beta}  \\
-\tens{A}_{\beta\alpha}  &
-\tens{A}_{\beta\beta}  
-\end{pmatrix}
- \begin{pmatrix}
-  \bm{U}_{\alpha} -  \bm{U}_{\alpha}^{\infty}\\
-  \bm{U}_{\beta} -  \bm{U}_{\beta}^{\infty}
- \end{pmatrix}
- + \mu
-\begin{pmatrix}
-\tilde{\tens{G}}_{\alpha\alpha} &
-\tilde{\tens{G}}_{\alpha\beta}  \\
-\tilde{\tens{G}}_{\beta\alpha}  &
-\tilde{\tens{G}}_{\beta\beta}  
-\end{pmatrix}
- \begin{pmatrix}
-\bm{E}_{\infty} \\ \bm{E}_{\infty}
-\end{pmatrix}
+ \bm{r} \equiv \bm{r}_2 - \bm{r}_1, 
+\quad
+ \bm{n} \equiv \frac{\bm{r}}{r}
+\end{equation}
+\begin{equation}
+  s \equiv \frac{2r}{a_{1}+ a_{2}}, \quad
+ \lambda \equiv \frac{a_2}{a_1}, \quad
+\xi \equiv s - 2
 \end{equation}
 
-
-\begin{align*}
-F^{\alpha}_i
-&= 
-- \mu A^{\alpha\alpha}_{ij}
-(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-- \mu A^{\alpha\beta}_{ij}
-(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j
-+ \mu \tilde{G}^{\alpha\alpha}_{ijk} \bm{E}^{\infty}_{jk}
-+ \mu \tilde{G}^{\alpha\beta}_{ijk} \bm{E}^{\infty}_{jk} \\
-&=
-- 6 \pi\mu a_{\alpha} \hat{A}^{\alpha\alpha}_{ij}
-(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-- 3 \pi\mu (a_{\alpha}+a_{\beta})\hat{A}^{\alpha\beta}_{ij}
-(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j \\
-&\quad
-+ 6 \pi\mu a_{\alpha} \hat{\tilde{G}}^{\alpha\alpha}_{ijk} \bm{E}^{\infty}_{jk}
-+ 3 \pi\mu (a_{\alpha}+a_{\beta}) \hat{\tilde{G}}^{\alpha\beta}_{ijk} \bm{E}^{\infty}_{jk} \\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-&=
-- 6 \pi\mu a_{\alpha} X_{\alpha\alpha}^{A} n_i n_j
-(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-- 3 \pi\mu (a_{\alpha}+a_{\beta}) X_{\alpha\beta}^{A} n_i n_j
-(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j \\
-&\quad
-+ 6 \pi\mu a_{\alpha} X_{\alpha\alpha}^{G} 
-\left(n_i n_j - \frac{\delta_{ij}}{3}  \right)n_k \bm{E}^{\infty}_{jk}
-+ 3 \pi\mu (a_{\alpha}+a_{\beta}) 
-X_{\alpha\beta}^{G} \left(n_i n_j - \frac{\delta_{ij}}{3} \right)n_k \bm{E}^{\infty}_{jk} \\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-&=
-- 6 \pi\mu a_{\alpha} \frac{g_1(\lambda)}{\xi} n_i n_j
-(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-+ \frac{6}{1+\lambda} \pi\mu (a_{\alpha}+a_{\beta})\frac{g_1(\lambda)}{\xi} n_i n_j
-(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
-\\
-&\quad
-+ 9 \pi \mu a_{\alpha} \frac{g_1(\lambda)}{\xi} 
-\left(n_i n_j - \frac{\delta_{ij}}{3} \right)n_k \bm{E}^{\infty}_{jk}
--  
-\frac{18 \pi}{(1+\lambda)^2} 
-\mu (a_{\alpha}+ a_{\beta})
-\frac{g_1(\lambda)}{\xi} 
-\left(n_i n_j - \frac{\delta_{ij}}{3} \right) n_k \bm{E}^{\infty}_{jk} 
-\end{align*}
-
-monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
-\begin{align*}
- F^{\alpha}_i
-&= 
-- 6 \pi\mu a \frac{1}{4\xi} n_i n_j
-(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-+ 6 \pi\mu a\frac{1}{4\xi} n_i n_j
-(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
-\\
-&\quad
-+ \frac{9}{4} \pi \mu a \frac{1}{\xi} 
-\left(n_i n_j - \frac{\delta_{ij}}{3} \right) n_k \bm{E}^{\infty}_{jk}
--  
-\frac{9}{4} \pi \mu a
-\frac{1}{\xi} 
-\left(n_i n_j - \frac{\delta_{ij}}{3} \right)n_k \bm{E}^{\infty}_{jk} \\
-&= 
-- \frac{3}{2} \pi\mu a \frac{1}{\xi} n_i n_j
-(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-+ \frac{3}{2} \pi\mu a\frac{1}{\xi} n_i n_j
-(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
-+ 0 \Leftarrow ???
-\end{align*}
-
-
-%\begin{align}
-%\frac{ F^{\alpha}_i}{F_0}
-%&= 
-%-  \frac{1}{4\xi} n_i n_j
-%(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
-%+ \frac{1}{4\xi} n_i n_j
-%(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
-%\\
-%&\quad
-%+ \frac{3}{8\xi}
-%(n_i n_j - 1/3 \delta_{ij}) \bm{E}^{\infty}_{jk}
-%-  
-%\frac{3}{8\xi}
-%(n_i n_j - 1/3 \delta_{ij}) \bm{E}^{\infty}_{jk} 
-%\end{align}
 
 
 \paragraph{Symmetries:}
@@ -425,6 +470,8 @@ monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
 \end{equation}
 
 \paragraph{Adimensional tensors:}
+
+The following adimensional transformation is given in \citet{Jeffrey_1984}
 \begin{equation}
  \hat{\tens{A}}_{\alpha\beta}
 = \frac{\tens{A}_{\alpha\beta}}{3\pi(a_{\alpha} + a_{\beta})},
@@ -436,9 +483,10 @@ monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
 = \frac{\tens{C}_{\alpha\beta}}{\pi(a_{\alpha}+ a_{\beta})^3}
 \end{equation}
 
+The following adimensional transformation is given in \citet{Jeffrey_1992}
 \begin{equation}
  \hat{\tens{G}}_{\alpha\beta}
-= \frac{\tens{G}_{\alpha\beta}}{3\pi(a_{\alpha} + a_{\beta})},
+= \frac{\tens{G}_{\alpha\beta}}{\pi(a_{\alpha} + a_{\beta})^2},
 \quad
  \hat{\tens{H}}_{\alpha\beta}
 = \frac{\tens{H}_{\alpha\beta}}{\pi(a_{\alpha}+ a_{\beta})^3},
@@ -447,49 +495,36 @@ monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
 = \frac{\tens{M}_{\alpha\beta}}{(5/6)\pi(a_{\alpha}+ a_{\beta})^3}
 \end{equation}
 
-\paragraph{Variables:}
-\begin{equation}
- \bm{r} = \bm{r}_\alpha - \bm{r}_\beta, \quad
- \bm{n} = \frac{\bm{r}}{r}
-\end{equation}
-\begin{equation}
-  s \equiv \frac{2r}{a_{\alpha}+ a_{\beta}}, \quad
- \lambda \equiv \frac{a_\beta}{a_\alpha}, \quad
-\xi \equiv s - 2
-\end{equation}
 
 
 
 \paragraph{Scalar functions}
 
-\begin{equation*}
-  \hat{A}_{ij}^{\alpha \beta}
-  = 
+From \citet{Jeffrey_1984}:
+\begin{align}
+  &\hat{A}_{ij}^{(\alpha \beta)}
+   = 
   X_{\alpha \beta}^{A} n_i n_j
   +
-  Y_{\alpha \beta}^{A} (\delta_{ij} - n_i n_j)
- \approx   X_{\alpha \beta}^{A} n_i n_j
-\end{equation*}
-
-\begin{equation*}
-  \hat{B}_{ij}^{\alpha \beta}
+  Y_{\alpha \beta}^{A} (\delta_{ij} - n_i n_j) \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  & \hat{B}_{ij}^{(\alpha \beta)}
+  =
+  \hat{\tilde{B}}_{ji}^{(\beta\alpha)}
   = 
-  Y_{\alpha \beta}^{B}   \varepsilon_{ijk} n_k
-\approx 0
-\end{equation*}
-
-\begin{equation*}
-  \hat{C}_{ij}^{\alpha \beta}
+  Y_{\alpha \beta}^{B}   \varepsilon_{ijk} n_k\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  &\hat{C}_{ij}^{\alpha \beta}
   = 
   X_{\alpha \beta}^{C} n_i n_j
   +
   Y_{\alpha \beta}^{C} (\delta_{ij} - n_i n_j)
  \approx
   X_{\alpha \beta}^{C} n_i n_j
-\end{equation*}
-
-\begin{equation*}
- \hat{G}_{ijk}^{\alpha \beta}
+\end{align}
+From \citet{Jeffrey_1992}
+\begin{align}
+& \hat{G}_{ijk}^{\alpha \beta}
  = 
 X_{\alpha\beta}^{G} 
 \left(n_i n_j - \frac{1}{3}\delta_{ij}\right)n_k
@@ -497,45 +532,40 @@ X_{\alpha\beta}^{G}
 Y_{\alpha\beta}^{G}
 \left(
 n_i \delta_{jk} + n_j \delta_{ik} - 2 n_i n_j n_k
-\right)
-\approx
-X_{\alpha\beta}^{G} 
-\left(n_in_j - \frac{1}{3}\delta_{ij}\right)n_k
-\end{equation*}
-\begin{equation*}
- \hat{H}_{ij}^{\alpha\beta}
+\right) \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+& 
+\hat{H}_{ij}^{\alpha\beta}
  = Y_{\alpha\beta}^{H}
 (n_i \varepsilon_{jkm} n_m 
-+ n_j \varepsilon_{ikm} n_m )
- \approx 0
-\end{equation*}
-\begin{align*}
++ n_j \varepsilon_{ikm} n_m )\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&
  \hat{M}_{ijkl}^{\alpha\beta}
-& = 
-\frac{3}{2}
+=  \frac{3}{2}
 X_{\alpha\beta}^{M}
- \left(e_i e_j
+ \left(n_i n_j
  - \frac{1}{3} \delta_{ij}
 \right)
- \left(e_k e_l
+ \left(n_k n_l
  - \frac{1}{3} \delta_{kl}
 \right) \\
-& \quad
+&\qquad\qquad
 +
 \frac{1}{2} 
 Y_{\alpha\beta}^{M}
 \left(
-e_i \delta_{jl} e_k
+n_i \delta_{jl} n_k
 +
-e_j \delta_{il} e_k
+n_j \delta_{il} n_k
 +
-e_i \delta_{jk} e_l
+n_i \delta_{jk} n_l
 +
-e_j \delta_{ik} e_l
+n_j \delta_{ik} n_l
 -
-4 e_i e_j e_k e_l
+4 n_i n_j n_k n_l
 \right) \\
-&\quad
+&\qquad\qquad
 + 
 \frac{1}{2}
 Z_{\alpha\beta}^{M}
@@ -546,233 +576,302 @@ Z_{\alpha\beta}^{M}
 -
 \delta_{ij}\delta_{kl}
 +
-e_i e_j \delta_{kl} 
+n_i n_j \delta_{kl} 
 +
-\delta_{ij} e_k e_l
+\delta_{ij} n_k n_l
 +
-e_i e_j e_k e_l \right.\\
+n_i n_j n_k n_l \right.\\
 &\qquad \qquad \quad
 \left.
 - 
-e_i \delta_{jl} e_k
+n_i \delta_{jl} n_k
 -
-e_j \delta_{il} e_k
+n_j \delta_{il} n_k
 -
-e_i \delta_{jk} e_l
+n_i \delta_{jk} n_l
 -
-e_j \delta_{ik} e_l
-\right) \\
-&\approx
-\frac{3}{2}
- X_{\alpha\beta}^{M}
- \left(e_i e_j
- - \frac{1}{3} \delta_{ij}
-\right)
- \left(e_k e_l
- - \frac{1}{3} \delta_{kl}
-\right)
-\end{align*}
+n_j \delta_{ik} n_l
+\right) 
+\end{align}
+\begin{align}
+ X_{\alpha\beta}^{G} (s,\lambda)
+& =
+- X_{(3-\alpha)(3-\beta)}^{G} (s,\lambda^{-1}), \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ Y_{\alpha\beta}^{G} (s,\lambda)
+& =
+- Y_{(3-\alpha)(3-\beta)}^{G} (s,\lambda^{-1}), \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ Y_{\alpha\beta}^{H} (s,\lambda)
+& =
+ Y_{(3-\alpha)(3-\beta)}^{G} (s,\lambda^{-1}), \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{\alpha\beta}^{M} (s,\lambda)
+& =
+ X_{\beta\alpha}^{M} (s,\lambda)
+ =
+ X_{(3-\alpha)(3-\beta)}^{M} (s,\lambda^{-1}), \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ Y_{\alpha\beta}^{M} (s,\lambda)
+& =
+ Y_{\beta\alpha}^{M} (s,\lambda)
+ =
+ Y_{(3-\alpha)(3-\beta)}^{M} (s,\lambda^{-1}), \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ Z_{\alpha\beta}^{M} (s,\lambda)
+& =
+ Z_{\beta\alpha}^{M} (s,\lambda)
+ =
+ Z_{(3-\alpha)(3-\beta)}^{M} (s,\lambda^{-1}), \\
+\end{align}
 
-\paragraph{Leading terms}
 
 The leading terms include the factor $\xi^{-1}$.
 %
-It can be found in $X^{A}$, $X^{G}$ and $X^{M}$.
+The leading order of scalar functions are given as follows:
 %
-
-
-
 \begin{equation*}
  g_1 (\lambda)
-= \frac{2\lambda^2}{(1+\lambda)^3}
+\approx \frac{2\lambda^2}{(1+\lambda)^3},
+\quad  g_1 (1) \approx \frac{1}{4}
 \end{equation*}
 
-\begin{equation*}
- X_{\alpha\alpha}^{A}
-\approx 
-g_1(\lambda) \xi^{-1}
-\end{equation*}
-\begin{equation*}
- X_{\alpha\beta}^{A}
-\approx
--\frac{2}{1+\lambda}g_1(\lambda) \xi^{-1}
- = 
--\frac{2}{1+\lambda} X_{\alpha\alpha}^{A} 
-\end{equation*}
-
-\begin{equation*}
- X_{\alpha\alpha}^{C} 
-\sim
- X_{\alpha\beta}^{C}
-\sim
-\mathcal{O}(1) + \mathcal{O}(\xi \ln \xi^{-1}).
-\end{equation*}
-
-\begin{equation*}
- X_{\alpha\alpha}^{G}
-= \frac{3}{2}g_1(\lambda) \xi^{-1}
-= \frac{3}{2} X_{\alpha\alpha}^{A} 
-\end{equation*}
-\begin{equation*}
- X_{\alpha \beta}^{G}
-=
+\begin{align}
+ X_{11}^{A}
+&\approx 
+g_1(\lambda) \xi^{-1}, 
+&  X_{11}^{A} &\approx \frac{1}{4\xi} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{12}^{A}
+&\approx
+-\frac{2}{1+\lambda}g_1(\lambda) \xi^{-1},
+&
+ X_{12}^{A} 
+&\approx - \frac{1}{\xi} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+X_{11}^{C} 
+& \approx 
+\mathcal{O}(1) + \mathcal{O}(\xi \ln \xi^{-1}) \\
+X_{12}^{C}
+& \approx
+\mathcal{O}(1) + \mathcal{O}(\xi \ln \xi^{-1}) \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{11}^{G}
+&\approx \frac{3}{2}g_1(\lambda) \xi^{-1}
+,&
+X_{11}^{G}
+&\approx \frac{3}{8} \xi^{-1} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{12}^{G}
+&\approx
 \frac{-6}{(1+\lambda)^2}
-g_1 (\lambda) \xi^{-1}
-= 
-\frac{-6}{(1+\lambda)^2} X_{\alpha\alpha}^{A}
-\end{equation*}
-
-\begin{equation*}
- X_{\alpha \alpha}^{M}
-=
-\frac{3}{5} g_1(\lambda) \xi^{-1}
-= \frac{3}{5} X_{\alpha\alpha}^{A}
-\end{equation*}
-\begin{equation}
- X_{\alpha \beta}^{M}
-=
+g_1 (\lambda) \xi^{-1}, &
+ X_{12}^{G}
+&\approx
+-\frac{3}{8}
+ \xi^{-1},  \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{11}^{M}
+&\approx
+\frac{3}{5} g_1(\lambda) \xi^{-1},
+&
+ X_{11}^{M}
+&\approx
+\frac{3}{20}  \xi^{-1}
+\\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{12}^{M}
+&\approx
 \frac{8\lambda}{(1+\lambda)^3} g_1(\lambda) \xi^{-1}
-= 
-\frac{8\lambda}{(1+\lambda)^3} X_{\alpha\alpha}^{A}
-= 
-\frac{4g_1}{\lambda} X_{\alpha\alpha}^{A}
-\end{equation}
-
+,&
+ X_{12}^{M}
+&\approx
+\frac{1}{4}  \xi^{-1}
+\end{align}
 
 \newpage
 
-$\bm{E}_{\infty} = 
-(E_{xx}^{\infty},
-E_{xy}^{\infty},
-E_{xz}^{\infty},
-E_{yz}^{\infty},
-E_{yy}^{\infty}
-)
-=
-(0, 0, \dot{\gamma}/2, 0, 0) $
-
-
-
-\begin{align}
- \tilde{\tens{G}}_{\alpha\alpha} \bm{E}_{\infty}
-&= 
+\paragraph{Leading order}
+If we consider only the leading terms for 
+the nearly contacting particles ($\xi \to 0$),
+only $\tens{A}$ and $\tens{G}$ give the leading contribution to the forces.
+\begin{equation}
+ \begin{pmatrix}
+  \bm{F}_{1} \\
+  \bm{F}_{2} 
+ \end{pmatrix}
+\approx
+- \mu
 \begin{pmatrix}
- \tilde{G}^{\alpha\alpha}_{x xx} E_{xx}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{x xy} E_{xy}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{x xz} E_{xz}^{\infty}
-+  \tilde{G}^{\alpha\alpha}_{x yy} E_{yy}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{x yz} E_{yz}^{\infty}
-+  \tilde{G}^{\alpha\alpha}_{x zz} E_{zz}^{\infty} 
-\\
-\tilde{G}^{\alpha\alpha}_{y xx} E_{xx}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{y xy} E_{xy}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{y xz} E_{xz}^{\infty}
-+  \tilde{G}^{\alpha\alpha}_{y yy} E_{yy}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{y yz} E_{yz}^{\infty}
-+  \tilde{G}^{\alpha\alpha}_{y zz} E_{zz}^{\infty} 
-\\
- \tilde{G}^{\alpha\alpha}_{z xx} E_{xx}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{z xy} E_{xy}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{z xz} E_{xz}^{\infty}
-+  \tilde{G}^{\alpha\alpha}_{z yy} E_{yy}^{\infty}
-+ 2\tilde{G}^{\alpha\alpha}_{z yz} E_{yz}^{\infty}
-+  \tilde{G}^{\alpha\alpha}_{z zz} E_{zz}^{\infty} 
+\tens{A}_{11} &
+\tens{A}_{12}  \\
+\tens{A}_{21}  &
+\tens{A}_{22}  
 \end{pmatrix}
-\\
-&=
+ \begin{pmatrix}
+  \bm{U}_{1} -  \bm{U}_{1}^{\infty}\\
+  \bm{U}_{2} -  \bm{U}_{2}^{\infty}
+ \end{pmatrix}
+ + \mu
 \begin{pmatrix}
- 2\tilde{G}^{\alpha\alpha}_{x xz} E_{xz}^{\infty}
-\\
- 2\tilde{G}^{\alpha\alpha}_{y xz} E_{xz}^{\infty}
-\\
- 2\tilde{G}^{\alpha\alpha}_{z xz} E_{xz}^{\infty}
+\tilde{\tens{G}}_{11} &
+\tilde{\tens{G}}_{12}  \\
+\tilde{\tens{G}}_{21}  &
+\tilde{\tens{G}}_{22}  
 \end{pmatrix}
-\end{align}
+ \begin{pmatrix}
+\bm{E}_{\infty} \\ \bm{E}_{\infty}
+\end{pmatrix}
+\end{equation}
 
-\subsubsection*{Ichiki-san's code}
-$s_1 = 2 s / (s^2-4)$, $s_4 = 4 / (s^2-4)$ , $s-2 = \xi $
+
+
 \begin{align*}
- X^{G}_{\alpha\alpha} &= g_1 s_1 = \frac{2g_1 s }{(s-2)(s+2)} = 
-\frac{2g_1 (\xi+2) }{\xi(\xi+4)} \approx  \frac{g_1  }{\xi }  \\
- X^{G}_{\alpha\beta} &= -g_1 s_4 = - \frac{4g_1  }{(s-2)(s+2)}
-= - \frac{4g_1  }{\xi(\xi+4)} 
-\approx - \frac{ g_1  }{\xi} 
+F^{(1)}_i
+&\approx 
+- \mu A^{(11)}_{ij}
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
+- \mu A^{(12)}_{ij}
+(U_{j}^{(2)}-U_{j}^{(2)\infty})
++ \mu \tilde{G}^{(11)}_{ijk} E^{\infty}_{jk}
++ \mu \tilde{G}^{(12)}_{ijk} E^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+- 6 \pi\mu a_{1} \hat{A}^{(11)}_{ij}(U_{j}^{(1)}-U_{j}^{(1)\infty})
+- 3 \pi\mu (a_{1}+a_{2})\hat{A}^{(12)}_{ij} (U_{j}^{(2)}-U_{j}^{(2)\infty})\\
+&\quad
++ 4 \pi\mu a_{1}^2 \hat{\tilde{G}}^{(11)}_{ijk} E^{\infty}_{jk}
++ \pi\mu (a_{1}+a_{2})^2 \hat{\tilde{G}}^{(12)}_{ijk} E^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+- 6 \pi\mu a_{1} \hat{A}^{(11)}_{ij}
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
+- 3 \pi\mu (a_{1}+a_{2})\hat{A}^{(12)}_{ij}
+(U_{j}^{(2)}-U_{j}^{(2)\infty}) \\
+&\quad
++ 4 \pi\mu a_{1}^2 \hat{G}^{(11)}_{jki} E^{\infty}_{jk}
++  \pi\mu (a_{1}+a_{2})^2 \hat{G}^{(21)}_{jki} E^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+- 6 \pi\mu a_{1} X_{11}^{A}(s,\lambda) n_i n_j
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
+- 3 \pi\mu (a_{1}+a_{2}) X_{12}^{A}(s,\lambda) n_i n_j
+(U_{j}-U_{j}^{(2)\infty}) \\
+&\quad
++ 4 \pi\mu a_{1}^2 X_{11}^{G}(s,\lambda) 
+n_i\left(n_j n_k - \frac{\delta_{jk}}{3}  \right) E^{\infty}_{jk}
++  \pi\mu (a_{1}+a_{2})^2
+X_{21}^{G}(s,\lambda) 
+n_i\left(n_j n_k - 
+\frac{\delta_{jk}}{3} \right) E^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+- 6 \pi\mu a_{1} X_{11}^{A}(s,\lambda) n_i n_j
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
+- 3 \pi\mu (a_{1}+a_{2}) X_{12}^{A}(s,\lambda) n_i n_j
+(U_{j}-U_{j}^{(2)\infty}) \\
+&\quad
++ 4 \pi\mu a_{1}^2 X_{11}^{G} (s,\lambda)
+n_i\left(n_j n_k - \frac{\delta_{jk}}{3}  \right) E^{\infty}_{jk}
+-  \pi\mu (a_{1}+a_{2})^2 X_{12}^{G}(s,\lambda^{-1})
+n_i\left(n_j n_k - 
+\frac{\delta_{jk}}{3} \right) E^{\infty}_{jk} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+&=
+6 \pi\mu
+\left(
+-  a_{1} \frac{g_1(\lambda)}{\xi} n_i n_j
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
++ \frac{a_{1}+a_{2}}{1+\lambda} \frac{g_1(\lambda)}{\xi} n_i n_j
+(U_{j}^{(2)}-U_{j}^{(2)\infty})\right.
+\\
+&\quad + 
+\left.
+ a_{1}^2 \frac{g_1(\lambda)}{\xi} 
+n_i\left(n_j n_k - \frac{\delta_{jk}}{3} \right) E^{\infty}_{jk}
++  
+\frac{  \lambda^2}{(1+\lambda)^2} 
+ (a_{1}+ a_{2})^2
+\frac{g_1(1/\lambda)}{\xi} n_i\left(n_j n_k 
+- \frac{\delta_{jk}}{3} \right)E^{\infty}_{jk} 
+\right)
 \end{align*}
 
-A crib sheet $\rightarrow$ \texttt{libstokes} written by Ichiki-san
-{\footnotesize
-\begin{verbatim}
-/* calc XG11 and XG12 for lubrication form
- * INPUT
- *  n : max order
- *  l := a2 / a1
- *  s := 2 * r / (a1 + a2)
- * OUTPUT
- *  YC11
- *  YC12
- */
-void twobody_XG_lub (int n, double l, double s,
-		     double *XG11, double *XG12)
-{
-  if (n%2 != 0) n--; // make n even for fail-safe
+\begin{itemize}
+ \item $\tilde{G}_{ijk}^{(11)}=G_{jki}^{(11)}$,
+$\tilde{G}_{ijk}^{(12)}=G_{jki}^{(21)}$,
+$\tilde{G}_{ijk}^{(21)}=G_{jki}^{(12)}$,
+$\tilde{G}_{ijk}^{(22)}=G_{jki}^{(22)}$.
 
-  double *f = (double *)malloc (sizeof (double) * (n + 1));
-  CHECK_MALLOC (f, "twobody_XG_lub");
+ \item 
+$X_{11}^{G}(s,\lambda)
+= - X_{22}^{G} (s, \lambda^{-1})$
+and $X_{21}^{G}(s,\lambda)
+= - X_{12}^{G} (s, \lambda^{-1})$
 
-  twobody_XG (n, l, f);
+ \item 
+$X_{11}^{A}(s,\lambda)\approx g_1(\lambda) \frac{1}{\xi}$, 
+$X_{12}^{A}(s,\lambda) \approx -\frac{2}{1+\lambda}g_1(\lambda) \frac{1}{\xi}$\\
+$X_{11}^{G}(s,\lambda)\approx \frac{3}{2} g_1(\lambda) \frac{1}{\xi}$,
+$X_{12}^{G}(s,\lambda)\approx -\frac{6}{(1+\lambda)^2} g_1(\lambda) \frac{1}{\xi}$   
+\end{itemize}
+Monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
+\begin{align}
+ F^{(1)}_i
+&= 
+\frac{6 \pi\mu a}{4\xi}
+\left(
+-   n_i n_j
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
++   n_i n_j
+(U_{j}^{(2)}-U_{j}^{(2)\infty})
++  
+2a n_i\left\{n_j n_k - \frac{\delta_{jk}}{3} \right\} E^{\infty}_{jk}
+\right) \notag \\
+&= 
+-
+\frac{6 \pi\mu a}{4\xi}
+\left(
+   n_i n_j
+(U_{j}^{(1)}-U_{j}^{(1)\infty})
+-   n_i n_j
+(U_{j}^{(2)}-U_{j}^{(2)\infty})
+-  
+2a n_in_j  E^{\infty}_{jk}n_k
++2an_i(E^{\infty}_{xx}+E^{\infty}_{yy}+E^{\infty}_{zz} )
+\right)
+\end{align}
 
-  *XG11 = 0.0;
-  *XG12 = 0.0;
+cf. Ball\&Melrose expression:
+\begin{equation}
+F_i^{(1)}
+=
+- \frac{1}{4 h}
+\left(
+n_{i} n_j (U^{(1)}_j-U^{(1)\infty}_j)
+- n_{i} n_j (U^{(2)}_j-U^{(2)\infty}_j)
+- (2+h) n_i n_j  E_{jk}n_k
+\right) 
+ \end{equation}
 
-  double l1 = 1.0 + l;
-  double l13 = l1 * l1 * l1;
-  double g1, g2, g3;
-  g1 = 3.0 * l * l / l13;
-  g2 = 0.3 * l * (1.0 + l * (12.0 - 4.0 * l)) / l13;
-  g3 = (5.0 + l*(181.0 + l*(-453.0 + l*(566.0 - 65.0 *l)))) / 140.0 / l13;
 
-  double s1, s2, s3, s4, s5;
-  double ls2, ls5;
-  s1 = 2.0 * s / (s * s - 4.0);
-  s2 = (s + 2.0) / (s - 2.0);
-  s3 = (s * s - 4.0) / 4.0;
-  s4 = 4.0 / (s * s - 4.0);
-  s5 = s * s / (s * s - 4.0);
-  ls2 = log (s2);
-  ls5 = log (s5);
-  
-  *XG11 = g1*s1 + (g2 + g3*s3)*ls2 - g3*s;
-  // next is m = 1
 
-  *XG12 = -g1*s4 - (g2 + g3*s3)*ls5 + g3;
-  // next is m = 2
+%\begin{align}
+%\frac{ F^{\alpha}_i}{F_0}
+%&= 
+%-  \frac{1}{4\xi} n_i n_j
+%(\bm{U}_{\alpha}-\bm{U}_{\alpha}^{\infty})_j
+%+ \frac{1}{4\xi} n_i n_j
+%(\bm{U}_{\beta}-\bm{U}_{\beta}^{\infty})_j 
+%\\
+%&\quad
+%+ \frac{3}{8\xi}
+%(n_i n_j - 1/3 \delta_{ij}) \bm{E}^{\infty}_{jk}
+%-  
+%\frac{3}{8\xi}
+%(n_i n_j - 1/3 \delta_{ij}) \bm{E}^{\infty}_{jk} 
+%\end{align}
 
-  double s1l = s * (1.0 + l);
-  double s1lm = s1l;
-
-  double s21  = 2.0 / s;
-  double s2m  = s21;
-
-  double a;
-  int m;
-  for (m = 1; m < n; m ++){
-      if (m%2 == 0){
-        a = - g1 - 2.0 * g2 / (double)m + 4.0 * g3 / (double)(m*(m+2));
-        *XG12 -= f[m] / s1lm + a * s2m;
-      }else{
-        a = - g1 - 2.0 * g2 / (double)m + 4.0 * g3 / (double)(m*(m+2));
-        *XG11 += f[m] / s1lm + a * s2m;
-      }
-      s1lm *= s1l;
-      s2m  *= s21;
-    }
-
-  *XG12 *= 4.0 / l1 / l1;
-
-  free (f);
-}
-\end{verbatim}
-}
 
 \newpage
 
@@ -966,7 +1065,7 @@ $\Delta \bm{v} \equiv (\bm{v}- \bm{U}^{\infty})$
     \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_{\alpha})
     - 
     \bm{n}_{\alpha\beta} (\bm{n}_{\alpha\beta}\cdot \Delta \bm{v}_\beta )
-    +
+    -
 r_{\alpha\beta}
   \bm{n}_{\alpha\beta}
   \left\{
@@ -975,7 +1074,7 @@ r_{\alpha\beta}
     \right\} 
   \right) 
 \end{align*}
-
+$\bm{n}_{\alpha\beta} = \bm{r}^{\beta}-\bm{r}^{\alpha}$
 \begin{align*}
     \bm{n}_{\alpha\beta}    \left\{
   ....
@@ -996,13 +1095,13 @@ r_{\alpha\beta}
   \left\{
       (
 \bm{n}_{\alpha\beta} \cdot \Omega^{\infty} \times \bm{n}_{\alpha\beta}
-+ 
+- 
 \bm{n}_{\alpha\beta} \cdot
 (\tens{E}^{\infty} \bm{n}_{\alpha\beta})
 )
     \right\} \\
 &= 
-r_{\alpha\beta}
+-r_{\alpha\beta}
   \bm{n}_{\alpha\beta}
   \left\{
 \bm{n}_{\alpha\beta} \cdot
@@ -1018,7 +1117,7 @@ r_{\alpha\beta}
 \left(
 n_{i} n_j \Delta v^{\alpha}_j
 - n_{i} n_j \Delta v^{\beta}_j
-+ r n_i n_j n_k E_{jk}
+- r n_i n_j n_k E_{jk}
 \right) \\
 &=
 - \Delta v^{\alpha}_i
@@ -1026,27 +1125,10 @@ n_{i} n_j \Delta v^{\alpha}_j
 \left(
 n_{i} n_j \Delta v^{\alpha}_j
 - n_{i} n_j \Delta v^{\beta}_j
-+ r n_i n_j n_k E_{jk}
-\right) \\
-&=
-- \Delta v^{\alpha}_i
-- \frac{1}{4 h}
-\left(
-n_{i} n_j \Delta v^{\alpha}_j
-- n_{i} n_j \Delta v^{\beta}_j
-+  r n_i n_x n_z 
-\right)
+- r n_i n_j n_k E_{jk}
+\right) 
 \end{align*}
-In the last line,
-$E_{xz}=E_{zx}=1/2$ is used.
 
-\begin{equation}
- \bm{F}^{\alpha} = - \Delta \bm{v}^{\alpha}
-- \frac{1}{4h} (\bm{n}\bm{n}\cdot\Delta \bm{v}^{\alpha}
-- \bm{n}\bm{n}\cdot\Delta \bm{v}^{\beta}
- + r  n_x n_z \bm{n}
-)
-\end{equation}
 
 
 
@@ -1097,6 +1179,72 @@ $E_{xz}=E_{zx}=1/2$ is used.
 \vdots 
 \end{pmatrix} 
 \end{align}
+
+\section{Ryuon}
+
+\begin{minipage}[cbt]{0.5\textwidth}
+{\tiny
+\begin{verbatim}
+  double l1 = 1.0 + l;
+  double l13 = l1 * l1 * l1;
+  double g1, g2, g3;
+  g1 = 2.0 * l * l / l13;
+  g2 = 0.2 * l * (1.0 + l * (7.0 + l)) / l13;
+  g3 = (1.0 + l * (18.0 + l * (- 29.0 + l * (18.0 + l)))) / l13 / 42.0;
+
+  double s1, s2, s3, s4, s5, ls1, ls2;
+  s1 = 1.0 - 4.0 / s / s;
+  s2 = (s + 2.0) / (s - 2.0);
+  s3 = s * s;
+  s4 =  1.0 / s3;
+  s5 = s * s / 4.0 - 1.0;
+  ls1 = log (s1);
+  ls2 = log (s2);
+
+  *XA11 = g1 / s1
+    - g2 * ls1
+    - g3 * s1 * ls1
+    + f[0]
+    - g1;
+  // next is m = 2
+
+  *XA12 = 2.0 / s * g1 / s1
+    + g2 * ls2
+    + g3 * s1 * ls2
+    + 4.0 * g3 / s;
+  // next is m = 1
+\end{verbatim}
+}
+\end{minipage}
+\begin{minipage}[cbt]{0.5\textwidth}
+{\tiny
+\begin{verbatim}
+  double l1 = 1.0 + l;
+  double l13 = l1 * l1 * l1;
+  double g1, g2, g3;
+  g1 = 3.0 * l * l / l13;
+  g2 = 0.3 * l * (1.0 + l * (12.0 - 4.0 * l)) / l13;
+  g3 = (5.0 + l*(181.0 + l*(-453.0 + l*(566.0 - 65.0 *l)))) / 140.0 / l13;
+
+  double s1, s2, s3, s4, s5;
+  double ls2, ls5;
+  s1 = 2.0 * s / (s * s - 4.0);
+  s2 = (s + 2.0) / (s - 2.0);
+  s3 = (s * s - 4.0) / 4.0;
+  s4 = 4.0 / (s * s - 4.0);
+  s5 = s * s / (s * s - 4.0);
+  ls2 = log (s2);
+  ls5 = log (s5);
+  
+  *XG11 = g1*s1 + (g2 + g3*s3)*ls2 - g3*s;
+  // next is m = 1
+
+  *XG12 = -g1*s4 - (g2 + g3*s3)*ls5 + g3;
+  // next is m = 2
+\end{verbatim}
+}
+\end{minipage}
+
 
 \bibliography{/Users/seto/Dropbox/Papers/rse}
 \end{document}

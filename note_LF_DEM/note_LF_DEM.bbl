@@ -1,4 +1,4 @@
-\begin{thebibliography}{29}
+\begin{thebibliography}{32}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -75,6 +75,17 @@ J.~R. Melrose and R.~C. Ball.
 J.~R. Melrose and R.~C. Ball.
 \newblock ``contact networks'' in continuously shear thickening colloids.
 \newblock \emph{J. Rheol.}, 48:\penalty0 961--978, 2004{\natexlab{b}}.
+
+\bibitem[Kumar and Higdon(2010)]{Kumar_2010}
+A.~Kumar and J.~L. Higdon.
+\newblock Origins of the anomalous stress behavior in charged colloidal
+  suspensions under shear.
+\newblock \emph{Phys. Rev. E}, 82:\penalty0 051401, 2010.
+
+\bibitem[Kumar(2010)]{Kumar_2010a}
+A.~Kumar.
+\newblock \emph{Microscale dynamics in suspension of non-spherical particles}.
+\newblock PhD thesis, 2010.
 
 \bibitem[Bossis and Brady(1984)]{Bossis_1984}
 G.~Bossis and J.~F. Brady.
@@ -170,5 +181,11 @@ B.~J. Maranzano and N.~J. Wagner.
 Y.~S. Lee and N.~J. Wagner.
 \newblock Dynamic properties of shear thickening colloidal suspensions.
 \newblock \emph{Rheol Acta}, 42:\penalty0 199--208, 2003.
+
+\bibitem[Jeffrey and Onishi(1984)]{Jeffrey_1984}
+D.~J. Jeffrey and Y.~Onishi.
+\newblock Calculation of the resistance and mobility functions for two unequal
+  rigid spheres in low-reynolds-number flow.
+\newblock \emph{J. Fluid Mech.}, 139:\penalty0 261--290, 1984.
 
 \end{thebibliography}
