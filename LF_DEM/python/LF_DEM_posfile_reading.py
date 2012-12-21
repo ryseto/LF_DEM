@@ -1,11 +1,13 @@
 import math
 from string import *
 import sys
+import copy
 
 class Pos_Stream:
     
     
     def __init__(self, input_stream, N, phi):
+
         self.instream=input_stream
         try:
             self.instream.tell()
@@ -68,8 +70,8 @@ class Pos_Stream:
                 
             if len(values)==4 :
                 i=values[0]
-                self.positions[i]=[float(values[j]) for j in range(1,4)]
-                    
+                self.positions[i]=[float(values[j])+0.5*self.cell_size for j in range(1,4)]
+                
         return switch
             
 # end of convert_input(input_line)
@@ -98,7 +100,6 @@ class Pos_Stream:
         return False
 
     def periodize(self,delta):
-        sim_time=self.time()
 
         deltax=delta[0]
         deltay=delta[1]
@@ -135,11 +136,15 @@ class Pos_Stream:
 
     def pos_diff_vec(self,a,b):
 
+        
         deltax=a[0]-b[0]
         deltay=a[1]-b[1]
         deltaz=a[2]-b[2]
-       
+        print "pos ", a
+        print "pos ", b
+        print [deltax, deltay, deltaz]
         [deltax, deltay, deltaz]=self.periodize([deltax, deltay, deltaz])
+        print [deltax, deltay, deltaz]
         deltatot= math.sqrt(deltax*deltax+deltay*deltay+deltaz*deltaz)
         return [deltax, deltay, deltaz, deltatot]
     

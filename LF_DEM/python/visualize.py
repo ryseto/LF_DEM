@@ -55,7 +55,7 @@ def update_visualization():
     for key in pos_stream.__iter__():
         j=int(key)
 
-        particles[j].pos=(pos_stream.pos(key)[0], pos_stream.pos(key)[1], pos_stream.pos(key)[2])
+        particles[j].pos=(pos_stream.pos(key)[0], pos_stream.pos(key)[2], pos_stream.pos(key)[1])
         if particles[j].pos[0] == 0. and  particles[j].pos[2] == 0.:
             particles[j].color=visual.color.red
         particles[j].radius=1.

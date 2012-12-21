@@ -1,0 +1,8 @@
+
+
+ - The periodize functions from LF_DEM_posfile_reading module 
+   do not take into account the strain so far.
+   This is because output files from LF_DEM do not contain this
+   information at the moment.
+   This bug impacts the pair correlation computation, which is 
+   therefore incorrect at the moment.
