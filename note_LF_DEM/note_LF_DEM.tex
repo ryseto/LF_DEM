@@ -26,6 +26,103 @@
 \begin{document}
 \maketitle
 
+
+\section{Targets}
+
+
+\paragraph{Contact forces}
+
+Friction, rolling friction, cohesion.
+%
+We try to understand the role of contact forces 
+on suspension rheology.
+%
+Contact forces tend to glow force chains.
+%
+
+It becomes question that
+how direct contacts appear with lubrication forces
+in sheared suspensions.
+
+\paragraph{Force chains}
+
+If volume fraction of suspension is the same,
+the increase of viscosity can be realized
+by efficient configuration of particles.
+%
+Many particles seem to cooperate for the resistance of flowing.
+%
+Force chains are the evidence of the cooperation.
+%
+Chain-like 1D structures in 3D suspension
+indicate the efficiency of particles' collaboration.
+%
+So, understanding the law of shear-induced force chains
+is key task to explain shear thickening.
+
+\paragraph{Avoiding ordering}
+
+Shear induces layering or latticed chains \citep{Catherall_2000}.
+%
+The shear induced order seems to be a simple tendency.
+%
+
+In packing problem,
+monodisperse smooth spheres tend to order.
+%
+Poly- or bidispersity can prevent this.
+
+Can we expect the same thing for the shear induced order?
+%
+We plan to check this by introducing bi-disperse simulation.
+%
+
+\section{Simulation method}
+
+To solve the problems,
+we start to work with particle scale simulation.
+%
+In order to capture some large scale structure
+and to keep aggressive investigation,
+we plan to introduce a simplified model than Stokesian dynamics.
+%
+We plan to follow Ball \& Melrose strategy (1995-2004).
+%
+They introduced lubrication dynamics 
+to simulate concentrated suspensions.
+%
+They took only the leading order terms of 
+the two-body lubrication forces,
+which diverges at zero gap $h\to 0$.
+%
+The force balance equations 
+($\bm{F}_{\mathrm{H}}+\bm{F}_{\mathrm{B}}+\bm{F}_{\mathrm{C}} = \bm{0}$)
+are solved.
+%
+The benefits of the lubrication dynamics is 
+the drastic reduction of the calculation cost from Stokesian dynamics:
+(1) we can build the resistance matrix without matrix inversion,
+(2) we can solve equation by using sparse matrix algorithm.
+%
+The limitation is 
+it should be valid for only concentrated suspensions.
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The main extension from Ball \& Melrose model (or Stokesian dynamics)
+is the introduction of the direct contact forces between particles.
+%
+We are preparing to combine contact models 
+to the lubrication dynamics.
+%
+We can also introduce bidisperse simulation
+to control shear induced ordering,
+though we don't know how much we can avoid it.
+
+
+
+
 \section{Previous works}
 \subsection*{Ball and Merlose model}
 
@@ -294,7 +391,7 @@ Dynamic properties of shear thickening colloidal suspensions
 
  \end{itemize}
 
-\section{Questions}
+\section{Questions on lubrication forces}
 
 \paragraph{Anisotropy}
 Does the leading order of lubrication force depend 
@@ -354,12 +451,6 @@ What is the reason for that?
 %
 This affects the physics?
 %
-
-\paragraph{Avoiding ordering}
-
-Shear induces layering or latticed chains \citep{Catherall_2000}.
-%
-How polydispersity
 
 
 \newpage
@@ -884,8 +975,8 @@ One-body limit:
  \bm{T}_i^{\mathrm{self}} &= 
 -8 \pi \mu a^3 ( \bm{\omega}_i - \bm{\Omega}^{\infty})
 \end{align}
-
-\citet{Melrose_2004a} uses 
+%
+\citet{Melrose_2004a} used
 the leading squeeze mode of lubrication force:
 \begin{align}
  \bm{F}_{ij}^{\mathrm{pair}}
@@ -905,11 +996,6 @@ where
  \alpha_{\mathrm{n}}(h_{ij}) = 
 \frac{3 \pi \mu a^2}{2 h_{\ij}}.
 \end{equation}
-Note: We should check the model of \citet{Ball_1997,Melrose_2004a}.
-%
-We need to understand the difference from FTS version~\citet{Jeffrey_1992}.
-
-
 Hydrodynamic interaction acting on particle $i$
 is given by
 \begin{align}
