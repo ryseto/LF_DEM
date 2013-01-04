@@ -7,6 +7,8 @@
 \usepackage{datetime}
 \usepackage{natbib}
 \usepackage{tabularx}
+\usepackage{mathtools}
+
 %\usepackage{bm}% bold math
 \usepackage[pdftex,bookmarks,colorlinks]{hyperref}
 
@@ -26,23 +28,80 @@
 \begin{document}
 \maketitle
 
-
 \section{Targets}
-
 
 \paragraph{Contact forces}
 
-Friction, rolling friction, cohesion.
+Friction, rolling friction, cohesion,
+these contact forces might have some influence 
+of suspension rheology.
 %
-We try to understand the role of contact forces 
-on suspension rheology.
-%
-Contact forces tend to glow force chains.
+We may expect that
+such contact forces tend to glow up
+force correlation (force chains).
 %
 
-It becomes question that
-how direct contacts appear with lubrication forces
-in sheared suspensions.
+\paragraph{Criteria of particle contact}
+
+It becomes a question that how 
+particles can get in contact 
+when lubrication forces act between particles in sheared suspensions.
+%
+\begin{equation}
+\bm{F}_{\mathrm{lub}} = -\frac{1}{4h} (\bm{v}_i-\bm{v}_j)\cdot\bm{n}\bm{n}
+\end{equation}
+%
+This factor $1/h$ is drastic.
+%
+However, it is not Coulomb type repulsive force.
+%
+The divergence factor $1/h$
+is in the resistance coefficient.
+%
+Even if the distance is nearly zero $h \ll 1$,
+the lubrication force can be small
+if the normal element of the relative velocity is samll.
+%
+
+In sheared suspensions,
+gaps between particles can become very small.
+%
+If they are perfect spheres,
+these gaps are finite positive mathematically.
+%
+In real system, particles can be get into contact
+due to various factors of reality.
+%
+We need to introduce some persuasive manner 
+to allow the direct contact in simulation model.
+%
+We may introduce a parameter to control this nature systematically.
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The replacement of $1/h$ by $1/h'$ is a possible way,
+where $h' \equiv r - 2a' $ with $a' < a$.
+%
+This $ 1/h'$ does not diverge at $h=2a$.
+%
+But, this modification systematically
+affects overall hydrodynamic interaction.
+%
+This is why this is not the best way.
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+We can introduce a cutoff gap $h^{\ast}$.
+\begin{equation}
+ \alpha(h) =
+\begin{dcases}
+\displaystyle \frac{1}{4h} , & h > h^{\ast} \\
+\displaystyle  \frac{1}{4h^{\ast}} , & h \leq h^{\ast} 
+\end{dcases}
+\end{equation}
+
+
 
 \paragraph{Force chains}
 
@@ -72,7 +131,8 @@ monodisperse smooth spheres tend to order.
 %
 Poly- or bidispersity can prevent this.
 
-Can we expect the same thing for the shear induced order?
+For the case of the shear induced ordering,
+we may expect the mixture of different sizes can avoid in some extent.
 %
 We plan to check this by introducing bi-disperse simulation.
 %
@@ -369,6 +429,8 @@ The detail description is in his thesis (\citet{Kumar_2010a})
   \item \citet{Morris_2009}:
   A review of microstructure in concentrated suspensions 
   and its implications for rheology and bulk flow
+ \item \citet{Nazockdast_2012}
+Smoluchowski theory for concentrated colloidal dispersions far from equilibrium
 \end{itemize}
 
 \subsection*{Experiments}
@@ -458,7 +520,7 @@ This affects the physics?
 
 \section{Lubrication forces}
 
-\subsection*{Jeffery's paper (1992)}
+\subsection*{Jeffrey (1992)}
 
 
 Interaction between particles $1$ and $2$
@@ -921,7 +983,7 @@ Monodisperse $a_\alpha = a_{\beta}=a$, $g_1(1)=1/4$.
 \right) \notag \\
 &= 
 -
-\frac{6 \pi\mu a}{4\xi}
+\frac{3 \pi\mu a}{2\xi}
 \left(
    n_i n_j
 (U_{j}^{(1)}-U_{j}^{(1)\infty})
@@ -937,11 +999,12 @@ cf. Ball\&Melrose expression:
 \begin{equation}
 F_i^{(1)}
 =
-- \frac{1}{4 h}
+- 
+\frac{3 \pi \mu a^2}{2 h_{\ij}}
 \left(
 n_{i} n_j (U^{(1)}_j-U^{(1)\infty}_j)
 - n_{i} n_j (U^{(2)}_j-U^{(2)\infty}_j)
-- (2+h) n_i n_j  E_{jk}n_k
+- (2+h/a) n_i n_j  E_{jk}n_k
 \right) 
  \end{equation}
 
@@ -1266,70 +1329,7 @@ n_{i} n_j \Delta v^{\alpha}_j
 \end{pmatrix} 
 \end{align}
 
-\section{Ryuon}
 
-\begin{minipage}[cbt]{0.5\textwidth}
-{\tiny
-\begin{verbatim}
-  double l1 = 1.0 + l;
-  double l13 = l1 * l1 * l1;
-  double g1, g2, g3;
-  g1 = 2.0 * l * l / l13;
-  g2 = 0.2 * l * (1.0 + l * (7.0 + l)) / l13;
-  g3 = (1.0 + l * (18.0 + l * (- 29.0 + l * (18.0 + l)))) / l13 / 42.0;
-
-  double s1, s2, s3, s4, s5, ls1, ls2;
-  s1 = 1.0 - 4.0 / s / s;
-  s2 = (s + 2.0) / (s - 2.0);
-  s3 = s * s;
-  s4 =  1.0 / s3;
-  s5 = s * s / 4.0 - 1.0;
-  ls1 = log (s1);
-  ls2 = log (s2);
-
-  *XA11 = g1 / s1
-    - g2 * ls1
-    - g3 * s1 * ls1
-    + f[0]
-    - g1;
-  // next is m = 2
-
-  *XA12 = 2.0 / s * g1 / s1
-    + g2 * ls2
-    + g3 * s1 * ls2
-    + 4.0 * g3 / s;
-  // next is m = 1
-\end{verbatim}
-}
-\end{minipage}
-\begin{minipage}[cbt]{0.5\textwidth}
-{\tiny
-\begin{verbatim}
-  double l1 = 1.0 + l;
-  double l13 = l1 * l1 * l1;
-  double g1, g2, g3;
-  g1 = 3.0 * l * l / l13;
-  g2 = 0.3 * l * (1.0 + l * (12.0 - 4.0 * l)) / l13;
-  g3 = (5.0 + l*(181.0 + l*(-453.0 + l*(566.0 - 65.0 *l)))) / 140.0 / l13;
-
-  double s1, s2, s3, s4, s5;
-  double ls2, ls5;
-  s1 = 2.0 * s / (s * s - 4.0);
-  s2 = (s + 2.0) / (s - 2.0);
-  s3 = (s * s - 4.0) / 4.0;
-  s4 = 4.0 / (s * s - 4.0);
-  s5 = s * s / (s * s - 4.0);
-  ls2 = log (s2);
-  ls5 = log (s5);
-  
-  *XG11 = g1*s1 + (g2 + g3*s3)*ls2 - g3*s;
-  // next is m = 1
-
-  *XG12 = -g1*s4 - (g2 + g3*s3)*ls5 + g3;
-  // next is m = 2
-\end{verbatim}
-}
-\end{minipage}
 
 
 \bibliography{/Users/seto/Dropbox/Papers/rse}

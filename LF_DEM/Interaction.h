@@ -48,6 +48,7 @@ public:
 	double sqnorm_contact_velocity;
 	int particle_num[2];
 	double r; // center-center distance // done
+	double ro; // ro = a_i + a_j
 	vec3d r_vec; // vector center to center
 	vec3d nr_vec; // normal vector
 	double f_normal;

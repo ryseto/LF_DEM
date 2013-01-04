@@ -45,7 +45,7 @@ System::prepareSimulationName(){
 		ss_simu_name << "vf" << volume_fraction ;
 	}
 	if (lub == true){
-		ss_simu_name << "lub" << lubcore ;
+		ss_simu_name << "hc" << h_cutoff;
 	}
 	if (brownian == true){
 		ss_simu_name << "kT" << kb_T ;
@@ -109,7 +109,6 @@ System::prepareSimulation(){
 	for (int k=0; k < maxnum_interactionpair ; k++){
 		interaction[k].init(this);
 	}
-	
 	initInteractionPair();
 	
 #ifdef CHOLMOD
@@ -135,7 +134,6 @@ System::prepareSimulation(){
 	lda = n3;
 	ldb = n3;
 #endif
-	
 	boxset = new BoxSet(2.5, this);
 	for (int i=0; i < n; i++){
 		boxset->box(i);
@@ -158,7 +156,6 @@ System::initInteractionPair(){
 void
 System::timeEvolution(int time_step){
 	int ts_next = ts + time_step;
-
 
 	while (ts < ts_next){
 		boxset->update();
@@ -490,7 +487,10 @@ System::buildLubricationTerms(){
 				nvec[0] = interaction[k].nr_vec.x;
 				nvec[1] = interaction[k].nr_vec.y;
 				nvec[2] = interaction[k].nr_vec.z;
-				h = interaction[k].r - lubcore;
+				h = interaction[k].r - interaction[k].ro;
+				if ( h < h_cutoff){
+					h = h_cutoff;
+				}
 				if(h > 0){
 					double alpha = - 1/(4*h);
 					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
@@ -587,7 +587,7 @@ System::buildLubricationTerms_new(){
 	double l13 = l1 * l1 * l1;
 	double g1;
 	
-	double s = 2*r / (ai + aj);
+	double s = 2 * r / (ai + aj);
 	double xi = s - 2;
 
 	double XAii;

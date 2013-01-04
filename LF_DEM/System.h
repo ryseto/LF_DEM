@@ -107,13 +107,12 @@ public:
 	Interaction *interaction;
 	int num_interaction;
 	/*
-	 * Leading term of lubrication force is 1/(r-2a).
-	 * This can be weakened by using a'<a.
-	 * lubcore = 2a'.
-	 * lubcore = 2 means full lubrication force.
-	 * lubcore < 2 gives weaker lubriaction force that allows particle contact.
+	 * Leading term of lubrication force is 1/h
+	 * h = r - 2a.
+	 * 1/h when h > h_cutoff
+	 * 1/h_cutoff when h <= h_cutoff
 	 */
-	double lubcore;
+	double h_cutoff;
 	BrownianForce *fb;
 	/*************************************************************/
 	double lx;

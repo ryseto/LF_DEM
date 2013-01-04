@@ -14,7 +14,7 @@ Interaction::init(System *sys_){
 	contact = false;
 	active = false;
 	f_normal = 0;
-
+	
 }
 
 /* Activate interaction between particles i and j.
@@ -25,6 +25,7 @@ Interaction::create(int i, int j){
 	contact = false;
 	particle_num[0] = i;
 	particle_num[1] = j;
+	ro = 2; // for polydispesity, we will rewrite this to a1+a2
 	return;
 }
 
@@ -120,7 +121,7 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		f_normal = sys->kn*(2.0 - r);
+		f_normal = sys->kn*(ro - r);
 		if (static_friction){
 			calcStaticFriction();
 		} else {
@@ -138,7 +139,7 @@ Interaction::calcContactInteraction(){
 void
 Interaction::calcContactInteractionNoFriction(){
 	if (contact){
-		f_normal = sys->kn*(2-r);
+		f_normal = sys->kn*(ro-r);
 		sys->force[ particle_num[0] ] += f_normal * nr_vec;
 		sys->force[ particle_num[1] ] -= f_normal * nr_vec;
 	}
@@ -181,13 +182,16 @@ Interaction::incrementContactTangentialDisplacement(){
 
 double
 Interaction::valNormalForce(){
-	double h = r  - sys->lubcore;
+	double h = r  - ro;
 	double f_normal_total = 0;
 	if ( h > 0){
 		int i = particle_num[0];
 		int j = particle_num[1];
 		vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
 		rel_vel.x += pd_z * sys->vel_difference;
+		if ( h < sys->h_cutoff){
+			h = sys->h_cutoff;
+		}
 		double alpha = 1.0/(4*h);
 		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
 	}
@@ -199,11 +203,14 @@ Interaction::valNormalForce(){
 
 void
 Interaction::addLubricationStress(){
-	double h = r  - sys->lubcore;
+	double h = r  - ro;
 	int i = particle_num[0];
 	int j = particle_num[1];
 	vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
 	double alpha;
+	if ( h < sys->h_cutoff){
+		h = sys->h_cutoff;
+	}
 	if (h > 0){
 		alpha = 1.0/(4*h);
 		rel_vel.x += pd_z * sys->vel_difference;

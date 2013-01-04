@@ -12,6 +12,12 @@
 
 int main(int argc, const char * argv[])
 {
+	if (argc == 1){
+		cerr << "usage:" << endl;
+		cerr << "LF_DEM POSITIONFILE LUBCUTOFF [f/nf]" << endl;
+		exit(1);
+	}
+	
 	if (argv[1][0] == 'g'){
 		generateInitialConfiguration(argc, argv);
 	} else {

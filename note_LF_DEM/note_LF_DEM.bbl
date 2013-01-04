@@ -1,9 +1,15 @@
-\begin{thebibliography}{32}
+\begin{thebibliography}{33}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Catherall et~al.(2000)Catherall, Melrose, and Ball]{Catherall_2000}
+A.~A. Catherall, J.~R. Melrose, and R.~C. Ball.
+\newblock Shear thickening and order-disorder effects in concentrated colloids
+  at high shear rates.
+\newblock \emph{J. Rheol.}, 44:\penalty0 1--25, 2000.
 
 \bibitem[Ball and Melrose(1995)]{Ball_1995}
 R.~C. Ball and J.~R. Melrose.
@@ -58,12 +64,6 @@ L.~E. Silbert, J.~R. Melrose, and R.~C. Ball.
 L.~E. Silbert, R.~S. Farr, J.~R. Melrose, and R.~C. Ball.
 \newblock Stress distributions in flowing aggregated colloidal suspensions.
 \newblock \emph{J. Chem. Phys.}, 111:\penalty0 4780--4789, 1999{\natexlab{b}}.
-
-\bibitem[Catherall et~al.(2000)Catherall, Melrose, and Ball]{Catherall_2000}
-A.~A. Catherall, J.~R. Melrose, and R.~C. Ball.
-\newblock Shear thickening and order-disorder effects in concentrated colloids
-  at high shear rates.
-\newblock \emph{J. Rheol.}, 44:\penalty0 1--25, 2000.
 
 \bibitem[Melrose and Ball(2004{\natexlab{a}})]{Melrose_2004a}
 J.~R. Melrose and R.~C. Ball.
@@ -152,6 +152,12 @@ J.~F. Morris.
 \newblock A review of microstructure in concentrated suspensions and its
   implications for rheology and bulk flow.
 \newblock \emph{Rheol Acta}, 48:\penalty0 909--923, 2009.
+
+\bibitem[Nazockdast(2012)]{Nazockdast_2012}
+Ehssan Nazockdast.
+\newblock \emph{Smoluchowski theory for concentrated colloidal dispersions far
+  from equilibrium}.
+\newblock PhD thesis, City University of New York, 2012.
 
 \bibitem[Bender and Wagner(1996)]{Bender_1996}
 J.~Bender and N.~J. Wagner.

@@ -19,7 +19,8 @@ Simulation::SetParameters(int argc, const char * argv[]){
 	sys.lub = true;
 	sys.brownian = false;
 	filename_import_positions = argv[1];
-	sys.lubcore = atof(argv[2]);
+	sys.h_cutoff = atof(argv[2]);
+	
 	string arg3 =argv[3];
 	if (arg3 == "f" ){
 		sys.friction = true;
@@ -85,8 +86,9 @@ Simulation::SetParameters(int argc, const char * argv[]){
 	 * dt: the time step to integrate the equation of motion.
 	 * We need to give a good criterion to give.
 	 */
-	sys.dt = 1e-5 / sys.shear_rate;
-	/* 
+//	sys.dt = 1e-5 / sys.shear_rate;
+	sys.dt = 1e-4 / sys.shear_rate;
+	/*
 	 * dt_mid: the intermediate time step for the mid-point 
 	 * algortithm. dt/dt_mid = dt_ratio
 	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
@@ -199,7 +201,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		time+=(double)interval_snapshot;
 		output_vpython(time);
 	}
-
 }
 
 /*
