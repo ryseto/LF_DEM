@@ -10,16 +10,25 @@
 #include <sstream>
 
 System::~System(){
-	delete [] position;
+	if (!position)
+		delete [] position;
+	if (!angle)
 	delete [] angle;
-	delete [] velocity;
-	delete [] ang_velocity;
-	delete [] force;
-	delete [] torque;
+	if (!velocity)
+		delete [] velocity;
+	if (!ang_velocity)
+		delete [] ang_velocity;
+	if (!force)
+		delete [] force;
+	if (!torque)
+		delete [] torque;
 #ifdef CHOLMOD
+	if (!diag_values)
 	delete [] diag_values;
-	delete [] off_diag_values;
-	delete [] ploc;
+	if (!off_diag_values )
+		delete [] off_diag_values;
+	if (!ploc)
+		delete [] ploc;
 	cholmod_free_dense(&v, &c);
 	cholmod_free_dense(&rhs_b, &c);
 	cholmod_free_sparse(&sparse_res, &c);
@@ -75,7 +84,6 @@ System::prepareSimulation(){
 	force = new vec3d [n];
 	torque = new vec3d [n];
 	contactstress = new double* [n];
-
 
 	for (int i=0; i < n; i++){
 		position[i].x=0.;

@@ -20,6 +20,7 @@ private:
 	bool import_positions;
 	vector< vec3d> initial_positions;
 	string filename_import_positions;
+	string filename_parameters;
 	/*
 	 *  Simulation parameters
 	 */
@@ -33,7 +34,13 @@ private:
 	ofstream fout_rheo;
 	double yap_force_factor;
 	bool origin_zero_flow;
-	void SetParameters(int argc, const char * argv[]);
+	void SetDefaultParameters(int argc, const char * argv[]);
+	void ReadParameterFile(int argc, const char * argv[]);
+	void SetParametersPostProcess();
+
+
+	void AutoSetParameters(const string &keyword,
+						   const string &value);
 	void importInitialPositionFile();
 	void output_yap();
 	void output_vpython(double);
