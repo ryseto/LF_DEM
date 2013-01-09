@@ -53,7 +53,7 @@ System::prepareSimulationName(){
 	} else {
 		ss_simu_name << "vf" << volume_fraction ;
 	}
-	if (lub == true){
+	if (lubrication == true){
 		ss_simu_name << "hc" << h_cutoff;
 	}
 	if (brownian == true){
@@ -164,7 +164,6 @@ System::initInteractionPair(){
 void
 System::timeEvolution(int time_step){
 	int ts_next = ts + time_step;
-
 	while (ts < ts_next){
 		boxset->update();
 		checkNewInteraction();
@@ -175,7 +174,7 @@ System::timeEvolution(int time_step){
 		forceReset();
 		torqueReset();
 		calcContactForces();
-		if (lub){
+		if (lubrication){
 			// Lubrication dynamics
 		  if(brownian){
 		    updateVelocityLubricationBrownian();

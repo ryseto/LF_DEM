@@ -101,8 +101,8 @@ public:
 	double mu_dynamic;// dynamic friction coefficient.
 	double dynamic_friction_critical_velocity;
 	double sq_critical_velocity;
+	bool lubrication;
 	bool friction;
-	bool lub;
 	bool brownian;
 	Interaction *interaction;
 	int num_interaction;

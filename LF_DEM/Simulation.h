@@ -34,8 +34,8 @@ private:
 	ofstream fout_rheo;
 	double yap_force_factor;
 	bool origin_zero_flow;
-	void SetDefaultParameters(int argc, const char * argv[]);
-	void ReadParameterFile(int argc, const char * argv[]);
+	void SetDefaultParameters();
+	void ReadParameterFile();
 	void SetParametersPostProcess();
 
 

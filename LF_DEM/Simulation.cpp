@@ -53,8 +53,8 @@ void
 Simulation::AutoSetParameters(const string &keyword,
 							  const string &value){
 	map<string,int> keylist;
-	const int _lub = 1;
-	keylist["lub"] = _lub;
+	const int _lubrication = 1;
+	keylist["lubrication"] = _lubrication;
 	const int _friction = 2;
 	keylist["friction"] = _friction;
 	const int _brownian = 3;
@@ -87,7 +87,7 @@ Simulation::AutoSetParameters(const string &keyword,
 	keylist["interval_snapshot"] = _interval_snapshot;
 	cerr << keyword << ' ' << value  << endl;
 	switch(keylist[keyword]){
-        case _lub: sys.lub = str2bool(value) ; break;
+        case _lubrication: sys.lubrication = str2bool(value) ; break;
 		case _friction: sys.friction = str2bool(value) ; break;
 		case _brownian: sys.brownian = str2bool(value) ; break;
 		case _h_cutoff: sys.h_cutoff = atof(value.c_str()); break;
@@ -112,9 +112,7 @@ Simulation::AutoSetParameters(const string &keyword,
 
 
 void
-Simulation::ReadParameterFile(int argc, const char * argv[]){
-	filename_import_positions = argv[1];
-	filename_parameters = argv[2];
+Simulation::ReadParameterFile(){
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
 	string keyword;
@@ -155,7 +153,8 @@ Simulation::ReadParameterFile(int argc, const char * argv[]){
 	return;
 }
 
-void Simulation::SetParametersPostProcess(){
+void
+Simulation::SetParametersPostProcess(){
 	/* take parameters from import file name.
 	 *
 	 */
@@ -209,16 +208,6 @@ void Simulation::SetParametersPostProcess(){
 	 * The time steps finishing simulation.
 	 */
 	ts_max = (int)(shear_strain / sys.dt);
-	
-	
-	/*
-	 * For yaplot output data,
-	 * rotation of disk (2D) is visualized by cross.
-	 */
-	if (sys.dimension == 2)
-		sys.draw_rotation_2d = true;
-	else
-		sys.draw_rotation_2d = false;
 	/*
 	 * The middle height of the simulation box is set to the flow zero level.
 	 */
@@ -227,70 +216,71 @@ void Simulation::SetParametersPostProcess(){
 	 * The bond width indicates the force strength.
 	 */
 	yap_force_factor = 0.05;
-
+	/*
+	 * For yaplot output data,
+	 * rotation of disk (2D) is visualized by cross.
+	 */
+	if (sys.dimension == 2)
+		sys.draw_rotation_2d = true;
+	else
+		sys.draw_rotation_2d = false;
 }
 
 void
-Simulation::SetDefaultParameters(int argc, const char * argv[]){
-	filename_import_positions = argv[1];
-	sys.lub = true;
+Simulation::SetDefaultParameters(){
+	sys.lubrication = true;
 	sys.brownian = false;
 	sys.friction = true;
-	sys.h_cutoff = 0.01;
 	/*
-	 * Simulation parameters
+	 * Simulation
+	 *
+	 * dt: the time step to integrate the equation of motion.
+	 *     We need to give a good criterion to give.
+	 * dt_mid: the intermediate time step for the mid-point
+	 *     algortithm. dt/dt_mid = dt_ratio
+	 *     Banchio/Brady (J Chem Phys) gives dt_ratio=100
+	 *    ASD code from Brady has dt_ratio=150
+	 *
 	 */
+	sys.dt = 1e-4;
+	sys.dt_ratio = 100;
 	/*
-	 * Shear rate
+	 * Shear flow
+	 *  shear_rate: shear rate
+	 *  shear_strain: total strain (length of simulation)
 	 *
 	 */
 	sys.shear_rate = 1.0;
+	shear_strain = 10;
 	/*
-	 * Temperature
+	 * Lubrication force
+	 * lub_max: range of lubrication force
+	 * h_cutoff: cutoff distance for diverging coeffient:
+	 *     alpha(h) = 1/h         if h > h_cutoff
+	 *                1/h_cutoff  if h < h_cutoff
+	 */
+	sys.lub_max = 2.5;
+	sys.h_cutoff = 0.01;
+	/*
+	 * Brownian force
+	 * kb_T: Thermal energy kb*T
 	 */
 	sys.kb_T = 1.0;
 	/*
-	 * Simulation terminate at this value
-	 */
-	shear_strain = 10;
-	/*
-	 * dt: the time step to integrate the equation of motion.
-	 * We need to give a good criterion to give.
-	 */
-	//	sys.dt = 1e-5;
-	sys.dt = 1e-4;
-	/*
-	 * dt_mid: the intermediate time step for the mid-point 
-	 * algortithm. dt/dt_mid = dt_ratio
-	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
-	 * ASD code from Brady has dt_ratio=150
-	 */
-	sys.dt_ratio = 100;
-	
-	/*
-	 * Range of lubrication force
-	 */
-	sys.lub_max = 2.5;
-	/*
 	 * Contact force parameters
-	 *
+	 * kn: normal spring constant
+	 * kt: tangential spring constant
+	 * mu_static: static friction coeffient
+	 * mu_dynamic: dynamic friction coeffient
+	 * dynamic_friction_critical_velocity: 
+	 *    This is a threshold velocity to swich from dynamic friction to
+	 *    static friction. But this is a temporal provísional.
+	 *    There is no reference to give this value.
 	 */
-	sys.kn = 100; // normal spring constant
-	sys.kt = 100; // tangential spring constant
-	/*
-	 * Particles are spined by the background vorticity.
-	 * Small friction coeffient may not stop the sliding between surfaces
-	 * of spinning particles, when normal force is small.
-	 * We should also estimate the effect of lubrication torque.
-	 *
-	 */
-	sys.mu_static = 1; // static friction coeffient
-	sys.mu_dynamic = 0.8; // dynamic friction coeffient
-	/*
-	 * This is a threshold velocity to swich from dynamic friction to
-	 * static friction. But this is a temporal provísional.
-	 * There is no reference to give this value.
-	 */
+	sys.kn = 100;
+	sys.kt = 100;
+	sys.mu_static = 1;
+	sys.mu_dynamic = 0.8;
 	sys.dynamic_friction_critical_velocity = 0.01;
 	/*
 	 * snapshot for yaplot data.
@@ -318,13 +308,14 @@ Simulation::importInitialPositionFile(){
  */
 void
 Simulation::SimulationMain(int argc, const char * argv[]){
-	
+	filename_import_positions = argv[1];
 	if (argc == 2){
 		cerr << "Default Parameters" << endl;
-		SetDefaultParameters(argc, argv);
+		SetDefaultParameters();
 	} else {
 		cerr << "Read Parameter File" << endl;
-		ReadParameterFile(argc, argv);
+		filename_parameters = argv[2];
+		ReadParameterFile();
 	}
 	SetParametersPostProcess();
 	importInitialPositionFile();
