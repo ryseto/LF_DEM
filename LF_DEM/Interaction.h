@@ -23,8 +23,7 @@ private:
 	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
 	vec3d xi; // tangential displacement
-	double a0, a1;
-	
+
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -51,7 +50,9 @@ public:
 	double sqnorm_contact_velocity;
 	int particle_num[2];
 	double r; // center-center distance // done
-	double ro; // ro = a_i + a_j
+	double a0, a1;
+	double ro; // ro = a0 + a1
+	double lambda, invlambda;  // a1/a0 , a0/a1
 	vec3d r_vec; // vector center to center
 	vec3d nr_vec; // normal vector
 	double f_normal;
@@ -59,6 +60,7 @@ public:
 //	vec3d t_tangent;
 	int pd_z;
 	int partner(int);
+
 };
 
 #endif /* defined(__LF_DEM__Interaction__) */

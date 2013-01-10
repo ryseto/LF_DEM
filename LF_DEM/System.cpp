@@ -562,6 +562,165 @@ System::buildLubricationTerms(){
 }
 
 void
+System::addStokesDrag(){
+
+	for (int i = 0; i < n; i ++){
+		int i6=6*i;
+		diag_values[i6  ] = radius[i];
+		diag_values[i6+3] = radius[i];
+		diag_values[i6+5] = radius[i];
+	}
+
+}
+
+
+void
+System::XA(double iksi, double lambda, double invlambda, double &XAii, double &XAij, double &XAji, double &XAjj){
+
+	double g1_l, g1_il;
+	double l1, l13, il1, il13;
+
+	l1 = 1.0 + lambda;
+	l13 = l1 * l1 * l1;
+
+	il1 = 1.0 + invlambda;
+	il13 = il1 * il1 * il1;
+	
+	g1_l = 2.0 * lambda * lambda / l13;
+	g1_il = 2.0 * invlambda * invlambda / il13;
+	
+	XAii = g1_l * iksi;
+	XAij = - 2 * XAii / l1;
+	XAjj = g1_il * iksi;
+	XAji = - 2 * XAjj / il1;
+	
+}
+
+
+void
+System::XG(double iksi, double lambda, double invlambda, double &XGii, double &XGij, double &XGji, double &XGjj){
+
+	double g1_l, g1_il;
+	double l1, l13, il1, il13;
+
+	l1 = 1.0 + lambda;
+	l13 = l1 * l1 * l1;
+
+	il1 = 1.0 + invlambda;
+	il13 = il1 * il1 * il1;
+	
+	g1_l = 2.0 * lambda * lambda / l13;
+	g1_il = 2.0 * invlambda * invlambda / il13;
+	
+	XGii = 1.5 * g1_l * iksi;
+	XGij = - 4 * XGii / l1 / l1 ;
+	XGjj = - 1.5 * g1_il * iksi;
+	XGji = - 4 * XGjj / il1 / il1 ;
+	
+}
+
+
+void
+System::buildLubricationTerms_new(){
+	for (int k = 0; k < 6*n; k++){
+		diag_values[k] = 0.;
+	}
+	rows.clear();
+	off_diag_values[0].clear();
+	off_diag_values[1].clear();
+	off_diag_values[2].clear();
+
+	addStokesDrag();
+
+
+	double r ; // distance
+	
+	double s;
+	double ksi, iksi, ksi_cutoff;
+
+	double XAii, XAjj, XAij, XAji;
+	double XGii, XGjj, XGij, XGji;
+
+	
+	// under construction.
+
+	set<Interaction*>::iterator it;
+	int j;
+	Interaction *inter;
+	for (int i = 0; i < n - 1; i ++){
+		ploc[i] = (unsigned int)rows.size();
+
+		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+			inter=*it;
+		 	j=inter->partner(i);
+			if(j>i){
+				r=inter->r;
+				s = 2 * r / inter->ro;
+				ksi = (s - 2);
+			    iksi = 1./iksi;
+				ksi_cutoff = 0.5*h_cutoff*inter->ro;
+				if ( ksi < ksi_cutoff){
+					ksi = ksi_cutoff;
+				}
+				if(ksi > 0){
+
+					double nvec[3];
+					nvec[0] = inter->nr_vec.x;
+					nvec[1] = inter->nr_vec.y;
+					nvec[2] = inter->nr_vec.z;
+				
+
+					XA(iksi, inter->lambda, inter->invlambda, XAii, XAij, XAji, XAjj);
+
+					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
+					addToDiag(nvec, i, inter->a0 * XAii);
+					addToDiag(nvec, j, inter->a1 * XAjj);
+					appendToColumn(nvec, j, 0.5 * inter->ro * XAji);
+
+
+					XG(iksi, inter->lambda, inter->invlambda, XGii, XGij, XGji, XGjj);
+
+					double nxnz = nvec[0] * nvec[2];
+					double GEi[3];
+					double GEj[3];
+					
+					double onesixth = 1./6.;
+					double twothird = 4.*onesixth;
+					for(int u=0; u<3; u++){
+						GEi[u] = twothird * inter->a0 * inter->a0 * XGii ;
+						GEi[u] += onesixth * inter->ro * inter->ro * XGji ;
+						GEi[u] *= shear_rate * nxnz * nvec[u];
+					}
+					for(int u=0; u<3; u++){
+						GEj[u] = twothird * inter->a0 * inter->a0 * XGjj ;
+						GEj[u] += onesixth * inter->ro * inter->ro * XGij ;
+						GEj[u] *= shear_rate * nxnz * nvec[u];
+					}
+					
+					for(int u=0; u<3; u++){
+						((double*)rhs_b->x)[ 3*i + u ] += GEi[ u ];
+						((double*)rhs_b->x)[ 3*j + u ] += GEj[ u ];
+					}
+
+				} else {
+					cerr << "interaction.r " << inter->r << endl;
+					cerr << i << ' ' << j << ' ' << endl;
+					cerr << "ksi<0 : " << ksi <<   endl;
+					cerr << "r = " << inter->r << endl;
+					position[i].cerr();
+					position[j].cerr();
+					exit(1);
+				}
+			}
+		}
+	}
+
+	ploc[n-1] = (unsigned int)rows.size();
+	ploc[n] = (unsigned int)rows.size();
+	
+}
+
+void
 System::buildBrownianTerms(){
 	// add Brownian force
 	fb->add_to(rhs_b);
@@ -606,45 +765,6 @@ System::allocateSparseResmatrix(){
 }
 
 
-void
-System::buildLubricationTerms_new(){
-	/*
-	 * interaction between particle i and particle j
-	 * l: lambda = a_j / a_i
-	 *
-	 */
-	double ai = 1;
-	double aj = 1;
-	double r ; // distance
-	double l = aj/ai; // 1 is monodisperse
-	double l1 = 1.0 + l;
-	double l13 = l1 * l1 * l1;
-	double g1;
-	
-	double s = 2 * r / (ai + aj);
-	double xi = s - 2;
-
-	double XAii;
-	double XAij;
-	double XGii;
-	double XGij;
-	double XMii;
-	double XMij;
-	
-	g1 = 2.0 * l * l / l13;
-	
-	XAii = g1 / xi;
-	XAij = - 2 / l1 * XAii;
-
-	XGii = 1.5 * XAii;
-	XGij = - 6 / (l1*l1) * XAii;
-	
-	XMii = 0.6 * XAii;
-	XMij = 4 * g1 * XAii / l;
-	
-	
-	// under construction.
-}
 
 
 void

@@ -39,6 +39,10 @@ private:
 
 	void buildBrownianTerms();
 	void buildContactTerms();
+	void addStokesDrag();
+	void XA(double iksi, double lambda, double invlambda, double &XAii, double &XAij, double &XAji, double &XAjj);
+	void XG(double iksi, double lambda, double invlambda, double &XGii, double &XGij, double &XGji, double &XGjj);
+
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v;

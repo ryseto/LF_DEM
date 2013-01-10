@@ -31,10 +31,11 @@ Interaction::create(int i, int j){
 	}		
 	active = true;
 	contact = false;
-	a0 = 1.;
-	a1 = 1.;
+	a0 = sys->radius[particle_num[0]];
+	a1 = sys->radius[particle_num[1]];
 	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
-
+	lambda = a1 / a0;
+	invlambda = 1. / lambda;
 	return;
 }
 
@@ -153,7 +154,7 @@ Interaction::calcContactVelocity(){
 		// v1 - v0
 		contact_velocity.x += pd_z * sys->vel_difference;
 	}
-	contact_velocity -= cross(sys->ang_velocity[particle_num[0]] + sys->ang_velocity[particle_num[1]], nr_vec);
+	contact_velocity -= cross(a0*sys->ang_velocity[particle_num[0]] + a1*sys->ang_velocity[particle_num[1]], nr_vec);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
 }
 
