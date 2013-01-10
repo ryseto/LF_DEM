@@ -895,6 +895,8 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 	boxset->box(i);
 }
 
+
+// [0,l]
 void
 System::periodize(vec3d *pos){
 	if (pos->z > lz ){
@@ -918,6 +920,59 @@ System::periodize(vec3d *pos){
 		}
 	}
 }
+
+// [-l/2,l/2]
+void
+System::periodize_diff(vec3d *pos_diff){
+	if (pos_diff->z > lz2 ){
+		pos_diff->z -= lz;
+		pos_diff->x -= shear_disp;
+	} else if ( pos_diff->z < 0 ){
+		pos_diff->z += lz;
+		pos_diff->x += shear_disp;
+	}
+	while ( pos_diff->x > lx2 ){
+		pos_diff->x -= lx;
+	} 
+	while (pos_diff->x < 0 ){
+		pos_diff->x += lx;
+	}
+	if (dimension == 3){
+		if ( pos_diff->y > ly2 ){
+			pos_diff->y -= ly;
+		} else if (pos_diff->y < 0 ){
+			pos_diff->y += ly;
+		}
+	}
+}
+// periodize + give z_shift= number of boundaries crossed in z-direction
+void
+System::periodize_diff(vec3d *pos_diff, int *zshift){
+	if (pos_diff->z > lz2 ){
+		pos_diff->z -= lz;
+		pos_diff->x -= shear_disp;
+		(*zshift)=-1;
+	} else if ( pos_diff->z < 0 ){
+		pos_diff->z += lz;
+		pos_diff->x += shear_disp;
+		(*zshift)=+1;
+	}
+	while ( pos_diff->x > lx2 ){
+		pos_diff->x -= lx;
+	} 
+	while (pos_diff->x < 0 ){
+		pos_diff->x += lx;
+	}
+	if (dimension == 3){
+		if ( pos_diff->y > ly2 ){
+			pos_diff->y -= ly;
+		} else if (pos_diff->y < 0 ){
+			pos_diff->y += ly;
+		}
+	}
+}
+
+
 
 void
 System::deltaTimeEvolution(){
@@ -948,73 +1003,15 @@ System::distance(int i, int j){
  */
 double
 System::sq_distance(int i, int j){
-	double dx = position[i].x - position[j].x;
-	double dy = position[i].y - position[j].y;
-	double dz = position[i].z - position[j].z;
-	if (dz > lz2 ){
-		dz -= lz;
-		dx -= shear_disp;
-	} else if (dz < -lz2){
-		dz += lz;
-		dx += shear_disp;
-	}
-	while(dx > lx2){
-		dx -= lx;
-	}
-	while(dx < - lx2){
-		dx += lx;
-	}
-	if (dimension == 3){
-		if (dy > ly2 ){
-			dy -= ly;
-		} else if (dy < -ly2){
-			dy += ly;
-		}
-		return dx*dx + dy*dy + dz*dz;
-	} else {
-		return dx*dx + dz*dz;
-	}
-}
+	vec3d pos_diff = position[j] - position[i];
 
-/*
- * Distance less than 'lub_max' can be calculated.
- * Otherwize it returns 1000.
- */
-double
-System::sq_distanceToCheckContact(int i, int j){
-	double dx = position[i].x - position[j].x;
-	double dz = position[i].z - position[j].z;
-	if (dz > lz2 ){
-		dz -= lz;
-		dx -= shear_disp;
-	} else if (dz < -lz2){
-		dz += lz;
-		dx += shear_disp;
+	periodize_diff(&pos_diff);
+
+	if (dimension == 3){
+		return pos_diff.sq_norm();
+	} else {
+		return pos_diff.sq_norm_xz();
 	}
-	if (abs(dz) < lub_max){
-		while(dx > lx2){
-			dx -= lx;
-		}
-		while(dx < -lx2){
-			dx += lx;
-		}
-		if (abs(dx) < lub_max){
-			if (dimension == 3){
-				double dy = position[i].y - position[j].y;
-				if (dy > ly2 ){
-					dy -= ly;
-				} else if (dy < -ly2){
-					dy += ly;
-				}
-				if (abs(dy) < lub_max){
-					return dx*dx + dy*dy + dz*dz;
-				}
-			} else {
-				return dx*dx + dz*dz;
-			}
-		}
-	}
-	return 1000;
 }
 
 void
