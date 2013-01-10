@@ -141,6 +141,7 @@ public:
 	inline void sign_reverse(){ (*this) = -(*this);}
 	inline double sq_norm(){return x*x + y*y + z*z; }
 	inline double sq_norm_xy(){return x*x + y*y;}
+	inline double sq_norm_xz(){return x*x + z*z;}
 	inline double norm(){return sqrt(sq_norm());}
 
 	inline friend double dist(const vec3d &a1, const vec3d &a2){

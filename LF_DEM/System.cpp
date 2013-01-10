@@ -13,7 +13,7 @@ System::~System(){
 	if (!position)
 		delete [] position;
 	if (!angle)
-	delete [] angle;
+		delete [] angle;
 	if (!velocity)
 		delete [] velocity;
 	if (!ang_velocity)
@@ -22,6 +22,11 @@ System::~System(){
 		delete [] force;
 	if (!torque)
 		delete [] torque;
+	if (!interaction_list)
+		delete [] interaction_list;
+	if (!interaction_partners)
+		delete [] interaction_partners;
+
 #ifdef CHOLMOD
 	if (!diag_values)
 	delete [] diag_values;
@@ -117,7 +122,10 @@ System::prepareSimulation(){
 	for (int k=0; k < maxnum_interactionpair ; k++){
 		interaction[k].init(this);
 	}
-	initInteractionPair();
+	interaction_list = new set <Interaction*> [n]; 
+	interaction_partners = new set <int> [n]; 
+
+	//	initInteractionPair();
 	
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
@@ -148,18 +156,6 @@ System::prepareSimulation(){
 	}
 }
 
-void
-System::initInteractionPair(){
-	interaction_pair = new int * [n];
-	for (int i=0; i < n; i++){
-		interaction_pair[i] = new int [n];
-	}
-	for (int i=0; i < n-1; i++){
-		for (int j=i+1; j < n; j++){
-			interaction_pair[i][j] = -1;
-		}
-	}
-}
 
 void
 System::timeEvolution(int time_step){
@@ -197,6 +193,9 @@ System::checkNewInteraction(){
 	vector<int>::iterator it;
 	vector<int>::iterator it_beg;
 	vector<int>::iterator it_end;
+	vec3d pos_diff;
+	int zshift;
+	double sq_dist;
 	for (int i=0; i < n-1; i++){
 		
 		it_beg = boxset->neighborhood_begin(i);
@@ -205,9 +204,13 @@ System::checkNewInteraction(){
 		for (it = it_beg; it != it_end; it++){
 			int j=*it;
 			if(j>i){
-				if ( interaction_pair[i][j] == -1){
-					double sq_distance = sq_distanceToCheckContact(i, j);
-					if ( sq_distance < sq_lub_max){
+				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
+					
+					pos_diff = position[j] - position[i];
+					periodize_diff(&pos_diff, &zshift);
+					sq_dist = pos_diff.sq_norm();
+
+					if ( sq_dist < sq_lub_max){
 						int interaction_new;
 						if (deactivated_interaction.empty()){
 							// add an interaction object.
@@ -219,8 +222,11 @@ System::checkNewInteraction(){
 							deactivated_interaction.pop();
 						}
 						interaction[interaction_new].create(i, j);
-						interaction[interaction_new].calcDistanceNormalVector();
-						interaction_pair[i][j] = interaction_new;
+						interaction[interaction_new].assignDistanceNormalVector(-pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
+						interaction_list[i].insert(&(interaction[interaction_new]));
+						interaction_list[j].insert(&(interaction[interaction_new]));
+						interaction_partners[i].insert(j);
+						interaction_partners[j].insert(i);
 					}
 				}
 			}
@@ -243,7 +249,13 @@ System::updateInteraction(){
 			if(interaction[k].r > lub_max){
 				// r > lub_max
 				interaction[k].active = false;
-				interaction_pair[interaction[k].particle_num[0]][interaction[k].particle_num[1]] = -1;
+				int i=interaction[k].particle_num[0];
+				int j=interaction[k].particle_num[1];
+				interaction_list[i].erase(&(interaction[k]));
+				interaction_list[j].erase(&(interaction[k]));
+				interaction_partners[i].erase(j);
+				interaction_partners[j].erase(i);
+
 				deactivated_interaction.push(k);
 			} else {
 				if (interaction[k].contact){
@@ -484,17 +496,22 @@ System::buildLubricationTerms(){
 		diag_values[i6+5] = 1.;
 	}
 	
+	set<Interaction*>::iterator it;
+	int j;
+	Interaction *inter;
 	for (int i = 0; i < n - 1; i ++){
 		ploc[i] = (unsigned int)rows.size();
-		for (int j = i+1 ; j < n; j ++){
+
+		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+			inter=*it;
+		 	j=inter->partner(i);
+			if(j>i){
 			double h = 0;
 			double nvec[3];
-			int k = interaction_pair[i][j];
-			if( k != -1){
-				nvec[0] = interaction[k].nr_vec.x;
-				nvec[1] = interaction[k].nr_vec.y;
-				nvec[2] = interaction[k].nr_vec.z;
-				h = interaction[k].r - interaction[k].ro;
+				nvec[0] = inter->nr_vec.x;
+				nvec[1] = inter->nr_vec.y;
+				nvec[2] = inter->nr_vec.z;
+				h = inter->r - inter->ro;
 				if ( h < h_cutoff){
 					h = h_cutoff;
 				}
@@ -504,7 +521,7 @@ System::buildLubricationTerms(){
 					addToDiag(nvec, i, -alpha);
 					addToDiag(nvec, j, -alpha);
 					appendToColumn(nvec, j, +alpha);
-					double alpha_gd_dz_n0 = alpha*shear_rate*interaction[k].r_vec.z*nvec[0];
+					double alpha_gd_dz_n0 = alpha*shear_rate*inter->r_vec.z*nvec[0];
 					double alpha_gd_dz_n0_n[] = { \
 						alpha_gd_dz_n0*nvec[0],
 						alpha_gd_dz_n0*nvec[1],
@@ -517,11 +534,10 @@ System::buildLubricationTerms(){
 					((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 					((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
 				} else {
-					cerr << "k = " << k << endl;
-					cerr << "interaction[k].r " << interaction[k].r << endl;
+					cerr << "interaction.r " << inter->r << endl;
 					cerr << i << ' ' << j << ' ' << endl;
 					cerr << "h<0 : " << h <<   endl;
-					cerr << "r = " << interaction[k].r << endl;
+					cerr << "r = " << inter->r << endl;
 					position[i].cerr();
 					position[j].cerr();
 					exit(1);
@@ -529,6 +545,7 @@ System::buildLubricationTerms(){
 			}
 		}
 	}
+
 	ploc[n-1] = (unsigned int)rows.size();
 	ploc[n] = (unsigned int)rows.size();
 	
@@ -895,6 +912,8 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 	boxset->box(i);
 }
 
+
+// [0,l]
 void
 System::periodize(vec3d *pos){
 	if (pos->z > lz ){
@@ -918,6 +937,62 @@ System::periodize(vec3d *pos){
 		}
 	}
 }
+
+// [-l/2,l/2]
+void
+System::periodize_diff(vec3d *pos_diff){
+	if (pos_diff->z > lz2 ){
+		pos_diff->z -= lz;
+		pos_diff->x -= shear_disp;
+	} else if ( pos_diff->z < -lz2 ){
+		pos_diff->z += lz;
+		pos_diff->x += shear_disp;
+	}
+	while ( pos_diff->x > lx2 ){
+		pos_diff->x -= lx;
+	} 
+	while (pos_diff->x < -lx2 ){
+		pos_diff->x += lx;
+	}
+	if (dimension == 3){
+		if ( pos_diff->y > ly2 ){
+			pos_diff->y -= ly;
+		} else if (pos_diff->y < -ly2 ){
+			pos_diff->y += ly;
+		}
+	}
+}
+// periodize + give z_shift= number of boundaries crossed in z-direction
+void
+System::periodize_diff(vec3d *pos_diff, int *zshift){
+	if (pos_diff->z > lz2 ){
+		pos_diff->z -= lz;
+		pos_diff->x -= shear_disp;
+		(*zshift)=-1;
+	} else if ( pos_diff->z < -lz2 ){
+		pos_diff->z += lz;
+		pos_diff->x += shear_disp;
+		(*zshift)=+1;
+	}
+	else{
+		(*zshift)=0;
+	}
+	while ( pos_diff->x > lx2 ){
+		pos_diff->x -= lx;
+	} 
+	while (pos_diff->x < -lx2 ){
+		pos_diff->x += lx;
+	}
+	if (dimension == 3){
+		if ( pos_diff->y > ly2 ){
+			pos_diff->y -= ly;
+		} else if (pos_diff->y < -ly2 ){
+			pos_diff->y += ly;
+		}
+	}
+}
+
+
 
 void
 System::deltaTimeEvolution(){
@@ -948,73 +1023,15 @@ System::distance(int i, int j){
  */
 double
 System::sq_distance(int i, int j){
-	double dx = position[i].x - position[j].x;
-	double dy = position[i].y - position[j].y;
-	double dz = position[i].z - position[j].z;
-	if (dz > lz2 ){
-		dz -= lz;
-		dx -= shear_disp;
-	} else if (dz < -lz2){
-		dz += lz;
-		dx += shear_disp;
-	}
-	while(dx > lx2){
-		dx -= lx;
-	}
-	while(dx < - lx2){
-		dx += lx;
-	}
-	if (dimension == 3){
-		if (dy > ly2 ){
-			dy -= ly;
-		} else if (dy < -ly2){
-			dy += ly;
-		}
-		return dx*dx + dy*dy + dz*dz;
-	} else {
-		return dx*dx + dz*dz;
-	}
-}
+	vec3d pos_diff = position[j] - position[i];
 
-/*
- * Distance less than 'lub_max' can be calculated.
- * Otherwize it returns 1000.
- */
-double
-System::sq_distanceToCheckContact(int i, int j){
-	double dx = position[i].x - position[j].x;
-	double dz = position[i].z - position[j].z;
-	if (dz > lz2 ){
-		dz -= lz;
-		dx -= shear_disp;
-	} else if (dz < -lz2){
-		dz += lz;
-		dx += shear_disp;
+	periodize_diff(&pos_diff);
+
+	if (dimension == 3){
+		return pos_diff.sq_norm();
+	} else {
+	 	return pos_diff.sq_norm_xz();
 	}
-	if (abs(dz) < lub_max){
-		while(dx > lx2){
-			dx -= lx;
-		}
-		while(dx < -lx2){
-			dx += lx;
-		}
-		if (abs(dx) < lub_max){
-			if (dimension == 3){
-				double dy = position[i].y - position[j].y;
-				if (dy > ly2 ){
-					dy -= ly;
-				} else if (dy < -ly2){
-					dy += ly;
-				}
-				if (abs(dy) < lub_max){
-					return dx*dx + dy*dy + dz*dz;
-				}
-			} else {
-				return dx*dx + dz*dz;
-			}
-		}
-	}
-	return 1000;
 }
 
 void

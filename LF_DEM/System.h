@@ -32,9 +32,8 @@ class System{
 private:
 	int n3;
 	int maxnum_interactionpair;
-	int **interaction_pair; // Table
+
 	queue<int> deactivated_interaction;
-	void initInteractionPair();
 	void buildLubricationTerms();
 	void buildLubricationTerms_new();
 
@@ -72,6 +71,8 @@ private:
 #endif
 
 	BoxSet* boxset;
+	set <Interaction*> *interaction_list;
+	set <int> *interaction_partners;
 
 protected:
 public:
@@ -142,11 +143,13 @@ public:
 
 	void calcContactForces();
 	double sq_distance(int i, int j);
-	double sq_distanceToCheckContact(int i, int j);
+
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
 	void periodize(vec3d*);
+	void periodize_diff(vec3d*);
+	void periodize_diff(vec3d*, int*);
 	void updateVelocity();
 	void updateVelocityLubrication();
 	void updateVelocityLubricationBrownian();

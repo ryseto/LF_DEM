@@ -21,10 +21,16 @@ Interaction::init(System *sys_){
  */
 void
 Interaction::create(int i, int j){
+	if(j>i){
+		particle_num[0] = i;
+		particle_num[1] = j;
+	}		
+	else{
+		particle_num[0] = j;
+		particle_num[1] = i;
+	}		
 	active = true;
 	contact = false;
-	particle_num[0] = i;
-	particle_num[1] = j;
 	ro = 2; // for polydispesity, we will rewrite this to a1+a2
 	return;
 }
@@ -44,34 +50,11 @@ Interaction::newContact(){
 void
 Interaction::calcNormalVector(){
 	r_vec = sys->position[particle_num[0]] - sys->position[particle_num[1]];
-	if (r_vec.z < -sys->lz2){
-		pd_z = 1; //  p1 (z = lz), p0 (z = 0)
-		r_vec.z += sys->lz;
-		r_vec.x += sys->shear_disp;
-	} else if (r_vec.z > sys->lz2){
-		pd_z = -1; //  p1 (z = 0), p0 (z = lz)
-		r_vec.z -= sys->lz;
-		r_vec.x -= sys->shear_disp;
-	} else{
-		pd_z = 0;
-	}
-	
-	while (r_vec.x > sys->lx2){
-		r_vec.x -= sys->lx;
-	}
-	while (r_vec.x < -sys->lx2){
-		r_vec.x += sys->lx;
-	}
-	
-	if (sys->dimension == 3){
-		if ( abs(r_vec.y) > sys->ly2 ){
-			if ( r_vec.y > 0 ){
-				r_vec.y -= sys->ly;
-			} else {
-				r_vec.y += sys->ly;
-			}
-		}
-	}
+
+	sys->periodize_diff(&r_vec, &pd_z);
+
+	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
+
 }
 
 void
@@ -82,6 +65,16 @@ Interaction::calcDistanceNormalVector(){
 		nr_vec = r_vec / r;
 	}
 }
+
+void
+Interaction::assignDistanceNormalVector(vec3d pos_diff, double distance, int zshift){
+	r_vec = pos_diff;
+	r = distance;
+	nr_vec = r_vec / r;
+	pd_z = zshift;
+	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
+}
+
 
 void
 Interaction::calcStaticFriction(){
@@ -266,7 +259,13 @@ Interaction::addContactStress(){
 	}
 }
 
-
+int
+Interaction::partner(int i){
+	if( i == particle_num[0] )
+		return particle_num[1];
+	else
+		return particle_num[0];
+}
 
 
 
