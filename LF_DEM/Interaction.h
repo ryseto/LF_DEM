@@ -23,6 +23,8 @@ private:
 	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
 	vec3d xi; // tangential displacement
+	double a0, a1;
+	
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();

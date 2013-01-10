@@ -12,6 +12,8 @@
 System::~System(){
 	if (!position)
 		delete [] position;
+	if (!radius)
+		delete [] radius;
 	if (!angle)
 		delete [] angle;
 	if (!velocity)
@@ -64,6 +66,10 @@ System::prepareSimulationName(){
 	if (brownian == true){
 		ss_simu_name << "kT" << kb_T ;
 	}		
+	if (poly == true){
+		ss_simu_name << "poly" ;
+	}		
+
 	simu_name = ss_simu_name.str();
 	cerr << simu_name << endl;
 	
@@ -82,6 +88,7 @@ System::prepareSimulation(){
 	vel_difference = shear_rate*lz;
 	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
 	position = new vec3d [n];
+	radius = new double [n];
 	n3 = 3*n;
 	angle = new double [n];
 	velocity = new vec3d [n];
@@ -94,6 +101,7 @@ System::prepareSimulation(){
 		position[i].x=0.;
 		position[i].y=0.;
 		position[i].z=0.;
+		radius[i]=0.;
 		velocity[i].x=0.;
 		velocity[i].y=0.;
 		velocity[i].z=0.;
@@ -222,7 +230,7 @@ System::checkNewInteraction(){
 							deactivated_interaction.pop();
 						}
 						interaction[interaction_new].create(i, j);
-						interaction[interaction_new].assignDistanceNormalVector(-pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
+						interaction[interaction_new].assignDistanceNormalVector(pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
 						interaction_list[i].insert(&(interaction[interaction_new]));
 						interaction_list[j].insert(&(interaction[interaction_new]));
 						interaction_partners[i].insert(j);
@@ -508,9 +516,9 @@ System::buildLubricationTerms(){
 			if(j>i){
 			double h = 0;
 			double nvec[3];
-				nvec[0] = inter->nr_vec.x;
-				nvec[1] = inter->nr_vec.y;
-				nvec[2] = inter->nr_vec.z;
+				nvec[0] = -inter->nr_vec.x;
+				nvec[1] = -inter->nr_vec.y;
+				nvec[2] = -inter->nr_vec.z;
 				h = inter->r - inter->ro;
 				if ( h < h_cutoff){
 					h = h_cutoff;
@@ -533,6 +541,8 @@ System::buildLubricationTerms(){
 					((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
 					((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
 					((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
+					
+
 				} else {
 					cerr << "interaction.r " << inter->r << endl;
 					cerr << i << ' ' << j << ' ' << endl;

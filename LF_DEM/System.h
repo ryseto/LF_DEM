@@ -84,6 +84,7 @@ public:
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
+	double *radius;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vec3d *ang_velocity;
@@ -105,6 +106,7 @@ public:
 	bool lubrication;
 	bool friction;
 	bool brownian;
+	bool poly;
 	Interaction *interaction;
 	int num_interaction;
 	/*

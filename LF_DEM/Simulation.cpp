@@ -58,6 +58,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.friction = str2bool(value);
 	} else if (keyword == "brownian"){
 		sys.brownian = str2bool(value);
+	} else if (keyword == "poly"){
+		sys.poly = str2bool(value);
 	} else if (keyword == "h_cutoff"){
 		sys.h_cutoff = atof(value.c_str());
 	} else if (keyword == "shear_rate"){
@@ -211,6 +213,7 @@ Simulation::SetDefaultParameters(){
 	sys.lubrication = true;
 	sys.brownian = false;
 	sys.friction = true;
+	sys.poly = false;
 	/*
 	 * Simulation
 	 *
@@ -274,11 +277,17 @@ Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open( filename_import_positions.c_str());
 	vec3d pos;
+	double radius;
 	while (true){
-		file_import >> pos.x >> pos.y >> pos.z;
+		if(sys.poly)
+			file_import >> pos.x >> pos.y >> pos.z >> radius;
+		else
+			file_import >> pos.x >> pos.y >> pos.z;
+
 		if (file_import.eof())
 			break;
 		initial_positions.push_back(pos);
+		radii.push_back(radius);
 	}
 	file_import.close();
 }
@@ -304,6 +313,11 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.prepareSimulation();
 	for (int i=0; i < sys.n; i++){
 		sys.position[i] = initial_positions[i];
+		if(sys.poly)
+			sys.radius[i] = radii[i];
+		else
+			sys.radius[i] = 1.;
+
 		sys.angle[i] = 0;
 	}
 

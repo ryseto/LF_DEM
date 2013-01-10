@@ -19,6 +19,7 @@ private:
 	double shear_strain;
 	bool import_positions;
 	vector< vec3d> initial_positions;
+	vector <double> radii;
 	string filename_import_positions;
 	string filename_parameters;
 	/*
