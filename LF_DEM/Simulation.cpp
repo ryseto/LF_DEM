@@ -52,61 +52,41 @@ removeBlank(string &str){
 void
 Simulation::AutoSetParameters(const string &keyword,
 							  const string &value){
-	map<string,int> keylist;
-	const int _lubrication = 1;
-	keylist["lubrication"] = _lubrication;
-	const int _friction = 2;
-	keylist["friction"] = _friction;
-	const int _brownian = 3;
-	keylist["brownian"] = _brownian;
-	const int _h_cutoff = 4;
-	keylist["h_cutoff"] = _h_cutoff;
-	const int _shear_rate = 5;
-	keylist["shear_rate"] = _shear_rate;
-	const int _kb_T = 6;
-	keylist["kb_T"] = _kb_T;
-	const int _shear_strain = 7;
-	keylist["shear_strain"] = _shear_strain;
-	const int _dt = 8;
-	keylist["dt"] = _dt;
-	const int _dt_ratio = 9;
-	keylist["dt_ratio"] = _dt_ratio;
-	const int _lub_max = 10;
-	keylist["lub_max"] = _lub_max;
-	const int _kn = 11;
-	keylist["kn"] = _kn;
-	const int _kt = 12;
-	keylist["kt"] = _kt;
-	const int _mu_static = 13;
-	keylist["mu_static"] = _mu_static;
-	const int _mu_dynamic = 14;
-	keylist["mu_dynamic"] = _mu_dynamic;
-	const int _dynamic_friction_critical_velocity = 15;
-	keylist["dynamic_friction_critical_velocity"] = _dynamic_friction_critical_velocity;
-	const int _interval_snapshot = 16;
-	keylist["interval_snapshot"] = _interval_snapshot;
-	cerr << keyword << ' ' << value  << endl;
-	switch(keylist[keyword]){
-        case _lubrication: sys.lubrication = str2bool(value) ; break;
-		case _friction: sys.friction = str2bool(value) ; break;
-		case _brownian: sys.brownian = str2bool(value) ; break;
-		case _h_cutoff: sys.h_cutoff = atof(value.c_str()); break;
-		case _shear_rate: sys.shear_rate = atof(value.c_str()); break;
-		case _kb_T: sys.kb_T = atof(value.c_str()); break;
-		case _shear_strain: shear_strain = atof(value.c_str()); break;
-		case _dt: sys.dt = atof(value.c_str()); break;
-		case _dt_ratio: sys.dt_ratio = atof(value.c_str()); break;
-		case _lub_max: sys.lub_max = atof(value.c_str()); break;
-		case _kn: sys.kn = atof(value.c_str()); break;
-		case _kt: sys.kt = atof(value.c_str()); break;
-		case _mu_static: sys.mu_static = atof(value.c_str()); break;
-		case _mu_dynamic: sys.mu_dynamic = atof(value.c_str()); break;
-		case _dynamic_friction_critical_velocity:
-			sys.dynamic_friction_critical_velocity = atof(value.c_str()); break;
-		case _interval_snapshot: interval_snapshot = atoi(value.c_str()); break;
-		default:
-			cerr << "The keyword " << keyword << " is'nt associated with an parameter" << endl;
-			exit(1);
+	if (keyword == "lubrication"){
+		sys.lubrication = str2bool(value);
+	} else if (keyword == "friction"){
+		sys.friction = str2bool(value);
+	} else if (keyword == "brownian"){
+		sys.brownian = str2bool(value);
+	} else if (keyword == "h_cutoff"){
+		sys.h_cutoff = atof(value.c_str());
+	} else if (keyword == "shear_rate"){
+		sys.shear_rate = atof(value.c_str());
+	} else if (keyword == "kb_T"){
+		sys.kb_T = atof(value.c_str());
+	} else if (keyword == "dt"){
+		sys.dt = atof(value.c_str());
+	} else if (keyword == "shear_strain"){
+		shear_strain = atof(value.c_str());
+	} else if (keyword == "dt_ratio"){
+		sys.dt_ratio = atof(value.c_str());
+	} else if (keyword == "lub_max"){
+		sys.lub_max = atof(value.c_str());
+	} else if (keyword == "kn"){
+		sys.kn = atof(value.c_str());
+	} else if (keyword == "kt"){
+		sys.kn = atof(value.c_str());
+	} else if (keyword == "mu_static"){
+		sys.mu_static = atof(value.c_str());
+	} else if (keyword == "mu_dynamic"){
+		sys.mu_dynamic = atof(value.c_str());
+	} else if (keyword == "dynamic_friction_critical_velocity"){
+		sys.dynamic_friction_critical_velocity = atof(value.c_str());
+	} else if (keyword == "interval_snapshot") {
+		interval_snapshot = atoi(value.c_str());
+	} else {
+		cerr << "keyword " << keyword << " is'nt associated with an parameter" << endl;
+		exit(1);
 	}
 }
 

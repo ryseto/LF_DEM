@@ -1,4 +1,4 @@
-\begin{thebibliography}{33}
+\begin{thebibliography}{35}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -86,6 +86,17 @@ A.~Kumar and J.~L. Higdon.
 A.~Kumar.
 \newblock \emph{Microscale dynamics in suspension of non-spherical particles}.
 \newblock PhD thesis, 2010.
+
+\bibitem[Marchioro and Acrivos(2001)]{Marchioro_2001}
+M.~Marchioro and A.~Acrivos.
+\newblock Shear-induced particle diffusivities from numerical simulations.
+\newblock \emph{J. Fluid Mech.}, 443:\penalty0 101--128, 2001.
+
+\bibitem[Jamali et~al.(2013)Jamali, Yamanoi, and Maia]{Jamali_2013}
+S.~Jamali, M.~Yamanoi, and J.~Maia.
+\newblock Bridging the gap between microstructure and macroscopic behavior of
+  monodisperse and bimodal colloidal suspensions.
+\newblock \emph{Soft Matter}, 9:\penalty0 1506, 2013.
 
 \bibitem[Bossis and Brady(1984)]{Bossis_1984}
 G.~Bossis and J.~F. Brady.
