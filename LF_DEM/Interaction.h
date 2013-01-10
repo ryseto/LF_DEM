@@ -37,6 +37,7 @@ public:
 	void calcContactInteractionNoFriction();
 	void calcContactStress();
 	void calcDistanceNormalVector();
+	void assignDistanceNormalVector(vec3d, double, int);
 	void calcContactVelocity();
 	void addLubricationStress();
 	void addContactStress();
@@ -55,7 +56,7 @@ public:
 	vec3d f_tangent;
 //	vec3d t_tangent;
 	int pd_z;
-	
+	int partner(int);
 };
 
 #endif /* defined(__LF_DEM__Interaction__) */

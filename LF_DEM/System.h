@@ -72,7 +72,7 @@ private:
 #endif
 
 	BoxSet* boxset;
-
+	
 protected:
 public:
     /* For DEMsystem

@@ -206,8 +206,8 @@ System::checkNewInteraction(){
 			int j=*it;
 			if(j>i){
 				if ( interaction_pair[i][j] == -1){
-					double sq_distance = sq_distanceToCheckContact(i, j);
-					if ( sq_distance < sq_lub_max){
+					double sq_dist = sq_distance(i, j);
+					if ( sq_dist < sq_lub_max){
 						int interaction_new;
 						if (deactivated_interaction.empty()){
 							// add an interaction object.
@@ -927,20 +927,20 @@ System::periodize_diff(vec3d *pos_diff){
 	if (pos_diff->z > lz2 ){
 		pos_diff->z -= lz;
 		pos_diff->x -= shear_disp;
-	} else if ( pos_diff->z < 0 ){
+	} else if ( pos_diff->z < -lz2 ){
 		pos_diff->z += lz;
 		pos_diff->x += shear_disp;
 	}
 	while ( pos_diff->x > lx2 ){
 		pos_diff->x -= lx;
 	} 
-	while (pos_diff->x < 0 ){
+	while (pos_diff->x < -lx2 ){
 		pos_diff->x += lx;
 	}
 	if (dimension == 3){
 		if ( pos_diff->y > ly2 ){
 			pos_diff->y -= ly;
-		} else if (pos_diff->y < 0 ){
+		} else if (pos_diff->y < -ly2 ){
 			pos_diff->y += ly;
 		}
 	}
@@ -952,21 +952,24 @@ System::periodize_diff(vec3d *pos_diff, int *zshift){
 		pos_diff->z -= lz;
 		pos_diff->x -= shear_disp;
 		(*zshift)=-1;
-	} else if ( pos_diff->z < 0 ){
+	} else if ( pos_diff->z < -lz2 ){
 		pos_diff->z += lz;
 		pos_diff->x += shear_disp;
 		(*zshift)=+1;
 	}
+	else{
+		(*zshift)=0;
+	}
 	while ( pos_diff->x > lx2 ){
 		pos_diff->x -= lx;
 	} 
-	while (pos_diff->x < 0 ){
+	while (pos_diff->x < -lx2 ){
 		pos_diff->x += lx;
 	}
 	if (dimension == 3){
 		if ( pos_diff->y > ly2 ){
 			pos_diff->y -= ly;
-		} else if (pos_diff->y < 0 ){
+		} else if (pos_diff->y < -ly2 ){
 			pos_diff->y += ly;
 		}
 	}
@@ -1010,7 +1013,7 @@ System::sq_distance(int i, int j){
 	if (dimension == 3){
 		return pos_diff.sq_norm();
 	} else {
-		return pos_diff.sq_norm_xz();
+	 	return pos_diff.sq_norm_xz();
 	}
 }
 
