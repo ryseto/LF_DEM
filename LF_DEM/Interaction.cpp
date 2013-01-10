@@ -21,10 +21,16 @@ Interaction::init(System *sys_){
  */
 void
 Interaction::create(int i, int j){
+	if(j>i){
+		particle_num[0] = i;
+		particle_num[1] = j;
+	}		
+	else{
+		particle_num[0] = j;
+		particle_num[1] = i;
+	}		
 	active = true;
 	contact = false;
-	particle_num[0] = i;
-	particle_num[1] = j;
 	ro = 2; // for polydispesity, we will rewrite this to a1+a2
 	return;
 }
@@ -47,7 +53,7 @@ Interaction::calcNormalVector(){
 
 	sys->periodize_diff(&r_vec, &pd_z);
 
-	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
+	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
 
 }
 
@@ -66,6 +72,7 @@ Interaction::assignDistanceNormalVector(vec3d pos_diff, double distance, int zsh
 	r = distance;
 	nr_vec = r_vec / r;
 	pd_z = zshift;
+	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
 }
 
 

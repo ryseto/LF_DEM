@@ -32,9 +32,8 @@ class System{
 private:
 	int n3;
 	int maxnum_interactionpair;
-	int **interaction_pair; // Table
+
 	queue<int> deactivated_interaction;
-	void initInteractionPair();
 	void buildLubricationTerms();
 	void buildLubricationTerms_new();
 
@@ -72,7 +71,9 @@ private:
 #endif
 
 	BoxSet* boxset;
-	
+	set <Interaction*> *interaction_list;
+	set <int> *interaction_partners;
+
 protected:
 public:
     /* For DEMsystem
