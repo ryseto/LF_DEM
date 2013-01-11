@@ -39,6 +39,10 @@ private:
 
 	void buildBrownianTerms();
 	void buildContactTerms();
+	void addStokesDrag();
+	void XA(double iksi, double lambda, double invlambda, double &XAii, double &XAij, double &XAji, double &XAjj);
+	void XG(double iksi, double lambda, double invlambda, double &XGii, double &XGij, double &XGji, double &XGjj);
+
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v;
@@ -71,8 +75,14 @@ private:
 #endif
 
 	BoxSet* boxset;
-	set <Interaction*> *interaction_list;
-	set <int> *interaction_partners;
+	void print_res();
+
+	double _lx;
+	double _ly;
+	double _lz;
+	double _lx2; // =lx/2
+	double _ly2; // =ly/2
+	double _lz2; // =lz/2
 
 protected:
 public:
@@ -84,6 +94,7 @@ public:
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
+	double *radius;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vec3d *ang_velocity;
@@ -117,12 +128,42 @@ public:
 	double h_cutoff;
 	BrownianForce *fb;
 	/*************************************************************/
-	double lx;
-	double ly;
-	double lz;
-	double lx2; // =lx/2
-	double ly2; // =ly/2
-	double lz2; // =lz/2
+	void lx(double length){
+	  _lx=length;
+	  _lx2=0.5*_lx;
+	}
+	void ly(double length){
+	  _ly=length;
+	  _ly2=0.5*_ly;
+	}
+	void lz(double length){
+	  _lz=length;
+	  _lz2=0.5*_lz;
+	}
+	inline double lx(){
+	  return _lx;
+	}
+	inline double ly(){
+	  return _ly;
+	}
+	inline double lz(){
+	  return _lz;
+	}
+	inline double lx2(){
+	  return _lx2;
+	}
+	inline double ly2(){
+	  return _ly2;
+	}
+	inline double lz2(){
+	  return _lz2;
+	}
+
+	void set_n(int _n){
+	  n=_n;
+	  n3=3*n;
+	}
+
 	double shear_disp;
 	double shear_rate;
 	double kb_T;
@@ -137,10 +178,11 @@ public:
 	
 //	void prepareSimulationName();
 	void prepareSimulation();
+	void allocateRessources();
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteraction();
+	void updateInteractions();
 
 	void calcContactForces();
 	double sq_distance(int i, int j);
@@ -159,7 +201,6 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
-	void incrementContactTangentialDisplacement();
 	int numpart(){
 		return n;
 	}
@@ -170,5 +211,13 @@ public:
 #endif
 
 	void lubricationStress(int i, int j);
+	void initializeBoxing();
+
+
+	// interactions
+	set <Interaction*> *interaction_list;
+	set <int> *interaction_partners;
+
+
 };
 #endif /* defined(__LF_DEM__State__) */
