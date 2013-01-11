@@ -24,6 +24,20 @@ private:
 	vec3d unit_contact_velocity_tan;
 	vec3d xi; // tangential displacement
 
+	void calcDistanceNormalVector();
+	void assignDistanceNormalVector(vec3d, double, int);
+	void calcContactVelocity();
+
+	void incrementContactTangentialDisplacement();
+//	vec3d t_tangent;
+	int pd_z;
+	double sqnorm_contact_velocity;
+
+	
+	// state switch
+	void deactivate();
+	void activate_contact();
+	void deactivate_contact();
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -32,22 +46,10 @@ public:
  	Interaction(){};
 	~Interaction(){};
 	void init(System *sys_);
-	void newContact();
-	void create(int i, int j);
-	void calcContactInteraction();
-	void calcContactInteractionNoFriction();
-	void calcContactStress();
-	void calcDistanceNormalVector();
-	void assignDistanceNormalVector(vec3d, double, int);
-	void calcContactVelocity();
-	void addLubricationStress();
-	void addContactStress();
-	double valNormalForce();
-	void incrementContactTangentialDisplacement();
+
+	void activate(int i, int j, vec3d pos_diff, double distance, int zshift);
+	bool update(); // after particles dispacement
 	bool active;
-	bool contact;
-	bool static_friction;
-	double sqnorm_contact_velocity;
 	int particle_num[2];
 	double r; // center-center distance // done
 	double a0, a1;
@@ -55,11 +57,21 @@ public:
 	double lambda, invlambda;  // a1/a0 , a0/a1
 	vec3d r_vec; // vector center to center
 	vec3d nr_vec; // normal vector
+	int partner(int);
+
+
+	bool contact;
+	bool static_friction;
+
 	double f_normal;
 	vec3d f_tangent;
-//	vec3d t_tangent;
-	int pd_z;
-	int partner(int);
+
+	double valNormalForce();
+	void calcContactInteraction();
+	void calcContactInteractionNoFriction();
+	void calcContactStress();
+	void addLubricationStress();
+	void addContactStress();
 
 };
 

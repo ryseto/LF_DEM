@@ -75,8 +75,6 @@ private:
 #endif
 
 	BoxSet* boxset;
-	set <Interaction*> *interaction_list;
-	set <int> *interaction_partners;
 	void print_res();
 
 	double _lx;
@@ -184,7 +182,7 @@ public:
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteraction();
+	void updateInteractions();
 
 	void calcContactForces();
 	double sq_distance(int i, int j);
@@ -203,7 +201,6 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
-	void incrementContactTangentialDisplacement();
 	int numpart(){
 		return n;
 	}
@@ -215,5 +212,12 @@ public:
 
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
+
+
+	// interactions
+	set <Interaction*> *interaction_list;
+	set <int> *interaction_partners;
+
+
 };
 #endif /* defined(__LF_DEM__State__) */

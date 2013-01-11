@@ -170,13 +170,8 @@ System::initializeBoxing(){// need to know radii first
 void
 System::timeEvolution(int time_step){
 	int ts_next = ts + time_step;
+	checkNewInteraction();
 	while (ts < ts_next){
-		boxset->update();
-		checkNewInteraction();
-		for (int k = 0; k < num_interaction; k++){
-			interaction[k].calcDistanceNormalVector();
-		}
-		updateInteraction();
 		forceReset();
 		torqueReset();
 		calcContactForces();
@@ -193,7 +188,6 @@ System::timeEvolution(int time_step){
 			updateVelocity();
 		}
 		deltaTimeEvolution();
-		incrementContactTangentialDisplacement();
 		ts ++;
 	}
 }
@@ -216,6 +210,7 @@ System::checkNewInteraction(){
 			if(j>i){
 				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
 					
+					// this is done in 3 steps because we need each information for Interaction creation
 					pos_diff = position[j] - position[i];
 					periodize_diff(&pos_diff, &zshift);
 					sq_dist = pos_diff.sq_norm();
@@ -231,12 +226,8 @@ System::checkNewInteraction(){
 							interaction_new = deactivated_interaction.front();
 							deactivated_interaction.pop();
 						}
-						interaction[interaction_new].create(i, j);
-						interaction[interaction_new].assignDistanceNormalVector(pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
-						interaction_list[i].insert(&(interaction[interaction_new]));
-						interaction_list[j].insert(&(interaction[interaction_new]));
-						interaction_partners[i].insert(j);
-						interaction_partners[j].insert(i);
+						// new interaction
+						interaction[interaction_new].activate(i, j, +pos_diff, sqrt(sq_dist), zshift);
 					}
 				}
 			}
@@ -253,58 +244,16 @@ System::checkNewInteraction(){
  * contact_pair[i][j] < -1, the particles have some distance.
  */
 void
-System::updateInteraction(){
+System::updateInteractions(){
+
 	for (int k = 0; k < num_interaction; k++){
-		if (interaction[k].active ){
-			if(interaction[k].r > lub_max){
-				// r > lub_max
-				interaction[k].active = false;
-				int i=interaction[k].particle_num[0];
-				int j=interaction[k].particle_num[1];
-				interaction_list[i].erase(&(interaction[k]));
-				interaction_list[j].erase(&(interaction[k]));
-				interaction_partners[i].erase(j);
-				interaction_partners[j].erase(i);
-
-				deactivated_interaction.push(k);
-			} else {
-				if (interaction[k].contact){
-					if (interaction[k].r > 2){			
-						interaction[k].contact = false;
-					}
-				} else {
-					// contact false:
-					if (interaction[k].r < 2){
-						interaction[k].newContact();
-						interaction[k].calcContactVelocity();
-					}
-				}
-			}
-		}
+		int switch_off = interaction[k].update();
+		if(switch_off)
+			deactivated_interaction.push(k);
 	}
+
 }
 
-void
-System::calcContactForces(){
-	if (friction){
-		for (int k = 0; k < num_interaction; k++){
-			interaction[k].calcContactInteraction();
-		}
-	} else {
-		for (int k=0; k < num_interaction; k++){
-			interaction[k].calcContactInteractionNoFriction();
-		}
-	}
-}
-
-void
-System::incrementContactTangentialDisplacement(){
-	if (friction) {
-		for (int k = 0; k < num_interaction; k++){
-			interaction[k].incrementContactTangentialDisplacement();
-		}
-	}
-}
 
 void
 System::forceReset(){
@@ -795,10 +744,8 @@ void System::updateVelocityLubricationBrownian(){
 	  int i3 = 3*i;
 	  displacement(i, ((double*)v_Brownian_init->x)[i3]*dt_mid, ((double*)v_Brownian_init->x)[i3+1]*dt_mid, ((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
-	for (int k = 0; k < num_interaction; k++){
-	  interaction[k].calcDistanceNormalVector();
-	}
-	updateInteraction();
+
+	updateInteractions();
 
 	// rebuild new R_FU
 	cholmod_free_factor(&L, &c);
@@ -836,10 +783,8 @@ void System::updateVelocityLubricationBrownian(){
 	  int i3 = 3*i;
 	  displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
-	for (int k = 0; k < num_interaction; k++){
-	  interaction[k].calcDistanceNormalVector();
-	}
-	updateInteraction();
+
+	updateInteractions();
 
 	// update total velocity
 	// first term is hydrodynamic + contact velocities
@@ -1065,10 +1010,14 @@ System::periodize_diff(vec3d *pos_diff, int *zshift){
 
 void
 System::deltaTimeEvolution(){
+	
+	// evolve PBC
 	shear_disp += vel_difference*dt;
 	if (shear_disp > lx()){
 		shear_disp -= lx();
 	}
+
+	// move particles
 	for (int i=0; i < n; i++){
 		displacement(i, velocity[i].x*dt, velocity[i].y*dt, velocity[i].z*dt);
 	}
@@ -1077,6 +1026,12 @@ System::deltaTimeEvolution(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+	// update boxing system
+	boxset->update();
+	
+	checkNewInteraction();
+	updateInteractions();
+
 }
 
 /*
@@ -1127,4 +1082,18 @@ System::calcStress(){
 		mean_lub_stress[k] = total_lub_stress[k] / n;
 		mean_contact_stress[k] = total_contact_stress[k] / n;
 	}
+}
+
+void
+System::calcContactForces(){
+	if (friction){
+		for (int k=0; k < num_interaction; k++){
+			interaction[k].calcContactInteraction();
+		}
+	} else {
+		for (int k=0; k < num_interaction; k++){
+			interaction[k].calcContactInteractionNoFriction();
+		}
+	}
+
 }

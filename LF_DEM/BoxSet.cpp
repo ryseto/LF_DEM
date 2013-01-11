@@ -314,9 +314,9 @@ BoxSet::BoxSet(double interaction_dist, System *sys_){
 	for(int i=0; i<sys->n;i++)
 	  boxMap[i]=NULL;
 
-	double xratio=sys->lx/interaction_dist;
-	double yratio=sys->lx/interaction_dist;
-	double zratio=sys->lx/interaction_dist;
+	double xratio=sys->lx()/interaction_dist;
+	double yratio=sys->ly()/interaction_dist;
+	double zratio=sys->lz()/interaction_dist;
 
 	x_box_nb = (int)xratio;
 	y_box_nb = (int)yratio;
@@ -344,18 +344,18 @@ BoxSet::BoxSet(double interaction_dist, System *sys_){
 		TopBottomBoxes[0] = Boxes[0];
 		(Boxes[0])->neigh_nb( 0 );
 
-		box_xsize=sys->lx;
-		box_ysize=sys->ly;
-		box_zsize=sys->lz;
+		box_xsize=sys->lx();
+		box_ysize=sys->ly();
+		box_zsize=sys->lz();
 
 	}
 	else{
 
 		_is_boxed=true;
 
-		box_xsize=sys->lx/x_box_nb;
-		box_ysize=sys->ly/y_box_nb;
-		box_zsize=sys->lz/z_box_nb;
+		box_xsize=sys->lx()/x_box_nb;
+		box_ysize=sys->ly()/y_box_nb;
+		box_zsize=sys->lz()/z_box_nb;
 
 		allocateBoxes();
 

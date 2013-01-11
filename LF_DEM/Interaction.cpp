@@ -20,7 +20,10 @@ Interaction::init(System *sys_){
 /* Activate interaction between particles i and j.
  */
 void
-Interaction::create(int i, int j){
+Interaction::activate(int i, int j, vec3d pos_diff, double distance, int zshift){
+
+	active = true;
+
 	if(j>i){
 		particle_num[0] = i;
 		particle_num[1] = j;
@@ -29,22 +32,28 @@ Interaction::create(int i, int j){
 		particle_num[0] = j;
 		particle_num[1] = i;
 	}		
-	active = true;
+
+	// tell it to particles i and j
+	sys->interaction_list[i].insert(this);
+	sys->interaction_list[j].insert(this);
+
+	// tell them their new partner
+	sys->interaction_partners[i].insert(j);
+	sys->interaction_partners[j].insert(i);
+
 	contact = false;
 	a0 = sys->radius[particle_num[0]];
 	a1 = sys->radius[particle_num[1]];
 	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
 	lambda = a1 / a0;
 	invlambda = 1. / lambda;
+
+	assignDistanceNormalVector(pos_diff, distance, zshift); 
+
+
 	return;
 }
 
-void
-Interaction::newContact(){
-	contact = true;
-	static_friction = true;
-	xi.reset();
-}
 
 /* Make a normal vector
  * Periodic boundaries are checked for all partices.
@@ -210,7 +219,6 @@ Interaction::addLubricationStress(){
 	if (h > 0){
 		alpha = 1.0/(4*h);
 		rel_vel.x += pd_z * sys->vel_difference;
-		double alpha = 1.0/(4*h);
 		vec3d force = alpha*dot(rel_vel, nr_vec)*nr_vec;
 		double Sxx = 2*(force.x * nr_vec.x);
 		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
@@ -272,3 +280,69 @@ Interaction::partner(int i){
 
 
 
+
+void
+Interaction::deactivate(){
+	// r > lub_max
+	active = false;
+	int i=particle_num[0];
+	int j=particle_num[1];
+	sys->interaction_list[i].erase(this);
+	sys->interaction_list[j].erase(this);
+	sys->interaction_partners[i].erase(j);
+	sys->interaction_partners[j].erase(i);
+
+}
+
+void
+Interaction::activate_contact(){
+	// r < a0 + a1
+	contact = true;
+	static_friction = true;
+	xi.reset();
+
+	calcContactVelocity();
+
+}
+
+void
+Interaction::deactivate_contact(){
+	// r > a0 + a1
+	contact = false;
+}
+
+bool
+Interaction::update(){
+
+	
+	// update tangential displacement: we do it before updating nr_vec
+	if (sys->friction) {
+		incrementContactTangentialDisplacement();
+	}
+
+
+	// compute new r_vec and distance
+	calcDistanceNormalVector();
+
+
+	// check new state of the interaction
+	if (active){
+		if(r > sys->lub_max){
+			deactivate();
+			return true;
+		} else {
+			if (contact){
+				if (r > a0 + a1 ){			
+					deactivate_contact();
+				}
+			} else {
+					// contact false:
+				if (r < 2){
+					activate_contact();
+				}
+			}
+		}
+	}
+
+	return false;
+}
