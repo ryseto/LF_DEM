@@ -92,7 +92,6 @@ Simulation::AutoSetParameters(const string &keyword,
 	}
 }
 
-
 void
 Simulation::ReadParameterFile(){
 	ifstream fin;
@@ -101,7 +100,7 @@ Simulation::ReadParameterFile(){
 	string value;
 	while (!fin.eof()){
 		string line;
-		if (!getline( fin, line , ';'))
+		if (!getline(fin, line, ';'))
 			break;
 		if (fin.eof())
 			break;
@@ -269,7 +268,6 @@ Simulation::SetDefaultParameters(){
 	 * snapshot for yaplot data.
 	 */
 	interval_snapshot = 100;
-
 }
 
 void

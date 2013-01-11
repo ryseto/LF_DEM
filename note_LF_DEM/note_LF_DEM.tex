@@ -529,6 +529,45 @@ What is the reason for that?
 This affects the physics?
 %
 
+\paragraph{Frame invariant pair drag model }
+
+\citet{Ball_1997} claims that 
+simulation model should satisfy frame invariant.
+%
+It points out that
+the addition of diagonal terms corresponding to
+Stokes drag forces
+relative to an assumed background shear flow
+breaks this invariant property.
+%
+I don't understand why this approximation is so bad.
+%
+\begin{quote}
+Such models are physically peculiar
+because they correspond to a set of particles
+each of which moves relative to the frame
+of its own independently sheared fluid. 
+\end{quote}
+
+
+Our first model includes the diagonal terms corresponding to
+Stokes drag forces.
+%
+As \citet{Ball_1997} pointed out,
+we can expect that 
+the profile of undisturbed background flow appears
+in particle configuration after some shearing.
+%
+Stokesian dynamics has less this tendency
+since the background flow can be disturbed.
+
+
+\begin{center}
+\includegraphics[width=8cm]{order_with_undisturbed_shearflow.pdf} 
+\end{center}
+
+
+
 
 \newpage
 
@@ -892,6 +931,35 @@ only $\tens{A}$ and $\tens{G}$ give the leading contribution to the forces.
 \end{pmatrix}
 \end{equation}
 
+\begin{equation}
+ \begin{pmatrix}
+  \tens{S}_{1} \\
+  \tens{S}_{2} 
+ \end{pmatrix}
+\approx
+- \mu
+\begin{pmatrix}
+\tens{G}_{11} &
+\tens{G}_{12}  \\
+\tens{G}_{21}  &
+\tens{G}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+  \bm{U}_{1} -  \bm{U}_{1}^{\infty}\\
+  \bm{U}_{2} -  \bm{U}_{2}^{\infty}
+ \end{pmatrix}
+ + \mu
+\begin{pmatrix}
+\tilde{\tens{M}}_{11} &
+\tilde{\tens{M}}_{12}  \\
+\tilde{\tens{M}}_{21}  &
+\tilde{\tens{M}}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+\bm{E}_{\infty} \\ \bm{E}_{\infty}
+\end{pmatrix}
+\end{equation}
+
 
 
 \begin{align*}
@@ -1022,6 +1090,69 @@ n_{i} n_j (U^{(1)}_j-U^{(1)\infty}_j)
 - (2+h/a) n_i n_j  E_{jk}n_k
 \right) 
  \end{equation}
+
+\paragraph{Expression in LFDEM}
+
+
+
+
+\begin{equation}
+ \begin{pmatrix}
+  \bm{F}_{1} \\
+  \bm{F}_{2} 
+ \end{pmatrix}
+\approx
+- \mu
+\begin{pmatrix}
+\tens{A}_{11} &
+\tens{A}_{12}  \\
+\tens{A}_{21}  &
+\tens{A}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+  \bm{U}_{1} -  \bm{U}_{1}^{\infty}\\
+  \bm{U}_{2} -  \bm{U}_{2}^{\infty}
+ \end{pmatrix}
+ + \mu
+\begin{pmatrix}
+\tilde{\tens{G}}_{11} &
+\tilde{\tens{G}}_{12}  \\
+\tilde{\tens{G}}_{21}  &
+\tilde{\tens{G}}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+\bm{E}_{\infty} \\ \bm{E}_{\infty}
+\end{pmatrix}
+\end{equation}
+
+\begin{equation}
+ \begin{pmatrix}
+  \tens{S}_{1} \\
+  \tens{S}_{2} 
+ \end{pmatrix}
+\approx
+- \mu
+\begin{pmatrix}
+\tens{G}_{11} &
+\tens{G}_{12}  \\
+\tens{G}_{21}  &
+\tens{G}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+  \bm{U}_{1} -  \bm{U}_{1}^{\infty}\\
+  \bm{U}_{2} -  \bm{U}_{2}^{\infty}
+ \end{pmatrix}
+ + \mu
+\begin{pmatrix}
+\tilde{\tens{M}}_{11} &
+\tilde{\tens{M}}_{12}  \\
+\tilde{\tens{M}}_{21}  &
+\tilde{\tens{M}}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+\bm{E}_{\infty} \\ \bm{E}_{\infty}
+\end{pmatrix}
+\end{equation}
 
 
 
