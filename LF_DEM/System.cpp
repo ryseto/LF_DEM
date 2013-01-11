@@ -230,7 +230,7 @@ System::checkNewInteraction(){
 							deactivated_interaction.pop();
 						}
 						interaction[interaction_new].create(i, j);
-						interaction[interaction_new].assignDistanceNormalVector(pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
+						interaction[interaction_new].assignDistanceNormalVector(-pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
 						interaction_list[i].insert(&(interaction[interaction_new]));
 						interaction_list[j].insert(&(interaction[interaction_new]));
 						interaction_partners[i].insert(j);
@@ -484,82 +484,6 @@ fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 
 
 #ifdef CHOLMOD
-/*
- * fills resistance matrix and part of the rhs force coming from lubrication
- *
- */
-void
-System::buildLubricationTerms(){
-	for (int k = 0; k < 6*n; k++){
-		diag_values[k] = 0.;
-	}
-	rows.clear();
-	off_diag_values[0].clear();
-	off_diag_values[1].clear();
-	off_diag_values[2].clear();
-	for (int i = 0; i < n; i ++){
-		int i6=6*i;
-		diag_values[i6  ] = 1.;
-		diag_values[i6+3] = 1.;
-		diag_values[i6+5] = 1.;
-	}
-	
-	set<Interaction*>::iterator it;
-	int j;
-	Interaction *inter;
-	for (int i = 0; i < n - 1; i ++){
-		ploc[i] = (unsigned int)rows.size();
-
-		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
-			inter=*it;
-		 	j=inter->partner(i);
-			if(j>i){
-			double h = 0;
-			double nvec[3];
-				nvec[0] = -inter->nr_vec.x;
-				nvec[1] = -inter->nr_vec.y;
-				nvec[2] = -inter->nr_vec.z;
-				h = inter->r - inter->ro;
-				if ( h < h_cutoff){
-					h = h_cutoff;
-				}
-				if(h > 0){
-					double alpha = - 1/(4*h);
-					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-					addToDiag(nvec, i, -alpha);
-					addToDiag(nvec, j, -alpha);
-					appendToColumn(nvec, j, +alpha);
-					double alpha_gd_dz_n0 = alpha*shear_rate*inter->r_vec.z*nvec[0];
-					double alpha_gd_dz_n0_n[] = { \
-						alpha_gd_dz_n0*nvec[0],
-						alpha_gd_dz_n0*nvec[1],
-						alpha_gd_dz_n0*nvec[2]};
-					
-					((double*)rhs_b->x)[3*i  ] += alpha_gd_dz_n0_n[0];
-					((double*)rhs_b->x)[3*i+1] += alpha_gd_dz_n0_n[1];
-					((double*)rhs_b->x)[3*i+2] += alpha_gd_dz_n0_n[2];
-					((double*)rhs_b->x)[3*j  ] -= alpha_gd_dz_n0_n[0];
-					((double*)rhs_b->x)[3*j+1] -= alpha_gd_dz_n0_n[1];
-					((double*)rhs_b->x)[3*j+2] -= alpha_gd_dz_n0_n[2];
-					
-
-				} else {
-					cerr << "interaction.r " << inter->r << endl;
-					cerr << i << ' ' << j << ' ' << endl;
-					cerr << "h<0 : " << h <<   endl;
-					cerr << "r = " << inter->r << endl;
-					position[i].cerr();
-					position[j].cerr();
-					exit(1);
-				}
-			}
-		}
-	}
-
-	ploc[n-1] = (unsigned int)rows.size();
-	ploc[n] = (unsigned int)rows.size();
-	
-}
 
 void
 System::addStokesDrag(){
@@ -621,7 +545,7 @@ System::XG(double iksi, double lambda, double invlambda, double &XGii, double &X
 
 
 void
-System::buildLubricationTerms_new(){
+System::buildLubricationTerms(){
 	for (int k = 0; k < 6*n; k++){
 		diag_values[k] = 0.;
 	}
@@ -642,8 +566,6 @@ System::buildLubricationTerms_new(){
 	double XGii, XGjj, XGij, XGji;
 
 	
-	// under construction.
-
 	set<Interaction*>::iterator it;
 	int j;
 	Interaction *inter;
@@ -657,7 +579,7 @@ System::buildLubricationTerms_new(){
 				r=inter->r;
 				s = 2 * r / inter->ro;
 				ksi = (s - 2);
-			    iksi = 1./iksi;
+			    iksi = 1./ksi;
 				ksi_cutoff = 0.5*h_cutoff*inter->ro;
 				if ( ksi < ksi_cutoff){
 					ksi = ksi_cutoff;
@@ -665,9 +587,9 @@ System::buildLubricationTerms_new(){
 				if(ksi > 0){
 
 					double nvec[3];
-					nvec[0] = inter->nr_vec.x;
-					nvec[1] = inter->nr_vec.y;
-					nvec[2] = inter->nr_vec.z;
+					nvec[0] = - inter->nr_vec.x;
+					nvec[1] = - inter->nr_vec.y;
+					nvec[2] = - inter->nr_vec.z;
 				
 
 					XA(iksi, inter->lambda, inter->invlambda, XAii, XAij, XAji, XAjj);
@@ -766,6 +688,21 @@ System::allocateSparseResmatrix(){
 
 
 
+void
+System::print_res(){ // testing
+	cout << " Diag " << endl;
+	for(int i=0;i<n;i++){
+		int ii6=6*i;
+		cout << i << " " << diag_values[ii6] << " " << diag_values[ii6+1]<< " " << diag_values[ii6+2]<< " " << diag_values[ii6+3]<< " " << diag_values[ii6+4]<< " " << diag_values[ii6+5] << endl;
+	}
+	
+	cout << endl<< " OffDiag " << endl;
+	for(int i=0;i<off_diag_values[0].size();i++){
+		cout << off_diag_values[0][i] << " " << off_diag_values[1][i] << " " << off_diag_values[2][i]<< endl;
+	}
+
+
+}
 
 void
 System::updateVelocityLubrication(){

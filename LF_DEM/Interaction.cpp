@@ -53,7 +53,7 @@ Interaction::newContact(){
  */
 void
 Interaction::calcNormalVector(){
-	r_vec = sys->position[particle_num[1]] - sys->position[particle_num[0]];
+	r_vec = sys->position[particle_num[0]] - sys->position[particle_num[1]];
 
 	sys->periodize_diff(&r_vec, &pd_z);
 
@@ -88,9 +88,9 @@ Interaction::calcStaticFriction(){
 		if (f_spring < f_static){
 			/*
 			 * f_tangent is force acting on particle 0 from particle 1
-			 * xi = r1' - r0'
+			 * xi = r0' - r1'
 			 */
-			f_tangent = sys->kt*xi;
+			f_tangent = -sys->kt*xi;
 		} else {
 			/* switch to dynamic friction */
 			static_friction = false;
@@ -105,7 +105,7 @@ Interaction::calcDynamicFriction(){
 	/* Use the velocity of one time step before as approximation. */
 	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
 
-	f_tangent = f_dynamic*unit_contact_velocity_tan; // on p0
+	f_tangent = -f_dynamic*unit_contact_velocity_tan; // on p0
 }
 
 
@@ -124,8 +124,8 @@ Interaction::calcContactInteraction(){
 		} else {
 			calcDynamicFriction();
 		}
-		vec3d f_ij = - f_normal * nr_vec + f_tangent; // acting on p0
-		vec3d t_ij = cross(nr_vec, f_tangent); // acting on p0
+		vec3d f_ij = f_normal * nr_vec + f_tangent; // acting on p0
+		vec3d t_ij = cross(-nr_vec, f_tangent); // acting on p0
 		sys->force[particle_num[0]] += f_ij;
 		sys->force[particle_num[1]] -= f_ij;
 		sys->torque[particle_num[0]] = a0*t_ij;
@@ -137,8 +137,8 @@ void
 Interaction::calcContactInteractionNoFriction(){
 	if (contact){
 		f_normal = sys->kn*(ro-r);
-		sys->force[ particle_num[0] ] -= f_normal * nr_vec;
-		sys->force[ particle_num[1] ] += f_normal * nr_vec;
+		sys->force[ particle_num[0] ] += f_normal * nr_vec;
+		sys->force[ particle_num[1] ] -= f_normal * nr_vec;
 	}
 }
 
@@ -148,13 +148,13 @@ Interaction::calcContactInteractionNoFriction(){
 void
 Interaction::calcContactVelocity(){
 	// relative velocity particle 0 from particle 1.
-	contact_velocity = sys->velocity[particle_num[1]] - sys->velocity[particle_num[0]];
+	contact_velocity = sys->velocity[particle_num[0]] - sys->velocity[particle_num[1]];
 	if (pd_z != 0){
-		//	pd_z = -1; //  p1 (z = lz), p0 (z = 0)
-		// v1 - v0
+		//	pd_z = 1; //  p1 (z = lz), p0 (z = 0)
+		// v0 - v1
 		contact_velocity.x += pd_z * sys->vel_difference;
 	}
-	contact_velocity -= cross(a0*sys->ang_velocity[particle_num[0]] + a1*sys->ang_velocity[particle_num[1]], nr_vec);
+	contact_velocity += cross(nr_vec, a0*sys->ang_velocity[particle_num[0]] + a1*sys->ang_velocity[particle_num[1]]);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
 }
 
@@ -170,7 +170,7 @@ Interaction::incrementContactTangentialDisplacement(){
 			sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
 			if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
 				static_friction = true;
-				xi = (1.0/sys->kt) * f_tangent;
+				xi = -(1.0/sys->kt) * f_tangent;
 			}
 		}
 	}
@@ -183,7 +183,7 @@ Interaction::valNormalForce(){
 	if ( h > 0){
 		int i = particle_num[0];
 		int j = particle_num[1];
-		vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
+		vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
 		rel_vel.x += pd_z * sys->vel_difference;
 		if ( h < sys->h_cutoff){
 			h = sys->h_cutoff;
@@ -202,7 +202,7 @@ Interaction::addLubricationStress(){
 	double h = r  - ro;
 	int i = particle_num[0];
 	int j = particle_num[1];
-	vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
+	vec3d rel_vel = sys->velocity[i] - sys->velocity[j];
 	double alpha;
 	if ( h < sys->h_cutoff){
 		h = sys->h_cutoff;

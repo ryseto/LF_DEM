@@ -77,6 +77,7 @@ private:
 	BoxSet* boxset;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
+	void print_res();
 
 protected:
 public:

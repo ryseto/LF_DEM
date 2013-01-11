@@ -1,0 +1,9 @@
+# data files
+*.dat
+*.yap
+
+# emacs backups
+*~
+
+# binary
+LF_DEM
