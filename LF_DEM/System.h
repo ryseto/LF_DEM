@@ -79,6 +79,13 @@ private:
 	set <int> *interaction_partners;
 	void print_res();
 
+	double _lx;
+	double _ly;
+	double _lz;
+	double _lx2; // =lx/2
+	double _ly2; // =ly/2
+	double _lz2; // =lz/2
+
 protected:
 public:
     /* For DEMsystem
@@ -123,12 +130,42 @@ public:
 	double h_cutoff;
 	BrownianForce *fb;
 	/*************************************************************/
-	double lx;
-	double ly;
-	double lz;
-	double lx2; // =lx/2
-	double ly2; // =ly/2
-	double lz2; // =lz/2
+	void lx(double length){
+	  _lx=length;
+	  _lx2=0.5*_lx;
+	}
+	void ly(double length){
+	  _ly=length;
+	  _ly2=0.5*_ly;
+	}
+	void lz(double length){
+	  _lz=length;
+	  _lz2=0.5*_lz;
+	}
+	inline double lx(){
+	  return _lx;
+	}
+	inline double ly(){
+	  return _ly;
+	}
+	inline double lz(){
+	  return _lz;
+	}
+	inline double lx2(){
+	  return _lx2;
+	}
+	inline double ly2(){
+	  return _ly2;
+	}
+	inline double lz2(){
+	  return _lz2;
+	}
+
+	void set_n(int _n){
+	  n=_n;
+	  n3=3*n;
+	}
+
 	double shear_disp;
 	double shear_rate;
 	double kb_T;
@@ -143,6 +180,7 @@ public:
 	
 	void prepareSimulationName();
 	void prepareSimulation();
+	void allocateRessources();
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
@@ -176,5 +214,6 @@ public:
 #endif
 
 	void lubricationStress(int i, int j);
+	void initializeBoxing();
 };
 #endif /* defined(__LF_DEM__State__) */

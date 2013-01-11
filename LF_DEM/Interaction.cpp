@@ -142,12 +142,12 @@ Interaction::calcContactInteractionNoFriction(){
 	}
 }
 
-/* Relative velocity of particle 0 from particle 1.
+/* Relative velocity of particle 1 from particle 0.
  *
  */
 void
 Interaction::calcContactVelocity(){
-	// relative velocity particle 0 from particle 1.
+	// relative velocity particle 1 from particle 0.
 	contact_velocity = sys->velocity[particle_num[1]] - sys->velocity[particle_num[0]];
 	if (pd_z != 0){
 		//	pd_z = -1; //  p1 (z = lz), p0 (z = 0)

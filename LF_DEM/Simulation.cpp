@@ -147,9 +147,9 @@ Simulation::SetParametersPostProcess(){
 		int j_lx = (int)filename_import_positions.find( "_" );
 		int j_lz = (int)filename_import_positions.find( "vf", j_lx);
 		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-		sys.lx = atoi( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() );
-		sys.ly = 0;
-		sys.lz = atoi( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() );
+		sys.lx(atof( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() ));
+		sys.ly(0);
+		sys.lz(atof( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() ));
 		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf - j_lz-2).c_str() );
 	} else {
 		// example: D3L10_10_10vf0.5.dat
@@ -158,13 +158,13 @@ Simulation::SetParametersPostProcess(){
 		int j_ly = (int)filename_import_positions.find( "_", j_lx+1);
 		int j_lz = (int)filename_import_positions.find( "vf", j_ly+1);
 		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-		sys.lx = atoi( filename_import_positions.substr(i_lx  , j_lx - i_lx).c_str() );
-		sys.ly = atoi( filename_import_positions.substr(j_lx+1, j_ly - j_lx-1).c_str() );
-		sys.lz = atoi( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() );
+		sys.lx(atof( filename_import_positions.substr(i_lx  , j_lx - i_lx).c_str() ));
+		sys.ly(atof( filename_import_positions.substr(j_lx+1, j_ly - j_lx-1).c_str() ));
+		sys.lz(atof( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() ));
 		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf-j_lz-2).c_str() );
 	}
 	
-	cerr << "L = " << sys.lx << ' ' << sys.ly << ' ' << sys.lz << endl;
+	cerr << "L = " << sys.lx() << ' ' << sys.ly() << ' ' << sys.lz() << endl;
 	cerr << "VF = " << sys.volume_fraction << endl;
 	/*
 	 * Set simulation name and name of output files.
@@ -177,7 +177,11 @@ Simulation::SetParametersPostProcess(){
 	fout_rheo.open(vel_filename.c_str());
 	fout_vpy.open(vpy_filename.c_str());
 	
+	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;	
 	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
+	sys.ts = 0;
+	sys.shear_disp = 0;
+	sys.vel_difference = sys.shear_rate*sys.lz();
 	/*
 	 * dt_mid: the intermediate time step for the mid-point
 	 * algortithm. dt/dt_mid = dt_ratio
@@ -306,9 +310,10 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 	SetParametersPostProcess();
 	importInitialPositionFile();
-	sys.n = (int)initial_positions.size();
+	sys.set_n( (int)initial_positions.size() );
 	cerr << "N = " << sys.n  << endl;
-	sys.prepareSimulation();
+	sys.allocateRessources();
+
 	for (int i=0; i < sys.n; i++){
 		sys.position[i] = initial_positions[i];
 		if(sys.poly)
@@ -319,6 +324,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		sys.angle[i] = 0;
 	}
 
+	sys.initializeBoxing();
 	sys.checkNewInteraction();
 	//	int count = 0;
 	//	while(count++<3){
@@ -360,12 +366,12 @@ Simulation::outputRheologyData(){
 vec3d
 Simulation::shiftUpCoordinate(double x, double y, double z){
 	if (origin_zero_flow){
-		z += sys.lz2;
-		if (z > sys.lz2){
+		z += sys.lz2();
+		if (z > sys.lz2()){
 			x += - sys.shear_disp;
-		if ( x < - sys.lx2)
-			x += sys.lx;
-			z -=  sys.lz;
+			if ( x < - sys.lx2())
+				x += sys.lx();
+			z -=  sys.lz();
 		}
 	}
 	return vec3d(x,y,z);
@@ -382,29 +388,29 @@ void
 Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
 	vec3d seg = pos2 - pos1;
 	fout << type << ' ';
-	if (seg.z > sys.lz2){
-		pos2.z -= sys.lz;
+	if (seg.z > sys.lz2()){
+		pos2.z -= sys.lz();
 		pos2.x -= sys.shear_disp;
 		seg = pos2 - pos1;
-	} else if (seg.z < -sys.lz2){
-		pos2.z += sys.lz;
+	} else if (seg.z < -sys.lz2()){
+		pos2.z += sys.lz();
 		pos2.x += sys.shear_disp;
 		seg = pos2 - pos1;
 	}
 		
-	while (seg.x > sys.lx2){
-		pos2.x -= sys.lx;
+	while (seg.x > sys.lx2()){
+		pos2.x -= sys.lx();
 		seg = pos2 - pos1;
 	}
-	while (seg.x < -sys.lx2){
-		pos2.x += sys.lx;
+	while (seg.x < -sys.lx2()){
+		pos2.x += sys.lx();
 		seg = pos2 - pos1;
 	}
 	
-	if (seg.y > sys.ly2){
-		pos2.y -= sys.ly;
-	} else if (seg.y < -sys.ly2){
-		pos2.y += sys.ly;
+	if (seg.y > sys.ly2()){
+		pos2.y -= sys.ly();
+	} else if (seg.y < -sys.ly2()){
+		pos2.y += sys.ly();
 	}
 	
 	fout << pos1.x << ' '<< pos1.y << ' '<< pos1.z << ' ';
@@ -449,9 +455,9 @@ Simulation::output_yap(){
 	fout_yap << "@ " << color_white << endl;
 	vec3d pos;
 	for (int i=0; i < sys.n; i++){
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-								sys.position[i].y - sys.ly2,
-								sys.position[i].z - sys.lz2);
+		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+								sys.position[i].y - sys.ly2(),
+								sys.position[i].z - sys.lz2());
 		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
 	}
 
@@ -463,9 +469,9 @@ Simulation::output_yap(){
 		fout_yap << "@ " << color_white << endl;
 		for (int i=0; i < sys.n; i++){
 			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-									sys.position[i].y - sys.ly2,
-									sys.position[i].z - sys.lz2);
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+									sys.position[i].y - sys.ly2(),
+									sys.position[i].z - sys.lz2());
 			drawLine('l', pos-u, 2*u, fout_yap);
 			u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
 			drawLine('l', pos-u, 2*u, fout_yap);
@@ -483,15 +489,15 @@ Simulation::output_yap(){
 					fout_yap << "@ " << color_orange << endl;
 				
 				int i = sys.interaction[k].particle_num[0];
-				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-										sys.position[i].y - sys.ly2,
-										sys.position[i].z - sys.lz2);
+				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+										sys.position[i].y - sys.ly2(),
+										sys.position[i].z - sys.lz2());
 				fout_yap << "r " << yap_force_factor*sys.interaction[k].f_tangent.norm()  << endl;
 				drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
-				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
-										sys.position[j].y - sys.ly2,
-										sys.position[j].z - sys.lz2);
+				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
+										sys.position[j].y - sys.ly2(),
+										sys.position[j].z - sys.lz2());
 				drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
 			}
 		}
@@ -506,13 +512,13 @@ Simulation::output_yap(){
 			int i = sys.interaction[k].particle_num[0];
 			int j = sys.interaction[k].particle_num[1];
 			fout_yap << "r " << yap_force_factor*sys.interaction[k].valNormalForce() << endl;
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-									sys.position[i].y - sys.ly2,
-									sys.position[i].z - sys.lz2);
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+									sys.position[i].y - sys.ly2(),
+									sys.position[i].z - sys.lz2());
 			drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
-			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2,
-									sys.position[j].y - sys.ly2,
-									sys.position[j].z - sys.lz2);
+			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
+									sys.position[j].y - sys.ly2(),
+									sys.position[j].z - sys.lz2());
 			drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
 		}
 	}
@@ -551,35 +557,35 @@ Simulation::output_yap(){
 	fout_yap << "y 6\n";
 	fout_yap << "@ " << color_blue << endl;
 	if (sys.dimension == 2){
-		drawLine(-sys.lx2, 0, -sys.lz2,  sys.lx2, 0, -sys.lz2, fout_yap);
-		drawLine(-sys.lx2, 0,  sys.lz2, -sys.lx2, 0, -sys.lz2, fout_yap);
-		drawLine(-sys.lx2, 0,  sys.lz2,  sys.lx2, 0,  sys.lz2, fout_yap);
-		drawLine( sys.lx2, 0, -sys.lz2,  sys.lx2, 0,  sys.lz2, fout_yap);
+		drawLine(-sys.lx2(), 0, -sys.lz2(),  sys.lx2(), 0, -sys.lz2(), fout_yap);
+		drawLine(-sys.lx2(), 0,  sys.lz2(), -sys.lx2(), 0, -sys.lz2(), fout_yap);
+		drawLine(-sys.lx2(), 0,  sys.lz2(),  sys.lx2(), 0,  sys.lz2(), fout_yap);
+		drawLine( sys.lx2(), 0, -sys.lz2(),  sys.lx2(), 0,  sys.lz2(), fout_yap);
 		/*
 		for (int i = 0 ; i < 10; i ++){
-			drawLine(-sys.lx2                , 0, -sys.lz2 + i*0.2*sys.lz2,
-					 -sys.lx2 + i*0.2*sys.lz2, 0,                 -sys.lz2, fout_yap);
-			drawLine( sys.lx2                   ,        0, sys.lz2 - i*0.2*sys.lz2,
-					  sys.lx2 - i*0.2*sys.lz2, 0,  sys.lz2, fout_yap);
+			drawLine(-sys.lx2()                , 0, -sys.lz2() + i*0.2*sys.lz2(),
+					 -sys.lx2() + i*0.2*sys.lz2(), 0,                 -sys.lz2(), fout_yap);
+			drawLine( sys.lx2()                   ,        0, sys.lz2() - i*0.2*sys.lz2(),
+					  sys.lx2() - i*0.2*sys.lz2(), 0,  sys.lz2(), fout_yap);
 		}
-		drawLine(-sys.lx2, 0, sys.lz2, sys.lx2 , 0, -sys.lz2, fout_yap);
+		drawLine(-sys.lx2(), 0, sys.lz2(), sys.lx2() , 0, -sys.lz2(), fout_yap);
 		 */
 	} else {
-		drawLine(-sys.lx2, -sys.ly2, -sys.lz2,  sys.lx2, -sys.ly2, -sys.lz2, fout_yap);
-		drawLine(-sys.lx2,  sys.ly2, -sys.lz2,  sys.lx2,  sys.ly2, -sys.lz2, fout_yap);
+		drawLine(-sys.lx2(), -sys.ly2(), -sys.lz2(),  sys.lx2(), -sys.ly2(), -sys.lz2(), fout_yap);
+		drawLine(-sys.lx2(),  sys.ly2(), -sys.lz2(),  sys.lx2(),  sys.ly2(), -sys.lz2(), fout_yap);
 
-		drawLine(-sys.lx2,  sys.ly2,  sys.lz2,  sys.lx2,  sys.ly2,  sys.lz2, fout_yap);
-		drawLine(-sys.lx2, -sys.ly2,  sys.lz2,  sys.lx2, -sys.ly2,  sys.lz2, fout_yap);
+		drawLine(-sys.lx2(),  sys.ly2(),  sys.lz2(),  sys.lx2(),  sys.ly2(),  sys.lz2(), fout_yap);
+		drawLine(-sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), -sys.ly2(),  sys.lz2(), fout_yap);
 		
-		drawLine(-sys.lx2, -sys.ly2, -sys.lz2, -sys.lx2, sys.ly2, -sys.lz2, fout_yap);
-		drawLine(-sys.lx2, -sys.ly2,  sys.lz2, -sys.lx2, sys.ly2,  sys.lz2, fout_yap);
-		drawLine( sys.lx2, -sys.ly2,  sys.lz2,  sys.lx2, sys.ly2,  sys.lz2, fout_yap);
-		drawLine( sys.lx2, -sys.ly2, -sys.lz2,  sys.lx2, sys.ly2, -sys.lz2, fout_yap);
+		drawLine(-sys.lx2(), -sys.ly2(), -sys.lz2(), -sys.lx2(), sys.ly2(), -sys.lz2(), fout_yap);
+		drawLine(-sys.lx2(), -sys.ly2(),  sys.lz2(), -sys.lx2(), sys.ly2(),  sys.lz2(), fout_yap);
+		drawLine( sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), sys.ly2(),  sys.lz2(), fout_yap);
+		drawLine( sys.lx2(), -sys.ly2(), -sys.lz2(),  sys.lx2(), sys.ly2(), -sys.lz2(), fout_yap);
 		
-		drawLine( sys.lx2,  sys.ly2,  sys.lz2,  sys.lx2, sys.ly2, -sys.lz2,  fout_yap);
-		drawLine(-sys.lx2,  sys.ly2,  sys.lz2, -sys.lx2, sys.ly2, -sys.lz2,  fout_yap);
-		drawLine(-sys.lx2, -sys.ly2,  sys.lz2, -sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
-		drawLine( sys.lx2, -sys.ly2,  sys.lz2,  sys.lx2, -sys.ly2, -sys.lz2,  fout_yap);
+		drawLine( sys.lx2(),  sys.ly2(),  sys.lz2(),  sys.lx2(), sys.ly2(), -sys.lz2(),  fout_yap);
+		drawLine(-sys.lx2(),  sys.ly2(),  sys.lz2(), -sys.lx2(), sys.ly2(), -sys.lz2(),  fout_yap);
+		drawLine(-sys.lx2(), -sys.ly2(),  sys.lz2(), -sys.lx2(), -sys.ly2(), -sys.lz2(),  fout_yap);
+		drawLine( sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), -sys.ly2(), -sys.lz2(),  fout_yap);
 	}
 }
 
@@ -593,9 +599,9 @@ Simulation::output_vpython(double time){
 	vec3d pos;
 	fout_vpy << "time: " << time << endl;
 	for (int i=0; i < sys.n; i++){
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-								sys.position[i].y - sys.ly2,
-								sys.position[i].z - sys.lz2);
+		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+								sys.position[i].y - sys.ly2(),
+								sys.position[i].z - sys.lz2());
 		fout_vpy << i << ' ' << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
 	}
 	fout_vpy << endl;

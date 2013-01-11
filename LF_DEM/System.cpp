@@ -50,9 +50,9 @@ void
 System::prepareSimulationName(){
 	ostringstream ss_simu_name;
 	if (dimension == 2){
-		ss_simu_name << "D" << dimension << "L" << lx << "_" <<lz ;
+	  ss_simu_name << "D" << dimension << "L" << lx() << "_" <<lz() ;
 	} else {
-		ss_simu_name << "D" << dimension << "L" << lx << "_" << ly << "_" << lz ;
+	  ss_simu_name << "D" << dimension << "L" << lx() << "_" << ly() << "_" << lz() ;
 	}
 	if (friction == true){
 		ss_simu_name << "vf" << volume_fraction ;
@@ -75,21 +75,11 @@ System::prepareSimulationName(){
 	
 }
 
-/* Set number of particles.
- * Allocate vectors for the state.
- */
 void
-System::prepareSimulation(){
-	ts = 0;
-	lx2 = 0.5*lx;
-	ly2 = 0.5*ly;
-	lz2 = 0.5*lz;
-	shear_disp = 0;
-	vel_difference = shear_rate*lz;
-	sq_critical_velocity = dynamic_friction_critical_velocity * dynamic_friction_critical_velocity;
+System::allocateRessources(){
+
 	position = new vec3d [n];
 	radius = new double [n];
-	n3 = 3*n;
 	angle = new double [n];
 	velocity = new vec3d [n];
 	ang_velocity = new vec3d [n];
@@ -133,7 +123,6 @@ System::prepareSimulation(){
 	interaction_list = new set <Interaction*> [n]; 
 	interaction_partners = new set <int> [n]; 
 
-	//	initInteractionPair();
 	
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
@@ -158,7 +147,20 @@ System::prepareSimulation(){
 	lda = n3;
 	ldb = n3;
 #endif
-	boxset = new BoxSet(2.5, this);
+}
+
+
+void
+System::initializeBoxing(){// need to know radii first
+	
+	double max_radius=0.;
+	for (int i=0; i < n; i++){
+		if(radius[i]>max_radius){
+			max_radius=radius[i];
+		}
+	}
+
+	boxset = new BoxSet(2.5*max_radius, this);
 	for (int i=0; i < n; i++){
 		boxset->box(i);
 	}
@@ -983,24 +985,24 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 // [0,l]
 void
 System::periodize(vec3d *pos){
-	if (pos->z > lz ){
-		pos->z -= lz;
+	if (pos->z > lz() ){
+		pos->z -= lz();
 		pos->x -= shear_disp;
 	} else if ( pos->z < 0 ){
-		pos->z += lz;
+		pos->z += lz();
 		pos->x += shear_disp;
 	}
-	while ( pos->x > lx ){
-		pos->x -= lx;
+	while ( pos->x > lx() ){
+		pos->x -= lx();
 	} 
 	while (pos->x < 0 ){
-		pos->x += lx;
+		pos->x += lx();
 	}
 	if (dimension == 3){
-		if ( pos->y > ly ){
-			pos->y -= ly;
+		if ( pos->y > ly() ){
+			pos->y -= ly();
 		} else if (pos->y < 0 ){
-			pos->y += ly;
+			pos->y += ly();
 		}
 	}
 }
@@ -1008,53 +1010,53 @@ System::periodize(vec3d *pos){
 // [-l/2,l/2]
 void
 System::periodize_diff(vec3d *pos_diff){
-	if (pos_diff->z > lz2 ){
-		pos_diff->z -= lz;
+	if (pos_diff->z > lz2() ){
+		pos_diff->z -= lz();
 		pos_diff->x -= shear_disp;
-	} else if ( pos_diff->z < -lz2 ){
-		pos_diff->z += lz;
+	} else if ( pos_diff->z < -lz2() ){
+		pos_diff->z += lz();
 		pos_diff->x += shear_disp;
 	}
-	while ( pos_diff->x > lx2 ){
-		pos_diff->x -= lx;
+	while ( pos_diff->x > lx2() ){
+		pos_diff->x -= lx();
 	} 
-	while (pos_diff->x < -lx2 ){
-		pos_diff->x += lx;
+	while (pos_diff->x < -lx2() ){
+		pos_diff->x += lx();
 	}
 	if (dimension == 3){
-		if ( pos_diff->y > ly2 ){
-			pos_diff->y -= ly;
-		} else if (pos_diff->y < -ly2 ){
-			pos_diff->y += ly;
+		if ( pos_diff->y > ly2() ){
+			pos_diff->y -= ly();
+		} else if (pos_diff->y < -ly2() ){
+			pos_diff->y += ly();
 		}
 	}
 }
 // periodize + give z_shift= number of boundaries crossed in z-direction
 void
 System::periodize_diff(vec3d *pos_diff, int *zshift){
-	if (pos_diff->z > lz2 ){
-		pos_diff->z -= lz;
+	if (pos_diff->z > lz2() ){
+		pos_diff->z -= lz();
 		pos_diff->x -= shear_disp;
 		(*zshift)=-1;
-	} else if ( pos_diff->z < -lz2 ){
-		pos_diff->z += lz;
+	} else if ( pos_diff->z < -lz2() ){
+		pos_diff->z += lz();
 		pos_diff->x += shear_disp;
 		(*zshift)=+1;
 	}
 	else{
 		(*zshift)=0;
 	}
-	while ( pos_diff->x > lx2 ){
-		pos_diff->x -= lx;
+	while ( pos_diff->x > lx2() ){
+		pos_diff->x -= lx();
 	} 
-	while (pos_diff->x < -lx2 ){
-		pos_diff->x += lx;
+	while (pos_diff->x < -lx2() ){
+		pos_diff->x += lx();
 	}
 	if (dimension == 3){
-		if ( pos_diff->y > ly2 ){
-			pos_diff->y -= ly;
-		} else if (pos_diff->y < -ly2 ){
-			pos_diff->y += ly;
+		if ( pos_diff->y > ly2() ){
+			pos_diff->y -= ly();
+		} else if (pos_diff->y < -ly2() ){
+			pos_diff->y += ly();
 		}
 	}
 }
@@ -1064,8 +1066,8 @@ System::periodize_diff(vec3d *pos_diff, int *zshift){
 void
 System::deltaTimeEvolution(){
 	shear_disp += vel_difference*dt;
-	if (shear_disp > lx){
-		shear_disp -= lx;
+	if (shear_disp > lx()){
+		shear_disp -= lx();
 	}
 	for (int i=0; i < n; i++){
 		displacement(i, velocity[i].x*dt, velocity[i].y*dt, velocity[i].z*dt);
