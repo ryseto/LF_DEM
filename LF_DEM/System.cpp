@@ -670,19 +670,24 @@ System::updateVelocityLubrication(){
 	cholmod_free_dense(&r, &c);
 	* end testing *************/
 
+	/* TEST IMPLEMENTATION
+	 * SDFF : Stokes drag force factor:
+	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
+	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
+	 */
+	double SDFF = 0;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		velocity[i].x = ((double*)v->x)[i3] + shear_rate*position[i].z;
+		velocity[i].x = ((double*)v->x)[i3] + SDFF * shear_rate*position[i].z;
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
-		//velocity[i].cerr();
 	}
-
+	
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
 			ang_velocity[i] = 1.33333*torque[i];
-			ang_velocity[i].y += O_inf_y;
+			ang_velocity[i].y += SDFF*O_inf_y;
 		}
 	}
 

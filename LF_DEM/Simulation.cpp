@@ -190,7 +190,7 @@ Simulation::SetParametersPostProcess(){
 	/*
 	 * The middle height of the simulation box is set to the flow zero level.
 	 */
-	origin_zero_flow = true;
+	origin_zero_flow = false;
 	/*
 	 * The bond width indicates the force strength.
 	 */
