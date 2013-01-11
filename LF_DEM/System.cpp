@@ -230,7 +230,7 @@ System::checkNewInteraction(){
 							deactivated_interaction.pop();
 						}
 						interaction[interaction_new].create(i, j);
-						interaction[interaction_new].assignDistanceNormalVector(-pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
+						interaction[interaction_new].assignDistanceNormalVector(pos_diff, sqrt(sq_dist), zshift); // to be modified to +pos_diff once Interaction normal vector is changed
 						interaction_list[i].insert(&(interaction[interaction_new]));
 						interaction_list[j].insert(&(interaction[interaction_new]));
 						interaction_partners[i].insert(j);
@@ -587,9 +587,9 @@ System::buildLubricationTerms(){
 				if(ksi > 0){
 
 					double nvec[3];
-					nvec[0] = - inter->nr_vec.x;
-					nvec[1] = - inter->nr_vec.y;
-					nvec[2] = - inter->nr_vec.z;
+					nvec[0] = inter->nr_vec.x; // nvec defined from i to j
+					nvec[1] = inter->nr_vec.y;
+					nvec[2] = inter->nr_vec.z;
 				
 
 					XA(iksi, inter->lambda, inter->invlambda, XAii, XAij, XAji, XAjj);
