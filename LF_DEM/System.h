@@ -105,6 +105,7 @@ public:
 	bool lubrication;
 	bool friction;
 	bool brownian;
+	double diag_stokes_drag;
 	Interaction *interaction;
 	int num_interaction;
 	/*
@@ -134,7 +135,7 @@ public:
 	vector <double> lubparticle_vec[3];
 	string simu_name;
 	
-	void prepareSimulationName();
+//	void prepareSimulationName();
 	void prepareSimulation();
 	void timeEvolution(int time_step);
 	void checkNewInteraction();

@@ -44,30 +44,6 @@ System::~System(){
 #endif
 };
 
-void
-System::prepareSimulationName(){
-	ostringstream ss_simu_name;
-	if (dimension == 2){
-		ss_simu_name << "D" << dimension << "L" << lx << "_" <<lz ;
-	} else {
-		ss_simu_name << "D" << dimension << "L" << lx << "_" << ly << "_" << lz ;
-	}
-	if (friction == true){
-		ss_simu_name << "vf" << volume_fraction ;
-		ss_simu_name << "fs" << mu_static << "fd" << mu_dynamic;
-	} else {
-		ss_simu_name << "vf" << volume_fraction ;
-	}
-	if (lubrication == true){
-		ss_simu_name << "hc" << h_cutoff;
-	}
-	if (brownian == true){
-		ss_simu_name << "kT" << kb_T ;
-	}		
-	simu_name = ss_simu_name.str();
-	cerr << simu_name << endl;
-	
-}
 
 /* Set number of particles.
  * Allocate vectors for the state.
@@ -491,9 +467,9 @@ System::buildLubricationTerms(){
 	off_diag_values[2].clear();
 	for (int i = 0; i < n; i ++){
 		int i6=6*i;
-		diag_values[i6  ] = 1.;
-		diag_values[i6+3] = 1.;
-		diag_values[i6+5] = 1.;
+		diag_values[i6  ] = diag_stokes_drag;
+		diag_values[i6+3] = diag_stokes_drag;
+		diag_values[i6+5] = diag_stokes_drag;
 	}
 	
 	set<Interaction*>::iterator it;
@@ -675,10 +651,9 @@ System::updateVelocityLubrication(){
 	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
 	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
 	 */
-	double SDFF = 0;
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		velocity[i].x = ((double*)v->x)[i3] + SDFF * shear_rate*position[i].z;
+		velocity[i].x = ((double*)v->x)[i3] + shear_rate*position[i].z;
 		velocity[i].y = ((double*)v->x)[i3+1];
 		velocity[i].z = ((double*)v->x)[i3+2];
 	}
@@ -687,7 +662,7 @@ System::updateVelocityLubrication(){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < n; i++){
 			ang_velocity[i] = 1.33333*torque[i];
-			ang_velocity[i].y += SDFF*O_inf_y;
+			ang_velocity[i].y += O_inf_y;
 		}
 	}
 

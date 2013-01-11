@@ -58,6 +58,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.friction = str2bool(value);
 	} else if (keyword == "brownian"){
 		sys.brownian = str2bool(value);
+	} else if (keyword == "diag_stokes_drag"){
+		sys.diag_stokes_drag = atof(value.c_str());
 	} else if (keyword == "h_cutoff"){
 		sys.h_cutoff = atof(value.c_str());
 	} else if (keyword == "shear_rate"){
@@ -167,7 +169,7 @@ Simulation::SetParametersPostProcess(){
 	/*
 	 * Set simulation name and name of output files.
 	 */
-	sys.prepareSimulationName();
+	prepareSimulationName();
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
@@ -280,6 +282,39 @@ Simulation::importInitialPositionFile(){
 	}
 	file_import.close();
 }
+
+
+void
+Simulation::prepareSimulationName(){
+	ostringstream ss_simu_name;
+	//	if (sys.dimension == 2){
+	//		ss_simu_name << "D" << sys.dimension << "L" << sys.lx << "_" << sys.lz ;
+	//	} else {
+	//		ss_simu_name << "D" << sys.dimension << "L" << sys.lx << "_" << sys.ly << "_" << sys.lz ;
+	//	}
+	string::size_type pos_ext_position = filename_import_positions.find(".dat");
+	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
+	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
+	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
+	/*
+	 if (friction == true){
+	 ss_simu_name << "vf" << volume_fraction ;
+	 ss_simu_name << "fs" << mu_static << "fd" << mu_dynamic;
+	 } else {
+	 ss_simu_name << "vf" << volume_fraction ;
+	 }
+	 if (lubrication == true){
+	 ss_simu_name << "hc" << h_cutoff;
+	 }
+	 if (brownian == true){
+	 ss_simu_name << "kT" << kb_T ;
+	 }
+	 */
+	sys.simu_name = ss_simu_name.str();
+	cerr << sys.simu_name << endl;
+	
+}
+
 
 /*
  * Main simulation

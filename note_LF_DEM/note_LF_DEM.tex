@@ -470,17 +470,17 @@ Dynamic properties of shear thickening colloidal suspensions
 
 \section{Questions on lubrication forces}
 
-\paragraph{Anisotropy}
-Does the leading order of lubrication force depend 
-on the orientation of two particles in shear flow?
-%
-$\Longrightarrow$ 
-Leading terms of lubrication force
-has no orientation dependence.
-%
-\begin{center}
-\includegraphics[width=7cm]{Lub_orientation_dependence.pdf} 
-\end{center}
+%\paragraph{Anisotropy}
+%Does the leading order of lubrication force depend 
+%on the orientation of two particles in shear flow?
+%%
+%$\Longrightarrow$ 
+%Leading terms of lubrication force
+%has no orientation dependence.
+%%
+%\begin{center}
+%\includegraphics[width=7cm]{Lub_orientation_dependence.pdf} 
+%\end{center}
 
 \paragraph{Leading order or higher order?}
 
@@ -504,7 +504,16 @@ and full order lubrication force.
   In the full lubrication model,
   the lubrication forces are depend on
   the orientation of two particles.
-  \end{itemize}
+\end{itemize}
+
+According to \citet{Kumar_2010a},
+$\delta$-$\log\delta $ FLD gives
+good agreement with SD.
+%
+(But, it is not clear
+how good SD is in concentrated suspension.
+)
+
 
 
 \paragraph{Ball\&Melrose model}
@@ -549,7 +558,6 @@ each of which moves relative to the frame
 of its own independently sheared fluid. 
 \end{quote}
 
-
 Our first model includes the diagonal terms corresponding to
 Stokes drag forces.
 %
@@ -561,11 +569,72 @@ in particle configuration after some shearing.
 Stokesian dynamics has less this tendency
 since the background flow can be disturbed.
 
-
 \begin{center}
-\includegraphics[width=8cm]{order_with_undisturbed_shearflow.pdf} 
+\includegraphics[width=12cm]{order_with_undisturbed_shearflow.pdf} 
 \end{center}
 
+\begin{equation}
+ \tens{R} =  \tens{R}_{\mathrm{onebody}} + \tens{R}_{\mathrm{pair}}
+\end{equation}
+$\tens{R}_{\mathrm{onebody}} = \tens{I}$.
+\begin{align*}
+\bm{F}_{\mathrm{H}} 
+&= - \tens{R}(\bm{U}-\bm{U}^{\infty})  +  \tens{G} \tens{E}^{\infty}  \\
+&= - (\tens{R}_{\mathrm{onebody}} + \tens{R}_{\mathrm{pair}})(\bm{U}-\bm{U}^{\infty})  
+ +  \tens{G} \tens{E}^{\infty}  \\
+\end{align*}
+%
+The background flow and the drag forces acting on particles
+are modeled by
+$\bm{U}^{\infty}(\bm{r})$ and
+the diagonal matrix $\tens{R}_{\mathrm{onebody}}$.
+%
+We may introduce a parameter $s$: $0<s<1$
+for the diagonal matrix $\tens{R}_{\mathrm{onebody}}$.
+%
+\begin{equation}
+ \tens{R}_{\mathrm{onebody}} 
+= s \tens{I}
+\end{equation}
+%
+In the dilute limit, $s$ should converge to $1$.
+So, a possible way is 
+\begin{equation}
+ s \approx \frac{(\phi_{\mathrm{max}} - \phi)}{\phi_{\mathrm{max}}}
+\end{equation}
+
+\begin{align*}
+  &\bm{F}_{\mathrm{H}} = 0 \\
+  & \rightarrow
+  (\tens{R}_{\mathrm{onebody}} + \tens{R}_{\mathrm{pair}})(\bm{U}-\bm{U}^{\infty})  
+  =  \tens{G} \tens{E}^{\infty}  
+\end{align*}
+
+We can find some implementation
+Kumar's thesis Chapter 6 
+(Fast lubrication dynamics algorithm)~\cite{Kumar_2010a}.
+He extract the optimal values by comparing with Stokesian dynamics.
+\begin{equation}
+ \tens{R}_{\mathrm{0}}
+=
+\begin{pmatrix}
+ R_{\mathrm{FU}}^{0} & 0 & 0 \\
+ 0 &  R_{\mathrm{T\Omega}}^{0}  & 0 \\
+ 0 &  0 &  R_{\mathrm{SE}}^{0}  
+\end{pmatrix}
+\end{equation}
+
+\begin{figure}
+\centering
+\includegraphics[width=10cm]{kumars_Rfu0.pdf} 
+\caption{
+Figure from Kumar's thesis.
+$R_{\mathrm{FU}}^{0 }$ can be larger than 1.
+%
+The left one is with $\delta$-$\log \delta $ level,
+and the right one with $\delta$ level,
+}
+\end{figure}
 
 
 

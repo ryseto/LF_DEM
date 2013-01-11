@@ -10,7 +10,9 @@
 #include <iostream>
 #include <fstream>
 #include <queue>
+#include <sstream>
 #include "System.h"
+
 
 class Simulation{
 private:
@@ -37,7 +39,7 @@ private:
 	void SetDefaultParameters();
 	void ReadParameterFile();
 	void SetParametersPostProcess();
-
+	void prepareSimulationName();
 
 	void AutoSetParameters(const string &keyword,
 						   const string &value);
