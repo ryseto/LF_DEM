@@ -60,6 +60,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.brownian = str2bool(value);
 	} else if (keyword == "diag_stokes_drag"){
 		sys.diag_stokes_drag = atof(value.c_str());
+	} else if (keyword == "poly"){
+		sys.poly = str2bool(value);
 	} else if (keyword == "h_cutoff"){
 		sys.h_cutoff = atof(value.c_str());
 	} else if (keyword == "shear_rate"){

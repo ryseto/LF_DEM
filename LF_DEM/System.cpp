@@ -46,6 +46,32 @@ System::~System(){
 #endif
 };
 
+//void
+//System::prepareSimulationName(){
+//	ostringstream ss_simu_name;
+//	if (dimension == 2){
+//	  ss_simu_name << "D" << dimension << "L" << lx() << "_" <<lz() ;
+//	} else {
+//	  ss_simu_name << "D" << dimension << "L" << lx() << "_" << ly() << "_" << lz() ;
+//	}
+//	if (friction == true){
+//		ss_simu_name << "vf" << volume_fraction ;
+//		ss_simu_name << "fs" << mu_static << "fd" << mu_dynamic;
+//	} else {
+//		ss_simu_name << "vf" << volume_fraction ;
+//	}
+//	if (lubrication == true){
+//		ss_simu_name << "hc" << h_cutoff;
+//	}
+//	if (brownian == true){
+//		ss_simu_name << "kT" << kb_T ;
+//	}		
+//	if (poly == true){
+//		ss_simu_name << "poly" ;
+//	}		
+//	simu_name = ss_simu_name.str();
+//	cerr << simu_name << endl;
+//}
 
 void
 System::allocateRessources(){
@@ -476,12 +502,18 @@ System::buildLubricationTerms(){
 	off_diag_values[0].clear();
 	off_diag_values[1].clear();
 	off_diag_values[2].clear();
-	for (int i = 0; i < n; i ++){
-		int i6=6*i;
-		diag_values[i6  ] = diag_stokes_drag;
-		diag_values[i6+3] = diag_stokes_drag;
-		diag_values[i6+5] = diag_stokes_drag;
-	}
+
+	addStokesDrag();
+
+
+	double r ; // distance
+	
+	double s;
+	double ksi, iksi, ksi_cutoff;
+
+	double XAii, XAjj, XAij, XAji;
+	double XGii, XGjj, XGij, XGji;
+
 	
 	set<Interaction*>::iterator it;
 	int j;

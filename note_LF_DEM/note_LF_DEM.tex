@@ -28,6 +28,7 @@
 \emph{lubrication} and \emph{contact force}}
 \date{\shortdate\today \, \ampmtime }
 \author{R. Seto, R. Mari}
+\usepackage{color}	% required for `\textcolor' (yatex added)
 \begin{document}
 \maketitle
 
@@ -538,8 +539,9 @@ What is the reason for that?
 This affects the physics?
 %
 
-\paragraph{Frame invariant pair drag model }
+\paragraph{Drag forces from background flow}
 
+%Frame invariant pair drag model 
 \citet{Ball_1997} claims that 
 simulation model should satisfy frame invariant.
 %
@@ -547,7 +549,7 @@ It points out that
 the addition of diagonal terms corresponding to
 Stokes drag forces
 relative to an assumed background shear flow
-breaks this invariant property.
+breaks this frame-invariant property.
 %
 I don't understand why this approximation is so bad.
 %
@@ -572,6 +574,37 @@ since the background flow can be disturbed.
 \begin{center}
 \includegraphics[width=12cm]{order_with_undisturbed_shearflow.pdf} 
 \end{center}
+
+In Kumar's thesis Chapter 6 ~\citep{Kumar_2010a},
+he gave some descriptions for ``fast lubrication dynamics algorithm''.
+%
+He investigated both, $1/\delta$ 
+and $1/\delta$-$\log(1/\delta)$ lubrication models.
+
+He put three parameters for the diagonal terms.
+\begin{equation}
+ \tens{R}_{\mathrm{0}}
+=
+\begin{pmatrix}
+ R_{\mathrm{FU}}^{0} & 0 & 0 \\
+ 0 &  R_{\mathrm{T\Omega}}^{0}  & 0 \\
+ 0 &  0 &  R_{\mathrm{SE}}^{0}  
+\end{pmatrix}
+\end{equation}
+He determined the optimal values by comparing with Stokesian dynamics.
+\begin{figure}
+\centering
+\includegraphics[width=16cm]{kumars_Rfu0.pdf} 
+\caption{
+Figure from Kumar's thesis.
+$R_{\mathrm{FU}}^{0 }$ can be larger than 1.
+%
+The left one is with $\delta$-$\log \delta $ level,
+and the right one with $\delta$ level,
+}
+\end{figure}
+
+----------
 
 \begin{equation}
  \tens{R} =  \tens{R}_{\mathrm{onebody}} + \tens{R}_{\mathrm{pair}}
@@ -610,35 +643,8 @@ So, a possible way is
   =  \tens{G} \tens{E}^{\infty}  
 \end{align*}
 
-We can find some implementation
-Kumar's thesis Chapter 6 
-(Fast lubrication dynamics algorithm)~\cite{Kumar_2010a}.
-He extract the optimal values by comparing with Stokesian dynamics.
-\begin{equation}
- \tens{R}_{\mathrm{0}}
-=
-\begin{pmatrix}
- R_{\mathrm{FU}}^{0} & 0 & 0 \\
- 0 &  R_{\mathrm{T\Omega}}^{0}  & 0 \\
- 0 &  0 &  R_{\mathrm{SE}}^{0}  
-\end{pmatrix}
-\end{equation}
-
-\begin{figure}
-\centering
-\includegraphics[width=10cm]{kumars_Rfu0.pdf} 
-\caption{
-Figure from Kumar's thesis.
-$R_{\mathrm{FU}}^{0 }$ can be larger than 1.
-%
-The left one is with $\delta$-$\log \delta $ level,
-and the right one with $\delta$ level,
-}
-\end{figure}
 
 
-
-\newpage
 
 
 \section{Lubrication forces}
