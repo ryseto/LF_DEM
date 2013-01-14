@@ -121,12 +121,15 @@ public:
 	Interaction *interaction;
 	int num_interaction;
 	/*
-	 * Leading term of lubrication force is 1/h
-	 * h = r - 2a.
-	 * 1/h when h > h_cutoff
-	 * 1/h_cutoff when h <= h_cutoff
+	 * Leading term of lubrication force is 1/ksi, with ksi the gap
+	 * ksi = 2r/(a0+a1) - 2.
+	 * we set a cutoff for the lubrication interaction,
+	 * such that the lub term is proportional to:
+	 * 
+	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
+	 * 1/ksi_cutoff when h <= ksi_cutoff
 	 */
-	double h_cutoff;
+	double gap_cutoff;
 	BrownianForce *fb;
 	/*************************************************************/
 	void lx(double length){

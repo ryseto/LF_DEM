@@ -62,8 +62,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.diag_stokes_drag = atof(value.c_str());
 	} else if (keyword == "poly"){
 		sys.poly = str2bool(value);
-	} else if (keyword == "h_cutoff"){
-		sys.h_cutoff = atof(value.c_str());
+	} else if (keyword == "gap_cutoff"){
+		sys.gap_cutoff = atof(value.c_str());
 	} else if (keyword == "shear_rate"){
 		sys.shear_rate = atof(value.c_str());
 	} else if (keyword == "kb_T"){
@@ -242,13 +242,13 @@ Simulation::SetDefaultParameters(){
 	shear_strain = 10;
 	/*
 	 * Lubrication force
-	 * lub_max: range of lubrication force
-	 * h_cutoff: cutoff distance for diverging coeffient:
-	 *     alpha(h) = 1/h         if h > h_cutoff
-	 *                1/h_cutoff  if h < h_cutoff
+	 * lub_max: reduced large cutoff distance for lubrication
+	 * gap_cutoff: reduced small cutoff distance for gap diverging coeffient:
+	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
+	 * 1/ksi_cutoff when h <= ksi_cutoff
 	 */
 	sys.lub_max = 2.5;
-	sys.h_cutoff = 0.01;
+	sys.gap_cutoff = 0.01;
 	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
@@ -317,7 +317,7 @@ Simulation::prepareSimulationName(){
 	 ss_simu_name << "vf" << volume_fraction ;
 	 }
 	 if (lubrication == true){
-	 ss_simu_name << "hc" << h_cutoff;
+	 ss_simu_name << "hc" << gap_cutoff;
 	 }
 	 if (brownian == true){
 	 ss_simu_name << "kT" << kb_T ;

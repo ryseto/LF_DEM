@@ -15,45 +15,23 @@ Interaction::init(System *sys_){
 	active = false;
 	f_normal = 0;
 	
+	//	twothird = 2./3.;
+	//	onesixth = 1./6.;
 }
 
-/* Activate interaction between particles i and j.
- */
-void
-Interaction::activate(int i, int j, vec3d pos_diff, double distance, int zshift){
 
-	active = true;
-
-	if(j>i){
-		particle_num[0] = i;
-		particle_num[1] = j;
-	}		
-	else{
-		particle_num[0] = j;
-		particle_num[1] = i;
-	}		
-
-	// tell it to particles i and j
-	sys->interaction_list[i].insert(this);
-	sys->interaction_list[j].insert(this);
-
-	// tell them their new partner
-	sys->interaction_partners[i].insert(j);
-	sys->interaction_partners[j].insert(i);
-
-	contact = false;
-	a0 = sys->radius[particle_num[0]];
-	a1 = sys->radius[particle_num[1]];
-	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
-	lambda = a1 / a0;
-	invlambda = 1. / lambda;
-
-	assignDistanceNormalVector(pos_diff, distance, zshift); 
-
-
-	return;
+void 
+Interaction::r(double new_r){
+	_r = new_r;
+	ksi = 2 * _r / ro - 2.;
+	iksi = 1./ksi;
+	if( ksi < ksi_cutoff )
+		ksi_eff = ksi_cutoff;
+	else
+		ksi_eff = ksi;
+	
+	iksi_eff = 1./ksi;
 }
-
 
 /* Make a normal vector
  * Periodic boundaries are checked for all partices.
@@ -74,21 +52,28 @@ void
 Interaction::calcDistanceNormalVector(){
 	if (active){
 		calcNormalVector();
-		r = r_vec.norm();
-		nr_vec = r_vec / r;
+		r(r_vec.norm());
+		nr_vec = r_vec / r();
 	}
 }
 
 void
 Interaction::assignDistanceNormalVector(vec3d pos_diff, double distance, int zshift){
 	r_vec = pos_diff;
-	r = distance;
-	nr_vec = r_vec / r;
+	r(distance);
+	nr_vec = r_vec / r();
 	pd_z = zshift;
 	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
 }
 
 
+
+
+/*********************************
+*                                *
+*	   Contact Forces Methods    *
+*                                *
+*********************************/
 void
 Interaction::calcStaticFriction(){
 	double f_static = sys->mu_static*f_normal;
@@ -127,7 +112,7 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		f_normal = sys->kn*(ro - r);
+		f_normal = sys->kn*ksi;
 		if (static_friction){
 			calcStaticFriction();
 		} else {
@@ -145,7 +130,7 @@ Interaction::calcContactInteraction(){
 void
 Interaction::calcContactInteractionNoFriction(){
 	if (contact){
-		f_normal = sys->kn*(ro-r);
+		f_normal = sys->kn*ksi;
 		sys->force[ particle_num[0] ] -= f_normal * nr_vec;
 		sys->force[ particle_num[1] ] += f_normal * nr_vec;
 	}
@@ -187,17 +172,15 @@ Interaction::incrementContactTangentialDisplacement(){
 
 double
 Interaction::valNormalForce(){
-	double h = r  - ro;
+
 	double f_normal_total = 0;
-	if ( h > 0){
+	if ( ksi_eff > 0){
 		int i = particle_num[0];
 		int j = particle_num[1];
 		vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
 		rel_vel.x += pd_z * sys->vel_difference;
-		if ( h < sys->h_cutoff){
-			h = sys->h_cutoff;
-		}
-		double alpha = 1.0/(4*h);
+
+		double alpha = 1.0/(4*ksi_eff);
 		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
 	}
 	if (contact){
@@ -206,18 +189,97 @@ Interaction::valNormalForce(){
 	return f_normal_total;
 }
 
+
+/*********************************
+*                                *
+*  Lubrication Forces Methods    *
+*                                *
+*********************************/
+
+// Resistance functions
+void
+Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
+
+	
+	double g1_l, g1_il;
+	double l1, l13, il1, il13;
+
+	l1 = 1.0 + lambda;
+	l13 = l1 * l1 * l1;
+
+	il1 = 1.0 + invlambda;
+	il13 = il1 * il1 * il1;
+	
+	g1_l = 2.0 * lambda * lambda / l13;
+	g1_il = 2.0 * invlambda * invlambda / il13;
+	
+	XAii = g1_l * iksi_eff;
+	XAij = - 2 * XAii / l1;
+	XAjj = g1_il * iksi_eff;
+	XAji = - 2 * XAjj / il1;
+	
+}
+
+
+void
+Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
+
+	double g1_l, g1_il;
+	double l1, l13, il1, il13;
+
+	l1 = 1.0 + lambda;
+	l13 = l1 * l1 * l1;
+
+	il1 = 1.0 + invlambda;
+	il13 = il1 * il1 * il1;
+	
+	g1_l = 2.0 * lambda * lambda / l13;
+	g1_il = 2.0 * invlambda * invlambda / il13;
+	
+	XGii = 1.5 * g1_l * iksi_eff;
+	XGij = - 4 * XGii / l1 / l1 ;
+	XGjj = - 1.5 * g1_il * iksi_eff;
+	XGji = - 4 * XGjj / il1 / il1 ;
+	
+}
+
+void
+Interaction::GE(double GEi[], double GEj[]){
+	double XGii, XGjj, XGij, XGji;
+	XG(XGii, XGij, XGji, XGjj);
+	
+	double nxnz = nr_vec.x * nr_vec.z;
+	
+	for(int u=0; u<3; u++){
+		GEi[u] = a0 * a0 * XGii * 2. / 3.;
+		GEi[u] += ro * ro * XGji / 6.;
+	}
+	GEi[0] *= sys->shear_rate * nxnz * nr_vec.x;
+	GEi[1] *= sys->shear_rate * nxnz * nr_vec.y;
+	GEi[2] *= sys->shear_rate * nxnz * nr_vec.z;
+
+	for(int u=0; u<3; u++){
+		GEj[u] = a1 * a1 * XGjj * 2. / 3.;
+		GEj[u] += ro * ro * XGij / 6.;
+	}
+	GEj[0] *= sys->shear_rate * nxnz * nr_vec.x;
+	GEj[1] *= sys->shear_rate * nxnz * nr_vec.y;
+	GEj[2] *= sys->shear_rate * nxnz * nr_vec.z;
+
+}
+
+
+
+
 void
 Interaction::addLubricationStress(){
-	double h = r  - ro;
 	int i = particle_num[0];
 	int j = particle_num[1];
 	vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
 	double alpha;
-	if ( h < sys->h_cutoff){
-		h = sys->h_cutoff;
-	}
-	if (h > 0){
-		alpha = 1.0/(4*h);
+
+	if (ksi_eff > 0){
+		alpha = 1.0/(4*ksi_eff);
 		rel_vel.x += pd_z * sys->vel_difference;
 		vec3d force = alpha*dot(rel_vel, nr_vec)*nr_vec;
 		double Sxx = 2*(force.x * nr_vec.x);
@@ -280,6 +342,48 @@ Interaction::partner(int i){
 
 
 
+/* Activate interaction between particles i and j.
+ */
+void
+Interaction::activate(int i, int j, vec3d pos_diff, double distance, int zshift){
+
+	active = true;
+
+	if(j>i){
+		particle_num[0] = i;
+		particle_num[1] = j;
+	}		
+	else{
+		particle_num[0] = j;
+		particle_num[1] = i;
+	}		
+
+	// tell it to particles i and j
+	sys->interaction_list[i].insert(this);
+	sys->interaction_list[j].insert(this);
+
+	// tell them their new partner
+	sys->interaction_partners[i].insert(j);
+	sys->interaction_partners[j].insert(i);
+
+	contact = false;
+	a0 = sys->radius[particle_num[0]];
+	a1 = sys->radius[particle_num[1]];
+	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
+	lambda = a1 / a0;
+	invlambda = 1. / lambda;
+	ksi_cutoff = 0.5*sys->gap_cutoff*ro;
+	//	r_lub_max = 0.5*sys->lub_max*ro;  // does it makes sense to scale it with radii?
+	// if yes, change it to in System::checkNewInteraction()
+	r_lub_max = sys->lub_max;
+	
+
+	assignDistanceNormalVector(pos_diff, distance, zshift); 
+
+
+	return;
+}
+
 
 void
 Interaction::deactivate(){
@@ -327,17 +431,17 @@ Interaction::update(){
 
 	// check new state of the interaction
 	if (active){
-		if(r > sys->lub_max){
+		if(r() > r_lub_max){
 			deactivate();
 			return true;
 		} else {
 			if (contact){
-				if (r > a0 + a1 ){			
+				if (r() > ro ){			
 					deactivate_contact();
 				}
 			} else {
 					// contact false:
-				if (r < 2){
+				if (r() < ro){
 					activate_contact();
 				}
 			}

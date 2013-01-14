@@ -38,6 +38,18 @@ private:
 	void deactivate();
 	void activate_contact();
 	void deactivate_contact();
+
+	double _r; // center-center distance  
+	double ksi; // gap between particles
+	double iksi; // inverse gap
+	double ksi_cutoff; // small cut-off for ksi: lubrication breakdown
+	double ksi_eff;  // max(ksi, ksi_cutoff)
+	double iksi_eff;
+	double r_lub_max;  // max distance for lubrication
+	
+	//	double twothird, onesixth; // used in lubrication computations;
+
+
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -45,13 +57,24 @@ protected:
 public:
  	Interaction(){};
 	~Interaction(){};
+
 	void init(System *sys_);
 
 	void activate(int i, int j, vec3d pos_diff, double distance, int zshift);
-	bool update(); // after particles dispacement
 	bool active;
+
 	int particle_num[2];
-	double r; // center-center distance // done
+
+	inline double r(){
+	  return _r;
+	}
+	void r(double new_r);
+	inline double gap(){
+	  return ksi;
+	}
+
+	bool update(); // after particles dispacement
+
 	double a0, a1;
 	double ro; // ro = a0 + a1
 	double lambda, invlambda;  // a1/a0 , a0/a1
@@ -73,6 +96,12 @@ public:
 	void addLubricationStress();
 	void addContactStress();
 
+	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
+	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);
+	void XM(double &XMii, double &XMij, double &XMji, double &XMjj);
+	void GE(double GEi[], double GEj[]);
+
 };
+
 
 #endif /* defined(__LF_DEM__Interaction__) */

@@ -447,50 +447,6 @@ System::addStokesDrag(){
 }
 
 
-void
-System::XA(double iksi, double lambda, double invlambda, double &XAii, double &XAij, double &XAji, double &XAjj){
-
-	double g1_l, g1_il;
-	double l1, l13, il1, il13;
-
-	l1 = 1.0 + lambda;
-	l13 = l1 * l1 * l1;
-
-	il1 = 1.0 + invlambda;
-	il13 = il1 * il1 * il1;
-	
-	g1_l = 2.0 * lambda * lambda / l13;
-	g1_il = 2.0 * invlambda * invlambda / il13;
-	
-	XAii = g1_l * iksi;
-	XAij = - 2 * XAii / l1;
-	XAjj = g1_il * iksi;
-	XAji = - 2 * XAjj / il1;
-	
-}
-
-
-void
-System::XG(double iksi, double lambda, double invlambda, double &XGii, double &XGij, double &XGji, double &XGjj){
-
-	double g1_l, g1_il;
-	double l1, l13, il1, il13;
-
-	l1 = 1.0 + lambda;
-	l13 = l1 * l1 * l1;
-
-	il1 = 1.0 + invlambda;
-	il13 = il1 * il1 * il1;
-	
-	g1_l = 2.0 * lambda * lambda / l13;
-	g1_il = 2.0 * invlambda * invlambda / il13;
-	
-	XGii = 1.5 * g1_l * iksi;
-	XGij = - 4 * XGii / l1 / l1 ;
-	XGjj = - 1.5 * g1_il * iksi;
-	XGji = - 4 * XGjj / il1 / il1 ;
-	
-}
 
 
 void
@@ -505,16 +461,13 @@ System::buildLubricationTerms(){
 
 	addStokesDrag();
 
-
-	double r ; // distance
-	
-	double s;
-	double ksi, iksi, ksi_cutoff;
-
 	double XAii, XAjj, XAij, XAji;
-	double XGii, XGjj, XGij, XGji;
+	//	double XGii, XGjj, XGij, XGji;
 
-	
+	double nvec[3];
+	double GEi[3];
+	double GEj[3];
+
 	set<Interaction*>::iterator it;
 	int j;
 	Interaction *inter;
@@ -525,62 +478,24 @@ System::buildLubricationTerms(){
 			inter=*it;
 		 	j=inter->partner(i);
 			if(j>i){
-				r=inter->r;
-				s = 2 * r / inter->ro;
-				ksi = (s - 2);
-			    iksi = 1./ksi;
-				ksi_cutoff = 0.5*h_cutoff*inter->ro;
-				if ( ksi < ksi_cutoff){
-					ksi = ksi_cutoff;
-				}
-				if(ksi > 0){
-
-					double nvec[3];
-					nvec[0] = inter->nr_vec.x; // nvec defined from i to j
-					nvec[1] = inter->nr_vec.y;
-					nvec[2] = inter->nr_vec.z;
 				
+				nvec[0] = inter->nr_vec.x; // nvec defined from i to j
+				nvec[1] = inter->nr_vec.y;
+				nvec[2] = inter->nr_vec.z;
+				
+				inter->XA(XAii, XAij, XAji, XAjj);
 
-					XA(iksi, inter->lambda, inter->invlambda, XAii, XAij, XAji, XAjj);
-
-					// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-					addToDiag(nvec, i, inter->a0 * XAii);
-					addToDiag(nvec, j, inter->a1 * XAjj);
-					appendToColumn(nvec, j, 0.5 * inter->ro * XAji);
-
-
-					XG(iksi, inter->lambda, inter->invlambda, XGii, XGij, XGji, XGjj);
-
-					double nxnz = nvec[0] * nvec[2];
-					double GEi[3];
-					double GEj[3];
-					
-					double onesixth = 1./6.;
-					double twothird = 4.*onesixth;
-					for(int u=0; u<3; u++){
-						GEi[u] = twothird * inter->a0 * inter->a0 * XGii ;
-						GEi[u] += onesixth * inter->ro * inter->ro * XGji ;
-						GEi[u] *= shear_rate * nxnz * nvec[u];
-					}
-					for(int u=0; u<3; u++){
-						GEj[u] = twothird * inter->a0 * inter->a0 * XGjj ;
-						GEj[u] += onesixth * inter->ro * inter->ro * XGij ;
-						GEj[u] *= shear_rate * nxnz * nvec[u];
-					}
-					
-					for(int u=0; u<3; u++){
-						((double*)rhs_b->x)[ 3*i + u ] += GEi[ u ];
-						((double*)rhs_b->x)[ 3*j + u ] += GEj[ u ];
-					}
-
-				} else {
-					cerr << "interaction.r " << inter->r << endl;
-					cerr << i << ' ' << j << ' ' << endl;
-					cerr << "ksi<0 : " << ksi <<   endl;
-					cerr << "r = " << inter->r << endl;
-					position[i].cerr();
-					position[j].cerr();
-					exit(1);
+				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
+				addToDiag(nvec, i, inter->a0 * XAii);
+				addToDiag(nvec, j, inter->a1 * XAjj);
+				appendToColumn(nvec, j, 0.5 * inter->ro * XAji);
+				
+				
+				inter->GE(GEi, GEj);  // G*E_\infty term
+				
+				for(int u=0; u<3; u++){
+					((double*)rhs_b->x)[ 3*i + u ] += GEi[ u ];
+					((double*)rhs_b->x)[ 3*j + u ] += GEj[ u ];
 				}
 			}
 		}
