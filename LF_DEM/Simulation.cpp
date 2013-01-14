@@ -141,33 +141,33 @@ Simulation::SetParametersPostProcess(){
 	/* take parameters from import file name.
 	 *
 	 */
-	int i_D = (int)filename_import_positions.find( "D") + 1;
-	sys.dimension = atoi( filename_import_positions.substr(i_D, 1).c_str() );
-	if (sys.dimension == 2 ){
-		// example: D2L10_10vf0.8.dat
-		int i_lx = (int)filename_import_positions.find( "L") + 1;
-		int j_lx = (int)filename_import_positions.find( "_" );
-		int j_lz = (int)filename_import_positions.find( "vf", j_lx);
-		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-		sys.lx(atof( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() ));
-		sys.ly(0);
-		sys.lz(atof( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() ));
-		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf - j_lz-2).c_str() );
-	} else {
-		// example: D3L10_10_10vf0.5.dat
-		int i_lx = (int)filename_import_positions.find( "L") + 1;
-		int j_lx = (int)filename_import_positions.find( "_", i_lx);
-		int j_ly = (int)filename_import_positions.find( "_", j_lx+1);
-		int j_lz = (int)filename_import_positions.find( "vf", j_ly+1);
-		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-		sys.lx(atof( filename_import_positions.substr(i_lx  , j_lx - i_lx).c_str() ));
-		sys.ly(atof( filename_import_positions.substr(j_lx+1, j_ly - j_lx-1).c_str() ));
-		sys.lz(atof( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() ));
-		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf-j_lz-2).c_str() );
-	}
+//	int i_D = (int)filename_import_positions.find( "D") + 1;
+//	sys.dimension = atoi( filename_import_positions.substr(i_D, 1).c_str() );
+//	if (sys.dimension == 2 ){
+//		// example: D2L10_10vf0.8.dat
+//		int i_lx = (int)filename_import_positions.find( "L") + 1;
+//		int j_lx = (int)filename_import_positions.find( "_" );
+//		int j_lz = (int)filename_import_positions.find( "vf", j_lx);
+//		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
+//		sys.lx(atof( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() ));
+//		sys.ly(0);
+//		sys.lz(atof( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() ));
+//		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf - j_lz-2).c_str() );
+//	} else {
+//		// example: D3L10_10_10vf0.5.dat
+//		int i_lx = (int)filename_import_positions.find( "L") + 1;
+//		int j_lx = (int)filename_import_positions.find( "_", i_lx);
+//		int j_ly = (int)filename_import_positions.find( "_", j_lx+1);
+//		int j_lz = (int)filename_import_positions.find( "vf", j_ly+1);
+//		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
+//		sys.lx(atof( filename_import_positions.substr(i_lx  , j_lx - i_lx).c_str() ));
+//		sys.ly(atof( filename_import_positions.substr(j_lx+1, j_ly - j_lx-1).c_str() ));
+//		sys.lz(atof( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() ));
+//		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf-j_lz-2).c_str() );
+//	}
 	
-	cerr << "L = " << sys.lx() << ' ' << sys.ly() << ' ' << sys.lz() << endl;
-	cerr << "VF = " << sys.volume_fraction << endl;
+//	cerr << "L = " << sys.lx() << ' ' << sys.ly() << ' ' << sys.lz() << endl;
+//	cerr << "VF = " << sys.volume_fraction << endl;
 	/*
 	 * Set simulation name and name of output files.
 	 */
@@ -280,19 +280,38 @@ void
 Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open( filename_import_positions.c_str());
+	string line;
+	getline(file_import, line);
+	
 	vec3d pos;
 	double radius;
-	while (true){
-		if(sys.poly)
-			file_import >> pos.x >> pos.y >> pos.z >> radius;
-		else
-			file_import >> pos.x >> pos.y >> pos.z;
-
-		if (file_import.eof())
-			break;
-		initial_positions.push_back(pos);
-		radii.push_back(radius);
+	int _np1_, _np2_;
+	double _volume_fraction_;
+	double _lx_, _ly_, _lz_;
+	char buf;
+	file_import >> buf >> _np1_ >> _np2_ >> _volume_fraction_ >> _lx_ >> _ly_ >> _lz_ ;
+	int num_of_particle = _np1_ + _np2_;
+	sys.set_n(num_of_particle);
+	cerr << "np = " << num_of_particle << endl;
+	if (_ly_ == 0){
+		sys.dimension = 2;
+	} else {
+		sys.dimension = 3;
 	}
+	cerr << "dimension = " << sys.dimension << endl;
+	sys.lx( _lx_);
+	sys.ly( _ly_);
+	sys.lz( _lz_);
+	cerr << "box: " << _lx_ << ' ' <<  _ly_ << ' ' << _lz_ << endl;
+	sys.volume_fraction = _volume_fraction_;
+	initial_positions.resize(num_of_particle);
+	radii.resize(num_of_particle);
+	for (int i = 0; i < num_of_particle ; i++){
+		file_import >> pos.x >> pos.y >> pos.z >> radius;
+		initial_positions[i] = pos;
+		radii[i] = radius;
+	}
+	
 	file_import.close();
 }
 
@@ -334,7 +353,10 @@ Simulation::prepareSimulationName(){
  */
 void
 Simulation::SimulationMain(int argc, const char * argv[]){
+
 	filename_import_positions = argv[1];
+	importInitialPositionFile();
+	
 	if (argc == 2){
 		cerr << "Default Parameters" << endl;
 		SetDefaultParameters();
@@ -344,8 +366,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		ReadParameterFile();
 	}
 	SetParametersPostProcess();
-	importInitialPositionFile();
-	sys.set_n( (int)initial_positions.size() );
+
 	cerr << "N = " << sys.n  << endl;
 	sys.allocateRessources();
 
@@ -486,10 +507,10 @@ Simulation::output_yap(){
 	/* Layer 1: Circles for particles
 	 */
 	fout_yap << "y 1\n";
-	fout_yap << "r 1\n";
 	fout_yap << "@ " << color_white << endl;
 	vec3d pos;
 	for (int i=0; i < sys.n; i++){
+		fout_yap << "r " << sys.radius[i] << endl;
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
