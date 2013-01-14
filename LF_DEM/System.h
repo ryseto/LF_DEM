@@ -97,6 +97,7 @@ public:
 	double *radius;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
+	vec3d *relative_velocity;
 	vec3d *ang_velocity;
 	vec3d *force;
 	vec3d *torque;

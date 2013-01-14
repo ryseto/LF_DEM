@@ -244,6 +244,30 @@ Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 }
 
 void
+Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
+
+
+	// under contruction
+	double g1_l, g1_il;
+	double l1, l13, il1, il13;
+
+	l1 = 1.0 + lambda;
+	l13 = l1 * l1 * l1;
+
+	il1 = 1.0 + invlambda;
+	il13 = il1 * il1 * il1;
+	
+	g1_l = 2.0 * lambda * lambda / l13;
+	g1_il = 2.0 * invlambda * invlambda / il13;
+	
+	XMii = 0.6 * g1_l * iksi_eff;
+	XMij = 40 * XMii * lambda / ( 3 * l13 * l13 * l13);
+	XMjj = 0.6 * g1_il * iksi_eff;
+	XMji = XMij;
+	
+}
+
+void
 Interaction::GE(double GEi[], double GEj[]){
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
@@ -273,35 +297,90 @@ Interaction::GE(double GEi[], double GEj[]){
 
 void
 Interaction::addLubricationStress(){
+
+
 	int i = particle_num[0];
 	int j = particle_num[1];
-	vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
-	double alpha;
 
-	if (ksi_eff > 0){
-		alpha = 1.0/(4*ksi_eff);
-		rel_vel.x += pd_z * sys->vel_difference;
-		vec3d force = alpha*dot(rel_vel, nr_vec)*nr_vec;
-		double Sxx = 2*(force.x * nr_vec.x);
-		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
-		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
-		double Syz = force.y * nr_vec.z + force.z * nr_vec.y ;
-		double Syy = 2*(force.y * nr_vec.y);
-		sys->lubstress[i][0] += Sxx;
-		sys->lubstress[j][0] += Sxx;
-		
-		sys->lubstress[i][1] += Sxy;
-		sys->lubstress[j][1] += Sxy;
-		
-		sys->lubstress[i][2] += Sxz;
-		sys->lubstress[j][2] += Sxz;
-		
-		sys->lubstress[i][3] += Syz;
-		sys->lubstress[j][3] += Syz;
-		
-		sys->lubstress[i][4] += Syy;
-		sys->lubstress[j][4] += Syy;
+	double n [3];
+	n[0] = nr_vec.x;
+	n[1] = nr_vec.y;
+	n[2] = nr_vec.z;
+
+
+	double Sixx = 0.;
+	double Sixy = 0.;
+	double Sixz = 0.;
+	double Siyz = 0.;
+	double Siyy = 0.;
+	double Sjxx = 0.;
+	double Sjxy = 0.;
+	double Sjxz = 0.;
+	double Sjyz = 0.;
+	double Sjyy = 0.;
+
+	// First G*(U-Uing) term
+	double vi [3];
+	double vj [3];
+
+	vi[0] = sys->relative_velocity[i].x;
+	vi[1] = sys->relative_velocity[i].y;
+	vi[2] = sys->relative_velocity[i].z;
+
+	vj[0] = sys->relative_velocity[j].x;
+	vj[1] = sys->relative_velocity[j].y;
+	vj[2] = sys->relative_velocity[j].z;
+
+	double XGii, XGjj, XGij, XGji;
+	XG(XGii, XGij, XGji, XGjj);
+	double n0n0_13 = ( n[0] * n[0] - 1./3. );
+	double n1n1_13 = ( n[1] * n[1] - 1./3. );
+	double n0n1 = n[0] * n[1];
+	double n0n2 = n[0] * n[2];
+	double n1n2 = n[1] * n[2];
+
+	double twothird = 2./3.;
+	double onesixth = 1./6.;
+	double common_factor_i = 0.;
+	double common_factor_j = 0.;
+	for(int u=0; u<3; u++){
+		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
+		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
 	}
+
+	Sixx += n0n0_13 * common_factor_i;
+	Sixy += n0n1 * common_factor_i;
+	Sixz += n0n2 * common_factor_i;
+	Siyy += n1n1_13 * common_factor_i;
+	Siyz += n1n2 * common_factor_i;
+	Sjxx += n0n0_13 * common_factor_j;
+	Sjxy += n0n1 * common_factor_j;
+	Sjxz += n0n2 * common_factor_j;
+	Sjyy += n1n1_13 * common_factor_j;
+	Sjyz += n1n2 * common_factor_j;
+
+
+	// Second: MEinf term
+	double XMii, XMjj, XMij, XMji;
+	XM(XMii, XMij, XMji, XMjj);
+
+	// to be constructed
+
+	sys->lubstress[i][0] += Sixx;
+	sys->lubstress[j][0] += Sjxx;
+	
+	sys->lubstress[i][1] += Sixy;
+	sys->lubstress[j][1] += Sjxy;
+	
+	sys->lubstress[i][2] += Sixz;
+	sys->lubstress[j][2] += Sjxz;
+	
+	sys->lubstress[i][3] += Siyz;
+	sys->lubstress[j][3] += Sjyz;
+	
+	sys->lubstress[i][4] += Siyy;
+	sys->lubstress[j][4] += Sjyy;
+
 }
 
 void
@@ -372,11 +451,8 @@ Interaction::activate(int i, int j, vec3d pos_diff, double distance, int zshift)
 	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
 	lambda = a1 / a0;
 	invlambda = 1. / lambda;
-	ksi_cutoff = 0.5*sys->gap_cutoff*ro;
-	//	r_lub_max = 0.5*sys->lub_max*ro;  // does it makes sense to scale it with radii?
-	// if yes, change it to in System::checkNewInteraction()
-	r_lub_max = sys->lub_max;
-	
+	ksi_cutoff = sys->gap_cutoff;
+	r_lub_max = 0.5*sys->lub_max*ro;
 
 	assignDistanceNormalVector(pos_diff, distance, zshift); 
 

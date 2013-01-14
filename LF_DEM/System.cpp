@@ -18,6 +18,8 @@ System::~System(){
 		delete [] angle;
 	if (!velocity)
 		delete [] velocity;
+	if (!relative_velocity)
+		delete [] relative_velocity;
 	if (!ang_velocity)
 		delete [] ang_velocity;
 	if (!force)
@@ -80,6 +82,7 @@ System::allocateRessources(){
 	radius = new double [n];
 	angle = new double [n];
 	velocity = new vec3d [n];
+	relative_velocity = new vec3d [n];
 	ang_velocity = new vec3d [n];
 	force = new vec3d [n];
 	torque = new vec3d [n];
@@ -93,6 +96,9 @@ System::allocateRessources(){
 		velocity[i].x=0.;
 		velocity[i].y=0.;
 		velocity[i].z=0.;
+		relative_velocity[i].x=0.;
+		relative_velocity[i].y=0.;
+		relative_velocity[i].z=0.;
 	}
 
 	for (int i=0; i < n; i++){
@@ -158,7 +164,7 @@ System::initializeBoxing(){// need to know radii first
 		}
 	}
 
-	boxset = new BoxSet(2.5*max_radius, this);
+	boxset = new BoxSet(lub_max*max_radius, this);
 	for (int i=0; i < n; i++){
 		boxset->box(i);
 	}
@@ -212,8 +218,9 @@ System::checkNewInteraction(){
 					pos_diff = position[j] - position[i];
 					periodize_diff(&pos_diff, &zshift);
 					sq_dist = pos_diff.sq_norm();
-
-					if ( sq_dist < sq_lub_max){
+					
+					double sq_dist_lim = sq_lub_max * 0.25 * ( radius[i] + radius[j] ) * ( radius[i] + radius[j] );
+					if ( sq_dist < sq_dist_lim){
 						int interaction_new;
 						if (deactivated_interaction.empty()){
 							// add an interaction object.
@@ -285,7 +292,9 @@ System::updateVelocity(){
 	vec3d U_inf(0, 0, 0);
 	for (int i=0; i < n; i++){
 		U_inf.x = shear_rate*position[i].z;
-		velocity[i] = (1.0/eta)*force[i] + U_inf;
+		relative_velocity[i] = (1.0/eta)*force[i];
+		velocity[i] = relative_velocity[i] + U_inf;
+
 	}
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
@@ -448,7 +457,8 @@ System::addStokesDrag(){
 
 
 
-
+// We solve A*(U-Uinf) = Gtilde*Einf
+// This method computes elements of matrix A and vector Gtilde*Einf
 void
 System::buildLubricationTerms(){
 	for (int k = 0; k < 6*n; k++){
@@ -608,9 +618,14 @@ System::updateVelocityLubrication(){
 	 */
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		velocity[i].x = ((double*)v->x)[i3] + shear_rate*position[i].z;
-		velocity[i].y = ((double*)v->x)[i3+1];
-		velocity[i].z = ((double*)v->x)[i3+2];
+		relative_velocity[i].x = ((double*)v->x)[i3];
+		relative_velocity[i].y = ((double*)v->x)[i3+1];
+		relative_velocity[i].z = ((double*)v->x)[i3+2];
+		
+		velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
+		velocity[i].y = relative_velocity[i].y;
+		velocity[i].z = relative_velocity[i].z;
+
 	}
 	
 	if(friction){
@@ -710,9 +725,13 @@ void System::updateVelocityLubricationBrownian(){
 	// fourth term for vx is the shear rate
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		velocity[i].x = ((double*)v_nonBrownian->x)[i3] + ((double*)v_Brownian_init->x)[i3] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3] - ((double*)v_Brownian_init->x)[i3] ) + shear_rate*position[i].z;
-		velocity[i].y = ((double*)v_nonBrownian->x)[i3+1] + ((double*)v_Brownian_init->x)[i3+1] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+1] - ((double*)v_Brownian_init->x)[i3+1] );
-		velocity[i].z = ((double*)v_nonBrownian->x)[i3+2] + ((double*)v_Brownian_init->x)[i3+2] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+2] - ((double*)v_Brownian_init->x)[i3+2] );
+		relative_velocity[i].x = ((double*)v_nonBrownian->x)[i3] + ((double*)v_Brownian_init->x)[i3] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3] - ((double*)v_Brownian_init->x)[i3] );
+		relative_velocity[i].y = ((double*)v_nonBrownian->x)[i3+1] + ((double*)v_Brownian_init->x)[i3+1] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+1] - ((double*)v_Brownian_init->x)[i3+1] );
+		relative_velocity[i].z = ((double*)v_nonBrownian->x)[i3+2] + ((double*)v_Brownian_init->x)[i3+2] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+2] - ((double*)v_Brownian_init->x)[i3+2] );
+		
+		velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
+		velocity[i].y = relative_velocity[i].y;
+		velocity[i].z = relative_velocity[i].z;
 	}
 
 	if(friction){
