@@ -570,18 +570,19 @@ in particle configuration after some shearing.
 %
 Stokesian dynamics has less this tendency
 since the background flow can be disturbed.
-
+\begin{figure}[htbp]
 \begin{center}
 \includegraphics[width=12cm]{order_with_undisturbed_shearflow.pdf} 
 \end{center}
+\end{figure}
 
 In Kumar's thesis Chapter 6 ~\citep{Kumar_2010a},
 he gave some descriptions for ``fast lubrication dynamics algorithm''.
 %
 He investigated both, $1/\delta$ 
 and $1/\delta$-$\log(1/\delta)$ lubrication models.
-
-He put three parameters for the diagonal terms.
+%
+He gave three parameters for the diagonal matrix.
 \begin{equation}
  \tens{R}_{\mathrm{0}}
 =
@@ -592,7 +593,7 @@ He put three parameters for the diagonal terms.
 \end{pmatrix}
 \end{equation}
 He determined the optimal values by comparing with Stokesian dynamics.
-\begin{figure}
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=16cm]{kumars_Rfu0.pdf} 
 \caption{
@@ -604,7 +605,6 @@ and the right one with $\delta$ level,
 }
 \end{figure}
 
-----------
 
 \begin{equation}
  \tens{R} =  \tens{R}_{\mathrm{onebody}} + \tens{R}_{\mathrm{pair}}
@@ -622,18 +622,17 @@ are modeled by
 $\bm{U}^{\infty}(\bm{r})$ and
 the diagonal matrix $\tens{R}_{\mathrm{onebody}}$.
 %
-We may introduce a parameter $s$: $0<s<1$
-for the diagonal matrix $\tens{R}_{\mathrm{onebody}}$.
+
+The diagonal matrix $\tens{R}_{\mathrm{onebody}}$.
 %
 \begin{equation}
  \tens{R}_{\mathrm{onebody}} 
-= s \tens{I}
+= F_{\mathrm{FU}}^{0} \tens{I}
 \end{equation}
 %
 In the dilute limit, $s$ should converge to $1$.
-So, a possible way is 
 \begin{equation}
- s \approx \frac{(\phi_{\mathrm{max}} - \phi)}{\phi_{\mathrm{max}}}
+  s (\phi \to 0) = 1
 \end{equation}
 
 \begin{align*}

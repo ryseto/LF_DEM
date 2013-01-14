@@ -20,7 +20,8 @@ int main(int argc, const char * argv[])
 	}
 	
 	if (argv[1][0] == 'g'){
-		generateInitialConfiguration(argc, argv);
+		GenerateInitConfig generate_init_config;
+		generate_init_config.generate(argc, argv);
 	} else {
 		Simulation simulation;
 		simulation.SimulationMain(argc, argv);
