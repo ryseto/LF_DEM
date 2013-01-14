@@ -218,7 +218,7 @@ Simulation::SetDefaultParameters(){
 	sys.lubrication = true;
 	sys.brownian = false;
 	sys.friction = true;
-	sys.poly = false;
+	sys.poly = true;
 	/*
 	 * Simulation
 	 *
@@ -658,7 +658,7 @@ Simulation::output_vpython(double time){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
-		fout_vpy << i << ' ' << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+		fout_vpy << i << ' ' << pos.x << ' ' << pos.y << ' ' << pos.z << ' ' << sys.radius[i] << endl;
 	}
 	fout_vpy << endl;
 }

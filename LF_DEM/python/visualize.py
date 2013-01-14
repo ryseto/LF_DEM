@@ -58,7 +58,7 @@ def update_visualization():
         particles[j].pos=(pos_stream.pos(key)[0], pos_stream.pos(key)[2], pos_stream.pos(key)[1])
         if particles[j].pos[0] == 0. and  particles[j].pos[2] == 0.:
             particles[j].color=visual.color.red
-        particles[j].radius=1.
+        particles[j].radius=pos_stream.rad(key)
         particles[j].visible=True
 
     
@@ -79,5 +79,5 @@ pos_stream=Pos_Stream(stream, part_nb, phi)
 init_visualization()
 while pos_stream.get_snapshot():
     update_visualization()
-    visual.rate(100)
+    visual.rate(30)
 
