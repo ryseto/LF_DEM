@@ -357,7 +357,23 @@ Interaction::addLubricationStress(){
 	double XMii, XMjj, XMij, XMji;
 	XM(XMii, XMij, XMji, XMjj);
 
-	// to be constructed
+	double five24 = 5./24.;
+	double fivethird = 5./3.;
+
+	common_factor_i = n0n2 * ( fivethird * a0 * a0 * XMii + five24 * ro * ro * XMij ) * sys->shear_rate;
+	common_factor_j = n0n2 * ( fivethird * a1 * a1 * XMjj + five24 * ro * ro * XMji ) * sys->shear_rate;
+
+	Sixx += n0n0_13 * common_factor_i;
+	Sixy += n0n1 * common_factor_i;
+	Sixz += n0n2 * common_factor_i;
+	Siyy += n1n1_13 * common_factor_i;
+	Siyz += n1n2 * common_factor_i;
+	Sjxx += n0n0_13 * common_factor_j;
+	Sjxy += n0n1 * common_factor_j;
+	Sjxz += n0n2 * common_factor_j;
+	Sjyy += n1n1_13 * common_factor_j;
+	Sjyz += n1n2 * common_factor_j;
+
 
 	sys->lubstress[i][0] += Sixx;
 	sys->lubstress[j][0] += Sjxx;
