@@ -30,7 +30,7 @@ Interaction::r(double new_r){
 	else
 		ksi_eff = ksi;
 	
-	iksi_eff = 1./ksi;
+	iksi_eff = 1./ksi_eff;
 }
 
 /* Make a normal vector
@@ -41,24 +41,19 @@ Interaction::r(double new_r){
 void
 Interaction::calcNormalVector(){
 	r_vec = sys->position[particle_num[1]] - sys->position[particle_num[0]];
-
 	sys->periodize_diff(&r_vec, &pd_z);
-
-	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
-
 }
 
 void
 Interaction::calcDistanceNormalVector(){
-	if (active){
-		calcNormalVector();
-		r(r_vec.norm());
-		nr_vec = r_vec / r();
-	}
+	calcNormalVector();
+	r(r_vec.norm());
+	nr_vec = r_vec / r();
+
 }
 
 void
-Interaction::assignDistanceNormalVector(vec3d pos_diff, double distance, int zshift){
+Interaction::assignDistanceNormalVector(const vec3d &pos_diff, double distance, int zshift){
 	r_vec = pos_diff;
 	r(distance);
 	nr_vec = r_vec / r();
@@ -134,7 +129,7 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		f_normal = sys->kn*ksi;
+		f_normal = -sys->kn*ksi;
 		if (static_friction){
 			calcStaticFriction();
 		} else {
@@ -176,18 +171,16 @@ Interaction::calcContactVelocity(){
 
 void
 Interaction::incrementContactTangentialDisplacement(){
-	if (active){
-		calcContactVelocity();
-		if (static_friction){
-			xi += contact_velocity_tan*sys->dt;
-			// projection
-			xi -= dot(xi,nr_vec)*nr_vec;
-		} else {
-			sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
-			if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
-				static_friction = true;
-				xi = (1.0/sys->kt) * f_tangent;
-			}
+	calcContactVelocity();
+	if (static_friction){
+		xi += contact_velocity_tan*sys->dt;
+		// projection
+		xi -= dot(xi,nr_vec)*nr_vec;
+	} else {
+		sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
+		if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
+			static_friction = true;
+			xi = (1.0/sys->kt) * f_tangent;
 		}
 	}
 }
@@ -397,6 +390,7 @@ Interaction::addContactStress(){
 		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
 		double Syz = force.y * nr_vec.z + force.z * nr_vec.y ;
 		double Syy = 2*(force.y * nr_vec.y);
+
 		sys->contactstress[i][0] += Sxx;
 		sys->contactstress[j][0] += Sxx;
 		
@@ -427,7 +421,7 @@ Interaction::partner(int i){
 /* Activate interaction between particles i and j.
  */
 void
-Interaction::activate(int i, int j, vec3d pos_diff, double distance, int zshift){
+Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int zshift){
 
 	active = true;
 
@@ -480,7 +474,6 @@ Interaction::activate_contact(){
 	contact = true;
 	static_friction = true;
 	xi.reset();
-
 	calcContactVelocity();
 }
 
@@ -490,33 +483,41 @@ Interaction::deactivate_contact(){
 	contact = false;
 }
 
+/*
+ * update()
+ *  return `true' if r > r_lub_max 
+ *   ---> deactivate
+ */
 bool
 Interaction::update(){
-	// update tangential displacement: we do it before updating nr_vec
-	if (sys->friction) {
-		incrementContactTangentialDisplacement();
-	}
-
-	// compute new r_vec and distance
-	calcDistanceNormalVector();
-
-	// check new state of the interaction
 	if (active){
+		// update tangential displacement: we do it before updating nr_vec
+		if (sys->friction) {
+			incrementContactTangentialDisplacement();
+		}
+		// compute new r_vec and distance
+		calcDistanceNormalVector();
+		// check new state of the interaction
 		if(r() > r_lub_max){
 			deactivate();
 			return true;
 		} else {
 			if (contact){
-				if (r() > ro ){			
+				if (r() > ro ){
 					deactivate_contact();
 				}
 			} else {
-					// contact false:
-				if (r() < ro){
+				// contact false:
+				if (r() <= ro){
 					activate_contact();
-				}
+				} 
 			}
 		}
+		
 	}
 	return false;
 }
+
+
+
+

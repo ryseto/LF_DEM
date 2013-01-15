@@ -154,8 +154,7 @@ System::timeEvolution(int time_step){
 			// Lubrication dynamics
 			if(brownian){
 				updateVelocityLubricationBrownian();
-			}
-			else{
+			} else{
 				updateVelocityLubrication();
 			}
 		} else {
@@ -223,7 +222,7 @@ void
 System::updateInteractions(){
 	
 	for (int k = 0; k < num_interaction; k++){
-		int switch_off = interaction[k].update();
+		bool switch_off = interaction[k].update();
 		if(switch_off)
 			deactivated_interaction.push(k);
 	}
@@ -913,7 +912,6 @@ System::periodize_diff(vec3d *pos_diff, int *zshift){
 
 void
 System::deltaTimeEvolution(){
-	
 	// evolve PBC
 	shear_disp += vel_difference*dt;
 	if (shear_disp > lx()){

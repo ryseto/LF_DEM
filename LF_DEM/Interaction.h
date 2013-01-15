@@ -25,7 +25,7 @@ private:
 	vec3d xi; // tangential displacement
 
 	void calcDistanceNormalVector();
-	void assignDistanceNormalVector(vec3d, double, int);
+	void assignDistanceNormalVector(const vec3d &, double, int);
 	void calcContactVelocity();
 
 	void incrementContactTangentialDisplacement();
@@ -57,7 +57,7 @@ public:
 
 	void init(System *sys_);
 
-	void activate(int i, int j, vec3d pos_diff, double distance, int zshift);
+	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
 	bool active;
 
 	int particle_num[2];
