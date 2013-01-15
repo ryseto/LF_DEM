@@ -91,7 +91,7 @@ class Box{
   }
 
 
-  int container_size(){
+  size_t container_size(){
 	return container->size();
   }
 

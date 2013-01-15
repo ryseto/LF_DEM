@@ -247,7 +247,6 @@ void
 Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
 
 
-	// under contruction
 	double g1_l, g1_il;
 	double l1, l13, il1, il13;
 
@@ -319,7 +318,7 @@ Interaction::addLubricationStress(){
 	double Sjyz = 0.;
 	double Sjyy = 0.;
 
-	// First G*(U-Uing) term
+	// First: -G*(U-Uing) term
 	double vi [3];
 	double vj [3];
 
@@ -344,8 +343,8 @@ Interaction::addLubricationStress(){
 	double common_factor_i = 0.;
 	double common_factor_j = 0.;
 	for(int u=0; u<3; u++){
-		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
-		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
+		common_factor_i -= n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
+		common_factor_j -= n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
 	}
 
 	Sixx += n0n0_13 * common_factor_i;
@@ -360,7 +359,7 @@ Interaction::addLubricationStress(){
 	Sjyz += n1n2 * common_factor_j;
 
 
-	// Second: MEinf term
+	// Second: +M*Einf term
 	double XMii, XMjj, XMij, XMji;
 	XM(XMii, XMij, XMji, XMjj);
 

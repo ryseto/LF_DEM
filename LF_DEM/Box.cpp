@@ -32,7 +32,9 @@ Box::reset_moving_neighbors(){
 	_neighbors[label+_still_neigh_nb]=NULL;
 	_moving_neighbors[label]=NULL;
   }
+
 }
+
 
 
 
@@ -41,6 +43,7 @@ Box::neigh_nb(int n, int moving_n){
   _neigh_nb = n;
   _moving_neigh_nb = moving_n;
   _still_neigh_nb = n - moving_n;
+  
 
   if(_neigh_nb>0)
     _neighbors = new Box* [_neigh_nb]; 
@@ -74,16 +77,16 @@ Box::neighbor(int label, Box* neigh_box){
 // we have to check that we don't list two times the same neighbor (for top AND bottom boxes)
 // or don't the the box as its own neighbor (for every box)
 
-  if(can_be_added(label, neigh_box)){
-    _neighbors[label]=neigh_box;
-    if(label >= _still_neigh_nb){
-      _moving_neighbors[label-_still_neigh_nb]=neigh_box;
-    }
-	return true;
-  }
-  else{
-	return false;
-  }
+	if(can_be_added(label, neigh_box)){
+		_neighbors[label]=neigh_box;
+		if(label >= _still_neigh_nb){
+			_moving_neighbors[label-_still_neigh_nb]=neigh_box;
+		}
+		return true;
+	}
+	else{
+		return false;
+	}
 }
 
 

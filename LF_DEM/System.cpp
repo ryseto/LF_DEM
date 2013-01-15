@@ -211,6 +211,7 @@ System::checkNewInteraction(){
 
 		for (it = it_beg; it != it_end; it++){
 			int j=*it;
+
 			if(j>i){
 				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
 					
@@ -233,6 +234,7 @@ System::checkNewInteraction(){
 						}
 						// new interaction
 						interaction[interaction_new].activate(i, j, +pos_diff, sqrt(sq_dist), zshift);
+
 					}
 				}
 			}

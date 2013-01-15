@@ -280,6 +280,10 @@ void
 Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open( filename_import_positions.c_str());
+	if(!file_import){
+		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
+		exit(1);
+	}
 	string line;
 	getline(file_import, line);
 	
