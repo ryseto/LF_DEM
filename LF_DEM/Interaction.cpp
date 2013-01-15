@@ -303,19 +303,6 @@ Interaction::addLubricationStress(){
 	n[1] = nr_vec.y;
 	n[2] = nr_vec.z;
 
-<<<<<<< HEAD
-
-	double Sixx = 0.;
-	double Sixy = 0.;
-	double Sixz = 0.;
-	double Siyz = 0.;
-	double Siyy = 0.;
-	double Sjxx = 0.;
-	double Sjxy = 0.;
-	double Sjxz = 0.;
-	double Sjyz = 0.;
-	double Sjyy = 0.;
-
 
 	double stresslet_i[5];
 	double stresslet_j[5];
