@@ -44,7 +44,9 @@ private:
 	void setParameters(int argc, const char * argv[]);
 	void outputPositionData();
 public:
-	GenerateInitConfig(){};
+	GenerateInitConfig(){
+		dr.set(0,0,0);
+	};
 	int generate(int argc, const char * argv[]);
 
 };
