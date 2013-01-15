@@ -186,7 +186,7 @@ Simulation::SetParametersPostProcess(){
 void
 Simulation::SetDefaultParameters(){
 	sys.lubrication = true;
-	sys.brownian = false;
+	sys.brownian = true;
 	sys.friction = true;
 	sys.poly = true;
 	/*
@@ -229,7 +229,7 @@ Simulation::SetDefaultParameters(){
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
 	 */
-	sys.kb_T = 1.0;
+	sys.kb_T = 0.1;
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant

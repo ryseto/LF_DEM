@@ -51,9 +51,9 @@ BrownianForce::generate_local(){
 	cholmod_factor* L_copy = cholmod_copy_factor(sys->L, c); // sadly it seems we have to make a copy. Is there a way to avoid this?
 	L_sparse = cholmod_factor_to_sparse(L_copy, c);
 	
-	double temperature [2] = {kb_T2,0};
+	double temp2_dt [2] = {kb_T2/sys->dt,0};
 	double zero [2] = {0,0};
-	cholmod_sdmult(L_sparse, 0, temperature, zero, random_vector(), forces, c);
+	cholmod_sdmult(L_sparse, 0, temp2_dt, zero, random_vector(), forces, c);
 
 	// cout << endl<< endl << " brownian force "<< endl<< endl;
 	// cout << " kbt " << kb_T2 << endl;
