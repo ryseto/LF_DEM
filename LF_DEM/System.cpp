@@ -984,8 +984,14 @@ System::calcStress(){
 	 *  The term 5.0/9 is the one-body part
 	 *
 	 */
+	double total_stress_bgf = 0;
+	for (int i=0; i < n ; i++){
+		double a = radius[i];
+		total_stress_bgf += (5.0/9)*bgf_factor*a*a*a;
+	}
+
 	for (int k=0; k < 5; k++){
-		mean_hydro_stress[k] = total_lub_stress[k] / n + (5.0/9)*bgf_factor;
+		mean_hydro_stress[k] = total_lub_stress[k] / n + total_stress_bgf / n;
 		mean_contact_stress[k] = total_contact_stress[k] / n;
 	}
 }

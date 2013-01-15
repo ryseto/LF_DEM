@@ -23,12 +23,13 @@ private:
 	vector <double> radii;
 	string filename_import_positions;
 	string filename_parameters;
+	int np1;
+	int np2;
 	/*
 	 *  Simulation parameters
 	 */
 	int ts_max;
 	int interval_snapshot;
-	int np1, np2;
 	/*
 	 * For output data.
 	 */

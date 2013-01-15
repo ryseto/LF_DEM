@@ -29,21 +29,21 @@ void GenerateInitConfig::outputPositionData(){
 	} else {
 		ss_posdatafilename << "Poly" << a2 << "_" << number_ratio ;
 	}
-
-	ss_posdatafilename << "VF" << volume_fraction << ".dat";
+	ss_posdatafilename << "VF" << volume_fraction;
 	if (dimension == 2){
 		if (lx_lz == 1){
-			ss_posdatafilename << "RSQ";
+			ss_posdatafilename << "Square"; // square
 		} else {
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
 		}
 	} else {
 		if (lx_lz == 1 && ly_lz == 1){
-			ss_posdatafilename << "CBC";
+			ss_posdatafilename << "Qubic"; //
 		} else {
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 		}
 	}
+	ss_posdatafilename << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	fout << "# np1 np2 vf lx ly lz" << endl;
