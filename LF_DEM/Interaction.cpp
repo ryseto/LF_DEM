@@ -13,7 +13,7 @@ Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
-	f_normal = 0;
+	Fc_normal = 0;
 	
 	//	twothird = 2./3.;
 	//	onesixth = 1./6.;
@@ -80,7 +80,7 @@ Interaction::valNormalForce(){
 		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
 	}
 	if (contact){
-		f_normal_total += f_normal;
+		f_normal_total += Fc_normal;
 	}
 	return f_normal_total;
 }
@@ -93,7 +93,7 @@ Interaction::valNormalForce(){
 *********************************/
 void
 Interaction::calcStaticFriction(){
-	double f_static = sys->mu_static*f_normal;
+	double f_static = sys->mu_static*Fc_normal;
 	double f_spring = sys->kt*xi.norm();
 	if ( xi.x != 0){
 		if (f_spring < f_static){
@@ -101,7 +101,7 @@ Interaction::calcStaticFriction(){
 			 * f_tangent is force acting on particle 0 from particle 1
 			 * xi = r1' - r0'
 			 */
-			f_tangent = sys->kt*xi;
+			Fc_tangent = sys->kt*xi;
 		} else {
 			/* switch to dynamic friction */
 			static_friction = false;
@@ -112,11 +112,11 @@ Interaction::calcStaticFriction(){
 
 void
 Interaction::calcDynamicFriction(){
-	double f_dynamic = sys->mu_dynamic*f_normal;
+	double f_dynamic = sys->mu_dynamic*Fc_normal;
 	/* Use the velocity of one time step before as approximation. */
 	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
 
-	f_tangent = f_dynamic*unit_contact_velocity_tan; // on p0
+	Fc_tangent = f_dynamic*unit_contact_velocity_tan; // on p0
 }
 
 
@@ -124,19 +124,20 @@ Interaction::calcDynamicFriction(){
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
  * r_vec = p[1] - p[0]
- * f_normal is positive (by overlapping particles r < 2)
+ * Fc_normal is positive (by overlapping particles r < 2)
  */
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		f_normal = -sys->kn*ksi;
+		Fc_normal = -sys->kn*ksi;
 		if (static_friction){
 			calcStaticFriction();
 		} else {
 			calcDynamicFriction();
 		}
-		vec3d f_ij = - f_normal * nr_vec + f_tangent; // acting on p0
-		vec3d t_ij = cross(nr_vec, f_tangent); // acting on p0
+		
+		vec3d f_ij = - Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
+		vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
 		sys->force[particle_num[0]] += f_ij;
 		sys->force[particle_num[1]] -= f_ij;
 		sys->torque[particle_num[0]] = a0*t_ij;
@@ -147,9 +148,9 @@ Interaction::calcContactInteraction(){
 void
 Interaction::calcContactInteractionNoFriction(){
 	if (contact){
-		f_normal = sys->kn*ksi;
-		sys->force[ particle_num[0] ] -= f_normal * nr_vec;
-		sys->force[ particle_num[1] ] += f_normal * nr_vec;
+		Fc_normal = sys->kn*ksi;
+		sys->force[ particle_num[0] ] -= Fc_normal * nr_vec;
+		sys->force[ particle_num[1] ] += Fc_normal * nr_vec;
 	}
 }
 
@@ -180,7 +181,7 @@ Interaction::incrementContactTangentialDisplacement(){
 		sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
 		if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
 			static_friction = true;
-			xi = (1.0/sys->kt) * f_tangent;
+			xi = (1.0/sys->kt) * Fc_tangent;
 		}
 	}
 }
@@ -385,7 +386,8 @@ Interaction::addContactStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
 	if (contact){
-		vec3d force = - (f_normal * nr_vec + f_tangent);
+		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
+        
 		double Sxx = 2*(force.x * nr_vec.x);
 		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
 		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
