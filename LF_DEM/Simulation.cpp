@@ -508,7 +508,7 @@ Simulation::output_yap(){
 				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 										sys.position[i].y - sys.ly2(),
 										sys.position[i].z - sys.lz2());
-				fout_yap << "r " << yap_force_factor*sys.interaction[k].f_tangent.norm()  << endl;
+				fout_yap << "r " << yap_force_factor*sys.interaction[k].Fc_tangent.norm()  << endl;
 				drawLine('s', pos, -sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),

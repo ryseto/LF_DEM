@@ -23,13 +23,27 @@ void GenerateInitConfig::outputPositionData(){
 	ostringstream ss_posdatafilename;
 	ss_posdatafilename << "D" << dimension;
 	ss_posdatafilename << "N" << np;
-	ss_posdatafilename << "PD" << number_ratio ;
-	if (dimension == 2){
-		ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
+	
+	if (number_ratio == 1){
+		ss_posdatafilename << "Mono";
 	} else {
-		ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
+		ss_posdatafilename << "Poly" << a2 << "_" << number_ratio ;
 	}
-	ss_posdatafilename << "vf" << volume_fraction << ".dat";
+
+	ss_posdatafilename << "VF" << volume_fraction << ".dat";
+	if (dimension == 2){
+		if (lx_lz == 1){
+			ss_posdatafilename << "RSQ";
+		} else {
+			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
+		}
+	} else {
+		if (lx_lz == 1 && ly_lz == 1){
+			ss_posdatafilename << "CBC";
+		} else {
+			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
+		}
+	}
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	fout << "# np1 np2 vf lx ly lz" << endl;

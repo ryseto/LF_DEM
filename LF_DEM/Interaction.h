@@ -82,8 +82,11 @@ public:
 	bool contact;
 	bool static_friction;
 
-	double f_normal;
-	vec3d f_tangent;
+	/* Fc_normal: normal contact force
+	 * Fc_tangent: tangneital contact force
+	 */
+	double Fc_normal;
+	vec3d Fc_tangent;
 
 	double valNormalForce();
 	void calcContactInteraction();
