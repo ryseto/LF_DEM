@@ -293,7 +293,7 @@ Simulation::importInitialPositionFile(){
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
 		radii[i] = radius;
-		cout << pos.x  << " rad " << radius << endl;
+		cerr << pos.x  << " rad " << radius << endl;
 	}
 	file_import.close();
 }

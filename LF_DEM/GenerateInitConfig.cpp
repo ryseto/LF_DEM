@@ -49,11 +49,20 @@ void GenerateInitConfig::outputPositionData(){
 	fout << "# np1 np2 vf lx ly lz" << endl;
 	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 	fout << lx << ' ' << ly << ' ' << lz << endl;
-	for (int i = 0; i < np ; i++){
-		fout << position[i].x << ' ';
-		fout << position[i].y << ' ';
-		fout << position[i].z << ' ';
-		fout << radius[i] << endl;
+	if (dimension == 2){
+		for (int i = 0; i < np ; i++){
+			fout << position[i].x << ' ';
+			fout << 0 << ' ';
+			fout << position[i].z << ' ';
+			fout << radius[i] << endl;
+		}
+	} else {
+		for (int i = 0; i < np ; i++){
+			fout << position[i].x << ' ';
+			fout << position[i].y << ' ';
+			fout << position[i].z << ' ';
+			fout << radius[i] << endl;
+		}
 	}
 	fout.close();
 }
@@ -118,7 +127,7 @@ void GenerateInitConfig::putRandom(){
 		position[i].x = lx*drand48();
 		position[i].z = lz*drand48();
 		if (dimension == 2){
-			position[i].y = ly2;
+			position[i].y = 0;
 		} else {
 			position[i].y = ly*drand48();
 		}
@@ -326,7 +335,7 @@ void GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	if (dimension == 2){
 		lz = sqrt(pvolume / (lx_lz*volume_fraction ));
 		lx = lz*lx_lz;
-		ly = 0;
+		ly = 0.0;
 	} else {
 		lz = pow( pvolume / (lx_lz*ly_lz*volume_fraction), 1.0/3);
 		lx = lz*lx_lz;
