@@ -118,6 +118,7 @@ public:
 	bool friction;
 	bool brownian;
 	double diag_stokes_drag;
+	double bgf_factor;
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;

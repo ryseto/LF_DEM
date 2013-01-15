@@ -29,10 +29,9 @@ private:
 	void calcContactVelocity();
 
 	void incrementContactTangentialDisplacement();
-//	vec3d t_tangent;
+	//	vec3d t_tangent;
 	int pd_z;
 	double sqnorm_contact_velocity;
-
 	
 	// state switch
 	void deactivate();
@@ -46,9 +45,7 @@ private:
 	double ksi_eff;  // max(ksi, ksi_cutoff)
 	double iksi_eff;
 	double r_lub_max;  // max distance for lubrication
-	
 	//	double twothird, onesixth; // used in lubrication computations;
-
 
 protected:
 	void calcStaticFriction();
@@ -70,9 +67,9 @@ public:
 	}
 	void r(double new_r);
 	inline double gap(){
-	  return ksi;
+		return ksi;
 	}
-
+	
 	bool update(); // after particles dispacement
 
 	double a0, a1;
@@ -81,7 +78,6 @@ public:
 	vec3d r_vec; // vector center to center
 	vec3d nr_vec; // normal vector
 	int partner(int);
-
 
 	bool contact;
 	bool static_friction;

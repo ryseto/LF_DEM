@@ -66,7 +66,29 @@ Interaction::assignDistanceNormalVector(vec3d pos_diff, double distance, int zsh
 	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
 }
 
-
+/* Lubrication force and contact normal force
+ * This function needs to be rewritten for poly disperse expression. 
+ *
+ *
+ */
+// @@@@@@@@@@@ THIS NEED TO BE UPDATED FOR POLYDISPERSE EXTENSION @@@@@@@@@@@@@@@@@@@
+double
+Interaction::valNormalForce(){
+	double f_normal_total = 0;
+	if ( ksi_eff > 0){
+		int i = particle_num[0];
+		int j = particle_num[1];
+		vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
+		rel_vel.x += pd_z * sys->vel_difference;
+		
+		double alpha = 1.0/(4*ksi_eff);
+		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
+	}
+	if (contact){
+		f_normal_total += f_normal;
+	}
+	return f_normal_total;
+}
 
 
 /*********************************
@@ -170,25 +192,6 @@ Interaction::incrementContactTangentialDisplacement(){
 	}
 }
 
-double
-Interaction::valNormalForce(){
-
-	double f_normal_total = 0;
-	if ( ksi_eff > 0){
-		int i = particle_num[0];
-		int j = particle_num[1];
-		vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
-		rel_vel.x += pd_z * sys->vel_difference;
-
-		double alpha = 1.0/(4*ksi_eff);
-		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
-	}
-	if (contact){
-		f_normal_total += f_normal;
-	}
-	return f_normal_total;
-}
-
 
 /*********************************
 *                                *
@@ -199,8 +202,6 @@ Interaction::valNormalForce(){
 // Resistance functions
 void
 Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
-
-	
 	double g1_l, g1_il;
 	double l1, l13, il1, il13;
 
@@ -217,13 +218,11 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 	XAij = - 2 * XAii / l1;
 	XAjj = g1_il * iksi_eff;
 	XAji = - 2 * XAjj / il1;
-	
 }
 
 
 void
 Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
-
 	double g1_l, g1_il;
 	double l1, l13, il1, il13;
 
@@ -289,15 +288,10 @@ Interaction::GE(double GEi[], double GEj[]){
 	GEj[0] *= sys->shear_rate * nxnz * nr_vec.x;
 	GEj[1] *= sys->shear_rate * nxnz * nr_vec.y;
 	GEj[2] *= sys->shear_rate * nxnz * nr_vec.z;
-
 }
-
-
-
 
 void
 Interaction::addLubricationStress(){
-
 
 	int i = particle_num[0];
 	int j = particle_num[1];
@@ -306,7 +300,6 @@ Interaction::addLubricationStress(){
 	n[0] = nr_vec.x;
 	n[1] = nr_vec.y;
 	n[2] = nr_vec.z;
-
 
 	double Sixx = 0.;
 	double Sixy = 0.;
@@ -456,10 +449,8 @@ Interaction::activate(int i, int j, vec3d pos_diff, double distance, int zshift)
 
 	assignDistanceNormalVector(pos_diff, distance, zshift); 
 
-
 	return;
 }
-
 
 void
 Interaction::deactivate(){
@@ -471,7 +462,6 @@ Interaction::deactivate(){
 	sys->interaction_list[j].erase(this);
 	sys->interaction_partners[i].erase(j);
 	sys->interaction_partners[j].erase(i);
-
 }
 
 void
@@ -482,7 +472,6 @@ Interaction::activate_contact(){
 	xi.reset();
 
 	calcContactVelocity();
-
 }
 
 void
@@ -493,17 +482,13 @@ Interaction::deactivate_contact(){
 
 bool
 Interaction::update(){
-
-	
 	// update tangential displacement: we do it before updating nr_vec
 	if (sys->friction) {
 		incrementContactTangentialDisplacement();
 	}
 
-
 	// compute new r_vec and distance
 	calcDistanceNormalVector();
-
 
 	// check new state of the interaction
 	if (active){
@@ -523,6 +508,5 @@ Interaction::update(){
 			}
 		}
 	}
-
 	return false;
 }
