@@ -182,61 +182,131 @@ vec3d GenerateInitConfig::randUniformSphere(double r){
 }
 
 void GenerateInitConfig::setParameters(int argc, const char * argv[]){
-	a1 = 1.0;
+	string input;
 	
-	cerr << "number of particle = ";
-	cin >> np;
-	
-	do {
-		cerr << "dimension[2 or 3] = ";
-		cin >> dimension;
-	} while (dimension !=2 && dimension !=3);
-	cerr << "volume fraction = ";
-	cin >> volume_fraction;
-	cerr << "box size ratio Lx/Lz = " ;
-	cin >> lx_lz;
-	if (dimension == 3){
-		cerr << "box size ratio Ly/Lz = " ;
-		cin >> ly_lz;
+	np = 200;
+	cerr << "number of particle[200]: ";
+	getline(cin, input);
+
+	if ( !input.empty() ) {
+		istringstream stream( input );
+		stream >> np;
+	} else {
+		cerr << "np = 200" << endl;
 	}
-	char m_p_disperse;
+
+	dimension = 3;
 	do {
-		cerr << "monodisperse or polydisperse? [m or p]:";
-		cin >> m_p_disperse;
+		cerr << "dimension[3]: ";
+		getline( cin, input );
+		if ( !input.empty() ) {
+			istringstream stream( input );
+			stream >> dimension;
+		} else {
+			cerr << "dimension = 3" << endl;
+		}
+	} while (dimension !=2 && dimension !=3);
+
+	volume_fraction = 0.5;
+	cerr << "volume fraction[0.5]: ";
+	getline( cin, input );
+	if ( !input.empty() ) {
+		istringstream stream( input );
+		stream >> volume_fraction;
+	} else {
+		cerr << "volume_fraction = 0.5" << endl;
+	}
+		
+	lx_lz = 1;
+	cerr << "Lx/Lz [1]: ";
+	getline(cin, input);
+	if ( !input.empty() ) {
+		istringstream stream( input );
+		stream >> lx_lz;
+	} else {
+		cerr << "Lx/Lz = 1" << endl;
+	}
+	
+	if (dimension == 3){
+		ly_lz = 1;
+		cerr << "Ly/Lz [1]: ";
+		getline(cin, input);
+		if ( !input.empty() ) {
+			istringstream stream( input );
+			stream >> ly_lz;
+		} else {
+			cerr << "Ly/Lz = 1" << endl;
+		}
+	}
+		
+	char m_p_disperse = 'm';
+	do {
+		cerr << "(m)onodisperse or (p)olydisperse [m]:";
+		getline( cin, input );
+		if ( !input.empty() ) {
+			istringstream stream( input );
+			stream >> m_p_disperse;
+		} else {
+			cerr << "(m)onodisperse" << endl;
+		}
 	} while (m_p_disperse != 'm' && m_p_disperse != 'p');
+
 	number_ratio = 1.0;
+	a1 = 1.0;
 	if ( m_p_disperse == 'p'){
 		do {
 			cerr << "a1 = 1.0" << endl;
-			cerr << "a2 = ";
-			cin >> a2;
+			
+			a2 = 1.4;
+			cerr << "a2[1.4]: ";
+			getline(cin, input);
+			if ( !input.empty() ) {
+				istringstream stream( input );
+				stream >> a2;
+			} else {
+				cerr << "a2 = " << a2 << endl;
+			}
 			if ( a2 < a1)
 				cerr << "!! a2 needs to be greater than a1." << endl;
 		} while (a2 < a1);
 		do {
-			cerr << "number ratio n1/(n1+n2) = ";
-			cin >> number_ratio;
+			number_ratio = 0.5;
+			cerr << "n1/(n1+n2) [0.5]: ";
+			getline(cin, input);
+			if ( !input.empty() ) {
+				istringstream stream( input );
+				stream >> number_ratio;
+			} else {
+				cerr << "number_ratio = " << number_ratio << endl;
+			}
 		} while ( number_ratio < 0 || number_ratio > 1);
 	}
-	cerr << "random seed?";
-	cin >> random_seed;
+
+	random_seed = 1;
+	cerr << "random seed [1]: ";
+	getline(cin, input);
+	if ( !input.empty() ) {
+		istringstream stream( input );
+		stream >> random_seed;
+	} else {
+		cerr << "random_seed = " << random_seed << endl;
+	}
 
 	double np1_tmp = np*number_ratio;
-	if (np1_tmp - (int)np1_tmp > 0.5){
-		np1 = (int)np1_tmp + 1;
-	} else {
+	if (np1_tmp - (int)np1_tmp <= 0.5){
 		np1 = (int)np1_tmp;
+	} else {
+		np1 = (int)np1_tmp+1;
 	}
 	np2 = np - np1;
-
 	double pvolume1;
 	double pvolume2;
 	if (dimension == 2){
-		pvolume1 = M_PI * np1;
-		pvolume2 = M_PI*a2*a2 * np2;
+		pvolume1 = M_PI*np1;
+		pvolume2 = M_PI*a2*a2*np2;
 	} else {
-		pvolume1 = (4.0/3)*M_PI * np1;
-		pvolume2 = (4.0/3)*M_PI*a2*a2*a2 * np2;
+		pvolume1 = (4.0/3)*M_PI*np1;
+		pvolume2 = (4.0/3)*M_PI*a2*a2*a2*np2;
 	}
 	double pvolume = pvolume1 + pvolume2;
 	if (dimension == 2){

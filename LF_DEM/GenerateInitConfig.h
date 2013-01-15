@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <string>
 #include "vec3d.h"
 using namespace std;
 

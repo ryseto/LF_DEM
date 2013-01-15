@@ -58,8 +58,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.friction = str2bool(value);
 	} else if (keyword == "brownian"){
 		sys.brownian = str2bool(value);
-	} else if (keyword == "diag_stokes_drag"){
-		sys.diag_stokes_drag = atof(value.c_str());
+	} else if (keyword == "bgf_factor"){
+		sys.bgf_factor = atof(value.c_str());
 	} else if (keyword == "poly"){
 		sys.poly = str2bool(value);
 	} else if (keyword == "gap_cutoff"){
@@ -138,36 +138,6 @@ Simulation::ReadParameterFile(){
 
 void
 Simulation::SetParametersPostProcess(){
-	/* take parameters from import file name.
-	 *
-	 */
-//	int i_D = (int)filename_import_positions.find( "D") + 1;
-//	sys.dimension = atoi( filename_import_positions.substr(i_D, 1).c_str() );
-//	if (sys.dimension == 2 ){
-//		// example: D2L10_10vf0.8.dat
-//		int i_lx = (int)filename_import_positions.find( "L") + 1;
-//		int j_lx = (int)filename_import_positions.find( "_" );
-//		int j_lz = (int)filename_import_positions.find( "vf", j_lx);
-//		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-//		sys.lx(atof( filename_import_positions.substr(i_lx, j_lx - i_lx).c_str() ));
-//		sys.ly(0);
-//		sys.lz(atof( filename_import_positions.substr(j_lx+1, j_lz - j_lx-1).c_str() ));
-//		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf - j_lz-2).c_str() );
-//	} else {
-//		// example: D3L10_10_10vf0.5.dat
-//		int i_lx = (int)filename_import_positions.find( "L") + 1;
-//		int j_lx = (int)filename_import_positions.find( "_", i_lx);
-//		int j_ly = (int)filename_import_positions.find( "_", j_lx+1);
-//		int j_lz = (int)filename_import_positions.find( "vf", j_ly+1);
-//		int j_vf = (int)filename_import_positions.find( ".dat", j_lz);
-//		sys.lx(atof( filename_import_positions.substr(i_lx  , j_lx - i_lx).c_str() ));
-//		sys.ly(atof( filename_import_positions.substr(j_lx+1, j_ly - j_lx-1).c_str() ));
-//		sys.lz(atof( filename_import_positions.substr(j_ly+1, j_lz - j_ly-1).c_str() ));
-//		sys.volume_fraction = atof( filename_import_positions.substr(j_lz + 2, j_vf-j_lz-2).c_str() );
-//	}
-	
-//	cerr << "L = " << sys.lx() << ' ' << sys.ly() << ' ' << sys.lz() << endl;
-//	cerr << "VF = " << sys.volume_fraction << endl;
 	/*
 	 * Set simulation name and name of output files.
 	 */
@@ -246,9 +216,15 @@ Simulation::SetDefaultParameters(){
 	 * gap_cutoff: reduced small cutoff distance for gap diverging coeffient:
 	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
 	 * 1/ksi_cutoff when h <= ksi_cutoff
+	 *
+	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
+	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
+	 *   The optimal value of bgf_factor (< 1.0) may exist.
+	 *
 	 */
 	sys.lub_max = 2.5;
 	sys.gap_cutoff = 0.01;
+	sys.bgf_factor = 1.0;
 	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
@@ -294,6 +270,9 @@ Simulation::importInitialPositionFile(){
 	double _lx_, _ly_, _lz_;
 	char buf;
 	file_import >> buf >> _np1_ >> _np2_ >> _volume_fraction_ >> _lx_ >> _ly_ >> _lz_ ;
+	np1 = _np1_;
+	np2 = _np2_;
+
 	int num_of_particle = _np1_ + _np2_;
 	sys.set_n(num_of_particle);
 	cerr << "np = " << num_of_particle << endl;
@@ -315,7 +294,6 @@ Simulation::importInitialPositionFile(){
 		initial_positions[i] = pos;
 		radii[i] = radius;
 	}
-	
 	file_import.close();
 }
 
@@ -323,32 +301,13 @@ Simulation::importInitialPositionFile(){
 void
 Simulation::prepareSimulationName(){
 	ostringstream ss_simu_name;
-	//	if (sys.dimension == 2){
-	//		ss_simu_name << "D" << sys.dimension << "L" << sys.lx << "_" << sys.lz ;
-	//	} else {
-	//		ss_simu_name << "D" << sys.dimension << "L" << sys.lx << "_" << sys.ly << "_" << sys.lz ;
-	//	}
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
+	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	/*
-	 if (friction == true){
-	 ss_simu_name << "vf" << volume_fraction ;
-	 ss_simu_name << "fs" << mu_static << "fd" << mu_dynamic;
-	 } else {
-	 ss_simu_name << "vf" << volume_fraction ;
-	 }
-	 if (lubrication == true){
-	 ss_simu_name << "hc" << gap_cutoff;
-	 }
-	 if (brownian == true){
-	 ss_simu_name << "kT" << kb_T ;
-	 }
-	 */
 	sys.simu_name = ss_simu_name.str();
 	cerr << sys.simu_name << endl;
-	
 }
 
 
@@ -357,7 +316,6 @@ Simulation::prepareSimulationName(){
  */
 void
 Simulation::SimulationMain(int argc, const char * argv[]){
-
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
 	
@@ -371,9 +329,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	}
 	SetParametersPostProcess();
 
-	cerr << "N = " << sys.n  << endl;
 	sys.allocateRessources();
-
 	for (int i=0; i < sys.n; i++){
 		sys.position[i] = initial_positions[i];
 		if(sys.poly)
@@ -386,8 +342,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 
 	sys.initializeBoxing();
 	sys.checkNewInteraction();
-	//	int count = 0;
-	//	while(count++<3){
 	double time = 0;
 	while(time < ts_max){
 		sys.timeEvolution(interval_snapshot);
@@ -396,7 +350,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		time += (double)interval_snapshot;
 		output_vpython(time);
 	}
-
 }
 
 /*
@@ -409,12 +362,12 @@ Simulation::outputRheologyData(){
 	 * Output the sum of the normal forces.
 	 */
 	fout_rheo << sys.dt * sys.ts << ' ';// 1
-	fout_rheo << sys.mean_lub_stress[2] + sys.mean_contact_stress[2]  << ' ' ; //2
-	fout_rheo << sys.mean_lub_stress[0] << ' ' ; //3
-	fout_rheo << sys.mean_lub_stress[1] << ' ' ; //4
-	fout_rheo << sys.mean_lub_stress[2] << ' ' ; //5
-	fout_rheo << sys.mean_lub_stress[3] << ' ' ; //6
-	fout_rheo << sys.mean_lub_stress[4] << ' ' ; //7
+	fout_rheo << sys.mean_hydro_stress[2] + sys.mean_contact_stress[2]  << ' ' ; //2
+	fout_rheo << sys.mean_hydro_stress[0] << ' ' ; //3
+	fout_rheo << sys.mean_hydro_stress[1] << ' ' ; //4
+	fout_rheo << sys.mean_hydro_stress[2] << ' ' ; //5
+	fout_rheo << sys.mean_hydro_stress[3] << ' ' ; //6
+	fout_rheo << sys.mean_hydro_stress[4] << ' ' ; //7
 	fout_rheo << sys.mean_contact_stress[0] << ' ' ; //8
 	fout_rheo << sys.mean_contact_stress[1] << ' ' ; //9
 	fout_rheo << sys.mean_contact_stress[2] << ' ' ; //10
@@ -513,8 +466,15 @@ Simulation::output_yap(){
 	fout_yap << "y 1\n";
 	fout_yap << "@ " << color_white << endl;
 	vec3d pos;
-	for (int i=0; i < sys.n; i++){
-		fout_yap << "r " << sys.radius[i] << endl;
+	fout_yap << "r " << sys.radius[0] << endl;
+	for (int i=0; i < np1; i++){
+		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+								sys.position[i].y - sys.ly2(),
+								sys.position[i].z - sys.lz2());
+		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+	}
+	fout_yap << "r " << sys.radius[np1+1] << endl;
+	for (int i = np1; i < sys.n ; i++){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
@@ -553,12 +513,12 @@ Simulation::output_yap(){
 										sys.position[i].y - sys.ly2(),
 										sys.position[i].z - sys.lz2());
 				fout_yap << "r " << yap_force_factor*sys.interaction[k].f_tangent.norm()  << endl;
-				drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, -sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
 										sys.position[j].y - sys.ly2(),
 										sys.position[j].z - sys.lz2());
-				drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 			}
 		}
 	}
@@ -575,11 +535,11 @@ Simulation::output_yap(){
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 									sys.position[i].y - sys.ly2(),
 									sys.position[i].z - sys.lz2());
-			drawLine('s', pos, -sys.interaction[k].nr_vec, fout_yap);
+			drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
 									sys.position[j].y - sys.ly2(),
 									sys.position[j].z - sys.lz2());
-			drawLine('s', pos, sys.interaction[k].nr_vec, fout_yap);
+			drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 		}
 	}
 

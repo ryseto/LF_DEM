@@ -17,7 +17,6 @@
 class Simulation{
 private:
 	System sys;
-
 	double shear_strain;
 	bool import_positions;
 	vector< vec3d> initial_positions;
@@ -29,6 +28,7 @@ private:
 	 */
 	int ts_max;
 	int interval_snapshot;
+	int np1, np2;
 	/*
 	 * For output data.
 	 */

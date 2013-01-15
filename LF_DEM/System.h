@@ -103,7 +103,7 @@ public:
 	vec3d *torque;
 	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
 	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
-	double mean_lub_stress[5];
+	double mean_hydro_stress[5];
 	double mean_contact_stress[5];
 	double kn;
 	double kt;
@@ -118,6 +118,7 @@ public:
 	bool friction;
 	bool brownian;
 	double diag_stokes_drag;
+	double bgf_factor;
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
