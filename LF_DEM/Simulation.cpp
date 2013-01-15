@@ -358,12 +358,12 @@ Simulation::outputRheologyData(){
 	 * Output the sum of the normal forces.
 	 */
 	fout_rheo << sys.dt * sys.ts << ' ';// 1
-	fout_rheo << sys.mean_lub_stress[2] + sys.mean_contact_stress[2]  << ' ' ; //2
-	fout_rheo << sys.mean_lub_stress[0] << ' ' ; //3
-	fout_rheo << sys.mean_lub_stress[1] << ' ' ; //4
-	fout_rheo << sys.mean_lub_stress[2] << ' ' ; //5
-	fout_rheo << sys.mean_lub_stress[3] << ' ' ; //6
-	fout_rheo << sys.mean_lub_stress[4] << ' ' ; //7
+	fout_rheo << sys.mean_hydro_stress[2] + sys.mean_contact_stress[2]  << ' ' ; //2
+	fout_rheo << sys.mean_hydro_stress[0] << ' ' ; //3
+	fout_rheo << sys.mean_hydro_stress[1] << ' ' ; //4
+	fout_rheo << sys.mean_hydro_stress[2] << ' ' ; //5
+	fout_rheo << sys.mean_hydro_stress[3] << ' ' ; //6
+	fout_rheo << sys.mean_hydro_stress[4] << ' ' ; //7
 	fout_rheo << sys.mean_contact_stress[0] << ' ' ; //8
 	fout_rheo << sys.mean_contact_stress[1] << ' ' ; //9
 	fout_rheo << sys.mean_contact_stress[2] << ' ' ; //10

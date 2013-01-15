@@ -413,10 +413,8 @@ fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 
 
 #ifdef CHOLMOD
-
 void
 System::addStokesDrag(){
-	
 	for (int i = 0; i < n; i ++){
 		int i6=6*i;
 		double d_value = bgf_factor*radius[i];
@@ -424,7 +422,6 @@ System::addStokesDrag(){
 		diag_values[i6+3] = d_value;
 		diag_values[i6+5] = d_value;
 	}
-	
 }
 
 
@@ -732,11 +729,13 @@ System::updateVelocityLubrication(){
 	for (int k = 0; k < n3*n3; k++){
 		res[k] = 0.;
 	}
+
 	for (int i = 0 ; i < n; i ++){
 		int i3 = 3*i;
-		res[n3*(i3  ) + i3  ] = 1.;
-		res[n3*(i3+1) + i3+1] = 1.;
-		res[n3*(i3+2) + i3+2] = 1.;
+		double d_value = bgf_factor*radius[i];
+		res[n3*(i3  ) + i3  ] = d_value;
+		res[n3*(i3+1) + i3+1] = d_value;
+		res[n3*(i3+2) + i3+2] = d_value;
 	}
 	if (lub){
 		for (int i = 0 ; i < n - 1; i ++){
@@ -976,14 +975,19 @@ System::calcStress(){
 	
 	double total_lub_stress[5] = {0,0,0,0,0};
 	double total_contact_stress[5] = {0,0,0,0,0};
-	for (int i=0; i< n ; i++){
+	for (int i=0; i < n ; i++){
 		for (int k=0; k < 5; k++){
 			total_lub_stress[k] += lubstress[i][k];
 			total_contact_stress[k] += contactstress[i][k];
 		}
 	}
+	/*
+	 *  mean_hydro_stress
+	 *  The term 5.0/9 is the one-body part
+	 *
+	 */
 	for (int k=0; k < 5; k++){
-		mean_lub_stress[k] = total_lub_stress[k] / n;
+		mean_hydro_stress[k] = total_lub_stress[k] / n + (5.0/9)*bgf_factor;
 		mean_contact_stress[k] = total_contact_stress[k] / n;
 	}
 }
