@@ -322,6 +322,7 @@ BoxSet::BoxSet(double interaction_dist, System *sys_){
 	double yratio=sys->ly()/interaction_dist;
 	double zratio=sys->lz()/interaction_dist;
 
+	cout << interaction_dist <<endl;
 	x_box_nb = (int)xratio;
 	y_box_nb = (int)yratio;
 	z_box_nb = (int)zratio;
@@ -374,6 +375,8 @@ BoxSet::BoxSet(double interaction_dist, System *sys_){
 		box_ysize=sys->ly()/y_box_nb;
 		box_zsize=sys->lz()/z_box_nb;
 
+		cout << box_xsize << " " << box_ysize << " "<< box_zsize << endl;
+		cout << x_box_nb << " " << y_box_nb << " "<< z_box_nb << endl;
 		allocateBoxes();
 
 		// give them their position

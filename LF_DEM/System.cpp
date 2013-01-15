@@ -135,7 +135,7 @@ System::initializeBoxing(){// need to know radii first
 			max_radius=radius[i];
 		}
 	}
-	
+	cout << lub_max << " " << max_radius << endl;
 	boxset = new BoxSet(lub_max*max_radius, this);
 	for (int i=0; i < n; i++){
 		boxset->box(i);
@@ -178,10 +178,12 @@ System::checkNewInteraction(){
 		
 		it_beg = boxset->neighborhood_begin(i);
 		it_end = boxset->neighborhood_end(i);
-		
+
+		//		cout << i << " " <<position[i].x << " " <<position[i].y << " " <<position[i].z << endl;
+
 		for (it = it_beg; it != it_end; it++){
 			int j=*it;
-
+			
 			if(j>i){
 				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
 					
@@ -825,7 +827,6 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 	position[i].x += dx_;
 	position[i].y += dy_;
 	position[i].z += dz_;
-	
 	periodize(&(position[i]));
 	boxset->box(i);
 }
