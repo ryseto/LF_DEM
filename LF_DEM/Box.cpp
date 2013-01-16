@@ -158,7 +158,7 @@ void
 Box::build_neighborhood_container(){
 
   neighborhood_container.clear();
-  int size = container_size();
+  int size = (int)container_size();
 
   for(int i=0;i<neigh_nb();i++){
 	size += (_neighbors[i])->container_size();

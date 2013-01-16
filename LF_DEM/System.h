@@ -30,7 +30,7 @@ class BoxSet;
 
 class System{
 private:
-	int n3;
+	int np3;
 	int maxnum_interactionpair;
 
 	queue<int> deactivated_interaction;
@@ -91,7 +91,7 @@ public:
      */
 	System(){};
 	~System();
-	int n; // number of particles
+	int np; // number of particles
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
@@ -174,9 +174,9 @@ public:
 	  return _lz2;
 	}
 
-	void set_n(int _n){
-	  n=_n;
-	  n3=3*n;
+	void set_np(int _np){
+	  np=_np;
+	  np3=3*np;
 	}
 
 	double shear_disp;
@@ -218,7 +218,7 @@ public:
 	void calcStress();
 	void computeBrownianStress();
 	int numpart(){
-		return n;
+		return np;
 	}
 
 #ifdef CHOLMOD
