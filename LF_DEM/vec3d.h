@@ -21,6 +21,13 @@ public:
 	inline vec3d (const double &_x,
 				  const double &_y,
 				  const double &_z): x(_x), y(_y), z(_z) {}
+	/* copy constructor */
+	inline vec3d(const vec3d& other){
+		x = other.x;
+		y = other.y;
+		z = other.z;
+	}
+
 	inline ~vec3d(void){}
 		
 	/* operators */
