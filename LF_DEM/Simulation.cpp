@@ -331,6 +331,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		filename_parameters = argv[2];
 		ReadParameterFile();
 	}
+	
 	SetParametersPostProcess();
 
 	sys.allocateRessources();
@@ -361,7 +362,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
  */
 void
 Simulation::outputRheologyData(){
-	sys.calcStress();
 	/*
 	 * Output the sum of the normal forces.
 	 */

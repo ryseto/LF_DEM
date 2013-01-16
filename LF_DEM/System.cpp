@@ -161,9 +161,13 @@ System::timeEvolution(int time_step){
 			// Free-draining approximation
 			updateVelocity();
 		}
+		if ( ts == ts_next - 2)
+			calcStress();
+		
 		deltaTimeEvolution();
 		ts ++;
 	}
+	//calcStress();
 }
 
 void
@@ -902,7 +906,6 @@ System::deltaTimeEvolution(){
 	if (shear_disp > lx()){
 		shear_disp -= lx();
 	}
-	
 	// move particles
 	for (int i=0; i < n; i++){
 		displacement(i, velocity[i].x*dt, velocity[i].y*dt, velocity[i].z*dt);
@@ -914,10 +917,8 @@ System::deltaTimeEvolution(){
 	}
 	// update boxing system
 	boxset->update();
-	
 	checkNewInteraction();
 	updateInteractions();
-	
 }
 
 /*
