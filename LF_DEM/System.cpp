@@ -135,7 +135,7 @@ System::initializeBoxing(){// need to know radii first
 			max_radius=radius[i];
 		}
 	}
-	cout << lub_max << " " << max_radius << endl;
+
 	boxset = new BoxSet(lub_max*max_radius, this);
 	for (int i=0; i < n; i++){
 		boxset->box(i);
@@ -178,8 +178,6 @@ System::checkNewInteraction(){
 		
 		it_beg = boxset->neighborhood_begin(i);
 		it_end = boxset->neighborhood_end(i);
-
-		//		cout << i << " " <<position[i].x << " " <<position[i].y << " " <<position[i].z << endl;
 
 		for (it = it_beg; it != it_end; it++){
 			int j=*it;
@@ -486,17 +484,6 @@ System::buildLubricationTerms(){
 }
 
 void
-System::buildBrownianTerms(){
-	// add Brownian force
-	fb->add_to(rhs_b);
-}
-// #else
-// void System::buildBrownianTerms(){
-// 	// add Brownian force
-// 	//	fb->generate(rhs_b); // right now not working, as it relies on Cholesky factor
-// }
-
-void
 System::buildContactTerms(){
 	// add contact force
 	for (int i = 0; i < n; i++){
@@ -610,13 +597,8 @@ System::updateVelocityLubrication(){
 	cholmod_free_dense(&v, &c);
 }
 
-void System::updateVelocityLubricationBrownian(){
-	
-	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
-	buildLubricationTerms();
-	
-	fillSparseResmatrix();
-	
+void
+System::factorizeResistanceMatrix(){
 	L = cholmod_analyze (sparse_res, &c);
 	cholmod_factorize (sparse_res, L, &c);
 	if(c.status){
@@ -629,13 +611,27 @@ void System::updateVelocityLubricationBrownian(){
 		cerr << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  c.final_ll <<endl;
 		c.supernodal = CHOLMOD_SUPERNODAL;
 	}
+
+}
+
+void System::updateVelocityLubricationBrownian(){
 	
+	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+	buildLubricationTerms();
+	
+	fillSparseResmatrix();
+
+	factorizeResistanceMatrix();
+
 	buildContactTerms();
 	
 	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
+
 	// now the Brownian part of the velocity:
-	// mid-point algortithm a la Banchio & Brady
+	// mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+
 	brownian_force = fb->generate();
+
 	v_Brownian_init = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
 	
 	// move particles to intermediate point
@@ -651,18 +647,7 @@ void System::updateVelocityLubricationBrownian(){
 	cholmod_free_sparse(&sparse_res, &c);
 	buildLubricationTerms();
 	fillSparseResmatrix();
-	L = cholmod_analyze (sparse_res, &c);
-	cholmod_factorize (sparse_res, L, &c);
-	if(c.status){
-		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
-		// It is very often enough to force another preconditioner to solve the problem.
-		cerr << " factorization failed. forcing simplicial algorithm... " << endl;
-		c.supernodal = CHOLMOD_SIMPLICIAL;
-		L = cholmod_analyze (sparse_res, &c);
-		cholmod_factorize (sparse_res, L, &c) ;
-		cerr << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  c.final_ll <<endl;
-		c.supernodal = CHOLMOD_SUPERNODAL;
-	}
+	factorizeResistanceMatrix();
 	
 	// get the intermediate brownian velocity
 	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
@@ -675,14 +660,17 @@ void System::updateVelocityLubricationBrownian(){
 	 getchar();
 	 */
 	
-	// move particles back to initial point
+	// move particles back to initial point, and update interactions
+	//
+	// Note that, although it looks like a complete reversal of the initial move (as it should be), 
+	// the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
+	// might switch off some of them. The 2nd move's update is not able to switch them back on.
 	for (int i=0; i < n; i++){
 		int i3 = 3*i;
 		displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
-	
 	updateInteractions();
-	
+
 	// update total velocity
 	// first term is hydrodynamic + contact velocities
 	// second term is Brownian velocities
