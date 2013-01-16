@@ -124,7 +124,7 @@ Interaction::calcDynamicFriction(){
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
  * r_vec = p[1] - p[0]
- * Fc_normal is positive (by overlapping particles r < 2)
+ * Fc_normal is positive (by overlapping particles r < ro)
  */
 void
 Interaction::calcContactInteraction(){
@@ -492,7 +492,7 @@ bool
 Interaction::update(){
 	if (active){
 		// update tangential displacement: we do it before updating nr_vec
-		if (sys->friction) {
+		if (sys->friction && contact) {
 			incrementContactTangentialDisplacement();
 		}
 		// compute new r_vec and distance

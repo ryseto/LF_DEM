@@ -21,6 +21,7 @@ class GenerateInitConfig{
 private:
 	int random_seed;
 	int dimension;
+	
 	double volume_fraction;
 	double lx_lz, ly_lz;
 	double lx, ly, lz;
@@ -28,6 +29,10 @@ private:
 	double number_ratio;
 	double a1;
 	double a2;
+	/*
+	 * Small gap
+	 */
+	double epsiron;
 	vector<vec3d> position;
 	vector<double> radius;
 	int np, np1, np2;

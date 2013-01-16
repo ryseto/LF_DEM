@@ -191,8 +191,8 @@ System::checkNewInteraction(){
 					pos_diff = position[j] - position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					
-					double sq_dist_lim = sq_lub_max * 0.25 * ( radius[i] + radius[j] ) * ( radius[i] + radius[j] );
+					double ri_rj_2 = 0.5*(radius[i] + radius[j]);
+					double sq_dist_lim = sq_lub_max * ri_rj_2 * ri_rj_2;
 					if ( sq_dist < sq_dist_lim){
 						int interaction_new;
 						if (deactivated_interaction.empty()){

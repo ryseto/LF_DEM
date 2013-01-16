@@ -10,6 +10,7 @@
 
 int
 GenerateInitConfig::generate(int argc, const char * argv[]){
+	epsiron = 1e-3;
 	setParameters(argc, argv);
 	position.resize(np);
 	radius.resize(np);
@@ -154,8 +155,8 @@ GenerateInitConfig::checkOverlap(){
 
 bool
 GenerateInitConfig::is_contact(int i, int j){
-	double contact_distance = radius[i] + radius[j];
-	double sq_contact_distance = contact_distance*contact_distance;
+	const double contact_distance = radius[i] + radius[j] + epsiron;
+	const double sq_contact_distance = contact_distance*contact_distance;
 	dr.x = position[i].x - position[j].x;
 	dr.z = position[i].z - position[j].z;
 	if (dr.z > contact_distance ){
@@ -204,7 +205,6 @@ template<typename T>
 T readStdinDefault(T default_value,	string message){
 	string input;
 	T value;
-	
 	cerr << message << "[" << default_value << "]: ";
 	getline(cin, input);
 	if ( !input.empty() ) {
