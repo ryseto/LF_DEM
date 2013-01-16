@@ -94,6 +94,7 @@ public:
 	void calcContactStress();
 	void addLubricationStress();
 	void addContactStress();
+	void pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]);
 
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
 	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);
