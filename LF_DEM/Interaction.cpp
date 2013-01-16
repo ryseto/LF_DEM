@@ -238,8 +238,6 @@ Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 
 void
 Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
-
-
 	double g1_l, g1_il;
 	double l1, l13, il1, il13;
 
@@ -256,7 +254,6 @@ Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
 	XMij = 40 * XMii * lambda / ( 3 * l13 * l13 * l13);
 	XMjj = 0.6 * g1_il * iksi_eff;
 	XMji = XMij;
-	
 }
 
 void
@@ -338,8 +335,8 @@ Interaction::addLubricationStress(){
 	double common_factor_i = 0.;
 	double common_factor_j = 0.;
 	for(int u=0; u<3; u++){
-		common_factor_i -= n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
-		common_factor_j -= n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
+		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
+		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
 	}
 
 	stresslet_i[0] += n0n0_13 * common_factor_i;
@@ -347,7 +344,6 @@ Interaction::addLubricationStress(){
 	stresslet_i[2] += n0n2 * common_factor_i;
 	stresslet_i[3] += n1n2 * common_factor_i;
 	stresslet_i[4] += n1n1_13 * common_factor_i;
-
 	stresslet_j[0] += n0n0_13 * common_factor_j;
 	stresslet_j[1] += n0n1 * common_factor_j;
 	stresslet_j[2] += n0n2 * common_factor_j;
@@ -367,8 +363,8 @@ Interaction::addLubricationStress(){
 	stresslet_i[0] += n0n0_13 * common_factor_i;
 	stresslet_i[1] += n0n1 * common_factor_i;
 	stresslet_i[2] += n0n2 * common_factor_i;
-	stresslet_i[4] += n1n1_13 * common_factor_i;
 	stresslet_i[3] += n1n2 * common_factor_i;
+	stresslet_i[4] += n1n1_13 * common_factor_i;
 	stresslet_j[0] += n0n0_13 * common_factor_j;
 	stresslet_j[1] += n0n1 * common_factor_j;
 	stresslet_j[2] += n0n2 * common_factor_j;

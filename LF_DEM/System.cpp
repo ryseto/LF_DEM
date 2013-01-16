@@ -994,9 +994,10 @@ System::calcStress(){
 	}
 
 	for (int k=0; k < 5; k++){
-		mean_hydro_stress[k] = total_lub_stress[k] / n + total_stress_bgf / n;
+		mean_hydro_stress[k] = total_lub_stress[k] / n ;
 		mean_contact_stress[k] = total_contact_stress[k] / n;
 	}
+	mean_hydro_stress[2] += total_stress_bgf / n;
 }
 
 void
