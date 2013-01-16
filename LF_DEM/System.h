@@ -46,9 +46,9 @@ private:
 
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
-	cholmod_dense *v;
+	cholmod_dense *v, *v_lub, *v_cont;
 	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
-	cholmod_dense *rhs_b, *brownian_force;
+	cholmod_dense *contact_rhs, *brownian_rhs, *nonbrownian_rhs, *lubrication_rhs, *total_rhs;
 	int max_lub_int;
 	int stype;
 	int sorted;
@@ -100,10 +100,18 @@ public:
 	vec3d *velocity;
 	vec3d *relative_velocity;
 	vec3d *ang_velocity;
-	vec3d *force;
-	vec3d *torque;
+	vec3d *total_force;
+	vec3d *lubrication_force;
+	vec3d *contact_force;
+	vec3d *brownian_force;
+	vec3d *total_velocity;
+	vec3d *lubrication_velocity;
+	vec3d *contact_velocity;
+	vec3d *brownian_velocity;
+	vec3d *torque; // right now only contact torque
 	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
 	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
+	double **brownianstress; // S_xx S_xy S_xz S_yz S_yy
 	double mean_hydro_stress[5];
 	double mean_contact_stress[5];
 	double kn;

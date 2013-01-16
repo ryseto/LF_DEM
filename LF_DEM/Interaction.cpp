@@ -138,8 +138,10 @@ Interaction::calcContactInteraction(){
 		
 		vec3d f_ij = - Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
 		vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
-		sys->force[particle_num[0]] += f_ij;
-		sys->force[particle_num[1]] -= f_ij;
+		sys->contact_force[particle_num[0]] += f_ij;
+		sys->contact_force[particle_num[1]] -= f_ij;
+		sys->total_force[particle_num[0]] += f_ij;
+		sys->total_force[particle_num[1]] -= f_ij;
 		sys->torque[particle_num[0]] = a0*t_ij;
 		sys->torque[particle_num[1]] = a1*t_ij;
 //		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
@@ -150,8 +152,10 @@ void
 Interaction::calcContactInteractionNoFriction(){
 	if (contact){
 		Fc_normal = sys->kn*ksi;
-		sys->force[ particle_num[0] ] -= Fc_normal * nr_vec;
-		sys->force[ particle_num[1] ] += Fc_normal * nr_vec;
+		sys->contact_force[ particle_num[0] ] -= Fc_normal * nr_vec;
+		sys->contact_force[ particle_num[1] ] += Fc_normal * nr_vec;
+		sys->total_force[ particle_num[0] ] -= Fc_normal * nr_vec;
+		sys->total_force[ particle_num[1] ] += Fc_normal * nr_vec;
 	}
 }
 
