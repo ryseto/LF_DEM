@@ -742,7 +742,7 @@ void System::computeBrownianStress(){
 	double vj [3];
 
 
-	total_rhs = cholmod_zeros(n3, 1, xtype, &c);
+	total_rhs = cholmod_zeros(np3, 1, xtype, &c);
 	buildLubricationTerms();
 	
 	fillSparseResmatrix();
@@ -783,7 +783,7 @@ void System::computeBrownianStress(){
 	
 
 	// move particles to intermediate point
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		int i3 = 3*i;
 		displacement(i, ((double*)v_Brownian_init->x)[i3]*dt_mid, ((double*)v_Brownian_init->x)[i3+1]*dt_mid, ((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
@@ -826,7 +826,7 @@ void System::computeBrownianStress(){
 		}
 	}
 
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		for (int u=0; u < 5; u++){
 			brownianstress[i][u] *= 0.5*dt_ratio;
 		}
@@ -838,7 +838,7 @@ void System::computeBrownianStress(){
 	// Note that, although it looks like a complete reversal of the initial move (as it should be), 
 	// the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
 	// might switch off some of them. The 2nd move's update is not able to switch them back on.
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		int i3 = 3*i;
 		displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}

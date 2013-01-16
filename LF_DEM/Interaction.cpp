@@ -276,7 +276,7 @@ Interaction::GE(double GEi[], double GEj[]){
 	GEi[2] *= sys->shear_rate * nxnz * nr_vec.z;
 
 	for(int u=0; u<3; u++){
-		GEj[u] = a1 * a1 * XGjj * 2. / 3;
+		GEj[u] = a1 * a1 * XGjj * 2 / 3;
 		GEj[u] += ro * ro * XGij / 6;
 	}
 	GEj[0] *= sys->shear_rate * nxnz * nr_vec.x;
