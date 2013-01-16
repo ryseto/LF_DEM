@@ -41,7 +41,7 @@ Interaction::r(double new_r){
 void
 Interaction::calcNormalVector(){
 	r_vec = sys->position[particle_num[1]] - sys->position[particle_num[0]];
-	sys->periodize_diff(&r_vec, &pd_z);
+	sys->periodize_diff(r_vec, pd_z);
 }
 
 void

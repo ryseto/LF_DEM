@@ -293,7 +293,7 @@ Simulation::importInitialPositionFile(){
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
 		radii[i] = radius;
-		cerr << pos.x  << " rad " << radius << endl;
+		//		cerr << pos.x  << " rad " << radius << endl;
 	}
 	file_import.close();
 }
@@ -392,43 +392,44 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 }
 
 void
-Simulation::drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
+Simulation::drawLine(char type , const vec3d &pos, const vec3d &vec, ofstream &fout){
 	fout << type << ' ';
 	fout << pos.x << ' '<< pos.y << ' '<< pos.z << ' ';
 	fout << pos.x + vec.x << ' '<< pos.y + vec.y << ' '<< pos.z + vec.z << endl;
 }
 
 void
-Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
+Simulation::drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout){
 	vec3d seg = pos2 - pos1;
+	vec3d pos2_ = pos2;
 	fout << type << ' ';
 	if (seg.z > sys.lz2()){
-		pos2.z -= sys.lz();
-		pos2.x -= sys.shear_disp;
+		pos2_.z -= sys.lz();
+		pos2_.x -= sys.shear_disp;
 		seg = pos2 - pos1;
 	} else if (seg.z < -sys.lz2()){
-		pos2.z += sys.lz();
-		pos2.x += sys.shear_disp;
+		pos2_.z += sys.lz();
+		pos2_.x += sys.shear_disp;
 		seg = pos2 - pos1;
 	}
 		
 	while (seg.x > sys.lx2()){
-		pos2.x -= sys.lx();
+		pos2_.x -= sys.lx();
 		seg = pos2 - pos1;
 	}
 	while (seg.x < -sys.lx2()){
-		pos2.x += sys.lx();
+		pos2_.x += sys.lx();
 		seg = pos2 - pos1;
 	}
 	
 	if (seg.y > sys.ly2()){
-		pos2.y -= sys.ly();
+		pos2_.y -= sys.ly();
 	} else if (seg.y < -sys.ly2()){
-		pos2.y += sys.ly();
+		pos2_.y += sys.ly();
 	}
 	
 	fout << pos1.x << ' '<< pos1.y << ' '<< pos1.z << ' ';
-	fout << pos2.x << ' '<< pos2.y << ' '<< pos2.z << endl;
+	fout << pos2_.x << ' '<< pos2_.y << ' '<< pos2_.z << endl;
 }
 
 void

@@ -90,10 +90,10 @@ Box::neighbor(int label, Box* neigh_box){
 }
 
 
-void 
-Box::probing_positions(int label, vec3d pos){
-  //  cout << label-_still_neigh_nb << endl;
-  _probing_positions[label-_still_neigh_nb] = pos;
+void
+Box::probing_positions(int label, const vec3d &pos){
+	//  cout << label-_still_neigh_nb << endl;
+	_probing_positions[label-_still_neigh_nb] = pos;
 }
 
 bool 

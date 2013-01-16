@@ -16,9 +16,8 @@ class vec3d {
 public:
 	/* variables */
 	double x, y, z;
-
 	/* constructor/destructor */
-	inline vec3d (void){}
+	inline vec3d (void): x(0), y(0), z(0){}
 	inline vec3d (const double &_x,
 				  const double &_y,
 				  const double &_z): x(_x), y(_y), z(_z) {}

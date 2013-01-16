@@ -25,9 +25,7 @@ private:
 	double lx_lz, ly_lz;
 	double lx, ly, lz;
 	double lx2, ly2, lz2;
-
 	double number_ratio;
-
 	double a1;
 	double a2;
 	vector<vec3d> position;
@@ -44,9 +42,7 @@ private:
 	void setParameters(int argc, const char * argv[]);
 	void outputPositionData();
 public:
-	GenerateInitConfig(){
-		dr.set(0,0,0);
-	};
+	GenerateInitConfig(){};
 	int generate(int argc, const char * argv[]);
 
 };
