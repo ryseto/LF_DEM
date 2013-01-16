@@ -730,7 +730,15 @@ void System::updateVelocityLubricationBrownian(){
 
 
 void System::computeBrownianStress(){
-	
+  // OVERALL SIGN TO BE CHECKED:
+  // THIS IS AN ALGO FROM BRADY
+  // BUT RESISTANCE FUNCTIONS FROM JEFFREY
+
+	for (int i=0; i < n; i++){
+		for (int u=0; u < 5; u++){
+			brownianstress[i][u] *= 0.;
+		}
+	}
 
 	double stresslet_i[5];
 	double stresslet_j[5];
