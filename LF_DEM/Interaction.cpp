@@ -302,7 +302,6 @@ Interaction::addLubricationStress(){
 	n[1] = nr_vec.y;
 	n[2] = nr_vec.z;
 
-
 	double stresslet_i[5];
 	double stresslet_j[5];
 	for (int k=0; k < 5; k ++){
@@ -341,10 +340,11 @@ Interaction::addLubricationStress(){
 	}
 
 	stresslet_i[0] += n0n0_13 * common_factor_i;
-	stresslet_i[1] += n0n1 * common_factor_i;
-	stresslet_i[2] += n0n2 * common_factor_i;
-	stresslet_i[3] += n1n2 * common_factor_i;
+	stresslet_i[1] += n0n1    * common_factor_i;
+	stresslet_i[2] += n0n2    * common_factor_i;
+	stresslet_i[3] += n1n2    * common_factor_i;
 	stresslet_i[4] += n1n1_13 * common_factor_i;
+
 	stresslet_j[0] += n0n0_13 * common_factor_j;
 	stresslet_j[1] += n0n1 * common_factor_j;
 	stresslet_j[2] += n0n2 * common_factor_j;
@@ -442,16 +442,19 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	sys->interaction_partners[i].insert(j);
 	sys->interaction_partners[j].insert(i);
 
-	contact = false;
+
 	a0 = sys->radius[particle_num[0]];
 	a1 = sys->radius[particle_num[1]];
 	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
+	if (distance > ro)
+		contact = false;
+	else
+		contact = true;
 	lambda = a1 / a0;
 	invlambda = 1. / lambda;
 	ksi_cutoff = sys->gap_cutoff;
-	r_lub_max = 0.5*sys->lub_max*ro;
-
-	assignDistanceNormalVector(pos_diff, distance, zshift); 
+	r_lub_max = 0.5*ro*sys->lub_max;
+	assignDistanceNormalVector(pos_diff, distance, zshift);
 
 	return;
 }
