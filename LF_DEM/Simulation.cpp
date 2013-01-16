@@ -188,7 +188,6 @@ Simulation::SetDefaultParameters(){
 	sys.lubrication = true;
 	sys.brownian = true;
 	sys.friction = true;
-	sys.poly = true;
 	/*
 	 * Simulation
 	 *
@@ -275,6 +274,11 @@ Simulation::importInitialPositionFile(){
 
 	int num_of_particle = _np1_ + _np2_;
 	sys.set_n(num_of_particle);
+	
+	if (np2 == 0)
+		sys.poly = false;
+	else
+		sys.poly = true;
 	cerr << "np = " << num_of_particle << endl;
 	if (_ly_ == 0){
 		sys.dimension = 2;
@@ -474,6 +478,7 @@ Simulation::output_yap(){
 								sys.position[i].z - sys.lz2());
 		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
 	}
+		
 	fout_yap << "r " << sys.radius[np1+1] << endl;
 	for (int i = np1; i < sys.n ; i++){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
@@ -483,9 +488,9 @@ Simulation::output_yap(){
 	}
 
 	/* Layer 4: Orientation of particle (2D simulation)
+	 * Only for small system.
 	 */
-	
-	if (sys.draw_rotation_2d){
+	if (sys.n <= 1000 && sys.draw_rotation_2d){
 		fout_yap << "y 5\n";
 		fout_yap << "@ " << color_white << endl;
 		for (int i=0; i < sys.n; i++){

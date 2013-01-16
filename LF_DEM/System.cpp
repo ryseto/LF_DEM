@@ -256,15 +256,12 @@ System::checkNewInteraction(){
  */
 void
 System::updateInteractions(){
-	
 	for (int k = 0; k < num_interaction; k++){
 		bool switch_off = interaction[k].update();
 		if(switch_off)
 			deactivated_interaction.push(k);
 	}
-	
 }
-
 
 void
 System::forceReset(){
