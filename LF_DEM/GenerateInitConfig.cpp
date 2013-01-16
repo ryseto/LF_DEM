@@ -8,7 +8,8 @@
 
 #include "GenerateInitConfig.h"
 
-int GenerateInitConfig::generate(int argc, const char * argv[]){
+int
+GenerateInitConfig::generate(int argc, const char * argv[]){
 	setParameters(argc, argv);
 	position.resize(np);
 	radius.resize(np);
@@ -18,7 +19,8 @@ int GenerateInitConfig::generate(int argc, const char * argv[]){
 	return 0;
 }
 
-void GenerateInitConfig::outputPositionData(){
+void
+GenerateInitConfig::outputPositionData(){
 	ofstream fout;
 	ostringstream ss_posdatafilename;
 	ss_posdatafilename << "D" << dimension;
@@ -58,8 +60,8 @@ void GenerateInitConfig::outputPositionData(){
 	fout.close();
 }
 
-
-void GenerateInitConfig::solveOverlap(){
+void
+GenerateInitConfig::solveOverlap(){
 	int cc = 0;
 	vector<int> previous_overlap;
 	previous_overlap.resize(np);
@@ -112,7 +114,8 @@ void GenerateInitConfig::solveOverlap(){
 	}
 }
 
-void GenerateInitConfig::putRandom(){
+void
+GenerateInitConfig::putRandom(){
 	srand48(random_seed);
 	for (int i=0; i < np; i++){
 		position[i].x = lx*drand48();
@@ -130,7 +133,8 @@ void GenerateInitConfig::putRandom(){
 	}
 }
 
-bool GenerateInitConfig::checkOverlap(){
+bool
+GenerateInitConfig::checkOverlap(){
 	static int i_previous = 0;
 	static int j_previous = 1;
 	if ( is_contact(i_previous, j_previous ) ){
@@ -148,7 +152,8 @@ bool GenerateInitConfig::checkOverlap(){
 	return false;
 }
 
-bool GenerateInitConfig::is_contact(int i, int j){
+bool
+GenerateInitConfig::is_contact(int i, int j){
 	double contact_distance = radius[i] + radius[j];
 	double sq_contact_distance = contact_distance*contact_distance;
 	dr.x = position[i].x - position[j].x;
@@ -187,17 +192,16 @@ bool GenerateInitConfig::is_contact(int i, int j){
 	return false;
 }
 
-
-vec3d GenerateInitConfig::randUniformSphere(double r){
+vec3d
+GenerateInitConfig::randUniformSphere(double r){
 	double z = 2*drand48() - 1.0;
 	double phi = 2*M_PI*drand48();
 	double sin_theta = sqrt(1.0-z*z);
 	return vec3d( r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
 }
 
-
-template<typename T> T readStdinDefault(T default_value,
-										string message){
+template<typename T>
+T readStdinDefault(T default_value,	string message){
 	string input;
 	T value;
 	
@@ -211,17 +215,21 @@ template<typename T> T readStdinDefault(T default_value,
 	}
 	cerr << value << endl;
 	return value;
-	
 }
 
-void GenerateInitConfig::setParameters(int argc, const char * argv[]){
+void
+GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	/*
 	 *  Read parameters from standard input
 	 *
 	 */
 	np = readStdinDefault(200, "number of particle");
 	dimension = readStdinDefault(3, "dimension (2 or 3)");
-	volume_fraction =  readStdinDefault(0.5, "volume_fraction");
+	if (dimension == 2){
+		volume_fraction =  readStdinDefault(0.7, "volume_fraction");
+	} else {
+		volume_fraction =  readStdinDefault(0.5, "volume_fraction");
+	}
 	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: ");
 	if (dimension == 3){
 		ly_lz = 1;
@@ -276,4 +284,3 @@ void GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
 }
-
