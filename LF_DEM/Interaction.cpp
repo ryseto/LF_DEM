@@ -49,7 +49,6 @@ Interaction::calcDistanceNormalVector(){
 	calcNormalVector();
 	r(r_vec.norm());
 	nr_vec = r_vec / r();
-
 }
 
 void
@@ -101,6 +100,7 @@ Interaction::calcStaticFriction(){
 			 * f_tangent is force acting on particle 0 from particle 1
 			 * xi = r1' - r0'
 			 */
+
 			Fc_tangent = sys->kt*xi;
 		} else {
 			/* switch to dynamic friction */
@@ -142,6 +142,7 @@ Interaction::calcContactInteraction(){
 		sys->force[particle_num[1]] -= f_ij;
 		sys->torque[particle_num[0]] = a0*t_ij;
 		sys->torque[particle_num[1]] = a1*t_ij;
+//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 	}
 }
 

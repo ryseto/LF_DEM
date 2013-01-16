@@ -79,7 +79,7 @@ Simulation::AutoSetParameters(const string &keyword,
 	} else if (keyword == "kn"){
 		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt"){
-		sys.kn = atof(value.c_str());
+		sys.kt = atof(value.c_str());
 	} else if (keyword == "mu_static"){
 		sys.mu_static = atof(value.c_str());
 	} else if (keyword == "mu_dynamic"){
