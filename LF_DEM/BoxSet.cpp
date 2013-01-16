@@ -460,7 +460,7 @@ BoxSet::WhichBox(vec3d pos){
 Box*
 BoxSet::WhichBox(vec3d* pos){
 	
-	sys->periodize(pos);
+	sys->periodize(*pos);
 	int ix=(int)(pos->x/box_xsize);
 	int iy;
 	if(sys->dimension == 2)

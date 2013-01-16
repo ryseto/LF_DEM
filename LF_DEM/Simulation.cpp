@@ -79,7 +79,7 @@ Simulation::AutoSetParameters(const string &keyword,
 	} else if (keyword == "kn"){
 		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt"){
-		sys.kn = atof(value.c_str());
+		sys.kt = atof(value.c_str());
 	} else if (keyword == "mu_static"){
 		sys.mu_static = atof(value.c_str());
 	} else if (keyword == "mu_dynamic"){
@@ -391,43 +391,44 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 }
 
 void
-Simulation::drawLine(char type , vec3d pos, vec3d vec, ofstream &fout){
+Simulation::drawLine(char type , const vec3d &pos, const vec3d &vec, ofstream &fout){
 	fout << type << ' ';
 	fout << pos.x << ' '<< pos.y << ' '<< pos.z << ' ';
 	fout << pos.x + vec.x << ' '<< pos.y + vec.y << ' '<< pos.z + vec.z << endl;
 }
 
 void
-Simulation::drawLine2(char type , vec3d pos1, vec3d pos2, ofstream &fout){
+Simulation::drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout){
 	vec3d seg = pos2 - pos1;
+	vec3d pos2_ = pos2;
 	fout << type << ' ';
 	if (seg.z > sys.lz2()){
-		pos2.z -= sys.lz();
-		pos2.x -= sys.shear_disp;
+		pos2_.z -= sys.lz();
+		pos2_.x -= sys.shear_disp;
 		seg = pos2 - pos1;
 	} else if (seg.z < -sys.lz2()){
-		pos2.z += sys.lz();
-		pos2.x += sys.shear_disp;
+		pos2_.z += sys.lz();
+		pos2_.x += sys.shear_disp;
 		seg = pos2 - pos1;
 	}
 		
 	while (seg.x > sys.lx2()){
-		pos2.x -= sys.lx();
+		pos2_.x -= sys.lx();
 		seg = pos2 - pos1;
 	}
 	while (seg.x < -sys.lx2()){
-		pos2.x += sys.lx();
+		pos2_.x += sys.lx();
 		seg = pos2 - pos1;
 	}
 	
 	if (seg.y > sys.ly2()){
-		pos2.y -= sys.ly();
+		pos2_.y -= sys.ly();
 	} else if (seg.y < -sys.ly2()){
-		pos2.y += sys.ly();
+		pos2_.y += sys.ly();
 	}
 	
 	fout << pos1.x << ' '<< pos1.y << ' '<< pos1.z << ' ';
-	fout << pos2.x << ' '<< pos2.y << ' '<< pos2.z << endl;
+	fout << pos2_.x << ' '<< pos2_.y << ' '<< pos2_.z << endl;
 }
 
 void
@@ -489,11 +490,13 @@ Simulation::output_yap(){
 		fout_yap << "@ " << color_white << endl;
 		for (int i=0; i < sys.n; i++){
 			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
+			u = sys.radius[i]*u;
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 									sys.position[i].y - sys.ly2(),
 									sys.position[i].z - sys.lz2());
 			drawLine('l', pos-u, 2*u, fout_yap);
 			u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
+			u = sys.radius[i]*u;
 			drawLine('l', pos-u, 2*u, fout_yap);
 		}
 	}
@@ -513,12 +516,12 @@ Simulation::output_yap(){
 										sys.position[i].y - sys.ly2(),
 										sys.position[i].z - sys.lz2());
 				fout_yap << "r " << yap_force_factor*sys.interaction[k].Fc_tangent.norm()  << endl;
-				drawLine('s', pos, -sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
 				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
 										sys.position[j].y - sys.ly2(),
 										sys.position[j].z - sys.lz2());
-				drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 			}
 		}
 	}
@@ -535,11 +538,12 @@ Simulation::output_yap(){
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 									sys.position[i].y - sys.ly2(),
 									sys.position[i].z - sys.lz2());
-			drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+			drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+
 			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
 									sys.position[j].y - sys.ly2(),
 									sys.position[j].z - sys.lz2());
-			drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+			drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 		}
 	}
 

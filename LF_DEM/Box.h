@@ -65,7 +65,7 @@ class Box{
   vec3d* probing_positions(){
 	return _probing_positions;
   }
-  void probing_positions(int label, vec3d pos);
+  void probing_positions(int label, const vec3d &pos);
 
   void is_top(bool);
   void is_bottom(bool);

@@ -197,9 +197,9 @@ public:
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
-	void periodize(vec3d*);
-	void periodize_diff(vec3d*);
-	void periodize_diff(vec3d*, int*);
+	void periodize(vec3d &);
+	void periodize_diff(vec3d &);
+	void periodize_diff(vec3d &, int &);
 	void updateVelocity();
 	void updateVelocityLubrication();
 	void updateVelocityLubricationBrownian();

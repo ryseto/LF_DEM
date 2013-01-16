@@ -8,7 +8,9 @@
 
 #include "GenerateInitConfig.h"
 
-int GenerateInitConfig::generate(int argc, const char * argv[]){
+int
+GenerateInitConfig::generate(int argc, const char * argv[]){
+	epsiron = 1e-3;
 	setParameters(argc, argv);
 	position.resize(np);
 	radius.resize(np);
@@ -18,18 +20,19 @@ int GenerateInitConfig::generate(int argc, const char * argv[]){
 	return 0;
 }
 
-void GenerateInitConfig::outputPositionData(){
+void
+GenerateInitConfig::outputPositionData(){
 	ofstream fout;
 	ostringstream ss_posdatafilename;
 	ss_posdatafilename << "D" << dimension;
 	ss_posdatafilename << "N" << np;
-	
+	ss_posdatafilename << "VF" << volume_fraction;
 	if (number_ratio == 1){
 		ss_posdatafilename << "Mono";
 	} else {
 		ss_posdatafilename << "Poly" << a2 << "_" << number_ratio ;
 	}
-	ss_posdatafilename << "VF" << volume_fraction;
+	
 	if (dimension == 2){
 		if (lx_lz == 1){
 			ss_posdatafilename << "Square"; // square
@@ -43,7 +46,7 @@ void GenerateInitConfig::outputPositionData(){
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 		}
 	}
-	ss_posdatafilename << ".dat";
+	ss_posdatafilename << "_" << random_seed << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	fout << "# np1 np2 vf lx ly lz" << endl;
@@ -58,8 +61,8 @@ void GenerateInitConfig::outputPositionData(){
 	fout.close();
 }
 
-
-void GenerateInitConfig::solveOverlap(){
+void
+GenerateInitConfig::solveOverlap(){
 	int cc = 0;
 	vector<int> previous_overlap;
 	previous_overlap.resize(np);
@@ -112,7 +115,8 @@ void GenerateInitConfig::solveOverlap(){
 	}
 }
 
-void GenerateInitConfig::putRandom(){
+void
+GenerateInitConfig::putRandom(){
 	srand48(random_seed);
 	for (int i=0; i < np; i++){
 		position[i].x = lx*drand48();
@@ -130,7 +134,8 @@ void GenerateInitConfig::putRandom(){
 	}
 }
 
-bool GenerateInitConfig::checkOverlap(){
+bool
+GenerateInitConfig::checkOverlap(){
 	static int i_previous = 0;
 	static int j_previous = 1;
 	if ( is_contact(i_previous, j_previous ) ){
@@ -148,9 +153,10 @@ bool GenerateInitConfig::checkOverlap(){
 	return false;
 }
 
-bool GenerateInitConfig::is_contact(int i, int j){
-	double contact_distance = radius[i] + radius[j];
-	double sq_contact_distance = contact_distance*contact_distance;
+bool
+GenerateInitConfig::is_contact(int i, int j){
+	const double contact_distance = radius[i] + radius[j] + epsiron;
+	const double sq_contact_distance = contact_distance*contact_distance;
 	dr.x = position[i].x - position[j].x;
 	dr.z = position[i].z - position[j].z;
 	if (dr.z > contact_distance ){
@@ -187,125 +193,64 @@ bool GenerateInitConfig::is_contact(int i, int j){
 	return false;
 }
 
-
-vec3d GenerateInitConfig::randUniformSphere(double r){
+vec3d
+GenerateInitConfig::randUniformSphere(double r){
 	double z = 2*drand48() - 1.0;
 	double phi = 2*M_PI*drand48();
 	double sin_theta = sqrt(1.0-z*z);
 	return vec3d( r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
 }
 
-void GenerateInitConfig::setParameters(int argc, const char * argv[]){
+template<typename T>
+T readStdinDefault(T default_value,	string message){
 	string input;
-	
-	np = 200;
-	cerr << "number of particle[200]: ";
-	getline(cin, input);
-
-	if ( !input.empty() ) {
-		istringstream stream( input );
-		stream >> np;
-	} else {
-		cerr << "np = 200" << endl;
-	}
-
-	dimension = 3;
-	do {
-		cerr << "dimension[3]: ";
-		getline( cin, input );
-		if ( !input.empty() ) {
-			istringstream stream( input );
-			stream >> dimension;
-		} else {
-			cerr << "dimension = 3" << endl;
-		}
-	} while (dimension !=2 && dimension !=3);
-
-	volume_fraction = 0.5;
-	cerr << "volume fraction[0.5]: ";
-	getline( cin, input );
-	if ( !input.empty() ) {
-		istringstream stream( input );
-		stream >> volume_fraction;
-	} else {
-		cerr << "volume_fraction = 0.5" << endl;
-	}
-		
-	lx_lz = 1;
-	cerr << "Lx/Lz [1]: ";
+	T value;
+	cerr << message << "[" << default_value << "]: ";
 	getline(cin, input);
 	if ( !input.empty() ) {
 		istringstream stream( input );
-		stream >> lx_lz;
+		stream >> value;
 	} else {
-		cerr << "Lx/Lz = 1" << endl;
+		value = default_value;
 	}
-	
+	cerr << value << endl;
+	return value;
+}
+
+void
+GenerateInitConfig::setParameters(int argc, const char * argv[]){
+	/*
+	 *  Read parameters from standard input
+	 *
+	 */
+	np = readStdinDefault(200, "number of particle");
+	dimension = readStdinDefault(3, "dimension (2 or 3)");
+	if (dimension == 2){
+		volume_fraction =  readStdinDefault(0.7, "volume_fraction");
+	} else {
+		volume_fraction =  readStdinDefault(0.5, "volume_fraction");
+	}
+	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: ");
 	if (dimension == 3){
 		ly_lz = 1;
-		cerr << "Ly/Lz [1]: ";
-		getline(cin, input);
-		if ( !input.empty() ) {
-			istringstream stream( input );
-			stream >> ly_lz;
-		} else {
-			cerr << "Ly/Lz = 1" << endl;
-		}
+		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
 	}
-		
-	char m_p_disperse = 'm';
-	do {
-		cerr << "(m)onodisperse or (p)olydisperse [m]:";
-		getline( cin, input );
-		if ( !input.empty() ) {
-			istringstream stream( input );
-			stream >> m_p_disperse;
-		} else {
-			cerr << "(m)onodisperse" << endl;
-		}
-	} while (m_p_disperse != 'm' && m_p_disperse != 'p');
-
-	number_ratio = 1.0;
+	char m_p_disperse = readStdinDefault('m' , "(m)onodisperse or (p)olydisperse");
+	number_ratio = 1.0; // mono
 	a1 = 1.0;
 	if ( m_p_disperse == 'p'){
+		cerr << "a1 = 1.0" << endl;
 		do {
-			cerr << "a1 = 1.0" << endl;
-			
-			a2 = 1.4;
-			cerr << "a2[1.4]: ";
-			getline(cin, input);
-			if ( !input.empty() ) {
-				istringstream stream( input );
-				stream >> a2;
-			} else {
-				cerr << "a2 = " << a2 << endl;
-			}
-			if ( a2 < a1)
-				cerr << "!! a2 needs to be greater than a1." << endl;
+			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
 		} while (a2 < a1);
-		do {
-			number_ratio = 0.5;
-			cerr << "n1/(n1+n2) [0.5]: ";
-			getline(cin, input);
-			if ( !input.empty() ) {
-				istringstream stream( input );
-				stream >> number_ratio;
-			} else {
-				cerr << "number_ratio = " << number_ratio << endl;
-			}
+		do{
+			number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
 		} while ( number_ratio < 0 || number_ratio > 1);
 	}
-
-	random_seed = 1;
-	cerr << "random seed [1]: ";
-	getline(cin, input);
-	if ( !input.empty() ) {
-		istringstream stream( input );
-		stream >> random_seed;
-	} else {
-		cerr << "random_seed = " << random_seed << endl;
-	}
-
+	random_seed = readStdinDefault(1, "random seed");
+	/*
+	 *  Calculate parameters
+	 */
 	double np1_tmp = np*number_ratio;
 	if (np1_tmp - (int)np1_tmp <= 0.5){
 		np1 = (int)np1_tmp;
@@ -313,8 +258,7 @@ void GenerateInitConfig::setParameters(int argc, const char * argv[]){
 		np1 = (int)np1_tmp+1;
 	}
 	np2 = np - np1;
-	double pvolume1;
-	double pvolume2;
+	double pvolume1, pvolume2;
 	if (dimension == 2){
 		pvolume1 = M_PI*np1;
 		pvolume2 = M_PI*a2*a2*np2;
@@ -335,12 +279,8 @@ void GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	lx2 = lx/2;
 	ly2 = ly/2;
 	lz2 = lz/2;
-	
-	
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1  << ":" << np2 << endl;
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
 }
-
-

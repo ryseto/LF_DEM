@@ -187,10 +187,10 @@ System::checkNewInteraction(){
 					
 					// this is done in 3 steps because we need each information for Interaction creation
 					pos_diff = position[j] - position[i];
-					periodize_diff(&pos_diff, &zshift);
+					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					
-					double sq_dist_lim = sq_lub_max * 0.25 * ( radius[i] + radius[j] ) * ( radius[i] + radius[j] );
+					double ri_rj_2 = 0.5*(radius[i] + radius[j]);
+					double sq_dist_lim = sq_lub_max * ri_rj_2 * ri_rj_2;
 					if ( sq_dist < sq_dist_lim){
 						int interaction_new;
 						if (deactivated_interaction.empty()){
@@ -815,91 +815,88 @@ System::displacement(int i, const double &dx_, const double &dy_, const double &
 	position[i].x += dx_;
 	position[i].y += dy_;
 	position[i].z += dz_;
-	periodize(&(position[i]));
+	periodize( position[i]);
 	boxset->box(i);
 }
 
 
 // [0,l]
 void
-System::periodize(vec3d *pos){
-	if (pos->z > lz() ){
-		pos->z -= lz();
-		pos->x -= shear_disp;
-	} else if ( pos->z < 0 ){
-		pos->z += lz();
-		pos->x += shear_disp;
+System::periodize(vec3d &pos){
+	if (pos.z > lz() ){
+		pos.z -= lz();
+		pos.x -= shear_disp;
+	} else if ( pos.z < 0 ){
+		pos.z += lz();
+		pos.x += shear_disp;
 	}
-	while ( pos->x > lx() ){
-		pos->x -= lx();
+	while ( pos.x > lx() ){
+		pos.x -= lx();
 	}
-	while (pos->x < 0 ){
-		pos->x += lx();
+	while (pos.x < 0 ){
+		pos.x += lx();
 	}
 	if (dimension == 3){
-		if ( pos->y > ly() ){
-			pos->y -= ly();
-		} else if (pos->y < 0 ){
-			pos->y += ly();
+		if ( pos.y > ly() ){
+			pos.y -= ly();
+		} else if (pos.y < 0 ){
+			pos.y += ly();
 		}
 	}
 }
 
 // [-l/2,l/2]
 void
-System::periodize_diff(vec3d *pos_diff){
-	if (pos_diff->z > lz2() ){
-		pos_diff->z -= lz();
-		pos_diff->x -= shear_disp;
-	} else if ( pos_diff->z < -lz2() ){
-		pos_diff->z += lz();
-		pos_diff->x += shear_disp;
+System::periodize_diff(vec3d &pos_diff){
+	if (pos_diff.z > lz2() ){
+		pos_diff.z -= lz();
+		pos_diff.x -= shear_disp;
+	} else if ( pos_diff.z < -lz2() ){
+		pos_diff.z += lz();
+		pos_diff.x += shear_disp;
 	}
-	while ( pos_diff->x > lx2() ){
-		pos_diff->x -= lx();
+	while ( pos_diff.x > lx2() ){
+		pos_diff.x -= lx();
 	}
-	while (pos_diff->x < -lx2() ){
-		pos_diff->x += lx();
+	while (pos_diff.x < -lx2() ){
+		pos_diff.x += lx();
 	}
 	if (dimension == 3){
-		if ( pos_diff->y > ly2() ){
-			pos_diff->y -= ly();
-		} else if (pos_diff->y < -ly2() ){
-			pos_diff->y += ly();
+		if ( pos_diff.y > ly2() ){
+			pos_diff.y -= ly();
+		} else if (pos_diff.y < -ly2() ){
+			pos_diff.y += ly();
 		}
 	}
 }
 // periodize + give z_shift= number of boundaries crossed in z-direction
 void
-System::periodize_diff(vec3d *pos_diff, int *zshift){
-	if (pos_diff->z > lz2() ){
-		pos_diff->z -= lz();
-		pos_diff->x -= shear_disp;
-		(*zshift)=-1;
-	} else if ( pos_diff->z < -lz2() ){
-		pos_diff->z += lz();
-		pos_diff->x += shear_disp;
-		(*zshift)=+1;
+System::periodize_diff(vec3d &pos_diff, int &zshift){
+	if (pos_diff.z > lz2() ){
+		pos_diff.z -= lz();
+		pos_diff.x -= shear_disp;
+		zshift = -1;
+	} else if ( pos_diff.z < -lz2() ){
+		pos_diff.z += lz();
+		pos_diff.x += shear_disp;
+		zshift = +1;
+	} else{
+		zshift = 0;
 	}
-	else{
-		(*zshift)=0;
+	while ( pos_diff.x > lx2() ){
+		pos_diff.x -= lx();
 	}
-	while ( pos_diff->x > lx2() ){
-		pos_diff->x -= lx();
-	}
-	while (pos_diff->x < -lx2() ){
-		pos_diff->x += lx();
+	while (pos_diff.x < -lx2() ){
+		pos_diff.x += lx();
 	}
 	if (dimension == 3){
-		if ( pos_diff->y > ly2() ){
-			pos_diff->y -= ly();
-		} else if (pos_diff->y < -ly2() ){
-			pos_diff->y += ly();
+		if ( pos_diff.y > ly2() ){
+			pos_diff.y -= ly();
+		} else if (pos_diff.y < -ly2() ){
+			pos_diff.y += ly();
 		}
 	}
 }
-
-
 
 void
 System::deltaTimeEvolution(){
@@ -940,9 +937,7 @@ System::distance(int i, int j){
 double
 System::sq_distance(int i, int j){
 	vec3d pos_diff = position[j] - position[i];
-	
-	periodize_diff(&pos_diff);
-	
+	periodize_diff(pos_diff);
 	if (dimension == 3){
 		return pos_diff.sq_norm();
 	} else {
@@ -982,9 +977,10 @@ System::calcStress(){
 	}
 
 	for (int k=0; k < 5; k++){
-		mean_hydro_stress[k] = total_lub_stress[k] / n + total_stress_bgf / n;
+		mean_hydro_stress[k] = total_lub_stress[k] / n ;
 		mean_contact_stress[k] = total_contact_stress[k] / n;
 	}
+	mean_hydro_stress[2] += total_stress_bgf / n;
 }
 
 void
