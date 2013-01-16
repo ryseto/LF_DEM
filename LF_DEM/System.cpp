@@ -751,11 +751,6 @@ void System::computeBrownianStress(){
 
 	factorizeResistanceMatrix();
 
-	buildContactTerms();
-	
-	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, total_rhs, &c) ;
-	
-
 	// now the Brownian part of the velocity:
 	// mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
 
