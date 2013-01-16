@@ -285,6 +285,57 @@ Interaction::GE(double GEi[], double GEj[]){
 	GEj[2] *= sys->shear_rate * nxnz * nr_vec.z;
 }
 
+
+// computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jefrrey's ones ]
+// from pair (i,j).
+// ie fills :
+// stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
+// stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
+ 
+void
+Interaction::pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]){
+	double n [3];
+	n[0] = nr_vec.x;
+	n[1] = nr_vec.y;
+	n[2] = nr_vec.z;
+
+	for (int k=0; k < 5; k ++){
+		stresslet_i[k] = 0.;
+		stresslet_j[k] = 0.;
+	}
+	
+	double XGii, XGjj, XGij, XGji;
+	XG(XGii, XGij, XGji, XGjj);
+	double n0n0_13 = ( n[0] * n[0] - 1./3. );
+	double n1n1_13 = ( n[1] * n[1] - 1./3. );
+	double n0n1 = n[0] * n[1];
+	double n0n2 = n[0] * n[2];
+	double n1n2 = n[1] * n[2];
+
+	double twothird = 2./3.;
+	double onesixth = 1./6.;
+	double common_factor_i = 0.;
+	double common_factor_j = 0.;
+	for(int u=0; u<3; u++){
+		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
+		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
+	}
+
+	stresslet_i[0] += n0n0_13 * common_factor_i;
+	stresslet_i[1] += n0n1    * common_factor_i;
+	stresslet_i[2] += n0n2    * common_factor_i;
+	stresslet_i[3] += n1n2    * common_factor_i;
+	stresslet_i[4] += n1n1_13 * common_factor_i;
+
+	stresslet_j[0] += n0n0_13 * common_factor_j;
+	stresslet_j[1] += n0n1 * common_factor_j;
+	stresslet_j[2] += n0n2 * common_factor_j;
+	stresslet_j[3] += n1n2 * common_factor_j;
+	stresslet_j[4] += n1n1_13 * common_factor_j;
+
+}
+
+
 /*
  *
  * Stresslet stresslet_[5]

@@ -680,18 +680,12 @@ void System::updateVelocityLubricationBrownian(){
 	cholmod_free_sparse(&sparse_res, &c);
 	buildLubricationTerms();
 	fillSparseResmatrix();
+
 	factorizeResistanceMatrix();
 	
 	// get the intermediate brownian velocity
 	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
 	
-	/* testing
-	 for (int i=0; i < n; i++){
-	 int i3 = 3*i;
-	 cout << ((double*)v_Brownian_init->x)[i3] << " " << ((double*)v_Brownian_init->x)[i3+1] << " " << ((double*)v_Brownian_init->x)[i3+2] << " "  <<0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3] - ((double*)v_Brownian_init->x)[i3] ) << " " << 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+1] - ((double*)v_Brownian_init->x)[i3+1] ) << " " << 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+2] - ((double*)v_Brownian_init->x)[i3+2] ) << " "  << ((double*)v_nonBrownian->x)[i3] << " " << ((double*)v_nonBrownian->x)[i3+1] << " " << ((double*)v_nonBrownian->x)[i3+2] <<endl;
-	 }
-	 getchar();
-	 */
 	
 	// move particles back to initial point, and update interactions
 	//
@@ -728,6 +722,135 @@ void System::updateVelocityLubricationBrownian(){
 		}
 	}
 	
+	cholmod_free_sparse(&sparse_res, &c);
+	cholmod_free_factor(&L, &c);
+	cholmod_free_dense(&total_rhs, &c);
+	cholmod_free_dense(&v_nonBrownian, &c);
+	cholmod_free_dense(&v_Brownian_init, &c);
+	cholmod_free_dense(&v_Brownian_mid, &c);
+}
+
+
+void System::computeBrownianStress(){
+	
+
+	double stresslet_i[5];
+	double stresslet_j[5];
+	for (int k=0; k < 5; k ++){
+		stresslet_i[k] = 0.;
+		stresslet_j[k] = 0.;
+	}
+	double vi [3];
+	double vj [3];
+
+
+	total_rhs = cholmod_zeros(n3, 1, xtype, &c);
+	buildLubricationTerms();
+	
+	fillSparseResmatrix();
+
+	factorizeResistanceMatrix();
+
+	buildContactTerms();
+	
+	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, total_rhs, &c) ;
+	
+
+	// now the Brownian part of the velocity:
+	// mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+
+	brownian_rhs = fb->generate();
+
+	v_Brownian_init = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
+	
+	for (int k = 0; k < num_interaction; k++){
+		for (int u=0; u < 5; u ++){
+			stresslet_i[u] = 0.;
+			stresslet_j[u] = 0.;
+		}
+
+		int i = interaction[k].particle_num[0];
+		int j = interaction[k].particle_num[1];
+		int i3 = 3*i;
+		int j3 = 3*j;
+		vi[0] = ((double*)v_Brownian_init->x)[i3  ];
+		vi[1] = ((double*)v_Brownian_init->x)[i3+1];
+		vi[2] = ((double*)v_Brownian_init->x)[i3+2];
+		
+		vj[0] = ((double*)v_Brownian_init->x)[j3  ];
+		vj[1] = ((double*)v_Brownian_init->x)[j3+1];
+		vj[2] = ((double*)v_Brownian_init->x)[j3+2];
+		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+
+		for (int u=0; u < 5; u++){
+			brownianstress[i][u] += stresslet_i[u];
+			brownianstress[j][u] += stresslet_j[u];
+		}
+	}
+	
+
+	// move particles to intermediate point
+	for (int i=0; i < n; i++){
+		int i3 = 3*i;
+		displacement(i, ((double*)v_Brownian_init->x)[i3]*dt_mid, ((double*)v_Brownian_init->x)[i3+1]*dt_mid, ((double*)v_Brownian_init->x)[i3+2]*dt_mid);
+	}
+	
+	updateInteractions();
+	
+	// rebuild new R_FU
+	cholmod_free_factor(&L, &c);
+	cholmod_free_sparse(&sparse_res, &c);
+	buildLubricationTerms();
+	fillSparseResmatrix();
+
+	factorizeResistanceMatrix();
+	
+	// get the intermediate brownian velocity
+	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
+	
+	for (int k = 0; k < num_interaction; k++){
+		for (int u=0; u < 5; u ++){
+			stresslet_i[u] = 0.;
+			stresslet_j[u] = 0.;
+		}
+
+		int i = interaction[k].particle_num[0];
+		int j = interaction[k].particle_num[1];
+		int i3 = 3*i;
+		int j3 = 3*j;
+		vi[0] = ((double*)v_Brownian_mid->x)[i3  ];
+		vi[1] = ((double*)v_Brownian_mid->x)[i3+1];
+		vi[2] = ((double*)v_Brownian_mid->x)[i3+2];
+		
+		vj[0] = ((double*)v_Brownian_mid->x)[j3  ];
+		vj[1] = ((double*)v_Brownian_mid->x)[j3+1];
+		vj[2] = ((double*)v_Brownian_mid->x)[j3+2];
+		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+
+		for (int u=0; u < 5; u++){
+			brownianstress[i][u] -= stresslet_i[u];
+			brownianstress[j][u] -= stresslet_j[u];
+		}
+	}
+
+	for (int i=0; i < n; i++){
+		for (int u=0; u < 5; u++){
+			brownianstress[i][u] *= 0.5*dt_ratio;
+		}
+	}
+
+	
+	// move particles back to initial point, and update interactions
+	//
+	// Note that, although it looks like a complete reversal of the initial move (as it should be), 
+	// the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
+	// might switch off some of them. The 2nd move's update is not able to switch them back on.
+	for (int i=0; i < n; i++){
+		int i3 = 3*i;
+		displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
+	}
+	updateInteractions();
+
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_free_factor(&L, &c);
 	cholmod_free_dense(&total_rhs, &c);

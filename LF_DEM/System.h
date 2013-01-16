@@ -41,7 +41,7 @@ private:
 	void buildContactTerms();
 	void addStokesDrag();
 	void factorizeResistanceMatrix();
-
+	
 
 
 #ifdef CHOLMOD
@@ -216,6 +216,7 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
+	void computeBrownianStress();
 	int numpart(){
 		return n;
 	}
