@@ -33,17 +33,17 @@ System::~System(){
 	if (!torque)
 		delete [] torque;
 	if (!lubstress){
-		for (int i=0; i < n; i++)
+		for (int i=0; i < np; i++)
 			delete [] lubstress[i];
 		delete [] lubstress;
 	}
 	if (!contactstress){
-		for (int i=0; i < n; i++)
+		for (int i=0; i < np; i++)
 			delete [] contactstress[i];
 		delete [] contactstress;
 	}
 	if (!brownianstress){
-		for (int i=0; i < n; i++)
+		for (int i=0; i < np; i++)
 			delete [] brownianstress[i];
 		delete [] brownianstress;
 	}
@@ -76,21 +76,21 @@ System::~System(){
 void
 System::allocateRessources(){
 	
-	position = new vec3d [n];
-	radius = new double [n];
-	angle = new double [n];
-	velocity = new vec3d [n];
-	relative_velocity = new vec3d [n];
-	ang_velocity = new vec3d [n];
-	total_force = new vec3d [n];
-	lubrication_force = new vec3d [n];
-	contact_force = new vec3d [n];
-	brownian_force = new vec3d [n];
+	position = new vec3d [np];
+	radius = new double [np];
+	angle = new double [np];
+	velocity = new vec3d [np];
+	relative_velocity = new vec3d [np];
+	ang_velocity = new vec3d [np];
+	total_force = new vec3d [np];
+	lubrication_force = new vec3d [np];
+	contact_force = new vec3d [np];
+	brownian_force = new vec3d [np];
 
-	torque = new vec3d [n];
-	contactstress = new double* [n];
+	torque = new vec3d [np];
+	contactstress = new double* [np];
 	
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		position[i].x=0.;
 		position[i].y=0.;
 		position[i].z=0.;
@@ -103,36 +103,36 @@ System::allocateRessources(){
 		relative_velocity[i].z=0.;
 	}
 	
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		contactstress[i] = new double [5];
 	}
 	
-	lubstress = new double* [n];
-	for (int i=0; i < n; i++){
+	lubstress = new double* [np];
+	for (int i=0; i < np; i++){
 		lubstress[i] = new double [5];
 	}
-	brownianstress = new double* [n];
-	for (int i=0; i < n; i++){
+	brownianstress = new double* [np];
+	for (int i=0; i < np; i++){
 		brownianstress[i] = new double [5];
 	}
 
 	
 	double O_inf_y = 0.5*shear_rate/2.0;
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		ang_velocity[i].set(0, O_inf_y, 0);
 		torque[i].reset();
 	}
 	
 	fb = new BrownianForce(this);
-	maxnum_interactionpair = (int)(12*n);
+	maxnum_interactionpair = (int)(12*np);
 	
 	num_interaction = 0;
 	interaction = new Interaction [maxnum_interactionpair];
 	for (int k=0; k < maxnum_interactionpair ; k++){
 		interaction[k].init(this);
 	}
-	interaction_list = new set <Interaction*> [n];
-	interaction_partners = new set <int> [n];
+	interaction_list = new set <Interaction*> [np];
+	interaction_partners = new set <int> [np];
 	
 	
 #ifdef CHOLMOD
@@ -141,9 +141,9 @@ System::allocateRessources(){
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
-	diag_values = new double [6*n];
+	diag_values = new double [6*np];
 	off_diag_values = new vector <double> [3];
-	ploc = new int [n+1];
+	ploc = new int [np+1];
 	fb->init();
 #else
 	/* for dgesv_ or dsysv_
@@ -164,14 +164,14 @@ void
 System::initializeBoxing(){// need to know radii first
 	
 	double max_radius=0.;
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		if(radius[i]>max_radius){
 			max_radius=radius[i];
 		}
 	}
 
 	boxset = new BoxSet(lub_max*max_radius, this);
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		boxset->box(i);
 	}
 }
@@ -195,13 +195,11 @@ System::timeEvolution(int time_step){
 			// Free-draining approximation
 			updateVelocity();
 		}
-		if ( ts == ts_next - 2)
+		if ( ts == ts_next - 1)
 			calcStress();
-		
 		deltaTimeEvolution();
 		ts ++;
 	}
-	//calcStress();
 }
 
 void
@@ -212,7 +210,7 @@ System::checkNewInteraction(){
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
-	for (int i=0; i < n-1; i++){
+	for (int i=0; i < np-1; i++){
 		
 		it_beg = boxset->neighborhood_begin(i);
 		it_end = boxset->neighborhood_end(i);
@@ -269,7 +267,7 @@ System::updateInteractions(){
 
 void
 System::forceReset(){
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		total_force[i].reset();
 		lubrication_force[i].reset();
 		contact_force[i].reset();
@@ -279,14 +277,14 @@ System::forceReset(){
 
 void
 System::torqueReset(){
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		torque[i].reset();
 	}
 }
 
 void
 System::stressReset(){
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		for (int j=0; j < 5; j++){
 			lubstress[i][j]=0;
 			contactstress[i][j]=0;
@@ -301,7 +299,7 @@ System::stressReset(){
 void
 System::updateVelocity(){
 	vec3d U_inf(0, 0, 0);
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		U_inf.x = shear_rate*position[i].z;
 		relative_velocity[i] = (1.0/eta)*total_force[i];
 		velocity[i] = relative_velocity[i] + U_inf;
@@ -309,7 +307,7 @@ System::updateVelocity(){
 	}
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
-		for (int i=0; i < n; i++){
+		for (int i=0; i < np; i++){
 			ang_velocity[i] = (1.33333/eta)*torque[i];
 			ang_velocity[i].y += O_inf_y;
 		}
@@ -374,7 +372,7 @@ System::fillSparseResmatrix(){
 	allocateSparseResmatrix();
 	
 	// fill
-	for(int j = 0; j < n; j++){
+	for(int j = 0; j < np; j++){
 		int j3 = 3*j;
 		int j6 = 6*j;
 		
@@ -419,7 +417,7 @@ System::fillSparseResmatrix(){
 			((double*)sparse_res->x)[ pj3_2 + u + 1 ] = off_diag_values[2][k];
 		}
 	}
-	((int*)sparse_res->p)[n3] = ((int*)sparse_res->p)[n3-1] + 1;
+	((int*)sparse_res->p)[np3] = ((int*)sparse_res->p)[np3-1] + 1;
 }
 
 #else
@@ -455,7 +453,7 @@ fillResmatrix(double *res, double *nvec, int ii, int jj, double alpha, int n3){
 #ifdef CHOLMOD
 void
 System::addStokesDrag(){
-	for (int i = 0; i < n; i ++){
+	for (int i = 0; i < np; i ++){
 		int i6=6*i;
 		double d_value = bgf_factor*radius[i];
 		diag_values[i6  ] = d_value;
@@ -470,7 +468,7 @@ System::addStokesDrag(){
 // This method computes elements of matrix A and vector Gtilde*Einf
 void
 System::buildLubricationTerms(){
-	for (int k = 0; k < 6*n; k++){
+	for (int k = 0; k < 6*np; k++){
 		diag_values[k] = 0.;
 	}
 	rows.clear();
@@ -490,7 +488,7 @@ System::buildLubricationTerms(){
 	set<Interaction*>::iterator it;
 	int j;
 	Interaction *inter;
-	for (int i = 0; i < n - 1; i ++){
+	for (int i = 0; i < np - 1; i ++){
 		ploc[i] = (unsigned int)rows.size();
 		
 		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
@@ -523,15 +521,15 @@ System::buildLubricationTerms(){
 		}
 	}
 	
-	ploc[n-1] = (unsigned int)rows.size();
-	ploc[n] = (unsigned int)rows.size();
+	ploc[np-1] = (unsigned int)rows.size();
+	ploc[np] = (unsigned int)rows.size();
 	
 }
 
 void
 System::buildContactTerms(){
 	// add contact force
-	for (int i = 0; i < n; i++){
+	for (int i = 0; i < np; i++){
 		int i3 = 3*i;
 		// ((double*)contact_rhs->x)[i3] += contact_force[i].x;
 		// ((double*)contact_rhs->x)[i3+1] += contact_force[i].y;
@@ -547,11 +545,11 @@ void
 System::allocateSparseResmatrix(){
 	// allocate
 	int nzmax;  // non-zero values
-	nzmax = 6*n; // diagonal blocks
+	nzmax = 6*np; // diagonal blocks
 	for(int s=0; s<3; s++){
 		nzmax += off_diag_values[s].size();  // off-diagonal
 	}
-	sparse_res = cholmod_allocate_sparse(n3, n3, nzmax, sorted, packed, stype,xtype, &c);
+	sparse_res = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &c);
 	
 }
 
@@ -560,7 +558,7 @@ System::allocateSparseResmatrix(){
 void
 System::print_res(){ // testing
 	cout << " Diag " << endl;
-	for(int i=0;i<n;i++){
+	for(int i=0;i<np;i++){
 		int ii6=6*i;
 		cout << i << " " << diag_values[ii6] << " " << diag_values[ii6+1]<< " " << diag_values[ii6+2]<< " " << diag_values[ii6+3]<< " " << diag_values[ii6+4]<< " " << diag_values[ii6+5] << endl;
 	}
@@ -577,7 +575,7 @@ void
 System::updateVelocityLubrication(){
 	// contact_rhs = cholmod_zeros(n3, 1, xtype, &c);
 	// lubrication_rhs = cholmod_zeros(n3, 1, xtype, &c);
-	total_rhs = cholmod_zeros(n3, 1, xtype, &c);
+	total_rhs = cholmod_zeros(np3, 1, xtype, &c);
 
 	buildLubricationTerms();
 	fillSparseResmatrix();
@@ -603,7 +601,7 @@ System::updateVelocityLubrication(){
 	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
 	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
 	 */
-	for (int i = 0; i < n; i++){
+	for (int i = 0; i < np; i++){
 		int i3 = 3*i;
 		relative_velocity[i].x = ((double*)v->x)[i3];
 		relative_velocity[i].y = ((double*)v->x)[i3+1];
@@ -616,7 +614,7 @@ System::updateVelocityLubrication(){
 	
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
-		for (int i=0; i < n; i++){
+		for (int i=0; i < np; i++){
 			ang_velocity[i] = 1.33333*torque[i];
 			ang_velocity[i].y += O_inf_y;
 		}
@@ -649,7 +647,7 @@ System::factorizeResistanceMatrix(){
 
 void System::updateVelocityLubricationBrownian(){
 	
-	total_rhs = cholmod_zeros(n3, 1, xtype, &c);
+	total_rhs = cholmod_zeros(np3, 1, xtype, &c);
 	buildLubricationTerms();
 	
 	fillSparseResmatrix();
@@ -668,7 +666,7 @@ void System::updateVelocityLubricationBrownian(){
 	v_Brownian_init = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
 	
 	// move particles to intermediate point
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		int i3 = 3*i;
 		displacement(i, ((double*)v_Brownian_init->x)[i3]*dt_mid, ((double*)v_Brownian_init->x)[i3+1]*dt_mid, ((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
@@ -698,7 +696,7 @@ void System::updateVelocityLubricationBrownian(){
 	// Note that, although it looks like a complete reversal of the initial move (as it should be), 
 	// the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
 	// might switch off some of them. The 2nd move's update is not able to switch them back on.
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		int i3 = 3*i;
 		displacement(i, -((double*)v_Brownian_init->x)[i3]*dt_mid, -((double*)v_Brownian_init->x)[i3+1]*dt_mid, -((double*)v_Brownian_init->x)[i3+2]*dt_mid);
 	}
@@ -709,7 +707,7 @@ void System::updateVelocityLubricationBrownian(){
 	// second term is Brownian velocities
 	// third term is Brownian drift
 	// fourth term for vx is the shear rate
-	for (int i = 0; i < n; i++){
+	for (int i = 0; i < np; i++){
 		int i3 = 3*i;
 		relative_velocity[i].x = ((double*)v_nonBrownian->x)[i3] + ((double*)v_Brownian_init->x)[i3] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3] - ((double*)v_Brownian_init->x)[i3] );
 		relative_velocity[i].y = ((double*)v_nonBrownian->x)[i3+1] + ((double*)v_Brownian_init->x)[i3+1] + 0.5*dt_ratio*(((double*)v_Brownian_mid->x)[i3+1] - ((double*)v_Brownian_init->x)[i3+1] );
@@ -722,7 +720,7 @@ void System::updateVelocityLubricationBrownian(){
 	
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
-		for (int i=0; i < n; i++){
+		for (int i=0; i < np; i++){
 			ang_velocity[i] = 1.33333*torque[i];
 			ang_velocity[i].y += O_inf_y;
 		}
@@ -834,11 +832,11 @@ System::deltaTimeEvolution(){
 		shear_disp -= lx();
 	}
 	// move particles
-	for (int i=0; i < n; i++){
+	for (int i=0; i < np; i++){
 		displacement(i, velocity[i].x*dt, velocity[i].y*dt, velocity[i].z*dt);
 	}
 	if (draw_rotation_2d){
-		for (int i=0; i < n; i++){
+		for (int i=0; i < np; i++){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
@@ -884,7 +882,7 @@ System::calcStress(){
 	
 	double total_lub_stress[5] = {0,0,0,0,0};
 	double total_contact_stress[5] = {0,0,0,0,0};
-	for (int i=0; i < n ; i++){
+	for (int i=0; i < np; i++){
 		for (int k=0; k < 5; k++){
 			total_lub_stress[k] += lubstress[i][k];
 			total_contact_stress[k] += contactstress[i][k];
@@ -896,16 +894,16 @@ System::calcStress(){
 	 *
 	 */
 	double total_stress_bgf = 0;
-	for (int i=0; i < n ; i++){
+	for (int i=0; i < np; i++){
 		double a = radius[i];
 		total_stress_bgf += (5.0/9)*bgf_factor*a*a*a;
 	}
 
 	for (int k=0; k < 5; k++){
-		mean_hydro_stress[k] = total_lub_stress[k] / n ;
-		mean_contact_stress[k] = total_contact_stress[k] / n;
+		mean_hydro_stress[k] = total_lub_stress[k] / np;
+		mean_contact_stress[k] = total_contact_stress[k] / np;
 	}
-	mean_hydro_stress[2] += total_stress_bgf / n;
+	mean_hydro_stress[2] += total_stress_bgf / np;
 }
 
 void

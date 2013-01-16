@@ -273,7 +273,7 @@ Simulation::importInitialPositionFile(){
 	np2 = _np2_;
 
 	int num_of_particle = _np1_ + _np2_;
-	sys.set_n(num_of_particle);
+	sys.set_np(num_of_particle);
 	
 	if (np2 == 0)
 		sys.poly = false;
@@ -335,7 +335,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	SetParametersPostProcess();
 
 	sys.allocateRessources();
-	for (int i=0; i < sys.n; i++){
+	for (int i=0; i < sys.np; i++){
 		sys.position[i] = initial_positions[i];
 		if(sys.poly)
 			sys.radius[i] = radii[i];
@@ -473,6 +473,8 @@ Simulation::output_yap(){
 	vec3d pos;
 	fout_yap << "r " << sys.radius[0] << endl;
 	for (int i=0; i < np1; i++){
+//		fout_yap << "r " << 0.1*log(sys.lubstress[i][2]) << endl;
+//		fout_yap << "r " << 1e-5*sys.lubstress[i][2] << endl;
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
@@ -480,7 +482,7 @@ Simulation::output_yap(){
 	}
 		
 	fout_yap << "r " << sys.radius[np1+1] << endl;
-	for (int i = np1; i < sys.n ; i++){
+	for (int i = np1; i < sys.np ; i++){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
@@ -490,10 +492,10 @@ Simulation::output_yap(){
 	/* Layer 4: Orientation of particle (2D simulation)
 	 * Only for small system.
 	 */
-	if (sys.n <= 1000 && sys.draw_rotation_2d){
+	if (sys.np <= 1000 && sys.draw_rotation_2d){
 		fout_yap << "y 5\n";
 		fout_yap << "@ " << color_white << endl;
-		for (int i=0; i < sys.n; i++){
+		for (int i=0; i < sys.np; i++){
 			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
 			u = sys.radius[i]*u;
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
@@ -627,7 +629,7 @@ void
 Simulation::output_vpython(double time){
 	vec3d pos;
 	fout_vpy << "time: " << time << endl;
-	for (int i=0; i < sys.n; i++){
+	for (int i=0; i < sys.np; i++){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());

@@ -40,7 +40,7 @@ private:
 
 	double _r; // center-center distance  
 	double ksi; // gap between particles
-	double iksi; // inverse gap
+//	double iksi; // inverse gap
 	double ksi_cutoff; // small cut-off for ksi: lubrication breakdown
 	double ksi_eff;  // max(ksi, ksi_cutoff)
 	double iksi_eff;
