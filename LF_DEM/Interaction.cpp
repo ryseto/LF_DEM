@@ -201,84 +201,83 @@ Interaction::incrementContactTangentialDisplacement(){
 // Resistance functions
 void
 Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
-	double g1_l, g1_il;
-	double l1, l13, il1, il13;
+	double g1_l; //, g1_il;
+	double l1, l13; //, il1; //, il13;
 
 	l1 = 1.0 + lambda;
 	l13 = l1 * l1 * l1;
 
-	il1 = 1.0 + invlambda;
-	il13 = il1 * il1 * il1;
+//	il1 = 1.0 + invlambda;
+	//	il13 = il1 * il1 * il1;
 	
 	g1_l = 2.0 * lambda * lambda / l13;
-	g1_il = 2.0 * invlambda * invlambda / il13;
+	//g1_il = 2.0 * invlambda * invlambda / il13;
+//	g1_il = g1_l/lambda;
 	
 	XAii = g1_l * iksi_eff;
 	XAij = - 2 * XAii / l1;
-	XAjj = g1_il * iksi_eff;
-	XAji = - 2 * XAjj / il1;
+	XAji = XAij;
+	XAjj = XAii / lambda;
+//	XAjj = g1_il * iksi_eff;
+//	XAji = - 2 * XAjj / il1;
+
 }
 
 
 void
 Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 	double g1_l, g1_il;
-	double l1, l13, il1, il13;
-
+	double l1, l13, il1; //, il13;
 	l1 = 1.0 + lambda;
 	l13 = l1 * l1 * l1;
-
 	il1 = 1.0 + invlambda;
-	il13 = il1 * il1 * il1;
+	//	il13 = il1 * il1 * il1;
 	
 	g1_l = 2.0 * lambda * lambda / l13;
-	g1_il = 2.0 * invlambda * invlambda / il13;
+	//g1_il = 2.0 * invlambda * invlambda / il13;
+	g1_il = g1_l/lambda;
 	
 	XGii = 1.5 * g1_l * iksi_eff;
 	XGij = - 4 * XGii / l1 / l1 ;
-	XGjj = - 1.5 * g1_il * iksi_eff;
+	//	XGjj = - 1.5 * g1_il * iksi_eff;
+	XGjj = - XGii / lambda;
 	XGji = - 4 * XGjj / il1 / il1 ;
-	
 }
 
 void
 Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
-	double g1_l, g1_il;
-	double l1, l13, il1, il13;
-
+	double g1_l; //, g1_il;
+	double l1, l13;// , il1; //, il13;
 	l1 = 1.0 + lambda;
 	l13 = l1 * l1 * l1;
-
-	il1 = 1.0 + invlambda;
-	il13 = il1 * il1 * il1;
-	
+	//	il1 = 1.0 + invlambda;
+	//	il13 = il1 * il1 * il1;
 	g1_l = 2.0 * lambda * lambda / l13;
-	g1_il = 2.0 * invlambda * invlambda / il13;
-	
+	//	g1_il = 2.0 * invlambda * invlambda / il13;
+	//g1_il = g1_l/lambda;
 	XMii = 0.6 * g1_l * iksi_eff;
-	XMij = 40 * XMii * lambda / ( 3 * l13 * l13 * l13);
-	XMjj = 0.6 * g1_il * iksi_eff;
+	XMij = 40*lambda / (3 * l13) * XMii ;
 	XMji = XMij;
+	XMjj = XMii/lambda;
 }
 
 void
 Interaction::GE(double GEi[], double GEj[]){
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	
 	double nxnz = nr_vec.x * nr_vec.z;
 	
 	for(int u=0; u<3; u++){
-		GEi[u] = a0 * a0 * XGii * 2. / 3.;
-		GEi[u] += ro * ro * XGji / 6.;
+		GEi[u] = a0 * a0 * XGii * 2 / 3;
+		GEi[u] += ro * ro * XGji / 6;
 	}
 	GEi[0] *= sys->shear_rate * nxnz * nr_vec.x;
 	GEi[1] *= sys->shear_rate * nxnz * nr_vec.y;
 	GEi[2] *= sys->shear_rate * nxnz * nr_vec.z;
 
 	for(int u=0; u<3; u++){
-		GEj[u] = a1 * a1 * XGjj * 2. / 3.;
-		GEj[u] += ro * ro * XGij / 6.;
+		GEj[u] = a1 * a1 * XGjj * 2. / 3;
+		GEj[u] += ro * ro * XGij / 6;
 	}
 	GEj[0] *= sys->shear_rate * nxnz * nr_vec.x;
 	GEj[1] *= sys->shear_rate * nxnz * nr_vec.y;
