@@ -22,10 +22,31 @@ System::~System(){
 		delete [] relative_velocity;
 	if (!ang_velocity)
 		delete [] ang_velocity;
-	if (!force)
-		delete [] force;
+	if (!total_force)
+		delete [] total_force;
+	if (!lubrication_force)
+		delete [] lubrication_force;
+	if (!contact_force)
+		delete [] contact_force;
+	if (!brownian_force)
+	  delete [] brownian_force;
 	if (!torque)
 		delete [] torque;
+	if (!lubstress){
+		for (int i=0; i < n; i++)
+			delete [] lubstress[i];
+		delete [] lubstress;
+	}
+	if (!contactstress){
+		for (int i=0; i < n; i++)
+			delete [] contactstress[i];
+		delete [] contactstress;
+	}
+	if (!brownianstress){
+		for (int i=0; i < n; i++)
+			delete [] brownianstress[i];
+		delete [] brownianstress;
+	}
 	if (!interaction_list)
 		delete [] interaction_list;
 	if (!interaction_partners)
@@ -39,7 +60,11 @@ System::~System(){
 	if (!ploc)
 		delete [] ploc;
 	cholmod_free_dense(&v, &c);
-	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_dense(&total_rhs, &c);
+	cholmod_free_dense(&nonbrownian_rhs, &c);
+	cholmod_free_dense(&brownian_rhs, &c);
+	cholmod_free_dense(&contact_rhs, &c);
+	cholmod_free_dense(&lubrication_rhs, &c);
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_finish(&c);
 #else
@@ -57,7 +82,11 @@ System::allocateRessources(){
 	velocity = new vec3d [n];
 	relative_velocity = new vec3d [n];
 	ang_velocity = new vec3d [n];
-	force = new vec3d [n];
+	total_force = new vec3d [n];
+	lubrication_force = new vec3d [n];
+	contact_force = new vec3d [n];
+	brownian_force = new vec3d [n];
+
 	torque = new vec3d [n];
 	contactstress = new double* [n];
 	
@@ -82,6 +111,11 @@ System::allocateRessources(){
 	for (int i=0; i < n; i++){
 		lubstress[i] = new double [5];
 	}
+	brownianstress = new double* [n];
+	for (int i=0; i < n; i++){
+		brownianstress[i] = new double [5];
+	}
+
 	
 	double O_inf_y = 0.5*shear_rate/2.0;
 	for (int i=0; i < n; i++){
@@ -236,7 +270,10 @@ System::updateInteractions(){
 void
 System::forceReset(){
 	for (int i=0; i < n; i++){
-		force[i].reset();
+		total_force[i].reset();
+		lubrication_force[i].reset();
+		contact_force[i].reset();
+		brownian_force[i].reset();
 	}
 }
 
@@ -253,6 +290,7 @@ System::stressReset(){
 		for (int j=0; j < 5; j++){
 			lubstress[i][j]=0;
 			contactstress[i][j]=0;
+			brownianstress[i][j]=0;
 		}
 	}
 }
@@ -265,7 +303,7 @@ System::updateVelocity(){
 	vec3d U_inf(0, 0, 0);
 	for (int i=0; i < n; i++){
 		U_inf.x = shear_rate*position[i].z;
-		relative_velocity[i] = (1.0/eta)*force[i];
+		relative_velocity[i] = (1.0/eta)*total_force[i];
 		velocity[i] = relative_velocity[i] + U_inf;
 		
 	}
@@ -428,7 +466,7 @@ System::addStokesDrag(){
 
 
 
-// We solve A*(U-Uinf) = Gtilde*Einf
+// We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
 // This method computes elements of matrix A and vector Gtilde*Einf
 void
 System::buildLubricationTerms(){
@@ -475,8 +513,11 @@ System::buildLubricationTerms(){
 				inter->GE(GEi, GEj);  // G*E_\infty term
 				
 				for(int u=0; u<3; u++){
-					((double*)rhs_b->x)[ 3*i + u ] += GEi[ u ];
-					((double*)rhs_b->x)[ 3*j + u ] += GEj[ u ];
+					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
+					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
+					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
+					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
+
 				}
 			}
 		}
@@ -492,21 +533,15 @@ System::buildContactTerms(){
 	// add contact force
 	for (int i = 0; i < n; i++){
 		int i3 = 3*i;
-		((double*)rhs_b->x)[i3] += force[i].x;
-		((double*)rhs_b->x)[i3+1] += force[i].y;
-		((double*)rhs_b->x)[i3+2] += force[i].z;
+		// ((double*)contact_rhs->x)[i3] += contact_force[i].x;
+		// ((double*)contact_rhs->x)[i3+1] += contact_force[i].y;
+		// ((double*)contact_rhs->x)[i3+2] += contact_force[i].z;
+		((double*)total_rhs->x)[i3] += contact_force[i].x;
+		((double*)total_rhs->x)[i3+1] += contact_force[i].y;
+		((double*)total_rhs->x)[i3+2] += contact_force[i].z;
 	}
 }
-// #else
-// void System::buildContactTerms(){
-// 	// add contact force
-// 	for (int i = 0; i < n; i++){
-// 		int i3 = 3*i;
-// 		rhs_b[i3] += force[i].x;
-// 		rhs_b[i3+1] += force[i].y;
-// 		rhs_b[i3+2] += force[i].z;
-// 	}
-// }
+
 
 void
 System::allocateSparseResmatrix(){
@@ -540,32 +575,24 @@ System::print_res(){ // testing
 
 void
 System::updateVelocityLubrication(){
-	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+	// contact_rhs = cholmod_zeros(n3, 1, xtype, &c);
+	// lubrication_rhs = cholmod_zeros(n3, 1, xtype, &c);
+	total_rhs = cholmod_zeros(n3, 1, xtype, &c);
+
 	buildLubricationTerms();
-	
 	fillSparseResmatrix();
-	
-	L = cholmod_analyze (sparse_res, &c);
-	cholmod_factorize (sparse_res, L, &c);
-	if(c.status){
-		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
-		// It is very often enough to force another preconditioner to solve the problem.
-		cerr << " factorization failed. forcing simplicial algorithm... " << endl;
-		c.supernodal = CHOLMOD_SIMPLICIAL;
-		L = cholmod_analyze (sparse_res, &c);
-		cholmod_factorize (sparse_res, L, &c) ;
-		cerr << " factorization status " << c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  c.final_ll <<endl;
-		c.supernodal = CHOLMOD_SUPERNODAL;
-	}
+	factorizeResistanceMatrix();
 	
 	buildContactTerms();
-	
-	v = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
+
+	v = cholmod_solve (CHOLMOD_A, L, total_rhs, &c) ;
+	// v_lub = cholmod_solve (CHOLMOD_A, L, lubrication_rhs, &c) ;
+	// v_cont = cholmod_solve (CHOLMOD_A, L, contact_rhs, &c) ;
 	
 	/********** testing *
 	 double m1 [2] = {-1,0};
 	 double p1 [2] = {1,0};
-	 cholmod_dense *r = cholmod_copy_dense(rhs_b, &c);
+	 cholmod_dense *r = cholmod_copy_dense(total_rhs, &c);
 	 cholmod_sdmult(sparse_res, 0, m1, p1, v, r, &c);
 	 cout << " cholmod residu " << cholmod_norm_dense(r,0, &c) << endl;
 	 cholmod_free_dense(&r, &c);
@@ -597,7 +624,9 @@ System::updateVelocityLubrication(){
 	
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_free_factor(&L, &c);
-	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_dense(&total_rhs, &c);
+	// cholmod_free_dense(&lubrication_rhs, &c);
+	// cholmod_free_dense(&contact_rhs, &c);
 	cholmod_free_dense(&v, &c);
 }
 
@@ -620,7 +649,7 @@ System::factorizeResistanceMatrix(){
 
 void System::updateVelocityLubricationBrownian(){
 	
-	rhs_b = cholmod_zeros(n3, 1, xtype, &c);
+	total_rhs = cholmod_zeros(n3, 1, xtype, &c);
 	buildLubricationTerms();
 	
 	fillSparseResmatrix();
@@ -629,14 +658,14 @@ void System::updateVelocityLubricationBrownian(){
 
 	buildContactTerms();
 	
-	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, rhs_b, &c) ;
+	v_nonBrownian = cholmod_solve (CHOLMOD_A, L, total_rhs, &c) ;
 
 	// now the Brownian part of the velocity:
 	// mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
 
-	brownian_force = fb->generate();
+	brownian_rhs = fb->generate();
 
-	v_Brownian_init = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
+	v_Brownian_init = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
 	
 	// move particles to intermediate point
 	for (int i=0; i < n; i++){
@@ -654,7 +683,7 @@ void System::updateVelocityLubricationBrownian(){
 	factorizeResistanceMatrix();
 	
 	// get the intermediate brownian velocity
-	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_force, &c) ;
+	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
 	
 	/* testing
 	 for (int i=0; i < n; i++){
@@ -701,114 +730,12 @@ void System::updateVelocityLubricationBrownian(){
 	
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_free_factor(&L, &c);
-	cholmod_free_dense(&rhs_b, &c);
+	cholmod_free_dense(&total_rhs, &c);
 	cholmod_free_dense(&v_nonBrownian, &c);
 	cholmod_free_dense(&v_Brownian_init, &c);
 	cholmod_free_dense(&v_Brownian_mid, &c);
 }
 
-
-#else
-
-/*
- * By using lapack
- */
-void
-System::updateVelocityLubrication(){
-	for (int k = 0;k < n3; k++){
-		rhs_b[k] = 0.;
-	}
-	for (int k = 0; k < n3*n3; k++){
-		res[k] = 0.;
-	}
-
-	for (int i = 0 ; i < n; i ++){
-		int i3 = 3*i;
-		double d_value = bgf_factor*radius[i];
-		res[n3*(i3  ) + i3  ] = d_value;
-		res[n3*(i3+1) + i3+1] = d_value;
-		res[n3*(i3+2) + i3+2] = d_value;
-	}
-	if (lub){
-		for (int i = 0 ; i < n - 1; i ++){
-			for (int j = i+1 ; j < n; j ++){
-				double r_sq = sq_distance(i,j);
-				double r;
-				if( r_sq < sq_lub_max){
-					r = sqrt(r_sq);
-					double nvec[] = {dx/r, dy/r, dz/r};
-					double h = r - lubcore;
-					double alpha = - 1/(4*h);
-					if (h > 0){
-						// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-						fillResmatrix(res, nvec, i, i, -alpha, n3);
-						fillResmatrix(res, nvec, i, j, +alpha, n3);
-						fillResmatrix(res, nvec, j, j, -alpha, n3);
-						fillResmatrix(res, nvec, j, i, +alpha, n3);
-						double alpha_gd_dz_n0 = alpha*shear_rate*dz*nvec[0];
-						double alpha_gd_dz_n0_n[] = { \
-							alpha_gd_dz_n0*nvec[0],
-							alpha_gd_dz_n0*nvec[1],
-							alpha_gd_dz_n0*nvec[2]};
-						rhs_b[3*i  ] += alpha_gd_dz_n0_n[0];
-						rhs_b[3*i+1] += alpha_gd_dz_n0_n[1];
-						rhs_b[3*i+2] += alpha_gd_dz_n0_n[2];
-						rhs_b[3*j  ] -= alpha_gd_dz_n0_n[0];
-						rhs_b[3*j+1] -= alpha_gd_dz_n0_n[1];
-						rhs_b[3*j+2] -= alpha_gd_dz_n0_n[2];
-					}
-				}
-			}
-		}
-	}
-	for (int i = 0; i < n; i++){
-		int i3 = 3*i;
-		rhs_b[i3  ] += force[i].x;
-		rhs_b[i3+1] += force[i].y;
-		rhs_b[i3+2] += force[i].z;
-	}
-	
-	/********** testing *
-	 double * rhs_b_cpy = new double [n3];
-	 for (int i = 0; i < n3; i++){
-	 rhs_b_cpy[i]= rhs_b[i];
-	 }
-	 * end testing ***********/
-	dsysv_(&UPLO, &n3, &nrhs, res, &lda, ipiv, rhs_b, &ldb, work, &lwork, &info);
-	
-	/********** testing *
-	 int inc=1;
-	 double beta=-1.;
-	 double alpha=1.;
-	 enum CBLAS_ORDER order=CblasRowMajor;
-	 enum CBLAS_UPLO ul=CblasUpper;
-	 cblas_dsymv(order, ul, n3, alpha, res, lda, rhs_b, inc, beta, rhs_b_cpy,inc);
-	 double infty_norm=0.;
-	 for (int i = 0; i < n3; i++){
-	 cout << rhs_b_cpy[i] << endl;
-	 if(fabs(rhs_b_cpy[i])>infty_norm)
-	 infty_norm=fabs(rhs_b_cpy[i]);
-	 }
-	 
-	 cout << " lapack residu " << infty_norm << endl;
-	 getchar();
-	 delete [] rhs_b_cpy;
-	 * end testing ***********/
-	
-	for (int i = 0; i < n; i++){
-		int i3 = 3*i;
-		velocity[i].x = rhs_b[i3] + shear_rate*position[i].z;
-		velocity[i].y = rhs_b[i3+1];
-		velocity[i].z = rhs_b[i3+2];
-	}
-	if(friction){
-		double O_inf_y = 0.5*shear_rate;
-		for (int i=0; i < n; i++){
-			ang_velocity[i] = 1.33333*torque[i];
-			ang_velocity[i].y += O_inf_y;
-		}
-	}
-}
 #endif
 
 void
