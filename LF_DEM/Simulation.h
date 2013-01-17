@@ -17,7 +17,7 @@
 class Simulation{
 private:
 	System sys;
-	double shear_strain;
+	double shear_strain_end;
 	bool import_positions;
 	vector< vec3d> initial_positions;
 	vector <double> radii;
@@ -28,8 +28,8 @@ private:
 	/*
 	 *  Simulation parameters
 	 */
-	int ts_max;
-	int interval_snapshot;
+//	int ts_max;
+	double strain_interval_out;
 	/*
 	 * For output data.
 	 */

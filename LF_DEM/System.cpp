@@ -199,6 +199,7 @@ System::timeEvolution(int time_step){
 			calcStress();
 		deltaTimeEvolution();
 		ts ++;
+		shear_strain += shear_rate*dt;
 	}
 }
 
@@ -989,14 +990,37 @@ System::sq_distance(int i, int j){
 void
 System::calcStress(){
 	stressReset();
+	gap_min = lz();
+	double sum_overlap = 0;
+	int cnt_overlap = 0;
+	max_age = 0;
+	double sum_age = 0;
+	int cnt_age = 0;
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
 			interaction[k].addLubricationStress();
 			if (interaction[k].contact){
 				interaction[k].addContactStress();
 			}
+			if (interaction[k].gap() < 0){
+				sum_overlap +=interaction[k].gap();
+				cnt_overlap ++;
+			}
+			
+			if (interaction[k].gap() < gap_min){
+				gap_min = interaction[k].gap();
+			}
+			if (interaction[k].age() > 0 ){
+				if (max_age < interaction[k].age()){
+					max_age = interaction[k].age();
+				}
+				sum_age = interaction[k].age();
+				cnt_age ++;
+			}
 		}
 	}
+	ave_overlap = sum_overlap / cnt_overlap;
+	ave_age = sum_age / cnt_age;
 	
 	double total_lub_stress[5] = {0,0,0,0,0};
 	double total_contact_stress[5] = {0,0,0,0,0};

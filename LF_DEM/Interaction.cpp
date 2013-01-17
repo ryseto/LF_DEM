@@ -509,6 +509,12 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	r_lub_max = 0.5*ro*sys->lub_max;
 	assignDistanceNormalVector(pos_diff, distance, zshift);
 
+	if ( distance - ro < sys->dist_near*0.5*ro){
+		near = true;
+		strain_0 = sys->shear_strain;
+	} else {
+		near = false;
+	}
 	return;
 }
 
@@ -570,10 +576,30 @@ Interaction::update(){
 			}
 		}
 		
+		if ( near == false ){
+			if (ksi < sys->dist_near*0.5*ro){
+				near = true;
+				strain_0 = sys->shear_strain;
+			}
+		} else {
+			if (ksi > sys->dist_near*0.5*ro){
+				near = false;
+				strain_0 = -1;
+			}
+		}
+
 	}
 	return false;
 }
 
 
-
+double
+Interaction::age(){
+	if (near){
+		return sys->shear_strain - strain_0;
+	} else {
+		return -1;
+	}
+	
+}
 
