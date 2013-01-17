@@ -1066,7 +1066,7 @@ F^{(1)}_i
 - 6 \pi\mu a_{1} X_{11}^{A}(s,\lambda) n_i n_j
 (U_{j}^{(1)}-U_{j}^{(1)\infty})
 - 3 \pi\mu (a_{1}+a_{2}) X_{12}^{A}(s,\lambda) n_i n_j
-(U_{j}-U_{j}^{(2)\infty}) \\
+(U_{j}^{(2)}-U_{j}^{(2)\infty}) \\
 &\quad
 + 4 \pi\mu a_{1}^2 X_{11}^{G}(s,\lambda) 
 n_i\left(n_j n_k - \frac{\delta_{jk}}{3}  \right) E^{\infty}_{jk}
@@ -1079,7 +1079,7 @@ n_i\left(n_j n_k -
 - 6 \pi\mu a_{1} X_{11}^{A}(s,\lambda) n_i n_j
 (U_{j}^{(1)}-U_{j}^{(1)\infty})
 - 3 \pi\mu (a_{1}+a_{2}) X_{12}^{A}(s,\lambda) n_i n_j
-(U_{j}-U_{j}^{(2)\infty}) \\
+(U_{j}^{(2)}-U_{j}^{(2)\infty}) \\
 &\quad
 + 4 \pi\mu a_{1}^2 X_{11}^{G} (s,\lambda)
 n_i\left(n_j n_k - \frac{\delta_{jk}}{3}  \right) E^{\infty}_{jk}
@@ -1228,7 +1228,71 @@ n_{i} n_j (U^{(1)}_j-U^{(1)\infty}_j)
 \end{pmatrix}
 \end{equation}
 
+\subsection{Calculation memo}
+\paragraph{XA}
+\begin{equation}
+ g_1 (\lambda) = \frac{2\lambda^2}{(1+\lambda)^3}
+\end{equation}
 
+$X_{\alpha\beta}^{A}(s,\lambda)=X_{\beta\alpha}^{A}(s,\lambda) =
+X_{(3-\alpha)(3-\beta)}^{A}(s,\lambda^{-1})$
+\begin{align}
+ X_{11}^{A}(s,\lambda) &= g_1 (\lambda) \xi^{-1} \\
+ X_{12}^{A}(s,\lambda) &= - \frac{2}{1+\lambda} g_1 (\lambda) \xi^{-1} 
+= -\frac{2}{1+\lambda} X_{11}^{A}(s,\lambda) \\
+ X_{21}^{A}(s,\lambda) &=  X_{12}^{A}(s,\lambda) \\
+ X_{22}^{A}(s,\lambda) &=  X_{11}^{A}(s,\lambda^{-1}) 
+ = g_1(\lambda^{-1})\xi^{-1}
+ = \frac{1}{\lambda} g_1(\lambda) \xi^{-1}
+ = \frac{1}{\lambda} X_{11}^{A}(s,\lambda) 
+\end{align}
+
+\paragraph{XG}
+$X_{\alpha\beta}^{G}(s,\lambda) = - X_{(3-\alpha)(3-\beta)}^{G}(s, \lambda^{-1})$
+\begin{align}
+ X_{11}^{G}(s,\lambda) &= \frac{3}{2}g_1(\lambda) \xi^{-1} \\
+ X_{22}^{G}(s,\lambda) &= - X_{11}^{G} (s, \lambda^{-1})
+ = - \frac{3}{2}g_1(\lambda^{-1}) \xi^{-1} 
+ = - \frac{1}{\lambda} \frac{3}{2}g_1(\lambda) \xi^{-1} 
+ = - \frac{1}{\lambda} X_{11}^{G} (s, \lambda) \\
+X_{12}^{G}(s,\lambda) &= 
+-\frac{6}{(1+\lambda)^2} g_1(\lambda)\xi^{-1} 
+= 
+-\frac{6}{(1+\lambda)^2} \frac{2}{3} X_{11}^{G}(s,\lambda)
+= 
+-\frac{4}{(1+\lambda)^2}  X_{11}^{G} (s,\lambda)\\
+X_{21}^{G}(s,\lambda) &= 
+- X_{12}^{G}(s,\lambda^{-1}) 
+= 
+\frac{4}{(1+\lambda^{-1})^2}X_{11}^{G}(s,\lambda^{-1})
+= 
+-\frac{4}{(1+\lambda^{-1})^2}X_{22}^{G}(s,\lambda)
+\end{align}
+
+\paragraph{XM}
+
+$X_{\alpha\beta}^{M} (s,\lambda) = 
+ X_{\beta\alpha}^{M}(s,\lambda) = 
+ X_{(3-\alpha)(3-\beta)}^{M}(s, \lambda^{-1})$
+
+\begin{align}
+X_{11}^{M}(s,\lambda)  &= 
+\frac{3}{5} g_1(\lambda)\xi^{-1} \\
+X_{12}^{M}(s,\lambda)
+&= \frac{8\lambda}{(1+\lambda)^3} g_1(\lambda)\xi^{-1} 
+= \frac{40\lambda}{3(1+\lambda)^3}  X_{11}^{M}(s,\lambda) \\
+X_{21}^{M}(s,\lambda) & = X_{12}^{M}(s,\lambda) \\
+X_{22}^{M}(s,\lambda) & = 
+X_{11}^{M}(s,\lambda^{-1}) 
+=
+\frac{3}{5} g_1(\lambda^{-1})\xi^{-1} 
+=
+\frac{1}{\lambda}
+\frac{3}{5} g_1(\lambda)\xi^{-1} 
+=
+\frac{1}{\lambda}
+X_{11}^{M}(s,\lambda)  
+\end{align}
 
 %\begin{align}
 %\frac{ F^{\alpha}_i}{F_0}

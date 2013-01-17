@@ -70,8 +70,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.kb_T = atof(value.c_str());
 	} else if (keyword == "dt"){
 		sys.dt = atof(value.c_str());
-	} else if (keyword == "shear_strain"){
-		shear_strain = atof(value.c_str());
+	} else if (keyword == "shear_strain_end"){
+		shear_strain_end = atof(value.c_str());
 	} else if (keyword == "dt_ratio"){
 		sys.dt_ratio = atof(value.c_str());
 	} else if (keyword == "lub_max"){
@@ -86,8 +86,8 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.mu_dynamic = atof(value.c_str());
 	} else if (keyword == "dynamic_friction_critical_velocity"){
 		sys.dynamic_friction_critical_velocity = atof(value.c_str());
-	} else if (keyword == "interval_snapshot") {
-		interval_snapshot = atoi(value.c_str());
+	} else if (keyword == "strain_interval_out") {
+		strain_interval_out = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is'nt associated with an parameter" << endl;
 		exit(1);
@@ -164,11 +164,11 @@ Simulation::SetParametersPostProcess(){
 	/*
 	 * The time steps finishing simulation.
 	 */
-	ts_max = (int)(shear_strain / sys.dt);
+	//ts_max = (int)(shear_strain / sys.dt);
 	/*
 	 * The middle height of the simulation box is set to the flow zero level.
 	 */
-	origin_zero_flow = false;
+	origin_zero_flow = true;
 	/*
 	 * The bond width indicates the force strength.
 	 */
@@ -181,6 +181,8 @@ Simulation::SetParametersPostProcess(){
 		sys.draw_rotation_2d = true;
 	else
 		sys.draw_rotation_2d = false;
+	
+	sys.dist_near = 0.001;
 }
 
 void
@@ -208,7 +210,7 @@ Simulation::SetDefaultParameters(){
 	 *
 	 */
 	sys.shear_rate = 1.0;
-	shear_strain = 10;
+	shear_strain_end = 10;
 	/*
 	 * Lubrication force
 	 * lub_max: reduced large cutoff distance for lubrication
@@ -248,7 +250,7 @@ Simulation::SetDefaultParameters(){
 	/*
 	 * snapshot for yaplot data.
 	 */
-	interval_snapshot = 100;
+	strain_interval_out = 0.01;
 }
 
 void
@@ -347,13 +349,14 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 
 	sys.initializeBoxing();
 	sys.checkNewInteraction();
-	double time = 0;
-	while(time < ts_max){
-		sys.timeEvolution(interval_snapshot);
+	sys.shear_strain = 0;
+	double time_interval = strain_interval_out/sys.shear_rate;
+	int i_time_interval = time_interval / sys.dt;
+	while(sys.shear_strain <= shear_strain_end){
+		sys.timeEvolution(i_time_interval);
 		outputRheologyData();
 		output_yap();
-		time += (double)interval_snapshot;
-		output_vpython(time);
+		output_vpython(sys.ts);
 	}
 }
 
@@ -377,6 +380,11 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.mean_contact_stress[2] << ' ' ; //10
 	fout_rheo << sys.mean_contact_stress[3] << ' ' ; //11
 	fout_rheo << sys.mean_contact_stress[4] << ' ' ; //12
+	fout_rheo << sys.gap_min << ' '; // 13
+	fout_rheo << sys.ave_overlap << ' ';
+	fout_rheo << sys.shear_strain << ' ';
+	fout_rheo << sys.max_age << ' ';
+	fout_rheo << sys.ave_age << ' ';
 	fout_rheo << endl;
 }
 

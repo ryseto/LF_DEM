@@ -131,6 +131,11 @@ public:
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
+	double shear_strain;
+	double max_age;
+	double ave_age;
+	double dist_near;
+	bool near;
 	/*
 	 * Leading term of lubrication force is 1/ksi, with ksi the gap
 	 * ksi = 2r/(a0+a1) - 2.
@@ -185,7 +190,10 @@ public:
 	double volume_fraction;
 	double vel_difference;
 	double dt;
-	double dt_mid, dt_ratio;
+	double dt_mid;
+	double dt_ratio;
+	double gap_min;
+	double ave_overlap;
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];

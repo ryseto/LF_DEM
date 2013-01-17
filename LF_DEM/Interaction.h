@@ -45,6 +45,7 @@ private:
 	double ksi_eff;  // max(ksi, ksi_cutoff)
 	double iksi_eff;
 	double r_lub_max;  // max distance for lubrication
+	double strain_0; // 
 	//	double twothird, onesixth; // used in lubrication computations;
 
 protected:
@@ -72,6 +73,8 @@ public:
 	
 	bool update(); // after particles dispacement
 
+	double age();
+	
 	double a0, a1;
 	double ro; // ro = a0 + a1
 	double lambda, invlambda;  // a1/a0 , a0/a1
@@ -80,6 +83,7 @@ public:
 	int partner(int);
 
 	bool contact;
+	bool near;
 	bool static_friction;
 
 	/* Fc_normal: normal contact force
