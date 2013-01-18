@@ -194,6 +194,7 @@ public:
 	double dt_ratio;
 	double gap_min;
 	double ave_overlap;
+	vec3d n_vec_longcontact;
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
@@ -228,7 +229,7 @@ public:
 	int numpart(){
 		return np;
 	}
-
+	
 #ifdef CHOLMOD
 	cholmod_factor *L ;
 	cholmod_common c ;
@@ -239,9 +240,10 @@ public:
 
 
 	// interactions
+	bool output_trajectory;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
-
+	ofstream fout_trajectory;
 
 };
 #endif /* defined(__LF_DEM__State__) */

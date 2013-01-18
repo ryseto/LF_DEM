@@ -509,9 +509,9 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	r_lub_max = 0.5*ro*sys->lub_max;
 	assignDistanceNormalVector(pos_diff, distance, zshift);
 
+	strain_0 = sys->shear_strain;
 	if ( distance - ro < sys->dist_near*0.5*ro){
 		near = true;
-		strain_0 = sys->shear_strain;
 	} else {
 		near = false;
 	}
@@ -521,6 +521,8 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 void
 Interaction::deactivate(){
 	// r > lub_max
+	if (sys->output_trajectory)
+		outputTrajectory();
 	active = false;
 	int i=particle_num[0];
 	int j=particle_num[1];
@@ -579,12 +581,10 @@ Interaction::update(){
 		if ( near == false ){
 			if (ksi < sys->dist_near*0.5*ro){
 				near = true;
-				strain_0 = sys->shear_strain;
 			}
 		} else {
 			if (ksi > sys->dist_near*0.5*ro){
 				near = false;
-				strain_0 = -1;
 			}
 		}
 
@@ -592,14 +592,28 @@ Interaction::update(){
 	return false;
 }
 
+/*
+ * Just provisional function for future analysis
+ *
+ */
+void
+Interaction::outputTrajectory(){
+	for (int k=0; k < trajectory.size(); k++){
+		sys->fout_trajectory << trajectory[k].x << ' ' <<  trajectory[k].y << ' '<<  trajectory[k].z << ' ';
+		sys->fout_trajectory << gap_history[k] << endl;
+	}
+	sys->fout_trajectory << endl ;
+	trajectory.clear();
+	gap_history.clear();
+}
 
 double
 Interaction::age(){
-	if (near){
-		return sys->shear_strain - strain_0;
-	} else {
-		return -1;
-	}
-	
+	return sys->shear_strain - strain_0;
 }
 
+void
+Interaction::recordTrajectory(){
+	trajectory.push_back(r_vec);
+	gap_history.push_back(ksi);
+}

@@ -72,7 +72,6 @@ public:
 	}
 	
 	bool update(); // after particles dispacement
-
 	double age();
 	
 	double a0, a1;
@@ -83,9 +82,14 @@ public:
 	int partner(int);
 
 	bool contact;
-	bool near;
 	bool static_friction;
-
+	
+	bool near;
+	vector <vec3d> trajectory;
+	vector <double> gap_history;
+	void recordTrajectory();
+	void outputTrajectory();
+	
 	/* Fc_normal: normal contact force
 	 * Fc_tangent: tangneital contact force
 	 */
@@ -99,6 +103,7 @@ public:
 	void addLubricationStress();
 	void addContactStress();
 	void pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]);
+
 
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
 	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);

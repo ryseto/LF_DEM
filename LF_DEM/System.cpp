@@ -996,12 +996,15 @@ System::calcStress(){
 	max_age = 0;
 	double sum_age = 0;
 	int cnt_age = 0;
+
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
+			
 			interaction[k].addLubricationStress();
 			if (interaction[k].contact){
 				interaction[k].addContactStress();
 			}
+			// for analysis
 			if (interaction[k].gap() < 0){
 				sum_overlap +=interaction[k].gap();
 				cnt_overlap ++;
@@ -1010,15 +1013,20 @@ System::calcStress(){
 			if (interaction[k].gap() < gap_min){
 				gap_min = interaction[k].gap();
 			}
+
 			if (interaction[k].age() > 0 ){
 				if (max_age < interaction[k].age()){
 					max_age = interaction[k].age();
+					n_vec_longcontact = interaction[k].nr_vec;
 				}
 				sum_age = interaction[k].age();
 				cnt_age ++;
 			}
+
+			interaction[k].recordTrajectory();
 		}
 	}
+
 	ave_overlap = sum_overlap / cnt_overlap;
 	ave_age = sum_age / cnt_age;
 	
@@ -1059,5 +1067,4 @@ System::calcContactForces(){
 			interaction[k].calcContactInteractionNoFriction();
 		}
 	}
-	
 }

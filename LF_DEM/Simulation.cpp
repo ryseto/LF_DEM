@@ -145,10 +145,15 @@ Simulation::SetParametersPostProcess(){
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
+	
 	fout_yap.open(yap_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_vpy.open(vpy_filename.c_str());
-	
+	if (sys.output_trajectory){
+		string trj_filename = "trj_" + sys.simu_name + ".dat";
+		sys.fout_trajectory.open(trj_filename.c_str());
+	}
+
 	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;	
 	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
 	sys.ts = 0;
@@ -183,6 +188,7 @@ Simulation::SetParametersPostProcess(){
 		sys.draw_rotation_2d = false;
 	
 	sys.dist_near = 0.001;
+	sys.output_trajectory = false;
 }
 
 void
@@ -381,10 +387,19 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.mean_contact_stress[3] << ' ' ; //11
 	fout_rheo << sys.mean_contact_stress[4] << ' ' ; //12
 	fout_rheo << sys.gap_min << ' '; // 13
-	fout_rheo << sys.ave_overlap << ' ';
-	fout_rheo << sys.shear_strain << ' ';
-	fout_rheo << sys.max_age << ' ';
-	fout_rheo << sys.ave_age << ' ';
+	fout_rheo << sys.ave_overlap << ' '; //14
+	fout_rheo << sys.shear_strain << ' '; //15
+	fout_rheo << sys.max_age << ' '; //16
+	fout_rheo << sys.ave_age << ' '; //17
+	if (sys.n_vec_longcontact.z > 0){
+		fout_rheo << sys.n_vec_longcontact.x << ' '; //18
+		fout_rheo << sys.n_vec_longcontact.y << ' '; //19
+		fout_rheo << sys.n_vec_longcontact.z << ' '; //20
+	} else {
+		fout_rheo << -sys.n_vec_longcontact.x << ' ';
+		fout_rheo << -sys.n_vec_longcontact.y << ' ';
+		fout_rheo << sys.n_vec_longcontact.z << ' ';
+	}
 	fout_rheo << endl;
 }
 
@@ -481,14 +496,11 @@ Simulation::output_yap(){
 	vec3d pos;
 	fout_yap << "r " << sys.radius[0] << endl;
 	for (int i=0; i < np1; i++){
-//		fout_yap << "r " << 0.1*log(sys.lubstress[i][2]) << endl;
-//		fout_yap << "r " << 1e-5*sys.lubstress[i][2] << endl;
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
 		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
 	}
-		
 	fout_yap << "r " << sys.radius[np1+1] << endl;
 	for (int i = np1; i < sys.np ; i++){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
@@ -496,6 +508,33 @@ Simulation::output_yap(){
 								sys.position[i].z - sys.lz2());
 		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
 	}
+	
+	/*
+	 *
+	 */
+	fout_yap << "y 8\n";
+	fout_yap << "@ " << color_white << endl;
+	for (int k=0; k < sys.num_interaction; k++){
+		if ( sys.interaction[k].near ){
+			int i = sys.interaction[k].particle_num[0];
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+									sys.position[i].y - sys.ly2(),
+									sys.position[i].z - sys.lz2());
+			fout_yap << "r " << sys.radius[i]  << endl;
+			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+
+			int j = sys.interaction[k].particle_num[1];
+			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
+									sys.position[j].y - sys.ly2(),
+									sys.position[j].z - sys.lz2());
+			fout_yap << "r " << sys.radius[j]  << endl;
+			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+	
+		}
+	}
+
+	
+	
 
 	/* Layer 4: Orientation of particle (2D simulation)
 	 * Only for small system.
