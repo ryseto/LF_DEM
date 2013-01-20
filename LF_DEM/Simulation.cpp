@@ -501,53 +501,31 @@ Simulation::output_yap(){
 	int color_yellow = 4;
 	int color_orange = 5;
 	int color_blue = 6;
+	
+	vector<vec3d> pos;
+	int np = np1 + np2 ;
+	pos.resize(np);
+	for (int i=0; i < np; i++){
+		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+								   sys.position[i].y - sys.ly2(),
+								   sys.position[i].z - sys.lz2());
+	}
+	
 	/* Layer 1: Circles for particles
 	 */
 	fout_yap << "y 1\n";
 	fout_yap << "@ " << color_white << endl;
-	vec3d pos;
+	//vec3d pos;
 	fout_yap << "r " << sys.radius[0] << endl;
+	
 	for (int i=0; i < np1; i++){
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-								sys.position[i].y - sys.ly2(),
-								sys.position[i].z - sys.lz2());
-		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+		fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
 	}
 	fout_yap << "r " << sys.radius[np1+1] << endl;
 	for (int i = np1; i < sys.np ; i++){
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-								sys.position[i].y - sys.ly2(),
-								sys.position[i].z - sys.lz2());
-		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+		fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
 	}
 	
-	/*
-	 *
-	 */
-	fout_yap << "y 8\n";
-	fout_yap << "@ " << color_white << endl;
-
-	fout_yap << "r " << sys.radius[0] << endl;
-	for (int i=0; i < np1; i++){
-		if (sys.contact_number[i] >= 4){
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-									sys.position[i].y - sys.ly2(),
-									sys.position[i].z - sys.lz2());
-			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-		}
-	}
-	fout_yap << "r " << sys.radius[np1+1] << endl;
-	for (int i = np1; i < sys.np ; i++){
-		if (sys.contact_number[i] >= 4){
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-									sys.position[i].y - sys.ly2(),
-									sys.position[i].z - sys.lz2());
-			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-		}
-	}
-	
-	
-
 	/* Layer 4: Orientation of particle (2D simulation)
 	 * Only for small system.
 	 */
@@ -557,13 +535,10 @@ Simulation::output_yap(){
 		for (int i=0; i < sys.np; i++){
 			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
 			u = sys.radius[i]*u;
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-									sys.position[i].y - sys.ly2(),
-									sys.position[i].z - sys.lz2());
-			drawLine('l', pos-u, 2*u, fout_yap);
+			drawLine('l', pos[i]-u, 2*u, fout_yap);
 			u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
 			u = sys.radius[i]*u;
-			drawLine('l', pos-u, 2*u, fout_yap);
+			drawLine('l', pos[i]-u, 2*u, fout_yap);
 		}
 	}
 	/* Layer 2: Friction
@@ -576,47 +551,33 @@ Simulation::output_yap(){
 					fout_yap << "@ " << color_green << endl;
 				else
 					fout_yap << "@ " << color_orange << endl;
-				
 				int i = sys.interaction[k].particle_num[0];
-				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-										sys.position[i].y - sys.ly2(),
-										sys.position[i].z - sys.lz2());
 				fout_yap << "r " << yap_force_factor*sys.interaction[k].Fc_tangent.norm()  << endl;
-				drawLine('s', pos, sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos[i], sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
-				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-										sys.position[j].y - sys.ly2(),
-										sys.position[j].z - sys.lz2());
-				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos[j], -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 			}
 		}
 	}
-	/* Layer 3: Normal
-	 * Lubrication + contact force
+	/* Layer 3: lubrication (Compression)
 	 */
+	// nr_vec i ---> j
 	fout_yap << "y 3\n";
 	fout_yap << "@ " << color_yellow << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if ( sys.interaction[k].active ){
 			double lub_force = sys.interaction[k].valLubForce();
-			if (lub_force > 0){
+			if (lub_force >= 0){
+				vec3d nvec = sys.interaction[k].nr_vec;
 				int i = sys.interaction[k].particle_num[0];
 				int j = sys.interaction[k].particle_num[1];
-				fout_yap << "r " << yap_force_factor*lub_force;
-				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-										sys.position[i].y - sys.ly2(),
-										sys.position[i].z - sys.lz2());
-				drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
-				
-				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-										sys.position[j].y - sys.ly2(),
-										sys.position[j].z - sys.lz2());
-				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				fout_yap << "r " << yap_force_factor*lub_force << endl;
+				drawLine('s', pos[i],  sys.radius[i]*nvec, fout_yap);
+				drawLine('s', pos[j], -sys.radius[j]*nvec, fout_yap);
 			}
 		}
 	}
-	/* Layer 3: Normal
-	 * Lubrication + contact force
+	/* Layer 4: lubrication (Extension)
 	 */
 	fout_yap << "y 4\n";
 	fout_yap << "@ " << color_green << endl;
@@ -624,52 +585,16 @@ Simulation::output_yap(){
 		if ( sys.interaction[k].active ){
 			double lub_force = sys.interaction[k].valLubForce();
 			if (lub_force < 0){
+				vec3d nvec = sys.interaction[k].nr_vec;
 				int i = sys.interaction[k].particle_num[0];
 				int j = sys.interaction[k].particle_num[1];
-				fout_yap << "r " << -yap_force_factor*lub_force;
-				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-										sys.position[i].y - sys.ly2(),
-										sys.position[i].z - sys.lz2());
-				drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
-				
-				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-										sys.position[j].y - sys.ly2(),
-										sys.position[j].z - sys.lz2());
-				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				fout_yap << "r " << -yap_force_factor*lub_force << endl;
+				drawLine('s', pos[i],  sys.radius[i]*nvec, fout_yap);
+				drawLine('s', pos[j], -sys.radius[j]*nvec, fout_yap);
 			}
 		}
 	}
 
-	
-	/* Layer 3: Normal
-	 * Lubrication + contact force
-	 */
-//	fout_yap << "y 4\n";
-//	fout_yap << "@ " << color_yellow << endl;
-//	for (int i=0; i < sys.n; i++){
-//		for (int j = i+1; j < sys.n; j++){
-//			double f_ij = 0;
-//			if (sys.lub == true){
-//				f_ij += sys.lubricationForceFactor(i, j);
-//			}
-//			if (contact_pair[i][j] != -1){
-//				f_ij += -fc[contact_pair[i][j]].f_normal;
-//			}
-//			if (f_ij > 0){
-//				fout_yap << "r " << yap_force_factor*f_ij << endl;
-//				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-//											   sys.position[i].y - sys.ly2,
-//											   sys.position[i].z - sys.lz2);
-//				vec3d pos2 = shiftUpCoordinate(sys.position[j].x - sys.lx2,
-//											   sys.position[j].y - sys.ly2,
-//											   sys.position[j].z - sys.lz2);
-//				
-//				drawLine2('s', pos1, pos2, fout_yap);
-//			}
-//		}
-//	}
-
-		
 	/* Layer 6: Box and guide lines
 	 */
 	fout_yap << "y 6\n";
@@ -706,8 +631,6 @@ Simulation::output_yap(){
 		drawLine( sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), -sys.ly2(), -sys.lz2(),  fout_yap);
 	}
 }
-
-
 
 /* Output data for vpython visualization.
  *

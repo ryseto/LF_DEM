@@ -327,7 +327,7 @@ Interaction::addLubricationStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
 
-	double n [3];
+	double n[3];
 	n[0] = nr_vec.x;
 	n[1] = nr_vec.y;
 	n[2] = nr_vec.z;
@@ -340,8 +340,8 @@ Interaction::addLubricationStress(){
 //	}
 	
 	// First -G*(U-Uinf) term
-	double vi [3];
-	double vj [3];
+	double vi[3];
+	double vj[3];
 
 	vi[0] = sys->relative_velocity[i].x;
 	vi[1] = sys->relative_velocity[i].y;
@@ -387,8 +387,8 @@ Interaction::addLubricationStress(){
 	double five24 = 5./24.;
 	double fivethird = 5./3.;
 
-	common_factor_i = n0n2 * ( fivethird * a0 * a0 * XMii + five24 * ro * ro * XMij ) * sys->shear_rate;
-	common_factor_j = n0n2 * ( fivethird * a1 * a1 * XMjj + five24 * ro * ro * XMji ) * sys->shear_rate;
+	common_factor_i = n0n2*(fivethird*a0*a0*XMii + five24*ro*ro*XMij)*sys->shear_rate;
+	common_factor_j = n0n2*(fivethird*a1*a1*XMjj + five24*ro*ro*XMji)*sys->shear_rate;
 
 	stresslet_i[0] += n0n0_13 * common_factor_i;
 	stresslet_i[1] += n0n1 * common_factor_i;
@@ -411,61 +411,43 @@ void
 Interaction::evaluateLubricationForce(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-	
 	double n [3];
 	n[0] = nr_vec.x;
 	n[1] = nr_vec.y;
 	n[2] = nr_vec.z;
-		
-	//double stresslet_j[5];
-	
 	lubforce_i.reset();
 	lubforce_j.reset();
-	
-	
-	// First -G*(U-Uinf) term
+	// First -A*(U-Uinf) term
 	double vi [3];
 	double vj [3];
-	
 	vi[0] = sys->relative_velocity[i].x;
 	vi[1] = sys->relative_velocity[i].y;
 	vi[2] = sys->relative_velocity[i].z;
-	
 	vj[0] = sys->relative_velocity[j].x;
 	vj[1] = sys->relative_velocity[j].y;
 	vj[2] = sys->relative_velocity[j].z;
-	
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
 	double common_factor_i = 0;
 	double common_factor_j = 0;
 	for(int u=0; u<3; u++){
-		common_factor_i += a0*XAii*n[u]*vi[u] + 0.5*ro*XAij*n[u]*vj[u];
-		common_factor_j += a1*XAjj*n[u]*vj[u] * 0.5*ro*XAji*n[u]*vi[u];
+		common_factor_i += (a0*XAii*vi[u] + 0.5*ro*XAij*vj[u])*n[u];
+		common_factor_j += (a1*XAjj*vj[u] + 0.5*ro*XAji*vi[u])*n[u];
 	}
-
-
-	lubforce_i.x = - n[0]*common_factor_i;
-	lubforce_i.y = - n[1]*common_factor_i;
-	lubforce_i.z = - n[2]*common_factor_i;
-	lubforce_j.x = - n[0]*common_factor_j;
-	lubforce_j.y = - n[1]*common_factor_j;
-	lubforce_j.z = - n[2]*common_factor_j;
-	
-
-//	stresslet_i[0] += n0n0_13 * common_factor_i;
-
+	lubforce_i.x = -n[0]*common_factor_i;
+	lubforce_i.y = -n[1]*common_factor_i;
+	lubforce_i.z = -n[2]*common_factor_i;
+	lubforce_j.x = -n[0]*common_factor_j;
+	lubforce_j.y = -n[1]*common_factor_j;
+	lubforce_j.z = -n[2]*common_factor_j;
+	// First -tildeG*(-Einf) term
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
 	double n0n2 = n[0] * n[2];
-	
 	double twothird = 2./3;
 	double onesixth = 1./6;
-	
-	common_factor_i = (twothird*a0*a0*XGii + onesixth*ro*ro*XGji)* n0n2* sys->shear_rate;
-	common_factor_j = (twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* n0n2* sys->shear_rate;
-		
-
+	common_factor_i = n0n2*(twothird*a0*a0*XGii + onesixth*ro*ro*XGji)* sys->shear_rate;
+	common_factor_j = n0n2*(twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* sys->shear_rate;
 	lubforce_i.x +=  n[0]*common_factor_i;
 	lubforce_i.y +=  n[1]*common_factor_i;
 	lubforce_i.z +=  n[2]*common_factor_i;
@@ -477,7 +459,7 @@ Interaction::evaluateLubricationForce(){
 
 double
 Interaction::valLubForce(){
-	return 	-dot(lubforce_i , nr_vec);
+	return 	-dot(lubforce_i, nr_vec);
 }
 
 

@@ -1091,7 +1091,6 @@ System::calcStress(){
 				interaction[k].addContactStress();
 			}
 			interaction[k].evaluateLubricationForce();
-
 		}
 	}
 	for(int k=0; k < 10 ; k++){
