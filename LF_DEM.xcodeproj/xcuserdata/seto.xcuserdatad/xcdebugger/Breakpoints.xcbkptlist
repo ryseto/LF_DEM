@@ -25,9 +25,7 @@
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "578"
-         endingLineNumber = "578"
-         landmarkName = "Interaction::update()"
-         landmarkType = "5">
+         endingLineNumber = "578">
       </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>

@@ -32,7 +32,6 @@ class System{
 private:
 	int np3;
 	int maxnum_interactionpair;
-
 	queue<int> deactivated_interaction;
 	void buildLubricationTerms();
 	void buildLubricationTerms_new();
@@ -62,6 +61,10 @@ private:
 	void allocateSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
 	void appendToColumn(double *nvec, int jj, double alpha);
+	
+	void addToDiag(const vec3d &nvec, int ii, double alpha);
+	void appendToColumn(const vec3d &nvec, int jj, double alpha);
+	
 #else
 	double *res;
 	int nrhs;
@@ -109,6 +112,7 @@ public:
 	vec3d *contact_velocity;
 	vec3d *brownian_velocity;
 	vec3d *torque; // right now only contact torque
+	vec3d *lub_force; // Only for outputing data
 	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
 	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
 	double **brownianstress; // S_xx S_xy S_xz S_yz S_yy
@@ -199,7 +203,10 @@ public:
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	string simu_name;
-	
+	int cnt_contact_number[10];
+	int total_contact;
+	vector<int> contact_number;
+
 //	void prepareSimulationName();
 	void prepareSimulation();
 	void allocateRessources();
@@ -225,6 +232,8 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
+	void analyzeState();
+
 	void computeBrownianStress();
 	int numpart(){
 		return np;
@@ -238,6 +247,7 @@ public:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 
+	void calcLubricationForce(); // for visualization of force chains
 
 	// interactions
 	bool output_trajectory;

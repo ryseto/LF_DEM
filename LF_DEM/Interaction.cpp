@@ -60,30 +60,6 @@ Interaction::assignDistanceNormalVector(const vec3d &pos_diff, double distance, 
 	//	cout << "p0 " <<  particle_num[0] << " p1 " <<  particle_num[1] << " " << r_vec.x <<" " << r_vec.y <<" " << r_vec.z << endl;
 }
 
-/* Lubrication force and contact normal force
- * This function needs to be rewritten for poly disperse expression. 
- *
- *
- */
-// @@@@@@@@@@@ THIS NEED TO BE UPDATED FOR POLYDISPERSE EXTENSION @@@@@@@@@@@@@@@@@@@
-double
-Interaction::valNormalForce(){
-	double f_normal_total = 0;
-	if ( ksi_eff > 0){
-		int i = particle_num[0];
-		int j = particle_num[1];
-		vec3d rel_vel = sys->velocity[j] - sys->velocity[i];
-		rel_vel.x += pd_z * sys->vel_difference;
-		
-		double alpha = 1.0/(4*ksi_eff);
-		f_normal_total += abs(alpha*dot(rel_vel, nr_vec));
-	}
-	if (contact){
-		f_normal_total += Fc_normal;
-	}
-	return f_normal_total;
-}
-
 
 /*********************************
 *                                *
@@ -358,10 +334,10 @@ Interaction::addLubricationStress(){
 
 	double stresslet_i[5];
 	double stresslet_j[5];
-	for (int k=0; k < 5; k ++){
-		stresslet_i[k] = 0.;
-		stresslet_j[k] = 0.;
-	}
+//	for (int k=0; k < 5; k ++){
+//		stresslet_i[k] = 0.;
+//		stresslet_j[k] = 0.;
+//	}
 	
 	// First -G*(U-Uinf) term
 	double vi [3];
@@ -392,17 +368,17 @@ Interaction::addLubricationStress(){
 		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
 	}
 
-	stresslet_i[0] += n0n0_13 * common_factor_i;
-	stresslet_i[1] += n0n1 * common_factor_i;
-	stresslet_i[2] += n0n2 * common_factor_i;
-	stresslet_i[3] += n1n2 * common_factor_i;
-	stresslet_i[4] += n1n1_13 * common_factor_i;
+	stresslet_i[0] = n0n0_13 * common_factor_i;
+	stresslet_i[1] = n0n1 * common_factor_i;
+	stresslet_i[2] = n0n2 * common_factor_i;
+	stresslet_i[3] = n1n2 * common_factor_i;
+	stresslet_i[4] = n1n1_13 * common_factor_i;
 
-	stresslet_j[0] += n0n0_13 * common_factor_j;
-	stresslet_j[1] += n0n1 * common_factor_j;
-	stresslet_j[2] += n0n2 * common_factor_j;
-	stresslet_j[3] += n1n2 * common_factor_j;
-	stresslet_j[4] += n1n1_13 * common_factor_j;
+	stresslet_j[0] = n0n0_13 * common_factor_j;
+	stresslet_j[1] = n0n1 * common_factor_j;
+	stresslet_j[2] = n0n2 * common_factor_j;
+	stresslet_j[3] = n1n2 * common_factor_j;
+	stresslet_j[4] = n1n1_13 * common_factor_j;
 
 	// Second: +M*Einf term
 	double XMii, XMjj, XMij, XMji;
@@ -430,6 +406,80 @@ Interaction::addLubricationStress(){
 		sys->lubstress[j][k] += stresslet_j[k];
 	}
 }
+
+void
+Interaction::evaluateLubricationForce(){
+	int i = particle_num[0];
+	int j = particle_num[1];
+	
+	double n [3];
+	n[0] = nr_vec.x;
+	n[1] = nr_vec.y;
+	n[2] = nr_vec.z;
+		
+	//double stresslet_j[5];
+	
+	lubforce_i.reset();
+	lubforce_j.reset();
+	
+	
+	// First -G*(U-Uinf) term
+	double vi [3];
+	double vj [3];
+	
+	vi[0] = sys->relative_velocity[i].x;
+	vi[1] = sys->relative_velocity[i].y;
+	vi[2] = sys->relative_velocity[i].z;
+	
+	vj[0] = sys->relative_velocity[j].x;
+	vj[1] = sys->relative_velocity[j].y;
+	vj[2] = sys->relative_velocity[j].z;
+	
+	double XAii, XAij, XAji, XAjj;
+	XA(XAii, XAij, XAji, XAjj);
+	double common_factor_i = 0;
+	double common_factor_j = 0;
+	for(int u=0; u<3; u++){
+		common_factor_i += a0*XAii*n[u]*vi[u] + 0.5*ro*XAij*n[u]*vj[u];
+		common_factor_j += a1*XAjj*n[u]*vj[u] * 0.5*ro*XAji*n[u]*vi[u];
+	}
+
+
+	lubforce_i.x = - n[0]*common_factor_i;
+	lubforce_i.y = - n[1]*common_factor_i;
+	lubforce_i.z = - n[2]*common_factor_i;
+	lubforce_j.x = - n[0]*common_factor_j;
+	lubforce_j.y = - n[1]*common_factor_j;
+	lubforce_j.z = - n[2]*common_factor_j;
+	
+
+//	stresslet_i[0] += n0n0_13 * common_factor_i;
+
+	double XGii, XGjj, XGij, XGji;
+	XG(XGii, XGij, XGji, XGjj);
+	double n0n2 = n[0] * n[2];
+	
+	double twothird = 2./3;
+	double onesixth = 1./6;
+	
+	common_factor_i = (twothird*a0*a0*XGii + onesixth*ro*ro*XGji)* n0n2* sys->shear_rate;
+	common_factor_j = (twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* n0n2* sys->shear_rate;
+		
+
+	lubforce_i.x +=  n[0]*common_factor_i;
+	lubforce_i.y +=  n[1]*common_factor_i;
+	lubforce_i.z +=  n[2]*common_factor_i;
+	lubforce_j.x +=  n[0]*common_factor_j;
+	lubforce_j.y +=  n[1]*common_factor_j;
+	lubforce_j.z +=  n[2]*common_factor_j;
+
+}
+
+double
+Interaction::valLubForce(){
+	return 	-dot(lubforce_i , nr_vec);
+}
+
 
 void
 Interaction::addContactStress(){

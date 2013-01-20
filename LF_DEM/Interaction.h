@@ -47,7 +47,8 @@ private:
 	double r_lub_max;  // max distance for lubrication
 	double strain_0; // 
 	//	double twothird, onesixth; // used in lubrication computations;
-
+	vec3d lubforce_i;
+	vec3d lubforce_j;
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -96,7 +97,9 @@ public:
 	double Fc_normal;
 	vec3d Fc_tangent;
 
-	double valNormalForce();
+	void evaluateLubricationForce();
+	double valLubForce();
+
 	void calcContactInteraction();
 	void calcContactInteractionNoFriction();
 	void calcContactStress();

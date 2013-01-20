@@ -177,7 +177,7 @@ Simulation::SetParametersPostProcess(){
 	/*
 	 * The bond width indicates the force strength.
 	 */
-	yap_force_factor = 0.05;
+	yap_force_factor = 0.02;
 	/*
 	 * For yaplot output data,
 	 * rotation of disk (2D) is visualized by cross.
@@ -187,7 +187,7 @@ Simulation::SetParametersPostProcess(){
 	else
 		sys.draw_rotation_2d = false;
 	
-	sys.dist_near = 0.001;
+	sys.dist_near = 1e-2;
 	sys.output_trajectory = false;
 }
 
@@ -400,6 +400,18 @@ Simulation::outputRheologyData(){
 		fout_rheo << -sys.n_vec_longcontact.y << ' ';
 		fout_rheo << sys.n_vec_longcontact.z << ' ';
 	}
+	fout_rheo << sys.total_contact << ' '; //21
+	fout_rheo << sys.cnt_contact_number[0] << ' ';
+	fout_rheo << sys.cnt_contact_number[1] << ' ';
+	fout_rheo << sys.cnt_contact_number[2] << ' ';
+	fout_rheo << sys.cnt_contact_number[3] << ' ';
+	fout_rheo << sys.cnt_contact_number[4] << ' ';
+	fout_rheo << sys.cnt_contact_number[5] << ' ';
+	fout_rheo << sys.cnt_contact_number[6] << ' ';
+	fout_rheo << sys.cnt_contact_number[7] << ' ';
+	fout_rheo << sys.cnt_contact_number[8] << ' ';
+	fout_rheo << sys.cnt_contact_number[9] << ' ';
+
 	fout_rheo << endl;
 }
 
@@ -514,25 +526,25 @@ Simulation::output_yap(){
 	 */
 	fout_yap << "y 8\n";
 	fout_yap << "@ " << color_white << endl;
-	for (int k=0; k < sys.num_interaction; k++){
-		if ( sys.interaction[k].near ){
-			int i = sys.interaction[k].particle_num[0];
+
+	fout_yap << "r " << sys.radius[0] << endl;
+	for (int i=0; i < np1; i++){
+		if (sys.contact_number[i] >= 4){
 			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 									sys.position[i].y - sys.ly2(),
 									sys.position[i].z - sys.lz2());
-			fout_yap << "r " << sys.radius[i]  << endl;
 			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-
-			int j = sys.interaction[k].particle_num[1];
-			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-									sys.position[j].y - sys.ly2(),
-									sys.position[j].z - sys.lz2());
-			fout_yap << "r " << sys.radius[j]  << endl;
-			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
-	
 		}
 	}
-
+	fout_yap << "r " << sys.radius[np1+1] << endl;
+	for (int i = np1; i < sys.np ; i++){
+		if (sys.contact_number[i] >= 4){
+			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+									sys.position[i].y - sys.ly2(),
+									sys.position[i].z - sys.lz2());
+			fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+		}
+	}
 	
 	
 
@@ -586,21 +598,49 @@ Simulation::output_yap(){
 	fout_yap << "@ " << color_yellow << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if ( sys.interaction[k].active ){
-			int i = sys.interaction[k].particle_num[0];
-			int j = sys.interaction[k].particle_num[1];
-			fout_yap << "r " << yap_force_factor*sys.interaction[k].valNormalForce() << endl;
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-									sys.position[i].y - sys.ly2(),
-									sys.position[i].z - sys.lz2());
-			drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
-
-			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-									sys.position[j].y - sys.ly2(),
-									sys.position[j].z - sys.lz2());
-			drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+			double lub_force = sys.interaction[k].valLubForce();
+			if (lub_force > 0){
+				int i = sys.interaction[k].particle_num[0];
+				int j = sys.interaction[k].particle_num[1];
+				fout_yap << "r " << yap_force_factor*lub_force;
+				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+										sys.position[i].y - sys.ly2(),
+										sys.position[i].z - sys.lz2());
+				drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				
+				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
+										sys.position[j].y - sys.ly2(),
+										sys.position[j].z - sys.lz2());
+				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+			}
+		}
+	}
+	/* Layer 3: Normal
+	 * Lubrication + contact force
+	 */
+	fout_yap << "y 4\n";
+	fout_yap << "@ " << color_green << endl;
+	for (int k=0; k < sys.num_interaction; k++){
+		if ( sys.interaction[k].active ){
+			double lub_force = sys.interaction[k].valLubForce();
+			if (lub_force < 0){
+				int i = sys.interaction[k].particle_num[0];
+				int j = sys.interaction[k].particle_num[1];
+				fout_yap << "r " << -yap_force_factor*lub_force;
+				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+										sys.position[i].y - sys.ly2(),
+										sys.position[i].z - sys.lz2());
+				drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				
+				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
+										sys.position[j].y - sys.ly2(),
+										sys.position[j].z - sys.lz2());
+				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+			}
 		}
 	}
 
+	
 	/* Layer 3: Normal
 	 * Lubrication + contact force
 	 */
