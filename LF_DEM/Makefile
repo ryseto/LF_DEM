@@ -27,7 +27,7 @@ $(OUT_CODE):$(OBJ)
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.cpp)
 
-tar: ps
+tar:
 	tar cvfz LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB)  LF_DEM_sources_$(DATE).ps Makefile input.*
 
 clean:
