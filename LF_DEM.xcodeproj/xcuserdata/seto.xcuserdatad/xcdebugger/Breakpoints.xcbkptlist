@@ -26,7 +26,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "578"
          endingLineNumber = "578"
-         landmarkName = "Interaction::update()"
+         landmarkName = "Interaction::activate_contact()"
          landmarkType = "5">
       </FileBreakpoint>
    </FileBreakpoints>

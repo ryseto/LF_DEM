@@ -20,6 +20,15 @@ Simulation::~Simulation(){
 	if (fout_rheo.is_open()){
 		fout_rheo.close();
 	}
+	if (fout_particle.is_open()){
+		fout_particle.close();
+	}
+	if (fout_interaction.is_open()){
+		fout_interaction.close();
+	}
+	if (fout_vpy.is_open()){
+		fout_vpy.close();
+	}
 };
 
 bool
@@ -56,8 +65,6 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.lubrication = str2bool(value);
 	} else if (keyword == "friction"){
 		sys.friction = str2bool(value);
-	} else if (keyword == "brownian"){
-		sys.brownian = str2bool(value);
 	} else if (keyword == "bgf_factor"){
 		sys.bgf_factor = atof(value.c_str());
 	} else if (keyword == "poly"){
@@ -88,6 +95,24 @@ Simulation::AutoSetParameters(const string &keyword,
 		sys.dynamic_friction_critical_velocity = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
 		strain_interval_out = atof(value.c_str());
+	} else if (keyword == "yap_force_factor"){
+		yap_force_factor = atof(value.c_str());
+	} else if (keyword == "draw_rotation_2d"){
+		sys.draw_rotation_2d = str2bool(value);
+	} else if (keyword == "dist_near"){
+		sys.dist_near = atof(value.c_str());
+	} else if (keyword == "out_data_particle"){
+		out_data_particle = str2bool(value);
+	} else if (keyword == "out_data_interaction"){
+		out_data_interaction = str2bool(value);
+	} else if (keyword == "out_vpython"){
+		out_vpython = str2bool(value);
+	} else if (keyword == "out_yaplot"){
+		out_yaplot = str2bool(value);
+	} else if (keyword == "out_pairtrajectory"){
+		sys.out_pairtrajectory = str2bool(value);
+	} else if (keyword == "origin_zero_flow"){
+		origin_zero_flow = str2bool(value);
 	} else {
 		cerr << "keyword " << keyword << " is'nt associated with an parameter" << endl;
 		exit(1);
@@ -138,16 +163,36 @@ Simulation::ReadParameterFile(){
 
 void
 Simulation::SetParametersPostProcess(){
+	if (sys.kb_T == 0){
+		sys.brownian = false;
+	} else {
+		sys.brownian = true;
+	}
+	
 	/*
 	 * Set simulation name and name of output files.
 	 */
 	prepareSimulationName();
+	
+
+	string particle_filename = "par_" + sys.simu_name + ".dat";
+	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
+	fout_particle.open(particle_filename.c_str());
+	fout_interaction.open(interaction_filename.c_str());
+	
+	if (out_yaplot)
 	fout_yap.open(yap_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_vpy.open(vpy_filename.c_str());
+	if (sys.out_pairtrajectory){
+		string trj_filename = "trj_" + sys.simu_name + ".dat";
+		sys.fout_trajectory.open(trj_filename.c_str());
+	}
+
+	outputDataHeader(fout_particle);
 	
 	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;	
 	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
@@ -165,30 +210,20 @@ Simulation::SetParametersPostProcess(){
 	 * The time steps finishing simulation.
 	 */
 	//ts_max = (int)(shear_strain / sys.dt);
-	/*
-	 * The middle height of the simulation box is set to the flow zero level.
-	 */
-	origin_zero_flow = true;
-	/*
-	 * The bond width indicates the force strength.
-	 */
-	yap_force_factor = 0.05;
-	/*
-	 * For yaplot output data,
-	 * rotation of disk (2D) is visualized by cross.
-	 */
-	if (sys.dimension == 2)
-		sys.draw_rotation_2d = true;
-	else
-		sys.draw_rotation_2d = false;
-	
-	sys.dist_near = 0.001;
+
 }
 
 void
 Simulation::SetDefaultParameters(){
+	/*
+	 * If lubrication is false, it should be free-draining approximation.
+	 * So far, we do not test this case well.
+	 */
 	sys.lubrication = true;
-	sys.brownian = false;
+	/*
+	 * If friction is false, the contact forces are only normal repulsion.
+	 * It is important to find the difference between with and without friction.
+	 */
 	sys.friction = true;
 	/*
 	 * Simulation
@@ -214,43 +249,98 @@ Simulation::SetDefaultParameters(){
 	/*
 	 * Lubrication force
 	 * lub_max: reduced large cutoff distance for lubrication
-	 * gap_cutoff: reduced small cutoff distance for gap diverging coeffient:
+	 * I think lub_max = 2.5 and 3 generate different results.
+	 * We should give suffiently larger value. 
+	 * The value 3 or 3.5 should be better (To be checked.)
+	 */
+	sys.lub_max = 2.5;
+	/*
+	 *gap_cutoff: reduced small cutoff distance for gap diverging coeffient:
+	 *
 	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
 	 * 1/ksi_cutoff when h <= ksi_cutoff
-	 *
+	 */
+	sys.gap_cutoff = 0.001;
+	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
 	 *   The optimal value of bgf_factor (< 1.0) may exist.
 	 *
 	 */
-	sys.lub_max = 2.5;
-	sys.gap_cutoff = 0.01;
 	sys.bgf_factor = 1.0;
 	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
+	 * kb_T = 0 ---> non-brownian
+	 * kb_T > 0 ---> brownian
 	 */
-	sys.kb_T = 0.1;
+	sys.kb_T = 0;
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
+	 *
+	 *
+	 */
+	sys.kn = 300;
+	sys.kt = 300;
+	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
-	 * dynamic_friction_critical_velocity: 
-	 *    This is a threshold velocity to swich from dynamic friction to
-	 *    static friction. But this is a temporal provísional.
-	 *    There is no reference to give this value.
 	 */
-	sys.kn = 100;
-	sys.kt = 100;
-	sys.mu_static = 1;
-	sys.mu_dynamic = 0.8;
+	sys.mu_static = 10;
+	sys.mu_dynamic = 8;
+	/*
+	 * dynamic_friction_critical_velocity:
+	 * This is a threshold velocity to swich from dynamic friction to
+	 * static friction. But this is a temporal provísional.
+	 * There is no reference to give this value.
+	 */
 	sys.dynamic_friction_critical_velocity = 0.01;
 	/*
-	 * snapshot for yaplot data.
+	 * Output interval
 	 */
 	strain_interval_out = 0.01;
+	/*
+	 * Consider particles are `near' if the gap is less than the following value
+	 */
+	sys.dist_near = 1e-2;
+	/*
+	 *  Data output
+	 */
+	/*
+	 * The middle height of the simulation box is set to the flow zero level.
+	 */
+	origin_zero_flow = true;
+	/*
+	 * position and interaction data
+	 */
+	out_data_particle = true;
+	out_data_interaction = true;
+	/*
+	 * output data for vpython
+	 */
+	out_vpython = true;
+	/*
+	 * output data for python
+	 */
+	out_yaplot = false;
+	/*
+	 * The bond width indicates the force strength.
+	 */
+	yap_force_factor = 0.02;
+	/*
+	 * Visualize rotations by crosses.
+	 * (for yaplot data)
+	 */
+	if (sys.dimension == 2)
+		sys.draw_rotation_2d = true;
+	else
+		sys.draw_rotation_2d = false;
+	/*
+	 * output pair trajeectory
+	 */
+	sys.out_pairtrajectory = false;
 }
 
 void
@@ -266,33 +356,33 @@ Simulation::importInitialPositionFile(){
 	
 	vec3d pos;
 	double radius;
-	int _np1_, _np2_;
-	double _volume_fraction_;
-	double _lx_, _ly_, _lz_;
+	int np_a_, np_b_;
+	double volume_fraction_;
+	double lx_, ly_, lz_;
 	char buf;
-	file_import >> buf >> _np1_ >> _np2_ >> _volume_fraction_ >> _lx_ >> _ly_ >> _lz_ ;
-	np1 = _np1_;
-	np2 = _np2_;
+	file_import >> buf >> np_a_ >> np_b_ >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
+	np_a = np_a_;
+	np_b = np_b_;
 
-	int num_of_particle = _np1_ + _np2_;
+	int num_of_particle = np_a_ + np_b_;
 	sys.set_np(num_of_particle);
 	
-	if (np2 == 0)
+	if (np_a_ == 0)
 		sys.poly = false;
 	else
 		sys.poly = true;
 	cerr << "np = " << num_of_particle << endl;
-	if (_ly_ == 0){
+	if (ly_ == 0){
 		sys.dimension = 2;
 	} else {
 		sys.dimension = 3;
 	}
 	cerr << "dimension = " << sys.dimension << endl;
-	sys.lx( _lx_);
-	sys.ly( _ly_);
-	sys.lz( _lz_);
-	cerr << "box: " << _lx_ << ' ' <<  _ly_ << ' ' << _lz_ << endl;
-	sys.volume_fraction = _volume_fraction_;
+	sys.lx(lx_);
+	sys.ly(ly_);
+	sys.lz(lz_);
+	cerr << "box: " << lx_ << ' ' <<  ly_ << ' ' << lz_ << endl;
+	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
 	for (int i = 0; i < num_of_particle ; i++){
@@ -300,6 +390,13 @@ Simulation::importInitialPositionFile(){
 		initial_positions[i] = pos;
 		radii[i] = radius;
 	}
+	radius_a = radii[0];
+	if (np_b == 0){
+		radius_b = 0;
+	} else {
+		radius_b = radii[np_a];
+	}
+
 	file_import.close();
 }
 
@@ -324,29 +421,20 @@ void
 Simulation::SimulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
-	
-	if (argc == 2){
-		cerr << "Default Parameters" << endl;
-		SetDefaultParameters();
-	} else {
+	SetDefaultParameters();
+	if (argc == 3){
 		cerr << "Read Parameter File" << endl;
 		filename_parameters = argv[2];
 		ReadParameterFile();
 	}
 	
 	SetParametersPostProcess();
-
 	sys.allocateRessources();
 	for (int i=0; i < sys.np; i++){
 		sys.position[i] = initial_positions[i];
-		if(sys.poly)
-			sys.radius[i] = radii[i];
-		else
-			sys.radius[i] = 1.;
-
+		sys.radius[i] = radii[i];
 		sys.angle[i] = 0;
 	}
-
 	sys.initializeBoxing();
 	sys.checkNewInteraction();
 	sys.shear_strain = 0;
@@ -355,8 +443,12 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	while(sys.shear_strain <= shear_strain_end){
 		sys.timeEvolution(i_time_interval);
 		outputRheologyData();
-		output_yap();
-		output_vpython(sys.ts);
+		outputData();
+		if(out_yaplot)
+			output_yap();
+		if(out_vpython)
+			output_vpython(sys.ts);
+
 	}
 }
 
@@ -381,10 +473,31 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.mean_contact_stress[3] << ' ' ; //11
 	fout_rheo << sys.mean_contact_stress[4] << ' ' ; //12
 	fout_rheo << sys.gap_min << ' '; // 13
-	fout_rheo << sys.ave_overlap << ' ';
-	fout_rheo << sys.shear_strain << ' ';
-	fout_rheo << sys.max_age << ' ';
-	fout_rheo << sys.ave_age << ' ';
+	fout_rheo << sys.ave_overlap << ' '; //14
+	fout_rheo << sys.shear_strain << ' '; //15
+	fout_rheo << sys.max_age << ' '; //16
+	fout_rheo << sys.ave_age << ' '; //17
+	if (sys.n_vec_longcontact.z > 0){
+		fout_rheo << sys.n_vec_longcontact.x << ' '; //18
+		fout_rheo << sys.n_vec_longcontact.y << ' '; //19
+		fout_rheo << sys.n_vec_longcontact.z << ' '; //20
+	} else {
+		fout_rheo << -sys.n_vec_longcontact.x << ' ';
+		fout_rheo << -sys.n_vec_longcontact.y << ' ';
+		fout_rheo << sys.n_vec_longcontact.z << ' ';
+	}
+	fout_rheo << sys.total_contact << ' '; //21
+	fout_rheo << sys.cnt_contact_number[0] << ' ';
+	fout_rheo << sys.cnt_contact_number[1] << ' ';
+	fout_rheo << sys.cnt_contact_number[2] << ' ';
+	fout_rheo << sys.cnt_contact_number[3] << ' ';
+	fout_rheo << sys.cnt_contact_number[4] << ' ';
+	fout_rheo << sys.cnt_contact_number[5] << ' ';
+	fout_rheo << sys.cnt_contact_number[6] << ' ';
+	fout_rheo << sys.cnt_contact_number[7] << ' ';
+	fout_rheo << sys.cnt_contact_number[8] << ' ';
+	fout_rheo << sys.cnt_contact_number[9] << ' ';
+
 	fout_rheo << endl;
 }
 
@@ -452,6 +565,69 @@ Simulation::drawLine(double x0, double y0, double z0,
 	fout << x1 << ' ' << y1 << ' ' << z1 << endl;
 }
 
+void
+Simulation::outputDataHeader(ofstream &fout){
+	char sp = ' ';
+	fout << "VF" << sp << sys.volume_fraction << endl;
+	fout << "Lx" << sp << sys.lx() << endl;
+	fout << "Ly" << sp << sys.ly() << endl;
+	fout << "Lz" << sp << sys.lz() << endl;
+	fout << "np_a" << sp << np_a << endl;
+	fout << "np_b" << sp << np_b << endl;
+	fout << "radius_a" << sp << radius_a << endl;
+	fout << "radius_b" << sp << radius_b << endl;
+	
+}
+void
+Simulation::outputData(){
+	
+	vector<vec3d> pos;
+	char sp = ' ';
+	int np = np_a + np_b;
+	pos.resize(np);
+	for (int i=0; i < np; i++){
+		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+								   sys.position[i].y - sys.ly2(),
+								   sys.position[i].z - sys.lz2());
+	}
+	fout_particle << "#" << sp << sys.shear_strain << endl;
+	for (int i=0; i < np; i++){
+		vec3d &p = pos[i];
+		vec3d &v = sys.velocity[i];
+		vec3d &o = sys.ang_velocity[i];
+		fout_particle << i << sp; //1: number
+		fout_particle << p.x << sp << p.y << sp << p.z << sp; //2,3,4: position
+		fout_particle << v.x << sp << v.y << sp << v.z << sp; //5,6,7: velocity
+		fout_particle << o.x << sp << o.y << sp << o.z << sp; //5,6,7: velocity
+		fout_particle << endl;
+	}
+
+	int cnt_interaction = 0;
+	for (int k=0; k < sys.num_interaction; k++){
+		if (sys.interaction[k].active){
+			cnt_interaction++;
+		}
+	}
+	
+	fout_interaction << "#" << sp << sys.shear_strain << sp << cnt_interaction << endl;
+	for (int k=0; k < sys.num_interaction; k++){
+		if (sys.interaction[k].active){
+			fout_interaction << sys.interaction[k].particle_num[0] << sp; //1
+			fout_interaction << sys.interaction[k].particle_num[1] << sp; //2
+			fout_interaction << sys.interaction[k].r() << sp; //3
+			fout_interaction << sys.interaction[k].valLubForce() << sp; //4
+			fout_interaction << sys.interaction[k].Fc_normal << sp; // 5
+			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 6
+			fout_interaction << sys.interaction[k].static_friction << sp; //7
+			/// fout_interaction << ???
+			fout_interaction << endl;
+		}
+	}
+
+	
+}
+
+
 /* Output data for yaplot visualization.
  *
  */
@@ -463,6 +639,8 @@ Simulation::output_yap(){
 	}else{
 		fout_yap << endl;
 	}
+	
+	double y_trimming = 2;
 	/*
 	 * yaplot color
 	 *
@@ -474,29 +652,35 @@ Simulation::output_yap(){
 	int color_yellow = 4;
 	int color_orange = 5;
 	int color_blue = 6;
+	
+	vector<vec3d> pos;
+	int np = np_a + np_b ;
+	pos.resize(np);
+	for (int i=0; i < np; i++){
+		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
+								   sys.position[i].y - sys.ly2(),
+								   sys.position[i].z - sys.lz2());
+	}
+
 	/* Layer 1: Circles for particles
 	 */
 	fout_yap << "y 1\n";
 	fout_yap << "@ " << color_white << endl;
-	vec3d pos;
-	fout_yap << "r " << sys.radius[0] << endl;
-	for (int i=0; i < np1; i++){
-//		fout_yap << "r " << 0.1*log(sys.lubstress[i][2]) << endl;
-//		fout_yap << "r " << 1e-5*sys.lubstress[i][2] << endl;
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-								sys.position[i].y - sys.ly2(),
-								sys.position[i].z - sys.lz2());
-		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+	//vec3d pos;
+	fout_yap << "r " << radius_a << endl;
+	
+	for (int i=0; i < np_a; i++){
+		if (abs(pos[i].y) < y_trimming ){
+			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
+		}
 	}
-		
-	fout_yap << "r " << sys.radius[np1+1] << endl;
-	for (int i = np1; i < sys.np ; i++){
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-								sys.position[i].y - sys.ly2(),
-								sys.position[i].z - sys.lz2());
-		fout_yap << "c " << pos.x << ' ' << pos.y << ' ' << pos.z << endl;
+	fout_yap << "r " << radius_b << endl;
+	for (int i = np_b; i < sys.np ; i++){
+		if (abs(pos[i].y) < y_trimming ){
+			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
+		}
 	}
-
+	
 	/* Layer 4: Orientation of particle (2D simulation)
 	 * Only for small system.
 	 */
@@ -504,15 +688,14 @@ Simulation::output_yap(){
 		fout_yap << "y 5\n";
 		fout_yap << "@ " << color_white << endl;
 		for (int i=0; i < sys.np; i++){
-			vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
-			u = sys.radius[i]*u;
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-									sys.position[i].y - sys.ly2(),
-									sys.position[i].z - sys.lz2());
-			drawLine('l', pos-u, 2*u, fout_yap);
-			u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
-			u = sys.radius[i]*u;
-			drawLine('l', pos-u, 2*u, fout_yap);
+
+				vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
+				u = sys.radius[i]*u;
+				drawLine('l', pos[i]-u, 2*u, fout_yap);
+				u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
+				u = sys.radius[i]*u;
+				drawLine('l', pos[i]-u, 2*u, fout_yap);
+			
 		}
 	}
 	/* Layer 2: Friction
@@ -525,72 +708,54 @@ Simulation::output_yap(){
 					fout_yap << "@ " << color_green << endl;
 				else
 					fout_yap << "@ " << color_orange << endl;
-				
 				int i = sys.interaction[k].particle_num[0];
-				pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-										sys.position[i].y - sys.ly2(),
-										sys.position[i].z - sys.lz2());
 				fout_yap << "r " << yap_force_factor*sys.interaction[k].Fc_tangent.norm()  << endl;
-				drawLine('s', pos, sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos[i], sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
-				pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-										sys.position[j].y - sys.ly2(),
-										sys.position[j].z - sys.lz2());
-				drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+				drawLine('s', pos[j], -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
 			}
 		}
 	}
-	/* Layer 3: Normal
-	 * Lubrication + contact force
+	/* Layer 3: lubrication (Compression)
 	 */
+	// nr_vec i ---> j
 	fout_yap << "y 3\n";
 	fout_yap << "@ " << color_yellow << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if ( sys.interaction[k].active ){
-			int i = sys.interaction[k].particle_num[0];
-			int j = sys.interaction[k].particle_num[1];
-			fout_yap << "r " << yap_force_factor*sys.interaction[k].valNormalForce() << endl;
-			pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-									sys.position[i].y - sys.ly2(),
-									sys.position[i].z - sys.lz2());
-			drawLine('s', pos, sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
-
-			pos = shiftUpCoordinate(sys.position[j].x - sys.lx2(),
-									sys.position[j].y - sys.ly2(),
-									sys.position[j].z - sys.lz2());
-			drawLine('s', pos, -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
+			double lub_force = sys.interaction[k].valLubForce();
+			if (lub_force >= 0){
+				vec3d nvec = sys.interaction[k].nr_vec;
+				int i = sys.interaction[k].particle_num[0];
+				int j = sys.interaction[k].particle_num[1];
+				if (abs(pos[i].y) < y_trimming || abs(pos[j].y) < y_trimming ){
+					fout_yap << "r " << yap_force_factor*lub_force << endl;
+					drawLine('s', pos[i],  sys.radius[i]*nvec, fout_yap);
+					drawLine('s', pos[j], -sys.radius[j]*nvec, fout_yap);
+				}
+			}
+		}
+	}
+	/* Layer 4: lubrication (Extension)
+	 */
+	fout_yap << "y 4\n";
+	fout_yap << "@ " << color_green << endl;
+	for (int k=0; k < sys.num_interaction; k++){
+		if ( sys.interaction[k].active ){
+			double lub_force = sys.interaction[k].valLubForce();
+			if (lub_force < 0){
+				vec3d nvec = sys.interaction[k].nr_vec;
+				int i = sys.interaction[k].particle_num[0];
+				int j = sys.interaction[k].particle_num[1];
+				if (abs(pos[i].y) < y_trimming || abs(pos[j].y) < y_trimming ){
+					fout_yap << "r " << -yap_force_factor*lub_force << endl;
+					drawLine('s', pos[i],  sys.radius[i]*nvec, fout_yap);
+					drawLine('s', pos[j], -sys.radius[j]*nvec, fout_yap);
+				}
+			}
 		}
 	}
 
-	/* Layer 3: Normal
-	 * Lubrication + contact force
-	 */
-//	fout_yap << "y 4\n";
-//	fout_yap << "@ " << color_yellow << endl;
-//	for (int i=0; i < sys.n; i++){
-//		for (int j = i+1; j < sys.n; j++){
-//			double f_ij = 0;
-//			if (sys.lub == true){
-//				f_ij += sys.lubricationForceFactor(i, j);
-//			}
-//			if (contact_pair[i][j] != -1){
-//				f_ij += -fc[contact_pair[i][j]].f_normal;
-//			}
-//			if (f_ij > 0){
-//				fout_yap << "r " << yap_force_factor*f_ij << endl;
-//				vec3d pos1 = shiftUpCoordinate(sys.position[i].x - sys.lx2,
-//											   sys.position[i].y - sys.ly2,
-//											   sys.position[i].z - sys.lz2);
-//				vec3d pos2 = shiftUpCoordinate(sys.position[j].x - sys.lx2,
-//											   sys.position[j].y - sys.ly2,
-//											   sys.position[j].z - sys.lz2);
-//				
-//				drawLine2('s', pos1, pos2, fout_yap);
-//			}
-//		}
-//	}
-
-		
 	/* Layer 6: Box and guide lines
 	 */
 	fout_yap << "y 6\n";
@@ -627,8 +792,6 @@ Simulation::output_yap(){
 		drawLine( sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), -sys.ly2(), -sys.lz2(),  fout_yap);
 	}
 }
-
-
 
 /* Output data for vpython visualization.
  *

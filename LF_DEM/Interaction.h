@@ -48,7 +48,12 @@ private:
 	double r_lub_max;  // max distance for lubrication
 	double strain_0; // 
 	//	double twothird, onesixth; // used in lubrication computations;
+
 	bool _just_off;
+
+	vec3d lubforce_i;
+	vec3d lubforce_j;
+
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -73,7 +78,6 @@ public:
 	}
 	
 	bool update(); // after particles dispacement
-
 	double age();
 	
 	double a0, a1;
@@ -84,22 +88,30 @@ public:
 	int partner(int);
 
 	bool contact;
-	bool near;
 	bool static_friction;
-
+	
+	bool near;
+	vector <vec3d> trajectory;
+	vector <double> gap_history;
+	void recordTrajectory();
+	void outputTrajectory();
+	
 	/* Fc_normal: normal contact force
 	 * Fc_tangent: tangneital contact force
 	 */
 	double Fc_normal;
 	vec3d Fc_tangent;
 
-	double valNormalForce();
+	void evaluateLubricationForce();
+	double valLubForce();
+
 	void calcContactInteraction();
 	void calcContactInteractionNoFriction();
 	void calcContactStress();
 	void addLubricationStress();
 	void addContactStress();
 	void pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]);
+
 
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
 	void prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj);

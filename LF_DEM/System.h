@@ -39,7 +39,6 @@ class System{
 private:
 	int np3;
 	int maxnum_interactionpair;
-
 	queue<int> deactivated_interaction;
 
 	void buildLubricationTerms();
@@ -116,10 +115,10 @@ private:
 	int *ploc;
 	void fillSparseResmatrix();
 	void allocateSparseResmatrix();
-	void addToDiag(double *nvec, int ii, double alpha);
-	void appendToColumn(double *nvec, int jj, double alpha);
-
-
+	
+	void addToDiag(const vec3d &nvec, int ii, double alpha);
+	void appendToColumn(const vec3d &nvec, int jj, double alpha);
+	
 	BoxSet* boxset;
 	void print_res();
 
@@ -154,6 +153,7 @@ public:
 	vec3d *contact_velocity;
 	vec3d *brownian_velocity;
 	vec3d *torque; // right now only contact torque
+	vec3d *lub_force; // Only for outputing data
 	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
 	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
 	double **brownianstress; // S_xx S_xy S_xz S_yz S_yy
@@ -239,11 +239,15 @@ public:
 	double dt_ratio;
 	double gap_min;
 	double ave_overlap;
+	vec3d n_vec_longcontact;
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	string simu_name;
-	
+	int cnt_contact_number[10];
+	int total_contact;
+	vector<int> contact_number;
+
 //	void prepareSimulationName();
 	void prepareSimulation();
 	void allocateRessources();
@@ -269,23 +273,29 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
-	void calcBrownianStress();
+
+	void analyzeState();
+
+	void computeBrownianStress();
 	int numpart(){
 		return np;
 	}
-
-
+	
+#ifdef CHOLMOD
 	cholmod_factor *L ;
 	cholmod_common c ;
+#endif
 
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 
+	void calcLubricationForce(); // for visualization of force chains
 
 	// interactions
+	bool out_pairtrajectory;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
-
+	ofstream fout_trajectory;
 
 };
 #endif /* defined(__LF_DEM__State__) */

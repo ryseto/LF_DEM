@@ -84,7 +84,11 @@ System::allocateRessources(){
 	brownian_force = new vec3d [np];
 
 	torque = new vec3d [np];
+	
+	lub_force = new vec3d [np];
+
 	contactstress = new double* [np];
+	contact_number.resize(np);
 	
 	for (int i=0; i < np; i++){
 		position[i].x=0.;
@@ -179,8 +183,16 @@ System::timeEvolution(int time_step){
 			// Free-draining approximation
 			updateVelocity();
 		}
-		if ( ts == ts_next - 1)
+		if ( ts == ts_next - 1){
+			/* Evaluation of the state of suspension.
+			 * The following evaluations are valid
+			 * when the positions and velocities are consistent.
+			 * For that, we need to evaluate them before updating the positions.
+			 */
 			calcStress();
+			analyzeState();
+
+		}
 		deltaTimeEvolution();
 		ts ++;
 		shear_strain += shear_rate*dt;
@@ -196,16 +208,12 @@ System::checkNewInteraction(){
 	int zshift;
 	double sq_dist;
 	for (int i=0; i < np-1; i++){
-		
 		it_beg = boxset->neighborhood_begin(i);
 		it_end = boxset->neighborhood_end(i);
-
 		for (it = it_beg; it != it_end; it++){
 			int j=*it;
-			
 			if(j>i){
 				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
-					
 					// this is done in 3 steps because we need each information for Interaction creation
 					pos_diff = position[j] - position[i];
 					periodize_diff(pos_diff, zshift);
@@ -327,6 +335,34 @@ System::appendToColumn(double *nvec, int jj, double alpha){
 	off_diag_values[2].push_back(alpha_n2*nvec[2]); //22
 }
 
+void
+System::appendToColumn(const vec3d &nvec, int jj, double alpha){
+	int jj3   = 3*jj;
+	int jj3_1 = jj3+1;
+	int jj3_2 = jj3+2;
+	double alpha_n0 = alpha*nvec.x;
+	double alpha_n1 = alpha*nvec.y;
+	double alpha_n2 = alpha*nvec.z;
+	double alpha_n1n0 = alpha_n0*nvec.y;
+	double alpha_n2n1 = alpha_n1*nvec.z;
+	double alpha_n0n2 = alpha_n2*nvec.x;
+	
+	rows.push_back(jj3);
+	rows.push_back(jj3_1);
+	rows.push_back(jj3_2);
+	
+	off_diag_values[0].push_back(alpha_n0*nvec.x); // 00
+	off_diag_values[0].push_back(alpha_n1n0); // 10
+	off_diag_values[0].push_back(alpha_n0n2); // 20
+	off_diag_values[1].push_back(alpha_n1n0); // 01
+	off_diag_values[1].push_back(alpha_n1*nvec.y); //11
+	off_diag_values[1].push_back(alpha_n2n1); // 21
+	off_diag_values[2].push_back(alpha_n0n2); // 02
+	off_diag_values[2].push_back(alpha_n2n1); // 12
+	off_diag_values[2].push_back(alpha_n2*nvec.z); //22
+}
+
+
 // diagonal terms
 void
 System::addToDiag(double *nvec, int ii, double alpha){
@@ -349,6 +385,28 @@ System::addToDiag(double *nvec, int ii, double alpha){
 	diag_values[ii6+5] += alpha_n2*nvec[2]; //22
 	
 }
+
+void
+System::addToDiag(const vec3d &nvec, int ii, double alpha){
+	int ii6 = 6*ii;
+	
+	double alpha_n0 = alpha*nvec.x;
+	double alpha_n1 = alpha*nvec.y;
+	double alpha_n2 = alpha*nvec.z;
+	double alpha_n1n0 = alpha_n0*nvec.y;
+	double alpha_n2n1 = alpha_n1*nvec.z;
+	double alpha_n0n2 = alpha_n2*nvec.x;
+	
+	diag_values[ii6]   += alpha_n0*nvec.x; // 00
+	diag_values[ii6+1] += alpha_n1n0; // 10
+	diag_values[ii6+2] += alpha_n0n2; // 20
+	
+	diag_values[ii6+3] += alpha_n1*nvec.y; //11
+	diag_values[ii6+4] += alpha_n2n1; // 21
+	
+	diag_values[ii6+5] += alpha_n2*nvec.z; //22
+}
+
 
 void
 System::fillSparseResmatrix(){
@@ -405,6 +463,7 @@ System::fillSparseResmatrix(){
 }
 
 
+
 void
 System::addStokesDrag(){
 	for (int i = 0; i < np; i ++){
@@ -415,9 +474,6 @@ System::addStokesDrag(){
 		diag_values[i6+5] = d_value;
 	}
 }
-
-
-
 
 // We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
 // This method computes elements of matrix A and vector Gtilde*Einf
@@ -437,7 +493,7 @@ System::buildLubricationTerms(){
 	double XAii, XAjj, XAij, XAji;
 	//	double XGii, XGjj, XGij, XGji;
 	
-	double nvec[3];
+//	double nvec[3];
 	double GEi[3];
 	double GEj[3];
 	
@@ -446,32 +502,21 @@ System::buildLubricationTerms(){
 	Interaction *inter;
 	for (int i = 0; i < np - 1; i ++){
 		ploc[i] = (unsigned int)rows.size();
-		
 		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
 			inter=*it;
 		 	j=inter->partner(i);
 			if(j>i){
-				
-				nvec[0] = inter->nr_vec.x; // nvec defined from i to j
-				nvec[1] = inter->nr_vec.y;
-				nvec[2] = inter->nr_vec.z;
-				
 				inter->XA(XAii, XAij, XAji, XAjj);
-				
 				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-				addToDiag(nvec, i, inter->a0 * XAii);
-				addToDiag(nvec, j, inter->a1 * XAjj);
-				appendToColumn(nvec, j, 0.5 * inter->ro * XAji);
-				
-				
+				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
+				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
+				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
 				inter->GE(GEi, GEj);  // G*E_\infty term
-				
 				for(int u=0; u<3; u++){
 					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
 					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
 					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
 					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
-
 				}
 			}
 		}
@@ -628,6 +673,58 @@ cholmod_sparse *update_vector_off_diag = cholmod_allocate_sparse ( nrow, ncol, n
 }
 
 void
+System::calcLubricationForce(){
+	for (int k = 0; k < 6*np; k++){
+		diag_values[k] = 0.;
+	}
+	off_diag_values[0].clear();
+	off_diag_values[1].clear();
+	off_diag_values[2].clear();
+
+	double GEi[3];
+	double GEj[3];
+	double XAii, XAjj, XAij, XAji;
+
+	set<Interaction*>::iterator it;
+	int j;
+	Interaction *inter;
+	for (int i = 0; i < np - 1; i ++){
+		ploc[i] = (unsigned int)rows.size();
+		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+			inter=*it;
+		 	j=inter->partner(i);
+			if(j>i){
+				inter->XA(XAii, XAij, XAji, XAjj);
+				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
+				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
+				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
+				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
+				inter->GE(GEi, GEj);  // G*E_\infty term
+				for(int u=0; u<3; u++){
+					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
+					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
+					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
+					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
+				}
+			}
+		}
+	}
+	for (int i=0; i < np; i++)
+		lub_force[i].reset();
+	
+	for (int i=0; i < np; i++){
+		for (int j=0; j < np; i++){
+			
+			
+			
+		}
+	}
+	
+	
+}
+
+
+void
 System::buildContactTerms(){
 	// add contact force
 	for (int i = 0; i < np; i++){
@@ -641,7 +738,6 @@ System::buildContactTerms(){
 	}
 }
 
-
 void
 System::allocateSparseResmatrix(){
 	// allocate
@@ -652,8 +748,6 @@ System::allocateSparseResmatrix(){
 	}
 	sparse_res = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &c);
 }
-
-
 
 void
 System::print_res(){ // testing
@@ -667,8 +761,6 @@ System::print_res(){ // testing
 	for(int i=0;i<off_diag_values[0].size();i++){
 		cout << off_diag_values[0][i] << " " << off_diag_values[1][i] << " " << off_diag_values[2][i]<< endl;
 	}
-	
-	
 }
 
 void
@@ -1095,37 +1187,24 @@ System::sq_distance(int i, int j){
 void
 System::calcStress(){
 	stressReset();
-	gap_min = lz();
-	double sum_overlap = 0;
-	int cnt_overlap = 0;
-	max_age = 0;
-	double sum_age = 0;
-	int cnt_age = 0;
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
 			interaction[k].addLubricationStress();
 			if (interaction[k].contact){
 				interaction[k].addContactStress();
 			}
-			if (interaction[k].gap() < 0){
-				sum_overlap +=interaction[k].gap();
-				cnt_overlap ++;
-			}
-			
-			if (interaction[k].gap() < gap_min){
-				gap_min = interaction[k].gap();
-			}
-			if (interaction[k].age() > 0 ){
-				if (max_age < interaction[k].age()){
-					max_age = interaction[k].age();
-				}
-				sum_age = interaction[k].age();
-				cnt_age ++;
-			}
+			interaction[k].evaluateLubricationForce();
 		}
 	}
-	ave_overlap = sum_overlap / cnt_overlap;
-	ave_age = sum_age / cnt_age;
+	for(int k=0; k < 10 ; k++){
+		cnt_contact_number[k] = 0;
+	}
+	for (int i =0; i < np; i++){
+		cnt_contact_number[ contact_number[i] ] ++;
+	}
+	
+	
+	
 	
 	double total_lub_stress[5] = {0,0,0,0,0};
 	double total_contact_stress[5] = {0,0,0,0,0};
@@ -1158,6 +1237,55 @@ System::calcStress(){
 }
 
 void
+System::analyzeState(){
+	gap_min = lz();
+	double sum_overlap = 0;
+	int cnt_overlap = 0;
+	max_age = 0;
+	double sum_age = 0;
+	int cnt_age = 0;
+	
+	for (int i=0; i < np; i++){
+		contact_number[i] = 0;
+	}
+	total_contact = 0;
+	// for analysis
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			
+			if (interaction[k].gap() < 0){
+				sum_overlap +=interaction[k].gap();
+				cnt_overlap ++;
+			}
+			
+			if (interaction[k].gap() < gap_min){
+				gap_min = interaction[k].gap();
+			}
+			
+			if (interaction[k].age() > 0 ){
+				if (max_age < interaction[k].age()){
+					max_age = interaction[k].age();
+					n_vec_longcontact = interaction[k].nr_vec;
+				}
+				sum_age = interaction[k].age();
+				cnt_age ++;
+			}
+			interaction[k].recordTrajectory();
+			
+			if (interaction[k].near){
+				total_contact ++;
+				contact_number[interaction[k].particle_num[0]] ++;
+				contact_number[interaction[k].particle_num[1]] ++;
+			}
+			
+		}
+	}
+	ave_overlap = sum_overlap / cnt_overlap;
+	ave_age = sum_age / cnt_age;
+
+}
+
+void
 System::calcContactForces(){
 	if (friction){
 		for (int k=0; k < num_interaction; k++){
@@ -1168,5 +1296,4 @@ System::calcContactForces(){
 			interaction[k].calcContactInteractionNoFriction();
 		}
 	}
-	
 }

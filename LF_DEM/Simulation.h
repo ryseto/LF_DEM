@@ -23,8 +23,10 @@ private:
 	vector <double> radii;
 	string filename_import_positions;
 	string filename_parameters;
-	int np1;
-	int np2;
+	int np_a;
+	int np_b;
+	double radius_a;
+	double radius_b;
 	/*
 	 *  Simulation parameters
 	 */
@@ -36,6 +38,13 @@ private:
 	ofstream fout_yap;
 	ofstream fout_vpy;
 	ofstream fout_rheo;
+	ofstream fout_particle;
+	ofstream fout_interaction;
+	bool out_yaplot;
+	bool out_vpython;
+	bool out_data_particle;
+	bool out_data_interaction;
+	
 	double yap_force_factor;
 	bool origin_zero_flow;
 	void SetDefaultParameters();
@@ -49,8 +58,11 @@ private:
 	void output_yap();
 	void output_vpython(double);
 	void output_vel();
+	void outputDataHeader(ofstream &fout);
 	void initContactPair();
 	void outputRheologyData();
+	void outputData();
+
 	void timeEvolution();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout);

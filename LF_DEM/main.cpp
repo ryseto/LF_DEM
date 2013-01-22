@@ -12,7 +12,6 @@
 
 int main(int argc, const char * argv[])
 {
-	
 	if (argc == 1){
 		cerr << "usage:" << endl;
 		cerr << "LF_DEM POSITIONFILE LUBCUTOFF [f/nf]" << endl;
