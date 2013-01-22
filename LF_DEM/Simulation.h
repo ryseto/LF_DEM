@@ -23,8 +23,10 @@ private:
 	vector <double> radii;
 	string filename_import_positions;
 	string filename_parameters;
-	int np1;
-	int np2;
+	int np_a;
+	int np_b;
+	double radius_a;
+	double radius_b;
 	/*
 	 *  Simulation parameters
 	 */
@@ -56,6 +58,7 @@ private:
 	void output_yap();
 	void output_vpython(double);
 	void output_vel();
+	void outputDataHeader(ofstream &fout);
 	void initContactPair();
 	void outputRheologyData();
 	void outputData();

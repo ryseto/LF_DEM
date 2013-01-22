@@ -192,6 +192,8 @@ Simulation::SetParametersPostProcess(){
 		sys.fout_trajectory.open(trj_filename.c_str());
 	}
 
+	outputDataHeader(fout_particle);
+	
 	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;	
 	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
 	sys.ts = 0;
@@ -354,33 +356,33 @@ Simulation::importInitialPositionFile(){
 	
 	vec3d pos;
 	double radius;
-	int _np1_, _np2_;
-	double _volume_fraction_;
-	double _lx_, _ly_, _lz_;
+	int np_a_, np_b_;
+	double volume_fraction_;
+	double lx_, ly_, lz_;
 	char buf;
-	file_import >> buf >> _np1_ >> _np2_ >> _volume_fraction_ >> _lx_ >> _ly_ >> _lz_ ;
-	np1 = _np1_;
-	np2 = _np2_;
+	file_import >> buf >> np_a_ >> np_b_ >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
+	np_a = np_a_;
+	np_b = np_b_;
 
-	int num_of_particle = _np1_ + _np2_;
+	int num_of_particle = np_a_ + np_b_;
 	sys.set_np(num_of_particle);
 	
-	if (np2 == 0)
+	if (np_a_ == 0)
 		sys.poly = false;
 	else
 		sys.poly = true;
 	cerr << "np = " << num_of_particle << endl;
-	if (_ly_ == 0){
+	if (ly_ == 0){
 		sys.dimension = 2;
 	} else {
 		sys.dimension = 3;
 	}
 	cerr << "dimension = " << sys.dimension << endl;
-	sys.lx( _lx_);
-	sys.ly( _ly_);
-	sys.lz( _lz_);
-	cerr << "box: " << _lx_ << ' ' <<  _ly_ << ' ' << _lz_ << endl;
-	sys.volume_fraction = _volume_fraction_;
+	sys.lx(lx_);
+	sys.ly(ly_);
+	sys.lz(lz_);
+	cerr << "box: " << lx_ << ' ' <<  ly_ << ' ' << lz_ << endl;
+	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
 	for (int i = 0; i < num_of_particle ; i++){
@@ -388,6 +390,13 @@ Simulation::importInitialPositionFile(){
 		initial_positions[i] = pos;
 		radii[i] = radius;
 	}
+	radius_a = radii[0];
+	if (np_b == 0){
+		radius_b = 0;
+	} else {
+		radius_b = radii[np_a];
+	}
+
 	file_import.close();
 }
 
@@ -557,20 +566,31 @@ Simulation::drawLine(double x0, double y0, double z0,
 }
 
 void
+Simulation::outputDataHeader(ofstream &fout){
+	char sp = ' ';
+	fout << "VF" << sp << sys.volume_fraction << endl;
+	fout << "Lx" << sp << sys.lx() << endl;
+	fout << "Ly" << sp << sys.ly() << endl;
+	fout << "Lz" << sp << sys.lz() << endl;
+	fout << "np_a" << sp << np_a << endl;
+	fout << "np_b" << sp << np_b << endl;
+	fout << "radius_a" << sp << radius_a << endl;
+	fout << "radius_b" << sp << radius_b << endl;
+	
+}
+void
 Simulation::outputData(){
 	
 	vector<vec3d> pos;
 	char sp = ' ';
-	int np = np1 + np2;
+	int np = np_a + np_b;
 	pos.resize(np);
 	for (int i=0; i < np; i++){
 		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								   sys.position[i].y - sys.ly2(),
 								   sys.position[i].z - sys.lz2());
 	}
-	
-	fout_particle << "#" << sp << sys.shear_strain  << sp << np1 << sp << np2 << sp;
-	fout_particle << sys.radius[0] << sp << sys.radius[np1] << endl;
+	fout_particle << "#" << sp << sys.shear_strain << endl;
 	for (int i=0; i < np; i++){
 		vec3d &p = pos[i];
 		vec3d &v = sys.velocity[i];
@@ -581,9 +601,15 @@ Simulation::outputData(){
 		fout_particle << o.x << sp << o.y << sp << o.z << sp; //5,6,7: velocity
 		fout_particle << endl;
 	}
-	fout_interaction << "#" << sp << sys.shear_strain  << sp << np1 << sp << np2 << sp;
-	fout_interaction << sys.radius[0] << sp << sys.radius[np1] << endl;
 
+	int cnt_interaction = 0;
+	for (int k=0; k < sys.num_interaction; k++){
+		if (sys.interaction[k].active){
+			cnt_interaction++;
+		}
+	}
+	
+	fout_interaction << "#" << sp << sys.shear_strain << sp << cnt_interaction << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			fout_interaction << sys.interaction[k].particle_num[0] << sp; //1
@@ -593,7 +619,7 @@ Simulation::outputData(){
 			fout_interaction << sys.interaction[k].Fc_normal << sp; // 5
 			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 6
 			fout_interaction << sys.interaction[k].static_friction << sp; //7
-			/// fout_interaction << ??? 
+			/// fout_interaction << ???
 			fout_interaction << endl;
 		}
 	}
@@ -628,7 +654,7 @@ Simulation::output_yap(){
 	int color_blue = 6;
 	
 	vector<vec3d> pos;
-	int np = np1 + np2 ;
+	int np = np_a + np_b ;
 	pos.resize(np);
 	for (int i=0; i < np; i++){
 		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
@@ -641,15 +667,15 @@ Simulation::output_yap(){
 	fout_yap << "y 1\n";
 	fout_yap << "@ " << color_white << endl;
 	//vec3d pos;
-	fout_yap << "r " << sys.radius[0] << endl;
+	fout_yap << "r " << radius_a << endl;
 	
-	for (int i=0; i < np1; i++){
+	for (int i=0; i < np_a; i++){
 		if (abs(pos[i].y) < y_trimming ){
 			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
 		}
 	}
-	fout_yap << "r " << sys.radius[np1+1] << endl;
-	for (int i = np1; i < sys.np ; i++){
+	fout_yap << "r " << radius_b << endl;
+	for (int i = np_b; i < sys.np ; i++){
 		if (abs(pos[i].y) < y_trimming ){
 			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
 		}
