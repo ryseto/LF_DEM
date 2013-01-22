@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/test5"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/test8"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,11 +78,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "D3N100PD0.5L10_10_10vf0.55.dat"
+            argument = "D2N200VF0.7MonoSquare_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "parameter1.txt"
+            argument = "fulllub_reducebgf.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -10,6 +10,7 @@
 #include <sstream>
 
 System::~System(){
+	return;
 	if (!position)
 		delete [] position;
 	if (!radius)
@@ -312,7 +313,6 @@ System::updateVelocity(){
 		U_inf.x = shear_rate*position[i].z;
 		relative_velocity[i] = (1.0/eta)*total_force[i];
 		velocity[i] = relative_velocity[i] + U_inf;
-		
 	}
 	if(friction){
 		double O_inf_y = 0.5*shear_rate;
@@ -325,32 +325,32 @@ System::updateVelocity(){
 
 #ifdef CHOLMOD
 //off-diagonal terms
-void
-System::appendToColumn(double *nvec, int jj, double alpha){
-	int jj3   = 3*jj;
-	int jj3_1 = jj3+1;
-	int jj3_2 = jj3+2;
-	double alpha_n0 = alpha*nvec[0];
-	double alpha_n1 = alpha*nvec[1];
-	double alpha_n2 = alpha*nvec[2];
-	double alpha_n1n0 = alpha_n0*nvec[1];
-	double alpha_n2n1 = alpha_n1*nvec[2];
-	double alpha_n0n2 = alpha_n2*nvec[0];
-	
-	rows.push_back(jj3);
-	rows.push_back(jj3_1);
-	rows.push_back(jj3_2);
-	
-	off_diag_values[0].push_back(alpha_n0*nvec[0]); // 00
-	off_diag_values[0].push_back(alpha_n1n0); // 10
-	off_diag_values[0].push_back(alpha_n0n2); // 20
-	off_diag_values[1].push_back(alpha_n1n0); // 01
-	off_diag_values[1].push_back(alpha_n1*nvec[1]); //11
-	off_diag_values[1].push_back(alpha_n2n1); // 21
-	off_diag_values[2].push_back(alpha_n0n2); // 02
-	off_diag_values[2].push_back(alpha_n2n1); // 12
-	off_diag_values[2].push_back(alpha_n2*nvec[2]); //22
-}
+//void
+//System::appendToColumn(double *nvec, int jj, double alpha){
+//	int jj3   = 3*jj;
+//	int jj3_1 = jj3+1;
+//	int jj3_2 = jj3+2;
+//	double alpha_n0 = alpha*nvec[0];
+//	double alpha_n1 = alpha*nvec[1];
+//	double alpha_n2 = alpha*nvec[2];
+//	double alpha_n1n0 = alpha_n0*nvec[1];
+//	double alpha_n2n1 = alpha_n1*nvec[2];
+//	double alpha_n0n2 = alpha_n2*nvec[0];
+//	
+//	rows.push_back(jj3);
+//	rows.push_back(jj3_1);
+//	rows.push_back(jj3_2);
+//	
+//	off_diag_values[0].push_back(alpha_n0*nvec[0]); // 00
+//	off_diag_values[0].push_back(alpha_n1n0); // 10
+//	off_diag_values[0].push_back(alpha_n0n2); // 20
+//	off_diag_values[1].push_back(alpha_n1n0); // 01
+//	off_diag_values[1].push_back(alpha_n1*nvec[1]); //11
+//	off_diag_values[1].push_back(alpha_n2n1); // 21
+//	off_diag_values[2].push_back(alpha_n0n2); // 02
+//	off_diag_values[2].push_back(alpha_n2n1); // 12
+//	off_diag_values[2].push_back(alpha_n2*nvec[2]); //22
+//}
 
 void
 System::appendToColumn(const vec3d &nvec, int jj, double alpha){
@@ -381,27 +381,27 @@ System::appendToColumn(const vec3d &nvec, int jj, double alpha){
 
 
 // diagonal terms
-void
-System::addToDiag(double *nvec, int ii, double alpha){
-	int ii6 = 6*ii;
-	
-	double alpha_n0 = alpha*nvec[0];
-	double alpha_n1 = alpha*nvec[1];
-	double alpha_n2 = alpha*nvec[2];
-	double alpha_n1n0 = alpha_n0*nvec[1];
-	double alpha_n2n1 = alpha_n1*nvec[2];
-	double alpha_n0n2 = alpha_n2*nvec[0];
-	
-	diag_values[ii6]   += alpha_n0*nvec[0]; // 00
-	diag_values[ii6+1] += alpha_n1n0; // 10
-	diag_values[ii6+2] += alpha_n0n2; // 20
-	
-	diag_values[ii6+3] += alpha_n1*nvec[1]; //11
-	diag_values[ii6+4] += alpha_n2n1; // 21
-	
-	diag_values[ii6+5] += alpha_n2*nvec[2]; //22
-	
-}
+//void
+//System::addToDiag(double *nvec, int ii, double alpha){
+//	int ii6 = 6*ii;
+//	
+//	double alpha_n0 = alpha*nvec[0];
+//	double alpha_n1 = alpha*nvec[1];
+//	double alpha_n2 = alpha*nvec[2];
+//	double alpha_n1n0 = alpha_n0*nvec[1];
+//	double alpha_n2n1 = alpha_n1*nvec[2];
+//	double alpha_n0n2 = alpha_n2*nvec[0];
+//	
+//	diag_values[ii6]   += alpha_n0*nvec[0]; // 00
+//	diag_values[ii6+1] += alpha_n1n0; // 10
+//	diag_values[ii6+2] += alpha_n0n2; // 20
+//	
+//	diag_values[ii6+3] += alpha_n1*nvec[1]; //11
+//	diag_values[ii6+4] += alpha_n2n1; // 21
+//	
+//	diag_values[ii6+5] += alpha_n2*nvec[2]; //22
+//	
+//}
 
 void
 System::addToDiag(const vec3d &nvec, int ii, double alpha){
@@ -552,7 +552,7 @@ System::buildLubricationTerms(){
 			if(j>i){
 				inter->XA(XAii, XAij, XAji, XAjj);
 				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
+				addToDiag(inter->nr_vec, i, inter->a0 * XAii);
 				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
 				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
 				inter->GE(GEi, GEj);  // G*E_\infty term
@@ -568,60 +568,7 @@ System::buildLubricationTerms(){
 	
 	ploc[np-1] = (unsigned int)rows.size();
 	ploc[np] = (unsigned int)rows.size();
-	
 }
-
-void
-System::calcLubricationForce(){
-	for (int k = 0; k < 6*np; k++){
-		diag_values[k] = 0.;
-	}
-	off_diag_values[0].clear();
-	off_diag_values[1].clear();
-	off_diag_values[2].clear();
-
-	double GEi[3];
-	double GEj[3];
-	double XAii, XAjj, XAij, XAji;
-
-	set<Interaction*>::iterator it;
-	int j;
-	Interaction *inter;
-	for (int i = 0; i < np - 1; i ++){
-		ploc[i] = (unsigned int)rows.size();
-		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
-			inter=*it;
-		 	j=inter->partner(i);
-			if(j>i){
-				inter->XA(XAii, XAij, XAji, XAjj);
-				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
-				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
-				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
-				inter->GE(GEi, GEj);  // G*E_\infty term
-				for(int u=0; u<3; u++){
-					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
-					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
-					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
-					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
-				}
-			}
-		}
-	}
-	for (int i=0; i < np; i++)
-		lub_force[i].reset();
-	
-	for (int i=0; i < np; i++){
-		for (int j=0; j < np; i++){
-			
-			
-			
-		}
-	}
-	
-	
-}
-
 
 void
 System::buildContactTerms(){
@@ -1095,10 +1042,7 @@ System::calcStress(){
 	for (int i =0; i < np; i++){
 		cnt_contact_number[ contact_number[i] ] ++;
 	}
-	
-	
-	
-	
+
 	double total_lub_stress[5] = {0,0,0,0,0};
 	double total_contact_stress[5] = {0,0,0,0,0};
 	for (int i=0; i < np; i++){

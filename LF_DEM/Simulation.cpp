@@ -182,11 +182,14 @@ Simulation::SetParametersPostProcess(){
 	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
-	
-	if (out_yaplot)
-	fout_yap.open(yap_filename.c_str());
+
 	fout_rheo.open(vel_filename.c_str());
-	fout_vpy.open(vpy_filename.c_str());
+	if (out_yaplot){
+		fout_yap.open(yap_filename.c_str());
+	}
+	if (out_vpython){
+		fout_vpy.open(vpy_filename.c_str());
+	}
 	if (sys.out_pairtrajectory){
 		string trj_filename = "trj_" + sys.simu_name + ".dat";
 		sys.fout_trajectory.open(trj_filename.c_str());
@@ -367,10 +370,10 @@ Simulation::importInitialPositionFile(){
 	int num_of_particle = np_a_ + np_b_;
 	sys.set_np(num_of_particle);
 	
-	if (np_a_ == 0)
-		sys.poly = false;
-	else
+	if (np_b_ > 0)
 		sys.poly = true;
+	else
+		sys.poly = false;
 	cerr << "np = " << num_of_particle << endl;
 	if (ly_ == 0){
 		sys.dimension = 2;
@@ -391,10 +394,10 @@ Simulation::importInitialPositionFile(){
 		radii[i] = radius;
 	}
 	radius_a = radii[0];
-	if (np_b == 0){
-		radius_b = 0;
-	} else {
+	if (sys.poly ){
 		radius_b = radii[np_a];
+	} else {
+		radius_b = 0;
 	}
 
 	file_import.close();
@@ -441,6 +444,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	double time_interval = strain_interval_out/sys.shear_rate;
 	int i_time_interval = time_interval / sys.dt;
 	while(sys.shear_strain <= shear_strain_end){
+		cerr << "strain: " << sys.shear_strain << endl;
 		sys.timeEvolution(i_time_interval);
 		outputRheologyData();
 		outputData();
@@ -568,14 +572,11 @@ Simulation::drawLine(double x0, double y0, double z0,
 void
 Simulation::outputDataHeader(ofstream &fout){
 	char sp = ' ';
+	fout << "np" << sp << sys.np << endl;
 	fout << "VF" << sp << sys.volume_fraction << endl;
 	fout << "Lx" << sp << sys.lx() << endl;
 	fout << "Ly" << sp << sys.ly() << endl;
 	fout << "Lz" << sp << sys.lz() << endl;
-	fout << "np_a" << sp << np_a << endl;
-	fout << "np_b" << sp << np_b << endl;
-	fout << "radius_a" << sp << radius_a << endl;
-	fout << "radius_b" << sp << radius_b << endl;
 	
 }
 void
@@ -596,6 +597,7 @@ Simulation::outputData(){
 		vec3d &v = sys.velocity[i];
 		vec3d &o = sys.ang_velocity[i];
 		fout_particle << i << sp; //1: number
+		fout_particle << sys.radius[i] << sp; //1: number
 		fout_particle << p.x << sp << p.y << sp << p.z << sp; //2,3,4: position
 		fout_particle << v.x << sp << v.y << sp << v.z << sp; //5,6,7: velocity
 		fout_particle << o.x << sp << o.y << sp << o.z << sp; //5,6,7: velocity
@@ -612,13 +614,12 @@ Simulation::outputData(){
 	fout_interaction << "#" << sp << sys.shear_strain << sp << cnt_interaction << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if (sys.interaction[k].active){
-			fout_interaction << sys.interaction[k].particle_num[0] << sp; //1
-			fout_interaction << sys.interaction[k].particle_num[1] << sp; //2
-			fout_interaction << sys.interaction[k].r() << sp; //3
-			fout_interaction << sys.interaction[k].valLubForce() << sp; //4
-			fout_interaction << sys.interaction[k].Fc_normal << sp; // 5
-			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 6
-			fout_interaction << sys.interaction[k].static_friction << sp; //7
+			fout_interaction << sys.interaction[k].particle_num[0] << sp; // 1
+			fout_interaction << sys.interaction[k].particle_num[1] << sp; // 2
+			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
+			fout_interaction << sys.interaction[k].Fc_normal << sp; // 4
+			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 5
+			fout_interaction << sys.interaction[k].static_friction << sp; //6
 			/// fout_interaction << ???
 			fout_interaction << endl;
 		}
