@@ -585,6 +585,9 @@ void
 Interaction::deactivate_contact(){
 	// r > a0 + a1
 	contact = false;
+	Fc_normal = 0;
+	Fc_tangent.reset();
+	
 }
 
 /*
