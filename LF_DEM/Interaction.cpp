@@ -220,6 +220,24 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 	XAjj = XAii / lambda;
 //	XAjj = g1_il * iksi_eff;
 //	XAji = - 2 * XAjj / il1;
+	prev_iksi_eff = iksi_eff;
+}
+
+void
+Interaction::prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj){
+	double g1_l;
+	double l1, l13;
+
+	l1 = 1.0 + lambda;
+	l13 = l1 * l1 * l1;
+
+	
+	g1_l = 2.0 * lambda * lambda / l13;
+	
+	prev_XAii = g1_l * prev_iksi_eff;
+	prev_XAij = - 2 * prev_XAii / l1;
+	prev_XAji = prev_XAij;
+	prev_XAjj = prev_XAii / lambda;
 
 }
 
@@ -515,7 +533,19 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	} else {
 		near = false;
 	}
+
+	prev_iksi_eff = 0.;
 	return;
+}
+
+bool 
+Interaction::just_off(){
+  if(_just_off){
+	_just_off = false;
+	return true;
+  }
+  else
+	return false;
 }
 
 void
@@ -528,6 +558,7 @@ Interaction::deactivate(){
 	sys->interaction_list[j].erase(this);
 	sys->interaction_partners[i].erase(j);
 	sys->interaction_partners[j].erase(i);
+	_just_off = true; // for resistance matrix update
 }
 
 void

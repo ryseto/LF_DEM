@@ -188,7 +188,7 @@ Simulation::SetParametersPostProcess(){
 void
 Simulation::SetDefaultParameters(){
 	sys.lubrication = true;
-	sys.brownian = true;
+	sys.brownian = false;
 	sys.friction = true;
 	/*
 	 * Simulation

@@ -8,7 +8,8 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-#define CHOLMOD 1
+#define CHOLMOD 
+#define TRILINOS 1
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -16,7 +17,13 @@
 #include <string>
 //#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
+#ifdef CHOLMOD
 #include "cholmod.h"
+#endif
+#ifdef TRILINOS
+#include "Epetra_ConfigDefs.h"
+#include "Epetra_SerialComm.h"
+#endif
 #include "vec3d.h"
 //#include "ContactForce.h"
 #include "BrownianForce.h"
@@ -34,6 +41,7 @@ private:
 	int maxnum_interactionpair;
 
 	queue<int> deactivated_interaction;
+
 	void buildLubricationTerms();
 	void buildLubricationTerms_new();
 
@@ -41,14 +49,62 @@ private:
 	void buildContactTerms();
 	void addStokesDrag();
 	void factorizeResistanceMatrix();
-	
+	void updateResistanceMatrix();
 
 
-#ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *v_lub, *v_cont;
 	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
 	cholmod_dense *contact_rhs, *brownian_rhs, *nonbrownian_rhs, *lubrication_rhs, *total_rhs;
+#define TRILINOS 1
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <queue>
+#include <string>
+//#include <Accelerate/Accelerate.h>
+#include "Interaction.h"
+#ifdef CHOLMOD
+#include "cholmod.h"
+#endif
+#ifdef TRILINOS
+#include "Epetra_ConfigDefs.h"
+#include "Epetra_SerialComm.h"
+#endif
+#include "vec3d.h"
+//#include "ContactForce.h"
+#include "BrownianForce.h"
+#include "BoxSet.h"
+
+using namespace std;
+class Simulation;
+class Interaction;
+class BrownianForce;
+class BoxSet;
+
+class System{
+private:
+	int np3;
+	int maxnum_interactionpair;
+
+	queue<int> deactivated_interaction;
+
+	void buildLubricationTerms();
+	void buildLubricationTerms_new();
+
+	void buildBrownianTerms();
+	void buildContactTerms();
+	void addStokesDrag();
+	void factorizeResistanceMatrix();
+	void updateResistanceMatrix();
+
+
+	cholmod_sparse *sparse_res;
+	cholmod_dense *v, *v_lub, *v_cont;
+	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
+	cholmod_dense *contact_rhs, *brownian_rhs, *nonbrownian_rhs, *lubrication_rhs, *total_rhs;
+	
+	Epetra_SerialDenseVector DoubleVector(Length);
 	int max_lub_int;
 	int stype;
 	int sorted;
@@ -62,18 +118,7 @@ private:
 	void allocateSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
 	void appendToColumn(double *nvec, int jj, double alpha);
-#else
-	double *res;
-	int nrhs;
-	int *ipiv;
-	int lda;
-	int ldb;
-	int info;
-	double *strain_term;
-	int lwork;
-	double *work;
-	char UPLO;
-#endif
+
 
 	BoxSet* boxset;
 	void print_res();
@@ -224,15 +269,14 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
-	void computeBrownianStress();
+	void calcBrownianStress();
 	int numpart(){
 		return np;
 	}
 
-#ifdef CHOLMOD
+
 	cholmod_factor *L ;
 	cholmod_common c ;
-#endif
 
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
