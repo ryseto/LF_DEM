@@ -224,16 +224,12 @@ System::checkNewInteraction(){
 	int zshift;
 	double sq_dist;
 	for (int i=0; i < np-1; i++){
-		
 		it_beg = boxset->neighborhood_begin(i);
 		it_end = boxset->neighborhood_end(i);
-
 		for (it = it_beg; it != it_end; it++){
 			int j=*it;
-			
 			if(j>i){
 				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
-					
 					// this is done in 3 steps because we need each information for Interaction creation
 					pos_diff = position[j] - position[i];
 					periodize_diff(pos_diff, zshift);

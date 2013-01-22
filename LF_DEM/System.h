@@ -250,7 +250,7 @@ public:
 	void calcLubricationForce(); // for visualization of force chains
 
 	// interactions
-	bool output_trajectory;
+	bool out_pairtrajectory;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;

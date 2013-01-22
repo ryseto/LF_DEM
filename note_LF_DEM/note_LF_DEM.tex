@@ -106,7 +106,6 @@ We can introduce a cutoff gap $h^{\ast}$.
 \end{equation}
 
 
-
 \paragraph{Force chains}
 
 If volume fraction of suspension is the same,
@@ -140,6 +139,49 @@ we may expect the mixture of different sizes can avoid in some extent.
 %
 We plan to check this by introducing bi-disperse simulation.
 %
+
+\paragraph{Fore-and-aft asymmetry}
+
+\citet{Parsi_1987}
+
+
+Observation:
+
+Particles in sheared suspensions collide each other.
+%
+Multi-collisions take place frequently
+if concentrated suspensions are sheared.
+%
+The essential difference 
+between multi-collisions and two-body interactions
+
+push, collide, hard core,
+
+pull, not symmetrical
+
+
+\paragraph{Check for simulations}
+
+How do the results depend on the simulation parameters?
+
+\begin{itemize}
+ \item  \texttt{lubmax}: 2.5, 3, 3.5, 4
+ \item  \texttt{lubmin}: 0.01, 0.02, 0.03, 0.04,
+ \item 
+
+\end{itemize}
+
+
+Lubrication max 
+
+identify by seeing contact numbers.
+
+
+
+
+
+
+
 
 \section{Simulation method}
 
@@ -1292,6 +1334,30 @@ X_{11}^{M}(s,\lambda^{-1})
 X_{11}^{M}(s,\lambda)  
 \end{align}
 
+
+\begin{align}
+\frac{1}{6\pi} F^{\alpha}_i
+&= -n_i \left(
+a_{\alpha} X_{\alpha\alpha}^{A} \Delta v^{\alpha}_j
++ \frac{r_0}{2} 
+X_{\alpha\beta}^{A} n_j \Delta v^{\beta}_j
+\right) 
+ +
+\dot{\gamma}
+\left( \frac{2}{3} a_{\alpha}^2   X_{\alpha\alpha}^{G} 
+ + \frac{r_0^2}{6} X_{\alpha\beta}^{G} \right)n_z n_x  n_i \\
+\frac{1}{6\pi} F^{\alpha}_i
+&= -n_i \left(
+a_{\alpha} X_{\alpha\alpha}^{A} \Delta v^{\alpha}_j
++ \frac{r_0}{2} 
+X_{\alpha\beta}^{A} n_j \Delta v^{\beta}_j
+\right)
+ + 
+\dot{\gamma}
+\left( \frac{2}{3} a_{\beta}^2 X_{\alpha\alpha}^{G}
+  + \frac{r_0^2}{6} X_{\alpha\beta}^{G}\right)
+n_z n_x n_i
+\end{align}
 %\begin{align}
 %\frac{ F^{\alpha}_i}{F_0}
 %&= 

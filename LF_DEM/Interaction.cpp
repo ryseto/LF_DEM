@@ -334,10 +334,6 @@ Interaction::addLubricationStress(){
 
 	double stresslet_i[5];
 	double stresslet_j[5];
-//	for (int k=0; k < 5; k ++){
-//		stresslet_i[k] = 0.;
-//		stresslet_j[k] = 0.;
-//	}
 	
 	// First -G*(U-Uinf) term
 	double vi[3];
@@ -407,6 +403,10 @@ Interaction::addLubricationStress(){
 	}
 }
 
+/* Lubriction force between two particles is calcurated.
+ * This part is used for ouput data.
+ * lubforce_j = -lubforce_i
+ */
 void
 Interaction::evaluateLubricationForce(){
 	int i = particle_num[0];
@@ -416,8 +416,10 @@ Interaction::evaluateLubricationForce(){
 	n[1] = nr_vec.y;
 	n[2] = nr_vec.z;
 	lubforce_i.reset();
-	lubforce_j.reset();
-	// First -A*(U-Uinf) term
+	/*	lubforce_j.reset(); */
+	/*******************************
+	 *  First: -A*(U-Uinf) term    *
+	 *******************************/
 	double vi [3];
 	double vj [3];
 	vi[0] = sys->relative_velocity[i].x;
@@ -429,32 +431,38 @@ Interaction::evaluateLubricationForce(){
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
 	double common_factor_i = 0;
-	double common_factor_j = 0;
+	/* 	double common_factor_j = 0; */
 	for(int u=0; u<3; u++){
 		common_factor_i += (a0*XAii*vi[u] + 0.5*ro*XAij*vj[u])*n[u];
-		common_factor_j += (a1*XAjj*vj[u] + 0.5*ro*XAji*vi[u])*n[u];
+		/* common_factor_j += (a1*XAjj*vj[u] + 0.5*ro*XAji*vi[u])*n[u]; */
 	}
 	lubforce_i.x = -n[0]*common_factor_i;
 	lubforce_i.y = -n[1]*common_factor_i;
 	lubforce_i.z = -n[2]*common_factor_i;
-	lubforce_j.x = -n[0]*common_factor_j;
-	lubforce_j.y = -n[1]*common_factor_j;
-	lubforce_j.z = -n[2]*common_factor_j;
-	// First -tildeG*(-Einf) term
+	/*
+	 *lubforce_j.x = -n[0]*common_factor_j;
+	 *lubforce_j.y = -n[1]*common_factor_j;
+	 *lubforce_j.z = -n[2]*common_factor_j;
+	 */
+	/*********************************
+	 *  Second -tildeG*(-Einf)term   *
+	 *********************************/
+	// First
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
 	double n0n2 = n[0] * n[2];
 	double twothird = 2./3;
 	double onesixth = 1./6;
 	common_factor_i = n0n2*(twothird*a0*a0*XGii + onesixth*ro*ro*XGji)* sys->shear_rate;
-	common_factor_j = n0n2*(twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* sys->shear_rate;
+	/*	common_factor_j = n0n2*(twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* sys->shear_rate; */
 	lubforce_i.x +=  n[0]*common_factor_i;
 	lubforce_i.y +=  n[1]*common_factor_i;
 	lubforce_i.z +=  n[2]*common_factor_i;
-	lubforce_j.x +=  n[0]*common_factor_j;
-	lubforce_j.y +=  n[1]*common_factor_j;
-	lubforce_j.z +=  n[2]*common_factor_j;
-
+	/*
+	 * lubforce_j.x +=  n[0]*common_factor_j;
+	 * lubforce_j.y +=  n[1]*common_factor_j;
+	 * lubforce_j.z +=  n[2]*common_factor_j;
+	 */
 }
 
 double
@@ -553,7 +561,7 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 void
 Interaction::deactivate(){
 	// r > lub_max
-	if (sys->output_trajectory)
+	if (sys->out_pairtrajectory)
 		outputTrajectory();
 	active = false;
 	int i=particle_num[0];
