@@ -591,6 +591,9 @@ Simulation::outputData(){
 								   sys.position[i].y - sys.ly2(),
 								   sys.position[i].z - sys.lz2());
 	}
+	/*
+	 * shear_disp = sys.shear_strain - (int)(sys.shear_strain/Lx)*Lx
+	 */
 	fout_particle << "#" << sp << sys.shear_strain << endl;
 	for (int i=0; i < np; i++){
 		vec3d &p = pos[i];
@@ -619,6 +622,7 @@ Simulation::outputData(){
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
 			fout_interaction << sys.interaction[k].Fc_normal << sp; // 4
 			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 5
+			fout_interaction << sys.interaction[k].gap() << sp;
 			fout_interaction << sys.interaction[k].static_friction << sp; //6
 			/// fout_interaction << ???
 			fout_interaction << endl;

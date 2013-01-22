@@ -22,9 +22,11 @@ open (OUT, "> ${output}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
-while ( <IN_particle> ){
+$first=1;
+while (1){
 	&InParticles;
 	&InInteractions;
+	last unless defined $line;
 	&OutYaplotData;
 	printf "$shear_rate\n";
 }
@@ -42,13 +44,10 @@ sub readHeader{
 sub InParticles {
 	$line = <IN_particle>;
     ($buf, $shear_rate) = split(/\s+/, $line);
-	if ($buf != "#"){
-        exit;
-    }
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
-        ($i, $r, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz ) = split(/\s+/, $line);
-		$radius[$i] = $r;
+        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz ) = split(/\s+/, $line);
+		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;
         $posz[$i] = $z;
@@ -63,16 +62,23 @@ sub InInteractions {
 	}
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $fc_n, $fc_t, $fric_st) = split(/\s+/, $line);
+		($i, $j, $f_lub, $fc_n, $fc_t, $gap, $fric_st) = split(/\s+/, $line);
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_t;
+		$Gap[$k] = $gap;
 	}
 }
 
 sub OutYaplotData{
+	if ($first == 0){
+		printf OUT "\n";
+	} else {
+		$first = 0;
+	}
+	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
 	$r = $radius[0];
@@ -116,7 +122,7 @@ sub OutYaplotData{
             &OutString($int0[$k],  $int1[$k]);
         }
     }
-    printf OUT "\n";
+   
 }
 
 sub OutString {

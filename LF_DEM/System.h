@@ -206,18 +206,14 @@ public:
 	int cnt_contact_number[10];
 	int total_contact;
 	vector<int> contact_number;
-
-//	void prepareSimulationName();
 	void prepareSimulation();
 	void allocateRessources();
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions();
-
 	void calcContactForces();
 	double sq_distance(int i, int j);
-
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	void displacement(int i, const double &dx_, const double &dy, const double &dz);
@@ -233,27 +229,21 @@ public:
 	void stressReset();
 	void calcStress();
 	void analyzeState();
-
 	void computeBrownianStress();
 	int numpart(){
 		return np;
 	}
-	
 #ifdef CHOLMOD
 	cholmod_factor *L ;
 	cholmod_common c ;
 #endif
-
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
-
 	void calcLubricationForce(); // for visualization of force chains
-
 	// interactions
 	bool out_pairtrajectory;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
-
 };
 #endif /* defined(__LF_DEM__State__) */
