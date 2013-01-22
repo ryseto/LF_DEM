@@ -132,6 +132,7 @@
 				D9850AB316AEFBCB00DFD13F /* generateYaplotFile.pl */,
 			);
 			name = Analysys_Visualization;
+			path = LF_DEM;
 			sourceTree = "<group>";
 		};
 		D988E37E165441750009949F = {
@@ -141,6 +142,7 @@
 				D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */,
 				D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */,
 				D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */,
+				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D988E38A165441750009949F /* Products */,
@@ -162,7 +164,6 @@
 				D99EBE1D167914C2003AC4C9 /* note.rtf */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
-				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
