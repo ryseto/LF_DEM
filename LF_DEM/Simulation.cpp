@@ -12,6 +12,7 @@
 #include <string>
 #include <algorithm>
 #include <cctype>
+
 Simulation::Simulation(){};
 Simulation::~Simulation(){
 	if (fout_yap.is_open()){
@@ -168,11 +169,39 @@ Simulation::SetParametersPostProcess(){
 	} else {
 		sys.brownian = true;
 	}
+	/*
+	 * Time step
+	 */
+	sys.dt = sys.dt * 1.0/radius_max;
+
+	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;
+	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
+	sys.ts = 0;
+	sys.shear_disp = 0;
+	sys.vel_difference = sys.shear_rate*sys.lz();
+	/*
+	 * dt_mid: the intermediate time step for the mid-point
+	 * algortithm. dt/dt_mid = dt_ratio
+	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
+	 * ASD code from Brady has dt_ratio=150
+	 */
+	sys.dt_mid = sys.dt/sys.dt_ratio;
+	/*
+	 * The time steps finishing simulation.
+	 */
+	//ts_max = (int)(shear_strain / sys.dt);
+	
+
+	
+	
+
 	
 	/*
 	 * Set simulation name and name of output files.
 	 */
 	prepareSimulationName();
+	
+	
 	
 
 	string particle_filename = "par_" + sys.simu_name + ".dat";
@@ -197,23 +226,6 @@ Simulation::SetParametersPostProcess(){
 
 	outputDataHeader(fout_particle);
 	
-	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;	
-	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
-	sys.ts = 0;
-	sys.shear_disp = 0;
-	sys.vel_difference = sys.shear_rate*sys.lz();
-	/*
-	 * dt_mid: the intermediate time step for the mid-point
-	 * algortithm. dt/dt_mid = dt_ratio
-	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
-	 * ASD code from Brady has dt_ratio=150
-	 */
-	sys.dt_mid = sys.dt/sys.dt_ratio;
-	/*
-	 * The time steps finishing simulation.
-	 */
-	//ts_max = (int)(shear_strain / sys.dt);
-
 }
 
 void
@@ -239,7 +251,7 @@ Simulation::SetDefaultParameters(){
 	 *    ASD code from Brady has dt_ratio=150
 	 *
 	 */
-	sys.dt = 1e-4;
+	sys.dt = 1e-5;
 	sys.dt_ratio = 100;
 	/*
 	 * Shear flow
@@ -388,11 +400,19 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
+	radius_max=1.0;
+
 	for (int i = 0; i < num_of_particle ; i++){
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
 		radii[i] = radius;
+		if (radius > radius_max){
+			radius_max = radius;
+		}
 	}
+	sys.setRadiusMax(radius_max);
+	sys.setSystemVolume();
+
 	radius_a = radii[0];
 	if (sys.poly ){
 		radius_b = radii[np_a];
@@ -461,47 +481,97 @@ Simulation::SimulationMain(int argc, const char * argv[]){
  */
 void
 Simulation::outputRheologyData(){
+	static bool firsttime = true;
 	/*
 	 * Output the sum of the normal forces.
+	 *
+	 *
+	 *  Viscosity = S_{xz} / V
+	 *  N1 = S_{xx}-S_{zz} = 2*S_xx + S_yy
+	 *  N1 = S_{zz}-S_{yy} = -2*S_xx - S_yy
 	 */
-	fout_rheo << sys.dt * sys.ts << ' ';// 1
-	fout_rheo << sys.mean_hydro_stress[2] + sys.mean_contact_stress[2]  << ' ' ; //2
-	fout_rheo << sys.mean_hydro_stress[0] << ' ' ; //3
-	fout_rheo << sys.mean_hydro_stress[1] << ' ' ; //4
-	fout_rheo << sys.mean_hydro_stress[2] << ' ' ; //5
-	fout_rheo << sys.mean_hydro_stress[3] << ' ' ; //6
-	fout_rheo << sys.mean_hydro_stress[4] << ' ' ; //7
-	fout_rheo << sys.mean_contact_stress[0] << ' ' ; //8
-	fout_rheo << sys.mean_contact_stress[1] << ' ' ; //9
-	fout_rheo << sys.mean_contact_stress[2] << ' ' ; //10
-	fout_rheo << sys.mean_contact_stress[3] << ' ' ; //11
-	fout_rheo << sys.mean_contact_stress[4] << ' ' ; //12
-	fout_rheo << sys.gap_min << ' '; // 13
-	fout_rheo << sys.ave_overlap << ' '; //14
-	fout_rheo << sys.shear_strain << ' '; //15
+	
+	//double total_stress_bgf;
+	//double total_hydro_stress[5];
+	//double total_contact_stress[5];
+	
+	double total_stress[5];
+	for (int k=0; k<5; k++){
+		total_stress[k] = (sys.total_lub_stress[k] + sys.total_contact_stress[k] + sys.total_brownian_stress[k]);
+	}
+	total_stress[2] += sys.total_stress_bgf;
+
+	double Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	double N1 = 2*total_stress[0] + total_stress[4];
+	double N2 = -2*total_stress[0] - total_stress[4];
+	double Viscosity_bgf = sys.total_stress_bgf/(sys.valSystemVolume()*sys.shear_rate);
+	double Viscosity_h = sys.total_lub_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	double N1_h = 2*sys.total_lub_stress[0] + sys.total_lub_stress[4];
+	double N2_h = -2*sys.total_lub_stress[0] - sys.total_lub_stress[4];
+	double Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	double N1_c = 2*sys.total_contact_stress[0] + sys.total_contact_stress[4];
+	double N2_c = -2*sys.total_contact_stress[0] - sys.total_contact_stress[4];
+	double Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	double N1_b = 2*sys.total_brownian_stress[0] + sys.total_brownian_stress[4];
+	double N2_b = -2*sys.total_brownian_stress[0] - sys.total_brownian_stress[4];
+	if ( firsttime ){
+		firsttime = false;
+		fout_rheo << "#1: shear strain" << endl;
+		fout_rheo << "#2: Viscosity" << endl;
+		fout_rheo << "#3: N1" << endl;
+		fout_rheo << "#4: N2" << endl;
+		fout_rheo << "#5: Viscosity(bgf)" << endl;
+		fout_rheo << "#6: Viscosity(lub)" << endl;
+		fout_rheo << "#7: N1(lub)" << endl;
+		fout_rheo << "#8: N2(lub)" << endl;
+		fout_rheo << "#9: Viscosity(contact)" << endl;
+		fout_rheo << "#10: N1(contact)" << endl;
+		fout_rheo << "#11: N2(contact)" << endl;
+		fout_rheo << "#12: Viscosity(brownian)" << endl;
+		fout_rheo << "#13: N1(brownian)" << endl;
+		fout_rheo << "#14: N2(brownian)" << endl;
+		fout_rheo << "#15: minimum gap"<< endl;
+		fout_rheo << "#16: maximum age" << endl;
+		fout_rheo << "#17: average age" << endl;
+		fout_rheo << "#18: average contuct number" << endl;
+		fout_rheo << "#19: rate of particles cn = 0" << endl;
+		fout_rheo << "#20: number of particle cn = 1" << endl;
+		fout_rheo << "#21: number of particle cn = 2" << endl;
+		fout_rheo << "#22: number of particle cn = 3" << endl;
+		fout_rheo << "#23: number of particle cn = 4" << endl;
+		fout_rheo << "#24: number of particle cn = 5" << endl;
+		fout_rheo << "#25: number of particle cn = 6" << endl;
+		fout_rheo << "#26: number of particle cn = 7" << endl;
+		fout_rheo << "#27: number of particle cn = 8" << endl;
+	}
+	
+	fout_rheo << sys.shear_strain << ' '; //1
+	fout_rheo << Viscosity << ' ' ; //2
+	fout_rheo << N1 << ' ' ; //3
+	fout_rheo << N2 << ' ' ; //4
+	fout_rheo << Viscosity_bgf << ' '; // 5
+	fout_rheo << Viscosity_h << ' ' ; //6
+	fout_rheo << N1_h << ' ' ; //7
+	fout_rheo << N2_h << ' ' ; //8
+	fout_rheo << Viscosity_c << ' ' ; //9
+	fout_rheo << N1_c << ' ' ; //10
+	fout_rheo << N2_c << ' ' ; //11
+	fout_rheo << Viscosity_b << ' ' ; //12
+	fout_rheo << N1_b << ' ' ; //13
+	fout_rheo << N2_b << ' ' ; //14
+	fout_rheo << sys.gap_min << ' '; // 15
 	fout_rheo << sys.max_age << ' '; //16
 	fout_rheo << sys.ave_age << ' '; //17
-	if (sys.n_vec_longcontact.z > 0){
-		fout_rheo << sys.n_vec_longcontact.x << ' '; //18
-		fout_rheo << sys.n_vec_longcontact.y << ' '; //19
-		fout_rheo << sys.n_vec_longcontact.z << ' '; //20
-	} else {
-		fout_rheo << -sys.n_vec_longcontact.x << ' ';
-		fout_rheo << -sys.n_vec_longcontact.y << ' ';
-		fout_rheo << sys.n_vec_longcontact.z << ' ';
-	}
-	fout_rheo << sys.total_contact << ' '; //21
-	fout_rheo << sys.cnt_contact_number[0] << ' ';
-	fout_rheo << sys.cnt_contact_number[1] << ' ';
-	fout_rheo << sys.cnt_contact_number[2] << ' ';
-	fout_rheo << sys.cnt_contact_number[3] << ' ';
-	fout_rheo << sys.cnt_contact_number[4] << ' ';
-	fout_rheo << sys.cnt_contact_number[5] << ' ';
-	fout_rheo << sys.cnt_contact_number[6] << ' ';
-	fout_rheo << sys.cnt_contact_number[7] << ' ';
-	fout_rheo << sys.cnt_contact_number[8] << ' ';
-	fout_rheo << sys.cnt_contact_number[9] << ' ';
-
+	fout_rheo << sys.total_contact*(1.0/sys.np) << ' '; //18
+	fout_rheo << sys.cnt_contact_number[0]*(1.0/sys.np) << ' '; //19
+	fout_rheo << sys.cnt_contact_number[1]*(1.0/sys.np) << ' '; //20
+	fout_rheo << sys.cnt_contact_number[2]*(1.0/sys.np) << ' '; //21
+	fout_rheo << sys.cnt_contact_number[3]*(1.0/sys.np) << ' '; //22
+	fout_rheo << sys.cnt_contact_number[4]*(1.0/sys.np) << ' '; //23
+	fout_rheo << sys.cnt_contact_number[5]*(1.0/sys.np) << ' '; //24
+	fout_rheo << sys.cnt_contact_number[6]*(1.0/sys.np) << ' '; //25
+	fout_rheo << sys.cnt_contact_number[7]*(1.0/sys.np) << ' '; //26
+	fout_rheo << sys.cnt_contact_number[8]*(1.0/sys.np) << ' '; //27
 	fout_rheo << endl;
 }
 

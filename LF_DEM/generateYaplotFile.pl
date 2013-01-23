@@ -1,12 +1,16 @@
 #! /usr/bin/perl
 use Math::Trig;
 $particle_data = $ARGV[0];
-$force_factor = $ARGV[1];
+$force_factor = 0.01;
+if ($#ARGV >= 1){
+	$force_factor = $ARGV[1];
+}
 $y_section = 0;
 printf "$#ARGV";
 if ($#ARGV == 2){
 	$y_section = $ARGV[2];
 	printf "section $y_section\n";
+	exit;
 }
 # Read the header
 #
@@ -17,7 +21,7 @@ $name = substr($particle_data, $i, $j-$i);
 
 $interaction_data = "int_${name}.dat";
 printf "$interaction_data\n";
-$output = "$name.yap";
+$output = "y_$name.yap";
 open (OUT, "> ${output}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
@@ -42,6 +46,7 @@ sub readHeader{
 }
 
 sub InParticles {
+	$radius_max = 0;
 	$line = <IN_particle>;
     ($buf, $shear_rate) = split(/\s+/, $line);
     for ($i = 0; $i < $np; $i ++){
@@ -51,6 +56,10 @@ sub InParticles {
         $posx[$i] = $x;
         $posy[$i] = $y;
         $posz[$i] = $z;
+		if ($radius_max < $a){
+			$radius_max = $a
+			
+		}
     }
 }
 
@@ -90,8 +99,8 @@ sub OutYaplotData{
 		}
 		if ($y_section == 0 ||
 			abs($posy[$i]) < $y_section ){
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
-		}
+				printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+			}
     }
 	
     printf OUT "y 2\n";
@@ -99,8 +108,12 @@ sub OutYaplotData{
     for ($k = 0; $k < $num_interaction; $k ++){
         if ($Fc_n[$k] > 0){
             $string_with = $force_factor*($Fc_n[$k]);
-            printf OUT "r ${string_with}\n";
-            OutString($int0[$k],  $int1[$k]);
+			if ( $y_section == 0
+				|| abs($yi) < $y_section
+				|| abs($yj) < $y_section){
+					printf OUT "r ${string_with}\n";
+					OutString($int0[$k],  $int1[$k]);
+				}
         }
     }
     printf OUT "y 3\n";
@@ -108,18 +121,29 @@ sub OutYaplotData{
     for ($k = 0; $k < $num_interaction; $k ++){
         $force = $F_lub[$k] + $Fc_n[$k];
         if ($force < 0){
-            $string_with = -${force_factor}*$force;
-            printf OUT "r ${string_with}\n";
-            &OutString($int0[$k],  $int1[$k]);
+            $string_with = -${force_factor}*${force};
+			if ( $y_section == 0
+				|| abs($yi) < $y_section
+				|| abs($yj) < $y_section){
+					
+					printf OUT "r ${string_with}\n";
+					&OutString($int0[$k],  $int1[$k]);
+				
+				}
         }
     }
     printf OUT "@ 4\n";
     for ($k = 0; $k < $num_interaction; $k ++){
         $force = $F_lub[$k] + $Fc_n[$k];
         if ($force > 0){
-            $string_with = ${force_factor}*$force;
-            printf OUT "r ${string_with}\n";
-            &OutString($int0[$k],  $int1[$k]);
+            $string_with = ${force_factor}*${force};
+			if ( $y_section == 0
+				|| abs($yi) < $y_section
+				|| abs($yj) < $y_section){
+					printf OUT "r ${string_with}\n";
+					&OutString($int0[$k],  $int1[$k]);
+				}
+			
         }
     }
    
@@ -131,16 +155,13 @@ sub OutString {
     $yi = $posy[$i];
     $zi = $posz[$i];
     $xj = $posx[$j];
-    $yj = $posy[$j]; 
+    $yj = $posy[$j];
     $zj = $posz[$j];
-	if ( $y_section == 0
-		|| abs($yi) < $y_section
-		|| abs($yj) < $y_section){
-		if (abs($xi-$xj) < 3
-			&&  abs($yi-$yj) < 3
-			&&  abs($zi-$zj) < 3){
-				printf OUT "s $xi $yi $zi $xj $yj $zj\n";
-			}
-	}
+	
+	if (abs($xi-$xj) < $radius_max*5
+		&&  abs($yi-$yj) < $radius_max*5
+		&&  abs($zi-$zj) < $radius_max*5){
+			printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+		}
 }
 

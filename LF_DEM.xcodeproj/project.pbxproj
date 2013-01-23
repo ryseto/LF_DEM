@@ -127,6 +127,14 @@
 			path = cython;
 			sourceTree = "<group>";
 		};
+		D972279C16AF8FF300DA851F /* Mathematica */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Mathematica;
+			path = LF_DEM;
+			sourceTree = "<group>";
+		};
 		D9850AB016AEFA3200DFD13F /* Analysys_Visualization */ = {
 			isa = PBXGroup;
 			children = (
@@ -143,6 +151,7 @@
 				D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */,
 				D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */,
 				D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */,
+				D972279C16AF8FF300DA851F /* Mathematica */,
 				D958B1DF1684141B003F94B4 /* python */,
 				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,

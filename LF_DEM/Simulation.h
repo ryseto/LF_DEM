@@ -13,7 +13,6 @@
 #include <sstream>
 #include "System.h"
 
-
 class Simulation{
 private:
 	System sys;
@@ -27,10 +26,10 @@ private:
 	int np_b;
 	double radius_a;
 	double radius_b;
+	double radius_max;
 	/*
 	 *  Simulation parameters
 	 */
-//	int ts_max;
 	double strain_interval_out;
 	/*
 	 * For output data.
@@ -44,17 +43,22 @@ private:
 	bool out_vpython;
 	bool out_data_particle;
 	bool out_data_interaction;
-	
 	double yap_force_factor;
 	bool origin_zero_flow;
+	/*
+	 * For inputs
+	 */
 	void SetDefaultParameters();
 	void ReadParameterFile();
 	void SetParametersPostProcess();
 	void prepareSimulationName();
-
 	void AutoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
+	
+	/*
+	 * For outputs
+	 */
 	void output_yap();
 	void output_vpython(double);
 	void output_vel();
@@ -62,7 +66,6 @@ private:
 	void initContactPair();
 	void outputRheologyData();
 	void outputData();
-
 	void timeEvolution();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout);
@@ -70,10 +73,6 @@ private:
 	void drawLine(double x0, double y0, double z0,
 				  double x1, double y1, double z1,
 				  ofstream &fout);
-	/*
-	 * Genrate initial configuration
-	 * LF_DEM g phi lx ly lz
-	 */
 public:
     /* For DEMsystem
      */

@@ -33,16 +33,21 @@ private:
 	int np3;
 	int maxnum_interactionpair;
 	queue<int> deactivated_interaction;
+	double _lx;
+	double _ly;
+	double _lz;
+	double _lx2; // =lx/2
+	double _ly2; // =ly/2
+	double _lz2; // =lz/2
+	double system_volume;
+	double radius_max;
+	
 	void buildLubricationTerms();
 	void buildLubricationTerms_new();
-
 	void buildBrownianTerms();
 	void buildContactTerms();
 	void addStokesDrag();
 	void factorizeResistanceMatrix();
-	
-
-
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *v_lub, *v_cont;
@@ -61,10 +66,8 @@ private:
 	void allocateSparseResmatrix();
 	void addToDiag(double *nvec, int ii, double alpha);
 	void appendToColumn(double *nvec, int jj, double alpha);
-	
 	void addToDiag(const vec3d &nvec, int ii, double alpha);
 	void appendToColumn(const vec3d &nvec, int jj, double alpha);
-	
 #else
 	double *res;
 	int nrhs;
@@ -80,13 +83,6 @@ private:
 
 	BoxSet* boxset;
 	void print_res();
-
-	double _lx;
-	double _ly;
-	double _lz;
-	double _lx2; // =lx/2
-	double _ly2; // =ly/2
-	double _lz2; // =lz/2
 
 protected:
 public:
@@ -113,11 +109,13 @@ public:
 	vec3d *brownian_velocity;
 	vec3d *torque; // right now only contact torque
 	vec3d *lub_force; // Only for outputing data
-	double **lubstress; // S_xx S_xy S_xz S_yz S_yy
-	double **contactstress; // S_xx S_xy S_xz S_yz S_yy
-	double **brownianstress; // S_xx S_xy S_xz S_yz S_yy
-	double mean_hydro_stress[5];
-	double mean_contact_stress[5];
+	double **lubstress; // [0-(np-1)][1-5] S_xx S_xy S_xz S_yz S_yy
+	double **contactstress; // [0-(np-1)][1-5]  S_xx S_xy S_xz S_yz S_yy
+	double **brownianstress; // [0-(np-1)][1-5] S_xx S_xy S_xz S_yz S_yy
+	double total_stress_bgf;
+	double total_lub_stress[5];
+	double total_contact_stress[5];
+	double total_brownian_stress[5];
 	double kn;
 	double kt;
 	double eta;
@@ -136,10 +134,7 @@ public:
 	Interaction *interaction;
 	int num_interaction;
 	double shear_strain;
-	double max_age;
-	double ave_age;
-	double dist_near;
-	bool near;
+	
 	/*
 	 * Leading term of lubrication force is 1/ksi, with ksi the gap
 	 * ksi = 2r/(a0+a1) - 2.
@@ -151,43 +146,6 @@ public:
 	 */
 	double gap_cutoff;
 	BrownianForce *fb;
-	/*************************************************************/
-	void lx(double length){
-	  _lx=length;
-	  _lx2=0.5*_lx;
-	}
-	void ly(double length){
-	  _ly=length;
-	  _ly2=0.5*_ly;
-	}
-	void lz(double length){
-	  _lz=length;
-	  _lz2=0.5*_lz;
-	}
-	inline double lx(){
-	  return _lx;
-	}
-	inline double ly(){
-	  return _ly;
-	}
-	inline double lz(){
-	  return _lz;
-	}
-	inline double lx2(){
-	  return _lx2;
-	}
-	inline double ly2(){
-	  return _ly2;
-	}
-	inline double lz2(){
-	  return _lz2;
-	}
-
-	void set_np(int _np){
-	  np=_np;
-	  np3=3*np;
-	}
-
 	double shear_disp;
 	double shear_rate;
 	double kb_T;
@@ -198,15 +156,71 @@ public:
 	double dt_ratio;
 	double gap_min;
 	double ave_overlap;
-	vec3d n_vec_longcontact;
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	string simu_name;
+	/* The definition of contact is
+	 * when the gap is smaller than "dist_near"
+	 */
 	int cnt_contact_number[10];
+	double max_age;
+	double ave_age;
+	double dist_near;
+	bool near;
 	int total_contact;
+	
+	/*
+	 * contact_number[i] means
+	 * the number of contact of particle i.
+	 */
 	vector<int> contact_number;
-	void prepareSimulation();
+		
+	/*************************************************************/
+	void lx(double length){
+		_lx=length;
+		_lx2=0.5*_lx;
+	}
+	void ly(double length){
+		_ly=length;
+		_ly2=0.5*_ly;
+	}
+	void lz(double length){
+		_lz=length;
+		_lz2=0.5*_lz;
+	}
+	void setRadiusMax(double _radius_max){
+		radius_max = _radius_max;
+	}
+	double valSystemVolume(){
+		return system_volume;
+	}
+	
+	inline double lx(){
+		return _lx;
+	}
+	inline double ly(){
+		return _ly;
+	}
+	inline double lz(){
+		return _lz;
+	}
+	inline double lx2(){
+		return _lx2;
+	}
+	inline double ly2(){
+		return _ly2;
+	}
+	inline double lz2(){
+		return _lz2;
+	}
+
+	void set_np(int _np){
+		np=_np;
+		np3=3*np;
+	}
+	//	void prepareSimulation();
+	void setSystemVolume();
 	void allocateRessources();
 	void timeEvolution(int time_step);
 	void checkNewInteraction();

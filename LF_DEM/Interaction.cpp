@@ -202,7 +202,7 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 
 void
 Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
-	double g1_l, g1_il;
+	double g1_l; //, g1_il;
 	double l1, l13, il1; //, il13;
 	l1 = 1.0 + lambda;
 	l13 = l1 * l1 * l1;
@@ -211,7 +211,7 @@ Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 	
 	g1_l = 2.0 * lambda * lambda / l13;
 	//g1_il = 2.0 * invlambda * invlambda / il13;
-	g1_il = g1_l/lambda;
+	//g1_il = g1_l/lambda;
 	
 	XGii = 1.5 * g1_l * iksi_eff;
 	XGij = - 4 * XGii / l1 / l1 ;
@@ -549,6 +549,14 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	r_lub_max = 0.5*ro*sys->lub_max;
 	assignDistanceNormalVector(pos_diff, distance, zshift);
 
+	/*
+	 * We may consider the particle size
+	 *
+	 */
+	kn = sys->kn/(0.5*ro);
+	kt = sys->kt/(0.5*ro);
+	
+	
 	strain_0 = sys->shear_strain;
 	if ( distance - ro < sys->dist_near*0.5*ro){
 		near = true;

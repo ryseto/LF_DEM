@@ -87,11 +87,8 @@ System::allocateRessources(){
 	lubrication_force = new vec3d [np];
 	contact_force = new vec3d [np];
 	brownian_force = new vec3d [np];
-
 	torque = new vec3d [np];
-	
 	lub_force = new vec3d [np];
-
 	contactstress = new double* [np];
 	contact_number.resize(np);
 	
@@ -120,7 +117,6 @@ System::allocateRessources(){
 	for (int i=0; i < np; i++){
 		brownianstress[i] = new double [5];
 	}
-
 	
 	double O_inf_y = 0.5*shear_rate/2.0;
 	for (int i=0; i < np; i++){
@@ -250,7 +246,6 @@ System::checkNewInteraction(){
 						}
 						// new interaction
 						interaction[interaction_new].activate(i, j, +pos_diff, sqrt(sq_dist), zshift);
-
 					}
 				}
 			}
@@ -325,33 +320,6 @@ System::updateVelocity(){
 
 #ifdef CHOLMOD
 //off-diagonal terms
-//void
-//System::appendToColumn(double *nvec, int jj, double alpha){
-//	int jj3   = 3*jj;
-//	int jj3_1 = jj3+1;
-//	int jj3_2 = jj3+2;
-//	double alpha_n0 = alpha*nvec[0];
-//	double alpha_n1 = alpha*nvec[1];
-//	double alpha_n2 = alpha*nvec[2];
-//	double alpha_n1n0 = alpha_n0*nvec[1];
-//	double alpha_n2n1 = alpha_n1*nvec[2];
-//	double alpha_n0n2 = alpha_n2*nvec[0];
-//	
-//	rows.push_back(jj3);
-//	rows.push_back(jj3_1);
-//	rows.push_back(jj3_2);
-//	
-//	off_diag_values[0].push_back(alpha_n0*nvec[0]); // 00
-//	off_diag_values[0].push_back(alpha_n1n0); // 10
-//	off_diag_values[0].push_back(alpha_n0n2); // 20
-//	off_diag_values[1].push_back(alpha_n1n0); // 01
-//	off_diag_values[1].push_back(alpha_n1*nvec[1]); //11
-//	off_diag_values[1].push_back(alpha_n2n1); // 21
-//	off_diag_values[2].push_back(alpha_n0n2); // 02
-//	off_diag_values[2].push_back(alpha_n2n1); // 12
-//	off_diag_values[2].push_back(alpha_n2*nvec[2]); //22
-//}
-
 void
 System::appendToColumn(const vec3d &nvec, int jj, double alpha){
 	int jj3   = 3*jj;
@@ -379,30 +347,7 @@ System::appendToColumn(const vec3d &nvec, int jj, double alpha){
 	off_diag_values[2].push_back(alpha_n2*nvec.z); //22
 }
 
-
 // diagonal terms
-//void
-//System::addToDiag(double *nvec, int ii, double alpha){
-//	int ii6 = 6*ii;
-//	
-//	double alpha_n0 = alpha*nvec[0];
-//	double alpha_n1 = alpha*nvec[1];
-//	double alpha_n2 = alpha*nvec[2];
-//	double alpha_n1n0 = alpha_n0*nvec[1];
-//	double alpha_n2n1 = alpha_n1*nvec[2];
-//	double alpha_n0n2 = alpha_n2*nvec[0];
-//	
-//	diag_values[ii6]   += alpha_n0*nvec[0]; // 00
-//	diag_values[ii6+1] += alpha_n1n0; // 10
-//	diag_values[ii6+2] += alpha_n0n2; // 20
-//	
-//	diag_values[ii6+3] += alpha_n1*nvec[1]; //11
-//	diag_values[ii6+4] += alpha_n2n1; // 21
-//	
-//	diag_values[ii6+5] += alpha_n2*nvec[2]; //22
-//	
-//}
-
 void
 System::addToDiag(const vec3d &nvec, int ii, double alpha){
 	int ii6 = 6*ii;
@@ -536,8 +481,6 @@ System::buildLubricationTerms(){
 	
 	double XAii, XAjj, XAij, XAji;
 	//	double XGii, XGjj, XGij, XGji;
-	
-//	double nvec[3];
 	double GEi[3];
 	double GEj[3];
 	
@@ -766,10 +709,7 @@ void System::updateVelocityLubricationBrownian(){
 	cholmod_free_dense(&v_Brownian_mid, &c);
 }
 
-
 void System::computeBrownianStress(){
-	
-
 	double stresslet_i[5];
 	double stresslet_j[5];
 	for (int k=0; k < 5; k ++){
@@ -869,7 +809,6 @@ void System::computeBrownianStress(){
 			brownianstress[i][u] *= 0.5*dt_ratio;
 		}
 	}
-
 	
 	// move particles back to initial point, and update interactions
 	//
@@ -951,6 +890,7 @@ System::periodize_diff(vec3d &pos_diff){
 		}
 	}
 }
+
 // periodize + give z_shift= number of boundaries crossed in z-direction
 void
 System::periodize_diff(vec3d &pos_diff, int &zshift){
@@ -1042,31 +982,31 @@ System::calcStress(){
 	for (int i =0; i < np; i++){
 		cnt_contact_number[ contact_number[i] ] ++;
 	}
-
-	double total_lub_stress[5] = {0,0,0,0,0};
-	double total_contact_stress[5] = {0,0,0,0,0};
+	
+	for (int k=0; k < 5; k++){
+		total_lub_stress[k] = 0;
+		total_contact_stress[k] = 0;
+		total_brownian_stress[k] = 0;
+	}
+	
+	
 	for (int i=0; i < np; i++){
 		for (int k=0; k < 5; k++){
 			total_lub_stress[k] += lubstress[i][k];
 			total_contact_stress[k] += contactstress[i][k];
+			total_brownian_stress[k] += brownianstress[i][k];
 		}
 	}
+	
 	/*
-	 *  mean_hydro_stress
-	 *  The term 5.0/9 is the one-body part
+	 * The term 5.0/9 is the one-body part
 	 *
 	 */
-	double total_stress_bgf = 0;
+	total_stress_bgf = 0;
 	for (int i=0; i < np; i++){
 		double a = radius[i];
 		total_stress_bgf += (5.0/9)*bgf_factor*a*a*a;
 	}
-
-	for (int k=0; k < 5; k++){
-		mean_hydro_stress[k] = total_lub_stress[k] / np;
-		mean_contact_stress[k] = total_contact_stress[k] / np;
-	}
-	mean_hydro_stress[2] += total_stress_bgf / np;
 }
 
 void
@@ -1081,6 +1021,7 @@ System::analyzeState(){
 	for (int i=0; i < np; i++){
 		contact_number[i] = 0;
 	}
+	
 	total_contact = 0;
 	// for analysis
 	for (int k = 0; k < num_interaction; k++){
@@ -1098,7 +1039,6 @@ System::analyzeState(){
 			if (interaction[k].age() > 0 ){
 				if (max_age < interaction[k].age()){
 					max_age = interaction[k].age();
-					n_vec_longcontact = interaction[k].nr_vec;
 				}
 				sum_age = interaction[k].age();
 				cnt_age ++;
@@ -1110,7 +1050,6 @@ System::analyzeState(){
 				contact_number[interaction[k].particle_num[0]] ++;
 				contact_number[interaction[k].particle_num[1]] ++;
 			}
-			
 		}
 	}
 	ave_overlap = sum_overlap / cnt_overlap;
@@ -1130,3 +1069,19 @@ System::calcContactForces(){
 		}
 	}
 }
+
+void
+System::setSystemVolume(){
+	if (dimension == 2){
+		system_volume = _lx*_lz*2*radius_max;
+	} else {
+		system_volume = _lx*_ly*_lz;
+	}
+}
+
+
+
+
+
+
+
