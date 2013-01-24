@@ -37,8 +37,9 @@ private:
 	void deactivate();
 	void activate_contact();
 	void deactivate_contact();
-
-	double _r; // center-center distance  
+	double kn; // spring constant for contact force
+	double kt; // spring constant for contact force
+	double _r; // center-center distance
 	double ksi; // gap between particles
 //	double iksi; // inverse gap
 	double ksi_cutoff; // small cut-off for ksi: lubrication breakdown

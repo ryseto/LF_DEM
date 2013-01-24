@@ -14,10 +14,12 @@ int main(int argc, const char * argv[])
 {
 	if (argc == 1){
 		cerr << "usage:" << endl;
-		cerr << "LF_DEM POSITIONFILE LUBCUTOFF [f/nf]" << endl;
+		cerr << "(1) Simulation" << endl;
+		cerr << "  $ LF_DEM POSITIONFILE [PARAMETERFILE]" << endl;
+		cerr << "(2) Generate initial configuration" << endl;
+		cerr << "  $ LF_DEM g" << endl;
 		exit(1);
 	}
-	
 	if (argv[1][0] == 'g'){
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate(argc, argv);

@@ -127,6 +127,14 @@
 			path = cython;
 			sourceTree = "<group>";
 		};
+		D972279C16AF8FF300DA851F /* Mathematica */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Mathematica;
+			path = LF_DEM;
+			sourceTree = "<group>";
+		};
 		D9850AB016AEFA3200DFD13F /* Analysys_Visualization */ = {
 			isa = PBXGroup;
 			children = (
@@ -143,6 +151,7 @@
 				D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */,
 				D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */,
 				D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */,
+				D972279C16AF8FF300DA851F /* Mathematica */,
 				D958B1DF1684141B003F94B4 /* python */,
 				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
@@ -162,24 +171,24 @@
 		D988E38C165441750009949F /* LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
-				D99EBE1D167914C2003AC4C9 /* note.rtf */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
-				D92F19C01676450800411650 /* BrownianForce.cpp */,
-				D92F19C11676450800411650 /* BrownianForce.h */,
-				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
-				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D97C3B07167690DC009A6BF0 /* Interaction.cpp */,
 				D97C3B08167690DC009A6BF0 /* Interaction.h */,
+				D92F19C01676450800411650 /* BrownianForce.cpp */,
+				D92F19C11676450800411650 /* BrownianForce.h */,
 				D9573FAE16797A000081E903 /* Box.cpp */,
 				D9573FAF16797A000081E903 /* Box.h */,
 				D9573FB016797A000081E903 /* BoxSet.cpp */,
 				D9573FB116797A000081E903 /* BoxSet.h */,
 				D988E399165443C10009949F /* vec3d.h */,
+				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
+				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
+				D99EBE1D167914C2003AC4C9 /* note.rtf */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;

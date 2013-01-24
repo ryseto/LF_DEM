@@ -231,7 +231,7 @@ inline void MTRand::seed( uint32 *const bigSeed, const uint32 seedLength )
 	initialize(19650218UL);
 	register int i = 1;
 	register uint32 j = 0;
-	register int k = ( (int) N > seedLength ? int(N) : seedLength );
+	register int k = ( (int) N > seedLength ? int(N) : (int)seedLength );
 	for( ; k; --k )
 	{
 		state[i] =
@@ -356,7 +356,7 @@ inline void MTRand::load( uint32 *const loadArray )
 	register uint32 *la = loadArray;
 	register int i = N;
 	for( ; i--; *s++ = *la++ ) {}
-	left = *la;
+	left = (int)*la;
 	pNext = &state[N-left];
 }
 
