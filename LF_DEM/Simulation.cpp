@@ -39,25 +39,18 @@ void
 Simulation::SimulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
-	SetDefaultParameters();
+	setDefaultParameters();
 	if (argc == 3){
-		cerr << "Read Parameter File" << endl;
 		filename_parameters = argv[2];
-		ReadParameterFile();
+		readParameterFile();
 	}
-	SetParametersPostProcess();
-	sys.allocateRessources();
-	sys.setConfiguration(initial_positions, radii);
-	sys.initializeBoxing();
-	sys.checkNewInteraction();
-	
-	sys.shear_strain = 0;
-	double time_interval = strain_interval_out/sys.shear_rate;
-	int i_time_interval = time_interval / sys.dt;
+	openOutputFiles();
+	sys.setupSystem(initial_positions, radii);
+	outputDataHeader(fout_particle);
+	int i_time_interval = strain_interval_out/(sys.dt*sys.shear_rate);
 	while(sys.shear_strain <= shear_strain_end){
 		cerr << "strain: " << sys.shear_strain << endl;
 		sys.timeEvolution(i_time_interval);
-
 		evaluateData();
 		outputRheologyData();
 		outputConfigurationData();
@@ -96,7 +89,7 @@ removeBlank(string &str){
 }
 
 void
-Simulation::AutoSetParameters(const string &keyword,
+Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
 	if (keyword == "lubrication"){
 		sys.lubrication = str2bool(value);
@@ -157,7 +150,7 @@ Simulation::AutoSetParameters(const string &keyword,
 }
 
 void
-Simulation::ReadParameterFile(){
+Simulation::readParameterFile(){
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
 	string keyword;
@@ -192,40 +185,14 @@ Simulation::ReadParameterFile(){
 			exit(1);
 		}
 		Str2KeyValue(str_parameter, keyword, value);
-		AutoSetParameters(keyword, value);
+		autoSetParameters(keyword, value);
 	}
 	fin.close();
 	return;
 }
 
 void
-Simulation::SetParametersPostProcess(){
-	if (sys.kb_T == 0){
-		sys.brownian = false;
-	} else {
-		sys.brownian = true;
-	}
-	/*
-	 * Time step
-	 */
-	sys.dt = sys.dt * 1.0/radius_max;
-
-	sys.sq_critical_velocity = sys.dynamic_friction_critical_velocity * sys.dynamic_friction_critical_velocity;
-	sys.sq_lub_max = sys.lub_max*sys.lub_max; // square of lubrication cutoff length.
-	sys.ts = 0;
-	sys.shear_disp = 0;
-	sys.vel_difference = sys.shear_rate*sys.lz();
-	/*
-	 * dt_mid: the intermediate time step for the mid-point
-	 * algortithm. dt/dt_mid = dt_ratio
-	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
-	 * ASD code from Brady has dt_ratio=150
-	 */
-	sys.dt_mid = sys.dt/sys.dt_ratio;
-	/*
-	 * The time steps finishing simulation.
-	 */
-	//ts_max = (int)(shear_strain / sys.dt);
+Simulation::openOutputFiles(){
 	/*
 	 * Set simulation name and name of output files.
 	 */
@@ -237,7 +204,6 @@ Simulation::SetParametersPostProcess(){
 	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
-
 	fout_rheo.open(vel_filename.c_str());
 	if (out_yaplot){
 		fout_yap.open(yap_filename.c_str());
@@ -249,13 +215,10 @@ Simulation::SetParametersPostProcess(){
 		string trj_filename = "trj_" + sys.simu_name + ".dat";
 		sys.fout_trajectory.open(trj_filename.c_str());
 	}
-
-	outputDataHeader(fout_particle);
-	
 }
 
 void
-Simulation::SetDefaultParameters(){
+Simulation::setDefaultParameters(){
 	/*
 	 * If lubrication is false, it should be free-draining approximation.
 	 * So far, we do not test this case well.
@@ -426,8 +389,7 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
-	radius_max=1.0;
-
+	double radius_max=1.0;
 	for (int i = 0; i < num_of_particle ; i++){
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;

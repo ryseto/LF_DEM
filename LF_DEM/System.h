@@ -228,9 +228,9 @@ public:
 		np3=3*np;
 	}
 	//	void prepareSimulation();
-	void setConfiguration(const vector<vec3d> &initial_positions,
-						  const vector <double> &radii);		
 	void setSystemVolume();
+	void setupSystem(const vector<vec3d> &initial_positions,
+					 const vector <double> &radii);
 	void allocateRessources();
 	void timeEvolution(int time_step);
 	void checkNewInteraction();

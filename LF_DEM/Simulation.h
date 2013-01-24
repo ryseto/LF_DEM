@@ -26,7 +26,6 @@ private:
 	int np_b;
 	double radius_a;
 	double radius_b;
-	double radius_max;
 	/*
 	 * Resultant data
 	 */
@@ -70,11 +69,11 @@ private:
 	/*
 	 * For inputs
 	 */
-	void SetDefaultParameters();
-	void ReadParameterFile();
-	void SetParametersPostProcess();
+	void setDefaultParameters();
+	void readParameterFile();
+	void openOutputFiles();
 	void prepareSimulationName();
-	void AutoSetParameters(const string &keyword,
+	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
 	/*

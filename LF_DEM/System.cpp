@@ -57,7 +57,10 @@ System::~System(){
 		delete [] interaction_list;
 	if (!interaction_partners)
 		delete [] interaction_partners;
-
+	if (!fb){
+		delete [] fb;
+	}
+	
 #ifdef CHOLMOD
 	if (!diag_values)
 		delete [] diag_values;
@@ -81,19 +84,9 @@ System::~System(){
 #endif
 };
 
-void
-System::setConfiguration(const vector<vec3d> &initial_positions,
-						 const vector <double> &radii){
-	for (int i=0; i < np; i++){
-		position[i] = initial_positions[i];
-		radius[i] = radii[i];
-		angle[i] = 0;
-	}
-}
 
 void
 System::allocateRessources(){
-	
 	position = new vec3d [np];
 	radius = new double [np];
 	angle = new double [np];
@@ -106,26 +99,11 @@ System::allocateRessources(){
 	brownian_force = new vec3d [np];
 	torque = new vec3d [np];
 	lub_force = new vec3d [np];
-	contactstress = new double* [np];
 	contact_number.resize(np);
-	
-	for (int i=0; i < np; i++){
-		position[i].x=0.;
-		position[i].y=0.;
-		position[i].z=0.;
-		radius[i]=0.;
-		velocity[i].x=0.;
-		velocity[i].y=0.;
-		velocity[i].z=0.;
-		relative_velocity[i].x=0.;
-		relative_velocity[i].y=0.;
-		relative_velocity[i].z=0.;
-	}
-	
+	contactstress = new double* [np];
 	for (int i=0; i < np; i++){
 		contactstress[i] = new double [5];
 	}
-	
 	lubstress = new double* [np];
 	for (int i=0; i < np; i++){
 		lubstress[i] = new double [5];
@@ -134,25 +112,11 @@ System::allocateRessources(){
 	for (int i=0; i < np; i++){
 		brownianstress[i] = new double [5];
 	}
-	
-	double O_inf_y = 0.5*shear_rate/2.0;
-	for (int i=0; i < np; i++){
-		ang_velocity[i].set(0, O_inf_y, 0);
-		torque[i].reset();
-	}
-	
 	fb = new BrownianForce(this);
 	maxnum_interactionpair = (int)(12*np);
-	
-	num_interaction = 0;
 	interaction = new Interaction [maxnum_interactionpair];
-	for (int k=0; k < maxnum_interactionpair ; k++){
-		interaction[k].init(this);
-	}
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	
-	
 #ifdef CHOLMOD
 	cholmod_start (&c) ;
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
@@ -176,6 +140,60 @@ System::allocateRessources(){
 	lda = n3;
 	ldb = n3;
 #endif
+}
+
+void
+System::setupSystem(const vector<vec3d> &initial_positions,
+					const vector <double> &radii){
+	allocateRessources();
+	for (int i=0; i < np; i++){
+		position[i] = initial_positions[i];
+		radius[i] = radii[i];
+		angle[i] = 0;
+	}
+	
+	for (int k=0; k < maxnum_interactionpair ; k++){
+		interaction[k].init(this);
+	}
+	for (int i=0; i < np; i++){
+		velocity[i].x=0.;
+		velocity[i].y=0.;
+		velocity[i].z=0.;
+		relative_velocity[i].x=0.;
+		relative_velocity[i].y=0.;
+		relative_velocity[i].z=0.;
+	}
+	double O_inf_y = 0.5*shear_rate/2.0;
+	for (int i=0; i < np; i++){
+		ang_velocity[i].set(0, O_inf_y, 0);
+		torque[i].reset();
+	}
+	initializeBoxing();
+	checkNewInteraction();
+
+	dt = dt * 1.0/radius_max;
+	shear_strain = 0;
+	num_interaction = 0;
+	
+	if (kb_T == 0){
+		brownian = false;
+	} else {
+		brownian = true;
+	}
+	sq_critical_velocity = \
+	dynamic_friction_critical_velocity*dynamic_friction_critical_velocity;
+	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
+	ts = 0;
+	shear_disp = 0;
+	vel_difference = shear_rate*_lz;
+	/*
+	 * dt_mid: the intermediate time step for the mid-point
+	 * algortithm. dt/dt_mid = dt_ratio
+	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
+	 * ASD code from Brady has dt_ratio=150
+	 */
+	dt_mid = dt/dt_ratio;
+	
 }
 
 void
