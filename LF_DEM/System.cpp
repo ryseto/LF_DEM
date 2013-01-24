@@ -10,49 +10,54 @@
 #include <sstream>
 
 System::~System(){
-	return;
+
 	if (!position)
 		delete [] position;
 	if (!radius)
 		delete [] radius;
 	if (!angle)
 		delete [] angle;
+
 	if (!velocity)
 		delete [] velocity;
 	if (!relative_velocity)
 		delete [] relative_velocity;
 	if (!ang_velocity)
 		delete [] ang_velocity;
+
 	if (!total_force)
 		delete [] total_force;
 	if (!lubrication_force)
 		delete [] lubrication_force;
 	if (!contact_force)
 		delete [] contact_force;
+
 	if (!brownian_force)
 	  delete [] brownian_force;
+
 	if (!torque)
 		delete [] torque;
-	if (!lubstress){
-		for (int i=0; i < np; i++)
-			delete [] lubstress[i];
-		delete [] lubstress;
+
+	for (int i=0; i < np; i++){
+		delete [] lubstress[i];
 	}
-	if (!contactstress){
-		for (int i=0; i < np; i++)
-			delete [] contactstress[i];
-		delete [] contactstress;
-	}
-	if (!brownianstress){
+	delete [] lubstress;
+
+	for (int i=0; i < np; i++)
+		delete [] contactstress[i];
+	delete [] contactstress;
+
+	if (brownian){
 		for (int i=0; i < np; i++)
 			delete [] brownianstress[i];
 		delete [] brownianstress;
 	}
+
 	if (!interaction_list)
 		delete [] interaction_list;
 	if (!interaction_partners)
 		delete [] interaction_partners;
-	
+
 #ifdef CHOLMOD
 	if (!diag_values)
 		delete [] diag_values;
@@ -62,10 +67,12 @@ System::~System(){
 		delete [] ploc;
 	cholmod_free_dense(&v, &c);
 	cholmod_free_dense(&total_rhs, &c);
-	cholmod_free_dense(&nonbrownian_rhs, &c);
-	cholmod_free_dense(&brownian_rhs, &c);
-	cholmod_free_dense(&contact_rhs, &c);
-	cholmod_free_dense(&lubrication_rhs, &c);
+	//	cholmod_free_dense(&nonbrownian_rhs, &c); 
+	if (brownian){
+		cholmod_free_dense(&brownian_rhs, &c);
+	}
+	//cholmod_free_dense(&contact_rhs, &c);
+	//cholmod_free_dense(&lubrication_rhs, &c);
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_finish(&c);
 #else
@@ -73,6 +80,16 @@ System::~System(){
 	delete [] ipiv;
 #endif
 };
+
+void
+System::setConfiguration(const vector<vec3d> &initial_positions,
+						 const vector <double> &radii){
+	for (int i=0; i < np; i++){
+		position[i] = initial_positions[i];
+		radius[i] = radii[i];
+		angle[i] = 0;
+	}
+}
 
 void
 System::allocateRessources(){
@@ -627,7 +644,6 @@ System::factorizeResistanceMatrix(){
 }
 
 void System::updateVelocityLubricationBrownian(){
-	
 	total_rhs = cholmod_zeros(np3, 1, xtype, &c);
 	buildLubricationTerms();
 	
@@ -664,7 +680,6 @@ void System::updateVelocityLubricationBrownian(){
 	
 	// get the intermediate brownian velocity
 	v_Brownian_mid = cholmod_solve (CHOLMOD_A, L, brownian_rhs, &c) ;
-	
 	
 	// move particles back to initial point, and update interactions
 	//
@@ -718,7 +733,6 @@ void System::computeBrownianStress(){
 	}
 	double vi [3];
 	double vj [3];
-
 
 	total_rhs = cholmod_zeros(np3, 1, xtype, &c);
 	buildLubricationTerms();

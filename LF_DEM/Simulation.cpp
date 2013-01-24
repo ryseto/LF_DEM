@@ -32,6 +32,42 @@ Simulation::~Simulation(){
 	}
 };
 
+/*
+ * Main simulation
+ */
+void
+Simulation::SimulationMain(int argc, const char * argv[]){
+	filename_import_positions = argv[1];
+	importInitialPositionFile();
+	SetDefaultParameters();
+	if (argc == 3){
+		cerr << "Read Parameter File" << endl;
+		filename_parameters = argv[2];
+		ReadParameterFile();
+	}
+	SetParametersPostProcess();
+	sys.allocateRessources();
+	sys.setConfiguration(initial_positions, radii);
+	sys.initializeBoxing();
+	sys.checkNewInteraction();
+	
+	sys.shear_strain = 0;
+	double time_interval = strain_interval_out/sys.shear_rate;
+	int i_time_interval = time_interval / sys.dt;
+	while(sys.shear_strain <= shear_strain_end){
+		cerr << "strain: " << sys.shear_strain << endl;
+		sys.timeEvolution(i_time_interval);
+
+		evaluateData();
+		outputRheologyData();
+		outputConfigurationData();
+		if(out_yaplot)
+			output_yap();
+		if(out_vpython)
+			output_vpython(sys.ts);
+	}
+}
+
 bool
 str2bool(string value){
 	if (value == "true"){
@@ -190,20 +226,10 @@ Simulation::SetParametersPostProcess(){
 	 * The time steps finishing simulation.
 	 */
 	//ts_max = (int)(shear_strain / sys.dt);
-	
-
-	
-	
-
-	
 	/*
 	 * Set simulation name and name of output files.
 	 */
 	prepareSimulationName();
-	
-	
-	
-
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string yap_filename = "yap_" + sys.simu_name + ".yap";
@@ -251,7 +277,7 @@ Simulation::SetDefaultParameters(){
 	 *    ASD code from Brady has dt_ratio=150
 	 *
 	 */
-	sys.dt = 1e-5;
+	sys.dt = 1e-4;
 	sys.dt_ratio = 100;
 	/*
 	 * Shear flow
@@ -436,45 +462,31 @@ Simulation::prepareSimulationName(){
 	cerr << sys.simu_name << endl;
 }
 
-
-/*
- * Main simulation
- */
 void
-Simulation::SimulationMain(int argc, const char * argv[]){
-	filename_import_positions = argv[1];
-	importInitialPositionFile();
-	SetDefaultParameters();
-	if (argc == 3){
-		cerr << "Read Parameter File" << endl;
-		filename_parameters = argv[2];
-		ReadParameterFile();
-	}
+Simulation::evaluateData(){
 	
-	SetParametersPostProcess();
-	sys.allocateRessources();
-	for (int i=0; i < sys.np; i++){
-		sys.position[i] = initial_positions[i];
-		sys.radius[i] = radii[i];
-		sys.angle[i] = 0;
+	double total_stress[5];
+	for (int k=0; k<5; k++){
+		total_stress[k] = (sys.total_lub_stress[k] + sys.total_contact_stress[k] + sys.total_brownian_stress[k]);
 	}
-	sys.initializeBoxing();
-	sys.checkNewInteraction();
-	sys.shear_strain = 0;
-	double time_interval = strain_interval_out/sys.shear_rate;
-	int i_time_interval = time_interval / sys.dt;
-	while(sys.shear_strain <= shear_strain_end){
-		cerr << "strain: " << sys.shear_strain << endl;
-		sys.timeEvolution(i_time_interval);
-		outputRheologyData();
-		outputData();
-		if(out_yaplot)
-			output_yap();
-		if(out_vpython)
-			output_vpython(sys.ts);
+	total_stress[2] += sys.total_stress_bgf;
+	
+	Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	N1 = 2*total_stress[0] + total_stress[4];
+	N2 = -2*total_stress[0] - total_stress[4];
+	Viscosity_bgf = sys.total_stress_bgf/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_h = sys.total_lub_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	N1_h = 2*sys.total_lub_stress[0] + sys.total_lub_stress[4];
+	N2_h = -2*sys.total_lub_stress[0] - sys.total_lub_stress[4];
+	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	N1_c = 2*sys.total_contact_stress[0] + sys.total_contact_stress[4];
+	N2_c = -2*sys.total_contact_stress[0] - sys.total_contact_stress[4];
+	Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	N1_b = 2*sys.total_brownian_stress[0] + sys.total_brownian_stress[4];
+	N2_b = -2*sys.total_brownian_stress[0] - sys.total_brownian_stress[4];
 
-	}
 }
+
 
 /*
  *
@@ -490,30 +502,6 @@ Simulation::outputRheologyData(){
 	 *  N1 = S_{xx}-S_{zz} = 2*S_xx + S_yy
 	 *  N1 = S_{zz}-S_{yy} = -2*S_xx - S_yy
 	 */
-	
-	//double total_stress_bgf;
-	//double total_hydro_stress[5];
-	//double total_contact_stress[5];
-	
-	double total_stress[5];
-	for (int k=0; k<5; k++){
-		total_stress[k] = (sys.total_lub_stress[k] + sys.total_contact_stress[k] + sys.total_brownian_stress[k]);
-	}
-	total_stress[2] += sys.total_stress_bgf;
-
-	double Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	double N1 = 2*total_stress[0] + total_stress[4];
-	double N2 = -2*total_stress[0] - total_stress[4];
-	double Viscosity_bgf = sys.total_stress_bgf/(sys.valSystemVolume()*sys.shear_rate);
-	double Viscosity_h = sys.total_lub_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	double N1_h = 2*sys.total_lub_stress[0] + sys.total_lub_stress[4];
-	double N2_h = -2*sys.total_lub_stress[0] - sys.total_lub_stress[4];
-	double Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	double N1_c = 2*sys.total_contact_stress[0] + sys.total_contact_stress[4];
-	double N2_c = -2*sys.total_contact_stress[0] - sys.total_contact_stress[4];
-	double Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	double N1_b = 2*sys.total_brownian_stress[0] + sys.total_brownian_stress[4];
-	double N2_b = -2*sys.total_brownian_stress[0] - sys.total_brownian_stress[4];
 	if ( firsttime ){
 		firsttime = false;
 		fout_rheo << "#1: shear strain" << endl;
@@ -544,7 +532,6 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#26: number of particle cn = 7" << endl;
 		fout_rheo << "#27: number of particle cn = 8" << endl;
 	}
-	
 	fout_rheo << sys.shear_strain << ' '; //1
 	fout_rheo << Viscosity << ' ' ; //2
 	fout_rheo << N1 << ' ' ; //3
@@ -649,8 +636,9 @@ Simulation::outputDataHeader(ofstream &fout){
 	fout << "Lz" << sp << sys.lz() << endl;
 	
 }
+
 void
-Simulation::outputData(){
+Simulation::outputConfigurationData(){
 	
 	vector<vec3d> pos;
 	char sp = ' ';
@@ -698,8 +686,6 @@ Simulation::outputData(){
 			fout_interaction << endl;
 		}
 	}
-
-	
 }
 
 

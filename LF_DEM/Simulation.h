@@ -28,6 +28,22 @@ private:
 	double radius_b;
 	double radius_max;
 	/*
+	 * Resultant data
+	 */
+	double Viscosity;
+	double N1;
+	double N2;
+	double Viscosity_bgf;
+	double Viscosity_h;
+	double N1_h;
+	double N2_h;
+	double Viscosity_c;
+	double N1_c;
+	double N2_c;
+	double Viscosity_b;
+	double N1_b;
+	double N2_b;
+	/*
 	 *  Simulation parameters
 	 */
 	double strain_interval_out;
@@ -46,6 +62,12 @@ private:
 	double yap_force_factor;
 	bool origin_zero_flow;
 	/*
+	 *
+	 */
+	void timeEvolution();
+	void evaluateData();
+	
+	/*
 	 * For inputs
 	 */
 	void SetDefaultParameters();
@@ -55,7 +77,6 @@ private:
 	void AutoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
-	
 	/*
 	 * For outputs
 	 */
@@ -65,8 +86,8 @@ private:
 	void outputDataHeader(ofstream &fout);
 	void initContactPair();
 	void outputRheologyData();
-	void outputData();
-	void timeEvolution();
+	void outputConfigurationData();
+	
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout);
 	void drawLine(char type , const vec3d &pos, const vec3d &vec, ofstream &fout);

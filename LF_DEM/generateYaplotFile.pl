@@ -1,19 +1,28 @@
-#! /usr/bin/perl
+#!/usr/bin/perl
+
+# Usage:
+# $ generateYaplotFile.pl par_[...].dat [force_factor] [y_section]
+#
+# force_factor: To change the widths of strings to exhibit forces.
+# y_section: Visualize the trimed range of the y coordinates.
+
+
 use Math::Trig;
-$particle_data = $ARGV[0];
+
+
 $force_factor = 0.01;
+$y_section = 0;
+
+$particle_data = $ARGV[0];
 if ($#ARGV >= 1){
 	$force_factor = $ARGV[1];
 }
-$y_section = 0;
-printf "$#ARGV";
 if ($#ARGV == 2){
 	$y_section = $ARGV[2];
 	printf "section $y_section\n";
 	exit;
 }
-# Read the header
-#
+
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
@@ -143,7 +152,6 @@ sub OutYaplotData{
 					printf OUT "r ${string_with}\n";
 					&OutString($int0[$k],  $int1[$k]);
 				}
-			
         }
     }
    
@@ -164,4 +172,3 @@ sub OutString {
 			printf OUT "s $xi $yi $zi $xj $yj $zj\n";
 		}
 }
-

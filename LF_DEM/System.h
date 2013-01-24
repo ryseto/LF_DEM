@@ -50,9 +50,17 @@ private:
 	void factorizeResistanceMatrix();
 #ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
-	cholmod_dense *v, *v_lub, *v_cont;
-	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
-	cholmod_dense *contact_rhs, *brownian_rhs, *nonbrownian_rhs, *lubrication_rhs, *total_rhs;
+	cholmod_dense *v;
+	cholmod_dense *v_lub;
+	cholmod_dense *v_cont;
+	cholmod_dense *v_nonBrownian;
+	cholmod_dense *v_Brownian_init;
+	cholmod_dense *v_Brownian_mid;
+	//	cholmod_dense *contact_rhs; // is not used?
+	cholmod_dense *brownian_rhs;
+	//	cholmod_dense *nonbrownian_rhs; // is not used?
+	//	cholmod_dense *lubrication_rhs; // is not used?
+	cholmod_dense *total_rhs;
 	int max_lub_int;
 	int stype;
 	int sorted;
@@ -220,6 +228,8 @@ public:
 		np3=3*np;
 	}
 	//	void prepareSimulation();
+	void setConfiguration(const vector<vec3d> &initial_positions,
+						  const vector <double> &radii);		
 	void setSystemVolume();
 	void allocateRessources();
 	void timeEvolution(int time_step);
@@ -244,6 +254,8 @@ public:
 	void calcStress();
 	void analyzeState();
 	void computeBrownianStress();
+
+
 	int numpart(){
 		return np;
 	}
