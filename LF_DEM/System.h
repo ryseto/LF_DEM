@@ -9,7 +9,7 @@
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
 #define CHOLMOD 
-#define TRILINOS 1
+//#define TRILINOS
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -17,23 +17,43 @@
 #include <string>
 //#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
+
 #ifdef CHOLMOD
 #include "cholmod.h"
 #endif
+
 #ifdef TRILINOS
-#include "Epetra_ConfigDefs.h"
 #include "Epetra_SerialComm.h"
+#include "Epetra_SerialDenseVector.h"
+#include "Epetra_CrsMatrix.h"
+#include "BelosSolverFactory.hpp"
+#include "BelosEpetraAdapter.hpp"
+#include "Teuchos_RCP.hpp"
 #endif
+
 #include "vec3d.h"
 //#include "ContactForce.h"
 #include "BrownianForce.h"
 #include "BoxSet.h"
 
 using namespace std;
+#ifdef TRILINOS
+using Teuchos::RCP;
+using Teuchos::rcp;
+using Teuchos::ParameterList;
+using Teuchos::parameterList;
+
+typedef double SCAL;
+//typedef Epetra_MultiVector VEC;
+typedef Epetra_SerialDenseVector VEC;
+typedef Epetra_CrsMatrix MAT;
+#endif
+
 class Simulation;
 class Interaction;
 class BrownianForce;
 class BoxSet;
+
 
 class System{
 private:
@@ -50,65 +70,34 @@ private:
 	void factorizeResistanceMatrix();
 	void updateResistanceMatrix();
 
-
+	int linalg_size;
+	int dof;
+	#ifdef CHOLMOD
 	cholmod_sparse *sparse_res;
 	cholmod_dense *v, *v_lub, *v_cont;
 	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
 	cholmod_dense *contact_rhs, *brownian_rhs, *nonbrownian_rhs, *lubrication_rhs, *total_rhs;
-#define TRILINOS 1
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <queue>
-#include <string>
-//#include <Accelerate/Accelerate.h>
-#include "Interaction.h"
-#ifdef CHOLMOD
-#include "cholmod.h"
-#endif
-#ifdef TRILINOS
-#include "Epetra_ConfigDefs.h"
-#include "Epetra_SerialComm.h"
-#endif
-#include "vec3d.h"
-//#include "ContactForce.h"
-#include "BrownianForce.h"
-#include "BoxSet.h"
-
-using namespace std;
-class Simulation;
-class Interaction;
-class BrownianForce;
-class BoxSet;
-
-class System{
-private:
-	int np3;
-	int maxnum_interactionpair;
-
-	queue<int> deactivated_interaction;
-
-	void buildLubricationTerms();
-	void buildLubricationTerms_new();
-
-	void buildBrownianTerms();
-	void buildContactTerms();
-	void addStokesDrag();
-	void factorizeResistanceMatrix();
-	void updateResistanceMatrix();
-
-
-	cholmod_sparse *sparse_res;
-	cholmod_dense *v, *v_lub, *v_cont;
-	cholmod_dense *v_nonBrownian, *v_Brownian_init, *v_Brownian_mid; 
-	cholmod_dense *contact_rhs, *brownian_rhs, *nonbrownian_rhs, *lubrication_rhs, *total_rhs;
-	
-	Epetra_SerialDenseVector DoubleVector(Length);
-	int max_lub_int;
 	int stype;
 	int sorted;
 	int packed;
 	int xtype;
+	#endif
+	#ifdef TRILINOS
+	Epetra_SerialComm Comm;
+	RCP < Epetra_Map > Map;
+	RCP < VEC > v;
+	RCP < VEC > lubrication_rhs;
+	RCP < MAT > sparse_res;
+	//	RCP < ParameterList > params;
+	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > stokes_equation;
+	RCP < Belos::SolverManager < SCAL, VEC, MAT > > solver;
+	Belos::SolverFactory<SCAL, VEC, MAT> factory;
+	#endif
+
+
+	int max_lub_int;
+
+
 	vector <int> rows;
 	double *diag_values;
 	vector <double> *off_diag_values;

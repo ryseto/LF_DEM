@@ -1,10 +1,13 @@
 #Makefile Romain Mari 06/2010
 CXX=g++ # -cxxlib-icc-abr
 
+INCLUDEPATHS= -I /usr/local/include/ -I /Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/
 #CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS
-CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS debug
+CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow  $(INCLUDEPATHS) # mac OS debug
+
 #CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/ # linux
 #CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/
+
 LINKLIBS = -llapack -lblas -lcholmod
 LINKLIBS += /usr/local/Lib/libcholmod.a /usr/local/Lib/libamd.a /usr/local/Lib/libcolamd.a /usr/local/lib/libsuitesparseconfig.a # mac os
 

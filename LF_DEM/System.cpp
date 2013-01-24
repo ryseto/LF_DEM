@@ -58,6 +58,7 @@ System::~System(){
 		delete [] off_diag_values;
 	if (!ploc)
 		delete [] ploc;
+#ifdef CHOLMOD
 	cholmod_free_dense(&v, &c);
 	cholmod_free_dense(&total_rhs, &c);
 	cholmod_free_dense(&nonbrownian_rhs, &c);
@@ -66,7 +67,7 @@ System::~System(){
 	cholmod_free_dense(&lubrication_rhs, &c);
 	cholmod_free_sparse(&sparse_res, &c);
 	cholmod_finish(&c);
-
+#endif
 };
 
 void
@@ -134,16 +135,30 @@ System::allocateRessources(){
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	
-	
+	dof = 3;
+	linalg_size = dof*np;
+#ifdef CHOLMOD
 	cholmod_start (&c) ;
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
+	L=NULL;
+#endif
+#ifdef TRILINOS
+	Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
+	v = rcp( new VEC(linalg_size) );
+	lubrication_rhs = rcp( new VEC(linalg_size) );
+	//	sparse_res = rcp( new MAT(linalg_size) );
+	RCP<ParameterList> solverParams = parameterList();
+	stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( sparse_res, v, lubrication_rhs ) ) ;
+#endif
+
 	diag_values = new double [6*np];
 	off_diag_values = new vector <double> [3];
 	ploc = new int [np+1];
-	L=NULL;
+
+
 	fb->init();
 	
 }
@@ -308,32 +323,6 @@ System::updateVelocity(){
 }
 
 //off-diagonal terms
-void
-System::appendToColumn(double *nvec, int jj, double alpha){
-	int jj3   = 3*jj;
-	int jj3_1 = jj3+1;
-	int jj3_2 = jj3+2;
-	double alpha_n0 = alpha*nvec[0];
-	double alpha_n1 = alpha*nvec[1];
-	double alpha_n2 = alpha*nvec[2];
-	double alpha_n1n0 = alpha_n0*nvec[1];
-	double alpha_n2n1 = alpha_n1*nvec[2];
-	double alpha_n0n2 = alpha_n2*nvec[0];
-	
-	rows.push_back(jj3);
-	rows.push_back(jj3_1);
-	rows.push_back(jj3_2);
-	
-	off_diag_values[0].push_back(alpha_n0*nvec[0]); // 00
-	off_diag_values[0].push_back(alpha_n1n0); // 10
-	off_diag_values[0].push_back(alpha_n0n2); // 20
-	off_diag_values[1].push_back(alpha_n1n0); // 01
-	off_diag_values[1].push_back(alpha_n1*nvec[1]); //11
-	off_diag_values[1].push_back(alpha_n2n1); // 21
-	off_diag_values[2].push_back(alpha_n0n2); // 02
-	off_diag_values[2].push_back(alpha_n2n1); // 12
-	off_diag_values[2].push_back(alpha_n2*nvec[2]); //22
-}
 
 void
 System::appendToColumn(const vec3d &nvec, int jj, double alpha){
@@ -364,27 +353,6 @@ System::appendToColumn(const vec3d &nvec, int jj, double alpha){
 
 
 // diagonal terms
-void
-System::addToDiag(double *nvec, int ii, double alpha){
-	int ii6 = 6*ii;
-	
-	double alpha_n0 = alpha*nvec[0];
-	double alpha_n1 = alpha*nvec[1];
-	double alpha_n2 = alpha*nvec[2];
-	double alpha_n1n0 = alpha_n0*nvec[1];
-	double alpha_n2n1 = alpha_n1*nvec[2];
-	double alpha_n0n2 = alpha_n2*nvec[0];
-	
-	diag_values[ii6]   += alpha_n0*nvec[0]; // 00
-	diag_values[ii6+1] += alpha_n1n0; // 10
-	diag_values[ii6+2] += alpha_n0n2; // 20
-	
-	diag_values[ii6+3] += alpha_n1*nvec[1]; //11
-	diag_values[ii6+4] += alpha_n2n1; // 21
-	
-	diag_values[ii6+5] += alpha_n2*nvec[2]; //22
-	
-}
 
 void
 System::addToDiag(const vec3d &nvec, int ii, double alpha){
@@ -408,6 +376,18 @@ System::addToDiag(const vec3d &nvec, int ii, double alpha){
 }
 
 
+void
+System::addStokesDrag(){
+	for (int i = 0; i < np; i ++){
+		int i6=6*i;
+		double d_value = bgf_factor*radius[i];
+		diag_values[i6  ] = d_value;
+		diag_values[i6+3] = d_value;
+		diag_values[i6+5] = d_value;
+	}
+}
+
+#ifdef CHOLMOD
 void
 System::fillSparseResmatrix(){
 	
@@ -461,19 +441,7 @@ System::fillSparseResmatrix(){
 	}
 	((int*)sparse_res->p)[np3] = ((int*)sparse_res->p)[np3-1] + 1;
 }
-
-
-
-void
-System::addStokesDrag(){
-	for (int i = 0; i < np; i ++){
-		int i6=6*i;
-		double d_value = bgf_factor*radius[i];
-		diag_values[i6  ] = d_value;
-		diag_values[i6+3] = d_value;
-		diag_values[i6+5] = d_value;
-	}
-}
+#endif
 
 // We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
 // This method computes elements of matrix A and vector Gtilde*Einf
@@ -515,8 +483,10 @@ System::buildLubricationTerms(){
 				for(int u=0; u<3; u++){
 					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
 					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
+#ifdef CHOLMOD
 					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
 					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
+#endif
 				}
 			}
 		}
@@ -527,7 +497,7 @@ System::buildLubricationTerms(){
 	
 }
 
-
+#ifdef CHOLMOD
 void
 System::updateResistanceMatrix(){
 		cerr << " Now updating matrix " << endl;
@@ -538,8 +508,8 @@ System::updateResistanceMatrix(){
 
 	int sort = 1;
 	int pack = 1;
-int styp = 0;
-cholmod_sparse *update_vector_off_diag = cholmod_allocate_sparse ( nrow, ncol, nzmax_od, sort, pack, styp, xtype, &c); 
+	int styp = 0;
+	cholmod_sparse *update_vector_off_diag = cholmod_allocate_sparse ( nrow, ncol, nzmax_od, sort, pack, styp, xtype, &c); 
 	cholmod_sparse *update_vector_diag = cholmod_allocate_sparse ( nrow, ncol, nzmax_d, sort, pack, styp, xtype, &c); ; // sparse packed vector. it has to be sorted. 
 	//	for(int i=0; i<nrow; i++){
 	((int*)update_vector_off_diag->p)[0] = 0;
@@ -672,58 +642,60 @@ cholmod_sparse *update_vector_off_diag = cholmod_allocate_sparse ( nrow, ncol, n
 	}
 }
 
-void
-System::calcLubricationForce(){
-	for (int k = 0; k < 6*np; k++){
-		diag_values[k] = 0.;
-	}
-	off_diag_values[0].clear();
-	off_diag_values[1].clear();
-	off_diag_values[2].clear();
+#endif
 
-	double GEi[3];
-	double GEj[3];
-	double XAii, XAjj, XAij, XAji;
+// void
+// System::calcLubricationForce(){
+// 	for (int k = 0; k < 6*np; k++){
+// 		diag_values[k] = 0.;
+// 	}
+// 	off_diag_values[0].clear();
+// 	off_diag_values[1].clear();
+// 	off_diag_values[2].clear();
 
-	set<Interaction*>::iterator it;
-	int j;
-	Interaction *inter;
-	for (int i = 0; i < np - 1; i ++){
-		ploc[i] = (unsigned int)rows.size();
-		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
-			inter=*it;
-		 	j=inter->partner(i);
-			if(j>i){
-				inter->XA(XAii, XAij, XAji, XAjj);
-				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
-				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
-				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
-				inter->GE(GEi, GEj);  // G*E_\infty term
-				for(int u=0; u<3; u++){
-					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
-					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
-					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
-					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
-				}
-			}
-		}
-	}
-	for (int i=0; i < np; i++)
-		lub_force[i].reset();
+// 	double GEi[3];
+// 	double GEj[3];
+// 	double XAii, XAjj, XAij, XAji;
+
+// 	set<Interaction*>::iterator it;
+// 	int j;
+// 	Interaction *inter;
+// 	for (int i = 0; i < np - 1; i ++){
+// 		ploc[i] = (unsigned int)rows.size();
+// 		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+// 			inter=*it;
+// 		 	j=inter->partner(i);
+// 			if(j>i){
+// 				inter->XA(XAii, XAij, XAji, XAjj);
+// 				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
+// 				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
+// 				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
+// 				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
+// 				inter->GE(GEi, GEj);  // G*E_\infty term
+// 				for(int u=0; u<3; u++){
+// 					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
+// 					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
+// 					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
+// 					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
+// 				}
+// 			}
+// 		}
+// 	}
+// 	for (int i=0; i < np; i++)
+// 		lub_force[i].reset();
 	
-	for (int i=0; i < np; i++){
-		for (int j=0; j < np; i++){
+// 	for (int i=0; i < np; i++){
+// 		for (int j=0; j < np; i++){
 			
 			
 			
-		}
-	}
+// 		}
+// 	}
 	
 	
-}
+// }
 
-
+#ifdef CHOLMOD
 void
 System::buildContactTerms(){
 	// add contact force
@@ -737,7 +709,8 @@ System::buildContactTerms(){
 		((double*)total_rhs->x)[i3+2] += contact_force[i].z;
 	}
 }
-
+#endif
+#ifdef CHOLMOD
 void
 System::allocateSparseResmatrix(){
 	// allocate
@@ -748,6 +721,22 @@ System::allocateSparseResmatrix(){
 	}
 	sparse_res = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &c);
 }
+#endif
+#ifdef TRILINOS
+void
+System::allocateSparseResmatrix(){
+	// allocate
+	int * nz = new int [linalg_size];  // non-zero values
+	
+	for(int i=0;i<linalg_size;i++){
+	  nz[i] = dof; // diagonal
+	  nz[i] += ploc[i+1]-1 - ploc[i];  // off-diagonal
+	}
+	sparse_res = rcp( new Epetra_CrsMatrix(Copy, *Map, nz));
+	delete [] nz;
+}
+#endif
+
 
 void
 System::print_res(){ // testing
@@ -763,6 +752,7 @@ System::print_res(){ // testing
 	}
 }
 
+#ifdef CHOLMOD
 void
 System::updateVelocityLubrication(){
 	// contact_rhs = cholmod_zeros(n3, 1, xtype, &c);
@@ -783,15 +773,6 @@ System::updateVelocityLubrication(){
 	v = cholmod_solve (CHOLMOD_A, L, total_rhs, &c) ;
 	// v_lub = cholmod_solve (CHOLMOD_A, L, lubrication_rhs, &c) ;
 	// v_cont = cholmod_solve (CHOLMOD_A, L, contact_rhs, &c) ;
-	
-	/********** testing *
-	 double m1 [2] = {-1,0};
-	 double p1 [2] = {1,0};
-	 cholmod_dense *r = cholmod_copy_dense(total_rhs, &c);
-	 cholmod_sdmult(sparse_res, 0, m1, p1, v, r, &c);
-	 cout << " cholmod residu " << cholmod_norm_dense(r,0, &c) << endl;
-	 cholmod_free_dense(&r, &c);
-	 * end testing *************/
 	
 	/* TEST IMPLEMENTATION
 	 * SDFF : Stokes drag force factor:
@@ -824,7 +805,9 @@ System::updateVelocityLubrication(){
 	// cholmod_free_dense(&contact_rhs, &c);
 	cholmod_free_dense(&v, &c);
 }
+#endif
 
+#ifdef CHOLMOD
 void
 System::factorizeResistanceMatrix(){
 	L = cholmod_analyze (sparse_res, &c);
@@ -841,7 +824,9 @@ System::factorizeResistanceMatrix(){
 	}
 
 }
+#endif
 
+#ifdef CHOLMOD
 void System::updateVelocityLubricationBrownian(){
 	
 	total_rhs = cholmod_zeros(np3, 1, xtype, &c);
@@ -924,9 +909,10 @@ void System::updateVelocityLubricationBrownian(){
 	cholmod_free_dense(&v_Brownian_init, &c);
 	cholmod_free_dense(&v_Brownian_mid, &c);
 }
+#endif
 
-
-void System::calcBrownianStress(){
+#ifdef CHOLMOD
+void System::computeBrownianStress(){
   // OVERALL SIGN TO BE CHECKED:
   // THIS IS AN ALGO FROM BRADY
   // BUT RESISTANCE FUNCTIONS FROM JEFFREY
@@ -1050,7 +1036,7 @@ void System::calcBrownianStress(){
 	cholmod_free_dense(&v_Brownian_init, &c);
 	cholmod_free_dense(&v_Brownian_mid, &c);
 }
-
+#endif
 
 void
 System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
@@ -1232,7 +1218,7 @@ System::calcStress(){
 	mean_hydro_stress[2] += total_stress_bgf / np;
 
 	if(brownian)
-	  calcBrownianStress();
+	  computeBrownianStress();
 
 }
 
