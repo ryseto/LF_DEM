@@ -23,11 +23,9 @@ private:
 	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
 	vec3d xi; // tangential displacement
-
 	void calcDistanceNormalVector();
 	void assignDistanceNormalVector(const vec3d &, double, int);
 	void calcContactVelocity();
-
 	void incrementContactTangentialDisplacement();
 	//	vec3d t_tangent;
 	int pd_z;
@@ -48,8 +46,10 @@ private:
 	double r_lub_max;  // max distance for lubrication
 	double strain_0; // 
 	//	double twothird, onesixth; // used in lubrication computations;
-	vec3d lubforce_i;
-	vec3d lubforce_j;
+	vec3d lubforce_i; // lubforce_j = - lubforce_i
+	double lubstresslet[5];
+	double contactstresslet[5];
+	
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -72,6 +72,10 @@ public:
 	inline double gap(){
 		return ksi;
 	}
+	double lubStresslet(int i){
+		return lubstresslet[i];
+	}
+	
 	
 	bool update(); // after particles dispacement
 	double age();

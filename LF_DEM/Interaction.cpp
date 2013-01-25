@@ -396,6 +396,7 @@ Interaction::addLubricationStress(){
 	for (int k=0; k < 5; k++){
 		sys->lubstress[i][k] += stresslet_i[k];
 		sys->lubstress[j][k] += stresslet_j[k];
+		lubstresslet[k] = stresslet_i[k] + stresslet_j[k];
 	}
 }
 
@@ -473,27 +474,15 @@ Interaction::addContactStress(){
 	int j = particle_num[1];
 	if (contact){
 		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
-        
-		double Sxx = 2*(force.x * nr_vec.x);
-		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
-		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
-		double Syz = force.y * nr_vec.z + force.z * nr_vec.y ;
-		double Syy = 2*(force.y * nr_vec.y);
-
-		sys->contactstress[i][0] += Sxx;
-		sys->contactstress[j][0] += Sxx;
-		
-		sys->contactstress[i][1] += Sxy;
-		sys->contactstress[j][1] += Sxy;
-		
-		sys->contactstress[i][2] += Sxz;
-		sys->contactstress[j][2] += Sxz;
-		
-		sys->contactstress[i][3] += Syz;
-		sys->contactstress[j][3] += Syz;
-		
-		sys->contactstress[i][4] += Syy;
-		sys->contactstress[j][4] += Syy;
+		contactstresslet[0] = 2*(force.x * nr_vec.x); //xx
+		contactstresslet[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
+		contactstresslet[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
+		contactstresslet[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+		contactstresslet[4] = 2*(force.y * nr_vec.y);   
+		for (int k=0; k < 5; k++){
+			sys->contactstress[i][k] += contactstresslet[k];
+			sys->contactstress[j][k] += contactstresslet[k];
+		}
 	}
 }
 
