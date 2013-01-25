@@ -780,7 +780,7 @@ void System::computeBrownianStress(){
 		vi.y = ((double*)v_Brownian_init->x)[i3+1];
 		vi.z = ((double*)v_Brownian_init->x)[i3+2];
 		
-		vj.x= ((double*)v_Brownian_init->x)[j3  ];
+		vj.x = ((double*)v_Brownian_init->x)[j3  ];
 		vj.y = ((double*)v_Brownian_init->x)[j3+1];
 		vj.z = ((double*)v_Brownian_init->x)[j3+2];
 		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
