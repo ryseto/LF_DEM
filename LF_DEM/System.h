@@ -84,25 +84,27 @@ private:
 	void updateResistanceMatrix();
 
 	int linalg_size;
+	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
 #ifdef CHOLMOD
-	cholmod_sparse *sparse_res;
-	cholmod_dense *v;
-	cholmod_dense *v_lub;
-	cholmod_dense *v_cont;
-	cholmod_dense *v_nonBrownian;
-	cholmod_dense *v_Brownian_init;
-	cholmod_dense *v_Brownian_mid;
-	//	cholmod_dense *contact_rhs; // is not used?
-	cholmod_dense *brownian_rhs;
-	//	cholmod_dense *nonbrownian_rhs; // is not used?
-	//	cholmod_dense *lubrication_rhs; // is not used?
-	cholmod_dense *total_rhs;
+	cholmod_sparse *chol_rfu_matrix;
+	cholmod_dense *chol_v_lub_cont;
+	cholmod_dense *chol_v_nonBrownian;
+	cholmod_dense *chol_v_Brownian_init;
+	cholmod_dense *chol_v_Brownian_mid;
+	cholmod_dense *chol_brownian_rhs;
+	cholmod_dense *chol_rhs_lub_cont;
 	int stype;
 	int sorted;
 	int packed;
 	int xtype;
+
+	// resistance matrix building
+	vector <int> rows;
+	double *diag_values;
+	vector <double> *off_diag_values;
+	int *ploc;
 #endif
 
 #ifdef TRILINOS
@@ -116,24 +118,31 @@ private:
 	Epetra_SerialComm Comm;
 	//#endif
 	RCP < Epetra_Map > Map;
-	RCP < Epetra_MultiVector > v;
-	RCP < Epetra_MultiVector > lubrication_rhs;
-	RCP < Epetra_CrsMatrix > sparse_res;
+	RCP < Epetra_MultiVector > tril_v_lub_cont;
+	RCP < Epetra_MultiVector > tril_rhs_lub_cont;
+	RCP < Epetra_CrsMatrix > tril_rfu_matrix;
 	//	RCP < ParameterList > params;
-	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > stokes_equation;
-	RCP < Belos::SolverManager < SCAL, VEC, MAT > > solver;
-	Belos::SolverFactory<SCAL, VEC, MAT> factory;
+	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
+	RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
+	Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
+
+	// resistance matrix building
+	int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
+	int* columns_nb;
+	int columns_max_nb;
+	double **values;
 #endif
 
-	vector <int> rows;
-	double *diag_values;
-	vector <double> *off_diag_values;
-	int *ploc;
+	// rhs vector building
+	//	double *rhs_lub_cont;
+	double *v_lub_cont;
+
 	void fillSparseResmatrix();
 	void allocateSparseResmatrix();
 	
 	void addToDiag(const vec3d &nvec, int ii, double alpha);
-	void appendToColumn(const vec3d &nvec, int jj, double alpha);
+	void appendToColumn(const vec3d &nvec, int jj, double alpha);  // Cholmod
+	void appendToRow(const vec3d &nvec, int ii, int jj, double alpha); // Trilinos
 	
 	BoxSet* boxset;
 	void print_res();
@@ -307,8 +316,8 @@ public:
 		return np;
 	}
 #ifdef CHOLMOD
-	cholmod_factor *L ;
-	cholmod_common c ;
+	cholmod_factor *chol_L ;
+	cholmod_common chol_c ;
 #endif
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
