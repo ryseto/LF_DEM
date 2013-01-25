@@ -8,8 +8,8 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-#define CHOLMOD 
-//#define TRILINOS
+//#define CHOLMOD 
+#define TRILINOS
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -43,10 +43,14 @@ using Teuchos::rcp;
 using Teuchos::ParameterList;
 using Teuchos::parameterList;
 
-typedef double SCAL;
-//typedef Epetra_MultiVector VEC;
-typedef Epetra_SerialDenseVector VEC;
-typedef Epetra_CrsMatrix MAT;
+typedef double                                SCAL;
+//typedef Teuchos::ScalarTraits<SCAL>          SCT;
+//typedef SCT::magnitudeType                    MT;
+typedef Epetra_MultiVector                     VEC;
+typedef Epetra_Operator                        MAT;
+//typedef Belos::MultiVecTraits<SCAL,VEC>      MVT;
+//typedef Belos::OperatorTraits<SCAL,VEC,MAT>  OPT;
+
 #endif
 
 class Simulation;
@@ -102,11 +106,19 @@ private:
 #endif
 
 #ifdef TRILINOS
+	int MyPID;
+/* #ifdef EPETRA_MPI */
+/* 	// Initialize MPI */
+/* 	MPI_Init(&argc,&argv); */
+/* 	Epetra_MpiComm Comm(MPI_COMM_WORLD); */
+/* 	MyPID = Comm.MyPID(); */
+/* #else */
 	Epetra_SerialComm Comm;
+	//#endif
 	RCP < Epetra_Map > Map;
-	RCP < VEC > v;
-	RCP < VEC > lubrication_rhs;
-	RCP < MAT > sparse_res;
+	RCP < Epetra_MultiVector > v;
+	RCP < Epetra_MultiVector > lubrication_rhs;
+	RCP < Epetra_CrsMatrix > sparse_res;
 	//	RCP < ParameterList > params;
 	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > stokes_equation;
 	RCP < Belos::SolverManager < SCAL, VEC, MAT > > solver;

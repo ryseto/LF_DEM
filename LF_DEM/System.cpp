@@ -8,6 +8,7 @@
 
 #include "System.h"
 #include <sstream>
+#include <BelosCGIteration.hpp>
 
 System::~System(){
 
@@ -110,6 +111,7 @@ System::allocateRessources(){
 		brownianstress[i] = new double [5];
 	}
 	fb = new BrownianForce(this);
+
 	maxnum_interactionpair = (int)(12*np);
 	interaction = new Interaction [maxnum_interactionpair];
 	interaction_list = new set <Interaction*> [np];
@@ -118,20 +120,13 @@ System::allocateRessources(){
 	dof = 3;
 	linalg_size = dof*np;
 
-#ifdef CHOLMOD
-	cholmod_start (&c) ;
-	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
-	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
-	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
-	xtype = CHOLMOD_REAL;
-	L=NULL;
-#endif
 #ifdef TRILINOS
+	int numlhs = 1;
+	int numrhs = 1;
 	Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
-	v = rcp( new VEC(linalg_size) );
-	lubrication_rhs = rcp( new VEC(linalg_size) );
+	v = rcp( new VEC(*Map, numlhs) );
+	lubrication_rhs = rcp( new VEC(*Map, numrhs) );
 	//	sparse_res = rcp( new MAT(linalg_size) );
-	RCP<ParameterList> solverParams = parameterList();
 	stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( sparse_res, v, lubrication_rhs ) ) ;
 #endif
 
@@ -139,8 +134,6 @@ System::allocateRessources(){
 	off_diag_values = new vector <double> [3];
 	ploc = new int [np+1];
 
-
-	fb->init();
 	
 }
 
@@ -148,6 +141,7 @@ void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector <double> &radii){
 	allocateRessources();
+
 	for (int i=0; i < np; i++){
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
@@ -181,6 +175,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		brownian = false;
 	} else {
 		brownian = true;
+		fb->init();
 	}
 	sq_critical_velocity = \
 	dynamic_friction_critical_velocity*dynamic_friction_critical_velocity;
@@ -195,6 +190,28 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	 * ASD code from Brady has dt_ratio=150
 	 */
 	dt_mid = dt/dt_ratio;
+
+
+	// linear algebra
+#ifdef CHOLMOD
+	cholmod_start (&c) ;
+	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
+	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
+	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
+	xtype = CHOLMOD_REAL;
+	L=NULL;
+#endif
+#ifdef TRILINOS
+	RCP<ParameterList> solverParams = parameterList();
+	int blocksize = 40;
+	int maxiters = 400;
+	double tol = 1.e-8;
+	solverParams->set( "Block Size", blocksize );              // Blocksize to be used by iterative solver
+	solverParams->set( "Maximum Iterations", maxiters );       // Maximum number of iterations allowed
+	solverParams->set( "Convergence Tolerance", tol );         // Relative convergence tolerance requested
+    solverParams->set( "Verbosity", Belos::Errors + Belos::Warnings );
+	solver = factory.create ("CG", solverParams);
+#endif
 	
 }
 
@@ -420,9 +437,32 @@ System::addStokesDrag(){
 }
 
 #ifdef CHOLMOD
+/*************** Cholmod Matrix Filling *************
+Cholmod matrices we are using are defined in column major order (index j is column index)
+
+Cholmod matrices are defined as follows:
+- all values are stored in array x ( size nzmax )
+- locations of values are encoded in array p ( size np ):
+  values corresponding to column j are x[ p[j] ]  to x[ p[j+1] - 1 ]
+- corresponding rows are stored in array i ( size nzmax ):
+  rows corresponding to column j are i[ p[j] ]  to i[ p[j+1] - 1 ]
+
+Hence: 
+with p[j] < a < p[j+1]-1  
+           . . . . j . . . . . .
+        .|         .            |
+        .|         .            |
+        .|         .            |  
+     i[a]| . . . .x[a]          |
+        .|                      |
+        .|                      |
+
+
+*****************************************************/
 void
 System::fillSparseResmatrix(){
 	
+
 	allocateSparseResmatrix();
 	
 	// fill
@@ -474,6 +514,58 @@ System::fillSparseResmatrix(){
 	((int*)sparse_res->p)[np3] = ((int*)sparse_res->p)[np3-1] + 1;
 }
 #endif
+
+#ifdef TRILINOS
+/*************** Epetra_CrsMatrix Filling *************
+Epetra_CrsMatrix we are using are defined in row major order.
+
+Epetra_CrsMatrix elements are not accessed directly for filling.
+Instead we use user friendly methods, that take one row at a time.
+
+*****************************************************/
+
+void
+System::fillSparseResmatrix(){
+	
+	allocateSparseResmatrix();
+	
+	int * diag_indices_j3 = new int [3];
+	int * diag_indices_j3_1 = new int [2];
+	int * diag_indices_j3_2;
+
+	for(int j = 0; j < np; j++){
+		int j3 = 3*j;
+		int j6 = 6*j;
+		
+
+	    /******* diagonal-block values ******/
+
+		diag_indices_j3[0] = j3;
+		diag_indices_j3[1] = j3+1;
+		diag_indices_j3[2] = j3+2;
+		diag_indices_j3_1[0] = j3+1;
+		diag_indices_j3_1[1] = j3+2;
+		*diag_indices_j3_2 = j3+2;
+
+
+		sparse_res->InsertMyValues(j3   , 3 , &(diag_values[j6])   , diag_indices_j3  );
+		sparse_res->InsertMyValues(j3+1 , 2 , &(diag_values[j6+3]) , diag_indices_j3_1);
+		sparse_res->InsertMyValues(j3+1 , 1 , &(diag_values[j6+5]) , diag_indices_j3_2); 
+
+
+	    /******* off-diagonal-block values ******/
+		int nb_entries = ploc[j+1] - ploc[j];
+		
+
+		sparse_res->InsertMyValues(j3   , nb_entries , &(off_diag_values[ 0 ][ ploc[j] ]) , &(rows[ ploc[j] ]) );
+		sparse_res->InsertMyValues(j3+1 , nb_entries , &(off_diag_values[ 1 ][ ploc[j] ]) , &(rows[ ploc[j] ]) );
+		sparse_res->InsertMyValues(j3+1 , nb_entries , &(off_diag_values[ 2 ][ ploc[j] ]) , &(rows[ ploc[j] ]) ); 
+	}
+	sparse_res->FillComplete();
+
+}
+#endif
+
 
 // We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
 // This method computes elements of matrix A and vector Gtilde*Einf
@@ -642,31 +734,6 @@ System::updateResistanceMatrix(){
 
 			cholmod_updown(update, update_vector_diag, L, &c);
 
-			// first part:
-			// update_vector = ( 0 ... 0 sqrt_off_diag*nr_vec 0 ... 0 -sqrt_off_diag*nr_vec 0 ... 0 ) 
-			// with only non-zero elements in range [ 3*i, 3i+3 ] and [ 3*j, 3j+3 ]
-			// this introduces terms in the diagonal that we will need to remove afterwards.
-			
-			
-			// second part:
-			// downdate_vector_i = ( 0 ... 0 sqrt_off_diag*nr_vec 0 ... 0 0 0 ... 0 ) 
-			// downdate_vector_j = ( 0 ... 0 0 0 ... 0 sqrt_off_diag*nr_vec  0 ... 0 ) 
-			// to correct previously introduced diagonal terms
-			
-			
-			// third part:
-			// update_vector_i = ( 0 ... 0 sqrt_diag_i*nr_vec 0 ... 0 0 0 ... 0 ) 
-			// update_vector_j = ( 0 ... 0 0 0 ... 0 sqrt_diag_j*nr_vec  0 ... 0 ) 
-			// 
-			
-			// four remarks :
-			// 1. These three steps can be merged in one (the first one actually) for monodisperse
-			//    systems as off diagonal terms and diagonal ones has same intensity.
-			// 2. The two last steps can probably be merged in any case.
-			//    It has to be checked, but I think that, (step 2 and step 3) amounts to add a positive
-			//    term on the diagonal, that we can thus write as a sqrt.
-			// 3. steps 1 and 2 can be reversed for efficiency
-			// 4. is there any merging possible with the DOWNDATE part?
 		}
 	}
 }
