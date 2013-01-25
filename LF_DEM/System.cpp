@@ -1227,8 +1227,8 @@ void System::computeBrownianStress(){
 		stresslet_i[k] = 0.;
 		stresslet_j[k] = 0.;
 	}
-	double vi [3];
-	double vj [3];
+	vec3d vi;
+	vec3d vj;
 
 	chol_rhs_lub_cont = cholmod_zeros(np3, 1, xtype, &chol_c);
 	buildLubricationTerms();
@@ -1254,13 +1254,15 @@ void System::computeBrownianStress(){
 		int j = interaction[k].particle_num[1];
 		int i3 = 3*i;
 		int j3 = 3*j;
-		vi[0] = ((double*)chol_v_Brownian_init->x)[i3  ];
-		vi[1] = ((double*)chol_v_Brownian_init->x)[i3+1];
-		vi[2] = ((double*)chol_v_Brownian_init->x)[i3+2];
+
+		vi.x = ((double*)chol_v_Brownian_init->x)[i3  ];
+		vi.y = ((double*)chol_v_Brownian_init->x)[i3+1];
+		vi.z = ((double*)chol_v_Brownian_init->x)[i3+2];
 		
-		vj[0] = ((double*)chol_v_Brownian_init->x)[j3  ];
-		vj[1] = ((double*)chol_v_Brownian_init->x)[j3+1];
-		vj[2] = ((double*)chol_v_Brownian_init->x)[j3+2];
+		vj.x = ((double*)chol_v_Brownian_init->x)[j3  ];
+		vj.y = ((double*)chol_v_Brownian_init->x)[j3+1];
+		vj.z = ((double*)chol_v_Brownian_init->x)[j3+2];
+
 		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
 
 		for (int u=0; u < 5; u++){
@@ -1299,13 +1301,15 @@ void System::computeBrownianStress(){
 		int j = interaction[k].particle_num[1];
 		int i3 = 3*i;
 		int j3 = 3*j;
-		vi[0] = ((double*)chol_v_Brownian_mid->x)[i3  ];
-		vi[1] = ((double*)chol_v_Brownian_mid->x)[i3+1];
-		vi[2] = ((double*)chol_v_Brownian_mid->x)[i3+2];
+
+		vi.x = ((double*)chol_v_Brownian_mid->x)[i3  ];
+		vi.y = ((double*)chol_v_Brownian_mid->x)[i3+1];
+		vi.z = ((double*)chol_v_Brownian_mid->x)[i3+2];
 		
-		vj[0] = ((double*)chol_v_Brownian_mid->x)[j3  ];
-		vj[1] = ((double*)chol_v_Brownian_mid->x)[j3+1];
-		vj[2] = ((double*)chol_v_Brownian_mid->x)[j3+2];
+		vj.x = ((double*)chol_v_Brownian_mid->x)[j3  ];
+		vj.y = ((double*)chol_v_Brownian_mid->x)[j3+1];
+		vj.z = ((double*)chol_v_Brownian_mid->x)[j3+2];
+
 		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
 
 		for (int u=0; u < 5; u++){

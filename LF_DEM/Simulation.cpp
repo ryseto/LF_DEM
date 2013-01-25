@@ -601,7 +601,6 @@ Simulation::outputDataHeader(ofstream &fout){
 
 void
 Simulation::outputConfigurationData(){
-	
 	vector<vec3d> pos;
 	char sp = ' ';
 	int np = np_a + np_b;
@@ -640,10 +639,12 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].particle_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].particle_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
-			fout_interaction << sys.interaction[k].Fc_normal << sp; // 4
-			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 5
-			fout_interaction << sys.interaction[k].gap() << sp;
-			fout_interaction << sys.interaction[k].static_friction << sp; //6
+			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; //4
+			fout_interaction << sys.interaction[k].Fc_normal << sp; // 5
+			fout_interaction << sys.interaction[k].Fc_tangent.norm() << sp; // 6
+			fout_interaction << sys.interaction[k].gap() << sp; //7
+			fout_interaction << sys.interaction[k].static_friction << sp; //8
+
 			/// fout_interaction << ???
 			fout_interaction << endl;
 		}

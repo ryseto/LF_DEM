@@ -286,11 +286,7 @@ Interaction::GE(double GEi[], double GEj[]){
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
  
 void
-Interaction::pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]){
-	double n [3];
-	n[0] = nr_vec.x;
-	n[1] = nr_vec.y;
-	n[2] = nr_vec.z;
+Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]){
 
 	for (int k=0; k < 5; k ++){
 		stresslet_i[k] = 0.;
@@ -299,20 +295,20 @@ Interaction::pairStresslet(double vi[], double vj[], double stresslet_i[], doubl
 	
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double n0n0_13 = ( n[0] * n[0] - 1./3. );
-	double n1n1_13 = ( n[1] * n[1] - 1./3. );
-	double n0n1 = n[0] * n[1];
-	double n0n2 = n[0] * n[2];
-	double n1n2 = n[1] * n[2];
+	double n0n0_13 = ( nr_vec.x * nr_vec.x - 1./3 );
+	double n1n1_13 = ( nr_vec.y * nr_vec.y - 1./3 );
+	double n0n1 = nr_vec.x * nr_vec.y;
+	double n0n2 = nr_vec.x * nr_vec.z;
+	double n1n2 = nr_vec.y * nr_vec.z;
 
-	double twothird = 2./3.;
-	double onesixth = 1./6.;
-	double common_factor_i = 0.;
-	double common_factor_j = 0.;
-	for(int u=0; u<3; u++){
-		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
-		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
-	}
+	double twothird = 2./3;
+	double onesixth = 1./6;
+	double common_factor_i = 0;
+	double common_factor_j = 0;
+
+	common_factor_i += dot(nr_vec, ( twothird * a0 * a0 * XGii * vi + onesixth * ro * ro * XGij * vj));
+	common_factor_j += dot(nr_vec, ( twothird * a1 * a1 * XGjj * vj + onesixth * ro * ro * XGji * vi));
+	
 
 	stresslet_i[0] += n0n0_13 * common_factor_i;
 	stresslet_i[1] += n0n1    * common_factor_i;
@@ -345,42 +341,25 @@ Interaction::addLubricationStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
 
-	double n[3];
-	n[0] = nr_vec.x;
-	n[1] = nr_vec.y;
-	n[2] = nr_vec.z;
-
 	double stresslet_i[5];
 	double stresslet_j[5];
 	
 	// First -G*(U-Uinf) term
-	double vi[3];
-	double vj[3];
-
-	vi[0] = sys->relative_velocity[i].x;
-	vi[1] = sys->relative_velocity[i].y;
-	vi[2] = sys->relative_velocity[i].z;
-
-	vj[0] = sys->relative_velocity[j].x;
-	vj[1] = sys->relative_velocity[j].y;
-	vj[2] = sys->relative_velocity[j].z;
+	vec3d &vi = sys->relative_velocity[i];
+	vec3d &vj = sys->relative_velocity[j];
 
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double n0n0_13 = ( n[0] * n[0] - 1./3 );
-	double n1n1_13 = ( n[1] * n[1] - 1./3 );
-	double n0n1 = n[0] * n[1];
-	double n0n2 = n[0] * n[2];
-	double n1n2 = n[1] * n[2];
+	double n0n0_13 = ( nr_vec.x*nr_vec.x - 1./3 );
+	double n1n1_13 = ( nr_vec.y*nr_vec.y - 1./3 );
+	double n0n1 = nr_vec.x * nr_vec.y;
+	double n0n2 = nr_vec.x * nr_vec.z;
+	double n1n2 = nr_vec.y * nr_vec.z;
 
 	double twothird = 2./3;
 	double onesixth = 1./6;
-	double common_factor_i = 0.;
-	double common_factor_j = 0.;
-	for(int u=0; u<3; u++){
-		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
-		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
-	}
+	double common_factor_i = dot( nr_vec, twothird * a0 * a0 * XGii * vi + onesixth * ro * ro * XGij * vj);
+	double common_factor_j = dot( nr_vec, twothird * a1 * a1 * XGjj * vj + onesixth * ro * ro * XGji * vi);
 
 	stresslet_i[0] = n0n0_13 * common_factor_i;
 	stresslet_i[1] = n0n1 * common_factor_i;
@@ -398,8 +377,8 @@ Interaction::addLubricationStress(){
 	double XMii, XMjj, XMij, XMji;
 	XM(XMii, XMij, XMji, XMjj);
 
-	double five24 = 5./24.;
-	double fivethird = 5./3.;
+	double five24 = 5./24;
+	double fivethird = 5./3;
 
 	common_factor_i = n0n2*(fivethird*a0*a0*XMii + five24*ro*ro*XMij)*sys->shear_rate;
 	common_factor_j = n0n2*(fivethird*a1*a1*XMjj + five24*ro*ro*XMji)*sys->shear_rate;
@@ -418,6 +397,7 @@ Interaction::addLubricationStress(){
 	for (int k=0; k < 5; k++){
 		sys->lubstress[i][k] += stresslet_i[k];
 		sys->lubstress[j][k] += stresslet_j[k];
+		lubstresslet[k] = stresslet_i[k] + stresslet_j[k];
 	}
 }
 
@@ -429,58 +409,32 @@ void
 Interaction::evaluateLubricationForce(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-	double n [3];
-	n[0] = nr_vec.x;
-	n[1] = nr_vec.y;
-	n[2] = nr_vec.z;
 	lubforce_i.reset();
 	/*	lubforce_j.reset(); */
 	/*******************************
 	 *  First: -A*(U-Uinf) term    *
 	 *******************************/
-	double vi [3];
-	double vj [3];
-	vi[0] = sys->relative_velocity[i].x;
-	vi[1] = sys->relative_velocity[i].y;
-	vi[2] = sys->relative_velocity[i].z;
-	vj[0] = sys->relative_velocity[j].x;
-	vj[1] = sys->relative_velocity[j].y;
-	vj[2] = sys->relative_velocity[j].z;
+	vec3d &vi = sys->relative_velocity[i];
+	vec3d &vj = sys->relative_velocity[j];
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
-	double common_factor_i = 0;
-	/* 	double common_factor_j = 0; */
-	for(int u=0; u<3; u++){
-		common_factor_i += (a0*XAii*vi[u] + 0.5*ro*XAij*vj[u])*n[u];
-		/* common_factor_j += (a1*XAjj*vj[u] + 0.5*ro*XAji*vi[u])*n[u]; */
-	}
-	lubforce_i.x = -n[0]*common_factor_i;
-	lubforce_i.y = -n[1]*common_factor_i;
-	lubforce_i.z = -n[2]*common_factor_i;
-	/*
-	 *lubforce_j.x = -n[0]*common_factor_j;
-	 *lubforce_j.y = -n[1]*common_factor_j;
-	 *lubforce_j.z = -n[2]*common_factor_j;
-	 */
+	double common_factor_i = dot(a0*XAii*vi + 0.5*ro*XAij*vj, nr_vec);
+	/*	double common_factor_j = dot(a1*XAjj*vj + 0.5*ro*XAji*vi, nr_vec); */
+	lubforce_i = - common_factor_i*nr_vec;
+	/* lubforce_i = - common_factor_j*nr_vec;*/
 	/*********************************
 	 *  Second -tildeG*(-Einf)term   *
 	 *********************************/
 	// First
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double n0n2 = n[0] * n[2];
+	double n0n2 = nr_vec.x * nr_vec.z;
 	double twothird = 2./3;
 	double onesixth = 1./6;
 	common_factor_i = n0n2*(twothird*a0*a0*XGii + onesixth*ro*ro*XGji)* sys->shear_rate;
 	/*	common_factor_j = n0n2*(twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* sys->shear_rate; */
-	lubforce_i.x +=  n[0]*common_factor_i;
-	lubforce_i.y +=  n[1]*common_factor_i;
-	lubforce_i.z +=  n[2]*common_factor_i;
-	/*
-	 * lubforce_j.x +=  n[0]*common_factor_j;
-	 * lubforce_j.y +=  n[1]*common_factor_j;
-	 * lubforce_j.z +=  n[2]*common_factor_j;
-	 */
+	lubforce_i += common_factor_i * nr_vec;
+	/* lubforce_j +=  common_factor_j * nr_vec; */
 }
 
 double
@@ -495,27 +449,15 @@ Interaction::addContactStress(){
 	int j = particle_num[1];
 	if (contact){
 		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
-        
-		double Sxx = 2*(force.x * nr_vec.x);
-		double Sxy = force.x * nr_vec.y + force.y * nr_vec.x ;
-		double Sxz = force.x * nr_vec.z + force.z * nr_vec.x ;
-		double Syz = force.y * nr_vec.z + force.z * nr_vec.y ;
-		double Syy = 2*(force.y * nr_vec.y);
-
-		sys->contactstress[i][0] += Sxx;
-		sys->contactstress[j][0] += Sxx;
-		
-		sys->contactstress[i][1] += Sxy;
-		sys->contactstress[j][1] += Sxy;
-		
-		sys->contactstress[i][2] += Sxz;
-		sys->contactstress[j][2] += Sxz;
-		
-		sys->contactstress[i][3] += Syz;
-		sys->contactstress[j][3] += Syz;
-		
-		sys->contactstress[i][4] += Syy;
-		sys->contactstress[j][4] += Syy;
+		contactstresslet[0] = 2*(force.x * nr_vec.x); //xx
+		contactstresslet[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
+		contactstresslet[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
+		contactstresslet[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+		contactstresslet[4] = 2*(force.y * nr_vec.y);   
+		for (int k=0; k < 5; k++){
+			sys->contactstress[i][k] += contactstresslet[k];
+			sys->contactstress[j][k] += contactstresslet[k];
+		}
 	}
 }
 

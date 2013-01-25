@@ -654,9 +654,10 @@ and the right one with $\delta$ level,
 $\tens{R}_{\mathrm{onebody}} = \tens{I}$.
 \begin{align*}
 \bm{F}_{\mathrm{H}} 
-&= - \tens{R}(\bm{U}-\bm{U}^{\infty})  +  \tens{G} \tens{E}^{\infty}  \\
-&= - (\tens{R}_{\mathrm{onebody}} + \tens{R}_{\mathrm{pair}})(\bm{U}-\bm{U}^{\infty})  
- +  \tens{G} \tens{E}^{\infty}  \\
+&=
+ - \tens{R}_{\mathrm{onebody}}(\bm{U}-\bm{U}^{\infty})  
+ - \tens{R}_{\mathrm{pair}}(\bm{U}-\bm{U}^{\infty})  
++  \tens{G}_{\mathrm{pair}} \tens{E}^{\infty}  
 \end{align*}
 %
 The background flow and the drag forces acting on particles
@@ -1358,6 +1359,13 @@ X_{\alpha\beta}^{A} n_j \Delta v^{\beta}_j
   + \frac{r_0^2}{6} X_{\alpha\beta}^{G}\right)
 n_z n_x n_i
 \end{align}
+
+\begin{align}
+\tens{S}_1
+ = 
+- \mu \tens{G}_{11} (\bm{U}_1-\bm{U}^{\infty})
+\end{align}
+
 %\begin{align}
 %\frac{ F^{\alpha}_i}{F_0}
 %&= 

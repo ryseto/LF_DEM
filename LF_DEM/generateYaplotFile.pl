@@ -80,10 +80,11 @@ sub InInteractions {
 	}
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $fc_n, $fc_t, $gap, $fric_st) = split(/\s+/, $line);
+		($i, $j, $f_lub, $sxz_lub, $fc_n, $fc_t, $gap, $fric_st) = split(/\s+/, $line);
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
+		$Sxz_lub[$k] = $sxz_lub;
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_t;
 		$Gap[$k] = $gap;
@@ -144,7 +145,7 @@ sub OutYaplotData{
     printf OUT "@ 4\n";
     for ($k = 0; $k < $num_interaction; $k ++){
         $force = $F_lub[$k] + $Fc_n[$k];
-        if ($force > 0){
+		if ($force > 0){
             $string_with = ${force_factor}*${force};
 			if ( $y_section == 0
 				|| abs($yi) < $y_section
@@ -154,7 +155,26 @@ sub OutYaplotData{
 				}
         }
     }
-   
+	$maxS=0;
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($maxS < $Sxz_lub[$k]){
+			$maxS = $Sxz_lub[$k];
+		}
+	}
+	
+	printf OUT "y 4\n";
+    printf OUT "@ 5\n";
+    for ($k = 0; $k < $num_interaction; $k ++){
+		$string_with = $Sxz_lub[$k]/$maxS;
+		if ( $y_section == 0
+			|| abs($yi) < $y_section
+			|| abs($yj) < $y_section){
+				printf OUT "r ${string_with}\n";
+				&OutCircle_middle($int0[$k],  $int1[$k]);
+			}
+    }
+	$zpos = $Lz / 2 + 1;
+	printf OUT "t 0 0 $zpos $maxS \n";
 }
 
 sub OutString {
@@ -172,3 +192,25 @@ sub OutString {
 			printf OUT "s $xi $yi $zi $xj $yj $zj\n";
 		}
 }
+
+sub OutCircle_middle {
+    ($i, $j) = @_;
+	$xi = $posx[$i];
+    $yi = $posy[$i];
+    $zi = $posz[$i];
+    $xj = $posx[$j];
+    $yj = $posy[$j];
+    $zj = $posz[$j];
+    $xc = ($posx[$i] + $posx[$j])/2;
+    $yc = ($posy[$i] + $posy[$j])/2;
+    $zc = ($posz[$i] + $posz[$j])/2;
+	
+	if (abs($xi-$xj) < $radius_max*5
+		&&  abs($yi-$yj) < $radius_max*5
+		&&  abs($zi-$zj) < $radius_max*5){
+			printf OUT "c $xc $yc $zc\n";
+		}
+}
+
+
+

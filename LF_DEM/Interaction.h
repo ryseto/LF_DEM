@@ -23,11 +23,9 @@ private:
 	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
 	vec3d xi; // tangential displacement
-
 	void calcDistanceNormalVector();
 	void assignDistanceNormalVector(const vec3d &, double, int);
 	void calcContactVelocity();
-
 	void incrementContactTangentialDisplacement();
 	//	vec3d t_tangent;
 	int pd_z;
@@ -52,8 +50,9 @@ private:
 
 	bool _just_off;
 
-	vec3d lubforce_i;
-	vec3d lubforce_j;
+	vec3d lubforce_i; // lubforce_j = - lubforce_i
+	double lubstresslet[5];
+	double contactstresslet[5];
 
 protected:
 	void calcStaticFriction();
@@ -77,6 +76,10 @@ public:
 	inline double gap(){
 		return ksi;
 	}
+	double lubStresslet(int i){
+		return lubstresslet[i];
+	}
+	
 	
 	bool update(); // after particles dispacement
 	double age();
@@ -111,7 +114,7 @@ public:
 	void calcContactStress();
 	void addLubricationStress();
 	void addContactStress();
-	void pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]);
+	void pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]);
 
 
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
