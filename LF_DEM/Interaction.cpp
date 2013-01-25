@@ -268,11 +268,7 @@ Interaction::GE(double GEi[], double GEj[]){
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
  
 void
-Interaction::pairStresslet(double vi[], double vj[], double stresslet_i[], double stresslet_j[]){
-	double n [3];
-	n[0] = nr_vec.x;
-	n[1] = nr_vec.y;
-	n[2] = nr_vec.z;
+Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]){
 
 	for (int k=0; k < 5; k ++){
 		stresslet_i[k] = 0.;
@@ -281,20 +277,20 @@ Interaction::pairStresslet(double vi[], double vj[], double stresslet_i[], doubl
 	
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double n0n0_13 = ( n[0] * n[0] - 1./3. );
-	double n1n1_13 = ( n[1] * n[1] - 1./3. );
-	double n0n1 = n[0] * n[1];
-	double n0n2 = n[0] * n[2];
-	double n1n2 = n[1] * n[2];
+	double n0n0_13 = ( nr_vec.x * nr_vec.x - 1./3 );
+	double n1n1_13 = ( nr_vec.y * nr_vec.y - 1./3 );
+	double n0n1 = nr_vec.x * nr_vec.y;
+	double n0n2 = nr_vec.x * nr_vec.z;
+	double n1n2 = nr_vec.y * nr_vec.z;
 
-	double twothird = 2./3.;
-	double onesixth = 1./6.;
-	double common_factor_i = 0.;
-	double common_factor_j = 0.;
-	for(int u=0; u<3; u++){
-		common_factor_i += n[u] * ( twothird * a0 * a0 * XGii * vi[u] + onesixth * ro * ro * XGij * vj[u] );
-		common_factor_j += n[u] * ( twothird * a1 * a1 * XGjj * vj[u] + onesixth * ro * ro * XGji * vi[u] );
-	}
+	double twothird = 2./3;
+	double onesixth = 1./6;
+	double common_factor_i = 0;
+	double common_factor_j = 0;
+
+	common_factor_i += dot(nr_vec, ( twothird * a0 * a0 * XGii * vi + onesixth * ro * ro * XGij * vj));
+	common_factor_j += dot(nr_vec, ( twothird * a1 * a1 * XGjj * vj + onesixth * ro * ro * XGji * vi));
+	
 
 	stresslet_i[0] += n0n0_13 * common_factor_i;
 	stresslet_i[1] += n0n1    * common_factor_i;
