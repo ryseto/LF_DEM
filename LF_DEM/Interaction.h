@@ -43,13 +43,17 @@ private:
 	double ksi_cutoff; // small cut-off for ksi: lubrication breakdown
 	double ksi_eff;  // max(ksi, ksi_cutoff)
 	double iksi_eff;
+	double prev_iksi_eff;
 	double r_lub_max;  // max distance for lubrication
 	double strain_0; // 
 	//	double twothird, onesixth; // used in lubrication computations;
+
+	bool _just_off;
+
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	double lubstresslet[5];
 	double contactstresslet[5];
-	
+
 protected:
 	void calcStaticFriction();
 	void calcDynamicFriction();
@@ -62,7 +66,7 @@ public:
 
 	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
 	bool active;
-
+	bool just_off();
 	int particle_num[2];
 
 	inline double r(){
@@ -114,9 +118,11 @@ public:
 
 
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
+	void prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj);
 	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);
 	void XM(double &XMii, double &XMij, double &XMji, double &XMjj);
 	void GE(double GEi[], double GEj[]);
+
 
 };
 

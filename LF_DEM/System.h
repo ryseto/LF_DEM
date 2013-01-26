@@ -8,7 +8,8 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-#define CHOLMOD 1
+//#define CHOLMOD 
+#define TRILINOS
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -16,23 +17,54 @@
 #include <string>
 //#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
+
+#ifdef CHOLMOD
 #include "cholmod.h"
+#endif
+
+#ifdef TRILINOS
+#include "Epetra_SerialComm.h"
+#include "Epetra_SerialDenseVector.h"
+#include "Epetra_CrsMatrix.h"
+#include "BelosSolverFactory.hpp"
+#include "BelosEpetraAdapter.hpp"
+#include "Teuchos_RCP.hpp"
+#endif
+
 #include "vec3d.h"
 //#include "ContactForce.h"
 #include "BrownianForce.h"
 #include "BoxSet.h"
 
 using namespace std;
+#ifdef TRILINOS
+using Teuchos::RCP;
+using Teuchos::rcp;
+using Teuchos::ParameterList;
+using Teuchos::parameterList;
+
+typedef double                                SCAL;
+//typedef Teuchos::ScalarTraits<SCAL>          SCT;
+//typedef SCT::magnitudeType                    MT;
+typedef Epetra_MultiVector                     VEC;
+typedef Epetra_Operator                        MAT;
+//typedef Belos::MultiVecTraits<SCAL,VEC>      MVT;
+//typedef Belos::OperatorTraits<SCAL,VEC,MAT>  OPT;
+
+#endif
+
 class Simulation;
 class Interaction;
 class BrownianForce;
 class BoxSet;
+
 
 class System{
 private:
 	int np3;
 	int maxnum_interactionpair;
 	queue<int> deactivated_interaction;
+
 	double _lx;
 	double _ly;
 	double _lz;
@@ -41,54 +73,77 @@ private:
 	double _lz2; // =lz/2
 	double system_volume;
 	double radius_max;
-	
+
 	void buildLubricationTerms();
 	void buildLubricationTerms_new();
 	void buildBrownianTerms();
 	void buildContactTerms();
 	void addStokesDrag();
 	void factorizeResistanceMatrix();
-#ifdef CHOLMOD
-	cholmod_sparse *sparse_res;
-	cholmod_dense *v;
-	cholmod_dense *v_lub;
-	cholmod_dense *v_cont;
-	cholmod_dense *v_nonBrownian;
-	cholmod_dense *v_Brownian_init;
-	cholmod_dense *v_Brownian_mid;
-	//	cholmod_dense *contact_rhs; // is not used?
-	cholmod_dense *brownian_rhs;
-	//	cholmod_dense *nonbrownian_rhs; // is not used?
-	//	cholmod_dense *lubrication_rhs; // is not used?
-	cholmod_dense *total_rhs;
+
+	void updateResistanceMatrix();
+
+	int linalg_size;
+	int linalg_size_per_particle;
+	int dof;
 	int max_lub_int;
+#ifdef CHOLMOD
+	cholmod_sparse *chol_rfu_matrix;
+	cholmod_dense *chol_v_lub_cont;
+	cholmod_dense *chol_v_nonBrownian;
+	cholmod_dense *chol_v_Brownian_init;
+	cholmod_dense *chol_v_Brownian_mid;
+	cholmod_dense *chol_brownian_rhs;
+	cholmod_dense *chol_rhs_lub_cont;
 	int stype;
 	int sorted;
 	int packed;
 	int xtype;
+
+	// resistance matrix building
 	vector <int> rows;
 	double *diag_values;
 	vector <double> *off_diag_values;
 	int *ploc;
-	void fillSparseResmatrix();
-	void allocateSparseResmatrix();
-	void addToDiag(double *nvec, int ii, double alpha);
-	void appendToColumn(double *nvec, int jj, double alpha);
-	void addToDiag(const vec3d &nvec, int ii, double alpha);
-	void appendToColumn(const vec3d &nvec, int jj, double alpha);
-#else
-	double *res;
-	int nrhs;
-	int *ipiv;
-	int lda;
-	int ldb;
-	int info;
-	double *strain_term;
-	int lwork;
-	double *work;
-	char UPLO;
 #endif
 
+#ifdef TRILINOS
+	int MyPID;
+/* #ifdef EPETRA_MPI */
+/* 	// Initialize MPI */
+/* 	MPI_Init(&argc,&argv); */
+/* 	Epetra_MpiComm Comm(MPI_COMM_WORLD); */
+/* 	MyPID = Comm.MyPID(); */
+/* #else */
+	Epetra_SerialComm Comm;
+	//#endif
+	RCP < Epetra_Map > Map;
+	RCP < Epetra_MultiVector > tril_v_lub_cont;
+	RCP < Epetra_MultiVector > tril_rhs_lub_cont;
+	RCP < Epetra_CrsMatrix > tril_rfu_matrix;
+	//	RCP < ParameterList > params;
+	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
+	RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
+	Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
+
+	// resistance matrix building
+	int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
+	int* columns_nb;
+	int columns_max_nb;
+	double **values;
+#endif
+
+	// rhs vector building
+	//	double *rhs_lub_cont;
+	double *v_lub_cont;
+
+	void fillSparseResmatrix();
+	void allocateSparseResmatrix();
+	
+	void addToDiag(const vec3d &nvec, int ii, double alpha);
+	void appendToColumn(const vec3d &nvec, int jj, double alpha);  // Cholmod
+	void appendToRow(const vec3d &nvec, int ii, int jj, double alpha); // Trilinos
+	
 	BoxSet* boxset;
 	void print_res();
 
@@ -252,6 +307,7 @@ public:
 	void torqueReset();
 	void stressReset();
 	void calcStress();
+
 	void analyzeState();
 	void computeBrownianStress();
 
@@ -260,8 +316,8 @@ public:
 		return np;
 	}
 #ifdef CHOLMOD
-	cholmod_factor *L ;
-	cholmod_common c ;
+	cholmod_factor *chol_L ;
+	cholmod_common chol_c ;
 #endif
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
