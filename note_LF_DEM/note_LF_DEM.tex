@@ -1067,10 +1067,10 @@ only $\tens{A}$ and $\tens{G}$ give the leading contribution to the forces.
  \end{pmatrix}
  + \mu
 \begin{pmatrix}
-\tilde{\tens{M}}_{11} &
-\tilde{\tens{M}}_{12}  \\
-\tilde{\tens{M}}_{21}  &
-\tilde{\tens{M}}_{22}  
+\tens{M}_{11} &
+\tens{M}_{12}  \\
+\tens{M}_{21}  &
+\tens{M}_{22}  
 \end{pmatrix}
  \begin{pmatrix}
 \bm{E}_{\infty} \\ \bm{E}_{\infty}
@@ -1259,10 +1259,10 @@ n_{i} n_j (U^{(1)}_j-U^{(1)\infty}_j)
  \end{pmatrix}
  + \mu
 \begin{pmatrix}
-\tilde{\tens{M}}_{11} &
-\tilde{\tens{M}}_{12}  \\
-\tilde{\tens{M}}_{21}  &
-\tilde{\tens{M}}_{22}  
+\tens{M}_{11} &
+\tens{M}_{12}  \\
+\tens{M}_{21}  &
+\tens{M}_{22}  
 \end{pmatrix}
  \begin{pmatrix}
 \bm{E}_{\infty} \\ \bm{E}_{\infty}
@@ -1363,7 +1363,10 @@ n_z n_x n_i
 \begin{align}
 \tens{S}_1
  = 
-- \mu \tens{G}_{11} (\bm{U}_1-\bm{U}^{\infty})
+- \mu \tens{G}_{11} (\bm{U}_1-\bm{U}_1^{\infty})
+- \mu \tens{G}_{12} (\bm{U}_2-\bm{U}_2^{\infty})
++ \mu \tilde{\tens{M}}_{11} \tens{E}_{\infty}
++ \mu \tilde{\tens{M}}_{12} \tens{E}_{\infty}
 \end{align}
 
 %\begin{align}

@@ -339,9 +339,9 @@ Interaction::addLubricationStress(){
 	double n1n2 = nr_vec.y * nr_vec.z;
 
 	double twothird = 2./3;
-	double onesixth = 1./6;
-	double common_factor_i = dot( nr_vec, twothird * a0 * a0 * XGii * vi + onesixth * ro * ro * XGij * vj);
-	double common_factor_j = dot( nr_vec, twothird * a1 * a1 * XGjj * vj + onesixth * ro * ro * XGji * vi);
+	double onesixth_ro_ro = 1./6 * ro * ro;
+	double common_factor_i = dot( nr_vec, twothird * a0 * a0 * XGii * vi + onesixth_ro_ro * XGij * vj);
+	double common_factor_j = dot( nr_vec, twothird * a1 * a1 * XGjj * vj + onesixth_ro_ro * XGji * vi);
 
 	stresslet_i[0] = n0n0_13 * common_factor_i;
 	stresslet_i[1] = n0n1 * common_factor_i;
