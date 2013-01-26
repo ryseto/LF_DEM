@@ -259,23 +259,15 @@ void
 Interaction::GE(double GEi[], double GEj[]){
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double nxnz = nr_vec.x * nr_vec.z;
-	
-	for(int u=0; u<3; u++){
-		GEi[u] = a0 * a0 * XGii * 2 / 3;
-		GEi[u] += ro * ro * XGji / 6;
-	}
-	GEi[0] *= sys->shear_rate * nxnz * nr_vec.x;
-	GEi[1] *= sys->shear_rate * nxnz * nr_vec.y;
-	GEi[2] *= sys->shear_rate * nxnz * nr_vec.z;
-
-	for(int u=0; u<3; u++){
-		GEj[u] = a1 * a1 * XGjj * 2 / 3;
-		GEj[u] += ro * ro * XGij / 6;
-	}
-	GEj[0] *= sys->shear_rate * nxnz * nr_vec.x;
-	GEj[1] *= sys->shear_rate * nxnz * nr_vec.y;
-	GEj[2] *= sys->shear_rate * nxnz * nr_vec.z;
+	double nxnz_sr = nr_vec.x * nr_vec.z * sys->shear_rate;
+	double common_factor_1 = (a0*a0*XGii*4 + ro*ro*XGji)/6;
+	GEi[0] = common_factor_1 * nxnz_sr * nr_vec.x;
+	GEi[1] = common_factor_1 * nxnz_sr * nr_vec.y;
+	GEi[2] = common_factor_1 * nxnz_sr * nr_vec.z;
+	double common_factor_2 = (a1*a1*XGjj*4 + ro*ro*XGij)/6;
+	GEj[0] = common_factor_2 * nxnz_sr * nr_vec.x;
+	GEj[1] = common_factor_2 * nxnz_sr * nr_vec.y;
+	GEj[2] = common_factor_2 * nxnz_sr * nr_vec.z;
 }
 
 
@@ -287,7 +279,6 @@ Interaction::GE(double GEi[], double GEj[]){
  
 void
 Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]){
-
 	for (int k=0; k < 5; k ++){
 		stresslet_i[k] = 0.;
 		stresslet_j[k] = 0.;
@@ -340,59 +331,57 @@ void
 Interaction::addLubricationStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-
 	double stresslet_i[5];
 	double stresslet_j[5];
-	
-	// First -G*(U-Uinf) term
 	vec3d &vi = sys->relative_velocity[i];
 	vec3d &vj = sys->relative_velocity[j];
-
+	
+	// First -G*(U-Uinf) term
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double n0n0_13 = ( nr_vec.x*nr_vec.x - 1./3 );
-	double n1n1_13 = ( nr_vec.y*nr_vec.y - 1./3 );
+	double n0n0_13 = nr_vec.x*nr_vec.x - 1./3;
+	double n1n1_13 = nr_vec.y*nr_vec.y - 1./3;
 	double n0n1 = nr_vec.x * nr_vec.y;
 	double n0n2 = nr_vec.x * nr_vec.z;
 	double n1n2 = nr_vec.y * nr_vec.z;
 
 	double twothird = 2./3;
-	double onesixth_ro_ro = 1./6 * ro * ro;
-	double common_factor_i = dot( nr_vec, twothird * a0 * a0 * XGii * vi + onesixth_ro_ro * XGij * vj);
-	double common_factor_j = dot( nr_vec, twothird * a1 * a1 * XGjj * vj + onesixth_ro_ro * XGji * vi);
+	double onesixth_ro_ro = ro*ro/6;
+	double common_factor_i_1 = - dot( nr_vec, (twothird*a0*a0*XGii) * vi + (onesixth_ro_ro*XGij) * vj);
+	double common_factor_j_1 = - dot( nr_vec, (twothird*a1*a1*XGjj) * vj + (onesixth_ro_ro*XGji) * vi);
 
-	stresslet_i[0] = n0n0_13 * common_factor_i;
-	stresslet_i[1] = n0n1 * common_factor_i;
-	stresslet_i[2] = n0n2 * common_factor_i;
-	stresslet_i[3] = n1n2 * common_factor_i;
-	stresslet_i[4] = n1n1_13 * common_factor_i;
+	stresslet_i[0] = n0n0_13 * common_factor_i_1;
+	stresslet_i[1] = n0n1 * common_factor_i_1;
+	stresslet_i[2] = n0n2 * common_factor_i_1;
+	stresslet_i[3] = n1n2 * common_factor_i_1;
+	stresslet_i[4] = n1n1_13 * common_factor_i_1;
 
-	stresslet_j[0] = n0n0_13 * common_factor_j;
-	stresslet_j[1] = n0n1 * common_factor_j;
-	stresslet_j[2] = n0n2 * common_factor_j;
-	stresslet_j[3] = n1n2 * common_factor_j;
-	stresslet_j[4] = n1n1_13 * common_factor_j;
+	stresslet_j[0] = n0n0_13 * common_factor_j_1;
+	stresslet_j[1] = n0n1 * common_factor_j_1;
+	stresslet_j[2] = n0n2 * common_factor_j_1;
+	stresslet_j[3] = n1n2 * common_factor_j_1;
+	stresslet_j[4] = n1n1_13 * common_factor_j_1;
 
 	// Second: +M*Einf term
 	double XMii, XMjj, XMij, XMji;
 	XM(XMii, XMij, XMji, XMjj);
 
-	double five24 = 5./24;
 	double fivethird = 5./3;
+	double five24_ro3 = (5./24)*ro*ro*ro;
 
-	common_factor_i = n0n2*(fivethird*a0*a0*XMii + five24*ro*ro*XMij)*sys->shear_rate;
-	common_factor_j = n0n2*(fivethird*a1*a1*XMjj + five24*ro*ro*XMji)*sys->shear_rate;
+	double common_factor_i_2 = (fivethird*a0*a0*XMii + five24_ro3*XMij)*n0n2*sys->shear_rate;
+	double common_factor_j_2 = (fivethird*a1*a1*XMjj + five24_ro3*XMji)*n0n2*sys->shear_rate;
 
-	stresslet_i[0] += n0n0_13 * common_factor_i;
-	stresslet_i[1] += n0n1 * common_factor_i;
-	stresslet_i[2] += n0n2 * common_factor_i;
-	stresslet_i[3] += n1n2 * common_factor_i;
-	stresslet_i[4] += n1n1_13 * common_factor_i;
-	stresslet_j[0] += n0n0_13 * common_factor_j;
-	stresslet_j[1] += n0n1 * common_factor_j;
-	stresslet_j[2] += n0n2 * common_factor_j;
-	stresslet_j[3] += n1n2 * common_factor_j;
-	stresslet_j[4] += n1n1_13 * common_factor_j;
+	stresslet_i[0] += n0n0_13 * common_factor_i_2;
+	stresslet_i[1] += n0n1 * common_factor_i_2;
+	stresslet_i[2] += n0n2 * common_factor_i_2;
+	stresslet_i[3] += n1n2 * common_factor_i_2;
+	stresslet_i[4] += n1n1_13 * common_factor_i_2;
+	stresslet_j[0] += n0n0_13 * common_factor_j_2;
+	stresslet_j[1] += n0n1 * common_factor_j_2;
+	stresslet_j[2] += n0n2 * common_factor_j_2;
+	stresslet_j[3] += n1n2 * common_factor_j_2;
+	stresslet_j[4] += n1n1_13 * common_factor_j_2;
 
 	for (int k=0; k < 5; k++){
 		sys->lubstress[i][k] += stresslet_i[k];

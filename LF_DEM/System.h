@@ -8,8 +8,8 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-//#define CHOLMOD 
-#define TRILINOS
+#define CHOLMOD
+//#define TRILINOS
 #include <iostream>
 #include <iomanip>
 #include <fstream>

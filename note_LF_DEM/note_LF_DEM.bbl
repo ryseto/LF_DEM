@@ -1,4 +1,4 @@
-\begin{thebibliography}{35}
+\begin{thebibliography}{36}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -10,6 +10,11 @@ A.~A. Catherall, J.~R. Melrose, and R.~C. Ball.
 \newblock Shear thickening and order-disorder effects in concentrated colloids
   at high shear rates.
 \newblock \emph{J. Rheol.}, 44:\penalty0 1--25, 2000.
+
+\bibitem[Parsi and Gadala-Maria(1987)]{Parsi_1987}
+F.~Parsi and F.~Gadala-Maria.
+\newblock Fore-and-aft asymmetry in a concentrated suspension of solid spheres.
+\newblock \emph{J. Rheol.}, 31:\penalty0 725--732, 1987.
 
 \bibitem[Ball and Melrose(1995)]{Ball_1995}
 R.~C. Ball and J.~R. Melrose.

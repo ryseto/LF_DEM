@@ -1013,6 +1013,7 @@ g_1 (\lambda) \xi^{-1}, &
 \frac{1}{4}  \xi^{-1}
 \end{align}
 
+
 \newpage
 
 \paragraph{Leading order}
@@ -1365,9 +1366,171 @@ n_z n_x n_i
  = 
 - \mu \tens{G}_{11} (\bm{U}_1-\bm{U}_1^{\infty})
 - \mu \tens{G}_{12} (\bm{U}_2-\bm{U}_2^{\infty})
-+ \mu \tilde{\tens{M}}_{11} \tens{E}_{\infty}
-+ \mu \tilde{\tens{M}}_{12} \tens{E}_{\infty}
++ \mu \tens{M}_{11} \tens{E}_{\infty}
++ \mu \tens{M}_{12} \tens{E}_{\infty}
 \end{align}
+
+\begin{gather}
+ \hat{G}_{ijk}^{\alpha \beta}
+\approx 
+X_{\alpha\beta}^{G} 
+\left(n_i n_j - \frac{1}{3}\delta_{ij}\right)n_k\\
+ \hat{\tens{G}}_{\alpha\beta}
+= \frac{\tens{G}_{\alpha\beta}}{\pi(a_{\alpha} + a_{\beta})^2},
+\end{gather}
+\begin{align}
+ G^{11}_{ijk} (\Delta U^{1}_k)
++ G^{12}_{ijk} (\Delta U^{2}_k)
+&= c_{11} \hat{G}^{11}_{ijk} (\Delta U^{1}_k)
++ c_{12} \hat{G}^{12}_{ijk} (\Delta U^{2}_k) \\
+&= c_{11} X_{11}^{G}(n_i n_j - \frac{1}{3}\delta_{ij}) n_k (\Delta U^{1}_k)
++ c_{12} X_{12}^{G}(n_i n_j - \frac{1}{3}\delta_{ij}) n_k  (\Delta U^{2}_k) \\
+&=
+(n_i n_j - \frac{1}{3}\delta_{ij}) n_k
+\left(
+\pi 4 a_1^2 X_{11}^{G} (\Delta U^{1}_k)
++ 
+\pi (a_1+a_2)^2 X_{12}^{G} (\Delta U^{2}_k)
+\right)
+\end{align}
+
+\begin{align}
+\frac{1}{6\pi} \Delta S^{1}_{ij}
+= - \mu 
+(n_i n_j - \frac{1}{3}\delta_{ij}) n_k
+\left(
+ \frac{2}{3} a_1^2 X_{11}^{G} (\Delta U^{1}_k)
++ 
+\frac{1}{6}
+ (a_1+a_2)^2 X_{12}^{G} (\Delta U^{2}_k)
+\right)
+\end{align}
+
+
+
+\begin{equation}
+ \hat{M}_{ijkl}^{\alpha\beta}
+=  \frac{3}{2}
+X_{\alpha\beta}^{M}
+ \left(n_i n_j
+ - \frac{1}{3} \delta_{ij}
+\right)
+ \left(n_k n_l
+ - \frac{1}{3} \delta_{kl}
+\right)  
+\end{equation}
+
+
+\begin{align*}
+\Delta (S^{\alpha}_{ij})
+&= 
+c \hat{M}_{ijkl}^{\alpha\beta} E_{kl}^{\infty} \\
+&=
+c (
+\hat{M}_{ijkx}^{\alpha\beta} E_{kx}^{\infty}
++
+\hat{M}_{ijky}^{\alpha\beta} E_{ky}^{\infty}
++
+\hat{M}_{ijkz}^{\alpha\beta} E_{kz}^{\infty}) \\
+&=
+c (
+\hat{M}_{ijxx}^{\alpha\beta} E_{xx}^{\infty}
++
+\hat{M}_{ijyx}^{\alpha\beta} E_{yx}^{\infty}
++
+\hat{M}_{ijzx}^{\alpha\beta} E_{zx}^{\infty} \\
+&\quad 
++
+\hat{M}_{ijxy}^{\alpha\beta} E_{xy}^{\infty}
++
+\hat{M}_{ijyy}^{\alpha\beta} E_{yy}^{\infty}
++
+\hat{M}_{ijzy}^{\alpha\beta} E_{zy}^{\infty} \\
+&\quad 
++
+\hat{M}_{ijxz}^{\alpha\beta} E_{xz}^{\infty}
++
+\hat{M}_{ijyz}^{\alpha\beta} E_{yz}^{\infty} 
++
+\hat{M}_{ijzz}^{\alpha\beta} E_{zz}^{\infty}) \\
+&=
+c(
+\hat{M}_{ijzx}^{\alpha\beta}
++
+\hat{M}_{ijxz}^{\alpha\beta}
+) E_{zx}^{\infty} 
+=
+2c\hat{M}_{ijxz}^{\alpha\beta}  E_{xz}^{\infty} \\
+&=
+3c X_{\alpha\beta}^{M}
+(n_i n_j-\frac{1}{3}\delta_{ij}) 
+n_x n_z E_{xz}^{\infty} 
+\end{align*}
+
+
+\begin{align}
+S_{ij}^{\alpha} &= 
+ 3 c_{11} X_{11}^{M}
+(n_i n_j-\frac{1}{3}\delta_{ij}) 
+n_x n_z E_{xz}^{\infty} 
++
+3 c_{12 }X_{12}^{M}
+(n_i n_j-\frac{1}{3}\delta_{ij}) 
+n_x n_z E_{xz}^{\infty}  \\
+&= 3 (
+c_{11} X_{11}^{M}
++ 
+c_{12} X_{12}^{M})
+(n_i n_j-\frac{1}{3}\delta_{ij})
+n_x n_z E_{xz}^{\infty} 
+ \\
+&= 3 (
+\frac{5\pi}{3} 4 a_1^3 X_{11}^{M}
++ 
+\frac{5\pi}{6} (a_1 + a_2)^3 X_{12}^{M})
+(n_i n_j-\frac{1}{3}\delta_{ij})
+n_x n_z E_{xz}^{\infty} 
+ \\
+&=  (
+20\pi  a_1^3  X_{11}^{M}
++ 
+\frac{5}{2}\pi (a_1+a_2)^3 X_{12}^{M})
+(n_i n_j-\frac{1}{3}\delta_{ij}) 
+n_x n_z \frac{\dot{\gamma}}{2}
+\end{align}
+
+\begin{align}
+\frac{1}{6\pi} S_{ij}^{\alpha} 
+&= 
+  (
+\frac{10}{3}  a_1^3  X_{11}^{M}
++ 
+\frac{5}{12} (a_1+a_2)^3 X_{12}^{M})
+(n_i n_j-\frac{1}{3}\delta_{ij}) 
+n_x n_z \frac{\dot{\gamma}}{2}
+\\
+&=
+  (
+\frac{5}{3}  a_1^3  X_{11}^{M}
++ 
+\frac{5}{24} (a_1+a_2)^3 X_{12}^{M})
+(n_i n_j-\frac{1}{3}\delta_{ij}) 
+n_x n_z \dot{\gamma}
+\\
+\end{align}
+
+$\tens{M}_{11} \bm{E}_{\infty}$
+
+\begin{equation}
+  X_{11}^{M}
+\approx
+\frac{3}{5} g_1(\lambda) \xi^{-1},
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ X_{12}^{M}
+\approx
+\frac{8\lambda}{(1+\lambda)^3} g_1(\lambda) \xi^{-1}
+\end{equation}
+
 
 %\begin{align}
 %\frac{ F^{\alpha}_i}{F_0}

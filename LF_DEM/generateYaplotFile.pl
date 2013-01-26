@@ -80,13 +80,14 @@ sub InInteractions {
 	}
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $sxz_lub, $fc_n, $fc_t, $gap, $fric_st) = split(/\s+/, $line);
+		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz,
+		$nx, $ny, $nz, $gap, $sxz_lub, $fric_st) = split(/\s+/, $line);
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
-		$Sxz_lub[$k] = $sxz_lub;
+		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
-		$Ft_t[$k] = $fc_t;
+		$Ft_t[$k] = ($fc_tx)**2 + ($fc_ty)**2 + ($fc_tz)**2 ;
 		$Gap[$k] = $gap;
 	}
 }
@@ -174,7 +175,7 @@ sub OutYaplotData{
 			}
     }
 	$zpos = $Lz / 2 + 1;
-	printf OUT "t 0 0 $zpos $maxS \n";
+	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
 }
 
 sub OutString {

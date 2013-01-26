@@ -386,10 +386,10 @@ System::torqueReset(){
 void
 System::stressReset(){
 	for (int i=0; i < np; i++){
-		for (int j=0; j < 5; j++){
-			lubstress[i][j]=0;
-			contactstress[i][j]=0;
-			brownianstress[i][j]=0;
+		for (int k=0; k < 5; k++){
+			lubstress[i][k]=0;
+			contactstress[i][k]=0;
+			brownianstress[i][k]=0;
 		}
 	}
 }
