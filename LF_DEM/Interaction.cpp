@@ -220,14 +220,11 @@ Interaction::prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, do
 
 void
 Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
-	double g1_l; //, g1_il;
-	double l1, l13, il1; //, il13;
-	l1 = 1.0 + lambda;
-	l13 = l1 * l1 * l1;
-	il1 = 1.0 + invlambda;
+	double l1 = 1.0 + lambda;
+	double l13 = l1 * l1 * l1;
+	double il1 = 1.0 + invlambda;
 	//	il13 = il1 * il1 * il1;
-	
-	g1_l = 2.0 * lambda * lambda / l13;
+	double g1_l = 2.0 * lambda * lambda / l13;
 	//g1_il = 2.0 * invlambda * invlambda / il13;
 	//g1_il = g1_l/lambda;
 	
@@ -240,17 +237,15 @@ Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 
 void
 Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
-	double g1_l; //, g1_il;
-	double l1, l13;// , il1; //, il13;
-	l1 = 1.0 + lambda;
-	l13 = l1 * l1 * l1;
+	double l1 = 1.0 + lambda;
+	double l13 = l1 * l1 * l1;
 	//	il1 = 1.0 + invlambda;
 	//	il13 = il1 * il1 * il1;
-	g1_l = 2.0 * lambda * lambda / l13;
-	//	g1_il = 2.0 * invlambda * invlambda / il13;
+	double g1_l = 2.0 * lambda * lambda / l13;
+	//g1_il = 2.0 * invlambda * invlambda / il13;
 	//g1_il = g1_l/lambda;
 	XMii = 0.6 * g1_l * iksi_eff;
-	XMij = 40*lambda / (3 * l13) * XMii ;
+	XMij = 40*lambda / 3 / l13 * XMii ;
 	XMji = XMij;
 	XMjj = XMii/lambda;
 }
@@ -278,10 +273,10 @@ Interaction::GE(double GEi[], double GEj[]){
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
  
 void
-Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]){
-	for (int k=0; k < 5; k ++){
-		stresslet_i[k] = 0.;
-		stresslet_j[k] = 0.;
+Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j){
+	for (int u=0; u < 5; u ++){
+		stresslet_i.elm[u] = 0.;
+		stresslet_j.elm[u] = 0.;
 	}
 	
 	double XGii, XGjj, XGij, XGji;
@@ -301,17 +296,17 @@ Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[
 	common_factor_j += dot(nr_vec, ( twothird * a1 * a1 * XGjj * vj + onesixth * ro * ro * XGji * vi));
 	
 
-	stresslet_i[0] += n0n0_13 * common_factor_i;
-	stresslet_i[1] += n0n1    * common_factor_i;
-	stresslet_i[2] += n0n2    * common_factor_i;
-	stresslet_i[3] += n1n2    * common_factor_i;
-	stresslet_i[4] += n1n1_13 * common_factor_i;
+	stresslet_i.elm[0] += n0n0_13 * common_factor_i;
+	stresslet_i.elm[1] += n0n1    * common_factor_i;
+	stresslet_i.elm[2] += n0n2    * common_factor_i;
+	stresslet_i.elm[3] += n1n2    * common_factor_i;
+	stresslet_i.elm[4] += n1n1_13 * common_factor_i;
 
-	stresslet_j[0] += n0n0_13 * common_factor_j;
-	stresslet_j[1] += n0n1 * common_factor_j;
-	stresslet_j[2] += n0n2 * common_factor_j;
-	stresslet_j[3] += n1n2 * common_factor_j;
-	stresslet_j[4] += n1n1_13 * common_factor_j;
+	stresslet_j.elm[0] += n0n0_13 * common_factor_j;
+	stresslet_j.elm[1] += n0n1 * common_factor_j;
+	stresslet_j.elm[2] += n0n2 * common_factor_j;
+	stresslet_j.elm[3] += n1n2 * common_factor_j;
+	stresslet_j.elm[4] += n1n1_13 * common_factor_j;
 
 }
 
@@ -331,62 +326,75 @@ void
 Interaction::addLubricationStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-	double stresslet_i[5];
-	double stresslet_j[5];
+	stresslet stresslet_i;
+	stresslet stresslet_j;
 	vec3d &vi = sys->relative_velocity[i];
 	vec3d &vj = sys->relative_velocity[j];
-	
-	// First -G*(U-Uinf) term
+	/*
+	 *  First: -G*(U-Uinf) term
+	 */
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
 	double n0n0_13 = nr_vec.x*nr_vec.x - 1./3;
 	double n1n1_13 = nr_vec.y*nr_vec.y - 1./3;
-	double n0n1 = nr_vec.x * nr_vec.y;
-	double n0n2 = nr_vec.x * nr_vec.z;
-	double n1n2 = nr_vec.y * nr_vec.z;
+	double n0n1 = nr_vec.x*nr_vec.y;
+	double n0n2 = nr_vec.x*nr_vec.z;
+	double n1n2 = nr_vec.y*nr_vec.z;
+	double roro = ro*ro;
+	double a0a0 = a0*a0;
+	double a1a1 = a1*a1;
 
-	double twothird = 2./3;
-	double onesixth_ro_ro = ro*ro/6;
-	double common_factor_i_1 = - dot( nr_vec, (twothird*a0*a0*XGii) * vi + (onesixth_ro_ro*XGij) * vj);
-	double common_factor_j_1 = - dot( nr_vec, (twothird*a1*a1*XGjj) * vj + (onesixth_ro_ro*XGji) * vi);
-
-	stresslet_i[0] = n0n0_13 * common_factor_i_1;
-	stresslet_i[1] = n0n1 * common_factor_i_1;
-	stresslet_i[2] = n0n2 * common_factor_i_1;
-	stresslet_i[3] = n1n2 * common_factor_i_1;
-	stresslet_i[4] = n1n1_13 * common_factor_i_1;
-
-	stresslet_j[0] = n0n0_13 * common_factor_j_1;
-	stresslet_j[1] = n0n1 * common_factor_j_1;
-	stresslet_j[2] = n0n2 * common_factor_j_1;
-	stresslet_j[3] = n1n2 * common_factor_j_1;
-	stresslet_j[4] = n1n1_13 * common_factor_j_1;
-
-	// Second: +M*Einf term
+	double cf_GU_i = -dot(nr_vec, (2*a0a0*XGii/3)*vi + (roro*XGij/6)*vj);
+	double cf_GU_j = -dot(nr_vec, (2*a1a1*XGjj/3)*vj + (roro*XGji/6)*vi);
+	/*
+	 *  Second: +M*Einf term
+	 */
 	double XMii, XMjj, XMij, XMji;
 	XM(XMii, XMij, XMji, XMjj);
+	double cf_ME_i = 5*(a0*a0a0*XMii/3 + ro*roro*XMij/24)*n0n2*sys->shear_rate;
+	double cf_ME_j = 5*(a1*a1a1*XMjj/3 + ro*roro*XMji/24)*n0n2*sys->shear_rate;
+	
+	double common_factor_i = cf_GU_i + cf_ME_i;
+	double common_factor_j = cf_GU_j + cf_ME_j;
+	stresslet_i.elm[0] = n0n0_13 * common_factor_i;
+	stresslet_i.elm[1] = n0n1 * common_factor_i;
+	stresslet_i.elm[2] = n0n2 * common_factor_i;
+	stresslet_i.elm[3] = n1n2 * common_factor_i;
+	stresslet_i.elm[4] = n1n1_13 * common_factor_i;
+	stresslet_j.elm[0] = n0n0_13 * common_factor_j;
+	stresslet_j.elm[1] = n0n1 * common_factor_j;
+	stresslet_j.elm[2] = n0n2 * common_factor_j;
+	stresslet_j.elm[3] = n1n2 * common_factor_j;
+	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
 
-	double fivethird = 5./3;
-	double five24_ro3 = (5./24)*ro*ro*ro;
+	for (int u=0; u < 5; u++){
+		sys->lubstress[i].elm[u] += stresslet_i.elm[u];
+		sys->lubstress[j].elm[u] += stresslet_j.elm[u];
+		lubstresslet.elm[u] = stresslet_i.elm[u] + stresslet_j.elm[u];
+	}
+	/*
+	 * Calculate the lubrication stresslet by using lubrication forces
+	 */
+	
+	stresslet stresslet2_i;
+	stresslet stresslet2_j;
+	vec3d dr_i = a0*nr_vec;
+	stresslet2_i.elm[0] = 2*dr_i.x*lubforce_i.x;
+	stresslet2_i.elm[1] = dr_i.x*lubforce_i.y + dr_i.y*lubforce_i.x;
+	stresslet2_i.elm[2] = dr_i.x*lubforce_i.z + dr_i.z*lubforce_i.x;
+	stresslet2_i.elm[3] = dr_i.y*lubforce_i.z + dr_i.z*lubforce_i.y;
+	stresslet2_i.elm[4] = 2*dr_i.y*lubforce_i.y;
+	vec3d lubforce_j = -lubforce_i;
+	vec3d dr_j = -a1*nr_vec;
+	stresslet2_j.elm[0] = 2*dr_j.x*lubforce_j.x;
+	stresslet2_j.elm[1] = dr_j.x*lubforce_j.y + dr_j.y*lubforce_j.x;
+	stresslet2_j.elm[2] = dr_j.x*lubforce_j.z + dr_j.z*lubforce_j.x;
+	stresslet2_j.elm[3] = dr_j.y*lubforce_j.z + dr_j.z*lubforce_j.y;
+	stresslet2_j.elm[4] = 2*dr_j.y*lubforce_j.y;
 
-	double common_factor_i_2 = (fivethird*a0*a0*XMii + five24_ro3*XMij)*n0n2*sys->shear_rate;
-	double common_factor_j_2 = (fivethird*a1*a1*XMjj + five24_ro3*XMji)*n0n2*sys->shear_rate;
-
-	stresslet_i[0] += n0n0_13 * common_factor_i_2;
-	stresslet_i[1] += n0n1 * common_factor_i_2;
-	stresslet_i[2] += n0n2 * common_factor_i_2;
-	stresslet_i[3] += n1n2 * common_factor_i_2;
-	stresslet_i[4] += n1n1_13 * common_factor_i_2;
-	stresslet_j[0] += n0n0_13 * common_factor_j_2;
-	stresslet_j[1] += n0n1 * common_factor_j_2;
-	stresslet_j[2] += n0n2 * common_factor_j_2;
-	stresslet_j[3] += n1n2 * common_factor_j_2;
-	stresslet_j[4] += n1n1_13 * common_factor_j_2;
-
-	for (int k=0; k < 5; k++){
-		sys->lubstress[i][k] += stresslet_i[k];
-		sys->lubstress[j][k] += stresslet_j[k];
-		lubstresslet[k] = stresslet_i[k] + stresslet_j[k];
+	for (int u=0; u < 5; u++){
+		sys->lubstress2[i].elm[u] += stresslet2_i.elm[u];
+		sys->lubstress2[j].elm[u] += stresslet2_j.elm[u];
 	}
 }
 
@@ -400,29 +408,26 @@ Interaction::evaluateLubricationForce(){
 	int j = particle_num[1];
 	lubforce_i.reset();
 	/*	lubforce_j.reset(); */
-	/*******************************
-	 *  First: -A*(U-Uinf) term    *
-	 *******************************/
+
+	/*
+	 *  First: -A*(U-Uinf) term
+	 */
 	vec3d &vi = sys->relative_velocity[i];
 	vec3d &vj = sys->relative_velocity[j];
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
-	double common_factor_i = dot(a0*XAii*vi + 0.5*ro*XAij*vj, nr_vec);
-	/*	double common_factor_j = dot(a1*XAjj*vj + 0.5*ro*XAji*vi, nr_vec); */
-	lubforce_i = - common_factor_i*nr_vec;
-	/* lubforce_i = - common_factor_j*nr_vec;*/
-	/*********************************
-	 *  Second -tildeG*(-Einf)term   *
-	 *********************************/
-	// First
+	double cf_AU_i = -dot(a0*XAii*vi + 0.5*ro*XAij*vj, nr_vec);
+	/*	double cf_AU_j = -dot(a1*XAjj*vj + 0.5*ro*XAji*vi, nr_vec); */
+
+	/*
+	 *  Second -tildeG*(-Einf)term
+	 */
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
 	double n0n2 = nr_vec.x * nr_vec.z;
-	double twothird = 2./3;
-	double onesixth = 1./6;
-	common_factor_i = n0n2*(twothird*a0*a0*XGii + onesixth*ro*ro*XGji)* sys->shear_rate;
-	/*	common_factor_j = n0n2*(twothird*a1*a1*XGjj + onesixth*ro*ro*XGij)* sys->shear_rate; */
-	lubforce_i += common_factor_i * nr_vec;
+	double cf_GE_i = n0n2*(2*a0*a0*XGii/3 + ro*ro*XGji/6)* sys->shear_rate;
+	/*	double cf_GE_j = n0n2*(2*a1*a1*XGjj/3 + ro*ro*XGij/6)* sys->shear_rate; */
+	lubforce_i = (cf_AU_i + cf_GE_i) * nr_vec;
 	/* lubforce_j +=  common_factor_j * nr_vec; */
 }
 
@@ -431,21 +436,20 @@ Interaction::valLubForce(){
 	return 	-dot(lubforce_i, nr_vec);
 }
 
-
 void
 Interaction::addContactStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
 	if (contact){
 		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
-		contactstresslet[0] = 2*(force.x * nr_vec.x); //xx
-		contactstresslet[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
-		contactstresslet[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
-		contactstresslet[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-		contactstresslet[4] = 2*(force.y * nr_vec.y);   
-		for (int k=0; k < 5; k++){
-			sys->contactstress[i][k] += contactstresslet[k];
-			sys->contactstress[j][k] += contactstresslet[k];
+		contactstresslet.elm[0] = 2*(force.x * nr_vec.x); //xx
+		contactstresslet.elm[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
+		contactstresslet.elm[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
+		contactstresslet.elm[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz
+		contactstresslet.elm[4] = 2*(force.y * nr_vec.y);
+		for (int u=0; u < 5; u++){
+			sys->contactstress[i].elm[u] += contactstresslet.elm[u];
+			sys->contactstress[j].elm[u] += contactstresslet.elm[u];
 		}
 	}
 }
@@ -464,7 +468,6 @@ Interaction::partner(int i){
  */
 void
 Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int zshift){
-
 	active = true;
 
 	if(j>i){
@@ -484,7 +487,6 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	sys->interaction_partners[i].insert(j);
 	sys->interaction_partners[j].insert(i);
 
-
 	a0 = sys->radius[particle_num[0]];
 	a1 = sys->radius[particle_num[1]];
 	ro = a0+a1; // for polydispesity, we will rewrite this to a1+a2
@@ -493,7 +495,7 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	else
 		contact = true;
 	lambda = a1 / a0;
-	invlambda = 1. / lambda;
+	invlambda = 1 / lambda;
 	ksi_cutoff = sys->gap_cutoff;
 	r_lub_max = 0.5*ro*sys->lub_max;
 	assignDistanceNormalVector(pos_diff, distance, zshift);
@@ -505,7 +507,6 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	kn = sys->kn/(0.5*ro);
 	kt = sys->kt/(0.5*ro);
 	
-	
 	strain_0 = sys->shear_strain;
 	if ( distance - ro < sys->dist_near*0.5*ro){
 		near = true;
@@ -513,7 +514,7 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 		near = false;
 	}
 
-	prev_iksi_eff = 0.;
+	prev_iksi_eff = 0;
 	return;
 }
 
@@ -557,7 +558,6 @@ Interaction::deactivate_contact(){
 	contact = false;
 	Fc_normal = 0;
 	Fc_tangent.reset();
-	
 }
 
 /*

@@ -50,7 +50,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	int i_time_interval = strain_interval_out/(sys.dt*sys.shear_rate);
 	while(sys.shear_strain <= shear_strain_end){
 		cerr << "strain: " << sys.shear_strain << endl;
-		sys.timeEvolution(i_time_interval);
 		evaluateData();
 		outputRheologyData();
 		outputConfigurationData();
@@ -58,6 +57,9 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 			output_yap();
 		if(out_vpython)
 			output_vpython(sys.ts);
+
+		
+		sys.timeEvolution(i_time_interval);
 	}
 }
 
@@ -427,8 +429,8 @@ Simulation::prepareSimulationName(){
 void
 Simulation::evaluateData(){
 	double total_stress[5];
-	for (int k=0; k<5; k++){
-		total_stress[k] = (sys.total_lub_stress[k] + sys.total_contact_stress[k] + sys.total_brownian_stress[k]);
+	for (int u=0; u<5; u++){
+		total_stress[u] = (sys.total_lub_stress[u] + sys.total_contact_stress[u] + sys.total_brownian_stress[u]);
 	}
 	total_stress[2] += sys.total_stress_bgf;
 	
@@ -445,6 +447,23 @@ Simulation::evaluateData(){
 	Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
 	N1_b = 2*sys.total_brownian_stress[0] + sys.total_brownian_stress[4];
 	N2_b = -2*sys.total_brownian_stress[0] - sys.total_brownian_stress[4];
+
+	
+	double total_lub_stress2[5];
+	for (int u=0; u < 5; u++){
+		total_lub_stress2[u] = 0;
+	}
+	for (int i=0; i < sys.np; i++){
+		for (int u=0; u < 5; u++){
+			total_lub_stress2[u] += sys.lubstress2[i].elm[u];
+		}
+	}
+
+	for (int u=0; u<5; u++){
+		total_stress[u] = (total_lub_stress2[u] + sys.total_contact_stress[u] + sys.total_brownian_stress[u]);
+	}
+	total_stress[2] += sys.total_stress_bgf;
+	Viscosity2 = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
 
 }
 
@@ -520,6 +539,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.cnt_contact_number[6]*(1.0/sys.np) << ' '; //25
 	fout_rheo << sys.cnt_contact_number[7]*(1.0/sys.np) << ' '; //26
 	fout_rheo << sys.cnt_contact_number[8]*(1.0/sys.np) << ' '; //27
+	fout_rheo << Viscosity2; // 28
 	fout_rheo << endl;
 }
 

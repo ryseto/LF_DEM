@@ -45,6 +45,7 @@
 		D92F19C01676450800411650 /* BrownianForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrownianForce.cpp; sourceTree = "<group>"; };
 		D92F19C11676450800411650 /* BrownianForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrownianForce.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
+		D938135C16B572A8006F1CAC /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxSet.cpp; sourceTree = "<group>"; };
@@ -176,6 +177,7 @@
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
+				D938135C16B572A8006F1CAC /* common.h */,
 				D97C3B07167690DC009A6BF0 /* Interaction.cpp */,
 				D97C3B08167690DC009A6BF0 /* Interaction.h */,
 				D92F19C01676450800411650 /* BrownianForce.cpp */,

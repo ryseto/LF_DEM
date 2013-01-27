@@ -40,21 +40,6 @@ System::~System(){
 	if (!torque)
 		delete [] torque;
 
-	for (int i=0; i < np; i++){
-		delete [] lubstress[i];
-	}
-	delete [] lubstress;
-
-	for (int i=0; i < np; i++)
-		delete [] contactstress[i];
-	delete [] contactstress;
-
-	if (brownian){
-		for (int i=0; i < np; i++)
-			delete [] brownianstress[i];
-		delete [] brownianstress;
-	}
-
 	if (!interaction_list)
 		delete [] interaction_list;
 	if (!interaction_partners)
@@ -116,18 +101,9 @@ System::allocateRessources(){
 	torque = new vec3d [np];
 	lub_force = new vec3d [np];
 	contact_number.resize(np);
-	contactstress = new double* [np];
-	for (int i=0; i < np; i++){
-		contactstress[i] = new double [5];
-	}
-	lubstress = new double* [np];
-	for (int i=0; i < np; i++){
-		lubstress[i] = new double [5];
-	}
-	brownianstress = new double* [np];
-	for (int i=0; i < np; i++){
-		brownianstress[i] = new double [5];
-	}
+	lubstress.resize(np);
+	contactstress.resize(np);
+	brownianstress.resize(np);
 	fb = new BrownianForce(this);
 
 	int maxnum_interactionpair_per_particle = 12;
@@ -135,6 +111,8 @@ System::allocateRessources(){
 	interaction = new Interaction [maxnum_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
+	
+	lubstress2.resize(np);
 	
 	dof = 3;
 	linalg_size = dof*np;
@@ -386,10 +364,11 @@ System::torqueReset(){
 void
 System::stressReset(){
 	for (int i=0; i < np; i++){
-		for (int k=0; k < 5; k++){
-			lubstress[i][k]=0;
-			contactstress[i][k]=0;
-			brownianstress[i][k]=0;
+		for (int u=0; u < 5; u++){
+			lubstress[i].elm[u]=0;
+			contactstress[i].elm[u]=0;
+			brownianstress[i].elm[u]=0;
+			lubstress2[i].elm[u]=0;
 		}
 	}
 }
@@ -523,8 +502,6 @@ System::appendToRow(const vec3d &nvec, int ii, int jj, double alpha){
 
 void
 System::addToDiag(const vec3d &nvec, int ii, double alpha){
-
-	
 	double alpha_n0 = alpha*nvec.x;
 	double alpha_n1 = alpha*nvec.y;
 	double alpha_n2 = alpha*nvec.z;
@@ -907,14 +884,12 @@ System::updateResistanceMatrix(){
 				sqrt_diag_diff_comp_i = sqrt( - diag_diff_comp_i );
 			}
 
-
 			for(int u=0; u<3; u++) {
 				((int*)update_vector_diag->i)[u] = j3+u;
 				((double*)update_vector_diag->x)[u] = sqrt_diag_diff_comp_j * nvec[u] ;
 			}
 
 			cholmod_updown(update, update_vector_diag, chol_L, &chol_c);
-
 		}
 	}
 }
@@ -1221,11 +1196,11 @@ void System::updateVelocityLubricationBrownian(){
 
 void System::computeBrownianStress(){
 #ifdef CHOLMOD
-	double stresslet_i[5];
-	double stresslet_j[5];
-	for (int k=0; k < 5; k ++){
-		stresslet_i[k] = 0.;
-		stresslet_j[k] = 0.;
+	stresslet stresslet_i;
+	stresslet stresslet_j;
+	for (int u=0; u < 5; u ++){
+		stresslet_i.elm[u] = 0.;
+		stresslet_j.elm[u] = 0.;
 	}
 	vec3d vi;
 	vec3d vj;
@@ -1246,8 +1221,8 @@ void System::computeBrownianStress(){
 	
 	for (int k = 0; k < num_interaction; k++){
 		for (int u=0; u < 5; u ++){
-			stresslet_i[u] = 0.;
-			stresslet_j[u] = 0.;
+			stresslet_i.elm[u] = 0.;
+			stresslet_j.elm[u] = 0.;
 		}
 
 		int i = interaction[k].particle_num[0];
@@ -1266,8 +1241,8 @@ void System::computeBrownianStress(){
 		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
 
 		for (int u=0; u < 5; u++){
-			brownianstress[i][u] += stresslet_i[u];
-			brownianstress[j][u] += stresslet_j[u];
+			brownianstress[i].elm[u] += stresslet_i.elm[u];
+			brownianstress[j].elm[u] += stresslet_j.elm[u];
 		}
 	}
 	
@@ -1293,8 +1268,8 @@ void System::computeBrownianStress(){
 	
 	for (int k = 0; k < num_interaction; k++){
 		for (int u=0; u < 5; u ++){
-			stresslet_i[u] = 0.;
-			stresslet_j[u] = 0.;
+			stresslet_i.elm[u] = 0.;
+			stresslet_j.elm[u] = 0.;
 		}
 
 		int i = interaction[k].particle_num[0];
@@ -1313,14 +1288,14 @@ void System::computeBrownianStress(){
 		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
 
 		for (int u=0; u < 5; u++){
-			brownianstress[i][u] -= stresslet_i[u];
-			brownianstress[j][u] -= stresslet_j[u];
+			brownianstress[i].elm[u] -= stresslet_i.elm[u];
+			brownianstress[j].elm[u] -= stresslet_j.elm[u];
 		}
 	}
 
 	for (int i=0; i < np; i++){
 		for (int u=0; u < 5; u++){
-			brownianstress[i][u] *= 0.5*dt_ratio;
+			brownianstress[i].elm[u] *= 0.5*dt_ratio;
 		}
 	}
 	
@@ -1487,32 +1462,32 @@ System::calcStress(){
 
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
+			interaction[k].evaluateLubricationForce();
 			interaction[k].addLubricationStress();
 			if (interaction[k].contact){
 				interaction[k].addContactStress();
 			}
-			interaction[k].evaluateLubricationForce();
 		}
 	}
-	for(int k=0; k < 10 ; k++){
-		cnt_contact_number[k] = 0;
+	for(int u=0; u < 10 ; u++){
+		cnt_contact_number[u] = 0;
 	}
 	for (int i =0; i < np; i++){
 		cnt_contact_number[ contact_number[i] ] ++;
 	}
 	
-	for (int k=0; k < 5; k++){
-		total_lub_stress[k] = 0;
-		total_contact_stress[k] = 0;
-		total_brownian_stress[k] = 0;
+	for (int u=0; u < 5; u++){
+		total_lub_stress[u] = 0;
+		total_contact_stress[u] = 0;
+		total_brownian_stress[u] = 0;
 	}
 	
 	
 	for (int i=0; i < np; i++){
-		for (int k=0; k < 5; k++){
-			total_lub_stress[k] += lubstress[i][k];
-			total_contact_stress[k] += contactstress[i][k];
-			total_brownian_stress[k] += brownianstress[i][k];
+		for (int u=0; u < 5; u++){
+			total_lub_stress[u] += lubstress[i].elm[u];
+			total_contact_stress[u] += contactstress[i].elm[u];
+			total_brownian_stress[u] += brownianstress[i].elm[u];
 		}
 	}
 	

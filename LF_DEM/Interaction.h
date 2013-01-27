@@ -13,6 +13,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "System.h"
+#include "common.h"
 using namespace std;
 class System;
 
@@ -51,8 +52,8 @@ private:
 	bool _just_off;
 
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
-	double lubstresslet[5];
-	double contactstresslet[5];
+	stresslet lubstresslet;
+	stresslet contactstresslet;
 
 protected:
 	void calcStaticFriction();
@@ -77,7 +78,7 @@ public:
 		return ksi;
 	}
 	double lubStresslet(int i){
-		return lubstresslet[i];
+		return lubstresslet.elm[i];
 	}
 	
 	
@@ -108,21 +109,17 @@ public:
 
 	void evaluateLubricationForce();
 	double valLubForce();
-
 	void calcContactInteraction();
 	void calcContactInteractionNoFriction();
 	void calcContactStress();
 	void addLubricationStress();
 	void addContactStress();
-	void pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]);
-
-
+	void pairStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
 	void prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj);
 	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);
 	void XM(double &XMii, double &XMij, double &XMji, double &XMjj);
 	void GE(double GEi[], double GEj[]);
-
 
 };
 

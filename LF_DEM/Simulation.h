@@ -42,6 +42,7 @@ private:
 	double Viscosity_b;
 	double N1_b;
 	double N2_b;
+	double Viscosity2;
 	/*
 	 *  Simulation parameters
 	 */

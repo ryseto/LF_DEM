@@ -12,9 +12,11 @@
 //#define TRILINOS
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include <fstream>
 #include <queue>
 #include <string>
+#include "common.h"
 //#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
 
@@ -29,6 +31,7 @@
 #include "BelosSolverFactory.hpp"
 #include "BelosEpetraAdapter.hpp"
 #include "Teuchos_RCP.hpp"
+
 #endif
 
 #include "vec3d.h"
@@ -57,6 +60,7 @@ class Simulation;
 class Interaction;
 class BrownianForce;
 class BoxSet;
+
 
 
 class System{
@@ -172,9 +176,10 @@ public:
 	vec3d *brownian_velocity;
 	vec3d *torque; // right now only contact torque
 	vec3d *lub_force; // Only for outputing data
-	double **lubstress; // [0-(np-1)][1-5] S_xx S_xy S_xz S_yz S_yy
-	double **contactstress; // [0-(np-1)][1-5]  S_xx S_xy S_xz S_yz S_yy
-	double **brownianstress; // [0-(np-1)][1-5] S_xx S_xy S_xz S_yz S_yy
+	vector <stresslet> lubstress; // G U + M E
+	vector <stresslet> lubstress2; // r * F_lub
+	vector <stresslet> contactstress;
+	vector <stresslet> brownianstress;
 	double total_stress_bgf;
 	double total_lub_stress[5];
 	double total_contact_stress[5];
