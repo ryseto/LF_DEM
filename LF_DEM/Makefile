@@ -1,12 +1,13 @@
 #Makefile Romain Mari 06/2010
 CXX=g++ # -cxxlib-icc-abr
 
+
 #CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS
-CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS debug
-#CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/ # linux
+#CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS debug
+CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/ # linux
 #CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/
 LINKLIBS = -llapack -lblas -lcholmod
-LINKLIBS += /usr/local/Lib/libcholmod.a /usr/local/Lib/libamd.a /usr/local/Lib/libcolamd.a /usr/local/lib/libsuitesparseconfig.a # mac os
+#LINKLIBS += /usr/local/Lib/libcholmod.a /usr/local/Lib/libamd.a /usr/local/Lib/libcolamd.a /usr/local/lib/libsuitesparseconfig.a # mac os
 
 
 OUT_CODE=LF_DEM
