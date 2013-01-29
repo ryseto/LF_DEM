@@ -23,7 +23,8 @@
 #include "Epetra_CrsMatrix.h"
 #include "BelosSolverFactory.hpp"
 #include "BelosEpetraAdapter.hpp"
-#include "Teuchos_RCP.hpp"
+#include "Teuchos_RCP.hpp" // ref counting pointer
+#include "Ifpack2_Preconditioner.hpp" // incomplete Cholesky preconditioner
 #endif
 
 #ifdef TRILINOS
@@ -128,6 +129,9 @@ class StokesSolver{
     void allocate_RFU();
     
     void allocateRessources();
+
+    void buildDiagBlockPreconditioner();
+    void buildIncCholPreconditioner();
     
  public:
 
@@ -138,9 +142,13 @@ class StokesSolver{
 
 
     // R_FU filling methods
-
+    /* prepareNewBuild_RFU() :
+        - initialize arrays/vectors used for building
+        - to be called before adding elements
+     */
     void prepareNewBuild_RFU();
-    /* addToDiag_RFU(int ii, double alpha);
+
+    /* addToDiag_RFU(int ii, double alpha) :
        - adds alpha to diagonal elements 3*ii, 3*ii+1, and 3*ii+2
     */
     void addToDiag_RFU(int ii, double alpha);
@@ -170,6 +178,7 @@ class StokesSolver{
       - transforms temporary arrays/vectors used to build resistance
         matrix into Cholmod or Epetra objects really used by 
 	the solvers
+      - also builds preconditionner when needed (TRILINOS)
       - must be called before solving the linear algebra problem
       - must be called after all terms are added
     */
@@ -180,7 +189,22 @@ class StokesSolver{
     void addToRHS(int, const double);
     void setRHS(double*);
 
-    void solve(double* &velocity);
+    /* 
+    solve(double* velocity) :
+      - once the RFU matrix and the RHS vector are built 
+        ( complete_RFU() must have been called )
+      - solves RFU * velocity = RHS, and stores it in velocity array
+    */
+    void solve(double* velocity);
+
+    /* 
+    solvingIsDone() :
+      - deletes RFU matrix and some other arrays 
+        (preconditionner, Cholesky factors, ...) used for solving
+      - should be called once every call to solve() WITH THE SAME RFU
+        is done. If RFU changes, solve() must be followed by 
+        solvingIsDone()
+    */
     void solvingIsDone();
 
 #ifdef CHOLMOD

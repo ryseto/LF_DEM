@@ -5,6 +5,11 @@
 
 using namespace std;
 
+/******************************************************
+*                                                     *
+*                   Public Methods                    *
+*                                                     *
+******************************************************/
 
 StokesSolver::StokesSolver(int n){
     np=n;
@@ -46,50 +51,6 @@ StokesSolver::~StokesSolver(){
 }
 
 void
-StokesSolver::allocateRessources(){
-	
-#ifdef TRILINOS
-    int maxnum_interactionpair_per_particle = 15;
-    columns_max_nb = dof*maxnum_interactionpair_per_particle;
-    int numlhs = 1;
-    int numrhs = 1;
-    Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
-    tril_solution = rcp( new VEC(*Map, numlhs) );
-    tril_rhs = rcp( new VEC(*Map, numrhs) );
-    //	tril_rfu_matrix = rcp( new MAT(linalg_size) );
-    
-    columns = new int* [linalg_size];
-    for (int i=0; i < linalg_size; i++){
-	columns[i] = new int [columns_max_nb];
-	for(int j=0; j < columns_max_nb; j++){
-	    columns[i][j] = -1;
-	}
-    }
-    values = new double* [linalg_size];
-    for (int i=0; i < linalg_size; i++){
-	values[i] = new double [columns_max_nb];
-	for(int j=0; j < columns_max_nb; j++){
-	    values[i][j] = 0.;
-	}
-    }
-    columns_nb = new int [linalg_size];
-    for (int i=0; i < linalg_size; i++)
-	columns_nb[i] = 0;
-    
-    
-#endif
-#ifdef CHOLMOD
-    cholmod_start (&chol_c) ;
-    diag_values = new double [6*np];
-    off_diag_values = new vector <double> [3];
-    ploc = new int [np+1];
-    chol_rhs = cholmod_allocate_dense(np3, xtype, &chol_c);
-    chol_L=NULL;
-#endif
-
-}
-
-void
 StokesSolver::initialize(){
 
 #ifdef CHOLMOD
@@ -117,9 +78,8 @@ StokesSolver::initialize(){
     
 }
 
-
-// diagonal terms
-
+/************* Matrix filling methods **********************/ 
+// Diagonal Terms
 void
 StokesSolver::addToDiag_RFU(int ii, double alpha){
     
@@ -137,6 +97,7 @@ StokesSolver::addToDiag_RFU(int ii, double alpha){
 #endif
 }
 
+// Diagonal Blocks Terms
 void
 StokesSolver::addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha){
     double alpha_n0 = alpha*nvec.x;
@@ -173,7 +134,7 @@ StokesSolver::addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha){
 #endif
 }
 
-// off-diagonal terms
+// Off-Diagonal Blocks Terms
 void
 StokesSolver::appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
@@ -184,116 +145,6 @@ StokesSolver::appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double
     appendToRow_RFU(nvec, ii, jj, alpha);
 #endif
 }
-
-#ifdef CHOLMOD
-void
-StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha){
-
-    if(ii>last_updated_colblock){
-	last_updated_colblock = ii;
-	ploc[i] = (unsigned int)rows.size();
-    }
-
-    int jj3   = 3*jj;
-    int jj3_1 = jj3+1;
-    int jj3_2 = jj3+2;
-    double alpha_n0 = alpha*nvec.x;
-    double alpha_n1 = alpha*nvec.y;
-    double alpha_n2 = alpha*nvec.z;
-    double alpha_n1n0 = alpha_n0*nvec.y;
-    double alpha_n2n1 = alpha_n1*nvec.z;
-    double alpha_n0n2 = alpha_n2*nvec.x;
-    
-    rows.push_back(jj3);
-    rows.push_back(jj3_1);
-    rows.push_back(jj3_2);
-    
-    off_diag_values[0].push_back(alpha_n0*nvec.x); // 00
-    off_diag_values[0].push_back(alpha_n1n0); // 10
-    off_diag_values[0].push_back(alpha_n0n2); // 20
-    off_diag_values[1].push_back(alpha_n1n0); // 01
-    off_diag_values[1].push_back(alpha_n1*nvec.y); //11
-    off_diag_values[1].push_back(alpha_n2n1); // 21
-    off_diag_values[2].push_back(alpha_n0n2); // 02
-    off_diag_values[2].push_back(alpha_n2n1); // 12
-    off_diag_values[2].push_back(alpha_n2*nvec.z); //22
-}
-#endif
-
-//off-diagonal terms
-#ifdef TRILINOS
-void
-StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
-    int ii3   = 3*ii;
-    int ii3_1 = ii3+1;
-    int ii3_2 = ii3+2;
-    int jj3   = 3*jj;
-    int jj3_1 = jj3+1;
-    int jj3_2 = jj3+2;
-    
-    double alpha_n0 = alpha*nvec.x;
-    double alpha_n1 = alpha*nvec.y;
-    double alpha_n2 = alpha*nvec.z;
-    double alpha_n1n0 = alpha_n0*nvec.y;
-    double alpha_n2n1 = alpha_n1*nvec.z;
-    double alpha_n0n2 = alpha_n2*nvec.x;
-    
-    
-    // declare ii and jj new columns, and update column nb
-    int last_col_nb_ii = columns_nb[ii3];
-    int last_col_nb_jj = columns_nb[jj3];
-    // cout << " last_col_nb_ii " << last_col_nb_ii << endl;
-    // cout << " last_col_nb_jj " << last_col_nb_jj << endl;
-    columns[ii3  ][last_col_nb_ii  ] = jj3  ;
-    columns[ii3  ][last_col_nb_ii+1] = jj3_1;
-    columns[ii3  ][last_col_nb_ii+2] = jj3_2;
-    columns[ii3_1][last_col_nb_ii  ] = jj3  ;
-    columns[ii3_1][last_col_nb_ii+1] = jj3_1;
-    columns[ii3_1][last_col_nb_ii+2] = jj3_2;
-    columns[ii3_2][last_col_nb_ii  ] = jj3  ;
-    columns[ii3_2][last_col_nb_ii+1] = jj3_1;
-    columns[ii3_2][last_col_nb_ii+2] = jj3_2;
-    
-    columns[jj3  ][last_col_nb_jj  ] = ii3  ;
-    columns[jj3  ][last_col_nb_jj+1] = ii3_1;
-    columns[jj3  ][last_col_nb_jj+2] = ii3_2;
-    columns[jj3_1][last_col_nb_jj  ] = ii3  ;
-    columns[jj3_1][last_col_nb_jj+1] = ii3_1;
-    columns[jj3_1][last_col_nb_jj+2] = ii3_2;
-    columns[jj3_2][last_col_nb_jj  ] = ii3  ;
-    columns[jj3_2][last_col_nb_jj+1] = ii3_1;
-    columns[jj3_2][last_col_nb_jj+2] = ii3_2;
-    
-    columns_nb[ii3] += 3;
-    columns_nb[ii3_1] += 3;
-    columns_nb[ii3_2] += 3;
-    columns_nb[jj3] += 3;
-    columns_nb[jj3_1] += 3;
-    columns_nb[jj3_2] += 3;
-    
-    // set values	
-    values[ii3  ][last_col_nb_ii  ] = alpha_n0*nvec.x; // 00
-    values[ii3  ][last_col_nb_ii+1] = alpha_n1n0;      // 01
-    values[ii3  ][last_col_nb_ii+2] = alpha_n0n2;      // 02
-    values[ii3_1][last_col_nb_ii  ] = alpha_n1n0;      // 10
-    values[ii3_1][last_col_nb_ii+1] = alpha_n1*nvec.y; // 11
-    values[ii3_1][last_col_nb_ii+2] = alpha_n2n1;      // 12
-    values[ii3_2][last_col_nb_ii  ] = alpha_n0n2;      // 20
-    values[ii3_2][last_col_nb_ii+1] = alpha_n2n1;      // 21
-    values[ii3_2][last_col_nb_ii+2] = alpha_n2*nvec.z;      // 22
-    
-    values[jj3  ][last_col_nb_jj  ] = alpha_n0*nvec.x; // 00
-    values[jj3  ][last_col_nb_jj+1] = alpha_n1n0;      // 01
-    values[jj3  ][last_col_nb_jj+2] = alpha_n0n2;      // 02
-    values[jj3_1][last_col_nb_jj  ] = alpha_n1n0;      // 10
-    values[jj3_1][last_col_nb_jj+1] = alpha_n1*nvec.y; // 11
-    values[jj3_1][last_col_nb_jj+2] = alpha_n2n1;      // 12
-    values[jj3_2][last_col_nb_jj  ] = alpha_n0n2;      // 20
-    values[jj3_2][last_col_nb_jj+1] = alpha_n2n1;      // 21
-    values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z;      // 22
-    
-}
-#endif
 
 
 #ifdef CHOLMOD
@@ -398,84 +249,15 @@ Instead we use user friendly methods, that take one row at a time.
 void
 StokesSolver::complete_RFU(){
 
-	for(int i = 0; i < linalg_size; i++){
-	    tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
-	}
+    for(int i = 0; i < linalg_size; i++){
+	tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
+    }
+    // FillComplete matrix before building the preconditioner
+    tril_rfu_matrix->FillComplete();
+    
+    buildDiagBlockPreconditioner();
 
-	double a00, a01, a02, a11, a12, a22;
-	double det, idet;
-	double *precond_row = new double [3];
-	int *indices = new int [3];
-	for(int i = 0; i < np; i++){
-	    int i3 = 3*i;
-
-	    indices[0] = i3;
-	    indices[1] = i3 + 1;
-	    indices[2] = i3 + 2;
-
-	    // +2.5*r in the diagonal ? --> Amit Kumar, PhD Thesis
-	    a00 = values[i3][0];
-	    a01 = values[i3][1];
-	    a02 = values[i3][2];
-	    a11 = values[i3+1][1];
-	    a12 = values[i3+1][2];
-	    a22 = values[i3+2][2];
-	    
-	    det = a00*(a22*a11-a12*a12) + a01*(-a01*a22+2*a12*a02 )-a02*a02*a11;
-	    idet = 1./det;
-
-	    // row i3
-	    precond_row[0] = idet*(a11*a22-a12*a12);
-	    precond_row[1] = idet*(a02*a12-a01*a22);
-	    precond_row[2] = idet*(a01*a12-a02*a11);
-
-	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
-
-	    // row i3+1
-	    precond_row[0] = precond_row[1]; // symmetric matrix!
-	    precond_row[1] = idet*(a00*a22-a02*a02);
-	    precond_row[2] = idet*(a02*a01-a00*a12);
-
-	    tril_l_precond->InsertGlobalValues(i3+1, 3 , precond_row, indices);
-
-	    // row i3+2
-	    precond_row[1] = precond_row[2]; // symmetric matrix!
-	    precond_row[0] = idet*(a01*a12-a02*a11);
-	    precond_row[2] = idet*(a00*a11-a01*a01);
-
-	    tril_l_precond->InsertGlobalValues(i3+2, 3 , precond_row, indices);
-
-	}
-	
-	delete [] precond_row;
-	delete [] indices;
-	
-	// double *val = new double [ 36 ];
-	// int *ind = new int [ 36 ];
-	// int int_nb; 	// for(int i = 0; i < linalg_size; i++){
-	// int nz;
-	// cout << endl<< "rfu " << endl;
-	// for(int i = 0; i < linalg_size; i++){
-	//   tril_rfu_matrix->ExtractGlobalRowCopy(i, int_nb, nz, val, ind);
-	//   //	   cout << i << " " << nz << endl;
-	//    for(int j = 0; j < nz; j++){
-	//      cout << i << " " << ind[j] << " " << val[j] << endl;
-	//    }
-	// }
-	// cout << "precond " << endl;
-	// for(int i = 0; i < linalg_size; i++){
-	//   tril_l_precond->ExtractGlobalRowCopy(i, int_nb, nz, val, ind);
-	//   cout << " line " << i << " " << nz << endl;
-	//    for(int j = 0; j < nz; j++){
-	//      cout << i << " " << ind[j] << " " << val[j] << endl;
-	//    }
-	// }
-
-	// delete [] val;
-	// delete [] ind;
-	
-	tril_rfu_matrix->FillComplete();
-	tril_l_precond->FillComplete();
+    tril_l_precond->FillComplete();
 }
 #endif
 
@@ -524,19 +306,6 @@ StokesSolver::prepareNewBuild_RFU(){
 
 }
 
-#ifdef CHOLMOD
-void
-StokesSolver::allocate_RFU(){
-	// allocate
-	int nzmax;  // non-zero values
-	nzmax = 6*np; // diagonal blocks
-	for(int s=0; s<3; s++){
-		nzmax += off_diag_values[s].size();  // off-diagonal
-	}
-	chol_rfu_matrix = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &chol_c);
-}
-#endif
-
 
 void
 StokesSolver::resetRHS(){
@@ -580,7 +349,7 @@ StokesSolver::setRHS(double* rhs){
 
 
 void
-StokesSolver::solve(double* &velocity){
+StokesSolver::solve(double* velocity){
 #ifdef CHOLMOD
     factorizeRFU();
     chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
@@ -591,6 +360,7 @@ StokesSolver::solve(double* &velocity){
 
 #ifdef TRILINOS
     RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( rcp ( tril_rfu_matrix, false), tril_solution, tril_rhs ) );
+    
     tril_stokes_equation->setLeftPrec( rcp ( tril_l_precond, false) );
 
     bool set_success = tril_stokes_equation->setProblem();
@@ -611,6 +381,198 @@ StokesSolver::solve(double* &velocity){
 
 }
 
+void
+StokesSolver::solvingIsDone(){
+    #ifdef CHOLMOD
+	cholmod_free_factor(&chol_L, &chol_c);
+	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
+	//	cholmod_free_dense(&chol_rhs, &chol_c);
+	cholmod_free_dense(&chol_solution, &chol_c);
+#endif
+#ifdef TRILINOS
+	delete tril_rfu_matrix;
+	delete tril_l_precond;
+#endif
+
+}
+
+
+
+/******************************************************
+*                                                     *
+*                  Private Methods                    *
+*                                                     *
+******************************************************/
+
+void
+StokesSolver::allocateRessources(){
+	
+#ifdef TRILINOS
+    int maxnum_interactionpair_per_particle = 15;
+    columns_max_nb = dof*maxnum_interactionpair_per_particle;
+    int numlhs = 1;
+    int numrhs = 1;
+    Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
+    tril_solution = rcp( new VEC(*Map, numlhs) );
+    tril_rhs = rcp( new VEC(*Map, numrhs) );
+    //	tril_rfu_matrix = rcp( new MAT(linalg_size) );
+    
+    columns = new int* [linalg_size];
+    for (int i=0; i < linalg_size; i++){
+	columns[i] = new int [columns_max_nb];
+	for(int j=0; j < columns_max_nb; j++){
+	    columns[i][j] = -1;
+	}
+    }
+    values = new double* [linalg_size];
+    for (int i=0; i < linalg_size; i++){
+	values[i] = new double [columns_max_nb];
+	for(int j=0; j < columns_max_nb; j++){
+	    values[i][j] = 0.;
+	}
+    }
+    columns_nb = new int [linalg_size];
+    for (int i=0; i < linalg_size; i++)
+	columns_nb[i] = 0;
+    
+    
+#endif
+#ifdef CHOLMOD
+    cholmod_start (&chol_c) ;
+    diag_values = new double [6*np];
+    off_diag_values = new vector <double> [3];
+    ploc = new int [np+1];
+    chol_rhs = cholmod_allocate_dense(np3, xtype, &chol_c);
+    chol_L=NULL;
+#endif
+
+}
+
+#ifdef CHOLMOD
+void
+StokesSolver::allocate_RFU(){
+	// allocate
+	int nzmax;  // non-zero values
+	nzmax = 6*np; // diagonal blocks
+	for(int s=0; s<3; s++){
+		nzmax += off_diag_values[s].size();  // off-diagonal
+	}
+	chol_rfu_matrix = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &chol_c);
+}
+#endif
+
+
+#ifdef CHOLMOD
+void
+StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha){
+
+    if(ii>last_updated_colblock){
+	last_updated_colblock = ii;
+	ploc[i] = (unsigned int)rows.size();
+    }
+
+    int jj3   = 3*jj;
+    int jj3_1 = jj3+1;
+    int jj3_2 = jj3+2;
+    double alpha_n0 = alpha*nvec.x;
+    double alpha_n1 = alpha*nvec.y;
+    double alpha_n2 = alpha*nvec.z;
+    double alpha_n1n0 = alpha_n0*nvec.y;
+    double alpha_n2n1 = alpha_n1*nvec.z;
+    double alpha_n0n2 = alpha_n2*nvec.x;
+    
+    rows.push_back(jj3);
+    rows.push_back(jj3_1);
+    rows.push_back(jj3_2);
+    
+    off_diag_values[0].push_back(alpha_n0*nvec.x); // 00
+    off_diag_values[0].push_back(alpha_n1n0); // 10
+    off_diag_values[0].push_back(alpha_n0n2); // 20
+    off_diag_values[1].push_back(alpha_n1n0); // 01
+    off_diag_values[1].push_back(alpha_n1*nvec.y); //11
+    off_diag_values[1].push_back(alpha_n2n1); // 21
+    off_diag_values[2].push_back(alpha_n0n2); // 02
+    off_diag_values[2].push_back(alpha_n2n1); // 12
+    off_diag_values[2].push_back(alpha_n2*nvec.z); //22
+}
+#endif
+
+#ifdef TRILINOS
+void
+StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
+    int ii3   = 3*ii;
+    int ii3_1 = ii3+1;
+    int ii3_2 = ii3+2;
+    int jj3   = 3*jj;
+    int jj3_1 = jj3+1;
+    int jj3_2 = jj3+2;
+    
+    double alpha_n0 = alpha*nvec.x;
+    double alpha_n1 = alpha*nvec.y;
+    double alpha_n2 = alpha*nvec.z;
+    double alpha_n1n0 = alpha_n0*nvec.y;
+    double alpha_n2n1 = alpha_n1*nvec.z;
+    double alpha_n0n2 = alpha_n2*nvec.x;
+    
+    
+    // declare ii and jj new columns, and update column nb
+    int last_col_nb_ii = columns_nb[ii3];
+    int last_col_nb_jj = columns_nb[jj3];
+    // cout << " last_col_nb_ii " << last_col_nb_ii << endl;
+    // cout << " last_col_nb_jj " << last_col_nb_jj << endl;
+    columns[ii3  ][last_col_nb_ii  ] = jj3  ;
+    columns[ii3  ][last_col_nb_ii+1] = jj3_1;
+    columns[ii3  ][last_col_nb_ii+2] = jj3_2;
+    columns[ii3_1][last_col_nb_ii  ] = jj3  ;
+    columns[ii3_1][last_col_nb_ii+1] = jj3_1;
+    columns[ii3_1][last_col_nb_ii+2] = jj3_2;
+    columns[ii3_2][last_col_nb_ii  ] = jj3  ;
+    columns[ii3_2][last_col_nb_ii+1] = jj3_1;
+    columns[ii3_2][last_col_nb_ii+2] = jj3_2;
+    
+    columns[jj3  ][last_col_nb_jj  ] = ii3  ;
+    columns[jj3  ][last_col_nb_jj+1] = ii3_1;
+    columns[jj3  ][last_col_nb_jj+2] = ii3_2;
+    columns[jj3_1][last_col_nb_jj  ] = ii3  ;
+    columns[jj3_1][last_col_nb_jj+1] = ii3_1;
+    columns[jj3_1][last_col_nb_jj+2] = ii3_2;
+    columns[jj3_2][last_col_nb_jj  ] = ii3  ;
+    columns[jj3_2][last_col_nb_jj+1] = ii3_1;
+    columns[jj3_2][last_col_nb_jj+2] = ii3_2;
+    
+    columns_nb[ii3] += 3;
+    columns_nb[ii3_1] += 3;
+    columns_nb[ii3_2] += 3;
+    columns_nb[jj3] += 3;
+    columns_nb[jj3_1] += 3;
+    columns_nb[jj3_2] += 3;
+    
+    // set values	
+    values[ii3  ][last_col_nb_ii  ] = alpha_n0*nvec.x; // 00
+    values[ii3  ][last_col_nb_ii+1] = alpha_n1n0;      // 01
+    values[ii3  ][last_col_nb_ii+2] = alpha_n0n2;      // 02
+    values[ii3_1][last_col_nb_ii  ] = alpha_n1n0;      // 10
+    values[ii3_1][last_col_nb_ii+1] = alpha_n1*nvec.y; // 11
+    values[ii3_1][last_col_nb_ii+2] = alpha_n2n1;      // 12
+    values[ii3_2][last_col_nb_ii  ] = alpha_n0n2;      // 20
+    values[ii3_2][last_col_nb_ii+1] = alpha_n2n1;      // 21
+    values[ii3_2][last_col_nb_ii+2] = alpha_n2*nvec.z;      // 22
+    
+    values[jj3  ][last_col_nb_jj  ] = alpha_n0*nvec.x; // 00
+    values[jj3  ][last_col_nb_jj+1] = alpha_n1n0;      // 01
+    values[jj3  ][last_col_nb_jj+2] = alpha_n0n2;      // 02
+    values[jj3_1][last_col_nb_jj  ] = alpha_n1n0;      // 10
+    values[jj3_1][last_col_nb_jj+1] = alpha_n1*nvec.y; // 11
+    values[jj3_1][last_col_nb_jj+2] = alpha_n2n1;      // 12
+    values[jj3_2][last_col_nb_jj  ] = alpha_n0n2;      // 20
+    values[jj3_2][last_col_nb_jj+1] = alpha_n2n1;      // 21
+    values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z;      // 22
+    
+}
+#endif
+
+
+
 #ifdef CHOLMOD
 void
 System::factorizeRFU(){
@@ -630,17 +592,100 @@ System::factorizeRFU(){
 }
 #endif
 
-void
-StokesSolver::solvingIsDone(){
-    #ifdef CHOLMOD
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	//	cholmod_free_dense(&chol_rhs, &chol_c);
-	cholmod_free_dense(&chol_solution, &chol_c);
-#endif
-#ifdef TRILINOS
-	delete tril_rfu_matrix;
-	delete tril_l_precond;
-#endif
 
+/*************  Preconditioners *********************/
+
+/* 
+  buildDiagBlockPreconditioner() :
+  A block diagonal (left-)preconditioner, almost similar to the 
+  one described in Amit Kumar's PhD Thesis: it is zero everywhere
+  except along the diagonal where diagonal 3x3 block are the 
+  ones of R_FU:
+
+          ..........   
+        |          .                             |
+        | R_FU(i,j).     0                       |
+        |          .                             |  
+        | .....................                  |
+        |          .          .                  |
+        |     0    . R_FU(i,j).                  |
+        |          .          .                  |  
+        |          ............                  |
+  P =   |                       .                |
+        |                         .              |
+        |                           .            |
+        |                             ...........|           
+        |                             .          |
+        |                             . R_FU(i,j)|                   |
+        |                             .          |
+                                      ...........
+
+   This method stores P^{-1} in tril_l_precond.
+*/
+void
+StokesSolver::buildDiagBlockPreconditioner(){
+    
+    double a00, a01, a02, a11, a12, a22;
+    double det, idet;
+    double *precond_row = new double [3];
+    int *indices = new int [3];
+    for(int i = 0; i < np; i++){
+	int i3 = 3*i;
+	
+	indices[0] = i3;
+	indices[1] = i3 + 1;
+	indices[2] = i3 + 2;
+	
+	    // +2.5*r in the diagonal ? --> Amit Kumar, PhD Thesis
+	a00 = values[i3][0];
+	a01 = values[i3][1];
+	a02 = values[i3][2];
+	a11 = values[i3+1][1];
+	a12 = values[i3+1][2];
+	a22 = values[i3+2][2];
+	
+	det = a00*(a22*a11-a12*a12) + a01*(-a01*a22+2*a12*a02 )-a02*a02*a11;
+	idet = 1./det;
+	
+	// row i3
+	precond_row[0] = idet*(a11*a22-a12*a12);
+	precond_row[1] = idet*(a02*a12-a01*a22);
+	precond_row[2] = idet*(a01*a12-a02*a11);
+	
+	tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
+	
+	// row i3+1
+	precond_row[0] = precond_row[1]; // symmetric matrix!
+	precond_row[1] = idet*(a00*a22-a02*a02);
+	precond_row[2] = idet*(a02*a01-a00*a12);
+	
+	tril_l_precond->InsertGlobalValues(i3+1, 3 , precond_row, indices);
+	
+	// row i3+2
+	precond_row[1] = precond_row[2]; // symmetric matrix!
+	precond_row[0] = idet*(a01*a12-a02*a11);
+	precond_row[2] = idet*(a00*a11-a01*a01);
+
+	tril_l_precond->InsertGlobalValues(i3+2, 3 , precond_row, indices);
+	
+    }
+    
+    delete [] precond_row;
+    delete [] indices;
+    
+}
+
+/* 
+  buildIncCholPreconditioner() :
+  A incomplete Cholesky factorization (left-)preconditioner.
+*/
+void
+StokesSolver::buildIncCholPreconditioner(){
+//  parameters to be tuned
+    int fill_level = 1;
+    double drop_tolerance = 0.0;
+
+    // Ifpack_CrsIct * ICT = NULL;
+    // ICT = new Ifpack_CrsIct(tril_rfu_matrix, drop_tolerance, fill_level);
+    
 }
