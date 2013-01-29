@@ -223,7 +223,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	RCP<ParameterList> solverParams = parameterList();
 	int blocksize = 40;
 	int maxiters = 400;
-	double tol = 1.e-8;
+	double tol = 1.e-5;
 	solverParams->set( "Block Size", blocksize );              // Blocksize to be used by iterative solver
 	solverParams->set( "Maximum Iterations", maxiters );       // Maximum number of iterations allowed
 	solverParams->set( "Convergence Tolerance", tol );         // Relative convergence tolerance requested
@@ -680,12 +680,13 @@ System::fillSparseResmatrix(){
 	    indices[1] = i3 + 1;
 	    indices[2] = i3 + 2;
 
-	    a00 = values[i3][0];
+	    // +2.5*r in the diagonal --> Amit Kumar, PhD Thesis
+	    a00 = values[i3][0] + 2.5*radius[i];
 	    a01 = values[i3][1];
 	    a02 = values[i3][2];
-	    a11 = values[i3+1][1];
+	    a11 = values[i3+1][1] + 2.5*radius[i];
 	    a12 = values[i3+1][2];
-	    a22 = values[i3+2][2];
+	    a22 = values[i3+2][2] + 2.5*radius[i];
 	    
 	    det = a00*(a22*a11-a12*a12) + a01*(-a01*a22+2*a12*a02 )-a02*a02*a11;
 	    idet = 1./det;
@@ -697,17 +698,19 @@ System::fillSparseResmatrix(){
 
 	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
 
+	    // row i3+1
 	    precond_row[0] = precond_row[1]; // symmetric matrix!
 	    precond_row[1] = idet*(a00*a22-a02*a02);
 	    precond_row[2] = idet*(a02*a01-a00*a12);
 
-	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
+	    tril_l_precond->InsertGlobalValues(i3+1, 3 , precond_row, indices);
 
+	    // row i3+2
 	    precond_row[1] = precond_row[2]; // symmetric matrix!
 	    precond_row[0] = idet*(a01*a12-a02*a11);
 	    precond_row[2] = idet*(a00*a11-a01*a01);
 
-	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
+	    tril_l_precond->InsertGlobalValues(i3+2, 3 , precond_row, indices);
 
 	}
 	
@@ -717,13 +720,24 @@ System::fillSparseResmatrix(){
 	// double *val = new double [ 36 ];
 	// int *ind = new int [ 36 ];
 	// int int_nb; 	// for(int i = 0; i < linalg_size; i++){
+	// int nz;
+	// cout << endl<< "rfu " << endl;
 	// for(int i = 0; i < linalg_size; i++){
-	//    tril_rfu_matrix->ExtractGlobalRowView(i, int_nb, val, ind);
-	//    cout << i << " " << int_nb << endl;
-	//    // for(int j = 0; j < int_nb; j++){
-	//    //   cout << i << " " << ind[j] << " " << val[j] << endl;
-	//    // }
+	//   tril_rfu_matrix->ExtractGlobalRowCopy(i, int_nb, nz, val, ind);
+	//   //	   cout << i << " " << nz << endl;
+	//    for(int j = 0; j < nz; j++){
+	//      cout << i << " " << ind[j] << " " << val[j] << endl;
+	//    }
 	// }
+	// cout << "precond " << endl;
+	// for(int i = 0; i < linalg_size; i++){
+	//   tril_l_precond->ExtractGlobalRowCopy(i, int_nb, nz, val, ind);
+	//   cout << " line " << i << " " << nz << endl;
+	//    for(int j = 0; j < nz; j++){
+	//      cout << i << " " << ind[j] << " " << val[j] << endl;
+	//    }
+	// }
+
 	// delete [] val;
 	// delete [] ind;
 	
@@ -1063,8 +1077,6 @@ System::updateVelocityLubrication(){
 #ifdef TRILINOS
 	tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 12*dof + dof );
 	tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
-	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( rcp ( tril_rfu_matrix, false), tril_v_lub_cont, tril_rhs_lub_cont ) );
-	//	tril_stokes_equation->setLeftPrec( rcp ( tril_l_precond, false) );
 	tril_rhs_lub_cont->PutScalar(0.);
 	tril_rfu_matrix->PutScalar(0.);
 #endif
@@ -1086,13 +1098,16 @@ System::updateVelocityLubrication(){
 	*****/ 
 
 	buildContactTerms();
-
+	
 #ifdef CHOLMOD
 	factorizeResistanceMatrix();
 	chol_v_lub_cont = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs_lub_cont, &chol_c) ;
 	v_lub_cont = (double*)chol_v_lub_cont->x;
 #endif
 #ifdef TRILINOS
+	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( rcp ( tril_rfu_matrix, false), tril_v_lub_cont, tril_rhs_lub_cont ) );
+       	tril_stokes_equation->setLeftPrec( rcp ( tril_l_precond, false) );
+
 	bool set_success = tril_stokes_equation->setProblem();
 	if(!set_success){
 		cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
