@@ -100,7 +100,7 @@ System::allocateRessources(){
 	brownian_force = new vec3d [np];
 	torque = new vec3d [np];
 	lub_force = new vec3d [np];
-	contact_number.resize(np);
+	nearing_number.resize(np);
 	lubstress.resize(np);
 	contactstress.resize(np);
 	brownianstress.resize(np);
@@ -1470,10 +1470,10 @@ System::calcStress(){
 		}
 	}
 	for(int u=0; u < 10 ; u++){
-		cnt_contact_number[u] = 0;
+		cnt_nearing_number[u] = 0;
 	}
 	for (int i =0; i < np; i++){
-		cnt_contact_number[ contact_number[i] ] ++;
+		cnt_nearing_number[ nearing_number[i] ] ++;
 	}
 	
 	for (int u=0; u < 5; u++){
@@ -1508,15 +1508,13 @@ System::analyzeState(){
 	gap_min = lz();
 	double sum_overlap = 0;
 	int cnt_overlap = 0;
-	max_age = 0;
-	double sum_age = 0;
-	int cnt_age = 0;
+	max_nearing_time = 0;
 	
 	for (int i=0; i < np; i++){
-		contact_number[i] = 0;
+		nearing_number[i] = 0;
 	}
 	
-	total_contact = 0;
+	num_nearing = 0;
 	// for analysis
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
@@ -1529,26 +1527,34 @@ System::analyzeState(){
 			if (interaction[k].gap() < gap_min){
 				gap_min = interaction[k].gap();
 			}
-			
-			if (interaction[k].age() > 0 ){
-				if (max_age < interaction[k].age()){
-					max_age = interaction[k].age();
-				}
-				sum_age = interaction[k].age();
-				cnt_age ++;
-			}
+
 			interaction[k].recordTrajectory();
 			
 			if (interaction[k].near){
-				total_contact ++;
-				contact_number[interaction[k].particle_num[0]] ++;
-				contact_number[interaction[k].particle_num[1]] ++;
+				num_nearing ++;
+				nearing_number[interaction[k].particle_num[0]] ++;
+				nearing_number[interaction[k].particle_num[1]] ++;
+				if ( max_nearing_time < interaction[k].nearingTime()){
+					max_nearing_time = interaction[k].nearingTime();
+				}
 			}
 		}
 	}
+	
+	double sum_nearing_time = 0;
+	for(int k = 0; k < nearing_time_record.size(); k++){
+		sum_nearing_time += nearing_time_record[k];
+	}
 	ave_overlap = sum_overlap / cnt_overlap;
-	ave_age = sum_age / cnt_age;
-
+	if (nearing_time_record.size() > 0){
+		ave_nearing_time = sum_nearing_time / nearing_time_record.size();
+	} else {
+		ave_nearing_time = 0;
+	}
+	nearing_time_record.clear();
+	
+	
+	
 }
 
 void

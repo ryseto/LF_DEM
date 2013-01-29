@@ -506,9 +506,12 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	 */
 	kn = sys->kn/(0.5*ro);
 	kt = sys->kt/(0.5*ro);
-	
-	strain_0 = sys->shear_strain;
+	/*
+	 * Record the strain when this lub interaction starts.
+	 */
+	strain_lub_generated = sys->shear_strain;
 	if ( distance - ro < sys->dist_near*0.5*ro){
+		strain_near_contact = sys->shear_strain;
 		near = true;
 	} else {
 		near = false;
@@ -594,9 +597,16 @@ Interaction::update(){
 		if ( near == false ){
 			if (ksi < sys->dist_near*0.5*ro){
 				near = true;
+				strain_near_contact = sys->shear_strain;
 			}
 		} else {
 			if (ksi > sys->dist_near*0.5*ro){
+				/*
+				 * Separate
+				 */
+				double age_approaching = sys->shear_strain - strain_near_contact;
+				sys->nearing_time_record.push_back(age_approaching);
+
 				near = false;
 			}
 		}
@@ -621,8 +631,12 @@ Interaction::outputTrajectory(){
 }
 
 double
-Interaction::age(){
-	return sys->shear_strain - strain_0;
+Interaction::nearingTime(){
+	double nearing_time = -1;
+	if (near == true){
+		nearing_time = sys->shear_strain - strain_near_contact;
+	}
+	return nearing_time;
 }
 
 void

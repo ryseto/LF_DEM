@@ -231,18 +231,20 @@ public:
 	/* The definition of contact is
 	 * when the gap is smaller than "dist_near"
 	 */
-	int cnt_contact_number[10];
-	double max_age;
-	double ave_age;
+	int cnt_nearing_number[10];
+	double max_nearing_time;
+	double ave_nearing_time;
 	double dist_near;
 	bool near;
-	int total_contact;
+	int num_nearing;
+	vector<double> nearing_time_record;
+	
 	
 	/*
-	 * contact_number[i] means
-	 * the number of contact of particle i.
+	 * nearing_number[i] means
+	 * the number of nearing of particle i.
 	 */
-	vector<int> contact_number;
+	vector<int> nearing_number;
 		
 	/*************************************************************/
 	void lx(double length){
