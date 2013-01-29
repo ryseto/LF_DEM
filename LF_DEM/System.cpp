@@ -106,7 +106,7 @@ System::allocateRessources(){
 	brownianstress.resize(np);
 	fb = new BrownianForce(this);
 
-	int maxnum_interactionpair_per_particle = 12;
+	int maxnum_interactionpair_per_particle = 15;
 	maxnum_interactionpair = (int)(maxnum_interactionpair_per_particle*np);
 	interaction = new Interaction [maxnum_interactionpair];
 	interaction_list = new set <Interaction*> [np];
@@ -126,8 +126,6 @@ System::allocateRessources(){
 	tril_v_lub_cont = rcp( new VEC(*Map, numlhs) );
 	tril_rhs_lub_cont = rcp( new VEC(*Map, numrhs) );
 	//	tril_rfu_matrix = rcp( new MAT(linalg_size) );
-	tril_rfu_matrix = rcp( new Epetra_CrsMatrix(Copy, *Map, maxnum_interactionpair_per_particle*dof + dof ));
-	tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( tril_rfu_matrix, tril_v_lub_cont, tril_rhs_lub_cont ) ) ;
 
 	columns = new int* [linalg_size];
 	for (int i=0; i < linalg_size; i++){
@@ -153,8 +151,8 @@ System::allocateRessources(){
 	diag_values = new double [6*np];
 	off_diag_values = new vector <double> [3];
 	ploc = new int [np+1];
-	v_lub_cont = new double [linalg_size];
 #endif
+	v_lub_cont = new double [linalg_size];
 }
 
 void
@@ -249,6 +247,7 @@ System::initializeBoxing(){// need to know radii first
 	for (int i=0; i < np; i++){
 		boxset->box(i);
 	}
+	boxset->update();
 }
 
 void
@@ -443,27 +442,29 @@ System::appendToRow(const vec3d &nvec, int ii, int jj, double alpha){
 	
 
 	// declare ii and jj new columns, and update column nb
-	int last_col_nb = columns_nb[ii3];
+	int last_col_nb_ii = columns_nb[ii3];
+	int last_col_nb_jj = columns_nb[jj3];
+	// cout << " last_col_nb_ii " << last_col_nb_ii << endl;
+	// cout << " last_col_nb_jj " << last_col_nb_jj << endl;
+	columns[ii3  ][last_col_nb_ii  ] = jj3  ;
+	columns[ii3  ][last_col_nb_ii+1] = jj3_1;
+	columns[ii3  ][last_col_nb_ii+2] = jj3_2;
+	columns[ii3_1][last_col_nb_ii  ] = jj3  ;
+	columns[ii3_1][last_col_nb_ii+1] = jj3_1;
+	columns[ii3_1][last_col_nb_ii+2] = jj3_2;
+	columns[ii3_2][last_col_nb_ii  ] = jj3  ;
+	columns[ii3_2][last_col_nb_ii+1] = jj3_1;
+	columns[ii3_2][last_col_nb_ii+2] = jj3_2;
 
-	columns[ii3  ][last_col_nb  ] = jj3  ;
-	columns[ii3  ][last_col_nb+1] = jj3_1;
-	columns[ii3  ][last_col_nb+2] = jj3_2;
-	columns[ii3_1][last_col_nb  ] = jj3  ;
-	columns[ii3_1][last_col_nb+1] = jj3_1;
-	columns[ii3_1][last_col_nb+2] = jj3_2;
-	columns[ii3_2][last_col_nb  ] = jj3  ;
-	columns[ii3_2][last_col_nb+1] = jj3_1;
-	columns[ii3_2][last_col_nb+2] = jj3_2;
-
-	columns[jj3  ][last_col_nb  ] = ii3  ;
-	columns[jj3  ][last_col_nb+1] = ii3_1;
-	columns[jj3  ][last_col_nb+2] = ii3_2;
-	columns[jj3_1][last_col_nb  ] = ii3  ;
-	columns[jj3_1][last_col_nb+1] = ii3_1;
-	columns[jj3_1][last_col_nb+2] = ii3_2;
-	columns[jj3_2][last_col_nb  ] = ii3  ;
-	columns[jj3_2][last_col_nb+1] = ii3_1;
-	columns[jj3_2][last_col_nb+2] = ii3_2;
+	columns[jj3  ][last_col_nb_jj  ] = ii3  ;
+	columns[jj3  ][last_col_nb_jj+1] = ii3_1;
+	columns[jj3  ][last_col_nb_jj+2] = ii3_2;
+	columns[jj3_1][last_col_nb_jj  ] = ii3  ;
+	columns[jj3_1][last_col_nb_jj+1] = ii3_1;
+	columns[jj3_1][last_col_nb_jj+2] = ii3_2;
+	columns[jj3_2][last_col_nb_jj  ] = ii3  ;
+	columns[jj3_2][last_col_nb_jj+1] = ii3_1;
+	columns[jj3_2][last_col_nb_jj+2] = ii3_2;
 
 	columns_nb[ii3] += 3;
 	columns_nb[ii3_1] += 3;
@@ -473,25 +474,25 @@ System::appendToRow(const vec3d &nvec, int ii, int jj, double alpha){
 	columns_nb[jj3_2] += 3;
 
 	// set values	
-	values[ii3  ][last_col_nb  ] = alpha_n0*nvec.x; // 00
-	values[ii3  ][last_col_nb+1] = alpha_n1n0;      // 01
-	values[ii3  ][last_col_nb+2] = alpha_n0n2;      // 02
-	values[ii3_1][last_col_nb  ] = alpha_n1n0;      // 10
-	values[ii3_1][last_col_nb+1] = alpha_n1*nvec.y; // 11
-	values[ii3_1][last_col_nb+2] = alpha_n2n1;      // 12
-	values[ii3_2][last_col_nb  ] = alpha_n0n2;      // 20
-	values[ii3_2][last_col_nb+1] = alpha_n2n1;      // 21
-	values[ii3_2][last_col_nb+2] = alpha_n2*nvec.z;      // 22
+	values[ii3  ][last_col_nb_ii  ] = alpha_n0*nvec.x; // 00
+	values[ii3  ][last_col_nb_ii+1] = alpha_n1n0;      // 01
+	values[ii3  ][last_col_nb_ii+2] = alpha_n0n2;      // 02
+	values[ii3_1][last_col_nb_ii  ] = alpha_n1n0;      // 10
+	values[ii3_1][last_col_nb_ii+1] = alpha_n1*nvec.y; // 11
+	values[ii3_1][last_col_nb_ii+2] = alpha_n2n1;      // 12
+	values[ii3_2][last_col_nb_ii  ] = alpha_n0n2;      // 20
+	values[ii3_2][last_col_nb_ii+1] = alpha_n2n1;      // 21
+	values[ii3_2][last_col_nb_ii+2] = alpha_n2*nvec.z;      // 22
 
-	values[jj3  ][last_col_nb  ] = alpha_n0*nvec.x; // 00
-	values[jj3  ][last_col_nb+1] = alpha_n1n0;      // 01
-	values[jj3  ][last_col_nb+2] = alpha_n0n2;      // 02
-	values[jj3_1][last_col_nb  ] = alpha_n1n0;      // 10
-	values[jj3_1][last_col_nb+1] = alpha_n1*nvec.y; // 11
-	values[jj3_1][last_col_nb+2] = alpha_n2n1;      // 12
-	values[jj3_2][last_col_nb  ] = alpha_n0n2;      // 20
-	values[jj3_2][last_col_nb+1] = alpha_n2n1;      // 21
-	values[jj3_2][last_col_nb+2] = alpha_n2*nvec.z;      // 22
+	values[jj3  ][last_col_nb_jj  ] = alpha_n0*nvec.x; // 00
+	values[jj3  ][last_col_nb_jj+1] = alpha_n1n0;      // 01
+	values[jj3  ][last_col_nb_jj+2] = alpha_n0n2;      // 02
+	values[jj3_1][last_col_nb_jj  ] = alpha_n1n0;      // 10
+	values[jj3_1][last_col_nb_jj+1] = alpha_n1*nvec.y; // 11
+	values[jj3_1][last_col_nb_jj+2] = alpha_n2n1;      // 12
+	values[jj3_2][last_col_nb_jj  ] = alpha_n0n2;      // 20
+	values[jj3_2][last_col_nb_jj+1] = alpha_n2n1;      // 21
+	values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z;      // 22
 
 }
 #endif
@@ -625,7 +626,6 @@ System::fillSparseResmatrix(){
 		
 		((double*)chol_rfu_matrix->x)[ pj3_2 ]     = diag_values[j6+5];
 		
-		//    cout << j3+2 <<" " << diag_values[j6+5]<< " " << ((int*)chol_rfu_matrix->p)[j3] << " " << ((int*)chol_rfu_matrix->p)[j3+1] << " " << ((int*)chol_rfu_matrix->p)[j3+2] <<endl;
 		// off-diagonal blocks row indices and values
 		for(int k = ploc[j]; k < ploc[j+1]; k++){
 			int u = k - ploc[j];
@@ -639,6 +639,13 @@ System::fillSparseResmatrix(){
 		}
 	}
 	((int*)chol_rfu_matrix->p)[np3] = ((int*)chol_rfu_matrix->p)[np3-1] + 1;
+
+	// for(int i = 0; i < linalg_size; i++){
+	//   for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
+	//     cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+	//   }
+	// }
+
 }
 #endif
 
@@ -655,18 +662,73 @@ Instead we use user friendly methods, that take one row at a time.
 
 void
 System::fillSparseResmatrix(){
-	
+
 	allocateSparseResmatrix();
 	
-	int * diag_indices_j3 = new int [3];
-	int * diag_indices_j3_1 = new int [2];
-	int diag_indices_j3_2;
-
 	for(int i = 0; i < linalg_size; i++){
-		tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
+	    tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
 	}
-	tril_rfu_matrix->FillComplete();
 
+	double a00, a01, a02, a11, a12, a22;
+	double det, idet;
+	double *precond_row = new double [3];
+	int *indices = new int [3];
+	for(int i = 0; i < np; i++){
+	    int i3 = 3*i;
+
+	    indices[0] = i3;
+	    indices[1] = i3 + 1;
+	    indices[2] = i3 + 2;
+
+	    a00 = values[i3][0];
+	    a01 = values[i3][1];
+	    a02 = values[i3][2];
+	    a11 = values[i3+1][1];
+	    a12 = values[i3+1][2];
+	    a22 = values[i3+2][2];
+	    
+	    det = a00*(a22*a11-a12*a12) + a01*(-a01*a22+2*a12*a02 )-a02*a02*a11;
+	    idet = 1./det;
+
+	    // row i3
+	    precond_row[0] = idet*(a11*a22-a12*a12);
+	    precond_row[1] = idet*(a02*a12-a01*a22);
+	    precond_row[2] = idet*(a01*a12-a02*a11);
+
+	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
+
+	    precond_row[0] = precond_row[1]; // symmetric matrix!
+	    precond_row[1] = idet*(a00*a22-a02*a02);
+	    precond_row[2] = idet*(a02*a01-a00*a12);
+
+	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
+
+	    precond_row[1] = precond_row[2]; // symmetric matrix!
+	    precond_row[0] = idet*(a01*a12-a02*a11);
+	    precond_row[2] = idet*(a00*a11-a01*a01);
+
+	    tril_l_precond->InsertGlobalValues(i3, 3 , precond_row, indices);
+
+	}
+	
+	delete [] precond_row;
+	delete [] indices;
+	
+	// double *val = new double [ 36 ];
+	// int *ind = new int [ 36 ];
+	// int int_nb; 	// for(int i = 0; i < linalg_size; i++){
+	// for(int i = 0; i < linalg_size; i++){
+	//    tril_rfu_matrix->ExtractGlobalRowView(i, int_nb, val, ind);
+	//    cout << i << " " << int_nb << endl;
+	//    // for(int j = 0; j < int_nb; j++){
+	//    //   cout << i << " " << ind[j] << " " << val[j] << endl;
+	//    // }
+	// }
+	// delete [] val;
+	// delete [] ind;
+	
+	tril_rfu_matrix->FillComplete();
+	tril_l_precond->FillComplete();
 }
 #endif
 
@@ -958,9 +1020,9 @@ System::buildContactTerms(){
 		((double*)chol_rhs_lub_cont->x)[i3+2] += contact_force[i].z;
 #endif
 #ifdef TRILINOS
-		tril_rhs_lub_cont->SumIntoMyValue( 3*i    , 0, contact_force[i].x);
-		tril_rhs_lub_cont->SumIntoMyValue( 3*i + 1, 0, contact_force[i].y);
-		tril_rhs_lub_cont->SumIntoMyValue( 3*i + 2, 0, contact_force[i].z);
+		tril_rhs_lub_cont->SumIntoMyValue( i3    , 0, contact_force[i].x);
+		tril_rhs_lub_cont->SumIntoMyValue( i3 + 1, 0, contact_force[i].y);
+		tril_rhs_lub_cont->SumIntoMyValue( i3 + 2, 0, contact_force[i].z);
 #endif
 	}
 }
@@ -992,22 +1054,6 @@ System::allocateSparseResmatrix(){
 }
 #endif
 
-#ifdef CHOLMOD
-void
-System::print_res(){ // testing
-	cout << " Diag " << endl;
-	for(int i=0;i<np;i++){
-		int ii6=6*i;
-		cout << i << " " << diag_values[ii6] << " " << diag_values[ii6+1]<< " " << diag_values[ii6+2]<< " " << diag_values[ii6+3]<< " " << diag_values[ii6+4]<< " " << diag_values[ii6+5] << endl;
-	}
-	
-	cout << endl<< " OffDiag " << endl;
-	for(int i=0;i<off_diag_values[0].size();i++){
-		cout << off_diag_values[0][i] << " " << off_diag_values[1][i] << " " << off_diag_values[2][i]<< endl;
-	}
-}
-#endif
-
 void
 System::updateVelocityLubrication(){
   
@@ -1015,6 +1061,10 @@ System::updateVelocityLubrication(){
 	chol_rhs_lub_cont = cholmod_zeros(np3, 1, xtype, &chol_c);
 #endif
 #ifdef TRILINOS
+	tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 12*dof + dof );
+	tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
+	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( rcp ( tril_rfu_matrix, false), tril_v_lub_cont, tril_rhs_lub_cont ) );
+	//	tril_stokes_equation->setLeftPrec( rcp ( tril_l_precond, false) );
 	tril_rhs_lub_cont->PutScalar(0.);
 	tril_rfu_matrix->PutScalar(0.);
 #endif
@@ -1086,7 +1136,10 @@ System::updateVelocityLubrication(){
 	cholmod_free_dense(&chol_rhs_lub_cont, &chol_c);
 	cholmod_free_dense(&chol_v_lub_cont, &chol_c);
 #endif
-	
+#ifdef TRILINOS
+	delete tril_rfu_matrix;
+	delete tril_l_precond;
+#endif
 }
 
 #ifdef CHOLMOD

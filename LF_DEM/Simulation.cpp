@@ -251,7 +251,7 @@ Simulation::setDefaultParameters(){
 	 *
 	 */
 	sys.shear_rate = 1.0;
-	shear_strain_end = 0.0001;
+	shear_strain_end = 10.;
 	/*
 	 * Lubrication force
 	 * lub_max: reduced large cutoff distance for lubrication

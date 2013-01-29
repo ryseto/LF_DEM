@@ -8,8 +8,8 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-#define CHOLMOD
-//#define TRILINOS
+//#define CHOLMOD
+#define TRILINOS
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -124,9 +124,11 @@ private:
 	RCP < Epetra_Map > Map;
 	RCP < Epetra_MultiVector > tril_v_lub_cont;
 	RCP < Epetra_MultiVector > tril_rhs_lub_cont;
-	RCP < Epetra_CrsMatrix > tril_rfu_matrix;
+	//RCP < Epetra_CrsMatrix > tril_rfu_matrix;
+	Epetra_CrsMatrix *tril_rfu_matrix;
+	Epetra_CrsMatrix *tril_l_precond;
 	//	RCP < ParameterList > params;
-	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
+	//	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
 	RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
 	Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
 

@@ -6,6 +6,7 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
+#include <stdlib.h> // necessary for Linux
 #include "GenerateInitConfig.h"
 
 int
