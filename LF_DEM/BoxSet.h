@@ -31,6 +31,7 @@ class BoxSet{
 
   int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3) 
   
+  Box* WhichBox(vec3d*);
 
   void updateNeighbors();
   void updateNeighbors(Box*);
@@ -43,6 +44,8 @@ class BoxSet{
   void assignNeighborsTop();
   void assignNeighborsBottom();
   void assignNeighborsTopBottom();
+
+  Box ** boxMap;
 
  protected:
   
@@ -75,9 +78,24 @@ class BoxSet{
   /*****
 	WhichBox(vec3d pos)
 	
-	return a pointer on the box containg position pos
+	returns a pointer on the box containg position pos
   *****/
   Box* WhichBox(vec3d);
+
+  /*****
+	box(int i)
+    boxes particles i
+	should be called after moving particle i
+  *****/
+  void box(int i);
+
+  /*****
+	neighborhood_begin(int i) and neighborhood_end(int i)
+    gives iterators to beginning and ending point of the container including 
+	all particles in the box containing particle i and in the adjacent boxes.
+  *****/
+  vector<int>::iterator neighborhood_begin(int i);
+  vector<int>::iterator neighborhood_end(int i);
 
   BoxSet(double interaction_dist, System *sys_);
   ~BoxSet();
