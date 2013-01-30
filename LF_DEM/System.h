@@ -8,55 +8,28 @@
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
-//#define CHOLMOD 
-#define TRILINOS
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include <fstream>
 #include <queue>
 #include <string>
+#include "common.h"
 //#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
 
-#ifdef CHOLMOD
-#include "cholmod.h"
-#endif
-
-#ifdef TRILINOS
-#include "Epetra_SerialComm.h"
-#include "Epetra_SerialDenseVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "BelosSolverFactory.hpp"
-#include "BelosEpetraAdapter.hpp"
-#include "Teuchos_RCP.hpp"
-#endif
-
 #include "vec3d.h"
-//#include "ContactForce.h"
 #include "BrownianForce.h"
 #include "BoxSet.h"
+#include "StokesSolver.h"
 
 using namespace std;
-#ifdef TRILINOS
-using Teuchos::RCP;
-using Teuchos::rcp;
-using Teuchos::ParameterList;
-using Teuchos::parameterList;
-
-typedef double                                SCAL;
-//typedef Teuchos::ScalarTraits<SCAL>          SCT;
-//typedef SCT::magnitudeType                    MT;
-typedef Epetra_MultiVector                     VEC;
-typedef Epetra_Operator                        MAT;
-//typedef Belos::MultiVecTraits<SCAL,VEC>      MVT;
-//typedef Belos::OperatorTraits<SCAL,VEC,MAT>  OPT;
-
-#endif
 
 class Simulation;
 class Interaction;
 class BrownianForce;
 class BoxSet;
+
 
 
 class System{
@@ -74,8 +47,7 @@ private:
 	double system_volume;
 	double radius_max;
 
-	void buildLubricationTerms();
-	void buildLubricationTerms_new();
+	void buildLubricationTerms(bool);
 	void buildBrownianTerms();
 	void buildContactTerms();
 	void addStokesDrag();
@@ -87,66 +59,18 @@ private:
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
-#ifdef CHOLMOD
-	cholmod_sparse *chol_rfu_matrix;
-	cholmod_dense *chol_v_lub_cont;
-	cholmod_dense *chol_v_nonBrownian;
-	cholmod_dense *chol_v_Brownian_init;
-	cholmod_dense *chol_v_Brownian_mid;
-	cholmod_dense *chol_brownian_rhs;
-	cholmod_dense *chol_rhs_lub_cont;
-	int stype;
-	int sorted;
-	int packed;
-	int xtype;
-
-	// resistance matrix building
-	vector <int> rows;
-	double *diag_values;
-	vector <double> *off_diag_values;
-	int *ploc;
-#endif
-
-#ifdef TRILINOS
-	int MyPID;
-/* #ifdef EPETRA_MPI */
-/* 	// Initialize MPI */
-/* 	MPI_Init(&argc,&argv); */
-/* 	Epetra_MpiComm Comm(MPI_COMM_WORLD); */
-/* 	MyPID = Comm.MyPID(); */
-/* #else */
-	Epetra_SerialComm Comm;
-	//#endif
-	RCP < Epetra_Map > Map;
-	RCP < Epetra_MultiVector > tril_v_lub_cont;
-	RCP < Epetra_MultiVector > tril_rhs_lub_cont;
-	RCP < Epetra_CrsMatrix > tril_rfu_matrix;
-	//	RCP < ParameterList > params;
-	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
-	RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
-	Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
-
-	// resistance matrix building
-	int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
-	int* columns_nb;
-	int columns_max_nb;
-	double **values;
-#endif
 
 	// rhs vector building
-	//	double *rhs_lub_cont;
 	double *v_lub_cont;
+	double *v_Brownian_init;
+	double *v_Brownian_mid;
 
-	void fillSparseResmatrix();
-	void allocateSparseResmatrix();
-	
-	void addToDiag(const vec3d &nvec, int ii, double alpha);
-	void appendToColumn(const vec3d &nvec, int jj, double alpha);  // Cholmod
-	void appendToRow(const vec3d &nvec, int ii, int jj, double alpha); // Trilinos
+	StokesSolver *stokes_solver;
 	
 	BoxSet* boxset;
 	void print_res();
 
+	
 protected:
 public:
     /* For DEMsystem
@@ -172,9 +96,10 @@ public:
 	vec3d *brownian_velocity;
 	vec3d *torque; // right now only contact torque
 	vec3d *lub_force; // Only for outputing data
-	double **lubstress; // [0-(np-1)][1-5] S_xx S_xy S_xz S_yz S_yy
-	double **contactstress; // [0-(np-1)][1-5]  S_xx S_xy S_xz S_yz S_yy
-	double **brownianstress; // [0-(np-1)][1-5] S_xx S_xy S_xz S_yz S_yy
+	vector <stresslet> lubstress; // G U + M E
+	vector <stresslet> lubstress2; // r * F_lub
+	vector <stresslet> contactstress;
+	vector <stresslet> brownianstress;
 	double total_stress_bgf;
 	double total_lub_stress[5];
 	double total_contact_stress[5];
@@ -226,18 +151,20 @@ public:
 	/* The definition of contact is
 	 * when the gap is smaller than "dist_near"
 	 */
-	int cnt_contact_number[10];
-	double max_age;
-	double ave_age;
+	int cnt_nearing_number[10];
+	double max_nearing_time;
+	double ave_nearing_time;
 	double dist_near;
 	bool near;
-	int total_contact;
+	int num_nearing;
+	vector<double> nearing_time_record;
+	
 	
 	/*
-	 * contact_number[i] means
-	 * the number of contact of particle i.
+	 * nearing_number[i] means
+	 * the number of nearing of particle i.
 	 */
-	vector<int> contact_number;
+	vector<int> nearing_number;
 		
 	/*************************************************************/
 	void lx(double length){
@@ -315,10 +242,7 @@ public:
 	int numpart(){
 		return np;
 	}
-#ifdef CHOLMOD
-	cholmod_factor *chol_L ;
-	cholmod_common chol_c ;
-#endif
+
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
@@ -328,4 +252,4 @@ public:
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
 };
-#endif /* defined(__LF_DEM__State__) */
+#endif /* defined(__LF_DEM__System__) */

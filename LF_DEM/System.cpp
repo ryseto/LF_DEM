@@ -8,9 +8,7 @@
 
 #include "System.h"
 #include <sstream>
-#ifdef TRILINOS
-#include <BelosCGIteration.hpp>
-#endif
+
 System::~System(){
 
 	if (!position)
@@ -40,21 +38,6 @@ System::~System(){
 	if (!torque)
 		delete [] torque;
 
-	for (int i=0; i < np; i++){
-		delete [] lubstress[i];
-	}
-	delete [] lubstress;
-
-	for (int i=0; i < np; i++)
-		delete [] contactstress[i];
-	delete [] contactstress;
-
-	if (brownian){
-		for (int i=0; i < np; i++)
-			delete [] brownianstress[i];
-		delete [] brownianstress;
-	}
-
 	if (!interaction_list)
 		delete [] interaction_list;
 	if (!interaction_partners)
@@ -66,38 +49,15 @@ System::~System(){
 	if (!v_lub_cont)
 		delete [] v_lub_cont;
 
-#ifdef CHOLMOD
-	if (!diag_values)
-		delete [] diag_values;
-	if (!off_diag_values )
-		delete [] off_diag_values;
-	if (!ploc)
-		delete [] ploc;
+	if(brownian){
+	    if (!v_Brownian_init)
+		delete [] v_Brownian_init;
 
-
-	cholmod_free_dense(&chol_v_lub_cont, &chol_c);
-	cholmod_free_dense(&chol_rhs_lub_cont, &chol_c);
-	//	cholmod_free_dense(&chol_nonbrownian_rhs, &chol_c); 
-	if (brownian){
-		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
+	    if (!v_Brownian_mid)
+		delete [] v_Brownian_mid;
 	}
-	//cholmod_free_dense(&chol_contact_rhs, &chol_c);
-	//cholmod_free_dense(&chol_lubrication_rhs, &chol_c);
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	cholmod_finish(&chol_c);
-#endif
 
-#ifdef TRILINOS
-	for (int i=0; i < linalg_size; i++)
-		delete [] columns[i];
-	delete [] columns;
-
-	delete [] columns_nb;
-
-	for (int i=0; i < linalg_size; i++)
-		delete [] values[i];
-	delete [] values;	
-#endif
+	delete stokes_solver;
 };
 
 
@@ -115,68 +75,29 @@ System::allocateRessources(){
 	brownian_force = new vec3d [np];
 	torque = new vec3d [np];
 	lub_force = new vec3d [np];
-	contact_number.resize(np);
-	contactstress = new double* [np];
-	for (int i=0; i < np; i++){
-		contactstress[i] = new double [5];
-	}
-	lubstress = new double* [np];
-	for (int i=0; i < np; i++){
-		lubstress[i] = new double [5];
-	}
-	brownianstress = new double* [np];
-	for (int i=0; i < np; i++){
-		brownianstress[i] = new double [5];
-	}
+	nearing_number.resize(np);
+	lubstress.resize(np);
+	contactstress.resize(np);
+	brownianstress.resize(np);
 	fb = new BrownianForce(this);
 
-	int maxnum_interactionpair_per_particle = 12;
+	int maxnum_interactionpair_per_particle = 15;
 	maxnum_interactionpair = (int)(maxnum_interactionpair_per_particle*np);
 	interaction = new Interaction [maxnum_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	
+	lubstress2.resize(np);
+	
 	dof = 3;
 	linalg_size = dof*np;
 	
-	
-#ifdef TRILINOS
-	columns_max_nb = dof*maxnum_interactionpair_per_particle;
-	int numlhs = 1;
-	int numrhs = 1;
-	Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
-	tril_v_lub_cont = rcp( new VEC(*Map, numlhs) );
-	tril_rhs_lub_cont = rcp( new VEC(*Map, numrhs) );
-	//	tril_rfu_matrix = rcp( new MAT(linalg_size) );
-	tril_rfu_matrix = rcp( new Epetra_CrsMatrix(Copy, *Map, maxnum_interactionpair_per_particle*dof + dof ));
-	tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( tril_rfu_matrix, tril_v_lub_cont, tril_rhs_lub_cont ) ) ;
-
-	columns = new int* [linalg_size];
-	for (int i=0; i < linalg_size; i++){
-		columns[i] = new int [columns_max_nb];
-		for(int j=0; j < columns_max_nb; j++){
-		  columns[i][j] = -1;
-		}
-	}
-	values = new double* [linalg_size];
-	for (int i=0; i < linalg_size; i++){
-		values[i] = new double [columns_max_nb];
-		for(int j=0; j < columns_max_nb; j++){
-		  values[i][j] = 0.;
-		}
-	}
-	columns_nb = new int [linalg_size];
-	for (int i=0; i < linalg_size; i++)
-		columns_nb[i] = 0;
-
-
-#endif
-#ifdef CHOLMOD
-	diag_values = new double [6*np];
-	off_diag_values = new vector <double> [3];
-	ploc = new int [np+1];
 	v_lub_cont = new double [linalg_size];
-#endif
+	if(brownian){
+	    v_Brownian_init = new double [linalg_size];
+	    v_Brownian_mid = new double [linalg_size];
+	}
+	stokes_solver = new StokesSolver(np);
 }
 
 void
@@ -233,27 +154,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	 */
 	dt_mid = dt/dt_ratio;
 
-
-	// linear algebra
-#ifdef CHOLMOD
-	cholmod_start (&chol_c) ;
-	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
-	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
-	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
-	xtype = CHOLMOD_REAL;
-	chol_L=NULL;
-#endif
-#ifdef TRILINOS
-	RCP<ParameterList> solverParams = parameterList();
-	int blocksize = 40;
-	int maxiters = 400;
-	double tol = 1.e-8;
-	solverParams->set( "Block Size", blocksize );              // Blocksize to be used by iterative solver
-	solverParams->set( "Maximum Iterations", maxiters );       // Maximum number of iterations allowed
-	solverParams->set( "Convergence Tolerance", tol );         // Relative convergence tolerance requested
-    solverParams->set( "Verbosity", Belos::Errors + Belos::Warnings );
-	tril_solver = tril_factory.create ("CG", solverParams);
-#endif
+	stokes_solver->initialize();
 	
 }
 
@@ -271,6 +172,7 @@ System::initializeBoxing(){// need to know radii first
 	for (int i=0; i < np; i++){
 		boxset->box(i);
 	}
+	boxset->update();
 }
 
 void
@@ -386,10 +288,11 @@ System::torqueReset(){
 void
 System::stressReset(){
 	for (int i=0; i < np; i++){
-		for (int j=0; j < 5; j++){
-			lubstress[i][j]=0;
-			contactstress[i][j]=0;
-			brownianstress[i][j]=0;
+		for (int u=0; u < 5; u++){
+			lubstress[i].elm[u]=0;
+			contactstress[i].elm[u]=0;
+			brownianstress[i].elm[u]=0;
+			lubstress2[i].elm[u]=0;
 		}
 	}
 }
@@ -414,936 +317,311 @@ System::updateVelocity(){
 	}
 }
 
-//off-diagonal terms
-#ifdef CHOLMOD
-void
-System::appendToColumn(const vec3d &nvec, int jj, double alpha){
-	int jj3   = 3*jj;
-	int jj3_1 = jj3+1;
-	int jj3_2 = jj3+2;
-	double alpha_n0 = alpha*nvec.x;
-	double alpha_n1 = alpha*nvec.y;
-	double alpha_n2 = alpha*nvec.z;
-	double alpha_n1n0 = alpha_n0*nvec.y;
-	double alpha_n2n1 = alpha_n1*nvec.z;
-	double alpha_n0n2 = alpha_n2*nvec.x;
-	
-	rows.push_back(jj3);
-	rows.push_back(jj3_1);
-	rows.push_back(jj3_2);
-	
-	off_diag_values[0].push_back(alpha_n0*nvec.x); // 00
-	off_diag_values[0].push_back(alpha_n1n0); // 10
-	off_diag_values[0].push_back(alpha_n0n2); // 20
-	off_diag_values[1].push_back(alpha_n1n0); // 01
-	off_diag_values[1].push_back(alpha_n1*nvec.y); //11
-	off_diag_values[1].push_back(alpha_n2n1); // 21
-	off_diag_values[2].push_back(alpha_n0n2); // 02
-	off_diag_values[2].push_back(alpha_n2n1); // 12
-	off_diag_values[2].push_back(alpha_n2*nvec.z); //22
-}
-#endif
-
-//off-diagonal terms
-#ifdef TRILINOS
-void
-System::appendToRow(const vec3d &nvec, int ii, int jj, double alpha){
-	int ii3   = 3*ii;
-	int ii3_1 = ii3+1;
-	int ii3_2 = ii3+2;
-	int jj3   = 3*jj;
-	int jj3_1 = jj3+1;
-	int jj3_2 = jj3+2;
-
-	double alpha_n0 = alpha*nvec.x;
-	double alpha_n1 = alpha*nvec.y;
-	double alpha_n2 = alpha*nvec.z;
-	double alpha_n1n0 = alpha_n0*nvec.y;
-	double alpha_n2n1 = alpha_n1*nvec.z;
-	double alpha_n0n2 = alpha_n2*nvec.x;
-	
-
-	// declare ii and jj new columns, and update column nb
-	int last_col_nb = columns_nb[ii3];
-
-	columns[ii3  ][last_col_nb  ] = jj3  ;
-	columns[ii3  ][last_col_nb+1] = jj3_1;
-	columns[ii3  ][last_col_nb+2] = jj3_2;
-	columns[ii3_1][last_col_nb  ] = jj3  ;
-	columns[ii3_1][last_col_nb+1] = jj3_1;
-	columns[ii3_1][last_col_nb+2] = jj3_2;
-	columns[ii3_2][last_col_nb  ] = jj3  ;
-	columns[ii3_2][last_col_nb+1] = jj3_1;
-	columns[ii3_2][last_col_nb+2] = jj3_2;
-
-	columns[jj3  ][last_col_nb  ] = ii3  ;
-	columns[jj3  ][last_col_nb+1] = ii3_1;
-	columns[jj3  ][last_col_nb+2] = ii3_2;
-	columns[jj3_1][last_col_nb  ] = ii3  ;
-	columns[jj3_1][last_col_nb+1] = ii3_1;
-	columns[jj3_1][last_col_nb+2] = ii3_2;
-	columns[jj3_2][last_col_nb  ] = ii3  ;
-	columns[jj3_2][last_col_nb+1] = ii3_1;
-	columns[jj3_2][last_col_nb+2] = ii3_2;
-
-	columns_nb[ii3] += 3;
-	columns_nb[ii3_1] += 3;
-	columns_nb[ii3_2] += 3;
-	columns_nb[jj3] += 3;
-	columns_nb[jj3_1] += 3;
-	columns_nb[jj3_2] += 3;
-
-	// set values	
-	values[ii3  ][last_col_nb  ] = alpha_n0*nvec.x; // 00
-	values[ii3  ][last_col_nb+1] = alpha_n1n0;      // 01
-	values[ii3  ][last_col_nb+2] = alpha_n0n2;      // 02
-	values[ii3_1][last_col_nb  ] = alpha_n1n0;      // 10
-	values[ii3_1][last_col_nb+1] = alpha_n1*nvec.y; // 11
-	values[ii3_1][last_col_nb+2] = alpha_n2n1;      // 12
-	values[ii3_2][last_col_nb  ] = alpha_n0n2;      // 20
-	values[ii3_2][last_col_nb+1] = alpha_n2n1;      // 21
-	values[ii3_2][last_col_nb+2] = alpha_n2*nvec.z;      // 22
-
-	values[jj3  ][last_col_nb  ] = alpha_n0*nvec.x; // 00
-	values[jj3  ][last_col_nb+1] = alpha_n1n0;      // 01
-	values[jj3  ][last_col_nb+2] = alpha_n0n2;      // 02
-	values[jj3_1][last_col_nb  ] = alpha_n1n0;      // 10
-	values[jj3_1][last_col_nb+1] = alpha_n1*nvec.y; // 11
-	values[jj3_1][last_col_nb+2] = alpha_n2n1;      // 12
-	values[jj3_2][last_col_nb  ] = alpha_n0n2;      // 20
-	values[jj3_2][last_col_nb+1] = alpha_n2n1;      // 21
-	values[jj3_2][last_col_nb+2] = alpha_n2*nvec.z;      // 22
-
-}
-#endif
-
-
-
-// diagonal terms
-
-void
-System::addToDiag(const vec3d &nvec, int ii, double alpha){
-
-	
-	double alpha_n0 = alpha*nvec.x;
-	double alpha_n1 = alpha*nvec.y;
-	double alpha_n2 = alpha*nvec.z;
-	double alpha_n1n0 = alpha_n0*nvec.y;
-	double alpha_n2n1 = alpha_n1*nvec.z;
-	double alpha_n0n2 = alpha_n2*nvec.x;
-	
-#ifdef CHOLMOD
-	int ii6 = 6*ii;
-	diag_values[ii6]   += alpha_n0*nvec.x; // 00
-	diag_values[ii6+1] += alpha_n1n0; // 10
-	diag_values[ii6+2] += alpha_n0n2; // 20
-	
-	diag_values[ii6+3] += alpha_n1*nvec.y; //11
-	diag_values[ii6+4] += alpha_n2n1; // 21
-	
-	diag_values[ii6+5] += alpha_n2*nvec.z; //22
-#endif
-#ifdef TRILINOS
-	int iidof = dof*ii;
-	values[iidof  ][0] += alpha_n0*nvec.x; // 00
-	values[iidof  ][1] += alpha_n1n0; // 01
-	values[iidof  ][2] += alpha_n0n2; // 02
-
-	values[iidof+1][0] += alpha_n1n0; // 10
-	values[iidof+1][1] += alpha_n1*nvec.y; // 11
-	values[iidof+1][2] += alpha_n2n1; // 12
-
-	values[iidof+2][0] += alpha_n0n2; // 20
-	values[iidof+2][1] += alpha_n2n1; // 21
-	values[iidof+2][2] += alpha_n2*nvec.z; // 20
-#endif
-}
-
-#ifdef CHOLMOD
 void
 System::addStokesDrag(){
-	for (int i = 0; i < np; i ++){
-		int i6=6*i;
-		double d_value = bgf_factor*radius[i];
-		diag_values[i6  ] += d_value;
-		diag_values[i6+3] += d_value;
-		diag_values[i6+5] += d_value;
-	}
+    for (int i = 0; i < np; i ++){
+	double d_value = bgf_factor*radius[i];	  
+	stokes_solver->addToDiag_RFU(i, d_value);    
+    }
 }
-#endif
-
-#ifdef TRILINOS
-void
-System::addStokesDrag(){
-	for (int i = 0; i < np; i ++){
-		int idof=dof*i;
-		double d_value = bgf_factor*radius[i];
-		for (int j = 0; j < dof; j ++){
-			values[idof+j][j] = d_value;
-		}
-	}
-}
-#endif
-
-
-#ifdef CHOLMOD
-/*************** Cholmod Matrix Filling *************
-Cholmod matrices we are using are defined in column major order (index j is column index)
-
-Cholmod matrices are defined as follows:
-- all values are stored in array x ( size nzmax )
-- locations of values are encoded in array p ( size np ):
-  values corresponding to column j are x[ p[j] ]  to x[ p[j+1] - 1 ]
-- corresponding rows are stored in array i ( size nzmax ):
-  rows corresponding to column j are i[ p[j] ]  to i[ p[j+1] - 1 ]
-
-Hence: 
-with p[j] < a < p[j+1]-1  
-           . . . . j . . . . . .
-        .|         .            |
-        .|         .            |
-        .|         .            |  
-     i[a]| . . . .x[a]          |
-        .|                      |
-        .|                      |
-
-
-*****************************************************/
-void
-System::fillSparseResmatrix(){
-	
-
-	allocateSparseResmatrix();
-	
-	// fill
-	for(int j = 0; j < np; j++){
-		int j3 = 3*j;
-		int j6 = 6*j;
-		
-		((int*)chol_rfu_matrix->p)[j3  ] = j6   + 3*ploc[j];
-		((int*)chol_rfu_matrix->p)[j3+1] = j6+3 + 2*ploc[j] +   ploc[j+1];
-		((int*)chol_rfu_matrix->p)[j3+2] = j6+5 +   ploc[j] + 2*ploc[j+1];
-		
-		int pj3   = ((int*)chol_rfu_matrix->p)[j3];
-		int pj3_1 = ((int*)chol_rfu_matrix->p)[j3+1];
-		int pj3_2 = ((int*)chol_rfu_matrix->p)[j3+2];
-		
-		// diagonal blocks row indices
-		((int*)chol_rfu_matrix->i)[ pj3 ]       = j3;
-		((int*)chol_rfu_matrix->i)[ pj3 + 1 ]   = j3+1;
-		((int*)chol_rfu_matrix->i)[ pj3 + 2 ]   = j3+2;
-		
-		((int*)chol_rfu_matrix->i)[ pj3_1 ]     = j3+1;
-		((int*)chol_rfu_matrix->i)[ pj3_1 + 1 ] = j3+2;
-		
-		((int*)chol_rfu_matrix->i)[ pj3_2 ]     = j3+2;
-		
-		// diagonal blocks row values
-		((double*)chol_rfu_matrix->x)[ pj3 ]       = diag_values[j6];
-		((double*)chol_rfu_matrix->x)[ pj3 + 1 ]   = diag_values[j6+1];
-		((double*)chol_rfu_matrix->x)[ pj3 + 2 ]   = diag_values[j6+2];
-		
-		((double*)chol_rfu_matrix->x)[ pj3_1 ]     = diag_values[j6+3];
-		((double*)chol_rfu_matrix->x)[ pj3_1 + 1 ] = diag_values[j6+4];
-		
-		((double*)chol_rfu_matrix->x)[ pj3_2 ]     = diag_values[j6+5];
-		
-		//    cout << j3+2 <<" " << diag_values[j6+5]<< " " << ((int*)chol_rfu_matrix->p)[j3] << " " << ((int*)chol_rfu_matrix->p)[j3+1] << " " << ((int*)chol_rfu_matrix->p)[j3+2] <<endl;
-		// off-diagonal blocks row indices and values
-		for(int k = ploc[j]; k < ploc[j+1]; k++){
-			int u = k - ploc[j];
-			((int*)chol_rfu_matrix->i)[ pj3   + u + 3 ] = rows[k];
-			((int*)chol_rfu_matrix->i)[ pj3_1 + u + 2 ] = rows[k];
-			((int*)chol_rfu_matrix->i)[ pj3_2 + u + 1 ] = rows[k];
-			
-			((double*)chol_rfu_matrix->x)[ pj3   + u + 3 ] = off_diag_values[0][k];
-			((double*)chol_rfu_matrix->x)[ pj3_1 + u + 2 ] = off_diag_values[1][k];
-			((double*)chol_rfu_matrix->x)[ pj3_2 + u + 1 ] = off_diag_values[2][k];
-		}
-	}
-	((int*)chol_rfu_matrix->p)[np3] = ((int*)chol_rfu_matrix->p)[np3-1] + 1;
-}
-#endif
-
-#ifdef TRILINOS
-/*************** Epetra_CrsMatrix Filling *************
-Epetra_CrsMatrix we are using are defined in row major order.
-
-Epetra_CrsMatrix must be stored completely.
-
-Epetra_CrsMatrix elements are not accessed directly for filling.
-Instead we use user friendly methods, that take one row at a time.
-
-*****************************************************/
-
-void
-System::fillSparseResmatrix(){
-	
-	allocateSparseResmatrix();
-	
-	int * diag_indices_j3 = new int [3];
-	int * diag_indices_j3_1 = new int [2];
-	int diag_indices_j3_2;
-
-	for(int i = 0; i < linalg_size; i++){
-		tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
-	}
-	tril_rfu_matrix->FillComplete();
-
-}
-#endif
 
 
 // We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
-// This method computes elements of matrix A and vector Gtilde*Einf
-#ifdef TRILINOS
+// This method computes:
+//  - elements of matrix A 
+//  - vector Gtilde*Einf if rhs is true (default behavior)
 void
-System::buildLubricationTerms(){
-	for (int i = 0; i < linalg_size; i++){
-		for (int j = 0; j < columns_max_nb; j++){
-			columns[i][j] = -1;
-			values[i][j] = 0.;
-		}
-	}
+System::buildLubricationTerms(bool rhs=true){
+    
+    double XAii, XAjj, XAij, XAji;
 
-	// declare the diagonal blocks
-	for (int i = 0; i < np; i++){
-		int idof = dof*i;
-		for (int j = 0; j < dof; j++){
-			columns[idof  ][j] = idof+j;
-			columns[idof+1][j] = idof+j;
-			columns[idof+2][j] = idof+j;
-		}
-		columns_nb[idof  ] = dof;
-		columns_nb[idof+1] = dof;
-		columns_nb[idof+2] = dof;
-	}
+    double GEi[3];
+    double GEj[3];
+    
+    set<Interaction*>::iterator it;
+    int j;
+    Interaction *inter;
+    for (int i = 0; i < np - 1; i ++){
+	for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+	    inter=*it;
+	    j=inter->partner(i);
+	    if(j>i){
+		inter->XA(XAii, XAij, XAji, XAjj);
 
-	addStokesDrag();
-	
-	double XAii, XAjj, XAij, XAji;
-	//	double XGii, XGjj, XGij, XGji;
-	double GEi[3];
-	double GEj[3];
-	
-	set<Interaction*>::iterator it;
-	int j;
-	Interaction *inter;
-	for (int i = 0; i < np - 1; i ++){
-		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
-			inter=*it;
-		 	j=inter->partner(i);
-			if(j>i){
-				inter->XA(XAii, XAij, XAji, XAjj);
-				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-				addToDiag(inter->nr_vec, i, inter->a0 * XAii);
-				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
-				appendToRow(inter->nr_vec, i, j, 0.5 * inter->ro * XAji);
-				inter->GE(GEi, GEj);  // G*E_\infty term
-				for(int u=0; u<3; u++){
-					tril_rhs_lub_cont->SumIntoMyValue( 3*i + u, 0, GEi[ u ]);
-					tril_rhs_lub_cont->SumIntoMyValue( 3*j + u, 0, GEj[ u ]);
-				}
-			}
-		}
-	}
+		stokes_solver->addToDiagBlock_RFU(inter->nr_vec, i, inter->a0 * XAii);
+		stokes_solver->addToDiagBlock_RFU(inter->nr_vec, j, inter->a1 * XAjj);
+		stokes_solver->appendToOffDiagBlock_RFU(inter->nr_vec, i, j, 0.5 * inter->ro * XAji);
 
+		if(rhs){
+		    inter->GE(GEi, GEj);  // G*E_\infty term
+		    for(int u=0; u<3; u++){
+			stokes_solver->addToRHS( 3*i + u, GEi[u] );
+			stokes_solver->addToRHS( 3*j + u, GEj[u] );
+		    }
+		}
+
+	    }
+	}
+    }
 }
-#endif
-
-// We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
-// This method computes elements of matrix A and vector Gtilde*Einf
-#ifdef CHOLMOD
-void
-System::buildLubricationTerms(){
-	for (int k = 0; k < 6*np; k++){
-		diag_values[k] = 0.;
-	}
-
-	rows.clear();
-	off_diag_values[0].clear();
-	off_diag_values[1].clear();
-	off_diag_values[2].clear();
-	
-	addStokesDrag();
-	
-	double XAii, XAjj, XAij, XAji;
-	//	double XGii, XGjj, XGij, XGji;
-	double GEi[3];
-	double GEj[3];
-	
-	set<Interaction*>::iterator it;
-	int j;
-	Interaction *inter;
-	for (int i = 0; i < np - 1; i ++){
-		ploc[i] = (unsigned int)rows.size();
-		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
-			inter=*it;
-		 	j=inter->partner(i);
-			if(j>i){
-				inter->XA(XAii, XAij, XAji, XAjj);
-				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-				addToDiag(inter->nr_vec, i, inter->a0 * XAii);
-				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
-				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
-				inter->GE(GEi, GEj);  // G*E_\infty term
-				for(int u=0; u<3; u++){
-					((double*)chol_rhs_lub_cont->x)[ 3*i + u ] += GEi[ u ];
-					((double*)chol_rhs_lub_cont->x)[ 3*j + u ] += GEj[ u ];
-				}
-			}
-		}
-	}
-
-
-	ploc[np-1] = (unsigned int)rows.size();
-	ploc[np] = (unsigned int)rows.size();
-}
-
-
-void
-System::updateResistanceMatrix(){
-	size_t nrow = np3;
-	size_t ncol = 1;
-	size_t nzmax_od = 6;
-	size_t nzmax_d = 3;
-
-	int sort = 1;
-	int pack = 1;
-	int styp = 0;
-	cholmod_sparse *update_vector_off_diag = cholmod_allocate_sparse ( nrow, ncol, nzmax_od, sort, pack, styp, xtype, &chol_c); 
-	cholmod_sparse *update_vector_diag = cholmod_allocate_sparse ( nrow, ncol, nzmax_d, sort, pack, styp, xtype, &chol_c); ; // sparse packed vector. it has to be sorted. 
-
-	((int*)update_vector_off_diag->p)[0] = 0;
-	((int*)update_vector_off_diag->p)[1] = nzmax_od;
-	((int*)update_vector_diag->p)[0] = 0;
-	((int*)update_vector_diag->p)[1] = nzmax_d;
-
-
-  	double XAii, XAjj, XAij, XAji;
-  	double prev_XAii, prev_XAjj, prev_XAij, prev_XAji;
-	int update;  // true for update, false for downdate
-	double off_diag_diff;
-	double sqrt_off_diag_diff;
-	double diag_diff_comp_i, diag_diff_comp_j;
-	double sqrt_diag_diff_comp_i, sqrt_diag_diff_comp_j;
-
-	double nvec[3];
-
-	for (int k = 0; k < num_interaction; k++){
-		if( interaction[k].active || interaction[k].just_off() ){
-			
-			int i = interaction[k].particle_num[0];
-			int j = interaction[k].particle_num[1];
-			int i3 = 3*i;
-			int j3 = 3*j; 
-
-			nvec[0] = interaction[k].nr_vec.x;
-			nvec[1] = interaction[k].nr_vec.y;
-			nvec[2] = interaction[k].nr_vec.z;
-
-
-			// DOWNDATE PART
-			interaction[k].prev_XA(prev_XAii, prev_XAij, prev_XAji, prev_XAjj);
-			// UPDATE PART
-			interaction[k].XA(XAii, XAij, XAji, XAjj);
-
-
-			off_diag_diff = 0.5 * interaction[k].ro * ( XAji - prev_XAji );
-
-			if ( off_diag_diff > 0. ){
-				update = 1;
-				sqrt_off_diag_diff = sqrt( off_diag_diff );
-			}
-			else{
-				update = 0;
-				sqrt_off_diag_diff = sqrt( - off_diag_diff );
-			}
-			for(int u=0; u<3; u++) {
-				((int*)update_vector_off_diag->i)[u] = i3+u;
-				((double*)update_vector_off_diag->x)[u] = sqrt_off_diag_diff * nvec[u] ;
-				((int*)update_vector_off_diag->i)[3+u] = j3+u;
-				((double*)update_vector_off_diag->x)[3+u] = sqrt_off_diag_diff * nvec[u] ;
-			}
-			
-			cholmod_updown(update, update_vector_off_diag, chol_L, &chol_c);
-
-			// Now compensate the terms introduced on the diagonal, and add the diagonal update
-
-			if(update){
-				diag_diff_comp_i = interaction[k].a0 * ( XAii - prev_XAii ) - off_diag_diff ;
-				diag_diff_comp_j = interaction[k].a1 * ( XAjj - prev_XAjj ) - off_diag_diff ;
-			}
-			else{
-				diag_diff_comp_i = interaction[k].a0 * ( XAii - prev_XAii ) + off_diag_diff ;
-				diag_diff_comp_j = interaction[k].a1 * ( XAjj - prev_XAjj ) + off_diag_diff ;
-			}
-			
-			// first i
-			if ( diag_diff_comp_i > 0. ){
-				update = 1;
-				sqrt_diag_diff_comp_i = sqrt( diag_diff_comp_i );
-			}
-			else{
-				update = 0;
-				sqrt_diag_diff_comp_i = sqrt( - diag_diff_comp_i );
-			}
-
-
-			for(int u=0; u<3; u++) {
-				((int*)update_vector_diag->i)[u] = i3+u;
-				((double*)update_vector_diag->x)[u] = sqrt_diag_diff_comp_i * nvec[u] ;
-			}
-			
-			cholmod_updown(update, update_vector_diag, chol_L, &chol_c);
-
-			// second j
-			if ( diag_diff_comp_i > 0. ){
-				update = 1;
-				sqrt_diag_diff_comp_i = sqrt( diag_diff_comp_i );
-			}
-			else{
-				update = 0;
-				sqrt_diag_diff_comp_i = sqrt( - diag_diff_comp_i );
-			}
-
-
-			for(int u=0; u<3; u++) {
-				((int*)update_vector_diag->i)[u] = j3+u;
-				((double*)update_vector_diag->x)[u] = sqrt_diag_diff_comp_j * nvec[u] ;
-			}
-
-			cholmod_updown(update, update_vector_diag, chol_L, &chol_c);
-
-		}
-	}
-}
-
-#endif
-
-// void
-// System::calcLubricationForce(){
-// 	for (int k = 0; k < 6*np; k++){
-// 		diag_values[k] = 0.;
-// 	}
-// 	off_diag_values[0].clear();
-// 	off_diag_values[1].clear();
-// 	off_diag_values[2].clear();
-
-// 	double GEi[3];
-// 	double GEj[3];
-// 	double XAii, XAjj, XAij, XAji;
-
-// 	set<Interaction*>::iterator it;
-// 	int j;
-// 	Interaction *inter;
-// 	for (int i = 0; i < np - 1; i ++){
-// 		ploc[i] = (unsigned int)rows.size();
-// 		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
-// 			inter=*it;
-// 		 	j=inter->partner(i);
-// 			if(j>i){
-// 				inter->XA(XAii, XAij, XAji, XAjj);
-// 				// (i, j) (k,l) --> res[ n3*(3*i+l) + 3*j+k ]
-// 				addToDiag(inter->nr_vec, i, inter->a0 * XAjj);
-// 				addToDiag(inter->nr_vec, j, inter->a1 * XAjj);
-// 				appendToColumn(inter->nr_vec, j, 0.5 * inter->ro * XAji);
-// 				inter->GE(GEi, GEj);  // G*E_\infty term
-// 				for(int u=0; u<3; u++){
-// 					// ((double*)lubrication_rhs->x)[ 3*i + u ] += GEi[ u ];
-// 					// ((double*)lubrication_rhs->x)[ 3*j + u ] += GEj[ u ];
-// 					((double*)total_rhs->x)[ 3*i + u ] += GEi[ u ];
-// 					((double*)total_rhs->x)[ 3*j + u ] += GEj[ u ];
-// 				}
-// 			}
-// 		}
-// 	}
-// 	for (int i=0; i < np; i++)
-// 		lub_force[i].reset();
-	
-// 	for (int i=0; i < np; i++){
-// 		for (int j=0; j < np; i++){
-			
-			
-			
-// 		}
-// 	}
-	
-	
-// }
 
 void
 System::buildContactTerms(){
-	// add contact force
-	for (int i = 0; i < np; i++){
-		int i3 = 3*i;
-#ifdef CHOLMOD
-		((double*)chol_rhs_lub_cont->x)[i3] += contact_force[i].x;
-		((double*)chol_rhs_lub_cont->x)[i3+1] += contact_force[i].y;
-		((double*)chol_rhs_lub_cont->x)[i3+2] += contact_force[i].z;
-#endif
-#ifdef TRILINOS
-		tril_rhs_lub_cont->SumIntoMyValue( 3*i    , 0, contact_force[i].x);
-		tril_rhs_lub_cont->SumIntoMyValue( 3*i + 1, 0, contact_force[i].y);
-		tril_rhs_lub_cont->SumIntoMyValue( 3*i + 2, 0, contact_force[i].z);
-#endif
-	}
+    // add contact force
+    for (int i = 0; i < np; i++){
+	int i3 = 3*i;
+	stokes_solver->addToRHS(i3  , contact_force[i].x);
+	stokes_solver->addToRHS(i3+1, contact_force[i].y);
+	stokes_solver->addToRHS(i3+2, contact_force[i].z);
+    }
 }
-
-#ifdef CHOLMOD
-void
-System::allocateSparseResmatrix(){
-	// allocate
-	int nzmax;  // non-zero values
-	nzmax = 6*np; // diagonal blocks
-	for(int s=0; s<3; s++){
-		nzmax += off_diag_values[s].size();  // off-diagonal
-	}
-	chol_rfu_matrix = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &chol_c);
-}
-#endif
-#ifdef TRILINOS
-void
-System::allocateSparseResmatrix(){
-	// // allocate
-	// int * nz = new int [linalg_size];  // non-zero values
-	
-	// for(int i=0;i<linalg_size;i++){
-	//   nz[i] = dof; // diagonal
-	//   nz[i] += ploc[i+1]-1 - ploc[i];  // off-diagonal
-	// }
-	// tril_rfu_matrix = rcp( new Epetra_CrsMatrix(Copy, *Map, nz));
-	// delete [] nz;
-}
-#endif
-
-#ifdef CHOLMOD
-void
-System::print_res(){ // testing
-	cout << " Diag " << endl;
-	for(int i=0;i<np;i++){
-		int ii6=6*i;
-		cout << i << " " << diag_values[ii6] << " " << diag_values[ii6+1]<< " " << diag_values[ii6+2]<< " " << diag_values[ii6+3]<< " " << diag_values[ii6+4]<< " " << diag_values[ii6+5] << endl;
-	}
-	
-	cout << endl<< " OffDiag " << endl;
-	for(int i=0;i<off_diag_values[0].size();i++){
-		cout << off_diag_values[0][i] << " " << off_diag_values[1][i] << " " << off_diag_values[2][i]<< endl;
-	}
-}
-#endif
 
 void
 System::updateVelocityLubrication(){
-  
-#ifdef CHOLMOD
-	chol_rhs_lub_cont = cholmod_zeros(np3, 1, xtype, &chol_c);
-#endif
-#ifdef TRILINOS
-	tril_rhs_lub_cont->PutScalar(0.);
-	tril_rfu_matrix->PutScalar(0.);
-#endif
 
-	buildLubricationTerms();
-	fillSparseResmatrix();
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU();
+
+    addStokesDrag();
+    buildLubricationTerms();
+
+    stokes_solver->complete_RFU();
+
+    buildContactTerms();
 	
-
-	/***** if you want to switch to update procedure for CHOLMOD (SLOW!),
-		   replace above 3 lines by the following
-	if( chol_L == NULL ) {
-		buildLubricationTerms();
-		fillSparseResmatrix();
-		factorizeResistanceMatrix();
-	}
-	else{
-	  updateResistanceMatrix();
-	}
-	*****/ 
-
-	buildContactTerms();
-
-#ifdef CHOLMOD
-	factorizeResistanceMatrix();
-	chol_v_lub_cont = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs_lub_cont, &chol_c) ;
-	v_lub_cont = (double*)chol_v_lub_cont->x;
-#endif
-#ifdef TRILINOS
-	bool set_success = tril_stokes_equation->setProblem();
-	if(!set_success){
-		cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
-		exit(1);
-	}
-	tril_solver->setProblem (tril_stokes_equation);
-	Belos::ReturnType ret = tril_solver->solve();
-	if( ret != Belos::Converged )
-		cerr << " Warning: Belos::Solver did not converge" << endl;
-	int iter_steps = tril_solver->getNumIters();
-	cout << " iterations " << iter_steps << endl;
-	tril_v_lub_cont->ExtractCopy(&v_lub_cont);
-#endif
+    stokes_solver->solve(v_lub_cont);
 	
 	/* TEST IMPLEMENTATION
 	 * SDFF : Stokes drag force factor:
 	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
 	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
 	 */
-	for (int i = 0; i < np; i++){
-		int i3 = 3*i;
-		relative_velocity[i].x = v_lub_cont[i3];
-		relative_velocity[i].y = v_lub_cont[i3+1];
-		relative_velocity[i].z = v_lub_cont[i3+2];
-		
-		velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
-		velocity[i].y = relative_velocity[i].y;
-		velocity[i].z = relative_velocity[i].z;
-	}
+    for (int i = 0; i < np; i++){
+	int i3 = 3*i;
+	relative_velocity[i].x = v_lub_cont[i3];
+	relative_velocity[i].y = v_lub_cont[i3+1];
+	relative_velocity[i].z = v_lub_cont[i3+2];
 	
-	if(friction){
-		double O_inf_y = 0.5*shear_rate;
-		for (int i=0; i < np; i++){
-			ang_velocity[i] = 1.33333*torque[i];
-			ang_velocity[i].y += O_inf_y;
-		}
-	}
-#ifdef CHOLMOD
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	cholmod_free_dense(&chol_rhs_lub_cont, &chol_c);
-	cholmod_free_dense(&chol_v_lub_cont, &chol_c);
-#endif
+	velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
+	velocity[i].y = relative_velocity[i].y;
+	velocity[i].z = relative_velocity[i].z;
+    }
 	
+    if(friction){
+	double O_inf_y = 0.5*shear_rate;
+	for (int i=0; i < np; i++){
+	    ang_velocity[i] = 1.33333*torque[i];
+	    ang_velocity[i].y += O_inf_y;
+	}
+    }
+    
+    stokes_solver->solvingIsDone();
 }
 
-#ifdef CHOLMOD
-void
-System::factorizeResistanceMatrix(){
-	chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
-	cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
-	if(chol_c.status){
-		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
-		// It is very often enough to force another preconditioner to solve the problem.
-		cerr << " factorization failed. forcing simplicial algorithm... " << endl;
-		chol_c.supernodal = CHOLMOD_SIMPLICIAL;
-		chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
-		cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c) ;
-		cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  chol_c.final_ll <<endl;
-		chol_c.supernodal = CHOLMOD_SUPERNODAL;
-	}
 
-}
-#endif
-
-
+// RIGHT NOW THIS WORKS ONLY WITH CHOLMOD
 void System::updateVelocityLubricationBrownian(){
-#ifdef CHOLMOD
-	chol_rhs_lub_cont = cholmod_zeros(np3, 1, xtype, &chol_c);
-	buildLubricationTerms();
+
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU();
+
+    addStokesDrag();
+    buildLubricationTerms();
+
+    stokes_solver->complete_RFU();
+
+    buildContactTerms();
 	
-	fillSparseResmatrix();
+    stokes_solver->solve(v_lub_cont);
 
-	factorizeResistanceMatrix();
+    // now the Brownian part of the velocity:
+    // mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+    // 
+    // we do not call solvingIsDone() before new solve(), because 
+    // R_FU has not changed, so same factorization is safely used
 
-	buildContactTerms();
+    stokes_solver->setRHS( fb->generate() );
+    stokes_solver->solve( v_Brownian_init );
+    stokes_solver->solvingIsDone();
 	
-	chol_v_nonBrownian = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs_lub_cont, &chol_c) ;
-
-	// now the Brownian part of the velocity:
-	// mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
-
-	chol_brownian_rhs = fb->generate();
-
-	chol_v_Brownian_init = cholmod_solve (CHOLMOD_A, chol_L, chol_brownian_rhs, &chol_c) ;
+    // move particles to intermediate point
+    for (int i=0; i < np; i++){
+	int i3 = 3*i;
+	displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions();
 	
-	// move particles to intermediate point
+    // build new Resistance matrix after move
+    stokes_solver->prepareNewBuild_RFU();
+    addStokesDrag();
+    buildLubricationTerms(false); // false: don't modify rhs
+    stokes_solver->complete_RFU();
+
+    // get the intermediate brownian velocity
+    stokes_solver->solve(v_Brownian_mid);
+    stokes_solver->solvingIsDone();
+
+    // move particles back to initial point, and update interactions
+    //
+    // Note that, although it looks like a complete reversal of the initial move (as it should be), 
+    // the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
+    // might switch off some of them. The 2nd move's update is not able to switch them back on.
+    for (int i=0; i < np; i++){
+	int i3 = 3*i;
+	displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions();
+
+    // update total velocity
+    // first term is hydrodynamic + contact velocities
+    // second term is Brownian velocities
+    // third term is Brownian drift
+    // fourth term for vx is the shear rate
+    for (int i = 0; i < np; i++){
+	int i3 = 3*i;
+	relative_velocity[i].x = v_lub_cont[i3] + v_Brownian_init[i3] + 0.5*dt_ratio*( v_Brownian_mid[i3] - v_Brownian_init[i3] );
+	relative_velocity[i].y = v_lub_cont[i3+1] + v_Brownian_init[i3+1] + 0.5*dt_ratio*( v_Brownian_mid[i3+1] - v_Brownian_init[i3+1] );
+	relative_velocity[i].z = v_lub_cont[i3+2] + v_Brownian_init[i3+2] + 0.5*dt_ratio*( v_Brownian_mid[i3+2] - v_Brownian_init[i3+2] );
+	
+	velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
+	velocity[i].y = relative_velocity[i].y;
+	velocity[i].z = relative_velocity[i].z;
+    }
+	
+    if(friction){
+	double O_inf_y = 0.5*shear_rate;
 	for (int i=0; i < np; i++){
-		int i3 = 3*i;
-		displacement(i, ((double*)chol_v_Brownian_init->x)[i3]*dt_mid, ((double*)chol_v_Brownian_init->x)[i3+1]*dt_mid, ((double*)chol_v_Brownian_init->x)[i3+2]*dt_mid);
+	    ang_velocity[i] = 1.33333*torque[i];
+	    ang_velocity[i].y += O_inf_y;
 	}
-	
-	updateInteractions();
-	
-	// rebuild new R_FU
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	buildLubricationTerms();
-	fillSparseResmatrix();
+    }
 
-	factorizeResistanceMatrix();
-	
-	// get the intermediate brownian velocity
-	chol_v_Brownian_mid = cholmod_solve (CHOLMOD_A, chol_L, chol_brownian_rhs, &chol_c) ;
-	
-	// move particles back to initial point, and update interactions
-	//
-	// Note that, although it looks like a complete reversal of the initial move (as it should be), 
-	// the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
-	// might switch off some of them. The 2nd move's update is not able to switch them back on.
-	for (int i=0; i < np; i++){
-		int i3 = 3*i;
-		displacement(i, -((double*)chol_v_Brownian_init->x)[i3]*dt_mid, -((double*)chol_v_Brownian_init->x)[i3+1]*dt_mid, -((double*)chol_v_Brownian_init->x)[i3+2]*dt_mid);
-	}
-	updateInteractions();
-
-	// update total velocity
-	// first term is hydrodynamic + contact velocities
-	// second term is Brownian velocities
-	// third term is Brownian drift
-	// fourth term for vx is the shear rate
-	for (int i = 0; i < np; i++){
-		int i3 = 3*i;
-		relative_velocity[i].x = ((double*)chol_v_nonBrownian->x)[i3] + ((double*)chol_v_Brownian_init->x)[i3] + 0.5*dt_ratio*(((double*)chol_v_Brownian_mid->x)[i3] - ((double*)chol_v_Brownian_init->x)[i3] );
-		relative_velocity[i].y = ((double*)chol_v_nonBrownian->x)[i3+1] + ((double*)chol_v_Brownian_init->x)[i3+1] + 0.5*dt_ratio*(((double*)chol_v_Brownian_mid->x)[i3+1] - ((double*)chol_v_Brownian_init->x)[i3+1] );
-		relative_velocity[i].z = ((double*)chol_v_nonBrownian->x)[i3+2] + ((double*)chol_v_Brownian_init->x)[i3+2] + 0.5*dt_ratio*(((double*)chol_v_Brownian_mid->x)[i3+2] - ((double*)chol_v_Brownian_init->x)[i3+2] );
-		
-		velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
-		velocity[i].y = relative_velocity[i].y;
-		velocity[i].z = relative_velocity[i].z;
-	}
-	
-	if(friction){
-		double O_inf_y = 0.5*shear_rate;
-		for (int i=0; i < np; i++){
-			ang_velocity[i] = 1.33333*torque[i];
-			ang_velocity[i].y += O_inf_y;
-		}
-	}
-	
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_dense(&chol_rhs_lub_cont, &chol_c);
-	cholmod_free_dense(&chol_v_nonBrownian, &chol_c);
-	cholmod_free_dense(&chol_v_Brownian_init, &chol_c);
-	cholmod_free_dense(&chol_v_Brownian_mid, &chol_c);
-#endif
 }
 
 
 
 void System::computeBrownianStress(){
-#ifdef CHOLMOD
-	double stresslet_i[5];
-	double stresslet_j[5];
-	for (int k=0; k < 5; k ++){
-		stresslet_i[k] = 0.;
-		stresslet_j[k] = 0.;
-	}
-	vec3d vi;
-	vec3d vj;
-
-	chol_rhs_lub_cont = cholmod_zeros(np3, 1, xtype, &chol_c);
-	buildLubricationTerms();
+    
+    stresslet stresslet_i;
+    stresslet stresslet_j;
+    for (int u=0; u < 5; u ++){
+	stresslet_i.elm[u] = 0.;
+	stresslet_j.elm[u] = 0.;
+    }
+    vec3d vi;
+    vec3d vj;
 	
-	fillSparseResmatrix();
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU();
 
-	factorizeResistanceMatrix();
+    addStokesDrag();
+    buildLubricationTerms();
 
-	// now the Brownian part of the velocity:
-	// mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+    stokes_solver->complete_RFU();
 
-	chol_brownian_rhs = fb->generate();
-
-	chol_v_Brownian_init = cholmod_solve (CHOLMOD_A, chol_L, chol_brownian_rhs, &chol_c) ;
+    buildContactTerms();
 	
-	for (int k = 0; k < num_interaction; k++){
-		for (int u=0; u < 5; u ++){
-			stresslet_i[u] = 0.;
-			stresslet_j[u] = 0.;
-		}
+    stokes_solver->solve(v_lub_cont);
 
-		int i = interaction[k].particle_num[0];
-		int j = interaction[k].particle_num[1];
-		int i3 = 3*i;
-		int j3 = 3*j;
+    // now the Brownian part of the velocity:
+    // mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+    // 
+    // we do not call solvingIsDone() before new solve(), because 
+    // R_FU has not changed, so same factorization is safely used
 
-		vi.x = ((double*)chol_v_Brownian_init->x)[i3  ];
-		vi.y = ((double*)chol_v_Brownian_init->x)[i3+1];
-		vi.z = ((double*)chol_v_Brownian_init->x)[i3+2];
-		
-		vj.x = ((double*)chol_v_Brownian_init->x)[j3  ];
-		vj.y = ((double*)chol_v_Brownian_init->x)[j3+1];
-		vj.z = ((double*)chol_v_Brownian_init->x)[j3+2];
-
-		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
-
-		for (int u=0; u < 5; u++){
-			brownianstress[i][u] += stresslet_i[u];
-			brownianstress[j][u] += stresslet_j[u];
-		}
+    stokes_solver->setRHS( fb->generate() );
+    stokes_solver->solve( v_Brownian_init );
+    stokes_solver->solvingIsDone();
+	
+    for (int k = 0; k < num_interaction; k++){
+	for (int u=0; u < 5; u ++){
+	    stresslet_i.elm[u] = 0.;
+	    stresslet_j.elm[u] = 0.;
 	}
 	
+	int i = interaction[k].particle_num[0];
+	int j = interaction[k].particle_num[1];
+	int i3 = 3*i;
+	int j3 = 3*j;
+	
+	vi.x = v_Brownian_init[i3  ];
+	vi.y = v_Brownian_init[i3+1];
+	vi.z = v_Brownian_init[i3+2];
+	
+	vj.x = v_Brownian_init[j3  ];
+	vj.y = v_Brownian_init[j3+1];
+	vj.z = v_Brownian_init[j3+2];
 
-	// move particles to intermediate point
-	for (int i=0; i < np; i++){
-		int i3 = 3*i;
-		displacement(i, ((double*)chol_v_Brownian_init->x)[i3]*dt_mid, ((double*)chol_v_Brownian_init->x)[i3+1]*dt_mid, ((double*)chol_v_Brownian_init->x)[i3+2]*dt_mid);
+	interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+
+	for (int u=0; u < 5; u++){
+	    brownianstress[i].elm[u] += stresslet_i.elm[u];
+	    brownianstress[j].elm[u] += stresslet_j.elm[u];
 	}
+    }
 	
-	updateInteractions();
+    // move particles to intermediate point
+    for (int i=0; i < np; i++){
+	int i3 = 3*i;
+	displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions();
 	
-	// rebuild new R_FU
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	buildLubricationTerms();
-	fillSparseResmatrix();
+    // build new Resistance matrix after move
+    stokes_solver->prepareNewBuild_RFU();
+    addStokesDrag();
+    buildLubricationTerms(false); // false: don't modify rhs
+    stokes_solver->complete_RFU();
 
-	factorizeResistanceMatrix();
+    // get the intermediate brownian velocity
+    stokes_solver->solve(v_Brownian_mid);
+    stokes_solver->solvingIsDone();
 	
-	// get the intermediate brownian velocity
-	chol_v_Brownian_mid = cholmod_solve (CHOLMOD_A, chol_L, chol_brownian_rhs, &chol_c) ;
-	
-	for (int k = 0; k < num_interaction; k++){
-		for (int u=0; u < 5; u ++){
-			stresslet_i[u] = 0.;
-			stresslet_j[u] = 0.;
-		}
-
-		int i = interaction[k].particle_num[0];
-		int j = interaction[k].particle_num[1];
-		int i3 = 3*i;
-		int j3 = 3*j;
-
-		vi.x = ((double*)chol_v_Brownian_mid->x)[i3  ];
-		vi.y = ((double*)chol_v_Brownian_mid->x)[i3+1];
-		vi.z = ((double*)chol_v_Brownian_mid->x)[i3+2];
-		
-		vj.x = ((double*)chol_v_Brownian_mid->x)[j3  ];
-		vj.y = ((double*)chol_v_Brownian_mid->x)[j3+1];
-		vj.z = ((double*)chol_v_Brownian_mid->x)[j3+2];
-
-		interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
-
-		for (int u=0; u < 5; u++){
-			brownianstress[i][u] -= stresslet_i[u];
-			brownianstress[j][u] -= stresslet_j[u];
-		}
+    for (int k = 0; k < num_interaction; k++){
+	for (int u=0; u < 5; u ++){
+	    stresslet_i.elm[u] = 0.;
+	    stresslet_j.elm[u] = 0.;
 	}
 
-	for (int i=0; i < np; i++){
-		for (int u=0; u < 5; u++){
-			brownianstress[i][u] *= 0.5*dt_ratio;
-		}
-	}
+	int i = interaction[k].particle_num[0];
+	int j = interaction[k].particle_num[1];
+	int i3 = 3*i;
+	int j3 = 3*j;
 	
-	// move particles back to initial point, and update interactions
-	//
-	// Note that, although it looks like a complete reversal of the initial move (as it should be), 
-	// the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
-	// might switch off some of them. The 2nd move's update is not able to switch them back on.
-	for (int i=0; i < np; i++){
-		int i3 = 3*i;
-		displacement(i, -((double*)chol_v_Brownian_init->x)[i3]*dt_mid, -((double*)chol_v_Brownian_init->x)[i3+1]*dt_mid, -((double*)chol_v_Brownian_init->x)[i3+2]*dt_mid);
-	}
-	updateInteractions();
+	vi.x = v_Brownian_mid[i3  ];
+	vi.y = v_Brownian_mid[i3+1];
+	vi.z = v_Brownian_mid[i3+2];
+	
+	vj.x = v_Brownian_mid[j3  ];
+	vj.y = v_Brownian_mid[j3+1];
+	vj.z = v_Brownian_mid[j3+2];
 
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_dense(&chol_rhs_lub_cont, &chol_c);
-	cholmod_free_dense(&chol_v_nonBrownian, &chol_c);
-	cholmod_free_dense(&chol_v_Brownian_init, &chol_c);
-	cholmod_free_dense(&chol_v_Brownian_mid, &chol_c);
-#endif
+	interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+
+	for (int u=0; u < 5; u++){
+	    brownianstress[i].elm[u] -= stresslet_i.elm[u];
+	    brownianstress[j].elm[u] -= stresslet_j.elm[u];
+	}
+    }
+
+    for (int i=0; i < np; i++){
+	for (int u=0; u < 5; u++){
+	    brownianstress[i].elm[u] *= 0.5*dt_ratio;
+	}
+    }
+	
+    // move particles back to initial point, and update interactions
+    //
+    // Note that, although it looks like a complete reversal of the initial move (as it should be), 
+    // the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
+    // might switch off some of them. The 2nd move's update is not able to switch them back on.
+    for (int i=0; i < np; i++){
+	int i3 = 3*i;
+	displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions();
+
 }
-
 
 void
 System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
@@ -1487,32 +765,32 @@ System::calcStress(){
 
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
+			interaction[k].evaluateLubricationForce();
 			interaction[k].addLubricationStress();
 			if (interaction[k].contact){
 				interaction[k].addContactStress();
 			}
-			interaction[k].evaluateLubricationForce();
 		}
 	}
-	for(int k=0; k < 10 ; k++){
-		cnt_contact_number[k] = 0;
+	for(int u=0; u < 10 ; u++){
+		cnt_nearing_number[u] = 0;
 	}
 	for (int i =0; i < np; i++){
-		cnt_contact_number[ contact_number[i] ] ++;
+		cnt_nearing_number[ nearing_number[i] ] ++;
 	}
 	
-	for (int k=0; k < 5; k++){
-		total_lub_stress[k] = 0;
-		total_contact_stress[k] = 0;
-		total_brownian_stress[k] = 0;
+	for (int u=0; u < 5; u++){
+		total_lub_stress[u] = 0;
+		total_contact_stress[u] = 0;
+		total_brownian_stress[u] = 0;
 	}
 	
 	
 	for (int i=0; i < np; i++){
-		for (int k=0; k < 5; k++){
-			total_lub_stress[k] += lubstress[i][k];
-			total_contact_stress[k] += contactstress[i][k];
-			total_brownian_stress[k] += brownianstress[i][k];
+		for (int u=0; u < 5; u++){
+			total_lub_stress[u] += lubstress[i].elm[u];
+			total_contact_stress[u] += contactstress[i].elm[u];
+			total_brownian_stress[u] += brownianstress[i].elm[u];
 		}
 	}
 	
@@ -1533,15 +811,13 @@ System::analyzeState(){
 	gap_min = lz();
 	double sum_overlap = 0;
 	int cnt_overlap = 0;
-	max_age = 0;
-	double sum_age = 0;
-	int cnt_age = 0;
+	max_nearing_time = 0;
 	
 	for (int i=0; i < np; i++){
-		contact_number[i] = 0;
+		nearing_number[i] = 0;
 	}
 	
-	total_contact = 0;
+	num_nearing = 0;
 	// for analysis
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
@@ -1554,26 +830,34 @@ System::analyzeState(){
 			if (interaction[k].gap() < gap_min){
 				gap_min = interaction[k].gap();
 			}
-			
-			if (interaction[k].age() > 0 ){
-				if (max_age < interaction[k].age()){
-					max_age = interaction[k].age();
-				}
-				sum_age = interaction[k].age();
-				cnt_age ++;
-			}
+
 			interaction[k].recordTrajectory();
 			
 			if (interaction[k].near){
-				total_contact ++;
-				contact_number[interaction[k].particle_num[0]] ++;
-				contact_number[interaction[k].particle_num[1]] ++;
+				num_nearing ++;
+				nearing_number[interaction[k].particle_num[0]] ++;
+				nearing_number[interaction[k].particle_num[1]] ++;
+				if ( max_nearing_time < interaction[k].nearingTime()){
+					max_nearing_time = interaction[k].nearingTime();
+				}
 			}
 		}
 	}
+	
+	double sum_nearing_time = 0;
+	for(int k = 0; k < nearing_time_record.size(); k++){
+		sum_nearing_time += nearing_time_record[k];
+	}
 	ave_overlap = sum_overlap / cnt_overlap;
-	ave_age = sum_age / cnt_age;
-
+	if (nearing_time_record.size() > 0){
+		ave_nearing_time = sum_nearing_time / nearing_time_record.size();
+	} else {
+		ave_nearing_time = 0;
+	}
+	nearing_time_record.clear();
+	
+	
+	
 }
 
 void

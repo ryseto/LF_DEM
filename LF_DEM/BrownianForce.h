@@ -1,5 +1,5 @@
 //
-//  Interaction.h
+//  BrownianForce.h
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
@@ -8,11 +8,6 @@
 
 #ifndef __LF_DEM__BrownianForce__
 #define __LF_DEM__BrownianForce__
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-//#include "vec3d.h"
-//#include "Interaction.h"
 #include "System.h"
 #include "cholmod.h"
 #include "MersenneTwister.h"
@@ -46,7 +41,8 @@ public:
 	
 	
 	void add_to(cholmod_dense*);
-	cholmod_dense* generate();
+	//	cholmod_dense* generate();
+	double* generate();
 	void generate(double*);
 	
 };

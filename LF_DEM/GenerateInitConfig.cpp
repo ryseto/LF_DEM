@@ -6,11 +6,12 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
+#include <stdlib.h> // necessary for Linux
 #include "GenerateInitConfig.h"
 
 int
 GenerateInitConfig::generate(int argc, const char * argv[]){
-	epsiron = 1e-3;
+	epsiron = 0.1;
 	setParameters(argc, argv);
 	position.resize(np);
 	radius.resize(np);
@@ -99,7 +100,7 @@ GenerateInitConfig::solveOverlap(){
 		}
 		if (overlap == -1){
 			if (cc > 10000){
-				if (cc % 1000 == 0 ){
+				if (cc % 10000 == 0 ){
 					if ( checkOverlap() == false){
 						break;
 					}

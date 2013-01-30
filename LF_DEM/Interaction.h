@@ -13,6 +13,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "System.h"
+#include "common.h"
 using namespace std;
 class System;
 
@@ -30,7 +31,6 @@ private:
 	//	vec3d t_tangent;
 	int pd_z;
 	double sqnorm_contact_velocity;
-	
 	// state switch
 	void deactivate();
 	void activate_contact();
@@ -39,20 +39,22 @@ private:
 	double kt; // spring constant for contact force
 	double _r; // center-center distance
 	double ksi; // gap between particles
-//	double iksi; // inverse gap
+	//	double iksi; // inverse gap
 	double ksi_cutoff; // small cut-off for ksi: lubrication breakdown
 	double ksi_eff;  // max(ksi, ksi_cutoff)
 	double iksi_eff;
 	double prev_iksi_eff;
 	double r_lub_max;  // max distance for lubrication
-	double strain_0; // 
+
+	double strain_lub_generated; // The strain when this interaction starts.
+	double strain_near_contact; // The strain when this interaction starts.
+	double lub_time;
+	double nearing_time;
 	//	double twothird, onesixth; // used in lubrication computations;
-
 	bool _just_off;
-
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
-	double lubstresslet[5];
-	double contactstresslet[5];
+	stresslet lubstresslet;
+	stresslet contactstresslet;
 
 protected:
 	void calcStaticFriction();
@@ -77,13 +79,12 @@ public:
 		return ksi;
 	}
 	double lubStresslet(int i){
-		return lubstresslet[i];
+		return lubstresslet.elm[i];
 	}
 	
 	
 	bool update(); // after particles dispacement
-	double age();
-	
+	double nearingTime();
 	double a0, a1;
 	double ro; // ro = a0 + a1
 	double lambda, invlambda;  // a1/a0 , a0/a1
@@ -108,21 +109,17 @@ public:
 
 	void evaluateLubricationForce();
 	double valLubForce();
-
 	void calcContactInteraction();
 	void calcContactInteractionNoFriction();
 	void calcContactStress();
 	void addLubricationStress();
 	void addContactStress();
-	void pairStresslet(const vec3d &vi, const vec3d &vj, double stresslet_i[], double stresslet_j[]);
-
-
+	void pairStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
 	void prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj);
 	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);
 	void XM(double &XMii, double &XMij, double &XMji, double &XMjj);
 	void GE(double GEi[], double GEj[]);
-
 
 };
 
