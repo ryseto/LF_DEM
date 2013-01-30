@@ -60,15 +60,23 @@ StokesSolver::initialize(){
 	xtype = CHOLMOD_REAL;
 #endif
 #ifdef TRILINOS
+
+	// initialize solver
 	RCP<ParameterList> solverParams = parameterList();
-	int blocksize = 40;
+
+	// parameters to be tuned (and understood!)
+	int blocksize = 10;
 	int maxiters = 400;
-	double tol = 1.e-8;
+	double tol = 1.e-6;
 	solverParams->set( "Block Size", blocksize );              // Blocksize to be used by iterative solver
 	solverParams->set( "Maximum Iterations", maxiters );       // Maximum number of iterations allowed
 	solverParams->set( "Convergence Tolerance", tol );         // Relative convergence tolerance requested
 	solverParams->set( "Verbosity", Belos::Errors + Belos::Warnings );
 	tril_solver = tril_factory.create ("CG", solverParams);
+
+	// initialize empty linear problem
+    tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > () );
+
 #endif
 
     dof = 3;
@@ -254,10 +262,12 @@ StokesSolver::complete_RFU(){
     }
     // FillComplete matrix before building the preconditioner
     tril_rfu_matrix->FillComplete();
-    
-    buildDiagBlockPreconditioner();
 
-    tril_l_precond->FillComplete();
+	tril_stokes_equation->setOperator( rcp ( tril_rfu_matrix, false) );
+
+	setDiagBlockPreconditioner();
+	//    setIncCholPreconditioner();
+
 }
 #endif
 
@@ -359,23 +369,41 @@ StokesSolver::solve(double* velocity){
 #endif
 
 #ifdef TRILINOS
-    RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation = rcp( new Belos::LinearProblem < SCAL, VEC, MAT > ( rcp ( tril_rfu_matrix, false), tril_solution, tril_rhs ) );
-    
-    tril_stokes_equation->setLeftPrec( rcp ( tril_l_precond, false) );
+	
+
+	tril_stokes_equation->setLHS( tril_solution );
+	tril_stokes_equation->setRHS( tril_rhs );
+
+
+	// double *vel_guess = new double [linalg_size];
+    // tril_solution->ExtractCopy(&vel_guess);
+
 
     bool set_success = tril_stokes_equation->setProblem();
     if(!set_success){
-	cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
-	exit(1);
+	  cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
+	  exit(1);
     }
+
     tril_solver->setProblem (tril_stokes_equation);
+
     Belos::ReturnType ret = tril_solver->solve();
+
     if( ret != Belos::Converged )
-	cerr << " Warning: Belos::Solver did not converge" << endl;
+	  cerr << " Warning: Belos::Solver did not converge" << endl;
+
     int iter_steps = tril_solver->getNumIters();
-    cout << " iterations " << iter_steps << endl;
+	//    cout << " iterations " << iter_steps << endl;
 
     tril_solution->ExtractCopy(&velocity);
+
+
+	// for(int i=0; i<linalg_size; i++){
+	//   cout << vel_guess[i] << " " << velocity[i] << endl;
+	// }
+
+	// getchar();
+	// delete [] vel_guess;
 
 #endif
 
@@ -623,7 +651,7 @@ System::factorizeRFU(){
    This method stores P^{-1} in tril_l_precond.
 */
 void
-StokesSolver::buildDiagBlockPreconditioner(){
+StokesSolver::setDiagBlockPreconditioner(){
     
     double a00, a01, a02, a11, a12, a22;
     double det, idet;
@@ -669,23 +697,42 @@ StokesSolver::buildDiagBlockPreconditioner(){
 	tril_l_precond->InsertGlobalValues(i3+2, 3 , precond_row, indices);
 	
     }
-    
+
+    tril_l_precond->FillComplete();
+
+	// give it to the LinearProblem
+    tril_stokes_equation->setLeftPrec( rcp ( tril_l_precond, false) );
+
+
     delete [] precond_row;
     delete [] indices;
     
 }
 
 /* 
-  buildIncCholPreconditioner() :
+  setIncCholPreconditioner() :
   A incomplete Cholesky factorization (left-)preconditioner.
 */
 void
-StokesSolver::buildIncCholPreconditioner(){
+StokesSolver::setIncCholPreconditioner(){
 //  parameters to be tuned
     int fill_level = 1;
     double drop_tolerance = 0.0;
 
-    // Ifpack_CrsIct * ICT = NULL;
-    // ICT = new Ifpack_CrsIct(tril_rfu_matrix, drop_tolerance, fill_level);
+	RCP <Ifpack_IC> tril_ICT_precond = rcp ( new Ifpack_IC ( tril_rfu_matrix ) ); 
+
+	ParameterList precondParams;
+	precondParams.set("fact: drop tolerance", drop_tolerance);
+	precondParams.set("fact: ict level-of-fill", fill_level);
+
+	tril_ICT_precond->SetParameters(precondParams);
+	tril_ICT_precond->Initialize();
+	tril_ICT_precond->Compute();
+
+	// template conversion, to make Ifpack preconditioner compatible with belos
+	RCP<Belos::EpetraPrecOp> belos_ICT_precond = rcp ( new Belos::EpetraPrecOp ( tril_ICT_precond ) );
+	
+	tril_stokes_equation->setLeftPrec ( belos_ICT_precond );
+	
     
 }

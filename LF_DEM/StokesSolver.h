@@ -24,7 +24,9 @@
 #include "BelosSolverFactory.hpp"
 #include "BelosEpetraAdapter.hpp"
 #include "Teuchos_RCP.hpp" // ref counting pointer
-#include "Ifpack2_Preconditioner.hpp" // incomplete Cholesky preconditioner
+//#include "Ifpack2_Preconditioner.hpp" // incomplete Cholesky preconditioner
+//#include "Ifpack_CrsIct.h"
+#include "Ifpack_IC.h"
 #endif
 
 #ifdef TRILINOS
@@ -93,16 +95,18 @@ class StokesSolver{
     RCP < Epetra_MultiVector > tril_rhs;
     Epetra_CrsMatrix *tril_rfu_matrix;
     Epetra_CrsMatrix *tril_l_precond;
-    //	RCP < ParameterList > params;
-    //	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
+
+	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
     RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
     Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
 
     // resistance matrix building
     int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
-    int* columns_nb;
-    int columns_max_nb;
-    double **values;
+    int* columns_nb; // nb of non-zero elements in each row
+    int columns_max_nb; // max nb of non-zero elements per row
+    double **values; // values corresponding to 'columns' array coordinates
+
+
 #endif
     
 
@@ -130,8 +134,8 @@ class StokesSolver{
     
     void allocateRessources();
 
-    void buildDiagBlockPreconditioner();
-    void buildIncCholPreconditioner();
+    void setDiagBlockPreconditioner();
+    void setIncCholPreconditioner();
     
  public:
 
