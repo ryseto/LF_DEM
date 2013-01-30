@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CD12D04C16B30F2900F11015 /* libsuitesparseconfig.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */; };
 		D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */; };
 		D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */; };
@@ -36,6 +37,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.a; path = ../../suitesparse/SuiteSparse/SuiteSparse_config/libsuitesparseconfig.a; sourceTree = "<group>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.0.1.a; path = ../../../../../../usr/local/lib/libcholmod.2.0.1.a; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 				D91B041C166EF09F00DC63CA /* libcolamd.2.8.0.a in Frameworks */,
 				D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */,
 				D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */,
+				CD12D04C16B30F2900F11015 /* libsuitesparseconfig.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -147,6 +150,7 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
+				CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
 				D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */,
 				D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */,
@@ -339,6 +343,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"/Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/Lib,
+					"\"$(SRCROOT)/../../suitesparse/SuiteSparse/SuiteSparse_config\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -347,6 +359,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"/Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/Lib,
+					"\"$(SRCROOT)/../../suitesparse/SuiteSparse/SuiteSparse_config\"",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
