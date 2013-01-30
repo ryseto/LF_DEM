@@ -30,7 +30,7 @@ $name = substr($particle_data, $i, $j-$i);
 $interaction_data = "int_${name}.dat";
 printf "$interaction_data\n";
 $output = "y_$name.yap";
-$output2 = "nvec_$name.yap";
+$output2 = "nvec_$name.dat";
 
 open (OUT, "> ${output}");
 open (OUT2, "> ${output2}");
@@ -178,8 +178,8 @@ sub OutYaplotData{
 sub OutNvec {
     ($k) = @_;
 	$nx = $nrvec_x[$k];
-	$nx = $nrvec_y[$k];
-	$nx = $nrvec_z[$k];
+	$ny = $nrvec_y[$k];
+	$nz = $nrvec_z[$k];
 	printf OUT2 "$nx $ny $nz\n";
 
 }
