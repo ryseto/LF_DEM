@@ -20,7 +20,6 @@ if ($#ARGV >= 1){
 if ($#ARGV == 2){
 	$y_section = $ARGV[2];
 	printf "section $y_section\n";
-	exit;
 }
 
 # Create output file name
@@ -119,13 +118,8 @@ sub OutYaplotData{
     printf OUT "@ 2\n";
     for ($k = 0; $k < $num_interaction; $k ++){
         if ($Fc_n[$k] > 0){
-            $string_with = $force_factor*($Fc_n[$k]);
-			if ( $y_section == 0
-				|| abs($yi) < $y_section
-				|| abs($yj) < $y_section){
-					printf OUT "r ${string_with}\n";
-					OutString($int0[$k],  $int1[$k]);
-				}
+            $string_width = $force_factor*($Fc_n[$k]);
+			&OutString_width($int0[$k],  $int1[$k]);
         }
     }
     printf OUT "y 3\n";
@@ -133,29 +127,17 @@ sub OutYaplotData{
     for ($k = 0; $k < $num_interaction; $k ++){
         $force = $F_lub[$k] + $Fc_n[$k];
         if ($force < 0){
-            $string_with = -${force_factor}*${force};
-			if ( $y_section == 0
-				|| abs($yi) < $y_section
-				|| abs($yj) < $y_section){
-					
-					printf OUT "r ${string_with}\n";
-					&OutString($int0[$k],  $int1[$k]);
-				
-				}
-        }
+			$string_width = -${force_factor}*${force};
+			&OutString_width($int0[$k], $int1[$k]);
+		}
     }
     printf OUT "@ 4\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k] + $Fc_n[$k];
+        $force = $F_lub[$k];
 		if ($force > 0){
-            $string_with = ${force_factor}*${force};
-			if ( $y_section == 0
-				|| abs($yi) < $y_section
-				|| abs($yj) < $y_section){
-					printf OUT "r ${string_with}\n";
-					&OutString($int0[$k],  $int1[$k]);
-				}
-        }
+            $string_width = ${force_factor}*${force};
+			&OutString_width($int0[$k], $int1[$k]);
+		}
     }
 	$maxS=0;
 	for ($k = 0; $k < $num_interaction; $k ++){
@@ -164,34 +146,48 @@ sub OutYaplotData{
 		}
 	}
 	
-	printf OUT "y 4\n";
-    printf OUT "@ 5\n";
-    for ($k = 0; $k < $num_interaction; $k ++){
-		$string_with = $Sxz_lub[$k]/$maxS;
-		if ( $y_section == 0
-			|| abs($yi) < $y_section
-			|| abs($yj) < $y_section){
-				printf OUT "r ${string_with}\n";
-				&OutCircle_middle($int0[$k],  $int1[$k]);
-			}
-    }
-	$zpos = $Lz / 2 + 1;
-	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
-	
+#	printf OUT "y 4\n";
+#    printf OUT "@ 5\n";
+#    for ($k = 0; $k < $num_interaction; $k ++){
+#		$string_with = $Sxz_lub[$k]/$maxS;
+#		printf OUT "r ${string_with}\n";
+#		&OutCircle_middle($int0[$k],  $int1[$k]);
+#	}
+	#	$zpos = $Lz / 2 + 1;
+#	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
+#	
 	printf OUT "y 5\n";
 	printf OUT "@ 2\n";
-	printf OUT "r 0.5\n";
+	printf OUT "r 0.3\n";
     for ($k = 0; $k < $num_interaction; $k ++){
 		if ($Gap[$k] < 0.01 ){
-			if ( $y_section == 0
-				|| abs($yi) < $y_section
-				|| abs($yj) < $y_section){
-					&OutString($int0[$k],  $int1[$k]);
-				}
-        }
+			&OutString($int0[$k],  $int1[$k]);
+		}
     }
 	
 }
+
+sub OutString_width {
+    ($i, $j) = @_;
+    $xi = $posx[$i];
+    $yi = $posy[$i];
+    $zi = $posz[$i];
+    $xj = $posx[$j];
+    $yj = $posy[$j];
+    $zj = $posz[$j];
+	
+	if (abs($xi-$xj) < $radius_max*5
+		&&  abs($yi-$yj) < $radius_max*5
+		&&  abs($zi-$zj) < $radius_max*5){
+			if ( $y_section == 0
+				|| abs($yi) < $y_section
+				|| abs($yj) < $y_section){
+					printf OUT "r ${string_width}\n";
+					printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+				}
+		}
+}
+
 
 sub OutString {
     ($i, $j) = @_;
@@ -205,7 +201,11 @@ sub OutString {
 	if (abs($xi-$xj) < $radius_max*5
 		&&  abs($yi-$yj) < $radius_max*5
 		&&  abs($zi-$zj) < $radius_max*5){
-			printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+			if ( $y_section == 0
+				|| abs($yi) < $y_section
+				|| abs($yj) < $y_section){
+					printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+				}
 		}
 }
 
