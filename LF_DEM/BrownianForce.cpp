@@ -43,10 +43,16 @@ BrownianForce::add_to(cholmod_dense *force_vec){
 	}
 }
 
-cholmod_dense*
+// cholmod_dense*
+// BrownianForce::generate(){
+// 	generate_local();
+// 	return forces;
+// }
+
+double*
 BrownianForce::generate(){
-	generate_local();
-	return forces;
+  generate_local();
+  return (double*)forces->x;
 }
 
 
