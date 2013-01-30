@@ -30,7 +30,10 @@ $name = substr($particle_data, $i, $j-$i);
 $interaction_data = "int_${name}.dat";
 printf "$interaction_data\n";
 $output = "y_$name.yap";
+$output2 = "nvec_$name.yap";
+
 open (OUT, "> ${output}");
+open (OUT2, "> ${output2}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
@@ -87,6 +90,10 @@ sub InInteractions {
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = ($fc_tx)**2 + ($fc_ty)**2 + ($fc_tz)**2 ;
+		$nrvec_x[$k] = $nx;
+		$nrvec_y[$k] = $ny;
+		$nrvec_z[$k] = $nz;
+		
 		$NearTime[$k] = $neartime;
 		$Gap[$k] = $gap;
 	}
@@ -162,9 +169,19 @@ sub OutYaplotData{
     for ($k = 0; $k < $num_interaction; $k ++){
 		if ($Gap[$k] < 0.01 ){
 			&OutString($int0[$k],  $int1[$k]);
+			&OutNvec($k);
 		}
     }
-	
+	printf OUT2 "\n";
+}
+
+sub OutNvec {
+    ($k) = @_;
+	$nx = $nrvec_x[$k];
+	$nx = $nrvec_y[$k];
+	$nx = $nrvec_z[$k];
+	printf OUT2 "$nx $ny $nz\n";
+
 }
 
 sub OutString_width {
