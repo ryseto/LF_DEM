@@ -1,19 +1,19 @@
 #Makefile LF_DEM, Romain Mari
 CXX=g++ # -cxxlib-icc-abr
 
-INCLUDEPATHS= -I /usr/local/include/ #-I /Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/
+INCLUDEPATHS= -I /usr/local/include/ -I /Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/
 #CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS
 #CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow  $(INCLUDEPATHS) # mac OS debug
-#CXXFLAGS=  -g -pg $(INCLUDEPATHS) # mac OS debug no warning 
+CXXFLAGS=  -g -pg $(INCLUDEPATHS) # mac OS debug no warning 
 #CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/ # linux
-CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/
+#CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/
 
 LA_LIBRARIES = -llapack -lblas 
 
 Cholmod_LIBRARIES = -lcholmod
-#Cholmod_LIBRARIES += /usr/local/Lib/libcholmod.a /usr/local/Lib/libamd.a /usr/local/Lib/libcolamd.a /usr/local/lib/libsuitesparseconfig.a # mac os
+Cholmod_LIBRARIES += /usr/local/Lib/libcholmod.a /usr/local/Lib/libamd.a /usr/local/Lib/libcolamd.a /usr/local/lib/libsuitesparseconfig.a # mac os
 
-#Trilinos_LIBRARY_DIRS= -L/Users/LevichFellow/recherche/trilinos-11.0.3-Build/lib 
+Trilinos_LIBRARY_DIRS= -L/Users/LevichFellow/recherche/trilinos-11.0.3-Build/lib 
 Trilinos_LIBRARIES=  -lbelosepetra -lbelos -lml -lifpack -lamesos -lgaleri-xpetra -lgaleri -laztecoo -lepetraext -ltpetraext -ltpetrainout -ltpetra -ltriutils -lepetra -lkokkosdisttsqr -lkokkosnodetsqr -lkokkoslinalg -lkokkosnodeapi -lkokkos -lkokkosdisttsqr -lkokkosnodetsqr -lkokkoslinalg -lkokkosnodeapi -lkokkos -ltpi -lteuchos
 
 

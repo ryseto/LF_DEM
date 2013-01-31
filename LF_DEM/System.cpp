@@ -97,7 +97,7 @@ System::allocateRessources(){
 	    v_Brownian_init = new double [linalg_size];
 	    v_Brownian_mid = new double [linalg_size];
 	}
-	stokes_solver = new StokesSolver(np);
+	stokes_solver = new StokesSolver(np, brownian);
 }
 
 void
@@ -342,26 +342,27 @@ System::buildLubricationTerms(bool rhs=true){
     int j;
     Interaction *inter;
     for (int i = 0; i < np - 1; i ++){
-	for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+	  for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
 	    inter=*it;
 	    j=inter->partner(i);
 	    if(j>i){
-		inter->XA(XAii, XAij, XAji, XAjj);
-
-		stokes_solver->addToDiagBlock_RFU(inter->nr_vec, i, inter->a0 * XAii);
-		stokes_solver->addToDiagBlock_RFU(inter->nr_vec, j, inter->a1 * XAjj);
-		stokes_solver->appendToOffDiagBlock_RFU(inter->nr_vec, i, j, 0.5 * inter->ro * XAji);
-
-		if(rhs){
+		  inter->XA(XAii, XAij, XAji, XAjj);
+		  
+		  stokes_solver->addToDiagBlock_RFU(inter->nr_vec, i, inter->a0 * XAii);
+		  stokes_solver->addToDiagBlock_RFU(inter->nr_vec, j, inter->a1 * XAjj);
+		  stokes_solver->appendToOffDiagBlock_RFU(inter->nr_vec, i, j, 0.5 * inter->ro * XAji);
+		  
+		  if(rhs){
 		    inter->GE(GEi, GEj);  // G*E_\infty term
 		    for(int u=0; u<3; u++){
-			stokes_solver->addToRHS( 3*i + u, GEi[u] );
-			stokes_solver->addToRHS( 3*j + u, GEj[u] );
+			  stokes_solver->addToRHS( 3*i + u, GEi[u] );
+			  stokes_solver->addToRHS( 3*j + u, GEj[u] );
 		    }
-		}
-
+		  }
+		  
 	    }
-	}
+	  }
+	  stokes_solver->doneBlocks(i);
     }
 }
 
@@ -881,10 +882,4 @@ System::setSystemVolume(){
 		system_volume = _lx*_ly*_lz;
 	}
 }
-
-
-
-
-
-
 

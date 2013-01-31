@@ -11,9 +11,10 @@ using namespace std;
 *                                                     *
 ******************************************************/
 
-StokesSolver::StokesSolver(int n){
+StokesSolver::StokesSolver(int n, bool is_brownian){
     np=n;
     np3=3*np;
+	brownian=is_brownian;
 }
 StokesSolver::~StokesSolver(){
     #ifdef CHOLMOD
@@ -235,11 +236,11 @@ StokesSolver::complete_RFU(){
     ((int*)chol_rfu_matrix->p)[np3] = ((int*)chol_rfu_matrix->p)[np3-1] + 1;
 
     // for(int i = 0; i < linalg_size; i++){
-    //   for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
-    //     cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
-    //   }
+	//   for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
+	// 	cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+	//   }
     // }
-    
+	
 }
 #endif
 
@@ -258,8 +259,9 @@ void
 StokesSolver::complete_RFU(){
 
     for(int i = 0; i < linalg_size; i++){
-	tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
+	  tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
     }
+
     // FillComplete matrix before building the preconditioner
     tril_rfu_matrix->FillComplete();
 
@@ -303,7 +305,6 @@ StokesSolver::prepareNewBuild_RFU(){
 #endif
 
 #ifdef CHOLMOD
-    last_updated_colblock = -1;
     for (int k = 0; k < 6*np; k++){
 	diag_values[k] = 0.;
     }
@@ -312,6 +313,9 @@ StokesSolver::prepareNewBuild_RFU(){
     off_diag_values[0].clear();
     off_diag_values[1].clear();
     off_diag_values[2].clear();
+
+	ploc[0] = 0;
+
 #endif
 
 }
@@ -363,6 +367,7 @@ StokesSolver::solve(double* velocity){
 #ifdef CHOLMOD
     factorizeRFU();
     chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+
     for (int i = 0; i < linalg_size; i++){
 	velocity[i] = ((double*)chol_solution->x)[i];
     }
@@ -373,7 +378,7 @@ StokesSolver::solve(double* velocity){
 
 	tril_stokes_equation->setLHS( tril_solution );
 	tril_stokes_equation->setRHS( tril_rhs );
-
+	
 
 	// double *vel_guess = new double [linalg_size];
     // tril_solution->ExtractCopy(&vel_guess);
@@ -424,8 +429,6 @@ StokesSolver::solvingIsDone(){
 
 }
 
-
-
 /******************************************************
 *                                                     *
 *                  Private Methods                    *
@@ -470,7 +473,7 @@ StokesSolver::allocateRessources(){
     diag_values = new double [6*np];
     off_diag_values = new vector <double> [3];
     ploc = new int [np+1];
-    chol_rhs = cholmod_allocate_dense(np3, xtype, &chol_c);
+    chol_rhs = cholmod_allocate_dense(np3, 1, np3, xtype, &chol_c);
     chol_L=NULL;
 #endif
 
@@ -489,15 +492,17 @@ StokesSolver::allocate_RFU(){
 }
 #endif
 
+void
+StokesSolver::doneBlocks(int i){
+#ifdef CHOLMOD
+  ploc[i+1] = (unsigned int)rows.size();
+#endif
+}
 
 #ifdef CHOLMOD
 void
 StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
-    if(ii>last_updated_colblock){
-	last_updated_colblock = ii;
-	ploc[i] = (unsigned int)rows.size();
-    }
 
     int jj3   = 3*jj;
     int jj3_1 = jj3+1;
@@ -603,7 +608,7 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
 #ifdef CHOLMOD
 void
-System::factorizeRFU(){
+StokesSolver::factorizeRFU(){
     chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
     cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
     if(chol_c.status){
@@ -621,6 +626,7 @@ System::factorizeRFU(){
 #endif
 
 
+#ifdef TRILINOS
 /*************  Preconditioners *********************/
 
 /* 
@@ -652,7 +658,7 @@ System::factorizeRFU(){
 */
 void
 StokesSolver::setDiagBlockPreconditioner(){
-    
+
     double a00, a01, a02, a11, a12, a22;
     double det, idet;
     double *precond_row = new double [3];
@@ -736,3 +742,4 @@ StokesSolver::setIncCholPreconditioner(){
 	
     
 }
+#endif

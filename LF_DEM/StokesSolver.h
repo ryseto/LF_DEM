@@ -8,8 +8,10 @@
 #ifndef __LF_DEM__StokesSolver__
 #define __LF_DEM__StokesSolver__
 
-//#define CHOLMOD
-#define TRILINOS
+#define CHOLMOD
+//#define TRILINOS
+
+#include <vector>
 
 #include "vec3d.h"
 
@@ -57,6 +59,7 @@ class StokesSolver{
     int np, np3;
     int dof;
     int linalg_size;
+	bool brownian;
 #ifdef CHOLMOD
     cholmod_sparse *chol_rfu_matrix;
     cholmod_dense *chol_solution;
@@ -75,9 +78,10 @@ class StokesSolver{
     double *diag_values;
     vector <double> *off_diag_values;
     int *ploc;
-    int last_updated_colblock;
 
-    factorizeRFU();
+    void factorizeRFU();
+	
+
 #endif
     
 #ifdef TRILINOS
@@ -139,7 +143,7 @@ class StokesSolver{
     
  public:
 
-    StokesSolver(int);
+    StokesSolver(int np, bool is_brownian);
     ~StokesSolver();
     void initialize();
 
@@ -177,8 +181,15 @@ class StokesSolver{
     */
     void appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double alpha); 
 
-    /* 
-    complete_RFU() :
+	/* 
+	 doneBlocks(int i) :
+	  - to be called when all terms involving particle i have been added,
+	    ie blocks in row i and column i are completed
+	*/
+	void doneBlocks(int i);
+
+	/* 
+	 complete_RFU() :
       - transforms temporary arrays/vectors used to build resistance
         matrix into Cholmod or Epetra objects really used by 
 	the solvers
@@ -210,6 +221,8 @@ class StokesSolver{
         solvingIsDone()
     */
     void solvingIsDone();
+
+
 
 #ifdef CHOLMOD
     cholmod_factor *chol_L ;
