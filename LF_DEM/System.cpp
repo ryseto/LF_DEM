@@ -563,7 +563,7 @@ void System::computeBrownianStress(){
 	vj.y = v_Brownian_init[j3+1];
 	vj.z = v_Brownian_init[j3+2];
 
-	interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+	interaction[k].pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
 
 	for (int u=0; u < 5; u++){
 	    brownianstress[i].elm[u] += stresslet_i.elm[u];
@@ -607,7 +607,7 @@ void System::computeBrownianStress(){
 	vj.y = v_Brownian_mid[j3+1];
 	vj.z = v_Brownian_mid[j3+2];
 
-	interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+	interaction[k].pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
 
 	for (int u=0; u < 5; u++){
 	    brownianstress[i].elm[u] -= stresslet_i.elm[u];
