@@ -381,7 +381,7 @@ void
 System::updateVelocityLubrication(){
 
     stokes_solver->resetRHS();
-    stokes_solver->prepareNewBuild_RFU();
+    stokes_solver->prepareNewBuild_RFU("direct");
 
     addStokesDrag();
     buildLubricationTerms();
@@ -424,7 +424,7 @@ System::updateVelocityLubrication(){
 void System::updateVelocityLubricationBrownian(){
 
     stokes_solver->resetRHS();
-    stokes_solver->prepareNewBuild_RFU();
+    stokes_solver->prepareNewBuild_RFU("prepare");
 
     addStokesDrag();
     buildLubricationTerms();
@@ -453,7 +453,7 @@ void System::updateVelocityLubricationBrownian(){
     updateInteractions();
 	
     // build new Resistance matrix after move
-    stokes_solver->prepareNewBuild_RFU();
+    stokes_solver->prepareNewBuild_RFU("direct");
     addStokesDrag();
     buildLubricationTerms(false); // false: don't modify rhs
     stokes_solver->complete_RFU();
@@ -513,7 +513,7 @@ void System::computeBrownianStress(){
     vec3d vj;
 	
     stokes_solver->resetRHS();
-    stokes_solver->prepareNewBuild_RFU();
+    stokes_solver->prepareNewBuild_RFU("direct");
 
     addStokesDrag();
     buildLubricationTerms();
@@ -569,7 +569,7 @@ void System::computeBrownianStress(){
     updateInteractions();
 	
     // build new Resistance matrix after move
-    stokes_solver->prepareNewBuild_RFU();
+    stokes_solver->prepareNewBuild_RFU("direct");
     addStokesDrag();
     buildLubricationTerms(false); // false: don't modify rhs
     stokes_solver->complete_RFU();
