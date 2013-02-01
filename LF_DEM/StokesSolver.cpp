@@ -2,7 +2,6 @@
 #ifdef TRILINOS
 #include <BelosCGIteration.hpp>
 #endif
-
 using namespace std;
 
 
@@ -60,6 +59,7 @@ StokesSolver::initialize(){
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
+
 #ifdef TRILINOS
 
 	// initialize solver
@@ -84,6 +84,8 @@ StokesSolver::initialize(){
     linalg_size = dof*np;
 
     allocateRessources();
+
+	chol_L_to_be_freed = false;
     
 }
 
@@ -241,12 +243,9 @@ StokesSolver::complete_RFU_cholmod(){
     }
     ((int*)chol_rfu_matrix->p)[np3] = ((int*)chol_rfu_matrix->p)[np3-1] + 1;
 
-    // for(int i = 0; i < linalg_size; i++){
-	//   for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
-	// 	cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
-	//   }
-    // }
-	
+	factorizeRFU();
+
+	//	print_RFU();
 }
 
 
@@ -263,9 +262,12 @@ Instead we use user friendly methods, that take one row at a time.
 void
 StokesSolver::complete_RFU_trilinos(){
 #ifdef TRILINOS
+
     for(int i = 0; i < linalg_size; i++){
 	  tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
     }
+
+	//	print_RFU();
 
     // FillComplete matrix before building the preconditioner
     tril_rfu_matrix->FillComplete();
@@ -273,7 +275,8 @@ StokesSolver::complete_RFU_trilinos(){
 	tril_stokes_equation->setOperator( rcp ( tril_rfu_matrix, false) );
 
 	//setDiagBlockPreconditioner();
-	setIncCholPreconditioner();
+	//	setIncCholPreconditioner();
+	//	setSpInvPreconditioner();
 #endif
 }
 
@@ -292,7 +295,7 @@ StokesSolver::complete_RFU(){
 void
 StokesSolver::prepareNewBuild_RFU(string solver_type){
 
-	resolveSolverType(solver_type);
+	setSolverType(solver_type);
 
 	if(direct()){
 
@@ -311,7 +314,7 @@ StokesSolver::prepareNewBuild_RFU(string solver_type){
 
 #ifdef TRILINOS
 	if(iterative()){
-		tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 12*dof + dof );
+		tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 20*dof + dof );
 		tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
 		tril_rfu_matrix->PutScalar(0.);
 		
@@ -365,7 +368,7 @@ StokesSolver::addToRHS(int i, double val){
 
 #ifdef TRILINOS
 	if(iterative()){
-		tril_rhs->SumIntoMyValue( i, 0, val);
+		tril_rhs->SumIntoGlobalValue( i, 0, val);
 	}
 #endif
 
@@ -391,7 +394,7 @@ void
 StokesSolver::solve(double* velocity){
 
 	if(direct()){
-		factorizeRFU();
+
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 		
 		for (int i = 0; i < linalg_size; i++){
@@ -430,9 +433,30 @@ StokesSolver::solve(double* velocity){
 }
 
 void
+StokesSolver::convertDirectToIterative(){
+#ifdef TRILINOS
+	// don't free the Cholesky factor, but rememver to do it when solvingIsDone
+	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
+	cholmod_free_dense(&chol_solution, &chol_c);
+	chol_L_to_be_freed = true;
+	
+	// convert RHS
+	for(int i=0; i<linalg_size;i++){
+		tril_rhs->ReplaceGlobalValue( i, 0, ((double*)chol_rhs->x)[i]);
+	}
+	setSolverType("iterative");
+#else
+			cerr << " Error: StokesSolver::convertDirectToIterative() : no iterative solver. Compile withe Trilinos. " << endl;
+		exit(1);
+#endif
+	
+}
+
+void
 StokesSolver::solvingIsDone(){
 	if(direct()){
 		cholmod_free_factor(&chol_L, &chol_c);
+
 		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
 		//	cholmod_free_dense(&chol_rhs, &chol_c);
 		cholmod_free_dense(&chol_solution, &chol_c);
@@ -441,6 +465,8 @@ StokesSolver::solvingIsDone(){
 	if(iterative()){
 		delete tril_rfu_matrix;
 		delete tril_l_precond;
+		if(chol_L_to_be_freed)
+			cholmod_free_factor(&chol_L, &chol_c);
 	}
 #endif
 
@@ -456,13 +482,13 @@ void
 StokesSolver::allocateRessources(){
 	
 #ifdef TRILINOS
-    int maxnum_interactionpair_per_particle = 15;
+    int maxnum_interactionpair_per_particle = 20;
     columns_max_nb = dof*maxnum_interactionpair_per_particle;
     int numlhs = 1;
     int numrhs = 1;
     Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
-    tril_solution = rcp( new VEC(*Map, numlhs) );
-    tril_rhs = rcp( new VEC(*Map, numrhs) );
+    tril_solution = rcp( new Epetra_Vector(*Map, numlhs) );
+    tril_rhs = rcp( new Epetra_Vector(*Map, numrhs) );
     //	tril_rfu_matrix = rcp( new MAT(linalg_size) );
     
     columns = new int* [linalg_size];
@@ -628,14 +654,14 @@ StokesSolver::factorizeRFU(){
     chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
     cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
     if(chol_c.status){
-	// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
-	// It is very often enough to force another preconditioner to solve the problem.
-	cerr << " factorization failed. forcing simplicial algorithm... " << endl;
-	chol_c.supernodal = CHOLMOD_SIMPLICIAL;
-	chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
-	cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c) ;
-	cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  chol_c.final_ll <<endl;
-	chol_c.supernodal = CHOLMOD_SUPERNODAL;
+		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
+		// It is very often enough to force another preconditioner to solve the problem.
+		cerr << " factorization failed. forcing simplicial algorithm... " << endl;
+		chol_c.supernodal = CHOLMOD_SIMPLICIAL;
+		chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
+		cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c) ;
+		cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  chol_c.final_ll <<endl;
+		chol_c.supernodal = CHOLMOD_SUPERNODAL;
     }
     
 }
@@ -810,14 +836,17 @@ StokesSolver::setIncCholPreconditioner(){
 */
 void
 StokesSolver::setSpInvPreconditioner(){
-
   cholmod_sparse *sparse_inv = cholmod_spinv( chol_L , &chol_c ) ;
+  
+  cholmod_free_sparse(&sparse_inv, &chol_c);
 }    
+
+
 
 #endif
 
 void
-StokesSolver::resolveSolverType(string solver_type){
+StokesSolver::setSolverType(string solver_type){
 	if( solver_type == "direct" ){
 		_direct = true;
 		_iterative = false;
@@ -837,4 +866,51 @@ StokesSolver::resolveSolverType(string solver_type){
 			exit(1);
 		}
 	}
+}
+
+
+
+// testing
+void
+StokesSolver::print_RFU(){
+
+if(direct()){
+	cout << endl<< " chol rfu " << endl;
+    for(int i = 0; i < linalg_size; i++){
+		for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
+			cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+		}
+	}
+ }
+
+#ifdef TRILINOS
+	if(iterative()){
+	int int_nb = 100;
+	double *val = new double [ int_nb ];
+	int *ind = new int [ int_nb ];
+
+	int nz;
+	cout << endl<< " tril rfu " << endl;
+	for(int i = 0; i < linalg_size; i++){
+	  tril_rfu_matrix->ExtractGlobalRowCopy(i, int_nb, nz, val, ind);
+	  //	   cout << i << " " << nz << endl;
+	   for(int j = 0; j < nz; j++){
+	     cout << i << " " << ind[j] << " " << val[j] << endl;
+	   }
+	}
+	// cout << "precond " << endl;
+	// for(int i = 0; i < linalg_size; i++){
+	//   tril_l_precond->ExtractGlobalRowCopy(i, int_nb, nz, val, ind);
+	//   cout << " line " << i << " " << nz << endl;
+	//    for(int j = 0; j < nz; j++){
+	//      cout << i << " " << ind[j] << " " << val[j] << endl;
+	//    }
+	// }
+
+	 delete [] val;
+	 delete [] ind;
+
+}
+
+#endif
 }
