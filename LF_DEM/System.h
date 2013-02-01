@@ -65,8 +65,6 @@ private:
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
 
-	StokesSolver *stokes_solver;
-	
 	BoxSet* boxset;
 	void print_res();
 
@@ -243,6 +241,8 @@ public:
 		return np;
 	}
 
+	StokesSolver *stokes_solver;
+
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
@@ -251,5 +251,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
+
+
 };
 #endif /* defined(__LF_DEM__System__) */

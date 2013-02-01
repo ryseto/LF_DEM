@@ -8,13 +8,21 @@
 #ifndef __LF_DEM__StokesSolver__
 #define __LF_DEM__StokesSolver__
 
-//#define CHOLMOD
-#define TRILINOS
+#define CHOLMOD_EXTRA
+//#define TRILINOS
+
+#include <vector>
+
+using namespace std;
 
 #include "vec3d.h"
 
-#ifdef CHOLMOD
 #include "cholmod.h"
+
+#ifdef CHOLMOD_EXTRA
+extern "C" {
+#include "cholmod_extra.h"
+}
 #endif
 
 #ifdef TRILINOS
@@ -27,37 +35,35 @@
 //#include "Ifpack2_Preconditioner.hpp" // incomplete Cholesky preconditioner
 //#include "Ifpack_CrsIct.h"
 #include "Ifpack_IC.h"
-#endif
 
-#ifdef TRILINOS
+
 using Teuchos::RCP;
 using Teuchos::rcp;
 using Teuchos::ParameterList;
 using Teuchos::parameterList;
 
 typedef double                                SCAL;
-//typedef Teuchos::ScalarTraits<SCAL>          SCT;
-//typedef SCT::magnitudeType                    MT;
 typedef Epetra_MultiVector                     VEC;
 typedef Epetra_Operator                        MAT;
-//typedef Belos::MultiVecTraits<SCAL,VEC>      MVT;
-//typedef Belos::OperatorTraits<SCAL,VEC,MAT>  OPT;
-
 #endif
 
 
-using namespace std;
+
 //class System;
 
 class StokesSolver{
 
  private:
-    //    System *sys;
-
-    int np, np3;
+ 
+	int np, np3;
     int dof;
     int linalg_size;
-#ifdef CHOLMOD
+	bool brownian;
+
+	bool _iterative;
+	bool _direct;
+
+	// Cholmod variables
     cholmod_sparse *chol_rfu_matrix;
     cholmod_dense *chol_solution;
     cholmod_dense *chol_v_nonBrownian;
@@ -75,10 +81,9 @@ class StokesSolver{
     double *diag_values;
     vector <double> *off_diag_values;
     int *ploc;
-    int last_updated_colblock;
 
-    factorizeRFU();
-#endif
+    void factorizeRFU();
+
     
 #ifdef TRILINOS
     int MyPID;
@@ -110,47 +115,57 @@ class StokesSolver{
 #endif
     
 
-#ifdef TRILINOS
     /* 
      appendToRow(const vec3d &nvec, int ii, int jj, double alpha) :
+	  - TRILINOS ONLY
       - appends alpha * |nvec><nvec| and corresponding indices 
         to blocks [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ] 
 	AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
+	  
     */
     void appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha);
-#endif
-#ifdef CHOLMOD
+
     /* 
      appendToColumn(const vec3d &nvec, int jj, double alpha) :
+	  - CHOLMOD ONLY
       - appends alpha * |nvec><nvec| and corresponding indices 
         [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors 
 	off_diag_values and ploc 
       - this must be called with order, according to LT filling
     */
     void appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha); 
-#endif
 
     void allocate_RFU();
+    void complete_RFU_cholmod();
+    void complete_RFU_trilinos();
     
     void allocateRessources();
 
     void setDiagBlockPreconditioner();
     void setIncCholPreconditioner();
-    
+    void setSpInvPreconditioner();
+
+	void resolveSolverType(string);
  public:
 
-    StokesSolver(int);
+    StokesSolver(int np, bool is_brownian);
     ~StokesSolver();
     void initialize();
 
-
+	bool direct(){
+		return _direct;
+	}
+	bool iterative(){
+		return _iterative;
+	}
 
     // R_FU filling methods
     /* prepareNewBuild_RFU() :
         - initialize arrays/vectors used for building
         - to be called before adding elements
+		- possible arguments: "direct" or "iterative"
      */
-    void prepareNewBuild_RFU();
+    void prepareNewBuild_RFU(string solver_type);
 
     /* addToDiag_RFU(int ii, double alpha) :
        - adds alpha to diagonal elements 3*ii, 3*ii+1, and 3*ii+2
@@ -177,8 +192,15 @@ class StokesSolver{
     */
     void appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double alpha); 
 
-    /* 
-    complete_RFU() :
+	/* 
+	 doneBlocks(int i) :
+	  - to be called when all terms involving particle i have been added,
+	    ie blocks in row i and column i are completed
+	*/
+	void doneBlocks(int i);
+
+	/* 
+	 complete_RFU() :
       - transforms temporary arrays/vectors used to build resistance
         matrix into Cholmod or Epetra objects really used by 
 	the solvers
@@ -211,10 +233,10 @@ class StokesSolver{
     */
     void solvingIsDone();
 
-#ifdef CHOLMOD
+
+
     cholmod_factor *chol_L ;
     cholmod_common chol_c ;
-#endif
 
 };
 #endif /* defined(__LF_DEM__StokesSolver__) */

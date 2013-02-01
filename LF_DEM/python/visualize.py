@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/Applications/VPython-Py2.7/VIDLE.app/Contents/MacOS/Python
 # coding=utf-8
 
-
+#/usr/bin/python
 
 import visual
 from visual import graph

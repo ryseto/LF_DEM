@@ -5,15 +5,18 @@
 
 using namespace std;
 
+
+
 /******************************************************
 *                                                     *
 *                   Public Methods                    *
 *                                                     *
 ******************************************************/
 
-StokesSolver::StokesSolver(int n){
+StokesSolver::StokesSolver(int n, bool is_brownian){
     np=n;
     np3=3*np;
+	brownian=is_brownian;
 }
 StokesSolver::~StokesSolver(){
     #ifdef CHOLMOD
@@ -53,12 +56,10 @@ StokesSolver::~StokesSolver(){
 void
 StokesSolver::initialize(){
 
-#ifdef CHOLMOD
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
-#endif
 #ifdef TRILINOS
 
 	// initialize solver
@@ -90,18 +91,20 @@ StokesSolver::initialize(){
 // Diagonal Terms
 void
 StokesSolver::addToDiag_RFU(int ii, double alpha){
-    
-#ifdef CHOLMOD
-    int ii6 = 6*ii;
-    diag_values[ii6]   += alpha;
-    diag_values[ii6+3] += alpha;
-    diag_values[ii6+5] += alpha;
-#endif
+
+	if(direct()){
+		int ii6 = 6*ii;
+		diag_values[ii6]   += alpha;
+		diag_values[ii6+3] += alpha;
+		diag_values[ii6+5] += alpha;
+	}
 #ifdef TRILINOS
-    int iidof = dof*ii;
-    for (int j = 0; j < dof; j ++){
-	values[iidof+j][j] += alpha; // 00
-    }
+	if(iterative()){
+		int iidof = dof*ii;
+		for (int j = 0; j < dof; j ++){
+			values[iidof+j][j] += alpha; // 00
+		}
+	}
 #endif
 }
 
@@ -115,30 +118,32 @@ StokesSolver::addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha){
     double alpha_n2n1 = alpha_n1*nvec.z;
     double alpha_n0n2 = alpha_n2*nvec.x;
     
-#ifdef CHOLMOD
-    int ii6 = 6*ii;
-    diag_values[ii6]   += alpha_n0*nvec.x; // 00
-    diag_values[ii6+1] += alpha_n1n0; // 10
-    diag_values[ii6+2] += alpha_n0n2; // 20
-    
-    diag_values[ii6+3] += alpha_n1*nvec.y; //11
-    diag_values[ii6+4] += alpha_n2n1; // 21
-    
-    diag_values[ii6+5] += alpha_n2*nvec.z; //22
-#endif
+	if(direct()){
+		int ii6 = 6*ii;
+		diag_values[ii6]   += alpha_n0*nvec.x; // 00
+		diag_values[ii6+1] += alpha_n1n0; // 10
+		diag_values[ii6+2] += alpha_n0n2; // 20
+		
+		diag_values[ii6+3] += alpha_n1*nvec.y; //11
+		diag_values[ii6+4] += alpha_n2n1; // 21
+		
+		diag_values[ii6+5] += alpha_n2*nvec.z; //22
+	}
 #ifdef TRILINOS
-    int iidof = dof*ii;
-    values[iidof  ][0] += alpha_n0*nvec.x; // 00
-    values[iidof  ][1] += alpha_n1n0; // 01
-    values[iidof  ][2] += alpha_n0n2; // 02
-    
-    values[iidof+1][0] += alpha_n1n0; // 10
-    values[iidof+1][1] += alpha_n1*nvec.y; // 11
-    values[iidof+1][2] += alpha_n2n1; // 12
-    
-    values[iidof+2][0] += alpha_n0n2; // 20
-    values[iidof+2][1] += alpha_n2n1; // 21
-    values[iidof+2][2] += alpha_n2*nvec.z; // 20
+	if(iterative()){
+		int iidof = dof*ii;
+		values[iidof  ][0] += alpha_n0*nvec.x; // 00
+		values[iidof  ][1] += alpha_n1n0; // 01
+		values[iidof  ][2] += alpha_n0n2; // 02
+		
+		values[iidof+1][0] += alpha_n1n0; // 10
+		values[iidof+1][1] += alpha_n1*nvec.y; // 11
+		values[iidof+1][2] += alpha_n2n1; // 12
+		
+		values[iidof+2][0] += alpha_n0n2; // 20
+		values[iidof+2][1] += alpha_n2n1; // 21
+		values[iidof+2][2] += alpha_n2*nvec.z; // 20
+	}
 #endif
 }
 
@@ -146,16 +151,18 @@ StokesSolver::addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha){
 void
 StokesSolver::appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
-#ifdef CHOLMOD
-    appendToColumn_RFU(nvec, ii, jj, alpha);
-#endif    
+	if(direct()){
+		appendToColumn_RFU(nvec, ii, jj, alpha);
+	}
+
 #ifdef TRILINOS
-    appendToRow_RFU(nvec, ii, jj, alpha);
+	if(iterative()){
+		appendToRow_RFU(nvec, ii, jj, alpha);
+	}
 #endif
 }
 
 
-#ifdef CHOLMOD
 /*************** Cholmod Matrix Filling *************
 Cholmod matrices we are using are defined in column major order (index j is column index)
 
@@ -179,7 +186,7 @@ with p[j] < a < p[j+1]-1
 
 *****************************************************/
 void
-StokesSolver::complete_RFU(){
+StokesSolver::complete_RFU_cholmod(){
 
     // declare the last 2 values of ploc
     ploc[np-1] = (unsigned int)rows.size();
@@ -235,15 +242,14 @@ StokesSolver::complete_RFU(){
     ((int*)chol_rfu_matrix->p)[np3] = ((int*)chol_rfu_matrix->p)[np3-1] + 1;
 
     // for(int i = 0; i < linalg_size; i++){
-    //   for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
-    //     cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
-    //   }
+	//   for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
+	// 	cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+	//   }
     // }
-    
+	
 }
-#endif
 
-#ifdef TRILINOS
+
 /*************** Epetra_CrsMatrix Filling *************
 Epetra_CrsMatrix we are using are defined in row major order.
 
@@ -255,63 +261,80 @@ Instead we use user friendly methods, that take one row at a time.
 *****************************************************/
 
 void
-StokesSolver::complete_RFU(){
-
+StokesSolver::complete_RFU_trilinos(){
+#ifdef TRILINOS
     for(int i = 0; i < linalg_size; i++){
-	tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
+	  tril_rfu_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
     }
+
     // FillComplete matrix before building the preconditioner
     tril_rfu_matrix->FillComplete();
 
 	tril_stokes_equation->setOperator( rcp ( tril_rfu_matrix, false) );
 
-	setDiagBlockPreconditioner();
-	//    setIncCholPreconditioner();
-
-}
+	//setDiagBlockPreconditioner();
+	setIncCholPreconditioner();
 #endif
+}
 
 
 void
-StokesSolver::prepareNewBuild_RFU(){
+StokesSolver::complete_RFU(){
+	if(direct()){
+		  complete_RFU_cholmod();
+	}
+
+	if(iterative()){
+		complete_RFU_trilinos();
+	}
+}
+
+void
+StokesSolver::prepareNewBuild_RFU(string solver_type){
+
+	resolveSolverType(solver_type);
+
+	if(direct()){
+
+		for (int k = 0; k < 6*np; k++){
+			diag_values[k] = 0.;
+		}
+		
+		rows.clear();
+		off_diag_values[0].clear();
+		off_diag_values[1].clear();
+		off_diag_values[2].clear();
+		
+		ploc[0] = 0;
+	}
+
 
 #ifdef TRILINOS
-    tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 12*dof + dof );
-    tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
-    tril_rfu_matrix->PutScalar(0.);
-
-    for (int i = 0; i < linalg_size; i++){
-	for (int j = 0; j < columns_max_nb; j++){
-	    columns[i][j] = -1;
-	    values[i][j] = 0.;
-	}
-    }
-    
-    // declare the diagonal blocks
-    for (int i = 0; i < np; i++){
-	int idof = dof*i;
-	for (int j = 0; j < dof; j++){
-	    columns[idof  ][j] = idof+j;
-	    columns[idof+1][j] = idof+j;
-	    columns[idof+2][j] = idof+j;
-	}
-	columns_nb[idof  ] = dof;
-	columns_nb[idof+1] = dof;
-	columns_nb[idof+2] = dof;
-    }
- 
-#endif
-
-#ifdef CHOLMOD
-    last_updated_colblock = -1;
-    for (int k = 0; k < 6*np; k++){
-	diag_values[k] = 0.;
-    }
-    
-    rows.clear();
-    off_diag_values[0].clear();
-    off_diag_values[1].clear();
-    off_diag_values[2].clear();
+	if(iterative()){
+		tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 12*dof + dof );
+		tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
+		tril_rfu_matrix->PutScalar(0.);
+		
+		for (int i = 0; i < linalg_size; i++){
+			for (int j = 0; j < columns_max_nb; j++){
+				columns[i][j] = -1;
+				values[i][j] = 0.;
+			}
+		}
+		
+		// declare the diagonal blocks
+		for (int i = 0; i < np; i++){
+			int idof = dof*i;
+			for (int j = 0; j < dof; j++){
+				columns[idof  ][j] = idof+j;
+				columns[idof+1][j] = idof+j;
+				columns[idof+2][j] = idof+j;
+			}
+			columns_nb[idof  ] = dof;
+			columns_nb[idof+1] = dof;
+			columns_nb[idof+2] = dof;
+		}
+	} 
 #endif
 
 }
@@ -319,13 +342,16 @@ StokesSolver::prepareNewBuild_RFU(){
 
 void
 StokesSolver::resetRHS(){
-#ifdef CHOLMOD
-    for (int i = 0; i < linalg_size; i++){
-	((double*)chol_rhs->x)[ i ] = 0.;
-    }
-#endif
+	if(direct()){
+		for (int i = 0; i < linalg_size; i++){
+			((double*)chol_rhs->x)[ i ] = 0.;
+		}
+	}
+
 #ifdef TRILINOS
-    tril_rhs->PutScalar(0.);
+	if(iterative()){
+		tril_rhs->PutScalar(0.);
+	}
 #endif
 
 }
@@ -333,12 +359,14 @@ StokesSolver::resetRHS(){
 void
 StokesSolver::addToRHS(int i, double val){
 
-#ifdef TRILINOS
-    tril_rhs->SumIntoMyValue( i, 0, val);
-#endif
+	if(direct()){
+		((double*)chol_rhs->x)[ i ] += val;
+	}
 
-#ifdef CHOLMOD
-    ((double*)chol_rhs->x)[ i ] += val;
+#ifdef TRILINOS
+	if(iterative()){
+		tril_rhs->SumIntoMyValue( i, 0, val);
+	}
 #endif
 
 }
@@ -346,85 +374,77 @@ StokesSolver::addToRHS(int i, double val){
 
 void
 StokesSolver::setRHS(double* rhs){
-#ifdef CHOLMOD
-    for (int i = 0; i < linalg_size; i++){
-	((double*)chol_rhs->x)[i] = rhs[i];
-    }
-#endif
-#ifdef TRILINOS
-    cerr << " Error : StokesSolver::setRHS(double* rhs) not implemented for TRILINOS yet ! " << endl;
-    exit(1);
-#endif
+	if(direct()){
+		for (int i = 0; i < linalg_size; i++){
+			((double*)chol_rhs->x)[i] = rhs[i];
+		}
+	}
+
+	if(iterative()){
+		cerr << " Error : StokesSolver::setRHS(double* rhs) not implemented for TRILINOS yet ! " << endl;
+		exit(1);
+	}
 }
 
 
 void
 StokesSolver::solve(double* velocity){
-#ifdef CHOLMOD
-    factorizeRFU();
-    chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
-    for (int i = 0; i < linalg_size; i++){
-	velocity[i] = ((double*)chol_solution->x)[i];
-    }
-#endif
+
+	if(direct()){
+		factorizeRFU();
+		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+		
+		for (int i = 0; i < linalg_size; i++){
+			velocity[i] = ((double*)chol_solution->x)[i];
+		}
+	}
+
 
 #ifdef TRILINOS
 	
-
-	tril_stokes_equation->setLHS( tril_solution );
-	tril_stokes_equation->setRHS( tril_rhs );
-
-
-	// double *vel_guess = new double [linalg_size];
-    // tril_solution->ExtractCopy(&vel_guess);
-
-
-    bool set_success = tril_stokes_equation->setProblem();
-    if(!set_success){
-	  cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
-	  exit(1);
-    }
-
-    tril_solver->setProblem (tril_stokes_equation);
-
-    Belos::ReturnType ret = tril_solver->solve();
-
-    if( ret != Belos::Converged )
-	  cerr << " Warning: Belos::Solver did not converge" << endl;
-
-    int iter_steps = tril_solver->getNumIters();
-	//    cout << " iterations " << iter_steps << endl;
-
-    tril_solution->ExtractCopy(&velocity);
-
-
-	// for(int i=0; i<linalg_size; i++){
-	//   cout << vel_guess[i] << " " << velocity[i] << endl;
-	// }
-
-	// getchar();
-	// delete [] vel_guess;
-
+	if(iterative()){
+		tril_stokes_equation->setLHS( tril_solution );
+		tril_stokes_equation->setRHS( tril_rhs );
+		
+		bool set_success = tril_stokes_equation->setProblem();
+		if(!set_success){
+			cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
+			exit(1);
+		}
+		
+		tril_solver->setProblem (tril_stokes_equation);
+		
+		Belos::ReturnType ret = tril_solver->solve();
+		
+		if( ret != Belos::Converged )
+			cerr << " Warning: Belos::Solver did not converge" << endl;
+		
+		int iter_steps = tril_solver->getNumIters();
+		cout << " iterations " << iter_steps << endl;
+		
+		tril_solution->ExtractCopy(&velocity);
+		
+	}
 #endif
 
 }
 
 void
 StokesSolver::solvingIsDone(){
-    #ifdef CHOLMOD
-	cholmod_free_factor(&chol_L, &chol_c);
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	//	cholmod_free_dense(&chol_rhs, &chol_c);
-	cholmod_free_dense(&chol_solution, &chol_c);
-#endif
+	if(direct()){
+		cholmod_free_factor(&chol_L, &chol_c);
+		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
+		//	cholmod_free_dense(&chol_rhs, &chol_c);
+		cholmod_free_dense(&chol_solution, &chol_c);
+	}
 #ifdef TRILINOS
-	delete tril_rfu_matrix;
-	delete tril_l_precond;
+	if(iterative()){
+		delete tril_rfu_matrix;
+		delete tril_l_precond;
+	}
 #endif
 
 }
-
-
 
 /******************************************************
 *                                                     *
@@ -465,18 +485,18 @@ StokesSolver::allocateRessources(){
     
     
 #endif
-#ifdef CHOLMOD
+
     cholmod_start (&chol_c) ;
     diag_values = new double [6*np];
     off_diag_values = new vector <double> [3];
     ploc = new int [np+1];
-    chol_rhs = cholmod_allocate_dense(np3, xtype, &chol_c);
+    chol_rhs = cholmod_allocate_dense(np3, 1, np3, xtype, &chol_c);
     chol_L=NULL;
-#endif
+
 
 }
 
-#ifdef CHOLMOD
+// only needed for Cholmod
 void
 StokesSolver::allocate_RFU(){
 	// allocate
@@ -487,17 +507,18 @@ StokesSolver::allocate_RFU(){
 	}
 	chol_rfu_matrix = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &chol_c);
 }
-#endif
+
+void
+StokesSolver::doneBlocks(int i){
+	if(direct()){
+		ploc[i+1] = (unsigned int)rows.size();
+	}
+}
 
 
-#ifdef CHOLMOD
 void
 StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
-    if(ii>last_updated_colblock){
-	last_updated_colblock = ii;
-	ploc[i] = (unsigned int)rows.size();
-    }
 
     int jj3   = 3*jj;
     int jj3_1 = jj3+1;
@@ -523,11 +544,12 @@ StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha
     off_diag_values[2].push_back(alpha_n2n1); // 12
     off_diag_values[2].push_back(alpha_n2*nvec.z); //22
 }
-#endif
 
-#ifdef TRILINOS
+
+
 void
 StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
+#ifdef TRILINOS
     int ii3   = 3*ii;
     int ii3_1 = ii3+1;
     int ii3_2 = ii3+2;
@@ -595,15 +617,14 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     values[jj3_2][last_col_nb_jj  ] = alpha_n0n2;      // 20
     values[jj3_2][last_col_nb_jj+1] = alpha_n2n1;      // 21
     values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z;      // 22
-    
+#endif    
 }
-#endif
 
 
 
-#ifdef CHOLMOD
+
 void
-System::factorizeRFU(){
+StokesSolver::factorizeRFU(){
     chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
     cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
     if(chol_c.status){
@@ -618,9 +639,9 @@ System::factorizeRFU(){
     }
     
 }
-#endif
 
 
+#ifdef TRILINOS
 /*************  Preconditioners *********************/
 
 /* 
@@ -652,7 +673,7 @@ System::factorizeRFU(){
 */
 void
 StokesSolver::setDiagBlockPreconditioner(){
-    
+
     double a00, a01, a02, a11, a12, a22;
     double det, idet;
     double *precond_row = new double [3];
@@ -712,22 +733,63 @@ StokesSolver::setDiagBlockPreconditioner(){
 /* 
   setIncCholPreconditioner() :
   A incomplete Cholesky factorization (left-)preconditioner.
+  It uses Ifpack routines.
+
+  Right now it seems that the routine sends back a diagonal preconditionner,
+  with values being the inverse of the ones on R_FU diagonal.
+  I (Romain) don't understand this behavior so far.
 */
 void
 StokesSolver::setIncCholPreconditioner(){
 //  parameters to be tuned
-    int fill_level = 1;
-    double drop_tolerance = 0.0;
+    int fill_level = 0;
+//    double drop_tolerance = 1.;
 
 	RCP <Ifpack_IC> tril_ICT_precond = rcp ( new Ifpack_IC ( tril_rfu_matrix ) ); 
 
 	ParameterList precondParams;
-	precondParams.set("fact: drop tolerance", drop_tolerance);
+//	precondParams.set("fact: drop tolerance", drop_tolerance);
 	precondParams.set("fact: ict level-of-fill", fill_level);
 
 	tril_ICT_precond->SetParameters(precondParams);
 	tril_ICT_precond->Initialize();
 	tril_ICT_precond->Compute();
+
+
+	/*****	 TESTING *****
+ 	cout << " non zeros : " << tril_ICT_precond->NumGlobalNonzeros() << " " << tril_ICT_precond->IsInitialized() << " " << tril_ICT_precond->IsComputed() << endl;
+ 	int nb;
+ 	double *values = new double [linalg_size];
+ 	int *indices = new int [linalg_size];
+
+ 	Epetra_CrsMatrix precU = tril_ICT_precond->U(); 
+ 	Epetra_Vector precD = tril_ICT_precond->D(); 
+ 	precD.ExtractCopy(values);
+
+ 	cout << " Diagonal " << endl;
+ 	for(int i=0; i<linalg_size; i++)
+ 		cout << i << " " << values[i] << endl;
+	
+ 	cout << " Upper " << endl;
+ 	for(int i=0; i<linalg_size; i++){
+ 	  precU.ExtractGlobalRowCopy(i, linalg_size, nb, values, indices);
+ 	  for(int j=0; j<nb; j++)
+ 		cout << i << " " << indices[j] << " " << values[j] << endl;
+ 	}
+
+ cout << " Original Matrix Diagonal " << endl;
+ 	for(int i=0; i<linalg_size; i++){
+
+ 	  tril_rfu_matrix->ExtractGlobalRowCopy(i, linalg_size, nb, values, indices);
+ 	  for(int j=0; j<nb; j++){
+ 		if(indices[j] == i )
+ 		  cout << i << " " << indices[j] << " " << 1./values[j] << endl;
+ 	  }
+ 	}
+
+ 	delete [] values;
+ 	delete [] indices;
+	***** END TESTING ********/
 
 	// template conversion, to make Ifpack preconditioner compatible with belos
 	RCP<Belos::EpetraPrecOp> belos_ICT_precond = rcp ( new Belos::EpetraPrecOp ( tril_ICT_precond ) );
@@ -735,4 +797,44 @@ StokesSolver::setIncCholPreconditioner(){
 	tril_stokes_equation->setLeftPrec ( belos_ICT_precond );
 	
     
+}
+#endif
+
+
+#ifdef CHOLMOD_EXTRA
+/* 
+  setSpInvPreconditioner() :
+  A sparse inverse (left-)preconditioner.
+  cholmod-extra routine by Jaakko Luttinen
+
+*/
+void
+StokesSolver::setSpInvPreconditioner(){
+
+  cholmod_sparse *sparse_inv = cholmod_spinv( chol_L , &chol_c ) ;
+}    
+
+#endif
+
+void
+StokesSolver::resolveSolverType(string solver_type){
+	if( solver_type == "direct" ){
+		_direct = true;
+		_iterative = false;
+	}
+	else{
+		if( solver_type == "iterative" ){
+#ifdef TRILINOS
+			_direct = false;
+			_iterative = true;
+#else
+			cerr << " Error : StokesSolver::prepareNewBuild_RFU(string solver_type) : 'iterative' solver asked, but needs to be compiled with Trilinos library."<< endl;
+			exit(1);
+#endif
+		}
+		else{
+			cerr << " Error : StokesSolver::prepareNewBuild_RFU(string solver_type) : Unknown solver type '" << solver_type << "'"<< endl;
+			exit(1);
+		}
+	}
 }
