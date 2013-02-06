@@ -9,7 +9,7 @@
 #define __LF_DEM__StokesSolver__
 
 //#define CHOLMOD_EXTRA
-//#define TRILINOS
+#define TRILINOS
 
 #include <vector>
 

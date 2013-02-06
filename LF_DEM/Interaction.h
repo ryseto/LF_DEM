@@ -74,6 +74,7 @@ public:
 	inline double r(){
 	  return _r;
 	}
+
 	void r(double new_r);
 	inline double gap(){
 		return ksi;

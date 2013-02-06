@@ -413,6 +413,7 @@ System::updateVelocityLubrication(){
 
     stokes_solver->resetRHS();
     stokes_solver->prepareNewBuild_RFU("direct");
+//	stokes_solver->prepareNewBuild_RFU("iterative");
 
     addStokesDrag();
     buildLubricationTerms();
