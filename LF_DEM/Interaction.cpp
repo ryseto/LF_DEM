@@ -353,8 +353,8 @@ Interaction::addLubricationStress(){
 	stresslet stresslet_ME_i;
 	stresslet stresslet_ME_j;
 
-	vec3d &vi = sys->relative_velocity[i];
-	vec3d &vj = sys->relative_velocity[j];
+	vec3d &vi = sys->relative_velocity_lub_cont[i];
+	vec3d &vj = sys->relative_velocity_lub_cont[j];
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
@@ -396,7 +396,8 @@ Interaction::addLubricationStress(){
 	}
 }
 
-/* Lubriction force between two particles is calcurated.
+/* Lubriction force between two particles is calculated. 
+ * Note that only the Brownian component of the velocity is NOT included here.
  * This part is used for ouput data.
  * lubforce_j = -lubforce_i
  */
@@ -410,8 +411,8 @@ Interaction::evaluateLubricationForce(){
 	/*
 	 *  First: -A*(U-Uinf) term
 	 */
-	vec3d &vi = sys->relative_velocity[i];
-	vec3d &vj = sys->relative_velocity[j];
+	vec3d &vi = sys->relative_velocity_lub_cont[i];
+	vec3d &vj = sys->relative_velocity_lub_cont[j];
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
 	double cf_AU_i = -dot(a0*XAii*vi + 0.5*ro*XAij*vj, nr_vec);

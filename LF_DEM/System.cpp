@@ -22,6 +22,11 @@ System::~System(){
 		delete [] velocity;
 	if (!relative_velocity)
 		delete [] relative_velocity;
+	if (!relative_velocity_lub_cont)
+		delete [] relative_velocity_lub_cont;
+	if (!relative_velocity_brownian)
+		delete [] relative_velocity_brownian;
+
 	if (!ang_velocity)
 		delete [] ang_velocity;
 
@@ -68,6 +73,8 @@ System::allocateRessources(){
 	angle = new double [np];
 	velocity = new vec3d [np];
 	relative_velocity = new vec3d [np];
+	relative_velocity_lub_cont = new vec3d [np];
+	relative_velocity_brownian = new vec3d [np];
 	ang_velocity = new vec3d [np];
 	total_force = new vec3d [np];
 	lubrication_force = new vec3d [np];
@@ -129,6 +136,12 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		relative_velocity[i].x=0.;
 		relative_velocity[i].y=0.;
 		relative_velocity[i].z=0.;
+		relative_velocity_lub_cont[i].x=0.;
+		relative_velocity_lub_cont[i].y=0.;
+		relative_velocity_lub_cont[i].z=0.;
+		relative_velocity_brownian[i].x=0.;
+		relative_velocity_brownian[i].y=0.;
+		relative_velocity_brownian[i].z=0.;
 	}
 	double O_inf_y = 0.5*shear_rate/2.0;
 	for (int i=0; i < np; i++){
@@ -164,6 +177,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		fb->init();
 	}
 
+	brownianstress_calc_nb = 0;
 }
 
 void
@@ -299,10 +313,18 @@ System::stressReset(){
 		for (int u=0; u < 5; u++){
 			lubstress[i].elm[u]=0;
 			contactstress[i].elm[u]=0;
-			brownianstress[i].elm[u]=0;
 			lubstress2[i].elm[u]=0;
 		}
 	}
+}
+void
+System::stressBrownianReset(){
+	for (int i=0; i < np; i++){
+		for (int u=0; u < 5; u++){
+			brownianstress[i].elm[u]=0;
+		}
+	}
+	brownianstress_calc_nb = 0;
 }
 
 /*
@@ -407,13 +429,13 @@ System::updateVelocityLubrication(){
 	 */
     for (int i = 0; i < np; i++){
 	int i3 = 3*i;
-	relative_velocity[i].x = v_lub_cont[i3];
-	relative_velocity[i].y = v_lub_cont[i3+1];
-	relative_velocity[i].z = v_lub_cont[i3+2];
+	relative_velocity_lub_cont[i].x = v_lub_cont[i3];
+	relative_velocity_lub_cont[i].y = v_lub_cont[i3+1];
+	relative_velocity_lub_cont[i].z = v_lub_cont[i3+2];
 	
-	velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
-	velocity[i].y = relative_velocity[i].y;
-	velocity[i].z = relative_velocity[i].z;
+	velocity[i].x = relative_velocity_lub_cont[i].x + shear_rate*position[i].z;
+	velocity[i].y = relative_velocity_lub_cont[i].y;
+	velocity[i].z = relative_velocity_lub_cont[i].z;
     }
 	
     if(friction){
@@ -429,7 +451,25 @@ System::updateVelocityLubrication(){
 
 
 // RIGHT NOW THIS WORKS ONLY WITH CHOLMOD
+// On the way, we compute the Brownian Stress, as this needs a lot of averaging to converge
 void System::updateVelocityLubricationBrownian(){
+
+    stresslet stresslet_i_init;
+    stresslet stresslet_j_init;
+    stresslet stresslet_i_mid;
+    stresslet stresslet_j_mid;
+    stresslet *step_stresslet = new stresslet [np];
+
+    for (int i=0; i < np; i++){
+	  for (int u=0; u < 5; u++){
+	    step_stresslet[i].elm[u] = 0.;
+	  }
+    }
+
+
+    vec3d vi;
+    vec3d vj;
+
 
     stokes_solver->resetRHS();
     stokes_solver->prepareNewBuild_RFU("direct");
@@ -452,6 +492,36 @@ void System::updateVelocityLubricationBrownian(){
     stokes_solver->setRHS( fb->generate() );
     stokes_solver->solve( v_Brownian_init );
 	
+
+	// Brownian Stress: term R_SU * v_Brownian_init
+    for (int k = 0; k < num_interaction; k++){
+	  for (int u=0; u < 5; u ++){
+ 		stresslet_i_init.elm[u] = 0.;
+		stresslet_j_init.elm[u] = 0.;
+	  }
+	  
+	  int i = interaction[k].particle_num[0];
+	  int j = interaction[k].particle_num[1];
+	  int i3 = 3*i;
+	  int j3 = 3*j;
+	  
+	  vi.x = v_Brownian_init[i3  ];
+	  vi.y = v_Brownian_init[i3+1];
+	  vi.z = v_Brownian_init[i3+2];
+	  
+	  vj.x = v_Brownian_init[j3  ];
+	  vj.y = v_Brownian_init[j3+1];
+	  vj.z = v_Brownian_init[j3+2];
+	  
+	  interaction[k].pairVelocityStresslet(vi, vj, stresslet_i_init, stresslet_j_init);
+	  
+	  for (int u=0; u < 5; u++){
+	    step_stresslet[i].elm[u] += stresslet_i_init.elm[u];
+	    step_stresslet[j].elm[u] += stresslet_j_init.elm[u];
+	  }
+    }
+
+
     // move particles to intermediate point
     for (int i=0; i < np; i++){
 	  int i3 = 3*i;
@@ -472,6 +542,43 @@ void System::updateVelocityLubricationBrownian(){
     stokes_solver->solve(v_Brownian_mid);
     stokes_solver->solvingIsDone();
 
+
+	// Brownian Stress: term  -R_SU_mid * v_Brownian_mid
+    for (int k = 0; k < num_interaction; k++){
+	  for (int u=0; u < 5; u ++){
+		stresslet_i_mid.elm[u] = 0.;
+		stresslet_j_mid.elm[u] = 0.;
+	  }
+	  
+	  int i = interaction[k].particle_num[0];
+	  int j = interaction[k].particle_num[1];
+	  int i3 = 3*i;
+	  int j3 = 3*j;
+	  
+	  vi.x = v_Brownian_mid[i3  ];
+	  vi.y = v_Brownian_mid[i3+1];
+	  vi.z = v_Brownian_mid[i3+2];
+	  
+	  vj.x = v_Brownian_mid[j3  ];
+	  vj.y = v_Brownian_mid[j3+1];
+	  vj.z = v_Brownian_mid[j3+2];
+	  
+	  interaction[k].pairVelocityStresslet(vi, vj, stresslet_i_mid, stresslet_j_mid);
+	  
+	  for (int u=0; u < 5; u++){
+	    step_stresslet[i].elm[u] -= stresslet_i_mid.elm[u];
+	    step_stresslet[j].elm[u] -= stresslet_j_mid.elm[u];
+	  }
+    }
+	// Brownian Stress: multiply all by  0.5*dt/dt_mid
+    for (int i=0; i < np; i++){
+	  for (int u=0; u < 5; u++){
+	    step_stresslet[i].elm[u] *= 0.5*dt_ratio;
+		brownianstress[i].elm[u] += step_stresslet[i].elm[u];
+	  }
+    }
+	brownianstress_calc_nb ++;
+
     // move particles back to initial point, and update interactions
     //
     // Note that, although it looks like a complete reversal of the initial move (as it should be), 
@@ -489,14 +596,18 @@ void System::updateVelocityLubricationBrownian(){
     // third term is Brownian drift
     // fourth term for vx is the shear rate
     for (int i = 0; i < np; i++){
-	int i3 = 3*i;
-	relative_velocity[i].x = v_lub_cont[i3] + v_Brownian_init[i3] + 0.5*dt_ratio*( v_Brownian_mid[i3] - v_Brownian_init[i3] );
-	relative_velocity[i].y = v_lub_cont[i3+1] + v_Brownian_init[i3+1] + 0.5*dt_ratio*( v_Brownian_mid[i3+1] - v_Brownian_init[i3+1] );
-	relative_velocity[i].z = v_lub_cont[i3+2] + v_Brownian_init[i3+2] + 0.5*dt_ratio*( v_Brownian_mid[i3+2] - v_Brownian_init[i3+2] );
-	
-	velocity[i].x = relative_velocity[i].x + shear_rate*position[i].z;
-	velocity[i].y = relative_velocity[i].y;
-	velocity[i].z = relative_velocity[i].z;
+	  int i3 = 3*i;
+	  relative_velocity_lub_cont[i].x = v_lub_cont[i3];
+	  relative_velocity_lub_cont[i].y = v_lub_cont[i3+1];
+	  relative_velocity_lub_cont[i].z = v_lub_cont[i3+2];
+	  
+	  relative_velocity_brownian[i].x = v_Brownian_init[i3] + 0.5*dt_ratio*( v_Brownian_mid[i3] - v_Brownian_init[i3] );
+	  relative_velocity_brownian[i].y = v_Brownian_init[i3+1] + 0.5*dt_ratio*( v_Brownian_mid[i3+1] - v_Brownian_init[i3+1] ); 
+	  relative_velocity_brownian[i].z = v_Brownian_init[i3+2] + 0.5*dt_ratio*( v_Brownian_mid[i3+2] - v_Brownian_init[i3+2] );
+
+	  velocity[i].x = relative_velocity_lub_cont[i].x + relative_velocity_brownian[i].x + shear_rate*position[i].z;
+	  velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
+	  velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
     }
 	
     if(friction){
@@ -507,132 +618,11 @@ void System::updateVelocityLubricationBrownian(){
 	}
     }
 
-}
-
-
-
-void System::computeBrownianStress(){
-    
-    stresslet stresslet_i;
-    stresslet stresslet_j;
-    for (int u=0; u < 5; u ++){
-	stresslet_i.elm[u] = 0.;
-	stresslet_j.elm[u] = 0.;
-    }
-    vec3d vi;
-    vec3d vj;
-	
-    stokes_solver->resetRHS();
-    stokes_solver->prepareNewBuild_RFU("direct");
-
-    addStokesDrag();
-    buildLubricationTerms();
-
-    stokes_solver->complete_RFU();
-
-    buildContactTerms();
-	
-    stokes_solver->solve(v_lub_cont);
-
-    // now the Brownian part of the velocity:
-    // mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
-    // 
-    // we do not call solvingIsDone() before new solve(), because 
-    // R_FU has not changed, so same factorization is safely used
-
-    stokes_solver->setRHS( fb->generate() );
-    stokes_solver->solve( v_Brownian_init );
-    stokes_solver->solvingIsDone();
-	
-    for (int k = 0; k < num_interaction; k++){
-	for (int u=0; u < 5; u ++){
-	    stresslet_i.elm[u] = 0.;
-	    stresslet_j.elm[u] = 0.;
-	}
-	
-	int i = interaction[k].particle_num[0];
-	int j = interaction[k].particle_num[1];
-	int i3 = 3*i;
-	int j3 = 3*j;
-	
-	vi.x = v_Brownian_init[i3  ];
-	vi.y = v_Brownian_init[i3+1];
-	vi.z = v_Brownian_init[i3+2];
-	
-	vj.x = v_Brownian_init[j3  ];
-	vj.y = v_Brownian_init[j3+1];
-	vj.z = v_Brownian_init[j3+2];
-
-	interaction[k].pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
-
-	for (int u=0; u < 5; u++){
-	    brownianstress[i].elm[u] += stresslet_i.elm[u];
-	    brownianstress[j].elm[u] += stresslet_j.elm[u];
-	}
-    }
-	
-    // move particles to intermediate point
-    for (int i=0; i < np; i++){
-	int i3 = 3*i;
-	displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
-    }
-    updateInteractions();
-	
-    // build new Resistance matrix after move
-    stokes_solver->prepareNewBuild_RFU("direct");
-    addStokesDrag();
-    buildLubricationTerms(false); // false: don't modify rhs
-    stokes_solver->complete_RFU();
-
-    // get the intermediate brownian velocity
-    stokes_solver->solve(v_Brownian_mid);
-    stokes_solver->solvingIsDone();
-	
-    for (int k = 0; k < num_interaction; k++){
-	for (int u=0; u < 5; u ++){
-	    stresslet_i.elm[u] = 0.;
-	    stresslet_j.elm[u] = 0.;
-	}
-
-	int i = interaction[k].particle_num[0];
-	int j = interaction[k].particle_num[1];
-	int i3 = 3*i;
-	int j3 = 3*j;
-	
-	vi.x = v_Brownian_mid[i3  ];
-	vi.y = v_Brownian_mid[i3+1];
-	vi.z = v_Brownian_mid[i3+2];
-	
-	vj.x = v_Brownian_mid[j3  ];
-	vj.y = v_Brownian_mid[j3+1];
-	vj.z = v_Brownian_mid[j3+2];
-
-	interaction[k].pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
-
-	for (int u=0; u < 5; u++){
-	    brownianstress[i].elm[u] -= stresslet_i.elm[u];
-	    brownianstress[j].elm[u] -= stresslet_j.elm[u];
-	}
-    }
-
-    for (int i=0; i < np; i++){
-	for (int u=0; u < 5; u++){
-	    brownianstress[i].elm[u] *= 0.5*dt_ratio;
-	}
-    }
-	
-    // move particles back to initial point, and update interactions
-    //
-    // Note that, although it looks like a complete reversal of the initial move (as it should be), 
-    // the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
-    // might switch off some of them. The 2nd move's update is not able to switch them back on.
-    for (int i=0; i < np; i++){
-	int i3 = 3*i;
-	displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
-    }
-    updateInteractions();
+	delete [] step_stresslet;
 
 }
+
+
 
 void
 System::displacement(int i, const double &dx_, const double &dy_, const double &dz_){
@@ -771,9 +761,6 @@ void
 System::calcStress(){
 	stressReset();
 
-	if(brownian)
-	  computeBrownianStress();
-
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
 			interaction[k].evaluateLubricationForce();
@@ -801,7 +788,7 @@ System::calcStress(){
 		for (int u=0; u < 5; u++){
 			total_lub_stress[u] += lubstress[i].elm[u];
 			total_contact_stress[u] += contactstress[i].elm[u];
-			total_brownian_stress[u] += brownianstress[i].elm[u];
+			total_brownian_stress[u] += brownianstress[i].elm[u]/brownianstress_calc_nb;
 		}
 	}
 	
@@ -815,6 +802,7 @@ System::calcStress(){
 		total_stress_bgf += (5.0/9)*bgf_factor*a*a*a;
 	}
 
+	stressBrownianReset();
 }
 
 void

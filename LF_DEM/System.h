@@ -83,6 +83,8 @@ public:
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vec3d *relative_velocity;
+	vec3d *relative_velocity_lub_cont;
+	vec3d *relative_velocity_brownian;
 	vec3d *ang_velocity;
 	vec3d *total_force;
 	vec3d *lubrication_force;
@@ -98,6 +100,7 @@ public:
 	vector <stresslet> lubstress2; // r * F_lub
 	vector <stresslet> contactstress;
 	vector <stresslet> brownianstress;
+	int brownianstress_calc_nb;
 	double total_stress_bgf;
 	double total_lub_stress[5];
 	double total_contact_stress[5];
@@ -231,6 +234,7 @@ public:
 	void forceReset();
 	void torqueReset();
 	void stressReset();
+	void stressBrownianReset();
 	void calcStress();
 
 	void analyzeState();
