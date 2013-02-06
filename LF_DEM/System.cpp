@@ -79,7 +79,7 @@ System::allocateRessources(){
 	lubstress.resize(np);
 	contactstress.resize(np);
 	brownianstress.resize(np);
-	fb = new BrownianForce(this);
+
 
 	int maxnum_interactionpair_per_particle = 15;
 	maxnum_interactionpair = (int)(maxnum_interactionpair_per_particle*np);
@@ -98,11 +98,19 @@ System::allocateRessources(){
 	    v_Brownian_mid = new double [linalg_size];
 	}
 	stokes_solver = new StokesSolver(np, brownian);
+	fb = new BrownianForce(this); 
 }
 
 void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector <double> &radii){
+
+	if (kb_T == 0){
+		brownian = false;
+	} else {
+		brownian = true;
+	}
+
 	allocateRessources();
 
 	for (int i=0; i < np; i++){
@@ -134,12 +142,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	shear_strain = 0;
 	num_interaction = 0;
 	
-	if (kb_T == 0){
-		brownian = false;
-	} else {
-		brownian = true;
-		fb->init();
-	}
 	sq_critical_velocity = \
 	dynamic_friction_critical_velocity*dynamic_friction_critical_velocity;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
@@ -156,6 +158,12 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 
 	stokes_solver->initialize();
 	
+	// initialize the brownian force after the solver, as it assumes
+	// the cholmod_common of the solver is already initialized
+	if(brownian){
+		fb->init();
+	}
+
 }
 
 void
@@ -424,7 +432,7 @@ System::updateVelocityLubrication(){
 void System::updateVelocityLubricationBrownian(){
 
     stokes_solver->resetRHS();
-    stokes_solver->prepareNewBuild_RFU("prepare");
+    stokes_solver->prepareNewBuild_RFU("direct");
 
     addStokesDrag();
     buildLubricationTerms();
@@ -443,16 +451,18 @@ void System::updateVelocityLubricationBrownian(){
 
     stokes_solver->setRHS( fb->generate() );
     stokes_solver->solve( v_Brownian_init );
-    stokes_solver->solvingIsDone();
 	
     // move particles to intermediate point
     for (int i=0; i < np; i++){
-	int i3 = 3*i;
-	displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
+	  int i3 = 3*i;
+	  displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
     }
     updateInteractions();
 	
     // build new Resistance matrix after move
+	stokes_solver->solvingIsDone();
+	//	stokes_solver->convertDirectToIterative();
+	//  stokes_solver->prepareNewBuild_RFU("iterative");
     stokes_solver->prepareNewBuild_RFU("direct");
     addStokesDrag();
     buildLubricationTerms(false); // false: don't modify rhs
@@ -468,8 +478,8 @@ void System::updateVelocityLubricationBrownian(){
     // the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
     // might switch off some of them. The 2nd move's update is not able to switch them back on.
     for (int i=0; i < np; i++){
-	int i3 = 3*i;
-	displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
+	  int i3 = 3*i;
+	  displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
     }
     updateInteractions();
 
@@ -553,7 +563,7 @@ void System::computeBrownianStress(){
 	vj.y = v_Brownian_init[j3+1];
 	vj.z = v_Brownian_init[j3+2];
 
-	interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+	interaction[k].pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
 
 	for (int u=0; u < 5; u++){
 	    brownianstress[i].elm[u] += stresslet_i.elm[u];
@@ -597,7 +607,7 @@ void System::computeBrownianStress(){
 	vj.y = v_Brownian_mid[j3+1];
 	vj.z = v_Brownian_mid[j3+2];
 
-	interaction[k].pairStresslet(vi, vj, stresslet_i, stresslet_j);
+	interaction[k].pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
 
 	for (int u=0; u < 5; u++){
 	    brownianstress[i].elm[u] -= stresslet_i.elm[u];

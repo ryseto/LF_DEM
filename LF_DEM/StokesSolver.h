@@ -8,7 +8,7 @@
 #ifndef __LF_DEM__StokesSolver__
 #define __LF_DEM__StokesSolver__
 
-#define CHOLMOD_EXTRA
+//#define CHOLMOD_EXTRA
 //#define TRILINOS
 
 #include <vector>
@@ -75,7 +75,8 @@ class StokesSolver{
     int sorted;
     int packed;
     int xtype;
-    
+	bool chol_L_to_be_freed;
+	
     // resistance matrix building
     vector <int> rows;
     double *diag_values;
@@ -96,8 +97,8 @@ class StokesSolver{
     Epetra_SerialComm Comm;
     //#endif
     RCP < Epetra_Map > Map;
-    RCP < Epetra_MultiVector > tril_solution;
-    RCP < Epetra_MultiVector > tril_rhs;
+    RCP < Epetra_Vector > tril_solution;
+    RCP < Epetra_Vector > tril_rhs;
     Epetra_CrsMatrix *tril_rfu_matrix;
     Epetra_CrsMatrix *tril_l_precond;
 
@@ -145,7 +146,9 @@ class StokesSolver{
     void setIncCholPreconditioner();
     void setSpInvPreconditioner();
 
-	void resolveSolverType(string);
+	void setSolverType(string);
+
+	void print_RFU();
  public:
 
     StokesSolver(int np, bool is_brownian);
@@ -159,6 +162,7 @@ class StokesSolver{
 		return _iterative;
 	}
 
+	void convertDirectToIterative();
     // R_FU filling methods
     /* prepareNewBuild_RFU() :
         - initialize arrays/vectors used for building
@@ -204,7 +208,8 @@ class StokesSolver{
       - transforms temporary arrays/vectors used to build resistance
         matrix into Cholmod or Epetra objects really used by 
 	the solvers
-      - also builds preconditionner when needed (TRILINOS)
+      - also builds preconditionner when needed (if TRILINOS)
+      - also performs Cholesky factorization (if CHOLMOD)
       - must be called before solving the linear algebra problem
       - must be called after all terms are added
     */
@@ -224,7 +229,7 @@ class StokesSolver{
     void solve(double* velocity);
 
     /* 
-    solvingIsDone() :
+    solvingIsDone(bool free_Cholesky_factor) :
       - deletes RFU matrix and some other arrays 
         (preconditionner, Cholesky factors, ...) used for solving
       - should be called once every call to solve() WITH THE SAME RFU

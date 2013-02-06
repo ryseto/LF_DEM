@@ -114,7 +114,8 @@ public:
 	void calcContactStress();
 	void addLubricationStress();
 	void addContactStress();
-	void pairStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
+	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
+	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
 	void prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj);
 	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);

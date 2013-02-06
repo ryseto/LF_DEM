@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		CD12D04C16B30F2900F11015 /* libsuitesparseconfig.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */; };
+		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
 		D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */; };
 		D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */; };
@@ -39,6 +40,8 @@
 
 /* Begin PBXFileReference section */
 		CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.a; path = ../../suitesparse/SuiteSparse/SuiteSparse_config/libsuitesparseconfig.a; sourceTree = "<group>"; };
+		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StokesSolver.cpp; sourceTree = "<group>"; };
+		CDE4695B16BC4CCB00923139 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.0.1.a; path = ../../../../../../usr/local/lib/libcholmod.2.0.1.a; sourceTree = "<group>"; };
@@ -179,6 +182,8 @@
 		D988E38C165441750009949F /* LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
+				CDE4695B16BC4CCB00923139 /* StokesSolver.h */,
+				CDE4695916BC4CB800923139 /* StokesSolver.cpp */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,

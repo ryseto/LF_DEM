@@ -266,18 +266,14 @@ Interaction::GE(double GEi[], double GEj[]){
 }
 
 
-// computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jefrrey's ones ]
+// computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
 // from pair (i,j).
 // ie fills :
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
  
 void
-Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j){
-	for (int u=0; u < 5; u ++){
-		stresslet_i.elm[u] = 0.;
-		stresslet_j.elm[u] = 0.;
-	}
+Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j){
 	
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
@@ -287,29 +283,55 @@ Interaction::pairStresslet(const vec3d &vi, const vec3d &vj, stresslet &stressle
 	double n0n2 = nr_vec.x * nr_vec.z;
 	double n1n2 = nr_vec.y * nr_vec.z;
 
-	double twothird = 2./3;
-	double onesixth = 1./6;
-	double common_factor_i = 0;
-	double common_factor_j = 0;
-
-	common_factor_i += dot(nr_vec, ( twothird * a0 * a0 * XGii * vi + onesixth * ro * ro * XGij * vj));
-	common_factor_j += dot(nr_vec, ( twothird * a1 * a1 * XGjj * vj + onesixth * ro * ro * XGji * vi));
+	double common_factor_i = - dot(nr_vec, ( 2. * a0 * a0 * XGii * vi / 3. +  ro * ro * XGij * vj / 6. ));
+	double common_factor_j = - dot(nr_vec, ( 2. * a1 * a1 * XGjj * vj / 3. +  ro * ro * XGji * vi / 6. ));
 	
 
-	stresslet_i.elm[0] += n0n0_13 * common_factor_i;
-	stresslet_i.elm[1] += n0n1    * common_factor_i;
-	stresslet_i.elm[2] += n0n2    * common_factor_i;
-	stresslet_i.elm[3] += n1n2    * common_factor_i;
-	stresslet_i.elm[4] += n1n1_13 * common_factor_i;
+	stresslet_i.elm[0] = n0n0_13 * common_factor_i;
+	stresslet_i.elm[1] = n0n1    * common_factor_i;
+	stresslet_i.elm[2] = n0n2    * common_factor_i;
+	stresslet_i.elm[3] = n1n2    * common_factor_i;
+	stresslet_i.elm[4] = n1n1_13 * common_factor_i;
 
-	stresslet_j.elm[0] += n0n0_13 * common_factor_j;
-	stresslet_j.elm[1] += n0n1 * common_factor_j;
-	stresslet_j.elm[2] += n0n2 * common_factor_j;
-	stresslet_j.elm[3] += n1n2 * common_factor_j;
-	stresslet_j.elm[4] += n1n1_13 * common_factor_j;
+	stresslet_j.elm[0] = n0n0_13 * common_factor_j;
+	stresslet_j.elm[1] = n0n1 * common_factor_j;
+	stresslet_j.elm[2] = n0n2 * common_factor_j;
+	stresslet_j.elm[3] = n1n2 * common_factor_j;
+	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
 
 }
 
+
+void
+Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j){
+	
+	double n0n0_13 = nr_vec.x*nr_vec.x - 1./3;
+	double n1n1_13 = nr_vec.y*nr_vec.y - 1./3;
+	double n0n1 = nr_vec.x*nr_vec.y;
+	double n0n2 = nr_vec.x*nr_vec.z;
+	double n1n2 = nr_vec.y*nr_vec.z;
+	double roro = ro*ro;
+	double a0a0 = a0*a0;
+	double a1a1 = a1*a1;
+
+	double XMii, XMjj, XMij, XMji;
+	XM(XMii, XMij, XMji, XMjj);
+	double common_factor_i = 5*(a0*a0a0*XMii/3 + ro*roro*XMij/24)*n0n2*sys->shear_rate;
+	double common_factor_j = 5*(a1*a1a1*XMjj/3 + ro*roro*XMji/24)*n0n2*sys->shear_rate;
+	
+	stresslet_i.elm[0] = n0n0_13 * common_factor_i;
+	stresslet_i.elm[1] = n0n1 * common_factor_i;
+	stresslet_i.elm[2] = n0n2 * common_factor_i;
+	stresslet_i.elm[3] = n1n2 * common_factor_i;
+	stresslet_i.elm[4] = n1n1_13 * common_factor_i;
+
+	stresslet_j.elm[0] = n0n0_13 * common_factor_j;
+	stresslet_j.elm[1] = n0n1 * common_factor_j;
+	stresslet_j.elm[2] = n0n2 * common_factor_j;
+	stresslet_j.elm[3] = n1n2 * common_factor_j;
+	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
+
+}
 
 /*
  *
@@ -326,51 +348,27 @@ void
 Interaction::addLubricationStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-	stresslet stresslet_i;
-	stresslet stresslet_j;
+	stresslet stresslet_GU_i;
+	stresslet stresslet_GU_j;
+	stresslet stresslet_ME_i;
+	stresslet stresslet_ME_j;
+
 	vec3d &vi = sys->relative_velocity[i];
 	vec3d &vj = sys->relative_velocity[j];
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
-	double XGii, XGjj, XGij, XGji;
-	XG(XGii, XGij, XGji, XGjj);
-	double n0n0_13 = nr_vec.x*nr_vec.x - 1./3;
-	double n1n1_13 = nr_vec.y*nr_vec.y - 1./3;
-	double n0n1 = nr_vec.x*nr_vec.y;
-	double n0n2 = nr_vec.x*nr_vec.z;
-	double n1n2 = nr_vec.y*nr_vec.z;
-	double roro = ro*ro;
-	double a0a0 = a0*a0;
-	double a1a1 = a1*a1;
-
-	double cf_GU_i = -dot(nr_vec, (2*a0a0*XGii/3)*vi + (roro*XGij/6)*vj);
-	double cf_GU_j = -dot(nr_vec, (2*a1a1*XGjj/3)*vj + (roro*XGji/6)*vi);
+	pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
+	
 	/*
 	 *  Second: +M*Einf term
 	 */
-	double XMii, XMjj, XMij, XMji;
-	XM(XMii, XMij, XMji, XMjj);
-	double cf_ME_i = 5*(a0*a0a0*XMii/3 + ro*roro*XMij/24)*n0n2*sys->shear_rate;
-	double cf_ME_j = 5*(a1*a1a1*XMjj/3 + ro*roro*XMji/24)*n0n2*sys->shear_rate;
-	
-	double common_factor_i = cf_GU_i + cf_ME_i;
-	double common_factor_j = cf_GU_j + cf_ME_j;
-	stresslet_i.elm[0] = n0n0_13 * common_factor_i;
-	stresslet_i.elm[1] = n0n1 * common_factor_i;
-	stresslet_i.elm[2] = n0n2 * common_factor_i;
-	stresslet_i.elm[3] = n1n2 * common_factor_i;
-	stresslet_i.elm[4] = n1n1_13 * common_factor_i;
-	stresslet_j.elm[0] = n0n0_13 * common_factor_j;
-	stresslet_j.elm[1] = n0n1 * common_factor_j;
-	stresslet_j.elm[2] = n0n2 * common_factor_j;
-	stresslet_j.elm[3] = n1n2 * common_factor_j;
-	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
+	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
 
 	for (int u=0; u < 5; u++){
-		sys->lubstress[i].elm[u] += stresslet_i.elm[u];
-		sys->lubstress[j].elm[u] += stresslet_j.elm[u];
-		lubstresslet.elm[u] = stresslet_i.elm[u] + stresslet_j.elm[u];
+		sys->lubstress[i].elm[u] += stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u];
+		sys->lubstress[j].elm[u] += stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
+		lubstresslet.elm[u] = stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u] + stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
 	}
 	/*
 	 * Calculate the lubrication stresslet by using lubrication forces
