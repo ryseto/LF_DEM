@@ -257,5 +257,9 @@ public:
 	ofstream fout_trajectory;
 
 
+	double ksi_avg;
+	int ksi_avg_nb;
+	double vb_avg;
+	int vb_avg_nb;
 };
 #endif /* defined(__LF_DEM__System__) */

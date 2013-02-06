@@ -31,6 +31,13 @@ Interaction::r(double new_r){
 		ksi_eff = ksi;
 	
 	iksi_eff = 1./ksi_eff;
+	// if(_r < 2.){
+	//   int i=particle_num[0];
+	//   int j=particle_num[1];
+	//   cout << sys->shear_disp << " " << i << " " << j << " " << _r << " " << sys->relative_velocity_brownian[i].x <<" " << sys->relative_velocity_brownian[i].y <<" " << sys->relative_velocity_brownian[i].z <<" " << sys->relative_velocity_brownian[j].x <<" " << sys->relative_velocity_brownian[j].y <<" " << sys->relative_velocity_brownian[j].z << endl;
+	// }
+	sys->ksi_avg += ksi;
+	sys->ksi_avg_nb ++;
 }
 
 /* Make a normal vector

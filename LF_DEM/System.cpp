@@ -247,10 +247,11 @@ System::checkNewInteraction(){
 			int j=*it;
 			if(j>i){
 				if ( interaction_partners[i].find(j) == interaction_partners[i].end() ){
-					// this is done in 3 steps because we need each information for Interaction creation
+					// distance is done in 3 steps because we need each information for Interaction creation
 					pos_diff = position[j] - position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
+
 					double ri_rj_2 = 0.5*(radius[i] + radius[j]);
 					double sq_dist_lim = sq_lub_max * ri_rj_2 * ri_rj_2;
 					if ( sq_dist < sq_dist_lim){
@@ -450,7 +451,7 @@ System::updateVelocityLubrication(){
 }
 
 
-// RIGHT NOW THIS WORKS ONLY WITH CHOLMOD
+
 // On the way, we compute the Brownian Stress, as this needs a lot of averaging to converge
 void System::updateVelocityLubricationBrownian(){
 
@@ -482,6 +483,7 @@ void System::updateVelocityLubricationBrownian(){
     buildContactTerms();
 	
     stokes_solver->solve(v_lub_cont);
+
 
     // now the Brownian part of the velocity:
     // mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
@@ -618,6 +620,27 @@ void System::updateVelocityLubricationBrownian(){
 	}
     }
 
+	vb_avg = 0;
+	vb_avg_nb = 0;
+	
+	for(int i=0; i < np; i++){
+	  vb_avg += relative_velocity_lub_cont[i].norm();
+	  vb_avg_nb++;
+	}
+	cout << " vlub_avg " << vb_avg/vb_avg_nb << " ";
+
+
+
+
+	vb_avg = 0;
+	vb_avg_nb = 0;
+	
+	for(int i=0; i < np; i++){
+	  vb_avg += relative_velocity_brownian[i].norm();
+	  vb_avg_nb++;
+	}
+	cout << " vb_avg " << vb_avg/vb_avg_nb << " ";
+
 	delete [] step_stresslet;
 
 }
@@ -729,10 +752,16 @@ System::deltaTimeEvolution(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+
 	// update boxing system
 	boxset->update();
+	
+	ksi_avg = 0.;
+	ksi_avg_nb = 0;
 	checkNewInteraction();
 	updateInteractions();
+	cout << " ksi_avg " << ksi_avg/ksi_avg_nb << endl;
+
 }
 
 /*
