@@ -7,22 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CD12D04C16B30F2900F11015 /* libsuitesparseconfig.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */; };
 		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
-		D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */; };
-		D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */; };
-		D91B041C166EF09F00DC63CA /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */; };
 		D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D92F19C31676450800411650 /* BrownianForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92F19C01676450800411650 /* BrownianForce.cpp */; };
-		D939AEE116B8E7D50061B707 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D939AEDF16B8E7D50061B707 /* StokesSolver.cpp */; };
+		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
+		D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D97C3B07167690DC009A6BF0 /* Interaction.cpp */; };
+		D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E016C2F45E00AD6E85 /* libbelos.dylib */; };
+		D932B8E316C2F48800AD6E85 /* libbelosepetra.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E216C2F48800AD6E85 /* libbelosepetra.dylib */; };
+		D932B8E516C2F4BC00AD6E85 /* libepetra.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E416C2F4BC00AD6E85 /* libepetra.dylib */; };
+		D932B8E716C2F55C00AD6E85 /* libteuchos.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E616C2F55C00AD6E85 /* libteuchos.dylib */; };
+		D932B8E916C2F5A800AD6E85 /* libkokkosnodetsqr.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */; };
+		D932B8EB16C2F60200AD6E85 /* libifpack.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8EA16C2F60200AD6E85 /* libifpack.dylib */; };
+		D932B8ED16C2F71400AD6E85 /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8EC16C2F71400AD6E85 /* libamd.2.3.1.a */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
-		D97C3B09167690DC009A6BF0 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D97C3B07167690DC009A6BF0 /* Interaction.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
 		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
+		D9F336C916C2F764003E8E7C /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F336C816C2F764003E8E7C /* libcolamd.2.8.0.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -39,21 +43,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.a; path = ../../suitesparse/SuiteSparse/SuiteSparse_config/libsuitesparseconfig.a; sourceTree = "<group>"; };
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StokesSolver.cpp; sourceTree = "<group>"; };
-		CDE4695B16BC4CCB00923139 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
-		D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.0.1.a; path = ../../../../../../usr/local/lib/libcholmod.2.0.1.a; sourceTree = "<group>"; };
-		D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = ../../../../../../usr/local/lib/libamd.2.3.1.a; sourceTree = "<group>"; };
-		D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = ../../../../../../usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<group>"; };
+		D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.0.1.a; path = /usr/local/lib/libcholmod.2.0.1.a; sourceTree = "<absolute>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		D92F19C01676450800411650 /* BrownianForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrownianForce.cpp; sourceTree = "<group>"; };
 		D92F19C11676450800411650 /* BrownianForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrownianForce.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
+		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
+		D932B8E016C2F45E00AD6E85 /* libbelos.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbelos.dylib; path = /usr/local/lib/libbelos.dylib; sourceTree = "<absolute>"; };
+		D932B8E216C2F48800AD6E85 /* libbelosepetra.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbelosepetra.dylib; path = /usr/local/lib/libbelosepetra.dylib; sourceTree = "<absolute>"; };
+		D932B8E416C2F4BC00AD6E85 /* libepetra.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libepetra.dylib; path = /usr/local/lib/libepetra.dylib; sourceTree = "<absolute>"; };
+		D932B8E616C2F55C00AD6E85 /* libteuchos.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libteuchos.dylib; path = /usr/local/lib/libteuchos.dylib; sourceTree = "<absolute>"; };
+		D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libkokkosnodetsqr.dylib; path = /usr/local/lib/libkokkosnodetsqr.dylib; sourceTree = "<absolute>"; };
+		D932B8EA16C2F60200AD6E85 /* libifpack.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libifpack.dylib; path = /usr/local/lib/libifpack.dylib; sourceTree = "<absolute>"; };
+		D932B8EC16C2F71400AD6E85 /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = /usr/local/lib/libamd.2.3.1.a; sourceTree = "<absolute>"; };
 		D938135C16B572A8006F1CAC /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
-		D939AEDF16B8E7D50061B707 /* StokesSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StokesSolver.cpp; sourceTree = "<group>"; };
-		D939AEE016B8E7D50061B707 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxSet.cpp; sourceTree = "<group>"; };
@@ -90,6 +96,7 @@
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DB1678F61E00E864E4 /* note_LF_DEM.synctex.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = note_LF_DEM.synctex.gz; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
+		D9F336C816C2F764003E8E7C /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = /usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,17 +104,40 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9F336C916C2F764003E8E7C /* libcolamd.2.8.0.a in Frameworks */,
+				D932B8ED16C2F71400AD6E85 /* libamd.2.3.1.a in Frameworks */,
+				D932B8EB16C2F60200AD6E85 /* libifpack.dylib in Frameworks */,
+				D932B8E916C2F5A800AD6E85 /* libkokkosnodetsqr.dylib in Frameworks */,
+				D932B8E716C2F55C00AD6E85 /* libteuchos.dylib in Frameworks */,
+				D932B8E516C2F4BC00AD6E85 /* libepetra.dylib in Frameworks */,
+				D932B8E316C2F48800AD6E85 /* libbelosepetra.dylib in Frameworks */,
+				D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */,
 				D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */,
-				D91B041C166EF09F00DC63CA /* libcolamd.2.8.0.a in Frameworks */,
-				D91B041A166EF07D00DC63CA /* libamd.2.3.1.a in Frameworks */,
 				D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */,
-				CD12D04C16B30F2900F11015 /* libsuitesparseconfig.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				D932B8E016C2F45E00AD6E85 /* libbelos.dylib */,
+				D932B8E216C2F48800AD6E85 /* libbelosepetra.dylib */,
+				D932B8E416C2F4BC00AD6E85 /* libepetra.dylib */,
+				D932B8E616C2F55C00AD6E85 /* libteuchos.dylib */,
+				D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */,
+				D932B8EA16C2F60200AD6E85 /* libifpack.dylib */,
+				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
+				D932B8EC16C2F71400AD6E85 /* libamd.2.3.1.a */,
+				D9F336C816C2F764003E8E7C /* libcolamd.2.8.0.a */,
+				D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */,
+			);
+			name = lib;
+			path = ..;
+			sourceTree = "<group>";
+		};
 		D958B1DF1684141B003F94B4 /* python */ = {
 			isa = PBXGroup;
 			children = (
@@ -157,16 +187,11 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
-				CD12D04B16B30F2900F11015 /* libsuitesparseconfig.a */,
-				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
-				D91B041B166EF09F00DC63CA /* libcolamd.2.8.0.a */,
-				D91B0419166EF07D00DC63CA /* libamd.2.3.1.a */,
-				D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */,
+				D988E38C165441750009949F /* LF_DEM */,
+				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
 				D972279C16AF8FF300DA851F /* Mathematica */,
 				D958B1DF1684141B003F94B4 /* python */,
 				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
-				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
-				D988E38C165441750009949F /* LF_DEM */,
 				D988E38A165441750009949F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -182,8 +207,7 @@
 		D988E38C165441750009949F /* LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
-				CDE4695B16BC4CCB00923139 /* StokesSolver.h */,
-				CDE4695916BC4CB800923139 /* StokesSolver.cpp */,
+				D932B8DE16C2EA1B00AD6E85 /* lib */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
@@ -199,8 +223,8 @@
 				D9573FB016797A000081E903 /* BoxSet.cpp */,
 				D9573FB116797A000081E903 /* BoxSet.h */,
 				D988E399165443C10009949F /* vec3d.h */,
-				D939AEDF16B8E7D50061B707 /* StokesSolver.cpp */,
-				D939AEE016B8E7D50061B707 /* StokesSolver.h */,
+				D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */,
+				CDE4695916BC4CB800923139 /* StokesSolver.cpp */,
 				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
 				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
@@ -275,15 +299,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */,
+				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
-				D91539E416718D3200FBD57E /* GenerateInitConfig.cpp in Sources */,
 				D92F19C31676450800411650 /* BrownianForce.cpp in Sources */,
-				D97C3B09167690DC009A6BF0 /* Interaction.cpp in Sources */,
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
-				D939AEE116B8E7D50061B707 /* StokesSolver.cpp in Sources */,
+				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,32 +379,42 @@
 		D988E394165441750009949F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					"/Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/",
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LD_DYLIB_INSTALL_NAME = "";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-lstdc++",
+					"-lm",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					/usr/local/Lib,
-					"\"$(SRCROOT)/../../suitesparse/SuiteSparse/SuiteSparse_config\"",
-				);
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
 		D988E395165441750009949F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					"/Users/LevichFellow/recherche/trilinos-11.0.3-Build/include/",
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LD_DYLIB_INSTALL_NAME = "";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-lstdc++",
+					"-lm",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					/usr/local/Lib,
-					"\"$(SRCROOT)/../../suitesparse/SuiteSparse/SuiteSparse_config\"",
-				);
+				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};

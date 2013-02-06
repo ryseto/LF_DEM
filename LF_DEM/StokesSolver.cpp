@@ -422,8 +422,9 @@ StokesSolver::solve(double* velocity){
 		if( ret != Belos::Converged )
 			cerr << " Warning: Belos::Solver did not converge" << endl;
 		
-		int iter_steps = tril_solver->getNumIters();
-		cout << " iterations " << iter_steps << endl;
+		tril_solver->getNumIters();
+//		int iter_steps = tril_solver->getNumIters();
+//		cout << " iterations " << iter_steps << endl;
 		
 		tril_solution->ExtractCopy(&velocity);
 		
