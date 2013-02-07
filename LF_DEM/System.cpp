@@ -492,7 +492,35 @@ void System::updateVelocityLubricationBrownian(){
     // we do not call solvingIsDone() before new solve(), because 
     // R_FU has not changed, so same factorization is safely used
 
-    stokes_solver->setRHS( fb->generate() );
+	/* add */
+	stokes_solver->solvingIsDone();
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU("direct");
+
+    addStokesDrag();
+    buildLubricationTerms(false);
+
+    stokes_solver->complete_RFU();
+	/* <<<<<< */
+	
+	stokes_solver->setRHS( fb->generate() );
+
+
+	/* add */
+	vb_avg = 0;
+	vb_avg_nb = 0;
+	
+	double *ran_rhs = new double [np3];
+	for(int i=0; i<np3; i++){
+	  ran_rhs[i]=rand() / double(RAND_MAX);;
+	  vb_avg += ran_rhs[i]*ran_rhs[i];
+	  vb_avg_nb++;
+	}
+	stokes_solver->setRHS( ran_rhs );
+	cout << " ran_rhs " << sqrt(vb_avg)/vb_avg_nb << " ";
+	/* <<<<<< */
+
+
     stokes_solver->solve( v_Brownian_init );
 	
 
@@ -621,26 +649,28 @@ void System::updateVelocityLubricationBrownian(){
 	}
     }
 
-	vb_avg = 0;
-	vb_avg_nb = 0;
-	
-	for(int i=0; i < np; i++){
-	  vb_avg += relative_velocity_lub_cont[i].norm();
-	  vb_avg_nb++;
-	}
-	cout << " vlub_avg " << vb_avg/vb_avg_nb << " ";
-
-
 
 
 	vb_avg = 0;
 	vb_avg_nb = 0;
 	
 	for(int i=0; i < np; i++){
-	  vb_avg += relative_velocity_brownian[i].norm();
+	  vb_avg += relative_velocity_lub_cont[i].sq_norm();
 	  vb_avg_nb++;
 	}
-	cout << " vb_avg " << vb_avg/vb_avg_nb << " ";
+	cout << " vlub_avg " << sqrt(vb_avg)/vb_avg_nb << " ";
+
+
+
+
+	vb_avg = 0;
+	vb_avg_nb = 0;
+	
+	for(int i=0; i < np; i++){
+	  vb_avg += relative_velocity_brownian[i].sq_norm();
+	  vb_avg_nb++;
+	}
+	cout << " vb_avg " << sqrt(vb_avg)/vb_avg_nb << " ";
 
 	delete [] step_stresslet;
 
@@ -757,11 +787,11 @@ System::deltaTimeEvolution(){
 	// update boxing system
 	boxset->update();
 	
-	ksi_avg = 0.;
+	ksi_avg = 1.;
 	ksi_avg_nb = 0;
 	checkNewInteraction();
 	updateInteractions();
-	cout << " ksi_avg " << ksi_avg/ksi_avg_nb << endl;
+	cout << " ksi_min " << ksi_avg << endl;
 
 }
 

@@ -246,6 +246,19 @@ StokesSolver::complete_RFU_cholmod(){
 	factorizeRFU();
 
 	//	print_RFU();
+
+
+	double vb_avg = 0;
+	int vb_avg_nb = 0;
+	
+	for(int i=0; i < np; i++){
+	  vb_avg += ((double*)chol_rhs->x)[3*i]*((double*)chol_rhs->x)[3*i]+((double*)chol_rhs->x)[3*i+1]*((double*)chol_rhs->x)[3*i+1]+((double*)chol_rhs->x)[3*i+2]*((double*)chol_rhs->x)[3*i+2];
+	  vb_avg_nb++;
+	}
+	cout << " lub_rhs " << sqrt(vb_avg)/vb_avg_nb << " ";
+
+
+
 }
 
 

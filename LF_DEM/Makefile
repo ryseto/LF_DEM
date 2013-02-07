@@ -1,20 +1,45 @@
 #Makefile LF_DEM, Romain Mari
-CXX=g++ # -cxxlib-icc-abr
-trilinos_path=/usr/local
-INCLUDEPATHS= -I /usr/local/include/ -I $(trilinos_path)/include/ 
-#CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/local/include/ # mac OS
-#CXXFLAGS=  -g -pg -Wall  -Wextra -Wshadow  $(INCLUDEPATHS) # mac OS debug
-CXXFLAGS=  -g -pg # # mac OS debug no warning 
-#CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/ # linux
-#CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow -I /usr/include/suitesparse/
 
-LA_LIBRARIES = -llapack -lblas 
+# Compiler and options
+CXX=g++
 
-Cholmod_LIBRARIES = -lcholmod
-Cholmod_LIBRARIES += /usr/local/lib/libcholmod.a /usr/local/lib/libamd.a /usr/local/lib/libcolamd.a /usr/local/lib/libsuitesparseconfig.a   # mac os
+OS_version=OSX # OSX or Linux
+Opt=Debug # debug or optimized
 
-Trilinos_LIBRARY_DIRS= -L$(trilinos_path)/lib 
-Trilinos_LIBRARIES=  -lbelosepetra -lbelos -lml -lifpack -lamesos -lgaleri-xpetra -lgaleri -laztecoo -lepetraext -ltpetraext -ltpetrainout -ltpetra -ltriutils -lepetra -lkokkosdisttsqr -lkokkosnodetsqr -lkokkoslinalg -lkokkosnodeapi -lkokkos -lkokkosdisttsqr -lkokkosnodetsqr -lkokkoslinalg -lkokkosnodeapi -lkokkos -ltpi -lteuchos
+
+Trilinos_path=/usr/local
+Cholmod_path=/usr/local
+
+# Includes
+Includes = -I $(Cholmod_path)/include/ -I $(Trilinos_path)/include/ 
+
+# Linking
+Blas_Linking_Flags = -lblas 
+Lapack_Linking_Flags = -llapack
+Cholmod_Linking_Flags = -lcholmod
+# extra linking flags for mac OS X
+Cholmod_Linking_Flags += $(Cholmod_path)/lib/libcholmod.a $(Cholmod_path)/lib/libamd.a $(Cholmod_path)/lib/libcolamd.a $(Cholmod_path)/lib/libsuitesparseconfig.a
+Trilinos_Linking_Flags =  -lbelosepetra -lbelos -lifpack -lepetra -lkokkosnodetsqr -lteuchos
+
+
+CXXFLAGS= -g -pg
+
+# tests do not work !!!???!
+ifeq ($(OS_version),OSX)
+ifeq ($(Opt), optimized)
+		CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow # mac OS
+else
+		CXXFLAGS=  -g -pg # mac OS debug
+endif
+endif
+ifeq ($(OS_version), Linux)
+ifeq ($(Opt), optimized)
+		CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow  # linux
+else
+		CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow # linux debug
+endif
+endif
+
 
 
 OUT_CODE=LF_DEM
@@ -26,12 +51,11 @@ DATE=$(shell date +%D | sed "s./..g")
 
 all:	$(OUT_CODE)
 
-$(OUT_CODE):$(OBJ) 
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(LA_LIBRARIES) $(Cholmod_LIBRARIES) $(Trilinos_LIBRARY_DIRS) $(Trilinos_LIBRARIES)
-
+$(OUT_CODE):$(OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
 
 $(OBJ): $(SRC)
-	$(CXX) $(CXXFLAGS) $(INCLUDEPATHS) -o $@ -c $(@:.o=.cpp) 
+	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp) 
 
 tar:
 	tar cvfz LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB)  LF_DEM_sources_$(DATE).ps Makefile input.*

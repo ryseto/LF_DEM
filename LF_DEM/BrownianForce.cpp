@@ -1,7 +1,5 @@
 #include "BrownianForce.h"
 
-
-#define RANDOM ( r_gen.rand() ) // RNG uniform in [0,1]
 #define GRANDOM ( r_gen.randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
 using namespace std;
@@ -48,6 +46,18 @@ BrownianForce::add_to(cholmod_dense *force_vec){
 double*
 BrownianForce::generate(){
   generate_local();
+
+
+	double vb_avg = 0;
+	int vb_avg_nb = 0;
+	for(int i=0; i < sys->numpart(); i++){
+	  vb_avg += ((double*)forces->x)[3*i]*((double*)forces->x)[3*i]+((double*)forces->x)[3*i+1]*((double*)forces->x)[3*i+1]+((double*)forces->x)[3*i+2]*((double*)forces->x)[3*i+2];
+	  vb_avg_nb++;
+	}
+	cout << " fb_avg " << sqrt(vb_avg)/vb_avg_nb << " ";
+
+
+
   return (double*)forces->x;
 }
 
@@ -58,7 +68,8 @@ BrownianForce::generate_local(){
 		cholmod_factor* L_copy = cholmod_copy_factor((sys->stokes_solver)->chol_L, c); // sadly it seems we have to make a copy. Is there a way to avoid this?
 		L_sparse = cholmod_factor_to_sparse(L_copy, c);
 		
-		double sqrt_temp2_dt [2] = {sqrt(kb_T2/sys->dt),0};
+		//		double sqrt_temp2_dt [2] = {sqrt(kb_T2/sys->dt),0};
+		double sqrt_temp2_dt [2] = {1.,0};
 		double zero [2] = {0,0};
 		cholmod_sdmult(L_sparse, 0, sqrt_temp2_dt, zero, random_vector(), forces, c);
 		
@@ -79,11 +90,14 @@ BrownianForce::generate_local(){
 
 void
 BrownianForce::generate(double* f){
+
 	generate_local();
+
 	int n3 = 3*sys->numpart();
 	for(int i=0; i<n3; i++){
 		f[i] = ((double*)forces->x)[i];
 	}
+
 }
 
 cholmod_dense*
