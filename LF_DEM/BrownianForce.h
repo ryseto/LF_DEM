@@ -20,20 +20,13 @@ class BrownianForce{
 
 private:
 	System *sys;
-	cholmod_dense *forces;
+	double *forces;
 	double kb_T, kb_T2;
 	MTRand r_gen;
 	
-	cholmod_dense *rand_vec;
-	cholmod_dense *random_vector();
-	
-	cholmod_sparse *L_sparse;
-	cholmod_common *c;
-	void generate_local();
-
 	double **pair_resistance_matrix;
 	double **L_factor;
-
+	
 	void factorize();
 	void addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha);
 	void addToOffDiagBlock_RFU(const vec3d &nvec, double alpha);

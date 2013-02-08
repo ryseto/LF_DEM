@@ -51,14 +51,8 @@ private:
 	double radius_max;
 
 	void buildLubricationTerms(bool);
-	void buildBrownianTerms(double*);
 	void buildContactTerms();
 	void addStokesDrag();
-	void factorizeResistanceMatrix();
-
-
-	void addToDiagBlock_RFU(cholmod_sparse *chol_rfu_submatrix, const vec3d &nvec, int ii, double alpha);
-	void addToOffDiagBlock_RFU(cholmod_sparse *chol_rfu_submatrix, const vec3d &nvec, double alpha);
 
 
 	void updateResistanceMatrix();
@@ -265,11 +259,5 @@ public:
 	ofstream fout_trajectory;
 
 
-	double ksi_avg;
-	int ksi_avg_nb;
-	double vb_avg;
-	int vb_avg_nb;
-
-	MTRand r_gen;
 };
 #endif /* defined(__LF_DEM__System__) */
