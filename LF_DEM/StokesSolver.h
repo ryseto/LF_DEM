@@ -229,6 +229,16 @@ class StokesSolver{
     void solve(double* velocity);
 
     /* 
+    solve_CholTrans(double* velocity) :
+      - once the RFU matrix and the RHS vector are built 
+        ( complete_RFU() must have been called )
+      - solves L^t * velocity = RHS, and stores it in velocity array,
+	    where L^t is the transpose of the Cholesky factor ( RFU = L L^t )
+	  - works only for direct solver, as we need the Cholesky factor
+    */
+    void solve_CholTrans(double* velocity);
+
+    /* 
     solvingIsDone(bool free_Cholesky_factor) :
       - deletes RFU matrix and some other arrays 
         (preconditionner, Cholesky factors, ...) used for solving

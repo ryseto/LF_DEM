@@ -16,6 +16,11 @@ StokesSolver::StokesSolver(int n, bool is_brownian){
     np=n;
     np3=3*np;
 	brownian=is_brownian;
+
+	// initializing values that can be changed later
+	_direct = true;
+	_iterative = false;
+
 }
 StokesSolver::~StokesSolver(){
     #ifdef CHOLMOD
@@ -245,17 +250,17 @@ StokesSolver::complete_RFU_cholmod(){
 
 	factorizeRFU();
 
-	//	print_RFU();
+	//		print_RFU();
 
 
-	double vb_avg = 0;
-	int vb_avg_nb = 0;
+	// double vb_avg = 0;
+	// int vb_avg_nb = 0;
 	
-	for(int i=0; i < np; i++){
-	  vb_avg += ((double*)chol_rhs->x)[3*i]*((double*)chol_rhs->x)[3*i]+((double*)chol_rhs->x)[3*i+1]*((double*)chol_rhs->x)[3*i+1]+((double*)chol_rhs->x)[3*i+2]*((double*)chol_rhs->x)[3*i+2];
-	  vb_avg_nb++;
-	}
-	cout << " lub_rhs " << sqrt(vb_avg)/vb_avg_nb << " ";
+	// for(int i=0; i < np; i++){
+	//   vb_avg += ((double*)chol_rhs->x)[3*i]*((double*)chol_rhs->x)[3*i]+((double*)chol_rhs->x)[3*i+1]*((double*)chol_rhs->x)[3*i+1]+((double*)chol_rhs->x)[3*i+2]*((double*)chol_rhs->x)[3*i+2];
+	//   vb_avg_nb++;
+	// }
+	// cout << " lub_rhs " << sqrt(vb_avg)/vb_avg_nb << " ";
 
 
 
@@ -404,12 +409,10 @@ StokesSolver::setRHS(double* rhs){
 
 
 void
-StokesSolver::solve(double* velocity){
+StokesSolver::solve_CholTrans(double* velocity){
 
 	if(direct()){
-
-		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
-		
+		chol_solution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 		for (int i = 0; i < linalg_size; i++){
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
@@ -417,35 +420,56 @@ StokesSolver::solve(double* velocity){
 
 
 #ifdef TRILINOS
-	
 	if(iterative()){
-		tril_stokes_equation->setLHS( tril_solution );
-		tril_stokes_equation->setRHS( tril_rhs );
-		
-		bool set_success = tril_stokes_equation->setProblem();
-		if(!set_success){
-			cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
-			exit(1);
-		}
-		
-		tril_solver->setProblem (tril_stokes_equation);
-		
-		Belos::ReturnType ret = tril_solver->solve();
-		
-		if( ret != Belos::Converged )
-			cerr << " Warning: Belos::Solver did not converge" << endl;
-		
-		tril_solver->getNumIters();
-//		int iter_steps = tril_solver->getNumIters();
-//		cout << " iterations " << iter_steps << endl;
-		
-		tril_solution->ExtractCopy(&velocity);
-		
+	  cerr << " StokesSolver::solve_CholTrans(double* velocity) not implemented for iterative solver." << endl;
+	  exit(1);
 	}
 #endif
 
 }
 
+void
+StokesSolver::solve(double* velocity){
+
+	if(direct()){
+
+		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+
+		for (int i = 0; i < linalg_size; i++){
+			velocity[i] = ((double*)chol_solution->x)[i];
+		}
+	}
+
+
+#ifdef TRILINOS
+
+	if(iterative()){
+		tril_stokes_equation->setLHS( tril_solution );
+		tril_stokes_equation->setRHS( tril_rhs );
+
+		bool set_success = tril_stokes_equation->setProblem();
+		if(!set_success){
+			cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
+			exit(1);
+		}
+
+		tril_solver->setProblem (tril_stokes_equation);
+
+		Belos::ReturnType ret = tril_solver->solve();
+
+		if( ret != Belos::Converged )
+			cerr << " Warning: Belos::Solver did not converge" << endl;
+
+		tril_solver->getNumIters();
+//		int iter_steps = tril_solver->getNumIters();
+//		cout << " iterations " << iter_steps << endl;
+
+		tril_solution->ExtractCopy(&velocity);
+
+	}
+#endif
+
+}
 void
 StokesSolver::convertDirectToIterative(){
 #ifdef TRILINOS
@@ -531,6 +555,10 @@ StokesSolver::allocateRessources(){
     off_diag_values = new vector <double> [3];
     ploc = new int [np+1];
     chol_rhs = cholmod_allocate_dense(np3, 1, np3, xtype, &chol_c);
+	for(int i=0; i<np3; i++){
+	  ((double*)chol_rhs->x)[i]=0.;
+	}
+
     chol_L=NULL;
 
 
@@ -667,6 +695,7 @@ void
 StokesSolver::factorizeRFU(){
     chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
     cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+
     if(chol_c.status){
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
 		// It is very often enough to force another preconditioner to solve the problem.

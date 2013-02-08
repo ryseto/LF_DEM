@@ -23,6 +23,9 @@
 #include "BoxSet.h"
 #include "StokesSolver.h"
 
+#include "cholmod.h"
+#include "MersenneTwister.h"
+
 using namespace std;
 
 class Simulation;
@@ -48,10 +51,15 @@ private:
 	double radius_max;
 
 	void buildLubricationTerms(bool);
-	void buildBrownianTerms();
+	void buildBrownianTerms(double*);
 	void buildContactTerms();
 	void addStokesDrag();
 	void factorizeResistanceMatrix();
+
+
+	void addToDiagBlock_RFU(cholmod_sparse *chol_rfu_submatrix, const vec3d &nvec, int ii, double alpha);
+	void addToOffDiagBlock_RFU(cholmod_sparse *chol_rfu_submatrix, const vec3d &nvec, double alpha);
+
 
 	void updateResistanceMatrix();
 
@@ -261,5 +269,7 @@ public:
 	int ksi_avg_nb;
 	double vb_avg;
 	int vb_avg_nb;
+
+	MTRand r_gen;
 };
 #endif /* defined(__LF_DEM__System__) */

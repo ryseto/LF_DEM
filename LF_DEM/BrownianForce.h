@@ -30,6 +30,13 @@ private:
 	cholmod_sparse *L_sparse;
 	cholmod_common *c;
 	void generate_local();
+
+	double **pair_resistance_matrix;
+	double **L_factor;
+
+	void factorize();
+	void addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha);
+	void addToOffDiagBlock_RFU(const vec3d &nvec, double alpha);
 protected:
 public:
 	
