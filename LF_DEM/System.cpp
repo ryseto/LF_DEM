@@ -43,6 +43,12 @@ System::~System(){
 	if (!torque)
 		delete [] torque;
 
+	if (!interaction)
+		delete [] interaction;
+
+	for(int i=0; i<np; i++){
+	  interaction_list[i].clear();
+	}
 	if (!interaction_list)
 		delete [] interaction_list;
 	if (!interaction_partners)
@@ -462,12 +468,16 @@ void System::updateVelocityLubricationBrownian(){
     stresslet stresslet_i_mid;
     stresslet stresslet_j_mid;
     stresslet *step_stresslet = new stresslet [np];
-
+    stresslet total_step_stresslet;
     for (int i=0; i < np; i++){
 	  for (int u=0; u < 5; u++){
 	    step_stresslet[i].elm[u] = 0.;
 	  }
     }
+
+	for (int u=0; u < 5; u++){
+	  total_step_stresslet.elm[u] = 0.;
+	}
 
 	
     vec3d vi;
@@ -524,6 +534,22 @@ void System::updateVelocityLubricationBrownian(){
 	  }
     }
 
+	//cout << " avg_vel_init ";
+	double avg_vel=0.;
+	for (int i=0; i < 3*np; i++){
+	  avg_vel += v_Brownian_init[i]*v_Brownian_init[i];
+	}
+
+	//cout << sqrt(avg_vel)/(3*np) << endl;
+
+	//cout << " init ";
+
+    for (int u=0; u < 5; u++){
+	  for (int i=0; i < np; i++){
+		total_step_stresslet.elm[u] += step_stresslet[i].elm[u];
+	  }
+	  //cout << total_step_stresslet.elm[u]/np << " " ;
+	}
 
     // move particles to intermediate point
     for (int i=0; i < np; i++){
@@ -544,6 +570,7 @@ void System::updateVelocityLubricationBrownian(){
     // get the intermediate brownian velocity
     stokes_solver->solve(v_Brownian_mid);
     stokes_solver->solvingIsDone();
+
 
 
 	// Brownian Stress: term  -R_SU_mid * v_Brownian_mid
@@ -571,8 +598,16 @@ void System::updateVelocityLubricationBrownian(){
 	  for (int u=0; u < 5; u++){
 	    step_stresslet[i].elm[u] -= stresslet_i_mid.elm[u];
 	    step_stresslet[j].elm[u] -= stresslet_j_mid.elm[u];
+		total_step_stresslet.elm[u] -= stresslet_i_mid.elm[u] + stresslet_j_mid.elm[u];
 	  }
     }
+
+	//cout << " mid ";
+	for (int u=0; u < 5; u++){
+	  //cout << total_step_stresslet.elm[u]/np << " " ;
+	}
+	
+
 	// Brownian Stress: multiply all by  0.5*dt/dt_mid
     for (int i=0; i < np; i++){
 	  for (int u=0; u < 5; u++){
@@ -581,6 +616,14 @@ void System::updateVelocityLubricationBrownian(){
 	  }
     }
 	brownianstress_calc_nb ++;
+
+	//cout << " total ";
+	for (int u=0; u < 5; u++){
+	  total_step_stresslet.elm[u] *= 0.5*dt_ratio;
+	  //cout << total_step_stresslet.elm[u]/np << " " ;	  
+	}
+	//cout << endl;
+
 
     // move particles back to initial point, and update interactions
     //
@@ -736,9 +779,10 @@ System::deltaTimeEvolution(){
 	// update boxing system
 	boxset->update();
 	
+	ksi_min=1.;
 	checkNewInteraction();
 	updateInteractions();
-
+	//	//cout << " ksi_min " << ksi_min;
 }
 
 /*

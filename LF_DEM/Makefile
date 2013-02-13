@@ -22,7 +22,7 @@ Cholmod_Linking_Flags += $(Cholmod_path)/lib/libcholmod.a $(Cholmod_path)/lib/li
 Trilinos_Linking_Flags =  -lbelosepetra -lbelos -lifpack -lepetra -lkokkosnodetsqr -lteuchos
 
 
-CXXFLAGS= -g -pg
+CXXFLAGS= -O3
 
 # tests do not work !!!???!
 ifeq ($(OS_version),OSX)

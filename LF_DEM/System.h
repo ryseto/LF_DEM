@@ -257,7 +257,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
-
+	double ksi_min;
 
 };
 #endif /* defined(__LF_DEM__System__) */

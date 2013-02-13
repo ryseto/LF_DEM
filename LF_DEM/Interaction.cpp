@@ -31,6 +31,8 @@ Interaction::r(double new_r){
 		ksi_eff = ksi;
 	
 	iksi_eff = 1./ksi_eff;
+	if(ksi<sys->ksi_min)
+	  sys->ksi_min=ksi;
 }
 
 /* Make a normal vector

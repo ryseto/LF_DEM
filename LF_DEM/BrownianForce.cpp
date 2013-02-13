@@ -108,9 +108,19 @@ BrownianForce::generate(){
 		}
 	  }
     }
+	// cout << " avg_fb ";
+	// double avg_fb=0.;
+	// for (int i=0; i < 3*np; i++){
+	//   avg_fb += forces[i]*forces[i];
+	// }
+
+	// cout << sqrt(avg_fb)/(3*np) << endl;
+
 	// for(int i=0;i<np3;i++){
 	//   cout << forces[i] << endl;
 	// }
+
+DIAGONAL TERM  AND KT AND FACTOR 0.5 in time integ
 	return forces;
 }
 

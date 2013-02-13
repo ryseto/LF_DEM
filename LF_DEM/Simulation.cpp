@@ -48,9 +48,10 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
 	int i_time_interval = strain_interval_out/(sys.dt*sys.shear_rate);
+
 	outputConfigurationData();
 	while(sys.shear_strain <= shear_strain_end){
-		cerr << "strain: " << sys.shear_strain << endl;
+	  cerr << "strain: " << sys.shear_strain << endl;
 		
 		sys.timeEvolution(i_time_interval);
 		evaluateData();
@@ -243,7 +244,7 @@ Simulation::setDefaultParameters(){
 	 *
 	 */
 	sys.dt = 1e-4;
-	sys.dt_ratio = 100;
+	sys.dt_ratio = 2;
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate

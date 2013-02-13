@@ -23,8 +23,10 @@ StokesSolver::StokesSolver(int n, bool is_brownian){
 
 }
 StokesSolver::~StokesSolver(){
-    #ifdef CHOLMOD
-	if (!diag_values)
+    off_diag_values[0].clear();
+    off_diag_values[1].clear();
+    off_diag_values[2].clear();
+    if (!diag_values)
 		delete [] diag_values;
 	if (!off_diag_values )
 		delete [] off_diag_values;
@@ -41,7 +43,6 @@ StokesSolver::~StokesSolver(){
 
 	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
 	cholmod_finish(&chol_c);
-#endif
 
 #ifdef TRILINOS
 	for (int i=0; i < linalg_size; i++)
@@ -438,6 +439,7 @@ StokesSolver::solve(double* velocity){
 		for (int i = 0; i < linalg_size; i++){
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
+		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 
 
@@ -497,7 +499,7 @@ StokesSolver::solvingIsDone(){
 
 		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
 		//	cholmod_free_dense(&chol_rhs, &chol_c);
-		cholmod_free_dense(&chol_solution, &chol_c);
+
 	}
 #ifdef TRILINOS
 	if(iterative()){
@@ -870,7 +872,24 @@ StokesSolver::setIncCholPreconditioner(){
 #endif
 
 
+#ifdef TRILINOS
+void
+StokesSolver::matrixChol2Tril(const cholmod_sparse *C, Epetra_CrsMatrix* &T){
+  
+  vector <double> row_values;
+  vector <int> row_indices;
+
+  for(int i=0; i< linalg_size;i++){
+	int nz = C->
+	C->x
+
+  }
+  
+}
+#endif
+
 #ifdef CHOLMOD_EXTRA
+
 /* 
   setSpInvPreconditioner() :
   A sparse inverse (left-)preconditioner.
@@ -883,8 +902,6 @@ StokesSolver::setSpInvPreconditioner(){
   
   cholmod_free_sparse(&sparse_inv, &chol_c);
 }    
-
-
 
 #endif
 
