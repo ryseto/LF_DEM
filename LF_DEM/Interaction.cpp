@@ -120,7 +120,7 @@ Interaction::calcContactInteraction(){
 		sys->total_force[particle_num[1]] -= f_ij;
 		sys->torque[particle_num[0]] = a0*t_ij;
 		sys->torque[particle_num[1]] = a1*t_ij;
-//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
+		//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 	}
 }
 

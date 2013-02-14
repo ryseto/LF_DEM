@@ -51,7 +51,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	outputConfigurationData();
 	while(sys.shear_strain <= shear_strain_end){
 		cerr << "strain: " << sys.shear_strain << endl;
-		
 		sys.timeEvolution(i_time_interval);
 		evaluateData();
 		outputRheologyData();
@@ -430,10 +429,14 @@ void
 Simulation::evaluateData(){
 	double total_stress[5];
 	for (int u=0; u<5; u++){
-		total_stress[u] = (sys.total_lub_stress[u] + sys.total_contact_stress[u] + sys.total_brownian_stress[u]);
+		total_stress[u] = sys.total_lub_stress[u] + sys.total_contact_stress[u];
+	}
+	if (sys.brownian){
+		for (int u=0; u<5; u++){
+			total_stress[u] += sys.total_brownian_stress[u];
+		}
 	}
 	total_stress[2] += sys.total_stress_bgf;
-
 	Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
 	/* N1 = tau_xx - tau_zz = tau_xx - (- tau_xx-tau_yy) = 2tau_xx + tau_yy
 	 * N2 = tau_zz - tau_yy = (- tau_xx-tau_yy) - tau_yy  = -tau11 - 2tau22
@@ -447,9 +450,15 @@ Simulation::evaluateData(){
 	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
 	N1_c = (2*sys.total_contact_stress[0] +   sys.total_contact_stress[4])/(sys.valSystemVolume());
 	N2_c = (-sys.total_contact_stress[0] - 2*sys.total_contact_stress[4])/(sys.valSystemVolume());
-	Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	N1_b = (2*sys.total_brownian_stress[0] +   sys.total_brownian_stress[4])/(sys.valSystemVolume());
-	N2_b = (-sys.total_brownian_stress[0] - 2*sys.total_brownian_stress[4])/(sys.valSystemVolume());
+	if (sys.brownian){
+		Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+		N1_b = (2*sys.total_brownian_stress[0] +   sys.total_brownian_stress[4])/(sys.valSystemVolume());
+		N2_b = (-sys.total_brownian_stress[0] - 2*sys.total_brownian_stress[4])/(sys.valSystemVolume());
+	} else {
+		Viscosity_b = 0;
+		N1_b = 0;
+		N2_b = 0;
+	}
 
 	
 	double total_lub_stress2[5];

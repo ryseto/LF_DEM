@@ -148,7 +148,7 @@ class StokesSolver{
 
 	void setSolverType(string);
 
-	void print_RFU();
+
  public:
 
     StokesSolver(int np, bool is_brownian);
@@ -161,7 +161,7 @@ class StokesSolver{
 	bool iterative(){
 		return _iterative;
 	}
-
+	void print_RFU();
 	void convertDirectToIterative();
     // R_FU filling methods
     /* prepareNewBuild_RFU() :

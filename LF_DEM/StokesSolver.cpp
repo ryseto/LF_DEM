@@ -98,7 +98,6 @@ StokesSolver::initialize(){
 // Diagonal Terms
 void
 StokesSolver::addToDiag_RFU(int ii, double alpha){
-
 	if(direct()){
 		int ii6 = 6*ii;
 		diag_values[ii6]   += alpha;
@@ -194,7 +193,7 @@ with p[j] < a < p[j+1]-1
 *****************************************************/
 void
 StokesSolver::complete_RFU_cholmod(){
-
+	
     // declare the last 2 values of ploc
     ploc[np-1] = (unsigned int)rows.size();
     ploc[np] = (unsigned int)rows.size();
@@ -248,11 +247,13 @@ StokesSolver::complete_RFU_cholmod(){
     }
     ((int*)chol_rfu_matrix->p)[np3] = ((int*)chol_rfu_matrix->p)[np3-1] + 1;
 
+	
 	factorizeRFU();
-
-	//		print_RFU();
-
-
+	
+	
+//	if (sys->gap_min < 1e-3)
+		//		print_RFU();
+		
 	// double vb_avg = 0;
 	// int vb_avg_nb = 0;
 	
@@ -430,7 +431,6 @@ StokesSolver::solve_CholTrans(double* velocity){
 
 void
 StokesSolver::solve(double* velocity){
-
 	if(direct()){
 
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
@@ -916,16 +916,15 @@ StokesSolver::setSolverType(string solver_type){
 // testing
 void
 StokesSolver::print_RFU(){
-
-if(direct()){
-	cout << endl<< " chol rfu " << endl;
-    for(int i = 0; i < linalg_size; i++){
-		for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
-			cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+	if(direct()){
+		//		cout << endl<< " chol rfu " << endl;
+		for(int i = 0; i < linalg_size; i++){
+			for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
+				cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+			}
 		}
 	}
- }
-
+	exit(1);
 #ifdef TRILINOS
 	if(iterative()){
 	int int_nb = 100;
