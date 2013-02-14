@@ -234,8 +234,6 @@ public:
 	void updateVelocity();
 	void updateVelocityLubrication();
 	void updateVelocityLubricationBrownian();
-	void updateVelocityLubricationBrownian_old();
-	void updateVelocityLubricationBrownian_new_2();
 	void deltaTimeEvolution();
 	void forceReset();
 	void torqueReset();

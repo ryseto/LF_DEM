@@ -21,13 +21,7 @@ class BrownianForce{
 private:
 	System *sys;
 	double *forces;
-	cholmod_dense *chol_forces;
-	cholmod_dense *chol_PTforces;
-	cholmod_dense *rand_vec;
-	cholmod_sparse *L_sparse;
-	cholmod_common *c;
-	cholmod_dense* random_vector();
-	
+
 	double kb_T, kb_T2;
 	MTRand r_gen;
 	
@@ -52,7 +46,7 @@ public:
 	void add_to(cholmod_dense*);
 	//	cholmod_dense* generate();
 	double* generate();
-	double* generate_new();
+	double* generate_invLFb();
 	double* generate_new_2();
 	void generate(double*);
 	

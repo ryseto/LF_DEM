@@ -50,8 +50,7 @@ private:
 	double strain_near_contact; // The strain when this interaction starts.
 	double lub_time;
 	double nearing_time;
-	//	double twothird, onesixth; // used in lubrication computations;
-	bool _just_off;
+
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
 	stresslet contactstresslet;
@@ -68,7 +67,7 @@ public:
 
 	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
 	bool active;
-	bool just_off();
+
 	int particle_num[2];
 
 	inline double r(){
