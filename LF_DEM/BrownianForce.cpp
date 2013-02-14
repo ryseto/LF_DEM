@@ -17,6 +17,9 @@ BrownianForce::BrownianForce(System *sys_){
 	forces = new double [3*sys->numpart()];
 	pair_resistance_matrix = new double* [6];
 	L_factor = new double* [6];
+
+	ran_vector = new double [3*sys->numpart()];
+
 	for(int i=0;i<6;i++){
 	  pair_resistance_matrix[i] = new double [6];
 	  L_factor[i] = new double [6];
@@ -37,7 +40,71 @@ BrownianForce::~BrownianForce(){
 
 void
 BrownianForce::init(){
+  c=&((sys->stokes_solver)->chol_c);
+  rand_vec=  cholmod_zeros(3*sys->numpart(), 1, CHOLMOD_REAL, c);
+  chol_PTforces=  cholmod_zeros(3*sys->numpart(), 1, CHOLMOD_REAL, c);
+}
 
+
+double*
+BrownianForce::generate_new(){
+  int n3 = 3*sys->numpart();
+  double sqrt_kbT2_dt = sqrt(kb_T2/sys->dt);
+  for(int i=0; i<n3; i++){
+	ran_vector[i] = sqrt_kbT2_dt * r_gen.randNorm(0., 1.);
+  }
+		  
+  return ran_vector;
+}
+
+double*
+BrownianForce::generate_new_2(){
+
+  cholmod_factor* L_copy = cholmod_copy_factor((sys->stokes_solver)->chol_L, c); // sadly it seems we have to make a copy. Is there a way to avoid this?
+  L_sparse = cholmod_factor_to_sparse(L_copy, c);
+  
+  double sqrt_temp2_dt [2] = {sqrt(kb_T2/sys->dt),0};
+  double zero [2] = {0,0};
+  cholmod_sdmult(L_sparse, 0, sqrt_temp2_dt, zero, random_vector(), chol_PTforces, c);
+  chol_forces = cholmod_solve(CHOLMOD_Pt, (sys->stokes_solver)->chol_L, chol_PTforces, c);
+  
+  if(sys->ksi_min<0.01){
+
+	// cout << endl<< endl << " L_sparse "<< endl<< endl;
+	// cout << (sys->stokes_solver)->chol_L->is_ll << " " <<(sys->stokes_solver)->chol_L->is_super << " " << (sys->stokes_solver)->chol_L->is_monotonic << endl;
+	// //	cout << " kbt " << kb_T2/sys->dt << endl;
+	//    for (int i = 0; i < 3*sys->numpart(); i++){
+  //   for (int i = 0; i < 1; i++){
+  // 	  //	  for (int j = ((int*)L_sparse->p)[i]; j < ((int*)L_sparse->p)[i+1]; j++){
+  // 	  for (int j = ((int*)L_sparse->p)[i]; j < ((int*)L_sparse->p)[i]+5; j++){
+  // 		cout << i << " " << ((int*)L_sparse->i)[j]<< " " <<((double*)L_sparse->x)[j] << endl;
+  // 	  }
+  // 	}
+
+  // 	cout << endl<< endl << " reconstructed rfu "<< endl<< endl;
+  // 	cholmod_sparse *chol_rec = cholmod_ssmult(L_sparse, cholmod_transpose(L_sparse, 1, c), -1, 1, 1, c);
+  // 	for (int i = 0; i < 1; i++){
+  // 	  for (int j = ((int*)chol_rec->p)[i]; j < ((int*)chol_rec->p)[i]+5; j++){
+  // 	 	cout << i << " " << ((int*)chol_rec->i)[j]<< " " <<((double*)chol_rec->x)[j] << endl;
+  // 	   }
+  //   }
+  // 	 cholmod_free_sparse(&chol_rec, c);
+
+
+
+  // 	cout << endl<< endl << " force "<< endl<< endl;
+  // 	// //	cout << " kbt " << kb_T2/sys->dt << endl;
+  //   for (int i = 0; i < 3*sys->numpart(); i++){
+  // 		cout << i << " " << ((double*)chol_forces->x)[i] << endl;
+  // 	}
+  // 	 cout << endl << sys->ksi_min << endl;
+  // getchar();
+  }
+
+  cholmod_free_sparse(&L_sparse, c);
+  cholmod_free_factor(&L_copy, c);
+
+  return (double*)chol_forces->x;
 }
 
 
@@ -70,13 +137,13 @@ BrownianForce::generate(){
 		  }
 
 		  // Stokes drag
-		  double d_value = sys->bgf_factor*sys->radius[i];
+		  double d_value = 0.1*sys->bgf_factor*sys->radius[i];
 		  for(int a=0; a<3; a++){
-			pair_resistance_matrix[a][a]=d_value;
+		  	pair_resistance_matrix[a][a]=d_value;
 		  }
 		  d_value = sys->bgf_factor*sys->radius[j];
 		  for(int a=3; a<6; a++){
-			pair_resistance_matrix[a][a]=d_value;
+		  	pair_resistance_matrix[a][a]=d_value;
 		  }
 
 		  inter->XA(XAii, XAij, XAji, XAjj);
@@ -120,7 +187,18 @@ BrownianForce::generate(){
 	//   cout << forces[i] << endl;
 	// }
 
-DIAGONAL TERM  AND KT AND FACTOR 0.5 in time integ
+
+
+  // if(sys->ksi_min<0.01){
+  // 	cout << endl<< endl << " force old "<< endl<< endl;
+  // 	// //	cout << " kbt " << kb_T2/sys->dt << endl;
+  //   for (int i = 0; i < 3*sys->numpart(); i++){
+  // 		cout << i << " " << forces[i] << endl;
+  // 	}
+
+  // }
+  // cout << endl << "end of old forces, ksi_mis is " << sys->ksi_min << endl;  
+
 	return forces;
 }
 
@@ -198,4 +276,14 @@ BrownianForce::factorize(){
 	}
   }
   
+}
+
+
+cholmod_dense*
+BrownianForce::random_vector(){
+	int n3 = 3*sys->numpart();
+	for(int i=0; i<n3; i++){
+		((double*)rand_vec->x)[i] = GRANDOM;
+	}
+	return rand_vec;
 }

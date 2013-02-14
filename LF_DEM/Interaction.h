@@ -84,7 +84,7 @@ public:
 	}
 	
 	
-	bool update(); // after particles dispacement
+	bool update(const bool switch_off_allowed=true); // after particles dispacement
 	double nearingTime();
 	double a0, a1;
 	double ro; // ro = a0 + a1

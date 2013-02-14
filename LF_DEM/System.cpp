@@ -289,9 +289,10 @@ System::checkNewInteraction(){
  * contact_pair[i][j] < -1, the particles have some distance.
  */
 void
-System::updateInteractions(){
+System::updateInteractions(const bool switch_off_allowed){
+  int active_int=0;
 	for (int k = 0; k < num_interaction; k++){
-		bool switch_off = interaction[k].update();
+		bool switch_off = interaction[k].update(switch_off_allowed);
 		if(switch_off)
 			deactivated_interaction.push(k);
 	}
@@ -502,9 +503,25 @@ void System::updateVelocityLubricationBrownian(){
     // 
     // we do not call solvingIsDone() before new solve(), because 
     // R_FU has not changed, so same factorization is safely used
-	stokes_solver->setRHS( fb->generate() );
+	stokes_solver->setRHS( fb->generate_new() );
 	
-	stokes_solver->solve( v_Brownian_init );
+
+	double vel [np3];
+	double avg_vel=0.;
+
+	stokes_solver->solve_CholTrans( v_Brownian_init );
+	//	cout << stokes_solver->chol_L->is_super <<" "<< stokes_solver->chol_L->is_ll << " "<< stokes_solver->chol_L->ordering << endl;
+	//	cout << " avg_vel_init solve_chol ";
+	 avg_vel=0.;
+	 for (int i=0; i < 3*np; i++){
+	   avg_vel += v_Brownian_init[i]*v_Brownian_init[i];
+	//   cout << " bef " << vel[i] << " " ;
+	   vel[i] = v_Brownian_init[i];
+	//   cout << vel[i] << endl;
+	 }
+	 //	 cout << sqrt(avg_vel)/(3*np) << endl;
+
+
 
 	// Brownian Stress: term R_SU * v_Brownian_init
     for (int k = 0; k < num_interaction; k++){
@@ -534,13 +551,6 @@ void System::updateVelocityLubricationBrownian(){
 	  }
     }
 
-	//cout << " avg_vel_init ";
-	double avg_vel=0.;
-	for (int i=0; i < 3*np; i++){
-	  avg_vel += v_Brownian_init[i]*v_Brownian_init[i];
-	}
-
-	//cout << sqrt(avg_vel)/(3*np) << endl;
 
 	//cout << " init ";
 
@@ -556,7 +566,7 @@ void System::updateVelocityLubricationBrownian(){
 	  int i3 = 3*i;
 	  displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
     }
-    updateInteractions();
+    updateInteractions(false);
 	
     // build new Resistance matrix after move
 	stokes_solver->solvingIsDone();
@@ -568,9 +578,21 @@ void System::updateVelocityLubricationBrownian(){
     stokes_solver->complete_RFU();
 
     // get the intermediate brownian velocity
-    stokes_solver->solve(v_Brownian_mid);
-    stokes_solver->solvingIsDone();
+	stokes_solver->solve_CholTrans( v_Brownian_mid );
 
+	//	cout << stokes_solver->chol_L->is_super <<" "<< stokes_solver->chol_L->is_ll<<" "<< stokes_solver->chol_L->ordering << endl;
+	//	cout << " avg_vel_mid solve_chol ";
+	avg_vel=0.;
+	for (int i=0; i < 3*np; i++){
+	  avg_vel += v_Brownian_mid[i]*v_Brownian_mid[i];
+	  //	  cout << " bef " << vel[i] << " " ;
+	  vel[i] = v_Brownian_mid[i];
+	  //	  cout << vel[i] << endl;
+	}
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+	
+
+    stokes_solver->solvingIsDone();
 
 
 	// Brownian Stress: term  -R_SU_mid * v_Brownian_mid
@@ -634,7 +656,7 @@ void System::updateVelocityLubricationBrownian(){
 	  int i3 = 3*i;
 	  displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
     }
-    updateInteractions();
+    updateInteractions(false);
 
     // update total velocity
     // first term is hydrodynamic + contact velocities
@@ -655,6 +677,171 @@ void System::updateVelocityLubricationBrownian(){
 	  velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
 	  velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
     }
+
+
+	// cout << " brownian_vel " << endl;
+	avg_vel=0.;
+	for (int i=0; i < np; i++){
+	  avg_vel += relative_velocity_brownian[i].x*relative_velocity_brownian[i].x + relative_velocity_brownian[i].y*relative_velocity_brownian[i].y+relative_velocity_brownian[i].z*relative_velocity_brownian[i].z;
+
+	//   cout << i << " " << relative_velocity_brownian[i].x <<endl;
+	//   cout << i << " " << relative_velocity_brownian[i].y <<endl;
+	//   cout << i << " " << relative_velocity_brownian[i].z <<endl;
+	//   cout << i << " " << avg_vel <<endl;
+	}
+	//	cout << " brownian_vel avg ";
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+	cout << ksi_min << endl;
+	if(sqrt(avg_vel)/(3*np)>10.){
+    // for (int i = 0; i < np; i++){
+	  
+	//   relative_velocity_brownian[i].x = 0.;
+	//   relative_velocity_brownian[i].y = 0.;
+	//   relative_velocity_brownian[i].z = 0.;
+	//   velocity[i].x = relative_velocity_lub_cont[i].x + relative_velocity_brownian[i].x + shear_rate*position[i].z;
+	//   velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
+	//   velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
+
+    // }
+
+	  //	  getchar();
+	}
+
+	
+    if(friction){
+	double O_inf_y = 0.5*shear_rate;
+	for (int i=0; i < np; i++){
+	    ang_velocity[i] = 1.33333*torque[i];
+	    ang_velocity[i].y += O_inf_y;
+	}
+    }
+	//	cout << endl << "before old, ksi_mis is " << ksi_min << endl;  
+	//	updateVelocityLubricationBrownian_old();
+	//	cout << endl << "after old, before new 2, ksi_mis is " << ksi_min << endl;  
+	//	updateVelocityLubricationBrownian_new_2();
+	//	cout << endl << "after new 2, ksi_mis is " << ksi_min << endl;  
+
+	delete [] step_stresslet;
+
+}
+
+
+void System::updateVelocityLubricationBrownian_old(){
+
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU("direct");
+
+    addStokesDrag();
+    buildLubricationTerms();
+
+    stokes_solver->complete_RFU();
+
+    buildContactTerms();
+	
+    stokes_solver->solve(v_lub_cont);
+
+
+    // now the Brownian part of the velocity:
+    // mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+    // 
+    // we do not call solvingIsDone() before new solve(), because 
+    // R_FU has not changed, so same factorization is safely used
+	double vel [np3];
+	double avg_vel=0.;
+
+	stokes_solver->setRHS( fb->generate() );
+	stokes_solver->solve( v_Brownian_init );
+
+	//	cout << " avg_vel_init solve ";
+	for (int i=0; i < 3*np; i++){
+	  avg_vel += v_Brownian_init[i]*v_Brownian_init[i];
+	  vel[i] = v_Brownian_init[i];
+	}
+
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+
+
+    // move particles to intermediate point
+    for (int i=0; i < np; i++){
+	  int i3 = 3*i;
+	  displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions(false);
+	
+    // build new Resistance matrix after move
+	stokes_solver->solvingIsDone();
+    stokes_solver->prepareNewBuild_RFU("direct");
+    addStokesDrag();
+    buildLubricationTerms(false); // false: don't modify rhs
+    stokes_solver->complete_RFU();
+
+    // get the intermediate brownian velocity
+	stokes_solver->solve(v_Brownian_mid);
+
+	//	cout << " avg_vel_mid solve ";
+	avg_vel=0.;
+	for (int i=0; i < 3*np; i++){
+	  avg_vel += v_Brownian_mid[i]*v_Brownian_mid[i];
+	  vel[i] = v_Brownian_mid[i];
+	}
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+    stokes_solver->solvingIsDone();
+
+    for (int i=0; i < np; i++){
+	  int i3 = 3*i;
+	  displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions(false);
+
+    // update total velocity
+    // first term is hydrodynamic + contact velocities
+    // second term is Brownian velocities
+    // third term is Brownian drift
+    // fourth term for vx is the shear rate
+    for (int i = 0; i < np; i++){
+	  int i3 = 3*i;
+	  relative_velocity_lub_cont[i].x = v_lub_cont[i3];
+	  relative_velocity_lub_cont[i].y = v_lub_cont[i3+1];
+	  relative_velocity_lub_cont[i].z = v_lub_cont[i3+2];
+	  
+	  relative_velocity_brownian[i].x = v_Brownian_init[i3] + 0.5*dt_ratio*( v_Brownian_mid[i3] - v_Brownian_init[i3] );
+	  relative_velocity_brownian[i].y = v_Brownian_init[i3+1] + 0.5*dt_ratio*( v_Brownian_mid[i3+1] - v_Brownian_init[i3+1] ); 
+	  relative_velocity_brownian[i].z = v_Brownian_init[i3+2] + 0.5*dt_ratio*( v_Brownian_mid[i3+2] - v_Brownian_init[i3+2] );
+
+	  velocity[i].x = relative_velocity_lub_cont[i].x + relative_velocity_brownian[i].x + shear_rate*position[i].z;
+	  velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
+	  velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
+    }
+
+
+	// cout << " brownian_vel " << endl;
+	avg_vel=0.;
+	for (int i=0; i < np; i++){
+	  avg_vel += relative_velocity_brownian[i].x*relative_velocity_brownian[i].x + relative_velocity_brownian[i].y*relative_velocity_brownian[i].y+relative_velocity_brownian[i].z*relative_velocity_brownian[i].z;
+
+	//   cout << i << " " << relative_velocity_brownian[i].x <<endl;
+	//   cout << i << " " << relative_velocity_brownian[i].y <<endl;
+	//   cout << i << " " << relative_velocity_brownian[i].z <<endl;
+	//   cout << i << " " << avg_vel <<endl;
+	}
+	// cout << " brownian_vel avg ";
+	// cout << sqrt(avg_vel)/(3*np) << endl;
+
+	if(sqrt(avg_vel)/(3*np)>10.){
+    // for (int i = 0; i < np; i++){
+	  
+	//   relative_velocity_brownian[i].x = 0.;
+	//   relative_velocity_brownian[i].y = 0.;
+	//   relative_velocity_brownian[i].z = 0.;
+	//   velocity[i].x = relative_velocity_lub_cont[i].x + relative_velocity_brownian[i].x + shear_rate*position[i].z;
+	//   velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
+	//   velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
+
+    // }
+
+	  //	  getchar();
+	}
+
 	
     if(friction){
 	double O_inf_y = 0.5*shear_rate;
@@ -664,10 +851,135 @@ void System::updateVelocityLubricationBrownian(){
 	}
     }
 
-	delete [] step_stresslet;
-
 }
 
+
+void System::updateVelocityLubricationBrownian_new_2(){
+
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU("direct");
+
+    addStokesDrag();
+    buildLubricationTerms();
+
+    stokes_solver->complete_RFU();
+
+    buildContactTerms();
+	
+    stokes_solver->solve(v_lub_cont);
+
+
+    // now the Brownian part of the velocity:
+    // mid-point algortithm (see Melrose & Ball), modified (intermediate tstep) a la Banchio & Brady
+    // 
+    // we do not call solvingIsDone() before new solve(), because 
+    // R_FU has not changed, so same factorization is safely used
+	double vel [np3];
+	double avg_vel=0.;
+
+	stokes_solver->setRHS( fb->generate_new_2() );
+	stokes_solver->solve( v_Brownian_init );
+
+	//	cout << " avg_vel_init solve new_2 ";
+	for (int i=0; i < 3*np; i++){
+	  avg_vel += v_Brownian_init[i]*v_Brownian_init[i];
+	  vel[i] = v_Brownian_init[i];
+	}
+
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+
+
+    // move particles to intermediate point
+    for (int i=0; i < np; i++){
+	  int i3 = 3*i;
+	  displacement(i, v_Brownian_init[i3]*dt_mid, v_Brownian_init[i3+1]*dt_mid, v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions(false);
+	
+    // build new Resistance matrix after move
+	stokes_solver->solvingIsDone();
+    stokes_solver->prepareNewBuild_RFU("direct");
+    addStokesDrag();
+    buildLubricationTerms(false); // false: don't modify rhs
+    stokes_solver->complete_RFU();
+
+    // get the intermediate brownian velocity
+	stokes_solver->solve(v_Brownian_mid);
+
+	//	cout << " avg_vel_mid solve  new_2 ";
+	avg_vel=0.;
+	for (int i=0; i < 3*np; i++){
+	  avg_vel += v_Brownian_mid[i]*v_Brownian_mid[i];
+	  vel[i] = v_Brownian_mid[i];
+	}
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+    stokes_solver->solvingIsDone();
+
+    for (int i=0; i < np; i++){
+	  int i3 = 3*i;
+	  displacement(i, -v_Brownian_init[i3]*dt_mid, -v_Brownian_init[i3+1]*dt_mid, -v_Brownian_init[i3+2]*dt_mid);
+    }
+    updateInteractions(false);
+
+    // update total velocity
+    // first term is hydrodynamic + contact velocities
+    // second term is Brownian velocities
+    // third term is Brownian drift
+    // fourth term for vx is the shear rate
+    for (int i = 0; i < np; i++){
+	  int i3 = 3*i;
+	  relative_velocity_lub_cont[i].x = v_lub_cont[i3];
+	  relative_velocity_lub_cont[i].y = v_lub_cont[i3+1];
+	  relative_velocity_lub_cont[i].z = v_lub_cont[i3+2];
+	  
+	  relative_velocity_brownian[i].x = v_Brownian_init[i3] + 0.5*dt_ratio*( v_Brownian_mid[i3] - v_Brownian_init[i3] );
+	  relative_velocity_brownian[i].y = v_Brownian_init[i3+1] + 0.5*dt_ratio*( v_Brownian_mid[i3+1] - v_Brownian_init[i3+1] ); 
+	  relative_velocity_brownian[i].z = v_Brownian_init[i3+2] + 0.5*dt_ratio*( v_Brownian_mid[i3+2] - v_Brownian_init[i3+2] );
+
+	  velocity[i].x = relative_velocity_lub_cont[i].x + relative_velocity_brownian[i].x + shear_rate*position[i].z;
+	  velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
+	  velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
+    }
+
+
+	// cout << " brownian_vel " << endl;
+	avg_vel=0.;
+	for (int i=0; i < np; i++){
+	  avg_vel += relative_velocity_brownian[i].x*relative_velocity_brownian[i].x + relative_velocity_brownian[i].y*relative_velocity_brownian[i].y+relative_velocity_brownian[i].z*relative_velocity_brownian[i].z;
+
+	//   cout << i << " " << relative_velocity_brownian[i].x <<endl;
+	//   cout << i << " " << relative_velocity_brownian[i].y <<endl;
+	//   cout << i << " " << relative_velocity_brownian[i].z <<endl;
+	//   cout << i << " " << avg_vel <<endl;
+	}
+	//	cout << " brownian_vel avg ";
+	//	cout << sqrt(avg_vel)/(3*np) << endl;
+
+	if(sqrt(avg_vel)/(3*np)>10.){
+    // for (int i = 0; i < np; i++){
+	  
+	//   relative_velocity_brownian[i].x = 0.;
+	//   relative_velocity_brownian[i].y = 0.;
+	//   relative_velocity_brownian[i].z = 0.;
+	//   velocity[i].x = relative_velocity_lub_cont[i].x + relative_velocity_brownian[i].x + shear_rate*position[i].z;
+	//   velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
+	//   velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
+
+    // }
+
+	  //	  getchar();
+	}
+
+	
+    if(friction){
+	double O_inf_y = 0.5*shear_rate;
+	for (int i=0; i < np; i++){
+	    ang_velocity[i] = 1.33333*torque[i];
+	    ang_velocity[i].y += O_inf_y;
+	}
+    }
+
+}
 
 
 void

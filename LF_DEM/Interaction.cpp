@@ -31,8 +31,10 @@ Interaction::r(double new_r){
 		ksi_eff = ksi;
 	
 	iksi_eff = 1./ksi_eff;
-	if(ksi<sys->ksi_min)
+	if(ksi<sys->ksi_min){
 	  sys->ksi_min=ksi;
+	  //	  cout <<"ksi min " << sys->ksi_min <<" held by " << particle_num[0] << " " << particle_num[1] << endl;
+	}
 }
 
 /* Make a normal vector
@@ -570,7 +572,7 @@ Interaction::deactivate_contact(){
  *   ---> deactivate
  */
 bool
-Interaction::update(){
+Interaction::update(const bool switch_off_allowed){
 	if (active){
 		// update tangential displacement: we do it before updating nr_vec
 		if (sys->friction && contact) {
@@ -578,8 +580,25 @@ Interaction::update(){
 		}
 		// compute new r_vec and distance
 		calcDistanceNormalVector();
+
+		if(switch_off_allowed){
+		  // vec3d cont_vel = sys->relative_velocity_brownian[particle_num[1]] - sys->relative_velocity_brownian[particle_num[0]];
+		  // //		  cout << ksi << " " << cont_vel.x <<" " << cont_vel.y <<" " << cont_vel.z << " " << dot(cont_vel, nr_vec) << endl;
+		  // cont_vel.x = sys->v_Brownian_init[3*particle_num[1]] - sys->v_Brownian_init[3*particle_num[0]];
+		  // cont_vel.y = sys->v_Brownian_init[3*particle_num[1]+1] - sys->v_Brownian_init[3*particle_num[0]+1];
+		  // cont_vel.z = sys->v_Brownian_init[3*particle_num[1]+2] - sys->v_Brownian_init[3*particle_num[0]+2];
+		  // cout << ksi << " " << ksi_eff << " rel_vel_B_init " << cont_vel.x <<" " << cont_vel.y <<" " << cont_vel.z << " dot nrvec " << dot(cont_vel, nr_vec) << " rel_vel_B_init " ;
+
+		  // cont_vel = sys->relative_velocity_brownian[particle_num[1]] - sys->relative_velocity_brownian[particle_num[0]];
+		  // //		  cout << ksi << " " << cont_vel.x <<" " << cont_vel.y <<" " << cont_vel.z << " " << dot(cont_vel, nr_vec) << endl;
+		  // cont_vel.x -= sys->v_Brownian_init[3*particle_num[1]] - sys->v_Brownian_init[3*particle_num[0]];
+		  // cont_vel.y -= sys->v_Brownian_init[3*particle_num[1]+1] - sys->v_Brownian_init[3*particle_num[0]+1];
+		  // cont_vel.z -= sys->v_Brownian_init[3*particle_num[1]+2] - sys->v_Brownian_init[3*particle_num[0]+2];
+		  // cout << " rel_vel_B_m_init " << cont_vel.x <<" " << cont_vel.y <<" " << cont_vel.z << " dot nrvec " << dot(cont_vel, nr_vec) ;
+		  // cout << " fb i " << ((double*)(sys->stokes_solver)->chol_rhs->x)[3*particle_num[1]] <<" " << ((double*)(sys->stokes_solver)->chol_rhs->x)[3*particle_num[1]+1] <<" " << ((double*)(sys->stokes_solver)->chol_rhs->x)[3*particle_num[1]+2] << " fb j " << ((double*)(sys->stokes_solver)->chol_rhs->x)[3*particle_num[0]] << " " <<  ((double*)(sys->stokes_solver)->chol_rhs->x)[3*particle_num[1]+1] << " " << ((double*)(sys->stokes_solver)->chol_rhs->x)[3*particle_num[1]+2] << endl;
+	}
 		// check new state of the interaction
-		if(r() > r_lub_max){
+		if(r() > r_lub_max && switch_off_allowed){
 			deactivate();
 			return true;
 		} else {

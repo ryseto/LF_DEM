@@ -251,7 +251,8 @@ StokesSolver::complete_RFU_cholmod(){
 
 	factorizeRFU();
 
-	//		print_RFU();
+
+	//	print_RFU();
 
 
 	// double vb_avg = 0;
@@ -413,10 +414,48 @@ void
 StokesSolver::solve_CholTrans(double* velocity){
 
 	if(direct()){
-		chol_solution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
-		for (int i = 0; i < linalg_size; i++){
-			velocity[i] = ((double*)chol_solution->x)[i];
+	  
+	  chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
+	  chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
+
+		for (int i = 0; i < 5; i++){
+		  //cout <<"rhs solveChol " <<  i << " " << ((double*)chol_rhs->x)[i] << endl;
 		}
+		cholmod_factor *Lc = cholmod_copy_factor(chol_L, &chol_c);
+		cholmod_sparse *L_sparse = cholmod_factor_to_sparse(Lc,  &chol_c);
+		for (int i = 0; i < 5; i++){
+		  //cout <<"L_factor " <<  i << " " << ((double*)L_sparse->x)[i] << " " << ((int*)L_sparse->i)[i] << " "<< ((int*)L_sparse->p)[i] <<  endl;
+		}
+		for (int i = 0; i < 5; i++){
+		  //cout <<"RFU " <<  i << " " << ((double*)chol_rfu_matrix->x)[i] << endl;
+		}
+		double one [2] = {1,0}, m1 [2] = {-1,0}, m0 [2]= {0,0} ;
+		cholmod_dense *r = cholmod_copy_dense (chol_rhs, &chol_c) ;
+		cholmod_sdmult (L_sparse, 1, m1, one, chol_solution, r, &chol_c) ;
+		//printf ("norm(b-Ax) %8.10e\n",
+		//	cholmod_norm_dense (r, 0, &chol_c)) ;
+
+		//printf ("norm(rfu) %8.10e\n",
+	//				cholmod_norm_dense (cholmod_sparse_to_dense(chol_rfu_matrix, &chol_c), 0, &chol_c)) ;
+		//printf ("norm(L) %8.10e\n",
+//				cholmod_norm_dense (cholmod_sparse_to_dense(L_sparse, &chol_c), 0, &chol_c)) ;
+
+		//		//printf ("norm(rfu) %8.1e\n",
+		//				cholmod_norm_dense (cholmod_sparse_to_dense(chol_rfu_matrix, &chol_c), 2, &chol_c)) ;
+
+		//		cholmod_print_sparse(chol_rfu_matrix, "R_FU", &chol_c);
+		cholmod_free_dense(&r, &chol_c);
+		cholmod_free_factor(&Lc, &chol_c);
+		cholmod_free_sparse(&L_sparse, &chol_c);
+
+		cholmod_free_sparse(&chol_rfu_copy, &chol_c);
+		chol_rfu_copy = cholmod_copy_sparse(chol_rfu_matrix, &chol_c);
+
+
+
+	  for (int i = 0; i < linalg_size; i++){
+		velocity[i] = ((double*)chol_solution->x)[i];
+	  }
 	}
 
 
@@ -435,7 +474,9 @@ StokesSolver::solve(double* velocity){
 	if(direct()){
 
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
-
+		for (int i = 0; i < 5; i++){
+		  //	  cout <<"rhs solve " <<  i << " " << ((double*)chol_rhs->x)[i] << endl;
+		}
 		for (int i = 0; i < linalg_size; i++){
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
@@ -496,7 +537,6 @@ void
 StokesSolver::solvingIsDone(){
 	if(direct()){
 		cholmod_free_factor(&chol_L, &chol_c);
-
 		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
 		//	cholmod_free_dense(&chol_rhs, &chol_c);
 
@@ -695,8 +735,15 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
 void
 StokesSolver::factorizeRFU(){
-    chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
-    cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  // chol_c.final_super=0;
+  // chol_c.final_ll=1;
+  // chol_c.supernodal = CHOLMOD_SIMPLICIAL;
+  chol_c.print = 0;
+  chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
+  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  cholmod_print_factor (chol_L, "L", &chol_c);
+  cholmod_print_sparse (chol_rfu_matrix, "RFU'", &chol_c);
 
     if(chol_c.status){
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
@@ -936,10 +983,10 @@ StokesSolver::print_RFU(){
 
 if(direct()){
 	cout << endl<< " chol rfu " << endl;
-    for(int i = 0; i < linalg_size; i++){
-		for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
-			cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
-		}
+	for(int i = 0; i < linalg_size; i++){
+	  for(int k =((int*)chol_rfu_matrix->p)[i] ; k < ((int*)chol_rfu_matrix->p)[i+1]; k++){
+		cout << i << " " << ((int*)chol_rfu_matrix->i)[k] << " " << ((double*)chol_rfu_matrix->x)[k] << endl;
+	  }
 	}
  }
 

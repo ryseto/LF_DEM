@@ -63,9 +63,6 @@ private:
 	int max_lub_int;
 
 	// rhs vector building
-	double *v_lub_cont;
-	double *v_Brownian_init;
-	double *v_Brownian_mid;
 
 	BoxSet* boxset;
 	void print_res();
@@ -73,6 +70,11 @@ private:
 	
 protected:
 public:
+	double *v_lub_cont;
+	double *v_Brownian_init;
+	double *v_Brownian_mid;
+
+
     /* For DEMsystem
      */
 	System(){};
@@ -220,7 +222,7 @@ public:
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteractions();
+	void updateInteractions(const bool switch_off_allowed=true);
 	void calcContactForces();
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
@@ -232,6 +234,8 @@ public:
 	void updateVelocity();
 	void updateVelocityLubrication();
 	void updateVelocityLubricationBrownian();
+	void updateVelocityLubricationBrownian_old();
+	void updateVelocityLubricationBrownian_new_2();
 	void deltaTimeEvolution();
 	void forceReset();
 	void torqueReset();
