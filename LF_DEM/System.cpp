@@ -43,6 +43,12 @@ System::~System(){
 	if (!torque)
 		delete [] torque;
 
+	if (!interaction)
+		delete [] interaction;
+
+	for(int i=0; i<np; i++){
+	  interaction_list[i].clear();
+	}
 	if (!interaction_list)
 		delete [] interaction_list;
 	if (!interaction_partners)
@@ -284,9 +290,10 @@ System::checkNewInteraction(){
  * contact_pair[i][j] < -1, the particles have some distance.
  */
 void
-System::updateInteractions(){
+System::updateInteractions(const bool switch_off_allowed){
+  int active_int=0;
 	for (int k = 0; k < num_interaction; k++){
-		bool switch_off = interaction[k].update();
+		bool switch_off = interaction[k].update(switch_off_allowed);
 		if(switch_off)
 			deactivated_interaction.push(k);
 	}
@@ -492,22 +499,30 @@ void System::updateVelocityLubricationBrownian(){
 				   v_Brownian_init[i3+1]*dt_mid*zero_2Dsimu,
 				   v_Brownian_init[i3+2]*dt_mid);
     }
-    updateInteractions();
+    updateInteractions(false);
 	
     // build new Resistance matrix after move
 	stokes_solver->solvingIsDone();
-	//	stokes_solver->convertDirectToIterative();
-	//  stokes_solver->prepareNewBuild_RFU("iterative");
+
     stokes_solver->prepareNewBuild_RFU("direct");
     addStokesDrag();
     buildLubricationTerms(false); // false: don't modify rhs
     stokes_solver->complete_RFU();
 
     // get the intermediate brownian velocity
-    stokes_solver->solve(v_Brownian_mid);
+	stokes_solver->solve_CholTrans( v_Brownian_mid );
+
     stokes_solver->solvingIsDone();
 
 	brownianstress_calc_nb ++;
+
+	//cout << " total ";
+	for (int u=0; u < 5; u++){
+	  total_step_stresslet.elm[u] *= 0.5*dt_ratio;
+	  //cout << total_step_stresslet.elm[u]/np << " " ;	  
+	}
+	//cout << endl;
+
 
     // move particles back to initial point, and update interactions
     //
@@ -521,7 +536,7 @@ void System::updateVelocityLubricationBrownian(){
 				   -v_Brownian_init[i3+1]*dt_mid*zero_2Dsimu,
 				   -v_Brownian_init[i3+2]*dt_mid);
     }
-    updateInteractions();
+    updateInteractions(false);
 
     // update total velocity
     // first term is hydrodynamic + contact velocities
@@ -543,7 +558,8 @@ void System::updateVelocityLubricationBrownian(){
 		velocity[i].y = relative_velocity_lub_cont[i].y + relative_velocity_brownian[i].y;
 		velocity[i].z = relative_velocity_lub_cont[i].z + relative_velocity_brownian[i].z;
     }
-	
+
+
     if(friction){
 		double O_inf_y = 0.5*shear_rate;
 		for (int i=0; i < np; i++){
@@ -553,7 +569,6 @@ void System::updateVelocityLubricationBrownian(){
     }
 
 }
-
 
 
 void
@@ -665,9 +680,10 @@ System::deltaTimeEvolution(){
 	// update boxing system
 	boxset->update();
 	
+	ksi_min=1.;
 	checkNewInteraction();
 	updateInteractions();
-
+	//	//cout << " ksi_min " << ksi_min;
 }
 
 /*

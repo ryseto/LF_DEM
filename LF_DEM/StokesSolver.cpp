@@ -23,8 +23,10 @@ StokesSolver::StokesSolver(int n, bool is_brownian){
 
 }
 StokesSolver::~StokesSolver(){
-    #ifdef CHOLMOD
-	if (!diag_values)
+    off_diag_values[0].clear();
+    off_diag_values[1].clear();
+    off_diag_values[2].clear();
+    if (!diag_values)
 		delete [] diag_values;
 	if (!off_diag_values )
 		delete [] off_diag_values;
@@ -41,7 +43,6 @@ StokesSolver::~StokesSolver(){
 
 	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
 	cholmod_finish(&chol_c);
-#endif
 
 #ifdef TRILINOS
 	for (int i=0; i < linalg_size; i++)
@@ -263,6 +264,7 @@ StokesSolver::complete_RFU_cholmod(){
 	// }
 	// cout << " lub_rhs " << sqrt(vb_avg)/vb_avg_nb << " ";
 
+	//	print_RFU();
 
 
 }
@@ -413,10 +415,15 @@ void
 StokesSolver::solve_CholTrans(double* velocity){
 
 	if(direct()){
-		chol_solution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
-		for (int i = 0; i < linalg_size; i++){
-			velocity[i] = ((double*)chol_solution->x)[i];
-		}
+	  
+	  chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
+	  chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
+
+	  for (int i = 0; i < linalg_size; i++){
+		velocity[i] = ((double*)chol_solution->x)[i];
+	  }
+	  cholmod_free_dense(&chol_solution, &chol_c);
+	  cholmod_free_dense(&chol_PTsolution, &chol_c);
 	}
 
 
@@ -438,6 +445,7 @@ StokesSolver::solve(double* velocity){
 		for (int i = 0; i < linalg_size; i++){
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
+		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 
 
@@ -494,10 +502,9 @@ void
 StokesSolver::solvingIsDone(){
 	if(direct()){
 		cholmod_free_factor(&chol_L, &chol_c);
-
 		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
 		//	cholmod_free_dense(&chol_rhs, &chol_c);
-		cholmod_free_dense(&chol_solution, &chol_c);
+
 	}
 #ifdef TRILINOS
 	if(iterative()){
@@ -636,8 +643,7 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     // declare ii and jj new columns, and update column nb
     int last_col_nb_ii = columns_nb[ii3];
     int last_col_nb_jj = columns_nb[jj3];
-    // cout << " last_col_nb_ii " << last_col_nb_ii << endl;
-    // cout << " last_col_nb_jj " << last_col_nb_jj << endl;
+
     columns[ii3  ][last_col_nb_ii  ] = jj3  ;
     columns[ii3  ][last_col_nb_ii+1] = jj3_1;
     columns[ii3  ][last_col_nb_ii+2] = jj3_2;
@@ -693,8 +699,15 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
 void
 StokesSolver::factorizeRFU(){
-    chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
-    cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  // chol_c.final_super=0;
+  // chol_c.final_ll=1;
+  // chol_c.supernodal = CHOLMOD_SIMPLICIAL;
+  chol_c.print = 0;
+  chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
+  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  cholmod_print_factor (chol_L, "L", &chol_c);
+  cholmod_print_sparse (chol_rfu_matrix, "RFU'", &chol_c);
 
     if(chol_c.status){
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
@@ -870,7 +883,24 @@ StokesSolver::setIncCholPreconditioner(){
 #endif
 
 
+#ifdef TRILINOS
+void
+StokesSolver::matrixChol2Tril(const cholmod_sparse *C, Epetra_CrsMatrix* &T){
+  
+  vector <double> row_values;
+  vector <int> row_indices;
+
+  for(int i=0; i< linalg_size;i++){
+	int nz = C->
+	C->x
+
+  }
+  
+}
+#endif
+
 #ifdef CHOLMOD_EXTRA
+
 /* 
   setSpInvPreconditioner() :
   A sparse inverse (left-)preconditioner.
@@ -883,8 +913,6 @@ StokesSolver::setSpInvPreconditioner(){
   
   cholmod_free_sparse(&sparse_inv, &chol_c);
 }    
-
-
 
 #endif
 

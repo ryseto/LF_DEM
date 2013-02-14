@@ -64,13 +64,19 @@ class StokesSolver{
 	bool _direct;
 
 	// Cholmod variables
+
+    cholmod_factor *chol_L ;
+    cholmod_common chol_c ;
+    cholmod_dense *chol_rhs;	
     cholmod_sparse *chol_rfu_matrix;
+
     cholmod_dense *chol_solution;
+    cholmod_dense *chol_PTsolution;
     cholmod_dense *chol_v_nonBrownian;
     cholmod_dense *chol_v_Brownian_init;
     cholmod_dense *chol_v_Brownian_mid;
     cholmod_dense *chol_brownian_rhs;
-    cholmod_dense *chol_rhs;
+	
     int stype;
     int sorted;
     int packed;
@@ -249,9 +255,6 @@ class StokesSolver{
     void solvingIsDone();
 
 
-
-    cholmod_factor *chol_L ;
-    cholmod_common chol_c ;
 
 };
 #endif /* defined(__LF_DEM__StokesSolver__) */

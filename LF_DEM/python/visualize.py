@@ -79,5 +79,5 @@ pos_stream=Pos_Stream(stream, part_nb, phi)
 init_visualization()
 while pos_stream.get_snapshot():
     update_visualization()
-    visual.rate(30)
+    visual.rate(10)
 
