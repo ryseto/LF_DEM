@@ -658,10 +658,10 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].particle_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].particle_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
-			fout_interaction << sys.interaction[k].Fc_normal << sp; // 5
-			fout_interaction << sys.interaction[k].Fc_tangent.x << sp; // 6
-			fout_interaction << sys.interaction[k].Fc_tangent.y << sp; // 6
-			fout_interaction << sys.interaction[k].Fc_tangent.z << sp; // 6
+			fout_interaction << sys.interaction[k].normal_force() << sp; // 5
+			fout_interaction << sys.interaction[k].tangential_force().x << sp; // 6
+			fout_interaction << sys.interaction[k].tangential_force().y << sp; // 6
+			fout_interaction << sys.interaction[k].tangential_force().z << sp; // 6
 			fout_interaction << sys.interaction[k].nr_vec.x << sp;
 			fout_interaction << sys.interaction[k].nr_vec.y << sp;
 			fout_interaction << sys.interaction[k].nr_vec.z << sp;
@@ -758,7 +758,7 @@ Simulation::output_yap(){
 				else
 					fout_yap << "@ " << color_orange << endl;
 				int i = sys.interaction[k].particle_num[0];
-				fout_yap << "r " << yap_force_factor*sys.interaction[k].Fc_tangent.norm()  << endl;
+				fout_yap << "r " << yap_force_factor*sys.interaction[k].tangential_force().norm()  << endl;
 				drawLine('s', pos[i], sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
 				int j = sys.interaction[k].particle_num[1];
 				drawLine('s', pos[j], -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);

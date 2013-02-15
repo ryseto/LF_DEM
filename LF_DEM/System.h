@@ -50,6 +50,8 @@ private:
 	double system_volume;
 	double radius_max;
 
+	void calcContactForces();
+
 	void buildLubricationTerms(bool);
 	void buildContactTerms();
 	void addStokesDrag();
@@ -223,7 +225,6 @@ public:
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions(const bool switch_off_allowed=true);
-	void calcContactForces();
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
