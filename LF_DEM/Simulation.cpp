@@ -245,6 +245,12 @@ Simulation::setDefaultParameters(){
 	sys.dt = 1e-4;
 	sys.dt_ratio = 2;
 	/*
+	 * integration_method:
+	 * 0, Euler's Method
+	 * 1,  
+	 */
+	sys.integration_method = 1;
+	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
 	 *  shear_strain: total strain (length of simulation)
@@ -347,6 +353,8 @@ Simulation::setDefaultParameters(){
 	 * output pair trajeectory
 	 */
 	sys.out_pairtrajectory = false;
+	
+	
 }
 
 void
@@ -428,6 +436,11 @@ Simulation::prepareSimulationName(){
 
 void
 Simulation::evaluateData(){
+	
+	sys.calcStress();
+	sys.analyzeState();
+	
+	
 	double total_stress[5];
 	for (int u=0; u<5; u++){
 		total_stress[u] = sys.total_lub_stress[u] + sys.total_contact_stress[u];
