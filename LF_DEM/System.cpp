@@ -211,7 +211,6 @@ System::timeEvolution(int time_step){
 	while (ts < ts_next){
 		forceReset();
 		torqueReset();
-		calcContactForces();
 		if (lubrication){
 			// Lubrication dynamics
 			if(brownian){
@@ -342,6 +341,7 @@ System::stressBrownianReset(){
 void
 System::updateVelocity(){
 	vec3d U_inf(0, 0, 0);
+	calcContactForces();
 	for (int i=0; i < np; i++){
 		U_inf.x = shear_rate*position[i].z;
 		relative_velocity[i] = (1.0/eta)*total_force[i];
@@ -404,7 +404,26 @@ System::buildLubricationTerms(bool rhs=true){
 }
 
 void
+System::calcContactForces(){
+  for (int i = 0; i < np; i++){
+	  contact_force[i].reset();
+  }
+  
+  for (int k=0; k < num_interaction; k++){
+	  int i = interaction[k].particle_num[0];
+	  int j = interaction[k].particle_num[1];
+	  interaction[k].addUpContactForce(contact_force[i], contact_force[j]);
+	  //	  interaction[k].addUpContactTorque(contact_torque[i], contact_torque[j]);
+	  total_force[i]+=contact_force[i];
+	  total_force[j]+=contact_force[j];
+  }
+
+}
+
+void
 System::buildContactTerms(){
+	calcContactForces();
+
     // add contact force
     for (int i = 0; i < np; i++){
 		int i3 = 3*i;
@@ -515,7 +534,6 @@ void System::updateVelocityLubricationBrownian(){
     stokes_solver->solvingIsDone();
 
 	brownianstress_calc_nb ++;
-
 	//cout << " total ";
 	for (int u=0; u < 5; u++){
 	  total_step_stresslet.elm[u] *= 0.5*dt_ratio;
@@ -525,10 +543,6 @@ void System::updateVelocityLubricationBrownian(){
 
 
     // move particles back to initial point, and update interactions
-    //
-    // Note that, although it looks like a complete reversal of the initial move (as it should be), 
-    // the final state we obtain can be slightly different than the initial one, as the 1st move's update of the interaction
-    // might switch off some of them. The 2nd move's update is not able to switch them back on.
     for (int i=0; i < np; i++){
 	  int i3 = 3*i;
 	  displacement(i,
@@ -683,7 +697,7 @@ System::deltaTimeEvolution(){
 	ksi_min=1.;
 	checkNewInteraction();
 	updateInteractions();
-	//	//cout << " ksi_min " << ksi_min;
+	cout << " ksi_min " << ksi_min << endl;
 }
 
 /*
@@ -806,19 +820,6 @@ System::analyzeState(){
 	}
 	nearing_time_record.clear();
 	
-}
-
-void
-System::calcContactForces(){
-	if (friction){
-		for (int k=0; k < num_interaction; k++){
-			interaction[k].calcContactInteraction();
-		}
-	} else {
-		for (int k=0; k < num_interaction; k++){
-			interaction[k].calcContactInteractionNoFriction();
-		}
-	}
 }
 
 void

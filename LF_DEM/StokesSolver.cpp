@@ -702,12 +702,13 @@ StokesSolver::factorizeRFU(){
   // chol_c.final_super=0;
   // chol_c.final_ll=1;
   // chol_c.supernodal = CHOLMOD_SIMPLICIAL;
-  chol_c.print = 0;
+  //  chol_c.print = 4;
   chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
+  //  cholmod_print_factor (chol_L, "L", &chol_c);
   cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
-  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
-  cholmod_print_factor (chol_L, "L", &chol_c);
-  cholmod_print_sparse (chol_rfu_matrix, "RFU'", &chol_c);
+  //  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+  // cholmod_print_factor (chol_L, "L", &chol_c);
+  // cholmod_print_sparse (chol_rfu_matrix, "RFU'", &chol_c);
 
     if(chol_c.status){
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite

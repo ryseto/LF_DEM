@@ -14,9 +14,8 @@ Interaction::init(System *sys_){
 	contact = false;
 	active = false;
 	Fc_normal = 0;
-	
-	//	twothird = 2./3.;
-	//	onesixth = 1./6.;
+	friction = sys->friction;
+
 }
 
 
@@ -31,15 +30,15 @@ Interaction::r(double new_r){
 		ksi_eff = ksi;
 	
 	iksi_eff = 1./ksi_eff;
-	// if(ksi<sys->ksi_min){
-	//   sys->ksi_min=ksi;
-	// }
+	if(ksi<sys->ksi_min){
+	   sys->ksi_min=ksi;
+	}
 }
 
 /* Make a normal vector
  * Periodic boundaries are checked for all partices.
- * vector from particle 1 to particle 0. ( i --> j)
- * pd_x, pd_y, pd_z : Periodic boundary condition
+ * vector from particle 0 to particle 1. ( i --> j)
+ * pd_z : Periodic boundary condition
  */
 void
 Interaction::calcNormalVector(){
@@ -107,11 +106,20 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		Fc_normal = -sys->kn*ksi;
-		if (static_friction){
-			calcStaticFriction();
-		} else {
-			calcDynamicFriction();
+		Fc_normal = sys->kn*ksi;
+
+		if(friction){
+
+			if(static_friction){
+				calcStaticFriction();
+			} else {
+				calcDynamicFriction();
+			}
+
+			vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
+			Tc_0 = a0*t_ij;
+			Tc_1 = a1*t_ij;
+			//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 		}
 		
 		vec3d f_ij = - Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
@@ -126,16 +134,30 @@ Interaction::calcContactInteraction(){
 	}
 }
 
+
 void
-Interaction::calcContactInteractionNoFriction(){
+Interaction::addUpContactForce(vec3d &force0, vec3d &force1){
+  vec3d f_ij;
 	if (contact){
-		Fc_normal = sys->kn*ksi;
-		sys->contact_force[ particle_num[0] ] -= Fc_normal * nr_vec;
-		sys->contact_force[ particle_num[1] ] += Fc_normal * nr_vec;
-		sys->total_force[ particle_num[0] ] -= Fc_normal * nr_vec;
-		sys->total_force[ particle_num[1] ] += Fc_normal * nr_vec;
+
+	  if(friction)
+		f_ij = Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
+	  else
+		f_ij = Fc_normal * nr_vec;
+
+	  force0 += f_ij;
+	  force1 -= f_ij;
 	}
 }
+
+void
+Interaction::addUpContactTorque(vec3d &torque0, vec3d &torque1){
+  if (contact&&friction){
+	  sys->torque[particle_num[0]] += Tc_0;
+	  sys->torque[particle_num[1]] += Tc_1;
+  }
+}
+
 
 /* Relative velocity of particle 1 from particle 0.
  *
@@ -192,26 +214,25 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 	XAji = XAij;
 	XAjj = XAii / lambda;
 
-	prev_iksi_eff = iksi_eff;
 }
 
-void
-Interaction::prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj){
-	double g1_l;
-	double l1, l13;
+// void
+// Interaction::prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj){
+// 	double g1_l;
+// 	double l1, l13;
 
-	l1 = 1.0 + lambda;
-	l13 = l1 * l1 * l1;
+// 	l1 = 1.0 + lambda;
+// 	l13 = l1 * l1 * l1;
 
 	
-	g1_l = 2.0 * lambda * lambda / l13;
+// 	g1_l = 2.0 * lambda * lambda / l13;
 	
-	prev_XAii = g1_l * prev_iksi_eff;
-	prev_XAij = - 2 * prev_XAii / l1;
-	prev_XAji = prev_XAij;
-	prev_XAjj = prev_XAii / lambda;
+// 	prev_XAii = g1_l * prev_iksi_eff;
+// 	prev_XAij = - 2 * prev_XAii / l1;
+// 	prev_XAji = prev_XAij;
+// 	prev_XAjj = prev_XAii / lambda;
 
-}
+// }
 
 
 void
@@ -507,7 +528,6 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 		near = false;
 	}
 
-	prev_iksi_eff = 0;
 	return;
 }
 
@@ -543,6 +563,27 @@ Interaction::deactivate_contact(){
 	Fc_tangent.reset();
 }
 
+
+bool
+Interaction::updateState(bool switch_off_allowed){
+	
+	if(r() > r_lub_max && switch_off_allowed){
+		deactivate();
+		return true;
+	} else {
+		if (contact){
+			if (r() > ro ){
+				deactivate_contact();
+			}
+		} else {
+			// contact false:
+			if (r() <= ro){
+				activate_contact();
+			} 
+		}
+	}
+	return false;
+}
 /*
  * update()
  *  return `true' if r > r_lub_max 
@@ -550,6 +591,7 @@ Interaction::deactivate_contact(){
  */
 bool
 Interaction::update(const bool switch_off_allowed){
+	bool switched_off = false;
 	if (active){
 		// update tangential displacement: we do it before updating nr_vec
 		if (sys->friction && contact) {
@@ -559,22 +601,11 @@ Interaction::update(const bool switch_off_allowed){
 		calcDistanceNormalVector();
 
 		// check new state of the interaction
-		if(r() > r_lub_max && switch_off_allowed){
-			deactivate();
-			return true;
-		} else {
-			if (contact){
-				if (r() > ro ){
-					deactivate_contact();
-				}
-			} else {
-				// contact false:
-				if (r() <= ro){
-					activate_contact();
-				} 
-			}
-		}
-		
+		switched_off = updateState(switch_off_allowed);
+
+		// compute new contact forces if needed
+		calcContactInteraction();
+
 		if ( near == false ){
 			if (ksi < sys->dist_near*0.5*ro){
 				near = true;
@@ -593,7 +624,7 @@ Interaction::update(const bool switch_off_allowed){
 		}
 
 	}
-	return false;
+	return switched_off;
 }
 
 /*
