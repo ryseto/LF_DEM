@@ -395,6 +395,25 @@ StokesSolver::addToRHS(int i, double val){
 
 }
 
+void
+StokesSolver::addToRHS(double *rhs){
+
+	if(direct()){
+		for (int i = 0; i < linalg_size; i++){
+			((double*)chol_rhs->x)[i] += rhs[i];
+		}
+	}
+
+#ifdef TRILINOS
+	if(iterative()){
+		for (int i = 0; i < linalg_size; i++){
+			tril_rhs->SumIntoGlobalValue( i, 0, rhs[i]);
+		}
+	}
+#endif
+
+}
+
 
 void
 StokesSolver::setRHS(double* rhs){
@@ -408,6 +427,20 @@ StokesSolver::setRHS(double* rhs){
 		cerr << " Error : StokesSolver::setRHS(double* rhs) not implemented for TRILINOS yet ! " << endl;
 		exit(1);
 	}
+}
+
+void
+StokesSolver::getRHS(double* rhs){
+	if(direct()){
+		for (int i = 0; i < linalg_size; i++){
+		   rhs[i] = ((double*)chol_rhs->x)[i];
+		}
+	}
+#ifdef TRILINOS
+	if(iterative()){
+		tril_rhs->ExtractCopy(rhs);
+	}
+#endif
 }
 
 

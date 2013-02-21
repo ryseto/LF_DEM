@@ -58,16 +58,23 @@ private:
 	void displacement(int i, const vec3d &dr);
 	void setContactForceToParticle();
 	void buildLubricationTerms(bool);
+	void buildLubricationRHS();
 	void buildContactTerms();
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
+
+
+	void calcBrownianStress();
+	double *lub_cont_forces_init;
 	
 protected:
 public:
 	double *v_lub_cont;
+	double *v_lub_cont_mid;
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
+
     /* For DEMsystem
      */
 	System(){};

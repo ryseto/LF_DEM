@@ -224,7 +224,9 @@ class StokesSolver{
 
     void resetRHS();
     void addToRHS(int, const double);
+    void addToRHS(double*);
     void setRHS(double*);
+    void getRHS(double*);
 
     /* 
     solve(double* velocity) :
