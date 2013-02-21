@@ -33,8 +33,6 @@ class Interaction;
 class BrownianForce;
 class BoxSet;
 
-
-
 class System{
 private:
 	int np3;
@@ -49,34 +47,27 @@ private:
 	double _lz2; // =lz/2
 	double system_volume;
 	double radius_max;
-
-	void calcContactForces();
-
-	void buildLubricationTerms(bool);
-	void buildContactTerms();
-	void addStokesDrag();
-
-
-	void updateResistanceMatrix();
-
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
-
-	// rhs vector building
-
 	BoxSet* boxset;
-	void print_res();
 
+	void timeEvolutionEulersMethod();
+	void timeEvolutionPredictorCorrectorMethod();
+	void displacement(int i, const vec3d &dr);
+	void setContactForceToParticle();
+	void buildLubricationTerms(bool);
+	void buildContactTerms();
+	void addStokesDrag();
+	void updateResistanceMatrix();
+	void print_res();
 	
 protected:
 public:
 	double *v_lub_cont;
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
-
-
     /* For DEMsystem
      */
 	System(){};
@@ -88,10 +79,14 @@ public:
 	double *radius;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
+	vector <vec3d> velocity_mp1st;
+	vector <vec3d> velocity_mp2nd;
 	vec3d *relative_velocity;
 	vec3d *relative_velocity_lub_cont;
 	vec3d *relative_velocity_brownian;
 	vec3d *ang_velocity;
+	vector <vec3d> ang_velocity_mp1st;
+	vector <vec3d> ang_velocity_mp2nd;
 	vec3d *total_force;
 	vec3d *lubrication_force;
 	vec3d *contact_force;
@@ -123,6 +118,8 @@ public:
 	bool lubrication;
 	bool friction;
 	bool brownian;
+	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
+
 	double diag_stokes_drag;
 	double bgf_factor;
 	bool poly;
@@ -228,14 +225,19 @@ public:
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
-	void displacement(int i, const double &dx_, const double &dy, const double &dz);
+
+
 	void periodize(vec3d &);
 	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void updateVelocity();
 	void updateVelocityLubrication();
+	void updateVelocityLubrication(vector<vec3d> &velocity_, vector<vec3d> &ang_velocity_);
 	void updateVelocityLubricationBrownian();
 	void deltaTimeEvolution();
+	void deltaTimeEvolution_firststep();
+	void deltaTimeEvolution_secondstep();
+
 	void forceReset();
 	void torqueReset();
 	void stressReset();
@@ -260,7 +262,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
-	double ksi_min;
+//	double ksi_min;
 
 };
 #endif /* defined(__LF_DEM__System__) */

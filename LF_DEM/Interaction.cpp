@@ -22,17 +22,14 @@ Interaction::init(System *sys_){
 void 
 Interaction::r(double new_r){
 	_r = new_r;
-	ksi = 2 * _r / ro - 2.;
+	_gap = 2 * _r / ro - 2.;
 	//	iksi = 1./ksi;
-	if( ksi < ksi_cutoff )
-		ksi_eff = ksi_cutoff;
+	if( _gap < gap_cutoff )
+		gap_eff = gap_cutoff;
 	else
-		ksi_eff = ksi;
+		gap_eff = _gap;
 	
-	iksi_eff = 1./ksi_eff;
-	if(ksi<sys->ksi_min){
-	   sys->ksi_min=ksi;
-	}
+	inv_gap_eff = 1./gap_eff;
 }
 
 /* Make a normal vector
@@ -106,7 +103,8 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		Fc_normal = sys->kn*ksi;
+
+		Fc_normal = sys->kn*_gap; // maybe _r - ro is better?
 
 		if(friction){
 
@@ -121,22 +119,32 @@ Interaction::calcContactInteraction(){
 			Tc_1 = a1*t_ij;
 			//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 		}
+		
+		vec3d f_ij = - Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
+		vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
+		sys->contact_force[particle_num[0]] += f_ij;
+		sys->contact_force[particle_num[1]] -= f_ij;
+		sys->total_force[particle_num[0]] += f_ij;
+		sys->total_force[particle_num[1]] -= f_ij;
+		sys->torque[particle_num[0]] = a0*t_ij;
+		sys->torque[particle_num[1]] = a1*t_ij;
+		//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 	}
 }
 
 
 void
 Interaction::addUpContactForce(vec3d &force0, vec3d &force1){
-  vec3d f_ij;
+	vec3d f_ij;
 	if (contact){
-
-	  if(friction)
-		f_ij = Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
-	  else
-		f_ij = Fc_normal * nr_vec;
-
-	  force0 += f_ij;
-	  force1 -= f_ij;
+		
+		if(friction)
+			f_ij = Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
+		else
+			f_ij = Fc_normal * nr_vec;
+		
+		force0 += f_ij;
+		force1 -= f_ij;
 	}
 }
 
@@ -199,7 +207,7 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 
 	g1_l = 2.0 * lambda * lambda / l13;
 	
-	XAii = g1_l * iksi_eff;
+	XAii = g1_l * inv_gap_eff;
 	XAij = - 2 * XAii / l1;
 	XAji = XAij;
 	XAjj = XAii / lambda;
@@ -234,7 +242,7 @@ Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 	double g1_l = 2.0 * lambda * lambda / l13;
 
 	
-	XGii = 1.5 * g1_l * iksi_eff;
+	XGii = 1.5 * g1_l * inv_gap_eff;
 	XGij = - 4 * XGii / l1 / l1 ;
 	XGjj = - XGii / lambda;
 	XGji = - 4 * XGjj / il1 / il1 ;
@@ -246,7 +254,7 @@ Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
 	double l13 = l1 * l1 * l1;
 	double g1_l = 2.0 * lambda * lambda / l13;
 
-	XMii = 0.6 * g1_l * iksi_eff;
+	XMii = 0.6 * g1_l * inv_gap_eff;
 	XMij = 40*lambda / 3 / l13 * XMii ;
 	XMji = XMij;
 	XMjj = XMii/lambda;
@@ -497,7 +505,7 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 		contact = true;
 	lambda = a1 / a0;
 	invlambda = 1 / lambda;
-	ksi_cutoff = sys->gap_cutoff;
+	gap_cutoff = sys->gap_cutoff;
 	r_lub_max = 0.5*ro*sys->lub_max;
 	assignDistanceNormalVector(pos_diff, distance, zshift);
 
@@ -517,10 +525,8 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	} else {
 		near = false;
 	}
-
 	return;
 }
-
 
 void
 Interaction::deactivate(){
@@ -574,6 +580,7 @@ Interaction::updateState(bool switch_off_allowed){
 	}
 	return false;
 }
+
 /*
  * update()
  *  return `true' if r > r_lub_max 
@@ -589,7 +596,7 @@ Interaction::update(const bool switch_off_allowed){
 		}
 		// compute new r_vec and distance
 		calcDistanceNormalVector();
-
+		
 		// check new state of the interaction
 		switched_off = updateState(switch_off_allowed);
 
@@ -597,12 +604,12 @@ Interaction::update(const bool switch_off_allowed){
 		calcContactInteraction();
 
 		if ( near == false ){
-			if (ksi < sys->dist_near*0.5*ro){
+			if (_gap < sys->dist_near*0.5*ro){
 				near = true;
 				strain_near_contact = sys->shear_strain;
 			}
 		} else {
-			if (ksi > sys->dist_near*0.5*ro){
+			if (_gap > sys->dist_near*0.5*ro){
 				/*
 				 * Separate
 				 */
@@ -612,7 +619,6 @@ Interaction::update(const bool switch_off_allowed){
 				near = false;
 			}
 		}
-
 	}
 	return switched_off;
 }
@@ -644,5 +650,5 @@ Interaction::nearingTime(){
 void
 Interaction::recordTrajectory(){
 	trajectory.push_back(r_vec);
-	gap_history.push_back(ksi);
+	gap_history.push_back(_gap);
 }

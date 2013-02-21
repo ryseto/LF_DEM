@@ -30,18 +30,16 @@ private:
 	//======= relative position/velocity data  =========//
 	double _r; // center-center distance
 	int pd_z;
-	double ksi; // gap between particles
-	double ksi_cutoff; // small cut-off for ksi: lubrication breakdown
-	double ksi_eff;  // max(ksi, ksi_cutoff)
-	double iksi_eff; // 1./ksi_eff
+	double _gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
+	double gap_cutoff; // small cut-off for ksi: lubrication breakdown
+	double gap_eff;  // max(ksi, ksi_cutoff)
+	double inv_gap_eff; // 1./ksi_eff
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
 	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
 	double sqnorm_contact_velocity;
 	vec3d xi; // tangential displacement
-	//	vec3d t_tangent;
-
 
 	//===== forces and stresses ==================== //
 	double kn; // spring constant for contact force
@@ -52,14 +50,11 @@ private:
 	stresslet lubstresslet;
 	stresslet contactstresslet;
 
-
 	//===== observables  ========================== //
 	double strain_lub_generated; // The strain when this interaction starts.
 	double strain_near_contact; // The strain when this interaction starts.
 	double lub_time;
 	double nearing_time;
-
-
 
 	/*********************************
 	 *       Private Methods         *
@@ -118,7 +113,7 @@ public:
 	//======= relative position/velocity  ========//
 	vec3d nr_vec; // vector center to center
 	inline double r(){return _r;}
-	inline double gap(){return ksi;}
+	inline double gap(){return _gap;}
 
 
 	//======= internal state =====================//
@@ -153,7 +148,6 @@ public:
 	vector <double> gap_history;
 	void recordTrajectory();
 	void outputTrajectory();
-
 };
 
 
