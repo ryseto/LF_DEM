@@ -113,6 +113,8 @@ Simulation::autoSetParameters(const string &keyword,
 		shear_strain_end = atof(value.c_str());
 	} else if (keyword == "dt_ratio"){
 		sys.dt_ratio = atof(value.c_str());
+	} else if (keyword == "integration_method"){
+		sys.integration_method = atof(value.c_str());
 	} else if (keyword == "lub_max"){
 		sys.lub_max = atof(value.c_str());
 	} else if (keyword == "kn"){
@@ -247,7 +249,9 @@ Simulation::setDefaultParameters(){
 	/*
 	 * integration_method:
 	 * 0, Euler's Method
-	 * 1,  
+	 * 1, predictor-corrector
+	 * In the case of Brownian forces, this parameters is forced to 0,
+     * and the value given here has no effect
 	 */
 	sys.integration_method = 1;
 	/*
