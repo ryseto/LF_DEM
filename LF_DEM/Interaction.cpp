@@ -103,8 +103,8 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-
-		Fc_normal = sys->kn*_gap; // maybe _r - ro is better?
+		
+		Fc_normal = sys->kn*(_r - ro);
 
 		if(friction){
 
@@ -513,8 +513,10 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	 * We may consider the particle size
 	 *
 	 */
-	kn = sys->kn/(0.5*ro);
-	kt = sys->kt/(0.5*ro);
+	//	kn = sys->kn/(0.5*ro);
+	//	kt = sys->kt/(0.5*ro);
+	kn = sys->kn;
+	kt = sys->kt;
 	/*
 	 * Record the strain when this lub interaction starts.
 	 */
