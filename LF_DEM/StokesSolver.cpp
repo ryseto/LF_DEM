@@ -627,7 +627,6 @@ StokesSolver::doneBlocks(int i){
 void
 StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha){
 
-
     int jj3   = 3*jj;
     int jj3_1 = jj3+1;
     int jj3_2 = jj3+2;
@@ -657,7 +656,7 @@ StokesSolver::appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha
 
 void
 StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
-#ifdef TRILINOS
+
     int ii3   = 3*ii;
     int ii3_1 = ii3+1;
     int ii3_2 = ii3+2;
@@ -672,7 +671,7 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     double alpha_n2n1 = alpha_n1*nvec.z;
     double alpha_n0n2 = alpha_n2*nvec.x;
     
-    
+
     // declare ii and jj new columns, and update column nb
     int last_col_nb_ii = columns_nb[ii3];
     int last_col_nb_jj = columns_nb[jj3];
@@ -724,7 +723,7 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     values[jj3_2][last_col_nb_jj  ] = alpha_n0n2;      // 20
     values[jj3_2][last_col_nb_jj+1] = alpha_n2n1;      // 21
     values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z;      // 22
-#endif    
+
 }
 
 

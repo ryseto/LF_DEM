@@ -54,7 +54,7 @@ private:
 	double strain_lub_generated; // The strain when this interaction starts.
 	double strain_near_contact; // The strain when this interaction starts.
 	double lub_time;
-	double nearing_time;
+	//	double nearing_time; // unused
 
 	/*********************************
 	 *       Private Methods         *
