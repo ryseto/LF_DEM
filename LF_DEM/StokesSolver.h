@@ -112,14 +112,14 @@ class StokesSolver{
     RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
     Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
 
-    // resistance matrix building
+#endif
+    // resistance matrix building for Trilinos
     int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
     int* columns_nb; // nb of non-zero elements in each row
     int columns_max_nb; // max nb of non-zero elements per row
     double **values; // values corresponding to 'columns' array coordinates
 
 
-#endif
     
 
     /* 

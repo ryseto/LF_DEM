@@ -151,8 +151,8 @@ Interaction::addUpContactForce(vec3d &force0, vec3d &force1){
 void
 Interaction::addUpContactTorque(vec3d &torque0, vec3d &torque1){
   if (contact&&friction){
-	  sys->torque[particle_num[0]] += Tc_0;
-	  sys->torque[particle_num[1]] += Tc_1;
+	  torque0 += Tc_0;
+	  torque1 += Tc_1;
   }
 }
 
@@ -629,7 +629,7 @@ Interaction::update(const bool switch_off_allowed){
  */
 void
 Interaction::outputTrajectory(){
-	for (int k=0; k < trajectory.size(); k++){
+	for (unsigned int k=0; k < trajectory.size(); k++){
 		sys->fout_trajectory << trajectory[k].x << ' ' <<  trajectory[k].y << ' '<<  trajectory[k].z << ' ';
 		sys->fout_trajectory << gap_history[k] << endl;
 	}

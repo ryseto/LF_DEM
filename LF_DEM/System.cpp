@@ -509,8 +509,6 @@ System::buildLubricationTerms(bool rhs=true){
 void
 System::buildLubricationRHS(){
     
-    double XAii, XAjj, XAij, XAji;
-	
     double GEi[3];
     double GEj[3];
     
@@ -1007,7 +1005,7 @@ System::analyzeState(){
 	}
 	
 	double sum_nearing_time = 0;
-	for(int k = 0; k < nearing_time_record.size(); k++){
+	for(unsigned int k = 0; k < nearing_time_record.size(); k++){
 		sum_nearing_time += nearing_time_record[k];
 	}
 	ave_overlap = sum_overlap / cnt_overlap;
