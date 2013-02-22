@@ -53,6 +53,7 @@ private:
 	int max_lub_int;
 	BoxSet* boxset;
 
+	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
 	void displacement(int i, const vec3d &dr);
@@ -86,14 +87,13 @@ public:
 	double *radius;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
-	vector <vec3d> velocity_mp1st;
-	vector <vec3d> velocity_mp2nd;
+	vector <vec3d> velocity_predictor;
 	vec3d *relative_velocity;
 	vec3d *relative_velocity_lub_cont;
 	vec3d *relative_velocity_brownian;
 	vec3d *ang_velocity;
-	vector <vec3d> ang_velocity_mp1st;
-	vector <vec3d> ang_velocity_mp2nd;
+	vector <vec3d> ang_velocity_predictor;
+
 	vec3d *total_force;
 	vec3d *lubrication_force;
 	vec3d *contact_force;
@@ -239,7 +239,7 @@ public:
 	void periodize_diff(vec3d &, int &);
 	void updateVelocity();
 	void updateVelocityLubrication();
-	void updateVelocityLubrication(vector<vec3d> &velocity_, vector<vec3d> &ang_velocity_);
+//	void updateVelocityLubrication(vector<vec3d> &velocity_, vector<vec3d> &ang_velocity_);
 	void updateVelocityLubricationBrownian();
 	void deltaTimeEvolution();
 	void deltaTimeEvolution_firststep();

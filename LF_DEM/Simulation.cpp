@@ -44,6 +44,9 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		filename_parameters = argv[2];
 		readParameterFile();
 	}
+	//filename_addition = argv[3];
+	filename_addition = "";
+	
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
@@ -248,10 +251,9 @@ Simulation::setDefaultParameters(){
 	sys.dt_ratio = 2;
 	/*
 	 * integration_method:
-	 * 0, Euler's Method
-	 * 1, predictor-corrector
-	 * In the case of Brownian forces, this parameters is forced to 0,
-     * and the value given here has no effect
+	 * 0 Euler's Method,
+	 * 1 predictor-corrector,
+	 * 2 Brownian (if kT > 0).
 	 */
 	sys.integration_method = 1;
 	/*
@@ -434,6 +436,7 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
+	ss_simu_name << filename_addition;
 	sys.simu_name = ss_simu_name.str();
 	cerr << sys.simu_name << endl;
 }

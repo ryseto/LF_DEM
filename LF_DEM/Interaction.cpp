@@ -103,24 +103,19 @@ Interaction::calcDynamicFriction(){
 void
 Interaction::calcContactInteraction(){
 	if (contact){
-		
 		Fc_normal = sys->kn*(_r - ro);
-
 		if(friction){
-
 			if(static_friction){
 				calcStaticFriction();
 			} else {
 				calcDynamicFriction();
 			}
-
 			vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
 			Tc_0 = a0*t_ij;
 			Tc_1 = a1*t_ij;
 			//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 		}
-		
-		vec3d f_ij = - Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
+		vec3d f_ij = Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
 		vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
 		sys->contact_force[particle_num[0]] += f_ij;
 		sys->contact_force[particle_num[1]] -= f_ij;

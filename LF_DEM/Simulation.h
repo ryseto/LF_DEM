@@ -16,6 +16,7 @@
 class Simulation{
 private:
 	System sys;
+	string filename_addition;
 	double shear_strain_end;
 	bool import_positions;
 	vector< vec3d> initial_positions;
