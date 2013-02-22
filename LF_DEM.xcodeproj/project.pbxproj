@@ -21,6 +21,7 @@
 		D932B8E916C2F5A800AD6E85 /* libkokkosnodetsqr.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */; };
 		D932B8EB16C2F60200AD6E85 /* libifpack.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8EA16C2F60200AD6E85 /* libifpack.dylib */; };
 		D932B8ED16C2F71400AD6E85 /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8EC16C2F71400AD6E85 /* libamd.2.3.1.a */; };
+		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
@@ -62,6 +63,7 @@
 		D932B8EA16C2F60200AD6E85 /* libifpack.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libifpack.dylib; path = /usr/local/lib/libifpack.dylib; sourceTree = "<absolute>"; };
 		D932B8EC16C2F71400AD6E85 /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = /usr/local/lib/libamd.2.3.1.a; sourceTree = "<absolute>"; };
 		D938135C16B572A8006F1CAC /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxSet.cpp; sourceTree = "<group>"; };
@@ -232,6 +234,7 @@
 				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
 				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
+				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D99EBE1D167914C2003AC4C9 /* note.rtf */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
@@ -312,6 +315,7 @@
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
+				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

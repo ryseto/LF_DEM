@@ -842,6 +842,7 @@ void System::updateVelocityLubricationBrownian(){
 		zero_2Dsimu = 1;
 	}
 	
+	
 	/*********************************************************/
 	/*                    First Step                         */
 	/*********************************************************/
@@ -917,6 +918,9 @@ void System::updateVelocityLubricationBrownian(){
 	}
 
     stokes_solver->solvingIsDone();
+
+
+
     // update total velocity
     // first term is hydrodynamic + contact velocities
     // second term is Brownian velocities
