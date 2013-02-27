@@ -209,25 +209,6 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 
 }
 
-// void
-// Interaction::prev_XA(double &prev_XAii, double &prev_XAij, double &prev_XAji, double &prev_XAjj){
-// 	double g1_l;
-// 	double l1, l13;
-
-// 	l1 = 1.0 + lambda;
-// 	l13 = l1 * l1 * l1;
-
-	
-// 	g1_l = 2.0 * lambda * lambda / l13;
-	
-// 	prev_XAii = g1_l * prev_iksi_eff;
-// 	prev_XAij = - 2 * prev_XAii / l1;
-// 	prev_XAji = prev_XAij;
-// 	prev_XAjj = prev_XAii / lambda;
-
-// }
-
-
 void
 Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 	double l1 = 1.0 + lambda;
@@ -250,7 +231,7 @@ Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
 	double g1_l = 2.0 * lambda * lambda / l13;
 
 	XMii = 0.6 * g1_l * inv_gap_eff;
-	XMij = 40*lambda / 3 / l13 * XMii ;
+	XMij = 8*lambda / l13 * XMii ;
 	XMji = XMij;
 	XMjj = XMii/lambda;
 }
@@ -353,28 +334,7 @@ void
 Interaction::addLubricationStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-	stresslet stresslet_GU_i;
-	stresslet stresslet_GU_j;
-	stresslet stresslet_ME_i;
-	stresslet stresslet_ME_j;
 
-	vec3d &vi = sys->relative_velocity_lub_cont[i];
-	vec3d &vj = sys->relative_velocity_lub_cont[j];
-	/*
-	 *  First: -G*(U-Uinf) term
-	 */
-	pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
-	
-	/*
-	 *  Second: +M*Einf term
-	 */
-	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-
-	for (int u=0; u < 5; u++){
-		sys->lubstress[i].elm[u] += stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u];
-		sys->lubstress[j].elm[u] += stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
-		lubstresslet.elm[u] = stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u] + stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
-	}
 	/*
 	 * Calculate the lubrication stresslet by using lubrication forces
 	 */
@@ -382,6 +342,7 @@ Interaction::addLubricationStress(){
 	stresslet stresslet2_i;
 	stresslet stresslet2_j;
 	vec3d dr_i = a0*nr_vec;
+	//	vec3d dr_i = r_vec;
 	stresslet2_i.elm[0] = 2*dr_i.x*lubforce_i.x;
 	stresslet2_i.elm[1] = dr_i.x*lubforce_i.y + dr_i.y*lubforce_i.x;
 	stresslet2_i.elm[2] = dr_i.x*lubforce_i.z + dr_i.z*lubforce_i.x;
@@ -389,6 +350,7 @@ Interaction::addLubricationStress(){
 	stresslet2_i.elm[4] = 2*dr_i.y*lubforce_i.y;
 	vec3d lubforce_j = -lubforce_i;
 	vec3d dr_j = -a1*nr_vec;
+	//	vec3d dr_j = -r_vec;
 	stresslet2_j.elm[0] = 2*dr_j.x*lubforce_j.x;
 	stresslet2_j.elm[1] = dr_j.x*lubforce_j.y + dr_j.y*lubforce_j.x;
 	stresslet2_j.elm[2] = dr_j.x*lubforce_j.z + dr_j.z*lubforce_j.x;
@@ -399,7 +361,70 @@ Interaction::addLubricationStress(){
 		sys->lubstress2[i].elm[u] += stresslet2_i.elm[u];
 		sys->lubstress2[j].elm[u] += stresslet2_j.elm[u];
 	}
+
+	//  vec3d &vi = sys->relative_velocity_lub_cont[i];
+	//  vec3d &vj = sys->relative_velocity_lub_cont[j];
+	// if(i==98){
+	//   	cout << " version2 " <<i << " " << j << " " << stresslet2_i.elm[2] << " " <<0.25*a0*a0*dot(nr_vec, vi-vj)*inv_gap_eff*nr_vec.x*nr_vec.z<< " " << vi.x <<" " << vj.x <<  endl;
+	// 	//		cout << " version2 " <<i << " " << j << " " << " " << vi.x <<" " << vj.x <<  endl;
+	// }
+	// if(j==98)
+	//   	cout << " version2 " << i << " " << j << " " << stresslet2_j.elm[2] <<" " <<0.25*a0*a0*dot(nr_vec, vi-vj)*inv_gap_eff*nr_vec.x*nr_vec.z << " " << vi.x <<" " << vj.x << endl;
+
 }
+
+
+void
+Interaction::addHydroStress(){
+	int i = particle_num[0];
+	int j = particle_num[1];
+	int i3=3*i;
+	int j3=3*j;
+
+	stresslet stresslet_GU_i;
+	stresslet stresslet_GU_j;
+	stresslet stresslet_ME_i;
+	stresslet stresslet_ME_j;
+
+	vec3d *vi = new vec3d(sys->v_hydro[i3], sys->v_hydro[i3+1], sys->v_hydro[i3+2]);
+	vec3d *vj = new vec3d(sys->v_hydro[j3], sys->v_hydro[j3+1], sys->v_hydro[j3+2]);
+	// vec3d *vi = new vec3d(sys->v_hydro[i3]+sys->v_cont[i3], sys->v_hydro[i3+1]+sys->v_cont[i3+1], sys->v_hydro[i3+2]+sys->v_cont[i3+2]);
+	// vec3d *vj = new vec3d(sys->v_hydro[j3]+sys->v_cont[j3], sys->v_hydro[j3+1]+sys->v_cont[j3+1], sys->v_hydro[j3+2]+sys->v_cont[j3+2]);
+	/*
+	 *  First: -G*(U-Uinf) term
+	 */
+
+	pairVelocityStresslet(*vi, *vj, stresslet_GU_i, stresslet_GU_j);
+
+	/*
+	 *  Second: +M*Einf term
+	 */
+	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
+
+	for (int u=0; u < 5; u++){
+		sys->lubstress[i].elm[u] += stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u];
+		sys->lubstress[j].elm[u] += stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
+		lubstresslet.elm[u] = stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u] + stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
+	}
+
+	// if(i==98){
+	// // 	//	  	cout << i << " " << j << " "<< "stresslet " << stresslet_GU_i.elm[2] << " " << (3.*inv_gap_eff/8.)*(2/3.)*a0*a0*dot(nr_vec, *vi-*vj)*nr_vec.x*nr_vec.z   << endl;
+	//  	cout << i << " " << j << " " <<"stresslet " << " " << stresslet_GU_i.elm[2]  << " " << 2*(stresslet_GU_i.elm[2]+stresslet_ME_i.elm[2]) << " " << vi->x <<" " << vj->x << " " << sys->relative_velocity_lub_cont[i].x << " " << sys->v_hydro[3*i] << " " << sys->v_cont[3*i] << " " << sys->v_hydro[3*i]+sys->v_cont[3*i] << " " << _gap<< " " << r() << endl;
+	// 	//		cout << i << " " << j << " " << vi->x <<" " << vj->x <<endl;
+	// }
+
+
+	// if(j==98){
+	// 	//	  	cout << "stresslet " << stresslet_GU_i.elm[2] << " " << (3.*inv_gap_eff/8.)*(2/3.)*a0*a0*dot(nr_vec, (*vi-*vj) )*nr_vec.x*nr_vec.z << endl;
+	// 	cout << i << " " << j << " " << "stresslet " << stresslet_GU_j.elm[2] << " " << 2*(stresslet_GU_i.elm[2]+stresslet_ME_i.elm[2]) << " " << vi->x <<" " << vj->x << endl;
+	// }
+
+	delete vi;
+	delete vj;
+
+
+}
+
 
 /* Lubriction force between two particles is calculated. 
  * Note that only the Brownian component of the velocity is NOT included here.
@@ -420,6 +445,7 @@ Interaction::evaluateLubricationForce(){
 	vec3d &vj = sys->relative_velocity_lub_cont[j];
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
+
 	double cf_AU_i = -dot(a0*XAii*vi + 0.5*ro*XAij*vj, nr_vec);
 	/*	double cf_AU_j = -dot(a1*XAjj*vj + 0.5*ro*XAji*vi, nr_vec); */
 
@@ -431,7 +457,9 @@ Interaction::evaluateLubricationForce(){
 	double n0n2 = nr_vec.x * nr_vec.z;
 	double cf_GE_i = n0n2*(2*a0*a0*XGii/3 + ro*ro*XGji/6)* sys->shear_rate;
 	/*	double cf_GE_j = n0n2*(2*a1*a1*XGjj/3 + ro*ro*XGij/6)* sys->shear_rate; */
-	lubforce_i = (cf_AU_i + cf_GE_i) * nr_vec;
+
+	lubforce_i = (cf_AU_i + cf_GE_i) * nr_vec; //---> original
+
 	/* lubforce_j +=  common_factor_j * nr_vec; */
 }
 
@@ -444,17 +472,64 @@ void
 Interaction::addContactStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
+	int i3=3*i;
+	int j3=3*j;
+
+	stresslet stresslet_GU_i;
+	stresslet stresslet_GU_j;
+
 	if (contact){
-		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
+		vec3d force =  - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
 		contactstresslet.elm[0] = 2*(force.x * nr_vec.x); //xx
 		contactstresslet.elm[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
 		contactstresslet.elm[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
 		contactstresslet.elm[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz
 		contactstresslet.elm[4] = 2*(force.y * nr_vec.y);
 		for (int u=0; u < 5; u++){
-			sys->contactstress[i].elm[u] += contactstresslet.elm[u];
-			sys->contactstress[j].elm[u] += contactstresslet.elm[u];
+			sys->contactstress[i].elm[u] += 0.5*contactstresslet.elm[u];
+			sys->contactstress[j].elm[u] += 0.5*contactstresslet.elm[u];
 		}
+
+	}
+
+	// Add term G*V_cont
+	vec3d *vi = new vec3d(sys->v_cont[i3], sys->v_cont[i3+1], sys->v_cont[i3+2]);
+	vec3d *vj = new vec3d(sys->v_cont[j3], sys->v_cont[j3+1], sys->v_cont[j3+2]);
+	
+	
+	pairVelocityStresslet(*vi, *vj, stresslet_GU_i, stresslet_GU_j);
+	
+	delete vi;
+	delete vj;
+	for (int u=0; u < 5; u++){
+		sys->contactstress[i].elm[u] += stresslet_GU_i.elm[u];
+		sys->contactstress[j].elm[u] += stresslet_GU_j.elm[u];
+    }
+
+}
+
+void
+Interaction::addContactStress2(){
+	int i = particle_num[0];
+	int j = particle_num[1];
+	int i3=3*i;
+	int j3=3*j;
+
+	stresslet stresslet_GU_i;
+	stresslet stresslet_GU_j;
+
+	if (contact){
+		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
+		contactstresslet2.elm[0] = 2*(force.x * nr_vec.x); //xx
+		contactstresslet2.elm[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
+		contactstresslet2.elm[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
+		contactstresslet2.elm[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz
+		contactstresslet2.elm[4] = 2*(force.y * nr_vec.y);
+		for (int u=0; u < 5; u++){
+			sys->contactstress2[i].elm[u] += contactstresslet2.elm[u];
+			sys->contactstress2[j].elm[u] += contactstresslet2.elm[u];
+		}
+		
 	}
 }
 

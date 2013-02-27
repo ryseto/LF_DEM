@@ -4,7 +4,7 @@
 CXX=g++
 
 # OS_version: OSX or Linux
-OS_version=Linux
+OS_version=OSX
 # Build : debug or optimized
 Build=debug
 
@@ -28,7 +28,7 @@ Lapack_Linking_Flags = -llapack
 Cholmod_Linking_Flags = -lcholmod
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
-	Cholmod_lib_path=$(Cholmod_path:include=lib)
+	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
 	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
 endif
 Trilinos_Linking_Flags =  -lbelosepetra -lbelos -lifpack -lepetra -lkokkosnodetsqr -lteuchos
@@ -39,25 +39,7 @@ CXXFLAGS_Linux_debug=  -g -pg -Wall  -Wextra -Wshadow # linux
 CXXFLAGS_OSX_optimized=  -O3 -Wall  -Wextra -Wshadow # mac OSX
 CXXFLAGS_OSX_debug=  -g -pg
 
-#CXXFLAGS= -g -pg
 CXXFLAGS= $(CXXFLAGS_$(OS_version)_$(Build))
-
-# tests do not work !!!???!
-# ifeq ($(OS_version),OSX)
-# ifeq ($(Opt), optimized)
-# 		CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow # mac OS÷
-# else
-# 		CXXFLAGS=  -g -pg # mac OS debug
-# endif
-# endif
-# ifeq ($(OS_version), Linux)
-# ifeq ($(Opt), optimized)
-# 		CXXFLAGS=  -O3 -Wall  -Wextra -Wshadow  # linux
-# else
-# 		CXXFLAGS=  -g  -pg -Wall  -Wextra -Wshadow # linux debug
-# endif
-# endif
-
 
 
 OUT_CODE=LF_DEM

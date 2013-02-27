@@ -49,6 +49,7 @@ private:
 	vec3d contact_force_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
 	stresslet contactstresslet;
+	stresslet contactstresslet2;
 
 	//===== observables  ========================== //
 	double strain_lub_generated; // The strain when this interaction starts.
@@ -137,7 +138,9 @@ public:
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}	
 	void addLubricationStress();
+	void addHydroStress();
 	void addContactStress();
+	void addContactStress2();
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 

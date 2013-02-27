@@ -8,7 +8,7 @@
 
 #include "System.h"
 
-void System::calcBrownianStress(){
+void System::calcStressesHydroContactBrownian(){
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;
@@ -186,5 +186,61 @@ void System::calcBrownianStress(){
 		displacement(i, dr);
     }
     updateInteractions(false);
+
+}
+
+
+void
+System::calcStressesHydroContact(){
+
+	setContactForceToParticle();
+
+    stokes_solver->resetRHS();
+
+    stokes_solver->prepareNewBuild_RFU("direct");
+
+    addStokesDrag();
+    buildLubricationTerms();
+
+    stokes_solver->complete_RFU();
+
+    stokes_solver->solve(v_hydro);
+
+
+    stokes_solver->resetRHS();
+    buildContactTerms();
+	
+    stokes_solver->solve(v_cont);
+    stokes_solver->solvingIsDone();
+
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].addHydroStress();
+			interaction[k].addContactStress();
+		}
+	}
+
+	
+	// testing : compare with stress computation from forces
+    for (int i = 0; i < np; i++){
+		int i3 = 3*i;
+		relative_velocity_lub_cont[i].x = v_hydro[i3  ] + v_cont[i3  ];
+		relative_velocity_lub_cont[i].y = v_hydro[i3+1] + v_cont[i3+1];
+		relative_velocity_lub_cont[i].z = v_hydro[i3+2] + v_cont[i3+2];
+		
+		velocity[i].x = relative_velocity_lub_cont[i].x + shear_rate*position[i].z;
+		velocity[i].y = relative_velocity_lub_cont[i].y;
+		velocity[i].z = relative_velocity_lub_cont[i].z;
+		
+    }
+
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].evaluateLubricationForce();
+			interaction[k].addLubricationStress();
+			interaction[k].addContactStress2();
+		}
+	}
+
 
 }

@@ -58,7 +58,7 @@ private:
 	void timeEvolutionPredictorCorrectorMethod();
 	void displacement(int i, const vec3d &dr);
 	void setContactForceToParticle();
-	void buildLubricationTerms(bool);
+	void buildLubricationTerms(bool rhs=true);
 	void buildLubricationRHS();
 	void buildContactTerms();
 	void addStokesDrag();
@@ -66,11 +66,14 @@ private:
 	void print_res();
 
 
-	void calcBrownianStress();
+	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
-	
+
+	void calcStressesHydroContact();
 protected:
 public:
+	double *v_hydro;
+	double *v_cont;
 	double *v_lub_cont;
 	double *v_lub_cont_mid;
 	double *v_Brownian_init;
@@ -107,12 +110,16 @@ public:
 	vector <stresslet> lubstress; // G U + M E
 	vector <stresslet> lubstress2; // r * F_lub
 	vector <stresslet> contactstress;
+	vector <stresslet> contactstress2;
 	vector <stresslet> brownianstress;
 	int brownianstress_calc_nb;
 	double total_stress_bgf;
 	double total_lub_stress[5];
 	double total_contact_stress[5];
 	double total_brownian_stress[5];
+	double total_lub_stress2[5];
+	double total_contact_stress2[5];
+
 	double kn;
 	double kt;
 	double eta;
@@ -250,6 +257,7 @@ public:
 	void stressReset();
 	void stressBrownianReset();
 	void calcStress();
+
 
 	void analyzeState();
 	void computeBrownianStress();
