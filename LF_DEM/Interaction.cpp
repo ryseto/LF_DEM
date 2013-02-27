@@ -15,21 +15,19 @@ Interaction::init(System *sys_){
 	active = false;
 	Fc_normal = 0;
 	friction = sys->friction;
-
 }
 
 
 void 
 Interaction::r(double new_r){
 	_r = new_r;
-	_gap = 2 * _r / ro - 2.;
-	//	iksi = 1./ksi;
-	if( _gap < gap_cutoff )
-		gap_eff = gap_cutoff;
-	else
-		gap_eff = _gap;
+	_gap_nondim = 2 * _r / ro - 2.;
 	
-	inv_gap_eff = 1./gap_eff;
+	if( _gap_nondim > 0 ){
+		lub_coeff = 1/(_gap_nondim + lub_reduce_parameter);
+	}else{
+		lub_coeff = lub_coeff_max;
+	}
 }
 
 /* Make a normal vector
@@ -64,23 +62,24 @@ Interaction::assignDistanceNormalVector(const vec3d &pos_diff, double distance, 
 *	   Contact Forces Methods    *
 *                                *
 *********************************/
+/*
+ * Determine Fc_tan
+ */
 void
 Interaction::calcStaticFriction(){
+	//	if ( disp_tan.x != 0){ // <<<<@@@@ I forget what it means @@@@
+	/*
+	 * f_tangent is force acting on particle 0 from particle 1
+	 * xi = r1' - r0'
+	 */
+	Fc_tan = sys->kt*disp_tan;
+	//	}
 	double f_static = sys->mu_static*Fc_normal;
-	double f_spring = sys->kt*xi.norm();
-	if ( xi.x != 0){
-		if (f_spring < f_static){
-			/*
-			 * f_tangent is force acting on particle 0 from particle 1
-			 * xi = r1' - r0'
-			 */
-
-			Fc_tangent = sys->kt*xi;
-		} else {
-			/* switch to dynamic friction */
-			static_friction = false;
-			calcDynamicFriction();
-		}
+	if (Fc_tan.sq_norm() > f_static*f_static){
+		/* switch to dynamic friction */
+		static_friction = false;
+		
+		
 	}
 }
 
@@ -89,10 +88,8 @@ Interaction::calcDynamicFriction(){
 	double f_dynamic = sys->mu_dynamic*Fc_normal;
 	/* Use the velocity of one time step before as approximation. */
 	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
-
-	Fc_tangent = f_dynamic*unit_contact_velocity_tan; // on p0
+	Fc_tan = f_dynamic*unit_contact_velocity_tan; // on p0
 }
-
 
 /*
  * Calculate interaction.
@@ -105,51 +102,67 @@ Interaction::calcContactInteraction(){
 	if (contact){
 		Fc_normal = sys->kn*(_r - ro);
 		if(friction){
-			if(static_friction){
+//			if(static_friction){
 				calcStaticFriction();
-			} else {
-				calcDynamicFriction();
-			}
-			vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
-			Tc_0 = a0*t_ij;
-			Tc_1 = a1*t_ij;
-			//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
+//			} else {
+//				calcDynamicFriction();
+//			}
+			//		vec3d t_ij = cross(nr_vec, Fc_tan); // acting on p0
+			//		sys->contact_torque[particle_num[0]] += a0*t_ij;
+			//		sys->contact_torque[particle_num[1]] += a1*t_ij;
 		}
-		vec3d f_ij = Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
-		vec3d t_ij = cross(nr_vec, Fc_tangent); // acting on p0
+		
+		
+		//		vec3d f_ij = Fc_normal * nr_vec + Fc_tan; // acting on p0 //@@TO BE CHECKED.
+		//		sys->contact_force[particle_num[0]] += f_ij;
+		//		sys->contact_force[particle_num[1]] -= f_ij;
+		
+		
+		//		sys->total_force[particle_num[0]] += f_ij;
+		//		sys->total_force[particle_num[1]] -= f_ij;
+		//		sys->torque[particle_num[0]] = a0*t_ij; //???
+		//		sys->torque[particle_num[1]] = a1*t_ij; // ???
+	}
+}
+
+void
+Interaction::addUpContactForceTorque(){
+	if (contact){
+		vec3d f_ij =  Fc_normal * nr_vec ;
+		if(friction){
+			f_ij += Fc_tan; // acting on p0 //@@TO BE CHECKED.
+			vec3d t_ij = cross(nr_vec, Fc_tan);
+			sys->contact_torque[particle_num[0]] += t_ij;
+			sys->contact_torque[particle_num[1]] += t_ij;
+		}
 		sys->contact_force[particle_num[0]] += f_ij;
 		sys->contact_force[particle_num[1]] -= f_ij;
-		sys->total_force[particle_num[0]] += f_ij;
-		sys->total_force[particle_num[1]] -= f_ij;
-		sys->torque[particle_num[0]] = a0*t_ij;
-		sys->torque[particle_num[1]] = a1*t_ij;
-		//		cerr << Fc_tangent.x << ' ' << Fc_tangent.z << endl;
 	}
 }
 
 
-void
-Interaction::addUpContactForce(vec3d &force0, vec3d &force1){
-	vec3d f_ij;
-	if (contact){
-		
-		if(friction)
-			f_ij = Fc_normal * nr_vec + Fc_tangent; // acting on p0 //@@TO BE CHECKED.
-		else
-			f_ij = Fc_normal * nr_vec;
-		
-		force0 += f_ij;
-		force1 -= f_ij;
-	}
-}
 
-void
-Interaction::addUpContactTorque(vec3d &torque0, vec3d &torque1){
-  if (contact&&friction){
-	  torque0 += Tc_0;
-	  torque1 += Tc_1;
-  }
-}
+//void
+//Interaction::addUpContactForce(vec3d &force0, vec3d &force1){
+//	vec3d f_ij;
+//	if (contact){
+//		if(friction)
+//			f_ij = Fc_normal * nr_vec + Fc_tan; // acting on p0 //@@TO BE CHECKED.
+//		else
+//			f_ij = Fc_normal * nr_vec;
+//		
+//		force0 += f_ij;
+//		force1 -= f_ij;
+//	}
+//}
+
+//void
+//Interaction::addUpContactTorque(vec3d &torque0, vec3d &torque1){
+//	if (contact&&friction){
+//		torque0 += Tc_0;
+//		torque1 += Tc_1;
+//	}
+//}
 
 
 /* Relative velocity of particle 1 from particle 0.
@@ -164,22 +177,47 @@ Interaction::calcContactVelocity(){
 		// v1 - v0
 		contact_velocity.x += pd_z * sys->vel_difference;
 	}
-	contact_velocity -= cross(a0*sys->ang_velocity[particle_num[0]] + a1*sys->ang_velocity[particle_num[1]], nr_vec);
+	contact_velocity -= cross(a0*sys->ang_velocity[particle_num[0]]
+							  + a1*sys->ang_velocity[particle_num[1]],
+							  nr_vec);
 	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
+	if(contact_velocity_tan.norm() > 10){
+		cerr << sys->ang_velocity[particle_num[0]].y << ' ' <<  sys->ang_velocity[particle_num[1]].y << '\n';
+		vec3d aaa = cross(a0*sys->ang_velocity[particle_num[0]]
+						  + a1*sys->ang_velocity[particle_num[1]],
+						  nr_vec);
+		aaa.cerr("diff_ang:");
+		
+		vec3d bbb = sys->velocity[particle_num[1]] - sys->velocity[particle_num[0]];
+		bbb.cerr("diff_velo:");
+
+		if (pd_z != 0){
+			//	pd_z = -1; //  p1 (z = lz), p0 (z = 0)
+			// v1 - v0
+			bbb.x += pd_z * sys->vel_difference;
+		}
+		bbb.cerr("diff_velo:");
+		
+		contact_velocity_tan.cerr();
+		cerr << "positions: \n";
+		sys->position[particle_num[0]].cerr();
+		sys->position[particle_num[1]].cerr();
+//		exit(1);
+	}
 }
 
 void
 Interaction::incrementContactTangentialDisplacement(){
 	calcContactVelocity();
 	if (static_friction){
-		xi += contact_velocity_tan*sys->dt;
+		disp_tan += contact_velocity_tan*sys->dt;
 		// projection
-		xi -= dot(xi,nr_vec)*nr_vec;
+		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
 	} else {
 		sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
 		if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
 			static_friction = true;
-			xi = (1.0/sys->kt) * Fc_tangent;
+			disp_tan = (1.0/sys->kt) * Fc_tan;
 		}
 	}
 }
@@ -189,7 +227,7 @@ Interaction::incrementContactTangentialDisplacement(){
 *                                *
 *  Lubrication Forces Methods    *
 *                                *
-*********************************/
+nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn*********************************/
 
 // Resistance functions
 void
@@ -202,7 +240,7 @@ Interaction::XA(double &XAii, double &XAij, double &XAji, double &XAjj){
 
 	g1_l = 2.0 * lambda * lambda / l13;
 	
-	XAii = g1_l * inv_gap_eff;
+	XAii = g1_l * lub_coeff;
 	XAij = - 2 * XAii / l1;
 	XAji = XAij;
 	XAjj = XAii / lambda;
@@ -237,7 +275,7 @@ Interaction::XG(double &XGii, double &XGij, double &XGji, double &XGjj){
 	double g1_l = 2.0 * lambda * lambda / l13;
 
 	
-	XGii = 1.5 * g1_l * inv_gap_eff;
+	XGii = 1.5 * g1_l * lub_coeff;
 	XGij = - 4 * XGii / l1 / l1 ;
 	XGjj = - XGii / lambda;
 	XGji = - 4 * XGjj / il1 / il1 ;
@@ -249,7 +287,7 @@ Interaction::XM(double &XMii, double &XMij, double &XMji, double &XMjj){
 	double l13 = l1 * l1 * l1;
 	double g1_l = 2.0 * lambda * lambda / l13;
 
-	XMii = 0.6 * g1_l * inv_gap_eff;
+	XMii = 0.6 * g1_l * lub_coeff;
 	XMij = 40*lambda / 3 / l13 * XMii ;
 	XMji = XMij;
 	XMjj = XMii/lambda;
@@ -278,7 +316,8 @@ Interaction::GE(double GEi[], double GEj[]){
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
  
 void
-Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j){
+Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
+								   stresslet &stresslet_i, stresslet &stresslet_j){
 	
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
@@ -445,7 +484,7 @@ Interaction::addContactStress(){
 	int i = particle_num[0];
 	int j = particle_num[1];
 	if (contact){
-		vec3d force = - Fc_normal * nr_vec + Fc_tangent; //@@TO BE CHECKED.
+		vec3d force = - Fc_normal * nr_vec + Fc_tan; //@@TO BE CHECKED.
 		contactstresslet.elm[0] = 2*(force.x * nr_vec.x); //xx
 		contactstresslet.elm[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
 		contactstresslet.elm[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
@@ -493,14 +532,16 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 
 	a0 = sys->radius[particle_num[0]];
 	a1 = sys->radius[particle_num[1]];
-	ro = a0+a1;
+	ro = a0 + a1;
 	if (distance > ro)
 		contact = false;
 	else
 		contact = true;
 	lambda = a1 / a0;
 	invlambda = 1 / lambda;
-	gap_cutoff = sys->gap_cutoff;
+	lub_reduce_parameter = sys->lub_reduce_parameter;
+	lub_coeff_max = 1/lub_reduce_parameter;
+	
 	r_lub_max = 0.5*ro*sys->lub_max;
 	assignDistanceNormalVector(pos_diff, distance, zshift);
 
@@ -516,12 +557,7 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	 * Record the strain when this lub interaction starts.
 	 */
 	strain_lub_generated = sys->shear_strain;
-	if ( distance - ro < sys->dist_near*0.5*ro){
-		strain_near_contact = sys->shear_strain;
-		near = true;
-	} else {
-		near = false;
-	}
+
 	return;
 }
 
@@ -544,7 +580,7 @@ Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
 	static_friction = true;
-	xi.reset();
+	disp_tan.reset();
 	calcContactVelocity();
 }
 
@@ -553,13 +589,12 @@ Interaction::deactivate_contact(){
 	// r > a0 + a1
 	contact = false;
 	Fc_normal = 0;
-	Fc_tangent.reset();
+	Fc_tan.reset();
 }
 
 
 bool
 Interaction::updateState(bool switch_off_allowed){
-	
 	if(r() > r_lub_max && switch_off_allowed){
 		deactivate();
 		return true;
@@ -587,12 +622,13 @@ bool
 Interaction::update(const bool switch_off_allowed){
 	bool switched_off = false;
 	if (active){
-		// update tangential displacement: we do it before updating nr_vec
-		if (sys->friction && contact) {
-			incrementContactTangentialDisplacement();
-		}
 		// compute new r_vec and distance
 		calcDistanceNormalVector();
+
+		// update tangential displacement: we do it before updating nr_vec
+		if (friction && contact) {
+			incrementContactTangentialDisplacement();
+		}
 		
 		// check new state of the interaction
 		switched_off = updateState(switch_off_allowed);
@@ -600,22 +636,6 @@ Interaction::update(const bool switch_off_allowed){
 		// compute new contact forces if needed
 		calcContactInteraction();
 
-		if ( near == false ){
-			if (_gap < sys->dist_near*0.5*ro){
-				near = true;
-				strain_near_contact = sys->shear_strain;
-			}
-		} else {
-			if (_gap > sys->dist_near*0.5*ro){
-				/*
-				 * Separate
-				 */
-				double age_approaching = sys->shear_strain - strain_near_contact;
-				sys->nearing_time_record.push_back(age_approaching);
-
-				near = false;
-			}
-		}
 	}
 	return switched_off;
 }
@@ -647,5 +667,5 @@ Interaction::nearingTime(){
 void
 Interaction::recordTrajectory(){
 	trajectory.push_back(r_vec);
-	gap_history.push_back(_gap);
+	gap_history.push_back(_gap_nondim);
 }

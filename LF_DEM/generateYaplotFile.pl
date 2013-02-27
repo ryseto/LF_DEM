@@ -62,14 +62,14 @@ sub InParticles {
     ($buf, $shear_rate) = split(/\s+/, $line);
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
-        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz ) = split(/\s+/, $line);
+        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle ) = split(/\s+/, $line);
 		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;
         $posz[$i] = $z;
+		$ang[$i] = $angle;
 		if ($radius_max < $a){
 			$radius_max = $a
-			
 		}
     }
 }
@@ -146,6 +146,14 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k]);
 		}
     }
+
+	printf OUT "y 6\n";
+	printf OUT "@ 0\n";
+	for ($i = 0; $i < $np; $i ++){
+		&OutCross($i);
+		
+	}
+	
 	$maxS=0;
 	for ($k = 0; $k < $num_interaction; $k ++){
 		if ($maxS < $Sxz_lub[$k]){
@@ -163,15 +171,15 @@ sub OutYaplotData{
 	#	$zpos = $Lz / 2 + 1;
 #	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
 #	
-	printf OUT "y 5\n";
-	printf OUT "@ 2\n";
-	printf OUT "r 0.3\n";
-    for ($k = 0; $k < $num_interaction; $k ++){
-		if ($Gap[$k] < 0.01 ){
-			&OutString($int0[$k],  $int1[$k]);
-			&OutNvec($k);
-		}
-    }
+	#	printf OUT "y 5\n";
+	#	printf OUT "@ 2\n";
+	#printf OUT "r 0.3\n";
+    #for ($k = 0; $k < $num_interaction; $k ++){
+	#	if ($Gap[$k] < 0.01 ){
+	#			&OutString($int0[$k],  $int1[$k]);
+	#			&OutNvec($k);
+	#		}
+	#    }
 	printf OUT2 "\n";
 }
 
@@ -187,10 +195,10 @@ sub OutNvec {
 sub OutString_width {
     ($i, $j) = @_;
     $xi = $posx[$i];
-    $yi = $posy[$i];
+    $yi = $posy[$i] - 0.01;
     $zi = $posz[$i];
     $xj = $posx[$j];
-    $yj = $posy[$j];
+    $yj = $posy[$j] - 0.01;
     $zj = $posz[$j];
 	
 	if (abs($xi-$xj) < $radius_max*5
@@ -244,6 +252,45 @@ sub OutCircle_middle {
 			printf OUT "c $xc $yc $zc\n";
 		}
 }
+
+sub OutCross {
+    ($i) = @_;
+	$a = $radius[$i];
+    $xi = $posx[$i];
+    $yi = $posy[$i] - 0.01;
+    $zi = $posz[$i];
+    $angle = $ang[$i];
+	$ux =  $a*cos($angle);
+	$uz = -$a*sin($angle);
+	$xa = $xi - $ux;
+	$ya = $yi - 0.01;
+	$za = $zi - $uz;
+	$xb = $xi + $ux;
+	$yb = $yi - 0.01;
+	$zb = $zi + $uz;
+	printf OUT "l $xa $ya $za $xb $yb $zb\n";
+	$ux =  $a*sin($angle);
+	$uz =  $a*cos($angle);
+	$xa = $xi - $ux;
+	$ya = $yi - 0.01;
+	$za = $zi - $uz;
+	$xb = $xi + $ux;
+	$yb = $yi - 0.01;
+	$zb = $zi + $uz;	
+	printf OUT "l $xa $ya $za $xb $yb $zb\n";
+	
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

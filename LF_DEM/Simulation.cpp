@@ -104,8 +104,8 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.bgf_factor = atof(value.c_str());
 	} else if (keyword == "poly"){
 		sys.poly = str2bool(value);
-	} else if (keyword == "gap_cutoff"){
-		sys.gap_cutoff = atof(value.c_str());
+	} else if (keyword == "lub_reduce_parameter"){
+		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "shear_rate"){
 		sys.shear_rate = atof(value.c_str());
 	} else if (keyword == "kb_T"){
@@ -136,8 +136,6 @@ Simulation::autoSetParameters(const string &keyword,
 		yap_force_factor = atof(value.c_str());
 	} else if (keyword == "draw_rotation_2d"){
 		sys.draw_rotation_2d = str2bool(value);
-	} else if (keyword == "dist_near"){
-		sys.dist_near = atof(value.c_str());
 	} else if (keyword == "out_data_particle"){
 		out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction"){
@@ -273,12 +271,10 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.lub_max = 2.5;
 	/*
-	 *gap_cutoff: reduced small cutoff distance for gap diverging coeffient:
+	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
-	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
-	 * 1/ksi_cutoff when h <= ksi_cutoff
 	 */
-	sys.gap_cutoff = 0.001;
+	sys.lub_reduce_parameter = 1e-3;
 	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
@@ -320,10 +316,6 @@ Simulation::setDefaultParameters(){
 	 */
 	strain_interval_out = 0.01;
 	/*
-	 * Consider particles are `near' if the gap is less than the following value
-	 */
-	sys.dist_near = 1e-2;
-	/*
 	 *  Data output
 	 */
 	/*
@@ -351,10 +343,6 @@ Simulation::setDefaultParameters(){
 	 * Visualize rotations by crosses.
 	 * (for yaplot data)
 	 */
-	if (sys.dimension == 2)
-		sys.draw_rotation_2d = true;
-	else
-		sys.draw_rotation_2d = false;
 	/*
 	 * output pair trajeectory
 	 */
@@ -480,7 +468,6 @@ Simulation::evaluateData(){
 		N1_b = 0;
 		N2_b = 0;
 	}
-
 	
 	double total_lub_stress2[5];
 	for (int u=0; u < 5; u++){
@@ -532,15 +519,11 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#12: Viscosity(brownian)" << endl;
 		fout_rheo << "#13: N1(brownian)" << endl;
 		fout_rheo << "#14: N2(brownian)" << endl;
-		fout_rheo << "#15: minimum gap"<< endl;
-		fout_rheo << "#16: nearing time" << endl;
-		fout_rheo << "#17: number of nearing" << endl;
-		fout_rheo << "#18: rate of particles cn = 0" << endl;
-		fout_rheo << "#19: number of particle cn = 1" << endl;
-		fout_rheo << "#20: number of particle cn = 2" << endl;
-		fout_rheo << "#21: number of particle cn = 3" << endl;
-		fout_rheo << "#22: number of particle cn = 4" << endl;
-		fout_rheo << "#23: number of particle cn = 5" << endl;
+		fout_rheo << "#15: minimum gap" << endl;
+		fout_rheo << "#16: Viscosity(2)" << endl;
+		fout_rheo << "#17: N1(2)" << endl;
+		fout_rheo << "#18: N2(2)" << endl;
+		
 	}
 	fout_rheo << sys.shear_strain << ' '; //1
 	fout_rheo << Viscosity << ' ' ; //2
@@ -556,19 +539,10 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_b << ' ' ; //12
 	fout_rheo << N1_b << ' ' ; //13
 	fout_rheo << N2_b << ' ' ; //14
-	fout_rheo << sys.gap_min << ' '; // 15
-	fout_rheo << sys.max_nearing_time << ' '; // 16
-	fout_rheo << sys.ave_nearing_time << ' '; // 17
-	fout_rheo << 2*sys.num_nearing*(1.0/sys.np) << ' '; //18
-	fout_rheo << sys.cnt_nearing_number[0]*(1.0/sys.np) << ' '; //19
-	fout_rheo << sys.cnt_nearing_number[1]*(1.0/sys.np) << ' '; //20
-	fout_rheo << sys.cnt_nearing_number[2]*(1.0/sys.np) << ' '; //21
-	fout_rheo << sys.cnt_nearing_number[3]*(1.0/sys.np) << ' '; //22
-	fout_rheo << sys.cnt_nearing_number[4]*(1.0/sys.np) << ' '; //23
-	fout_rheo << sys.cnt_nearing_number[5]*(1.0/sys.np) << ' '; //24
-	fout_rheo << Viscosity_2 << ' '; // 25
-	fout_rheo << N1_2 << ' '; // 26
-	fout_rheo << N2_2 << ' '; // 27
+	fout_rheo << sys.minvalue_gap_nondim << ' '; // 15
+	fout_rheo << Viscosity_2 << ' '; // 16
+	fout_rheo << N1_2 << ' '; // 17
+	fout_rheo << N2_2 << ' '; // 18
 	fout_rheo << endl;
 }
 
@@ -671,6 +645,9 @@ Simulation::outputConfigurationData(){
 		fout_particle << p.x << sp << p.y << sp << p.z << sp; //2,3,4: position
 		fout_particle << v.x << sp << v.y << sp << v.z << sp; //5,6,7: velocity
 		fout_particle << o.x << sp << o.y << sp << o.z << sp; //5,6,7: velocity
+		if (sys.dimension == 2){
+			fout_particle << sys.angle[i];
+		}
 		fout_particle << endl;
 	}
 
@@ -694,9 +671,8 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].nr_vec.x << sp;
 			fout_interaction << sys.interaction[k].nr_vec.y << sp;
 			fout_interaction << sys.interaction[k].nr_vec.z << sp;
-			fout_interaction << sys.interaction[k].gap() << sp; //7
+			fout_interaction << sys.interaction[k].gap_nondim() << sp; //7
 			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; //
-			fout_interaction << sys.interaction[k].nearingTime() << sp; //8
 			fout_interaction << sys.interaction[k].static_friction << sp; //8
 
 			/// fout_interaction << ???

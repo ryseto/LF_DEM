@@ -11,6 +11,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <string>
+
 
 class vec3d {
 public:
@@ -186,9 +188,14 @@ public:
 			z -= lz;
 		}
 	}
+
+	void cerr(std::string note){
+		std::cerr << note << ' ' << x << ' '<< y << ' ' << z << std::endl;
+	}
+	
 	void cerr(){
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
-	}	
+	}
 };
 #endif	
 
