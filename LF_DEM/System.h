@@ -81,7 +81,14 @@ public:
 	double *v_lub_cont_mid;
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
-
+	/*
+	 * fix_interaction_status
+	 * If it is true:
+	 * no destruction 
+	 * no switching between static and dynamic is not allowed
+	 *
+	 */ 
+	bool fix_interaction_status;
     /* For DEMsystem
      */
 	System(){};
@@ -91,6 +98,7 @@ public:
 	int dimension;
 	vec3d *position;
 	double *radius;
+	vector <double> radius_cubic;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vector <vec3d> velocity_predictor;
@@ -226,7 +234,7 @@ public:
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteractions(const bool switch_off_allowed=true);
+	void updateInteractions();
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
@@ -237,6 +245,8 @@ public:
 	void periodize_diff(vec3d &, int &);
 	void updateVelocity();
 	void updateVelocityLubrication();
+	void revertRealVelocity();
+	
 //	void updateVelocityLubrication(vector<vec3d> &velocity_, vector<vec3d> &ang_velocity_);
 	void updateVelocityLubricationBrownian();
 	

@@ -139,7 +139,7 @@ void System::calcStressesHydroContactBrownian(){
 		vec3d dr(v_Brownian_init[i3]*dt, v_Brownian_init[i3+1]*dt, v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
     }
-    updateInteractions(false);
+    updateInteractions();
 	
 
 
@@ -195,7 +195,7 @@ void System::calcStressesHydroContactBrownian(){
 		vec3d dr(-v_Brownian_init[i3]*dt, -v_Brownian_init[i3+1]*dt, -v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
     }
-    updateInteractions(false);
+    updateInteractions();
 
 	delete [] step_stresslet;	
 }

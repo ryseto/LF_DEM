@@ -35,26 +35,22 @@ Interaction::r(double new_r){
  * vector from particle 0 to particle 1. ( i --> j)
  * pd_z : Periodic boundary condition
  */
-void
-Interaction::calcNormalVector(){
-	r_vec = sys->position[particle_num[1]] - sys->position[particle_num[0]];
-	sys->periodize_diff(r_vec, pd_z);
-}
 
 void
 Interaction::calcDistanceNormalVector(){
-	calcNormalVector();
+	r_vec = sys->position[particle_num[1]] - sys->position[particle_num[0]];
+	sys->periodize_diff(r_vec, zshift);
 	r(r_vec.norm());
 	nr_vec = r_vec / r();
 }
 
-void
-Interaction::assignDistanceNormalVector(const vec3d &pos_diff, double distance, int zshift){
-	r_vec = pos_diff;
-	r(distance);
-	nr_vec = r_vec / r();
-	pd_z = zshift;
-}
+//void
+//Interaction::assignDistanceNormalVector(const vec3d &pos_diff, double distance, int zshift_){
+//	r_vec = pos_diff;
+//	r(distance);
+//	nr_vec = r_vec / r();
+//	zshift = zshift_;
+//}
 
 
 /*********************************
@@ -71,12 +67,17 @@ Interaction::calcStaticFriction(){
 	 * f_tangent is force acting on particle 0 from particle 1
 	 * xi = r1' - r0'
 	 */
+	
 	Fc_tan = sys->kt*disp_tan;
-	double f_static = sys->mu_static*Fc_normal;
-	if (Fc_tan.sq_norm() > f_static*f_static){
-		/* switch to dynamic friction */
-		static_friction = false;
+	if (!sys->fix_interaction_status){
+		double f_static = sys->mu_static*Fc_normal;
+		if (Fc_tan.sq_norm() > f_static*f_static){
+			/* switch to dynamic friction */
+			disp_tan.reset();
+			Fc_tan.reset();
+		}
 	}
+	
 }
 
 void
@@ -97,12 +98,9 @@ Interaction::calcDynamicFriction(){
  */
 void
 Interaction::calcContactInteraction(){
-	if (contact){
-		Fc_normal = sys->kn*(_r - ro);
-		if(static_friction){
-			calcStaticFriction();
-		}
-	}
+	Fc_normal = sys->kn*(_r - ro);
+	calcStaticFriction();
+
 }
 
 void
@@ -134,10 +132,29 @@ void
 Interaction::calcContactVelocity(){
 	// relative velocity particle 1 from particle 0.
 	contact_velocity = sys->velocity[particle_num[1]] - sys->velocity[particle_num[0]];
-	if (pd_z != 0){
-		//	pd_z = -1; //  p1 (z = lz), p0 (z = 0)
+	if (zshift != 0){
+		//	zshift = -1; //  p1 (z += lz), p0 (z )
 		// v1 - v0
-		contact_velocity.x += pd_z * sys->vel_difference;
+		/* if p1 is upper, zshift = -1.
+		 * v1' = v1 - Lz = v1 - zshift*lz;
+		 */
+		/**** NOTE ********************************************
+		 * In the Corrector, this contact_velocity
+		 * is also the correcting velocity.
+		 * This correcting velocity should not involve the
+		 * velocity diffrence due to crossing the z boundary.
+		 * fix_interaction_status = true : in the Predictor
+		 * fix_interaction_status = false : in the Corrector
+		 ******************************************************/
+		if (sys->integration_method == 0 ){
+			/* In Eular Method
+			 */
+			contact_velocity.x += zshift * sys->vel_difference;
+		} else {
+			if (sys->fix_interaction_status == true){
+				contact_velocity.x += zshift * sys->vel_difference;
+			}
+		}
 	}
 	contact_velocity -= cross(a0*sys->ang_velocity[particle_num[0]]
 							  + a1*sys->ang_velocity[particle_num[1]],
@@ -147,23 +164,23 @@ Interaction::calcContactVelocity(){
 
 void
 Interaction::incrementContactTangentialDisplacement(){
-	if (static_friction){
+	//	if (static_friction){
+	if (contact){
 		disp_tan += contact_velocity_tan*sys->dt;
-		// projection
-		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
-	} else {
-		/* Criteria from static friction to dynamic friction
-		 * must be given properly.
-		 */
-		static_friction = true;
-		disp_tan.reset();
-		
-		//sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
-		//if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
-		//static_friction = true;
-		//disp_tan.reset();
-		//}
+		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;// projection
 	}
+	//} else {
+	/* Criteria from static friction to dynamic friction
+	 * must be given properly.
+	 */
+	//static_friction = true;
+	//	disp_tan.reset();
+	//sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
+	//if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
+	//static_friction = true;
+	//disp_tan.reset();
+	//}
+	//}
 }
 
 /*********************************
@@ -521,8 +538,12 @@ Interaction::partner(int i){
 /* Activate interaction between particles i and j.
  */
 void
-Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int zshift){
+Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int _zshift){
 	active = true;
+	r_vec = pos_diff;
+	r(distance);
+	nr_vec = r_vec / r();
+	zshift = _zshift;
 
 	if(j>i){
 		particle_num[0] = i;
@@ -554,7 +575,10 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	lub_coeff_max = 1/lub_reduce_parameter;
 	
 	r_lub_max = 0.5*ro*sys->lub_max;
-	assignDistanceNormalVector(pos_diff, distance, zshift);
+	
+	
+	
+	//assignDistanceNormalVector(pos_diff, distance, zshift);
 
 	/*
 	 * We may consider the particle size
@@ -601,14 +625,16 @@ void
 Interaction::deactivate_contact(){
 	// r > a0 + a1
 	contact = false;
+	static_friction = false;
+	disp_tan.reset();
 	Fc_normal = 0;
 	Fc_tan.reset();
 }
 
 
 bool
-Interaction::updateState(bool switch_off_allowed){
-	if(r() > r_lub_max && switch_off_allowed){
+Interaction::updateState(){
+	if(r() > r_lub_max ){
 		deactivate();
 		return true;
 	} else {
@@ -620,7 +646,7 @@ Interaction::updateState(bool switch_off_allowed){
 			// contact false:
 			if (r() <= ro){
 				activate_contact();
-			} 
+			}
 		}
 	}
 	return false;
@@ -632,7 +658,7 @@ Interaction::updateState(bool switch_off_allowed){
  *   ---> deactivate
  */
 bool
-Interaction::update(const bool switch_off_allowed){
+Interaction::update(){
 	bool switched_off = false;
 	if (active){
 		// compute new r_vec and distance
@@ -641,14 +667,13 @@ Interaction::update(const bool switch_off_allowed){
 		if (contact) {
 			calcContactVelocity();
 			incrementContactTangentialDisplacement();
+			calcContactInteraction();
 		}
-		
-		// check new state of the interaction
-		switched_off = updateState(switch_off_allowed);
-
 		// compute new contact forces if needed
-		calcContactInteraction();
-
+		// check new state of the interaction
+		if (!sys->fix_interaction_status ){
+			switched_off = updateState();
+		}
 	}
 	return switched_off;
 }

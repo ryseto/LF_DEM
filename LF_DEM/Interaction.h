@@ -29,7 +29,7 @@ private:
 
 	//======= relative position/velocity data  =========//
 	double _r; // center-center distance
-	int pd_z;
+	int zshift;
 	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_reduce_parameter; // small cut-off for ksi: lubrication breakdown
 //	double gap_nondim_eff;
@@ -67,14 +67,14 @@ private:
 
 	//======= relative position/velocity  ========//
 	void r(double new_r);
-	void calcNormalVector();
+//	void calcNormalVector();
 	void calcDistanceNormalVector();
-	void assignDistanceNormalVector(const vec3d &, double, int);
+//	void assignDistanceNormalVector(const vec3d &, double, int);
 	void calcContactVelocity();
 	void incrementContactTangentialDisplacement();
 
 	//======= internal state switches  ===========//
-	bool updateState(bool);
+	bool updateState();
 	void deactivate();
 	void activate_contact();
 	void deactivate_contact();
@@ -102,7 +102,7 @@ public:
 	void init(System *sys_);
 
 	//======= state updates  ====================//
-	bool update(const bool switch_off_allowed=true); // after particles dispacement, updates internal state, contact forces...
+	bool update();
 	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
 	bool active;
 
