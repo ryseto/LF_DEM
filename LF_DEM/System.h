@@ -97,15 +97,16 @@ public:
 	vec3d *ang_velocity;
 	vector <vec3d> ang_velocity_predictor;
 
-	vec3d *total_force;
+//	vec3d *total_force;
 	vec3d *lubrication_force;
 	vec3d *contact_force;
+	vec3d *contact_torque;
 	vec3d *brownian_force;
 	vec3d *total_velocity;
 	vec3d *lubrication_velocity;
 	vec3d *contact_velocity;
 	vec3d *brownian_velocity;
-	vec3d *torque; // right now only contact torque
+//	vec3d *torque; // right now only contact torque
 	vec3d *lub_force; // Only for outputing data
 	vector <stresslet> lubstress; // G U + M E
 	vector <stresslet> lubstress2; // r * F_lub
@@ -150,7 +151,8 @@ public:
 	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
 	 * 1/ksi_cutoff when h <= ksi_cutoff
 	 */
-	double gap_cutoff;
+	double lub_reduce_parameter;
+	
 	BrownianForce *fb;
 	double shear_disp;
 	double shear_rate;
@@ -160,30 +162,13 @@ public:
 	double dt;
 	double dt_mid;
 	double dt_ratio;
-	double gap_min;
+	double minvalue_gap_nondim;
 	double ave_overlap;
 	bool draw_rotation_2d;
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	string simu_name;
-	/* The definition of contact is
-	 * when the gap is smaller than "dist_near"
-	 */
-	int cnt_nearing_number[10];
-	double max_nearing_time;
-	double ave_nearing_time;
-	double dist_near;
-	bool near;
-	int num_nearing;
-	vector<double> nearing_time_record;
-	
-	
-	/*
-	 * nearing_number[i] means
-	 * the number of nearing of particle i.
-	 */
-	vector<int> nearing_number;
-		
+
 	/*************************************************************/
 	void lx(double length){
 		_lx=length;
@@ -277,7 +262,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
-//	double ksi_min;
+
 
 };
 #endif /* defined(__LF_DEM__System__) */

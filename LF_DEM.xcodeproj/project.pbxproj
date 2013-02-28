@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CDC267E216C97D100026ABF5 /* libsuitesparseconfig.4.0.2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CDC267E116C97D100026ABF5 /* libsuitesparseconfig.4.0.2.a */; };
 		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
 		D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */; };
 		D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
@@ -45,7 +44,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		CDC267E116C97D100026ABF5 /* libsuitesparseconfig.4.0.2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.0.2.a; path = ../../../../../usr/local/lib/libsuitesparseconfig.4.0.2.a; sourceTree = "<group>"; };
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StokesSolver.cpp; sourceTree = "<group>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
@@ -108,7 +106,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CDC267E216C97D100026ABF5 /* libsuitesparseconfig.4.0.2.a in Frameworks */,
 				D9F336C916C2F764003E8E7C /* libcolamd.2.8.0.a in Frameworks */,
 				D932B8ED16C2F71400AD6E85 /* libamd.2.3.1.a in Frameworks */,
 				D932B8EB16C2F60200AD6E85 /* libifpack.dylib in Frameworks */,
@@ -192,7 +189,6 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
-				CDC267E116C97D100026ABF5 /* libsuitesparseconfig.4.0.2.a */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
 				D972279C16AF8FF300DA851F /* Mathematica */,
