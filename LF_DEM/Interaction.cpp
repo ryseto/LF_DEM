@@ -492,11 +492,6 @@ void
 Interaction::addContactStress2(){
 	int i = particle_num[0];
 	int j = particle_num[1];
-	int i3=3*i;
-	int j3=3*j;
-
-	stresslet stresslet_GU_i;
-	stresslet stresslet_GU_j;
 
 	if (contact){
 		vec3d force = - Fc_normal * nr_vec + Fc_tan; //@@TO BE CHECKED.

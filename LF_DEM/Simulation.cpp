@@ -511,16 +511,6 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#11: Viscosity(brownian)" << endl;
 		fout_rheo << "#12: N1(brownian)" << endl;
 		fout_rheo << "#13: N2(brownian)" << endl;
-		fout_rheo << "#14: minimum gap"<< endl;
-		fout_rheo << "#15: nearing time" << endl;
-		fout_rheo << "#16: number of nearing" << endl;
-		fout_rheo << "#17: rate of particles cn = 0" << endl;
-		fout_rheo << "#18: number of particle cn = 1" << endl;
-		fout_rheo << "#19: number of particle cn = 2" << endl;
-		fout_rheo << "#20: number of particle cn = 3" << endl;
-		fout_rheo << "#21: number of particle cn = 4" << endl;
-		fout_rheo << "#22: number of particle cn = 5" << endl;
-
 		// fout_rheo << "#1: shear strain" << endl;
 		// fout_rheo << "#2: Viscosity" << endl;
 		// fout_rheo << "#4: Viscosity(lub)" << endl;
@@ -543,16 +533,6 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_b << ' ' ; //11
 	fout_rheo << N1_b << ' ' ; //12
 	fout_rheo << N2_b << ' ' ; //13
-	fout_rheo << sys.gap_min << ' '; // 14
-	fout_rheo << sys.max_nearing_time << ' '; // 15
-	fout_rheo << sys.ave_nearing_time << ' '; // 16
-	fout_rheo << 2*sys.num_nearing*(1.0/sys.np) << ' '; //17
-	fout_rheo << sys.cnt_nearing_number[0]*(1.0/sys.np) << ' '; //18
-	fout_rheo << sys.cnt_nearing_number[1]*(1.0/sys.np) << ' '; //19
-	fout_rheo << sys.cnt_nearing_number[2]*(1.0/sys.np) << ' '; //20
-	fout_rheo << sys.cnt_nearing_number[3]*(1.0/sys.np) << ' '; //21
-	fout_rheo << sys.cnt_nearing_number[4]*(1.0/sys.np) << ' '; //22
-	fout_rheo << sys.cnt_nearing_number[5]*(1.0/sys.np) << ' '; //23
 	fout_rheo << endl;
 
 

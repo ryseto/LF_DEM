@@ -12,7 +12,7 @@ OS_version=OSX
 Build=debug
 
 # Enable use of Trilinos library ( yes / no )
-UseTrilinos=yes 
+UseTrilinos=no
 
 #=======================================#
 #=======================================#
@@ -39,8 +39,10 @@ Trilinos_path = $(Trilinos_include_path_$(OS_version))
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
 
 # Includes
-Includes = -I $(Cholmod_path) -I $(Trilinos_path)
-
+Includes = -I $(Cholmod_path) 
+ifeq ($(UseTrilinos),yes)
+	Includes += -I $(Trilinos_path)
+endif
 
 #======== Linking ==================
 # Blas and Lapack
