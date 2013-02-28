@@ -200,17 +200,12 @@ sub OutString_width {
     $xj = $posx[$j];
     $yj = $posy[$j] - 0.01;
     $zj = $posz[$j];
+	$sq_dist = ($xi-$xj)**2 +	($yi-$yj)**2 + ($zi-$zj)**2;
+	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
+		printf OUT "r ${string_width}\n";
+		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+	}
 	
-	if (abs($xi-$xj) < $radius_max*5
-		&&  abs($yi-$yj) < $radius_max*5
-		&&  abs($zi-$zj) < $radius_max*5){
-			if ( $y_section == 0
-				|| abs($yi) < $y_section
-				|| abs($yj) < $y_section){
-					printf OUT "r ${string_width}\n";
-					printf OUT "s $xi $yi $zi $xj $yj $zj\n";
-				}
-		}
 }
 
 

@@ -121,7 +121,6 @@ public:
 	//======= internal state =====================//
 	bool contact;
 	bool static_friction;
-	bool friction;
 
 	//=============  Resistance Matrices ====================/
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
