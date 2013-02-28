@@ -143,6 +143,7 @@ public:
 	void addContactStress();
 	void addContactStress2();
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
+	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 
 	//===== other observables  ========================== //

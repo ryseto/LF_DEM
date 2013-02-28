@@ -113,15 +113,18 @@ public:
 	vec3d *lub_force; // Only for outputing data
 	vector <stresslet> lubstress; // G U + M E
 	vector <stresslet> lubstress2; // r * F_lub
+	vector <stresslet> bgfstress;
+	vector <stresslet> bgfstress2;
 	vector <stresslet> contactstress;
 	vector <stresslet> contactstress2;
 	vector <stresslet> brownianstress;
 	int brownianstress_calc_nb;
-	double total_stress_bgf;
-	double total_lub_stress[5];
+
+	double total_hydro_stress[5];
 	double total_contact_stress[5];
 	double total_brownian_stress[5];
-	double total_lub_stress2[5];
+
+	double total_hydro_stress2[5];
 	double total_contact_stress2[5];
 
 	double kn;

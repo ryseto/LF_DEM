@@ -149,7 +149,7 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "origin_zero_flow"){
 		origin_zero_flow = str2bool(value);
 	} else {
-		cerr << "keyword " << keyword << " is'nt associated with an parameter" << endl;
+		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
 	}
 }
@@ -439,8 +439,8 @@ Simulation::evaluateData(){
 	double total_stress[5];
 	double total_stress2[5];
 	for (int u=0; u<5; u++){
-		total_stress[u] = sys.total_lub_stress[u] + sys.total_contact_stress[u];
-		total_stress2[u] = sys.total_lub_stress2[u] + sys.total_contact_stress2[u];
+		total_stress[u] = sys.total_hydro_stress[u] + sys.total_contact_stress[u];
+		total_stress2[u] = sys.total_hydro_stress2[u] + sys.total_contact_stress2[u];
 	}
 	if (sys.brownian){
 		for (int u=0; u<5; u++){
@@ -449,7 +449,7 @@ Simulation::evaluateData(){
 		}
 	}
 	total_stress[2] += sys.shear_rate;
-	total_stress2[2] += sys.total_stress_bgf;
+	total_stress2[2] += sys.shear_rate;
 	Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
 	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
 	/* N1 = tau_xx - tau_zz = tau_xx - (- tau_xx-tau_yy) = 2tau_xx + tau_yy
@@ -457,13 +457,11 @@ Simulation::evaluateData(){
 	 */
 	N1 = (2*total_stress[0] +   total_stress[4])/(sys.valSystemVolume());
 	N2 = (-total_stress[0] - 2*total_stress[4])/(sys.valSystemVolume());
-	Viscosity_bgf = 1.;
-	Viscosity_h = sys.total_lub_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2_bgf = sys.total_stress_bgf/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2_h = sys.total_lub_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
 
-	N1_h = (2*sys.total_lub_stress[0] +   sys.total_lub_stress[4])/(sys.valSystemVolume());
-	N2_h = (-sys.total_lub_stress[0] - 2*sys.total_lub_stress[4])/(sys.valSystemVolume());
+	N1_h = (2*sys.total_hydro_stress[0] +   sys.total_hydro_stress[4])/(sys.valSystemVolume());
+	N2_h = (-sys.total_hydro_stress[0] - 2*sys.total_hydro_stress[4])/(sys.valSystemVolume());
 	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
 	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
 	N1_c = (2*sys.total_contact_stress[0] +   sys.total_contact_stress[4])/(sys.valSystemVolume());
@@ -500,81 +498,72 @@ Simulation::outputRheologyData(){
 	 */
 	if ( firsttime ){
 		firsttime = false;
-		// fout_rheo << "#1: shear strain" << endl;
-		// fout_rheo << "#2: Viscosity" << endl;
-		// fout_rheo << "#3: N1" << endl;
-		// fout_rheo << "#4: N2" << endl;
-		// fout_rheo << "#5: Viscosity(bgf)" << endl;
-		// fout_rheo << "#6: Viscosity(lub)" << endl;
-		// fout_rheo << "#7: N1(lub)" << endl;
-		// fout_rheo << "#8: N2(lub)" << endl;
-		// fout_rheo << "#9: Viscosity(contact)" << endl;
-		// fout_rheo << "#10: N1(contact)" << endl;
-		// fout_rheo << "#11: N2(contact)" << endl;
-		// fout_rheo << "#12: Viscosity(brownian)" << endl;
-		// fout_rheo << "#13: N1(brownian)" << endl;
-		// fout_rheo << "#14: N2(brownian)" << endl;
-		// fout_rheo << "#15: minimum gap"<< endl;
-		// fout_rheo << "#16: nearing time" << endl;
-		// fout_rheo << "#17: number of nearing" << endl;
-		// fout_rheo << "#18: rate of particles cn = 0" << endl;
-		// fout_rheo << "#19: number of particle cn = 1" << endl;
-		// fout_rheo << "#20: number of particle cn = 2" << endl;
-		// fout_rheo << "#21: number of particle cn = 3" << endl;
-		// fout_rheo << "#22: number of particle cn = 4" << endl;
-		// fout_rheo << "#23: number of particle cn = 5" << endl;
-
 		fout_rheo << "#1: shear strain" << endl;
 		fout_rheo << "#2: Viscosity" << endl;
-		fout_rheo << "#3: Viscosity(bgf)" << endl;
-		fout_rheo << "#4: Viscosity(lub)" << endl;
-		fout_rheo << "#5: Viscosity(contact)" << endl;
-		fout_rheo << "#6: Viscosity2" << endl;
-		fout_rheo << "#7: Viscosity2(bgf)" << endl;
-		fout_rheo << "#8: Viscosity2(lub)" << endl;
-		fout_rheo << "#9: Viscosity2(contact)" << endl;
+		fout_rheo << "#3: N1" << endl;
+		fout_rheo << "#4: N2" << endl;
+		fout_rheo << "#5: Viscosity(lub)" << endl;
+		fout_rheo << "#6: N1(lub)" << endl;
+		fout_rheo << "#7: N2(lub)" << endl;
+		fout_rheo << "#8: Viscosity(contact)" << endl;
+		fout_rheo << "#9: N1(contact)" << endl;
+		fout_rheo << "#10: N2(contact)" << endl;
+		fout_rheo << "#11: Viscosity(brownian)" << endl;
+		fout_rheo << "#12: N1(brownian)" << endl;
+		fout_rheo << "#13: N2(brownian)" << endl;
+		fout_rheo << "#14: minimum gap"<< endl;
+		fout_rheo << "#15: nearing time" << endl;
+		fout_rheo << "#16: number of nearing" << endl;
+		fout_rheo << "#17: rate of particles cn = 0" << endl;
+		fout_rheo << "#18: number of particle cn = 1" << endl;
+		fout_rheo << "#19: number of particle cn = 2" << endl;
+		fout_rheo << "#20: number of particle cn = 3" << endl;
+		fout_rheo << "#21: number of particle cn = 4" << endl;
+		fout_rheo << "#22: number of particle cn = 5" << endl;
+
+		// fout_rheo << "#1: shear strain" << endl;
+		// fout_rheo << "#2: Viscosity" << endl;
+		// fout_rheo << "#4: Viscosity(lub)" << endl;
+		// fout_rheo << "#5: Viscosity(contact)" << endl;
+		// fout_rheo << "#6: Viscosity2" << endl;
+		// fout_rheo << "#8: Viscosity2(lub)" << endl;
+		// fout_rheo << "#9: Viscosity2(contact)" << endl;
 
 	}
-	// fout_rheo << sys.shear_strain << ' '; //1
-	// fout_rheo << Viscosity << ' ' ; //2
-	// fout_rheo << N1 << ' ' ; //3
-	// fout_rheo << N2 << ' ' ; //4
-	// fout_rheo << Viscosity_bgf << ' '; // 5
-	// fout_rheo << Viscosity_h << ' ' ; //6
-	// fout_rheo << N1_h << ' ' ; //7
-	// fout_rheo << N2_h << ' ' ; //8
-	// fout_rheo << Viscosity_c << ' ' ; //9
-	// fout_rheo << N1_c << ' ' ; //10
-	// fout_rheo << N2_c << ' ' ; //11
-	// fout_rheo << Viscosity_b << ' ' ; //12
-	// fout_rheo << N1_b << ' ' ; //13
-	// fout_rheo << N2_b << ' ' ; //14
-	// fout_rheo << sys.gap_min << ' '; // 15
-	// fout_rheo << sys.max_nearing_time << ' '; // 16
-	// fout_rheo << sys.ave_nearing_time << ' '; // 17
-	// fout_rheo << 2*sys.num_nearing*(1.0/sys.np) << ' '; //18
-	// fout_rheo << sys.cnt_nearing_number[0]*(1.0/sys.np) << ' '; //19
-	// fout_rheo << sys.cnt_nearing_number[1]*(1.0/sys.np) << ' '; //20
-	// fout_rheo << sys.cnt_nearing_number[2]*(1.0/sys.np) << ' '; //21
-	// fout_rheo << sys.cnt_nearing_number[3]*(1.0/sys.np) << ' '; //22
-	// fout_rheo << sys.cnt_nearing_number[4]*(1.0/sys.np) << ' '; //23
-	// fout_rheo << sys.cnt_nearing_number[5]*(1.0/sys.np) << ' '; //24
-	// fout_rheo << Viscosity_2 << ' '; // 25
-	// fout_rheo << N1_2 << ' '; // 26
-	// fout_rheo << N2_2 << ' '; // 27
-	// fout_rheo << endl;
-
-
 	fout_rheo << sys.shear_strain << ' '; //1
 	fout_rheo << Viscosity << ' ' ; //2
-	fout_rheo << Viscosity_bgf << ' '; // 5
-	fout_rheo << Viscosity_h << ' ' ; //6
-	fout_rheo << Viscosity_c << ' ' ; //9
-	fout_rheo << Viscosity_2 << ' '; // 25
-	fout_rheo << Viscosity_2_bgf << ' '; // 5
-	fout_rheo << Viscosity_2_h << ' ' ; //6
-	fout_rheo << Viscosity_2_c << ' ' ; //9
+	fout_rheo << N1 << ' ' ; //3
+	fout_rheo << N2 << ' ' ; //4
+	fout_rheo << Viscosity_h << ' ' ; //5
+	fout_rheo << N1_h << ' ' ; //6
+	fout_rheo << N2_h << ' ' ; //7
+	fout_rheo << Viscosity_c << ' ' ; //8
+	fout_rheo << N1_c << ' ' ; //9
+	fout_rheo << N2_c << ' ' ; //10
+	fout_rheo << Viscosity_b << ' ' ; //11
+	fout_rheo << N1_b << ' ' ; //12
+	fout_rheo << N2_b << ' ' ; //13
+	fout_rheo << sys.gap_min << ' '; // 14
+	fout_rheo << sys.max_nearing_time << ' '; // 15
+	fout_rheo << sys.ave_nearing_time << ' '; // 16
+	fout_rheo << 2*sys.num_nearing*(1.0/sys.np) << ' '; //17
+	fout_rheo << sys.cnt_nearing_number[0]*(1.0/sys.np) << ' '; //18
+	fout_rheo << sys.cnt_nearing_number[1]*(1.0/sys.np) << ' '; //19
+	fout_rheo << sys.cnt_nearing_number[2]*(1.0/sys.np) << ' '; //20
+	fout_rheo << sys.cnt_nearing_number[3]*(1.0/sys.np) << ' '; //21
+	fout_rheo << sys.cnt_nearing_number[4]*(1.0/sys.np) << ' '; //22
+	fout_rheo << sys.cnt_nearing_number[5]*(1.0/sys.np) << ' '; //23
 	fout_rheo << endl;
+
+
+	// fout_rheo << sys.shear_strain << ' '; //1
+	// fout_rheo << Viscosity << ' ' ; //2
+	// fout_rheo << Viscosity_h << ' ' ; //6
+	// fout_rheo << Viscosity_c << ' ' ; //9
+	// fout_rheo << Viscosity_2 << ' '; // 25
+	// fout_rheo << Viscosity_2_h << ' ' ; //6
+	// fout_rheo << Viscosity_2_c << ' ' ; //9
+	// fout_rheo << endl;
 
 }
 

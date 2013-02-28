@@ -105,6 +105,7 @@ System::allocateRessources(){
 	lub_force = new vec3d [np];
 
 	lubstress.resize(np);
+	bgfstress.resize(np);
 	contactstress.resize(np);
 	brownianstress.resize(np);
 
@@ -116,6 +117,7 @@ System::allocateRessources(){
 	interaction_partners = new set <int> [np];
 	
 	lubstress2.resize(np);
+	bgfstress2.resize(np);
 	contactstress2.resize(np);
 	
 	dof = 3;
@@ -571,8 +573,10 @@ System::stressReset(){
 	for (int i=0; i < np; i++){
 		for (int u=0; u < 5; u++){
 			lubstress[i].elm[u]=0;
+			bgfstress[i].elm[u]=0;
 			contactstress[i].elm[u]=0;
 			lubstress2[i].elm[u]=0;
+			bgfstress2[i].elm[u]=0;
 			contactstress2[i].elm[u]=0;
 		}
 	}
@@ -1031,47 +1035,6 @@ System::sq_distance(int i, int j){
 	} else {
 	 	return pos_diff.sq_norm_xz();
 	}
-}
-
-void
-System::calcStress(){
-	stressReset();
-
-	calcStressesHydroContact();
-	
-	if(brownian)
-	 	calcStressesHydroContactBrownian();
-
-	for (int u=0; u < 5; u++){
-		total_lub_stress[u] = 0;
-		total_contact_stress[u] = 0;
-		total_lub_stress2[u] = 0;
-		total_contact_stress2[u] = 0;
-		total_brownian_stress[u] = 0;
-	}
-	
-	for (int i=0; i < np; i++){
-		for (int u=0; u < 5; u++){
-			total_lub_stress[u] += lubstress[i].elm[u];
-			total_contact_stress[u] += contactstress[i].elm[u];
-			total_lub_stress2[u] += lubstress2[i].elm[u];
-			total_contact_stress2[u] += contactstress2[i].elm[u];
-			total_brownian_stress[u] += brownianstress[i].elm[u];
-		}
-	}
-	// cout << 2*total_lub_stress[2] << " " << total_lub_stress2[2] << endl;
-	// cout << 2*total_contact_stress[2] << " " << total_contact_stress2[2] << endl;
-	/*
-	 * The term 5.0/9 is the one-body part
-	 *
-	 */
-	total_stress_bgf = 0;
-	for (int i=0; i < np; i++){
-		double a = radius[i];
-		total_stress_bgf += (5.0/9)*bgf_factor*a*a*a;
-	}
-
-	stressBrownianReset();
 }
 
 void

@@ -93,7 +93,7 @@ Interaction::calcDynamicFriction(){
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
  * r_vec = p[1] - p[0]
- * Fc_normal is positive (by overlapping particles r < ro)
+ * Fc_normal is negative (by overlapping particles r < ro)
  */
 void
 Interaction::calcContactInteraction(){
@@ -120,29 +120,6 @@ Interaction::addUpContactForceTorque(){
 	}
 }
 
-
-
-//void
-//Interaction::addUpContactForce(vec3d &force0, vec3d &force1){
-//	vec3d f_ij;
-//	if (contact){
-//		if(friction)
-//			f_ij = Fc_normal * nr_vec + Fc_tan; // acting on p0 //@@TO BE CHECKED.
-//		else
-//			f_ij = Fc_normal * nr_vec;
-//		
-//		force0 += f_ij;
-//		force1 -= f_ij;
-//	}
-//}
-
-//void
-//Interaction::addUpContactTorque(vec3d &torque0, vec3d &torque1){
-//	if (contact&&friction){
-//		torque0 += Tc_0;
-//		torque1 += Tc_1;
-//	}
-//}
 
 
 /* Relative velocity of particle 1 from particle 0.
@@ -288,6 +265,30 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 }
 
 
+// convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
+void
+Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j){
+	
+	vec3d vi, vj;
+
+	int i = particle_num[0];
+	int j = particle_num[1];
+	int i3 = 3*i;
+	int j3 = 3*j;
+	
+	vi.x = vel_array[i3  ];
+	vi.y = vel_array[i3+1];
+	vi.z = vel_array[i3+2];
+	
+	vj.x = vel_array[j3  ];
+	vj.y = vel_array[j3+1];
+	vj.z = vel_array[j3+2];
+	
+	pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
+
+}
+
+
 void
 Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j){
 	
@@ -343,33 +344,24 @@ Interaction::addLubricationStress(){
 	stresslet stresslet2_j;
 	vec3d dr_i = a0*nr_vec;
 	//	vec3d dr_i = r_vec;
-	stresslet2_i.elm[0] = 2*dr_i.x*lubforce_i.x;
-	stresslet2_i.elm[1] = dr_i.x*lubforce_i.y + dr_i.y*lubforce_i.x;
-	stresslet2_i.elm[2] = dr_i.x*lubforce_i.z + dr_i.z*lubforce_i.x;
-	stresslet2_i.elm[3] = dr_i.y*lubforce_i.z + dr_i.z*lubforce_i.y;
-	stresslet2_i.elm[4] = 2*dr_i.y*lubforce_i.y;
+	stresslet2_i.elm[0] = dr_i.x*lubforce_i.x;
+	stresslet2_i.elm[1] = 0.5*(dr_i.x*lubforce_i.y + dr_i.y*lubforce_i.x);
+	stresslet2_i.elm[2] = 0.5*(dr_i.x*lubforce_i.z + dr_i.z*lubforce_i.x);
+	stresslet2_i.elm[3] = 0.5*(dr_i.y*lubforce_i.z + dr_i.z*lubforce_i.y);
+	stresslet2_i.elm[4] = dr_i.y*lubforce_i.y;
 	vec3d lubforce_j = -lubforce_i;
 	vec3d dr_j = -a1*nr_vec;
 	//	vec3d dr_j = -r_vec;
-	stresslet2_j.elm[0] = 2*dr_j.x*lubforce_j.x;
-	stresslet2_j.elm[1] = dr_j.x*lubforce_j.y + dr_j.y*lubforce_j.x;
-	stresslet2_j.elm[2] = dr_j.x*lubforce_j.z + dr_j.z*lubforce_j.x;
-	stresslet2_j.elm[3] = dr_j.y*lubforce_j.z + dr_j.z*lubforce_j.y;
-	stresslet2_j.elm[4] = 2*dr_j.y*lubforce_j.y;
+	stresslet2_j.elm[0] = dr_j.x*lubforce_j.x;
+	stresslet2_j.elm[1] = 0.5*(dr_j.x*lubforce_j.y + dr_j.y*lubforce_j.x);
+	stresslet2_j.elm[2] = 0.5*(dr_j.x*lubforce_j.z + dr_j.z*lubforce_j.x);
+	stresslet2_j.elm[3] = 0.5*(dr_j.y*lubforce_j.z + dr_j.z*lubforce_j.y);
+	stresslet2_j.elm[4] = dr_j.y*lubforce_j.y;
 
 	for (int u=0; u < 5; u++){
 		sys->lubstress2[i].elm[u] += stresslet2_i.elm[u];
 		sys->lubstress2[j].elm[u] += stresslet2_j.elm[u];
 	}
-
-	//  vec3d &vi = sys->relative_velocity_lub_cont[i];
-	//  vec3d &vj = sys->relative_velocity_lub_cont[j];
-	// if(i==98){
-	//   	cout << " version2 " <<i << " " << j << " " << stresslet2_i.elm[2] << " " <<0.25*a0*a0*dot(nr_vec, vi-vj)*lub_coeff*nr_vec.x*nr_vec.z<< " " << vi.x <<" " << vj.x <<  endl;
-	// 	//		cout << " version2 " <<i << " " << j << " " << " " << vi.x <<" " << vj.x <<  endl;
-	// }
-	// if(j==98)
-	//   	cout << " version2 " << i << " " << j << " " << stresslet2_j.elm[2] <<" " <<0.25*a0*a0*dot(nr_vec, vi-vj)*lub_coeff*nr_vec.x*nr_vec.z << " " << vi.x <<" " << vj.x << endl;
 
 }
 
@@ -406,18 +398,6 @@ Interaction::addHydroStress(){
 		sys->lubstress[j].elm[u] += stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
 		lubstresslet.elm[u] = stresslet_GU_i.elm[u] + stresslet_ME_i.elm[u] + stresslet_GU_j.elm[u] + stresslet_ME_j.elm[u];
 	}
-
-	// if(i==98){
-	// // 	//	  	cout << i << " " << j << " "<< "stresslet " << stresslet_GU_i.elm[2] << " " << (3.*lub_coeff/8.)*(2/3.)*a0*a0*dot(nr_vec, *vi-*vj)*nr_vec.x*nr_vec.z   << endl;
-	//  	cout << i << " " << j << " " <<"stresslet " << " " << stresslet_GU_i.elm[2]  << " " << 2*(stresslet_GU_i.elm[2]+stresslet_ME_i.elm[2]) << " " << vi->x <<" " << vj->x << " " << sys->relative_velocity_lub_cont[i].x << " " << sys->v_hydro[3*i] << " " << sys->v_cont[3*i] << " " << sys->v_hydro[3*i]+sys->v_cont[3*i] << " " << _gap<< " " << r() << endl;
-	// 	//		cout << i << " " << j << " " << vi->x <<" " << vj->x <<endl;
-	// }
-
-
-	// if(j==98){
-	// 	//	  	cout << "stresslet " << stresslet_GU_i.elm[2] << " " << (3.*lub_coeff/8.)*(2/3.)*a0*a0*dot(nr_vec, (*vi-*vj) )*nr_vec.x*nr_vec.z << endl;
-	// 	cout << i << " " << j << " " << "stresslet " << stresslet_GU_j.elm[2] << " " << 2*(stresslet_GU_i.elm[2]+stresslet_ME_i.elm[2]) << " " << vi->x <<" " << vj->x << endl;
-	// }
 
 	delete vi;
 	delete vj;
@@ -480,11 +460,11 @@ Interaction::addContactStress(){
 
 	if (contact){
 		vec3d force = - Fc_normal * nr_vec + Fc_tan; //@@TO BE CHECKED.
-		contactstresslet.elm[0] = 2*(force.x * nr_vec.x); //xx
-		contactstresslet.elm[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
-		contactstresslet.elm[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
-		contactstresslet.elm[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz
-		contactstresslet.elm[4] = 2*(force.y * nr_vec.y);
+		contactstresslet.elm[0] = force.x * nr_vec.x; //xx
+		contactstresslet.elm[1] = 0.5*(force.x * nr_vec.y + force.y * nr_vec.x) ; //xy
+		contactstresslet.elm[2] = 0.5*(force.x * nr_vec.z + force.z * nr_vec.x) ; //yy
+		contactstresslet.elm[3] = 0.5*(force.y * nr_vec.z + force.z * nr_vec.y) ; //xz
+		contactstresslet.elm[4] = force.y * nr_vec.y;
 		for (int u=0; u < 5; u++){
 			sys->contactstress[i].elm[u] += 0.5*contactstresslet.elm[u];
 			sys->contactstress[j].elm[u] += 0.5*contactstresslet.elm[u];
@@ -520,11 +500,11 @@ Interaction::addContactStress2(){
 
 	if (contact){
 		vec3d force = - Fc_normal * nr_vec + Fc_tan; //@@TO BE CHECKED.
-		contactstresslet2.elm[0] = 2*(force.x * nr_vec.x); //xx
-		contactstresslet2.elm[1] = force.x * nr_vec.y + force.y * nr_vec.x ; //xy
-		contactstresslet2.elm[2] = force.x * nr_vec.z + force.z * nr_vec.x ; //yy
-		contactstresslet2.elm[3] = force.y * nr_vec.z + force.z * nr_vec.y ; //xz
-		contactstresslet2.elm[4] = 2*(force.y * nr_vec.y);
+		contactstresslet2.elm[0] = force.x * nr_vec.x; //xx
+		contactstresslet2.elm[1] = 0.5*(force.x * nr_vec.y + force.y * nr_vec.x) ; //xy
+		contactstresslet2.elm[2] = 0.5*(force.x * nr_vec.z + force.z * nr_vec.x) ; //yy
+		contactstresslet2.elm[3] = 0.5*(force.y * nr_vec.z + force.z * nr_vec.y) ; //xz
+		contactstresslet2.elm[4] = force.y * nr_vec.y;
 		for (int u=0; u < 5; u++){
 			sys->contactstress2[i].elm[u] += contactstresslet2.elm[u];
 			sys->contactstress2[j].elm[u] += contactstresslet2.elm[u];

@@ -33,7 +33,6 @@ private:
 	double Viscosity;
 	double N1;
 	double N2;
-	double Viscosity_bgf;
 	double Viscosity_h;
 	double N1_h;
 	double N2_h;
@@ -44,7 +43,6 @@ private:
 	double N1_b;
 	double N2_b;
 	double Viscosity_2;
-	double Viscosity_2_bgf;
 	double Viscosity_2_h;
 	double Viscosity_2_c;
 	double N1_2;
