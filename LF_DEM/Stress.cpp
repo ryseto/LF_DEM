@@ -106,7 +106,7 @@ void System::calcBrownianStress(){
 				 v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
     }
-    updateInteractions(false);
+    updateInteractions();
 	
 
 
@@ -185,6 +185,6 @@ void System::calcBrownianStress(){
 				 -v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
     }
-    updateInteractions(false);
+    updateInteractions();
 
 }
