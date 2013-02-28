@@ -56,6 +56,9 @@ private:
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
+	void deltaTimeEvolution();
+	void deltaTimeEvolutionCorrector();
+	void deltaTimeEvolutionPredictor();
 	void displacement(int i, const vec3d &dr);
 	void setContactForceToParticle();
 	void buildLubricationTerms(bool);
@@ -226,10 +229,7 @@ public:
 	void updateVelocityLubrication();
 //	void updateVelocityLubrication(vector<vec3d> &velocity_, vector<vec3d> &ang_velocity_);
 	void updateVelocityLubricationBrownian();
-	void deltaTimeEvolution();
-	void deltaTimeEvolution_firststep();
-	void deltaTimeEvolution_secondstep();
-
+	
 	void forceReset();
 	void torqueReset();
 	void stressReset();
