@@ -417,6 +417,7 @@ void System::timeEvolutionBrownian(){
 	stokes_solver->setRHS( fb->generate_invLFb() );
 	stokes_solver->solve_CholTrans( v_Brownian_init );
 	stokes_solver->solvingIsDone();
+
     // move particles to intermediate point
 
     for (int i=0; i < np; i++){
@@ -442,6 +443,7 @@ void System::timeEvolutionBrownian(){
 	if (shear_disp > lx()){
 		shear_disp -= lx();
 	}
+	fix_interaction_status = true;
     updateInteractions();
 	
 	for (int i=0; i < np; i++){
@@ -504,8 +506,10 @@ void System::timeEvolutionBrownian(){
 		}
 	}
 	// update boxing system
+
+
+	fix_interaction_status = false;
 	boxset->update();
-	//	ksi_min=1.;
 	checkNewInteraction();
 	updateInteractions();
 }
