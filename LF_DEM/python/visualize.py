@@ -1,9 +1,11 @@
-#!/usr/bin/python
+#!/Applications/VPython-Py2.7/VIDLE.app/Contents/MacOS/Python
 # coding=utf-8
 
 # if using Mac OSX, interpreter is
 #/Applications/VPython-Py2.7/VIDLE.app/Contents/MacOS/Python
 
+# if using Linux, interpreter is
+# /usr/bin/python
 
 import visual
 from visual import graph
@@ -81,5 +83,5 @@ pos_stream=Pos_Stream(stream, part_nb, phi)
 init_visualization()
 while pos_stream.get_snapshot():
     update_visualization()
-    visual.rate(5)
+    visual.rate(50)
 

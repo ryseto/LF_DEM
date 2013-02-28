@@ -8,7 +8,9 @@
 
 #include "System.h"
 
-void System::calcBrownianStress(){
+void System::calcStressesHydroContactBrownian(){
+
+
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;
@@ -17,22 +19,71 @@ void System::calcBrownianStress(){
 	}
 	
 
+
+	/**************************************************
+              1. Stress from background flow 
+	                                                **/
+    for (int i = 0; i < np; i++){
+		double a = radius[i];
+		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
+		bgfstress2[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
+	}
+
+
+
+	/**************************************************
+       2. and 3.: Stresses from 
+			       2-body lubrication and contacts  **/
+
+	// first obtain hydrodynamic part of velocity
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU("direct");
+    addStokesDrag();
+    buildLubricationTerms();
+    stokes_solver->complete_RFU();
+    stokes_solver->solve(v_hydro);
+
+
+	// then obtain contact forces, adn contact part of velocity
+    stokes_solver->resetRHS();
+	setContactForceToParticle();
+    buildContactTerms();
+    stokes_solver->solve(v_cont);
+
+    stokes_solver->solvingIsDone();
+
+
+	// from that, compute stresses
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].addHydroStress();       // - R_SU * v_hydro
+			interaction[k].addContactStress();    //  - R_SU * v_cont - rF_cont
+		}
+	}
+
+
+
+	/**************************************************
+       4. : Stresses from Brownian forces 
+			                                        **/
+	
+	// This needs to be done with a mid-point algorithm,
+	// due to the drift term of Brownian motion.
+	// The steps are similar to the ones done for the  
+	// actual dynamics, although the motions are reverted
+	// at the very end, to let the system back in the initial
+	// state.
+
 	stresslet stresslet_i_init;
     stresslet stresslet_j_init;
     stresslet stresslet_i_mid;
     stresslet stresslet_j_mid;
     stresslet *step_stresslet = new stresslet [np];
-    stresslet total_step_stresslet;
     for (int i=0; i < np; i++){
 	  for (int u=0; u < 5; u++){
 	    step_stresslet[i].elm[u] = 0.;
 	  }
     }
-
-	for (int u=0; u < 5; u++){
-	  total_step_stresslet.elm[u] = 0.;
-	}
-
 
     vec3d vi;
     vec3d vj;
@@ -62,48 +113,30 @@ void System::calcBrownianStress(){
 	stokes_solver->solve_CholTrans( v_Brownian_init );
 	stokes_solver->solvingIsDone();
 
-
-	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
-    for (int k = 0; k < num_interaction; k++){
-	  for (int u=0; u < 5; u ++){
- 		stresslet_i_init.elm[u] = 0.;
-		stresslet_j_init.elm[u] = 0.;
-	  }
-
-	  int i = interaction[k].particle_num[0];
-	  int j = interaction[k].particle_num[1];
-	  int i3 = 3*i;
-	  int j3 = 3*j;
-
-	  vi.x = v_Brownian_init[i3  ];
-	  vi.y = v_Brownian_init[i3+1];
-	  vi.z = v_Brownian_init[i3+2];
-
-	  vj.x = v_Brownian_init[j3  ];
-	  vj.y = v_Brownian_init[j3+1];
-	  vj.z = v_Brownian_init[j3+2];
-
-	  interaction[k].pairVelocityStresslet(vi, vj, stresslet_i_init, stresslet_j_init);
-
-	  for (int u=0; u < 5; u++){
-	    step_stresslet[i].elm[u] -= stresslet_i_init.elm[u];
-	    step_stresslet[j].elm[u] -= stresslet_j_init.elm[u];
-	  }
+    for (int i=0; i < np; i++){
+		v_Brownian_init[3*i+1] *= zero_2Dsimu;
     }
 
-	// for (int u=0; u < 5; u++){
-	//   for (int i=0; i < np; i++){
-	// 	total_step_stresslet.elm[u] += step_stresslet[i].elm[u];
-	//   }
-	//   //cout << total_step_stresslet.elm[u]/np << " " ;
-	// }
+	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
+
+    for (int k = 0; k < num_interaction; k++){
+		if(interaction[k].active){
+			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_mid, stresslet_j_mid);
+
+			int i = interaction[k].particle_num[0];
+			int j = interaction[k].particle_num[1];
+			for (int u=0; u < 5; u++){
+				step_stresslet[i].elm[u] -= 0.5*stresslet_i_init.elm[u];
+				step_stresslet[j].elm[u] -= 0.5*stresslet_j_init.elm[u];
+			}
+		}
+    }
+
 
     // move particles to intermediate point
     for (int i=0; i < np; i++){
 		int i3 = 3*i;
-		vec3d dr(v_Brownian_init[i3]*dt,
-				 v_Brownian_init[i3+1]*dt*zero_2Dsimu,
-				 v_Brownian_init[i3+2]*dt);
+		vec3d dr(v_Brownian_init[i3]*dt, v_Brownian_init[i3+1]*dt, v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
     }
     updateInteractions();
@@ -126,32 +159,21 @@ void System::calcBrownianStress(){
     stokes_solver->solvingIsDone();
 
 	/**** Brownian Stress: term  -R_SU_mid * v_Brownian_mid **/
+    for (int i=0; i < np; i++){
+		v_Brownian_mid[3*i+1] *= zero_2Dsimu;
+	}
+
     for (int k = 0; k < num_interaction; k++){
-	  for (int u=0; u < 5; u ++){
-		stresslet_i_mid.elm[u] = 0.;
-		stresslet_j_mid.elm[u] = 0.;
-	  }
-
-	  int i = interaction[k].particle_num[0];
-	  int j = interaction[k].particle_num[1];
-	  int i3 = 3*i;
-	  int j3 = 3*j;
-
-	  vi.x = v_Brownian_mid[i3  ];
-	  vi.y = v_Brownian_mid[i3+1];
-	  vi.z = v_Brownian_mid[i3+2];
-
-	  vj.x = v_Brownian_mid[j3  ];
-	  vj.y = v_Brownian_mid[j3+1];
-	  vj.z = v_Brownian_mid[j3+2];
-
-	  interaction[k].pairVelocityStresslet(vi, vj, stresslet_i_mid, stresslet_j_mid);
-
-	  for (int u=0; u < 5; u++){
-	    step_stresslet[i].elm[u] += stresslet_i_mid.elm[u];
-	    step_stresslet[j].elm[u] += stresslet_j_mid.elm[u];
-		//		total_step_stresslet.elm[u] -= stresslet_i_mid.elm[u] + stresslet_j_mid.elm[u];
-	  }
+		if(interaction[k].active){
+			interaction[k].pairVelocityStresslet(v_Brownian_mid, stresslet_i_mid, stresslet_j_mid);
+			
+			int i = interaction[k].particle_num[0];
+			int j = interaction[k].particle_num[1];
+			for (int u=0; u < 5; u++){
+				step_stresslet[i].elm[u] += 0.5*stresslet_i_mid.elm[u];
+				step_stresslet[j].elm[u] += 0.5*stresslet_j_mid.elm[u];
+			}
+		}
     }
 
 
@@ -161,30 +183,130 @@ void System::calcBrownianStress(){
 	/*  and leaving particle positions as they initially were */
 	/**********************************************************/
 
-	/** Overall Brownian Stress: multiply all by  0.5 **/
     for (int i=0; i < np; i++){
 	  for (int u=0; u < 5; u++){
-	    step_stresslet[i].elm[u] *= 0.5;
 		brownianstress[i].elm[u] += step_stresslet[i].elm[u];
 	  }
     }
-	//cout << " total ";
-	for (int u=0; u < 5; u++){
-	  total_step_stresslet.elm[u] *= 0.5;
-	  //cout << total_step_stresslet.elm[u]/np << " " ;	  
-	}
-	//cout << endl;
-
 
 	// move particles back to initial point, and update interactions
-
     for (int i=0; i < np; i++){
 		int i3 = 3*i;
-		vec3d dr(-v_Brownian_init[i3]*dt,
-				 -v_Brownian_init[i3+1]*dt*zero_2Dsimu,
-				 -v_Brownian_init[i3+2]*dt);
+		vec3d dr(-v_Brownian_init[i3]*dt, -v_Brownian_init[i3+1]*dt, -v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
     }
     updateInteractions();
 
+	delete [] step_stresslet;	
+}
+
+
+void
+System::calcStressesHydroContact(){
+
+	/**************************************************
+              1. Stress from background flow 
+	                                                **/
+    for (int i = 0; i < np; i++){
+		double a = radius[i];
+		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
+		bgfstress2[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
+	}
+
+
+
+	/**************************************************
+       2. and 3.: Stresses from 
+			       2-body lubrication and contacts  **/
+
+	// first obtain hydrodynamic part of velocity
+    stokes_solver->resetRHS();
+    stokes_solver->prepareNewBuild_RFU("direct");
+    addStokesDrag();
+    buildLubricationTerms();
+    stokes_solver->complete_RFU();
+    stokes_solver->solve(v_hydro);
+
+
+	// then obtain contact forces, adn contact part of velocity
+    stokes_solver->resetRHS();
+	setContactForceToParticle();
+    buildContactTerms();
+    stokes_solver->solve(v_cont);
+
+    stokes_solver->solvingIsDone();
+
+
+	// from that, compute stresses
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].addHydroStress();       // - R_SU * v_hydro
+			interaction[k].addContactStress();    //  - R_SU * v_cont - rF_cont
+		}
+	}
+
+	
+	// >>>>  testing : compare with stress computation from forces
+	// Note that the definition of Hydrodynamic Stress and Contact Stress
+	// are different: the part coming from v_cont is included in Hydro stress.
+	// There is also a factor 2 difference coming from the way the two methods
+	// define the stress. This is known, and is not a bug.
+	// The total stress should the same though (well, more precisely 2*total_stress=total_stress2).
+	/*
+	for (int i = 0; i < np; i++){
+		int i3 = 3*i;
+		relative_velocity_lub_cont[i].x = v_hydro[i3  ] + v_cont[i3  ];
+		relative_velocity_lub_cont[i].y = v_hydro[i3+1] + v_cont[i3+1];
+		relative_velocity_lub_cont[i].z = v_hydro[i3+2] + v_cont[i3+2];
+    }
+
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].evaluateLubricationForce();
+			interaction[k].addLubricationStress();    // - R_SU * (v_hydro + v_cont)
+			interaction[k].addContactStress2();       // - rF_cont
+		}
+	}
+	// reset velocities to zero to avoid any confusion
+    for (int i = 0; i < np; i++){
+		int i3 = 3*i;
+		relative_velocity_lub_cont[i].x = 0.;
+		relative_velocity_lub_cont[i].y = 0.;
+		relative_velocity_lub_cont[i].z = 0.;
+    }
+	*/
+
+	// <<<< end of testing
+
+}
+
+
+void
+System::calcStress(){
+	stressReset();
+	
+	if(brownian)
+	 	calcStressesHydroContactBrownian();
+	else
+		calcStressesHydroContact();
+
+	for (int u=0; u < 5; u++){
+		total_hydro_stress[u] = 0;
+		total_contact_stress[u] = 0;
+		total_hydro_stress2[u] = 0;
+		total_contact_stress2[u] = 0;
+		total_brownian_stress[u] = 0;
+	}
+	
+	for (int i=0; i < np; i++){
+		for (int u=0; u < 5; u++){
+			total_hydro_stress[u] += lubstress[i].elm[u] + bgfstress[i].elm[u];
+			total_contact_stress[u] += contactstress[i].elm[u];
+			total_hydro_stress2[u] += lubstress2[i].elm[u] + bgfstress2[i].elm[u];
+			total_contact_stress2[u] += contactstress2[i].elm[u];
+			total_brownian_stress[u] += brownianstress[i].elm[u];
+		}
+	}
+
+	stressBrownianReset();
 }

@@ -60,6 +60,12 @@ System::~System(){
 	if (!v_lub_cont)
 		delete [] v_lub_cont;
 
+	if (!v_hydro)
+		delete [] v_hydro;
+
+	if (!v_cont)
+		delete [] v_cont;
+
 	if(brownian){
 	    if (!v_Brownian_init)
 		delete [] v_Brownian_init;
@@ -99,6 +105,7 @@ System::allocateRessources(){
 	lub_force = new vec3d [np];
 
 	lubstress.resize(np);
+	bgfstress.resize(np);
 	contactstress.resize(np);
 	brownianstress.resize(np);
 
@@ -110,17 +117,31 @@ System::allocateRessources(){
 	interaction_partners = new set <int> [np];
 	
 	lubstress2.resize(np);
+	bgfstress2.resize(np);
+	contactstress2.resize(np);
 	
 	dof = 3;
 	linalg_size = dof*np;
 	
 	v_lub_cont = new double [linalg_size];
+	v_cont = new double [linalg_size];
+	v_hydro = new double [linalg_size];
+	for(int i=0;i<linalg_size;i++){
+		v_lub_cont[i]=0.;
+		v_cont[i]=0.;
+		v_hydro[i]=0.;
+	}
 
 	if(brownian){
 	    v_Brownian_init = new double [linalg_size];
 	    v_Brownian_mid = new double [linalg_size];
 		v_lub_cont_mid = new double [linalg_size];
 		lub_cont_forces_init = new double [linalg_size];
+		for(int i=0;i<linalg_size;i++){
+			v_Brownian_init[i]=0.;
+			v_Brownian_mid[i]=0.;
+			lub_cont_forces_init[i]=0.;
+		}
 	}
 
 
@@ -577,8 +598,11 @@ System::stressReset(){
 	for (int i=0; i < np; i++){
 		for (int u=0; u < 5; u++){
 			lubstress[i].elm[u]=0;
+			bgfstress[i].elm[u]=0;
 			contactstress[i].elm[u]=0;
 			lubstress2[i].elm[u]=0;
+			bgfstress2[i].elm[u]=0;
+			contactstress2[i].elm[u]=0;
 		}
 	}
 }
@@ -625,7 +649,7 @@ System::addStokesDrag(){
 //  - elements of matrix A 
 //  - vector Gtilde*Einf if rhs is true (default behavior)
 void
-System::buildLubricationTerms(bool rhs=true){
+System::buildLubricationTerms(bool rhs){
     
     double XAii, XAjj, XAij, XAji;
 	
@@ -1040,49 +1064,6 @@ System::sq_distance(int i, int j){
 	} else {
 	 	return pos_diff.sq_norm_xz();
 	}
-}
-
-void
-System::calcStress(){
-	stressReset();
-
-	for (int k = 0; k < num_interaction; k++){
-		if (interaction[k].active){
-			interaction[k].evaluateLubricationForce();
-			interaction[k].addLubricationStress();
-			if (interaction[k].contact){
-				interaction[k].addContactStress();
-			}
-		}
-	}
-	if(brownian)
-	 	calcBrownianStress();
-
-	for (int u=0; u < 5; u++){
-		total_lub_stress[u] = 0;
-		total_contact_stress[u] = 0;
-		total_brownian_stress[u] = 0;
-	}
-	
-	for (int i=0; i < np; i++){
-		for (int u=0; u < 5; u++){
-			total_lub_stress[u] += lubstress[i].elm[u];
-			total_contact_stress[u] += contactstress[i].elm[u];
-			total_brownian_stress[u] += brownianstress[i].elm[u];
-		}
-	}
-	
-	/*
-	 * The term 5.0/9 is the one-body part
-	 *
-	 */
-	total_stress_bgf = 0;
-	for (int i=0; i < np; i++){
-		double a = radius[i];
-		total_stress_bgf += (5.0/9)*bgf_factor*a*a*a;
-	}
-
-	stressBrownianReset();
 }
 
 void

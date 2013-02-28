@@ -149,7 +149,7 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "origin_zero_flow"){
 		origin_zero_flow = str2bool(value);
 	} else {
-		cerr << "keyword " << keyword << " is'nt associated with an parameter" << endl;
+		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
 	}
 }
@@ -437,26 +437,33 @@ Simulation::evaluateData(){
 	
 	
 	double total_stress[5];
+	double total_stress2[5];
 	for (int u=0; u<5; u++){
-		total_stress[u] = sys.total_lub_stress[u] + sys.total_contact_stress[u];
+		total_stress[u] = sys.total_hydro_stress[u] + sys.total_contact_stress[u];
+		total_stress2[u] = sys.total_hydro_stress2[u] + sys.total_contact_stress2[u];
 	}
 	if (sys.brownian){
 		for (int u=0; u<5; u++){
 			total_stress[u] += sys.total_brownian_stress[u];
+			total_stress2[u] += sys.total_brownian_stress[u];
 		}
 	}
-	total_stress[2] += sys.total_stress_bgf;
+	total_stress[2] += sys.shear_rate;
+	total_stress2[2] += sys.shear_rate;
 	Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
 	/* N1 = tau_xx - tau_zz = tau_xx - (- tau_xx-tau_yy) = 2tau_xx + tau_yy
 	 * N2 = tau_zz - tau_yy = (- tau_xx-tau_yy) - tau_yy  = -tau11 - 2tau22
 	 */
 	N1 = (2*total_stress[0] +   total_stress[4])/(sys.valSystemVolume());
 	N2 = (-total_stress[0] - 2*total_stress[4])/(sys.valSystemVolume());
-	Viscosity_bgf = sys.total_stress_bgf/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_h = sys.total_lub_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	N1_h = (2*sys.total_lub_stress[0] +   sys.total_lub_stress[4])/(sys.valSystemVolume());
-	N2_h = (-sys.total_lub_stress[0] - 2*sys.total_lub_stress[4])/(sys.valSystemVolume());
+	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+
+	N1_h = (2*sys.total_hydro_stress[0] +   sys.total_hydro_stress[4])/(sys.valSystemVolume());
+	N2_h = (-sys.total_hydro_stress[0] - 2*sys.total_hydro_stress[4])/(sys.valSystemVolume());
 	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
 	N1_c = (2*sys.total_contact_stress[0] +   sys.total_contact_stress[4])/(sys.valSystemVolume());
 	N2_c = (-sys.total_contact_stress[0] - 2*sys.total_contact_stress[4])/(sys.valSystemVolume());
 	if (sys.brownian){
@@ -468,21 +475,7 @@ Simulation::evaluateData(){
 		N1_b = 0;
 		N2_b = 0;
 	}
-	
-	double total_lub_stress2[5];
-	for (int u=0; u < 5; u++){
-		total_lub_stress2[u] = 0;
-	}
-	for (int i=0; i < sys.np; i++){
-		for (int u=0; u < 5; u++){
-			total_lub_stress2[u] += sys.lubstress2[i].elm[u];
-		}
-	}
-	for (int u=0; u<5; u++){
-		total_stress[u] = (total_lub_stress2[u] + sys.total_contact_stress[u] + sys.total_brownian_stress[u]);
-	}
-	total_stress[2] += sys.total_stress_bgf;
-	Viscosity_2 = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+
 	N1_2 = (2*total_stress[0] +   total_stress[4])/(sys.valSystemVolume());
 	N2_2 = (-total_stress[0] - 2*total_stress[4])/(sys.valSystemVolume());
 
@@ -509,41 +502,49 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#2: Viscosity" << endl;
 		fout_rheo << "#3: N1" << endl;
 		fout_rheo << "#4: N2" << endl;
-		fout_rheo << "#5: Viscosity(bgf)" << endl;
-		fout_rheo << "#6: Viscosity(lub)" << endl;
-		fout_rheo << "#7: N1(lub)" << endl;
-		fout_rheo << "#8: N2(lub)" << endl;
-		fout_rheo << "#9: Viscosity(contact)" << endl;
-		fout_rheo << "#10: N1(contact)" << endl;
-		fout_rheo << "#11: N2(contact)" << endl;
-		fout_rheo << "#12: Viscosity(brownian)" << endl;
-		fout_rheo << "#13: N1(brownian)" << endl;
-		fout_rheo << "#14: N2(brownian)" << endl;
-		fout_rheo << "#15: minimum gap" << endl;
-		fout_rheo << "#16: Viscosity(2)" << endl;
-		fout_rheo << "#17: N1(2)" << endl;
-		fout_rheo << "#18: N2(2)" << endl;
-		
+		fout_rheo << "#5: Viscosity(lub)" << endl;
+		fout_rheo << "#6: N1(lub)" << endl;
+		fout_rheo << "#7: N2(lub)" << endl;
+		fout_rheo << "#8: Viscosity(contact)" << endl;
+		fout_rheo << "#9: N1(contact)" << endl;
+		fout_rheo << "#10: N2(contact)" << endl;
+		fout_rheo << "#11: Viscosity(brownian)" << endl;
+		fout_rheo << "#12: N1(brownian)" << endl;
+		fout_rheo << "#13: N2(brownian)" << endl;
+		// fout_rheo << "#1: shear strain" << endl;
+		// fout_rheo << "#2: Viscosity" << endl;
+		// fout_rheo << "#4: Viscosity(lub)" << endl;
+		// fout_rheo << "#5: Viscosity(contact)" << endl;
+		// fout_rheo << "#6: Viscosity2" << endl;
+		// fout_rheo << "#8: Viscosity2(lub)" << endl;
+		// fout_rheo << "#9: Viscosity2(contact)" << endl;
+
 	}
 	fout_rheo << sys.shear_strain << ' '; //1
 	fout_rheo << Viscosity << ' ' ; //2
 	fout_rheo << N1 << ' ' ; //3
 	fout_rheo << N2 << ' ' ; //4
-	fout_rheo << Viscosity_bgf << ' '; // 5
-	fout_rheo << Viscosity_h << ' ' ; //6
-	fout_rheo << N1_h << ' ' ; //7
-	fout_rheo << N2_h << ' ' ; //8
-	fout_rheo << Viscosity_c << ' ' ; //9
-	fout_rheo << N1_c << ' ' ; //10
-	fout_rheo << N2_c << ' ' ; //11
-	fout_rheo << Viscosity_b << ' ' ; //12
-	fout_rheo << N1_b << ' ' ; //13
-	fout_rheo << N2_b << ' ' ; //14
-	fout_rheo << sys.minvalue_gap_nondim << ' '; // 15
-	fout_rheo << Viscosity_2 << ' '; // 16
-	fout_rheo << N1_2 << ' '; // 17
-	fout_rheo << N2_2 << ' '; // 18
+	fout_rheo << Viscosity_h << ' ' ; //5
+	fout_rheo << N1_h << ' ' ; //6
+	fout_rheo << N2_h << ' ' ; //7
+	fout_rheo << Viscosity_c << ' ' ; //8
+	fout_rheo << N1_c << ' ' ; //9
+	fout_rheo << N2_c << ' ' ; //10
+	fout_rheo << Viscosity_b << ' ' ; //11
+	fout_rheo << N1_b << ' ' ; //12
+	fout_rheo << N2_b << ' ' ; //13
 	fout_rheo << endl;
+
+
+	// fout_rheo << sys.shear_strain << ' '; //1
+	// fout_rheo << Viscosity << ' ' ; //2
+	// fout_rheo << Viscosity_h << ' ' ; //6
+	// fout_rheo << Viscosity_c << ' ' ; //9
+	// fout_rheo << Viscosity_2 << ' '; // 25
+	// fout_rheo << Viscosity_2_h << ' ' ; //6
+	// fout_rheo << Viscosity_2_c << ' ' ; //9
+	// fout_rheo << endl;
+
 }
 
 vec3d
