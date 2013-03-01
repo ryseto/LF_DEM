@@ -78,7 +78,9 @@ Interaction::calcContactInteraction(){
 	}
 	Fc_normal_norm /= sys->shear_rate; // to have it nondimensionalized
 	Fc_normal = - Fc_normal_norm*nr_vec;
-
+	
+	if(static_friction)
+		Fc_tan = sys_kt*disp_tan;
 
 }
 
