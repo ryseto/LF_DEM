@@ -128,8 +128,6 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.mu_static = atof(value.c_str());
 	} else if (keyword == "mu_dynamic"){
 		sys.mu_dynamic = atof(value.c_str());
-	} else if (keyword == "dynamic_friction_critical_velocity"){
-		sys.dynamic_friction_critical_velocity = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
 		strain_interval_out = atof(value.c_str());
 	} else if (keyword == "yap_force_factor"){
@@ -298,13 +296,6 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.mu_static = 10;
 	sys.mu_dynamic = 8;
-	/*
-	 * dynamic_friction_critical_velocity:
-	 * This is a threshold velocity to swich from dynamic friction to
-	 * static friction. But this is a temporal provísional.
-	 * There is no reference to give this value.
-	 */
-	sys.dynamic_friction_critical_velocity = 0.01;
 	/*
 	 * Output interval
 	 */

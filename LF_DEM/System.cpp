@@ -133,14 +133,12 @@ System::allocateRessources(){
 void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector <double> &radii){
-
 	if (kb_T == 0){
 		brownian = false;
 	} else {
 		brownian = true;
 		integration_method = 2; // > force Euler
 	}
-
 	allocateRessources();
 	radius_cubic.resize(_np);
 	for (int i=0; i < _np; i++){
@@ -149,7 +147,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
 		angle[i] = 0;
 	}
-	
 	for (int k=0; k < maxnum_interactionpair ; k++){
 		interaction[k].init(this);
 	}
@@ -174,8 +171,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	shear_strain = 0;
 	num_interaction = 0;
 	
-	sq_critical_velocity = \
-	dynamic_friction_critical_velocity*dynamic_friction_critical_velocity;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	ts = 0;
 	shear_disp = 0;
@@ -195,15 +190,13 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	if(brownian){
 		fb->init();
 	}
-
 	brownianstress_calc_nb = 0;
 //	in_predictor = false;
 }
 
 void
 System::initializeBoxing(){// need to know radii first
-	
-	double max_radius=0.;
+	double max_radius = 0.;
 	for (int i=0; i < _np; i++){
 		if(radius[i]>max_radius){
 			max_radius=radius[i];
@@ -256,7 +249,7 @@ System::timeEvolutionPredictorCorrectorMethod(){
 	 * x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
 	 *           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
 	 */
-	/*  predictore */
+	/* predictore */
 	setContactForceToParticle();
 	updateVelocityLubrication();
 	deltaTimeEvolutionPredictor();
@@ -327,16 +320,15 @@ System::deltaTimeEvolutionCorrector(){
 	 * V += V^{-}              (2)
 	 * V = 0.5*(V^{+}+V^{-})   (3)
 	 *
-	 * [Note] Contact velocities in the interaction objects
-	 * are not acculate
+	 * [Note] 
+	 * Contact velocities in the interaction objects
+	 * are not right ones.
 	 */
 	for (int i=0; i < _np; i++){
 		velocity[i] += velocity_predictor[i];
 		ang_velocity[i] += ang_velocity_predictor[i];
 	}
 }
-
-
 
 void System::timeEvolutionBrownian(){
 	int zero_2Dsimu;

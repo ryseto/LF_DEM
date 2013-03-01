@@ -124,8 +124,6 @@ public:
 	double lub_max; //
 	double mu_static; // static friction coefficient.
 	double mu_dynamic;// dynamic friction coefficient.
-	double dynamic_friction_critical_velocity;
-	double sq_critical_velocity;
 	bool lubrication;
 	bool friction;
 	bool brownian;
