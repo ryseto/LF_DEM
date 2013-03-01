@@ -7,12 +7,14 @@
 CXX=g++
 
 # OS_version: OSX or Linux
-OS_version=Linux
+OS_version=OSX
 # Build : debug or optimized
-Build=debug
+Build=optimized
 
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no
+# Enable use of Metis library ( yes / no )
+UseMetis=no
 
 #=======================================#
 #=======================================#
@@ -50,7 +52,10 @@ Blas_Linking_Flags = -lblas
 Lapack_Linking_Flags = -llapack
 
 # Cholmod
-Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd -lmetis
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+ifeq ($(UseMetis),yes)
+	Cholmod_Linking_Flags += -lmetis 
+endif
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
