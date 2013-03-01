@@ -7,7 +7,7 @@
 CXX=g++
 
 # OS_version: OSX or Linux
-OS_version=OSX
+OS_version=Linux
 # Build : debug or optimized
 Build=debug
 
@@ -50,7 +50,7 @@ Blas_Linking_Flags = -lblas
 Lapack_Linking_Flags = -llapack
 
 # Cholmod
-Cholmod_Linking_Flags = -lcholmod
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd -lmetis
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
