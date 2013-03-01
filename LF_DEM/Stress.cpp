@@ -117,7 +117,7 @@ void System::calcStressesHydroContactBrownian(){
 
     for (int k = 0; k < num_interaction; k++){
 		if(interaction[k].active){
-			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_mid, stresslet_j_mid);
+			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_init, stresslet_j_init);
 
 			int i = interaction[k].particle_num[0];
 			int j = interaction[k].particle_num[1];

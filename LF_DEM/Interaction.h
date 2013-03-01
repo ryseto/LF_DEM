@@ -76,11 +76,13 @@ private:
 	void deactivate_contact();
 
 	//===== forces and stresses computations =====//
-	double Fc_normal; // normal contact force
+	double Fc_normal_norm; // normal contact force
+	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d Tc_0; // contact torque on p0
 	vec3d Tc_1; // contact torque on p1
 	void calcContactInteraction();
+	void calcContactStressTermXF();
 
 protected:
 
@@ -133,8 +135,8 @@ public:
 
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
-	double normal_force(){
-		return Fc_normal;};
+
+	double normal_force(){return Fc_normal_norm;};
 	vec3d tangential_force(){return Fc_tan;};
 	void evaluateLubricationForce();
 	double valLubForce();

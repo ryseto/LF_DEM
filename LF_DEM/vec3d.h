@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <cmath>
 #include <string>
-
+using namespace std;
 
 class vec3d {
 public:
@@ -138,6 +138,12 @@ public:
 		double d_tmp = 1.0/i;
 		x *= d_tmp, y *= d_tmp, z *= d_tmp;
 		return *this;
+	}
+
+	// out stream operator
+	inline friend ostream& operator<<(ostream& out, const vec3d &vec){
+		out << vec.x << " " << vec.y << " " << vec.z;
+		return out;
 	}
 
 	/* utility */

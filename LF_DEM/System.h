@@ -225,7 +225,6 @@ public:
 	void periodize_diff(vec3d &, int &);
 	void updateVelocity();
 	void updateVelocityLubrication();
-	void updateVelocityLubricationBrownian();
 	void forceReset();
 	void torqueReset();
 	void stressReset();

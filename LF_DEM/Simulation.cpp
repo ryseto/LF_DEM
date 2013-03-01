@@ -50,7 +50,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
-	int i_time_interval = strain_interval_out/(sys.dt*sys.shear_rate);
+	int i_time_interval = strain_interval_out/sys.dt;
 
 	outputConfigurationData();
 	while(sys.shear_strain <= shear_strain_end){
@@ -428,28 +428,28 @@ Simulation::evaluateData(){
 			total_stress2[u] += sys.total_brownian_stress[u];
 		}
 	}
-	total_stress[2] += sys.shear_rate;
-	total_stress2[2] += sys.shear_rate;
+	total_stress[2] += 1;
+	total_stress2[2] += 1;
 
-	Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity = total_stress[2]/(sys.valSystemVolume());
+	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume());
 
 	/* N1 = tau_xx - tau_zz = tau_xx - (- tau_xx-tau_yy) = 2tau_xx + tau_yy
 	 * N2 = tau_zz - tau_yy = (- tau_xx-tau_yy) - tau_yy  = -tau11 - 2tau22
 	 */
 	N1 = (2*total_stress[0] +   total_stress[4])/(sys.valSystemVolume());
 	N2 = (-total_stress[0] - 2*total_stress[4])/(sys.valSystemVolume());
-	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume());
+	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume());
 
 	N1_h = (2*sys.total_hydro_stress[0] +   sys.total_hydro_stress[4])/(sys.valSystemVolume());
 	N2_h = (-sys.total_hydro_stress[0] - 2*sys.total_hydro_stress[4])/(sys.valSystemVolume());
-	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume());
+	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume());
 	N1_c = (2*sys.total_contact_stress[0] +   sys.total_contact_stress[4])/(sys.valSystemVolume());
 	N2_c = (-sys.total_contact_stress[0] - 2*sys.total_contact_stress[4])/(sys.valSystemVolume());
 	if (sys.brownian){
-		Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+		Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume());
 		N1_b = (2*sys.total_brownian_stress[0] +   sys.total_brownian_stress[4])/(sys.valSystemVolume());
 		N2_b = (-sys.total_brownian_stress[0] - 2*sys.total_brownian_stress[4])/(sys.valSystemVolume());
 	} else {
