@@ -9,9 +9,9 @@ BrownianForce::BrownianForce(System *sys_){
 	kb_T = sys->kb_T;
 	kb_T2= 2*kb_T;
 
-	forces = new double [3*sys->numpart()];
+	forces = new double [3*sys->np()];
 
-	ran_vector = new double [3*sys->numpart()];
+	ran_vector = new double [3*sys->np()];
 
 }
 
@@ -29,7 +29,7 @@ BrownianForce::init(){
 
 double*
 BrownianForce::generate_invLFb(){
-  int n3 = 3*sys->numpart();
+  int n3 = 3*sys->np();
   double sqrt_kbT2_dt = sqrt(kb_T2/sys->dt);
   for(int i=0; i<n3; i++){
 	ran_vector[i] = sqrt_kbT2_dt * GRANDOM;

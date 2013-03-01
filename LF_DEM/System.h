@@ -35,10 +35,10 @@ class BoxSet;
 
 class System{
 private:
+	int _np;
 	int np3;
 	int maxnum_interactionpair;
 	queue<int> deactivated_interaction;
-
 	double _lx;
 	double _ly;
 	double _lz;
@@ -47,12 +47,13 @@ private:
 	double _lz2; // =lz/2
 	double system_volume;
 	double radius_max;
+	double sq_lub_max;
+
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
 	BoxSet* boxset;
-
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -67,11 +68,8 @@ private:
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-
-
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
-
 	void calcStressesHydroContact();
 protected:
 public:
@@ -81,19 +79,11 @@ public:
 	double *v_lub_cont_mid;
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
-	/*
-	 * fix_interaction_status
-	 * If it is true:
-	 * no destruction 
-	 * no switching between static and dynamic is not allowed
-	 *
-	 */ 
-	bool fix_interaction_status;
+	bool in_predictor;
     /* For DEMsystem
      */
 	System(){};
 	~System();
-	int np; // number of particles
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
@@ -107,8 +97,6 @@ public:
 	vec3d *relative_velocity_brownian;
 	vec3d *ang_velocity;
 	vector <vec3d> ang_velocity_predictor;
-
-//	vec3d *total_force;
 	vec3d *lubrication_force;
 	vec3d *contact_force;
 	vec3d *contact_torque;
@@ -117,7 +105,6 @@ public:
 	vec3d *lubrication_velocity;
 	vec3d *contact_velocity;
 	vec3d *brownian_velocity;
-//	vec3d *torque; // right now only contact torque
 	vec3d *lub_force; // Only for outputing data
 	vector <stresslet> lubstress; // G U + M E
 	vector <stresslet> lubstress2; // r * F_lub
@@ -127,19 +114,14 @@ public:
 	vector <stresslet> contactstress2;
 	vector <stresslet> brownianstress;
 	int brownianstress_calc_nb;
-
 	double total_hydro_stress[5];
 	double total_contact_stress[5];
 	double total_brownian_stress[5];
-
 	double total_hydro_stress2[5];
 	double total_contact_stress2[5];
-
 	double kn;
 	double kt;
-	double eta;
-	double lub_max;
-	double sq_lub_max;
+	double lub_max; //
 	double mu_static; // static friction coefficient.
 	double mu_dynamic;// dynamic friction coefficient.
 	double dynamic_friction_critical_velocity;
@@ -166,7 +148,6 @@ public:
 	 * 1/ksi_cutoff when h <= ksi_cutoff
 	 */
 	double lub_reduce_parameter;
-	
 	BrownianForce *fb;
 	double shear_disp;
 	double shear_rate;
@@ -221,11 +202,14 @@ public:
 	inline double lz2(){
 		return _lz2;
 	}
-
-	void set_np(int _np){
-		np=_np;
-		np3=3*np;
+	void np(int val){
+		_np = val;
+		np3=3*_np;
 	}
+	inline int np(){
+		return _np;
+	}
+	
 	//	void prepareSimulation();
 	void setSystemVolume();
 	void setupSystem(const vector<vec3d> &initial_positions,
@@ -234,44 +218,27 @@ public:
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteractions();
+	void updateInteractions(bool _in_predictor=false);
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
-
-
 	void periodize(vec3d &);
 	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void updateVelocity();
 	void updateVelocityLubrication();
-	void revertRealVelocity();
-	
-//	void updateVelocityLubrication(vector<vec3d> &velocity_, vector<vec3d> &ang_velocity_);
 	void updateVelocityLubricationBrownian();
-	
 	void forceReset();
 	void torqueReset();
 	void stressReset();
 	void stressBrownianReset();
 	void calcStress();
-
-
 	void analyzeState();
 	void computeBrownianStress();
-
-
-	int numpart(){
-		return np;
-	}
-
 	StokesSolver *stokes_solver;
-
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	// interactions
-	bool out_pairtrajectory;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;

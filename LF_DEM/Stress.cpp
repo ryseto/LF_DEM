@@ -18,18 +18,14 @@ void System::calcStressesHydroContactBrownian(){
 		zero_2Dsimu = 1;
 	}
 	
-
-
 	/**************************************************
               1. Stress from background flow 
 	                                                **/
-    for (int i = 0; i < np; i++){
+    for (int i = 0; i < _np; i++){
 		double a = radius[i];
 		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
 		bgfstress2[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
 	}
-
-
 
 	/**************************************************
        2. and 3.: Stresses from 
@@ -78,8 +74,8 @@ void System::calcStressesHydroContactBrownian(){
     stresslet stresslet_j_init;
     stresslet stresslet_i_mid;
     stresslet stresslet_j_mid;
-    stresslet *step_stresslet = new stresslet [np];
-    for (int i=0; i < np; i++){
+    stresslet *step_stresslet = new stresslet [_np];
+    for (int i=0; i < _np; i++){
 	  for (int u=0; u < 5; u++){
 	    step_stresslet[i].elm[u] = 0.;
 	  }
@@ -113,7 +109,7 @@ void System::calcStressesHydroContactBrownian(){
 	stokes_solver->solve_CholTrans( v_Brownian_init );
 	stokes_solver->solvingIsDone();
 
-    for (int i=0; i < np; i++){
+    for (int i=0; i < _np; i++){
 		v_Brownian_init[3*i+1] *= zero_2Dsimu;
     }
 
@@ -134,7 +130,7 @@ void System::calcStressesHydroContactBrownian(){
 
 
     // move particles to intermediate point
-    for (int i=0; i < np; i++){
+    for (int i=0; i < _np; i++){
 		int i3 = 3*i;
 		vec3d dr(v_Brownian_init[i3]*dt, v_Brownian_init[i3+1]*dt, v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
@@ -159,7 +155,7 @@ void System::calcStressesHydroContactBrownian(){
     stokes_solver->solvingIsDone();
 
 	/**** Brownian Stress: term  -R_SU_mid * v_Brownian_mid **/
-    for (int i=0; i < np; i++){
+    for (int i=0; i < _np; i++){
 		v_Brownian_mid[3*i+1] *= zero_2Dsimu;
 	}
 
@@ -183,14 +179,14 @@ void System::calcStressesHydroContactBrownian(){
 	/*  and leaving particle positions as they initially were */
 	/**********************************************************/
 
-    for (int i=0; i < np; i++){
+    for (int i=0; i < _np; i++){
 	  for (int u=0; u < 5; u++){
 		brownianstress[i].elm[u] += step_stresslet[i].elm[u];
 	  }
     }
 
 	// move particles back to initial point, and update interactions
-    for (int i=0; i < np; i++){
+    for (int i=0; i < _np; i++){
 		int i3 = 3*i;
 		vec3d dr(-v_Brownian_init[i3]*dt, -v_Brownian_init[i3+1]*dt, -v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
@@ -207,13 +203,11 @@ System::calcStressesHydroContact(){
 	/**************************************************
               1. Stress from background flow 
 	                                                **/
-    for (int i = 0; i < np; i++){
+    for (int i = 0; i < _np; i++){
 		double a = radius[i];
 		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
 		bgfstress2[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
 	}
-
-
 
 	/**************************************************
        2. and 3.: Stresses from 
@@ -298,7 +292,7 @@ System::calcStress(){
 		total_brownian_stress[u] = 0;
 	}
 	
-	for (int i=0; i < np; i++){
+	for (int i=0; i < _np; i++){
 		for (int u=0; u < 5; u++){
 			total_hydro_stress[u] += lubstress[i].elm[u] + bgfstress[i].elm[u];
 			total_contact_stress[u] += contactstress[i].elm[u];

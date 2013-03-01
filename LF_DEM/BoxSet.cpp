@@ -314,8 +314,8 @@ BoxSet::BoxSet(double interaction_dist, System *sys_){
 	
 	sys=sys_;
 
-	boxMap = new Box* [sys->np];
-	for(int i=0; i<sys->np;i++)
+	boxMap = new Box* [sys->np()];
+	for(int i=0; i<sys->np();i++)
 	  boxMap[i]=NULL;
 
 	double xratio=sys->lx()/interaction_dist;
