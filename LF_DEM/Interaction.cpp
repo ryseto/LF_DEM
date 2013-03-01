@@ -59,38 +59,6 @@ Interaction::calcDistanceNormalVector(){
 *                                *
 *********************************/
 /*
- * Determine Fc_tan
- */
-void
-Interaction::calcStaticFriction(){
-	/*
-	 * f_tangent is force acting on particle 0 from particle 1
-	 * xi = r1' - r0'
-	 */
-	
-	Fc_tan = sys->kt*disp_tan;
-	if (!sys->fix_interaction_status){
-		double f_static = sys->mu_static*Fc_normal_norm;
-		if (Fc_tan.sq_norm() > f_static*f_static){
-			/* switch to dynamic friction */
-			disp_tan.reset();
-			Fc_tan.reset();
-		}
-	}
-	
-}
-
-void
-Interaction::calcDynamicFriction(){
-
-	exit(1);
-	double f_dynamic = sys->mu_dynamic*Fc_normal_norm;
-	/* Use the velocity of one time step before as approximation. */
-	unit_contact_velocity_tan = contact_velocity_tan/contact_velocity_tan.norm();
-	Fc_tan = f_dynamic*unit_contact_velocity_tan; // on p0
-}
-
-/*
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
  * r_vec = p[1] - p[0]
@@ -98,11 +66,19 @@ Interaction::calcDynamicFriction(){
  */
 void
 Interaction::calcContactInteraction(){
-	Fc_normal_norm = sys->kn*(ro - _r);
+
+	int normal_potential_type = 1;
+	switch (normal_potential_type) {
+	case 0:
+		Fc_normal_norm = sys->kn*(ro - _r);
+		break;
+	case 1:
+		Fc_normal_norm = exp(100.*(ro - _r)) - 1. ;
+	
+	}
+	Fc_normal_norm /= sys->shear_rate; // to have it nondimensionalized
 	Fc_normal = - Fc_normal_norm*nr_vec;
 
-	if(static_friction)
-		calcStaticFriction();
 
 }
 
@@ -123,24 +99,18 @@ Interaction::addUpContactForceTorque(){
 	}
 }
 
-
-
 /* Relative velocity of particle 1 from particle 0.
  *
  * Use: 
  *  sys->velocity and ang_velocity
  *
- * @@@@@@@@@@@@@@@@@
- * This part should be checked carefully for predictor-corrector method.
  */
 void
 Interaction::calcContactVelocity(){
 	// relative velocity particle 1 from particle 0.
 	contact_velocity = sys->velocity[particle_num[1]] - sys->velocity[particle_num[0]];
 	if (zshift != 0){
-		//	zshift = -1; //  p1 (z += lz), p0 (z )
-		// v1 - v0
-		/* if p1 is upper, zshift = -1.
+		/*
 		 * v1' = v1 - Lz = v1 - zshift*lz;
 		 */
 		/**** NOTE ********************************************
@@ -150,13 +120,19 @@ Interaction::calcContactVelocity(){
 		 * velocity diffrence due to crossing the z boundary.
 		 * fix_interaction_status = true : in the Predictor
 		 * fix_interaction_status = false : in the Corrector
+		 *
+		 * if p1 is upper, zshift = -1.
+		 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
+		 *
 		 ******************************************************/
 		if (sys->integration_method == 0 ){
-			/* In Eular Method
+			/* In the Eular Method
 			 */
 			contact_velocity.x += zshift * sys->vel_difference;
 		} else {
-			if (sys->fix_interaction_status == true){
+			/* In the Predictor-Corrector Method
+			 */
+			if (sys->in_predictor){
 				contact_velocity.x += zshift * sys->vel_difference;
 			}
 		}
@@ -164,28 +140,13 @@ Interaction::calcContactVelocity(){
 	contact_velocity -= cross(a0*sys->ang_velocity[particle_num[0]]
 							  + a1*sys->ang_velocity[particle_num[1]],
 							  nr_vec);
-	contact_velocity_tan = contact_velocity - dot(contact_velocity,nr_vec)*nr_vec;
+
 }
 
 void
 Interaction::incrementContactTangentialDisplacement(){
-	//	if (static_friction){
-	if (contact){
-		disp_tan += contact_velocity_tan*sys->dt;
-		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;// projection
-	}
-	//} else {
-	/* Criteria from static friction to dynamic friction
-	 * must be given properly.
-	 */
-	//static_friction = true;
-	//	disp_tan.reset();
-	//sqnorm_contact_velocity = contact_velocity_tan.sq_norm();
-	//if ( sqnorm_contact_velocity < sys->sq_critical_velocity){
-	//static_friction = true;
-	//disp_tan.reset();
-	//}
-	//}
+	disp_tan += contact_velocity*sys->dt;
+	disp_tan -= dot(disp_tan, nr_vec)*nr_vec;// projection
 }
 
 /*********************************
@@ -240,7 +201,7 @@ void
 Interaction::GE(double GEi[], double GEj[]){
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
-	double nxnz_sr = nr_vec.x * nr_vec.z * sys->shear_rate;
+	double nxnz_sr = nr_vec.x * nr_vec.z;
 	double common_factor_1 = (a0*a0*XGii*4 + ro*ro*XGji)/6;
 	GEi[0] = common_factor_1 * nxnz_sr * nr_vec.x;
 	GEi[1] = common_factor_1 * nxnz_sr * nr_vec.y;
@@ -307,13 +268,11 @@ Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, s
 	vj.z = vel_array[j3+2];
 	
 	pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
-
 }
 
 
 void
 Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j){
-	
 	double n0n0_13 = nr_vec.x*nr_vec.x - 1./3;
 	double n1n1_13 = nr_vec.y*nr_vec.y - 1./3;
 	double n0n1 = nr_vec.x*nr_vec.y;
@@ -325,8 +284,8 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 
 	double XMii, XMjj, XMij, XMji;
 	XM(XMii, XMij, XMji, XMjj);
-	double common_factor_i = 5*(a0*a0a0*XMii/3 + ro*roro*XMij/24)*n0n2*sys->shear_rate;
-	double common_factor_j = 5*(a1*a1a1*XMjj/3 + ro*roro*XMji/24)*n0n2*sys->shear_rate;
+	double common_factor_i = 5*(a0*a0a0*XMii/3 + ro*roro*XMij/24)*n0n2;
+	double common_factor_j = 5*(a1*a1a1*XMjj/3 + ro*roro*XMji/24)*n0n2;
 	
 	stresslet_i.elm[0] = n0n0_13 * common_factor_i;
 	stresslet_i.elm[1] = n0n1 * common_factor_i;
@@ -339,7 +298,6 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	stresslet_j.elm[2] = n0n2 * common_factor_j;
 	stresslet_j.elm[3] = n1n2 * common_factor_j;
 	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
-
 }
 
 /*
@@ -384,7 +342,6 @@ Interaction::addLubricationStress(){
 		sys->lubstress2[i].elm[u] += stresslet2_i.elm[u];
 		sys->lubstress2[j].elm[u] += stresslet2_j.elm[u];
 	}
-
 }
 
 
@@ -423,8 +380,6 @@ Interaction::addHydroStress(){
 
 	delete vi;
 	delete vj;
-
-
 }
 
 
@@ -455,7 +410,7 @@ Interaction::evaluateLubricationForce(){
 	double XGii, XGjj, XGij, XGji;
 	XG(XGii, XGij, XGji, XGjj);
 	double n0n2 = nr_vec.x * nr_vec.z;
-	double cf_GE_i = n0n2*(2*a0*a0*XGii/3 + ro*ro*XGji/6)* sys->shear_rate;
+	double cf_GE_i = n0n2*(2*a0*a0*XGii/3 + ro*ro*XGji/6);
 
 	lubforce_i = (cf_AU_i + cf_GE_i) * nr_vec;
 
@@ -512,6 +467,7 @@ Interaction::addContactStress(){
 			sys->contactstress[j].elm[u] += stresslet_GU_j.elm[u];
 		}
 	}
+
 }
 
 void
@@ -537,12 +493,12 @@ Interaction::partner(int i){
 		return particle_num[0];
 }
 
-
-
 /* Activate interaction between particles i and j.
  */
 void
-Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int _zshift){
+Interaction::activate(int i, int j,
+					  const vec3d &pos_diff,
+					  double distance, int _zshift){
 	active = true;
 
 	Fc_normal_norm = 0.;	
@@ -585,8 +541,6 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	
 	r_lub_max = 0.5*ro*sys->lub_max;
 
-
-	
 	//assignDistanceNormalVector(pos_diff, distance, zshift);
 
 	/*
@@ -597,10 +551,6 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 	//	kt = sys->kt/(0.5*ro);
 	kn = sys->kn;
 	kt = sys->kt;
-	/*
-	 * Record the strain when this lub interaction starts.
-	 */
-	strain_lub_generated = sys->shear_strain;
 
 	return;
 }
@@ -608,8 +558,6 @@ Interaction::activate(int i, int j, const vec3d &pos_diff, double distance, int 
 void
 Interaction::deactivate(){
 	// r > lub_max
-	if (sys->out_pairtrajectory)
-		outputTrajectory();
 	active = false;
 	int i=particle_num[0];
 	int j=particle_num[1];
@@ -641,12 +589,15 @@ Interaction::deactivate_contact(){
 	Fc_tan.reset();
 }
 
-
+/* 
+ * updateState 
+ * return value is true, this interaction will be broken up.
+ */
 bool
 Interaction::updateState(){
 	if(r() > r_lub_max ){
 		deactivate();
-		return true;
+		return true; // breakup
 	} else {
 		if (contact){
 			if (r() > ro ){
@@ -668,8 +619,7 @@ Interaction::updateState(){
  *   ---> deactivate
  */
 bool
-Interaction::update(){
-	bool switched_off = false;
+Interaction::updateStatesForceTorque(){
 	if (active){
 		// compute new r_vec and distance
 		calcDistanceNormalVector();
@@ -678,11 +628,14 @@ Interaction::update(){
 			calcContactVelocity();
 			incrementContactTangentialDisplacement();
 			calcContactInteraction();
+			if ( static_friction && (!sys->in_predictor) ){
+				checkBreakupStaticFriction();
+			}
 		}
 		// compute new contact forces if needed
 		// check new state of the interaction
-		if (!sys->fix_interaction_status ){
-			switched_off = updateState();
+		if (!sys->in_predictor){
+			return updateState();
 		}
 	}
 	
@@ -692,35 +645,20 @@ Interaction::update(){
 		exit(1);
 	}
 		
-	return switched_off;
-}
+	return false;
 
-/*
- * Just provisional function for future analysis
- *
- */
-void
-Interaction::outputTrajectory(){
-	for (unsigned int k=0; k < trajectory.size(); k++){
-		sys->fout_trajectory << trajectory[k].x << ' ' <<  trajectory[k].y << ' '<<  trajectory[k].z << ' ';
-		sys->fout_trajectory << gap_history[k] << endl;
-	}
-	sys->fout_trajectory << endl ;
-	trajectory.clear();
-	gap_history.clear();
-}
-
-double
-Interaction::nearingTime(){
-	double nearing_time = -1;
-	if (near == true){
-		nearing_time = sys->shear_strain - strain_near_contact;
-	}
-	return nearing_time;
 }
 
 void
-Interaction::recordTrajectory(){
-	trajectory.push_back(r_vec);
-	gap_history.push_back(_gap_nondim);
+Interaction::checkBreakupStaticFriction(){
+	double f_static = sys->mu_static*Fc_normal_norm;
+	if (Fc_tan.sq_norm() > f_static*f_static){
+		/**
+		 ** switch to dynamic friction
+		 **
+		 ** A simple imprementation is used temporary.
+		 */
+		disp_tan.reset();
+		Fc_tan.reset();
+	}
 }

@@ -32,12 +32,10 @@ private:
 	int zshift;
 	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_reduce_parameter; // small cut-off for ksi: lubrication breakdown
-//	double gap_nondim_eff;
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
 	double lub_coeff_max; // = 1/lub_reduce_parameter
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
-	vec3d contact_velocity_tan;
 	vec3d unit_contact_velocity_tan;
 	double sqnorm_contact_velocity;
 	vec3d disp_tan; // tangential displacement
@@ -67,15 +65,13 @@ private:
 
 	//======= relative position/velocity  ========//
 	void r(double new_r);
-//	void calcNormalVector();
 	void calcDistanceNormalVector();
-//	void assignDistanceNormalVector(const vec3d &, double, int);
 	void calcContactVelocity();
 	void incrementContactTangentialDisplacement();
+	void checkBreakupStaticFriction();
 
 	//======= internal state switches  ===========//
 	bool updateState();
-	void deactivate();
 	void activate_contact();
 	void deactivate_contact();
 
@@ -85,8 +81,6 @@ private:
 	vec3d Fc_tan; // tangential contact force
 	vec3d Tc_0; // contact torque on p0
 	vec3d Tc_1; // contact torque on p1
-	void calcStaticFriction();
-	void calcDynamicFriction();
 	void calcContactInteraction();
 	void calcContactStressTermXF();
 
@@ -104,8 +98,17 @@ public:
 	void init(System *sys_);
 
 	//======= state updates  ====================//
-	bool update();
+	/* Update the follow items:
+	 * - r_vec, zshift, _r, and nr_vec
+	 * - contact_velocity_tan
+	 * - disp_tan
+	 * - Fc_normal and Fc_tan
+	 * - check breakup of static friction
+	 * - State (deactivation, contact)
+	 */
+	bool updateStatesForceTorque();
 	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
+	void deactivate();
 	bool active;
 
 	//======= particles data  ====================//
@@ -130,11 +133,9 @@ public:
 	void XM(double &XMii, double &XMij, double &XMji, double &XMjj);
 	void GE(double GEi[], double GEj[]);
 
-
 	//===== forces/stresses  ========================== //
-//	void addUpContactForce(vec3d &force0, vec3d &force1);
-//	void addUpContactTorque(vec3d &torque0, vec3d &torque1);
 	void addUpContactForceTorque();
+
 	double normal_force(){return Fc_normal_norm;};
 	vec3d tangential_force(){return Fc_tan;};
 	void evaluateLubricationForce();
@@ -148,13 +149,6 @@ public:
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 
-	//===== other observables  ========================== //
-	double nearingTime();
-	bool near;
-	vector <vec3d> trajectory;
-	vector <double> gap_history;
-	void recordTrajectory();
-	void outputTrajectory();
 };
 
 

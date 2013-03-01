@@ -6,9 +6,7 @@
 # force_factor: To change the widths of strings to exhibit forces.
 # y_section: Visualize the trimed range of the y coordinates.
 
-
 use Math::Trig;
-
 
 $force_factor = 0.01;
 $y_section = 0;
@@ -147,19 +145,20 @@ sub OutYaplotData{
 		}
     }
 
-	printf OUT "y 6\n";
-	printf OUT "@ 0\n";
-	for ($i = 0; $i < $np; $i ++){
-		&OutCross($i);
-		
-	}
-	
-	$maxS=0;
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($maxS < $Sxz_lub[$k]){
-			$maxS = $Sxz_lub[$k];
+	if ($Ly == 0){
+		printf OUT "y 6\n";
+		printf OUT "@ 0\n";
+		for ($i = 0; $i < $np; $i ++){
+			&OutCross($i);
 		}
 	}
+	
+	#	$maxS=0;
+	#for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($maxS < $Sxz_lub[$k]){
+	#			$maxS = $Sxz_lub[$k];
+	#		}
+	#}
 	
 #	printf OUT "y 4\n";
 #    printf OUT "@ 5\n";

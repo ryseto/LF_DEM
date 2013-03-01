@@ -50,7 +50,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
-	int i_time_interval = strain_interval_out/(sys.dt*sys.shear_rate);
+	int i_time_interval = strain_interval_out/sys.dt;
 
 	outputConfigurationData();
 	while(sys.shear_strain <= shear_strain_end){
@@ -144,8 +144,6 @@ Simulation::autoSetParameters(const string &keyword,
 		out_vpython = str2bool(value);
 	} else if (keyword == "out_yaplot"){
 		out_yaplot = str2bool(value);
-	} else if (keyword == "out_pairtrajectory"){
-		sys.out_pairtrajectory = str2bool(value);
 	} else if (keyword == "origin_zero_flow"){
 		origin_zero_flow = str2bool(value);
 	} else {
@@ -215,10 +213,6 @@ Simulation::openOutputFiles(){
 	}
 	if (out_vpython){
 		fout_vpy.open(vpy_filename.c_str());
-	}
-	if (sys.out_pairtrajectory){
-		string trj_filename = "trj_" + sys.simu_name + ".dat";
-		sys.fout_trajectory.open(trj_filename.c_str());
 	}
 }
 
@@ -343,12 +337,7 @@ Simulation::setDefaultParameters(){
 	 * Visualize rotations by crosses.
 	 * (for yaplot data)
 	 */
-	/*
-	 * output pair trajeectory
-	 */
-	sys.out_pairtrajectory = false;
-	
-	
+
 }
 
 void
@@ -373,7 +362,7 @@ Simulation::importInitialPositionFile(){
 	np_b = np_b_;
 
 	int num_of_particle = np_a_ + np_b_;
-	sys.set_np(num_of_particle);
+	sys.np(num_of_particle);
 	
 	if (np_b_ > 0)
 		sys.poly = true;
@@ -435,9 +424,9 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.analyzeState();
 	
-	
 	double total_stress[5];
 	double total_stress2[5];
+
 	for (int u=0; u<5; u++){
 		total_stress[u] = sys.total_hydro_stress[u] + sys.total_contact_stress[u];
 		total_stress2[u] = sys.total_hydro_stress2[u] + sys.total_contact_stress2[u];
@@ -448,26 +437,28 @@ Simulation::evaluateData(){
 			total_stress2[u] += sys.total_brownian_stress[u];
 		}
 	}
-	total_stress[2] += sys.shear_rate;
-	total_stress2[2] += sys.shear_rate;
-	Viscosity = total_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	total_stress[2] += 1;
+	total_stress2[2] += 1;
+
+	Viscosity = total_stress[2]/(sys.valSystemVolume());
+	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume());
+
 	/* N1 = tau_xx - tau_zz = tau_xx - (- tau_xx-tau_yy) = 2tau_xx + tau_yy
 	 * N2 = tau_zz - tau_yy = (- tau_xx-tau_yy) - tau_yy  = -tau11 - 2tau22
 	 */
 	N1 = (2*total_stress[0] +   total_stress[4])/(sys.valSystemVolume());
 	N2 = (-total_stress[0] - 2*total_stress[4])/(sys.valSystemVolume());
-	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume());
+	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume());
 
 	N1_h = (2*sys.total_hydro_stress[0] +   sys.total_hydro_stress[4])/(sys.valSystemVolume());
 	N2_h = (-sys.total_hydro_stress[0] - 2*sys.total_hydro_stress[4])/(sys.valSystemVolume());
-	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
-	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume()*sys.shear_rate);
+	Viscosity_c = sys.total_contact_stress[2]/(sys.valSystemVolume());
+	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume());
 	N1_c = (2*sys.total_contact_stress[0] +   sys.total_contact_stress[4])/(sys.valSystemVolume());
 	N2_c = (-sys.total_contact_stress[0] - 2*sys.total_contact_stress[4])/(sys.valSystemVolume());
 	if (sys.brownian){
-		Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume()*sys.shear_rate);
+		Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume());
 		N1_b = (2*sys.total_brownian_stress[0] +   sys.total_brownian_stress[4])/(sys.valSystemVolume());
 		N2_b = (-sys.total_brownian_stress[0] - 2*sys.total_brownian_stress[4])/(sys.valSystemVolume());
 	} else {
@@ -511,6 +502,8 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#11: Viscosity(brownian)" << endl;
 		fout_rheo << "#12: N1(brownian)" << endl;
 		fout_rheo << "#13: N2(brownian)" << endl;
+		fout_rheo << "#14: min gap (non-dim)" << endl;
+		
 		// fout_rheo << "#1: shear strain" << endl;
 		// fout_rheo << "#2: Viscosity" << endl;
 		// fout_rheo << "#4: Viscosity(lub)" << endl;
@@ -533,17 +526,8 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_b << ' ' ; //11
 	fout_rheo << N1_b << ' ' ; //12
 	fout_rheo << N2_b << ' ' ; //13
+	fout_rheo << sys.minvalue_gap_nondim << ' '; // 14
 	fout_rheo << endl;
-
-
-	// fout_rheo << sys.shear_strain << ' '; //1
-	// fout_rheo << Viscosity << ' ' ; //2
-	// fout_rheo << Viscosity_h << ' ' ; //6
-	// fout_rheo << Viscosity_c << ' ' ; //9
-	// fout_rheo << Viscosity_2 << ' '; // 25
-	// fout_rheo << Viscosity_2_h << ' ' ; //6
-	// fout_rheo << Viscosity_2_c << ' ' ; //9
-	// fout_rheo << endl;
 
 }
 
@@ -614,7 +598,7 @@ Simulation::drawLine(double x0, double y0, double z0,
 void
 Simulation::outputDataHeader(ofstream &fout){
 	char sp = ' ';
-	fout << "np" << sp << sys.np << endl;
+	fout << "np" << sp << sys.np() << endl;
 	fout << "VF" << sp << sys.volume_fraction << endl;
 	fout << "Lx" << sp << sys.lx() << endl;
 	fout << "Ly" << sp << sys.ly() << endl;
@@ -730,7 +714,7 @@ Simulation::output_yap(){
 		}
 	}
 	fout_yap << "r " << radius_b << endl;
-	for (int i = np_b; i < sys.np ; i++){
+	for (int i = np_b; i < sys.np() ; i++){
 		if (abs(pos[i].y) < y_trimming ){
 			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
 		}
@@ -739,10 +723,10 @@ Simulation::output_yap(){
 	/* Layer 4: Orientation of particle (2D simulation)
 	 * Only for small system.
 	 */
-	if (sys.np <= 1000 && sys.draw_rotation_2d){
+	if (sys.np() <= 1000 && sys.draw_rotation_2d){
 		fout_yap << "y 5\n";
 		fout_yap << "@ " << color_white << endl;
-		for (int i=0; i < sys.np; i++){
+		for (int i=0; i < sys.np(); i++){
 
 				vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
 				u = sys.radius[i]*u;
@@ -855,7 +839,7 @@ void
 Simulation::output_vpython(double time){
 	vec3d pos;
 	fout_vpy << "time: " << time << endl;
-	for (int i=0; i < sys.np; i++){
+	for (int i=0; i < sys.np(); i++){
 		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								sys.position[i].y - sys.ly2(),
 								sys.position[i].z - sys.lz2());
