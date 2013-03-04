@@ -615,10 +615,10 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].particle_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].particle_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
-			fout_interaction << sys.interaction[k].normal_force() << sp; // 5
-			fout_interaction << sys.interaction[k].tangential_force().x << sp; // 6
-			fout_interaction << sys.interaction[k].tangential_force().y << sp; // 6
-			fout_interaction << sys.interaction[k].tangential_force().z << sp; // 6
+			fout_interaction << sys.shear_rate*sys.interaction[k].normal_force() << sp; // 5
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().x << sp; // 6
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().y << sp; // 6
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().z << sp; // 6
 			fout_interaction << sys.interaction[k].nr_vec.x << sp;
 			fout_interaction << sys.interaction[k].nr_vec.y << sp;
 			fout_interaction << sys.interaction[k].nr_vec.z << sp;
