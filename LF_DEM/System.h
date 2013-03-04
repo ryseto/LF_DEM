@@ -86,6 +86,7 @@ public:
 	~System();
 	int ts; // time steps
 	int dimension;
+
 	vec3d *position;
 	double *radius;
 	vector <double> radius_cubic;
@@ -123,14 +124,13 @@ public:
 	double kt;
 	double lub_max; //
 	double mu_static; // static friction coefficient.
-	double mu_dynamic;// dynamic friction coefficient.
 	bool lubrication;
 	bool friction;
 	bool brownian;
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
-
 	double diag_stokes_drag;
 	double bgf_factor;
+	bool shearrate_scale_Fc_normal;
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
@@ -158,10 +158,12 @@ public:
 	double minvalue_gap_nondim;
 	double ave_overlap;
 	bool draw_rotation_2d;
+	
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	string simu_name;
 
+	
 	/*************************************************************/
 	void lx(double length){
 		_lx=length;

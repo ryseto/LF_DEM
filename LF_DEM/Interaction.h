@@ -43,6 +43,7 @@ private:
 	//===== forces and stresses ==================== //
 	double kn; // spring constant for contact force
 	double kt; // spring constant for contact force
+	double mu; // friction coeffient
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	vec3d contact_force_i; // lubforce_j = - lubforce_i
@@ -125,7 +126,9 @@ public:
 
 	//======= internal state =====================//
 	bool contact;
-	bool static_friction;
+	bool friction;
+
+
 
 	//=============  Resistance Matrices ====================/
 	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);

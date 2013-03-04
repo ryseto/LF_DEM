@@ -14,7 +14,7 @@ Interaction::init(System *sys_){
 	contact = false;
 	active = false;
 	Fc_normal_norm = 0;
-	static_friction = false;
+//	static_friction = false;
 }
 
 
@@ -66,20 +66,15 @@ Interaction::calcDistanceNormalVector(){
  */
 void
 Interaction::calcContactInteraction(){
-
-	int normal_potential_type = 1;
-	switch (normal_potential_type) {
-	case 0:
-		Fc_normal_norm = sys->kn*(ro - _r);
-		break;
-	case 1:
-		Fc_normal_norm = exp(100.*(ro - _r)) - 1. ;
-	
+	if (sys->shearrate_scale_Fc_normal){
+		Fc_normal_norm = exp(sys->kn*(ro - _r)) - 1;
+	} else {
+		Fc_normal_norm = (exp(sys->kn*(ro - _r)) - 1)/sys->shear_rate;
 	}
-	Fc_normal_norm /= sys->shear_rate; // to have it nondimensionalized
 	Fc_normal = - Fc_normal_norm*nr_vec;
-
-
+	if (friction){
+		Fc_tan = sys->kt*disp_tan;
+	}
 }
 
 void
@@ -88,7 +83,7 @@ Interaction::addUpContactForceTorque(){
 		sys->contact_force[particle_num[0]] += Fc_normal;
 		sys->contact_force[particle_num[1]] -= Fc_normal;
 
-		if(static_friction){
+		if(friction){
 			sys->contact_force[particle_num[0]] += Fc_tan;
 			sys->contact_force[particle_num[1]] -= Fc_tan;
 
@@ -411,9 +406,7 @@ Interaction::evaluateLubricationForce(){
 	XG(XGii, XGij, XGji, XGjj);
 	double n0n2 = nr_vec.x * nr_vec.z;
 	double cf_GE_i = n0n2*(2*a0*a0*XGii/3 + ro*ro*XGji/6);
-
 	lubforce_i = (cf_AU_i + cf_GE_i) * nr_vec;
-
 }
 
 double
@@ -421,12 +414,9 @@ Interaction::valLubForce(){
 	return 	-dot(lubforce_i, nr_vec);
 }
 
-
-
 // term nr_vec*F
 void
 Interaction::calcContactStressTermXF(){
-
 	if (contact){
 		vec3d force = Fc_normal + Fc_tan;
 		contactstresslet.elm[0] = force.x * nr_vec.x; //xx
@@ -435,12 +425,10 @@ Interaction::calcContactStressTermXF(){
 		contactstresslet.elm[3] = 0.5*(force.y * nr_vec.z + force.z * nr_vec.y) ; //xz
 		contactstresslet.elm[4] = force.y * nr_vec.y;
 	}
-
 }
 
 void
 Interaction::addContactStress(){
-
 	int i = particle_num[0];
 	int j = particle_num[1];
 	int i3=3*i;
@@ -538,20 +526,18 @@ Interaction::activate(int i, int j,
 	invlambda = 1 / lambda;
 	lub_reduce_parameter = sys->lub_reduce_parameter;
 	lub_coeff_max = 1/lub_reduce_parameter;
-	
 	r_lub_max = 0.5*ro*sys->lub_max;
-
 	//assignDistanceNormalVector(pos_diff, distance, zshift);
 
 	/*
 	 * We may consider the particle size
 	 *
 	 */
-	//	kn = sys->kn/(0.5*ro);
-	//	kt = sys->kt/(0.5*ro);
+	friction = sys->friction;
 	kn = sys->kn;
 	kt = sys->kt;
-
+	mu = sys->mu_static;
+	
 	return;
 }
 
@@ -571,18 +557,14 @@ void
 Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
-	if (sys->friction){
-		static_friction = true;
-	}
 	disp_tan.reset();
-	calcContactVelocity();
+	//calcContactVelocity();
 }
 
 void
 Interaction::deactivate_contact(){
 	// r > a0 + a1
 	contact = false;
-	static_friction = false;
 	disp_tan.reset();
 	Fc_normal_norm = 0;
 	Fc_normal.reset();
@@ -628,7 +610,7 @@ Interaction::updateStatesForceTorque(){
 			calcContactVelocity();
 			incrementContactTangentialDisplacement();
 			calcContactInteraction();
-			if ( static_friction && (!sys->in_predictor) ){
+			if ( !sys->in_predictor ){
 				checkBreakupStaticFriction();
 			}
 		}
@@ -639,14 +621,12 @@ Interaction::updateStatesForceTorque(){
 		}
 	}
 	
-	if(!static_friction && Fc_tan.sq_norm() > 0.){
-		cerr << " Error : Interaction " << particle_num[0] << " " << particle_num[1] << " : " << endl;
-		cerr << " No friction required but non-zero tangential force ( " << Fc_tan << " ) after update " << endl;
-		exit(1);
-	}
-		
+//	if(!static_friction && Fc_tan.sq_norm() > 0.){
+//		cerr << " Error : Interaction " << particle_num[0] << " " << particle_num[1] << " : " << endl;
+//		cerr << " No friction required but non-zero tangential force ( " << Fc_tan << " ) after update " << endl;
+//		exit(1);
+//	}
 	return false;
-
 }
 
 void
@@ -659,6 +639,6 @@ Interaction::checkBreakupStaticFriction(){
 		 ** A simple imprementation is used temporary.
 		 */
 		disp_tan.reset();
-		Fc_tan.reset();
 	}
 }
+

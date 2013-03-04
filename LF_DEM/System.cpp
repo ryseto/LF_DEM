@@ -191,7 +191,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		fb->init();
 	}
 	brownianstress_calc_nb = 0;
-//	in_predictor = false;
 }
 
 void

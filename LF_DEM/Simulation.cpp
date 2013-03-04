@@ -15,9 +15,6 @@
 
 Simulation::Simulation(){};
 Simulation::~Simulation(){
-	if (fout_yap.is_open()){
-		fout_yap.close();
-	}
 	if (fout_rheo.is_open()){
 		fout_rheo.close();
 	}
@@ -40,12 +37,13 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
 	setDefaultParameters();
-	if (argc == 3){
-		filename_parameters = argv[2];
-		readParameterFile();
+	filename_parameters = argv[2];
+	readParameterFile();
+	if ( argc == 3){
+		filename_addition = "";
+	} else {
+		filename_addition = argv[3];
 	}
-	//filename_addition = argv[3];
-	filename_addition = "";
 	
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
@@ -59,8 +57,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		evaluateData();
 		outputRheologyData();
 		outputConfigurationData();
-		if(out_yaplot)
-			output_yap();
 		if(out_vpython)
 			output_vpython(sys.ts);
 	}
@@ -120,18 +116,16 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.integration_method = atof(value.c_str());
 	} else if (keyword == "lub_max"){
 		sys.lub_max = atof(value.c_str());
+	} else if (keyword == "shearrate_scale_Fc_normal"){
+		sys.shearrate_scale_Fc_normal = str2bool(value);
 	} else if (keyword == "kn"){
 		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt"){
 		sys.kt = atof(value.c_str());
 	} else if (keyword == "mu_static"){
 		sys.mu_static = atof(value.c_str());
-	} else if (keyword == "mu_dynamic"){
-		sys.mu_dynamic = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
 		strain_interval_out = atof(value.c_str());
-	} else if (keyword == "yap_force_factor"){
-		yap_force_factor = atof(value.c_str());
 	} else if (keyword == "draw_rotation_2d"){
 		sys.draw_rotation_2d = str2bool(value);
 	} else if (keyword == "out_data_particle"){
@@ -140,8 +134,6 @@ Simulation::autoSetParameters(const string &keyword,
 		out_data_interaction = str2bool(value);
 	} else if (keyword == "out_vpython"){
 		out_vpython = str2bool(value);
-	} else if (keyword == "out_yaplot"){
-		out_yaplot = str2bool(value);
 	} else if (keyword == "origin_zero_flow"){
 		origin_zero_flow = str2bool(value);
 	} else {
@@ -200,15 +192,11 @@ Simulation::openOutputFiles(){
 	prepareSimulationName();
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
-	string yap_filename = "yap_" + sys.simu_name + ".yap";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
-	if (out_yaplot){
-		fout_yap.open(yap_filename.c_str());
-	}
 	if (out_vpython){
 		fout_vpy.open(vpy_filename.c_str());
 	}
@@ -288,14 +276,14 @@ Simulation::setDefaultParameters(){
 	 *
 	 *
 	 */
+	sys.shearrate_scale_Fc_normal = true;
 	sys.kn = 300;
-	sys.kt = 300;
+	sys.kt = 1000;
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
 	 */
 	sys.mu_static = 10;
-	sys.mu_dynamic = 8;
 	/*
 	 * Output interval
 	 */
@@ -316,19 +304,6 @@ Simulation::setDefaultParameters(){
 	 * output data for vpython
 	 */
 	out_vpython = true;
-	/*
-	 * output data for python
-	 */
-	out_yaplot = false;
-	/*
-	 * The bond width indicates the force strength.
-	 */
-	yap_force_factor = 0.02;
-	/*
-	 * Visualize rotations by crosses.
-	 * (for yaplot data)
-	 */
-
 }
 
 void
@@ -649,177 +624,11 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].nr_vec.z << sp;
 			fout_interaction << sys.interaction[k].gap_nondim() << sp; //7
 			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; //
-			fout_interaction << sys.interaction[k].static_friction << sp; //8
+			fout_interaction << sys.interaction[k].contact << sp; //8
 
 			/// fout_interaction << ???
 			fout_interaction << endl;
 		}
-	}
-}
-
-
-/* Output data for yaplot visualization.
- *
- */
-void
-Simulation::output_yap(){
-	static bool fasttime = true;
-	if (fasttime){
-		fasttime = false;
-	}else{
-		fout_yap << endl;
-	}
-	
-	double y_trimming = 2;
-	/*
-	 * yaplot color
-	 *
-	 * int color_black = 0;
-	 * int color_gray = 1;
-	 */
-	int color_white = 2;
-	int color_green = 3;
-	int color_yellow = 4;
-	int color_orange = 5;
-	int color_blue = 6;
-	
-	vector<vec3d> pos;
-	int np = np_a + np_b ;
-	pos.resize(np);
-	for (int i=0; i < np; i++){
-		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-								   sys.position[i].y - sys.ly2(),
-								   sys.position[i].z - sys.lz2());
-	}
-
-	/* Layer 1: Circles for particles
-	 */
-	fout_yap << "y 1\n";
-	fout_yap << "@ " << color_white << endl;
-	//vec3d pos;
-	fout_yap << "r " << radius_a << endl;
-	
-	for (int i=0; i < np_a; i++){
-		if (abs(pos[i].y) < y_trimming ){
-			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
-		}
-	}
-	fout_yap << "r " << radius_b << endl;
-	for (int i = np_b; i < sys.np() ; i++){
-		if (abs(pos[i].y) < y_trimming ){
-			fout_yap << "c " << pos[i].x << ' ' << pos[i].y << ' ' << pos[i].z << endl;
-		}
-	}
-	
-	/* Layer 4: Orientation of particle (2D simulation)
-	 * Only for small system.
-	 */
-	if (sys.np() <= 1000 && sys.draw_rotation_2d){
-		fout_yap << "y 5\n";
-		fout_yap << "@ " << color_white << endl;
-		for (int i=0; i < sys.np(); i++){
-
-				vec3d u(cos(-sys.angle[i]),0,sin(-sys.angle[i]));
-				u = sys.radius[i]*u;
-				drawLine('l', pos[i]-u, 2*u, fout_yap);
-				u.set(-sin(-sys.angle[i]), 0, cos(-sys.angle[i]));
-				u = sys.radius[i]*u;
-				drawLine('l', pos[i]-u, 2*u, fout_yap);
-			
-		}
-	}
-	/* Layer 2: Friction
-	 */
-	if (sys.friction){
-		fout_yap << "y 2\n";
-		for (int k=0; k < sys.num_interaction; k++){
-			if ( sys.interaction[k].contact){
-				if (sys.interaction[k].static_friction)
-					fout_yap << "@ " << color_green << endl;
-				else
-					fout_yap << "@ " << color_orange << endl;
-				int i = sys.interaction[k].particle_num[0];
-				fout_yap << "r " << yap_force_factor*sys.interaction[k].tangential_force().norm()  << endl;
-				drawLine('s', pos[i], sys.radius[i]*sys.interaction[k].nr_vec, fout_yap);
-				int j = sys.interaction[k].particle_num[1];
-				drawLine('s', pos[j], -sys.radius[j]*sys.interaction[k].nr_vec, fout_yap);
-			}
-		}
-	}
-	/* Layer 3: lubrication (Compression)
-	 */
-	// nr_vec i ---> j
-	fout_yap << "y 3\n";
-	fout_yap << "@ " << color_yellow << endl;
-	for (int k=0; k < sys.num_interaction; k++){
-		if ( sys.interaction[k].active ){
-			double lub_force = sys.interaction[k].valLubForce();
-			if (lub_force >= 0){
-				vec3d nvec = sys.interaction[k].nr_vec;
-				int i = sys.interaction[k].particle_num[0];
-				int j = sys.interaction[k].particle_num[1];
-				if (abs(pos[i].y) < y_trimming || abs(pos[j].y) < y_trimming ){
-					fout_yap << "r " << yap_force_factor*lub_force << endl;
-					drawLine('s', pos[i],  sys.radius[i]*nvec, fout_yap);
-					drawLine('s', pos[j], -sys.radius[j]*nvec, fout_yap);
-				}
-			}
-		}
-	}
-	/* Layer 4: lubrication (Extension)
-	 */
-	fout_yap << "y 4\n";
-	fout_yap << "@ " << color_green << endl;
-	for (int k=0; k < sys.num_interaction; k++){
-		if ( sys.interaction[k].active ){
-			double lub_force = sys.interaction[k].valLubForce();
-			if (lub_force < 0){
-				vec3d nvec = sys.interaction[k].nr_vec;
-				int i = sys.interaction[k].particle_num[0];
-				int j = sys.interaction[k].particle_num[1];
-				if (abs(pos[i].y) < y_trimming || abs(pos[j].y) < y_trimming ){
-					fout_yap << "r " << -yap_force_factor*lub_force << endl;
-					drawLine('s', pos[i],  sys.radius[i]*nvec, fout_yap);
-					drawLine('s', pos[j], -sys.radius[j]*nvec, fout_yap);
-				}
-			}
-		}
-	}
-
-	/* Layer 6: Box and guide lines
-	 */
-	fout_yap << "y 6\n";
-	fout_yap << "@ " << color_blue << endl;
-	if (sys.dimension == 2){
-		drawLine(-sys.lx2(), 0, -sys.lz2(),  sys.lx2(), 0, -sys.lz2(), fout_yap);
-		drawLine(-sys.lx2(), 0,  sys.lz2(), -sys.lx2(), 0, -sys.lz2(), fout_yap);
-		drawLine(-sys.lx2(), 0,  sys.lz2(),  sys.lx2(), 0,  sys.lz2(), fout_yap);
-		drawLine( sys.lx2(), 0, -sys.lz2(),  sys.lx2(), 0,  sys.lz2(), fout_yap);
-		/*
-		for (int i = 0 ; i < 10; i ++){
-			drawLine(-sys.lx2()                , 0, -sys.lz2() + i*0.2*sys.lz2(),
-					 -sys.lx2() + i*0.2*sys.lz2(), 0,                 -sys.lz2(), fout_yap);
-			drawLine( sys.lx2()                   ,        0, sys.lz2() - i*0.2*sys.lz2(),
-					  sys.lx2() - i*0.2*sys.lz2(), 0,  sys.lz2(), fout_yap);
-		}
-		drawLine(-sys.lx2(), 0, sys.lz2(), sys.lx2() , 0, -sys.lz2(), fout_yap);
-		 */
-	} else {
-		drawLine(-sys.lx2(), -sys.ly2(), -sys.lz2(),  sys.lx2(), -sys.ly2(), -sys.lz2(), fout_yap);
-		drawLine(-sys.lx2(),  sys.ly2(), -sys.lz2(),  sys.lx2(),  sys.ly2(), -sys.lz2(), fout_yap);
-
-		drawLine(-sys.lx2(),  sys.ly2(),  sys.lz2(),  sys.lx2(),  sys.ly2(),  sys.lz2(), fout_yap);
-		drawLine(-sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), -sys.ly2(),  sys.lz2(), fout_yap);
-		
-		drawLine(-sys.lx2(), -sys.ly2(), -sys.lz2(), -sys.lx2(), sys.ly2(), -sys.lz2(), fout_yap);
-		drawLine(-sys.lx2(), -sys.ly2(),  sys.lz2(), -sys.lx2(), sys.ly2(),  sys.lz2(), fout_yap);
-		drawLine( sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), sys.ly2(),  sys.lz2(), fout_yap);
-		drawLine( sys.lx2(), -sys.ly2(), -sys.lz2(),  sys.lx2(), sys.ly2(), -sys.lz2(), fout_yap);
-		
-		drawLine( sys.lx2(),  sys.ly2(),  sys.lz2(),  sys.lx2(), sys.ly2(), -sys.lz2(),  fout_yap);
-		drawLine(-sys.lx2(),  sys.ly2(),  sys.lz2(), -sys.lx2(), sys.ly2(), -sys.lz2(),  fout_yap);
-		drawLine(-sys.lx2(), -sys.ly2(),  sys.lz2(), -sys.lx2(), -sys.ly2(), -sys.lz2(),  fout_yap);
-		drawLine( sys.lx2(), -sys.ly2(),  sys.lz2(),  sys.lx2(), -sys.ly2(), -sys.lz2(),  fout_yap);
 	}
 }
 

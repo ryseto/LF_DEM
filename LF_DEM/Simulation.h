@@ -55,23 +55,19 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_yap;
 	ofstream fout_vpy;
 	ofstream fout_rheo;
 	ofstream fout_particle;
 	ofstream fout_interaction;
-	bool out_yaplot;
 	bool out_vpython;
 	bool out_data_particle;
 	bool out_data_interaction;
-	double yap_force_factor;
 	bool origin_zero_flow;
 	/*
 	 *
 	 */
 	void timeEvolution();
 	void evaluateData();
-	
 	/*
 	 * For inputs
 	 */

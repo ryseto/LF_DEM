@@ -227,15 +227,22 @@ System::calcStressesHydroContact(){
 	setContactForceToParticle();
     buildContactTerms();
     stokes_solver->solve(v_cont);
-
     stokes_solver->solvingIsDone();
-
 
 	// from that, compute stresses
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
 			interaction[k].addHydroStress();       // - R_SU * v_hydro
 			interaction[k].addContactStress();    //  - R_SU * v_cont - rF_cont
+		}
+	}
+
+	/*
+	 * Calculate lubrication force to output
+	 */
+	for (int k = 0; k < num_interaction; k++){
+		if (interaction[k].active){
+			interaction[k].evaluateLubricationForce();
 		}
 	}
 
