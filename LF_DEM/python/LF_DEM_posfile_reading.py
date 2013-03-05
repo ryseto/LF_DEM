@@ -60,7 +60,7 @@ class Pos_Stream:
         switch=0
 
         if(len(values)>0):
-            if(values[0] == 'time:'):
+            if(values[0] == '#'):
                 if self.is_file:
                     tlabel=[float(values[1]),self.instream.tell()]
                 else:
@@ -69,18 +69,11 @@ class Pos_Stream:
                 self.update_labels(tlabel)
                 switch=1
                 
-            if len(values)==5 :
+            if len(values) > 10 : # exact number to be fixed. Now it is different in 2d an 3d, due to different output of angular position
                 i=values[0]
 #                self.positions[i]=[float(values[j])+0.5*self.cell_size for j in range(1,4)]
-                self.positions[i]=[float(values[j]) for j in range(1,4)]
-                self.radius[i]=float(values[4])
-
-            if len(values)==4 :  #monodisperse
-                i=values[0]
-#                self.positions[i]=[float(values[j])+0.5*self.cell_size for j in range(1,4)]
-                self.positions[i]=[float(values[j]) for j in range(1,4)]
-                self.radius[i]=1.
-
+                self.positions[i]=[float(values[j]) for j in range(2,5)]
+                self.radius[i]=float(values[1])
 
         return switch
             

@@ -59,7 +59,6 @@ private:
 	ofstream fout_rheo;
 	ofstream fout_particle;
 	ofstream fout_interaction;
-	bool out_vpython;
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
@@ -82,7 +81,6 @@ private:
 	 * For outputs
 	 */
 	void output_yap();
-	void output_vpython(double);
 	void output_vel();
 	void outputDataHeader(ofstream &fout);
 	void initContactPair();
