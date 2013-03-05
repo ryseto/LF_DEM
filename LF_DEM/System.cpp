@@ -18,12 +18,6 @@ System::~System(){
 		delete [] angle;
 	if (!velocity)
 		delete [] velocity;
-	if (!relative_velocity)
-		delete [] relative_velocity;
-	if (!relative_velocity_lub_cont)
-		delete [] relative_velocity_lub_cont;
-	if (!relative_velocity_brownian)
-		delete [] relative_velocity_brownian;
 	if (!ang_velocity)
 		delete [] ang_velocity;
 	if (!lubrication_force)
@@ -79,9 +73,6 @@ System::allocateRessources(){
 	angle = new double [_np];
 	velocity = new vec3d [_np];
 	velocity_predictor.resize(_np);
-	relative_velocity = new vec3d [_np];
-	relative_velocity_lub_cont = new vec3d [_np];
-	relative_velocity_brownian = new vec3d [_np];
 	ang_velocity = new vec3d [_np];
 	ang_velocity_predictor.resize(_np);
 	lubrication_force = new vec3d [_np];
@@ -151,18 +142,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		interaction[k].init(this);
 	}
 	for (int i=0; i < _np; i++){
-		velocity[i].x=0.;
-		velocity[i].y=0.;
-		velocity[i].z=0.;
-		relative_velocity[i].x=0.;
-		relative_velocity[i].y=0.;
-		relative_velocity[i].z=0.;
-		relative_velocity_lub_cont[i].x=0.;
-		relative_velocity_lub_cont[i].y=0.;
-		relative_velocity_lub_cont[i].z=0.;
-		relative_velocity_brownian[i].x=0.;
-		relative_velocity_brownian[i].y=0.;
-		relative_velocity_brownian[i].z=0.;
+		velocity[i].reset();
 	}
 	initializeBoxing();
 	checkNewInteraction();
@@ -264,7 +244,7 @@ System::deltaTimeEvolutionPredictor(){
 	 * It must not be updated in corrector.
 	 */
 	shear_disp += vel_difference*dt;
-	if (shear_disp > lx()){
+	if (shear_disp >= lx()){
 		shear_disp -= lx();
 	}
 	for (int i=0; i < _np; i++){
@@ -409,7 +389,7 @@ void System::timeEvolutionBrownian(){
     }
 	// evolve PBC
 	shear_disp += vel_difference*dt;
-	if (shear_disp > lx()){
+	if (shear_disp >= lx()){
 		shear_disp -= lx();
 	}
 
@@ -591,26 +571,6 @@ System::stressBrownianReset(){
 	brownianstress_calc_nb = 0;
 }
 
-///*
-// * Free-draining approximation
-// */
-//void
-//System::updateVelocity(){
-//	vec3d U_inf(0, 0, 0);
-//	for (int i=0; i < _np; i++){
-//		U_inf.x = shear_rate*position[i].z;
-//		relative_velocity[i] = (1.0/eta)*total_force[i];
-//		velocity[i] = relative_velocity[i] + U_inf;
-//	}
-//	if(friction){
-//		double O_inf_y = 0.5*shear_rate;
-//		for (int i=0; i < _np; i++){
-//			ang_velocity[i] = 0.75*torque[i];
-//			ang_velocity[i].y += O_inf_y;
-//		}
-//	}
-//}
-
 void
 System::addStokesDrag(){
     for (int i = 0; i < _np; i ++){
@@ -731,31 +691,21 @@ System::updateVelocityLubrication(){
 	 */
     for (int i = 0; i < _np; i++){
 		int i3 = 3*i;
-		relative_velocity_lub_cont[i].x = v_lub_cont[i3];
-		relative_velocity_lub_cont[i].y = v_lub_cont[i3+1];
-		relative_velocity_lub_cont[i].z = v_lub_cont[i3+2];
-		velocity[i].x = relative_velocity_lub_cont[i].x + position[i].z;
-		velocity[i].y = relative_velocity_lub_cont[i].y;
-		velocity[i].z = relative_velocity_lub_cont[i].z;
+		velocity[i].x = v_lub_cont[i3] + position[i].z;
+		velocity[i].y = v_lub_cont[i3+1];
+		velocity[i].z = v_lub_cont[i3+2];
     }
-
 	// Tc - 8 pi eta a^3 (omega - omega_inf) = 0
 	// U0 = a gammadot
 	// F0 = 6 pi eta a U0 = 6 pi eta a^2 gammadot
 	// Tc/a F0 - 8 pi eta a'^3 (omega - omega_inf) / a F0 = 0
 	// \hat{Tc} - (4/3) (a'/a)^3(omega - omega_inf) / gammadot = 0
 	//  omega = (3/4) (a/a')^3\hat{Tc} gammadot + omega_inf;
-	/*
-	 * This must be modified for polidisperse system.
-	 *
-	 *
-	 */
 	double O_inf_y = 0.5;
 	for (int i=0; i < _np; i++){
 		ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
 		ang_velocity[i].y += O_inf_y;
 	}
-    
     stokes_solver->solvingIsDone();
 }
 
@@ -763,34 +713,50 @@ System::updateVelocityLubrication(){
 void
 System::displacement(int i, const vec3d &dr){
 	position[i] += dr;
-	periodize(position[i]);
+	int z_shift = periodize(position[i]);
+	/* Note:
+	 * When the position of the particle is periodized,
+	 * we need to modify the velocity, which was already evaluated.
+	 * The position and velocity will be used to calculate the contact forces.
+	 */
+	if (z_shift){
+		velocity[i].x += z_shift*lz();
+	}
 	boxset->box(i);
 }
 
 // [0,l]
-void
+int
 System::periodize(vec3d &pos){
-	if (pos.z > lz() ){
+	int z_shift = 0;
+	if (pos.z >= lz() ){
 		pos.z -= lz();
 		pos.x -= shear_disp;
+		z_shift = -1;
 	} else if ( pos.z < 0 ){
 		pos.z += lz();
 		pos.x += shear_disp;
+		z_shift = +1;
 	}
-	while ( pos.x > lx() ){
+	while ( pos.x >= lx() ){
 		pos.x -= lx();
 	}
 	while (pos.x < 0 ){
 		pos.x += lx();
 	}
+	
 	if (dimension == 3){
-		if ( pos.y > ly() ){
+		if ( pos.y >= ly() ){
 			pos.y -= ly();
 		} else if (pos.y < 0 ){
 			pos.y += ly();
 		}
 	}
+	return z_shift;
 }
+
+
+
 
 // [-l/2,l/2]
 void

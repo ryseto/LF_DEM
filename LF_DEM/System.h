@@ -15,17 +15,13 @@
 #include <queue>
 #include <string>
 #include "common.h"
-//#include <Accelerate/Accelerate.h>
 #include "Interaction.h"
-
 #include "vec3d.h"
 #include "BrownianForce.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
-
 #include "cholmod.h"
 #include "MersenneTwister.h"
-
 using namespace std;
 
 class Simulation;
@@ -93,9 +89,6 @@ public:
 	double *angle; // for 2D visualization
 	vec3d *velocity;
 	vector <vec3d> velocity_predictor;
-	vec3d *relative_velocity;
-	vec3d *relative_velocity_lub_cont;
-	vec3d *relative_velocity_brownian;
 	vec3d *ang_velocity;
 	vector <vec3d> ang_velocity_predictor;
 	vec3d *lubrication_force;
@@ -162,8 +155,6 @@ public:
 	vector <int> lubparticle;
 	vector <double> lubparticle_vec[3];
 	string simu_name;
-
-	
 	/*************************************************************/
 	void lx(double length){
 		_lx=length;
@@ -222,7 +213,7 @@ public:
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
-	void periodize(vec3d &);
+	int periodize(vec3d &);
 	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void updateVelocity();

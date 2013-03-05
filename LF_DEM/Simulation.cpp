@@ -42,7 +42,8 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	if ( argc == 3){
 		filename_addition = "";
 	} else {
-		filename_addition = argv[3];
+		filename_addition = "_";
+		filename_addition += argv[3];
 	}
 	
 	openOutputFiles();
@@ -586,7 +587,7 @@ Simulation::outputConfigurationData(){
 	/*
 	 * shear_disp = sys.shear_strain - (int)(sys.shear_strain/Lx)*Lx
 	 */
-	fout_particle << "#" << sp << sys.shear_strain << endl;
+	fout_particle << "#" << sp << sys.shear_strain  << ' ' << sys.shear_disp << endl;
 	for (int i=0; i < np; i++){
 		vec3d &p = pos[i];
 		vec3d &v = sys.velocity[i];
