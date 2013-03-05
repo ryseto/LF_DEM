@@ -58,8 +58,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		evaluateData();
 		outputRheologyData();
 		outputConfigurationData();
-		if(out_vpython)
-			output_vpython(sys.ts);
 	}
 }
 
@@ -133,8 +131,6 @@ Simulation::autoSetParameters(const string &keyword,
 		out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction"){
 		out_data_interaction = str2bool(value);
-	} else if (keyword == "out_vpython"){
-		out_vpython = str2bool(value);
 	} else if (keyword == "origin_zero_flow"){
 		origin_zero_flow = str2bool(value);
 	} else {
@@ -198,9 +194,6 @@ Simulation::openOutputFiles(){
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
-	if (out_vpython){
-		fout_vpy.open(vpy_filename.c_str());
-	}
 }
 
 void
@@ -301,10 +294,6 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
-	/*
-	 * output data for vpython
-	 */
-	out_vpython = true;
 }
 
 void
@@ -633,18 +622,3 @@ Simulation::outputConfigurationData(){
 	}
 }
 
-/* Output data for vpython visualization.
- *
- */
-void
-Simulation::output_vpython(double time){
-	vec3d pos;
-	fout_vpy << "time: " << time << endl;
-	for (int i=0; i < sys.np(); i++){
-		pos = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
-								sys.position[i].y - sys.ly2(),
-								sys.position[i].z - sys.lz2());
-		fout_vpy << i << ' ' << pos.x << ' ' << pos.y << ' ' << pos.z << ' ' << sys.radius[i] << endl;
-	}
-	fout_vpy << endl;
-}
