@@ -15,5 +15,5 @@ cdef class CircularCoordinateHistogram(Histograms):
 
     cpdef genkey_nolist(self, double r, double theta)
     cpdef update_nolist(self, double a, double b, value, str coord=*, str act=*)
-
+#    cpdef normalize_a_la_gofr(self, int N, double rho, int call_nb)
     
