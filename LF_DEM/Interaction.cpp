@@ -120,6 +120,7 @@ Interaction::calcContactVelocity(){
 		 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 		 *
 		 ******************************************************/
+
 		if (sys->integration_method == 0 ){
 			/* In the Eular Method
 			 */
@@ -392,8 +393,11 @@ Interaction::evaluateLubricationForce(){
 	/*
 	 *  First: -A*(U-Uinf) term
 	 */
-	vec3d &vi = sys->relative_velocity_lub_cont[i];
-	vec3d &vj = sys->relative_velocity_lub_cont[j];
+	vec3d vi = sys->velocity[i];
+	vec3d vj = sys->velocity[j];
+	vi.x -= sys->position[i].z;
+	vj.x -= sys->position[j].z;
+	
 	double XAii, XAij, XAji, XAjj;
 	XA(XAii, XAij, XAji, XAjj);
 
@@ -604,6 +608,7 @@ bool
 Interaction::updateStatesForceTorque(){
 	if (active){
 		// compute new r_vec and distance
+		// z_shift is updated
 		calcDistanceNormalVector();
 		// update tangential displacement: we do it before updating nr_vec
 		if (contact) {

@@ -245,7 +245,6 @@ System::calcStressesHydroContact(){
 			interaction[k].evaluateLubricationForce();
 		}
 	}
-
 	
 	// >>>>  testing : compare with stress computation from forces
 	// Note that the definition of Hydrodynamic Stress and Contact Stress

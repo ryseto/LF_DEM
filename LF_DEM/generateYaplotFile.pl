@@ -57,7 +57,7 @@ sub readHeader{
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
-    ($buf, $shear_rate) = split(/\s+/, $line);
+    ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
         ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle ) = split(/\s+/, $line);
@@ -122,17 +122,21 @@ sub OutYaplotData{
     printf OUT "y 2\n";
     printf OUT "@ 2\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        if ($Fc_n[$k] > 0){
-            $string_width = $force_factor*($Fc_n[$k]);
+		$force = $Fc_n[$k];
+        if ( $F_lub[$k] < 0){
+			$force += - $F_lub[$k];
+		}
+		if ( $force > 0 ){
+			$string_width = $force_factor*($force);
 			&OutString_width($int0[$k],  $int1[$k]);
-        }
+		}
     }
     printf OUT "y 3\n";
     printf OUT "@ 3\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k] + $Fc_n[$k];
+        $force = $F_lub[$k];
         if ($force < 0){
-			$string_width = -${force_factor}*${force};
+			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
     }
@@ -152,6 +156,26 @@ sub OutYaplotData{
 			&OutCross($i);
 		}
 	}
+	
+	$x0 = -$Lx/2;
+	$x1 = -$Lx/2 + $shear_disp / 2;
+	$z1 = $Lz/2;
+
+	$x2 = $Lx/2;
+	$z2 = 0;
+	$x3 = $Lx/2 - $shear_disp / 2;
+	$z3 = -$Lz/2;
+	
+	$lx2 = $Lx/2;
+	
+	printf OUT "y 7\n";
+	printf OUT "@ 6\n";
+	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
+
+	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
+	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
+
+	
 	
 	#	$maxS=0;
 	#for ($k = 0; $k < $num_interaction; $k ++){
