@@ -443,8 +443,6 @@ Interaction::addContactStress(){
 			sys->contactstress[i].elm[u] += contactstresslet.elm[u];
 			sys->contactstress[j].elm[u] += contactstresslet.elm[u];
 		}
-		
-
 		// Add term G*V_cont
 		stresslet stresslet_GU_i;
 		stresslet stresslet_GU_j;

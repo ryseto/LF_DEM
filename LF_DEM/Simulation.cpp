@@ -459,15 +459,6 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#12: N1(brownian)" << endl;
 		fout_rheo << "#13: N2(brownian)" << endl;
 		fout_rheo << "#14: min gap (non-dim)" << endl;
-		
-		// fout_rheo << "#1: shear strain" << endl;
-		// fout_rheo << "#2: Viscosity" << endl;
-		// fout_rheo << "#4: Viscosity(lub)" << endl;
-		// fout_rheo << "#5: Viscosity(contact)" << endl;
-		// fout_rheo << "#6: Viscosity2" << endl;
-		// fout_rheo << "#8: Viscosity2(lub)" << endl;
-		// fout_rheo << "#9: Viscosity2(contact)" << endl;
-
 	}
 	fout_rheo << sys.shear_strain << ' '; //1
 	fout_rheo << Viscosity << ' ' ; //2
@@ -565,13 +556,26 @@ Simulation::outputDataHeader(ofstream &fout){
 void
 Simulation::outputConfigurationData(){
 	vector<vec3d> pos;
+	vector<vec3d> vel;
 	char sp = ' ';
 	int np = np_a + np_b;
 	pos.resize(np);
+	vel.resize(np);
 	for (int i=0; i < np; i++){
 		pos[i] = shiftUpCoordinate(sys.position[i].x - sys.lx2(),
 								   sys.position[i].y - sys.ly2(),
 								   sys.position[i].z - sys.lz2());
+	}
+	/* If the origin is shifted,
+	 * we need to change the velocities of particles as well.
+	 */
+	if (origin_zero_flow){
+		for (int i=0; i < np; i++){
+			vel[i] = sys.velocity[i];
+			if (pos[i].z < 0){
+				vel[i].x -= sys.lz();
+			}
+		}
 	}
 	/*
 	 * shear_disp = sys.shear_strain - (int)(sys.shear_strain/Lx)*Lx
@@ -579,7 +583,7 @@ Simulation::outputConfigurationData(){
 	fout_particle << "#" << sp << sys.shear_strain  << ' ' << sys.shear_disp << endl;
 	for (int i=0; i < np; i++){
 		vec3d &p = pos[i];
-		vec3d &v = sys.velocity[i];
+		vec3d &v = vel[i];
 		vec3d &o = sys.ang_velocity[i];
 		fout_particle << i << sp; //1: number
 		fout_particle << sys.radius[i] << sp; //1: number
