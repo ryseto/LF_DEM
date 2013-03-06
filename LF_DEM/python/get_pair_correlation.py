@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/opt/local/bin/python
 #coding=utf-8
 
 import sys
@@ -10,19 +10,18 @@ import pair_correlation
 
 
 def init():
-    global r_bin_nb, theta_bin_nb, phi_bin_nb, r_max, N, phi
-    if len(sys.argv) != 8 :
-        print "   Utilisation: ", sys.argv[0], "r_bin_nb theta_bin_nb phi_bin_nb r_max INPUT_FILE N phi"
+    global r_bin_nb, theta_bin_nb, phi_bin_nb, r_min, r_max
+    if len(sys.argv) != 7 :
+        print "   Utilisation: ", sys.argv[0], "r_bin_nb theta_bin_nb phi_bin_nb r_min r_max INPUT_FILE"
         exit(1)
+
 
     r_bin_nb=int(sys.argv[1])
     theta_bin_nb=int(sys.argv[2])
     phi_bin_nb=int(sys.argv[3])
-    r_max=float(sys.argv[4])
-    input_stream=open(str(sys.argv[5]),"r")
-    N=int(sys.argv[6])
-    phi=float(sys.argv[7])
-
+    r_min=float(sys.argv[4])
+    r_max=float(sys.argv[5])
+    input_stream=open(str(sys.argv[6]),"r")
 
     return input_stream
 
@@ -32,13 +31,17 @@ r_bin_nb=int()
 theta_bin_nb=int()
 phi_bin_nb=int()
 r_max=float()
-N=int()
-phi=float()
+r_min=float()
 stream=init()
 
-pos_stream=LF_DEM_posfile_reading.Pos_Stream(stream, N,phi)
+pos_stream=LF_DEM_posfile_reading.Pos_Stream(stream)
 
-twopoint_correl=pair_correlation.PairCorrelation(r_bin_nb,theta_bin_nb,phi_bin_nb, r_max)
+if pos_stream.dimension() == 2:
+    params = [r_bin_nb,theta_bin_nb, r_min, r_max]
+if pos_stream.dimension() == 3:
+    params = [r_bin_nb,theta_bin_nb,phi_bin_nb, r_min, r_max]
+
+twopoint_correl=pair_correlation.PairCorrelation( pos_stream.dimension(), params )
 snapshot_nb=0
 
 pos_stream.get_snapshot()
@@ -47,7 +50,7 @@ while pos_stream.get_snapshot():
 
     twopoint_correl.update_field(pos_stream)
 
-twopoint_correl.normalize()
+twopoint_correl.normalize(pos_stream.np(), pos_stream.rho())
 twopoint_correl.print_to(sys.stdout)
 
 

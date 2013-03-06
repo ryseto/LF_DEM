@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PYTHON=/usr/local/bin/python
+PYTHON=/opt/local/bin/python
 
 for file in setup.*py
 do
