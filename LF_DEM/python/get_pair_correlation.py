@@ -46,7 +46,7 @@ snapshot_nb=0
 
 pos_stream.get_snapshot()
 while pos_stream.get_snapshot():
-    sys.stderr.write(str(pos_stream.time())+'\n')
+#    sys.stderr.write(str(pos_stream.time())+'\n')
 
     twopoint_correl.update_field(pos_stream)
 
