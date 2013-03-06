@@ -1,13 +1,15 @@
 import sys
 sys.path.append('/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages')
 from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Distutils import build_ext
+#from distutils.extension import Extension
+#from Cython.Distutils import build_ext
+from Cython.Build import cythonize
 
-ext_modules = [Extension("pair_correlation", ["pair_correlation.pyx"])]
+#ext_modules = [Extension("pair_correlation", ["pair_correlation.pyx"])]
 
 setup(
   name = 'Computes spherically resolved pair correlation function for LF_DEM data',
-  cmdclass = {'build_ext': build_ext},
-  ext_modules = ext_modules
+#  cmdclass = {'build_ext': build_ext},
+#  ext_modules = ext_modules
+  ext_modules = cythonize('pair_correlation.pyx'),
 )

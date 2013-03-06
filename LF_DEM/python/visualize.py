@@ -13,7 +13,7 @@ from visual import graph
 
 import sys
 import math
-from LF_DEM_posfile_reading import *
+from pyLF_DEM_posfile_reading import *
 from string import *
 
 

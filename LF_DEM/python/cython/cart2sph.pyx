@@ -48,3 +48,30 @@ def cart2sph_nolist(double x, double y , double z):
     return rtp
 
 
+def cart2circ(x):
+    return cart2circ_nolist(x[0], x[1])
+
+
+# r, theta \in [0,2*pi]
+def cart2circ_nolist(double x, double y): 
+    rt=[]
+
+    cdef double theta
+    cdef double coord
+    cdef double pi=3.141592653589793238462643
+
+
+    cdef double r=x*x+y*y
+    r=libc.math.sqrt(r)
+    rt.append(r)
+    theta=libc.math.acos(x/r)
+
+    if y<0.:
+        theta=2.*pi-theta  # theta \in [0, 2pi]
+
+
+    rt.append(theta)
+
+    return rt
+
+

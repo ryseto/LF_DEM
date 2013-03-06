@@ -8,22 +8,69 @@ cdef class Pos_Stream:
     cdef:
         instream
         is_file
-        double cell_size
-        positions, old_positions
+        double lx, ly, lz, N, phi, V
+        positions, old_positions, radius
         time_labels, last_read_time_label, current_time_index, first_time
+        int dim
 
-
-    def __init__(self, input_stream, N, phi):
+    def __init__(self, input_stream):
 
         self.instream=input_stream
         try:
             self.instream.tell()
             self.is_file=True
         except IOError:
-            self.is_file=False
+            self.is_file=False # means that we deal with stdin
 
-        V=4.*libc.math.acos(-1)*N/(3.*phi)
-        self.cell_size=libc.math.pow(V, 1./3.)
+        
+        err_str = ' ERROR LF_DEM_posfile_reading : incorrect input file, '
+
+        # get N
+        input_line=self.instream.readline()
+        fields=split(input_line)
+        if fields[0] != 'np':
+            sys.stderr.write(err_str+'no particle number \n')
+        else:
+            self.N = int(fields[1])
+
+        # get VF
+        input_line=self.instream.readline()
+        fields=split(input_line)
+        if fields[0] != 'VF':
+            sys.stderr.write(err_str+'no volume fraction \n')
+        else:
+            self.phi = float(fields[1])
+
+        # get Lx
+        input_line=self.instream.readline()
+        fields=split(input_line)
+        if fields[0] != 'Lx':
+            sys.stderr.write(err_str+'no Lx \n')
+        else:
+            self.lx = float(fields[1])
+
+        # get Ly
+        input_line=self.instream.readline()
+        fields=split(input_line)
+        if fields[0] != 'Ly':
+            sys.stderr.write(err_str+'no Ly \n')
+        else:
+            self.ly = float(fields[1])
+
+        # get Lz
+        input_line=self.instream.readline()
+        fields=split(input_line)
+        if fields[0] != 'Lz':
+            sys.stderr.write(err_str+'no Lz \n')
+        else:
+            self.lz = float(fields[1])
+
+        if self.Ly() == 0.: # 2d case
+            self.V = self.Lx()*self.Lz()
+            self.dim=2
+        else:               # 3d case
+            self.V = self.Lx()*self.Ly()*self.Lz()
+            self.dim=3
 
         self.reset_members()
 
@@ -33,6 +80,7 @@ cdef class Pos_Stream:
     def reset_members(self):
         self.positions=dict()
         self.old_positions=dict()
+        self.radius=dict()
         self.last_read_time_label=[]
         self.time_labels=[]
         self.current_time_index=0
@@ -62,23 +110,27 @@ cdef class Pos_Stream:
 
     def convert_input_pos(self,line):
         values=split(line)
-
+        
         switch=0
 
         if(len(values)>0):
-            if(values[0] == 'realtime' or values[0] == 'REALTIME'):
+            if(values[0] == '#'):
                 if self.is_file:
-                    tlabel=[float(values[2]),self.instream.tell()]
+                    tlabel=[float(values[1]),self.instream.tell()]
                 else:
-                    tlabel=[float(values[2]),0]
+                    tlabel=[float(values[1]),0]
 
                 self.update_labels(tlabel)
                 switch=1
-
-            if len(values)==7 :
+                
+            if len(values) > 10 : # exact number to be fixed. Now it is different in 2d an 3d, due to different output of angular position
                 i=int(values[0])
-                self.positions[i]=[float(values[j]) for j in range(1,4)]
+#                self.positions[i]=[float(values[j])+0.5*self.cell_size for j in range(1,4)]
+                self.positions[i]=[float(values[j]) for j in range(2,5)]
+                self.radius[i]=float(values[1])
+
         return switch
+
 
 # end of convert_input(input_line)
 
@@ -91,10 +143,11 @@ cdef class Pos_Stream:
         switch=0
 
         count=0
-        input_line='start'
-        while input_line!='':
 
+        while True:
             input_line=self.instream.readline()
+            if len(input_line)==0:
+                break              #EOF
             if verbose:
                 print input_line
 
@@ -103,28 +156,31 @@ cdef class Pos_Stream:
             if switch==1:
                 return True
 
+            
         return False
 
 
     cdef void cperiodize(self, double *deltax, double *deltay, double *deltaz):
     
-        if deltaz[0] > 0.5*self.cell_size:
-            deltaz[0] = deltaz[0] - self.cell_size
+        if deltaz[0] > 0.5*self.Lz():
+            deltaz[0] = deltaz[0] - self.Lz()
+            deltax[0] = deltax[0] - self.time()*self.Lx()
         else:
-            if deltaz[0] < -0.5*self.cell_size:
-                deltaz[0] = deltaz[0] + self.cell_size
+            if deltaz[0] < -0.5*self.Lz():
+                deltaz[0] = deltaz[0] + self.Lz()
+                deltax[0] = deltax[0] + self.time()*self.Lx()
 
-        if deltay[0] > 0.5*self.cell_size:
-            deltay[0] = deltay[0] - self.cell_size
+        if deltay[0] > 0.5*self.Ly():
+            deltay[0] = deltay[0] - self.Ly()
         else:
-            if deltay[0] < -0.5*self.cell_size:
-                deltay[0] = deltay[0] + self.cell_size
+            if deltay[0] < -0.5*self.Ly():
+                deltay[0] = deltay[0] + self.Ly()
 
-        if deltax[0] > 0.5*self.cell_size:
-            deltax[0] = deltax[0] - self.cell_size
+        if deltax[0] > 0.5*self.Lx():
+            deltax[0] = deltax[0] - self.Lx()
         else:
-            if deltax[0] < -0.5*self.cell_size:
-                deltax[0] = deltax[0] + self.cell_size
+            if deltax[0] < -0.5*self.Lx():
+                deltax[0] = deltax[0] + self.Lx()
 
     cpdef list pos(self,int i):
         return self.positions[i]
@@ -348,17 +404,28 @@ cdef class Pos_Stream:
     def part_nb(self):
         return len(self.positions)
 
-    def rho(self):
-        return float(self.part_nb)/float(pow(self.cell_size,3))
+    def np(self):
+        return self.N
 
-    def cell_lin_size(self):
-        return self.cell_size
-    def range(self, int u=1):
-        return range(u,self.part_nb()+1)
+    def rho(self):
+        return self.N/self.V
+
+    def Lx(self):
+        return self.lx
+
+    def Ly(self):
+        return self.ly
+
+    def Lz(self):
+        return self.lz
+
+    def range(self, int u=0):
+        return range(u,self.part_nb())
     #    def range(self, u=1):
     #    return range(u,self.part_nb()+1)
 
     def is_present(self, i):
         return (i in self.positions)
     
-    
+    def dimension(self):
+        return self.dim
