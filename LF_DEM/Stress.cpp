@@ -221,7 +221,6 @@ System::calcStressesHydroContact(){
     stokes_solver->complete_RFU();
     stokes_solver->solve(v_hydro);
 
-
 	// then obtain contact forces, adn contact part of velocity
     stokes_solver->resetRHS();
 	setContactForceToParticle();
