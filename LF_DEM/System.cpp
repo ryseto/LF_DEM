@@ -82,7 +82,8 @@ System::allocateRessources(){
 	lub_force = new vec3d [_np];
 	lubstress.resize(_np);
 	bgfstress.resize(_np);
-	contactstress.resize(_np);
+	contactstressXF.resize(_np);
+	contactstressGU.resize(_np);
 	brownianstress.resize(_np);
 	int maxnum_interactionpair_per_particle = 15;
 	maxnum_interactionpair = (int)(maxnum_interactionpair_per_particle*_np);
@@ -554,7 +555,8 @@ System::stressReset(){
 		for (int u=0; u < 5; u++){
 			lubstress[i].elm[u]=0;
 			bgfstress[i].elm[u]=0;
-			contactstress[i].elm[u]=0;
+			contactstressXF[i].elm[u]=0;
+			contactstressGU[i].elm[u]=0;
 			lubstress2[i].elm[u]=0;
 			bgfstress2[i].elm[u]=0;
 			contactstress2[i].elm[u]=0;
@@ -858,5 +860,6 @@ System::setSystemVolume(){
 	} else {
 		system_volume = _lx*_ly*_lz;
 	}
+	_rho = np()/valSystemVolume();
 }
 

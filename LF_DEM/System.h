@@ -33,6 +33,7 @@ class System{
 private:
 	int _np;
 	int np3;
+	
 	int maxnum_interactionpair;
 	queue<int> deactivated_interaction;
 	double _lx;
@@ -44,7 +45,8 @@ private:
 	double system_volume;
 	double radius_max;
 	double sq_lub_max;
-
+	double _rho; // N/V
+	
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -104,12 +106,14 @@ public:
 	vector <stresslet> lubstress2; // r * F_lub
 	vector <stresslet> bgfstress;
 	vector <stresslet> bgfstress2;
-	vector <stresslet> contactstress;
+	vector <stresslet> contactstressXF;
+	vector <stresslet> contactstressGU;
 	vector <stresslet> contactstress2;
 	vector <stresslet> brownianstress;
 	int brownianstress_calc_nb;
 	double total_hydro_stress[5];
-	double total_contact_stress[5];
+	double total_contact_stressXF[5];
+	double total_contact_stressGU[5];
 	double total_brownian_stress[5];
 	double total_hydro_stress2[5];
 	double total_contact_stress2[5];
@@ -174,7 +178,6 @@ public:
 	double valSystemVolume(){
 		return system_volume;
 	}
-	
 	inline double lx(){
 		return _lx;
 	}
@@ -199,6 +202,9 @@ public:
 	}
 	inline int np(){
 		return _np;
+	}
+	inline double rho(){ // N/V
+		return _rho;
 	}
 	
 	//	void prepareSimulation();

@@ -44,14 +44,6 @@ Interaction::calcDistanceNormalVector(){
 	nr_vec = r_vec / r();
 }
 
-//void
-//Interaction::assignDistanceNormalVector(const vec3d &pos_diff, double distance, int zshift_){
-//	r_vec = pos_diff;
-//	r(distance);
-//	nr_vec = r_vec / r();
-//	zshift = zshift_;
-//}
-
 
 /*********************************
 *                                *
@@ -423,11 +415,11 @@ void
 Interaction::calcContactStressTermXF(){
 	if (contact){
 		vec3d force = Fc_normal + Fc_tan;
-		contactstresslet.elm[0] = force.x * nr_vec.x; //xx
-		contactstresslet.elm[1] = 0.5*(force.x * nr_vec.y + force.y * nr_vec.x) ; //xy
-		contactstresslet.elm[2] = 0.5*(force.x * nr_vec.z + force.z * nr_vec.x) ; //yy
-		contactstresslet.elm[3] = 0.5*(force.y * nr_vec.z + force.z * nr_vec.y) ; //xz
-		contactstresslet.elm[4] = force.y * nr_vec.y;
+		contactstressletXF.elm[0] = force.x * nr_vec.x; //xx
+		contactstressletXF.elm[1] = 0.5*(force.x * nr_vec.y + force.y * nr_vec.x) ; //xy
+		contactstressletXF.elm[2] = 0.5*(force.x * nr_vec.z + force.z * nr_vec.x) ; //yy
+		contactstressletXF.elm[3] = 0.5*(force.y * nr_vec.z + force.z * nr_vec.y) ; //xz
+		contactstressletXF.elm[4] = force.y * nr_vec.y;
 	}
 }
 
@@ -440,9 +432,10 @@ Interaction::addContactStress(){
 	if (contact){
 		calcContactStressTermXF();
 		for (int u=0; u < 5; u++){
-			sys->contactstress[i].elm[u] += contactstresslet.elm[u];
-			sys->contactstress[j].elm[u] += contactstresslet.elm[u];
+			sys->contactstressXF[i].elm[u] += contactstressletXF.elm[u];
+			sys->contactstressXF[j].elm[u] += contactstressletXF.elm[u];
 		}
+
 		// Add term G*V_cont
 		stresslet stresslet_GU_i;
 		stresslet stresslet_GU_j;
@@ -453,8 +446,8 @@ Interaction::addContactStress(){
 		delete vi;
 		delete vj;
 		for (int u=0; u < 5; u++){
-			sys->contactstress[i].elm[u] += stresslet_GU_i.elm[u];
-			sys->contactstress[j].elm[u] += stresslet_GU_j.elm[u];
+			sys->contactstressGU[i].elm[u] += stresslet_GU_i.elm[u];
+			sys->contactstressGU[j].elm[u] += stresslet_GU_j.elm[u];
 		}
 	}
 
@@ -468,8 +461,8 @@ Interaction::addContactStress2(){
 	if (contact){
 		calcContactStressTermXF();
 		for (int u=0; u < 5; u++){
-			sys->contactstress2[i].elm[u] += contactstresslet.elm[u];
-			sys->contactstress2[j].elm[u] += contactstresslet.elm[u];
+			sys->contactstress2[i].elm[u] += contactstressletXF.elm[u];
+			sys->contactstress2[j].elm[u] += contactstressletXF.elm[u];
 		}
 		
 	}

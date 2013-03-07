@@ -48,7 +48,7 @@ private:
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	vec3d contact_force_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
-	stresslet contactstresslet;
+	stresslet contactstressletXF;
 	stresslet contactstresslet2;
 
 	//===== observables  ========================== //

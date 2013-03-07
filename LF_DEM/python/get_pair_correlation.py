@@ -82,6 +82,7 @@ if mode == "c":
 if mode == "s":
     params = [r_bin_nb,theta_bin_nb,phi_bin_nb, r_min, r_max]
 
+
 twopoint_correl=pair_correlation.PairCorrelation( mode , params )
 snapshot_nb=0
 

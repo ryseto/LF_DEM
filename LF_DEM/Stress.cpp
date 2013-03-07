@@ -291,7 +291,8 @@ System::calcStress(){
 
 	for (int u=0; u < 5; u++){
 		total_hydro_stress[u] = 0;
-		total_contact_stress[u] = 0;
+		total_contact_stressXF[u] = 0;
+		total_contact_stressGU[u] = 0;
 		total_hydro_stress2[u] = 0;
 		total_contact_stress2[u] = 0;
 		total_brownian_stress[u] = 0;
@@ -300,11 +301,21 @@ System::calcStress(){
 	for (int i=0; i < _np; i++){
 		for (int u=0; u < 5; u++){
 			total_hydro_stress[u] += lubstress[i].elm[u] + bgfstress[i].elm[u];
-			total_contact_stress[u] += contactstress[i].elm[u];
+			total_contact_stressXF[u] += contactstressXF[i].elm[u];
+			total_contact_stressGU[u] += contactstressGU[i].elm[u];
 			total_hydro_stress2[u] += lubstress2[i].elm[u] + bgfstress2[i].elm[u];
 			total_contact_stress2[u] += contactstress2[i].elm[u];
 			total_brownian_stress[u] += brownianstress[i].elm[u];
 		}
+	}
+
+	for (int u=0; u < 5; u++){
+		total_hydro_stress[u] *= rho();
+		total_contact_stressXF[u] *= rho();
+		total_contact_stressGU[u] *= rho();
+		total_hydro_stress2[u] *= rho();
+		total_contact_stress2[u] *= rho();
+		total_brownian_stress[u] *= rho();
 	}
 
 	stressBrownianReset();
