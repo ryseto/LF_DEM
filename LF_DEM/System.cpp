@@ -862,4 +862,3 @@ System::setSystemVolume(){
 	}
 	_rho = np()/valSystemVolume();
 }
-

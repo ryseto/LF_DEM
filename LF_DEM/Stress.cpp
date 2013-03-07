@@ -251,29 +251,14 @@ System::calcStressesHydroContact(){
 	// There is also a factor 2 difference coming from the way the two methods
 	// define the stress. This is known, and is not a bug.
 	// The total stress should the same though (well, more precisely 2*total_stress=total_stress2).
-	/*
-	for (int i = 0; i < np; i++){
-		int i3 = 3*i;
-		relative_velocity_lub_cont[i].x = v_hydro[i3  ] + v_cont[i3  ];
-		relative_velocity_lub_cont[i].y = v_hydro[i3+1] + v_cont[i3+1];
-		relative_velocity_lub_cont[i].z = v_hydro[i3+2] + v_cont[i3+2];
-    }
 
-	for (int k = 0; k < num_interaction; k++){
-		if (interaction[k].active){
-			interaction[k].evaluateLubricationForce();
-			interaction[k].addLubricationStress();    // - R_SU * (v_hydro + v_cont)
-			interaction[k].addContactStress2();       // - rF_cont
-		}
-	}
-	// reset velocities to zero to avoid any confusion
-    for (int i = 0; i < np; i++){
-		int i3 = 3*i;
-		relative_velocity_lub_cont[i].x = 0.;
-		relative_velocity_lub_cont[i].y = 0.;
-		relative_velocity_lub_cont[i].z = 0.;
-    }
-	*/
+	//	for (int k = 0; k < num_interaction; k++){
+	//		if (interaction[k].active){
+	//			interaction[k].evaluateLubricationForce();
+	//			interaction[k].addLubricationStress();    // - R_SU * (v_hydro + v_cont)
+	//			interaction[k].addContactStress2();       // - rF_cont
+	//		}
+	//	}
 
 	// <<<< end of testing
 
