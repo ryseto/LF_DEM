@@ -15,6 +15,7 @@ Interaction::init(System *sys_){
 	active = false;
 	Fc_normal_norm = 0;
 //	static_friction = false;
+	nearing_gapnd_cutoff = 0.01;
 }
 
 
@@ -553,7 +554,8 @@ Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
 	disp_tan.reset();
-	//calcContactVelocity();
+	
+	init_contact_time = sys->time();
 }
 
 void
@@ -586,6 +588,16 @@ Interaction::updateState(){
 				activate_contact();
 			}
 		}
+
+		// nearing observable
+		if(!nearing_on&&gap_nondim()<nearing_gapnd_cutoff){
+			nearing_on = true;
+			init_nearing_time = sys->time();
+		}
+		if(nearing_on&&gap_nondim()>nearing_gapnd_cutoff){
+			nearing_on = false;
+		}
+
 	}
 	return false;
 }
@@ -598,13 +610,18 @@ Interaction::updateState(){
 bool
 Interaction::updateStatesForceTorque(){
 	if (active){
-		// compute new r_vec and distance
-		// z_shift is updated
-		calcDistanceNormalVector();
 		// update tangential displacement: we do it before updating nr_vec
+		// as it should be along the tangential vector defined in the previous time step
 		if (contact) {
 			calcContactVelocity();
 			incrementContactTangentialDisplacement();
+		}
+
+		// compute new r_vec and distance
+		// z_shift is updated
+		calcDistanceNormalVector();
+
+		if (contact) {
 			calcContactInteraction();
 			if ( !sys->in_predictor ){
 				checkBreakupStaticFriction();
@@ -638,3 +655,18 @@ Interaction::checkBreakupStaticFriction(){
 	}
 }
 
+
+double 
+Interaction::nearing_time(){
+	double time=0.;
+	if(nearing_on)
+		time = sys->time()-init_nearing_time;
+	return time;
+}
+double 
+Interaction::contact_time(){
+	double time=0.;
+	if(contact)
+		time = sys->time()-init_contact_time;
+	return time;
+}

@@ -274,7 +274,6 @@ System::calcStressesHydroContact(){
 		relative_velocity_lub_cont[i].z = 0.;
     }
 	*/
-
 	// <<<< end of testing
 
 }

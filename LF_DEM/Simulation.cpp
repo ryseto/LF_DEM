@@ -52,8 +52,8 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	int i_time_interval = strain_interval_out/sys.dt;
 
 	outputConfigurationData();
-	while(sys.shear_strain <= shear_strain_end){
-		cerr << "strain: " << sys.shear_strain << endl;
+	while(sys.strain() <= shear_strain_end){
+		cerr << "strain: " << sys.strain() << endl;
 		sys.timeEvolution(i_time_interval);
 		evaluateData();
 		outputRheologyData();
@@ -232,7 +232,7 @@ Simulation::setDefaultParameters(){
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
-	 *  shear_strain: total strain (length of simulation)
+	 *  strain(): total strain (length of simulation)
 	 *
 	 */
 	sys.shear_rate = 1.0;
@@ -483,7 +483,7 @@ Simulation::outputRheologyData(){
 	}
 	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
 	double unit_of_stress = unit_of_force/(unit_of_length*unit_of_length);
-	fout_rheo << sys.shear_strain << ' '; //1
+	fout_rheo << sys.strain() << ' '; //1
 	fout_rheo << Viscosity * unit_of_viscosity << ' ' ; //2
 	fout_rheo << N1 * unit_of_stress << ' ' ; //3
 	fout_rheo << N2 * unit_of_stress << ' ' ; //4
@@ -605,9 +605,9 @@ Simulation::outputConfigurationData(){
 		}
 	}
 	/*
-	 * shear_disp = sys.shear_strain - (int)(sys.shear_strain/Lx)*Lx
+	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
-	fout_particle << "#" << sp << sys.shear_strain  << ' ' << sys.shear_disp << ' ' << sys.shear_rate << endl;
+	fout_particle << "#" << sp << sys.strain()  << ' ' << sys.shear_disp << ' ' << sys.shear_rate << endl;
 	for (int i=0; i < np; i++){
 		vec3d &p = pos[i];
 		vec3d &v = vel[i];
@@ -636,7 +636,7 @@ Simulation::outputConfigurationData(){
 		}
 	}
 	
-	fout_interaction << "#" << sp << sys.shear_strain << sp << cnt_interaction << endl;
+	fout_interaction << "#" << sp << sys.strain() << sp << cnt_interaction << " avg_contact_time: " << sys.average_contact_time << " avg_nearing_time: " << sys.average_nearing_time << endl;
 	for (int k=0; k < sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			fout_interaction << sys.interaction[k].particle_num[0] << sp; // 1

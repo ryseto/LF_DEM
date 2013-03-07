@@ -46,7 +46,10 @@ private:
 	double radius_max;
 	double sq_lub_max;
 	double _rho; // N/V
-	
+
+	double shear_strain;
+	double _time;
+
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -69,6 +72,11 @@ private:
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
+
+	void increment_time( double _dt ){
+		_time += _dt;
+	}
+
 protected:
 public:
 	double *v_hydro;
@@ -131,7 +139,7 @@ public:
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
-	double shear_strain;
+
 	
 	/*
 	 * Leading term of lubrication force is 1/ksi, with ksi the gap
@@ -154,6 +162,10 @@ public:
 	double dt_ratio;
 	double minvalue_gap_nondim;
 	double ave_overlap;
+	double average_contact_time;
+	int contact_nb;
+	double average_nearing_time;
+	int nearing_nb;
 	bool draw_rotation_2d;
 	
 	vector <int> lubparticle;
@@ -207,6 +219,14 @@ public:
 		return _rho;
 	}
 	
+	double time(){
+		return _time;
+	}
+	double strain(){
+		return shear_strain;
+	}
+
+
 	//	void prepareSimulation();
 	void setSystemVolume();
 	void setupSystem(const vector<vec3d> &initial_positions,
