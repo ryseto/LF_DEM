@@ -155,6 +155,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	ts = 0;
 	shear_disp = 0;
+	_time = 0.;
 	vel_difference = _lz;
 	/*
 	 * dt_mid: the intermediate time step for the mid-point
@@ -480,6 +481,7 @@ System::timeEvolution(int time_step){
 		}
 		ts ++;
 		shear_strain += dt;
+		increment_time(dt);
 	}
 }
 
@@ -843,14 +845,30 @@ System::sq_distance(int i, int j){
 void
 System::analyzeState(){
 	minvalue_gap_nondim = lz();
+	average_nearing_time = 0.;
+	average_contact_time = 0.;
+	contact_nb = 0;
+	nearing_nb = 0;
 	// for analysis
 	for (int k = 0; k < num_interaction; k++){
 		if (interaction[k].active){
 			if (interaction[k].gap_nondim() < minvalue_gap_nondim){
 				minvalue_gap_nondim = interaction[k].gap_nondim();
 			}
+			if(interaction[k].contact_time()>0.){
+				average_contact_time += interaction[k].contact_time();
+				contact_nb += 1;
+			}
+			if(interaction[k].nearing_time()>0.){
+				average_nearing_time += interaction[k].nearing_time();
+				nearing_nb += 1;
+			}
 		}
 	}
+	if(contact_nb)
+		average_contact_time /= contact_nb;
+	if(nearing_nb)
+		average_nearing_time /= nearing_nb;
 }
 
 void

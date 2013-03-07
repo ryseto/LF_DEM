@@ -52,10 +52,10 @@ private:
 	stresslet contactstresslet2;
 
 	//===== observables  ========================== //
-	double strain_lub_generated; // The strain when this interaction starts.
-	double strain_near_contact; // The strain when this interaction starts.
-	double lub_time;
-	//	double nearing_time; // unused
+	double init_nearing_time;
+	double init_contact_time; 
+	bool nearing_on;
+	double nearing_gapnd_cutoff;
 
 	/*********************************
 	 *       Private Methods         *
@@ -152,6 +152,10 @@ public:
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 
+	//=========== observables ===============================//
+	double nearing_time();
+	double contact_time();
+	
 };
 
 
