@@ -237,6 +237,13 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.shear_rate = 1.0;
 	shear_strain_end = 10.;
+	
+	viscosity_solvent = 1.0;
+	unit_of_length = 1.0; // = radius of smaller particle (a0)
+	unit_of_velocity = sys.shear_rate*unit_of_length;
+	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity*unit_of_velocity;
+	
+
 	/*
 	 * Lubrication force
 	 * lub_max: reduced large cutoff distance for lubrication
@@ -474,23 +481,26 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#16: N2(brownian)" << endl;
 		fout_rheo << "#17: min gap (non-dim)" << endl;
 	}
+	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
+	double unit_of_stress = unit_of_force/(unit_of_length*unit_of_length);
 	fout_rheo << sys.shear_strain << ' '; //1
-	fout_rheo << Viscosity << ' ' ; //2
-	fout_rheo << N1 << ' ' ; //3
-	fout_rheo << N2 << ' ' ; //4
-	fout_rheo << Viscosity_h << ' ' ; //5
-	fout_rheo << N1_h << ' ' ; //6
-	fout_rheo << N2_h << ' ' ; //7
-	fout_rheo << Viscosity_c_XF << ' ' ; //8
-	fout_rheo << N1_c_XF << ' ' ; //9
-	fout_rheo << N2_c_XF << ' ' ; //10
-	fout_rheo << Viscosity_c_GU << ' ' ; //11
-	fout_rheo << N1_c_GU << ' ' ; //12
-	fout_rheo << N2_c_GU << ' ' ; //13
-	fout_rheo << Viscosity_b << ' ' ; //14
-	fout_rheo << N1_b << ' ' ; //15
-	fout_rheo << N2_b << ' ' ; //16
+	fout_rheo << Viscosity * unit_of_viscosity << ' ' ; //2
+	fout_rheo << N1 * unit_of_stress << ' ' ; //3
+	fout_rheo << N2 * unit_of_stress << ' ' ; //4
+	fout_rheo << Viscosity_h * unit_of_viscosity<< ' ' ; //5
+	fout_rheo << N1_h * unit_of_stress << ' ' ; //6
+	fout_rheo << N2_h * unit_of_stress << ' ' ; //7
+	fout_rheo << Viscosity_c_XF * unit_of_viscosity << ' ' ; //8
+	fout_rheo << N1_c_XF * unit_of_stress << ' ' ; //9
+	fout_rheo << N2_c_XF * unit_of_stress << ' ' ; //10
+	fout_rheo << Viscosity_c_GU * unit_of_viscosity << ' ' ; //11
+	fout_rheo << N1_c_GU * unit_of_stress << ' ' ; //12
+	fout_rheo << N2_c_GU * unit_of_stress << ' ' ; //13
+	fout_rheo << Viscosity_b * unit_of_viscosity << ' ' ; //14
+	fout_rheo << N1_b * unit_of_stress << ' ' ; //15
+	fout_rheo << N2_b * unit_of_stress << ' ' ; //16
 	fout_rheo << sys.minvalue_gap_nondim << ' '; // 17
+
 	fout_rheo << endl;
 
 }

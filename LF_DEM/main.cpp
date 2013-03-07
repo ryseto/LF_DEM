@@ -18,7 +18,7 @@ int main(int argc, const char * argv[])
 		cerr << "  $ LF_DEM POSITIONFILE [PARAMETERFILE]" << endl;
 		cerr << "(2) Generate initial configuration" << endl;
 		cerr << "  $ LF_DEM g" << endl;
-		exit(1);
+		return 0;
 	}
 	if (argv[1][0] == 'g'){
 		GenerateInitConfig generate_init_config;

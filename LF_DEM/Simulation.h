@@ -27,6 +27,10 @@ private:
 	int np_b;
 	double radius_a;
 	double radius_b;
+	double unit_of_force;
+	double unit_of_velocity;
+	double unit_of_length;
+	double viscosity_solvent;
 	/*
 	 * Resultant data
 	 */
