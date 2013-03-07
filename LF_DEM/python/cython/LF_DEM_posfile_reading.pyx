@@ -369,7 +369,7 @@ cdef class Pos_Stream:
     def non_affine_displacement(self, i):
         dr=self.displacement(i)
         dt=self.time(0)-self.time(-1)
-        dr[0]-=self.old_positions[i][1]*dt
+        dr[0]-=self.old_positions[i][2]*dt
         dr[3]=libc.math.sqrt(dr[0]*dr[0]+dr[1]*dr[1]+dr[2]*dr[2])
         return dr
         
@@ -400,6 +400,10 @@ cdef class Pos_Stream:
     cpdef double time(self, t=0):
         tl_loc=self.current_time_index+t
         return self.time_labels[tl_loc][0]
+
+    cpdef int time_index(self):
+        return self.current_time_index
+
 
     def part_nb(self):
         return len(self.positions)

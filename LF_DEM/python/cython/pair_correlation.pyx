@@ -3,9 +3,18 @@
 
 import sys
 import LF_DEM_posfile_reading
-cimport Spherical_coordinate_histogram
-from Spherical_coordinate_histogram cimport SphericalCoordinateHistogram
-cimport Circular_coordinate_histogram
+# cimport Spherical_coordinate_histogram
+# from Spherical_coordinate_histogram cimport SphericalCoordinateHistogram
+# cimport Circular_coordinate_histogram
+# from Circular_coordinate_histogram cimport CircularCoordinateHistogram
+# cimport Histograms
+# from Histograms cimport Histograms
+import Spherical_coordinate_histogram
+from Spherical_coordinate_histogram import SphericalCoordinateHistogram
+import Circular_coordinate_histogram
+from Circular_coordinate_histogram import CircularCoordinateHistogram
+import Linear_histogram
+from Linear_histogram import LinearHistogram
 
 import cart2sph
 
@@ -14,15 +23,41 @@ cdef class PairCorrelation:
     cdef:
         field
         int update_nb
-        int dimension
-    def __init__(self, dim, params ):
+        int mode
+    def __init__(self, _mode, params ):
 
-        if dim==3:
-            self.field=SphericalCoordinateHistogram(params)
-        if dim==2:
+        if _mode == "r":
+            self.mode=0
+            [r_bn, min_r, max_r] = params
+            self.field=LinearHistogram(r_bn, min_r, max_r)
+        if _mode == "c":
+            self.mode=1
             [r_bn, theta_bn, min_r, max_r] = params
-            self.field=Circular_coordinate_histogram.CircularCoordinateHistogram(r_bn, theta_bn, min_r, max_r)
-        self.dimension = dim
+            self.field=CircularCoordinateHistogram(r_bn, theta_bn, min_r, max_r)
+        if _mode == "s":
+            self.mode=2
+            self.field=SphericalCoordinateHistogram(params)            
+
+
+    cdef update_field_1d(self,pos_stream):
+
+        cdef int i
+        cdef int j
+        cdef double deltax, deltay, deltaz, deltatot
+
+        
+        self.update_nb += 1
+
+        for i in pos_stream.range():
+
+            for j in pos_stream.range(i+1):
+                dr=pos_stream.pos_diff(i,j)
+
+                deltatot=dr[3]
+
+                key=self.field.genkey_nolist(deltatot)
+                self.field.update_nolist(deltatot, 1., act='add')
+
 
 
     cdef update_field_2d(self,pos_stream):
@@ -80,14 +115,15 @@ cdef class PairCorrelation:
 
 
 
-
-
     cpdef update_field(self,pos_stream):
 
-        if self.dimension == 2:
+        if self.mode == 0:
+            self.update_field_1d(pos_stream)
+        if self.mode == 1:
             self.update_field_2d(pos_stream)
-        if self.dimension == 3:
+        if self.mode == 2:
             self.update_field_3d(pos_stream)
+
 
 
 

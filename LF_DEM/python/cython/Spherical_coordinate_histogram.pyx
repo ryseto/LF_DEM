@@ -94,7 +94,7 @@ cdef class SphericalCoordinateHistogram(Histograms):
 
 
     cpdef update_nolist(self, double a, double b, double c, value, str coord='sph', str act='add'):
-
+    
         if coord == 'cart':
             (a, b, c)=cart2sph.cart2sph_nolist(a, b, c)
 
@@ -115,22 +115,17 @@ cdef class SphericalCoordinateHistogram(Histograms):
     def update(self, pos, value, coordinates='sph',action='add'):
         self.update_nolist(pos[0], pos[1], pos[2], value, coord=coordinates,act=action)
         
+#    cpdef normalize_a_la_gofr(self, int N, double rho, int call_nb):
     def normalize_a_la_gofr(self, N, rho, call_nb):
-
-        # for point in self.histogram.itervalues():
-        #     if point is None:
-        #         point = 0.
-        #     print point
 
         for point in self.histogram:
             if self.histogram[point] is None:
                 self.histogram[point] = 0.
-            print self.histogram[point]
 
         norm_factor=N*rho*call_nb
         for i in range(self.r_bin_nb):
             r=self.r_bsize*(i+0.5)+self.r_min
-            rlo=self.r_bsize*i+self.r_min
+            rlo=self.r_bsize*(i+0.001)+self.r_min
             for j in range(self.theta_bin_nb):
                 theta=self.theta_bsize*(j+0.5)
                 for k in range(self.phi_bin_nb):

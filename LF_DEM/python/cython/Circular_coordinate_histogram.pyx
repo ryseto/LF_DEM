@@ -102,19 +102,14 @@ cdef class CircularCoordinateHistogram(Histograms):
     def update(self, pos, value, coordinates='circ',action='add'):
         self.update_nolist(pos[0], pos[1], value, coord=coordinates,act=action)
         
-    def normalize_a_la_gofr(self, N, rho, call_nb):
-
-        # for point in self.histogram.itervalues():
-        #     if point is None:
-        #         point = 0.
-        #     print point
+    def normalize_a_la_gofr(self, int N, double rho, int call_nb):
 
         for point in self.histogram:
             if self.histogram[point] is None:
                 self.histogram[point] = 0.
-            print self.histogram[point]
 
         norm_factor=N*rho*call_nb
+        
         for i in range(self.r_bin_nb):
             r=self.r_bsize*(i+0.5)+self.r_min
             rlo=self.r_bsize*i+self.r_min

@@ -5,5 +5,20 @@
 # emacs backups
 *~
 
+# other backups
+*.bak
+
+# python/cython byproducts
+./python/*.pyc
+
+# cython compilation files
+./python/cython/*.c
+
 # binary
 LF_DEM
+
+# pdf's
+./*.pdf
+
+# tests
+./test*
