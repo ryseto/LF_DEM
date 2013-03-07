@@ -310,12 +310,12 @@ System::calcStress(){
 	}
 
 	for (int u=0; u < 5; u++){
-		total_hydro_stress[u] *= rho();
-		total_contact_stressXF[u] *= rho();
-		total_contact_stressGU[u] *= rho();
-		total_hydro_stress2[u] *= rho();
-		total_contact_stress2[u] *= rho();
-		total_brownian_stress[u] *= rho();
+		total_hydro_stress[u] /= valSystemVolume();
+		total_contact_stressXF[u] /= valSystemVolume();
+		total_contact_stressGU[u] /= valSystemVolume();
+		total_hydro_stress2[u] /= valSystemVolume();
+		total_contact_stress2[u] /= valSystemVolume();
+		total_brownian_stress[u] /= valSystemVolume();
 	}
 
 	stressBrownianReset();
