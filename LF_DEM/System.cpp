@@ -125,6 +125,7 @@ System::allocateRessources(){
 void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector <double> &radii){
+	shear_disp = 0; // !!! used for Boxing initialization, so must be set early
 	if (kb_T == 0){
 		brownian = false;
 	} else {
