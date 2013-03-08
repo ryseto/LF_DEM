@@ -25,12 +25,14 @@ private:
 	string filename_parameters;
 	int np_a;
 	int np_b;
+
 	double radius_a;
 	double radius_b;
 	double unit_of_force;
 	double unit_of_velocity;
 	double unit_of_length;
-	double viscosity_solvent;
+	double viscosity_solvent; // It can be real value.
+	double radius_of_particle; // It can be real value.
 	/*
 	 * Resultant data
 	 */
@@ -87,6 +89,7 @@ private:
 	/*
 	 * For outputs
 	 */
+	void setUnits();
 	void output_yap();
 	void output_vel();
 	void outputDataHeader(ofstream &fout);

@@ -37,6 +37,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
 	setDefaultParameters();
+	setUnits();
 	filename_parameters = argv[2];
 	readParameterFile();
 	if ( argc == 3){
@@ -45,7 +46,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		filename_addition = "_";
 		filename_addition += argv[3];
 	}
-	
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
@@ -59,8 +59,16 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		outputRheologyData();
 		outputConfigurationData();
 	}
-
 }
+
+void
+Simulation::setUnits(){
+	unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
+	unit_of_velocity = sys.shear_rate*unit_of_length;
+	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity*unit_of_velocity;
+}
+
+
 
 bool
 str2bool(string value){
@@ -237,12 +245,6 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.shear_rate = 1.0;
 	shear_strain_end = 10.;
-	
-	viscosity_solvent = 1.0;
-	unit_of_length = 1.0; // = radius of smaller particle (a0)
-	unit_of_velocity = sys.shear_rate*unit_of_length;
-	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity*unit_of_velocity;
-	
 
 	/*
 	 * Lubrication force
@@ -302,6 +304,13 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
+
+	/*
+	 *
+	 *
+	 */
+	viscosity_solvent = 1.0;
+	radius_of_particle = 1.0;
 }
 
 void
@@ -384,7 +393,6 @@ Simulation::prepareSimulationName(){
 
 void
 Simulation::evaluateData(){
-	
 	sys.calcStress();
 	sys.analyzeState();
 	
@@ -398,52 +406,50 @@ Simulation::evaluateData(){
 			total_stress[u] += sys.total_brownian_stress[u];
 		}
 	}
-	total_stress[2] += 1;  // fluid part
 
-	Viscosity = total_stress[2]/(sys.valSystemVolume());
-	Viscosity_h = sys.total_hydro_stress[2]/(sys.valSystemVolume());
-	Viscosity_c_XF = sys.total_contact_stressXF[2]/(sys.valSystemVolume());
-	Viscosity_c_GU = sys.total_contact_stressGU[2]/(sys.valSystemVolume());
+	Viscosity = total_stress[2];
+	Viscosity_h = sys.total_hydro_stress[2];
+	Viscosity_c_XF = sys.total_contact_stressXF[2];
+	Viscosity_c_GU = sys.total_contact_stressGU[2];
 
 	/* N1 = tau_xx - tau_zz = tau_xx - (- tau_xx-tau_yy) = 2tau_xx + tau_yy
 	 * N2 = tau_zz - tau_yy = (- tau_xx-tau_yy) - tau_yy  = -tau11 - 2tau22
 	 */
-	N1 = (2*total_stress[0] +   total_stress[4])/(sys.valSystemVolume());
-	N2 = (-total_stress[0] - 2*total_stress[4])/(sys.valSystemVolume());
-	N1_h = (2*sys.total_hydro_stress[0] +   sys.total_hydro_stress[4])/(sys.valSystemVolume());
-	N2_h = (-sys.total_hydro_stress[0] - 2*sys.total_hydro_stress[4])/(sys.valSystemVolume());
-	N1_c_XF = (2*sys.total_contact_stressXF[0] +   sys.total_contact_stressXF[4])/(sys.valSystemVolume());
-	N2_c_XF = (-sys.total_contact_stressXF[0] - 2*sys.total_contact_stressXF[4])/(sys.valSystemVolume());
-	N1_c_GU = (2*sys.total_contact_stressGU[0] +   sys.total_contact_stressGU[4])/(sys.valSystemVolume());
-	N2_c_GU = (-sys.total_contact_stressGU[0] - 2*sys.total_contact_stressGU[4])/(sys.valSystemVolume());
+	N1 = (2*total_stress[0] +   total_stress[4]);
+	N2 = (-total_stress[0] - 2*total_stress[4]);
+	N1_h = (2*sys.total_hydro_stress[0] +   sys.total_hydro_stress[4]);
+	N2_h = (-sys.total_hydro_stress[0] - 2*sys.total_hydro_stress[4]);
+	N1_c_XF = (2*sys.total_contact_stressXF[0] +   sys.total_contact_stressXF[4]);
+	N2_c_XF = (-sys.total_contact_stressXF[0] - 2*sys.total_contact_stressXF[4]);
+	N1_c_GU = (2*sys.total_contact_stressGU[0] +   sys.total_contact_stressGU[4]);
+	N2_c_GU = (-sys.total_contact_stressGU[0] - 2*sys.total_contact_stressGU[4]);
 
 	if (sys.brownian){
-		Viscosity_b = sys.total_brownian_stress[2]/(sys.valSystemVolume());
-		N1_b = (2*sys.total_brownian_stress[0] +   sys.total_brownian_stress[4])/(sys.valSystemVolume());
-		N2_b = (-sys.total_brownian_stress[0] - 2*sys.total_brownian_stress[4])/(sys.valSystemVolume());
+		Viscosity_b = sys.total_brownian_stress[2];
+		N1_b = (2*sys.total_brownian_stress[0] +   sys.total_brownian_stress[4]);
+		N2_b = (-sys.total_brownian_stress[0] - 2*sys.total_brownian_stress[4]);
 	} else {
 		Viscosity_b = 0;
 		N1_b = 0;
 		N2_b = 0;
 	}
-
-	/** >>>>>>>>>>>>>>> testing: rheology data from direct xF evaluation of all stresses
-	double total_stress2[5];
-	for (int u=0; u<5; u++){
-		total_stress2[u] = sys.total_hydro_stress2[u] + sys.total_contact_stress2[u];
-	}
-	if (sys.brownian){
-		for (int u=0; u<5; u++){
-			total_stress2[u] += sys.total_brownian_stress[u];
-		}
-	}
-	total_stress2[2] += 1; // fluid part
-	Viscosity_2 = total_stress2[2]/(sys.valSystemVolume());
-	Viscosity_2_h = sys.total_hydro_stress2[2]/(sys.valSystemVolume());
-	Viscosity_2_c = sys.total_contact_stress2[2]/(sys.valSystemVolume());
-	N1_2 = (2*total_stress2[0] +   total_stress2[4])/(sys.valSystemVolume());
-	N2_2 = (-total_stress2[0] - 2*total_stress2[4])/(sys.valSystemVolume());
-	*/
+	
+	/** >>>>>>>>>>>>>>> testing: rheology data from direct xF evaluation of all stresses**/
+	//	double total_stress2[5];
+	//	for (int u=0; u<5; u++){
+	//		total_stress2[u] = sys.total_hydro_stress2[u] + sys.total_contact_stress2[u];
+	//	}
+	//	if (sys.brownian){
+	//		for (int u=0; u<5; u++){
+	//			total_stress2[u] += sys.total_brownian_stress[u];
+	//		}
+	//	}
+	//	Viscosity_2 = total_stress2[2];
+	//	Viscosity_2_h = sys.total_hydro_stress2[2];
+	//	Viscosity_2_c = sys.total_contact_stress2[2];
+	//	N1_2 = (2*total_stress2[0] +   total_stress2[4]);
+	//	N2_2 = (-total_stress2[0] - 2*total_stress2[4]);
+	/*	*/
 }
 
 
@@ -457,7 +463,7 @@ Simulation::outputRheologyData(){
 	 * Output the sum of the normal forces.
 	 *
 	 *
-	 *  Viscosity = S_{xz} / V
+	 *  Viscosity = S_{xz} / shear_rate
 	 *  N1 = S_{xx}-S_{zz} = 2*S_xx + S_yy
 	 *  N1 = S_{zz}-S_{yy} = -2*S_xx - S_yy
 	 */
@@ -467,9 +473,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#2: Viscosity" << endl;
 		fout_rheo << "#3: N1" << endl;
 		fout_rheo << "#4: N2" << endl;
-		fout_rheo << "#5: Viscosity(lub)" << endl;
-		fout_rheo << "#6: N1(lub)" << endl;
-		fout_rheo << "#7: N2(lub)" << endl;
+		fout_rheo << "#5: Viscosity(lub+GUc)" << endl;
+		fout_rheo << "#6: N1(lub+GUc)" << endl;
+		fout_rheo << "#7: N2(lub+GUc)" << endl;
 		fout_rheo << "#8: Viscosity(xF_contact part)" << endl;
 		fout_rheo << "#9: N1(xF_contact part)" << endl;
 		fout_rheo << "#10: N2(xF_contact part)" << endl;
@@ -487,9 +493,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity * unit_of_viscosity << ' ' ; //2
 	fout_rheo << N1 * unit_of_stress << ' ' ; //3
 	fout_rheo << N2 * unit_of_stress << ' ' ; //4
-	fout_rheo << Viscosity_h * unit_of_viscosity<< ' ' ; //5
-	fout_rheo << N1_h * unit_of_stress << ' ' ; //6
-	fout_rheo << N2_h * unit_of_stress << ' ' ; //7
+	fout_rheo << (Viscosity_h + Viscosity_c_GU) * unit_of_viscosity<< ' ' ; //5
+	fout_rheo << (N1_h + N1_c_GU)* unit_of_stress << ' ' ; //6
+	fout_rheo << (N2_h + N2_c_GU) * unit_of_stress << ' ' ; //7
 	fout_rheo << Viscosity_c_XF * unit_of_viscosity << ' ' ; //8
 	fout_rheo << N1_c_XF * unit_of_stress << ' ' ; //9
 	fout_rheo << N2_c_XF * unit_of_stress << ' ' ; //10
@@ -500,9 +506,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << N1_b * unit_of_stress << ' ' ; //15
 	fout_rheo << N2_b * unit_of_stress << ' ' ; //16
 	fout_rheo << sys.minvalue_gap_nondim << ' '; // 17
-
 	fout_rheo << endl;
-
 }
 
 vec3d
