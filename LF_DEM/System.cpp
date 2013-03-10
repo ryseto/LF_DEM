@@ -145,9 +145,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	for (int i=0; i < _np; i++){
 		velocity[i].reset();
 	}
-	initializeBoxing();
-	checkNewInteraction();
-
+	
 	dt = dt * 1.0/radius_max;
 	shear_strain = 0;
 	num_interaction = 0;
@@ -164,7 +162,10 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	 * ASD code from Brady has dt_ratio=150
 	 */
 	dt_mid = dt/dt_ratio;// UNUSED NOW: ALGO EQUIVALENT TO dt_ratio = 1 (Melrose & Ball 1997)
-
+	
+	initializeBoxing();
+	checkNewInteraction();
+	
 	stokes_solver->initialize();
 	
 	// initialize the brownian force after the solver, as it assumes

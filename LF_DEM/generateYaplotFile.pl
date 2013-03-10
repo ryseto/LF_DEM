@@ -58,9 +58,11 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
     ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
+	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
-        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle ) = split(/\s+/, $line);
+        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+		$h_xzstress, $c_xzstressXF, $c_xzstressGU, $b_xzstress,  $angle ) = split(/\s+/, $line);
 		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;
@@ -157,24 +159,7 @@ sub OutYaplotData{
 		}
 	}
 	
-	$x0 = -$Lx/2;
-	$x1 = -$Lx/2 + $shear_disp / 2;
-	$z1 = $Lz/2;
-
-	$x2 = $Lx/2;
-	$z2 = 0;
-	$x3 = $Lx/2 - $shear_disp / 2;
-	$z3 = -$Lz/2;
 	
-	$lx2 = $Lx/2;
-	
-	printf OUT "y 7\n";
-	printf OUT "@ 6\n";
-	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
-
-	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
-	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
-
 	
 	
 	#	$maxS=0;
@@ -206,6 +191,30 @@ sub OutYaplotData{
 	printf OUT2 "\n";
 }
 
+sub OutBoundaryBox{
+	$x0 = -$Lx/2;
+	$x1 = -$Lx/2 + $shear_disp / 2;
+	$z1 = $Lz/2;
+	
+	$x2 = $Lx/2;
+	$z2 = 0;
+	$x3 = $Lx/2 - $shear_disp / 2;
+	$z3 = -$Lz/2;
+	
+	$lx2 = $Lx/2;
+	
+	printf OUT "y 7\n";
+	printf OUT "@ 6\n";
+	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
+	
+	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
+	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
+
+	
+	
+}
+
+	
 sub OutNvec {
     ($k) = @_;
 	$nx = $nrvec_x[$k];
