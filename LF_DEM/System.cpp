@@ -125,6 +125,7 @@ System::allocateRessources(){
 void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector <double> &radii){
+
 	if (kb_T == 0){
 		brownian = false;
 	} else {
@@ -148,7 +149,9 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	
 	dt = dt * 1.0/radius_max;
 	shear_strain = 0;
+	shear_disp = 0;
 	num_interaction = 0;
+
 	
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	ts = 0;
@@ -174,6 +177,11 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		fb->init();
 	}
 	brownianstress_calc_nb = 0;
+
+	initializeBoxing();
+	checkNewInteraction();
+
+
 }
 
 void
