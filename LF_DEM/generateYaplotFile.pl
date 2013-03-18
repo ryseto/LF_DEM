@@ -93,7 +93,7 @@ sub InInteractions {
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
-		
+		#		printf "$f_lub\n";
 		$NearTime[$k] = $neartime;
 		$Gap[$k] = $gap;
 	}
@@ -121,22 +121,22 @@ sub OutYaplotData{
 			}
     }
 	
-    printf OUT "y 2\n";
-    printf OUT "@ 2\n";
-    for ($k = 0; $k < $num_interaction; $k ++){
+	printf OUT "y 2\n";
+	printf OUT "@ 0\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ( $F_lub[$k] < 0){
 			$force += - $F_lub[$k];
 		}
-		if ( $force > 0 ){
-			$string_width = $force_factor*($force);
+		if ( $Gap[$k] < 0 ){
+			$string_width = 0.2;
 			&OutString_width($int0[$k],  $int1[$k]);
 		}
     }
     printf OUT "y 3\n";
     printf OUT "@ 3\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k];
+        $force = $F_lub[$k]+ $Fc_n[$k];
         if ($force < 0){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
@@ -144,7 +144,7 @@ sub OutYaplotData{
     }
     printf OUT "@ 4\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k];
+        $force = $F_lub[$k]+ $Fc_n[$k];
 		if ($force > 0){
             $string_width = ${force_factor}*${force};
 			&OutString_width($int0[$k], $int1[$k]);
@@ -169,16 +169,16 @@ sub OutYaplotData{
 	#		}
 	#}
 	
-#	printf OUT "y 4\n";
-#    printf OUT "@ 5\n";
-#    for ($k = 0; $k < $num_interaction; $k ++){
-#		$string_with = $Sxz_lub[$k]/$maxS;
-#		printf OUT "r ${string_with}\n";
-#		&OutCircle_middle($int0[$k],  $int1[$k]);
-#	}
+	#	printf OUT "y 4\n";
+	#    printf OUT "@ 5\n";
+	#    for ($k = 0; $k < $num_interaction; $k ++){
+	#		$string_with = $Sxz_lub[$k]/$maxS;
+	#		printf OUT "r ${string_with}\n";
+	#		&OutCircle_middle($int0[$k],  $int1[$k]);
+	#	}
 	#	$zpos = $Lz / 2 + 1;
-#	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
-#	
+	#	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
+	#
 	#	printf OUT "y 5\n";
 	#	printf OUT "@ 2\n";
 	#printf OUT "r 0.3\n";

@@ -1,43 +1,106 @@
 #include "BoxSet.h"
-
+#include "System.h"
 using namespace std;
 
 void
-BoxSet::allocateBoxes(){
-		box_nb = x_box_nb*y_box_nb*z_box_nb;
-		top_box_nb = x_box_nb*y_box_nb;
-		bottom_box_nb = top_box_nb;
-		bulk_box_nb = box_nb - top_box_nb - bottom_box_nb;
-		topbottom_box_nb=0;
+BoxSet::init(double interaction_dist, System *sys_){
+	sys = sys_;
+	boxMap = new Box* [sys->np()];
+	for(int i=0; i<sys->np();i++){
+		boxMap[i] = NULL;
+	}
+	
+	double xratio=sys->lx()/interaction_dist;
+	double yratio=sys->ly()/interaction_dist;
+	double zratio=sys->lz()/interaction_dist;
+	
+	x_box_nb = (int)xratio;
+	y_box_nb = (int)yratio;
+	z_box_nb = (int)zratio;
+	
+	if( x_box_nb == 0 ){
+		x_box_nb = 1;
+		box_xsize=sys->lx();
+	}
+	if( y_box_nb == 0 ){
+		y_box_nb = 1;
+		box_ysize=sys->ly();
+	}
+	if( z_box_nb == 0 ){
+		z_box_nb = 1;
+		box_zsize=sys->lz();
+	}
+	
+	if ( x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4){ // boxing useless: a neighborhood is the whole system
+		_is_boxed=false;
 		
-		if(bulk_box_nb<0){ // there is only one layer in the z direction ( ie BottomBoxes == TopBoxes )
-			bulk_box_nb=0;
-			topbottom_box_nb=top_box_nb;
-			top_box_nb=0;
-			bottom_box_nb=0;
-		}
-
-		cerr << endl << "Boxer allocating :" << endl;
-		cerr << box_nb << " boxes" << endl;
-		cerr << top_box_nb << " top_boxes" << endl;
-		cerr << bottom_box_nb << " bottom_boxes" << endl;
-		cerr << bulk_box_nb << " bulk_boxes" << endl;
-		cerr << topbottom_box_nb << " topbottom_boxes" << endl;
-
-
+		box_xsize=sys->lx();
+		box_ysize=sys->ly();
+		box_zsize=sys->lz();
+		
+		box_nb=1;
+		top_box_nb = 0;
+		bottom_box_nb = 0;
+		topbottom_box_nb = 1;
+		bulk_box_nb = 0;
+		
 		Boxes = new Box* [box_nb];
-		if(top_box_nb>0)
-			TopBoxes = new Box* [top_box_nb];
-		if(bottom_box_nb>0)
-			BottomBoxes = new Box* [bottom_box_nb];
-		if(topbottom_box_nb>0)
-			TopBottomBoxes = new Box* [topbottom_box_nb];
-		if(bulk_box_nb>0)
-			BulkBoxes = new Box* [bulk_box_nb];
-
+		Boxes[0] = new Box;
+		
+		Boxes[0]->position.x=0;
+		Boxes[0]->position.y=0;
+		Boxes[0]->position.z=0;
+		Boxes[0]->is_bottom(true);
+		Boxes[0]->is_top(true);
+		TopBottomBoxes = new Box* [topbottom_box_nb];
+		TopBottomBoxes[0] = Boxes[0];
+		(Boxes[0])->neigh_nb( 0 );
+	}else{
+		_is_boxed=true;
+		box_xsize=sys->lx()/x_box_nb;
+		box_ysize=sys->ly()/y_box_nb;
+		box_zsize=sys->lz()/z_box_nb;
+		allocateBoxes();
+		// give them their position
+		positionBoxes();
+		// tell them their neighbors
+		assignNeighbors();
+	}
 }
 
-
+void
+BoxSet::allocateBoxes(){
+	box_nb = x_box_nb*y_box_nb*z_box_nb;
+	top_box_nb = x_box_nb*y_box_nb;
+	bottom_box_nb = top_box_nb;
+	bulk_box_nb = box_nb - top_box_nb - bottom_box_nb;
+	topbottom_box_nb=0;
+	
+	if(bulk_box_nb<0){ // there is only one layer in the z direction ( ie BottomBoxes == TopBoxes )
+		bulk_box_nb=0;
+		topbottom_box_nb=top_box_nb;
+		top_box_nb=0;
+		bottom_box_nb=0;
+	}
+	
+	cerr << endl << "Boxer allocating :" << endl;
+	cerr << box_nb << " boxes" << endl;
+	cerr << top_box_nb << " top_boxes" << endl;
+	cerr << bottom_box_nb << " bottom_boxes" << endl;
+	cerr << bulk_box_nb << " bulk_boxes" << endl;
+	cerr << topbottom_box_nb << " topbottom_boxes" << endl;
+	
+	Boxes = new Box* [box_nb];
+	if(top_box_nb>0)
+		TopBoxes = new Box* [top_box_nb];
+	if(bottom_box_nb>0)
+		BottomBoxes = new Box* [bottom_box_nb];
+	if(topbottom_box_nb>0)
+		TopBottomBoxes = new Box* [topbottom_box_nb];
+	if(bulk_box_nb>0)
+		BulkBoxes = new Box* [bulk_box_nb];
+	
+}
 
 void
 BoxSet::positionBoxes(){
@@ -46,14 +109,11 @@ BoxSet::positionBoxes(){
 	else
 		amax = x_box_nb;
 	
-
 	if(y_box_nb>3)
 		bmax = 3;
 	else
 		bmax = y_box_nb;
-
-
-
+	
 	if(z_box_nb>3)
 		cmax = 3;
 	else
@@ -123,18 +183,14 @@ BoxSet::positionBoxes(){
 	}
 }
 
-
 void
 BoxSet::assignNeighborsBulk(){
-
 	for(int i=0; i<bulk_box_nb; i++){
 		vec3d pos = BulkBoxes[i]->position;
 		vec3d delta;
-
 		pos.x += 0.5*box_xsize;
 		pos.y += 0.5*box_ysize;
 		pos.z += 0.5*box_zsize;
-	
 		int label=0;
 		for (int a=0; a<amax; a++){
 			delta.x = (a-1)*box_xsize;
@@ -149,19 +205,17 @@ BoxSet::assignNeighborsBulk(){
 			}
 		}
 	}
-
 }
 
 void
 BoxSet::assignNeighborsBottom(){
-
 	for(int i=0; i<bottom_box_nb; i++){
 		vec3d pos = BottomBoxes[i]->position;
 		vec3d delta;
 		pos.x += 0.5*box_xsize;
 		pos.y += 0.5*box_ysize;
 		pos.z += 0.5*box_zsize;
-	
+		
 		int label=0;
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
 		for (int a=0; a<amax; a++){
@@ -176,7 +230,7 @@ BoxSet::assignNeighborsBottom(){
 				}
 			}
 		}
-
+		
 		// identities of boxes below are added at the end, and they will be updated at each time step
 		pos.x -= 0.499999999*box_xsize;
 		delta.z = -1.*box_zsize;  // below
@@ -195,16 +249,16 @@ BoxSet::assignNeighborsBottom(){
 
 void
 BoxSet::assignNeighborsTop(){
-
+	
 	for(int i=0; i<top_box_nb; i++){
 		
 		vec3d pos = TopBoxes[i]->position;
 		vec3d delta;
-
+		
 		pos.x += 0.5*box_xsize;
 		pos.y += 0.5*box_ysize;
 		pos.z += 0.5*box_zsize;
-	
+		
 		int label=0;
 		// boxes at same level and below first: these are fixed once and for all in the simulation
 		for (int a=0; a<amax; a++){
@@ -219,7 +273,7 @@ BoxSet::assignNeighborsTop(){
 				}
 			}
 		}
-
+		
 		// identities of boxes above are added at the end, and they will be updated at each time step
 		pos.x -= 0.499999999*box_xsize;
 		delta.z = +1.*box_zsize;  // above
@@ -238,16 +292,12 @@ BoxSet::assignNeighborsTop(){
 
 void
 BoxSet::assignNeighborsTopBottom(){
-
 	for(int i=0; i<topbottom_box_nb; i++){
-		
 		vec3d pos = TopBottomBoxes[i]->position;
 		vec3d delta;
-
 		pos.x += 0.5*box_xsize;
 		pos.y += 0.5*box_ysize;
 		pos.z += 0.5*box_zsize;
-	
 		int label=0;
 		// boxes at same level first: these are fixed once and for all in the simulation
 		delta.z = 0.;  // same level
@@ -260,7 +310,6 @@ BoxSet::assignNeighborsTopBottom(){
 					label++;
 			}
 		}
-
 		// identities of boxes above and below are added, and they will be updated at each time step
 		pos.x -= 0.499999999*box_xsize;
 		delta.z = +1.*box_zsize;  // above
@@ -280,123 +329,38 @@ BoxSet::assignNeighborsTopBottom(){
 			for (int b=0; b<bmax; b++){
 				delta.y = (b-1)*box_ysize;
 				(TopBottomBoxes[i])->probing_positions(label, pos+delta);
- 				bool successful_add = (TopBottomBoxes[i])->neighbor(label, WhichBox( pos + delta ));
+				bool successful_add = (TopBottomBoxes[i])->neighbor(label, WhichBox( pos + delta ));
 				if(successful_add)
 					label++;
 			}
 		}
-
-
 	}
 }
-
 
 void
 BoxSet::assignNeighbors(){
-
 	// bulk boxes
 	assignNeighborsBulk();
-
 	// bottom boxes
 	assignNeighborsBottom();
-
-
 	// top boxes
 	assignNeighborsTop();
-
 	// top/bottom boxes
 	assignNeighborsTopBottom();
-
 }
-
-
-BoxSet::BoxSet(double interaction_dist, System *sys_){
-	
-	sys=sys_;
-
-	boxMap = new Box* [sys->np()];
-	for(int i=0; i<sys->np();i++)
-	  boxMap[i]=NULL;
-
-	double xratio=sys->lx()/interaction_dist;
-	double yratio=sys->ly()/interaction_dist;
-	double zratio=sys->lz()/interaction_dist;
-
-	x_box_nb = (int)xratio;
-	y_box_nb = (int)yratio;
-	z_box_nb = (int)zratio;
-	
-	if( x_box_nb == 0 ){
-		x_box_nb = 1;
-		box_xsize=sys->lx();
-	}
-	if( y_box_nb == 0 ){
-		y_box_nb = 1;
-		box_ysize=sys->ly();
-	}
-	if( z_box_nb == 0 ){
-		z_box_nb = 1;
-		box_zsize=sys->lz();
-	}
-
-
-	if ( x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4){ // boxing useless: a neighborhood is the whole system
-		_is_boxed=false;
-
-		box_xsize=sys->lx();
-		box_ysize=sys->ly();
-		box_zsize=sys->lz();
-
-		box_nb=1;
-		top_box_nb = 0;
-		bottom_box_nb = 0;
-		topbottom_box_nb = 1;
-		bulk_box_nb = 0;
-
-		Boxes = new Box* [box_nb];
-		Boxes[0] = new Box;
-
-		Boxes[0]->position.x=0;
-		Boxes[0]->position.y=0;
-		Boxes[0]->position.z=0;
-		Boxes[0]->is_bottom(true);
-		Boxes[0]->is_top(true);
-		TopBottomBoxes = new Box* [topbottom_box_nb];
-		TopBottomBoxes[0] = Boxes[0];
-		(Boxes[0])->neigh_nb( 0 );
-
-	}
-	else{
-
-		_is_boxed=true;
-
-		box_xsize=sys->lx()/x_box_nb;
-		box_ysize=sys->ly()/y_box_nb;
-		box_zsize=sys->lz()/z_box_nb;
-
-		allocateBoxes();
-
-		// give them their position
-		positionBoxes();
-
-		// tell them their neighbors
-		assignNeighbors();
-	}
-}
-
 
 BoxSet::~BoxSet(){
-	for(int i=0; i<box_nb;i++){
+	for(int i=0; i<box_nb; i++){
 		delete Boxes[i];
 	}
-	delete [] Boxes;
-	if(bulk_box_nb>0)
-		delete [] BulkBoxes;
-	delete [] TopBoxes;
-	delete [] BottomBoxes;
-	delete [] boxMap;
+	DELETE(Boxes);
+	if(bulk_box_nb>0){
+		DELETE(BulkBoxes);
+	}
+	DELETE(TopBoxes);
+	DELETE(BottomBoxes);
+	DELETE(boxMap);
 }
-
 
 void
 BoxSet::updateNeighbors(Box* b){
@@ -409,52 +373,52 @@ BoxSet::updateNeighbors(Box* b){
 		bool successful_add = b->moving_neighbor(moving_label, WhichBox(probes[i]) );
 		if(successful_add)
 			moving_label++;
-	} 
-
+	}
+	
 }
 
 /*****
-	UpdateNeighbors()
-	
-	At each time step, we need to check if neighborhood on top and bottom boxes have changed.
-	Bulk boxes do not need to be updated.
-*****/
+ UpdateNeighbors()
+ 
+ At each time step, we need to check if neighborhood on top and bottom boxes have changed.
+ Bulk boxes do not need to be updated.
+ *****/
 void
-	BoxSet::updateNeighbors(){
+BoxSet::updateNeighbors(){
 	// top boxes
 	for(int i=0; i<top_box_nb;i++)
 		updateNeighbors(TopBoxes[i]);
-
+	
 	// bottom boxes
 	for(int i=0; i<bottom_box_nb;i++)
 		updateNeighbors(BottomBoxes[i]);
-
+	
 	// topbottom boxes
 	for(int i=0; i<topbottom_box_nb;i++)
 		updateNeighbors(TopBottomBoxes[i]);
-
+	
 }
 
 
 
 //public methods
-void 
-	BoxSet::update(){
-  if(is_boxed()){
+void
+BoxSet::update(){
+	if(is_boxed()){
 		updateNeighbors();
-  }
-  for(int i=0; i<box_nb;i++)
-	Boxes[i]->build_neighborhood_container();
+	}
+	for(int i=0; i<box_nb;i++)
+		Boxes[i]->build_neighborhood_container();
 }
 
 bool
-	BoxSet::is_boxed(){
+BoxSet::is_boxed(){
 	return _is_boxed;
 }
 
 Box*
 BoxSet::WhichBox(vec3d pos){
-  return WhichBox(&pos);
+	return WhichBox(&pos);
 }
 
 Box*
@@ -468,52 +432,52 @@ BoxSet::WhichBox(vec3d* pos){
 	else
 		iy=(int)(pos->y/box_ysize);
 	int iz=(int)(pos->z/box_zsize);
-
-
+	
+	
 	int label= ix*y_box_nb*z_box_nb + iy*z_box_nb + iz;
 	// cout << " Which Box : " << label << endl;
 	// cout << x_box_nb << " " << y_box_nb << " " << z_box_nb<< " "<< ix  <<" "<< iy << " " << iz << endl;
 	// cout <<pos->x << " " << pos->y << " " << pos->z << endl;
 	// cout << (Boxes[label])->position.x<< " " << (Boxes[label])->position.y<< " " << (Boxes[label])->position.z<< endl;
-
+	
 	return Boxes[label];
 }
 
 
 void
 BoxSet::box(int i){
-  Box *b = WhichBox( sys->position[i] );
-  if( b != boxMap[i] ){
-	b->add(i);
-	if( boxMap[i] != NULL)
-	  boxMap[i]->remove(i);
-
-	boxMap[i]=b;
-  }
-
+	Box *b = WhichBox( sys->position[i] );
+	if( b != boxMap[i] ){
+		b->add(i);
+		if( boxMap[i] != NULL)
+			boxMap[i]->remove(i);
+		
+		boxMap[i]=b;
+	}
+	
 }
 
 vector<int>::iterator
 BoxSet::neighborhood_begin(int i){
-  return (boxMap[i])->neighborhood_begin();
+	return (boxMap[i])->neighborhood_begin();
 }
 
 vector<int>::iterator
 BoxSet::neighborhood_end(int i){
-  return (boxMap[i])->neighborhood_end();
+	return (boxMap[i])->neighborhood_end();
 }
 
 void
 BoxSet::printBoxNetwork(){
-
+	
 	for(int i=0; i<box_nb; i++){
 		Box** neighbors = (Boxes[i])->neighbors();
 		int nneigh = (Boxes[i])->neigh_nb();
 		for (int j = 0; j< nneigh;j++){
-		  //		  if(!(Boxes[i])->is_top() && !(Boxes[i])->is_bottom()){
-		  if((Boxes[i])->is_top()){
-			cout << i << " " <<box_xsize << " " <<nneigh << " " << (Boxes[i])->position.x << " " << (Boxes[i])->position.y <<  " " << (neighbors[j])->position.x << " " << (neighbors[j])->position.y << " " << (Boxes[i])->is_top() << " " << (Boxes[i])->is_bottom() << endl;
-		  }
+			//		  if(!(Boxes[i])->is_top() && !(Boxes[i])->is_bottom()){
+			if((Boxes[i])->is_top()){
+				cout << i << " " <<box_xsize << " " <<nneigh << " " << (Boxes[i])->position.x << " " << (Boxes[i])->position.y <<  " " << (neighbors[j])->position.x << " " << (neighbors[j])->position.y << " " << (Boxes[i])->is_top() << " " << (Boxes[i])->is_bottom() << endl;
+			}
 		}
-	} 
+	}
 }

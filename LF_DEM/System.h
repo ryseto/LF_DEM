@@ -33,8 +33,8 @@ class System{
 private:
 	int _np;
 	int np3;
-	
 	int maxnum_interactionpair;
+	BoxSet boxset;
 	queue<int> deactivated_interaction;
 	double _lx;
 	double _ly;
@@ -46,15 +46,12 @@ private:
 	double radius_max;
 	double sq_lub_max;
 	double _rho; // N/V
-
 	double shear_strain;
 	double _time;
-
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
-	BoxSet* boxset;
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -72,11 +69,9 @@ private:
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
-
-	void increment_time( double _dt ){
+	inline void increment_time(double _dt){
 		_time += _dt;
 	}
-
 protected:
 public:
 	double *v_hydro;
@@ -92,32 +87,21 @@ public:
 	~System();
 	int ts; // time steps
 	int dimension;
-
 	vec3d *position;
 	double *radius;
-	vector <double> radius_cubic;
+	double *radius_cubic;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
-	vector <vec3d> velocity_predictor;
+	vec3d *velocity_predictor;
 	vec3d *ang_velocity;
-	vector <vec3d> ang_velocity_predictor;
-	vec3d *lubrication_force;
+	vec3d *ang_velocity_predictor;
 	vec3d *contact_force;
 	vec3d *contact_torque;
-	vec3d *brownian_force;
-	vec3d *total_velocity;
-	vec3d *lubrication_velocity;
-	vec3d *contact_velocity;
-	vec3d *brownian_velocity;
-	vec3d *lub_force; // Only for outputing data
-	vector <stresslet> lubstress; // G U + M E
-	vector <stresslet> lubstress2; // r * F_lub
-	vector <stresslet> bgfstress;
-	vector <stresslet> bgfstress2;
-	vector <stresslet> contactstressXF;
-	vector <stresslet> contactstressGU;
-	vector <stresslet> contactstress2;
-	vector <stresslet> brownianstress;
+	stresslet* lubstress; // G U + M E
+	stresslet* bgfstress;
+	stresslet* contactstressXF;
+	stresslet* contactstressGU;
+	stresslet* brownianstress;
 	int brownianstress_calc_nb;
 	double total_hydro_stress[5];
 	double total_contact_stressXF[5];
@@ -127,7 +111,7 @@ public:
 	double total_contact_stress2[5];
 	double kn;
 	double kt;
-	double lub_max; //
+	double lub_max;
 	double mu_static; // static friction coefficient.
 	bool lubrication;
 	bool friction;
@@ -139,8 +123,6 @@ public:
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
-
-	
 	/*
 	 * Leading term of lubrication force is 1/ksi, with ksi the gap
 	 * ksi = 2r/(a0+a1) - 2.
@@ -167,67 +149,7 @@ public:
 	double average_nearing_time;
 	int nearing_nb;
 	bool draw_rotation_2d;
-	
-	vector <int> lubparticle;
-	vector <double> lubparticle_vec[3];
 	string simu_name;
-	/*************************************************************/
-	void lx(double length){
-		_lx=length;
-		_lx2=0.5*_lx;
-	}
-	void ly(double length){
-		_ly=length;
-		_ly2=0.5*_ly;
-	}
-	void lz(double length){
-		_lz=length;
-		_lz2=0.5*_lz;
-	}
-	void setRadiusMax(double _radius_max){
-		radius_max = _radius_max;
-	}
-	double valSystemVolume(){
-		return system_volume;
-	}
-	inline double lx(){
-		return _lx;
-	}
-	inline double ly(){
-		return _ly;
-	}
-	inline double lz(){
-		return _lz;
-	}
-	inline double lx2(){
-		return _lx2;
-	}
-	inline double ly2(){
-		return _ly2;
-	}
-	inline double lz2(){
-		return _lz2;
-	}
-	void np(int val){
-		_np = val;
-		np3=3*_np;
-	}
-	inline int np(){
-		return _np;
-	}
-	inline double rho(){ // N/V
-		return _rho;
-	}
-	
-	double time(){
-		return _time;
-	}
-	double strain(){
-		return shear_strain;
-	}
-
-
-	//	void prepareSimulation();
 	void setSystemVolume();
 	void setupSystem(const vector<vec3d> &initial_positions,
 					 const vector <double> &radii);
@@ -251,14 +173,66 @@ public:
 	void calcStress();
 	void analyzeState();
 	void computeBrownianStress();
-	StokesSolver *stokes_solver;
+	StokesSolver stokes_solver;
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
-
-
+	
+	/*************************************************************/
+	inline void lx(double length){
+		_lx=length;
+		_lx2=0.5*_lx;
+	}
+	inline void ly(double length){
+		_ly=length;
+		_ly2=0.5*_ly;
+	}
+	inline void lz(double length){
+		_lz=length;
+		_lz2=0.5*_lz;
+	}
+	inline void setRadiusMax(double _radius_max){
+		radius_max = _radius_max;
+	}
+	inline double valSystemVolume(){
+		return system_volume;
+	}
+	inline double lx(){
+		return _lx;
+	}
+	inline double ly(){
+		return _ly;
+	}
+	inline double lz(){
+		return _lz;
+	}
+	inline double lx2(){
+		return _lx2;
+	}
+	inline double ly2(){
+		return _ly2;
+	}
+	inline double lz2(){
+		return _lz2;
+	}
+	inline void np(int val){
+		_np = val;
+		np3=3*_np;
+	}
+	inline int np(){
+		return _np;
+	}
+	inline double rho(){ // N/V
+		return _rho;
+	}
+	inline double time(){
+		return _time;
+	}
+	inline double strain(){
+		return shear_strain;
+	}
 };
 #endif /* defined(__LF_DEM__System__) */

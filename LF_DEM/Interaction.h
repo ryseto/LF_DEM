@@ -39,7 +39,7 @@ private:
 	vec3d unit_contact_velocity_tan;
 	double sqnorm_contact_velocity;
 	vec3d disp_tan; // tangential displacement
-
+	
 	//===== forces and stresses ==================== //
 	double kn; // spring constant for contact force
 	double kt; // spring constant for contact force
@@ -128,13 +128,14 @@ public:
 	bool contact;
 	bool friction;
 
-
-
 	//=============  Resistance Matrices ====================/
-	void XA(double &XAii, double &XAij, double &XAji, double &XAjj);
-	void XG(double &XGii, double &XGij, double &XGji, double &XGjj);
-	void XM(double &XMii, double &XMij, double &XMji, double &XMjj);
-	void GE(double GEi[], double GEj[]);
+	double XA[4]; // ii ij ji jj
+	double XG[4]; // ii ij ji jj
+	double XM[4]; // ii ij ji jj
+	void GE(double *GEi, double *GEj);
+	void calcXA();
+	void calcXG();
+	void calcXM();
 
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
@@ -144,10 +145,10 @@ public:
 	void evaluateLubricationForce();
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}	
-	void addLubricationStress();
+//	void addLubricationStress();
 	void addHydroStress();
 	void addContactStress();
-	void addContactStress2();
+//	void addContactStress2();
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
