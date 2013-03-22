@@ -19,21 +19,17 @@ class System;
 
 class Interaction{
 private:
-
-
 	/*********************************
 	 *        Members                *
 	 *********************************/
-
 	System *sys;
-
 	//======= relative position/velocity data  =========//
 	double _r; // center-center distance
 	int zshift;
 	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	double lub_reduce_parameter; // small cut-off for ksi: lubrication breakdown
+//	double lub_reduce_parameter; // small cut-off for ksi: lubrication breakdown
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
-	double lub_coeff_max; // = 1/lub_reduce_parameter
+//	double lub_coeff_contact; // lub_coeff for h < 0.
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
 	vec3d unit_contact_velocity_tan;
@@ -41,22 +37,20 @@ private:
 	vec3d disp_tan; // tangential displacement
 	
 	//===== forces and stresses ==================== //
-	double kn; // spring constant for contact force
-	double kt; // spring constant for contact force
-	double mu; // friction coeffient
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	vec3d contact_force_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
 	stresslet contactstressletXF;
 	stresslet contactstresslet2;
-
+	
 	//===== observables  ========================== //
+	
 	double init_nearing_time;
 	double init_contact_time; 
 	bool nearing_on;
 	double nearing_gapnd_cutoff;
-
+	
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -86,18 +80,13 @@ private:
 	void calcContactStressTermXF();
 
 protected:
-
 public:
-
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-
  	Interaction(){};
 	~Interaction(){};
-
 	void init(System *sys_);
-
 	//======= state updates  ====================//
 	/* Update the follow items:
 	 * - r_vec, zshift, _r, and nr_vec
@@ -113,9 +102,10 @@ public:
 	bool active;
 
 	//======= particles data  ====================//
-	int particle_num[2];
+	int par_num[2];
 	int partner(int);
-	double a0, a1; // radii
+	double a0; // radii
+	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
 
 	//======= relative position/velocity  ========//
@@ -123,10 +113,8 @@ public:
 	inline double r(){return _r;}
 	inline double gap_nondim(){return _gap_nondim;}
 
-
 	//======= internal state =====================//
 	bool contact;
-	bool friction;
 
 	//=============  Resistance Matrices ====================/
 	double XA[4]; // ii ij ji jj
@@ -139,24 +127,23 @@ public:
 
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
-
 	double normal_force(){return Fc_normal_norm;};
 	vec3d tangential_force(){return Fc_tan;};
 	void evaluateLubricationForce();
 	double valLubForce();
-	double lubStresslet(int i){return lubstresslet.elm[i];}	
-//	void addLubricationStress();
+	double lubStresslet(int i){return lubstresslet.elm[i];}
+	//	void addLubricationStress();
 	void addHydroStress();
 	void addContactStress();
-//	void addContactStress2();
-	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j);
+	//	void addContactStress2();
+	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
+							   stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
-
+	
 	//=========== observables ===============================//
 	double nearing_time();
 	double contact_time();
-	
 };
 
 

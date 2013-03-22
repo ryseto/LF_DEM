@@ -71,9 +71,6 @@ private:
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
-	/*
-	 *
-	 */
 	void timeEvolution();
 	void evaluateData();
 	/*

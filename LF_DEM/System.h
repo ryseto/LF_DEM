@@ -107,11 +107,12 @@ public:
 	double total_contact_stressXF[5];
 	double total_contact_stressGU[5];
 	double total_brownian_stress[5];
-	double total_hydro_stress2[5];
-	double total_contact_stress2[5];
+//	double total_hydro_stress2[5];
+//	double total_contact_stress2[5];
 	double kn;
 	double kt;
 	double lub_max;
+	double lub_coeff_contact;
 	double mu_static; // static friction coefficient.
 	bool lubrication;
 	bool friction;
@@ -124,15 +125,17 @@ public:
 	Interaction *interaction;
 	int num_interaction;
 	/*
-	 * Leading term of lubrication force is 1/ksi, with ksi the gap
-	 * ksi = 2r/(a0+a1) - 2.
+	 * Leading term of lubrication force is 1/gap_nondim, 
+	 * with gap_nondim the gap
+	 * gap_nondim = 2r/(a0+a1) - 2.
 	 * we set a cutoff for the lubrication interaction,
 	 * such that the lub term is proportional to:
 	 * 
-	 * 1/ksi when ksi > gap_cutoff*(a0+a1)/2. = ksi_cutoff
-	 * 1/ksi_cutoff when h <= ksi_cutoff
+	 * 1/(gap_nondim+lub_reduce_parameter) 
+	 * when gap_nondim > 0.
 	 */
 	double lub_reduce_parameter;
+	double contact_relaxzation_time;
 	BrownianForce *fb;
 	double shear_disp;
 	double shear_rate;
@@ -148,6 +151,8 @@ public:
 	int contact_nb;
 	double average_nearing_time;
 	int nearing_nb;
+	double average_Fc_normal_norm;
+	double max_Fc_normal_norm;
 	bool draw_rotation_2d;
 	string simu_name;
 	void setSystemVolume();

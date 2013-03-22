@@ -176,14 +176,14 @@ StokesSolver::complete_RFU_cholmod(){
     ploc[np] = (unsigned int)rows.size();
     allocate_RFU();
     // fill
-    for(int j = 0; j < np; j++){
+    for(int j=0; j<np; j++){
 		int j3 = 3*j;
 		int j6 = 6*j;
 		
 		((int*)chol_rfu_matrix->p)[j3  ] = j6   + 3*ploc[j];
 		((int*)chol_rfu_matrix->p)[j3+1] = j6+3 + 2*ploc[j] +   ploc[j+1];
 		((int*)chol_rfu_matrix->p)[j3+2] = j6+5 +   ploc[j] + 2*ploc[j+1];
-		
+
 		int pj3   = ((int*)chol_rfu_matrix->p)[j3];
 		int pj3_1 = ((int*)chol_rfu_matrix->p)[j3+1];
 		int pj3_2 = ((int*)chol_rfu_matrix->p)[j3+2];
@@ -262,8 +262,8 @@ void
 StokesSolver::prepareNewBuild_RFU(string solver_type){
 	setSolverType(solver_type);
 	if(direct()){
-		for (int k = 0; k < 6*np; k++){
-			diag_values[k] = 0.;
+		for (int k=0; k<6*np; k++){
+			diag_values[k] = 0;
 		}
 		rows.clear();
 		off_diag_values[0].clear();
@@ -271,24 +271,21 @@ StokesSolver::prepareNewBuild_RFU(string solver_type){
 		off_diag_values[2].clear();
 		ploc[0] = 0;
 	}
-	
 #ifdef TRILINOS
 	if(iterative()){
 		tril_rfu_matrix = new Epetra_CrsMatrix(Copy, *Map, 20*dof+dof );
 		tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
 		tril_rfu_matrix->PutScalar(0.);
-		
-		for (int i = 0; i < linalg_size; i++){
-			for (int j = 0; j < columns_max_nb; j++){
+		for (int i=0; i<linalg_size; i++){
+			for (int j=0; j<columns_max_nb; j++){
 				columns[i][j] = -1;
-				values[i][j] = 0.;
+				values[i][j] = 0;
 			}
 		}
-		
 		// declare the diagonal blocks
-		for (int i = 0; i < np; i++){
+		for (int i=0; i<np; i++){
 			int idof = dof*i;
-			for (int j = 0; j < dof; j++){
+			for (int j=0; j<dof; j++){
 				columns[idof  ][j] = idof+j;
 				columns[idof+1][j] = idof+j;
 				columns[idof+2][j] = idof+j;
@@ -304,16 +301,15 @@ StokesSolver::prepareNewBuild_RFU(string solver_type){
 void
 StokesSolver::resetRHS(){
 	if(direct()){
-		for (int i = 0; i < linalg_size; i++){
-			((double*)chol_rhs->x)[i] = 0.;
+		for (int i=0; i<linalg_size; i++){
+			((double*)chol_rhs->x)[i] = 0;
 		}
 	}
 #ifdef TRILINOS
 	if(iterative()){
-		tril_rhs->PutScalar(0.);
+		tril_rhs->PutScalar(0);
 	}
 #endif
-	
 }
 
 void
@@ -321,7 +317,6 @@ StokesSolver::addToRHS(int i, double val){
 	if(direct()){
 		((double*)chol_rhs->x)[i] += val;
 	}
-	
 #ifdef TRILINOS
 	if(iterative()){
 		tril_rhs->SumIntoGlobalValue( i, 0, val);

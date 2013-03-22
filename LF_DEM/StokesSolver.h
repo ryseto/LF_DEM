@@ -134,19 +134,14 @@ private:
 	 - this must be called with order, according to LT filling
 	 */
     void appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha);
-	
     void allocate_RFU();
     void complete_RFU_cholmod();
     void complete_RFU_trilinos();
-    
     void allocateRessources();
-	
     void setDiagBlockPreconditioner();
     void setIncCholPreconditioner();
     void setSpInvPreconditioner();
-	
 	void setSolverType(string);
-	
 	
 public:
 	
@@ -154,7 +149,6 @@ public:
     ~StokesSolver();
 	void init(int np, bool is_brownian);
     void initialize();
-	
 	bool direct(){
 		return _direct;
 	}
