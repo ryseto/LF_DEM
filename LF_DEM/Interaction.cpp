@@ -81,6 +81,21 @@ Interaction::addUpContactForceTorque(){
 	}
 }
 
+/*
+ * Colloidal force should be modified
+ * for polydisperse system.
+ *
+ */
+void
+Interaction::addUpColloidalForce(){
+	if (!contact){
+		double colloidal_force_norm = sys->cf_amp_dl*exp(-(_r-ro)/sys->cf_range);
+		vec3d colloidal_force = colloidal_force_norm*nr_vec;
+		sys->colloidal_force[par_num[0]] -= colloidal_force;
+		sys->colloidal_force[par_num[1]] += colloidal_force;
+	}
+}
+
 /* Relative velocity of particle 1 from particle 0.
  *
  * Use: 

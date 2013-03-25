@@ -60,6 +60,7 @@ private:
 	void deltaTimeEvolutionPredictor();
 	void displacement(int i, const vec3d &dr);
 	void setContactForceToParticle();
+	void setColloidalForceToParticle();
 	void buildLubricationTerms(bool rhs=true);
 	void buildLubricationRHS();
 	void buildContactTerms();
@@ -97,6 +98,8 @@ public:
 	vec3d *ang_velocity_predictor;
 	vec3d *contact_force;
 	vec3d *contact_torque;
+	vec3d *colloidal_force;
+	
 	stresslet* lubstress; // G U + M E
 	stresslet* bgfstress;
 	stresslet* contactstressXF;
@@ -116,6 +119,7 @@ public:
 	double mu_static; // static friction coefficient.
 	bool lubrication;
 	bool friction;
+	bool colloidalforce;
 	bool brownian;
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	double diag_stokes_drag;
@@ -139,6 +143,12 @@ public:
 	BrownianForce *fb;
 	double shear_disp;
 	double shear_rate;
+	/* Colloidal force to stabilize suspension
+	 * (This gives simple shear-rate depenedence.)
+	 */
+	double cf_amp; // colloidal force amplitude
+	double cf_amp_dl; // colloidal force dimensionless
+	double cf_range; // colloidal force range
 	double kb_T;
 	double volume_fraction;
 	double vel_difference;

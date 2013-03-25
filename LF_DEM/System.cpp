@@ -57,6 +57,7 @@ System::allocateRessources(){
 	}
 	contact_force = new vec3d [_np];
 	contact_torque = new vec3d [_np];
+	colloidal_force = new vec3d [_np];
 	lubstress = new stresslet [_np];
 	bgfstress = new stresslet [_np];
 	contactstressXF = new stresslet [_np];
@@ -98,9 +99,15 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector<double> &radii){
 	if (kb_T == 0){
 		brownian = false;
-	} else {
+	}else{
 		brownian = true;
 		integration_method = 2; // > force Euler
+	}
+	
+	if (cf_amp == 0){
+		colloidalforce = false;
+	}else{
+		colloidalforce = true;
 	}
 	allocateRessources();
 	for (int i=0; i < _np; i++){
@@ -172,6 +179,7 @@ System::initializeBoxing(){// need to know radii first
 void
 System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
+	setColloidalForceToParticle();
 	updateVelocityLubrication();
 	deltaTimeEvolution();
 }
@@ -624,6 +632,18 @@ System::setContactForceToParticle(){
 }
 
 void
+System::setColloidalForceToParticle(){
+	if (colloidalforce){
+		for (int i=0; i<_np; i++){
+			colloidal_force[i].reset();
+		}
+		for (int k=0; k<num_interaction; k++){
+			interaction[k].addUpColloidalForce();
+		}
+	}
+}
+
+void
 System::buildContactTerms(){
 	//	calcContactForces();
     // add contact force
@@ -633,6 +653,14 @@ System::buildContactTerms(){
 		stokes_solver.addToRHS(i3+1, contact_force[i].y);
 		stokes_solver.addToRHS(i3+2, contact_force[i].z);
     }
+	if (colloidalforce){
+		for (int i=0; i<_np; i++){
+			int i3 = 3*i;
+			stokes_solver.addToRHS(i3  , colloidal_force[i].x);
+			stokes_solver.addToRHS(i3+1, colloidal_force[i].y);
+			stokes_solver.addToRHS(i3+2, colloidal_force[i].z);
+		}
+	}
 }
 
 /*

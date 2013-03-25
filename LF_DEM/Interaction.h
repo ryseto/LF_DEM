@@ -127,6 +127,7 @@ public:
 
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
+	void addUpColloidalForce();
 	double normal_force(){return Fc_normal_norm;};
 	vec3d tangential_force(){return Fc_tan;};
 	void evaluateLubricationForce();

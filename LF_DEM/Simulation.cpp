@@ -37,15 +37,18 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
 	setDefaultParameters();
-	setUnits();
 	filename_parameters = argv[2];
 	readParameterFile();
 	if ( argc == 3){
-		filename_addition = "";
+		sys.shear_rate = 1.0;
+		filename_addition = "sr1";
 	} else {
-		filename_addition = "_";
+		sys.shear_rate = atof(argv[3]);
+		filename_addition = "sr";
 		filename_addition += argv[3];
 	}
+	setUnits();
+	
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
@@ -65,7 +68,9 @@ void
 Simulation::setUnits(){
 	unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
 	unit_of_velocity = sys.shear_rate*unit_of_length;
-	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity*unit_of_velocity;
+	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity;
+	sys.cf_amp_dl = sys.cf_amp/unit_of_force;
+	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
 }
 
 bool
@@ -104,14 +109,16 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.friction = str2bool(value);
 	} else if (keyword == "bgf_factor"){
 		sys.bgf_factor = atof(value.c_str());
-	} else if (keyword == "poly"){
-		sys.poly = str2bool(value);
+	} else if (keyword == "cf_amp"){
+		sys.cf_amp = atof(value.c_str());
+	} else if (keyword == "cf_range"){
+		sys.cf_range = atof(value.c_str());
 	} else if (keyword == "lub_reduce_parameter"){
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxzation_time"){
 		sys.contact_relaxzation_time = atof(value.c_str());
-	} else if (keyword == "shear_rate"){
-		sys.shear_rate = atof(value.c_str());
+//	} else if (keyword == "shear_rate"){
+//		sys.shear_rate = atof(value.c_str());
 	} else if (keyword == "kb_T"){
 		sys.kb_T = atof(value.c_str());
 	} else if (keyword == "dt"){
@@ -243,7 +250,7 @@ Simulation::setDefaultParameters(){
 	 *  strain(): total strain (length of simulation)
 	 *
 	 */
-	sys.shear_rate = 1.0;
+//	sys.shear_rate = 1.0;
 	shear_strain_end = 10.;
 
 	/*
@@ -287,17 +294,20 @@ Simulation::setDefaultParameters(){
 	 * Contact force parameters
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
-	 *
-	 *
 	 */
 	sys.shearrate_scale_Fc_normal = true;
-	sys.kn = 300;
+	sys.kn = 5000;
 	sys.kt = 1000;
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
 	 */
-	sys.mu_static = 10;
+	sys.mu_static = 10;	
+	/* Colloidal force
+	 * Short range repulsion is assumed.
+	 */
+	sys.cf_amp = 1.0;
+	sys.cf_range = 0.1;
 	/*
 	 * Output interval
 	 */
