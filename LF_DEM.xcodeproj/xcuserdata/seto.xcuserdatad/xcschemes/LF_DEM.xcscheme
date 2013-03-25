@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/static_friction"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/rigid_sphere"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,11 +78,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "D3N3000VF0.5Poly1.4_0.5L10_3_10_1.dat"
+            argument = "D2N200VF0.7MonoSquare_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "friction1.txt"
+            argument = "fric3_lub3.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -93,7 +93,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/static_friction"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/rigid_sphere"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
       <BuildableProductRunnable>

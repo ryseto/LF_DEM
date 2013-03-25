@@ -19,8 +19,8 @@ private:
 	string filename_addition;
 	double shear_strain_end;
 	bool import_positions;
-	vector< vec3d> initial_positions;
-	vector <double> radii;
+	vector<vec3d> initial_positions;
+	vector<double> radii;
 	string filename_import_positions;
 	string filename_parameters;
 	int np_a;
@@ -71,9 +71,6 @@ private:
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
-	/*
-	 *
-	 */
 	void timeEvolution();
 	void evaluateData();
 	/*

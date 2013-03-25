@@ -15,5 +15,4 @@ struct stresslet {
 	double elm[5];
 };
 
-
 #endif

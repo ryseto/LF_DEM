@@ -58,9 +58,11 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
     ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
+	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
-        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $s1, $s2, $s3, $s4,$angle ) = split(/\s+/, $line);
+        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+		$h_xzstress, $c_xzstressXF, $c_xzstressGU, $b_xzstress,  $angle ) = split(/\s+/, $line);
 		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;
@@ -91,7 +93,7 @@ sub InInteractions {
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
-		
+		#		printf "$f_lub\n";
 		$NearTime[$k] = $neartime;
 		$Gap[$k] = $gap;
 	}
@@ -119,22 +121,22 @@ sub OutYaplotData{
 			}
     }
 	
-    printf OUT "y 2\n";
-    printf OUT "@ 2\n";
-    for ($k = 0; $k < $num_interaction; $k ++){
+	printf OUT "y 2\n";
+	printf OUT "@ 0\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ( $F_lub[$k] < 0){
 			$force += - $F_lub[$k];
 		}
-		if ( $force > 0 ){
-			$string_width = $force_factor*($force);
+		if ( $Gap[$k] < 0 ){
+			$string_width = 0.2;
 			&OutString_width($int0[$k],  $int1[$k]);
 		}
     }
     printf OUT "y 3\n";
     printf OUT "@ 3\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k];
+        $force = $F_lub[$k]+ $Fc_n[$k];
         if ($force < 0){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
@@ -142,7 +144,7 @@ sub OutYaplotData{
     }
     printf OUT "@ 4\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k];
+        $force = $F_lub[$k]+ $Fc_n[$k];
 		if ($force > 0){
             $string_width = ${force_factor}*${force};
 			&OutString_width($int0[$k], $int1[$k]);
@@ -157,24 +159,7 @@ sub OutYaplotData{
 		}
 	}
 	
-	$x0 = -$Lx/2;
-	$x1 = -$Lx/2 + $shear_disp / 2;
-	$z1 = $Lz/2;
-
-	$x2 = $Lx/2;
-	$z2 = 0;
-	$x3 = $Lx/2 - $shear_disp / 2;
-	$z3 = -$Lz/2;
 	
-	$lx2 = $Lx/2;
-	
-	printf OUT "y 7\n";
-	printf OUT "@ 6\n";
-	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
-
-	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
-	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
-
 	
 	
 	#	$maxS=0;
@@ -184,16 +169,16 @@ sub OutYaplotData{
 	#		}
 	#}
 	
-#	printf OUT "y 4\n";
-#    printf OUT "@ 5\n";
-#    for ($k = 0; $k < $num_interaction; $k ++){
-#		$string_with = $Sxz_lub[$k]/$maxS;
-#		printf OUT "r ${string_with}\n";
-#		&OutCircle_middle($int0[$k],  $int1[$k]);
-#	}
+	#	printf OUT "y 4\n";
+	#    printf OUT "@ 5\n";
+	#    for ($k = 0; $k < $num_interaction; $k ++){
+	#		$string_with = $Sxz_lub[$k]/$maxS;
+	#		printf OUT "r ${string_with}\n";
+	#		&OutCircle_middle($int0[$k],  $int1[$k]);
+	#	}
 	#	$zpos = $Lz / 2 + 1;
-#	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
-#	
+	#	printf OUT sprintf("t 0 0 %3.2f %2.4f\n", $zpos, $maxS);
+	#
 	#	printf OUT "y 5\n";
 	#	printf OUT "@ 2\n";
 	#printf OUT "r 0.3\n";
@@ -206,6 +191,30 @@ sub OutYaplotData{
 	printf OUT2 "\n";
 }
 
+sub OutBoundaryBox{
+	$x0 = -$Lx/2;
+	$x1 = -$Lx/2 + $shear_disp / 2;
+	$z1 = $Lz/2;
+	
+	$x2 = $Lx/2;
+	$z2 = 0;
+	$x3 = $Lx/2 - $shear_disp / 2;
+	$z3 = -$Lz/2;
+	
+	$lx2 = $Lx/2;
+	
+	printf OUT "y 7\n";
+	printf OUT "@ 6\n";
+	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
+	
+	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
+	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
+
+	
+	
+}
+
+	
 sub OutNvec {
     ($k) = @_;
 	$nx = $nrvec_x[$k];
