@@ -621,13 +621,13 @@ Simulation::outputConfigurationData(){
 		double c_xzstressGU = sys.contactstressGU[i].elm[2];
 		double b_xzstress = sys.brownianstress[i].elm[2];
 		fout_particle << i << sp; //1: number
-		fout_particle << sys.radius[i] << sp; //1: number
-		fout_particle << p.x << sp << p.y << sp << p.z << sp; //2,3,4: position
-		fout_particle << v.x << sp << v.y << sp << v.z << sp; //5,6,7: velocity
-		fout_particle << o.x << sp << o.y << sp << o.z << sp; //8,9,10: angular velocity
-		fout_particle << h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress << sp; //11,12,13,14: xz stress contributions
+		fout_particle << sys.radius[i] << sp; //2: number
+		fout_particle << p.x << sp << p.y << sp << p.z << sp; //3,4,5: position
+		fout_particle << v.x << sp << v.y << sp << v.z << sp; //6,7,8: velocity
+		fout_particle << o.x << sp << o.y << sp << o.z << sp; //9,10,11: angular velocity
+		fout_particle << h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress << sp; //12,13,14,15: xz stress contributions
 		if (sys.dimension == 2){
-			fout_particle << sys.angle[i] << sp;
+			fout_particle << sys.angle[i] << sp; // 16
 		}
 
 		fout_particle << endl;
@@ -646,16 +646,16 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].particle_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].particle_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
-			fout_interaction << sys.shear_rate*sys.interaction[k].normal_force() << sp; // 5
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().x << sp; // 6
+			fout_interaction << sys.shear_rate*sys.interaction[k].normal_force() << sp; // 4
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().x << sp; // 5
 			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().y << sp; // 6
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().z << sp; // 6
-			fout_interaction << sys.interaction[k].nr_vec.x << sp;
-			fout_interaction << sys.interaction[k].nr_vec.y << sp;
-			fout_interaction << sys.interaction[k].nr_vec.z << sp;
-			fout_interaction << sys.interaction[k].gap_nondim() << sp; //7
-			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; //
-			fout_interaction << sys.interaction[k].contact << sp; //8
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().z << sp; // 7
+			fout_interaction << sys.interaction[k].nr_vec.x << sp; // 8 
+			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 9
+			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 10
+			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 11
+			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 12
+			fout_interaction << sys.interaction[k].contact << sp; // 13
 
 			/// fout_interaction << ???
 			fout_interaction << endl;

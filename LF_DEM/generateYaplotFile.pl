@@ -60,7 +60,7 @@ sub InParticles {
     ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
-        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle ) = split(/\s+/, $line);
+        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $s1, $s2, $s3, $s4,$angle ) = split(/\s+/, $line);
 		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;

@@ -66,7 +66,13 @@ Interaction::calcContactInteraction(){
 	}
 	Fc_normal = - Fc_normal_norm*nr_vec;
 	if (friction){
+	if (sys->shearrate_scale_Fc_normal){
+		double disp_tan_norm =disp_tan.norm(); 
+		Fc_tan = (exp(sys->kt*disp_tan_norm)-1.)*disp_tan/disp_tan_norm;
+		Fc_tan /= sys->shear_rate;
+	} else {
 		Fc_tan = sys->kt*disp_tan;
+	}
 	}
 }
 
