@@ -126,7 +126,7 @@ public:
 	double lub_max;
 	double lub_coeff_contact;
 	double mu_static; // static friction coefficient.
-	bool lubrication;
+//	bool lubrication;
 	bool friction;
 	bool colloidalforce;
 	bool brownian;

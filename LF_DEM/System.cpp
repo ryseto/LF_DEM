@@ -111,6 +111,12 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		integration_method = 2; // > force Euler
 	}
 	
+	if (mu_static > 0){
+		friction = true;
+	} else {
+		friction = false;
+	}
+	
 	if (cf_amp == 0){
 		colloidalforce = false;
 	}else{

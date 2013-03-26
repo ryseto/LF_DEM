@@ -103,11 +103,7 @@ removeBlank(string &str){
 void
 Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
-	if (keyword == "lubrication"){
-		sys.lubrication = str2bool(value);
-	} else if (keyword == "friction"){
-		sys.friction = str2bool(value);
-	} else if (keyword == "bgf_factor"){
+	if (keyword == "bgf_factor"){
 		sys.bgf_factor = atof(value.c_str());
 	} else if (keyword == "cf_amp"){
 		sys.cf_amp = atof(value.c_str());
@@ -117,8 +113,6 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxzation_time"){
 		sys.contact_relaxzation_time = atof(value.c_str());
-//	} else if (keyword == "shear_rate"){
-//		sys.shear_rate = atof(value.c_str());
 	} else if (keyword == "kb_T"){
 		sys.kb_T = atof(value.c_str());
 	} else if (keyword == "dt"){
@@ -214,16 +208,6 @@ Simulation::openOutputFiles(){
 
 void
 Simulation::setDefaultParameters(){
-	/*
-	 * If lubrication is false, it should be free-draining approximation.
-	 * So far, we do not test this case well.
-	 */
-	sys.lubrication = true;
-	/*
-	 * If friction is false, the contact forces are only normal repulsion.
-	 * It is important to find the difference between with and without friction.
-	 */
-	sys.friction = true;
 	/*
 	 * Simulation
 	 *
@@ -482,9 +466,11 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#14: Viscosity(brownian)" << endl;
 		fout_rheo << "#15: N1(brownian)" << endl;
 		fout_rheo << "#16: N2(brownian)" << endl;
-		fout_rheo << "#17: min gap (non-dim)" << endl;
-		fout_rheo << "#18: Average normal contact force" << endl;
-		fout_rheo << "#19: max Fc_normal_norm" << endl;
+		fout_rheo << "#17: Viscosity(xF_colloidal)" << endl;
+		fout_rheo << "#18: Viscosity(GU_colloidal)" << endl;
+		fout_rheo << "#19: min gap (non-dim)" << endl;
+		fout_rheo << "#20: Average normal contact force" << endl;
+		fout_rheo << "#21: max Fc_normal_norm" << endl;
 	}
 	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
 	double unit_of_stress = unit_of_force/(unit_of_length*unit_of_length);
@@ -504,8 +490,8 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_b*unit_of_viscosity << ' ' ; //14
 	fout_rheo << N1_b*unit_of_stress << ' ' ; //15
 	fout_rheo << N2_b*unit_of_stress << ' ' ; //16
-	fout_rheo << Viscosity_col_GU*unit_of_viscosity << ' '; //17
-	fout_rheo << Viscosity_col_XF*unit_of_viscosity << ' '; //18
+	fout_rheo << Viscosity_col_XF*unit_of_viscosity << ' '; //17
+	fout_rheo << Viscosity_col_GU*unit_of_viscosity << ' '; //18
 	fout_rheo << sys.minvalue_gap_nondim << ' '; // 19
 	fout_rheo << sys.average_Fc_normal_norm << ' '; // 20
 	fout_rheo << sys.max_Fc_normal_norm << ' '; // 21
