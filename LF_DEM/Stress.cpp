@@ -15,7 +15,6 @@ void System::calcStressesHydroContactBrownian(){
 	}else{
 		zero_2Dsimu = 1;
 	}
-	
 	/**************************************************
               1. Stress from background flow 
 	                                                **/
@@ -163,7 +162,6 @@ void System::calcStressesHydroContactBrownian(){
 		brownianstress[i].elm[u] += step_stresslet[i].elm[u];
 	  }
     }
-
 	// move particles back to initial point, and update interactions
     for (int i=0; i < _np; i++){
 		int i3 = 3*i;
@@ -171,8 +169,7 @@ void System::calcStressesHydroContactBrownian(){
 		displacement(i, dr);
     }
     updateInteractions();
-
-	delete [] step_stresslet;	
+	delete [] step_stresslet;
 }
 
 void
@@ -200,7 +197,7 @@ System::calcStressesHydroContact(){
 	setContactForceToParticle();
     buildContactTerms();
     stokes_solver.solve(v_cont);
-//    stokes_solver.solvingIsDone();
+	//    stokes_solver.solvingIsDone();
 
 	// then obtain colloidal forces
     stokes_solver.resetRHS();
@@ -247,13 +244,11 @@ System::calcStressesHydroContact(){
 void
 System::calcStress(){
 	stressReset();
-	
 	if(brownian){
 	 	calcStressesHydroContactBrownian();
 	}else{
 		calcStressesHydroContact();
 	}
-
 	for (int u=0; u < 5; u++){
 		total_hydro_stress[u] = 0;
 		total_contact_stressXF[u] = 0;
@@ -262,7 +257,6 @@ System::calcStress(){
 		total_colloidal_stressGU[u] = 0;
 		total_brownian_stress[u] = 0;
 	}
-	
 	for (int i=0; i < _np; i++){
 		for (int u=0; u < 5; u++){
 			total_hydro_stress[u] += lubstress[i].elm[u]+bgfstress[i].elm[u];
@@ -273,7 +267,6 @@ System::calcStress(){
 			total_brownian_stress[u] += brownianstress[i].elm[u];
 		}
 	}
-
 	for (int u=0; u < 5; u++){
 		total_hydro_stress[u] /= valSystemVolume();
 		total_contact_stressXF[u] /= valSystemVolume();
@@ -282,6 +275,5 @@ System::calcStress(){
 		total_colloidal_stressGU[u] /= valSystemVolume();
 		total_brownian_stress[u] /= valSystemVolume();
 	}
-
 	stressBrownianReset();
 }

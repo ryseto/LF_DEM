@@ -133,7 +133,6 @@ public:
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	double diag_stokes_drag;
 	double bgf_factor;
-	bool shearrate_scale_Fc_normal;
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
@@ -157,7 +156,7 @@ public:
 	 */
 	double cf_amp; // colloidal force amplitude
 	double cf_amp_dl; // colloidal force dimensionless
-	double cf_range; // colloidal force range
+	double cf_range_dl; // colloidal force range (dimensionless)
 	double kb_T;
 	double volume_fraction;
 	double vel_difference;

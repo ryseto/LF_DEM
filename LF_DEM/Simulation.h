@@ -33,6 +33,11 @@ private:
 	double unit_of_length;
 	double viscosity_solvent; // It can be real value.
 	double radius_of_particle; // It can be real value.
+	/* Colloidal force parameter
+	 * A exp(-h/lambda)
+	 * cf_amp_dl0 = A/F_0 at shear rate = 1.0
+	 */
+	double cf_amp_dl0;
 	/*
 	 * Resultant data
 	 */
@@ -50,7 +55,6 @@ private:
 	double N2_c_GU;
 	double Viscosity_col_XF;
 	double Viscosity_col_GU;
-	
 	double Viscosity_b;
 	double N1_b;
 	double N2_b;

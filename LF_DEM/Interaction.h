@@ -27,9 +27,7 @@ private:
 	double _r; // center-center distance
 	int zshift;
 	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-//	double lub_reduce_parameter; // small cut-off for ksi: lubrication breakdown
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
-//	double lub_coeff_contact; // lub_coeff for h < 0.
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
 	vec3d unit_contact_velocity_tan;
@@ -80,7 +78,6 @@ private:
 	void calcContactInteraction();
 	void calcContactStressTermXF();
 	void calcColloidalStressTermXF();
-
 
 protected:
 public:

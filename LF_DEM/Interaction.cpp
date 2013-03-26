@@ -55,12 +55,8 @@ Interaction::calcDistanceNormalVector(){
  */
 void
 Interaction::calcContactInteraction(){
-	if (sys->shearrate_scale_Fc_normal){
-		//Fc_normal_norm = exp(kn*(ro-_r))-1;
-		Fc_normal_norm = sys->kn*(ro-_r);
-	} else {
-		Fc_normal_norm = (exp(sys->kn*(ro-_r))-1)/sys->shear_rate;
-	}
+	//Fc_normal_norm = exp(kn*(ro-_r))-1;
+	Fc_normal_norm = sys->kn*(ro-_r);
 	Fc_normal = -Fc_normal_norm*nr_vec;
 	if (sys->friction){
 		Fc_tan = sys->kt*disp_tan;
@@ -90,7 +86,7 @@ Interaction::addUpContactForceTorque(){
 void
 Interaction::addUpColloidalForce(){
 	if (contact == false){
-		colloidal_force_norm = -sys->cf_amp_dl*ro_2*exp(-(_r-ro)/sys->cf_range);
+		colloidal_force_norm = -sys->cf_amp_dl*ro_2*exp(-(_r-ro)/sys->cf_range_dl);
 		vec3d colloidal_force = colloidal_force_norm*nr_vec;
 		sys->colloidal_force[par_num[0]] += colloidal_force;
 		sys->colloidal_force[par_num[1]] -= colloidal_force;

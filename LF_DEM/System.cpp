@@ -79,11 +79,11 @@ System::allocateRessources(){
 	v_cont = new double [linalg_size];
 	v_hydro = new double [linalg_size];
 	v_colloidal = new double [linalg_size];
- 
 	for(int i=0; i<linalg_size; i++){
 		v_lub_cont[i] = 0;
 		v_cont[i] = 0;
 		v_hydro[i] = 0;
+		v_colloidal[i] = 0;
 	}
 	if(brownian){
 	    v_Brownian_init = new double [linalg_size];
@@ -97,7 +97,6 @@ System::allocateRessources(){
 		}
 		fb = new BrownianForce(this);
 	}
-	//stokes_solver = new StokesSolver(_np, brownian);
 	stokes_solver.init(_np, brownian);
 }
 
@@ -110,13 +109,11 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		brownian = true;
 		integration_method = 2; // > force Euler
 	}
-	
 	if (mu_static > 0){
 		friction = true;
 	} else {
 		friction = false;
 	}
-	
 	if (cf_amp == 0){
 		colloidalforce = false;
 	}else{
@@ -181,7 +178,6 @@ System::initializeBoxing(){// need to know radii first
 			max_radius=radius[i];
 		}
 	}
-	
 	boxset.init(lub_max*max_radius, this);
 	for (int i=0; i<_np; i++){
 		boxset.box(i);
@@ -274,14 +270,14 @@ System::deltaTimeEvolutionPredictor(){
 void
 System::deltaTimeEvolutionCorrector(){
 	for (int i=0; i<_np; i++){
-		velocity[i] = 0.5*(velocity[i] - velocity_predictor[i]);
-		ang_velocity[i] = 0.5*(ang_velocity[i] - ang_velocity_predictor[i]);
+		velocity[i] = 0.5*(velocity[i]-velocity_predictor[i]);
+		ang_velocity[i] = 0.5*(ang_velocity[i]-ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<_np; i++){
 		displacement(i, velocity[i]*dt);
 	}
 	if (dimension == 2){
-		for (int i=0; i < _np; i++){
+		for (int i=0; i<_np; i++){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
