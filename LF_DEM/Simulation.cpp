@@ -39,21 +39,19 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	setDefaultParameters();
 	filename_parameters = argv[2];
 	readParameterFile();
-	if ( argc == 3){
+	if (argc == 3){
 		sys.shear_rate = 1.0;
-		filename_addition = "sr1";
+		filename_addition = "_sr1";
 	} else {
 		sys.shear_rate = atof(argv[3]);
-		filename_addition = "sr";
+		filename_addition = "_sr";
 		filename_addition += argv[3];
 	}
 	setUnits();
-	
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
 	int i_time_interval = strain_interval_out/sys.dt;
-
 	outputConfigurationData();
 	while(sys.strain() <= shear_strain_end){
 		cerr << "strain: " << sys.strain() << endl;
@@ -328,7 +326,6 @@ Simulation::importInitialPositionFile(){
 	}
 	string line;
 	getline(file_import, line);
-	
 	vec3d pos;
 	double radius;
 	int np_a_, np_b_;
@@ -338,8 +335,7 @@ Simulation::importInitialPositionFile(){
 	file_import >> buf >> np_a_ >> np_b_ >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
 	np_a = np_a_;
 	np_b = np_b_;
-
-	int num_of_particle = np_a_ + np_b_;
+	int num_of_particle = np_a_+np_b_;
 	sys.np(num_of_particle);
 	if (np_b_ > 0){
 		sys.poly = true;
@@ -360,7 +356,7 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
-	double radius_max=1.0;
+	double radius_max = 1.0;
 	for (int i = 0; i < num_of_particle ; i++){
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
@@ -403,7 +399,6 @@ Simulation::evaluateData(){
 		total_stress[u] += sys.total_contact_stressXF[u];
 		total_stress[u] += sys.total_colloidal_stressXF[u];
 		total_stress[u] += sys.total_colloidal_stressGU[u];
-		// + sys.total_contact_stressGU[u];
 	}
 	if (sys.brownian){
 		for (int u=0; u<5; u++){
@@ -416,7 +411,6 @@ Simulation::evaluateData(){
 	Viscosity_c_GU = sys.total_contact_stressGU[2];
 	Viscosity_col_XF = sys.total_colloidal_stressXF[2];
 	Viscosity_col_GU = sys.total_colloidal_stressGU[2];
-	
 	/* N1 = tau_xx-tau_zz = tau_xx-(-tau_xx-tau_yy) = 2tau_xx+tau_yy
 	 * N2 = tau_zz-tau_yy = (-tau_xx-tau_yy)-tau_yy = -tau_xx-2tau_yy
 	 */
@@ -451,7 +445,7 @@ Simulation::outputRheologyData(){
 	 * 
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	if ( firsttime ){
+	if (firsttime){
 		firsttime = false;
 		fout_rheo << "#1: shear strain" << endl;
 		fout_rheo << "#2: Viscosity" << endl;
@@ -475,19 +469,19 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#20: Average normal contact force" << endl;
 		fout_rheo << "#21: max Fc_normal_norm" << endl;
 	}
-	double unit_of_viscosity = (unit_of_force/(unit_of_velocity*unit_of_length));
-	double unit_of_rel_viscosity = unit_of_viscosity / viscosity_solvent;
+	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
+	double unit_of_rel_viscosity = unit_of_viscosity/viscosity_solvent;
 	double unit_of_stress = unit_of_force/(unit_of_length*unit_of_length);
 	fout_rheo << sys.strain() << ' '; //1
-	fout_rheo << Viscosity*unit_of_rel_viscosity << ' ' ; //2
-	fout_rheo << N1*unit_of_stress << ' ' ; //3
-	fout_rheo << N2*unit_of_stress << ' ' ; //4
-	fout_rheo << Viscosity_h*unit_of_rel_viscosity << ' ' ; //5
-	fout_rheo << N1_h*unit_of_stress << ' ' ; //6
-	fout_rheo << N2_h*unit_of_stress << ' ' ; //7
-	fout_rheo << Viscosity_c_XF*unit_of_rel_viscosity << ' ' ; //8
-	fout_rheo << N1_c_XF*unit_of_stress << ' ' ; //9
-	fout_rheo << N2_c_XF*unit_of_stress << ' ' ; //10
+	fout_rheo << Viscosity*unit_of_rel_viscosity << ' '; //2
+	fout_rheo << N1*unit_of_stress << ' '; //3
+	fout_rheo << N2*unit_of_stress << ' '; //4
+	fout_rheo << Viscosity_h*unit_of_rel_viscosity << ' '; //5
+	fout_rheo << N1_h*unit_of_stress << ' '; //6
+	fout_rheo << N2_h*unit_of_stress << ' '; //7
+	fout_rheo << Viscosity_c_XF*unit_of_rel_viscosity << ' '; //8
+	fout_rheo << N1_c_XF*unit_of_stress << ' '; //9
+	fout_rheo << N2_c_XF*unit_of_stress << ' '; //10
 	fout_rheo << Viscosity_c_GU*unit_of_rel_viscosity << ' ' ; //11
 	fout_rheo << N1_c_GU*unit_of_stress << ' ' ; //12
 	fout_rheo << N2_c_GU*unit_of_stress << ' ' ; //13

@@ -567,10 +567,7 @@ Interaction::checkBreakupStaticFriction(){
 	 * But, when beta is not huge,
 	 * the difference may be neglegible.
 	 */
-	//	evaluateLubricationForce();
-	//	double f_lub = -dot(lubforce_i, nr_vec);
-	//	double f_static = sys->mu_static*(Fc_normal_norm+f_lub);
-	double f_static = sys->mu_static*(Fc_normal_norm);
+	double f_static = sys->mu_static*Fc_normal_norm;
 	if (Fc_tan.sq_norm() > f_static*f_static){
 		/**
 		 ** switch to dynamic friction
