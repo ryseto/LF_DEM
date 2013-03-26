@@ -26,7 +26,9 @@ System::~System(){
 	DELETE(lubstress);
 	DELETE(bgfstress);
 	DELETE(contactstressXF);
+	DELETE(colloidalstressXF);
 	DELETE(contactstressGU);
+	DELETE(colloidalstressGU);
 	DELETE(brownianstress);
 	DELETE(interaction);
 	DELETE(interaction_list);
@@ -34,6 +36,7 @@ System::~System(){
 	DELETE(v_lub_cont);
 	DELETE(v_hydro);
 	DELETE(v_cont);
+	DELETE(v_colloidal);
 	if(brownian){
 		DELETE(fb);
 		DELETE(v_Brownian_init);
@@ -61,7 +64,9 @@ System::allocateRessources(){
 	lubstress = new stresslet [_np];
 	bgfstress = new stresslet [_np];
 	contactstressXF = new stresslet [_np];
+	colloidalstressXF = new stresslet [_np];
 	contactstressGU = new stresslet [_np];
+	colloidalstressGU = new stresslet [_np];
 	brownianstress = new stresslet [_np];
 	int maxnum_interactionpair_per_particle = 15;
 	maxnum_interactionpair = maxnum_interactionpair_per_particle*_np;
@@ -73,6 +78,8 @@ System::allocateRessources(){
 	v_lub_cont = new double [linalg_size];
 	v_cont = new double [linalg_size];
 	v_hydro = new double [linalg_size];
+	v_colloidal = new double [linalg_size];
+ 
 	for(int i=0; i<linalg_size; i++){
 		v_lub_cont[i] = 0;
 		v_cont[i] = 0;
@@ -218,10 +225,12 @@ System::timeEvolutionPredictorCorrectorMethod(){
 	 */
 	/* predictore */
 	setContactForceToParticle();
+	setColloidalForceToParticle();
 	updateVelocityLubrication();
 	deltaTimeEvolutionPredictor();
 	/* corrector */
 	setContactForceToParticle();
+	setColloidalForceToParticle();
 	updateVelocityLubrication();
 	deltaTimeEvolutionCorrector();
 }
@@ -538,6 +547,8 @@ System::stressReset(){
 			bgfstress[i].elm[u]=0;
 			contactstressXF[i].elm[u]=0;
 			contactstressGU[i].elm[u]=0;
+			colloidalstressXF[i].elm[u]=0;
+			colloidalstressGU[i].elm[u]=0;
 		}
 	}
 }
@@ -645,7 +656,7 @@ System::setColloidalForceToParticle(){
 
 void
 System::buildContactTerms(){
-	//	calcContactForces();
+	// calcContactForces();
     // add contact force
     for (int i=0; i<_np; i++){
 		int i3 = 3*i;
@@ -653,6 +664,10 @@ System::buildContactTerms(){
 		stokes_solver.addToRHS(i3+1, contact_force[i].y);
 		stokes_solver.addToRHS(i3+2, contact_force[i].z);
     }
+}
+
+void
+System::buildColloidalForceTerms(){
 	if (colloidalforce){
 		for (int i=0; i<_np; i++){
 			int i3 = 3*i;
@@ -662,6 +677,8 @@ System::buildContactTerms(){
 		}
 	}
 }
+
+
 
 /*
  *
@@ -678,6 +695,7 @@ System::updateVelocityLubrication(){
     buildLubricationTerms();
     stokes_solver.complete_RFU();
     buildContactTerms();
+	buildColloidalForceTerms();
     stokes_solver.solve(v_lub_cont);
 	//stokes_solver->print_RFU();
 	/* TEST IMPLEMENTATION

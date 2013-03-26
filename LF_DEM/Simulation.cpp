@@ -68,7 +68,7 @@ void
 Simulation::setUnits(){
 	unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
 	unit_of_velocity = sys.shear_rate*unit_of_length;
-	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity;
+	unit_of_force = 6*M_PI*viscosity_solvent*radius_of_particle*unit_of_velocity;
 	sys.cf_amp_dl = sys.cf_amp/unit_of_force;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
 }
@@ -414,7 +414,10 @@ Simulation::evaluateData(){
 	sys.analyzeState();
 	double total_stress[5];
 	for (int u=0; u<5; u++){
-		total_stress[u] = sys.total_hydro_stress[u]+sys.total_contact_stressXF[u];
+		total_stress[u] = sys.total_hydro_stress[u];
+		total_stress[u] += sys.total_contact_stressXF[u];
+		total_stress[u] += sys.total_colloidal_stressXF[u];
+		total_stress[u] += sys.total_colloidal_stressGU[u];
 		// + sys.total_contact_stressGU[u];
 	}
 	if (sys.brownian){
@@ -426,6 +429,9 @@ Simulation::evaluateData(){
 	Viscosity_h = sys.total_hydro_stress[2];
 	Viscosity_c_XF = sys.total_contact_stressXF[2];
 	Viscosity_c_GU = sys.total_contact_stressGU[2];
+	Viscosity_col_XF = sys.total_colloidal_stressXF[2];
+	Viscosity_col_GU = sys.total_colloidal_stressGU[2];
+	
 	/* N1 = tau_xx-tau_zz = tau_xx-(-tau_xx-tau_yy) = 2tau_xx+tau_yy
 	 * N2 = tau_zz-tau_yy = (-tau_xx-tau_yy)-tau_yy = -tau_xx-2tau_yy
 	 */
@@ -498,9 +504,11 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_b*unit_of_viscosity << ' ' ; //14
 	fout_rheo << N1_b*unit_of_stress << ' ' ; //15
 	fout_rheo << N2_b*unit_of_stress << ' ' ; //16
-	fout_rheo << sys.minvalue_gap_nondim << ' '; // 17
-	fout_rheo << sys.average_Fc_normal_norm << ' '; // 18
-	fout_rheo << sys.max_Fc_normal_norm << ' '; // 19
+	fout_rheo << Viscosity_col_GU*unit_of_viscosity << ' '; //17
+	fout_rheo << Viscosity_col_XF*unit_of_viscosity << ' '; //18
+	fout_rheo << sys.minvalue_gap_nondim << ' '; // 19
+	fout_rheo << sys.average_Fc_normal_norm << ' '; // 20
+	fout_rheo << sys.max_Fc_normal_norm << ' '; // 21
 	fout_rheo << endl;
 }
 
@@ -510,7 +518,7 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 		z += sys.lz2();
 		if (z > sys.lz2()){
 			x -= sys.shear_disp;
-			if ( x < - sys.lx2()){
+			if (x < - sys.lx2()){
 				x += sys.lx();
 			}
 			z -=  sys.lz();
@@ -628,7 +636,7 @@ Simulation::outputConfigurationData(){
 		fout_particle << endl;
 	}
 	int cnt_interaction = 0;
-	for (int k=0; k < sys.num_interaction; k++){
+	for (int k=0; k<sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			cnt_interaction++;
 		}
@@ -636,15 +644,16 @@ Simulation::outputConfigurationData(){
 	fout_interaction << "#" << sp << sys.strain() << sp ;
 	fout_interaction << cnt_interaction << " avg_contact_time: " << sys.average_contact_time;
 	fout_interaction << " avg_nearing_time: " << sys.average_nearing_time << endl;
-	for (int k=0; k < sys.num_interaction; k++){
+	for (int k=0; k<sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].par_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
-			fout_interaction << sys.shear_rate*sys.interaction[k].normal_force() << sp; // 5
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().x << sp; // 6
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().y << sp; // 6
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().z << sp; // 6
+			fout_interaction << sys.interaction[k].normal_force() << sp; // 5
+			fout_interaction << sys.interaction[k].tangential_force().x << sp; // 6
+			fout_interaction << sys.interaction[k].tangential_force().y << sp; // 7
+			fout_interaction << sys.interaction[k].tangential_force().z << sp; // 8
+			fout_interaction << sys.interaction[k].colloidal_force() << sp; //
 			fout_interaction << sys.interaction[k].nr_vec.x << sp;
 			fout_interaction << sys.interaction[k].nr_vec.y << sp;
 			fout_interaction << sys.interaction[k].nr_vec.z << sp;

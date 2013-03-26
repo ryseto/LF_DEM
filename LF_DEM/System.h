@@ -64,12 +64,16 @@ private:
 	void buildLubricationTerms(bool rhs=true);
 	void buildLubricationRHS();
 	void buildContactTerms();
+	void buildColloidalForceTerms();
+
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
+
+
 	inline void increment_time(double _dt){
 		_time += _dt;
 	}
@@ -77,6 +81,7 @@ protected:
 public:
 	double *v_hydro;
 	double *v_cont;
+	double *v_colloidal;
 	double *v_lub_cont;
 	double *v_lub_cont_mid;
 	double *v_Brownian_init;
@@ -103,15 +108,19 @@ public:
 	stresslet* lubstress; // G U + M E
 	stresslet* bgfstress;
 	stresslet* contactstressXF;
+	stresslet* colloidalstressXF;
 	stresslet* contactstressGU;
+	stresslet* colloidalstressGU;
 	stresslet* brownianstress;
 	int brownianstress_calc_nb;
 	double total_hydro_stress[5];
 	double total_contact_stressXF[5];
 	double total_contact_stressGU[5];
+	double total_colloidal_stressXF[5];
+	double total_colloidal_stressGU[5];
 	double total_brownian_stress[5];
-//	double total_hydro_stress2[5];
-//	double total_contact_stress2[5];
+	
+	
 	double kn;
 	double kt;
 	double lub_max;

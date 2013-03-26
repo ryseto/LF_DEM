@@ -42,7 +42,7 @@ private:
 	vec3d contact_force_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
 	stresslet contactstressletXF;
-	stresslet contactstresslet2;
+	stresslet colloidalstressletXF;
 	
 	//===== observables  ========================== //
 	
@@ -72,12 +72,15 @@ private:
 
 	//===== forces and stresses computations =====//
 	double Fc_normal_norm; // normal contact force
+	double colloidal_force_norm;
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d Tc_0; // contact torque on p0
 	vec3d Tc_1; // contact torque on p1
 	void calcContactInteraction();
 	void calcContactStressTermXF();
+	void calcColloidalStressTermXF();
+
 
 protected:
 public:
@@ -107,6 +110,7 @@ public:
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
+	double ro_2; // = ro/2
 
 	//======= relative position/velocity  ========//
 	vec3d nr_vec; // vector center to center
@@ -128,14 +132,17 @@ public:
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
-	double normal_force(){return Fc_normal_norm;};
-	vec3d tangential_force(){return Fc_tan;};
+	double normal_force(){return Fc_normal_norm;}
+	double colloidal_force(){return colloidal_force_norm;}
+	vec3d tangential_force(){return Fc_tan;}
 	void evaluateLubricationForce();
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}
 	//	void addLubricationStress();
 	void addHydroStress();
 	void addContactStress();
+	void addColloidalStress();
+
 	//	void addContactStress2();
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   stresslet &stresslet_i, stresslet &stresslet_j);

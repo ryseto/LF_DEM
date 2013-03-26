@@ -48,6 +48,9 @@ private:
 	double Viscosity_c_GU;
 	double N1_c_GU;
 	double N2_c_GU;
+	double Viscosity_col_XF;
+	double Viscosity_col_GU;
+	
 	double Viscosity_b;
 	double N1_b;
 	double N2_b;
