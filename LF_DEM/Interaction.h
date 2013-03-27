@@ -37,11 +37,7 @@ private:
 	//===== forces and stresses ==================== //
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
-	vec3d contact_force_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
-	stresslet contactstressletXF;
-	stresslet colloidalstressletXF;
-	
 	//===== observables  ========================== //
 	
 	double init_nearing_time;
@@ -70,14 +66,17 @@ private:
 
 	//===== forces and stresses computations =====//
 	double Fc_normal_norm; // normal contact force
-	double colloidal_force_norm;
+	double F_colloidal_norm                                                                                                                                                   ;
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d Tc_0; // contact torque on p0
 	vec3d Tc_1; // contact torque on p1
+	vec3d F_colloidal;
 	void calcContactInteraction();
-	void calcContactStressTermXF();
-	void calcColloidalStressTermXF();
+	void calcStressTermXF(stresslet &stresslet_,
+						  const vec3d &force);
+//	void calcContactStressTermXF();
+//	void calcColloidalStressTermXF();
 
 protected:
 public:
@@ -130,8 +129,9 @@ public:
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
 	double normal_force(){return Fc_normal_norm;}
-	double colloidal_force(){return colloidal_force_norm;}
+	double colloidal_force(){return F_colloidal_norm;}
 	vec3d tangential_force(){return Fc_tan;}
+	double disp_tan_norm(){return disp_tan.norm();}
 	void evaluateLubricationForce();
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}

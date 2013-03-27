@@ -13,7 +13,7 @@ Interaction::init(System *sys_){
 	contact = false;
 	active = false;
 	Fc_normal_norm = 0;
-	colloidal_force_norm = 0;
+	F_colloidal_norm = 0;
 	nearing_gapnd_cutoff = 0.01;
 }
 
@@ -79,17 +79,15 @@ Interaction::addUpContactForceTorque(){
 }
 
 /*
- *
+ * Colloidal stabilizing force
  *
  *
  */
 void
 Interaction::addUpColloidalForce(){
 	if (contact == false){
-		colloidal_force_norm = -sys->cf_amp_dl*ro_2*exp(-(_r-ro)/sys->cf_range_dl);
-		vec3d colloidal_force = colloidal_force_norm*nr_vec;
-		sys->colloidal_force[par_num[0]] += colloidal_force;
-		sys->colloidal_force[par_num[1]] -= colloidal_force;
+		sys->colloidal_force[par_num[0]] += F_colloidal;
+		sys->colloidal_force[par_num[1]] -= F_colloidal;
 	}
 }
 
@@ -295,8 +293,6 @@ Interaction::addHydroStress(){
 	}
 }
 
-
-
 /* Lubriction force between two particles is calculated. 
  * Note that only the Brownian component of the velocity is NOT included here.
  * This part is used for ouput data.
@@ -327,54 +323,30 @@ Interaction::valLubForce(){
 }
 
 // term nr_vec*F
+/* [Note]:
+ * Unit vector (nr_vec) is used.
+ * The radius factors are added in addContactStress().
+ */
 void
-Interaction::calcContactStressTermXF(){
-	if (contact){
-		vec3d force = Fc_normal+Fc_tan;
-		contactstressletXF.elm[0] = force.x*nr_vec.x; //xx
-		contactstressletXF.elm[1] = 0.5*(force.x*nr_vec.y+force.y*nr_vec.x); //xy
-		contactstressletXF.elm[2] = 0.5*(force.x*nr_vec.z+force.z*nr_vec.x); //yy
-		contactstressletXF.elm[3] = 0.5*(force.y*nr_vec.z+force.z*nr_vec.y); //xz
-		contactstressletXF.elm[4] = force.y*nr_vec.y;
-	}else{
-		for (int k=0; k<5; k++){
-			contactstressletXF.elm[k] = 0;
-		}
-	}
-}
-
-// term nr_vec*F
-void
-Interaction::calcColloidalStressTermXF(){
-	if (contact == false){
-		vec3d force = colloidal_force_norm*nr_vec;
-		colloidalstressletXF.elm[0] = force.x*nr_vec.x; //xx
-		colloidalstressletXF.elm[1] = 0.5*(force.x*nr_vec.y+force.y*nr_vec.x); //xy
-		colloidalstressletXF.elm[2] = 0.5*(force.x*nr_vec.z+force.z*nr_vec.x); //yy
-		colloidalstressletXF.elm[3] = 0.5*(force.y*nr_vec.z+force.z*nr_vec.y); //xz
-		colloidalstressletXF.elm[4] = force.y*nr_vec.y;
-	}else{
-		for (int k=0; k<5; k++){
-			colloidalstressletXF.elm[k] = 0;
-		}
-	}
+Interaction::calcStressTermXF(stresslet &stresslet_, const vec3d &force){
+	stresslet_.elm[0] = force.x*nr_vec.x; //xx
+	stresslet_.elm[1] = 0.5*(force.x*nr_vec.y+force.y*nr_vec.x); //xy
+	stresslet_.elm[2] = 0.5*(force.x*nr_vec.z+force.z*nr_vec.x); //xz
+	stresslet_.elm[3] = 0.5*(force.y*nr_vec.z+force.z*nr_vec.y); //yz
+	stresslet_.elm[4] = force.y*nr_vec.y; // yy
 }
 
 void
 Interaction::addContactStress(){
-	int i3 = 3*par_num[0];
-	int j3 = 3*par_num[1];
 	if (contact){
-		calcContactStressTermXF();
+		int i3 = 3*par_num[0];
+		int j3 = 3*par_num[1];
+		stresslet contactstressletXF;
+		calcStressTermXF(contactstressletXF, Fc_normal+Fc_tan);
 		for (int u=0; u<5; u++){
 			sys->contactstressXF[par_num[0]].elm[u] += a0*contactstressletXF.elm[u];
 			sys->contactstressXF[par_num[1]].elm[u] += a1*contactstressletXF.elm[u];
 		}
-		/* I think:
-		 * In hard sphere model,
-		 * the following stress contribution has no physical meaning.
-		 * We should not add this term for the total viscosity.
-		 */
 		// Add term G*V_cont
 		stresslet stresslet_GU_i;
 		stresslet stresslet_GU_j;
@@ -390,10 +362,11 @@ Interaction::addContactStress(){
 
 void
 Interaction::addColloidalStress(){
-	int i3 = 3*par_num[0];
-	int j3 = 3*par_num[1];
 	if (!contact){
-		calcColloidalStressTermXF();
+		int i3 = 3*par_num[0];
+		int j3 = 3*par_num[1];
+		stresslet colloidalstressletXF;
+		calcStressTermXF(colloidalstressletXF, F_colloidal);
 		for (int u=0; u<5; u++){
 			sys->colloidalstressXF[par_num[0]].elm[u] += a0*colloidalstressletXF.elm[u];
 			sys->colloidalstressXF[par_num[1]].elm[u] += a1*colloidalstressletXF.elm[u];
@@ -479,7 +452,7 @@ Interaction::activate_contact(){
 	contact = true;
 	disp_tan.reset();
 	init_contact_time = sys->time();
-	colloidal_force_norm = 0;
+	F_colloidal_norm = 0;
 }
 
 void
@@ -547,6 +520,11 @@ Interaction::updateStatesForceTorque(){
 			calcContactInteraction();
 			if (!sys->in_predictor){
 				checkBreakupStaticFriction();
+			}
+		}else{
+			if (sys->colloidalforce){
+				F_colloidal_norm = -sys->cf_amp_dl*ro_2*exp(-(_r-ro)/sys->cf_range_dl);
+				F_colloidal = F_colloidal_norm*nr_vec;
 			}
 		}
 		// compute new contact forces if needed

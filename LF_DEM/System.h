@@ -104,7 +104,6 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-	
 	stresslet* lubstress; // G U + M E
 	stresslet* bgfstress;
 	stresslet* contactstressXF;
@@ -119,14 +118,11 @@ public:
 	double total_colloidal_stressXF[5];
 	double total_colloidal_stressGU[5];
 	double total_brownian_stress[5];
-	
-	
 	double kn;
 	double kt;
 	double lub_max;
 	double lub_coeff_contact;
 	double mu_static; // static friction coefficient.
-//	bool lubrication;
 	bool friction;
 	bool colloidalforce;
 	bool brownian;
@@ -164,6 +160,7 @@ public:
 	double dt_mid;
 	double dt_ratio;
 	double minvalue_gap_nondim;
+	double max_disp_tan;
 	double ave_overlap;
 	double average_contact_time;
 	int contact_nb;
@@ -206,16 +203,16 @@ public:
 	
 	/*************************************************************/
 	inline void lx(double length){
-		_lx=length;
-		_lx2=0.5*_lx;
+		_lx = length;
+		_lx2 = 0.5*_lx;
 	}
 	inline void ly(double length){
-		_ly=length;
-		_ly2=0.5*_ly;
+		_ly = length;
+		_ly2 = 0.5*_ly;
 	}
 	inline void lz(double length){
-		_lz=length;
-		_lz2=0.5*_lz;
+		_lz = length;
+		_lz2 = 0.5*_lz;
 	}
 	inline void setRadiusMax(double _radius_max){
 		radius_max = _radius_max;
@@ -243,7 +240,7 @@ public:
 	}
 	inline void np(int val){
 		_np = val;
-		np3=3*_np;
+		np3 = 3*_np;
 	}
 	inline int np(){
 		return _np;

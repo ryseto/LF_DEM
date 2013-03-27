@@ -545,12 +545,12 @@ void
 System::stressReset(){
 	for (int i=0; i<_np; i++){
 		for (int u=0; u < 5; u++){
-			lubstress[i].elm[u]=0;
-			bgfstress[i].elm[u]=0;
-			contactstressXF[i].elm[u]=0;
-			contactstressGU[i].elm[u]=0;
-			colloidalstressXF[i].elm[u]=0;
-			colloidalstressGU[i].elm[u]=0;
+			lubstress[i].elm[u] = 0;
+			bgfstress[i].elm[u] = 0;
+			contactstressXF[i].elm[u] = 0;
+			contactstressGU[i].elm[u] = 0;
+			colloidalstressXF[i].elm[u] = 0;
+			colloidalstressGU[i].elm[u] = 0;
 		}
 	}
 }
@@ -559,7 +559,7 @@ void
 System::stressBrownianReset(){
 	for (int i=0; i<_np; i++){
 		for (int u=0; u<5; u++){
-			brownianstress[i].elm[u]=0;
+			brownianstress[i].elm[u] = 0;
 		}
 	}
 	brownianstress_calc_nb = 0;
@@ -617,12 +617,11 @@ System::buildLubricationRHS(){
     set<Interaction*>::iterator it;
     int j;
     Interaction *inter;
-	//  i < _np - 1 is fine??
     for (int i=0; i<_np-1; i ++){
-		for (it = interaction_list[i].begin() ; it != interaction_list[i].end(); it ++){
+		for (it = interaction_list[i].begin(); it != interaction_list[i].end(); it ++){
 			inter=*it;
-			j=inter->partner(i);
-			if(j>i){
+			j = inter->partner(i);
+			if(j > i){
 				inter->GE(GEi, GEj);  // G*E_\infty term
 				for(int u=0; u<3; u++){
 					stokes_solver.addToRHS(3*i+u, GEi[u]);
@@ -853,6 +852,7 @@ System::sq_distance(int i, int j){
 void
 System::analyzeState(){
 	minvalue_gap_nondim = lz();
+	max_disp_tan = 0;
 	average_nearing_time = 0;
 	average_contact_time = 0;
 	contact_nb = 0;
@@ -880,6 +880,10 @@ System::analyzeState(){
 				if (interaction[k].normal_force() > max_Fc_normal_norm){
 					max_Fc_normal_norm = interaction[k].normal_force();
 				}
+				if (interaction[k].disp_tan_norm() > max_disp_tan){
+					max_disp_tan = interaction[k].disp_tan_norm();
+				}
+
 			}
 		}
 	}

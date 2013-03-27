@@ -466,8 +466,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#17: Viscosity(xF_colloidal)" << endl;
 		fout_rheo << "#18: Viscosity(GU_colloidal)" << endl;
 		fout_rheo << "#19: min gap (non-dim)" << endl;
-		fout_rheo << "#20: Average normal contact force" << endl;
-		fout_rheo << "#21: max Fc_normal_norm" << endl;
+		fout_rheo << "#20: max tangential displacement" << endl;
+		fout_rheo << "#21: Average normal contact force" << endl;
+		fout_rheo << "#22: max Fc_normal_norm" << endl;
 	}
 	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
 	double unit_of_rel_viscosity = unit_of_viscosity/viscosity_solvent;
@@ -491,8 +492,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_col_XF*unit_of_rel_viscosity << ' '; //17
 	fout_rheo << Viscosity_col_GU*unit_of_rel_viscosity << ' '; //18
 	fout_rheo << sys.minvalue_gap_nondim << ' '; // 19
-	fout_rheo << sys.average_Fc_normal_norm << ' '; // 20
-	fout_rheo << sys.max_Fc_normal_norm << ' '; // 21
+	fout_rheo << sys.max_disp_tan << ' '; // 20
+	fout_rheo << sys.average_Fc_normal_norm << ' '; // 21
+	fout_rheo << sys.max_Fc_normal_norm << ' '; // 22
 	fout_rheo << endl;
 }
 
