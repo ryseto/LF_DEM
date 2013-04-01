@@ -109,11 +109,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = $radius[0];
+	$r = 0.2*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = $radius[$i];
+			$r = 0.2*$radius[$i];
 			printf OUT "r $r\n";
 		}
 		if ($y_section == 0 ||
@@ -130,7 +130,7 @@ sub OutYaplotData{
 			$force += - $F_lub[$k];
 		}
 		if ( $Gap[$k] < 0 ){
-			$string_width = 0.2;
+			$string_width = 0.1;
 			&OutString_width($int0[$k],  $int1[$k]);
 		}
     }
@@ -141,7 +141,7 @@ sub OutYaplotData{
 		#$force = $Fcol[$k];
 		#$force = $Fc_n[$k];
 		$force = $F_lub[$k];
-        if ($force < 0){
+        if ($force < -50){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
@@ -150,7 +150,7 @@ sub OutYaplotData{
    for ($k = 0; $k < $num_interaction; $k ++){
 	   $force = $F_lub[$k]+ $Fc_n[$k] + $Fcol[$k];
 	   
-	   if ($force > 0){
+	   if ($force > 50){
            $string_width = ${force_factor}*${force};
 		   &OutString_width($int0[$k], $int1[$k]);
 	   }

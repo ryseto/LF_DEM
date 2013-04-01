@@ -12,18 +12,18 @@ Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
-	Fc_normal_norm = 0;
-	F_colloidal_norm = 0;
-	nearing_gapnd_cutoff = 0.01;
+	if (sys->integration_method == 0){
+		sys->in_predictor = true;
+	}
 }
 
-void 
+void
 Interaction::r(double new_r){
 	_r = new_r;
 	_gap_nondim = 2*_r/ro-2;
-	if(_gap_nondim > 0){
+	if (_gap_nondim > 0) {
 		lub_coeff = 1/(_gap_nondim+sys->lub_reduce_parameter);
-	}else{
+	} else {
 		lub_coeff = sys->lub_coeff_contact;
 	}
 }
@@ -58,17 +58,21 @@ Interaction::calcContactInteraction(){
 	//Fc_normal_norm = exp(kn*(ro-_r))-1;
 	Fc_normal_norm = sys->kn*(ro-_r);
 	Fc_normal = -Fc_normal_norm*nr_vec;
-	if (sys->friction){
+	if (sys->friction) {
 		Fc_tan = sys->kt*disp_tan;
+	}
+	
+	if (Fc_normal_norm > max_Fnc){
+		max_Fnc = Fc_normal_norm;
 	}
 }
 
 void
 Interaction::addUpContactForceTorque(){
-	if (contact){
+	if (contact) {
 		sys->contact_force[par_num[0]] += Fc_normal;
 		sys->contact_force[par_num[1]] -= Fc_normal;
-		if(sys->friction){
+		if (sys->friction) {
 			sys->contact_force[par_num[0]] += Fc_tan;
 			sys->contact_force[par_num[1]] -= Fc_tan;
 			vec3d t_ij = cross(nr_vec, Fc_tan);
@@ -85,7 +89,7 @@ Interaction::addUpContactForceTorque(){
  */
 void
 Interaction::addUpColloidalForce(){
-	if (contact == false){
+	if (contact == false) {
 		sys->colloidal_force[par_num[0]] += F_colloidal;
 		sys->colloidal_force[par_num[1]] -= F_colloidal;
 	}
@@ -100,38 +104,28 @@ Interaction::addUpColloidalForce(){
 void
 Interaction::calcContactVelocity(){
 	// relative velocity particle 1 from particle 0.
+	/*
+	 * v1' = v1 - Lz = v1 - zshift*lz;
+	 */
+	/**** NOTE ********************************************
+	 * In the Corrector, this contact_velocity
+	 * is also the correcting velocity.
+	 * This correcting velocity should not involve the
+	 * velocity diffrence due to crossing the z boundary.
+	 * fix_interaction_status = true : in the Predictor
+	 * fix_interaction_status = false : in the Corrector
+	 *
+	 * if p1 is upper, zshift = -1.
+	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
+	 *
+	 ******************************************************/
 	contact_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
-	if (zshift != 0){
-		/*
-		 * v1' = v1 - Lz = v1 - zshift*lz;
-		 */
-		/**** NOTE ********************************************
-		 * In the Corrector, this contact_velocity
-		 * is also the correcting velocity.
-		 * This correcting velocity should not involve the
-		 * velocity diffrence due to crossing the z boundary.
-		 * fix_interaction_status = true : in the Predictor
-		 * fix_interaction_status = false : in the Corrector
-		 *
-		 * if p1 is upper, zshift = -1.
-		 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
-		 *
-		 ******************************************************/
-		if (sys->integration_method == 0){
-			/* In the Euler Method
-			 */
-			contact_velocity.x += zshift*sys->vel_difference;
-		}else{
-			/* In the Predictor-Corrector Method
-			 */
-			if (sys->in_predictor){
-				contact_velocity.x += zshift*sys->vel_difference;
-			}
-		}
+	if (zshift != 0 &&
+		sys->in_predictor) {
+		contact_velocity.x += zshift*sys->vel_difference;
 	}
 	contact_velocity -= \
-	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], \
-		  nr_vec);
+	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
 }
 
 void
@@ -386,9 +380,9 @@ Interaction::addColloidalStress(){
 
 int
 Interaction::partner(int i){
-	if(i == par_num[0]){
+	if (i == par_num[0]) {
 		return par_num[1];
-	}else{
+	} else {
 		return par_num[0];
 	}
 }
@@ -401,6 +395,11 @@ Interaction::activate(int i, int j,
 					  const vec3d &pos_diff,
 					  double distance, int _zshift){
 	active = true;
+	if (sys->strain() < 0.01) {
+		initially_existing = true;
+	} else {
+		initially_existing = false;
+	}
 	Fc_normal_norm = 0;
 	Fc_normal.reset();
 	Fc_tan.reset();
@@ -408,10 +407,10 @@ Interaction::activate(int i, int j,
 	r(distance);
 	nr_vec = r_vec/r();
 	zshift = _zshift;
-	if(j > i){
+	if (j > i) {
 		par_num[0] = i;
 		par_num[1] = j;
-	}else{
+	} else {
 		par_num[0] = j;
 		par_num[1] = i;
 	}		
@@ -425,20 +424,28 @@ Interaction::activate(int i, int j,
 	a1 = sys->radius[par_num[1]];
 	ro = a0+a1;
 	ro_2 = ro/2;
-	if (distance > ro){
+	if (distance > ro) {
 		contact = false;
-	}else{
+	} else {
 		contact = true;
 	}
+	
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	r_lub_max = 0.5*ro*sys->lub_max;
+	Fc_normal_norm = 0;
+	F_colloidal_norm = 0;
+	min_gap = 0;
 	return;
 }
 
 void
 Interaction::deactivate(){
 	// r > lub_max
+#ifdef RECORD_HISTORY
+	gap_history.clear();
+	disp_tan_sq_history.clear();
+#endif
 	active = false;
 	sys->interaction_list[par_num[0]].erase(this);
 	sys->interaction_list[par_num[1]].erase(this);
@@ -451,89 +458,110 @@ Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
 	disp_tan.reset();
-	init_contact_time = sys->time();
 	F_colloidal_norm = 0;
+	cnt_sliding_reset = 0;
 }
 
 void
 Interaction::deactivate_contact(){
 	// r > a0 + a1
+	max_Fnc = 0;
+	cnt_sliding_reset = 0;
 	contact = false;
 	disp_tan.reset();
+	min_gap = 0;
 	Fc_normal_norm = 0;
 	Fc_normal.reset();
 	Fc_tan.reset();
+	
+#ifdef RECORD_HISTORY
+	cerr << "cnt_sliding_reset =" << cnt_sliding_reset << ' ' << min_gap << ' ' << max_Fnc << endl;
+	if (initially_existing == false
+		&& sys->strain() > 5){
+		for (int i=0; i<disp_tan_sq_history.size(); i += 1){
+			cout << overlap_history[i] << ' ' << sqrt(disp_tan_sq_history[i]) << endl;
+		}
+		cout << endl;
+		sys->cnt_monitored_data ++;
+		if (sys->cnt_monitored_data > 100){
+			exit(1);
+		}
+	}
+	disp_tan_sq_history.clear();
+	overlap_history.clear();
+#endif
 }
 
+
+
 /* 
- * updateState 
- * return value is true, this interaction will be broken up.
  */
 bool
-Interaction::updateState(){
-	if(r() > r_lub_max){
+Interaction::checkDeactivation(){
+	if (r() > r_lub_max) {
 		deactivate();
 		return true; // breakup
-	}else{
-		if (contact){
-			if (r() > ro){
+	} else {
+		if (contact) {
+			if (r() > ro) {
 				deactivate_contact();
 			}
-		}else{
+		} else {
 			// contact false:
-			if (r() <= ro){
+			if (r() <= ro) {
 				activate_contact();
 			}
-		}
-		// nearing observable
-		if(!nearing_on
-		   && gap_nondim()<nearing_gapnd_cutoff){
-			nearing_on = true;
-			init_nearing_time = sys->time();
-		}
-		if(nearing_on
-		   && gap_nondim()>nearing_gapnd_cutoff){
-			nearing_on = false;
 		}
 	}
 	return false;
 }
 
 /*
- * update()
- *  return `true' if r > r_lub_max 
- *   ---> deactivate
+ *
  */
-bool
-Interaction::updateStatesForceTorque(){
-	if (active){
-		// update tangential displacement: we do it before updating nr_vec
-		// as it should be along the tangential vector defined in the previous time step
-		if (contact){
-			calcContactVelocity();
-			incrementContactTangentialDisplacement();
-		}
+void
+Interaction::updateState(bool &deactivated){
+	if (active) {
+		/* update tangential displacement: we do it before updating nr_vec
+		 * as it should be along the tangential vector defined in the previous time step
+		 *
+		 * ---> changed.
+		 * The direction of forces should be consistent with the positions.
+		 * So, the normal vectors are updated before incrementing the tangential displacement.
+		 *
+		 */
 		// compute new r_vec and distance
 		// z_shift is updated
 		calcDistanceNormalVector();
-		if (contact){
+		if (contact) {
+			calcContactVelocity();
+			incrementContactTangentialDisplacement();
 			calcContactInteraction();
-			if (!sys->in_predictor){
+			if (!sys->in_predictor) {
 				checkBreakupStaticFriction();
 			}
-		}else{
-			if (sys->colloidalforce){
+		} else {
+			if (sys->colloidalforce) {
 				F_colloidal_norm = -sys->cf_amp_dl*ro_2*exp(-(_r-ro)/sys->cf_range_dl);
 				F_colloidal = F_colloidal_norm*nr_vec;
 			}
 		}
 		// compute new contact forces if needed
 		// check new state of the interaction
-		if (!sys->in_predictor){
-			return updateState();
+		if (!sys->in_predictor) {
+			if (checkDeactivation()) {
+				deactivated = true;
+			}
 		}
+#ifdef RECORD_HISTORY
+		gap_history.push_back(_gap_nondim);
+		if (contact) {
+			disp_tan_sq_history.push_back(disp_tan.sq_norm());
+			overlap_history.push_back(_gap_nondim);
+		}
+#endif
 	}
-	return false;
+	return;
 }
 
 void
@@ -546,28 +574,33 @@ Interaction::checkBreakupStaticFriction(){
 	 * the difference may be neglegible.
 	 */
 	double f_static = sys->mu_static*Fc_normal_norm;
-	if (Fc_tan.sq_norm() > f_static*f_static){
+	if (Fc_tan.sq_norm() > f_static*f_static) {
 		/**
 		 ** switch to dynamic friction
 		 **
 		 ** A simple imprementation is used temporary.
 		 */
 		disp_tan.reset();
+		cnt_sliding_reset ++;
 	}
 }
 
-double 
-Interaction::nearing_time(){
-	double time = 0;
-	if(nearing_on)
-		time = sys->time()-init_nearing_time;
-	return time;
-}
+/* Strain interval 
+ *
+ */
+//Interaction::nearing_time(){
+//	double time = 0;
+////	if (nearing_on) {
+////		time = sys->time()-init_nearing_time;
+////	}
+//	return time;
+//}
 
-double
-Interaction::contact_time(){
-	double time = 0;
-	if(contact)
-		time = sys->time()-init_contact_time;
-	return time;
-}
+//double
+//Interaction::contact_time(){
+//	double time = 0;
+//	if (contact) {
+//		time = sys->time()-init_contact_time;
+//	}
+//	return time;
+//}

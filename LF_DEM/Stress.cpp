@@ -102,20 +102,19 @@ void System::calcStressesHydroContactBrownian(){
 
 	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
 
-    for (int k = 0; k < num_interaction; k++){
-		if(interaction[k].active){
+    for (int k = 0; k < num_interaction; k++) {
+		if (interaction[k].active) {
 			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_init, stresslet_j_init);
-
 			int i = interaction[k].par_num[0];
 			int j = interaction[k].par_num[1];
-			for (int u=0; u < 5; u++){
+			for (int u=0; u < 5; u++) {
 				step_stresslet[i].elm[u] -= 0.5*stresslet_i_init.elm[u];
 				step_stresslet[j].elm[u] -= 0.5*stresslet_j_init.elm[u];
 			}
 		}
     }
     // move particles to intermediate point
-    for (int i=0; i < _np; i++){
+    for (int i=0; i < _np; i++) {
 		int i3 = 3*i;
 		vec3d dr(v_Brownian_init[i3]*dt, v_Brownian_init[i3+1]*dt, v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
