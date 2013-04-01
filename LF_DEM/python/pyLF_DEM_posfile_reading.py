@@ -26,6 +26,9 @@ class Pos_Stream:
     def reset_members(self):
         self.positions=dict()
         self.radius=dict()
+        self.GUh_stress=dict()
+        self.GUc_stress=dict()
+        self.xFc_stress=dict()
         self.old_positions=dict()
         self.last_read_time_label=[]
         self.time_labels=[]
@@ -74,7 +77,9 @@ class Pos_Stream:
 #                self.positions[i]=[float(values[j])+0.5*self.cell_size for j in range(1,4)]
                 self.positions[i]=[float(values[j]) for j in range(2,5)]
                 self.radius[i]=float(values[1])
-
+                self.GUh_stress[i]=float(values[11])
+                self.xFc_stress[i]=float(values[12])
+                self.GUc_stress[i]=float(values[13])
         return switch
             
 # end of convert_input(input_line)
