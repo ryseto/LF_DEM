@@ -88,7 +88,6 @@ origin_zero_flow = true;
  */
 out_data_particle = true;
 out_data_interaction = true;
-
 /*
  * Visualize rotations by crosses.
  * (for yaplot data)

@@ -627,7 +627,7 @@ Simulation::outputConfigurationData(){
 		fout_particle << c_xzstressGU << sp; //14: xz stress contributions
 		fout_particle << b_xzstress << sp; //15: xz stress contributions
 		if (sys.dimension == 2){
-			fout_particle << sys.angle[i] << sp;
+			fout_particle << sys.angle[i] << sp; // 16
 		}
 		fout_particle << endl;
 	}
@@ -645,17 +645,16 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].par_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3
-			fout_interaction << sys.interaction[k].normal_force() << sp; // 5
-			fout_interaction << sys.interaction[k].tangential_force().x << sp; // 6
-			fout_interaction << sys.interaction[k].tangential_force().y << sp; // 7
-			fout_interaction << sys.interaction[k].tangential_force().z << sp; // 8
-			fout_interaction << sys.interaction[k].colloidal_force() << sp; //
-			fout_interaction << sys.interaction[k].nr_vec.x << sp;
-			fout_interaction << sys.interaction[k].nr_vec.y << sp;
-			fout_interaction << sys.interaction[k].nr_vec.z << sp;
-			fout_interaction << sys.interaction[k].gap_nondim() << sp; //7
-			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; //
-			fout_interaction << sys.interaction[k].contact << sp; //8
+			fout_interaction << sys.shear_rate*sys.interaction[k].normal_force() << sp; // 4
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().x << sp; // 5
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().y << sp; // 6
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().z << sp; // 7
+			fout_interaction << sys.interaction[k].nr_vec.x << sp; // 8 
+			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 9
+			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 10
+			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 11
+			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 12
+			fout_interaction << sys.interaction[k].contact << sp; // 13
 			fout_interaction << endl;
 		}
 	}
