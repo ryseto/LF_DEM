@@ -319,7 +319,7 @@ StokesSolver::addToRHS(int i, double val){
 	}
 #ifdef TRILINOS
 	if(iterative()){
-		tril_rhs->SumIntoGlobalValue( i, 0, val);
+		tril_rhs->SumIntoGlobalValue(i, 0, val);
 	}
 #endif
 }
@@ -327,15 +327,15 @@ StokesSolver::addToRHS(int i, double val){
 void
 StokesSolver::addToRHS(double *rhs){
 	if(direct()){
-		for (int i = 0; i < linalg_size; i++){
+		for (int i=0; i<linalg_size; i++){
 			((double*)chol_rhs->x)[i] += rhs[i];
 		}
 	}
 	
 #ifdef TRILINOS
 	if(iterative()){
-		for (int i = 0; i < linalg_size; i++){
-			tril_rhs->SumIntoGlobalValue( i, 0, rhs[i]);
+		for (int i=0; i<linalg_size; i++){
+			tril_rhs->SumIntoGlobalValue(i, 0, rhs[i]);
 		}
 	}
 #endif
@@ -344,7 +344,7 @@ StokesSolver::addToRHS(double *rhs){
 void
 StokesSolver::setRHS(double* rhs){
 	if(direct()){
-		for (int i = 0; i < linalg_size; i++){
+		for (int i=0; i<linalg_size; i++){
 			((double*)chol_rhs->x)[i] = rhs[i];
 		}
 	}
@@ -357,7 +357,7 @@ StokesSolver::setRHS(double* rhs){
 void
 StokesSolver::getRHS(double* rhs){
 	if(direct()){
-		for (int i = 0; i < linalg_size; i++){
+		for (int i=0; i<linalg_size; i++){
 			rhs[i] = ((double*)chol_rhs->x)[i];
 		}
 	}
@@ -373,7 +373,7 @@ StokesSolver::solve_CholTrans(double* velocity){
 	if(direct()){
 		chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 		chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
-		for (int i = 0; i < linalg_size; i++){
+		for (int i=0; i<linalg_size; i++){
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
@@ -391,7 +391,7 @@ void
 StokesSolver::solve(double* velocity){
 	if(direct()){
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
-		for (int i = 0; i < linalg_size; i++){
+		for (int i=0; i<linalg_size; i++){
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
@@ -426,7 +426,7 @@ StokesSolver::convertDirectToIterative(){
 	chol_L_to_be_freed = true;
 	// convert RHS
 	for(int i=0; i<linalg_size;i++){
-		tril_rhs->ReplaceGlobalValue( i, 0, ((double*)chol_rhs->x)[i]);
+		tril_rhs->ReplaceGlobalValue(i, 0, ((double*)chol_rhs->x)[i]);
 	}
 	setSolverType("iterative");
 #else
@@ -467,25 +467,25 @@ StokesSolver::allocateRessources(){
     int numlhs = 1;
     int numrhs = 1;
     Map = rcp(new Epetra_Map(linalg_size, 0, Comm));
-    tril_solution = rcp( new Epetra_Vector(*Map, numlhs) );
-    tril_rhs = rcp( new Epetra_Vector(*Map, numrhs) );
+    tril_solution = rcp(new Epetra_Vector(*Map, numlhs));
+    tril_rhs = rcp(new Epetra_Vector(*Map, numrhs));
     //	tril_rfu_matrix = rcp( new MAT(linalg_size) );
     columns = new int* [linalg_size];
-    for (int i=0; i < linalg_size; i++){
+    for (int i=0; i<linalg_size; i++){
 		columns[i] = new int [columns_max_nb];
-		for(int j=0; j < columns_max_nb; j++){
+		for(int j=0; j<columns_max_nb; j++){
 			columns[i][j] = -1;
 		}
     }
     values = new double* [linalg_size];
-    for (int i=0; i < linalg_size; i++){
+    for (int i=0; i<linalg_size; i++){
 		values[i] = new double [columns_max_nb];
-		for(int j=0; j < columns_max_nb; j++){
+		for(int j=0; j<columns_max_nb; j++){
 			values[i][j] = 0.;
 		}
     }
     columns_nb = new int [linalg_size];
-    for (int i=0; i < linalg_size; i++){
+    for (int i=0; i<linalg_size; i++){
 		columns_nb[i] = 0;
 	}
 #endif
@@ -495,16 +495,16 @@ StokesSolver::allocateRessources(){
     ploc = new int [np+1];
     chol_rhs = cholmod_allocate_dense(np3, 1, np3, xtype, &chol_c);
 	for(int i=0; i<np3; i++){
-		((double*)chol_rhs->x)[i]=0.;
+		((double*)chol_rhs->x)[i] = 0;
 	}
-    chol_L=NULL;
+    chol_L = NULL;
 }
 
 // only needed for Cholmod
 void
 StokesSolver::allocate_RFU(){
 	// allocate
-	int nzmax;  // non-zero values
+	int nzmax; // non-zero values
 	nzmax = 6*np; // diagonal blocks
 	for(int s=0; s<3; s++){
 		nzmax += off_diag_values[s].size();  // off-diagonal
@@ -584,10 +584,10 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     columns[jj3_2][last_col_nb_jj+1] = ii3_1;
     columns[jj3_2][last_col_nb_jj+2] = ii3_2;
     
-    columns_nb[ii3] += 3;
+    columns_nb[ii3]   += 3;
     columns_nb[ii3_1] += 3;
     columns_nb[ii3_2] += 3;
-    columns_nb[jj3] += 3;
+    columns_nb[jj3]   += 3;
     columns_nb[jj3_1] += 3;
     columns_nb[jj3_2] += 3;
     
@@ -600,7 +600,7 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     values[ii3_1][last_col_nb_ii+2] = alpha_n2n1;      // 12
     values[ii3_2][last_col_nb_ii  ] = alpha_n0n2;      // 20
     values[ii3_2][last_col_nb_ii+1] = alpha_n2n1;      // 21
-    values[ii3_2][last_col_nb_ii+2] = alpha_n2*nvec.z;      // 22
+    values[ii3_2][last_col_nb_ii+2] = alpha_n2*nvec.z; // 22
     
     values[jj3  ][last_col_nb_jj  ] = alpha_n0*nvec.x; // 00
     values[jj3  ][last_col_nb_jj+1] = alpha_n1n0;      // 01
@@ -610,7 +610,7 @@ StokesSolver::appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha){
     values[jj3_1][last_col_nb_jj+2] = alpha_n2n1;      // 12
     values[jj3_2][last_col_nb_jj  ] = alpha_n0n2;      // 20
     values[jj3_2][last_col_nb_jj+1] = alpha_n2n1;      // 21
-    values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z;      // 22
+    values[jj3_2][last_col_nb_jj+2] = alpha_n2*nvec.z; // 22
 }
 
 void
@@ -619,9 +619,9 @@ StokesSolver::factorizeRFU(){
 	// chol_c.final_ll=1;
 	// chol_c.supernodal = CHOLMOD_SIMPLICIAL;
 	//  chol_c.print = 4;
-	chol_L = cholmod_analyze (chol_rfu_matrix, &chol_c);
+	chol_L = cholmod_analyze(chol_rfu_matrix, &chol_c);
 	//  cholmod_print_factor (chol_L, "L", &chol_c);
-	cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
+	cholmod_factorize(chol_rfu_matrix, chol_L, &chol_c);
 	//  cholmod_factorize (chol_rfu_matrix, chol_L, &chol_c);
 	// cholmod_print_factor (chol_L, "L", &chol_c);
 	// cholmod_print_sparse (chol_rfu_matrix, "RFU'", &chol_c);

@@ -39,21 +39,19 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	setDefaultParameters();
 	filename_parameters = argv[2];
 	readParameterFile();
-	if ( argc == 3){
+	if (argc == 3){
 		sys.shear_rate = 1.0;
-		filename_addition = "sr1";
+		filename_addition = "_sr1";
 	} else {
 		sys.shear_rate = atof(argv[3]);
-		filename_addition = "sr";
+		filename_addition = "_sr";
 		filename_addition += argv[3];
 	}
 	setUnits();
-	
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
 	int i_time_interval = strain_interval_out/sys.dt;
-
 	outputConfigurationData();
 	while(sys.strain() <= shear_strain_end){
 		cerr << "strain: " << sys.strain() << endl;
@@ -68,8 +66,10 @@ void
 Simulation::setUnits(){
 	unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
 	unit_of_velocity = sys.shear_rate*unit_of_length;
-	unit_of_force = 6*M_PI*viscosity_solvent*unit_of_velocity;
-	sys.cf_amp_dl = sys.cf_amp/unit_of_force;
+	unit_of_force = 6*M_PI*viscosity_solvent*radius_of_particle*unit_of_velocity;
+	double cf_amp = cf_amp_dl0*6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
+	sys.cf_amp_dl = cf_amp/unit_of_force;
+	cerr << "unit_of_force = " << unit_of_force << endl;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
 }
 
@@ -103,22 +103,16 @@ removeBlank(string &str){
 void
 Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
-	if (keyword == "lubrication"){
-		sys.lubrication = str2bool(value);
-	} else if (keyword == "friction"){
-		sys.friction = str2bool(value);
-	} else if (keyword == "bgf_factor"){
+	if (keyword == "bgf_factor"){
 		sys.bgf_factor = atof(value.c_str());
-	} else if (keyword == "cf_amp"){
-		sys.cf_amp = atof(value.c_str());
-	} else if (keyword == "cf_range"){
-		sys.cf_range = atof(value.c_str());
+	} else if (keyword == "cf_amp_dl0"){
+		cf_amp_dl0 = atof(value.c_str());
+	} else if (keyword == "cf_range_dl"){
+		sys.cf_range_dl = atof(value.c_str());
 	} else if (keyword == "lub_reduce_parameter"){
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxzation_time"){
 		sys.contact_relaxzation_time = atof(value.c_str());
-//	} else if (keyword == "shear_rate"){
-//		sys.shear_rate = atof(value.c_str());
 	} else if (keyword == "kb_T"){
 		sys.kb_T = atof(value.c_str());
 	} else if (keyword == "dt"){
@@ -131,14 +125,16 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.integration_method = atof(value.c_str());
 	} else if (keyword == "lub_max"){
 		sys.lub_max = atof(value.c_str());
-	} else if (keyword == "shearrate_scale_Fc_normal"){
-		sys.shearrate_scale_Fc_normal = str2bool(value);
 	} else if (keyword == "kn"){
 		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt"){
 		sys.kt = atof(value.c_str());
 	} else if (keyword == "mu_static"){
 		sys.mu_static = atof(value.c_str());
+	} else if (keyword == "viscosity_solvent"){
+		viscosity_solvent = atof(value.c_str());
+	} else if (keyword == "radius_of_particle"){
+		radius_of_particle = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
 		strain_interval_out = atof(value.c_str());
 	} else if (keyword == "draw_rotation_2d"){
@@ -163,10 +159,12 @@ Simulation::readParameterFile(){
 	string value;
 	while (!fin.eof()){
 		string line;
-		if (!getline(fin, line, ';'))
+		if (!getline(fin, line, ';')){
 			break;
-		if (fin.eof())
+		}
+		if (fin.eof()){
 			break;
+		}
 		string str_parameter;
 		removeBlank(line);
 		str_parameter = line;
@@ -175,10 +173,11 @@ Simulation::readParameterFile(){
 		do {
 			begin_comment = str_parameter.find("/*");
 			end_comment = str_parameter.find("*/");
-			if (begin_comment > 10000 )
+			if (begin_comment > 10000){
 				break;
+			}
 			str_parameter = str_parameter.substr(end_comment+2);
-		}while (true);
+		}while(true);
 		if (begin_comment > end_comment ){
 			cerr << str_parameter.find("/*") << endl;
 			cerr << str_parameter.find("*/") << endl;
@@ -206,7 +205,6 @@ Simulation::openOutputFiles(){
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
-	string vpy_filename = "vpy_" + sys.simu_name + ".dat";
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
@@ -215,15 +213,10 @@ Simulation::openOutputFiles(){
 void
 Simulation::setDefaultParameters(){
 	/*
-	 * If lubrication is false, it should be free-draining approximation.
-	 * So far, we do not test this case well.
+	 * 
 	 */
-	sys.lubrication = true;
-	/*
-	 * If friction is false, the contact forces are only normal repulsion.
-	 * It is important to find the difference between with and without friction.
-	 */
-	sys.friction = true;
+	viscosity_solvent = 0.001;
+	radius_of_particle = 1e-6;
 	/*
 	 * Simulation
 	 *
@@ -250,9 +243,7 @@ Simulation::setDefaultParameters(){
 	 *  strain(): total strain (length of simulation)
 	 *
 	 */
-//	sys.shear_rate = 1.0;
-	shear_strain_end = 10.;
-
+	shear_strain_end = 10;
 	/*
 	 * Lubrication force
 	 * lub_max: reduced large cutoff distance for lubrication
@@ -271,8 +262,6 @@ Simulation::setDefaultParameters(){
 	 *
 	 * This gives the coeffient of the resistance term for h < 0.
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
-	 * - The value
-	 *
 	 *
 	 */
 	sys.contact_relaxzation_time = 0.001;
@@ -295,19 +284,20 @@ Simulation::setDefaultParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	sys.shearrate_scale_Fc_normal = true;
 	sys.kn = 5000;
 	sys.kt = 1000;
+	/* 
+	 * Colloidal force parameter
+	 * Short range repulsion is assumed.
+	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
+	 */
+	cf_amp_dl0 = 1; // dimensionless
+	sys.cf_range_dl = 0.1; // dimensionless
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
 	 */
 	sys.mu_static = 10;	
-	/* Colloidal force
-	 * Short range repulsion is assumed.
-	 */
-	sys.cf_amp = 1.0;
-	sys.cf_range = 0.1;
 	/*
 	 * Output interval
 	 */
@@ -324,13 +314,6 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
-
-	/*
-	 *
-	 *
-	 */
-	viscosity_solvent = 1.0;
-	radius_of_particle = 1.0;
 }
 
 void
@@ -343,7 +326,6 @@ Simulation::importInitialPositionFile(){
 	}
 	string line;
 	getline(file_import, line);
-	
 	vec3d pos;
 	double radius;
 	int np_a_, np_b_;
@@ -353,8 +335,7 @@ Simulation::importInitialPositionFile(){
 	file_import >> buf >> np_a_ >> np_b_ >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
 	np_a = np_a_;
 	np_b = np_b_;
-
-	int num_of_particle = np_a_ + np_b_;
+	int num_of_particle = np_a_+np_b_;
 	sys.np(num_of_particle);
 	if (np_b_ > 0){
 		sys.poly = true;
@@ -375,7 +356,7 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
-	double radius_max=1.0;
+	double radius_max = 1.0;
 	for (int i = 0; i < num_of_particle ; i++){
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
@@ -414,8 +395,10 @@ Simulation::evaluateData(){
 	sys.analyzeState();
 	double total_stress[5];
 	for (int u=0; u<5; u++){
-		total_stress[u] = sys.total_hydro_stress[u]+sys.total_contact_stressXF[u];
-		// + sys.total_contact_stressGU[u];
+		total_stress[u] = sys.total_hydro_stress[u];
+		total_stress[u] += sys.total_contact_stressXF[u];
+		total_stress[u] += sys.total_colloidal_stressXF[u];
+		total_stress[u] += sys.total_colloidal_stressGU[u];
 	}
 	if (sys.brownian){
 		for (int u=0; u<5; u++){
@@ -426,6 +409,8 @@ Simulation::evaluateData(){
 	Viscosity_h = sys.total_hydro_stress[2];
 	Viscosity_c_XF = sys.total_contact_stressXF[2];
 	Viscosity_c_GU = sys.total_contact_stressGU[2];
+	Viscosity_col_XF = sys.total_colloidal_stressXF[2];
+	Viscosity_col_GU = sys.total_colloidal_stressGU[2];
 	/* N1 = tau_xx-tau_zz = tau_xx-(-tau_xx-tau_yy) = 2tau_xx+tau_yy
 	 * N2 = tau_zz-tau_yy = (-tau_xx-tau_yy)-tau_yy = -tau_xx-2tau_yy
 	 */
@@ -457,8 +442,10 @@ Simulation::outputRheologyData(){
 	 *  Viscosity = S_{xz} / shear_rate
 	 *  N1 = S_{xx}-S_{zz}
 	 *  N2 = S_{zz}-S_{yy} = S_zz-(-S_xx-S_zz) = S_xx+2*S_zz
+	 * 
+	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	if ( firsttime ){
+	if (firsttime){
 		firsttime = false;
 		fout_rheo << "#1: shear strain" << endl;
 		fout_rheo << "#2: Viscosity" << endl;
@@ -476,31 +463,38 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#14: Viscosity(brownian)" << endl;
 		fout_rheo << "#15: N1(brownian)" << endl;
 		fout_rheo << "#16: N2(brownian)" << endl;
-		fout_rheo << "#17: min gap (non-dim)" << endl;
-		fout_rheo << "#18: Average normal contact force" << endl;
-		fout_rheo << "#19: max Fc_normal_norm" << endl;
+		fout_rheo << "#17: Viscosity(xF_colloidal)" << endl;
+		fout_rheo << "#18: Viscosity(GU_colloidal)" << endl;
+		fout_rheo << "#19: min gap (non-dim)" << endl;
+		fout_rheo << "#20: max tangential displacement" << endl;
+		fout_rheo << "#21: Average normal contact force" << endl;
+		fout_rheo << "#22: max Fc_normal_norm" << endl;
 	}
 	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
+	double unit_of_rel_viscosity = unit_of_viscosity/viscosity_solvent;
 	double unit_of_stress = unit_of_force/(unit_of_length*unit_of_length);
 	fout_rheo << sys.strain() << ' '; //1
-	fout_rheo << Viscosity*unit_of_viscosity << ' ' ; //2
-	fout_rheo << N1*unit_of_stress << ' ' ; //3
-	fout_rheo << N2*unit_of_stress << ' ' ; //4
-	fout_rheo << Viscosity_h*unit_of_viscosity << ' ' ; //5
-	fout_rheo << N1_h*unit_of_stress << ' ' ; //6
-	fout_rheo << N2_h*unit_of_stress << ' ' ; //7
-	fout_rheo << Viscosity_c_XF*unit_of_viscosity << ' ' ; //8
-	fout_rheo << N1_c_XF*unit_of_stress << ' ' ; //9
-	fout_rheo << N2_c_XF*unit_of_stress << ' ' ; //10
-	fout_rheo << Viscosity_c_GU*unit_of_viscosity << ' ' ; //11
+	fout_rheo << Viscosity*unit_of_rel_viscosity << ' '; //2
+	fout_rheo << N1*unit_of_stress << ' '; //3
+	fout_rheo << N2*unit_of_stress << ' '; //4
+	fout_rheo << Viscosity_h*unit_of_rel_viscosity << ' '; //5
+	fout_rheo << N1_h*unit_of_stress << ' '; //6
+	fout_rheo << N2_h*unit_of_stress << ' '; //7
+	fout_rheo << Viscosity_c_XF*unit_of_rel_viscosity << ' '; //8
+	fout_rheo << N1_c_XF*unit_of_stress << ' '; //9
+	fout_rheo << N2_c_XF*unit_of_stress << ' '; //10
+	fout_rheo << Viscosity_c_GU*unit_of_rel_viscosity << ' ' ; //11
 	fout_rheo << N1_c_GU*unit_of_stress << ' ' ; //12
 	fout_rheo << N2_c_GU*unit_of_stress << ' ' ; //13
-	fout_rheo << Viscosity_b*unit_of_viscosity << ' ' ; //14
+	fout_rheo << Viscosity_b*unit_of_rel_viscosity << ' ' ; //14
 	fout_rheo << N1_b*unit_of_stress << ' ' ; //15
 	fout_rheo << N2_b*unit_of_stress << ' ' ; //16
-	fout_rheo << sys.minvalue_gap_nondim << ' '; // 17
-	fout_rheo << sys.average_Fc_normal_norm << ' '; // 18
-	fout_rheo << sys.max_Fc_normal_norm << ' '; // 19
+	fout_rheo << Viscosity_col_XF*unit_of_rel_viscosity << ' '; //17
+	fout_rheo << Viscosity_col_GU*unit_of_rel_viscosity << ' '; //18
+	fout_rheo << sys.minvalue_gap_nondim << ' '; // 19
+	fout_rheo << sys.max_disp_tan << ' '; // 20
+	fout_rheo << sys.average_Fc_normal_norm << ' '; // 21
+	fout_rheo << sys.max_Fc_normal_norm << ' '; // 22
 	fout_rheo << endl;
 }
 
@@ -510,7 +504,7 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 		z += sys.lz2();
 		if (z > sys.lz2()){
 			x -= sys.shear_disp;
-			if ( x < - sys.lx2()){
+			if (x < - sys.lx2()){
 				x += sys.lx();
 			}
 			z -=  sys.lz();
@@ -628,7 +622,7 @@ Simulation::outputConfigurationData(){
 		fout_particle << endl;
 	}
 	int cnt_interaction = 0;
-	for (int k=0; k < sys.num_interaction; k++){
+	for (int k=0; k<sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			cnt_interaction++;
 		}
@@ -636,7 +630,7 @@ Simulation::outputConfigurationData(){
 	fout_interaction << "#" << sp << sys.strain() << sp ;
 	fout_interaction << cnt_interaction << " avg_contact_time: " << sys.average_contact_time;
 	fout_interaction << " avg_nearing_time: " << sys.average_nearing_time << endl;
-	for (int k=0; k < sys.num_interaction; k++){
+	for (int k=0; k<sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].par_num[1] << sp; // 2
@@ -651,8 +645,6 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 11
 			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 12
 			fout_interaction << sys.interaction[k].contact << sp; // 13
-
-			/// fout_interaction << ???
 			fout_interaction << endl;
 		}
 	}

@@ -64,12 +64,16 @@ private:
 	void buildLubricationTerms(bool rhs=true);
 	void buildLubricationRHS();
 	void buildContactTerms();
+	void buildColloidalForceTerms();
+
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
+
+
 	inline void increment_time(double _dt){
 		_time += _dt;
 	}
@@ -77,6 +81,7 @@ protected:
 public:
 	double *v_hydro;
 	double *v_cont;
+	double *v_colloidal;
 	double *v_lub_cont;
 	double *v_lub_cont_mid;
 	double *v_Brownian_init;
@@ -99,32 +104,31 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-	
 	stresslet* lubstress; // G U + M E
 	stresslet* bgfstress;
 	stresslet* contactstressXF;
+	stresslet* colloidalstressXF;
 	stresslet* contactstressGU;
+	stresslet* colloidalstressGU;
 	stresslet* brownianstress;
 	int brownianstress_calc_nb;
 	double total_hydro_stress[5];
 	double total_contact_stressXF[5];
 	double total_contact_stressGU[5];
+	double total_colloidal_stressXF[5];
+	double total_colloidal_stressGU[5];
 	double total_brownian_stress[5];
-//	double total_hydro_stress2[5];
-//	double total_contact_stress2[5];
 	double kn;
 	double kt;
 	double lub_max;
 	double lub_coeff_contact;
 	double mu_static; // static friction coefficient.
-	bool lubrication;
 	bool friction;
 	bool colloidalforce;
 	bool brownian;
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	double diag_stokes_drag;
 	double bgf_factor;
-	bool shearrate_scale_Fc_normal;
 	bool poly;
 	Interaction *interaction;
 	int num_interaction;
@@ -148,7 +152,7 @@ public:
 	 */
 	double cf_amp; // colloidal force amplitude
 	double cf_amp_dl; // colloidal force dimensionless
-	double cf_range; // colloidal force range
+	double cf_range_dl; // colloidal force range (dimensionless)
 	double kb_T;
 	double volume_fraction;
 	double vel_difference;
@@ -156,6 +160,7 @@ public:
 	double dt_mid;
 	double dt_ratio;
 	double minvalue_gap_nondim;
+	double max_disp_tan;
 	double ave_overlap;
 	double average_contact_time;
 	int contact_nb;
@@ -198,16 +203,16 @@ public:
 	
 	/*************************************************************/
 	inline void lx(double length){
-		_lx=length;
-		_lx2=0.5*_lx;
+		_lx = length;
+		_lx2 = 0.5*_lx;
 	}
 	inline void ly(double length){
-		_ly=length;
-		_ly2=0.5*_ly;
+		_ly = length;
+		_ly2 = 0.5*_ly;
 	}
 	inline void lz(double length){
-		_lz=length;
-		_lz2=0.5*_lz;
+		_lz = length;
+		_lz2 = 0.5*_lz;
 	}
 	inline void setRadiusMax(double _radius_max){
 		radius_max = _radius_max;
@@ -235,7 +240,7 @@ public:
 	}
 	inline void np(int val){
 		_np = val;
-		np3=3*_np;
+		np3 = 3*_np;
 	}
 	inline int np(){
 		return _np;

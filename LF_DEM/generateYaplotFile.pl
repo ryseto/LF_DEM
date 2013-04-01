@@ -82,14 +82,15 @@ sub InInteractions {
 	}
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz,
+		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz, $fcol,
 		$nx, $ny, $nz, $gap, $sxz_lub, $neartime, $fric_st) = split(/\s+/, $line);
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
-		$Ft_t[$k] = ($fc_tx)**2 + ($fc_ty)**2 + ($fc_tz)**2 ;
+		$Ft_t[$k] = sqrt(($fc_tx)**2 + ($fc_ty)**2 + ($fc_tz)**2) ;
+		$Fcol[$k] = $fcol;
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
@@ -136,21 +137,24 @@ sub OutYaplotData{
     printf OUT "y 3\n";
     printf OUT "@ 3\n";
     for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k]+ $Fc_n[$k];
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		#$force = $Fcol[$k];
+		#$force = $Fc_n[$k];
+		$force = $F_lub[$k];
         if ($force < 0){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
     }
-    printf OUT "@ 4\n";
-    for ($k = 0; $k < $num_interaction; $k ++){
-        $force = $F_lub[$k]+ $Fc_n[$k];
-		if ($force > 0){
-            $string_width = ${force_factor}*${force};
-			&OutString_width($int0[$k], $int1[$k]);
-		}
+   printf OUT "@ 4\n";
+   for ($k = 0; $k < $num_interaction; $k ++){
+	   $force = $F_lub[$k]+ $Fc_n[$k] + $Fcol[$k];
+	   
+	   if ($force > 0){
+           $string_width = ${force_factor}*${force};
+		   &OutString_width($int0[$k], $int1[$k]);
+	   }
     }
-
 	if ($Ly == 0){
 		printf OUT "y 6\n";
 		printf OUT "@ 0\n";
@@ -158,9 +162,6 @@ sub OutYaplotData{
 			&OutCross($i);
 		}
 	}
-	
-	
-	
 	
 	#	$maxS=0;
 	#for ($k = 0; $k < $num_interaction; $k ++){
@@ -195,23 +196,18 @@ sub OutBoundaryBox{
 	$x0 = -$Lx/2;
 	$x1 = -$Lx/2 + $shear_disp / 2;
 	$z1 = $Lz/2;
-	
 	$x2 = $Lx/2;
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
-	
 	$lx2 = $Lx/2;
 	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
 	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
-	
 	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
 	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
 
-	
-	
 }
 
 	
