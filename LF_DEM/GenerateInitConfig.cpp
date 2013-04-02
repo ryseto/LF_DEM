@@ -89,12 +89,12 @@ GenerateInitConfig::outputPositionData(){
 		}
 	} else {
 		if (lx_lz == 1 && ly_lz == 1){
-			ss_posdatafilename << "Qubic"; //
+			ss_posdatafilename << "Cubic"; //
 		} else {
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 		}
 	}
-	ss_posdatafilename << "_" << random_seed << ".dat";
+	ss_posdatafilename << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	fout << "# np1 np2 vf lx ly lz" << endl;
@@ -266,8 +266,10 @@ GenerateInitConfig::updateInteractions(int i){
 	for (it = sys.interaction_list[i].begin(); it != sys.interaction_list[i].end(); it ++)
 		inter_list.push_back(*it);
 
-	for (int k=0; k<inter_list.size(); k++){
-		if(inter_list[k]->updateStatesForceTorque())
+	for (unsigned int k=0; k<inter_list.size(); k++){
+		bool desactivated;
+		inter_list[k]->updateState(desactivated);
+		if(desactivated)
 			sys.deactivated_interaction.push(inter_list[k]->label);
 	}
 
@@ -432,7 +434,6 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 			number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
 		} while ( number_ratio < 0 || number_ratio > 1);
 	}
-	random_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */

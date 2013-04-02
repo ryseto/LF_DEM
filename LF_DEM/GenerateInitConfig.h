@@ -25,7 +25,6 @@ class GenerateInitConfig{
 private:
 	System sys;
 
-	int random_seed;
 	int dimension;
 	
 	double volume_fraction;
