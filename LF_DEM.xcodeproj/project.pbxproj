@@ -220,6 +220,7 @@
 				D938135C16B572A8006F1CAC /* common.h */,
 				D97C3B07167690DC009A6BF0 /* Interaction.cpp */,
 				D97C3B08167690DC009A6BF0 /* Interaction.h */,
+				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D92F19C01676450800411650 /* BrownianForce.cpp */,
 				D92F19C11676450800411650 /* BrownianForce.h */,
 				D9573FAE16797A000081E903 /* Box.cpp */,
@@ -232,7 +233,6 @@
 				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
 				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
-				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D99EBE1D167914C2003AC4C9 /* note.rtf */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);

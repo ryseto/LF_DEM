@@ -8,8 +8,7 @@
 
 #ifndef __LF_DEM__Interaction__
 #define __LF_DEM__Interaction__
-
-#define RECORD_HISTORY 1
+// #define RECORD_HISTORY 1
 
 #include <iostream>
 #include <iomanip>
@@ -42,38 +41,43 @@ private:
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
 	//===== observables  ========================== //
-	bool initially_existing;
-//	double duration;
-//	double init_nearing_time;
-//	double init_contact_time;
-//	bool nearing_on;
-//	double nearing_gapnd_cutoff;
-	double min_gap;
+	double strain_lub_start; // the strain when lubrication object starts.
+	double strain_contact_start; // the strain at h=0.
+	double strain_static_contac_start;
+	double duration; // entire lifetime
+	double duration_contact; // enture duraction for h < 0
+	double max_duration_static_contact; // duration twhena spring
+	double max_stress; // Maximum value of stress in the all history of this object.
+	int cnt_sliding_reset;  // to count the number of slips.
+	double max_sq_Ftc; // squre of the tangential contact force.
 	double max_Fnc;
-	int cnt_sliding_reset;
+#ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;
 	vector <double> disp_tan_sq_history;
-
-	
+	void outputHistory();
+#endif
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
 
 	//======= particles data  ====================//
-	double lambda, invlambda;  // a1/a0 , a0/a1
+	double lambda; // a1/a0
+	double invlambda; // a0/a1
 
 	//======= relative position/velocity  ========//
 	void r(double new_r);
 	void calcDistanceNormalVector();
 	void calcContactVelocity();
-	void incrementContactTangentialDisplacement();
 	void checkBreakupStaticFriction();
 
 	//======= internal state switches  ===========//
 	bool checkDeactivation();
 	void activate_contact();
 	void deactivate_contact();
+	
+	//=======   ===========//
+	void outputSummary();
 
 	//===== forces and stresses computations =====//
 	double Fc_normal_norm; // normal contact force
@@ -86,8 +90,6 @@ private:
 	void calcContactInteraction();
 	void calcStressTermXF(stresslet &stresslet_,
 						  const vec3d &force);
-	
-
 protected:
 public:
 	/*********************************
@@ -126,6 +128,9 @@ public:
 	//======= internal state =====================//
 	bool contact;
 
+	//======= Data ===============================//
+	double total_stress_xz;
+	double stress_xz_integration;
 	//=============  Resistance Matrices ====================/
 	double XA[4]; // ii ij ji jj
 	double XG[4]; // ii ij ji jj
@@ -157,10 +162,10 @@ public:
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 	
+	void integrateStress();
+
 	//=========== observables ===============================//
 	//	double nearing_time();
 	//	double contact_time();
 };
-
-
 #endif /* defined(__LF_DEM__Interaction__) */

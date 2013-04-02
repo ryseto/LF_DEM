@@ -202,11 +202,14 @@ System::calcStressesHydroContact(){
 	/////////////////////////////////////////////////
     stokes_solver.solvingIsDone();
 	// from that, compute stresses
-	for (int k=0; k<num_interaction; k++){
-		if (interaction[k].active){
+	for (int k=0; k<num_interaction; k++) {
+		if (interaction[k].active) {
+			interaction[k].total_stress_xz = 0;
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
+			interaction[k].integrateStress();
+			
 		}
 	}
 	/*
@@ -217,7 +220,7 @@ System::calcStressesHydroContact(){
 			interaction[k].evaluateLubricationForce();
 		}
 	}
-	
+
 	// >>>>  testing : compare with stress computation from forces
 	// Note that the definition of Hydrodynamic Stress and Contact Stress
 	// are different: the part coming from v_cont is included in Hydro stress.
@@ -237,6 +240,11 @@ System::calcStressesHydroContact(){
 
 void
 System::calcStress(){
+	static double previous_strain = 0;
+	d_strain = strain()-previous_strain;
+	previous_strain = strain();
+	
+	
 	stressReset();
 	if(brownian){
 	 	calcStressesHydroContactBrownian();

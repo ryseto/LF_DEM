@@ -867,6 +867,7 @@ System::analyzeState(){
 	contact_nb = 0;
 	nearing_nb = 0;
 	max_disp_tan = 0;
+	min_gap_nondim = lub_max;
 	// for analysis
 	double sum_Fc_normal_norm = 0;
 	max_Fc_normal_norm = 0;
@@ -893,6 +894,9 @@ System::analyzeState(){
 				if (interaction[k].valContactVelocity() > max_contact_velocity) {
 					max_contact_velocity = interaction[k].valContactVelocity();
 				}
+				if (interaction[k].disp_tan_norm() > max_disp_tan) {
+					max_disp_tan = interaction[k].disp_tan_norm();
+				}
 			}
 		}
 	}
@@ -914,3 +918,12 @@ System::setSystemVolume(){
 	}
 	_rho = np()/valSystemVolume();
 }
+
+void
+System::openFileInteractionData(){
+	string int_daat_filename = "int_record" + simu_name + ".dat";
+	fout_int_data.open(int_daat_filename.c_str());
+}
+
+
+

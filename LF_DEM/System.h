@@ -34,6 +34,7 @@ private:
 	int _np;
 	int np3;
 	int maxnum_interactionpair;
+	
 	BoxSet boxset;
 	queue<int> deactivated_interaction;
 	double _lx;
@@ -74,6 +75,9 @@ private:
 	void calcStressesHydroContact();
 protected:
 public:
+	System(){};
+	~System();
+	
 	double *v_hydro;
 	double *v_cont;
 	double *v_colloidal;
@@ -82,13 +86,10 @@ public:
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
 	bool in_predictor;
-    /* For DEMsystem
-     */
-	System(){};
-	~System();
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
+	Interaction *interaction;
 	double *radius;
 	double *radius_cubic;
 	double *angle; // for 2D visualization
@@ -125,8 +126,9 @@ public:
 	double diag_stokes_drag;
 	double bgf_factor;
 	bool poly;
-	Interaction *interaction;
+	
 	int num_interaction;
+	double d_strain;
 	/*
 	 * Leading term of lubrication force is 1/gap_nondim, 
 	 * with gap_nondim the gap
@@ -169,6 +171,10 @@ public:
 	double max_Fc_normal_norm;
 	bool draw_rotation_2d;
 	string simu_name;
+	ofstream fout_int_data;
+
+	
+	
 	void setSystemVolume();
 	void setupSystem(const vector<vec3d> &initial_positions,
 					 const vector <double> &radii);
@@ -198,8 +204,7 @@ public:
 	void calcLubricationForce(); // for visualization of force chains
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
-	ofstream fout_trajectory;
-	
+	void openFileInteractionData();
 	/*************************************************************/
 	inline void lx(double length) {
 		_lx = length;
@@ -247,11 +252,12 @@ public:
 	inline double rho(){ // N/V
 		return _rho;
 	}
-	inline double time(){
-		return _time;
-	}
+//	inline double time(){
+//		return _time;
+//	}
 	inline double strain(){
 		return shear_strain;
 	}
+	
 };
 #endif /* defined(__LF_DEM__System__) */

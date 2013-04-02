@@ -62,8 +62,11 @@ Interaction::calcContactInteraction(){
 		Fc_tan = sys->kt*disp_tan;
 	}
 	
-	if (Fc_normal_norm > max_Fnc){
+	if (Fc_normal_norm > max_Fnc) {
 		max_Fnc = Fc_normal_norm;
+	}
+	if (Fc_tan.sq_norm() > max_sq_Ftc) {
+		max_sq_Ftc = Fc_tan.sq_norm();
 	}
 }
 
@@ -128,11 +131,6 @@ Interaction::calcContactVelocity(){
 	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
 }
 
-void
-Interaction::incrementContactTangentialDisplacement(){
-	disp_tan += contact_velocity*sys->dt;
-	disp_tan -= dot(disp_tan, nr_vec)*nr_vec;// projection
-}
 
 /*********************************
 *                                *
@@ -217,7 +215,6 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
 }
 
-
 // convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
 void
 Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j){
@@ -285,6 +282,7 @@ Interaction::addHydroStress(){
 		lubstresslet.elm[u] = \
 		stresslet_GU_i.elm[u]+stresslet_ME_i.elm[u]+stresslet_GU_j.elm[u]+stresslet_ME_j.elm[u];
 	}
+	total_stress_xz += (sys->lubstress[par_num[0]].elm[2] + sys->lubstress[par_num[0]].elm[2])*sys->d_strain;
 }
 
 /* Lubriction force between two particles is calculated. 
@@ -337,7 +335,7 @@ Interaction::addContactStress(){
 		int j3 = 3*par_num[1];
 		stresslet contactstressletXF;
 		calcStressTermXF(contactstressletXF, Fc_normal+Fc_tan);
-		for (int u=0; u<5; u++){
+		for (int u=0; u<5; u++) {
 			sys->contactstressXF[par_num[0]].elm[u] += a0*contactstressletXF.elm[u];
 			sys->contactstressXF[par_num[1]].elm[u] += a1*contactstressletXF.elm[u];
 		}
@@ -347,10 +345,11 @@ Interaction::addContactStress(){
 		vec3d vi(sys->v_cont[i3], sys->v_cont[i3+1], sys->v_cont[i3+2]);
 		vec3d vj(sys->v_cont[j3], sys->v_cont[j3+1], sys->v_cont[j3+2]);
 		pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
-		for (int u=0; u<5; u++){
+		for (int u=0; u<5; u++) {
 			sys->contactstressGU[par_num[0]].elm[u] += stresslet_GU_i.elm[u];
 			sys->contactstressGU[par_num[1]].elm[u] += stresslet_GU_j.elm[u];
 		}
+		total_stress_xz += (a0*contactstressletXF.elm[2] + a1*contactstressletXF.elm[2])*sys->d_strain;
 	}
 }
 
@@ -365,6 +364,8 @@ Interaction::addColloidalStress(){
 			sys->colloidalstressXF[par_num[0]].elm[u] += a0*colloidalstressletXF.elm[u];
 			sys->colloidalstressXF[par_num[1]].elm[u] += a1*colloidalstressletXF.elm[u];
 		}
+		total_stress_xz += (a0*colloidalstressletXF.elm[2]+a1*colloidalstressletXF.elm[2])*sys->d_strain;
+		
 		// Add term G*V_cont
 		stresslet stresslet_colloid_GU_i;
 		stresslet stresslet_colloid_GU_j;
@@ -375,6 +376,8 @@ Interaction::addColloidalStress(){
 			sys->colloidalstressGU[par_num[0]].elm[u] += stresslet_colloid_GU_i.elm[u];
 			sys->colloidalstressGU[par_num[1]].elm[u] += stresslet_colloid_GU_j.elm[u];
 		}
+		
+		total_stress_xz += (a0*stresslet_colloid_GU_i.elm[2]+a1*stresslet_colloid_GU_j.elm[2])*sys->d_strain;
 	}
 }
 
@@ -395,13 +398,18 @@ Interaction::activate(int i, int j,
 					  const vec3d &pos_diff,
 					  double distance, int _zshift){
 	active = true;
-	if (sys->strain() < 0.01) {
-		initially_existing = true;
-	} else {
-		initially_existing = false;
-	}
+	strain_lub_start = sys->strain(); // for output
+	duration_contact = 0; // for output
+	max_Fnc = 0; // for output
+	max_sq_Ftc = 0; // for output
+	max_duration_static_contact = 0; // for output
+	max_stress = 0; // for output
+	stress_xz_integration = 0; // for output
+	cnt_sliding_reset = 0;
+	
 	Fc_normal_norm = 0;
 	Fc_normal.reset();
+	F_colloidal_norm = 0;
 	Fc_tan.reset();
 	r_vec = pos_diff;
 	r(distance);
@@ -433,9 +441,6 @@ Interaction::activate(int i, int j,
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	r_lub_max = 0.5*ro*sys->lub_max;
-	Fc_normal_norm = 0;
-	F_colloidal_norm = 0;
-	min_gap = 0;
 	return;
 }
 
@@ -444,8 +449,8 @@ Interaction::deactivate(){
 	// r > lub_max
 #ifdef RECORD_HISTORY
 	gap_history.clear();
-	disp_tan_sq_history.clear();
 #endif
+	outputSummary();
 	active = false;
 	sys->interaction_list[par_num[0]].erase(this);
 	sys->interaction_list[par_num[1]].erase(this);
@@ -459,42 +464,51 @@ Interaction::activate_contact(){
 	contact = true;
 	disp_tan.reset();
 	F_colloidal_norm = 0;
-	cnt_sliding_reset = 0;
+
+	strain_contact_start = sys->strain();
+	strain_static_contac_start = sys->strain();
 }
 
 void
 Interaction::deactivate_contact(){
 	// r > a0 + a1
-	max_Fnc = 0;
-	cnt_sliding_reset = 0;
+#ifdef RECORD_HISTORY
+	outputHistory();
+#endif
 	contact = false;
 	disp_tan.reset();
-	min_gap = 0;
 	Fc_normal_norm = 0;
 	Fc_normal.reset();
 	Fc_tan.reset();
+	duration_contact += sys->strain()-strain_contact_start; // for output
+	double duraction_static_contact = sys->strain()-strain_static_contac_start;  // for output
+	if (max_duration_static_contact < duraction_static_contact){ // for output
+		max_duration_static_contact = duraction_static_contact; // for output
+	} // for output
+	strain_static_contac_start = sys->strain();	// for output
 	
+}
+
 #ifdef RECORD_HISTORY
-	cerr << "cnt_sliding_reset =" << cnt_sliding_reset << ' ' << min_gap << ' ' << max_Fnc << endl;
-	if (initially_existing == false
-		&& sys->strain() > 5){
+void
+Interaction::outputHistory(){
+	cerr << "cnt_sliding_reset =" << cnt_sliding_reset << ' ' << max_Fnc << endl;
+	if (sys->strain() > 2){
 		for (int i=0; i<disp_tan_sq_history.size(); i += 1){
 			cout << overlap_history[i] << ' ' << sqrt(disp_tan_sq_history[i]) << endl;
 		}
 		cout << endl;
-		sys->cnt_monitored_data ++;
-		if (sys->cnt_monitored_data > 100){
+		
+		if (sys->cnt_monitored_data++ == 200){
 			exit(1);
 		}
 	}
 	disp_tan_sq_history.clear();
 	overlap_history.clear();
-#endif
 }
+#endif
 
-
-
-/* 
+/*
  */
 bool
 Interaction::checkDeactivation(){
@@ -525,17 +539,17 @@ Interaction::updateState(bool &deactivated){
 		/* update tangential displacement: we do it before updating nr_vec
 		 * as it should be along the tangential vector defined in the previous time step
 		 *
-		 * ---> changed.
-		 * The direction of forces should be consistent with the positions.
-		 * So, the normal vectors are updated before incrementing the tangential displacement.
-		 *
+
 		 */
 		// compute new r_vec and distance
 		// z_shift is updated
-		calcDistanceNormalVector();
 		if (contact) {
 			calcContactVelocity();
-			incrementContactTangentialDisplacement();
+			disp_tan += contact_velocity*sys->dt;
+		}
+		calcDistanceNormalVector();
+		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;// projection
+		if (contact) {
 			calcContactInteraction();
 			if (!sys->in_predictor) {
 				checkBreakupStaticFriction();
@@ -575,32 +589,42 @@ Interaction::checkBreakupStaticFriction(){
 	 */
 	double f_static = sys->mu_static*Fc_normal_norm;
 	if (Fc_tan.sq_norm() > f_static*f_static) {
-		/**
-		 ** switch to dynamic friction
-		 **
-		 ** A simple imprementation is used temporary.
+		/*
+		 * switch to dynamic friction
+		 *
+		 * A simple imprementation is used temporary.
 		 */
 		disp_tan.reset();
-		cnt_sliding_reset ++;
+
+		cnt_sliding_reset ++; // for output
+		double duraction_static_contact = sys->strain()-strain_static_contac_start; // for output
+		if (max_duration_static_contact < duraction_static_contact){// for output
+			max_duration_static_contact = duraction_static_contact;// for output
+		} // for output
+		strain_static_contac_start = sys->strain();// for output
 	}
 }
 
-/* Strain interval 
- *
- */
-//Interaction::nearing_time(){
-//	double time = 0;
-////	if (nearing_on) {
-////		time = sys->time()-init_nearing_time;
-////	}
-//	return time;
-//}
+void
+Interaction::outputSummary(){
+	duration = sys->strain()-strain_lub_start;
+	sys->fout_int_data << strain_lub_start << ' '; // 1
+	sys->fout_int_data << duration << ' '; // 2
+	sys->fout_int_data << duration-duration_contact << ' '; // 3
+	sys->fout_int_data << duration_contact << ' '; // 4
+	sys->fout_int_data << max_duration_static_contact << ' '; // 5
+	sys->fout_int_data << max_stress << ' ';  // 6
+	sys->fout_int_data << stress_xz_integration << ' '; // 7
+	sys->fout_int_data << max_Fnc << ' '; // 8
+	sys->fout_int_data << sqrt(max_sq_Ftc) << ' '; // 9
+	sys->fout_int_data << cnt_sliding_reset << ' '; //  10
+	sys->fout_int_data << endl;
+}
 
-//double
-//Interaction::contact_time(){
-//	double time = 0;
-//	if (contact) {
-//		time = sys->time()-init_contact_time;
-//	}
-//	return time;
-//}
+void
+Interaction::integrateStress(){
+	stress_xz_integration += total_stress_xz;
+	if (max_stress < total_stress_xz) {
+		max_stress = total_stress_xz;
+	}
+}

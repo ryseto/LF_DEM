@@ -71,7 +71,6 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_vpy;
 	ofstream fout_rheo;
 	ofstream fout_particle;
 	ofstream fout_interaction;

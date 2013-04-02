@@ -24,9 +24,6 @@ Simulation::~Simulation(){
 	if (fout_interaction.is_open()){
 		fout_interaction.close();
 	}
-	if (fout_vpy.is_open()){
-		fout_vpy.close();
-	}
 };
 
 /*
@@ -208,6 +205,7 @@ Simulation::openOutputFiles(){
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
+	sys.openFileInteractionData();
 }
 
 void
