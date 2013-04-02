@@ -469,6 +469,10 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#20: max tangential displacement" << endl;
 		fout_rheo << "#21: Average normal contact force" << endl;
 		fout_rheo << "#22: max Fc_normal_norm" << endl;
+		fout_rheo << "#23: max contact velocity (sliding)" << endl;
+		fout_rheo << "#24: max velocity" << endl;
+		fout_rheo << "#25: max angular velocity" << endl;
+		fout_rheo << "#26: total number of contact" << endl;
 	}
 	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
 	double unit_of_rel_viscosity = unit_of_viscosity/viscosity_solvent;
@@ -491,10 +495,16 @@ Simulation::outputRheologyData(){
 	fout_rheo << N2_b*unit_of_stress << ' ' ; //16
 	fout_rheo << Viscosity_col_XF*unit_of_rel_viscosity << ' '; //17
 	fout_rheo << Viscosity_col_GU*unit_of_rel_viscosity << ' '; //18
-	fout_rheo << sys.minvalue_gap_nondim << ' '; // 19
+	
+	fout_rheo << sys.min_gap_nondim << ' '; // 19
 	fout_rheo << sys.max_disp_tan << ' '; // 20
+	
 	fout_rheo << sys.average_Fc_normal_norm << ' '; // 21
 	fout_rheo << sys.max_Fc_normal_norm << ' '; // 22
+	fout_rheo << sys.max_contact_velocity << ' '; // 23
+	fout_rheo << sys.max_velocity << ' '; // 24
+	fout_rheo << sys.max_ang_velocity << ' '; // 25
+	fout_rheo << sys.contact_nb << ' '; // 26
 	fout_rheo << endl;
 }
 

@@ -54,7 +54,7 @@ System::allocateRessources(){
 	angle = new double [_np];
 	velocity = new vec3d [_np];
 	ang_velocity = new vec3d [_np];
-	if(integration_method >= 1){
+	if (integration_method >= 1) {
 		ang_velocity_predictor = new vec3d [_np];
 		velocity_predictor = new vec3d [_np];
 	}
@@ -79,13 +79,14 @@ System::allocateRessources(){
 	v_cont = new double [linalg_size];
 	v_hydro = new double [linalg_size];
 	v_colloidal = new double [linalg_size];
-	for(int i=0; i<linalg_size; i++){
+	for (int i=0; i<linalg_size; i++){
 		v_lub_cont[i] = 0;
 		v_cont[i] = 0;
 		v_hydro[i] = 0;
 		v_colloidal[i] = 0;
 	}
-	if(brownian){
+
+	if (brownian) {
 	    v_Brownian_init = new double [linalg_size];
 	    v_Brownian_mid = new double [linalg_size];
 		v_lub_cont_mid = new double [linalg_size];
@@ -143,34 +144,34 @@ System::setupSystemForGenerateInit(){
 void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector<double> &radii){
-	if (kb_T == 0){
+	if (kb_T == 0) {
 		brownian = false;
-	}else{
+	} else {
 		brownian = true;
 		integration_method = 2; // > force Euler
 	}
-	if (mu_static > 0){
+	if (mu_static > 0) {
 		friction = true;
 	} else {
 		friction = false;
 	}
-	if (cf_amp == 0){
+	if (cf_amp == 0) {
 		colloidalforce = false;
-	}else{
+	} else {
 		colloidalforce = true;
 	}
 	allocateRessources();
-	for (int i=0; i < _np; i++){
+	for (int i=0; i < _np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
 		angle[i] = 0;
 	}
-	for (int k=0; k<maxnum_interactionpair ; k++){
+	for (int k=0; k<maxnum_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].label = k;
 	}
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		velocity[i].reset();
 	}
 	dt = dt/radius_max;
@@ -178,7 +179,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	shear_disp = 0;
 	num_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	if (contact_relaxzation_time < 0){
+	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
 	} else {
@@ -203,24 +204,25 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	stokes_solver.initialize();
 	// initialize the brownian force after the solver, as it assumes
 	// the cholmod_common of the solver is already initialized
-	if(brownian){
+	if (brownian) {
 		fb->init();
 	}
 	brownianstress_calc_nb = 0;
 	initializeBoxing();
 	checkNewInteraction();
+	cnt_monitored_data = 0;
 }
 
 void
 System::initializeBoxing(){// need to know radii first
 	double max_radius = 0;
-	for (int i=0; i < _np; i++){
-		if(radius[i]>max_radius){
+	for (int i=0; i < _np; i++) {
+		if (radius[i]>max_radius) {
 			max_radius=radius[i];
 		}
 	}
 	boxset.init(lub_max*max_radius, this);
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		boxset.box(i);
 	}
 	boxset.update();
@@ -238,15 +240,15 @@ void
 System::deltaTimeEvolution(){
 	// evolve PBC
 	shear_disp += vel_difference*dt;
-	if (shear_disp > lx()){
+	if (shear_disp > lx()) {
 		shear_disp -= lx();
 	}
 	// move particles
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2){
-		for (int i=0; i<_np; i++){
+	if (dimension == 2) {
+		for (int i=0; i<_np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
@@ -284,14 +286,14 @@ System::deltaTimeEvolutionPredictor(){
 	 * It must not be updated in corrector.
 	 */
 	shear_disp += vel_difference*dt;
-	if (shear_disp >= lx()){
+	if (shear_disp >= lx()) {
 		shear_disp -= lx();
 	}
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2){
-		for (int i=0; i<_np; i++){
+	if (dimension == 2) {
+		for (int i=0; i<_np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
@@ -302,7 +304,7 @@ System::deltaTimeEvolutionPredictor(){
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
 	}
@@ -310,15 +312,15 @@ System::deltaTimeEvolutionPredictor(){
 
 void
 System::deltaTimeEvolutionCorrector(){
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		velocity[i] = 0.5*(velocity[i]-velocity_predictor[i]);
 		ang_velocity[i] = 0.5*(ang_velocity[i]-ang_velocity_predictor[i]);
 	}
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2){
-		for (int i=0; i<_np; i++){
+	if (dimension == 2) {
+		for (int i=0; i<_np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
@@ -343,7 +345,7 @@ System::deltaTimeEvolutionCorrector(){
 	 * Contact velocities in the interaction objects
 	 * are not right ones.
 	 */
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		velocity[i] += velocity_predictor[i];
 		ang_velocity[i] += ang_velocity_predictor[i];
 	}
@@ -351,9 +353,9 @@ System::deltaTimeEvolutionCorrector(){
 
 void System::timeEvolutionBrownian(){
 	int zero_2Dsimu;
-	if (dimension == 2){
+	if (dimension == 2) {
 		zero_2Dsimu = 0;
-	}else{
+	} else {
 		zero_2Dsimu = 1;
 	}
 	/***************************************************************************
@@ -393,7 +395,7 @@ void System::timeEvolutionBrownian(){
     buildContactTerms();
     stokes_solver.solve(v_lub_cont);
 	
-	if(displubcont){
+	if (displubcont) {
 		stokes_solver.getRHS(lub_cont_forces_init);
 	}
     // now the Brownian part of the velocity:
@@ -408,7 +410,7 @@ void System::timeEvolutionBrownian(){
 
     // move particles to intermediate point
 
-    for (int i=0; i<_np; i++){
+    for (int i=0; i<_np; i++) {
 		int i3 = 3*i;
 		velocity[i].set(v_Brownian_init[i3],
 						v_Brownian_init[i3+1]*zero_2Dsimu,
@@ -419,22 +421,22 @@ void System::timeEvolutionBrownian(){
 		velocity[i].x += position[i].z;
 		displacement(i, velocity[i]*dt);
     }
-	if(friction){
+	if (friction) {
 		double O_inf_y = 0.5;
-		for (int i=0; i<_np; i++){
+		for (int i=0; i<_np; i++) {
 			ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
 			ang_velocity[i].y += O_inf_y;
 		}
     }
 	// evolve PBC
 	shear_disp += vel_difference*dt;
-	if (shear_disp >= lx()){
+	if (shear_disp >= lx()) {
 		shear_disp -= lx();
 	}
 
     updateInteractions();
 	
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
 	}
@@ -450,11 +452,10 @@ void System::timeEvolutionBrownian(){
     stokes_solver.complete_RFU();
     // get the intermediate brownian velocity
 	stokes_solver.solve_CholTrans( v_Brownian_mid );
-	if(flubcont_update){  // rebuild rhs
+	if (flubcont_update) {  // rebuild rhs
 		stokes_solver.resetRHS();
 		buildLubricationRHS();
-	}
-	else{  // don't rebuild rhs
+	} else {  // don't rebuild rhs
 		stokes_solver.setRHS(lub_cont_forces_init);
 	}
 	stokes_solver.solve(v_lub_cont_mid);
@@ -464,7 +465,7 @@ void System::timeEvolutionBrownian(){
     // second term is Brownian velocities
     // third term is Brownian drift
     // fourth term for vx is the shear rate
-    for (int i = 0; i<_np; i++){
+    for (int i = 0; i<_np; i++) {
 		int i3 = 3*i;
 		velocity[i].set(0.5*(v_lub_cont_mid[i]+v_Brownian_mid[i3]+position[i].z),
 						0.5*(v_lub_cont_mid[i3+1]+v_Brownian_mid[i3+1]*zero_2Dsimu),
@@ -472,7 +473,7 @@ void System::timeEvolutionBrownian(){
 
 		velocity[i] -= 0.5*velocity_predictor[i];
     }
-	if(friction){
+	if (friction) {
 		//
 //		double O_inf_y = 0.5;
 //		for (int i=0; i < _np; i++){
@@ -482,11 +483,11 @@ void System::timeEvolutionBrownian(){
 //		}
 //		//	ang_velocity[i] = 0.5*(ang_velocity_mp1st[i] + ang_velocity_mp2nd[i]);
 	}
-	for (int i=0; i < _np; i++){
+	for (int i=0; i < _np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2 ){
-		for (int i=0; i < _np; i++){
+	if (dimension == 2) {
+		for (int i=0; i < _np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
@@ -500,7 +501,7 @@ void
 System::timeEvolution(int time_step){
 	int ts_next = ts+time_step;
 	checkNewInteraction();
-	while (ts < ts_next){
+	while (ts < ts_next) {
 		switch (integration_method) {
 			case 0:
 				timeEvolutionEulersMethod();
@@ -513,7 +514,7 @@ System::timeEvolution(int time_step){
 		}
 		ts++;
 		shear_strain += dt;
-		increment_time(dt);
+		_time += dt;
 	}
 }
 
@@ -525,14 +526,13 @@ System::checkNewInteraction(){
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
-	for (int i=0; i<_np-1; i++){
+	for (int i=0; i<_np-1; i++) {
 		it_beg = boxset.neighborhood_begin(i);
 		it_end = boxset.neighborhood_end(i);
-
-		for (it = it_beg; it != it_end; it++){
+		for (it = it_beg; it != it_end; it++) {
 			int j = *it;
-			if(j > i){
-				if (interaction_partners[i].find(j) == interaction_partners[i].end()){
+			if (j > i) {
+				if (interaction_partners[i].find(j) == interaction_partners[i].end()) {
 					// distance is done in 3 steps
 					// because we need each information for Interaction creation
 					pos_diff = position[j]-position[i];
@@ -540,9 +540,9 @@ System::checkNewInteraction(){
 					sq_dist = pos_diff.sq_norm();
 					double ri_rj_2 = 0.5*(radius[i]+radius[j]);
 					double sq_dist_lim = sq_lub_max*ri_rj_2*ri_rj_2;
-					if (sq_dist < sq_dist_lim){
+					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
-						if (deactivated_interaction.empty()){
+						if (deactivated_interaction.empty()) {
 							// add an interaction object.
 							interaction_new = num_interaction;
 							num_interaction ++;
@@ -574,10 +574,10 @@ System::updateInteractions(bool _in_predictor){
 	 *
 	 */
 	in_predictor = _in_predictor;
-	for (int k=0; k<num_interaction; k++){
-		if(interaction[k].updateStatesForceTorque()){
-			/* deactivation
-			 */
+	for (int k=0; k<num_interaction; k++) {
+		bool deactivated = false;
+		interaction[k].updateState(deactivated);
+		if (deactivated) {
 			deactivated_interaction.push(k);
 		}
 	}
@@ -585,8 +585,8 @@ System::updateInteractions(bool _in_predictor){
 
 void
 System::stressReset(){
-	for (int i=0; i<_np; i++){
-		for (int u=0; u < 5; u++){
+	for (int i=0; i<_np; i++) {
+		for (int u=0; u < 5; u++) {
 			lubstress[i].elm[u] = 0;
 			bgfstress[i].elm[u] = 0;
 			contactstressXF[i].elm[u] = 0;
@@ -599,8 +599,8 @@ System::stressReset(){
 
 void
 System::stressBrownianReset(){
-	for (int i=0; i<_np; i++){
-		for (int u=0; u<5; u++){
+	for (int i=0; i<_np; i++) {
+		for (int u=0; u<5; u++) {
 			brownianstress[i].elm[u] = 0;
 		}
 	}
@@ -609,7 +609,7 @@ System::stressBrownianReset(){
 
 void
 System::addStokesDrag(){
-    for (int i=0; i<_np; i++){
+    for (int i=0; i<_np; i++) {
 		stokes_solver.addToDiag_RFU(i, bgf_factor*radius[i]);
     }
 }
@@ -629,19 +629,19 @@ System::buildLubricationTerms(bool rhs){
 	/* interaction_list[i] includes all partners j (j > i and j < i).
 	 * This range i < _np - 1 is ok?
 	 */
-    for (int i=0; i<_np-1; i ++){
-		for (it = interaction_list[i].begin(); it != interaction_list[i].end(); it ++){
+    for (int i=0; i<_np-1; i ++) {
+		for (it = interaction_list[i].begin(); it != interaction_list[i].end(); it ++) {
 			inter = *it;
 			j = inter->partner(i);
-			if(j > i){
+			if (j > i) {
 				inter->calcXA();
 				stokes_solver.addToDiagBlock_RFU(inter->nr_vec, i, inter->a0*inter->XA[0]);
 				stokes_solver.addToDiagBlock_RFU(inter->nr_vec, j, inter->a1*inter->XA[3]);
 				stokes_solver.appendToOffDiagBlock_RFU(inter->nr_vec, i, j,
 													   0.5*inter->ro*inter->XA[2]);
-				if(rhs){
+				if (rhs) {
 					inter->GE(GEi, GEj);  // G*E_\infty term
-					for(int u=0; u<3; u++){
+					for (int u=0; u<3; u++) {
 						stokes_solver.addToRHS(3*i+u, GEi[u]);
 						stokes_solver.addToRHS(3*j+u, GEj[u]);
 					}
@@ -659,13 +659,13 @@ System::buildLubricationRHS(){
     set<Interaction*>::iterator it;
     int j;
     Interaction *inter;
-    for (int i=0; i<_np-1; i ++){
-		for (it = interaction_list[i].begin(); it != interaction_list[i].end(); it ++){
+    for (int i=0; i<_np-1; i ++) {
+		for (it = interaction_list[i].begin(); it != interaction_list[i].end(); it ++) {
 			inter=*it;
 			j = inter->partner(i);
-			if(j > i){
+			if (j > i) {
 				inter->GE(GEi, GEj);  // G*E_\infty term
-				for(int u=0; u<3; u++){
+				for (int u=0; u<3; u++) {
 					stokes_solver.addToRHS(3*i+u, GEi[u]);
 					stokes_solver.addToRHS(3*j+u, GEj[u]);
 				}
@@ -676,22 +676,22 @@ System::buildLubricationRHS(){
 
 void
 System::setContactForceToParticle(){
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		contact_force[i].reset();
 		contact_torque[i].reset();
 	}
-	for (int k=0; k<num_interaction; k++){
+	for (int k=0; k<num_interaction; k++) {
 		interaction[k].addUpContactForceTorque();
 	}
 }
 
 void
 System::setColloidalForceToParticle(){
-	if (colloidalforce){
-		for (int i=0; i<_np; i++){
+	if (colloidalforce) {
+		for (int i=0; i<_np; i++) {
 			colloidal_force[i].reset();
 		}
-		for (int k=0; k<num_interaction; k++){
+		for (int k=0; k<num_interaction; k++) {
 			interaction[k].addUpColloidalForce();
 		}
 	}
@@ -701,7 +701,7 @@ void
 System::buildContactTerms(){
 	// calcContactForces();
     // add contact force
-    for (int i=0; i<_np; i++){
+    for (int i=0; i<_np; i++) {
 		int i3 = 3*i;
 		stokes_solver.addToRHS(i3  , contact_force[i].x);
 		stokes_solver.addToRHS(i3+1, contact_force[i].y);
@@ -711,8 +711,8 @@ System::buildContactTerms(){
 
 void
 System::buildColloidalForceTerms(){
-	if (colloidalforce){
-		for (int i=0; i<_np; i++){
+	if (colloidalforce) {
+		for (int i=0; i<_np; i++) {
 			int i3 = 3*i;
 			stokes_solver.addToRHS(i3  , colloidal_force[i].x);
 			stokes_solver.addToRHS(i3+1, colloidal_force[i].y);
@@ -720,8 +720,6 @@ System::buildColloidalForceTerms(){
 		}
 	}
 }
-
-
 
 /*
  *
@@ -746,7 +744,7 @@ System::updateVelocityLubrication(){
 	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
 	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
 	 */
-    for (int i=0; i<_np; i++){
+    for (int i=0; i<_np; i++) {
 		int i3 = 3*i;
 		velocity[i].x = v_lub_cont[i3]+position[i].z;
 		velocity[i].y = v_lub_cont[i3+1];
@@ -759,7 +757,7 @@ System::updateVelocityLubrication(){
 	// \hat{Tc} - (4/3) (a'/a)^3(omega - omega_inf) / gammadot = 0
 	//  omega = (3/4) (a/a')^3\hat{Tc} gammadot + omega_inf;
 	double O_inf_y = 0.5;
-	for (int i=0; i<_np; i++){
+	for (int i=0; i<_np; i++) {
 		ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
 		ang_velocity[i].y += O_inf_y;
 	}
@@ -776,7 +774,7 @@ System::displacement(int i, const vec3d &dr){
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (z_shift){
+	if (z_shift) {
 		velocity[i].x += z_shift*lz();
 	}
 	boxset.box(i);
@@ -893,46 +891,56 @@ System::sq_distance(int i, int j){
 
 void
 System::analyzeState(){
-	minvalue_gap_nondim = lz();
-	max_disp_tan = 0;
+	max_velocity = 0;
+	max_ang_velocity = 0;
+	for (int i = 0; i < _np; i++) {
+		if (velocity[i].norm() > max_velocity) {
+			max_velocity = velocity[i].norm();
+		}
+		if (ang_velocity[i].norm() > max_ang_velocity) {
+			max_ang_velocity = ang_velocity[i].norm();
+		}
+	}
+
+	max_contact_velocity = 0;
 	average_nearing_time = 0;
 	average_contact_time = 0;
 	contact_nb = 0;
 	nearing_nb = 0;
+	max_disp_tan = 0;
 	// for analysis
 	double sum_Fc_normal_norm = 0;
 	max_Fc_normal_norm = 0;
 	int cnt_contact = 0;
-	for (int k = 0; k < num_interaction; k++){
-		if (interaction[k].active){
-			if (interaction[k].gap_nondim() < minvalue_gap_nondim){
-				minvalue_gap_nondim = interaction[k].gap_nondim();
+	for (int k = 0; k < num_interaction; k++) {
+		if (interaction[k].active) {
+			if (interaction[k].gap_nondim() < min_gap_nondim){
+				min_gap_nondim = interaction[k].gap_nondim();
 			}
-			if (interaction[k].contact_time()>0){
-				average_contact_time += interaction[k].contact_time();
-				contact_nb += 1;
-			}
-			if (interaction[k].nearing_time()>0){
-				average_nearing_time += interaction[k].nearing_time();
-				nearing_nb += 1;
-			}
-			if (interaction[k].contact){
+//			if (interaction[k].contact_time() > 0) {
+//				average_contact_time += interaction[k].contact_time();
+//				contact_nb ++;
+//			}
+//			if (interaction[k].nearing_time() > 0) {
+//				average_nearing_time += interaction[k].nearing_time();
+//				nearing_nb ++;
+//			}
+			if (interaction[k].contact) {
 				sum_Fc_normal_norm += interaction[k].normal_force();
-				cnt_contact++;
-				if (interaction[k].normal_force() > max_Fc_normal_norm){
+				cnt_contact ++;
+				if (interaction[k].normal_force() > max_Fc_normal_norm) {
 					max_Fc_normal_norm = interaction[k].normal_force();
 				}
-				if (interaction[k].disp_tan_norm() > max_disp_tan){
-					max_disp_tan = interaction[k].disp_tan_norm();
+				if (interaction[k].valContactVelocity() > max_contact_velocity) {
+					max_contact_velocity = interaction[k].valContactVelocity();
 				}
-
 			}
 		}
 	}
-	if(contact_nb){
+	if (contact_nb) {
 		average_contact_time /= contact_nb;
 	}
-	if(nearing_nb){
+	if (nearing_nb) {
 		average_nearing_time /= nearing_nb;
 	}
 	average_Fc_normal_norm = sum_Fc_normal_norm/cnt_contact;

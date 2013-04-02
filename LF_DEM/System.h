@@ -72,11 +72,6 @@ private:
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
-
-
-	inline void increment_time(double _dt){
-		_time += _dt;
-	}
 protected:
 public:
 	double *v_hydro;
@@ -160,13 +155,17 @@ public:
 	double dt;
 	double dt_mid;
 	double dt_ratio;
-	double minvalue_gap_nondim;
+	double max_velocity;
+	double max_ang_velocity;
+	double min_gap_nondim;
 	double max_disp_tan;
+	double max_contact_velocity;
 	double ave_overlap;
 	double average_contact_time;
 	int contact_nb;
 	double average_nearing_time;
 	int nearing_nb;
+	int cnt_monitored_data;
 	double average_Fc_normal_norm;
 	double max_Fc_normal_norm;
 	bool draw_rotation_2d;
@@ -179,7 +178,7 @@ public:
 	void timeEvolution(int time_step);
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteractions(bool _in_predictor=false);
+	void updateInteractions(bool _in_predictor = false);
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
@@ -205,22 +204,22 @@ public:
 	void displacement(int i, const vec3d &dr);
 	
 	/*************************************************************/
-	inline void lx(double length){
+	inline void lx(double length) {
 		_lx = length;
 		_lx2 = 0.5*_lx;
 	}
-	inline void ly(double length){
+	inline void ly(double length) {
 		_ly = length;
 		_ly2 = 0.5*_ly;
 	}
-	inline void lz(double length){
+	inline void lz(double length) {
 		_lz = length;
 		_lz2 = 0.5*_lz;
 	}
-	inline void setRadiusMax(double _radius_max){
+	inline void setRadiusMax(double _radius_max) {
 		radius_max = _radius_max;
 	}
-	inline double valSystemVolume(){
+	inline double valSystemVolume() {
 		return system_volume;
 	}
 	inline double lx(){

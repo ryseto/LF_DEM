@@ -8,6 +8,9 @@
 
 #ifndef __LF_DEM__Interaction__
 #define __LF_DEM__Interaction__
+
+#define RECORD_HISTORY 1
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -39,11 +42,19 @@ private:
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
 	//===== observables  ========================== //
-	
-	double init_nearing_time;
-	double init_contact_time; 
-	bool nearing_on;
-	double nearing_gapnd_cutoff;
+	bool initially_existing;
+//	double duration;
+//	double init_nearing_time;
+//	double init_contact_time;
+//	bool nearing_on;
+//	double nearing_gapnd_cutoff;
+	double min_gap;
+	double max_Fnc;
+	int cnt_sliding_reset;
+	vector <double> gap_history;
+	vector <double> overlap_history;
+	vector <double> disp_tan_sq_history;
+
 	
 	/*********************************
 	 *       Private Methods         *
@@ -60,13 +71,13 @@ private:
 	void checkBreakupStaticFriction();
 
 	//======= internal state switches  ===========//
-	bool updateState();
+	bool checkDeactivation();
 	void activate_contact();
 	void deactivate_contact();
 
 	//===== forces and stresses computations =====//
 	double Fc_normal_norm; // normal contact force
-	double F_colloidal_norm                                                                                                                                                   ;
+	double F_colloidal_norm;
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d Tc_0; // contact torque on p0
@@ -75,8 +86,7 @@ private:
 	void calcContactInteraction();
 	void calcStressTermXF(stresslet &stresslet_,
 						  const vec3d &force);
-//	void calcContactStressTermXF();
-//	void calcColloidalStressTermXF();
+	
 
 protected:
 public:
@@ -95,7 +105,7 @@ public:
 	 * - check breakup of static friction
 	 * - State (deactivation, contact)
 	 */
-	bool updateStatesForceTorque();
+	void updateState(bool &deactivated);
 	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
 	void deactivate();
 	bool active;
@@ -107,6 +117,7 @@ public:
 	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
 	double ro_2; // = ro/2
+	int label;
 
 	//======= relative position/velocity  ========//
 	vec3d nr_vec; // vector center to center
@@ -135,6 +146,7 @@ public:
 	void evaluateLubricationForce();
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}
+	double valContactVelocity(){return contact_velocity.norm();}
 	//	void addLubricationStress();
 	void addHydroStress();
 	void addContactStress();
@@ -147,10 +159,7 @@ public:
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 	
 	//=========== observables ===============================//
-	double nearing_time();
-	double contact_time();
 
-	int label;
 };
 
 
