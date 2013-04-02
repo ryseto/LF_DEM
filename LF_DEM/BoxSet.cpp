@@ -62,6 +62,7 @@ BoxSet::init(double interaction_dist, System *sys_){
 		// tell them their neighbors
 		assignNeighbors();
 	}
+	cout << box_nb << " " << interaction_dist << " " << box_xsize << endl;
 }
 
 void

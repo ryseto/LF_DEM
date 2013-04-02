@@ -12,9 +12,13 @@ using namespace std;
  ******************************************************/
 
 StokesSolver::~StokesSolver(){
-    off_diag_values[0].clear();
-    off_diag_values[1].clear();
-    off_diag_values[2].clear();
+
+    if (!off_diag_values)
+		off_diag_values[0].clear();
+    if (!off_diag_values)
+		off_diag_values[1].clear();
+    if (!off_diag_values)
+		off_diag_values[2].clear();
     if (!diag_values)
 		delete [] diag_values;
 	if (!off_diag_values )
@@ -22,15 +26,19 @@ StokesSolver::~StokesSolver(){
 	if (!ploc)
 		delete [] ploc;
 
-	cholmod_free_dense(&chol_solution, &chol_c);
-	cholmod_free_dense(&chol_rhs, &chol_c);
+	if(!chol_solution)
+		cholmod_free_dense(&chol_solution, &chol_c);
+	if(!chol_rhs)
+		cholmod_free_dense(&chol_rhs, &chol_c);
 	
 	if (brownian){
 		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
 	}
-	
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	cholmod_finish(&chol_c);
+	if(!chol_rfu_matrix)
+		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
+
+	if(chol_init)
+		cholmod_finish(&chol_c);
 	
 #ifdef TRILINOS
 	for (int i=0; i < linalg_size; i++)
@@ -51,6 +59,7 @@ StokesSolver::init(int n, bool is_brownian){
 	// initializing values that can be changed later
 	_direct = true;
 	_iterative = false;
+	chol_init = false;
 }
 
 void
@@ -490,6 +499,7 @@ StokesSolver::allocateRessources(){
 	}
 #endif
     cholmod_start (&chol_c);
+	chol_init = true;
     diag_values = new double [6*np];
     off_diag_values = new vector <double> [3];
     ploc = new int [np+1];

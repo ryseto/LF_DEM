@@ -149,6 +149,8 @@ public:
 	//=========== observables ===============================//
 	double nearing_time();
 	double contact_time();
+
+	int label;
 };
 
 

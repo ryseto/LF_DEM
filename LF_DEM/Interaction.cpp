@@ -55,22 +55,13 @@ Interaction::calcDistanceNormalVector(){
  */
 void
 Interaction::calcContactInteraction(){
-	if (sys->shearrate_scale_Fc_normal){
-		//Fc_normal_norm = exp(kn*(ro-_r))-1;
-		Fc_normal_norm = sys->kn*(ro-_r);
-	} else {
-		Fc_normal_norm = (exp(sys->kn*(ro-_r))-1)/sys->shear_rate;
-	}
+
+	//Fc_normal_norm = exp(kn*(ro-_r))-1;
+	Fc_normal_norm = sys->kn*(ro-_r);
 	Fc_normal = - Fc_normal_norm*nr_vec;
 
 	if (sys->friction){
-		if (sys->shearrate_scale_Fc_normal){
-			double disp_tan_norm =disp_tan.norm(); 
-			Fc_tan = (exp(sys->kt*disp_tan_norm)-1.)*disp_tan/disp_tan_norm;
-			Fc_tan /= sys->shear_rate;
-		} else {
-			Fc_tan = sys->kt*disp_tan;
-		}
+		Fc_tan = sys->kt*disp_tan;
 	}
 }
 

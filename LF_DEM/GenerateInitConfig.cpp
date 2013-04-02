@@ -9,15 +9,62 @@
 #include <stdlib.h> // necessary for Linux
 #include "GenerateInitConfig.h"
 
+#define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
+
+using namespace std;
+
 int
 GenerateInitConfig::generate(int argc, const char * argv[]){
-	epsiron = 0.1;
 	setParameters(argc, argv);
-	position.resize(np);
-	radius.resize(np);
+	sys.np(np);
+
+	sys.allocateRessources();
+	sys.lx(lx);
+	sys.ly(ly);
+	sys.lz(lz);
+	sys.setSystemVolume();
+	sys.volume_fraction = volume_fraction;
+	sys.lub_max = 2.5;
+	sys.in_predictor = false;
+
 	putRandom();
-	solveOverlap();
+
+	sys.setupSystemForGenerateInit();
+
+
+	grad = new vec3d [np];
+	prev_grad = new vec3d [np];
+	step_size=10.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+	step_size /= 4.;
+	gradientDescent();
+
+
+	int count=0;
+	double energy=0.;
+	do{
+		energy = zeroTMonteCarloSweep();
+	}while( count++<200 && energy > 0.);
+
+
+	//	solveOverlap();
 	outputPositionData();
+
+	delete [] grad;
+	delete [] prev_grad;
+
 	return 0;
 }
 
@@ -54,150 +101,276 @@ GenerateInitConfig::outputPositionData(){
 	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 	fout << lx << ' ' << ly << ' ' << lz << endl;
 	for (int i = 0; i < np ; i++){
-		fout << position[i].x << ' ';
-		fout << position[i].y << ' ';
-		fout << position[i].z << ' ';
-		fout << radius[i] << endl;
+		fout << sys.position[i].x << ' ';
+		fout << sys.position[i].y << ' ';
+		fout << sys.position[i].z << ' ';
+		fout << sys.radius[i] << endl;
 	}
 	fout.close();
 }
 
-void
-GenerateInitConfig::solveOverlap(){
-	int cc = 0;
-	vector<int> previous_overlap;
-	previous_overlap.resize(np);
-	double dd = 0.01;
-	vec3d delta_translation;
-	while (true){
-		int i = lrand48() % np;
-		if (dimension == 2){
-			double rand_angle = 2*M_PI*drand48();
-			delta_translation.set(dd*cos(rand_angle), 0, dd*sin(rand_angle));
-		} else {
-			delta_translation = randUniformSphere(dd);
-		}
-		position[i] += delta_translation;
-		position[i].periodicBoundaryBox(lx, ly, lz);
-		int overlap = -1;
-		if (is_contact(i, previous_overlap[i] )){
-			/* First check is the overlap last time is dissolved?
-			 */
-			overlap = previous_overlap[i];
-		} else {
-			/* If previous overlap is resolved.
-			 * search other overlap.
-			 */
-			for (int j = 0; j < np ; j++){
-				if (j != i){
-					if (is_contact(i, j)){
-						previous_overlap[i] = j;
-						overlap = j;
-						break;
-					}
-				}
-			}
-		}
-		if (overlap == -1){
-			if (cc > 10000){
-				if (cc % 10000 == 0 ){
-					if ( checkOverlap() == false){
-						break;
-					}
-				}
-			}
-			cc ++;
-		} else {
-			position[i] += dd*dr;
-			position[i].periodicBoundaryBox(lx, ly, lz);
-			position[overlap] -= dd*dr;
-			position[overlap].periodicBoundaryBox(lx, ly, lz);
-		}
-	}
+
+double
+GenerateInitConfig::computeGradient(){
+
+  int i, j;
+  double r, rcont;
+  vec3d nr_vec;
+
+  double amp, amp2;
+  double energy=0.;
+
+  for(i=0; i<np; i++){
+    for(int u=0;u<sys.dimension;u++){
+		grad[i].reset();
+    }
+  }
+
+
+  for (int k=0; k<sys.num_interaction; k++){
+	  if(sys.interaction[k].contact){
+		  i = sys.interaction[k].par_num[0];
+		  j = sys.interaction[k].par_num[1];
+		  r = sys.interaction[k].r();
+		  rcont = sys.interaction[k].ro;
+		  nr_vec = sys.interaction[k].nr_vec;
+
+		  amp=(1./rcont-1./r); // negative
+		  amp2=4.*amp/rcont;
+
+		  grad[i] -= r*nr_vec*amp2;
+		  grad[j] += r*nr_vec*amp2;
+		  
+		  energy += 2*r*amp*amp;
+	  }
+  }
+
+  return energy;
+
 }
+
+
+
+void
+GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
+  double grad_norm;  
+  double gradient_power=0.9;
+  vec3d step;
+  
+  grad_norm=0.;
+  for(int i=0; i<np;i++){
+    for(int u=0; u<sys.dimension; u++){
+		grad_norm+=g[i].sq_norm();
+    }
+  }
+  
+  if(grad_norm!=0.){
+	double rescale = pow(grad_norm, gradient_power);
+    for(int i=0; i<np;i++){
+		step = -dir*g[i]*step_size/rescale;
+		sys.displacement(i, step);
+    }
+	sys.checkNewInteraction();
+	sys.updateInteractions();
+  }
+  
+}
+
+void 
+GenerateInitConfig::storeGradient(){
+  for(int i=0;i<np;i++){
+      prev_grad[i]=grad[i];
+  }
+}
+
+double
+GenerateInitConfig::gradientDescent(){
+
+  double old_running_energy;
+  double running_energy;
+  double relative_en;  
+ 
+  long long int steps=0;
+
+  cout << endl << " Gradient Descent..." << endl;
+
+  storeGradient();
+
+  running_energy=computeGradient();
+
+  cout << "  Starting Energy "<< running_energy/np << endl;
+
+  do{
+    
+    old_running_energy = running_energy;
+    
+    moveAlongGradient(grad, 1);
+	storeGradient();
+    running_energy=computeGradient();
+    
+    relative_en=(old_running_energy-running_energy)/(old_running_energy+running_energy);
+    
+    if(steps%100==0){
+      cout << "    Steps = " << steps << " :::   Energy : "<< running_energy/np << endl;
+    }
+    
+    steps++;
+    
+  }while(relative_en>1e-6);
+  
+  
+  if(relative_en<0.){
+	  cout << "    Steps = " << steps << " :::   Last Step Upwards. Old Energy : " << old_running_energy/np << " New Energy : " << running_energy/np << " Relative : " << relative_en << endl << "      Reverting last step..." << endl;
+	  
+	  moveAlongGradient(prev_grad,-1);
+	  return old_running_energy;
+  }
+  if(relative_en>0.&&relative_en<1e-6){
+      cout << "    Steps = " << steps << " :::   Stuck: too slow (Relative energy difference : " << relative_en  << endl;
+      cout << "  Ending Energy "<< running_energy << endl<< endl;
+      return running_energy;
+  }
+  
+  return running_energy;
+}
+
+
 
 void
 GenerateInitConfig::putRandom(){
-	srand48(random_seed);
 	for (int i=0; i < np; i++){
-		position[i].x = lx*drand48();
-		position[i].z = lz*drand48();
+		sys.position[i].x = lx*RANDOM;
+		sys.position[i].z = lz*RANDOM;
 		if (dimension == 2){
-			position[i].y = ly2;
+			sys.position[i].y = ly2;
 		} else {
-			position[i].y = ly*drand48();
+			sys.position[i].y = ly*RANDOM;
 		}
 		if (i < np1){
-			radius[i] = a1;
+			sys.radius[i] = a1;
 		} else {
-			radius[i] = a2;
+			sys.radius[i] = a2;
 		}
 	}
+	sys.setRadiusMax(a2);
 }
 
-bool
-GenerateInitConfig::checkOverlap(){
-	static int i_previous = 0;
-	static int j_previous = 1;
-	if ( is_contact(i_previous, j_previous ) ){
-		return true;
+
+
+void
+GenerateInitConfig::updateInteractions(int i){
+
+    set<Interaction*>::iterator it;
+	vector <Interaction*> inter_list;
+
+	for (it = sys.interaction_list[i].begin(); it != sys.interaction_list[i].end(); it ++)
+		inter_list.push_back(*it);
+
+	for (int k=0; k<inter_list.size(); k++){
+		if(inter_list[k]->updateStatesForceTorque())
+			sys.deactivated_interaction.push(inter_list[k]->label);
 	}
-	for (int i = 0; i < np ; i++){
-		for (int j = i+1; j < np ; j++){
-			if ( is_contact(i,j) ){
-				i_previous = i ;
-				j_previous = j ;
-				return true;
-			}
-		}
-	}
-	return false;
+
 }
 
-bool
-GenerateInitConfig::is_contact(int i, int j){
-	const double contact_distance = radius[i] + radius[j] + epsiron;
-	const double sq_contact_distance = contact_distance*contact_distance;
-	dr.x = position[i].x - position[j].x;
-	dr.z = position[i].z - position[j].z;
-	if (dr.z > contact_distance ){
-		dr.z -= lz;
-	} else if (dr.z < -contact_distance){
-		dr.z += lz;
-	}
-	if (abs(dr.z) < contact_distance){
-		if(dr.x > contact_distance){
-			dr.x -= lx;
-		} else if(dr.x < - contact_distance){
-			dr.x += lx;
+
+int
+GenerateInitConfig::overlapNumber(int i){
+
+  int overlaps=0;
+  Interaction *inter;
+  set<Interaction*>::iterator it;
+
+  for (it = sys.interaction_list[i].begin(); it != sys.interaction_list[i].end(); it ++){
+	   inter = *it;
+	   if(inter->r()<inter->ro){
+		   overlaps++;
+	   }
+  }
+  return overlaps;
+
+}
+
+double
+GenerateInitConfig::particleEnergy(int i){
+  double energy = 0.;
+
+  Interaction *inter;
+  set<Interaction*>::iterator it;
+
+  for (it = sys.interaction_list[i].begin(); it != sys.interaction_list[i].end(); it ++){
+	   inter = *it;
+	   if(inter->r()<inter->ro){
+
+		  double r = inter->r();
+		  double rcont = inter->ro;
+
+		  double amp=(r/rcont-1.); // negative
+		  energy += 2*amp*amp;
+	   }
+  }
+  return energy;
+
+}
+
+
+double
+GenerateInitConfig::zeroTMonteCarloSweep(){
+
+	int steps = 0;
+	int init_overlaps = 0;
+	double init_energy=0;
+
+	for(int i=0; i<np; i++)
+	 	init_overlaps += overlapNumber(i);
+
+	for(int i=0; i<np; i++)
+	 	init_energy += particleEnergy(i);
+
+
+	while(steps < np){
+		int moved_part = (int)(RANDOM * np);
+
+
+		//		int overlap_pre_move = overlapNumber(moved_part);
+		double energy_pre_move = particleEnergy(moved_part);
+		vec3d trial_move = randUniformSphere(0.002);
+		trial_move*=RANDOM;
+		sys.displacement(moved_part, trial_move);
+		updateInteractions(moved_part);
+
+		//		int overlap_post_move = overlapNumber(moved_part);
+		double energy_post_move = particleEnergy(moved_part);
+		
+		//		if( overlap_pre_move <= overlap_post_move ){
+		if( energy_pre_move < energy_post_move ){
+			sys.displacement(moved_part, -trial_move);
+			updateInteractions(moved_part);
 		}
-		if (abs(dr.x) < contact_distance){
-			if (dimension == 3){
-				dr.y = position[i].y - position[j].y;
-				if (dr.y > contact_distance ){
-					dr.y -= ly;
-				} else if (dr.y < -contact_distance){
-					dr.y += ly;
-				}
-				if (abs(dr.y) < contact_distance){
-					if (dr.sq_norm() < sq_contact_distance){
-						return true;
-					} 
-				}
-			} else {
-				if (dr.sq_norm_xz() < sq_contact_distance){
-					return true;
-				}
-			}
-		}
+		steps ++;
 	}
-	return false;
+
+	sys.checkNewInteraction();
+	sys.updateInteractions();
+
+	int final_overlaps = 0;
+	double final_energy = 0;
+	for(int i=0; i<np; i++)
+		final_overlaps += overlapNumber(i);
+	for(int i=0; i<np; i++)
+	 	final_energy += particleEnergy(i);
+
+
+	cerr << " MC sweep : init energy " << init_energy/np << " final energy " << final_energy/np << " init overlaps " << init_overlaps << " final overlaps " << final_overlaps << endl;
+
+	return final_energy;
+
 }
 
 vec3d
 GenerateInitConfig::randUniformSphere(double r){
-	double z = 2*drand48() - 1.0;
-	double phi = 2*M_PI*drand48();
+	double z = 2*RANDOM - 1.0;
+	double phi = 2*M_PI*RANDOM;
 	double sin_theta = sqrt(1.0-z*z);
 	return vec3d( r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
 }
@@ -284,4 +457,21 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	cerr << "np1 : np2 " << np1  << ":" << np2 << endl;
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
+
+	sys.np(np);
+	if (np2 > 0){
+		sys.poly = true;
+	}else{
+		sys.poly = false;
+	}
+	cerr << "np = " << np << endl;
+	if (ly == 0){
+		sys.dimension = 2;
+	} else {
+		sys.dimension = 3;
+	}
+	cerr << "dimension = " << sys.dimension << endl;
+
+
+
 }

@@ -35,7 +35,7 @@ private:
 	int np3;
 	int maxnum_interactionpair;
 	BoxSet boxset;
-	queue<int> deactivated_interaction;
+
 	double _lx;
 	double _ly;
 	double _lz;
@@ -58,7 +58,7 @@ private:
 	void deltaTimeEvolution();
 	void deltaTimeEvolutionCorrector();
 	void deltaTimeEvolutionPredictor();
-	void displacement(int i, const vec3d &dr);
+
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildLubricationTerms(bool rhs=true);
@@ -131,6 +131,7 @@ public:
 	double bgf_factor;
 	bool poly;
 	Interaction *interaction;
+	queue<int> deactivated_interaction;
 	int num_interaction;
 	/*
 	 * Leading term of lubrication force is 1/gap_nondim, 
@@ -171,6 +172,7 @@ public:
 	bool draw_rotation_2d;
 	string simu_name;
 	void setSystemVolume();
+	void setupSystemForGenerateInit();
 	void setupSystem(const vector<vec3d> &initial_positions,
 					 const vector <double> &radii);
 	void allocateRessources();
@@ -200,6 +202,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	ofstream fout_trajectory;
+	void displacement(int i, const vec3d &dr);
 	
 	/*************************************************************/
 	inline void lx(double length){

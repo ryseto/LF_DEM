@@ -70,6 +70,7 @@ private:
     cholmod_dense *chol_v_Brownian_init;
     cholmod_dense *chol_v_Brownian_mid;
     cholmod_dense *chol_brownian_rhs;
+	bool chol_init;
 	
     int stype;
     int sorted;
