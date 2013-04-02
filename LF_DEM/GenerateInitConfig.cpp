@@ -334,7 +334,12 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 
 		//		int overlap_pre_move = overlapNumber(moved_part);
 		double energy_pre_move = particleEnergy(moved_part);
-		vec3d trial_move = randUniformSphere(0.002);
+		vec3d trial_move;
+		if(sys.dimension==3)
+			trial_move = randUniformSphere(0.002);
+		if(sys.dimension==2)
+			trial_move = randUniformCircle(0.002);
+
 		trial_move*=RANDOM;
 		sys.displacement(moved_part, trial_move);
 		updateInteractions(moved_part);
@@ -373,6 +378,12 @@ GenerateInitConfig::randUniformSphere(double r){
 	double phi = 2*M_PI*RANDOM;
 	double sin_theta = sqrt(1.0-z*z);
 	return vec3d( r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
+}
+
+vec3d
+GenerateInitConfig::randUniformCircle(double r){
+	double phi = 2*M_PI*RANDOM;
+	return vec3d( r*cos(phi), 0, r*sin(phi));
 }
 
 template<typename T>

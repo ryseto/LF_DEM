@@ -56,6 +56,7 @@ void updateInteractions(int);
 	vec3d dr;
 
 	inline vec3d randUniformSphere(double r);
+	inline vec3d randUniformCircle(double r);
 	double sqContactDistance(int i, int j, double contact_distance);
 
 	void putRandom();
