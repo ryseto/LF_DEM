@@ -8,7 +8,8 @@
 
 #include "System.h"
 
-void System::calcStressesHydroContactBrownian(){
+void
+System::calcStressesHydroContactBrownian(){
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;

@@ -35,9 +35,7 @@ private:
 	int _np;
 	int np3;
 	int maxnum_interactionpair;
-	
 	BoxSet boxset;
-
 	double _lx;
 	double _ly;
 	double _lz;
@@ -171,7 +169,8 @@ public:
 	
 	double overlap_target;
 	double disp_tan_target;
-	
+	queue<int> deactivated_interaction;
+
 	double max_contact_velocity;
 	double ave_overlap;
 	int contact_nb;
@@ -188,6 +187,8 @@ public:
 					 const vector <double> &radii);
 	void allocateRessources();
 	void timeEvolution(int time_step);
+	void displacement(int i, const vec3d &dr);
+
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions(bool _in_predictor = false);

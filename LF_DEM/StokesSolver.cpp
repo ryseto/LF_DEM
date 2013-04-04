@@ -12,9 +12,15 @@ using namespace std;
  ******************************************************/
 
 StokesSolver::~StokesSolver(){
-    off_diag_values[0].clear();
-    off_diag_values[1].clear();
-    off_diag_values[2].clear();
+    if (!off_diag_values) {
+		off_diag_values[0].clear();
+	}
+    if (!off_diag_values) {
+		off_diag_values[1].clear();
+	}
+    if (!off_diag_values) {
+		off_diag_values[2].clear();
+	}
     if (!diag_values) {
 		delete [] diag_values;
 	}
@@ -24,18 +30,21 @@ StokesSolver::~StokesSolver(){
 	if (!ploc) {
 		delete [] ploc;
 	}
-	
-	cholmod_free_dense(&chol_solution, &chol_c);
-	cholmod_free_dense(&chol_rhs, &chol_c);
-	
+	if(!chol_solution) {
+		cholmod_free_dense(&chol_solution, &chol_c);
+	}
+	if(!chol_rhs) {
+		cholmod_free_dense(&chol_rhs, &chol_c);
+	}
 	if (brownian) {
 		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
 	}
-	if(!chol_rfu_matrix)
+	if(!chol_rfu_matrix) {
 		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-
-	if(chol_init)
+	}
+	if(chol_init) {
 		cholmod_finish(&chol_c);
+	}
 	
 #ifdef TRILINOS
 	for (int i=0; i<linalg_size; i++) {
