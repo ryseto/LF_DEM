@@ -17,6 +17,8 @@ class Simulation{
 private:
 	System sys;
 	string filename_addition;
+	bool dt_adjustment;
+	bool kn_kt_adjustment;
 	double shear_strain_end;
 	bool import_positions;
 	vector<vec3d> initial_positions;
@@ -63,11 +65,6 @@ private:
 	double Viscosity_2_c;
 	double N1_2;
 	double N2_2;
-	
-	/*
-	 *  Simulation parameters
-	 */
-	double strain_interval_out;
 	/*
 	 * For output data.
 	 */

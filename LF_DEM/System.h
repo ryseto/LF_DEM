@@ -13,6 +13,7 @@
 #include <vector>
 #include <fstream>
 #include <queue>
+#include <list>
 #include <string>
 #include "common.h"
 #include "Interaction.h"
@@ -73,6 +74,12 @@ private:
 	void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
+	double evaluateMaxOverlap();
+	double evaluateMaxDispTan();
+	double evaluateMaxContactVelocity();
+	double evaluateMaxVelocity();
+	double evaluateMaxAngVelocity();
+	
 protected:
 public:
 	System(){};
@@ -159,22 +166,22 @@ public:
 	double max_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
+	double max_overlap; // = ro-r
 	double max_disp_tan;
+	
+	double overlap_target;
+	double disp_tan_target;
+	
 	double max_contact_velocity;
 	double ave_overlap;
-	double average_contact_time;
 	int contact_nb;
-	double average_nearing_time;
-	int nearing_nb;
 	int cnt_monitored_data;
 	double average_Fc_normal_norm;
 	double max_Fc_normal_norm;
 	bool draw_rotation_2d;
 	string simu_name;
 	ofstream fout_int_data;
-
-	
-	
+	double strain_interval_output;
 	void setSystemVolume();
 	void setupSystem(const vector<vec3d> &initial_positions,
 					 const vector <double> &radii);
@@ -205,56 +212,70 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	void openFileInteractionData();
+	void adjustContactModelParameters();
+	void adjustTimeStep();
+
 	/*************************************************************/
 	inline void lx(double length) {
 		_lx = length;
 		_lx2 = 0.5*_lx;
 	}
+
 	inline void ly(double length) {
 		_ly = length;
 		_ly2 = 0.5*_ly;
 	}
+
 	inline void lz(double length) {
 		_lz = length;
 		_lz2 = 0.5*_lz;
 	}
+
 	inline void setRadiusMax(double _radius_max) {
 		radius_max = _radius_max;
 	}
+
 	inline double valSystemVolume() {
 		return system_volume;
 	}
+
 	inline double lx(){
 		return _lx;
 	}
+
 	inline double ly(){
 		return _ly;
 	}
+
 	inline double lz(){
 		return _lz;
 	}
+
 	inline double lx2(){
 		return _lx2;
 	}
+
 	inline double ly2(){
 		return _ly2;
 	}
+
 	inline double lz2(){
 		return _lz2;
 	}
+
 	inline void np(int val){
 		_np = val;
 		np3 = 3*_np;
 	}
+
 	inline int np(){
 		return _np;
 	}
+
 	inline double rho(){ // N/V
 		return _rho;
 	}
-//	inline double time(){
-//		return _time;
-//	}
+
 	inline double strain(){
 		return shear_strain;
 	}

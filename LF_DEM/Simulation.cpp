@@ -48,14 +48,20 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	openOutputFiles();
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
-	int i_time_interval = strain_interval_out/sys.dt;
 	outputConfigurationData();
 	while(sys.strain() <= shear_strain_end){
+		int i_time_interval = sys.strain_interval_output/sys.dt;
 		cerr << "strain: " << sys.strain() << endl;
 		sys.timeEvolution(i_time_interval);
 		evaluateData();
 		outputRheologyData();
 		outputConfigurationData();
+		if (kn_kt_adjustment) {
+			sys.adjustContactModelParameters();
+		}
+		if (dt_adjustment) {
+			sys.adjustTimeStep();
+		}
 	}
 }
 
@@ -102,6 +108,10 @@ Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
 	if (keyword == "bgf_factor"){
 		sys.bgf_factor = atof(value.c_str());
+	} else if (keyword == "dt_adjustment"){
+		dt_adjustment = str2bool(value);
+	} else if (keyword == "kn_kt_adjustment"){
+		kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "cf_amp_dl0"){
 		cf_amp_dl0 = atof(value.c_str());
 	} else if (keyword == "cf_range_dl"){
@@ -127,21 +137,25 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "kt"){
 		sys.kt = atof(value.c_str());
 	} else if (keyword == "mu_static"){
-		sys.mu_static = atof(value.c_str());
-	} else if (keyword == "viscosity_solvent"){
+		sys.mu_static = atof(value.c_str()) ;
+	} else if (keyword == "viscosity_solvent") {
 		viscosity_solvent = atof(value.c_str());
-	} else if (keyword == "radius_of_particle"){
+	} else if (keyword == "radius_of_particle") {
 		radius_of_particle = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
-		strain_interval_out = atof(value.c_str());
-	} else if (keyword == "draw_rotation_2d"){
+		sys.strain_interval_output = atof(value.c_str());
+	} else if (keyword == "draw_rotation_2d") {
 		sys.draw_rotation_2d = str2bool(value);
-	} else if (keyword == "out_data_particle"){
+	} else if (keyword == "out_data_particle") {
 		out_data_particle = str2bool(value);
-	} else if (keyword == "out_data_interaction"){
+	} else if (keyword == "out_data_interaction") {
 		out_data_interaction = str2bool(value);
-	} else if (keyword == "origin_zero_flow"){
+	} else if (keyword == "origin_zero_flow") {
 		origin_zero_flow = str2bool(value);
+	} else if (keyword == "overlap_target") {
+		sys.overlap_target = atof(value.c_str());
+	} else if (keyword == "disp_tan_target") {
+		sys.disp_tan_target = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -210,6 +224,8 @@ Simulation::openOutputFiles(){
 
 void
 Simulation::setDefaultParameters(){
+	dt_adjustment = false;
+	kn_kt_adjustment = false;
 	/*
 	 * 
 	 */
@@ -284,7 +300,9 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.kn = 5000;
 	sys.kt = 1000;
-	/* 
+	sys.overlap_target = 0.03;
+	sys.disp_tan_target = 0.03;
+	/*
 	 * Colloidal force parameter
 	 * Short range repulsion is assumed.
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
@@ -299,7 +317,7 @@ Simulation::setDefaultParameters(){
 	/*
 	 * Output interval
 	 */
-	strain_interval_out = 0.01;
+	sys.strain_interval_output = 0.05;
 	/*
 	 *  Data output
 	 */
@@ -503,6 +521,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.max_velocity << ' '; // 24
 	fout_rheo << sys.max_ang_velocity << ' '; // 25
 	fout_rheo << sys.contact_nb << ' '; // 26
+	fout_rheo << sys.kn << ' ';
+	fout_rheo << sys.kt << ' ';
+	fout_rheo << sys.dt << ' ';
 	fout_rheo << endl;
 }
 
@@ -636,8 +657,7 @@ Simulation::outputConfigurationData(){
 		}
 	}
 	fout_interaction << "#" << sp << sys.strain() << sp ;
-	fout_interaction << cnt_interaction << " avg_contact_time: " << sys.average_contact_time;
-	fout_interaction << " avg_nearing_time: " << sys.average_nearing_time << endl;
+	fout_interaction << cnt_interaction << endl;
 	for (int k=0; k<sys.num_interaction; k++){
 		if (sys.interaction[k].active){
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
@@ -653,6 +673,7 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 11
 			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 12
 			fout_interaction << sys.interaction[k].contact << sp; // 13
+			fout_interaction << sys.interaction[k].getContactVelocity() << sp; // 14
 			fout_interaction << endl;
 		}
 	}

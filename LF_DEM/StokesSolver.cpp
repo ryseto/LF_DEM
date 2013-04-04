@@ -15,17 +15,20 @@ StokesSolver::~StokesSolver(){
     off_diag_values[0].clear();
     off_diag_values[1].clear();
     off_diag_values[2].clear();
-    if (!diag_values)
+    if (!diag_values) {
 		delete [] diag_values;
-	if (!off_diag_values )
+	}
+	if (!off_diag_values) {
 		delete [] off_diag_values;
-	if (!ploc)
+	}
+	if (!ploc) {
 		delete [] ploc;
-
+	}
+	
 	cholmod_free_dense(&chol_solution, &chol_c);
 	cholmod_free_dense(&chol_rhs, &chol_c);
 	
-	if (brownian){
+	if (brownian) {
 		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
 	}
 	
@@ -33,12 +36,14 @@ StokesSolver::~StokesSolver(){
 	cholmod_finish(&chol_c);
 	
 #ifdef TRILINOS
-	for (int i=0; i < linalg_size; i++)
+	for (int i=0; i<linalg_size; i++) {
 		delete [] columns[i];
+	}
 	delete [] columns;
 	delete [] columns_nb;
-	for (int i=0; i < linalg_size; i++)
+	for (int i=0; i<linalg_size; i++){
 		delete [] values[i];
+	}
 	delete [] values;
 #endif
 }
@@ -183,7 +188,7 @@ StokesSolver::complete_RFU_cholmod(){
 		((int*)chol_rfu_matrix->p)[j3  ] = j6   + 3*ploc[j];
 		((int*)chol_rfu_matrix->p)[j3+1] = j6+3 + 2*ploc[j] +   ploc[j+1];
 		((int*)chol_rfu_matrix->p)[j3+2] = j6+5 +   ploc[j] + 2*ploc[j+1];
-
+		
 		int pj3   = ((int*)chol_rfu_matrix->p)[j3];
 		int pj3_1 = ((int*)chol_rfu_matrix->p)[j3+1];
 		int pj3_2 = ((int*)chol_rfu_matrix->p)[j3+2];

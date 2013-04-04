@@ -43,10 +43,8 @@ private:
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
 	double strain_contact_start; // the strain at h=0.
-	double strain_static_contac_start;
 	double duration; // entire lifetime
 	double duration_contact; // enture duraction for h < 0
-	double max_duration_static_contact; // duration twhena spring
 	double max_stress; // Maximum value of stress in the all history of this object.
 	int cnt_sliding_reset;  // to count the number of slips.
 	double max_sq_Ftc; // squre of the tangential contact force.
@@ -124,7 +122,13 @@ public:
 	vec3d nr_vec; // vector center to center
 	inline double r(){return _r;}
 	inline double gap_nondim(){return _gap_nondim;}
-
+	inline double overlap(){
+		if (contact){
+			return ro-_r;
+		} else {
+			return 0;
+		}
+	}
 	//======= internal state =====================//
 	bool contact;
 
@@ -150,7 +154,8 @@ public:
 	void evaluateLubricationForce();
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}
-	double valContactVelocity(){return contact_velocity.norm();}
+	double getContactVelocity();
+	
 	//	void addLubricationStress();
 	void addHydroStress();
 	void addContactStress();

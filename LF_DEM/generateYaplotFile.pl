@@ -82,8 +82,8 @@ sub InInteractions {
 	}
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz, $fcol,
-		$nx, $ny, $nz, $gap, $sxz_lub, $neartime, $fric_st) = split(/\s+/, $line);
+		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz,
+		$nx, $ny, $nz, $gap, $sxz_lub, $contact, $cv) = split(/\s+/, $line);
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
@@ -94,9 +94,9 @@ sub InInteractions {
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
-		#		printf "$f_lub\n";
-		$NearTime[$k] = $neartime;
 		$Gap[$k] = $gap;
+		$ContVelo[$k] = $cv;
+		printf "$cv\n" ;
 	}
 }
 
@@ -109,11 +109,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = 0.2*$radius[0];
+	$r = $radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = 0.2*$radius[$i];
+			$r = $radius[$i];
 			printf OUT "r $r\n";
 		}
 		if ($y_section == 0 ||
@@ -141,20 +141,32 @@ sub OutYaplotData{
 		#$force = $Fcol[$k];
 		#$force = $Fc_n[$k];
 		$force = $F_lub[$k];
-        if ($force < -50){
+        if ($force < -1){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
     }
+	
    printf OUT "@ 4\n";
    for ($k = 0; $k < $num_interaction; $k ++){
-	   $force = $F_lub[$k]+ $Fc_n[$k] + $Fcol[$k];
+	   $force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 	   
-	   if ($force > 50){
+	   if ($force > 1){
            $string_width = ${force_factor}*${force};
 		   &OutString_width($int0[$k], $int1[$k]);
 	   }
     }
+	printf OUT "y 4\n";
+	printf OUT "@ 5\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		
+		
+		$radius = $ContVelo[$k]/10;
+		printf OUT "r $radius\n";
+		&OutCircle_middle($int0[$k],  $int1[$k]);
+
+    }
+	
 	if ($Ly == 0){
 		printf OUT "y 6\n";
 		printf OUT "@ 0\n";
@@ -266,7 +278,7 @@ sub OutCircle_middle {
     $yj = $posy[$j];
     $zj = $posz[$j];
     $xc = ($posx[$i] + $posx[$j])/2;
-    $yc = ($posy[$i] + $posy[$j])/2;
+    $yc = ($posy[$i] + $posy[$j])/2-0.01;
     $zc = ($posz[$i] + $posz[$j])/2;
 	
 	if (abs($xi-$xj) < $radius_max*5
