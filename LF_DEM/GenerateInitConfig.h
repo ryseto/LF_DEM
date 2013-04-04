@@ -15,11 +15,16 @@
 #include <vector>
 #include <string>
 #include "vec3d.h"
+#include "System.h"
+
 using namespace std;
+
+
 
 class GenerateInitConfig{
 private:
-	int random_seed;
+	System sys;
+
 	int dimension;
 	
 	double volume_fraction;
@@ -29,21 +34,31 @@ private:
 	double number_ratio;
 	double a1;
 	double a2;
-	/*
-	 * Small gap
-	 */
-	double epsiron;
+
+vec3d *grad;
+vec3d *prev_grad;
+double gradientDescent();
+double computeGradient();
+void moveAlongGradient(vec3d*, int);
+void storeGradient();
+double step_size;
+MTRand rand_gen;
+
+double zeroTMonteCarloSweep();
+int overlapNumber(int);
+double particleEnergy(int);
+void updateInteractions(int);
+
 	vector<vec3d> position;
 	vector<double> radius;
 	int np, np1, np2;
 	vec3d dr;
 
 	inline vec3d randUniformSphere(double r);
+	inline vec3d randUniformCircle(double r);
 	double sqContactDistance(int i, int j, double contact_distance);
-	bool is_contact(int i, int j);
-	bool checkOverlap();
+
 	void putRandom();
-	void solveOverlap();
 	void setParameters(int argc, const char * argv[]);
 	void outputPositionData();
 public:

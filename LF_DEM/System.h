@@ -37,7 +37,7 @@ private:
 	int maxnum_interactionpair;
 	
 	BoxSet boxset;
-	queue<int> deactivated_interaction;
+
 	double _lx;
 	double _ly;
 	double _lz;
@@ -60,7 +60,7 @@ private:
 	void deltaTimeEvolution();
 	void deltaTimeEvolutionCorrector();
 	void deltaTimeEvolutionPredictor();
-	void displacement(int i, const vec3d &dr);
+
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildLubricationTerms(bool rhs=true);
@@ -183,6 +183,7 @@ public:
 	ofstream fout_int_data;
 	double strain_interval_output;
 	void setSystemVolume();
+	void setupSystemForGenerateInit();
 	void setupSystem(const vector<vec3d> &initial_positions,
 					 const vector <double> &radii);
 	void allocateRessources();

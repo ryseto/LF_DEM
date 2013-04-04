@@ -31,9 +31,11 @@ StokesSolver::~StokesSolver(){
 	if (brownian) {
 		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
 	}
-	
-	cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
-	cholmod_finish(&chol_c);
+	if(!chol_rfu_matrix)
+		cholmod_free_sparse(&chol_rfu_matrix, &chol_c);
+
+	if(chol_init)
+		cholmod_finish(&chol_c);
 	
 #ifdef TRILINOS
 	for (int i=0; i<linalg_size; i++) {
@@ -56,6 +58,7 @@ StokesSolver::init(int n, bool is_brownian){
 	// initializing values that can be changed later
 	_direct = true;
 	_iterative = false;
+	chol_init = false;
 }
 
 void
@@ -495,6 +498,7 @@ StokesSolver::allocateRessources(){
 	}
 #endif
     cholmod_start (&chol_c);
+	chol_init = true;
     diag_values = new double [6*np];
     off_diag_values = new vector <double> [3];
     ploc = new int [np+1];

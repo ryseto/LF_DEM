@@ -117,6 +117,7 @@ public:
 	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
 	double ro_2; // = ro/2
+	int label;
 
 	//======= relative position/velocity  ========//
 	vec3d nr_vec; // vector center to center
@@ -170,7 +171,6 @@ public:
 	void integrateStress();
 
 	//=========== observables ===============================//
-	//	double nearing_time();
-	//	double contact_time();
+
 };
 #endif /* defined(__LF_DEM__Interaction__) */

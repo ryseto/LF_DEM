@@ -101,6 +101,46 @@ System::allocateRessources(){
 	stokes_solver.init(_np, brownian);
 }
 
+
+void
+System::setupSystemForGenerateInit(){
+
+	for (int i=0; i < _np; i++){
+		radius_cubic[i] = radius[i]*radius[i]*radius[i];
+		angle[i] = 0;
+	}
+	for (int k=0; k<maxnum_interactionpair ; k++){
+		interaction[k].init(this);
+		interaction[k].label = k;
+	}
+	for (int i=0; i<_np; i++){
+		velocity[i].reset();
+	}
+	dt = dt/radius_max;
+	shear_strain = 0;
+	shear_disp = 0;
+	num_interaction = 0;
+	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
+	if (contact_relaxzation_time < 0){
+		// 1/(h+c) --> 1/c
+		lub_coeff_contact = 1/lub_reduce_parameter;
+	} else {
+		/* t = beta/kn
+		 *  beta = t*kn
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 */
+		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+	}
+	ts = 0;
+	shear_disp = 0;
+	_time = 0;
+	vel_difference = _lz;
+
+	initializeBoxing();
+	checkNewInteraction();
+}
+
+
 void
 System::setupSystem(const vector<vec3d> &initial_positions,
 					const vector<double> &radii){
@@ -129,6 +169,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	}
 	for (int k=0; k<maxnum_interactionpair ; k++) {
 		interaction[k].init(this);
+		interaction[k].label = k;
 	}
 	for (int i=0; i<_np; i++) {
 		velocity[i].reset();
