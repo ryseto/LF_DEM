@@ -17,6 +17,7 @@ class Simulation{
 private:
 	System sys;
 	string filename_addition;
+	int num_of_particle;
 	bool dt_adjustment;
 	bool kn_kt_adjustment;
 	double shear_strain_end;
@@ -109,5 +110,8 @@ public:
 	Simulation();
 	~Simulation();
 	void SimulationMain(int argc, const char * argv[]);
+	void RelaxzationZeroShear(vector<vec3d> &positions,
+							  vector<double> &radii,
+							  double lx, double ly, double lz);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

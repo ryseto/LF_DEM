@@ -40,15 +40,16 @@ private:
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
+	double colloidal_force_amplitude;
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
 	double strain_contact_start; // the strain at h=0.
 	double duration; // entire lifetime
 	double duration_contact; // enture duraction for h < 0
 	double max_stress; // Maximum value of stress in the all history of this object.
-	int cnt_sliding_reset;  // to count the number of slips.
-	double max_sq_Ftc; // squre of the tangential contact force.
-	double max_Fnc;
+	int cnt_sliding;  // to count the number of slips.
+//	double max_sq_Ftc; // squre of the tangential contact force.
+//	double max_Fnc;
 #ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;
@@ -64,13 +65,12 @@ private:
 	double invlambda; // a0/a1
 
 	//======= relative position/velocity  ========//
-	void r(double new_r);
+	void r(const double &new_r);
 	void calcDistanceNormalVector();
 	void calcContactVelocity();
 	void checkBreakupStaticFriction();
 
 	//======= internal state switches  ===========//
-	bool checkDeactivation();
 	void activate_contact();
 	void deactivate_contact();
 	
@@ -106,7 +106,7 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool &deactivated);
-	void activate(int i, int j, const vec3d &pos_diff, double distance, int zshift);
+	void activate(int i, int j);
 	void deactivate();
 	bool active;
 
@@ -117,6 +117,7 @@ public:
 	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
 	double ro_2; // = ro/2
+	double ro_contactforce;
 	int label;
 
 	//======= relative position/velocity  ========//
@@ -156,6 +157,7 @@ public:
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}
 	double getContactVelocity();
+	double calcPotentialEnergy();
 	
 	//	void addLubricationStress();
 	void addHydroStress();

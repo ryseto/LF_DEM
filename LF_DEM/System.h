@@ -47,7 +47,6 @@ private:
 	double sq_lub_max;
 	double _rho; // N/V
 	double shear_strain;
-	double _time;
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -80,7 +79,7 @@ private:
 	
 protected:
 public:
-	System(){};
+	System();
 	~System();
 	
 	double *v_hydro;
@@ -130,7 +129,7 @@ public:
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	double diag_stokes_drag;
 	double bgf_factor;
-	bool poly;
+
 	
 	int num_interaction;
 	double d_strain;
@@ -181,12 +180,16 @@ public:
 	string simu_name;
 	ofstream fout_int_data;
 	double strain_interval_output;
+	double total_energy;
+	
+	
 	void setSystemVolume();
 	void setupSystemForGenerateInit();
 	void setupSystem(const vector<vec3d> &initial_positions,
 					 const vector <double> &radii);
 	void allocateRessources();
 	void timeEvolution(int time_step);
+	void timeEvolutionRelax(int time_step);
 	void displacement(int i, const vec3d &dr);
 
 	void checkNewInteraction();
@@ -216,7 +219,16 @@ public:
 	void openFileInteractionData();
 	void adjustContactModelParameters();
 	void adjustTimeStep();
+	void calcTotalPotentialEnergy();
 
+
+	void setupShearFlow(bool activate){
+		if (activate) {
+			vel_difference = _lz;
+		} else {
+			vel_difference = 0;
+		}
+	}
 	/*************************************************************/
 	inline void lx(double length) {
 		_lx = length;

@@ -18,7 +18,7 @@ Interaction::init(System *sys_){
 }
 
 void
-Interaction::r(double new_r){
+Interaction::r(const double &new_r){
 	_r = new_r;
 	_gap_nondim = 2*_r/ro-2;
 	if (_gap_nondim > 0) {
@@ -39,14 +39,69 @@ Interaction::calcDistanceNormalVector(){
 	r_vec = sys->position[par_num[1]]-sys->position[par_num[0]];
 	sys->periodize_diff(r_vec, zshift);
 	r(r_vec.norm());
-	nr_vec = r_vec/r();
+	nr_vec = r_vec/_r;
+}
+
+/* Activate interaction between particles i and j.
+ * Always j>i is satisfied.
+ */
+void
+Interaction::activate(int i, int j){
+	active = true;
+	if (j > i) {
+		par_num[0] = i;
+		par_num[1] = j;
+	} else {
+		par_num[0] = j;
+		par_num[1] = i;
+	}
+	// tell it to particles i and j
+	sys->interaction_list[i].insert(this);
+	sys->interaction_list[j].insert(this);
+	// tell them their new partner
+	sys->interaction_partners[i].insert(j);
+	sys->interaction_partners[j].insert(i);
+	a0 = sys->radius[par_num[0]];
+	a1 = sys->radius[par_num[1]];
+	ro = a0+a1;
+	ro_2 = ro/2;
+	r_lub_max = 0.5*ro*sys->lub_max;
+	colloidal_force_amplitude = sys->cf_amp_dl*ro_2;
+	lambda = a1/a0;
+	invlambda = 1/lambda;
+	calcDistanceNormalVector();
+	if (_gap_nondim < 0) {
+		activate_contact();
+	} else {
+		contact = false;
+	}
+	cnt_sliding = 0;
+	strain_lub_start = sys->strain(); // for output
+	duration_contact = 0; // for output
+	max_stress = 0; // for output
+	stress_xz_integration = 0; // for output
+	return;
+}
+
+void
+Interaction::deactivate(){
+	// r > lub_max
+#ifdef RECORD_HISTORY
+	gap_history.clear();
+#endif
+	outputSummary();
+	active = false;
+	sys->interaction_list[par_num[0]].erase(this);
+	sys->interaction_list[par_num[1]].erase(this);
+	sys->interaction_partners[par_num[0]].erase(par_num[1]);
+	sys->interaction_partners[par_num[1]].erase(par_num[0]);
 }
 
 /*********************************
-*                                *
-*	   Contact Forces Methods    *
-*                                *
-*********************************/
+ *                                *
+ *	   Contact Forces Methods    *
+ *                                *
+ *********************************/
 /*
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
@@ -55,18 +110,14 @@ Interaction::calcDistanceNormalVector(){
  */
 void
 Interaction::calcContactInteraction(){
-	//Fc_normal_norm = exp(kn*(ro-_r))-1;
 	Fc_normal_norm = sys->kn*(ro-_r);
 	Fc_normal = -Fc_normal_norm*nr_vec;
 	if (sys->friction) {
-		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;// projection
+		/* disp_tan is orthogonal to the normal vector.
+		 */
+		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
 		Fc_tan = sys->kt*disp_tan;
-	}
-	if (Fc_normal_norm > max_Fnc) {
-		max_Fnc = Fc_normal_norm;
-	}
-	if (Fc_tan.sq_norm() > max_sq_Ftc) {
-		max_sq_Ftc = Fc_tan.sq_norm();
+		checkBreakupStaticFriction();
 	}
 }
 
@@ -92,15 +143,13 @@ Interaction::addUpContactForceTorque(){
  */
 void
 Interaction::addUpColloidalForce(){
-	if (contact == false) {
-		sys->colloidal_force[par_num[0]] += F_colloidal;
-		sys->colloidal_force[par_num[1]] -= F_colloidal;
-	}
+	sys->colloidal_force[par_num[0]] += F_colloidal;
+	sys->colloidal_force[par_num[1]] -= F_colloidal;
 }
 
 /* Relative velocity of particle 1 from particle 0.
  *
- * Use: 
+ * Use:
  *  sys->velocity and ang_velocity
  *
  */
@@ -133,10 +182,10 @@ Interaction::calcContactVelocity(){
 
 
 /*********************************
-*                                *
-*  Lubrication Forces Methods    *
-*                                *
-*********************************/
+ *                                *
+ *  Lubrication Forces Methods    *
+ *                                *
+ *********************************/
 
 // Resistance functions
 void
@@ -240,7 +289,7 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	double roro = ro*ro;
 	double a0a0 = a0*a0;
 	double a1a1 = a1*a1;
-
+	
 	calcXM();
 	double common_factor_i = 5*(a0*a0a0*XM[0]/3+ro*roro*XM[1]/24)*n0n2;
 	double common_factor_j = 5*(a1*a1a1*XM[3]/3+ro*roro*XM[2]/24)*n0n2;
@@ -250,7 +299,7 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	stresslet_i.elm[2] = n0n2*common_factor_i;
 	stresslet_i.elm[3] = n1n2*common_factor_i;
 	stresslet_i.elm[4] = n1n1_13*common_factor_i;
-
+	
 	stresslet_j.elm[0] = n0n0_13*common_factor_j;
 	stresslet_j.elm[1] = n0n1*common_factor_j;
 	stresslet_j.elm[2] = n0n2*common_factor_j;
@@ -285,7 +334,7 @@ Interaction::addHydroStress(){
 	total_stress_xz += (sys->lubstress[par_num[0]].elm[2] + sys->lubstress[par_num[0]].elm[2])*sys->d_strain;
 }
 
-/* Lubriction force between two particles is calculated. 
+/* Lubriction force between two particles is calculated.
  * Note that only the Brownian component of the velocity is NOT included here.
  * This part is used for ouput data.
  * lubforce_j = -lubforce_i
@@ -297,8 +346,10 @@ Interaction::evaluateLubricationForce(){
 	 */
 	vec3d vi = sys->velocity[par_num[0]];
 	vec3d vj = sys->velocity[par_num[1]];
-	vi.x -= sys->position[par_num[0]].z;
-	vj.x -= sys->position[par_num[1]].z;
+	if (sys->vel_difference > 0) {
+		vi.x -= sys->position[par_num[0]].z;
+		vj.x -= sys->position[par_num[1]].z;
+	}
 	calcXA();
 	double cf_AU_i = -dot(a0*XA[0]*vi+0.5*ro*XA[1]*vj, nr_vec);
 	/*
@@ -390,78 +441,12 @@ Interaction::partner(int i){
 	}
 }
 
-/* Activate interaction between particles i and j.
- * Always j>i is satisfied.
- */
-void
-Interaction::activate(int i, int j,
-					  const vec3d &pos_diff,
-					  double distance, int _zshift){
-	active = true;
-	strain_lub_start = sys->strain(); // for output
-	duration_contact = 0; // for output
-	max_Fnc = 0; // for output
-	max_sq_Ftc = 0; // for output
-	max_stress = 0; // for output
-	stress_xz_integration = 0; // for output
-	cnt_sliding_reset = 0;
-	Fc_normal_norm = 0;
-	Fc_normal.reset();
-	F_colloidal_norm = 0;
-	Fc_tan.reset();
-	r_vec = pos_diff;
-	r(distance);
-	nr_vec = r_vec/r();
-	zshift = _zshift;
-	if (j > i) {
-		par_num[0] = i;
-		par_num[1] = j;
-	} else {
-		par_num[0] = j;
-		par_num[1] = i;
-	}		
-	// tell it to particles i and j
-	sys->interaction_list[i].insert(this);
-	sys->interaction_list[j].insert(this);
-	// tell them their new partner
-	sys->interaction_partners[i].insert(j);
-	sys->interaction_partners[j].insert(i);
-	a0 = sys->radius[par_num[0]];
-	a1 = sys->radius[par_num[1]];
-	ro = a0+a1;
-	ro_2 = ro/2;
-	if (distance > ro) {
-		contact = false;
-	} else {
-		contact = true;
-	}
-	
-	lambda = a1/a0;
-	invlambda = 1/lambda;
-	r_lub_max = 0.5*ro*sys->lub_max;
-	return;
-}
-
-void
-Interaction::deactivate(){
-	// r > lub_max
-#ifdef RECORD_HISTORY
-	gap_history.clear();
-#endif
-	outputSummary();
-	active = false;
-	sys->interaction_list[par_num[0]].erase(this);
-	sys->interaction_list[par_num[1]].erase(this);
-	sys->interaction_partners[par_num[0]].erase(par_num[1]);
-	sys->interaction_partners[par_num[1]].erase(par_num[0]);
-}
 
 void
 Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
 	disp_tan.reset();
-	F_colloidal_norm = 0;
 	strain_contact_start = sys->strain();
 }
 
@@ -482,9 +467,9 @@ Interaction::deactivate_contact(){
 #ifdef RECORD_HISTORY
 void
 Interaction::outputHistory(){
-	cerr << "cnt_sliding_reset =" << cnt_sliding_reset << ' ' << max_Fnc << endl;
-	if (sys->strain() > 2){
-		for (int i=0; i<disp_tan_sq_history.size(); i += 1){
+	cerr << "cnt_sliding =" << cnt_sliding << ' '  << endl;
+	if (sys->strain() > 1){
+		for (int i=0; i<disp_tan_sq_history.size(); i += 10){
 			cout << overlap_history[i] << ' ' << sqrt(disp_tan_sq_history[i]) << endl;
 		}
 		cout << endl;
@@ -499,94 +484,77 @@ Interaction::outputHistory(){
 #endif
 
 /*
- */
-bool
-Interaction::checkDeactivation(){
-	if (r() > r_lub_max) {
-		deactivate();
-		return true; // breakup
-	} else {
-		if (contact) {
-			if (r() > ro) {
-				deactivate_contact();
-			}
-		} else {
-			// contact false:
-			if (r() <= ro) {
-				activate_contact();
-			}
-		}
-	}
-	return false;
-}
-
-/*
  *
  */
 void
 Interaction::updateState(bool &deactivated){
-	if (active) {
-		/* update tangential displacement: we do it before updating nr_vec
-		 * as it should be along the tangential vector defined in the previous time step
-		 *
-
-		 */
-		// compute new r_vec and distance
-		// z_shift is updated
-		if (contact) {
+	if (active == false) {
+		return;
+	}
+	/* update tangential displacement: we do it before updating nr_vec
+	 * as it should be along the tangential vector defined in the previous time step
+	 */
+	if (contact) {
+		if (sys->friction) {
 			calcContactVelocity();
 			disp_tan += contact_velocity*sys->dt;
 		}
 		calcDistanceNormalVector();
-		if (contact) {
-			calcContactInteraction();
-			if (!sys->in_predictor) {
-				checkBreakupStaticFriction();
-			}
-		} else {
-			if (sys->colloidalforce) {
-				F_colloidal_norm = -sys->cf_amp_dl*ro_2*exp(-(_r-ro)/sys->cf_range_dl);
-				F_colloidal = F_colloidal_norm*nr_vec;
-			}
+		if (_gap_nondim > 0) {
+			deactivate_contact();
 		}
-		// compute new contact forces if needed
-		// check new state of the interaction
+		if (sys->colloidalforce) {
+			calcContactInteraction();
+			/* For continuity, the colloidal force is kept as constant for h < 0.
+			 * This force does not affect the friction law,
+			 * i.e. it is separated from Fc_normal_norm.
+			 */
+			F_colloidal_norm = colloidal_force_amplitude;
+			F_colloidal = -F_colloidal_norm*nr_vec;
+		} else {
+			calcContactInteraction();
+		}
+	} else {
+		calcDistanceNormalVector();
+		if (_gap_nondim <= 0) {
+			activate_contact();
+		}
+		if (sys->colloidalforce) {
+			F_colloidal_norm = colloidal_force_amplitude*exp(-(_r-ro)/sys->cf_range_dl);
+			F_colloidal = -F_colloidal_norm*nr_vec;
+		}
 		if (!sys->in_predictor) {
-			if (checkDeactivation()) {
+			/* If r > r_lub_max, deactivate the interaction object.
+			 */
+			if (_r > r_lub_max) {
+				deactivate();
 				deactivated = true;
 			}
 		}
+	}
 #ifdef RECORD_HISTORY
+	if (!sys->in_predictor) {
 		gap_history.push_back(_gap_nondim);
 		if (contact) {
 			disp_tan_sq_history.push_back(disp_tan.sq_norm());
 			overlap_history.push_back(_gap_nondim);
 		}
-#endif
 	}
-	return;
+#endif
 }
 
 void
 Interaction::checkBreakupStaticFriction(){
-	/* Do we need to add the lubrication force
-	 * for the friction law?
-	 * -->
-	 * It is better to add. 
-	 * But, when beta is not huge,
-	 * the difference may be neglegible.
-	 */
 	double f_static = sys->mu_static*Fc_normal_norm;
 	double sq_f_tan = Fc_tan.sq_norm();
-	if (Fc_tan.sq_norm() > f_static*f_static) {
+	if (sq_f_tan > f_static*f_static) {
 		/*
-		 * switch to dynamic friction
+		 * The static and dynamic friction coeffients are the same.
 		 *
-		 * A simple imprementation is used temporary.
 		 */
-		//disp_tan.reset();
-		disp_tan = disp_tan*f_static/sqrt(sq_f_tan);
-		cnt_sliding_reset ++; // for output
+		disp_tan *= f_static/sqrt(sq_f_tan);
+		Fc_tan = sys->kt*disp_tan;
+		cnt_sliding++; // for output
 	}
 }
 
@@ -599,9 +567,7 @@ Interaction::outputSummary(){
 	sys->fout_int_data << duration_contact << ' '; // 4
 	sys->fout_int_data << max_stress << ' ';  // 5
 	sys->fout_int_data << stress_xz_integration << ' '; // 6
-	sys->fout_int_data << max_Fnc << ' '; // 7
-	sys->fout_int_data << sqrt(max_sq_Ftc) << ' '; // 8
-	sys->fout_int_data << cnt_sliding_reset << ' '; //  9
+	sys->fout_int_data << cnt_sliding << ' '; //  9
 	sys->fout_int_data << endl;
 }
 
@@ -624,3 +590,15 @@ Interaction::getContactVelocity(){
 	return contact_velocity.norm();
 }
 
+double
+Interaction::calcPotentialEnergy(){
+	double energy;
+	double h = _r - ro;
+	if (h < 0) {
+		energy = 0.5*sys->kn*h*h;
+		energy += -colloidal_force_amplitude*h;
+	} else {
+		energy = sys->cf_range_dl*colloidal_force_amplitude*(exp(-h/sys->cf_range_dl)-1);
+	}
+	return energy;
+}

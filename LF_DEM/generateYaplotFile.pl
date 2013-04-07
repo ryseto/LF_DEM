@@ -36,7 +36,9 @@ open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
 $first=1;
+$c_traj=0;
 while (1){
+	
 	&InParticles;
 	&InInteractions;
 	last unless defined $line;
@@ -69,9 +71,53 @@ sub InParticles {
         $posz[$i] = $z;
 		$ang[$i] = $angle;
 		if ($radius_max < $a){
-			$radius_max = $a
+			$radius_max = $a;
 		}
     }
+	
+	if ($c_traj == 0) {
+		$min_dist_origin = 100;
+		$min_dist_origin1 = 100;
+		$min_dist_origin2 = 100;
+		for ($i = 0; $i < $np; $i ++) {
+			#$sqdistance = ($posx[$i]*$posx[$i]+$posy[$i]*$posy[$i]+$posz[$i]*$posz[$i]);
+			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,0);
+			if ($sqdistance < $min_dist_origin) {
+				$min_dist_origin = $sqdistance;
+				$center = $i;
+			}
+			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,5);
+			if ($sqdistance < $min_dist_origin1) {
+				$min_dist_origin1 = $sqdistance;
+				$uppder = $i;
+			}
+			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,-5);
+			if ($sqdistance < $min_dist_origin2) {
+				$min_dist_origin2 = $sqdistance;
+				$lower = $i;
+			}
+			
+		}
+	}
+	
+	$trajx[$c_traj] = $posx[$center];
+	$trajy[$c_traj] = $posy[$center];
+	$trajz[$c_traj] = $posz[$center];
+	$trajx2[$c_traj] = $posx[$uppder];
+	$trajy2[$c_traj] = $posy[$uppder];
+	$trajz2[$c_traj] = $posz[$uppder];
+	$trajx3[$c_traj] = $posx[$lower];
+	$trajy3[$c_traj] = $posy[$lower];
+	$trajz3[$c_traj] = $posz[$lower];
+	$c_traj++;
+}
+
+sub calcsqdist {
+    ($x1, $y1, $z1, $x2, $y2, $z2) = @_;
+	$dist = ($x1-$x2)*($x1-$x2);
+	$dist += ($y1-$y2)*($y1-$y2);
+	$dist += ($z1-$z2)*($z1-$z2);
+	return $dist;
 }
 
 sub InInteractions {
@@ -96,7 +142,6 @@ sub InInteractions {
 		$nrvec_z[$k] = $nz;
 		$Gap[$k] = $gap;
 		$ContVelo[$k] = $cv;
-		printf "$cv\n" ;
 	}
 }
 
@@ -106,14 +151,71 @@ sub OutYaplotData{
 	} else {
 		$first = 0;
 	}
+	printf OUT "y 7\n";
+
+	printf OUT "r 0.1";
+    printf OUT "@ 6\n";
+	for ($i = 0; $i < $c_traj; $i++){
+		$xs = $trajx[$i];
+#		$ys = $trajy[$i];
+#		$zs = $trajz[$i];
+#		$xe = $trajx[$i+1];
+#		$ye = $trajy[$i+1];
+#		$ze = $trajz[$i+1];
+#		if (abs($zs-$ze) < 1
+#			&& abs($xs-$xe) < 1
+#			) {
+#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+#		}
+		$xs = $trajx[$i];
+		$ys = $trajy[$i];
+		$zs = $trajz[$i];
+		printf OUT "c $xs $ys $zs\n";
+	}
+    printf OUT "@ 3\n";
+	for ($i = 0; $i < $c_traj; $i++){
+		$xs = $trajx[$i];
+		#		$ys = $trajy[$i];
+		#		$zs = $trajz[$i];
+		#		$xe = $trajx[$i+1];
+		#		$ye = $trajy[$i+1];
+		#		$ze = $trajz[$i+1];
+		#		if (abs($zs-$ze) < 1
+		#			&& abs($xs-$xe) < 1
+		#			) {
+		#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+		#		}
+		$xs = $trajx2[$i];
+		$ys = $trajy2[$i];
+		$zs = $trajz2[$i];
+		printf OUT "c $xs $ys $zs\n";
+	}
+    printf OUT "@ 4\n";
+	for ($i = 0; $i < $c_traj; $i++){
+		$xs = $trajx[$i];
+		#		$ys = $trajy[$i];
+		#		$zs = $trajz[$i];
+		#		$xe = $trajx[$i+1];
+		#		$ye = $trajy[$i+1];
+		#		$ze = $trajz[$i+1];
+		#		if (abs($zs-$ze) < 1
+		#			&& abs($xs-$xe) < 1
+		#			) {
+		#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+		#		}
+		$xs = $trajx3[$i];
+		$ys = $trajy3[$i];
+		$zs = $trajz3[$i];
+		printf OUT "c $xs $ys $zs\n";
+	}
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = $radius[0];
+	$r = 0.2*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = $radius[$i];
+			$r = 0.2*$radius[$i];
 			printf OUT "r $r\n";
 		}
 		if ($y_section == 0 ||
@@ -156,16 +258,16 @@ sub OutYaplotData{
 		   &OutString_width($int0[$k], $int1[$k]);
 	   }
     }
-	printf OUT "y 4\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		
-		
-		$radius = $ContVelo[$k]/10;
-		printf OUT "r $radius\n";
-		&OutCircle_middle($int0[$k],  $int1[$k]);
-
-    }
+#	printf OUT "y 4\n";
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		
+#		
+#		$radius = $ContVelo[$k]/10;
+#		printf OUT "r $radius\n";
+#		&OutCircle_middle($int0[$k],  $int1[$k]);
+#
+#    }
 	
 	if ($Ly == 0){
 		printf OUT "y 6\n";
@@ -277,9 +379,11 @@ sub OutCircle_middle {
     $xj = $posx[$j];
     $yj = $posy[$j];
     $zj = $posz[$j];
-    $xc = ($posx[$i] + $posx[$j])/2;
-    $yc = ($posy[$i] + $posy[$j])/2-0.01;
-    $zc = ($posz[$i] + $posz[$j])/2;
+	$ai = $radius[$i];
+	$aj = $radius[$j];
+    $xc = $posx[$i]*$aj/($ai+$aj) + $posx[$j]*$ai/($ai+$aj);
+    $yc = $posy[$i]*$aj/($ai+$aj) + $posy[$j]*$ai/($ai+$aj) -0.01;
+    $zc = $posz[$i]*$aj/($ai+$aj) + $posz[$j]*$ai/($ai+$aj);
 	
 	if (abs($xi-$xj) < $radius_max*5
 		&&  abs($yi-$yj) < $radius_max*5

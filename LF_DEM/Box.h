@@ -36,7 +36,7 @@ public:
 	Box();
 	~Box();
 	vec3d position;
-	set <int> *container;
+	set <int> container;
 	void neigh_nb(int n, int moving_n=0);
 	bool neighbor(int label, Box* neigh_box);
 	bool moving_neighbor(int moving_label, Box* neigh_box);
@@ -61,10 +61,10 @@ public:
 	void add(int);
 	void remove(int);
 	set<int>::iterator begin(){
-		return container->begin();
+		return container.begin();
 	}
 	set<int>::iterator end(){
-		return container->end();
+		return container.end();
 	}
 	vector<int>::iterator neighborhood_begin(){
 		return neighborhood_container.begin();
@@ -73,7 +73,7 @@ public:
 		return neighborhood_container.end();
 	}
 	size_t container_size(){
-		return container->size();
+		return container.size();
 	}
 	void build_neighborhood_container();
 };

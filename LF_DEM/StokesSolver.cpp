@@ -270,9 +270,11 @@ StokesSolver::complete_RFU(){
 	if(direct()){
 		complete_RFU_cholmod();
 	}
+#ifdef TRILINOS
 	if(iterative()){
 		complete_RFU_trilinos();
 	}
+#endif
 }
 
 void

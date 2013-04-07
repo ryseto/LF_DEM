@@ -51,7 +51,7 @@ BoxSet::init(double interaction_dist, System *sys_){
 		TopBottomBoxes = new Box* [topbottom_box_nb];
 		TopBottomBoxes[0] = Boxes[0];
 		(Boxes[0])->neigh_nb(0);
-	}else{
+	} else {
 		_is_boxed = true;
 		box_xsize = sys->lx()/x_box_nb;
 		box_ysize = sys->ly()/y_box_nb;
@@ -62,7 +62,7 @@ BoxSet::init(double interaction_dist, System *sys_){
 		// tell them their neighbors
 		assignNeighbors();
 	}
-	cout << box_nb << " " << interaction_dist << " " << box_xsize << endl;
+	cerr << box_nb << " " << interaction_dist << " " << box_xsize << endl;
 }
 
 void
@@ -365,10 +365,10 @@ BoxSet::updateNeighbors(Box* b){
 	vec3d *probes = b->probing_positions();
 	int probes_nb = b->probe_nb();
 	int moving_label = 0;
-	for(int i=0; i < probes_nb; i++){
+	for(int i=0; i < probes_nb; i++) {
 		//	  cout <<  i << " " << b->position.x << " " << b->position.y<< " " << b->position.z << " "<< (WhichBox(probes[i]))->position.x << " " << (WhichBox(probes[i]))->position.y<< " " << (WhichBox(probes[i]))->position.z << endl;
-		bool successful_add = b->moving_neighbor(moving_label, WhichBox(probes[i]) );
-		if(successful_add){
+		bool successful_add = b->moving_neighbor(moving_label, WhichBox(probes[i]));
+		if (successful_add) {
 			moving_label++;
 		}
 	}
@@ -383,15 +383,15 @@ BoxSet::updateNeighbors(Box* b){
 void
 BoxSet::updateNeighbors(){
 	// top boxes
-	for(int i=0; i<top_box_nb;i++){
+	for(int i=0; i<top_box_nb; i++) {
 		updateNeighbors(TopBoxes[i]);
 	}
 	// bottom boxes
-	for(int i=0; i<bottom_box_nb;i++){
+	for(int i=0; i<bottom_box_nb; i++) {
 		updateNeighbors(BottomBoxes[i]);
 	}
 	// topbottom boxes
-	for(int i=0; i<topbottom_box_nb;i++){
+	for(int i=0; i<topbottom_box_nb; i++) {
 		updateNeighbors(TopBottomBoxes[i]);
 	}
 }
@@ -399,10 +399,10 @@ BoxSet::updateNeighbors(){
 //public methods
 void
 BoxSet::update(){
-	if(is_boxed()){
+	if (is_boxed()) {
 		updateNeighbors();
 	}
-	for(int i=0; i<box_nb;i++){
+	for(int i=0; i<box_nb; i++) {
 		Boxes[i]->build_neighborhood_container();
 	}
 }
@@ -420,15 +420,15 @@ BoxSet::WhichBox(vec3d pos){
 Box*
 BoxSet::WhichBox(vec3d* pos){
 	sys->periodize(*pos);
-	int ix=(int)(pos->x/box_xsize);
+	int ix = (int)(pos->x/box_xsize);
 	int iy;
-	if(sys->dimension == 2){
-		iy=0;
-	}else{
-		iy=(int)(pos->y/box_ysize);
+	if(sys->dimension == 2) {
+		iy = 0;
+	} else {
+		iy = (int)(pos->y/box_ysize);
 	}
-	int iz=(int)(pos->z/box_zsize);
-	int label= ix*y_box_nb*z_box_nb + iy*z_box_nb + iz;
+	int iz = (int)(pos->z/box_zsize);
+	int label= ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 	// cout << " Which Box : " << label << endl;
 	// cout << x_box_nb << " " << y_box_nb << " " << z_box_nb<< " "<< ix  <<" "<< iy << " " << iz << endl;
 	// cout <<pos->x << " " << pos->y << " " << pos->z << endl;
@@ -438,13 +438,14 @@ BoxSet::WhichBox(vec3d* pos){
 
 void
 BoxSet::box(int i){
-	Box *b = WhichBox( sys->position[i] );
-	if( b != boxMap[i] ){
+	Box *b = WhichBox(sys->position[i]);
+	if(b != boxMap[i]) {
+//		sys->position[i].cerr();
 		b->add(i);
-		if( boxMap[i] != NULL){
+		if(boxMap[i] != NULL) {
 			boxMap[i]->remove(i);
 		}
-		boxMap[i]=b;
+		boxMap[i] = b;
 	}
 }
 
@@ -467,7 +468,7 @@ BoxSet::printBoxNetwork(){
 		for (int j = 0; j< nneigh;j++){
 			//		  if(!(Boxes[i])->is_top() && !(Boxes[i])->is_bottom()){
 			if((Boxes[i])->is_top()){
-				cout << i << " " <<box_xsize << " " <<nneigh << " " << (Boxes[i])->position.x << " " << (Boxes[i])->position.y <<  " " << (neighbors[j])->position.x << " " << (neighbors[j])->position.y << " " << (Boxes[i])->is_top() << " " << (Boxes[i])->is_bottom() << endl;
+				cerr << i << " " <<box_xsize << " " <<nneigh << " " << (Boxes[i])->position.x << " " << (Boxes[i])->position.y <<  " " << (neighbors[j])->position.x << " " << (neighbors[j])->position.y << " " << (Boxes[i])->is_top() << " " << (Boxes[i])->is_bottom() << endl;
 			}
 		}
 	}

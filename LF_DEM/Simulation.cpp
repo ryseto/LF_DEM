@@ -34,6 +34,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	importInitialPositionFile();
 	setDefaultParameters();
+	sys.np(num_of_particle);
 	filename_parameters = argv[2];
 	readParameterFile();
 	if (argc == 3){
@@ -49,7 +50,8 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.setupSystem(initial_positions, radii);
 	outputDataHeader(fout_particle);
 	outputConfigurationData();
-	while(sys.strain() <= shear_strain_end){
+	sys.setupShearFlow(true);
+	while (sys.strain() <= shear_strain_end) {
 		int i_time_interval = sys.strain_interval_output/sys.dt;
 		cerr << "strain: " << sys.strain() << endl;
 		sys.timeEvolution(i_time_interval);
@@ -66,14 +68,88 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 }
 
 void
+Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
+								 vector<double> &radii,
+								 double lx,
+								 double ly,
+								 double lz){
+	num_of_particle = positions.size();
+	sys.lx(lx);
+	sys.ly(ly);
+	sys.lz(lz);
+	if (ly == 0){
+		sys.dimension = 2;
+	} else {
+		sys.dimension = 3;
+	}
+	sys.setupShearFlow(false);
+	radius_a = radii[0];
+	sys.np(num_of_particle);
+	sys.setRadiusMax(radius_a);
+	for (int i=0; i<num_of_particle; i++) {
+		if (radii[i] != radius_a) {
+			np_a = i;
+			radius_b = radii[i];
+			sys.setRadiusMax(radius_b);
+		}
+	}
+	setDefaultParameters();
+	sys.dt = 1e-4;
+	sys.kn = 5000;
+	sys.mu_static = 0;
+	sys.shear_rate = 0;
+	setUnits();
+	sys.cf_range_dl = 0.01; // dimensionless
+	sys.cf_amp_dl = 10;
+	sys.setupSystem(positions, radii);
+	
+	//outputDataHeader(fout_particle);
+	//outputConfigurationData();
+	sys.setupShearFlow(false);
+	double energy_previous = 0;
+	while (true) {
+		int i_time_interval = 2000;
+		sys.timeEvolutionRelax(i_time_interval);
+		evaluateData();
+		sys.calcTotalPotentialEnergy();
+		cout << sys.strain() << ' ' << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
+		cerr << energy_previous-sys.total_energy << endl;
+		if (sys.min_gap_nondim > 0 &&
+			energy_previous-sys.total_energy < 0.01){
+			cerr << "finish" << endl;
+			break;
+		}
+		energy_previous = sys.total_energy;
+		//		outputRheologyData();
+		//		outputConfigurationData();
+	}
+	
+	for (int i=0; i<num_of_particle; i++) {
+		positions[i] = sys.position[i];
+	}
+
+}
+
+void
 Simulation::setUnits(){
+	bool shear_rate_revert = false;
+	if (sys.shear_rate == 0){
+		sys.shear_rate = 0.1;
+		shear_rate_revert = true;
+	}
 	unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
 	unit_of_velocity = sys.shear_rate*unit_of_length;
 	unit_of_force = 6*M_PI*viscosity_solvent*radius_of_particle*unit_of_velocity;
+	
+	cerr << viscosity_solvent << endl;
+	cerr << sys.shear_rate << endl;
 	double cf_amp = cf_amp_dl0*6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
 	sys.cf_amp_dl = cf_amp/unit_of_force;
 	cerr << "unit_of_force = " << unit_of_force << endl;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
+	if (shear_rate_revert == true){
+		sys.shear_rate = 1;
+	}
 }
 
 bool
@@ -313,7 +389,7 @@ Simulation::setDefaultParameters(){
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
 	 */
-	sys.mu_static = 10;	
+	sys.mu_static = 1;	
 	/*
 	 * Output interval
 	 */
@@ -351,20 +427,12 @@ Simulation::importInitialPositionFile(){
 	file_import >> buf >> np_a_ >> np_b_ >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
 	np_a = np_a_;
 	np_b = np_b_;
-	int num_of_particle = np_a_+np_b_;
-	sys.np(num_of_particle);
-	if (np_b_ > 0){
-		sys.poly = true;
-	}else{
-		sys.poly = false;
-	}
-	cerr << "np = " << num_of_particle << endl;
+	num_of_particle = np_a + np_b;
 	if (ly_ == 0){
 		sys.dimension = 2;
 	} else {
 		sys.dimension = 3;
 	}
-	cerr << "dimension = " << sys.dimension << endl;
 	sys.lx(lx_);
 	sys.ly(ly_);
 	sys.lz(lz_);
@@ -372,24 +440,22 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
-	double radius_max = 1.0;
-	for (int i = 0; i < num_of_particle ; i++){
+	
+	for (int i = 0; i < num_of_particle ; i++) {
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
 		radii[i] = radius;
-		if (radius > radius_max){
-			radius_max = radius;
-		}
-	}
-	sys.setRadiusMax(radius_max);
-	sys.setSystemVolume();
-	radius_a = radii[0];
-	if (sys.poly ){
-		radius_b = radii[np_a];
-	} else {
-		radius_b = 0;
 	}
 	file_import.close();
+	
+	radius_a = radii[0];
+	if (np_a < num_of_particle){
+		radius_b = radii[np_a];
+		sys.setRadiusMax(radius_b);
+	} else {
+		radius_b = 0;
+		sys.setRadiusMax(radius_a);
+	}
 }
 
 void

@@ -10,17 +10,18 @@ Box::Box(){
 	// #ifdef __flist_container__
 	//   container = new forward_list <int>;
 	// #endif
-	container = new set <int>;
+	//container = new set <int>;
 }
 
 Box::~Box(){
-	if(_neigh_nb>0)
+	if(_neigh_nb > 0) {
 		delete [] _neighbors;
-	if(_moving_neigh_nb>0){
+	}
+	if(_moving_neigh_nb > 0) {
 		delete [] _moving_neighbors;
 		delete [] _probing_positions;
 	}
-	delete container;
+	//delete container;
 }
 
 /* reset every moving neighbor:
@@ -29,9 +30,9 @@ Box::~Box(){
  */
 void
 Box::reset_moving_neighbors(){
-	for(int label=0; label<_moving_neigh_nb;label++){
-		_neighbors[label+_still_neigh_nb]=NULL;
-		_moving_neighbors[label]=NULL;
+	for(int label=0; label<_moving_neigh_nb; label++) {
+		_neighbors[label+_still_neigh_nb] = NULL;
+		_moving_neighbors[label] = NULL;
 	}
 }
 
@@ -41,11 +42,11 @@ Box::neigh_nb(int n, int moving_n){
 	_moving_neigh_nb = moving_n;
 	_still_neigh_nb = n - moving_n;
 	
-	if(_neigh_nb>0){
+	if(_neigh_nb > 0) {
 		_neighbors = new Box* [_neigh_nb];
 	}
 	
-	if(_moving_neigh_nb>0){
+	if(_moving_neigh_nb > 0) {
 		_moving_neighbors = new Box* [_moving_neigh_nb];
 		_probing_positions = new vec3d [_moving_neigh_nb];
 		_probe_nb = _moving_neigh_nb;
@@ -71,13 +72,13 @@ bool
 Box::neighbor(int label, Box* neigh_box){
 	// we have to check that we don't list two times the same neighbor (for top AND bottom boxes)
 	// or don't the the box as its own neighbor (for every box)
-	if(can_be_added(label, neigh_box)){
+	if(can_be_added(label, neigh_box)) {
 		_neighbors[label] = neigh_box;
-		if(label >= _still_neigh_nb){
+		if (label >= _still_neigh_nb) {
 			_moving_neighbors[label-_still_neigh_nb] = neigh_box;
 		}
 		return true;
-	}else{
+	} else {
 		return false;
 	}
 }
@@ -137,36 +138,33 @@ Box::is_bottom(){
 
 void
 Box::add(int i){
-	container->insert(i);
+	container.insert(i);
 }
 
 void
 Box::remove(int i){
-	container->erase(i);
+	container.erase(i);
 }
 
 void
 Box::build_neighborhood_container(){
 	neighborhood_container.clear();
 	int size = (int)container_size();
-	
-	for(int i=0;i<neigh_nb();i++){
-		size += (_neighbors[i])->container_size();
+	for(int i=0; i<neigh_nb(); i++) {
+		size += _neighbors[i]->container_size();
 	}
-	
 	neighborhood_container.resize(size);
 	
-	set<int>::iterator it;
-	int j=0;
+	int j = 0;
 	// own box
-	for(it = begin(); it != end(); it++){
-		neighborhood_container[j]=*it;
+	for (set<int>::iterator it = begin(); it != end(); it++) {
+		neighborhood_container[j] = *it;
 		j++;
 	}
 	// neighboring boxes
-	for(int i=0;i<neigh_nb();i++){
-		for(it = (_neighbors[i])->begin(); it != (_neighbors[i])->end(); it++){
-			neighborhood_container[j]=*it;
+	for (int i=0; i<neigh_nb(); i++) {
+		for(set<int>::iterator it = (_neighbors[i])->begin(); it != (_neighbors[i])->end(); it++) {
+			neighborhood_container[j] = *it;
 			j++;
 		}
 	}
