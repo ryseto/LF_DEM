@@ -45,7 +45,6 @@ private:
 	double system_volume;
 	double radius_max;
 	double sq_lub_max;
-	double _rho; // N/V
 	double shear_strain;
 	int linalg_size;
 	int linalg_size_per_particle;
@@ -73,7 +72,8 @@ private:
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
-	double evaluateMaxContactVelocity();
+	void evaluateMaxContactVelocity();
+	
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	
@@ -81,7 +81,6 @@ protected:
 public:
 	System();
 	~System();
-	
 	double *v_hydro;
 	double *v_cont;
 	double *v_colloidal;
@@ -170,7 +169,8 @@ public:
 	double disp_tan_target;
 	queue<int> deactivated_interaction;
 
-	double max_contact_velocity;
+	double max_contact_velo_tan;
+	double max_contact_velo_normal;
 	double ave_overlap;
 	int contact_nb;
 	int cnt_monitored_data;
@@ -201,8 +201,8 @@ public:
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
-	void updateVelocity();
 	void updateVelocityLubrication();
+	void updateVelocityRestingFluid();
 	void forceReset();
 	void torqueReset();
 	void stressReset();
@@ -284,10 +284,6 @@ public:
 
 	inline int np(){
 		return _np;
-	}
-
-	inline double rho(){ // N/V
-		return _rho;
 	}
 
 	inline double strain(){

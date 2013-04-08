@@ -8,7 +8,7 @@
 
 #ifndef __LF_DEM__Interaction__
 #define __LF_DEM__Interaction__
-// #define RECORD_HISTORY 1
+//#define RECORD_HISTORY 1
 
 #include <iostream>
 #include <iomanip>
@@ -35,7 +35,6 @@ private:
 	vec3d unit_contact_velocity_tan;
 	double sqnorm_contact_velocity;
 	vec3d disp_tan; // tangential displacement
-	
 	//===== forces and stresses ==================== //
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
@@ -48,8 +47,6 @@ private:
 	double duration_contact; // enture duraction for h < 0
 	double max_stress; // Maximum value of stress in the all history of this object.
 	int cnt_sliding;  // to count the number of slips.
-//	double max_sq_Ftc; // squre of the tangential contact force.
-//	double max_Fnc;
 #ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;
@@ -108,7 +105,6 @@ public:
 	void updateState(bool &deactivated);
 	void activate(int i, int j);
 	void deactivate();
-	bool active;
 
 	//======= particles data  ====================//
 	int par_num[2];
@@ -117,7 +113,6 @@ public:
 	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
 	double ro_2; // = ro/2
-	double ro_contactforce;
 	int label;
 
 	//======= relative position/velocity  ========//
@@ -132,6 +127,7 @@ public:
 		}
 	}
 	//======= internal state =====================//
+	bool active;
 	bool contact;
 
 	//======= Data ===============================//
@@ -157,14 +153,11 @@ public:
 	double valLubForce();
 	double lubStresslet(int i){return lubstresslet.elm[i];}
 	double getContactVelocity();
+	double getNormalVelocity();
 	double calcPotentialEnergy();
-	
-	//	void addLubricationStress();
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
-
-	//	void addContactStress2();
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);

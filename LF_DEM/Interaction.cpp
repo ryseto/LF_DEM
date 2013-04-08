@@ -65,7 +65,7 @@ Interaction::activate(int i, int j){
 	a1 = sys->radius[par_num[1]];
 	ro = a0+a1;
 	ro_2 = ro/2;
-	r_lub_max = 0.5*ro*sys->lub_max;
+	r_lub_max = ro_2*sys->lub_max;
 	colloidal_force_amplitude = sys->cf_amp_dl*ro_2;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
@@ -80,7 +80,6 @@ Interaction::activate(int i, int j){
 	duration_contact = 0; // for output
 	max_stress = 0; // for output
 	stress_xz_integration = 0; // for output
-	return;
 }
 
 void
@@ -441,7 +440,6 @@ Interaction::partner(int i){
 	}
 }
 
-
 void
 Interaction::activate_contact(){
 	// r < a0 + a1
@@ -468,13 +466,12 @@ Interaction::deactivate_contact(){
 void
 Interaction::outputHistory(){
 	cerr << "cnt_sliding =" << cnt_sliding << ' '  << endl;
-	if (sys->strain() > 1){
-		for (int i=0; i<disp_tan_sq_history.size(); i += 10){
+	if (sys->strain() > 1 && disp_tan_sq_history.size() > 10) {
+		for (int i=0; i<disp_tan_sq_history.size(); i += 10) {
 			cout << overlap_history[i] << ' ' << sqrt(disp_tan_sq_history[i]) << endl;
 		}
 		cout << endl;
-		
-		if (sys->cnt_monitored_data++ == 200){
+		if (sys->cnt_monitored_data++ == 200) {
 			exit(1);
 		}
 	}
@@ -537,7 +534,7 @@ Interaction::updateState(bool &deactivated){
 		gap_history.push_back(_gap_nondim);
 		if (contact) {
 			disp_tan_sq_history.push_back(disp_tan.sq_norm());
-			overlap_history.push_back(_gap_nondim);
+			overlap_history.push_back(_r-ro);
 		}
 	}
 #endif
@@ -589,6 +586,18 @@ Interaction::getContactVelocity(){
 	calcContactVelocity();
 	return contact_velocity.norm();
 }
+
+double
+Interaction::getNormalVelocity(){
+	sys->in_predictor = true;
+	calcDistanceNormalVector();
+	vec3d d_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
+	if (zshift != 0){
+		d_velocity.x += zshift*sys->vel_difference;
+	}
+	return dot(d_velocity, nr_vec);
+}
+
 
 double
 Interaction::calcPotentialEnergy(){

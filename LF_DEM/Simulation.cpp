@@ -15,13 +15,13 @@
 
 Simulation::Simulation(){};
 Simulation::~Simulation(){
-	if (fout_rheo.is_open()){
+	if (fout_rheo.is_open()) {
 		fout_rheo.close();
 	}
-	if (fout_particle.is_open()){
+	if (fout_particle.is_open()) {
 		fout_particle.close();
 	}
-	if (fout_interaction.is_open()){
+	if (fout_interaction.is_open()) {
 		fout_interaction.close();
 	}
 };
@@ -37,7 +37,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.np(num_of_particle);
 	filename_parameters = argv[2];
 	readParameterFile();
-	if (argc == 3){
+	if (argc == 3) {
 		sys.shear_rate = 1.0;
 		filename_addition = "_sr1";
 	} else {
@@ -77,7 +77,7 @@ Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
 	sys.lx(lx);
 	sys.ly(ly);
 	sys.lz(lz);
-	if (ly == 0){
+	if (ly == 0) {
 		sys.dimension = 2;
 	} else {
 		sys.dimension = 3;
@@ -102,7 +102,6 @@ Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
 	sys.cf_range_dl = 0.01; // dimensionless
 	sys.cf_amp_dl = 10;
 	sys.setupSystem(positions, radii);
-	
 	//outputDataHeader(fout_particle);
 	//outputConfigurationData();
 	sys.setupShearFlow(false);
@@ -115,7 +114,7 @@ Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
 		cout << sys.strain() << ' ' << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
 		cerr << energy_previous-sys.total_energy << endl;
 		if (sys.min_gap_nondim > 0 &&
-			energy_previous-sys.total_energy < 0.01){
+			energy_previous-sys.total_energy < 0.01) {
 			cerr << "finish" << endl;
 			break;
 		}
@@ -133,7 +132,7 @@ Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
 void
 Simulation::setUnits(){
 	bool shear_rate_revert = false;
-	if (sys.shear_rate == 0){
+	if (sys.shear_rate == 0) {
 		sys.shear_rate = 0.1;
 		shear_rate_revert = true;
 	}
@@ -147,16 +146,16 @@ Simulation::setUnits(){
 	sys.cf_amp_dl = cf_amp/unit_of_force;
 	cerr << "unit_of_force = " << unit_of_force << endl;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
-	if (shear_rate_revert == true){
+	if (shear_rate_revert == true) {
 		sys.shear_rate = 1;
 	}
 }
 
 bool
 str2bool(string value){
-	if (value == "true"){
+	if (value == "true") {
 		return true;
-	} else if (value == "false"){
+	} else if (value == "false") {
 		return false;
 	} else {
 		cerr << "The value should be true or false" << endl;
@@ -182,37 +181,37 @@ removeBlank(string &str){
 void
 Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
-	if (keyword == "bgf_factor"){
+	if (keyword == "bgf_factor") {
 		sys.bgf_factor = atof(value.c_str());
-	} else if (keyword == "dt_adjustment"){
+	} else if (keyword == "dt_adjustment") {
 		dt_adjustment = str2bool(value);
-	} else if (keyword == "kn_kt_adjustment"){
+	} else if (keyword == "kn_kt_adjustment") {
 		kn_kt_adjustment = str2bool(value);
-	} else if (keyword == "cf_amp_dl0"){
+	} else if (keyword == "cf_amp_dl0") {
 		cf_amp_dl0 = atof(value.c_str());
-	} else if (keyword == "cf_range_dl"){
+	} else if (keyword == "cf_range_dl") {
 		sys.cf_range_dl = atof(value.c_str());
-	} else if (keyword == "lub_reduce_parameter"){
+	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
-	} else if (keyword == "contact_relaxzation_time"){
+	} else if (keyword == "contact_relaxzation_time") {
 		sys.contact_relaxzation_time = atof(value.c_str());
-	} else if (keyword == "kb_T"){
+	} else if (keyword == "kb_T") {
 		sys.kb_T = atof(value.c_str());
-	} else if (keyword == "dt"){
+	} else if (keyword == "dt") {
 		sys.dt = atof(value.c_str());
-	} else if (keyword == "shear_strain_end"){
+	} else if (keyword == "shear_strain_end") {
 		shear_strain_end = atof(value.c_str());
-	} else if (keyword == "dt_ratio"){
+	} else if (keyword == "dt_ratio") {
 		sys.dt_ratio = atof(value.c_str());
-	} else if (keyword == "integration_method"){
+	} else if (keyword == "integration_method") {
 		sys.integration_method = atof(value.c_str());
-	} else if (keyword == "lub_max"){
+	} else if (keyword == "lub_max") {
 		sys.lub_max = atof(value.c_str());
-	} else if (keyword == "kn"){
+	} else if (keyword == "kn") {
 		sys.kn = atof(value.c_str());
-	} else if (keyword == "kt"){
+	} else if (keyword == "kt") {
 		sys.kt = atof(value.c_str());
-	} else if (keyword == "mu_static"){
+	} else if (keyword == "mu_static") {
 		sys.mu_static = atof(value.c_str()) ;
 	} else if (keyword == "viscosity_solvent") {
 		viscosity_solvent = atof(value.c_str());
@@ -244,12 +243,12 @@ Simulation::readParameterFile(){
 	fin.open(filename_parameters.c_str());
 	string keyword;
 	string value;
-	while (!fin.eof()){
+	while (!fin.eof()) {
 		string line;
-		if (!getline(fin, line, ';')){
+		if (!getline(fin, line, ';')) {
 			break;
 		}
-		if (fin.eof()){
+		if (fin.eof()) {
 			break;
 		}
 		string str_parameter;
@@ -260,19 +259,19 @@ Simulation::readParameterFile(){
 		do {
 			begin_comment = str_parameter.find("/*");
 			end_comment = str_parameter.find("*/");
-			if (begin_comment > 10000){
+			if (begin_comment > 10000) {
 				break;
 			}
 			str_parameter = str_parameter.substr(end_comment+2);
-		}while(true);
-		if (begin_comment > end_comment ){
+		} while(true);
+		if (begin_comment > end_comment ) {
 			cerr << str_parameter.find("/*") << endl;
 			cerr << str_parameter.find("*/") << endl;
 			cerr << "syntax error in the parameter file." << endl;
 			exit(1);
 		}
 		string::size_type pos_slashslash = str_parameter.find("//");
-		if( pos_slashslash != string::npos){
+		if( pos_slashslash != string::npos) {
 			cerr << " // is not syntax for comment out." << endl;
 			exit(1);
 		}
@@ -412,7 +411,7 @@ void
 Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open( filename_import_positions.c_str());
-	if(!file_import){
+	if(!file_import) {
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
@@ -428,7 +427,7 @@ Simulation::importInitialPositionFile(){
 	np_a = np_a_;
 	np_b = np_b_;
 	num_of_particle = np_a + np_b;
-	if (ly_ == 0){
+	if (ly_ == 0) {
 		sys.dimension = 2;
 	} else {
 		sys.dimension = 3;
@@ -440,16 +439,14 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
-	
 	for (int i = 0; i < num_of_particle ; i++) {
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
 		radii[i] = radius;
 	}
 	file_import.close();
-	
 	radius_a = radii[0];
-	if (np_a < num_of_particle){
+	if (np_a < num_of_particle) {
 		radius_b = radii[np_a];
 		sys.setRadiusMax(radius_b);
 	} else {
@@ -476,14 +473,14 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.analyzeState();
 	double total_stress[5];
-	for (int u=0; u<5; u++){
+	for (int u=0; u<5; u++) {
 		total_stress[u] = sys.total_hydro_stress[u];
 		total_stress[u] += sys.total_contact_stressXF[u];
 		total_stress[u] += sys.total_colloidal_stressXF[u];
 		total_stress[u] += sys.total_colloidal_stressGU[u];
 	}
-	if (sys.brownian){
-		for (int u=0; u<5; u++){
+	if (sys.brownian) {
+		for (int u=0; u<5; u++) {
 			total_stress[u] += sys.total_brownian_stress[u];
 		}
 	}
@@ -504,7 +501,7 @@ Simulation::evaluateData(){
 	N2_c_XF = -sys.total_contact_stressXF[0]-2*sys.total_contact_stressXF[4];
 	N1_c_GU = 2*sys.total_contact_stressGU[0]+sys.total_contact_stressGU[4];
 	N2_c_GU = -sys.total_contact_stressGU[0]-2*sys.total_contact_stressGU[4];
-	if (sys.brownian){
+	if (sys.brownian) {
 		Viscosity_b = sys.total_brownian_stress[2];
 		N1_b = 2*sys.total_brownian_stress[0]+sys.total_brownian_stress[4];
 		N2_b = -sys.total_brownian_stress[0]-2*sys.total_brownian_stress[4];
@@ -527,7 +524,7 @@ Simulation::outputRheologyData(){
 	 * 
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	if (firsttime){
+	if (firsttime) {
 		firsttime = false;
 		fout_rheo << "#1: shear strain" << endl;
 		fout_rheo << "#2: Viscosity" << endl;
@@ -551,10 +548,14 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#20: max tangential displacement" << endl;
 		fout_rheo << "#21: Average normal contact force" << endl;
 		fout_rheo << "#22: max Fc_normal_norm" << endl;
-		fout_rheo << "#23: max contact velocity (sliding)" << endl;
-		fout_rheo << "#24: max velocity" << endl;
-		fout_rheo << "#25: max angular velocity" << endl;
-		fout_rheo << "#26: total number of contact" << endl;
+		fout_rheo << "#23: max velocity" << endl;
+		fout_rheo << "#24: max angular velocity" << endl;
+		fout_rheo << "#25: max contact tangential velocity" << endl;
+		fout_rheo << "#26: max contact normal velocity" << endl;
+		fout_rheo << "#27: total number of contact" << endl;
+		fout_rheo << "#28: kn" << endl;
+		fout_rheo << "#29: kt" << endl;
+		fout_rheo << "#30: dt" << endl;
 	}
 	double unit_of_viscosity = unit_of_force/(unit_of_velocity*unit_of_length);
 	double unit_of_rel_viscosity = unit_of_viscosity/viscosity_solvent;
@@ -583,23 +584,24 @@ Simulation::outputRheologyData(){
 	
 	fout_rheo << sys.average_Fc_normal_norm << ' '; // 21
 	fout_rheo << sys.max_Fc_normal_norm << ' '; // 22
-	fout_rheo << sys.max_contact_velocity << ' '; // 23
-	fout_rheo << sys.max_velocity << ' '; // 24
-	fout_rheo << sys.max_ang_velocity << ' '; // 25
-	fout_rheo << sys.contact_nb << ' '; // 26
-	fout_rheo << sys.kn << ' ';
-	fout_rheo << sys.kt << ' ';
-	fout_rheo << sys.dt << ' ';
+	fout_rheo << sys.max_velocity << ' '; // 23
+	fout_rheo << sys.max_ang_velocity << ' '; // 24
+	fout_rheo << sys.max_contact_velo_normal << ' '; // 25
+	fout_rheo << sys.max_contact_velo_tan << ' '; // 26
+	fout_rheo << sys.contact_nb << ' '; // 27
+	fout_rheo << sys.kn << ' '; // 28
+	fout_rheo << sys.kt << ' '; // 29
+	fout_rheo << sys.dt << ' '; // 30
 	fout_rheo << endl;
 }
 
 vec3d
 Simulation::shiftUpCoordinate(double x, double y, double z){
-	if (origin_zero_flow){
+	if (origin_zero_flow) {
 		z += sys.lz2();
-		if (z > sys.lz2()){
+		if (z > sys.lz2()) {
 			x -= sys.shear_disp;
-			if (x < - sys.lx2()){
+			if (x < - sys.lx2()) {
 				x += sys.lx();
 			}
 			z -=  sys.lz();
@@ -620,26 +622,26 @@ Simulation::drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream
 	vec3d seg = pos2 - pos1;
 	vec3d pos2_ = pos2;
 	fout << type << ' ';
-	if (seg.z > sys.lz2()){
+	if (seg.z > sys.lz2()) {
 		pos2_.z -= sys.lz();
 		pos2_.x -= sys.shear_disp;
 		seg = pos2 - pos1;
-	} else if (seg.z < -sys.lz2()){
+	} else if (seg.z < -sys.lz2()) {
 		pos2_.z += sys.lz();
 		pos2_.x += sys.shear_disp;
 		seg = pos2 - pos1;
 	}
-	while (seg.x > sys.lx2()){
+	while (seg.x > sys.lx2()) {
 		pos2_.x -= sys.lx();
 		seg = pos2 - pos1;
 	}
-	while (seg.x < -sys.lx2()){
+	while (seg.x < -sys.lx2()) {
 		pos2_.x += sys.lx();
 		seg = pos2 - pos1;
 	}
-	if (seg.y > sys.ly2()){
+	if (seg.y > sys.ly2()) {
 		pos2_.y -= sys.ly();
-	} else if (seg.y < -sys.ly2()){
+	} else if (seg.y < -sys.ly2()) {
 		pos2_.y += sys.ly();
 	}
 	fout << pos1.x << ' '<< pos1.y << ' '<< pos1.z << ' ';
@@ -673,7 +675,7 @@ Simulation::outputConfigurationData(){
 	int np = np_a+np_b;
 	pos.resize(np);
 	vel.resize(np);
-	for (int i=0; i < np; i++){
+	for (int i=0; i < np; i++) {
 		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.lx2(),
 								   sys.position[i].y-sys.ly2(),
 								   sys.position[i].z-sys.lz2());
@@ -681,10 +683,10 @@ Simulation::outputConfigurationData(){
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
 	 */
-	if (origin_zero_flow){
-		for (int i=0; i < np; i++){
+	if (origin_zero_flow) {
+		for (int i=0; i < np; i++) {
 			vel[i] = sys.velocity[i];
-			if (pos[i].z < 0){
+			if (pos[i].z < 0) {
 				vel[i].x -= sys.lz();
 			}
 		}
@@ -694,7 +696,7 @@ Simulation::outputConfigurationData(){
 	 */
 	fout_particle << "#" << sp << sys.strain() << sp;
 	fout_particle << sys.shear_disp << sp << sys.shear_rate << endl;
-	for (int i=0; i < np; i++){
+	for (int i=0; i < np; i++) {
 		vec3d &p = pos[i];
 		vec3d &v = vel[i];
 		vec3d &o = sys.ang_velocity[i];
@@ -717,15 +719,15 @@ Simulation::outputConfigurationData(){
 		fout_particle << endl;
 	}
 	int cnt_interaction = 0;
-	for (int k=0; k<sys.num_interaction; k++){
-		if (sys.interaction[k].active){
+	for (int k=0; k<sys.num_interaction; k++) {
+		if (sys.interaction[k].active) {
 			cnt_interaction++;
 		}
 	}
 	fout_interaction << "#" << sp << sys.strain() << sp ;
 	fout_interaction << cnt_interaction << endl;
-	for (int k=0; k<sys.num_interaction; k++){
-		if (sys.interaction[k].active){
+	for (int k=0; k<sys.num_interaction; k++) {
+		if (sys.interaction[k].active) {
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].par_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].valLubForce() << sp; // 3

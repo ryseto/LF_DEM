@@ -529,7 +529,7 @@ System::timeEvolutionRelax(int time_step){
 	while (ts < ts_next) {
 		setContactForceToParticle();
 		setColloidalForceToParticle();
-		updateVelocity();
+		updateVelocityRestingFluid();
 		deltaTimeEvolution();
 		ts++;
 		shear_strain += dt;
@@ -758,7 +758,7 @@ System::updateVelocityLubrication(){
 		velocity[i].y = v_lub_cont[i3+1];
 		velocity[i].z = v_lub_cont[i3+2];
     }
-	if (vel_difference > 0){
+	if (vel_difference > 0) {
 		for (int i=0; i<_np; i++) {
 			velocity[i].x += position[i].z;
 		}
@@ -776,26 +776,7 @@ System::updateVelocityLubrication(){
 }
 
 void
-System::updateVelocity(){
-	//	stokes_solver.resetRHS();
-	//  stokes_solver.prepareNewBuild_RFU("direct");
-	//	stokes_solver->prepareNewBuild_RFU("iterative");
-    //addStokesDrag();
-	//	if (vel_difference == 0){
-	//		buildLubricationTerms(false);
-	//	} else {
-	//		buildLubricationTerms();
-	//	}
-	//    stokes_solver.complete_RFU();
-	//    buildContactTerms();
-	//	buildColloidalForceTerms();
-	//  stokes_solver.solve(v_lub_cont);
-	//stokes_solver->print_RFU();
-	/* TEST IMPLEMENTATION
-	 * SDFF : Stokes drag force factor:
-	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
-	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
-	 */
+System::updateVelocityRestingFluid(){
     for (int i=0; i<_np; i++) {
 		velocity[i] = contact_force[i]+colloidal_force[i];
     }
@@ -944,19 +925,22 @@ System::sq_distance(int i, int j){
 }
 
 
-double
+void
 System::evaluateMaxContactVelocity(){
-	double _max_contact_velocity = 0;
+	max_contact_velo_tan = 0;
+	max_contact_velo_normal = 0;
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active) {
 			if (interaction[k].contact) {
-				if (interaction[k].getContactVelocity() > _max_contact_velocity) {
-					_max_contact_velocity = interaction[k].getContactVelocity();
+				if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
+					max_contact_velo_tan = interaction[k].getContactVelocity();
+				}
+				if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
+					max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
 				}
 			}
 		}
 	}
-	return _max_contact_velocity;
 }
 
 double
@@ -989,7 +973,7 @@ void
 System::analyzeState(){
 	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
-	max_contact_velocity = evaluateMaxContactVelocity();
+	evaluateMaxContactVelocity();
 	contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lub_max;
@@ -1006,13 +990,11 @@ System::analyzeState(){
 				if (interaction[k].normal_force() > max_Fc_normal_norm) {
 					max_Fc_normal_norm = interaction[k].normal_force();
 				}
-				if (interaction[k].getContactVelocity() > max_contact_velocity) {
-					max_contact_velocity = interaction[k].getContactVelocity();
-				}
 				if (interaction[k].disp_tan_norm() > max_disp_tan) {
 					max_disp_tan = interaction[k].disp_tan_norm();
 				}
 			}
+			//			cout << interaction[k].gap_nondim() << ' ' << interaction[k].getNormalVelocity() << endl;
 		}
 	}
 	average_Fc_normal_norm = sum_Fc_normal_norm/contact_nb;
@@ -1025,7 +1007,6 @@ System::setSystemVolume(){
 	} else {
 		system_volume = _lx*_ly*_lz;
 	}
-	_rho = np()/valSystemVolume();
 }
 
 void
@@ -1064,17 +1045,17 @@ averageList(list<double> &_list, bool remove_max_min){
 	double max_one = 0;
 	double min_one = 999999;
 	for(list<double>::iterator j=_list.begin(); j != _list.end(); ++j) {
-		if (remove_max_min){
-			if (*j > max_one){
+		if (remove_max_min) {
+			if (*j > max_one) {
 				max_one = *j;
 			}
-			if (*j < min_one){
+			if (*j < min_one) {
 				min_one = *j;
 			}
 		}
 		sum += *j;
 	}
-	if (remove_max_min){
+	if (remove_max_min) {
 		return (sum-max_one-min_one)/(_list.size()-2);
 	} else {
 		return sum/_list.size();
@@ -1085,6 +1066,9 @@ void
 System::adjustContactModelParameters(){
 	double strain_interval_for_average = 5;
 	int num_average = strain_interval_for_average/strain_interval_output;
+	/*
+	 * Averaged max Fn, over a strain interval
+	 */
 	static list<double> max_Fn_list;
 	max_overlap = evaluateMaxOverlap();
 	if (max_overlap > 0) {
@@ -1098,7 +1082,9 @@ System::adjustContactModelParameters(){
 	if (max_Fn_list.size() == num_average){
 		max_Fn_list.pop_front();
 	}
-	
+	/*
+	 * Averaged max Ft, over a strain interval
+	 */
 	static list<double> max_Ft_list;
 	if (mu_static > 0) {
 		max_disp_tan = evaluateMaxDispTan();
@@ -1126,10 +1112,14 @@ System::adjustTimeStep(){
 	double max_displacement = critical_length*0.1;
 	int num_average = strain_interval_for_average/strain_interval_output;
 	if (mu_static > 0) {
-		max_contact_velocity = evaluateMaxContactVelocity();
+		/*
+		 * Frictional system.
+		 * dt is detemined by the contact velocity
+		 */
+		evaluateMaxContactVelocity();
 		static list<double> max_cv_list;
-		if (max_contact_velocity > 0){
-			max_cv_list.push_back(max_contact_velocity);
+		if (max_contact_velo_tan > 0){
+			max_cv_list.push_back(max_contact_velo_tan);
 		}
 		if (max_cv_list.size() > 10){
 			double ave_max_cv = averageList(max_cv_list, true);
@@ -1139,6 +1129,12 @@ System::adjustTimeStep(){
 			dt = max_displacement/ave_max_cv;
 		}
 	} else {
+		/*
+		 * Only normal contact force.
+		 * dt is determined by the velocity;
+		 * ---> 
+		 * It should be change to relative normal force.
+		 */
 		max_velocity = evaluateMaxVelocity();
 		static list<double> max_v_list;
 		if (max_velocity > 0){
