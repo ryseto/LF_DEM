@@ -171,12 +171,11 @@ Interaction::calcContactVelocity(){
 	 *
 	 ******************************************************/
 	contact_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
-	if (zshift != 0 &&
-		sys->in_predictor) {
+	if(sys->in_predictor && zshift != 0){
 		contact_velocity.x += zshift*sys->vel_difference;
 	}
-	contact_velocity -= \
-	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
+	contact_velocity -=													\
+			cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
 }
 
 
@@ -405,30 +404,28 @@ Interaction::addContactStress(){
 
 void
 Interaction::addColloidalStress(){
-	if (!contact){
-		int i3 = 3*par_num[0];
-		int j3 = 3*par_num[1];
-		stresslet colloidalstressletXF;
-		calcStressTermXF(colloidalstressletXF, F_colloidal);
-		for (int u=0; u<5; u++){
-			sys->colloidalstressXF[par_num[0]].elm[u] += a0*colloidalstressletXF.elm[u];
-			sys->colloidalstressXF[par_num[1]].elm[u] += a1*colloidalstressletXF.elm[u];
-		}
-		total_stress_xz += (a0*colloidalstressletXF.elm[2]+a1*colloidalstressletXF.elm[2])*sys->d_strain;
-		
-		// Add term G*V_cont
-		stresslet stresslet_colloid_GU_i;
-		stresslet stresslet_colloid_GU_j;
-		vec3d vi(sys->v_colloidal[i3], sys->v_colloidal[i3+1], sys->v_colloidal[i3+2]);
-		vec3d vj(sys->v_colloidal[j3], sys->v_colloidal[j3+1], sys->v_colloidal[j3+2]);
-		pairVelocityStresslet(vi, vj, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
-		for (int u=0; u<5; u++){
+	int i3 = 3*par_num[0];
+	int j3 = 3*par_num[1];
+	stresslet colloidalstressletXF;
+	calcStressTermXF(colloidalstressletXF, F_colloidal);
+	for (int u=0; u<5; u++){
+		sys->colloidalstressXF[par_num[0]].elm[u] += a0*colloidalstressletXF.elm[u];
+		sys->colloidalstressXF[par_num[1]].elm[u] += a1*colloidalstressletXF.elm[u];
+	}
+	total_stress_xz += (a0*colloidalstressletXF.elm[2]+a1*colloidalstressletXF.elm[2])*sys->d_strain;
+	
+	// Add term G*V_cont
+	stresslet stresslet_colloid_GU_i;
+	stresslet stresslet_colloid_GU_j;
+	vec3d vi(sys->v_colloidal[i3], sys->v_colloidal[i3+1], sys->v_colloidal[i3+2]);
+	vec3d vj(sys->v_colloidal[j3], sys->v_colloidal[j3+1], sys->v_colloidal[j3+2]);
+	pairVelocityStresslet(vi, vj, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
+	for (int u=0; u<5; u++){
 			sys->colloidalstressGU[par_num[0]].elm[u] += stresslet_colloid_GU_i.elm[u];
 			sys->colloidalstressGU[par_num[1]].elm[u] += stresslet_colloid_GU_j.elm[u];
-		}
-		
-		total_stress_xz += (a0*stresslet_colloid_GU_i.elm[2]+a1*stresslet_colloid_GU_j.elm[2])*sys->d_strain;
 	}
+	
+	total_stress_xz += (a0*stresslet_colloid_GU_i.elm[2]+a1*stresslet_colloid_GU_j.elm[2])*sys->d_strain;
 }
 
 int
@@ -494,22 +491,26 @@ Interaction::updateState(bool &deactivated){
 	if (contact) {
 		if (sys->friction) {
 			calcContactVelocity();
-			disp_tan += contact_velocity*sys->dt;
+			if(sys->in_predictor){
+				disp_tan += contact_velocity*sys->dt;
+				disp_tan_predictor = disp_tan;
+			}
+			else{
+				disp_tan = disp_tan_predictor + contact_velocity*sys->dt;
+			}
 		}
 		calcDistanceNormalVector();
 		if (_gap_nondim > 0) {
 			deactivate_contact();
 		}
+		calcContactInteraction();
 		if (sys->colloidalforce) {
-			calcContactInteraction();
 			/* For continuity, the colloidal force is kept as constant for h < 0.
 			 * This force does not affect the friction law,
 			 * i.e. it is separated from Fc_normal_norm.
 			 */
 			F_colloidal_norm = colloidal_force_amplitude;
 			F_colloidal = -F_colloidal_norm*nr_vec;
-		} else {
-			calcContactInteraction();
 		}
 	} else {
 		calcDistanceNormalVector();
@@ -564,7 +565,7 @@ Interaction::outputSummary(){
 	sys->fout_int_data << duration_contact << ' '; // 4
 	sys->fout_int_data << max_stress << ' ';  // 5
 	sys->fout_int_data << stress_xz_integration << ' '; // 6
-	sys->fout_int_data << cnt_sliding << ' '; //  9
+	sys->fout_int_data << cnt_sliding << ' '; //  7
 	sys->fout_int_data << endl;
 }
 
