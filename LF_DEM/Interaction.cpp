@@ -117,14 +117,12 @@ Interaction::deactivate(){
  */
 void
 Interaction::calcContactInteraction(){
-	//Fc_normal_norm = sys->kn*(ro-_r);
 	Fc_normal_norm = -kn_scaled*_gap_nondim;
 	Fc_normal = -Fc_normal_norm*nr_vec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
 		 */
 		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
-		//Fc_tan = sys->kt*disp_tan;
 		Fc_tan = kt_scaled*disp_tan;
 		checkBreakupStaticFriction();
 	}
@@ -184,8 +182,8 @@ Interaction::calcContactVelocity(){
 	if(sys->in_predictor && zshift != 0){
 		contact_velocity.x += zshift*sys->vel_difference;
 	}
-	contact_velocity -=													\
-			cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
+	contact_velocity -=
+	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
 }
 
 
@@ -502,12 +500,11 @@ Interaction::updateState(bool &deactivated){
 	if (contact) {
 		if (sys->friction) {
 			calcContactVelocity();
-			if(sys->in_predictor){
+			if (sys->in_predictor) {
 				disp_tan += contact_velocity*sys->dt;
 				disp_tan_predictor = disp_tan;
-			}
-			else{
-				disp_tan = disp_tan_predictor + contact_velocity*sys->dt;
+			} else {
+				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
 			}
 		}
 		calcDistanceNormalVector();
@@ -562,7 +559,7 @@ Interaction::checkBreakupStaticFriction(){
 		 *
 		 */
 		disp_tan *= f_static/sqrt(sq_f_tan);
-		Fc_tan = sys->kt*disp_tan;
+		Fc_tan = kt_scaled*disp_tan;
 		cnt_sliding++; // for output
 	}
 }

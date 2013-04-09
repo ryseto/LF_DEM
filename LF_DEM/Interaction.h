@@ -70,6 +70,9 @@ private:
 	void r(const double &new_r);
 	void calcDistanceNormalVector();
 	void calcContactVelocity();
+	void calcContactVelocity_predictor();
+	void calcContactVelocity_corrector();
+
 	void checkBreakupStaticFriction();
 
 	//======= internal state switches  ===========//

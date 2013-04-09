@@ -592,6 +592,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.kn << ' '; // 28
 	fout_rheo << sys.kt << ' '; // 29
 	fout_rheo << sys.dt << ' '; // 30
+	
 	fout_rheo << endl;
 }
 

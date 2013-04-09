@@ -118,7 +118,6 @@ System::setupSystemForGenerateInit(){
 	for (int i=0; i<_np; i++) {
 		velocity[i].reset();
 	}
-
 	shear_strain = 0;
 	shear_disp = 0;
 	num_interaction = 0;
