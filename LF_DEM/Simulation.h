@@ -26,11 +26,7 @@ private:
 	vector<double> radii;
 	string filename_import_positions;
 	string filename_parameters;
-	int np_a;
-	int np_b;
 
-	double radius_a;
-	double radius_b;
 	double unit_of_force;
 	double unit_of_velocity;
 	double unit_of_length;
@@ -110,7 +106,7 @@ public:
 	Simulation();
 	~Simulation();
 	void SimulationMain(int argc, const char * argv[]);
-	void RelaxzationZeroShear(vector<vec3d> &positions,
+	void RelaxationZeroShear(vector<vec3d> &positions,
 							  vector<double> &radii,
 							  double lx, double ly, double lz);
 };

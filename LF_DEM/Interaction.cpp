@@ -496,7 +496,7 @@ Interaction::updateState(bool &deactivated){
 				disp_tan_predictor = disp_tan;
 			}
 			else{
-				disp_tan = disp_tan_predictor + contact_velocity*sys->dt;
+				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
 			}
 		}
 		calcDistanceNormalVector();

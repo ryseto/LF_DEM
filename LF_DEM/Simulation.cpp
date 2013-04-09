@@ -68,12 +68,13 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 }
 
 void
-Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
+Simulation::RelaxationZeroShear(vector<vec3d> &positions,
 								 vector<double> &radii,
 								 double lx,
 								 double ly,
 								 double lz){
 	num_of_particle = positions.size();
+	sys.np(num_of_particle);
 	sys.lx(lx);
 	sys.ly(ly);
 	sys.lz(lz);
@@ -83,19 +84,17 @@ Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
 		sys.dimension = 3;
 	}
 	sys.setupShearFlow(false);
-	radius_a = radii[0];
-	sys.np(num_of_particle);
-	sys.setRadiusMax(radius_a);
-	for (int i=0; i<num_of_particle; i++) {
-		if (radii[i] != radius_a) {
-			np_a = i;
-			radius_b = radii[i];
-			sys.setRadiusMax(radius_b);
-		}
+
+	double max_radius = 0.;
+	for(int i=0; i<num_of_particle;i++){
+		if(max_radius<radii[i])
+			max_radius=radii[i];
 	}
+	sys.setRadiusMax(max_radius);
+
 	setDefaultParameters();
 	sys.dt = 1e-4;
-	sys.kn = 5000;
+	sys.kn = 100;
 	sys.mu_static = 0;
 	sys.shear_rate = 0;
 	setUnits();
@@ -144,6 +143,8 @@ Simulation::setUnits(){
 	cerr << sys.shear_rate << endl;
 	double cf_amp = cf_amp_dl0*6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
 	sys.cf_amp_dl = cf_amp/unit_of_force;
+	cerr << "unit_of_length = " << unit_of_length << endl;
+	cerr << "unit_of_velocity = " << unit_of_velocity << endl;
 	cerr << "unit_of_force = " << unit_of_force << endl;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
 	if (shear_rate_revert == true) {
@@ -419,14 +420,14 @@ Simulation::importInitialPositionFile(){
 	getline(file_import, line);
 	vec3d pos;
 	double radius;
-	int np_a_, np_b_;
+	int n1, n2;
 	double volume_fraction_;
 	double lx_, ly_, lz_;
 	char buf;
-	file_import >> buf >> np_a_ >> np_b_ >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
-	np_a = np_a_;
-	np_b = np_b_;
-	num_of_particle = np_a + np_b;
+	file_import >> buf >> n1 >> n2 >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
+	
+	num_of_particle = n1+n2;
+
 	if (ly_ == 0) {
 		sys.dimension = 2;
 	} else {
@@ -445,14 +446,13 @@ Simulation::importInitialPositionFile(){
 		radii[i] = radius;
 	}
 	file_import.close();
-	radius_a = radii[0];
-	if (np_a < num_of_particle) {
-		radius_b = radii[np_a];
-		sys.setRadiusMax(radius_b);
-	} else {
-		radius_b = 0;
-		sys.setRadiusMax(radius_a);
+
+	double max_radius = 0.;
+	for(int i=0; i<num_of_particle;i++){
+		if(max_radius<radii[i])
+			max_radius=radii[i];
 	}
+	sys.setRadiusMax(max_radius);
 }
 
 void
@@ -672,7 +672,7 @@ Simulation::outputConfigurationData(){
 	vector<vec3d> pos;
 	vector<vec3d> vel;
 	char sp = ' ';
-	int np = np_a+np_b;
+	int np = sys.np();
 	pos.resize(np);
 	vel.resize(np);
 	for (int i=0; i < np; i++) {

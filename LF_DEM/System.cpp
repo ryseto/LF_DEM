@@ -118,7 +118,6 @@ System::setupSystemForGenerateInit(){
 	for (int i=0; i<_np; i++) {
 		velocity[i].reset();
 	}
-	dt = dt/radius_max;
 	shear_strain = 0;
 	shear_disp = 0;
 	num_interaction = 0;
@@ -179,7 +178,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		velocity[i].set(position[i].z, 0, 0);
 		ang_velocity[i].set(0, 0.5, 0);
 	}
-	dt = dt/radius_max;
 	shear_strain = 0;
 	shear_disp = 0;
 	num_interaction = 0;
