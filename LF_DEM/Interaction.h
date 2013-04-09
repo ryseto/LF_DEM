@@ -30,6 +30,7 @@ private:
 	int zshift;
 	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
+	double lub_coeff_contact_scaled;
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
 	vec3d unit_contact_velocity_tan;
@@ -41,6 +42,8 @@ private:
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	stresslet lubstresslet;
+	double kn_scaled;
+	double kt_scaled;
 	double colloidal_force_amplitude;
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
@@ -67,6 +70,9 @@ private:
 	void r(const double &new_r);
 	void calcDistanceNormalVector();
 	void calcContactVelocity();
+	void calcContactVelocity_predictor();
+	void calcContactVelocity_corrector();
+
 	void checkBreakupStaticFriction();
 
 	//======= internal state switches  ===========//

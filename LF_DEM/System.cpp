@@ -123,7 +123,7 @@ System::setupSystemForGenerateInit(){
 	num_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	contact_relaxzation_time = 1e-3;
-	kn = 5000;
+	kn = 2000;
 	colloidalforce = false;
 	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -178,21 +178,22 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		velocity[i].set(position[i].z, 0, 0);
 		ang_velocity[i].set(0, 0.5, 0);
 	}
+
 	shear_strain = 0;
 	shear_disp = 0;
 	num_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	if (contact_relaxzation_time < 0) {
-		// 1/(h+c) --> 1/c
-		lub_coeff_contact = 1/lub_reduce_parameter;
-	} else {
-		/* t = beta/kn
-		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
-		 */
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-	}
-	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	//	if (contact_relaxzation_time < 0) {
+	//		// 1/(h+c) --> 1/c
+	//		lub_coeff_contact = 1/lub_reduce_parameter;
+	//	} else {
+	//		/* t = beta/kn
+	//		 *  beta = t*kn
+	//		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+	//		 */
+	////		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+	//	}
+//	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = _lz;
@@ -551,8 +552,8 @@ System::checkNewInteraction(){
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double ri_rj_2 = 0.5*(radius[i]+radius[*it]);
-					double sq_dist_lim = sq_lub_max*ri_rj_2*ri_rj_2;
+					double ro_2 = 0.5*(radius[i]+radius[*it]);
+					double sq_dist_lim = sq_lub_max*ro_2*ro_2;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
 						if (deactivated_interaction.empty()) {
@@ -800,6 +801,7 @@ System::displacement(int i, const vec3d &dr){
 int
 System::periodize(vec3d &pos){
 	int z_shift = 0;
+	vec3d tmp = pos;
 	if (pos.z >= _lz) {
 		pos.z -= _lz;
 		pos.x -= shear_disp;
@@ -979,7 +981,7 @@ System::analyzeState(){
 	max_Fc_normal_norm = 0;
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active) {
-			if (interaction[k].gap_nondim() < min_gap_nondim){
+			if (interaction[k].gap_nondim() < min_gap_nondim) {
 				min_gap_nondim = interaction[k].gap_nondim();
 			}
 			if (interaction[k].contact) {

@@ -93,8 +93,9 @@ Simulation::RelaxationZeroShear(vector<vec3d> &positions,
 	sys.setRadiusMax(max_radius);
 
 	setDefaultParameters();
+	sys.integration_method = 0;
 	sys.dt = 1e-4;
-	sys.kn = 100;
+	sys.kn = 2000;
 	sys.mu_static = 0;
 	sys.shear_rate = 0;
 	setUnits();
@@ -132,13 +133,12 @@ void
 Simulation::setUnits(){
 	bool shear_rate_revert = false;
 	if (sys.shear_rate == 0) {
-		sys.shear_rate = 0.1;
+		sys.shear_rate = 1;
 		shear_rate_revert = true;
 	}
 	unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
 	unit_of_velocity = sys.shear_rate*unit_of_length;
 	unit_of_force = 6*M_PI*viscosity_solvent*radius_of_particle*unit_of_velocity;
-	
 	cerr << viscosity_solvent << endl;
 	cerr << sys.shear_rate << endl;
 	double cf_amp = cf_amp_dl0*6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
@@ -148,7 +148,7 @@ Simulation::setUnits(){
 	cerr << "unit_of_force = " << unit_of_force << endl;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
 	if (shear_rate_revert == true) {
-		sys.shear_rate = 1;
+		sys.shear_rate = 0;
 	}
 }
 
@@ -592,6 +592,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.kn << ' '; // 28
 	fout_rheo << sys.kt << ' '; // 29
 	fout_rheo << sys.dt << ' '; // 30
+	
 	fout_rheo << endl;
 }
 

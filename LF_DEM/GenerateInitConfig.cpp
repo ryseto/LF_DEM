@@ -101,7 +101,7 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 	} else {
 		ss_posdatafilename << "Poly" << a2 << "_" << number_ratio ;
 	}
-	
+
 	if (dimension == 2) {
 		if (lx_lz == 1) {
 			ss_posdatafilename << "Square"; // square
@@ -115,7 +115,7 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 		}
 	}
-	ss_posdatafilename << ".dat";
+	ss_posdatafilename << "_" << rand_seed << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	fout << "# np1 np2 vf lx ly lz" << endl;
@@ -260,6 +260,7 @@ GenerateInitConfig::gradientDescent(){
 
 void
 GenerateInitConfig::putRandom(){
+	rand_gen.seed(rand_seed);
 	for (int i=0; i < np; i++) {
 		sys.position[i].x = lx*RANDOM;
 		sys.position[i].z = lz*RANDOM;
@@ -420,6 +421,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	 */
 	np = readStdinDefault(200, "number of particle");
 	dimension = readStdinDefault(3, "dimension (2 or 3)");
+	sys.dimension = dimension;
 	if (dimension == 2){
 		volume_fraction =  readStdinDefault(0.7, "volume_fraction");
 	} else {
@@ -442,6 +444,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 			number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
 		} while ( number_ratio < 0 || number_ratio > 1);
 	}
+	rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
@@ -506,7 +509,6 @@ GenerateInitConfig::setSystemParameters(){
 	sys.cf_amp_dl = cf_amp/unit_of_force;
 	cerr << "unit_of_force = " << unit_of_force << endl;
 	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
-
 	/*
 	 * Simulation
 	 *
@@ -519,7 +521,6 @@ GenerateInitConfig::setSystemParameters(){
 	 *
 	 */
 	sys.dt = 1e-4;
-	sys.dt_ratio = 2;
 	/*
 	 * integration_method:
 	 * 0 Euler's Method,
@@ -574,7 +575,6 @@ GenerateInitConfig::setSystemParameters(){
 	 * kt: tangential spring constant
 	 */
 	sys.kn = 5000;
-	sys.kt = 1000;
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
 	/*
