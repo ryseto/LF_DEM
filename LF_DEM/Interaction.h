@@ -36,6 +36,8 @@ private:
 	vec3d unit_contact_velocity_tan;
 	double sqnorm_contact_velocity;
 	vec3d disp_tan; // tangential displacement
+	vec3d disp_tan_predictor; // tangential displacement
+	//	vec3d nr_vec_before_predictor;
 	//===== forces and stresses ==================== //
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
