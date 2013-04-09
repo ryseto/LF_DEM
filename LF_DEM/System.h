@@ -185,7 +185,7 @@ public:
 	
 	void setSystemVolume();
 	void setupSystemForGenerateInit();
-	void setupSystem(const vector<vec3d> &initial_positions,
+	void setupSystem(const vector <vec3d> &initial_positions,
 					 const vector <double> &radii);
 	void allocateRessources();
 	void timeEvolution(int time_step);
@@ -253,40 +253,40 @@ public:
 		return system_volume;
 	}
 
-	inline double lx(){
+	inline double lx() {
 		return _lx;
 	}
 
-	inline double ly(){
+	inline double ly() {
 		return _ly;
 	}
 
-	inline double lz(){
+	inline double lz() {
 		return _lz;
 	}
 
-	inline double lx2(){
+	inline double lx2() {
 		return _lx2;
 	}
 
-	inline double ly2(){
+	inline double ly2() {
 		return _ly2;
 	}
 
-	inline double lz2(){
+	inline double lz2() {
 		return _lz2;
 	}
 
-	inline void np(int val){
+	inline void np(int val) {
 		_np = val;
 		np3 = 3*_np;
 	}
 
-	inline int np(){
+	inline int np() {
 		return _np;
 	}
 
-	inline double strain(){
+	inline double strain() {
 		return shear_strain;
 	}
 	

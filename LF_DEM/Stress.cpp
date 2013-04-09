@@ -19,9 +19,8 @@ System::calcStressesHydroContactBrownian(){
 	/**************************************************
 	 1. Stress from background flow
 	 **/
-    for (int i = 0; i < _np; i++){
-		double a = radius[i];
-		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*a*a*a;
+    for (int i=0; i < _np; i++) {
+		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*radius_cubic[i];
 	}
 	
 	/**************************************************
@@ -210,7 +209,6 @@ System::calcStressesHydroContact(){
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 			interaction[k].integrateStress();
-			
 		}
 	}
 	/*
@@ -244,8 +242,6 @@ System::calcStress(){
 	static double previous_strain = 0;
 	d_strain = strain()-previous_strain;
 	previous_strain = strain();
-	
-	
 	stressReset();
 	if (brownian) {
 	 	calcStressesHydroContactBrownian();

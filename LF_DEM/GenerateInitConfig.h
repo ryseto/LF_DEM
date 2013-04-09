@@ -16,10 +16,7 @@
 #include <string>
 #include "vec3d.h"
 #include "System.h"
-
 using namespace std;
-
-
 
 class GenerateInitConfig{
 private:
@@ -42,6 +39,7 @@ private:
 	void moveAlongGradient(vec3d*, int);
 	void storeGradient();
 	double step_size;
+	int rand_seed;
 	MTRand rand_gen;
 	
 	double zeroTMonteCarloSweep();
