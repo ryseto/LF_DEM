@@ -210,6 +210,9 @@ System::calcStressesHydroContact(){
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 			interaction[k].integrateStress();
 		}
+
+			
+			
 	}
 	/*
 	 * Calculate lubrication force to output
@@ -219,7 +222,6 @@ System::calcStressesHydroContact(){
 			interaction[k].evaluateLubricationForce();
 		}
 	}
-	
 	// >>>>  testing : compare with stress computation from forces
 	// Note that the definition of Hydrodynamic Stress and Contact Stress
 	// are different: the part coming from v_cont is included in Hydro stress.
@@ -276,3 +278,6 @@ System::calcStress(){
 	}
 	stressBrownianReset();
 }
+
+
+

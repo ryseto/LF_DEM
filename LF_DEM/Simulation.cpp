@@ -123,11 +123,9 @@ Simulation::RelaxzationZeroShear(vector<vec3d> &positions,
 		//		outputRheologyData();
 		//		outputConfigurationData();
 	}
-	
 	for (int i=0; i<num_of_particle; i++) {
 		positions[i] = sys.position[i];
 	}
-
 }
 
 void

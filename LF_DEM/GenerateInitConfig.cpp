@@ -285,7 +285,6 @@ GenerateInitConfig::updateInteractions(int i){
 		 it != sys.interaction_list[i].end(); it ++) {
 		inter_list.push_back(*it);
 	}
-	
 	for (unsigned int k=0; k<inter_list.size(); k++) {
 		bool desactivated;
 		inter_list[k]->updateState(desactivated);
@@ -293,9 +292,7 @@ GenerateInitConfig::updateInteractions(int i){
 			sys.deactivated_interaction.push(inter_list[k]->label);
 		}
 	}
-	
 }
-
 
 int
 GenerateInitConfig::overlapNumber(int i){
@@ -323,7 +320,6 @@ GenerateInitConfig::particleEnergy(int i){
 	}
 	return energy;
 }
-
 
 double
 GenerateInitConfig::zeroTMonteCarloSweep(){

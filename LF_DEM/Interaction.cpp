@@ -12,9 +12,6 @@ Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
-	if (sys->integration_method == 0){
-		sys->in_predictor = true;
-	}
 }
 
 void
@@ -386,7 +383,7 @@ Interaction::calcStressTermXF(stresslet &stresslet_, const vec3d &force){
 
 void
 Interaction::addContactStress(){
-	if (contact){
+	if (contact) {
 		int i3 = 3*par_num[0];
 		int j3 = 3*par_num[1];
 		stresslet contactstressletXF;
@@ -415,7 +412,7 @@ Interaction::addColloidalStress(){
 	int j3 = 3*par_num[1];
 	stresslet colloidalstressletXF;
 	calcStressTermXF(colloidalstressletXF, F_colloidal);
-	for (int u=0; u<5; u++){
+	for (int u=0; u<5; u++) {
 		sys->colloidalstressXF[par_num[0]].elm[u] += a0*colloidalstressletXF.elm[u];
 		sys->colloidalstressXF[par_num[1]].elm[u] += a1*colloidalstressletXF.elm[u];
 	}
@@ -427,11 +424,10 @@ Interaction::addColloidalStress(){
 	vec3d vi(sys->v_colloidal[i3], sys->v_colloidal[i3+1], sys->v_colloidal[i3+2]);
 	vec3d vj(sys->v_colloidal[j3], sys->v_colloidal[j3+1], sys->v_colloidal[j3+2]);
 	pairVelocityStresslet(vi, vj, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
-	for (int u=0; u<5; u++){
-			sys->colloidalstressGU[par_num[0]].elm[u] += stresslet_colloid_GU_i.elm[u];
-			sys->colloidalstressGU[par_num[1]].elm[u] += stresslet_colloid_GU_j.elm[u];
+	for (int u=0; u<5; u++) {
+		sys->colloidalstressGU[par_num[0]].elm[u] += stresslet_colloid_GU_i.elm[u];
+		sys->colloidalstressGU[par_num[1]].elm[u] += stresslet_colloid_GU_j.elm[u];
 	}
-	
 	total_stress_xz += (a0*stresslet_colloid_GU_i.elm[2]+a1*stresslet_colloid_GU_j.elm[2])*sys->d_strain;
 }
 
@@ -451,7 +447,6 @@ Interaction::activate_contact(){
 	disp_tan.reset();
 	strain_contact_start = sys->strain();
 	lub_coeff = sys->lub_coeff_contact;
-
 }
 
 void
@@ -607,11 +602,10 @@ Interaction::getNormalVelocity(){
 	return dot(d_velocity, nr_vec);
 }
 
-
 double
 Interaction::calcPotentialEnergy(){
 	double energy;
-//	double h = _r - ro;
+	//	double h = _r - ro;
 	if (_gap_nondim < 0) {
 		energy = 0.5*sys->kn*_gap_nondim*_gap_nondim;
 		energy += -colloidal_force_amplitude*_gap_nondim;

@@ -194,7 +194,7 @@ public:
 
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteractions(bool _in_predictor = false);
+	void updateInteractions(bool _in_predictor = true);
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);

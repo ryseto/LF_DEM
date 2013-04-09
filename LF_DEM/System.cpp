@@ -183,17 +183,17 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	shear_disp = 0;
 	num_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	//	if (contact_relaxzation_time < 0) {
-	//		// 1/(h+c) --> 1/c
-	//		lub_coeff_contact = 1/lub_reduce_parameter;
-	//	} else {
-	//		/* t = beta/kn
-	//		 *  beta = t*kn
-	//		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
-	//		 */
-	////		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-	//	}
-//	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	if (contact_relaxzation_time < 0) {
+		// 1/(h+c) --> 1/c
+		lub_coeff_contact = 1/lub_reduce_parameter;
+	} else {
+		/* t = beta/kn
+		 *  beta = t*kn
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 */
+		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+	}
+	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = _lz;
@@ -304,7 +304,7 @@ System::deltaTimeEvolutionPredictor(){
 	/* In predictor, the values of interactions is updated,
 	 * but the statuses are fixed by using boolean `fix_interaction_status'
 	 */
-	updateInteractions(true); // true ---> in predictor
+	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
@@ -335,7 +335,7 @@ System::deltaTimeEvolutionCorrector(){
 	 * Interaction
 	 *
 	 */
-	updateInteractions();
+	updateInteractions(false); // false --> in corrector
 	/* In deltaTimeEvolutionCorrector,
 	 * velocity[] and ang_velocity[]
 	 * are virtual velocities to correct the predictor.
@@ -757,15 +757,13 @@ System::updateVelocityLubrication(){
 		velocity[i].y = v_lub_cont[i3+1];
 		velocity[i].z = v_lub_cont[i3+2];
     }
-	if (vel_difference > 0) {
-		for (int i=0; i<_np; i++) {
-			velocity[i].x += position[i].z;
-		}
-	}
 	for (int i=0; i<_np; i++) {
 		ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
 	}
-	if (vel_difference > 0){
+	if (shear_rate != 0) {
+		for (int i=0; i<_np; i++) {
+			velocity[i].x += position[i].z;
+		}
 		double O_inf_y = 0.5;
 		for (int i=0; i<_np; i++) {
 			ang_velocity[i].y += O_inf_y;
@@ -997,7 +995,11 @@ System::analyzeState(){
 			//			cout << interaction[k].gap_nondim() << ' ' << interaction[k].getNormalVelocity() << endl;
 		}
 	}
-	average_Fc_normal_norm = sum_Fc_normal_norm/contact_nb;
+	if (contact_nb > 0) {
+		average_Fc_normal_norm = sum_Fc_normal_norm/contact_nb;
+	} else {
+		average_Fc_normal_norm = 0;
+	}
 }
 
 void
