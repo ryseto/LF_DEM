@@ -77,7 +77,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 		radii[i] = sys.radius[i];
 	}
 	Simulation simulation;
-	simulation.RelaxzationZeroShear(positions, radii, lx, ly, lz);
+	simulation.RelaxationZeroShear(positions, radii, lx, ly, lz);
 	//	solveOverlap();
 	outputPositionData(positions,
 					   radii);
