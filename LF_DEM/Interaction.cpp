@@ -134,8 +134,8 @@ Interaction::addUpContactForceTorque(){
 			sys->contact_force[par_num[0]] += Fc_tan;
 			sys->contact_force[par_num[1]] -= Fc_tan;
 			vec3d t_ij = cross(nr_vec, Fc_tan);
-			sys->contact_torque[par_num[0]] += t_ij;
-			sys->contact_torque[par_num[1]] += t_ij;
+			sys->contact_torque[par_num[0]] += a0*t_ij;
+			sys->contact_torque[par_num[1]] += a1*t_ij;
 		}
 	}
 }
@@ -182,7 +182,6 @@ Interaction::calcContactVelocity(){
 	contact_velocity -=
 	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
 }
-
 
 /*********************************
  *                                *
@@ -255,16 +254,16 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double common_factor_i = -dot(nr_vec, (4*a0*a0*XG[0]*vi+ro*ro*XG[1]*vj)/6);
 	double common_factor_j = -dot(nr_vec, (4*a1*a1*XG[3]*vj+ro*ro*XG[2]*vi)/6);
-	stresslet_i.elm[0] = n0n0_13 * common_factor_i;
-	stresslet_i.elm[1] = n0n1    * common_factor_i;
-	stresslet_i.elm[2] = n0n2    * common_factor_i;
-	stresslet_i.elm[3] = n1n2    * common_factor_i;
-	stresslet_i.elm[4] = n1n1_13 * common_factor_i;
-	stresslet_j.elm[0] = n0n0_13 * common_factor_j;
-	stresslet_j.elm[1] = n0n1 * common_factor_j;
-	stresslet_j.elm[2] = n0n2 * common_factor_j;
-	stresslet_j.elm[3] = n1n2 * common_factor_j;
-	stresslet_j.elm[4] = n1n1_13 * common_factor_j;
+	stresslet_i.elm[0] = common_factor_i*n0n0_13;
+	stresslet_i.elm[1] = common_factor_i*n0n1;
+	stresslet_i.elm[2] = common_factor_i*n0n2;
+	stresslet_i.elm[3] = common_factor_i*n1n2;
+	stresslet_i.elm[4] = common_factor_i*n1n1_13;
+	stresslet_j.elm[0] = common_factor_j*n0n0_13;
+	stresslet_j.elm[1] = common_factor_j*n0n1;
+	stresslet_j.elm[2] = common_factor_j*n0n2;
+	stresslet_j.elm[3] = common_factor_j*n1n2;
+	stresslet_j.elm[4] = common_factor_j*n1n1_13;
 }
 
 // convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
@@ -273,10 +272,10 @@ Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, s
 	vec3d vi, vj;
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
-	vi.x = vel_array[i3  ];
+	vi.x = vel_array[i3];
 	vi.y = vel_array[i3+1];
 	vi.z = vel_array[i3+2];
-	vj.x = vel_array[j3  ];
+	vj.x = vel_array[j3];
 	vj.y = vel_array[j3+1];
 	vj.z = vel_array[j3+2];
 	pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
@@ -284,8 +283,8 @@ Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, s
 
 void
 Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j){
-	double n0n0_13 = nr_vec.x*nr_vec.x - 1./3;
-	double n1n1_13 = nr_vec.y*nr_vec.y - 1./3;
+	double n0n0_13 = nr_vec.x*nr_vec.x-1./3;
+	double n1n1_13 = nr_vec.y*nr_vec.y-1./3;
 	double n0n1 = nr_vec.x*nr_vec.y;
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
