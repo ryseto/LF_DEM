@@ -440,7 +440,6 @@ void
 BoxSet::box(int i){
 	Box *b = WhichBox(sys->position[i]);
 	if(b != boxMap[i]) {
-//		sys->position[i].cerr();
 		b->add(i);
 		if(boxMap[i] != NULL) {
 			boxMap[i]->remove(i);
