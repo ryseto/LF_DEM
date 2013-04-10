@@ -30,14 +30,10 @@ private:
 	int zshift;
 	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
-	double lub_coeff_contact_scaled;
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
-	vec3d unit_contact_velocity_tan;
-	double sqnorm_contact_velocity;
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_predictor; // tangential displacement
-	//	vec3d nr_vec_before_predictor;
 	//===== forces and stresses ==================== //
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
@@ -73,8 +69,6 @@ private:
 	void calcContactVelocity_predictor();
 	void calcContactVelocity_corrector();
 
-	void checkBreakupStaticFriction();
-
 	//======= internal state switches  ===========//
 	void activate_contact();
 	void deactivate_contact();
@@ -87,12 +81,12 @@ private:
 	double F_colloidal_norm;
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
-	vec3d Tc_0; // contact torque on p0
-	vec3d Tc_1; // contact torque on p1
 	vec3d F_colloidal;
 	void calcContactInteraction();
+	void checkBreakupStaticFriction();
 	void calcStressTermXF(stresslet &stresslet_,
 						  const vec3d &force);
+
 protected:
 public:
 	/*********************************
@@ -116,7 +110,10 @@ public:
 
 	//======= particles data  ====================//
 	int par_num[2];
-	int partner(int);
+	inline int
+	partner(int i){
+		return (i == par_num[0] ? par_num[1] : par_num[0]);
+	}
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0 + a1
@@ -127,13 +124,7 @@ public:
 	vec3d nr_vec; // vector center to center
 	inline double r(){return _r;}
 	inline double gap_nondim(){return _gap_nondim;}
-	inline double overlap(){
-		if (contact){
-			return ro-_r;
-		} else {
-			return 0;
-		}
-	}
+
 	//======= internal state =====================//
 	bool active;
 	bool contact;
@@ -153,16 +144,16 @@ public:
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
-	double normal_force(){return Fc_normal_norm;}
-	double colloidal_force(){return F_colloidal_norm;}
-	vec3d tangential_force(){return Fc_tan;}
-	double disp_tan_norm(){return disp_tan.norm();}
 	void evaluateLubricationForce();
-	double valLubForce();
-	double lubStresslet(int i){return lubstresslet.elm[i];}
 	double getContactVelocity();
 	double getNormalVelocity();
-	double calcPotentialEnergy();
+	double getPotentialEnergy();
+	inline double normal_force(){return Fc_normal_norm;}
+	inline double colloidal_force(){return F_colloidal_norm;}
+	inline vec3d tangential_force(){return Fc_tan;}
+	inline double disp_tan_norm(){return disp_tan.norm();}
+	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
+	inline double lubStresslet(int i){return lubstresslet.elm[i];}
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
@@ -170,7 +161,6 @@ public:
 							   stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
-	
 	void integrateStress();
 
 	//=========== observables ===============================//

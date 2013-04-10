@@ -156,7 +156,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	} else {
 		friction = false;
 	}
-	if (cf_amp_dl >  0) {
+	if (cf_amp_dl > 0) {
 		colloidalforce = true;
 		cerr << "Colloidal force" << endl;
 	} else {
@@ -178,7 +178,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		velocity[i].set(position[i].z, 0, 0);
 		ang_velocity[i].set(0, 0.5, 0);
 	}
-
 	shear_strain = 0;
 	shear_disp = 0;
 	num_interaction = 0;
@@ -281,6 +280,8 @@ System::deltaTimeEvolution(){
 	// update boxing system
 	boxset.update();
 	checkNewInteraction();
+	in_predictor = true;
+	in_corrector = true;
 	updateInteractions();
 }
 
@@ -304,6 +305,8 @@ System::deltaTimeEvolutionPredictor(){
 	/* In predictor, the values of interactions is updated,
 	 * but the statuses are fixed by using boolean `fix_interaction_status'
 	 */
+	in_predictor = true;
+	in_corrector = false;
 	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.
@@ -330,12 +333,14 @@ System::deltaTimeEvolutionCorrector(){
 	}
 	// update boxing system
 	boxset.update();
-	checkNewInteraction();
+	checkNewInteraction(); 
 	/*
 	 * Interaction
 	 *
 	 */
-	updateInteractions(false); // false --> in corrector
+	in_predictor = false;
+	in_corrector = true;
+	updateInteractions(); // false --> in corrector
 	/* In deltaTimeEvolutionCorrector,
 	 * velocity[] and ang_velocity[]
 	 * are virtual velocities to correct the predictor.
@@ -528,10 +533,11 @@ System::timeEvolutionRelax(int time_step){
 	while (ts < ts_next) {
 		setContactForceToParticle();
 		setColloidalForceToParticle();
+		in_predictor = true;
+		in_corrector = true;
 		updateVelocityRestingFluid();
 		deltaTimeEvolution();
 		ts++;
-		shear_strain += dt;
 	}
 	
 }
@@ -583,11 +589,10 @@ System::checkNewInteraction(){
  * contact_pair[i][j] < -1, the particles have some distance.
  */
 void
-System::updateInteractions(bool _in_predictor){
+System::updateInteractions(){
 	/* default value of `_in_predictor' is false
 	 *
 	 */
-	in_predictor = _in_predictor;
 	for (int k=0; k<num_interaction; k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
@@ -700,7 +705,9 @@ System::setColloidalForceToParticle(){
 			colloidal_force[i].reset();
 		}
 		for (int k=0; k<num_interaction; k++) {
-			interaction[k].addUpColloidalForce();
+			if (interaction[k].active) {
+				interaction[k].addUpColloidalForce();
+			}
 		}
 	}
 }
@@ -1022,8 +1029,8 @@ System::evaluateMaxOverlap(){
 	double _max_overlap = 0;
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active &&
-			interaction[k].overlap() > _max_overlap) {
-			_max_overlap = interaction[k].overlap();
+			-interaction[k].gap_nondim() > _max_overlap) {
+			_max_overlap = -interaction[k].gap_nondim();
 		}
 	}
 	return _max_overlap;
@@ -1157,7 +1164,7 @@ System::calcTotalPotentialEnergy(){
 	total_energy = 0;
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active){
-			total_energy += interaction[k].calcPotentialEnergy();
+			total_energy += interaction[k].getPotentialEnergy();
 		}
 	}
 }

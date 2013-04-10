@@ -211,11 +211,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = 0.2*$radius[0];
+	$r = $radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = 0.2*$radius[$i];
+			$r = $radius[$i];
 			printf OUT "r $r\n";
 		}
 		if ($y_section == 0 ||

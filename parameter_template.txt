@@ -1,5 +1,19 @@
+/*
+ * Sample parameters
+ *
+ */
+
 viscosity_solvent = 0.001;
 radius_of_particle = 1e-6;
+
+/*
+ * Parameter auto adjustment.
+ *
+ */
+kn_kt_adjustment = false;
+overlap_target = 0.03;
+disp_tan_target = 0.03;
+
 /*
  * Simulation
  *
@@ -39,6 +53,7 @@ lub_max = 2.5;
 lub_reduce_parameter = 1e-3;
 /*
  * contact_relaxzation_time: to determine the coeffient of the dashpot
+ * This need to be larger than dt.
  */
 contact_relaxzation_time = 1e-3;
 /*
@@ -92,6 +107,4 @@ out_data_interaction = true;
  * Visualize rotations by crosses.
  * (for yaplot data)
  */
-
 draw_rotation_2d = true;
-

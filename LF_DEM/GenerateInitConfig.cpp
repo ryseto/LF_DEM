@@ -175,17 +175,17 @@ GenerateInitConfig::computeGradient(){
 void
 GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	double grad_norm;
-	double gradient_power=0.9;
+	double gradient_power = 0.9;
 	vec3d step;
 	
-	grad_norm=0.;
-	for(int i=0; i<np;i++){
-		for(int u=0; u<sys.dimension; u++){
-			grad_norm+=g[i].sq_norm();
+	grad_norm = 0;
+	for (int i=0; i<np;i++) {
+		for(int u=0; u<sys.dimension; u++) {
+			grad_norm += g[i].sq_norm();
 		}
 	}
 	
-	if(grad_norm!=0.){
+	if (grad_norm != 0) {
 		double rescale = pow(grad_norm, gradient_power);
 		for(int i=0; i<np;i++){
 			step = -dir*g[i]*step_size/rescale;
@@ -199,8 +199,8 @@ GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 
 void
 GenerateInitConfig::storeGradient(){
-	for(int i=0;i<np;i++){
-		prev_grad[i]=grad[i];
+	for (int i=0;i<np;i++) {
+		prev_grad[i] = grad[i];
 	}
 }
 
@@ -229,7 +229,7 @@ GenerateInitConfig::gradientDescent(){
 		
 		relative_en=(old_running_energy-running_energy)/(old_running_energy+running_energy);
 		
-		if(steps%100 == 0){
+		if (steps%100 == 0) {
 			cerr << "    Steps = " << steps << " :::   Energy : "<< running_energy/np << endl;
 		}
 		
@@ -239,10 +239,10 @@ GenerateInitConfig::gradientDescent(){
 	
 	
 	if(relative_en < 0) {
-		cerr << "    Steps = " << steps ;
+		cerr << "    Steps = " << steps;
 		cerr << " :::   Last Step Upwards. Old Energy : " << old_running_energy/np;
-		cerr << " New Energy : " << running_energy/np ;
-		cerr << " Relative : " << relative_en << endl ;
+		cerr << " New Energy : " << running_energy/np;
+		cerr << " Relative : " << relative_en << endl;
 		cerr << "      Reverting last step..." << endl;
 		moveAlongGradient(prev_grad, -1);
 		return old_running_energy;
@@ -250,7 +250,7 @@ GenerateInitConfig::gradientDescent(){
 
 	if (relative_en > 0
 		&& relative_en < 1e-6) {
-		cerr << "    Steps = " << steps ;
+		cerr << "    Steps = " << steps;
 		cerr << " :::   Stuck: too slow (Relative energy difference : " << relative_en  << endl;
 		cerr << "  Ending Energy "<< running_energy << endl<< endl;
 		return running_energy;
@@ -299,7 +299,7 @@ GenerateInitConfig::overlapNumber(int i){
 	int overlaps = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
-		if((*it)->r() < (*it)->ro) {
+		if ((*it)->r() < (*it)->ro) {
 			overlaps++;
 		}
 	}
@@ -326,16 +326,13 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 	int steps = 0;
 	int init_overlaps = 0;
 	double init_energy = 0;
-	
 	for(int i=0; i<np; i++) {
 	 	init_overlaps += overlapNumber(i);
 	}
-	
 	for(int i=0; i<np; i++) {
 	 	init_energy += particleEnergy(i);
 	}
-	
-	while(steps < np) {
+	while (steps < np) {
 		int moved_part = (int)(RANDOM*np);
 		//		int overlap_pre_move = overlapNumber(moved_part);
 		double energy_pre_move = particleEnergy(moved_part);
@@ -345,7 +342,6 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 		} else {
 			trial_move = randUniformCircle(0.002);
 		}
-		
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);
 		updateInteractions(moved_part);
