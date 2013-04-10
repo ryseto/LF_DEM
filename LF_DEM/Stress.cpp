@@ -143,7 +143,6 @@ System::calcStressesHydroContactBrownian(){
     for (int k = 0; k < num_interaction; k++) {
 		if(interaction[k].active) {
 			interaction[k].pairVelocityStresslet(v_Brownian_mid, stresslet_i_mid, stresslet_j_mid);
-			
 			int i = interaction[k].par_num[0];
 			int j = interaction[k].par_num[1];
 			for (int u=0; u < 5; u++) {
@@ -210,9 +209,6 @@ System::calcStressesHydroContact(){
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 			interaction[k].integrateStress();
 		}
-
-			
-			
 	}
 	/*
 	 * Calculate lubrication force to output

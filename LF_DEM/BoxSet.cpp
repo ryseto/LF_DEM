@@ -428,7 +428,7 @@ BoxSet::WhichBox(vec3d* pos){
 		iy = (int)(pos->y/box_ysize);
 	}
 	int iz = (int)(pos->z/box_zsize);
-	int label= ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
+	int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 	// cout << " Which Box : " << label << endl;
 	// cout << x_box_nb << " " << y_box_nb << " " << z_box_nb<< " "<< ix  <<" "<< iy << " " << iz << endl;
 	// cout <<pos->x << " " << pos->y << " " << pos->z << endl;
@@ -439,10 +439,10 @@ BoxSet::WhichBox(vec3d* pos){
 void
 BoxSet::box(int i){
 	Box *b = WhichBox(sys->position[i]);
-	if(b != boxMap[i]) {
-//		sys->position[i].cerr();
+	if (b != boxMap[i]) {
+		//		sys->position[i].cerr();
 		b->add(i);
-		if(boxMap[i] != NULL) {
+		if (boxMap[i] != NULL) {
 			boxMap[i]->remove(i);
 		}
 		boxMap[i] = b;

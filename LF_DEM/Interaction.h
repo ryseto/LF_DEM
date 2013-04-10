@@ -52,6 +52,7 @@ private:
 	double duration_contact; // enture duraction for h < 0
 	double max_stress; // Maximum value of stress in the all history of this object.
 	int cnt_sliding;  // to count the number of slips.
+	double r_activated;
 #ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;

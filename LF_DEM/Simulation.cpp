@@ -51,7 +51,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	outputDataHeader(fout_particle);
 	outputConfigurationData();
 	sys.setupShearFlow(true);
-	while (sys.strain() <= shear_strain_end) {
+	do {
 		int i_time_interval = sys.strain_interval_output/sys.dt;
 		cerr << "strain: " << sys.strain() << endl;
 		sys.timeEvolution(i_time_interval);
@@ -64,7 +64,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		if (dt_adjustment) {
 			sys.adjustTimeStep();
 		}
-	}
+	} while (sys.strain() <= shear_strain_end);
 }
 
 void
@@ -84,14 +84,13 @@ Simulation::RelaxationZeroShear(vector<vec3d> &positions,
 		sys.dimension = 3;
 	}
 	sys.setupShearFlow(false);
-
-	double max_radius = 0.;
-	for(int i=0; i<num_of_particle;i++){
-		if(max_radius<radii[i])
-			max_radius=radii[i];
+	double max_radius = 0;
+	for (int i=0; i<num_of_particle; i++) {
+		if (max_radius < radii[i]) {
+			max_radius = radii[i];
+		}
 	}
 	sys.setRadiusMax(max_radius);
-
 	setDefaultParameters();
 	sys.integration_method = 0;
 	sys.dt = 1e-4;

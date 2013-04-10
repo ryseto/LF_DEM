@@ -85,6 +85,7 @@ Interaction::activate(int i, int j){
 	duration_contact = 0; // for output
 	max_stress = 0; // for output
 	stress_xz_integration = 0; // for output
+	r_activated = _r;
 }
 
 void
@@ -100,6 +101,95 @@ Interaction::deactivate(){
 	sys->interaction_partners[par_num[0]].erase(par_num[1]);
 	sys->interaction_partners[par_num[1]].erase(par_num[0]);
 }
+
+void
+Interaction::activate_contact(){
+	// r < a0 + a1
+	contact = true;
+	disp_tan.reset();
+	strain_contact_start = sys->strain();
+	lub_coeff = sys->lub_coeff_contact;
+}
+
+void
+Interaction::deactivate_contact(){
+	// r > a0 + a1
+#ifdef RECORD_HISTORY
+	outputHistory();
+#endif
+	contact = false;
+	disp_tan.reset();
+	Fc_normal_norm = 0;
+	Fc_normal.reset();
+	Fc_tan.reset();
+	duration_contact += sys->strain()-strain_contact_start; // for output
+}
+
+
+/*
+ *
+ */
+void
+Interaction::updateState(bool &deactivated){
+	if (active == false) {
+		return;
+	}
+	/* update tangential displacement: we do it before updating nr_vec
+	 * as it should be along the tangential vector defined in the previous time step
+	 */
+	if (contact) {
+		if (sys->friction) {
+			calcContactVelocity();
+			if (sys->in_predictor) {
+				disp_tan += contact_velocity*sys->dt;
+				disp_tan_predictor = disp_tan;
+			} else {
+				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
+			}
+		}
+		calcDistanceNormalVector();
+		if (_gap_nondim > 0) {
+			deactivate_contact();
+		}
+		calcContactInteraction();
+		if (sys->colloidalforce) {
+			/* For continuity, the colloidal force is kept as constant for h < 0.
+			 * This force does not affect the friction law,
+			 * i.e. it is separated from Fc_normal_norm.
+			 */
+			F_colloidal_norm = colloidal_force_amplitude;
+			F_colloidal = -F_colloidal_norm*nr_vec;
+		}
+	} else {
+		calcDistanceNormalVector();
+		if (_gap_nondim <= 0) {
+			activate_contact();
+		}
+		if (sys->colloidalforce) {
+			F_colloidal_norm = colloidal_force_amplitude*exp(-_gap_nondim/sys->cf_range_dl);
+			F_colloidal = -F_colloidal_norm*nr_vec;
+		}
+		if (!sys->in_predictor) {
+			/* If r > r_lub_max, deactivate the interaction object.
+			 */
+			if (_r > r_lub_max) {
+				deactivate();
+				deactivated = true;
+			}
+		}
+	}
+#ifdef RECORD_HISTORY
+	if (!sys->in_predictor) {
+		gap_history.push_back(_gap_nondim);
+		if (contact) {
+			disp_tan_sq_history.push_back(disp_tan.sq_norm());
+			overlap_history.push_back(_r-ro);
+		}
+	}
+#endif
+}
+
+
 
 /*********************************
  *                                *
@@ -439,28 +529,6 @@ Interaction::partner(int i){
 	}
 }
 
-void
-Interaction::activate_contact(){
-	// r < a0 + a1
-	contact = true;
-	disp_tan.reset();
-	strain_contact_start = sys->strain();
-	lub_coeff = sys->lub_coeff_contact;
-}
-
-void
-Interaction::deactivate_contact(){
-	// r > a0 + a1
-#ifdef RECORD_HISTORY
-	outputHistory();
-#endif
-	contact = false;
-	disp_tan.reset();
-	Fc_normal_norm = 0;
-	Fc_normal.reset();
-	Fc_tan.reset();
-	duration_contact += sys->strain()-strain_contact_start; // for output
-}
 
 #ifdef RECORD_HISTORY
 void
@@ -480,68 +548,6 @@ Interaction::outputHistory(){
 }
 #endif
 
-/*
- *
- */
-void
-Interaction::updateState(bool &deactivated){
-	if (active == false) {
-		return;
-	}
-	/* update tangential displacement: we do it before updating nr_vec
-	 * as it should be along the tangential vector defined in the previous time step
-	 */
-	if (contact) {
-		if (sys->friction) {
-			calcContactVelocity();
-			if (sys->in_predictor) {
-				disp_tan += contact_velocity*sys->dt;
-				disp_tan_predictor = disp_tan;
-			} else {
-				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
-			}
-		}
-		calcDistanceNormalVector();
-		if (_gap_nondim > 0) {
-			deactivate_contact();
-		}
-		calcContactInteraction();
-		if (sys->colloidalforce) {
-			/* For continuity, the colloidal force is kept as constant for h < 0.
-			 * This force does not affect the friction law,
-			 * i.e. it is separated from Fc_normal_norm.
-			 */
-			F_colloidal_norm = colloidal_force_amplitude;
-			F_colloidal = -F_colloidal_norm*nr_vec;
-		}
-	} else {
-		calcDistanceNormalVector();
-		if (_gap_nondim <= 0) {
-			activate_contact();
-		}
-		if (sys->colloidalforce) {
-			F_colloidal_norm = colloidal_force_amplitude*exp(-_gap_nondim/sys->cf_range_dl);
-			F_colloidal = -F_colloidal_norm*nr_vec;
-		}
-		if (!sys->in_predictor) {
-			/* If r > r_lub_max, deactivate the interaction object.
-			 */
-			if (_r > r_lub_max) {
-				deactivate();
-				deactivated = true;
-			}
-		}
-	}
-#ifdef RECORD_HISTORY
-	if (!sys->in_predictor) {
-		gap_history.push_back(_gap_nondim);
-		if (contact) {
-			disp_tan_sq_history.push_back(disp_tan.sq_norm());
-			overlap_history.push_back(_r-ro);
-		}
-	}
-#endif
-}
 
 void
 Interaction::checkBreakupStaticFriction(){
@@ -568,6 +574,7 @@ Interaction::outputSummary(){
 	sys->fout_int_data << max_stress << ' ';  // 5
 	sys->fout_int_data << stress_xz_integration << ' '; // 6
 	sys->fout_int_data << cnt_sliding << ' '; //  7
+	sys->fout_int_data << r_activated << ' ';
 	sys->fout_int_data << endl;
 }
 
