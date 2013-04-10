@@ -68,7 +68,6 @@ Interaction::activate(int i, int j){
 	 * If the scaled kn is used there,
 	 * particle size dependence appears in the simulation.
 	 * I don't understand this point yet.
-	 *
 	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxzation_time;
 	 */
 	colloidal_force_amplitude = sys->cf_amp_dl*ro_2;
@@ -85,7 +84,6 @@ Interaction::activate(int i, int j){
 	duration_contact = 0; // for output
 	max_stress = 0; // for output
 	stress_xz_integration = 0; // for output
-	r_activated = _r;
 }
 
 void
@@ -125,7 +123,6 @@ Interaction::deactivate_contact(){
 	duration_contact += sys->strain()-strain_contact_start; // for output
 }
 
-
 /*
  *
  */
@@ -148,9 +145,6 @@ Interaction::updateState(bool &deactivated){
 			}
 		}
 		calcDistanceNormalVector();
-		if (_gap_nondim > 0) {
-			deactivate_contact();
-		}
 		calcContactInteraction();
 		if (sys->colloidalforce) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
@@ -159,6 +153,13 @@ Interaction::updateState(bool &deactivated){
 			 */
 			F_colloidal_norm = colloidal_force_amplitude;
 			F_colloidal = -F_colloidal_norm*nr_vec;
+		}
+		if (!sys->in_predictor) {
+			/* Keep the contact state in predictor.
+			 */
+			if (_gap_nondim > 0) {
+				deactivate_contact();
+			}
 		}
 	} else {
 		calcDistanceNormalVector();
@@ -212,6 +213,21 @@ Interaction::calcContactInteraction(){
 		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
 		Fc_tan = kt_scaled*disp_tan;
 		checkBreakupStaticFriction();
+	}
+}
+
+void
+Interaction::checkBreakupStaticFriction(){
+	double f_static = sys->mu_static*Fc_normal_norm;
+	double sq_f_tan = Fc_tan.sq_norm();
+	if (sq_f_tan > f_static*f_static) {
+		/*
+		 * The static and dynamic friction coeffients are the same.
+		 *
+		 */
+		disp_tan *= f_static/sqrt(sq_f_tan);
+		Fc_tan = kt_scaled*disp_tan;
+		cnt_sliding++; // for output
 	}
 }
 
@@ -385,17 +401,17 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	double common_factor_i = 5*(a0a0a0*XM[0]/3+rororo*XM[1]/24)*n0n2;
 	double common_factor_j = 5*(a1a1a1*XM[3]/3+rororo*XM[2]/24)*n0n2;
 	
-	stresslet_i.elm[0] = n0n0_13*common_factor_i;
-	stresslet_i.elm[1] = n0n1*common_factor_i;
-	stresslet_i.elm[2] = n0n2*common_factor_i;
-	stresslet_i.elm[3] = n1n2*common_factor_i;
-	stresslet_i.elm[4] = n1n1_13*common_factor_i;
+	stresslet_i.elm[0] = common_factor_i*n0n0_13;
+	stresslet_i.elm[1] = common_factor_i*n0n1;
+	stresslet_i.elm[2] = common_factor_i*n0n2;
+	stresslet_i.elm[3] = common_factor_i*n1n2;
+	stresslet_i.elm[4] = common_factor_i*n1n1_13;
 	
-	stresslet_j.elm[0] = n0n0_13*common_factor_j;
-	stresslet_j.elm[1] = n0n1*common_factor_j;
-	stresslet_j.elm[2] = n0n2*common_factor_j;
-	stresslet_j.elm[3] = n1n2*common_factor_j;
-	stresslet_j.elm[4] = n1n1_13*common_factor_j;
+	stresslet_j.elm[0] = common_factor_j*n0n0_13;
+	stresslet_j.elm[1] = common_factor_j*n0n1;
+	stresslet_j.elm[2] = common_factor_j*n0n2;
+	stresslet_j.elm[3] = common_factor_j*n1n2;
+	stresslet_j.elm[4] = common_factor_j*n1n1_13;
 }
 
 void
@@ -449,11 +465,6 @@ Interaction::evaluateLubricationForce(){
 	calcXG();
 	double cf_GE_i = nr_vec.x*nr_vec.z*(a0*a0*XG[0]*4+ro*ro*XG[2])/6;
 	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
-}
-
-double
-Interaction::valLubForce(){
-	return -dot(lubforce_i, nr_vec);
 }
 
 // term nr_vec*F
@@ -520,16 +531,6 @@ Interaction::addColloidalStress(){
 	total_stress_xz += (a0*stresslet_colloid_GU_i.elm[2]+a1*stresslet_colloid_GU_j.elm[2])*sys->d_strain;
 }
 
-int
-Interaction::partner(int i){
-	if (i == par_num[0]) {
-		return par_num[1];
-	} else {
-		return par_num[0];
-	}
-}
-
-
 #ifdef RECORD_HISTORY
 void
 Interaction::outputHistory(){
@@ -548,22 +549,6 @@ Interaction::outputHistory(){
 }
 #endif
 
-
-void
-Interaction::checkBreakupStaticFriction(){
-	double f_static = sys->mu_static*Fc_normal_norm;
-	double sq_f_tan = Fc_tan.sq_norm();
-	if (sq_f_tan > f_static*f_static) {
-		/*
-		 * The static and dynamic friction coeffients are the same.
-		 *
-		 */
-		disp_tan *= f_static/sqrt(sq_f_tan);
-		Fc_tan = kt_scaled*disp_tan;
-		cnt_sliding++; // for output
-	}
-}
-
 void
 Interaction::outputSummary(){
 	duration = sys->strain()-strain_lub_start;
@@ -574,7 +559,6 @@ Interaction::outputSummary(){
 	sys->fout_int_data << max_stress << ' ';  // 5
 	sys->fout_int_data << stress_xz_integration << ' '; // 6
 	sys->fout_int_data << cnt_sliding << ' '; //  7
-	sys->fout_int_data << r_activated << ' ';
 	sys->fout_int_data << endl;
 }
 
@@ -609,7 +593,7 @@ Interaction::getNormalVelocity(){
 }
 
 double
-Interaction::calcPotentialEnergy(){
+Interaction::getPotentialEnergy(){
 	double energy;
 	//	double h = _r - ro;
 	if (_gap_nondim < 0) {

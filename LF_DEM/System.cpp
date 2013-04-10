@@ -1022,8 +1022,8 @@ System::evaluateMaxOverlap(){
 	double _max_overlap = 0;
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active &&
-			interaction[k].overlap() > _max_overlap) {
-			_max_overlap = interaction[k].overlap();
+			-interaction[k].gap_nondim() > _max_overlap) {
+			_max_overlap = -interaction[k].gap_nondim();
 		}
 	}
 	return _max_overlap;
@@ -1157,7 +1157,7 @@ System::calcTotalPotentialEnergy(){
 	total_energy = 0;
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active){
-			total_energy += interaction[k].calcPotentialEnergy();
+			total_energy += interaction[k].getPotentialEnergy();
 		}
 	}
 }
