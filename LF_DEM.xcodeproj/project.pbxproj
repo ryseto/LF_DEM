@@ -91,6 +91,7 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
+		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
 		D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.aux; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
@@ -181,6 +182,7 @@
 		D9850AB016AEFA3200DFD13F /* Analysys_Visualization */ = {
 			isa = PBXGroup;
 			children = (
+				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
 			);
 			name = Analysys_Visualization;
@@ -211,8 +213,8 @@
 			isa = PBXGroup;
 			children = (
 				D932B8DE16C2EA1B00AD6E85 /* lib */,
-				D988E38D165441750009949F /* main.cpp */,
 				D9CD258916E54DFF00A8E397 /* parameter_template.txt */,
+				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,

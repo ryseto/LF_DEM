@@ -156,7 +156,7 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	} else {
 		friction = false;
 	}
-	if (cf_amp_dl >  0) {
+	if (cf_amp_dl > 0) {
 		colloidalforce = true;
 		cerr << "Colloidal force" << endl;
 	} else {
@@ -178,7 +178,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		velocity[i].set(position[i].z, 0, 0);
 		ang_velocity[i].set(0, 0.5, 0);
 	}
-
 	shear_strain = 0;
 	shear_disp = 0;
 	num_interaction = 0;
@@ -334,7 +333,7 @@ System::deltaTimeEvolutionCorrector(){
 	}
 	// update boxing system
 	boxset.update();
-	checkNewInteraction();
+	checkNewInteraction(); 
 	/*
 	 * Interaction
 	 *
@@ -534,10 +533,11 @@ System::timeEvolutionRelax(int time_step){
 	while (ts < ts_next) {
 		setContactForceToParticle();
 		setColloidalForceToParticle();
+		in_predictor = true;
+		in_corrector = true;
 		updateVelocityRestingFluid();
 		deltaTimeEvolution();
 		ts++;
-		shear_strain += dt;
 	}
 	
 }
@@ -705,7 +705,9 @@ System::setColloidalForceToParticle(){
 			colloidal_force[i].reset();
 		}
 		for (int k=0; k<num_interaction; k++) {
-			interaction[k].addUpColloidalForce();
+			if (interaction[k].active) {
+				interaction[k].addUpColloidalForce();
+			}
 		}
 	}
 }

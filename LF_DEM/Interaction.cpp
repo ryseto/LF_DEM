@@ -74,7 +74,7 @@ Interaction::activate(int i, int j){
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	calcDistanceNormalVector();
-	if (_gap_nondim < 0) {
+	if (_gap_nondim <= 0) {
 		activate_contact();
 	} else {
 		contact = false;
@@ -163,9 +163,6 @@ Interaction::updateState(bool &deactivated){
 		}
 	} else {
 		calcDistanceNormalVector();
-		if (_gap_nondim <= 0) {
-			activate_contact();
-		}
 		if (sys->colloidalforce) {
 			F_colloidal_norm = colloidal_force_amplitude*exp(-_gap_nondim/sys->cf_range_dl);
 			F_colloidal = -F_colloidal_norm*nr_vec;
@@ -173,12 +170,15 @@ Interaction::updateState(bool &deactivated){
 		if (sys->in_corrector) {
 			/* If r > r_lub_max, deactivate the interaction object.
 			 */
-			if (_r > r_lub_max) {
+			if (_gap_nondim <= 0) {
+				activate_contact();
+			} else if (_r > r_lub_max) {
 				deactivate();
 				deactivated = true;
 			}
 		}
 	}
+
 #ifdef RECORD_HISTORY
 	if (!sys->in_predictor) {
 		gap_history.push_back(_gap_nondim);
@@ -253,6 +253,7 @@ void
 Interaction::addUpColloidalForce(){
 	sys->colloidal_force[par_num[0]] += F_colloidal;
 	sys->colloidal_force[par_num[1]] -= F_colloidal;
+
 }
 
 /* Relative velocity of particle 1 from particle 0.

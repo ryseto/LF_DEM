@@ -15,7 +15,7 @@ int main(int argc, const char * argv[])
 	if (argc == 1){
 		cerr << "usage:" << endl;
 		cerr << "(1) Simulation" << endl;
-		cerr << "  $ LF_DEM POSITIONFILE [PARAMETERFILE]" << endl;
+		cerr << "  $ LF_DEM POSITIONFILE PARAMETERFILE SHEAR-RATE" << endl;
 		cerr << "(2) Generate initial configuration" << endl;
 		cerr << "  $ LF_DEM g" << endl;
 		return 0;

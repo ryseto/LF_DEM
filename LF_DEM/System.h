@@ -73,7 +73,6 @@ private:
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
 	void evaluateMaxContactVelocity();
-	
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	
@@ -222,7 +221,6 @@ public:
 	void adjustTimeStep();
 	void calcTotalPotentialEnergy();
 
-
 	void setupShearFlow(bool activate){
 		if (activate) {
 			vel_difference = _lz;
@@ -231,63 +229,67 @@ public:
 		}
 	}
 	/*************************************************************/
-	inline void lx(double length) {
+	inline void lx(double length){
 		_lx = length;
 		_lx2 = 0.5*_lx;
 	}
 
-	inline void ly(double length) {
+	inline void ly(double length){
 		_ly = length;
 		_ly2 = 0.5*_ly;
 	}
 
-	inline void lz(double length) {
+	inline void lz(double length){
 		_lz = length;
 		_lz2 = 0.5*_lz;
 	}
 
-	inline void setRadiusMax(double _radius_max) {
+	inline void setRadiusMax(double _radius_max){
 		radius_max = _radius_max;
 	}
 
-	inline double valSystemVolume() {
+	inline double valSystemVolume(){
 		return system_volume;
 	}
-
-	inline double lx() {
+	
+	double getParticleContactNumber(){
+		return (double)contact_nb/_np;
+	}
+	
+	inline double lx(){
 		return _lx;
 	}
 
-	inline double ly() {
+	inline double ly(){
 		return _ly;
 	}
 
-	inline double lz() {
+	inline double lz(){
 		return _lz;
 	}
 
-	inline double lx2() {
+	inline double lx2(){
 		return _lx2;
 	}
 
-	inline double ly2() {
+	inline double ly2(){
 		return _ly2;
 	}
 
-	inline double lz2() {
+	inline double lz2(){
 		return _lz2;
 	}
 
-	inline void np(int val) {
+	inline void np(int val){
 		_np = val;
 		np3 = 3*_np;
 	}
 
-	inline int np() {
+	inline int np(){
 		return _np;
 	}
 
-	inline double strain() {
+	inline double strain(){
 		return shear_strain;
 	}
 	

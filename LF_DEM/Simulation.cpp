@@ -83,7 +83,6 @@ Simulation::RelaxationZeroShear(vector<vec3d> &positions,
 	} else {
 		sys.dimension = 3;
 	}
-	sys.setupShearFlow(false);
 	double max_radius = 0;
 	for (int i=0; i<num_of_particle; i++) {
 		if (max_radius < radii[i]) {
@@ -98,15 +97,13 @@ Simulation::RelaxationZeroShear(vector<vec3d> &positions,
 	sys.mu_static = 0;
 	sys.shear_rate = 0;
 	setUnits();
-	sys.cf_range_dl = 0.01; // dimensionless
+	sys.cf_range_dl = 0.02; // dimensionless
 	sys.cf_amp_dl = 10;
 	sys.setupSystem(positions, radii);
-	//outputDataHeader(fout_particle);
-	//outputConfigurationData();
 	sys.setupShearFlow(false);
 	double energy_previous = 0;
 	while (true) {
-		int i_time_interval = 2000;
+		int i_time_interval = 1000;
 		sys.timeEvolutionRelax(i_time_interval);
 		evaluateData();
 		sys.calcTotalPotentialEnergy();
@@ -549,7 +546,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#24: max angular velocity" << endl;
 		fout_rheo << "#25: max contact tangential velocity" << endl;
 		fout_rheo << "#26: max contact normal velocity" << endl;
-		fout_rheo << "#27: total number of contact" << endl;
+		fout_rheo << "#27: average contact number per particle" << endl;
 		fout_rheo << "#28: kn" << endl;
 		fout_rheo << "#29: kt" << endl;
 		fout_rheo << "#30: dt" << endl;
@@ -575,21 +572,18 @@ Simulation::outputRheologyData(){
 	fout_rheo << N2_b*unit_of_stress << ' ' ; //16
 	fout_rheo << Viscosity_col_XF*unit_of_rel_viscosity << ' '; //17
 	fout_rheo << Viscosity_col_GU*unit_of_rel_viscosity << ' '; //18
-	
 	fout_rheo << sys.min_gap_nondim << ' '; // 19
 	fout_rheo << sys.max_disp_tan << ' '; // 20
-	
 	fout_rheo << sys.average_Fc_normal_norm << ' '; // 21
 	fout_rheo << sys.max_Fc_normal_norm << ' '; // 22
 	fout_rheo << sys.max_velocity << ' '; // 23
 	fout_rheo << sys.max_ang_velocity << ' '; // 24
 	fout_rheo << sys.max_contact_velo_normal << ' '; // 25
 	fout_rheo << sys.max_contact_velo_tan << ' '; // 26
-	fout_rheo << sys.contact_nb << ' '; // 27
+	fout_rheo << sys.getParticleContactNumber() << ' '; // 27
 	fout_rheo << sys.kn << ' '; // 28
 	fout_rheo << sys.kt << ' '; // 29
 	fout_rheo << sys.dt << ' '; // 30
-	
 	fout_rheo << endl;
 }
 
