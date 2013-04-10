@@ -89,6 +89,7 @@ public:
 	double *v_Brownian_init;
 	double *v_Brownian_mid;
 	bool in_predictor;
+	bool in_corrector;
 	int ts; // time steps
 	int dimension;
 	vec3d *position;
@@ -194,7 +195,7 @@ public:
 
 	void checkNewInteraction();
 	void checkInteractionEnd();
-	void updateInteractions(bool _in_predictor = true);
+	void updateInteractions();
 	double sq_distance(int i, int j);
 	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);

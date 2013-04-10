@@ -57,11 +57,11 @@ Box::neigh_nb(int n, int moving_n){
 
 bool
 Box::can_be_added(int label, Box* neigh_box){
-	if(neigh_box == this){
+	if (neigh_box == this) {
 		return false;
 	}
-	for(int i=0; i<label; i++){
-		if(neigh_box == _neighbors[i]){
+	for (int i=0; i<label; i++) {
+		if (neigh_box == _neighbors[i]) {
 			return false;
 		}
 	}
@@ -72,7 +72,7 @@ bool
 Box::neighbor(int label, Box* neigh_box){
 	// we have to check that we don't list two times the same neighbor (for top AND bottom boxes)
 	// or don't the the box as its own neighbor (for every box)
-	if(can_be_added(label, neigh_box)) {
+	if (can_be_added(label, neigh_box)) {
 		_neighbors[label] = neigh_box;
 		if (label >= _still_neigh_nb) {
 			_moving_neighbors[label-_still_neigh_nb] = neigh_box;
@@ -150,11 +150,10 @@ void
 Box::build_neighborhood_container(){
 	neighborhood_container.clear();
 	int size = (int)container_size();
-	for(int i=0; i<neigh_nb(); i++) {
+	for (int i=0; i<neigh_nb(); i++) {
 		size += _neighbors[i]->container_size();
 	}
 	neighborhood_container.resize(size);
-	
 	int j = 0;
 	// own box
 	for (set<int>::iterator it = begin(); it != end(); it++) {
@@ -163,10 +162,10 @@ Box::build_neighborhood_container(){
 	}
 	// neighboring boxes
 	for (int i=0; i<neigh_nb(); i++) {
-		for(set<int>::iterator it = (_neighbors[i])->begin(); it != (_neighbors[i])->end(); it++) {
+		for(set<int>::iterator it = (_neighbors[i])->begin();
+			it != (_neighbors[i])->end(); it++) {
 			neighborhood_container[j] = *it;
 			j++;
 		}
 	}
 }
-

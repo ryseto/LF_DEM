@@ -281,6 +281,8 @@ System::deltaTimeEvolution(){
 	// update boxing system
 	boxset.update();
 	checkNewInteraction();
+	in_predictor = true;
+	in_corrector = true;
 	updateInteractions();
 }
 
@@ -304,6 +306,8 @@ System::deltaTimeEvolutionPredictor(){
 	/* In predictor, the values of interactions is updated,
 	 * but the statuses are fixed by using boolean `fix_interaction_status'
 	 */
+	in_predictor = true;
+	in_corrector = false;
 	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.
@@ -335,7 +339,9 @@ System::deltaTimeEvolutionCorrector(){
 	 * Interaction
 	 *
 	 */
-	updateInteractions(false); // false --> in corrector
+	in_predictor = false;
+	in_corrector = true;
+	updateInteractions(); // false --> in corrector
 	/* In deltaTimeEvolutionCorrector,
 	 * velocity[] and ang_velocity[]
 	 * are virtual velocities to correct the predictor.
@@ -583,11 +589,10 @@ System::checkNewInteraction(){
  * contact_pair[i][j] < -1, the particles have some distance.
  */
 void
-System::updateInteractions(bool _in_predictor){
+System::updateInteractions(){
 	/* default value of `_in_predictor' is false
 	 *
 	 */
-	in_predictor = _in_predictor;
 	for (int k=0; k<num_interaction; k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
