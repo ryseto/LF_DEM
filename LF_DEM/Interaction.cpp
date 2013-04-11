@@ -70,7 +70,12 @@ Interaction::activate(int i, int j){
 	 * I don't understand this point yet.
 	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxzation_time;
 	 */
-	colloidal_force_amplitude = sys->cf_amp_dl*ro_2;
+	/*
+	 * The size dependence of colloidal force:
+	 * a0*a1/(a1+a2)/2
+	 * Is
+	 */
+	colloidal_force_amplitude = sys->cf_amp_dl*a0*a1/ro;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	calcDistanceNormalVector();
@@ -164,7 +169,7 @@ Interaction::updateState(bool &deactivated){
 	} else {
 		calcDistanceNormalVector();
 		if (sys->colloidalforce) {
-			F_colloidal_norm = colloidal_force_amplitude*exp(-_gap_nondim/sys->cf_range_dl);
+			F_colloidal_norm = colloidal_force_amplitude*exp(-(_r-ro)/sys->cf_range_dl);
 			F_colloidal = -F_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
@@ -281,7 +286,7 @@ Interaction::calcContactVelocity(){
 	 *
 	 ******************************************************/
 	contact_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
-	if(sys->in_predictor && zshift != 0){
+	if (sys->in_predictor && zshift != 0) {
 		contact_velocity.x += zshift*sys->vel_difference;
 	}
 	contact_velocity -=
@@ -566,7 +571,7 @@ Interaction::integrateStress(){
 
 double
 Interaction::getContactVelocity(){
-	if (contact == false){
+	if (contact == false) {
 		return 0;
 	}
 	sys->in_predictor = true;
@@ -594,7 +599,7 @@ Interaction::getPotentialEnergy(){
 		energy = 0.5*sys->kn*_gap_nondim*_gap_nondim;
 		energy += -colloidal_force_amplitude*_gap_nondim;
 	} else {
-		energy = sys->cf_range_dl*colloidal_force_amplitude*(exp(-_gap_nondim/sys->cf_range_dl)-1);
+		energy = sys->cf_range_dl*colloidal_force_amplitude*(exp(-(_r-ro)/sys->cf_range_dl)-1);
 	}
 	return energy;
 }

@@ -135,7 +135,8 @@ Simulation::setUnits(){
 	unit_of_force = 6*M_PI*viscosity_solvent*radius_of_particle*unit_of_velocity;
 	cerr << viscosity_solvent << endl;
 	cerr << sys.shear_rate << endl;
-	double cf_amp = cf_amp_dl0*6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
+	double unit_of_force_sr1 = 6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
+	double cf_amp = cf_amp_dl0*unit_of_force_sr1;
 	sys.cf_amp_dl = cf_amp/unit_of_force;
 	cerr << "unit_of_length = " << unit_of_length << endl;
 	cerr << "unit_of_velocity = " << unit_of_velocity << endl;
