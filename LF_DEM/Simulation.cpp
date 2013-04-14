@@ -349,14 +349,14 @@ Simulation::setDefaultParameters(){
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	sys.contact_relaxzation_time = 0.001;
+	sys.contact_relaxzation_time = 1e-3;
 	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
 	 *   The optimal value of bgf_factor (< 1.0) may exist.
 	 *
 	 */
-	sys.bgf_factor = 1.0;
+	sys.bgf_factor = 1;
 	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
@@ -420,9 +420,7 @@ Simulation::importInitialPositionFile(){
 	double lx_, ly_, lz_;
 	char buf;
 	file_import >> buf >> n1 >> n2 >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
-	
 	num_of_particle = n1+n2;
-
 	if (ly_ == 0) {
 		sys.dimension = 2;
 	} else {
@@ -435,17 +433,18 @@ Simulation::importInitialPositionFile(){
 	sys.volume_fraction = volume_fraction_;
 	initial_positions.resize(num_of_particle);
 	radii.resize(num_of_particle);
-	for (int i = 0; i < num_of_particle ; i++) {
+	for (int i=0; i<num_of_particle ; i++) {
 		file_import >> pos.x >> pos.y >> pos.z >> radius;
 		initial_positions[i] = pos;
 		radii[i] = radius;
 	}
 	file_import.close();
 
-	double max_radius = 0.;
-	for(int i=0; i<num_of_particle;i++){
-		if(max_radius<radii[i])
+	double max_radius = 0;
+	for (int i=0; i<num_of_particle; i++) {
+		if (max_radius<radii[i]) {
 			max_radius=radii[i];
+		}
 	}
 	sys.setRadiusMax(max_radius);
 }
@@ -545,8 +544,8 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#22: max Fc_normal_norm" << endl;
 		fout_rheo << "#23: max velocity" << endl;
 		fout_rheo << "#24: max angular velocity" << endl;
-		fout_rheo << "#25: max contact tangential velocity" << endl;
-		fout_rheo << "#26: max contact normal velocity" << endl;
+		fout_rheo << "#25: max contact normal velocity" << endl;
+		fout_rheo << "#26: max contact tangential velocity" << endl;
 		fout_rheo << "#27: average contact number per particle" << endl;
 		fout_rheo << "#28: kn" << endl;
 		fout_rheo << "#29: kt" << endl;
@@ -601,53 +600,6 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 		}
 	}
 	return vec3d(x,y,z);
-}
-
-void
-Simulation::drawLine(char type , const vec3d &pos, const vec3d &vec, ofstream &fout){
-	fout << type << ' ';
-	fout << pos.x << ' '<< pos.y << ' '<< pos.z << ' ';
-	fout << pos.x + vec.x << ' '<< pos.y + vec.y << ' '<< pos.z + vec.z << endl;
-}
-
-void
-Simulation::drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout){
-	vec3d seg = pos2 - pos1;
-	vec3d pos2_ = pos2;
-	fout << type << ' ';
-	if (seg.z > sys.lz2()) {
-		pos2_.z -= sys.lz();
-		pos2_.x -= sys.shear_disp;
-		seg = pos2 - pos1;
-	} else if (seg.z < -sys.lz2()) {
-		pos2_.z += sys.lz();
-		pos2_.x += sys.shear_disp;
-		seg = pos2 - pos1;
-	}
-	while (seg.x > sys.lx2()) {
-		pos2_.x -= sys.lx();
-		seg = pos2 - pos1;
-	}
-	while (seg.x < -sys.lx2()) {
-		pos2_.x += sys.lx();
-		seg = pos2 - pos1;
-	}
-	if (seg.y > sys.ly2()) {
-		pos2_.y -= sys.ly();
-	} else if (seg.y < -sys.ly2()) {
-		pos2_.y += sys.ly();
-	}
-	fout << pos1.x << ' '<< pos1.y << ' '<< pos1.z << ' ';
-	fout << pos2_.x << ' '<< pos2_.y << ' '<< pos2_.z << endl;
-}
-
-void
-Simulation::drawLine(double x0, double y0, double z0,
-			  double x1, double y1, double z1,
-			  ofstream &fout){
-	fout << 'l' << ' ';
-	fout << x0 << ' ' << y0 << ' ' << z0 << ' ';
-	fout << x1 << ' ' << y1 << ' ' << z1 << endl;
 }
 
 void
@@ -724,10 +676,10 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].par_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].getLubForce() << sp; // 3
-			fout_interaction << sys.shear_rate*sys.interaction[k].normal_force() << sp; // 4
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().x << sp; // 5
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().y << sp; // 6
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangential_force().z << sp; // 7
+			fout_interaction << sys.shear_rate*sys.interaction[k].normalContactForce() << sp; // 4
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangentialContactForce().x << sp; // 5
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangentialContactForce().y << sp; // 6
+			fout_interaction << sys.shear_rate*sys.interaction[k].tangentialContactForce().z << sp; // 7
 			fout_interaction << sys.interaction[k].nr_vec.x << sp; // 8 
 			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 9
 			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 10
@@ -735,6 +687,7 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 12
 			fout_interaction << sys.interaction[k].contact << sp; // 13
 			fout_interaction << sys.interaction[k].getContactVelocity() << sp; // 14
+			fout_interaction << sys.interaction[k].getColloidalForce();
 			fout_interaction << endl;
 		}
 	}

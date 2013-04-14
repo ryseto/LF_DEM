@@ -253,7 +253,7 @@ public:
 	}
 	
 	double getParticleContactNumber(){
-		return (double)contact_nb/_np;
+		return (double)2*contact_nb/_np;
 	}
 	
 	inline double lx(){

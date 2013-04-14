@@ -66,6 +66,7 @@
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BoxSet.cpp; sourceTree = "<group>"; };
 		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxSet.h; sourceTree = "<group>"; };
+		D957F833171720D9007C6437 /* trajectory.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = trajectory.pl; sourceTree = "<group>"; };
 		D958B1E11684141B003F94B4 /* build_all.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_all.sh; sourceTree = "<group>"; };
 		D958B1E21684141B003F94B4 /* cart2sph.pyx */ = {isa = PBXFileReference; lastKnownFileType = text; path = cart2sph.pyx; sourceTree = "<group>"; };
 		D958B1E31684141B003F94B4 /* LF_DEM_posfile_reading.pyx */ = {isa = PBXFileReference; lastKnownFileType = text; path = LF_DEM_posfile_reading.pyx; sourceTree = "<group>"; };
@@ -184,6 +185,7 @@
 			children = (
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
+				D957F833171720D9007C6437 /* trajectory.pl */,
 			);
 			name = Analysys_Visualization;
 			path = LF_DEM;

@@ -90,13 +90,7 @@ private:
 	void initContactPair();
 	void outputRheologyData();
 	void outputConfigurationData();
-	
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout);
-	void drawLine(char type , const vec3d &pos, const vec3d &vec, ofstream &fout);
-	void drawLine(double x0, double y0, double z0,
-				  double x1, double y1, double z1,
-				  ofstream &fout);
 public:
     /* For DEMsystem
      */

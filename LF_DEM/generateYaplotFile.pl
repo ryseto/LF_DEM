@@ -29,9 +29,11 @@ $interaction_data = "int_${name}.dat";
 printf "$interaction_data\n";
 $output = "y_$name.yap";
 $output2 = "nvec_$name.dat";
+$out_gaps = "gaps_$name.dat";
 
 open (OUT, "> ${output}");
 open (OUT2, "> ${output2}");
+open (OUTG, "> ${out_gaps}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
@@ -60,6 +62,7 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
     ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
+	
 	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
@@ -126,6 +129,8 @@ sub InInteractions {
 	if ($buf != "#"){
 		exit;
 	}
+	printf OUTG "$shear_rate\n";
+	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
 		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz,
@@ -142,7 +147,9 @@ sub InInteractions {
 		$nrvec_z[$k] = $nz;
 		$Gap[$k] = $gap;
 		$ContVelo[$k] = $cv;
+		printf OUTG "$gap ";
 	}
+	printf OUTG "\n";
 }
 
 sub OutYaplotData{
@@ -152,76 +159,80 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	printf OUT "y 7\n";
-
-	printf OUT "r 0.1";
-    printf OUT "@ 6\n";
+	printf OUT "r 0.1\n";
+    printf OUT "@ 5\n";
 	for ($i = 0; $i < $c_traj; $i++){
-		$xs = $trajx[$i];
-#		$ys = $trajy[$i];
-#		$zs = $trajz[$i];
-#		$xe = $trajx[$i+1];
-#		$ye = $trajy[$i+1];
-#		$ze = $trajz[$i+1];
-#		if (abs($zs-$ze) < 1
-#			&& abs($xs-$xe) < 1
-#			) {
-#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
-#		}
 		$xs = $trajx[$i];
 		$ys = $trajy[$i];
 		$zs = $trajz[$i];
-		printf OUT "c $xs $ys $zs\n";
+		$xe = $trajx[$i+1];
+		$ye = $trajy[$i+1];
+		$ze = $trajz[$i+1];
+		if (abs($zs-$ze) < 1
+			&& abs($xs-$xe) < 1
+			) {
+			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+		}
+		#		$xs = $trajx[$i];
+		#$ys = $trajy[$i];
+		#$zs = $trajz[$i];
+		#		printf OUT "c $xs $ys $zs\n";
 	}
     printf OUT "@ 3\n";
 	for ($i = 0; $i < $c_traj; $i++){
-		$xs = $trajx[$i];
-		#		$ys = $trajy[$i];
-		#		$zs = $trajz[$i];
-		#		$xe = $trajx[$i+1];
-		#		$ye = $trajy[$i+1];
-		#		$ze = $trajz[$i+1];
-		#		if (abs($zs-$ze) < 1
-		#			&& abs($xs-$xe) < 1
-		#			) {
-		#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
-		#		}
 		$xs = $trajx2[$i];
 		$ys = $trajy2[$i];
 		$zs = $trajz2[$i];
-		printf OUT "c $xs $ys $zs\n";
+		$xe = $trajx2[$i+1];
+		$ye = $trajy2[$i+1];
+		$ze = $trajz2[$i+1];
+		if (abs($zs-$ze) < 1
+			&& abs($xs-$xe) < 1
+			) {
+				printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+			}
+		#$xs = $trajx2[$i];
+		#$ys = $trajy2[$i];
+		#$zs = $trajz2[$i];
+		#		printf OUT "c $xs $ys $zs\n";
 	}
     printf OUT "@ 4\n";
 	for ($i = 0; $i < $c_traj; $i++){
-		$xs = $trajx[$i];
-		#		$ys = $trajy[$i];
-		#		$zs = $trajz[$i];
-		#		$xe = $trajx[$i+1];
-		#		$ye = $trajy[$i+1];
-		#		$ze = $trajz[$i+1];
-		#		if (abs($zs-$ze) < 1
-		#			&& abs($xs-$xe) < 1
-		#			) {
-		#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
-		#		}
 		$xs = $trajx3[$i];
 		$ys = $trajy3[$i];
 		$zs = $trajz3[$i];
-		printf OUT "c $xs $ys $zs\n";
+		$xe = $trajx3[$i+1];
+		$ye = $trajy3[$i+1];
+		$ze = $trajz3[$i+1];
+		if (abs($zs-$ze) < 1
+			&& abs($xs-$xe) < 1
+			) {
+				printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+			}
+		#$xs = $trajx3[$i];
+		#$ys = $trajy3[$i];
+		#$zs = $trajz3[$i];
+		#printf OUT "c $xs $ys $zs\n";
 	}
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = $radius[0];
+	$r = 0.2*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = $radius[$i];
+			$r = 0.2*$radius[$i];
 			printf OUT "r $r\n";
 		}
+#		if ($i % 100 == 0){
+#			$col = $i/100 + 2;
+#			printf OUT "@ $col\n";
+#		} 
 		if ($y_section == 0 ||
 			abs($posy[$i]) < $y_section ){
 				printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 			}
+		
     }
 	
 	printf OUT "y 2\n";

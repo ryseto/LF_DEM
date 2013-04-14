@@ -539,7 +539,6 @@ System::timeEvolutionRelax(int time_step){
 		deltaTimeEvolution();
 		ts++;
 	}
-	
 }
 
 void
@@ -593,8 +592,8 @@ System::updateInteractions(){
 	/* default value of `_in_predictor' is false
 	 *
 	 */
+	bool deactivated;
 	for (int k=0; k<num_interaction; k++) {
-		bool deactivated = false;
 		interaction[k].updateState(deactivated);
 		if (deactivated) {
 			deactivated_interaction.push(k);
@@ -990,10 +989,10 @@ System::analyzeState(){
 				min_gap_nondim = interaction[k].gap_nondim();
 			}
 			if (interaction[k].contact) {
-				sum_Fc_normal_norm += interaction[k].normal_force();
+				sum_Fc_normal_norm += interaction[k].normalContactForce();
 				contact_nb ++;
-				if (interaction[k].normal_force() > max_Fc_normal_norm) {
-					max_Fc_normal_norm = interaction[k].normal_force();
+				if (interaction[k].normalContactForce() > max_Fc_normal_norm) {
+					max_Fc_normal_norm = interaction[k].normalContactForce();
 				}
 				if (interaction[k].disp_tan_norm() > max_disp_tan) {
 					max_disp_tan = interaction[k].disp_tan_norm();

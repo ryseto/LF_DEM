@@ -133,6 +133,7 @@ Interaction::deactivate_contact(){
  */
 void
 Interaction::updateState(bool &deactivated){
+	deactivated = false;
 	if (active == false) {
 		return;
 	}
@@ -183,7 +184,6 @@ Interaction::updateState(bool &deactivated){
 			}
 		}
 	}
-
 #ifdef RECORD_HISTORY
 	if (!sys->in_predictor) {
 		gap_history.push_back(_gap_nondim);
@@ -258,7 +258,6 @@ void
 Interaction::addUpColloidalForce(){
 	sys->colloidal_force[par_num[0]] += F_colloidal;
 	sys->colloidal_force[par_num[1]] -= F_colloidal;
-
 }
 
 /* Relative velocity of particle 1 from particle 0.

@@ -99,7 +99,7 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 	if (number_ratio == 1) {
 		ss_posdatafilename << "Mono";
 	} else {
-		ss_posdatafilename << "Poly" << a2 << "_" << number_ratio ;
+		ss_posdatafilename << "Bidi" << a2 << "_" << number_ratio ;
 	}
 
 	if (dimension == 2) {
@@ -133,43 +133,32 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 
 double
 GenerateInitConfig::computeGradient(){
-	
 	int i, j;
 	double r, rcont;
 	vec3d nr_vec;
-	
 	double amp, amp2;
-	double energy=0.;
-	
-	for(i=0; i<np; i++){
-		for(int u=0;u<sys.dimension;u++){
+	double energy = 0;
+	for(i=0; i<np; i++) {
+		for(int u=0; u<sys.dimension; u++) {
 			grad[i].reset();
 		}
 	}
-	
-	
-	for (int k=0; k<sys.num_interaction; k++){
-		if(sys.interaction[k].contact){
+	for (int k=0; k<sys.num_interaction; k++) {
+		if (sys.interaction[k].contact) {
 			i = sys.interaction[k].par_num[0];
 			j = sys.interaction[k].par_num[1];
 			r = sys.interaction[k].r();
 			rcont = sys.interaction[k].ro;
 			nr_vec = sys.interaction[k].nr_vec;
-			
-			amp=(1./rcont-1./r); // negative
-			amp2=4.*amp/rcont;
-			
+			amp = (1/rcont-1/r); // negative
+			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
 			grad[j] += r*nr_vec*amp2;
-			
 			energy += 2*r*amp*amp;
 		}
 	}
-	
 	return energy;
-	
 }
-
 
 
 void
@@ -187,14 +176,13 @@ GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	
 	if (grad_norm != 0) {
 		double rescale = pow(grad_norm, gradient_power);
-		for(int i=0; i<np;i++){
+		for (int i=0; i<np;i++) {
 			step = -dir*g[i]*step_size/rescale;
 			sys.displacement(i, step);
 		}
 		sys.checkNewInteraction();
 		sys.updateInteractions();
 	}
-	
 }
 
 void
@@ -209,36 +197,25 @@ GenerateInitConfig::gradientDescent(){
 	double old_running_energy;
 	double running_energy;
 	double relative_en;
-
 	long long int steps = 0;
-
 	cerr << endl << " Gradient Descent..." << endl;
-	
 	storeGradient();
-	
 	running_energy=computeGradient();
-	
 	cerr << "  Starting Energy "<< running_energy/np << endl;
-	
+
 	do {
 		old_running_energy = running_energy;
-		
 		moveAlongGradient(grad, 1);
 		storeGradient();
 		running_energy=computeGradient();
-		
 		relative_en=(old_running_energy-running_energy)/(old_running_energy+running_energy);
-		
 		if (steps%100 == 0) {
 			cerr << "    Steps = " << steps << " :::   Energy : "<< running_energy/np << endl;
 		}
-		
 		steps++;
-		
 	} while(relative_en > 1e-6);
-	
-	
-	if(relative_en < 0) {
+
+	if (relative_en < 0) {
 		cerr << "    Steps = " << steps;
 		cerr << " :::   Last Step Upwards. Old Energy : " << old_running_energy/np;
 		cerr << " New Energy : " << running_energy/np;
@@ -424,7 +401,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 		ly_lz = 1;
 		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
 	}
-	char m_p_disperse = readStdinDefault('m' , "(m)onodisperse or (p)olydisperse");
+	char m_p_disperse = readStdinDefault('m' , "(m)onodisperse or (b)idisperse");
 	number_ratio = 1.0; // mono
 	a1 = 1.0;
 	if ( m_p_disperse == 'p'){
@@ -433,7 +410,8 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
 		} while (a2 < a1);
 		do{
-			number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
+			//number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
+			phi_ratio = readStdinDefault(0.5, "phi1");
 		} while ( number_ratio < 0 || number_ratio > 1);
 	}
 	rand_seed = readStdinDefault(1, "random seed");
@@ -592,5 +570,3 @@ GenerateInitConfig::setSystemParameters(){
 	 * The middle height of the simulation box is set to the flow zero level.
 	 */
 }
-
-

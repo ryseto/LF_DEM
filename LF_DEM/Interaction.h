@@ -148,9 +148,9 @@ public:
 	double getContactVelocity();
 	double getNormalVelocity();
 	double getPotentialEnergy();
-	inline double normal_force(){return Fc_normal_norm;}
-	inline double colloidal_force(){return F_colloidal_norm;}
-	inline vec3d tangential_force(){return Fc_tan;}
+	inline double normalContactForce(){return Fc_normal_norm;}
+	inline vec3d tangentialContactForce(){return Fc_tan;}
+	inline double getColloidalForce(){return F_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
 	inline double lubStresslet(int i){return lubstresslet.elm[i];}
