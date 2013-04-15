@@ -72,15 +72,13 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	vector<double> radii;
 	positions.resize(sys.np());
 	radii.resize(sys.np());
-	for (int i=0; i<sys.np(); i++){
+	for (int i=0; i<sys.np(); i++) {
 		positions[i] = sys.position[i];
 		radii[i] = sys.radius[i];
 	}
 	Simulation simulation;
 	simulation.RelaxationZeroShear(positions, radii, lx, ly, lz);
-	//	solveOverlap();
-	outputPositionData(positions,
-					   radii);
+	outputPositionData(positions, radii);
 	
 	delete [] grad;
 	delete [] prev_grad;
@@ -96,10 +94,10 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 	ss_posdatafilename << "D" << dimension;
 	ss_posdatafilename << "N" << np;
 	ss_posdatafilename << "VF" << volume_fraction;
-	if (number_ratio == 1) {
+	if (volume_fraction2 == 0) {
 		ss_posdatafilename << "Mono";
 	} else {
-		ss_posdatafilename << "Bidi" << a2 << "_" << number_ratio ;
+		ss_posdatafilename << "Bidi" << a2 << "_" << volume_fraction2;
 	}
 
 	if (dimension == 2) {
@@ -118,10 +116,11 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 	ss_posdatafilename << "_" << rand_seed << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
-	fout << "# np1 np2 vf lx ly lz" << endl;
+	fout << "# np1 np2 vf lx ly lz vf1 vf2" << endl;
 	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
-	fout << lx << ' ' << ly << ' ' << lz << endl;
-	for (int i = 0; i < np ; i++){
+	fout << lx << ' ' << ly << ' ' << lz << ' ';
+	fout << volume_fraction1 << ' ' << volume_fraction2 << endl;
+	for (int i = 0; i < np; i++) {
 		fout << positions[i].x << ' ';
 		fout << positions[i].y << ' ';
 		fout << positions[i].z << ' ';
@@ -392,54 +391,59 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	dimension = readStdinDefault(3, "dimension (2 or 3)");
 	sys.dimension = dimension;
 	if (dimension == 2){
-		volume_fraction =  readStdinDefault(0.7, "volume_fraction");
+		volume_fraction = readStdinDefault(0.7, "volume_fraction");
 	} else {
-		volume_fraction =  readStdinDefault(0.5, "volume_fraction");
+		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
 	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: ");
 	if (dimension == 3){
 		ly_lz = 1;
 		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
 	}
-	char m_p_disperse = readStdinDefault('m' , "(m)onodisperse or (b)idisperse");
-	number_ratio = 1.0; // mono
-	a1 = 1.0;
-	if ( m_p_disperse == 'p'){
+	char disperse_type = readStdinDefault('m' , "(m)onodisperse or (b)idisperse");
+	a1 = 1;
+	a2 = 1;
+	volume_fraction1 = volume_fraction; // mono
+	if (disperse_type == 'b'){
 		cerr << "a1 = 1.0" << endl;
 		do {
 			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
 		} while (a2 < a1);
 		do{
 			//number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
-			phi_ratio = readStdinDefault(0.5, "phi1");
-		} while ( number_ratio < 0 || number_ratio > 1);
+			volume_fraction1= readStdinDefault(volume_fraction*0.5, "vf of particle 1 (small particle)");
+		} while (volume_fraction1 < 0 || volume_fraction1 > volume_fraction);
 	}
 	rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
-	double np1_tmp = np*number_ratio;
+	volume_fraction2 = volume_fraction - volume_fraction1;
+	cerr << "vf = " << volume_fraction1 << ' ' << volume_fraction2 << endl;
+	double total_volume;
+	double pvolume1, pvolume2;
+	if (dimension == 2) {
+		pvolume1 = M_PI*a1*a1;
+		pvolume2 = M_PI*a2*a2;
+	} else {
+		pvolume1 = (4./3)*M_PI*a1*a1*a1;
+		pvolume2 = (4./3)*M_PI*a2*a2*a2;
+	}
+	total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
+	double np1_tmp = volume_fraction1*total_volume/pvolume1;
 	if (np1_tmp - (int)np1_tmp <= 0.5) {
 		np1 = (int)np1_tmp;
 	} else {
 		np1 = (int)np1_tmp+1;
 	}
 	np2 = np - np1;
-	double pvolume1, pvolume2;
-	if (dimension == 2) {
-		pvolume1 = M_PI*np1;
-		pvolume2 = M_PI*a2*a2*np2;
-	} else {
-		pvolume1 = (4.0/3)*M_PI*np1;
-		pvolume2 = (4.0/3)*M_PI*a2*a2*a2*np2;
-	}
-	double pvolume = pvolume1 + pvolume2;
+	double pvolume = np1*pvolume1+np2*pvolume2;
 	if (dimension == 2) {
 		lz = sqrt(pvolume / (lx_lz*volume_fraction ));
 		lx = lz*lx_lz;
 		ly = 0.0;
 	} else {
-		lz = pow( pvolume / (lx_lz*ly_lz*volume_fraction), 1.0/3);
+		lz = pow(pvolume / (lx_lz*ly_lz*volume_fraction), 1./3);
 		lx = lz*lx_lz;
 		ly = lz*ly_lz;
 	}
@@ -449,22 +453,9 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1  << ":" << np2 << endl;
 	cerr << "vf = " << volume_fraction << endl;
+	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
-	
 	sys.np(np);
-//	if (np2 > 0) {
-//		sys.poly = true;
-//	} else {
-//		sys.poly = false;
-//	}
-	cerr << "np = " << np << endl;
-	if (ly == 0) {
-		sys.dimension = 2;
-	} else {
-		sys.dimension = 3;
-	}
-	cerr << "dimension = " << sys.dimension << endl;
-
 }
 
 void

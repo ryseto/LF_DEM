@@ -23,11 +23,12 @@ private:
 	System sys;
 	int dimension;
 	double volume_fraction;
+	double volume_fraction1;
+	double volume_fraction2;
 	double lx_lz, ly_lz;
 	double lx, ly, lz;
 	double lx2, ly2, lz2;
-	double number_ratio;
-	double phi_ratio;
+//	double number_ratio;
 	double a1;
 	double a2;
 	vec3d *grad;
