@@ -31,11 +31,11 @@ BoxSet::init(double interaction_dist, System *sys_){
 	}
 	
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
+		cerr << "boxing useless: a neighborhood is the whole system" << endl;
 		_is_boxed=false;
 		box_xsize=sys->lx();
 		box_ysize=sys->ly();
 		box_zsize=sys->lz();
-		
 		box_nb = 1;
 		top_box_nb = 0;
 		bottom_box_nb = 0;
@@ -351,6 +351,7 @@ BoxSet::assignNeighbors(){
 }
 
 BoxSet::~BoxSet(){
+	
 	for (int i=0; i<box_nb; i++) {
 		delete Boxes[i];
 	}
@@ -358,8 +359,12 @@ BoxSet::~BoxSet(){
 	if (bulk_box_nb > 0) {
 		DELETE(BulkBoxes);
 	}
-	DELETE(TopBoxes);
-	DELETE(BottomBoxes);
+	if (_is_boxed) {
+		DELETE(TopBoxes);
+		DELETE(BottomBoxes);
+	} else {
+		DELETE(TopBottomBoxes);
+	}
 	DELETE(boxMap);
 }
 

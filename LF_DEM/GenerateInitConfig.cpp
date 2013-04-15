@@ -553,7 +553,7 @@ GenerateInitConfig::setSystemParameters(){
 	/*
 	 * Output interval
 	 */
-	sys.strain_interval_output = 0.05;
+	//strain_interval_output = 0.05;
 	/*
 	 *  Data output
 	 */

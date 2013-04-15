@@ -179,7 +179,7 @@ public:
 	bool draw_rotation_2d;
 	string simu_name;
 	ofstream fout_int_data;
-	double strain_interval_output;
+//	
 	double total_energy;
 	
 	
@@ -188,7 +188,7 @@ public:
 	void setupSystem(const vector <vec3d> &initial_positions,
 					 const vector <double> &radii);
 	void allocateRessources();
-	void timeEvolution(int time_step);
+	void timeEvolution(double strain_interval);
 	void timeEvolutionRelax(int time_step);
 	void displacement(int i, const vec3d &dr);
 
@@ -217,8 +217,8 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	void openFileInteractionData();
-	void adjustContactModelParameters();
-	void adjustTimeStep();
+	void adjustContactModelParameters(int nb_average);
+//	void adjustTimeStep();
 	void calcTotalPotentialEnergy();
 
 	void setupShearFlow(bool activate){

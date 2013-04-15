@@ -507,10 +507,12 @@ void System::timeEvolutionBrownian(){
 }
 
 void
-System::timeEvolution(int time_step){
-	int ts_next = ts+time_step;
-	checkNewInteraction();
-	while (ts < ts_next) {
+System::timeEvolution(double strain_interval){
+	double shear_strain_next = shear_strain+strain_interval-1e-6;
+	if (shear_strain == 0) {
+		checkNewInteraction();
+	}
+	do {
 		switch (integration_method) {
 			case 0:
 				timeEvolutionEulersMethod();
@@ -520,10 +522,11 @@ System::timeEvolution(int time_step){
 				break;
 			case 2:
 				timeEvolutionBrownian();
+				break;
 		}
 		ts++;
-		shear_strain += dt;
-	}
+		shear_strain += shear_rate*dt; // shear_rate = 1
+	} while (shear_strain < shear_strain_next);
 }
 
 void
@@ -989,10 +992,10 @@ System::analyzeState(){
 				min_gap_nondim = interaction[k].gap_nondim();
 			}
 			if (interaction[k].contact) {
-				sum_Fc_normal_norm += interaction[k].normalContactForce();
+				sum_Fc_normal_norm += interaction[k].getFcNormal();
 				contact_nb ++;
-				if (interaction[k].normalContactForce() > max_Fc_normal_norm) {
-					max_Fc_normal_norm = interaction[k].normalContactForce();
+				if (interaction[k].getFcNormal() > max_Fc_normal_norm) {
+					max_Fc_normal_norm = interaction[k].getFcNormal();
 				}
 				if (interaction[k].disp_tan_norm() > max_disp_tan) {
 					max_disp_tan = interaction[k].disp_tan_norm();
@@ -1019,7 +1022,7 @@ System::setSystemVolume(){
 
 void
 System::openFileInteractionData(){
-	string int_daat_filename = "int_record" + simu_name + ".dat";
+	string int_daat_filename = "irecord_" + simu_name + ".dat";
 	fout_int_data.open(int_daat_filename.c_str());
 }
 
@@ -1071,9 +1074,9 @@ averageList(list<double> &_list, bool remove_max_min){
 }
 
 void
-System::adjustContactModelParameters(){
-	double strain_interval_for_average = 5;
-	int num_average = strain_interval_for_average/strain_interval_output;
+System::adjustContactModelParameters(int nb_average){
+//	double strain_interval_for_average = 5;
+//	int num_average = strain_interval_for_average/strain_interval_output;
 	/*
 	 * Averaged max Fn, over a strain interval
 	 */
@@ -1087,7 +1090,7 @@ System::adjustContactModelParameters(){
 		kn = ave_max_Fn/overlap_target;
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
 	}
-	if (max_Fn_list.size() == num_average){
+	if (max_Fn_list.size() == nb_average){
 		max_Fn_list.pop_front();
 	}
 	/*
@@ -1103,59 +1106,11 @@ System::adjustContactModelParameters(){
 			double ave_max_Ft = averageList(max_Ft_list, true);
 			kt = ave_max_Ft/disp_tan_target;
 		}
-		if (max_Ft_list.size() == num_average){
+		if (max_Ft_list.size() == nb_average){
 			max_Ft_list.pop_front();
 		}
 	}
 	cerr << "(kn, kt, lub_coeff_contact) = " << kn << ' ' << kt << ' ' << lub_coeff_contact << endl;
-}
-
-void
-System::adjustTimeStep(){
-	double strain_interval_for_average = 5;
-	double critical_length = overlap_target;
-	if (disp_tan_target <  overlap_target){
-		critical_length = disp_tan_target;
-	}
-	double max_displacement = critical_length*0.1;
-	int num_average = strain_interval_for_average/strain_interval_output;
-	if (mu_static > 0) {
-		/*
-		 * Frictional system.
-		 * dt is detemined by the contact velocity
-		 */
-		evaluateMaxContactVelocity();
-		static list<double> max_cv_list;
-		if (max_contact_velo_tan > 0){
-			max_cv_list.push_back(max_contact_velo_tan);
-		}
-		if (max_cv_list.size() > 10){
-			double ave_max_cv = averageList(max_cv_list, true);
-			if (max_cv_list.size() == num_average){
-				max_cv_list.pop_front();
-			}
-			dt = max_displacement/ave_max_cv;
-		}
-	} else {
-		/*
-		 * Only normal contact force.
-		 * dt is determined by the velocity;
-		 * ---> 
-		 * It should be change to relative normal force.
-		 */
-		max_velocity = evaluateMaxVelocity();
-		static list<double> max_v_list;
-		if (max_velocity > 0){
-			max_v_list.push_back(max_velocity);
-		}
-		if (max_v_list.size() > 10){
-			double ave_max_v = averageList(max_v_list, true);
-			if (max_v_list.size() == num_average){
-				max_v_list.pop_front();
-			}
-			dt = max_displacement/ave_max_v;
-		}
-	}
 }
 
 void

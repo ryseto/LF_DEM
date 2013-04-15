@@ -133,8 +133,9 @@ sub InInteractions {
 	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $fc_n, $fc_tx, $fc_ty, $fc_tz,
-		$nx, $ny, $nz, $gap, $sxz_lub, $contact, $cv) = split(/\s+/, $line);
+		($i, $j, $f_lub, $fcol, $fc_n, $fc_tx, $fc_ty, $fc_tz,
+		$nx, $ny, $nz, $gap, $sxz_lub, $contact) = split(/\s+/, $line);
+		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
@@ -146,7 +147,6 @@ sub InInteractions {
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
 		$Gap[$k] = $gap;
-		$ContVelo[$k] = $cv;
 		printf OUTG "$gap ";
 	}
 	printf OUTG "\n";
@@ -239,22 +239,22 @@ sub OutYaplotData{
 	printf OUT "@ 0\n";
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
-        if ( $F_lub[$k] < 0){
+        if ($F_lub[$k] < 0) {
 			$force += - $F_lub[$k];
 		}
-		if ( $Gap[$k] < 0 ){
+		if ($Gap[$k] < 0) {
 			$string_width = 0.1;
 			&OutString_width($int0[$k],  $int1[$k]);
 		}
     }
     printf OUT "y 3\n";
     printf OUT "@ 3\n";
-    for ($k = 0; $k < $num_interaction; $k ++){
+    for ($k=0; $k<$num_interaction; $k++){
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		#$force = $Fcol[$k];
 		#$force = $Fc_n[$k];
 		$force = $F_lub[$k];
-        if ($force < -1){
+        if ($force < 0){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
@@ -262,10 +262,13 @@ sub OutYaplotData{
 	
    printf OUT "@ 4\n";
    for ($k = 0; $k < $num_interaction; $k ++){
-	   $force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	   
-	   if ($force > 1){
-           $string_width = ${force_factor}*${force};
+	   if ($Fc_n[$k] > 0){
+		   $force = $Fc_n[$k] + $Fcol[$k];
+	   } else {
+		   $force = $F_lub[$k] + $Fcol[$k];
+	   }
+	   if ($force > 0){
+		   $string_width = ${force_factor}*${force};
 		   &OutString_width($int0[$k], $int1[$k]);
 	   }
     }

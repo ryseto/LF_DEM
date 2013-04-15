@@ -51,18 +51,19 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	outputDataHeader(fout_particle);
 	outputConfigurationData();
 	sys.setupShearFlow(true);
+	double strain_next_config_out = strain_interval_output;
 	do {
-		int i_time_interval = sys.strain_interval_output/sys.dt;
-		cerr << "strain: " << sys.strain() << endl;
-		sys.timeEvolution(i_time_interval);
+		cerr.precision(10);
+		cerr << "strain: " << sys.strain() << ' ' << endl;
+		sys.timeEvolution(strain_interval_output_data);
 		evaluateData();
 		outputRheologyData();
-		outputConfigurationData();
-		if (kn_kt_adjustment) {
-			sys.adjustContactModelParameters();
+		if (sys.strain() >= strain_next_config_out) {
+			outputConfigurationData();
+			strain_next_config_out = sys.strain()+strain_interval_output-1e-6;
 		}
-		if (dt_adjustment) {
-			sys.adjustTimeStep();
+		if (kn_kt_adjustment) {
+			sys.adjustContactModelParameters(10);
 		}
 	} while (sys.strain() <= shear_strain_end);
 }
@@ -214,7 +215,9 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "radius_of_particle") {
 		radius_of_particle = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
-		sys.strain_interval_output = atof(value.c_str());
+		strain_interval_output = atof(value.c_str());
+	} else if (keyword == "strain_interval_out_data") {
+		strain_interval_output_data = atof(value.c_str());
 	} else if (keyword == "draw_rotation_2d") {
 		sys.draw_rotation_2d = str2bool(value);
 	} else if (keyword == "out_data_particle") {
@@ -386,9 +389,12 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.mu_static = 1;	
 	/*
-	 * Output interval
+	 * Output interval:
+	 * strain_interval_output_data is for outputing rheo_...
+	 * strain_interval_output is for outputing int_... and par_...
 	 */
-	sys.strain_interval_output = 0.05;
+	strain_interval_output_data = 0.01;
+	strain_interval_output = 0.05;
 	/*
 	 *  Data output
 	 */
@@ -674,21 +680,21 @@ Simulation::outputConfigurationData(){
 	fout_interaction << cnt_interaction << endl;
 	for (int k=0; k<sys.num_interaction; k++) {
 		if (sys.interaction[k].active) {
+			vec3d fc_tan = sys.interaction[k].getFcTan();
 			fout_interaction << sys.interaction[k].par_num[0] << sp; // 1
 			fout_interaction << sys.interaction[k].par_num[1] << sp; // 2
 			fout_interaction << sys.interaction[k].getLubForce() << sp; // 3
-			fout_interaction << sys.shear_rate*sys.interaction[k].normalContactForce() << sp; // 4
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangentialContactForce().x << sp; // 5
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangentialContactForce().y << sp; // 6
-			fout_interaction << sys.shear_rate*sys.interaction[k].tangentialContactForce().z << sp; // 7
-			fout_interaction << sys.interaction[k].nr_vec.x << sp; // 8 
-			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 9
-			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 10
-			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 11
-			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 12
-			fout_interaction << sys.interaction[k].contact << sp; // 13
-			fout_interaction << sys.interaction[k].getContactVelocity() << sp; // 14
-			fout_interaction << sys.interaction[k].getColloidalForce();
+			fout_interaction << sys.interaction[k].getColloidalForce() << sp; // 4
+			fout_interaction << sys.interaction[k].getFcNormal() << sp; // 5
+			fout_interaction << fc_tan.x << sp; // 6
+			fout_interaction << fc_tan.y << sp; // 7
+			fout_interaction << fc_tan.z << sp; // 8
+			fout_interaction << sys.interaction[k].nr_vec.x << sp; // 9
+			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 10
+			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 11
+			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 12
+			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 13
+			fout_interaction << sys.interaction[k].contact << sp; // 14
 			fout_interaction << endl;
 		}
 	}

@@ -26,12 +26,15 @@ private:
 	vector<double> radii;
 	string filename_import_positions;
 	string filename_parameters;
+	
 
 	double unit_of_force;
 	double unit_of_velocity;
 	double unit_of_length;
 	double viscosity_solvent; // It can be real value.
 	double radius_of_particle; // It can be real value.
+	double strain_interval_output_data;
+	double strain_interval_output;
 	/* Colloidal force parameter
 	 * A exp(-h/lambda)
 	 * cf_amp_dl0 = A/F_0 at shear rate = 1.0
