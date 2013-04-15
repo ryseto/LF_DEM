@@ -525,7 +525,7 @@ System::timeEvolution(double strain_interval){
 				break;
 		}
 		ts++;
-		shear_strain += shear_rate*dt; // shear_rate = 1
+		shear_strain += dt; // 
 	} while (shear_strain < shear_strain_next);
 }
 
