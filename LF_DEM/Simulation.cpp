@@ -418,8 +418,9 @@ Simulation::importInitialPositionFile(){
 	int n1, n2;
 	double volume_fraction_;
 	double lx_, ly_, lz_;
+	double vf1, vf2;
 	char buf;
-	file_import >> buf >> n1 >> n2 >> volume_fraction_ >> lx_ >> ly_ >> lz_ ;
+	file_import >> buf >> n1 >> n2 >> volume_fraction_ >> lx_ >> ly_ >> lz_ >> vf1 >> vf2;
 	num_of_particle = n1+n2;
 	if (ly_ == 0) {
 		sys.dimension = 2;
