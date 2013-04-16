@@ -53,8 +53,6 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	sys.setupShearFlow(true);
 	double strain_next_config_out = strain_interval_output;
 	do {
-		cerr.precision(10);
-		cerr << "strain: " << sys.strain() << ' ' << endl;
 		sys.timeEvolution(strain_interval_output_data);
 		evaluateData();
 		outputRheologyData();
@@ -65,7 +63,8 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		if (kn_kt_adjustment) {
 			sys.adjustContactModelParameters(10);
 		}
-	} while (sys.strain() <= shear_strain_end);
+		cerr << "strain: " << sys.strain() << endl;
+	} while (strain_next_config_out < shear_strain_end);
 }
 
 void
@@ -180,8 +179,6 @@ Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
 	if (keyword == "bgf_factor") {
 		sys.bgf_factor = atof(value.c_str());
-	} else if (keyword == "dt_adjustment") {
-		dt_adjustment = str2bool(value);
 	} else if (keyword == "kn_kt_adjustment") {
 		kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "cf_amp_dl0") {
@@ -298,7 +295,6 @@ Simulation::openOutputFiles(){
 
 void
 Simulation::setDefaultParameters(){
-	dt_adjustment = false;
 	kn_kt_adjustment = false;
 	/*
 	 * 
@@ -473,44 +469,47 @@ void
 Simulation::evaluateData(){
 	sys.calcStress();
 	sys.analyzeState();
-	double total_stress[5];
-	for (int u=0; u<5; u++) {
-		total_stress[u] = sys.total_hydro_stress[u];
-		total_stress[u] += sys.total_contact_stressXF[u];
-		total_stress[u] += sys.total_colloidal_stressXF[u];
-		total_stress[u] += sys.total_colloidal_stressGU[u];
-	}
+	stresslet total_stress;
+	
+	total_stress = sys.total_hydro_stress;
+	total_stress += sys.total_contact_stressXF;
+	total_stress += sys.total_colloidal_stressXF;
+	total_stress += sys.total_colloidal_stressGU;
 	if (sys.brownian) {
-		for (int u=0; u<5; u++) {
-			total_stress[u] += sys.total_brownian_stress[u];
-		}
+		total_stress += sys.total_brownian_stress;
 	}
-	Viscosity = total_stress[2];
-	Viscosity_h = sys.total_hydro_stress[2];
-	Viscosity_c_XF = sys.total_contact_stressXF[2];
-	Viscosity_c_GU = sys.total_contact_stressGU[2];
-	Viscosity_col_XF = sys.total_colloidal_stressXF[2];
-	Viscosity_col_GU = sys.total_colloidal_stressGU[2];
+	Viscosity = total_stress.elm[2];
+	Viscosity_h = sys.total_hydro_stress.elm[2];
+	Viscosity_cont_XF = sys.total_contact_stressXF.elm[2];
+	Viscosity_cont_GU = sys.total_contact_stressGU.elm[2];
+	Viscosity_col_XF = sys.total_colloidal_stressXF.elm[2];
+	Viscosity_col_GU = sys.total_colloidal_stressGU.elm[2];
+	// 0xx 1xy 2xz 3yz 4yy 5zz
 	/* N1 = tau_xx-tau_zz = tau_xx-(-tau_xx-tau_yy) = 2tau_xx+tau_yy
 	 * N2 = tau_zz-tau_yy = (-tau_xx-tau_yy)-tau_yy = -tau_xx-2tau_yy
 	 */
-	N1 = 2*total_stress[0]+total_stress[4];
-	N2 = -total_stress[0]-2*total_stress[4];
-	N1_h = 2*sys.total_hydro_stress[0]+sys.total_hydro_stress[4];
-	N2_h = -sys.total_hydro_stress[0]-2*sys.total_hydro_stress[4];
-	N1_c_XF = 2*sys.total_contact_stressXF[0]+sys.total_contact_stressXF[4];
-	N2_c_XF = -sys.total_contact_stressXF[0]-2*sys.total_contact_stressXF[4];
-	N1_c_GU = 2*sys.total_contact_stressGU[0]+sys.total_contact_stressGU[4];
-	N2_c_GU = -sys.total_contact_stressGU[0]-2*sys.total_contact_stressGU[4];
-	if (sys.brownian) {
-		Viscosity_b = sys.total_brownian_stress[2];
-		N1_b = 2*sys.total_brownian_stress[0]+sys.total_brownian_stress[4];
-		N2_b = -sys.total_brownian_stress[0]-2*sys.total_brownian_stress[4];
-	} else {
-		Viscosity_b = 0;
-		N1_b = 0;
-		N2_b = 0;
-	}
+	N1 = total_stress.elm[0]-total_stress.elm[5];
+	N2 = total_stress.elm[5]-total_stress.elm[4];
+	//total_stress.elm[0]+total_stress.elm[4]+total_stress.elm[5] << endl;
+	N1_h = 2*sys.total_hydro_stress.elm[0]+sys.total_hydro_stress.elm[4];
+	N2_h = -sys.total_hydro_stress.elm[0]-2*sys.total_hydro_stress.elm[4];
+	N1_cont_XF = sys.total_contact_stressXF.elm[0]-sys.total_contact_stressXF.elm[5];
+	N2_cont_XF = sys.total_contact_stressXF.elm[5]-sys.total_contact_stressXF.elm[4];
+	N1_cont_GU = 2*sys.total_contact_stressGU.elm[0]+sys.total_contact_stressGU.elm[4];
+	N2_cont_GU = -sys.total_contact_stressGU.elm[0]-2*sys.total_contact_stressGU.elm[4];
+	
+	N1_col_XF = sys.total_colloidal_stressXF.elm[0]-sys.total_colloidal_stressXF.elm[5];
+	N2_col_XF = sys.total_colloidal_stressXF.elm[5]-sys.total_colloidal_stressXF.elm[4];
+
+	//	if (sys.brownian) {
+	//		Viscosity_b = sys.total_brownian_stress.elm[2];
+	//		N1_b = 2*sys.total_brownian_stress.elm[0]+sys.total_brownian_stress.elm[4];
+	//		N2_b = -sys.total_brownian_stress.elm[0]-2*sys.total_brownian_stress.elm[4];
+	//	} else {
+	//		Viscosity_b = 0;
+	//		N1_b = 0;
+	//		N2_b = 0;
+	//	}
 }
 
 void
@@ -568,12 +567,12 @@ Simulation::outputRheologyData(){
 	fout_rheo << Viscosity_h*unit_of_rel_viscosity << ' '; //5
 	fout_rheo << N1_h*unit_of_stress << ' '; //6
 	fout_rheo << N2_h*unit_of_stress << ' '; //7
-	fout_rheo << Viscosity_c_XF*unit_of_rel_viscosity << ' '; //8
-	fout_rheo << N1_c_XF*unit_of_stress << ' '; //9
-	fout_rheo << N2_c_XF*unit_of_stress << ' '; //10
-	fout_rheo << Viscosity_c_GU*unit_of_rel_viscosity << ' ' ; //11
-	fout_rheo << N1_c_GU*unit_of_stress << ' ' ; //12
-	fout_rheo << N2_c_GU*unit_of_stress << ' ' ; //13
+	fout_rheo << Viscosity_cont_XF*unit_of_rel_viscosity << ' '; //8
+	fout_rheo << N1_cont_XF*unit_of_stress << ' '; //9
+	fout_rheo << N2_cont_XF*unit_of_stress << ' '; //10
+	fout_rheo << Viscosity_cont_GU*unit_of_rel_viscosity << ' ' ; //11
+	fout_rheo << N1_cont_GU*unit_of_stress << ' ' ; //12
+	fout_rheo << N2_cont_GU*unit_of_stress << ' ' ; //13
 	fout_rheo << Viscosity_b*unit_of_rel_viscosity << ' ' ; //14
 	fout_rheo << N1_b*unit_of_stress << ' ' ; //15
 	fout_rheo << N2_b*unit_of_stress << ' ' ; //16
@@ -693,7 +692,7 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 10
 			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 11
 			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 12
-			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 13
+//			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 13
 			fout_interaction << sys.interaction[k].contact << sp; // 14
 			fout_interaction << endl;
 		}

@@ -333,7 +333,7 @@ System::deltaTimeEvolutionCorrector(){
 	}
 	// update boxing system
 	boxset.update();
-	checkNewInteraction(); 
+	checkNewInteraction();
 	/*
 	 * Interaction
 	 *
@@ -525,7 +525,7 @@ System::timeEvolution(double strain_interval){
 				break;
 		}
 		ts++;
-		shear_strain += dt; // 
+		shear_strain += dt; //
 	} while (shear_strain < shear_strain_next);
 }
 
@@ -607,23 +607,19 @@ System::updateInteractions(){
 void
 System::stressReset(){
 	for (int i=0; i<_np; i++) {
-		for (int u=0; u < 5; u++) {
-			lubstress[i].elm[u] = 0;
-			bgfstress[i].elm[u] = 0;
-			contactstressXF[i].elm[u] = 0;
-			contactstressGU[i].elm[u] = 0;
-			colloidalstressXF[i].elm[u] = 0;
-			colloidalstressGU[i].elm[u] = 0;
-		}
+		lubstress[i].reset();
+		bgfstress[i].reset();
+		contactstressXF[i].reset();
+		contactstressGU[i].reset();
+		colloidalstressXF[i].reset();
+		colloidalstressGU[i].reset();
 	}
 }
 
 void
 System::stressBrownianReset(){
 	for (int i=0; i<_np; i++) {
-		for (int u=0; u<5; u++) {
-			brownianstress[i].elm[u] = 0;
-		}
+		brownianstress[i].reset();
 	}
 	brownianstress_calc_nb = 0;
 }
@@ -648,6 +644,7 @@ System::buildLubricationTerms(bool rhs){
 	 * This range i < _np - 1 is ok?
 	 */
     for (int i=0; i<_np-1; i ++) {
+		int i3 = 3*i;
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
@@ -658,10 +655,11 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.appendToOffDiagBlock_RFU((*it)->nr_vec, i, j,
 													   0.5*(*it)->ro*(*it)->XA[2]);
 				if (rhs) {
+					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
 					for (int u=0; u<3; u++) {
-						stokes_solver.addToRHS(3*i+u, GEi[u]);
-						stokes_solver.addToRHS(3*j+u, GEj[u]);
+						stokes_solver.addToRHS(i3+u, GEi[u]);
+						stokes_solver.addToRHS(j3+u, GEj[u]);
 					}
 				}
 			}
@@ -675,14 +673,16 @@ System::buildLubricationRHS(){
 	double GEi[3];
     double GEj[3];
     for (int i=0; i<_np-1; i ++) {
+		int i3 = 3*i;
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
+				int j3 = 3*j;
 				(*it)->GE(GEi, GEj);  // G*E_\infty term
 				for (int u=0; u<3; u++) {
-					stokes_solver.addToRHS(3*i+u, GEi[u]);
-					stokes_solver.addToRHS(3*j+u, GEj[u]);
+					stokes_solver.addToRHS(i3+u, GEi[u]);
+					stokes_solver.addToRHS(j3+u, GEj[u]);
 				}
 			}
 		}
@@ -1075,8 +1075,8 @@ averageList(list<double> &_list, bool remove_max_min){
 
 void
 System::adjustContactModelParameters(int nb_average){
-//	double strain_interval_for_average = 5;
-//	int num_average = strain_interval_for_average/strain_interval_output;
+	//	double strain_interval_for_average = 5;
+	//	int num_average = strain_interval_for_average/strain_interval_output;
 	/*
 	 * Averaged max Fn, over a strain interval
 	 */

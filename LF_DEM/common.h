@@ -9,10 +9,5 @@
 #ifndef LF_DEM_common_h
 #define LF_DEM_common_h
 
-struct stresslet {
-	/* element[]= {S_xx, S_xy, S_xz, S_yz, S_yy}
-	 */
-	double elm[5];
-};
-
+	
 #endif

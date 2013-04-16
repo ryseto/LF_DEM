@@ -18,7 +18,6 @@ private:
 	System sys;
 	string filename_addition;
 	int num_of_particle;
-	bool dt_adjustment;
 	bool kn_kt_adjustment;
 	double shear_strain_end;
 	bool import_positions;
@@ -26,8 +25,6 @@ private:
 	vector<double> radii;
 	string filename_import_positions;
 	string filename_parameters;
-	
-
 	double unit_of_force;
 	double unit_of_velocity;
 	double unit_of_length;
@@ -49,14 +46,19 @@ private:
 	double Viscosity_h;
 	double N1_h;
 	double N2_h;
-	double Viscosity_c_XF;
-	double N1_c_XF;
-	double N2_c_XF;
-	double Viscosity_c_GU;
-	double N1_c_GU;
-	double N2_c_GU;
+	double Viscosity_cont_XF;
+	double N1_cont_XF;
+	double N2_cont_XF;
+	double Viscosity_cont_GU;
+	double N1_cont_GU;
+	double N2_cont_GU;
 	double Viscosity_col_XF;
 	double Viscosity_col_GU;
+	double N1_col_XF;
+	double N2_col_XF;
+	double N1_col_GU;
+	double N2_col_GU;
+	
 	double Viscosity_b;
 	double N1_b;
 	double N2_b;

@@ -15,7 +15,7 @@
 #include <queue>
 #include <list>
 #include <string>
-#include "common.h"
+#include "Stresslet.h"
 #include "Interaction.h"
 #include "vec3d.h"
 #include "BrownianForce.h"
@@ -111,12 +111,12 @@ public:
 	stresslet* colloidalstressGU;
 	stresslet* brownianstress;
 	int brownianstress_calc_nb;
-	double total_hydro_stress[5];
-	double total_contact_stressXF[5];
-	double total_contact_stressGU[5];
-	double total_colloidal_stressXF[5];
-	double total_colloidal_stressGU[5];
-	double total_brownian_stress[5];
+	stresslet total_hydro_stress;
+	stresslet total_contact_stressXF;
+	stresslet total_contact_stressGU;
+	stresslet total_colloidal_stressXF;
+	stresslet total_colloidal_stressGU;
+	stresslet total_brownian_stress;
 	double kn;
 	double kt;
 	double lub_max;

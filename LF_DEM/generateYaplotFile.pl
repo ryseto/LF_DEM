@@ -335,14 +335,12 @@ sub OutBoundaryBox{
 
 }
 
-	
 sub OutNvec {
     ($k) = @_;
 	$nx = $nrvec_x[$k];
 	$ny = $nrvec_y[$k];
 	$nz = $nrvec_z[$k];
 	printf OUT2 "$nx $ny $nz\n";
-
 }
 
 sub OutString_width {

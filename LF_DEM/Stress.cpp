@@ -19,7 +19,7 @@ System::calcStressesHydroContactBrownian(){
 	/**************************************************
 	 1. Stress from background flow
 	 **/
-    for (int i=0; i < _np; i++) {
+    for (int i=0; i<_np; i++) {
 		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*radius_cubic[i];
 	}
 	
@@ -203,11 +203,9 @@ System::calcStressesHydroContact(){
 	// from that, compute stresses
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active) {
-			interaction[k].total_stress_xz = 0;
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
-			interaction[k].integrateStress();
 		}
 	}
 	/*
@@ -238,7 +236,7 @@ System::calcStressesHydroContact(){
 void
 System::calcStress(){
 	static double previous_strain = 0;
-	d_strain = strain()-previous_strain;
+	//d_strain = strain()-previous_strain;
 	previous_strain = strain();
 	stressReset();
 	if (brownian) {
@@ -246,33 +244,31 @@ System::calcStress(){
 	} else {
 		calcStressesHydroContact();
 	}
-	for (int u=0; u < 5; u++) {
-		total_hydro_stress[u] = 0;
-		total_contact_stressXF[u] = 0;
-		total_contact_stressGU[u] = 0;
-		total_colloidal_stressXF[u] = 0;
-		total_colloidal_stressGU[u] = 0;
-		total_brownian_stress[u] = 0;
-	}
-	for (int i=0; i < _np; i++) {
-		for (int u=0; u < 5; u++) {
-			total_hydro_stress[u] += lubstress[i].elm[u]+bgfstress[i].elm[u];
-			total_contact_stressXF[u] += contactstressXF[i].elm[u];
-			total_contact_stressGU[u] += contactstressGU[i].elm[u];
-			total_colloidal_stressXF[u] += colloidalstressXF[i].elm[u];
-			total_colloidal_stressGU[u] += colloidalstressGU[i].elm[u];
-			total_brownian_stress[u] += brownianstress[i].elm[u];
+	total_hydro_stress.reset();
+	total_contact_stressXF.reset();
+	total_contact_stressGU.reset();
+	total_colloidal_stressXF.reset();
+	total_colloidal_stressGU.reset();
+	total_brownian_stress.reset();
+	for (int i=0; i<_np; i++) {
+		total_hydro_stress += lubstress[i]+bgfstress[i];
+		total_contact_stressGU += contactstressGU[i];
+		total_contact_stressXF += contactstressXF[i];
+		total_colloidal_stressGU += colloidalstressGU[i];
+		total_colloidal_stressXF += colloidalstressXF[i];
+		if (brownian) {
+			total_brownian_stress += brownianstress[i];
 		}
 	}
-	for (int u=0; u < 5; u++) {
-		total_hydro_stress[u] /= valSystemVolume();
-		total_contact_stressXF[u] /= valSystemVolume();
-		total_contact_stressGU[u] /= valSystemVolume();
-		total_colloidal_stressXF[u] /= valSystemVolume();
-		total_colloidal_stressGU[u] /= valSystemVolume();
-		total_brownian_stress[u] /= valSystemVolume();
+	total_hydro_stress /= valSystemVolume();
+	total_contact_stressGU /= valSystemVolume();
+	total_contact_stressXF /= valSystemVolume();
+	total_colloidal_stressGU /= valSystemVolume();
+	total_colloidal_stressXF /= valSystemVolume();
+	if (brownian) {
+		total_brownian_stress /= valSystemVolume();
+		stressBrownianReset();
 	}
-	stressBrownianReset();
 }
 
 

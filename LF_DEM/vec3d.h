@@ -43,15 +43,17 @@ public:
 	
 	inline friend bool
 	operator == (const vec3d &v1, const vec3d &v2){
-		if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z)
+		if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z) {
 			return true;
+		}
 		return false;
 	}
 	
 	inline friend bool
 	operator != (const vec3d &v1, const vec3d &v2){
-		if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z )
+		if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z) {
 			return true;
+		}
 		return false;
 	}
 	
@@ -89,14 +91,12 @@ public:
 	
 	inline friend vec3d
 	operator * (const int &i, const vec3d &v){
-		double d_tmp = (double)i;
-		return d_tmp*v;
+		return vec3d(i*v.x, i*v.y, i*v.z);
 	}
 	
 	inline friend vec3d
 	operator * (const vec3d &v, const int &i){
-		double d_tmp = (double)i;
-		return d_tmp*v;
+		return vec3d(i*v.x, i*v.y, i*v.z);
 	}
 	
 	/* scalar product */
@@ -156,8 +156,7 @@ public:
 	
 	inline vec3d&
 	operator *=(const int &i){
-		double d_tmp = (double)i;
-		x *= d_tmp, y *= d_tmp, z *= d_tmp;
+		x *= i, y *= i, z *= i;
 		return *this;
 	}
 	
@@ -170,7 +169,7 @@ public:
 	
 	inline vec3d&
 	operator /= (const int &i){
-		double d_tmp = 1.0/i;
+		double d_tmp = 1./i;
 		x *= d_tmp, y *= d_tmp, z *= d_tmp;
 		return *this;
 	}

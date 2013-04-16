@@ -87,8 +87,6 @@ Interaction::activate(int i, int j){
 	cnt_sliding = 0;
 	strain_lub_start = sys->strain(); // for output
 	duration_contact = 0; // for output
-	max_stress = 0; // for output
-	stress_xz_integration = 0; // for output
 }
 
 void
@@ -368,11 +366,13 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	stresslet_i.elm[2] = common_factor_i*n0n2;
 	stresslet_i.elm[3] = common_factor_i*n1n2;
 	stresslet_i.elm[4] = common_factor_i*n1n1_13;
+	stresslet_i.elm[5] = -stresslet_i.elm[0]-stresslet_i.elm[4];
 	stresslet_j.elm[0] = common_factor_j*n0n0_13;
 	stresslet_j.elm[1] = common_factor_j*n0n1;
 	stresslet_j.elm[2] = common_factor_j*n0n2;
 	stresslet_j.elm[3] = common_factor_j*n1n2;
 	stresslet_j.elm[4] = common_factor_j*n1n1_13;
+	stresslet_j.elm[5] = -stresslet_j.elm[0]-stresslet_j.elm[4];
 }
 
 // convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
@@ -406,11 +406,13 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	stresslet_i.elm[2] = common_factor_i*n0n2;
 	stresslet_i.elm[3] = common_factor_i*n1n2;
 	stresslet_i.elm[4] = common_factor_i*n1n1_13;
+	stresslet_i.elm[5] = -stresslet_i.elm[0]-stresslet_i.elm[4];
 	stresslet_j.elm[0] = common_factor_j*n0n0_13;
 	stresslet_j.elm[1] = common_factor_j*n0n1;
 	stresslet_j.elm[2] = common_factor_j*n0n2;
 	stresslet_j.elm[3] = common_factor_j*n1n2;
 	stresslet_j.elm[4] = common_factor_j*n1n1_13;
+	stresslet_j.elm[5] = -stresslet_j.elm[0]-stresslet_j.elm[4];
 }
 
 void
@@ -431,13 +433,10 @@ Interaction::addHydroStress(){
 	 *  Second: +M*Einf term
 	 */
 	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-	for (int u=0; u<5; u++) {
-		sys->lubstress[par_num[0]].elm[u] += stresslet_GU_i.elm[u]+stresslet_ME_i.elm[u];
-		sys->lubstress[par_num[1]].elm[u] += stresslet_GU_j.elm[u]+stresslet_ME_j.elm[u];
-		lubstresslet.elm[u] = \
-		stresslet_GU_i.elm[u]+stresslet_ME_i.elm[u]+stresslet_GU_j.elm[u]+stresslet_ME_j.elm[u];
-	}
-	total_stress_xz += (sys->lubstress[par_num[0]].elm[2]+sys->lubstress[par_num[0]].elm[2])*sys->d_strain;
+	sys->lubstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
+	sys->lubstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
+	//		lubstresslet.elm[u] = \
+	stresslet_GU_i.elm[u]+stresslet_ME_i.elm[u]+stresslet_GU_j.elm[u]+stresslet_ME_j.elm[u];
 }
 
 /* Lubriction force between two particles is calculated.
@@ -472,12 +471,13 @@ Interaction::evaluateLubricationForce(){
  * The radius factors are added in addContactStress().
  */
 void
-Interaction::calcStressTermXF(stresslet &stresslet_, const vec3d &force){
+Interaction::calcStressTermXF(stresslet &stresslet_, const vec3d force){
 	stresslet_.elm[0] = force.x*nr_vec.x; //xx
 	stresslet_.elm[1] = 0.5*(force.x*nr_vec.y+force.y*nr_vec.x); //xy
 	stresslet_.elm[2] = 0.5*(force.x*nr_vec.z+force.z*nr_vec.x); //xz
 	stresslet_.elm[3] = 0.5*(force.y*nr_vec.z+force.z*nr_vec.y); //yz
 	stresslet_.elm[4] = force.y*nr_vec.y; // yy
+	stresslet_.elm[5] = force.z*nr_vec.z; // zz
 }
 
 void
@@ -486,22 +486,25 @@ Interaction::addContactStress(){
 		int i3 = 3*par_num[0];
 		int j3 = 3*par_num[1];
 		stresslet contactstressletXF;
-		calcStressTermXF(contactstressletXF, Fc_normal+Fc_tan);
-		for (int u=0; u<5; u++) {
-			sys->contactstressXF[par_num[0]].elm[u] += a0*contactstressletXF.elm[u];
-			sys->contactstressXF[par_num[1]].elm[u] += a1*contactstressletXF.elm[u];
-		}
+		/*
+		 * Fc_normal_norm = -kn_scaled*_gap_nondim; --> positive
+		 * Fc_normal = -Fc_normal_norm*nr_vec;
+		 * This force acts on particle 1.
+		 * stress1 is a0*nr_vec[*]force.
+		 * stress2 is (-a1*nr_vec)[*](-force) = a1*nr_vec[*]force
+		 */
+		vec3d contact_force = Fc_normal+Fc_tan;
+		calcStressTermXF(contactstressletXF, contact_force);
+		sys->contactstressXF[par_num[0]] += a0*contactstressletXF;
+		sys->contactstressXF[par_num[1]] += a1*contactstressletXF;
 		// Add term G*V_cont
 		stresslet stresslet_GU_i;
 		stresslet stresslet_GU_j;
 		vec3d vi(sys->v_cont[i3], sys->v_cont[i3+1], sys->v_cont[i3+2]);
 		vec3d vj(sys->v_cont[j3], sys->v_cont[j3+1], sys->v_cont[j3+2]);
 		pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
-		for (int u=0; u<5; u++) {
-			sys->contactstressGU[par_num[0]].elm[u] += stresslet_GU_i.elm[u];
-			sys->contactstressGU[par_num[1]].elm[u] += stresslet_GU_j.elm[u];
-		}
-		total_stress_xz += (a0*contactstressletXF.elm[2]+a1*contactstressletXF.elm[2])*sys->d_strain;
+		sys->contactstressGU[par_num[0]] += stresslet_GU_i;
+		sys->contactstressGU[par_num[1]] += stresslet_GU_j;
 	}
 }
 
@@ -511,22 +514,16 @@ Interaction::addColloidalStress(){
 	int j3 = 3*par_num[1];
 	stresslet colloidalstressletXF;
 	calcStressTermXF(colloidalstressletXF, F_colloidal);
-	for (int u=0; u<5; u++) {
-		sys->colloidalstressXF[par_num[0]].elm[u] += a0*colloidalstressletXF.elm[u];
-		sys->colloidalstressXF[par_num[1]].elm[u] += a1*colloidalstressletXF.elm[u];
-	}
-	total_stress_xz += (a0*colloidalstressletXF.elm[2]+a1*colloidalstressletXF.elm[2])*sys->d_strain;
+	sys->colloidalstressXF[par_num[0]] += a0*colloidalstressletXF;
+	sys->colloidalstressXF[par_num[1]] += a1*colloidalstressletXF;
 	// Add term G*V_cont
 	stresslet stresslet_colloid_GU_i;
 	stresslet stresslet_colloid_GU_j;
 	vec3d vi(sys->v_colloidal[i3], sys->v_colloidal[i3+1], sys->v_colloidal[i3+2]);
 	vec3d vj(sys->v_colloidal[j3], sys->v_colloidal[j3+1], sys->v_colloidal[j3+2]);
 	pairVelocityStresslet(vi, vj, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
-	for (int u=0; u<5; u++) {
-		sys->colloidalstressGU[par_num[0]].elm[u] += stresslet_colloid_GU_i.elm[u];
-		sys->colloidalstressGU[par_num[1]].elm[u] += stresslet_colloid_GU_j.elm[u];
-	}
-	total_stress_xz += (a0*stresslet_colloid_GU_i.elm[2]+a1*stresslet_colloid_GU_j.elm[2])*sys->d_strain;
+	sys->colloidalstressGU[par_num[0]] += stresslet_colloid_GU_i;
+	sys->colloidalstressGU[par_num[1]] += stresslet_colloid_GU_j;
 }
 
 #ifdef RECORD_HISTORY
@@ -554,18 +551,8 @@ Interaction::outputSummary(){
 	sys->fout_int_data << duration << ' '; // 2
 	sys->fout_int_data << duration-duration_contact << ' '; // 3
 	sys->fout_int_data << duration_contact << ' '; // 4
-	sys->fout_int_data << max_stress << ' ';  // 5
-	sys->fout_int_data << stress_xz_integration << ' '; // 6
 	sys->fout_int_data << cnt_sliding << ' '; //  7
 	sys->fout_int_data << endl;
-}
-
-void
-Interaction::integrateStress(){
-	stress_xz_integration += total_stress_xz;
-	if (max_stress < total_stress_xz) {
-		max_stress = total_stress_xz;
-	}
 }
 
 double
