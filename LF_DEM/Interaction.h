@@ -37,7 +37,6 @@ private:
 	//===== forces and stresses ==================== //
 	double r_lub_max;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
-//	stresslet lubstresslet;
 	double kn_scaled;
 	double kt_scaled;
 	double colloidal_force_amplitude;
@@ -84,8 +83,6 @@ private:
 	vec3d F_colloidal;
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
-	void calcStressTermXF(stresslet &stresslet_,
-						  const vec3d force);
 
 protected:
 public:
@@ -128,8 +125,8 @@ public:
 	//======= internal state =====================//
 	bool active;
 	bool contact;
-
 	//======= Data ===============================//
+
 	//	double total_stress_xz;
 	//	double stress_xz_integration;
 	//=============  Resistance Matrices ====================/
@@ -140,7 +137,6 @@ public:
 	void calcXA();
 	void calcXG();
 	void calcXM();
-
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
@@ -153,7 +149,7 @@ public:
 	inline double getColloidalForce(){return F_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
-//	inline double lubStresslet(int i){return lubstresslet.elm[i];}
+	//	inline double lubStresslet(int i){return lubstresslet.elm[i];}
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
@@ -162,8 +158,6 @@ public:
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
 	void integrateStress();
-
 	//=========== observables ===============================//
-
 };
 #endif /* defined(__LF_DEM__Interaction__) */

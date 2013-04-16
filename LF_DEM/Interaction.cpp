@@ -465,27 +465,12 @@ Interaction::evaluateLubricationForce(){
 	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
 }
 
-// term nr_vec*F
-/* [Note]:
- * Unit vector (nr_vec) is used.
- * The radius factors are added in addContactStress().
- */
-void
-Interaction::calcStressTermXF(stresslet &stresslet_, const vec3d force){
-	stresslet_.elm[0] = force.x*nr_vec.x; //xx
-	stresslet_.elm[1] = 0.5*(force.x*nr_vec.y+force.y*nr_vec.x); //xy
-	stresslet_.elm[2] = 0.5*(force.x*nr_vec.z+force.z*nr_vec.x); //xz
-	stresslet_.elm[3] = 0.5*(force.y*nr_vec.z+force.z*nr_vec.y); //yz
-	stresslet_.elm[4] = force.y*nr_vec.y; // yy
-	stresslet_.elm[5] = force.z*nr_vec.z; // zz
-}
-
 void
 Interaction::addContactStress(){
 	if (contact) {
 		int i3 = 3*par_num[0];
 		int j3 = 3*par_num[1];
-		stresslet contactstressletXF;
+		
 		/*
 		 * Fc_normal_norm = -kn_scaled*_gap_nondim; --> positive
 		 * Fc_normal = -Fc_normal_norm*nr_vec;
@@ -494,7 +479,7 @@ Interaction::addContactStress(){
 		 * stress2 is (-a1*nr_vec)[*](-force) = a1*nr_vec[*]force
 		 */
 		vec3d contact_force = Fc_normal+Fc_tan;
-		calcStressTermXF(contactstressletXF, contact_force);
+		stresslet contactstressletXF(nr_vec, contact_force);
 		sys->contactstressXF[par_num[0]] += a0*contactstressletXF;
 		sys->contactstressXF[par_num[1]] += a1*contactstressletXF;
 		// Add term G*V_cont
@@ -512,8 +497,7 @@ void
 Interaction::addColloidalStress(){
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
-	stresslet colloidalstressletXF;
-	calcStressTermXF(colloidalstressletXF, F_colloidal);
+	stresslet colloidalstressletXF(nr_vec, F_colloidal);
 	sys->colloidalstressXF[par_num[0]] += a0*colloidalstressletXF;
 	sys->colloidalstressXF[par_num[1]] += a1*colloidalstressletXF;
 	// Add term G*V_cont

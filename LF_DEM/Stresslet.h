@@ -8,6 +8,8 @@
 
 #ifndef LF_DEM_Stresslet_h
 #define LF_DEM_Stresslet_h
+#include "vec3d.h"
+
 class stresslet {
 public:
 	/* variables */
@@ -17,6 +19,15 @@ public:
 		for (int i=0; i<6; i++){
 			elm[i] = 0;
 		}
+	}
+	
+	inline stresslet(const vec3d & v1, const vec3d & v2){
+		elm[0] = v1.x*v2.x;
+		elm[1] = 0.5*(v1.x*v2.y+v1.y*v2.x);
+		elm[2] = 0.5*(v1.x*v2.z+v1.z*v2.x);
+		elm[3] = 0.5*(v1.y*v2.z+v1.z*v2.y);
+		elm[4] = v1.y*v2.y;
+		elm[5] = v1.z*v2.z;
 	}
 	
 	inline stresslet(const double &_xx,
@@ -162,11 +173,31 @@ public:
 	}
 	
 	inline void
+	set(const double &_xx, const double &_xy, const double &_xz,
+		const double &_yz, const double &_yy, const double &_zz){
+		elm[0] = _xx;
+		elm[1] = _xy;
+		elm[2] = _xz;
+		elm[3] = _yz;
+		elm[4] = _yy;
+		elm[5] = _zz;
+	}
+	
+	inline void
 	reset(){
 		for (int i=0; i<6; i++){
 			elm[i] = 0;
 		}
 	}
 	
+	inline friend stresslet
+	tensor_prod (const vec3d &v1, const vec3d &v2) {
+		return stresslet(v1.x*v2.x,
+						 0.5*(v1.x*v2.y+v1.y*v2.x),
+						 0.5*(v1.x*v2.z+v1.z*v2.x),
+						 0.5*(v1.y*v2.z+v1.z*v2.y),
+						 v1.y*v2.y,
+						 v1.z*v2.z);
+	}
 };
 #endif
