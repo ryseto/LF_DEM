@@ -214,6 +214,9 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	checkNewInteraction();
 	cnt_monitored_data = 0;
 	setSystemVolume();
+	for (int i=0; i<_np; i++) {
+		bgfstress[i].set(0, 0, (5.0/9)*bgf_factor*radius_cubic[i], 0, 0, 0);
+	}
 }
 
 void

@@ -299,8 +299,8 @@ Simulation::setDefaultParameters(){
 	/*
 	 * 
 	 */
-	viscosity_solvent = 0.001;
-	radius_of_particle = 1e-6;
+	viscosity_solvent = 1;
+	radius_of_particle = 1;
 	/*
 	 * Simulation
 	 *
@@ -408,7 +408,7 @@ Simulation::setDefaultParameters(){
 void
 Simulation::importInitialPositionFile(){
 	fstream file_import;
-	file_import.open( filename_import_positions.c_str());
+	file_import.open(filename_import_positions.c_str());
 	if(!file_import) {
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
@@ -442,11 +442,10 @@ Simulation::importInitialPositionFile(){
 		radii[i] = radius;
 	}
 	file_import.close();
-
 	double max_radius = 0;
 	for (int i=0; i<num_of_particle; i++) {
-		if (max_radius<radii[i]) {
-			max_radius=radii[i];
+		if (max_radius < radii[i]) {
+			max_radius = radii[i];
 		}
 	}
 	sys.setRadiusMax(max_radius);
@@ -470,7 +469,6 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.analyzeState();
 	stresslet total_stress;
-	
 	total_stress = sys.total_hydro_stress;
 	total_stress += sys.total_contact_stressXF;
 	total_stress += sys.total_colloidal_stressXF;
@@ -478,38 +476,23 @@ Simulation::evaluateData(){
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
-	Viscosity = total_stress.elm[2];
-	Viscosity_h = sys.total_hydro_stress.elm[2];
-	Viscosity_cont_XF = sys.total_contact_stressXF.elm[2];
-	Viscosity_cont_GU = sys.total_contact_stressGU.elm[2];
-	Viscosity_col_XF = sys.total_colloidal_stressXF.elm[2];
-	Viscosity_col_GU = sys.total_colloidal_stressGU.elm[2];
-	// 0xx 1xy 2xz 3yz 4yy 5zz
-	/* N1 = tau_xx-tau_zz = tau_xx-(-tau_xx-tau_yy) = 2tau_xx+tau_yy
-	 * N2 = tau_zz-tau_yy = (-tau_xx-tau_yy)-tau_yy = -tau_xx-2tau_yy
-	 */
-	N1 = total_stress.elm[0]-total_stress.elm[5];
-	N2 = total_stress.elm[5]-total_stress.elm[4];
+	Viscosity = total_stress.getViscosity();
+	Viscosity_h = sys.total_hydro_stress.getViscosity();
+	Viscosity_cont_XF = sys.total_contact_stressXF.getViscosity();
+	Viscosity_cont_GU = sys.total_contact_stressGU.getViscosity();
+	Viscosity_col_XF = sys.total_colloidal_stressXF.getViscosity();
+	Viscosity_col_GU = sys.total_colloidal_stressGU.getViscosity();
+	N1 = total_stress.getNormalStress1();
+	N2 = total_stress.getNormalStress2();
 	//total_stress.elm[0]+total_stress.elm[4]+total_stress.elm[5] << endl;
-	N1_h = 2*sys.total_hydro_stress.elm[0]+sys.total_hydro_stress.elm[4];
-	N2_h = -sys.total_hydro_stress.elm[0]-2*sys.total_hydro_stress.elm[4];
-	N1_cont_XF = sys.total_contact_stressXF.elm[0]-sys.total_contact_stressXF.elm[5];
-	N2_cont_XF = sys.total_contact_stressXF.elm[5]-sys.total_contact_stressXF.elm[4];
-	N1_cont_GU = 2*sys.total_contact_stressGU.elm[0]+sys.total_contact_stressGU.elm[4];
-	N2_cont_GU = -sys.total_contact_stressGU.elm[0]-2*sys.total_contact_stressGU.elm[4];
-	
-	N1_col_XF = sys.total_colloidal_stressXF.elm[0]-sys.total_colloidal_stressXF.elm[5];
-	N2_col_XF = sys.total_colloidal_stressXF.elm[5]-sys.total_colloidal_stressXF.elm[4];
-
-	//	if (sys.brownian) {
-	//		Viscosity_b = sys.total_brownian_stress.elm[2];
-	//		N1_b = 2*sys.total_brownian_stress.elm[0]+sys.total_brownian_stress.elm[4];
-	//		N2_b = -sys.total_brownian_stress.elm[0]-2*sys.total_brownian_stress.elm[4];
-	//	} else {
-	//		Viscosity_b = 0;
-	//		N1_b = 0;
-	//		N2_b = 0;
-	//	}
+	N1_h = sys.total_hydro_stress.getNormalStress1();
+	N2_h = sys.total_hydro_stress.getNormalStress2();
+	N1_cont_XF = sys.total_contact_stressXF.getNormalStress1();
+	N2_cont_XF = sys.total_contact_stressXF.getNormalStress2();
+	N1_cont_GU = sys.total_contact_stressGU.getNormalStress1();
+	N2_cont_GU = sys.total_contact_stressGU.getNormalStress2();
+	N1_col_XF = sys.total_colloidal_stressXF.getNormalStress1();
+	N2_col_XF = sys.total_colloidal_stressXF.getNormalStress2();
 }
 
 void
@@ -651,10 +634,10 @@ Simulation::outputConfigurationData(){
 		vec3d &p = pos[i];
 		vec3d &v = vel[i];
 		vec3d &o = sys.ang_velocity[i];
-		double h_xzstress = sys.lubstress[i].elm[2] + sys.bgfstress[i].elm[2];
-		double c_xzstressXF = sys.contactstressXF[i].elm[2];
-		double c_xzstressGU = sys.contactstressGU[i].elm[2];
-		double b_xzstress = sys.brownianstress[i].elm[2];
+		double h_xzstress = sys.lubstress[i].getViscosity()+ sys.bgfstress[i].getViscosity();
+		double c_xzstressXF = sys.contactstressXF[i].getViscosity();
+		double c_xzstressGU = sys.contactstressGU[i].getViscosity();
+		double b_xzstress = sys.brownianstress[i].getViscosity();
 		fout_particle << i << sp; //1: number
 		fout_particle << sys.radius[i] << sp; //2: radius
 		fout_particle << p.x << sp << p.y << sp << p.z << sp; //3,4,5: position
@@ -664,7 +647,7 @@ Simulation::outputConfigurationData(){
 		fout_particle << c_xzstressXF << sp; //13: xz stress contributions
 		fout_particle << c_xzstressGU << sp; //14: xz stress contributions
 		fout_particle << b_xzstress << sp; //15: xz stress contributions
-		if (sys.dimension == 2){
+		if (sys.dimension == 2) {
 			fout_particle << sys.angle[i] << sp; // 16
 		}
 		fout_particle << endl;
@@ -692,7 +675,6 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].nr_vec.y << sp; // 10
 			fout_interaction << sys.interaction[k].nr_vec.z << sp; // 11
 			fout_interaction << sys.interaction[k].gap_nondim() << sp; // 12
-//			fout_interaction << sys.interaction[k].lubStresslet(2) << sp; // 13
 			fout_interaction << sys.interaction[k].contact << sp; // 14
 			fout_interaction << endl;
 		}

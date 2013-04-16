@@ -11,10 +11,12 @@
 #include "vec3d.h"
 
 class stresslet {
-public:
-	/* variables */
+private:
+	/*
+	 * (xx, xy, xz, yz, yy, zz)
+	 */
 	double elm[6];
-	
+public:
 	inline stresslet(void){
 		for (int i=0; i<6; i++){
 			elm[i] = 0;
@@ -198,6 +200,21 @@ public:
 						 0.5*(v1.y*v2.z+v1.z*v2.y),
 						 v1.y*v2.y,
 						 v1.z*v2.z);
+	}
+	
+	/*	N1 = Sxx-Szz;
+	 */
+	double getNormalStress1(){
+		return elm[0]-elm[5];
+	}
+	/*	N2 = Szz-Syy;
+	 */
+	double getNormalStress2(){
+		return elm[5]-elm[4];
+	}
+	
+	double getViscosity(){
+		return elm[2];
 	}
 };
 #endif

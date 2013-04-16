@@ -361,18 +361,10 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double common_factor_i = -dot(nr_vec, (4*a0*a0*XG[0]*vi+ro*ro*XG[1]*vj)/6);
 	double common_factor_j = -dot(nr_vec, (4*a1*a1*XG[3]*vj+ro*ro*XG[2]*vi)/6);
-	stresslet_i.elm[0] = common_factor_i*n0n0_13;
-	stresslet_i.elm[1] = common_factor_i*n0n1;
-	stresslet_i.elm[2] = common_factor_i*n0n2;
-	stresslet_i.elm[3] = common_factor_i*n1n2;
-	stresslet_i.elm[4] = common_factor_i*n1n1_13;
-	stresslet_i.elm[5] = -stresslet_i.elm[0]-stresslet_i.elm[4];
-	stresslet_j.elm[0] = common_factor_j*n0n0_13;
-	stresslet_j.elm[1] = common_factor_j*n0n1;
-	stresslet_j.elm[2] = common_factor_j*n0n2;
-	stresslet_j.elm[3] = common_factor_j*n1n2;
-	stresslet_j.elm[4] = common_factor_j*n1n1_13;
-	stresslet_j.elm[5] = -stresslet_j.elm[0]-stresslet_j.elm[4];
+	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, -(n0n0_13+n1n1_13));
+	stresslet_i *= common_factor_i;
+	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, -(n0n0_13+n1n1_13));
+	stresslet_j *= common_factor_j;
 }
 
 // convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
@@ -400,19 +392,11 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	double rororo = ro*ro*ro;
 	calcXM();
 	double common_factor_i = 5*(a0*a0*a0*XM[0]/3+rororo*XM[1]/24)*n0n2;
+	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13,	-(n0n0_13+n1n1_13));
+	stresslet_i *= common_factor_i;
 	double common_factor_j = 5*(a1*a1*a1*XM[3]/3+rororo*XM[2]/24)*n0n2;
-	stresslet_i.elm[0] = common_factor_i*n0n0_13;
-	stresslet_i.elm[1] = common_factor_i*n0n1;
-	stresslet_i.elm[2] = common_factor_i*n0n2;
-	stresslet_i.elm[3] = common_factor_i*n1n2;
-	stresslet_i.elm[4] = common_factor_i*n1n1_13;
-	stresslet_i.elm[5] = -stresslet_i.elm[0]-stresslet_i.elm[4];
-	stresslet_j.elm[0] = common_factor_j*n0n0_13;
-	stresslet_j.elm[1] = common_factor_j*n0n1;
-	stresslet_j.elm[2] = common_factor_j*n0n2;
-	stresslet_j.elm[3] = common_factor_j*n1n2;
-	stresslet_j.elm[4] = common_factor_j*n1n1_13;
-	stresslet_j.elm[5] = -stresslet_j.elm[0]-stresslet_j.elm[4];
+	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, -(n0n0_13+n1n1_13));
+	stresslet_j *= common_factor_j;
 }
 
 void
