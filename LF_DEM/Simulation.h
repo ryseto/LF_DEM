@@ -56,12 +56,9 @@ private:
 	double Viscosity_col_GU;
 	double N1_col_GU;
 	double N2_col_GU;
-	
-	double Viscosity_b;
-	double N1_b;
-	double N2_b;
-  	double N1_2;
-	double N2_2;
+	double Viscosity_brownian;
+	double N1_brownian;
+	double N2_brownian;
 	/*
 	 * For output data.
 	 */

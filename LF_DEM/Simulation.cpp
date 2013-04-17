@@ -457,6 +457,9 @@ Simulation::evaluateData(){
 	Viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
 	N1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
 	N2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
+	Viscosity_brownian = sys.total_brownian_stress.getStressXZ();
+	N1_brownian = sys.total_brownian_stress.getNormalStress1();
+	N2_brownian = sys.total_brownian_stress.getNormalStress2();
 }
 
 void
@@ -541,9 +544,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*Viscosity_col_GU << ' '; //20
 	fout_rheo << 6*M_PI*N1_col_GU << ' '; //21
 	fout_rheo << 6*M_PI*N2_col_GU << ' '; //22
-	fout_rheo << 6*M_PI*Viscosity_b << ' ' ; //23
-	fout_rheo << 6*M_PI*N1_b << ' ' ; //24
-	fout_rheo << 6*M_PI*N2_b << ' ' ; //25
+	fout_rheo << 6*M_PI*Viscosity_brownian << ' ' ; //23
+	fout_rheo << 6*M_PI*N1_brownian << ' ' ; //24
+	fout_rheo << 6*M_PI*N2_brownian << ' ' ; //25
 	fout_rheo << sys.min_gap_nondim << ' '; //26
 	fout_rheo << sys.max_disp_tan << ' '; //27
 	fout_rheo << sys.average_Fc_normal_norm << ' '; //28
@@ -564,7 +567,7 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 		z += sys.lz_half();
 		if (z > sys.lz_half()) {
 			x -= sys.shear_disp;
-			if (x < - sys.lx_half()) {
+			if (x < -sys.lx_half()) {
 				x += sys.lx();
 			}
 			z -= sys.lz();
@@ -662,4 +665,3 @@ Simulation::outputConfigurationData(){
 		}
 	}
 }
-
