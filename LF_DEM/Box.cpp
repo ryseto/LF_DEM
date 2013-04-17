@@ -52,7 +52,6 @@ Box::neigh_nb(int n, int moving_n){
 	reset_moving_neighbors();
 }
 
-
 bool
 Box::can_be_added(int label, Box* neigh_box){
 	if (neigh_box == this) {

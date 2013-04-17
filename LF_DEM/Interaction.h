@@ -39,7 +39,7 @@ private:
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	double kn_scaled;
 	double kt_scaled;
-	double colloidal_force_amplitude;
+	double colloidalforce_amplitude;
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
 	double strain_contact_start; // the strain at h=0.
@@ -81,8 +81,9 @@ private:
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d F_colloidal;
-	stresslet colloidalstressletXF; //stress tensor of colloidal force
-	
+	stresslet colloidal_stresslet_XF; //stress tensor of colloidal force
+	stresslet contact_stresslet_XF_normal; //stress tensor of normal contact force
+	stresslet contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
 
@@ -148,6 +149,7 @@ public:
 	double getPotentialEnergy();
 	inline double getFcNormal(){return Fc_normal_norm;}
 	inline vec3d getFcTan(){return Fc_tan;}
+	inline double getFcTan_norm(){return Fc_tan.norm();}
 	inline double getColloidalForce(){return F_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
@@ -155,7 +157,10 @@ public:
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
-	stresslet getColloidalstressXF(){return colloidalstressletXF;}
+	stresslet getColloidalStressXF(){return colloidal_stresslet_XF;}
+	stresslet getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
+	stresslet getContactStressXF_normal(){return contact_stresslet_XF_normal;}
+	stresslet getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);

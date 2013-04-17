@@ -29,7 +29,6 @@ System::~System(){
 	DELETE(contact_torque);
 	DELETE(lubstress);
 	DELETE(bgfstress);
-	DELETE(contactstressXF);
 	DELETE(contactstressGU);
 	DELETE(colloidalstressGU);
 	DELETE(brownianstress);
@@ -66,7 +65,6 @@ System::allocateRessources(){
 	colloidal_force = new vec3d [_np];
 	lubstress = new stresslet [_np];
 	bgfstress = new stresslet [_np];
-	contactstressXF = new stresslet [_np];
 	contactstressGU = new stresslet [_np];
 	colloidalstressGU = new stresslet [_np];
 	brownianstress = new stresslet [_np];
@@ -122,7 +120,9 @@ System::setupSystemForGenerateInit(){
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	contact_relaxzation_time = 1e-3;
 	kn = 2000;
-	colloidalforce = false;
+	kt = 0;
+	friction = false;
+	colloidalforce = true;
 	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
@@ -154,7 +154,14 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	} else {
 		friction = false;
 	}
-	if (cf_amp_dl > 0) {
+	if (colloidalforce_length > 0) {
+		/*
+		 * The diemnsionless shear rate is defined as follows:
+		 * dimensionless_shear_rate = 6pi*eta*a^2*shear_rate/colloidalforce_amplitude
+		 * Under the unit of this simulation
+		 * 6pi*eta*a^2*shear_rate is set to 1.
+		 */
+		colloidalforce_amplitude = 1/dimensionless_shear_rate;
 		colloidalforce = true;
 		cerr << "Colloidal force" << endl;
 	} else {
@@ -443,9 +450,7 @@ void System::timeEvolutionBrownian(){
 	if (shear_disp >= lx()) {
 		shear_disp -= lx();
 	}
-	
     updateInteractions();
-	
 	for (int i=0; i<_np; i++) {
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
@@ -480,11 +485,9 @@ void System::timeEvolutionBrownian(){
 		velocity[i].set(0.5*(v_lub_cont_mid[i]+v_Brownian_mid[i3]+position[i].z),
 						0.5*(v_lub_cont_mid[i3+1]+v_Brownian_mid[i3+1]*zero_2Dsimu),
 						0.5*(v_lub_cont_mid[i3+2]+v_Brownian_mid[i3+2]));
-		
 		velocity[i] -= 0.5*velocity_predictor[i];
     }
 	if (friction) {
-		//
 		//		double O_inf_y = 0.5;
 		//		for (int i=0; i < _np; i++){
 		//			ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
@@ -610,7 +613,6 @@ System::stressReset(){
 	for (int i=0; i<_np; i++) {
 		lubstress[i].reset();
 		bgfstress[i].reset();
-		contactstressXF[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
 	}
@@ -769,7 +771,7 @@ System::updateVelocityLubrication(){
 	for (int i=0; i<_np; i++) {
 		ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
 	}
-	if (shear_rate != 0) {
+	if (dimensionless_shear_rate != 0) {
 		for (int i=0; i<_np; i++) {
 			velocity[i].x += position[i].z;
 		}

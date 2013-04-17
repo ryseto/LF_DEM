@@ -36,6 +36,9 @@ BoxSet::init(double interaction_dist, System *sys_){
 		box_xsize = sys->lx();
 		box_ysize = sys->ly();
 		box_zsize = sys->lz();
+		box_xsize_half = 0.5*box_xsize;
+		box_ysize_half = 0.5*box_ysize;
+		box_zsize_half = 0.5*box_zsize;
 		box_nb = 1;
 		top_box_nb = 0;
 		bottom_box_nb = 0;
@@ -56,15 +59,15 @@ BoxSet::init(double interaction_dist, System *sys_){
 		box_xsize = sys->lx()/x_box_nb;
 		box_ysize = sys->ly()/y_box_nb;
 		box_zsize = sys->lz()/z_box_nb;
+		box_xsize_half = 0.5*box_xsize;
+		box_ysize_half = 0.5*box_ysize;
+		box_zsize_half = 0.5*box_zsize;
 		allocateBoxes();
 		// give them their position
 		positionBoxes();
 		// tell them their neighbors
 		assignNeighbors();
 	}
-	box_xsize_half = 0.5*box_xsize;
-	box_ysize_half = 0.5*box_ysize;
-	box_zsize_half = 0.5*box_zsize;
 	cerr << box_nb << " " << interaction_dist << " " << box_xsize << endl;
 }
 

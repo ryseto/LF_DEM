@@ -217,11 +217,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = 0.2*$radius[0];
+	$r = $radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = 0.2*$radius[$i];
+			$r = $radius[$i];
 			printf OUT "r $r\n";
 		}
 #		if ($i % 100 == 0){
@@ -351,7 +351,7 @@ sub OutString_width {
     $xj = $posx[$j];
     $yj = $posy[$j] - 0.01;
     $zj = $posz[$j];
-	$sq_dist = ($xi-$xj)**2 +	($yi-$yj)**2 + ($zi-$zj)**2;
+	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
 		printf OUT "r ${string_width}\n";
 		printf OUT "s $xi $yi $zi $xj $yj $zj\n";

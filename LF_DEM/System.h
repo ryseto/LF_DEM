@@ -104,14 +104,14 @@ public:
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
 	stresslet* lubstress; // G U + M E
-	stresslet* bgfstress;
-	stresslet* contactstressXF;
-	stresslet* contactstressGU;
-	stresslet* colloidalstressGU;
-	stresslet* brownianstress;
+	stresslet* bgfstress; // by particle
+	stresslet* contactstressGU; // by particle
+	stresslet* colloidalstressGU; // by particle
+	stresslet* brownianstress; // by particle
 	int brownianstress_calc_nb;
 	stresslet total_hydro_stress;
-	stresslet total_contact_stressXF;
+	stresslet total_contact_stressXF_normal;
+	stresslet total_contact_stressXF_tan;
 	stresslet total_contact_stressGU;
 	stresslet total_colloidal_stressXF;
 	stresslet total_colloidal_stressGU;
@@ -145,19 +145,20 @@ public:
 	double contact_relaxzation_time;
 	BrownianForce *fb;
 	double shear_disp;
-	double shear_rate;
+	/* For non-Brownian suspension:
+	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_col(0)
+	 * For Brownian suspension, it should be Peclet number
+	 */
+	double dimensionless_shear_rate;
 	/* Colloidal force to stabilize suspension
 	 * (This gives simple shear-rate depenedence.)
 	 */
-	double cf_amp; // colloidal force amplitude
-	double cf_amp_dl; // colloidal force dimensionless
-	double cf_range_dl; // colloidal force range (dimensionless)
+	double colloidalforce_amplitude; // colloidal force dimensionless
+	double colloidalforce_length; // colloidal force length (dimensionless)
 	double kb_T;
 	double volume_fraction;
 	double vel_difference;
 	double dt;
-	double dt_mid;
-	double dt_ratio;
 	double max_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;

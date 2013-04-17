@@ -390,13 +390,13 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	np = readStdinDefault(200, "number of particle");
 	dimension = readStdinDefault(3, "dimension (2 or 3)");
 	sys.dimension = dimension;
-	if (dimension == 2){
+	if (dimension == 2) {
 		volume_fraction = readStdinDefault(0.7, "volume_fraction");
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
 	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: ");
-	if (dimension == 3){
+	if (dimension == 3) {
 		ly_lz = 1;
 		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
 	}
@@ -404,13 +404,12 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	a1 = 1;
 	a2 = 1;
 	volume_fraction1 = volume_fraction; // mono
-	if (disperse_type == 'b'){
+	if (disperse_type == 'b') {
 		cerr << "a1 = 1.0" << endl;
 		do {
 			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
 		} while (a2 < a1);
-		do{
-			//number_ratio = readStdinDefault(0.5, "n1/(n1+n2)");
+		do {
 			volume_fraction1= readStdinDefault(volume_fraction*0.5, "vf of particle 1 (small particle)");
 		} while (volume_fraction1 < 0 || volume_fraction1 > volume_fraction);
 	}
@@ -418,7 +417,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	/*
 	 *  Calculate parameters
 	 */
-	volume_fraction2 = volume_fraction - volume_fraction1;
+	volume_fraction2 = volume_fraction-volume_fraction1;
 	cerr << "vf = " << volume_fraction1 << ' ' << volume_fraction2 << endl;
 	double total_volume;
 	double pvolume1, pvolume2;
@@ -436,14 +435,14 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	} else {
 		np1 = (int)np1_tmp+1;
 	}
-	np2 = np - np1;
+	np2 = np-np1;
 	double pvolume = np1*pvolume1+np2*pvolume2;
 	if (dimension == 2) {
-		lz = sqrt(pvolume / (lx_lz*volume_fraction ));
+		lz = sqrt(pvolume/(lx_lz*volume_fraction));
 		lx = lz*lx_lz;
 		ly = 0.0;
 	} else {
-		lz = pow(pvolume / (lx_lz*ly_lz*volume_fraction), 1./3);
+		lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1./3);
 		lx = lz*lx_lz;
 		ly = lz*ly_lz;
 	}
@@ -460,16 +459,6 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 
 void
 GenerateInitConfig::setSystemParameters(){
-	double viscosity_solvent = 0.001;
-	double radius_of_particle = 1e-6;
-	double cf_amp_dl0 = 1;
-	double unit_of_length = radius_of_particle; // = radius of smaller particle (a0)
-	double unit_of_velocity = sys.shear_rate*unit_of_length;
-	double unit_of_force = 6*M_PI*viscosity_solvent*radius_of_particle*unit_of_velocity;
-	double cf_amp = cf_amp_dl0*6*M_PI*viscosity_solvent*radius_of_particle*radius_of_particle;
-	sys.cf_amp_dl = cf_amp/unit_of_force;
-	cerr << "unit_of_force = " << unit_of_force << endl;
-	cerr << "cf_amp_dl = " << sys.cf_amp_dl << endl;
 	/*
 	 * Simulation
 	 *
@@ -543,8 +532,6 @@ GenerateInitConfig::setSystemParameters(){
 	 * Short range repulsion is assumed.
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
 	 */
-	cf_amp_dl0 = 1; // dimensionless
-	sys.cf_range_dl = 0.1; // dimensionless
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient

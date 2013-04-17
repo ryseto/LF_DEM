@@ -1,19 +1,10 @@
 /*
- * Sample parameters
- *
- */
-
-viscosity_solvent = 0.001;
-radius_of_particle = 1e-6;
-
-/*
  * Parameter auto adjustment.
  *
  */
 kn_kt_adjustment = false;
 overlap_target = 0.03;
 disp_tan_target = 0.03;
-
 /*
  * Simulation
  *
@@ -75,13 +66,12 @@ kb_T = 0;
  * kn: normal spring constant
  * kt: tangential spring constant
  */
-kn = 5000;
-kt = 1000;
+kn = 10000;
+kt = 5000;
 /* Colloidal force
  * Short range repulsion is assumed.
  */
-cf_amp = 1.0;
-cf_range = 0.1;
+colloidalforce_length = 0.1;
 /*
  * mu_static: static friction coeffient
  * mu_dynamic: dynamic friction coeffient

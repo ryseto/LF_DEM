@@ -25,11 +25,6 @@ private:
 	vector<double> radii;
 	string filename_import_positions;
 	string filename_parameters;
-	double unit_of_force;
-	double unit_of_velocity;
-	double unit_of_length;
-	double viscosity_solvent; // It can be real value.
-	double radius_of_particle; // It can be real value.
 	double strain_interval_output_data;
 	double strain_interval_output;
 	/* Colloidal force parameter
@@ -49,13 +44,16 @@ private:
 	double Viscosity_cont_XF;
 	double N1_cont_XF;
 	double N2_cont_XF;
+	double Viscosity_friction; // Fc_tan contribution.
+	double N1_friction;
+	double N2_friction;
 	double Viscosity_cont_GU;
 	double N1_cont_GU;
 	double N2_cont_GU;
 	double Viscosity_col_XF;
-	double Viscosity_col_GU;
 	double N1_col_XF;
 	double N2_col_XF;
+	double Viscosity_col_GU;
 	double N1_col_GU;
 	double N2_col_GU;
 	
@@ -88,7 +86,6 @@ private:
 	/*
 	 * For outputs
 	 */
-	void setUnits();
 	void output_yap();
 	void output_vel();
 	void outputDataHeader(ofstream &fout);

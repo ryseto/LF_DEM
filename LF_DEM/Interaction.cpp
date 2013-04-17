@@ -75,7 +75,7 @@ Interaction::activate(int i, int j){
 	 * a0*a1/(a1+a2)/2
 	 * Is
 	 */
-	colloidal_force_amplitude = sys->cf_amp_dl*a0*a1/ro;
+	colloidalforce_amplitude = sys->colloidalforce_amplitude*a0*a1/ro;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	calcDistanceNormalVector();
@@ -155,7 +155,7 @@ Interaction::updateState(bool &deactivated){
 			 * This force does not affect the friction law,
 			 * i.e. it is separated from Fc_normal_norm.
 			 */
-			F_colloidal_norm = colloidal_force_amplitude;
+			F_colloidal_norm = colloidalforce_amplitude;
 			F_colloidal = -F_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
@@ -168,7 +168,7 @@ Interaction::updateState(bool &deactivated){
 	} else {
 		calcDistanceNormalVector();
 		if (sys->colloidalforce) {
-			F_colloidal_norm = colloidal_force_amplitude*exp(-(_r-ro)/sys->cf_range_dl);
+			F_colloidal_norm = colloidalforce_amplitude*exp(-(_r-ro)/sys->colloidalforce_length);
 			F_colloidal = -F_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
@@ -454,7 +454,6 @@ Interaction::addContactStress(){
 	if (contact) {
 		int i3 = 3*par_num[0];
 		int j3 = 3*par_num[1];
-		
 		/*
 		 * Fc_normal_norm = -kn_scaled*_gap_nondim; --> positive
 		 * Fc_normal = -Fc_normal_norm*nr_vec;
@@ -462,10 +461,8 @@ Interaction::addContactStress(){
 		 * stress1 is a0*nr_vec[*]force.
 		 * stress2 is (-a1*nr_vec)[*](-force) = a1*nr_vec[*]force
 		 */
-		vec3d contact_force = Fc_normal+Fc_tan;
-		stresslet contactstressletXF(nr_vec, contact_force);
-		sys->contactstressXF[par_num[0]] += a0*contactstressletXF;
-		sys->contactstressXF[par_num[1]] += a1*contactstressletXF;
+		contact_stresslet_XF_normal.set(r_vec, Fc_normal);
+		contact_stresslet_XF_tan.set(r_vec, Fc_tan);
 		// Add term G*V_cont
 		stresslet stresslet_GU_i;
 		stresslet stresslet_GU_j;
@@ -481,7 +478,7 @@ void
 Interaction::addColloidalStress(){
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
-	colloidalstressletXF.set(r_vec, F_colloidal);
+	colloidal_stresslet_XF.set(r_vec, F_colloidal);
 	// Add term G*V_cont
 	stresslet stresslet_colloid_GU_i;
 	stresslet stresslet_colloid_GU_j;
@@ -549,9 +546,9 @@ Interaction::getPotentialEnergy(){
 	//	double h = _r - ro;
 	if (_gap_nondim < 0) {
 		energy = 0.5*sys->kn*_gap_nondim*_gap_nondim;
-		energy += -colloidal_force_amplitude*_gap_nondim;
+		energy += -colloidalforce_amplitude*_gap_nondim;
 	} else {
-		energy = sys->cf_range_dl*colloidal_force_amplitude*(exp(-(_r-ro)/sys->cf_range_dl)-1);
+		energy = sys->colloidalforce_length*colloidalforce_amplitude*(exp(-(_r-ro)/sys->colloidalforce_length)-1);
 	}
 	return energy;
 }
