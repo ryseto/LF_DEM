@@ -30,7 +30,6 @@ System::~System(){
 	DELETE(lubstress);
 	DELETE(bgfstress);
 	DELETE(contactstressXF);
-	DELETE(colloidalstressXF);
 	DELETE(contactstressGU);
 	DELETE(colloidalstressGU);
 	DELETE(brownianstress);
@@ -68,7 +67,6 @@ System::allocateRessources(){
 	lubstress = new stresslet [_np];
 	bgfstress = new stresslet [_np];
 	contactstressXF = new stresslet [_np];
-	colloidalstressXF = new stresslet [_np];
 	contactstressGU = new stresslet [_np];
 	colloidalstressGU = new stresslet [_np];
 	brownianstress = new stresslet [_np];
@@ -614,7 +612,6 @@ System::stressReset(){
 		bgfstress[i].reset();
 		contactstressXF[i].reset();
 		contactstressGU[i].reset();
-		colloidalstressXF[i].reset();
 		colloidalstressGU[i].reset();
 	}
 }
@@ -843,7 +840,7 @@ System::periodize(vec3d &pos){
 // [-l/2,l/2]
 void
 System::periodize_diff(vec3d &pos_diff){
-	if (abs(pos_diff.z) > _lz2) {
+	if (abs(pos_diff.z) > _lz_half) {
 		if (pos_diff.z > 0) {
 			pos_diff.z -= _lz;
 			pos_diff.x -= shear_disp;
@@ -852,22 +849,22 @@ System::periodize_diff(vec3d &pos_diff){
 			pos_diff.x += shear_disp;
 		}
 	}
-	if (abs(pos_diff.x) > _lx2) {
+	if (abs(pos_diff.x) > _lx_half) {
 		if (pos_diff.x > 0) {
 			pos_diff.x -= _lx;
-			if (pos_diff.x > _lx2) {
+			if (pos_diff.x > _lx_half) {
 				pos_diff.x -= _lx;
 			}
 		} else {
 			pos_diff.x += _lx;
-			if (pos_diff.x < -_lx2) {
+			if (pos_diff.x < -_lx_half) {
 				pos_diff.x += _lx;
 			}
 		}
 	}
-	if (pos_diff.y > _ly2) {
+	if (pos_diff.y > _ly_half) {
 		pos_diff.y -= _ly;
-	} else if (pos_diff.y < -_ly2) {
+	} else if (pos_diff.y < -_ly_half) {
 		pos_diff.y += _ly;
 	}
 }
@@ -879,7 +876,7 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
-	if (abs(pos_diff.z) > _lz2) {
+	if (abs(pos_diff.z) > _lz_half) {
 		if (pos_diff.z > 0) {
 			pos_diff.z -= _lz;
 			pos_diff.x -= shear_disp;
@@ -892,22 +889,22 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	} else {
 		zshift = 0;
 	}
-	if (abs(pos_diff.x) > _lx2) {
+	if (abs(pos_diff.x) > _lx_half) {
 		if (pos_diff.x > 0) {
 			pos_diff.x -= _lx;
-			if (pos_diff.x > _lx2) {
+			if (pos_diff.x > _lx_half) {
 				pos_diff.x -= _lx;
 			}
 		} else {
 			pos_diff.x += _lx;
-			if (pos_diff.x < -_lx2) {
+			if (pos_diff.x < -_lx_half) {
 				pos_diff.x += _lx;
 			}
 		}
 	}
-	if (pos_diff.y > _ly2) {
+	if (pos_diff.y > _ly_half) {
 		pos_diff.y -= _ly;
-	} else if (pos_diff.y < -_ly2) {
+	} else if (pos_diff.y < -_ly_half) {
 		pos_diff.y += _ly;
 	}
 }

@@ -241,7 +241,7 @@ GenerateInitConfig::putRandom(){
 		sys.position[i].x = lx*RANDOM;
 		sys.position[i].z = lz*RANDOM;
 		if (dimension == 2) {
-			sys.position[i].y = ly2;
+			sys.position[i].y = ly_half;
 		} else {
 			sys.position[i].y = ly*RANDOM;
 		}
@@ -447,9 +447,9 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 		lx = lz*lx_lz;
 		ly = lz*ly_lz;
 	}
-	lx2 = lx/2;
-	ly2 = ly/2;
-	lz2 = lz/2;
+	lx_half = lx/2;
+	ly_half = ly/2;
+	lz_half = lz/2;
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1  << ":" << np2 << endl;
 	cerr << "vf = " << volume_fraction << endl;

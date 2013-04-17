@@ -39,9 +39,9 @@ private:
 	double _lx;
 	double _ly;
 	double _lz;
-	double _lx2; // =lx/2
-	double _ly2; // =ly/2
-	double _lz2; // =lz/2
+	double _lx_half; // =lx/2
+	double _ly_half; // =ly/2
+	double _lz_half; // =lz/2
 	double system_volume;
 	double radius_max;
 	double sq_lub_max;
@@ -106,7 +106,6 @@ public:
 	stresslet* lubstress; // G U + M E
 	stresslet* bgfstress;
 	stresslet* contactstressXF;
-	stresslet* colloidalstressXF;
 	stresslet* contactstressGU;
 	stresslet* colloidalstressGU;
 	stresslet* brownianstress;
@@ -231,17 +230,17 @@ public:
 	/*************************************************************/
 	inline void lx(double length){
 		_lx = length;
-		_lx2 = 0.5*_lx;
+		_lx_half = 0.5*_lx;
 	}
 
 	inline void ly(double length){
 		_ly = length;
-		_ly2 = 0.5*_ly;
+		_ly_half = 0.5*_ly;
 	}
 
 	inline void lz(double length){
 		_lz = length;
-		_lz2 = 0.5*_lz;
+		_lz_half = 0.5*_lz;
 	}
 
 	inline void setRadiusMax(double _radius_max){
@@ -268,16 +267,16 @@ public:
 		return _lz;
 	}
 
-	inline double lx2(){
-		return _lx2;
+	inline double lx_half(){
+		return _lx_half;
 	}
 
-	inline double ly2(){
-		return _ly2;
+	inline double ly_half(){
+		return _ly_half;
 	}
 
-	inline double lz2(){
-		return _lz2;
+	inline double lz_half(){
+		return _lz_half;
 	}
 
 	inline void np(int val){

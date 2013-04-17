@@ -361,9 +361,9 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double common_factor_i = -dot(nr_vec, (4*a0*a0*XG[0]*vi+ro*ro*XG[1]*vj)/6);
 	double common_factor_j = -dot(nr_vec, (4*a1*a1*XG[3]*vj+ro*ro*XG[2]*vi)/6);
-	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, -(n0n0_13+n1n1_13));
+	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
 	stresslet_i *= common_factor_i;
-	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, -(n0n0_13+n1n1_13));
+	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
 	stresslet_j *= common_factor_j;
 }
 
@@ -392,10 +392,10 @@ Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j)
 	double rororo = ro*ro*ro;
 	calcXM();
 	double common_factor_i = 5*(a0*a0*a0*XM[0]/3+rororo*XM[1]/24)*n0n2;
-	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13,	-(n0n0_13+n1n1_13));
+	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
 	stresslet_i *= common_factor_i;
 	double common_factor_j = 5*(a1*a1*a1*XM[3]/3+rororo*XM[2]/24)*n0n2;
-	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, -(n0n0_13+n1n1_13));
+	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
 	stresslet_j *= common_factor_j;
 }
 
@@ -481,9 +481,7 @@ void
 Interaction::addColloidalStress(){
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
-	stresslet colloidalstressletXF(nr_vec, F_colloidal);
-	sys->colloidalstressXF[par_num[0]] += a0*colloidalstressletXF;
-	sys->colloidalstressXF[par_num[1]] += a1*colloidalstressletXF;
+	colloidalstressletXF.set(r_vec, F_colloidal);
 	// Add term G*V_cont
 	stresslet stresslet_colloid_GU_i;
 	stresslet stresslet_colloid_GU_j;

@@ -226,7 +226,6 @@ System::calcStressesHydroContact(){
 void
 System::calcStress(){
 	static double previous_strain = 0;
-	//d_strain = strain()-previous_strain;
 	previous_strain = strain();
 	stressReset();
 	if (brownian) {
@@ -245,9 +244,13 @@ System::calcStress(){
 		total_contact_stressGU += contactstressGU[i];
 		total_contact_stressXF += contactstressXF[i];
 		total_colloidal_stressGU += colloidalstressGU[i];
-		total_colloidal_stressXF += colloidalstressXF[i];
 		if (brownian) {
 			total_brownian_stress += brownianstress[i];
+		}
+	}
+	for (int k=0; k<num_interaction; k++) {
+		if (interaction[k].active) {
+			total_colloidal_stressXF += interaction[k].getColloidalstressXF();
 		}
 	}
 	total_hydro_stress /= valSystemVolume();
@@ -255,11 +258,7 @@ System::calcStress(){
 	total_contact_stressXF /= valSystemVolume();
 	total_colloidal_stressGU /= valSystemVolume();
 	total_colloidal_stressXF /= valSystemVolume();
-	if (brownian) {
-		total_brownian_stress /= valSystemVolume();
-		stressBrownianReset();
-	}
+	total_brownian_stress /= valSystemVolume();
+	stressBrownianReset();
+	
 }
-
-
-

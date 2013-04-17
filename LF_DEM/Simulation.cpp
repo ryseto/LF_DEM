@@ -476,12 +476,12 @@ Simulation::evaluateData(){
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
-	Viscosity = total_stress.getViscosity();
-	Viscosity_h = sys.total_hydro_stress.getViscosity();
-	Viscosity_cont_XF = sys.total_contact_stressXF.getViscosity();
-	Viscosity_cont_GU = sys.total_contact_stressGU.getViscosity();
-	Viscosity_col_XF = sys.total_colloidal_stressXF.getViscosity();
-	Viscosity_col_GU = sys.total_colloidal_stressGU.getViscosity();
+	Viscosity = total_stress.getStressXZ();
+	Viscosity_h = sys.total_hydro_stress.getStressXZ();
+	Viscosity_cont_XF = sys.total_contact_stressXF.getStressXZ();
+	Viscosity_cont_GU = sys.total_contact_stressGU.getStressXZ();
+	Viscosity_col_XF = sys.total_colloidal_stressXF.getStressXZ();
+	Viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
 	N1 = total_stress.getNormalStress1();
 	N2 = total_stress.getNormalStress2();
 	//total_stress.elm[0]+total_stress.elm[4]+total_stress.elm[5] << endl;
@@ -579,13 +579,13 @@ Simulation::outputRheologyData(){
 vec3d
 Simulation::shiftUpCoordinate(double x, double y, double z){
 	if (origin_zero_flow) {
-		z += sys.lz2();
-		if (z > sys.lz2()) {
+		z += sys.lz_half();
+		if (z > sys.lz_half()) {
 			x -= sys.shear_disp;
-			if (x < - sys.lx2()) {
+			if (x < - sys.lx_half()) {
 				x += sys.lx();
 			}
-			z -=  sys.lz();
+			z -= sys.lz();
 		}
 	}
 	return vec3d(x,y,z);
@@ -610,9 +610,9 @@ Simulation::outputConfigurationData(){
 	pos.resize(np);
 	vel.resize(np);
 	for (int i=0; i < np; i++) {
-		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.lx2(),
-								   sys.position[i].y-sys.ly2(),
-								   sys.position[i].z-sys.lz2());
+		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.lx_half(),
+								   sys.position[i].y-sys.ly_half(),
+								   sys.position[i].z-sys.lz_half());
 	}
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
@@ -634,10 +634,10 @@ Simulation::outputConfigurationData(){
 		vec3d &p = pos[i];
 		vec3d &v = vel[i];
 		vec3d &o = sys.ang_velocity[i];
-		double h_xzstress = sys.lubstress[i].getViscosity()+ sys.bgfstress[i].getViscosity();
-		double c_xzstressXF = sys.contactstressXF[i].getViscosity();
-		double c_xzstressGU = sys.contactstressGU[i].getViscosity();
-		double b_xzstress = sys.brownianstress[i].getViscosity();
+		double h_xzstress = sys.lubstress[i].getStressXZ()+ sys.bgfstress[i].getStressXZ();
+		double c_xzstressXF = sys.contactstressXF[i].getStressXZ();
+		double c_xzstressGU = sys.contactstressGU[i].getStressXZ();
+		double b_xzstress = sys.brownianstress[i].getStressXZ();
 		fout_particle << i << sp; //1: number
 		fout_particle << sys.radius[i] << sp; //2: radius
 		fout_particle << p.x << sp << p.y << sp << p.z << sp; //3,4,5: position

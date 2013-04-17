@@ -174,6 +174,9 @@ public:
 		return *this;
 	}
 	
+	/*
+	 * Finite trace
+	 */
 	inline void
 	set(const double &_xx, const double &_xy, const double &_xz,
 		const double &_yz, const double &_yy, const double &_zz){
@@ -183,6 +186,30 @@ public:
 		elm[3] = _yz;
 		elm[4] = _yy;
 		elm[5] = _zz;
+	}
+	
+	/*
+	 * Traceless
+	 */
+	inline void
+	set(const double &_xx, const double &_xy, const double &_xz,
+		const double &_yz, const double &_yy){
+		elm[0] = _xx;
+		elm[1] = _xy;
+		elm[2] = _xz;
+		elm[3] = _yz;
+		elm[4] = _yy;
+		elm[5] = -(_xx+_yy);
+	}
+	
+	inline void
+	set(const vec3d &v1, const vec3d &v2){
+		elm[0] = v1.x*v2.x;
+		elm[1] = 0.5*(v1.x*v2.y+v1.y*v2.x);
+		elm[2] = 0.5*(v1.x*v2.z+v1.z*v2.x);
+		elm[3] = 0.5*(v1.y*v2.z+v1.z*v2.y);
+		elm[4] = v1.y*v2.y;
+		elm[5] = v1.z*v2.z;
 	}
 	
 	inline void
@@ -213,7 +240,7 @@ public:
 		return elm[5]-elm[4];
 	}
 	
-	double getViscosity(){
+	double getStressXZ(){
 		return elm[2];
 	}
 };

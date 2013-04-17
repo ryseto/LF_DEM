@@ -254,25 +254,25 @@ sub OutYaplotData{
 		#$force = $Fcol[$k];
 		#$force = $Fc_n[$k];
 		$force = $F_lub[$k];
-        if ($force < 0){
+        if ($force < -5){
 			$string_width = (-${force_factor})*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
     }
-	
+	printf OUT "y 4\n";
    printf OUT "@ 4\n";
    for ($k = 0; $k < $num_interaction; $k ++){
-	   if ($Fc_n[$k] > 0){
+	   if ($Fc_n[$k] > 1){
 		   $force = $Fc_n[$k] + $Fcol[$k];
 	   } else {
 		   $force = $F_lub[$k] + $Fcol[$k];
 	   }
-	   if ($force > 0){
+	   if ($force > 5){
 		   $string_width = ${force_factor}*${force};
 		   &OutString_width($int0[$k], $int1[$k]);
 	   }
     }
-	printf OUT "y 4\n";
+	printf OUT "y 5\n";
 	printf OUT "@ 5\n";
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$radius = $ContVelo[$k]/10;

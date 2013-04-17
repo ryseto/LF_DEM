@@ -27,8 +27,8 @@ private:
 	double volume_fraction2;
 	double lx_lz, ly_lz;
 	double lx, ly, lz;
-	double lx2, ly2, lz2;
-//	double number_ratio;
+	double lx_half, ly_half, lz_half;
+	//	double number_ratio;
 	double a1;
 	double a2;
 	vec3d *grad;

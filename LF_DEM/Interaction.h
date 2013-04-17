@@ -81,6 +81,8 @@ private:
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d F_colloidal;
+	stresslet colloidalstressletXF; //stress tensor of colloidal force
+	
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
 
@@ -153,6 +155,7 @@ public:
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
+	stresslet getColloidalstressXF(){return colloidalstressletXF;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   stresslet &stresslet_i, stresslet &stresslet_j);
 	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
