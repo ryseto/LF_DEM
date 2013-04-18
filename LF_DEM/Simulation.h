@@ -16,22 +16,17 @@
 class Simulation{
 private:
 	System sys;
-	string filename_addition;
+	string filename_;
 	int num_of_particle;
 	bool kn_kt_adjustment;
 	double shear_strain_end;
 	bool import_positions;
-	vector<vec3d> initial_positions;
-	vector<double> radii;
+	vector<vec3d> initial_position;
+	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;
 	double strain_interval_output_data;
 	double strain_interval_output;
-	/* Colloidal force parameter
-	 * A exp(-h/lambda)
-	 * cf_amp_dl0 = A/F_0 at shear rate = 1.0
-	 */
-	double cf_amp_dl0;
 	/*
 	 * Resultant data
 	 */
@@ -68,6 +63,8 @@ private:
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
+	/*
+	 */
 	void timeEvolution();
 	void evaluateData();
 	/*

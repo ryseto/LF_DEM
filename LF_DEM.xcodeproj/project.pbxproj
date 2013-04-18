@@ -60,7 +60,6 @@
 		D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libkokkosnodetsqr.dylib; path = /usr/local/lib/libkokkosnodetsqr.dylib; sourceTree = "<absolute>"; };
 		D932B8EA16C2F60200AD6E85 /* libifpack.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libifpack.dylib; path = /usr/local/lib/libifpack.dylib; sourceTree = "<absolute>"; };
 		D932B8EC16C2F71400AD6E85 /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = /usr/local/lib/libamd.2.3.1.a; sourceTree = "<absolute>"; };
-		D938135C16B572A8006F1CAC /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
@@ -222,7 +221,6 @@
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
-				D938135C16B572A8006F1CAC /* common.h */,
 				D97C3B07167690DC009A6BF0 /* Interaction.cpp */,
 				D97C3B08167690DC009A6BF0 /* Interaction.h */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,

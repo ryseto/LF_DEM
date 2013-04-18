@@ -64,10 +64,20 @@ sub InParticles {
     ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
 	
 	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
+	# 1: number of the particle
+	# 2: radius
+	# 3, 4, 5: position
+	# 6, 7, 8: velocity
+	# 9, 10, 11: angular velocity
+	# 12: viscosity contribution of lubrication
+	# 13: viscosity contributon of contact GU xz
+	# 14: viscosity contributon of brownian xz
+	# (15: angle for 2D simulation)
+
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
         ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-		$h_xzstress, $c_xzstressXF, $c_xzstressGU, $b_xzstress,  $angle ) = split(/\s+/, $line);
+		$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;
@@ -131,17 +141,30 @@ sub InInteractions {
 	}
 	printf OUTG "$shear_rate\n";
 	
+	# 1, 2: numbers of the interacting particles
+	# 3: 1=contact, 0=apart
+	# 4, 5, 6: normal vector
+	# 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
+	# 8: lubrication force
+	# 9: Normal part of contact force
+	# 10: Tangential part of contact force
+	# 11: Colloidal force
+	# 12: Viscosity contribution of contact xF
+	# 13: N1 contribution of contact xF
+	# 14: N2 contribution of contact xF
+	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $f_lub, $fcol, $fc_n, $fc_tx, $fc_ty, $fc_tz,
-		$nx, $ny, $nz, $gap, $sxz_lub, $contact) = split(/\s+/, $line);
+		($i, $j, $contact, $nx, $ny, $nz,
+		$gap, $f_lub, $fc_n, $fc_tan, $fcol,
+		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF) = split(/\s+/, $line);
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$F_lub[$k] = $f_lub;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
-		$Ft_t[$k] = sqrt(($fc_tx)**2 + ($fc_ty)**2 + ($fc_tz)**2) ;
+		$Ft_t[$k] = $fc_t;
 		$Fcol[$k] = $fcol;
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;

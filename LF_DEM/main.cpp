@@ -15,7 +15,10 @@ int main(int argc, const char * argv[])
 	if (argc == 1){
 		cerr << "usage:" << endl;
 		cerr << "(1) Simulation" << endl;
-		cerr << "  $ LF_DEM POSITIONFILE PARAMETERFILE SHEAR-RATE" << endl;
+		cerr << "  $ LF_DEM ARG1 ARG2 ARG3" << endl;
+		cerr << " ARG1: file name of initial configuration" << endl;
+		cerr << " ARG2: parameter file" << endl;
+		cerr << " ARG3: dimensionless shear rate" << endl;
 		cerr << "(2) Generate initial configuration" << endl;
 		cerr << "  $ LF_DEM g" << endl;
 		return 0;

@@ -75,7 +75,6 @@ private:
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
-	
 protected:
 public:
 	System();
@@ -127,8 +126,6 @@ public:
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	double diag_stokes_drag;
 	double bgf_factor;
-
-	
 	int num_interaction;
 	double d_strain;
 	/*
@@ -179,9 +176,7 @@ public:
 	bool draw_rotation_2d;
 	string simu_name;
 	ofstream fout_int_data;
-//	
 	double total_energy;
-	
 	
 	void setSystemVolume();
 	void setupSystemForGenerateInit();
@@ -191,7 +186,6 @@ public:
 	void timeEvolution(double strain_interval);
 	void timeEvolutionRelax(int time_step);
 	void displacement(int i, const vec3d &dr);
-
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions();
@@ -220,7 +214,6 @@ public:
 	void adjustContactModelParameters(int nb_average);
 //	void adjustTimeStep();
 	void calcTotalPotentialEnergy();
-
 	void setupShearFlow(bool activate){
 		if (activate) {
 			vel_difference = _lz;
