@@ -12,11 +12,9 @@ BoxSet::init(double interaction_dist, System *sys_){
 	double xratio = sys->lx()/interaction_dist;
 	double yratio = sys->ly()/interaction_dist;
 	double zratio = sys->lz()/interaction_dist;
-	
 	x_box_nb = (int)xratio;
 	y_box_nb = (int)yratio;
 	z_box_nb = (int)zratio;
-	
 	if (x_box_nb == 0) {
 		x_box_nb = 1;
 		box_xsize = sys->lx();

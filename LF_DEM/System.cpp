@@ -50,8 +50,6 @@ System::~System(){
 
 void
 System::allocateRessources(){
-	position = new vec3d [_np];
-	radius = new double [_np];
 	radius_cubic = new double [_np];
 	angle = new double [_np];
 	velocity = new vec3d [_np];
@@ -79,12 +77,6 @@ System::allocateRessources(){
 	v_cont = new double [linalg_size];
 	v_hydro = new double [linalg_size];
 	v_colloidal = new double [linalg_size];
-	for (int i=0; i<linalg_size; i++) {
-		v_lub_cont[i] = 0;
-		v_cont[i] = 0;
-		v_hydro[i] = 0;
-		v_colloidal[i] = 0;
-	}
 	if (brownian) {
 	    v_Brownian_init = new double [linalg_size];
 	    v_Brownian_mid = new double [linalg_size];
@@ -139,10 +131,34 @@ System::setupSystemForGenerateInit(){
 	checkNewInteraction();
 }
 
+void
+System::allocatePositionRadius(){
+	position = new vec3d [_np];
+	radius = new double [_np];
+}
 
 void
-System::setupSystem(const vector<vec3d> &initial_positions,
-					const vector<double> &radii){
+System::setConfiguration(const vector <vec3d> &initial_positions,
+						 const vector <double> &radii,
+						 double lx_, double ly_, double lz_,
+						 double volume_fraction_){
+	np(initial_positions.size());
+	setBoxSize(lx_, ly_, lz_);
+	allocatePositionRadius();
+	volume_fraction = volume_fraction_;
+	for (int i=0; i<_np; i++) {
+		position[i] = initial_positions[i];
+		radius[i] = radii[i];
+	}
+	if (ly_ == 0) {
+		dimension = 2;
+	} else {
+		dimension = 3;
+	}
+}
+
+void
+System::setupSystem(){
 	if (kb_T == 0) {
 		brownian = false;
 	} else {
@@ -170,19 +186,21 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 		cerr << "No colloidal force" << endl;
 	}
 	allocateRessources();
-	for (int i=0; i<_np; i++) {
-		position[i] = initial_positions[i];
-		radius[i] = radii[i];
-		radius_cubic[i] = radius[i]*radius[i]*radius[i];
-		angle[i] = 0;
-	}
 	for (int k=0; k<maxnum_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].label = k;
 	}
 	for (int i=0; i<_np; i++) {
+		radius_cubic[i] = radius[i]*radius[i]*radius[i];
+		angle[i] = 0;
 		velocity[i].set(position[i].z, 0, 0);
 		ang_velocity[i].set(0, 0.5, 0);
+	}
+	for (int i=0; i<linalg_size; i++) {
+		v_lub_cont[i] = 0;
+		v_cont[i] = 0;
+		v_hydro[i] = 0;
+		v_colloidal[i] = 0;
 	}
 	shear_strain = 0;
 	shear_disp = 0;
@@ -208,7 +226,6 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
 	 * ASD code from Brady has dt_ratio=150
 	 */
-	//dt_mid = dt/dt_ratio; // UNUSED NOW: ALGO EQUIVALENT TO dt_ratio = 1 (Melrose & Ball 1997)
 	stokes_solver.initialize();
 	// initialize the brownian force after the solver, as it assumes
 	// the cholmod_common of the solver is already initialized

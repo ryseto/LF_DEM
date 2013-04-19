@@ -27,8 +27,12 @@ private:
 	double volume_fraction2;
 	double lx_lz;
 	double ly_lz;
-	double lx, ly, lz;
-	double lx_half, ly_half, lz_half;
+	double lx;
+	double ly;
+	double lz;
+	double lx_half;
+	double ly_half;
+	double lz_half;
 	double a1;
 	double a2;
 	vec3d *grad;
@@ -57,8 +61,6 @@ private:
 	void setParameters(int argc, const char * argv[]);
 	void setSystemParameters();
 	void outputPositionData();
-	void outputPositionData(vector<vec3d> &positions,
-							vector<double> &radii);
 public:
 	GenerateInitConfig(){};
 	int generate(int argc, const char * argv[]);

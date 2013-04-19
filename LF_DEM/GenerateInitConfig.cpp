@@ -19,9 +19,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	setParameters(argc, argv);
 	sys.np(np);
 	sys.allocateRessources();
-	sys.lx(lx);
-	sys.ly(ly);
-	sys.lz(lz);
+	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume();
 	sys.volume_fraction = volume_fraction;
 	sys.lub_max = 2.5;
@@ -63,22 +61,15 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 		}
 		count ++;
 	} while (abs(diff_energy) > 0.01);
-
-	//sys.setupSystem(initial_positions, radii);
-	//	outputDataHeader(fout_particle);
-	//	outputConfigurationData();
-	
-	vector<vec3d> positions;
-	vector<double> radii;
-	positions.resize(sys.np());
-	radii.resize(sys.np());
+	position.resize(np);
+	radius.resize(np);
 	for (int i=0; i<sys.np(); i++) {
-		positions[i] = sys.position[i];
-		radii[i] = sys.radius[i];
+		position[i] = sys.position[i];
+		radius[i] = sys.radius[i];
 	}
 	Simulation simulation;
-	simulation.RelaxationZeroShear(positions, radii, lx, ly, lz);
-	outputPositionData(positions, radii);
+	simulation.RelaxationZeroShear(position, radius, lx, ly, lz, volume_fraction);
+	outputPositionData();
 	
 	delete [] grad;
 	delete [] prev_grad;
@@ -87,8 +78,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 }
 
 void
-GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
-									   vector<double> &radii){
+GenerateInitConfig::outputPositionData(){
 	ofstream fout;
 	ostringstream ss_posdatafilename;
 	ss_posdatafilename << "D" << dimension;
@@ -121,10 +111,10 @@ GenerateInitConfig::outputPositionData(vector<vec3d> &positions,
 	fout << lx << ' ' << ly << ' ' << lz << ' ';
 	fout << volume_fraction1 << ' ' << volume_fraction2 << endl;
 	for (int i = 0; i < np; i++) {
-		fout << positions[i].x << ' ';
-		fout << positions[i].y << ' ';
-		fout << positions[i].z << ' ';
-		fout << radii[i] << endl;
+		fout << position[i].x << ' ';
+		fout << position[i].y << ' ';
+		fout << position[i].z << ' ';
+		fout << radius[i] << endl;
 	}
 	fout.close();
 }
@@ -236,6 +226,7 @@ GenerateInitConfig::gradientDescent(){
 
 void
 GenerateInitConfig::putRandom(){
+	sys.allocatePositionRadius();
 	rand_gen.seed(rand_seed);
 	for (int i=0; i < np; i++) {
 		sys.position[i].x = lx*RANDOM;

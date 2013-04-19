@@ -179,9 +179,13 @@ public:
 	double total_energy;
 	
 	void setSystemVolume();
+	void setConfiguration(const vector <vec3d> &initial_positions,
+						  const vector <double> &radii,
+						  double lx_, double ly_, double lz_,
+						  double volume_fraction_);
 	void setupSystemForGenerateInit();
-	void setupSystem(const vector <vec3d> &initial_positions,
-					 const vector <double> &radii);
+	void setupSystem();
+	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(double strain_interval);
 	void timeEvolutionRelax(int time_step);
@@ -212,7 +216,6 @@ public:
 	set <int> *interaction_partners;
 	void openFileInteractionData();
 	void adjustContactModelParameters(int nb_average);
-//	void adjustTimeStep();
 	void calcTotalPotentialEnergy();
 	void setupShearFlow(bool activate){
 		if (activate) {
@@ -222,19 +225,14 @@ public:
 		}
 	}
 	/*************************************************************/
-	inline void lx(double length){
-		_lx = length;
+	inline void setBoxSize(double lx_, double ly_, double lz_){
+		_lx = lx_;
 		_lx_half = 0.5*_lx;
-	}
-
-	inline void ly(double length){
-		_ly = length;
+		_ly = ly_;
 		_ly_half = 0.5*_ly;
-	}
-
-	inline void lz(double length){
-		_lz = length;
+		_lz = lz_;
 		_lz_half = 0.5*_lz;
+		cerr << "box: " << _lx << ' ' << _ly << ' ' << _lz << endl;
 	}
 
 	inline void setRadiusMax(double _radius_max){

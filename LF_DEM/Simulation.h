@@ -17,10 +17,8 @@ class Simulation{
 private:
 	System sys;
 	string filename_;
-	int num_of_particle;
 	bool kn_kt_adjustment;
 	double shear_strain_end;
-	bool import_positions;
 	vector<vec3d> initial_position;
 	vector<double> radius;
 	string filename_import_positions;
@@ -30,30 +28,30 @@ private:
 	/*
 	 * Resultant data
 	 */
-	double Viscosity;
-	double N1;
-	double N2;
-	double Viscosity_h;
-	double N1_h;
-	double N2_h;
-	double Viscosity_cont_XF;
-	double N1_cont_XF;
-	double N2_cont_XF;
-	double Viscosity_friction; // Fc_tan contribution.
-	double N1_friction;
-	double N2_friction;
-	double Viscosity_cont_GU;
-	double N1_cont_GU;
-	double N2_cont_GU;
-	double Viscosity_col_XF;
-	double N1_col_XF;
-	double N2_col_XF;
-	double Viscosity_col_GU;
-	double N1_col_GU;
-	double N2_col_GU;
-	double Viscosity_brownian;
-	double N1_brownian;
-	double N2_brownian;
+	double viscosity;
+	double normalstress_diff_1;
+	double normalstress_diff_2;
+	double viscosity_hydro;
+	double normalstress_diff_1_hydro;
+	double normalstress_diff_2_hydro;
+	double viscosity_cont_XF;
+	double normalstress_diff_1_cont_XF;
+	double normalstress_diff_2_cont_XF;
+	double viscosity_friction; // Fc_tan contribution.
+	double normalstress_diff_1_friction;
+	double normalstress_diff_2_friction;
+	double viscosity_cont_GU;
+	double normalstress_diff_1_cont_GU;
+	double normalstress_diff_2_cont_GU;
+	double viscosity_col_XF;
+	double normalstress_diff_1_col_XF;
+	double normalstress_diff_2_col_XF;
+	double viscosity_col_GU;
+	double normalstress_diff_1_col_GU;
+	double normalstress_diff_2_col_GU;
+	double viscosity_brownian;
+	double normalstress_diff_1_brownian;
+	double normalstress_diff_2_brownian;
 	/*
 	 * For output data.
 	 */
@@ -80,10 +78,7 @@ private:
 	/*
 	 * For outputs
 	 */
-	void output_yap();
-	void output_vel();
 	void outputDataHeader(ofstream &fout);
-	void initContactPair();
 	void outputRheologyData();
 	void outputConfigurationData();
 	vec3d shiftUpCoordinate(double x, double y, double z);
@@ -93,8 +88,8 @@ public:
 	Simulation();
 	~Simulation();
 	void SimulationMain(int argc, const char * argv[]);
-	void RelaxationZeroShear(vector<vec3d> &positions,
-							  vector<double> &radii,
-							  double lx, double ly, double lz);
+	void RelaxationZeroShear(vector<vec3d> &position_,
+							  vector<double> &radius_,
+							  double lx_, double ly_, double lz_, double volume_fraction_);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

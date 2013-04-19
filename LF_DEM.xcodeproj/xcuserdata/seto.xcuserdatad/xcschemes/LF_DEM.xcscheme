@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/benchmark"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/tmp"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
