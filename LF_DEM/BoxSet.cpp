@@ -5,35 +5,35 @@ using namespace std;
 void
 BoxSet::init(double interaction_dist, System *sys_){
 	sys = sys_;
-	boxMap = new Box* [sys->np()];
-	for (int i=0; i<sys->np(); i++) {
+	boxMap = new Box* [sys->Np()];
+	for (int i=0; i<sys->Np(); i++) {
 		boxMap[i] = NULL;
 	}
-	double xratio = sys->lx()/interaction_dist;
-	double yratio = sys->ly()/interaction_dist;
-	double zratio = sys->lz()/interaction_dist;
+	double xratio = sys->Lx()/interaction_dist;
+	double yratio = sys->Ly()/interaction_dist;
+	double zratio = sys->Lz()/interaction_dist;
 	x_box_nb = (int)xratio;
 	y_box_nb = (int)yratio;
 	z_box_nb = (int)zratio;
 	if (x_box_nb == 0) {
 		x_box_nb = 1;
-		box_xsize = sys->lx();
+		box_xsize = sys->Lx();
 	}
 	if (y_box_nb == 0) {
 		y_box_nb = 1;
-		box_ysize = sys->ly();
+		box_ysize = sys->Ly();
 	}
 	if (z_box_nb == 0) {
 		z_box_nb = 1;
-		box_zsize = sys->lz();
+		box_zsize = sys->Lz();
 	}
 	
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
 		cerr << "boxing useless: a neighborhood is the whole system" << endl;
 		_is_boxed = false;
-		box_xsize = sys->lx();
-		box_ysize = sys->ly();
-		box_zsize = sys->lz();
+		box_xsize = sys->Lx();
+		box_ysize = sys->Ly();
+		box_zsize = sys->Lz();
 		box_xsize_half = 0.5*box_xsize;
 		box_ysize_half = 0.5*box_ysize;
 		box_zsize_half = 0.5*box_zsize;
@@ -54,9 +54,9 @@ BoxSet::init(double interaction_dist, System *sys_){
 		(Boxes[0])->neigh_nb(0);
 	} else {
 		_is_boxed = true;
-		box_xsize = sys->lx()/x_box_nb;
-		box_ysize = sys->ly()/y_box_nb;
-		box_zsize = sys->lz()/z_box_nb;
+		box_xsize = sys->Lx()/x_box_nb;
+		box_ysize = sys->Ly()/y_box_nb;
+		box_zsize = sys->Lz()/z_box_nb;
 		box_xsize_half = 0.5*box_xsize;
 		box_ysize_half = 0.5*box_ysize;
 		box_zsize_half = 0.5*box_zsize;

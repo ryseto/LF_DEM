@@ -32,20 +32,23 @@ class BoxSet;
 
 class System{
 private:
-	int _np;
+	int np;
 	int np3;
 	int maxnum_interactionpair;
 	BoxSet boxset;
-	double _lx;
-	double _ly;
-	double _lz;
-	double _lx_half; // =lx/2
-	double _ly_half; // =ly/2
-	double _lz_half; // =lz/2
+	double lx;
+	double ly;
+	double lz;
+	double lx_half; // =lx/2
+	double ly_half; // =ly/2
+	double lz_half; // =lz/2
 	double system_volume;
 	double radius_max;
 	double sq_lub_max;
 	double shear_strain;
+	double kn;
+	double kt;
+	double lub_max;
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -115,9 +118,7 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
-	double kn;
-	double kt;
-	double lub_max;
+	
 	double lub_coeff_contact;
 	double mu_static; // static friction coefficient.
 	bool friction;
@@ -219,69 +220,93 @@ public:
 	void calcTotalPotentialEnergy();
 	void setupShearFlow(bool activate){
 		if (activate) {
-			vel_difference = _lz;
+			vel_difference = lz;
 		} else {
 			vel_difference = 0;
 		}
 	}
 	/*************************************************************/
 	inline void setBoxSize(double lx_, double ly_, double lz_){
-		_lx = lx_;
-		_lx_half = 0.5*_lx;
-		_ly = ly_;
-		_ly_half = 0.5*_ly;
-		_lz = lz_;
-		_lz_half = 0.5*_lz;
-		cerr << "box: " << _lx << ' ' << _ly << ' ' << _lz << endl;
+		lx = lx_;
+		lx_half = 0.5*lx;
+		ly = ly_;
+		ly_half = 0.5*ly;
+		lz = lz_;
+		lz_half = 0.5*lz;
+		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
 
-	inline void setRadiusMax(double _radius_max){
+	inline void Radius_max(double _radius_max){
 		radius_max = _radius_max;
 	}
 
-	inline double valSystemVolume(){
+	inline double System_volume(){
 		return system_volume;
 	}
 	
 	double getParticleContactNumber(){
-		return (double)2*contact_nb/_np;
+		return (double)2*contact_nb/np;
 	}
 	
-	inline double lx(){
-		return _lx;
+	inline double Lx(){
+		return lx;
 	}
 
-	inline double ly(){
-		return _ly;
+	inline double Ly(){
+		return ly;
 	}
 
-	inline double lz(){
-		return _lz;
+	inline double Lz(){
+		return lz;
 	}
 
-	inline double lx_half(){
-		return _lx_half;
+	inline double Lx_half(){
+		return lx_half;
 	}
 
-	inline double ly_half(){
-		return _ly_half;
+	inline double Ly_half(){
+		return ly_half;
 	}
 
-	inline double lz_half(){
-		return _lz_half;
+	inline double Lz_half(){
+		return lz_half;
 	}
 
-	inline void np(int val){
-		_np = val;
-		np3 = 3*_np;
+	inline void Np(int val){
+		np = val;
+		np3 = 3*np;
 	}
 
-	inline int np(){
-		return _np;
+	inline int Np(){
+		return np;
 	}
 
-	inline double strain(){
+	inline double Shear_strain(){
 		return shear_strain;
+	}
+	
+	inline void Kn(double val){
+		kn = val;
+	}
+
+	inline double Kn(){
+		return kn;
+	}
+
+	inline void Kt(double val){
+		kt = val;
+	}
+	
+	inline double Kt(){
+		return kt;
+	}
+	
+	inline void Lub_max(double val){
+		lub_max = val;
+	}
+	
+	inline double Lub_max(){
+		return 	lub_max;
 	}
 	
 };

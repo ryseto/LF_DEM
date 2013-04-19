@@ -26,9 +26,13 @@ private:
 	 *********************************/
 	System *sys;
 	//======= relative position/velocity data  =========//
-	double _r; // center-center distance
+	double r; // center-center distance
+	double a0; // radii
+	double a1; // second raddi > a0
+	double ro; // ro = a0+a1;
+	double ro_half; // = ro/2
 	int zshift;
-	double _gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
+	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
 	vec3d r_vec; // normal vector
 	vec3d contact_velocity;
@@ -62,8 +66,8 @@ private:
 	double invlambda; // a0/a1
 	
 	//======= relative position/velocity  ========//
-	void r(const double &new_r);
-	void calcDistanceNormalVector();
+//	void set_r(const double &_r);
+	void setNormalVectorDistanceGap();
 	void calcContactVelocity();
 	void calcContactVelocity_predictor();
 	void calcContactVelocity_corrector();
@@ -114,16 +118,29 @@ public:
 	partner(int i){
 		return (i == par_num[0] ? par_num[1] : par_num[0]);
 	}
-	double a0; // radii
-	double a1; // second raddi > a0
-	double ro; // ro = a0 + a1
-	double ro_2; // = ro/2
-	int label;
 	
+	int label;
+
+	inline double get_a0(){
+		return a0;
+	}
+	
+	inline double get_a1(){
+		return a1;
+	}
+	
+	inline void Ro(double val){
+		ro = val;
+		ro_half = 0.5*ro;
+	}; // ro = a0 + a1
+
+	inline double Ro(){
+		return ro;
+	}
 	//======= relative position/velocity  ========//
 	vec3d nr_vec; // vector center to center
-	inline double r(){return _r;}
-	inline double gap_nondim(){return _gap_nondim;}
+	inline double R(){return r;}
+	inline double Gap_nondim(){return gap_nondim;}
 	
 	//======= internal state =====================//
 	bool active;

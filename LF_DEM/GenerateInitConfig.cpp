@@ -17,12 +17,12 @@ using namespace std;
 int
 GenerateInitConfig::generate(int argc, const char * argv[]){
 	setParameters(argc, argv);
-	sys.np(np);
+	sys.Np(np);
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume();
 	sys.volume_fraction = volume_fraction;
-	sys.lub_max = 2.5;
+	sys.Lub_max(2.5);
 	sys.in_predictor = false;
 	putRandom();
 	sys.setupSystemForGenerateInit();
@@ -63,7 +63,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	} while (abs(diff_energy) > 0.01);
 	position.resize(np);
 	radius.resize(np);
-	for (int i=0; i<sys.np(); i++) {
+	for (int i=0; i<sys.Np(); i++) {
 		position[i] = sys.position[i];
 		radius[i] = sys.radius[i];
 	}
@@ -136,8 +136,8 @@ GenerateInitConfig::computeGradient(){
 		if (sys.interaction[k].contact) {
 			i = sys.interaction[k].par_num[0];
 			j = sys.interaction[k].par_num[1];
-			r = sys.interaction[k].r();
-			rcont = sys.interaction[k].ro;
+			r = sys.interaction[k].R();
+			rcont = sys.interaction[k].Ro();
 			nr_vec = sys.interaction[k].nr_vec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
@@ -242,7 +242,7 @@ GenerateInitConfig::putRandom(){
 			sys.radius[i] = a2;
 		}
 	}
-	sys.setRadiusMax(a2);
+	sys.Radius_max(a2);
 }
 
 void
@@ -266,7 +266,7 @@ GenerateInitConfig::overlapNumber(int i){
 	int overlaps = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
-		if ((*it)->r() < (*it)->ro) {
+		if ((*it)->R() < (*it)->Ro()) {
 			overlaps++;
 		}
 	}
@@ -278,8 +278,8 @@ GenerateInitConfig::particleEnergy(int i){
 	double energy = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
-		double r = (*it)->r();
-		double rcont = (*it)->ro;
+		double r = (*it)->R();
+		double rcont = (*it)->Ro();
 		if (r < rcont) {
 			double amp = (r/rcont-1); // negative
 			energy += 2*amp*amp;
@@ -445,7 +445,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
-	sys.np(np);
+	sys.Np(np);
 }
 
 void
@@ -482,7 +482,7 @@ GenerateInitConfig::setSystemParameters(){
 	 * We should give suffiently larger value.
 	 * The value 3 or 3.5 should be better (To be checked.)
 	 */
-	sys.lub_max = 2.5;
+	sys.Lub_max(2.5);
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -515,7 +515,7 @@ GenerateInitConfig::setSystemParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	sys.kn = 5000;
+	sys.Kn(5000);
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
 	/*

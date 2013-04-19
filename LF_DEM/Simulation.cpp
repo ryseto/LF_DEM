@@ -46,14 +46,14 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 		sys.timeEvolution(strain_interval_output_data);
 		evaluateData();
 		outputRheologyData();
-		if (sys.strain() >= strain_next_config_out) {
+		if (sys.Shear_strain() >= strain_next_config_out) {
 			outputConfigurationData();
-			strain_next_config_out = sys.strain()+strain_interval_output-1e-6;
+			strain_next_config_out = sys.Shear_strain()+strain_interval_output-1e-6;
 		}
 		if (kn_kt_adjustment) {
 			sys.adjustContactModelParameters(10);
 		}
-		cerr << "strain: " << sys.strain() << endl;
+		cerr << "strain: " << sys.Shear_strain() << endl;
 	} while (strain_next_config_out < shear_strain_end);
 }
 
@@ -65,7 +65,7 @@ Simulation::RelaxationZeroShear(vector<vec3d> &position_,
 	setDefaultParameters();
 	sys.integration_method = 0;
 	sys.dt = 1e-4;
-	sys.kn = 2000;
+	sys.Kn(2000);
 	sys.mu_static = 0;
 	sys.dimensionless_shear_rate = 1;
 	sys.colloidalforce_length = 0.05; // dimensionless
@@ -78,7 +78,7 @@ Simulation::RelaxationZeroShear(vector<vec3d> &position_,
 		sys.timeEvolutionRelax(i_time_interval);
 		evaluateData();
 		sys.calcTotalPotentialEnergy();
-		cout << sys.strain() << ' ' << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
+		cout << sys.Shear_strain() << ' ' << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
 		cerr << energy_previous-sys.total_energy << endl;
 		if (sys.min_gap_nondim > 0 &&
 			energy_previous-sys.total_energy < 0.01) {
@@ -87,7 +87,7 @@ Simulation::RelaxationZeroShear(vector<vec3d> &position_,
 		}
 		energy_previous = sys.total_energy;
 	}
-	for (int i=0; i<sys.np(); i++) {
+	for (int i=0; i<sys.Np(); i++) {
 		position_[i] = sys.position[i];
 	}
 }
@@ -141,11 +141,11 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "integration_method") {
 		sys.integration_method = atof(value.c_str());
 	} else if (keyword == "lub_max") {
-		sys.lub_max = atof(value.c_str());
+		sys.Lub_max(atof(value.c_str()));
 	} else if (keyword == "kn") {
-		sys.kn = atof(value.c_str());
+		sys.Kn(atof(value.c_str()));
 	} else if (keyword == "kt") {
-		sys.kt = atof(value.c_str());
+		sys.Kt(atof(value.c_str()));
 	} else if (keyword == "mu_static") {
 		sys.mu_static = atof(value.c_str()) ;
 	} else if (keyword == "strain_interval_out") {
@@ -266,7 +266,7 @@ Simulation::setDefaultParameters(){
 	 * We should give suffiently larger value. 
 	 * The value 3 or 3.5 should be better (To be checked.)
 	 */
-	sys.lub_max = 2.5;
+	sys.Lub_max(2.5);
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -299,8 +299,8 @@ Simulation::setDefaultParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	sys.kn = 5000;
-	sys.kt = 1000;
+	sys.Kn(5000);
+	sys.Kt(1000);
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
 	/*
@@ -479,7 +479,7 @@ Simulation::outputRheologyData(){
 	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
 	 *
 	 */
-	fout_rheo << sys.strain() << ' '; //1
+	fout_rheo << sys.Shear_strain() << ' '; //1
 	fout_rheo << 6*M_PI*viscosity << ' '; //2
 	fout_rheo << 6*M_PI*normalstress_diff_1 << ' '; //3
 	fout_rheo << 6*M_PI*normalstress_diff_2 << ' '; //4
@@ -513,21 +513,21 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.max_contact_velo_normal << ' '; //32
 	fout_rheo << sys.max_contact_velo_tan << ' '; //33
 	fout_rheo << sys.getParticleContactNumber() << ' '; //34
-	fout_rheo << sys.kn << ' '; //35
-	fout_rheo << sys.kt << ' '; //36
+	fout_rheo << sys.Kn() << ' '; //35
+	fout_rheo << sys.Kt() << ' '; //36
 	fout_rheo << endl;
 }
 
 vec3d
 Simulation::shiftUpCoordinate(double x, double y, double z){
 	if (origin_zero_flow) {
-		z += sys.lz_half();
-		if (z > sys.lz_half()) {
+		z += sys.Lz_half();
+		if (z > sys.Lz_half()) {
 			x -= sys.shear_disp;
-			if (x < -sys.lx_half()) {
-				x += sys.lx();
+			if (x < -sys.Lx_half()) {
+				x += sys.Lx();
 			}
-			z -= sys.lz();
+			z -= sys.Lz();
 		}
 	}
 	return vec3d(x,y,z);
@@ -535,24 +535,24 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 
 void
 Simulation::outputDataHeader(ofstream &fout){
-	fout << "np " << sys.np() << endl;
+	fout << "np " << sys.Np() << endl;
 	fout << "VF " << sys.volume_fraction << endl;
-	fout << "Lx " << sys.lx() << endl;
-	fout << "Ly " << sys.ly() << endl;
-	fout << "Lz " << sys.lz() << endl;
+	fout << "Lx " << sys.Lx() << endl;
+	fout << "Ly " << sys.Ly() << endl;
+	fout << "Lz " << sys.Lz() << endl;
 }
 
 void
 Simulation::outputConfigurationData(){
 	vector<vec3d> pos;
 	vector<vec3d> vel;
-	int np = sys.np();
+	int np = sys.Np();
 	pos.resize(np);
 	vel.resize(np);
 	for (int i=0; i < np; i++) {
-		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.lx_half(),
-								   sys.position[i].y-sys.ly_half(),
-								   sys.position[i].z-sys.lz_half());
+		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
+								   sys.position[i].y-sys.Ly_half(),
+								   sys.position[i].z-sys.Lz_half());
 	}
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
@@ -561,14 +561,14 @@ Simulation::outputConfigurationData(){
 		for (int i=0; i < np; i++) {
 			vel[i] = sys.velocity[i];
 			if (pos[i].z < 0) {
-				vel[i].x -= sys.lz();
+				vel[i].x -= sys.Lz();
 			}
 		}
 	}
 	/*
 	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
-	fout_particle << "# " << sys.strain() << ' ';
+	fout_particle << "# " << sys.Shear_strain() << ' ';
 	fout_particle << sys.shear_disp << ' ';
 	fout_particle << sys.dimensionless_shear_rate << endl;
 	for (int i=0; i < np; i++) {
@@ -607,7 +607,7 @@ Simulation::outputConfigurationData(){
 			cnt_interaction++;
 		}
 	}
-	fout_interaction << "# " << sys.strain();
+	fout_interaction << "# " << sys.Shear_strain();
 	fout_interaction << ' ' << cnt_interaction << endl;
 	for (int k=0; k<sys.num_interaction; k++) {
 		if (sys.interaction[k].active) {
@@ -631,7 +631,7 @@ Simulation::outputConfigurationData(){
 			fout_interaction << ' ' << sys.interaction[k].nr_vec.x; // 4
 			fout_interaction << ' ' << sys.interaction[k].nr_vec.y; // 5
 			fout_interaction << ' ' << sys.interaction[k].nr_vec.z; // 6
-			fout_interaction << ' ' << sys.interaction[k].gap_nondim(); // 7
+			fout_interaction << ' ' << sys.interaction[k].Gap_nondim(); // 7
 			fout_interaction << ' ' << sys.interaction[k].getLubForce(); // 8
 			fout_interaction << ' ' << sys.interaction[k].getFcNormal(); // 9
 			fout_interaction << ' ' << sys.interaction[k].getFcTan_norm(); // 10

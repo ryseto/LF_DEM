@@ -14,27 +14,30 @@ Interaction::init(System *sys_){
 	active = false;
 }
 
-void
-Interaction::r(const double &new_r){
-	_r = new_r;
-	_gap_nondim = _r/ro_2-2; // = h/ro_2
-	if (_gap_nondim > 0) {
-		lub_coeff = 1/(_gap_nondim+sys->lub_reduce_parameter);
-	}
-}
+//void
+//Interaction::set_r(const double &val){
+//	r = val;
+//	gap_nondim = r/ro_half-2;
+//	if (gap_nondim > 0) {
+//		lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
+//	}
+//}
 
 /* Make a normal vector
  * Periodic boundaries are checked for all partices.
  * vector from particle 0 to particle 1. ( i --> j)
  * pd_z : Periodic boundary condition
  */
-
 void
-Interaction::calcDistanceNormalVector(){
+Interaction::setNormalVectorDistanceGap(){
 	r_vec = sys->position[par_num[1]]-sys->position[par_num[0]];
 	sys->periodize_diff(r_vec, zshift);
-	r(r_vec.norm());
-	nr_vec = r_vec/_r;
+	r = r_vec.norm();
+	nr_vec = r_vec/r;
+	gap_nondim = r/ro_half-2;
+	if (gap_nondim > 0) {
+		lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
+	}
 }
 
 /* Activate interaction between particles i and j.
@@ -58,11 +61,10 @@ Interaction::activate(int i, int j){
 	sys->interaction_partners[j].insert(i);
 	a0 = sys->radius[par_num[0]];
 	a1 = sys->radius[par_num[1]];
-	ro = a0+a1;
-	ro_2 = ro/2;
-	r_lub_max = ro_2*sys->lub_max;
-	kn_scaled = ro_2*ro_2*sys->kn; // F = kn_scaled * _gap_nondim;  <-- gap is scaled
-	kt_scaled = ro_2*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+	Ro(a0+a1); // ro=a0+a1
+	r_lub_max = ro_half*sys->Lub_max();
+	kn_scaled = ro_half*ro_half*sys->Kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+	kt_scaled = ro_half*sys->Kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -78,14 +80,14 @@ Interaction::activate(int i, int j){
 	colloidalforce_amplitude = sys->colloidalforce_amplitude*a0*a1/ro;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
-	calcDistanceNormalVector();
-	if (_gap_nondim <= 0) {
+	setNormalVectorDistanceGap();
+	if (gap_nondim <= 0) {
 		activate_contact();
 	} else {
 		contact = false;
 	}
 	cnt_sliding = 0;
-	strain_lub_start = sys->strain(); // for output
+	strain_lub_start = sys->Shear_strain(); // for output
 	duration_contact = 0; // for output
 }
 
@@ -108,7 +110,7 @@ Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
 	disp_tan.reset();
-	strain_contact_start = sys->strain();
+	strain_contact_start = sys->Shear_strain();
 	lub_coeff = sys->lub_coeff_contact;
 }
 
@@ -123,12 +125,9 @@ Interaction::deactivate_contact(){
 	Fc_normal_norm = 0;
 	Fc_normal.reset();
 	Fc_tan.reset();
-	duration_contact += sys->strain()-strain_contact_start; // for output
+	duration_contact += sys->Shear_strain()-strain_contact_start; // for output
 }
 
-/*
- *
- */
 void
 Interaction::updateState(bool &deactivated){
 	deactivated = false;
@@ -148,7 +147,7 @@ Interaction::updateState(bool &deactivated){
 				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
 			}
 		}
-		calcDistanceNormalVector();
+		setNormalVectorDistanceGap();
 		calcContactInteraction();
 		if (sys->colloidalforce) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
@@ -161,22 +160,22 @@ Interaction::updateState(bool &deactivated){
 		if (sys->in_corrector) {
 			/* Keep the contact state in predictor.
 			 */
-			if (_gap_nondim > 0) {
+			if (gap_nondim > 0) {
 				deactivate_contact();
 			}
 		}
 	} else {
-		calcDistanceNormalVector();
+		setNormalVectorDistanceGap();
 		if (sys->colloidalforce) {
-			F_colloidal_norm = colloidalforce_amplitude*exp(-(_r-ro)/sys->colloidalforce_length);
+			F_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/sys->colloidalforce_length);
 			F_colloidal = -F_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
 			/* If r > r_lub_max, deactivate the interaction object.
 			 */
-			if (_gap_nondim <= 0) {
+			if (gap_nondim <= 0) {
 				activate_contact();
-			} else if (_r > r_lub_max) {
+			} else if (r > r_lub_max) {
 				deactivate();
 				deactivated = true;
 			}
@@ -184,10 +183,10 @@ Interaction::updateState(bool &deactivated){
 	}
 #ifdef RECORD_HISTORY
 	if (!sys->in_predictor) {
-		gap_history.push_back(_gap_nondim);
+		gap_history.push_back(gap_nondim);
 		if (contact) {
 			disp_tan_sq_history.push_back(disp_tan.sq_norm());
-			overlap_history.push_back(-_gap_nondim);
+			overlap_history.push_back(-gap_nondim);
 		}
 	}
 #endif
@@ -206,7 +205,7 @@ Interaction::updateState(bool &deactivated){
  */
 void
 Interaction::calcContactInteraction(){
-	Fc_normal_norm = -kn_scaled*_gap_nondim;
+	Fc_normal_norm = -kn_scaled*gap_nondim;
 	Fc_normal = -Fc_normal_norm*nr_vec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
@@ -249,8 +248,6 @@ Interaction::addUpContactForceTorque(){
 
 /*
  * Colloidal stabilizing force
- *
- *
  */
 void
 Interaction::addUpColloidalForce(){
@@ -455,7 +452,7 @@ Interaction::addContactStress(){
 		int i3 = 3*par_num[0];
 		int j3 = 3*par_num[1];
 		/*
-		 * Fc_normal_norm = -kn_scaled*_gap_nondim; --> positive
+		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
 		 * Fc_normal = -Fc_normal_norm*nr_vec;
 		 * This force acts on particle 1.
 		 * stress1 is a0*nr_vec[*]force.
@@ -509,7 +506,7 @@ Interaction::outputHistory(){
 
 void
 Interaction::outputSummary(){
-	duration = sys->strain()-strain_lub_start;
+	duration = sys->Shear_strain()-strain_lub_start;
 	sys->fout_int_data << strain_lub_start << ' '; // 1
 	sys->fout_int_data << duration << ' '; // 2
 	sys->fout_int_data << duration-duration_contact << ' '; // 3
@@ -523,16 +520,12 @@ Interaction::getContactVelocity(){
 	if (contact == false) {
 		return 0;
 	}
-	sys->in_predictor = true;
-	calcDistanceNormalVector();
-	calcContactVelocity();
 	return contact_velocity.norm();
 }
 
 double
 Interaction::getNormalVelocity(){
 	sys->in_predictor = true;
-	calcDistanceNormalVector();
 	vec3d d_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;
@@ -544,11 +537,11 @@ double
 Interaction::getPotentialEnergy(){
 	double energy;
 	//	double h = _r - ro;
-	if (_gap_nondim < 0) {
-		energy = 0.5*sys->kn*_gap_nondim*_gap_nondim;
-		energy += -colloidalforce_amplitude*_gap_nondim;
+	if (gap_nondim < 0) {
+		energy = 0.5*sys->Kn()*gap_nondim*gap_nondim;
+		energy += -colloidalforce_amplitude*gap_nondim;
 	} else {
-		energy = sys->colloidalforce_length*colloidalforce_amplitude*(exp(-(_r-ro)/sys->colloidalforce_length)-1);
+		energy = sys->colloidalforce_length*colloidalforce_amplitude*(exp(-(r-ro)/sys->colloidalforce_length)-1);
 	}
 	return energy;
 }
