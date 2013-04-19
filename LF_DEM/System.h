@@ -15,7 +15,7 @@
 #include <queue>
 #include <list>
 #include <string>
-#include "Stresslet.h"
+#include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
 #include "BrownianForce.h"
@@ -102,19 +102,19 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-	stresslet* lubstress; // G U + M E
-	stresslet* bgfstress; // by particle
-	stresslet* contactstressGU; // by particle
-	stresslet* colloidalstressGU; // by particle
-	stresslet* brownianstress; // by particle
+	StressTensor* lubstress; // G U + M E
+	StressTensor* bgfstress; // by particle
+	StressTensor* contactstressGU; // by particle
+	StressTensor* colloidalstressGU; // by particle
+	StressTensor* brownianstress; // by particle
 	int brownianstress_calc_nb;
-	stresslet total_hydro_stress;
-	stresslet total_contact_stressXF_normal;
-	stresslet total_contact_stressXF_tan;
-	stresslet total_contact_stressGU;
-	stresslet total_colloidal_stressXF;
-	stresslet total_colloidal_stressGU;
-	stresslet total_brownian_stress;
+	StressTensor total_hydro_stress;
+	StressTensor total_contact_stressXF_normal;
+	StressTensor total_contact_stressXF_tan;
+	StressTensor total_contact_stressGU;
+	StressTensor total_colloidal_stressXF;
+	StressTensor total_colloidal_stressGU;
+	StressTensor total_brownian_stress;
 	double kn;
 	double kt;
 	double lub_max;

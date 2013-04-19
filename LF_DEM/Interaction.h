@@ -15,7 +15,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "System.h"
-#include "Stresslet.h"
+#include "StressTensor.h"
 using namespace std;
 class System;
 
@@ -56,37 +56,37 @@ private:
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
-
+	
 	//======= particles data  ====================//
 	double lambda; // a1/a0
 	double invlambda; // a0/a1
-
+	
 	//======= relative position/velocity  ========//
 	void r(const double &new_r);
 	void calcDistanceNormalVector();
 	void calcContactVelocity();
 	void calcContactVelocity_predictor();
 	void calcContactVelocity_corrector();
-
+	
 	//======= internal state switches  ===========//
 	void activate_contact();
 	void deactivate_contact();
 	
 	//=======   ===========//
 	void outputSummary();
-
+	
 	//===== forces and stresses computations =====//
 	double Fc_normal_norm; // normal contact force
 	double F_colloidal_norm;
 	vec3d Fc_normal; // normal contact force
 	vec3d Fc_tan; // tangential contact force
 	vec3d F_colloidal;
-	stresslet colloidal_stresslet_XF; //stress tensor of colloidal force
-	stresslet contact_stresslet_XF_normal; //stress tensor of normal contact force
-	stresslet contact_stresslet_XF_tan; //stress tensor of frictional contact force
+	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
+	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
+	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
-
+	
 protected:
 public:
 	/*********************************
@@ -107,7 +107,7 @@ public:
 	void updateState(bool &deactivated);
 	void activate(int i, int j);
 	void deactivate();
-
+	
 	//======= particles data  ====================//
 	int par_num[2];
 	inline int
@@ -119,17 +119,17 @@ public:
 	double ro; // ro = a0 + a1
 	double ro_2; // = ro/2
 	int label;
-
+	
 	//======= relative position/velocity  ========//
 	vec3d nr_vec; // vector center to center
 	inline double r(){return _r;}
 	inline double gap_nondim(){return _gap_nondim;}
-
+	
 	//======= internal state =====================//
 	bool active;
 	bool contact;
 	//======= Data ===============================//
-
+	
 	//	double total_stress_xz;
 	//	double stress_xz_integration;
 	//=============  Resistance Matrices ====================/
@@ -157,14 +157,14 @@ public:
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
-	stresslet getColloidalStressXF(){return colloidal_stresslet_XF;}
-	stresslet getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
-	stresslet getContactStressXF_normal(){return contact_stresslet_XF_normal;}
-	stresslet getContactStressXF_tan(){return contact_stresslet_XF_tan;}
+	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
+	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
+	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
+	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-							   stresslet &stresslet_i, stresslet &stresslet_j);
-	void pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j);
-	void pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j);
+							   StressTensor &stresslet_i, StressTensor &stresslet_j);
+	void pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j);
+	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
 	//=========== observables ===============================//
 };

@@ -426,7 +426,7 @@ Simulation::evaluateData(){
 	 * The total stress does not include contact GU term
 	 * due to the asumption of hard-sphere model.
 	 */
-	stresslet total_stress;
+	StressTensor total_stress;
 	total_stress = sys.total_hydro_stress;
 	total_stress += sys.total_contact_stressXF_normal;
 	total_stress += sys.total_contact_stressXF_tan;
@@ -435,7 +435,7 @@ Simulation::evaluateData(){
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
-	stresslet total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
+	StressTensor total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
 	Viscosity = total_stress.getStressXZ();
 	N1 = total_stress.getNormalStress1();
 	N2 = total_stress.getNormalStress2();
@@ -656,7 +656,7 @@ Simulation::outputConfigurationData(){
 	for (int k=0; k<sys.num_interaction; k++) {
 		if (sys.interaction[k].active) {
 			vec3d fc_tan = sys.interaction[k].getFcTan();
-			stresslet stress_contact = sys.interaction[k].getContactStressXF();
+			StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 			/* 1, 2: numbers of the interacting particles
 			 * 3: 1=contact, 0=apart 
 			 * 4, 5, 6: normal vector

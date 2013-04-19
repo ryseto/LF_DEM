@@ -60,11 +60,11 @@ System::calcStressesHydroContactBrownian(){
 	// actual dynamics, although the motions are reverted
 	// at the very end, to let the system back in the initial
 	// state.
-	stresslet stresslet_i_init;
-    stresslet stresslet_j_init;
-    stresslet stresslet_i_mid;
-    stresslet stresslet_j_mid;
-    stresslet *step_stresslet = new stresslet [_np];
+	StressTensor stresslet_i_init;
+    StressTensor stresslet_j_init;
+    StressTensor stresslet_i_mid;
+    StressTensor stresslet_j_mid;
+    StressTensor *step_stresslet = new StressTensor [_np];
     for (int i=0; i < _np; i++) {
 		step_stresslet[i].reset();
     }
@@ -234,16 +234,15 @@ System::calcStress(){
 		calcStressesHydroContact();
 	}
 	total_hydro_stress.reset();
+	total_contact_stressGU.reset();
+	total_colloidal_stressGU.reset();
 	total_contact_stressXF_normal.reset();
 	total_contact_stressXF_tan.reset();
-	total_contact_stressGU.reset();
 	total_colloidal_stressXF.reset();
-	total_colloidal_stressGU.reset();
 	total_brownian_stress.reset();
 	for (int i=0; i<_np; i++) {
 		total_hydro_stress += lubstress[i]+bgfstress[i];
 		total_contact_stressGU += contactstressGU[i];
-		
 		total_colloidal_stressGU += colloidalstressGU[i];
 		if (brownian) {
 			total_brownian_stress += brownianstress[i];
@@ -251,9 +250,9 @@ System::calcStress(){
 	}
 	for (int k=0; k<num_interaction; k++) {
 		if (interaction[k].active) {
-			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
 			total_contact_stressXF_normal += interaction[k].getContactStressXF_normal();
 			total_contact_stressXF_tan += interaction[k].getContactStressXF_tan();
+			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
 		}
 	}
 	total_hydro_stress /= valSystemVolume();

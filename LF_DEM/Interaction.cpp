@@ -352,7 +352,7 @@ Interaction::GE(double *GEi, double *GEj){
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
 void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-								   stresslet &stresslet_i, stresslet &stresslet_j){
+								   StressTensor &stresslet_i, StressTensor &stresslet_j){
 	calcXG();
 	double n0n0_13 = nr_vec.x*nr_vec.x-1./3;
 	double n1n1_13 = nr_vec.y*nr_vec.y-1./3;
@@ -369,7 +369,7 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 
 // convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
 void
-Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, stresslet &stresslet_j){
+Interaction::pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j){
 	vec3d vi, vj;
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
@@ -383,7 +383,7 @@ Interaction::pairVelocityStresslet(double* &vel_array, stresslet &stresslet_i, s
 }
 
 void
-Interaction::pairStrainStresslet(stresslet &stresslet_i, stresslet &stresslet_j){
+Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
 	double n0n0_13 = nr_vec.x*nr_vec.x-1./3;
 	double n1n1_13 = nr_vec.y*nr_vec.y-1./3;
 	double n0n1 = nr_vec.x*nr_vec.y;
@@ -403,10 +403,10 @@ void
 Interaction::addHydroStress(){
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
-	stresslet stresslet_GU_i;
-	stresslet stresslet_GU_j;
-	stresslet stresslet_ME_i;
-	stresslet stresslet_ME_j;
+	StressTensor stresslet_GU_i;
+	StressTensor stresslet_GU_j;
+	StressTensor stresslet_ME_i;
+	StressTensor stresslet_ME_j;
 	vec3d vi(sys->v_hydro[i3], sys->v_hydro[i3+1], sys->v_hydro[i3+2]);
 	vec3d vj(sys->v_hydro[j3], sys->v_hydro[j3+1], sys->v_hydro[j3+2]);
 	/*
@@ -464,8 +464,8 @@ Interaction::addContactStress(){
 		contact_stresslet_XF_normal.set(r_vec, Fc_normal);
 		contact_stresslet_XF_tan.set(r_vec, Fc_tan);
 		// Add term G*V_cont
-		stresslet stresslet_GU_i;
-		stresslet stresslet_GU_j;
+		StressTensor stresslet_GU_i;
+		StressTensor stresslet_GU_j;
 		vec3d vi(sys->v_cont[i3], sys->v_cont[i3+1], sys->v_cont[i3+2]);
 		vec3d vj(sys->v_cont[j3], sys->v_cont[j3+1], sys->v_cont[j3+2]);
 		pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
@@ -480,8 +480,8 @@ Interaction::addColloidalStress(){
 	int j3 = 3*par_num[1];
 	colloidal_stresslet_XF.set(r_vec, F_colloidal);
 	// Add term G*V_cont
-	stresslet stresslet_colloid_GU_i;
-	stresslet stresslet_colloid_GU_j;
+	StressTensor stresslet_colloid_GU_i;
+	StressTensor stresslet_colloid_GU_j;
 	vec3d vi(sys->v_colloidal[i3], sys->v_colloidal[i3+1], sys->v_colloidal[i3+2]);
 	vec3d vj(sys->v_colloidal[j3], sys->v_colloidal[j3+1], sys->v_colloidal[j3+2]);
 	pairVelocityStresslet(vi, vj, stresslet_colloid_GU_i, stresslet_colloid_GU_j);

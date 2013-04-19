@@ -63,11 +63,11 @@ System::allocateRessources(){
 	contact_force = new vec3d [_np];
 	contact_torque = new vec3d [_np];
 	colloidal_force = new vec3d [_np];
-	lubstress = new stresslet [_np];
-	bgfstress = new stresslet [_np];
-	contactstressGU = new stresslet [_np];
-	colloidalstressGU = new stresslet [_np];
-	brownianstress = new stresslet [_np];
+	lubstress = new StressTensor [_np];
+	bgfstress = new StressTensor [_np];
+	contactstressGU = new StressTensor [_np];
+	colloidalstressGU = new StressTensor [_np];
+	brownianstress = new StressTensor [_np];
 	int maxnum_interactionpair_per_particle = 15;
 	maxnum_interactionpair = maxnum_interactionpair_per_particle*_np;
 	interaction = new Interaction [maxnum_interactionpair];
@@ -157,7 +157,8 @@ System::setupSystem(const vector<vec3d> &initial_positions,
 	if (colloidalforce_length > 0) {
 		/*
 		 * The diemnsionless shear rate is defined as follows:
-		 * dimensionless_shear_rate = 6pi*eta*a^2*shear_rate/colloidalforce_amplitude
+		 * dimensionless_shear_rate = F0/colloidalforce_amplitude
+		 * F0 = 6pi*eta*a^2*shear_rate
 		 * Under the unit of this simulation
 		 * 6pi*eta*a^2*shear_rate is set to 1.
 		 */

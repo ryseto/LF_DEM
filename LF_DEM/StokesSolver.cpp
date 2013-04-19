@@ -12,15 +12,6 @@ using namespace std;
  ******************************************************/
 
 StokesSolver::~StokesSolver(){
-    if (!off_diag_values) {
-		off_diag_values[0].clear();
-	}
-    if (!off_diag_values) {
-		off_diag_values[1].clear();
-	}
-    if (!off_diag_values) {
-		off_diag_values[2].clear();
-	}
     if (!diag_values) {
 		delete [] diag_values;
 	}
