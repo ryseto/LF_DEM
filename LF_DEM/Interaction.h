@@ -45,7 +45,7 @@ private:
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_predictor; // tangential displacement
 	//===== forces and stresses ==================== //
-	double r_lub_max;  // max distance for lubrication
+	double lub_max_scaled;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
 	double kn_scaled;
 	double kt_scaled;
@@ -90,11 +90,11 @@ private:
 	void outputSummary();
 	
 	//===== forces and stresses computations =====//
-	double Fc_normal_norm; // normal contact force
-	double F_colloidal_norm;
-	vec3d Fc_normal; // normal contact force
-	vec3d Fc_tan; // tangential contact force
-	vec3d F_colloidal;
+	double f_contact_normal_norm; // normal contact force
+	double f_colloidal_norm;
+	vec3d f_contact_normal; // normal contact force
+	vec3d f_contact_tan; // tangential contact force
+	vec3d f_colloidal;
 	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
 	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
@@ -106,8 +106,7 @@ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
- 	Interaction(){};
-	~Interaction(){};
+	// 	Interaction(){};
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
@@ -165,10 +164,10 @@ public:
 	double getContactVelocity();
 	double getNormalVelocity();
 	double getPotentialEnergy();
-	inline double getFcNormal(){return Fc_normal_norm;}
-	inline vec3d getFcTan(){return Fc_tan;}
-	inline double getFcTan_norm(){return Fc_tan.norm();}
-	inline double getColloidalForce(){return F_colloidal_norm;}
+	inline double getFcNormal(){return f_contact_normal_norm;}
+	inline vec3d getFcTan(){return f_contact_tan;}
+	inline double getFcTan_norm(){return f_contact_tan.norm();}
+	inline double getColloidalForce(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
 	void addHydroStress();

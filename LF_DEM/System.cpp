@@ -10,10 +10,6 @@
 #include <sstream>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 
-System::System(){
-	brownian = false;
-};
-
 System::~System(){
 	DELETE(position);
 	DELETE(radius);
@@ -66,9 +62,9 @@ System::allocateRessources(){
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
 	brownianstress = new StressTensor [np];
-	int maxnum_interactionpair_per_particle = 15;
-	maxnum_interactionpair = maxnum_interactionpair_per_particle*np;
-	interaction = new Interaction [maxnum_interactionpair];
+	int maxnb_interactionpair_per_particle = 15;
+	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
+	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	dof = 3;
@@ -99,7 +95,7 @@ System::setupSystemForGenerateInit(){
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
 		angle[i] = 0;
 	}
-	for (unsigned int k=0; k<maxnum_interactionpair ; k++) {
+	for (unsigned int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].Label(k);
 	}
@@ -108,7 +104,7 @@ System::setupSystemForGenerateInit(){
 	}
 	shear_strain = 0;
 	shear_disp = 0;
-	num_interaction = 0;
+	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	contact_relaxzation_time = 1e-3;
 	kn = 2000;
@@ -184,7 +180,7 @@ System::setupSystem(){
 		cerr << "No colloidal force" << endl;
 	}
 	allocateRessources();
-	for (unsigned int k=0; k<maxnum_interactionpair ; k++) {
+	for (unsigned int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].Label(k);
 	}
@@ -202,7 +198,7 @@ System::setupSystem(){
 	}
 	shear_strain = 0;
 	shear_disp = 0;
-	num_interaction = 0;
+	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -586,8 +582,8 @@ System::checkNewInteraction(){
 						int interaction_new;
 						if (deactivated_interaction.empty()) {
 							// add an interaction object.
-							interaction_new = num_interaction;
-							num_interaction ++;
+							interaction_new = nb_interaction;
+							nb_interaction ++;
 						} else {
 							// fill a deactivated interaction object.
 							interaction_new = deactivated_interaction.front();
@@ -616,7 +612,7 @@ System::updateInteractions(){
 	 *
 	 */
 	bool deactivated;
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].updateState(deactivated);
 		if (deactivated) {
 			deactivated_interaction.push(k);
@@ -713,7 +709,7 @@ System::setContactForceToParticle(){
 		contact_force[i].reset();
 		contact_torque[i].reset();
 	}
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].addUpContactForceTorque();
 	}
 }
@@ -724,7 +720,7 @@ System::setColloidalForceToParticle(){
 		for (int i=0; i<np; i++) {
 			colloidal_force[i].reset();
 		}
-		for (int k=0; k<num_interaction; k++) {
+		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
 				interaction[k].addUpColloidalForce();
 			}
@@ -954,7 +950,7 @@ void
 System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
 			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
 				max_contact_velo_tan = interaction[k].getContactVelocity();
@@ -1002,7 +998,7 @@ System::analyzeState(){
 	min_gap_nondim = lub_max;
 	double sum_Fc_normal_norm = 0;
 	max_Fc_normal_norm = 0;
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (interaction[k].Gap_nondim() < min_gap_nondim) {
 				min_gap_nondim = interaction[k].Gap_nondim();
@@ -1045,7 +1041,7 @@ System::openFileInteractionData(){
 double
 System::evaluateMaxOverlap(){
 	double _max_overlap = 0;
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
 			-interaction[k].Gap_nondim() > _max_overlap) {
 			_max_overlap = -interaction[k].Gap_nondim();
@@ -1057,7 +1053,7 @@ System::evaluateMaxOverlap(){
 double
 System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;
-	for (int k= 0; k<num_interaction; k++) {
+	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
 			interaction[k].disp_tan_norm() > _max_disp_tan) {
 			_max_disp_tan = interaction[k].disp_tan_norm();
@@ -1132,7 +1128,7 @@ System::adjustContactModelParameters(int nb_average){
 void
 System::calcTotalPotentialEnergy(){
 	total_energy = 0;
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()){
 			total_energy += interaction[k].getPotentialEnergy();
 		}

@@ -18,10 +18,9 @@ class vec3d {
 public:
 	/* variables */
 	double x, y, z;
-	
 	/* constructor/destructor */
 	inline vec3d (void): x(0), y(0), z(0){}
-	
+
 	inline vec3d (const double &_x,
 				  const double &_y,
 				  const double &_z): x(_x), y(_y), z(_z) {}
@@ -32,9 +31,7 @@ public:
 		y = other.y;
 		z = other.z;
 	}
-	
-	inline ~vec3d(void){}
-	
+
 	/* operators */
 	inline vec3d& operator = (const vec3d& v){
 		x = v.x, y = v.y, z = v.z;
@@ -125,13 +122,13 @@ public:
 	/* division */
 	inline friend vec3d
 	operator / (const vec3d &v, const double &d){
-		double d_tmp = 1.0/d;
+		double d_tmp = 1/d;
 		return d_tmp*v;
 	}
 	
 	inline friend vec3d
 	operator / (const vec3d &v, const int &i){
-		double d_tmp = 1.0/i;
+		double d_tmp = 1./i;
 		return d_tmp*v;
 	}
 	
@@ -227,7 +224,7 @@ public:
 	
 	inline friend double
 	sq_dist(const vec3d &a1, const vec3d &a2){
-		return (a1-a2).sq_norm() ;
+		return (a1-a2).sq_norm();
 	}
 	
 	inline void
@@ -248,19 +245,19 @@ public:
 	periodicBoundaryBox(const double &lx,
 						const double &ly,
 						const double &lz){
-		if ( x < 0 ){
+		if (x < 0) {
 			x += lx;
-		} else if ( x > lx ){
+		} else if (x > lx) {
 			x -= lx;
 		}
-		if ( y < 0 ){
+		if (y < 0) {
 			y += ly;
-		} else if ( y > ly ){
+		} else if (y > ly) {
 			y -= ly;
 		}
-		if ( z < 0 ){
+		if (z < 0){
 			z += lz;
-		} else if ( z > lz ){
+		} else if (z > lz) {
 			z -= lz;
 		}
 	}

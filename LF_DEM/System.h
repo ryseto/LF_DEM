@@ -34,7 +34,7 @@ class System{
 private:
 	int np;
 	int np3;
-	int maxnum_interactionpair;
+	int maxnb_interactionpair;
 	BoxSet boxset;
 	double lx;
 	double ly;
@@ -80,7 +80,6 @@ private:
 	double evaluateMaxAngVelocity();
 protected:
 public:
-	System();
 	~System();
 	double *v_hydro;
 	double *v_cont;
@@ -127,7 +126,7 @@ public:
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	double diag_stokes_drag;
 	double bgf_factor;
-	int num_interaction;
+	int nb_interaction;
 	double d_strain;
 	/*
 	 * Leading term of lubrication force is 1/gap_nondim, 
@@ -154,7 +153,6 @@ public:
 	double colloidalforce_amplitude; // colloidal force dimensionless
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	double kb_T;
-//	double volume_fraction;
 	double vel_difference;
 	double dt;
 	double max_velocity;
@@ -162,11 +160,9 @@ public:
 	double min_gap_nondim;
 	double max_overlap; // = ro-r
 	double max_disp_tan;
-	
 	double overlap_target;
 	double disp_tan_target;
 	queue<int> deactivated_interaction;
-
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;
 	double ave_overlap;

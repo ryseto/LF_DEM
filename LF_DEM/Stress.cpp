@@ -43,7 +43,7 @@ System::calcStressesHydroContactBrownian(){
     stokes_solver.solvingIsDone();
 	
 	// from that, compute stresses
-	for (int k = 0; k < num_interaction; k++) {
+	for (int k = 0; k < nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); // - R_SU * v_cont - rF_cont
@@ -101,7 +101,7 @@ System::calcStressesHydroContactBrownian(){
 	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
 	
 	
-    for (int k = 0; k < num_interaction; k++) {
+    for (int k = 0; k < nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_init, stresslet_j_init);
 			unsigned int i, j;
@@ -137,7 +137,7 @@ System::calcStressesHydroContactBrownian(){
 		v_Brownian_mid[3*i+1] *= zero_2Dsimu;
 	}
 	
-    for (int k = 0; k < num_interaction; k++) {
+    for (int k = 0; k < nb_interaction; k++) {
 		if(interaction[k].is_active()) {
 			interaction[k].pairVelocityStresslet(v_Brownian_mid, stresslet_i_mid, stresslet_j_mid);
 			unsigned int i, j;
@@ -192,7 +192,7 @@ System::calcStressesHydroContact(){
 	/////////////////////////////////////////////////
     stokes_solver.solvingIsDone();
 	// from that, compute stresses
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
@@ -202,7 +202,7 @@ System::calcStressesHydroContact(){
 	/*
 	 * Calculate lubrication force to output
 	 */
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].evaluateLubricationForce();
 		}
@@ -249,7 +249,7 @@ System::calcStress(){
 			total_brownian_stress += brownianstress[i];
 		}
 	}
-	for (int k=0; k<num_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			total_contact_stressXF_normal += interaction[k].getContactStressXF_normal();
 			total_contact_stressXF_tan += interaction[k].getContactStressXF_tan();

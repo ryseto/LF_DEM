@@ -604,17 +604,15 @@ Simulation::outputConfigurationData(){
 		fout_particle << endl;
 	}
 	int cnt_interaction = 0;
-	for (int k=0; k<sys.num_interaction; k++) {
+	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_active()) {
 			cnt_interaction++;
 		}
 	}
 	fout_interaction << "# " << sys.Shear_strain();
 	fout_interaction << ' ' << cnt_interaction << endl;
-	for (int k=0; k<sys.num_interaction; k++) {
+	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_active()) {
-			vec3d fc_tan = sys.interaction[k].getFcTan();
-			StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 			/* 1, 2: numbers of the interacting particles
 			 * 3: 1=contact, 0=apart 
 			 * 4, 5, 6: normal vector
@@ -630,6 +628,7 @@ Simulation::outputConfigurationData(){
 			unsigned int i, j;
 			sys.interaction[k].get_par_num(i, j);
 			vec3d nr_vec = sys.interaction[k].Nr_vec();
+			StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 			fout_interaction << i << ' ' << j << ' '; // 1, 2
 			fout_interaction << sys.interaction[k].is_contact() << ' '; // 3
 			fout_interaction << nr_vec.x << ' '; // 4

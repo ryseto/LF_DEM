@@ -130,7 +130,7 @@ GenerateInitConfig::computeGradient(){
 	vec3d nr_vec;
 	double amp, amp2;
 	double energy = 0;
-	for (int k=0; k<sys.num_interaction; k++) {
+	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_contact()) {
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();

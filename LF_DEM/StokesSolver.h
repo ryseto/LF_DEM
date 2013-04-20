@@ -113,9 +113,6 @@ private:
     int* columns_nb; // nb of non-zero elements in each row
     int columns_max_nb; // max nb of non-zero elements per row
     double **values; // values corresponding to 'columns' array coordinates
-
-    
-	
     /*
      appendToRow(const vec3d &nvec, int ii, int jj, double alpha) :
 	 - TRILINOS ONLY

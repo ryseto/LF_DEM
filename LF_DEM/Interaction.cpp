@@ -53,7 +53,7 @@ Interaction::activate(int i, int j){
 	a0 = sys->radius[par_num[0]];
 	a1 = sys->radius[par_num[1]];
 	set_ro(a0+a1); // ro=a0+a1
-	r_lub_max = ro_half*sys->Lub_max();
+	lub_max_scaled = ro_half*sys->Lub_max();
 	kn_scaled = ro_half*ro_half*sys->Kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_half*sys->Kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
 	/* NOTE:
@@ -114,9 +114,9 @@ Interaction::deactivate_contact(){
 #endif
 	contact = false;
 	disp_tan.reset();
-	Fc_normal_norm = 0;
-	Fc_normal.reset();
-	Fc_tan.reset();
+	f_contact_normal_norm = 0;
+	f_contact_normal.reset();
+	f_contact_tan.reset();
 	duration_contact += sys->Shear_strain()-strain_contact_start; // for output
 }
 
@@ -146,8 +146,8 @@ Interaction::updateState(bool &deactivated){
 			 * This force does not affect the friction law,
 			 * i.e. it is separated from Fc_normal_norm.
 			 */
-			F_colloidal_norm = colloidalforce_amplitude;
-			F_colloidal = -F_colloidal_norm*nr_vec;
+			f_colloidal_norm = colloidalforce_amplitude;
+			f_colloidal = -f_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
 			/* Keep the contact state in predictor.
@@ -159,15 +159,15 @@ Interaction::updateState(bool &deactivated){
 	} else {
 		calcNormalVectorDistanceGap();
 		if (sys->colloidalforce) {
-			F_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/sys->colloidalforce_length);
-			F_colloidal = -F_colloidal_norm*nr_vec;
+			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/sys->colloidalforce_length);
+			f_colloidal = -f_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
 			/* If r > r_lub_max, deactivate the interaction object.
 			 */
 			if (gap_nondim <= 0) {
 				activate_contact();
-			} else if (r > r_lub_max) {
+			} else if (r > lub_max_scaled) {
 				deactivate();
 				deactivated = true;
 			}
@@ -197,28 +197,28 @@ Interaction::updateState(bool &deactivated){
  */
 void
 Interaction::calcContactInteraction(){
-	Fc_normal_norm = -kn_scaled*gap_nondim;
-	Fc_normal = -Fc_normal_norm*nr_vec;
+	f_contact_normal_norm = -kn_scaled*gap_nondim;
+	f_contact_normal = -f_contact_normal_norm*nr_vec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
 		 */
 		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
-		Fc_tan = kt_scaled*disp_tan;
+		f_contact_tan = kt_scaled*disp_tan;
 		checkBreakupStaticFriction();
 	}
 }
 
 void
 Interaction::checkBreakupStaticFriction(){
-	double f_static = sys->mu_static*Fc_normal_norm;
-	double sq_f_tan = Fc_tan.sq_norm();
+	double f_static = sys->mu_static*f_contact_normal_norm;
+	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > f_static*f_static) {
 		/*
 		 * The static and dynamic friction coeffients are the same.
 		 *
 		 */
 		disp_tan *= f_static/sqrt(sq_f_tan);
-		Fc_tan = kt_scaled*disp_tan;
+		f_contact_tan = kt_scaled*disp_tan;
 		cnt_sliding++; // for output
 	}
 }
@@ -226,12 +226,12 @@ Interaction::checkBreakupStaticFriction(){
 void
 Interaction::addUpContactForceTorque(){
 	if (contact) {
-		sys->contact_force[par_num[0]] += Fc_normal;
-		sys->contact_force[par_num[1]] -= Fc_normal;
+		sys->contact_force[par_num[0]] += f_contact_normal;
+		sys->contact_force[par_num[1]] -= f_contact_normal;
 		if (sys->friction) {
-			sys->contact_force[par_num[0]] += Fc_tan;
-			sys->contact_force[par_num[1]] -= Fc_tan;
-			vec3d t_ij = cross(nr_vec, Fc_tan);
+			sys->contact_force[par_num[0]] += f_contact_tan;
+			sys->contact_force[par_num[1]] -= f_contact_tan;
+			vec3d t_ij = cross(nr_vec, f_contact_tan);
 			sys->contact_torque[par_num[0]] += a0*t_ij;
 			sys->contact_torque[par_num[1]] += a1*t_ij;
 		}
@@ -243,8 +243,8 @@ Interaction::addUpContactForceTorque(){
  */
 void
 Interaction::addUpColloidalForce(){
-	sys->colloidal_force[par_num[0]] += F_colloidal;
-	sys->colloidal_force[par_num[1]] -= F_colloidal;
+	sys->colloidal_force[par_num[0]] += f_colloidal;
+	sys->colloidal_force[par_num[1]] -= f_colloidal;
 }
 
 /* Relative velocity of particle 1 from particle 0.
@@ -449,8 +449,8 @@ Interaction::addContactStress(){
 		 * stress1 is a0*nr_vec[*]force.
 		 * stress2 is (-a1*nr_vec)[*](-force) = a1*nr_vec[*]force
 		 */
-		contact_stresslet_XF_normal.set(r_vec, Fc_normal);
-		contact_stresslet_XF_tan.set(r_vec, Fc_tan);
+		contact_stresslet_XF_normal.set(r_vec, f_contact_normal);
+		contact_stresslet_XF_tan.set(r_vec, f_contact_tan);
 		// Add term G*V_cont
 		StressTensor stresslet_GU_i;
 		StressTensor stresslet_GU_j;
@@ -466,7 +466,7 @@ void
 Interaction::addColloidalStress(){
 	int i3 = 3*par_num[0];
 	int j3 = 3*par_num[1];
-	colloidal_stresslet_XF.set(r_vec, F_colloidal);
+	colloidal_stresslet_XF.set(r_vec, f_colloidal);
 	// Add term G*V_cont
 	StressTensor stresslet_colloid_GU_i;
 	StressTensor stresslet_colloid_GU_j;
