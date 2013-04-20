@@ -14,22 +14,13 @@ Interaction::init(System *sys_){
 	active = false;
 }
 
-//void
-//Interaction::set_r(const double &val){
-//	r = val;
-//	gap_nondim = r/ro_half-2;
-//	if (gap_nondim > 0) {
-//		lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
-//	}
-//}
-
 /* Make a normal vector
  * Periodic boundaries are checked for all partices.
  * vector from particle 0 to particle 1. ( i --> j)
  * pd_z : Periodic boundary condition
  */
 void
-Interaction::setNormalVectorDistanceGap(){
+Interaction::calcNormalVectorDistanceGap(){
 	r_vec = sys->position[par_num[1]]-sys->position[par_num[0]];
 	sys->periodize_diff(r_vec, zshift);
 	r = r_vec.norm();
@@ -61,7 +52,7 @@ Interaction::activate(int i, int j){
 	sys->interaction_partners[j].insert(i);
 	a0 = sys->radius[par_num[0]];
 	a1 = sys->radius[par_num[1]];
-	Ro(a0+a1); // ro=a0+a1
+	set_ro(a0+a1); // ro=a0+a1
 	r_lub_max = ro_half*sys->Lub_max();
 	kn_scaled = ro_half*ro_half*sys->Kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_half*sys->Kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -80,7 +71,7 @@ Interaction::activate(int i, int j){
 	colloidalforce_amplitude = sys->colloidalforce_amplitude*a0*a1/ro;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
-	setNormalVectorDistanceGap();
+	calcNormalVectorDistanceGap();
 	if (gap_nondim <= 0) {
 		activate_contact();
 	} else {
@@ -99,6 +90,7 @@ Interaction::deactivate(){
 #endif
 	outputSummary();
 	active = false;
+	contact = false;
 	sys->interaction_list[par_num[0]].erase(this);
 	sys->interaction_list[par_num[1]].erase(this);
 	sys->interaction_partners[par_num[0]].erase(par_num[1]);
@@ -147,7 +139,7 @@ Interaction::updateState(bool &deactivated){
 				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
 			}
 		}
-		setNormalVectorDistanceGap();
+		calcNormalVectorDistanceGap();
 		calcContactInteraction();
 		if (sys->colloidalforce) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
@@ -165,7 +157,7 @@ Interaction::updateState(bool &deactivated){
 			}
 		}
 	} else {
-		setNormalVectorDistanceGap();
+		calcNormalVectorDistanceGap();
 		if (sys->colloidalforce) {
 			F_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/sys->colloidalforce_length);
 			F_colloidal = -F_colloidal_norm*nr_vec;
@@ -263,7 +255,8 @@ Interaction::addUpColloidalForce(){
  */
 void
 Interaction::calcContactVelocity(){
-	// relative velocity particle 1 from particle 0.
+	/* relative velocity particle 1 from particle 0.
+	 */
 	/*
 	 * v1' = v1 - Lz = v1 - zshift*lz;
 	 */
@@ -416,8 +409,6 @@ Interaction::addHydroStress(){
 	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
 	sys->lubstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
 	sys->lubstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
-	//		lubstresslet.elm[u] = \
-	stresslet_GU_i.elm[u]+stresslet_ME_i.elm[u]+stresslet_GU_j.elm[u]+stresslet_ME_j.elm[u];
 }
 
 /* Lubriction force between two particles is calculated.
@@ -536,7 +527,6 @@ Interaction::getNormalVelocity(){
 double
 Interaction::getPotentialEnergy(){
 	double energy;
-	//	double h = _r - ro;
 	if (gap_nondim < 0) {
 		energy = 0.5*sys->Kn()*gap_nondim*gap_nondim;
 		energy += -colloidalforce_amplitude*gap_nondim;

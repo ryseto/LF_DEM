@@ -25,16 +25,22 @@ private:
 	 *        Members                *
 	 *********************************/
 	System *sys;
-	//======= relative position/velocity data  =========//
-	double r; // center-center distance
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
 	double ro_half; // = ro/2
+	//======= internal state =====================//
+	bool active;
+	unsigned int label;
+	unsigned int par_num[2];
+	bool contact;
+	//======= relative position/velocity data  =========//
+	double r; // center-center distance
 	int zshift;
 	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
 	vec3d r_vec; // normal vector
+	vec3d nr_vec; // vector center to center
 	vec3d contact_velocity;
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_predictor; // tangential displacement
@@ -44,6 +50,9 @@ private:
 	double kn_scaled;
 	double kt_scaled;
 	double colloidalforce_amplitude;
+	double XA[4]; // ii ij ji jj
+	double XG[4]; // ii ij ji jj
+	double XM[4]; // ii ij ji jj
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
 	double strain_contact_start; // the strain at h=0.
@@ -51,6 +60,8 @@ private:
 	double duration_contact; // enture duraction for h < 0
 	double max_stress; // Maximum value of stress in the all history of this object.
 	int cnt_sliding;  // to count the number of slips.
+	
+	
 #ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;
@@ -66,8 +77,7 @@ private:
 	double invlambda; // a0/a1
 	
 	//======= relative position/velocity  ========//
-//	void set_r(const double &_r);
-	void setNormalVectorDistanceGap();
+	void calcNormalVectorDistanceGap();
 	void calcContactVelocity();
 	void calcContactVelocity_predictor();
 	void calcContactVelocity_corrector();
@@ -111,52 +121,43 @@ public:
 	void updateState(bool &deactivated);
 	void activate(int i, int j);
 	void deactivate();
-	
+	inline bool is_overlap(){return r<ro;}
+	inline bool is_contact(){return contact;}
+	inline bool is_active(){return active;}
+
 	//======= particles data  ====================//
-	int par_num[2];
+
 	inline int
 	partner(int i){
 		return (i == par_num[0] ? par_num[1] : par_num[0]);
 	}
-	
-	int label;
-
-	inline double get_a0(){
-		return a0;
+	inline void
+	get_par_num(unsigned int &i, unsigned int &j){
+		i = par_num[0], j = par_num[1];
 	}
-	
-	inline double get_a1(){
-		return a1;
-	}
-	
-	inline void Ro(double val){
+	inline void Label(unsigned int val){label = val;}
+	inline unsigned int Label(){return label;}
+	inline double get_a0(){return a0;}
+	inline double get_a1(){return a1;}
+	inline void set_ro(double val){
 		ro = val;
 		ro_half = 0.5*ro;
 	}; // ro = a0 + a1
-
-	inline double Ro(){
-		return ro;
-	}
+	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
-	vec3d nr_vec; // vector center to center
-	inline double R(){return r;}
+	inline double get_r(){return r;}
 	inline double Gap_nondim(){return gap_nondim;}
-	
-	//======= internal state =====================//
-	bool active;
-	bool contact;
-	//======= Data ===============================//
-	
-	//	double total_stress_xz;
-	//	double stress_xz_integration;
+	inline vec3d Nr_vec(){return nr_vec;}
+
 	//=============  Resistance Matrices ====================/
-	double XA[4]; // ii ij ji jj
-	double XG[4]; // ii ij ji jj
-	double XM[4]; // ii ij ji jj
+
 	void GE(double *GEi, double *GEj);
 	void calcXA();
 	void calcXG();
 	void calcXM();
+	inline double get_a0_XA0(){return a0*XA[0];}
+	inline double get_a1_XA3(){return a1*XA[3];}
+	inline double get_ro2_XA2(){return ro_half*XA[2];}
 	//===== forces/stresses  ========================== //
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
@@ -170,7 +171,6 @@ public:
 	inline double getColloidalForce(){return F_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
-	//	inline double lubStresslet(int i){return lubstresslet.elm[i];}
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();

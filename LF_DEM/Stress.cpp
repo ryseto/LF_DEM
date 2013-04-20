@@ -44,7 +44,7 @@ System::calcStressesHydroContactBrownian(){
 	
 	// from that, compute stresses
 	for (int k = 0; k < num_interaction; k++) {
-		if (interaction[k].active) {
+		if (interaction[k].is_active()) {
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); // - R_SU * v_cont - rF_cont
 		}
@@ -100,11 +100,12 @@ System::calcStressesHydroContactBrownian(){
 	
 	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
 	
+	
     for (int k = 0; k < num_interaction; k++) {
-		if (interaction[k].active) {
+		if (interaction[k].is_active()) {
 			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_init, stresslet_j_init);
-			int i = interaction[k].par_num[0];
-			int j = interaction[k].par_num[1];
+			unsigned int i, j;
+			interaction[k].get_par_num(i, j);
 			step_stresslet[i] -= 0.5*stresslet_i_init;
 			step_stresslet[j] -= 0.5*stresslet_j_init;
 		}
@@ -137,10 +138,10 @@ System::calcStressesHydroContactBrownian(){
 	}
 	
     for (int k = 0; k < num_interaction; k++) {
-		if(interaction[k].active) {
+		if(interaction[k].is_active()) {
 			interaction[k].pairVelocityStresslet(v_Brownian_mid, stresslet_i_mid, stresslet_j_mid);
-			int i = interaction[k].par_num[0];
-			int j = interaction[k].par_num[1];
+			unsigned int i, j;
+			interaction[k].get_par_num(i, j);
 			step_stresslet[i] += 0.5*stresslet_i_mid;
 			step_stresslet[j] += 0.5*stresslet_j_mid;
 		}
@@ -192,7 +193,7 @@ System::calcStressesHydroContact(){
     stokes_solver.solvingIsDone();
 	// from that, compute stresses
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
+		if (interaction[k].is_active()) {
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
@@ -202,7 +203,7 @@ System::calcStressesHydroContact(){
 	 * Calculate lubrication force to output
 	 */
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
+		if (interaction[k].is_active()) {
 			interaction[k].evaluateLubricationForce();
 		}
 	}
@@ -249,7 +250,7 @@ System::calcStress(){
 		}
 	}
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
+		if (interaction[k].is_active()) {
 			total_contact_stressXF_normal += interaction[k].getContactStressXF_normal();
 			total_contact_stressXF_tan += interaction[k].getContactStressXF_tan();
 			total_colloidal_stressXF += interaction[k].getColloidalStressXF();

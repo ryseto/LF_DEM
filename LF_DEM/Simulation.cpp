@@ -5,7 +5,7 @@
 //  Created by Ryohei Seto and Romain Mari on 11/15/12.
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
-
+#define _USE_MATH_DEFINES
 #include "Simulation.h"
 #include <cmath>
 #include <map>
@@ -605,14 +605,14 @@ Simulation::outputConfigurationData(){
 	}
 	int cnt_interaction = 0;
 	for (int k=0; k<sys.num_interaction; k++) {
-		if (sys.interaction[k].active) {
+		if (sys.interaction[k].is_active()) {
 			cnt_interaction++;
 		}
 	}
 	fout_interaction << "# " << sys.Shear_strain();
 	fout_interaction << ' ' << cnt_interaction << endl;
 	for (int k=0; k<sys.num_interaction; k++) {
-		if (sys.interaction[k].active) {
+		if (sys.interaction[k].is_active()) {
 			vec3d fc_tan = sys.interaction[k].getFcTan();
 			StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 			/* 1, 2: numbers of the interacting particles
@@ -627,21 +627,22 @@ Simulation::outputConfigurationData(){
 			 * 13: N1 contribution of contact xF
 			 * 14: N2 contribution of contact xF
 			 */
-			fout_interaction << ' ' << sys.interaction[k].par_num[0]; // 1
-			fout_interaction << ' ' << sys.interaction[k].par_num[1]; // 2
-			fout_interaction << ' ' << sys.interaction[k].contact; // 3
-			fout_interaction << ' ' << sys.interaction[k].nr_vec.x; // 4
-			fout_interaction << ' ' << sys.interaction[k].nr_vec.y; // 5
-			fout_interaction << ' ' << sys.interaction[k].nr_vec.z; // 6
-			fout_interaction << ' ' << sys.interaction[k].Gap_nondim(); // 7
-			fout_interaction << ' ' << sys.interaction[k].getLubForce(); // 8
-			fout_interaction << ' ' << sys.interaction[k].getFcNormal(); // 9
-			fout_interaction << ' ' << sys.interaction[k].getFcTan_norm(); // 10
-			fout_interaction << ' ' << sys.interaction[k].getColloidalForce(); // 11
-			fout_interaction << ' ' << 6*M_PI*stress_contact.getStressXZ(); // 12
-			fout_interaction << ' ' << 6*M_PI*stress_contact.getNormalStress1(); // 13
-			fout_interaction << ' ' << 6*M_PI*stress_contact.getNormalStress2(); // 14
-			fout_interaction << endl;
+			unsigned int i, j;
+			sys.interaction[k].get_par_num(i, j);
+			vec3d nr_vec = sys.interaction[k].Nr_vec();
+			fout_interaction << i << ' ' << j << ' '; // 1, 2
+			fout_interaction << sys.interaction[k].is_contact() << ' '; // 3
+			fout_interaction << nr_vec.x << ' '; // 4
+			fout_interaction << nr_vec.y << ' '; // 5
+			fout_interaction << nr_vec.z << ' '; // 6
+			fout_interaction << sys.interaction[k].Gap_nondim() << ' '; // 7
+			fout_interaction << sys.interaction[k].getLubForce() << ' '; // 8
+			fout_interaction << sys.interaction[k].getFcNormal() << ' '; // 9
+			fout_interaction << sys.interaction[k].getFcTan_norm() << ' '; // 10
+			fout_interaction << sys.interaction[k].getColloidalForce() << ' '; // 11
+			fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 12
+			fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 13
+			fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << endl; // 14
 		}
 	}
 }

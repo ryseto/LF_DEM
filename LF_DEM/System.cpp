@@ -99,9 +99,9 @@ System::setupSystemForGenerateInit(){
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
 		angle[i] = 0;
 	}
-	for (int k=0; k<maxnum_interactionpair ; k++) {
+	for (unsigned int k=0; k<maxnum_interactionpair ; k++) {
 		interaction[k].init(this);
-		interaction[k].label = k;
+		interaction[k].Label(k);
 	}
 	for (int i=0; i<np; i++) {
 		velocity[i].reset();
@@ -184,9 +184,9 @@ System::setupSystem(){
 		cerr << "No colloidal force" << endl;
 	}
 	allocateRessources();
-	for (int k=0; k<maxnum_interactionpair ; k++) {
+	for (unsigned int k=0; k<maxnum_interactionpair ; k++) {
 		interaction[k].init(this);
-		interaction[k].label = k;
+		interaction[k].Label(k);
 	}
 	for (int i=0; i<np; i++) {
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
@@ -668,10 +668,10 @@ System::buildLubricationTerms(bool rhs){
 			int j = (*it)->partner(i);
 			if (j > i) {
 				(*it)->calcXA();
-				stokes_solver.addToDiagBlock_RFU((*it)->nr_vec, i, (*it)->get_a0()*(*it)->XA[0]);
-				stokes_solver.addToDiagBlock_RFU((*it)->nr_vec, j, (*it)->get_a1()*(*it)->XA[3]);
-				stokes_solver.appendToOffDiagBlock_RFU((*it)->nr_vec, i, j,
-													   0.5*(*it)->Ro()*(*it)->XA[2]);
+				vec3d nr_vec = (*it)->Nr_vec();
+				stokes_solver.addToDiagBlock_RFU(nr_vec, i, (*it)->get_a0_XA0());
+				stokes_solver.addToDiagBlock_RFU(nr_vec, j, (*it)->get_a1_XA3());
+				stokes_solver.appendToOffDiagBlock_RFU(nr_vec, i, j, (*it)->get_ro2_XA2());
 				if (rhs) {
 					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
@@ -725,7 +725,7 @@ System::setColloidalForceToParticle(){
 			colloidal_force[i].reset();
 		}
 		for (int k=0; k<num_interaction; k++) {
-			if (interaction[k].active) {
+			if (interaction[k].is_active()) {
 				interaction[k].addUpColloidalForce();
 			}
 		}
@@ -955,14 +955,12 @@ System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
-			if (interaction[k].contact) {
-				if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
-					max_contact_velo_tan = interaction[k].getContactVelocity();
-				}
-				if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
-					max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
-				}
+		if (interaction[k].is_contact()) {
+			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
+				max_contact_velo_tan = interaction[k].getContactVelocity();
+			}
+			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
+				max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
 			}
 		}
 	}
@@ -1005,11 +1003,11 @@ System::analyzeState(){
 	double sum_Fc_normal_norm = 0;
 	max_Fc_normal_norm = 0;
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
+		if (interaction[k].is_active()) {
 			if (interaction[k].Gap_nondim() < min_gap_nondim) {
 				min_gap_nondim = interaction[k].Gap_nondim();
 			}
-			if (interaction[k].contact) {
+			if (interaction[k].is_contact()) {
 				sum_Fc_normal_norm += interaction[k].getFcNormal();
 				contact_nb ++;
 				if (interaction[k].getFcNormal() > max_Fc_normal_norm) {
@@ -1048,7 +1046,7 @@ double
 System::evaluateMaxOverlap(){
 	double _max_overlap = 0;
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active &&
+		if (interaction[k].is_active() &&
 			-interaction[k].Gap_nondim() > _max_overlap) {
 			_max_overlap = -interaction[k].Gap_nondim();
 		}
@@ -1060,7 +1058,7 @@ double
 System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;
 	for (int k= 0; k<num_interaction; k++) {
-		if (interaction[k].active &&
+		if (interaction[k].is_active() &&
 			interaction[k].disp_tan_norm() > _max_disp_tan) {
 			_max_disp_tan = interaction[k].disp_tan_norm();
 		}
@@ -1135,7 +1133,7 @@ void
 System::calcTotalPotentialEnergy(){
 	total_energy = 0;
 	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active){
+		if (interaction[k].is_active()){
 			total_energy += interaction[k].getPotentialEnergy();
 		}
 	}

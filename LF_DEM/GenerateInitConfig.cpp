@@ -122,23 +122,20 @@ GenerateInitConfig::outputPositionData(){
 
 double
 GenerateInitConfig::computeGradient(){
-	int i, j;
+	for(int i=0; i<np; i++) {
+		grad[i].reset();
+	}
+	unsigned int i,j;
 	double r, rcont;
 	vec3d nr_vec;
 	double amp, amp2;
 	double energy = 0;
-	for(i=0; i<np; i++) {
-		for(int u=0; u<sys.dimension; u++) {
-			grad[i].reset();
-		}
-	}
 	for (int k=0; k<sys.num_interaction; k++) {
-		if (sys.interaction[k].contact) {
-			i = sys.interaction[k].par_num[0];
-			j = sys.interaction[k].par_num[1];
-			r = sys.interaction[k].R();
-			rcont = sys.interaction[k].Ro();
-			nr_vec = sys.interaction[k].nr_vec;
+		if (sys.interaction[k].is_contact()) {
+			sys.interaction[k].get_par_num(i, j);
+			r = sys.interaction[k].get_r();
+			rcont = sys.interaction[k].get_ro();
+			nr_vec = sys.interaction[k].Nr_vec();
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
@@ -256,7 +253,7 @@ GenerateInitConfig::updateInteractions(int i){
 		bool desactivated;
 		inter_list[k]->updateState(desactivated);
 		if (desactivated) {
-			sys.deactivated_interaction.push(inter_list[k]->label);
+			sys.deactivated_interaction.push(inter_list[k]->Label());
 		}
 	}
 }
@@ -266,7 +263,7 @@ GenerateInitConfig::overlapNumber(int i){
 	int overlaps = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
-		if ((*it)->R() < (*it)->Ro()) {
+		if ((*it)->is_overlap()) {
 			overlaps++;
 		}
 	}
@@ -278,9 +275,9 @@ GenerateInitConfig::particleEnergy(int i){
 	double energy = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
-		double r = (*it)->R();
-		double rcont = (*it)->Ro();
-		if (r < rcont) {
+		if ((*it)->is_overlap()) {
+			double r = (*it)->get_r();
+			double rcont = (*it)->get_ro();
 			double amp = (r/rcont-1); // negative
 			energy += 2*amp*amp;
 		}
