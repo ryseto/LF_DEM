@@ -30,7 +30,7 @@ Simulation::~Simulation(){
  * Main simulation
  */
 void
-Simulation::SimulationMain(int argc, const char * argv[]){
+Simulation::simulationMain(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	filename_parameters = argv[2];
 	sys.dimensionless_shear_rate = atof(argv[3]);
@@ -39,6 +39,7 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 	importInitialPositionFile();
 	openOutputFiles();
 	outputDataHeader(fout_particle);
+	sys.setupSystem();
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	double strain_next_config_out = strain_interval_output;
@@ -58,10 +59,10 @@ Simulation::SimulationMain(int argc, const char * argv[]){
 }
 
 void
-Simulation::RelaxationZeroShear(vector<vec3d> &position_,
+Simulation::relaxationZeroShear(vector<vec3d> &position_,
 								vector<double> &radius_,
-								double lx_, double ly_, double lz_, double volume_fraction_){
-	sys.setConfiguration(position_, radius_, lx_, ly_, lz_, volume_fraction_);
+								double lx_, double ly_, double lz_){
+	sys.setConfiguration(position_, radius_, lx_, ly_, lz_);
 	setDefaultParameters();
 	sys.integration_method = 0;
 	sys.dt = 1e-4;
@@ -347,19 +348,20 @@ Simulation::importInitialPositionFile(){
 	getline(file_import, line);
 	int n1, n2;
 	double volume_fraction_;
-	double lx_, ly_, lz_;
+	double lx, ly, lz;
 	double vf1, vf2;
 	char buf;
-	file_import >> buf >> n1 >> n2 >> volume_fraction_ >> lx_ >> ly_ >> lz_ >> vf1 >> vf2;
-	double _radius;
-	vec3d _pos;
-	while (file_import >> _pos.x >> _pos.y >> _pos.z >> _radius) {
-		initial_position.push_back(_pos);
-		radius.push_back(_radius);
+	file_import >> buf >> n1 >> n2 >> volume_fraction_ >> lx >> ly >> lz >> vf1 >> vf2;
+	volume_fraction = volume_fraction_;
+	double x_, y_, z_, a_;
+	while (file_import >> x_ >> y_ >> z_ >> a_) {
+		//initial_position.push_back(vec3d (x_,y_,z_));
+		vec3d tmp(x_, y_, z_);
+		initial_position.push_back(tmp);
+		radius.push_back(a_);
 	}
 	file_import.close();
-	sys.setConfiguration(initial_position, radius,
-						 lx_, ly_, lz_, volume_fraction_);
+	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 }
 
 void
@@ -536,7 +538,7 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 void
 Simulation::outputDataHeader(ofstream &fout){
 	fout << "np " << sys.Np() << endl;
-	fout << "VF " << sys.volume_fraction << endl;
+	fout << "VF " << volume_fraction << endl;
 	fout << "Lx " << sys.Lx() << endl;
 	fout << "Ly " << sys.Ly() << endl;
 	fout << "Lz " << sys.Lz() << endl;
@@ -558,7 +560,7 @@ Simulation::outputConfigurationData(){
 	 * we need to change the velocities of particles as well.
 	 */
 	if (origin_zero_flow) {
-		for (int i=0; i < np; i++) {
+		for (int i=0; i<np; i++) {
 			vel[i] = sys.velocity[i];
 			if (pos[i].z < 0) {
 				vel[i].x -= sys.Lz();

@@ -140,12 +140,10 @@ System::allocatePositionRadius(){
 void
 System::setConfiguration(const vector <vec3d> &initial_positions,
 						 const vector <double> &radii,
-						 double lx_, double ly_, double lz_,
-						 double volume_fraction_){
+						 double lx_, double ly_, double lz_){
 	Np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
-	volume_fraction = volume_fraction_;
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];

@@ -25,6 +25,7 @@ private:
 	string filename_parameters;
 	double strain_interval_output_data;
 	double strain_interval_output;
+	double volume_fraction;
 	/*
 	 * Resultant data
 	 */
@@ -87,9 +88,9 @@ public:
      */
 	Simulation();
 	~Simulation();
-	void SimulationMain(int argc, const char * argv[]);
-	void RelaxationZeroShear(vector<vec3d> &position_,
+	void simulationMain(int argc, const char * argv[]);
+	void relaxationZeroShear(vector<vec3d> &position_,
 							  vector<double> &radius_,
-							  double lx_, double ly_, double lz_, double volume_fraction_);
+							  double lx_, double ly_, double lz_);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

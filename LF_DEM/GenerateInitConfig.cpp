@@ -21,7 +21,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume();
-	sys.volume_fraction = volume_fraction;
+//	sys.volume_fraction = volume_fraction;
 	sys.Lub_max(2.5);
 	sys.in_predictor = false;
 	putRandom();
@@ -68,7 +68,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 		radius[i] = sys.radius[i];
 	}
 	Simulation simulation;
-	simulation.RelaxationZeroShear(position, radius, lx, ly, lz, volume_fraction);
+	simulation.relaxationZeroShear(position, radius, lx, ly, lz);
 	outputPositionData();
 	
 	delete [] grad;

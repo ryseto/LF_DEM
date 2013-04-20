@@ -154,7 +154,7 @@ public:
 	double colloidalforce_amplitude; // colloidal force dimensionless
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	double kb_T;
-	double volume_fraction;
+//	double volume_fraction;
 	double vel_difference;
 	double dt;
 	double max_velocity;
@@ -182,8 +182,7 @@ public:
 	void setSystemVolume();
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
-						  double lx_, double ly_, double lz_,
-						  double volume_fraction_);
+						  double lx_, double ly_, double lz_);
 	void setupSystemForGenerateInit();
 	void setupSystem();
 	void allocatePositionRadius();

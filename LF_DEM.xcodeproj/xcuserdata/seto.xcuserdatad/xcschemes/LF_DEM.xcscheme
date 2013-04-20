@@ -78,7 +78,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "g"
+            argument = "D3N200VF0.5MonoCubic_1.dat"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "fric1.txt"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "1"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -28,7 +28,7 @@ int main(int argc, const char * argv[])
 		generate_init_config.generate(argc, argv);
 	} else {
 		Simulation simulation;
-		simulation.SimulationMain(argc, argv);
+		simulation.simulationMain(argc, argv);
 	}
     return 0;
 }
