@@ -36,6 +36,8 @@ private:
 	int np3;
 	int maxnb_interactionpair;
 	BoxSet boxset;
+	int ts; // time steps
+	double dt;
 	double lx;
 	double ly;
 	double lz;
@@ -49,10 +51,21 @@ private:
 	double kn;
 	double kt;
 	double lub_max;
+	double lub_coeff_contact;
+	double mu_static; // static friction coefficient.
+	double bgf_factor;
+
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
+	double colloidalforce_amplitude; // colloidal force dimensionless
+	double colloidalforce_length; // colloidal force length (dimensionless)
+	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
+	bool twodimension;
+	/* data */
+	int intr_max_fc_normal;
+	int intr_max_fc_tan;
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -90,7 +103,6 @@ public:
 	double *v_Brownian_mid;
 	bool in_predictor;
 	bool in_corrector;
-	int ts; // time steps
 	int dimension;
 	vec3d *position;
 	Interaction *interaction;
@@ -118,16 +130,10 @@ public:
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
 	
-	double lub_coeff_contact;
-	double mu_static; // static friction coefficient.
 	bool friction;
 	bool colloidalforce;
 	bool brownian;
-	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
-	double diag_stokes_drag;
-	double bgf_factor;
 	int nb_interaction;
-	double d_strain;
 	/*
 	 * Leading term of lubrication force is 1/gap_nondim, 
 	 * with gap_nondim the gap
@@ -150,11 +156,8 @@ public:
 	/* Colloidal force to stabilize suspension
 	 * (This gives simple shear-rate depenedence.)
 	 */
-	double colloidalforce_amplitude; // colloidal force dimensionless
-	double colloidalforce_length; // colloidal force length (dimensionless)
 	double kb_T;
 	double vel_difference;
-	double dt;
 	double max_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
@@ -168,9 +171,9 @@ public:
 	double ave_overlap;
 	int contact_nb;
 	int cnt_monitored_data;
-	double average_Fc_normal_norm;
-	double max_Fc_normal_norm;
-	bool draw_rotation_2d;
+	double average_fc_normal;
+	double max_fc_normal;
+	double max_fc_tan;
 	string simu_name;
 	ofstream fout_int_data;
 	double total_energy;
@@ -211,7 +214,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	void openFileInteractionData();
-	void adjustContactModelParameters(int nb_average);
+	void adjustContactModelParameters(int averaging_nb);
 	void calcTotalPotentialEnergy();
 	void setupShearFlow(bool activate){
 		if (activate) {
@@ -242,67 +245,32 @@ public:
 	double getParticleContactNumber(){
 		return (double)2*contact_nb/np;
 	}
-	
-	inline double Lx(){
-		return lx;
-	}
+	void Integration_method(int val){integration_method = val;}
+	void Bgf_factor(int val){bgf_factor = val;}
+	inline double Lx(){return lx;}
+	inline double Ly(){return ly;}
+	inline double Lz(){return lz;}
+	inline double Lx_half(){return lx_half;}
+	inline double Ly_half(){return ly_half;}
+	inline double Lz_half(){return lz_half;}
+	inline void Np(int val){np = val, np3 = 3*val;}
+	inline int Np(){return np;}
+	inline double Shear_strain(){return shear_strain;}
+	inline void Kn(double val){kn = val;}
+	inline double Kn(){return kn;}
+	inline void Kt(double val){kt = val;}
+	inline double Kt(){return kt;}
+	inline void Lub_max(double val){lub_max = val;}
+	inline double Lub_max(){return lub_max;}
+	inline void Dt(double val){dt = val;}
+	inline double Dt(){return dt;}
+	inline void Colloidalforce_amplitude(double val){colloidalforce_amplitude = val;}
+	inline double Colloidalforce_amplitude(){return colloidalforce_amplitude;}
+	inline void Colloidalforce_length(double val){colloidalforce_length = val;}
+	inline double Colloidalforce_length(){return colloidalforce_length;}
+	inline void Mu_static(double val){mu_static = val;}
+	inline double Mu_static(){return mu_static;}
+	inline double Lub_coeff_contact(){return lub_coeff_contact;}
 
-	inline double Ly(){
-		return ly;
-	}
-
-	inline double Lz(){
-		return lz;
-	}
-
-	inline double Lx_half(){
-		return lx_half;
-	}
-
-	inline double Ly_half(){
-		return ly_half;
-	}
-
-	inline double Lz_half(){
-		return lz_half;
-	}
-
-	inline void Np(int val){
-		np = val;
-		np3 = 3*np;
-	}
-
-	inline int Np(){
-		return np;
-	}
-
-	inline double Shear_strain(){
-		return shear_strain;
-	}
-	
-	inline void Kn(double val){
-		kn = val;
-	}
-
-	inline double Kn(){
-		return kn;
-	}
-
-	inline void Kt(double val){
-		kt = val;
-	}
-	
-	inline double Kt(){
-		return kt;
-	}
-	
-	inline void Lub_max(double val){
-		lub_max = val;
-	}
-	
-	inline double Lub_max(){
-		return 	lub_max;
-	}
-	
 };
 #endif /* defined(__LF_DEM__System__) */

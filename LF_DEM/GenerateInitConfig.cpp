@@ -18,10 +18,10 @@ int
 GenerateInitConfig::generate(int argc, const char * argv[]){
 	setParameters(argc, argv);
 	sys.Np(np);
+	sys.brownian = false;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume();
-//	sys.volume_fraction = volume_fraction;
 	sys.Lub_max(2.5);
 	sys.in_predictor = false;
 	putRandom();
@@ -442,97 +442,97 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
-	sys.Np(np);
 }
-
-void
-GenerateInitConfig::setSystemParameters(){
-	/*
-	 * Simulation
-	 *
-	 * dt: the time step to integrate the equation of motion.
-	 *     We need to give a good criterion to give.
-	 * dt_mid: the intermediate time step for the mid-point
-	 *     algortithm. dt/dt_mid = dt_ratio
-	 *     Banchio/Brady (J Chem Phys) gives dt_ratio=100
-	 *    ASD code from Brady has dt_ratio=150
-	 *
-	 */
-	sys.dt = 1e-4;
-	/*
-	 * integration_method:
-	 * 0 Euler's Method,
-	 * 1 predictor-corrector,
-	 * 2 Brownian (if kT > 0).
-	 */
-	sys.integration_method = 1;
-	/*
-	 * Shear flow
-	 *  shear_rate: shear rate
-	 *  strain(): total strain (length of simulation)
-	 *
-	 */
-	/*
-	 * Lubrication force
-	 * lub_max: reduced large cutoff distance for lubrication
-	 * I think lub_max = 2.5 and 3 generate different results.
-	 * We should give suffiently larger value.
-	 * The value 3 or 3.5 should be better (To be checked.)
-	 */
-	sys.Lub_max(2.5);
-	/*
-	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
-	 *
-	 */
-	sys.lub_reduce_parameter = 1e-3;
-	/*
-	 * contact_relaxzation_factor:
-	 *
-	 * This gives the coeffient of the resistance term for h < 0.
-	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
-	 *
-	 */
-	sys.contact_relaxzation_time = 0.001;
-	/*
-	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
-	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
-	 *   The optimal value of bgf_factor (< 1.0) may exist.
-	 *
-	 */
-	sys.bgf_factor = 1.0;
-	/*
-	 * Brownian force
-	 * kb_T: Thermal energy kb*T
-	 * kb_T = 0 ---> non-brownian
-	 * kb_T > 0 ---> brownian
-	 */
-	sys.kb_T = 0;
-	/*
-	 * Contact force parameters
-	 * kn: normal spring constant
-	 * kt: tangential spring constant
-	 */
-	sys.Kn(5000);
-	sys.overlap_target = 0.03;
-	sys.disp_tan_target = 0.03;
-	/*
-	 * Colloidal force parameter
-	 * Short range repulsion is assumed.
-	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
-	 */
-	/*
-	 * mu_static: static friction coeffient
-	 * mu_dynamic: dynamic friction coeffient
-	 */
-	sys.mu_static = 10;
-	/*
-	 * Output interval
-	 */
-	//strain_interval_output = 0.05;
-	/*
-	 *  Data output
-	 */
-	/*
-	 * The middle height of the simulation box is set to the flow zero level.
-	 */
-}
+//
+//void
+//GenerateInitConfig::setSystemParameters(){
+//	/*
+//	 * Simulation
+//	 *
+//	 * dt: the time step to integrate the equation of motion.
+//	 *     We need to give a good criterion to give.
+//	 * dt_mid: the intermediate time step for the mid-point
+//	 *     algortithm. dt/dt_mid = dt_ratio
+//	 *     Banchio/Brady (J Chem Phys) gives dt_ratio=100
+//	 *    ASD code from Brady has dt_ratio=150
+//	 *
+//	 */
+//	sys.Dt(1e-4);
+//	/*
+//	 * integration_method:
+//	 * 0 Euler's Method,
+//	 * 1 predictor-corrector,
+//	 * 2 Brownian (if kT > 0).
+//	 */
+//	sys.Integration_method(1);
+//	/*
+//	 * Shear flow
+//	 *  shear_rate: shear rate
+//	 *  strain(): total strain (length of simulation)
+//	 *
+//	 */
+//	/*
+//	 * Lubrication force
+//	 * lub_max: reduced large cutoff distance for lubrication
+//	 * I think lub_max = 2.5 and 3 generate different results.
+//	 * We should give suffiently larger value.
+//	 * The value 3 or 3.5 should be better (To be checked.)
+//	 */
+//	sys.Lub_max(2.5);
+//	/*
+//	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
+//	 *
+//	 */
+//	sys.lub_reduce_parameter = 1e-3;
+//	/*
+//	 * contact_relaxzation_factor:
+//	 *
+//	 * This gives the coeffient of the resistance term for h < 0.
+//	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
+//	 *
+//	 */
+//	sys.contact_relaxzation_time = 0.001;
+//	/*
+//	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
+//	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
+//	 *   The optimal value of bgf_factor (< 1.0) may exist.
+//	 *
+//	 */
+//	sys.Bgf_factor(1);
+//	/*
+//	 * Brownian force
+//	 * kb_T: Thermal energy kb*T
+//	 * kb_T = 0 ---> non-brownian
+//	 * kb_T > 0 ---> brownian
+//	 */
+//	sys.kb_T = 0;
+//	/*
+//	 * Contact force parameters
+//	 * kn: normal spring constant
+//	 * kt: tangential spring constant
+//	 */
+//	sys.Kn(5000);
+//	sys.overlap_target = 0.03;
+//	sys.disp_tan_target = 0.03;
+//	/*
+//	 * Colloidal force parameter
+//	 * Short range repulsion is assumed.
+//	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
+//	 */
+//	/*
+//	 * mu_static: static friction coeffient
+//	 * mu_dynamic: dynamic friction coeffient
+//	 */
+//	sys.Mu_static(0);
+//	/*
+//	 * Output interval
+//	 */
+//	//strain_interval_output = 0.05;
+//	/*
+//	 *  Data output
+//	 */
+//	/*
+//	 * The middle height of the simulation box is set to the flow zero level.
+//	 */
+//
+//}

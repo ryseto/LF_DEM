@@ -26,6 +26,31 @@ Simulation::~Simulation(){
 	}
 };
 
+void
+Simulation::contactForceParameter(){
+	ifstream fnmax_file;
+	fnmax_file.open("fn_max.dat");
+	double phi_;
+	double fnmax_;
+	while (fnmax_file >> phi_ >> fnmax_) {
+		if (phi_ == volume_fraction){
+			break;
+		}
+	}
+	fnmax_file.close();
+	cerr << volume_fraction << ' ' << fnmax_ << endl;
+	double kn = fnmax_/sys.overlap_target;
+	double kt = kn*3/5;
+	double dt = 240*1e-4/fnmax_;
+	if (dt > 1e-4){
+		dt = 1e-4;
+	}
+	sys.Kn(kn);
+	sys.Kt(kt);
+	sys.Dt(dt);
+	cerr << phi_ << ' ' << fnmax_ << ' ' << kn << ' ' << kt << endl;
+}
+
 /*
  * Main simulation
  */
@@ -37,12 +62,17 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	setDefaultParameters();
 	readParameterFile();
 	importInitialPositionFile();
+	/*
+	 *
+	 */
+	//contactForceParameter();
 	openOutputFiles();
 	outputDataHeader(fout_particle);
 	sys.setupSystem();
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	double strain_next_config_out = strain_interval_output;
+	int knkt_averaging_nb = strain_interval_knkt_adjustment/strain_interval_output_data;
 	do {
 		sys.timeEvolution(strain_interval_output_data);
 		evaluateData();
@@ -52,7 +82,7 @@ Simulation::simulationMain(int argc, const char * argv[]){
 			strain_next_config_out = sys.Shear_strain()+strain_interval_output-1e-6;
 		}
 		if (kn_kt_adjustment) {
-			sys.adjustContactModelParameters(10);
+			sys.adjustContactModelParameters(knkt_averaging_nb);
 		}
 		cerr << "strain: " << sys.Shear_strain() << endl;
 	} while (strain_next_config_out < shear_strain_end);
@@ -64,13 +94,14 @@ Simulation::relaxationZeroShear(vector<vec3d> &position_,
 								double lx_, double ly_, double lz_){
 	sys.setConfiguration(position_, radius_, lx_, ly_, lz_);
 	setDefaultParameters();
-	sys.integration_method = 0;
-	sys.dt = 1e-4;
+	sys.Integration_method(0);
+	sys.Dt(1e-4);
 	sys.Kn(2000);
-	sys.mu_static = 0;
+	sys.kb_T = 0;
+	sys.Mu_static(0);
 	sys.dimensionless_shear_rate = 1;
-	sys.colloidalforce_length = 0.05; // dimensionless
-	sys.colloidalforce_amplitude = 10;
+	sys.Colloidalforce_length(0.05); // dimensionless
+	sys.Colloidalforce_amplitude(10);
 	sys.setupSystem();
 	sys.setupShearFlow(false);
 	double energy_previous = 0;
@@ -124,11 +155,13 @@ void
 Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
 	if (keyword == "bgf_factor") {
-		sys.bgf_factor = atof(value.c_str());
+		sys.Bgf_factor(atof(value.c_str()));
 	} else if (keyword == "kn_kt_adjustment") {
 		kn_kt_adjustment = str2bool(value);
+	} else if (keyword == "strain_interval_knkt_adjustment") {
+		strain_interval_knkt_adjustment = atof(value.c_str());
 	} else if (keyword == "colloidalforce_length") {
-		sys.colloidalforce_length = atof(value.c_str());
+		sys.Colloidalforce_length(atof(value.c_str()));
 	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxzation_time") {
@@ -136,11 +169,11 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "kb_T") {
 		sys.kb_T = atof(value.c_str());
 	} else if (keyword == "dt") {
-		sys.dt = atof(value.c_str());
+		sys.Dt(atof(value.c_str()));
 	} else if (keyword == "shear_strain_end") {
 		shear_strain_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
-		sys.integration_method = atof(value.c_str());
+		sys.Integration_method(atoi(value.c_str()));
 	} else if (keyword == "lub_max") {
 		sys.Lub_max(atof(value.c_str()));
 	} else if (keyword == "kn") {
@@ -148,13 +181,11 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "kt") {
 		sys.Kt(atof(value.c_str()));
 	} else if (keyword == "mu_static") {
-		sys.mu_static = atof(value.c_str()) ;
+		sys.Mu_static(atof(value.c_str()));
 	} else if (keyword == "strain_interval_out") {
 		strain_interval_output = atof(value.c_str());
 	} else if (keyword == "strain_interval_out_data") {
 		strain_interval_output_data = atof(value.c_str());
-	} else if (keyword == "draw_rotation_2d") {
-		sys.draw_rotation_2d = str2bool(value);
 	} else if (keyword == "out_data_particle") {
 		out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
@@ -233,7 +264,8 @@ Simulation::openOutputFiles(){
 
 void
 Simulation::setDefaultParameters(){
-	kn_kt_adjustment = false;
+	
+	
 	/*
 	 * Simulation
 	 *
@@ -245,14 +277,14 @@ Simulation::setDefaultParameters(){
 	 *    ASD code from Brady has dt_ratio=150
 	 *
 	 */
-	sys.dt = 1e-4;
+	double _dt = 1e-4;
 	/*
 	 * integration_method:
 	 * 0 Euler's Method,
 	 * 1 predictor-corrector,
 	 * 2 Brownian (if kT > 0).
 	 */
-	sys.integration_method = 1;
+	int _integration_method = 1;
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
@@ -267,7 +299,7 @@ Simulation::setDefaultParameters(){
 	 * We should give suffiently larger value. 
 	 * The value 3 or 3.5 should be better (To be checked.)
 	 */
-	sys.Lub_max(2.5);
+	int _lub_max = 2.5;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -287,7 +319,7 @@ Simulation::setDefaultParameters(){
 	 *   The optimal value of bgf_factor (< 1.0) may exist.
 	 *
 	 */
-	sys.bgf_factor = 1;
+	double _bgf_factor = 1;
 	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
@@ -300,21 +332,24 @@ Simulation::setDefaultParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	sys.Kn(5000);
-	sys.Kt(1000);
+	double _kn = 5000;
+	double _kt = 1000;
+	kn_kt_adjustment = false;
+	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
+	
 	/*
 	 * Colloidal force parameter
 	 * Short range repulsion is assumed.
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
 	 */
-	sys.colloidalforce_length = 0.1;
+	double _colloidalforce_length = 0.1;
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
 	 */
-	sys.mu_static = 1;	
+	double _mu_static = 1;
 	/*
 	 * Output interval:
 	 * strain_interval_output_data is for outputing rheo_...
@@ -334,6 +369,15 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
+	
+	sys.Integration_method(_integration_method);
+	sys.Bgf_factor(_bgf_factor);
+	sys.Lub_max(_lub_max);
+	sys.Dt(_dt);
+	sys.Kn(_kn);
+	sys.Kt(_kt);
+	sys.Mu_static(_mu_static);
+	sys.Colloidalforce_length(_colloidalforce_length);
 }
 
 void
@@ -463,7 +507,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#26: min gap (non-dim)" << endl;
 		fout_rheo << "#27: max tangential displacement" << endl;
 		fout_rheo << "#28: Average normal contact force" << endl;
-		fout_rheo << "#29: max Fc_normal_norm" << endl;
+		fout_rheo << "#29: max Fc_normal" << endl;
 		fout_rheo << "#30: max velocity" << endl;
 		fout_rheo << "#31: max angular velocity" << endl;
 		fout_rheo << "#32: max contact normal velocity" << endl;
@@ -508,8 +552,8 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*normalstress_diff_2_brownian << ' ' ; //25
 	fout_rheo << sys.min_gap_nondim << ' '; //26
 	fout_rheo << sys.max_disp_tan << ' '; //27
-	fout_rheo << sys.average_Fc_normal_norm << ' '; //28
-	fout_rheo << sys.max_Fc_normal_norm << ' '; //29
+	fout_rheo << sys.average_fc_normal << ' '; //28
+	fout_rheo << sys.max_fc_normal << ' '; //29
 	fout_rheo << sys.max_velocity << ' '; //30
 	fout_rheo << sys.max_ang_velocity << ' '; //31
 	fout_rheo << sys.max_contact_velo_normal << ' '; //32
@@ -637,7 +681,7 @@ Simulation::outputConfigurationData(){
 			fout_interaction << sys.interaction[k].Gap_nondim() << ' '; // 7
 			fout_interaction << sys.interaction[k].getLubForce() << ' '; // 8
 			fout_interaction << sys.interaction[k].getFcNormal() << ' '; // 9
-			fout_interaction << sys.interaction[k].getFcTan_norm() << ' '; // 10
+			fout_interaction << sys.interaction[k].getFcTan() << ' '; // 10
 			fout_interaction << sys.interaction[k].getColloidalForce() << ' '; // 11
 			fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 12
 			fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 13

@@ -26,7 +26,7 @@ Interaction::calcNormalVectorDistanceGap(){
 	r = r_vec.norm();
 	nr_vec = r_vec/r;
 	gap_nondim = r/ro_half-2;
-	if (gap_nondim > 0) {
+	if (!contact) {
 		lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
 	}
 }
@@ -68,7 +68,8 @@ Interaction::activate(int i, int j){
 	 * a0*a1/(a1+a2)/2
 	 * Is
 	 */
-	colloidalforce_amplitude = sys->colloidalforce_amplitude*a0*a1/ro;
+	colloidalforce_amplitude = sys->Colloidalforce_amplitude()*a0*a1/ro;
+	colloidalforce_length = sys->Colloidalforce_length();
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	calcNormalVectorDistanceGap();
@@ -80,6 +81,17 @@ Interaction::activate(int i, int j){
 	cnt_sliding = 0;
 	strain_lub_start = sys->Shear_strain(); // for output
 	duration_contact = 0; // for output
+}
+
+void
+Interaction::updateContactModel(){
+	if (active) {
+		kn_scaled = ro_half*ro_half*sys->Kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+		kt_scaled = ro_half*sys->Kt(); // F = kt_s
+		if (contact) {
+			lub_coeff = sys->Lub_coeff_contact();
+		}
+	}
 }
 
 void
@@ -103,7 +115,7 @@ Interaction::activate_contact(){
 	contact = true;
 	disp_tan.reset();
 	strain_contact_start = sys->Shear_strain();
-	lub_coeff = sys->lub_coeff_contact;
+	lub_coeff = sys->Lub_coeff_contact();
 }
 
 void
@@ -133,10 +145,10 @@ Interaction::updateState(bool &deactivated){
 		if (sys->friction) {
 			calcContactVelocity();
 			if (sys->in_predictor) {
-				disp_tan += contact_velocity*sys->dt;
+				disp_tan += contact_velocity*sys->Dt();
 				disp_tan_predictor = disp_tan;
 			} else {
-				disp_tan = disp_tan_predictor+contact_velocity*sys->dt;
+				disp_tan = disp_tan_predictor+contact_velocity*sys->Dt();
 			}
 		}
 		calcNormalVectorDistanceGap();
@@ -159,7 +171,7 @@ Interaction::updateState(bool &deactivated){
 	} else {
 		calcNormalVectorDistanceGap();
 		if (sys->colloidalforce) {
-			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/sys->colloidalforce_length);
+			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
 			f_colloidal = -f_colloidal_norm*nr_vec;
 		}
 		if (sys->in_corrector) {
@@ -210,7 +222,7 @@ Interaction::calcContactInteraction(){
 
 void
 Interaction::checkBreakupStaticFriction(){
-	double f_static = sys->mu_static*f_contact_normal_norm;
+	double f_static = sys->Mu_static()*f_contact_normal_norm;
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > f_static*f_static) {
 		/*
@@ -531,7 +543,7 @@ Interaction::getPotentialEnergy(){
 		energy = 0.5*sys->Kn()*gap_nondim*gap_nondim;
 		energy += -colloidalforce_amplitude*gap_nondim;
 	} else {
-		energy = sys->colloidalforce_length*colloidalforce_amplitude*(exp(-(r-ro)/sys->colloidalforce_length)-1);
+		energy = colloidalforce_length*colloidalforce_amplitude*(exp(-(r-ro)/colloidalforce_length)-1);
 	}
 	return energy;
 }

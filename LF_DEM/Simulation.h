@@ -25,6 +25,7 @@ private:
 	string filename_parameters;
 	double strain_interval_output_data;
 	double strain_interval_output;
+	double strain_interval_knkt_adjustment;
 	double volume_fraction;
 	/*
 	 * Resultant data
@@ -62,6 +63,7 @@ private:
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
+
 	/*
 	 */
 	void timeEvolution();
@@ -76,6 +78,7 @@ private:
 	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
+	void contactForceParameter();
 	/*
 	 * For outputs
 	 */

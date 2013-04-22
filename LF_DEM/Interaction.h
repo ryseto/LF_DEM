@@ -39,6 +39,7 @@ private:
 	int zshift;
 	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
+	double lub_coeff_contact; //
 	vec3d r_vec; // normal vector
 	vec3d nr_vec; // vector center to center
 	vec3d contact_velocity;
@@ -50,6 +51,7 @@ private:
 	double kn_scaled;
 	double kt_scaled;
 	double colloidalforce_amplitude;
+	double colloidalforce_length;
 	double XA[4]; // ii ij ji jj
 	double XG[4]; // ii ij ji jj
 	double XM[4]; // ii ij ji jj
@@ -78,7 +80,6 @@ private:
 	
 	//======= relative position/velocity  ========//
 	void calcNormalVectorDistanceGap();
-	void calcContactVelocity();
 	void calcContactVelocity_predictor();
 	void calcContactVelocity_corrector();
 	
@@ -123,9 +124,8 @@ public:
 	inline bool is_overlap(){return r<ro;}
 	inline bool is_contact(){return contact;}
 	inline bool is_active(){return active;}
-
+	void updateContactModel();
 	//======= particles data  ====================//
-
 	inline int
 	partner(int i){
 		return (i == par_num[0] ? par_num[1] : par_num[0]);
@@ -158,6 +158,7 @@ public:
 	inline double get_a1_XA3(){return a1*XA[3];}
 	inline double get_ro2_XA2(){return ro_half*XA[2];}
 	//===== forces/stresses  ========================== //
+	void calcContactVelocity();
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
 	void evaluateLubricationForce();
@@ -165,8 +166,8 @@ public:
 	double getNormalVelocity();
 	double getPotentialEnergy();
 	inline double getFcNormal(){return f_contact_normal_norm;}
-	inline vec3d getFcTan(){return f_contact_tan;}
-	inline double getFcTan_norm(){return f_contact_tan.norm();}
+	inline double getFcTan(){return f_contact_tan.norm();}
+//	inline double getFcTan_norm(){return f_contact_tan.norm();}
 	inline double getColloidalForce(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}

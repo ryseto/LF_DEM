@@ -59,7 +59,7 @@ private:
 	double sqContactDistance(int i, int j, double contact_distance);
 	void putRandom();
 	void setParameters(int argc, const char * argv[]);
-	void setSystemParameters();
+//	void setSystemParameters();
 	void outputPositionData();
 public:
 	GenerateInitConfig(){};

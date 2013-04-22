@@ -102,6 +102,7 @@ System::setupSystemForGenerateInit(){
 	for (int i=0; i<np; i++) {
 		velocity[i].reset();
 	}
+	kb_T = 0;
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
@@ -225,14 +226,19 @@ System::setupSystem(){
 	// the cholmod_common of the solver is already initialized
 	if (brownian) {
 		fb->init();
+		brownianstress_calc_nb = 0;
 	}
-	brownianstress_calc_nb = 0;
 	initializeBoxing();
 	checkNewInteraction();
 	cnt_monitored_data = 0;
 	setSystemVolume();
 	for (int i=0; i<np; i++) {
 		bgfstress[i].set(0, 0, (5.0/9)*bgf_factor*radius_cubic[i], 0, 0, 0);
+	}
+	if (dimension == 2){
+		twodimension = true;
+	} else {
+		twodimension = false;
 	}
 }
 
@@ -292,7 +298,7 @@ System::deltaTimeEvolution(){
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -317,7 +323,7 @@ System::deltaTimeEvolutionPredictor(){
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -346,7 +352,7 @@ System::deltaTimeEvolutionCorrector(){
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2) {
+	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -511,7 +517,7 @@ void System::timeEvolutionBrownian(){
 	for (int i=0; i < np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (dimension == 2) {
+	if (twodimension) {
 		for (int i=0; i < np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -950,8 +956,10 @@ void
 System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
+	in_predictor = true;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
+			interaction[k].calcContactVelocity();
 			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
 				max_contact_velo_tan = interaction[k].getContactVelocity();
 			}
@@ -996,30 +1004,37 @@ System::analyzeState(){
 	contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lub_max;
-	double sum_Fc_normal_norm = 0;
-	max_Fc_normal_norm = 0;
+	double sum_fc_normal = 0;
+	max_fc_normal = 0;
+	max_fc_tan = 0;
+	intr_max_fc_normal = -1;
+	intr_max_fc_tan = -1;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (interaction[k].Gap_nondim() < min_gap_nondim) {
 				min_gap_nondim = interaction[k].Gap_nondim();
 			}
 			if (interaction[k].is_contact()) {
-				sum_Fc_normal_norm += interaction[k].getFcNormal();
 				contact_nb ++;
-				if (interaction[k].getFcNormal() > max_Fc_normal_norm) {
-					max_Fc_normal_norm = interaction[k].getFcNormal();
+				sum_fc_normal += interaction[k].getFcNormal();
+				if (interaction[k].getFcNormal() > max_fc_normal) {
+					max_fc_normal = interaction[k].getFcNormal();
+					intr_max_fc_normal = k;
+				}
+				if (interaction[k].getFcTan() > max_fc_tan) {
+					max_fc_tan = interaction[k].getFcTan();
+					intr_max_fc_tan = k;
 				}
 				if (interaction[k].disp_tan_norm() > max_disp_tan) {
 					max_disp_tan = interaction[k].disp_tan_norm();
 				}
 			}
-			//			cout << interaction[k].gap_nondim() << ' ' << interaction[k].getNormalVelocity() << endl;
 		}
 	}
 	if (contact_nb > 0) {
-		average_Fc_normal_norm = sum_Fc_normal_norm/contact_nb;
+		average_fc_normal = sum_fc_normal/contact_nb;
 	} else {
-		average_Fc_normal_norm = 0;
+		average_fc_normal = 0;
 	}
 }
 
@@ -1038,17 +1053,6 @@ System::openFileInteractionData(){
 	fout_int_data.open(int_daat_filename.c_str());
 }
 
-double
-System::evaluateMaxOverlap(){
-	double _max_overlap = 0;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active() &&
-			-interaction[k].Gap_nondim() > _max_overlap) {
-			_max_overlap = -interaction[k].Gap_nondim();
-		}
-	}
-	return _max_overlap;
-}
 
 double
 System::evaluateMaxDispTan(){
@@ -1086,43 +1090,47 @@ averageList(list<double> &_list, bool remove_max_min){
 }
 
 void
-System::adjustContactModelParameters(int nb_average){
-	//	double strain_interval_for_average = 5;
-	//	int num_average = strain_interval_for_average/strain_interval_output;
+System::adjustContactModelParameters(int averaging_nb){
+	//	 = 5;
 	/*
 	 * Averaged max Fn, over a strain interval
 	 */
-	static list<double> max_Fn_list;
-	max_overlap = evaluateMaxOverlap();
-	if (max_overlap > 0) {
-		max_Fn_list.push_back(kn*max_overlap);
+	static list<double> kn_list;
+	if (intr_max_fc_normal != -1) {
+		double ro_half = 0.5*interaction[intr_max_fc_normal].get_ro();
+		double kn_adjusted = max_fc_normal/(overlap_target*ro_half*ro_half);
+		kn_list.push_back(kn_adjusted);
+		cerr << "kn_adjusted = " << kn_adjusted << endl;
 	}
-	if (max_Fn_list.size() > 10) {
-		double ave_max_Fn = averageList(max_Fn_list, true);
-		kn = ave_max_Fn/overlap_target;
+	if (kn_list.size() > averaging_nb) {
+		kn = averageList(kn_list, true);
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-	}
-	if (max_Fn_list.size() == nb_average){
-		max_Fn_list.pop_front();
+		kn_list.pop_front();
 	}
 	/*
 	 * Averaged max Ft, over a strain interval
 	 */
-	static list<double> max_Ft_list;
+	static list<double> kt_list;
 	if (mu_static > 0) {
-		max_disp_tan = evaluateMaxDispTan();
-		if (max_disp_tan > 0){
-			max_Ft_list.push_back(kt*max_disp_tan);
+		if (intr_max_fc_tan != -1){
+			double ro_half = 0.5*interaction[intr_max_fc_tan].get_ro();
+			double kt_adjusted = max_fc_tan/(disp_tan_target*ro_half);
+			kt_list.push_back(kt_adjusted);
+			cerr << "kt_adjusted = " << kt_adjusted << endl;
 		}
-		if (max_Ft_list.size() > 10){
-			double ave_max_Ft = averageList(max_Ft_list, true);
-			kt = ave_max_Ft/disp_tan_target;
-		}
-		if (max_Ft_list.size() == nb_average){
-			max_Ft_list.pop_front();
+
+		if (kt_list.size() > averaging_nb){
+			kt = averageList(kt_list, true);
+			kt_list.pop_front();
 		}
 	}
-	cerr << "(kn, kt, lub_coeff_contact) = " << kn << ' ' << kt << ' ' << lub_coeff_contact << endl;
+	if (kn_list.size() > averaging_nb) {
+		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+		cerr << "(kn, kt, lub_coeff_contact) = " << kn << ' ' << kt << ' ' << lub_coeff_contact << endl;
+		for (int k=0; k<nb_interaction; k++) {
+			interaction[k].updateContactModel();
+		}
+	}
 }
 
 void
