@@ -24,6 +24,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	sys.setSystemVolume();
 	sys.Lub_max(2.5);
 	sys.in_predictor = false;
+	sys.Integration_method(0);
 	putRandom();
 	sys.setupSystemForGenerateInit();
 	grad = new vec3d [np];
@@ -239,7 +240,6 @@ GenerateInitConfig::putRandom(){
 			sys.radius[i] = a2;
 		}
 	}
-	sys.Radius_max(a2);
 }
 
 void

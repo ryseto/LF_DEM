@@ -79,7 +79,6 @@ private:
 	double invlambda; // a0/a1
 	
 	//======= relative position/velocity  ========//
-	void calcNormalVectorDistanceGap();
 	void calcContactVelocity_predictor();
 	void calcContactVelocity_corrector();
 	
@@ -125,6 +124,7 @@ public:
 	inline bool is_contact(){return contact;}
 	inline bool is_active(){return active;}
 	void updateContactModel();
+	void calcNormalVectorDistanceGap();
 	//======= particles data  ====================//
 	inline int
 	partner(int i){
@@ -183,6 +183,12 @@ public:
 	void pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
+	void info(){
+		cerr << "contact " << contact << endl;
+		cerr << "kn " << kn_scaled << endl;
+		cerr << "kn " << colloidalforce_amplitude << endl;
+		cerr << "kn " << colloidalforce_length << endl;
+	}
 	//=========== observables ===============================//
 };
 #endif /* defined(__LF_DEM__Interaction__) */

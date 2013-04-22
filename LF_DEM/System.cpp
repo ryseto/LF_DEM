@@ -1,3 +1,5 @@
+
+
 //
 //  System.cpp
 //  LF_DEM
@@ -111,7 +113,8 @@ System::setupSystemForGenerateInit(){
 	kn = 2000;
 	kt = 0;
 	friction = false;
-	colloidalforce = true;
+	dimensionless_shear_rate = 1;
+	colloidalforce = false;
 	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
@@ -808,7 +811,6 @@ System::updateVelocityRestingFluid(){
     }
 }
 
-
 void
 System::displacement(int i, const vec3d &dr){
 	position[i] += dr;
@@ -1003,7 +1005,7 @@ System::analyzeState(){
 	evaluateMaxContactVelocity();
 	contact_nb = 0;
 	max_disp_tan = 0;
-	min_gap_nondim = lub_max;
+	min_gap_nondim = lx;
 	double sum_fc_normal = 0;
 	max_fc_normal = 0;
 	max_fc_tan = 0;
@@ -1041,7 +1043,13 @@ System::analyzeState(){
 void
 System::setSystemVolume(){
 	if (dimension == 2) {
-		system_volume = lx*lz*2*radius_max;
+		double max_radius = 0;
+		for (int i=0; i < np; i++) {
+			if (radius[i] > max_radius) {
+				max_radius = radius[i];
+			}
+		}
+		system_volume = lx*lz*2*max_radius;
 	} else {
 		system_volume = lx*ly*lz;
 	}
@@ -1142,10 +1150,3 @@ System::calcTotalPotentialEnergy(){
 		}
 	}
 }
-
-
-
-
-
-
-

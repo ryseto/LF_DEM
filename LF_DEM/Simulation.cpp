@@ -101,16 +101,17 @@ Simulation::relaxationZeroShear(vector<vec3d> &position_,
 	sys.Mu_static(0);
 	sys.dimensionless_shear_rate = 1;
 	sys.Colloidalforce_length(0.05); // dimensionless
-	sys.Colloidalforce_amplitude(10);
 	sys.setupSystem();
+	sys.Colloidalforce_amplitude(10);
 	sys.setupShearFlow(false);
 	double energy_previous = 0;
 	while (true) {
 		int i_time_interval = 1000;
 		sys.timeEvolutionRelax(i_time_interval);
 		evaluateData();
+		//sys.analyzeState();
 		sys.calcTotalPotentialEnergy();
-		cout << sys.Shear_strain() << ' ' << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
+		cout << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
 		cerr << energy_previous-sys.total_energy << endl;
 		if (sys.min_gap_nondim > 0 &&
 			energy_previous-sys.total_energy < 0.01) {
@@ -299,7 +300,7 @@ Simulation::setDefaultParameters(){
 	 * We should give suffiently larger value. 
 	 * The value 3 or 3.5 should be better (To be checked.)
 	 */
-	int _lub_max = 2.5;
+	double _lub_max = 2.5;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *

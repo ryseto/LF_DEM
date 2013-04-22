@@ -45,7 +45,6 @@ private:
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
 	double system_volume;
-	double radius_max;
 	double sq_lub_max;
 	double shear_strain;
 	double kn;
@@ -234,10 +233,6 @@ public:
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
 
-	inline void Radius_max(double _radius_max){
-		radius_max = _radius_max;
-	}
-
 	inline double System_volume(){
 		return system_volume;
 	}
@@ -261,7 +256,13 @@ public:
 	inline void Kt(double val){kt = val;}
 	inline double Kt(){return kt;}
 	inline void Lub_max(double val){lub_max = val;}
-	inline double Lub_max(){return lub_max;}
+	inline double Lub_max(){
+		if (lub_max == 2){
+			cerr << lub_max << endl;
+			
+		}
+		
+		return lub_max;}
 	inline void Dt(double val){dt = val;}
 	inline double Dt(){return dt;}
 	inline void Colloidalforce_amplitude(double val){colloidalforce_amplitude = val;}
