@@ -14,10 +14,10 @@ Box::Box(){
 }
 
 Box::~Box(){
-	if(_neigh_nb > 0) {
+	if (_neigh_nb > 0) {
 		delete [] _neighbors;
 	}
-	if(_moving_neigh_nb > 0) {
+	if (_moving_neigh_nb > 0) {
 		delete [] _moving_neighbors;
 		delete [] _probing_positions;
 	}
@@ -30,7 +30,7 @@ Box::~Box(){
  */
 void
 Box::reset_moving_neighbors(){
-	for(int label=0; label<_moving_neigh_nb; label++) {
+	for (int label=0; label<_moving_neigh_nb; label++) {
 		_neighbors[label+_still_neigh_nb] = NULL;
 		_moving_neighbors[label] = NULL;
 	}
@@ -40,20 +40,17 @@ void
 Box::neigh_nb(int n, int moving_n){
 	_neigh_nb = n;
 	_moving_neigh_nb = moving_n;
-	_still_neigh_nb = n - moving_n;
-	
-	if(_neigh_nb > 0) {
+	_still_neigh_nb = n-moving_n;
+	if (_neigh_nb > 0) {
 		_neighbors = new Box* [_neigh_nb];
 	}
-	
-	if(_moving_neigh_nb > 0) {
+	if (_moving_neigh_nb > 0) {
 		_moving_neighbors = new Box* [_moving_neigh_nb];
 		_probing_positions = new vec3d [_moving_neigh_nb];
 		_probe_nb = _moving_neigh_nb;
 	}
 	reset_moving_neighbors();
 }
-
 
 bool
 Box::can_be_added(int label, Box* neigh_box){
@@ -82,7 +79,6 @@ Box::neighbor(int label, Box* neigh_box){
 		return false;
 	}
 }
-
 
 void
 Box::probing_positions(int label, const vec3d &pos){

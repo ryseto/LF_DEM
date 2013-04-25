@@ -16,49 +16,44 @@
 class Simulation{
 private:
 	System sys;
-	string filename_addition;
-	int num_of_particle;
-	bool dt_adjustment;
+	string filename_;
 	bool kn_kt_adjustment;
 	double shear_strain_end;
-	bool import_positions;
-	vector<vec3d> initial_positions;
-	vector<double> radii;
+	vector<vec3d> initial_position;
+	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;
-
-	double unit_of_force;
-	double unit_of_velocity;
-	double unit_of_length;
-	double viscosity_solvent; // It can be real value.
-	double radius_of_particle; // It can be real value.
-	/* Colloidal force parameter
-	 * A exp(-h/lambda)
-	 * cf_amp_dl0 = A/F_0 at shear rate = 1.0
-	 */
-	double cf_amp_dl0;
+	double strain_interval_output_data;
+	double strain_interval_output;
+	double strain_interval_knkt_adjustment;
+	double volume_fraction;
 	/*
 	 * Resultant data
 	 */
-	double Viscosity;
-	double N1;
-	double N2;
-	double Viscosity_h;
-	double N1_h;
-	double N2_h;
-	double Viscosity_c_XF;
-	double N1_c_XF;
-	double N2_c_XF;
-	double Viscosity_c_GU;
-	double N1_c_GU;
-	double N2_c_GU;
-	double Viscosity_col_XF;
-	double Viscosity_col_GU;
-	double Viscosity_b;
-	double N1_b;
-	double N2_b;
-  	double N1_2;
-	double N2_2;
+	double viscosity;
+	double normalstress_diff_1;
+	double normalstress_diff_2;
+	double viscosity_hydro;
+	double normalstress_diff_1_hydro;
+	double normalstress_diff_2_hydro;
+	double viscosity_cont_XF;
+	double normalstress_diff_1_cont_XF;
+	double normalstress_diff_2_cont_XF;
+	double viscosity_friction; // Fc_tan contribution.
+	double normalstress_diff_1_friction;
+	double normalstress_diff_2_friction;
+	double viscosity_cont_GU;
+	double normalstress_diff_1_cont_GU;
+	double normalstress_diff_2_cont_GU;
+	double viscosity_col_XF;
+	double normalstress_diff_1_col_XF;
+	double normalstress_diff_2_col_XF;
+	double viscosity_col_GU;
+	double normalstress_diff_1_col_GU;
+	double normalstress_diff_2_col_GU;
+	double viscosity_brownian;
+	double normalstress_diff_1_brownian;
+	double normalstress_diff_2_brownian;
 	/*
 	 * For output data.
 	 */
@@ -68,6 +63,9 @@ private:
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
+
+	/*
+	 */
 	void timeEvolution();
 	void evaluateData();
 	/*
@@ -80,31 +78,22 @@ private:
 	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
+	void contactForceParameter();
 	/*
 	 * For outputs
 	 */
-	void setUnits();
-	void output_yap();
-	void output_vel();
 	void outputDataHeader(ofstream &fout);
-	void initContactPair();
 	void outputRheologyData();
 	void outputConfigurationData();
-	
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void drawLine2(char type , const vec3d &pos1, const vec3d &pos2, ofstream &fout);
-	void drawLine(char type , const vec3d &pos, const vec3d &vec, ofstream &fout);
-	void drawLine(double x0, double y0, double z0,
-				  double x1, double y1, double z1,
-				  ofstream &fout);
 public:
     /* For DEMsystem
      */
 	Simulation();
 	~Simulation();
-	void SimulationMain(int argc, const char * argv[]);
-	void RelaxationZeroShear(vector<vec3d> &positions,
-							  vector<double> &radii,
-							  double lx, double ly, double lz);
+	void simulationMain(int argc, const char * argv[]);
+	void relaxationZeroShear(vector<vec3d> &position_,
+							  vector<double> &radius_,
+							  double lx_, double ly_, double lz_);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

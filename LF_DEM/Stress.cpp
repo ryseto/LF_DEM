@@ -19,8 +19,8 @@ System::calcStressesHydroContactBrownian(){
 	/**************************************************
 	 1. Stress from background flow
 	 **/
-    for (int i=0; i < _np; i++) {
-		bgfstress[i].elm[2] = (5.0/9)*bgf_factor*radius_cubic[i];
+    for (int i=0; i<np; i++) {
+		bgfstress[i].set(0, 0, (5.0/9)*bgf_factor*radius_cubic[i], 0, 0, 0);
 	}
 	
 	/**************************************************
@@ -43,8 +43,8 @@ System::calcStressesHydroContactBrownian(){
     stokes_solver.solvingIsDone();
 	
 	// from that, compute stresses
-	for (int k = 0; k < num_interaction; k++) {
-		if (interaction[k].active) {
+	for (int k = 0; k < nb_interaction; k++) {
+		if (interaction[k].is_active()) {
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); // - R_SU * v_cont - rF_cont
 		}
@@ -60,15 +60,13 @@ System::calcStressesHydroContactBrownian(){
 	// actual dynamics, although the motions are reverted
 	// at the very end, to let the system back in the initial
 	// state.
-	stresslet stresslet_i_init;
-    stresslet stresslet_j_init;
-    stresslet stresslet_i_mid;
-    stresslet stresslet_j_mid;
-    stresslet *step_stresslet = new stresslet [_np];
-    for (int i=0; i < _np; i++) {
-		for (int u=0; u < 5; u++) {
-			step_stresslet[i].elm[u] = 0;
-		}
+	StressTensor stresslet_i_init;
+    StressTensor stresslet_j_init;
+    StressTensor stresslet_i_mid;
+    StressTensor stresslet_j_mid;
+    StressTensor *step_stresslet = new StressTensor [np];
+    for (int i=0; i < np; i++) {
+		step_stresslet[i].reset();
     }
     vec3d vi;
     vec3d vj;
@@ -96,25 +94,24 @@ System::calcStressesHydroContactBrownian(){
 	stokes_solver.solve_CholTrans( v_Brownian_init );
 	stokes_solver.solvingIsDone();
 	
-    for (int i=0; i < _np; i++) {
+    for (int i=0; i < np; i++) {
 		v_Brownian_init[3*i+1] *= zero_2Dsimu;
     }
 	
 	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
 	
-    for (int k = 0; k < num_interaction; k++) {
-		if (interaction[k].active) {
+	
+    for (int k = 0; k < nb_interaction; k++) {
+		if (interaction[k].is_active()) {
 			interaction[k].pairVelocityStresslet(v_Brownian_init, stresslet_i_init, stresslet_j_init);
-			int i = interaction[k].par_num[0];
-			int j = interaction[k].par_num[1];
-			for (int u=0; u < 5; u++) {
-				step_stresslet[i].elm[u] -= 0.5*stresslet_i_init.elm[u];
-				step_stresslet[j].elm[u] -= 0.5*stresslet_j_init.elm[u];
-			}
+			unsigned int i, j;
+			interaction[k].get_par_num(i, j);
+			step_stresslet[i] -= 0.5*stresslet_i_init;
+			step_stresslet[j] -= 0.5*stresslet_j_init;
 		}
     }
     // move particles to intermediate point
-    for (int i=0; i < _np; i++) {
+    for (int i=0; i < np; i++) {
 		int i3 = 3*i;
 		vec3d dr(v_Brownian_init[i3]*dt, v_Brownian_init[i3+1]*dt, v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
@@ -136,32 +133,28 @@ System::calcStressesHydroContactBrownian(){
     stokes_solver.solvingIsDone();
 	
 	/**** Brownian Stress: term  -R_SU_mid * v_Brownian_mid **/
-    for (int i=0; i < _np; i++) {
+    for (int i=0; i < np; i++) {
 		v_Brownian_mid[3*i+1] *= zero_2Dsimu;
 	}
 	
-    for (int k = 0; k < num_interaction; k++) {
-		if(interaction[k].active) {
+    for (int k = 0; k < nb_interaction; k++) {
+		if(interaction[k].is_active()) {
 			interaction[k].pairVelocityStresslet(v_Brownian_mid, stresslet_i_mid, stresslet_j_mid);
-			int i = interaction[k].par_num[0];
-			int j = interaction[k].par_num[1];
-			for (int u=0; u < 5; u++) {
-				step_stresslet[i].elm[u] += 0.5*stresslet_i_mid.elm[u];
-				step_stresslet[j].elm[u] += 0.5*stresslet_j_mid.elm[u];
-			}
+			unsigned int i, j;
+			interaction[k].get_par_num(i, j);
+			step_stresslet[i] += 0.5*stresslet_i_mid;
+			step_stresslet[j] += 0.5*stresslet_j_mid;
 		}
     }
 	/**********************************************************/
 	/*  Finishing stress computation                          */
 	/*  and leaving particle positions as they initially were */
 	/**********************************************************/
-    for (int i=0; i < _np; i++) {
-		for (int u=0; u < 5; u++) {
-			brownianstress[i].elm[u] += step_stresslet[i].elm[u];
-		}
+    for (int i=0; i < np; i++) {
+		brownianstress[i] += step_stresslet[i];
     }
 	// move particles back to initial point, and update interactions
-    for (int i=0; i < _np; i++) {
+    for (int i=0; i < np; i++) {
 		int i3 = 3*i;
 		vec3d dr(-v_Brownian_init[i3]*dt, -v_Brownian_init[i3+1]*dt, -v_Brownian_init[i3+2]*dt);
 		displacement(i, dr);
@@ -175,9 +168,7 @@ System::calcStressesHydroContact(){
 	/**************************************************
 	 1. Stress from background flow
 	 **/
-    for (int i=0; i<_np; i++) {
-		bgfstress[i].elm[2] = (5./9)*bgf_factor*radius_cubic[i];
-	}
+ 
 	/**************************************************
 	 2. and 3.: Stresses from
 	 2-body lubrication and contacts  **/
@@ -201,20 +192,18 @@ System::calcStressesHydroContact(){
 	/////////////////////////////////////////////////
     stokes_solver.solvingIsDone();
 	// from that, compute stresses
-	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
-			interaction[k].total_stress_xz = 0;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
-			interaction[k].integrateStress();
 		}
 	}
 	/*
 	 * Calculate lubrication force to output
 	 */
-	for (int k=0; k<num_interaction; k++) {
-		if (interaction[k].active) {
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
 			interaction[k].evaluateLubricationForce();
 		}
 	}
@@ -238,42 +227,42 @@ System::calcStressesHydroContact(){
 void
 System::calcStress(){
 	static double previous_strain = 0;
-	d_strain = strain()-previous_strain;
-	previous_strain = strain();
+	previous_strain = shear_strain;
 	stressReset();
 	if (brownian) {
 	 	calcStressesHydroContactBrownian();
 	} else {
 		calcStressesHydroContact();
 	}
-	for (int u=0; u < 5; u++) {
-		total_hydro_stress[u] = 0;
-		total_contact_stressXF[u] = 0;
-		total_contact_stressGU[u] = 0;
-		total_colloidal_stressXF[u] = 0;
-		total_colloidal_stressGU[u] = 0;
-		total_brownian_stress[u] = 0;
-	}
-	for (int i=0; i < _np; i++) {
-		for (int u=0; u < 5; u++) {
-			total_hydro_stress[u] += lubstress[i].elm[u]+bgfstress[i].elm[u];
-			total_contact_stressXF[u] += contactstressXF[i].elm[u];
-			total_contact_stressGU[u] += contactstressGU[i].elm[u];
-			total_colloidal_stressXF[u] += colloidalstressXF[i].elm[u];
-			total_colloidal_stressGU[u] += colloidalstressGU[i].elm[u];
-			total_brownian_stress[u] += brownianstress[i].elm[u];
+	total_hydro_stress.reset();
+	total_contact_stressGU.reset();
+	total_colloidal_stressGU.reset();
+	total_contact_stressXF_normal.reset();
+	total_contact_stressXF_tan.reset();
+	total_colloidal_stressXF.reset();
+	total_brownian_stress.reset();
+	for (int i=0; i<np; i++) {
+		total_hydro_stress += lubstress[i]+bgfstress[i];
+		total_contact_stressGU += contactstressGU[i];
+		total_colloidal_stressGU += colloidalstressGU[i];
+		if (brownian) {
+			total_brownian_stress += brownianstress[i];
 		}
 	}
-	for (int u=0; u < 5; u++) {
-		total_hydro_stress[u] /= valSystemVolume();
-		total_contact_stressXF[u] /= valSystemVolume();
-		total_contact_stressGU[u] /= valSystemVolume();
-		total_colloidal_stressXF[u] /= valSystemVolume();
-		total_colloidal_stressGU[u] /= valSystemVolume();
-		total_brownian_stress[u] /= valSystemVolume();
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			total_contact_stressXF_normal += interaction[k].getContactStressXF_normal();
+			total_contact_stressXF_tan += interaction[k].getContactStressXF_tan();
+			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
+		}
 	}
+	total_hydro_stress /= System_volume();
+	total_contact_stressGU /= System_volume();
+	total_contact_stressXF_normal /= System_volume();
+	total_contact_stressXF_tan /= System_volume();
+	total_colloidal_stressGU /= System_volume();
+	total_colloidal_stressXF /= System_volume();
+	total_brownian_stress /= System_volume();
 	stressBrownianReset();
+	
 }
-
-
-

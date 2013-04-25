@@ -7,24 +7,16 @@
 
 #ifndef __LF_DEM__StokesSolver__
 #define __LF_DEM__StokesSolver__
-
 //#define CHOLMOD_EXTRA
 //#define TRILINOS
-
 #include <vector>
-
-using namespace std;
-
 #include "vec3d.h"
-
 #include "cholmod.h"
-
 #ifdef CHOLMOD_EXTRA
 extern "C" {
 #include "cholmod_extra.h"
 }
 #endif
-
 #ifdef TRILINOS
 #include "Epetra_SerialComm.h"
 #include "Epetra_SerialDenseVector.h"
@@ -44,12 +36,13 @@ typedef double                                SCAL;
 typedef Epetra_MultiVector                     VEC;
 typedef Epetra_Operator                        MAT;
 #endif
-
+using namespace std;
 //class System;
 
 class StokesSolver{
 private:
-	int np, np3;
+	int np;
+	int np3;
     int dof;
     int linalg_size;
 	bool brownian;
@@ -58,7 +51,6 @@ private:
 	bool _direct;
 	
 	// Cholmod variables
-	
     cholmod_factor *chol_L ;
     cholmod_common chol_c ;
     cholmod_dense *chol_rhs;
@@ -113,9 +105,6 @@ private:
     int* columns_nb; // nb of non-zero elements in each row
     int columns_max_nb; // max nb of non-zero elements per row
     double **values; // values corresponding to 'columns' array coordinates
-
-    
-	
     /*
      appendToRow(const vec3d &nvec, int ii, int jj, double alpha) :
 	 - TRILINOS ONLY
@@ -145,8 +134,6 @@ private:
 	void setSolverType(string);
 	
 public:
-	
-    StokesSolver(){};
     ~StokesSolver();
 	void init(int np, bool is_brownian);
     void initialize();

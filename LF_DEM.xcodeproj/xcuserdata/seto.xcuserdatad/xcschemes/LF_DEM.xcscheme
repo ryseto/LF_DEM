@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM  $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/initconfig_scale_size.pl $HOME/bin/&#10;">
+               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM  $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/initconfig_scale_size.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/trajectory.pl $HOME/bin/&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/2D"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/tmp"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"

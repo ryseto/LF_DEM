@@ -10,7 +10,9 @@ private:
 	double box_xsize;
 	double box_ysize;
 	double box_zsize;
-	
+	double box_xsize_half; // = box_xsize/2
+	double box_ysize_half; // = box_ysize/2
+	double box_zsize_half; // = box_zsize/2
 	int x_box_nb;
 	int y_box_nb;
 	int z_box_nb;
@@ -20,7 +22,6 @@ private:
 	int bulk_box_nb;
 	int topbottom_box_nb;
 	bool _is_boxed;
-	
 	Box** Boxes;
 	Box** BulkBoxes;
 	Box** TopBoxes;
@@ -31,7 +32,6 @@ private:
 	Box* WhichBox(vec3d*);
 	void updateNeighbors();
 	void updateNeighbors(Box*);
-	
 	// init methods
 	void allocateBoxes();
 	void positionBoxes();

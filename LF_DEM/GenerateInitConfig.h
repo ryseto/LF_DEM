@@ -21,17 +21,20 @@ using namespace std;
 class GenerateInitConfig{
 private:
 	System sys;
-	
 	int dimension;
-	
 	double volume_fraction;
-	double lx_lz, ly_lz;
-	double lx, ly, lz;
-	double lx2, ly2, lz2;
-	double number_ratio;
+	double volume_fraction1;
+	double volume_fraction2;
+	double lx_lz;
+	double ly_lz;
+	double lx;
+	double ly;
+	double lz;
+	double lx_half;
+	double ly_half;
+	double lz_half;
 	double a1;
 	double a2;
-	
 	vec3d *grad;
 	vec3d *prev_grad;
 	double gradientDescent();
@@ -41,27 +44,23 @@ private:
 	double step_size;
 	int rand_seed;
 	MTRand rand_gen;
-	
 	double zeroTMonteCarloSweep();
 	int overlapNumber(int);
 	double particleEnergy(int);
 	void updateInteractions(int);
-	
 	vector<vec3d> position;
 	vector<double> radius;
-	int np, np1, np2;
+	int np;
+	int np1;
+	int np2;
 	vec3d dr;
-	
 	inline vec3d randUniformSphere(double r);
 	inline vec3d randUniformCircle(double r);
 	double sqContactDistance(int i, int j, double contact_distance);
-	
 	void putRandom();
 	void setParameters(int argc, const char * argv[]);
-	void setSystemParameters();
+//	void setSystemParameters();
 	void outputPositionData();
-	void outputPositionData(vector<vec3d> &positions,
-							vector<double> &radii);
 public:
 	GenerateInitConfig(){};
 	int generate(int argc, const char * argv[]);

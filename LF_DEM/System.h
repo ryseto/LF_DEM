@@ -15,7 +15,7 @@
 #include <queue>
 #include <list>
 #include <string>
-#include "common.h"
+#include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
 #include "BrownianForce.h"
@@ -32,24 +32,39 @@ class BoxSet;
 
 class System{
 private:
-	int _np;
+	int np;
 	int np3;
-	int maxnum_interactionpair;
+	int maxnb_interactionpair;
 	BoxSet boxset;
-	double _lx;
-	double _ly;
-	double _lz;
-	double _lx2; // =lx/2
-	double _ly2; // =ly/2
-	double _lz2; // =lz/2
+	int ts; // time steps
+	double dt;
+	double lx;
+	double ly;
+	double lz;
+	double lx_half; // =lx/2
+	double ly_half; // =ly/2
+	double lz_half; // =lz/2
 	double system_volume;
-	double radius_max;
 	double sq_lub_max;
 	double shear_strain;
+	double kn;
+	double kt;
+	double lub_max;
+	double lub_coeff_contact;
+	double mu_static; // static friction coefficient.
+	double bgf_factor;
+
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
+	double colloidalforce_amplitude; // colloidal force dimensionless
+	double colloidalforce_length; // colloidal force length (dimensionless)
+	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
+	bool twodimension;
+	/* data */
+	int intr_max_fc_normal;
+	int intr_max_fc_tan;
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -75,10 +90,8 @@ private:
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
-	
 protected:
 public:
-	System();
 	~System();
 	double *v_hydro;
 	double *v_cont;
@@ -89,7 +102,6 @@ public:
 	double *v_Brownian_mid;
 	bool in_predictor;
 	bool in_corrector;
-	int ts; // time steps
 	int dimension;
 	vec3d *position;
 	Interaction *interaction;
@@ -103,35 +115,24 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-	stresslet* lubstress; // G U + M E
-	stresslet* bgfstress;
-	stresslet* contactstressXF;
-	stresslet* colloidalstressXF;
-	stresslet* contactstressGU;
-	stresslet* colloidalstressGU;
-	stresslet* brownianstress;
+	StressTensor* lubstress; // G U + M E
+	StressTensor* bgfstress; // by particle
+	StressTensor* contactstressGU; // by particle
+	StressTensor* colloidalstressGU; // by particle
+	StressTensor* brownianstress; // by particle
 	int brownianstress_calc_nb;
-	double total_hydro_stress[5];
-	double total_contact_stressXF[5];
-	double total_contact_stressGU[5];
-	double total_colloidal_stressXF[5];
-	double total_colloidal_stressGU[5];
-	double total_brownian_stress[5];
-	double kn;
-	double kt;
-	double lub_max;
-	double lub_coeff_contact;
-	double mu_static; // static friction coefficient.
+	StressTensor total_hydro_stress;
+	StressTensor total_contact_stressXF_normal;
+	StressTensor total_contact_stressXF_tan;
+	StressTensor total_contact_stressGU;
+	StressTensor total_colloidal_stressXF;
+	StressTensor total_colloidal_stressGU;
+	StressTensor total_brownian_stress;
+	
 	bool friction;
 	bool colloidalforce;
 	bool brownian;
-	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
-	double diag_stokes_drag;
-	double bgf_factor;
-
-	
-	int num_interaction;
-	double d_strain;
+	int nb_interaction;
 	/*
 	 * Leading term of lubrication force is 1/gap_nondim, 
 	 * with gap_nondim the gap
@@ -146,52 +147,47 @@ public:
 	double contact_relaxzation_time;
 	BrownianForce *fb;
 	double shear_disp;
-	double shear_rate;
+	/* For non-Brownian suspension:
+	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_col(0)
+	 * For Brownian suspension, it should be Peclet number
+	 */
+	double dimensionless_shear_rate;
 	/* Colloidal force to stabilize suspension
 	 * (This gives simple shear-rate depenedence.)
 	 */
-	double cf_amp; // colloidal force amplitude
-	double cf_amp_dl; // colloidal force dimensionless
-	double cf_range_dl; // colloidal force range (dimensionless)
 	double kb_T;
-	double volume_fraction;
 	double vel_difference;
-	double dt;
-	double dt_mid;
-	double dt_ratio;
 	double max_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
 	double max_overlap; // = ro-r
 	double max_disp_tan;
-	
 	double overlap_target;
 	double disp_tan_target;
 	queue<int> deactivated_interaction;
-
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;
 	double ave_overlap;
 	int contact_nb;
 	int cnt_monitored_data;
-	double average_Fc_normal_norm;
-	double max_Fc_normal_norm;
-	bool draw_rotation_2d;
+	double average_fc_normal;
+	double max_fc_normal;
+	double max_fc_tan;
 	string simu_name;
 	ofstream fout_int_data;
-	double strain_interval_output;
 	double total_energy;
 	
-	
 	void setSystemVolume();
+	void setConfiguration(const vector <vec3d> &initial_positions,
+						  const vector <double> &radii,
+						  double lx_, double ly_, double lz_);
 	void setupSystemForGenerateInit();
-	void setupSystem(const vector <vec3d> &initial_positions,
-					 const vector <double> &radii);
+	void setupSystem();
+	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(int time_step);
+	void timeEvolution(double strain_interval);
 	void timeEvolutionRelax(int time_step);
 	void displacement(int i, const vec3d &dr);
-
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions();
@@ -217,81 +213,65 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	void openFileInteractionData();
-	void adjustContactModelParameters();
-	void adjustTimeStep();
+	void adjustContactModelParameters(int averaging_nb);
 	void calcTotalPotentialEnergy();
-
 	void setupShearFlow(bool activate){
 		if (activate) {
-			vel_difference = _lz;
+			vel_difference = lz;
 		} else {
 			vel_difference = 0;
 		}
 	}
 	/*************************************************************/
-	inline void lx(double length){
-		_lx = length;
-		_lx2 = 0.5*_lx;
+	inline void setBoxSize(double lx_, double ly_, double lz_){
+		lx = lx_;
+		lx_half = 0.5*lx;
+		ly = ly_;
+		ly_half = 0.5*ly;
+		lz = lz_;
+		lz_half = 0.5*lz;
+		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
 
-	inline void ly(double length){
-		_ly = length;
-		_ly2 = 0.5*_ly;
-	}
-
-	inline void lz(double length){
-		_lz = length;
-		_lz2 = 0.5*_lz;
-	}
-
-	inline void setRadiusMax(double _radius_max){
-		radius_max = _radius_max;
-	}
-
-	inline double valSystemVolume(){
+	inline double System_volume(){
 		return system_volume;
 	}
 	
 	double getParticleContactNumber(){
-		return (double)contact_nb/_np;
+		return (double)2*contact_nb/np;
 	}
-	
-	inline double lx(){
-		return _lx;
-	}
+	void Integration_method(int val){integration_method = val;}
+	void Bgf_factor(int val){bgf_factor = val;}
+	inline double Lx(){return lx;}
+	inline double Ly(){return ly;}
+	inline double Lz(){return lz;}
+	inline double Lx_half(){return lx_half;}
+	inline double Ly_half(){return ly_half;}
+	inline double Lz_half(){return lz_half;}
+	inline void Np(int val){np = val, np3 = 3*val;}
+	inline int Np(){return np;}
+	inline double Shear_strain(){return shear_strain;}
+	inline void Kn(double val){kn = val;}
+	inline double Kn(){return kn;}
+	inline void Kt(double val){kt = val;}
+	inline double Kt(){return kt;}
+	inline void Lub_max(double val){lub_max = val;}
+	inline double Lub_max(){
+		if (lub_max == 2){
+			cerr << lub_max << endl;
+			
+		}
+		
+		return lub_max;}
+	inline void Dt(double val){dt = val;}
+	inline double Dt(){return dt;}
+	inline void Colloidalforce_amplitude(double val){colloidalforce_amplitude = val;}
+	inline double Colloidalforce_amplitude(){return colloidalforce_amplitude;}
+	inline void Colloidalforce_length(double val){colloidalforce_length = val;}
+	inline double Colloidalforce_length(){return colloidalforce_length;}
+	inline void Mu_static(double val){mu_static = val;}
+	inline double Mu_static(){return mu_static;}
+	inline double Lub_coeff_contact(){return lub_coeff_contact;}
 
-	inline double ly(){
-		return _ly;
-	}
-
-	inline double lz(){
-		return _lz;
-	}
-
-	inline double lx2(){
-		return _lx2;
-	}
-
-	inline double ly2(){
-		return _ly2;
-	}
-
-	inline double lz2(){
-		return _lz2;
-	}
-
-	inline void np(int val){
-		_np = val;
-		np3 = 3*_np;
-	}
-
-	inline int np(){
-		return _np;
-	}
-
-	inline double strain(){
-		return shear_strain;
-	}
-	
 };
 #endif /* defined(__LF_DEM__System__) */
