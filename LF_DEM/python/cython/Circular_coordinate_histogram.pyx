@@ -95,7 +95,7 @@ cdef class CircularCoordinateHistogram(Histograms):
         elif act == 'replace':
             self.kreplace(key, value)
         else:
-            sys.stderr.write("  SphericalCoordinateHistogram :: update(pos, value, coord='sph',act='add') :\n       Unknown act %s".str(act))
+            sys.stderr.write("  CircularCoordinateHistogram :: update(pos, value, coord='sph',act='add') :\n       Unknown act %s".str(act))
             sys.exit(1)
 
 

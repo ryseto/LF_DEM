@@ -1,9 +1,11 @@
 #!/opt/local/bin/python
 #coding=utf-8
 
-import sys
+import sys, os
 import math
-sys.path.append('./cython')
+
+self_path=os.path.dirname(os.path.abspath(sys.argv[0]))
+sys.path.append(self_path+'/cython')
 import LF_DEM_posfile_reading
 import pair_correlation
 
@@ -88,7 +90,7 @@ snapshot_nb=0
 
 pos_stream.get_snapshot()
 while pos_stream.get_snapshot():
-#    sys.stderr.write(str(pos_stream.time())+'\n')
+    sys.stderr.write('Strain analyzed : '+str(pos_stream.time())+'\n')
 
     twopoint_correl.update_field(pos_stream)
 
