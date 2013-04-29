@@ -75,14 +75,17 @@ cdef class PairCorrelation:
                 dr=pos_stream.pos_diff(i,j)
 
                 deltax=dr[0]
+                deltay=dr[1]
                 deltaz=dr[2]
                 deltatot=dr[3]
 
-                # we go to circular coordinates
-                (a, b)=cart2sph.cart2circ_nolist(deltax, deltaz)
-
-                key=self.field.genkey_nolist(a, b)
-                self.field.update_nolist(a, b, 1., coord='circ', act='add')
+                if deltay/deltatot < 0.1:
+                
+                    # we go to circular coordinates
+                    (a, b)=cart2sph.cart2circ_nolist(deltax, deltaz)
+                    
+                    key=self.field.genkey_nolist(a, b)
+                    self.field.update_nolist(a, b, 1., coord='circ', act='add')
 
 
 
