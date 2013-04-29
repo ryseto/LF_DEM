@@ -8,6 +8,7 @@
 
 use Math::Trig;
 
+$num_mathm = 220;
 $force_factor = 0.01;
 $y_section = 0;
 
@@ -30,21 +31,30 @@ printf "$interaction_data\n";
 $output = "y_$name.yap";
 $output2 = "nvec_$name.dat";
 $out_gaps = "gaps_$name.dat";
+$out_mathm_pos = "mpos_$name.dat";
+$out_mathm_int = "mint_$name.dat";
+
 
 open (OUT, "> ${output}");
 open (OUT2, "> ${output2}");
 open (OUTG, "> ${out_gaps}");
+open (OUTMP, "> ${out_mathm_pos}");
+open (OUTMI, "> ${out_mathm_int}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
 $first=1;
 $c_traj=0;
+$num = 0;
 while (1){
-	
 	&InParticles;
 	&InInteractions;
 	last unless defined $line;
 	&OutYaplotData;
+	if ($num > $num_mathm){
+		last;
+	}
+	$num ++;
 	printf "$shear_rate\n";
 }
 close (OUT);
@@ -78,6 +88,11 @@ sub InParticles {
         $line = <IN_particle> ;
         ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 		$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+		
+		if ($num==$num_mathm){
+			printf OUTMP "$line";
+		}
+		
 		$radius[$i] = $a;
         $posx[$i] = $x;
         $posy[$i] = $y;
@@ -158,6 +173,11 @@ sub InInteractions {
 		($i, $j, $contact, $nx, $ny, $nz,
 		$gap, $f_lub, $fc_n, $fc_tan, $fcol,
 		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF) = split(/\s+/, $line);
+		
+		
+		if ($num==$num_mathm){
+			printf OUTMI "$line";
+		}
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
@@ -176,11 +196,16 @@ sub InInteractions {
 }
 
 sub OutYaplotData{
+	
 	if ($first == 0){
 		printf OUT "\n";
 	} else {
 		$first = 0;
 	}
+	$postext = $Lz/2+2;
+	printf OUT "y 10\n";
+	printf OUT "@ 3\n";
+	printf OUT "t 0 0 $postext $num\n";
 	printf OUT "y 7\n";
 	printf OUT "r 0.1\n";
     printf OUT "@ 5\n";
@@ -338,6 +363,13 @@ sub OutYaplotData{
 	#		}
 	#    }
 	printf OUT2 "\n";
+	
+	
+	if ($num == 26){
+		
+		
+		
+	}
 }
 
 sub OutBoundaryBox{

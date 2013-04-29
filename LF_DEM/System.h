@@ -53,7 +53,6 @@ private:
 	double lub_coeff_contact;
 	double mu_static; // static friction coefficient.
 	double bgf_factor;
-
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -65,6 +64,14 @@ private:
 	/* data */
 	int intr_max_fc_normal;
 	int intr_max_fc_tan;
+	vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
+	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
+	/* cnt_parameter_changed is used for kn-kt ajusting algorithm.
+	 * Spring constants are changed in the simulation.
+	 * This may cause large contact forces.
+	 * These values are not considered for the next deteremination.
+	 */
+	int cnt_parameter_changed; //
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -213,7 +220,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	void openFileInteractionData();
-	void adjustContactModelParameters(int averaging_nb);
+	void adjustContactModelParameters();
 	void calcTotalPotentialEnergy();
 	void setupShearFlow(bool activate){
 		if (activate) {

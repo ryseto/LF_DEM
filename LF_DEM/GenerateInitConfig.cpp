@@ -88,7 +88,7 @@ GenerateInitConfig::outputPositionData(){
 	if (volume_fraction2 == 0) {
 		ss_posdatafilename << "Mono";
 	} else {
-		ss_posdatafilename << "Bidi" << a2 << "_" << volume_fraction2;
+		ss_posdatafilename << "Bidi" << a2 << "_" << vf_ratio;
 	}
 
 	if (dimension == 2) {
@@ -398,13 +398,14 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
 		} while (a2 < a1);
 		do {
-			volume_fraction1= readStdinDefault(volume_fraction*0.5, "vf of particle 1 (small particle)");
-		} while (volume_fraction1 < 0 || volume_fraction1 > volume_fraction);
+			vf_ratio = readStdinDefault(0.5, "volume fraction ratio of smaller particle");
+		} while (vf_ratio < 0 || vf_ratio > 1);
 	}
 	rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
+	volume_fraction1 = volume_fraction*vf_ratio;
 	volume_fraction2 = volume_fraction-volume_fraction1;
 	cerr << "vf = " << volume_fraction1 << ' ' << volume_fraction2 << endl;
 	double total_volume;

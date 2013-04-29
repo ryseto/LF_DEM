@@ -218,6 +218,7 @@ System::setupSystem(){
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
+	cnt_parameter_changed = 0;
 	/*
 	 * dt_mid: the intermediate time step for the mid-point
 	 * algortithm. dt/dt_mid = dt_ratio
@@ -1033,6 +1034,10 @@ System::analyzeState(){
 			}
 		}
 	}
+	if (cnt_parameter_changed++ > 15){
+		max_fc_normal_history.push_back(max_fc_normal);
+		max_fc_tan_history.push_back(max_fc_tan);
+	}
 	if (contact_nb > 0) {
 		average_fc_normal = sum_fc_normal/contact_nb;
 	} else {
@@ -1097,48 +1102,74 @@ averageList(list<double> &_list, bool remove_max_min){
 	}
 }
 
-void
-System::adjustContactModelParameters(int averaging_nb){
-	//	 = 5;
-	/*
-	 * Averaged max Fn, over a strain interval
-	 */
-	static list<double> kn_list;
-	if (intr_max_fc_normal != -1) {
-		double ro_half = 0.5*interaction[intr_max_fc_normal].get_ro();
-		double kn_adjusted = max_fc_normal/(overlap_target*ro_half*ro_half);
-		kn_list.push_back(kn_adjusted);
-		cerr << "kn_adjusted = " << kn_adjusted << endl;
+void calcMean_StdDev(vector<double> history,
+					 double &mean,
+					 double &std_dev){
+	int ne = history.size();
+	double sum = 0;
+	for (int i=0; i<ne; i++) {
+		sum += history[i];
 	}
-	if (kn_list.size() > averaging_nb) {
-		kn = averageList(kn_list, true);
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-		kn_list.pop_front();
+	mean = sum/ne;
+	double sum_sq_deviation = 0;
+	for (int i=0; i<ne; i++) {
+		double tmp = history[i]-mean;
+		sum_sq_deviation += tmp*tmp;
 	}
-	/*
-	 * Averaged max Ft, over a strain interval
-	 */
-	static list<double> kt_list;
-	if (mu_static > 0) {
-		if (intr_max_fc_tan != -1){
-			double ro_half = 0.5*interaction[intr_max_fc_tan].get_ro();
-			double kt_adjusted = max_fc_tan/(disp_tan_target*ro_half);
-			kt_list.push_back(kt_adjusted);
-			cerr << "kt_adjusted = " << kt_adjusted << endl;
-		}
+	std_dev = sqrt(sum_sq_deviation/(ne-1));
+}
 
-		if (kt_list.size() > averaging_nb){
-			kt = averageList(kt_list, true);
-			kt_list.pop_front();
+
+void
+System::adjustContactModelParameters(){
+	/*
+	 * kn, kt and dt are determined in one test simulation.
+	 * We give small values of kn and kt as the initial values.
+	 * With target values of spring strech,
+	 * spring constants are determined by the maximum foces in a certain interaval.
+	 * In order to avoid unusual large values of forces,
+	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
+	 * Only increases of kn and kt are accepted.
+	 * But the increase is accepted up to 2000.
+	 */
+	double dk_max = 2000;
+	double mean_max_fc_normal;
+	double mean_max_fc_tan;
+	double stddev_max_fc_normal;
+	double stddev_max_fc_tan;
+	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
+	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
+	
+	double representative_max_fc_normal = mean_max_fc_normal+stddev_max_fc_normal;
+	double representative_max_fc_tan = mean_max_fc_normal+stddev_max_fc_normal;
+	double kn_try = representative_max_fc_normal/overlap_target;
+	double kt_try = representative_max_fc_tan/disp_tan_target;
+	if (kn_try > kn) {
+		if (kn_try > kn+dk_max){
+			kn_try = kn+dk_max;
 		}
-	}
-	if (kn_list.size() > averaging_nb) {
+		kn = kn_try;
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-		cerr << "(kn, kt, lub_coeff_contact) = " << kn << ' ' << kt << ' ' << lub_coeff_contact << endl;
-		for (int k=0; k<nb_interaction; k++) {
-			interaction[k].updateContactModel();
+		double dt = 240*1e-4/representative_max_fc_normal;
+		if (dt > 1e-4){
+			dt = 1e-4;
 		}
+		cerr << "dt = " << dt << endl;
 	}
+	if (kt_try > kt){
+		if (kt_try > kt+dk_max){
+			kt_try = kt+dk_max;
+		}
+		kt = kt_try;
+	}
+
+	for (int k=0; k<nb_interaction; k++) {
+		interaction[k].updateContactModel();
+	}
+	max_fc_normal_history.clear();
+	max_fc_tan_history.clear();
+
+	cnt_parameter_changed = 0;
 }
 
 void

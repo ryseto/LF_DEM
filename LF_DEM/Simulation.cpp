@@ -72,8 +72,10 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	double strain_next_config_out = strain_interval_output;
-	int knkt_averaging_nb = strain_interval_knkt_adjustment/strain_interval_output_data;
+	//	int knkt_averaging_nb = strain_interval_knkt_adjustment/strain_interval_output_data;
+	int cnt_knkt_adjustment = 1;
 	do {
+		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		sys.timeEvolution(strain_interval_output_data);
 		evaluateData();
 		outputRheologyData();
@@ -81,8 +83,9 @@ Simulation::simulationMain(int argc, const char * argv[]){
 			outputConfigurationData();
 			strain_next_config_out = sys.Shear_strain()+strain_interval_output-1e-6;
 		}
-		if (kn_kt_adjustment) {
-			sys.adjustContactModelParameters(knkt_averaging_nb);
+		if (sys.Shear_strain() >= strain_knkt_adjustment) {
+			sys.adjustContactModelParameters();
+			cnt_knkt_adjustment ++;
 		}
 		cerr << "strain: " << sys.Shear_strain() << endl;
 	} while (strain_next_config_out < shear_strain_end);
@@ -265,8 +268,6 @@ Simulation::openOutputFiles(){
 
 void
 Simulation::setDefaultParameters(){
-	
-	
 	/*
 	 * Simulation
 	 *
@@ -516,6 +517,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#34: average contact number per particle" << endl;
 		fout_rheo << "#35: kn" << endl;
 		fout_rheo << "#36: kt" << endl;
+		fout_rheo << "#37: dt" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -562,6 +564,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.getParticleContactNumber() << ' '; //34
 	fout_rheo << sys.Kn() << ' '; //35
 	fout_rheo << sys.Kt() << ' '; //36
+	fout_rheo << sys.Dt() << ' '; //37
 	fout_rheo << endl;
 }
 

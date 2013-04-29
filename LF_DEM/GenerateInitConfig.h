@@ -25,6 +25,7 @@ private:
 	double volume_fraction;
 	double volume_fraction1;
 	double volume_fraction2;
+	double vf_ratio; // = volume_fraction1/volume_fraction;
 	double lx_lz;
 	double ly_lz;
 	double lx;
