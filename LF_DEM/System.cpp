@@ -218,7 +218,7 @@ System::setupSystem(){
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
-	cnt_parameter_changed = 0;
+	after_parameter_changed = false;
 	/*
 	 * dt_mid: the intermediate time step for the mid-point
 	 * algortithm. dt/dt_mid = dt_ratio
@@ -1034,10 +1034,23 @@ System::analyzeState(){
 			}
 		}
 	}
-	if (cnt_parameter_changed++ > 15){
+	/*
+	 * History is recorded after the relaxation.
+	 *
+	 */
+	static double max_fc_normal_previous = 0;
+	if (after_parameter_changed) {
+		if (max_fc_normal > max_fc_normal_previous){
+			after_parameter_changed = false;
+		}
+	}
+	max_fc_normal_previous = max_fc_normal;
+	
+	if (after_parameter_changed == false) {
 		max_fc_normal_history.push_back(max_fc_normal);
 		max_fc_tan_history.push_back(max_fc_tan);
 	}
+	
 	if (contact_nb > 0) {
 		average_fc_normal = sum_fc_normal/contact_nb;
 	} else {
@@ -1133,28 +1146,25 @@ System::adjustContactModelParameters(){
 	 * But the increase is accepted up to 2000.
 	 */
 	double dk_max = 2000;
-	double mean_max_fc_normal;
-	double mean_max_fc_tan;
-	double stddev_max_fc_normal;
-	double stddev_max_fc_tan;
+	/*----------------------------------------------------------------------*/
+	double mean_max_fc_normal, stddev_max_fc_normal;
 	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-	
 	double representative_max_fc_normal = mean_max_fc_normal+stddev_max_fc_normal;
-	double representative_max_fc_tan = mean_max_fc_normal+stddev_max_fc_normal;
 	double kn_try = representative_max_fc_normal/overlap_target;
+	/*----------------------------------------------------------------------*/
+	double mean_max_fc_tan, stddev_max_fc_tan;
+	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
+	double representative_max_fc_tan = mean_max_fc_tan+stddev_max_fc_tan;
 	double kt_try = representative_max_fc_tan/disp_tan_target;
+	/*----------------------------------------------------------------------*/
 	if (kn_try > kn) {
 		if (kn_try > kn+dk_max){
 			kn_try = kn+dk_max;
 		}
 		kn = kn_try;
+		cerr << representative_max_fc_normal << endl;
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-		double dt = 240*1e-4/representative_max_fc_normal;
-		if (dt > 1e-4){
-			dt = 1e-4;
-		}
-		cerr << "dt = " << dt << endl;
+		after_parameter_changed = true;
 	}
 	if (kt_try > kt){
 		if (kt_try > kt+dk_max){
@@ -1162,14 +1172,23 @@ System::adjustContactModelParameters(){
 		}
 		kt = kt_try;
 	}
-
+	/*----------------------------------------------------------------------*/
+	/* The time step dt is scaled by the max force;
+	 *
+	 */
+	dt = 240*1e-4/representative_max_fc_normal;
+	if (dt > 1e-4){
+		dt = 1e-4;
+	}
+	cerr << "dt = " << dt << endl;
+	/*----------------------------------------------------------------------*/
+	
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].updateContactModel();
 	}
 	max_fc_normal_history.clear();
 	max_fc_tan_history.clear();
 
-	cnt_parameter_changed = 0;
 }
 
 void

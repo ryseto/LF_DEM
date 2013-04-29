@@ -71,7 +71,7 @@ private:
 	 * This may cause large contact forces.
 	 * These values are not considered for the next deteremination.
 	 */
-	int cnt_parameter_changed; //
+	bool after_parameter_changed; //
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
