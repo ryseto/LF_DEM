@@ -1143,52 +1143,47 @@ System::adjustContactModelParameters(){
 	 * In order to avoid unusual large values of forces,
 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
 	 * Only increases of kn and kt are accepted.
-	 * But the increase is accepted up to 2000.
 	 */
-	double dk_max = 2000;
-	/*----------------------------------------------------------------------*/
+	double max_increment = 2;
+	/* determination of kn
+	 */
 	double mean_max_fc_normal, stddev_max_fc_normal;
 	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-	double representative_max_fc_normal = mean_max_fc_normal+stddev_max_fc_normal;
+	double representative_max_fc_normal = mean_max_fc_normal;
 	double kn_try = representative_max_fc_normal/overlap_target;
-	/*----------------------------------------------------------------------*/
-	double mean_max_fc_tan, stddev_max_fc_tan;
-	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-	double representative_max_fc_tan = mean_max_fc_tan+stddev_max_fc_tan;
-	double kt_try = representative_max_fc_tan/disp_tan_target;
-	/*----------------------------------------------------------------------*/
 	if (kn_try > kn) {
-		if (kn_try > kn+dk_max){
-			kn_try = kn+dk_max;
+		if (kn_try > kn*max_increment){
+			kn_try = kn*max_increment;
 		}
 		kn = kn_try;
 		cerr << representative_max_fc_normal << endl;
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-		after_parameter_changed = true;
 	}
+	/* determination of kt
+	 */
+	double mean_max_fc_tan, stddev_max_fc_tan;
+	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
+	double representative_max_fc_tan = mean_max_fc_tan;
+	double kt_try = representative_max_fc_tan/disp_tan_target;
 	if (kt_try > kt){
-		if (kt_try > kt+dk_max){
-			kt_try = kt+dk_max;
+		if (kt_try > kt*max_increment){
+			kt_try = kt*max_increment;
 		}
 		kt = kt_try;
 	}
-	/*----------------------------------------------------------------------*/
 	/* The time step dt is scaled by the max force;
-	 *
 	 */
 	dt = 240*1e-4/representative_max_fc_normal;
 	if (dt > 1e-4){
 		dt = 1e-4;
 	}
 	cerr << "dt = " << dt << endl;
-	/*----------------------------------------------------------------------*/
-	
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].updateContactModel();
 	}
 	max_fc_normal_history.clear();
 	max_fc_tan_history.clear();
-
+	after_parameter_changed = true;
 }
 
 void
