@@ -533,12 +533,13 @@ void System::timeEvolutionBrownian(){
 }
 
 void
-System::timeEvolution(double strain_interval){
-	double shear_strain_next = shear_strain+strain_interval-1e-6;
-	if (shear_strain == 0) {
+System::timeEvolution(double strain_next){
+	static bool firsttime = true;
+	if (firsttime) {
 		checkNewInteraction();
+		firsttime = false;
 	}
-	do {
+	while (shear_strain < strain_next-1e-8) {
 		switch (integration_method) {
 			case 0:
 				timeEvolutionEulersMethod();
@@ -552,7 +553,7 @@ System::timeEvolution(double strain_interval){
 		}
 		ts++;
 		shear_strain += dt; //
-	} while (shear_strain < shear_strain_next);
+	};
 }
 
 void
@@ -1144,7 +1145,7 @@ System::adjustContactModelParameters(){
 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
 	 * Only increases of kn and kt are accepted.
 	 */
-	double max_increment = 2;
+	double max_increment = 1000;
 	/* determination of kn
 	 */
 	double mean_max_fc_normal, stddev_max_fc_normal;

@@ -78,7 +78,7 @@ private:
 	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
-	void contactForceParameter();
+	void contactForceParameter(string filename);
 	/*
 	 * For outputs
 	 */

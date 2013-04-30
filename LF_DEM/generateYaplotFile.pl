@@ -8,7 +8,7 @@
 
 use Math::Trig;
 
-$num_mathm = 220;
+
 $force_factor = 0.01;
 $y_section = 0;
 
@@ -51,9 +51,6 @@ while (1){
 	&InInteractions;
 	last unless defined $line;
 	&OutYaplotData;
-	if ($num > $num_mathm){
-		last;
-	}
 	$num ++;
 	printf "$shear_rate\n";
 }
