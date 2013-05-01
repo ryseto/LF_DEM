@@ -69,26 +69,26 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
 	double strain_next_config_out = 0;
-	do {
+	while (sys.Shear_strain() < shear_strain_end-1e-8) {
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		strain_next_config_out = cnt_config_out*strain_interval_output;
 		double strain_next = (cnt_simu_loop)*strain_interval_output_data;
 		sys.timeEvolution(strain_next);
 		evaluateData();
 		outputRheologyData();
-		if (sys.Shear_strain() >= strain_next_config_out) {
+		if (sys.Shear_strain() >= strain_next_config_out-1e-8) {
 			outputConfigurationData();
 			cnt_config_out ++;
 		}
 		if (kn_kt_adjustment) {
-			if (sys.Shear_strain() >= strain_knkt_adjustment) {
+			if (sys.Shear_strain() >= strain_knkt_adjustment-1e-8) {
 				sys.adjustContactModelParameters();
 				cnt_knkt_adjustment ++;
 			}
 		}
 		cnt_simu_loop ++;
-		cerr << "strain: " << sys.Shear_strain() << endl;
-	} while (strain_next_config_out < shear_strain_end);
+		cerr << "strain: " << sys.Shear_strain() << " / " << shear_strain_end << endl;
+	}
 }
 
 void

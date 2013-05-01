@@ -85,10 +85,13 @@ GenerateInitConfig::outputPositionData(){
 	ss_posdatafilename << "D" << dimension;
 	ss_posdatafilename << "N" << np;
 	ss_posdatafilename << "VF" << volume_fraction;
-	if (volume_fraction2 == 0) {
+	if (disperse_type == 'm') {
 		ss_posdatafilename << "Mono";
-	} else {
+	} else if (disperse_type == 'b') {
 		ss_posdatafilename << "Bidi" << a2 << "_" << vf_ratio;
+	} else {
+		cerr << "disperse_type is wrong." << endl;
+		exit(1);
 	}
 
 	if (dimension == 2) {
@@ -388,7 +391,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 		ly_lz = 1;
 		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
 	}
-	char disperse_type = readStdinDefault('m' , "(m)onodisperse or (b)idisperse");
+	disperse_type = readStdinDefault('m' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
 	a2 = 1;
 	volume_fraction1 = volume_fraction; // mono
@@ -400,13 +403,19 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 		do {
 			vf_ratio = readStdinDefault(0.5, "volume fraction ratio of smaller particle");
 		} while (vf_ratio < 0 || vf_ratio > 1);
+	} else {
+		vf_ratio = 1;
 	}
 	rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
 	volume_fraction1 = volume_fraction*vf_ratio;
-	volume_fraction2 = volume_fraction-volume_fraction1;
+	if (disperse_type == 'b') {
+		volume_fraction2 = volume_fraction-volume_fraction1;
+	} else {
+		volume_fraction2 = 0;
+	}
 	cerr << "vf = " << volume_fraction1 << ' ' << volume_fraction2 << endl;
 	double total_volume;
 	double pvolume1, pvolume2;
@@ -419,7 +428,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 	}
 	total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
 	double np1_tmp = volume_fraction1*total_volume/pvolume1;
-	if (np1_tmp - (int)np1_tmp <= 0.5) {
+	if (np1_tmp-(int)np1_tmp <= 0.5) {
 		np1 = (int)np1_tmp;
 	} else {
 		np1 = (int)np1_tmp+1;
@@ -446,7 +455,7 @@ GenerateInitConfig::setParameters(int argc, const char * argv[]){
 }
 //
 //void
-//GenerateInitConfig::setSystemParameters(){
+//GenerateInitComononfig::setSystemParameters(){
 //	/*
 //	 * Simulation
 //	 *
