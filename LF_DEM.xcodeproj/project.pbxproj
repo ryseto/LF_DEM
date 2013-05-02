@@ -102,6 +102,7 @@
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9F336C816C2F764003E8E7C /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = /usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<absolute>"; };
 		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StressTensor.h; sourceTree = "<group>"; };
+		D9FF68A31732F24D0062236C /* force_chain.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = force_chain.pl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -186,6 +187,7 @@
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
 				D957F833171720D9007C6437 /* trajectory.pl */,
+				D9FF68A31732F24D0062236C /* force_chain.pl */,
 			);
 			name = Analysys_Visualization;
 			path = LF_DEM;
