@@ -35,12 +35,17 @@ open (IN_interaction, "< ${interaction_data}");
 $first=1;
 $c_traj=0;
 $num = 0;
+$counter_fc = 0;
+$istart0 = -1;
+$istart1 = -1;
+$k_max = -1;
 while (1){
 	&InParticles;
 	&InInteractions;
 	last unless defined $line;
-
-	&OutYaplotData;
+	&analyzeForceChain;
+	
+	#&OutYaplotData;
 	$num ++;
 	printf "$shear_rate\n";
 }
@@ -131,6 +136,7 @@ sub InInteractions {
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$force[$k] = $f_lub + $fc_n + $fc_tan + $fcol;
+		#$force[$k] = $fc_n + $fc_tan;
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
@@ -140,41 +146,177 @@ sub InInteractions {
 	printf OUTG "\n";
 }
 
-sub analzeForceChain {
+
+
+sub connection {
+	($i) = @_; # 分岐の粒子
+	for ($l=$#chain; $l>=0; $l--){
+		if (@{chain[$l]->[3]} == $i){
+			$rootpos_x = @{chain[$l]->[0]};
+			$rootpos_y = @{chain[$l]->[1]};
+			$rootpos_z = @{chain[$l]->[2]};
+			break;
+		}
+	}
+	while(@{int_in_p->[$i]}){
+		$k = pop(@{int_in_p->[$i]}); # interaction bond of particle i
+		$i0 = $int0[$k];
+		$i1 = $int1[$k];
+		if ($i0 != $i){
+			$i_next = $i0;
+			$step = -($radius[$i0]+$radius[$i1]);
+		} else {
+			$i_next = $i1;
+			$step = ($radius[$i0]+$radius[$i1]);
+		}
+		$exist = 0;
+		if ($#ilist > 5){
+			if ($i_next == $istart0){
+				$percolation = 1;
+			}
+		}
+		
+		for ($l=0; $l<$#ilist; $l++){
+			if ($i_next == @ilist[$l]){
+				$exist = 1;
+				break;
+			}
+		}
+		if ($exist == 0){
+			if ($fc_max < $force[$k]){
+				$fc_max = $force[$k];
+				$k_max = $k;
+			}
+			push(@ilist, $i_next);
+			$dx = $step*$nrvec_x[$k];
+			$dy = $step*$nrvec_y[$k];
+			$dz = $step*$nrvec_z[$k];
+			$xx = $rootpos_x + $dx;
+			$yy = $rootpos_y + $dy;
+			$zz = $rootpos_z + $dz;
+			push(@chain, ([$xx,$yy,$zz,$i_next]));
+			push(@fcsegment, ([$rootpos_x, $rootpos_y,$rootpos_z, $xx, $yy, $zz, $force[$k]]));
+			
+		}
+	}
+	
+}
+
+
+sub analyzeForceChain {
+	for ($i=0; $i<$np; $i++) {
+		@{int_in_p[$i]} = ();
+	}
+
+
 	$maxf = 0;
-	$k_max = 0;
+	$k_max = -1;
 	for ($k=0; $k<$num_interaction; $k++) {
 		if ($force[$k] > $maxf) {
 			$maxf = $force[$k];
 			$k_max = $k;
 		}
 	}
-	$i0 = $int0[$k_max];
-	$i1 = $int1[$k_max];
+	$k_start = $k_max;
+	$istart0 = $int0[$k_start];
+	$istart1 = $int1[$k_start];
 	
-	printf OUT ("%3.5f %3.5f %3.5f ", posx[$i0], posy[$i0], posz[$i0]);
+	for ($k=0; $k<$num_interaction; $k++) {
+		$ii0 = $int0[$k];
+		$ii1 = $int1[$k];
+		if ($force[$k] > 0.333*$maxf){
+			push(@{int_in_p->[$ii0]}, $k);
+			push(@{int_in_p->[$ii1]}, $k);
+		}
+	}
+	printf "$maxf\n";
+	
+	
+	if ($istart0 != -1){
+		@ilist = ($istart0);
+		@chain = ([0 ,0, 0, $istart0]);
+		
+		$dx = $radius[$istart0]*$nrvec_x[$k_start];
+		$dy = $radius[$istart0]*$nrvec_y[$k_start];
+		$dz = $radius[$istart0]*$nrvec_z[$k_start];
+		@fcsegment = ([0,0,0, $dx,$dy,$dz,$force[$k_start]] );
+#		push(@ilist, $istart1);
 
-	
-	
-	
-	
+#		push(@chain, ([$dx, $dy, $dz , $istart1]));
+		$it=0;
+		$fc_max = 0;
+		$percolation = 0;
+		while ($it < @ilist) {
+			&connection(@ilist[$it]);
+			$it++;
+		}
+
+		#	while(@ilist){
+		#		print pop(@ilist);
+		#		print ",";
+		#}
+		#print "\n";
+		
+		#	push(@{Pos->[0]}, 2);
+		#push(@{Pos->[0]}, 3);
+		
+		#print @[Pos->[0]];
+		#	for ($i=0; $i<$np; $i++) {
+		#		if (@{Pos->[$i]}) {
+		#			while(@{Pos->[$i]}){
+		##				print pop(@{Pos->[$i]});
+		#			print ",";
+		#			}
+		#			print "\n";
+		#		}
+		#}
+#		if ($#chain>2){
+#			for ($l=0; $l< $#chain; $l++){
+#				printf OUT ("r %3.5f\n", $radius[@{chain[$l]->[3]}]);
+#				printf OUT ("c %3.5f %3.5f %3.5f\n", @{chain[$l]->[0]}, @{chain[$l]->[1]}, @{chain[$l]->[2]});
+#				
+#			}
+#			printf OUT ("t 0 0 28 %d\n", $#chain);
+#			if ($percolation == 1){
+#				printf OUT ("t 0 0 30 percolation\n");
+#			}
+#			if ($counter_fc == 0){
+#				printf OUT ("t 0 0 32 renew origin\n");
+#			}
+#			printf OUT ("\n");
+#		}
+		if ($#chain>2){
+			printf OUT "@ 4\n";
+			for ($l=0; $l< $#fcsegment; $l++){
+				printf OUT ("r  %3.5f\n", 0.002*@{fcsegment[$l]->[6]});
+				printf OUT ("s  %3.5f %3.5f %3.5f  %3.5f %3.5f %3.5f\n",
+				@{fcsegment[$l]->[0]}, @{fcsegment[$l]->[1]}, @{fcsegment[$l]->[2]},
+				@{fcsegment[$l]->[3]}, @{fcsegment[$l]->[4]}, @{fcsegment[$l]->[5]});
+			}
+			printf OUT ("\n");
+			#		if ($counter_fc++ > 1000){
+			#			$istart0 = $int0[$k_max];
+#			$istart1 = $int1[$k_max];
+#			$k_start = $k_max;
+#			$counter_fc = 0;
+#			printf "k = $k_max\n";
+#		}
+		}
+		#
+		#		printf OUT ("@ 2\n");
+		#		for ($l=0; $l<@ilist; $l++){
+		#			$i = @ilist[$l];
+		#			if ($i != $istart0 && $i != $istart1) {
+		#				printf OUT ("r %3.5f\n", $radius[$i]);
+		#				printf OUT ("c %3.5f %3.5f %3.5f\n", $posx[$i]-$xo, $posy[$i]-$yo, $posz[$i]-$zo);
+		#			}
+		#		}
+		#
+		#		printf OUT ("\n");
+		#		printf OUT ("@ 5\n");
+		#		printf OUT ("r %3.5f\n", $radius[$istart0]);
+		#		printf OUT ("c %3.5f %3.5f %3.5f\n", $posx[$istart0]-$xo, $posy[$istart0]-$yo, $posz[$istart0]-$zo);
+		#		printf OUT ("r %3.5f\n", $radius[$istart1]);
+		#		printf OUT ("c %3.5f %3.5f %3.5f\n", $posx[$istart1]-$xo, $posy[$istart1]-$yo, $posz[$istart1]-$zo);
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
