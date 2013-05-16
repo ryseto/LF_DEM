@@ -103,9 +103,9 @@ Simulation::relaxationZeroShear(vector<vec3d> &position_,
 	sys.kb_T = 0;
 	sys.Mu_static(0);
 	sys.dimensionless_shear_rate = 1;
-	sys.Colloidalforce_length(0.05); // dimensionless
+	sys.Colloidalforce_length(0); // dimensionless
 	sys.setupSystem();
-	sys.Colloidalforce_amplitude(10);
+	sys.Colloidalforce_amplitude(0);
 	sys.setupShearFlow(false);
 	double energy_previous = 0;
 	while (true) {

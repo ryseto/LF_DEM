@@ -7,6 +7,8 @@
 # y_section: Visualize the trimed range of the y coordinates.
 
 use Math::Trig;
+#use strict;
+#use warnings;
 
 $force_factor = 0.01;
 $y_section = 0;
@@ -39,15 +41,62 @@ $counter_fc = 0;
 $istart0 = -1;
 $istart1 = -1;
 $k_max = -1;
+$newchain = 1;
 while (1){
 	&InParticles;
 	&InInteractions;
 	last unless defined $line;
-	&analyzeForceChain;
+	for ($i=0; $i<$np; $i++) {
+		@{int_in_p[$i]} = ();
+	}
+	for ($k=0; $k<$num_interaction; $k++) {
+		$ii0 = $int0[$k];
+		$ii1 = $int1[$k];
+		# Particles memorize connecting bonds.
+		# One bond is recorded in the connecting two particles.
+		# Therefore, one way is rejected due to the comparison of thier forces,
+		# another way should be accepted.
+		if ($force[$k] > 1){
+			push(@{int_in_p->[$ii0]}, $k);
+			push(@{int_in_p->[$ii1]}, $k);
+		}
+	}
+	$m = 0;
+	FCLOOP: {
+		do {
+			&analyzeForceChain;
+			$m ++;
+			if ($k_max == -1){
+				last FCLOOP;
+			}
+		} while ( $num_k >= 10);
+		
+		
+
+	}
+
+	printf OUT "@ 0\n";
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2,-$Ly/2,-$Lz/2, $Lx/2,-$Ly/2,-$Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2, $Ly/2,-$Lz/2, $Lx/2, $Ly/2,-$Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2,-$Ly/2, $Lz/2, $Lx/2,-$Ly/2, $Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2, $Ly/2, $Lz/2, $Lx/2, $Ly/2, $Lz/2);
+	
+	
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n",  $Lx/2,-$Ly/2, $Lz/2, $Lx/2, $Ly/2, $Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2,-$Ly/2, $Lz/2,-$Lx/2, $Ly/2, $Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n",  $Lx/2,-$Ly/2,-$Lz/2, $Lx/2, $Ly/2,-$Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2,-$Ly/2,-$Lz/2,-$Lx/2, $Ly/2,-$Lz/2);
+	
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n",  $Lx/2, $Ly/2, $Lz/2, $Lx/2, $Ly/2,-$Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2, $Ly/2, $Lz/2,-$Lx/2, $Ly/2,-$Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n", -$Lx/2,-$Ly/2, $Lz/2,-$Lx/2,-$Ly/2,-$Lz/2);
+	printf OUT ("l %3.3f %3.3f %3.3f  %3.3f %3.3f %3.3f\n",  $Lx/2,-$Ly/2, $Lz/2, $Lx/2,-$Ly/2,-$Lz/2);
+	printf OUT ("\n");
 	
 	#&OutYaplotData;
 	$num ++;
 	printf "$shear_rate\n";
+	printf ("--------------\n");
 }
 close (OUT);
 
@@ -127,35 +176,58 @@ sub InInteractions {
 		($i, $j, $contact, $nx, $ny, $nz,
 		$gap, $f_lub, $fc_n, $fc_tan, $fcol,
 		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF) = split(/\s+/, $line);
-		
-		
+
 		if ($num==$num_mathm){
 			printf OUTMI "$line";
 		}
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
-		$force[$k] = $f_lub + $fc_n + $fc_tan + $fcol;
+		$f_normal = $fc_n + $fcol + $f_lub;
+		#	$force[$k] = sqrt($f_normal)
+		if ($f_normal > 3){
+			if ($gap < 0){
+				#$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan);
+				$force[$k] = $f_normal;
+			} else {
+				$force[$k] = $f_normal;
+			}
+		} else {
+			$force[$k] = 0;
+		}
+		
 		#$force[$k] = $fc_n + $fc_tan;
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
 		$Gap[$k] = $gap;
+		$checked[$k] = 1;
+
 		printf OUTG "$gap ";
 	}
 	printf OUTG "\n";
 }
 
-
-
 sub connection {
-	($i) = @_; # 分岐の粒子
-	for ($l=$#chain; $l>=0; $l--){
-		if (@{chain[$l]->[3]} == $i){
-			$rootpos_x = @{chain[$l]->[0]};
-			$rootpos_y = @{chain[$l]->[1]};
-			$rootpos_z = @{chain[$l]->[2]};
-			break;
+	($i) = @_;
+	$accept = 0;
+	if ($i == $istart1) {
+		$accept = 1;
+		$step = ($radius[$istart0]+$radius[$istart1]);
+		$rootpos_x = $posx[$istart0]+$step*$nrvec_x[$k_start];
+		$rootpos_y = $posy[$istart0]+$step*$nrvec_y[$k_start];
+		$rootpos_z = $posz[$istart0]+$step*$nrvec_z[$k_start];
+		$rootforce = $force[$k_start];
+	} else {
+		for ($l = $#node; $l>=0; $l--){
+			if (@{node[$l]->[3]} == $i){
+				$rootpos_x = @{node[$l]->[0]};
+				$rootpos_y = @{node[$l]->[1]};
+				$rootpos_z = @{node[$l]->[2]};
+				$rootforce = @{fcsegment[$l]->[6]};
+				break;
+				
+			}
 		}
 	}
 	while(@{int_in_p->[$i]}){
@@ -169,154 +241,101 @@ sub connection {
 			$i_next = $i1;
 			$step = ($radius[$i0]+$radius[$i1]);
 		}
-		$exist = 0;
-		if ($#ilist > 5){
-			if ($i_next == $istart0){
-				$percolation = 1;
-			}
-		}
-		
-		for ($l=0; $l<$#ilist; $l++){
-			if ($i_next == @ilist[$l]){
-				$exist = 1;
-				break;
-			}
-		}
-		if ($exist == 0){
-			if ($fc_max < $force[$k]){
-				$fc_max = $force[$k];
-				$k_max = $k;
-			}
-			push(@ilist, $i_next);
+		if ($accept ==1 || $force[$k] < $rootforce ){
+			#			printf (" %3.3f --> %3.3f\n", $force[$k], $rootforce);
+			#		if ($fc_max < $force[$k]){
+						#	$fc_max = $force[$k];
+						#		$k_max = $k;
+						#}
 			$dx = $step*$nrvec_x[$k];
 			$dy = $step*$nrvec_y[$k];
 			$dz = $step*$nrvec_z[$k];
 			$xx = $rootpos_x + $dx;
 			$yy = $rootpos_y + $dy;
 			$zz = $rootpos_z + $dz;
-			push(@chain, ([$xx,$yy,$zz,$i_next]));
-			push(@fcsegment, ([$rootpos_x, $rootpos_y,$rootpos_z, $xx, $yy, $zz, $force[$k]]));
 			
+			push(@ilist, $i_next);
+			push(@node, ([$xx, $yy, $zz, $i_next]));
+			push(@fcsegment, ([$rootpos_x, $rootpos_y,$rootpos_z, $xx, $yy, $zz, $force[$k]]));
+			$checked[$k] = 0;
+
 		}
 	}
-	
 }
 
-
 sub analyzeForceChain {
-	for ($i=0; $i<$np; $i++) {
-		@{int_in_p[$i]} = ();
-	}
-
-
 	$maxf = 0;
 	$k_max = -1;
+	$num_k = 0;
 	for ($k=0; $k<$num_interaction; $k++) {
-		if ($force[$k] > $maxf) {
-			$maxf = $force[$k];
-			$k_max = $k;
+		if ($checked[$k] == 1 && $force[$k] >0){
+			$num_k ++;
+			if ($force[$k] > $maxf) {
+				$maxf = $force[$k];
+				$k_max = $k;
+			}
 		}
 	}
+	#	$maxf_previous = $maxf;
+
 	$k_start = $k_max;
+	$checked[$k_start] = 0;
+	printf ("$k_start $maxf $num_k\n");
 	$istart0 = $int0[$k_start];
 	$istart1 = $int1[$k_start];
-	
-	for ($k=0; $k<$num_interaction; $k++) {
-		$ii0 = $int0[$k];
-		$ii1 = $int1[$k];
-		if ($force[$k] > 0.333*$maxf){
-			push(@{int_in_p->[$ii0]}, $k);
-			push(@{int_in_p->[$ii1]}, $k);
-		}
+	@ilist = ($istart1, $istart0);
+	@node = ([$posx[$istart0], $posy[$istart0], $posz[$istart0], $istart0]);
+
+	$step =$radius[$istart0]+$radius[$istart1];
+	$dx = $step*$nrvec_x[$k_start];
+	$dy = $step*$nrvec_y[$k_start];
+	$dz = $step*$nrvec_z[$k_start];
+	$xx = $posx[$istart0]+$dx;
+	$yy = $posy[$istart0]+$dy;
+	$zz = $posz[$istart0]+$dz;
+	@fcsegment = ([$posx[$istart0], $posy[$istart0], $posz[$istart0], $xx, $yy, $zz, $force[$k_start]]);
+	$it=0;
+	$fc_max = 0;
+	$percolation = 0;
+	while ($it < @ilist ) {
+		&connection(@ilist[$it]);
+		$it++;
 	}
-	printf "$maxf\n";
+	printf ("%d\n", $it);
 	
-	
-	if ($istart0 != -1){
-		@ilist = ($istart0);
-		@chain = ([0 ,0, 0, $istart0]);
+	if ($#fcsegment>=5){
+		printf OUT "y 4\n";
 		
-		$dx = $radius[$istart0]*$nrvec_x[$k_start];
-		$dy = $radius[$istart0]*$nrvec_y[$k_start];
-		$dz = $radius[$istart0]*$nrvec_z[$k_start];
-		@fcsegment = ([0,0,0, $dx,$dy,$dz,$force[$k_start]] );
-#		push(@ilist, $istart1);
-
-#		push(@chain, ([$dx, $dy, $dz , $istart1]));
-		$it=0;
-		$fc_max = 0;
-		$percolation = 0;
-		while ($it < @ilist) {
-			&connection(@ilist[$it]);
-			$it++;
+		$col = $#fcsegment+8;
+		if ($col >= 58){
+			printf "size = $col\n";
+			$col = 58;
 		}
-
-		#	while(@ilist){
-		#		print pop(@ilist);
-		#		print ",";
-		#}
-		#print "\n";
 		
-		#	push(@{Pos->[0]}, 2);
-		#push(@{Pos->[0]}, 3);
+		printf OUT ("@ %d\n", $col);
+		$maxf_cluster = 0;
 		
-		#print @[Pos->[0]];
-		#	for ($i=0; $i<$np; $i++) {
-		#		if (@{Pos->[$i]}) {
-		#			while(@{Pos->[$i]}){
-		##				print pop(@{Pos->[$i]});
-		#			print ",";
-		#			}
-		#			print "\n";
-		#		}
-		#}
-#		if ($#chain>2){
-#			for ($l=0; $l< $#chain; $l++){
-#				printf OUT ("r %3.5f\n", $radius[@{chain[$l]->[3]}]);
-#				printf OUT ("c %3.5f %3.5f %3.5f\n", @{chain[$l]->[0]}, @{chain[$l]->[1]}, @{chain[$l]->[2]});
-#				
+		#		printf OUT ("r 0.5\n");
+		#		printf OUT ("c  %3.6f %3.6f %3.6f\n",
+		#		0.5*(@{fcsegment[0]->[0]} + @{fcsegment[0]->[3]}),
+		#0.5*(@{fcsegment[0]->[1]} + @{fcsegment[0]->[4]}),
+		#		0.5*(@{fcsegment[0]->[2]} + @{fcsegment[0]->[5]}));
+		for ($l=0; $l< $#fcsegment; $l++){
+			$forcevalue = 0.0002*10*@{fcsegment[$l]->[6]};
+#			if ($forcevalue > 0.3){
+#				$forcevalue = 0.3;
 #			}
-#			printf OUT ("t 0 0 28 %d\n", $#chain);
-#			if ($percolation == 1){
-#				printf OUT ("t 0 0 30 percolation\n");
-#			}
-#			if ($counter_fc == 0){
-#				printf OUT ("t 0 0 32 renew origin\n");
-#			}
-#			printf OUT ("\n");
-#		}
-		if ($#chain>2){
-			printf OUT "@ 4\n";
-			for ($l=0; $l< $#fcsegment; $l++){
-				printf OUT ("r  %3.5f\n", 0.002*@{fcsegment[$l]->[6]});
-				printf OUT ("s  %3.5f %3.5f %3.5f  %3.5f %3.5f %3.5f\n",
-				@{fcsegment[$l]->[0]}, @{fcsegment[$l]->[1]}, @{fcsegment[$l]->[2]},
-				@{fcsegment[$l]->[3]}, @{fcsegment[$l]->[4]}, @{fcsegment[$l]->[5]});
+			printf OUT ("r  %3.6f\n", $forcevalue);
+			printf OUT ("s  %3.6f %3.6f %3.6f  %3.6f %3.6f %3.6f\n",
+			@{fcsegment[$l]->[0]}, @{fcsegment[$l]->[1]}, @{fcsegment[$l]->[2]},
+			@{fcsegment[$l]->[3]}, @{fcsegment[$l]->[4]}, @{fcsegment[$l]->[5]});
+		
+			if (@{fcsegment[$l]->[6]} > $maxf_cluster){
+				$maxf_cluster = @{fcsegment[$l]->[6]};
 			}
-			printf OUT ("\n");
-			#		if ($counter_fc++ > 1000){
-			#			$istart0 = $int0[$k_max];
-#			$istart1 = $int1[$k_max];
-#			$k_start = $k_max;
-#			$counter_fc = 0;
-#			printf "k = $k_max\n";
-#		}
+			
 		}
-		#
-		#		printf OUT ("@ 2\n");
-		#		for ($l=0; $l<@ilist; $l++){
-		#			$i = @ilist[$l];
-		#			if ($i != $istart0 && $i != $istart1) {
-		#				printf OUT ("r %3.5f\n", $radius[$i]);
-		#				printf OUT ("c %3.5f %3.5f %3.5f\n", $posx[$i]-$xo, $posy[$i]-$yo, $posz[$i]-$zo);
-		#			}
-		#		}
-		#
-		#		printf OUT ("\n");
-		#		printf OUT ("@ 5\n");
-		#		printf OUT ("r %3.5f\n", $radius[$istart0]);
-		#		printf OUT ("c %3.5f %3.5f %3.5f\n", $posx[$istart0]-$xo, $posy[$istart0]-$yo, $posz[$istart0]-$zo);
-		#		printf OUT ("r %3.5f\n", $radius[$istart1]);
-		#		printf OUT ("c %3.5f %3.5f %3.5f\n", $posx[$istart1]-$xo, $posy[$istart1]-$yo, $posz[$istart1]-$zo);
+
+	
 	}
 }

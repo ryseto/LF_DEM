@@ -196,6 +196,45 @@ Interaction::updateState(bool &deactivated){
 #endif
 }
 
+
+void
+Interaction::updateStateRelax(bool &deactivated){
+	deactivated = false;
+	if (active == false) {
+		return;
+	}
+	/* update tangential displacement: we do it before updating nr_vec
+	 * as it should be along the tangential vector defined in the previous time step
+	 */
+	calcNormalVectorDistanceGap();
+	if (contact) {
+		f_contact_normal_norm = -kn_scaled*(gap_nondim-0.02);
+		f_contact_normal = -f_contact_normal_norm*nr_vec;
+		if (sys->friction) {
+			/* disp_tan is orthogonal to the normal vector.
+			 */
+			disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
+			f_contact_tan = kt_scaled*disp_tan;
+			checkBreakupStaticFriction();
+		}
+		f_colloidal_norm = colloidalforce_amplitude;
+		f_colloidal = -f_colloidal_norm*nr_vec;
+		if (gap_nondim > 0) {
+			deactivate_contact();
+		}
+	} else {
+		f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
+		f_colloidal = -f_colloidal_norm*nr_vec;
+		if (gap_nondim <= 0) {
+			activate_contact();
+		} else if (r > lub_max_scaled) {
+			deactivate();
+			deactivated = true;
+		}
+	}
+}
+
+
 /*********************************
  *                                *
  *	   Contact Forces Methods    *

@@ -46,10 +46,14 @@ open (IN_interaction, "< ${interaction_data}");
 $first=1;
 $c_traj=0;
 $num = 0;
+
 while (1){
+
 	&InParticles;
+
 	&InInteractions;
 	last unless defined $line;
+
 	&OutYaplotData;
 	$num ++;
 	printf "$shear_rate\n";
@@ -148,6 +152,7 @@ sub calcsqdist {
 sub InInteractions {
 	$line = <IN_interaction>;
 	($buf, $shear_rate, $num_interaction) = split(/\s+/, $line);
+	printf "$line\n";
 	if ($buf != "#"){
 		exit;
 	}
@@ -183,6 +188,19 @@ sub InInteractions {
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_t;
 		$Fcol[$k] = $fcol;
+		$f_normal = $fc_n + $fcol + $f_lub;
+		#	$force[$k] = sqrt($f_normal)
+		if ($f_normal > 5){
+			if ($gap < 0){
+				$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan);
+			} else {
+				$force[$k] = $f_normal;
+			}
+		} elsif ($f_normal < -5) {
+			$force[$k] = $fcol + $f_lub;
+		} else {
+			$force[$k] = 0;
+		}
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
@@ -272,7 +290,7 @@ sub OutYaplotData{
 #		if ($i % 100 == 0){
 #			$col = $i/100 + 2;
 #			printf OUT "@ $col\n";
-#		} 
+#		}
 		if ($y_section == 0 ||
 			abs($posy[$i]) < $y_section ){
 				printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
@@ -298,24 +316,22 @@ sub OutYaplotData{
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		#$force = $Fcol[$k];
 		#$force = $Fc_n[$k];
-		$force = $F_lub[$k];
-        if ($force < -5){
-			$string_width = (-${force_factor})*${force};
+		if ($force[$k] <0){
+			$force = -$force[$k];
+			
+			$string_width = ${force_factor}*${force};
 			&OutString_width($int0[$k], $int1[$k]);
 		}
+		
     }
 	printf OUT "y 4\n";
-   printf OUT "@ 4\n";
-   for ($k = 0; $k < $num_interaction; $k ++){
-	   if ($Fc_n[$k] > 1){
-		   $force = $Fc_n[$k] + $Fcol[$k];
-	   } else {
-		   $force = $F_lub[$k] + $Fcol[$k];
-	   }
-	   if ($force > 5){
-		   $string_width = ${force_factor}*${force};
-		   &OutString_width($int0[$k], $int1[$k]);
-	   }
+	printf OUT "@ 4\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		$force = $force[$k];
+		$string_width = ${force_factor}*${force};
+		if ($string_width > 0){
+			&OutString_width($int0[$k], $int1[$k]);
+		}
     }
 	printf OUT "y 5\n";
 	printf OUT "@ 5\n";
@@ -361,12 +377,6 @@ sub OutYaplotData{
 	#    }
 	printf OUT2 "\n";
 	
-	
-	if ($num == 26){
-		
-		
-		
-	}
 }
 
 sub OutBoundaryBox{

@@ -316,6 +316,37 @@ System::deltaTimeEvolution(){
 }
 
 void
+System::deltaTimeEvolutionRelax(){
+	// evolve PBC
+	shear_disp += vel_difference*dt;
+	if (shear_disp > lx) {
+		shear_disp -= lx;
+	}
+	// move particles
+	for (int i=0; i<np; i++) {
+		displacement(i, velocity[i]*dt);
+	}
+	if (twodimension) {
+		for (int i=0; i<np; i++) {
+			angle[i] += ang_velocity[i].y*dt;
+		}
+	}
+	// update boxing system
+	boxset.update();
+	checkNewInteraction();
+	in_predictor = true;
+	in_corrector = true;
+	bool deactivated;
+	for (int k=0; k<nb_interaction; k++) {
+		interaction[k].updateStateRelax(deactivated);
+		if (deactivated) {
+			deactivated_interaction.push(k);
+		}
+	}
+}
+
+
+void
 System::deltaTimeEvolutionPredictor(){
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
@@ -566,7 +597,7 @@ System::timeEvolutionRelax(int time_step){
 		in_predictor = true;
 		in_corrector = true;
 		updateVelocityRestingFluid();
-		deltaTimeEvolution();
+		deltaTimeEvolutionRelax();
 		ts++;
 	}
 }

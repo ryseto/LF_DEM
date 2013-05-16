@@ -76,6 +76,7 @@ private:
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
 	void deltaTimeEvolution();
+	void deltaTimeEvolutionRelax();
 	void deltaTimeEvolutionCorrector();
 	void deltaTimeEvolutionPredictor();
 
