@@ -38,6 +38,8 @@ private:
 	BoxSet boxset;
 	int ts; // time steps
 	double dt;
+	double dt_max;
+	double disp_max;
 	double lx;
 	double ly;
 	double lz;
@@ -272,6 +274,8 @@ public:
 		
 		return lub_max;}
 	inline void Dt(double val){dt = val;}
+	void set_dt_max(double val){dt_max = val;}
+	void set_disp_max(double val){disp_max = val;}
 	inline double Dt(){return dt;}
 	inline void Colloidalforce_amplitude(double val){colloidalforce_amplitude = val;}
 	inline double Colloidalforce_amplitude(){return colloidalforce_amplitude;}

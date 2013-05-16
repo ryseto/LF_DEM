@@ -172,8 +172,10 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.contact_relaxzation_time = atof(value.c_str());
 	} else if (keyword == "kb_T") {
 		sys.kb_T = atof(value.c_str());
-	} else if (keyword == "dt") {
-		sys.Dt(atof(value.c_str()));
+	} else if (keyword == "dt_max") {
+		sys.set_dt_max(atof(value.c_str()));
+	} else if (keyword == "disp_max") {
+		sys.set_disp_max(atof(value.c_str()));
 	} else if (keyword == "shear_strain_end") {
 		shear_strain_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
@@ -375,7 +377,7 @@ Simulation::setDefaultParameters(){
 	sys.Integration_method(_integration_method);
 	sys.Bgf_factor(_bgf_factor);
 	sys.Lub_max(_lub_max);
-	sys.Dt(_dt);
+	sys.set_dt_max(_dt);
 	sys.Kn(_kn);
 	sys.Kt(_kt);
 	sys.Mu_static(_mu_static);

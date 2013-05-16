@@ -232,6 +232,7 @@ System::setupSystem(){
 		fb->init();
 		brownianstress_calc_nb = 0;
 	}
+	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
 	cnt_monitored_data = 0;
@@ -1036,6 +1037,14 @@ System::analyzeState(){
 	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
+	
+	if (max_contact_velo_tan > 0) {
+		double dt_try = disp_max/max_contact_velo_tan;
+		if (dt_try < dt_max){
+			dt = dt_try;
+		}
+	}
+	
 	contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lx;
@@ -1088,6 +1097,8 @@ System::analyzeState(){
 	} else {
 		average_fc_normal = 0;
 	}
+	
+	
 }
 
 void
@@ -1205,11 +1216,11 @@ System::adjustContactModelParameters(){
 	}
 	/* The time step dt is scaled by the max force;
 	 */
-	dt = 240*1e-4/representative_max_fc_normal;
-	if (dt > 1e-4){
-		dt = 1e-4;
-	}
-	cerr << "dt = " << dt << endl;
+//	dt = 240*1e-4/representative_max_fc_normal;
+//	if (dt > 1e-4){
+//		dt = 1e-4;
+//	}
+//	cerr << "dt = " << dt << endl;
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].updateContactModel();
 	}
