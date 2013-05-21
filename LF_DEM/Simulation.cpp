@@ -33,8 +33,8 @@ Simulation::contactForceParameter(string filename){
 	double phi_;
 	double kn_;
 	double kt_;
-	double dt_;
-	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
+	double dt_max_;
+	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_max_) {
 		if (phi_ == volume_fraction){
 			break;
 		}
@@ -42,8 +42,8 @@ Simulation::contactForceParameter(string filename){
 	fin_knktdt.clear();
 	sys.Kn(kn_);
 	sys.Kt(kt_);
-	sys.Dt(dt_);
-	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+	sys.set_dt_max(dt_max_);
+	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
 
 /*

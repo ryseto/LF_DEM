@@ -510,6 +510,9 @@ Interaction::addContactStress(){
 		pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
 		sys->contactstressGU[par_num[0]] += stresslet_GU_i;
 		sys->contactstressGU[par_num[1]] += stresslet_GU_j;
+	} else {
+		contact_stresslet_XF_normal.reset();
+		contact_stresslet_XF_tan.reset();
 	}
 }
 

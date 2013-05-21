@@ -251,9 +251,11 @@ System::calcStress(){
 	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
+			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
+		}
+		if (interaction[k].is_contact()) {
 			total_contact_stressXF_normal += interaction[k].getContactStressXF_normal();
 			total_contact_stressXF_tan += interaction[k].getContactStressXF_tan();
-			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
 		}
 	}
 	total_hydro_stress /= System_volume();
