@@ -1042,6 +1042,8 @@ System::analyzeState(){
 		double dt_try = disp_max/max_contact_velo_tan;
 		if (dt_try < dt_max){
 			dt = dt_try;
+		} else {
+			dt = dt_max;
 		}
 	}
 	
