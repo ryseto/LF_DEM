@@ -243,5 +243,10 @@ public:
 	double getStressXZ(){
 		return elm[2];
 	}
+	
+	double getParticlePressure(){
+		return -(1./3)*(elm[0]+elm[4]+elm[5]);
+	}
+	
 };
 #endif

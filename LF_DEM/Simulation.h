@@ -33,12 +33,16 @@ private:
 	double viscosity;
 	double normalstress_diff_1;
 	double normalstress_diff_2;
+	double particle_pressure;
+	
 	double viscosity_hydro;
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
 	double viscosity_cont_XF;
 	double normalstress_diff_1_cont_XF;
 	double normalstress_diff_2_cont_XF;
+	double particle_pressure_cont;
+	
 	double viscosity_friction; // Fc_tan contribution.
 	double normalstress_diff_1_friction;
 	double normalstress_diff_2_friction;
@@ -48,6 +52,7 @@ private:
 	double viscosity_col_XF;
 	double normalstress_diff_1_col_XF;
 	double normalstress_diff_2_col_XF;
+	double particle_pressure_col;
 	double viscosity_col_GU;
 	double normalstress_diff_1_col_GU;
 	double normalstress_diff_2_col_GU;

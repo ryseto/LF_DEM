@@ -446,12 +446,16 @@ Simulation::evaluateData(){
 	viscosity = total_stress.getStressXZ();
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
+	particle_pressure = total_stress.getParticlePressure();
+
 	viscosity_hydro = sys.total_hydro_stress.getStressXZ();
 	normalstress_diff_1_hydro = sys.total_hydro_stress.getNormalStress1();
 	normalstress_diff_2_hydro = sys.total_hydro_stress.getNormalStress2();
 	viscosity_cont_XF = total_contact_stressXF.getStressXZ();
 	normalstress_diff_1_cont_XF = total_contact_stressXF.getNormalStress1();
 	normalstress_diff_2_cont_XF = total_contact_stressXF.getNormalStress2();
+	particle_pressure_cont = total_contact_stressXF.getParticlePressure();
+	
 	viscosity_friction = sys.total_contact_stressXF_tan.getStressXZ();
 	normalstress_diff_1_friction = sys.total_contact_stressXF_tan.getNormalStress1();
 	normalstress_diff_2_friction = sys.total_contact_stressXF_tan.getNormalStress2();
@@ -461,6 +465,7 @@ Simulation::evaluateData(){
 	viscosity_col_XF = sys.total_colloidal_stressXF.getStressXZ();
 	normalstress_diff_1_col_XF = sys.total_colloidal_stressXF.getNormalStress1();
 	normalstress_diff_2_col_XF = sys.total_colloidal_stressXF.getNormalStress2();
+	particle_pressure_col = sys.total_colloidal_stressXF.getParticlePressure();
 	viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
 	normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
 	normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
@@ -520,6 +525,10 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#35: kn" << endl;
 		fout_rheo << "#36: kt" << endl;
 		fout_rheo << "#37: dt" << endl;
+		fout_rheo << "#38: particle pressure" << endl;
+		fout_rheo << "#39: particle pressure contact" << endl;
+		fout_rheo << "#40: particle pressure colloidal force" << endl;
+		
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -567,6 +576,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.Kn() << ' '; //35
 	fout_rheo << sys.Kt() << ' '; //36
 	fout_rheo << sys.Dt() << ' '; //37
+	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
+	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
+	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
 	fout_rheo << endl;
 }
 

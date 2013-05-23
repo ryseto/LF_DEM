@@ -281,11 +281,11 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
 	$r = $radius[0];
-	printf OUT "r $r\n";
+	printf OUT "r 0.2*$r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $radius[$i];
-			printf OUT "r $r\n";
+			printf OUT "r 0.2*$r\n";
 		}
 #		if ($i % 100 == 0){
 #			$col = $i/100 + 2;
