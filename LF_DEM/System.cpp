@@ -26,7 +26,6 @@ System::~System(){
 	DELETE(contact_force);
 	DELETE(contact_torque);
 	DELETE(lubstress);
-	DELETE(bgfstress);
 	DELETE(contactstressGU);
 	DELETE(colloidalstressGU);
 	DELETE(brownianstress);
@@ -60,7 +59,7 @@ System::allocateRessources(){
 	contact_torque = new vec3d [np];
 	colloidal_force = new vec3d [np];
 	lubstress = new StressTensor [np];
-	bgfstress = new StressTensor [np];
+
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
 	brownianstress = new StressTensor [np];
@@ -237,9 +236,6 @@ System::setupSystem(){
 	checkNewInteraction();
 	cnt_monitored_data = 0;
 	setSystemVolume();
-	for (int i=0; i<np; i++) {
-		bgfstress[i].set(0, 0, (5.0/9)*bgf_factor*radius_cubic[i], 0, 0, 0);
-	}
 	if (dimension == 2){
 		twodimension = true;
 	} else {
@@ -667,7 +663,6 @@ void
 System::stressReset(){
 	for (int i=0; i<np; i++) {
 		lubstress[i].reset();
-		bgfstress[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
 	}

@@ -190,13 +190,13 @@ sub InInteractions {
 		$Fcol[$k] = $fcol;
 		$f_normal = $fc_n + $fcol + $f_lub;
 		#	$force[$k] = sqrt($f_normal)
-		if ($f_normal > 5){
+		if ($f_normal > 0){
 			if ($gap < 0){
 				$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan);
 			} else {
 				$force[$k] = $f_normal;
 			}
-		} elsif ($f_normal < -5) {
+		} elsif ($f_normal < 0) {
 			$force[$k] = $fcol + $f_lub;
 		} else {
 			$force[$k] = 0;
@@ -280,12 +280,12 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = $radius[0];
-	printf OUT "r 0.2*$r\n";
+	$r = 0.5*$radius[0];
+	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = $radius[$i];
-			printf OUT "r 0.2*$r\n";
+			$r = 0.5*$radius[$i];
+			printf OUT "r $r\n";
 		}
 #		if ($i % 100 == 0){
 #			$col = $i/100 + 2;

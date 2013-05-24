@@ -126,7 +126,6 @@ public:
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
 	StressTensor* lubstress; // G U + M E
-	StressTensor* bgfstress; // by particle
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
 	StressTensor* brownianstress; // by particle

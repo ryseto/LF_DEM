@@ -17,13 +17,6 @@ System::calcStressesHydroContactBrownian(){
 		zero_2Dsimu = 1;
 	}
 	/**************************************************
-	 1. Stress from background flow
-	 **/
-    for (int i=0; i<np; i++) {
-		bgfstress[i].set(0, 0, (5.0/9)*bgf_factor*radius_cubic[i], 0, 0, 0);
-	}
-	
-	/**************************************************
 	 2. and 3.: Stresses from
 	 2-body lubrication and contacts  **/
 	
@@ -99,7 +92,6 @@ System::calcStressesHydroContactBrownian(){
     }
 	
 	/****** Brownian Stress: term R_SU * v_Brownian_init ****/
-	
 	
     for (int k = 0; k < nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -242,7 +234,7 @@ System::calcStress(){
 	total_colloidal_stressXF.reset();
 	total_brownian_stress.reset();
 	for (int i=0; i<np; i++) {
-		total_hydro_stress += lubstress[i]+bgfstress[i];
+		total_hydro_stress += lubstress[i];
 		total_contact_stressGU += contactstressGU[i];
 		total_colloidal_stressGU += colloidalstressGU[i];
 		if (brownian) {

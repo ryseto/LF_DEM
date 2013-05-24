@@ -7,6 +7,8 @@
 //
 #ifndef __LF_DEM__Simulation__
 #define __LF_DEM__Simulation__
+
+
 #include <iostream>
 #include <fstream>
 #include <queue>
@@ -35,7 +37,7 @@ private:
 	double normalstress_diff_2;
 	double particle_pressure;
 	
-	double viscosity_hydro;
+	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
 	double viscosity_cont_XF;

@@ -6,13 +6,13 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
+#define VERSION "1.0"
 #include "Simulation.h"
 #include <cmath>
 #include <map>
 #include <string>
 #include <algorithm>
 #include <cctype>
-
 Simulation::Simulation(){};
 Simulation::~Simulation(){
 	if (fout_rheo.is_open()) {
@@ -62,6 +62,9 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	}
 	openOutputFiles();
 	outputDataHeader(fout_particle);
+	outputDataHeader(fout_interaction);
+	outputDataHeader(fout_rheo);
+
 	sys.setupSystem();
 	outputConfigurationData();
 	sys.setupShearFlow(true);
@@ -443,7 +446,7 @@ Simulation::evaluateData(){
 		total_stress += sys.total_brownian_stress;
 	}
 	StressTensor total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
-	viscosity = total_stress.getStressXZ();
+	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
@@ -599,11 +602,12 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 
 void
 Simulation::outputDataHeader(ofstream &fout){
-	fout << "np " << sys.Np() << endl;
-	fout << "VF " << volume_fraction << endl;
-	fout << "Lx " << sys.Lx() << endl;
-	fout << "Ly " << sys.Ly() << endl;
-	fout << "Lz " << sys.Lz() << endl;
+	fout << "# LF_DEM version " << VERSION << endl;
+	fout << "# np " << sys.Np() << endl;
+	fout << "# VF " << volume_fraction << endl;
+	fout << "# Lx " << sys.Lx() << endl;
+	fout << "# Ly " << sys.Ly() << endl;
+	fout << "# Lz " << sys.Lz() << endl;
 }
 
 void
