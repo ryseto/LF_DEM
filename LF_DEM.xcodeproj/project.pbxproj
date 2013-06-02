@@ -93,6 +93,7 @@
 		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
 		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
+		D9CE560517555DE500719775 /* extract_normalvecdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extract_normalvecdata.pl; sourceTree = "<group>"; };
 		D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.aux; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50D81678F61E00E864E4 /* note_LF_DEM.blg */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.blg; sourceTree = "<group>"; };
@@ -186,6 +187,7 @@
 			children = (
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
+				D9CE560517555DE500719775 /* extract_normalvecdata.pl */,
 				D957F833171720D9007C6437 /* trajectory.pl */,
 				D9FF68A31732F24D0062236C /* force_chain.pl */,
 			);

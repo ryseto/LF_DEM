@@ -36,7 +36,8 @@ private:
 	double normalstress_diff_1;
 	double normalstress_diff_2;
 	double particle_pressure;
-	
+	StressTensor total_stress;
+	StressTensor total_contact_stressXF;
 	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
@@ -67,6 +68,7 @@ private:
 	ofstream fout_rheo;
 	ofstream fout_particle;
 	ofstream fout_interaction;
+	ofstream fout_st;
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
@@ -91,6 +93,7 @@ private:
 	 */
 	void outputDataHeader(ofstream &fout);
 	void outputRheologyData();
+	void outputStressTensorData();
 	void outputConfigurationData();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 public:

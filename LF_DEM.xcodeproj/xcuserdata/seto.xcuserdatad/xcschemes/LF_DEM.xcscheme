@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM  $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/force_chain.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/initconfig_scale_size.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/trajectory.pl $HOME/bin/&#10;&#10;&#10;">
+               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM  $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/force_chain.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/extract_normalvecdata.pl $HOME/bin/&#10;&#10;#cp ${PROJECT_DIR}/LF_DEM/initconfig_scale_size.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/trajectory.pl $HOME/bin/&#10;&#10;&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/tmp"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/debug"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -76,6 +76,24 @@
             ReferencedContainer = "container:LF_DEM.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "D3N512VF0.56Bidi1.4_0.5Cubic_1.dat"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "fric1.txt"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "1"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "kn_kt_dt_mu1.dat"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -83,7 +101,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/rigid_sphere"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/debug"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
       <BuildableProductRunnable>

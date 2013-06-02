@@ -258,5 +258,7 @@ System::calcStress(){
 	total_colloidal_stressXF /= System_volume();
 	total_brownian_stress /= System_volume();
 	stressBrownianReset();
-	
 }
+
+
+

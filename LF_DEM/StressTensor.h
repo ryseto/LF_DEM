@@ -12,15 +12,26 @@
 
 class StressTensor {
 private:
+
+public:
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
 	 */
 	double elm[6];
-public:
+	
 	inline StressTensor(void){
 		for (int i=0; i<6; i++){
 			elm[i] = 0;
 		}
+	}
+	
+	void outputStressTensor(ofstream &fout){
+		fout << elm[0] << ' ';
+		fout << elm[1] << ' ';
+		fout << elm[2] << ' ';
+		fout << elm[3] << ' ';
+		fout << elm[4] << ' ';
+		fout << elm[5] << ' ';
 	}
 	
 	inline StressTensor(const vec3d & v1, const vec3d & v2){

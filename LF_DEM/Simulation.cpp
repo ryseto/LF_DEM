@@ -64,7 +64,7 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	outputDataHeader(fout_particle);
 	outputDataHeader(fout_interaction);
 	outputDataHeader(fout_rheo);
-
+	outputDataHeader(fout_st);
 	sys.setupSystem();
 	outputConfigurationData();
 	sys.setupShearFlow(true);
@@ -79,6 +79,7 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		sys.timeEvolution(strain_next);
 		evaluateData();
 		outputRheologyData();
+		outputStressTensorData();
 		if (sys.Shear_strain() >= strain_next_config_out-1e-8) {
 			outputConfigurationData();
 			cnt_config_out ++;
@@ -265,9 +266,11 @@ Simulation::openOutputFiles(){
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
+	string st_filename = "st_" +sys.simu_name + ".dat";
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
+	fout_st.open(st_filename.c_str());
 	sys.openFileInteractionData();
 }
 
@@ -436,7 +439,6 @@ Simulation::evaluateData(){
 	 * The total stress does not include contact GU term
 	 * due to the asumption of hard-sphere model.
 	 */
-	StressTensor total_stress;
 	total_stress = sys.total_hydro_stress;
 	total_stress += sys.total_contact_stressXF_normal;
 	total_stress += sys.total_contact_stressXF_tan;
@@ -445,7 +447,8 @@ Simulation::evaluateData(){
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
-	StressTensor total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
+	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
+	
 	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
@@ -475,6 +478,16 @@ Simulation::evaluateData(){
 	viscosity_brownian = sys.total_brownian_stress.getStressXZ();
 	normalstress_diff_1_brownian = sys.total_brownian_stress.getNormalStress1();
 	normalstress_diff_2_brownian = sys.total_brownian_stress.getNormalStress2();
+}
+
+void
+Simulation::outputStressTensorData(){
+	fout_st << sys.Shear_strain() << ' ';
+	fout_st << 6*M_PI*viscosity << ' ';
+	total_stress.outputStressTensor(fout_st);
+	sys.total_hydro_stress.outputStressTensor(fout_st);
+	total_contact_stressXF.outputStressTensor(fout_st);
+	fout_st << endl;
 }
 
 void

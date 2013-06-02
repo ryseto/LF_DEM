@@ -70,9 +70,6 @@ while (1){
 				last FCLOOP;
 			}
 		} while ( $num_k >= 10);
-		
-		
-
 	}
 
 	printf OUT "@ 0\n";

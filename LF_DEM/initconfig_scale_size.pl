@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 use Math::Trig;
 $initcongif_data = $ARGV[0];
-$scale_factor = $ARGV[1];
 # Create output file name
 $j = index($initcongif_data, '.dat');
 printf "$j\n";
