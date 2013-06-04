@@ -186,7 +186,7 @@ public:
 	ofstream fout_int_data;
 	double total_energy;
 	
-	void setSystemVolume();
+	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
 						  double lx_, double ly_, double lz_);

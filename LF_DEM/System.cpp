@@ -235,11 +235,12 @@ System::setupSystem(){
 	initializeBoxing();
 	checkNewInteraction();
 	cnt_monitored_data = 0;
-	setSystemVolume();
 	if (dimension == 2){
 		twodimension = true;
+		setSystemVolume(2*radius[np-1]);
 	} else {
 		twodimension = false;
+		setSystemVolume();
 	}
 }
 
@@ -1094,20 +1095,12 @@ System::analyzeState(){
 	} else {
 		average_fc_normal = 0;
 	}
-	
-	
 }
 
 void
-System::setSystemVolume(){
+System::setSystemVolume(double depth){
 	if (dimension == 2) {
-		double max_radius = 0;
-		for (int i=0; i < np; i++) {
-			if (radius[i] > max_radius) {
-				max_radius = radius[i];
-			}
-		}
-		system_volume = lx*lz*2*max_radius;
+		system_volume = lx*lz*depth;
 	} else {
 		system_volume = lx*ly*lz;
 	}

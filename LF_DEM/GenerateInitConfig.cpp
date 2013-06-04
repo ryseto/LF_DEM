@@ -21,7 +21,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	sys.brownian = false;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
-	sys.setSystemVolume();
+	sys.setSystemVolume(2*a2);
 	sys.Lub_max(2.5);
 	sys.in_predictor = false;
 	sys.Integration_method(0);

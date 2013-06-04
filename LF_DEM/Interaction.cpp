@@ -395,16 +395,17 @@ void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 								   StressTensor &stresslet_i, StressTensor &stresslet_j){
 	calcXG();
-	double n0n0_13 = nr_vec.x*nr_vec.x-1./3;
-	double n1n1_13 = nr_vec.y*nr_vec.y-1./3;
+	double n0n0_13 = nr_vec.x*nr_vec.x;
+	double n1n1_13 = nr_vec.y*nr_vec.y;
 	double n0n1 = nr_vec.x*nr_vec.y;
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
+	double n2n2 = nr_vec.z*nr_vec.z;
 	double common_factor_i = -dot(nr_vec, (4*a0*a0*XG[0]*vi+ro*ro*XG[1]*vj)/6);
 	double common_factor_j = -dot(nr_vec, (4*a1*a1*XG[3]*vj+ro*ro*XG[2]*vi)/6);
-	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
+	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
 	stresslet_i *= common_factor_i;
-	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
+	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
 	stresslet_j *= common_factor_j;
 }
 
@@ -425,18 +426,19 @@ Interaction::pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i
 
 void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double n0n0_13 = nr_vec.x*nr_vec.x-1./3;
-	double n1n1_13 = nr_vec.y*nr_vec.y-1./3;
+	double n0n0_13 = nr_vec.x*nr_vec.x;
+	double n1n1_13 = nr_vec.y*nr_vec.y;
 	double n0n1 = nr_vec.x*nr_vec.y;
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
+	double n2n2 = nr_vec.z*nr_vec.z;
 	double rororo = ro*ro*ro;
 	calcXM();
 	double common_factor_i = 5*(a0*a0*a0*XM[0]/3+rororo*XM[1]/24)*n0n2;
-	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
+	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
 	stresslet_i *= common_factor_i;
 	double common_factor_j = 5*(a1*a1*a1*XM[3]/3+rororo*XM[2]/24)*n0n2;
-	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13);
+	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
 	stresslet_j *= common_factor_j;
 }
 

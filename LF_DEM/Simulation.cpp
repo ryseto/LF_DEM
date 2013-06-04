@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#define VERSION "1.0"
+#define VERSION "1.1"
 #include "Simulation.h"
 #include <cmath>
 #include <map>
@@ -439,15 +439,16 @@ Simulation::evaluateData(){
 	 * The total stress does not include contact GU term
 	 * due to the asumption of hard-sphere model.
 	 */
+	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
+	total_colloidal_stress = sys.total_colloidal_stressXF+sys.total_colloidal_stressGU;
+	
 	total_stress = sys.total_hydro_stress;
-	total_stress += sys.total_contact_stressXF_normal;
-	total_stress += sys.total_contact_stressXF_tan;
-	total_stress += sys.total_colloidal_stressXF;
-	total_stress += sys.total_colloidal_stressGU;
+	total_stress += total_contact_stressXF;
+	total_stress += total_colloidal_stress;
+	
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
-	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
 	
 	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
 	normalstress_diff_1 = total_stress.getNormalStress1();
@@ -484,9 +485,14 @@ void
 Simulation::outputStressTensorData(){
 	fout_st << sys.Shear_strain() << ' ';
 	fout_st << 6*M_PI*viscosity << ' ';
+	/* total_stress = sys.total_hydro_stress;
+	 * + total_contact_stressXF + total_colloidal_stress;
+	 */
 	total_stress.outputStressTensor(fout_st);
 	sys.total_hydro_stress.outputStressTensor(fout_st);
 	total_contact_stressXF.outputStressTensor(fout_st);
+	sys.total_contact_stressGU.outputStressTensor(fout_st);
+	total_colloidal_stress.outputStressTensor(fout_st);
 	fout_st << endl;
 }
 

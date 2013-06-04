@@ -10,6 +10,9 @@
 		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
 		D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */; };
 		D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
+		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
+		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
+		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
 		D92F19C31676450800411650 /* BrownianForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92F19C01676450800411650 /* BrownianForce.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D97C3B07167690DC009A6BF0 /* Interaction.cpp */; };
@@ -31,6 +34,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		D921A0BC175BF90D002F64B1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		D988E387165441750009949F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -49,6 +62,11 @@
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B0417166EF06800DC63CA /* libcholmod.2.0.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.0.1.a; path = /usr/local/lib/libcholmod.2.0.1.a; sourceTree = "<absolute>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze_data_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
+		D921A0C0175BF90D002F64B1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = analyze_data_LF_DEM.1; sourceTree = "<group>"; };
+		D921A0C7175C0041002F64B1 /* SystemParticles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemParticles.cpp; sourceTree = "<group>"; };
+		D921A0C8175C0041002F64B1 /* SystemParticles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemParticles.h; sourceTree = "<group>"; };
 		D92F19C01676450800411650 /* BrownianForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrownianForce.cpp; sourceTree = "<group>"; };
 		D92F19C11676450800411650 /* BrownianForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrownianForce.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
@@ -107,6 +125,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D921A0BB175BF90D002F64B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D988E386165441750009949F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,6 +152,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D921A0BF175BF90D002F64B1 /* analyze_data_LF_DEM */ = {
+			isa = PBXGroup;
+			children = (
+				D921A0C0175BF90D002F64B1 /* main.cpp */,
+				D921A0C7175C0041002F64B1 /* SystemParticles.cpp */,
+				D921A0C8175C0041002F64B1 /* SystemParticles.h */,
+				D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */,
+			);
+			path = analyze_data_LF_DEM;
+			sourceTree = "<group>";
+		};
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
@@ -203,6 +239,7 @@
 				D972279C16AF8FF300DA851F /* Mathematica */,
 				D958B1DF1684141B003F94B4 /* python */,
 				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
+				D921A0BF175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D988E38A165441750009949F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -211,6 +248,7 @@
 			isa = PBXGroup;
 			children = (
 				D988E389165441750009949F /* LF_DEM */,
+				D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -264,6 +302,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D921A0BD175BF90D002F64B1 /* analyze_data_LF_DEM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D921A0C6175BF90D002F64B1 /* Build configuration list for PBXNativeTarget "analyze_data_LF_DEM" */;
+			buildPhases = (
+				D921A0BA175BF90D002F64B1 /* Sources */,
+				D921A0BB175BF90D002F64B1 /* Frameworks */,
+				D921A0BC175BF90D002F64B1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = analyze_data_LF_DEM;
+			productName = analyze_data_LF_DEM;
+			productReference = D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */;
+			productType = "com.apple.product-type.tool";
+		};
 		D988E388165441750009949F /* LF_DEM */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D988E393165441750009949F /* Build configuration list for PBXNativeTarget "LF_DEM" */;
@@ -303,11 +358,21 @@
 			projectRoot = "";
 			targets = (
 				D988E388165441750009949F /* LF_DEM */,
+				D921A0BD175BF90D002F64B1 /* analyze_data_LF_DEM */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D921A0BA175BF90D002F64B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D921A0C1175BF90D002F64B1 /* main.cpp in Sources */,
+				D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D988E385165441750009949F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -328,6 +393,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		D921A0C4175BF90D002F64B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D921A0C5175BF90D002F64B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D988E391165441750009949F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -435,6 +520,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D921A0C6175BF90D002F64B1 /* Build configuration list for PBXNativeTarget "analyze_data_LF_DEM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D921A0C4175BF90D002F64B1 /* Debug */,
+				D921A0C5175BF90D002F64B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		D988E383165441750009949F /* Build configuration list for PBXProject "LF_DEM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

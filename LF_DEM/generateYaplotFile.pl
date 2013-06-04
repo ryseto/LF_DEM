@@ -50,8 +50,11 @@ while (1) {
 		${cnt} ++;
 	}
 }
-$fmax_ave = ${sum_fmax}/${cnt};
-$force_factor = 0.3/$fmax_ave;
+
+#$fmax_ave = ${sum_fmax}/${cnt};
+#printf "fmax = $fmax_ave $cnt \n";
+#$force_factor = 0.3/$fmax_ave;
+$force_factor = 0.01;
 #printf  "$fmax_ave\n";
 #exit;
 
@@ -309,11 +312,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = 0.5*$radius[0];
+	$r = $radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = 0.5*$radius[$i];
+			$r = $radius[$i];
 			printf OUT "r $r\n";
 		}
 #		if ($i % 100 == 0){
