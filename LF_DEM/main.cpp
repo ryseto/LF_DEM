@@ -8,11 +8,8 @@
 #include <iostream>
 #include "Simulation.h"
 #include "GenerateInitConfig.h"
-
-
 int main(int argc, const char * argv[])
 {
-	
 	if (argc == 1){
 		cerr << "usage:" << endl;
 		cerr << "(1) Simulation" << endl;

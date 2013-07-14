@@ -30,6 +30,11 @@
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
 		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
+		D9BE3B66178C838100937C5C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B65178C838100937C5C /* main.cpp */; };
+		D9BE3B68178C838100937C5C /* cluster_detector.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9BE3B67178C838100937C5C /* cluster_detector.1 */; };
+		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
+		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
+		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9F336C916C2F764003E8E7C /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F336C816C2F764003E8E7C /* libcolamd.2.8.0.a */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +56,16 @@
 			dstSubfolderSpec = 0;
 			files = (
 				D988E390165441750009949F /* LF_DEM.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D9BE3B61178C838100937C5C /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				D9BE3B68178C838100937C5C /* cluster_detector.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -110,6 +125,15 @@
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
 		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
+		D9BE3B63178C838100937C5C /* cluster_detector */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_detector; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9BE3B65178C838100937C5C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D9BE3B67178C838100937C5C /* cluster_detector.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_detector.1; sourceTree = "<group>"; };
+		D9BE3B6C178C83C900937C5C /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
+		D9BE3B6D178C83C900937C5C /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		D9BE3B6F178CB35E00937C5C /* Bond.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Bond.cpp; sourceTree = "<group>"; };
+		D9BE3B70178CB35E00937C5C /* Bond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Bond.h; sourceTree = "<group>"; };
+		D9BE3B72178CB8A800937C5C /* Cluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Cluster.cpp; sourceTree = "<group>"; };
+		D9BE3B73178CB8A800937C5C /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
 		D9CE560517555DE500719775 /* extract_normalvecdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extract_normalvecdata.pl; sourceTree = "<group>"; };
 		D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.aux; sourceTree = "<group>"; };
@@ -146,6 +170,13 @@
 				D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */,
 				D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */,
 				D91B0418166EF06800DC63CA /* libcholmod.2.0.1.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9BE3B60178C838100937C5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,6 +271,7 @@
 				D958B1DF1684141B003F94B4 /* python */,
 				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
 				D921A0BF175BF90D002F64B1 /* analyze_data_LF_DEM */,
+				D9BE3B64178C838100937C5C /* cluster_detector */,
 				D988E38A165441750009949F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -249,6 +281,7 @@
 			children = (
 				D988E389165441750009949F /* LF_DEM */,
 				D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */,
+				D9BE3B63178C838100937C5C /* cluster_detector */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -283,6 +316,21 @@
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
+			sourceTree = "<group>";
+		};
+		D9BE3B64178C838100937C5C /* cluster_detector */ = {
+			isa = PBXGroup;
+			children = (
+				D9BE3B65178C838100937C5C /* main.cpp */,
+				D9BE3B6C178C83C900937C5C /* System.cpp */,
+				D9BE3B6D178C83C900937C5C /* System.h */,
+				D9BE3B6F178CB35E00937C5C /* Bond.cpp */,
+				D9BE3B70178CB35E00937C5C /* Bond.h */,
+				D9BE3B72178CB8A800937C5C /* Cluster.cpp */,
+				D9BE3B73178CB8A800937C5C /* Cluster.h */,
+				D9BE3B67178C838100937C5C /* cluster_detector.1 */,
+			);
+			path = cluster_detector;
 			sourceTree = "<group>";
 		};
 		D9DA50D51678F61E00E864E4 /* note_LF_DEM */ = {
@@ -336,6 +384,23 @@
 			productReference = D988E389165441750009949F /* LF_DEM */;
 			productType = "com.apple.product-type.tool";
 		};
+		D9BE3B62178C838100937C5C /* cluster_detector */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9BE3B6B178C838100937C5C /* Build configuration list for PBXNativeTarget "cluster_detector" */;
+			buildPhases = (
+				D9BE3B5F178C838100937C5C /* Sources */,
+				D9BE3B60178C838100937C5C /* Frameworks */,
+				D9BE3B61178C838100937C5C /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cluster_detector;
+			productName = cluster_detector;
+			productReference = D9BE3B63178C838100937C5C /* cluster_detector */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -359,6 +424,7 @@
 			targets = (
 				D988E388165441750009949F /* LF_DEM */,
 				D921A0BD175BF90D002F64B1 /* analyze_data_LF_DEM */,
+				D9BE3B62178C838100937C5C /* cluster_detector */,
 			);
 		};
 /* End PBXProject section */
@@ -387,6 +453,17 @@
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
 				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9BE3B5F178C838100937C5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9BE3B66178C838100937C5C /* main.cpp in Sources */,
+				D9BE3B6E178C83C900937C5C /* System.cpp in Sources */,
+				D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */,
+				D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -517,6 +594,26 @@
 			};
 			name = Release;
 		};
+		D9BE3B69178C838100937C5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D9BE3B6A178C838100937C5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -527,6 +624,7 @@
 				D921A0C5175BF90D002F64B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D988E383165441750009949F /* Build configuration list for PBXProject "LF_DEM" */ = {
 			isa = XCConfigurationList;
@@ -545,6 +643,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		D9BE3B6B178C838100937C5C /* Build configuration list for PBXNativeTarget "cluster_detector" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9BE3B69178C838100937C5C /* Debug */,
+				D9BE3B6A178C838100937C5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

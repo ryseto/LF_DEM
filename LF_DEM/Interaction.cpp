@@ -134,10 +134,6 @@ Interaction::deactivate_contact(){
 
 void
 Interaction::updateState(bool &deactivated){
-	deactivated = false;
-	if (active == false) {
-		return;
-	}
 	/* update tangential displacement: we do it before updating nr_vec
 	 * as it should be along the tangential vector defined in the previous time step
 	 */
@@ -167,8 +163,9 @@ Interaction::updateState(bool &deactivated){
 			if (gap_nondim > 0) {
 				deactivate_contact();
 			}
+			
 		}
-	} else {
+	} else { /* separating */
 		calcNormalVectorDistanceGap();
 		if (sys->colloidalforce) {
 			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
@@ -195,7 +192,6 @@ Interaction::updateState(bool &deactivated){
 	}
 #endif
 }
-
 
 void
 Interaction::updateStateRelax(bool &deactivated){

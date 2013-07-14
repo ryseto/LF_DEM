@@ -253,10 +253,12 @@ GenerateInitConfig::updateInteractions(int i){
 		inter_list.push_back(*it);
 	}
 	for (unsigned int k=0; k<inter_list.size(); k++) {
-		bool desactivated;
-		inter_list[k]->updateState(desactivated);
-		if (desactivated) {
-			sys.deactivated_interaction.push(inter_list[k]->Label());
+		if (inter_list[k]->is_active()){
+			bool desactivated = false;
+			inter_list[k]->updateState(desactivated);
+			if (desactivated) {
+				sys.deactivated_interaction.push(inter_list[k]->Label());
+			}
 		}
 	}
 }

@@ -20,7 +20,7 @@ private:
 	int ix;
 	int iz;
 	double** g;
-	int cnt;
+//	int cnt;
 	double a1;
 	double a2;
 	int ix_max;
@@ -35,8 +35,9 @@ private:
 	double impact2;
 public:
 	SystemParticles(){
-		d = 0.1;
-		cnt = 0;
+//		d = 0.02;
+		d = 0.05;
+//		cnt = 0;
 		xrange = 6;
 		zrange = 6;
 		a1 = 1;
@@ -63,8 +64,8 @@ public:
 	vector <vec3d> pos;
 	void eval_pair_correlation();
 	void allocate_g(){
-		ix_max = 2*xrange/d;
-		iz_max = zrange/d;
+		ix_max = 2*xrange/d+1;
+		iz_max = zrange/d+1;
 		g = new double* [ix_max];
 		for (int ix=0; ix < ix_max; ix++){
 			g[ix] = new double [iz_max];
@@ -80,7 +81,11 @@ public:
 	void calc_pair_correlation(){
 		for (int iz=0; iz < iz_max; iz++){
 			for (int ix=0; ix < ix_max; ix++){
-				cout << g[ix][iz]/(cnt_snapshot) << ' ';
+				if (g[ix][iz] == 0){
+					cout << 0 << ' ';
+				} else {
+					cout << log(g[ix][iz]/(np*cnt_snapshot*volume_fraction)) << ' ';
+				}
 			}
 			cout << endl;
 		}

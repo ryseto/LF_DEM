@@ -1,5 +1,3 @@
-
-
 //
 //  System.cpp
 //  LF_DEM
@@ -291,12 +289,12 @@ System::timeEvolutionPredictorCorrectorMethod(){
 
 void
 System::deltaTimeEvolution(){
-	// evolve PBC
+	/* evolve PBC */
 	shear_disp += vel_difference*dt;
 	if (shear_disp > lx) {
 		shear_disp -= lx;
 	}
-	// move particles
+	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -305,7 +303,7 @@ System::deltaTimeEvolution(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	// update boxing system
+	/* update boxing system */
 	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
@@ -315,12 +313,12 @@ System::deltaTimeEvolution(){
 
 void
 System::deltaTimeEvolutionRelax(){
-	// evolve PBC
+	/* evolve PBC */
 	shear_disp += vel_difference*dt;
 	if (shear_disp > lx) {
 		shear_disp -= lx;
 	}
-	// move particles
+	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -329,7 +327,7 @@ System::deltaTimeEvolutionRelax(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	// update boxing system
+	/* update boxing system */
 	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
@@ -342,7 +340,6 @@ System::deltaTimeEvolutionRelax(){
 		}
 	}
 }
-
 
 void
 System::deltaTimeEvolutionPredictor(){
@@ -390,7 +387,8 @@ System::deltaTimeEvolutionCorrector(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	// update boxing system
+	/* update boxing system
+	 */
 	boxset.update();
 	checkNewInteraction();
 	/*
@@ -477,7 +475,6 @@ void System::timeEvolutionBrownian(){
 	stokes_solver.solvingIsDone();
 	
     // move particles to intermediate point
-	
     for (int i=0; i<np; i++) {
 		int i3 = 3*i;
 		velocity[i].set(v_Brownian_init[i3],
@@ -651,11 +648,13 @@ System::updateInteractions(){
 	/* default value of `_in_predictor' is false
 	 *
 	 */
-	bool deactivated;
 	for (int k=0; k<nb_interaction; k++) {
-		interaction[k].updateState(deactivated);
-		if (deactivated) {
-			deactivated_interaction.push(k);
+		bool deactivated = false;
+		if (interaction[k].is_active()){
+			interaction[k].updateState(deactivated);
+			if (deactivated) {
+				deactivated_interaction.push(k);
+			}
 		}
 	}
 }
@@ -983,7 +982,6 @@ System::sq_distance(int i, int j){
 	}
 }
 
-
 void
 System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
@@ -1004,15 +1002,15 @@ System::evaluateMaxContactVelocity(){
 
 double
 System::evaluateMaxVelocity(){
-	double _max_velocity = 0;
+	double sq_max_velocity = 0;
 	for (int i = 0; i < np; i++) {
 		vec3d velocity_deviation = velocity[i];
 		velocity_deviation.x -= position[i].z;
-		if (velocity_deviation.norm() > _max_velocity) {
-			_max_velocity = velocity_deviation.norm();
+		if (velocity_deviation.sq_norm() > sq_max_velocity) {
+			sq_max_velocity = velocity_deviation.sq_norm();
 		}
 	}
-	return _max_velocity;
+	return sqrt(sq_max_velocity);
 }
 
 double
@@ -1031,18 +1029,9 @@ System::evaluateMaxAngVelocity(){
 void
 System::analyzeState(){
 	max_velocity = evaluateMaxVelocity();
+	velocity_history.push_back(max_velocity);
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
-	
-	if (max_contact_velo_tan > 0) {
-		double dt_try = disp_max/max_contact_velo_tan;
-		if (dt_try < dt_max){
-			dt = dt_try;
-		} else {
-			dt = dt_max;
-		}
-	}
-	
 	contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lx;
@@ -1084,7 +1073,6 @@ System::analyzeState(){
 		}
 	}
 	max_fc_normal_previous = max_fc_normal;
-	
 	if (after_parameter_changed == false) {
 		max_fc_normal_history.push_back(max_fc_normal);
 		max_fc_tan_history.push_back(max_fc_tan);
@@ -1095,6 +1083,7 @@ System::analyzeState(){
 	} else {
 		average_fc_normal = 0;
 	}
+
 }
 
 void
@@ -1204,18 +1193,23 @@ System::adjustContactModelParameters(){
 		}
 		kt = kt_try;
 	}
-	/* The time step dt is scaled by the max force;
-	 */
-//	dt = 240*1e-4/representative_max_fc_normal;
-//	if (dt > 1e-4){
-//		dt = 1e-4;
+//	double max_velocity = 0;
+//	for (int j=0; j<velocity_history.size(); j++){
+//		if (max_velocity < velocity_history[j]){
+//			max_velocity = velocity_history[j];
+//		}
 //	}
-//	cerr << "dt = " << dt << endl;
+//	double dt_try = disp_max/max_velocity;
+//	if (dt_try < dt){
+//		dt = dt_try;
+//	}
+	
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].updateContactModel();
 	}
 	max_fc_normal_history.clear();
 	max_fc_tan_history.clear();
+	velocity_history.clear();
 	after_parameter_changed = true;
 }
 

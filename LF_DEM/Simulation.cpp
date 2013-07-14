@@ -488,11 +488,11 @@ Simulation::outputStressTensorData(){
 	/* total_stress = sys.total_hydro_stress;
 	 * + total_contact_stressXF + total_colloidal_stress;
 	 */
-	total_stress.outputStressTensor(fout_st);
-	sys.total_hydro_stress.outputStressTensor(fout_st);
-	total_contact_stressXF.outputStressTensor(fout_st);
-	sys.total_contact_stressGU.outputStressTensor(fout_st);
-	total_colloidal_stress.outputStressTensor(fout_st);
+	total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
+	sys.total_hydro_stress.outputStressTensor(fout_st); // (9,10,11,12,13,14)
+	total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
+	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
+	total_colloidal_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	fout_st << endl;
 }
 
@@ -550,7 +550,6 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#38: particle pressure" << endl;
 		fout_rheo << "#39: particle pressure contact" << endl;
 		fout_rheo << "#40: particle pressure colloidal force" << endl;
-		
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.

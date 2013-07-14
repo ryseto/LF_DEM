@@ -54,7 +54,8 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.01;
+$force_factor = 0.0003;
+#$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
 
@@ -216,7 +217,7 @@ sub InInteractions {
 		$F_lub[$k] = $f_lub;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
-		$Ft_t[$k] = $fc_t;
+		$Ft_t[$k] = $fc_tan;
 		$Fcol[$k] = $fcol;
 		$f_normal = $fc_n + $fcol + $f_lub;
 		#	$force[$k] = sqrt($f_normal)
@@ -227,7 +228,7 @@ sub InInteractions {
 				$force[$k] = $f_normal;
 			}
 		} elsif ($f_normal < 0) {
-			$force[$k] = $fcol + $f_lub;
+			$force[$k] =  $fcol + $f_lub;
 		} else {
 			$force[$k] = 0;
 		}
@@ -250,7 +251,7 @@ sub OutYaplotData{
 	$postext = $Lz/2+2;
 	printf OUT "y 10\n";
 	printf OUT "@ 3\n";
-	printf OUT "t 0 0 $postext $num\n";
+	printf OUT "t -2 0 $postext strain=$shear_strain\n";
 	
 	
 #	printf OUT "y 7\n";
@@ -312,11 +313,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = $radius[0];
+	$r = 0.5*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = $radius[$i];
+			$r = 0.5*$radius[$i];
 			printf OUT "r $r\n";
 		}
 #		if ($i % 100 == 0){
@@ -332,7 +333,7 @@ sub OutYaplotData{
 	
 	printf OUT "y 2\n";
 	printf OUT "@ 0\n";
-	printf OUT "r 0.1\n";
+	printf OUT "r 0.2\n";
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {
@@ -342,7 +343,7 @@ sub OutYaplotData{
 			&OutString2($int0[$k],  $int1[$k]);
 		}
     }
-	printf OUT "r 0.2\n";
+	#printf OUT "r 0.2\n";
     printf OUT "y 3\n";
     printf OUT "@ 3\n";
     for ($k=0; $k<$num_interaction; $k++){
@@ -458,10 +459,10 @@ sub OutString_width {
 sub OutString2{
     ($i, $j) = @_;
     $xi = $posx[$i];
-    $yi = $posy[$i] - 0.01;
+    $yi = $posy[$i] - 0.02;
     $zi = $posz[$i];
     $xj = $posx[$j];
-    $yj = $posy[$j] - 0.01;
+    $yj = $posy[$j] - 0.02;
     $zj = $posz[$j];
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){

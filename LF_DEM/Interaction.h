@@ -45,6 +45,7 @@ private:
 	vec3d contact_velocity;
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_predictor; // tangential displacement
+	vec3d disp_tan_previous;
 	//===== forces and stresses ==================== //
 	double lub_max_scaled;  // max distance for lubrication
 	vec3d lubforce_i; // lubforce_j = - lubforce_i
@@ -79,8 +80,8 @@ private:
 	double invlambda; // a0/a1
 	
 	//======= relative position/velocity  ========//
-	void calcContactVelocity_predictor();
-	void calcContactVelocity_corrector();
+//	void calcContactVelocity_predictor();
+//	void calcContactVelocity_corrector();
 	
 	//======= internal state switches  ===========//
 	void activate_contact();
@@ -100,6 +101,7 @@ private:
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
+	
 	
 protected:
 public:
@@ -168,7 +170,6 @@ public:
 	double getPotentialEnergy();
 	inline double getFcNormal(){return f_contact_normal_norm;}
 	inline double getFcTan(){return f_contact_tan.norm();}
-//	inline double getFcTan_norm(){return f_contact_tan.norm();}
 	inline double getColloidalForce(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}

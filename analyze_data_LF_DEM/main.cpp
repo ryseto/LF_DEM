@@ -14,7 +14,6 @@
 using namespace std;
 int main(int argc, const char * argv[])
 {
-	
 	SystemParticles sys;
 	char buf[1024];
 	ifstream fin;

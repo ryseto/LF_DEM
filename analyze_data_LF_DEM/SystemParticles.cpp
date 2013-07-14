@@ -10,18 +10,21 @@
 
 void
 SystemParticles::eval_pair_correlation(){
+	double v_cell = 2*d*d*d;
+	double v_sphere = (4./3)*M_PI;
+	double value = v_sphere/v_cell;
+	
 	for (int i=0; i < np-1; i++){
 		for (int j=i+1; j < np; j++){
-			if (true || radius[i] == 1 && radius[j] == 1){
+			if (true ){
 				vec3d dr = pos[i]-pos[j];
-				if (abs(dr.y) > ly_half) {
-					if (dr.y > 0){
-						dr.y -= ly;
-					} else {
-						dr.y += ly;
-					}
-				}
-				
+				//				if (abs(dr.y) > ly_half) {
+				//					if (dr.y > 0){
+				//						dr.y -= ly;
+				//					} else {
+				//						dr.y += ly;
+				//					}
+//				}
 				if ( abs(dr.y) < d ){
 					if (abs(dr.z) > lz_half) {
 						if (dr.z > 0) {
@@ -47,11 +50,8 @@ SystemParticles::eval_pair_correlation(){
 						abs(dr.x) < xrange){
 						int ix = (dr.x+xrange)/d;
 						int iz = dr.z/d;
-
-						g[ix][iz] += 1;
-						
-						cnt ++;
-						
+						g[ix][iz] += value;
+//						cnt ++;
 					}
 				}
 			}

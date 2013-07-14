@@ -68,6 +68,7 @@ private:
 	int intr_max_fc_tan;
 	vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
 	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
+	vector<double> velocity_history;
 	/* cnt_parameter_changed is used for kn-kt ajusting algorithm.
 	 * Spring constants are changed in the simulation.
 	 * This may cause large contact forces.
@@ -125,6 +126,7 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
+
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
@@ -265,13 +267,7 @@ public:
 	inline void Kt(double val){kt = val;}
 	inline double Kt(){return kt;}
 	inline void Lub_max(double val){lub_max = val;}
-	inline double Lub_max(){
-		if (lub_max == 2){
-			cerr << lub_max << endl;
-			
-		}
-		
-		return lub_max;}
+	inline double Lub_max(){return lub_max;}
 	inline void Dt(double val){dt = val;}
 	void set_dt_max(double val){dt_max = val;}
 	void set_disp_max(double val){disp_max = val;}

@@ -14,6 +14,11 @@
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
+		<key>cluster_detector.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
@@ -23,6 +28,11 @@
 			<true/>
 		</dict>
 		<key>D988E388165441750009949F</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D9BE3B62178C838100937C5C</key>
 		<dict>
 			<key>primary</key>
 			<true/>
