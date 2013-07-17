@@ -96,6 +96,11 @@ cdef class Pos_Stream:
     def positions_deepcopy(self):
         return copy.deepcopy(self.positions)
 
+    def radius_copy(self):
+        return self.radius.copy()
+
+    def radius_deepcopy(self):
+        return copy.deepcopy(self.radius)
 
 
 
@@ -122,7 +127,8 @@ cdef class Pos_Stream:
 
                 self.update_labels(tlabel)
                 switch=1
-                
+#                print " Read positions ", values[1]
+
             if len(values) > 10 : # exact number to be fixed. Now it is different in 2d an 3d, due to different output of angular position
                 i=int(values[0])
 #                self.positions[i]=[float(values[j])+0.5*self.cell_size for j in range(1,4)]
@@ -161,14 +167,16 @@ cdef class Pos_Stream:
 
 
     cdef void cperiodize(self, double *deltax, double *deltay, double *deltaz):
-    
+        cdef double xshift
+        xshift = (self.time()-int(self.time()))*self.Lx()
+
         if deltaz[0] > 0.5*self.Lz():
             deltaz[0] = deltaz[0] - self.Lz()
-            deltax[0] = deltax[0] - self.time()*self.Lx()
+            deltax[0] = deltax[0] - xshift
         else:
             if deltaz[0] < -0.5*self.Lz():
                 deltaz[0] = deltaz[0] + self.Lz()
-                deltax[0] = deltax[0] + self.time()*self.Lx()
+                deltax[0] = deltax[0] + xshift
 
         if deltay[0] > 0.5*self.Ly():
             deltay[0] = deltay[0] - self.Ly()
@@ -181,6 +189,9 @@ cdef class Pos_Stream:
         else:
             if deltax[0] < -0.5*self.Lx():
                 deltax[0] = deltax[0] + self.Lx()
+
+    cpdef double rad(self,int i):
+        return self.radius[i]
 
     cpdef list pos(self,int i):
         return self.positions[i]
@@ -413,6 +424,9 @@ cdef class Pos_Stream:
 
     def rho(self):
         return self.N/self.V
+
+    def vol(self):
+        return self.V
 
     def Lx(self):
         return self.lx

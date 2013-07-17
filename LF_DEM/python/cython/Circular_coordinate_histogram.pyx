@@ -68,7 +68,7 @@ cdef class CircularCoordinateHistogram(Histograms):
         if theta_bin_label==self.theta_bin_nb:
             theta_bin_label-=self.theta_bin_nb
 
-        if r_bin_label>=self.r_bin_nb:
+        if r_bin_label>=self.r_bin_nb or r_bin_label<0:
             return None
 
 
@@ -102,13 +102,13 @@ cdef class CircularCoordinateHistogram(Histograms):
     def update(self, pos, value, coordinates='circ',action='add'):
         self.update_nolist(pos[0], pos[1], value, coord=coordinates,act=action)
         
-    def normalize_a_la_gofr(self, int N, double rho, int call_nb):
+    def normalize_a_la_gofr(self, double Nrho, int call_nb):
 
         for point in self.histogram:
             if self.histogram[point] is None:
                 self.histogram[point] = 0.
 
-        norm_factor=N*rho*call_nb
+        norm_factor=Nrho*call_nb
         
         for i in range(self.r_bin_nb):
             r=self.r_bsize*(i+0.5)+self.r_min

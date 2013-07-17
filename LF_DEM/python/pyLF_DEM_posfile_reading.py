@@ -108,32 +108,31 @@ class Pos_Stream:
         return False
 
     def periodize(self,delta):
+        
+        deltax = delta[0]
+        deltay = delta[1]
+        deltaz = delta[2]
+        xshift = (self.time()-int(self.time()))*self.Lx()
 
-        xshift = self.time()
-        deltax=delta[0]
-        deltay=delta[1]
-        deltaz=delta[2]
-
-
-        if deltaz > 0.5*self.cell_size:
-            deltaz = deltaz - self.cell_size
+        if deltaz > 0.5*self.Lz():
+            deltaz = deltaz - self.Lz()
             deltax = deltax - xshift
         else:
-            if deltaz < -0.5*self.cell_size:
-                deltaz = deltaz + self.cell_size
+            if deltaz < -0.5*self.Lz():
+                deltaz = deltaz + self.Lz()
                 deltax = deltax + xshift
-
-        if deltay > 0.5*self.cell_size:
-            deltay = deltay - self.cell_size
+                
+        if deltay > 0.5*self.Ly():
+            deltay = deltay - self.Ly()
         else:
-            if deltay < -0.5*self.cell_size:
-                deltay = deltay + self.cell_size
+            if deltay < -0.5*self.Ly():
+                deltay = deltay + self.Ly()
 
-        if deltax > 0.5*self.cell_size:
-            deltax = deltax - self.cell_size
+        if deltax > 0.5*self.Lx():
+            deltax = deltax - self.Lx()
         else:
-            if deltax < -0.5*self.cell_size:
-                deltax = deltax + self.cell_size
+            if deltax < -0.5*self.Lx():
+                deltax = deltax + self.Lx()
 
         return [deltax, deltay, deltaz]
 
