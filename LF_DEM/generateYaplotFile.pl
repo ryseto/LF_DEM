@@ -9,7 +9,9 @@
 use Math::Trig;
 
 $force_factor = 0.01;
+
 $y_section = 0;
+$yap_radius = 1;
 
 $particle_data = $ARGV[0];
 if ($#ARGV >= 1){
@@ -54,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.0003;
+$force_factor = 0.0001;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
@@ -313,11 +315,11 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
-	$r = 0.5*$radius[0];
+	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = 0.5*$radius[$i];
+			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
 		}
 #		if ($i % 100 == 0){
@@ -383,6 +385,8 @@ sub OutYaplotData{
 			&OutCross($i);
 		}
 	}
+
+	&OutBoundaryBox;
 	
 	#	$maxS=0;
 	#for ($k = 0; $k < $num_interaction; $k ++){
@@ -422,13 +426,19 @@ sub OutBoundaryBox{
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
-	$lx2 = $Lx/2;
+	$lx2 = $Lx/2+1;
+	$ly2 = $Ly/2+1;
+	$lz2 = $Lz/2+1;
 	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
-	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
-	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
-	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
+	#	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
+	#	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
+	#	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
+	printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
+	printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
+	printf OUT "l -$lx2 0 -$lz2  -$lx2 0 $lz2\n";
+	printf OUT "l $lx2 0 $lz2   $lx2 0 -$lz2\n";
 
 }
 

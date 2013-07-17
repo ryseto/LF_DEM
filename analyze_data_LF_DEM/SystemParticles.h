@@ -48,7 +48,7 @@ public:
 	}
 	
 	int np;
-	int cnt_snapshot;
+	int cnt_data;
 	double volume_fraction;
 	double lx;
 	double ly;
@@ -62,6 +62,7 @@ public:
 	double dimensionless_shear_rate;
 	vector <double> radius;
 	vector <vec3d> pos;
+	vector <double> contri;
 	void eval_pair_correlation();
 	void allocate_g(){
 		ix_max = 2*xrange/d+1;
@@ -84,7 +85,7 @@ public:
 				if (g[ix][iz] == 0){
 					cout << 0 << ' ';
 				} else {
-					cout << log(g[ix][iz]/(np*cnt_snapshot*volume_fraction)) << ' ';
+					cout << log(g[ix][iz]/(cnt_data*volume_fraction)) << ' ';
 				}
 			}
 			cout << endl;
