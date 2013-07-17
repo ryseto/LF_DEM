@@ -65,10 +65,10 @@ def update_visualization():
 #        if particles[j].pos[0] == 0. and  particles[j].pos[2] == 0.:
 #            particles[j].color=visual.color.red
         stress_to_display = pos_stream.xFc_stress[key]
-        if stress_to_display == 0:
-            particles[j].color=(0.5, 0.5, 0.5)
-        else:
-            particles[j].color=(stress_to_display+0.5, 0.5-stress_to_display, 0.5-stress_to_display)
+#        if stress_to_display == 0:
+        particles[j].color=(0.9, 0.9, 0.9)
+#        else:
+#            particles[j].color=(stress_to_display+0.5, 0.5-stress_to_display, 0.5-stress_to_display)
 
         particles[j].radius=pos_stream.rad(key)
         particles[j].visible=True
@@ -91,5 +91,5 @@ pos_stream=Pos_Stream(stream, part_nb, phi)
 init_visualization()
 while pos_stream.get_snapshot():
     update_visualization()
-    visual.rate(100)
+    visual.rate(1000)
 

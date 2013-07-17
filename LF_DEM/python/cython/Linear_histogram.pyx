@@ -46,7 +46,7 @@ cdef class LinearHistogram(Histograms):
 
         r_bin_label=int((r-self.r_min)/self.r_bsize)
 
-        if r_bin_label>=self.r_bin_nb:
+        if r_bin_label>=self.r_bin_nb or r_bin_label<0:
             return None
 
         key=str(r_bin_label)
