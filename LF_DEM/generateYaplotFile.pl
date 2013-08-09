@@ -426,19 +426,45 @@ sub OutBoundaryBox{
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
-	$lx2 = $Lx/2+1;
-	$ly2 = $Ly/2+1;
-	$lz2 = $Lz/2+1;
-	
+		
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
 	#	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 	#	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
 	#	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
-	printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
-	printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
-	printf OUT "l -$lx2 0 -$lz2  -$lx2 0 $lz2\n";
-	printf OUT "l $lx2 0 $lz2   $lx2 0 -$lz2\n";
+
+	
+	
+	if($Ly == 0){
+		$lx2 = $Lx/2+1;
+		$ly2 = $Ly/2+1;
+		$lz2 = $Lz/2+1;
+
+		printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
+		printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
+		printf OUT "l -$lx2 0 -$lz2  -$lx2 0 $lz2\n";
+		printf OUT "l $lx2 0 $lz2   $lx2 0 -$lz2\n";
+	} else {
+		$lx2 = $Lx/2;
+		$ly2 = $Ly/2;
+		$lz2 = $Lz/2;
+
+		printf OUT "l -$lx2 -$ly2 $lz2    $lx2 -$ly2 $lz2\n";
+		printf OUT "l -$lx2 -$ly2 -$lz2   $lx2 -$ly2 -$lz2\n";
+		printf OUT "l -$lx2 -$ly2 -$lz2  -$lx2 -$ly2 $lz2\n";
+		printf OUT "l  $lx2 -$ly2 $lz2    $lx2 -$ly2 -$lz2\n";
+		printf OUT "l -$lx2 $ly2 $lz2    $lx2 $ly2 $lz2\n";
+		printf OUT "l -$lx2 $ly2 -$lz2   $lx2 $ly2 -$lz2\n";
+		printf OUT "l -$lx2 $ly2 -$lz2  -$lx2 $ly2 $lz2\n";
+		printf OUT "l  $lx2 $ly2 $lz2    $lx2 $ly2 -$lz2\n";
+		printf OUT "l -$lx2 $ly2 $lz2    -$lx2 -$ly2 $lz2\n";
+		printf OUT "l $lx2 $ly2 $lz2    $lx2 -$ly2 $lz2\n";
+		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
+		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
+
+
+		
+	}
 
 }
 

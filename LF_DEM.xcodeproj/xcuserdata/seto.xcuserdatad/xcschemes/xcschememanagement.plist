@@ -19,10 +19,20 @@
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
+		<key>percolation_LF_DEM.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>D921A0BD175BF90D002F64B1</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D96731B017A042AD005D02F8</key>
 		<dict>
 			<key>primary</key>
 			<true/>
