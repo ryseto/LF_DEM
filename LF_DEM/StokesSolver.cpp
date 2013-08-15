@@ -129,9 +129,9 @@ StokesSolver::addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha){
 #ifdef TRILINOS
 	if (iterative()) {
 		int iidof = dof*ii;
-		values[iidof  ][0] += alpha_n0*nvec.x; // 00
-		values[iidof  ][1] += alpha_n1n0; // 01
-		values[iidof  ][2] += alpha_n0n2; // 02
+		values[iidof][0] += alpha_n0*nvec.x; // 00
+		values[iidof][1] += alpha_n1n0; // 01
+		values[iidof][2] += alpha_n0n2; // 02
 		values[iidof+1][0] += alpha_n1n0; // 10
 		values[iidof+1][1] += alpha_n1*nvec.y; // 11
 		values[iidof+1][2] += alpha_n2n1; // 12
