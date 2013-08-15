@@ -52,7 +52,7 @@ class StokesSolver{
 	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, ie is sparse.
 
 	  The ResistanceMatrix has the following structure (all blocks are 3x3):
-	  (if only force-velocity resistance matrix is considered, then ResistanceMatrix is limited tothe top left corner)
+	  (if only force-velocity resistance matrix is considered, then ResistanceMatrix is limited to the top left corner)
 
 	                    =========== 3Nx3N FU submatrix =========||========== 3Nx3N FW submatrix =========
 	                     .........        ..........            :.........        ..........

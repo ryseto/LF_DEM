@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#define VERSION "1.1"
+#define VERSION "2.0"
 #include "Simulation.h"
 #include <cmath>
 #include <map>
@@ -437,13 +437,14 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.analyzeState();
 	/* NOTE:
-	 * The total stress does not include contact GU term
-	 * due to the asumption of hard-sphere model.
-	 *
-	 * [Aug 15 2013]
-	 * Force in the contact model has two compornents: spring and dash-pot.
-	 * We should include both for the stress calculation.
-	 * Our previous explanation is not correct.
+	 * 
+	 * The total stress DID not include the contact GU terms,
+	 * because we consider that the relative motion is not expected hard spheres
+	 * and artificial in the soft-sphere contact model.
+	 * [Aug 15, 2013]
+	 * In the contact model, force is divided into two parts (spring and dash-pot).
+	 * In physics, the total force is important.
+	 * Therefore, both should be included for the stress calculation.
 	 *
 	 */
 	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
@@ -451,9 +452,8 @@ Simulation::evaluateData(){
 	
 	total_stress = sys.total_hydro_stress;
 	total_stress += total_contact_stressXF;
-	total_stress + =total_contact_stressGU; // added (Aug 15 2013)
+	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
-	
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
