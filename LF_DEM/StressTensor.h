@@ -161,8 +161,8 @@ public:
 	
 	inline StressTensor&
 	operator *=(const int &i){
-		for (int i=0; i<6; i++){
-			elm[i] *= i;
+		for (int j=0; j<6; j++){
+			elm[j] *= i;
 		}
 		return *this;
 	}
@@ -179,8 +179,8 @@ public:
 	inline StressTensor&
 	operator /= (const int &i){
 		double d_inv = 1./i;
-		for (int i=0; i<6; i++){
-			elm[i] *= d_inv;
+		for (int j=0; j<6; j++){
+			elm[j] *= d_inv;
 		}
 		return *this;
 	}
