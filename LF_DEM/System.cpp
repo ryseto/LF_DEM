@@ -453,11 +453,11 @@ void System::timeEvolutionBrownian(){
 	/*********************************************************/
 	setContactForceToParticle();
 	stokes_solver.resetRHS();
-    stokes_solver.prepareNewBuild_RFU("direct");
+    stokes_solver.resetResistanceMatrix("direct");
     addStokesDrag();
     buildLubricationTerms();
 	
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
     buildContactTerms();
     stokes_solver.solve(v_lub_cont);
 	
@@ -509,10 +509,10 @@ void System::timeEvolutionBrownian(){
 	/*********************************************************/
 	setContactForceToParticle();
     // build new Resistance matrix after move
-    stokes_solver.prepareNewBuild_RFU("direct");
+    stokes_solver.resetResistanceMatrix("direct");
     addStokesDrag();
     buildLubricationTerms(false); // false: don't modify rhs, as we want to keep same Brownian force
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
     // get the intermediate brownian velocity
 	stokes_solver.solve_CholTrans( v_Brownian_mid );
 	if (flubcont_update) {  // rebuild rhs
@@ -679,7 +679,7 @@ System::stressBrownianReset(){
 void
 System::addStokesDrag(){
     for (int i=0; i<np; i++) {
-		stokes_solver.addToDiag_RFU(i, bgf_factor*radius[i]);
+		stokes_solver.addToDiag(i, bgf_factor*radius[i]);
     }
 }
 
@@ -703,9 +703,9 @@ System::buildLubricationTerms(bool rhs){
 			if (j > i) {
 				(*it)->calcXA();
 				vec3d nr_vec = (*it)->Nr_vec();
-				stokes_solver.addToDiagBlock_RFU(nr_vec, i, (*it)->get_a0_XA0());
-				stokes_solver.addToDiagBlock_RFU(nr_vec, j, (*it)->get_a1_XA3());
-				stokes_solver.appendToOffDiagBlock_RFU(nr_vec, i, j, (*it)->get_ro2_XA2());
+				stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_a0_XA0());
+				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_a1_XA3());
+				stokes_solver.appendToOffDiagBlock(nr_vec, i, j, (*it)->get_ro2_XA2());
 				if (rhs) {
 					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
@@ -798,15 +798,15 @@ System::buildColloidalForceTerms(){
 void
 System::updateVelocityLubrication(){
     stokes_solver.resetRHS();
-    stokes_solver.prepareNewBuild_RFU("direct");
-	//	stokes_solver->prepareNewBuild_RFU("iterative");
+    stokes_solver.resetResistanceMatrix("direct");
+	//	stokes_solver->resetResistanceMatrix("iterative");
     addStokesDrag();
 	buildLubricationTerms();
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
     buildContactTerms();
 	buildColloidalForceTerms();
     stokes_solver.solve(v_lub_cont);
-	//stokes_solver->print_RFU();
+	//stokes_solver->printResistanceMatrix();
 	/* TEST IMPLEMENTATION
 	 * SDFF : Stokes drag force factor:
 	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.

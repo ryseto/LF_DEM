@@ -40,21 +40,96 @@ using namespace std;
 //class System;
 
 class StokesSolver{
+
+	/*
+	 
+	  This class provides solver for the "Stokes" equation, which is an equation of motion of the type:
+	  
+	  ResistanceMatrix*Velocity = SomeForces
+
+	  Here, Velocity can be either translational velocity (U) alone (a 3N vector), or more generally translational and rotational velocities (U and W) (a 6N vector).
+	  Accordingly, Forces are either forces alone (F) or torques and forces (F and T).
+	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, ie is sparse.
+
+	  The ResistanceMatrix has the following structure (all blocks are 3x3):
+	  (if only force-velocity resistance matrix is considered, then ResistanceMatrix is limited tothe top left corner)
+
+	                    =========== 3Nx3N FU submatrix =========||========== 3Nx3N FW submatrix =========
+	                     .........        ..........            :.........        ..........
+                    ||  |  3x3   .        .        .            :        .        .        .           | ||
+                    ||  | dblock .   0    .odblock .            :sdblock .  0     .odblock .           | ||
+                    ||  |  (FU)  .        .        .            : (FW)   .        .        .           | ||
+                    ||  |...........................            :...........................           | ||
+                    ||  |        .        .                     :       .        .                     | ||
+                    ||  |     0  . dblock .                     :  0    .sdblock .                     | ||
+                    FU  |        .        .                     :       .        .                     | 3Nx3N FW submatrix
+                    ||  |        ..........                     :       ..........                     | ||
+                    ||  |                    .                  :                   .                  | || 
+                    ||  |                      .                :                     .                | ||     
+                    ||  |                        .              :                       .              | ||    
+                    ||  |                          .            :                         .            | ||
+					||  |                            .          :                           .          | ||
+					||  | 						       .........:                             .........| ||
+                    ||  |                              .        :                             .        | ||
+                    ||  |                              . dblock :                             .sdblock | ||
+                    ||  |                              .        :                             .        | ||
+ ResistanceMatrix =     |---------------------------------------:--------------------------------------| =
+					||  |        .		  .        .            :        .        .        .           | ||
+					||  |sdblock .  0     .odblock .            : dblock .  0     .odblock .           | ||
+					||  | (TU)   .		  .        .	        :  (WT)  .        .        .           | ||
+					||  |...........................  		    :...........................           | ||
+                    ||  |        .        .                     :        .        .                    | ||
+                    ||  |    0   .sdblock .                     : 0      . dblock .                    | ||
+                    ||  |        .        .                     :        .        .                    | ||
+                    ||  |        ..........                     :        ..........                    | ||
+                    TU  |                    .                  :                   .                  | 3Nx3N TW submatrix
+                    ||  |                      .                :                     .                | ||                     .
+                    ||  |                        .              :                       .              | ||    
+                    ||  |                          .            :                         .            | ||
+					||  |                            .          :                           .          | ||
+					||  | 				   		       .........:                             .........| ||
+                    ||  |                              .        :                             .        | ||
+                    ||  |                              .sdblock :                             . dblock | ||
+                    ||  |                              .        :                             .        | ||
+					||  |                              .........:                             .........| || 
+	                    ========== 3Nx3N TU submatrix ==========||========== 3Nx3N TW submatrix =========					  
+
+	 This matrix is symmetric, so we only store its upper or lower part.
+
+	 The non-zero 3x3 blocks are of three kinds:
+	 - dblocks ("diagonal") contain the contributions to the force (resp torque) acting on particle i 
+	   coming from particle i's velocity (angular velocity) itself: they are the Stokes drag terms ("self"-terms) 
+	   on the diagonal, plus parts of the interaction terms coming from lubrication or contact dashpots. 
+	 - sdblocks ("secondary-diagonal") contain the contributions to the force (torque) acting on particle i 
+	   coming from particle i's angular velocity (velocity) itself: they are only interaction terms.
+	 - odblocks ("off-diagonal") contain the contributions to the force (torque) acting on particle i 
+	   coming from other particles velocities and angular velocities.
+
+
+
+
+	 */
+
 private:
 	int np;
 	int np3;
-    int dof;
-    int linalg_size;
+	//    int dof;
+    int res_matrix_linear_size;
+	int dblocks_nb;
+	int sdblocks_nb;
+	int dblocks_element_nb;
 	bool brownian;
 	
 	bool _iterative;
 	bool _direct;
 	
+	bool FTcoupling;
+
 	// Cholmod variables
     cholmod_factor *chol_L ;
     cholmod_common chol_c ;
     cholmod_dense *chol_rhs;
-    cholmod_sparse *chol_rfu_matrix;
+    cholmod_sparse *chol_res_matrix;
 	
     cholmod_dense *chol_solution;
     cholmod_dense *chol_PTsolution;
@@ -72,11 +147,11 @@ private:
 	
     // resistance matrix building
     vector <int> rows;
-    double *diag_values;
-    vector <double> *off_diag_values;
+    double *dblocks;
+    vector <double> *odblocks;
     int *ploc;
 	
-    void factorizeRFU();
+    void factorizeResistanceMatrix();
 	
     
 #ifdef TRILINOS
@@ -92,7 +167,7 @@ private:
     RCP < Epetra_Map > Map;
     RCP < Epetra_Vector > tril_solution;
     RCP < Epetra_Vector > tril_rhs;
-    Epetra_CrsMatrix *tril_rfu_matrix;
+    Epetra_CrsMatrix *tril_res_matrix;
     Epetra_CrsMatrix *tril_l_precond;
 	
 	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
@@ -113,20 +188,20 @@ private:
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 
 	 */
-    void appendToRow_RFU(const vec3d &nvec, int ii, int jj, double alpha);
+    void appendToRow(const vec3d &nvec, int ii, int jj, double alpha);
 	
     /*
      appendToColumn(const vec3d &nvec, int jj, double alpha) :
 	 - CHOLMOD ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
-	 off_diag_values and ploc
+	 odblocks and ploc
 	 - this must be called with order, according to LT filling
 	 */
-    void appendToColumn_RFU(const vec3d &nvec, int ii, int jj, double alpha);
-    void allocate_RFU();
-    void complete_RFU_cholmod();
-    void complete_RFU_trilinos();
+    void appendToColumn(const vec3d &nvec, int ii, int jj, double alpha);
+    void allocateResistanceMatrix();
+    void completeResistanceMatrix_cholmod();
+    void completeResistanceMatrix_trilinos();
     void allocateRessources();
     void setDiagBlockPreconditioner();
     void setIncCholPreconditioner();
@@ -143,29 +218,29 @@ public:
 	bool iterative(){
 		return _iterative;
 	}
-	void print_RFU();
+	void printResistanceMatrix();
 	void convertDirectToIterative();
     // R_FU filling methods
-    /* prepareNewBuild_RFU() :
+    /* resetResistanceMatrix() :
 	 - initialize arrays/vectors used for building
 	 - to be called before adding elements
 	 - possible arguments: "direct" or "iterative"
      */
-    void prepareNewBuild_RFU(string solver_type);
+    void resetResistanceMatrix(string solver_type);
 	
-    /* addToDiag_RFU(int ii, double alpha) :
+    /* addToDiag(int ii, double alpha) :
 	 - adds alpha to diagonal elements 3*ii, 3*ii+1, and 3*ii+2
 	 */
-    void addToDiag_RFU(int ii, double alpha);
+    void addToDiag(int ii, double alpha);
 	
-    /* addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha);
+    /* addToDiagBlock(const vec3d &nvec, int ii, double alpha);
 	 - adds alpha * |nvec><nvec| to diagonal block
 	 [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*ii, 3*ii+1, 3*ii+2 ]
 	 */
-    void addToDiagBlock_RFU(const vec3d &nvec, int ii, double alpha);
+    void addToDiagBlock(const vec3d &nvec, int ii, double alpha);
 	
     /*
-     appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double alpha) :
+     appendToOffDiagBlock(const vec3d &nvec, int ii, int jj, double alpha) :
      - appends alpha * |nvec><nvec| and corresponding indices
 	 to block [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ]
 	 
@@ -176,7 +251,7 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void appendToOffDiagBlock_RFU(const vec3d &nvec, int ii, int jj, double alpha);
+    void appendToOffDiagBlock(const vec3d &nvec, int ii, int jj, double alpha);
 	
 	/*
 	 doneBlocks(int i) :
@@ -186,7 +261,7 @@ public:
 	void doneBlocks(int i);
 	
 	/*
-	 complete_RFU() :
+	 completeResistanceMatrix() :
 	 - transforms temporary arrays/vectors used to build resistance
 	 matrix into Cholmod or Epetra objects really used by
 	 the solvers
@@ -195,7 +270,7 @@ public:
 	 - must be called before solving the linear algebra problem
 	 - must be called after all terms are added
 	 */
-    void complete_RFU();
+    void completeResistanceMatrix();
     
 	
     void resetRHS();
@@ -206,28 +281,28 @@ public:
 	
     /*
 	 solve(double* velocity) :
-	 - once the RFU matrix and the RHS vector are built
-	 ( complete_RFU() must have been called )
-	 - solves RFU * velocity = RHS, and stores it in velocity array
+	 - once the resistance matrix and the RHS vector are built
+	 ( completeResistanceMatrix() must have been called )
+	 - solves Resistance * velocity = RHS, and stores it in velocity array
 	 */
     void solve(double* velocity);
 	
     /*
 	 solve_CholTrans(double* velocity) :
-	 - once the RFU matrix and the RHS vector are built
-	 ( complete_RFU() must have been called )
+	 - once the resistance matrix and the RHS vector are built
+	 ( completeResistanceMatrix() must have been called )
 	 - solves L^t * velocity = RHS, and stores it in velocity array,
-	 where L^t is the transpose of the Cholesky factor ( RFU = L L^t )
+	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
     void solve_CholTrans(double* velocity);
 	
     /*
 	 solvingIsDone(bool free_Cholesky_factor) :
-	 - deletes RFU matrix and some other arrays
+	 - deletes resistance matrix and some other arrays
 	 (preconditionner, Cholesky factors, ...) used for solving
-	 - should be called once every call to solve() WITH THE SAME RFU
-	 is done. If RFU changes, solve() must be followed by
+	 - should be called once every solve() call WITH THE SAME RESISTANCE MATRIX
+	 is done. If matrix changes, solve() must be followed by
 	 solvingIsDone()
 	 */
     void solvingIsDone();

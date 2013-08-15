@@ -22,10 +22,10 @@ System::calcStressesHydroContactBrownian(){
 	
 	// first obtain hydrodynamic part of velocity
     stokes_solver.resetRHS();
-    stokes_solver.prepareNewBuild_RFU("direct");
+    stokes_solver.resetResistanceMatrix("direct");
     addStokesDrag();
     buildLubricationTerms();
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
     stokes_solver.solve(v_hydro);
 	
 	// then obtain contact forces, adn contact part of velocity
@@ -68,12 +68,12 @@ System::calcStressesHydroContactBrownian(){
 	/*********************************************************/
     stokes_solver.resetRHS();
 	
-    stokes_solver.prepareNewBuild_RFU("direct");
+    stokes_solver.resetResistanceMatrix("direct");
 	
     addStokesDrag();
     buildLubricationTerms(true);
 	
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
     buildContactTerms();
     stokes_solver.solve(v_lub_cont);
 	
@@ -114,10 +114,10 @@ System::calcStressesHydroContactBrownian(){
 	/*********************************************************/
 	
     // build new Resistance matrix after move
-    stokes_solver.prepareNewBuild_RFU("direct");
+    stokes_solver.resetResistanceMatrix("direct");
     addStokesDrag();
     buildLubricationTerms(false); // false: don't modify rhs
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
 	
     // get the intermediate brownian velocity
 	stokes_solver.solve_CholTrans( v_Brownian_mid );
@@ -166,10 +166,10 @@ System::calcStressesHydroContact(){
 	 2-body lubrication and contacts  **/
 	// first obtain hydrodynamic part of velocity
     stokes_solver.resetRHS();
-    stokes_solver.prepareNewBuild_RFU("direct");
+    stokes_solver.resetResistanceMatrix("direct");
     addStokesDrag();
     buildLubricationTerms();
-    stokes_solver.complete_RFU();
+    stokes_solver.completeResistanceMatrix();
     stokes_solver.solve(v_hydro);
 	// then obtain contact forces, and contact part of velocity
     stokes_solver.resetRHS();
