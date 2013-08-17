@@ -255,6 +255,16 @@ Interaction::calcContactInteraction(){
 	}
 }
 
+/*
+ * We need to modify the friction law.
+ * F_tangent < mu F_normal
+ * The total forces should be used in the friction law.
+ * F_normal = spring_force + dashpot
+ * F_tangent = spring_force + dashpot
+ *
+ */
+
+
 void
 Interaction::checkBreakupStaticFriction(){
 	double f_static = sys->Mu_static()*f_contact_normal_norm;
