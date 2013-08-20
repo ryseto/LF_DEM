@@ -139,7 +139,7 @@ Interaction::updateState(bool &deactivated){
 	 */
 	if (contact) {
 		if (sys->friction) {
-			calcContactVelocity();
+			calcRelativeVelocities();
 			if (sys->in_predictor) {
 				disp_tan += contact_velocity*sys->Dt();
 				disp_tan_predictor = disp_tan;
@@ -163,7 +163,6 @@ Interaction::updateState(bool &deactivated){
 			if (gap_nondim > 0) {
 				deactivate_contact();
 			}
-			
 		}
 	} else { /* separating */
 		calcNormalVectorDistanceGap();
@@ -206,6 +205,9 @@ Interaction::updateStateRelax(bool &deactivated){
 	if (contact) {
 		f_contact_normal_norm = -kn_scaled*(gap_nondim-0.02);
 		f_contact_normal = -f_contact_normal_norm*nr_vec;
+		if (gap_nondim > 0) {
+			deactivate_contact();
+		}
 		if (sys->friction) {
 			/* disp_tan is orthogonal to the normal vector.
 			 */
@@ -215,9 +217,6 @@ Interaction::updateStateRelax(bool &deactivated){
 		}
 		f_colloidal_norm = colloidalforce_amplitude;
 		f_colloidal = -f_colloidal_norm*nr_vec;
-		if (gap_nondim > 0) {
-			deactivate_contact();
-		}
 	} else {
 		f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
 		f_colloidal = -f_colloidal_norm*nr_vec;
@@ -244,7 +243,9 @@ Interaction::updateStateRelax(bool &deactivated){
  */
 void
 Interaction::calcContactInteraction(){
-	f_contact_normal_norm = -kn_scaled*gap_nondim;
+	// gap_nondim < 0 (in contact)
+	//
+	f_contact_normal_norm = -kn_scaled*gap_nondim; // gap_nondim is negative, therefore it is allways positive.
 	f_contact_normal = -f_contact_normal_norm*nr_vec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
@@ -264,19 +265,32 @@ Interaction::calcContactInteraction(){
  *
  */
 
-
 void
 Interaction::checkBreakupStaticFriction(){
-	double f_static = sys->Mu_static()*f_contact_normal_norm;
-	double sq_f_tan = f_contact_tan.sq_norm();
-	if (sq_f_tan > f_static*f_static) {
-		/*
-		 * The static and dynamic friction coeffients are the same.
-		 *
-		 */
-		disp_tan *= f_static/sqrt(sq_f_tan);
-		f_contact_tan = kt_scaled*disp_tan;
-		cnt_sliding++; // for output
+	/* f_contact_normal_norm > 0 for contacting state
+	 * If normal_relative_velocity > 0 (seprating),
+	 *   f_normal is the sum of positive (spring) + negative (dashpot)
+	 * If normal_relative_velocity < 0 (approaching),
+	 *   f_normal is the sum of two positives.
+	 *
+	 */
+	double f_normal = f_contact_normal_norm-lub_coeff*normal_relative_velocity;
+	//f_contact_tan is only spring.
+	//f_contact_tan = kt_scaled*disp_tan;
+	//double coeff_tan_dashpot= 0;
+	//double f_tangential = (dot(f_contact_tan,disp_tan)-dashpot_coeff*dot(contact_velocity,disp_tan))/disp_tan.norm();
+	// f_contact_tan = kt_scaled*disp_tan;
+	double disp_tan_norm = disp_tan.norm();
+	double f_tangential = dot(f_contact_tan,disp_tan)/disp_tan_norm;
+	if (f_normal < 0){
+		disp_tan.reset();
+		f_contact_tan.reset();
+	} else {
+		double f_friction = sys->Mu_static()*f_normal;
+		if (f_tangential > f_friction) {
+			f_contact_tan = (f_friction/disp_tan_norm)*disp_tan;
+			cnt_sliding++; // for output
+		}
 	}
 }
 
@@ -311,7 +325,7 @@ Interaction::addUpColloidalForce(){
  *
  */
 void
-Interaction::calcContactVelocity(){
+Interaction::calcRelativeVelocities(){
 	/* relative velocity particle 1 from particle 0.
 	 */
 	/*
@@ -329,12 +343,13 @@ Interaction::calcContactVelocity(){
 	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 	 *
 	 ******************************************************/
-	contact_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
+	vec3d dv = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
 	if (sys->in_predictor && zshift != 0) {
-		contact_velocity.x += zshift*sys->vel_difference;
+		dv.x += zshift*sys->vel_difference;
 	}
-	contact_velocity -=
-	cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
+	contact_velocity = dv-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
+	normal_relative_velocity = dot(dv, nr_vec); // Negative when approaching.
+
 }
 
 /*********************************

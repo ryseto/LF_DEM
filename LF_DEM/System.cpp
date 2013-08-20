@@ -989,7 +989,7 @@ System::evaluateMaxContactVelocity(){
 	in_predictor = true;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
-			interaction[k].calcContactVelocity();
+			interaction[k].calcRelativeVelocities();
 			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
 				max_contact_velo_tan = interaction[k].getContactVelocity();
 			}

@@ -43,6 +43,7 @@ private:
 	vec3d r_vec; // normal vector
 	vec3d nr_vec; // vector center to center
 	vec3d contact_velocity;
+	double normal_relative_velocity;
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_predictor; // tangential displacement
 	vec3d disp_tan_previous;
@@ -161,7 +162,7 @@ public:
 	inline double get_a1_XA3(){return a1*XA[3];}
 	inline double get_ro2_XA2(){return ro_half*XA[2];}
 	//===== forces/stresses  ========================== //
-	void calcContactVelocity();
+	void calcRelativeVelocities();
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
 	void evaluateLubricationForce();
