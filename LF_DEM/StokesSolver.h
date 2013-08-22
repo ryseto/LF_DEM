@@ -47,73 +47,118 @@ class StokesSolver{
 	  
 	  ResistanceMatrix*Velocity = SomeForces
 
-	  Here, Velocity can be either translational velocity (U) alone (a 3N vector), or more generally translational and rotational velocities (U and W) (a 6N vector).
-	  Accordingly, Forces are either forces alone (F) or torques and forces (F and T).
+	  Here, Velocity can be either translational velocity (U) alone (a 3N vector, F/U case), 
+	  or more generally translational and rotational velocities (U and W) (a 6N vector, FT/UW case). 
+	  In the latter case it is stored as (U_1, W_1, U_2, W_2, ...., U_N, W_N).
+	  Accordingly, Forces are either forces alone (F) or torques and forces ( F and T, stored as (F_1, T_1,  ..., F_N, T_N) ).
 	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, ie is sparse.
+	  
+	  The descriptions given here are a priori written for the FT/UW case. Adaptation to the F/U case is straightforward.
 
-	  The ResistanceMatrix has the following structure (all blocks are 3x3):
-	  (if only force-velocity resistance matrix is considered, then ResistanceMatrix is limited to the top left corner)
+	  ============================
+	  ============================
+	  The ResistanceMatrix has the following structure (all blocks are 6x6 if UW/FT version, 3x3 if U/F version):
 
-	                    =========== 3Nx3N FU submatrix =========||========== 3Nx3N FW submatrix =========
-	                     .........        ..........            :.........        ..........
-                    ||  |  3x3   .        .        .            :        .        .        .           | ||
-                    ||  | dblock .   0    .odblock .            :sdblock .  0     .odblock .           | ||
-                    ||  |  (FU)  .        .        .            : (FW)   .        .        .           | ||
-                    ||  |...........................            :...........................           | ||
-                    ||  |        .        .                     :       .        .                     | ||
-                    ||  |     0  . dblock .                     :  0    .sdblock .                     | ||
-                    FU  |        .        .                     :       .        .                     | 3Nx3N FW submatrix
-                    ||  |        ..........                     :       ..........                     | ||
-                    ||  |                    .                  :                   .                  | || 
-                    ||  |                      .                :                     .                | ||     
-                    ||  |                        .              :                       .              | ||    
-                    ||  |                          .            :                         .            | ||
-					||  |                            .          :                           .          | ||
-					||  | 						       .........:                             .........| ||
-                    ||  |                              .        :                             .        | ||
-                    ||  |                              . dblock :                             .sdblock | ||
-                    ||  |                              .        :                             .        | ||
- ResistanceMatrix =     |---------------------------------------:--------------------------------------| =
-					||  |        .		  .        .            :        .        .        .           | ||
-					||  |sdblock .  0     .odblock .            : dblock .  0     .odblock .           | ||
-					||  | (TU)   .		  .        .	        :  (WT)  .        .        .           | ||
-					||  |...........................  		    :...........................           | ||
-                    ||  |        .        .                     :        .        .                    | ||
-                    ||  |    0   .sdblock .                     : 0      . dblock .                    | ||
-                    ||  |        .        .                     :        .        .                    | ||
-                    ||  |        ..........                     :        ..........                    | ||
-                    TU  |                    .                  :                   .                  | 3Nx3N TW submatrix
-                    ||  |                      .                :                     .                | ||                     .
-                    ||  |                        .              :                       .              | ||    
-                    ||  |                          .            :                         .            | ||
-					||  |                            .          :                           .          | ||
-					||  | 				   		       .........:                             .........| ||
-                    ||  |                              .        :                             .        | ||
-                    ||  |                              .sdblock :                             . dblock | ||
-                    ||  |                              .        :                             .        | ||
-					||  |                              .........:                             .........| || 
-	                    ========== 3Nx3N TU submatrix ==========||========== 3Nx3N TW submatrix =========					  
+	                    ================== 6N ==================
+	                     .........        ..........
+                    ||  |  6x6   .        . 6x6    .            | ||
+                    ||  | dblock .   0    .odblock .            | ||
+                    ||  |        .        .        .            | ||
+                    ||  |...........................            | ||
+                    ||  |        .        .                     | ||
+                    ||  |     0  . dblock .                     | ||
+                    6N  |        .        .                     | 6N
+ ResistanceMatrix = ||  |..................                     | ||
+                    ||  |        .           .                  | || 
+                    ||  |odblock .             .                | ||     
+                    ||  |        .               .              | ||    
+                    ||  |.........                 .            | ||
+					||  |                            .          | ||
+					||  | 						       .........| ||
+                    ||  |                              .        | ||
+                    ||  |                              . dblock | ||
+                    ||  |                              .        | ||
+					                                   .........
+	                    =================== 6N =================
 
-	 This matrix is symmetric, so we only store its upper or lower part.
+	 This matrix is symmetric, so we only store its lower part. This implies dblocks themselves are symmetric. 
+	 odblocks however are antisymmetric.
 
-	 The non-zero 3x3 blocks are of three kinds:
-	 - dblocks ("diagonal") contain the contributions to the force (resp torque) acting on particle i 
-	   coming from particle i's velocity (angular velocity) itself: they are the Stokes drag terms ("self"-terms) 
+	 The non-zero 6x6 blocks are of two kinds:
+	 - dblocks ("diagonal") contain the contributions to the force/torque acting on particle i 
+	   coming from particle i's velocity/angular velocity itself: they are the Stokes drag terms ("self"-terms) 
 	   on the diagonal, plus parts of the interaction terms coming from lubrication or contact dashpots. 
-	 - sdblocks ("secondary-diagonal") contain the contributions to the force (torque) acting on particle i 
-	   coming from particle i's angular velocity (velocity) itself: they are only interaction terms.
 	 - odblocks ("off-diagonal") contain the contributions to the force (torque) acting on particle i 
 	   coming from other particles velocities and angular velocities.
 
+	  ============================
+	  ============================
+	  Technical details on the storage of matrix elements:
+	  
+	  Elements are stored differently depending on which library is used.
+
+	  * CHOLMOD storage:
+	  With cholmod library, the storage is first done in the "natural" block structures presented above.
+	  At the end of filling, the storage is converted to the compressed-column form used by cholmod.
+	 
+	  Natural form is done as follows 
+	  - dblocks: Due to symmetries (dblocks are symmetric, and their "B" subblocks are antisymmetric)
+	             each dblock has 18 independent elements (6 diagonal terms and 12 off diagonal).
+	             There are np such blocks.
+	             They are all stored in 'double *dblocks', which is allocated with size 6*np.
+				 Labeling in block associated with particle i is the following:
+				 (subblocks names according to "Jeffrey" (Brady) ):
+
+			     	 | 18*i      .        .        .         .         .     |
+"A11" subblock (FU)	 | 18*i+1   18*i+6    .        .         .         .     |
+                     | 18*i+2   18*i+7   18*i+10   .         .         .     |
+					 | 18*i+3    .        .       18*i+12    .         .     |  
+"B11" subblock (TU)	 | 18*i+4   18*i+8    .       18*i+13   18*i+15    .     |
+				     | 18*i+5   18*i+9   18*i+11  18*i+14   18*i+16  18*i+17 |
+                                                     "C11" subblock (TW)
+
+	  - odblocks: 18 independent elements per block.
+	              Organization is much closer to compressed-column form.
+				  All the odblocks values are stored columnwise in 6 vectors called odblocks[0-5]
+				  The corresponding locations in the ResistanceMatrix are stored in a vector* called odrows 
+                  and an array called odrows_table.
+
+				  This works as follows:
+				  Particle i interacts with particle j (i<j), we have 1 associated odblock in
+				  the ResistanceMatrix. Say j appears as the m^th interaction involving i. Then: 
+				  odbrows[odbrows_table[i]+m] = j, and the elements are accessed via:
+
+				  (only stored elements are shown)
+		| odblocks[0][6*t  ]    .                   .                   .                   .                   .              |
+"A21"	| odblocks[0][6*t+1]  odblocks[1][4*t  ]    .                   .                   .                   .              |
+		| odblocks[0][6*t+2]  odblocks[1][4*t+1]  odblocks[2][2*t  ]    .                   .                   .              |
+		| odblocks[0][6*t+3]    .                   .                 odblocks[3][3*t  ]    .                   .              |
+"B21"	| odblocks[0][6*t+4]  odblocks[1][4*t+2]    .                 odblocks[3][3*t+1]  odblocks[4][2*t  ]    .              | 
+		| odblocks[0][6*t+5]  odblocks[1][4*t+3]  odblocks[2][2*t+1]  odblocks[3][3*t+2]  odblocks[4][2*t+1]  odblocks[5][t  ] |
+		                                                                          "C21"
+	  with t=odbrows_table[i]+m
+	  
+	             (all elements)
+		| odblocks[0][6*t  ]  odblocks[0][6*t+1]  odblocks[0][6*t+2]  odblocks[0][6*t+3]  odblocks[0][6*t+4]  odblocks[0][6*t+5] |
+"A21"	| odblocks[0][6*t+1]  odblocks[1][4*t  ]  odblocks[1][4*t+1] -odblocks[0][6*t+4]  odblocks[1][4*t+2]  odblocks[1][4*t+3] |
+		| odblocks[0][6*t+2]  odblocks[1][4*t+1]  odblocks[2][2*t  ] -odblocks[0][6*t+5] -odblocks[1][4*t+3]  odblocks[2][2*t+1] |
+		| odblocks[0][6*t+3] -odblocks[0][6*t+4] -odblocks[0][6*t+5]  odblocks[3][3*t  ]  odblocks[3][3*t+1]  odblocks[3][3*t+2] |
+"B21"	| odblocks[0][6*t+4]  odblocks[1][4*t+2] -odblocks[1][4*t+3]  odblocks[3][3*t+1]  odblocks[4][2*t  ]  odblocks[4][2*t+1] | 
+		| odblocks[0][6*t+5]  odblocks[1][4*t+3]  odblocks[2][2*t+1]  odblocks[3][3*t+2]  odblocks[4][2*t+1]  odblocks[5][t    ] |
+		                                                                          "C21"
+	  with t=odbrows_table[i]+m
 
 
-
+	  * TRILINOS storage:
+	  TO BE DONE. TRILINOS NOT YET ADAPTED FOR FT/UW VERSION.
+				  
 	 */
 
 private:
 	int np;
-	int np3;
-	//    int dof;
+	//	int np3;
+	int np6;
+	
     int res_matrix_linear_size;
 	int dblocks_nb;
 	int sdblocks_nb;
@@ -123,7 +168,7 @@ private:
 	bool _iterative;
 	bool _direct;
 	
-	bool FTcoupling;
+	//	bool FTcoupling;
 
 	// Cholmod variables
     cholmod_factor *chol_L ;
@@ -146,10 +191,10 @@ private:
 	bool chol_L_to_be_freed;
 	
     // resistance matrix building
-    vector <int> rows;
     double *dblocks;
     vector <double> *odblocks;
-    int *ploc;
+    vector <int> odbrows;
+	int *odbrows_table;
 	
     void factorizeResistanceMatrix();
 	
@@ -181,24 +226,24 @@ private:
     int columns_max_nb; // max nb of non-zero elements per row
     double **values; // values corresponding to 'columns' array coordinates
     /*
-     appendToRow(const vec3d &nvec, int ii, int jj, double alpha) :
+     setRow(const vec3d &nvec, int ii, int jj, double alpha) :
 	 - TRILINOS ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 to blocks [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 
 	 */
-    void appendToRow(const vec3d &nvec, int ii, int jj, double alpha);
+    void setRow(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
 	
     /*
-     appendToColumn(const vec3d &nvec, int jj, double alpha) :
+     setColumn(const vec3d &nvec, int jj, double XA, double YB, double YC) :
 	 - CHOLMOD ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
-	 odblocks and ploc
+	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void appendToColumn(const vec3d &nvec, int ii, int jj, double alpha);
+    void setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
     void completeResistanceMatrix_trilinos();
@@ -228,30 +273,34 @@ public:
      */
     void resetResistanceMatrix(string solver_type);
 	
-    /* addToDiag(int ii, double alpha) :
-	 - adds alpha to diagonal elements 3*ii, 3*ii+1, and 3*ii+2
+    /* addToDiag(int ii, double FUvalue, TWvalue) :
+	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 
+	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii 
 	 */
-    void addToDiag(int ii, double alpha);
+    void addToDiag(int ii, double FUvalue, double TWvalue);
 	
-    /* addToDiagBlock(const vec3d &nvec, int ii, double alpha);
-	 - adds alpha * |nvec><nvec| to diagonal block
-	 [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*ii, 3*ii+1, 3*ii+2 ]
+    /* addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC);
+	  Adds to block (ii, ii):
+	 - XA * |nvec><nvec| on FU part
+	 - YB * e_ijk nvec_ij on TU part (NOT IMPLEMENTED YET)
+	 - YC *(1 - |nvec><nvec|) on TW part (NOT IMPLEMENTED YET)
 	 */
-    void addToDiagBlock(const vec3d &nvec, int ii, double alpha);
+    void addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC);
 	
     /*
-     appendToOffDiagBlock(const vec3d &nvec, int ii, int jj, double alpha) :
-     - appends alpha * |nvec><nvec| and corresponding indices
-	 to block [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ]
-	 
-     - if the solver is Trilinos, it also appends it to the
-	 symmetric block [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
-	 
-	 - this must be called with order (ii < jj) if CHOLMOD is used,
+     setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC) :
+	 Sets (ii,jj) block with:
+     -  XA * |nvec><nvec| for FU part
+	 -  YB * e_ijk nvec_ij for TU part (NOT IMPLEMENTED YET)
+	 - YC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
+
+     If the solver is Trilinos, it also sets the symmetric block (jj, ii)
+
+	 This must be called with order (ii < jj) if CHOLMOD is used,
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void appendToOffDiagBlock(const vec3d &nvec, int ii, int jj, double alpha);
+    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
 	
 	/*
 	 doneBlocks(int i) :
