@@ -52,7 +52,8 @@ private:
 	double kn;
 	double kt;
 	double lub_max;
-	double lub_coeff_contact;
+	double lub_coeff_contact; // resistance coeffient for normal mode
+	double tang_coeff_contact; // resistance coeffient for tangential mode
 	double mu_static; // static friction coefficient.
 	double bgf_factor;
 	int linalg_size;
@@ -93,7 +94,7 @@ private:
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-	void calcStressesHydroContactBrownian();
+	//void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
@@ -104,13 +105,14 @@ private:
 protected:
 public:
 	~System();
-	double *v_hydro;
+	double *v_total; // Velocities and angular velocities of all particles.
+	double *v_hydro; // Velocities balancing with the 
 	double *v_cont;
 	double *v_colloidal;
-	double *v_lub_cont;
-	double *v_lub_cont_mid;
-	double *v_Brownian_init;
-	double *v_Brownian_mid;
+
+	//	double *v_lub_cont_mid;
+	//	double *v_Brownian_init;
+	//	double *v_Brownian_mid;
 	bool in_predictor;
 	bool in_corrector;
 	int dimension;
@@ -279,6 +281,7 @@ public:
 	inline void Mu_static(double val){mu_static = val;}
 	inline double Mu_static(){return mu_static;}
 	inline double Lub_coeff_contact(){return lub_coeff_contact;}
+	inline double Tang_coeff_contact(){return tang_coeff_contact;}
 
 };
 #endif /* defined(__LF_DEM__System__) */
