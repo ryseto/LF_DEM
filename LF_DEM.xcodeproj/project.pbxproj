@@ -26,6 +26,9 @@
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
+		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
+		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
+		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
@@ -46,6 +49,16 @@
 			dstSubfolderSpec = 0;
 			files = (
 				D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D96731AF17A042AD005D02F8 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -112,6 +125,11 @@
 		D958B1EB1684141B003F94B4 /* known_bugs */ = {isa = PBXFileReference; lastKnownFileType = text; path = known_bugs; sourceTree = "<group>"; };
 		D958B1EC1684141B003F94B4 /* LF_DEM_posfile_reading.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = LF_DEM_posfile_reading.py; sourceTree = "<group>"; };
 		D958B1ED1684141B003F94B4 /* visualize.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = visualize.py; sourceTree = "<group>"; };
+		D96731B117A042AD005D02F8 /* percolation_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = percolation_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
+		D96731B317A042AD005D02F8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
+		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
+		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D972279B16AF02DC00DA851F /* generateYaplotFile.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = generateYaplotFile.pl; sourceTree = "<group>"; };
 		D97C3B07167690DC009A6BF0 /* Interaction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Interaction.cpp; sourceTree = "<group>"; };
 		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Interaction.h; sourceTree = "<group>"; };
@@ -150,6 +168,13 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		D921A0BB175BF90D002F64B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D96731AE17A042AD005D02F8 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -241,6 +266,17 @@
 			path = cython;
 			sourceTree = "<group>";
 		};
+		D96731B217A042AD005D02F8 /* percolation_LF_DEM */ = {
+			isa = PBXGroup;
+			children = (
+				D96731B317A042AD005D02F8 /* main.cpp */,
+				D96731BA17A042D1005D02F8 /* System.cpp */,
+				D96731BB17A042D1005D02F8 /* System.h */,
+				D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */,
+			);
+			path = percolation_LF_DEM;
+			sourceTree = "<group>";
+		};
 		D972279C16AF8FF300DA851F /* Mathematica */ = {
 			isa = PBXGroup;
 			children = (
@@ -272,6 +308,7 @@
 				D9850AB016AEFA3200DFD13F /* Analysys_Visualization */,
 				D921A0BF175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D9BE3B64178C838100937C5C /* cluster_detector */,
+				D96731B217A042AD005D02F8 /* percolation_LF_DEM */,
 				D988E38A165441750009949F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -282,6 +319,7 @@
 				D988E389165441750009949F /* LF_DEM */,
 				D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D9BE3B63178C838100937C5C /* cluster_detector */,
+				D96731B117A042AD005D02F8 /* percolation_LF_DEM */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -367,6 +405,23 @@
 			productReference = D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */;
 			productType = "com.apple.product-type.tool";
 		};
+		D96731B017A042AD005D02F8 /* percolation_LF_DEM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D96731B917A042AD005D02F8 /* Build configuration list for PBXNativeTarget "percolation_LF_DEM" */;
+			buildPhases = (
+				D96731AD17A042AD005D02F8 /* Sources */,
+				D96731AE17A042AD005D02F8 /* Frameworks */,
+				D96731AF17A042AD005D02F8 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = percolation_LF_DEM;
+			productName = percolation_LF_DEM;
+			productReference = D96731B117A042AD005D02F8 /* percolation_LF_DEM */;
+			productType = "com.apple.product-type.tool";
+		};
 		D988E388165441750009949F /* LF_DEM */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D988E393165441750009949F /* Build configuration list for PBXNativeTarget "LF_DEM" */;
@@ -425,6 +480,7 @@
 				D988E388165441750009949F /* LF_DEM */,
 				D921A0BD175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D9BE3B62178C838100937C5C /* cluster_detector */,
+				D96731B017A042AD005D02F8 /* percolation_LF_DEM */,
 			);
 		};
 /* End PBXProject section */
@@ -436,6 +492,15 @@
 			files = (
 				D921A0C1175BF90D002F64B1 /* main.cpp in Sources */,
 				D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D96731AD17A042AD005D02F8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D96731B417A042AD005D02F8 /* main.cpp in Sources */,
+				D96731BC17A042D1005D02F8 /* System.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -481,6 +546,26 @@
 			name = Debug;
 		};
 		D921A0C5175BF90D002F64B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		D96731B717A042AD005D02F8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D96731B817A042AD005D02F8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -626,6 +711,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		D96731B917A042AD005D02F8 /* Build configuration list for PBXNativeTarget "percolation_LF_DEM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D96731B717A042AD005D02F8 /* Debug */,
+				D96731B817A042AD005D02F8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		D988E383165441750009949F /* Build configuration list for PBXProject "LF_DEM" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -651,6 +744,7 @@
 				D9BE3B6A178C838100937C5C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

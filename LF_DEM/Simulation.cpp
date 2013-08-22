@@ -6,14 +6,16 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#define VERSION "1.1"
+#define VERSION "2.0"
 #include "Simulation.h"
 #include <cmath>
 #include <map>
 #include <string>
 #include <algorithm>
 #include <cctype>
+
 Simulation::Simulation(){};
+
 Simulation::~Simulation(){
 	if (fout_rheo.is_open()) {
 		fout_rheo.close();
@@ -71,11 +73,10 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	int cnt_simu_loop = 1;
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
-	double strain_next_config_out = 0;
 	while (sys.Shear_strain() < shear_strain_end-1e-8) {
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
-		strain_next_config_out = cnt_config_out*strain_interval_output;
-		double strain_next = (cnt_simu_loop)*strain_interval_output_data;
+		double strain_next_config_out = cnt_config_out*strain_interval_output;
+		double strain_next = cnt_simu_loop*strain_interval_output_data;
 		sys.timeEvolution(strain_next);
 		evaluateData();
 		outputRheologyData();
@@ -436,16 +437,23 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.analyzeState();
 	/* NOTE:
-	 * The total stress does not include contact GU term
-	 * due to the asumption of hard-sphere model.
+	 * 
+	 * The total stress DID not include the contact GU terms,
+	 * because we consider that the relative motion is not expected hard spheres
+	 * and artificial in the soft-sphere contact model.
+	 * [Aug 15, 2013]
+	 * In the contact model, force is divided into two parts (spring and dash-pot).
+	 * In physics, the total force is important.
+	 * Therefore, both should be included for the stress calculation.
+	 *
 	 */
 	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
 	total_colloidal_stress = sys.total_colloidal_stressXF+sys.total_colloidal_stressGU;
 	
 	total_stress = sys.total_hydro_stress;
 	total_stress += total_contact_stressXF;
+	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
-	
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}

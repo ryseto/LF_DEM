@@ -1,0 +1,317 @@
+%\documentclass[
+%  aip,author-year,
+%  preprint,
+%  %unsortedaddress,
+%  amsmath,amssymb,
+%  %linenumbers,
+%  tightenlines
+%]{revtex4-1}
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+%\usepackage{hyperref}
+\usepackage[pdftex]{graphicx}	% required for `\includegraphics' (yatex added)
+\usepackage{datetime}
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+\newcommand{\figref}[1]{\figurename ~\ref{#1}}
+\begin{document}
+\title{Shear rate dependence of no-Brownian suspension}
+\date{\shortdate\today \, \ampmtime }
+\maketitle
+\subsection*{Units}
+
+Our first target
+is rheology of non-Brownian suspensions
+under simple shear flows
+(shear rates, $\dot{\gamma}$).
+%
+It is convenient
+to use units of length, velocity and force
+as follows:
+\begin{gather}
+ L_0 = a_0,  \\
+ U_0 = L_0 \dot{\gamma}, \\
+ F_0 = 6 \pi \eta_0 a U_0 = 6 \pi \eta_0 a^2 \dot{\gamma}.
+\end{gather}
+$a_0$ is the radius of particles
+(smaller one, if it is bidisperse, i.e., $a_0 < a_1$).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Non-dimensional variables are denoted 
+by hat (~$\hat{}$~):
+\begin{align}
+ \hat{F} &=  F/F_0, \\
+ \hat{T} &=  T/(F_0 L_0), \\
+ \hat{S} &=  S/(F_0 L_0),
+\end{align}
+and $ \hat{U} = U / U_0$,
+$\hat{\Omega} = \Omega $,
+and $\hat{E} = E L_0 / U_0 $.
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Due to the linearity of Stokes regime,
+hydrodynamic interaction
+can be written as non-dimensional model,
+where the shear rate 
+does not appear in the model.
+%
+We can scale all non-dimensional results
+by the shear rate.
+
+
+\subsection*{The finite lubrication}
+
+Our working hypothesis is
+\emph{to use finite lubrication}.
+%
+For monodisperse system,
+
+%
+\begin{equation}
+  \bm{F}_{\mathrm{lub}}^{(i,j)}
+  = -\alpha (h)
+  (\bm{v}^{(i)} - \bm{v}^{(j)})\cdot
+  \bm{n}^{(i,j)} \bm{n}^{(i,j)}.\label{123922_1Mar13}
+\end{equation}
+\begin{equation}
+  \alpha(h)
+  = 
+  \begin{cases}
+    3 \pi \eta_0 a^2 / 2(h+c) & h > 0 \\
+    3 \pi \eta_0 a^2 / 2c & h\leq 0 
+  \end{cases}\label{124138_1Mar13}
+\end{equation}
+%
+This way to introduce the finiteness
+is not obvious.
+%
+We might imagine smaller spheres
+with a radius $b < a$.
+%
+We may consider them as hydrodynamic radii.
+%
+Each particle have 
+both geometrical and hydrodynamic radii: $a$ and $b$.
+%
+When the gap is geometrically $h \equiv r - 2a$,
+the hydrodynamic gap is
+\begin{equation}
+  h' = 
+  r - 2b =
+  r - 2a + 2(a-b) = h + c.
+\end{equation}
+where $c \equiv 2(a-b)$.
+%
+So, the eqs.~\eqref{123922_1Mar13} 
+and \eqref{124138_1Mar13} for $h>0$
+is considered as
+a solution of Stokes equations
+for two spheres of radius $b$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The non-dimensional form
+is 
+\begin{equation}
+  \hat{\bm{F}}_{\mathrm{lub}}^{(i,j)}
+  = \hat{\alpha} (\hat{h})
+  (\hat{\bm{v}}^{(i)} - \hat{\bm{v}}^{(j)})\cdot
+  \bm{n}^{(i,j)} \bm{n}^{(i,j)}.
+\end{equation}
+\begin{equation}
+  \hat{\alpha}(\hat{h})
+  = 
+  \begin{cases}
+    1 / 4(\hat{h}+\hat{c}) & \hat{h} > 0 \\
+    1 /4\hat{c} & \hat{h} \leq 0 
+  \end{cases}
+\end{equation}
+%
+If the above interpretation is ok 
+to have the finiteness in 
+the lubrication model,
+the shear-rate independence
+of the Stokes regime remains
+in the lubrication model.
+%
+The trajectories of particles before the first contact
+never depend on shear rates.
+%
+Just this finiteness
+allows particles 
+to come into contact.
+
+\subsection*{Contact force model}
+
+Contact forces act between
+two particles $i$ and $j$,
+when the distance $r$
+is smaller than $r_0 = a_i + a_j$.
+
+\paragraph{Rigid sphere model}
+
+Typical hydrodynamic forces
+are much smaller than
+the force which can deform particles.
+%
+Young's modulus of particles
+(1--100~GPa) is usually large enough
+to consider the particles are rigid body
+in sheared suspensions.
+%
+In the rigid-body limit of elastic body,
+any force cannot cause finite deformation.
+%
+In simulations (such as DEM),
+we need to use a finite potential function
+to mimic this behavior.
+%
+As mentioned above,
+we can model the hydrodynamic interaction part
+as shear-rate independent.
+%
+To combine models of hydrodynamic and
+contact interactions,
+there are two possibilities.
+%
+The one is shear-rate independent contact force model,
+and the second is shear-rate scaling contact force model.
+%
+
+Since contact force model
+is unrelated to shear flows,
+the fist one seems reasonable.
+%
+If so,
+in the non-denationalized simulation,
+the contact force looks to be scaled by shear rates:
+\begin{equation}
+  \hat{F}_{\mathrm{c}}(\hat{r}) = \frac{F_{\mathrm{c}}(r) }{F_0}
+  = \frac{F_{\mathrm{c}}(\hat{r}L_0) }{6 \pi \eta_0 L_0^2  } 
+  \frac{1}{\dot{\gamma}},
+\end{equation}
+%
+where we use the same $F_{\mathrm{c}}(r)$.
+Thus,
+the hydrodynamic parts 
+are equivalent for different shear rates,
+while
+the shear rate changes the contact force model
+in the non-denationalized simulation.
+%
+We need to check
+this model can mimic the rigid spheres
+for a wide range of shear rates.
+%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In the rigid-body limit,
+we may expect
+no shear-rate dependence
+in the non-Brownian+finite-lubrication suspension rheology.
+%
+If so, 
+we should use
+a shear-rate independent dimensionless simulation model
+by introducing shear-rate scaling contact model.
+%
+We can just use the same contact model
+$\hat{F}_c(\hat{r})$
+in the non-denationalized simulation.
+%
+It means that 
+we consider 
+different contact models
+for different shear rates;
+\begin{equation}
+ F_{\mathrm{c}}(r) = \hat{F}_{\mathrm{c}}(\hat{r}) F_0
+= 6 \pi \eta L_0^2 \dot{\gamma} 
+\hat{F}_{\mathrm{c}}(r/L_0).
+\end{equation}
+%
+Since the absence of the shear rate in the code,
+it guarantees to have shear-rate independent results,
+which is expected in the rigid-bory limit.
+%
+If friction is the origin
+to yield shear-rate dependence,
+it is better to use
+this shear-rate independent form.
+%
+
+\paragraph{Friction model}
+
+Friction laws can be matter.
+%
+The well-known formula
+\begin{equation}
+ F_{\|} = \mu F_{\perp}
+\end{equation}
+is a linear relation.
+%
+In the non-dimensional form,
+shear-rate dependence does not appear:
+\begin{equation}
+ \hat{F}_{\|} F_0 = \mu \hat{F}_{\perp} F_0
+\quad
+\rightarrow 
+\quad
+ \hat{F}_{\|} = \mu \hat{F}_{\perp}.
+\end{equation}
+%
+
+
+Cohesion term is also expected:
+\begin{equation}
+ F_{\parallel} = \mu F_{\perp}
+ + \sigma A
+\end{equation}
+The textbook of Israelachvili says
+\begin{quote}
+At low loads
+the friction force is dominated
+by the adhesion contribution,
+but at high loads,
+where $A \propto F_{\perp}^{2/3}$ ,
+it is dominated by the load-dependent contribution 
+$\mu F_{\perp}$.
+\end{quote}
+%
+\begin{align}
+& 
+\hat{F}_{\parallel} F_0
+= \mu \hat{F}_{\perp} F_0 +
+\sigma (\hat{F}_{\perp} F_0)^{2/3} \\
+&
+\to \quad
+\hat{F}_{\parallel} 
+= \mu \hat{F}_{\perp}  +
+(\sigma F_0^{-1/3}) \hat{F}_{\perp}^{2/3}  
+\end{align}
+%
+This means that
+the cohesion term is less and less important
+at higher shear rate.
+
+
+
+
+
+
+\bibliography{/Users/seto/Dropbox/Papers/rse}
+\end{document}
+
+
+
+
+
+
+
+
+
+

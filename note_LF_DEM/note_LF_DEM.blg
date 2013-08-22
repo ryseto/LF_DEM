@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2013)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: note_LF_DEM.aux
+The style file: unsrtnat.bst
+Database file #1: /Users/seto/Dropbox/Papers/rse.bib
+Warning--empty school in Kumar_2010a
+You've used 36 entries,
+            2481 wiz_defined-function locations,
+            787 strings with 9687 characters,
+and the built_in function-call counts, 13733 in all, are:
+= -- 1270
+> -- 568
+< -- 27
++ -- 231
+- -- 156
+* -- 1032
+:= -- 2146
+add.period$ -- 108
+call.type$ -- 36
+change.case$ -- 70
+chr.to.int$ -- 33
+cite$ -- 37
+duplicate$ -- 676
+empty$ -- 1297
+format.name$ -- 238
+if$ -- 2908
+int.to.chr$ -- 4
+int.to.str$ -- 37
+missing$ -- 34
+newline$ -- 188
+num.names$ -- 108
+pop$ -- 251
+preamble$ -- 1
+purify$ -- 36
+quote$ -- 0
+skip$ -- 400
+stack$ -- 0
+substring$ -- 900
+swap$ -- 78
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 252
+warning$ -- 1
+while$ -- 136
+width$ -- 0
+write$ -- 474
+(There was 1 warning)
