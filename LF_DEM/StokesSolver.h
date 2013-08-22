@@ -233,17 +233,17 @@ private:
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 
 	 */
-    void setRow(const vec3d &nvec, int ii, int jj, double alpha);
+    void setRow(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
 	
     /*
-     setColumn(const vec3d &nvec, int jj, double alpha) :
+     setColumn(const vec3d &nvec, int jj, double XA, double YB, double YC) :
 	 - CHOLMOD ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int ii, int jj, double alpha);
+    void setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
     void completeResistanceMatrix_trilinos();
@@ -273,30 +273,34 @@ public:
      */
     void resetResistanceMatrix(string solver_type);
 	
-    /* addToDiag(int ii, double alpha) :
-	 - adds alpha to diagonal elements 3*ii, 3*ii+1, and 3*ii+2
+    /* addToDiag(int ii, double FUvalue, TWvalue) :
+	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 
+	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii 
 	 */
-    void addToDiag(int ii, double alpha);
+    void addToDiag(int ii, double FUvalue, double TWvalue);
 	
-    /* addToDiagBlock(const vec3d &nvec, int ii, double alpha);
-	 - adds alpha * |nvec><nvec| to diagonal block
-	 [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*ii, 3*ii+1, 3*ii+2 ]
+    /* addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC);
+	  Adds to block (ii, ii):
+	 - XA * |nvec><nvec| on FU part
+	 - YB * e_ijk nvec_ij on TU part (NOT IMPLEMENTED YET)
+	 - YC *(1 - |nvec><nvec|) on TW part (NOT IMPLEMENTED YET)
 	 */
-    void addToDiagBlock(const vec3d &nvec, int ii, double alpha);
+    void addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC);
 	
     /*
-     setOffDiagBlock(const vec3d &nvec, int ii, int jj, double alpha) :
-     - appends alpha * |nvec><nvec| and corresponding indices
-	 to block [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ]
-	 
-     - if the solver is Trilinos, it also appends it to the
-	 symmetric block [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
-	 
-	 - this must be called with order (ii < jj) if CHOLMOD is used,
+     setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC) :
+	 Sets (ii,jj) block with:
+     -  XA * |nvec><nvec| for FU part
+	 -  YB * e_ijk nvec_ij for TU part (NOT IMPLEMENTED YET)
+	 - YC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
+
+     If the solver is Trilinos, it also sets the symmetric block (jj, ii)
+
+	 This must be called with order (ii < jj) if CHOLMOD is used,
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double alpha);
+    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
 	
 	/*
 	 doneBlocks(int i) :

@@ -679,7 +679,7 @@ System::stressBrownianReset(){
 void
 System::addStokesDrag(){
     for (int i=0; i<np; i++) {
-		stokes_solver.addToDiag(i, bgf_factor*radius[i]);
+		stokes_solver.addToDiag(i, bgf_factor*radius[i], 0.);
     }
 }
 
