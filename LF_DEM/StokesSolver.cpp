@@ -51,13 +51,13 @@ StokesSolver::~StokesSolver(){
 void
 StokesSolver::init(int n, bool is_brownian){
 	np = n;
-    np3 = 3*np;
+    np6 = 6*np;
 	brownian = is_brownian;
 	// initializing values that can be changed later
 	_direct = true;
 	_iterative = false;
 	chol_init = false;
-	FTcoupling = false;
+	//	FTcoupling = false;
 }
 
 void
@@ -89,20 +89,7 @@ StokesSolver::initialize(){
 
 
 	// resistance matrix characteristics (see header for matrix description)
-	if(FTcoupling){
-		res_matrix_linear_size = 6*np;
-		dblocks_nb = 2*np;
-		sdblocks_nb = 2*np;
-		dblocks_element_nb = 12*np;
-	}
-	else{
-		res_matrix_linear_size = 3*np;
-		dblocks_nb = np;
-		sdblocks_nb = 0;
-		dblocks_element_nb = 6*np;
-	}
-
-
+	res_matrix_linear_size = np6;
 
 	allocateRessources();
 	chol_L_to_be_freed = false;
@@ -425,6 +412,9 @@ StokesSolver::resetResistanceMatrix(string solver_type){
 		odblocks[0].clear();
 		odblocks[1].clear();
 		odblocks[2].clear();
+		odblocks[3].clear();
+		odblocks[4].clear();
+		odblocks[5].clear();
 		odbrows_table[0] = 0;
 	}
 #ifdef TRILINOS
@@ -558,13 +548,13 @@ StokesSolver::solve(double* velocity){
 		tril_stokes_equation->setRHS(tril_rhs);
 		bool set_success = tril_stokes_equation->setProblem();
 		if (!set_success) {
-			cerr << "ERROR:  Belos::LinearProblem failed to set up correctly" << endl;
+			cerr << "ERROR: StokesSolver::solve : Belos::LinearProblem failed to set up correctly" << endl;
 			exit(1);
 		}
 		tril_solver->setProblem (tril_stokes_equation);
 		Belos::ReturnType ret = tril_solver->solve();
 		if (ret != Belos::Converged) {
-			cerr << " Warning: Belos::Solver did not converge" << endl;
+			cerr << " Warning: StokesSolver::solve : Belos::Solver did not converge" << endl;
 		}
 		tril_solver->getNumIters();
 		//		int iter_steps = tril_solver->getNumIters();
@@ -620,7 +610,7 @@ void
 StokesSolver::allocateRessources(){
 #ifdef TRILINOS
     int maxnum_interactionpair_per_particle = 20;
-    columns_max_nb = dof*maxnum_interactionpair_per_particle;
+    columns_max_nb = 6*maxnum_interactionpair_per_particle;
     int numlhs = 1;
     int numrhs = 1;
     Map = rcp(new Epetra_Map(res_matrix_linear_size, 0, Comm));
@@ -648,11 +638,11 @@ StokesSolver::allocateRessources(){
 #endif
     cholmod_start (&chol_c);
 	chol_init = true;
-    dblocks = new double [6*np];
-    odblocks = new vector <double> [3];
+    dblocks = new double [18*np];
+    odblocks = new vector <double> [6];
     odbrows_table = new int [np+1];
-    chol_rhs = cholmod_allocate_dense(np3, 1, np3, xtype, &chol_c);
-	for (int i=0; i<np3; i++) {
+    chol_rhs = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
+	for (int i=0; i<np6; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
     chol_L = NULL;
@@ -663,11 +653,9 @@ void
 StokesSolver::allocateResistanceMatrix(){
 	// allocate
 	int nzmax; // non-zero values
-	nzmax = 6*np; // diagonal blocks
-	for (int s=0; s<3; s++) {
-		nzmax += odblocks[s].size();  // off-diagonal
-	}
-	chol_res_matrix = cholmod_allocate_sparse(np3, np3, nzmax, sorted, packed, stype,xtype, &chol_c);
+	nzmax = 21*np; // diagonal blocks
+	nzmax += 21*odbrows_table[np];  // off-diagonal
+	chol_res_matrix = cholmod_allocate_sparse(np6, np6, nzmax, sorted, packed, stype,xtype, &chol_c);
 }
 
 void

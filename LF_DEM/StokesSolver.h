@@ -156,7 +156,7 @@ class StokesSolver{
 
 private:
 	int np;
-	int np3;
+	//	int np3;
 	int np6;
 	
     int res_matrix_linear_size;
@@ -168,7 +168,7 @@ private:
 	bool _iterative;
 	bool _direct;
 	
-	bool FTcoupling;
+	//	bool FTcoupling;
 
 	// Cholmod variables
     cholmod_factor *chol_L ;
