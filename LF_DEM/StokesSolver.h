@@ -51,6 +51,8 @@ class StokesSolver{
 	  Accordingly, Forces are either forces alone (F) or torques and forces (F and T).
 	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, ie is sparse.
 
+	  ============================
+	  ============================
 	  The ResistanceMatrix has the following structure (all blocks are 3x3):
 	  (if only force-velocity resistance matrix is considered, then ResistanceMatrix is limited tothe top left corner)
 
@@ -63,11 +65,11 @@ class StokesSolver{
                     ||  |        .        .                     :       .        .                     | ||
                     ||  |     0  . dblock .                     :  0    .sdblock .                     | ||
                     FU  |        .        .                     :       .        .                     | 3Nx3N FW submatrix
-                    ||  |        ..........                     :       ..........                     | ||
-                    ||  |                    .                  :                   .                  | || 
-                    ||  |                      .                :                     .                | ||     
-                    ||  |                        .              :                       .              | ||    
-                    ||  |                          .            :                         .            | ||
+                    ||  |..................                     :.................                     | ||
+                    ||  |        .           .                  :       .           .                  | || 
+                    ||  |odblock .             .                :odblock.             .                | ||     
+                    ||  |        .               .              :       .               .              | ||    
+                    ||  |.........                 .            :........                 .            | ||
 					||  |                            .          :                           .          | ||
 					||  | 						       .........:                             .........| ||
                     ||  |                              .        :                             .        | ||
@@ -81,11 +83,11 @@ class StokesSolver{
                     ||  |        .        .                     :        .        .                    | ||
                     ||  |    0   .sdblock .                     : 0      . dblock .                    | ||
                     ||  |        .        .                     :        .        .                    | ||
-                    ||  |        ..........                     :        ..........                    | ||
-                    TU  |                    .                  :                   .                  | 3Nx3N TW submatrix
-                    ||  |                      .                :                     .                | ||                     .
-                    ||  |                        .              :                       .              | ||    
-                    ||  |                          .            :                         .            | ||
+                    ||  |..................                     :..................                    | ||
+                    TU  |        .           .                  :        .          .                  | 3Nx3N TW submatrix
+                    ||  |odblock .             .                :odblock .            .                | ||                     .
+                    ||  |        .               .              :        .              .              | ||    
+                    ||  |.........                 .            :.........                .            | ||
 					||  |                            .          :                           .          | ||
 					||  | 				   		       .........:                             .........| ||
                     ||  |                              .        :                             .        | ||
@@ -94,7 +96,7 @@ class StokesSolver{
 					||  |                              .........:                             .........| || 
 	                    ========== 3Nx3N TU submatrix ==========||========== 3Nx3N TW submatrix =========					  
 
-	 This matrix is symmetric, so we only store its upper or lower part.
+	 This matrix is symmetric, so we only store its lower part. Sub-matrices themselves are symmetric.
 
 	 The non-zero 3x3 blocks are of three kinds:
 	 - dblocks ("diagonal") contain the contributions to the force (resp torque) acting on particle i 
@@ -105,9 +107,49 @@ class StokesSolver{
 	 - odblocks ("off-diagonal") contain the contributions to the force (torque) acting on particle i 
 	   coming from other particles velocities and angular velocities.
 
+	  ============================
+	  ============================
+	  Technical details on the storage of matrix elements:
+	  
+	  Elements are stored differently depending on which library is used.
 
+	  * CHOLMOD storage:
+	  With cholmod library, the storage is first done in the "natural" block structures presented above.
+	  At the end of filling, the storage is converted to the compressed-column form used by cholmod.
+	 
+	  Natural form is done as follows:
+	  - dblocks: Each dblock has 6 independent elements (3 diagonal terms and 3 off diagonal).
+	             There are np such block if FTcoupling is false, 2*np if it is true. 
+	             They are all stored in 'double *dblocks', which is allocated with size 3*np or 6*np 
+				 depending on FTcoupling.
+				 Labeling in block associated with particle i is the following:
+				 | 6*i     .     .     |
+				 | 6*i+1  6*i+3  .     |
+				 | 6*i+2  6*i+4  6*i+5 |
+	  - sdblocks: Organized as dblocks.
+	              np such block if FTcoupling is false, 2*np if it is true. 
+	              Stored in double *sdblocks, allocated with size 3*np or 6*np 
+				  depending on FTcoupling.
+	  - odblocks: 9 elements per block.
+	              Organization is much closer to compressed-column form.
+				  All the odblocks values in the FU part of ResistanceMatrix are stored columnwise 
+				  in three vectors called odFUblocks[0], odFUblocks[1], odFUblocks[2].
+				  The corresponding locations in the ResistanceMatrix are stored in a vector called odFrows and an array called odFrows_table.
+				  Similarly the right (TU) and (TW) parts of ResistanceMatrix are stored in odTUblocks[0-2], odTWblocks[0-2], 
+				  odTrows and odTrows_table (as the row labels are the same in the TU and TW parts)
 
-
+				  This works as follows:
+				  Particle i interacts with particle j (i<j), we have 4 associated odblocks (1 if FTcoupling is false) in
+				  the ResistanceMatrix (for FU, FW, TU and TW submatrices). We store 3 of them (FU, TU and TW).
+				  j appears as the m^th interaction involving i, such that 
+				  odFUrows_table[i][m] = 3*j
+				  odTrows_table[i][m] = 3*np+3*j
+				  
+				  The X submatrix is then: 
+				  | odXblocks[0][3*m  ] .                    .                 |
+				  | odXblocks[0][3*m+1] odXblocks[1][2*m  ]  .                 |
+				  | odXblocks[0][3*m+2] odXblocks[1][2*m+1]  odXblocks[2][m  ] |
+				  
 	 */
 
 private:
@@ -146,10 +188,15 @@ private:
 	bool chol_L_to_be_freed;
 	
     // resistance matrix building
-    vector <int> rows;
     double *dblocks;
-    vector <double> *odblocks;
-    int *ploc;
+
+
+    vector <double> *odFUblocks;
+    vector <double> *odTUblocks;
+    vector <double> *odTWblocks;
+    vector <int> odbFrows;
+    vector <int> odbTrows;
+	int *odbFrows_table;
 	
     void factorizeResistanceMatrix();
 	
@@ -195,7 +242,7 @@ private:
 	 - CHOLMOD ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
-	 odblocks and ploc
+	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
     void appendToColumn(const vec3d &nvec, int ii, int jj, double alpha);
