@@ -160,9 +160,8 @@ private:
 	int np6;
 	
     int res_matrix_linear_size;
-	int dblocks_nb;
-	int sdblocks_nb;
-	int dblocks_element_nb;
+	int odblocks_nb;
+	int dblocks_size;
 	bool brownian;
 	
 	bool _iterative;
@@ -195,7 +194,8 @@ private:
     vector <double> *odblocks;
     vector <int> odbrows;
 	int *odbrows_table;
-	
+	int *current_index_positions;
+
     void factorizeResistanceMatrix();
 	
     
@@ -266,12 +266,13 @@ public:
 	void printResistanceMatrix();
 	void convertDirectToIterative();
     // R_FU filling methods
-    /* resetResistanceMatrix() :
+    /* resetResistanceMatrix(string solver_type, int nb_of_interactions) :
 	 - initialize arrays/vectors used for building
 	 - to be called before adding elements
-	 - possible arguments: "direct" or "iterative"
+	 - possible solver_type: "direct" or "iterative"
+	 - nb_of_interactions is the number of odblocks in the matrix
      */
-    void resetResistanceMatrix(string solver_type);
+    void resetResistanceMatrix(string solver_type, int nb_of_interactions);
 	
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 

@@ -18,6 +18,12 @@ StokesSolver::~StokesSolver(){
 	if (!odblocks) {
 		delete [] odblocks;
 	}
+	if (!odbrows_table) {
+		delete [] odbrows_table;
+	}
+    if (!current_index_positions) {
+		delete [] current_index_positions;
+	}
 
 	if(!chol_solution) {
 		cholmod_free_dense(&chol_solution, &chol_c);
@@ -70,6 +76,7 @@ StokesSolver::initialize(){
 	xtype = CHOLMOD_REAL;
 
 	
+	
 #ifdef TRILINOS
 	// TRILINOS init and parameters
 	// initialize solver
@@ -90,6 +97,7 @@ StokesSolver::initialize(){
 
 	// resistance matrix characteristics (see header for matrix description)
 	res_matrix_linear_size = np6;
+	dblocks_size = 18*np;
 
 	allocateRessources();
 	chol_L_to_be_freed = false;
@@ -401,20 +409,30 @@ StokesSolver::completeResistanceMatrix(){
 }
 
 void
-StokesSolver::resetResistanceMatrix(string solver_type){
+StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 	setSolverType(solver_type);
 	
+	odblocks_nb = nb_of_interactions;
 	if (direct()) {
-		for (int k=0; k<dblocks_element_nb; k++){
+		for (int k=0; k<dblocks_size; k++){
 			dblocks[k] = 0;
 		}
 		odbrows.clear();
-		odblocks[0].clear();
-		odblocks[1].clear();
-		odblocks[2].clear();
-		odblocks[3].clear();
-		odblocks[4].clear();
-		odblocks[5].clear();
+		
+		odblocks[0].resize(6*odblocks_nb);
+		odblocks[1].resize(4*odblocks_nb);
+		odblocks[2].resize(2*odblocks_nb);
+		odblocks[3].resize(3*odblocks_nb);
+		odblocks[4].resize(2*odblocks_nb);
+		odblocks[5].resize(odblocks_nb);
+		
+		for(int k=0;k<6;k++){
+			for(int i=0; i<odblocks[k].size();i++){
+				odblocks[k][i]=0.;
+			}
+			current_index_positions[k]=0;
+		}
+
 		odbrows_table[0] = 0;
 	}
 #ifdef TRILINOS
@@ -636,11 +654,15 @@ StokesSolver::allocateRessources(){
 		columns_nb[i] = 0;
 	}
 #endif
+
+    dblocks = new double [dblocks_size];
+    odblocks = new vector <double> [6];
+	current_index_positions = new int [6];
+    odbrows_table = new int [np+1];
+
     cholmod_start (&chol_c);
 	chol_init = true;
-    dblocks = new double [18*np];
-    odblocks = new vector <double> [6];
-    odbrows_table = new int [np+1];
+
     chol_rhs = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
 	for (int i=0; i<np6; i++) {
 		((double*)chol_rhs->x)[i] = 0;
@@ -693,17 +715,39 @@ StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB,
 
 
 	odbrows.push_back(6*jj);
+	
+	int i0 = current_index_positions[0];
+	int i1 = current_index_positions[1];
+	int i2 = current_index_positions[2];
+	int i3 = current_index_positions[3];
+	int i4 = current_index_positions[4];
+	int i5 = current_index_positions[5];
+	
+	odblocks[0][i0  ] = XA_n0*nvec.x; // column 0
+	odblocks[0][i0+1] = XA_n1n0;
+	odblocks[0][i0+2] = XA_n0n2;
+	odblocks[0][i0+3] = 0;
+	odblocks[0][i0+4] = 0;
+	odblocks[0][i0+5] = 0;
+	odblocks[1][i1  ] = XA_n1*nvec.y; // column 1
+	odblocks[1][i1+1] = XA_n2n1;
+	odblocks[1][i1+2] = 0;
+	odblocks[1][i1+3] = 0;
+	odblocks[2][i2  ] = XA_n2*nvec.z; // column 2
+	odblocks[2][i2+1] = 0;
+	odblocks[3][i3  ] = 0; // column 3
+	odblocks[3][i3+1] = 0;
+	odblocks[3][i3+2] = 0;
+	odblocks[4][i4  ] = 0; // column 4
+	odblocks[4][i4+1] = 0;
+	odblocks[5][i5  ] = 0; // column 5
 
-	odblocks[0].push_back(XA_n0*nvec.x); // 00
-	odblocks[0].push_back(XA_n1n0); // 10
-	odblocks[0].push_back(XA_n0n2); // 20
-	odblocks[1].push_back(XA_n1n0); // 01
-	odblocks[1].push_back(XA_n1*nvec.y); //11
-	odblocks[1].push_back(XA_n2n1); // 21
-	odblocks[2].push_back(XA_n0n2); // 02
-	odblocks[2].push_back(XA_n2n1); // 12
-	odblocks[2].push_back(XA_n2*nvec.z); //22
-
+	current_index_positions[0] += 6;
+	current_index_positions[1] += 4;
+	current_index_positions[2] += 2;
+	current_index_positions[3] += 3;
+	current_index_positions[4] += 2;
+	current_index_positions[5] += 1;
 }
 
 
