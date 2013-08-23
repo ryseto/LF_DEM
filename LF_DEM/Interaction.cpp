@@ -56,6 +56,7 @@ Interaction::activate(int i, int j){
 	lub_max_scaled = ro_half*sys->Lub_max();
 	kn_scaled = ro_half*ro_half*sys->Kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_half*sys->Kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
+	tangential_dashpot_coeff = ro_half*sys->Tang_coeff_contact(); // **** to be checked ****
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -431,19 +432,19 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 }
 
 // convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
-void
-Interaction::pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j){
-	vec3d vi, vj;
-	int i3 = 3*par_num[0];
-	int j3 = 3*par_num[1];
-	vi.x = vel_array[i3];
-	vi.y = vel_array[i3+1];
-	vi.z = vel_array[i3+2];
-	vj.x = vel_array[j3];
-	vj.y = vel_array[j3+1];
-	vj.z = vel_array[j3+2];
-	pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
-}
+//void
+//Interaction::pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j){
+//	vec3d vi, vj;
+//	int i3 = 3*par_num[0];
+//	int j3 = 3*par_num[1];
+//	vi.x = vel_array[i3];
+//	vi.y = vel_array[i3+1];
+//	vi.z = vel_array[i3+2];
+//	vj.x = vel_array[j3];
+//	vj.y = vel_array[j3+1];
+//	vj.z = vel_array[j3+2];
+//	pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
+//}
 
 void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
@@ -465,14 +466,14 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 
 void
 Interaction::addHydroStress(){
-	int i3 = 3*par_num[0];
-	int j3 = 3*par_num[1];
+	int i6 = 6*par_num[0];
+	int j6 = 6*par_num[1];
 	StressTensor stresslet_GU_i;
 	StressTensor stresslet_GU_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
-	vec3d vi(sys->v_hydro[i3], sys->v_hydro[i3+1], sys->v_hydro[i3+2]);
-	vec3d vj(sys->v_hydro[j3], sys->v_hydro[j3+1], sys->v_hydro[j3+2]);
+	vec3d vi(sys->v_hydro[i6], sys->v_hydro[i6+1], sys->v_hydro[i6+2]);
+	vec3d vj(sys->v_hydro[j6], sys->v_hydro[j6+1], sys->v_hydro[j6+2]);
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
@@ -514,8 +515,8 @@ Interaction::evaluateLubricationForce(){
 void
 Interaction::addContactStress(){
 	if (contact) {
-		int i3 = 3*par_num[0];
-		int j3 = 3*par_num[1];
+		int i6 = 6*par_num[0];
+		int j6 = 6*par_num[1];
 		/*
 		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
 		 * Fc_normal = -Fc_normal_norm*nr_vec;
@@ -528,8 +529,8 @@ Interaction::addContactStress(){
 		// Add term G*V_cont
 		StressTensor stresslet_GU_i;
 		StressTensor stresslet_GU_j;
-		vec3d vi(sys->v_cont[i3], sys->v_cont[i3+1], sys->v_cont[i3+2]);
-		vec3d vj(sys->v_cont[j3], sys->v_cont[j3+1], sys->v_cont[j3+2]);
+		vec3d vi(sys->v_cont[i6], sys->v_cont[i6+1], sys->v_cont[i6+2]);
+		vec3d vj(sys->v_cont[j6], sys->v_cont[j6+1], sys->v_cont[j6+2]);
 		pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
 		sys->contactstressGU[par_num[0]] += stresslet_GU_i;
 		sys->contactstressGU[par_num[1]] += stresslet_GU_j;
@@ -541,14 +542,14 @@ Interaction::addContactStress(){
 
 void
 Interaction::addColloidalStress(){
-	int i3 = 3*par_num[0];
-	int j3 = 3*par_num[1];
+	int i6 = 6*par_num[0];
+	int j6 = 6*par_num[1];
 	colloidal_stresslet_XF.set(r_vec, f_colloidal);
 	// Add term G*V_cont
 	StressTensor stresslet_colloid_GU_i;
 	StressTensor stresslet_colloid_GU_j;
-	vec3d vi(sys->v_colloidal[i3], sys->v_colloidal[i3+1], sys->v_colloidal[i3+2]);
-	vec3d vj(sys->v_colloidal[j3], sys->v_colloidal[j3+1], sys->v_colloidal[j3+2]);
+	vec3d vi(sys->v_colloidal[i6], sys->v_colloidal[i6+1], sys->v_colloidal[i6+2]);
+	vec3d vj(sys->v_colloidal[j6], sys->v_colloidal[j6+1], sys->v_colloidal[j6+2]);
 	pairVelocityStresslet(vi, vj, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
 	sys->colloidalstressGU[par_num[0]] += stresslet_colloid_GU_i;
 	sys->colloidalstressGU[par_num[1]] += stresslet_colloid_GU_j;

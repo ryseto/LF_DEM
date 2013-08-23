@@ -40,6 +40,7 @@ private:
 	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
 	double lub_coeff_contact; //
+	double tangential_dashpot_coeff; //
 	vec3d r_vec; // normal vector
 	vec3d nr_vec; // vector center to center
 	vec3d contact_velocity;
@@ -183,7 +184,7 @@ public:
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   StressTensor &stresslet_i, StressTensor &stresslet_j);
-	void pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j);
+//	void pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
 	void info(){
