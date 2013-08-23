@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.7.24)  22 AUG 2013 18:17
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2013.7.24)  23 AUG 2013 16:18
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1456,17 +1456,17 @@ Overfull \hbox (33.57097pt too wide) in paragraph at lines 1195--1195
 
 LaTeX Warning: Command \ij invalid in math mode on input line 1202.
 
-[12] [13] [14] [15]
+[12] [13] [14] [15] [16]
 
-LaTeX Warning: Command \ij invalid in math mode on input line 1621.
+LaTeX Warning: Command \ij invalid in math mode on input line 1746.
 
-[16] [17] (./note_LF_DEM.bbl [18] [19])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1897.
- [20]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1897.
+[17] [18] (./note_LF_DEM.bbl [19] [20])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 2022.
+ [21]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 2022.
  (./note_LF_DEM.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1897.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1897.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 2022.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 2022.
 
 Package rerunfilecheck Info: File `note_LF_DEM.out' has not changed.
 (rerunfilecheck)             Checksum: A4FB26132398704B1D2B770EA1CD0A0B;460.
@@ -1478,11 +1478,11 @@ LaTeX Font Warning: Size substitutions with differences
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1897.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 2022.
  ) 
 Here is how much of TeX's memory you used:
- 19928 strings out of 493311
- 352372 string characters out of 6137850
+ 19946 strings out of 493311
+ 352606 string characters out of 6137850
  440286 words of memory out of 5000000
  22771 multiletter control sequences out of 15000+600000
  130061 words of font info for 243 fonts, out of 8000000 for 9000
@@ -1511,10 +1511,10 @@ texlive/2013/texmf-dist/fonts/type1/public/newtx/txsy7.pfb></usr/local/texlive/
 xmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/local/texlive/2013/texmf-dis
 t/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2013/texmf-dist/fonts/ty
 pe1/urw/times/utmri8a.pfb>
-Output written on note_LF_DEM.pdf (20 pages, 402264 bytes).
+Output written on note_LF_DEM.pdf (21 pages, 405384 bytes).
 PDF statistics:
- 628 PDF objects out of 1000 (max. 8388607)
- 558 compressed objects within 6 object streams
- 199 named destinations out of 1000 (max. 500000)
+ 655 PDF objects out of 1000 (max. 8388607)
+ 584 compressed objects within 6 object streams
+ 217 named destinations out of 1000 (max. 500000)
  75 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1269,28 +1269,153 @@ n_{i} n_j (U^{(1)}_j-U^{(1)\infty}_j)
 \end{equation}
 
 
+\begin{equation}
+\frac{1}{\mu}
+ \begin{pmatrix}
+  \bm{F}_{1} \\
+  \bm{F}_{2} 
+ \end{pmatrix}
+\approx
+- 
+\begin{pmatrix}
+\tens{A}_{11} &
+\tens{A}_{12}  \\
+\tens{A}_{21}  &
+\tens{A}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+  \bm{U}_{1} -  \bm{U}_{1}^{\infty}\\
+  \bm{U}_{2} -  \bm{U}_{2}^{\infty}
+ \end{pmatrix}
+-
+\begin{pmatrix}
+\tilde{\tens{B}}_{11} &
+\tilde{\tens{B}}_{12}  \\
+\tilde{\tens{B}}_{21}  &
+\tilde{\tens{B}}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+  \bm{\Omega}_{1} -  \bm{\Omega}_{1}^{\infty}\\
+  \bm{\Omega}_{2} -  \bm{\Omega}_{2}^{\infty}
+ \end{pmatrix}
+ +
+\begin{pmatrix}
+\tilde{\tens{G}}_{11} &
+\tilde{\tens{G}}_{12}  \\
+\tilde{\tens{G}}_{21}  &
+\tilde{\tens{G}}_{22}  
+\end{pmatrix}
+ \begin{pmatrix}
+\bm{E}^{\infty} \\ \bm{E}^{\infty}
+\end{pmatrix}
+\end{equation}
+
+
 \paragraph{XA}
 \begin{equation}
  g_1 (\lambda) = \frac{2\lambda^2}{(1+\lambda)^3}
 \end{equation}
+\begin{equation}
+ g_2 = \frac{1}{5}
+\frac{\lambda(1+7\lambda+\lambda^2)}{(1+\lambda)^{3}}
+\end{equation}
+
 
 $X_{\alpha\beta}^{A}(s,\lambda)=X_{\beta\alpha}^{A}(s,\lambda) =
 X_{(3-\alpha)(3-\beta)}^{A}(s,\lambda^{-1})$
 \begin{align}
- X_{11}^{A}(s,\lambda) &= g_1 (\lambda) \xi^{-1} \\
- X_{12}^{A}(s,\lambda) &= - \frac{2}{1+\lambda} g_1 (\lambda) \xi^{-1} 
-= -\frac{2}{1+\lambda} X_{11}^{A}(s,\lambda) \\
+  X_{11}^{A}(s,\lambda) &= 
+  g_1 (\lambda) \xi^{-1} + g_2(\lambda) \ln \xi^{-1}
+  \\
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  X_{12}^{A}(s,\lambda) &= 
+  - \frac{2}{1+\lambda} 
+\left(
+g_1 (\lambda) \xi^{-1} 
++g_2(\lambda) \ln \xi^{-1}
+\right)
+  = -\frac{2}{1+\lambda} X_{11}^{A}(s,\lambda) 
+  \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  X_{21}^{A}(s,\lambda) &=  X_{12}^{A}(s,\lambda) \\
  X_{22}^{A}(s,\lambda) &=  X_{11}^{A}(s,\lambda^{-1}) 
  = g_1(\lambda^{-1})\xi^{-1}
- = \frac{1}{\lambda} g_1(\lambda) \xi^{-1}
++ g_2(\lambda^{-1}) \ln \xi^{-1} \notag \\
+& = \frac{1}{\lambda} 
+\left(
+g_1(\lambda) \xi^{-1}
++ g_2(\lambda)\ln \xi^{-1}
+ \right)
  = \frac{1}{\lambda} X_{11}^{A}(s,\lambda) 
 \end{align}
+
+\paragraph{YA}
+\begin{equation}
+ g_2(\lambda)
+= (4/15)\lambda (2+\lambda+2 \lambda^2)
+\frac{1}{(1+\lambda)^3}
+\end{equation}
+\begin{equation}
+ Y^{A}_{\alpha\beta} (s,\lambda)
+=
+ Y^{A}_{\beta\alpha} (s,\lambda)
+=
+ Y^{A}_{(3-\alpha)(3-\beta)} (s,\lambda^{-1})
+\end{equation}
+\begin{align}
+  Y_{11}^{A} (s, \lambda)
+  &=
+  g_2(\lambda) \ln \xi^{-1} \\
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  Y_{12}^{A}(s, \lambda)
+  &=
+  -
+  \frac{2}{(1+\lambda)}
+  g_2(\lambda) \ln \xi^{-1} \\
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  Y_{21}^{A} (s, \lambda)
+  &=   Y_{12}^{A}(s, \lambda) \\
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  Y_{22}^{A}(s, \lambda)
+  &=   Y_{11}^{A} (s, \lambda^{-1}) \\
+  &=
+  g_2(\lambda^{-1}) \ln \xi^{-1} 
+=  \frac{1}{\lambda} g_2(\lambda) \ln \xi^{-1} 
+\end{align}
+
+\paragraph{YB}
+
+\begin{equation}
+ Y_{\alpha\beta}^{B}(s,\lambda)
+=-
+ Y_{(3-\alpha)(3-\beta)}^{B}(s,\lambda^{-1})
+\end{equation}
+\begin{equation}
+ g_2(\lambda) = -\frac{1}{5}\lambda (4+\lambda)\frac{1}{(1+\lambda)^{2}}
+\end{equation}
+
+\begin{align}
+  Y_{11}^{B}(s,\lambda)
+  &=
+  g_2 (\lambda)\ln \xi^{-1} \\
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  Y_{12}^{B}(s,\lambda)
+  &=
+  \frac{-4}{(1+\lambda)^2}
+  g_2 (\lambda)\ln \xi^{-1} \\
+  Y_{21}^{B}(s,\lambda)
+  &=
+  -Y_{12}^{B}(\lambda^{-1}) 
+=
+  \frac{4}{(1+\lambda^{-1})^2}
+  g_2 (\lambda^{-1})\ln \xi^{-1} \\
+ \end{align}
 
 \paragraph{XG}
 $X_{\alpha\beta}^{G}(s,\lambda) = - X_{(3-\alpha)(3-\beta)}^{G}(s, \lambda^{-1})$
 \begin{align}
  X_{11}^{G}(s,\lambda) &= \frac{3}{2}g_1(\lambda) \xi^{-1} \\
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
  X_{22}^{G}(s,\lambda) &= - X_{11}^{G} (s, \lambda^{-1})
  = - \frac{3}{2}g_1(\lambda^{-1}) \xi^{-1} 
  = - \frac{1}{\lambda} \frac{3}{2}g_1(\lambda) \xi^{-1} 

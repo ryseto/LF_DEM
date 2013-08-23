@@ -39,6 +39,7 @@ private:
 	int zshift;
 	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
+	double log_lub_coeff; // = log(lub_coeff);
 	double lub_coeff_contact; //
 	double tangential_dashpot_coeff; //
 	vec3d r_vec; // normal vector
@@ -56,8 +57,14 @@ private:
 	double colloidalforce_amplitude;
 	double colloidalforce_length;
 	double XA[4]; // ii ij ji jj
+	double YA[4]; // ii ij ji jj
+	double YB[4]; // ii ij ji jj
+	double YC[4]; // ii ij ji jj
 	double XG[4]; // ii ij ji jj
+	double YG[4]; // ii ij ji jj
+	double YH[4]; // ii ij ji jj
 	double XM[4]; // ii ij ji jj
+	double YM[4]; // ii ij ji jj
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
 	double strain_contact_start; // the strain at h=0.
@@ -103,6 +110,65 @@ private:
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
+	//==========================================================================//
+	
+	void calcLubConstants();
+	
+	double func_g1_XA(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return 2*lambda_*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	double func_g2_YA(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return (4./15)*lambda_*(2+lambda_+2*lambda_*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	double func_g2_YB(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return -0.2*lambda_*(4+lambda_)/(lambda_1_*lambda_1_);
+	}
+	double func_g2_YC(double lambda_){
+		return 0.4*lambda/(lambda_+1);
+	}
+	double func_g4_YC(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return 0.8*lambda*lambda/(lambda_1_*lambda_1_*lambda_1_*lambda_1_);
+	}
+	double func_g1_XG(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return 3*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	}
+
+	double func_g2_YH(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return 0.1*lambda_*(2-lambda_)/(lambda_1_*lambda_1_);
+	}
+	
+	double func_g5_YH(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return 0.05*lambda_*lambda_*(1+7*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	
+	double lambda_square;
+	double lambda_cubic;
+	double lambda_1;
+	double lambda_1_square;
+	double lambda_1_cubic;
+	double g1_XA;
+	double g2_YA;
+	double g2_inv_YA;
+	double g2_YB;
+	double g2_inv_YB;
+	double g2_YC;
+	double g2_inv_YC;
+	double g4_YC;
+	double g1_XG;
+	double g1_inv_XG;
+	double g2_YH;
+	double g2_inv_YH;
+	double g5_YH;
+	double g5_inv_YH;
+
+//	double g4_inv_YC;
 	
 	
 protected:
@@ -157,8 +223,19 @@ public:
 
 	void GE(double *GEi, double *GEj);
 	void calcXA();
+	void calcYA();
+
+	void calcYB();
+	void calcYC();
+
 	void calcXG();
+	void calcYG();
 	void calcXM();
+	void calcYM();
+	
+	void calcYH();
+	
+	
 	inline double get_a0_XA0(){return a0*XA[0];}
 	inline double get_a1_XA3(){return a1*XA[3];}
 	inline double get_ro2_XA2(){return ro_half*XA[2];}
