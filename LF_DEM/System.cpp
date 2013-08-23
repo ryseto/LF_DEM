@@ -678,8 +678,9 @@ System::stressBrownianReset(){
 
 void
 System::addStokesDrag(){
+	double torque_factor = 4./3.;
     for (int i=0; i<np; i++) {
-		stokes_solver.addToDiag(i, bgf_factor*radius[i], 0.);
+		stokes_solver.addToDiag(i, bgf_factor*radius[i], bgf_factor*torque_factor*radius[i]*radius[i]*radius[i]);
     }
 }
 
@@ -703,9 +704,9 @@ System::buildLubricationTerms(bool rhs){
 			if (j > i) {
 				(*it)->calcXA();
 				vec3d nr_vec = (*it)->Nr_vec();
-				stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_a0_XA0());
-				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_a1_XA3());
-				stokes_solver.appendToOffDiagBlock(nr_vec, i, j, (*it)->get_ro2_XA2());
+				stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_a0_XA0(), 0, 0);
+				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_a1_XA3(), 0, 0);
+				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_ro2_XA2(), 0, 0);
 				if (rhs) {
 					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
