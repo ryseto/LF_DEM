@@ -676,7 +676,7 @@ StokesSolver::allocateResistanceMatrix(){
 	// allocate
 	int nzmax; // non-zero values
 	nzmax = 21*np; // diagonal blocks
-	nzmax += 21*odbrows_table[np];  // off-diagonal
+	nzmax += 36*odblocks_nb;  // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(np6, np6, nzmax, sorted, packed, stype,xtype, &chol_c);
 }
 
