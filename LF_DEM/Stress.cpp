@@ -166,7 +166,8 @@ System::calcStressesHydroContact(){
 	 2-body lubrication and contacts  **/
 	// first obtain hydrodynamic part of velocity
     stokes_solver.resetRHS();
-    stokes_solver.resetResistanceMatrix("direct");
+	int nb_of_active_interactions = nb_interaction - deactivated_interaction.size();
+    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
     buildLubricationTerms();
     stokes_solver.completeResistanceMatrix();

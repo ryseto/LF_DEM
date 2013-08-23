@@ -679,8 +679,9 @@ System::stressBrownianReset(){
 
 void
 System::addStokesDrag(){
+	double torque_factor = 4./3.;
     for (int i=0; i<np; i++) {
-		stokes_solver.addToDiag(i, bgf_factor*radius[i], 0.);
+		stokes_solver.addToDiag(i, bgf_factor*radius[i], bgf_factor*torque_factor*radius[i]*radius[i]*radius[i]);
     }
 }
 
@@ -806,7 +807,8 @@ System::buildColloidalForceTerms(){
 void
 System::updateVelocityLubrication(){
     stokes_solver.resetRHS();
-    stokes_solver.resetResistanceMatrix("direct");
+	int nb_of_active_interactions = nb_interaction - deactivated_interaction.size();
+    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
 	//	stokes_solver->resetResistanceMatrix("iterative");
     addStokesDrag();
 	buildLubricationTerms();
