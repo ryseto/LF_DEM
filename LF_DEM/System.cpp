@@ -705,16 +705,9 @@ System::buildLubricationTerms(bool rhs){
 			if (j > i) {
 				(*it)->calcXA();
 				vec3d nr_vec = (*it)->Nr_vec();
-				
-//stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_a0_XA0());
-				// ---> stokes_solver.addToDiagBlock(nr_vec, i, XA, YB, YC);
-				
-//				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_a1_XA3());
-				// ---> stokes_solver.addToDiagBlock(nr_vec, j, XA, YB, YC);
-				
-//				stokes_solver.appendToOffDiagBlock(nr_vec, i, j, (*it)->get_ro2_XA2());
-				// --->setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA,double YB, double YC){
-
+				stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_a0_XA0(), 0, 0);
+				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_a1_XA3(), 0, 0);
+				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_ro2_XA2(), 0, 0);
 				if (rhs) {
 					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term

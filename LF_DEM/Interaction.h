@@ -133,9 +133,15 @@ private:
 		double lambda_1_ = lambda_ + 1;
 		return 0.8*lambda*lambda/(lambda_1_*lambda_1_*lambda_1_*lambda_1_);
 	}
+
 	double func_g1_XG(double lambda_){
 		double lambda_1_ = lambda_ + 1;
 		return 3*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	
+	double func_g2_YG(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return 0.1*lambda_*(4-lambda_+7*lambda_*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
 	}
 
 	double func_g2_YH(double lambda_){
@@ -146,6 +152,25 @@ private:
 	double func_g5_YH(double lambda_){
 		double lambda_1_ = lambda_ + 1;
 		return 0.05*lambda_*lambda_*(1+7*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	
+	double func_g1_XM(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return (6./5)*lambda_*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	double func_g4_XM(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return (6./5)*lambda_*lambda_*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	}
+	
+	double func_g2_YM(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return (6./25)*lambda*(1-lambda+4*lambda*lambda)/(lambda_1_*lambda_1_*lambda_1_);
+	}
+
+	double func_g5_YM(double lambda_){
+		double lambda_1_ = lambda_ + 1;
+		return (3./50)*lambda*lambda*(7-10*lambda+7*lambda*lambda)/(lambda_1_*lambda_1_*lambda_1_);
 	}
 	
 	double lambda_square;
@@ -163,12 +188,19 @@ private:
 	double g4_YC;
 	double g1_XG;
 	double g1_inv_XG;
+	double g2_YG;
+	double g2_inv_YG;
 	double g2_YH;
 	double g2_inv_YH;
 	double g5_YH;
 	double g5_inv_YH;
+	double g1_XM;
+	double g1_inv_XM;
+	double g4_XM;
+	double g2_YM;
+	double g2_inv_YM;
+	double g5_YM;
 
-//	double g4_inv_YC;
 	
 	
 protected:
