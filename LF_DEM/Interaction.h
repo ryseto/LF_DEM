@@ -114,63 +114,71 @@ private:
 	
 	void calcLubConstants();
 	
-	double func_g1_XA(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return 2*lambda_*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g1_XA(double l){
+		double l_plus_1 = l+1;
+		return 2*l*l/(l_plus_1*l_plus_1*l_plus_1);
 	}
-	double func_g2_YA(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return (4./15)*lambda_*(2+lambda_+2*lambda_*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
+	
+	double func_g2_YA(double l){
+		double l_plus_1 = l+1;
+		return (4./15)*l*(2+l+2*l*l)/(l_plus_1*l_plus_1*l_plus_1);
 	}
-	double func_g2_YB(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return -0.2*lambda_*(4+lambda_)/(lambda_1_*lambda_1_);
+	
+	double func_g2_YB(double l){
+		double l_plus_1 = l+1;
+		return -(1./5)*l*(4+l)/(l_plus_1*l_plus_1);
 	}
-	double func_g2_YC(double lambda_){
-		return 0.4*lambda/(lambda_+1);
+	
+	/*
+	 * XC ---> no singular contribution
+	 */
+
+	double func_g2_YC(double l){
+		return (2./5)*l/(l+1);
 	}
-	double func_g4_YC(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return 0.8*lambda*lambda/(lambda_1_*lambda_1_*lambda_1_*lambda_1_);
+	
+	double func_g4_YC(double l){
+		double l_plus_1 = l+1;
+		return (4./5)*l*l/(l_plus_1*l_plus_1*l_plus_1*l_plus_1);
 	}
 
-	double func_g1_XG(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return 3*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g1_XG(double l){
+		double l_plus_1 = l+1;
+		return 3*l*l/(l_plus_1*l_plus_1*l_plus_1);
 	}
 	
-	double func_g2_YG(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return 0.1*lambda_*(4-lambda_+7*lambda_*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g2_YG(double l){
+		double l_plus_1 = l+1;
+		return (1./10)*l*(4-l+7*l*l)/(l_plus_1*l_plus_1*l_plus_1);
 	}
 
-	double func_g2_YH(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return 0.1*lambda_*(2-lambda_)/(lambda_1_*lambda_1_);
+	double func_g2_YH(double l){
+		double l_plus_1 = l+1;
+		return (1./10)*l*(2-l)/(l_plus_1*l_plus_1);
 	}
 	
-	double func_g5_YH(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return 0.05*lambda_*lambda_*(1+7*lambda_)/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g5_YH(double l){
+		double l_plus_1 = l+1;
+		return (1./20)*l*l*(1+7*l)/(l_plus_1*l_plus_1);
 	}
 	
-	double func_g1_XM(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return (6./5)*lambda_*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g1_XM(double l){
+		double l_plus_1 = l+1;
+		return (6./5)*l*l/(l_plus_1*l_plus_1*l_plus_1);
 	}
-	double func_g4_XM(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return (6./5)*lambda_*lambda_*lambda_/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g4_XM(double l){
+		double l_plus_1 = l+1;
+		return (6./5)*l*l*l/(l_plus_1*l_plus_1*l_plus_1);
 	}
 	
-	double func_g2_YM(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return (6./25)*lambda*(1-lambda+4*lambda*lambda)/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g2_YM(double l){
+		double l_plus_1 = l+1;
+		return (6./25)*l*(1-l+4*l*l)/(l_plus_1*l_plus_1*l_plus_1);
 	}
 
-	double func_g5_YM(double lambda_){
-		double lambda_1_ = lambda_ + 1;
-		return (3./50)*lambda*lambda*(7-10*lambda+7*lambda*lambda)/(lambda_1_*lambda_1_*lambda_1_);
+	double func_g5_YM(double l){
+		double l_plus_1 = l+1;
+		return (3./50)*l*l*(7-10*l+7*l*l)/(l_plus_1*l_plus_1*l_plus_1);
 	}
 	
 	double lambda_square;
@@ -179,6 +187,7 @@ private:
 	double lambda_1_square;
 	double lambda_1_cubic;
 	double g1_XA;
+	double g1_inv_XA;
 	double g2_YA;
 	double g2_inv_YA;
 	double g2_YB;
