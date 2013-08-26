@@ -233,17 +233,17 @@ private:
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 
 	 */
-    void setRow(const vec3d &nvec, int ii, int jj, double XA, double YBtilde, double YB, double YC);
+    void setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYBtilde, double scaledYB, double scaledYC);
 	
     /*
-     setColumn(const vec3d &nvec, int jj, double XA, double YB, double YBtilde, double YC) :
+     setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
 	 - CHOLMOD ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YBtilde, double YC);
+    void setColumn(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
     void completeResistanceMatrix_trilinos();
@@ -280,21 +280,21 @@ public:
 	 */
     void addToDiag(int ii, double FUvalue, double TWvalue);
 	
-    /* addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC);
+    /* addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYB, double scaledYC);
 	  Adds to block (ii, ii):
-	 - XA * |nvec><nvec| on FU part
-	 - YB * e_ijk nvec_ij on TU part (NOT IMPLEMENTED YET)
-	 - YC *(1 - |nvec><nvec|) on TW part (NOT IMPLEMENTED YET)
+	 - scaledXA * |nvec><nvec| on FU part
+	 - scaledYB * e_ijk nvec_ij on TU part (NOT IMPLEMENTED YET)
+	 - scaledYC *(1 - |nvec><nvec|) on TW part (NOT IMPLEMENTED YET)
 	 */
-    void addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC);
+    void addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYB, double scaledYC);
 	
     /*
-     setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC) :
+     setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYC) :
 	 Sets (ii,jj) block with:
-     -  XA * |nvec><nvec| for FU part
-	 -  YB * e_ijk nvec_ij for TU part ( YB is YB_12(lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
-	 -  YBtilde * e_ijk nvec_ij    ( YBtilde is YB_12(1/lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
-	 -  YC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
+     -  scaledXA * |nvec><nvec| for FU part
+	 -  scaledYB * e_ijk nvec_ij for TU part ( scaledYB is scaledYB_12(lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
+	 -  scaledYBtilde * e_ijk nvec_ij    ( scaledYBtilde is scaledYB_12(1/lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
+	 -  scaledYC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
 
      If the solver is Trilinos, it also sets the symmetric block (jj, ii)
 
@@ -302,7 +302,7 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YBtilde, double YC);
+    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC);
 	
 	/*
 	 doneBlocks(int i) :
