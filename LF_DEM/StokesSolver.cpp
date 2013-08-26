@@ -172,13 +172,13 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, do
 
 // Off-Diagonal Blocks Terms, FT/UW version
 void
-StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA,double YB, double YC){
+StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA,double YB, double YBtilde, double YC){
 	if (direct()) {
-		setColumn(nvec, ii, jj, XA, YB, YC);
+		setColumn(nvec, ii, jj, XA, YB, YBtilde, YC);
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-		setRow(nvec, ii, jj, XA, YB, YC);
+		setRow(nvec, ii, jj, XA, YB, YBtilde, YC);
 	}
 #endif
 }
@@ -327,40 +327,40 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[0][k6+4];
 			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[0][k6+5];
 
-			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[0][k6+1];  // symmetry  // column j6+1
+			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[0][k6+1];  // column j6+1
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[1][k4  ];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[1][k4+1];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[0][k6+4];  // antisymmetry
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[0][k6+4];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = odblocks[1][k4+2];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[1][k4+3];
 
-			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[0][k6+2];    // symmetry  // column j6+2
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[1][k4+1];    // symmetry
+			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[0][k6+2];  // column j6+2
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[1][k4+1];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[2][k2  ];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[0][k6+5];  // antisymmetry
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[1][k4+3];  // antisymmetry
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[0][k6+5];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[1][k4+3];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = odblocks[2][k2+1];
 			
-			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[0][k6+3];    // symmetry // column j6+3
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = -odblocks[0][k6+4];    // symmetry+antisymmetry
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = -odblocks[0][k6+5];    // symmetry+antisymmetry
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[3][k3  ];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[3][k3+1];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[3][k3+2];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[3][k6  ];   // column j6+3
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[3][k6+1];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[3][k6+2];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[3][k6+3];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[3][k6+4];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[3][k6+5];
 			
-			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = odblocks[0][k6+4];  // symmetry  // column j6+4
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = odblocks[1][k4+2]; // symmetry
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = -odblocks[1][k4+3]; // symmetry+antisymmetry
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[3][k3+1]; // symmetry
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[4][k2  ];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[4][k2+1];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[3][k6+1];  // column j6+4
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = odblocks[4][k4  ];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[4][k4+1];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[3][k6+4];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[4][k4+2];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[4][k4+3];
 			
-			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = odblocks[0][k6+5];  // symmetry  // column j6+5
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = odblocks[1][k4+3]; // symmetry
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[2][k2+1]; // symmetry
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[3][k3+2]; // symmetry
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[4][k2+1]; // symmetry
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[5][k   ];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[3][k6+2];  // column j6+5
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[4][k4+1];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[5][k2  ];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[3][k6+5];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[4][k4+3];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[5][k2+1];
 			
 		}
 	}
@@ -422,9 +422,9 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 		odblocks[0].resize(6*odblocks_nb);
 		odblocks[1].resize(4*odblocks_nb);
 		odblocks[2].resize(2*odblocks_nb);
-		odblocks[3].resize(3*odblocks_nb);
-		odblocks[4].resize(2*odblocks_nb);
-		odblocks[5].resize(odblocks_nb);
+		odblocks[3].resize(6*odblocks_nb);
+		odblocks[4].resize(4*odblocks_nb);
+		odblocks[5].resize(2*odblocks_nb);
 		
 		for(int k=0;k<6;k++){
 			for(int i=0; i<odblocks[k].size();i++){
@@ -690,7 +690,7 @@ StokesSolver::doneBlocks(int i){
 
 // odblocks fillings, for FT/UW version
 void
-StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC){
+StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YBtilde, double YC){
     double XA_n0 = XA*nvec.x;
     double XA_n1 = XA*nvec.y;
     double XA_n2 = XA*nvec.z;
@@ -738,21 +738,27 @@ StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB,
 	odblocks[3][i3  ] = 0; // column 3
 	odblocks[3][i3+1] = 0;
 	odblocks[3][i3+2] = 0;
+	odblocks[3][i3+3] = 0;
+	odblocks[3][i3+4] = 0;
+	odblocks[3][i3+5] = 0;
 	odblocks[4][i4  ] = 0; // column 4
 	odblocks[4][i4+1] = 0;
+	odblocks[4][i4+2] = 0;
+	odblocks[4][i4+3] = 0;
 	odblocks[5][i5  ] = 0; // column 5
+	odblocks[5][i5+1] = 0;
 
 	current_index_positions[0] += 6;
 	current_index_positions[1] += 4;
 	current_index_positions[2] += 2;
-	current_index_positions[3] += 3;
-	current_index_positions[4] += 2;
-	current_index_positions[5] += 1;
+	current_index_positions[3] += 6;
+	current_index_positions[4] += 4;
+	current_index_positions[5] += 2;
 }
 
 
 void
-StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC){
+StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double XA, double YB, double YBtilde, double YC){
 	cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
 	exit(1);
 
