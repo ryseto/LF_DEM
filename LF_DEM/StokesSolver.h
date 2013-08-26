@@ -292,9 +292,9 @@ public:
      setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYC) :
 	 Sets (ii,jj) block with:
      -  scaledXA * |nvec><nvec| for FU part
-	 -  scaledYB * e_ijk nvec_ij for TU part ( scaledYB is scaledYB_12(lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
-	 -  scaledYBtilde * e_ijk nvec_ij    ( scaledYBtilde is scaledYB_12(1/lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
-	 -  scaledYC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
+	 -  scaledYB * e_ijk nvec_ij for TU part ( scaledYB is scaledYB_12(lambda) in Jeffrey & Onishi's notations)
+	 -  scaledYBtilde * e_ijk nvec_ij    ( scaledYBtilde is scaledYB_12(1/lambda) in Jeffrey & Onishi's notations)
+	 -  scaledYC *(1 - |nvec><nvec|) for TW part
 
      If the solver is Trilinos, it also sets the symmetric block (jj, ii)
 

@@ -129,37 +129,54 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 void
 
 StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYB, double scaledYC){
-	
-    double scaledXA_n0 = scaledXA*nvec.x;
-    double scaledXA_n1 = scaledXA*nvec.y;
-    double scaledXA_n2 = scaledXA*nvec.z;
-    double scaledXA_n1n0 = scaledXA_n0*nvec.y;
-    double scaledXA_n2n1 = scaledXA_n1*nvec.z;
-    double scaledXA_n0n2 = scaledXA_n2*nvec.x;
+	double n0n0 = nvec.x*nvec.x;
+	double n0n1 = nvec.x*nvec.y;
+	double n0n2 = nvec.x*nvec.z;
+	double n1n1 = nvec.y*nvec.y;
+	double n1n2 = nvec.y*nvec.z;
+	double n2n2 = nvec.z*nvec.z;
 
 	if (direct()) {
 		int ii18 = 18*ii;
-		dblocks[ii18   ] += scaledXA_n0*nvec.x;   // 00 element of the dblock
-		dblocks[ii18+1 ] += scaledXA_n1n0;        // 10
-		dblocks[ii18+2 ] += scaledXA_n0n2;        // 20
-		dblocks[ii18+6 ] += scaledXA_n1*nvec.y;   // 11
-		dblocks[ii18+7 ] += scaledXA_n2n1;        // 21
-		dblocks[ii18+10] += scaledXA_n2*nvec.z;   // 22
+		dblocks[ii18   ] += scaledXA*n0n0;        // 00 element of the dblock
+		dblocks[ii18+1 ] += scaledXA*n0n1;        // 10
+		dblocks[ii18+2 ] += scaledXA*n0n2;        // 20
+		dblocks[ii18+3 ] += 0;                    // 30 
+		dblocks[ii18+4 ] += -scaledYB*nvec.z;     // 40
+		dblocks[ii18+5 ] += scaledYB*nvec.y;      // 50
+
+		dblocks[ii18+6 ] += scaledXA*n1n1;        // 11
+		dblocks[ii18+7 ] += scaledXA*n1n2;        // 21
+		dblocks[ii18+8 ] += 0;                    // 41
+		dblocks[ii18+9 ] += -scaledYB*nvec.x;     // 51
+
+		dblocks[ii18+10] += scaledXA*n2n2;        // 22
+		dblocks[ii18+11] += 0;                    // 32
+
+		dblocks[ii18+12] += scaledYC*(1-n0n0);    // 33
+		dblocks[ii18+13] += -scaledYC*n0n1;       // 43
+		dblocks[ii18+14] += -scaledYC*n0n2;       // 53
+		
+		dblocks[ii18+15] += scaledYC*(1-n1n1);    // 44
+		dblocks[ii18+16] += -scaledYC*n1n2;       // 54
+
+		dblocks[ii18+17] += scaledYC*(1-n2n2);    // 55
+
 	}
 #ifdef TRILINOS
 	if (iterative()) {
 		int iidof = dof*ii;
 		cerr << " Error : StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYB, double scaledYC) not implemented for TRILINOS yet ! " << endl;
 		exit(1);
-		values[iidof  ][0] += scaledXA_n0*nvec.x; // 00
-		values[iidof  ][1] += scaledXA_n1n0; // 01
-		values[iidof  ][2] += scaledXA_n0n2; // 02
-		values[iidof+1][0] += scaledXA_n1n0; // 10
-		values[iidof+1][1] += scaledXA_n1*nvec.y; // 11
-		values[iidof+1][2] += scaledXA_n2n1; // 12
-		values[iidof+2][0] += scaledXA_n0n2; // 20
-		values[iidof+2][1] += scaledXA_n2n1; // 21
-		values[iidof+2][2] += scaledXA_n2*nvec.z; // 20
+		values[iidof  ][0] += scaledXA*n0n0; // 00
+		values[iidof  ][1] += scaledXA*n0n1; // 01
+		values[iidof  ][2] += scaledXA*n0n2; // 02
+		values[iidof+1][0] += scaledXA*n0n1; // 10
+		values[iidof+1][1] += scaledXA*n1n1; // 11
+		values[iidof+1][2] += scaledXA*n1n2; // 12
+		values[iidof+2][0] += scaledXA*n0n2; // 20
+		values[iidof+2][1] += scaledXA*n1n2; // 21
+		values[iidof+2][2] += scaledXA*n2n2; // 22
 	}
 #endif
 }
@@ -190,7 +207,7 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA
  rows corresponding to column j are i[ p[j] ]  to i[ p[j+1] - 1 ]
  
  Hence:
- with p[j] < a < p[j+1]-1
+ with p[j]-1 < a < p[j+1]
         . . . . j . . . . . .
      .|         .            |
      .|         .            |
@@ -229,12 +246,13 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		//
 		// for 6j+2 --> 6j+5: same idea
 			
+		int od_nzero_nb = 6*(odbrows_table[j+1]-odbrows_table[j]);
 		((int*)chol_res_matrix->p)[j6  ] = j21   + 21*odbrows_table[j];
-		((int*)chol_res_matrix->p)[j6+1] = ((int*)chol_res_matrix->p)[j6] + 6 + 6*(odbrows_table[j+1]-odbrows_table[j]);
-		((int*)chol_res_matrix->p)[j6+2] = ((int*)chol_res_matrix->p)[j6+1] + 5 + 6*(odbrows_table[j+2]-odbrows_table[j+1]);
-		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + 6*(odbrows_table[j+3]-odbrows_table[j+2]);
-		((int*)chol_res_matrix->p)[j6+4] = ((int*)chol_res_matrix->p)[j6+3] + 3 + 6*(odbrows_table[j+4]-odbrows_table[j+3]);
-		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + 6*(odbrows_table[j+5]-odbrows_table[j+4]);	
+		((int*)chol_res_matrix->p)[j6+1] = ((int*)chol_res_matrix->p)[j6] + 6 + od_nzero_nb;
+		((int*)chol_res_matrix->p)[j6+2] = ((int*)chol_res_matrix->p)[j6+1] + 5 + od_nzero_nb;
+		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + od_nzero_nb;
+		((int*)chol_res_matrix->p)[j6+4] = ((int*)chol_res_matrix->p)[j6+3] + 3 + od_nzero_nb;
+		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + od_nzero_nb;	
 
 		int pj6   = ((int*)chol_res_matrix->p)[j6];
 		int pj6_1 = ((int*)chol_res_matrix->p)[j6+1];
@@ -275,7 +293,7 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((double*)chol_res_matrix->x)[pj6+5] = dblocks[j18+5];
 		((double*)chol_res_matrix->x)[pj6_1  ] = dblocks[j18+6];   // column j6+1
 		((double*)chol_res_matrix->x)[pj6_1+1] = dblocks[j18+7];
-		((double*)chol_res_matrix->x)[pj6_1+2] = -dblocks[j18+3];   // anti-symmetry
+		((double*)chol_res_matrix->x)[pj6_1+2] = -dblocks[j18+4];   // anti-symmetry
 		((double*)chol_res_matrix->x)[pj6_1+3] = dblocks[j18+8];
 		((double*)chol_res_matrix->x)[pj6_1+4] = dblocks[j18+9];
 		((double*)chol_res_matrix->x)[pj6_2  ] = dblocks[j18+10];   // column j6+2
@@ -686,27 +704,12 @@ StokesSolver::doneBlocks(int i){
 // odblocks fillings, for FT/UW version
 void
 StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
-    double scaledXA_n0 = scaledXA*nvec.x;
-    double scaledXA_n1 = scaledXA*nvec.y;
-    double scaledXA_n2 = scaledXA*nvec.z;
-    double scaledXA_n1n0 = scaledXA_n0*nvec.y;
-    double scaledXA_n2n1 = scaledXA_n1*nvec.z;
-    double scaledXA_n0n2 = scaledXA_n2*nvec.x;
-
-
-    double mscaledYB_n0 = -scaledYB*nvec.x;
-    double mscaledYB_n1 = -scaledYB*nvec.y;
-    double mscaledYB_n2 = -scaledYB*nvec.z;
-
-    double scaledYC_n0 = scaledYC*nvec.x;
-    double scaledYC_n1 = scaledYC*nvec.y;
-    double scaledYC_n2 = scaledYC*nvec.z;
-    double mscaledYC_n1n0 = -scaledYC_n0*nvec.y;
-    double mscaledYC_n2n1 = -scaledYC_n1*nvec.z;
-    double mscaledYC_n0n2 = -scaledYC_n2*nvec.x;
-    double scaledYC_1_m_n0n0 = scaledYC*(1-nvec.x*nvec.x);
-    double scaledYC_1_m_n1n1 = scaledYC*(1-nvec.y*nvec.y);
-    double scaledYC_1_m_n2n2 = scaledYC*(1-nvec.y*nvec.y);
+	double n0n0 = nvec.x*nvec.x;
+	double n0n1 = nvec.x*nvec.y;
+	double n0n2 = nvec.x*nvec.z;
+	double n1n1 = nvec.y*nvec.y;
+	double n1n2 = nvec.y*nvec.z;
+	double n2n2 = nvec.z*nvec.z;
 
 	odbrows.push_back(6*jj);
 	
@@ -717,30 +720,30 @@ StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double scaledXA, doub
 	int i4 = current_index_positions[4];
 	int i5 = current_index_positions[5];
 	
-	odblocks[0][i0  ] = scaledXA_n0*nvec.x; // column 0
-	odblocks[0][i0+1] = scaledXA_n1n0;
-	odblocks[0][i0+2] = scaledXA_n0n2;
-	odblocks[0][i0+3] = 0;
-	odblocks[0][i0+4] = 0;
-	odblocks[0][i0+5] = 0;
-	odblocks[1][i1  ] = scaledXA_n1*nvec.y; // column 1
-	odblocks[1][i1+1] = scaledXA_n2n1;
+	odblocks[0][i0  ] = scaledXA*n0n0; // column 0
+	odblocks[0][i0+1] = scaledXA*n0n1;
+	odblocks[0][i0+2] = scaledXA*n0n2;
+	odblocks[0][i0+3] = 0
+	odblocks[0][i0+4] = -scaledYB*nvec.z;
+	odblocks[0][i0+5] = scaledYB*nvec.y;
+	odblocks[1][i1  ] = scaledXA*n1n1; // column 1
+	odblocks[1][i1+1] = scaledXA*n1n2;
 	odblocks[1][i1+2] = 0;
-	odblocks[1][i1+3] = 0;
-	odblocks[2][i2  ] = scaledXA_n2*nvec.z; // column 2
+	odblocks[1][i1+3] = -scaledYB*nvec.x;
+	odblocks[2][i2  ] = scaledXA*n2n2; // column 2
 	odblocks[2][i2+1] = 0;
 	odblocks[3][i3  ] = 0; // column 3
-	odblocks[3][i3+1] = 0;
-	odblocks[3][i3+2] = 0;
-	odblocks[3][i3+3] = 0;
-	odblocks[3][i3+4] = 0;
-	odblocks[3][i3+5] = 0;
+	odblocks[3][i3+1] = -scaledYBtilde*nvec.z;
+	odblocks[3][i3+2] = scaledYBtilde*nvec.y;
+	odblocks[3][i3+3] = scaledYC*(1-n0n0);
+	odblocks[3][i3+4] = -scaledYC*n0n1;
+	odblocks[3][i3+5] = -scaledYC*n0n2;
 	odblocks[4][i4  ] = 0; // column 4
-	odblocks[4][i4+1] = 0;
-	odblocks[4][i4+2] = 0;
-	odblocks[4][i4+3] = 0;
+	odblocks[4][i4+1] = -scaledYBtilde*nvec.x;
+	odblocks[4][i4+2] = scaledYC*(1-n1n1);
+	odblocks[4][i4+3] = -scaledYC*n1n2;
 	odblocks[5][i5  ] = 0; // column 5
-	odblocks[5][i5+1] = 0;
+	odblocks[5][i5+1] = scaledYC*(1-n2n2);
 
 	current_index_positions[0] += 6;
 	current_index_positions[1] += 4;
