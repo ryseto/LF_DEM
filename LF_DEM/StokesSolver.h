@@ -117,7 +117,7 @@ class StokesSolver{
 				     | 18*i+5   18*i+9   18*i+11  18*i+14   18*i+16  18*i+17 |
                                                      "C11" subblock (TW)
 
-	  - odblocks: 18 independent elements per block.
+	  - odblocks: 24 independent elements per block.
 	              Organization is much closer to compressed-column form.
 				  All the odblocks values are stored columnwise in 6 vectors called odblocks[0-5]
 				  The corresponding locations in the ResistanceMatrix are stored in a vector* called odrows 
@@ -128,23 +128,23 @@ class StokesSolver{
 				  the ResistanceMatrix. Say j appears as the m^th interaction involving i. Then: 
 				  odbrows[odbrows_table[i]+m] = j, and the elements are accessed via:
 
-				  (only stored elements are shown)
-		| odblocks[0][6*t  ]    .                   .                   .                   .                   .              |
-"A21"	| odblocks[0][6*t+1]  odblocks[1][4*t  ]    .                   .                   .                   .              |
-		| odblocks[0][6*t+2]  odblocks[1][4*t+1]  odblocks[2][2*t  ]    .                   .                   .              |
-		| odblocks[0][6*t+3]    .                   .                 odblocks[3][3*t  ]    .                   .              |
-"B21"	| odblocks[0][6*t+4]  odblocks[1][4*t+2]    .                 odblocks[3][3*t+1]  odblocks[4][2*t  ]    .              | 
-		| odblocks[0][6*t+5]  odblocks[1][4*t+3]  odblocks[2][2*t+1]  odblocks[3][3*t+2]  odblocks[4][2*t+1]  odblocks[5][t  ] |
+				  (only stored elements are shown)                                "\tilde B21"
+		| odblocks[0][6*t  ]    .                   .                 odblocks[3][6*t  ]    .                   .                |
+"A21"	| odblocks[0][6*t+1]  odblocks[1][4*t  ]    .                 odblocks[3][6*t+1]  odblocks[4][4*t  ]    .                |
+		| odblocks[0][6*t+2]  odblocks[1][4*t+1]  odblocks[2][2*t  ]  odblocks[3][6*t+2]  odblocks[4][4*t+1]  odblocks[5][2*t  ] |
+		| odblocks[0][6*t+3]    .                   .                 odblocks[3][6*t+3]    .                   .                |
+"B21"	| odblocks[0][6*t+4]  odblocks[1][4*t+2]    .                 odblocks[3][6*t+4]  odblocks[4][4*t+2]    .                | 
+		| odblocks[0][6*t+5]  odblocks[1][4*t+3]  odblocks[2][2*t+1]  odblocks[3][6*t+5]  odblocks[4][4*t+3]  odblocks[5][2*t+1] |
 		                                                                          "C21"
 	  with t=odbrows_table[i]+m
 	  
-	             (all elements)
-		| odblocks[0][6*t  ]  odblocks[0][6*t+1]  odblocks[0][6*t+2]  odblocks[0][6*t+3]  odblocks[0][6*t+4]  odblocks[0][6*t+5] |
-"A21"	| odblocks[0][6*t+1]  odblocks[1][4*t  ]  odblocks[1][4*t+1] -odblocks[0][6*t+4]  odblocks[1][4*t+2]  odblocks[1][4*t+3] |
-		| odblocks[0][6*t+2]  odblocks[1][4*t+1]  odblocks[2][2*t  ] -odblocks[0][6*t+5] -odblocks[1][4*t+3]  odblocks[2][2*t+1] |
-		| odblocks[0][6*t+3] -odblocks[0][6*t+4] -odblocks[0][6*t+5]  odblocks[3][3*t  ]  odblocks[3][3*t+1]  odblocks[3][3*t+2] |
-"B21"	| odblocks[0][6*t+4]  odblocks[1][4*t+2] -odblocks[1][4*t+3]  odblocks[3][3*t+1]  odblocks[4][2*t  ]  odblocks[4][2*t+1] | 
-		| odblocks[0][6*t+5]  odblocks[1][4*t+3]  odblocks[2][2*t+1]  odblocks[3][3*t+2]  odblocks[4][2*t+1]  odblocks[5][t    ] |
+	             (all elements)                                                   "\tilde B21"
+		| odblocks[0][6*t  ]  odblocks[0][6*t+1]  odblocks[0][6*t+2]  odblocks[3][6*t  ] -odblocks[3][6*t+1] -odblocks[3][6*t+2] |
+"A21"	| odblocks[0][6*t+1]  odblocks[1][4*t  ]  odblocks[1][4*t+1]  odblocks[3][6*t+1]  odblocks[4][4*t  ] -odblocks[4][4*t+1] |
+		| odblocks[0][6*t+2]  odblocks[1][4*t+1]  odblocks[2][2*t  ]  odblocks[3][6*t+2]  odblocks[4][4*t+1]  odblocks[5][2*t  ] |
+		| odblocks[0][6*t+3] -odblocks[0][6*t+4] -odblocks[0][6*t+5]  odblocks[3][6*t+3]  odblocks[3][6*t+4]  odblocks[3][6*t+5] |
+"B21"	| odblocks[0][6*t+4]  odblocks[1][4*t+2] -odblocks[1][4*t+3]  odblocks[3][6*t+4]  odblocks[4][4*t+2]  odblocks[4][4*t+3] | 
+		| odblocks[0][6*t+5]  odblocks[1][4*t+3]  odblocks[2][2*t+1]  odblocks[3][6*t+5]  odblocks[4][4*t+3]  odblocks[5][2*t+1] |
 		                                                                          "C21"
 	  with t=odbrows_table[i]+m
 
@@ -233,17 +233,17 @@ private:
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 
 	 */
-    void setRow(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
+    void setRow(const vec3d &nvec, int ii, int jj, double XA, double YBtilde, double YB, double YC);
 	
     /*
-     setColumn(const vec3d &nvec, int jj, double XA, double YB, double YC) :
+     setColumn(const vec3d &nvec, int jj, double XA, double YB, double YBtilde, double YC) :
 	 - CHOLMOD ONLY
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
+    void setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB, double YBtilde, double YC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
     void completeResistanceMatrix_trilinos();
@@ -292,8 +292,9 @@ public:
      setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC) :
 	 Sets (ii,jj) block with:
      -  XA * |nvec><nvec| for FU part
-	 -  YB * e_ijk nvec_ij for TU part (NOT IMPLEMENTED YET)
-	 - YC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
+	 -  YB * e_ijk nvec_ij for TU part ( YB is YB_12(lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
+	 -  YBtilde * e_ijk nvec_ij    ( YBtilde is YB_12(1/lambda) in Jeffrey & Onishi's notations) (NOT IMPLEMENTED YET)
+	 -  YC *(1 - |nvec><nvec|) for TW part (NOT IMPLEMENTED YET)
 
      If the solver is Trilinos, it also sets the symmetric block (jj, ii)
 
@@ -301,7 +302,7 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YC);
+    void setOffDiagBlock(const vec3d &nvec, int ii, int jj, double XA, double YB, double YBtilde, double YC);
 	
 	/*
 	 doneBlocks(int i) :
