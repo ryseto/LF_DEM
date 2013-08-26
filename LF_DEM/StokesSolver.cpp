@@ -690,7 +690,6 @@ StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double XA, double YB,
     double XA_n2n1 = XA_n1*nvec.z;
     double XA_n0n2 = XA_n2*nvec.x;
 
-
     double mYB_n0 = -YB*nvec.x;
     double mYB_n1 = -YB*nvec.y;
     double mYB_n2 = -YB*nvec.z;

@@ -285,7 +285,6 @@ public:
 	
 	void calcXA();
 	void calcYA();
-
 	void calcYB();
 	void calcYC();
 
@@ -295,11 +294,9 @@ public:
 	void calcYM();
 	void calcYH();
 	
-	
-	inline double get_a0_XA0(){return a0*XA[0];}
-	inline double get_a1_XA3(){return a1*XA[3];}
-	inline double get_ro2_XA2(){return ro_half*XA[2];}
-	
+	inline double get_scaled_XA0(){return a0*XA[0];}
+	inline double get_scaled_XA3(){return a1*XA[3];}
+	inline double get_scaled_XA2(){return ro_half*XA[2];}
 	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();

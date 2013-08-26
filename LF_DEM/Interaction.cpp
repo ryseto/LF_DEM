@@ -487,11 +487,9 @@ Interaction::calcResistanceFunctions(){
 		XA[j] = cXA[j]*lub_coeff;
 		YA[j] = cYA[j]*log_lub_coeff;
 		YB[j] = cYB[j]*log_lub_coeff;
-		YC[j] = cYC[j]*lub_coeff;
+		YC[j] = cYC[j]*log_lub_coeff;
 	}
 }
-
-
 
 void
 Interaction::calcXA(){
@@ -517,7 +515,7 @@ Interaction::calcYB(){
 void
 Interaction::calcYC(){
 	for (int j=0; j<4; j++) {
-		YC[j] = cYC[j]*lub_coeff;
+		YC[j] = cYC[j]*log_lub_coeff;
 	}
 }
 
