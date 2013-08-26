@@ -367,53 +367,42 @@ Interaction::calcLubConstants(){
 	lambda_cubic = lambda*lambda*lambda;
 	lambda_1 = 1+lambda;
 	lambda_1_square = lambda_1*lambda_1;
-	g1_XA = func_g1_XA(lambda);
-	g1_inv_XA = func_g1_XA(1/lambda);
-	g2_YA = func_g2_YA(lambda);
-	g2_inv_YA = func_g2_YA(1/lambda);
-	g2_YB = func_g2_YB(lambda);
-	g2_inv_YB = func_g2_YB(1/lambda);
-	g2_YC = func_g2_YC(lambda);
-	g2_inv_YC = func_g2_YC(1/lambda);
-	g4_YC = func_g4_YC(lambda);
-	g1_XG = func_g1_XG(lambda);
-	g1_inv_XG = func_g1_XG(1/lambda);
-	g2_YG = func_g2_YG(lambda);
-	g2_inv_YG = func_g2_YG(1/lambda);
-	g2_YH = func_g2_YH(lambda);
-	g2_inv_YH = func_g2_YH(1/lambda);
-	g5_YH = func_g5_YH(lambda);
-	g5_inv_YH = func_g5_YH(1/lambda);
-	g1_XM = func_g1_XM(lambda);
-	g1_inv_XM = func_g1_XM(1/lambda);
-	g4_XM = func_g4_XM(lambda);
-	g2_YM = func_g2_YM(lambda);
-	g2_inv_YM = func_g2_YM(1/lambda);
-	g5_YM = func_g5_YM(lambda);
-
+	a0a0_23 = a0*a0*(2./3); // (2/3)*a0*a0
+	a1a1_23 = a1*a1*(2./3); // (2/3)*a1*a1
+	roro_6 = ro*ro/6; // (1/6)*ro*ro
+	a0a0a0_53 = a0a0_23*a0*(5./2); // (5/3)*a0*a0*a0 = (5/2)*a0*(2/3)*a0*a0
+	a1a1a1_53 = a1a1_23*a1*(5./2); // (5/3)*a1*a1*a1 = (5/2)*a1*(2/3)*a1*a1
+	rororo_524 = roro_6*ro/4;     // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(1/4)
 	/* XA
 	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
+	g1_XA = func_g1_XA(lambda);
+	g1_inv_XA = func_g1_XA(1/lambda);
 	cXA[0] = g1_XA;
 	cXA[1] = (-2/lambda_1)*g1_XA;
-	cXA[2] = g1_XA;
+	cXA[2] = cXA[0];
 	cXA[3] = g1_inv_XA;
 	/* YA
 	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l)
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
+	g2_YA = func_g2_YA(lambda);
+	g2_inv_YA = func_g2_YA(1/lambda);
 	cYA[0] = g2_YA;
 	cYA[1] = (-2/lambda_1)*g2_YA;
-	cYA[2] = g2_YA;
+	cYA[2] = cYA[0];
 	cYA[3] = g2_inv_YA;
 	/* YB
 	 * Yab(l) = -Y(3-a)(3-b)(1/l)
 	 * Y21(l) = -Y12(1/l)
 	 * Y22(l) = -Y11(1/l)
 	 */
+	g2_YB = func_g2_YB(lambda);
+	g2_inv_YB = func_g2_YB(1/lambda);
+	g4_YC = func_g4_YC(lambda);
 	cYB[0] = g2_YB;
 	cYB[1] = -4/lambda_1_square*g2_YB;
 	cYB[2] = 4*lambda_square/lambda_1_square*g2_inv_YB;
@@ -423,20 +412,30 @@ Interaction::calcLubConstants(){
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
+	g2_YC = func_g2_YC(lambda);
+	g2_inv_YC = func_g2_YC(1/lambda);
 	cYC[0] = g2_YC;
 	cYC[1] = g4_YC;
-	cYC[2] = g4_YC;
+	cYC[2] = cYC[1];
 	cYC[3] = g2_inv_YC;
 	/* XG
 	 * Xab(l) = -X(3-a)(3-b)(1/l)
 	 * X21(l) = -X12(1/l)
 	 * X22(l) = -X11(1/l)
 	 */
+	g1_XG = func_g1_XG(lambda);
+	g1_inv_XG = func_g1_XG(1/lambda);
 	cXG[0] = g1_XG;
 	cXG[1] = -4/lambda_1_square*g1_XG;
 	cXG[2] = 4*lambda_square/lambda_1_square*g1_inv_XG;
 	cXG[3] = -g1_inv_XG;
-
+	/* YG
+	 * Yab(l) = -Y(3-a)(3-b)(1/l)
+	 * Y21(l) = -Y12(1/l)
+	 * Y22(l) = -Y11(1/l)
+	 */
+	g2_YG = func_g2_YG(lambda);
+	g2_inv_YG = func_g2_YG(1/lambda);
 	cYG[0] = g2_YG;
 	cYG[1] = -(4/lambda_1_square)*g2_YG;
 	cYG[2] = (4*lambda_square/lambda_1_square)*g2_inv_YG;
@@ -446,6 +445,10 @@ Interaction::calcLubConstants(){
 	 * Y21(l) = Y12(1/l)
 	 * Y22(l) = Y11(1/l)
 	 */
+	g2_YH = func_g2_YH(lambda);
+	g2_inv_YH = func_g2_YH(1/lambda);
+	g5_YH = func_g5_YH(lambda);
+	g5_inv_YH = func_g5_YH(1/lambda);
 	cYH[0] = g2_YH;
 	cYH[1] = (8/lambda_1_cubic)*g5_YH;
 	cYH[2] = (8*lambda_cubic/lambda_1_cubic)*g5_inv_YH;
@@ -455,23 +458,39 @@ Interaction::calcLubConstants(){
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
+	g1_XM = func_g1_XM(lambda);
+	g1_inv_XM = func_g1_XM(1/lambda);
+	g4_XM = func_g4_XM(lambda);
 	cXM[0] = g1_XM;
 	cXM[1] = (8/lambda_1_cubic)*g4_XM;
-	cXM[2] = g1_XM;
+	cXM[2] = cXM[1];
 	cXM[3] = g1_inv_XM;
 	/* YM
-		* Yab(l) = Yba(l)= Y(3-a)(3-b)(1/l)
+	 * Yab(l) = Yba(l)= Y(3-a)(3-b)(1/l)
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
+	g2_YM = func_g2_YM(lambda);
+	g2_inv_YM = func_g2_YM(1/lambda);
+	g5_YM = func_g5_YM(lambda);
 	cYM[0] = g2_YM;
 	cYM[1] = (8/lambda_1_cubic)*g5_YM;
-	cYM[2] = (8/lambda_1_cubic)*g5_YM;
+	cYM[2] = cYM[1];
 	cYM[3] = g2_inv_YM;
-
 }
 
 // Resistance functions
+
+void
+Interaction::calcResistanceFunctions(){
+	for (int j=0; j<4; j++) {
+		XA[j] = cXA[j]*lub_coeff;
+		YA[j] = cYA[j]*log_lub_coeff;
+		YB[j] = cYB[j]*log_lub_coeff;
+		YC[j] = cYC[j]*log_lub_coeff;
+	}
+}
+
 void
 Interaction::calcXA(){
 	for (int j=0; j<4; j++) {
@@ -496,7 +515,7 @@ Interaction::calcYB(){
 void
 Interaction::calcYC(){
 	for (int j=0; j<4; j++) {
-		YC[j] = cYC[j]*lub_coeff;
+		YC[j] = cYC[j]*log_lub_coeff;
 	}
 }
 
@@ -539,14 +558,14 @@ void
 Interaction::GE(double *GEi, double *GEj){
 	calcXG();
 	double nxnz_sr = nr_vec.x*nr_vec.z;
-	double common_factor_1 = (4*a0*a0*XG[0]+ro*ro*XG[2])/6;
-	GEi[0] = common_factor_1*nxnz_sr*nr_vec.x;
-	GEi[1] = common_factor_1*nxnz_sr*nr_vec.y;
-	GEi[2] = common_factor_1*nxnz_sr*nr_vec.z;
-	double common_factor_2 = (4*a1*a1*XG[3]+ro*ro*XG[1])/6;
-	GEj[0] = common_factor_2*nxnz_sr*nr_vec.x;
-	GEj[1] = common_factor_2*nxnz_sr*nr_vec.y;
-	GEj[2] = common_factor_2*nxnz_sr*nr_vec.z;
+	double common_factor_1 = (a0a0_23*XG[0]+roro_6*XG[2])*nxnz_sr;
+	double common_factor_2 = (a1a1_23*XG[3]+roro_6*XG[1])*nxnz_sr;
+	GEi[0] = common_factor_1*nr_vec.x;
+	GEi[1] = common_factor_1*nr_vec.y;
+	GEi[2] = common_factor_1*nr_vec.z;
+	GEj[0] = common_factor_2*nr_vec.x;
+	GEj[1] = common_factor_2*nr_vec.y;
+	GEj[2] = common_factor_2*nr_vec.z;
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
@@ -564,8 +583,8 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double n2n2 = nr_vec.z*nr_vec.z;
-	double common_factor_i = -dot(nr_vec, (4*a0*a0*XG[0]*vi+ro*ro*XG[1]*vj)/6);
-	double common_factor_j = -dot(nr_vec, (4*a1*a1*XG[3]*vj+ro*ro*XG[2]*vi)/6);
+	double common_factor_i = -dot(nr_vec, a0a0_23*XG[0]*vi+roro_6*XG[1]*vj);
+	double common_factor_j = -dot(nr_vec, a1a1_23*XG[3]*vj+roro_6*XG[2]*vi);
 	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
 	stresslet_i *= common_factor_i;
 	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
@@ -589,19 +608,18 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 
 void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double n0n0_13 = nr_vec.x*nr_vec.x;
-	double n1n1_13 = nr_vec.y*nr_vec.y;
+	double n0n0 = nr_vec.x*nr_vec.x;
+	double n1n1 = nr_vec.y*nr_vec.y;
 	double n0n1 = nr_vec.x*nr_vec.y;
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double n2n2 = nr_vec.z*nr_vec.z;
-	double rororo = ro*ro*ro;
 	calcXM();
-	double common_factor_i = 5*(a0*a0*a0*XM[0]/3+rororo*XM[1]/24)*n0n2;
-	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
+	double common_factor_i = (a0a0a0_53*XM[0]+rororo_524*XM[1])*n0n2;
+	stresslet_i.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
 	stresslet_i *= common_factor_i;
-	double common_factor_j = 5*(a1*a1*a1*XM[3]/3+rororo*XM[2]/24)*n0n2;
-	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
+	double common_factor_j = (a1a1a1_53*XM[3]+rororo_524*XM[2])*n0n2;
+	stresslet_j.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
 	stresslet_j *= common_factor_j;
 }
 
@@ -643,13 +661,14 @@ Interaction::evaluateLubricationForce(){
 		vi.x -= sys->position[par_num[0]].z;
 		vj.x -= sys->position[par_num[1]].z;
 	}
-	calcXA();
+	//	calcXA();
+	calcResistanceFunctions();
 	double cf_AU_i = -dot(a0*XA[0]*vi+0.5*ro*XA[1]*vj, nr_vec);
 	/*
 	 *  Second -tildeG*(-Einf)term
 	 */
 	calcXG();
-	double cf_GE_i = nr_vec.x*nr_vec.z*(a0*a0*XG[0]*4+ro*ro*XG[2])/6;
+	double cf_GE_i = nr_vec.x*nr_vec.z*(a0a0_23*XG[0]+roro_6*XG[2]);
 	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
 }
 
