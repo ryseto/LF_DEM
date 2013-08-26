@@ -186,6 +186,16 @@ private:
 	double lambda_1;
 	double lambda_1_square;
 	double lambda_1_cubic;
+	double cXA[4];
+	double cYA[4];
+	double cYB[4];
+	double cYC[4];
+	double cXG[4];
+	double cYG[4];
+	double cYH[4];
+	double cXM[4];
+	double cYM[4];
+	
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -195,6 +205,7 @@ private:
 	double g2_YC;
 	double g2_inv_YC;
 	double g4_YC;
+	
 	double g1_XG;
 	double g1_inv_XG;
 	double g2_YG;

@@ -83,6 +83,7 @@ Interaction::activate(int i, int j){
 	cnt_sliding = 0;
 	strain_lub_start = sys->Shear_strain(); // for output
 	duration_contact = 0; // for output
+	calcLubConstants();
 }
 
 void
@@ -389,124 +390,149 @@ Interaction::calcLubConstants(){
 	g2_YM = func_g2_YM(lambda);
 	g2_inv_YM = func_g2_YM(1/lambda);
 	g5_YM = func_g5_YM(lambda);
+
+	/* XA
+	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
+	 * X21(l) = X12(l)
+	 * X22(l) = X11(1/l)
+	 */
+	cXA[0] = g1_XA;
+	cXA[1] = (-2/lambda_1)*g1_XA;
+	cXA[2] = g1_XA;
+	cXA[3] = g1_inv_XA;
+	/* YA
+	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l)
+	 * Y21(l) = Y12(l)
+	 * Y22(l) = Y11(1/l)
+	 */
+	cYA[0] = g2_YA;
+	cYA[1] = (-2/lambda_1)*g2_YA;
+	cYA[2] = g2_YA;
+	cYA[3] = g2_inv_YA;
+	/* YB
+	 * Yab(l) = -Y(3-a)(3-b)(1/l)
+	 * Y21(l) = -Y12(1/l)
+	 * Y22(l) = -Y11(1/l)
+	 */
+	cYB[0] = g2_YB;
+	cYB[1] = -4/lambda_1_square*g2_YB;
+	cYB[2] = 4*lambda_square/lambda_1_square*g2_inv_YB;
+	cYB[3] = -g2_inv_YB;
+	/* YC
+	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l})
+	 * Y21(l) = Y12(l)
+	 * Y22(l) = Y11(1/l)
+	 */
+	cYC[0] = g2_YC;
+	cYC[1] = g4_YC;
+	cYC[2] = g4_YC;
+	cYC[3] = g2_inv_YC;
+	/* XG
+	 * Xab(l) = -X(3-a)(3-b)(1/l)
+	 * X21(l) = -X12(1/l)
+	 * X22(l) = -X11(1/l)
+	 */
+	cXG[0] = g1_XG;
+	cXG[1] = -4/lambda_1_square*g1_XG;
+	cXG[2] = 4*lambda_square/lambda_1_square*g1_inv_XG;
+	cXG[3] = -g1_inv_XG;
+
+	cYG[0] = g2_YG;
+	cYG[1] = -(4/lambda_1_square)*g2_YG;
+	cYG[2] = (4*lambda_square/lambda_1_square)*g2_inv_YG;
+	cYG[3] = -g2_inv_YG;
+	/* YH
+	 * Yab(l) = Y(3-a)(3-b)(1/l)
+	 * Y21(l) = Y12(1/l)
+	 * Y22(l) = Y11(1/l)
+	 */
+	cYH[0] = g2_YH;
+	cYH[1] = (8/lambda_1_cubic)*g5_YH;
+	cYH[2] = (8*lambda_cubic/lambda_1_cubic)*g5_inv_YH;
+	cYH[3] = g2_inv_YH;
+	/* XM
+	 * Xab(l) = Xba(l)= X(3-a)(3-b)(1/l)
+	 * X21(l) = X12(l)
+	 * X22(l) = X11(1/l)
+	 */
+	cXM[0] = g1_XM;
+	cXM[1] = (8/lambda_1_cubic)*g4_XM;
+	cXM[2] = g1_XM;
+	cXM[3] = g1_inv_XM;
+	/* YM
+		* Yab(l) = Yba(l)= Y(3-a)(3-b)(1/l)
+	 * Y21(l) = Y12(l)
+	 * Y22(l) = Y11(1/l)
+	 */
+	cYM[0] = g2_YM;
+	cYM[1] = (8/lambda_1_cubic)*g5_YM;
+	cYM[2] = (8/lambda_1_cubic)*g5_YM;
+	cYM[3] = g2_inv_YM;
+
 }
 
 // Resistance functions
 void
 Interaction::calcXA(){
-	/*
-	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
-	 * X21(l) = X12(l)
-	 * X22(l) = X11(1/l)
-	 */
-	XA[0] = g1_XA*lub_coeff; // g1*(1/xi)
-	XA[1] = (-2/lambda_1)*g1_XA*lub_coeff;
-	XA[2] = XA[1];
-	XA[3] = g1_inv_XA*lub_coeff;
+	for (int j=0; j<4; j++) {
+		XA[j] = cXA[j]*lub_coeff;
+	}
 }
 
 void
 Interaction::calcYA(){
-	/*
-	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l)
-	 * Y21(l) = Y12(l)
-	 * Y22(l) = Y11(1/l)
-	 */
-	YA[0] = g2_YA*log_lub_coeff;
-	YA[1] = (-2/lambda_1)*g2_YA*log_lub_coeff;
-	YA[2] = YA[1];
-	YA[3] = g2_inv_YA*log_lub_coeff;
+	for (int j=0; j<4; j++) {
+		YA[j] = cYA[j]*log_lub_coeff;
+	}
 }
 
 void
 Interaction::calcYB(){
-	/*
-	 * Yab(l) = -Y(3-a)(3-b)(1/l)
-	 * Y21(l) = -Y12(1/l)
-	 * Y22(l) = -Y11(1/l)
-	 */
-	YB[0] = g2_YB*log_lub_coeff;
-	YB[1] = -4/lambda_1_square*g2_YB*log_lub_coeff;
-	YB[2] = 4*lambda_square/lambda_1_square*g2_inv_YB*log_lub_coeff;
-	YB[3] = -g2_inv_YB*log_lub_coeff;
+ 	for (int j=0; j<4; j++) {
+		YB[j] = cYB[j]*log_lub_coeff;
+	}
 }
 
 void
 Interaction::calcYC(){
-	/*
-	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l})
-	 * Y21(l) = Y12(l)
-	 * Y22(l) = Y11(1/l)
-	 */
-	YC[0] = g2_YC*log_lub_coeff;
-	YC[1] = g4_YC*log_lub_coeff;
-	YC[2] = YC[1];
-	YC[3] = g2_inv_YC*log_lub_coeff;
+	for (int j=0; j<4; j++) {
+		YC[j] = cYC[j]*lub_coeff;
+	}
 }
 
 void
 Interaction::calcXG(){
-	/*
-	 * Xab(l) = -X(3-a)(3-b)(1/l)
-	 * X21(l) = -X12(1/l)
-	 * X22(l) = -X11(1/l)
-	 */
-	XG[0] = g1_XG*lub_coeff;
-	XG[1] = -4/lambda_1_square*g1_XG*lub_coeff;
-	XG[2] = 4*lambda_square/lambda_1_square*g1_inv_XG*lub_coeff;
-	XG[3] = -g1_inv_XG*lub_coeff;
+	for (int j=0; j<4; j++) {
+		XG[j] = cXG[j]*lub_coeff;
+	}
 }
 
 void
 Interaction::calcYG(){
-	/*
-	 * Yab(l) = -Y(3-a)(3-b)(1/l)
-	 * Y21(l) = -Y12(1/l)
-	 * Y22(l) = -Y11(1/l)
-	 */
-	YG[0] = g2_YG*log_lub_coeff;
-	YG[1] = -(4/lambda_1_square)*g2_YG*log_lub_coeff;
-	YG[2] = (4*lambda_square/lambda_1_square)*g2_inv_YG*log_lub_coeff;
-	YG[3] = -g2_inv_YG*log_lub_coeff;
+	for (int j=0; j<4; j++) {
+		YG[j] = cYG[j]*log_lub_coeff;
+	}
 }
 
 void
 Interaction::calcYH(){
-	/*
-	 * Yab(l) = Y(3-a)(3-b)(1/l)
-	 * Y21(l) = Y12(1/l)
-	 * Y22(l) = Y11(1/l)
-	 */
-	YH[0] = g2_YH*log_lub_coeff;
-	YH[1] = (8/lambda_1_cubic)*g5_YH*log_lub_coeff;
-	YH[2] = (8*lambda_cubic/lambda_1_cubic)*g5_inv_YH*log_lub_coeff;
-	YH[3] = g2_inv_YH*log_lub_coeff;
+	for (int j=0; j<4; j++) {
+		YH[j] = cYH[j]*log_lub_coeff;
+	}
 }
 
 void
 Interaction::calcXM(){
-	/*
-	 * Xab(l) = Xba(l)= X(3-a)(3-b)(1/l)
-	 * X21(l) = X12(l)
-	 * X22(l) = X11(1/l)
-	 */
-	XM[0] = g1_XM*lub_coeff;
-	XM[1] = (8/lambda_1_cubic)*g4_XM*lub_coeff;
-	XM[2] = XM[1];
-	XM[3] = g1_inv_XM*lub_coeff;
+	for (int j=0; j<4; j++) {
+		XM[j] = cXM[j]*lub_coeff;
+	}
 }
 
 void
 Interaction::calcYM(){
-	/*
-	 * Yab(l) = Yba(l)= Y(3-a)(3-b)(1/l)
-	 * Y21(l) = Y12(l)
-	 * Y22(l) = Y11(1/l)
-	 */
-	YM[0] = g2_YM*log_lub_coeff;
-	YM[1] = (8/lambda_1_cubic)*g5_YM*log_lub_coeff;
-	YM[2] = YM[1];
-	YM[3] = g2_inv_YM*log_lub_coeff;
+	for (int j=0; j<4; j++) {
+		YM[j] = cYM[j]*log_lub_coeff;
+	}
 }
 
 void
