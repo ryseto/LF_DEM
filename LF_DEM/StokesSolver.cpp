@@ -74,9 +74,6 @@ StokesSolver::initialize(){
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
-
-	
-	
 #ifdef TRILINOS
 	// TRILINOS init and parameters
 	// initialize solver
@@ -93,8 +90,6 @@ StokesSolver::initialize(){
 	// initialize empty linear problem
     tril_stokes_equation = rcp(new Belos::LinearProblem <SCAL, VEC, MAT> ());
 #endif
-
-
 	// resistance matrix characteristics (see header for matrix description)
 	res_matrix_linear_size = np6;
 	dblocks_size = 18*np;
@@ -119,7 +114,6 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-
 		cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
 		exit(1);
 
@@ -130,7 +124,6 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 	}
 #endif
 }
-
 
 // Diagonal Blocks Terms, FT/UW version
 void
