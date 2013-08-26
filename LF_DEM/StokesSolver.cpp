@@ -135,7 +135,6 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 // Diagonal Blocks Terms, FT/UW version
 void
 StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double XA, double YB, double YC){
-	
     double XA_n0 = XA*nvec.x;
     double XA_n1 = XA*nvec.y;
     double XA_n2 = XA*nvec.z;

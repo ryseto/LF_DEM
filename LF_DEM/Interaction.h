@@ -195,6 +195,12 @@ private:
 	double cYH[4];
 	double cXM[4];
 	double cYM[4];
+	double a0a0_23;
+	double a1a1_23;
+	double roro_6;
+	double a0a0a0_53;
+	double a1a1a1_53;
+	double rororo_524;
 	
 	double g1_XA;
 	double g1_inv_XA;
@@ -221,7 +227,7 @@ private:
 	double g2_inv_YM;
 	double g5_YM;
 
-	
+
 	
 protected:
 public:
@@ -274,6 +280,9 @@ public:
 	//=============  Resistance Matrices ====================/
 
 	void GE(double *GEi, double *GEj);
+	
+	void calcResistanceFunctions();
+	
 	void calcXA();
 	void calcYA();
 
@@ -284,13 +293,14 @@ public:
 	void calcYG();
 	void calcXM();
 	void calcYM();
-	
 	void calcYH();
 	
 	
 	inline double get_a0_XA0(){return a0*XA[0];}
 	inline double get_a1_XA3(){return a1*XA[3];}
 	inline double get_ro2_XA2(){return ro_half*XA[2];}
+	
+	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
 	void addUpContactForceTorque();
