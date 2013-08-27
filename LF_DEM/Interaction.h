@@ -16,6 +16,7 @@
 #include "vec3d.h"
 #include "System.h"
 #include "StressTensor.h"
+
 using namespace std;
 class System;
 
@@ -72,8 +73,6 @@ private:
 	double duration_contact; // enture duraction for h < 0
 	double max_stress; // Maximum value of stress in the all history of this object.
 	int cnt_sliding;  // to count the number of slips.
-	
-	
 #ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;
@@ -87,11 +86,7 @@ private:
 	//======= particles data  ====================//
 	double lambda; // a1/a0
 	double invlambda; // a0/a1
-	
-	//======= relative position/velocity  ========//
-//	void calcContactVelocity_predictor();
-//	void calcContactVelocity_corrector();
-	
+
 	//======= internal state switches  ===========//
 	void activate_contact();
 	void deactivate_contact();
@@ -113,79 +108,11 @@ private:
 	//==========================================================================//
 	
 	void calcLubConstants();
-	
-	double func_g1_XA(double l){
-		double l_plus_1 = l+1;
-		return 2*l*l/(l_plus_1*l_plus_1*l_plus_1);
-	}
-	
-	double func_g2_YA(double l){
-		double l_plus_1 = l+1;
-		return (4./15)*l*(2+l+2*l*l)/(l_plus_1*l_plus_1*l_plus_1);
-	}
-	
-	double func_g2_YB(double l){
-		double l_plus_1 = l+1;
-		return -(1./5)*l*(4+l)/(l_plus_1*l_plus_1);
-	}
-	
-	/*
-	 * XC ---> no singular contribution
-	 */
-
-	double func_g2_YC(double l){
-		return (2./5)*l/(l+1);
-	}
-	
-	double func_g4_YC(double l){
-		double l_plus_1 = l+1;
-		return (4./5)*l*l/(l_plus_1*l_plus_1*l_plus_1*l_plus_1);
-	}
-
-	double func_g1_XG(double l){
-		double l_plus_1 = l+1;
-		return 3*l*l/(l_plus_1*l_plus_1*l_plus_1);
-	}
-	
-	double func_g2_YG(double l){
-		double l_plus_1 = l+1;
-		return (1./10)*l*(4-l+7*l*l)/(l_plus_1*l_plus_1*l_plus_1);
-	}
-
-	double func_g2_YH(double l){
-		double l_plus_1 = l+1;
-		return (1./10)*l*(2-l)/(l_plus_1*l_plus_1);
-	}
-	
-	double func_g5_YH(double l){
-		double l_plus_1 = l+1;
-		return (1./20)*l*l*(1+7*l)/(l_plus_1*l_plus_1);
-	}
-	
-	double func_g1_XM(double l){
-		double l_plus_1 = l+1;
-		return (6./5)*l*l/(l_plus_1*l_plus_1*l_plus_1);
-	}
-	double func_g4_XM(double l){
-		double l_plus_1 = l+1;
-		return (6./5)*l*l*l/(l_plus_1*l_plus_1*l_plus_1);
-	}
-	
-	double func_g2_YM(double l){
-		double l_plus_1 = l+1;
-		return (6./25)*l*(1-l+4*l*l)/(l_plus_1*l_plus_1*l_plus_1);
-	}
-
-	double func_g5_YM(double l){
-		double l_plus_1 = l+1;
-		return (3./50)*l*l*(7-10*l+7*l*l)/(l_plus_1*l_plus_1*l_plus_1);
-	}
-	
 	double lambda_square;
 	double lambda_cubic;
-	double lambda_1;
-	double lambda_1_square;
-	double lambda_1_cubic;
+	double lambda_p_1;
+	double lambda_p_1_square;
+	double lambda_p_1_cubic;
 	double cXA[4];
 	double cYA[4];
 	double cYB[4];
@@ -201,7 +128,6 @@ private:
 	double a0a0a0_53;
 	double a1a1a1_53;
 	double rororo_524;
-	
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -211,7 +137,6 @@ private:
 	double g2_YC;
 	double g2_inv_YC;
 	double g4_YC;
-	
 	double g1_XG;
 	double g1_inv_XG;
 	double g2_YG;
@@ -227,8 +152,6 @@ private:
 	double g2_inv_YM;
 	double g5_YM;
 
-
-	
 protected:
 public:
 	/*********************************
@@ -280,20 +203,16 @@ public:
 	//=============  Resistance Matrices ====================/
 
 	void GE(double *GEi, double *GEj);
-	
 	void calcResistanceFunctions();
-	
 	void calcXA();
 	void calcYA();
 	void calcYB();
 	void calcYC();
-
 	void calcXG();
 	void calcYG();
 	void calcXM();
 	void calcYM();
 	void calcYH();
-	
 	inline double get_scaled_XA0(){return a0*XA[0];}
 	inline double get_scaled_XA3(){return a1*XA[3];}
 	inline double get_scaled_XA2(){return ro_half*XA[2];}
@@ -320,7 +239,6 @@ public:
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   StressTensor &stresslet_i, StressTensor &stresslet_j);
-//	void pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
 	void info(){

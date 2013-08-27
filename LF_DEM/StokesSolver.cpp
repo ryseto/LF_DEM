@@ -327,7 +327,7 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 				((int*)chol_res_matrix->i)[pj6_4+2 + u +s] = odbrows[k]+s;
 				((int*)chol_res_matrix->i)[pj6_5+1 + u +s] = odbrows[k]+s;
 			}
-
+			
 			int k6 = 6*k;
 			int k4 = 4*k;
 			int k3 = 3*k;
@@ -723,7 +723,7 @@ StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double scaledXA, doub
 	odblocks[0][i0  ] = scaledXA*n0n0; // column 0
 	odblocks[0][i0+1] = scaledXA*n0n1;
 	odblocks[0][i0+2] = scaledXA*n0n2;
-	odblocks[0][i0+3] = 0
+	odblocks[0][i0+3] = 0;
 	odblocks[0][i0+4] = -scaledYB*nvec.z;
 	odblocks[0][i0+5] = scaledYB*nvec.y;
 	odblocks[1][i1  ] = scaledXA*n1n1; // column 1
