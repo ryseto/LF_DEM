@@ -794,7 +794,7 @@ System::updateVelocityLubrication(){
     addStokesDrag();
 	buildLubricationTerms();
     stokes_solver.completeResistanceMatrix();
-    buildContactTerms();
+	buildContactTerms();
 	buildColloidalForceTerms();
     stokes_solver.solve(v_total);
 	//stokes_solver->printResistanceMatrix();

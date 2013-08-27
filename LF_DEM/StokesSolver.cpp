@@ -1,3 +1,4 @@
+#include "fstream"
 #include "StokesSolver.h"
 #ifdef TRILINOS
 #include <BelosCGIteration.hpp>
@@ -499,6 +500,10 @@ StokesSolver::addToRHSForce(int i, double *force_i){
 	if (direct()) {
 		for(int u=0; u<3;u++){
 			((double*)chol_rhs->x)[i6+u] += force_i[u];
+			if(fabs(force_i[u])>100000){
+				cout << i << " " << force_i[u] << endl;
+				getchar();
+			}
 		}
 	}
 #ifdef TRILINOS
@@ -516,6 +521,20 @@ StokesSolver::addToRHSForce(int i, const vec3d &force_i){
 		((double*)chol_rhs->x)[i6  ] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
 		((double*)chol_rhs->x)[i6+2] += force_i.z;
+		if(fabs(force_i.x)>100000){
+			cout << i << " " << force_i.x << endl;
+			getchar();
+		}
+		if(fabs(force_i.y)>100000){
+			cout << i << " " << force_i.y << endl;
+			getchar();
+		}
+		if(fabs(force_i.z)>100000){
+			cout << i << " " << force_i.z << endl;
+			getchar();
+		}
+
+
 	}
 #ifdef TRILINOS
 	if (iterative()) {
@@ -592,7 +611,28 @@ StokesSolver::solve_CholTrans(double* velocity){
 void
 StokesSolver::solve(double* velocity){
 	if (direct()) {
-		int verbose = 0; // TESTING
+		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+
+		for (int i=0; i<res_matrix_linear_size; i++) {
+			velocity[i] = ((double*)chol_solution->x)[i];
+		}				
+		int verbose=0; // TESTING
+		if(verbose){
+			cout << " RHS is " << endl;
+			printRHS();
+			cout << endl;
+			verbose=0;
+			for (int i=0; i<res_matrix_linear_size/6; i++) {
+				cout <<"velocity components of " <<  i <<" are : " << velocity[6*i] << " " << velocity[6*i+1] << " " <<velocity[6*i+2] << " " <<velocity[6*i+3] << " " <<velocity[6*i+4] << " " <<velocity[6*i+5] <<  endl;  
+				for(int u=0; u<6; u++){
+					if (velocity[6*i] > 1e10)
+						verbose=1;
+				}
+			}
+
+		}
+
+		verbose = 0; 
 		if(verbose){
 			const char name [256] = "bla";
 			chol_c.print = 4;
@@ -602,23 +642,16 @@ StokesSolver::solve(double* velocity){
 			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
 		cholmod_print_dense(dense_res, name, &chol_c); */
 			cout << endl << " LF_DEM printing " << endl;	
-			printResistanceMatrix("dense");
+			ofstream rmat;
+			rmat.open("matrix.dat"); 
+			printResistanceMatrix(rmat, "sparse");
+			rmat.close();
 			printRHS();
 			//		getchar();
 		}
 
 
-		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 
-		for (int i=0; i<res_matrix_linear_size; i++) {
-			velocity[i] = ((double*)chol_solution->x)[i];
-		}				
-		verbose=0;
-		if(verbose){
-			for (int i=0; i<res_matrix_linear_size/6; i++) {
-				cout <<"velocity components of " <<  i <<" are : " << velocity[6*i] << " " << velocity[6*i+1] << " " <<velocity[6*i+2] << " " <<velocity[6*i+3] << " " <<velocity[6*i+4] << " " <<velocity[6*i+5] <<  endl;  
-			}
-		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
@@ -1098,13 +1131,13 @@ StokesSolver::setSolverType(string solver_type){
 
 // testing
 void
-StokesSolver::printResistanceMatrix(string sparse_or_dense){
+StokesSolver::printResistanceMatrix(ofstream &out, string sparse_or_dense){
 	if (direct()) {
 		if(sparse_or_dense=="sparse"){
-			//		cout << endl<< " chol res " << endl;
+			//		out << endl<< " chol res " << endl;
 			for (int i = 0; i < res_matrix_linear_size; i++) {
 				for (int k =((int*)chol_res_matrix->p)[i] ; k < ((int*)chol_res_matrix->p)[i+1]; k++) {
-					cout << i << " " << ((int*)chol_res_matrix->i)[k] << " " << ((double*)chol_res_matrix->x)[k] << endl;
+					out << i << " " << ((int*)chol_res_matrix->i)[k] << " " << ((double*)chol_res_matrix->x)[k] << endl;
 				}
 			}
 		}
@@ -1113,18 +1146,18 @@ StokesSolver::printResistanceMatrix(string sparse_or_dense){
 			for (int i = 0; i < res_matrix_linear_size; i++) {
 				if(i==0){
 					for (int j = 0; j < res_matrix_linear_size/6; j++) {
-						cout << j << "\t \t \t \t \t \t" ;
+						out << j << "\t \t \t \t \t \t" ;
 					}
-					cout << endl;
+					out << endl;
 				}
 				for (int j = 0; j < res_matrix_linear_size; j++) {
-					cout <<setprecision(3) <<  ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
+					out <<setprecision(3) <<  ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
 				}
 
 					
-				cout << endl;
+				out << endl;
 			}
-			cout << endl;
+			out << endl;
 			cholmod_free_dense(&dense_res, &chol_c);
 		}
 
