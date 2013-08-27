@@ -263,7 +263,7 @@ public:
 	bool iterative(){
 		return _iterative;
 	}
-	void printResistanceMatrix();
+	void printResistanceMatrix(string);
 	void convertDirectToIterative();
     // R_FU filling methods
     /* resetResistanceMatrix(string solver_type, int nb_of_interactions) :
@@ -325,7 +325,10 @@ public:
     
 	
     void resetRHS();
-    void addToRHS(int, const double);
+    void addToRHSForce(int, double *);
+    void addToRHSForce(int, const vec3d &);
+    void addToRHSTorque(int, double *);
+    void addToRHSTorque(int, const vec3d &);
     void addToRHS(double*);
     void setRHS(double*);
     void getRHS(double*);
