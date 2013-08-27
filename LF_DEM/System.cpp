@@ -794,7 +794,7 @@ System::updateVelocityLubrication(){
     addStokesDrag();
 	buildLubricationTerms();
     stokes_solver.completeResistanceMatrix();
-    buildContactTerms();
+	buildContactTerms();
 	buildColloidalForceTerms();
     stokes_solver.solve(v_total);
 	//stokes_solver->printResistanceMatrix();
@@ -813,17 +813,15 @@ System::updateVelocityLubrication(){
 		ang_velocity[i].z = v_total[i6+5];
 		//		cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
     }
-	//	for (int i=0; i<np; i++) {
-	//		ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
-	//	}
+
 	if (dimensionless_shear_rate != 0) {
 		for (int i=0; i<np; i++) {
 			velocity[i].x += position[i].z;
 		}
-		// double O_inf_y = 0.5;
-		// for (int i=0; i<np; i++) {
-		// 	ang_velocity[i].y += O_inf_y;
-		// }
+		double O_inf_y = 0.5;
+		for (int i=0; i<np; i++) {
+		 	ang_velocity[i].y += O_inf_y;
+		}
 	}
     stokes_solver.solvingIsDone();
 }

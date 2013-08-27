@@ -251,6 +251,7 @@ Interaction::calcContactInteraction(){
 	// gap_nondim < 0 (in contact)
 	//
 	f_contact_normal_norm = -kn_scaled*gap_nondim; // gap_nondim is negative, therefore it is allways positive.
+	
 	f_contact_normal = -f_contact_normal_norm*nr_vec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
@@ -385,7 +386,7 @@ Interaction::calcLubConstants(){
 	g1_inv_XA = func_g1_XA(lambda_inv);
 	cXA[0] = g1_XA;
 	cXA[1] = (-2/lambda_p_1)*g1_XA;
-	cXA[2] = cXA[0];
+	cXA[2] = cXA[1];
 	cXA[3] = g1_inv_XA;
 	/* YA
 	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l)
@@ -396,7 +397,7 @@ Interaction::calcLubConstants(){
 	g2_inv_YA = func_g2_YA(lambda_inv);
 	cYA[0] = g2_YA;
 	cYA[1] = (-2/lambda_p_1)*g2_YA;
-	cYA[2] = cYA[0];
+	cYA[2] = cYA[1];
 	cYA[3] = g2_inv_YA;
 	/* YB
 	 * Yab(l) = -Y(3-a)(3-b)(1/l)

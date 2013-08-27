@@ -263,7 +263,7 @@ public:
 	bool iterative(){
 		return _iterative;
 	}
-	void printResistanceMatrix(string);
+	void printResistanceMatrix(ofstream &, string);
 	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
