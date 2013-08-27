@@ -698,7 +698,6 @@ System::buildLubricationTerms(bool rhs){
 	 * This range i < np - 1 is ok?
 	 */
     for (int i=0; i<np-1; i ++) {
- 		int i3 = 3*i;
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
@@ -710,7 +709,6 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(), 0, 0);
 				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0);
 				if (rhs) {
-					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
 					for (int u=0; u<3; u++) {
 						stokes_solver.addToRHSForce(i, GEi);
@@ -728,12 +726,10 @@ System::buildLubricationRHS(){
 	double GEi[3];
     double GEj[3];
     for (int i=0; i<np-1; i ++) {
-		int i3 = 3*i;
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				int j3 = 3*j;
 				(*it)->GE(GEi, GEj);  // G*E_\infty term
 				stokes_solver.addToRHSForce(i, GEi);
 				stokes_solver.addToRHSForce(j, GEj);

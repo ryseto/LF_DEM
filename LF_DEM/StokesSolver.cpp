@@ -220,7 +220,6 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA
  *****************************************************/
 void
 StokesSolver::completeResistanceMatrix_cholmod(){
-	int verbose = 0; // TESTING
 
 	// this function is commented, but you are strongly advised to read 
 	// the description of storage in the header file first :)
@@ -267,12 +266,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		int pj6_3 = ((int*)chol_res_matrix->p)[j6+3];
 		int pj6_4 = ((int*)chol_res_matrix->p)[j6+4];
 		int pj6_5 = ((int*)chol_res_matrix->p)[j6+5];
-
-		if(verbose){
-			for (int s=0; s<6;s++){
-				cout << " column " << j6+s << "  p is " << ((int*)chol_res_matrix->p)[j6+s] << endl;
-			}
-		}
 
 		// diagonal block row indices (21)
 		((int*)chol_res_matrix->i)[pj6  ] = j6;   // column j6
@@ -394,27 +387,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 	
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
 	
-	if(verbose){
-		const char name [256] = "bla";
-		chol_c.print = 4;
-		
-		/*		cout << "dblock 1" << endl;
-		for(int i=0;i<18;i++)
-			cout << i << " " << dblocks[i] << endl;
-		
-		cout << "dblock 2" << endl;
-		for(int i=18;i<36;i++)
-			cout << i-18 << " "<<dblocks[i] << endl;
-		*/
-		
-		/*		cout <<endl <<  " cholmod printing " << endl;
-		//		cholmod_print_sparse(chol_res_matrix, name, &chol_c);
-		cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
-		cholmod_print_dense(dense_res, name, &chol_c); */
-		cout << endl << " LF_DEM printing " << endl;	
-		printResistanceMatrix("dense");
-		getchar();
-	}
 	
 	factorizeResistanceMatrix();
 }
@@ -624,10 +596,28 @@ StokesSolver::solve_CholTrans(double* velocity){
 void
 StokesSolver::solve(double* velocity){
 	if (direct()) {
+		int verbose = 0; // TESTING
+		if(verbose){
+			const char name [256] = "bla";
+			chol_c.print = 4;
+			
+			/*		cout <<endl <<  " cholmod printing " << endl;
+			//		cholmod_print_sparse(chol_res_matrix, name, &chol_c);
+			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
+		cholmod_print_dense(dense_res, name, &chol_c); */
+			cout << endl << " LF_DEM printing " << endl;	
+			printResistanceMatrix("dense");
+			printRHS();
+			//		getchar();
+		}
+
+
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
-		for (int i=0; i<res_matrix_linear_size; i++) {
-			velocity[i] = ((double*)chol_solution->x)[i];
-			//			cout <<"velocity component " <<  i <<" is " << velocity[i] << endl;  
+		if(verbose){
+			for (int i=0; i<res_matrix_linear_size; i++) {
+				velocity[i] = ((double*)chol_solution->x)[i];
+				cout <<"velocity component " <<  i <<" is " << velocity[i] << endl;  
+			}
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
@@ -1121,9 +1111,17 @@ StokesSolver::printResistanceMatrix(string sparse_or_dense){
 		if(sparse_or_dense=="dense"){
 			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
 			for (int i = 0; i < res_matrix_linear_size; i++) {
-				for (int j = 0; j < res_matrix_linear_size; j++) {
-					cout << ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
+				if(i==0){
+					for (int j = 0; j < res_matrix_linear_size/6; j++) {
+						cout << j << "\t \t \t \t \t \t" ;
+					}
+					cout << endl;
 				}
+				for (int j = 0; j < res_matrix_linear_size; j++) {
+					cout <<setprecision(3) <<  ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
+				}
+
+					
 				cout << endl;
 			}
 			cout << endl;
@@ -1158,4 +1156,15 @@ StokesSolver::printResistanceMatrix(string sparse_or_dense){
 		delete [] ind;
 	}
 #endif
+}
+
+
+// testing
+void
+StokesSolver::printRHS(){
+	if (direct()) {
+		for (int i = 0; i < res_matrix_linear_size; i++) {
+			cout << i << " (part " << " " << i-i%6 << " )  " << ((double*)chol_rhs->x)[i] <<  endl;
+		}
+	}
 }
