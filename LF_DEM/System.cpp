@@ -66,8 +66,7 @@ System::allocateRessources(){
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	dof = 6;
-	linalg_size = dof*np;
+	linalg_size = 6*np;
 	v_total = new double [linalg_size];
 	v_cont = new double [linalg_size];
 	v_hydro = new double [linalg_size];
