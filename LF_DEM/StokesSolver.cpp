@@ -247,10 +247,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		//
 		// for 6j+2 --> 6j+5: same idea
 		
-		if(verbose){
-			for(int k=0; k<np;k++)
-				cout << "odbrows_table " << k << " is " << odbrows_table[k] << endl;
-		}
 
 		int od_nzero_nb = 6*(odbrows_table[j+1]-odbrows_table[j]);
 		((int*)chol_res_matrix->p)[j6  ] = j21   + 36*odbrows_table[j];
@@ -613,11 +609,12 @@ StokesSolver::solve(double* velocity){
 
 
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+
+		for (int i=0; i<res_matrix_linear_size; i++) {
+			velocity[i] = ((double*)chol_solution->x)[i];
+		}				
 		verbose=0;
 		if(verbose){
-			for (int i=0; i<res_matrix_linear_size; i++) {
-				velocity[i] = ((double*)chol_solution->x)[i];
-			}				
 			for (int i=0; i<res_matrix_linear_size/6; i++) {
 				cout <<"velocity components of " <<  i <<" are : " << velocity[6*i] << " " << velocity[6*i+1] << " " <<velocity[6*i+2] << " " <<velocity[6*i+3] << " " <<velocity[6*i+4] << " " <<velocity[6*i+5] <<  endl;  
 			}
