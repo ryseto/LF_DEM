@@ -812,6 +812,7 @@ System::updateVelocityLubrication(){
 		ang_velocity[i].x = v_total[i6+3];
 		ang_velocity[i].y = v_total[i6+4];
 		ang_velocity[i].z = v_total[i6+5];
+		//		cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
     }
 	//	for (int i=0; i<np; i++) {
 	//		ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
@@ -820,10 +821,10 @@ System::updateVelocityLubrication(){
 		for (int i=0; i<np; i++) {
 			velocity[i].x += position[i].z;
 		}
-		double O_inf_y = 0.5;
-		for (int i=0; i<np; i++) {
-			ang_velocity[i].y += O_inf_y;
-		}
+		// double O_inf_y = 0.5;
+		// for (int i=0; i<np; i++) {
+		// 	ang_velocity[i].y += O_inf_y;
+		// }
 	}
     stokes_solver.solvingIsDone();
 }

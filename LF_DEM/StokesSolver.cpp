@@ -609,10 +609,13 @@ StokesSolver::solve(double* velocity){
 
 
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+		verbose=0;
 		if(verbose){
 			for (int i=0; i<res_matrix_linear_size; i++) {
 				velocity[i] = ((double*)chol_solution->x)[i];
-				cout <<"velocity component " <<  i <<" is " << velocity[i] << endl;  
+			}				
+			for (int i=0; i<res_matrix_linear_size/6; i++) {
+				cout <<"velocity components of " <<  i <<" are : " << velocity[6*i] << " " << velocity[6*i+1] << " " <<velocity[6*i+2] << " " <<velocity[6*i+3] << " " <<velocity[6*i+4] << " " <<velocity[6*i+5] <<  endl;  
 			}
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
