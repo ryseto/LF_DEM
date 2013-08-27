@@ -500,10 +500,6 @@ StokesSolver::addToRHSForce(int i, double *force_i){
 	if (direct()) {
 		for(int u=0; u<3;u++){
 			((double*)chol_rhs->x)[i6+u] += force_i[u];
-			if(fabs(force_i[u])>100000){
-				cout << i << " " << force_i[u] << endl;
-				getchar();
-			}
 		}
 	}
 #ifdef TRILINOS
@@ -521,26 +517,45 @@ StokesSolver::addToRHSForce(int i, const vec3d &force_i){
 		((double*)chol_rhs->x)[i6  ] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
 		((double*)chol_rhs->x)[i6+2] += force_i.z;
-		if(fabs(force_i.x)>100000){
-			cout << i << " " << force_i.x << endl;
-			getchar();
-		}
-		if(fabs(force_i.y)>100000){
-			cout << i << " " << force_i.y << endl;
-			getchar();
-		}
-		if(fabs(force_i.z)>100000){
-			cout << i << " " << force_i.z << endl;
-			getchar();
-		}
-
-
 	}
 #ifdef TRILINOS
 	if (iterative()) {
 		tril_rhs->SumIntoGlobalValue(i6  , 0, force_i.x);
 		tril_rhs->SumIntoGlobalValue(i6+1, 0, force_i.y);
 		tril_rhs->SumIntoGlobalValue(i6+2, 0, force_i.z);
+	}
+#endif
+}
+void
+StokesSolver::addToRHSTorque(int i, double *torque_i){
+	int i6_3 = 6*i+3;
+	if (direct()) {
+		for(int u=0; u<3;u++){
+			((double*)chol_rhs->x)[i6_3+u] += torque_i[u];
+		}
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		for(int u=0; u<3;u++){
+			tril_rhs->SumIntoGlobalValue(i6_3+u, 0, torque_i[u]);
+		}
+	}
+#endif
+}
+
+void
+StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
+	int i6_3 = 6*i+3;
+	if (direct()) {
+		((double*)chol_rhs->x)[i6_3  ] += torque_i.x;
+		((double*)chol_rhs->x)[i6_3+1] += torque_i.y;
+		((double*)chol_rhs->x)[i6_3+2] += torque_i.z;
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		tril_rhs->SumIntoGlobalValue(i6_3  , 0, torque_i.x);
+		tril_rhs->SumIntoGlobalValue(i6_3+1, 0, torque_i.y);
+		tril_rhs->SumIntoGlobalValue(i6_3+2, 0, torque_i.z);
 	}
 #endif
 }

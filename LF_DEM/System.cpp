@@ -767,6 +767,7 @@ System::buildContactTerms(){
     // add contact force
     for (int i=0; i<np; i++) {
 		stokes_solver.addToRHSForce(i, contact_force[i]);
+		stokes_solver.addToRHSTorque(i, contact_torque[i]);
     }
 }
 
