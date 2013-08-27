@@ -94,6 +94,7 @@ Interaction::updateContactModel(){
 		kt_scaled = ro_half*sys->Kt(); // F = kt_s
 		if (contact) {
 			lub_coeff = sys->Lub_coeff_contact();
+			log_lub_coeff = log(lub_coeff);
 		}
 	}
 }

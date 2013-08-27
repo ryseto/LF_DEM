@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/debug"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/test_FT"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,7 +78,19 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "g"
+            argument = "D2N50VF0.5Bidi1.4_0.5Square_1.dat"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "fric1.txt"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "1"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "kn_kt_dt_mu1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
