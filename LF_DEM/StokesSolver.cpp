@@ -220,7 +220,7 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA
  *****************************************************/
 void
 StokesSolver::completeResistanceMatrix_cholmod(){
-	int verbose = 1;
+	int verbose = 0; // TESTING
 
 	// this function is commented, but you are strongly advised to read 
 	// the description of storage in the header file first :)
@@ -627,7 +627,7 @@ StokesSolver::solve(double* velocity){
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
-			cout <<"velocity component " <<  i <<" is " << velocity[i] << endl;  
+			//			cout <<"velocity component " <<  i <<" is " << velocity[i] << endl;  
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
