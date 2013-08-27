@@ -138,7 +138,7 @@ void
 System::setConfiguration(const vector <vec3d> &initial_positions,
 						 const vector <double> &radii,
 						 double lx_, double ly_, double lz_){
-	Np(initial_positions.size());
+	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
@@ -234,7 +234,7 @@ System::setupSystem(){
 	initializeBoxing();
 	checkNewInteraction();
 	cnt_monitored_data = 0;
-	if (dimension == 2){
+	if (dimension == 2) {
 		twodimension = true;
 		setSystemVolume(2*radius[np-1]);
 	} else {
