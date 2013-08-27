@@ -713,8 +713,8 @@ System::buildLubricationTerms(bool rhs){
 					int j3 = 3*j;
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
 					for (int u=0; u<3; u++) {
-						stokes_solver.addToRHS(i3+u, GEi[u]);
-						stokes_solver.addToRHS(j3+u, GEj[u]);
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
 					}
 				}
 			}
@@ -735,10 +735,8 @@ System::buildLubricationRHS(){
 			if (j > i) {
 				int j3 = 3*j;
 				(*it)->GE(GEi, GEj);  // G*E_\infty term
-				for (int u=0; u<3; u++) {
-					stokes_solver.addToRHS(i3+u, GEi[u]);
-					stokes_solver.addToRHS(j3+u, GEj[u]);
-				}
+				stokes_solver.addToRHSForce(i, GEi);
+				stokes_solver.addToRHSForce(j, GEj);
 			}
 		}
     }
@@ -773,10 +771,7 @@ void
 System::buildContactTerms(){
     // add contact force
     for (int i=0; i<np; i++) {
-		int i3 = 3*i;
-		stokes_solver.addToRHS(i3  , contact_force[i].x);
-		stokes_solver.addToRHS(i3+1, contact_force[i].y);
-		stokes_solver.addToRHS(i3+2, contact_force[i].z);
+		stokes_solver.addToRHSForce(i, contact_force[i]);
     }
 }
 
@@ -784,10 +779,7 @@ void
 System::buildColloidalForceTerms(){
 	if (colloidalforce) {
 		for (int i=0; i<np; i++) {
-			int i3 = 3*i;
-			stokes_solver.addToRHS(i3  , colloidal_force[i].x);
-			stokes_solver.addToRHS(i3+1, colloidal_force[i].y);
-			stokes_solver.addToRHS(i3+2, colloidal_force[i].z);
+			stokes_solver.addToRHSForce(i, colloidal_force[i]);
 		}
 	}
 }

@@ -220,6 +220,8 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA
  *****************************************************/
 void
 StokesSolver::completeResistanceMatrix_cholmod(){
+	int verbose = 1;
+
 	// this function is commented, but you are strongly advised to read 
 	// the description of storage in the header file first :)
 
@@ -238,16 +240,21 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		
 		// the number of non-zero elements before column 6j is:
 		// - 21*j from j diagonal blocks
-		// - 21*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
+		// - 36*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
 		//
 		// the number of non-zero elements before column 6j+1 is:
 		// - number of non-zero before column 6j + number of non-zero in column 6*j
 		// (in 6j: 6 elements in diagonal block, plus 6*(odbrows_table[j+1]-odbrows_table[j])
 		//
 		// for 6j+2 --> 6j+5: same idea
-			
+
+		if(verbose){
+			for(int k=0; k<np;k++)
+				cout << "odbrows_table " << k << " is " << odbrows_table[k] << endl;
+		}
+
 		int od_nzero_nb = 6*(odbrows_table[j+1]-odbrows_table[j]);
-		((int*)chol_res_matrix->p)[j6  ] = j21   + 21*odbrows_table[j];
+		((int*)chol_res_matrix->p)[j6  ] = j21   + 36*odbrows_table[j];
 		((int*)chol_res_matrix->p)[j6+1] = ((int*)chol_res_matrix->p)[j6] + 6 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+2] = ((int*)chol_res_matrix->p)[j6+1] + 5 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + od_nzero_nb;
@@ -260,7 +267,13 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		int pj6_3 = ((int*)chol_res_matrix->p)[j6+3];
 		int pj6_4 = ((int*)chol_res_matrix->p)[j6+4];
 		int pj6_5 = ((int*)chol_res_matrix->p)[j6+5];
-			
+
+		if(verbose){
+			for (int s=0; s<6;s++){
+				cout << " column " << j6+s << "  p is " << ((int*)chol_res_matrix->p)[j6+s] << endl;
+			}
+		}
+
 		// diagonal block row indices (21)
 		((int*)chol_res_matrix->i)[pj6  ] = j6;   // column j6
 		((int*)chol_res_matrix->i)[pj6+1] = j6+1;
@@ -283,6 +296,7 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((int*)chol_res_matrix->i)[pj6_4  ] = j6+4;    // column j6+4
 		((int*)chol_res_matrix->i)[pj6_4+1] = j6+5;
 		((int*)chol_res_matrix->i)[pj6_5  ] = j6+5;    // column j6+5
+
 
 		// diagonal blocks row values (21)
 		((double*)chol_res_matrix->x)[pj6  ] = dblocks[j18];   // column j6
@@ -377,8 +391,30 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 			
 		}
 	}
-
+	
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
+	
+	if(verbose){
+		const char name [256] = "bla";
+		chol_c.print = 4;
+		
+		/*		cout << "dblock 1" << endl;
+		for(int i=0;i<18;i++)
+			cout << i << " " << dblocks[i] << endl;
+		
+		cout << "dblock 2" << endl;
+		for(int i=18;i<36;i++)
+			cout << i-18 << " "<<dblocks[i] << endl;
+		*/
+		
+		/*		cout <<endl <<  " cholmod printing " << endl;
+		//		cholmod_print_sparse(chol_res_matrix, name, &chol_c);
+		cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
+		cholmod_print_dense(dense_res, name, &chol_c); */
+		cout << endl << " LF_DEM printing " << endl;	
+		printResistanceMatrix("dense");
+		getchar();
+	}
 	
 	factorizeResistanceMatrix();
 }
@@ -490,13 +526,34 @@ StokesSolver::resetRHS(){
 }
 
 void
-StokesSolver::addToRHS(int i, double val){
+StokesSolver::addToRHSForce(int i, double *force_i){
+	int i6 = 6*i;
 	if (direct()) {
-		((double*)chol_rhs->x)[i] += val;
+		for(int u=0; u<3;u++){
+			((double*)chol_rhs->x)[i6+u] += force_i[u];
+		}
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-		tril_rhs->SumIntoGlobalValue(i, 0, val);
+		for(int u=0; u<3;u++){
+			tril_rhs->SumIntoGlobalValue(i6+u, 0, force_i[u]);
+		}
+	}
+#endif
+}
+void
+StokesSolver::addToRHSForce(int i, const vec3d &force_i){
+	int i6 = 6*i;
+	if (direct()) {
+		((double*)chol_rhs->x)[i6  ] += force_i.x;
+		((double*)chol_rhs->x)[i6+1] += force_i.y;
+		((double*)chol_rhs->x)[i6+2] += force_i.z;
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		tril_rhs->SumIntoGlobalValue(i6  , 0, force_i.x);
+		tril_rhs->SumIntoGlobalValue(i6+1, 0, force_i.y);
+		tril_rhs->SumIntoGlobalValue(i6+2, 0, force_i.z);
 	}
 #endif
 }
@@ -570,6 +627,7 @@ StokesSolver::solve(double* velocity){
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
+			cout <<"velocity component " <<  i <<" is " << velocity[i] << endl;  
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
@@ -1050,16 +1108,30 @@ StokesSolver::setSolverType(string solver_type){
 
 // testing
 void
-StokesSolver::printResistanceMatrix(){
+StokesSolver::printResistanceMatrix(string sparse_or_dense){
 	if (direct()) {
-		//		cout << endl<< " chol res " << endl;
-		for (int i = 0; i < res_matrix_linear_size; i++) {
-			for (int k =((int*)chol_res_matrix->p)[i] ; k < ((int*)chol_res_matrix->p)[i+1]; k++) {
-				cout << i << " " << ((int*)chol_res_matrix->i)[k] << " " << ((double*)chol_res_matrix->x)[k] << endl;
+		if(sparse_or_dense=="sparse"){
+			//		cout << endl<< " chol res " << endl;
+			for (int i = 0; i < res_matrix_linear_size; i++) {
+				for (int k =((int*)chol_res_matrix->p)[i] ; k < ((int*)chol_res_matrix->p)[i+1]; k++) {
+					cout << i << " " << ((int*)chol_res_matrix->i)[k] << " " << ((double*)chol_res_matrix->x)[k] << endl;
+				}
 			}
 		}
+		if(sparse_or_dense=="dense"){
+			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
+			for (int i = 0; i < res_matrix_linear_size; i++) {
+				for (int j = 0; j < res_matrix_linear_size; j++) {
+					cout << ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
+				}
+				cout << endl;
+			}
+			cout << endl;
+			cholmod_free_dense(&dense_res, &chol_c);
+		}
+
 	}
-	exit(1);
+	//	exit(1);
 #ifdef TRILINOS
 	if (iterative()) {
 		int int_nb = 100;
