@@ -165,6 +165,8 @@ Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
 	if (keyword == "bgf_factor") {
 		sys.set_bgf_factor(atof(value.c_str()));
+	} else if (keyword == "lubrication_model") {
+		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "kn_kt_adjustment") {
 		kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
@@ -392,6 +394,7 @@ Simulation::setDefaultParameters(){
 	out_data_interaction = true;
 	
 	sys.set_integration_method(_integration_method);
+	sys.set_lubrication_model(_lubrication_model);
 	sys.set_bgf_factor(_bgf_factor);
 	sys.set_lub_max(_lub_max);
 	sys.set_dt_max(_dt);
