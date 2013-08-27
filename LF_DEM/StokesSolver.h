@@ -264,6 +264,7 @@ public:
 		return _iterative;
 	}
 	void printResistanceMatrix(string);
+	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
     /* resetResistanceMatrix(string solver_type, int nb_of_interactions) :
