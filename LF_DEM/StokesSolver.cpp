@@ -330,7 +330,7 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 				((int*)chol_res_matrix->i)[pj6_4+2 + u +s] = odbrows[k]+s;
 				((int*)chol_res_matrix->i)[pj6_5+1 + u +s] = odbrows[k]+s;
 			}
-
+			
 			int k6 = 6*k;
 			int k4 = 4*k;
 			int k3 = 3*k;
