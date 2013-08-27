@@ -42,8 +42,8 @@ Simulation::contactForceParameter(string filename){
 		}
 	}
 	fin_knktdt.clear();
-	sys.Kn(kn_);
-	sys.Kt(kt_);
+	sys.set_kn(kn_);
+	sys.set_kt(kt_);
 	sys.set_dt_max(dt_max_);
 	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
@@ -73,7 +73,7 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	int cnt_simu_loop = 1;
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
-	while (sys.Shear_strain() < shear_strain_end-1e-8) {
+	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
@@ -81,18 +81,18 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
-		if (sys.Shear_strain() >= strain_next_config_out-1e-8) {
+		if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
 			outputConfigurationData();
 			cnt_config_out ++;
 		}
 		if (kn_kt_adjustment) {
-			if (sys.Shear_strain() >= strain_knkt_adjustment-1e-8) {
+			if (sys.get_shear_strain() >= strain_knkt_adjustment-1e-8) {
 				sys.adjustContactModelParameters();
 				cnt_knkt_adjustment ++;
 			}
 		}
 		cnt_simu_loop ++;
-		cerr << "strain: " << sys.Shear_strain() << " / " << shear_strain_end << endl;
+		cerr << "strain: " << sys.get_shear_strain() << " / " << shear_strain_end << endl;
 	}
 }
 
@@ -102,15 +102,15 @@ Simulation::relaxationZeroShear(vector<vec3d> &position_,
 								double lx_, double ly_, double lz_){
 	sys.setConfiguration(position_, radius_, lx_, ly_, lz_);
 	setDefaultParameters();
-	sys.Integration_method(0);
-	sys.Dt(1e-4);
-	sys.Kn(2000);
-	sys.kb_T = 0;
-	sys.Mu_static(0);
+	sys.set_integration_method(0);
+	sys.set_dt(1e-4);
+	sys.set_kn(2000);
+	sys.set_kb_T(0);
+	sys.set_mu_static(0);
 	sys.dimensionless_shear_rate = 1;
-	sys.Colloidalforce_length(0); // dimensionless
+	sys.set_colloidalforce_length(0); // dimensionless
 	sys.setupSystem();
-	sys.Colloidalforce_amplitude(0);
+	sys.set_colloidalforce_amplitude(0);
 	sys.setupShearFlow(false);
 	double energy_previous = 0;
 	while (true) {
@@ -128,7 +128,7 @@ Simulation::relaxationZeroShear(vector<vec3d> &position_,
 		}
 		energy_previous = sys.total_energy;
 	}
-	for (int i=0; i<sys.Np(); i++) {
+	for (int i=0; i<sys.get_np(); i++) {
 		position_[i] = sys.position[i];
 	}
 }
@@ -164,19 +164,19 @@ void
 Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
 	if (keyword == "bgf_factor") {
-		sys.Bgf_factor(atof(value.c_str()));
+		sys.set_bgf_factor(atof(value.c_str()));
 	} else if (keyword == "kn_kt_adjustment") {
 		kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
 		strain_interval_knkt_adjustment = atof(value.c_str());
 	} else if (keyword == "colloidalforce_length") {
-		sys.Colloidalforce_length(atof(value.c_str()));
+		sys.set_colloidalforce_length(atof(value.c_str()));
 	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxzation_time") {
 		sys.contact_relaxzation_time = atof(value.c_str());
 	} else if (keyword == "kb_T") {
-		sys.kb_T = atof(value.c_str());
+		sys.set_kb_T(atof(value.c_str()));
 	} else if (keyword == "dt_max") {
 		sys.set_dt_max(atof(value.c_str()));
 	} else if (keyword == "disp_max") {
@@ -184,15 +184,15 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "shear_strain_end") {
 		shear_strain_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
-		sys.Integration_method(atoi(value.c_str()));
+		sys.set_integration_method(atoi(value.c_str()));
 	} else if (keyword == "lub_max") {
-		sys.Lub_max(atof(value.c_str()));
+		sys.set_lub_max(atof(value.c_str()));
 	} else if (keyword == "kn") {
-		sys.Kn(atof(value.c_str()));
+		sys.set_kn(atof(value.c_str()));
 	} else if (keyword == "kt") {
-		sys.Kt(atof(value.c_str()));
+		sys.set_kt(atof(value.c_str()));
 	} else if (keyword == "mu_static") {
-		sys.Mu_static(atof(value.c_str()));
+		sys.set_mu_static(atof(value.c_str()));
 	} else if (keyword == "strain_interval_out") {
 		strain_interval_output = atof(value.c_str());
 	} else if (keyword == "strain_interval_out_data") {
@@ -296,6 +296,16 @@ Simulation::setDefaultParameters(){
 	 * 2 Brownian (if kT > 0).
 	 */
 	int _integration_method = 1;
+	
+	/*
+	 * Lubrication model
+	 * 0 no lubrication
+	 * 1 1/xi lubrication (only squeeze mode)
+	 * 2 log(1/xi) lubrication (only squeeze mode)
+	 */
+	
+	int _lubrication_model = 2;
+	
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
@@ -337,7 +347,7 @@ Simulation::setDefaultParameters(){
 	 * kb_T = 0 ---> non-brownian
 	 * kb_T > 0 ---> brownian
 	 */
-	sys.kb_T = 0;
+	sys.set_kb_T(0);
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
@@ -381,14 +391,14 @@ Simulation::setDefaultParameters(){
 	out_data_particle = true;
 	out_data_interaction = true;
 	
-	sys.Integration_method(_integration_method);
-	sys.Bgf_factor(_bgf_factor);
-	sys.Lub_max(_lub_max);
+	sys.set_integration_method(_integration_method);
+	sys.set_bgf_factor(_bgf_factor);
+	sys.set_lub_max(_lub_max);
 	sys.set_dt_max(_dt);
-	sys.Kn(_kn);
-	sys.Kt(_kt);
-	sys.Mu_static(_mu_static);
-	sys.Colloidalforce_length(_colloidalforce_length);
+	sys.set_kn(_kn);
+	sys.set_kt(_kt);
+	sys.set_mu_static(_mu_static);
+	sys.set_colloidalforce_length(_colloidalforce_length);
 }
 
 void
@@ -495,7 +505,7 @@ Simulation::evaluateData(){
 
 void
 Simulation::outputStressTensorData(){
-	fout_st << sys.Shear_strain() << ' ';
+	fout_st << sys.get_shear_strain() << ' ';
 	fout_st << 6*M_PI*viscosity << ' ';
 	/* total_stress = sys.total_hydro_stress;
 	 * + total_contact_stressXF + total_colloidal_stress;
@@ -572,7 +582,7 @@ Simulation::outputRheologyData(){
 	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
 	 *
 	 */
-	fout_rheo << sys.Shear_strain() << ' '; //1
+	fout_rheo << sys.get_shear_strain() << ' '; //1
 	fout_rheo << 6*M_PI*viscosity << ' '; //2
 	fout_rheo << 6*M_PI*normalstress_diff_1 << ' '; //3
 	fout_rheo << 6*M_PI*normalstress_diff_2 << ' '; //4
@@ -606,9 +616,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.max_contact_velo_normal << ' '; //32
 	fout_rheo << sys.max_contact_velo_tan << ' '; //33
 	fout_rheo << sys.getParticleContactNumber() << ' '; //34
-	fout_rheo << sys.Kn() << ' '; //35
-	fout_rheo << sys.Kt() << ' '; //36
-	fout_rheo << sys.Dt() << ' '; //37
+	fout_rheo << sys.get_kn() << ' '; //35
+	fout_rheo << sys.get_kt() << ' '; //36
+	fout_rheo << sys.get_dt() << ' '; //37
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
@@ -622,9 +632,9 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 		if (z > sys.Lz_half()) {
 			x -= sys.shear_disp;
 			if (x < -sys.Lx_half()) {
-				x += sys.Lx();
+				x += sys.get_lx();
 			}
-			z -= sys.Lz();
+			z -= sys.get_lz();
 		}
 	}
 	return vec3d(x,y,z);
@@ -633,18 +643,18 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 void
 Simulation::outputDataHeader(ofstream &fout){
 	fout << "# LF_DEM version " << VERSION << endl;
-	fout << "# np " << sys.Np() << endl;
+	fout << "# np " << sys.get_np() << endl;
 	fout << "# VF " << volume_fraction << endl;
-	fout << "# Lx " << sys.Lx() << endl;
-	fout << "# Ly " << sys.Ly() << endl;
-	fout << "# Lz " << sys.Lz() << endl;
+	fout << "# Lx " << sys.get_lx() << endl;
+	fout << "# Ly " << sys.get_ly() << endl;
+	fout << "# Lz " << sys.get_lz() << endl;
 }
 
 void
 Simulation::outputConfigurationData(){
 	vector<vec3d> pos;
 	vector<vec3d> vel;
-	int np = sys.Np();
+	int np = sys.get_np();
 	pos.resize(np);
 	vel.resize(np);
 	for (int i=0; i < np; i++) {
@@ -659,7 +669,7 @@ Simulation::outputConfigurationData(){
 		for (int i=0; i<np; i++) {
 			vel[i] = sys.velocity[i];
 			if (pos[i].z < 0) {
-				vel[i].x -= sys.Lz();
+				vel[i].x -= sys.get_lz();
 			}
 		}
 	}
@@ -667,7 +677,7 @@ Simulation::outputConfigurationData(){
 	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
 	if (out_data_particle) {
-		fout_particle << "# " << sys.Shear_strain() << ' ';
+		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_shear_rate << endl;
 		for (int i=0; i < np; i++) {
@@ -708,7 +718,7 @@ Simulation::outputConfigurationData(){
 		}
 	}
 	if (out_data_interaction) {
-		fout_interaction << "# " << sys.Shear_strain();
+		fout_interaction << "# " << sys.get_shear_strain();
 		fout_interaction << ' ' << cnt_interaction << endl;
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {

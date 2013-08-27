@@ -246,7 +246,11 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		// (in 6j: 6 elements in diagonal block, plus 6*(odbrows_table[j+1]-odbrows_table[j])
 		//
 		// for 6j+2 --> 6j+5: same idea
-
+		
+		if(verbose){
+			for(int k=0; k<np;k++)
+				cout << "odbrows_table " << k << " is " << odbrows_table[k] << endl;
+		}
 
 		int od_nzero_nb = 6*(odbrows_table[j+1]-odbrows_table[j]);
 		((int*)chol_res_matrix->p)[j6  ] = j21   + 36*odbrows_table[j];

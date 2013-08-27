@@ -17,14 +17,14 @@ using namespace std;
 int
 GenerateInitConfig::generate(int argc, const char * argv[]){
 	setParameters(argc, argv);
-	sys.Np(np);
+	sys.set_np(np);
 	sys.brownian = false;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);
-	sys.Lub_max(2.5);
+	sys.set_lub_max(2.5);
 	sys.in_predictor = false;
-	sys.Integration_method(0);
+	sys.set_integration_method(0);
 	putRandom();
 	sys.setupSystemForGenerateInit();
 	grad = new vec3d [np];
@@ -64,7 +64,7 @@ GenerateInitConfig::generate(int argc, const char * argv[]){
 	} while (abs(diff_energy) > 0.01);
 	position.resize(np);
 	radius.resize(np);
-	for (int i=0; i<sys.Np(); i++) {
+	for (int i=0; i<sys.get_np(); i++) {
 		position[i] = sys.position[i];
 		radius[i] = sys.radius[i];
 	}
