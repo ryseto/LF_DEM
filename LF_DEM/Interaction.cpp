@@ -286,15 +286,15 @@ Interaction::checkBreakupStaticFriction(){
 	//double coeff_tan_dashpot= 0;
 	//double f_tangential = (dot(f_contact_tan,disp_tan)-dashpot_coeff*dot(contact_velocity,disp_tan))/disp_tan.norm();
 	// f_contact_tan = kt_scaled*disp_tan;
-	double disp_tan_norm = disp_tan.norm();
-	double f_tangential = dot(f_contact_tan,disp_tan)/disp_tan_norm;
+	double disp_tannorm = disp_tan.norm();
+	double f_tangential = dot(f_contact_tan,disp_tan)/disp_tannorm;
 	if (f_normal < 0){
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
 		double f_friction = sys->get_mu_static()*f_normal;
 		if (f_tangential > f_friction) {
-			f_contact_tan = (f_friction/disp_tan_norm)*disp_tan;
+			f_contact_tan = (f_friction/disp_tannorm)*disp_tan;
 			cnt_sliding++; // for output
 		}
 	}

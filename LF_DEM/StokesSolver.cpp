@@ -188,7 +188,7 @@ void
 StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	if (direct()) {
 		setColumn(nvec, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
-	}
+	}	
 #ifdef TRILINOS
 	if (iterative()) {
 		setRow(nvec, ii, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
@@ -334,7 +334,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 			
 			int k6 = 6*k;
 			int k4 = 4*k;
-			int k3 = 3*k;
 			int k2 = 2*k;
 
 			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[0][k6  ];    // column j6
@@ -445,7 +444,7 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 		odblocks[5].resize(2*odblocks_nb);
 		
 		for (int k=0; k<6; k++) {
-			for (int i=0; i<odblocks[k].size(); i++) {
+			for (unsigned int i=0; i<odblocks[k].size(); i++) {
 				odblocks[k][i] = 0;
 			}
 			current_index_positions[k] = 0;
@@ -630,44 +629,7 @@ StokesSolver::solve(double* velocity){
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}				
-		int verbose=0; // TESTING
-		if(verbose){
-			cout << " RHS is " << endl;
-			printRHS();
-			cout << endl;
-			verbose=0;
-			for (int i=0; i<res_matrix_linear_size/6; i++) {
-				cout <<"velocity components of " <<  i <<" are : " << velocity[6*i] << " " << velocity[6*i+1] << " " <<velocity[6*i+2] << " " <<velocity[6*i+3] << " " <<velocity[6*i+4] << " " <<velocity[6*i+5] <<  endl;  
-				for(int u=0; u<6; u++){
-					if (velocity[6*i] > 1e10)
-						verbose=1;
-				}
-			}
 
-		}
-
-		verbose = 0; 
-		if(verbose){
-			const char name [256] = "bla";
-			chol_c.print = 4;
-			
-			/*		cout <<endl <<  " cholmod printing " << endl;
-			//		cholmod_print_sparse(chol_res_matrix, name, &chol_c);
-			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
-		cholmod_print_dense(dense_res, name, &chol_c); */
-			cout << endl << " LF_DEM printing " << endl;	
-			ofstream rmat;
-			rmat.open("matrix.dat"); 
-			printResistanceMatrix(cout, "sparse");
-			if(((double*)chol_res_matrix->x)[0] != 1){
-				cout << " first interaction " << endl;
-				getchar();
-			}
-	
-			rmat.close();
-			printRHS();
-			//		getchar();
-		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
@@ -849,7 +811,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	current_index_positions[5] += 2;
 }
 
-
+#ifdef TRILINOS
 void
 StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
@@ -921,6 +883,7 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
     values[jj3_2][last_col_nb_jj+1] = scaledXA_n2n1;      // 21
     values[jj3_2][last_col_nb_jj+2] = scaledXA_n2*nvec.z; // 22
 }
+#endif
 
 void
 StokesSolver::factorizeResistanceMatrix(){
