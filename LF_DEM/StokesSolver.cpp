@@ -658,7 +658,12 @@ StokesSolver::solve(double* velocity){
 			cout << endl << " LF_DEM printing " << endl;	
 			ofstream rmat;
 			rmat.open("matrix.dat"); 
-			printResistanceMatrix(rmat, "sparse");
+			printResistanceMatrix(cout, "sparse");
+			if(((double*)chol_res_matrix->x)[0] != 1){
+				cout << " first interaction " << endl;
+				getchar();
+			}
+	
 			rmat.close();
 			printRHS();
 			//		getchar();
@@ -1141,7 +1146,7 @@ StokesSolver::setSolverType(string solver_type){
 
 // testing
 void
-StokesSolver::printResistanceMatrix(ofstream &out, string sparse_or_dense){
+StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 	if (direct()) {
 		if(sparse_or_dense=="sparse"){
 			//		out << endl<< " chol res " << endl;
