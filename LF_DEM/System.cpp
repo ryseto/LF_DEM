@@ -709,10 +709,8 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0);
 				if (rhs) {
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
-					for (int u=0; u<3; u++) {
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-					}
+					stokes_solver.addToRHSForce(i, GEi);
+					stokes_solver.addToRHSForce(j, GEj);
 				}
 			}
 		}
@@ -720,22 +718,22 @@ System::buildLubricationTerms(bool rhs){
     }
 }
 
-void
-System::buildLubricationRHS(){
-	double GEi[3];
-    double GEj[3];
-    for (int i=0; i<np-1; i ++) {
-		for (set<Interaction*>::iterator it = interaction_list[i].begin();
-			 it != interaction_list[i].end(); it ++) {
-			int j = (*it)->partner(i);
-			if (j > i) {
-				(*it)->GE(GEi, GEj);  // G*E_\infty term
-				stokes_solver.addToRHSForce(i, GEi);
-				stokes_solver.addToRHSForce(j, GEj);
-			}
-		}
-    }
-}
+//void
+//System::buildLubricationRHS(){
+//	double GEi[3];
+//    double GEj[3];
+//    for (int i=0; i<np-1; i ++) {
+//		for (set<Interaction*>::iterator it = interaction_list[i].begin();
+//			 it != interaction_list[i].end(); it ++) {
+//			int j = (*it)->partner(i);
+//			if (j > i) {
+//				(*it)->GE(GEi, GEj);  // G*E_\infty term
+//				stokes_solver.addToRHSForce(i, GEi);
+//				stokes_solver.addToRHSForce(j, GEj);
+//			}
+//		}
+//    }
+//}
 
 void
 System::setContactForceToParticle(){
@@ -814,14 +812,11 @@ System::updateVelocityLubrication(){
 		ang_velocity[i].z = v_total[i6+5];
 		//		cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
     }
-
 	if (dimensionless_shear_rate != 0) {
-		for (int i=0; i<np; i++) {
-			velocity[i].x += position[i].z;
-		}
 		double O_inf_y = 0.5;
 		for (int i=0; i<np; i++) {
-		 	ang_velocity[i].y += O_inf_y;
+			velocity[i].x += position[i].z;
+			ang_velocity[i].y += O_inf_y;
 		}
 	}
     stokes_solver.solvingIsDone();

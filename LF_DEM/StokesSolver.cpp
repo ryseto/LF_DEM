@@ -185,7 +185,7 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 
 // Off-Diagonal Blocks Terms, FT/UW version
 void
-StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA,double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	if (direct()) {
 		setColumn(nvec, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
 	}
@@ -663,9 +663,6 @@ StokesSolver::solve(double* velocity){
 			printRHS();
 			//		getchar();
 		}
-
-
-
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
