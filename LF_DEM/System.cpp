@@ -93,7 +93,7 @@ System::setupSystemForGenerateInit(){
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
 		angle[i] = 0;
 	}
-	for (unsigned int k=0; k<maxnb_interactionpair ; k++) {
+	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
@@ -180,7 +180,7 @@ System::setupSystem(){
 		cerr << "No colloidal force" << endl;
 	}
 	allocateRessources();
-	for (unsigned int k=0; k<maxnb_interactionpair ; k++) {
+	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}

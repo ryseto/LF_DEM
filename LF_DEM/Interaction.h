@@ -179,7 +179,7 @@ public:
 	void calcNormalVectorDistanceGap();
 	//======= particles data  ====================//
 	inline int
-	partner(int i){
+	partner(unsigned int i){
 		return (i == par_num[0] ? par_num[1] : par_num[0]);
 	}
 	inline void

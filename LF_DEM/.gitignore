@@ -22,3 +22,18 @@ LF_DEM
 
 # tests
 ./test*
+
+# local bash scripts
+*.sh
+
+# text files
+*.txt
+
+#subdirectories
+LF_DEM*/
+
+# archives
+*.gz
+*.tgz
+*.bz2
+*.tz2

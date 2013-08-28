@@ -188,7 +188,7 @@ void
 StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	if (direct()) {
 		setColumn(nvec, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
-	}
+	}	
 #ifdef TRILINOS
 	if (iterative()) {
 		setRow(nvec, ii, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
@@ -444,7 +444,7 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 		odblocks[5].resize(2*odblocks_nb);
 		
 		for (int k=0; k<6; k++) {
-			for (int i=0; i<odblocks[k].size(); i++) {
+			for (unsigned int i=0; i<odblocks[k].size(); i++) {
 				odblocks[k][i] = 0;
 			}
 			current_index_positions[k] = 0;
@@ -847,7 +847,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	current_index_positions[5] += 2;
 }
 
-
+#ifdef TRILINOS
 void
 StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
@@ -919,6 +919,7 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
     values[jj3_2][last_col_nb_jj+1] = scaledXA_n2n1;      // 21
     values[jj3_2][last_col_nb_jj+2] = scaledXA_n2*nvec.z; // 22
 }
+#endif
 
 void
 StokesSolver::factorizeResistanceMatrix(){
