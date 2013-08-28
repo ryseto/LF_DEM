@@ -693,6 +693,8 @@ void
 System::buildLubricationTerms(bool rhs){
     double GEi[3];
     double GEj[3];
+	double HEi[3];
+    double HEj[3];
 	/* interaction_list[i] includes all partners j (j > i and j < i).
 	 * This range i < np - 1 is ok?
 	 */
@@ -701,17 +703,43 @@ System::buildLubricationTerms(bool rhs){
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				//(*it)->calcXA();
-				(*it)->calcResistanceFunctions();
 				vec3d nr_vec = (*it)->get_nr_vec();
-				stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(), 0, 0);
-				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(), 0, 0);
-				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0);
-				if (rhs) {
-					(*it)->GE(GEi, GEj);  // G*E_\infty term
-					stokes_solver.addToRHSForce(i, GEi);
-					stokes_solver.addToRHSForce(j, GEj);
+				switch (lubrication_model) {
+					case 1:
+						(*it)->calcXA();
+						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(), 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(), 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0);
+						if (rhs) {
+							(*it)->GE(GEi, GEj);  // G*E_\infty term
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+						}
+						break;
+					case 2:
+						(*it)->calcResistanceFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(),
+													 (*it)->get_scaled_YA0(), (*it)->get_scaled_YB0());
+						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(),
+													 (*it)->get_scaled_YA3(), (*it)->get_scaled_YB3());
+						// double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC
+						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), (*it)->get_scaled_YB2(),
+													  (*it)->get_scaled_YB1(),  (*it)->get_scaled_YC2());
+						if (rhs) {
+							(*it)->GE(GEi, GEj);  // G*E_\infty term
+							(*it)->GE(HEi, HEj);  // G*E_\infty term
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
+						}
+						break;
+					default:
+						cerr << "lubrication_model = 0 is not implemented yet.\n";
+						exit(1);
+						break;
 				}
+				
 			}
 		}
 		stokes_solver.doneBlocks(i);
@@ -810,7 +838,7 @@ System::updateVelocityLubrication(){
 		ang_velocity[i].x = v_total[i6+3];
 		ang_velocity[i].y = v_total[i6+4];
 		ang_velocity[i].z = v_total[i6+5];
-		//		cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
+		//cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
     }
 	if (dimensionless_shear_rate != 0) {
 		double O_inf_y = 0.5;
