@@ -142,7 +142,6 @@ Interaction::updateState(bool &deactivated){
 	/* update tangential displacement: we do it before updating nr_vec
 	 * as it should be along the tangential vector defined in the previous time step
 	 */
-	//	calcLubConstants(); //@@@@
 	if (contact) {
 		if (sys->friction) {
 			calcRelativeVelocities();
