@@ -739,18 +739,18 @@ Simulation::outputConfigurationData(){
 				 */
 				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d nr_vec = sys.interaction[k].Nr_vec();
+				vec3d nr_vec = sys.interaction[k].get_nr_vec();
 				StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
 				fout_interaction << sys.interaction[k].is_contact() << ' '; // 3
 				fout_interaction << nr_vec.x << ' '; // 4
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
-				fout_interaction << sys.interaction[k].Gap_nondim() << ' '; // 7
+				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
 				fout_interaction << sys.interaction[k].getLubForce() << ' '; // 8
-				fout_interaction << sys.interaction[k].getFcNormal() << ' '; // 9
-				fout_interaction << sys.interaction[k].getFcTan() << ' '; // 10
-				fout_interaction << sys.interaction[k].getColloidalForce() << ' '; // 11
+				fout_interaction << sys.interaction[k].get_f_contact_normal_norm() << ' '; // 9
+				fout_interaction << sys.interaction[k].get_f_contact_tan_norm() << ' '; // 10
+				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 11
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 12
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 13
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << endl; // 14

@@ -95,7 +95,7 @@ System::setupSystemForGenerateInit(){
 	}
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
-		interaction[k].Label(k);
+		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
 		velocity[i].reset();
@@ -182,7 +182,7 @@ System::setupSystem(){
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
-		interaction[k].Label(k);
+		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
@@ -703,7 +703,7 @@ System::buildLubricationTerms(bool rhs){
 			if (j > i) {
 				//(*it)->calcXA();
 				(*it)->calcResistanceFunctions();
-				vec3d nr_vec = (*it)->Nr_vec();
+				vec3d nr_vec = (*it)->get_nr_vec();
 				stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(), 0, 0);
 				stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(), 0, 0);
 				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0);
@@ -1031,18 +1031,18 @@ System::analyzeState(){
 	intr_max_fc_tan = -1;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			if (interaction[k].Gap_nondim() < min_gap_nondim) {
-				min_gap_nondim = interaction[k].Gap_nondim();
+			if (interaction[k].get_gap_nondim() < min_gap_nondim) {
+				min_gap_nondim = interaction[k].get_gap_nondim();
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
-				sum_fc_normal += interaction[k].getFcNormal();
-				if (interaction[k].getFcNormal() > max_fc_normal) {
-					max_fc_normal = interaction[k].getFcNormal();
+				sum_fc_normal += interaction[k].get_f_contact_normal_norm();
+				if (interaction[k].get_f_contact_normal_norm() > max_fc_normal) {
+					max_fc_normal = interaction[k].get_f_contact_normal_norm();
 					intr_max_fc_normal = k;
 				}
-				if (interaction[k].getFcTan() > max_fc_tan) {
-					max_fc_tan = interaction[k].getFcTan();
+				if (interaction[k].get_f_contact_tan_norm() > max_fc_tan) {
+					max_fc_tan = interaction[k].get_f_contact_tan_norm();
 					intr_max_fc_tan = k;
 				}
 				if (interaction[k].disp_tan_norm() > max_disp_tan) {
