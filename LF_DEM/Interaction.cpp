@@ -374,19 +374,20 @@ Interaction::calcLubConstants(){
 	lambda_cubic = lambda*lambda*lambda;
 	lambda_p_1 = 1+lambda;
 	lambda_p_1_square = lambda_p_1*lambda_p_1;
+	lambda_p_1_cubic = lambda_p_1_square*lambda_p_1;
 	a0a0_23 = a0*a0*(2./3); // (2/3)*a0*a0
 	a1a1_23 = a1*a1*(2./3); // (2/3)*a1*a1
 	roro_6 = ro*ro/6; // (1/6)*ro*ro
 	a0a0a0_53 = a0a0_23*a0*(5./2); // (5/3)*a0*a0*a0 = (5/2)*a0*(2/3)*a0*a0
 	a1a1a1_53 = a1a1_23*a1*(5./2); // (5/3)*a1*a1*a1 = (5/2)*a1*(2/3)*a1*a1
-	rororo_524 = roro_6*ro/4;     // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(1/4)
+	rororo_524 = roro_6*ro*(5./4); // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(5/4)
 	/* XA
 	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
 	g1_XA = func_g1_XA(lambda);
-	g1_inv_XA = func_g1_XA(1/lambda);
+	g1_inv_XA = func_g1_XA(invlambda);
 	cXA[0] = g1_XA;
 	cXA[1] = (-2/lambda_p_1)*g1_XA;
 	cXA[2] = cXA[1];
@@ -397,7 +398,7 @@ Interaction::calcLubConstants(){
 	 * Y22(l) = Y11(1/l)
 	 */
 	g2_YA = func_g2_YA(lambda);
-	g2_inv_YA = func_g2_YA(1/lambda);
+	g2_inv_YA = func_g2_YA(invlambda);
 	cYA[0] = g2_YA;
 	cYA[1] = (-2/lambda_p_1)*g2_YA;
 	cYA[2] = cYA[1];
@@ -408,7 +409,7 @@ Interaction::calcLubConstants(){
 	 * Y22(l) = -Y11(1/l)
 	 */
 	g2_YB = func_g2_YB(lambda);
-	g2_inv_YB = func_g2_YB(1/lambda);
+	g2_inv_YB = func_g2_YB(invlambda);
 	g4_YC = func_g4_YC(lambda);
 	cYB[0] = g2_YB;
 	cYB[1] = -4/lambda_p_1_square*g2_YB;
@@ -420,18 +421,18 @@ Interaction::calcLubConstants(){
 	 * Y22(l) = Y11(1/l)
 	 */
 	g2_YC = func_g2_YC(lambda);
-	g2_inv_YC = func_g2_YC(1/lambda);
+	g2_inv_YC = func_g2_YC(invlambda);
 	cYC[0] = g2_YC;
 	cYC[1] = g4_YC;
 	cYC[2] = cYC[1];
 	cYC[3] = g2_inv_YC;
 	/* XG
-	 * Xab(l) = -X(3-a)(3-b)(1/l)
+	 * X_{a,b}(l) = -X_{3-a,3-b}(1/l)
 	 * X21(l) = -X12(1/l)
 	 * X22(l) = -X11(1/l)
 	 */
 	g1_XG = func_g1_XG(lambda);
-	g1_inv_XG = func_g1_XG(1/lambda);
+	g1_inv_XG = func_g1_XG(invlambda);
 	cXG[0] = g1_XG;
 	cXG[1] = -4/lambda_p_1_square*g1_XG;
 	cXG[2] = 4*lambda_square/lambda_p_1_square*g1_inv_XG;
@@ -442,7 +443,7 @@ Interaction::calcLubConstants(){
 	 * Y22(l) = -Y11(1/l)
 	 */
 	g2_YG = func_g2_YG(lambda);
-	g2_inv_YG = func_g2_YG(1/lambda);
+	g2_inv_YG = func_g2_YG(invlambda);
 	cYG[0] = g2_YG;
 	cYG[1] = -(4/lambda_p_1_square)*g2_YG;
 	cYG[2] = (4*lambda_square/lambda_p_1_square)*g2_inv_YG;
@@ -453,20 +454,20 @@ Interaction::calcLubConstants(){
 	 * Y22(l) = Y11(1/l)
 	 */
 	g2_YH = func_g2_YH(lambda);
-	g2_inv_YH = func_g2_YH(1/lambda);
+	g2_inv_YH = func_g2_YH(invlambda);
 	g5_YH = func_g5_YH(lambda);
-	g5_inv_YH = func_g5_YH(1/lambda);
+	g5_inv_YH = func_g5_YH(invlambda);
 	cYH[0] = g2_YH;
 	cYH[1] = (8/lambda_p_1_cubic)*g5_YH;
 	cYH[2] = (8*lambda_cubic/lambda_p_1_cubic)*g5_inv_YH;
 	cYH[3] = g2_inv_YH;
 	/* XM
-	 * Xab(l) = Xba(l)= X(3-a)(3-b)(1/l)
+	 * Xab(l) = Xba(l)= X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
 	g1_XM = func_g1_XM(lambda);
-	g1_inv_XM = func_g1_XM(1/lambda);
+	g1_inv_XM = func_g1_XM(invlambda);
 	g4_XM = func_g4_XM(lambda);
 	cXM[0] = g1_XM;
 	cXM[1] = (8/lambda_p_1_cubic)*g4_XM;
@@ -478,7 +479,7 @@ Interaction::calcLubConstants(){
 	 * Y22(l) = Y11(1/l)
 	 */
 	g2_YM = func_g2_YM(lambda);
-	g2_inv_YM = func_g2_YM(1/lambda);
+	g2_inv_YM = func_g2_YM(invlambda);
 	g5_YM = func_g5_YM(lambda);
 	cYM[0] = g2_YM;
 	cYM[1] = (8/lambda_p_1_cubic)*g5_YM;
@@ -564,10 +565,9 @@ Interaction::calcYM(){
 void
 Interaction::GE(double *GEi, double *GEj){
 	calcXG();
-	double nxnz_sr = nr_vec.x*nr_vec.z;
-	double common_factor_1 = (a0a0_23*XG[0]+roro_6*XG[2])*nxnz_sr;
-	double common_factor_2 = (a1a1_23*XG[3]+roro_6*XG[1])*nxnz_sr;
-
+	double nxnz = nr_vec.x*nr_vec.z;
+	double common_factor_1 = (a0a0_23*XG[0]+roro_6*XG[2])*nxnz; //((3/2)*a_0^2*XG11+(1/6)*ro^2*XG21)*nx*nz
+	double common_factor_2 = (a1a1_23*XG[3]+roro_6*XG[1])*nxnz; //((3/2)*a_1^2*XG22+(1/6)*ro^2*XG12)*nx*nz
 	GEi[0] = common_factor_1*nr_vec.x;
 	GEi[1] = common_factor_1*nr_vec.y;
 	GEi[2] = common_factor_1*nr_vec.z;
@@ -586,17 +586,17 @@ void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 								   StressTensor &stresslet_i, StressTensor &stresslet_j){
 	calcXG();
-	double n0n0_13 = nr_vec.x*nr_vec.x;
-	double n1n1_13 = nr_vec.y*nr_vec.y;
+	double n0n0 = nr_vec.x*nr_vec.x;
+	double n1n1 = nr_vec.y*nr_vec.y;
 	double n0n1 = nr_vec.x*nr_vec.y;
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double n2n2 = nr_vec.z*nr_vec.z;
 	double common_factor_i = -dot(nr_vec, a0a0_23*XG[0]*vi+roro_6*XG[1]*vj);
 	double common_factor_j = -dot(nr_vec, a1a1_23*XG[3]*vj+roro_6*XG[2]*vi);
-	stresslet_i.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
+	stresslet_i.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
 	stresslet_i *= common_factor_i;
-	stresslet_j.set(n0n0_13, n0n1, n0n2, n1n2, n1n1_13, n2n2);
+	stresslet_j.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
 	stresslet_j *= common_factor_j;
 }
 

@@ -185,9 +185,9 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 
 // Off-Diagonal Blocks Terms, FT/UW version
 void
-StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA,double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	if (direct()) {
-		setColumn(nvec, ii, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
+		setColumn(nvec, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
 	}
 #ifdef TRILINOS
 	if (iterative()) {
@@ -432,11 +432,11 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 	
 	odblocks_nb = nb_of_interactions;
 	if (direct()) {
-		for (int k=0; k<dblocks_size; k++){
+		for (int k=0; k<dblocks_size; k++) {
 			dblocks[k] = 0;
 		}
 		odbrows.clear();
-		
+
 		odblocks[0].resize(6*odblocks_nb);
 		odblocks[1].resize(4*odblocks_nb);
 		odblocks[2].resize(2*odblocks_nb);
@@ -444,20 +444,19 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 		odblocks[4].resize(4*odblocks_nb);
 		odblocks[5].resize(2*odblocks_nb);
 		
-		for(int k=0;k<6;k++){
-			for(int i=0; i<odblocks[k].size();i++){
-				odblocks[k][i]=0.;
+		for (int k=0; k<6; k++) {
+			for (int i=0; i<odblocks[k].size(); i++) {
+				odblocks[k][i] = 0;
 			}
-			current_index_positions[k]=0;
+			current_index_positions[k] = 0;
 		}
-
 		odbrows_table[0] = 0;
 	}
 #ifdef TRILINOS
 	if (iterative()) {
 		tril_res_matrix = new Epetra_CrsMatrix(Copy, *Map, 20*dof+dof );
 		tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
-		tril_res_matrix->PutScalar(0.);
+		tril_res_matrix->PutScalar(0);
 		for (int i=0; i<res_matrix_linear_size; i++){
 			for (int j=0; j<columns_max_nb; j++){
 				columns[i][j] = -1;
@@ -498,7 +497,7 @@ void
 StokesSolver::addToRHSForce(int i, double *force_i){
 	int i6 = 6*i;
 	if (direct()) {
-		for(int u=0; u<3;u++){
+		for (int u=0; u<3; u++) {
 			((double*)chol_rhs->x)[i6+u] += force_i[u];
 		}
 	}
@@ -669,9 +668,6 @@ StokesSolver::solve(double* velocity){
 			printRHS();
 			//		getchar();
 		}
-
-
-
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
@@ -801,10 +797,9 @@ StokesSolver::doneBlocks(int i){
 	}
 }
 
-
 // odblocks fillings, for FT/UW version
 void
-StokesSolver::setColumn(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
 	double n0n2 = nvec.x*nvec.z;

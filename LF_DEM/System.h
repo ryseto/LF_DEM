@@ -89,7 +89,7 @@ private:
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildLubricationTerms(bool rhs=true);
-	void buildLubricationRHS();
+//	void buildLubricationRHS();
 	void buildContactTerms();
 	void buildColloidalForceTerms();
 

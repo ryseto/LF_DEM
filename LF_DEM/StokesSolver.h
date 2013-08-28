@@ -243,7 +243,7 @@ private:
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC);
+    void setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
     void completeResistanceMatrix_trilinos();
