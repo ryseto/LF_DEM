@@ -374,12 +374,13 @@ Interaction::calcLubConstants(){
 	lambda_cubic = lambda*lambda*lambda;
 	lambda_p_1 = 1+lambda;
 	lambda_p_1_square = lambda_p_1*lambda_p_1;
+	lambda_p_1_cubic = lambda_p_1_square*lambda_p_1;
 	a0a0_23 = a0*a0*(2./3); // (2/3)*a0*a0
 	a1a1_23 = a1*a1*(2./3); // (2/3)*a1*a1
 	roro_6 = ro*ro/6; // (1/6)*ro*ro
 	a0a0a0_53 = a0a0_23*a0*(5./2); // (5/3)*a0*a0*a0 = (5/2)*a0*(2/3)*a0*a0
 	a1a1a1_53 = a1a1_23*a1*(5./2); // (5/3)*a1*a1*a1 = (5/2)*a1*(2/3)*a1*a1
-	rororo_524 = roro_6*ro/4;     // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(1/4)
+	rororo_524 = roro_6*ro*(5./4); // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(5/4)
 	/* XA
 	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
 	 * X21(l) = X12(l)
@@ -461,7 +462,7 @@ Interaction::calcLubConstants(){
 	cYH[2] = (8*lambda_cubic/lambda_p_1_cubic)*g5_inv_YH;
 	cYH[3] = g2_inv_YH;
 	/* XM
-	 * Xab(l) = Xba(l)= X(3-a)(3-b)(1/l)
+	 * Xab(l) = Xba(l)= X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
