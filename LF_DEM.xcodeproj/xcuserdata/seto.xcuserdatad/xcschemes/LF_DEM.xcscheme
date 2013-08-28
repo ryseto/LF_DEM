@@ -78,11 +78,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "D2N50VF0.5Bidi1.4_0.5Square_1.dat"
+            argument = "D3N100VF0.54Bidi1.4_0.5Cubic_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "fric1.txt"
+            argument = "fric3.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
@@ -101,7 +101,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/debug"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/test_FT"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
       <BuildableProductRunnable>
