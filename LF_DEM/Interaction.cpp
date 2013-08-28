@@ -304,10 +304,10 @@ void
 Interaction::addUpContactForceTorque(){
 	if (contact) {
 		sys->contact_force[par_num[0]] += f_contact_normal;
-		if(f_contact_normal < 0){
+		/*		if(f_contact_normal < 0){
 			cout << "neg force " << f_contact_normal<< " " << nr_vec <<" " << sys->position[par_num[0]] << " " << sys->position[par_num[1]] << endl;
 			getchar();
-		}
+			}*/
 		sys->contact_force[par_num[1]] -= f_contact_normal;
 		if (sys->friction) {
 			sys->contact_force[par_num[0]] += f_contact_tan;
@@ -567,12 +567,14 @@ Interaction::GE(double *GEi, double *GEj){
 	double nxnz_sr = nr_vec.x*nr_vec.z;
 	double common_factor_1 = (a0a0_23*XG[0]+roro_6*XG[2])*nxnz_sr;
 	double common_factor_2 = (a1a1_23*XG[3]+roro_6*XG[1])*nxnz_sr;
+
 	GEi[0] = common_factor_1*nr_vec.x;
 	GEi[1] = common_factor_1*nr_vec.y;
 	GEi[2] = common_factor_1*nr_vec.z;
 	GEj[0] = common_factor_2*nr_vec.x;
 	GEj[1] = common_factor_2*nr_vec.y;
 	GEj[2] = common_factor_2*nr_vec.z;
+
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]

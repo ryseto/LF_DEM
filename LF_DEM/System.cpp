@@ -709,10 +709,8 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0);
 				if (rhs) {
 					(*it)->GE(GEi, GEj);  // G*E_\infty term
-					for (int u=0; u<3; u++) {
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-					}
+					stokes_solver.addToRHSForce(i, GEi);
+					stokes_solver.addToRHSForce(j, GEj);
 				}
 			}
 		}
