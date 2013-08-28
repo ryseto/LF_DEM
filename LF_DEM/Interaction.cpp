@@ -304,6 +304,10 @@ void
 Interaction::addUpContactForceTorque(){
 	if (contact) {
 		sys->contact_force[par_num[0]] += f_contact_normal;
+		if(f_contact_normal < 0){
+			cout << "neg force " << f_contact_normal<< " " << nr_vec <<" " << sys->position[par_num[0]] << " " << sys->position[par_num[1]] << endl;
+			getchar();
+		}
 		sys->contact_force[par_num[1]] -= f_contact_normal;
 		if (sys->friction) {
 			sys->contact_force[par_num[0]] += f_contact_tan;

@@ -647,7 +647,7 @@ StokesSolver::solve(double* velocity){
 
 		}
 
-		verbose = 0; 
+		verbose = 1; 
 		if(verbose){
 			const char name [256] = "bla";
 			chol_c.print = 4;
