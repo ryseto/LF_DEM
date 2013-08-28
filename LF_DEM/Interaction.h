@@ -186,8 +186,8 @@ public:
 	get_par_num(unsigned int &i, unsigned int &j){
 		i = par_num[0], j = par_num[1];
 	}
-	inline void Label(unsigned int val){label = val;}
-	inline unsigned int Label(){return label;}
+	inline void set_label(unsigned int val){label = val;}
+	inline unsigned int get_label(){return label;}
 	inline double get_a0(){return a0;}
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
@@ -197,8 +197,8 @@ public:
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
-	inline double Gap_nondim(){return gap_nondim;}
-	inline vec3d Nr_vec(){return nr_vec;}
+	inline double get_gap_nondim(){return gap_nondim;}
+	inline vec3d get_nr_vec(){return nr_vec;}
 
 	//=============  Resistance Matrices ====================/
 
@@ -225,9 +225,9 @@ public:
 	double getContactVelocity();
 	double getNormalVelocity();
 	double getPotentialEnergy();
-	inline double getFcNormal(){return f_contact_normal_norm;}
-	inline double getFcTan(){return f_contact_tan.norm();}
-	inline double getColloidalForce(){return f_colloidal_norm;}
+	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
+	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
+	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
 	void addHydroStress();

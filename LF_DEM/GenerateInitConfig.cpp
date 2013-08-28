@@ -139,7 +139,7 @@ GenerateInitConfig::computeGradient(){
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();
 			rcont = sys.interaction[k].get_ro();
-			nr_vec = sys.interaction[k].Nr_vec();
+			nr_vec = sys.interaction[k].get_nr_vec();
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
@@ -257,7 +257,7 @@ GenerateInitConfig::updateInteractions(int i){
 			bool desactivated = false;
 			inter_list[k]->updateState(desactivated);
 			if (desactivated) {
-				sys.deactivated_interaction.push(inter_list[k]->Label());
+				sys.deactivated_interaction.push(inter_list[k]->get_label());
 			}
 		}
 	}

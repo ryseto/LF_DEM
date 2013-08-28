@@ -273,31 +273,25 @@ Interaction::calcContactInteraction(){
 
 void
 Interaction::checkBreakupStaticFriction(){
-	/* f_contact_normal_norm > 0 for contacting state
-	 * If normal_relative_velocity > 0 (seprating),
-	 *   f_normal is the sum of positive (spring) + negative (dashpot)
-	 * If normal_relative_velocity < 0 (approaching),
-	 *   f_normal is the sum of two positives.
+	/* [NOTE]
+	 * Test forces for the friction law include dashpot contributions in Luding model[1].
+	 * However, in our overdamped formulation, we use only springs for the test forces.
+	 * This approximated friction-law was used for our PRL2013 paper.
 	 *
+	 * [1] S. Luding. Cohesive, frictional powders: contact models for tension. Granular Matter, 10:235–246, 2008.
 	 */
-	double f_normal = f_contact_normal_norm-lub_coeff*normal_relative_velocity;
-	//f_contact_tan is only spring.
-	//f_contact_tan = kt_scaled*disp_tan;
-	//double coeff_tan_dashpot= 0;
-	//double f_tangential = (dot(f_contact_tan,disp_tan)-dashpot_coeff*dot(contact_velocity,disp_tan))/disp_tan.norm();
-	// f_contact_tan = kt_scaled*disp_tan;
-	double disp_tan_norm = disp_tan.norm();
-	double f_tangential = dot(f_contact_tan,disp_tan)/disp_tan_norm;
-	if (f_normal < 0){
-		disp_tan.reset();
-		f_contact_tan.reset();
-	} else {
-		double f_friction = sys->get_mu_static()*f_normal;
-		if (f_tangential > f_friction) {
-			f_contact_tan = (f_friction/disp_tan_norm)*disp_tan;
-			cnt_sliding++; // for output
-		}
+	double f_static = sys->get_mu_static()*f_contact_normal_norm;
+	double sq_f_tan = f_contact_tan.sq_norm();
+	if (sq_f_tan > f_static*f_static) {
+		/*
+		 * The static and dynamic friction coeffients are the same.
+		 *
+		 */
+		disp_tan *= f_static/sqrt(sq_f_tan);
+		f_contact_tan = kt_scaled*disp_tan;
+		cnt_sliding++; // for output
 	}
+	
 }
 
 void
@@ -488,7 +482,6 @@ Interaction::calcLubConstants(){
 }
 
 // Resistance functions
-
 void
 Interaction::calcResistanceFunctions(){
 	for (int j=0; j<4; j++) {
@@ -672,7 +665,7 @@ Interaction::evaluateLubricationForce(){
 	}
 	//	calcXA();
 	calcResistanceFunctions();
-	double cf_AU_i = -dot(a0*XA[0]*vi+0.5*ro*XA[1]*vj, nr_vec);
+	double cf_AU_i = -dot(a0*XA[0]*vi+ro_half*XA[1]*vj, nr_vec);
 	/*
 	 *  Second -tildeG*(-Einf)term
 	 */
