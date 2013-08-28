@@ -128,6 +128,9 @@ private:
 	double a0a0a0_53;
 	double a1a1a1_53;
 	double rororo_524;
+	double a0a0a0_43;
+	double a1a1a1_43;
+	double rororo_16;
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -203,6 +206,7 @@ public:
 	//=============  Resistance Matrices ====================/
 
 	void GE(double *GEi, double *GEj);
+	void HE(double *HEi, double *HEj);
 	void calcResistanceFunctions();
 	void calcXA();
 	void calcYA();

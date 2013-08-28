@@ -381,6 +381,9 @@ Interaction::calcLubConstants(){
 	a0a0a0_53 = a0a0_23*a0*(5./2); // (5/3)*a0*a0*a0 = (5/2)*a0*(2/3)*a0*a0
 	a1a1a1_53 = a1a1_23*a1*(5./2); // (5/3)*a1*a1*a1 = (5/2)*a1*(2/3)*a1*a1
 	rororo_524 = roro_6*ro*(5./4); // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(5/4)
+	a0a0a0_43 = a0a0_23*a0*2; // (4/3)*a0*a0*a0 = 4*a0*(2/3)*a0*a0
+	a1a1a1_43 = a1a1_23*a1*2; // (4/3)*a1*a1*a1 = 4*a1*(2/3)*a1*a1
+	rororo_16 = roro_6*ro;
 	/* XA
 	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
 	 * X21(l) = X12(l)
@@ -574,6 +577,24 @@ Interaction::GE(double *GEi, double *GEj){
 	GEj[0] = common_factor_2*nr_vec.x;
 	GEj[1] = common_factor_2*nr_vec.y;
 	GEj[2] = common_factor_2*nr_vec.z;
+
+}
+
+void
+Interaction::HE(double *HEi, double *HEj){
+	calcYH();
+	double nxny = nr_vec.x*nr_vec.y;
+	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
+	double nynz = nr_vec.y*nr_vec.z;
+	
+	double common_factor_i = a0a0a0_43*YH[0]+rororo_16*YH[2];
+	double common_factor_j = a1a1a1_43*YH[3]+rororo_16*XG[1];
+	HEi[0] = -common_factor_i*nxny;
+	HEi[1] = common_factor_i*nxnx_nznz;
+	HEi[2] = common_factor_i*nynz;
+	HEj[0] = -common_factor_j*nxny;
+	HEj[1] = common_factor_j*nxnx_nznz;
+	HEj[2] = common_factor_j*nynz;
 
 }
 
