@@ -380,7 +380,7 @@ Interaction::calcLubConstants(){
 	a1a1a1_43 = a1a1_23*a1*2; // (4/3)*a1*a1*a1 = 4*a1*(2/3)*a1*a1
 	rororo_16 = roro_6*ro;
 	/* XA
-	 * Xab(l) = Xba(l) = X(3-a)(3-b)(1/l)
+	 * X_{a,b}(l) = X_{b,a}(l) = X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
@@ -391,7 +391,7 @@ Interaction::calcLubConstants(){
 	cXA[2] = cXA[1];
 	cXA[3] = g1_inv_XA;
 	/* YA
-	 * Yab(l) = Yba(l) = Y_{3-a,3-b}(1/l)
+	 * Y_{a,b}(l) = Y_{b,a}(l) = Y_{3-a,3-b}(1/l)
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
@@ -402,19 +402,18 @@ Interaction::calcLubConstants(){
 	cYA[2] = cYA[1];
 	cYA[3] = g2_inv_YA;
 	/* YB
-	 * Yab(l) = -Y(3-a)(3-b)(1/l)
+	 * Y_{a,b}(l) = -Y_{3-a,3-b}(1/l)
 	 * Y21(l) = -Y12(1/l)
 	 * Y22(l) = -Y11(1/l)
 	 */
 	g2_YB = func_g2_YB(lambda);
 	g2_inv_YB = func_g2_YB(invlambda);
-
 	cYB[0] = g2_YB;
 	cYB[1] = -4/lambda_p_1_square*g2_YB;
 	cYB[2] = 4*lambda_square/lambda_p_1_square*g2_inv_YB;
 	cYB[3] = -g2_inv_YB;
 	/* YC
-	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l})
+	 * Y_{a,b}(l) = Y_{b,a}(l) = Y_{3-a,3-b}(1/l})
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
@@ -437,7 +436,7 @@ Interaction::calcLubConstants(){
 	cXG[2] = 4*lambda_square/lambda_p_1_square*g1_inv_XG;
 	cXG[3] = -g1_inv_XG;
 	/* YG
-	 * Yab(l) = -Y(3-a)(3-b)(1/l)
+	 * Y_{a,b}(l) = -Y_{3-a,3-b}(1/l)
 	 * Y21(l) = -Y12(1/l)
 	 * Y22(l) = -Y11(1/l)
 	 */
@@ -448,7 +447,7 @@ Interaction::calcLubConstants(){
 	cYG[2] = (4*lambda_square/lambda_p_1_square)*g2_inv_YG;
 	cYG[3] = -g2_inv_YG;
 	/* YH
-	 * Yab(l) = Y(3-a)(3-b)(1/l)
+	 * Y_{a,b}(l) = Y_{3-a,3-b}(1/l)
 	 * Y21(l) = Y12(1/l)
 	 * Y22(l) = Y11(1/l)
 	 */
@@ -461,7 +460,7 @@ Interaction::calcLubConstants(){
 	cYH[2] = (8*lambda_cubic/lambda_p_1_cubic)*g5_inv_YH;
 	cYH[3] = g2_inv_YH;
 	/* XM
-	 * Xab(l) = Xba(l)= X_{3-a,3-b}(1/l)
+	 * X_{a,b}(l) = X_{b,a}(l)= X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
@@ -473,7 +472,7 @@ Interaction::calcLubConstants(){
 	cXM[2] = cXM[1];
 	cXM[3] = g1_inv_XM;
 	/* YM
-	 * Yab(l) = Yba(l)= Y(3-a)(3-b)(1/l)
+	 * Y_{a,b}(l) = Y_{b,a}(l)= Y_{3-a,3-b}(1/l)
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
