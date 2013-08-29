@@ -390,7 +390,16 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 	
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
 	
-	
+
+	/*	
+		// DEBUG
+		ofstream mymat;
+		mymat.open("matrix.dat");
+		printResistanceMatrix(mymat, "sparse");
+		mymat.close();
+		//	exit(1);
+	*/
+
 	factorizeResistanceMatrix();
 }
 

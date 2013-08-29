@@ -718,16 +718,26 @@ System::buildLubricationTerms(bool rhs){
 						break;
 					case 2:
 						(*it)->calcResistanceFunctions();
+						// stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(),
+						// 							 (*it)->get_scaled_YA0(), (*it)->get_scaled_YB0(), (*it)->get_scaled_YC0());
+						// stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(),
+						// 							 (*it)->get_scaled_YA3(), (*it)->get_scaled_YB3(), (*it)->get_scaled_YC3());
+						// // double scaledXA, double YA, , double scaledYB, double scaledYBtilde, double scaledYC
+						// stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 
+                        //                              (*it)->get_scaled_YA2(), (*it)->get_scaled_YB2(), (*it)->get_scaled_YB1(),  (*it)->get_scaled_YC2());
+
 						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(),
 													 (*it)->get_scaled_YA0(), (*it)->get_scaled_YB0(), (*it)->get_scaled_YC0());
 						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(),
 													 (*it)->get_scaled_YA3(), (*it)->get_scaled_YB3(), (*it)->get_scaled_YC3());
 						// double scaledXA, double YA, , double scaledYB, double scaledYBtilde, double scaledYC
 						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 
-                                                     (*it)->get_scaled_YA2(), (*it)->get_scaled_YB2(), (*it)->get_scaled_YB1(),  (*it)->get_scaled_YC2());
+                                                     (*it)->get_scaled_YA2(), (*it)->get_scaled_YB2(), (*it)->get_scaled_YB1(), (*it)->get_scaled_YC2());
+
+
 						if (rhs) {
 							(*it)->GE(GEi, GEj);  // G*E_\infty term
-							(*it)->GE(HEi, HEj);  // G*E_\infty term
+							(*it)->HE(HEi, HEj);  // G*E_\infty term
 							stokes_solver.addToRHSForce(i, GEi);
 							stokes_solver.addToRHSForce(j, GEj);
 							stokes_solver.addToRHSTorque(i, HEi);
