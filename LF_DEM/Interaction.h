@@ -223,13 +223,14 @@ public:
 	inline double get_scaled_YA0(){return a0*YA[0];}
 	inline double get_scaled_YA3(){return a1*YA[3];}
 	inline double get_scaled_YA2(){return ro_half*YA[2];}
-	inline double get_scaled_YB0(){return a0*YB[0];}
-	inline double get_scaled_YB3(){return a1*YB[3];}
-	inline double get_scaled_YB2(){return ro_half*YB[2];}
-	inline double get_scaled_YB1(){return ro_half*YB[1];}
-	inline double get_scaled_YC0(){return a0*YC[0];}
-	inline double get_scaled_YC3(){return a1*YC[3];}
-	inline double get_scaled_YC2(){return ro_half*YC[2];}
+
+	inline double get_scaled_YB0(){return (2./3)*a0*a0*YB[0];}
+	inline double get_scaled_YB3(){return (2./3)*a1*a1*YB[3];}
+	inline double get_scaled_YB2(){return (2./3)*ro_half*ro_half*YB[2];}
+	inline double get_scaled_YB1(){return (2./3)*ro_half*ro_half*YB[1];}
+	inline double get_scaled_YC0(){return (4./3)*a0*a0*a0*YC[0];}
+	inline double get_scaled_YC3(){return (4./3)*a1*a1*a1*YC[3];}
+	inline double get_scaled_YC2(){return (4./3)*ro_half*ro_half*ro_half*YC[2];}
 	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
