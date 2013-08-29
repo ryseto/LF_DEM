@@ -129,7 +129,7 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 // Diagonal Blocks Terms, FT/UW version
 void
 
-StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYB, double scaledYC){
+StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC){
 	/* YA is missing?
 	 *
 	 */
@@ -139,32 +139,36 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 	double n1n1 = nvec.y*nvec.y;
 	double n1n2 = nvec.y*nvec.z;
 	double n2n2 = nvec.z*nvec.z;
+	double one_n0n0 = 1-n0n0;
+	double one_n1n1 = 1-n1n1;
+	double one_n2n2 = 1-n2n2;
+
 
 	if (direct()) {
 		int ii18 = 18*ii;
-		dblocks[ii18   ] += scaledXA*n0n0;        // 00 element of the dblock
-		dblocks[ii18+1 ] += scaledXA*n0n1;        // 10
-		dblocks[ii18+2 ] += scaledXA*n0n2;        // 20
+		dblocks[ii18   ] += scaledXA*n0n0 + scaledYA*one_n0n0;        // 00 element of the dblock
+		dblocks[ii18+1 ] += (scaledXA-scaledYA)*n0n1;        // 10
+		dblocks[ii18+2 ] += (scaledXA-scaledYA)*n0n2;        // 20
 		dblocks[ii18+3 ] += 0;                    // 30 
 		dblocks[ii18+4 ] += -scaledYB*nvec.z;     // 40
 		dblocks[ii18+5 ] += scaledYB*nvec.y;      // 50
 
-		dblocks[ii18+6 ] += scaledXA*n1n1;        // 11
-		dblocks[ii18+7 ] += scaledXA*n1n2;        // 21
+		dblocks[ii18+6 ] += scaledXA*n1n1 + scaledYA*one_n1n1;        // 11
+		dblocks[ii18+7 ] += (scaledXA-scaledYA)*n1n2;        // 21
 		dblocks[ii18+8 ] += 0;                    // 41
 		dblocks[ii18+9 ] += -scaledYB*nvec.x;     // 51
 
-		dblocks[ii18+10] += scaledXA*n2n2;        // 22
+		dblocks[ii18+10] += scaledXA*n2n2 + scaledYA*one_n2n2;        // 22
 		dblocks[ii18+11] += 0;                    // 32
 
-		dblocks[ii18+12] += scaledYC*(1-n0n0);    // 33
+		dblocks[ii18+12] += scaledYC*one_n0n0;    // 33
 		dblocks[ii18+13] += -scaledYC*n0n1;       // 43
 		dblocks[ii18+14] += -scaledYC*n0n2;       // 53
 		
-		dblocks[ii18+15] += scaledYC*(1-n1n1);    // 44
+		dblocks[ii18+15] += scaledYC*one_n1n1;    // 44
 		dblocks[ii18+16] += -scaledYC*n1n2;       // 54
 
-		dblocks[ii18+17] += scaledYC*(1-n2n2);    // 55
+		dblocks[ii18+17] += scaledYC*one_n2n2;    // 55
 
 	}
 #ifdef TRILINOS
@@ -188,13 +192,13 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 
 // Off-Diagonal Blocks Terms, FT/UW version
 void
-StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
 	if (direct()) {
-		setColumn(nvec, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
+		setColumn(nvec, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	}	
 #ifdef TRILINOS
 	if (iterative()) {
-		setRow(nvec, ii, jj, scaledXA, scaledYB, scaledYBtilde, scaledYC);
+		setRow(nvec, ii, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	}
 #endif
 }
@@ -800,13 +804,17 @@ StokesSolver::doneBlocks(int i){
 
 // odblocks fillings, for FT/UW version
 void
-StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
 	double n0n2 = nvec.x*nvec.z;
 	double n1n1 = nvec.y*nvec.y;
 	double n1n2 = nvec.y*nvec.z;
 	double n2n2 = nvec.z*nvec.z;
+	double one_n0n0 = 1-n0n0;
+	double one_n1n1 = 1-n1n1;
+	double one_n2n2 = 1-n2n2;
+
 
 	odbrows.push_back(6*jj);
 	
@@ -817,17 +825,17 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	int i4 = current_index_positions[4];
 	int i5 = current_index_positions[5];
 	
-	odblocks[0][i0  ] = scaledXA*n0n0; // column 0
-	odblocks[0][i0+1] = scaledXA*n0n1;
-	odblocks[0][i0+2] = scaledXA*n0n2;
+	odblocks[0][i0  ] = scaledXA*n0n0 + scaledYA*one_n0n0; // column 0
+	odblocks[0][i0+1] = (scaledXA-scaledYA)*n0n1;
+	odblocks[0][i0+2] = (scaledXA-scaledYA)*n0n2;
 	odblocks[0][i0+3] = 0;
 	odblocks[0][i0+4] = -scaledYB*nvec.z;
 	odblocks[0][i0+5] = scaledYB*nvec.y;
-	odblocks[1][i1  ] = scaledXA*n1n1; // column 1
-	odblocks[1][i1+1] = scaledXA*n1n2;
+	odblocks[1][i1  ] = scaledXA*n1n1 + scaledYA*one_n1n1; // column 1
+	odblocks[1][i1+1] = (scaledXA-scaledYA)*n1n2;
 	odblocks[1][i1+2] = 0;
 	odblocks[1][i1+3] = -scaledYB*nvec.x;
-	odblocks[2][i2  ] = scaledXA*n2n2; // column 2
+	odblocks[2][i2  ] = scaledXA*n2n2 + scaledYA*one_n2n2; // column 2
 	odblocks[2][i2+1] = 0;
 	odblocks[3][i3  ] = 0; // column 3
 	odblocks[3][i3+1] = -scaledYBtilde*nvec.z;
@@ -852,7 +860,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 
 #ifdef TRILINOS
 void
-StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
 	cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
 	exit(1);
 
