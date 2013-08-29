@@ -219,9 +219,11 @@ public:
 	void calcYH();
 	inline double get_scaled_XA0(){return a0*XA[0];}
 	inline double get_scaled_XA3(){return a1*XA[3];}
+	inline double get_scaled_XA1(){return ro_half*XA[1];}
 	inline double get_scaled_XA2(){return ro_half*XA[2];}
 	inline double get_scaled_YA0(){return a0*YA[0];}
 	inline double get_scaled_YA3(){return a1*YA[3];}
+	inline double get_scaled_YA1(){return ro_half*YA[1];}
 	inline double get_scaled_YA2(){return ro_half*YA[2];}
 	inline double get_scaled_YB0(){return a0a0_23*YB[0];}
 	inline double get_scaled_YB3(){return a1a1_23*YB[3];}
@@ -229,6 +231,7 @@ public:
 	inline double get_scaled_YB1(){return roro_6*YB[1];}
 	inline double get_scaled_YC0(){return a0a0a0_43*YC[0];}
 	inline double get_scaled_YC3(){return a1a1a1_43*YC[3];}
+	inline double get_scaled_YC1(){return rororo_16*YC[1];}
 	inline double get_scaled_YC2(){return rororo_16*YC[2];}
 	
 	//===== forces/stresses  ========================== //
