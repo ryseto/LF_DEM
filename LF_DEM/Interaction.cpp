@@ -571,7 +571,6 @@ Interaction::GE(double *GEi, double *GEj){
 	GEj[0] = common_factor_2*nr_vec.x;
 	GEj[1] = common_factor_2*nr_vec.y;
 	GEj[2] = common_factor_2*nr_vec.z;
-
 }
 
 void
@@ -580,7 +579,6 @@ Interaction::HE(double *HEi, double *HEj){
 	double nxny = nr_vec.x*nr_vec.y;
 	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
 	double nynz = nr_vec.y*nr_vec.z;
-	
 	double common_factor_i = a0a0a0_43*YH[0]+rororo_16*YH[2];
 	double common_factor_j = a1a1a1_43*YH[3]+rororo_16*XG[1];
 	HEi[0] = -common_factor_i*nxny;
@@ -589,7 +587,6 @@ Interaction::HE(double *HEi, double *HEj){
 	HEj[0] = -common_factor_j*nxny;
 	HEj[1] = common_factor_j*nxnx_nznz;
 	HEj[2] = common_factor_j*nynz;
-
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
