@@ -408,7 +408,7 @@ Interaction::calcLubConstants(){
 	 */
 	g2_YB = func_g2_YB(lambda);
 	g2_inv_YB = func_g2_YB(invlambda);
-	g4_YC = func_g4_YC(lambda);
+
 	cYB[0] = g2_YB;
 	cYB[1] = -4/lambda_p_1_square*g2_YB;
 	cYB[2] = 4*lambda_square/lambda_p_1_square*g2_inv_YB;
@@ -420,6 +420,7 @@ Interaction::calcLubConstants(){
 	 */
 	g2_YC = func_g2_YC(lambda);
 	g2_inv_YC = func_g2_YC(invlambda);
+	g4_YC = func_g4_YC(lambda);
 	cYC[0] = g2_YC;
 	cYC[1] = g4_YC;
 	cYC[2] = cYC[1];

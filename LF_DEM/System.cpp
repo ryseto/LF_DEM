@@ -732,7 +732,7 @@ System::buildLubricationTerms(bool rhs){
 													 (*it)->get_scaled_YA3(), (*it)->get_scaled_YB3(), (*it)->get_scaled_YC3());
 						// double scaledXA, double YA, , double scaledYB, double scaledYBtilde, double scaledYC
 						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 
-                                                     (*it)->get_scaled_YA2(), (*it)->get_scaled_YB2(), (*it)->get_scaled_YB1(), (*it)->get_scaled_YC2());
+                                                     (*it)->get_scaled_YA2(), (*it)->get_scaled_YB1(), (*it)->get_scaled_YB2(), (*it)->get_scaled_YC2());
 
 
 						if (rhs) {
