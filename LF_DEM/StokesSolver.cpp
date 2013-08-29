@@ -299,12 +299,12 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((double*)chol_res_matrix->x)[pj6  ] = dblocks[j18];   // column j6
 		((double*)chol_res_matrix->x)[pj6+1] = dblocks[j18+1];
 		((double*)chol_res_matrix->x)[pj6+2] = dblocks[j18+2];
-		((double*)chol_res_matrix->x)[pj6+3] = dblocks[j18+3];
+		((double*)chol_res_matrix->x)[pj6+3] = dblocks[j18+3]; 
 		((double*)chol_res_matrix->x)[pj6+4] = dblocks[j18+4];
 		((double*)chol_res_matrix->x)[pj6+5] = dblocks[j18+5];
 		((double*)chol_res_matrix->x)[pj6_1  ] = dblocks[j18+6];   // column j6+1
 		((double*)chol_res_matrix->x)[pj6_1+1] = dblocks[j18+7];
-		((double*)chol_res_matrix->x)[pj6_1+2] = -dblocks[j18+4];   // anti-symmetry
+		((double*)chol_res_matrix->x)[pj6_1+2] = -dblocks[j18+4];  // anti-symmetry
 		((double*)chol_res_matrix->x)[pj6_1+3] = dblocks[j18+8];
 		((double*)chol_res_matrix->x)[pj6_1+4] = dblocks[j18+9];
 		((double*)chol_res_matrix->x)[pj6_2  ] = dblocks[j18+10];   // column j6+2
@@ -343,45 +343,45 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 			int k4 = 4*k;
 			int k2 = 2*k;
 
-			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[0][k6  ];    // column j6
+			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[0][k6  ]; // A   // column j6
 			((double*)chol_res_matrix->x)[pj6+6 + u +1]   = odblocks[0][k6+1];
 			((double*)chol_res_matrix->x)[pj6+6 + u +2]   = odblocks[0][k6+2];
-			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = odblocks[0][k6+3];
+			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = odblocks[0][k6+3]; // B
 			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[0][k6+4];
 			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[0][k6+5];
 
-			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[0][k6+1];  // column j6+1
+			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[0][k6+1]; // A  // column j6+1
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[1][k4  ];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[1][k4+1];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[0][k6+4];
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[0][k6+4]; // B
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = odblocks[1][k4+2];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[1][k4+3];
 
-			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[0][k6+2];  // column j6+2
+			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[0][k6+2]; // A // column j6+2
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[1][k4+1];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[2][k2  ];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[0][k6+5];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[0][k6+5]; // B
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[1][k4+3];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = odblocks[2][k2+1];
 			
-			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[3][k6  ];   // column j6+3
+			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[3][k6  ]; // Btilde   // column j6+3
 			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[3][k6+1];
 			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[3][k6+2];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[3][k6+3];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[3][k6+3]; // C
 			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[3][k6+4];
 			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[3][k6+5];
 			
-			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[3][k6+1];  // column j6+4
+			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[3][k6+1]; // Btilde // column j6+4
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = odblocks[4][k4  ];
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[4][k4+1];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[3][k6+4];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[3][k6+4]; // C
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[4][k4+2];
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[4][k4+3];
 			
-			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[3][k6+2];  // column j6+5
+			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[3][k6+2]; // Btilde // column j6+5
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[4][k4+1];
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[5][k2  ];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[3][k6+5];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[3][k6+5]; // C
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[4][k4+3];
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[5][k2+1];
 			
@@ -391,14 +391,14 @@ StokesSolver::completeResistanceMatrix_cholmod(){
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
 	
 
-	/*	
+	
 		// DEBUG
 		ofstream mymat;
 		mymat.open("matrix.dat");
 		printResistanceMatrix(mymat, "sparse");
 		mymat.close();
-		//	exit(1);
-	*/
+		//exit(1);
+		
 
 	factorizeResistanceMatrix();
 }
