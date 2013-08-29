@@ -121,6 +121,7 @@ Interaction::activate_contact(){
 	disp_tan.reset();
 	strain_contact_start = sys->get_shear_strain();
 	lub_coeff = sys->get_lub_coeff_contact();
+	log_lub_coeff = log(1/(sys->lub_reduce_parameter));
 }
 
 void
@@ -390,7 +391,7 @@ Interaction::calcLubConstants(){
 	cXA[2] = cXA[1];
 	cXA[3] = g1_inv_XA;
 	/* YA
-	 * Yab(l) = Yba(l) = Y(3-a)(3-b)(1/l)
+	 * Yab(l) = Yba(l) = Y_{3-a,3-b}(1/l)
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
