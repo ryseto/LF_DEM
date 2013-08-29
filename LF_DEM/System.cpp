@@ -734,7 +734,6 @@ System::buildLubricationTerms(bool rhs){
 						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA1(), (*it)->get_scaled_YA1(),
 													  (*it)->get_scaled_YB1(), (*it)->get_scaled_YB2(), (*it)->get_scaled_YC1());
 						
-
 						if (rhs) {
 							(*it)->GE(GEi, GEj);  // G*E_\infty term
 							(*it)->HE(HEi, HEj);  // G*E_\infty term
