@@ -13,6 +13,7 @@ Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
+	
 }
 
 /* Make a normal vector
@@ -564,22 +565,34 @@ Interaction::calcYM(){
 
 void
 Interaction::GE(double *GEi, double *GEj){
-//	calcXG();
-//	calcYG();
+	/* NOTE:
+	 * Calculation of XG and YG needs to be done before that.
+	 */
 	double nxnz = nr_vec.x*nr_vec.z;
 	/* GE1 = nx*nz*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(nz,0,nx);
 	 * GE2 = nx*nz*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(nz,0,nx);
 	 */
-	double common_factor_i = (get_scaled_XG0()+get_scaled_XG2()-2*(get_scaled_YG0()+get_scaled_YG2()))*nxnz;
-	double common_factor_j = (get_scaled_XG1()+get_scaled_XG3()-2*(get_scaled_YG1()+get_scaled_YG3()))*nxnz;
-	double additional_term_i = get_scaled_YG0()+get_scaled_YG2();
-	double additional_term_j = get_scaled_YG1()+get_scaled_YG3();
-	GEi[0] = common_factor_i*nr_vec.x+additional_term_i*nr_vec.z;
-	GEi[1] = common_factor_i*nr_vec.y;
-	GEi[2] = common_factor_i*nr_vec.z+additional_term_i*nr_vec.x;
-	GEj[0] = common_factor_j*nr_vec.x+additional_term_j*nr_vec.z;
-	GEj[1] = common_factor_j*nr_vec.y;
-	GEj[2] = common_factor_j*nr_vec.z+additional_term_j*nr_vec.x;
+	if (sys->lubrication_model == 1){
+		double common_factor_i = (get_scaled_XG0()+get_scaled_XG2())*nxnz;
+		double common_factor_j = (get_scaled_XG1()+get_scaled_XG3())*nxnz;
+		GEi[0] = common_factor_i*nr_vec.x;
+		GEi[1] = common_factor_i*nr_vec.y;
+		GEi[2] = common_factor_i*nr_vec.z;
+		GEj[0] = common_factor_j*nr_vec.x;
+		GEj[1] = common_factor_j*nr_vec.y;
+		GEj[2] = common_factor_j*nr_vec.z;
+	} else {
+		double common_factor_i = (get_scaled_XG0()+get_scaled_XG2()-2*(get_scaled_YG0()+get_scaled_YG2()))*nxnz;
+		double common_factor_j = (get_scaled_XG1()+get_scaled_XG3()-2*(get_scaled_YG1()+get_scaled_YG3()))*nxnz;
+		double additional_term_i = get_scaled_YG0()+get_scaled_YG2();
+		double additional_term_j = get_scaled_YG1()+get_scaled_YG3();
+		GEi[0] = common_factor_i*nr_vec.x+additional_term_i*nr_vec.z;
+		GEi[1] = common_factor_i*nr_vec.y;
+		GEi[2] = common_factor_i*nr_vec.z+additional_term_i*nr_vec.x;
+		GEj[0] = common_factor_j*nr_vec.x+additional_term_j*nr_vec.z;
+		GEj[1] = common_factor_j*nr_vec.y;
+		GEj[2] = common_factor_j*nr_vec.z+additional_term_j*nr_vec.x;
+	}
 }
 
 void
