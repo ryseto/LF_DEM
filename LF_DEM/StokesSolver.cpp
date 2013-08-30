@@ -141,8 +141,7 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-
-
+  	
 	if (direct()) {
 		int ii18 = 18*ii;
 		dblocks[ii18   ] += scaledXA*n0n0 + scaledYA*one_n0n0;        // 00 element of the dblock
