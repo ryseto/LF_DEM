@@ -150,13 +150,13 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 		dblocks[ii18+1 ] += (scaledXA-scaledYA)*n0n1;        // 10
 		dblocks[ii18+2 ] += (scaledXA-scaledYA)*n0n2;        // 20
 		dblocks[ii18+3 ] += 0;                    // 30 
-		dblocks[ii18+4 ] += scaledYB*nvec.z;     // 40
-		dblocks[ii18+5 ] += -scaledYB*nvec.y;      // 50
+		dblocks[ii18+4 ] += -scaledYB*nvec.z;     // 40
+		dblocks[ii18+5 ] += +scaledYB*nvec.y;      // 50
 
 		dblocks[ii18+6 ] += scaledXA*n1n1 + scaledYA*one_n1n1;        // 11
 		dblocks[ii18+7 ] += (scaledXA-scaledYA)*n1n2;        // 21
 		dblocks[ii18+8 ] += 0;                    // 41
-		dblocks[ii18+9 ] += scaledYB*nvec.x;     // 51
+		dblocks[ii18+9 ] += -scaledYB*nvec.x;     // 51
 
 		dblocks[ii18+10] += scaledXA*n2n2 + scaledYA*one_n2n2;        // 22
 		dblocks[ii18+11] += 0;                    // 32
@@ -391,17 +391,16 @@ StokesSolver::completeResistanceMatrix_cholmod(){
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
 	
 
-	/*
-	// DEBUG
-		ofstream mymat;
-		//		mymat.open("matrix.dat");
-		printResistanceMatrix(cout, "sparse");
-		//		mymat.close();
 	
-		*/	
-
+	// DEBUG
+	/*		ofstream mymat;
+		mymat.open("matrix.dat");
+		printResistanceMatrix(mymat, "sparse");
+		mymat.close();
+		printRHS();
+	*/	
 	factorizeResistanceMatrix();
-	//	exit(1);
+	//		exit(1);
 }
 
 
@@ -662,7 +661,8 @@ StokesSolver::solve(double* velocity){
 			}
 
 		}
-		//	verbose = 0;
+		//		exit(1);
+		verbose = 0;
 		if (verbose){
 			//const char name [256] = "bla";
 			chol_c.print = 4;
@@ -1233,7 +1233,7 @@ void
 StokesSolver::printRHS(){
 	if (direct()) {
 		for (int i = 0; i < res_matrix_linear_size; i++) {
-			cout << i << " (part " << " " << i-i%6 << " )  " << ((double*)chol_rhs->x)[i] <<  endl;
+			cout << i << " (part " << " " << (i-i%6)/6 << " )  " << ((double*)chol_rhs->x)[i] <<  endl;
 		}
 	}
 }
