@@ -117,7 +117,6 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 	if (iterative()) {
 		cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
 		exit(1);
-
 		int ii3 = 3*ii;
 		for (int j = 0; j < 3; j ++) {
 			values[ii3+j][j] += FUvalue;
@@ -192,10 +191,11 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 
 // Off-Diagonal Blocks Terms, FT/UW version
 void
-StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
+StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
+							  double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
 	if (direct()) {
 		setColumn(nvec, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
-	}	
+	}
 #ifdef TRILINOS
 	if (iterative()) {
 		setRow(nvec, ii, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
@@ -825,7 +825,6 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
 
-
 	odbrows.push_back(6*jj);
 	
 	int i0 = current_index_positions[0];
@@ -851,15 +850,15 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	odblocks[3][i3  ] = 0; // column 3
 	odblocks[3][i3+1] = scaledYBtilde*nvec.z;
 	odblocks[3][i3+2] = -scaledYBtilde*nvec.y;
-	odblocks[3][i3+3] = scaledYC*(1-n0n0);
+	odblocks[3][i3+3] = scaledYC*one_n0n0;
 	odblocks[3][i3+4] = -scaledYC*n0n1;
 	odblocks[3][i3+5] = -scaledYC*n0n2;
 	odblocks[4][i4  ] = 0; // column 4
 	odblocks[4][i4+1] = scaledYBtilde*nvec.x;
-	odblocks[4][i4+2] = scaledYC*(1-n1n1);
+	odblocks[4][i4+2] = scaledYC*one_n1n1;
 	odblocks[4][i4+3] = -scaledYC*n1n2;
 	odblocks[5][i5  ] = 0; // column 5
-	odblocks[5][i5+1] = scaledYC*(1-n2n2);
+	odblocks[5][i5+1] = scaledYC*one_n2n2;
 
 	current_index_positions[0] += 6;
 	current_index_positions[1] += 4;

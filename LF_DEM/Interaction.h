@@ -124,7 +124,7 @@ private:
 	double cYM[4];
 	double a0a0_23;
 	double a1a1_23;
-	double roro_6;
+	double roro_16;
 	double a0a0a0_53;
 	double a1a1a1_53;
 	double rororo_524;
@@ -226,25 +226,26 @@ public:
 	inline double get_scaled_YA2(){return ro_half*YA[2];}
 	inline double get_scaled_YA3(){return a1*YA[3];}
 	inline double get_scaled_YB0(){return a0a0_23*YB[0];}
-	inline double get_scaled_YB1(){return roro_6*YB[1];}
-	inline double get_scaled_YB2(){return roro_6*YB[2];}
+	inline double get_scaled_YB1(){return roro_16*YB[1];}
+	inline double get_scaled_YB2(){return roro_16*YB[2];}
 	inline double get_scaled_YB3(){return a1a1_23*YB[3];}
 	inline double get_scaled_YC0(){return a0a0a0_43*YC[0];}
-	inline double get_scaled_YC3(){return a1a1a1_43*YC[3];}
 	inline double get_scaled_YC1(){return rororo_16*YC[1];}
 	inline double get_scaled_YC2(){return rororo_16*YC[2];}
+	inline double get_scaled_YC3(){return a1a1a1_43*YC[3];}
 	inline double get_scaled_XG0(){return a0a0_23*XG[0];}
-	inline double get_scaled_XG1(){return roro_6*XG[1];}
-	inline double get_scaled_XG2(){return roro_6*XG[2];}
+	inline double get_scaled_XG1(){return roro_16*XG[1];}
+	inline double get_scaled_XG2(){return roro_16*XG[2];}
 	inline double get_scaled_XG3(){return a1a1_23*XG[3];}
 	inline double get_scaled_YG0(){return a0a0_23*YG[0];}
-	inline double get_scaled_YG1(){return roro_6*YG[1];}
-	inline double get_scaled_YG2(){return roro_6*YG[2];}
+	inline double get_scaled_YG1(){return roro_16*YG[1];}
+	inline double get_scaled_YG2(){return roro_16*YG[2];}
 	inline double get_scaled_YG3(){return a1a1_23*YG[3];}
-	
-	
-	
-	
+	inline double get_scaled_YH0(){return a0a0a0_43*YH[0];}
+	inline double get_scaled_YH1(){return rororo_16*YH[1];}
+	inline double get_scaled_YH2(){return rororo_16*YH[2];}
+	inline double get_scaled_YH3(){return a1a1a1_43*YH[3];}
+
 	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();

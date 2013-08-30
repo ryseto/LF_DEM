@@ -372,13 +372,13 @@ Interaction::calcLubConstants(){
 	lambda_p_1_cubic = lambda_p_1_square*lambda_p_1;
 	a0a0_23 = a0*a0*(2./3); // (2/3)*a0*a0
 	a1a1_23 = a1*a1*(2./3); // (2/3)*a1*a1
-	roro_6 = ro*ro/6; // (1/6)*ro*ro
+	roro_16 = ro*ro/6; // (1/6)*ro*ro
 	a0a0a0_53 = a0a0_23*a0*(5./2); // (5/3)*a0*a0*a0 = (5/2)*a0*(2/3)*a0*a0
 	a1a1a1_53 = a1a1_23*a1*(5./2); // (5/3)*a1*a1*a1 = (5/2)*a1*(2/3)*a1*a1
-	rororo_524 = roro_6*ro*(5./4); // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(5/4)
+	rororo_524 = roro_16*ro*(5./4); // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(5/4)
 	a0a0a0_43 = a0a0_23*a0*2; // (4/3)*a0*a0*a0 = 4*a0*(2/3)*a0*a0
 	a1a1a1_43 = a1a1_23*a1*2; // (4/3)*a1*a1*a1 = 4*a1*(2/3)*a1*a1
-	rororo_16 = roro_6*ro;
+	rororo_16 = roro_16*ro;
 	/* XA
 	 * X_{a,b}(l) = X_{b,a}(l) = X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
@@ -584,8 +584,8 @@ Interaction::HE(double *HEi, double *HEj){
 	double nxny = nr_vec.x*nr_vec.y;
 	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
 	double nynz = nr_vec.y*nr_vec.z;
-	double common_factor_i = a0a0a0_43*YH[0]+rororo_16*YH[2];
-	double common_factor_j = a1a1a1_43*YH[3]+rororo_16*YH[1];
+	double common_factor_i = get_scaled_YH0()+get_scaled_YH2();
+	double common_factor_j = get_scaled_YH3()+get_scaled_YH1();
 	HEi[0] = -common_factor_i*nxny;
 	HEi[1] = common_factor_i*nxnx_nznz;
 	HEi[2] = common_factor_i*nynz;
@@ -609,8 +609,8 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	double n0n2 = nr_vec.x*nr_vec.z;
 	double n1n2 = nr_vec.y*nr_vec.z;
 	double n2n2 = nr_vec.z*nr_vec.z;
-	double common_factor_i = -dot(nr_vec, a0a0_23*XG[0]*vi+roro_6*XG[1]*vj);
-	double common_factor_j = -dot(nr_vec, a1a1_23*XG[3]*vj+roro_6*XG[2]*vi);
+	double common_factor_i = -dot(nr_vec, get_scaled_XG0()*vi+get_scaled_XG1()*vj);
+	double common_factor_j = -dot(nr_vec, get_scaled_XG3()*vj+get_scaled_XG2()*vi);
 	stresslet_i.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
 	stresslet_i *= common_factor_i;
 	stresslet_j.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
@@ -694,7 +694,7 @@ Interaction::evaluateLubricationForce(){
 	 *  Second -tildeG*(-Einf)term
 	 */
 	calcXG();
-	double cf_GE_i = nr_vec.x*nr_vec.z*(a0a0_23*XG[0]+roro_6*XG[2]);
+	double cf_GE_i = nr_vec.x*nr_vec.z*(a0a0_23*XG[0]+roro_16*XG[2]);
 	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
 }
 
