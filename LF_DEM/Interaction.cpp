@@ -563,10 +563,13 @@ void
 Interaction::GE(double *GEi, double *GEj){
 	calcXG();
 	double nxnz = nr_vec.x*nr_vec.z;
+	/* GE1 = nx*nz*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(nz,0,nx);
+	 * GE2 = nx*nz*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(nz,0,nx);
+	 */
 	double common_factor_i = (get_scaled_XG0()+get_scaled_XG2()-2*(get_scaled_YG0()+get_scaled_YG2()))*nxnz; //((3/2)*a_0^2*XG11+(1/6)*ro^2*XG21)*nx*nz
-	double common_factor_j = (get_scaled_XG3()+get_scaled_XG1()-2*(get_scaled_YG3()+get_scaled_YG1()))*nxnz; //((3/2)*a_1^2*XG22+(1/6)*ro^2*XG12)*nx*nz
+	double common_factor_j = (get_scaled_XG1()+get_scaled_XG3()-2*(get_scaled_YG1()+get_scaled_YG3()))*nxnz; //((3/2)*a_1^2*XG22+(1/6)*ro^2*XG12)*nx*nz
 	double additional_term_i = get_scaled_YG0()+get_scaled_YG2();
-	double additional_term_j = get_scaled_YG3()+get_scaled_YG1();
+	double additional_term_j = get_scaled_YG1()+get_scaled_YG3();
 	GEi[0] = common_factor_i*nr_vec.x+additional_term_i*nr_vec.z;
 	GEi[1] = common_factor_i*nr_vec.y;
 	GEi[2] = common_factor_i*nr_vec.z+additional_term_i*nr_vec.x;
@@ -582,7 +585,7 @@ Interaction::HE(double *HEi, double *HEj){
 	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
 	double nynz = nr_vec.y*nr_vec.z;
 	double common_factor_i = a0a0a0_43*YH[0]+rororo_16*YH[2];
-	double common_factor_j = a1a1a1_43*YH[3]+rororo_16*XG[1];
+	double common_factor_j = a1a1a1_43*YH[3]+rororo_16*YH[1];
 	HEi[0] = -common_factor_i*nxny;
 	HEi[1] = common_factor_i*nxnx_nznz;
 	HEi[2] = common_factor_i*nynz;
