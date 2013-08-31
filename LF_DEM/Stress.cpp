@@ -165,11 +165,11 @@ System::calcStressesHydroContact(){
 	 2. and 3.: Stresses from
 	 2-body lubrication and contacts  **/
 	// first obtain hydrodynamic part of velocity
-    stokes_solver.resetRHS();
+	stokes_solver.resetRHS();
 	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
     stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
-    buildLubricationTerms();
+	buildLubricationTerms();
     stokes_solver.completeResistanceMatrix();
     stokes_solver.solve(v_hydro);
 	// then obtain contact forces, and contact part of velocity
@@ -184,6 +184,7 @@ System::calcStressesHydroContact(){
     stokes_solver.solve(v_colloidal);
 	/////////////////////////////////////////////////
     stokes_solver.solvingIsDone();
+	
 	// from that, compute stresses
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -192,6 +193,46 @@ System::calcStressesHydroContact(){
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 		}
 	}
+
+	/*************************************************************************************
+	 *                                                                                   *
+	 *             Test stress calculation                                               *
+	 *                                                                                   *
+	 *************************************************************************************/
+	
+	
+	stokes_solver.resetRHS();
+    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
+    addStokesDrag();
+    buildLubricationTerms();
+    setContactForceToParticle();
+	buildContactTerms();
+	setColloidalForceToParticle();
+	buildColloidalForceTerms();
+	stokes_solver.completeResistanceMatrix();
+	stokes_solver.solve(v_total);
+    stokes_solver.solvingIsDone();
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			interaction[k].calcTestStress();
+		}
+	}
+	double v_diff = 0;
+	double s_diff = 0;
+	for (int i=0; i<np; i++) {
+		int i6 = 6*i;
+		double vx = v_total[i6] - (v_hydro[i6]+v_colloidal[i6]+v_cont[i6]);
+		double vy = v_total[i6+1] - (v_hydro[i6+1]+v_colloidal[i6+1]+v_cont[i6+1]);
+		double vz = v_total[i6+2] - (v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
+		v_diff += sqrt(vx*vx + vy*vy +vz*vz);
+		StressTensor total_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
+		s_diff += abs((total_stress-test_lubstress[i]).getStressXZ());
+	}
+	cerr << " v_diff = " << v_diff << endl;
+	cerr << " s_diff = " << s_diff << endl;
+	/************************* test ********************************************************/
+	
+	
 	/*
 	 * Calculate lubrication force to output
 	 */
@@ -227,6 +268,8 @@ System::calcStress(){
 	} else {
 		calcStressesHydroContact();
 	}
+	
+	testStressCalculation();
 	total_hydro_stress.reset();
 	total_contact_stressGU.reset();
 	total_colloidal_stressGU.reset();
@@ -260,6 +303,56 @@ System::calcStress(){
 	total_brownian_stress /= System_volume();
 	stressBrownianReset();
 }
+
+void
+System::testStressCalculation(){
+
+//	for (int i=0; i<np; i++) {
+//		int i3 = 3*i;
+//		cerr << v_total[i3] << endl;
+//	}
+//	
+//	stokes_solver.resetRHS();
+//	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
+//    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
+//    addStokesDrag();
+//    buildLubricationTerms();
+//	setContactForceToParticle();
+//    stokes_solver.completeResistanceMatrix();
+//    
+//	
+//	
+//	
+//	
+//	
+//	
+//	stokes_solver.solve(v_hydro);
+//	// then obtain contact forces, and contact part of velocity
+//    stokes_solver.resetRHS();
+//	
+//    buildContactTerms();
+//    stokes_solver.solve(v_cont);
+//	// then obtain colloidal forces
+//    stokes_solver.resetRHS();
+//	setColloidalForceToParticle();
+//    buildColloidalForceTerms();
+//    stokes_solver.solve(v_colloidal);
+//	/////////////////////////////////////////////////
+//    stokes_solver.solvingIsDone();
+//	// from that, compute stresses
+//	
+//	
+//	
+}
+
+
+
+
+
+
+
+
+
 
 
 

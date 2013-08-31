@@ -106,7 +106,6 @@ private:
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
 	//==========================================================================//
-	
 	void calcLubConstants();
 	double lambda_square;
 	double lambda_cubic;
@@ -205,9 +204,11 @@ public:
 
 	//=============  Resistance Matrices ====================/
 
-	void GE(double *GEi, double *GEj);
-	void HE(double *HEi, double *HEj);
-	void calcResistanceFunctions();
+	void calcGE(double *GEi, double *GEj);
+	void calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj);
+	void calcXFunctions();
+	void calcXYFunctions();
+	
 	void calcXA();
 	void calcYA();
 	void calcYB();
@@ -217,34 +218,34 @@ public:
 	void calcXM();
 	void calcYM();
 	void calcYH();
-	inline double get_scaled_XA0(){return a0*XA[0];}
-	inline double get_scaled_XA1(){return ro_half*XA[1];}
-	inline double get_scaled_XA2(){return ro_half*XA[2];}
-	inline double get_scaled_XA3(){return a1*XA[3];}
-	inline double get_scaled_YA0(){return a0*YA[0];}
-	inline double get_scaled_YA1(){return ro_half*YA[1];}
-	inline double get_scaled_YA2(){return ro_half*YA[2];}
-	inline double get_scaled_YA3(){return a1*YA[3];}
-	inline double get_scaled_YB0(){return a0a0_23*YB[0];}
-	inline double get_scaled_YB1(){return roro_16*YB[1];}
-	inline double get_scaled_YB2(){return roro_16*YB[2];}
-	inline double get_scaled_YB3(){return a1a1_23*YB[3];}
-	inline double get_scaled_YC0(){return a0a0a0_43*YC[0];}
-	inline double get_scaled_YC1(){return rororo_16*YC[1];}
-	inline double get_scaled_YC2(){return rororo_16*YC[2];}
-	inline double get_scaled_YC3(){return a1a1a1_43*YC[3];}
-	inline double get_scaled_XG0(){return a0a0_23*XG[0];}
-	inline double get_scaled_XG1(){return roro_16*XG[1];}
-	inline double get_scaled_XG2(){return roro_16*XG[2];}
-	inline double get_scaled_XG3(){return a1a1_23*XG[3];}
-	inline double get_scaled_YG0(){return a0a0_23*YG[0];}
-	inline double get_scaled_YG1(){return roro_16*YG[1];}
-	inline double get_scaled_YG2(){return roro_16*YG[2];}
-	inline double get_scaled_YG3(){return a1a1_23*YG[3];}
-	inline double get_scaled_YH0(){return a0a0a0_43*YH[0];}
-	inline double get_scaled_YH1(){return rororo_16*YH[1];}
-	inline double get_scaled_YH2(){return rororo_16*YH[2];}
-	inline double get_scaled_YH3(){return a1a1a1_43*YH[3];}
+	inline double scaledXA0(){return a0*XA[0];}
+	inline double scaledXA1(){return ro_half*XA[1];}
+	inline double scaledXA2(){return ro_half*XA[2];}
+	inline double scaledXA3(){return a1*XA[3];}
+	inline double scaledYA0(){return a0*YA[0];}
+	inline double scaledYA1(){return ro_half*YA[1];}
+	inline double scaledYA2(){return ro_half*YA[2];}
+	inline double scaledYA3(){return a1*YA[3];}
+	inline double scaledYB0(){return a0a0_23*YB[0];}
+	inline double scaledYB1(){return roro_16*YB[1];}
+	inline double scaledYB2(){return roro_16*YB[2];}
+	inline double scaledYB3(){return a1a1_23*YB[3];}
+	inline double scaledYC0(){return a0a0a0_43*YC[0];}
+	inline double scaledYC1(){return rororo_16*YC[1];}
+	inline double scaledYC2(){return rororo_16*YC[2];}
+	inline double scaledYC3(){return a1a1a1_43*YC[3];}
+	inline double scaledXG0(){return a0a0_23*XG[0];}
+	inline double scaledXG1(){return roro_16*XG[1];}
+	inline double scaledXG2(){return roro_16*XG[2];}
+	inline double scaledXG3(){return a1a1_23*XG[3];}
+	inline double scaledYG0(){return a0a0_23*YG[0];}
+	inline double scaledYG1(){return roro_16*YG[1];}
+	inline double scaledYG2(){return roro_16*YG[2];}
+	inline double scaledYG3(){return a1a1_23*YG[3];}
+	inline double scaledYH0(){return a0a0a0_43*YH[0];}
+	inline double scaledYH1(){return rororo_16*YH[1];}
+	inline double scaledYH2(){return rororo_16*YH[2];}
+	inline double scaledYH3(){return a1a1a1_43*YH[3];}
 
 	
 	//===== forces/stresses  ========================== //
@@ -260,9 +261,11 @@ public:
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
+
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
+	void calcTestStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}

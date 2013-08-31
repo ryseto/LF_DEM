@@ -57,6 +57,7 @@ System::allocateRessources(){
 	contact_torque = new vec3d [np];
 	colloidal_force = new vec3d [np];
 	lubstress = new StressTensor [np];
+	test_lubstress = new StressTensor [np]; //@@ test
 
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
@@ -665,6 +666,7 @@ System::stressReset(){
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
+		test_lubstress[i].reset(); // @@@@ FOR TEST @@@@
 	}
 }
 
@@ -691,60 +693,68 @@ System::addStokesDrag(){
  */
 void
 System::buildLubricationTerms(bool rhs){
-    double GEi[3];
-    double GEj[3];
-	double HEi[3];
-    double HEj[3];
 	/* interaction_list[i] includes all partners j (j > i and j < i).
 	 * This range i < np - 1 is ok?
 	 */
-    for (int i=0; i<np-1; i ++) {
-		for (set<Interaction*>::iterator it = interaction_list[i].begin();
-			 it != interaction_list[i].end(); it ++) {
-			int j = (*it)->partner(i);
-			if (j > i) {
-				vec3d nr_vec = (*it)->get_nr_vec();
-
-				switch (lubrication_model) {
-				    case 1:
-						(*it)->calcXA();
-						(*it)->calcXG();
-						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA2(), 0, 0, 0, 0);
+	switch (lubrication_model) {
+		case 1:
+			for (int i=0; i<np-1; i ++) {
+				for (set<Interaction*>::iterator it = interaction_list[i].begin();
+					 it != interaction_list[i].end(); it ++) {
+					int j = (*it)->partner(i);
+					if (j > i) {
+						vec3d nr_vec = (*it)->get_nr_vec();
+						(*it)->calcXFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), 0, 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), 0, 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA2(), 0, 0, 0, 0);
 						if (rhs) {
-							(*it)->GE(GEi, GEj);  // G*E_\infty term
+							double GEi[3];
+							double GEj[3];
+							(*it)->calcGE(GEi, GEj);  // G*E_\infty term
 							stokes_solver.addToRHSForce(i, GEi);
 							stokes_solver.addToRHSForce(j, GEj);
 						}
-						break;
-					case 2:
-						(*it)->calcResistanceFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->get_scaled_XA0(), (*it)->get_scaled_YA0(),
-													 (*it)->get_scaled_YB0(), (*it)->get_scaled_YC0());
-						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->get_scaled_XA3(), (*it)->get_scaled_YA3(),
-													 (*it)->get_scaled_YB3(), (*it)->get_scaled_YC3());
-						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->get_scaled_XA1(), (*it)->get_scaled_YA1(),
-													  (*it)->get_scaled_YB2(), (*it)->get_scaled_YB1(), (*it)->get_scaled_YC1());
+					}
+				}
+				stokes_solver.doneBlocks(i);
+			}
+			break;
+		case 2:
+			for (int i=0; i<np-1; i ++) {
+				for (set<Interaction*>::iterator it = interaction_list[i].begin();
+					 it != interaction_list[i].end(); it ++) {
+					int j = (*it)->partner(i);
+					if (j > i) {
+						vec3d nr_vec = (*it)->get_nr_vec();
+						(*it)->calcXYFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), (*it)->scaledYA0(),
+													 (*it)->scaledYB0(), (*it)->scaledYC0());
+						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), (*it)->scaledYA3(),
+													 (*it)->scaledYB3(), (*it)->scaledYC3());
+						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA1(), (*it)->scaledYA1(),
+													  (*it)->scaledYB2(), (*it)->scaledYB1(), (*it)->scaledYC1());
 						if (rhs) {
-							(*it)->GE(GEi, GEj);  // G*E_\infty term
-							(*it)->HE(HEi, HEj);  // G*E_\infty term
+							double GEi[3];
+							double GEj[3];
+							double HEi[3];
+							double HEj[3];
+							(*it)->calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
 							stokes_solver.addToRHSForce(i, GEi);
 							stokes_solver.addToRHSForce(j, GEj);
 							stokes_solver.addToRHSTorque(i, HEi);
 							stokes_solver.addToRHSTorque(j, HEj);
 						}
-						break;
-					default:
-						cerr << "lubrication_model = 0 is not implemented yet.\n";
-						exit(1);
-						break;
+					}
 				}
-				
+				stokes_solver.doneBlocks(i);
 			}
-		}
-		stokes_solver.doneBlocks(i);
-    }
+			break;
+		default:
+			cerr << "lubrication_model = 0 is not implemented yet.\n";
+			exit(1);
+			break;
+	}
 }
 
 //void
