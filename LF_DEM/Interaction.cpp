@@ -639,8 +639,8 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	double nxnz = nr_vec.x*nr_vec.z;
 	double nynz = nr_vec.y*nr_vec.z;
 	double nznz = nr_vec.z*nr_vec.z;
-	double common_factor_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj);
-	double common_factor_j = -dot(nr_vec, scaledXG3()*vj+scaledXG2()*vi);
+	double common_factor_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj); // 11 12
+	double common_factor_j = -dot(nr_vec, scaledXG2()*vi+scaledXG3()*vj); // 21
 	stresslet_i.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	stresslet_i *= common_factor_i;
 	stresslet_j.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
@@ -682,12 +682,12 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 void
 Interaction::calcTestStress(){
 	// @@@@@ FOR TEST
-	int i6 = 6*par_num[0];
-	int j6 = 6*par_num[1];
 	StressTensor stresslet_GU_i;
 	StressTensor stresslet_GU_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
+	int i6 = 6*par_num[0];
+	int j6 = 6*par_num[1];
 	vec3d vi(sys->v_total[i6], sys->v_total[i6+1], sys->v_total[i6+2]);
 	vec3d vj(sys->v_total[j6], sys->v_total[j6+1], sys->v_total[j6+2]);
 	/*
@@ -719,15 +719,10 @@ Interaction::evaluateLubricationForce(){
 		vj.x -= sys->position[par_num[1]].z;
 	}
 	//	calcXA();
-	switch (sys->lubrication_model) {
-		case 1:
-			calcXFunctions();
-			break;
-		case 2:
-			calcXYFunctions();
-			break;
-		default:
-			break;
+	if (sys->lubrication_model == 1){
+		calcXFunctions();
+	} else if (sys->lubrication_model == 2){
+		calcXYFunctions();
 	}
 	double cf_AU_i = -dot(a0*XA[0]*vi+ro_half*XA[1]*vj, nr_vec);
 	/*

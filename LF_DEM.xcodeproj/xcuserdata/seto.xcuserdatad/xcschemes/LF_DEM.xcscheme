@@ -82,11 +82,11 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "lubmodel1"
+            argument = "lubmodel1.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "1"
+            argument = "100000"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
