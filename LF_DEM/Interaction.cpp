@@ -633,17 +633,17 @@ Interaction::calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj){
 void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 								   StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double n0n0 = nr_vec.x*nr_vec.x;
-	double n1n1 = nr_vec.y*nr_vec.y;
-	double n0n1 = nr_vec.x*nr_vec.y;
-	double n0n2 = nr_vec.x*nr_vec.z;
-	double n1n2 = nr_vec.y*nr_vec.z;
-	double n2n2 = nr_vec.z*nr_vec.z;
+	double nxnx = nr_vec.x*nr_vec.x;
+	double nyny = nr_vec.y*nr_vec.y;
+	double nxny = nr_vec.x*nr_vec.y;
+	double nxnz = nr_vec.x*nr_vec.z;
+	double nynz = nr_vec.y*nr_vec.z;
+	double nznz = nr_vec.z*nr_vec.z;
 	double common_factor_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj);
 	double common_factor_j = -dot(nr_vec, scaledXG3()*vj+scaledXG2()*vi);
-	stresslet_i.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
+	stresslet_i.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	stresslet_i *= common_factor_i;
-	stresslet_j.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
+	stresslet_j.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	stresslet_j *= common_factor_j;
 }
 
@@ -664,17 +664,17 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 
 void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double n0n0 = nr_vec.x*nr_vec.x;
-	double n1n1 = nr_vec.y*nr_vec.y;
-	double n0n1 = nr_vec.x*nr_vec.y;
-	double n0n2 = nr_vec.x*nr_vec.z;
-	double n1n2 = nr_vec.y*nr_vec.z;
-	double n2n2 = nr_vec.z*nr_vec.z;
-	double common_factor_i = (a0a0a0_53*XM[0]+rororo_524*XM[1])*n0n2;
-	stresslet_i.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
+	double nxnx = nr_vec.x*nr_vec.x;
+	double nyny = nr_vec.y*nr_vec.y;
+	double nxny = nr_vec.x*nr_vec.y;
+	double nxnz = nr_vec.x*nr_vec.z;
+	double nynz = nr_vec.y*nr_vec.z;
+	double nznz = nr_vec.z*nr_vec.z;
+	double common_factor_i = (a0a0a0_53*XM[0]+rororo_524*XM[1])*nxnz;
+	stresslet_i.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	stresslet_i *= common_factor_i;
-	double common_factor_j = (a1a1a1_53*XM[3]+rororo_524*XM[2])*n0n2;
-	stresslet_j.set(n0n0, n0n1, n0n2, n1n2, n1n1, n2n2);
+	double common_factor_j = (a1a1a1_53*XM[3]+rororo_524*XM[2])*nxnz;
+	stresslet_j.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	stresslet_j *= common_factor_j;
 }
 
@@ -690,14 +690,6 @@ Interaction::calcTestStress(){
 	StressTensor stresslet_ME_j;
 	vec3d vi(sys->v_total[i6], sys->v_total[i6+1], sys->v_total[i6+2]);
 	vec3d vj(sys->v_total[j6], sys->v_total[j6+1], sys->v_total[j6+2]);
-	if (sys->lubrication_model==1){
-		calcXFunctions();
-		calcXM();
-	} else if (sys->lubrication_model==2){
-		calcXYFunctions();
-		calcXM();
-		calcYM();
-	}
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
@@ -706,36 +698,8 @@ Interaction::calcTestStress(){
 	 *  Second: +M*Einf term
 	 */
 	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-	sys->test_lubstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
-	sys->test_lubstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
-}
-
-
-void
-Interaction::addHydroStress(){
-	int i6 = 6*par_num[0];
-	int j6 = 6*par_num[1];
-	StressTensor stresslet_GU_i;
-	StressTensor stresslet_GU_j;
-	StressTensor stresslet_ME_i;
-	StressTensor stresslet_ME_j;
-	vec3d vi(sys->v_hydro[i6], sys->v_hydro[i6+1], sys->v_hydro[i6+2]);
-	vec3d vj(sys->v_hydro[j6], sys->v_hydro[j6+1], sys->v_hydro[j6+2]);
-	if (sys->lubrication_model==1){
-		calcXFunctions();
-	} else if (sys->lubrication_model==2){
-		calcXYFunctions();
-	}
-	/*
-	 *  First: -G*(U-Uinf) term
-	 */
-	pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
-	/*
-	 *  Second: +M*Einf term
-	 */
-	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-	sys->lubstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
-	sys->lubstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
+	sys->test_totalstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
+	sys->test_totalstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
 }
 
 /* Lubriction force between two particles is calculated.
@@ -772,6 +736,28 @@ Interaction::evaluateLubricationForce(){
 	//calcXG();
 	double cf_GE_i = nr_vec.x*nr_vec.z*(a0a0_23*XG[0]+roro_16*XG[2]);
 	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
+}
+
+void
+Interaction::addHydroStress(){
+	int i6 = 6*par_num[0];
+	int j6 = 6*par_num[1];
+	StressTensor stresslet_GU_i;
+	StressTensor stresslet_GU_j;
+	StressTensor stresslet_ME_i;
+	StressTensor stresslet_ME_j;
+	vec3d vi(sys->v_hydro[i6], sys->v_hydro[i6+1], sys->v_hydro[i6+2]);
+	vec3d vj(sys->v_hydro[j6], sys->v_hydro[j6+1], sys->v_hydro[j6+2]);
+	/*
+	 *  First: -G*(U-Uinf) term
+	 */
+	pairVelocityStresslet(vi, vj, stresslet_GU_i, stresslet_GU_j);
+	/*
+	 *  Second: +M*Einf term
+	 */
+	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
+	sys->lubstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
+	sys->lubstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
 }
 
 void

@@ -57,7 +57,7 @@ System::allocateRessources(){
 	contact_torque = new vec3d [np];
 	colloidal_force = new vec3d [np];
 	lubstress = new StressTensor [np];
-	test_lubstress = new StressTensor [np]; //@@ test
+	test_totalstress = new StressTensor [np]; //@@ test
 
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
@@ -666,7 +666,7 @@ System::stressReset(){
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
-		test_lubstress[i].reset(); // @@@@ FOR TEST @@@@
+		test_totalstress[i].reset(); // @@@@ FOR TEST @@@@
 	}
 }
 

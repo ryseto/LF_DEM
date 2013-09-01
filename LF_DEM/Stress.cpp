@@ -188,19 +188,19 @@ System::calcStressesHydroContact(){
 	// from that, compute stresses
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
+			if (lubrication_model == 1){
+				interaction[k].calcXFunctions();
+			} else if (lubrication_model == 2){
+				interaction[k].calcXYFunctions();
+			}
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 		}
 	}
-
-	/*************************************************************************************
-	 *                                                                                   *
-	 *             Test stress calculation                                               *
-	 *                                                                                   *
-	 *************************************************************************************/
 	
-	
+	/***************************************************************************************
+	 ************************* test ********************************************************/
 	stokes_solver.resetRHS();
     stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
@@ -214,6 +214,11 @@ System::calcStressesHydroContact(){
     stokes_solver.solvingIsDone();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
+			if (lubrication_model == 1){
+				interaction[k].calcXFunctions();
+			} else if (lubrication_model == 2){
+				interaction[k].calcXYFunctions();
+			}
 			interaction[k].calcTestStress();
 		}
 	}
@@ -221,16 +226,18 @@ System::calcStressesHydroContact(){
 	double s_diff = 0;
 	for (int i=0; i<np; i++) {
 		int i6 = 6*i;
-		double vx = v_total[i6] - (v_hydro[i6]+v_colloidal[i6]+v_cont[i6]);
-		double vy = v_total[i6+1] - (v_hydro[i6+1]+v_colloidal[i6+1]+v_cont[i6+1]);
-		double vz = v_total[i6+2] - (v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
+		double vx = v_total[i6]-(v_hydro[i6]+v_colloidal[i6]+v_cont[i6]);
+		double vy = v_total[i6+1]-(v_hydro[i6+1]+v_colloidal[i6+1]+v_cont[i6+1]);
+		double vz = v_total[i6+2]-(v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
 		v_diff += sqrt(vx*vx + vy*vy +vz*vz);
-		StressTensor total_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
-		s_diff += abs((total_stress-test_lubstress[i]).getStressXZ());
+		StressTensor sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
+		s_diff += abs((sum_stress-test_totalstress[i]).getStressXZ());
 	}
 	cerr << " v_diff = " << v_diff << endl;
 	cerr << " s_diff = " << s_diff << endl;
-	/************************* test ********************************************************/
+	/************************* test ********************************************************
+	 ***************************************************************************************/
+
 	
 	
 	/*
