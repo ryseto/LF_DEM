@@ -164,17 +164,18 @@ System::calcStressesHydroContact(){
 	/**************************************************
 	 2. and 3.: Stresses from
 	 2-body lubrication and contacts  **/
+
 	// first obtain hydrodynamic part of velocity
-	stokes_solver.resetRHS();
 	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
     stokes_solver.resetResistanceMatrix("direct",nb_of_active_interactions);
 	addStokesDrag();
+	stokes_solver.resetRHS();
 	buildLubricationTerms();
 	stokes_solver.completeResistanceMatrix();
     stokes_solver.solve(v_hydro);
+
 	// then obtain contact forces, and contact part of velocity
-	
-    stokes_solver.resetRHS();
+	stokes_solver.resetRHS();
 	setContactForceToParticle();
     buildContactTerms();
 	stokes_solver.solve(v_cont);
@@ -205,9 +206,11 @@ System::calcStressesHydroContact(){
 	
 	/***************************************************************************************
 	 ************************* test ********************************************************/
-	stokes_solver.resetRHS();
+
     stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
+	
+	stokes_solver.resetRHS();
     buildLubricationTerms();
     setContactForceToParticle();
 	buildContactTerms();
@@ -215,7 +218,6 @@ System::calcStressesHydroContact(){
 	buildColloidalForceTerms();
 	stokes_solver.completeResistanceMatrix();
 	stokes_solver.solve(v_total);
-    stokes_solver.solvingIsDone();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (lubrication_model == 1){
@@ -230,6 +232,8 @@ System::calcStressesHydroContact(){
 			interaction[k].calcTestStress();
 		}
 	}
+	stokes_solver.solvingIsDone();
+
 	double v_diff = 0;
 	double s_diff = 0;
 	for (int i=0; i<np; i++) {
@@ -239,7 +243,7 @@ System::calcStressesHydroContact(){
 		double vz = v_total[i6+2]-(v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
 		v_diff += sqrt(vx*vx + vy*vy +vz*vz);
 		StressTensor sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
-		s_diff += abs((sum_stress-test_totalstress[i]).getStressXZ());
+		s_diff += (sum_stress-test_totalstress[i]).getStressXZ();
 	}
 	cerr << " v_diff = " << v_diff << endl;
 	cerr << " s_diff = " << s_diff << endl;

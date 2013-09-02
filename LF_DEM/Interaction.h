@@ -235,18 +235,27 @@ public:
 	inline double scaledYC2(){return rororo_16*YC[2];}
 	inline double scaledYC3(){return a1a1a1_43*YC[3];}
 	inline double scaledXG0(){return a0a0_23*XG[0];}
-	inline double scaledXG1(){return roro_16*XG[1];}
-	inline double scaledXG2(){return roro_16*XG[2];}
-	inline double scaledXG3(){return a1a1_23*XG[3];}
 	inline double scaledYG0(){return a0a0_23*YG[0];}
+	inline double scaledXG1(){return roro_16*XG[1];}
 	inline double scaledYG1(){return roro_16*YG[1];}
+	inline double scaledXG2(){return roro_16*XG[2];}
 	inline double scaledYG2(){return roro_16*YG[2];}
+	inline double scaledXG3(){return a1a1_23*XG[3];}
 	inline double scaledYG3(){return a1a1_23*YG[3];}
+
+	
 	inline double scaledYH0(){return a0a0a0_43*YH[0];}
 	inline double scaledYH1(){return rororo_16*YH[1];}
 	inline double scaledYH2(){return rororo_16*YH[2];}
 	inline double scaledYH3(){return a1a1a1_43*YH[3];}
-
+	inline double scaledXM0(){return a0a0a0_53*XM[0];}
+	inline double scaledYM0(){return a0a0a0_53*YM[0];}
+	inline double scaledXM1(){return rororo_524*XM[1];}
+	inline double scaledYM1(){return rororo_524*YM[1];}
+	inline double scaledXM2(){return rororo_524*XM[2];}
+	inline double scaledYM2(){return rororo_524*YM[2];}
+	inline double scaledXM3(){return a1a1a1_53*XM[3];}
+	inline double scaledYM3(){return a1a1a1_53*YM[3];}
 	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
@@ -271,6 +280,7 @@ public:
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
+							   const vec3d &oi, const vec3d &oj,
 							   StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
