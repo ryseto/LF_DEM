@@ -34,6 +34,8 @@ private:
 	bool active;
 	unsigned int label;
 	unsigned int par_num[2];
+	int i6;
+	int j6;
 	bool contact;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
@@ -130,6 +132,9 @@ private:
 	double a0a0a0_43;
 	double a1a1a1_43;
 	double rororo_16;
+	double a0a0a0_109;
+	double a1a1a1_109;
+	double rororo_536;
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -243,19 +248,19 @@ public:
 	inline double scaledXG3(){return a1a1_23*XG[3];}
 	inline double scaledYG3(){return a1a1_23*YG[3];}
 
-	
 	inline double scaledYH0(){return a0a0a0_43*YH[0];}
 	inline double scaledYH1(){return rororo_16*YH[1];}
 	inline double scaledYH2(){return rororo_16*YH[2];}
 	inline double scaledYH3(){return a1a1a1_43*YH[3];}
-	inline double scaledXM0(){return a0a0a0_53*XM[0];}
-	inline double scaledYM0(){return a0a0a0_53*YM[0];}
-	inline double scaledXM1(){return rororo_524*XM[1];}
-	inline double scaledYM1(){return rororo_524*YM[1];}
-	inline double scaledXM2(){return rororo_524*XM[2];}
-	inline double scaledYM2(){return rororo_524*YM[2];}
-	inline double scaledXM3(){return a1a1a1_53*XM[3];}
-	inline double scaledYM3(){return a1a1a1_53*YM[3];}
+
+	inline double scaledXM0(){return a0a0a0_109*XM[0];}
+	inline double scaledYM0(){return a0a0a0_109*YM[0];}
+	inline double scaledXM1(){return rororo_536*XM[1];}
+	inline double scaledYM1(){return rororo_536*YM[1];}
+	inline double scaledXM2(){return rororo_536*XM[2];}
+	inline double scaledYM2(){return rororo_536*YM[2];}
+	inline double scaledXM3(){return a1a1a1_109*XM[3];}
+	inline double scaledYM3(){return a1a1a1_109*YM[3];}
 	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();

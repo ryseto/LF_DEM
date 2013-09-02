@@ -46,6 +46,9 @@ Interaction::activate(int i, int j){
 		par_num[0] = j;
 		par_num[1] = i;
 	}
+	i6 = 6*par_num[0];
+	j6 = 6*par_num[1];
+	
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
@@ -373,12 +376,21 @@ Interaction::calcLubConstants(){
 	a0a0_23 = a0*a0*(2./3); // (2/3)*a0*a0
 	a1a1_23 = a1*a1*(2./3); // (2/3)*a1*a1
 	roro_16 = ro*ro/6; // (1/6)*ro*ro
-	a0a0a0_53 = a0a0_23*a0*(5./2); // (5/3)*a0*a0*a0 = (5/2)*a0*(2/3)*a0*a0
-	a1a1a1_53 = a1a1_23*a1*(5./2); // (5/3)*a1*a1*a1 = (5/2)*a1*(2/3)*a1*a1
-	rororo_524 = roro_16*ro*(5./4); // (5/24)*ro*ro*ro = ro*ro*(1/6)*ro*(5/4)
-	a0a0a0_43 = a0a0_23*a0*2; // (4/3)*a0*a0*a0 = 2*a0*(2/3)*a0*a0
-	a1a1a1_43 = a1a1_23*a1*2; // (4/3)*a1*a1*a1 = 2*a1*(2/3)*a1*a1
-	rororo_16 = roro_16*ro;
+	double a0a0a0 = a0*a0*a0;
+	double a1a1a1 = a1*a1*a1;
+	double rororo = ro*ro*ro;
+//	a0a0a0_53 = a0a0a0*(5./3); // (5/3)*a0*a0*a0
+//	a1a1a1_53 = a1a1a1*(5./3); // (5/3)*a1*a1*a1
+//	rororo_524 = rororo*(5./24); // (5/24)*ro*ro*ro
+	
+	a0a0a0_43 = a0a0a0*(4./3); // (4/3)*a0*a0*a0
+	a1a1a1_43 = a1a1a1*(4./3); // (4/3)*a1*a1*a1
+	rororo_16 = rororo*(1./6);
+	a0a0a0_109 = a0a0a0*(10./9);
+	a1a1a1_109 = a1a1a1*(10./9);
+	rororo_536 = rororo*(10./9);
+
+
 	/* XA
 	 * X_{a,b}(l) = X_{b,a}(l) = X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
@@ -634,6 +646,7 @@ void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 								   const vec3d &oi, const vec3d &oj,
 								   StressTensor &stresslet_i, StressTensor &stresslet_j){
+	double c13 = 1./3;
 	double nxnx = nr_vec.x*nr_vec.x; // -1./3
 	double nyny = nr_vec.y*nr_vec.y;
 	double nxny = nr_vec.x*nr_vec.y; // -1./3
@@ -654,9 +667,9 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 
 	double cXG_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj); // 11 12
 	double cXG_j = -dot(nr_vec, scaledXG2()*vi+scaledXG3()*vj); // 21
-	XGU_i.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
+	XGU_i.set(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
 	XGU_i *= cXG_i;
-	XGU_j.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
+	XGU_j.set(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
 	XGU_j *= cXG_j;
 	if (sys->lubrication_model == 1){
 		stresslet_i = XGU_i;
@@ -759,12 +772,12 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 	double nxnz = nr_vec.x*nr_vec.z;
 	double nynz = nr_vec.y*nr_vec.z;
 	double nznz = nr_vec.z*nr_vec.z;
-	
+	double c13 = 1./3;
 	StressTensor XME_i;
 	StressTensor XME_j;
 	
-	double cXM_i = (scaledXM0()+scaledXM1())*nxnz;
-	XME_i.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
+	double cXM_i = (3./2)*(scaledXM0()+scaledXM1())*nxnz; // 11 + 12
+	XME_i.set(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
 	XME_j *= cXM_i;
 	
 	double cXM_j = (scaledXM2()+scaledXM3())*nxnz;
@@ -776,10 +789,28 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 		stresslet_j = XME_j;
 		return;
 	}
-
+	
 	StressTensor YME_i;
 	StressTensor YME_j;
-
+	double cYM_i = (1./2)*(scaledYM0()+scaledYM1());
+	double cYM_j = (1./2)*(scaledYM2()+scaledYM3());
+	
+	YME_i.elm[0] = cYM_i*(2*nxnz-4*nxnx*nxnz);
+	YME_i.elm[1] = cYM_i*(nynz-4*nxnz*nxnz);
+	YME_i.elm[2] = cYM_i*(nxnx+nznz-4*nxnz*nxnz);
+	YME_i.elm[3] = cYM_i*(nxny-4*nynz*nxnz);
+	YME_i.elm[4] = cYM_i*(-4*nyny*nxnz);
+	YME_i.elm[5] = cYM_i*(2*nxnz-4*nznz*nxnz);
+	
+	YME_j.elm[0] = cYM_j*(2*nxnz-4*nxnx*nxnz);
+	YME_j.elm[1] = cYM_j*(nynz-4*nxnz*nxnz);
+	YME_j.elm[2] = cYM_j*(nxnx+nznz-4*nxnz*nxnz);
+	YME_j.elm[3] = cYM_j*(nxny-4*nynz*nxnz);
+	YME_j.elm[4] = cYM_j*(-4*nyny*nxnz);
+	YME_j.elm[5] = cYM_j*(2*nxnz-4*nznz*nxnz);
+	
+	stresslet_i += YME_i;
+	stresslet_j += YME_j;
 }
 
 
@@ -790,8 +821,6 @@ Interaction::calcTestStress(){
 	StressTensor stresslet_GU_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
-	int i6 = 6*par_num[0];
-	int j6 = 6*par_num[1];
 	vec3d vi(sys->v_total[i6], sys->v_total[i6+1], sys->v_total[i6+2]);
 	vec3d vj(sys->v_total[j6], sys->v_total[j6+1], sys->v_total[j6+2]);
 	vec3d oi(sys->v_total[i6+3], sys->v_total[i6+4], sys->v_total[i6+5]);
@@ -841,8 +870,6 @@ Interaction::evaluateLubricationForce(){
 
 void
 Interaction::addHydroStress(){
-	int i6 = 6*par_num[0];
-	int j6 = 6*par_num[1];
 	StressTensor stresslet_GU_i;
 	StressTensor stresslet_GU_j;
 	StressTensor stresslet_ME_i;
@@ -866,8 +893,6 @@ Interaction::addHydroStress(){
 void
 Interaction::addContactStress(){
 	if (contact) {
-		int i6 = 6*par_num[0];
-		int j6 = 6*par_num[1];
 		/*
 		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
 		 * Fc_normal = -Fc_normal_norm*nr_vec;
@@ -896,8 +921,6 @@ Interaction::addContactStress(){
 
 void
 Interaction::addColloidalStress(){
-	int i6 = 6*par_num[0];
-	int j6 = 6*par_num[1];
 	colloidal_stresslet_XF.set(r_vec, f_colloidal);
 	// Add term G*V_cont
 	StressTensor stresslet_colloid_GU_i;

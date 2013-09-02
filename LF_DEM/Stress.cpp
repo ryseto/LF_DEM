@@ -249,8 +249,6 @@ System::calcStressesHydroContact(){
 	cerr << " s_diff = " << s_diff << endl;
 	/************************* test ********************************************************
 	 ***************************************************************************************/
-
-	
 	
 	/*
 	 * Calculate lubrication force to output
@@ -295,10 +293,12 @@ System::calcStress(){
 	total_contact_stressXF_tan.reset();
 	total_colloidal_stressXF.reset();
 	total_brownian_stress.reset();
+	total_test_stress.reset();
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 		total_contact_stressGU += contactstressGU[i];
 		total_colloidal_stressGU += colloidalstressGU[i];
+		total_test_stress += test_totalstress[i];
 		if (brownian) {
 			total_brownian_stress += brownianstress[i];
 		}
@@ -319,6 +319,7 @@ System::calcStress(){
 	total_colloidal_stressGU /= System_volume();
 	total_colloidal_stressXF /= System_volume();
 	total_brownian_stress /= System_volume();
+	total_test_stress /= System_volume();
 	stressBrownianReset();
 }
 
