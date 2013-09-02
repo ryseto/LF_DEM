@@ -26,7 +26,7 @@ Interaction::calcNormalVectorDistanceGap(){
 	sys->periodize_diff(r_vec, zshift);
 	r = r_vec.norm();
 	nr_vec = r_vec/r;
-	gap_nondim = r/ro_half-2;
+	gap_nondim = r/ro_12-2;
 	if (!contact) {
 		lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
 		log_lub_coeff = log(lub_coeff);
@@ -58,10 +58,10 @@ Interaction::activate(int i, int j){
 	a0 = sys->radius[par_num[0]];
 	a1 = sys->radius[par_num[1]];
 	set_ro(a0+a1); // ro=a0+a1
-	lub_max_scaled = ro_half*sys->get_lub_max();
-	kn_scaled = ro_half*ro_half*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
-	kt_scaled = ro_half*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
-	tangential_dashpot_coeff = ro_half*sys->get_tang_coeff_contact(); // **** to be checked ****
+	lub_max_scaled = ro_12*sys->get_lub_max();
+	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
+	tangential_dashpot_coeff = ro_12*sys->get_tang_coeff_contact(); // **** to be checked ****
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -91,8 +91,8 @@ Interaction::activate(int i, int j){
 void
 Interaction::updateContactModel(){
 	if (active) {
-		kn_scaled = ro_half*ro_half*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
-		kt_scaled = ro_half*sys->get_kt(); // F = kt_s
+		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
 		if (contact) {
 			lub_coeff = sys->get_lub_coeff_contact();
 			log_lub_coeff = log(lub_coeff);
@@ -507,77 +507,38 @@ Interaction::calcXFunctions(){
 }
 
 void
-Interaction::calcXYFunctions(){
+Interaction::calcXFunctionsStress(){
 	for (int j=0; j<4; j++) {
 		XA[j] = cXA[j]*lub_coeff;
 		XG[j] = cXG[j]*lub_coeff;
-		YA[j] = cYA[j]*log_lub_coeff;
-		YB[j] = cYB[j]*log_lub_coeff;
-		YC[j] = cYC[j]*log_lub_coeff;
-		YG[j] = cYG[j]*log_lub_coeff;
-		YH[j] = cYH[j]*log_lub_coeff;
-	}
-}
-
-void
-Interaction::calcXA(){
-	for (int j=0; j<4; j++) {
-		XA[j] = cXA[j]*lub_coeff;
-	}
-}
-
-void
-Interaction::calcYA(){
-	for (int j=0; j<4; j++) {
-		YA[j] = cYA[j]*log_lub_coeff;
-	}
-}
-
-void
-Interaction::calcYB(){
- 	for (int j=0; j<4; j++) {
-		YB[j] = cYB[j]*log_lub_coeff;
-	}
-}
-
-void
-Interaction::calcYC(){
-	for (int j=0; j<4; j++) {
-		YC[j] = cYC[j]*log_lub_coeff;
-	}
-}
-
-void
-Interaction::calcXG(){
-	for (int j=0; j<4; j++) {
-		XG[j] = cXG[j]*lub_coeff;
-	}
-}
-
-void
-Interaction::calcYG(){
-	for (int j=0; j<4; j++) {
-		YG[j] = cYG[j]*log_lub_coeff;
-	}
-}
-
-void
-Interaction::calcYH(){
-	for (int j=0; j<4; j++) {
-		YH[j] = cYH[j]*log_lub_coeff;
-	}
-}
-
-void
-Interaction::calcXM(){
-	for (int j=0; j<4; j++) {
 		XM[j] = cXM[j]*lub_coeff;
 	}
 }
 
 void
-Interaction::calcYM(){
+Interaction::calcXYFunctions(){
 	for (int j=0; j<4; j++) {
+		XA[j] = cXA[j]*lub_coeff;
+		YA[j] = cYA[j]*log_lub_coeff;
+		YB[j] = cYB[j]*log_lub_coeff;
+		YC[j] = cYC[j]*log_lub_coeff;
+		XG[j] = cXG[j]*lub_coeff;
+		YG[j] = cYG[j]*log_lub_coeff;
+		YH[j] = cYH[j]*log_lub_coeff;
+	}
+}
+
+void
+Interaction::calcXYFunctionsStress(){
+	for (int j=0; j<4; j++) {
+		XA[j] = cXA[j]*lub_coeff;
+		YA[j] = cYA[j]*log_lub_coeff;
+		YB[j] = cYB[j]*log_lub_coeff;
+		YC[j] = cYC[j]*log_lub_coeff;
+		XG[j] = cXG[j]*lub_coeff;
+		YG[j] = cYG[j]*log_lub_coeff;
+		YH[j] = cYH[j]*log_lub_coeff;
+		XM[j] = cXM[j]*lub_coeff;
 		YM[j] = cYM[j]*log_lub_coeff;
 	}
 }
@@ -859,7 +820,7 @@ Interaction::evaluateLubricationForce(){
 	} else if (sys->lubrication_model == 2){
 		calcXYFunctions();
 	}
-	double cf_AU_i = -dot(a0*XA[0]*vi+ro_half*XA[1]*vj, nr_vec);
+	double cf_AU_i = -dot(a0*XA[0]*vi+ro_12*XA[1]*vj, nr_vec);
 	/*
 	 *  Second -tildeG*(-Einf)term
 	 */
@@ -867,6 +828,7 @@ Interaction::evaluateLubricationForce(){
 	double cf_GE_i = nr_vec.x*nr_vec.z*(a0a0_23*XG[0]+roro_16*XG[2]);
 	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
 }
+
 
 void
 Interaction::addHydroStress(){

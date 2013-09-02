@@ -29,7 +29,6 @@ private:
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
-	double ro_half; // = ro/2
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
@@ -123,6 +122,7 @@ private:
 	double cYH[4];
 	double cXM[4];
 	double cYM[4];
+	double ro_12; // = ro/2
 	double a0a0_23;
 	double a1a1_23;
 	double roro_16;
@@ -199,7 +199,7 @@ public:
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
 		ro = val;
-		ro_half = 0.5*ro;
+		ro_12 = ro*(1./2);
 	}; // ro = a0 + a1
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
@@ -213,23 +213,15 @@ public:
 	void calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj);
 	void calcXFunctions();
 	void calcXYFunctions();
-	
-	void calcXA();
-	void calcYA();
-	void calcYB();
-	void calcYC();
-	void calcXG();
-	void calcYG();
-	void calcXM();
-	void calcYM();
-	void calcYH();
+	void calcXFunctionsStress();
+	void calcXYFunctionsStress();
 	inline double scaledXA0(){return a0*XA[0];}
-	inline double scaledXA1(){return ro_half*XA[1];}
-	inline double scaledXA2(){return ro_half*XA[2];}
+	inline double scaledXA1(){return ro_12*XA[1];}
+	inline double scaledXA2(){return ro_12*XA[2];}
 	inline double scaledXA3(){return a1*XA[3];}
 	inline double scaledYA0(){return a0*YA[0];}
-	inline double scaledYA1(){return ro_half*YA[1];}
-	inline double scaledYA2(){return ro_half*YA[2];}
+	inline double scaledYA1(){return ro_12*YA[1];}
+	inline double scaledYA2(){return ro_12*YA[2];}
 	inline double scaledYA3(){return a1*YA[3];}
 	inline double scaledYB0(){return a0a0_23*YB[0];}
 	inline double scaledYB1(){return roro_16*YB[1];}
