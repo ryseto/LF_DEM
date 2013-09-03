@@ -46,8 +46,14 @@ private:
 	double log_lub_coeff; // = log(lub_coeff);
 	double lub_coeff_contact; //
 	double tangential_dashpot_coeff; //
-	vec3d r_vec; // normal vector
-	vec3d nr_vec; // vector center to center
+	vec3d r_vec; // vector center to center
+	vec3d nvec; // normal vector
+	double nxnx;
+	double nxny;
+	double nxnz;
+	double nynz;
+	double nyny;
+	double nznz;
 	vec3d contact_velocity;
 	double normal_relative_velocity;
 	vec3d disp_tan; // tangential displacement
@@ -207,8 +213,7 @@ public:
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
 	inline double get_gap_nondim(){return gap_nondim;}
-	inline vec3d get_nr_vec(){return nr_vec;}
-
+	inline vec3d get_nvec(){return nvec;}
 	//=============  Resistance Matrices ====================/
 
 	void calcGE(double *GEi, double *GEj);
@@ -268,7 +273,7 @@ public:
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
-	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
+	inline double getLubForce(){return -dot(lubforce_i, nvec);}
 
 	void addHydroStress();
 	void addContactStress();

@@ -703,7 +703,7 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
-						vec3d nr_vec = (*it)->get_nr_vec();
+						vec3d nr_vec = (*it)->get_nvec();
 						(*it)->calcXFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), 0, 0, 0);
 						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), 0, 0, 0);
@@ -726,7 +726,7 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
-						vec3d nr_vec = (*it)->get_nr_vec();
+						vec3d nr_vec = (*it)->get_nvec();
 						(*it)->calcXYFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), (*it)->scaledYA0(),
 													 (*it)->scaledYB0(), (*it)->scaledYC0());

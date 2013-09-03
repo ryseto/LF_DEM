@@ -26,7 +26,13 @@ Interaction::calcNormalVectorDistanceGap(){
 	r_vec = sys->position[par_num[1]]-sys->position[par_num[0]];
 	sys->periodize_diff(r_vec, zshift);
 	r = r_vec.norm();
-	nr_vec = r_vec/r;
+	nvec = r_vec/r;
+	nxnx = nvec.x*nvec.x;
+	nxny = nvec.x*nvec.y;
+	nxnz = nvec.x*nvec.z;
+	nynz = nvec.y*nvec.z;
+	nyny = nvec.y*nvec.y;
+	nznz = nvec.z*nvec.z;
 	gap_nondim = r/ro_12-2;
 	if (!contact) {
 		lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
@@ -142,7 +148,7 @@ Interaction::deactivate_contact(){
 
 void
 Interaction::updateState(bool &deactivated){
-	/* update tangential displacement: we do it before updating nr_vec
+	/* update tangential displacement: we do it before updating nvec
 	 * as it should be along the tangential vector defined in the previous time step
 	 */
 	if (contact) {
@@ -163,7 +169,7 @@ Interaction::updateState(bool &deactivated){
 			 * i.e. it is separated from Fc_normal_norm.
 			 */
 			f_colloidal_norm = colloidalforce_amplitude;
-			f_colloidal = -f_colloidal_norm*nr_vec;
+			f_colloidal = -f_colloidal_norm*nvec;
 		}
 		if (sys->in_corrector) {
 			/* Keep the contact state in predictor.
@@ -176,7 +182,7 @@ Interaction::updateState(bool &deactivated){
 		calcNormalVectorDistanceGap();
 		if (sys->colloidalforce) {
 			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
-			f_colloidal = -f_colloidal_norm*nr_vec;
+			f_colloidal = -f_colloidal_norm*nvec;
 		}
 		if (sys->in_corrector) {
 			/* If r > r_lub_max, deactivate the interaction object.
@@ -206,28 +212,28 @@ Interaction::updateStateRelax(bool &deactivated){
 	if (active == false) {
 		return;
 	}
-	/* update tangential displacement: we do it before updating nr_vec
+	/* update tangential displacement: we do it before updating nvec
 	 * as it should be along the tangential vector defined in the previous time step
 	 */
 	calcNormalVectorDistanceGap();
 	if (contact) {
 		f_contact_normal_norm = -kn_scaled*(gap_nondim-0.02);
-		f_contact_normal = -f_contact_normal_norm*nr_vec;
+		f_contact_normal = -f_contact_normal_norm*nvec;
 		if (gap_nondim > 0) {
 			deactivate_contact();
 		}
 		if (sys->friction) {
 			/* disp_tan is orthogonal to the normal vector.
 			 */
-			disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
+			disp_tan -= dot(disp_tan, nvec)*nvec;
 			f_contact_tan = kt_scaled*disp_tan;
 			checkBreakupStaticFriction();
 		}
 		f_colloidal_norm = colloidalforce_amplitude;
-		f_colloidal = -f_colloidal_norm*nr_vec;
+		f_colloidal = -f_colloidal_norm*nvec;
 	} else {
 		f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
-		f_colloidal = -f_colloidal_norm*nr_vec;
+		f_colloidal = -f_colloidal_norm*nvec;
 		if (gap_nondim <= 0) {
 			activate_contact();
 		} else if (r > lub_max_scaled) {
@@ -255,11 +261,11 @@ Interaction::calcContactInteraction(){
 	//
 	f_contact_normal_norm = -kn_scaled*gap_nondim; // gap_nondim is negative, therefore it is allways positive.
 	
-	f_contact_normal = -f_contact_normal_norm*nr_vec;
+	f_contact_normal = -f_contact_normal_norm*nvec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
 		 */
-		disp_tan -= dot(disp_tan, nr_vec)*nr_vec;
+		disp_tan -= dot(disp_tan, nvec)*nvec;
 		f_contact_tan = kt_scaled*disp_tan;
 		checkBreakupStaticFriction();
 	}
@@ -302,14 +308,14 @@ Interaction::addUpContactForceTorque(){
 	if (contact) {
 		sys->contact_force[par_num[0]] += f_contact_normal;
 		/*		if(f_contact_normal < 0){
-			cout << "neg force " << f_contact_normal<< " " << nr_vec <<" " << sys->position[par_num[0]] << " " << sys->position[par_num[1]] << endl;
+			cout << "neg force " << f_contact_normal<< " " << nvec <<" " << sys->position[par_num[0]] << " " << sys->position[par_num[1]] << endl;
 			getchar();
 			}*/
 		sys->contact_force[par_num[1]] -= f_contact_normal;
 		if (sys->friction) {
 			sys->contact_force[par_num[0]] += f_contact_tan;
 			sys->contact_force[par_num[1]] -= f_contact_tan;
-			vec3d t_ij = cross(nr_vec, f_contact_tan);
+			vec3d t_ij = cross(nvec, f_contact_tan);
 			sys->contact_torque[par_num[0]] += a0*t_ij;
 			sys->contact_torque[par_num[1]] += a1*t_ij;
 		}
@@ -354,8 +360,8 @@ Interaction::calcRelativeVelocities(){
 	if (sys->in_predictor && zshift != 0) {
 		dv.x += zshift*sys->vel_difference;
 	}
-	contact_velocity = dv-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nr_vec);
-	normal_relative_velocity = dot(dv, nr_vec); // Negative when approaching.
+	contact_velocity = dv-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
+	normal_relative_velocity = dot(dv, nvec); // Negative when approaching.
 
 }
 
@@ -549,15 +555,14 @@ Interaction::calcGE(double *GEi, double *GEj){
 	 * GE1 = nx*nz*(XG11+XG21)*nvec
 	 * GE2 = nx*nz*(XG12+XG22)*nvec
 	 */
-	double nxnz = nr_vec.x*nr_vec.z;
-	double ge_factor_i = (scaledXG0()+scaledXG2())*nxnz;
-	double ge_factor_j = (scaledXG1()+scaledXG3())*nxnz;
-	GEi[0] = ge_factor_i*nr_vec.x;
-	GEi[1] = ge_factor_i*nr_vec.y;
-	GEi[2] = ge_factor_i*nr_vec.z;
-	GEj[0] = ge_factor_j*nr_vec.x;
-	GEj[1] = ge_factor_j*nr_vec.y;
-	GEj[2] = ge_factor_j*nr_vec.z;
+	double cGE_i = (scaledXG0()+scaledXG2())*nxnz;
+	double cGE_j = (scaledXG1()+scaledXG3())*nxnz;
+	GEi[0] = cGE_i*nvec.x;
+	GEi[1] = cGE_i*nvec.y;
+	GEi[2] = cGE_i*nvec.z;
+	GEj[0] = cGE_j*nvec.x;
+	GEj[1] = cGE_j*nvec.y;
+	GEj[2] = cGE_j*nvec.z;
 }
 
 void
@@ -569,26 +574,23 @@ Interaction::calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj){
 	 * GE1 = nx*nz*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(nz,0,nx);
 	 * GE2 = nx*nz*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(nz,0,nx);
 	 */
-	double nxny = nr_vec.x*nr_vec.y;
-	double nynz = nr_vec.y*nr_vec.z;
-	double nxnz = nr_vec.x*nr_vec.z;
-	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
-	double yg0_yg2 = scaledYG0()+scaledYG2();
-	double yg1_yg3 = scaledYG1()+scaledYG3();
-	double cGE_i = (scaledXG0()+scaledXG2()-2*yg0_yg2)*nxnz;
-	double cGE_j = (scaledXG1()+scaledXG3()-2*yg1_yg3)*nxnz;
+	double nxnx_nznz = nxnx-nznz;
+	double YG0_YG2 = scaledYG0()+scaledYG2();
+	double YG1_YG3 = scaledYG1()+scaledYG3();
+	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nxnz;
+	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nxnz;
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
-	GEi[0] = cGE_i*nr_vec.x+yg0_yg2*nr_vec.z;
-	GEi[1] = cGE_i*nr_vec.y;
-	GEi[2] = cGE_i*nr_vec.z+yg0_yg2*nr_vec.x;
-	GEj[0] = cGE_j*nr_vec.x+yg1_yg3*nr_vec.z;
-	GEj[1] = cGE_j*nr_vec.y;
-	GEj[2] = cGE_j*nr_vec.z+yg1_yg3*nr_vec.x;
-	HEi[0] = cHE_i*nxny;
+	GEi[0] = cGE_i*nvec.x+YG0_YG2*nvec.z;
+	GEi[1] = cGE_i*nvec.y;
+	GEi[2] = cGE_i*nvec.z+YG0_YG2*nvec.x;
+	GEj[0] = cGE_j*nvec.x+YG1_YG3*nvec.z;
+	GEj[1] = cGE_j*nvec.y;
+	GEj[2] = cGE_j*nvec.z+YG1_YG3*nvec.x;
+	HEi[0] =  cHE_i*nxny;
 	HEi[1] = -cHE_i*nxnx_nznz;
 	HEi[2] = -cHE_i*nynz;
-	HEj[0] = cHE_j*nxny;
+	HEj[0] =  cHE_j*nxny;
 	HEj[1] = -cHE_j*nxnx_nznz;
 	HEj[2] = -cHE_j*nynz;
 }
@@ -602,12 +604,6 @@ void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 								   const vec3d &oi, const vec3d &oj,
 								   StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double nxnx = nr_vec.x*nr_vec.x;
-	double nyny = nr_vec.y*nr_vec.y;
-	double nznz = nr_vec.z*nr_vec.z;
-	double nxny = nr_vec.x*nr_vec.y;
-	double nynz = nr_vec.y*nr_vec.z;
-	double nxnz = nr_vec.x*nr_vec.z;
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
 	 *
@@ -615,10 +611,10 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	 *         = - vec{n}.(XG11*v1+XG12*v2)*(ninj-(1/3)*delta_{ij})
 	 *
 	 */
-	double cXG_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj);
-	double cXG_j = -dot(nr_vec, scaledXG2()*vi+scaledXG3()*vj);
+	double cXG_i = -dot(nvec, scaledXG0()*vi+scaledXG1()*vj);
+	double cXG_j = -dot(nvec, scaledXG2()*vi+scaledXG3()*vj);
 	StressTensor XGU_i(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
-	StressTensor XGU_j(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
+	StressTensor XGU_j = XGU_i;
 	XGU_i *= cXG_i;
 	XGU_j *= cXG_j;
 	stresslet_i = XGU_i;
@@ -628,72 +624,72 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	}
 	StressTensor YGU_i;
 	StressTensor YGU_j;
-	double tmpxx_vi = nr_vec.x*vi.x+nr_vec.x*vi.x-2*nr_vec.x*nr_vec.x*dot(nr_vec, vi);
-	double tmpxx_vj = nr_vec.x*vj.x+nr_vec.x*vj.x-2*nr_vec.x*nr_vec.x*dot(nr_vec, vj);
-	YGU_i.elm[0]  = -scaledYG0()*tmpxx_vi-scaledYG1()*tmpxx_vj;
-	YGU_j.elm[0]  = -scaledYG2()*tmpxx_vi-scaledYG3()*tmpxx_vj;
+	double cYGUi_xx = nvec.x*vi.x+nvec.x*vi.x-2*nvec.x*nvec.x*dot(nvec, vi);
+	double cYGUj_xx = nvec.x*vj.x+nvec.x*vj.x-2*nvec.x*nvec.x*dot(nvec, vj);
+	YGU_i.elm[0]  = -scaledYG0()*cYGUi_xx-scaledYG1()*cYGUj_xx;
+	YGU_j.elm[0]  = -scaledYG2()*cYGUi_xx-scaledYG3()*cYGUj_xx;
 	
-	double tmpxy_vi = nr_vec.x*vi.y+nr_vec.y*vi.x-2*nr_vec.x*nr_vec.y*dot(nr_vec, vi);
-	double tmpxy_vj = nr_vec.x*vj.y+nr_vec.y*vj.x-2*nr_vec.x*nr_vec.y*dot(nr_vec, vj);
-	YGU_i.elm[1]  = -scaledYG0()*tmpxy_vi-scaledYG1()*tmpxy_vj;
-	YGU_j.elm[1]  = -scaledYG2()*tmpxy_vi-scaledYG3()*tmpxy_vj;
+	double cYGUi_xy = nvec.x*vi.y+nvec.y*vi.x-2*nvec.x*nvec.y*dot(nvec, vi);
+	double cYGUj_xy = nvec.x*vj.y+nvec.y*vj.x-2*nvec.x*nvec.y*dot(nvec, vj);
+	YGU_i.elm[1]  = -scaledYG0()*cYGUi_xy-scaledYG1()*cYGUj_xy;
+	YGU_j.elm[1]  = -scaledYG2()*cYGUi_xy-scaledYG3()*cYGUj_xy;
 	
-	double tmpxz_vi = nr_vec.x*vi.z+nr_vec.z*vi.x-2*nr_vec.x*nr_vec.z*dot(nr_vec, vi);
-	double tmpxz_vj = nr_vec.x*vj.z+nr_vec.z*vj.x-2*nr_vec.x*nr_vec.z*dot(nr_vec, vj);
-	YGU_i.elm[2]  = -scaledYG0()*tmpxz_vi-scaledYG1()*tmpxz_vj;
-	YGU_j.elm[2]  = -scaledYG2()*tmpxz_vi-scaledYG3()*tmpxz_vj;
+	double cYGUi_xz = nvec.x*vi.z+nvec.z*vi.x-2*nvec.x*nvec.z*dot(nvec, vi);
+	double cYGUj_xz = nvec.x*vj.z+nvec.z*vj.x-2*nvec.x*nvec.z*dot(nvec, vj);
+	YGU_i.elm[2]  = -scaledYG0()*cYGUi_xz-scaledYG1()*cYGUj_xz;
+	YGU_j.elm[2]  = -scaledYG2()*cYGUi_xz-scaledYG3()*cYGUj_xz;
 	
-	double tmpyz_vi = nr_vec.y*vi.z+nr_vec.z*vi.y-2*nr_vec.y*nr_vec.z*dot(nr_vec, vi);
-	double tmpyz_vj = nr_vec.y*vj.z+nr_vec.z*vj.y-2*nr_vec.y*nr_vec.z*dot(nr_vec, vj);
-	YGU_i.elm[3]  = -scaledYG0()*tmpyz_vi-scaledYG1()*tmpyz_vj;
-	YGU_j.elm[3]  = -scaledYG2()*tmpyz_vi-scaledYG3()*tmpyz_vj;
+	double cYGUi_yz = nvec.y*vi.z+nvec.z*vi.y-2*nvec.y*nvec.z*dot(nvec, vi);
+	double cYGUj_yz = nvec.y*vj.z+nvec.z*vj.y-2*nvec.y*nvec.z*dot(nvec, vj);
+	YGU_i.elm[3]  = -scaledYG0()*cYGUi_yz-scaledYG1()*cYGUj_yz;
+	YGU_j.elm[3]  = -scaledYG2()*cYGUi_yz-scaledYG3()*cYGUj_yz;
 
-	double tmpyy_vi = nr_vec.y*vi.y+nr_vec.y*vi.y-2*nr_vec.y*nr_vec.y*dot(nr_vec, vi);
-	double tmpyy_vj = nr_vec.y*vj.y+nr_vec.y*vj.y-2*nr_vec.y*nr_vec.y*dot(nr_vec, vj);
+	double cYGUi_yy = nvec.y*vi.y+nvec.y*vi.y-2*nvec.y*nvec.y*dot(nvec, vi);
+	double cYGUj_yy = nvec.y*vj.y+nvec.y*vj.y-2*nvec.y*nvec.y*dot(nvec, vj);
 	
-	YGU_i.elm[4]  = -scaledYG0()*tmpyy_vi-scaledYG1()*tmpyy_vj;
-	YGU_j.elm[4]  = -scaledYG2()*tmpyy_vi-scaledYG3()*tmpyy_vj;
+	YGU_i.elm[4]  = -scaledYG0()*cYGUi_yy-scaledYG1()*cYGUj_yy;
+	YGU_j.elm[4]  = -scaledYG2()*cYGUi_yy-scaledYG3()*cYGUj_yy;
 
-	double tmpzz_vi = nr_vec.z*vi.z+nr_vec.z*vi.z-2*nr_vec.z*nr_vec.z*dot(nr_vec, vi);
-	double tmpzz_vj = nr_vec.z*vj.z+nr_vec.z*vj.z-2*nr_vec.z*nr_vec.z*dot(nr_vec, vj);
+	double cYGUi_zz = nvec.z*vi.z+nvec.z*vi.z-2*nvec.z*nvec.z*dot(nvec, vi);
+	double cYGUj_zz = nvec.z*vj.z+nvec.z*vj.z-2*nvec.z*nvec.z*dot(nvec, vj);
 	
-	YGU_i.elm[5]  = -scaledYG0()*tmpzz_vi-scaledYG1()*tmpzz_vj;
-	YGU_j.elm[5]  = -scaledYG2()*tmpzz_vi-scaledYG3()*tmpzz_vj;
+	YGU_i.elm[5]  = -scaledYG0()*cYGUi_zz-scaledYG1()*cYGUj_zz;
+	YGU_j.elm[5]  = -scaledYG2()*cYGUi_zz-scaledYG3()*cYGUj_zz;
 	
 	stresslet_i += YGU_i;
 	stresslet_j += YGU_j;
 	
 	StressTensor YHO_i;
 	StressTensor YHO_j;
-	YHO_i.elm[0]  = -2*scaledYM0()*(nxnz*oi.y-nxny*oi.z);
-	YHO_i.elm[0] += -2*scaledYM1()*(nxnz*oj.y-nxny*oj.z);
-	YHO_j.elm[0]  = -2*scaledYM2()*(nxnz*oi.y-nxny*oi.z);
-	YHO_j.elm[0] += -2*scaledYM3()*(nxnz*oj.y-nxny*oj.z);
+	double cYHOi_xx = nxnz*oi.y-nxny*oi.z;
+	double cYHOj_xx = nxnz*oj.y-nxny*oj.z;
+	YHO_i.elm[0]  = -2*(scaledYM0()*cYHOi_xx+scaledYM1()*cYHOj_xx);
+	YHO_j.elm[0]  = -2*(scaledYM2()*cYHOi_xx+scaledYM3()*cYHOj_xx);
 
-	YHO_i.elm[1]  = -scaledYM0()*(nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z);
-	YHO_i.elm[1] += -scaledYM1()*(nxnz*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z);
-	YHO_j.elm[1]  = -scaledYM2()*(nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z);
-	YHO_j.elm[1] += -scaledYM3()*(nxnz*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z);
-
-	YHO_i.elm[2]  = -scaledYM0()*(nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z);
-	YHO_i.elm[2] += -scaledYM1()*(nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z);
-	YHO_j.elm[2]  = -scaledYM2()*(nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z);
-	YHO_j.elm[2] += -scaledYM3()*(nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z);
+	double cYHOi_xy = nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z;
+	double cYHOj_xy = nxnx*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z;
+	YHO_i.elm[1]  = -scaledYM0()*cYHOi_xy-scaledYM1()*cYHOj_xy;
+	YHO_j.elm[1]  = -scaledYM2()*cYHOi_xy-scaledYM3()*cYHOj_xy;
 	
-	YHO_i.elm[3]  = -scaledYM0()*(nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x);
-	YHO_i.elm[3] += -scaledYM1()*(nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x);
-	YHO_j.elm[3]  = -scaledYM2()*(nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x);
-	YHO_j.elm[3] += -scaledYM3()*(nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x);
-
-	YHO_i.elm[4]  = -2*scaledYM0()*(nxny*oi.z-nynz*oi.x);
-	YHO_i.elm[4] += -2*scaledYM1()*(nxny*oj.z-nynz*oj.x);
-	YHO_j.elm[4]  = -2*scaledYM2()*(nxny*oi.z-nynz*oi.x);
-	YHO_j.elm[4] += -2*scaledYM3()*(nxny*oj.z-nynz*oj.x);
+	double cYHOi_xz = nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z;
+	double cYHOj_xz = nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z;
+	YHO_i.elm[2]  = -scaledYM0()*cYHOi_xz-scaledYM1()*cYHOj_xz;
+	YHO_j.elm[2]  = -scaledYM2()*cYHOi_xz-scaledYM3()*cYHOj_xz;
 	
-	YHO_i.elm[5]  = -2*scaledYM0()*(nynz*oi.x-nxnz*oi.y);
-	YHO_i.elm[5] += -2*scaledYM1()*(nynz*oj.x-nxnz*oj.y);
-	YHO_j.elm[5]  = -2*scaledYM2()*(nynz*oi.x-nxnz*oi.y);
-	YHO_j.elm[5] += -2*scaledYM3()*(nynz*oj.x-nxnz*oj.y);
+	double cYHOi_yz = nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x;
+	double cYHOj_yz = nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x;
+	YHO_i.elm[3]  = -scaledYM0()*cYHOi_yz-scaledYM1()*cYHOj_yz;
+	YHO_j.elm[3]  = -scaledYM2()*cYHOi_yz-scaledYM3()*cYHOj_yz;
+	
+	double cYHOi_yy = nxny*oi.z-nynz*oi.x;
+	double cYHOj_yy = nxny*oj.z-nynz*oj.x;
+	YHO_i.elm[4]  = -2*(scaledYM0()*cYHOi_yy+scaledYM1()*cYHOj_yy);
+	YHO_j.elm[4]  = -2*(scaledYM2()*cYHOi_yy+scaledYM3()*cYHOj_yy);
+	
+	double cYHOi_zz = nynz*oi.x-nxnz*oi.y;
+	double cYHOj_zz = nynz*oj.x-nxnz*oj.y;
+	YHO_i.elm[5]  = -2*(scaledYM0()*cYHOi_zz+scaledYM1()*cYHOj_zz);
+	YHO_j.elm[5]  = -2*(scaledYM2()*cYHOi_zz+scaledYM3()*cYHOj_zz);
 	
 	stresslet_i += YHO_i;
 	stresslet_j += YHO_j;
@@ -716,12 +712,6 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 
 void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double nxnx = nr_vec.x*nr_vec.x;
-	double nyny = nr_vec.y*nr_vec.y;
-	double nznz = nr_vec.z*nr_vec.z;
-	double nxny = nr_vec.x*nr_vec.y;
-	double nynz = nr_vec.y*nr_vec.z;
-	double nxnz = nr_vec.x*nr_vec.z;
 	/*
 	 * S_{ab} = M_{ijxz}E_{xz}+M_{ijzx}E_{zx}
 	 *        = (rate/2)*(M_{ijxz}+M_{ijzx})
@@ -738,7 +728,7 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 	double cXM_i = (3./2)*(scaledXM0()+scaledXM1())*nxnz;
 	double cXM_j = (3./2)*(scaledXM2()+scaledXM3())*nxnz;
 	StressTensor XME_i(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
-	StressTensor XME_j(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
+	StressTensor XME_j = XME_i;
 	XME_i *= cXM_i;
 	XME_j *= cXM_j;
 	stresslet_i = XME_i;
@@ -754,12 +744,7 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 					   nxny-4*nynz*nxnz,
 					   -4*nyny*nxnz,
 					   2*nxnz-4*nznz*nxnz);
-	StressTensor YME_j(2*nxnz-4*nxnx*nxnz,
-					   nynz-4*nxnz*nxnz,
-					   nxnx+nznz-4*nxnz*nxnz,
-					   nxny-4*nynz*nxnz,
-					   -4*nyny*nxnz,
-					   2*nxnz-4*nznz*nxnz);
+	StressTensor YME_j = YME_i;
 	YME_i *= cYM_i;
 	YME_j *= cYM_j;
 	
@@ -813,15 +798,14 @@ Interaction::evaluateLubricationForce(){
 	} else if (sys->lubrication_model == 2){
 		calcXYFunctions();
 	}
-	double cf_AU_i = -dot(a0*XA[0]*vi+ro_12*XA[1]*vj, nr_vec);
+	double cf_AU_i = -dot(a0*XA[0]*vi+ro_12*XA[1]*vj, nvec);
 	/*
 	 *  Second -tildeG*(-Einf)term
 	 */
 	//calcXG();
-	double cf_GE_i = nr_vec.x*nr_vec.z*(a0a0_23*XG[0]+roro_16*XG[2]);
-	lubforce_i = (cf_AU_i+cf_GE_i)*nr_vec;
+	double cf_GE_i = nxnz*(a0a0_23*XG[0]+roro_16*XG[2]);
+	lubforce_i = (cf_AU_i+cf_GE_i)*nvec;
 }
-
 
 void
 Interaction::addHydroStress(){
@@ -850,10 +834,10 @@ Interaction::addContactStress(){
 	if (contact) {
 		/*
 		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
-		 * Fc_normal = -Fc_normal_norm*nr_vec;
+		 * Fc_normal = -Fc_normal_norm*nvec;
 		 * This force acts on particle 1.
-		 * stress1 is a0*nr_vec[*]force.
-		 * stress2 is (-a1*nr_vec)[*](-force) = a1*nr_vec[*]force
+		 * stress1 is a0*nvec[*]force.
+		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 		 */
 		contact_stresslet_XF_normal.set(r_vec, f_contact_normal);
 		contact_stresslet_XF_tan.set(r_vec, f_contact_tan);
@@ -933,7 +917,7 @@ Interaction::getNormalVelocity(){
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;
 	}
-	return dot(d_velocity, nr_vec);
+	return dot(d_velocity, nvec);
 }
 
 double

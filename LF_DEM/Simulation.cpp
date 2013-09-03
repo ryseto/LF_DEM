@@ -746,7 +746,7 @@ Simulation::outputConfigurationData(){
 				 */
 				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d nr_vec = sys.interaction[k].get_nr_vec();
+				vec3d nr_vec = sys.interaction[k].get_nvec();
 				StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
 				fout_interaction << sys.interaction[k].is_contact() << ' '; // 3
