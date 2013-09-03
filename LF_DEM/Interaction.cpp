@@ -836,13 +836,21 @@ Interaction::addContactStress(){
 	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 	 */
 	if (contact) {
+		/*
+		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+		 * Fc_normal = -Fc_normal_norm*nvec;
+		 * This force acts on particle 1.
+		 * stress1 is a0*nvec[*]force.
+		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
+		 */
 		contact_stresslet_XF_normal.set(rvec, f_contact_normal);
 		contact_stresslet_XF_tan.set(rvec, f_contact_tan);
-		// Add term G*V_cont
 	} else {
 		contact_stresslet_XF_normal.reset();
 		contact_stresslet_XF_tan.reset();
 	}
+
+	// Add term G*V_cont
 	StressTensor stresslet_GU_i;
 	StressTensor stresslet_GU_j;
 	vec3d vi(sys->v_cont[i6], sys->v_cont[i6+1], sys->v_cont[i6+2]);
