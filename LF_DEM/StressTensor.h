@@ -9,6 +9,8 @@
 #ifndef LF_DEM_StressTensor_h
 #define LF_DEM_StressTensor_h
 #include "vec3d.h"
+#include <iostream>
+#include <iomanip>
 
 class StressTensor {
 private:
@@ -259,5 +261,9 @@ public:
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
 	
+	void cerr(){
+		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
+	}
+
 };
 #endif

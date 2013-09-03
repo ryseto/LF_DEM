@@ -29,6 +29,8 @@ private:
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
+	double c13;
+
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;

@@ -166,28 +166,24 @@ System::calcStressesHydroContact(){
 	 2-body lubrication and contacts  **/
 
 	// first obtain hydrodynamic part of velocity
+	stokes_solver.resetRHS();
 	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
     stokes_solver.resetResistanceMatrix("direct",nb_of_active_interactions);
 	addStokesDrag();
-	stokes_solver.resetRHS();
 	buildLubricationTerms();
 	stokes_solver.completeResistanceMatrix();
     stokes_solver.solve(v_hydro);
-
 	// then obtain contact forces, and contact part of velocity
 	stokes_solver.resetRHS();
 	setContactForceToParticle();
     buildContactTerms();
 	stokes_solver.solve(v_cont);
-	
 	// then obtain colloidal forces
     stokes_solver.resetRHS();
 	setColloidalForceToParticle();
     buildColloidalForceTerms();
     stokes_solver.solve(v_colloidal);
 	/////////////////////////////////////////////////
-    stokes_solver.solvingIsDone();
-	
 	// from that, compute stresses
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -201,7 +197,7 @@ System::calcStressesHydroContact(){
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 		}
 	}
-	
+    stokes_solver.solvingIsDone();
 	/***************************************************************************************
 	 ************************* test ********************************************************/
 

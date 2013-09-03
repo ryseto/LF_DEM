@@ -13,6 +13,7 @@ Interaction::init(System *sys_){
 	sys = sys_;
 	contact = false;
 	active = false;
+	c13 = 0;
 }
 
 /* Make a normal vector
@@ -373,24 +374,18 @@ Interaction::calcLubConstants(){
 	lambda_p_1 = 1+lambda;
 	lambda_p_1_square = lambda_p_1*lambda_p_1;
 	lambda_p_1_cubic = lambda_p_1_square*lambda_p_1;
-	a0a0_23 = a0*a0*(2./3); // (2/3)*a0*a0
-	a1a1_23 = a1*a1*(2./3); // (2/3)*a1*a1
-	roro_16 = ro*ro/6; // (1/6)*ro*ro
+	a0a0_23 = a0*a0*(2./3);
+	a1a1_23 = a1*a1*(2./3);
+	roro_16 = ro*ro/6;
 	double a0a0a0 = a0*a0*a0;
 	double a1a1a1 = a1*a1*a1;
 	double rororo = ro*ro*ro;
-//	a0a0a0_53 = a0a0a0*(5./3); // (5/3)*a0*a0*a0
-//	a1a1a1_53 = a1a1a1*(5./3); // (5/3)*a1*a1*a1
-//	rororo_524 = rororo*(5./24); // (5/24)*ro*ro*ro
-	
-	a0a0a0_43 = a0a0a0*(4./3); // (4/3)*a0*a0*a0
-	a1a1a1_43 = a1a1a1*(4./3); // (4/3)*a1*a1*a1
+	a0a0a0_43 = a0a0a0*(4./3);
+	a1a1a1_43 = a1a1a1*(4./3);
 	rororo_16 = rororo*(1./6);
 	a0a0a0_109 = a0a0a0*(10./9);
 	a1a1a1_109 = a1a1a1*(10./9);
-	rororo_536 = rororo*(10./9);
-
-
+	rororo_536 = rororo*(5./36);
 	/* XA
 	 * X_{a,b}(l) = X_{b,a}(l) = X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
@@ -607,34 +602,28 @@ void
 Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 								   const vec3d &oi, const vec3d &oj,
 								   StressTensor &stresslet_i, StressTensor &stresslet_j){
-	double c13 = 1./3;
-	double nxnx = nr_vec.x*nr_vec.x; // -1./3
+	double nxnx = nr_vec.x*nr_vec.x;
 	double nyny = nr_vec.y*nr_vec.y;
-	double nxny = nr_vec.x*nr_vec.y; // -1./3
-	double nxnz = nr_vec.x*nr_vec.z;
+	double nznz = nr_vec.z*nr_vec.z;
+	double nxny = nr_vec.x*nr_vec.y;
 	double nynz = nr_vec.y*nr_vec.z;
-	double nznz = nr_vec.z*nr_vec.z; // -1./3
-	/*
-	 *  Angular velocity contribution is not implimented
-	 *
-	 */
-	
+	double nxnz = nr_vec.x*nr_vec.z;
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
+	 *
+	 * S_{11}^{GUX}+S_{12}^{GUX}
+	 *         = - vec{n}.(XG11*v1+XG12*v2)*(ninj-(1/3)*delta_{ij})
+	 *
 	 */
-	
-	StressTensor XGU_i;
-	StressTensor XGU_j;
-
-	double cXG_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj); // 11 12
-	double cXG_j = -dot(nr_vec, scaledXG2()*vi+scaledXG3()*vj); // 21
-	XGU_i.set(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
+	double cXG_i = -dot(nr_vec, scaledXG0()*vi+scaledXG1()*vj);
+	double cXG_j = -dot(nr_vec, scaledXG2()*vi+scaledXG3()*vj);
+	StressTensor XGU_i(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
+	StressTensor XGU_j(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
 	XGU_i *= cXG_i;
-	XGU_j.set(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
 	XGU_j *= cXG_j;
+	stresslet_i = XGU_i;
+	stresslet_j = XGU_j;
 	if (sys->lubrication_model == 1){
-		stresslet_i = XGU_i;
-		stresslet_j = XGU_j;
 		return;
 	}
 	StressTensor YGU_i;
@@ -676,35 +665,35 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	
 	StressTensor YHO_i;
 	StressTensor YHO_j;
-	YHO_i.elm[0]  = 2*scaledYM0()*(nxnz*oi.y-nxny*oi.z);
-	YHO_i.elm[0] += 2*scaledYM1()*(nxnz*oj.y-nxny*oj.z);
-	YHO_j.elm[0]  = 2*scaledYM2()*(nxnz*oi.y-nxny*oi.z);
-	YHO_j.elm[0] += 2*scaledYM3()*(nxnz*oj.y-nxny*oj.z);
+	YHO_i.elm[0]  = -2*scaledYM0()*(nxnz*oi.y-nxny*oi.z);
+	YHO_i.elm[0] += -2*scaledYM1()*(nxnz*oj.y-nxny*oj.z);
+	YHO_j.elm[0]  = -2*scaledYM2()*(nxnz*oi.y-nxny*oi.z);
+	YHO_j.elm[0] += -2*scaledYM3()*(nxnz*oj.y-nxny*oj.z);
 
-	YHO_i.elm[1]  = scaledYM0()*(nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z);
-	YHO_i.elm[1] += scaledYM1()*(nxnz*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z);
-	YHO_j.elm[1]  = scaledYM2()*(nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z);
-	YHO_j.elm[1] += scaledYM3()*(nxnz*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z);
+	YHO_i.elm[1]  = -scaledYM0()*(nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z);
+	YHO_i.elm[1] += -scaledYM1()*(nxnz*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z);
+	YHO_j.elm[1]  = -scaledYM2()*(nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z);
+	YHO_j.elm[1] += -scaledYM3()*(nxnz*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z);
 
-	YHO_i.elm[2]  = scaledYM0()*(nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z);
-	YHO_i.elm[2] += scaledYM1()*(nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z);
-	YHO_j.elm[2]  = scaledYM2()*(nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z);
-	YHO_j.elm[2] += scaledYM3()*(nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z);
+	YHO_i.elm[2]  = -scaledYM0()*(nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z);
+	YHO_i.elm[2] += -scaledYM1()*(nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z);
+	YHO_j.elm[2]  = -scaledYM2()*(nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z);
+	YHO_j.elm[2] += -scaledYM3()*(nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z);
 	
-	YHO_i.elm[3]  = scaledYM0()*(nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x);
-	YHO_i.elm[3] += scaledYM1()*(nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x);
-	YHO_j.elm[3]  = scaledYM2()*(nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x);
-	YHO_j.elm[3] += scaledYM3()*(nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x);
+	YHO_i.elm[3]  = -scaledYM0()*(nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x);
+	YHO_i.elm[3] += -scaledYM1()*(nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x);
+	YHO_j.elm[3]  = -scaledYM2()*(nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x);
+	YHO_j.elm[3] += -scaledYM3()*(nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x);
 
-	YHO_i.elm[4]  = 2*scaledYM0()*(nxny*oi.z-nynz*oi.x);
-	YHO_i.elm[4] += 2*scaledYM1()*(nxny*oj.z-nynz*oj.x);
-	YHO_j.elm[4]  = 2*scaledYM2()*(nxny*oi.z-nynz*oi.x);
-	YHO_j.elm[4] += 2*scaledYM3()*(nxny*oj.z-nynz*oj.x);
+	YHO_i.elm[4]  = -2*scaledYM0()*(nxny*oi.z-nynz*oi.x);
+	YHO_i.elm[4] += -2*scaledYM1()*(nxny*oj.z-nynz*oj.x);
+	YHO_j.elm[4]  = -2*scaledYM2()*(nxny*oi.z-nynz*oi.x);
+	YHO_j.elm[4] += -2*scaledYM3()*(nxny*oj.z-nynz*oj.x);
 	
-	YHO_i.elm[5]  = 2*scaledYM0()*(nynz*oi.x-nxnz*oi.y);
-	YHO_i.elm[5] += 2*scaledYM1()*(nynz*oj.x-nxnz*oj.y);
-	YHO_j.elm[5]  = 2*scaledYM2()*(nynz*oi.x-nxnz*oi.y);
-	YHO_j.elm[5] += 2*scaledYM3()*(nynz*oj.x-nxnz*oj.y);
+	YHO_i.elm[5]  = -2*scaledYM0()*(nynz*oi.x-nxnz*oi.y);
+	YHO_i.elm[5] += -2*scaledYM1()*(nynz*oj.x-nxnz*oj.y);
+	YHO_j.elm[5]  = -2*scaledYM2()*(nynz*oi.x-nxnz*oi.y);
+	YHO_j.elm[5] += -2*scaledYM3()*(nynz*oj.x-nxnz*oj.y);
 	
 	stresslet_i += YHO_i;
 	stresslet_j += YHO_j;
@@ -729,46 +718,50 @@ void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
 	double nxnx = nr_vec.x*nr_vec.x;
 	double nyny = nr_vec.y*nr_vec.y;
-	double nxny = nr_vec.x*nr_vec.y;
-	double nxnz = nr_vec.x*nr_vec.z;
-	double nynz = nr_vec.y*nr_vec.z;
 	double nznz = nr_vec.z*nr_vec.z;
-	double c13 = 1./3;
-	StressTensor XME_i;
-	StressTensor XME_j;
-	
-	double cXM_i = (3./2)*(scaledXM0()+scaledXM1())*nxnz; // 11 + 12
-	XME_i.set(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
-	XME_j *= cXM_i;
-	
-	double cXM_j = (scaledXM2()+scaledXM3())*nxnz;
-	XME_j.set(nxnx, nxny, nxnz, nynz, nyny, nznz);
+	double nxny = nr_vec.x*nr_vec.y;
+	double nynz = nr_vec.y*nr_vec.z;
+	double nxnz = nr_vec.x*nr_vec.z;
+	/*
+	 * S_{ab} = M_{ijxz}E_{xz}+M_{ijzx}E_{zx}
+	 *        = (rate/2)*(M_{ijxz}+M_{ijzx})
+	 *        = M_{ijxz}
+	 * rate = 1 and M_{ijxz} = M_{ijzx}
+	 *   M_{ijxz} = XM_{ab}(3/2)(ninj-(1/3)delta_ij)*(nznx)
+	 *   M_{ijzx} = XM_{ab}(3/2)(ninj-(1/3)delta_ij)*(nznx)
+	 *
+	 * (S_{11}+S_{12})^{ME,X}
+	 *   = M11_{ijxz} + M12_{ijxz}
+     *   = XM_{11}(3/2)(ninj-(1/3)delta_ij)*(nznx) + XM_{12}(3/2)(ninj-(1/3)delta_ij)*(nznx)
+	 *   = [(3/2)(XM_{11}+XM_{12})*nxnz]*(ninj-(1/3)delta_ij)
+	 */
+	double cXM_i = (3./2)*(scaledXM0()+scaledXM1())*nxnz;
+	double cXM_j = (3./2)*(scaledXM2()+scaledXM3())*nxnz;
+	StressTensor XME_i(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
+	StressTensor XME_j(nxnx-c13, nxny, nxnz, nynz, nyny-c13, nznz-c13);
+	XME_i *= cXM_i;
 	XME_j *= cXM_j;
-	
+	stresslet_i = XME_i;
+	stresslet_j = XME_j;
 	if (sys->lubrication_model == 1){
-		stresslet_i = XME_i;
-		stresslet_j = XME_j;
 		return;
 	}
-	
-	StressTensor YME_i;
-	StressTensor YME_j;
-	double cYM_i = (1./2)*(scaledYM0()+scaledYM1());
-	double cYM_j = (1./2)*(scaledYM2()+scaledYM3());
-	
-	YME_i.elm[0] = cYM_i*(2*nxnz-4*nxnx*nxnz);
-	YME_i.elm[1] = cYM_i*(nynz-4*nxnz*nxnz);
-	YME_i.elm[2] = cYM_i*(nxnx+nznz-4*nxnz*nxnz);
-	YME_i.elm[3] = cYM_i*(nxny-4*nynz*nxnz);
-	YME_i.elm[4] = cYM_i*(-4*nyny*nxnz);
-	YME_i.elm[5] = cYM_i*(2*nxnz-4*nznz*nxnz);
-	
-	YME_j.elm[0] = cYM_j*(2*nxnz-4*nxnx*nxnz);
-	YME_j.elm[1] = cYM_j*(nynz-4*nxnz*nxnz);
-	YME_j.elm[2] = cYM_j*(nxnx+nznz-4*nxnz*nxnz);
-	YME_j.elm[3] = cYM_j*(nxny-4*nynz*nxnz);
-	YME_j.elm[4] = cYM_j*(-4*nyny*nxnz);
-	YME_j.elm[5] = cYM_j*(2*nxnz-4*nznz*nxnz);
+	double cYM_i = (1./4)*(scaledYM0()+scaledYM1());
+	double cYM_j = (1./4)*(scaledYM2()+scaledYM3());
+	StressTensor YME_i(2*nxnz-4*nxnx*nxnz,
+					   nynz-4*nxnz*nxnz,
+					   nxnx+nznz-4*nxnz*nxnz,
+					   nxny-4*nynz*nxnz,
+					   -4*nyny*nxnz,
+					   2*nxnz-4*nznz*nxnz);
+	StressTensor YME_j(2*nxnz-4*nxnx*nxnz,
+					   nynz-4*nxnz*nxnz,
+					   nxnx+nznz-4*nxnz*nxnz,
+					   nxny-4*nynz*nxnz,
+					   -4*nyny*nxnz,
+					   2*nxnz-4*nznz*nxnz);
+	YME_i *= cYM_i;
+	YME_j *= cYM_j;
 	
 	stresslet_i += YME_i;
 	stresslet_j += YME_j;
@@ -871,7 +864,6 @@ Interaction::addContactStress(){
 		vec3d vj(sys->v_cont[j6], sys->v_cont[j6+1], sys->v_cont[j6+2]);
 		vec3d oi(sys->v_cont[i6+3], sys->v_cont[i6+4], sys->v_cont[i6+5]);
 		vec3d oj(sys->v_cont[j6+3], sys->v_cont[j6+4], sys->v_cont[j6+5]);
-	
 		pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_i, stresslet_GU_j);
 		sys->contactstressGU[par_num[0]] += stresslet_GU_i;
 		sys->contactstressGU[par_num[1]] += stresslet_GU_j;
