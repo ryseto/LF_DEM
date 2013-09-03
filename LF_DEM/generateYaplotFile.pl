@@ -8,7 +8,7 @@
 
 use Math::Trig;
 
-$force_factor = 0.01;
+$force_factor = 0.2;
 
 $y_section = 0;
 $yap_radius = 1;
@@ -56,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.0001;
+$force_factor = 0.001;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
