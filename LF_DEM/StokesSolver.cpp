@@ -393,12 +393,12 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 
 	
 	// DEBUG
-	/*		ofstream mymat;
+			ofstream mymat;
 		mymat.open("matrix.dat");
 		printResistanceMatrix(mymat, "sparse");
 		mymat.close();
 		printRHS();
-	*/	
+
 	factorizeResistanceMatrix();
 	//		exit(1);
 }
@@ -645,7 +645,7 @@ StokesSolver::solve(double* velocity){
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}				
-		int verbose = 0; // TESTING
+		int verbose = 1; // TESTING
 		if(verbose){
 			cout << " RHS is " << endl;
 			printRHS();
@@ -661,7 +661,7 @@ StokesSolver::solve(double* velocity){
 			}
 
 		}
-		//		exit(1);
+		exit(1);
 		verbose = 0;
 		if (verbose){
 			//const char name [256] = "bla";

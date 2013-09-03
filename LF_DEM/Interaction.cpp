@@ -582,16 +582,16 @@ void
 Interaction::HE(double *HEi, double *HEj){
 	calcYH();
 	double nxny = nr_vec.x*nr_vec.y;
-	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
+	double nxnx_nznz = -nr_vec.x*nr_vec.x+nr_vec.z*nr_vec.z;
 	double nynz = nr_vec.y*nr_vec.z;
 	double common_factor_i = get_scaled_YH0()+get_scaled_YH2();
 	double common_factor_j = get_scaled_YH3()+get_scaled_YH1();
-	HEi[0] = -common_factor_i*nxny;
+	HEi[0] = common_factor_i*nxny;
 	HEi[1] = common_factor_i*nxnx_nznz;
-	HEi[2] = common_factor_i*nynz;
-	HEj[0] = -common_factor_j*nxny;
+	HEi[2] = -common_factor_i*nynz;
+	HEj[0] = common_factor_j*nxny;
 	HEj[1] = common_factor_j*nxnx_nznz;
-	HEj[2] = common_factor_j*nynz;
+	HEj[2] = -common_factor_j*nynz;
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
