@@ -468,13 +468,13 @@ Simulation::evaluateData(){
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
 	
-	test_stress = sys.total_test_stress;
-	test_stress += total_contact_stressXF;
-	test_stress += total_colloidal_stress;
-	
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
+	
+	test_stress = sys.total_test_stress;
+	test_sum_hydro_stresses = sys.total_hydro_stress+sys.total_contact_stressGU+sys.total_colloidal_stressGU;
+	
 	/*
 	 * Viscosity is only the increment of stress (=del_eta).
 	 * The total viscosity should be 
@@ -482,6 +482,8 @@ Simulation::evaluateData(){
 	 */
 	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
 	test_viscosity = test_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
+	test_sum_hydro_viscosity = test_sum_hydro_stresses.getStressXZ()+5*volume_fraction/(12*M_PI);
+	
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
@@ -632,6 +634,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
 	fout_rheo << 6*M_PI*test_viscosity << ' ';
+	fout_rheo << 6*M_PI*test_sum_hydro_viscosity << ' ';
 	fout_rheo << endl;
 }
 

@@ -736,18 +736,17 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 	if (sys->lubrication_model == 1){
 		return;
 	}
-	double cYM_i = (1./4)*(scaledYM0()+scaledYM1());
-	double cYM_j = (1./4)*(scaledYM2()+scaledYM3());
-	StressTensor YME_i(2*nxnz-4*nxnx*nxnz,
-					   nynz-4*nxnz*nxnz,
-					   nxnx+nznz-4*nxnz*nxnz,
-					   nxny-4*nynz*nxnz,
-					   -4*nyny*nxnz,
-					   2*nxnz-4*nznz*nxnz);
+	double cYM_i = (1./2)*(scaledYM0()+scaledYM1());
+	double cYM_j = (1./2)*(scaledYM2()+scaledYM3());
+	StressTensor YME_i(2*nxnz     -4*nxnx*nxnz,
+					     nynz     -4*nxny*nxnz,
+						 nxnx+nznz-4*nxnz*nxnz,
+					     nxny     -4*nynz*nxnz,
+								  -4*nyny*nxnz,
+					   2*nxnz     -4*nznz*nxnz);
 	StressTensor YME_j = YME_i;
 	YME_i *= cYM_i;
 	YME_j *= cYM_j;
-	
 	stresslet_i += YME_i;
 	stresslet_j += YME_j;
 }

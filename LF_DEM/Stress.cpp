@@ -198,12 +198,12 @@ System::calcStressesHydroContact(){
 		}
 	}
     stokes_solver.solvingIsDone();
+
 	/***************************************************************************************
 	 ************************* test ********************************************************/
 
     stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
-	
 	stokes_solver.resetRHS();
     buildLubricationTerms();
     setContactForceToParticle();
@@ -223,7 +223,6 @@ System::calcStressesHydroContact(){
 		}
 	}
 	stokes_solver.solvingIsDone();
-
 	double v_diff = 0;
 	double s_diff = 0;
 	for (int i=0; i<np; i++) {
