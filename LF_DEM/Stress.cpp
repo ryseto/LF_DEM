@@ -185,7 +185,9 @@ System::calcStressesHydroContact(){
     stokes_solver.solve(v_colloidal);
 	/////////////////////////////////////////////////
 	// from that, compute stresses
+	cout << nb_interaction << endl;
 	for (int k=0; k<nb_interaction; k++) {
+
 		if (interaction[k].is_active()) {
 			if (lubrication_model == 1){
 				interaction[k].calcXFunctionsStress();
@@ -225,18 +227,20 @@ System::calcStressesHydroContact(){
 	stokes_solver.solvingIsDone();
 	double v_diff = 0;
 	double s_diff = 0;
-	StressTensor sum_stress;
+
 	for (int i=0; i<np; i++) {
 		int i6 = 6*i;
 		double vx = v_total[i6]-(v_hydro[i6]+v_colloidal[i6]+v_cont[i6]);
 		double vy = v_total[i6+1]-(v_hydro[i6+1]+v_colloidal[i6+1]+v_cont[i6+1]);
 		double vz = v_total[i6+2]-(v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
 		v_diff += sqrt(vx*vx + vy*vy +vz*vz);
-		sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
+		StressTensor sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
 		s_diff += (sum_stress-test_totalstress[i]).getStressXZ();
+		//		cerr << " s_diff[" << i << "] = " << (sum_stress-test_totalstress[i]).getStressXZ() << " ( sum_stress.xz = " << sum_stress.getStressXZ() << " )"<< " lubstress[i] " << lubstress[i].getStressXZ() << " contactstressGU[i] " << contactstressGU[i].getStressXZ() << " colloidalstressGU[i]" << colloidalstressGU[i].getStressXZ() << " v_total.x " << v_total[i6] << " v_hydro.x " << v_hydro[i6]<< " v_contact.x " << v_cont[i6]<< " v_colloidal.x " << v_colloidal[i6]  << endl;
 	}
+
 	cerr << " v_diff = " << v_diff << endl;
-	cerr << " s_diff = " << s_diff << " ( sum_stress.xz = " << sum_stress.getStressXZ() << " )"<< endl;
+	cerr << " s_diff = " << s_diff << endl;
 	/************************* test ********************************************************
 	 ***************************************************************************************/
 	

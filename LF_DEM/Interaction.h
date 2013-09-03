@@ -289,6 +289,7 @@ public:
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
 	void info(){
+		cerr << "particles " << par_num[0] << " " << par_num[1] << endl;
 		cerr << "contact " << contact << endl;
 		cerr << "kn " << kn_scaled << endl;
 		cerr << "kn " << colloidalforce_amplitude << endl;
