@@ -141,8 +141,7 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-
-
+  	
 	if (direct()) {
 		int ii18 = 18*ii;
 		dblocks[ii18   ] += scaledXA*n0n0 + scaledYA*one_n0n0;        // 00 element of the dblock
@@ -824,7 +823,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-
+	
 	odbrows.push_back(6*jj);
 	
 	int i0 = current_index_positions[0];
@@ -859,7 +858,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	odblocks[4][i4+3] = -scaledYC*n1n2;
 	odblocks[5][i5  ] = 0; // column 5
 	odblocks[5][i5+1] = scaledYC*one_n2n2;
-
+	
 	current_index_positions[0] += 6;
 	current_index_positions[1] += 4;
 	current_index_positions[2] += 2;

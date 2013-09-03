@@ -29,11 +29,14 @@ private:
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
-	double ro_half; // = ro/2
+	double c13;
+
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
 	unsigned int par_num[2];
+	int i6;
+	int j6;
 	bool contact;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
@@ -43,8 +46,14 @@ private:
 	double log_lub_coeff; // = log(lub_coeff);
 	double lub_coeff_contact; //
 	double tangential_dashpot_coeff; //
-	vec3d r_vec; // normal vector
-	vec3d nr_vec; // vector center to center
+	vec3d r_vec; // vector center to center
+	vec3d nvec; // normal vector
+	double nxnx;
+	double nxny;
+	double nxnz;
+	double nynz;
+	double nyny;
+	double nznz;
 	vec3d contact_velocity;
 	double normal_relative_velocity;
 	vec3d disp_tan; // tangential displacement
@@ -106,7 +115,6 @@ private:
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
 	//==========================================================================//
-	
 	void calcLubConstants();
 	double lambda_square;
 	double lambda_cubic;
@@ -122,6 +130,7 @@ private:
 	double cYH[4];
 	double cXM[4];
 	double cYM[4];
+	double ro_12; // = ro/2
 	double a0a0_23;
 	double a1a1_23;
 	double roro_16;
@@ -131,6 +140,9 @@ private:
 	double a0a0a0_43;
 	double a1a1a1_43;
 	double rororo_16;
+	double a0a0a0_109;
+	double a1a1a1_109;
+	double rororo_536;
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -195,57 +207,59 @@ public:
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
 		ro = val;
-		ro_half = 0.5*ro;
+		ro_12 = ro*(1./2);
 	}; // ro = a0 + a1
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
 	inline double get_gap_nondim(){return gap_nondim;}
-	inline vec3d get_nr_vec(){return nr_vec;}
-
+	inline vec3d get_nvec(){return nvec;}
 	//=============  Resistance Matrices ====================/
 
-	void GE(double *GEi, double *GEj);
-	void HE(double *HEi, double *HEj);
-	void calcResistanceFunctions();
-	void calcXA();
-	void calcYA();
-	void calcYB();
-	void calcYC();
-	void calcXG();
-	void calcYG();
-	void calcXM();
-	void calcYM();
-	void calcYH();
-	inline double get_scaled_XA0(){return a0*XA[0];}
-	inline double get_scaled_XA1(){return ro_half*XA[1];}
-	inline double get_scaled_XA2(){return ro_half*XA[2];}
-	inline double get_scaled_XA3(){return a1*XA[3];}
-	inline double get_scaled_YA0(){return a0*YA[0];}
-	inline double get_scaled_YA1(){return ro_half*YA[1];}
-	inline double get_scaled_YA2(){return ro_half*YA[2];}
-	inline double get_scaled_YA3(){return a1*YA[3];}
-	inline double get_scaled_YB0(){return a0a0_23*YB[0];}
-	inline double get_scaled_YB1(){return roro_16*YB[1];}
-	inline double get_scaled_YB2(){return roro_16*YB[2];}
-	inline double get_scaled_YB3(){return a1a1_23*YB[3];}
-	inline double get_scaled_YC0(){return a0a0a0_43*YC[0];}
-	inline double get_scaled_YC1(){return rororo_16*YC[1];}
-	inline double get_scaled_YC2(){return rororo_16*YC[2];}
-	inline double get_scaled_YC3(){return a1a1a1_43*YC[3];}
-	inline double get_scaled_XG0(){return a0a0_23*XG[0];}
-	inline double get_scaled_XG1(){return roro_16*XG[1];}
-	inline double get_scaled_XG2(){return roro_16*XG[2];}
-	inline double get_scaled_XG3(){return a1a1_23*XG[3];}
-	inline double get_scaled_YG0(){return a0a0_23*YG[0];}
-	inline double get_scaled_YG1(){return roro_16*YG[1];}
-	inline double get_scaled_YG2(){return roro_16*YG[2];}
-	inline double get_scaled_YG3(){return a1a1_23*YG[3];}
-	inline double get_scaled_YH0(){return a0a0a0_43*YH[0];}
-	inline double get_scaled_YH1(){return rororo_16*YH[1];}
-	inline double get_scaled_YH2(){return rororo_16*YH[2];}
-	inline double get_scaled_YH3(){return a1a1a1_43*YH[3];}
+	void calcGE(double *GEi, double *GEj);
+	void calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj);
+	void calcXFunctions();
+	void calcXYFunctions();
+	void calcXFunctionsStress();
+	void calcXYFunctionsStress();
+	inline double scaledXA0(){return a0*XA[0];}
+	inline double scaledXA1(){return ro_12*XA[1];}
+	inline double scaledXA2(){return ro_12*XA[2];}
+	inline double scaledXA3(){return a1*XA[3];}
+	inline double scaledYA0(){return a0*YA[0];}
+	inline double scaledYA1(){return ro_12*YA[1];}
+	inline double scaledYA2(){return ro_12*YA[2];}
+	inline double scaledYA3(){return a1*YA[3];}
+	inline double scaledYB0(){return a0a0_23*YB[0];}
+	inline double scaledYB1(){return roro_16*YB[1];}
+	inline double scaledYB2(){return roro_16*YB[2];}
+	inline double scaledYB3(){return a1a1_23*YB[3];}
+	inline double scaledYC0(){return a0a0a0_43*YC[0];}
+	inline double scaledYC1(){return rororo_16*YC[1];}
+	inline double scaledYC2(){return rororo_16*YC[2];}
+	inline double scaledYC3(){return a1a1a1_43*YC[3];}
+	inline double scaledXG0(){return a0a0_23*XG[0];}
+	inline double scaledYG0(){return a0a0_23*YG[0];}
+	inline double scaledXG1(){return roro_16*XG[1];}
+	inline double scaledYG1(){return roro_16*YG[1];}
+	inline double scaledXG2(){return roro_16*XG[2];}
+	inline double scaledYG2(){return roro_16*YG[2];}
+	inline double scaledXG3(){return a1a1_23*XG[3];}
+	inline double scaledYG3(){return a1a1_23*YG[3];}
 
+	inline double scaledYH0(){return a0a0a0_43*YH[0];}
+	inline double scaledYH1(){return rororo_16*YH[1];}
+	inline double scaledYH2(){return rororo_16*YH[2];}
+	inline double scaledYH3(){return a1a1a1_43*YH[3];}
+
+	inline double scaledXM0(){return a0a0a0_109*XM[0];}
+	inline double scaledYM0(){return a0a0a0_109*YM[0];}
+	inline double scaledXM1(){return rororo_536*XM[1];}
+	inline double scaledYM1(){return rororo_536*YM[1];}
+	inline double scaledXM2(){return rororo_536*XM[2];}
+	inline double scaledYM2(){return rororo_536*YM[2];}
+	inline double scaledXM3(){return a1a1a1_109*XM[3];}
+	inline double scaledYM3(){return a1a1a1_109*YM[3];}
 	
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
@@ -259,15 +273,18 @@ public:
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
-	inline double getLubForce(){return -dot(lubforce_i, nr_vec);}
+	inline double getLubForce(){return -dot(lubforce_i, nvec);}
+
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
+	void calcTestStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
+							   const vec3d &oi, const vec3d &oj,
 							   StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();

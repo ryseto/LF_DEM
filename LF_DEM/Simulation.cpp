@@ -467,6 +467,11 @@ Simulation::evaluateData(){
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
+	
+	test_stress = sys.total_test_stress;
+	test_stress += total_contact_stressXF;
+	test_stress += total_colloidal_stress;
+	
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
@@ -476,6 +481,7 @@ Simulation::evaluateData(){
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
 	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
+	test_viscosity = test_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
@@ -625,6 +631,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
+	fout_rheo << 6*M_PI*test_viscosity << ' ';
 	fout_rheo << endl;
 }
 
@@ -739,7 +746,7 @@ Simulation::outputConfigurationData(){
 				 */
 				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d nr_vec = sys.interaction[k].get_nr_vec();
+				vec3d nr_vec = sys.interaction[k].get_nvec();
 				StressTensor stress_contact = sys.interaction[k].getContactStressXF();
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
 				fout_interaction << sys.interaction[k].is_contact() << ' '; // 3

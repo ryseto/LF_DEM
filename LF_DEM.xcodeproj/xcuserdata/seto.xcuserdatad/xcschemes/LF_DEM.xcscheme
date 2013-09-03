@@ -78,11 +78,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "two.dat"
+            argument = "D2N50VF0.5Bidi1.4_0.5Square_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "lubmodel2"
+            argument = "lubmodel2.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

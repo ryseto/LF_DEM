@@ -17,7 +17,10 @@ using namespace std;
 class vec3d {
 public:
 	/* variables */
-	double x, y, z;
+	double x;
+	double y;
+	double z;
+
 	/* constructor/destructor */
 	inline vec3d (void): x(0), y(0), z(0){}
 
@@ -271,5 +274,10 @@ public:
 	cerr(){
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
 	}
+	
+
 };
+
+
+
 #endif
