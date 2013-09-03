@@ -226,17 +226,18 @@ System::calcStressesHydroContact(){
 
 	double v_diff = 0;
 	double s_diff = 0;
+	StressTensor sum_stress;
 	for (int i=0; i<np; i++) {
 		int i6 = 6*i;
 		double vx = v_total[i6]-(v_hydro[i6]+v_colloidal[i6]+v_cont[i6]);
 		double vy = v_total[i6+1]-(v_hydro[i6+1]+v_colloidal[i6+1]+v_cont[i6+1]);
 		double vz = v_total[i6+2]-(v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
 		v_diff += sqrt(vx*vx + vy*vy +vz*vz);
-		StressTensor sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
+		sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
 		s_diff += (sum_stress-test_totalstress[i]).getStressXZ();
 	}
 	cerr << " v_diff = " << v_diff << endl;
-	cerr << " s_diff = " << s_diff << endl;
+	cerr << " s_diff = " << s_diff << " ( sum_stress.xz = " << sum_stress.getStressXZ() << " )"<< endl;
 	/************************* test ********************************************************
 	 ***************************************************************************************/
 	
