@@ -754,13 +754,14 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
 				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
-				fout_interaction << sys.interaction[k].getLubForce() << ' '; // 8
-				fout_interaction << sys.interaction[k].get_f_contact_normal_norm() << ' '; // 9
-				fout_interaction << sys.interaction[k].get_f_contact_tan_norm() << ' '; // 10
-				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 11
-				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 12
-				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 13
-				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << endl; // 14
+				fout_interaction << sys.interaction[k].get_lubforce_norm() << ' '; // 8
+				fout_interaction << sys.interaction[k].get_lubforce_tan() << ' '; // 9
+				fout_interaction << sys.interaction[k].get_f_contact_normal_norm() << ' '; // 10
+				fout_interaction << sys.interaction[k].get_f_contact_tan_norm() << ' '; // 11
+				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 12
+				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
+				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
+				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << endl; // 15
 			}
 		}
 	}

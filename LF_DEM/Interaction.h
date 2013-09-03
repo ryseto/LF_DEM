@@ -267,8 +267,11 @@ public:
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	inline double disp_tan_norm(){return disp_tan.norm();}
-	inline double getLubForce(){return -dot(lubforce_i, nvec);}
-
+	inline double get_lubforce_norm(){return -dot(lubforce_i, nvec);}
+	inline double get_lubforce_tan(){
+		vec3d lub_tan = lubforce_i-dot(lubforce_i, nvec)*nvec;
+		return lub_tan.norm();
+	}
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();

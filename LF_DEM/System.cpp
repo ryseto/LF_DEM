@@ -1126,7 +1126,6 @@ System::openFileInteractionData(){
 	fout_int_data.open(int_daat_filename.c_str());
 }
 
-
 double
 System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;
