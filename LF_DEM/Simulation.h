@@ -34,14 +34,17 @@ private:
 	 */
 	double viscosity;
 	double test_viscosity;
-
+	double test_sum_hydro_viscosity;
 	double normalstress_diff_1;
 	double normalstress_diff_2;
 	double particle_pressure;
 	StressTensor total_stress;
 	StressTensor test_stress;
+	StressTensor test_sum_hydro_stresses;
 	StressTensor total_contact_stressXF;
 	StressTensor total_colloidal_stress;
+
+	
 	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
