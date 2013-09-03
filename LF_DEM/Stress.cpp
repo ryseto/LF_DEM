@@ -185,7 +185,9 @@ System::calcStressesHydroContact(){
     stokes_solver.solve(v_colloidal);
 	/////////////////////////////////////////////////
 	// from that, compute stresses
+	cout << nb_interaction << endl;
 	for (int k=0; k<nb_interaction; k++) {
+
 		if (interaction[k].is_active()) {
 			if (lubrication_model == 1){
 				interaction[k].calcXFunctionsStress();

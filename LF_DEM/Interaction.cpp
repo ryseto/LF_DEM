@@ -304,6 +304,10 @@ Interaction::checkBreakupStaticFriction(){
 void
 Interaction::addUpContactForceTorque(){
 	if (contact) {
+		
+		//		cerr << " I am interaction " <<endl;
+		//		info();
+		
 		sys->contact_force[par_num[0]] += f_contact_normal;
 		/*		if(f_contact_normal < 0){
 			cout << "neg force " << f_contact_normal<< " " << nvec <<" " << sys->position[par_num[0]] << " " << sys->position[par_num[1]] << endl;
@@ -736,8 +740,8 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 void
 Interaction::calcTestStress(){
 	// @@@@@ FOR TEST
-	StressTensor stresslet_GU_i;
-	StressTensor stresslet_GU_j;
+	StressTensor stresslet_GU_HO_i;
+	StressTensor stresslet_GU_HO_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
 	vec3d vi(sys->v_total[i6], sys->v_total[i6+1], sys->v_total[i6+2]);
@@ -747,13 +751,13 @@ Interaction::calcTestStress(){
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
-	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_i, stresslet_GU_j);
+	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_HO_i, stresslet_GU_HO_j);
 	/*
 	 *  Second: +M*Einf term
 	 */
 	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-	sys->test_totalstress[par_num[0]] += stresslet_GU_i+stresslet_ME_i;
-	sys->test_totalstress[par_num[1]] += stresslet_GU_j+stresslet_ME_j;
+	sys->test_totalstress[par_num[0]] += stresslet_GU_HO_i+stresslet_ME_i;
+	sys->test_totalstress[par_num[1]] += stresslet_GU_HO_j+stresslet_ME_j;
 }
 
 /* Lubriction force between two particles is calculated.
