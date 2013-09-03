@@ -100,7 +100,7 @@ private:
 	//void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
-	void testStressCalculation();
+
 
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
@@ -133,7 +133,6 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-	StressTensor* test_totalstress; /// @@@@ FOR TEST
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
@@ -146,9 +145,6 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
-	
-	StressTensor total_test_stress;
-	
 	bool friction;
 	bool colloidalforce;
 	bool brownian;

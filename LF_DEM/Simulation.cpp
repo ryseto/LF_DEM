@@ -448,7 +448,9 @@ Simulation::prepareSimulationName(){
 void
 Simulation::evaluateData(){
 	sys.calcStress();
+	sys.calcLubricationForce();
 	sys.analyzeState();
+
 	/* NOTE:
 	 * 
 	 * The total stress DID not include the contact GU terms,
@@ -467,14 +469,9 @@ Simulation::evaluateData(){
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
-	
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stress;
 	}
-	
-	test_stress = sys.total_test_stress;
-	test_sum_hydro_stresses = sys.total_hydro_stress+sys.total_contact_stressGU+sys.total_colloidal_stressGU;
-	
 	/*
 	 * Viscosity is only the increment of stress (=del_eta).
 	 * The total viscosity should be 

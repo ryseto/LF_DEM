@@ -756,8 +756,6 @@ Interaction::calcTestStress(){
 	 *  Second: +M*Einf term
 	 */
 	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-	sys->test_totalstress[par_num[0]] += stresslet_GU_HO_i+stresslet_ME_i;
-	sys->test_totalstress[par_num[1]] += stresslet_GU_HO_j+stresslet_ME_j;
 }
 
 /* Lubriction force between two particles is calculated.

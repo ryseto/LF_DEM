@@ -57,8 +57,6 @@ System::allocateRessources(){
 	contact_torque = new vec3d [np];
 	colloidal_force = new vec3d [np];
 	lubstress = new StressTensor [np];
-	test_totalstress = new StressTensor [np]; //@@ test
-
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
 	brownianstress = new StressTensor [np];
@@ -666,7 +664,6 @@ System::stressReset(){
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
-		test_totalstress[i].reset(); // @@@@ FOR TEST @@@@
 	}
 }
 
@@ -1250,3 +1247,28 @@ System::calcTotalPotentialEnergy(){
 		}
 	}
 }
+
+void
+System::calcLubricationForce(){
+	/*
+	 * Calculate lubrication force to output
+	 */
+	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
+	stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
+    addStokesDrag();
+	stokes_solver.resetRHS();
+    buildLubricationTerms();
+    setContactForceToParticle();
+	buildContactTerms();
+	setColloidalForceToParticle();
+	buildColloidalForceTerms();
+	stokes_solver.completeResistanceMatrix();
+	stokes_solver.solve(v_total);
+	stokes_solver.solvingIsDone();
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			interaction[k].evaluateLubricationForce();
+		}
+	}
+}
+
