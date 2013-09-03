@@ -376,7 +376,7 @@ Interaction::calcLubConstants(){
 	lambda_p_1_cubic = lambda_p_1_square*lambda_p_1;
 	a0a0_23 = a0*a0*(2./3);
 	a1a1_23 = a1*a1*(2./3);
-	roro_16 = ro*ro/6;
+	roro_16 = ro*ro*(1./6);
 	double a0a0a0 = a0*a0*a0;
 	double a1a1a1 = a1*a1*a1;
 	double rororo = ro*ro*ro;
@@ -575,22 +575,22 @@ Interaction::calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj){
 	double nxnx_nznz = nr_vec.x*nr_vec.x-nr_vec.z*nr_vec.z;
 	double yg0_yg2 = scaledYG0()+scaledYG2();
 	double yg1_yg3 = scaledYG1()+scaledYG3();
-	double ge_factor_i = (scaledXG0()+scaledXG2()-2*yg0_yg2)*nxnz;
-	double ge_factor_j = (scaledXG1()+scaledXG3()-2*yg1_yg3)*nxnz;
-	double he_factor_i = scaledYH0()+scaledYH2();
-	double he_factor_j = scaledYH3()+scaledYH1();
-	GEi[0] = ge_factor_i*nr_vec.x+yg0_yg2*nr_vec.z;
-	GEi[1] = ge_factor_i*nr_vec.y;
-	GEi[2] = ge_factor_i*nr_vec.z+yg0_yg2*nr_vec.x;
-	GEj[0] = ge_factor_j*nr_vec.x+yg1_yg3*nr_vec.z;
-	GEj[1] = ge_factor_j*nr_vec.y;
-	GEj[2] = ge_factor_j*nr_vec.z+yg1_yg3*nr_vec.x;
-	HEi[0] = he_factor_i*nxny;
-	HEi[1] = -he_factor_i*nxnx_nznz;
-	HEi[2] = -he_factor_i*nynz;
-	HEj[0] = he_factor_j*nxny;
-	HEj[1] = -he_factor_j*nxnx_nznz;
-	HEj[2] = -he_factor_j*nynz;
+	double cGE_i = (scaledXG0()+scaledXG2()-2*yg0_yg2)*nxnz;
+	double cGE_j = (scaledXG1()+scaledXG3()-2*yg1_yg3)*nxnz;
+	double cHE_i = scaledYH0()+scaledYH2();
+	double cHE_j = scaledYH3()+scaledYH1();
+	GEi[0] = cGE_i*nr_vec.x+yg0_yg2*nr_vec.z;
+	GEi[1] = cGE_i*nr_vec.y;
+	GEi[2] = cGE_i*nr_vec.z+yg0_yg2*nr_vec.x;
+	GEj[0] = cGE_j*nr_vec.x+yg1_yg3*nr_vec.z;
+	GEj[1] = cGE_j*nr_vec.y;
+	GEj[2] = cGE_j*nr_vec.z+yg1_yg3*nr_vec.x;
+	HEi[0] = cHE_i*nxny;
+	HEi[1] = -cHE_i*nxnx_nznz;
+	HEi[2] = -cHE_i*nynz;
+	HEj[0] = cHE_j*nxny;
+	HEj[1] = -cHE_j*nxnx_nznz;
+	HEj[2] = -cHE_j*nynz;
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
