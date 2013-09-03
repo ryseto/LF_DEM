@@ -29,14 +29,11 @@ private:
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
-	double c13;
-
+	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
 	unsigned int par_num[2];
-	int i6;
-	int j6;
 	bool contact;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
@@ -45,17 +42,9 @@ private:
 	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
 	double log_lub_coeff; // = log(lub_coeff);
 	double lub_coeff_contact; //
-	double tangential_dashpot_coeff; //
-	vec3d r_vec; // vector center to center
+	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
-	double nxnx;
-	double nxny;
-	double nxnz;
-	double nynz;
-	double nyny;
-	double nznz;
 	vec3d contact_velocity;
-	double normal_relative_velocity;
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_predictor; // tangential displacement
 	vec3d disp_tan_previous;
@@ -91,7 +80,6 @@ private:
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
-	
 	//======= particles data  ====================//
 	double lambda; // a1/a0
 	double invlambda; // a0/a1
@@ -114,8 +102,17 @@ private:
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
+
 	//==========================================================================//
 	void calcLubConstants();
+	int i6;
+	int j6;
+	double nxnx;
+	double nxny;
+	double nxnz;
+	double nynz;
+	double nyny;
+	double nznz;
 	double lambda_square;
 	double lambda_cubic;
 	double lambda_p_1;
@@ -215,7 +212,6 @@ public:
 	inline double get_gap_nondim(){return gap_nondim;}
 	inline vec3d get_nvec(){return nvec;}
 	//=============  Resistance Matrices ====================/
-
 	void calcGE(double *GEi, double *GEj);
 	void calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj);
 	void calcXFunctions();
@@ -246,12 +242,10 @@ public:
 	inline double scaledYG2(){return roro_16*YG[2];}
 	inline double scaledXG3(){return a1a1_23*XG[3];}
 	inline double scaledYG3(){return a1a1_23*YG[3];}
-
 	inline double scaledYH0(){return a0a0a0_43*YH[0];}
 	inline double scaledYH1(){return rororo_16*YH[1];}
 	inline double scaledYH2(){return rororo_16*YH[2];}
 	inline double scaledYH3(){return a1a1a1_43*YH[3];}
-
 	inline double scaledXM0(){return a0a0a0_109*XM[0];}
 	inline double scaledYM0(){return a0a0a0_109*YM[0];}
 	inline double scaledXM1(){return rororo_536*XM[1];}

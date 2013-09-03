@@ -199,10 +199,10 @@ System::calcStressesHydroContact(){
 	}
     stokes_solver.solvingIsDone();
 
-	/***************************************************************************************
-	 ************************* test ********************************************************/
-
-    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
+	/*
+	 * Calculate lubrication force to output
+	 */
+	stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
 	stokes_solver.resetRHS();
     buildLubricationTerms();
@@ -212,36 +212,7 @@ System::calcStressesHydroContact(){
 	buildColloidalForceTerms();
 	stokes_solver.completeResistanceMatrix();
 	stokes_solver.solve(v_total);
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			if (lubrication_model == 1){
-				interaction[k].calcXFunctionsStress();
-			} else if (lubrication_model == 2){
-				interaction[k].calcXYFunctionsStress();
-			}
-			interaction[k].calcTestStress();
-		}
-	}
 	stokes_solver.solvingIsDone();
-	double v_diff = 0;
-	double s_diff = 0;
-	for (int i=0; i<np; i++) {
-		int i6 = 6*i;
-		double vx = v_total[i6]-(v_hydro[i6]+v_colloidal[i6]+v_cont[i6]);
-		double vy = v_total[i6+1]-(v_hydro[i6+1]+v_colloidal[i6+1]+v_cont[i6+1]);
-		double vz = v_total[i6+2]-(v_hydro[i6+2]+v_colloidal[i6+2]+v_cont[i6+2]);
-		v_diff += sqrt(vx*vx + vy*vy +vz*vz);
-		StressTensor sum_stress = lubstress[i]+contactstressGU[i]+colloidalstressGU[i];
-		s_diff += (sum_stress-test_totalstress[i]).getStressXZ();
-	}
-	cerr << " v_diff = " << v_diff << endl;
-	cerr << " s_diff = " << s_diff << endl;
-	/************************* test ********************************************************
-	 ***************************************************************************************/
-	
-	/*
-	 * Calculate lubrication force to output
-	 */
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].evaluateLubricationForce();

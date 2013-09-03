@@ -44,7 +44,6 @@ private:
 	StressTensor total_contact_stressXF;
 	StressTensor total_colloidal_stress;
 
-	
 	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
@@ -79,7 +78,6 @@ private:
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
-
 	/*
 	 */
 	void timeEvolution();

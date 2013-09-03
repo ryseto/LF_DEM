@@ -231,7 +231,6 @@ private:
 	 - appends alpha * |nvec><nvec| and corresponding indices
 	 to blocks [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
-	 
 	 */
     void setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYBtilde, double scaledYB, double scaledYC);
 	

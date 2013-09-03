@@ -23,10 +23,10 @@ Interaction::init(System *sys_){
  */
 void
 Interaction::calcNormalVectorDistanceGap(){
-	r_vec = sys->position[par_num[1]]-sys->position[par_num[0]];
-	sys->periodize_diff(r_vec, zshift);
-	r = r_vec.norm();
-	nvec = r_vec/r;
+	rvec = sys->position[par_num[1]]-sys->position[par_num[0]];
+	sys->periodize_diff(rvec, zshift);
+	r = rvec.norm();
+	nvec = rvec/r;
 	nxnx = nvec.x*nvec.x;
 	nxny = nvec.x*nvec.y;
 	nxnz = nvec.x*nvec.z;
@@ -55,7 +55,6 @@ Interaction::activate(int i, int j){
 	}
 	i6 = 6*par_num[0];
 	j6 = 6*par_num[1];
-	
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
@@ -68,7 +67,6 @@ Interaction::activate(int i, int j){
 	lub_max_scaled = ro_12*sys->get_lub_max();
 	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
-	tangential_dashpot_coeff = ro_12*sys->get_tang_coeff_contact(); // **** to be checked ****
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -252,7 +250,7 @@ Interaction::updateStateRelax(bool &deactivated){
 /*
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
- * r_vec = p[1] - p[0]
+ * rvec = p[1] - p[0]
  * Fc_normal_norm is positive (for overlapping particles r < ro)
  */
 void
@@ -361,8 +359,6 @@ Interaction::calcRelativeVelocities(){
 		dv.x += zshift*sys->vel_difference;
 	}
 	contact_velocity = dv-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
-	normal_relative_velocity = dot(dv, nvec); // Negative when approaching.
-
 }
 
 /*********************************
@@ -695,21 +691,6 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	stresslet_j += YHO_j;
 }
 
-// convenient interface for pairVelocityStresslet(const vec3d &vi, const vec3d &vj, stresslet &stresslet_i, stresslet &stresslet_j)
-//void
-//Interaction::pairVelocityStresslet(double* &vel_array, StressTensor &stresslet_i, StressTensor &stresslet_j){
-//	vec3d vi, vj;
-//	int i3 = 3*par_num[0];
-//	int j3 = 3*par_num[1];
-//	vi.x = vel_array[i3];
-//	vi.y = vel_array[i3+1];
-//	vi.z = vel_array[i3+2];
-//	vj.x = vel_array[j3];
-//	vj.y = vel_array[j3+1];
-//	vj.z = vel_array[j3+2];
-//	pairVelocityStresslet(vi, vj, stresslet_i, stresslet_j);
-//}
-
 void
 Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
 	/*
@@ -785,25 +766,38 @@ Interaction::evaluateLubricationForce(){
 	/*
 	 *  First: -A*(U-Uinf) term
 	 */
-	vec3d vi = sys->velocity[par_num[0]];
-	vec3d vj = sys->velocity[par_num[1]];
-	if (sys->vel_difference > 0) {
-		vi.x -= sys->position[par_num[0]].z;
-		vj.x -= sys->position[par_num[1]].z;
-	}
+	//	vec3d vi = sys->velocity[par_num[0]];
+	//	vec3d vj = sys->velocity[par_num[1]];
+	//	if (sys->vel_difference > 0) {
+	//		vi.x -= sys->position[par_num[0]].z;
+	//		vj.x -= sys->position[par_num[1]].z;
+	//	}
 	//	calcXA();
+	
+	/* Eq. (1.6a) in Jeffrey&Onishi 1984
+	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
+	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
+	 *
+	 */
+	vec3d vi(sys->v_total[i6], sys->v_total[i6+1], sys->v_total[i6+2]);
+	vec3d vj(sys->v_total[j6], sys->v_total[j6+1], sys->v_total[j6+2]);
+	vec3d oi(sys->v_total[i6+3], sys->v_total[i6+4], sys->v_total[i6+5]);
+	vec3d oj(sys->v_total[j6+3], sys->v_total[j6+4], sys->v_total[j6+5]);
 	if (sys->lubrication_model == 1){
 		calcXFunctions();
 	} else if (sys->lubrication_model == 2){
 		calcXYFunctions();
 	}
-	double cf_AU_i = -dot(a0*XA[0]*vi+ro_12*XA[1]*vj, nvec);
-	/*
-	 *  Second -tildeG*(-Einf)term
-	 */
-	//calcXG();
-	double cf_GE_i = nxnz*(a0a0_23*XG[0]+roro_16*XG[2]);
-	lubforce_i = (cf_AU_i+cf_GE_i)*nvec;
+	vec3d XAU_i = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*nvec;
+	vec3d XGE_i = (scaledXG0()+scaledXG2())*nxnz*nvec;
+	if (sys->lubrication_model == 1){
+		lubforce_i = XAU_i+XGE_i;
+	}
+	vec3d YAU_i = -scaledYA0()*(vi-nvec*dot(nvec,vi))-scaledYA1()*(vj - nvec*dot(nvec,vj));
+	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)-scaledYB1()*cross(nvec, oj);
+	vec3d vec_z_x(nvec.z, 0, nvec.x);
+	vec3d YGE_i = (scaledXG0()+scaledXG2())*(vec_z_x-2*nxnz*nvec);
+	lubforce_i = XAU_i+YAU_i+YBO_i+XGE_i+YGE_i;
 }
 
 void
@@ -830,35 +824,36 @@ Interaction::addHydroStress(){
 
 void
 Interaction::addContactStress(){
+	/*
+	 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+	 * Fc_normal = -Fc_normal_norm*nvec;
+	 * This force acts on particle 1.
+	 * stress1 is a0*nvec[*]force.
+	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
+	 */
 	if (contact) {
-		/*
-		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
-		 * Fc_normal = -Fc_normal_norm*nvec;
-		 * This force acts on particle 1.
-		 * stress1 is a0*nvec[*]force.
-		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
-		 */
-		contact_stresslet_XF_normal.set(r_vec, f_contact_normal);
-		contact_stresslet_XF_tan.set(r_vec, f_contact_tan);
+		contact_stresslet_XF_normal.set(rvec, f_contact_normal);
+		contact_stresslet_XF_tan.set(rvec, f_contact_tan);
 		// Add term G*V_cont
-		StressTensor stresslet_GU_i;
-		StressTensor stresslet_GU_j;
-		vec3d vi(sys->v_cont[i6], sys->v_cont[i6+1], sys->v_cont[i6+2]);
-		vec3d vj(sys->v_cont[j6], sys->v_cont[j6+1], sys->v_cont[j6+2]);
-		vec3d oi(sys->v_cont[i6+3], sys->v_cont[i6+4], sys->v_cont[i6+5]);
-		vec3d oj(sys->v_cont[j6+3], sys->v_cont[j6+4], sys->v_cont[j6+5]);
-		pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_i, stresslet_GU_j);
-		sys->contactstressGU[par_num[0]] += stresslet_GU_i;
-		sys->contactstressGU[par_num[1]] += stresslet_GU_j;
 	} else {
 		contact_stresslet_XF_normal.reset();
 		contact_stresslet_XF_tan.reset();
 	}
+	StressTensor stresslet_GU_i;
+	StressTensor stresslet_GU_j;
+	vec3d vi(sys->v_cont[i6], sys->v_cont[i6+1], sys->v_cont[i6+2]);
+	vec3d vj(sys->v_cont[j6], sys->v_cont[j6+1], sys->v_cont[j6+2]);
+	vec3d oi(sys->v_cont[i6+3], sys->v_cont[i6+4], sys->v_cont[i6+5]);
+	vec3d oj(sys->v_cont[j6+3], sys->v_cont[j6+4], sys->v_cont[j6+5]);
+	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_i, stresslet_GU_j);
+	sys->contactstressGU[par_num[0]] += stresslet_GU_i;
+	sys->contactstressGU[par_num[1]] += stresslet_GU_j;
+
 }
 
 void
 Interaction::addColloidalStress(){
-	colloidal_stresslet_XF.set(r_vec, f_colloidal);
+	colloidal_stresslet_XF.set(rvec, f_colloidal);
 	// Add term G*V_cont
 	StressTensor stresslet_colloid_GU_i;
 	StressTensor stresslet_colloid_GU_j;
