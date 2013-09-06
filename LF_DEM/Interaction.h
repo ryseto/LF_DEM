@@ -277,7 +277,7 @@ public:
 	void addHydroStress();
 	void addContactStress();
 	void addColloidalStress();
-	void calcTestStress();
+
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}

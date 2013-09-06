@@ -737,28 +737,6 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 	stresslet_j += YME_j;
 }
 
-
-void
-Interaction::calcTestStress(){
-	// @@@@@ FOR TEST
-	StressTensor stresslet_GU_HO_i;
-	StressTensor stresslet_GU_HO_j;
-	StressTensor stresslet_ME_i;
-	StressTensor stresslet_ME_j;
-	vec3d vi(sys->v_total[i6], sys->v_total[i6+1], sys->v_total[i6+2]);
-	vec3d vj(sys->v_total[j6], sys->v_total[j6+1], sys->v_total[j6+2]);
-	vec3d oi(sys->v_total[i6+3], sys->v_total[i6+4], sys->v_total[i6+5]);
-	vec3d oj(sys->v_total[j6+3], sys->v_total[j6+4], sys->v_total[j6+5]);
-	/*
-	 *  First: -G*(U-Uinf) term
-	 */
-	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_HO_i, stresslet_GU_HO_j);
-	/*
-	 *  Second: +M*Einf term
-	 */
-	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-}
-
 /* Lubriction force between two particles is calculated.
  * Note that only the Brownian component of the velocity is NOT included here.
  * This part is used for ouput data.

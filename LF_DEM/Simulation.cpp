@@ -477,8 +477,6 @@ Simulation::evaluateData(){
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
 	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
-	test_viscosity = test_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
-	test_sum_hydro_viscosity = test_sum_hydro_stresses.getStressXZ()+5*volume_fraction/(12*M_PI);
 	
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
