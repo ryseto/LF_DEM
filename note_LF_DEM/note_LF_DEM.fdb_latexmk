@@ -1,6 +1,6 @@
 # Fdb version 3
-["bibtex note_LF_DEM"] 1377289003 "note_LF_DEM.aux" "note_LF_DEM.bbl" "note_LF_DEM" 
-  "/Users/seto/Dropbox/Papers/rse.bib" 1377108819 1310738 585d9cfbe121da8880133150c85a9903 ""
+["bibtex note_LF_DEM"] 1378307304 "note_LF_DEM.aux" "note_LF_DEM.bbl" "note_LF_DEM" 
+  "/Users/seto/Dropbox/Papers/rse.bib" 1377897400 1313901 09ba6ad897e9a8adc05ef87d3a25c54e ""
   "/usr/osxws/share/texmf-dist/bibtex/bst/natbib/unsrtnat.bst" 1233624470 24550 a41a6405f4de768c43e871d9fbce2bc8 ""
   "note_LF_DEM.aux" 1377289110 6889 28f30f0205d05da0847324bbc19924fb ""
   "note_LF_DEM.bcf" 0 -1 0 ""
@@ -122,7 +122,7 @@
   "/usr/local/texlive/2013/texmf-dist/tex/latex/xkeyval/xkeyval.sty" 1350473462 4934 09bb8eb3760faa4ffb6107a36e5b3d76 ""
   "kumars_Rfu0.pdf" 1357946415 164501 3074baf36abacd13d0b69c4dd81f585c ""
   "note_LF_DEM.aux" 1377289110 6889 28f30f0205d05da0847324bbc19924fb ""
-  "note_LF_DEM.bbl" 1377289003 8992 93435e06569f98bec90787c8e21a7827 "bibtex note_LF_DEM"
+  "note_LF_DEM.bbl" 1378307304 8992 93435e06569f98bec90787c8e21a7827 "bibtex note_LF_DEM"
   "note_LF_DEM.out" 1377289110 460 a4fb26132398704b1d2b770ea1cd0a0b ""
   "note_LF_DEM.tex" 1377289109 49064 e4eee462b0775715e518d38ceb38f869 ""
   "order_with_undisturbed_shearflow.pdf" 1357920263 28461 89e5703ec787b614c35edf17c5a62ba2 ""

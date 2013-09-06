@@ -450,7 +450,6 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.calcLubricationForce();
 	sys.analyzeState();
-
 	/* NOTE:
 	 * 
 	 * The total stress DID not include the contact GU terms,

@@ -114,7 +114,6 @@ public:
 	double *v_hydro; // Velocities balancing with the 
 	double *v_cont;
 	double *v_colloidal;
-
 	//	double *v_lub_cont_mid;
 	//	double *v_Brownian_init;
 	//	double *v_Brownian_mid;

@@ -778,7 +778,9 @@ System::setContactForceToParticle(){
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		interaction[k].addUpContactForceTorque();
+		if (interaction[k].is_active()) {
+			interaction[k].addUpContactForceTorque();
+		}
 	}
 }
 
@@ -832,6 +834,7 @@ System::updateVelocityLubrication(){
 	buildContactTerms();
 	buildColloidalForceTerms();
     stokes_solver.solve(v_total);
+	stokes_solver.solvingIsDone();
 	//stokes_solver->printResistanceMatrix();
 	/* TEST IMPLEMENTATION
 	 * SDFF : Stokes drag force factor:
@@ -849,13 +852,11 @@ System::updateVelocityLubrication(){
 		//cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
     }
 	if (dimensionless_shear_rate != 0) {
-		double O_inf_y = 0.5;
 		for (int i=0; i<np; i++) {
 			velocity[i].x += position[i].z;
-			ang_velocity[i].y += O_inf_y;
+			ang_velocity[i].y += 0.5;
 		}
 	}
-    stokes_solver.solvingIsDone();
 }
 
 void

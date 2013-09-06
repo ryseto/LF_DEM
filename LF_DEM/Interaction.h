@@ -26,8 +26,10 @@ private:
 	 *        Members                *
 	 *********************************/
 	System *sys;
-	double a0; // radii
-	double a1; // second raddi > a0
+	double a0; // radius
+	double a1; // second radius > a0
+	double a0_dash; // radius - overlap/2
+	double a1_dash;
 	double ro; // ro = a0+a1;
 	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
 	//======= internal state =====================//

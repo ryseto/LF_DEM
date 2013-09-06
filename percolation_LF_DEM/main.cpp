@@ -26,7 +26,7 @@ int main(int argc, const char * argv[])
 		for (int i=0; i< sys.np; i++){
 			sys.check_percolation(i);
 		}
-		cout << sys.strain << ' ' << (1.*sys.max_cluster_size)/sys.np << endl;
+		cerr << sys.strain << ' ' << (1.*sys.max_cluster_size)/sys.np << endl;
 		if (sys.strain >= 40){
 			break;
 		}

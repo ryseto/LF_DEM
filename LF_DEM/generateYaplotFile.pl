@@ -206,7 +206,7 @@ sub InInteractions {
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
 		($i, $j, $contact, $nx, $ny, $nz,
-		$gap, $f_lub, $fc_n, $fc_tan, $fcol,
+		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol,
 		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF) = split(/\s+/, $line);
 		
 		
@@ -221,11 +221,12 @@ sub InInteractions {
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_tan;
 		$Fcol[$k] = $fcol;
-		$f_normal = $fc_n + $fcol + $f_lub;
+		$f_normal = $fc_n + $fcol + $f_lub_norm;
 		#	$force[$k] = sqrt($f_normal)
 		if ($f_normal > 0){
 			if ($gap < 0){
-				$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan);
+				$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan)
+				+ sqrt($f_lub_norm*$f_lub_norm + $f_lub_tan*$f_lub_tan);
 			} else {
 				$force[$k] = $f_normal;
 			}
