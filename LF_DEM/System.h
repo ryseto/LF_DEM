@@ -35,6 +35,7 @@ private:
 	int np;
 	int np3;
 	int maxnb_interactionpair;
+	int nb_of_active_interactions;
 	BoxSet boxset;
 	int ts; // time steps
 	double dt;
@@ -295,6 +296,7 @@ public:
 	inline double get_mu_static(){return mu_static;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
 	inline double get_tang_coeff_contact(){return tang_coeff_contact;}
+	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
 
 };
 #endif /* defined(__LF_DEM__System__) */

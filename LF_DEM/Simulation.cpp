@@ -579,6 +579,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#38: particle pressure" << endl;
 		fout_rheo << "#39: particle pressure contact" << endl;
 		fout_rheo << "#40: particle pressure colloidal force" << endl;
+		fout_rheo << "#41: number of active interactions" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -629,8 +630,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
-	fout_rheo << 6*M_PI*test_viscosity << ' ';
-	fout_rheo << 6*M_PI*test_sum_hydro_viscosity << ' ';
+	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
 	fout_rheo << endl;
 }
 

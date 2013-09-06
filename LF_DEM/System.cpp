@@ -825,7 +825,7 @@ System::buildColloidalForceTerms(){
 void
 System::updateVelocityLubrication(){
     stokes_solver.resetRHS();
-	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
+	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
     stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
 	//	stokes_solver->resetResistanceMatrix("iterative");
     addStokesDrag();
@@ -1253,7 +1253,7 @@ System::calcLubricationForce(){
 	/*
 	 * Calculate lubrication force to output
 	 */
-	int nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
+	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
 	stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
     addStokesDrag();
 	stokes_solver.resetRHS();
