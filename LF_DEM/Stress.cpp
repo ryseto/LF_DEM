@@ -188,10 +188,16 @@ System::calcStressesHydroContact(){
 //	cout << nb_interaction << endl;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			if (lubrication_model == 1){
+			if (lubrication_model == 1) {
 				interaction[k].calcXFunctionsStress();
-			} else if (lubrication_model == 2){
+			} else if (lubrication_model == 2) {
 				interaction[k].calcXYFunctionsStress();
+			} else if (lubrication_model == 3) {
+				if (interaction[k].is_contact()){
+					interaction[k].calcXYFunctionsStress();
+				} else {
+					interaction[k].calcXFunctionsStress();
+				}
 			}
 			interaction[k].addHydroStress(); // - R_SU * v_hydro
 			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont

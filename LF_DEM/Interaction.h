@@ -104,6 +104,8 @@ private:
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
 	void checkBreakupStaticFriction();
+	void checkBreakupStaticFriction_test();
+	void checkBreakupStaticFriction_test2();
 
 	//==========================================================================//
 	void calcLubConstants();
@@ -261,7 +263,7 @@ public:
 	void calcRelativeVelocities();
 	void addUpContactForceTorque();
 	void addUpColloidalForce();
-	void evaluateLubricationForce();
+	void calcLubricationForce();
 	double getContactVelocity();
 	double getNormalVelocity();
 	double getPotentialEnergy();

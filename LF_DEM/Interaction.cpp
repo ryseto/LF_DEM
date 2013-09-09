@@ -275,6 +275,7 @@ Interaction::calcContactInteraction(){
 		disp_tan -= dot(disp_tan, nvec)*nvec;
 		f_contact_tan = kt_scaled*disp_tan;
 		checkBreakupStaticFriction();
+		//checkBreakupStaticFriction_test();
 	}
 }
 
@@ -306,6 +307,34 @@ Interaction::checkBreakupStaticFriction(){
 		disp_tan *= f_static/sqrt(sq_f_tan);
 		f_contact_tan = kt_scaled*disp_tan;
 		cnt_sliding++; // for output
+	}
+}
+
+void
+Interaction::checkBreakupStaticFriction_test(){
+	/* [NOTE]
+	 * Test forces for the friction law include dashpot contributions in Luding model[1].
+	 * However, in our overdamped formulation, we use only springs for the test forces.
+	 * This approximated friction-law was used for our PRL2013 paper.
+	 *
+	 * [1] S. Luding. Cohesive, frictional powders: contact models for tension. Granular Matter, 10:235–246, 2008.
+	 */
+	calcLubricationForce();
+	double lubforce_norm = -dot(lubforce_i, nvec);
+	double f_static = sys->get_mu_static()*(f_contact_normal_norm+lubforce_norm);
+	
+	vec3d lubforce_tan = lubforce_i+lubforce_norm*nvec;
+	if (f_static > 0
+		&& dot(f_contact_tan, lubforce_tan) > 0
+		&& lubforce_tan.sq_norm() < f_static*f_static){
+		double sq_f_tan = (f_contact_tan+lubforce_tan).sq_norm();
+		if (sq_f_tan > f_static*f_static) {
+			double f_contact_tan_norm = f_contact_tan.norm();
+			vec3d tvec = f_contact_tan/f_contact_tan_norm;
+			disp_tan = (1/kt_scaled)*(f_static*tvec - lubforce_tan);
+			f_contact_tan = kt_scaled*disp_tan;
+			cnt_sliding++; 
+		}
 	}
 }
 
@@ -623,6 +652,9 @@ Interaction::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	if (sys->lubrication_model == 1){
 		return;
 	}
+	if (sys->lubrication_model == 3 && !contact){
+		return;
+	}
 	StressTensor YGU_i;
 	StressTensor YGU_j;
 	double cYGUi_xx = nvec.x*vi.x+nvec.x*vi.x-2*nvec.x*nvec.x*dot(nvec, vi);
@@ -722,6 +754,10 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 	if (sys->lubrication_model == 1){
 		return;
 	}
+	if (sys->lubrication_model == 3 && !contact){
+		return;
+	}
+	
 	double cYM_i = (1./2)*(scaledYM0()+scaledYM1());
 	double cYM_j = (1./2)*(scaledYM2()+scaledYM3());
 	StressTensor YME_i(2*nxnz     -4*nxnx*nxnz,
@@ -743,7 +779,7 @@ Interaction::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
  * lubforce_j = -lubforce_i
  */
 void
-Interaction::evaluateLubricationForce(){
+Interaction::calcLubricationForce(){
 	/*
 	 *  First: -A*(U-Uinf) term
 	 */
@@ -756,15 +792,15 @@ Interaction::evaluateLubricationForce(){
 	vec3d vj(sys->v_total[j6], sys->v_total[j6+1], sys->v_total[j6+2]);
 	vec3d oi(sys->v_total[i6+3], sys->v_total[i6+4], sys->v_total[i6+5]);
 	vec3d oj(sys->v_total[j6+3], sys->v_total[j6+4], sys->v_total[j6+5]);
-	if (sys->lubrication_model == 1){
-		calcXFunctions();
-	} else if (sys->lubrication_model == 2){
-		calcXYFunctions();
-	}
 	vec3d XAU_i = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*nvec;
 	vec3d XGE_i = (scaledXG0()+scaledXG2())*nxnz*nvec;
 	if (sys->lubrication_model == 1){
 		lubforce_i = XAU_i+XGE_i;
+		return;
+	}
+	if (sys->lubrication_model == 3 && !contact){
+		lubforce_i = XAU_i+XGE_i;
+		return;
 	}
 	vec3d YAU_i = -(scaledYA0()*vi+scaledYA1()*vj);
 	YAU_i -= dot(nvec, YAU_i)*nvec;
@@ -772,6 +808,7 @@ Interaction::evaluateLubricationForce(){
 	vec3d vec_z_x(nvec.z, 0, nvec.x);
 	vec3d YGE_i = (scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*nvec);
 	lubforce_i = XAU_i+YAU_i+YBO_i+XGE_i+YGE_i;
+	return;
 }
 
 void

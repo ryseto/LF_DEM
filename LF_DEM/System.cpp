@@ -747,6 +747,53 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.doneBlocks(i);
 			}
 			break;
+		case 3:
+			for (int i=0; i<np-1; i ++) {
+				for (set<Interaction*>::iterator it = interaction_list[i].begin();
+					 it != interaction_list[i].end(); it ++) {
+					int j = (*it)->partner(i);
+					if (j > i) {
+						vec3d nr_vec = (*it)->get_nvec();
+						if ((*it)->is_contact()){
+							(*it)->calcXYFunctions();
+							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), (*it)->scaledYA0(),
+														 (*it)->scaledYB0(), (*it)->scaledYC0());
+							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), (*it)->scaledYA3(),
+														 (*it)->scaledYB3(), (*it)->scaledYC3());
+							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA1(), (*it)->scaledYA1(),
+														  (*it)->scaledYB2(), (*it)->scaledYB1(), (*it)->scaledYC1());
+							if (rhs) {
+								double GEi[3];
+								double GEj[3];
+								double HEi[3];
+								double HEj[3];
+								(*it)->calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+								stokes_solver.addToRHSForce(i, GEi);
+								stokes_solver.addToRHSForce(j, GEj);
+								stokes_solver.addToRHSTorque(i, HEi);
+								stokes_solver.addToRHSTorque(j, HEj);
+							}
+						} else {
+							(*it)->calcXFunctions();
+							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), 0, 0, 0);
+							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), 0, 0, 0);
+							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA2(), 0, 0, 0, 0);
+							if (rhs) {
+								double GEi[3];
+								double GEj[3];
+								(*it)->calcGE(GEi, GEj);  // G*E_\infty term
+								stokes_solver.addToRHSForce(i, GEi);
+								stokes_solver.addToRHSForce(j, GEj);
+							}
+						}
+					}
+				}
+				stokes_solver.doneBlocks(i);
+			}
+			break;
+			
+			
+			
 		default:
 			cerr << "lubrication_model = 0 is not implemented yet.\n";
 			exit(1);
@@ -1265,10 +1312,36 @@ System::calcLubricationForce(){
 	stokes_solver.completeResistanceMatrix();
 	stokes_solver.solve(v_total);
 	stokes_solver.solvingIsDone();
+	
+	if (lubrication_model == 1){
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+				interaction[k].calcXFunctions();
+			}
+		}
+	} else if (lubrication_model == 2){
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+				interaction[k].calcXYFunctions();
+			}
+		}
+	} else if (lubrication_model == 3){
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+				if (interaction[k].is_contact()) {
+					interaction[k].calcXYFunctions();
+				} else {
+					interaction[k].calcXFunctions();
+				}
+			}
+		}
+	}
+	
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].evaluateLubricationForce();
+			interaction[k].calcLubricationForce();
 		}
 	}
 }
+
 
