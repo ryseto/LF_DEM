@@ -103,9 +103,8 @@ private:
 	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	void calcContactInteraction();
-	void checkBreakupStaticFriction();
-	void checkBreakupStaticFriction_test();
-	void checkBreakupStaticFriction_test2();
+	void applyFrictionLaw_spring();
+	void applyFrictionLaw_spring_dashpot();
 
 	//==========================================================================//
 	void calcLubConstants();

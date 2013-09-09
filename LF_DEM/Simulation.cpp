@@ -209,6 +209,8 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
 		sys.disp_tan_target = atof(value.c_str());
+	} else if (keyword == "frictionlaw") {
+		sys.frictionlaw = atoi(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -304,6 +306,8 @@ Simulation::setDefaultParameters(){
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
 	 * 2 log(1/xi) lubrication (only squeeze mode)
+	 * 3 mix (only squeeze mode for h>0, and tangential dashpot for h>0)
+	 *
 	 */
 	
 	int _lubrication_model = 2;
@@ -373,6 +377,16 @@ Simulation::setDefaultParameters(){
 	 * mu_dynamic: dynamic friction coeffient
 	 */
 	double _mu_static = 1;
+
+	/*
+	 * Friction law Ft > mu*Fn
+	 * 1: Ft = kt*dist_tan
+	 *    Fn = kn*overlap
+	 * 2: Ft = kt*dist_tan + Flub_tan
+	 *    Fn = kn*overlap + Flub_norm
+	 */
+	int frictionlaw = 1;
+
 	/*
 	 * Output interval:
 	 * strain_interval_output_data is for outputing rheo_...

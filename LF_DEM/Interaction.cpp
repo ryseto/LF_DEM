@@ -231,7 +231,11 @@ Interaction::updateStateRelax(bool &deactivated){
 			 */
 			disp_tan -= dot(disp_tan, nvec)*nvec;
 			f_contact_tan = kt_scaled*disp_tan;
-			checkBreakupStaticFriction();
+			if (sys->frictionlaw == 1) {
+				applyFrictionLaw_spring();
+			} else {
+				applyFrictionLaw_spring_dashpot();
+			}
 		}
 		f_colloidal_norm = colloidalforce_amplitude;
 		f_colloidal = -f_colloidal_norm*nvec;
@@ -274,8 +278,11 @@ Interaction::calcContactInteraction(){
 		 */
 		disp_tan -= dot(disp_tan, nvec)*nvec;
 		f_contact_tan = kt_scaled*disp_tan;
-		checkBreakupStaticFriction();
-		//checkBreakupStaticFriction_test();
+		if (sys->frictionlaw == 1) {
+			applyFrictionLaw_spring();
+		} else {
+			applyFrictionLaw_spring_dashpot();
+		}
 	}
 }
 
@@ -289,7 +296,7 @@ Interaction::calcContactInteraction(){
  */
 
 void
-Interaction::checkBreakupStaticFriction(){
+Interaction::applyFrictionLaw_spring(){
 	/* [NOTE]
 	 * Test forces for the friction law include dashpot contributions in Luding model[1].
 	 * However, in our overdamped formulation, we use only springs for the test forces.
@@ -311,11 +318,9 @@ Interaction::checkBreakupStaticFriction(){
 }
 
 void
-Interaction::checkBreakupStaticFriction_test(){
+Interaction::applyFrictionLaw_spring_dashpot(){
 	/* [NOTE]
 	 * Test forces for the friction law include dashpot contributions in Luding model[1].
-	 * However, in our overdamped formulation, we use only springs for the test forces.
-	 * This approximated friction-law was used for our PRL2013 paper.
 	 *
 	 * [1] S. Luding. Cohesive, frictional powders: contact models for tension. Granular Matter, 10:235–246, 2008.
 	 */

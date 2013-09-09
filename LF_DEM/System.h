@@ -146,6 +146,7 @@ public:
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
 	bool friction;
+	int frictionlaw;
 	bool colloidalforce;
 	bool brownian;
 	
