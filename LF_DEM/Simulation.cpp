@@ -385,7 +385,7 @@ Simulation::setDefaultParameters(){
 	 * 2: Ft = kt*dist_tan + Flub_tan
 	 *    Fn = kn*overlap + Flub_norm
 	 */
-	int frictionlaw = 1;
+	int _frictionlaw = 1;
 
 	/*
 	 * Output interval:
@@ -415,7 +415,10 @@ Simulation::setDefaultParameters(){
 	sys.set_kn(_kn);
 	sys.set_kt(_kt);
 	sys.set_mu_static(_mu_static);
+	sys.set_frictionlaw(_frictionlaw);
 	sys.set_colloidalforce_length(_colloidalforce_length);
+
+
 }
 
 void

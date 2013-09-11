@@ -34,6 +34,7 @@ private:
 	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
 	//======= internal state =====================//
 	bool active;
+	bool staticfriction;
 	unsigned int label;
 	unsigned int par_num[2];
 	bool contact;

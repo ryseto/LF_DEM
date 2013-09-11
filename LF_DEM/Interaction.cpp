@@ -52,6 +52,7 @@ Interaction::calcNormalVectorDistanceGap(){
 void
 Interaction::activate(int i, int j){
 	active = true;
+	staticfriction = false;
 	if (j > i) {
 		par_num[0] = i;
 		par_num[1] = j;
@@ -325,20 +326,26 @@ Interaction::applyFrictionLaw_spring_dashpot(){
 	 * [1] S. Luding. Cohesive, frictional powders: contact models for tension. Granular Matter, 10:235–246, 2008.
 	 */
 	calcLubricationForce();
-	double lubforce_norm = -dot(lubforce_i, nvec);
-	double f_static = sys->get_mu_static()*(f_contact_normal_norm+lubforce_norm);
-	
-	vec3d lubforce_tan = lubforce_i+lubforce_norm*nvec;
-	if (f_static > 0
-		&& dot(f_contact_tan, lubforce_tan) > 0
-		&& lubforce_tan.sq_norm() < f_static*f_static){
-		double sq_f_tan = (f_contact_tan+lubforce_tan).sq_norm();
-		if (sq_f_tan > f_static*f_static) {
-			double f_contact_tan_norm = f_contact_tan.norm();
-			vec3d tvec = f_contact_tan/f_contact_tan_norm;
-			disp_tan = (1/kt_scaled)*(f_static*tvec - lubforce_tan);
-			f_contact_tan = kt_scaled*disp_tan;
-			cnt_sliding++; 
+	double ft_max = sys->get_mu_static()*(f_contact_normal_norm);
+	vec3d lubforce_tan = lubforce_i-dot(lubforce_i, nvec)*nvec;
+	if (staticfriction == false){
+		// dynamic
+		double f_test = f_contact_tan.norm();
+		vec3d tvec = lubforce_tan/lubforce_tan.norm();
+		if (f_test > ft_max){
+			disp_tan = (1/kt_scaled)*ft_max*tvec;
+		} else {
+			disp_tan = (1/kt_scaled)*(ft_max*tvec-lubforce_tan);
+			staticfriction = true;
+		}
+	} else {
+		// static
+		vec3d ft_total = f_contact_tan+lubforce_tan;
+		double f_test = ft_total.norm();
+		if (f_test > ft_max){
+			vec3d tvec = lubforce_tan/lubforce_tan.norm();
+			disp_tan = (1/kt_scaled)*(ft_max*tvec-lubforce_tan);
+			staticfriction = false;
 		}
 	}
 }

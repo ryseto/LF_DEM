@@ -78,7 +78,7 @@ private:
 	 * This may cause large contact forces.
 	 * These values are not considered for the next deteremination.
 	 */
-	bool after_parameter_changed; //
+	bool after_parameter_changed;
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -91,7 +91,7 @@ private:
 	void setColloidalForceToParticle();
 	void buildLubricationTerms(bool rhs=true);
 	
-//	void buildLubricationRHS();
+	//void buildLubricationRHS();
 	void buildContactTerms();
 	void buildColloidalForceTerms();
 
@@ -291,10 +291,11 @@ public:
 	inline double get_dt(){return dt;}
 	inline void set_colloidalforce_amplitude(double val){colloidalforce_amplitude = val;}
 	inline double get_colloidalforce_amplitude(){return colloidalforce_amplitude;}
-	inline void set_colloidalforce_length(double val){colloidalforce_length = val;}
+	void set_colloidalforce_length(double val){colloidalforce_length = val;}
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
-	inline void set_mu_static(double val){mu_static = val;}
+	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
+	void set_frictionlaw(double val){frictionlaw = val;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
 	inline double get_tang_coeff_contact(){return tang_coeff_contact;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}

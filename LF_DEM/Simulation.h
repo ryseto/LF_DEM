@@ -98,13 +98,13 @@ private:
 	void outputConfigurationData();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 public:
-    /* For DEMsystem
-     */
+	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
 	void simulationMain(int argc, const char * argv[]);
 	void relaxationZeroShear(vector<vec3d> &position_,
-							  vector<double> &radius_,
-							  double lx_, double ly_, double lz_);
+							 vector<double> &radius_,
+							 double lx_, double ly_, double lz_);
 };
 #endif /* defined(__LF_DEM__Simulation__) */
+
