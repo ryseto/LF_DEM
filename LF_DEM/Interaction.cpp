@@ -279,11 +279,14 @@ Interaction::calcContactInteraction(){
 		 */
 		disp_tan -= dot(disp_tan, nvec)*nvec;
 		f_contact_tan = kt_scaled*disp_tan;
-		if (sys->frictionlaw == 1) {
-			applyFrictionLaw_spring();
-		} else {
-			applyFrictionLaw_spring_dashpot();
+		if (sys->in_predictor) {
+			if (sys->frictionlaw == 1) {
+				applyFrictionLaw_spring();
+			} else {
+				applyFrictionLaw_spring_dashpot();
+			}
 		}
+
 	}
 }
 
