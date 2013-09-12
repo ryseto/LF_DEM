@@ -189,18 +189,18 @@ System::calcStressesHydroContact(){
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (lubrication_model == 1) {
-				interaction[k].calcXFunctionsStress();
+				interaction[k].lubrication.calcXFunctionsStress();
 			} else if (lubrication_model == 2) {
-				interaction[k].calcXYFunctionsStress();
+				interaction[k].lubrication.calcXYFunctionsStress();
 			} else if (lubrication_model == 3) {
 				if (interaction[k].is_contact()){
-					interaction[k].calcXYFunctionsStress();
+					interaction[k].lubrication.calcXYFunctionsStress();
 				} else {
-					interaction[k].calcXFunctionsStress();
+					interaction[k].lubrication.calcXFunctionsStress();
 				}
 			}
-			interaction[k].addHydroStress(); // - R_SU * v_hydro
-			interaction[k].addContactStress(); //  - R_SU * v_cont - rF_cont
+			interaction[k].lubrication.addHydroStress(); // - R_SU * v_hydro
+			interaction[k].contact.addContactStress(); //  - R_SU * v_cont - rF_cont
 			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
 		}
 	}
@@ -253,8 +253,8 @@ System::calcStress(){
 			total_colloidal_stressXF += interaction[k].getColloidalStressXF();
 		}
 		if (interaction[k].is_contact()) {
-			total_contact_stressXF_normal += interaction[k].getContactStressXF_normal();
-			total_contact_stressXF_tan += interaction[k].getContactStressXF_tan();
+			total_contact_stressXF_normal += interaction[k].contact.getContactStressXF_normal();
+			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
 		}
 	}
 	total_hydro_stress /= System_volume();

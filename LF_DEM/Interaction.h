@@ -15,65 +15,54 @@
 #include <fstream>
 #include "vec3d.h"
 #include "System.h"
+#include "Contact.h"
+#include "Lubrication.h"
 #include "StressTensor.h"
 
 using namespace std;
 class System;
+class Lubrication;
+class Contact;
 
 class Interaction{
-private:
+	friend class Contact;
+	friend class Lubrication;
+ private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
 	System *sys;
-	double a0; // radius
-	double a1; // second radius > a0
-	double a0_dash; // radius - overlap/2
-	double a1_dash;
-	double ro; // ro = a0+a1;
-	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
+
+	double a0; // radii
+	double a1; // second raddi > a0
+	double ro, ro_12; // ro = a0+a1;
 	//======= internal state =====================//
 	bool active;
-	bool staticfriction;
 	unsigned int label;
 	unsigned int par_num[2];
-	bool contact;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
 	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	double lub_coeff; // = 1/(gap + lub_reduce_parameter)
-	double log_lub_coeff; // = log(lub_coeff);
-	double lub_coeff_contact; //
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
-	vec3d contact_velocity;
-	vec3d disp_tan; // tangential displacement
-	vec3d disp_tan_predictor; // tangential displacement
-	vec3d disp_tan_previous;
+	vec3d relative_surface_velocity;
+	double nxnx;
+	double nxny;
+	double nxnz;
+	double nynz;
+	double nyny;
+	double nznz;
+	double a0_dash; // radius - 0.5*overlap
+	double a1_dash; // second radius > a0
 	//===== forces and stresses ==================== //
-	double lub_max_scaled;  // max distance for lubrication
-	vec3d lubforce_i; // lubforce_j = - lubforce_i
-	double kn_scaled;
-	double kt_scaled;
+	double interaction_range_scaled;  // max distance for lubrication
 	double colloidalforce_amplitude;
 	double colloidalforce_length;
-	double XA[4]; // ii ij ji jj
-	double YA[4]; // ii ij ji jj
-	double YB[4]; // ii ij ji jj
-	double YC[4]; // ii ij ji jj
-	double XG[4]; // ii ij ji jj
-	double YG[4]; // ii ij ji jj
-	double YH[4]; // ii ij ji jj
-	double XM[4]; // ii ij ji jj
-	double YM[4]; // ii ij ji jj
 	//===== observables  ========================== //
 	double strain_lub_start; // the strain when lubrication object starts.
-	double strain_contact_start; // the strain at h=0.
 	double duration; // entire lifetime
-	double duration_contact; // enture duraction for h < 0
 	double max_stress; // Maximum value of stress in the all history of this object.
-	int cnt_sliding;  // to count the number of slips.
 #ifdef RECORD_HISTORY
 	vector <double> gap_history;
 	vector <double> overlap_history;
@@ -83,97 +72,26 @@ private:
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
-	//======= particles data  ====================//
-	double lambda; // a1/a0
-	double invlambda; // a0/a1
 
-	//======= internal state switches  ===========//
-	void activate_contact();
-	void deactivate_contact();
-	
+
 	//=======   ===========//
 	void outputSummary();
 	
 	//===== forces and stresses computations =====//
-	double f_contact_normal_norm; // normal contact force
 	double f_colloidal_norm;
-	vec3d f_contact_normal; // normal contact force
-	vec3d f_contact_tan; // tangential contact force
 	vec3d f_colloidal;
 	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
-	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
-	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
-	void calcContactInteraction();
-	void applyFrictionLaw_spring();
-	void applyFrictionLaw_spring_dashpot();
-
-	//==========================================================================//
-	void calcLubConstants();
-	int i6;
-	int j6;
-	double nxnx;
-	double nxny;
-	double nxnz;
-	double nynz;
-	double nyny;
-	double nznz;
-	double lambda_square;
-	double lambda_cubic;
-	double lambda_p_1;
-	double lambda_p_1_square;
-	double lambda_p_1_cubic;
-	double cXA[4];
-	double cYA[4];
-	double cYB[4];
-	double cYC[4];
-	double cXG[4];
-	double cYG[4];
-	double cYH[4];
-	double cXM[4];
-	double cYM[4];
-	double ro_12; // = ro/2
-	double a0a0_23;
-	double a1a1_23;
-	double roro_16;
-	double a0a0a0_53;
-	double a1a1a1_53;
-	double rororo_524;
-	double a0a0a0_43;
-	double a1a1a1_43;
-	double rororo_16;
-	double a0a0a0_109;
-	double a1a1a1_109;
-	double rororo_536;
-	double g1_XA;
-	double g1_inv_XA;
-	double g2_YA;
-	double g2_inv_YA;
-	double g2_YB;
-	double g2_inv_YB;
-	double g2_YC;
-	double g2_inv_YC;
-	double g4_YC;
-	double g1_XG;
-	double g1_inv_XG;
-	double g2_YG;
-	double g2_inv_YG;
-	double g2_YH;
-	double g2_inv_YH;
-	double g5_YH;
-	double g5_inv_YH;
-	double g1_XM;
-	double g1_inv_XM;
-	double g4_XM;
-	double g2_YM;
-	double g2_inv_YM;
-	double g5_YM;
 
 protected:
 public:
+	Contact contact;
+	Lubrication lubrication;
+
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	// 	Interaction(){};
+ Interaction() : contact(), lubrication(Lubrication(this)) { }
+
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
@@ -189,9 +107,8 @@ public:
 	void activate(int i, int j);
 	void deactivate();
 	inline bool is_overlap(){return r<ro;}
-	inline bool is_contact(){return contact;}
+	inline bool is_contact(){return contact.active;}
 	inline bool is_active(){return active;}
-	void updateContactModel();
 	void calcNormalVectorDistanceGap();
 	//======= particles data  ====================//
 	inline int
@@ -215,86 +132,25 @@ public:
 	inline double get_r(){return r;}
 	inline double get_gap_nondim(){return gap_nondim;}
 	inline vec3d get_nvec(){return nvec;}
-	//=============  Resistance Matrices ====================/
-	void calcGE(double *GEi, double *GEj);
-	void calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj);
-	void calcXFunctions();
-	void calcXYFunctions();
-	void calcXFunctionsStress();
-	void calcXYFunctionsStress();
-	inline double scaledXA0(){return a0*XA[0];}
-	inline double scaledXA1(){return ro_12*XA[1];}
-	inline double scaledXA2(){return ro_12*XA[2];}
-	inline double scaledXA3(){return a1*XA[3];}
-	inline double scaledYA0(){return a0*YA[0];}
-	inline double scaledYA1(){return ro_12*YA[1];}
-	inline double scaledYA2(){return ro_12*YA[2];}
-	inline double scaledYA3(){return a1*YA[3];}
-	inline double scaledYB0(){return a0a0_23*YB[0];}
-	inline double scaledYB1(){return roro_16*YB[1];}
-	inline double scaledYB2(){return roro_16*YB[2];}
-	inline double scaledYB3(){return a1a1_23*YB[3];}
-	inline double scaledYC0(){return a0a0a0_43*YC[0];}
-	inline double scaledYC1(){return rororo_16*YC[1];}
-	inline double scaledYC2(){return rororo_16*YC[2];}
-	inline double scaledYC3(){return a1a1a1_43*YC[3];}
-	inline double scaledXG0(){return a0a0_23*XG[0];}
-	inline double scaledYG0(){return a0a0_23*YG[0];}
-	inline double scaledXG1(){return roro_16*XG[1];}
-	inline double scaledYG1(){return roro_16*YG[1];}
-	inline double scaledXG2(){return roro_16*XG[2];}
-	inline double scaledYG2(){return roro_16*YG[2];}
-	inline double scaledXG3(){return a1a1_23*XG[3];}
-	inline double scaledYG3(){return a1a1_23*YG[3];}
-	inline double scaledYH0(){return a0a0a0_43*YH[0];}
-	inline double scaledYH1(){return rororo_16*YH[1];}
-	inline double scaledYH2(){return rororo_16*YH[2];}
-	inline double scaledYH3(){return a1a1a1_43*YH[3];}
-	inline double scaledXM0(){return a0a0a0_109*XM[0];}
-	inline double scaledYM0(){return a0a0a0_109*YM[0];}
-	inline double scaledXM1(){return rororo_536*XM[1];}
-	inline double scaledYM1(){return rororo_536*YM[1];}
-	inline double scaledXM2(){return rororo_536*XM[2];}
-	inline double scaledYM2(){return rororo_536*YM[2];}
-	inline double scaledXM3(){return a1a1a1_109*XM[3];}
-	inline double scaledYM3(){return a1a1a1_109*YM[3];}
-	
-	//===== forces/stresses  ========================== //
-	void calcRelativeVelocities();
-	void addUpContactForceTorque();
-	void addUpColloidalForce();
-	void calcLubricationForce();
 	double getContactVelocity();
+
+	//===== forces/stresses  ========================== //
+	void setResistanceCoeff(double, double);
+	void calcRelativeVelocities();
+	void addUpColloidalForce();
 	double getNormalVelocity();
 	double getPotentialEnergy();
-	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
-	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
-	inline double disp_tan_norm(){return disp_tan.norm();}
-	inline double get_lubforce_norm(){return -dot(lubforce_i, nvec);}
-	inline double get_lubforce_tan(){
-		vec3d lub_tan = lubforce_i-dot(lubforce_i, nvec)*nvec;
-		return lub_tan.norm();
-	}
-	void addHydroStress();
-	void addContactStress();
 	void addColloidalStress();
-
+	void calcTestStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
-	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
-	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
-	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
-	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-							   const vec3d &oi, const vec3d &oj,
-							   StressTensor &stresslet_i, StressTensor &stresslet_j);
-	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void integrateStress();
 	void info(){
 		cerr << "particles " << par_num[0] << " " << par_num[1] << endl;
-		cerr << "contact " << contact << endl;
-		cerr << "kn " << kn_scaled << endl;
-		cerr << "kn " << colloidalforce_amplitude << endl;
-		cerr << "kn " << colloidalforce_length << endl;
+		cerr << "contact " << contact.active << endl;
+		cerr << "colloidal force amp " << colloidalforce_amplitude << endl;
+		cerr << "colloidal force length " << colloidalforce_length << endl;
+		contact.info();
 	}
 	//=========== observables ===============================//
 };
