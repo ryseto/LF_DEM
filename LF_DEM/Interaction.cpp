@@ -159,12 +159,7 @@ Interaction::updateState(bool &deactivated){
 	if (contact) {
 		if (sys->friction) {
 			calcRelativeVelocities();
-			if (sys->in_predictor) {
-				disp_tan += contact_velocity*sys->get_dt();
-				disp_tan_predictor = disp_tan;
-			} else {
-				disp_tan = disp_tan_predictor+contact_velocity*sys->get_dt();
-			}
+			disp_tan += contact_velocity*sys->get_dt();
 		}
 		calcNormalVectorDistanceGap();
 		calcContactInteraction();
@@ -279,13 +274,13 @@ Interaction::calcContactInteraction(){
 		 */
 		disp_tan -= dot(disp_tan, nvec)*nvec;
 		f_contact_tan = kt_scaled*disp_tan;
-		if (sys->in_predictor) {
-			if (sys->frictionlaw == 1) {
-				applyFrictionLaw_spring();
-			} else {
-				applyFrictionLaw_spring_dashpot();
-			}
+		
+		if (sys->frictionlaw == 1) {
+			applyFrictionLaw_spring();
+		} else {
+			applyFrictionLaw_spring_dashpot();
 		}
+		
 
 	}
 }
@@ -324,30 +319,75 @@ Interaction::applyFrictionLaw_spring(){
 void
 Interaction::applyFrictionLaw_spring_dashpot(){
 	/* [NOTE]
-	 * Test forces for the friction law include dashpot contributions in Luding model[1].
+	 * Luding model[1] is modified to simulate static/dynamic friction of particles in fluid.
 	 *
 	 * [1] S. Luding. Cohesive, frictional powders: contact models for tension. Granular Matter, 10:235–246, 2008.
+	 *
 	 */
 	calcLubricationForce();
-	double ft_max = sys->get_mu_static()*(f_contact_normal_norm);
-	vec3d lubforce_tan = lubforce_i-dot(lubforce_i, nvec)*nvec;
+	double lubforce_norm = -dot(lubforce_i, nvec);
+	double supportable_tangential_force = sys->get_mu_static()*(f_contact_normal_norm+lubforce_norm);
 	if (staticfriction == false){
-		// dynamic
+		/* dynamic (sliding)
+		 *
+		 *  F = Fc_max + F_lub
+		 *  Fc_max = mu*Fn
+		 *  after update of xi,
+		 *  If kt*xi > Fc_max, keep the sliding state.
+		 *  If kt*xi < Fc_max, switch into the no-sliding state.
+		 */
+		vec3d lubforce_tan = lubforce_i+lubforce_norm*nvec;
 		double f_test = f_contact_tan.norm();
-		vec3d tvec = lubforce_tan/lubforce_tan.norm();
-		if (f_test > ft_max){
-			disp_tan = (1/kt_scaled)*ft_max*tvec;
+		double lubforce_tan_norm = lubforce_tan.norm();
+		vec3d tvec = lubforce_tan/lubforce_tan_norm;
+		if (f_test >= supportable_tangential_force){
+			/* ft_max is not enough large to stop sliding.
+			 * The force acting on the contact point can be estimated
+			 * from the streathed spring. kt*disp_tan.
+			 * Then, the sliding state is kept.
+			 *
+			 */
+			disp_tan = (1/kt_scaled)*supportable_tangential_force*tvec;
 		} else {
-			disp_tan = (1/kt_scaled)*(ft_max*tvec-lubforce_tan);
-			staticfriction = true;
+			/* ft_max becomes large or the tangential force acting on the contact point becomes smaller.
+			 * So, the possibility becoming the static friction is considered.
+			 *
+			 */
+			if (supportable_tangential_force > lubforce_tan_norm) {
+				/* Switch from dynamic friction to static friction.
+				 * The streach of the tangential spring is reset by considering 
+				 * the expected dashpot force due to the finite velocity.
+				 */
+				disp_tan = (1/kt_scaled)*(supportable_tangential_force-lubforce_tan_norm)*tvec;
+				staticfriction = true;
+			} else {
+				/* If the relative velocity is still large, the lubrication resistance is also large.
+				 * In this case, even if it is switched into static friction,
+				 * the static friction force cannot support the external force causing the velocity.
+				 * So, dynamic friction is kept.
+				 */
+				disp_tan = (1/kt_scaled)*supportable_tangential_force*tvec;
+			}
 		}
 	} else {
-		// static
-		vec3d ft_total = f_contact_tan+lubforce_tan;
-		double f_test = ft_total.norm();
-		if (f_test > ft_max){
-			vec3d tvec = lubforce_tan/lubforce_tan.norm();
-			disp_tan = (1/kt_scaled)*(ft_max*tvec-lubforce_tan);
+		/* static (non-sliding)
+		 * In the non-sliding state of a contact point, the expected relative velocity is zero.
+		 * But, it is finite in simulation.
+		 * Thus, the total force is the sum of spring force and dashpot force.
+		 * Test force for the friction law is here the sum of them.
+		 * If tangential force is smaller than the supportable tangential force,
+		 * it kepts the static friction.
+		 */
+		vec3d dashpot = lubforce_i+lubforce_norm*nvec;
+		double f_test = (f_contact_tan+dashpot).norm();
+		if (f_test > supportable_tangential_force){
+			/* If the tangential force becomes larger than the supportable tangential force,
+			 * the state is switched into the dynamics friction.
+			 * In the dynamic friction, the frictional force is given from only spring.
+			 * So, we need to set disp_tan here
+			 */
+			vec3d tvec = dashpot/dashpot.norm();
+			disp_tan = (1/kt_scaled)*supportable_tangential_force*tvec;
 			staticfriction = false;
 		}
 	}

@@ -645,7 +645,6 @@ System::checkNewInteraction(){
 void
 System::updateInteractions(){
 	/* default value of `_in_predictor' is false
-	 *
 	 */
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
