@@ -366,7 +366,6 @@ Interaction::applyFrictionLaw_spring_dashpot(){
 				 * the static friction force cannot support the external force causing the velocity.
 				 * So, dynamic friction is kept.
 				 */
-				disp_tan = (1/kt_scaled)*supportable_tangential_force*tvec;
 			}
 		}
 	} else {
