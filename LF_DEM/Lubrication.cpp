@@ -23,7 +23,6 @@ Lubrication::Lubrication(Interaction *int_){
 
 void
 Lubrication::init(System *sys_){
-	cout << interaction->nvec.x << " " << nvec->x << endl;
 	sys = sys_;
 	c13 = 0;
 	p0 = interaction->par_num[0];
