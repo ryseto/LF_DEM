@@ -54,7 +54,8 @@ private:
 	double kt;
 	double lub_max;
 	double lub_coeff_contact; // resistance coeffient for normal mode
-	double tang_coeff_contact; // resistance coeffient for tangential mode
+	double log_lub_coeff_contact;
+	double dashpot_coeff_contact; // resistance coeffient for tangential mode
 	double mu_static; // static friction coefficient.
 	double bgf_factor;
 	double kb_T;
@@ -145,6 +146,7 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
+	double ratio_dashpot_lubrication;
 	bool friction;
 	int frictionlaw;
 	bool colloidalforce;
@@ -171,6 +173,7 @@ public:
 	 */
 	double lub_reduce_parameter;
 	double contact_relaxzation_time;
+	double contact_relaxzation_time_tan;
 	BrownianForce *fb;
 	double shear_disp;
 	/* For non-Brownian suspension:
@@ -297,7 +300,7 @@ public:
 	inline double get_mu_static(){return mu_static;}
 	void set_frictionlaw(double val){frictionlaw = val;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-	inline double get_tang_coeff_contact(){return tang_coeff_contact;}
+	inline double get_log_lub_coeff_contact(){return log_lub_coeff_contact;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
 
 };

@@ -107,7 +107,7 @@ Interaction::updateContactModel(){
 		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
 		if (contact) {
 			lub_coeff = sys->get_lub_coeff_contact();
-			log_lub_coeff = log(lub_coeff);
+			log_lub_coeff = sys->get_log_lub_coeff_contact();
 		}
 	}
 }
@@ -131,10 +131,12 @@ void
 Interaction::activate_contact(){
 	// r < a0 + a1
 	contact = true;
+	staticfriction = false;
 	disp_tan.reset();
 	strain_contact_start = sys->get_shear_strain();
 	lub_coeff = sys->get_lub_coeff_contact();
-	log_lub_coeff = log(1/(sys->lub_reduce_parameter));
+	log_lub_coeff = sys->get_log_lub_coeff_contact();
+
 }
 
 void
@@ -262,7 +264,9 @@ Interaction::updateStateRelax(bool &deactivated){
 void
 Interaction::calcContactInteraction(){
 	// gap_nondim < 0 (in contact)
-	//
+	if (gap_nondim > 0) {
+		return;
+	}
 	f_contact_normal_norm = -kn_scaled*gap_nondim; // gap_nondim is negative, therefore it is allways positive.
 	f_contact_normal = -f_contact_normal_norm*nvec;
 	if (sys->friction) {
@@ -274,14 +278,11 @@ Interaction::calcContactInteraction(){
 		 */
 		disp_tan -= dot(disp_tan, nvec)*nvec;
 		f_contact_tan = kt_scaled*disp_tan;
-		
 		if (sys->frictionlaw == 1) {
 			applyFrictionLaw_spring();
 		} else {
 			applyFrictionLaw_spring_dashpot();
 		}
-		
-
 	}
 }
 
@@ -303,14 +304,20 @@ Interaction::applyFrictionLaw_spring(){
 	 *
 	 * [1] S. Luding. Cohesive, frictional powders: contact models for tension. Granular Matter, 10:235–246, 2008.
 	 */
-	double f_static = sys->get_mu_static()*f_contact_normal_norm;
-	double sq_f_tan = f_contact_tan.sq_norm();
-	if (sq_f_tan > f_static*f_static) {
+	calcLubricationForce();
+	double lubforce_norm = -dot(lubforce_i, nvec);
+	double supportable_tangential_force = sys->get_mu_static()*(f_contact_normal_norm+lubforce_norm);
+	
+	//double f_static = sys->get_mu_static()*f_contact_normal_norm;
+//	double sq_f_tan = f_contact_tan.sq_norm();
+	double f_test = f_contact_tan.norm();
+
+	if (f_test >= supportable_tangential_force) {
 		/*
 		 * The static and dynamic friction coeffients are the same.
 		 *
 		 */
-		disp_tan *= f_static/sqrt(sq_f_tan);
+		disp_tan *= supportable_tangential_force/f_test;
 		f_contact_tan = kt_scaled*disp_tan;
 		cnt_sliding++; // for output
 	}
@@ -353,19 +360,11 @@ Interaction::applyFrictionLaw_spring_dashpot(){
 			 * So, the possibility becoming the static friction is considered.
 			 *
 			 */
-			if (supportable_tangential_force > lubforce_tan_norm) {
-				/* Switch from dynamic friction to static friction.
-				 * The streach of the tangential spring is reset by considering 
-				 * the expected dashpot force due to the finite velocity.
-				 */
-				disp_tan = (1/kt_scaled)*(supportable_tangential_force-lubforce_tan_norm)*tvec;
-				staticfriction = true;
+			if ( f_test+(1-sys->ratio_dashpot_lubrication)*lubforce_tan_norm > 0 ){
+				disp_tan = (1/kt_scaled)*(f_test+(1-sys->ratio_dashpot_lubrication)*lubforce_tan_norm)*tvec;
 			} else {
-				/* If the relative velocity is still large, the lubrication resistance is also large.
-				 * In this case, even if it is switched into static friction,
-				 * the static friction force cannot support the external force causing the velocity.
-				 * So, dynamic friction is kept.
-				 */
+				cerr << f_test << ' ' << 1-sys->ratio_dashpot_lubrication << ' ' << lubforce_tan_norm << endl;
+				disp_tan = (1/kt_scaled)*supportable_tangential_force*tvec;
 			}
 		}
 	} else {
@@ -378,6 +377,9 @@ Interaction::applyFrictionLaw_spring_dashpot(){
 		 * it kepts the static friction.
 		 */
 		vec3d dashpot = lubforce_i+lubforce_norm*nvec;
+		if (dot(f_contact_tan, dashpot)<0){
+			cerr << "." ;
+		}
 		double f_test = (f_contact_tan+dashpot).norm();
 		if (f_test > supportable_tangential_force){
 			/* If the tangential force becomes larger than the supportable tangential force,

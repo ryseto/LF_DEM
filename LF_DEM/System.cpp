@@ -208,9 +208,24 @@ System::setupSystem(){
 		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
 		 */
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-		tang_coeff_contact = 4*kt*contact_relaxzation_time;
 	}
-	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	if (contact_relaxzation_time_tan < 0) {
+		// 1/(h+c) --> 1/c
+		log_lub_coeff_contact = log(1/lub_reduce_parameter);
+	} else {
+		/* t = beta/kn
+		 *  beta = t*kn
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 */
+		log_lub_coeff_contact = 6*kt*contact_relaxzation_time_tan;
+	}
+
+	ratio_dashpot_lubrication = log_lub_coeff_contact/log(1/lub_reduce_parameter);
+	
+	cerr << "lub_coeff_contact: " << endl;
+	cerr << " dashpot " << log_lub_coeff_contact << ' ' << lub_coeff_contact << endl;
+	cerr << " lubrication " << 1/lub_reduce_parameter << ' ' << log(1/lub_reduce_parameter) << endl;
+	cerr << "ratio_dashpot_lubrication = " << ratio_dashpot_lubrication << endl;
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
