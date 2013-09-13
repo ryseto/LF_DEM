@@ -113,7 +113,9 @@ private:
  public:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
+	void getInteractionData();
 	void calcLubConstants();
+
 	//===== forces/stresses  ========================== //
 	void calcLubricationForce();
 	inline double get_lubforce_value(){return -dot(lubforce_p0, nvec);}

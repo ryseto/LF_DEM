@@ -103,6 +103,7 @@ Interaction::activate(int i, int j){
 	}
 	contact.resetObservables();
 
+	lubrication.getInteractionData();
 	strain_lub_start = sys->get_shear_strain(); // for output
 	lubrication.calcLubConstants();
 
