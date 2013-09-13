@@ -715,14 +715,14 @@ System::buildLubricationTerms(bool rhs){
 					int j = (*it)->partner(i);
 					if (j > i) {
 						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->calcXFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA2(), 0, 0, 0, 0);
+						(*it)->lubrication.calcXFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
 						if (rhs) {
 							double GEi[3];
 							double GEj[3];
-							(*it)->calcGE(GEi, GEj);  // G*E_\infty term
+							(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
 							stokes_solver.addToRHSForce(i, GEi);
 							stokes_solver.addToRHSForce(j, GEj);
 						}
@@ -738,19 +738,19 @@ System::buildLubricationTerms(bool rhs){
 					int j = (*it)->partner(i);
 					if (j > i) {
 						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->calcXYFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), (*it)->scaledYA0(),
-													 (*it)->scaledYB0(), (*it)->scaledYC0());
-						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), (*it)->scaledYA3(),
-													 (*it)->scaledYB3(), (*it)->scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA1(), (*it)->scaledYA1(),
-													  (*it)->scaledYB2(), (*it)->scaledYB1(), (*it)->scaledYC1());
+						(*it)->lubrication.calcXYFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
+													 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
+						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
+													 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
+						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
+													  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
 						if (rhs) {
 							double GEi[3];
 							double GEj[3];
 							double HEi[3];
 							double HEj[3];
-							(*it)->calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+							(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
 							stokes_solver.addToRHSForce(i, GEi);
 							stokes_solver.addToRHSForce(j, GEj);
 							stokes_solver.addToRHSTorque(i, HEi);
@@ -769,33 +769,33 @@ System::buildLubricationTerms(bool rhs){
 					if (j > i) {
 						vec3d nr_vec = (*it)->get_nvec();
 						if ((*it)->is_contact()){
-							(*it)->calcXYFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), (*it)->scaledYA0(),
-														 (*it)->scaledYB0(), (*it)->scaledYC0());
-							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), (*it)->scaledYA3(),
-														 (*it)->scaledYB3(), (*it)->scaledYC3());
-							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA1(), (*it)->scaledYA1(),
-														  (*it)->scaledYB2(), (*it)->scaledYB1(), (*it)->scaledYC1());
+							(*it)->lubrication.calcXYFunctions();
+							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
+														 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
+							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
+														 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
+							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
+														  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
 							if (rhs) {
 								double GEi[3];
 								double GEj[3];
 								double HEi[3];
 								double HEj[3];
-								(*it)->calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+								(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
 								stokes_solver.addToRHSForce(i, GEi);
 								stokes_solver.addToRHSForce(j, GEj);
 								stokes_solver.addToRHSTorque(i, HEi);
 								stokes_solver.addToRHSTorque(j, HEj);
 							}
 						} else {
-							(*it)->calcXFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->scaledXA0(), 0, 0, 0);
-							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->scaledXA3(), 0, 0, 0);
-							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->scaledXA2(), 0, 0, 0, 0);
+							(*it)->lubrication.calcXFunctions();
+							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
+							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
+							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
 							if (rhs) {
 								double GEi[3];
 								double GEj[3];
-								(*it)->calcGE(GEi, GEj);  // G*E_\infty term
+								(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
 								stokes_solver.addToRHSForce(i, GEi);
 								stokes_solver.addToRHSForce(j, GEj);
 							}
@@ -840,7 +840,7 @@ System::setContactForceToParticle(){
 	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].addUpContactForceTorque();
+			interaction[k].contact.addUpContactForceTorque();
 		}
 	}
 }
@@ -1134,17 +1134,17 @@ System::analyzeState(){
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
-				sum_fc_normal += interaction[k].get_f_contact_normal_norm();
-				if (interaction[k].get_f_contact_normal_norm() > max_fc_normal) {
-					max_fc_normal = interaction[k].get_f_contact_normal_norm();
+				sum_fc_normal += interaction[k].contact.get_f_contact_normal_norm();
+				if (interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal) {
+					max_fc_normal = interaction[k].contact.get_f_contact_normal_norm();
 					intr_max_fc_normal = k;
 				}
-				if (interaction[k].get_f_contact_tan_norm() > max_fc_tan) {
-					max_fc_tan = interaction[k].get_f_contact_tan_norm();
+				if (interaction[k].contact.get_f_contact_tan_norm() > max_fc_tan) {
+					max_fc_tan = interaction[k].contact.get_f_contact_tan_norm();
 					intr_max_fc_tan = k;
 				}
-				if (interaction[k].disp_tan_norm() > max_disp_tan) {
-					max_disp_tan = interaction[k].disp_tan_norm();
+				if (interaction[k].contact.disp_tan_norm() > max_disp_tan) {
+					max_disp_tan = interaction[k].contact.disp_tan_norm();
 				}
 			}
 		}
@@ -1193,8 +1193,8 @@ System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;
 	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].disp_tan_norm() > _max_disp_tan) {
-			_max_disp_tan = interaction[k].disp_tan_norm();
+			interaction[k].contact.disp_tan_norm() > _max_disp_tan) {
+			_max_disp_tan = interaction[k].contact.disp_tan_norm();
 		}
 	}
 	return _max_disp_tan;
@@ -1291,7 +1291,7 @@ System::adjustContactModelParameters(){
 //	}
 	
 	for (int k=0; k<nb_interaction; k++) {
-		interaction[k].updateContactModel();
+		interaction[k].contact.updateContactModel();
 	}
 	max_fc_normal_history.clear();
 	max_fc_tan_history.clear();
@@ -1330,22 +1330,22 @@ System::calcLubricationForce(){
 	if (lubrication_model == 1){
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-				interaction[k].calcXFunctions();
+				interaction[k].lubrication.calcXFunctions();
 			}
 		}
 	} else if (lubrication_model == 2){
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-				interaction[k].calcXYFunctions();
+				interaction[k].lubrication.calcXYFunctions();
 			}
 		}
 	} else if (lubrication_model == 3){
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
 				if (interaction[k].is_contact()) {
-					interaction[k].calcXYFunctions();
+					interaction[k].lubrication.calcXYFunctions();
 				} else {
-					interaction[k].calcXFunctions();
+					interaction[k].lubrication.calcXFunctions();
 				}
 			}
 		}
@@ -1353,7 +1353,7 @@ System::calcLubricationForce(){
 	
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].calcLubricationForce();
+			interaction[k].lubrication.calcLubricationForce();
 		}
 	}
 }
