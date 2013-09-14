@@ -776,7 +776,16 @@ Simulation::outputConfigurationData(){
 				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 12
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
-				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << endl; // 15
+				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
+				if (sys.interaction[k].is_contact()){
+					if (sys.interaction[k].contact.staticfriction) {
+						fout_interaction << 1 << endl;
+					} else {
+						fout_interaction << 2 << endl;
+					}
+				} else {
+					fout_interaction << 0 << endl;
+				}
 			}
 		}
 	}

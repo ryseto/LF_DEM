@@ -109,6 +109,8 @@ private:
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
+	
+	void evaluateFrictionalState();
 protected:
 public:
 	~System();

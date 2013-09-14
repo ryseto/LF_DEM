@@ -18,7 +18,6 @@ Lubrication::Lubrication(Interaction *int_){
 	nynz = &(interaction->nynz);
 	nyny = &(interaction->nyny); 
 	nznz = &(interaction->nznz);
-	
 }
 
 void

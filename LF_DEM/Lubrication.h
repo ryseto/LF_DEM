@@ -107,9 +107,6 @@ private:
 	double g2_inv_YM;
 	double g5_YM;
 
-
-	
-
  public:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);

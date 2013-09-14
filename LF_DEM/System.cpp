@@ -219,7 +219,6 @@ System::setupSystem(){
 		 */
 		log_lub_coeff_contact = 6*kt*contact_relaxzation_time_tan;
 	}
-
 	ratio_dashpot_lubrication = log_lub_coeff_contact/log(1/lub_reduce_parameter);
 	
 	cerr << "lub_coeff_contact: " << endl;
@@ -276,8 +275,22 @@ System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
+	evaluateFrictionalState();
 	deltaTimeEvolution();
 }
+
+void
+System::evaluateFrictionalState(){
+	
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_contact()){
+			interaction[k].updateFrictionalState();
+		}
+	}
+
+	
+}
+
 
 void
 System::timeEvolutionPredictorCorrectorMethod(){

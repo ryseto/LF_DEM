@@ -207,7 +207,7 @@ sub InInteractions {
 		$line = <IN_interaction> ;
 		($i, $j, $contact, $nx, $ny, $nz,
 		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol,
-		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF) = split(/\s+/, $line);
+		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction) = split(/\s+/, $line);
 		
 		
 		if ($num==$num_mathm){
@@ -222,6 +222,7 @@ sub InInteractions {
 		$Ft_t[$k] = $fc_tan;
 		$Fcol[$k] = $fcol;
 		$f_normal = $fc_n + $fcol + $f_lub_norm;
+		$fricstate[$k] = $friction;
 		#	$force[$k] = sqrt($f_normal)
 		if ($f_normal > 0){
 			if ($gap < 0){
@@ -235,6 +236,7 @@ sub InInteractions {
 		} else {
 			$force[$k] = 0;
 		}
+		
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
@@ -335,7 +337,7 @@ sub OutYaplotData{
     }
 	
 	printf OUT "y 2\n";
-	printf OUT "@ 0\n";
+	
 	printf OUT "r 0.2\n";
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
@@ -343,6 +345,11 @@ sub OutYaplotData{
 			$force += - $F_lub[$k];
 		}
 		if ($Gap[$k] < 0) {
+			if ($fricstate[$k] == 1){
+				printf OUT "@ 0\n"; # static
+			} else {
+				printf OUT "@ 5\n"; # dynamic
+			}
 			&OutString2($int0[$k],  $int1[$k]);
 		}
     }

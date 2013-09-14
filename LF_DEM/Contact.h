@@ -32,7 +32,6 @@ private:
 
 	//======= internal state =====================//
 	vec3d disp_tan; // tangential displacement
-	vec3d disp_tan_predictor; // tangential displacement
 	vec3d disp_tan_previous;
 	//===== forces and stresses ==================== //
 	double kn_scaled;
@@ -54,10 +53,12 @@ private:
 
 	void applyFrictionLaw_spring();
 	void applyFrictionLaw_spring_dashpot();
+	void imposeFrictionLaw_spring();
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
-	
+	vec3d tvec;
+	double supportable_tanforce;
 
 protected:
 public:
@@ -73,7 +74,9 @@ public:
 	bool staticfriction;
 	void updateContactModel();
 	void resetObservables();
+	void frictionlaw();
 
+	
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();
