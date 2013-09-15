@@ -40,6 +40,10 @@ Lubrication::setResistanceCoeff(double normal_rc, double tangent_rc){
 	log_lub_coeff = tangent_rc;
 }
 
+void
+Lubrication::setResistanceCoeffTang(double tangent_rc){
+	log_lub_coeff = tangent_rc;
+}
 
 /*********************************
  *                                *

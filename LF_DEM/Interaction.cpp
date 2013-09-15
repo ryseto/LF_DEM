@@ -42,8 +42,7 @@ Interaction::calcNormalVectorDistanceGap(){
 		double overlap_12 = 0.5*(a0+a1-r);
 		a0_dash = a0-overlap_12;
 		a1_dash = a1-overlap_12;
-	}
-	else{
+	} else {
 		double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
 		lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		a0_dash = a0;

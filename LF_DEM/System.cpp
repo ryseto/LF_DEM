@@ -219,8 +219,10 @@ System::setupSystem(){
 		 */
 		log_lub_coeff_contact = 6*kt*contact_relaxzation_time_tan;
 	}
+	log_lub_coeff_contactlub = log(1/lub_reduce_parameter);
 	ratio_dashpot_lubrication = log_lub_coeff_contact/log(1/lub_reduce_parameter);
-	
+	ratio_dashpot_total = log_lub_coeff_contact/(log_lub_coeff_contact+log_lub_coeff_contactlub);
+
 	cerr << "lub_coeff_contact: " << endl;
 	cerr << " dashpot " << log_lub_coeff_contact << ' ' << lub_coeff_contact << endl;
 	cerr << " lubrication " << 1/lub_reduce_parameter << ' ' << log(1/lub_reduce_parameter) << endl;

@@ -59,7 +59,9 @@ private:
 	vec3d f_contact_tan; // tangential contact force
 	vec3d tvec;
 	double supportable_tanforce;
-
+	vec3d dashpot;
+	vec3d lubforce_tan;
+	
 protected:
 public:
 	/*********************************

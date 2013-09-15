@@ -346,9 +346,9 @@ sub OutYaplotData{
 		}
 		if ($Gap[$k] < 0) {
 			if ($fricstate[$k] == 1){
-				printf OUT "@ 0\n"; # static
+				printf OUT "@ 5\n"; # static
 			} else {
-				printf OUT "@ 5\n"; # dynamic
+				printf OUT "@ 0\n"; # dynamic
 			}
 			&OutString2($int0[$k],  $int1[$k]);
 		}

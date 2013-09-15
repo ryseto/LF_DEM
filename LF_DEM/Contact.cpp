@@ -29,7 +29,12 @@ Contact::updateContactModel(){
 		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
 		if (active) {
 			double lub_coeff = sys->get_lub_coeff_contact();
-			double log_lub_coeff = sys->get_log_lub_coeff_contact();
+			double log_lub_coeff;
+			if (staticfriction) {
+				log_lub_coeff = sys->get_log_lub_coeff_staticfriction();
+			} else {
+				log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
+			}
 			interaction->lubrication.setResistanceCoeff(lub_coeff, log_lub_coeff);
 			cerr << lub_coeff << ' ' <<  log(lub_coeff) << endl;
 		}
@@ -51,7 +56,7 @@ Contact::activate(){
 	staticfriction = false;
 	disp_tan.reset();
 	double lub_coeff = sys->get_lub_coeff_contact();
-	double log_lub_coeff = sys->get_log_lub_coeff_contact();
+	double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
 	interaction->lubrication.setResistanceCoeff(lub_coeff, log_lub_coeff);
 }
 
@@ -93,7 +98,6 @@ Contact::calcContactInteraction(){
 	// gap_nondim < 0 (in contact)
 	//
 	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); // gap_nondim is negative, therefore it is allways positive.
-	
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	if (sys->friction) {
 		/* disp_tan is orthogonal to the normal vector.
@@ -103,8 +107,7 @@ Contact::calcContactInteraction(){
 			f_contact_tan = kt_scaled*disp_tan;
 		} else {
 			double supportable_tanforce = sys->get_mu_static()*(f_contact_normal_norm+interaction->lubrication.get_lubforce_value());
-			f_contact_tan = supportable_tanforce*tvec;
-			disp_tan = (1/kt_scaled)*f_contact_tan;
+			disp_tan = (1/kt_scaled)*(supportable_tanforce-lubforce_tan.norm()*sys->get_ratio_dashpot_total())*tvec;
 		}
 //		imposeFrictionLaw_spring();
 //		if (sys->frictionlaw == 1) {
@@ -167,7 +170,7 @@ Contact::frictionlaw(){
 	interaction->lubrication.calcLubricationForce();
 	double supportable_tanforce = sys->get_mu_static()*(f_contact_normal_norm+interaction->lubrication.get_lubforce_value());
 	if (staticfriction){
-		vec3d dashpot = interaction->lubrication.lubforce_p0;
+		dashpot = interaction->lubrication.lubforce_p0;
 		dashpot += interaction->lubrication.get_lubforce_value()*interaction->nvec;
 		// @@@ The sign (+) is correct, but it is counter-intuitive, we should find a clearer way to do this
 		double f_test = (f_contact_tan+dashpot).norm();
@@ -180,20 +183,32 @@ Contact::frictionlaw(){
 			staticfriction = false;
 		} else {
 			tvec = dashpot/dashpot.norm();
+			lubforce_tan = dashpot;
+			double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
+			interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
 		}
 	} else {
-		vec3d lubforce_tan = interaction->lubrication.lubforce_p0;
+		lubforce_tan = interaction->lubrication.lubforce_p0;
 		lubforce_tan += interaction->lubrication.get_lubforce_value()*interaction->nvec;
 		// @@@ The sign (+) is correct, but it is counter-intuitive, we should find a clearer way to do this
-//		double lubforce_tan_norm = lubforce_tan.norm();
+		//		double lubforce_tan_norm = lubforce_tan.norm();
 		double ftest = (lubforce_tan+f_contact_tan).norm();
 		if (ftest < supportable_tanforce) {
+			dashpot = lubforce_tan;
 			staticfriction = true;
+			double log_lub_coeff = sys->get_log_lub_coeff_staticfriction();
+			interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
 		} else {
 			tvec = lubforce_tan/lubforce_tan.norm();
 		}
 	}
 }
+
+
+
+
+
+
 
 void
 Contact::imposeFrictionLaw_spring(){
