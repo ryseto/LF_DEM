@@ -115,7 +115,7 @@ private:
 
 	//===== forces/stresses  ========================== //
 	void calcLubricationForce();
-	inline double get_lubforce_value(){return -dot(lubforce_p0, nvec);}
+	inline double get_lubforce_normal(){return -dot(lubforce_p0, nvec);} // positive for compression
 	inline double get_lubforce_tan(){
 		vec3d lub_tan = lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 		return lub_tan.norm();

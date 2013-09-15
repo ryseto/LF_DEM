@@ -162,6 +162,7 @@ public:
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
 	 * 2 log(1/xi) lubrication (only squeeze mode)
+	 * 3 1/xi lubrication for h>0 and tangential dashpot.
 	 */
 	int lubrication_model;
 	

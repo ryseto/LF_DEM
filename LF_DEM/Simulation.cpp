@@ -769,7 +769,7 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
 				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
-				fout_interaction << sys.interaction[k].lubrication.get_lubforce_value() << ' '; // 8
+				fout_interaction << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan_norm() << ' '; // 11

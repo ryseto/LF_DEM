@@ -36,6 +36,7 @@ private:
 	//===== forces and stresses ==================== //
 	double kn_scaled;
 	double kt_scaled;
+	double mu;
 	//===== observables  ========================== //
 	double strain_contact_start; // the strain at h=0.
 	double duration_contact; // entire duration for h < 0
@@ -53,7 +54,6 @@ private:
 
 	void applyFrictionLaw_spring();
 	void applyFrictionLaw_spring_dashpot();
-	void imposeFrictionLaw_spring();
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
@@ -82,6 +82,7 @@ public:
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();
+	
 	void calcContactInteraction();
 	void calcContactInteractionRelax();
 	void addUpContactForceTorque();
