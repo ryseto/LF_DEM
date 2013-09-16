@@ -303,7 +303,8 @@ Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	XGU_j *= cXG_j;
 	stresslet_i = XGU_i;
 	stresslet_j = XGU_j;
-	if (sys->lubrication_model == 1){
+	
+	if (sys->lubrication_model == 1){ // @@@@@ This need to be changed
 		return;
 	}
 	StressTensor YGU_i;

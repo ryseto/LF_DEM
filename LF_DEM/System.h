@@ -150,7 +150,6 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
-	double ratio_dashpot_lubrication;
 	double ratio_dashpot_total;
 	bool friction;
 	int frictionlaw;
@@ -209,6 +208,11 @@ public:
 	double max_fc_tan;
 	string simu_name;
 	ofstream fout_int_data;
+	
+	ofstream fout_sfric;
+	ofstream fout_dfric;
+	
+	
 	double total_energy;
 	
 	void setSystemVolume(double depth = 0);

@@ -62,6 +62,9 @@ private:
 	vec3d dashpot;
 	vec3d lubforce_tan;
 	
+	double previous_f_test;
+	double previous_supportable_tanforce;
+	
 protected:
 public:
 	/*********************************
@@ -103,6 +106,7 @@ public:
 	inline double get_cnt_sliding(){
 		return cnt_sliding;
 	}
+	vec3d get_disp_tan(){return disp_tan;}
 
 };
 #endif /* defined(__LF_DEM__Contact__) */

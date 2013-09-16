@@ -779,13 +779,19 @@ Simulation::outputConfigurationData(){
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
 				if (sys.interaction[k].is_contact()){
 					if (sys.interaction[k].contact.staticfriction) {
-						fout_interaction << 1 << endl;
+						fout_interaction << 1 << ' ';
 					} else {
-						fout_interaction << 2 << endl;
+						fout_interaction << 2 << ' ';
 					}
 				} else {
-					fout_interaction << 0 << endl;
+					fout_interaction << 0 << ' ';
 				}
+				vec3d p = pos[i];
+				vec3d xi =  sys.interaction[k].contact.get_disp_tan();
+				vec3d pf_s = p + sys.radius[i]*nr_vec;
+				vec3d pf_e = pf_s + 10*xi;
+				fout_interaction << pf_s.x << ' ' << pf_s.y << ' ' << pf_s.z << ' ';
+				fout_interaction << pf_e.x << ' ' << pf_e.y << ' ' << pf_e.z << endl;
 			}
 		}
 	}

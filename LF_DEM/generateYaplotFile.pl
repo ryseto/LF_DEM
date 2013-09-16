@@ -207,7 +207,7 @@ sub InInteractions {
 		$line = <IN_interaction> ;
 		($i, $j, $contact, $nx, $ny, $nz,
 		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol,
-		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction) = split(/\s+/, $line);
+		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction, $lsx, $lsy, $lsz,  $lex, $ley, $lez) = split(/\s+/, $line);
 		
 		
 		if ($num==$num_mathm){
@@ -240,6 +240,13 @@ sub InInteractions {
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
+		$xi_s_x[$k] = $lsx;
+		$xi_s_y[$k] = $lsy;
+		$xi_s_z[$k] = $lsz;
+		$xi_e_x[$k] = $lex;
+		$xi_e_y[$k] = $ley;
+		$xi_e_z[$k] = $lez;
+		
 		$Gap[$k] = $gap;
 		printf OUTG "$gap ";
 	}
@@ -338,17 +345,19 @@ sub OutYaplotData{
 	
 	printf OUT "y 2\n";
 	
-	printf OUT "r 0.2\n";
+
+	printf OUT "@ 0\n"; # dynamic
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {
 			$force += - $F_lub[$k];
 		}
 		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 1){
-				printf OUT "@ 5\n"; # static
+			if ($fricstate[$k] == 1) {
+				# static
+				printf OUT "r 0.3\n";
 			} else {
-				printf OUT "@ 0\n"; # dynamic
+				printf OUT "r 0.1\n";
 			}
 			&OutString2($int0[$k],  $int1[$k]);
 		}
@@ -386,6 +395,30 @@ sub OutYaplotData{
 		&OutCircle_middle($int0[$k],  $int1[$k]);
     }
 	
+	printf OUT "y 8\n";
+	printf OUT "@ 3\n";
+	
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($Gap[$k] < 0) {
+			printf OUT "l $xi_s_x[$k] $xi_s_y[$k] $xi_s_z[$k] $xi_e_x[$k] $xi_e_y[$k] $xi_e_z[$k]\n";
+		}
+    }
+	printf OUT "@ 3\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($Gap[$k] < 0) {
+			printf OUT "l $xi_s_x[$k] $xi_s_y[$k] $xi_s_z[$k] $xi_e_x[$k] $xi_e_y[$k] $xi_e_z[$k]\n";
+		}
+    }
+	printf OUT "@ 3\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($Gap[$k] < 0) {
+			$xx = $xi_s_x[$k] + $nrvec_x[$k];
+			$yy = $xi_s_y[$k] + $nrvec_y[$k];
+			$zz = $xi_s_z[$k] + $nrvec_z[$k];
+			printf OUT "l $xi_s_x[$k] $xi_s_y[$k] $xi_s_z[$k] $xx $yy $zz\n";
+		}
+    }
+
 	if ($Ly == 0){
 		printf OUT "y 6\n";
 		printf OUT "@ 0\n";

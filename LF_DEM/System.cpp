@@ -217,16 +217,25 @@ System::setupSystem(){
 		 *  beta = t*kn
 		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
 		 */
-		log_lub_coeff_contact = 6*kt*contact_relaxzation_time_tan;
+		log_lub_coeff_contact = 6*kt*contact_relaxzation_time_tan; //
 	}
-	log_lub_coeff_contactlub = log(1/lub_reduce_parameter);
-	ratio_dashpot_lubrication = log_lub_coeff_contact/log(1/lub_reduce_parameter);
+	/* If a contact is in sliding mode,
+	 * lubrication and dashpot forces are activated.
+	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
+	 *
+	 */
+	if (lubrication_model == 2) {
+		log_lub_coeff_contactlub = log(1/lub_reduce_parameter);
+	} else {
+		log_lub_coeff_contactlub = 0;
+	}
 	ratio_dashpot_total = log_lub_coeff_contact/(log_lub_coeff_contact+log_lub_coeff_contactlub);
 
 	cerr << "lub_coeff_contact: " << endl;
 	cerr << " dashpot " << log_lub_coeff_contact << ' ' << lub_coeff_contact << endl;
 	cerr << " lubrication " << 1/lub_reduce_parameter << ' ' << log(1/lub_reduce_parameter) << endl;
-	cerr << "ratio_dashpot_lubrication = " << ratio_dashpot_lubrication << endl;
+	cerr << "ratio_dashpot_total = " << ratio_dashpot_total << endl;
+
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
@@ -283,13 +292,11 @@ System::timeEvolutionEulersMethod(){
 
 void
 System::evaluateFrictionalState(){
-	
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()){
 			interaction[k].updateFrictionalState();
 		}
 	}
-
 	
 }
 
@@ -1185,7 +1192,6 @@ System::analyzeState(){
 	} else {
 		average_fc_normal = 0;
 	}
-
 }
 
 void
@@ -1199,8 +1205,13 @@ System::setSystemVolume(double depth){
 
 void
 System::openFileInteractionData(){
-	string int_daat_filename = "irecord_" + simu_name + ".dat";
-	fout_int_data.open(int_daat_filename.c_str());
+	string int_data_filename = "irecord_" + simu_name + ".dat";
+	fout_int_data.open(int_data_filename.c_str());
+	
+	string sfric_filename = "sf_" + simu_name + ".dat";
+	string dfric_filename = "df_" + simu_name + ".dat";
+	fout_sfric.open(sfric_filename.c_str());
+	fout_dfric.open(dfric_filename.c_str());
 }
 
 double
