@@ -789,9 +789,10 @@ Simulation::outputConfigurationData(){
 				vec3d p = pos[i];
 				vec3d xi =  sys.interaction[k].contact.get_disp_tan();
 				vec3d pf_s = p + sys.radius[i]*nr_vec;
-				vec3d pf_e = pf_s + 10*xi;
+				vec3d ftest = sys.interaction[k].contact.get_f_test();
 				fout_interaction << pf_s.x << ' ' << pf_s.y << ' ' << pf_s.z << ' ';
-				fout_interaction << pf_e.x << ' ' << pf_e.y << ' ' << pf_e.z << endl;
+				fout_interaction << xi.x << ' ' << xi.y << ' ' << xi.z << ' ';
+				fout_interaction << ftest.x << ' ' << ftest.y << ' ' << ftest.z << endl;
 			}
 		}
 	}

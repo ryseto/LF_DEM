@@ -61,7 +61,7 @@ private:
 	double supportable_tanforce;
 	vec3d dashpot;
 	vec3d lubforce_tan;
-	
+	vec3d f_test_vec;
 	double previous_f_test;
 	double previous_supportable_tanforce;
 	
@@ -92,6 +92,8 @@ public:
 	double getContactVelocity();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
+	inline vec3d get_f_test(){return f_test_vec;}
+	
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	void addContactStress();
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}

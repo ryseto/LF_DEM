@@ -111,15 +111,8 @@ Contact::calcContactInteraction(){
 			 * In the contact model, the dashpot part is considered to set the tangential spring.
 			 * As approximation, the previously calculated resistance force is used here.
 			 */
-			double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
-			if (supportable_tanforce < 0){
-				disp_tan.reset();
-				f_contact_tan.reset();
-			} else {
-				disp_tan = (1/kt_scaled)*(supportable_tanforce-lubforce_tan.norm()*sys->get_ratio_dashpot_total())*tvec;
-				//disp_tan = (1/kt_scaled)*(supportable_tanforce-lubforce_tan.norm())*tvec;
-				f_contact_tan = kt_scaled*disp_tan;
-			}
+			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-sys->get_ratio_dashpot_total()*lubforce_tan);
+			f_contact_tan = kt_scaled*disp_tan;
 		}
 	}
 }
@@ -137,7 +130,7 @@ Contact::frictionlaw(){
 		dashpot = interaction->lubrication.lubforce_p0;
 		dashpot += interaction->lubrication.get_lubforce_normal()*interaction->nvec; // note: nvec directs from i to j.
 		// @@@ The sign (+) is correct, but it is counter-intuitive, we should find a clearer way to do this
-		vec3d f_test_vec = f_contact_tan+dashpot;
+		f_test_vec = f_contact_tan+dashpot;
 		f_test = f_test_vec.norm();
 		if (f_test > supportable_tanforce){
 			/* If f_est becomes larger than the supportable tangential force,
@@ -152,11 +145,12 @@ Contact::frictionlaw(){
 			tvec = f_test_vec/f_test;
 		}
 	} else {
+		/* lubforce_tan is lubforce + dashpot
+		 */ 
 		lubforce_tan = interaction->lubrication.lubforce_p0;
 		lubforce_tan += interaction->lubrication.get_lubforce_normal()*interaction->nvec;
 		// @@@ The sign (+) is correct, but it is counter-intuitive, we should find a clearer way to do this
-		//		double lubforce_tan_norm = lubforce_tan.norm();
-		vec3d f_test_vec = lubforce_tan+f_contact_tan;
+		f_test_vec = lubforce_tan+f_contact_tan;
 		f_test = f_test_vec.norm();
 		if (f_test < supportable_tanforce) {
 			staticfriction = true;
@@ -236,7 +230,7 @@ Contact::applyFrictionLaw_spring_dashpot(){
 	 *
 	 */
 	interaction->lubrication.calcLubricationForce();
-	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
+	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
 	if (staticfriction == false){
 		/* dynamic (sliding)
 		 *
