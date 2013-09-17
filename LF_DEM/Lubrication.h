@@ -116,11 +116,10 @@ private:
 	//===== forces/stresses  ========================== //
 	void calcLubricationForce();
 	inline double get_lubforce_normal(){return -dot(lubforce_p0, nvec);} // positive for compression
-	inline double get_lubforce_tan(){
-		vec3d lub_tan = lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
-		return lub_tan.norm();
-	}
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
+	vec3d get_lubforce_tan(){
+		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
+	}
 	void addHydroStress();
 	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 							   const vec3d &oi, const vec3d &oj,

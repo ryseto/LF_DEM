@@ -29,7 +29,6 @@ private:
 	Interaction *interaction;
 
 	unsigned int i,j;
-
 	//======= internal state =====================//
 	vec3d disp_tan; // tangential displacement
 	vec3d disp_tan_previous;
@@ -52,8 +51,6 @@ private:
 	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 
-	void applyFrictionLaw_spring();
-	void applyFrictionLaw_spring_dashpot();
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
@@ -65,9 +62,9 @@ private:
 	bool old_state;
 	vec3d tvec;
 	double supportable_tanforce;
-	vec3d dashpot;
-	vec3d lubforce_tan;
-	
+	vec3d resforce_tan;
+//	vec3d lubforce_tan;
+	vec3d f_test_vec;
 	double previous_f_test;
 	double previous_supportable_tanforce;
 	
@@ -87,17 +84,17 @@ public:
 	void resetObservables();
 	void frictionlaw();
 
-	
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();
-	
 	void calcContactInteraction();
 	void calcContactInteractionRelax();
 	void addUpContactForceTorque();
 	double getContactVelocity();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
+	inline vec3d get_f_test(){return f_test_vec;}
+	
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	void addContactStress();
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}

@@ -770,7 +770,7 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.z << ' '; // 6
 				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
-				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9
+				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan().norm() << ' '; // 9
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan_norm() << ' '; // 11
 				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 12
@@ -786,12 +786,10 @@ Simulation::outputConfigurationData(){
 				} else {
 					fout_interaction << 0 << ' ';
 				}
-				vec3d p = pos[i];
 				vec3d xi =  sys.interaction[k].contact.get_disp_tan();
-				vec3d pf_s = p + sys.radius[i]*nr_vec;
-				vec3d pf_e = pf_s + 10*xi;
-				fout_interaction << pf_s.x << ' ' << pf_s.y << ' ' << pf_s.z << ' ';
-				fout_interaction << pf_e.x << ' ' << pf_e.y << ' ' << pf_e.z << endl;
+				vec3d ftest = sys.interaction[k].contact.get_f_test();
+				fout_interaction << xi.x << ' ' << xi.y << ' ' << xi.z << ' ';
+				fout_interaction << ftest.x << ' ' << ftest.y << ' ' << ftest.z << endl;
 			}
 		}
 	}
