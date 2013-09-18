@@ -30,17 +30,14 @@ Contact::getInteractionData(){
 void
 Contact::updateContactModel(){
 	if (interaction->active) {
+		exit(1);
 		double ro_12 = interaction->ro_12;
 		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
 		if (active) {
 			double lub_coeff = sys->get_lub_coeff_contact();
 			double log_lub_coeff;
-			if (staticfriction) {
-				log_lub_coeff = sys->get_log_lub_coeff_staticfriction();
-			} else {
-				log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
-			}
+			log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
 			interaction->lubrication.setResistanceCoeff(lub_coeff, log_lub_coeff);
 		}
 	}
@@ -137,11 +134,11 @@ Contact::frictionlaw(){
 	//	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
 	//	if (supportable_tanforce < 0){
 	//		supportable_tanforce = 0;
-	//	}
+	//		}
 	supportable_tanforce = mu*f_contact_normal_norm;
 	double f_test;
 	resforce_tan = interaction->lubrication.get_lubforce_tan();
-	f_test_vec = f_contact_tan+resforce_tan;
+	f_test_vec = f_contact_tan+sys->get_ratio_dashpot_total()*resforce_tan;
 	f_test = f_test_vec.norm();
 	tvec = f_test_vec/f_test;
 	if (staticfriction){
@@ -155,7 +152,7 @@ Contact::frictionlaw(){
 			/* Switch from static to dynamic.
 			 */
 			staticfriction = false;
-			//disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-resforce_tan);
+			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-sys->get_ratio_dashpot_total()*resforce_tan);
 			double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
 			interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
 			if (sys->get_shear_strain() > 1 && sys->get_shear_strain() < 1.5) {
@@ -172,8 +169,8 @@ Contact::frictionlaw(){
 			 * It seems easier than expected behavior now.
 			 */
 			staticfriction = true;
-			double log_lub_coeff = sys->get_log_lub_coeff_staticfriction();
-			interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
+			//double log_lub_coeff = sys->get_log_lub_coeff_staticfriction();
+			//interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
 			if (sys->get_shear_strain() > 1 && sys->get_shear_strain() < 1.5) {
 				if (previous_f_test != 0){
 					sys->fout_sfric << previous_f_test << ' ' << previous_supportable_tanforce << endl;

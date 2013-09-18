@@ -209,15 +209,18 @@ System::setupSystem(){
 		 */
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
 	}
+	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
+
 	if (contact_relaxzation_time_tan < 0) {
 		// 1/(h+c) --> 1/c
-		log_lub_coeff_contact = log(1/lub_reduce_parameter);
+		log_lub_coeff_contact_tan_dashpot = log(1/lub_reduce_parameter);
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
 		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
 		 */
-		log_lub_coeff_contact = 6*kt*contact_relaxzation_time_tan; //
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan; //
 	}
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
@@ -225,15 +228,15 @@ System::setupSystem(){
 	 *
 	 */
 	if (lubrication_model == 2) {
-		log_lub_coeff_contactlub = log(1/lub_reduce_parameter);
+		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
 	} else {
-		log_lub_coeff_contactlub = 0;
+		log_lub_coeff_contact_tan_lubrication = 0;
 	}
-	ratio_dashpot_total = log_lub_coeff_contact/(log_lub_coeff_contact+log_lub_coeff_contactlub);
+	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
 
-	cerr << "lub_coeff_contact: " << endl;
-	cerr << " dashpot " << log_lub_coeff_contact << ' ' << lub_coeff_contact << endl;
-	cerr << " lubrication " << 1/lub_reduce_parameter << ' ' << log(1/lub_reduce_parameter) << endl;
+	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
+	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	cerr << "ratio_dashpot_total = " << ratio_dashpot_total << endl;
 
 	ts = 0;
