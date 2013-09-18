@@ -226,8 +226,9 @@ sub InInteractions {
 		#	$force[$k] = sqrt($f_normal)
 		if ($f_normal > 0){
 			if ($gap < 0){
-				$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan)
-				+ sqrt($f_lub_norm*$f_lub_norm + $f_lub_tan*$f_lub_tan);
+				#$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan)
+				#+ sqrt($f_lub_norm*$f_lub_norm + $f_lub_tan*$f_lub_tan);
+				$force[$k] = $f_normal + $f_lub_norm;
 			} else {
 				$force[$k] = $f_normal;
 			}
@@ -351,7 +352,7 @@ sub OutYaplotData{
 	printf OUT "y 2\n";
 	
 
-	printf OUT "@ 0\n"; # dynamic
+	printf OUT "@ 5\n"; # dynamic
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {

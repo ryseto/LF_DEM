@@ -61,7 +61,8 @@ private:
 	vec3d f_test_vec;
 	double previous_f_test;
 	double previous_supportable_tanforce;
-	
+	int just_switched = -1;
+
 protected:
 public:
 	/*********************************

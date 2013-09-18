@@ -152,7 +152,7 @@ public:
 	StressTensor total_brownian_stress;
 	double ratio_dashpot_total;
 	bool friction;
-	int frictionlaw;
+//	int frictionlaw;
 	bool colloidalforce;
 	bool brownian;
 	
@@ -308,7 +308,7 @@ public:
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
-	void set_frictionlaw(double val){frictionlaw = val;}
+//	void set_frictionlaw(double val){frictionlaw = val;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
 	inline double get_log_lub_coeff_staticfriction(){return log_lub_coeff_contact;}
 	inline double get_log_lub_coeff_dynamicfriction(){return log_lub_coeff_contact+log_lub_coeff_contactlub;}

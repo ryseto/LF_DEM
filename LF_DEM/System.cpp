@@ -297,9 +297,7 @@ System::evaluateFrictionalState(){
 			interaction[k].updateFrictionalState();
 		}
 	}
-	
 }
-
 
 void
 System::timeEvolutionPredictorCorrectorMethod(){

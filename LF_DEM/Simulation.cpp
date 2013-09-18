@@ -211,8 +211,8 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
 		sys.disp_tan_target = atof(value.c_str());
-	} else if (keyword == "frictionlaw") {
-		sys.frictionlaw = atoi(value.c_str());
+//	} else if (keyword == "frictionlaw") {
+//		sys.frictionlaw = atoi(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -380,15 +380,6 @@ Simulation::setDefaultParameters(){
 	double _mu_static = 1;
 
 	/*
-	 * Friction law Ft > mu*Fn
-	 * 1: Ft = kt*dist_tan
-	 *    Fn = kn*overlap
-	 * 2: Ft = kt*dist_tan + Flub_tan
-	 *    Fn = kn*overlap + Flub_norm
-	 */
-	int _frictionlaw = 1;
-
-	/*
 	 * Output interval:
 	 * strain_interval_output_data is for outputing rheo_...
 	 * strain_interval_output is for outputing int_... and par_...
@@ -416,7 +407,7 @@ Simulation::setDefaultParameters(){
 	sys.set_kn(_kn);
 	sys.set_kt(_kt);
 	sys.set_mu_static(_mu_static);
-	sys.set_frictionlaw(_frictionlaw);
+//	sys.set_frictionlaw(_frictionlaw);
 	sys.set_colloidalforce_length(_colloidalforce_length);
 
 

@@ -11,6 +11,7 @@ Contact::init(System *sys_, Interaction *interaction_){
 	sys = sys_;
 	interaction = interaction_;
 	active = false;
+	just_switched = 0;
 }
 
 void
@@ -20,6 +21,7 @@ Contact::getInteractionData(){
 	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
 	mu = sys->get_mu_static();
+	
 }
 
 /*
@@ -99,34 +101,46 @@ void
 Contact::calcContactInteraction(){
 	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); // gap_nondim is negative, therefore it is allways positive.
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-	if (sys->friction) {
-		/* disp_tan is orthogonal to the normal vector.
-		 */
-		if (staticfriction) {
-			/* Static friction:
-			 *
-			 */
-			disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
-			f_contact_tan = kt_scaled*disp_tan;
-		} else {
-			/* Dynamic friction:
-			 * The spring force is set with the new value of mu*F_n.
-			 * The total resistance force consists of lubrication force and dashpot.
-			 * In the contact model, the dashpot part is considered to set the tangential spring.
-			 * As approximation, the previously calculated resistance force is used here.
-			 */
-			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-sys->get_ratio_dashpot_total()*resforce_tan);
-			disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
-			f_contact_tan = kt_scaled*disp_tan;
-		}
-	}
+//	if (sys->friction) {
+//		/* disp_tan is orthogonal to the normal vector.
+//		 */
+//		if (!staticfriction) {
+//			/* Dynamic friction:
+//			 * The spring force is set with the new value of mu*F_n.
+//			 * The total resistance force consists of lubrication force and dashpot.
+//			 * In the contact model, the dashpot part is considered to set the tangential spring.
+//			 * As approximation, the previously calculated resistance force is used here.
+//			 *
+//			 * Spring + dashpot + lubrication
+//			 * resforce_tan = dashpot +lubrication
+//			 * Spring + dashpot = mu*Fn
+//			 */
+//			/*
+//			 * This condition is an attempt.
+//			 * The conditiong has some impacts on the result.
+//			 */
+//			//if (supportable_tanforce > 0){
+////			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-sys->get_ratio_dashpot_total()*resforce_tan);
+//			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-resforce_tan);
+//			//}
+//		}
+//	
+//	}
+	
+	f_contact_tan = kt_scaled*disp_tan;
 }
 
 void
 Contact::frictionlaw(){
 	interaction->lubrication.calcLubricationForce();
-	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
+	//supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
+	supportable_tanforce = mu*f_contact_normal_norm;
 	double f_test;
+	resforce_tan = interaction->lubrication.get_lubforce_tan();
+	f_test_vec = f_contact_tan+resforce_tan; // total contact force
+	f_test = f_test_vec.norm();
+	tvec = f_test_vec/f_test;
+	//	tvec = resforce_tan/resforce_tan.norm();
 	if (staticfriction){
 		/* Friction force is the sum of spring force and dashpot force.
 		 * The lubrication forces obtained by solving the force balance equations
@@ -134,36 +148,29 @@ Contact::frictionlaw(){
 		 */
 		/* resforce_tan is dashpot
 		 */
-		resforce_tan = interaction->lubrication.get_lubforce_tan();
-		f_test_vec = f_contact_tan+resforce_tan;
-		f_test = f_test_vec.norm();
-		tvec = f_test_vec/f_test;
 		if (f_test > supportable_tanforce){
-			/* If f_est becomes larger than the supportable tangential force,
-			 * the state is switched into the dynamics friction.
+			/* Switch from static to dynamic.
 			 */
 			staticfriction = false;
+			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-sys->get_ratio_dashpot_total()*resforce_tan);
 			sys->fout_dfric << previous_f_test << ' ' << previous_supportable_tanforce << endl;
 			sys->fout_dfric << f_test << ' ' << supportable_tanforce << endl << endl;
-			double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
-			interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
 		}
 	} else {
 		/* resforce_tan is lubforce + dashpot
+		 *
 		 */ 
-		resforce_tan = interaction->lubrication.get_lubforce_tan();
-		f_test_vec = f_contact_tan+resforce_tan;
-		f_test = f_test_vec.norm();
-		tvec = f_test_vec/f_test;
 		if (f_test < supportable_tanforce) {
+			/* Switch from dynamic to static.
+			 * It seems easier than expected behavior now.
+			 */
 			staticfriction = true;
-			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-resforce_tan);
-			double log_lub_coeff = sys->get_log_lub_coeff_staticfriction();
-			interaction->lubrication.setResistanceCoeffTang(log_lub_coeff);
 			if (previous_f_test != 0){
 				sys->fout_sfric << previous_f_test << ' ' << previous_supportable_tanforce << endl;
 				sys->fout_sfric << f_test << ' ' << supportable_tanforce << endl << endl;
 			}
+		} else {
+			disp_tan = (1/kt_scaled)*(supportable_tanforce*tvec-sys->get_ratio_dashpot_total()*resforce_tan);
 		}
 	}
 	previous_f_test = f_test;
