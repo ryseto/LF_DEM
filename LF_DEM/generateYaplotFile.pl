@@ -226,8 +226,9 @@ sub InInteractions {
 		#	$force[$k] = sqrt($f_normal)
 		if ($f_normal > 0){
 			if ($gap < 0){
-				$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan)
-				+ sqrt($f_lub_norm*$f_lub_norm + $f_lub_tan*$f_lub_tan);
+				#$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan)
+				#+ sqrt($f_lub_norm*$f_lub_norm + $f_lub_tan*$f_lub_tan);
+				$force[$k] = $f_normal + $f_lub_norm;
 			} else {
 				$force[$k] = $f_normal;
 			}
@@ -349,9 +350,8 @@ sub OutYaplotData{
     }
 	
 	printf OUT "y 2\n";
-	
-
-	printf OUT "@ 0\n"; # dynamic
+	printf OUT "r 0.4\n";
+	printf OUT "@ 5\n"; # dynamic
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {
@@ -360,13 +360,25 @@ sub OutYaplotData{
 		if ($Gap[$k] < 0) {
 			if ($fricstate[$k] == 1) {
 				# static
-				printf OUT "r 0.3\n";
-			} else {
-				printf OUT "r 0.1\n";
+				&OutString2($int0[$k],  $int1[$k]);
 			}
-			&OutString2($int0[$k],  $int1[$k]);
 		}
     }
+	printf OUT "r 0.2\n";
+	printf OUT "@ 7\n"; # dynamic
+	for ($k = 0; $k < $num_interaction; $k ++){
+		$force = $Fc_n[$k];
+        if ($F_lub[$k] < 0) {
+			$force += - $F_lub[$k];
+		}
+		if ($Gap[$k] < 0) {
+			if ($fricstate[$k] == 2) {
+				# static
+				&OutString2($int0[$k],  $int1[$k]);
+			}
+		}
+    }
+	
 	#printf OUT "r 0.2\n";
     printf OUT "y 3\n";
     printf OUT "@ 3\n";

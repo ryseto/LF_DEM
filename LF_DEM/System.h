@@ -54,10 +54,10 @@ private:
 	double kt;
 	double lub_max;
 	double lub_coeff_contact; // resistance coeffient for normal mode
-	double log_lub_coeff_contact;
-	double log_lub_coeff_contactlub;
+	double log_lub_coeff_contact_tan_dashpot;
+	double log_lub_coeff_contact_tan_lubrication;
+	double log_lub_coeff_contact_tan_total;
 
-//	double dashpot_coeff_contact; // resistance coeffient for tangential mode
 	double mu_static; // static friction coefficient.
 	double bgf_factor;
 	double kb_T;
@@ -152,7 +152,7 @@ public:
 	StressTensor total_brownian_stress;
 	double ratio_dashpot_total;
 	bool friction;
-	int frictionlaw;
+//	int frictionlaw;
 	bool colloidalforce;
 	bool brownian;
 	
@@ -308,10 +308,14 @@ public:
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
-	void set_frictionlaw(double val){frictionlaw = val;}
+//	void set_frictionlaw(double val){frictionlaw = val;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-	inline double get_log_lub_coeff_staticfriction(){return log_lub_coeff_contact;}
-	inline double get_log_lub_coeff_dynamicfriction(){return log_lub_coeff_contact+log_lub_coeff_contactlub;}
+	inline double get_log_lub_coeff_staticfriction(){
+		cerr << "not allowed\n";
+		exit(1);
+		return log_lub_coeff_contact_tan_dashpot;
+	}
+	inline double get_log_lub_coeff_dynamicfriction(){return log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;}
 	inline double get_ratio_dashpot_total(){return ratio_dashpot_total;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
 
