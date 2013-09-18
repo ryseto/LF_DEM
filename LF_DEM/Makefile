@@ -9,7 +9,7 @@ CXX=g++
 # OS_version: OSX or Linux
 OS_version=OSX
 # Build : debug or optimized
-Build=debug
+Build=optimized
 
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no

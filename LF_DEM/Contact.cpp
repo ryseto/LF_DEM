@@ -140,7 +140,7 @@ Contact::frictionlaw(){
 	interaction->lubrication.calcLubricationForce();
 	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
 	double f_test;
-	vec3d f_test_vec;
+
 	if (staticfriction){
 		/* Friction force is the sum of spring force and dashpot force.
 		 * The lubrication forces obtained by solving the force balance equations
@@ -184,13 +184,6 @@ Contact::frictionlaw(){
 		}
 	}
 	previous_f_test = f_test;
-	previous_supportable_tanforce = supportable_tanforce;
-	old_state = staticfriction;
-	old_relative_velocity = interaction->relative_surface_velocity;
-	old_f_test_vec = f_test_vec;
-	old_lubforce_tan = lubforce_tan;
-	old_dashpot = dashpot;
-	
 }
 
 void
