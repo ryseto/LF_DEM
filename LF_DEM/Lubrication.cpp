@@ -471,6 +471,7 @@ Lubrication::calcLubricationForce(){
 	vec3d XGE_i = (scaledXG0()+scaledXG2())*(*nxnz)*(*nvec);
 	if (sys->lubrication_model == 1){
 		lubforce_p0 = XAU_i+XGE_i;
+		return;
 	}
 	vec3d YAU_i = -scaledYA0()*(vi-(*nvec)*dot(nvec,vi))-scaledYA1()*(vj - (*nvec)*dot(nvec,vj));
 	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)-scaledYB1()*cross(nvec, oj);

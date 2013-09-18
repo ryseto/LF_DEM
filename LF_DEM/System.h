@@ -315,7 +315,7 @@ public:
 		exit(1);
 		return log_lub_coeff_contact_tan_dashpot;
 	}
-	inline double get_log_lub_coeff_dynamicfriction(){return log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;}
+	inline double get_log_lub_coeff_dynamicfriction(){return log_lub_coeff_contact_tan_total;}
 	inline double get_ratio_dashpot_total(){return ratio_dashpot_total;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
 

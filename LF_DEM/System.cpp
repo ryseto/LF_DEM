@@ -211,29 +211,31 @@ System::setupSystem(){
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
-
-	if (contact_relaxzation_time_tan < 0) {
-		// 1/(h+c) --> 1/c
-		log_lub_coeff_contact_tan_dashpot = log(1/lub_reduce_parameter);
-	} else {
-		/* t = beta/kn
-		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
-		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan; //
-	}
+	/* t = beta/kn
+	 *  beta = t*kn
+	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+	 */
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
 	 *
 	 */
-	if (lubrication_model == 2) {
+	if (lubrication_model == 1) {
+		log_lub_coeff_contact_tan_lubrication = 0;
+		log_lub_coeff_contact_tan_dashpot = 0;
+	} else if (lubrication_model == 2) {
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
 	} else {
 		log_lub_coeff_contact_tan_lubrication = 0;
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
+
+	if (lubrication_model == 1) {
+		ratio_dashpot_total = 0;
+	}
 
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
@@ -828,9 +830,6 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.doneBlocks(i);
 			}
 			break;
-			
-			
-			
 		default:
 			cerr << "lubrication_model = 0 is not implemented yet.\n";
 			exit(1);

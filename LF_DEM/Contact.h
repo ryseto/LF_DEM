@@ -78,7 +78,7 @@ public:
 	void updateContactModel();
 	void resetObservables();
 	void frictionlaw();
-
+	void frictionlaw_legacy();
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();

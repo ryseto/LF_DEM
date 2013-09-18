@@ -129,9 +129,6 @@ StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
 void
 
 StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC){
-	/* YA is missing?
-	 *
-	 */
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
 	double n0n2 = nvec.x*nvec.z;
