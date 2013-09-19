@@ -226,9 +226,6 @@ System::setupSystem(){
 	} else if (lubrication_model == 2) {
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
 		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
-	} else {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;

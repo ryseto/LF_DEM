@@ -110,13 +110,11 @@ Contact::frictionlaw(){
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		staticfriction = false;
 		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		cnt_sliding++; // for output
+		cnt_sliding++; 
 	} else {
 		staticfriction = true;
 	}
 }
-
-
 
 void
 Contact::calcContactInteractionRelax(){
@@ -162,7 +160,6 @@ Contact::addContactStress(){
 		contact_stresslet_XF_normal.reset();
 		contact_stresslet_XF_tan.reset();
 	}
-
 }
 
 double

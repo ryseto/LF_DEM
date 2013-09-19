@@ -302,13 +302,11 @@ Simulation::setDefaultParameters(){
 	 * 2 Brownian (if kT > 0).
 	 */
 	int _integration_method = 1;
-	
 	/*
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
 	 * 2 log(1/xi) lubrication (only squeeze mode)
-	 * 3 mix (only squeeze mode for h>0, and tangential dashpot for h>0)
 	 *
 	 */
 	int _lubrication_model = 2;
