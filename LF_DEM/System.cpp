@@ -291,15 +291,16 @@ System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	evaluateFrictionalState();
+	
 	deltaTimeEvolution();
+
 }
 
 void
 System::evaluateFrictionalState(){
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()){
-			interaction[k].updateFrictionalState();
+			interaction[k].contact.frictionlaw();
 		}
 	}
 }
@@ -686,6 +687,16 @@ void
 System::updateInteractions(){
 	/* default value of `_in_predictor' is false
 	 */
+	if (friction) {
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_contact()){
+				interaction[k].calcRelativeVelocities();
+				interaction[k].contact.incrementTangentialDisplacement();
+			}
+		}
+	}
+	
+	
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
 		if (interaction[k].is_active()){
@@ -695,6 +706,7 @@ System::updateInteractions(){
 			}
 		}
 	}
+//	evaluateFrictionalState();
 }
 
 void

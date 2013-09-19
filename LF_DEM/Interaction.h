@@ -127,7 +127,7 @@ public:
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
 		ro = val;
-		ro_12 = ro*(1./2);
+		ro_12 = ro/2;
 	}; // ro = a0 + a1
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//

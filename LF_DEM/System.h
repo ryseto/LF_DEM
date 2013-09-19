@@ -152,10 +152,8 @@ public:
 	StressTensor total_brownian_stress;
 	double ratio_dashpot_total;
 	bool friction;
-//	int frictionlaw;
 	bool colloidalforce;
 	bool brownian;
-	
 	/*
 	 * Lubrication model
 	 * 0 no lubrication

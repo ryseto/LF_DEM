@@ -777,10 +777,8 @@ Simulation::outputConfigurationData(){
 				} else {
 					fout_interaction << 0 << ' ';
 				}
-				vec3d xi =  sys.interaction[k].contact.get_disp_tan();
-				vec3d ftest = sys.interaction[k].contact.get_f_test();
-				fout_interaction << xi.x << ' ' << xi.y << ' ' << xi.z << ' ';
-				fout_interaction << ftest.x << ' ' << ftest.y << ' ' << ftest.z << endl;
+				fout_interaction << endl;
+
 			}
 		}
 	}
