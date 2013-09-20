@@ -153,7 +153,7 @@ public:
 	double ratio_dashpot_total;
 	bool friction;
 	bool colloidalforce;
-	bool brownian;
+//	bool brownian;
 	/*
 	 * Lubrication model
 	 * 0 no lubrication
@@ -162,7 +162,6 @@ public:
 	 * 3 1/xi lubrication for h>0 and tangential dashpot.
 	 */
 	int lubrication_model;
-	
 	int nb_interaction;
 	/*
 	 * Leading term of lubrication force is 1/gap_nondim, 
@@ -200,19 +199,16 @@ public:
 	double max_contact_velo_normal;
 	double ave_overlap;
 	int contact_nb;
-	int cnt_monitored_data;
+	double ratio_dynamic_friction;
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
 	ofstream fout_int_data;
-	
-	ofstream fout_sfric;
-	ofstream fout_dfric;
-	
-	
-	double total_energy;
-	
+	int cnt_static_to_dynamic;
+	int rate_static_to_dynamic;
+	double total_energy; // for initial-config generation
+		
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
@@ -306,16 +302,26 @@ public:
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
-//	void set_frictionlaw(double val){frictionlaw = val;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
 	inline double get_log_lub_coeff_staticfriction(){
 		cerr << "not allowed\n";
 		exit(1);
 		return log_lub_coeff_contact_tan_dashpot;
 	}
-	inline double get_log_lub_coeff_dynamicfriction(){return log_lub_coeff_contact_tan_total;}
+	inline double get_log_lub_coeff_dynamicfriction(){
+		/* In a sliding state, the resistance coeffient is the sum of
+		 * lubrication and dashpot.
+		 * In our standard model, we do not set the dashpot.
+		 * Only tangential lubrications are considered.
+		 */
+		return log_lub_coeff_contact_tan_total;
+	}
 	inline double get_ratio_dashpot_total(){return ratio_dashpot_total;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-
+	double get_rate_static_to_dynamic(){return rate_static_to_dynamic;}
+	double get_ratio_dynamic_friction(){return ratio_dynamic_friction;}
+	void incrementCounter_static_to_dynamic(){
+		cnt_static_to_dynamic++;
+	}
 };
 #endif /* defined(__LF_DEM__System__) */

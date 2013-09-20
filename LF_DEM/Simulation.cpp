@@ -338,7 +338,7 @@ Simulation::setDefaultParameters(){
 	 *
 	 */
 	sys.contact_relaxzation_time = 1e-2;
-	sys.contact_relaxzation_time_tan = 1e-2;
+	sys.contact_relaxzation_time_tan = 0;
 	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
@@ -475,9 +475,9 @@ Simulation::evaluateData(){
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
-	if (sys.brownian) {
-		total_stress += sys.total_brownian_stress;
-	}
+	//	if (sys.brownian) {
+	//		total_stress += sys.total_brownian_stress;
+	//	}
 	/*
 	 * Viscosity is only the increment of stress (=del_eta).
 	 * The total viscosity should be 
@@ -566,9 +566,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#20: Viscosity(Colloidal force GU)" << endl;
 		fout_rheo << "#21: N1(Colloidal force GU)" << endl;
 		fout_rheo << "#22: N2(Colloidal force GU)" << endl;
-		fout_rheo << "#23: Viscosity(brownian)" << endl;
-		fout_rheo << "#24: N1(brownian)" << endl;
-		fout_rheo << "#25: N2(brownian)" << endl;
+		fout_rheo << "#23: Viscosity(brownian)" << endl; // not yet
+		fout_rheo << "#24: N1(brownian)" << endl;// not yet
+		fout_rheo << "#25: N2(brownian)" << endl;// not yet
 		fout_rheo << "#26: min gap (non-dim)" << endl;
 		fout_rheo << "#27: max tangential displacement" << endl;
 		fout_rheo << "#28: Average normal contact force" << endl;
@@ -584,7 +584,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#38: particle pressure" << endl;
 		fout_rheo << "#39: particle pressure contact" << endl;
 		fout_rheo << "#40: particle pressure colloidal force" << endl;
-		fout_rheo << "#41: number of active interactions" << endl;
+		fout_rheo << "#41: ratio of dynamic friction" << endl;
+		fout_rheo << "#42: rate of static friction to dynamic" << endl;
+		fout_rheo << "#43: number of active interactions" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -629,13 +631,17 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.max_contact_velo_normal << ' '; //32
 	fout_rheo << sys.max_contact_velo_tan << ' '; //33
 	fout_rheo << sys.getParticleContactNumber() << ' '; //34
+	fout_rheo << sys.get_ratio_dynamic_friction();
+	
 	fout_rheo << sys.get_kn() << ' '; //35
 	fout_rheo << sys.get_kt() << ' '; //36
 	fout_rheo << sys.get_dt() << ' '; //37
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
-	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
+	fout_rheo << sys.get_ratio_dynamic_friction() << ' ';//41
+	fout_rheo << sys.get_rate_static_to_dynamic() << ' ';//42
+	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//43
 	fout_rheo << endl;
 }
 

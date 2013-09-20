@@ -34,13 +34,13 @@ System::~System(){
 	DELETE(v_hydro);
 	DELETE(v_cont);
 	DELETE(v_colloidal);
-//	if(brownian){
-//		DELETE(fb);
-//		DELETE(v_Brownian_init);
-//		DELETE(v_Brownian_mid);
-//		DELETE(v_lub_cont_mid);
-//		DELETE(lub_cont_forces_init);
-//	}
+	//	if(brownian){
+	//		DELETE(fb);
+	//		DELETE(v_Brownian_init);
+	//		DELETE(v_Brownian_mid);
+	//		DELETE(v_lub_cont_mid);
+	//		DELETE(lub_cont_forces_init);
+	//	}
 };
 
 void
@@ -82,7 +82,7 @@ System::allocateRessources(){
 	//		}
 	//		fb = new BrownianForce(this);
 	//	}
-	stokes_solver.init(np, brownian);
+	stokes_solver.init(np, false);
 }
 
 
@@ -152,12 +152,12 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void
 System::setupSystem(){
-	if (kb_T == 0) {
-		brownian = false;
-	} else {
-		brownian = true;
-		integration_method = 2; // > force Euler
-	}
+	//	if (kb_T == 0) {
+	//		brownian = false;
+	//	} else {
+	//		brownian = true;
+	//		integration_method = 2; // > force Euler
+	//	}
 	if (mu_static > 0) {
 		friction = true;
 	} else {
@@ -198,6 +198,8 @@ System::setupSystem(){
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
+	cnt_static_to_dynamic = 0;
+
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -229,15 +231,15 @@ System::setupSystem(){
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
-
+	
 	if (lubrication_model == 1) {
 		ratio_dashpot_total = 0;
 	}
-
+	
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	cerr << "ratio_dashpot_total = " << ratio_dashpot_total << endl;
-
+	
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
@@ -251,14 +253,13 @@ System::setupSystem(){
 	stokes_solver.initialize();
 	// initialize the brownian force after the solver, as it assumes
 	// the cholmod_common of the solver is already initialized
-	if (brownian) {
-		fb->init();
-		brownianstress_calc_nb = 0;
-	}
+	//	if (brownian) {
+	//		fb->init();
+	//		brownianstress_calc_nb = 0;
+	//	}
 	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
-	cnt_monitored_data = 0;
 	if (dimension == 2) {
 		twodimension = true;
 		setSystemVolume(2*radius[np-1]);
@@ -290,7 +291,7 @@ System::timeEvolutionEulersMethod(){
 	updateVelocityLubrication();
 	
 	deltaTimeEvolution();
-
+	
 }
 
 void
@@ -493,11 +494,11 @@ System::deltaTimeEvolutionCorrector(){
 //    stokes_solver.resetResistanceMatrix("direct");
 //    addStokesDrag();
 //    buildLubricationTerms();
-//	
+//
 //    stokes_solver.completeResistanceMatrix();
 //    buildContactTerms();
 //    stokes_solver.solve(v_lub_cont);
-//	
+//
 //	if (displubcont) {
 //		stokes_solver.getRHS(lub_cont_forces_init);
 //	}
@@ -506,11 +507,11 @@ System::deltaTimeEvolutionCorrector(){
 //    //
 //    // we do not call solvingIsDone() before new solve(), because
 //    // R_FU has not changed, so same factorization is safely used
-//	
+//
 //	stokes_solver.setRHS( fb->generate_invLFb() );
 //	stokes_solver.solve_CholTrans( v_Brownian_init );
 //	stokes_solver.solvingIsDone();
-//	
+//
 //    // move particles to intermediate point
 //    for (int i=0; i<np; i++) {
 //		int i3 = 3*i;
@@ -540,7 +541,7 @@ System::deltaTimeEvolutionCorrector(){
 //		velocity_predictor[i] = velocity[i];
 //		ang_velocity_predictor[i] = ang_velocity[i];
 //	}
-//	
+//
 //	/*********************************************************/
 //	/*                   Corrector                           */
 //	/*********************************************************/
@@ -611,7 +612,7 @@ System::timeEvolution(double strain_next){
 				timeEvolutionPredictorCorrectorMethod();
 				break;
 			case 2:
-//				timeEvolutionBrownian();
+				//				timeEvolutionBrownian();
 				break;
 		}
 		ts++;
@@ -703,7 +704,7 @@ System::updateInteractions(){
 			}
 		}
 	}
-//	evaluateFrictionalState();
+	//	evaluateFrictionalState();
 }
 
 void
@@ -1146,6 +1147,10 @@ System::evaluateMaxAngVelocity(){
 
 void
 System::analyzeState(){
+	static double previous_strain = 0;
+	double strain_interval = shear_strain-previous_strain;
+	previous_strain = shear_strain;
+	
 	max_velocity = evaluateMaxVelocity();
 	velocity_history.push_back(max_velocity);
 	max_ang_velocity = evaluateMaxAngVelocity();
@@ -1158,6 +1163,7 @@ System::analyzeState(){
 	max_fc_tan = 0;
 	intr_max_fc_normal = -1;
 	intr_max_fc_tan = -1;
+	int cnt_sliding_contact=0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (interaction[k].get_gap_nondim() < min_gap_nondim) {
@@ -1165,6 +1171,9 @@ System::analyzeState(){
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
+				if (interaction[k].contact.staticfriction == false){
+					cnt_sliding_contact++;
+				}
 				sum_fc_normal += interaction[k].contact.get_f_contact_normal_norm();
 				if (interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal) {
 					max_fc_normal = interaction[k].contact.get_f_contact_normal_norm();
@@ -1195,12 +1204,14 @@ System::analyzeState(){
 		max_fc_normal_history.push_back(max_fc_normal);
 		max_fc_tan_history.push_back(max_fc_tan);
 	}
-	
 	if (contact_nb > 0) {
 		average_fc_normal = sum_fc_normal/contact_nb;
 	} else {
 		average_fc_normal = 0;
 	}
+	rate_static_to_dynamic = cnt_static_to_dynamic/(strain_interval*np);
+	ratio_dynamic_friction = (contact_nb-cnt_sliding_contact)*(1./contact_nb);
+	cnt_static_to_dynamic = 0;
 }
 
 void
@@ -1216,11 +1227,6 @@ void
 System::openFileInteractionData(){
 	string int_data_filename = "irecord_" + simu_name + ".dat";
 	fout_int_data.open(int_data_filename.c_str());
-	
-	string sfric_filename = "sf_" + simu_name + ".dat";
-	string dfric_filename = "df_" + simu_name + ".dat";
-	fout_sfric.open(sfric_filename.c_str());
-	fout_dfric.open(dfric_filename.c_str());
 }
 
 double
@@ -1314,16 +1320,16 @@ System::adjustContactModelParameters(){
 		}
 		kt = kt_try;
 	}
-//	double max_velocity = 0;
-//	for (int j=0; j<velocity_history.size(); j++){
-//		if (max_velocity < velocity_history[j]){
-//			max_velocity = velocity_history[j];
-//		}
-//	}
-//	double dt_try = disp_max/max_velocity;
-//	if (dt_try < dt){
-//		dt = dt_try;
-//	}
+	//	double max_velocity = 0;
+	//	for (int j=0; j<velocity_history.size(); j++){
+	//		if (max_velocity < velocity_history[j]){
+	//			max_velocity = velocity_history[j];
+	//		}
+	//	}
+	//	double dt_try = disp_max/max_velocity;
+	//	if (dt_try < dt){
+	//		dt = dt_try;
+	//	}
 	
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].contact.updateContactModel();

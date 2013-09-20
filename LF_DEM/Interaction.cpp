@@ -106,9 +106,6 @@ Interaction::activate(int i, int j){
 void
 Interaction::deactivate(){
 	// r > lub_max
-#ifdef RECORD_HISTORY
-	gap_history.clear();
-#endif
 	outputSummary();
 	contact.deactivate();
 	active = false;
@@ -160,15 +157,6 @@ Interaction::updateState(bool &deactivated){
 			f_colloidal = -f_colloidal_norm*nvec;
 		}
 	}
-#ifdef RECORD_HISTORY
-	if (!sys->in_predictor) {
-		gap_history.push_back(gap_nondim);
-		if (contact) {
-			disp_tan_sq_history.push_back(disp_tan.sq_norm());
-			overlap_history.push_back(-gap_nondim);
-		}
-	}
-#endif
 }
 
 
@@ -243,38 +231,17 @@ Interaction::calcRelativeVelocities(){
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
-
 void
 Interaction::addColloidalStress(){
 	colloidal_stresslet_XF.set(rvec, f_colloidal);
 }
-
-#ifdef RECORD_HISTORY
-void
-Interaction::outputHistory(){
-	cerr << "cnt_sliding =" << contact.cnt_sliding << ' '  << endl;
-	if (sys->strain() > 1 && disp_tan_sq_history.size() > 10) {
-		for (int i=0; i<disp_tan_sq_history.size(); i += 10) {
-			cout << overlap_history[i] << ' ' << sqrt(disp_tan_sq_history[i]) << endl;
-		}
-		cout << endl;
-		if (sys->cnt_monitored_data++ == 200) {
-			exit(1);
-		}
-	}
-	disp_tan_sq_history.clear();
-	overlap_history.clear();
-}
-#endif
 
 void
 Interaction::outputSummary(){
 	duration = sys->get_shear_strain()-strain_lub_start;
 	sys->fout_int_data << strain_lub_start << ' '; // 1
 	sys->fout_int_data << duration << ' '; // 2
-	sys->fout_int_data << duration-contact.get_duration() << ' '; // 3
-	sys->fout_int_data << contact.get_duration() << ' '; // 4
-	sys->fout_int_data << contact.get_cnt_sliding() << ' '; //  7
+	sys->fout_int_data << contact.get_duration() << ' '; // 3
 	sys->fout_int_data << endl;
 }
 

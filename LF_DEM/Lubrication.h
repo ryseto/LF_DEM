@@ -8,7 +8,6 @@
 
 #ifndef __LF_DEM__Lubrication__
 #define __LF_DEM__Lubrication__
-//#define RECORD_HISTORY 1
 
 #include <iostream>
 #include <iomanip>
@@ -29,11 +28,9 @@ private:
 	Interaction *interaction;
 
 	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
-
 	//======= particles data  ====================//
 	int p0, p0_6;
 	int p1, p1_6;
-	
 
 	vec3d *nvec;
 	double *nxnx;

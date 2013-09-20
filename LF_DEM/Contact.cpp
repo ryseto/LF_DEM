@@ -57,14 +57,12 @@ Contact::activate(){
 	double lub_coeff = sys->get_lub_coeff_contact();
 	double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
 	interaction->lubrication.setResistanceCoeff(lub_coeff, log_lub_coeff);
+	strain_contact_start = sys->get_shear_strain();
 }
 
 void
 Contact::deactivate(){
 	// r > a0 + a1
-#ifdef RECORD_HISTORY
-	outputHistory();
-#endif
 	active = false;
 	disp_tan.reset();
 	f_contact_normal_norm = 0;
@@ -108,9 +106,11 @@ Contact::frictionlaw(){
 	}
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		if (staticfriction) {
+			sys->incrementCounter_static_to_dynamic();
+		}
 		staticfriction = false;
 		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		cnt_sliding++; 
 	} else {
 		staticfriction = true;
 	}
