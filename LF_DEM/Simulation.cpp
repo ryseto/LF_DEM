@@ -79,15 +79,27 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
 		sys.timeEvolution(strain_next);
 		evaluateData();
+		cerr << sys.get_kn() << endl;
 		outputRheologyData();
 		outputStressTensorData();
 		if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
 			outputConfigurationData();
 			cnt_config_out ++;
 		}
-		if (kn_kt_adjustment) {
+		if (sys.kn_kt_adjustment) {
+			cerr << strain_knkt_adjustment << endl;
 			if (sys.get_shear_strain() >= strain_knkt_adjustment-1e-8) {
-				sys.adjustContactModelParameters();
+				if (sys.adjustContactModelParameters() == 1){
+					cout << "phi kn kt dt" << endl;
+					cout << volume_fraction << ' ';
+					cout << sys.get_kn() << ' ' ;
+					cout << sys.get_kt() << ' ';
+					cout << sys.get_dt() << endl;
+					if (sys.get_kn() > sys.max_kn){
+						cout << "kn cannot be determined. It can be larger than the upper limit." << endl;
+					}
+					return;
+				}
 				cnt_knkt_adjustment ++;
 			}
 		}
@@ -168,7 +180,7 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "kn_kt_adjustment") {
-		kn_kt_adjustment = str2bool(value);
+		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
 		strain_interval_knkt_adjustment = atof(value.c_str());
 	} else if (keyword == "colloidalforce_length") {
@@ -302,13 +314,11 @@ Simulation::setDefaultParameters(){
 	 * 2 Brownian (if kT > 0).
 	 */
 	int _integration_method = 1;
-	
 	/*
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
 	 * 2 log(1/xi) lubrication (only squeeze mode)
-	 * 3 mix (only squeeze mode for h>0, and tangential dashpot for h>0)
 	 *
 	 */
 	int _lubrication_model = 2;
@@ -340,7 +350,7 @@ Simulation::setDefaultParameters(){
 	 *
 	 */
 	sys.contact_relaxzation_time = 1e-2;
-	sys.contact_relaxzation_time_tan = 1e-2;
+	sys.contact_relaxzation_time_tan = 0;
 	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
@@ -362,10 +372,12 @@ Simulation::setDefaultParameters(){
 	 */
 	double _kn = 5000;
 	double _kt = 1000;
-	kn_kt_adjustment = false;
+	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
+	sys.max_kn = 50000;
+	
 	
 	/*
 	 * Colloidal force parameter
@@ -477,9 +489,9 @@ Simulation::evaluateData(){
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
-	if (sys.brownian) {
-		total_stress += sys.total_brownian_stress;
-	}
+	//	if (sys.brownian) {
+	//		total_stress += sys.total_brownian_stress;
+	//	}
 	/*
 	 * Viscosity is only the increment of stress (=del_eta).
 	 * The total viscosity should be 
@@ -568,9 +580,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#20: Viscosity(Colloidal force GU)" << endl;
 		fout_rheo << "#21: N1(Colloidal force GU)" << endl;
 		fout_rheo << "#22: N2(Colloidal force GU)" << endl;
-		fout_rheo << "#23: Viscosity(brownian)" << endl;
-		fout_rheo << "#24: N1(brownian)" << endl;
-		fout_rheo << "#25: N2(brownian)" << endl;
+		fout_rheo << "#23: Viscosity(brownian)" << endl; // not yet
+		fout_rheo << "#24: N1(brownian)" << endl;// not yet
+		fout_rheo << "#25: N2(brownian)" << endl;// not yet
 		fout_rheo << "#26: min gap (non-dim)" << endl;
 		fout_rheo << "#27: max tangential displacement" << endl;
 		fout_rheo << "#28: Average normal contact force" << endl;
@@ -586,7 +598,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#38: particle pressure" << endl;
 		fout_rheo << "#39: particle pressure contact" << endl;
 		fout_rheo << "#40: particle pressure colloidal force" << endl;
-		fout_rheo << "#41: number of active interactions" << endl;
+		fout_rheo << "#41: ratio of dynamic friction" << endl;
+		fout_rheo << "#42: rate of static friction to dynamic" << endl;
+		fout_rheo << "#43: number of active interactions" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -637,7 +651,9 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
-	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
+	fout_rheo << sys.get_ratio_dynamic_friction() << ' ';//41
+	fout_rheo << sys.get_rate_static_to_dynamic() << ' ';//42
+	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//43
 	fout_rheo << endl;
 }
 
@@ -777,10 +793,8 @@ Simulation::outputConfigurationData(){
 				} else {
 					fout_interaction << 0 << ' ';
 				}
-				vec3d xi =  sys.interaction[k].contact.get_disp_tan();
-				vec3d ftest = sys.interaction[k].contact.get_f_test();
-				fout_interaction << xi.x << ' ' << xi.y << ' ' << xi.z << ' ';
-				fout_interaction << ftest.x << ' ' << ftest.y << ' ' << ftest.z << endl;
+				fout_interaction << endl;
+
 			}
 		}
 	}

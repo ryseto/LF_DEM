@@ -8,7 +8,6 @@
 
 #ifndef __LF_DEM__Contact__
 #define __LF_DEM__Contact__
-//#define RECORD_HISTORY 1
 
 #include <iostream>
 #include <iomanip>
@@ -40,10 +39,6 @@ private:
 	double strain_contact_start; // the strain at h=0.
 	double duration_contact; // entire duration for h < 0
 	int cnt_sliding;  // to count the number of slips.
-#ifdef RECORD_HISTORY
-	vector <double> disp_tan_sq_history;
-	void outputHistory();
-#endif
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -62,13 +57,6 @@ private:
 	bool old_state;
 	vec3d tvec;
 	double supportable_tanforce;
-	vec3d resforce_tan;
-//	vec3d lubforce_tan;
-	vec3d f_test_vec;
-	double previous_f_test;
-	bool previous_state;
-	double previous_supportable_tanforce;
-	vec3d previous_disp_tan;
 
 protected:
 public:
@@ -85,7 +73,7 @@ public:
 	void updateContactModel();
 	void resetObservables();
 	void frictionlaw();
-
+	void frictionlaw_legacy();
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();
@@ -95,8 +83,6 @@ public:
 	double getContactVelocity();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
-	inline vec3d get_f_test(){return f_test_vec;}
-	
 	inline double disp_tan_norm(){return disp_tan.norm();}
 	void addContactStress();
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
@@ -108,9 +94,7 @@ public:
 	inline double get_duration(){
 		return duration_contact;
 	}
-	inline double get_cnt_sliding(){
-		return cnt_sliding;
-	}
+
 	vec3d get_disp_tan(){return disp_tan;}
 
 };

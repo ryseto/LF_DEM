@@ -93,8 +93,7 @@ Interaction::activate(int i, int j){
 	contact.getInteractionData();
 	if (gap_nondim <= 0) {
 		contact.activate();
-	}
-	else{
+	} else {
 		contact.deactivate();
 	}
 	contact.resetObservables();
@@ -102,15 +101,11 @@ Interaction::activate(int i, int j){
 	lubrication.getInteractionData();
 	strain_lub_start = sys->get_shear_strain(); // for output
 	lubrication.calcLubConstants();
-	
 }
 
 void
 Interaction::deactivate(){
 	// r > lub_max
-#ifdef RECORD_HISTORY
-	gap_history.clear();
-#endif
 	outputSummary();
 	contact.deactivate();
 	active = false;
@@ -125,60 +120,43 @@ Interaction::updateFrictionalState(){
 	contact.frictionlaw();
 }
 
-
 void
 Interaction::updateState(bool &deactivated){
 	/* update tangential displacement: we do it before updating nvec
 	 * as it should be along the tangential vector defined in the previous time step
 	 */
+	calcNormalVectorDistanceGap();
 	if (contact.active) {
-		if (sys->friction) {
-			calcRelativeVelocities();
-			contact.incrementTangentialDisplacement();
+		if (gap_nondim > 0){
+			contact.deactivate();
 		}
-		calcNormalVectorDistanceGap();
+	} else {
+		if (gap_nondim <= 0) {
+			contact.activate();
+		} else if (r > interaction_range_scaled) {
+			deactivate();
+			deactivated = true;
+			return;
+		}
+	}
+	
+	if (contact.active) {
 		contact.calcContactInteraction();
-		if (sys->colloidalforce) {
+	}
+	if (sys->colloidalforce) {
+		if (contact.active) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
 			 * This force does not affect the friction law,
 			 * i.e. it is separated from Fc_normal_norm.
 			 */
 			f_colloidal_norm = colloidalforce_amplitude;
 			f_colloidal = -f_colloidal_norm*nvec;
-		}
-		if (sys->in_corrector) {
-			/* Keep the contact state in predictor.
-			 */
-			if (gap_nondim > 0) {
-				contact.deactivate();
-			}
-		}
-	} else { /* separating */
-		calcNormalVectorDistanceGap();
-		if (sys->colloidalforce) {
+		} else {
+			 /* separating */
 			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
 			f_colloidal = -f_colloidal_norm*nvec;
 		}
-		if (sys->in_corrector) {
-			/* If r > interaction_range_scaled, deactivate the interaction object.
-			 */
-			if (gap_nondim <= 0) {
-				contact.activate();
-			} else if (r > interaction_range_scaled) {
-				deactivate();
-				deactivated = true;
-			}
-		}
 	}
-#ifdef RECORD_HISTORY
-	if (!sys->in_predictor) {
-		gap_history.push_back(gap_nondim);
-		if (contact) {
-			disp_tan_sq_history.push_back(disp_tan.sq_norm());
-			overlap_history.push_back(-gap_nondim);
-		}
-	}
-#endif
 }
 
 
@@ -210,7 +188,6 @@ Interaction::updateStateRelax(bool &deactivated){
 		}
 	}
 }
-
 
 /*
  * Colloidal stabilizing force
@@ -254,38 +231,17 @@ Interaction::calcRelativeVelocities(){
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
-
 void
 Interaction::addColloidalStress(){
 	colloidal_stresslet_XF.set(rvec, f_colloidal);
 }
-
-#ifdef RECORD_HISTORY
-void
-Interaction::outputHistory(){
-	cerr << "cnt_sliding =" << contact.cnt_sliding << ' '  << endl;
-	if (sys->strain() > 1 && disp_tan_sq_history.size() > 10) {
-		for (int i=0; i<disp_tan_sq_history.size(); i += 10) {
-			cout << overlap_history[i] << ' ' << sqrt(disp_tan_sq_history[i]) << endl;
-		}
-		cout << endl;
-		if (sys->cnt_monitored_data++ == 200) {
-			exit(1);
-		}
-	}
-	disp_tan_sq_history.clear();
-	overlap_history.clear();
-}
-#endif
 
 void
 Interaction::outputSummary(){
 	duration = sys->get_shear_strain()-strain_lub_start;
 	sys->fout_int_data << strain_lub_start << ' '; // 1
 	sys->fout_int_data << duration << ' '; // 2
-	sys->fout_int_data << duration-contact.get_duration() << ' '; // 3
-	sys->fout_int_data << contact.get_duration() << ' '; // 4
-	sys->fout_int_data << contact.get_cnt_sliding() << ' '; //  7
+	sys->fout_int_data << contact.get_duration() << ' '; // 3
 	sys->fout_int_data << endl;
 }
 

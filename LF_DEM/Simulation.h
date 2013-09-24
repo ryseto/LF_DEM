@@ -19,7 +19,6 @@ class Simulation{
 private:
 	System sys;
 	string filename_;
-	bool kn_kt_adjustment;
 	double shear_strain_end;
 	vector<vec3d> initial_position;
 	vector<double> radius;

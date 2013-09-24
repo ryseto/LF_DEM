@@ -34,13 +34,13 @@ System::~System(){
 	DELETE(v_hydro);
 	DELETE(v_cont);
 	DELETE(v_colloidal);
-//	if(brownian){
-//		DELETE(fb);
-//		DELETE(v_Brownian_init);
-//		DELETE(v_Brownian_mid);
-//		DELETE(v_lub_cont_mid);
-//		DELETE(lub_cont_forces_init);
-//	}
+	//	if(brownian){
+	//		DELETE(fb);
+	//		DELETE(v_Brownian_init);
+	//		DELETE(v_Brownian_mid);
+	//		DELETE(v_lub_cont_mid);
+	//		DELETE(lub_cont_forces_init);
+	//	}
 };
 
 void
@@ -82,7 +82,7 @@ System::allocateRessources(){
 	//		}
 	//		fb = new BrownianForce(this);
 	//	}
-	stokes_solver.init(np, brownian);
+	stokes_solver.init(np, false);
 }
 
 
@@ -152,12 +152,12 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void
 System::setupSystem(){
-	if (kb_T == 0) {
-		brownian = false;
-	} else {
-		brownian = true;
-		integration_method = 2; // > force Euler
-	}
+	//	if (kb_T == 0) {
+	//		brownian = false;
+	//	} else {
+	//		brownian = true;
+	//		integration_method = 2; // > force Euler
+	//	}
 	if (mu_static > 0) {
 		friction = true;
 	} else {
@@ -198,6 +198,8 @@ System::setupSystem(){
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
+	cnt_static_to_dynamic = 0;
+
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (contact_relaxzation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -211,34 +213,33 @@ System::setupSystem(){
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
-
-	if (contact_relaxzation_time_tan < 0) {
-		// 1/(h+c) --> 1/c
-		log_lub_coeff_contact_tan_dashpot = log(1/lub_reduce_parameter);
-	} else {
-		/* t = beta/kn
-		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
-		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan; //
-	}
+	/* t = beta/kn
+	 *  beta = t*kn
+	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+	 */
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
 	 *
 	 */
-	if (lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
-	} else {
+	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
+		log_lub_coeff_contact_tan_dashpot = 0;
+	} else if (lubrication_model == 2) {
+		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
-
+	
+	if (lubrication_model == 1) {
+		ratio_dashpot_total = 0;
+	}
+	
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	cerr << "ratio_dashpot_total = " << ratio_dashpot_total << endl;
-
+	
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
@@ -252,14 +253,13 @@ System::setupSystem(){
 	stokes_solver.initialize();
 	// initialize the brownian force after the solver, as it assumes
 	// the cholmod_common of the solver is already initialized
-	if (brownian) {
-		fb->init();
-		brownianstress_calc_nb = 0;
-	}
+	//	if (brownian) {
+	//		fb->init();
+	//		brownianstress_calc_nb = 0;
+	//	}
 	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
-	cnt_monitored_data = 0;
 	if (dimension == 2) {
 		twodimension = true;
 		setSystemVolume(2*radius[np-1]);
@@ -267,6 +267,7 @@ System::setupSystem(){
 		twodimension = false;
 		setSystemVolume();
 	}
+	cnt_prameter_convergence = 0;
 }
 
 void
@@ -289,15 +290,16 @@ System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	evaluateFrictionalState();
+	
 	deltaTimeEvolution();
+	
 }
 
 void
 System::evaluateFrictionalState(){
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()){
-			interaction[k].updateFrictionalState();
+			interaction[k].contact.frictionlaw();
 		}
 	}
 }
@@ -493,11 +495,11 @@ System::deltaTimeEvolutionCorrector(){
 //    stokes_solver.resetResistanceMatrix("direct");
 //    addStokesDrag();
 //    buildLubricationTerms();
-//	
+//
 //    stokes_solver.completeResistanceMatrix();
 //    buildContactTerms();
 //    stokes_solver.solve(v_lub_cont);
-//	
+//
 //	if (displubcont) {
 //		stokes_solver.getRHS(lub_cont_forces_init);
 //	}
@@ -506,11 +508,11 @@ System::deltaTimeEvolutionCorrector(){
 //    //
 //    // we do not call solvingIsDone() before new solve(), because
 //    // R_FU has not changed, so same factorization is safely used
-//	
+//
 //	stokes_solver.setRHS( fb->generate_invLFb() );
 //	stokes_solver.solve_CholTrans( v_Brownian_init );
 //	stokes_solver.solvingIsDone();
-//	
+//
 //    // move particles to intermediate point
 //    for (int i=0; i<np; i++) {
 //		int i3 = 3*i;
@@ -540,7 +542,7 @@ System::deltaTimeEvolutionCorrector(){
 //		velocity_predictor[i] = velocity[i];
 //		ang_velocity_predictor[i] = ang_velocity[i];
 //	}
-//	
+//
 //	/*********************************************************/
 //	/*                   Corrector                           */
 //	/*********************************************************/
@@ -611,7 +613,7 @@ System::timeEvolution(double strain_next){
 				timeEvolutionPredictorCorrectorMethod();
 				break;
 			case 2:
-//				timeEvolutionBrownian();
+				//				timeEvolutionBrownian();
 				break;
 		}
 		ts++;
@@ -684,6 +686,16 @@ void
 System::updateInteractions(){
 	/* default value of `_in_predictor' is false
 	 */
+	if (friction) {
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_contact()){
+				interaction[k].calcRelativeVelocities();
+				interaction[k].contact.incrementTangentialDisplacement();
+			}
+		}
+	}
+	
+	
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
 		if (interaction[k].is_active()){
@@ -693,6 +705,7 @@ System::updateInteractions(){
 			}
 		}
 	}
+	//	evaluateFrictionalState();
 }
 
 void
@@ -833,9 +846,6 @@ System::buildLubricationTerms(bool rhs){
 				stokes_solver.doneBlocks(i);
 			}
 			break;
-			
-			
-			
 		default:
 			cerr << "lubrication_model = 0 is not implemented yet.\n";
 			exit(1);
@@ -1143,10 +1153,15 @@ System::evaluateMaxAngVelocity(){
 
 void
 System::analyzeState(){
+	static double previous_strain = 0;
+	double strain_interval = shear_strain-previous_strain;
+	previous_strain = shear_strain;
+	
 	max_velocity = evaluateMaxVelocity();
-	velocity_history.push_back(max_velocity);
+
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
+	sliding_velocity_history.push_back(max_contact_velo_tan);
 	contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lx;
@@ -1155,6 +1170,7 @@ System::analyzeState(){
 	max_fc_tan = 0;
 	intr_max_fc_normal = -1;
 	intr_max_fc_tan = -1;
+	int cnt_sliding_contact=0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (interaction[k].get_gap_nondim() < min_gap_nondim) {
@@ -1162,6 +1178,9 @@ System::analyzeState(){
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
+				if (interaction[k].contact.staticfriction == false){
+					cnt_sliding_contact++;
+				}
 				sum_fc_normal += interaction[k].contact.get_f_contact_normal_norm();
 				if (interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal) {
 					max_fc_normal = interaction[k].contact.get_f_contact_normal_norm();
@@ -1192,12 +1211,14 @@ System::analyzeState(){
 		max_fc_normal_history.push_back(max_fc_normal);
 		max_fc_tan_history.push_back(max_fc_tan);
 	}
-	
 	if (contact_nb > 0) {
 		average_fc_normal = sum_fc_normal/contact_nb;
 	} else {
 		average_fc_normal = 0;
 	}
+	rate_static_to_dynamic = cnt_static_to_dynamic/(strain_interval*np);
+	ratio_dynamic_friction = (contact_nb-cnt_sliding_contact)*(1./contact_nb);
+	cnt_static_to_dynamic = 0;
 }
 
 void
@@ -1213,11 +1234,6 @@ void
 System::openFileInteractionData(){
 	string int_data_filename = "irecord_" + simu_name + ".dat";
 	fout_int_data.open(int_data_filename.c_str());
-	
-	string sfric_filename = "sf_" + simu_name + ".dat";
-	string dfric_filename = "df_" + simu_name + ".dat";
-	fout_sfric.open(sfric_filename.c_str());
-	fout_dfric.open(dfric_filename.c_str());
 }
 
 double
@@ -1273,7 +1289,7 @@ void calcMean_StdDev(vector<double> history,
 }
 
 
-void
+int
 System::adjustContactModelParameters(){
 	/*
 	 * kn, kt and dt are determined in one test simulation.
@@ -1284,51 +1300,62 @@ System::adjustContactModelParameters(){
 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
 	 * Only increases of kn and kt are accepted.
 	 */
+	double kn_previous = kn;
+	double kt_previous = kt;
 	double max_increment = 1000;
 	/* determination of kn
 	 */
 	double mean_max_fc_normal, stddev_max_fc_normal;
 	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-	double representative_max_fc_normal = mean_max_fc_normal;
-	double kn_try = representative_max_fc_normal/overlap_target;
+	double kn_try = mean_max_fc_normal/overlap_target;
 	if (kn_try > kn) {
 		if (kn_try > kn*max_increment){
 			kn_try = kn*max_increment;
 		}
 		kn = kn_try;
-		cerr << representative_max_fc_normal << endl;
 		lub_coeff_contact = 4*kn*contact_relaxzation_time;
 	}
 	/* determination of kt
 	 */
 	double mean_max_fc_tan, stddev_max_fc_tan;
 	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-	double representative_max_fc_tan = mean_max_fc_tan;
-	double kt_try = representative_max_fc_tan/disp_tan_target;
+	double kt_try = mean_max_fc_tan/disp_tan_target;
 	if (kt_try > kt){
 		if (kt_try > kt*max_increment){
 			kt_try = kt*max_increment;
 		}
 		kt = kt_try;
 	}
-//	double max_velocity = 0;
-//	for (int j=0; j<velocity_history.size(); j++){
-//		if (max_velocity < velocity_history[j]){
-//			max_velocity = velocity_history[j];
-//		}
-//	}
-//	double dt_try = disp_max/max_velocity;
-//	if (dt_try < dt){
-//		dt = dt_try;
-//	}
+	double average_max_tanvelocity = 0;
+	for (int j=0; j<sliding_velocity_history.size(); j++){
+		average_max_tanvelocity += sliding_velocity_history[j];
+	}
+	average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
+	cerr << "average_max_velocity = " << average_max_tanvelocity << endl;
+	cerr << "disp_max " << disp_max << endl;
+	double dt_try = disp_max/average_max_tanvelocity;
+	if (dt_try < dt){
+		dt = dt_try;
+	}
+	cerr << "dt_try = " << dt_try << endl;
 	
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].contact.updateContactModel();
 	}
 	max_fc_normal_history.clear();
 	max_fc_tan_history.clear();
-	velocity_history.clear();
+	sliding_velocity_history.clear();
 	after_parameter_changed = true;
+	
+	if (kn_previous == kn && kt_previous == kt ){
+		cnt_prameter_convergence ++;
+	} else {
+		cnt_prameter_convergence = 0;
+	}
+	if (cnt_prameter_convergence == 5 || kn > max_kn){
+		return 1;
+	}
+	return 0;
 }
 
 void

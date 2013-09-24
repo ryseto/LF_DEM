@@ -18,7 +18,7 @@ int
 GenerateInitConfig::generate(int argc, const char * argv[]){
 	setParameters(argc, argv);
 	sys.set_np(np);
-	sys.brownian = false;
+	//	sys.brownian = false;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);

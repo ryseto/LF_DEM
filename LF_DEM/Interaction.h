@@ -8,7 +8,6 @@
 
 #ifndef __LF_DEM__Interaction__
 #define __LF_DEM__Interaction__
-//#define RECORD_HISTORY 1
 
 #include <iostream>
 #include <iomanip>
@@ -39,7 +38,7 @@ class Interaction{
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
-	unsigned int par_num[2];
+	unsigned int par_num[2]; // <<--- We may change this to p0 and p1 (?)
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
@@ -63,16 +62,9 @@ class Interaction{
 	double strain_lub_start; // the strain when lubrication object starts.
 	double duration; // entire lifetime
 	double max_stress; // Maximum value of stress in the all history of this object.
-#ifdef RECORD_HISTORY
-	vector <double> gap_history;
-	vector <double> overlap_history;
-	vector <double> disp_tan_sq_history;
-	void outputHistory();
-#endif
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
-
 
 	//=======   ===========//
 	void outputSummary();
@@ -81,7 +73,6 @@ class Interaction{
 	double f_colloidal_norm;
 	vec3d f_colloidal;
 	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
-
 protected:
 public:
 	Contact contact;
@@ -127,7 +118,7 @@ public:
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
 		ro = val;
-		ro_12 = ro*(1./2);
+		ro_12 = ro/2;
 	}; // ro = a0 + a1
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//

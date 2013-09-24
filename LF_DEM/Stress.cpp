@@ -185,7 +185,7 @@ System::calcStressesHydroContact(){
     stokes_solver.solve(v_colloidal);
 	/////////////////////////////////////////////////
 	// from that, compute stresses
-//	cout << nb_interaction << endl;
+	//	cout << nb_interaction << endl;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (lubrication_model == 1) {
@@ -228,11 +228,11 @@ System::calcStress(){
 	static double previous_strain = 0;
 	previous_strain = shear_strain;
 	stressReset();
-	if (brownian) {
-	 	//calcStressesHydroContactBrownian();
-	} else {
-		calcStressesHydroContact();
-	}
+	//	if (brownian) {
+	//calcStressesHydroContactBrownian();
+	//	} else {
+	calcStressesHydroContact();
+	//}
 	total_hydro_stress.reset();
 	total_contact_stressGU.reset();
 	total_colloidal_stressGU.reset();
@@ -244,9 +244,9 @@ System::calcStress(){
 		total_hydro_stress += lubstress[i];
 		total_contact_stressGU += contactstressGU[i];
 		total_colloidal_stressGU += colloidalstressGU[i];
-		if (brownian) {
-			total_brownian_stress += brownianstress[i];
-		}
+		//		if (brownian) {
+		//			total_brownian_stress += brownianstress[i];
+		//		}
 	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
