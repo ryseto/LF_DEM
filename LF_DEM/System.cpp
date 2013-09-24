@@ -738,7 +738,7 @@ System::buildLubricationTerms(bool rhs){
 					int j = (*it)->partner(i);
 					if (j > i) {
 						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->lubrication.calcXFunctions();
+						(*it)->lubrication.calcXFunctions();						
 						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
 						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
 						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
@@ -760,6 +760,11 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
+						// if(i==58&&j==97&&(*it)->is_contact()){
+						// 	cout << " pause " << endl;
+						// 	getchar();
+						// }
+
 						vec3d nr_vec = (*it)->get_nvec();
 						(*it)->lubrication.calcXYFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),

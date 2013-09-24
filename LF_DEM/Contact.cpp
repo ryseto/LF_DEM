@@ -11,7 +11,6 @@ Contact::init(System *sys_, Interaction *interaction_){
 	sys = sys_;
 	interaction = interaction_;
 	active = false;
-	just_switched = 0;
 }
 
 void
@@ -143,11 +142,11 @@ Contact::calcContactInteraction(){
 void
 Contact::frictionlaw(){
 	interaction->lubrication.calcLubricationForce();
-	//	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
-	//	if (supportable_tanforce < 0){
-	//		supportable_tanforce = 0;
-	//		}
-	supportable_tanforce = mu*f_contact_normal_norm;
+		supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
+		if (supportable_tanforce < 0){
+			supportable_tanforce = 0;
+			}
+	//	supportable_tanforce = mu*f_contact_normal_norm;
 	double f_test;
 	resforce_tan = interaction->lubrication.get_lubforce_tan();
 	f_test_vec = f_contact_tan+sys->get_ratio_dashpot_total()*resforce_tan;
@@ -197,6 +196,10 @@ Contact::frictionlaw(){
 		}
 	}
 	previous_f_test = f_test;
+	previous_disp_tan = disp_tan;
+	previous_state = staticfriction;
+	previous_supportable_tanforce = supportable_tanforce;
+	
 }
 
 void

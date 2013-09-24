@@ -66,8 +66,9 @@ private:
 //	vec3d lubforce_tan;
 	vec3d f_test_vec;
 	double previous_f_test;
+	bool previous_state;
 	double previous_supportable_tanforce;
-	int just_switched = -1;
+	vec3d previous_disp_tan;
 
 protected:
 public:
