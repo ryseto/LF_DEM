@@ -79,15 +79,27 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
 		sys.timeEvolution(strain_next);
 		evaluateData();
+		cerr << sys.get_kn() << endl;
 		outputRheologyData();
 		outputStressTensorData();
 		if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
 			outputConfigurationData();
 			cnt_config_out ++;
 		}
-		if (kn_kt_adjustment) {
+		if (sys.kn_kt_adjustment) {
+			cerr << strain_knkt_adjustment << endl;
 			if (sys.get_shear_strain() >= strain_knkt_adjustment-1e-8) {
-				sys.adjustContactModelParameters();
+				if (sys.adjustContactModelParameters() == 1){
+					cout << "phi kn kt dt" << endl;
+					cout << volume_fraction << ' ';
+					cout << sys.get_kn() << ' ' ;
+					cout << sys.get_kt() << ' ';
+					cout << sys.get_dt() << endl;
+					if (sys.get_kn() > sys.max_kn){
+						cout << "kn cannot be determined. It can be larger than the upper limit." << endl;
+					}
+					return;
+				}
 				cnt_knkt_adjustment ++;
 			}
 		}
@@ -168,7 +180,7 @@ Simulation::autoSetParameters(const string &keyword,
 	} else if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "kn_kt_adjustment") {
-		kn_kt_adjustment = str2bool(value);
+		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
 		strain_interval_knkt_adjustment = atof(value.c_str());
 	} else if (keyword == "colloidalforce_length") {
@@ -360,10 +372,12 @@ Simulation::setDefaultParameters(){
 	 */
 	double _kn = 5000;
 	double _kt = 1000;
-	kn_kt_adjustment = false;
+	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
+	sys.max_kn = 50000;
+	
 	
 	/*
 	 * Colloidal force parameter
@@ -631,8 +645,6 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.max_contact_velo_normal << ' '; //32
 	fout_rheo << sys.max_contact_velo_tan << ' '; //33
 	fout_rheo << sys.getParticleContactNumber() << ' '; //34
-	fout_rheo << sys.get_ratio_dynamic_friction();
-	
 	fout_rheo << sys.get_kn() << ' '; //35
 	fout_rheo << sys.get_kt() << ' '; //36
 	fout_rheo << sys.get_dt() << ' '; //37

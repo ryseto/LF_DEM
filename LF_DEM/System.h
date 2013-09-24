@@ -61,7 +61,8 @@ private:
 	double mu_static; // static friction coefficient.
 	double bgf_factor;
 	double kb_T;
-
+	
+	
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -75,13 +76,14 @@ private:
 	int intr_max_fc_tan;
 	vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
 	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
-	vector<double> velocity_history;
+	vector<double> sliding_velocity_history;
 	/* cnt_parameter_changed is used for kn-kt ajusting algorithm.
 	 * Spring constants are changed in the simulation.
 	 * This may cause large contact forces.
 	 * These values are not considered for the next deteremination.
 	 */
 	bool after_parameter_changed;
+	int cnt_prameter_convergence;
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -123,6 +125,7 @@ public:
 	//	double *v_lub_cont_mid;
 	//	double *v_Brownian_init;
 	//	double *v_Brownian_mid;
+
 	bool in_predictor;
 	bool in_corrector;
 	int dimension;
@@ -194,6 +197,7 @@ public:
 	double max_disp_tan;
 	double overlap_target;
 	double disp_tan_target;
+	double max_kn;
 	queue<int> deactivated_interaction;
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;
@@ -208,7 +212,8 @@ public:
 	int cnt_static_to_dynamic;
 	int rate_static_to_dynamic;
 	double total_energy; // for initial-config generation
-		
+	bool kn_kt_adjustment;
+	
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
@@ -245,7 +250,7 @@ public:
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	void openFileInteractionData();
-	void adjustContactModelParameters();
+	int adjustContactModelParameters();
 	void calcTotalPotentialEnergy();
 	void setupShearFlow(bool activate){
 		if (activate) {

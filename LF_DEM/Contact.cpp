@@ -27,7 +27,6 @@ Contact::getInteractionData(){
  */
 void
 Contact::updateContactModel(){
-	exit(1);
 	if (interaction->active) {
 		double ro_12 = interaction->ro_12;
 		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
