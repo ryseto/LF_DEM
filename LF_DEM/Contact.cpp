@@ -68,15 +68,6 @@ Contact::deactivate(){
 	f_contact_normal.reset();
 	f_contact_tan.reset();
 	duration_contact += sys->get_shear_strain()-strain_contact_start; // for output
-
-
-	previous_f_test = 0;
-	previous_supportable_tanforce = 0;
-	old_state = 0;
-	old_relative_velocity.reset();
-	old_f_test_vec.reset();
-	old_lubforce_tan.reset();
-	old_dashpot.reset();
 }
 
 /*********************************
