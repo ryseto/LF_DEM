@@ -4,7 +4,7 @@
 from __future__ import division
 import sys
 import math
-import LF_DEM_posfile_reading
+import pyLF_DEM_posfile_reading
 import Spherical_coordinate_histogram
 from Spherical_coordinate_histogram import SphericalCoordinateHistogram
 import Circular_coordinate_histogram
@@ -13,6 +13,7 @@ import Linear_histogram
 from Linear_histogram import LinearHistogram
 
 import cart2sph
+import numpy as np
 
 cdef class PairCorrelation:
 
@@ -65,7 +66,7 @@ cdef class PairCorrelation:
 
     cdef update_field_2d(self,double deltax, double deltay, double deltaz, double deltatot):
 
-        if math.fabs(deltay)/deltatot < self.max_out_of_plane:
+        if deltatot>0 and math.fabs(deltay)/deltatot < self.max_out_of_plane:
                 
             # we go to circular coordinates
             (a, b)=cart2sph.cart2circ_nolist(deltax, deltaz)
@@ -100,17 +101,16 @@ cdef class PairCorrelation:
         cdef double deltax, deltay, deltaz, deltatot
 
         self.update_nb += 1
-
+        
+        pos_stream.computePairSeparations()
         for i in pos_stream.range():
             for j in pos_stream.range(i+1):
                 if self.passRestrictions(i, j):
-                    dr=pos_stream.pos_diff(i,j)
-
                     rescale_factor = 1/(self.rescale_func(i) + self.rescale_func(j))
-                    deltax=dr[0]*rescale_factor
-                    deltay=dr[1]*rescale_factor
-                    deltaz=dr[2]*rescale_factor
-                    deltatot=dr[3]*rescale_factor
+                    deltax = pos_stream.pair_sep[i,j-i][0]*rescale_factor
+                    deltay = pos_stream.pair_sep[i,j-i][1]*rescale_factor
+                    deltaz = pos_stream.pair_sep[i,j-i][2]*rescale_factor
+                    deltatot = pos_stream.pair_dist[i,j-i]*rescale_factor
                     
                     if self.mode == 0:
                         self.update_field_1d(deltatot)

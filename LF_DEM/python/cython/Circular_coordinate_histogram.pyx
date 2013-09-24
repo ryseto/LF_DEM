@@ -4,12 +4,9 @@
 import sys
 import math
 import cart2sph
-import numpy
-cimport numpy
+import numpy as np
 import string
 import copy
-cimport Histograms
-from Histograms cimport Histograms
 
 cdef class CircularCoordinateHistogram(Histograms):
     # cdef:
@@ -21,56 +18,40 @@ cdef class CircularCoordinateHistogram(Histograms):
     #     double theta_bsize
     #     double pi
 
-    def __init__(self, int r_bn, int theta_bn, double min_r, double max_r):
+    def __init__(self, int r_bn, int theta_bn, double min_r, double max_r, is_sym):
         Histograms.__init__(self)
         
         self.r_bin_nb=r_bn
         self.theta_bin_nb=theta_bn
+
+        self.histogram = np.zeros((r_bn, theta_bn))
 
         self.r_max=max_r
         self.r_min=min_r
 
         self.pi=3.141592653589793238462643
         self.r_bsize=(max_r-self.r_min)/self.r_bin_nb
-        self.theta_bsize=self.pi/self.theta_bin_nb # symmetry: only theta in [0:pi]
+        
+        if is_sym:
+            self.theta_max = self.pi # symmetry: only theta in [0:pi]
+        else:
+            self.theta_max = 2*self.pi # symmetry: only theta in [0:pi]
 
-        for i in range(self.r_bin_nb):
-            r=self.r_bsize*(i+0.5)+self.r_min
-            for j in range(self.theta_bin_nb):
-                theta=self.theta_bsize*(j+0.5)
-                key=self.genkey_nolist(r, theta)
-                self.histogram[key]=None
-                self.events[key]=0
+        self.theta_bsize=self.theta_max/self.theta_bin_nb
 
+    def genkey(self, r, theta):
 
-    def __iter__(self):
-        return self.histogram.iterkeys()
-
-    def copy(self, histo):
-        Histograms.copy(histo)
-        (self.r_bin_nb, self.theta_bin_nb, self.r_max, self.r_bsize, self.theta_bsize)=histo.params()
-
-    def deepcopy(self, histo):
-        Histograms.deepcopy(histo)
-        (self.r_bin_nb, self.theta_bin_nb, self.r_max, self.r_bsize, self.theta_bsize)=histo.params()
-
-    cpdef genkey_nolist(self, double r, double theta):
         cdef int r_bin_label
         cdef int theta_bin_label
 
-        #take advantage of the symmetry of the flow
-        if theta>self.pi:
-            theta = theta - self.pi
+        if theta>self.theta_max:
+            theta = theta - self.theta_max
 
-        r_bin_label=int((r-self.r_min)/self.r_bsize)
-        theta_bin_label=int(theta/self.theta_bsize)
+        r_bin_label=array((r-self.r_min)/self.r_bsize), dtype=int)
+        theta_bin_label=array((theta/self.theta_bsize), dtype=int)
 
-        if theta_bin_label==self.theta_bin_nb:
-            theta_bin_label-=self.theta_bin_nb
-
-        if r_bin_label>=self.r_bin_nb or r_bin_label<0:
-            return None
-
+        bins = np.where(r_bin_label<self.r_bin_nb and r_bin_label>0, 
+# how to merge r and theta arrays?
 
         key=str(r_bin_label)+' '+str(theta_bin_label)
         return key
