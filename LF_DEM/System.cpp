@@ -1136,9 +1136,18 @@ System::evaluateMaxContactVelocity(){
 			
 		}
 	}
-	ave_contact_velo_tan = sum_contact_velo_tan/cnt_contact;
-	ave_contact_velo_normal = sum_contact_velo_normal/cnt_contact;
-	ave_sliding_velocity = sum_sliding_velocity/cnt_sliding;
+	if (cnt_contact > 0) {
+		ave_contact_velo_tan = sum_contact_velo_tan/cnt_contact;
+		ave_contact_velo_normal = sum_contact_velo_normal/cnt_contact;
+	} else {
+		ave_contact_velo_tan = 0;
+		ave_contact_velo_normal = 0;
+	}
+	if (cnt_sliding > 0) {
+		ave_sliding_velocity = sum_sliding_velocity/cnt_sliding;
+	} else {
+		ave_sliding_velocity = 0;
+	}
 }
 
 double
@@ -1233,7 +1242,11 @@ System::analyzeState(){
 		average_fc_normal = 0;
 	}
 	rate_static_to_dynamic = cnt_static_to_dynamic/(strain_interval*np);
-	ratio_dynamic_friction = (contact_nb-cnt_sliding_contact)*(1./contact_nb);
+	if (contact_nb > 0) {
+		ratio_dynamic_friction = (contact_nb-cnt_sliding_contact)*(1./contact_nb);
+	} else {
+		ratio_dynamic_friction = 0;
+	}
 	cnt_static_to_dynamic = 0;
 }
 
