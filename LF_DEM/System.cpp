@@ -1107,17 +1107,33 @@ System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	in_predictor = true;
+	double sum_contact_velo_tan = 0;
+	double sum_contact_velo_normal = 0;
+	double sum_sliding_velocity = 0;
+	int cnt_contact = 0;
+	int cnt_sliding = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
 			interaction[k].calcRelativeVelocities();
+			cnt_contact++;
+			sum_contact_velo_tan += interaction[k].getContactVelocity();
+			sum_contact_velo_normal += abs(interaction[k].getNormalVelocity());
+			if (interaction[k].contact.staticfriction == false) {
+				cnt_sliding++;
+				sum_sliding_velocity += interaction[k].getContactVelocity();
+			}
 			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
 				max_contact_velo_tan = interaction[k].getContactVelocity();
 			}
 			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
 				max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
 			}
+			
 		}
 	}
+	ave_contact_velo_tan = sum_contact_velo_tan/cnt_contact;
+	ave_contact_velo_normal = sum_contact_velo_normal/cnt_contact;
+	ave_sliding_velocity = sum_sliding_velocity/cnt_sliding;
 }
 
 double

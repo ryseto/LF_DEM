@@ -201,6 +201,10 @@ public:
 	queue<int> deactivated_interaction;
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;
+	double ave_contact_velo_tan;
+	double ave_contact_velo_normal;
+	double ave_sliding_velocity;
+	
 	double ave_overlap;
 	int contact_nb;
 	double ratio_dynamic_friction;

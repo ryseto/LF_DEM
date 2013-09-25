@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#define VERSION "2.0"
+#define VERSION "3.0"
 #include "Simulation.h"
 #include <cmath>
 #include <map>
@@ -79,7 +79,6 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
 		sys.timeEvolution(strain_next);
 		evaluateData();
-		cerr << sys.get_kn() << endl;
 		outputRheologyData();
 		outputStressTensorData();
 		if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
@@ -654,6 +653,10 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.get_ratio_dynamic_friction() << ' ';//41
 	fout_rheo << sys.get_rate_static_to_dynamic() << ' ';//42
 	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//43
+	fout_rheo << sys.ave_contact_velo_tan << ' '; // 44
+	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
+	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
+	
 	fout_rheo << endl;
 }
 
