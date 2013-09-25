@@ -452,7 +452,6 @@ Lubrication::calcLubricationForce(){
 	/*
 	 *  First: -A*(U-Uinf) term
 	 */
-	
 	/* Eq. (1.6a) in Jeffrey&Onishi 1984
 	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk

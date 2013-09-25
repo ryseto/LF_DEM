@@ -1415,35 +1415,9 @@ System::calcLubricationForce(){
 	stokes_solver.solve(v_total);
 	stokes_solver.solvingIsDone();
 	
-	if (lubrication_model == 1){
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].lubrication.calcXFunctions();
-			}
-		}
-	} else if (lubrication_model == 2){
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].lubrication.calcXYFunctions();
-			}
-		}
-	} else if (lubrication_model == 3){
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				if (interaction[k].is_contact()) {
-					interaction[k].lubrication.calcXYFunctions();
-				} else {
-					interaction[k].lubrication.calcXFunctions();
-				}
-			}
-		}
-	}
-	
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].lubrication.calcLubricationForce();
 		}
 	}
 }
-
-
