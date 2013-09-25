@@ -6,7 +6,7 @@ import math
 
 self_path=os.path.dirname(os.path.abspath(sys.argv[0]))
 sys.path.append(self_path+'/cython')
-import LF_DEM_posfile_reading
+import pyLF_DEM_posfile_reading
 import pair_correlation
 
 
@@ -71,7 +71,7 @@ r_max=float()
 r_min=float()
 stream=init()
 
-pos_stream=LF_DEM_posfile_reading.Pos_Stream(stream)
+pos_stream=pyLF_DEM_posfile_reading.Pos_Stream(stream)
 
 if pos_stream.dimension() == 2 and mode == "s":
     sys.stderr.write(' WARNING : input is 2d, switching to circular coordinates mode ')
@@ -94,7 +94,7 @@ while pos_stream.get_snapshot():
 
     twopoint_correl.update_field(pos_stream)
 
-twopoint_correl.normalize(pos_stream.np(), pos_stream.rho())
+twopoint_correl.normalize(pos_stream.np()*pos_stream.rho())
 twopoint_correl.print_to(sys.stdout)
 
 

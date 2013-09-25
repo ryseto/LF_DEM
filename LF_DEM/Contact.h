@@ -49,6 +49,12 @@ private:
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
+	vec3d old_relative_velocity;
+	vec3d old_f_test_vec;
+	vec3d old_lubforce_tan;
+	vec3d old_dashpot;
+	vec3d old_spring;
+	bool old_state;
 	vec3d tvec;
 	double supportable_tanforce;
 

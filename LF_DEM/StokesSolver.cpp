@@ -629,9 +629,26 @@ StokesSolver::solve(double* velocity){
 	if (direct()) {
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 
+		//
+		ofstream mout;
+		mout.open("matrix.dat");
+		printResistanceMatrix(mout, "sparse");
+		mout.close();
+		//
+
+
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}				
+
+		//
+		mout.open("velo.dat");
+		for (int i=0; i<res_matrix_linear_size; i++) {
+			mout << i << " " <<velocity[i] <<endl;
+		}				
+		mout.close();
+		//
+
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
