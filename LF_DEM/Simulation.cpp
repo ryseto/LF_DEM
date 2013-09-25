@@ -600,6 +600,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#41: ratio of dynamic friction" << endl;
 		fout_rheo << "#42: rate of static friction to dynamic" << endl;
 		fout_rheo << "#43: number of active interactions" << endl;
+		fout_rheo << "#44: average tangential velocity (contact)" << endl;
+		fout_rheo << "#45: average normal velocity (contact)" << endl;
+		fout_rheo << "#46: average sliding velocity (dynamic friction)" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
