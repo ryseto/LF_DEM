@@ -14,7 +14,7 @@ Build=debug
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no
 # Enable use of Metis library ( yes / no )
-UseMetis=no
+UseMetis=yes
 
 #=======================================#
 #=======================================#
