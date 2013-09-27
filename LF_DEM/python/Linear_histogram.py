@@ -3,7 +3,6 @@
 
 import sys
 import math
-import pycart2sph
 import numpy as np
 import string
 

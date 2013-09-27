@@ -3,14 +3,13 @@
 
 import sys
 import math
-import pycart2sph
+import cart2sph
 import numpy as np
 import string
 
 class SphericalCoordinateHistogram:
 
-    def __init__(self, params):
-        [r_bn, theta_bn, phi_bn, min_r, max_r, min_theta, max_theta] = params
+    def __init__(self, r_bn, theta_bn, phi_bn, min_r, max_r, min_theta, max_theta):
         
         self.r_bin_nb=r_bn
         self.theta_bin_nb=theta_bn

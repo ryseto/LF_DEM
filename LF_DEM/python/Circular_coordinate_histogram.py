@@ -3,7 +3,7 @@
 
 import sys
 import math
-import pycart2sph
+import cart2sph
 import numpy as np
 import string
 
@@ -57,7 +57,6 @@ class CircularCoordinateHistogram:
             # the idea is to use bincount to aggregate the duplicate indices first, and then feed the array with an array of unique indices. 
             # but, as things cannot be simple, bincount can only aggregate 1d indices, 
             # so there's a pre-step to convert 2d indices in 1d, with ravel_multi_index
-            
             flat_indices = np.ravel_multi_index((r_bin, theta_bin), dims=self.histogram.shape)
             unique_indices = np.unique(flat_indices)
             aggregated_values = (np.bincount(flat_indices, weights = values))[unique_indices]

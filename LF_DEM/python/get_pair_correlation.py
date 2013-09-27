@@ -7,7 +7,7 @@ import numpy as np
 self_path=os.path.dirname(os.path.abspath(sys.argv[0]))
 sys.path.append(self_path+'/cython')
 import pyLF_DEM_posfile_reading
-import pypair_correlation
+import pair_correlation
 
 
 def misuse():
@@ -98,19 +98,21 @@ if pos_stream.dim == 2 and mode == "s":
     mode = "c"
 
 if mode == "r":
-    params = [r_bin_nb, r_min, r_max]
+    params = [r_bin_nb, r_min, r_max, pos_stream.N]
 if mode == "c":
-    params = [r_bin_nb,theta_bin_nb, r_min, r_max]
+    params = [r_bin_nb,theta_bin_nb, r_min, r_max, pos_stream.N]
 if mode == "s":
-    params = [r_bin_nb,theta_bin_nb,phi_bin_nb, r_min, r_max, theta_min, theta_max]
+    params = [r_bin_nb,theta_bin_nb,phi_bin_nb, r_min, r_max, theta_min, theta_max, pos_stream.N]
 
-twopoint_correl=pypair_correlation.PairCorrelation( mode , params )
+twopoint_correl=pair_correlation.PairCorrelation( mode , params )
 snapshot_nb=0
 
 pos_stream.get_snapshot()
 while pos_stream.get_snapshot():
-    twopoint_correl.update_field(pos_stream)
+    pos_stream.computePairSeparations()
+    twopoint_correl.update_field(pos_stream.pair_sep, pos_stream.pair_dist)
 
+    
 twopoint_correl.normalize(pos_stream.N*pos_stream.rho())
 twopoint_correl.print_to(sys.stdout)
 
