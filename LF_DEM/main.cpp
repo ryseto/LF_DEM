@@ -24,9 +24,12 @@ int main(int argc, const char * argv[])
 	if (argv[1][0] == 'g'){
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate(argc, argv);
+	} else if (argv[1][0] == 'h'){
+		Simulation simulation;
+		simulation.simulationHysteresis(argc, argv);
 	} else {
 		Simulation simulation;
-		simulation.simulationMain(argc, argv);
+		simulation.simulationConstantShearRate(argc, argv);
 	}
     return 0;
 }

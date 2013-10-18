@@ -86,6 +86,8 @@ Interaction::activate(int i, int j){
 	 * Is
 	 */
 	colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
+
+
 	colloidalforce_length = sys->get_colloidalforce_length();
 	calcNormalVectorDistanceGap();
 	
@@ -196,6 +198,7 @@ void
 Interaction::addUpColloidalForce(){
 	sys->colloidal_force[par_num[0]] += f_colloidal;
 	sys->colloidal_force[par_num[1]] -= f_colloidal;
+
 }
 
 /* Relative velocity of particle 1 from particle 0.

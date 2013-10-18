@@ -208,7 +208,7 @@ public:
 	add(const double &_dx, const double &_dy, const double &_dz){
 		x += _dx, y += _dy, z += _dz;
 	}
-	
+
 	inline void
 	unitvector(){
 		(*this) = (*this)/norm();

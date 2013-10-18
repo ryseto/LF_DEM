@@ -305,7 +305,8 @@ public:
 	void set_dt_max(double val){dt_max = val;}
 	void set_disp_max(double val){disp_max = val;}
 	inline double get_dt(){return dt;}
-	inline void set_colloidalforce_amplitude(double val){colloidalforce_amplitude = val;}
+	inline void set_colloidalforce_amplitude(double val){
+		colloidalforce_amplitude = val;}
 	inline double get_colloidalforce_amplitude(){return colloidalforce_amplitude;}
 	void set_colloidalforce_length(double val){colloidalforce_length = val;}
 	inline double get_colloidalforce_length(){return colloidalforce_length;}

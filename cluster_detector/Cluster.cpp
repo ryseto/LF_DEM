@@ -8,6 +8,7 @@
 
 #include "Cluster.h"
 
-Cluster::Cluster(int i){
+Cluster::Cluster(int i, vec3d pos_){
 	member.push_back(i);
+	pos.push_back(pos_);
 };

@@ -351,7 +351,7 @@ sub OutYaplotData{
 	
 	printf OUT "y 2\n";
 	printf OUT "r 0.4\n";
-	printf OUT "@ 5\n"; # dynamic
+	printf OUT "@ 5\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {
@@ -364,7 +364,7 @@ sub OutYaplotData{
 			}
 		}
     }
-	printf OUT "r 0.2\n";
+	printf OUT "r 0.35\n";
 	printf OUT "@ 7\n"; # dynamic
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];

@@ -36,6 +36,10 @@
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
 		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
+		D9953515180713FB00FC99C9 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9953514180713FB00FC99C9 /* main.cpp */; };
+		D9953517180713FB00FC99C9 /* cluster_life.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9953516180713FB00FC99C9 /* cluster_life.1 */; };
+		D9953520180716B100FC99C9 /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D995351E180716B100FC99C9 /* Cluster.cpp */; };
+		D99535231807276D00FC99C9 /* StrainSnapShot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D99535211807276D00FC99C9 /* StrainSnapShot.cpp */; };
 		D9BE3B66178C838100937C5C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B65178C838100937C5C /* main.cpp */; };
 		D9BE3B68178C838100937C5C /* cluster_detector.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9BE3B67178C838100937C5C /* cluster_detector.1 */; };
 		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
@@ -71,6 +75,16 @@
 			dstSubfolderSpec = 0;
 			files = (
 				D988E390165441750009949F /* LF_DEM.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D9953510180713FB00FC99C9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				D9953517180713FB00FC99C9 /* cluster_life.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -149,6 +163,14 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		D99437CE1800F65000B756D5 /* particleconfig.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = particleconfig.pl; sourceTree = "<group>"; };
+		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D9953516180713FB00FC99C9 /* cluster_life.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_life.1; sourceTree = "<group>"; };
+		D995351E180716B100FC99C9 /* Cluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Cluster.cpp; sourceTree = "<group>"; };
+		D995351F180716B100FC99C9 /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
+		D99535211807276D00FC99C9 /* StrainSnapShot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrainSnapShot.cpp; sourceTree = "<group>"; };
+		D99535221807276D00FC99C9 /* StrainSnapShot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrainSnapShot.h; sourceTree = "<group>"; };
 		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
 		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
 		D9BE3B63178C838100937C5C /* cluster_detector */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_detector; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -202,6 +224,13 @@
 				D932B8E316C2F48800AD6E85 /* libbelosepetra.dylib in Frameworks */,
 				D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */,
 				D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D995350F180713FB00FC99C9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +326,7 @@
 			children = (
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
+				D99437CE1800F65000B756D5 /* particleconfig.pl */,
 				D9CE560517555DE500719775 /* extract_normalvecdata.pl */,
 				D957F833171720D9007C6437 /* trajectory.pl */,
 				D9FF68A31732F24D0062236C /* force_chain.pl */,
@@ -316,6 +346,7 @@
 				D921A0BF175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D9BE3B64178C838100937C5C /* cluster_detector */,
 				D96731B217A042AD005D02F8 /* percolation_LF_DEM */,
+				D9953513180713FB00FC99C9 /* cluster_life */,
 				D988E38A165441750009949F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -327,6 +358,7 @@
 				D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D9BE3B63178C838100937C5C /* cluster_detector */,
 				D96731B117A042AD005D02F8 /* percolation_LF_DEM */,
+				D9953512180713FB00FC99C9 /* cluster_life */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -366,6 +398,19 @@
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
+			sourceTree = "<group>";
+		};
+		D9953513180713FB00FC99C9 /* cluster_life */ = {
+			isa = PBXGroup;
+			children = (
+				D9953514180713FB00FC99C9 /* main.cpp */,
+				D99535211807276D00FC99C9 /* StrainSnapShot.cpp */,
+				D99535221807276D00FC99C9 /* StrainSnapShot.h */,
+				D995351E180716B100FC99C9 /* Cluster.cpp */,
+				D995351F180716B100FC99C9 /* Cluster.h */,
+				D9953516180713FB00FC99C9 /* cluster_life.1 */,
+			);
+			path = cluster_life;
 			sourceTree = "<group>";
 		};
 		D9BE3B64178C838100937C5C /* cluster_detector */ = {
@@ -451,6 +496,23 @@
 			productReference = D988E389165441750009949F /* LF_DEM */;
 			productType = "com.apple.product-type.tool";
 		};
+		D9953511180713FB00FC99C9 /* cluster_life */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D995351A180713FB00FC99C9 /* Build configuration list for PBXNativeTarget "cluster_life" */;
+			buildPhases = (
+				D995350E180713FB00FC99C9 /* Sources */,
+				D995350F180713FB00FC99C9 /* Frameworks */,
+				D9953510180713FB00FC99C9 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cluster_life;
+			productName = cluster_life;
+			productReference = D9953512180713FB00FC99C9 /* cluster_life */;
+			productType = "com.apple.product-type.tool";
+		};
 		D9BE3B62178C838100937C5C /* cluster_detector */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D9BE3B6B178C838100937C5C /* Build configuration list for PBXNativeTarget "cluster_detector" */;
@@ -493,6 +555,7 @@
 				D921A0BD175BF90D002F64B1 /* analyze_data_LF_DEM */,
 				D9BE3B62178C838100937C5C /* cluster_detector */,
 				D96731B017A042AD005D02F8 /* percolation_LF_DEM */,
+				D9953511180713FB00FC99C9 /* cluster_life */,
 			);
 		};
 /* End PBXProject section */
@@ -532,6 +595,16 @@
 				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
 				D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */,
 				D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D995350E180713FB00FC99C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9953520180716B100FC99C9 /* Cluster.cpp in Sources */,
+				D99535231807276D00FC99C9 /* StrainSnapShot.cpp in Sources */,
+				D9953515180713FB00FC99C9 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,6 +767,43 @@
 			};
 			name = Release;
 		};
+		D9953518180713FB00FC99C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D9953519180713FB00FC99C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		D9BE3B69178C838100937C5C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -749,6 +859,15 @@
 			buildConfigurations = (
 				D988E394165441750009949F /* Debug */,
 				D988E395165441750009949F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D995351A180713FB00FC99C9 /* Build configuration list for PBXNativeTarget "cluster_life" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9953518180713FB00FC99C9 /* Debug */,
+				D9953519180713FB00FC99C9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

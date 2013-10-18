@@ -39,10 +39,10 @@ private:
 	double dimensionless_shear_rate;
 	vector <vector<int>> bond_list;
 	vector <Cluster *> cl;
-	ifstream fin_p;
-	ifstream fin_i;
+
 	ofstream fout_yap;
 	ofstream fout_data;
+	ofstream fout_cluster;
 protected:
 public:
 	~System(){};
@@ -51,7 +51,8 @@ public:
 	vector<vec3d> ang_velocity;
 	vector<double> radius;
 	vector<Bond> bond;
-		
+	ifstream fin_p;
+	ifstream fin_i;
 	void setImportFile_par(string filename){
 		fin_p.open(filename.c_str());
 		char buf[128];
@@ -91,6 +92,10 @@ public:
 	void openDataFile(string filename){
 		fout_data.open(filename.c_str());
 	}
+	void openClusterFile(string filename){
+		fout_cluster.open(filename.c_str());
+	}
+	
 	
 	void importConfiguration(){
 		char buf[1024];
@@ -113,34 +118,23 @@ public:
 		for (int j=0; j < num_interaction; j ++){
 			int i0, i1;
 			bool contact;
+			double nx, ny, nz, gap;
+			double f_lub_n, f_lub_t;
+			double f_con_n, f_con_t, f_ele;
+			double s_xz, ns1, ns2;
+			int contact_state;
 			fin_i >> i0 >> i1 >> contact;
-			fin_i.getline(buf, 1024);
-			vec3d d_omega = ang_velocity[i0]-ang_velocity[i1];
-			if (d_omega.norm() < 0.2){
-				vec3d dv = velocity[i1] - velocity[i0];
-				vec3d dp = position[i1] - position[i0];
-				vec3d omega = 0.5*(ang_velocity[i0]+ang_velocity[i1]);
-				if (dp.z > 10){
-					dv.x -= lz;
-					dp.z -= lz;
-					dp.x -= shear_disp;
-				} else if (position[i1].z - position[i0].z < -10){
-					dv.x += lz;
-					dp.z += lz;
-					dp.x += shear_disp;
-				}
-				if (dp.x > 10){
-					dp.x -= lx;
-				} else if (dp.x < -10){
-					dp.x += lx;
-				}
-				vec3d deviation = dv-cross(omega, dp);
-				dv_sum += dv.norm();
-				if (deviation.norm() < 0.1){
-					bond_list[i0].push_back(j);
-					bond_list[i1].push_back(j);
-					bond[j].set(i0, i1, true);
-				}
+			fin_i >> nx >> ny >> nz >> gap;
+			fin_i >> f_lub_n >> f_lub_t;
+			fin_i >> f_con_n >> f_con_t;
+			fin_i >> f_ele;
+			fin_i >> s_xz >> ns1 >> ns2;
+			fin_i >> contact_state;
+			
+			if (contact_state == 1) {
+				bond_list[i0].push_back(j);
+				bond_list[i1].push_back(j);
+				bond[j].set(i0, i1, contact_state);
 			}
 		}
 		cerr << "dv_ave = "<< dv_sum/num_interaction << endl;
@@ -161,7 +155,7 @@ public:
 		cl.clear();
 		while (i < np){
 			if (checked[i] == false){
-				cl.push_back(new Cluster(i));
+				cl.push_back(new Cluster(i, position[i]));
 				checked[i] = true;
 				int mem;
 				int j_cnt = 0;
@@ -172,10 +166,38 @@ public:
 					}
 					for (int j=0; j < bond_list[mem].size(); j++){
 						int b = bond_list[mem][j];
-						int next = bond[b].next(mem);
-						if (next >= 0){
-							cl[numcluster]->add(next);
-							checked[next] = true;
+						if (bond[b].contact_state == 1){
+							int next = bond[b].next(mem);
+							if (next >= 0){
+																
+								vec3d dr = position[next]-position[mem];
+								if (abs(dr.z) > 10 ){
+									if (dr.z > 0){
+										dr.z -= lz;
+										dr.x -= shear_disp;
+									} else {
+										dr.z += lz;
+										dr.x += shear_disp;
+									}
+								}
+								if (abs(dr.x) > 10 ){
+									if (dr.x > 0){
+										dr.x -= lx;
+									} else {
+										dr.x += lx;
+									}
+								}
+//								if (abs(dr.y) > 10 ){
+//									if (dr.y > 0){
+//										dr.y -= ly;
+//									} else {
+//										dr.y += ly;
+//									}
+//								}
+
+								cl[numcluster]->add(next, mem, dr);
+								checked[next] = true;
+							}
 						}
 					}
 				}
@@ -215,66 +237,106 @@ public:
 	}
 	
 	void output_yap(){
-		vector <bool> done;
-		done.resize(np);
-		for (int i=0; i< np;i++){
-			done[i] = false;
-		}
 		int num_cl_particle = 0;
 		int sum_cl_size = 0;
 		int cnt_cl = 0;
 		int max_size = 0;
+		vec3d comp_axis(-1,0,1);
+		comp_axis.unitvector();
+		
+		vec3d elong_axis(1,1,0);
+		elong_axis.unitvector();
+		vector <double> cluster_length;
 		for (int i=0; i<cl.size(); i++){
 			int cl_size = (int)(cl[i]->size());
-
-			double std_dev_ang;
-			vec3d ave_ang_vel = calcAngVelocity(cl[i], std_dev_ang);
 			if (cl_size > 1){
-				sum_cl_size += cl_size;
-				cnt_cl++;
-				if (max_size < cl_size){
-					max_size = cl_size ;
-				}
+				vec3d cm(0,0,0);
 				for (int j=0; j< cl_size; j++){
-					int mem = cl[i]->get_member(j);
-					if (abs(ave_ang_vel.y - ang_velocity[mem].y) > 0.3){
-						fout_yap << "@ 0" << endl;
-						fout_yap << "r 0.2" << endl;
-						fout_yap << "c ";
-						fout_yap << position[mem].x << ' ' ;
-						fout_yap << position[mem].y -0.1<< ' ' ;
-						fout_yap << position[mem].z << ' ' ;
-						fout_yap << "@ 10" << endl;
+					cm += cl[i]->pos[j];
+				}
+				cm = cm /cl_size;
+				for (int j=0; j< cl[i]->size(); j++){
+					cl[i]->pos[j]-=cm;
+				}
+				double comp_max = 0;
+				double comp_min = 0;
+				for (int j=0; j< cl[i]->size(); j++){
+					double comp_length = dot(comp_axis, cl[i]->pos[j]);
+					if (comp_length > comp_max){
+						comp_max = comp_length;
 					}
-					fout_yap << "@ 10" << endl;
-					fout_yap << "r " << radius[mem] << endl;
-					fout_yap << "c ";
-					fout_yap << position[mem].x << ' ' ;
-					fout_yap << position[mem].y << ' ' ;
-					fout_yap << position[mem].z << endl;
-					done[mem] = true;
-					num_cl_particle ++;
+					if (comp_length < comp_min){
+						comp_min = comp_length;
+					}
+				}
+				cluster_length.push_back(comp_max-comp_min);
+			}
+		}
+
+		double ave_cluster_length = 0;
+		double max_cluster_length = 0;
+		if (cluster_length.size() > 0){
+			for (int k=0; k < cluster_length.size(); k++){
+				ave_cluster_length += cluster_length[k];
+				if (max_cluster_length < cluster_length[k]){
+					max_cluster_length = cluster_length[k];
 				}
 			}
-			
+			ave_cluster_length = ave_cluster_length/cluster_length.size();
 		}
-		cout << endl;
+	
 		
-		fout_yap << "@ 2" << endl;
-		for (int i=0; i<np; i++){
-			if (done[i] == false){
-				fout_yap << "r " << radius[i] << endl;
-				fout_yap << "c ";
-				fout_yap << position[i].x << ' ' ;
-				fout_yap << position[i].y << ' ' ;
-				fout_yap << position[i].z << endl;
-			}
-		}
-		fout_yap << endl;
-		fout_data << strain << ' ' << (1.*num_cl_particle)/np << ' ' << sum_cl_size*(1./cnt_cl) << ' ';
-		fout_data << cnt_cl << ' ' << max_size << endl;
+//		for (int i=0; i<cl.size(); i++){
+//			int cl_size = (int)(cl[i]->size());
+//			if (cl_size > 1){
+//				sum_cl_size += cl_size;
+//				cnt_cl++;
+//				if (max_size < cl_size){
+//					max_size = cl_size ;
+//				}
+//				vec3d cm(0,0,0);
+//				for (int j=0; j< cl_size; j++){
+//					cm += cl[i]->pos[j];
+//				}
+//				cm = cm /cl_size;
+//				fout_yap << "@ 10" << endl;
+//				for (int j=0; j< cl[i]->size(); j++){
+//					fout_yap << "r " << radius[cl[i]->get_member(j)] << endl;
+//					fout_yap << "c ";
+//					fout_yap << cl[i]->pos[j].x << ' ' ;
+//					fout_yap << cl[i]->pos[j].y << ' ' ;
+//					fout_yap << cl[i]->pos[j].z << endl;
+//					num_cl_particle ++;
+//				}
+//			}
+//		}
+//		fout_yap << endl;
+		fout_data << strain << ' ';
+		fout_data << ave_cluster_length << ' ';
+		fout_data << cluster_length.size() << ' ';
+		fout_data << max_cluster_length << endl;
+
 	}
 	
+	void output_clusters(){
+		if (cl.size() > 1){
+			int count_cluster = 0;
+			for (int i=0; i<cl.size(); i++){
+				int cl_size = (int)(cl[i]->size());
+				if (cl_size > 1){
+					count_cluster ++;
+					for (int j=0; j< cl_size; j++){
+						fout_cluster << cl[i]->get_member(j) << ' ';
+					}
+					fout_cluster << "\n" ;
+				}
+			}
+			if (count_cluster > 0){
+				fout_cluster << "\n";
+			}
+		}
+	}
+		
 	
 };
 

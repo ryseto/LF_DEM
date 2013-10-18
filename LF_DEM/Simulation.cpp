@@ -52,7 +52,7 @@ Simulation::contactForceParameter(string filename){
  * Main simulation
  */
 void
-Simulation::simulationMain(int argc, const char * argv[]){
+Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	filename_parameters = argv[2];
 	sys.dimensionless_shear_rate = atof(argv[3]);
@@ -106,6 +106,83 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		cerr << "strain: " << sys.get_shear_strain() << " / " << shear_strain_end << endl;
 	}
 }
+
+void
+Simulation::simulationHysteresis(int argc, const char * argv[]){
+	filename_import_positions = argv[2];
+	filename_parameters = argv[3];
+	filename_prog_shearrate = argv[4];
+	setDefaultParameters();
+	readParameterFile();
+	ifstream fin_shearprog;
+	fin_shearprog.open(filename_prog_shearrate.c_str());
+	fin_shearprog >> shearrate_min;
+	fin_shearprog >> shearrate_max;
+	fin_shearprog >> shearrate_increment;
+	fin_shearprog >> shearrate_interval;
+	fin_shearprog >> hysteresis_loop;
+	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_increment << ' ' << hysteresis_loop << endl;
+	importInitialPositionFile();
+	if (argc == 6) {
+		contactForceParameter(argv[5]);
+	}
+	openOutputFiles();
+	outputDataHeader(fout_particle);
+	outputDataHeader(fout_interaction);
+	outputDataHeader(fout_rheo);
+	outputDataHeader(fout_st);
+	sys.setupSystem();
+	outputConfigurationData();
+	sys.setupShearFlow(true);
+	int cnt_simu_loop = 1;
+	int cnt_config_out = 1;
+	sys.dimensionless_shear_rate = shearrate_min;
+	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_increment;
+	bool shearrate_increase = true;
+	int cnt_hysteresis = 0;
+	while (true) {
+		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
+		shear_strain_end = sys.get_shear_strain()+shearrate_interval;
+		while (sys.get_shear_strain() < shear_strain_end-1e-8) {
+			
+			double strain_next = cnt_simu_loop*strain_interval_output_data;
+			double strain_next_config_out = cnt_config_out*strain_interval_output;
+			sys.timeEvolution(strain_next);
+			evaluateData();
+			outputRheologyData();
+			outputStressTensorData();
+			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+			cnt_simu_loop ++;
+		}
+		if (shearrate_increase) {
+			if (sys.dimensionless_shear_rate < shearrate_max){
+				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
+			} else {
+				shearrate_increase = false;
+				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
+			}
+		} else {
+			if (sys.dimensionless_shear_rate > shearrate_min){
+				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
+			} else {
+				shearrate_increase = true;
+				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
+				
+					
+				cnt_hysteresis ++;
+				if ( cnt_hysteresis == hysteresis_loop){
+					break;
+				}
+			}
+		}
+	}
+	
+}
+
+
 
 void
 Simulation::relaxationZeroShear(vector<vec3d> &position_,
@@ -603,6 +680,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#44: average tangential velocity (contact)" << endl;
 		fout_rheo << "#45: average normal velocity (contact)" << endl;
 		fout_rheo << "#46: average sliding velocity (dynamic friction)" << endl;
+		fout_rheo << "#47: shearrate" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -659,7 +737,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.ave_contact_velo_tan << ' '; // 44
 	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
-	
+	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
 	fout_rheo << endl;
 }
 
