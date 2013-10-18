@@ -167,19 +167,22 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 		average_viscosity = average_viscosity/cnt_average;
 		fout_hysteresis << sys.dimensionless_shear_rate << ' ' << average_viscosity << endl;
 		if (shearrate_increase) {
-			if (sys.dimensionless_shear_rate < shearrate_max){
+			if (sys.dimensionless_shear_rate < shearrate_max-1e-6){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
 			} else {
 				shearrate_increase = false;
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
+				fout_hysteresis  << endl;
+
 			}
 		} else {
-			if (sys.dimensionless_shear_rate > shearrate_min){
+			if (sys.dimensionless_shear_rate > shearrate_min+1e-6){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
 			} else {
 				shearrate_increase = true;
 				sys.dimensionless_shear_rate = shearrate_min;
 				cnt_hysteresis ++;
+				fout_hysteresis  << endl;
 				if ( cnt_hysteresis == hysteresis_loop){
 					break;
 				}
