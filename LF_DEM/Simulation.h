@@ -76,6 +76,7 @@ private:
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
+	ofstream fout_hysteresis;
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;

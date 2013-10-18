@@ -109,6 +109,7 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 
 void
 Simulation::simulationHysteresis(int argc, const char * argv[]){
+	sys.hysteresis = true;
 	filename_import_positions = argv[2];
 	filename_parameters = argv[3];
 	filename_prog_shearrate = argv[4];
@@ -143,8 +144,9 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	while (true) {
 		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
 		shear_strain_end = sys.get_shear_strain()+shearrate_interval;
+		double average_viscosity = 0;
+		int cnt_average = 0;
 		while (sys.get_shear_strain() < shear_strain_end-1e-8) {
-			
 			double strain_next = cnt_simu_loop*strain_interval_output_data;
 			double strain_next_config_out = cnt_config_out*strain_interval_output;
 			sys.timeEvolution(strain_next);
@@ -154,9 +156,16 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
 				outputConfigurationData();
 				cnt_config_out ++;
+				cerr << sys.dimensionless_shear_rate  << ' ';
+				cerr << sys.get_shear_strain()  << ' ' << 6*M_PI*viscosity << endl;
 			}
+			
+			average_viscosity += 6*M_PI*viscosity;
+			cnt_average ++;
 			cnt_simu_loop ++;
 		}
+		average_viscosity = average_viscosity/cnt_average;
+		fout_hysteresis << sys.dimensionless_shear_rate << ' ' << average_viscosity << endl;
 		if (shearrate_increase) {
 			if (sys.dimensionless_shear_rate < shearrate_max){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
@@ -169,9 +178,7 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
 			} else {
 				shearrate_increase = true;
-				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
-				
-					
+				sys.dimensionless_shear_rate = shearrate_min;
 				cnt_hysteresis ++;
 				if ( cnt_hysteresis == hysteresis_loop){
 					break;
@@ -362,11 +369,16 @@ Simulation::openOutputFiles(){
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string st_filename = "st_" +sys.simu_name + ".dat";
+
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
 	sys.openFileInteractionData();
+	if (sys.hysteresis){
+		string hysteresis_filename = "his_" +sys.simu_name + ".dat";
+		fout_hysteresis.open(hysteresis_filename.c_str());
+	}
 }
 
 void

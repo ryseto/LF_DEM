@@ -156,6 +156,8 @@ public:
 	double ratio_dashpot_total;
 	bool friction;
 	bool colloidalforce;
+	bool hysteresis;
+
 //	bool brownian;
 	/*
 	 * Lubrication model
