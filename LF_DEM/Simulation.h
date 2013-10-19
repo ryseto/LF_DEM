@@ -27,9 +27,9 @@ private:
 	string filename_prog_shearrate;
 	double shearrate_min;
 	double shearrate_max;
-	double shearrate_interval;
-	double shearrate_relax_interval;
-	int shearrate_increment;
+	double strain_interval;
+	double strain_interval_relax;
+	int shearrate_steps;
 	int hysteresis_loop;
 	double strain_interval_output_data;
 	double strain_interval_output;

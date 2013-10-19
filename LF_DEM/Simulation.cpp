@@ -117,13 +117,25 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	readParameterFile();
 	ifstream fin_shearprog;
 	fin_shearprog.open(filename_prog_shearrate.c_str());
-	fin_shearprog >> shearrate_min;
-	fin_shearprog >> shearrate_max;
-	fin_shearprog >> shearrate_increment;
-	fin_shearprog >> shearrate_interval;
-	fin_shearprog >> shearrate_relax_interval;
-	fin_shearprog >> hysteresis_loop;
-	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_increment << ' ' << hysteresis_loop << endl;
+	/*
+	 * example of "shear_prog.txt"
+	 * ---------------------------------
+	 * shearrate_min 0.005
+	 * shearrate_max 0.2
+	 * shearrate_steps 10
+	 * strain_interval 10
+	 * strain_interval_relax 2
+	 * hysteresis_loop 1
+	 * ---------------------------------
+	 */
+	string key;
+	fin_shearprog >> key >> shearrate_min;
+	fin_shearprog >> key >> shearrate_max;
+	fin_shearprog >> key >> shearrate_steps;
+	fin_shearprog >> key >> strain_interval;
+	fin_shearprog >> key >> strain_interval_relax;
+	fin_shearprog >> key >> hysteresis_loop;
+	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_steps << ' ' << hysteresis_loop << endl;
 	importInitialPositionFile();
 	if (argc == 6) {
 		contactForceParameter(argv[5]);
@@ -139,7 +151,7 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	sys.dimensionless_shear_rate = shearrate_min;
-	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_increment;
+	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_steps;
 	bool shearrate_increase = true;
 	int cnt_hysteresis = 0;
 	double shear_rate_previous;
@@ -148,7 +160,7 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	while (true) {
 		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
 		double strain_0 = sys.get_shear_strain();
-		shear_strain_end = sys.get_shear_strain()+shearrate_interval;
+		shear_strain_end = sys.get_shear_strain()+strain_interval;
 		double average_viscosity = 0;
 		double average_contact_number = 0;
 		int cnt_average = 0;
@@ -165,7 +177,7 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 				cerr << sys.dimensionless_shear_rate  << ' ';
 				cerr << sys.get_shear_strain()  << ' ' << 6*M_PI*viscosity << endl;
 			}
-			if (sys.get_shear_strain()-strain_0 > shearrate_relax_interval){
+			if (sys.get_shear_strain()-strain_0 > strain_interval_relax){
 				average_viscosity += 6*M_PI*viscosity;
 				average_contact_number += sys.getParticleContactNumber();
 				cnt_average ++;
