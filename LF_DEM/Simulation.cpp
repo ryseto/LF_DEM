@@ -142,6 +142,9 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_increment;
 	bool shearrate_increase = true;
 	int cnt_hysteresis = 0;
+	double shear_rate_previous;
+	double viscosity_previous;
+	double contactnumber_previous;
 	while (true) {
 		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
 		double strain_0 = sys.get_shear_strain();
@@ -180,10 +183,10 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 			} else {
 				shearrate_increase = false;
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
-				fout_hysteresis  << endl;
-				fout_hysteresis << sys.dimensionless_shear_rate << ' ';
-				fout_hysteresis << average_viscosity << ' ';
-				fout_hysteresis << average_contact_number << endl;
+				fout_hysteresis << endl;
+				fout_hysteresis << shear_rate_previous << ' ';
+				fout_hysteresis << viscosity_previous << ' ';
+				fout_hysteresis << contactnumber_previous << endl;
 			}
 		} else {
 			if (sys.dimensionless_shear_rate > shearrate_min+1e-6){
@@ -192,12 +195,19 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 				shearrate_increase = true;
 				sys.dimensionless_shear_rate = shearrate_min;
 				cnt_hysteresis ++;
-				fout_hysteresis  << endl;
+				fout_hysteresis << endl;
+				fout_hysteresis << shear_rate_previous << ' ';
+				fout_hysteresis << viscosity_previous << ' ';
+				fout_hysteresis << contactnumber_previous << endl;
+
 				if ( cnt_hysteresis == hysteresis_loop){
 					break;
 				}
 			}
 		}
+		shear_rate_previous = sys.dimensionless_shear_rate;
+		viscosity_previous = average_viscosity;
+		contactnumber_previous = average_contact_number;
 	}
 	
 }
