@@ -28,6 +28,7 @@ private:
 	double shearrate_min;
 	double shearrate_max;
 	double shearrate_interval;
+	double shearrate_relax_interval;
 	int shearrate_increment;
 	int hysteresis_loop;
 	double strain_interval_output_data;

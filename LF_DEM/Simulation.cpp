@@ -121,6 +121,7 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	fin_shearprog >> shearrate_max;
 	fin_shearprog >> shearrate_increment;
 	fin_shearprog >> shearrate_interval;
+	fin_shearprog >> shearrate_relax_interval;
 	fin_shearprog >> hysteresis_loop;
 	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_increment << ' ' << hysteresis_loop << endl;
 	importInitialPositionFile();
@@ -143,8 +144,10 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	int cnt_hysteresis = 0;
 	while (true) {
 		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
+		double strain_0 = sys.get_shear_strain();
 		shear_strain_end = sys.get_shear_strain()+shearrate_interval;
 		double average_viscosity = 0;
+		double average_contact_number = 0;
 		int cnt_average = 0;
 		while (sys.get_shear_strain() < shear_strain_end-1e-8) {
 			double strain_next = cnt_simu_loop*strain_interval_output_data;
@@ -159,13 +162,18 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 				cerr << sys.dimensionless_shear_rate  << ' ';
 				cerr << sys.get_shear_strain()  << ' ' << 6*M_PI*viscosity << endl;
 			}
-			
-			average_viscosity += 6*M_PI*viscosity;
-			cnt_average ++;
+			if (sys.get_shear_strain()-strain_0 > shearrate_relax_interval){
+				average_viscosity += 6*M_PI*viscosity;
+				average_contact_number += sys.getParticleContactNumber();
+				cnt_average ++;
+			}
 			cnt_simu_loop ++;
 		}
 		average_viscosity = average_viscosity/cnt_average;
-		fout_hysteresis << sys.dimensionless_shear_rate << ' ' << average_viscosity << endl;
+		average_contact_number = average_contact_number/cnt_average;
+		fout_hysteresis << sys.dimensionless_shear_rate << ' ';
+		fout_hysteresis << average_viscosity << ' ';
+		fout_hysteresis << average_contact_number << endl;
 		if (shearrate_increase) {
 			if (sys.dimensionless_shear_rate < shearrate_max-1e-6){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
@@ -173,7 +181,9 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 				shearrate_increase = false;
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
 				fout_hysteresis  << endl;
-
+				fout_hysteresis << sys.dimensionless_shear_rate << ' ';
+				fout_hysteresis << average_viscosity << ' ';
+				fout_hysteresis << average_contact_number << endl;
 			}
 		} else {
 			if (sys.dimensionless_shear_rate > shearrate_min+1e-6){
