@@ -113,6 +113,16 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	filename_import_positions = argv[2];
 	filename_parameters = argv[3];
 	filename_prog_shearrate = argv[4];
+	string arg5 = argv[5];
+	if (arg5 == "up") {
+		shearrate_upward = true;
+	} else if (arg5 == "down") {
+		shearrate_upward = false;
+	} else {
+		cerr << "arg 5 need to be up or down." << endl;
+		exit(1);
+	}
+
 	setDefaultParameters();
 	readParameterFile();
 	ifstream fin_shearprog;
@@ -134,11 +144,10 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	fin_shearprog >> key >> shearrate_steps;
 	fin_shearprog >> key >> strain_interval;
 	fin_shearprog >> key >> strain_interval_relax;
-	fin_shearprog >> key >> hysteresis_loop;
-	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_steps << ' ' << hysteresis_loop << endl;
+	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_steps << ' ' << endl;
 	importInitialPositionFile();
-	if (argc == 6) {
-		contactForceParameter(argv[5]);
+	if (argc == 7) {
+		contactForceParameter(argv[6]);
 	}
 	openOutputFiles();
 	outputDataHeader(fout_particle);
@@ -150,13 +159,12 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	sys.setupShearFlow(true);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-	sys.dimensionless_shear_rate = shearrate_min;
+	if (shearrate_upward) {
+		sys.dimensionless_shear_rate = shearrate_min;
+	} else {
+		sys.dimensionless_shear_rate = shearrate_max;
+	}
 	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_steps;
-	bool shearrate_increase = true;
-	int cnt_hysteresis = 0;
-	double shear_rate_previous;
-	double viscosity_previous;
-	double contactnumber_previous;
 	while (true) {
 		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
 		double strain_0 = sys.get_shear_strain();
@@ -189,39 +197,20 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 		fout_hysteresis << sys.dimensionless_shear_rate << ' ';
 		fout_hysteresis << average_viscosity << ' ';
 		fout_hysteresis << average_contact_number << endl;
-		if (shearrate_increase) {
+		if (shearrate_upward) {
 			if (sys.dimensionless_shear_rate < shearrate_max-1e-6){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
 			} else {
-				shearrate_increase = false;
-				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
-				fout_hysteresis << endl;
-				fout_hysteresis << shear_rate_previous << ' ';
-				fout_hysteresis << viscosity_previous << ' ';
-				fout_hysteresis << contactnumber_previous << endl;
+				break;
 			}
 		} else {
 			if (sys.dimensionless_shear_rate > shearrate_min+1e-6){
 				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
 			} else {
-				shearrate_increase = true;
-				sys.dimensionless_shear_rate = shearrate_min;
-				cnt_hysteresis ++;
-				fout_hysteresis << endl;
-				fout_hysteresis << shear_rate_previous << ' ';
-				fout_hysteresis << viscosity_previous << ' ';
-				fout_hysteresis << contactnumber_previous << endl;
-
-				if ( cnt_hysteresis == hysteresis_loop){
-					break;
-				}
+				break;
 			}
 		}
-		shear_rate_previous = sys.dimensionless_shear_rate;
-		viscosity_previous = average_viscosity;
-		contactnumber_previous = average_contact_number;
 	}
-	
 }
 
 
@@ -584,8 +573,25 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+
+	
+	if (sys.hysteresis) {
+		ss_simu_name << "_hysteresis";
+		
+		if (shearrate_upward) {
+			ss_simu_name << "_up";
+		} else {
+			ss_simu_name << "_down";
+		}
+	} else {
+		
+		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+	}
+	
 	sys.simu_name = ss_simu_name.str();
+	
+	
+	
 	cerr << sys.simu_name << endl;
 }
 

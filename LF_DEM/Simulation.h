@@ -30,7 +30,8 @@ private:
 	double strain_interval;
 	double strain_interval_relax;
 	int shearrate_steps;
-	int hysteresis_loop;
+	bool shearrate_upward;
+
 	double strain_interval_output_data;
 	double strain_interval_output;
 	double strain_interval_knkt_adjustment;
