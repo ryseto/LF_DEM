@@ -98,8 +98,8 @@ Contact::calcContactInteraction(){
 
 void
 Contact::frictionlaw(){
-	interaction->lubrication.calcLubricationForce();
-	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
+	interaction->lubrication.calcLubricationForce_normal();
+	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast());
 	if (supportable_tanforce < 0){
 		supportable_tanforce = 0;
 	}
