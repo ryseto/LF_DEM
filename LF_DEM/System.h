@@ -114,7 +114,7 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	
-	void evaluateFrictionalState();
+	//void evaluateFrictionalState();
 protected:
 public:
 	~System();
@@ -129,6 +129,7 @@ public:
 	bool in_predictor;
 	bool in_corrector;
 	int dimension;
+	double critical_normal_force; 
 	vec3d *position;
 	Interaction *interaction;
 	double *radius;
@@ -154,6 +155,7 @@ public:
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stress;
 	double ratio_dashpot_total;
+	int friction_model;
 	bool friction;
 	bool colloidalforce;
 	bool hysteresis;

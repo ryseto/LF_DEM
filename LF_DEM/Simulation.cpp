@@ -286,6 +286,8 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.set_bgf_factor(atof(value.c_str()));
 	} else if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
+	} else if (keyword == "friction_model") {
+		sys.friction_model = atoi(value.c_str());
 	} else if (keyword == "kn_kt_adjustment") {
 		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
@@ -435,6 +437,11 @@ Simulation::setDefaultParameters(){
 	 */
 	int _lubrication_model = 2;
 	/*
+	 * 1 Linear friction law Ft < mu Fn
+	 * 2 Threshold friction without repulsive force
+	 */
+	int _friction_model = 1;
+	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
 	 *  strain(): total strain (length of simulation)
@@ -522,7 +529,8 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
-	
+
+	sys.friction_model = _friction_model;
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);
 	sys.set_bgf_factor(_bgf_factor);

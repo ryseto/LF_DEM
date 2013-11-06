@@ -117,10 +117,10 @@ Interaction::deactivate(){
 	sys->interaction_partners[par_num[1]].erase(par_num[0]);
 }
 
-void
-Interaction::updateFrictionalState(){
-	contact.frictionlaw();
-}
+//void
+//Interaction::updateFrictionalState(){
+//	contact.frictionlaw();
+//}
 
 void
 Interaction::updateState(bool &deactivated){

@@ -26,6 +26,10 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
+	
+	
+	void (Contact::*frictionlaw)();
+
 
 	unsigned int i,j;
 	//======= internal state =====================//
@@ -72,8 +76,10 @@ public:
 	bool staticfriction;
 	void updateContactModel();
 	void resetObservables();
-	void frictionlaw();
-	void frictionlaw_legacy();
+	void frictionlaw_criticalload();
+	void frictionlaw_coulomb();
+
+//	void frictionlaw_legacy();
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();

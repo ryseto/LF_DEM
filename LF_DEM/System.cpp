@@ -163,6 +163,8 @@ System::setupSystem(){
 	} else {
 		friction = false;
 	}
+	critical_normal_force = 1/dimensionless_shear_rate;
+
 	if (colloidalforce_length > 0) {
 		/*
 		 * The diemnsionless shear rate is defined as follows:
@@ -292,19 +294,17 @@ System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	
 	deltaTimeEvolution();
-	
 }
 
-void
-System::evaluateFrictionalState(){
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()){
-			interaction[k].contact.frictionlaw();
-		}
-	}
-}
+//void
+//System::evaluateFrictionalState(){
+//	for (int k=0; k<nb_interaction; k++) {
+//		if (interaction[k].is_contact()){
+//			interaction[k].contact.frictionlaw();
+//		}
+//	}
+//}
 
 void
 System::timeEvolutionPredictorCorrectorMethod(){
@@ -696,8 +696,6 @@ System::updateInteractions(){
 			}
 		}
 	}
-	
-	
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
 		if (interaction[k].is_active()){
@@ -707,7 +705,6 @@ System::updateInteractions(){
 			}
 		}
 	}
-	//	evaluateFrictionalState();
 }
 
 void
