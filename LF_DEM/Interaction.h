@@ -101,7 +101,6 @@ public:
 	inline bool is_contact(){return contact.active;}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
-//	void updateFrictionalState();
 
 	//======= particles data  ====================//
 	inline int

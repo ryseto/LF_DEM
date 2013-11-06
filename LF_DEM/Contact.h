@@ -30,7 +30,6 @@ private:
 	
 	void (Contact::*frictionlaw)();
 
-
 	unsigned int i,j;
 	//======= internal state =====================//
 	vec3d disp_tan; // tangential displacement
@@ -60,7 +59,7 @@ private:
 	vec3d old_spring;
 	bool old_state;
 	vec3d tvec;
-	double supportable_tanforce;
+//	double supportable_tanforce;
 
 protected:
 public:
@@ -78,6 +77,7 @@ public:
 	void resetObservables();
 	void frictionlaw_criticalload();
 	void frictionlaw_coulomb();
+	void frictionlaw_null();
 
 //	void frictionlaw_legacy();
 	//===== forces/stresses  ========================== //
