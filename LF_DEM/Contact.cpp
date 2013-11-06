@@ -95,17 +95,14 @@ Contact::incrementTangentialDisplacement(){
 void
 Contact::calcContactInteraction(){
 	(this->*frictionlaw)();
-
-
 	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); // gap_nondim is negative, therefore it is allways positive.
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
 }
 
-
 void
-Contact::frictionlaw_criticalload(void){
+Contact::frictionlaw_criticalload(){
 	interaction->lubrication.calcLubricationForce_normal();
 	double f_normal = f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast();
 	if (f_normal < sys->critical_normal_force){
@@ -134,7 +131,7 @@ Contact::frictionlaw_criticalload(void){
 
 
 void
-Contact::frictionlaw_coulomb(void){
+Contact::frictionlaw_coulomb(){
 	interaction->lubrication.calcLubricationForce_normal();
 	double f_normal = f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast();
 	if (f_normal < 0){

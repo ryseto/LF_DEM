@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/simu2D_4"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/switch"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,15 +78,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "D2N200VF0.75MonoSquare_1.dat"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "sqlub.txt"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "1"
+            argument = "g"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

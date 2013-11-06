@@ -145,7 +145,9 @@ Interaction::updateState(bool &deactivated){
 	if (contact.active) {
 		contact.calcContactInteraction();
 	}
+
 	if (sys->colloidalforce) {
+
 		if (contact.active) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
 			 * This force does not affect the friction law,

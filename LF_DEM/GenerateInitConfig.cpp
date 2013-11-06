@@ -190,17 +190,17 @@ GenerateInitConfig::gradientDescent(){
 	long long int steps = 0;
 	cerr << endl << " Gradient Descent..." << endl;
 	storeGradient();
-	running_energy=computeGradient();
-	cerr << "  Starting Energy "<< running_energy/np << endl;
+	running_energy = computeGradient();
+	cerr << "  Starting Energy " << running_energy/np << endl;
 
 	do {
 		old_running_energy = running_energy;
 		moveAlongGradient(grad, 1);
 		storeGradient();
-		running_energy=computeGradient();
+		running_energy = computeGradient();
 		relative_en=(old_running_energy-running_energy)/(old_running_energy+running_energy);
 		if (steps%100 == 0) {
-			cerr << "    Steps = " << steps << " :::   Energy : "<< running_energy/np << endl;
+			cerr << "    Steps = " << steps << " :::   Energy : " << running_energy/np << endl;
 		}
 		steps++;
 	} while(relative_en > 1e-6);

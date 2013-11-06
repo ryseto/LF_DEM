@@ -164,8 +164,11 @@ System::setupSystem(){
 		friction = false;
 	}
 	critical_normal_force = 1/dimensionless_shear_rate;
-
-	if (colloidalforce_length > 0) {
+	
+	if (friction_model == 2 || colloidalforce_length <= 0) {
+		colloidalforce = false;
+		cerr << "No colloidal force" << endl;
+	} else {
 		/*
 		 * The diemnsionless shear rate is defined as follows:
 		 * dimensionless_shear_rate = F0/colloidalforce_amplitude
@@ -178,9 +181,6 @@ System::setupSystem(){
 		}
 		colloidalforce = true;
 		cerr << "Colloidal force" << endl;
-	} else {
-		colloidalforce = false;
-		cerr << "No colloidal force" << endl;
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
