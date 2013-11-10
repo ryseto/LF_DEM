@@ -40,8 +40,11 @@ private:
 	double *nyny;
 	double *nznz;
 
-	double lub_coeff, log_lub_coeff;
-	double a0, a1, ro;
+	double lub_coeff;
+	double log_lub_coeff;
+	double a0;
+	double a1;
+	double ro;
 	double lambda;
 	double invlambda;
 	double lambda_square;

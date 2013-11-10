@@ -74,6 +74,7 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
 	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
+		//sys.backupState();
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
@@ -213,8 +214,6 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	}
 }
 
-
-
 void
 Simulation::relaxationZeroShear(vector<vec3d> &position_,
 								vector<double> &radius_,
@@ -332,8 +331,6 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
 		sys.disp_tan_target = atof(value.c_str());
-//	} else if (keyword == "frictionlaw") {
-//		sys.frictionlaw = atoi(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -437,6 +434,7 @@ Simulation::setDefaultParameters(){
 	 */
 	int _lubrication_model = 2;
 	/*
+	 * 0 No friction
 	 * 1 Linear friction law Ft < mu Fn
 	 * 2 Threshold friction without repulsive force
 	 */
@@ -539,10 +537,7 @@ Simulation::setDefaultParameters(){
 	sys.set_kn(_kn);
 	sys.set_kt(_kt);
 	sys.set_mu_static(_mu_static);
-//	sys.set_frictionlaw(_frictionlaw);
 	sys.set_colloidalforce_length(_colloidalforce_length);
-
-
 }
 
 void
@@ -930,10 +925,22 @@ Simulation::outputConfigurationData(){
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
 				if (sys.interaction[k].is_contact()){
+					/* 0 not frictional
+					 * 1 static friction
+					 * 2 sliding
+					 */
 					if (sys.interaction[k].contact.staticfriction) {
 						fout_interaction << 1 << ' ';
 					} else {
-						fout_interaction << 2 << ' ';
+						if (sys.friction_model == 1) {
+							fout_interaction << 2 << ' ';
+						} else {
+							if (sys.interaction[k].contact.is_activated_friction()){
+								fout_interaction << 2 << ' ';
+							} else {
+								fout_interaction << 0 << ' ';
+							}
+						}
 					}
 				} else {
 					fout_interaction << 0 << ' ';
@@ -944,3 +951,11 @@ Simulation::outputConfigurationData(){
 		}
 	}
 }
+
+
+
+
+
+
+
+

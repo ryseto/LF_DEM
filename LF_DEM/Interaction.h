@@ -31,7 +31,6 @@ class Interaction{
 	 *        Members                *
 	 *********************************/
 	System *sys;
-
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro, ro_12; // ro = a0+a1;
@@ -68,7 +67,6 @@ class Interaction{
 
 	//=======   ===========//
 	void outputSummary();
-	
 	//===== forces and stresses computations =====//
 	double f_colloidal_norm;
 	vec3d f_colloidal;
@@ -77,12 +75,15 @@ protected:
 public:
 	Contact contact;
 	Lubrication lubrication;
-
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
- Interaction() : contact(), lubrication(Lubrication(this)) { }
+	Interaction(): contact(), lubrication(Lubrication(this)) {;}
 
+	Interaction(const Interaction& obj): contact(), lubrication(Lubrication(this)){
+		contact = obj.contact;
+		//active = obj.is_active();
+	}
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:

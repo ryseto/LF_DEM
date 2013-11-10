@@ -86,11 +86,8 @@ Interaction::activate(int i, int j){
 	 * Is
 	 */
 	colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
-
-
 	colloidalforce_length = sys->get_colloidalforce_length();
 	calcNormalVectorDistanceGap();
-	
 	// deal with contact
 	contact.getInteractionData();
 	if (gap_nondim <= 0) {
@@ -117,11 +114,6 @@ Interaction::deactivate(){
 	sys->interaction_partners[par_num[1]].erase(par_num[0]);
 }
 
-//void
-//Interaction::updateFrictionalState(){
-//	contact.frictionlaw();
-//}
-
 void
 Interaction::updateState(bool &deactivated){
 	/* update tangential displacement: we do it before updating nvec
@@ -141,13 +133,10 @@ Interaction::updateState(bool &deactivated){
 			return;
 		}
 	}
-	
 	if (contact.active) {
 		contact.calcContactInteraction();
 	}
-
 	if (sys->colloidalforce) {
-
 		if (contact.active) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
 			 * This force does not affect the friction law,
@@ -162,7 +151,6 @@ Interaction::updateState(bool &deactivated){
 		}
 	}
 }
-
 
 void
 Interaction::updateStateRelax(bool &deactivated){
@@ -200,7 +188,6 @@ void
 Interaction::addUpColloidalForce(){
 	sys->colloidal_force[par_num[0]] += f_colloidal;
 	sys->colloidal_force[par_num[1]] -= f_colloidal;
-
 }
 
 /* Relative velocity of particle 1 from particle 0.

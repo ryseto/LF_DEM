@@ -57,12 +57,9 @@ private:
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
-
 	double mu_static; // static friction coefficient.
 	double bgf_factor;
 	double kb_T;
-	
-	
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -91,41 +88,34 @@ private:
 	void deltaTimeEvolutionRelax();
 	void deltaTimeEvolutionCorrector();
 	void deltaTimeEvolutionPredictor();
-
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildLubricationTerms(bool rhs=true);
-	
-	//void buildLubricationRHS();
 	void buildContactTerms();
 	void buildColloidalForceTerms();
-
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-	//void calcStressesHydroContactBrownian();
 	double *lub_cont_forces_init;
 	void calcStressesHydroContact();
-
-
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
-	
-	//void evaluateFrictionalState();
+	/*Backup*/
+	vector <vec3d> position_backup;
+	Interaction *interaction_backup;
+
 protected:
 public:
 	~System();
+	void backupState();
+	
 	double *v_total; // Velocities and angular velocities of all particles.
 	double *v_hydro; // Velocities balancing with the 
 	double *v_cont;
 	double *v_colloidal;
-	//	double *v_lub_cont_mid;
-	//	double *v_Brownian_init;
-	//	double *v_Brownian_mid;
-
 	bool in_predictor;
 	bool in_corrector;
 	int dimension;
@@ -159,8 +149,8 @@ public:
 	bool friction;
 	bool colloidalforce;
 	bool hysteresis;
-
-//	bool brownian;
+	set <Interaction*> *interaction_list;
+	set <int> *interaction_partners;
 	/*
 	 * Lubrication model
 	 * 0 no lubrication
@@ -208,8 +198,6 @@ public:
 	double ave_contact_velo_tan;
 	double ave_contact_velo_normal;
 	double ave_sliding_velocity;
-	
-	double ave_overlap;
 	int contact_nb;
 	double ratio_dynamic_friction;
 	double average_fc_normal;
@@ -250,17 +238,14 @@ public:
 	void stressBrownianReset();
 	void calcStress();
 	void analyzeState();
-	void computeBrownianStress();
 	StokesSolver stokes_solver;
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	set <Interaction*> *interaction_list;
-	set <int> *interaction_partners;
 	void openFileInteractionData();
 	int adjustContactModelParameters();
-	void calcTotalPotentialEnergy();
-	void setupShearFlow(bool activate){
+		void calcTotalPotentialEnergy();
+		void setupShearFlow(bool activate){
 		if (activate) {
 			vel_difference = lz;
 		} else {
@@ -277,11 +262,9 @@ public:
 		lz_half = 0.5*lz;
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
-
 	inline double System_volume(){
 		return system_volume;
 	}
-	
 	double getParticleContactNumber(){
 		return (double)2*contact_nb/np;
 	}

@@ -271,7 +271,6 @@ sub OutYaplotData{
 	printf OUT "@ 3\n";
 	printf OUT "t -2 0 $postext strain=$shear_strain\n";
 	
-	
 #	printf OUT "y 7\n";
 #	printf OUT "r 0.1\n";
 #    printf OUT "@ 5\n";
@@ -365,7 +364,7 @@ sub OutYaplotData{
 		}
     }
 	printf OUT "r 0.35\n";
-	printf OUT "@ 7\n"; # dynamic
+	printf OUT "@ 6\n"; # dynamic
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {
@@ -378,6 +377,21 @@ sub OutYaplotData{
 			}
 		}
     }
+	printf OUT "r 0.2\n";
+	printf OUT "@ 0\n"; # dynamic
+	for ($k = 0; $k < $num_interaction; $k ++){
+		$force = $Fc_n[$k];
+        if ($F_lub[$k] < 0) {
+			$force += - $F_lub[$k];
+		}
+		if ($Gap[$k] < 0) {
+			if ($fricstate[$k] == 0) {
+				# static
+				&OutString2($int0[$k],  $int1[$k]);
+			}
+		}
+    }
+
 	
 	#printf OUT "r 0.2\n";
     printf OUT "y 3\n";

@@ -105,7 +105,7 @@ Contact::calcContactInteraction(){
 
 void
 Contact::frictionlaw_coulomb(){
-	interaction->lubrication.calcLubricationForce_normal();
+	interaction->lubrication.calcLubricationForce_normal(); // dashpot for the squeezed mode.
 	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast());
 	if (supportable_tanforce < 0){
 		if (staticfriction) {
@@ -136,7 +136,7 @@ Contact::frictionlaw_criticalload(){
 		if (staticfriction) {
 			sys->incrementCounter_static_to_dynamic();
 		}
-		staticfriction = false;
+ 		staticfriction = false;
 		disp_tan.reset();
 		f_contact_tan.reset();
 		return;
