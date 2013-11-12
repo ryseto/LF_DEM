@@ -478,13 +478,13 @@ sub OutYaplotData{
 
 
 	
-	if ($Ly == 0){
-		printf OUT "y 6\n";
-		printf OUT "@ 0\n";
-		for ($i = 0; $i < $np; $i ++){
-			&OutCross($i);
-		}
-	}
+#	if ($Ly == 0){
+#		printf OUT "y 6\n";
+#		printf OUT "@ 0\n";
+#		for ($i = 0; $i < $np; $i ++){
+#			&OutCross($i);
+#		}
+#	}
 
 	&OutBoundaryBox;
 	

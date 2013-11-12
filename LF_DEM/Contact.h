@@ -86,10 +86,10 @@ public:
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
 	bool is_activated_friction() {
-		if (disp_tan.is_zero()){
-			return false;
-		} else {
+		if (disp_tan.is_not_zero()){
 			return true;
+		} else {
+			return false;
 		}
 	}
 	void info(){

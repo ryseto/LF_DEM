@@ -79,7 +79,6 @@ public:
 	 *       Public Methods          *
 	 *********************************/
 	Interaction(): contact(), lubrication(Lubrication(this)) {;}
-
 	Interaction(const Interaction& obj): contact(), lubrication(Lubrication(this)){
 		contact = obj.contact;
 		//active = obj.is_active();
@@ -100,6 +99,13 @@ public:
 	void deactivate();
 	inline bool is_overlap(){return r<ro;}
 	inline bool is_contact(){return contact.active;}
+	inline bool is_friccontact(){
+		if (contact.disp_tan.is_not_zero()){
+			return true;
+		} else {
+			return false;
+		}
+	}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
 

@@ -1019,12 +1019,12 @@ System::analyzeState(){
 	static double previous_strain = 0;
 	double strain_interval = shear_strain-previous_strain;
 	previous_strain = shear_strain;
-	
 	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	sliding_velocity_history.push_back(max_contact_velo_tan);
 	contact_nb = 0;
+	fric_contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lx;
 	double sum_fc_normal = 0;
@@ -1040,8 +1040,11 @@ System::analyzeState(){
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
-				if (interaction[k].contact.staticfriction == false){
-					cnt_sliding_contact++;
+				if (interaction[k].is_friccontact()){
+					fric_contact_nb ++;
+					if (interaction[k].contact.staticfriction == false){
+						cnt_sliding_contact++;
+					}
 				}
 				sum_fc_normal += interaction[k].contact.get_f_contact_normal_norm();
 				if (interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal) {
@@ -1079,8 +1082,8 @@ System::analyzeState(){
 		average_fc_normal = 0;
 	}
 	rate_static_to_dynamic = cnt_static_to_dynamic/(strain_interval*np);
-	if (contact_nb > 0) {
-		ratio_dynamic_friction = (contact_nb-cnt_sliding_contact)*(1./contact_nb);
+	if (fric_contact_nb > 0) {
+		ratio_dynamic_friction = (fric_contact_nb-cnt_sliding_contact)*(1./fric_contact_nb);
 	} else {
 		ratio_dynamic_friction = 0;
 	}
