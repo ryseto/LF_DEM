@@ -480,6 +480,25 @@ Lubrication::calcLubricationForce(){
 }
 
 void
+Lubrication::calcLubricationForce_normal(){
+	/*
+	 *  First: -A*(U-Uinf) term
+	 */
+	/* Eq. (1.6a) in Jeffrey&Onishi 1984
+	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
+	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
+	 *
+	 */
+	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
+	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
+	calcXFunctions();
+	double XAU_i_normal = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec);
+	double XGE_i_normal = (scaledXG0()+scaledXG2())*(*nxnz);
+	lubforce_p0_normal = XAU_i_normal+XGE_i_normal;
+}
+
+
+void
 Lubrication::addHydroStress(){
 	StressTensor stresslet_hydro_GU_i;
 	StressTensor stresslet_hydro_GU_j;

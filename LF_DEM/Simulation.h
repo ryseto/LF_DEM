@@ -24,6 +24,14 @@ private:
 	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;
+	string filename_prog_shearrate;
+	double shearrate_min;
+	double shearrate_max;
+	double strain_interval;
+	double strain_interval_relax;
+	int shearrate_steps;
+	bool shearrate_upward;
+
 	double strain_interval_output_data;
 	double strain_interval_output;
 	double strain_interval_knkt_adjustment;
@@ -70,6 +78,7 @@ private:
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
+	ofstream fout_hysteresis;
 	bool out_data_particle;
 	bool out_data_interaction;
 	bool origin_zero_flow;
@@ -100,7 +109,8 @@ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	void simulationMain(int argc, const char * argv[]);
+	void simulationConstantShearRate(int argc, const char * argv[]);
+	void simulationHysteresis(int argc, const char * argv[]);
 	void relaxationZeroShear(vector<vec3d> &position_,
 							 vector<double> &radius_,
 							 double lx_, double ly_, double lz_);

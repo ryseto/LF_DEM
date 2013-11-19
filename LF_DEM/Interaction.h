@@ -31,7 +31,6 @@ class Interaction{
 	 *        Members                *
 	 *********************************/
 	System *sys;
-
 	double a0; // radii
 	double a1; // second raddi > a0
 	double ro, ro_12; // ro = a0+a1;
@@ -68,7 +67,6 @@ class Interaction{
 
 	//=======   ===========//
 	void outputSummary();
-	
 	//===== forces and stresses computations =====//
 	double f_colloidal_norm;
 	vec3d f_colloidal;
@@ -77,12 +75,14 @@ protected:
 public:
 	Contact contact;
 	Lubrication lubrication;
-
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
- Interaction() : contact(), lubrication(Lubrication(this)) { }
-
+	Interaction(): contact(), lubrication(Lubrication(this)) {;}
+	Interaction(const Interaction& obj): contact(), lubrication(Lubrication(this)){
+		contact = obj.contact;
+		//active = obj.is_active();
+	}
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
@@ -99,9 +99,15 @@ public:
 	void deactivate();
 	inline bool is_overlap(){return r<ro;}
 	inline bool is_contact(){return contact.active;}
+	inline bool is_friccontact(){
+		if (contact.disp_tan.is_not_zero()){
+			return true;
+		} else {
+			return false;
+		}
+	}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
-	void updateFrictionalState();
 
 	//======= particles data  ====================//
 	inline int

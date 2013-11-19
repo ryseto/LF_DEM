@@ -88,7 +88,6 @@ Interaction::activate(int i, int j){
 	colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
 	colloidalforce_length = sys->get_colloidalforce_length();
 	calcNormalVectorDistanceGap();
-	
 	// deal with contact
 	contact.getInteractionData();
 	if (gap_nondim <= 0) {
@@ -116,11 +115,6 @@ Interaction::deactivate(){
 }
 
 void
-Interaction::updateFrictionalState(){
-	contact.frictionlaw();
-}
-
-void
 Interaction::updateState(bool &deactivated){
 	/* update tangential displacement: we do it before updating nvec
 	 * as it should be along the tangential vector defined in the previous time step
@@ -139,7 +133,6 @@ Interaction::updateState(bool &deactivated){
 			return;
 		}
 	}
-	
 	if (contact.active) {
 		contact.calcContactInteraction();
 	}
@@ -158,7 +151,6 @@ Interaction::updateState(bool &deactivated){
 		}
 	}
 }
-
 
 void
 Interaction::updateStateRelax(bool &deactivated){

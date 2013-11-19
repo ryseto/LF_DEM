@@ -11,6 +11,13 @@ Contact::init(System *sys_, Interaction *interaction_){
 	sys = sys_;
 	interaction = interaction_;
 	active = false;
+	if (sys->friction_model == 1) {
+		frictionlaw = &Contact::frictionlaw_coulomb;
+	} else if (sys->friction_model == 2) {
+		frictionlaw = &Contact::frictionlaw_criticalload;
+	} else {
+		frictionlaw = &Contact::frictionlaw_null;
+	}
 }
 
 void
@@ -89,19 +96,25 @@ Contact::incrementTangentialDisplacement(){
  */
 void
 Contact::calcContactInteraction(){
-	frictionlaw();
 	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); // gap_nondim is negative, therefore it is allways positive.
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
+	(this->*frictionlaw)();
 }
 
 void
-Contact::frictionlaw(){
-	interaction->lubrication.calcLubricationForce();
-	supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal());
+Contact::frictionlaw_coulomb(){
+	interaction->lubrication.calcLubricationForce_normal(); // dashpot for the squeezed mode.
+	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast());
 	if (supportable_tanforce < 0){
-		supportable_tanforce = 0;
+		if (staticfriction) {
+			sys->incrementCounter_static_to_dynamic();
+		}
+		staticfriction = false;
+		disp_tan.reset();
+		f_contact_tan.reset();
+		return;
 	}
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
@@ -114,6 +127,35 @@ Contact::frictionlaw(){
 		staticfriction = true;
 	}
 }
+
+void
+Contact::frictionlaw_criticalload(){
+	interaction->lubrication.calcLubricationForce_normal();
+	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast());
+	if (supportable_tanforce < sys->critical_normal_force){
+		if (staticfriction) {
+			sys->incrementCounter_static_to_dynamic();
+		}
+ 		staticfriction = false;
+		disp_tan.reset();
+		f_contact_tan.reset();
+		return;
+	}
+	double sq_f_tan = f_contact_tan.sq_norm();
+	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		if (staticfriction) {
+			sys->incrementCounter_static_to_dynamic();
+		}
+		staticfriction = false;
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+	} else {
+		staticfriction = true;
+	}
+}
+
+void
+Contact::frictionlaw_null(){;}
+
 
 void
 Contact::calcContactInteractionRelax(){

@@ -52,7 +52,7 @@ Simulation::contactForceParameter(string filename){
  * Main simulation
  */
 void
-Simulation::simulationMain(int argc, const char * argv[]){
+Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	filename_import_positions = argv[1];
 	filename_parameters = argv[2];
 	sys.dimensionless_shear_rate = atof(argv[3]);
@@ -74,6 +74,7 @@ Simulation::simulationMain(int argc, const char * argv[]){
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
 	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
+		//sys.backupState();
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
@@ -104,6 +105,112 @@ Simulation::simulationMain(int argc, const char * argv[]){
 		}
 		cnt_simu_loop ++;
 		cerr << "strain: " << sys.get_shear_strain() << " / " << shear_strain_end << endl;
+	}
+}
+
+void
+Simulation::simulationHysteresis(int argc, const char * argv[]){
+	sys.hysteresis = true;
+	filename_import_positions = argv[2];
+	filename_parameters = argv[3];
+	filename_prog_shearrate = argv[4];
+	string arg5 = argv[5];
+	if (arg5 == "up") {
+		shearrate_upward = true;
+	} else if (arg5 == "down") {
+		shearrate_upward = false;
+	} else {
+		cerr << "arg 5 need to be up or down." << endl;
+		exit(1);
+	}
+
+	setDefaultParameters();
+	readParameterFile();
+	ifstream fin_shearprog;
+	fin_shearprog.open(filename_prog_shearrate.c_str());
+	/*
+	 * example of "shear_prog.txt"
+	 * ---------------------------------
+	 * shearrate_min 0.005
+	 * shearrate_max 0.2
+	 * shearrate_steps 10
+	 * strain_interval 10
+	 * strain_interval_relax 2
+	 * hysteresis_loop 1
+	 * ---------------------------------
+	 */
+	string key;
+	fin_shearprog >> key >> shearrate_min;
+	fin_shearprog >> key >> shearrate_max;
+	fin_shearprog >> key >> shearrate_steps;
+	fin_shearprog >> key >> strain_interval;
+	fin_shearprog >> key >> strain_interval_relax;
+	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_steps << ' ' << endl;
+	importInitialPositionFile();
+	if (argc == 7) {
+		contactForceParameter(argv[6]);
+	}
+	openOutputFiles();
+	outputDataHeader(fout_particle);
+	outputDataHeader(fout_interaction);
+	outputDataHeader(fout_rheo);
+	outputDataHeader(fout_st);
+	sys.setupSystem();
+	outputConfigurationData();
+	sys.setupShearFlow(true);
+	int cnt_simu_loop = 1;
+	int cnt_config_out = 1;
+	if (shearrate_upward) {
+		sys.dimensionless_shear_rate = shearrate_min;
+	} else {
+		sys.dimensionless_shear_rate = shearrate_max;
+	}
+	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_steps;
+	while (true) {
+		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
+		double strain_0 = sys.get_shear_strain();
+		shear_strain_end = sys.get_shear_strain()+strain_interval;
+		double average_viscosity = 0;
+		double average_contact_number = 0;
+		int cnt_average = 0;
+		while (sys.get_shear_strain() < shear_strain_end-1e-8) {
+			double strain_next = cnt_simu_loop*strain_interval_output_data;
+			double strain_next_config_out = cnt_config_out*strain_interval_output;
+			sys.timeEvolution(strain_next);
+			evaluateData();
+			outputRheologyData();
+			outputStressTensorData();
+			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+				cerr << sys.dimensionless_shear_rate  << ' ';
+				cerr << sys.get_shear_strain()  << ' ' << 6*M_PI*viscosity << endl;
+			}
+			if (sys.get_shear_strain()-strain_0 > strain_interval_relax){
+				average_viscosity += 6*M_PI*viscosity;
+				average_contact_number += sys.getParticleContactNumber();
+				cnt_average ++;
+			}
+			cnt_simu_loop ++;
+		}
+		average_viscosity = average_viscosity/cnt_average;
+		average_contact_number = average_contact_number/cnt_average;
+		fout_hysteresis << sys.dimensionless_shear_rate << ' ';
+		fout_hysteresis << average_viscosity << ' ';
+		fout_hysteresis << average_contact_number << endl;
+		if (shearrate_upward) {
+			if (sys.dimensionless_shear_rate < shearrate_max-1e-6){
+				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
+			} else {
+				break;
+			}
+		} else {
+			if (sys.dimensionless_shear_rate > shearrate_min+1e-6){
+				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
+			} else {
+				break;
+			}
+		}
 	}
 }
 
@@ -178,6 +285,8 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.set_bgf_factor(atof(value.c_str()));
 	} else if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
+	} else if (keyword == "friction_model") {
+		sys.friction_model = atoi(value.c_str());
 	} else if (keyword == "kn_kt_adjustment") {
 		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
@@ -222,8 +331,6 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
 		sys.disp_tan_target = atof(value.c_str());
-//	} else if (keyword == "frictionlaw") {
-//		sys.frictionlaw = atoi(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -285,11 +392,16 @@ Simulation::openOutputFiles(){
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string st_filename = "st_" +sys.simu_name + ".dat";
+
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
 	sys.openFileInteractionData();
+	if (sys.hysteresis){
+		string hysteresis_filename = "his_" +sys.simu_name + ".dat";
+		fout_hysteresis.open(hysteresis_filename.c_str());
+	}
 }
 
 void
@@ -321,6 +433,12 @@ Simulation::setDefaultParameters(){
 	 *
 	 */
 	int _lubrication_model = 2;
+	/*
+	 * 0 No friction
+	 * 1 Linear friction law Ft < mu Fn
+	 * 2 Threshold friction without repulsive force
+	 */
+	int _friction_model = 1;
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
@@ -409,7 +527,8 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
-	
+
+	sys.friction_model = _friction_model;
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);
 	sys.set_bgf_factor(_bgf_factor);
@@ -418,10 +537,7 @@ Simulation::setDefaultParameters(){
 	sys.set_kn(_kn);
 	sys.set_kt(_kt);
 	sys.set_mu_static(_mu_static);
-//	sys.set_frictionlaw(_frictionlaw);
 	sys.set_colloidalforce_length(_colloidalforce_length);
-
-
 }
 
 void
@@ -460,8 +576,25 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+
+	
+	if (sys.hysteresis) {
+		ss_simu_name << "_hysteresis";
+		
+		if (shearrate_upward) {
+			ss_simu_name << "_up";
+		} else {
+			ss_simu_name << "_down";
+		}
+	} else {
+		
+		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+	}
+	
 	sys.simu_name = ss_simu_name.str();
+	
+	
+	
 	cerr << sys.simu_name << endl;
 }
 
@@ -603,6 +736,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#44: average tangential velocity (contact)" << endl;
 		fout_rheo << "#45: average normal velocity (contact)" << endl;
 		fout_rheo << "#46: average sliding velocity (dynamic friction)" << endl;
+		fout_rheo << "#47: shearrate" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -659,7 +793,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.ave_contact_velo_tan << ' '; // 44
 	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
-	
+	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
 	fout_rheo << endl;
 }
 
@@ -791,10 +925,22 @@ Simulation::outputConfigurationData(){
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
 				if (sys.interaction[k].is_contact()){
+					/* 0 not frictional
+					 * 1 static friction
+					 * 2 sliding
+					 */
 					if (sys.interaction[k].contact.staticfriction) {
 						fout_interaction << 1 << ' ';
 					} else {
-						fout_interaction << 2 << ' ';
+						if (sys.friction_model == 1) {
+							fout_interaction << 2 << ' ';
+						} else {
+							if (sys.interaction[k].contact.is_activated_friction()){
+								fout_interaction << 2 << ' ';
+							} else {
+								fout_interaction << 0 << ' ';
+							}
+						}
 					}
 				} else {
 					fout_interaction << 0 << ' ';
@@ -805,3 +951,11 @@ Simulation::outputConfigurationData(){
 		}
 	}
 }
+
+
+
+
+
+
+
+

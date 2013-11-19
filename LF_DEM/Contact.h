@@ -26,11 +26,10 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
+	void (Contact::*frictionlaw)();
 
 	unsigned int i,j;
-	//======= internal state =====================//
-	vec3d disp_tan; // tangential displacement
-	vec3d disp_tan_previous;
+
 	//===== forces and stresses ==================== //
 	double kn_scaled;
 	double kt_scaled;
@@ -49,21 +48,18 @@ private:
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
-	vec3d old_relative_velocity;
-	vec3d old_f_test_vec;
-	vec3d old_lubforce_tan;
-	vec3d old_dashpot;
-	vec3d old_spring;
-	bool old_state;
 	vec3d tvec;
-	double supportable_tanforce;
-
 protected:
 public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
+	//======= internal state =====================//
+	vec3d disp_tan; // tangential displacement
 	Contact(){};
+	Contact(const Contact& obj){
+		disp_tan = obj.disp_tan;
+	}
 	void init(System *sys_, Interaction *int_);
 	void getInteractionData();
 	void activate();
@@ -72,8 +68,9 @@ public:
 	bool staticfriction;
 	void updateContactModel();
 	void resetObservables();
-	void frictionlaw();
-	void frictionlaw_legacy();
+	void frictionlaw_criticalload();
+	void frictionlaw_coulomb();
+	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
 
 	void incrementTangentialDisplacement();
@@ -88,13 +85,19 @@ public:
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
+	bool is_activated_friction() {
+		if (disp_tan.is_not_zero()){
+			return true;
+		} else {
+			return false;
+		}
+	}
 	void info(){
 		cerr << "kn " << kn_scaled << endl;
 	}
 	inline double get_duration(){
 		return duration_contact;
 	}
-
 	vec3d get_disp_tan(){return disp_tan;}
 
 };

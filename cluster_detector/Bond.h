@@ -15,11 +15,12 @@ using namespace std;
 class Bond{
 private:
 	unsigned int par_num[2];
-	bool contact;
+
 protected:
 public:
-	void set(int i, int j, bool contact_){
-		contact = contact_;
+	int contact_state;
+	void set(int i, int j, int contact_state_){
+		contact_state = contact_state_;
 		if (i < j){
 			par_num[0] = i;
 			par_num[1] = j;
@@ -30,7 +31,7 @@ public:
 	}
 	
 	int next(int i){
-		if (contact){
+		if (contact_state == 1){
 			if (i == par_num[0]){
 				return par_num[1];
 			} else if(i == par_num[1]){

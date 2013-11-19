@@ -63,6 +63,8 @@ System::allocateRessources(){
 	int maxnb_interactionpair_per_particle = 15;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	interaction = new Interaction [maxnb_interactionpair];
+	interaction_backup = new Interaction [maxnb_interactionpair];
+	
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	linalg_size = 6*np;
@@ -152,31 +154,46 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void
 System::setupSystem(){
-	//	if (kb_T == 0) {
-	//		brownian = false;
-	//	} else {
-	//		brownian = true;
-	//		integration_method = 2; // > force Euler
-	//	}
-	if (mu_static > 0) {
-		friction = true;
-	} else {
+	if (friction_model == 0 || mu_static <= 0){
+		cerr << "friction_model = 0" << endl;
 		friction = false;
-	}
-	if (colloidalforce_length > 0) {
+	} else if (friction_model == 1) {
+		cerr << "friction_model = 1" << endl;
+		friction = true;
+		if (colloidalforce_length <= 0) {
+			colloidalforce = false;
+			cerr << "No colloidal force" << endl;
+		} else {
+			/*
+			 * The diemnsionless shear rate is defined as follows:
+			 * dimensionless_shear_rate = F0/colloidalforce_amplitude
+			 * F0 = 6pi*eta*a^2*shear_rate
+			 * Under the unit of this simulation
+			 * 6pi*eta*a^2*shear_rate is set to 1.
+			 */
+			if (hysteresis == false){
+				colloidalforce_amplitude = 1/dimensionless_shear_rate;
+			}
+			colloidalforce = true;
+			cerr << "Colloidal force" << endl;
+		}
+	} else if (friction_model == 2) {
+		cerr << "friction_model = 2" << endl;
 		/*
 		 * The diemnsionless shear rate is defined as follows:
-		 * dimensionless_shear_rate = F0/colloidalforce_amplitude
+		 * dimensionless_shear_rate = F0/F^{*}
 		 * F0 = 6pi*eta*a^2*shear_rate
-		 * Under the unit of this simulation
-		 * 6pi*eta*a^2*shear_rate is set to 1.
+		 * The force unit is changed by the considering shear rate.
+		 * In the simulation, the critical force F^{*} = \tilde{F^{*}} F_0.
+		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_shear_rate.
+		 *
 		 */
-		colloidalforce_amplitude = 1/dimensionless_shear_rate;
-		colloidalforce = true;
-		cerr << "Colloidal force" << endl;
-	} else {
+		friction = true;
+		critical_normal_force = 1/dimensionless_shear_rate;
 		colloidalforce = false;
-		cerr << "No colloidal force" << endl;
+		cerr << "critical_normal_force = " << critical_normal_force << endl;
+	} else {
+		exit(1);
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
@@ -227,6 +244,11 @@ System::setupSystem(){
 		log_lub_coeff_contact_tan_dashpot = 0;
 	} else if (lubrication_model == 2) {
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+		/* [Note]
+		 * We finally do not introduce a dashpot for the sliding mode.
+		 * This is set in the parameter file, i.e. contact_relaxzation_time_tan = 0
+		 * So log_lub_coeff_contact_tan_dashpot = 0;
+		 */
 		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
@@ -251,12 +273,6 @@ System::setupSystem(){
 	 * ASD code from Brady has dt_ratio=150
 	 */
 	stokes_solver.initialize();
-	// initialize the brownian force after the solver, as it assumes
-	// the cholmod_common of the solver is already initialized
-	//	if (brownian) {
-	//		fb->init();
-	//		brownianstress_calc_nb = 0;
-	//	}
 	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
@@ -290,18 +306,7 @@ System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	
 	deltaTimeEvolution();
-	
-}
-
-void
-System::evaluateFrictionalState(){
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()){
-			interaction[k].contact.frictionlaw();
-		}
-	}
 }
 
 void
@@ -456,147 +461,6 @@ System::deltaTimeEvolutionCorrector(){
 	}
 }
 
-//void System::timeEvolutionBrownian(){
-//	int zero_2Dsimu;
-//	if (dimension == 2) {
-//		zero_2Dsimu = 0;
-//	} else {
-//		zero_2Dsimu = 1;
-//	}
-//	/***************************************************************************
-//	 *  This routine implements a predictor-corrector algorithm                 *
-//	 *  for the dynamics with Brownian motion.                                  *
-//	 *  The		algorithm is the one of Melrose & Ball 1997.                        *
-//	 *                                                                          *
-//	 *  X_pred = X(t) + V(t)*dt                                                 *
-//	 *  X(t+dt) = X_pred + 0.5*(V(t+dt)-V(t))*dt                                *
-//	 *                                                                          *
-//	 *  Parameters                                                              *
-//	 *  They essentially controls what enter V(t) and V(t+dt):                  *
-//	 *   * displubcont : - if true  V(t) = V^{B}(t) + V^{H}(t) + V^{C}(t)       *
-//	 *                   - if false V(t) = V^{B}(t)                             *
-//	 *   * flubcont_update : - requires displubcont                             *
-//	 *                       - allows dt^2 scheme for contact and hydro         *
-//	 *                         velocities                                       *
-//	 *                       - if true :                                        *
-//	 *                          R_FU(t+dt) V^{*}(t+dt) = F^{*}(t+dt)            *
-//	 *                          with * = C or H                                 *
-//	 *                       - if false :                                       *
-//	 *                          R_FU(t+dt) V^{*}(t+dt) = F^{*}(t)               *
-//	 *                                                                          *
-//	 ****************************************************************************/
-//	bool displubcont = true;
-//	bool flubcont_update = true;
-//	/*********************************************************/
-//	/*                    Predictor                          */
-//	/*********************************************************/
-//	setContactForceToParticle();
-//	stokes_solver.resetRHS();
-//    stokes_solver.resetResistanceMatrix("direct");
-//    addStokesDrag();
-//    buildLubricationTerms();
-//
-//    stokes_solver.completeResistanceMatrix();
-//    buildContactTerms();
-//    stokes_solver.solve(v_lub_cont);
-//
-//	if (displubcont) {
-//		stokes_solver.getRHS(lub_cont_forces_init);
-//	}
-//    // now the Brownian part of the velocity:
-//    // predictor-corrector algortithm (see Melrose & Ball, 1997)
-//    //
-//    // we do not call solvingIsDone() before new solve(), because
-//    // R_FU has not changed, so same factorization is safely used
-//
-//	stokes_solver.setRHS( fb->generate_invLFb() );
-//	stokes_solver.solve_CholTrans( v_Brownian_init );
-//	stokes_solver.solvingIsDone();
-//
-//    // move particles to intermediate point
-//    for (int i=0; i<np; i++) {
-//		int i3 = 3*i;
-//		velocity[i].set(v_Brownian_init[i3],
-//						v_Brownian_init[i3+1]*zero_2Dsimu,
-//						v_Brownian_init[i3+2]);
-//		velocity[i].add(v_lub_cont[i3],
-//						v_lub_cont[i3+1],
-//						v_lub_cont[i3+2]);
-//		velocity[i].x += position[i].z;
-//		displacement(i, velocity[i]*dt);
-//    }
-//	if (friction) {
-//		double O_inf_y = 0.5;
-//		for (int i=0; i<np; i++) {
-//			ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
-//			ang_velocity[i].y += O_inf_y;
-//		}
-//    }
-//	// evolve PBC
-//	shear_disp += vel_difference*dt;
-//	if (shear_disp >= lx) {
-//		shear_disp -= lx;
-//	}
-//    updateInteractions();
-//	for (int i=0; i<np; i++) {
-//		velocity_predictor[i] = velocity[i];
-//		ang_velocity_predictor[i] = ang_velocity[i];
-//	}
-//
-//	/*********************************************************/
-//	/*                   Corrector                           */
-//	/*********************************************************/
-//	setContactForceToParticle();
-//    // build new Resistance matrix after move
-//    stokes_solver.resetResistanceMatrix("direct");
-//    addStokesDrag();
-//    buildLubricationTerms(false); // false: don't modify rhs, as we want to keep same Brownian force
-//    stokes_solver.completeResistanceMatrix();
-//    // get the intermediate brownian velocity
-//	stokes_solver.solve_CholTrans( v_Brownian_mid );
-//	if (flubcont_update) {  // rebuild rhs
-//		stokes_solver.resetRHS();
-//		buildLubricationRHS();
-//	} else {  // don't rebuild rhs
-//		stokes_solver.setRHS(lub_cont_forces_init);
-//	}
-//	stokes_solver.solve(v_lub_cont_mid);
-//    stokes_solver.solvingIsDone();
-//    // update total velocity
-//    // first term is hydrodynamic + contact velocities
-//    // second term is Brownian velocities
-//    // third term is Brownian drift
-//    // fourth term for vx is the shear rate
-//    for (int i = 0; i<np; i++) {
-//		int i3 = 3*i;
-//		velocity[i].set(0.5*(v_lub_cont_mid[i]+v_Brownian_mid[i3]+position[i].z),
-//						0.5*(v_lub_cont_mid[i3+1]+v_Brownian_mid[i3+1]*zero_2Dsimu),
-//						0.5*(v_lub_cont_mid[i3+2]+v_Brownian_mid[i3+2]));
-//		velocity[i] -= 0.5*velocity_predictor[i];
-//    }
-//	if (friction) {
-//		//		double O_inf_y = 0.5;
-//		//		for (int i=0; i < np; i++){
-//		//			ang_velocity[i] = 0.75*contact_torque[i]/radius_cubic[i];
-//		//			ang_velocity[i].y += 0.5*O_inf_y;
-//		//			ang_velocity[i] -= 0.5*ang_velocity_predictor[i];
-//		//		}
-//		//		//	ang_velocity[i] = 0.5*(ang_velocity_mp1st[i] + ang_velocity_mp2nd[i]);
-//	}
-//	for (int i=0; i < np; i++) {
-//		displacement(i, velocity[i]*dt);
-//	}
-//	if (twodimension) {
-//		for (int i=0; i < np; i++) {
-//			angle[i] += ang_velocity[i].y*dt;
-//		}
-//	}
-//	// update boxing system
-//	boxset.update();
-//	checkNewInteraction();
-//	updateInteractions();
-//}
-
 void
 System::timeEvolution(double strain_next){
 	static bool firsttime = true;
@@ -694,8 +558,6 @@ System::updateInteractions(){
 			}
 		}
 	}
-	
-	
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
 		if (interaction[k].is_active()){
@@ -705,7 +567,6 @@ System::updateInteractions(){
 			}
 		}
 	}
-	//	evaluateFrictionalState();
 }
 
 void
@@ -773,11 +634,6 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
-						// if(i==58&&j==97&&(*it)->is_contact()){
-						// 	cout << " pause " << endl;
-						// 	getchar();
-						// }
-
 						vec3d nr_vec = (*it)->get_nvec();
 						(*it)->lubrication.calcXYFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
@@ -852,23 +708,6 @@ System::buildLubricationTerms(bool rhs){
 			break;
 	}
 }
-
-//void
-//System::buildLubricationRHS(){
-//	double GEi[3];
-//    double GEj[3];
-//    for (int i=0; i<np-1; i ++) {
-//		for (set<Interaction*>::iterator it = interaction_list[i].begin();
-//			 it != interaction_list[i].end(); it ++) {
-//			int j = (*it)->partner(i);
-//			if (j > i) {
-//				(*it)->GE(GEi, GEj);  // G*E_\infty term
-//				stokes_solver.addToRHSForce(i, GEi);
-//				stokes_solver.addToRHSForce(j, GEj);
-//			}
-//		}
-//    }
-//}
 
 void
 System::setContactForceToParticle(){
@@ -1133,7 +972,6 @@ System::evaluateMaxContactVelocity(){
 			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
 				max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
 			}
-			
 		}
 	}
 	if (cnt_contact > 0) {
@@ -1181,13 +1019,12 @@ System::analyzeState(){
 	static double previous_strain = 0;
 	double strain_interval = shear_strain-previous_strain;
 	previous_strain = shear_strain;
-	
 	max_velocity = evaluateMaxVelocity();
-
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	sliding_velocity_history.push_back(max_contact_velo_tan);
 	contact_nb = 0;
+	fric_contact_nb = 0;
 	max_disp_tan = 0;
 	min_gap_nondim = lx;
 	double sum_fc_normal = 0;
@@ -1203,8 +1040,11 @@ System::analyzeState(){
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
-				if (interaction[k].contact.staticfriction == false){
-					cnt_sliding_contact++;
+				if (interaction[k].is_friccontact()){
+					fric_contact_nb ++;
+					if (interaction[k].contact.staticfriction == false){
+						cnt_sliding_contact++;
+					}
 				}
 				sum_fc_normal += interaction[k].contact.get_f_contact_normal_norm();
 				if (interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal) {
@@ -1242,8 +1082,8 @@ System::analyzeState(){
 		average_fc_normal = 0;
 	}
 	rate_static_to_dynamic = cnt_static_to_dynamic/(strain_interval*np);
-	if (contact_nb > 0) {
-		ratio_dynamic_friction = (contact_nb-cnt_sliding_contact)*(1./contact_nb);
+	if (fric_contact_nb > 0) {
+		ratio_dynamic_friction = (fric_contact_nb-cnt_sliding_contact)*(1./fric_contact_nb);
 	} else {
 		ratio_dynamic_friction = 0;
 	}
@@ -1316,7 +1156,6 @@ void calcMean_StdDev(vector<double> history,
 	}
 	std_dev = sqrt(sum_sq_deviation/(ne-1));
 }
-
 
 int
 System::adjustContactModelParameters(){
@@ -1414,10 +1253,36 @@ System::calcLubricationForce(){
 	stokes_solver.completeResistanceMatrix();
 	stokes_solver.solve(v_total);
 	stokes_solver.solvingIsDone();
-	
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].lubrication.calcLubricationForce();
 		}
 	}
 }
+
+void
+System::backupState(){
+	position_backup.clear();
+	position_backup.resize(np);
+	for (int i=0; i<np; i++){
+		position_backup[i] = position[i];
+	}
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			interaction_backup[k] = interaction[k];
+		} else {
+			//interaction_backup[k];
+		}
+	}
+
+	
+}
+
+
+
+
+
+
+
+
+

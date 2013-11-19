@@ -11,26 +11,33 @@
 
 #include <iostream>
 #include <vector>
+#include "vec3d.h"
 //#include "System.h"
 using namespace std;
 
 class Cluster{
 private:
 	vector <int> member;
+
 protected:
 public:
 	Cluster(){;}
-	Cluster(int i);
+	Cluster(int i, vec3d pos_);
 	
 	~Cluster(){;}
-	
-	void add(int i){
+	vector <vec3d> pos;
+	void add(int i, int next, vec3d dr_){
+		vec3d pos_orig;
 		for (int j=0; j<member.size(); j++){
 			if (member[j]== i){
 				return;
 			}
+			if (member[j] == next){
+				pos_orig = pos[j];
+			}
 		}
 		member.push_back(i);
+		pos.push_back(pos_orig + dr_);
 	}
 	unsigned long size(){
 		return member.size();
