@@ -104,8 +104,8 @@ if mode == "c":
 if mode == "s":
     params = [r_bin_nb,theta_bin_nb,phi_bin_nb, r_min, r_max, theta_min, theta_max, pos_stream.N]
 
+#twopoint_correl=pair_correlation.PairCorrelation( mode , params, restrictions=(pos_stream.radius, 1., 1.4) )
 twopoint_correl=pair_correlation.PairCorrelation( mode , params )
-snapshot_nb=0
 
 pos_stream.get_snapshot()
 while pos_stream.get_snapshot():
