@@ -106,7 +106,9 @@ Contact::calcContactInteraction(){
 void
 Contact::frictionlaw_coulomb(){
 	interaction->lubrication.calcLubricationForce_normal(); // dashpot for the squeezed mode.
-	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast());
+	double supportable_tanforce = f_contact_normal_norm;
+	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
+	supportable_tanforce *=	mu;
 	if (supportable_tanforce < 0){
 		if (staticfriction) {
 			sys->incrementCounter_static_to_dynamic();
@@ -114,40 +116,6 @@ Contact::frictionlaw_coulomb(){
 		staticfriction = false;
 		disp_tan.reset();
 		f_contact_tan.reset();
-		return;
-	}
-	double sq_f_tan = f_contact_tan.sq_norm();
-	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-		if (staticfriction) {
-			sys->incrementCounter_static_to_dynamic();
-		}
-		staticfriction = false;
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-	} else {
-		staticfriction = true;
-	}
-}
-
-void
-Contact::frictionlaw_criticalload(){
-	interaction->lubrication.calcLubricationForce_normal();
-	/*  Since gap_nondim < 0, f_contact_normal_norm is always positive.
-	 * 	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
-	 *  F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
-	 *
-	 * supportable_tanforce = mu*(F_normal - critical_force)
-	 *
-	 */
-	double supportable_tanforce = mu*(f_contact_normal_norm+interaction->lubrication.get_lubforce_normal_fast());
-	supportable_tanforce += -sys->critical_normal_force;
-	if (supportable_tanforce < 0){
-		if (staticfriction) {
-			sys->incrementCounter_static_to_dynamic();
-		}
- 		staticfriction = false;
-		disp_tan.reset();
-		f_contact_tan.reset();
-		return;
 	} else {
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
@@ -160,6 +128,43 @@ Contact::frictionlaw_criticalload(){
 			staticfriction = true;
 		}
 	}
+	return;
+}
+
+void
+Contact::frictionlaw_criticalload(){
+	interaction->lubrication.calcLubricationForce_normal();
+	/* Since gap_nondim < 0, f_contact_normal_norm is always positive.
+	 * f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
+	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
+	 * 
+	 * supportable_tanforce = mu*(F_normal - critical_force)
+	 *
+	 */
+	double supportable_tanforce = f_contact_normal_norm;
+	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
+	supportable_tanforce -= sys->critical_normal_force; // critical load model.
+	supportable_tanforce *= mu;
+	if (supportable_tanforce < 0){
+		if (staticfriction) {
+			sys->incrementCounter_static_to_dynamic();
+		}
+ 		staticfriction = false;
+		disp_tan.reset();
+		f_contact_tan.reset();
+	} else {
+		double sq_f_tan = f_contact_tan.sq_norm();
+		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+			if (staticfriction) {
+				sys->incrementCounter_static_to_dynamic();
+			}
+			staticfriction = false;
+			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+		} else {
+			staticfriction = true;
+		}
+	}
+	return;
 }
 
 void
