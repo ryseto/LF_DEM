@@ -28,12 +28,13 @@ $name = substr($particle_data, $i, $j-$i);
 $interaction_data = "int_${name}.dat";
 printf "$interaction_data\n";
 $output = "mathm_$name.dat";
+$posoutput = "posmathm_$name.dat";
 open (IN_rheo, "< rheo_${name}.dat");
 #printf  "$fmax_ave\n";
 #exit;
 
 open (OUT, "> ${output}");
-open (POUT, "> position.dat");
+open (POUT, "> ${posoutput}.dat");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
@@ -43,7 +44,14 @@ while (1){
 	&InParticles;
 	&InInteractions;
 	last unless defined $line;
-	&OutYaplotData;
+
+	if ($shear_strain > 15.104){
+		&OutYaplotData;
+		exit(1);
+	
+	}
+	
+
 	$num ++;
 	printf "$shear_rate\n";
 }
@@ -197,16 +205,16 @@ sub OutYaplotData{
     }
 	
 	
-	if ($shear_strain>10){
-		for ($i = 0; $i < $np; $i ++){
-			$xx = $posx[$i];
-			$yy = $posy[$i];
-			$zz = $posz[$i];
-			$rr = $radius[$i];
-			printf POUT "$xx $yy $zz $rr\n";
-		}
-		exit;
+
+	for ($i = 0; $i < $np; $i ++){
+		$xx = $posx[$i];
+		$yy = $posy[$i];
+		$zz = $posz[$i];
+		$rr = $radius[$i];
+		printf POUT "$xx $yy $zz $rr\n";
 	}
+	exit;
+
 		
 }
 

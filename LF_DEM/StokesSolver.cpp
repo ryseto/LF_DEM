@@ -740,6 +740,7 @@ StokesSolver::allocateRessources(){
 	for (int i=0; i<np6; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
+	
     chol_L = NULL;
 }
 
