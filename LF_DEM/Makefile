@@ -39,6 +39,7 @@ endif
 
 Trilinos_path = $(Trilinos_include_path_$(OS_version))
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
+Metis_path = /opt/local/lib/
 
 # Includes
 Includes = -I $(Cholmod_path) 
@@ -60,6 +61,9 @@ endif
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
 	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
+	ifeq ($(UseMetis),yes)
+		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
+	endif
 endif
 
 # Trilinos

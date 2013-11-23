@@ -46,31 +46,21 @@ def init ():
 def init_visualization():
     global particles, box, scene
     
-    half_cell=0.5*pos_stream.cell_lin_size()
+    half_cell=0.5*pos_stream.lx
 #    box=visual.box(pos=(0., 0., 0.), length=pos_stream.cell_lin_size(), width=pos_stream.cell_lin_size(), height=pos_stream.cell_lin_size(), opacity=0.1)
     particles=[ visual.sphere(pos=(half_cell,half_cell,half_cell), radius=0., color=(0.9,0.9,0.9), opacity=1.) for i in range(part_nb) ]
     
 def update_visualization():
     global particles
     count=0
-#    for i in pos_stream.range():
-#        particles[i].visible=False
-#        if not pos_stream.is_present(i):
-#            particles[i].visible=False
 
-    for key in pos_stream.__iter__():
-        j=int(key)
+    for j in pos_stream.range():
 
-        particles[j].pos=(pos_stream.pos(key)[0], pos_stream.pos(key)[2], pos_stream.pos(key)[1])
-#        if particles[j].pos[0] == 0. and  particles[j].pos[2] == 0.:
-#            particles[j].color=visual.color.red
-        stress_to_display = pos_stream.xFc_stress[key]
-#        if stress_to_display == 0:
-        particles[j].color=(0.9, 0.9, 0.9)
-#        else:
-#            particles[j].color=(stress_to_display+0.5, 0.5-stress_to_display, 0.5-stress_to_display)
+        particles[j].pos=(pos_stream.positions[j,0], pos_stream.positions[j,2], pos_stream.positions[j,1])
 
-        particles[j].radius=pos_stream.rad(key)
+        particles[j].color=(0.2, 0.2, 0.5)
+        particles[j].radius=pos_stream.radius[j]
+        particles[j].material=visual.materials.wood
         particles[j].visible=True
 
     
@@ -87,7 +77,7 @@ print ""
 print " Plotting visualization for ", stream
 print ""
 
-pos_stream=Pos_Stream(stream, part_nb, phi)
+pos_stream=Pos_Stream(stream)
 init_visualization()
 while pos_stream.get_snapshot():
     update_visualization()
