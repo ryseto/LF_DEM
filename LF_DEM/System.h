@@ -135,7 +135,6 @@ public:
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
-	StressTensor* brownianstress; // by particle
 	int brownianstress_calc_nb;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
@@ -143,7 +142,6 @@ public:
 	StressTensor total_contact_stressGU;
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
-	StressTensor total_brownian_stress;
 	double ratio_dashpot_total;
 	int friction_model;
 	bool friction;

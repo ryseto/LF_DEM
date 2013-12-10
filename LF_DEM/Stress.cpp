@@ -228,25 +228,17 @@ System::calcStress(){
 	static double previous_strain = 0;
 	previous_strain = shear_strain;
 	stressReset();
-	//	if (brownian) {
-	//calcStressesHydroContactBrownian();
-	//	} else {
 	calcStressesHydroContact();
-	//}
 	total_hydro_stress.reset();
 	total_contact_stressGU.reset();
 	total_colloidal_stressGU.reset();
 	total_contact_stressXF_normal.reset();
 	total_contact_stressXF_tan.reset();
 	total_colloidal_stressXF.reset();
-	total_brownian_stress.reset();
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 		total_contact_stressGU += contactstressGU[i];
 		total_colloidal_stressGU += colloidalstressGU[i];
-		//		if (brownian) {
-		//			total_brownian_stress += brownianstress[i];
-		//		}
 	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -263,6 +255,4 @@ System::calcStress(){
 	total_contact_stressXF_tan /= System_volume();
 	total_colloidal_stressGU /= System_volume();
 	total_colloidal_stressXF /= System_volume();
-	total_brownian_stress /= System_volume();
-	stressBrownianReset();
 }

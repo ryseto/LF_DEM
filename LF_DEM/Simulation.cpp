@@ -656,9 +656,6 @@ Simulation::evaluateData(){
 	viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
 	normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
 	normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
-	viscosity_brownian = sys.total_brownian_stress.getStressXZ();
-	normalstress_diff_1_brownian = sys.total_brownian_stress.getNormalStress1();
-	normalstress_diff_2_brownian = sys.total_brownian_stress.getNormalStress2();
 }
 
 void
@@ -858,7 +855,6 @@ Simulation::outputConfigurationData(){
 			vec3d &o = sys.ang_velocity[i];
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
 			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
-			double brownian_xzstress = sys.brownianstress[i].getStressXZ();
 			/* 1: number of the particle
 			 * 2: radius
 			 * 3, 4, 5: position
@@ -876,7 +872,7 @@ Simulation::outputConfigurationData(){
 			fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
-			fout_particle << ' ' << 6*M_PI*brownian_xzstress; //14: xz stress contributions
+			fout_particle << ' ' << 0; //14: xz stress contributions
 			if (sys.dimension == 2) {
 				fout_particle << ' ' << sys.angle[i]; // 15
 			}

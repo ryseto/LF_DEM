@@ -69,6 +69,7 @@ public:
 	void updateContactModel();
 	void resetObservables();
 	void frictionlaw_criticalload();
+	void frictionlaw_criticalload_mu_inf();
 	void frictionlaw_coulomb();
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
