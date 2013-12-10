@@ -15,6 +15,8 @@ Contact::init(System *sys_, Interaction *interaction_){
 		frictionlaw = &Contact::frictionlaw_coulomb;
 	} else if (sys->friction_model == 2) {
 		frictionlaw = &Contact::frictionlaw_criticalload;
+	} else if (sys->friction_model == 3) {
+		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
 	} else {
 		frictionlaw = &Contact::frictionlaw_null;
 	}
@@ -168,6 +170,32 @@ Contact::frictionlaw_criticalload(){
 }
 
 void
+Contact::frictionlaw_criticalload_mu_inf(){
+	interaction->lubrication.calcLubricationForce_normal();
+	/* Since gap_nondim < 0, f_contact_normal_norm is always positive.
+	 * f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
+	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
+	 *
+	 * supportable_tanforce = mu*(F_normal - critical_force)
+	 *
+	 */
+	double supportable_tanforce = f_contact_normal_norm;
+	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
+	supportable_tanforce -= sys->critical_normal_force; // critical load model.
+	if (supportable_tanforce < 0){
+		if (staticfriction) {
+			sys->incrementCounter_static_to_dynamic();
+		}
+ 		staticfriction = false;
+		disp_tan.reset();
+		f_contact_tan.reset();
+	} else {
+		staticfriction = true;
+	}
+	return;
+}
+
+void
 Contact::frictionlaw_null(){;}
 
 
@@ -201,6 +229,12 @@ Contact::addContactStress(){
 	 * stress1 is a0*nvec[*]force.
 	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 	 */
+	
+	/* When we compose stress tensor,
+	 * even individual leverl, this part calculates symmetric tensor.
+	 * This symmetry is expected in the average ensumble.
+	 * I'm not sure this is allowed or not.
+	 */
 	if (active) {
 		/*
 		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
@@ -208,9 +242,11 @@ Contact::addContactStress(){
 		 * This force acts on particle 1.
 		 * stress1 is a0*nvec[*]force.
 		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
+		 * stress1 + stress2 = (a1+a2)*nvec[*]force
 		 */
 		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);
 		contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
+
 	} else {
 		contact_stresslet_XF_normal.reset();
 		contact_stresslet_XF_tan.reset();

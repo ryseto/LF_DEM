@@ -503,7 +503,6 @@ Lubrication::addHydroStress(){
 	StressTensor stresslet_hydro_GU_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
-
 	vec3d vih(sys->v_hydro[p0_6], sys->v_hydro[p0_6+1], sys->v_hydro[p0_6+2]);
 	vec3d vjh(sys->v_hydro[p1_6], sys->v_hydro[p1_6+1], sys->v_hydro[p1_6+2]);
 	vec3d oih(sys->v_hydro[p0_6+3], sys->v_hydro[p0_6+4], sys->v_hydro[p0_6+5]);
@@ -518,8 +517,6 @@ Lubrication::addHydroStress(){
 	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
 	sys->lubstress[p0] += stresslet_hydro_GU_i+stresslet_ME_i;
 	sys->lubstress[p1] += stresslet_hydro_GU_j+stresslet_ME_j;
-
-
 	// Add term G*V_cont
 	StressTensor stresslet_contact_GU_i;
 	StressTensor stresslet_contact_GU_j;
@@ -530,7 +527,6 @@ Lubrication::addHydroStress(){
 	pairVelocityStresslet(vict, vjct, oict, ojct, stresslet_contact_GU_i, stresslet_contact_GU_j);
 	sys->contactstressGU[p0] += stresslet_contact_GU_i;
 	sys->contactstressGU[p1] += stresslet_contact_GU_j;
-
 	// Add term G*V_colloidal
 	StressTensor stresslet_colloid_GU_i;
 	StressTensor stresslet_colloid_GU_j;
@@ -538,10 +534,8 @@ Lubrication::addHydroStress(){
 	vec3d vjcl(sys->v_colloidal[p1_6], sys->v_colloidal[p1_6+1], sys->v_colloidal[p1_6+2]);
 	vec3d oicl(sys->v_colloidal[p0_6+3], sys->v_colloidal[p0_6+4], sys->v_colloidal[p0_6+5]);
 	vec3d ojcl(sys->v_colloidal[p1_6+3], sys->v_colloidal[p1_6+4], sys->v_colloidal[p1_6+5]);
-
 	pairVelocityStresslet(vicl, vjcl, oicl, ojcl, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
 	sys->colloidalstressGU[p0] += stresslet_colloid_GU_i;
 	sys->colloidalstressGU[p1] += stresslet_colloid_GU_j;
-
 }
 

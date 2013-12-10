@@ -26,7 +26,6 @@ System::~System(){
 	DELETE(lubstress);
 	DELETE(contactstressGU);
 	DELETE(colloidalstressGU);
-	DELETE(brownianstress);
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
@@ -34,13 +33,6 @@ System::~System(){
 	DELETE(v_hydro);
 	DELETE(v_cont);
 	DELETE(v_colloidal);
-	//	if(brownian){
-	//		DELETE(fb);
-	//		DELETE(v_Brownian_init);
-	//		DELETE(v_Brownian_mid);
-	//		DELETE(v_lub_cont_mid);
-	//		DELETE(lub_cont_forces_init);
-	//	}
 };
 
 void
@@ -59,7 +51,6 @@ System::allocateRessources(){
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
-	brownianstress = new StressTensor [np];
 	int maxnb_interactionpair_per_particle = 15;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	interaction = new Interaction [maxnb_interactionpair];
@@ -154,7 +145,7 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void
 System::setupSystem(){
-	if (friction_model == 0 || mu_static <= 0){
+	if (friction_model == 0 ){
 		cerr << "friction_model = 0" << endl;
 		friction = false;
 	} else if (friction_model == 1) {
@@ -177,8 +168,8 @@ System::setupSystem(){
 			colloidalforce = true;
 			cerr << "Colloidal force" << endl;
 		}
-	} else if (friction_model == 2) {
-		cerr << "friction_model = 2" << endl;
+	} else if (friction_model == 2 || friction_model == 3) {
+		cerr << "friction_model " << friction_model << endl;
 		/*
 		 * The diemnsionless shear rate is defined as follows:
 		 * dimensionless_shear_rate = F0/F^{*}
@@ -576,14 +567,6 @@ System::stressReset(){
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
 	}
-}
-
-void
-System::stressBrownianReset(){
-	for (int i=0; i<np; i++) {
-		brownianstress[i].reset();
-	}
-	brownianstress_calc_nb = 0;
 }
 
 void
