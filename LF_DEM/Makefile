@@ -8,6 +8,7 @@ CXX=g++
 
 # OS_version: OSX or Linux
 OS_version=OSX
+SysEnv=Energy_seto
 # Build : debug or optimized
 Build=debug
 
@@ -30,6 +31,12 @@ CXXFLAGS= $(CXXFLAGS_$(OS_version)_$(Build))
 
 #======== Include Paths =============
 Cholmod_include_path_OSX     = /usr/local/include/
+
+ifeq ($(SysEnv),Energy_seto)
+	Cholmod_include_path_OSX     = ~/usr/local/include/
+endif
+
+
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
 ifeq ($(UseTrilinos),yes)
 	Trilinos_include_path_Linux  = /home/romain/romain/recherche/trilinos-11.0.3-Source/
@@ -54,9 +61,14 @@ Lapack_Linking_Flags = -llapack
 
 # Cholmod
 Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+ifeq ($(SysEnv),Energy_seto)
+	Cholmod_Linking_Flags     =
+endif
+
 ifeq ($(UseMetis),yes)
 	Cholmod_Linking_Flags += -lmetis 
 endif
+
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)

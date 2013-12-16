@@ -8,6 +8,7 @@
 #include <iostream>
 #include "Simulation.h"
 #include "GenerateInitConfig.h"
+
 int main(int argc, const char * argv[])
 {
 	if (argc == 1){
