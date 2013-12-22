@@ -437,6 +437,7 @@ Simulation::setDefaultParameters(){
 	 * 0 No friction
 	 * 1 Linear friction law Ft < mu Fn
 	 * 2 Threshold friction without repulsive force
+	 * 3 Threshold friction without repulsion + mu inf
 	 */
 	int _friction_model = 1;
 	/*
@@ -493,7 +494,7 @@ Simulation::setDefaultParameters(){
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
-	sys.max_kn = 50000;
+	sys.max_kn = 100000;
 	
 	
 	/*

@@ -131,7 +131,7 @@ public:
 			fin_i >> s_xz >> ns1 >> ns2;
 			fin_i >> contact_state;
 			
-			if (contact_state == 1) {
+			if (contact_state >= 1) {
 				bond_list[i0].push_back(j);
 				bond_list[i1].push_back(j);
 				bond[j].set(i0, i1, contact_state);
@@ -325,10 +325,12 @@ public:
 				int cl_size = (int)(cl[i]->size());
 				if (cl_size > 1){
 					count_cluster ++;
-					for (int j=0; j< cl_size; j++){
-						fout_cluster << cl[i]->get_member(j) << ' ';
-					}
-					fout_cluster << "\n" ;
+					//for (int j=0; j< cl_size; j++){
+					//fout_cluster << cl[i]->get_member(j) << ' ';
+					//
+					//}
+					//fout_cluster << "\n" ;
+					fout_cluster << cl_size << ' ';
 				}
 			}
 			if (count_cluster > 0){
