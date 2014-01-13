@@ -588,12 +588,14 @@ Simulation::prepareSimulationName(){
 			ss_simu_name << "_down";
 		}
 	} else {
-		
-		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+		if (sys.dimensionless_shear_rate == -1) {
+			ss_simu_name << "_srinf" ; // shear rate infinity
+			
+		} else {
+			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+		}
 	}
-	
 	sys.simu_name = ss_simu_name.str();
-	
 	
 	
 	cerr << sys.simu_name << endl;
@@ -895,13 +897,18 @@ Simulation::outputConfigurationData(){
 				 * 3: 1=contact, 0=apart
 				 * 4, 5, 6: normal vector
 				 * 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-				 * 8: lubrication force
-				 * 9: Normal part of contact force
-				 * 10: Tangential part of contact force
-				 * 11: Colloidal force
-				 * 12: Viscosity contribution of contact xF
-				 * 13: N1 contribution of contact xF
-				 * 14: N2 contribution of contact xF
+				 * 8: normal     of lubrication force
+				 * 9: tangential of lubrication force
+				 * 10: normal part     of contact force
+				 * 11: tangential part of contact force
+				 * 12: normal colloidal force
+				 * 13: Viscosity contribution of contact xF
+				 * 14: N1 contribution of contact xF
+				 * 15: N2 contribution of contact xF
+				 * 16: friction state
+				 *      0 = not frictional
+				 *      1 = non-sliding
+				 *      2 = sliding
 				 */
 				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
@@ -926,11 +933,17 @@ Simulation::outputConfigurationData(){
 					 * 1 static friction
 					 * 2 sliding
 					 */
-					if (sys.interaction[k].contact.staticfriction) {
-						fout_interaction << 1 << ' ';
+					if (sys.friction_model == 1) {
+						// repulsive force model
+						if (sys.interaction[k].contact.staticfriction) {
+							fout_interaction << 1 << ' '; // non-sliding
+						} else {
+							fout_interaction << 2 << ' '; // sliding
+						}
 					} else {
-						if (sys.friction_model == 1) {
-							fout_interaction << 2 << ' ';
+						// critical force model
+						if (sys.interaction[k].contact.staticfriction) {
+							fout_interaction << 1 << ' '; // non-sliding
 						} else {
 							if (sys.interaction[k].contact.is_activated_friction()){
 								fout_interaction << 2 << ' ';

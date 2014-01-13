@@ -131,6 +131,7 @@ sub InParticles {
         $posx[$i] = $x;
         $posy[$i] = $y;
         $posz[$i] = $z;
+		$omegay[$i] = $oy;
 		$ang[$i] = $angle;
 		if ($radius_max < $a){
 			$radius_max = $a;
@@ -205,9 +206,28 @@ sub InInteractions {
 	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $contact, $nx, $ny, $nz,
-		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol,
-		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction, $lsx, $lsy, $lsz, $xix, $xiy, $xiz, $ftx, $fty, $ftz) = split(/\s+/, $line);
+#		/* 1, 2: numbers of the interacting particles
+#		* 3: 1=contact, 0=apart
+#		* 4, 5, 6: normal vector
+#		* 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
+#		* 8: normal     of lubrication force
+#		* 9: tangential of lubrication force
+#		* 10: normal part     of contact force
+#		* 11: tangential part of contact force
+#		* 12: normal colloidal force
+#		* 13: Viscosity contribution of contact xF
+#		* 14: N1 contribution of contact xF
+#		* 15: N2 contribution of contact xF
+#		* 16: friction state
+#		*      0 = not frictional
+#		*      1 = non-sliding
+#		*      2 = sliding
+#		*/
+		
+		($i, $j, $contact, $nx, $ny, $nz, #1---6
+		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol, #7--12
+		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction, # 13--16
+		) = split(/\s+/, $line);
 		
 		
 		if ($num==$num_mathm){
@@ -216,6 +236,9 @@ sub InInteractions {
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
+		
+		$domega[$k] = $omegay[$i] - $omegay[$j];
+		
 		$F_lub[$k] = $f_lub;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
@@ -337,10 +360,10 @@ sub OutYaplotData{
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
 		}
-#		if ($i % 100 == 0){
-#			$col = $i/100 + 2;
-#			printf OUT "@ $col\n";
-#		}
+		#		if ($i % 100 == 0){
+		#			$col = $i/100 + 2;
+		#			printf OUT "@ $col\n";
+		#		}
 		if ($y_section == 0 ||
 			abs($posy[$i]) < $y_section ){
 				printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
@@ -357,74 +380,111 @@ sub OutYaplotData{
 			$force += - $F_lub[$k];
 		}
 		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 1) {
-				# static
+			if ($fricstate[$k] == 1 && abs($domega[$k]) < 5) {
 				&OutString2($int0[$k],  $int1[$k]);
 			}
 		}
     }
-	printf OUT "r 0.35\n";
-	printf OUT "@ 6\n"; # dynamic
+	
+	printf OUT "y 4\n";
+	printf OUT "r 0.4\n";
+	printf OUT "@ 0\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$force = $Fc_n[$k];
         if ($F_lub[$k] < 0) {
 			$force += - $F_lub[$k];
 		}
 		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 2) {
-				# static
-				&OutString2($int0[$k],  $int1[$k]);
+			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
+				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
+					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
+						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
+						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
+						$tmpoy = int $oy;
+						printf OUT "t $xx -0.2 $zz $tmpoy \n";
+					}
+				
 			}
 		}
     }
-	printf OUT "r 0.2\n";
-	printf OUT "@ 0\n"; # dynamic
-	for ($k = 0; $k < $num_interaction; $k ++){
-		$force = $Fc_n[$k];
-        if ($F_lub[$k] < 0) {
-			$force += - $F_lub[$k];
-		}
-		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 0) {
-				# static
-				&OutString2($int0[$k],  $int1[$k]);
-			}
-		}
-    }
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.4\n";
+#	printf OUT "@ 3\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		$force = $Fc_n[$k];
+#        if ($F_lub[$k] < 0) {
+#			$force += - $F_lub[$k];
+#		}
+#		if ($Gap[$k] < 0) {
+#			if ($fricstate[$k] == 1 && abs($domega[$k]) > 2) {
+#				&OutString2($int0[$k],  $int1[$k]);
+#			}
+#		}
+#    }
+	
+	
+#	printf OUT "y 9\n";
+#	printf OUT "r 0.35\n";
+#	printf OUT "@ 6\n"; # dynamic
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		$force = $Fc_n[$k];
+#        if ($F_lub[$k] < 0) {
+#			$force += - $F_lub[$k];
+#		}
+#		if ($Gap[$k] < 0) {
+#			if ($fricstate[$k] == 2) {
+#				&OutString2($int0[$k],  $int1[$k]);
+#			}
+#		}
+#    }
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 0\n"; # dynamic
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		$force = $Fc_n[$k];
+#        if ($F_lub[$k] < 0) {
+#			$force += - $F_lub[$k];
+#		}
+#		if ($Gap[$k] < 0) {
+#			if ($fricstate[$k] == 0) {
+#				# static
+#				&OutString2($int0[$k],  $int1[$k]);
+#			}
+#		}
+#    }
 
 	
 	#printf OUT "r 0.2\n";
-    printf OUT "y 3\n";
-    printf OUT "@ 3\n";
-    for ($k=0; $k<$num_interaction; $k++){
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		#$force = $Fcol[$k];
-		#$force = $Fc_n[$k];
-		if ($force[$k] <0){
-			$force = -$force[$k];
-			$string_width = ${force_factor}*${force};
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-		
-    }
-	printf OUT "y 4\n";
-	printf OUT "@ 4\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($force[$k] > 0){
-			$force = $force[$k];
-			$string_width = ${force_factor}*${force};
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-    }
-	printf OUT "y 5\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		$radius = $ContVelo[$k]/10;
-		printf OUT "r $radius\n";
-		&OutCircle_middle($int0[$k],  $int1[$k]);
-    }
+#    printf OUT "y 3\n";
+#    printf OUT "@ 3\n";
+#    for ($k=0; $k<$num_interaction; $k++){
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		#$force = $Fcol[$k];
+#		#$force = $Fc_n[$k];
+#		if ($force[$k] <0){
+#			$force = -$force[$k];
+#			$string_width = ${force_factor}*${force};
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
+#		}
+#		
+#    }
+#	printf OUT "y 4\n";
+#	printf OUT "@ 4\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		if ($force[$k] > 0){
+#			$force = $force[$k];
+#			$string_width = ${force_factor}*${force};
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
+#		}
+#    }
+#	printf OUT "y 5\n";
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		$radius = $ContVelo[$k]/10;
+#		printf OUT "r $radius\n";
+#		&OutCircle_middle($int0[$k],  $int1[$k]);
+#    }
 	
 #
 #	printf OUT "y 10\n";
@@ -478,13 +538,13 @@ sub OutYaplotData{
 
 
 	
-#	if ($Ly == 0){
-#		printf OUT "y 6\n";
-#		printf OUT "@ 0\n";
-#		for ($i = 0; $i < $np; $i ++){
-#			&OutCross($i);
-#		}
-#	}
+	if ($Ly == 0){
+		printf OUT "y 6\n";
+		printf OUT "@ 0\n";
+		for ($i = 0; $i < $np; $i ++){
+			&OutCross($i);
+		}
+	}
 
 	&OutBoundaryBox;
 	

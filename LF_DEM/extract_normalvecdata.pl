@@ -45,7 +45,7 @@ while (1){
 	&InInteractions;
 	last unless defined $line;
 
-	if ($shear_strain > 15.104){
+	if ($shear_strain >= 3.49){
 		&OutYaplotData;
 		exit(1);
 	
@@ -128,23 +128,30 @@ sub InInteractions {
 	}
 	printf OUTG "$shear_rate\n";
 	
-	# 1, 2: numbers of the interacting particles
-	# 3: 1=contact, 0=apart
-	# 4, 5, 6: normal vector
-	# 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-	# 8: lubrication force
-	# 9: Normal part of contact force
-	# 10: Tangential part of contact force
-	# 11: Colloidal force
-	# 12: Viscosity contribution of contact xF
-	# 13: N1 contribution of contact xF
-	# 14: N2 contribution of contact xF
+	#		/* 1, 2: numbers of the interacting particles
+	#		* 3: 1=contact, 0=apart
+	#		* 4, 5, 6: normal vector
+	#		* 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
+	#		* 8: normal     of lubrication force
+	#		* 9: tangential of lubrication force
+	#		* 10: normal part     of contact force
+	#		* 11: tangential part of contact force
+	#		* 12: normal colloidal force
+	#		* 13: Viscosity contribution of contact xF
+	#		* 14: N1 contribution of contact xF
+	#		* 15: N2 contribution of contact xF
+	#		* 16: friction state
+	#		*      0 = not frictional
+	#		*      1 = non-sliding
+	#		*      2 = sliding
+	#		*/
 	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		($i, $j, $contact, $nx, $ny, $nz,
-		$gap, $f_lub, $fc_n, $fc_tan, $fcol,
-		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF) = split(/\s+/, $line);
+		($i, $j, $contact, $nx, $ny, $nz, # 1 2 3 4 5 6
+		$gap, $fn_lub, $ft_lub, $fc_n, $fc_tan, $fcol, # 7 8 9 10 11 12
+		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction) # 13 14 15 16
+		= split(/\s+/, $line);
 		
 		
 		if ($num==$num_mathm){
@@ -158,6 +165,7 @@ sub InInteractions {
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_t;
 		$Fcol[$k] = $fcol;
+		$fstate[$k] = $friction;
 		$f_normal = $fc_n + $fcol + $f_lub;
 		#	$force[$k] = sqrt($f_normal)
 		if ($f_normal > 0){
@@ -189,9 +197,10 @@ sub OutString2{
     $yj = $posy[$j];
     $zj = $posz[$j];
 	$f = $force[$k];
+	$s = $fstate[$k];
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
-		printf OUT "$xi $yi $zi $xj $yj $zj $f\n";
+		printf OUT "$xi $yi $zi $xj $yj $zj $f $s\n";
 	}
 }
 
@@ -199,12 +208,10 @@ sub OutString2{
 sub OutYaplotData{
 	printf OUT "$num_interaction\n";
 	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($Gap[$k] < 0) {
-			&OutString2($int0[$k],  $int1[$k]);
+		if ($fstate[$k] >= 1) {
+			&OutString2($int0[$k], $int1[$k]);
 		}
     }
-	
-	
 
 	for ($i = 0; $i < $np; $i ++){
 		$xx = $posx[$i];

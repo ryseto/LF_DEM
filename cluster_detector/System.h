@@ -47,6 +47,7 @@ protected:
 public:
 	~System(){};
 	vector<vec3d> position;
+	vector<double> orientation;
 	vector<vec3d> velocity;
 	vector<vec3d> ang_velocity;
 	vector<double> radius;
@@ -68,6 +69,7 @@ public:
 		cerr << "np = " << np << endl;
 		cerr << lx << ' ' << ly << ' ' << lz << endl;
 		position.resize(np);
+		orientation.resize(np);
 		radius.resize(np);
 		velocity.resize(np);
 		ang_velocity.resize(np);
@@ -83,7 +85,6 @@ public:
 		fin_i.getline(buf, 1024);
 		fin_i.getline(buf, 1024);
 		fin_i.getline(buf, 1024);
-		cerr << "======" << endl;
 	}
 	
 	void openYapFile(string filename){
@@ -106,7 +107,10 @@ public:
 			fin_p >> position[i].x >> position[i].y >> position[i].z;
 			fin_p >> velocity[i].x >> velocity[i].y >> velocity[i].z;
 			fin_p >> ang_velocity[i].x >> ang_velocity[i].y >> ang_velocity[i].z;
+			fin_p >> buf >> buf >> buf;
+			fin_p >> orientation[i];
 			fin_p.getline(buf, 1024);
+		//	cerr << ang_velocity[i].y << endl;
 		}
 		double strain_;
 		int num_interaction;
@@ -115,6 +119,7 @@ public:
 		cerr << strain << ' ' << strain_ << ' ' << "num_i" << num_interaction<< endl;
 		bond.resize(num_interaction);
 		double dv_sum = 0;
+		static int cnt_strain = 0;
 		for (int j=0; j < num_interaction; j ++){
 			int i0, i1;
 			bool contact;
@@ -123,20 +128,43 @@ public:
 			double f_con_n, f_con_t, f_ele;
 			double s_xz, ns1, ns2;
 			int contact_state;
-			fin_i >> i0 >> i1 >> contact;
-			fin_i >> nx >> ny >> nz >> gap;
-			fin_i >> f_lub_n >> f_lub_t;
-			fin_i >> f_con_n >> f_con_t;
-			fin_i >> f_ele;
-			fin_i >> s_xz >> ns1 >> ns2;
-			fin_i >> contact_state;
-			
-			if (contact_state >= 1) {
-				bond_list[i0].push_back(j);
-				bond_list[i1].push_back(j);
-				bond[j].set(i0, i1, contact_state);
+			/* 1, 2: numbers of the interacting particles
+			 * 3: 1=contact, 0=apart
+			 * 4, 5, 6: normal vector
+			 * 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
+			 * 8: normal     of lubrication force
+			 * 9: tangential of lubrication force
+			 * 10: normal part     of contact force
+			 * 11: tangential part of contact force
+			 * 12: normal colloidal force
+			 * 13: Viscosity contribution of contact xF
+			 * 14: N1 contribution of contact xF
+			 * 15: N2 contribution of contact xF
+			 * 16: friction state
+			 *      0 = not frictional
+			 *      1 = non-sliding
+			 *      2 = sliding
+			 */
+			fin_i >> i0 >> i1 >> contact; // 1 2 3
+			fin_i >> nx >> ny >> nz >> gap; //4 5 6 7
+			fin_i >> f_lub_n >> f_lub_t; // 8 9
+			fin_i >> f_con_n >> f_con_t; // 10 11
+			fin_i >> f_ele; //12
+			fin_i >> s_xz >> ns1 >> ns2; // 13 14 15
+			fin_i >> contact_state; //16
+			//cerr << contact_state << endl;
+			if (contact_state == 1) {
+				//vec3d dw = ang_velocity[i1]-ang_velocity[i0];
+				double dw = ang_velocity[i1].y-ang_velocity[i0].y;
+				cout << cnt_strain << ' '  << dw << endl;
+				if (abs(dw) < 2){
+					bond_list[i0].push_back(j);
+					bond_list[i1].push_back(j);
+					bond[j].set(i0, i1, contact_state);
+				}
 			}
 		}
+		cnt_strain ++;
 		cerr << "dv_ave = "<< dv_sum/num_interaction << endl;
 		//		fout_interaction << "# " << sys.Shear_strain();
 		//		fout_interaction << ' ' << cnt_interaction << endl;
@@ -150,9 +178,9 @@ public:
 		}
 		int i = 0;
 		int numcluster = 0;
-		cerr << cl.size();
-
+		cerr << cl.size() << endl;
 		cl.clear();
+		
 		while (i < np){
 			if (checked[i] == false){
 				cl.push_back(new Cluster(i, position[i]));
@@ -187,15 +215,15 @@ public:
 										dr.x += lx;
 									}
 								}
-//								if (abs(dr.y) > 10 ){
-//									if (dr.y > 0){
-//										dr.y -= ly;
-//									} else {
-//										dr.y += ly;
-//									}
-//								}
-
-								cl[numcluster]->add(next, mem, dr);
+								if (abs(dr.y) > 10 ){
+									if (dr.y > 0){
+										dr.y -= ly;
+									} else {
+										dr.y += ly;
+									}
+								}
+								
+								cl[numcluster]->add(next, mem, dr, b);
 								checked[next] = true;
 							}
 						}
@@ -238,54 +266,55 @@ public:
 	
 	void output_yap(){
 		int num_cl_particle = 0;
-		int sum_cl_size = 0;
-		int cnt_cl = 0;
-		int max_size = 0;
-		vec3d comp_axis(-1,0,1);
-		comp_axis.unitvector();
+//		int sum_cl_size = 0;
+//		int cnt_cl = 0;
+//		int max_size = 0;
+//		vec3d comp_axis(-1,0,1);
+//		comp_axis.unitvector();
+//		
+//		vec3d elong_axis(1,1,0);
+//		elong_axis.unitvector();
+//		vector <double> cluster_length;
+//		for (int i=0; i<cl.size(); i++){
+//			int cl_size = (int)(cl[i]->size());
+//			if (cl_size > 1){
+//				vec3d cm(0,0,0);
+//				for (int j=0; j< cl_size; j++){
+//					cm += cl[i]->pos[j];
+//				}
+//				cm = cm /cl_size;
+//				for (int j=0; j< cl[i]->size(); j++){
+//					cl[i]->pos[j]-=cm;
+//				}
+//				double comp_max = 0;
+//				double comp_min = 0;
+//				for (int j=0; j< cl[i]->size(); j++){
+//					double comp_length = dot(comp_axis, cl[i]->pos[j]);
+//					if (comp_length > comp_max){
+//						comp_max = comp_length;
+//					}
+//					if (comp_length < comp_min){
+//						comp_min = comp_length;
+//					}
+//				}
+//				cluster_length.push_back(comp_max-comp_min);
+//			}
+//		}
+//
+//		double ave_cluster_length = 0;
+//		double max_cluster_length = 0;
+//		if (cluster_length.size() > 0){
+//			for (int k=0; k < cluster_length.size(); k++){
+//				ave_cluster_length += cluster_length[k];
+//				if (max_cluster_length < cluster_length[k]){
+//					max_cluster_length = cluster_length[k];
+//				}
+//			}
+//			ave_cluster_length = ave_cluster_length/cluster_length.size();
+//		}
 		
-		vec3d elong_axis(1,1,0);
-		elong_axis.unitvector();
-		vector <double> cluster_length;
-		for (int i=0; i<cl.size(); i++){
-			int cl_size = (int)(cl[i]->size());
-			if (cl_size > 1){
-				vec3d cm(0,0,0);
-				for (int j=0; j< cl_size; j++){
-					cm += cl[i]->pos[j];
-				}
-				cm = cm /cl_size;
-				for (int j=0; j< cl[i]->size(); j++){
-					cl[i]->pos[j]-=cm;
-				}
-				double comp_max = 0;
-				double comp_min = 0;
-				for (int j=0; j< cl[i]->size(); j++){
-					double comp_length = dot(comp_axis, cl[i]->pos[j]);
-					if (comp_length > comp_max){
-						comp_max = comp_length;
-					}
-					if (comp_length < comp_min){
-						comp_min = comp_length;
-					}
-				}
-				cluster_length.push_back(comp_max-comp_min);
-			}
-		}
-
-		double ave_cluster_length = 0;
-		double max_cluster_length = 0;
-		if (cluster_length.size() > 0){
-			for (int k=0; k < cluster_length.size(); k++){
-				ave_cluster_length += cluster_length[k];
-				if (max_cluster_length < cluster_length[k]){
-					max_cluster_length = cluster_length[k];
-				}
-			}
-			ave_cluster_length = ave_cluster_length/cluster_length.size();
-		}
-	
-		
+//		fout_yap << "@ 3" << endl;
+//		
 //		for (int i=0; i<cl.size(); i++){
 //			int cl_size = (int)(cl[i]->size());
 //			if (cl_size > 1){
@@ -311,10 +340,86 @@ public:
 //			}
 //		}
 //		fout_yap << endl;
-		fout_data << strain << ' ';
-		fout_data << ave_cluster_length << ' ';
-		fout_data << cluster_length.size() << ' ';
-		fout_data << max_cluster_length << endl;
+//
+
+
+		fout_yap << "@ 3" << endl;
+		fout_yap << "y 3" << endl;
+		for (int i=0; i<cl.size(); i++){
+			int cl_size = (int)(cl[i]->size());
+			if (cl_size > 1){
+				for (int j=0; j< cl[i]->size()-1; j++){
+					int b = cl[i]->cbond[j];
+					int i0 = bond[b].par_num[0];
+					int i1 = bond[b].par_num[1];
+					vec3d dp = position[i0] - position[i1];
+					if (dp.sq_norm() < 10){
+						double dw = abs(ang_velocity[i0].y- ang_velocity[i1].y);
+						fout_yap << "r " << 0.2*dw << endl;
+						fout_yap << "s ";
+						fout_yap << position[i0].x << ' ' ;
+						fout_yap << position[i0].y - 0.1<< ' ' ;
+						fout_yap << position[i0].z << ' ' ;
+						fout_yap << position[i1].x << ' ' ;
+						fout_yap << position[i1].y - 0.1<< ' ' ;
+						fout_yap << position[i1].z << endl;
+					}
+					//	fout_yap << cl[i]->pos[j].z << endl;
+					//num_cl_particle ++;
+				}
+			}
+		}
+		fout_yap << "@ 2" << endl;
+		for (int i=0; i<cl.size(); i++){
+			int cl_size = (int)(cl[i]->size());
+			if (cl_size > 1){
+				//				sum_cl_size += cl_size;
+				//				cnt_cl++;
+				//				if (max_size < cl_size){
+				//					max_size = cl_size ;
+				//				}
+				for (int j=0; j< cl[i]->size(); j++){
+					fout_yap << "r " << radius[cl[i]->get_member(j)] << endl;
+					fout_yap << "c ";
+					fout_yap << cl[i]->pos[j].x << ' ' ;
+					fout_yap << cl[i]->pos[j].y << ' ' ;
+					fout_yap << cl[i]->pos[j].z << endl;
+					num_cl_particle ++;
+				}
+			}
+		}
+		fout_yap << "y 4" << endl;
+		fout_yap << "@ 0" << endl;
+		for (int i=0; i<cl.size(); i++){
+			int cl_size = (int)(cl[i]->size());
+			if (cl_size > 1){
+				//				sum_cl_size += cl_size;
+				//				cnt_cl++;
+				//				if (max_size < cl_size){
+				//					max_size = cl_size ;
+				//				}
+				for (int j=0; j< cl[i]->size(); j++){
+					int ii = cl[i]->member[j];
+					fout_yap << "l ";
+					fout_yap << cl[i]->pos[j].x << ' ' ;
+					fout_yap << cl[i]->pos[j].y -0.1 << ' ' ;
+					fout_yap << cl[i]->pos[j].z << ' ' ;
+					fout_yap << cl[i]->pos[j].x + sin(orientation[ii])<< ' ' ;
+					fout_yap << cl[i]->pos[j].y -0.1<< ' ' ;
+					fout_yap << cl[i]->pos[j].z + cos(orientation[ii])<< endl;
+					num_cl_particle ++;
+				}
+			}
+		}
+		
+		
+		
+		fout_yap << endl;
+		
+//		fout_data << strain << ' ';
+//		fout_data << ave_cluster_length << ' ';
+//		fout_data << cluster_length.size() << ' ';
+//		fout_data << max_cluster_length << endl;
 
 	}
 	

@@ -14,10 +14,11 @@ using namespace std;
 
 class Bond{
 private:
-	unsigned int par_num[2];
+
 
 protected:
 public:
+	unsigned int par_num[2];
 	int contact_state;
 	void set(int i, int j, int contact_state_){
 		contact_state = contact_state_;

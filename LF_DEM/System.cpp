@@ -180,7 +180,11 @@ System::setupSystem(){
 		 *
 		 */
 		friction = true;
-		critical_normal_force = 1/dimensionless_shear_rate;
+		if (dimensionless_shear_rate == -1) {
+			critical_normal_force = 0;
+		} else {
+			critical_normal_force = 1/dimensionless_shear_rate;
+		}
 		colloidalforce = false;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else {
