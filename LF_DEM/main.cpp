@@ -25,7 +25,7 @@ int main(int argc, const char * argv[])
 	}
 	if (argv[1][0] == 'g'){
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate(argc, argv);
+		generate_init_config.generate();
 	} else if (argv[1][0] == 'h'){
 		Simulation simulation;
 		simulation.simulationHysteresis(argc, argv);
