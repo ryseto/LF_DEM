@@ -494,7 +494,7 @@ Simulation::setDefaultParameters(){
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.03;
 	sys.disp_tan_target = 0.03;
-	sys.max_kn = 100000;
+	sys.max_kn = 1000000;
 	
 	
 	/*

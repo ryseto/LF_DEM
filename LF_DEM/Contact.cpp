@@ -146,7 +146,6 @@ Contact::frictionlaw_criticalload(){
 	double supportable_tanforce = f_contact_normal_norm;
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
-	supportable_tanforce *= mu;
 	if (supportable_tanforce < 0){
 		if (staticfriction) {
 			sys->incrementCounter_static_to_dynamic();
@@ -155,6 +154,7 @@ Contact::frictionlaw_criticalload(){
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
+		supportable_tanforce *= mu;
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 			if (staticfriction) {

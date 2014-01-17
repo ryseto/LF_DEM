@@ -117,14 +117,15 @@ sub InParticles {
 	# 13: viscosity contributon of contact GU xz
 	# 14: viscosity contributon of brownian xz
 	# (15: angle for 2D simulation)
-
+	
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
         ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 		$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 		
-		if ($num==$num_mathm){
-			printf OUTMP "$line";
+		if (true){
+			#printf OUTMP "$line";
+			printf OUTMP "$i $x $y $z $a\n";
 		}
 		
 		$radius[$i] = $a;
@@ -466,7 +467,6 @@ sub OutYaplotData{
 #			#&OutString2($int0[$k], $int1[$k]);
 #			&OutString_width($int0[$k], $int1[$k]);
 #		}
-#		
 #    }
 #	printf OUT "y 4\n";
 #	printf OUT "@ 4\n";

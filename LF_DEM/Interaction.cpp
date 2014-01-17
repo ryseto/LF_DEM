@@ -145,7 +145,7 @@ Interaction::updateState(bool &deactivated){
 			f_colloidal_norm = colloidalforce_amplitude;
 			f_colloidal = -f_colloidal_norm*nvec;
 		} else {
-			 /* separating */
+			/* separating */
 			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
 			f_colloidal = -f_colloidal_norm*nvec;
 		}
