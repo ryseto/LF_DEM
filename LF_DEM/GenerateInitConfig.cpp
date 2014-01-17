@@ -15,8 +15,8 @@
 using namespace std;
 
 int
-GenerateInitConfig::generate(int argc, const char * argv[]){
-	setParameters(argc, argv);
+GenerateInitConfig::generate(){
+	setParameters();
 	sys.set_np(np);
 	//	sys.brownian = false;
 	sys.allocateRessources();
@@ -375,7 +375,7 @@ T readStdinDefault(T default_value,	string message){
 }
 
 void
-GenerateInitConfig::setParameters(int argc, const char * argv[]){
+GenerateInitConfig::setParameters(){
 	/*
 	 *  Read parameters from standard input
 	 *

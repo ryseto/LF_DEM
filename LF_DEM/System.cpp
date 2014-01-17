@@ -1182,7 +1182,7 @@ System::adjustContactModelParameters(){
 		kt = kt_try;
 	}
 	double average_max_tanvelocity = 0;
-	for (int j=0; j<sliding_velocity_history.size(); j++){
+	for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
 		average_max_tanvelocity += sliding_velocity_history[j];
 	}
 	average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();

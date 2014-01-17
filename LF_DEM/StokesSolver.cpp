@@ -197,6 +197,8 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
 		setRow(nvec, ii, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	}
 #endif
+	return;
+	ii=0; // prevents gcc warning when compiled without TRILINOS
 }
 
 
