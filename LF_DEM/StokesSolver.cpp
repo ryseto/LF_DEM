@@ -198,7 +198,7 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
 	}
 #endif
 	return;
-	ii=0; // prevents gcc warning when compiled without TRILINOS
+	ii = 0; // prevents gcc warning when compiled without TRILINOS
 }
 
 
