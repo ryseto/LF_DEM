@@ -381,47 +381,49 @@ sub OutYaplotData{
 			$force += - $F_lub[$k];
 		}
 		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 1 && abs($domega[$k]) < 5) {
+			if ($fricstate[$k] != 0) {
 				&OutString2($int0[$k],  $int1[$k]);
 			}
 		}
     }
 	
-	printf OUT "y 4\n";
-	printf OUT "r 0.4\n";
-	printf OUT "@ 0\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++){
-		$force = $Fc_n[$k];
-        if ($F_lub[$k] < 0) {
-			$force += - $F_lub[$k];
-		}
-		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
-				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
-					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
-						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
-						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
-						$tmpoy = int $oy;
-						printf OUT "t $xx -0.2 $zz $tmpoy \n";
-					}
-				
+	
+	
+#	printf OUT "y 4\n";
+#	printf OUT "r 0.4\n";
+#	printf OUT "@ 0\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		$force = $Fc_n[$k];
+#        if ($F_lub[$k] < 0) {
+#			$force += - $F_lub[$k];
+#		}
+#		if ($Gap[$k] < 0) {
+#			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
+#				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
+#					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
+#						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
+#						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
+#						$tmpoy = int $oy;
+#						printf OUT "t $xx -0.2 $zz $tmpoy \n";
+#					}
+#				
+#			}
+#		}
+#    }
+		printf OUT "y 3\n";
+		printf OUT "r 0.4\n";
+		printf OUT "@ 7\n"; # static
+		for ($k = 0; $k < $num_interaction; $k ++){
+			$force = $Fc_n[$k];
+	        if ($F_lub[$k] < 0) {
+				$force += - $F_lub[$k];
 			}
-		}
-    }
-	#	printf OUT "y 2\n";
-	#	printf OUT "r 0.4\n";
-	#	printf OUT "@ 3\n"; # static
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		$force = $Fc_n[$k];
-	#        if ($F_lub[$k] < 0) {
-	#			$force += - $F_lub[$k];
-	#		}
-	#		if ($Gap[$k] < 0) {
-	#			if ($fricstate[$k] == 1 && abs($domega[$k]) > 2) {
-	#				&OutString2($int0[$k],  $int1[$k]);
-	#			}
-	#		}
-	#    }
+			if ($Gap[$k] < 0) {
+				if ($fricstate[$k] == 0) {
+					&OutString2($int0[$k],  $int1[$k]);
+				}
+			}
+	    }
 	
 	
 	#	printf OUT "y 9\n";

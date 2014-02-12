@@ -15,10 +15,19 @@ $i = index($interaction_data, 'int_', 0)+4;
 $j = index($interaction_data, '.dat', $i-1);
 $name = substr($interaction_data, $i, $j-$i);
 
+$i = index($name, 'N', 0)+1;
+$j = index($name, 'VF', $i-1);
+$number = substr($name, $i, $j-$i) ;
+printf "num = $number \n";
+
+
 printf "$name\n";
 
 $output = "confrac_$name.dat";
 open (IN_rheo, "< rheo_${name}.dat");
+
+open (IN_stress, "< eigen_${name}.dat");
+
 open (OUT, "> ${output}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
@@ -72,6 +81,24 @@ sub readRheo{
 	}
 	
 }
+
+sub readStress{
+	
+	while(1){
+		$line = <IN_stress>;
+		($shear_strain_data, $eigen1) = split(/\s+/, $line);
+		printf "$shear_strain_data --- $shear_strain \n";
+		if ($shear_strain_data >= $shear_strain){
+			$stress_eigen_value = - $eigen1;
+			#printf "$shear_strain_data :::: $shear_strain\n";
+			#rintf "a = $shear_strain_data b =$viscosity_data\n";
+			return;
+		}
+	}
+	
+	
+}
+
 sub InInteractions {
 	$line = <IN_interaction>;
 	($buf, $shear_strain, $num_interaction) = split(/\s+/, $line);
@@ -80,9 +107,10 @@ sub InInteractions {
 		exit;
 	}
 	#	printf "shear strain ---> $shear_strain \n";
-
-	&readRheo;
 	
+	
+	&readRheo;
+	&readStress;
 
 	# 1, 2: numbers of the interacting particles
 	# 3: 1=contact, 0=apart
@@ -150,8 +178,12 @@ sub InInteractions {
 		if ($shear_strain_data > 5) {
 			$contact_fraction = $count_frictional / $count_contact ;
 			$stress = $viscosity_data*$shearrate_data;
+			$stress_eigen_value_nonscale = $stress_eigen_value*$shearrate_data;
 			$pressure_nonscale = $pressure*$shearrate_data;
-			printf OUT "$stress $contact_fraction $pressure_nonscale\n";
+			$contact_number = 2*$count_contact / $number;
+			$fric_contact_number = 2*$count_frictional  / $number;
+			
+			printf OUT "$contact_fraction $stress $stress_eigen_value_nonscale $pressure_nonscale $contact_number $fric_contact_number\n";
 		}
 
 	}
