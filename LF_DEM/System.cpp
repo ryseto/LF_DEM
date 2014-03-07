@@ -278,7 +278,7 @@ System::setupSystem(){
 		twodimension = false;
 		setSystemVolume();
 	}
-	cnt_prameter_convergence = 0;
+	//cnt_prameter_convergence = 0;
 }
 
 void
@@ -937,6 +937,7 @@ void
 System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
+	max_relative_velocity = 0;
 	in_predictor = true;
 	double sum_contact_velo_tan = 0;
 	double sum_contact_velo_normal = 0;
@@ -944,6 +945,7 @@ System::evaluateMaxContactVelocity(){
 	int cnt_contact = 0;
 	int cnt_sliding = 0;
 	for (int k=0; k<nb_interaction; k++) {
+	
 		if (interaction[k].is_contact()) {
 			interaction[k].calcRelativeVelocities();
 			cnt_contact++;
@@ -958,6 +960,9 @@ System::evaluateMaxContactVelocity(){
 			}
 			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
 				max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
+			}
+			if (interaction[k].getRelativeVelocity() > max_relative_velocity){
+				max_relative_velocity = interaction[k].getRelativeVelocity();
 			}
 		}
 	}
@@ -1010,6 +1015,9 @@ System::analyzeState(){
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	sliding_velocity_history.push_back(max_contact_velo_tan);
+	relative_velocity_history.push_back(max_relative_velocity);
+	cerr << "v contact tan = " << max_contact_velo_tan << endl;
+	cerr << "v relative = " << max_relative_velocity << endl;
 	contact_nb = 0;
 	fric_contact_nb = 0;
 	max_disp_tan = 0;
@@ -1155,32 +1163,30 @@ System::adjustContactModelParameters(){
 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
 	 * Only increases of kn and kt are accepted.
 	 */
-	double kn_previous = kn;
-	double kt_previous = kt;
-	double max_increment = 1000;
+	//	double max_increment = 1000;
 	/* determination of kn
 	 */
 	double mean_max_fc_normal, stddev_max_fc_normal;
 	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
 	double kn_try = mean_max_fc_normal/overlap_target;
-	if (kn_try > kn) {
-		if (kn_try > kn*max_increment){
-			kn_try = kn*max_increment;
-		}
-		kn = kn_try;
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
-	}
+	//if (kn_try > kn) {
+	//	if (kn_try > kn*max_increment){
+	//		kn_try = kn*max_increment;
+	//	}
+	kn = kn_try;
+	lub_coeff_contact = 4*kn*contact_relaxzation_time;
+	//}
 	/* determination of kt
 	 */
 	double mean_max_fc_tan, stddev_max_fc_tan;
 	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
 	double kt_try = mean_max_fc_tan/disp_tan_target;
-	if (kt_try > kt){
-		if (kt_try > kt*max_increment){
-			kt_try = kt*max_increment;
-		}
-		kt = kt_try;
-	}
+	//if (kt_try > kt){
+	//if (kt_try > kt*max_increment){
+	//kt_try = kt*max_increment;
+	//	}
+	kt = kt_try;
+	//}
 	double average_max_tanvelocity = 0;
 	for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
 		average_max_tanvelocity += sliding_velocity_history[j];
@@ -1188,11 +1194,29 @@ System::adjustContactModelParameters(){
 	average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
 	cerr << "average_max_velocity = " << average_max_tanvelocity << endl;
 	cerr << "disp_max " << disp_max << endl;
-	double dt_try = disp_max/average_max_tanvelocity;
-	if (dt_try < dt){
+	
+	double average_max_relative_velocity = 0;
+	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
+		average_max_relative_velocity += relative_velocity_history[j];
+	}
+	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
+	
+	cerr << "average_max_relative_velocity = " << average_max_relative_velocity << endl;
+	cerr << "average_max_tanvelocity = " << average_max_tanvelocity << endl;
+	
+	double tmp_max_velocity;
+	if (average_max_relative_velocity > average_max_tanvelocity){
+		tmp_max_velocity = average_max_relative_velocity ;
+	} else {
+		tmp_max_velocity = average_max_tanvelocity ;
+	}
+	
+	double dt_try = disp_max/tmp_max_velocity;
+	
+	if (dt_try < dt_max){
 		dt = dt_try;
 	}
-	cerr << "dt_try = " << dt_try << endl;
+	cerr << "dt = " << dt << endl;
 	
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].contact.updateContactModel();
@@ -1202,12 +1226,7 @@ System::adjustContactModelParameters(){
 	sliding_velocity_history.clear();
 	after_parameter_changed = true;
 	
-	if (kn_previous == kn && kt_previous == kt ){
-		cnt_prameter_convergence ++;
-	} else {
-		cnt_prameter_convergence = 0;
-	}
-	if (cnt_prameter_convergence == 5 || kn > max_kn){
+	if (kn > max_kn){
 		return 1;
 	}
 	return 0;
