@@ -8,7 +8,7 @@
 
 use Math::Trig;
 
-$force_factor = 0.2;
+$force_factor = 0.01;
 
 $y_section = 0;
 $yap_radius = 1;
@@ -56,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.001;
+$force_factor = 0.0008;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
@@ -291,10 +291,10 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	$postext = $Lz/2+2;
-	printf OUT "y 10\n";
-	printf OUT "@ 3\n";
-	printf OUT "t -2 0 $postext strain=$shear_strain\n";
-	
+	#	printf OUT "y 10\n";
+	#	printf OUT "@ 3\n";
+	#	printf OUT "t -2 0 $postext strain=$shear_strain\n";
+	#
 	#	printf OUT "y 7\n";
 	#	printf OUT "r 0.1\n";
 	#    printf OUT "@ 5\n";
@@ -371,60 +371,60 @@ sub OutYaplotData{
 			}
 		
     }
-	
-	printf OUT "y 2\n";
-	printf OUT "r 0.4\n";
-	printf OUT "@ 5\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++){
-		$force = $Fc_n[$k];
-        if ($F_lub[$k] < 0) {
-			$force += - $F_lub[$k];
-		}
-		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] != 0) {
-				&OutString2($int0[$k],  $int1[$k]);
-			}
-		}
-    }
-	
-	
-	
-#	printf OUT "y 4\n";
-#	printf OUT "r 0.4\n";
-#	printf OUT "@ 0\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		$force = $Fc_n[$k];
-#        if ($F_lub[$k] < 0) {
-#			$force += - $F_lub[$k];
-#		}
-#		if ($Gap[$k] < 0) {
-#			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
-#				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
-#					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
-#						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
-#						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
-#						$tmpoy = int $oy;
-#						printf OUT "t $xx -0.2 $zz $tmpoy \n";
-#					}
-#				
-#			}
-#		}
-#    }
-		printf OUT "y 3\n";
-		printf OUT "r 0.4\n";
-		printf OUT "@ 7\n"; # static
-		for ($k = 0; $k < $num_interaction; $k ++){
-			$force = $Fc_n[$k];
-	        if ($F_lub[$k] < 0) {
-				$force += - $F_lub[$k];
-			}
-			if ($Gap[$k] < 0) {
-				if ($fricstate[$k] == 0) {
-					&OutString2($int0[$k],  $int1[$k]);
-				}
-			}
-	    }
-	
+	#
+	#	printf OUT "y 2\n";
+	#	printf OUT "r 0.4\n";
+	#	printf OUT "@ 5\n"; # static
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$force = $Fc_n[$k];
+	#        if ($F_lub[$k] < 0) {
+	#			$force += - $F_lub[$k];
+	#		}
+	#		if ($Gap[$k] < 0) {
+	#			if ($fricstate[$k] != 0) {
+	#				&OutString2($int0[$k],  $int1[$k]);
+	#			}
+	#		}
+	#    }
+	#
+	#
+	#
+	#	printf OUT "y 4\n";
+	#	printf OUT "r 0.4\n";
+	#	printf OUT "@ 0\n"; # static
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$force = $Fc_n[$k];
+	#        if ($F_lub[$k] < 0) {
+	#			$force += - $F_lub[$k];
+	#		}
+	#		if ($Gap[$k] < 0) {
+	#			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
+	#				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
+	#					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
+	#						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
+	#						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
+	#						$tmpoy = int $oy;
+	#						printf OUT "t $xx -0.2 $zz $tmpoy \n";
+	#					}
+	#
+	#			}
+	#		}
+	#    }
+	#		printf OUT "y 3\n";
+	#		printf OUT "r 0.4\n";
+	#		printf OUT "@ 7\n"; # static
+	#		for ($k = 0; $k < $num_interaction; $k ++){
+	#			$force = $Fc_n[$k];
+	#	        if ($F_lub[$k] < 0) {
+	#				$force += - $F_lub[$k];
+	#			}
+	#			if ($Gap[$k] < 0) {
+	#				if ($fricstate[$k] == 0) {
+	#					&OutString2($int0[$k],  $int1[$k]);
+	#				}
+	#			}
+	#	    }
+	#
 	
 	#	printf OUT "y 9\n";
 	#	printf OUT "r 0.35\n";
@@ -457,29 +457,29 @@ sub OutYaplotData{
 	
 	
 	#printf OUT "r 0.2\n";
-	#    printf OUT "y 3\n";
-	#    printf OUT "@ 3\n";
-	#    for ($k=0; $k<$num_interaction; $k++){
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		#$force = $Fcol[$k];
-	#		#$force = $Fc_n[$k];
-	#		if ($force[$k] <0){
-	#			$force = -$force[$k];
-	#			$string_width = ${force_factor}*${force};
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#			&OutString_width($int0[$k], $int1[$k]);
-	#		}
-	#    }
-	#	printf OUT "y 4\n";
-	#	printf OUT "@ 4\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		if ($force[$k] > 0){
-	#			$force = $force[$k];
-	#			$string_width = ${force_factor}*${force};
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#			&OutString_width($int0[$k], $int1[$k]);
-	#		}
-	#    }
+	printf OUT "y 3\n";
+	printf OUT "@ 3\n";
+	for ($k=0; $k<$num_interaction; $k++){
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		#$force = $Fcol[$k];
+		#$force = $Fc_n[$k];
+		if ($force[$k] <0){
+			$force = -$force[$k];
+			$string_width = ${force_factor}*${force};
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "y 4\n";
+	printf OUT "@ 4\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($force[$k] > 0){
+			$force = $force[$k];
+			$string_width = ${force_factor}*${force};
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
 	#	printf OUT "y 5\n";
 	#	printf OUT "@ 5\n";
 	#	for ($k = 0; $k < $num_interaction; $k ++){
@@ -570,15 +570,15 @@ sub OutYaplotData{
 	#	printf OUT "y 5\n";
 	#	printf OUT "@ 2\n";
 	#printf OUT "r 0.3\n";
-#    for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0){
-#			&OutString($int0[$k],  $int1[$k]);
-#			&OutNvec($k);
-#		}
-#	}
-#	printf OUT2 "\n";
-#	
-#
+	#    for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0){
+	#			&OutString($int0[$k],  $int1[$k]);
+	#			&OutNvec($k);
+	#		}
+	#	}
+	#	printf OUT2 "\n";
+	#
+	#
 }
 
 sub OutBoundaryBox{
@@ -735,7 +735,7 @@ sub OutCross {
 	$za = $zi - $uz;
 	$xb = $xi + $ux;
 	$yb = $yi - 0.01;
-	$zb = $zi + $uz;	
+	$zb = $zi + $uz;
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
 	
 }
