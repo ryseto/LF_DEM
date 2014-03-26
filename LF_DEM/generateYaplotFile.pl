@@ -8,7 +8,7 @@
 
 use Math::Trig;
 
-$force_factor = 0.2;
+$force_factor = 0.01;
 
 $y_section = 0;
 $yap_radius = 1;
@@ -56,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.001;
+$force_factor = 0.0008;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
@@ -74,12 +74,12 @@ $c_traj=0;
 $num = 0;
 
 while (1){
-
+	
 	&InParticles;
-
+	
 	&InInteractions;
 	last unless defined $line;
-
+	
 	&OutYaplotData;
 	$num ++;
 	printf "$shear_rate\n";
@@ -117,14 +117,15 @@ sub InParticles {
 	# 13: viscosity contributon of contact GU xz
 	# 14: viscosity contributon of brownian xz
 	# (15: angle for 2D simulation)
-
+	
     for ($i = 0; $i < $np; $i ++){
         $line = <IN_particle> ;
         ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 		$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 		
-		if ($num==$num_mathm){
-			printf OUTMP "$line";
+		if (true){
+			#printf OUTMP "$line";
+			printf OUTMP "$i $x $y $z $a\n";
 		}
 		
 		$radius[$i] = $a;
@@ -138,40 +139,40 @@ sub InParticles {
 		}
     }
 	
-#	if ($c_traj == 0) {
-#		$min_dist_origin = 100;
-#		$min_dist_origin1 = 100;
-#		$min_dist_origin2 = 100;
-#		for ($i = 0; $i < $np; $i ++) {
-#			#$sqdistance = ($posx[$i]*$posx[$i]+$posy[$i]*$posy[$i]+$posz[$i]*$posz[$i]);
-#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,0);
-#			if ($sqdistance < $min_dist_origin) {
-#				$min_dist_origin = $sqdistance;
-#				$center = $i;
-#			}
-#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,5);
-#			if ($sqdistance < $min_dist_origin1) {
-#				$min_dist_origin1 = $sqdistance;
-#				$uppder = $i;
-#			}
-#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,-5);
-#			if ($sqdistance < $min_dist_origin2) {
-#				$min_dist_origin2 = $sqdistance;
-#				$lower = $i;
-#			}
-#			
-#		}
-#	}
-#	
-#	$trajx[$c_traj] = $posx[$center];
-#	$trajy[$c_traj] = $posy[$center];
-#	$trajz[$c_traj] = $posz[$center];
-#	$trajx2[$c_traj] = $posx[$uppder];
-#	$trajy2[$c_traj] = $posy[$uppder];
-#	$trajz2[$c_traj] = $posz[$uppder];
-#	$trajx3[$c_traj] = $posx[$lower];
-#	$trajy3[$c_traj] = $posy[$lower];
-#	$trajz3[$c_traj] = $posz[$lower];
+	#	if ($c_traj == 0) {
+	#		$min_dist_origin = 100;
+	#		$min_dist_origin1 = 100;
+	#		$min_dist_origin2 = 100;
+	#		for ($i = 0; $i < $np; $i ++) {
+	#			#$sqdistance = ($posx[$i]*$posx[$i]+$posy[$i]*$posy[$i]+$posz[$i]*$posz[$i]);
+	#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,0);
+	#			if ($sqdistance < $min_dist_origin) {
+	#				$min_dist_origin = $sqdistance;
+	#				$center = $i;
+	#			}
+	#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,5);
+	#			if ($sqdistance < $min_dist_origin1) {
+	#				$min_dist_origin1 = $sqdistance;
+	#				$uppder = $i;
+	#			}
+	#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,-5);
+	#			if ($sqdistance < $min_dist_origin2) {
+	#				$min_dist_origin2 = $sqdistance;
+	#				$lower = $i;
+	#			}
+	#
+	#		}
+	#	}
+	#
+	#	$trajx[$c_traj] = $posx[$center];
+	#	$trajy[$c_traj] = $posy[$center];
+	#	$trajz[$c_traj] = $posz[$center];
+	#	$trajx2[$c_traj] = $posx[$uppder];
+	#	$trajy2[$c_traj] = $posy[$uppder];
+	#	$trajz2[$c_traj] = $posz[$uppder];
+	#	$trajx3[$c_traj] = $posx[$lower];
+	#	$trajy3[$c_traj] = $posy[$lower];
+	#	$trajz3[$c_traj] = $posz[$lower];
 	$c_traj++;
 }
 
@@ -206,23 +207,23 @@ sub InInteractions {
 	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-#		/* 1, 2: numbers of the interacting particles
-#		* 3: 1=contact, 0=apart
-#		* 4, 5, 6: normal vector
-#		* 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-#		* 8: normal     of lubrication force
-#		* 9: tangential of lubrication force
-#		* 10: normal part     of contact force
-#		* 11: tangential part of contact force
-#		* 12: normal colloidal force
-#		* 13: Viscosity contribution of contact xF
-#		* 14: N1 contribution of contact xF
-#		* 15: N2 contribution of contact xF
-#		* 16: friction state
-#		*      0 = not frictional
-#		*      1 = non-sliding
-#		*      2 = sliding
-#		*/
+		#		/* 1, 2: numbers of the interacting particles
+		#		* 3: 1=contact, 0=apart
+		#		* 4, 5, 6: normal vector
+		#		* 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
+		#		* 8: normal     of lubrication force
+		#		* 9: tangential of lubrication force
+		#		* 10: normal part     of contact force
+		#		* 11: tangential part of contact force
+		#		* 12: normal colloidal force
+		#		* 13: Viscosity contribution of contact xF
+		#		* 14: N1 contribution of contact xF
+		#		* 15: N2 contribution of contact xF
+		#		* 16: friction state
+		#		*      0 = not frictional
+		#		*      1 = non-sliding
+		#		*      2 = sliding
+		#		*/
 		
 		($i, $j, $contact, $nx, $ny, $nz, #1---6
 		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol, #7--12
@@ -290,66 +291,66 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	$postext = $Lz/2+2;
-	printf OUT "y 10\n";
-	printf OUT "@ 3\n";
-	printf OUT "t -2 0 $postext strain=$shear_strain\n";
-	
-#	printf OUT "y 7\n";
-#	printf OUT "r 0.1\n";
-#    printf OUT "@ 5\n";
-#	for ($i = 0; $i < $c_traj; $i++){
-#		$xs = $trajx[$i];
-#		$ys = $trajy[$i];
-#		$zs = $trajz[$i];
-#		$xe = $trajx[$i+1];
-#		$ye = $trajy[$i+1];
-#		$ze = $trajz[$i+1];
-#		if (abs($zs-$ze) < 1
-#			&& abs($xs-$xe) < 1
-#			) {
-#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
-#		}
-#		#		$xs = $trajx[$i];
-#		#$ys = $trajy[$i];
-#		#$zs = $trajz[$i];
-#		#		printf OUT "c $xs $ys $zs\n";
-#	}
-#    printf OUT "@ 3\n";
-#	for ($i = 0; $i < $c_traj; $i++){
-#		$xs = $trajx2[$i];
-#		$ys = $trajy2[$i];
-#		$zs = $trajz2[$i];
-#		$xe = $trajx2[$i+1];
-#		$ye = $trajy2[$i+1];
-#		$ze = $trajz2[$i+1];
-#		if (abs($zs-$ze) < 1
-#			&& abs($xs-$xe) < 1
-#			) {
-#				printf OUT "l $xs $ys $zs $xe $ye $ze\n";
-#			}
-#		#$xs = $trajx2[$i];
-#		#$ys = $trajy2[$i];
-#		#$zs = $trajz2[$i];
-#		#		printf OUT "c $xs $ys $zs\n";
-#	}
-#    printf OUT "@ 4\n";
-#	for ($i = 0; $i < $c_traj; $i++){
-#		$xs = $trajx3[$i];
-#		$ys = $trajy3[$i];
-#		$zs = $trajz3[$i];
-#		$xe = $trajx3[$i+1];
-#		$ye = $trajy3[$i+1];
-#		$ze = $trajz3[$i+1];
-#		if (abs($zs-$ze) < 1
-#			&& abs($xs-$xe) < 1
-#			) {
-#				printf OUT "l $xs $ys $zs $xe $ye $ze\n";
-#			}
-#		#$xs = $trajx3[$i];
-#		#$ys = $trajy3[$i];
-#		#$zs = $trajz3[$i];
-#		#printf OUT "c $xs $ys $zs\n";
-#	}
+	#	printf OUT "y 10\n";
+	#	printf OUT "@ 3\n";
+	#	printf OUT "t -2 0 $postext strain=$shear_strain\n";
+	#
+	#	printf OUT "y 7\n";
+	#	printf OUT "r 0.1\n";
+	#    printf OUT "@ 5\n";
+	#	for ($i = 0; $i < $c_traj; $i++){
+	#		$xs = $trajx[$i];
+	#		$ys = $trajy[$i];
+	#		$zs = $trajz[$i];
+	#		$xe = $trajx[$i+1];
+	#		$ye = $trajy[$i+1];
+	#		$ze = $trajz[$i+1];
+	#		if (abs($zs-$ze) < 1
+	#			&& abs($xs-$xe) < 1
+	#			) {
+	#			printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+	#		}
+	#		#		$xs = $trajx[$i];
+	#		#$ys = $trajy[$i];
+	#		#$zs = $trajz[$i];
+	#		#		printf OUT "c $xs $ys $zs\n";
+	#	}
+	#    printf OUT "@ 3\n";
+	#	for ($i = 0; $i < $c_traj; $i++){
+	#		$xs = $trajx2[$i];
+	#		$ys = $trajy2[$i];
+	#		$zs = $trajz2[$i];
+	#		$xe = $trajx2[$i+1];
+	#		$ye = $trajy2[$i+1];
+	#		$ze = $trajz2[$i+1];
+	#		if (abs($zs-$ze) < 1
+	#			&& abs($xs-$xe) < 1
+	#			) {
+	#				printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+	#			}
+	#		#$xs = $trajx2[$i];
+	#		#$ys = $trajy2[$i];
+	#		#$zs = $trajz2[$i];
+	#		#		printf OUT "c $xs $ys $zs\n";
+	#	}
+	#    printf OUT "@ 4\n";
+	#	for ($i = 0; $i < $c_traj; $i++){
+	#		$xs = $trajx3[$i];
+	#		$ys = $trajy3[$i];
+	#		$zs = $trajz3[$i];
+	#		$xe = $trajx3[$i+1];
+	#		$ye = $trajy3[$i+1];
+	#		$ze = $trajz3[$i+1];
+	#		if (abs($zs-$ze) < 1
+	#			&& abs($xs-$xe) < 1
+	#			) {
+	#				printf OUT "l $xs $ys $zs $xe $ye $ze\n";
+	#			}
+	#		#$xs = $trajx3[$i];
+	#		#$ys = $trajy3[$i];
+	#		#$zs = $trajz3[$i];
+	#		#printf OUT "c $xs $ys $zs\n";
+	#	}
 	
 	printf OUT "y 1\n";
     printf OUT "@ 2\n";
@@ -370,173 +371,174 @@ sub OutYaplotData{
 			}
 		
     }
+	#
+	#	printf OUT "y 2\n";
+	#	printf OUT "r 0.4\n";
+	#	printf OUT "@ 5\n"; # static
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$force = $Fc_n[$k];
+	#        if ($F_lub[$k] < 0) {
+	#			$force += - $F_lub[$k];
+	#		}
+	#		if ($Gap[$k] < 0) {
+	#			if ($fricstate[$k] != 0) {
+	#				&OutString2($int0[$k],  $int1[$k]);
+	#			}
+	#		}
+	#    }
+	#
+	#
+	#
+	#	printf OUT "y 4\n";
+	#	printf OUT "r 0.4\n";
+	#	printf OUT "@ 0\n"; # static
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$force = $Fc_n[$k];
+	#        if ($F_lub[$k] < 0) {
+	#			$force += - $F_lub[$k];
+	#		}
+	#		if ($Gap[$k] < 0) {
+	#			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
+	#				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
+	#					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
+	#						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
+	#						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
+	#						$tmpoy = int $oy;
+	#						printf OUT "t $xx -0.2 $zz $tmpoy \n";
+	#					}
+	#
+	#			}
+	#		}
+	#    }
+	#		printf OUT "y 3\n";
+	#		printf OUT "r 0.4\n";
+	#		printf OUT "@ 7\n"; # static
+	#		for ($k = 0; $k < $num_interaction; $k ++){
+	#			$force = $Fc_n[$k];
+	#	        if ($F_lub[$k] < 0) {
+	#				$force += - $F_lub[$k];
+	#			}
+	#			if ($Gap[$k] < 0) {
+	#				if ($fricstate[$k] == 0) {
+	#					&OutString2($int0[$k],  $int1[$k]);
+	#				}
+	#			}
+	#	    }
+	#
 	
-	printf OUT "y 2\n";
-	printf OUT "r 0.4\n";
-	printf OUT "@ 5\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++){
-		$force = $Fc_n[$k];
-        if ($F_lub[$k] < 0) {
-			$force += - $F_lub[$k];
-		}
-		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 1 && abs($domega[$k]) < 5) {
-				&OutString2($int0[$k],  $int1[$k]);
-			}
-		}
-    }
+	#	printf OUT "y 9\n";
+	#	printf OUT "r 0.35\n";
+	#	printf OUT "@ 6\n"; # dynamic
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$force = $Fc_n[$k];
+	#        if ($F_lub[$k] < 0) {
+	#			$force += - $F_lub[$k];
+	#		}
+	#		if ($Gap[$k] < 0) {
+	#			if ($fricstate[$k] == 2) {
+	#				&OutString2($int0[$k],  $int1[$k]);
+	#			}
+	#		}
+	#    }
+	#	printf OUT "r 0.2\n";
+	#	printf OUT "@ 0\n"; # dynamic
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$force = $Fc_n[$k];
+	#        if ($F_lub[$k] < 0) {
+	#			$force += - $F_lub[$k];
+	#		}
+	#		if ($Gap[$k] < 0) {
+	#			if ($fricstate[$k] == 0) {
+	#				# static
+	#				&OutString2($int0[$k],  $int1[$k]);
+	#			}
+	#		}
+	#    }
 	
-	printf OUT "y 4\n";
-	printf OUT "r 0.4\n";
-	printf OUT "@ 0\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++){
-		$force = $Fc_n[$k];
-        if ($F_lub[$k] < 0) {
-			$force += - $F_lub[$k];
-		}
-		if ($Gap[$k] < 0) {
-			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
-				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
-					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
-						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
-						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
-						$tmpoy = int $oy;
-						printf OUT "t $xx -0.2 $zz $tmpoy \n";
-					}
-				
-			}
-		}
-    }
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.4\n";
-#	printf OUT "@ 3\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		$force = $Fc_n[$k];
-#        if ($F_lub[$k] < 0) {
-#			$force += - $F_lub[$k];
-#		}
-#		if ($Gap[$k] < 0) {
-#			if ($fricstate[$k] == 1 && abs($domega[$k]) > 2) {
-#				&OutString2($int0[$k],  $int1[$k]);
-#			}
-#		}
-#    }
-	
-	
-#	printf OUT "y 9\n";
-#	printf OUT "r 0.35\n";
-#	printf OUT "@ 6\n"; # dynamic
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		$force = $Fc_n[$k];
-#        if ($F_lub[$k] < 0) {
-#			$force += - $F_lub[$k];
-#		}
-#		if ($Gap[$k] < 0) {
-#			if ($fricstate[$k] == 2) {
-#				&OutString2($int0[$k],  $int1[$k]);
-#			}
-#		}
-#    }
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 0\n"; # dynamic
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		$force = $Fc_n[$k];
-#        if ($F_lub[$k] < 0) {
-#			$force += - $F_lub[$k];
-#		}
-#		if ($Gap[$k] < 0) {
-#			if ($fricstate[$k] == 0) {
-#				# static
-#				&OutString2($int0[$k],  $int1[$k]);
-#			}
-#		}
-#    }
-
 	
 	#printf OUT "r 0.2\n";
-#    printf OUT "y 3\n";
-#    printf OUT "@ 3\n";
-#    for ($k=0; $k<$num_interaction; $k++){
-#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-#		#$force = $Fcol[$k];
-#		#$force = $Fc_n[$k];
-#		if ($force[$k] <0){
-#			$force = -$force[$k];
-#			$string_width = ${force_factor}*${force};
-#			#&OutString2($int0[$k], $int1[$k]);
-#			&OutString_width($int0[$k], $int1[$k]);
-#		}
-#		
-#    }
-#	printf OUT "y 4\n";
-#	printf OUT "@ 4\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($force[$k] > 0){
-#			$force = $force[$k];
-#			$string_width = ${force_factor}*${force};
-#			#&OutString2($int0[$k], $int1[$k]);
-#			&OutString_width($int0[$k], $int1[$k]);
-#		}
-#    }
-#	printf OUT "y 5\n";
-#	printf OUT "@ 5\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		$radius = $ContVelo[$k]/10;
-#		printf OUT "r $radius\n";
-#		&OutCircle_middle($int0[$k],  $int1[$k]);
-#    }
+	printf OUT "y 3\n";
+	printf OUT "@ 3\n";
+	for ($k=0; $k<$num_interaction; $k++){
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		#$force = $Fcol[$k];
+		#$force = $Fc_n[$k];
+		if ($force[$k] <0){
+			$force = -$force[$k];
+			$string_width = ${force_factor}*${force};
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "y 4\n";
+	printf OUT "@ 4\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($force[$k] > 0){
+			$force = $force[$k];
+			$string_width = ${force_factor}*${force};
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
+	#	printf OUT "y 5\n";
+	#	printf OUT "@ 5\n";
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		$radius = $ContVelo[$k]/10;
+	#		printf OUT "r $radius\n";
+	#		&OutCircle_middle($int0[$k],  $int1[$k]);
+	#    }
 	
-#
-#	printf OUT "y 10\n";
-#	printf OUT "@ 5\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0) {
-#			$xx = $sp_x[$k] + 10*$xi_x[$k];
-#			$yy = $sp_y[$k] + 10*$xi_y[$k];
-#			$zz = $sp_z[$k] + 10*$xi_z[$k];
-#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
-#
-#		}
-#    }
-#	printf OUT "y 9\n";
-#	printf OUT "@ 4\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0) {
-#			$xx = $sp_x[$k] - $nrvec_x[$k];
-#			$yy = $sp_y[$k] - $nrvec_y[$k];
-#			$zz = $sp_z[$k] - $nrvec_z[$k];
-#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
-#		}
-#    }
-#	$ff=1.0/1000;
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0) {
-#			$xx = $sp_x[$k] + $ff*$ft_x[$k];
-#			$yy = $sp_y[$k] + $ff*$ft_y[$k];
-#			$zz = $sp_z[$k] + $ff*$ft_z[$k];
-#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
-#		}
-#    }
-#	$ff=1.0/1000;
-#	printf OUT "@ 3\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0) {
-#			$xx = $sp_x[$k] + $nrvec_x[$k];
-#			$yy = $sp_y[$k] + $nrvec_y[$k];
-#			$zz = $sp_z[$k] + $nrvec_z[$k];
-#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
-#		}
-#    }
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0) {
-#			$xx = $sp_x[$k] - $ff*$ft_x[$k];
-#			$yy = $sp_y[$k] - $ff*$ft_y[$k];
-#			$zz = $sp_z[$k] - $ff*$ft_z[$k];
-#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
-#		}
-#    }
-
-
+	#
+	#	printf OUT "y 10\n";
+	#	printf OUT "@ 5\n";
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0) {
+	#			$xx = $sp_x[$k] + 10*$xi_x[$k];
+	#			$yy = $sp_y[$k] + 10*$xi_y[$k];
+	#			$zz = $sp_z[$k] + 10*$xi_z[$k];
+	#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
+	#
+	#		}
+	#    }
+	#	printf OUT "y 9\n";
+	#	printf OUT "@ 4\n";
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0) {
+	#			$xx = $sp_x[$k] - $nrvec_x[$k];
+	#			$yy = $sp_y[$k] - $nrvec_y[$k];
+	#			$zz = $sp_z[$k] - $nrvec_z[$k];
+	#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
+	#		}
+	#    }
+	#	$ff=1.0/1000;
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0) {
+	#			$xx = $sp_x[$k] + $ff*$ft_x[$k];
+	#			$yy = $sp_y[$k] + $ff*$ft_y[$k];
+	#			$zz = $sp_z[$k] + $ff*$ft_z[$k];
+	#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
+	#		}
+	#    }
+	#	$ff=1.0/1000;
+	#	printf OUT "@ 3\n";
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0) {
+	#			$xx = $sp_x[$k] + $nrvec_x[$k];
+	#			$yy = $sp_y[$k] + $nrvec_y[$k];
+	#			$zz = $sp_z[$k] + $nrvec_z[$k];
+	#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
+	#		}
+	#    }
+	#	for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0) {
+	#			$xx = $sp_x[$k] - $ff*$ft_x[$k];
+	#			$yy = $sp_y[$k] - $ff*$ft_y[$k];
+	#			$zz = $sp_z[$k] - $ff*$ft_z[$k];
+	#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
+	#		}
+	#    }
+	
+	
 	
 	if ($Ly == 0){
 		printf OUT "y 6\n";
@@ -545,7 +547,7 @@ sub OutYaplotData{
 			&OutCross($i);
 		}
 	}
-
+	
 	&OutBoundaryBox;
 	
 	#	$maxS=0;
@@ -568,14 +570,15 @@ sub OutYaplotData{
 	#	printf OUT "y 5\n";
 	#	printf OUT "@ 2\n";
 	#printf OUT "r 0.3\n";
-    #for ($k = 0; $k < $num_interaction; $k ++){
-	#	if ($Gap[$k] < 0.01 ){
+	#    for ($k = 0; $k < $num_interaction; $k ++){
+	#		if ($Gap[$k] < 0){
 	#			&OutString($int0[$k],  $int1[$k]);
 	#			&OutNvec($k);
 	#		}
-	#    }
-	printf OUT2 "\n";
-	
+	#	}
+	#	printf OUT2 "\n";
+	#
+	#
 }
 
 sub OutBoundaryBox{
@@ -586,20 +589,20 @@ sub OutBoundaryBox{
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
-		
+	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
 	#	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 	#	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
 	#	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
-
+	
 	
 	
 	if($Ly == 0){
 		$lx2 = $Lx/2+1;
 		$ly2 = $Ly/2+1;
 		$lz2 = $Lz/2+1;
-
+		
 		printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
 		printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
 		printf OUT "l -$lx2 0 -$lz2  -$lx2 0 $lz2\n";
@@ -608,7 +611,7 @@ sub OutBoundaryBox{
 		$lx2 = $Lx/2;
 		$ly2 = $Ly/2;
 		$lz2 = $Lz/2;
-
+		
 		printf OUT "l -$lx2 -$ly2 $lz2    $lx2 -$ly2 $lz2\n";
 		printf OUT "l -$lx2 -$ly2 -$lz2   $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 -$ly2 -$lz2  -$lx2 -$ly2 $lz2\n";
@@ -621,11 +624,11 @@ sub OutBoundaryBox{
 		printf OUT "l $lx2 $ly2 $lz2    $lx2 -$ly2 $lz2\n";
 		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
-
-
+		
+		
 		
 	}
-
+	
 }
 
 sub OutNvec {
@@ -732,7 +735,7 @@ sub OutCross {
 	$za = $zi - $uz;
 	$xb = $xi + $ux;
 	$yb = $yi - 0.01;
-	$zb = $zi + $uz;	
+	$zb = $zi + $uz;
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
 	
 }

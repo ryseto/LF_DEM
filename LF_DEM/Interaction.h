@@ -53,6 +53,7 @@ class Interaction{
 	double nznz;
 	double a0_dash; // radius - 0.5*overlap
 	double a1_dash; // second radius > a0
+	vec3d relative_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range_scaled;  // max distance for lubrication
 	double colloidalforce_amplitude;
@@ -118,6 +119,7 @@ public:
 	get_par_num(unsigned int &i, unsigned int &j){
 		i = par_num[0], j = par_num[1];
 	}
+	
 	inline void set_label(unsigned int val){label = val;}
 	inline unsigned int get_label(){return label;}
 	inline double get_a0(){return a0;}
@@ -132,7 +134,7 @@ public:
 	inline double get_gap_nondim(){return gap_nondim;}
 	inline vec3d get_nvec(){return nvec;}
 	double getContactVelocity();
-
+	double getRelativeVelocity(){return relative_velocity.norm();}
 	//===== forces/stresses  ========================== //
 	void setResistanceCoeff(double, double);
 	void calcRelativeVelocities();

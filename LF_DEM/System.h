@@ -74,13 +74,14 @@ private:
 	vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
 	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
 	vector<double> sliding_velocity_history;
+	vector<double> relative_velocity_history;
 	/* cnt_parameter_changed is used for kn-kt ajusting algorithm.
 	 * Spring constants are changed in the simulation.
 	 * This may cause large contact forces.
 	 * These values are not considered for the next deteremination.
 	 */
 	bool after_parameter_changed;
-	int cnt_prameter_convergence;
+	//int cnt_prameter_convergence;
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
@@ -183,6 +184,7 @@ public:
 	 */
 	double vel_difference;
 	double max_velocity;
+	double max_relative_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
 	double max_overlap; // = ro-r

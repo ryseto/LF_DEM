@@ -491,14 +491,12 @@ Simulation::setDefaultParameters(){
 	 * kt: tangential spring constant
 	 */
 	double _kn = 5000;
-	double _kt = 1000;
+	double _kt = 3000;
 	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
-	sys.overlap_target = 0.03;
-	sys.disp_tan_target = 0.03;
-	sys.max_kn = 100000;
-	
-	
+	sys.overlap_target = 0.05;
+	sys.disp_tan_target = 0.05;
+	sys.max_kn = 1000000;
 	/*
 	 * Colloidal force parameter
 	 * Short range repulsion is assumed.

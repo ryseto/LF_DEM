@@ -145,7 +145,7 @@ Interaction::updateState(bool &deactivated){
 			f_colloidal_norm = colloidalforce_amplitude;
 			f_colloidal = -f_colloidal_norm*nvec;
 		} else {
-			 /* separating */
+			/* separating */
 			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
 			f_colloidal = -f_colloidal_norm*nvec;
 		}
@@ -215,13 +215,15 @@ Interaction::calcRelativeVelocities(){
 	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 	 *
 	 ******************************************************/
-	vec3d dv = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
+	relative_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
 	if (sys->in_predictor && zshift != 0) {
-		dv.x += zshift*sys->vel_difference;
+		relative_velocity.x += zshift*sys->vel_difference;
 	}
-	relative_surface_velocity = dv-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
+	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
+
+
 
 void
 Interaction::addColloidalStress(){
