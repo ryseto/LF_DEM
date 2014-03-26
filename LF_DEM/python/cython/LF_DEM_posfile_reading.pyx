@@ -2,6 +2,7 @@ cimport libc.math
 from string import *
 import sys
 import copy
+import numpy as np
 
 cdef class Pos_Stream:
 
@@ -12,7 +13,8 @@ cdef class Pos_Stream:
         positions, old_positions, radius
         time_labels, last_read_time_label, current_time_index, first_time
         int dim
-
+        pair_sep, pair_dist
+		
     def __init__(self, input_stream):
 
         self.instream=input_stream
@@ -24,46 +26,46 @@ cdef class Pos_Stream:
 
         
         err_str = ' ERROR LF_DEM_posfile_reading : incorrect input file, '
-
+        input_line=self.instream.readline()
         # get N
         input_line=self.instream.readline()
         fields=split(input_line)
-        if fields[0] != 'np':
+        if fields[1] != 'np':
             sys.stderr.write(err_str+'no particle number \n')
         else:
-            self.N = int(fields[1])
+            self.N = int(fields[2])
 
         # get VF
         input_line=self.instream.readline()
         fields=split(input_line)
-        if fields[0] != 'VF':
+        if fields[1] != 'VF':
             sys.stderr.write(err_str+'no volume fraction \n')
         else:
-            self.phi = float(fields[1])
+            self.phi = float(fields[2])
 
         # get Lx
         input_line=self.instream.readline()
         fields=split(input_line)
-        if fields[0] != 'Lx':
+        if fields[1] != 'Lx':
             sys.stderr.write(err_str+'no Lx \n')
         else:
-            self.lx = float(fields[1])
+            self.lx = float(fields[2])
 
         # get Ly
         input_line=self.instream.readline()
         fields=split(input_line)
-        if fields[0] != 'Ly':
+        if fields[1] != 'Ly':
             sys.stderr.write(err_str+'no Ly \n')
         else:
-            self.ly = float(fields[1])
+            self.ly = float(fields[2])
 
         # get Lz
         input_line=self.instream.readline()
         fields=split(input_line)
-        if fields[0] != 'Lz':
+        if fields[1] != 'Lz':
             sys.stderr.write(err_str+'no Lz \n')
         else:
-            self.lz = float(fields[1])
+            self.lz = float(fields[2])
 
         if self.Ly() == 0.: # 2d case
             self.V = self.Lx()*self.Lz()
@@ -165,6 +167,75 @@ cdef class Pos_Stream:
             
         return False
 
+
+    def computePairSeparations(self):
+        flat_pos = np.ravel(self.positions.values())
+        self.pair_sep = np.asarray([ flat_pos - np.roll(flat_pos, 3*i, axis=0) for i in self.range()] )
+
+        # define the shifts to apply if a boundary is crossed
+        xcross_shift = np.tile([self.Lx(), 0, 0], self.np()) # x
+        ycross_shift = np.tile([0, self.Ly(), 0], self.np()) # y
+        xshift = (self.time()-int(self.time()))*self.Lx()    # z (Lees-Edwards)
+        zcross_shift = np.tile([xshift, 0, self.Lz()], (self.np(),self.np())) # z
+
+        # easier to start by delta_z
+
+        # case delta_z > 0.5*Lz:
+        # determine which elements have to be updated:
+        # if delta_z > 0.5*Lz, delta_x and delta_z should be updated, delta_y remains
+        # so the 3 entries will appear in the mask as [ True, False, True ]
+        zcrossed = np.repeat(self.pair_sep[:,2::3] > 0.5*self.Lz(),2, axis=1) #  [ True, True ]
+#        mask = np.insert(zcrossed, np.tile(np.arange(1,2*zcrossed.shape[0],2), (200, 1)), False, axis=1) # insert False in between
+        mask = np.insert(zcrossed, np.arange(1,2*zcrossed.shape[0],2), False, axis=1) # insert False in between
+        # replace values using the mask
+        self.pair_sep = np.where(mask, self.pair_sep-zcross_shift, self.pair_sep)
+        
+        # case delta_z < -0.5*Lz:
+        # same as above
+        zcrossed = np.repeat(self.pair_sep[:,2::3] < -0.5*self.Lz(),2, axis=1)
+#        mask = np.insert(zcrossed, np.tile(np.arange(1,2*zcrossed.shape[0],2), (200, 1)), False, axis=1)
+        mask = np.insert(zcrossed, np.arange(1,2*zcrossed.shape[0],2), False, axis=1)
+        # replace values using the mask
+        self.pair_sep = np.where(mask, self.pair_sep+zcross_shift, self.pair_sep)
+        
+
+        # case delta_x > 0.5*Lx:
+        # delta_x alone should be updated, mask [ True, False, False ]
+        mask = np.tile(np.asarray(np.zeros(2*self.np()), dtype=bool), (200, 1)) # [ False, False ]
+#        mask = np.insert(mask, np.tile(np.arange(0,2*mask.shape[0],2), (200,1)), self.pair_sep[:,0::3] > 0.5*self.Lx(), axis=1) # [ True, False, False ]
+        mask = np.insert(mask, np.arange(0,2*mask.shape[0],2), self.pair_sep[:,0::3] > 0.5*self.Lx(), axis=1) # [ True, False, False ]
+        # replace values using the mask
+        self.pair_sep = np.where(mask, self.pair_sep-xcross_shift, self.pair_sep)
+
+        # case delta_x < -0.5*Lx:
+        mask = np.tile(np.asarray(np.zeros(2*self.np()), dtype=bool), (200, 1)) # [ False, False ]
+#        mask = np.insert(mask, np.tile(np.arange(0,2*len(mask),2), (200,1)), self.pair_sep[:,0::3] < -0.5*self.Lx(), axis=1) # [ True, False, False ]
+        mask = np.insert(mask, np.arange(0,2*len(mask),2), self.pair_sep[:,0::3] < -0.5*self.Lx(), axis=1) # [ True, False, False ]
+        # replace values using the mask
+        self.pair_sep = np.where(mask, self.pair_sep+xcross_shift, self.pair_sep)
+
+
+        # case delta_y > 0.5*Ly:
+        # delta_y alone should be updated, mask [ False, True, False ]
+        mask = np.tile(np.asarray(np.zeros(2*self.np()), dtype=bool), (200, 1)) # [ False, False ]
+#        mask = np.insert(mask, np.tile(np.arange(0,2*len(mask),2), (200,1)), self.pair_sep[:,1::3] > 0.5*self.Ly(), axis=1) # [ False, True, False ]
+        mask = np.insert(mask, np.arange(0,2*len(mask),2), self.pair_sep[:,1::3] > 0.5*self.Ly(), axis=1) # [ False, True, False ]
+        # replace values using the mask
+        self.pair_sep = np.where(mask, self.pair_sep-ycross_shift, self.pair_sep)
+
+        # case delta_y < -0.5*Ly:
+        # delta_y alone should be updated, mask [ False, True, False ]
+        mask = np.tile(np.asarray(np.zeros(2*self.np()), dtype=bool), (200, 1)) # [ False, False ]
+#        mask = np.insert(mask, np.tile(np.arange(0,2*len(mask),2), (200,1)), self.pair_sep[:,1::3] < -0.5*self.Ly(), axis=1) # [ False, True, False ]
+        mask = np.insert(mask, np.arange(0,2*len(mask),2), self.pair_sep[:,1::3] < -0.5*self.Ly(), axis=1) # [ False, True, False ]
+        # replace values using the mask
+        self.pair_sep = np.where(mask, self.pair_sep+ycross_shift, self.pair_sep)
+
+        
+        self.pair_dist = np.sum(np.reshape(self.pair_sep, (self.np(), self.np(), 3))**2, axis=2)**(1./2)
+
+    def getPairSeparations(self):
+        return self.pair_sep
 
     cdef void cperiodize(self, double *deltax, double *deltay, double *deltaz):
         cdef double xshift

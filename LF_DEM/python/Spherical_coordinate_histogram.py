@@ -100,7 +100,6 @@ class SphericalCoordinateHistogram:
                     dphi = self.phi_bins[k+1] - self.phi_bins[k] 
 
                     dvol= (r**2)*dr*np.sin(theta)*dtheta*dphi
-                    
                     self.histogram[i,j,k]/=dvol*norm_factor
 
     def getHistogram(self):

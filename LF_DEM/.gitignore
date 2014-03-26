@@ -17,6 +17,9 @@
 # binary
 LF_DEM
 
+# object files
+*.o
+
 # pdf's
 ./*.pdf
 

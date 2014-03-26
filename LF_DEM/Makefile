@@ -8,7 +8,7 @@ CXX=g++
 
 # OS_version: OSX or Linux
 OS_version=OSX
-SysEnv=Energy_seto
+#SysEnv=Energy_seto
 # Build : debug or optimized
 Build=debug
 

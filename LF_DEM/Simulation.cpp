@@ -150,6 +150,7 @@ Simulation::simulationHysteresis(int argc, const char * argv[]){
 	if (argc == 7) {
 		contactForceParameter(argv[6]);
 	}
+
 	openOutputFiles();
 	outputDataHeader(fout_particle);
 	outputDataHeader(fout_interaction);
@@ -392,12 +393,13 @@ Simulation::openOutputFiles(){
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string st_filename = "st_" +sys.simu_name + ".dat";
-
+	
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
 	sys.openFileInteractionData();
+	
 	if (sys.hysteresis){
 		string hysteresis_filename = "his_" +sys.simu_name + ".dat";
 		fout_hysteresis.open(hysteresis_filename.c_str());

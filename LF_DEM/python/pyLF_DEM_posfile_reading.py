@@ -189,17 +189,21 @@ class Pos_Stream:
 
         # case delta_x > 0.5*Lx:
         crossed = self.pair_sep[:,:,0] > 0.5*self.lx
-        self.pair_sep = np.where(crossed[:,:,None], self.pair_sep-[self.lx, 0, 0], self.pair_sep)
+        while crossed.any():
+            self.pair_sep = np.where(crossed[:,:,None], self.pair_sep-[self.lx, 0, 0], self.pair_sep)
+            crossed = self.pair_sep[:,:,0] > 0.5*self.lx
 
         # case delta_x < -0.5*Lx:
         crossed = self.pair_sep[:,:,0] < -0.5*self.lx
-        self.pair_sep = np.where(crossed[:,:,None], self.pair_sep+[self.lx, 0, 0], self.pair_sep)
+        while crossed.any():
+            self.pair_sep = np.where(crossed[:,:,None], self.pair_sep+[self.lx, 0, 0], self.pair_sep)
+            crossed = self.pair_sep[:,:,0] < -0.5*self.lx
 
-        # case delta_x > 0.5*Lx:
+        # case delta_y > 0.5*Ly:
         crossed = self.pair_sep[:,:,1] > 0.5*self.ly
         self.pair_sep = np.where(crossed[:,:,None], self.pair_sep-[0, self.ly, 0], self.pair_sep)
 
-        # case delta_x < -0.5*Lx:
+        # case delta_y < -0.5*Ly:
         crossed = self.pair_sep[:,:,1] < -0.5*self.ly
         self.pair_sep = np.where(crossed[:,:,None], self.pair_sep+[0, self.ly, 0], self.pair_sep)
 
