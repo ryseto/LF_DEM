@@ -488,8 +488,8 @@ Lubrication::calcLubricationForce_normal(){
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
-	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
+	vec3d vi(sys->velocity[p0]);
+	vec3d vj(sys->velocity[p1]);
 	calcXFunctions();
 	double XAU_i_normal = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec);
 	double XGE_i_normal = (scaledXG0()+scaledXG2())*(*nxnz);
