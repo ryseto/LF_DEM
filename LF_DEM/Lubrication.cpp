@@ -427,14 +427,14 @@ Lubrication::calcTestStress(){
 	StressTensor stresslet_GU_HO_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
-	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
-	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
-	vec3d oi(sys->v_total[p0_6+3], sys->v_total[p0_6+4], sys->v_total[p0_6+5]);
-	vec3d oj(sys->v_total[p1_6+3], sys->v_total[p1_6+4], sys->v_total[p1_6+5]);
+	//	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
+	//	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
+	//	vec3d oi(sys->v_total[p0_6+3], sys->v_total[p0_6+4], sys->v_total[p0_6+5]);
+	//	vec3d oj(sys->v_total[p1_6+3], sys->v_total[p1_6+4], sys->v_total[p1_6+5]);
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
-	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_HO_i, stresslet_GU_HO_j);
+	pairVelocityStresslet(sys->velocity[p0], sys->velocity[p1], sys->ang_velocity[p0], sys->ang_velocity[p1], stresslet_GU_HO_i, stresslet_GU_HO_j);
 	/*
 	 *  Second: +M*Einf term
 	 */
@@ -442,7 +442,7 @@ Lubrication::calcTestStress(){
 }
 
 /* Lubriction force between two particles is calculated.
- * Note that only the Brownian component of the velocity is NOT included here.
+ * Note that only the Brownian component of the velocity is NOT included here (IS THAT TRUE?).
  * This part is used for ouput data.
  * lubforce_p1 = -lubforce_p0
  */
@@ -456,10 +456,10 @@ Lubrication::calcLubricationForce(){
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
-	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
-	vec3d oi(sys->v_total[p0_6+3], sys->v_total[p0_6+4], sys->v_total[p0_6+5]);
-	vec3d oj(sys->v_total[p1_6+3], sys->v_total[p1_6+4], sys->v_total[p1_6+5]);
+	vec3d vi(sys->velocity[p0]);
+	vec3d vj(sys->velocity[p1]);
+	vec3d oi(sys->ang_velocity[p0]);
+	vec3d oj(sys->ang_velocity[p1]);
 	if (sys->lubrication_model == 1){
 		calcXFunctions();
 	} else if (sys->lubrication_model == 2){
