@@ -55,7 +55,10 @@ public:
 	 *       Public Methods          *
 	 *********************************/
 	//======= internal state =====================//
+
 	vec3d disp_tan; // tangential displacement
+	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
+
 	Contact(){};
 	Contact(const Contact& obj){
 		disp_tan = obj.disp_tan;

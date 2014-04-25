@@ -346,7 +346,6 @@ System::deltaTimeEvolution(){
 	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
-	in_corrector = true;
 	updateInteractions();
 }
 
@@ -370,7 +369,6 @@ System::deltaTimeEvolutionRelax(){
 	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
-	in_corrector = true;
 	bool deactivated;
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].updateStateRelax(deactivated);
@@ -401,7 +399,6 @@ System::deltaTimeEvolutionPredictor(){
 	 * but the statuses are fixed by using boolean `fix_interaction_status'
 	 */
 	in_predictor = true;
-	in_corrector = false;
 	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.
@@ -415,15 +412,15 @@ System::deltaTimeEvolutionPredictor(){
 void
 System::deltaTimeEvolutionCorrector(){
 	for (int i=0; i<np; i++) {
-		velocity[i] = 0.5*(velocity[i]-velocity_predictor[i]);
-		ang_velocity[i] = 0.5*(ang_velocity[i]-ang_velocity_predictor[i]);
+		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
+		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<np; i++) {
-		displacement(i, velocity[i]*dt);
+		displacement(i, (velocity[i]-velocity_predictor[i])*dt);
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			angle[i] += ang_velocity[i].y*dt;
+			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
 	}
 	/* update boxing system
@@ -435,25 +432,7 @@ System::deltaTimeEvolutionCorrector(){
 	 *
 	 */
 	in_predictor = false;
-	in_corrector = true;
 	updateInteractions(); // false --> in corrector
-	/* In deltaTimeEvolutionCorrector,
-	 * velocity[] and ang_velocity[]
-	 * are virtual velocities to correct the predictor.
-	 *
-	 * This function reverts them by (2):
-	 * V = 0.5*(V^{+}-V^{-})   (1)
-	 * V += V^{-}              (2)
-	 * V = 0.5*(V^{+}+V^{-})   (3)
-	 *
-	 * [Note]
-	 * Contact velocities in the interaction objects
-	 * are not right ones.
-	 */
-	for (int i=0; i<np; i++) {
-		velocity[i] += velocity_predictor[i];
-		ang_velocity[i] += ang_velocity_predictor[i];
-	}
 }
 
 void
@@ -488,7 +467,6 @@ System::timeEvolutionRelax(int time_step){
 		setContactForceToParticle();
 		setColloidalForceToParticle();
 		in_predictor = true;
-		in_corrector = true;
 		updateVelocityRestingFluid();
 		deltaTimeEvolutionRelax();
 		ts++;
@@ -543,16 +521,6 @@ System::checkNewInteraction(){
  */
 void
 System::updateInteractions(){
-	/* default value of `_in_predictor' is false
-	 */
-	if (friction) {
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_contact()){
-				interaction[k].calcRelativeVelocities();
-				interaction[k].contact.incrementTangentialDisplacement();
-			}
-		}
-	}
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
 		if (interaction[k].is_active()){

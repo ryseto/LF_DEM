@@ -118,7 +118,6 @@ public:
 	double *v_cont;
 	double *v_colloidal;
 	bool in_predictor;
-	bool in_corrector;
 	int dimension;
 	double critical_normal_force; 
 	vec3d *position;

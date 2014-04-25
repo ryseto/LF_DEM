@@ -116,9 +116,20 @@ Interaction::deactivate(){
 
 void
 Interaction::updateState(bool &deactivated){
-	/* update tangential displacement: we do it before updating nvec
-	 * as it should be along the tangential vector defined in the previous time step
+	/* update tangential displacement: we do it before updating nvec as:
+     *  - it should be along the tangential vector defined in the previous time step
+	 *  - (VERY IMPORTANT) it must compute the relative velocities with PBC at time t. 
+	 *    This is encoded in variable zshift which takes care of Lees-Edwards in the z direction.
+	 *    zshift is updated for time t+1 in calcNormalVectorDistanceGap(), 
+	 *    so this function should be called after calcRelativeVelocities();
 	 */
+	if (sys->friction) {
+		if (is_contact()){
+			calcRelativeVelocities();
+			contact.incrementTangentialDisplacement();
+		}
+	}
+
 	calcNormalVectorDistanceGap();
 	if (contact.active) {
 		if (gap_nondim > 0){
@@ -158,9 +169,6 @@ Interaction::updateStateRelax(bool &deactivated){
 	if (active == false) {
 		return;
 	}
-	/* update tangential displacement: we do it before updating nvec
-	 * as it should be along the tangential vector defined in the previous time step
-	 */
 	calcNormalVectorDistanceGap();
 	if (contact.active) {
 		contact.calcContactInteractionRelax();
@@ -204,6 +212,7 @@ Interaction::calcRelativeVelocities(){
 	 * v1' = v1 - Lz = v1 - zshift*lz;
 	 */
 	/**** NOTE ********************************************
+		  THE FOLLOWING IS TO BE DISCARDED 
 	 * In the Corrector, this relative_surface_velocity
 	 * is also the correcting velocity.
 	 * This correcting velocity should not involve the
@@ -215,10 +224,10 @@ Interaction::calcRelativeVelocities(){
 	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 	 *
 	 ******************************************************/
-	relative_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
-	if (sys->in_predictor && zshift != 0) {
-		relative_velocity.x += zshift*sys->vel_difference;
-	}
+	relative_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]]; //true velocity, in predictor and in corrector
+	//	if (sys->in_predictor && zshift != 0) {
+	 relative_velocity.x += zshift*sys->vel_difference;
+		//	}
 	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
@@ -249,7 +258,7 @@ Interaction::getContactVelocity(){
 
 double
 Interaction::getNormalVelocity(){
-	sys->in_predictor = true;
+	sys->in_predictor = true;  // ??? doen't seem safe
 	vec3d d_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;
