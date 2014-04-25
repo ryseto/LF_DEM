@@ -10,7 +10,7 @@ CXX=g++
 OS_version=OSX
 #SysEnv=Energy_seto
 # Build : debug or optimized
-Build=debug
+Build=optimized
 
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no
