@@ -225,9 +225,7 @@ Interaction::calcRelativeVelocities(){
 	 *
 	 ******************************************************/
 	relative_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]]; //true velocity, in predictor and in corrector
-	//	if (sys->in_predictor && zshift != 0) {
-	 relative_velocity.x += zshift*sys->vel_difference;
-		//	}
+	relative_velocity.x += zshift*sys->vel_difference;
 	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }

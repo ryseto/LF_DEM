@@ -17,6 +17,15 @@ System::~System(){
 	DELETE(angle);
 	DELETE(velocity);
 	DELETE(ang_velocity);
+	DELETE(na_velocity);
+	DELETE(na_ang_velocity);
+	DELETE(vel_contact);
+	DELETE(ang_vel_contact);
+	DELETE(vel_hydro);
+	DELETE(ang_vel_hydro);
+	DELETE(vel_colloidal);
+	DELETE(ang_vel_colloidal);
+
 	if (integration_method >= 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
@@ -29,10 +38,6 @@ System::~System(){
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
-	DELETE(v_total);
-	DELETE(v_hydro);
-	DELETE(v_cont);
-	DELETE(v_colloidal);
 };
 
 void
@@ -41,10 +46,19 @@ System::allocateRessources(){
 	angle = new double [np];
 	velocity = new vec3d [np];
 	ang_velocity = new vec3d [np];
+	na_velocity = new vec3d [np];
+	na_ang_velocity = new vec3d [np];
 	if (integration_method >= 1) {
 		ang_velocity_predictor = new vec3d [np];
 		velocity_predictor = new vec3d [np];
 	}
+	vel_colloidal = new vec3d [np];
+	ang_vel_colloidal = new vec3d [np];
+	vel_contact = new vec3d [np];
+	ang_vel_contact = new vec3d [np];
+	vel_hydro = new vec3d [np];
+	ang_vel_hydro = new vec3d [np];
+
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
 	colloidal_force = new vec3d [np];
@@ -59,10 +73,7 @@ System::allocateRessources(){
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	linalg_size = 6*np;
-	v_total = new double [linalg_size];
-	v_cont = new double [linalg_size];
-	v_hydro = new double [linalg_size];
-	v_colloidal = new double [linalg_size];
+
 	//	if (brownian) {
 	//	    v_Brownian_init = new double [linalg_size];
 	//	    v_Brownian_mid = new double [linalg_size];
@@ -91,6 +102,15 @@ System::setupSystemForGenerateInit(){
 	}
 	for (int i=0; i<np; i++) {
 		velocity[i].reset();
+		na_velocity[i].reset();
+		ang_velocity[i].reset();
+		na_ang_velocity[i].reset();
+		vel_contact[i].reset();
+		ang_vel_contact[i].reset();
+		vel_colloidal[i].reset();
+		ang_vel_colloidal[i].reset();
+		vel_hydro[i].reset();
+		ang_vel_hydro[i].reset();
 	}
 	kb_T = 0;
 	shear_strain = 0;
@@ -201,12 +221,7 @@ System::setupSystem(){
 		velocity[i].set(position[i].z, 0, 0);
 		ang_velocity[i].set(0, 0.5, 0);
 	}
-	for (int i=0; i<linalg_size; i++) {
-		v_total[i] = 0;
-		v_cont[i] = 0;
-		v_hydro[i] = 0;
-		v_colloidal[i] = 0;
-	}
+
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
@@ -726,26 +741,14 @@ System::updateVelocityLubrication(){
     stokes_solver.completeResistanceMatrix();
 	buildContactTerms();
 	buildColloidalForceTerms();
-    stokes_solver.solve(v_total);
+	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
-	//stokes_solver->printResistanceMatrix();
-	/* TEST IMPLEMENTATION
-	 * SDFF : Stokes drag force factor:
-	 * SDFF = 1.0 : full drag forces from the undisturbed background flow.
-	 * SDFF = 0.0 : no drag force from the undisturbed background flow.
-	 */
-    for (int i=0; i<np; i++) {
-		int i6 = 6*i;
-		velocity[i].x = v_total[i6];
-		velocity[i].y = v_total[i6+1];
-		velocity[i].z = v_total[i6+2];
-		ang_velocity[i].x = v_total[i6+3];
-		ang_velocity[i].y = v_total[i6+4];
-		ang_velocity[i].z = v_total[i6+5];
-		//cout << " in System : particle  " << i << " has a velocity " << velocity[i].x << " " << velocity[i].y << " "  << velocity[i].z << " " << ang_velocity[i].x << " " << ang_velocity[i].y << " "  << ang_velocity[i].z << endl;
-    }
-	if (dimensionless_shear_rate != 0) {
-		for (int i=0; i<np; i++) {
+
+	for (int i=0; i<np; i++) {
+		//		int i6 = 6*i;
+		velocity[i] = na_velocity[i];
+		ang_velocity[i] = na_ang_velocity[i];
+		if (dimensionless_shear_rate != 0) {
 			velocity[i].x += position[i].z;
 			ang_velocity[i].y += 0.5;
 		}
@@ -1218,7 +1221,7 @@ System::calcLubricationForce(){
 	setColloidalForceToParticle();
 	buildColloidalForceTerms();
 	stokes_solver.completeResistanceMatrix();
-	stokes_solver.solve(v_total);
+	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {

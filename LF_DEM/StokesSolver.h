@@ -334,11 +334,12 @@ public:
     void getRHS(double*);
 	
     /*
-	 solve(double* velocity) :
+	 solve(vec3d* velocity, vec3d* ang_velocity) :
 	 - once the resistance matrix and the RHS vector are built
 	 ( completeResistanceMatrix() must have been called )
 	 - solves Resistance * velocity = RHS, and stores it in velocity array
 	 */
+    void solve(vec3d* velocity, vec3d* ang_velocity);
     void solve(double* velocity);
 	
     /*

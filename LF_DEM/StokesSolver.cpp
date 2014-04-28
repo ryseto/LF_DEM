@@ -627,6 +627,41 @@ StokesSolver::solve_CholTrans(double* velocity){
 }
 
 void
+StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity){
+	if (direct()) {
+		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+		for (int i=0; i<np; i++) {
+			int i6 = 6*i;
+			velocity[i].x = ((double*)chol_solution->x)[i6  ];
+			velocity[i].y = ((double*)chol_solution->x)[i6+1];
+			velocity[i].z = ((double*)chol_solution->x)[i6+2];
+			ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
+			ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
+			ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+		}				
+		cholmod_free_dense(&chol_solution, &chol_c);
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		tril_stokes_equation->setLHS(tril_solution);
+		tril_stokes_equation->setRHS(tril_rhs);
+		bool set_success = tril_stokes_equation->setProblem();
+		if (!set_success) {
+			cerr << "ERROR: StokesSolver::solve : Belos::LinearProblem failed to set up correctly" << endl;
+			exit(1);
+		}
+		tril_solver->setProblem (tril_stokes_equation);
+		Belos::ReturnType ret = tril_solver->solve();
+		if (ret != Belos::Converged) {
+			cerr << " Warning: StokesSolver::solve : Belos::Solver did not converge" << endl;
+		}
+		tril_solver->getNumIters();
+		//		cout << " iterations " << tril_solver->getNumIters() << endl;
+		tril_solution->ExtractCopy(&velocity);
+	}
+#endif
+}
+void
 StokesSolver::solve(double* velocity){
 	if (direct()) {
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
@@ -650,8 +685,7 @@ StokesSolver::solve(double* velocity){
 			cerr << " Warning: StokesSolver::solve : Belos::Solver did not converge" << endl;
 		}
 		tril_solver->getNumIters();
-		//		int iter_steps = tril_solver->getNumIters();
-		//		cout << " iterations " << iter_steps << endl;
+		//		cout << " iterations " << tril_solver->getNumIters() << endl;
 		tril_solution->ExtractCopy(&velocity);
 	}
 #endif
