@@ -427,14 +427,14 @@ Lubrication::calcTestStress(){
 	StressTensor stresslet_GU_HO_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
-	//	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
-	//	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
-	//	vec3d oi(sys->v_total[p0_6+3], sys->v_total[p0_6+4], sys->v_total[p0_6+5]);
-	//	vec3d oj(sys->v_total[p1_6+3], sys->v_total[p1_6+4], sys->v_total[p1_6+5]);
+	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
+	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
+	vec3d oi(sys->v_total[p0_6+3], sys->v_total[p0_6+4], sys->v_total[p0_6+5]);
+	vec3d oj(sys->v_total[p1_6+3], sys->v_total[p1_6+4], sys->v_total[p1_6+5]);
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
-	pairVelocityStresslet(sys->velocity[p0], sys->velocity[p1], sys->ang_velocity[p0], sys->ang_velocity[p1], stresslet_GU_HO_i, stresslet_GU_HO_j);
+	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_HO_i, stresslet_GU_HO_j);
 	/*
 	 *  Second: +M*Einf term
 	 */
@@ -456,10 +456,10 @@ Lubrication::calcLubricationForce(){
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	vec3d vi(sys->velocity[p0]);
-	vec3d vj(sys->velocity[p1]);
-	vec3d oi(sys->ang_velocity[p0]);
-	vec3d oj(sys->ang_velocity[p1]);
+	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
+	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
+	vec3d oi(sys->v_total[p0_6+3], sys->v_total[p0_6+4], sys->v_total[p0_6+5]);
+	vec3d oj(sys->v_total[p1_6+3], sys->v_total[p1_6+4], sys->v_total[p1_6+5]);
 	if (sys->lubrication_model == 1){
 		calcXFunctions();
 	} else if (sys->lubrication_model == 2){
@@ -488,8 +488,8 @@ Lubrication::calcLubricationForce_normal(){
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	vec3d vi(sys->velocity[p0]);
-	vec3d vj(sys->velocity[p1]);
+	vec3d vi(sys->v_total[p0_6], sys->v_total[p0_6+1], sys->v_total[p0_6+2]);
+	vec3d vj(sys->v_total[p1_6], sys->v_total[p1_6+1], sys->v_total[p1_6+2]);
 	calcXFunctions();
 	double XAU_i_normal = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec);
 	double XGE_i_normal = (scaledXG0()+scaledXG2())*(*nxnz);
