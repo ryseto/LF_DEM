@@ -351,6 +351,7 @@ public:
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
     void solve_CholTrans(double* velocity);
+    void solve_CholTrans(vec3d* velocity, vec3d* ang_velocity);
 	
     /*
 	 solvingIsDone(bool free_Cholesky_factor) :

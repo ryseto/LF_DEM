@@ -627,6 +627,31 @@ StokesSolver::solve_CholTrans(double* velocity){
 }
 
 void
+StokesSolver::solve_CholTrans(vec3d* velocity, vec3d* ang_velocity){
+	if (direct()) {
+		chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
+		chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
+		for (int i=0; i<np; i++) {
+			int i6 = 6*i;
+			velocity[i].x = ((double*)chol_solution->x)[i6  ];
+			velocity[i].y = ((double*)chol_solution->x)[i6+1];
+			velocity[i].z = ((double*)chol_solution->x)[i6+2];
+			ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
+			ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
+			ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+		}				
+		cholmod_free_dense(&chol_solution, &chol_c);
+		cholmod_free_dense(&chol_PTsolution, &chol_c);
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		cerr << " StokesSolver::solve_CholTrans(double* velocity) not implemented for iterative solver." << endl;
+		exit(1);
+	}
+#endif
+}
+
+void
 StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity){
 	if (direct()) {
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;

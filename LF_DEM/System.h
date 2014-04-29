@@ -18,7 +18,7 @@
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
-#include "BrownianForce.h"
+//#include "BrownianForce.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "cholmod.h"
@@ -27,7 +27,7 @@ using namespace std;
 
 class Simulation;
 class Interaction;
-class BrownianForce;
+//class BrownianForce;
 class BoxSet;
 
 class System{
@@ -68,6 +68,7 @@ private:
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	bool twodimension;
+	bool brownian;
 	/* data */
 	int intr_max_fc_normal;
 	int intr_max_fc_tan;
@@ -91,13 +92,13 @@ private:
 	void deltaTimeEvolutionPredictor();
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
-	void buildLubricationTerms(bool rhs=true);
+	void buildLubricationTerms(bool mat=true, bool rhs=true);
 	void buildContactTerms();
 	void buildColloidalForceTerms();
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-	double *lub_cont_forces_init;
+
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
@@ -107,6 +108,7 @@ private:
 	/*Backup*/
 	vector <vec3d> position_backup;
 	Interaction *interaction_backup;
+	MTRand r_gen;
 
 protected:
 public:
@@ -133,9 +135,15 @@ public:
 	vec3d *ang_vel_contact;
 	vec3d *vel_hydro;
 	vec3d *ang_vel_hydro;
+	vec3d *vel_brownian;
+	vec3d *ang_vel_brownian;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
+	double *contact_forces_predictor;
+	double *hydro_forces_predictor;
+	double *ran_vector;
+
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
@@ -175,7 +183,7 @@ public:
 	double lub_reduce_parameter;
 	double contact_relaxzation_time;
 	double contact_relaxzation_time_tan;
-	BrownianForce *fb;
+	//	BrownianForce *fb;
 	double shear_disp;
 	/* For non-Brownian suspension:
 	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_col(0)
