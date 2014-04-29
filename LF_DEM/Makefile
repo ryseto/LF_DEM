@@ -3,14 +3,24 @@
 #=======================================#
 #    Parameters to provide              #
 #=======================================#
-# Compiler
-CXX=g++
 
 # OS_version: OSX or Linux
 OS_version=OSX
 #SysEnv=Energy_seto
 # Build : debug or optimized
 Build=optimized
+
+# Compiler
+ifeq ($(OS_version),Linux)
+	CXX=g++
+	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow
+	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow
+endif
+ifeq ($(OS_version),OSX)
+	CXX=clang
+	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow
+	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow
+endif
 
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no
@@ -21,12 +31,7 @@ UseMetis=no
 #=======================================#
 
 #======== Compiler flags =============
-CXXFLAGS_Linux_optimized=  -O3 -Wall  -Wextra -Wshadow
-CXXFLAGS_Linux_debug=  -g -pg -Wall  -Wextra -Wshadow
-CXXFLAGS_OSX_optimized=  -O3 -Wall  -Wextra -Wshadow
-CXXFLAGS_OSX_debug=  -g -pg  -Wall  -Wextra -Wshadow
-
-CXXFLAGS= $(CXXFLAGS_$(OS_version)_$(Build))
+CXXFLAGS= $(CXXFLAGS_$(Build))
 
 
 #======== Include Paths =============

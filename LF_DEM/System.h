@@ -113,12 +113,7 @@ public:
 	~System();
 	void backupState();
 	
-	double *v_total; // Velocities and angular velocities of all particles.
-	double *v_hydro; // Velocities balancing with the 
-	double *v_cont;
-	double *v_colloidal;
 	bool in_predictor;
-	bool in_corrector;
 	int dimension;
 	double critical_normal_force; 
 	vec3d *position;
@@ -127,9 +122,17 @@ public:
 	double *radius_cubic;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
+	vec3d *na_velocity;
 	vec3d *velocity_predictor;
 	vec3d *ang_velocity;
+	vec3d *na_ang_velocity;
 	vec3d *ang_velocity_predictor;
+	vec3d *vel_colloidal;
+	vec3d *ang_vel_colloidal;
+	vec3d *vel_contact;
+	vec3d *ang_vel_contact;
+	vec3d *vel_hydro;
+	vec3d *ang_vel_hydro;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
