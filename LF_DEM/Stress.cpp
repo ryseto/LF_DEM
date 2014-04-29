@@ -200,9 +200,9 @@ System::calcStressesHydroContact(){
 					interaction[k].lubrication.calcXFunctionsStress();
 				}
 			}
-			interaction[k].lubrication.addHydroStress(); // - R_SU * v_hydro
-			interaction[k].contact.addContactStress(); //  - R_SU * v_cont - rF_cont
-			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
+			interaction[k].lubrication.addHydroStress(); // - R_SU * v
+			interaction[k].contact.addContactStress(); //  - rF_cont
+			interaction[k].addColloidalStress(); //  - rF_colloid
 		}
 	}
     stokes_solver.solvingIsDone();
