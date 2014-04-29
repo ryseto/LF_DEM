@@ -29,6 +29,7 @@ System::~System(){
 	if (brownian) {
 		DELETE(vel_brownian);
 		DELETE(ang_vel_brownian);
+		DELETE(ran_vector);
 	}
 	if (integration_method >= 1) {
 		DELETE(velocity_predictor);
@@ -67,8 +68,8 @@ System::allocateRessources(){
 	vel_hydro = new vec3d [np];
 	ang_vel_hydro = new vec3d [np];
 	if (brownian) {
-		vel_colloidal = new vec3d [np];
-		ang_vel_colloidal = new vec3d [np];
+		vel_brownian = new vec3d [np];
+		ang_vel_brownian = new vec3d [np];
 	}
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
@@ -87,6 +88,7 @@ System::allocateRessources(){
 	if (brownian) {
 		contact_forces_predictor = new double [linalg_size];
 		hydro_forces_predictor = new double [linalg_size];
+		ran_vector = new double [linalg_size];
 	}
 	//	if (brownian) {
 	//	    v_Brownian_init = new double [linalg_size];
@@ -356,6 +358,7 @@ System::timeEvolutionPredictorCorrectorMethod(){
 }
 
 void System::timeEvolutionBrownian(){
+	cout << "going Brownian ! " << endl;
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;
@@ -643,7 +646,7 @@ System::timeEvolution(double strain_next){
 				timeEvolutionPredictorCorrectorMethod();
 				break;
 			case 2:
-				//				timeEvolutionBrownian();
+				timeEvolutionBrownian();
 				break;
 		}
 		ts++;
