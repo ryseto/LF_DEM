@@ -8,7 +8,7 @@
 OS_version=OSX
 #SysEnv=Energy_seto
 # Build : debug or optimized
-Build=optimized
+#Build=optimized
 
 # Compiler
 ifeq ($(OS_version),Linux)
@@ -32,7 +32,7 @@ CXXFLAGS_Linux_debug=  -g -pg -Wall  -Wextra -Wshadow
 CXXFLAGS_OSX_optimized=  -O3 -Wall  -Wextra -Wshadow
 CXXFLAGS_OSX_debug=  -g -pg  -Wall  -Wextra -Wshadow
 
-CXXFLAGS= $(CXXFLAGS_$(OS_version)_$(Build))
+CXXFLAGS= $(CXXFLAGS_$(OS_version)_optimized)
 
 
 #======== Include Paths =============
@@ -100,8 +100,11 @@ DATE=$(shell date +%D | sed "s./..g")
 
 all:	$(OUT_CODE)
 
+debug:	CXXFLAGS= $(CXXFLAGS_$(OS_version)_debug)
+debug:	$(OUT_CODE)
+
 $(OUT_CODE):$(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
+	$(CXX) $(CXXFLAGS_$(OS_version)_$(Build)) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp) 
