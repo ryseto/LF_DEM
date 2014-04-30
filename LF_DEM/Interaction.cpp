@@ -131,6 +131,13 @@ Interaction::updateState(bool &deactivated){
 	}
 
 	calcNormalVectorDistanceGap();
+	if (gap_nondim < 0){
+		cerr << gap_nondim << endl;
+		if (sys->minvalue_gap_nondim > gap_nondim){
+			sys->minvalue_gap_nondim = gap_nondim;
+		}
+	}
+		
 	if (contact.active) {
 		if (gap_nondim > 0){
 			contact.deactivate();

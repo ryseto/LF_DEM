@@ -794,6 +794,8 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
 	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
+	fout_rheo << sys.minvalue_gap_nondim << ' ';
+	sys.minvalue_gap_nondim  = 0;
 	fout_rheo << endl;
 }
 

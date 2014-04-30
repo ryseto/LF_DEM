@@ -222,6 +222,9 @@ public:
 	double total_energy; // for initial-config generation
 	bool kn_kt_adjustment;
 	
+	//
+	double minvalue_gap_nondim;
+	
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
@@ -283,7 +286,7 @@ public:
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
 	void set_bgf_factor(int val){bgf_factor = val;}
-	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=2;} }
+	void set_kb_T(double val){kb_T = val; if(kb_T>0){ brownian=true; integration_method=2;} }
 	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}

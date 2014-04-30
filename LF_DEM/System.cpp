@@ -358,7 +358,7 @@ System::timeEvolutionPredictorCorrectorMethod(){
 }
 
 void System::timeEvolutionBrownian(){
-	cout << "going Brownian ! " << endl;
+	//cout << "going Brownian ! " << endl;
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;
