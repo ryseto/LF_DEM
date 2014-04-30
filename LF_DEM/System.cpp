@@ -26,7 +26,7 @@ System::~System(){
 	DELETE(ang_vel_hydro);
 	DELETE(vel_colloidal);
 	DELETE(ang_vel_colloidal);
-	if (brownian) {
+	if (integration_method==2) {
 		DELETE(vel_brownian);
 		DELETE(ang_vel_brownian);
 		DELETE(ran_vector);
@@ -34,6 +34,8 @@ System::~System(){
 	if (integration_method >= 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
+		DELETE(na_velocity_predictor);
+		DELETE(na_ang_velocity_predictor);
 	}
 	DELETE(contact_force);
 	DELETE(contact_torque);
@@ -43,7 +45,7 @@ System::~System(){
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
-	if(brownian){
+	if(integration_method==2){
 		DELETE(contact_forces_predictor);
 		DELETE(hydro_forces_predictor);
 	}
@@ -60,6 +62,8 @@ System::allocateRessources(){
 	if (integration_method >= 1) {
 		ang_velocity_predictor = new vec3d [np];
 		velocity_predictor = new vec3d [np];
+		na_ang_velocity_predictor = new vec3d [np];
+		na_velocity_predictor = new vec3d [np];
 	}
 	vel_colloidal = new vec3d [np];
 	ang_vel_colloidal = new vec3d [np];
@@ -67,7 +71,7 @@ System::allocateRessources(){
 	ang_vel_contact = new vec3d [np];
 	vel_hydro = new vec3d [np];
 	ang_vel_hydro = new vec3d [np];
-	if (brownian) {
+	if (integration_method==2) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
 	}
@@ -85,7 +89,7 @@ System::allocateRessources(){
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	linalg_size = 6*np;
-	if (brownian) {
+	if (integration_method==2) {
 		contact_forces_predictor = new double [linalg_size];
 		hydro_forces_predictor = new double [linalg_size];
 		ran_vector = new double [linalg_size];
@@ -358,7 +362,6 @@ System::timeEvolutionPredictorCorrectorMethod(){
 }
 
 void System::timeEvolutionBrownian(){
-	cout << "going Brownian ! " << endl;
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;
@@ -419,14 +422,23 @@ void System::timeEvolutionBrownian(){
     //
     // we do not call solvingIsDone() before new solve(), because
     // R_FU has not changed, so same factorization is safely used
-	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
-	int np6 = 6*np;
-	for(int i=0; i<np6; i++){
-		ran_vector[i] = sqrt_kbT2_dt * GRANDOM;
+	if(kb_T==0){
+		cout << "T0" << endl;
+		for (int i=0; i < np; i++){
+			vel_brownian[i].set(0,0,0);
+			ang_vel_brownian[i].set(0,0,0);
+		}
 	}
-	
-	stokes_solver.setRHS( ran_vector );
-	stokes_solver.solve_CholTrans( vel_brownian, ang_vel_brownian );
+	else{
+		double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
+		int np6 = 6*np;
+		for(int i=0; i<np6; i++){
+			ran_vector[i] = sqrt_kbT2_dt * GRANDOM;
+		}
+		
+		stokes_solver.setRHS( ran_vector );
+		stokes_solver.solve_CholTrans( vel_brownian, ang_vel_brownian );
+	}
 	stokes_solver.solvingIsDone();
 
 	// evolve PBC
@@ -436,14 +448,18 @@ void System::timeEvolutionBrownian(){
 	}
     // move particles to intermediate point
     for (int i=0; i < np; i++){
-		velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
-		velocity[i].y *= zero_2Dsimu;
+		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
+		na_velocity[i].y *= zero_2Dsimu;
+		velocity[i] = na_velocity[i];
 		velocity[i].x += position[i].z;
+		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5;
 
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
+		na_velocity_predictor[i] = na_velocity[i];
+		na_ang_velocity_predictor[i] = na_ang_velocity[i];
 
 		displacement(i, velocity[i]*dt);
 		if (twodimension) {
@@ -498,23 +514,29 @@ void System::timeEvolutionBrownian(){
     // third term is Brownian drift
     // fourth term for vx is the shear rate
     for (int i = 0; i < np; i++){
-		velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
-		velocity[i].y *= zero_2Dsimu;
+		// get V(+)
+		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
+		na_velocity[i].y *= zero_2Dsimu;
+		velocity[i] = na_velocity[i];
 		velocity[i].x += position[i].z;
-		velocity[i] += 0.5*velocity_predictor[i];
-
+		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5;
+		
+		// V = 0.5*( V(+) + V(-) )
+		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);
+		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);
+		na_ang_velocity[i] = 0.5*(na_ang_velocity[i] + na_ang_velocity_predictor[i]);
+		ang_velocity[i] = 0.5*(ang_velocity[i] + ang_velocity_predictor[i]);
 
+		// displace by X(t+1) = X(mid) + 0.5*( V(+) - V(-) )*dt
 		displacement(i, (velocity[i]-velocity_predictor[i])*dt);
 		if (twodimension) {
-			angle[i] += ang_velocity[i].y*dt;
+			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
     }
 
 	// update boxing system
-
-
 	boxset.update();
 	checkNewInteraction();
 	in_predictor = false;
@@ -601,13 +623,17 @@ System::deltaTimeEvolutionPredictor(){
 	for (int i=0; i<np; i++) {
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
+		na_velocity_predictor[i] = na_velocity[i];
+		na_ang_velocity_predictor[i] = na_ang_velocity[i];
 	}
 }
 
 void
 System::deltaTimeEvolutionCorrector(){
 	for (int i=0; i<np; i++) {
+		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
+		na_ang_velocity[i] = 0.5*(na_ang_velocity[i]+na_ang_velocity_predictor[i]);
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<np; i++) {
