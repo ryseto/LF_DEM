@@ -144,7 +144,7 @@ public:
 	vec3d *colloidal_force;
 	double *contact_forces_predictor;
 	double *hydro_forces_predictor;
-	double *ran_vector;
+	double *brownian_force;
 
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
