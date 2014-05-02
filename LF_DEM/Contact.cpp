@@ -106,6 +106,18 @@ Contact::calcContactInteraction(){
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
 	(this->*frictionlaw)();
+	// if( f_contact_tan.y != 0){
+	// 	cout << "weird tan" << endl;
+	// 	cout <<  f_contact_tan.x << " " << f_contact_tan.y << " " << f_contact_tan.z << endl;
+	// 	cout <<  interaction->nvec.x << " " << interaction->nvec.y << " " << interaction->nvec.z << endl;
+	// 	getchar();
+	// }
+	// if( f_contact_normal.y != 0){
+	// 	cout << "weird normal" << endl;
+	// 	cout <<  f_contact_normal.x << " " << f_contact_normal.y << " " << f_contact_normal.z << endl;
+	// 	cout <<  interaction->nvec.x << " " << interaction->nvec.y << " " << interaction->nvec.z << endl;
+	// }
+
 }
 
 void
@@ -129,6 +141,7 @@ Contact::frictionlaw_coulomb(){
 			}
 			staticfriction = false;
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
 		} else {
 			staticfriction = true;
 		}
@@ -165,6 +178,7 @@ Contact::frictionlaw_criticalload(){
 			}
 			staticfriction = false;
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
 		} else {
 			staticfriction = true;
 		}
