@@ -167,23 +167,20 @@ System::calcStressesHydroContact(){
 
 	// first obtain hydrodynamic part of velocity
 	stokes_solver.resetRHS();
-	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-	addStokesDrag();
-	buildLubricationTerms();
-	stokes_solver.completeResistanceMatrix();
+	buildHydroTerms(true, true);
+
 	stokes_solver.solve(vel_hydro, ang_vel_hydro);
 
 	// then obtain contact forces, and contact part of velocity
-	stokes_solver.resetRHS();
 	setContactForceToParticle();
-    buildContactTerms();
+    buildContactTerms(true);
 	stokes_solver.solve(vel_contact, ang_vel_contact);
+
 	// then obtain colloidal forces
-    stokes_solver.resetRHS();
 	setColloidalForceToParticle();
-    buildColloidalForceTerms();
+    buildColloidalForceTerms(true);
 	stokes_solver.solve(vel_colloidal, ang_vel_colloidal);
+
 	/////////////////////////////////////////////////
 	// from that, compute stresses
 	//	cout << nb_interaction << endl;
