@@ -90,15 +90,18 @@ private:
 	void deltaTimeEvolutionRelax();
 	void deltaTimeEvolutionCorrector();
 	void deltaTimeEvolutionPredictor();
+	void timeStepBoxing();
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
+	void buildHydroTerms(bool, bool);
 	void buildLubricationTerms(bool mat=true, bool rhs=true);
-	void buildContactTerms();
-	void buildColloidalForceTerms();
+	void buildBrownianTerms();
+	void buildContactTerms(bool);
+	void buildColloidalForceTerms(bool);
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-
+	
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
