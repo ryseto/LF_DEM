@@ -86,10 +86,10 @@ private:
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
-	void deltaTimeEvolution();
-	void deltaTimeEvolutionRelax();
-	void deltaTimeEvolutionCorrector();
-	void deltaTimeEvolutionPredictor();
+	void timeStepMove();
+	void timeStepMoveRelax();
+	void timeStepMoveCorrector();
+	void timeStepMovePredictor();
 	void timeStepBoxing();
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();

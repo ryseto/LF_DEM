@@ -328,7 +328,7 @@ System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	deltaTimeEvolution();
+	timeStepMove();
 }
 
 void
@@ -345,12 +345,12 @@ System::timeEvolutionPredictorCorrectorMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	deltaTimeEvolutionPredictor();
+	timeStepMovePredictor();
 	/* corrector */
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	deltaTimeEvolutionCorrector();
+	timeStepMoveCorrector();
 }
 
 void System::timeEvolutionBrownian(){
@@ -409,33 +409,26 @@ void System::timeEvolutionBrownian(){
 	/*                   First step                          */
 	/*********************************************************/
     stokes_solver.resetRHS();
-	// build matrix and rhs force GE
-	buildHydroTerms(true, true);  
-
-	// get hydro velocities
-	stokes_solver.solve(vel_hydro, ang_vel_hydro);
+	buildHydroTerms(true, true); 	// build matrix and rhs force GE
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); 	// get V_H
 	// if(flubcont_update){
 	stokes_solver.getRHS(hydro_forces_predictor);
 	// }
 
 	// then obtain contact forces, and contact part of velocity
-	stokes_solver.resetRHS();
 	setContactForceToParticle();
-    buildContactTerms(true);
-	stokes_solver.solve(vel_contact, ang_vel_contact);
+    buildContactTerms(true); 	// set F_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); 	// get V_C
 	// if(flubcont_update){
 	stokes_solver.getRHS(contact_forces_predictor);
 	// }
 
-	buildBrownianTerms();
-	stokes_solver.solve( vel_brownian, ang_vel_brownian ); 
+	buildBrownianTerms(); 	// set F_B
+	stokes_solver.solve( vel_brownian, ang_vel_brownian ); 	// get V_B
 
 	stokes_solver.solvingIsDone();
 
 
-	timeStepBoxing();
-
-    // move particles to the intermediate point
     for (int i=0; i < np; i++){
 		// V_{-}
 		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
@@ -447,50 +440,36 @@ void System::timeEvolutionBrownian(){
 		na_ang_velocity[i].z *= zero_2Dsimu;
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5; // Omega_infty
+	}
 
-		velocity_predictor[i] = velocity[i];
-		ang_velocity_predictor[i] = ang_velocity[i];
-		na_velocity_predictor[i] = na_velocity[i];
-		na_ang_velocity_predictor[i] = na_ang_velocity[i];
-
-		displacement(i, velocity[i]*dt);
-
-		if (twodimension) {
-			angle[i] += ang_velocity[i].y*dt;
-		}
-    }
-
-	in_predictor = true;
-    updateInteractions();
+	timeStepMovePredictor();
 	
 	
 	/*********************************************************/
 	/*                   Second step                         */
 	/*********************************************************/
-	// build the new resistance matrix / don't reset RHS
 	buildHydroTerms(true, false);  // build resistance matrix, but not GE term
 
-    // get the intermediate brownian velocity
-	stokes_solver.solve( vel_brownian, ang_vel_brownian );
+	stokes_solver.solve( vel_brownian, ang_vel_brownian );     // get V_B
 
 	//	if(flubcont_update){  // recompute forces at mid-point
 	//		stokes_solver.resetRHS();
 	//		buildHydro(false, true);
 		//	}
 		//	else{  // use forces at time t
-	stokes_solver.setRHS(hydro_forces_predictor);
+	stokes_solver.setRHS(hydro_forces_predictor); // set GE
 //	}
 
-	stokes_solver.solve(vel_hydro, ang_vel_hydro);
+	stokes_solver.solve(vel_hydro, ang_vel_hydro);  // get V_H
 
 	// if(flubcont_update){  // recompute forces at mid-point
 	// 	buildContactTerms(true);
 	// }
 	//	else{  // use forces at time t
-	stokes_solver.setRHS(contact_forces_predictor);
+	stokes_solver.setRHS(contact_forces_predictor); // set F_C
 	//	}
 
-	stokes_solver.solve(vel_contact, ang_vel_contact);
+	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 	
     stokes_solver.solvingIsDone();
 
@@ -505,32 +484,16 @@ void System::timeEvolutionBrownian(){
 		na_ang_velocity[i].z *= zero_2Dsimu;
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5;
+	}
 
-		// V = 0.5*( V(+) + V(-) )
-		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);
-		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);
-		na_ang_velocity[i] = 0.5*(na_ang_velocity[i] + na_ang_velocity_predictor[i]);
-		ang_velocity[i] = 0.5*(ang_velocity[i] + ang_velocity_predictor[i]);
-
-		// displace by X(t+dt) = X_pred + 0.5*( V(+) - V(-) )*dt
-		displacement(i, (velocity[i]-velocity_predictor[i])*dt);
-		if (twodimension) {
-			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
-		}
-    }
-
-	checkNewInteraction();
-	in_predictor = false;
-	updateInteractions();
+	timeStepMoveCorrector();
 }
 
 void
-System::deltaTimeEvolution(){
+System::timeStepMove(){
 	/* evolve PBC */
-	shear_disp += vel_difference*dt;
-	if (shear_disp > lx) {
-		shear_disp -= lx;
-	}
+	timeStepBoxing();
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -540,20 +503,16 @@ System::deltaTimeEvolution(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	/* update boxing system */
-	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
 	updateInteractions();
 }
 
 void
-System::deltaTimeEvolutionRelax(){
+System::timeStepMoveRelax(){
 	/* evolve PBC */
-	shear_disp += vel_difference*dt;
-	if (shear_disp > lx) {
-		shear_disp -= lx;
-	}
+	timeStepBoxing();
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -564,7 +523,6 @@ System::deltaTimeEvolutionRelax(){
 		}
 	}
 	/* update boxing system */
-	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
 	bool deactivated;
@@ -577,7 +535,7 @@ System::deltaTimeEvolutionRelax(){
 }
 
 void
-System::deltaTimeEvolutionPredictor(){
+System::timeStepMovePredictor(){
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
@@ -592,7 +550,7 @@ System::deltaTimeEvolutionPredictor(){
 		}
 	}
 	/* In predictor, the values of interactions is updated,
-	 * but the statuses are fixed by using boolean `fix_interaction_status'
+	 * but the statuses are fixed by using boolean `fix_interaction_status' (STILL USED?)
 	 */
 	in_predictor = true;
 	updateInteractions();
@@ -608,7 +566,7 @@ System::deltaTimeEvolutionPredictor(){
 }
 
 void
-System::deltaTimeEvolutionCorrector(){
+System::timeStepMoveCorrector(){
 	for (int i=0; i<np; i++) {
 		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
@@ -665,7 +623,7 @@ System::timeEvolutionRelax(int time_step){
 		setColloidalForceToParticle();
 		in_predictor = true;
 		updateVelocityRestingFluid();
-		deltaTimeEvolutionRelax();
+		timeStepMoveRelax();
 		ts++;
 	}
 }
