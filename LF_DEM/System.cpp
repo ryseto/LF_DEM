@@ -1416,9 +1416,6 @@ System::calcLubricationForce(){
 	/*
 	 * Calculate lubrication force to output
 	 */
-	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-	stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-    addStokesDrag();
 	stokes_solver.resetRHS();
     buildHydroTerms(true, true);
     setContactForceToParticle();
