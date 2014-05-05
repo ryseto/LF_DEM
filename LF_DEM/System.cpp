@@ -934,6 +934,10 @@ System::buildColloidalForceTerms(bool set_or_add){
 			}
 		}
 	}
+	else{
+		if(set_or_add)
+			stokes_solver.resetRHS();
+	}
 
 }
 
