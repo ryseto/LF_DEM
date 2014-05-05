@@ -354,7 +354,49 @@ System::timeEvolutionPredictorCorrectorMethod(){
 }
 
 void System::timeEvolutionBrownian(){
-	//cout << "going Brownian ! " << endl;
+	/************************************************************************************************************* 
+   * This routine implements a two-step algorithm for the dynamics with Brownian motion. 
+   * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
+   *         
+   * The equation of motion is:
+   * 
+   * R.V = F_H + F_C + F_B
+   * where R is the resistance, F_H/F_C/F_B are hydro/contact/brownian forces.
+   * 
+   * Integrating this, we get a first order update of the positions as:
+   * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
+   * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
+   *  
+   * The divergence term comes from the fact that dt >> "Brownian_time", the typical 
+   * time between 2 Brownian kicks. The sum of the many displacements due to Brownian kicks 
+   * happening during dt has a non-zero mean anywhere the mobility is non uniform, 
+   * and this is taken care of by the div term.
+   * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as 
+   * <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1} (which is nothing but the FD theorem). 
+   * 
+   * Reminding that we obtain the Cholesky decomposition R = L L^T in the stokes_solver, 
+   * we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
+   *   - generate a "Brownian force" F_B(t) such that:
+   *       < F_B F_B > = (2kT/dt) R(t) and <F_B> = 0
+   *   - (1) solve R(X(t)).V_{-} = F_H(t) + F_C(t) + F_B(t)
+   *   - move to X_pred = X(t) + V_{-}dt
+   *   - (2) solve R(X_pred).V_{+} = F_H(t) + F_C(t) + F_B(t)  (note: forces at time t)
+   *   - set X(t+dt) = X(t) + 0.5*( V_{-} + V_{+} )*dt = X_pred + 0.5*( V_{+} - V_{-} )*dt
+   * 
+   * One can check that the velocity U = 0.5*( V_{-} + V_{+} ) has the properties:
+   * <U> = R^{-1}.( F_H + F_C ) + kT*div R^{-1} 
+   * <UU> - <U>^2 = (2kT/dt)R^{-1}
+   * which gives the correct mean and variance for X_B.
+   * 
+   * F_B is obtained as F_B = \sqrt(2kT/dt) * L^T.A, where A is a gaussian random vector with 
+   * <A> = 0 and <AA> = 1. In practice, we solve L^{-T}.F_B = \sqrt(2kT/dt) * A.
+   * 
+   * Extra Parameter flubcont_update: (DISABLED FOR DEBUGGING PHASE AS OF 05/02/2014, NOW NOT UPDATING THE FORCES)
+   *  allows dt^2 scheme for contact and hydro by solving the second step as:
+   *   - (2) solve R(X_pred).V_{+} = F_H(pred) + F_C(pred) + F_B(t)
+   *
+   ************************************************************************************************************/
+
 	int zero_2Dsimu;
 	if (dimension == 2){
 		zero_2Dsimu = 0;
