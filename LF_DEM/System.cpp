@@ -355,7 +355,8 @@ System::timeEvolutionPredictorCorrectorMethod(){
 
 void System::timeEvolutionBrownian(){
 	/************************************************************************************************************* 
-   * This routine implements a two-step algorithm for the dynamics with Brownian motion. 
+   * This routine implements a two-step algorithm for the dynamics with Brownian motion, 
+   * initially derived by [ Fixman 1978 ]. 
    * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
    *         
    * The equation of motion is:
@@ -397,13 +398,6 @@ void System::timeEvolutionBrownian(){
    *
    ************************************************************************************************************/
 
-	int zero_2Dsimu;
-	if (dimension == 2){
-		zero_2Dsimu = 0;
-	}else{
-		zero_2Dsimu = 1;
-	}
-
 	//	bool flubcont_update = true;
 	/*********************************************************/
 	/*                   First step                          */
@@ -432,12 +426,9 @@ void System::timeEvolutionBrownian(){
     for (int i=0; i < np; i++){
 		// V_{-}
 		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
-		na_velocity[i].y *= zero_2Dsimu;
 		velocity[i] = na_velocity[i];
 		velocity[i].x += position[i].z; // U_infty
 		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
-		na_ang_velocity[i].x *= zero_2Dsimu;
-		na_ang_velocity[i].z *= zero_2Dsimu;
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5; // Omega_infty
 	}
@@ -476,12 +467,9 @@ void System::timeEvolutionBrownian(){
     for (int i = 0; i < np; i++){
 		// get V(+)
 		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
-		na_velocity[i].y *= zero_2Dsimu;
 		velocity[i] = na_velocity[i];
 		velocity[i].x += position[i].z;
 		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
-		na_ang_velocity[i].x *= zero_2Dsimu;
-		na_ang_velocity[i].z *= zero_2Dsimu;
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5;
 	}
@@ -871,6 +859,13 @@ System::buildBrownianTerms(){
 
 	stokes_solver.setRHS( brownian_force );
 	stokes_solver.solve_CholTrans( brownian_force ); // L^{-T}.F_B = \sqrt(2kT/dt) * A
+
+	for(int i=0; i<np; i++){
+		int i6 = 6*i; 
+		brownian_force[i6+1] = 0;
+		brownian_force[i6+3] = 0;
+		brownian_force[i6+5] = 0;
+	}
 	
 	stokes_solver.setRHS( brownian_force );
 	
