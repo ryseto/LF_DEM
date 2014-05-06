@@ -341,21 +341,26 @@ System::timeEvolutionPredictorCorrectorMethod(){
 	 * x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
 	 *           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
 	 */
-	/* predictore */
+	/* predictor */
+	in_predictor = true;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	updateVelocityLubrication();
+	computeVelocities();
+	//	updateVelocityLubrication();
 	timeStepMovePredictor();
 	/* corrector */
+	in_predictor = false;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	updateVelocityLubrication();
+	computeVelocities();
+	//	updateVelocityLubrication();
 	timeStepMoveCorrector();
 }
 
 void System::timeEvolutionBrownian(){
 	/************************************************************************************************************* 
-   * This routine implements a two-step algorithm for the dynamics with Brownian motion. 
+   * This routine implements a two-step algorithm for the dynamics with Brownian motion, 
+   * initially derived by [ Fixman 1978 ]. 
    * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
    *         
    * The equation of motion is:
@@ -397,13 +402,6 @@ void System::timeEvolutionBrownian(){
    *
    ************************************************************************************************************/
 
-	int zero_2Dsimu;
-	if (dimension == 2){
-		zero_2Dsimu = 0;
-	}else{
-		zero_2Dsimu = 1;
-	}
-
 	//	bool flubcont_update = true;
 	/*********************************************************/
 	/*                   First step                          */
@@ -432,12 +430,9 @@ void System::timeEvolutionBrownian(){
     for (int i=0; i < np; i++){
 		// V_{-}
 		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
-		na_velocity[i].y *= zero_2Dsimu;
 		velocity[i] = na_velocity[i];
 		velocity[i].x += position[i].z; // U_infty
 		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
-		na_ang_velocity[i].x *= zero_2Dsimu;
-		na_ang_velocity[i].z *= zero_2Dsimu;
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5; // Omega_infty
 	}
@@ -476,12 +471,9 @@ void System::timeEvolutionBrownian(){
     for (int i = 0; i < np; i++){
 		// get V(+)
 		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
-		na_velocity[i].y *= zero_2Dsimu;
 		velocity[i] = na_velocity[i];
 		velocity[i].x += position[i].z;
 		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
-		na_ang_velocity[i].x *= zero_2Dsimu;
-		na_ang_velocity[i].z *= zero_2Dsimu;
 		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5;
 	}
@@ -552,7 +544,7 @@ System::timeStepMovePredictor(){
 	/* In predictor, the values of interactions is updated,
 	 * but the statuses are fixed by using boolean `fix_interaction_status' (STILL USED?)
 	 */
-	in_predictor = true;
+
 	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.
@@ -586,7 +578,6 @@ System::timeStepMoveCorrector(){
 	 * Interaction
 	 *
 	 */
-	in_predictor = false;
 	updateInteractions(); // false --> in corrector
 }
 
@@ -871,6 +862,13 @@ System::buildBrownianTerms(){
 
 	stokes_solver.setRHS( brownian_force );
 	stokes_solver.solve_CholTrans( brownian_force ); // L^{-T}.F_B = \sqrt(2kT/dt) * A
+
+	for(int i=0; i<np; i++){
+		int i6 = 6*i; 
+		brownian_force[i6+1] = 0;
+		brownian_force[i6+3] = 0;
+		brownian_force[i6+5] = 0;
+	}
 	
 	stokes_solver.setRHS( brownian_force );
 	
@@ -939,6 +937,53 @@ System::buildColloidalForceTerms(bool set_or_add){
 			stokes_solver.resetRHS();
 	}
 
+}
+
+
+void
+System::computeVelocities(){
+
+    stokes_solver.resetRHS();
+	buildHydroTerms(true, true); 	// build matrix and rhs force GE
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); 	// get V_H
+	
+	buildContactTerms(true); // set rhs = F_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); 	// get V_C
+
+	buildColloidalForceTerms(true); // set rhs = F_Coll
+	stokes_solver.solve(vel_colloidal, ang_vel_colloidal); 	// get V_Coll
+
+	if(brownian){
+		if(in_predictor){
+			buildBrownianTerms();  // generate new F_B and set rhs = F_B
+		}
+		else{
+			stokes_solver.setRHS( brownian_force ); // set rhs = F_B
+		}
+		stokes_solver.solve( vel_brownian, ang_vel_brownian ); 	// get V_B
+	}
+
+	stokes_solver.solvingIsDone();
+
+
+	for (int i=0; i<np; i++) {
+		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_colloidal[i];
+		velocity[i] = na_velocity[i];
+
+		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_colloidal[i];
+		ang_velocity[i] = na_ang_velocity[i];
+
+		if(brownian){
+			na_velocity[i] += vel_brownian[i];
+			na_ang_velocity[i] += ang_vel_brownian[i];
+		}
+
+		if (dimensionless_shear_rate != 0) {
+			velocity[i].x += position[i].z;
+			ang_velocity[i].y += 0.5;
+		}
+
+	}
 }
 
 /*
