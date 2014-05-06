@@ -247,6 +247,7 @@ public:
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
+	void computeVelocities();
 	void updateVelocityLubrication();
 	void updateVelocityRestingFluid();
 	void forceReset();
