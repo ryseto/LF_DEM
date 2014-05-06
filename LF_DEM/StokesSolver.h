@@ -156,7 +156,6 @@ class StokesSolver{
 
 private:
 	int np;
-	//	int np3;
 	int np6;
 	
     int res_matrix_linear_size;
@@ -167,7 +166,6 @@ private:
 	bool _iterative;
 	bool _direct;
 	
-	//	bool FTcoupling;
 
 	// Cholmod variables
     cholmod_factor *chol_L ;
@@ -324,13 +322,18 @@ public:
     void completeResistanceMatrix();
     
 	
+	/* 
+	   Right-hand vector access methods
+	*/
     void resetRHS();
+    void addToRHS(double*);
     void addToRHSForce(int, double *);
     void addToRHSForce(int, const vec3d &);
     void addToRHSTorque(int, double *);
     void addToRHSTorque(int, const vec3d &);
-    void addToRHS(double*);
     void setRHS(double*);
+    void setRHSForce(int, const vec3d &);
+    void setRHSTorque(int, const vec3d &);
     void getRHS(double*);
 	
     /*
@@ -351,6 +354,7 @@ public:
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
     void solve_CholTrans(double* velocity);
+    void solve_CholTrans(vec3d* velocity, vec3d* ang_velocity);
 	
     /*
 	 solvingIsDone(bool free_Cholesky_factor) :

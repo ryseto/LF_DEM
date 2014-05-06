@@ -211,15 +211,7 @@ Interaction::calcRelativeVelocities(){
 	/*
 	 * v1' = v1 - Lz = v1 - zshift*lz;
 	 */
-	/**** NOTE ********************************************
-		  THE FOLLOWING IS TO BE DISCARDED 
-	 * In the Corrector, this relative_surface_velocity
-	 * is also the correcting velocity.
-	 * This correcting velocity should not involve the
-	 * velocity diffrence due to crossing the z boundary.
-	 * fix_interaction_status = true : in the Predictor
-	 * fix_interaction_status = false : in the Corrector
-	 *
+	/******************************************************
 	 * if p1 is upper, zshift = -1.
 	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 	 *

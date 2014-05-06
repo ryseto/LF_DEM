@@ -9,6 +9,7 @@
 #include "System.h"
 #include <sstream>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
+#define GRANDOM ( r_gen.randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
 System::~System(){
 	DELETE(position);
@@ -25,10 +26,16 @@ System::~System(){
 	DELETE(ang_vel_hydro);
 	DELETE(vel_colloidal);
 	DELETE(ang_vel_colloidal);
-
+	if (integration_method==2) {
+		DELETE(vel_brownian);
+		DELETE(ang_vel_brownian);
+		DELETE(brownian_force);
+	}
 	if (integration_method >= 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
+		DELETE(na_velocity_predictor);
+		DELETE(na_ang_velocity_predictor);
 	}
 	DELETE(contact_force);
 	DELETE(contact_torque);
@@ -38,6 +45,10 @@ System::~System(){
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
+	if(integration_method==2){
+		DELETE(contact_forces_predictor);
+		DELETE(hydro_forces_predictor);
+	}
 };
 
 void
@@ -51,6 +62,8 @@ System::allocateRessources(){
 	if (integration_method >= 1) {
 		ang_velocity_predictor = new vec3d [np];
 		velocity_predictor = new vec3d [np];
+		na_ang_velocity_predictor = new vec3d [np];
+		na_velocity_predictor = new vec3d [np];
 	}
 	vel_colloidal = new vec3d [np];
 	ang_vel_colloidal = new vec3d [np];
@@ -58,7 +71,10 @@ System::allocateRessources(){
 	ang_vel_contact = new vec3d [np];
 	vel_hydro = new vec3d [np];
 	ang_vel_hydro = new vec3d [np];
-
+	if (integration_method==2) {
+		vel_brownian = new vec3d [np];
+		ang_vel_brownian = new vec3d [np];
+	}
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
 	colloidal_force = new vec3d [np];
@@ -73,19 +89,11 @@ System::allocateRessources(){
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	linalg_size = 6*np;
-
-	//	if (brownian) {
-	//	    v_Brownian_init = new double [linalg_size];
-	//	    v_Brownian_mid = new double [linalg_size];
-	//		v_lub_cont_mid = new double [linalg_size];
-	//		lub_cont_forces_init = new double [linalg_size];
-	//		for(int i=0;i<linalg_size;i++){
-	//			v_Brownian_init[i] = 0;
-	//			v_Brownian_mid[i] = 0;
-	//			lub_cont_forces_init[i] = 0;
-	//		}
-	//		fb = new BrownianForce(this);
-	//	}
+	if (integration_method==2) {
+		contact_forces_predictor = new double [linalg_size];
+		hydro_forces_predictor = new double [linalg_size];
+		brownian_force = new double [linalg_size];
+	}
 	stokes_solver.init(np, false);
 }
 
@@ -276,12 +284,6 @@ System::setupSystem(){
 	shear_disp = 0;
 	vel_difference = lz;
 	after_parameter_changed = false;
-	/*
-	 * dt_mid: the intermediate time step for the mid-point
-	 * algortithm. dt/dt_mid = dt_ratio
-	 * Banchio/Brady (J Chem Phys) gives dt_ratio=100
-	 * ASD code from Brady has dt_ratio=150
-	 */
 	stokes_solver.initialize();
 	dt = dt_max;
 	initializeBoxing();
@@ -312,11 +314,21 @@ System::initializeBoxing(){// need to know radii first
 }
 
 void
+System::timeStepBoxing(){
+	// evolve PBC
+	shear_disp += vel_difference*dt;
+	if (shear_disp > lx){
+		shear_disp -= lx;
+	}
+	boxset.update();
+}
+
+void
 System::timeEvolutionEulersMethod(){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
-	deltaTimeEvolution();
+	timeStepMove();
 }
 
 void
@@ -329,25 +341,151 @@ System::timeEvolutionPredictorCorrectorMethod(){
 	 * x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
 	 *           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
 	 */
-	/* predictore */
+	/* predictor */
+	in_predictor = true;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	updateVelocityLubrication();
-	deltaTimeEvolutionPredictor();
+	computeVelocities();
+	//	updateVelocityLubrication();
+	timeStepMovePredictor();
 	/* corrector */
+	in_predictor = false;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	updateVelocityLubrication();
-	deltaTimeEvolutionCorrector();
+	computeVelocities();
+	//	updateVelocityLubrication();
+	timeStepMoveCorrector();
+}
+
+void System::timeEvolutionBrownian(){
+	/************************************************************************************************************* 
+   * This routine implements a two-step algorithm for the dynamics with Brownian motion, 
+   * initially derived by [ Fixman 1978 ]. 
+   * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
+   *         
+   * The equation of motion is:
+   * 
+   * R.V = F_H + F_C + F_B
+   * where R is the resistance, F_H/F_C/F_B are hydro/contact/brownian forces.
+   * 
+   * Integrating this, we get a first order update of the positions as:
+   * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
+   * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
+   *  
+   * The divergence term comes from the fact that dt >> "Brownian_time", the typical 
+   * time between 2 Brownian kicks. The sum of the many displacements due to Brownian kicks 
+   * happening during dt has a non-zero mean anywhere the mobility is non uniform, 
+   * and this is taken care of by the div term.
+   * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as 
+   * <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1} (which is nothing but the FD theorem). 
+   * 
+   * Reminding that we obtain the Cholesky decomposition R = L L^T in the stokes_solver, 
+   * we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
+   *   - generate a "Brownian force" F_B(t) such that:
+   *       < F_B F_B > = (2kT/dt) R(t) and <F_B> = 0
+   *   - (1) solve R(X(t)).V_{-} = F_H(t) + F_C(t) + F_B(t)
+   *   - move to X_pred = X(t) + V_{-}dt
+   *   - (2) solve R(X_pred).V_{+} = F_H(t) + F_C(t) + F_B(t)  (note: forces at time t)
+   *   - set X(t+dt) = X(t) + 0.5*( V_{-} + V_{+} )*dt = X_pred + 0.5*( V_{+} - V_{-} )*dt
+   * 
+   * One can check that the velocity U = 0.5*( V_{-} + V_{+} ) has the properties:
+   * <U> = R^{-1}.( F_H + F_C ) + kT*div R^{-1} 
+   * <UU> - <U>^2 = (2kT/dt)R^{-1}
+   * which gives the correct mean and variance for X_B.
+   * 
+   * F_B is obtained as F_B = \sqrt(2kT/dt) * L^T.A, where A is a gaussian random vector with 
+   * <A> = 0 and <AA> = 1. In practice, we solve L^{-T}.F_B = \sqrt(2kT/dt) * A.
+   * 
+   * Extra Parameter flubcont_update: (DISABLED FOR DEBUGGING PHASE AS OF 05/02/2014, NOW NOT UPDATING THE FORCES)
+   *  allows dt^2 scheme for contact and hydro by solving the second step as:
+   *   - (2) solve R(X_pred).V_{+} = F_H(pred) + F_C(pred) + F_B(t)
+   *
+   ************************************************************************************************************/
+
+	//	bool flubcont_update = true;
+	/*********************************************************/
+	/*                   First step                          */
+	/*********************************************************/
+    stokes_solver.resetRHS();
+	buildHydroTerms(true, true); 	// build matrix and rhs force GE
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); 	// get V_H
+	// if(flubcont_update){
+	stokes_solver.getRHS(hydro_forces_predictor);
+	// }
+
+	// then obtain contact forces, and contact part of velocity
+	setContactForceToParticle();
+    buildContactTerms(true); 	// set F_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); 	// get V_C
+	// if(flubcont_update){
+	stokes_solver.getRHS(contact_forces_predictor);
+	// }
+
+	buildBrownianTerms(); 	// set F_B
+	stokes_solver.solve( vel_brownian, ang_vel_brownian ); 	// get V_B
+
+	stokes_solver.solvingIsDone();
+
+
+    for (int i=0; i < np; i++){
+		// V_{-}
+		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
+		velocity[i] = na_velocity[i];
+		velocity[i].x += position[i].z; // U_infty
+		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
+		ang_velocity[i] = na_ang_velocity[i];
+		ang_velocity[i].y += 0.5; // Omega_infty
+	}
+
+	timeStepMovePredictor();
+	
+	
+	/*********************************************************/
+	/*                   Second step                         */
+	/*********************************************************/
+	buildHydroTerms(true, false);  // build resistance matrix, but not GE term
+
+	stokes_solver.solve( vel_brownian, ang_vel_brownian );     // get V_B
+
+	//	if(flubcont_update){  // recompute forces at mid-point
+	//		stokes_solver.resetRHS();
+	//		buildHydro(false, true);
+		//	}
+		//	else{  // use forces at time t
+	stokes_solver.setRHS(hydro_forces_predictor); // set GE
+//	}
+
+	stokes_solver.solve(vel_hydro, ang_vel_hydro);  // get V_H
+
+	// if(flubcont_update){  // recompute forces at mid-point
+	// 	buildContactTerms(true);
+	// }
+	//	else{  // use forces at time t
+	stokes_solver.setRHS(contact_forces_predictor); // set F_C
+	//	}
+
+	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+	
+    stokes_solver.solvingIsDone();
+
+    for (int i = 0; i < np; i++){
+		// get V(+)
+		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_brownian[i];
+		velocity[i] = na_velocity[i];
+		velocity[i].x += position[i].z;
+		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_brownian[i];
+		ang_velocity[i] = na_ang_velocity[i];
+		ang_velocity[i].y += 0.5;
+	}
+
+	timeStepMoveCorrector();
 }
 
 void
-System::deltaTimeEvolution(){
+System::timeStepMove(){
 	/* evolve PBC */
-	shear_disp += vel_difference*dt;
-	if (shear_disp > lx) {
-		shear_disp -= lx;
-	}
+	timeStepBoxing();
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -357,20 +495,16 @@ System::deltaTimeEvolution(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	/* update boxing system */
-	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
 	updateInteractions();
 }
 
 void
-System::deltaTimeEvolutionRelax(){
+System::timeStepMoveRelax(){
 	/* evolve PBC */
-	shear_disp += vel_difference*dt;
-	if (shear_disp > lx) {
-		shear_disp -= lx;
-	}
+	timeStepBoxing();
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -381,7 +515,6 @@ System::deltaTimeEvolutionRelax(){
 		}
 	}
 	/* update boxing system */
-	boxset.update();
 	checkNewInteraction();
 	in_predictor = true;
 	bool deactivated;
@@ -394,14 +527,12 @@ System::deltaTimeEvolutionRelax(){
 }
 
 void
-System::deltaTimeEvolutionPredictor(){
+System::timeStepMovePredictor(){
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	shear_disp += vel_difference*dt;
-	if (shear_disp >= lx) {
-		shear_disp -= lx;
-	}
+	timeStepBoxing();
+
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -411,9 +542,9 @@ System::deltaTimeEvolutionPredictor(){
 		}
 	}
 	/* In predictor, the values of interactions is updated,
-	 * but the statuses are fixed by using boolean `fix_interaction_status'
+	 * but the statuses are fixed by using boolean `fix_interaction_status' (STILL USED?)
 	 */
-	in_predictor = true;
+
 	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.
@@ -421,13 +552,17 @@ System::deltaTimeEvolutionPredictor(){
 	for (int i=0; i<np; i++) {
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
+		na_velocity_predictor[i] = na_velocity[i];
+		na_ang_velocity_predictor[i] = na_ang_velocity[i];
 	}
 }
 
 void
-System::deltaTimeEvolutionCorrector(){
+System::timeStepMoveCorrector(){
 	for (int i=0; i<np; i++) {
+		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
+		na_ang_velocity[i] = 0.5*(na_ang_velocity[i]+na_ang_velocity_predictor[i]);
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<np; i++) {
@@ -438,15 +573,11 @@ System::deltaTimeEvolutionCorrector(){
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
 	}
-	/* update boxing system
-	 */
-	boxset.update();
 	checkNewInteraction();
 	/*
 	 * Interaction
 	 *
 	 */
-	in_predictor = false;
 	updateInteractions(); // false --> in corrector
 }
 
@@ -466,7 +597,7 @@ System::timeEvolution(double strain_next){
 				timeEvolutionPredictorCorrectorMethod();
 				break;
 			case 2:
-				//				timeEvolutionBrownian();
+				timeEvolutionBrownian();
 				break;
 		}
 		ts++;
@@ -483,7 +614,7 @@ System::timeEvolutionRelax(int time_step){
 		setColloidalForceToParticle();
 		in_predictor = true;
 		updateVelocityRestingFluid();
-		deltaTimeEvolutionRelax();
+		timeStepMoveRelax();
 		ts++;
 	}
 }
@@ -556,6 +687,37 @@ System::stressReset(){
 	}
 }
 
+
+
+
+void
+System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
+	// Builds the following terms, according to the value of 'build_res_mat' and 'build_force_GE':
+	//  - elements of the resistance matrix if 'build_res_mat' is true
+	//       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
+	//  - vector Gtilde*Einf if 'build_force_GE' is true (default behavior)
+	//
+	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine 
+	// if you want GE to be the only rhs.
+
+	if(build_res_mat){
+		// create a new resistance matrix in stokes_solver
+		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
+		stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
+	
+		// add Stokes drag in the matrix
+		addStokesDrag();
+
+		// add GE in the rhs and lubrication terms in the resistance matrix
+		buildLubricationTerms(true, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
+		stokes_solver.completeResistanceMatrix();
+	}
+	else{
+		// add GE in the rhs
+		buildLubricationTerms(false, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
+	}
+}
+
 void
 System::addStokesDrag(){
 	double torque_factor = 4./3;
@@ -566,14 +728,12 @@ System::addStokesDrag(){
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
  * This method computes:
- *  - elements of matrix A
- *  - vector Gtilde*Einf if rhs is true (default behavior)
+ *  - elements of the resistance matrix if 'mat' is true
+ *       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
+ *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
 void
-System::buildLubricationTerms(bool rhs){
-	/* interaction_list[i] includes all partners j (j > i and j < i).
-	 * This range i < np - 1 is ok?
-	 */
+System::buildLubricationTerms(bool mat, bool rhs){ // default for mat and rhs is true
 	switch (lubrication_model) {
 		case 1:
 			for (int i=0; i<np-1; i ++) {
@@ -581,11 +741,13 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
-						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->lubrication.calcXFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
+						if (mat) {
+							vec3d nr_vec = (*it)->get_nvec();
+							(*it)->lubrication.calcXFunctions();
+							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
+							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
+							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
+						}
 						if (rhs) {
 							double GEi[3];
 							double GEj[3];
@@ -604,14 +766,16 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
-						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->lubrication.calcXYFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
-													 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
-						stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
-													 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
-													  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
+						if (mat) {
+							vec3d nr_vec = (*it)->get_nvec();
+							(*it)->lubrication.calcXYFunctions();
+							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
+														 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
+							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
+														 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
+							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
+														  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
+						}
 						if (rhs) {
 							double GEi[3];
 							double GEj[3];
@@ -634,15 +798,17 @@ System::buildLubricationTerms(bool rhs){
 					 it != interaction_list[i].end(); it ++) {
 					int j = (*it)->partner(i);
 					if (j > i) {
-						vec3d nr_vec = (*it)->get_nvec();
 						if ((*it)->is_contact()){
-							(*it)->lubrication.calcXYFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
-														 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
-							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
-														 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
-							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
-														  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
+							if (mat) {
+								vec3d nr_vec = (*it)->get_nvec();
+								(*it)->lubrication.calcXYFunctions();
+								stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
+															 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
+								stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
+															 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
+								stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
+															  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
+							}
 							if (rhs) {
 								double GEi[3];
 								double GEj[3];
@@ -655,10 +821,13 @@ System::buildLubricationTerms(bool rhs){
 								stokes_solver.addToRHSTorque(j, HEj);
 							}
 						} else {
-							(*it)->lubrication.calcXFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
-							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
-							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
+							if (mat) {
+								vec3d nr_vec = (*it)->get_nvec();
+								(*it)->lubrication.calcXFunctions();
+								stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
+								stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
+								stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
+							}
 							if (rhs) {
 								double GEi[3];
 								double GEj[3];
@@ -677,6 +846,32 @@ System::buildLubricationTerms(bool rhs){
 			exit(1);
 			break;
 	}
+}
+
+void
+System::buildBrownianTerms(){
+	// generates a Brownian force F_B with <F_B> = 0, and <F_B F_B> = (2kT/dt)*R
+	// where R is the current resistance matrix stored in the stokes_solver.
+	// note that it SETS the rhs of the solver as rhs = F_B
+	// F_B is also stored in sys->brownian_force
+
+	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
+	for(int i=0; i<linalg_size; i++){
+		brownian_force[i] = sqrt_kbT2_dt * GRANDOM;
+	}
+
+	stokes_solver.setRHS( brownian_force );
+	stokes_solver.solve_CholTrans( brownian_force ); // L^{-T}.F_B = \sqrt(2kT/dt) * A
+
+	for(int i=0; i<np; i++){
+		int i6 = 6*i; 
+		brownian_force[i6+1] = 0;
+		brownian_force[i6+3] = 0;
+		brownian_force[i6+5] = 0;
+	}
+	
+	stokes_solver.setRHS( brownian_force );
+	
 }
 
 void
@@ -707,40 +902,99 @@ System::setColloidalForceToParticle(){
 }
 
 void
-System::buildContactTerms(){
-    // add contact force
-    for (int i=0; i<np; i++) {
-		stokes_solver.addToRHSForce(i, contact_force[i]);
-		stokes_solver.addToRHSTorque(i, contact_torque[i]);
+System::buildContactTerms(bool set_or_add){
+    // sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
+	if(set_or_add){
+		for (int i=0; i<np; i++) {
+			stokes_solver.setRHSForce(i, contact_force[i]);
+			stokes_solver.setRHSTorque(i, contact_torque[i]);
+		}
+	}
+	else{
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, contact_force[i]);
+			stokes_solver.addToRHSTorque(i, contact_torque[i]);
+		}
     }
 }
 
 void
-System::buildColloidalForceTerms(){
+System::buildColloidalForceTerms(bool set_or_add){
 	if (colloidalforce) {
-		for (int i=0; i<np; i++) {
-			stokes_solver.addToRHSForce(i, colloidal_force[i]);
+		if(set_or_add){
+			for (int i=0; i<np; i++) {
+				stokes_solver.addToRHSForce(i, colloidal_force[i]);
+			}
 		}
+		else{
+			for (int i=0; i<np; i++) {
+				stokes_solver.setRHSForce(i, colloidal_force[i]);
+			}
+		}
+	}
+	else{
+		if(set_or_add)
+			stokes_solver.resetRHS();
+	}
+
+}
+
+
+void
+System::computeVelocities(){
+
+    stokes_solver.resetRHS();
+	buildHydroTerms(true, true); 	// build matrix and rhs force GE
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); 	// get V_H
+	
+	buildContactTerms(true); // set rhs = F_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); 	// get V_C
+
+	buildColloidalForceTerms(true); // set rhs = F_Coll
+	stokes_solver.solve(vel_colloidal, ang_vel_colloidal); 	// get V_Coll
+
+	if(brownian){
+		if(in_predictor){
+			buildBrownianTerms();  // generate new F_B and set rhs = F_B
+		}
+		else{
+			stokes_solver.setRHS( brownian_force ); // set rhs = F_B
+		}
+		stokes_solver.solve( vel_brownian, ang_vel_brownian ); 	// get V_B
+	}
+
+	stokes_solver.solvingIsDone();
+
+
+	for (int i=0; i<np; i++) {
+		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_colloidal[i];
+		velocity[i] = na_velocity[i];
+
+		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_colloidal[i];
+		ang_velocity[i] = na_ang_velocity[i];
+
+		if(brownian){
+			na_velocity[i] += vel_brownian[i];
+			na_ang_velocity[i] += ang_vel_brownian[i];
+		}
+
+		if (dimensionless_shear_rate != 0) {
+			velocity[i].x += position[i].z;
+			ang_velocity[i].y += 0.5;
+		}
+
 	}
 }
 
 /*
- *
- *
- * This function deteremins velocity[] and ang_velocity[].
- *
+ * This function determines velocity[] and ang_velocity[].
  */
 void
 System::updateVelocityLubrication(){
     stokes_solver.resetRHS();
-	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-	//	stokes_solver->resetResistanceMatrix("iterative");
-    addStokesDrag();
-	buildLubricationTerms();
-    stokes_solver.completeResistanceMatrix();
-	buildContactTerms();
-	buildColloidalForceTerms();
+	buildHydroTerms(true, true);
+	buildContactTerms(false);// adding F_C
+	buildColloidalForceTerms(false); // add F_Coll
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
 
@@ -1211,16 +1465,13 @@ System::calcLubricationForce(){
 	/*
 	 * Calculate lubrication force to output
 	 */
-	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-	stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-    addStokesDrag();
 	stokes_solver.resetRHS();
-    buildLubricationTerms();
+    buildHydroTerms(true, true);
     setContactForceToParticle();
-	buildContactTerms();
+	buildContactTerms(false);
 	setColloidalForceToParticle();
-	buildColloidalForceTerms();
-	stokes_solver.completeResistanceMatrix();
+	buildColloidalForceTerms(false);
+
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
 	for (int k=0; k<nb_interaction; k++) {

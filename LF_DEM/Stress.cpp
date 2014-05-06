@@ -167,23 +167,20 @@ System::calcStressesHydroContact(){
 
 	// first obtain hydrodynamic part of velocity
 	stokes_solver.resetRHS();
-	nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-    stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-	addStokesDrag();
-	buildLubricationTerms();
-	stokes_solver.completeResistanceMatrix();
+	buildHydroTerms(true, true);
+
 	stokes_solver.solve(vel_hydro, ang_vel_hydro);
 
 	// then obtain contact forces, and contact part of velocity
-	stokes_solver.resetRHS();
 	setContactForceToParticle();
-    buildContactTerms();
+    buildContactTerms(true);
 	stokes_solver.solve(vel_contact, ang_vel_contact);
+
 	// then obtain colloidal forces
-    stokes_solver.resetRHS();
 	setColloidalForceToParticle();
-    buildColloidalForceTerms();
+    buildColloidalForceTerms(true);
 	stokes_solver.solve(vel_colloidal, ang_vel_colloidal);
+
 	/////////////////////////////////////////////////
 	// from that, compute stresses
 	//	cout << nb_interaction << endl;
@@ -200,9 +197,9 @@ System::calcStressesHydroContact(){
 					interaction[k].lubrication.calcXFunctionsStress();
 				}
 			}
-			interaction[k].lubrication.addHydroStress(); // - R_SU * v_hydro
-			interaction[k].contact.addContactStress(); //  - R_SU * v_cont - rF_cont
-			interaction[k].addColloidalStress(); //  - R_SU * v_colloid - rF_colloid
+			interaction[k].lubrication.addHydroStress(); // - R_SU * v
+			interaction[k].contact.addContactStress(); //  - rF_cont
+			interaction[k].addColloidalStress(); //  - rF_colloid
 		}
 	}
     stokes_solver.solvingIsDone();

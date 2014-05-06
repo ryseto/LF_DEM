@@ -18,7 +18,7 @@
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
-#include "BrownianForce.h"
+//#include "BrownianForce.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "cholmod.h"
@@ -27,7 +27,7 @@ using namespace std;
 
 class Simulation;
 class Interaction;
-class BrownianForce;
+//class BrownianForce;
 class BoxSet;
 
 class System{
@@ -68,6 +68,7 @@ private:
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	bool twodimension;
+
 	/* data */
 	int intr_max_fc_normal;
 	int intr_max_fc_tan;
@@ -85,19 +86,22 @@ private:
 	void timeEvolutionBrownian();
 	void timeEvolutionEulersMethod();
 	void timeEvolutionPredictorCorrectorMethod();
-	void deltaTimeEvolution();
-	void deltaTimeEvolutionRelax();
-	void deltaTimeEvolutionCorrector();
-	void deltaTimeEvolutionPredictor();
+	void timeStepMove();
+	void timeStepMoveRelax();
+	void timeStepMoveCorrector();
+	void timeStepMovePredictor();
+	void timeStepBoxing();
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
-	void buildLubricationTerms(bool rhs=true);
-	void buildContactTerms();
-	void buildColloidalForceTerms();
+	void buildHydroTerms(bool, bool);
+	void buildLubricationTerms(bool mat=true, bool rhs=true);
+	void buildBrownianTerms();
+	void buildContactTerms(bool);
+	void buildColloidalForceTerms(bool);
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-	double *lub_cont_forces_init;
+	
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
@@ -107,12 +111,13 @@ private:
 	/*Backup*/
 	vector <vec3d> position_backup;
 	Interaction *interaction_backup;
+	MTRand r_gen;
 
 protected:
 public:
 	~System();
 	void backupState();
-	
+	bool brownian;	
 	bool in_predictor;
 	int dimension;
 	double critical_normal_force; 
@@ -122,10 +127,12 @@ public:
 	double *radius_cubic;
 	double *angle; // for 2D visualization
 	vec3d *velocity;
-	vec3d *na_velocity;
 	vec3d *velocity_predictor;
-	vec3d *ang_velocity;
+	vec3d *na_velocity;
 	vec3d *na_ang_velocity;
+	vec3d *na_velocity_predictor;
+	vec3d *na_ang_velocity_predictor;
+	vec3d *ang_velocity;
 	vec3d *ang_velocity_predictor;
 	vec3d *vel_colloidal;
 	vec3d *ang_vel_colloidal;
@@ -133,9 +140,15 @@ public:
 	vec3d *ang_vel_contact;
 	vec3d *vel_hydro;
 	vec3d *ang_vel_hydro;
+	vec3d *vel_brownian;
+	vec3d *ang_vel_brownian;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
+	double *contact_forces_predictor;
+	double *hydro_forces_predictor;
+	double *brownian_force;
+
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
@@ -175,7 +188,7 @@ public:
 	double lub_reduce_parameter;
 	double contact_relaxzation_time;
 	double contact_relaxzation_time_tan;
-	BrownianForce *fb;
+	//	BrownianForce *fb;
 	double shear_disp;
 	/* For non-Brownian suspension:
 	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_col(0)
@@ -234,6 +247,7 @@ public:
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
+	void computeVelocities();
 	void updateVelocityLubrication();
 	void updateVelocityRestingFluid();
 	void forceReset();
@@ -275,7 +289,7 @@ public:
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
 	void set_bgf_factor(int val){bgf_factor = val;}
-	void set_kb_T(double val){kb_T = val;}
+	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=2;} }
 	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}

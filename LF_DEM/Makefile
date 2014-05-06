@@ -8,7 +8,6 @@
 OS_version=OSX
 #SysEnv=Energy_seto
 # Build : debug or optimized
-Build=optimized
 
 # Compiler
 ifeq ($(OS_version),Linux)
@@ -26,13 +25,6 @@ endif
 UseTrilinos=no
 # Enable use of Metis library ( yes / no )
 UseMetis=no
-
-#=======================================#
-#=======================================#
-
-#======== Compiler flags =============
-CXXFLAGS= $(CXXFLAGS_$(Build))
-
 
 #======== Include Paths =============
 Cholmod_include_path_OSX     = /usr/local/include/
@@ -97,7 +89,11 @@ OBJ=$(SRC:.cpp=.o)
 
 DATE=$(shell date +%D | sed "s./..g")
 
+all:	CXXFLAGS= $(CXXFLAGS_optimized)
 all:	$(OUT_CODE)
+
+debug:	CXXFLAGS= $(CXXFLAGS_debug)
+debug:	$(OUT_CODE)
 
 $(OUT_CODE):$(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)

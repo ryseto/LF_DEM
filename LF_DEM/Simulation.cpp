@@ -595,6 +595,10 @@ Simulation::prepareSimulationName(){
 			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 		}
 	}
+
+	if (sys.brownian) {
+		ss_simu_name << "_T" << sys.get_kb_T();
+	}
 	sys.simu_name = ss_simu_name.str();
 	
 	

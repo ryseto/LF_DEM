@@ -513,6 +513,7 @@ StokesSolver::addToRHSForce(int i, double *force_i){
 	}
 #endif
 }
+
 void
 StokesSolver::addToRHSForce(int i, const vec3d &force_i){
 	int i6 = 6*i;
@@ -529,6 +530,8 @@ StokesSolver::addToRHSForce(int i, const vec3d &force_i){
 	}
 #endif
 }
+
+
 void
 StokesSolver::addToRHSTorque(int i, double *torque_i){
 	int i6_3 = 6*i+3;
@@ -546,6 +549,7 @@ StokesSolver::addToRHSTorque(int i, double *torque_i){
 #endif
 }
 
+
 void
 StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
 	int i6_3 = 6*i+3;
@@ -562,6 +566,7 @@ StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
 	}
 #endif
 }
+
 
 void
 StokesSolver::addToRHS(double *rhs){
@@ -594,6 +599,38 @@ StokesSolver::setRHS(double* rhs){
 }
 
 void
+StokesSolver::setRHSForce(int i, const vec3d &force_i){
+	int i6 = 6*i;
+	if (direct()) {
+		((double*)chol_rhs->x)[i6  ] = force_i.x;
+		((double*)chol_rhs->x)[i6+1] = force_i.y;
+		((double*)chol_rhs->x)[i6+2] = force_i.z;
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		cerr << " Error : StokesSolver:: setRHSForce(int i, const vec3d &force_i) not implemented for TRILINOS yet ! " << endl;
+		exit(1);		
+	}
+#endif
+}
+
+void
+StokesSolver::setRHSTorque(int i, const vec3d &torque_i){
+	int i6_3 = 6*i+3;
+	if (direct()) {
+		((double*)chol_rhs->x)[i6_3  ] = torque_i.x;
+		((double*)chol_rhs->x)[i6_3+1] = torque_i.y;
+		((double*)chol_rhs->x)[i6_3+2] = torque_i.z;
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		cerr << " Error : StokesSolver:: setRHSTorque(int i, const vec3d &torque_i) not implemented for TRILINOS yet ! " << endl;
+		exit(1);		
+	}
+#endif
+}
+
+void
 StokesSolver::getRHS(double* rhs){
 	if (direct()) {
 		for (int i=0; i<res_matrix_linear_size; i++) {
@@ -615,6 +652,31 @@ StokesSolver::solve_CholTrans(double* velocity){
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}
+		cholmod_free_dense(&chol_solution, &chol_c);
+		cholmod_free_dense(&chol_PTsolution, &chol_c);
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		cerr << " StokesSolver::solve_CholTrans(double* velocity) not implemented for iterative solver." << endl;
+		exit(1);
+	}
+#endif
+}
+
+void
+StokesSolver::solve_CholTrans(vec3d* velocity, vec3d* ang_velocity){
+	if (direct()) {
+		chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
+		chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
+		for (int i=0; i<np; i++) {
+			int i6 = 6*i;
+			velocity[i].x = ((double*)chol_solution->x)[i6  ];
+			velocity[i].y = ((double*)chol_solution->x)[i6+1];
+			velocity[i].z = ((double*)chol_solution->x)[i6+2];
+			ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
+			ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
+			ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+		}				
 		cholmod_free_dense(&chol_solution, &chol_c);
 		cholmod_free_dense(&chol_PTsolution, &chol_c);
 	}
