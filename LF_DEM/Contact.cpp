@@ -270,11 +270,14 @@ Contact::addContactStress(){
 	}
 }
 
-double
-Contact::getContactVelocity(){
-	if (!active) {
-		return 0;
-	}
-	return interaction->relative_surface_velocity.norm();
-}
+// ***
+// *** It seems never to be used, so we may remove this function.
+// ***
+//double
+//Contact::getContactVelocity(){
+//	if (!active) {
+//		return 0;
+//	}
+//	return interaction->relative_surface_velocity.norm();
+//}
 

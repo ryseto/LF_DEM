@@ -81,7 +81,7 @@ public:
 	void calcContactInteraction();
 	void calcContactInteractionRelax();
 	void addUpContactForceTorque();
-	double getContactVelocity();
+	//double getContactVelocity();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
 	inline double disp_tan_norm(){return disp_tan.norm();}

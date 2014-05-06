@@ -68,8 +68,12 @@ GenerateInitConfig::generate(){
 		position[i] = sys.position[i];
 		radius[i] = sys.radius[i];
 	}
+	
+	/* Relaxation under zero shear process is a rush work.
+	 */
 	Simulation simulation;
 	simulation.relaxationZeroShear(position, radius, lx, ly, lz);
+	
 	outputPositionData();
 	
 	delete [] grad;

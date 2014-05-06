@@ -123,21 +123,18 @@ Interaction::updateState(bool &deactivated){
 	 *    zshift is updated for time t+1 in calcNormalVectorDistanceGap(), 
 	 *    so this function should be called after calcRelativeVelocities();
 	 */
-	if (sys->friction) {
-		if (is_contact()){
-			calcRelativeVelocities();
-			contact.incrementTangentialDisplacement();
-		}
+	if (sys->friction && is_contact()) {
+		calcRelativeVelocities();
+		contact.incrementTangentialDisplacement();
 	}
-
+	
 	calcNormalVectorDistanceGap();
-	if (gap_nondim < 0){
-		cerr << gap_nondim << endl;
-		if (sys->minvalue_gap_nondim > gap_nondim){
-			sys->minvalue_gap_nondim = gap_nondim;
-		}
+	
+	/* just for observation (not important) */
+	if (gap_nondim < sys->minvalue_gap_nondim) {
+		sys->minvalue_gap_nondim = gap_nondim;
 	}
-		
+	
 	if (contact.active) {
 		if (gap_nondim > 0){
 			contact.deactivate();
@@ -146,6 +143,7 @@ Interaction::updateState(bool &deactivated){
 		if (gap_nondim <= 0) {
 			contact.activate();
 		} else if (r > interaction_range_scaled) {
+			/* all interaction is switched off. */
 			deactivate();
 			deactivated = true;
 			return;
@@ -170,6 +168,9 @@ Interaction::updateState(bool &deactivated){
 	}
 }
 
+/* Relaxation to generate initial configuration.
+ * This process should be reconsidered.
+ */
 void
 Interaction::updateStateRelax(bool &deactivated){
 	deactivated = false;
@@ -229,13 +230,12 @@ Interaction::calcRelativeVelocities(){
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
-
-
 void
 Interaction::addColloidalStress(){
 	colloidal_stresslet_XF.set(rvec, f_colloidal);
 }
 
+/* observation */
 void
 Interaction::outputSummary(){
 	duration = sys->get_shear_strain()-strain_lub_start;
@@ -245,6 +245,7 @@ Interaction::outputSummary(){
 	sys->fout_int_data << endl;
 }
 
+/* observation */
 double
 Interaction::getContactVelocity(){
 	if (contact.active == false) {
@@ -253,9 +254,9 @@ Interaction::getContactVelocity(){
 	return relative_surface_velocity.norm();
 }
 
+/* observation */
 double
 Interaction::getNormalVelocity(){
-	sys->in_predictor = true;  // ??? doen't seem safe
 	vec3d d_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;
@@ -263,6 +264,7 @@ Interaction::getNormalVelocity(){
 	return dot(d_velocity, nvec);
 }
 
+/* observation */
 double
 Interaction::getPotentialEnergy(){
 	double energy;

@@ -500,6 +500,9 @@ System::timeStepMove(){
 	updateInteractions();
 }
 
+/* Relaxation to generate initial configuration.
+ * This process should be reconsidered.
+ */
 void
 System::timeStepMoveRelax(){
 	/* evolve PBC */
@@ -605,6 +608,10 @@ System::timeEvolution(double strain_next){
 	};
 }
 
+
+/* Relaxation to generate initial configuration.
+ * This process should be reconsidered.
+ */
 void
 System::timeEvolutionRelax(int time_step){
 	int ts_next = ts+time_step;
