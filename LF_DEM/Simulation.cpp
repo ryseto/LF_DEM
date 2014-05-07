@@ -868,7 +868,10 @@ Simulation::outputConfigurationData(){
 			vec3d &o = sys.ang_velocity[i];
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
 			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
-			double brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
+			double brownian_xzstressGU = 0;
+			if(sys.brownian){
+				brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
+			}
 			/* 1: number of the particle
 			 * 2: radius
 			 * 3, 4, 5: position

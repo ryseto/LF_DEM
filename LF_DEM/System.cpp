@@ -432,6 +432,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	computeVelocities();
 	timeStepMoveCorrector();
 	if(calc_stress){
+		stressReset();
 		calcStressPerParticle();
 		if(brownian){
 			for(int i=0;i<np;i++){
