@@ -650,6 +650,9 @@ System::stressReset(){
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
+		if(brownian){
+			brownianstressGU[i].reset();
+		}
 	}
 }
 
@@ -934,15 +937,14 @@ System::computeVelocities(){
 
 	for (int i=0; i<np; i++) {
 		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_colloidal[i];
-		velocity[i] = na_velocity[i];
-
 		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_colloidal[i];
-		ang_velocity[i] = na_ang_velocity[i];
-
 		if(brownian){
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
+
+		velocity[i] = na_velocity[i];
+		ang_velocity[i] = na_ang_velocity[i];
 
 		if (dimensionless_shear_rate != 0) {
 			velocity[i].x += position[i].z;
