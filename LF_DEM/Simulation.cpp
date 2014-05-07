@@ -628,9 +628,9 @@ Simulation::evaluateData(){
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
 	total_stress += total_colloidal_stress;
-	//	if (sys.brownian) {
-	//		total_stress += sys.total_brownian_stress;
-	//	}
+	if (sys.brownian) {
+		total_stress += sys.total_brownian_stressGU;
+	}
 	/*
 	 * Viscosity is only the increment of stress (=del_eta).
 	 * The total viscosity should be 
@@ -663,6 +663,11 @@ Simulation::evaluateData(){
 	viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
 	normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
 	normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
+	if(sys.brownian){
+		viscosity_brownian = sys.total_brownian_stressGU.getStressXZ();
+		normalstress_diff_1_brownian = sys.total_brownian_stressGU.getNormalStress1();
+		normalstress_diff_2_brownian = sys.total_brownian_stressGU.getNormalStress2();
+	}
 }
 
 void
@@ -677,6 +682,7 @@ Simulation::outputStressTensorData(){
 	total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	total_colloidal_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
+	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
 	fout_st << endl;
 }
 
@@ -716,9 +722,9 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#20: Viscosity(Colloidal force GU)" << endl;
 		fout_rheo << "#21: N1(Colloidal force GU)" << endl;
 		fout_rheo << "#22: N2(Colloidal force GU)" << endl;
-		fout_rheo << "#23: Viscosity(brownian)" << endl; // not yet
-		fout_rheo << "#24: N1(brownian)" << endl;// not yet
-		fout_rheo << "#25: N2(brownian)" << endl;// not yet
+		fout_rheo << "#23: Viscosity(brownian)" << endl;
+		fout_rheo << "#24: N1(brownian)" << endl;
+		fout_rheo << "#25: N2(brownian)" << endl;
 		fout_rheo << "#26: min gap (non-dim)" << endl;
 		fout_rheo << "#27: max tangential displacement" << endl;
 		fout_rheo << "#28: Average normal contact force" << endl;
@@ -862,6 +868,7 @@ Simulation::outputConfigurationData(){
 			vec3d &o = sys.ang_velocity[i];
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
 			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
+			double brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
 			/* 1: number of the particle
 			 * 2: radius
 			 * 3, 4, 5: position
@@ -879,7 +886,7 @@ Simulation::outputConfigurationData(){
 			fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
-			fout_particle << ' ' << 0; //14: xz stress contributions
+			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
 			if (sys.dimension == 2) {
 				fout_particle << ' ' << sys.angle[i]; // 15
 			}

@@ -544,5 +544,18 @@ Lubrication::addHydroStress(){
 	pairVelocityStresslet(vicl, vjcl, oicl, ojcl, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
 	sys->colloidalstressGU[p0] += stresslet_colloid_GU_i;
 	sys->colloidalstressGU[p1] += stresslet_colloid_GU_j;
+
+	if(sys->brownian){
+		StressTensor stresslet_brownian_GU_i;
+		StressTensor stresslet_brownian_GU_j;
+		vec3d vib(sys->vel_brownian[p0]);
+		vec3d vjb(sys->vel_brownian[p1]);
+		vec3d oib(sys->ang_vel_brownian[p0]);
+		vec3d ojb(sys->ang_vel_brownian[p1]);
+		pairVelocityStresslet(vib, vjb, oib, ojb, stresslet_brownian_GU_i, stresslet_brownian_GU_j);
+		sys->brownianstressGU[p0] += stresslet_brownian_GU_i;
+		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
+	}
+	
 }
 

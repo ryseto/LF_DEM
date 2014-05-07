@@ -83,9 +83,8 @@ private:
 	 */
 	bool after_parameter_changed;
 	//int cnt_prameter_convergence;
-	void timeEvolutionBrownian();
-	void timeEvolutionEulersMethod();
-	void timeEvolutionPredictorCorrectorMethod();
+	void timeEvolutionEulersMethod(bool calc_stress=false);
+	void timeEvolutionPredictorCorrectorMethod(bool calc_stress=false);
 	void timeStepMove();
 	void timeStepMoveRelax();
 	void timeStepMoveCorrector();
@@ -152,13 +151,16 @@ public:
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
-	int brownianstress_calc_nb;
+	StressTensor* brownianstressGU; // by particle
+	StressTensor* brownianstressGU_predictor; // by particle
+	//	int brownianstress_calc_nb;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
 	StressTensor total_contact_stressGU;
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
+	StressTensor total_brownian_stressGU;
 	double ratio_dashpot_total;
 	int friction_model;
 	bool friction;
@@ -255,6 +257,7 @@ public:
 	void stressReset();
 	void stressBrownianReset();
 	void calcStress();
+	void calcStressPerParticle();
 	void analyzeState();
 	StokesSolver stokes_solver;
 	void lubricationStress(int i, int j);
@@ -289,7 +292,7 @@ public:
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
 	void set_bgf_factor(int val){bgf_factor = val;}
-	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=2;} }
+	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=1;} }
 	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}

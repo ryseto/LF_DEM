@@ -4,12 +4,17 @@
 #    Parameters to provide              #
 #=======================================#
 
-# OS_version: OSX or Linux
+# OS_version: OSX or Linux or SI 
 OS_version=OSX
 #SysEnv=Energy_seto
 # Build : debug or optimized
 
 # Compiler
+ifeq ($(OS_version),SI)
+	CXX=icc
+	CXXFLAGS_optimized=  -O3
+	CXXFLAGS_debug=  -g
+endif
 ifeq ($(OS_version),Linux)
 	CXX=g++
 	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow
@@ -26,6 +31,7 @@ UseTrilinos=no
 # Enable use of Metis library ( yes / no )
 UseMetis=no
 
+
 #======== Include Paths =============
 Cholmod_include_path_OSX     = /usr/local/include/
 
@@ -35,6 +41,8 @@ endif
 
 
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
+Cholmod_include_path_SI  = ~/usr/include/
+
 ifeq ($(UseTrilinos),yes)
 	Trilinos_include_path_Linux  = /home/romain/romain/recherche/trilinos-11.0.3-Source/
 	Trilinos_include_path_OSX    = /usr/local/include/
@@ -56,15 +64,24 @@ endif
 Blas_Linking_Flags = -lblas 
 Lapack_Linking_Flags = -llapack
 
+ifeq ($(OS_version), SI)
+	Blas_Linking_Flags = -mkl -lrt
+	Lapack_Linking_Flags =
+endif
+
 # Cholmod
 Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
 ifeq ($(SysEnv),Energy_seto)
 	Cholmod_Linking_Flags     =
 endif
 
-ifeq ($(UseMetis),yes)
-	Cholmod_Linking_Flags += -lmetis 
+ifeq ($(OS_version), SI)
+       Cholmod_Linking_Flags     =
 endif
+
+#ifeq ($(UseMetis),yes)
+#	Cholmod_Linking_Flags += -lmetis 
+#endif
 
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
@@ -73,6 +90,15 @@ ifeq ($(OS_version),OSX)
 	ifeq ($(UseMetis),yes)
 		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
 	endif
+endif
+
+ifeq ($(OS_version), SI)
+       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
+       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
+       ifeq ($(UseMetis),yes)
+#               Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
+			Cholmod_Linking_Flags += ~/SuiteSparse/metis-4.0/libmetis.a
+       endif
 endif
 
 # Trilinos
