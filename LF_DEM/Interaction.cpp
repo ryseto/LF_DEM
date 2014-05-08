@@ -27,7 +27,7 @@ Interaction::setResistanceCoeff(double normal_rc, double tangent_rc){
  */
 void
 Interaction::calcNormalVectorDistanceGap(){
-	rvec = sys->position[par_num[1]]-sys->position[par_num[0]];
+	rvec = sys->position[p1]-sys->position[p0];
 	sys->periodize_diff(rvec, zshift);
 	r = rvec.norm();
 	nvec = rvec/r;
@@ -57,11 +57,11 @@ void
 Interaction::activate(int i, int j){
 	active = true;
 	if (j > i) {
-		par_num[0] = i;
-		par_num[1] = j;
+		p0 = i;
+		p1 = j;
 	} else {
-		par_num[0] = j;
-		par_num[1] = i;
+		p0 = j;
+		p1 = i;
 	}
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
@@ -69,8 +69,8 @@ Interaction::activate(int i, int j){
 	// tell them their new partner
 	sys->interaction_partners[i].insert(j);
 	sys->interaction_partners[j].insert(i);
-	a0 = sys->radius[par_num[0]];
-	a1 = sys->radius[par_num[1]];
+	a0 = sys->radius[p0];
+	a1 = sys->radius[p1];
 	set_ro(a0+a1); // ro=a0+a1
 	interaction_range_scaled = ro_12*sys->get_lub_max();
 	/* NOTE:
@@ -108,10 +108,10 @@ Interaction::deactivate(){
 	outputSummary();
 	contact.deactivate();
 	active = false;
-	sys->interaction_list[par_num[0]].erase(this);
-	sys->interaction_list[par_num[1]].erase(this);
-	sys->interaction_partners[par_num[0]].erase(par_num[1]);
-	sys->interaction_partners[par_num[1]].erase(par_num[0]);
+	sys->interaction_list[p0].erase(this);
+	sys->interaction_list[p1].erase(this);
+	sys->interaction_partners[p0].erase(p1);
+	sys->interaction_partners[p1].erase(p0);
 }
 
 void
@@ -202,8 +202,8 @@ Interaction::updateStateRelax(bool &deactivated){
  */
 void
 Interaction::addUpColloidalForce(){
-	sys->colloidal_force[par_num[0]] += f_colloidal;
-	sys->colloidal_force[par_num[1]] -= f_colloidal;
+	sys->colloidal_force[p0] += f_colloidal;
+	sys->colloidal_force[p1] -= f_colloidal;
 }
 
 /* Relative velocity of particle 1 from particle 0.
@@ -224,9 +224,9 @@ Interaction::calcRelativeVelocities(){
 	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 	 *
 	 ******************************************************/
-	relative_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]]; //true velocity, in predictor and in corrector
+	relative_velocity = sys->velocity[p1]-sys->velocity[p0]; //true velocity, in predictor and in corrector
 	relative_velocity.x += zshift*sys->vel_difference;
-	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
+	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
@@ -257,7 +257,7 @@ Interaction::getContactVelocity(){
 /* observation */
 double
 Interaction::getNormalVelocity(){
-	vec3d d_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
+	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0];
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;
 	}

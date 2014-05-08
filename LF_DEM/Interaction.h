@@ -37,7 +37,8 @@ class Interaction{
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
-	unsigned int par_num[2]; // <<--- We may change this to p0 and p1 (?)
+	unsigned int p0;
+	unsigned int p1;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
@@ -113,11 +114,11 @@ public:
 	//======= particles data  ====================//
 	inline int
 	partner(unsigned int i){
-		return (i == par_num[0] ? par_num[1] : par_num[0]);
+		return (i == p0 ? p1 : p0);
 	}
 	inline void
 	get_par_num(unsigned int &i, unsigned int &j){
-		i = par_num[0], j = par_num[1];
+		i = p0, j = p1;
 	}
 	
 	inline void set_label(unsigned int val){label = val;}
@@ -147,7 +148,7 @@ public:
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	void integrateStress();
 	void info(){
-		cerr << "particles " << par_num[0] << " " << par_num[1] << endl;
+		cerr << "particles " << p0 << " " << p1 << endl;
 		cerr << "contact " << contact.active << endl;
 		cerr << "colloidal force amp " << colloidalforce_amplitude << endl;
 		cerr << "colloidal force length " << colloidalforce_length << endl;

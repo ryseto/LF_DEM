@@ -28,8 +28,8 @@ Lubrication::init(System *sys_){
 
 void
 Lubrication::getInteractionData(){
-	p0 = interaction->par_num[0];
-	p1 = interaction->par_num[1];
+	p0 = interaction->p0;
+	p1 = interaction->p1;
 	p0_6 = 6*p0;
 	p1_6 = 6*p1;
 }

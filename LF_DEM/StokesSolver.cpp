@@ -567,7 +567,6 @@ StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
 #endif
 }
 
-
 void
 StokesSolver::addToRHS(double *rhs){
 	if (direct()) {

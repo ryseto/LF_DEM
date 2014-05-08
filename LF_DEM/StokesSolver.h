@@ -32,12 +32,11 @@ using Teuchos::rcp;
 using Teuchos::ParameterList;
 using Teuchos::parameterList;
 
-typedef double                                SCAL;
-typedef Epetra_MultiVector                     VEC;
-typedef Epetra_Operator                        MAT;
+typedef double SCAL;
+typedef Epetra_MultiVector VEC;
+typedef Epetra_Operator MAT;
 #endif
 using namespace std;
-//class System;
 
 class StokesSolver{
 
@@ -165,7 +164,6 @@ private:
 	
 	bool _iterative;
 	bool _direct;
-	
 
 	// Cholmod variables
     cholmod_factor *chol_L ;
@@ -195,7 +193,6 @@ private:
 	int *current_index_positions;
 
     void factorizeResistanceMatrix();
-	
     
 #ifdef TRILINOS
     int MyPID;
