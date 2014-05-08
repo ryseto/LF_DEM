@@ -9,7 +9,7 @@
 #include "System.h"
 #include <sstream>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
-#define GRANDOM ( r_gen.randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
+#define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
 System::~System(){
 	DELETE(position);
@@ -173,6 +173,11 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void
 System::setupSystem(){
+	/* Giving a seed for debugging (Brownian)
+	 * r_gen = new MTRand(71);
+	 */
+	r_gen = new MTRand;
+	
 	if (friction_model == 0 ){
 		cerr << "friction_model = 0" << endl;
 		friction = false;
@@ -248,6 +253,7 @@ System::setupSystem(){
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
+
 	/* t = beta/kn
 	 *  beta = t*kn
 	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time

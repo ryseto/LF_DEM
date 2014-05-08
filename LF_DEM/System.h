@@ -111,7 +111,7 @@ private:
 	/*Backup*/
 	vector <vec3d> position_backup;
 	Interaction *interaction_backup;
-	MTRand r_gen;
+	MTRand *r_gen;
 
 protected:
 public:
