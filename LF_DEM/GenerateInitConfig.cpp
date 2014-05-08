@@ -162,10 +162,11 @@ GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	vec3d step;
 	
 	grad_norm = 0;
+		
 	for (int i=0; i<np;i++) {
-		for(int u=0; u<sys.dimension; u++) {
-			grad_norm += g[i].sq_norm();
-		}
+		//for(int u=0; u<sys.dimension; u++) { // I don't get what this loop mean.
+		grad_norm += g[i].sq_norm();
+		//}
 	}
 	
 	if (grad_norm != 0) {
@@ -310,10 +311,10 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 		//		int overlap_pre_move = overlapNumber(moved_part);
 		double energy_pre_move = particleEnergy(moved_part);
 		vec3d trial_move;
-		if (sys.dimension == 3) {
-			trial_move = randUniformSphere(0.002);
-		} else {
+		if (sys.twodimension) {
 			trial_move = randUniformCircle(0.002);
+		} else {
+			trial_move = randUniformSphere(0.002);
 		}
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);
@@ -385,8 +386,13 @@ GenerateInitConfig::setParameters(){
 	 *
 	 */
 	np = readStdinDefault(200, "number of particle");
-	dimension = readStdinDefault(3, "dimension (2 or 3)");
-	sys.dimension = dimension;
+	int dimension = readStdinDefault(3, "dimension (2 or 3)");
+	if (dimension == 2){
+		sys.twodimension = true;
+	} else {
+		sys.twodimension = false;
+	}
+
 	if (dimension == 2) {
 		volume_fraction = readStdinDefault(0.7, "volume_fraction");
 	} else {

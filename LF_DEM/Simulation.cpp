@@ -768,7 +768,7 @@ Simulation::outputConfigurationData(){
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.dimension == 2) {
+			if (sys.twodimension) {
 				fout_particle << ' ' << sys.angle[i]; // 15
 			}
 			fout_particle << endl;

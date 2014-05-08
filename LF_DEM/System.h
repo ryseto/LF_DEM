@@ -70,7 +70,7 @@ private:
 	double colloidalforce_amplitude; // colloidal force dimensionless
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
-	bool twodimension;
+
 
 	/* data */
 	int intr_max_fc_normal;
@@ -121,7 +121,7 @@ public:
 	void backupState();
 	bool brownian;	
 	bool in_predictor;
-	int dimension;
+	bool twodimension;
 	double critical_normal_force; 
 	vec3d *position;
 	Interaction *interaction;
