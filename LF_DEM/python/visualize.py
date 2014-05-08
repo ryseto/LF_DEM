@@ -58,9 +58,9 @@ def update_visualization():
 
         particles[j].pos=(pos_stream.positions[j,0], pos_stream.positions[j,2], pos_stream.positions[j,1])
 
-        particles[j].color=(0.2, 0.2, 0.5)
+        particles[j].color=(0.5, 0.5, 0.5)
         particles[j].radius=pos_stream.radius[j]
-        particles[j].material=visual.materials.wood
+#        particles[j].material=visual.materials.wood
         particles[j].visible=True
 
     
