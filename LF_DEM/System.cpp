@@ -315,6 +315,9 @@ System::initializeBoxing(){// need to know radii first
 		boxset.box(i);
 	}
 	boxset.update();
+	lx_periodic_threshold = lx - max_radius*lub_max;
+	ly_periodic_threshold = ly - max_radius*lub_max;
+	lz_periodic_threshold = lz - max_radius*lub_max;
 }
 
 void
@@ -1045,16 +1048,17 @@ System::displacement(int i, const vec3d &dr){
 // [0,l]
 int
 System::periodize(vec3d &pos){
-	int z_shift = 0;
-	vec3d tmp = pos;
+	int z_shift;
 	if (pos.z >= lz) {
 		pos.z -= lz;
 		pos.x -= shear_disp;
-		z_shift--;
+		z_shift = -1;
 	} else if (pos.z < 0) {
 		pos.z += lz;
 		pos.x += shear_disp;
-		z_shift++;
+		z_shift = 1;
+	} else {
+		z_shift = 0;
 	}
 	if (pos.x >= lx) {
 		pos.x -= lx;
@@ -1075,38 +1079,6 @@ System::periodize(vec3d &pos){
 	return z_shift;
 }
 
-// [-l/2,l/2]
-void
-System::periodize_diff(vec3d &pos_diff){
-	if (abs(pos_diff.z) > lz_half) {
-		if (pos_diff.z > 0) {
-			pos_diff.z -= lz;
-			pos_diff.x -= shear_disp;
-		} else {
-			pos_diff.z += lz;
-			pos_diff.x += shear_disp;
-		}
-	}
-	if (abs(pos_diff.x) > lx_half) {
-		if (pos_diff.x > 0) {
-			pos_diff.x -= lx;
-			if (pos_diff.x > lx_half) {
-				pos_diff.x -= lx;
-			}
-		} else {
-			pos_diff.x += lx;
-			if (pos_diff.x < -lx_half) {
-				pos_diff.x += lx;
-			}
-		}
-	}
-	if (pos_diff.y > ly_half) {
-		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_half) {
-		pos_diff.y += ly;
-	}
-}
-
 // periodize + give z_shift= number of boundaries crossed in z-direction
 void
 System::periodize_diff(vec3d &pos_diff, int &zshift){
@@ -1114,58 +1086,32 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
-	if (abs(pos_diff.z) > lz_half) {
-		if (pos_diff.z > 0) {
-			pos_diff.z -= lz;
-			pos_diff.x -= shear_disp;
-			zshift = -1;
-		} else {
-			pos_diff.z += lz;
-			pos_diff.x += shear_disp;
-			zshift = +1;
-		}
+	if (pos_diff.z > lz_periodic_threshold) {
+		pos_diff.z -= lz;
+		pos_diff.x -= shear_disp;
+		zshift = -1;
+	} else if (pos_diff.z > lz_periodic_threshold) {
+		pos_diff.z += lz;
+		pos_diff.x += shear_disp;
+		zshift = 1;
 	} else {
 		zshift = 0;
 	}
-	if (abs(pos_diff.x) > lx_half) {
-		if (pos_diff.x > 0) {
+	if (pos_diff.x > lx_periodic_threshold) {
+		pos_diff.x -= lx;
+		if (pos_diff.x > lx_periodic_threshold) {
 			pos_diff.x -= lx;
-			if (pos_diff.x > lx_half) {
-				pos_diff.x -= lx;
-			}
-		} else {
+		}
+	} else if (pos_diff.x < -lx_periodic_threshold) {
+		pos_diff.x += lx;
+		if (pos_diff.x < -lx_periodic_threshold) {
 			pos_diff.x += lx;
-			if (pos_diff.x < -lx_half) {
-				pos_diff.x += lx;
-			}
 		}
 	}
-	if (pos_diff.y > ly_half) {
+	if (pos_diff.y > ly_periodic_threshold) {
 		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_half) {
+	} else if (pos_diff.y < -ly_periodic_threshold) {
 		pos_diff.y += ly;
-	}
-}
-
-/*
- * Distance between particle i and particle j
- */
-double
-System::distance(int i, int j){
-	return sqrt(sq_distance(i, j));
-}
-
-/*
- * Square distance between particle i and particle j
- */
-double
-System::sq_distance(int i, int j){
-	vec3d pos_diff = position[j] - position[i];
-	periodize_diff(pos_diff);
-	if (dimension == 3) {
-		return pos_diff.sq_norm();
-	} else {
-	 	return pos_diff.sq_norm_xz();
 	}
 }
 

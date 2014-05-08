@@ -47,6 +47,12 @@ private:
 	double lx_half; // =lx/2
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
+	/* l_periodic_threshold = lz - a1*lub_max (a1 is larger particle)
+	 * threshold distance which can intaract each other as periodic image.
+	 */
+	double lx_periodic_threshold;
+	double ly_periodic_threshold;
+	double lz_periodic_threshold;
 	double system_volume;
 	double sq_lub_max;
 	double shear_strain;
@@ -243,11 +249,8 @@ public:
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions();
-	double sq_distance(int i, int j);
-	double distance(int i, int j);
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
-	void periodize_diff(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void computeVelocities();
 	void updateVelocityLubrication();
