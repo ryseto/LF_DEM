@@ -109,113 +109,6 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 }
 
 void
-Simulation::simulationHysteresis(int argc, const char * argv[]){
-	sys.hysteresis = true;
-	filename_import_positions = argv[2];
-	filename_parameters = argv[3];
-	filename_prog_shearrate = argv[4];
-	string arg5 = argv[5];
-	if (arg5 == "up") {
-		shearrate_upward = true;
-	} else if (arg5 == "down") {
-		shearrate_upward = false;
-	} else {
-		cerr << "arg 5 need to be up or down." << endl;
-		exit(1);
-	}
-
-	setDefaultParameters();
-	readParameterFile();
-	ifstream fin_shearprog;
-	fin_shearprog.open(filename_prog_shearrate.c_str());
-	/*
-	 * example of "shear_prog.txt"
-	 * ---------------------------------
-	 * shearrate_min 0.005
-	 * shearrate_max 0.2
-	 * shearrate_steps 10
-	 * strain_interval 10
-	 * strain_interval_relax 2
-	 * hysteresis_loop 1
-	 * ---------------------------------
-	 */
-	string key;
-	fin_shearprog >> key >> shearrate_min;
-	fin_shearprog >> key >> shearrate_max;
-	fin_shearprog >> key >> shearrate_steps;
-	fin_shearprog >> key >> strain_interval;
-	fin_shearprog >> key >> strain_interval_relax;
-	cerr << shearrate_min << ' ' << shearrate_max << ' ' << shearrate_steps << ' ' << endl;
-	importInitialPositionFile();
-	if (argc == 7) {
-		contactForceParameter(argv[6]);
-	}
-
-	openOutputFiles();
-	outputDataHeader(fout_particle);
-	outputDataHeader(fout_interaction);
-	outputDataHeader(fout_rheo);
-	outputDataHeader(fout_st);
-	sys.setupSystem();
-	outputConfigurationData();
-	sys.setupShearFlow(true);
-	int cnt_simu_loop = 1;
-	int cnt_config_out = 1;
-	if (shearrate_upward) {
-		sys.dimensionless_shear_rate = shearrate_min;
-	} else {
-		sys.dimensionless_shear_rate = shearrate_max;
-	}
-	double del_log_shearrate = (log(shearrate_max)-log(shearrate_min))/shearrate_steps;
-	while (true) {
-		sys.set_colloidalforce_amplitude(1.0/sys.dimensionless_shear_rate);
-		double strain_0 = sys.get_shear_strain();
-		shear_strain_end = sys.get_shear_strain()+strain_interval;
-		double average_viscosity = 0;
-		double average_contact_number = 0;
-		int cnt_average = 0;
-		while (sys.get_shear_strain() < shear_strain_end-1e-8) {
-			double strain_next = cnt_simu_loop*strain_interval_output_data;
-			double strain_next_config_out = cnt_config_out*strain_interval_output;
-			sys.timeEvolution(strain_next);
-			evaluateData();
-			outputRheologyData();
-			outputStressTensorData();
-			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
-				outputConfigurationData();
-				cnt_config_out ++;
-				cerr << sys.dimensionless_shear_rate  << ' ';
-				cerr << sys.get_shear_strain()  << ' ' << 6*M_PI*viscosity << endl;
-			}
-			if (sys.get_shear_strain()-strain_0 > strain_interval_relax){
-				average_viscosity += 6*M_PI*viscosity;
-				average_contact_number += sys.getParticleContactNumber();
-				cnt_average ++;
-			}
-			cnt_simu_loop ++;
-		}
-		average_viscosity = average_viscosity/cnt_average;
-		average_contact_number = average_contact_number/cnt_average;
-		fout_hysteresis << sys.dimensionless_shear_rate << ' ';
-		fout_hysteresis << average_viscosity << ' ';
-		fout_hysteresis << average_contact_number << endl;
-		if (shearrate_upward) {
-			if (sys.dimensionless_shear_rate < shearrate_max-1e-6){
-				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)+del_log_shearrate);
-			} else {
-				break;
-			}
-		} else {
-			if (sys.dimensionless_shear_rate > shearrate_min+1e-6){
-				sys.dimensionless_shear_rate = exp(log(sys.dimensionless_shear_rate)-del_log_shearrate);
-			} else {
-				break;
-			}
-		}
-	}
-}
-
-void
 Simulation::relaxationZeroShear(vector<vec3d> &position_,
 								vector<double> &radius_,
 								double lx_, double ly_, double lz_){
@@ -399,11 +292,6 @@ Simulation::openOutputFiles(){
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
 	sys.openFileInteractionData();
-	
-	if (sys.hysteresis){
-		string hysteresis_filename = "his_" +sys.simu_name + ".dat";
-		fout_hysteresis.open(hysteresis_filename.c_str());
-	}
 }
 
 void
@@ -577,23 +465,11 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-
 	
-	if (sys.hysteresis) {
-		ss_simu_name << "_hysteresis";
-		
-		if (shearrate_upward) {
-			ss_simu_name << "_up";
-		} else {
-			ss_simu_name << "_down";
-		}
+	if (sys.dimensionless_shear_rate == -1) {
+		ss_simu_name << "_srinf" ; // shear rate infinity
 	} else {
-		if (sys.dimensionless_shear_rate == -1) {
-			ss_simu_name << "_srinf" ; // shear rate infinity
-			
-		} else {
-			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
-		}
+		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 	}
 
 	if (sys.brownian) {

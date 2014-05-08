@@ -163,7 +163,6 @@ public:
 	int friction_model;
 	bool friction;
 	bool colloidalforce;
-	bool hysteresis;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	/*

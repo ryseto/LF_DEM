@@ -195,9 +195,7 @@ System::setupSystem(){
 			 * Under the unit of this simulation
 			 * 6pi*eta*a^2*shear_rate is set to 1.
 			 */
-			if (hysteresis == false){
-				colloidalforce_amplitude = 1/dimensionless_shear_rate;
-			}
+			colloidalforce_amplitude = 1/dimensionless_shear_rate;
 			colloidalforce = true;
 			cerr << "Colloidal force" << endl;
 		}
