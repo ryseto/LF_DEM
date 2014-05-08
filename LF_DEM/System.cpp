@@ -321,9 +321,6 @@ System::initializeBoxing(){// need to know radii first
 		boxset.box(i);
 	}
 	boxset.update();
-	lx_periodic_threshold = lx - max_radius*lub_max;
-	ly_periodic_threshold = ly - max_radius*lub_max;
-	lz_periodic_threshold = lz - max_radius*lub_max;
 }
 
 void
@@ -1054,31 +1051,31 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
-	if (pos_diff.z > lz_periodic_threshold) {
+	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff.x -= shear_disp;
 		zshift = -1;
-	} else if (pos_diff.z > lz_periodic_threshold) {
+	} else if (pos_diff.z > lz_half) {
 		pos_diff.z += lz;
 		pos_diff.x += shear_disp;
 		zshift = 1;
 	} else {
 		zshift = 0;
 	}
-	if (pos_diff.x > lx_periodic_threshold) {
+	if (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-		if (pos_diff.x > lx_periodic_threshold) {
+		if (pos_diff.x > lx_half) {
 			pos_diff.x -= lx;
 		}
-	} else if (pos_diff.x < -lx_periodic_threshold) {
+	} else if (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
-		if (pos_diff.x < -lx_periodic_threshold) {
+		if (pos_diff.x < -lx_half) {
 			pos_diff.x += lx;
 		}
 	}
-	if (pos_diff.y > ly_periodic_threshold) {
+	if (pos_diff.y > ly_half) {
 		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_periodic_threshold) {
+	} else if (pos_diff.y < -ly_half) {
 		pos_diff.y += ly;
 	}
 }

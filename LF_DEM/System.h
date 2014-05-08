@@ -50,9 +50,6 @@ private:
 	/* l_periodic_threshold = lz - a1*lub_max (a1 is larger particle)
 	 * threshold distance which can intaract each other as periodic image.
 	 */
-	double lx_periodic_threshold;
-	double ly_periodic_threshold;
-	double lz_periodic_threshold;
 	double system_volume;
 	double sq_lub_max;
 	double shear_strain;
