@@ -298,6 +298,7 @@ System::setupSystem(){
 	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
+	
 	if (twodimension) {
 		setSystemVolume(2*radius[np-1]);
 	} else {
@@ -1023,7 +1024,7 @@ System::periodize(vec3d &pos){
 			pos.x += lx;
 		}
 	}
-
+	
 	if (pos.y >= ly) {
 		pos.y -= ly;
 	} else if (pos.y < 0) {
@@ -1043,7 +1044,7 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 		pos_diff.z -= lz;
 		pos_diff.x -= shear_disp;
 		zshift = -1;
-	} else if (pos_diff.z > lz_half) {
+	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 		pos_diff.x += shear_disp;
 		zshift = 1;
@@ -1082,7 +1083,6 @@ System::evaluateMaxContactVelocity(){
 	int cnt_contact = 0;
 	int cnt_sliding = 0;
 	for (int k=0; k<nb_interaction; k++) {
-	
 		if (interaction[k].is_contact()) {
 			interaction[k].calcRelativeVelocities();
 			cnt_contact++;

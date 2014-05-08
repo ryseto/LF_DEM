@@ -33,7 +33,6 @@ class BoxSet;
 class System{
 private:
 	int np;
-	int np3;
 	int maxnb_interactionpair;
 	int nb_of_active_interactions;
 	BoxSet boxset;
@@ -302,7 +301,7 @@ public:
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}
 	inline double Lz_half(){return lz_half;}
-	inline void set_np(int val){np = val, np3 = 3*val;}
+	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
 	inline void set_kn(double val){kn = val;}

@@ -86,7 +86,11 @@ void
 GenerateInitConfig::outputPositionData(){
 	ofstream fout;
 	ostringstream ss_posdatafilename;
-	ss_posdatafilename << "D" << dimension;
+	if (sys.twodimension) {
+		ss_posdatafilename << "D2";
+	} else {
+		ss_posdatafilename << "D3";
+	}
 	ss_posdatafilename << "N" << np;
 	ss_posdatafilename << "VF" << volume_fraction;
 	if (disperse_type == 'm') {
@@ -98,7 +102,7 @@ GenerateInitConfig::outputPositionData(){
 		exit(1);
 	}
 
-	if (dimension == 2) {
+	if (sys.twodimension) {
 		if (lx_lz == 1) {
 			ss_posdatafilename << "Square"; // square
 		} else {
@@ -154,19 +158,15 @@ GenerateInitConfig::computeGradient(){
 	return energy;
 }
 
-
 void
 GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	double grad_norm;
 	double gradient_power = 0.9;
 	vec3d step;
-	
+
 	grad_norm = 0;
-		
 	for (int i=0; i<np;i++) {
-		//for(int u=0; u<sys.dimension; u++) { // I don't get what this loop mean.
 		grad_norm += g[i].sq_norm();
-		//}
 	}
 	
 	if (grad_norm != 0) {
@@ -182,7 +182,7 @@ GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 
 void
 GenerateInitConfig::storeGradient(){
-	for (int i=0;i<np;i++) {
+	for (int i=0; i<np; i++) {
 		prev_grad[i] = grad[i];
 	}
 }
@@ -237,7 +237,7 @@ GenerateInitConfig::putRandom(){
 	for (int i=0; i < np; i++) {
 		sys.position[i].x = lx*RANDOM;
 		sys.position[i].z = lz*RANDOM;
-		if (dimension == 2) {
+		if (sys.twodimension) {
 			sys.position[i].y = ly_half;
 		} else {
 			sys.position[i].y = ly*RANDOM;
@@ -393,13 +393,13 @@ GenerateInitConfig::setParameters(){
 		sys.twodimension = false;
 	}
 
-	if (dimension == 2) {
+	if (sys.twodimension) {
 		volume_fraction = readStdinDefault(0.7, "volume_fraction");
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
 	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: ");
-	if (dimension == 3) {
+	if (!sys.twodimension) {
 		ly_lz = 1;
 		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
 	}
@@ -431,7 +431,7 @@ GenerateInitConfig::setParameters(){
 	cerr << "vf = " << volume_fraction1 << ' ' << volume_fraction2 << endl;
 	double total_volume;
 	double pvolume1, pvolume2;
-	if (dimension == 2) {
+	if (sys.twodimension) {
 		pvolume1 = M_PI*a1*a1;
 		pvolume2 = M_PI*a2*a2;
 	} else {
@@ -447,7 +447,7 @@ GenerateInitConfig::setParameters(){
 	}
 	np2 = np-np1;
 	double pvolume = np1*pvolume1+np2*pvolume2;
-	if (dimension == 2) {
+	if (sys.twodimension) {
 		lz = sqrt(pvolume/(lx_lz*volume_fraction));
 		lx = lz*lx_lz;
 		ly = 0.0;
