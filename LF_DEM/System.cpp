@@ -443,7 +443,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 		calcStressPerParticle();
 		if(brownian){
 			for(int i=0;i<np;i++){
-				brownianstressGU[i] = 0.5*(brownianstressGU[i] + brownianstressGU_predictor[i]); // [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ] 
+				brownianstressGU[i] = 0.5*(brownianstressGU[i] - brownianstressGU_predictor[i]); // [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ] 
 			}
 		}
 	}
