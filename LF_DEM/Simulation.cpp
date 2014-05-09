@@ -108,43 +108,6 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	}
 }
 
-void
-Simulation::relaxationZeroShear(vector<vec3d> &position_,
-								vector<double> &radius_,
-								double lx_, double ly_, double lz_){
-	sys.setConfiguration(position_, radius_, lx_, ly_, lz_);
-	setDefaultParameters();
-	sys.set_integration_method(0);
-	sys.set_dt(1e-4);
-	sys.set_kn(2000);
-	sys.set_kb_T(0);
-	sys.set_mu_static(0);
-	sys.dimensionless_shear_rate = 1;
-	sys.set_colloidalforce_length(0); // dimensionless
-	sys.setupSystem();
-	sys.set_colloidalforce_amplitude(0);
-	sys.setupShearFlow(false);
-	double energy_previous = 0;
-	while (true) {
-		int i_time_interval = 1000;
-		sys.timeEvolutionRelax(i_time_interval);
-		evaluateData();
-		//sys.analyzeState();
-		sys.calcTotalPotentialEnergy();
-		cout << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
-		cerr << energy_previous-sys.total_energy << endl;
-		if (sys.min_gap_nondim > 0 &&
-			energy_previous-sys.total_energy < 0.01) {
-			cerr << "finish" << endl;
-			break;
-		}
-		energy_previous = sys.total_energy;
-	}
-	for (int i=0; i<sys.get_np(); i++) {
-		position_[i] = sys.position[i];
-	}
-}
-
 bool
 str2bool(string value){
 	if (value == "true") {
@@ -679,8 +642,6 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
 	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
-	fout_rheo << sys.minvalue_gap_nondim << ' ';
-	sys.minvalue_gap_nondim  = 0;
 	fout_rheo << endl;
 }
 

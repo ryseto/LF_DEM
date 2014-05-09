@@ -86,7 +86,6 @@ private:
 	void timeEvolutionEulersMethod(bool calc_stress=false);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress=false);
 	void timeStepMove();
-	void timeStepMoveRelax();
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
 	void timeStepBoxing();
@@ -225,12 +224,8 @@ public:
 	//ofstream fout_int_data;
 	int cnt_static_to_dynamic;
 	int rate_static_to_dynamic;
-	double total_energy; // for initial-config generation
 	bool kn_kt_adjustment;
-	
-	//
-	double minvalue_gap_nondim;
-	
+
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
@@ -240,7 +235,6 @@ public:
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(double strain_interval);
-	void timeEvolutionRelax(int time_step);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();
@@ -263,8 +257,7 @@ public:
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	int adjustContactModelParameters();
-		void calcTotalPotentialEnergy();
-		void setupShearFlow(bool activate){
+	void setupShearFlow(bool activate){
 		if (activate) {
 			vel_difference = lz;
 		} else {

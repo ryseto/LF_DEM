@@ -60,8 +60,6 @@ class Interaction{
 	double interaction_range_scaled;  // max distance for lubrication
 	double colloidalforce_amplitude;
 	double colloidalforce_length;
-	//===== observables  ========================== //
-
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -130,7 +128,6 @@ public:
 	void calcRelativeVelocities();
 	void addUpColloidalForce();
 	double getNormalVelocity();
-	double getPotentialEnergy();
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	void addColloidalStress();
 	void calcTestStress();

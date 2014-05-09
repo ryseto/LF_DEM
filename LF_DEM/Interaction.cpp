@@ -126,11 +126,6 @@ Interaction::updateState(bool &deactivated){
 	
 	calcNormalVectorDistanceGap();
 	
-	/* just for observation (not important) */
-	if (gap_nondim < sys->minvalue_gap_nondim) {
-		sys->minvalue_gap_nondim = gap_nondim;
-	}
-	
 	if (contact.active) {
 		if (gap_nondim > 0){
 			contact.deactivate();
@@ -248,17 +243,4 @@ Interaction::getNormalVelocity(){
 		d_velocity.x += zshift*sys->vel_difference;
 	}
 	return dot(d_velocity, nvec);
-}
-
-/* observation */
-double
-Interaction::getPotentialEnergy(){
-	double energy;
-	if (gap_nondim < 0) {
-		energy = 0.5*sys->get_kn()*gap_nondim*gap_nondim;
-		energy += -colloidalforce_amplitude*gap_nondim;
-	} else {
-		energy = colloidalforce_length*colloidalforce_amplitude*(exp(-(r-ro)/colloidalforce_length)-1);
-	}
-	return energy;
 }

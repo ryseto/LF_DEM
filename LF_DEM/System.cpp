@@ -464,35 +464,6 @@ System::timeStepMove(){
 	updateInteractions();
 }
 
-/* Relaxation to generate initial configuration.
- * This process should be reconsidered.
- */
-void
-System::timeStepMoveRelax(){
-	/* evolve PBC */
-	timeStepBoxing();
-
-	/* move particles */
-	for (int i=0; i<np; i++) {
-		displacement(i, velocity[i]*dt);
-	}
-	if (twodimension) {
-		for (int i=0; i<np; i++) {
-			angle[i] += ang_velocity[i].y*dt;
-		}
-	}
-	/* update boxing system */
-	checkNewInteraction();
-	in_predictor = true;
-	bool deactivated;
-	for (int k=0; k<nb_interaction; k++) {
-		interaction[k].updateStateRelax(deactivated);
-		if (deactivated) {
-			deactivated_interaction.push(k);
-		}
-	}
-}
-
 void
 System::timeStepMovePredictor(){
 	/* The periodic boundary condition is updated in predictor.
@@ -573,26 +544,7 @@ System::timeEvolution(double strain_next){
 		break;
 	}
 	ts++;
-	shear_strain += dt; //
-	
-}
-
-
-/* Relaxation to generate initial configuration.
- * This process should be reconsidered.
- */
-void
-System::timeEvolutionRelax(int time_step){
-	int ts_next = ts+time_step;
-	checkNewInteraction();
-	while (ts < ts_next) {
-		setContactForceToParticle();
-		setColloidalForceToParticle();
-		in_predictor = true;
-		updateVelocityRestingFluid();
-		timeStepMoveRelax();
-		ts++;
-	}
+	shear_strain += dt;
 }
 
 void
@@ -1354,16 +1306,6 @@ System::adjustContactModelParameters(){
 	}
 	
 	return 0;
-}
-
-void
-System::calcTotalPotentialEnergy(){
-	total_energy = 0;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()){
-			total_energy += interaction[k].getPotentialEnergy();
-		}
-	}
 }
 
 void
