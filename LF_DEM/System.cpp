@@ -131,21 +131,21 @@ System::setupSystemForGenerateInit(){
 	shear_disp = 0;
 	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	contact_relaxzation_time = 1e-3;
+	contact_relaxation_time = 1e-3;
 	kn = 2000;
 	kt = 0;
 	friction = false;
 	dimensionless_shear_rate = 1;
 	colloidalforce = false;
-	if (contact_relaxzation_time < 0) {
+	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
 		 */
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+		lub_coeff_contact = 4*kn*contact_relaxation_time;
 	}
 	ts = 0;
 	stokes_solver.initialize();
@@ -171,9 +171,9 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 		radius[i] = radii[i];
 	}
 	if (ly_ == 0) {
-		dimension = 2;
+		twodimension = true;
 	} else {
-		dimension = 3;
+		twodimension = false;
 	}
 }
 
@@ -245,22 +245,22 @@ System::setupSystem(){
 	cnt_static_to_dynamic = 0;
 
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	if (contact_relaxzation_time < 0) {
+	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
 		 */
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+		lub_coeff_contact = 4*kn*contact_relaxation_time;
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
 
 	/* t = beta/kn
 	 *  beta = t*kn
-	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
 	 */
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
@@ -274,10 +274,10 @@ System::setupSystem(){
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. contact_relaxzation_time_tan = 0
+		 * This is set in the parameter file, i.e. contact_relaxation_time_tan = 0
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
@@ -298,11 +298,10 @@ System::setupSystem(){
 	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
-	if (dimension == 2) {
-		twodimension = true;
+	
+	if (twodimension) {
 		setSystemVolume(2*radius[np-1]);
 	} else {
-		twodimension = false;
 		setSystemVolume();
 	}
 	//cnt_prameter_convergence = 0;
@@ -321,9 +320,6 @@ System::initializeBoxing(){// need to know radii first
 		boxset.box(i);
 	}
 	boxset.update();
-	lx_periodic_threshold = lx - max_radius*lub_max;
-	ly_periodic_threshold = ly - max_radius*lub_max;
-	lz_periodic_threshold = lz - max_radius*lub_max;
 }
 
 void
@@ -468,35 +464,6 @@ System::timeStepMove(){
 	updateInteractions();
 }
 
-/* Relaxation to generate initial configuration.
- * This process should be reconsidered.
- */
-void
-System::timeStepMoveRelax(){
-	/* evolve PBC */
-	timeStepBoxing();
-
-	/* move particles */
-	for (int i=0; i<np; i++) {
-		displacement(i, velocity[i]*dt);
-	}
-	if (twodimension) {
-		for (int i=0; i<np; i++) {
-			angle[i] += ang_velocity[i].y*dt;
-		}
-	}
-	/* update boxing system */
-	checkNewInteraction();
-	in_predictor = true;
-	bool deactivated;
-	for (int k=0; k<nb_interaction; k++) {
-		interaction[k].updateStateRelax(deactivated);
-		if (deactivated) {
-			deactivated_interaction.push(k);
-		}
-	}
-}
-
 void
 System::timeStepMovePredictor(){
 	/* The periodic boundary condition is updated in predictor.
@@ -577,26 +544,7 @@ System::timeEvolution(double strain_next){
 		break;
 	}
 	ts++;
-	shear_strain += dt; //
-	
-}
-
-
-/* Relaxation to generate initial configuration.
- * This process should be reconsidered.
- */
-void
-System::timeEvolutionRelax(int time_step){
-	int ts_next = ts+time_step;
-	checkNewInteraction();
-	while (ts < ts_next) {
-		setContactForceToParticle();
-		setColloidalForceToParticle();
-		in_predictor = true;
-		updateVelocityRestingFluid();
-		timeStepMoveRelax();
-		ts++;
-	}
+	shear_strain += dt;
 }
 
 void
@@ -669,9 +617,6 @@ System::stressReset(){
 		}
 	}
 }
-
-
-
 
 void
 System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
@@ -839,22 +784,23 @@ System::buildBrownianTerms(){
 	// F_B is also stored in sys->brownian_force
 
 	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
-	for(int i=0; i<linalg_size; i++){
-		brownian_force[i] = sqrt_kbT2_dt * GRANDOM;
-	}
-
-	stokes_solver.setRHS( brownian_force );
-	stokes_solver.solve_CholTrans( brownian_force ); // L^{-T}.F_B = \sqrt(2kT/dt) * A
-
-	for(int i=0; i<np; i++){
-		int i6 = 6*i; 
-		brownian_force[i6+1] = 0;
-		brownian_force[i6+3] = 0;
-		brownian_force[i6+5] = 0;
+	for (int i=0; i<linalg_size; i++) {
+		brownian_force[i] = sqrt_kbT2_dt*GRANDOM;
 	}
 	
-	stokes_solver.setRHS( brownian_force );
+	stokes_solver.setRHS(brownian_force);
+	stokes_solver.solve_CholTrans(brownian_force); // L^{-T}.F_B = \sqrt(2kT/dt) * A
+
+	if (twodimension) {
+		for (int i=0; i<np; i++) {
+			int i6 = 6*i;
+			brownian_force[i6+1] = 0;
+			brownian_force[i6+3] = 0;
+			brownian_force[i6+5] = 0;
+		}
+	}
 	
+	stokes_solver.setRHS(brownian_force);
 }
 
 void
@@ -887,13 +833,12 @@ System::setColloidalForceToParticle(){
 void
 System::buildContactTerms(bool set_or_add){
     // sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
-	if(set_or_add){
+	if(set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
 			stokes_solver.setRHSTorque(i, contact_torque[i]);
 		}
-	}
-	else{
+	} else {
 		for (int i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, contact_force[i]);
 			stokes_solver.addToRHSTorque(i, contact_torque[i]);
@@ -904,54 +849,47 @@ System::buildContactTerms(bool set_or_add){
 void
 System::buildColloidalForceTerms(bool set_or_add){
 	if (colloidalforce) {
-		if(set_or_add){
+		if (set_or_add) {
 			for (int i=0; i<np; i++) {
 				stokes_solver.addToRHSForce(i, colloidal_force[i]);
 			}
-		}
-		else{
+		} else {
 			for (int i=0; i<np; i++) {
 				stokes_solver.setRHSForce(i, colloidal_force[i]);
 			}
 		}
-	}
-	else{
-		if(set_or_add)
+	} else {
+		if(set_or_add) {
 			stokes_solver.resetRHS();
+		}
 	}
-
 }
-
 
 void
 System::computeVelocities(){
-
     stokes_solver.resetRHS();
-	buildHydroTerms(true, true); 	// build matrix and rhs force GE
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); 	// get V_H
+	buildHydroTerms(true, true); // build matrix and rhs force GE
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	
 	buildContactTerms(true); // set rhs = F_C
-	stokes_solver.solve(vel_contact, ang_vel_contact); 	// get V_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 
 	buildColloidalForceTerms(true); // set rhs = F_Coll
-	stokes_solver.solve(vel_colloidal, ang_vel_colloidal); 	// get V_Coll
+	stokes_solver.solve(vel_colloidal, ang_vel_colloidal); // get V_Coll
 
-	if(brownian){
-		if(in_predictor){
-			buildBrownianTerms();  // generate new F_B and set rhs = F_B
+	if (brownian) {
+		if (in_predictor) {
+			buildBrownianTerms(); // generate new F_B and set rhs = F_B
+		} else {
+			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		}
-		else{
-			stokes_solver.setRHS( brownian_force ); // set rhs = F_B
-		}
-		stokes_solver.solve( vel_brownian, ang_vel_brownian ); 	// get V_B
+		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 	}
 
 	stokes_solver.solvingIsDone();
-
-
 	for (int i=0; i<np; i++) {
-		na_velocity[i] = vel_hydro[i] + vel_contact[i] + vel_colloidal[i];
-		na_ang_velocity[i] = ang_vel_hydro[i] + ang_vel_contact[i] + ang_vel_colloidal[i];
+		na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_colloidal[i];
+		na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_colloidal[i];
 		if(brownian){
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
@@ -964,7 +902,6 @@ System::computeVelocities(){
 			velocity[i].x += position[i].z;
 			ang_velocity[i].y += 0.5;
 		}
-
 	}
 }
 
@@ -981,7 +918,6 @@ System::updateVelocityLubrication(){
 	stokes_solver.solvingIsDone();
 
 	for (int i=0; i<np; i++) {
-		//		int i6 = 6*i;
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
 		if (dimensionless_shear_rate != 0) {
@@ -1028,6 +964,7 @@ System::periodize(vec3d &pos){
 	} else {
 		z_shift = 0;
 	}
+
 	if (pos.x >= lx) {
 		pos.x -= lx;
 		if (pos.x >= lx){
@@ -1039,6 +976,7 @@ System::periodize(vec3d &pos){
 			pos.x += lx;
 		}
 	}
+	
 	if (pos.y >= ly) {
 		pos.y -= ly;
 	} else if (pos.y < 0) {
@@ -1054,31 +992,33 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
-	if (pos_diff.z > lz_periodic_threshold) {
+	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff.x -= shear_disp;
 		zshift = -1;
-	} else if (pos_diff.z > lz_periodic_threshold) {
+	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 		pos_diff.x += shear_disp;
 		zshift = 1;
 	} else {
 		zshift = 0;
 	}
-	if (pos_diff.x > lx_periodic_threshold) {
+
+	if (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-		if (pos_diff.x > lx_periodic_threshold) {
+		if (pos_diff.x > lx_half) {
 			pos_diff.x -= lx;
 		}
-	} else if (pos_diff.x < -lx_periodic_threshold) {
+	} else if (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
-		if (pos_diff.x < -lx_periodic_threshold) {
+		if (pos_diff.x < -lx_half) {
 			pos_diff.x += lx;
 		}
 	}
-	if (pos_diff.y > ly_periodic_threshold) {
+
+	if (pos_diff.y > ly_half) {
 		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_periodic_threshold) {
+	} else if (pos_diff.y < -ly_half) {
 		pos_diff.y += ly;
 	}
 }
@@ -1095,7 +1035,6 @@ System::evaluateMaxContactVelocity(){
 	int cnt_contact = 0;
 	int cnt_sliding = 0;
 	for (int k=0; k<nb_interaction; k++) {
-	
 		if (interaction[k].is_contact()) {
 			interaction[k].calcRelativeVelocities();
 			cnt_contact++;
@@ -1237,17 +1176,11 @@ System::analyzeState(){
 
 void
 System::setSystemVolume(double depth){
-	if (dimension == 2) {
+	if (twodimension) {
 		system_volume = lx*lz*depth;
 	} else {
 		system_volume = lx*ly*lz;
 	}
-}
-
-void
-System::openFileInteractionData(){
-	string int_data_filename = "irecord_" + simu_name + ".dat";
-	fout_int_data.open(int_data_filename.c_str());
 }
 
 double
@@ -1319,7 +1252,7 @@ System::adjustContactModelParameters(){
 	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
 	double kn_try = mean_max_fc_normal/overlap_target;
 	kn = kn_try;
-	lub_coeff_contact = 4*kn*contact_relaxzation_time;
+	lub_coeff_contact = 4*kn*contact_relaxation_time;
 	/* determination of kt
 	 */
 	double mean_max_fc_tan, stddev_max_fc_tan;
@@ -1373,16 +1306,6 @@ System::adjustContactModelParameters(){
 	}
 	
 	return 0;
-}
-
-void
-System::calcTotalPotentialEnergy(){
-	total_energy = 0;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()){
-			total_energy += interaction[k].getPotentialEnergy();
-		}
-	}
 }
 
 void

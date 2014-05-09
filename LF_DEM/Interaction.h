@@ -33,11 +33,13 @@ class Interaction{
 	System *sys;
 	double a0; // radii
 	double a1; // second raddi > a0
-	double ro, ro_12; // ro = a0+a1;
+	double ro; // ro = a0+a1;
+	double ro_12; // ro_12 = ro/2
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
-	unsigned int par_num[2]; // <<--- We may change this to p0 and p1 (?)
+	unsigned int p0;
+	unsigned int p1;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
@@ -58,16 +60,9 @@ class Interaction{
 	double interaction_range_scaled;  // max distance for lubrication
 	double colloidalforce_amplitude;
 	double colloidalforce_length;
-	//===== observables  ========================== //
-	double strain_lub_start; // the strain when lubrication object starts.
-	double duration; // entire lifetime
-	double max_stress; // Maximum value of stress in the all history of this object.
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
-
-	//=======   ===========//
-	void outputSummary();
 	//===== forces and stresses computations =====//
 	double f_colloidal_norm;
 	vec3d f_colloidal;
@@ -82,7 +77,6 @@ public:
 	Interaction(): contact(), lubrication(Lubrication(this)) {;}
 	Interaction(const Interaction& obj): contact(), lubrication(Lubrication(this)){
 		contact = obj.contact;
-		//active = obj.is_active();
 	}
 	void init(System *sys_);
 	//======= state updates  ====================//
@@ -98,26 +92,20 @@ public:
 	void updateStateRelax(bool &deactivated);
 	void activate(int i, int j);
 	void deactivate();
-	inline bool is_overlap(){return r<ro;}
+	inline bool is_overlap(){return r < ro;}
 	inline bool is_contact(){return contact.active;}
-	inline bool is_friccontact(){
-		if (contact.disp_tan.is_not_zero()){
-			return true;
-		} else {
-			return false;
-		}
-	}
+	inline bool is_friccontact(){return contact.disp_tan.is_not_zero();}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
 
 	//======= particles data  ====================//
 	inline int
 	partner(unsigned int i){
-		return (i == par_num[0] ? par_num[1] : par_num[0]);
+		return (i == p0 ? p1 : p0);
 	}
 	inline void
 	get_par_num(unsigned int &i, unsigned int &j){
-		i = par_num[0], j = par_num[1];
+		i = p0, j = p1;
 	}
 	
 	inline void set_label(unsigned int val){label = val;}
@@ -125,9 +113,9 @@ public:
 	inline double get_a0(){return a0;}
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
-		ro = val;
+		ro = val; // ro = a0 + a1
 		ro_12 = ro/2;
-	}; // ro = a0 + a1
+	};
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
@@ -140,19 +128,17 @@ public:
 	void calcRelativeVelocities();
 	void addUpColloidalForce();
 	double getNormalVelocity();
-	double getPotentialEnergy();
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	void addColloidalStress();
 	void calcTestStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	void integrateStress();
 	void info(){
-		cerr << "particles " << par_num[0] << " " << par_num[1] << endl;
+		cerr << "particles " << p0 << " " << p1 << endl;
 		cerr << "contact " << contact.active << endl;
 		cerr << "colloidal force amp " << colloidalforce_amplitude << endl;
 		cerr << "colloidal force length " << colloidalforce_length << endl;
 		contact.info();
 	}
-	//=========== observables ===============================//
 };
 #endif /* defined(__LF_DEM__Interaction__) */

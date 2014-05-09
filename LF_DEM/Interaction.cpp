@@ -27,7 +27,7 @@ Interaction::setResistanceCoeff(double normal_rc, double tangent_rc){
  */
 void
 Interaction::calcNormalVectorDistanceGap(){
-	rvec = sys->position[par_num[1]]-sys->position[par_num[0]];
+	rvec = sys->position[p1]-sys->position[p0];
 	sys->periodize_diff(rvec, zshift);
 	r = rvec.norm();
 	nvec = rvec/r;
@@ -57,11 +57,11 @@ void
 Interaction::activate(int i, int j){
 	active = true;
 	if (j > i) {
-		par_num[0] = i;
-		par_num[1] = j;
+		p0 = i;
+		p1 = j;
 	} else {
-		par_num[0] = j;
-		par_num[1] = i;
+		p0 = j;
+		p1 = i;
 	}
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
@@ -69,8 +69,8 @@ Interaction::activate(int i, int j){
 	// tell them their new partner
 	sys->interaction_partners[i].insert(j);
 	sys->interaction_partners[j].insert(i);
-	a0 = sys->radius[par_num[0]];
-	a1 = sys->radius[par_num[1]];
+	a0 = sys->radius[p0];
+	a1 = sys->radius[p1];
 	set_ro(a0+a1); // ro=a0+a1
 	interaction_range_scaled = ro_12*sys->get_lub_max();
 	/* NOTE:
@@ -78,7 +78,7 @@ Interaction::activate(int i, int j){
 	 * If the scaled kn is used there,
 	 * particle size dependence appears in the simulation.
 	 * I don't understand this point yet.
-	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxzation_time;
+	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxation_time;
 	 */
 	/*
 	 * The size dependence of colloidal force:
@@ -95,23 +95,19 @@ Interaction::activate(int i, int j){
 	} else {
 		contact.deactivate();
 	}
-	contact.resetObservables();
-	
 	lubrication.getInteractionData();
-	strain_lub_start = sys->get_shear_strain(); // for output
 	lubrication.calcLubConstants();
 }
 
 void
 Interaction::deactivate(){
 	// r > lub_max
-	outputSummary();
 	contact.deactivate();
 	active = false;
-	sys->interaction_list[par_num[0]].erase(this);
-	sys->interaction_list[par_num[1]].erase(this);
-	sys->interaction_partners[par_num[0]].erase(par_num[1]);
-	sys->interaction_partners[par_num[1]].erase(par_num[0]);
+	sys->interaction_list[p0].erase(this);
+	sys->interaction_list[p1].erase(this);
+	sys->interaction_partners[p0].erase(p1);
+	sys->interaction_partners[p1].erase(p0);
 }
 
 void
@@ -129,11 +125,6 @@ Interaction::updateState(bool &deactivated){
 	}
 	
 	calcNormalVectorDistanceGap();
-	
-	/* just for observation (not important) */
-	if (gap_nondim < sys->minvalue_gap_nondim) {
-		sys->minvalue_gap_nondim = gap_nondim;
-	}
 	
 	if (contact.active) {
 		if (gap_nondim > 0){
@@ -202,8 +193,8 @@ Interaction::updateStateRelax(bool &deactivated){
  */
 void
 Interaction::addUpColloidalForce(){
-	sys->colloidal_force[par_num[0]] += f_colloidal;
-	sys->colloidal_force[par_num[1]] -= f_colloidal;
+	sys->colloidal_force[p0] += f_colloidal;
+	sys->colloidal_force[p1] -= f_colloidal;
 }
 
 /* Relative velocity of particle 1 from particle 0.
@@ -224,25 +215,15 @@ Interaction::calcRelativeVelocities(){
 	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
 	 *
 	 ******************************************************/
-	relative_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]]; //true velocity, in predictor and in corrector
+	relative_velocity = sys->velocity[p1]-sys->velocity[p0]; //true velocity, in predictor and in corrector
 	relative_velocity.x += zshift*sys->vel_difference;
-	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[par_num[0]]+a1*sys->ang_velocity[par_num[1]], nvec);
+	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
 void
 Interaction::addColloidalStress(){
 	colloidal_stresslet_XF.set(rvec, f_colloidal);
-}
-
-/* observation */
-void
-Interaction::outputSummary(){
-	duration = sys->get_shear_strain()-strain_lub_start;
-	sys->fout_int_data << strain_lub_start << ' '; // 1
-	sys->fout_int_data << duration << ' '; // 2
-	sys->fout_int_data << contact.get_duration() << ' '; // 3
-	sys->fout_int_data << endl;
 }
 
 /* observation */
@@ -257,22 +238,9 @@ Interaction::getContactVelocity(){
 /* observation */
 double
 Interaction::getNormalVelocity(){
-	vec3d d_velocity = sys->velocity[par_num[1]]-sys->velocity[par_num[0]];
+	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0];
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;
 	}
 	return dot(d_velocity, nvec);
-}
-
-/* observation */
-double
-Interaction::getPotentialEnergy(){
-	double energy;
-	if (gap_nondim < 0) {
-		energy = 0.5*sys->get_kn()*gap_nondim*gap_nondim;
-		energy += -colloidalforce_amplitude*gap_nondim;
-	} else {
-		energy = colloidalforce_length*colloidalforce_amplitude*(exp(-(r-ro)/colloidalforce_length)-1);
-	}
-	return energy;
 }

@@ -33,7 +33,6 @@ class BoxSet;
 class System{
 private:
 	int np;
-	int np3;
 	int maxnb_interactionpair;
 	int nb_of_active_interactions;
 	BoxSet boxset;
@@ -50,9 +49,6 @@ private:
 	/* l_periodic_threshold = lz - a1*lub_max (a1 is larger particle)
 	 * threshold distance which can intaract each other as periodic image.
 	 */
-	double lx_periodic_threshold;
-	double ly_periodic_threshold;
-	double lz_periodic_threshold;
 	double system_volume;
 	double sq_lub_max;
 	double shear_strain;
@@ -73,8 +69,6 @@ private:
 	double colloidalforce_amplitude; // colloidal force dimensionless
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
-	bool twodimension;
-
 	/* data */
 	int intr_max_fc_normal;
 	int intr_max_fc_tan;
@@ -92,7 +86,6 @@ private:
 	void timeEvolutionEulersMethod(bool calc_stress=false);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress=false);
 	void timeStepMove();
-	void timeStepMoveRelax();
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
 	void timeStepBoxing();
@@ -124,7 +117,7 @@ public:
 	void backupState();
 	bool brownian;	
 	bool in_predictor;
-	int dimension;
+	bool twodimension;
 	double critical_normal_force; 
 	vec3d *position;
 	Interaction *interaction;
@@ -177,7 +170,7 @@ public:
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
-	 * 2 log(1/xi) lubrication (only squeeze mode)
+	 * 2 log(1/xi) lubrication
 	 * 3 1/xi lubrication for h>0 and tangential dashpot.
 	 */
 	int lubrication_model;
@@ -193,8 +186,8 @@ public:
 	 * when gap_nondim > 0.
 	 */
 	double lub_reduce_parameter;
-	double contact_relaxzation_time;
-	double contact_relaxzation_time_tan;
+	double contact_relaxation_time;
+	double contact_relaxation_time_tan;
 	//	BrownianForce *fb;
 	double shear_disp;
 	/* For non-Brownian suspension:
@@ -228,15 +221,11 @@ public:
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
-	ofstream fout_int_data;
+	//ofstream fout_int_data;
 	int cnt_static_to_dynamic;
 	int rate_static_to_dynamic;
-	double total_energy; // for initial-config generation
 	bool kn_kt_adjustment;
-	
-	//
-	double minvalue_gap_nondim;
-	
+
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
@@ -246,7 +235,6 @@ public:
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(double strain_interval);
-	void timeEvolutionRelax(int time_step);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();
@@ -268,10 +256,8 @@ public:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	void openFileInteractionData();
 	int adjustContactModelParameters();
-		void calcTotalPotentialEnergy();
-		void setupShearFlow(bool activate){
+	void setupShearFlow(bool activate){
 		if (activate) {
 			vel_difference = lz;
 		} else {
@@ -305,7 +291,7 @@ public:
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}
 	inline double Lz_half(){return lz_half;}
-	inline void set_np(int val){np = val, np3 = 3*val;}
+	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
 	inline void set_kn(double val){kn = val;}

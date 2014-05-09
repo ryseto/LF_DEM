@@ -20,7 +20,6 @@
 class System{
 private:
 	double volume_fraction;
-	int np3;
 	double lx;
 	double ly;
 	double lz;

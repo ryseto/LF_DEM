@@ -567,7 +567,6 @@ StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
 #endif
 }
 
-
 void
 StokesSolver::addToRHS(double *rhs){
 	if (direct()) {
@@ -647,8 +646,8 @@ StokesSolver::getRHS(double* rhs){
 void
 StokesSolver::solve_CholTrans(double* velocity){
 	if (direct()) {
-		chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
-		chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
+		chol_PTsolution = cholmod_solve(CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
+		chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
 		}

@@ -21,7 +21,6 @@ using namespace std;
 class GenerateInitConfig{
 private:
 	System sys;
-	int dimension;
 	char disperse_type;
 	double volume_fraction;
 	double volume_fraction1;

@@ -27,17 +27,13 @@ private:
 	System *sys;
 	Interaction *interaction;
 	void (Contact::*frictionlaw)();
-
-	unsigned int i,j;
+	unsigned int i; // <-- p0?
+	unsigned int j; // <-- p1?
 
 	//===== forces and stresses ==================== //
 	double kn_scaled;
 	double kt_scaled;
 	double mu;
-	//===== observables  ========================== //
-	double strain_contact_start; // the strain at h=0.
-	double duration_contact; // entire duration for h < 0
-	int cnt_sliding;  // to count the number of slips.
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -70,7 +66,6 @@ public:
 	bool active;
 	bool staticfriction;
 	void updateContactModel();
-	void resetObservables();
 	void frictionlaw_criticalload();
 	void frictionlaw_criticalload_mu_inf();
 	void frictionlaw_coulomb();
@@ -98,9 +93,6 @@ public:
 	}
 	void info(){
 		cerr << "kn " << kn_scaled << endl;
-	}
-	inline double get_duration(){
-		return duration_contact;
 	}
 	vec3d get_disp_tan(){return disp_tan;}
 

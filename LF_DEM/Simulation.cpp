@@ -108,43 +108,6 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	}
 }
 
-void
-Simulation::relaxationZeroShear(vector<vec3d> &position_,
-								vector<double> &radius_,
-								double lx_, double ly_, double lz_){
-	sys.setConfiguration(position_, radius_, lx_, ly_, lz_);
-	setDefaultParameters();
-	sys.set_integration_method(0);
-	sys.set_dt(1e-4);
-	sys.set_kn(2000);
-	sys.set_kb_T(0);
-	sys.set_mu_static(0);
-	sys.dimensionless_shear_rate = 1;
-	sys.set_colloidalforce_length(0); // dimensionless
-	sys.setupSystem();
-	sys.set_colloidalforce_amplitude(0);
-	sys.setupShearFlow(false);
-	double energy_previous = 0;
-	while (true) {
-		int i_time_interval = 1000;
-		sys.timeEvolutionRelax(i_time_interval);
-		evaluateData();
-		//sys.analyzeState();
-		sys.calcTotalPotentialEnergy();
-		cout << sys.min_gap_nondim << ' ' << sys.total_energy << endl;
-		cerr << energy_previous-sys.total_energy << endl;
-		if (sys.min_gap_nondim > 0 &&
-			energy_previous-sys.total_energy < 0.01) {
-			cerr << "finish" << endl;
-			break;
-		}
-		energy_previous = sys.total_energy;
-	}
-	for (int i=0; i<sys.get_np(); i++) {
-		position_[i] = sys.position[i];
-	}
-}
-
 bool
 str2bool(string value){
 	if (value == "true") {
@@ -189,10 +152,10 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.set_colloidalforce_length(atof(value.c_str()));
 	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
-	} else if (keyword == "contact_relaxzation_time") {
-		sys.contact_relaxzation_time = atof(value.c_str());
-	} else if (keyword == "contact_relaxzation_time_tan"){
-		sys.contact_relaxzation_time_tan =  atof(value.c_str());
+	} else if (keyword == "contact_relaxation_time") {
+		sys.contact_relaxation_time = atof(value.c_str());
+	} else if (keyword == "contact_relaxation_time_tan"){
+		sys.contact_relaxation_time_tan =  atof(value.c_str());
 	} else if (keyword == "kb_T") {
 		sys.set_kb_T(atof(value.c_str()));
 	} else if (keyword == "dt_max") {
@@ -291,7 +254,6 @@ Simulation::openOutputFiles(){
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
-	sys.openFileInteractionData();
 }
 
 void
@@ -319,8 +281,8 @@ Simulation::setDefaultParameters(){
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
-	 * 2 log(1/xi) lubrication (only squeeze mode)
-	 *
+	 * 2 log(1/xi) lubrication
+	 * 3 ???
 	 */
 	int _lubrication_model = 2;
 	/*
@@ -351,14 +313,14 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.lub_reduce_parameter = 1e-3;
 	/*
-	 * contact_relaxzation_factor:
+	 * contact_relaxation_factor:
 	 *
 	 * This gives the coeffient of the resistance term for h < 0.
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	sys.contact_relaxzation_time = 1e-2;
-	sys.contact_relaxzation_time_tan = 0;
+	sys.contact_relaxation_time = 1e-2;
+	sys.contact_relaxation_time_tan = 0;
 	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
@@ -680,8 +642,6 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
 	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
-	fout_rheo << sys.minvalue_gap_nondim << ' ';
-	sys.minvalue_gap_nondim  = 0;
 	fout_rheo << endl;
 }
 
@@ -768,7 +728,7 @@ Simulation::outputConfigurationData(){
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.dimension == 2) {
+			if (sys.twodimension) {
 				fout_particle << ' ' << sys.angle[i]; // 15
 			}
 			fout_particle << endl;

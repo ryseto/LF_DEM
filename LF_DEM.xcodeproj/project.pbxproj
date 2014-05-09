@@ -187,12 +187,8 @@
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
 		D9CE560517555DE500719775 /* extract_normalvecdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extract_normalvecdata.pl; sourceTree = "<group>"; };
 		D9D805951889BAC700D139F5 /* generateSimpleData.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = generateSimpleData.pl; sourceTree = "<group>"; };
-		D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.aux; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
-		D9DA50D81678F61E00E864E4 /* note_LF_DEM.blg */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.blg; sourceTree = "<group>"; };
-		D9DA50D91678F61E00E864E4 /* note_LF_DEM.log */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.log; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
-		D9DA50DB1678F61E00E864E4 /* note_LF_DEM.synctex.gz */ = {isa = PBXFileReference; lastKnownFileType = archive.gzip; path = note_LF_DEM.synctex.gz; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = calc_contact_fraction.pl; sourceTree = "<group>"; };
 		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StressTensor.h; sourceTree = "<group>"; };
@@ -438,12 +434,8 @@
 		D9DA50D51678F61E00E864E4 /* note_LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
-				D9DA50D61678F61E00E864E4 /* note_LF_DEM.aux */,
 				D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */,
-				D9DA50D81678F61E00E864E4 /* note_LF_DEM.blg */,
-				D9DA50D91678F61E00E864E4 /* note_LF_DEM.log */,
 				D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */,
-				D9DA50DB1678F61E00E864E4 /* note_LF_DEM.synctex.gz */,
 				D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */,
 			);
 			path = note_LF_DEM;
