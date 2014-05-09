@@ -222,7 +222,7 @@ public:
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
-	ofstream fout_int_data;
+	//ofstream fout_int_data;
 	int cnt_static_to_dynamic;
 	int rate_static_to_dynamic;
 	double total_energy; // for initial-config generation
@@ -262,7 +262,6 @@ public:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	void openFileInteractionData();
 	int adjustContactModelParameters();
 		void calcTotalPotentialEnergy();
 		void setupShearFlow(bool activate){

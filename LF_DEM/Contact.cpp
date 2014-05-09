@@ -25,7 +25,7 @@ Contact::init(System *sys_, Interaction *interaction_){
 void
 Contact::getInteractionData(){
 	interaction->get_par_num(i, j);
-	double ro_12 = interaction->ro_12;
+	double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
 	mu = sys->get_mu_static();
@@ -37,23 +37,14 @@ Contact::getInteractionData(){
 void
 Contact::updateContactModel(){
 	if (interaction->active) {
-		double ro_12 = interaction->ro_12;
+		double &ro_12 = interaction->ro_12;
 		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
 		if (active) {
-			double lub_coeff = sys->get_lub_coeff_contact();
-			double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
-			interaction->lubrication.setResistanceCoeff(lub_coeff, log_lub_coeff);
+			interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
+														sys->get_log_lub_coeff_dynamicfriction());
 		}
 	}
-}
-
-void
-Contact::resetObservables(){
-	// observables
-	strain_contact_start = sys->get_shear_strain();
-	duration_contact = 0; // for output
-	cnt_sliding = 0;
 }
 
 void
@@ -62,10 +53,8 @@ Contact::activate(){
 	active = true;
 	staticfriction = true;
 	disp_tan.reset();
-	double lub_coeff = sys->get_lub_coeff_contact();
-	double log_lub_coeff = sys->get_log_lub_coeff_dynamicfriction();
-	interaction->lubrication.setResistanceCoeff(lub_coeff, log_lub_coeff);
-	strain_contact_start = sys->get_shear_strain();
+	interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
+												sys->get_log_lub_coeff_dynamicfriction());
 }
 
 void
@@ -76,7 +65,6 @@ Contact::deactivate(){
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
 	f_contact_tan.reset();
-	duration_contact += sys->get_shear_strain()-strain_contact_start; // for output
 }
 
 /*********************************
@@ -84,7 +72,6 @@ Contact::deactivate(){
  *	   Contact Forces Methods    *
  *                                *
  *********************************/
-
 void
 Contact::incrementTangentialDisplacement(){
 	if(sys->in_predictor){

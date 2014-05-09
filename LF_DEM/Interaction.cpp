@@ -95,17 +95,13 @@ Interaction::activate(int i, int j){
 	} else {
 		contact.deactivate();
 	}
-	contact.resetObservables();
-	
 	lubrication.getInteractionData();
-	strain_lub_start = sys->get_shear_strain(); // for output
 	lubrication.calcLubConstants();
 }
 
 void
 Interaction::deactivate(){
 	// r > lub_max
-	outputSummary();
 	contact.deactivate();
 	active = false;
 	sys->interaction_list[p0].erase(this);
@@ -233,16 +229,6 @@ Interaction::calcRelativeVelocities(){
 void
 Interaction::addColloidalStress(){
 	colloidal_stresslet_XF.set(rvec, f_colloidal);
-}
-
-/* observation */
-void
-Interaction::outputSummary(){
-	duration = sys->get_shear_strain()-strain_lub_start;
-	sys->fout_int_data << strain_lub_start << ' '; // 1
-	sys->fout_int_data << duration << ' '; // 2
-	sys->fout_int_data << contact.get_duration() << ' '; // 3
-	sys->fout_int_data << endl;
 }
 
 /* observation */

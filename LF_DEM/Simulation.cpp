@@ -291,7 +291,6 @@ Simulation::openOutputFiles(){
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
-	sys.openFileInteractionData();
 }
 
 void

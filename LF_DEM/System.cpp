@@ -1231,12 +1231,6 @@ System::setSystemVolume(double depth){
 	}
 }
 
-void
-System::openFileInteractionData(){
-	string int_data_filename = "irecord_" + simu_name + ".dat";
-	fout_int_data.open(int_data_filename.c_str());
-}
-
 double
 System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;

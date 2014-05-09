@@ -33,7 +33,8 @@ class Interaction{
 	System *sys;
 	double a0; // radii
 	double a1; // second raddi > a0
-	double ro, ro_12; // ro = a0+a1;
+	double ro; // ro = a0+a1;
+	double ro_12; // ro_12 = ro/2
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
@@ -60,15 +61,10 @@ class Interaction{
 	double colloidalforce_amplitude;
 	double colloidalforce_length;
 	//===== observables  ========================== //
-	double strain_lub_start; // the strain when lubrication object starts.
-	double duration; // entire lifetime
-	double max_stress; // Maximum value of stress in the all history of this object.
+
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
-
-	//=======   ===========//
-	void outputSummary();
 	//===== forces and stresses computations =====//
 	double f_colloidal_norm;
 	vec3d f_colloidal;
@@ -83,7 +79,6 @@ public:
 	Interaction(): contact(), lubrication(Lubrication(this)) {;}
 	Interaction(const Interaction& obj): contact(), lubrication(Lubrication(this)){
 		contact = obj.contact;
-		//active = obj.is_active();
 	}
 	void init(System *sys_);
 	//======= state updates  ====================//
@@ -99,15 +94,9 @@ public:
 	void updateStateRelax(bool &deactivated);
 	void activate(int i, int j);
 	void deactivate();
-	inline bool is_overlap(){return r<ro;}
+	inline bool is_overlap(){return r < ro;}
 	inline bool is_contact(){return contact.active;}
-	inline bool is_friccontact(){
-		if (contact.disp_tan.is_not_zero()){
-			return true;
-		} else {
-			return false;
-		}
-	}
+	inline bool is_friccontact(){return contact.disp_tan.is_not_zero();}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
 
@@ -126,9 +115,9 @@ public:
 	inline double get_a0(){return a0;}
 	inline double get_a1(){return a1;}
 	inline void set_ro(double val){
-		ro = val;
+		ro = val; // ro = a0 + a1
 		ro_12 = ro/2;
-	}; // ro = a0 + a1
+	};
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
@@ -154,6 +143,5 @@ public:
 		cerr << "colloidal force length " << colloidalforce_length << endl;
 		contact.info();
 	}
-	//=========== observables ===============================//
 };
 #endif /* defined(__LF_DEM__Interaction__) */
