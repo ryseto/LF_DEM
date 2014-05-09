@@ -69,8 +69,6 @@ private:
 	double colloidalforce_amplitude; // colloidal force dimensionless
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
-
-
 	/* data */
 	int intr_max_fc_normal;
 	int intr_max_fc_tan;
@@ -173,7 +171,7 @@ public:
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
-	 * 2 log(1/xi) lubrication (only squeeze mode)
+	 * 2 log(1/xi) lubrication
 	 * 3 1/xi lubrication for h>0 and tangential dashpot.
 	 */
 	int lubrication_model;

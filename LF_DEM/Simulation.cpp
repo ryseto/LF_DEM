@@ -319,8 +319,8 @@ Simulation::setDefaultParameters(){
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
-	 * 2 log(1/xi) lubrication (only squeeze mode)
-	 *
+	 * 2 log(1/xi) lubrication
+	 * 3 ???
 	 */
 	int _lubrication_model = 2;
 	/*
