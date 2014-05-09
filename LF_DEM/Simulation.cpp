@@ -152,10 +152,10 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.set_colloidalforce_length(atof(value.c_str()));
 	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
-	} else if (keyword == "contact_relaxzation_time") {
-		sys.contact_relaxzation_time = atof(value.c_str());
-	} else if (keyword == "contact_relaxzation_time_tan"){
-		sys.contact_relaxzation_time_tan =  atof(value.c_str());
+	} else if (keyword == "contact_relaxation_time") {
+		sys.contact_relaxation_time = atof(value.c_str());
+	} else if (keyword == "contact_relaxation_time_tan"){
+		sys.contact_relaxation_time_tan =  atof(value.c_str());
 	} else if (keyword == "kb_T") {
 		sys.set_kb_T(atof(value.c_str()));
 	} else if (keyword == "dt_max") {
@@ -313,14 +313,14 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.lub_reduce_parameter = 1e-3;
 	/*
-	 * contact_relaxzation_factor:
+	 * contact_relaxation_factor:
 	 *
 	 * This gives the coeffient of the resistance term for h < 0.
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	sys.contact_relaxzation_time = 1e-2;
-	sys.contact_relaxzation_time_tan = 0;
+	sys.contact_relaxation_time = 1e-2;
+	sys.contact_relaxation_time_tan = 0;
 	/*
 	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.

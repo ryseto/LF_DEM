@@ -500,13 +500,13 @@ GenerateInitConfig::setParameters(){
 //	 */
 //	sys.lub_reduce_parameter = 1e-3;
 //	/*
-//	 * contact_relaxzation_factor:
+//	 * contact_relaxation_factor:
 //	 *
 //	 * This gives the coeffient of the resistance term for h < 0.
 //	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 //	 *
 //	 */
-//	sys.contact_relaxzation_time = 0.001;
+//	sys.contact_relaxation_time = 0.001;
 //	/*
 //	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
 //	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.

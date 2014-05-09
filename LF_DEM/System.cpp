@@ -131,21 +131,21 @@ System::setupSystemForGenerateInit(){
 	shear_disp = 0;
 	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	contact_relaxzation_time = 1e-3;
+	contact_relaxation_time = 1e-3;
 	kn = 2000;
 	kt = 0;
 	friction = false;
 	dimensionless_shear_rate = 1;
 	colloidalforce = false;
-	if (contact_relaxzation_time < 0) {
+	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
 		 */
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+		lub_coeff_contact = 4*kn*contact_relaxation_time;
 	}
 	ts = 0;
 	stokes_solver.initialize();
@@ -245,22 +245,22 @@ System::setupSystem(){
 	cnt_static_to_dynamic = 0;
 
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	if (contact_relaxzation_time < 0) {
+	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
 		 */
-		lub_coeff_contact = 4*kn*contact_relaxzation_time;
+		lub_coeff_contact = 4*kn*contact_relaxation_time;
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
 
 	/* t = beta/kn
 	 *  beta = t*kn
-	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxzation_time
+	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
 	 */
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
@@ -274,10 +274,10 @@ System::setupSystem(){
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. contact_relaxzation_time_tan = 0
+		 * This is set in the parameter file, i.e. contact_relaxation_time_tan = 0
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxzation_time_tan;
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
@@ -1252,7 +1252,7 @@ System::adjustContactModelParameters(){
 	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
 	double kn_try = mean_max_fc_normal/overlap_target;
 	kn = kn_try;
-	lub_coeff_contact = 4*kn*contact_relaxzation_time;
+	lub_coeff_contact = 4*kn*contact_relaxation_time;
 	/* determination of kt
 	 */
 	double mean_max_fc_tan, stddev_max_fc_tan;

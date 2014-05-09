@@ -186,8 +186,8 @@ public:
 	 * when gap_nondim > 0.
 	 */
 	double lub_reduce_parameter;
-	double contact_relaxzation_time;
-	double contact_relaxzation_time_tan;
+	double contact_relaxation_time;
+	double contact_relaxation_time_tan;
 	//	BrownianForce *fb;
 	double shear_disp;
 	/* For non-Brownian suspension:

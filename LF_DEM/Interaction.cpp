@@ -78,7 +78,7 @@ Interaction::activate(int i, int j){
 	 * If the scaled kn is used there,
 	 * particle size dependence appears in the simulation.
 	 * I don't understand this point yet.
-	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxzation_time;
+	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxation_time;
 	 */
 	/*
 	 * The size dependence of colloidal force:
