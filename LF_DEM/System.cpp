@@ -154,7 +154,16 @@ System::setupSystem(){
 		cerr << "The integration method is not impremented yet." << endl;
 		exit(1);
 	}
-	
+	if (lubrication_model == 1) {
+		buildLubricationTerms = &System::buildLubricationTerms_model1;
+	} else if (lubrication_model == 2) {
+		buildLubricationTerms = &System::buildLubricationTerms_model2;
+	} else if (lubrication_model == 3) {
+		buildLubricationTerms = &System::buildLubricationTerms_model1;
+	} else {
+		cerr << "lubrication_model = 0 is not implemented yet.\n";
+		exit(1);
+	}
 	if (friction_model == 0 ){
 		cerr << "friction_model = 0" << endl;
 		friction = false;
@@ -591,11 +600,11 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 		// add Stokes drag in the matrix
 		addStokesDrag();
 		// add GE in the rhs and lubrication terms in the resistance matrix
-		buildLubricationTerms(true, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
+		(this->*buildLubricationTerms)(true, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
 		stokes_solver.completeResistanceMatrix();
 	} else {
 		// add GE in the rhs
-		buildLubricationTerms(false, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
+		(this->*buildLubricationTerms)(false, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
 	}
 }
 
@@ -614,126 +623,143 @@ System::addStokesDrag(){
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
 void
-System::buildLubricationTerms(bool mat, bool rhs){ // default for mat and rhs is true
-	switch (lubrication_model) {
-		case 1:
-			for (int i=0; i<np-1; i ++) {
-				for (set<Interaction*>::iterator it = interaction_list[i].begin();
-					 it != interaction_list[i].end(); it ++) {
-					int j = (*it)->partner(i);
-					if (j > i) {
-						if (mat) {
-							vec3d nr_vec = (*it)->get_nvec();
-							(*it)->lubrication.calcXFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
-							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
-							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
-						}
-						if (rhs) {
-							double GEi[3];
-							double GEj[3];
-							(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
-							stokes_solver.addToRHSForce(i, GEi);
-							stokes_solver.addToRHSForce(j, GEj);
-						}
-					}
+System::buildLubricationTerms_model1(bool mat, bool rhs){
+	for (int i=0; i<np-1; i ++) {
+		for (set<Interaction*>::iterator it = interaction_list[i].begin();
+			 it != interaction_list[i].end(); it ++) {
+			int j = (*it)->partner(i);
+			if (j > i) {
+				if (mat) {
+					vec3d nr_vec = (*it)->get_nvec();
+					(*it)->lubrication.calcXFunctions();
+					stokes_solver.addToDiagBlock(nr_vec, i,
+												 (*it)->lubrication.scaledXA0(), 0, 0, 0);
+					stokes_solver.addToDiagBlock(nr_vec, j,
+												 (*it)->lubrication.scaledXA3(), 0, 0, 0);
+					stokes_solver.setOffDiagBlock(nr_vec, i, j,
+												  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
 				}
-				stokes_solver.doneBlocks(i);
-			}
-			break;
-		case 2:
-			for (int i=0; i<np-1; i ++) {
-				for (set<Interaction*>::iterator it = interaction_list[i].begin();
-					 it != interaction_list[i].end(); it ++) {
-					int j = (*it)->partner(i);
-					if (j > i) {
-						if (mat) {
-							vec3d nr_vec = (*it)->get_nvec();
-							(*it)->lubrication.calcXYFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i,
-														 (*it)->lubrication.scaledXA0(),
-														 (*it)->lubrication.scaledYA0(),
-														 (*it)->lubrication.scaledYB0(),
-														 (*it)->lubrication.scaledYC0());
-							stokes_solver.addToDiagBlock(nr_vec, j,
-														 (*it)->lubrication.scaledXA3(),
-														 (*it)->lubrication.scaledYA3(),
-														 (*it)->lubrication.scaledYB3(),
-														 (*it)->lubrication.scaledYC3());
-							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
-														  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
-						}
-						if (rhs) {
-							double GEi[3];
-							double GEj[3];
-							double HEi[3];
-							double HEj[3];
-							(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
-							stokes_solver.addToRHSForce(i, GEi);
-							stokes_solver.addToRHSForce(j, GEj);
-							stokes_solver.addToRHSTorque(i, HEi);
-							stokes_solver.addToRHSTorque(j, HEj);
-						}
-					}
+				if (rhs) {
+					double GEi[3];
+					double GEj[3];
+					(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+					stokes_solver.addToRHSForce(i, GEi);
+					stokes_solver.addToRHSForce(j, GEj);
 				}
-				stokes_solver.doneBlocks(i);
 			}
-			break;
-		case 3:
-			for (int i=0; i<np-1; i ++) {
-				for (set<Interaction*>::iterator it = interaction_list[i].begin();
-					 it != interaction_list[i].end(); it ++) {
-					int j = (*it)->partner(i);
-					if (j > i) {
-						if ((*it)->is_contact()){
-							if (mat) {
-								vec3d nr_vec = (*it)->get_nvec();
-								(*it)->lubrication.calcXYFunctions();
-								stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
-															 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
-								stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
-															 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
-								stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
-															  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
-							}
-							if (rhs) {
-								double GEi[3];
-								double GEj[3];
-								double HEi[3];
-								double HEj[3];
-								(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
-								stokes_solver.addToRHSForce(i, GEi);
-								stokes_solver.addToRHSForce(j, GEj);
-								stokes_solver.addToRHSTorque(i, HEi);
-								stokes_solver.addToRHSTorque(j, HEj);
-							}
-						} else {
-							if (mat) {
-								vec3d nr_vec = (*it)->get_nvec();
-								(*it)->lubrication.calcXFunctions();
-								stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), 0, 0, 0);
-								stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), 0, 0, 0);
-								stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
-							}
-							if (rhs) {
-								double GEi[3];
-								double GEj[3];
-								(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
-								stokes_solver.addToRHSForce(i, GEi);
-								stokes_solver.addToRHSForce(j, GEj);
-							}
-						}
-					}
-				}
-				stokes_solver.doneBlocks(i);
-			}
-			break;
-		default:
-			cerr << "lubrication_model = 0 is not implemented yet.\n";
-			exit(1);
-			break;
+		}
+		stokes_solver.doneBlocks(i);
 	}
 }
+
+void
+System::buildLubricationTerms_model2(bool mat, bool rhs){
+	for (int i=0; i<np-1; i ++) {
+		for (set<Interaction*>::iterator it = interaction_list[i].begin();
+			 it != interaction_list[i].end(); it ++) {
+			int j = (*it)->partner(i);
+			if (j > i) {
+				if (mat) {
+					vec3d nr_vec = (*it)->get_nvec();
+					(*it)->lubrication.calcXYFunctions();
+					stokes_solver.addToDiagBlock(nr_vec, i,
+												 (*it)->lubrication.scaledXA0(),
+												 (*it)->lubrication.scaledYA0(),
+												 (*it)->lubrication.scaledYB0(),
+												 (*it)->lubrication.scaledYC0());
+					stokes_solver.addToDiagBlock(nr_vec, j,
+												 (*it)->lubrication.scaledXA3(),
+												 (*it)->lubrication.scaledYA3(),
+												 (*it)->lubrication.scaledYB3(),
+												 (*it)->lubrication.scaledYC3());
+					stokes_solver.setOffDiagBlock(nr_vec, i, j,
+												  (*it)->lubrication.scaledXA1(),
+												  (*it)->lubrication.scaledYA1(),
+												  (*it)->lubrication.scaledYB2(),
+												  (*it)->lubrication.scaledYB1(),
+												  (*it)->lubrication.scaledYC1());
+				}
+				if (rhs) {
+					double GEi[3];
+					double GEj[3];
+					double HEi[3];
+					double HEj[3];
+					(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+					stokes_solver.addToRHSForce(i, GEi);
+					stokes_solver.addToRHSForce(j, GEj);
+					stokes_solver.addToRHSTorque(i, HEi);
+					stokes_solver.addToRHSTorque(j, HEj);
+				}
+			}
+		}
+		stokes_solver.doneBlocks(i);
+	}
+}
+
+void
+System::buildLubricationTerms_model3(bool mat, bool rhs){
+	for (int i=0; i<np-1; i ++) {
+		for (set<Interaction*>::iterator it = interaction_list[i].begin();
+			 it != interaction_list[i].end(); it ++) {
+			int j = (*it)->partner(i);
+			if (j > i) {
+				if ((*it)->is_contact()){
+					if (mat) {
+						vec3d nr_vec = (*it)->get_nvec();
+						(*it)->lubrication.calcXYFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 (*it)->lubrication.scaledXA0(),
+													 (*it)->lubrication.scaledYA0(),
+													 (*it)->lubrication.scaledYB0(),
+													 (*it)->lubrication.scaledYC0());
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 (*it)->lubrication.scaledXA3(),
+													 (*it)->lubrication.scaledYA3(),
+													 (*it)->lubrication.scaledYB3(),
+													 (*it)->lubrication.scaledYC3());
+						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+													  (*it)->lubrication.scaledXA1(),
+													  (*it)->lubrication.scaledYA1(),
+													  (*it)->lubrication.scaledYB2(),
+													  (*it)->lubrication.scaledYB1(),
+													  (*it)->lubrication.scaledYC1());
+					}
+					if (rhs) {
+						double GEi[3];
+						double GEj[3];
+						double HEi[3];
+						double HEj[3];
+						(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+						stokes_solver.addToRHSTorque(i, HEi);
+						stokes_solver.addToRHSTorque(j, HEj);
+					}
+				} else {
+					if (mat) {
+						vec3d nr_vec = (*it)->get_nvec();
+						(*it)->lubrication.calcXFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 (*it)->lubrication.scaledXA0(), 0, 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 (*it)->lubrication.scaledXA3(), 0, 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+													  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
+					}
+					if (rhs) {
+						double GEi[3];
+						double GEj[3];
+						(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+					}
+				}
+			}
+		}
+		stokes_solver.doneBlocks(i);
+	}
+}
+
 
 void
 System::buildBrownianTerms(){

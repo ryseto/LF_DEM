@@ -81,7 +81,6 @@ private:
 	 *
 	 */
 	void (System::*timeEvolutionDt)(bool);
-
 	void timeEvolutionEulersMethod(bool calc_stress);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
 	void timeStepMove();
@@ -91,7 +90,12 @@ private:
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildHydroTerms(bool, bool);
-	void buildLubricationTerms(bool mat=true, bool rhs=true);
+	//	void buildLubricationTerms(bool mat=true, bool rhs=true);
+	void (System::*buildLubricationTerms)(bool, bool);
+	void buildLubricationTerms_model1(bool mat, bool rhs);
+	void buildLubricationTerms_model2(bool mat, bool rhs);
+	void buildLubricationTerms_model3(bool mat, bool rhs);
+	
 	void buildBrownianTerms();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
