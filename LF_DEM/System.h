@@ -76,15 +76,14 @@ private:
 	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
 	vector<double> sliding_velocity_history;
 	vector<double> relative_velocity_history;
-	/* cnt_parameter_changed is used for kn-kt ajusting algorithm.
-	 * Spring constants are changed in the simulation.
-	 * This may cause large contact forces.
-	 * These values are not considered for the next deteremination.
-	 */
 	bool after_parameter_changed;
-	//int cnt_prameter_convergence;
-	void timeEvolutionEulersMethod(bool calc_stress=false);
-	void timeEvolutionPredictorCorrectorMethod(bool calc_stress=false);
+	/*
+	 *
+	 */
+	void (System::*timeEvolutionDt)(bool);
+
+	void timeEvolutionEulersMethod(bool calc_stress);
+	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
 	void timeStepMove();
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
@@ -325,12 +324,6 @@ public:
 		 */
 		return log_lub_coeff_contact_tan_total;
 	}
-	inline double get_ratio_dashpot_total(){return ratio_dashpot_total;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-	double get_rate_static_to_dynamic(){return rate_static_to_dynamic;}
-	double get_ratio_dynamic_friction(){return ratio_dynamic_friction;}
-	void incrementCounter_static_to_dynamic(){
-		cnt_static_to_dynamic++;
-	}
 };
 #endif /* defined(__LF_DEM__System__) */

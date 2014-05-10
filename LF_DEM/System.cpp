@@ -146,6 +146,16 @@ System::setupSystem(){
 	 */
 	r_gen = new MTRand;
 	
+	if (integration_method == 1) {
+		timeEvolutionDt = &System::timeEvolutionEulersMethod;
+	} else if (integration_method == 2) {
+		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
+	} else {
+		cerr << "integration_method = " << integration_method << endl;
+		cerr << "The integration method is not impremented yet." << endl;
+		exit(1);
+	}
+	
 	if (friction_model == 0 ){
 		cerr << "friction_model = 0" << endl;
 		friction = false;
@@ -295,7 +305,7 @@ void
 System::timeStepBoxing(){
 	// evolve PBC
 	shear_disp += vel_difference*dt;
-	if (shear_disp > lx){
+	if (shear_disp > lx) {
 		shear_disp -= lx;
 	}
 	boxset.update();
@@ -308,12 +318,11 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setColloidalForceToParticle();
 	updateVelocityLubrication();
 	timeStepMove();
-	if(calc_stress){
+	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
 	}
 }
-
 
 
 /****************************************************************************************************
@@ -382,33 +391,34 @@ void
 System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* predictor */
 	in_predictor = true;
-
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	computeVelocities();
 	timeStepMovePredictor();
-	if(calc_stress){
+	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
-		if(brownian){
-			for(int i=0;i<np;i++){
+		if (brownian) {
+			for (int i=0; i<np; i++) {
 				brownianstressGU_predictor[i] = brownianstressGU[i];
 			}
 		}
 	}
-
 	/* corrector */
 	in_predictor = false;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	computeVelocities();
 	timeStepMoveCorrector();
-	if(calc_stress){
+	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
-		if(brownian){
-			for(int i=0;i<np;i++){
-				brownianstressGU[i] = 0.5*(brownianstressGU[i] + brownianstressGU_predictor[i]); // [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ] 
+		if (brownian) {
+			for (int i=0; i<np; i++) {
+				/*
+				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
+				 */
+				brownianstressGU[i] = 0.5*(brownianstressGU[i]+brownianstressGU_predictor[i]);
 			}
 		}
 	}
@@ -418,7 +428,6 @@ void
 System::timeStepMove(){
 	/* evolve PBC */
 	timeStepBoxing();
-
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -491,27 +500,11 @@ System::timeEvolution(double strain_next){
 		firsttime = false;
 	}
 	while (shear_strain < strain_next-dt-1e-8) { // integrate until strain_next - 1 time step
-		switch (integration_method) {
-		case 0:
-			timeEvolutionEulersMethod();
-			break;
-		case 1:
-			timeEvolutionPredictorCorrectorMethod();
-			break;
-		}
+		(this->*timeEvolutionDt)(false);
 		ts++;
-		shear_strain += dt; //
+		shear_strain += dt;
 	};
-
-	
-	switch (integration_method) { // last time step - compute the stress
-	case 0:
-		timeEvolutionEulersMethod(true);
-		break;
-	case 1:
-		timeEvolutionPredictorCorrectorMethod(true);
-		break;
-	}
+	(this->*timeEvolutionDt)(true);
 	ts++;
 	shear_strain += dt;
 }

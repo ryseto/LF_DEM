@@ -628,13 +628,11 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
-	fout_rheo << sys.get_ratio_dynamic_friction() << ' ';//41
-	fout_rheo << sys.get_rate_static_to_dynamic() << ' ';//42
-	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//43
-	fout_rheo << sys.ave_contact_velo_tan << ' '; // 44
-	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
-	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
-	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
+	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
+	fout_rheo << sys.ave_contact_velo_tan << ' '; // 42
+	fout_rheo << sys.ave_contact_velo_normal << ' '; // 43
+	fout_rheo << sys.ave_sliding_velocity << ' ' ; //44
+	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //45
 	fout_rheo << endl;
 }
 
