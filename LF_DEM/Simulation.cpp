@@ -138,9 +138,8 @@ removeBlank(string &str){
 void
 Simulation::autoSetParameters(const string &keyword,
 							  const string &value){
-	if (keyword == "bgf_factor") {
-		sys.set_bgf_factor(atof(value.c_str()));
-	} else if (keyword == "lubrication_model") {
+	
+	if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "friction_model") {
 		sys.friction_model = atoi(value.c_str());
@@ -322,13 +321,6 @@ Simulation::setDefaultParameters(){
 	sys.contact_relaxation_time = 1e-2;
 	sys.contact_relaxation_time_tan = 0;
 	/*
-	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
-	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
-	 *   The optimal value of bgf_factor (< 1.0) may exist.
-	 *
-	 */
-	double _bgf_factor = 1;
-	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
 	 * kb_T = 0 ---> non-brownian
@@ -382,7 +374,6 @@ Simulation::setDefaultParameters(){
 	sys.friction_model = _friction_model;
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);
-	sys.set_bgf_factor(_bgf_factor);
 	sys.set_lub_max(_lub_max);
 	sys.set_dt_max(_dt);
 	sys.set_kn(_kn);

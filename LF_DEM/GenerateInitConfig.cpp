@@ -508,13 +508,6 @@ GenerateInitConfig::setParameters(){
 //	 */
 //	sys.contact_relaxation_time = 0.001;
 //	/*
-//	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
-//	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
-//	 *   The optimal value of bgf_factor (< 1.0) may exist.
-//	 *
-//	 */
-//	sys.Bgf_factor(1);
-//	/*
 //	 * Brownian force
 //	 * kb_T: Thermal energy kb*T
 //	 * kb_T = 0 ---> non-brownian

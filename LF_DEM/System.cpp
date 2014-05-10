@@ -612,7 +612,7 @@ void
 System::addStokesDrag(){
 	double torque_factor = 4./3;
     for (int i=0; i<np; i++) {
-		stokes_solver.addToDiag(i, bgf_factor*radius[i], bgf_factor*torque_factor*radius[i]*radius[i]*radius[i]);
+		stokes_solver.addToDiag(i, radius[i], torque_factor*radius[i]*radius[i]*radius[i]);
     }
 }
 

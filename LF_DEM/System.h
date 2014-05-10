@@ -60,7 +60,6 @@ private:
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
 	double mu_static; // static friction coefficient.
-	double bgf_factor;
 	double kb_T;
 	int linalg_size;
 	int linalg_size_per_particle;
@@ -282,7 +281,6 @@ public:
 	}
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
-	void set_bgf_factor(int val){bgf_factor = val;}
 	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=1;} }
 	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
