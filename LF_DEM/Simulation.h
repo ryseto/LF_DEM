@@ -24,14 +24,6 @@ private:
 	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;
-	string filename_prog_shearrate;
-	double shearrate_min;
-	double shearrate_max;
-	double strain_interval;
-	double strain_interval_relax;
-	int shearrate_steps;
-	bool shearrate_upward;
-
 	double strain_interval_output_data;
 	double strain_interval_output;
 	double strain_interval_knkt_adjustment;
@@ -46,7 +38,6 @@ private:
 	StressTensor total_stress;
 	StressTensor total_contact_stressXF;
 	StressTensor total_colloidal_stress;
-
 	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
@@ -54,7 +45,6 @@ private:
 	double normalstress_diff_1_cont_XF;
 	double normalstress_diff_2_cont_XF;
 	double particle_pressure_cont;
-	
 	double viscosity_friction; // Fc_tan contribution.
 	double normalstress_diff_1_friction;
 	double normalstress_diff_2_friction;
@@ -82,10 +72,6 @@ private:
 	bool out_data_interaction;
 	bool origin_zero_flow;
 	/*
-	 */
-	void timeEvolution();
-	void evaluateData();
-	/*
 	 * For inputs
 	 */
 	void setDefaultParameters();
@@ -99,6 +85,7 @@ private:
 	/*
 	 * For outputs
 	 */
+	void evaluateData();
 	void outputDataHeader(ofstream &fout);
 	void outputRheologyData();
 	void outputStressTensorData();
@@ -109,9 +96,6 @@ public:
 	Simulation();
 	~Simulation();
 	void simulationConstantShearRate(int argc, const char * argv[]);
-	void relaxationZeroShear(vector<vec3d> &position_,
-							 vector<double> &radius_,
-							 double lx_, double ly_, double lz_);
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 
