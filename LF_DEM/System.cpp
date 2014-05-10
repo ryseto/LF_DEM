@@ -45,7 +45,7 @@ System::~System(){
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
-	if(brownian){
+	if (brownian) {
 		DELETE(contact_forces_predictor);
 		DELETE(hydro_forces_predictor);
 		DELETE(brownianstressGU);
@@ -91,7 +91,6 @@ System::allocateRessources(){
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_backup = new Interaction [maxnb_interactionpair];
-	
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	linalg_size = 6*np;
@@ -106,7 +105,7 @@ System::allocateRessources(){
 
 void
 System::setInteractions_GenerateInitConfig(){
-	for (int k=0; k<maxnb_interactionpair ; k++) {
+	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
@@ -221,8 +220,6 @@ System::setupSystem(){
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
-	cnt_static_to_dynamic = 0;
-
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -283,7 +280,6 @@ System::setupSystem(){
 	} else {
 		setSystemVolume();
 	}
-	//cnt_prameter_convergence = 0;
 }
 
 void
@@ -311,7 +307,6 @@ System::timeStepBoxing(){
 	boxset.update();
 }
 
-
 void
 System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
@@ -323,7 +318,6 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 		calcStressPerParticle();
 	}
 }
-
 
 /****************************************************************************************************
 ******************************************** Mid-Point Scheme ***************************************
@@ -590,19 +584,16 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine 
 	// if you want GE to be the only rhs.
 
-	if(build_res_mat){
+	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
 		stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-	
 		// add Stokes drag in the matrix
 		addStokesDrag();
-
 		// add GE in the rhs and lubrication terms in the resistance matrix
 		buildLubricationTerms(true, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
 		stokes_solver.completeResistanceMatrix();
-	}
-	else{
+	} else {
 		// add GE in the rhs
 		buildLubricationTerms(false, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
 	}
@@ -659,10 +650,16 @@ System::buildLubricationTerms(bool mat, bool rhs){ // default for mat and rhs is
 						if (mat) {
 							vec3d nr_vec = (*it)->get_nvec();
 							(*it)->lubrication.calcXYFunctions();
-							stokes_solver.addToDiagBlock(nr_vec, i, (*it)->lubrication.scaledXA0(), (*it)->lubrication.scaledYA0(),
-														 (*it)->lubrication.scaledYB0(), (*it)->lubrication.scaledYC0());
-							stokes_solver.addToDiagBlock(nr_vec, j, (*it)->lubrication.scaledXA3(), (*it)->lubrication.scaledYA3(),
-														 (*it)->lubrication.scaledYB3(), (*it)->lubrication.scaledYC3());
+							stokes_solver.addToDiagBlock(nr_vec, i,
+														 (*it)->lubrication.scaledXA0(),
+														 (*it)->lubrication.scaledYA0(),
+														 (*it)->lubrication.scaledYB0(),
+														 (*it)->lubrication.scaledYC0());
+							stokes_solver.addToDiagBlock(nr_vec, j,
+														 (*it)->lubrication.scaledXA3(),
+														 (*it)->lubrication.scaledYA3(),
+														 (*it)->lubrication.scaledYB3(),
+														 (*it)->lubrication.scaledYC3());
 							stokes_solver.setOffDiagBlock(nr_vec, i, j, (*it)->lubrication.scaledXA1(), (*it)->lubrication.scaledYA1(),
 														  (*it)->lubrication.scaledYB2(), (*it)->lubrication.scaledYB1(), (*it)->lubrication.scaledYC1());
 						}
@@ -1078,7 +1075,7 @@ System::analyzeState(){
 	max_fc_tan = 0;
 	intr_max_fc_normal = -1;
 	intr_max_fc_tan = -1;
-	int cnt_sliding_contact=0;
+	int cnt_sliding_contact = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (interaction[k].get_gap_nondim() < min_gap_nondim) {
@@ -1127,13 +1124,6 @@ System::analyzeState(){
 	} else {
 		average_fc_normal = 0;
 	}
-	rate_static_to_dynamic = cnt_static_to_dynamic/(strain_interval*np);
-	if (fric_contact_nb > 0) {
-		ratio_dynamic_friction = (fric_contact_nb-cnt_sliding_contact)*(1./fric_contact_nb);
-	} else {
-		ratio_dynamic_friction = 0;
-	}
-	cnt_static_to_dynamic = 0;
 }
 
 void

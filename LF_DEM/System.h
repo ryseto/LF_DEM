@@ -215,14 +215,11 @@ public:
 	double ave_sliding_velocity;
 	int contact_nb;
 	int fric_contact_nb;
-	double ratio_dynamic_friction;
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
 	//ofstream fout_int_data;
-	int cnt_static_to_dynamic;
-	int rate_static_to_dynamic;
 	bool kn_kt_adjustment;
 
 	void setSystemVolume(double depth = 0);
