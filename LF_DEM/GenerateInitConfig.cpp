@@ -26,7 +26,7 @@ GenerateInitConfig::generate(){
 	sys.in_predictor = false;
 	sys.set_integration_method(0);
 	putRandom();
-	sys.setupSystemForGenerateInit();
+	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
 	step_size = 10;

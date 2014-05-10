@@ -230,7 +230,7 @@ public:
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
 						  double lx_, double ly_, double lz_);
-	void setupSystemForGenerateInit();
+	void setInteractions_GenerateInitConfig();
 	void setupSystem();
 	void allocatePositionRadius();
 	void allocateRessources();

@@ -410,9 +410,7 @@ Simulation::importInitialPositionFile(){
 	volume_fraction = volume_fraction_;
 	double x_, y_, z_, a_;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
-		//initial_position.push_back(vec3d (x_,y_,z_));
-		vec3d tmp(x_, y_, z_);
-		initial_position.push_back(tmp);
+		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);
 	}
 	file_import.close();
@@ -427,20 +425,15 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	
 	if (sys.dimensionless_shear_rate == -1) {
 		ss_simu_name << "_srinf" ; // shear rate infinity
 	} else {
 		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 	}
-
 	if (sys.brownian) {
 		ss_simu_name << "_T" << sys.get_kb_T();
 	}
 	sys.simu_name = ss_simu_name.str();
-	
-	
-	cerr << sys.simu_name << endl;
 }
 
 void

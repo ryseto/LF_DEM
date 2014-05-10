@@ -78,15 +78,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "two.dat"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "nofric_tlub.txt"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "1"
+            argument = "g"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

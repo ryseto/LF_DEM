@@ -105,50 +105,12 @@ System::allocateRessources(){
 
 
 void
-System::setupSystemForGenerateInit(){
-	for (int i=0; i < np; i++) {
-		radius_cubic[i] = radius[i]*radius[i]*radius[i];
-		angle[i] = 0;
-	}
+System::setInteractions_GenerateInitConfig(){
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
-	for (int i=0; i<np; i++) {
-		velocity[i].reset();
-		na_velocity[i].reset();
-		ang_velocity[i].reset();
-		na_ang_velocity[i].reset();
-		vel_contact[i].reset();
-		ang_vel_contact[i].reset();
-		vel_colloidal[i].reset();
-		ang_vel_colloidal[i].reset();
-		vel_hydro[i].reset();
-		ang_vel_hydro[i].reset();
-	}
-	kb_T = 0;
-	shear_strain = 0;
-	shear_disp = 0;
 	nb_interaction = 0;
-	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	contact_relaxation_time = 1e-3;
-	kn = 2000;
-	kt = 0;
-	friction = false;
-	dimensionless_shear_rate = 1;
-	colloidalforce = false;
-	if (contact_relaxation_time < 0) {
-		// 1/(h+c) --> 1/c
-		lub_coeff_contact = 1/lub_reduce_parameter;
-	} else {
-		/* t = beta/kn
-		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
-		 */
-		lub_coeff_contact = 4*kn*contact_relaxation_time;
-	}
-	ts = 0;
-	stokes_solver.initialize();
 	initializeBoxing();
 	checkNewInteraction();
 }
@@ -235,10 +197,17 @@ System::setupSystem(){
 	for (int i=0; i<np; i++) {
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
 		angle[i] = 0;
-		velocity[i].set(position[i].z, 0, 0);
-		ang_velocity[i].set(0, 0.5, 0);
+		velocity[i].reset();
+		na_velocity[i].reset();
+		ang_velocity[i].reset();
+		na_ang_velocity[i].reset();
+		vel_contact[i].reset();
+		ang_vel_contact[i].reset();
+		vel_colloidal[i].reset();
+		ang_vel_colloidal[i].reset();
+		vel_hydro[i].reset();
+		ang_vel_hydro[i].reset();
 	}
-
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
