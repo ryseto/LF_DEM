@@ -108,15 +108,11 @@ private:
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
-	/*Backup*/
-	vector <vec3d> position_backup;
-	Interaction *interaction_backup;
 	MTRand *r_gen;
 
 protected:
 public:
 	~System();
-	void backupState();
 	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
@@ -222,7 +218,6 @@ public:
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
-	//ofstream fout_int_data;
 	bool kn_kt_adjustment;
 
 	void setSystemVolume(double depth = 0);
@@ -258,6 +253,9 @@ public:
 	int adjustContactModelParameters();
 	void setupShearFlow(bool activate){
 		if (activate) {
+			/* In dimensionless simulations for non Browninan simulation,
+			 * shear rate is always 1.
+			 */
 			vel_difference = lz;
 		} else {
 			vel_difference = 0;

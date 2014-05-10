@@ -90,7 +90,6 @@ System::allocateRessources(){
 	int maxnb_interactionpair_per_particle = 15;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	interaction = new Interaction [maxnb_interactionpair];
-	interaction_backup = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	linalg_size = 6*np;
@@ -1305,23 +1304,5 @@ System::calcLubricationForce(){
 			interaction[k].lubrication.calcLubricationForce();
 		}
 	}
-}
-
-void
-System::backupState(){
-	position_backup.clear();
-	position_backup.resize(np);
-	for (int i=0; i<np; i++){
-		position_backup[i] = position[i];
-	}
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			interaction_backup[k] = interaction[k];
-		} else {
-			//interaction_backup[k];
-		}
-	}
-
-	
 }
 
