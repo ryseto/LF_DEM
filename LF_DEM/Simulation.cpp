@@ -73,6 +73,7 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	int cnt_simu_loop = 1;
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
+
 	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
@@ -271,7 +272,6 @@ Simulation::setDefaultParameters(){
 	 * integration_method:
 	 * 0 Euler's Method,
 	 * 1 predictor-corrector,
-	 * 2 Brownian (if kT > 0).
 	 */
 	int _integration_method = 1;
 	/*

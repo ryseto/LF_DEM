@@ -279,7 +279,13 @@ public:
 	}
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
-	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=1;} }
+	void set_kb_T(double val){
+		kb_T = val;
+		if (kb_T > 0) {
+			brownian = true;
+			integration_method = 1;
+		}
+	}
 	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}

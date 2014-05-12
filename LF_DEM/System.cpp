@@ -101,7 +101,6 @@ System::allocateRessources(){
 	stokes_solver.init(np, false);
 }
 
-
 void
 System::setInteractions_GenerateInitConfig(){
 	for (int k=0; k<maxnb_interactionpair; k++) {
@@ -144,9 +143,9 @@ System::setupSystem(){
 	 */
 	r_gen = new MTRand;
 	
-	if (integration_method == 1) {
+	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
-	} else if (integration_method == 2) {
+	} else if (integration_method == 1) {
 		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
 	} else {
 		cerr << "integration_method = " << integration_method << endl;
@@ -163,7 +162,7 @@ System::setupSystem(){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (friction_model == 0 ){
+	if (friction_model == 0 ) {
 		cerr << "friction_model = 0" << endl;
 		friction = false;
 	} else if (friction_model == 1) {
@@ -561,7 +560,7 @@ void
 System::updateInteractions(){
 	for (int k=0; k<nb_interaction; k++) {
 		bool deactivated = false;
-		if (interaction[k].is_active()){
+		if (interaction[k].is_active()) {
 			interaction[k].updateState(deactivated);
 			if (deactivated) {
 				deactivated_interaction.push(k);
@@ -576,7 +575,7 @@ System::stressReset(){
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 		colloidalstressGU[i].reset();
-		if(brownian){
+		if (brownian) {
 			brownianstressGU[i].reset();
 		}
 	}
@@ -874,7 +873,7 @@ System::computeVelocities(){
 	for (int i=0; i<np; i++) {
 		na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_colloidal[i];
 		na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_colloidal[i];
-		if(brownian){
+		if (brownian) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
@@ -882,10 +881,8 @@ System::computeVelocities(){
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
 
-		if (dimensionless_shear_rate != 0) {
-			velocity[i].x += position[i].z;
-			ang_velocity[i].y += 0.5;
-		}
+		velocity[i].x += position[i].z;
+		ang_velocity[i].y += 0.5;
 	}
 }
 
@@ -949,17 +946,23 @@ System::periodize(vec3d &pos){
 		z_shift = 0;
 	}
 
-	if (pos.x >= lx) {
+	while (pos.x >= lx) {
 		pos.x -= lx;
-		if (pos.x >= lx){
-			pos.x -= lx;
-		}
-	} else if (pos.x < 0) {
-		pos.x += lx;
-		if (pos.x < 0){
-			pos.x += lx;
-		}
 	}
+	while (pos.x < 0) {
+		pos.x += lx;
+	}
+
+	//	if (pos.x >= lx) {
+	//		pos.x -= lx;
+	//	}
+	//	}
+	//	while (pos.x < 0) {
+	//		pos.x += lx;
+	//if (pos.x < 0) {
+	//			pos.x += lx;
+	//		}
+	//	}
 	
 	if (pos.y >= ly) {
 		pos.y -= ly;
@@ -1081,9 +1084,6 @@ System::evaluateMaxAngVelocity(){
 
 void
 System::analyzeState(){
-	static double previous_strain = 0;
-	double strain_interval = shear_strain-previous_strain;
-	previous_strain = shear_strain;
 	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();

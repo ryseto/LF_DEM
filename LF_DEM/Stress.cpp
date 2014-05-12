@@ -250,8 +250,6 @@ System::calcStressPerParticle(){
 
 void
 System::calcStress(){
-	static double previous_strain = 0;
-	previous_strain = shear_strain;
 	//	calcStressesHydroContact();
 	total_hydro_stress.reset();
 	total_contact_stressGU.reset();
