@@ -18,7 +18,6 @@
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
-//#include "BrownianForce.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "cholmod.h"
@@ -27,7 +26,6 @@ using namespace std;
 
 class Simulation;
 class Interaction;
-//class BrownianForce;
 class BoxSet;
 
 class System{
@@ -76,9 +74,6 @@ private:
 	vector<double> sliding_velocity_history;
 	vector<double> relative_velocity_history;
 	bool after_parameter_changed;
-	/*
-	 *
-	 */
 	void (System::*timeEvolutionDt)(bool);
 	void timeEvolutionEulersMethod(bool calc_stress);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
@@ -89,19 +84,15 @@ private:
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildHydroTerms(bool, bool);
-	//	void buildLubricationTerms(bool mat=true, bool rhs=true);
 	void (System::*buildLubricationTerms)(bool, bool);
-	void buildLubricationTerms_model1(bool mat, bool rhs);
-	void buildLubricationTerms_model2(bool mat, bool rhs);
-	void buildLubricationTerms_model3(bool mat, bool rhs);
-	
+	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
+	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
 	void buildBrownianTerms();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
 	void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
-	
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
@@ -109,7 +100,6 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	MTRand *r_gen;
-
 protected:
 public:
 	~System();
@@ -144,7 +134,6 @@ public:
 	double *contact_forces_predictor;
 	double *hydro_forces_predictor;
 	double *brownian_force;
-
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
@@ -158,7 +147,6 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stressGU;
-	double ratio_dashpot_total;
 	int friction_model;
 	bool friction;
 	bool colloidalforce;
@@ -219,7 +207,6 @@ public:
 	double max_fc_tan;
 	string simu_name;
 	bool kn_kt_adjustment;
-
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
@@ -262,7 +249,7 @@ public:
 		}
 	}
 	/*************************************************************/
-	inline void setBoxSize(double lx_, double ly_, double lz_){
+	void setBoxSize(double lx_, double ly_, double lz_){
 		lx = lx_;
 		lx_half = 0.5*lx;
 		ly = ly_;
@@ -314,11 +301,6 @@ public:
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-	inline double get_log_lub_coeff_staticfriction(){
-		cerr << "not allowed\n";
-		exit(1);
-		return log_lub_coeff_contact_tan_dashpot;
-	}
 	inline double get_log_lub_coeff_dynamicfriction(){
 		/* In a sliding state, the resistance coeffient is the sum of
 		 * lubrication and dashpot.

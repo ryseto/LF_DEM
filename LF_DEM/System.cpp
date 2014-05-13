@@ -141,8 +141,6 @@ System::setupSystem(){
 	/* Giving a seed for debugging (Brownian)
 	 * r_gen = new MTRand(71);
 	 */
-	r_gen = new MTRand;
-	
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -153,11 +151,9 @@ System::setupSystem(){
 		exit(1);
 	}
 	if (lubrication_model == 1) {
-		buildLubricationTerms = &System::buildLubricationTerms_model1;
+		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
 	} else if (lubrication_model == 2) {
-		buildLubricationTerms = &System::buildLubricationTerms_model2;
-	} else if (lubrication_model == 3) {
-		buildLubricationTerms = &System::buildLubricationTerms_model1;
+		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
@@ -263,16 +259,11 @@ System::setupSystem(){
 		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	ratio_dashpot_total = log_lub_coeff_contact_tan_dashpot/log_lub_coeff_contact_tan_total;
-	
-	if (lubrication_model == 1) {
-		ratio_dashpot_total = 0;
+	if (brownian) {
+		r_gen = new MTRand;
 	}
-	
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
-	cerr << "ratio_dashpot_total = " << ratio_dashpot_total << endl;
-	
 	ts = 0;
 	shear_disp = 0;
 	vel_difference = lz;
@@ -281,7 +272,6 @@ System::setupSystem(){
 	dt = dt_max;
 	initializeBoxing();
 	checkNewInteraction();
-	
 	if (twodimension) {
 		setSystemVolume(2*radius[np-1]);
 	} else {
@@ -621,7 +611,7 @@ System::addStokesDrag(){
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
 void
-System::buildLubricationTerms_model1(bool mat, bool rhs){
+System::buildLubricationTerms_squeeze(bool mat, bool rhs){
 	for (int i=0; i<np-1; i ++) {
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
@@ -651,7 +641,7 @@ System::buildLubricationTerms_model1(bool mat, bool rhs){
 }
 
 void
-System::buildLubricationTerms_model2(bool mat, bool rhs){
+System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 	for (int i=0; i<np-1; i ++) {
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
@@ -693,71 +683,6 @@ System::buildLubricationTerms_model2(bool mat, bool rhs){
 		stokes_solver.doneBlocks(i);
 	}
 }
-
-void
-System::buildLubricationTerms_model3(bool mat, bool rhs){
-	for (int i=0; i<np-1; i ++) {
-		for (set<Interaction*>::iterator it = interaction_list[i].begin();
-			 it != interaction_list[i].end(); it ++) {
-			int j = (*it)->partner(i);
-			if (j > i) {
-				if ((*it)->is_contact()){
-					if (mat) {
-						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->lubrication.calcXYFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 (*it)->lubrication.scaledXA0(),
-													 (*it)->lubrication.scaledYA0(),
-													 (*it)->lubrication.scaledYB0(),
-													 (*it)->lubrication.scaledYC0());
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 (*it)->lubrication.scaledXA3(),
-													 (*it)->lubrication.scaledYA3(),
-													 (*it)->lubrication.scaledYB3(),
-													 (*it)->lubrication.scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, i, j,
-													  (*it)->lubrication.scaledXA1(),
-													  (*it)->lubrication.scaledYA1(),
-													  (*it)->lubrication.scaledYB2(),
-													  (*it)->lubrication.scaledYB1(),
-													  (*it)->lubrication.scaledYC1());
-					}
-					if (rhs) {
-						double GEi[3];
-						double GEj[3];
-						double HEi[3];
-						double HEj[3];
-						(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-						stokes_solver.addToRHSTorque(i, HEi);
-						stokes_solver.addToRHSTorque(j, HEj);
-					}
-				} else {
-					if (mat) {
-						vec3d nr_vec = (*it)->get_nvec();
-						(*it)->lubrication.calcXFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 (*it)->lubrication.scaledXA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 (*it)->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, i, j,
-													  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
-					}
-					if (rhs) {
-						double GEi[3];
-						double GEj[3];
-						(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-					}
-				}
-			}
-		}
-		stokes_solver.doneBlocks(i);
-	}
-}
-
 
 void
 System::buildBrownianTerms(){
@@ -1015,7 +940,6 @@ System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	max_relative_velocity = 0;
-	in_predictor = true;
 	double sum_contact_velo_tan = 0;
 	double sum_contact_velo_normal = 0;
 	double sum_sliding_velocity = 0;
@@ -1037,7 +961,7 @@ System::evaluateMaxContactVelocity(){
 			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
 				max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
 			}
-			if (interaction[k].getRelativeVelocity() > max_relative_velocity){
+			if (interaction[k].getRelativeVelocity() > max_relative_velocity) {
 				max_relative_velocity = interaction[k].getRelativeVelocity();
 			}
 		}
@@ -1108,9 +1032,9 @@ System::analyzeState(){
 			}
 			if (interaction[k].is_contact()) {
 				contact_nb ++;
-				if (interaction[k].is_friccontact()){
+				if (interaction[k].is_friccontact()) {
 					fric_contact_nb ++;
-					if (interaction[k].contact.staticfriction == false){
+					if (interaction[k].contact.staticfriction == false) {
 						cnt_sliding_contact++;
 					}
 				}
@@ -1135,7 +1059,7 @@ System::analyzeState(){
 	 */
 	static double max_fc_normal_previous = 0;
 	if (after_parameter_changed) {
-		if (max_fc_normal > max_fc_normal_previous){
+		if (max_fc_normal > max_fc_normal_previous) {
 			after_parameter_changed = false;
 		}
 	}

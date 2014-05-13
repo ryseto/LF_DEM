@@ -317,9 +317,8 @@ public:
 	 - must be called after all terms are added
 	 */
     void completeResistanceMatrix();
-    
-	
-	/* 
+
+	/*
 	   Right-hand vector access methods
 	*/
     void resetRHS();
@@ -362,8 +361,6 @@ public:
 	 solvingIsDone()
 	 */
     void solvingIsDone();
-	
-	
 	
 };
 #endif /* defined(__LF_DEM__StokesSolver__) */

@@ -675,7 +675,7 @@ StokesSolver::solve_CholTrans(vec3d* velocity, vec3d* ang_velocity){
 			ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
 			ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
 			ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
-		}				
+		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 		cholmod_free_dense(&chol_PTsolution, &chol_c);
 	}
