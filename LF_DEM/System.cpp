@@ -108,6 +108,7 @@ System::setInteractions_GenerateInitConfig(){
 		interaction[k].set_label(k);
 	}
 	nb_interaction = 0;
+	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	initializeBoxing();
 	checkNewInteraction();
 }
@@ -415,6 +416,9 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	}
 }
 
+/*
+ * timeStepMove is used for only Euler method.
+ */
 void
 System::timeStepMove(){
 	/* evolve PBC */
@@ -439,7 +443,6 @@ System::timeStepMovePredictor(){
 	 * It must not be updated in corrector.
 	 */
 	timeStepBoxing();
-
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}

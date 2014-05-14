@@ -196,7 +196,7 @@ GenerateInitConfig::gradientDescent(){
 		moveAlongGradient(grad, 1);
 		storeGradient();
 		running_energy = computeGradient();
-		relative_en=(old_running_energy-running_energy)/(old_running_energy+running_energy);
+		relative_en = (old_running_energy-running_energy)/(old_running_energy+running_energy);
 		if (steps%100 == 0) {
 			cerr << "    Steps = " << steps << " :::   Energy : " << running_energy/np << endl;
 		}
@@ -380,7 +380,7 @@ GenerateInitConfig::setParameters(){
 	 */
 	np = readStdinDefault(200, "number of particle");
 	int dimension = readStdinDefault(3, "dimension (2 or 3)");
-	if (dimension == 2){
+	if (dimension == 2) {
 		sys.twodimension = true;
 	} else {
 		sys.twodimension = false;

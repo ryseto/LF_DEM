@@ -74,8 +74,8 @@ Contact::deactivate(){
  *********************************/
 void
 Contact::incrementTangentialDisplacement(){
-	if(sys->in_predictor){
-	   prev_disp_tan = disp_tan;
+	if (sys->in_predictor) {
+		prev_disp_tan = disp_tan;
 	}
 	disp_tan = prev_disp_tan + interaction->relative_surface_velocity*sys->get_dt();
 }
