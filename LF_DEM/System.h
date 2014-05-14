@@ -223,7 +223,7 @@ public:
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
-	void computeVelocities();
+	void computeVelocities(bool divided_velocities);
 	void updateVelocityLubrication();
 	void updateVelocityRestingFluid();
 	void forceReset();

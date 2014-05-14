@@ -385,7 +385,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	in_predictor = true;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	computeVelocities();
+	computeVelocities(calc_stress);
 	timeStepMovePredictor();
 	if (calc_stress) {
 		stressReset();
@@ -400,7 +400,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	in_predictor = false;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	computeVelocities();
+	computeVelocities(calc_stress);
 	timeStepMoveCorrector();
 	if (calc_stress) {
 		stressReset();
@@ -710,7 +710,6 @@ System::buildBrownianTerms(){
 			brownian_force[i6+5] = 0;
 		}
 	}
-	
 	stokes_solver.setRHS(brownian_force);
 }
 
@@ -744,7 +743,7 @@ System::setColloidalForceToParticle(){
 void
 System::buildContactTerms(bool set_or_add){
     // sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
-	if(set_or_add) {
+	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
 			stokes_solver.setRHSTorque(i, contact_torque[i]);
@@ -777,17 +776,27 @@ System::buildColloidalForceTerms(bool set_or_add){
 }
 
 void
-System::computeVelocities(){
-    stokes_solver.resetRHS();
-	buildHydroTerms(true, true); // build matrix and rhs force GE
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
-	
-	buildContactTerms(true); // set rhs = F_C
-	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-
-	buildColloidalForceTerms(true); // set rhs = F_Coll
-	stokes_solver.solve(vel_colloidal, ang_vel_colloidal); // get V_Coll
-
+System::computeVelocities(bool divided_velocities){
+	stokes_solver.resetRHS();
+	if (divided_velocities) {
+		// For seeing each stress contribution
+		buildHydroTerms(true, true); // build matrix and rhs force GE
+		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
+		buildContactTerms(true); // set rhs = F_C
+		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+		buildColloidalForceTerms(true); // set rhs = F_Coll
+		stokes_solver.solve(vel_colloidal, ang_vel_colloidal); // get V_Coll
+		for (int i=0; i<np; i++) {
+			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_colloidal[i];
+			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_colloidal[i];
+		}
+	} else {
+		// For the most of time evolution
+		buildHydroTerms(true, true); // build matrix and rhs force GE
+		buildContactTerms(false); // set rhs = F_C
+		buildColloidalForceTerms(false); // set rhs = F_Coll
+		stokes_solver.solve(na_velocity, na_ang_velocity); // get V_Coll
+	}
 	if (brownian) {
 		if (in_predictor) {
 			buildBrownianTerms(); // generate new F_B and set rhs = F_B
@@ -796,19 +805,14 @@ System::computeVelocities(){
 		}
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 	}
-
 	stokes_solver.solvingIsDone();
 	for (int i=0; i<np; i++) {
-		na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_colloidal[i];
-		na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_colloidal[i];
 		if (brownian) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
-
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
-
 		velocity[i].x += position[i].z;
 		ang_velocity[i].y += 0.5;
 	}
