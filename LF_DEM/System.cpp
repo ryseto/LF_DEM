@@ -261,7 +261,12 @@ System::setupSystem(){
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (brownian) {
-		r_gen = new MTRand;
+		/* In developing and debugging phases,
+		 * we give a seed to generate the same series of random number.
+		 *
+		 * r_gen = new MTRand;
+		 */
+		r_gen = new MTRand(17);
 	}
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
@@ -693,15 +698,12 @@ System::buildBrownianTerms(){
 	// where R is the current resistance matrix stored in the stokes_solver.
 	// note that it SETS the rhs of the solver as rhs = F_B
 	// F_B is also stored in sys->brownian_force
-
 	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_kbT2_dt*GRANDOM;
 	}
-	
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.solve_CholTrans(brownian_force); // L^{-T}.F_B = \sqrt(2kT/dt) * A
-
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
@@ -769,7 +771,7 @@ System::buildColloidalForceTerms(bool set_or_add){
 			}
 		}
 	} else {
-		if(set_or_add) {
+		if (set_or_add) {
 			stokes_solver.resetRHS();
 		}
 	}
@@ -829,7 +831,6 @@ System::updateVelocityLubrication(){
 	buildColloidalForceTerms(false); // add F_Coll
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
-
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
@@ -877,25 +878,17 @@ System::periodize(vec3d &pos){
 	} else {
 		z_shift = 0;
 	}
-
-	while (pos.x >= lx) {
+	if (pos.x >= lx) {
 		pos.x -= lx;
-	}
-	while (pos.x < 0) {
+		if (pos.x >= lx){
+			pos.x -= lx;
+		}
+	} else if (pos.x < 0) {
 		pos.x += lx;
+		if (pos.x < 0){
+			pos.x += lx;
+		}
 	}
-
-	//	if (pos.x >= lx) {
-	//		pos.x -= lx;
-	//	}
-	//	}
-	//	while (pos.x < 0) {
-	//		pos.x += lx;
-	//if (pos.x < 0) {
-	//			pos.x += lx;
-	//		}
-	//	}
-	
 	if (pos.y >= ly) {
 		pos.y -= ly;
 	} else if (pos.y < 0) {
@@ -922,7 +915,6 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	} else {
 		zshift = 0;
 	}
-
 	if (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
 		if (pos_diff.x > lx_half) {
@@ -934,7 +926,6 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 			pos_diff.x += lx;
 		}
 	}
-
 	if (pos_diff.y > ly_half) {
 		pos_diff.y -= ly;
 	} else if (pos_diff.y < -ly_half) {
@@ -1182,20 +1173,16 @@ System::adjustContactModelParameters(){
 	}
 	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
 	double tmp_max_velocity = 0;
-	
 	if (average_max_relative_velocity > average_max_tanvelocity){
 		tmp_max_velocity = average_max_relative_velocity ;
 	} else {
 		tmp_max_velocity = average_max_tanvelocity ;
 	}
-	
 	if (max_max_tanvelocity > 1000){
 		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
 		return 1;
 	}
-	
 	double dt_try = disp_max/tmp_max_velocity;
-	
 	if (dt_try < dt_max){
 		dt = dt_try;
 	}
@@ -1206,13 +1193,11 @@ System::adjustContactModelParameters(){
 	max_fc_tan_history.clear();
 	sliding_velocity_history.clear();
 	after_parameter_changed = true;
-	
 	if (kn > max_kn){
 		cerr << "kn = " << kn << endl;
 		cerr << " kn > max_kn : exit" << endl;
 		return 1;
 	}
-	
 	return 0;
 }
 
@@ -1227,7 +1212,6 @@ System::calcLubricationForce(){
 	buildContactTerms(false);
 	setColloidalForceToParticle();
 	buildColloidalForceTerms(false);
-
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
 	for (int k=0; k<nb_interaction; k++) {
@@ -1236,4 +1220,3 @@ System::calcLubricationForce(){
 		}
 	}
 }
-
