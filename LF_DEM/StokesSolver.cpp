@@ -25,7 +25,6 @@ StokesSolver::~StokesSolver(){
     if (!current_index_positions) {
 		delete [] current_index_positions;
 	}
-
 	if(!chol_solution) {
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
@@ -69,7 +68,6 @@ StokesSolver::init(int n, bool is_brownian){
 
 void
 StokesSolver::initialize(){
-
 	// CHOLMOD parameters
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
@@ -94,7 +92,6 @@ StokesSolver::initialize(){
 	// resistance matrix characteristics (see header for matrix description)
 	res_matrix_linear_size = np6;
 	dblocks_size = 18*np;
-
 	allocateRessources();
 	chol_L_to_be_freed = false;
 }
@@ -138,33 +135,32 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-  	
 	if (direct()) {
 		int ii18 = 18*ii;
+		// (*,0)
 		dblocks[ii18   ] += scaledXA*n0n0 + scaledYA*one_n0n0;        // 00 element of the dblock
 		dblocks[ii18+1 ] += (scaledXA-scaledYA)*n0n1;        // 10
 		dblocks[ii18+2 ] += (scaledXA-scaledYA)*n0n2;        // 20
 		dblocks[ii18+3 ] += 0;                    // 30 
 		dblocks[ii18+4 ] += -scaledYB*nvec.z;     // 40
 		dblocks[ii18+5 ] += +scaledYB*nvec.y;      // 50
-
+		// (*,1)
 		dblocks[ii18+6 ] += scaledXA*n1n1 + scaledYA*one_n1n1;        // 11
 		dblocks[ii18+7 ] += (scaledXA-scaledYA)*n1n2;        // 21
 		dblocks[ii18+8 ] += 0;                    // 41
 		dblocks[ii18+9 ] += -scaledYB*nvec.x;     // 51
-
+		// (*,2)
 		dblocks[ii18+10] += scaledXA*n2n2 + scaledYA*one_n2n2;        // 22
 		dblocks[ii18+11] += 0;                    // 32
-
+		// (*,3)
 		dblocks[ii18+12] += scaledYC*one_n0n0;    // 33
 		dblocks[ii18+13] += -scaledYC*n0n1;       // 43
 		dblocks[ii18+14] += -scaledYC*n0n2;       // 53
-		
+		// (*,4)
 		dblocks[ii18+15] += scaledYC*one_n1n1;    // 44
 		dblocks[ii18+16] += -scaledYC*n1n2;       // 54
-
+		// (*,5)
 		dblocks[ii18+17] += scaledYC*one_n2n2;    // 55
-
 	}
 #ifdef TRILINOS
 	if (iterative()) {
@@ -236,13 +232,11 @@ StokesSolver::completeResistanceMatrix_cholmod(){
     allocateResistanceMatrix();
     // fill
 	for (int j=0; j<np; j++) {
-		
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
 		int j6 = 6*j;
 		int j18 = 18*j;
 		int j21 = 21*j;
-		
 		// the number of non-zero elements before column 6j is:
 		// - 21*j from j diagonal blocks
 		// - 36*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
@@ -252,8 +246,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		// (in 6j: 6 elements in diagonal block, plus 6*(odbrows_table[j+1]-odbrows_table[j])
 		//
 		// for 6j+2 --> 6j+5: same idea
-		
-
 		int od_nzero_nb = 6*(odbrows_table[j+1]-odbrows_table[j]);
 		((int*)chol_res_matrix->p)[j6  ] = j21   + 36*odbrows_table[j];
 		((int*)chol_res_matrix->p)[j6+1] = ((int*)chol_res_matrix->p)[j6] + 6 + od_nzero_nb;
@@ -261,14 +253,12 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+4] = ((int*)chol_res_matrix->p)[j6+3] + 3 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + od_nzero_nb;	
-
 		int pj6   = ((int*)chol_res_matrix->p)[j6];
 		int pj6_1 = ((int*)chol_res_matrix->p)[j6+1];
 		int pj6_2 = ((int*)chol_res_matrix->p)[j6+2];
 		int pj6_3 = ((int*)chol_res_matrix->p)[j6+3];
 		int pj6_4 = ((int*)chol_res_matrix->p)[j6+4];
 		int pj6_5 = ((int*)chol_res_matrix->p)[j6+5];
-
 		// diagonal block row indices (21)
 		((int*)chol_res_matrix->i)[pj6  ] = j6;   // column j6
 		((int*)chol_res_matrix->i)[pj6+1] = j6+1;
@@ -291,8 +281,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((int*)chol_res_matrix->i)[pj6_4  ] = j6+4;    // column j6+4
 		((int*)chol_res_matrix->i)[pj6_4+1] = j6+5;
 		((int*)chol_res_matrix->i)[pj6_5  ] = j6+5;    // column j6+5
-
-
 		// diagonal blocks row values (21)
 		((double*)chol_res_matrix->x)[pj6  ] = dblocks[j18];   // column j6
 		((double*)chol_res_matrix->x)[pj6+1] = dblocks[j18+1];
@@ -315,13 +303,10 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((double*)chol_res_matrix->x)[pj6_4  ] = dblocks[j18+15];   // column j6+4
 		((double*)chol_res_matrix->x)[pj6_4+1] = dblocks[j18+16];
 		((double*)chol_res_matrix->x)[pj6_5  ] = dblocks[j18+17];   // column j6+5
-			
 		/*****  2  : off-diagonal blocks row indices and values ***********/
 		// 36 non-zero elements per block
-
 		for(int k = odbrows_table[j]; k < odbrows_table[j+1]; k++){
 			int u = 6*(k-odbrows_table[j]); 
-
 			// we are filling the "k-odbFrows_table[j]"th off-diag block of the column.
 			// For column j6, for exemple, the indices of the non-zero values are:
 			// pj6 for all non-zero elements before column j6,
@@ -336,32 +321,30 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 				((int*)chol_res_matrix->i)[pj6_4+2 + u +s] = odbrows[k]+s;
 				((int*)chol_res_matrix->i)[pj6_5+1 + u +s] = odbrows[k]+s;
 			}
-			
 			int k6 = 6*k;
 			int k4 = 4*k;
 			int k2 = 2*k;
-
 			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[0][k6  ]; // A   // column j6
 			((double*)chol_res_matrix->x)[pj6+6 + u +1]   = odblocks[0][k6+1];
 			((double*)chol_res_matrix->x)[pj6+6 + u +2]   = odblocks[0][k6+2];
 			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = odblocks[0][k6+3]; // B
 			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[0][k6+4];
 			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[0][k6+5];
-
+			//
 			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[0][k6+1]; // A  // column j6+1
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[1][k4  ];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[1][k4+1];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[0][k6+4]; // B
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = odblocks[1][k4+2];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[1][k4+3];
-
+			//
 			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[0][k6+2]; // A // column j6+2
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[1][k4+1];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[2][k2  ];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[0][k6+5]; // B
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[1][k4+3];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = odblocks[2][k2+1];
-			
+			//
 			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[3][k6  ]; // Btilde   // column j6+3
 			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[3][k6+1];
 			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[3][k6+2];
@@ -375,20 +358,16 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[3][k6+4]; // C
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[4][k4+2];
 			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[4][k4+3];
-			
+			//
 			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[3][k6+2]; // Btilde // column j6+5
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[4][k4+1];
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[5][k2  ];
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[3][k6+5]; // C
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[4][k4+3];
 			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[5][k2+1];
-			
 		}
 	}
-	
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
-	
-
 	factorizeResistanceMatrix();
 }
 
@@ -433,21 +412,18 @@ StokesSolver::completeResistanceMatrix(){
 void
 StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
 	setSolverType(solver_type);
-	
 	odblocks_nb = nb_of_interactions;
 	if (direct()) {
 		for (int k=0; k<dblocks_size; k++) {
 			dblocks[k] = 0;
 		}
 		odbrows.clear();
-
 		odblocks[0].resize(6*odblocks_nb);
 		odblocks[1].resize(4*odblocks_nb);
 		odblocks[2].resize(2*odblocks_nb);
 		odblocks[3].resize(6*odblocks_nb);
 		odblocks[4].resize(4*odblocks_nb);
 		odblocks[5].resize(2*odblocks_nb);
-		
 		for (int k=0; k<6; k++) {
 			for (unsigned int i=0; i<odblocks[k].size(); i++) {
 				odblocks[k][i] = 0;
@@ -549,7 +525,6 @@ StokesSolver::addToRHSTorque(int i, double *torque_i){
 #endif
 }
 
-
 void
 StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
 	int i6_3 = 6*i+3;
@@ -608,7 +583,7 @@ StokesSolver::setRHSForce(int i, const vec3d &force_i){
 #ifdef TRILINOS
 	if (iterative()) {
 		cerr << " Error : StokesSolver:: setRHSForce(int i, const vec3d &force_i) not implemented for TRILINOS yet ! " << endl;
-		exit(1);		
+		exit(1);
 	}
 #endif
 }
