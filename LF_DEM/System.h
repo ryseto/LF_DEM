@@ -18,7 +18,6 @@
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
-//#include "BrownianForce.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "cholmod.h"
@@ -27,7 +26,6 @@ using namespace std;
 
 class Simulation;
 class Interaction;
-//class BrownianForce;
 class BoxSet;
 
 class System{
@@ -188,7 +186,6 @@ public:
 	double lub_reduce_parameter;
 	double contact_relaxation_time;
 	double contact_relaxation_time_tan;
-	//	BrownianForce *fb;
 	double shear_disp;
 	/* For non-Brownian suspension:
 	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_col(0)
