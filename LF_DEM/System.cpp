@@ -15,6 +15,7 @@ System::~System(){
 	DELETE(position);
 	DELETE(radius);
 	DELETE(radius_cubic);
+	DELETE(resistance_matrix_dblock);
 	DELETE(angle);
 	DELETE(velocity);
 	DELETE(ang_velocity);
@@ -56,6 +57,7 @@ System::~System(){
 void
 System::allocateRessources(){
 	radius_cubic = new double [np];
+	resistance_matrix_dblock = new double [18*np];
 	angle = new double [np];
 	velocity = new vec3d [np];
 	ang_velocity = new vec3d [np];
@@ -220,6 +222,24 @@ System::setupSystem(){
 		ang_vel_colloidal[i].reset();
 		vel_hydro[i].reset();
 		ang_vel_hydro[i].reset();
+	}
+	/* Prepare
+	 *
+	 */
+	for (int i=0; i<18*np; i++) {
+		resistance_matrix_dblock[i] = 0;
+	}
+	double torque_factor = 4./3;
+	for (int i=0; i<np; i++) {
+		int i18 = 18*i;
+		double FUvalue = sd_coeff*radius[i];
+		double TWvalue = sd_coeff*torque_factor*radius_cubic[i];
+		resistance_matrix_dblock[i18   ] += FUvalue;
+		resistance_matrix_dblock[i18+6 ] += FUvalue;
+		resistance_matrix_dblock[i18+10] += FUvalue;
+		resistance_matrix_dblock[i18+12] += TWvalue;
+		resistance_matrix_dblock[i18+15] += TWvalue;
+		resistance_matrix_dblock[i18+17] += TWvalue;
 	}
 	shear_strain = 0;
 	shear_disp = 0;
@@ -592,9 +612,12 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-		stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions);
-		// add Stokes drag in the matrix
-		addStokesDrag();
+		stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions, resistance_matrix_dblock);
+		/* [note]
+		 * The resistance matrix is reset with resistance_matrix_dblock,
+		 * which is calculated at the begining.
+		 * addStokesDrag() is no more used.
+		 */
 		// add GE in the rhs and lubrication terms in the resistance matrix
 		(this->*buildLubricationTerms)(true, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
 		stokes_solver.completeResistanceMatrix();
@@ -604,13 +627,14 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	}
 }
 
-void
-System::addStokesDrag(){
-	double torque_factor = 4./3;
-    for (int i=0; i<np; i++) {
-		stokes_solver.addToDiag(i, radius[i], torque_factor*radius[i]*radius[i]*radius[i]);
-    }
-}
+//void
+//System::addStokesDrag(){
+//	double sd_coeff = 1;
+//	double torque_factor = 4./3;
+//    for (int i=0; i<np; i++) {
+//		 stokes_solver.addToDiag(i, sd_coeff*radius[i], sd_coeff*torque_factor*radius_cubic[i]);
+//    }
+//}
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
  * This method computes:

@@ -166,6 +166,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		sys.set_integration_method(atoi(value.c_str()));
 	} else if (keyword == "lub_max") {
 		sys.set_lub_max(atof(value.c_str()));
+	} else if (keyword == "sd_coeff") {
+		sys.set_sd_coeff(atof(value.c_str()));
 	} else if (keyword == "kn") {
 		sys.set_kn(atof(value.c_str()));
 	} else if (keyword == "kt") {

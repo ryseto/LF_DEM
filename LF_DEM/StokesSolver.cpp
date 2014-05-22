@@ -410,12 +410,12 @@ StokesSolver::completeResistanceMatrix(){
 }
 
 void
-StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions){
+StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, double *resetResistanceMatrix){
 	setSolverType(solver_type);
 	odblocks_nb = nb_of_interactions;
 	if (direct()) {
 		for (int k=0; k<dblocks_size; k++) {
-			dblocks[k] = 0;
+			dblocks[k] = resetResistanceMatrix[k];
 		}
 		odbrows.clear();
 		odblocks[0].resize(6*odblocks_nb);

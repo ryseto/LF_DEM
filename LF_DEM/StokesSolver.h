@@ -267,7 +267,7 @@ public:
 	 - possible solver_type: "direct" or "iterative"
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
-    void resetResistanceMatrix(string solver_type, int nb_of_interactions);
+    void resetResistanceMatrix(string solver_type, int nb_of_interactions, double *resetResistanceMatrix);
 	
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 

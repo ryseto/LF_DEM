@@ -57,8 +57,10 @@ private:
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
+	double sd_coeff;
 	double mu_static; // static friction coefficient.
 	double kb_T;
+	double coeff_stokes_drag;
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -90,7 +92,7 @@ private:
 	void buildBrownianTerms();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
-	void addStokesDrag();
+	//void addStokesDrag();
 	void updateResistanceMatrix();
 	void print_res();
 	void calcStressesHydroContact();
@@ -112,6 +114,7 @@ public:
 	double *radius;
 	double *radius_cubic;
 	double *angle; // for 2D visualization
+	double *resistance_matrix_dblock;
 	vec3d *velocity;
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
@@ -297,6 +300,7 @@ public:
 		colloidalforce_amplitude = val;}
 	inline double get_colloidalforce_amplitude(){return colloidalforce_amplitude;}
 	void set_colloidalforce_length(double val){colloidalforce_length = val;}
+	void set_sd_coeff(double val){sd_coeff = val;}
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
