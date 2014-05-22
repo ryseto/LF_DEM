@@ -26,7 +26,7 @@ GenerateInitConfig::generate(){
 	sys.in_predictor = false;
 	sys.set_integration_method(0);
 	putRandom();
-	sys.setupSystemForGenerateInit();
+	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
 	step_size = 10;
@@ -196,7 +196,7 @@ GenerateInitConfig::gradientDescent(){
 		moveAlongGradient(grad, 1);
 		storeGradient();
 		running_energy = computeGradient();
-		relative_en=(old_running_energy-running_energy)/(old_running_energy+running_energy);
+		relative_en = (old_running_energy-running_energy)/(old_running_energy+running_energy);
 		if (steps%100 == 0) {
 			cerr << "    Steps = " << steps << " :::   Energy : " << running_energy/np << endl;
 		}
@@ -380,7 +380,7 @@ GenerateInitConfig::setParameters(){
 	 */
 	np = readStdinDefault(200, "number of particle");
 	int dimension = readStdinDefault(3, "dimension (2 or 3)");
-	if (dimension == 2){
+	if (dimension == 2) {
 		sys.twodimension = true;
 	} else {
 		sys.twodimension = false;
@@ -507,13 +507,6 @@ GenerateInitConfig::setParameters(){
 //	 *
 //	 */
 //	sys.contact_relaxation_time = 0.001;
-//	/*
-//	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
-//	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
-//	 *   The optimal value of bgf_factor (< 1.0) may exist.
-//	 *
-//	 */
-//	sys.Bgf_factor(1);
 //	/*
 //	 * Brownian force
 //	 * kb_T: Thermal energy kb*T

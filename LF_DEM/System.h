@@ -57,9 +57,10 @@ private:
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
+	double sd_coeff;
 	double mu_static; // static friction coefficient.
-	double bgf_factor;
 	double kb_T;
+	double coeff_stokes_drag;
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -74,15 +75,10 @@ private:
 	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
 	vector<double> sliding_velocity_history;
 	vector<double> relative_velocity_history;
-	/* cnt_parameter_changed is used for kn-kt ajusting algorithm.
-	 * Spring constants are changed in the simulation.
-	 * This may cause large contact forces.
-	 * These values are not considered for the next deteremination.
-	 */
 	bool after_parameter_changed;
-	//int cnt_prameter_convergence;
-	void timeEvolutionEulersMethod(bool calc_stress=false);
-	void timeEvolutionPredictorCorrectorMethod(bool calc_stress=false);
+	void (System::*timeEvolutionDt)(bool);
+	void timeEvolutionEulersMethod(bool calc_stress);
+	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
 	void timeStepMove();
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
@@ -90,29 +86,25 @@ private:
 	void setContactForceToParticle();
 	void setColloidalForceToParticle();
 	void buildHydroTerms(bool, bool);
-	void buildLubricationTerms(bool mat=true, bool rhs=true);
+	void (System::*buildLubricationTerms)(bool, bool);
+	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
+	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
 	void buildBrownianTerms();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
-	void addStokesDrag();
-	void print_res();
-	
 	void brownianForceTest();
+	void updateResistanceMatrix();
+	void print_res();
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
-	/*Backup*/
-	vector <vec3d> position_backup;
-	Interaction *interaction_backup;
 	MTRand *r_gen;
-
 protected:
 public:
 	~System();
-	void backupState();
 	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
@@ -122,6 +114,7 @@ public:
 	double *radius;
 	double *radius_cubic;
 	double *angle; // for 2D visualization
+	double *resistance_matrix_dblock;
 	vec3d *velocity;
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
@@ -144,7 +137,6 @@ public:
 	double *contact_forces_predictor;
 	double *hydro_forces_predictor;
 	double *brownian_force;
-
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
@@ -158,7 +150,6 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stressGU;
-	double ratio_dashpot_total;
 	int friction_model;
 	bool friction;
 	bool colloidalforce;
@@ -213,21 +204,16 @@ public:
 	double ave_sliding_velocity;
 	int contact_nb;
 	int fric_contact_nb;
-	double ratio_dynamic_friction;
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
-	//ofstream fout_int_data;
-	int cnt_static_to_dynamic;
-	int rate_static_to_dynamic;
 	bool kn_kt_adjustment;
-
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
 						  double lx_, double ly_, double lz_);
-	void setupSystemForGenerateInit();
+	void setInteractions_GenerateInitConfig();
 	void setupSystem();
 	void allocatePositionRadius();
 	void allocateRessources();
@@ -239,7 +225,7 @@ public:
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
-	void computeVelocities();
+	void computeVelocities(bool divided_velocities);
 	void updateVelocityLubrication();
 	void updateVelocityRestingFluid();
 	void forceReset();
@@ -256,13 +242,16 @@ public:
 	int adjustContactModelParameters();
 	void setupShearFlow(bool activate){
 		if (activate) {
+			/* In dimensionless simulations for non Browninan simulation,
+			 * shear rate is always 1.
+			 */
 			vel_difference = lz;
 		} else {
 			vel_difference = 0;
 		}
 	}
 	/*************************************************************/
-	inline void setBoxSize(double lx_, double ly_, double lz_){
+	void setBoxSize(double lx_, double ly_, double lz_){
 		lx = lx_;
 		lx_half = 0.5*lx;
 		ly = ly_;
@@ -279,8 +268,13 @@ public:
 	}
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
-	void set_bgf_factor(int val){bgf_factor = val;}
-	void set_kb_T(double val){kb_T = val; if(kb_T>0.){ brownian=true; integration_method=1;} }
+	void set_kb_T(double val){
+		kb_T = val;
+		if (kb_T > 0) {
+			brownian = true;
+			integration_method = 1;
+		}
+	}
 	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}
@@ -305,15 +299,11 @@ public:
 		colloidalforce_amplitude = val;}
 	inline double get_colloidalforce_amplitude(){return colloidalforce_amplitude;}
 	void set_colloidalforce_length(double val){colloidalforce_length = val;}
+	void set_sd_coeff(double val){sd_coeff = val;}
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
 	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-	inline double get_log_lub_coeff_staticfriction(){
-		cerr << "not allowed\n";
-		exit(1);
-		return log_lub_coeff_contact_tan_dashpot;
-	}
 	inline double get_log_lub_coeff_dynamicfriction(){
 		/* In a sliding state, the resistance coeffient is the sum of
 		 * lubrication and dashpot.
@@ -322,12 +312,6 @@ public:
 		 */
 		return log_lub_coeff_contact_tan_total;
 	}
-	inline double get_ratio_dashpot_total(){return ratio_dashpot_total;}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-	double get_rate_static_to_dynamic(){return rate_static_to_dynamic;}
-	double get_ratio_dynamic_friction(){return ratio_dynamic_friction;}
-	void incrementCounter_static_to_dynamic(){
-		cnt_static_to_dynamic++;
-	}
 };
 #endif /* defined(__LF_DEM__System__) */

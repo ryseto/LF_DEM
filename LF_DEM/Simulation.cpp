@@ -73,8 +73,8 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	int cnt_simu_loop = 1;
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
+
 	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
-		//sys.backupState();
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
@@ -136,11 +136,9 @@ removeBlank(string &str){
 }
 
 void
-Simulation::autoSetParameters(const string &keyword,
-							  const string &value){
-	if (keyword == "bgf_factor") {
-		sys.set_bgf_factor(atof(value.c_str()));
-	} else if (keyword == "lubrication_model") {
+Simulation::autoSetParameters(const string &keyword, const string &value){
+	
+	if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "friction_model") {
 		sys.friction_model = atoi(value.c_str());
@@ -168,6 +166,8 @@ Simulation::autoSetParameters(const string &keyword,
 		sys.set_integration_method(atoi(value.c_str()));
 	} else if (keyword == "lub_max") {
 		sys.set_lub_max(atof(value.c_str()));
+	} else if (keyword == "sd_coeff") {
+		sys.set_sd_coeff(atof(value.c_str()));
 	} else if (keyword == "kn") {
 		sys.set_kn(atof(value.c_str()));
 	} else if (keyword == "kt") {
@@ -274,7 +274,6 @@ Simulation::setDefaultParameters(){
 	 * integration_method:
 	 * 0 Euler's Method,
 	 * 1 predictor-corrector,
-	 * 2 Brownian (if kT > 0).
 	 */
 	int _integration_method = 1;
 	/*
@@ -321,13 +320,6 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.contact_relaxation_time = 1e-2;
 	sys.contact_relaxation_time_tan = 0;
-	/*
-	 *  bgf_factor: background flow factor gives the weight between the one-body force and two-body force.
-	 *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimate.
-	 *   The optimal value of bgf_factor (< 1.0) may exist.
-	 *
-	 */
-	double _bgf_factor = 1;
 	/*
 	 * Brownian force
 	 * kb_T: Thermal energy kb*T
@@ -382,7 +374,6 @@ Simulation::setDefaultParameters(){
 	sys.friction_model = _friction_model;
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);
-	sys.set_bgf_factor(_bgf_factor);
 	sys.set_lub_max(_lub_max);
 	sys.set_dt_max(_dt);
 	sys.set_kn(_kn);
@@ -410,9 +401,7 @@ Simulation::importInitialPositionFile(){
 	volume_fraction = volume_fraction_;
 	double x_, y_, z_, a_;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
-		//initial_position.push_back(vec3d (x_,y_,z_));
-		vec3d tmp(x_, y_, z_);
-		initial_position.push_back(tmp);
+		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);
 	}
 	file_import.close();
@@ -427,20 +416,15 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	
 	if (sys.dimensionless_shear_rate == -1) {
 		ss_simu_name << "_srinf" ; // shear rate infinity
 	} else {
 		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 	}
-
 	if (sys.brownian) {
 		ss_simu_name << "_T" << sys.get_kb_T();
 	}
 	sys.simu_name = ss_simu_name.str();
-	
-	
-	cerr << sys.simu_name << endl;
 }
 
 void
@@ -635,13 +619,11 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//38
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//39
 	fout_rheo << 6*M_PI*particle_pressure_col << ' ';//40
-	fout_rheo << sys.get_ratio_dynamic_friction() << ' ';//41
-	fout_rheo << sys.get_rate_static_to_dynamic() << ' ';//42
-	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//43
-	fout_rheo << sys.ave_contact_velo_tan << ' '; // 44
-	fout_rheo << sys.ave_contact_velo_normal << ' '; // 45
-	fout_rheo << sys.ave_sliding_velocity << ' ' ; //46
-	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
+	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
+	fout_rheo << sys.ave_contact_velo_tan << ' '; // 42
+	fout_rheo << sys.ave_contact_velo_normal << ' '; // 43
+	fout_rheo << sys.ave_sliding_velocity << ' ' ; //44
+	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //45
 	fout_rheo << endl;
 }
 

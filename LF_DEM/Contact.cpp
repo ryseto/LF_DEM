@@ -74,8 +74,8 @@ Contact::deactivate(){
  *********************************/
 void
 Contact::incrementTangentialDisplacement(){
-	if(sys->in_predictor){
-	   prev_disp_tan = disp_tan;
+	if (sys->in_predictor) {
+		prev_disp_tan = disp_tan;
 	}
 	disp_tan = prev_disp_tan + interaction->relative_surface_velocity*sys->get_dt();
 }
@@ -114,18 +114,12 @@ Contact::frictionlaw_coulomb(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce *=	mu;
 	if (supportable_tanforce < 0){
-		if (staticfriction) {
-			sys->incrementCounter_static_to_dynamic();
-		}
 		staticfriction = false;
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			if (staticfriction) {
-				sys->incrementCounter_static_to_dynamic();
-			}
 			staticfriction = false;
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
 			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
@@ -150,9 +144,6 @@ Contact::frictionlaw_criticalload(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0){
-		if (staticfriction) {
-			sys->incrementCounter_static_to_dynamic();
-		}
  		staticfriction = false;
 		disp_tan.reset();
 		f_contact_tan.reset();
@@ -160,9 +151,6 @@ Contact::frictionlaw_criticalload(){
 		supportable_tanforce *= mu;
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			if (staticfriction) {
-				sys->incrementCounter_static_to_dynamic();
-			}
 			staticfriction = false;
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
 			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
@@ -187,9 +175,6 @@ Contact::frictionlaw_criticalload_mu_inf(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0){
-		if (staticfriction) {
-			sys->incrementCounter_static_to_dynamic();
-		}
  		staticfriction = false;
 		disp_tan.reset();
 		f_contact_tan.reset();

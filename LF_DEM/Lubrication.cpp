@@ -511,7 +511,6 @@ Lubrication::addHydroStress(){
 	vec3d vjh(sys->vel_hydro[p1]);
 	vec3d oih(sys->ang_vel_hydro[p0]);
 	vec3d ojh(sys->ang_vel_hydro[p1]);
-
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
@@ -545,7 +544,7 @@ Lubrication::addHydroStress(){
 	sys->colloidalstressGU[p0] += stresslet_colloid_GU_i;
 	sys->colloidalstressGU[p1] += stresslet_colloid_GU_j;
 
-	if(sys->brownian){
+	if (sys->brownian) {
 		StressTensor stresslet_brownian_GU_i;
 		StressTensor stresslet_brownian_GU_j;
 		vec3d vib(sys->vel_brownian[p0]);
@@ -556,6 +555,5 @@ Lubrication::addHydroStress(){
 		sys->brownianstressGU[p0] += stresslet_brownian_GU_i;
 		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
 	}
-	
 }
 

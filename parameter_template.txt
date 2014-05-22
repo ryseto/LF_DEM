@@ -48,13 +48,6 @@ lub_reduce_parameter = 1e-3;
  */
 contact_relaxation_time = 1e-3;
 /*
- *  bgf_factor: background flow factor gives the weight between the one-body force and two-body forc.
- *   bgf_factor = 1.0 means full drag forces from undisturbed shear flow, that should be overestimat.
- *   The optimal value of bgf_factor (< 1.0) may exist.
- *
- */
-bgf_factor = 1.0;
-/*
  * Brownian force
  * kb_T: Thermal energy kb*T
  * kb_T = 0 ---> non-brownian
