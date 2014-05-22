@@ -93,6 +93,7 @@ private:
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
 	void brownianForceTest();
+
 	void updateResistanceMatrix();
 	void print_res();
 	void calcStressesHydroContact();
