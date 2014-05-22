@@ -643,13 +643,49 @@ StokesSolver::getRHS(double* rhs){
 #endif
 }
 
+
+
+// Computes X = L^T RHS
 void
-StokesSolver::solve_CholTrans(double* velocity){
+StokesSolver::compute_LTRHS(double* X){
+	if (direct()) {
+		if(!chol_L->is_ll){
+			cerr << " The factorization is LDL^T. compute_LTRHS(double* X) only works for LL^T factorization." << endl;
+		}
+		chol_Psolution = cholmod_solve(CHOLMOD_P, chol_L, chol_rhs, &chol_c) ; // X1 = P*RHS
+		double alpha [2] = {1,0};
+		double beta [2] = {0,0};
+		int transpose = 1;
+		chol_solution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
+		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
+		cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(chol_L_copy, &chol_c);
+		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_Psolution, chol_solution, &chol_c) ; // X = L^T*X1
+
+		for (int i=0; i<res_matrix_linear_size; i++) {
+			X[i] = ((double*)chol_solution->x)[i];
+		}
+		cholmod_free_sparse(&chol_L_sparse, &chol_c);
+		cholmod_free_factor(&chol_L_copy, &chol_c);
+		cholmod_free_dense(&chol_solution, &chol_c);
+		cholmod_free_dense(&chol_Psolution, &chol_c);
+	}
+#ifdef TRILINOS
+	if (iterative()) {
+		cerr << " StokesSolver::compute_LTRHS(double* velocity) not implemented for iterative solver." << endl;
+		exit(1);
+	}
+#endif
+}
+
+
+// Finds solutions to L^T X = RHS
+void
+StokesSolver::solve_LT(double* X){
 	if (direct()) {
 		chol_PTsolution = cholmod_solve(CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 		chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
 		for (int i=0; i<res_matrix_linear_size; i++) {
-			velocity[i] = ((double*)chol_solution->x)[i];
+			X[i] = ((double*)chol_solution->x)[i];
 		}
 		cholmod_free_dense(&chol_solution, &chol_c);
 		cholmod_free_dense(&chol_PTsolution, &chol_c);
@@ -663,18 +699,18 @@ StokesSolver::solve_CholTrans(double* velocity){
 }
 
 void
-StokesSolver::solve_CholTrans(vec3d* velocity, vec3d* ang_velocity){
+StokesSolver::solve_LT(vec3d* X, vec3d* ang_X){
 	if (direct()) {
 		chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 		chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
-			velocity[i].x = ((double*)chol_solution->x)[i6  ];
-			velocity[i].y = ((double*)chol_solution->x)[i6+1];
-			velocity[i].z = ((double*)chol_solution->x)[i6+2];
-			ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
-			ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
-			ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+			X[i].x = ((double*)chol_solution->x)[i6  ];
+			X[i].y = ((double*)chol_solution->x)[i6+1];
+			X[i].z = ((double*)chol_solution->x)[i6+2];
+			ang_X[i].x = ((double*)chol_solution->x)[i6+3];
+			ang_X[i].y = ((double*)chol_solution->x)[i6+4];
+			ang_X[i].z = ((double*)chol_solution->x)[i6+5];
 		}				
 		cholmod_free_dense(&chol_solution, &chol_c);
 		cholmod_free_dense(&chol_PTsolution, &chol_c);
@@ -990,7 +1026,9 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
 
 void
 StokesSolver::factorizeResistanceMatrix(){
-
+	//	chol_c.nmethods = 1;
+	//	chol_c.method[0].ordering = CHOLMOD_NATURAL;
+	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 
@@ -1004,6 +1042,7 @@ StokesSolver::factorizeResistanceMatrix(){
 		cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  chol_c.final_ll <<endl;
 		chol_c.supernodal = CHOLMOD_SUPERNODAL;
     }
+	
 }
 
 #ifdef TRILINOS
@@ -1225,17 +1264,15 @@ StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 		if(sparse_or_dense=="dense"){
 			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
 			for (int i = 0; i < res_matrix_linear_size; i++) {
-				if(i==0){
-					for (int j = 0; j < res_matrix_linear_size/6; j++) {
-						out << j << "\t \t \t \t \t \t" ;
-					}
-					out << endl;
-				}
+				// if(i==0){
+				// 	for (int j = 0; j < res_matrix_linear_size/6; j++) {
+				// 		out << j << "\t \t \t \t \t \t" ;
+				// 	}
+				// 	out << endl;
+				// }
 				for (int j = 0; j < res_matrix_linear_size; j++) {
 					out <<setprecision(3) <<  ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
 				}
-
-					
 				out << endl;
 			}
 			out << endl;

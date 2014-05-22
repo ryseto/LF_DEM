@@ -173,6 +173,7 @@ private:
 	
     cholmod_dense *chol_solution;
     cholmod_dense *chol_PTsolution;
+    cholmod_dense *chol_Psolution;
     cholmod_dense *chol_v_nonBrownian;
     cholmod_dense *chol_v_Brownian_init;
     cholmod_dense *chol_v_Brownian_mid;
@@ -343,15 +344,25 @@ public:
     void solve(double* velocity);
 	
     /*
-	 solve_CholTrans(double* velocity) :
+	 solve_LT(double* X) :
 	 - once the resistance matrix and the RHS vector are built
 	 ( completeResistanceMatrix() must have been called )
-	 - solves L^t * velocity = RHS, and stores it in velocity array,
+	 - solves L^t * X = RHS, and stores it in X array,
 	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
-    void solve_CholTrans(double* velocity);
-    void solve_CholTrans(vec3d* velocity, vec3d* ang_velocity);
+    void solve_LT(double* X);
+    void solve_LT(vec3d* X, vec3d* ang_X);
+
+    /*
+	 compute_LTRHS(double* X) :
+	 - once the resistance matrix and the RHS vector are built
+	 ( completeResistanceMatrix() must have been called )
+	 - solves X = L^T * RHS, and stores it in X array,
+	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
+	 - works only for direct solver, as we need the Cholesky factor
+	 */
+    void compute_LTRHS(double* X);
 	
     /*
 	 solvingIsDone(bool free_Cholesky_factor) :

@@ -95,9 +95,9 @@ private:
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
 	void addStokesDrag();
-	void updateResistanceMatrix();
 	void print_res();
 	
+	void brownianForceTest();
 	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();

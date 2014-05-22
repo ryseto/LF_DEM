@@ -443,6 +443,8 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 			}
 		}
 	}
+	
+
 }
 
 void
@@ -789,7 +791,7 @@ System::buildBrownianTerms(){
 	}
 	
 	stokes_solver.setRHS(brownian_force);
-	stokes_solver.solve_CholTrans(brownian_force); // L^{-T}.F_B = \sqrt(2kT/dt) * A
+	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
 
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
@@ -801,6 +803,67 @@ System::buildBrownianTerms(){
 	}
 	
 	stokes_solver.setRHS(brownian_force);
+}
+
+void
+System::brownianForceTest(){ // a test that < Fb Fb > = RFU
+	double **avg_fbfb;
+	avg_fbfb = new double* [linalg_size];
+	for(int i=0; i<linalg_size;i++){
+		avg_fbfb[i] = new double [linalg_size];
+		for(int j=0; j<linalg_size;j++){
+			avg_fbfb[i][j] = 0;
+		}
+	}
+	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
+	int sample=0;
+	int sample_max = 1000;
+	while(sample < sample_max){
+		sample++;
+		
+		for (int i=0; i<linalg_size; i++) {
+			brownian_force[i] = sqrt_kbT2_dt*GRANDOM;
+		}
+		
+		stokes_solver.setRHS(brownian_force);
+		stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) *L^{-T}* A
+		
+		if (twodimension) {
+			for (int i=0; i<np; i++) {
+				int i6 = 6*i;
+				brownian_force[i6+1] = 0;
+				brownian_force[i6+3] = 0;
+				brownian_force[i6+5] = 0;
+			}
+		}
+	
+		for (int i=0; i<linalg_size; i++) {
+			for (int j=0; j<linalg_size; j++) {
+				avg_fbfb[i][j] += brownian_force[i]*brownian_force[j];
+			}
+		}
+	}
+
+	ofstream fout;
+	fout.open("fbfb.dat");	
+	for (int i=0; i<linalg_size; i++) {
+		for (int j=0; j<linalg_size; j++) {
+			fout << avg_fbfb[i][j]/sample_max << " ";
+		}
+		fout << endl;
+	}
+
+	stokes_solver.printResistanceMatrix(fout, "dense");
+	fout.close();
+	double var=0;
+	for(int i=0;i<10000;i++){
+		double rn = GRANDOM;
+		var+=rn*rn;
+	}
+	cout << var/10000. << endl;
+	cout << "done" << endl;
+
+	DELETE(avg_fbfb);
 }
 
 void
@@ -867,6 +930,8 @@ System::buildColloidalForceTerms(bool set_or_add){
 
 void
 System::computeVelocities(){
+
+
     stokes_solver.resetRHS();
 	buildHydroTerms(true, true); // build matrix and rhs force GE
 	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
