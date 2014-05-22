@@ -277,6 +277,10 @@ Simulation::setDefaultParameters(){
 	 */
 	int _integration_method = 1;
 	/*
+	 * Stokes drag coeffient
+	 */
+	double _sd_coeff = 1;
+	/*
 	 * Lubrication model
 	 * 0 no lubrication
 	 * 1 1/xi lubrication (only squeeze mode)
@@ -370,7 +374,7 @@ Simulation::setDefaultParameters(){
 	 */
 	out_data_particle = true;
 	out_data_interaction = true;
-
+	sys.set_sd_coeff(_sd_coeff);
 	sys.friction_model = _friction_model;
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);

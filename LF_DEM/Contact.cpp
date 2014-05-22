@@ -104,7 +104,6 @@ Contact::calcContactInteraction(){
 	// 	cout <<  f_contact_normal.x << " " << f_contact_normal.y << " " << f_contact_normal.z << endl;
 	// 	cout <<  interaction->nvec.x << " " << interaction->nvec.y << " " << interaction->nvec.z << endl;
 	// }
-
 }
 
 void
@@ -187,7 +186,6 @@ Contact::frictionlaw_criticalload_mu_inf(){
 void
 Contact::frictionlaw_null(){;}
 
-
 void
 Contact::calcContactInteractionRelax(){
 	f_contact_normal_norm = -kn_scaled*(interaction->get_gap_nondim()-0.02);
@@ -235,21 +233,8 @@ Contact::addContactStress(){
 		 */
 		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);
 		contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
-
 	} else {
 		contact_stresslet_XF_normal.reset();
 		contact_stresslet_XF_tan.reset();
 	}
 }
-
-// ***
-// *** It seems never to be used, so we may remove this function.
-// ***
-//double
-//Contact::getContactVelocity(){
-//	if (!active) {
-//		return 0;
-//	}
-//	return interaction->relative_surface_velocity.norm();
-//}
-

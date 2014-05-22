@@ -410,12 +410,12 @@ StokesSolver::completeResistanceMatrix(){
 }
 
 void
-StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, double *resetResistanceMatrix){
+StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, double *reset_resmat_dblocks){
 	setSolverType(solver_type);
 	odblocks_nb = nb_of_interactions;
 	if (direct()) {
 		for (int k=0; k<dblocks_size; k++) {
-			dblocks[k] = resetResistanceMatrix[k];
+			dblocks[k] = reset_resmat_dblocks[k];
 		}
 		odbrows.clear();
 		odblocks[0].resize(6*odblocks_nb);
@@ -433,6 +433,8 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, 
 		odbrows_table[0] = 0;
 	}
 #ifdef TRILINOS
+	/* reset_resmat_dblocks is not adopted to reset.
+	 */
 	if (iterative()) {
 		tril_res_matrix = new Epetra_CrsMatrix(Copy, *Map, 20*dof+dof );
 		tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);

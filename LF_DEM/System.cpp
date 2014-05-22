@@ -234,12 +234,12 @@ System::setupSystem(){
 		int i18 = 18*i;
 		double FUvalue = sd_coeff*radius[i];
 		double TWvalue = sd_coeff*torque_factor*radius_cubic[i];
-		resistance_matrix_dblock[i18   ] += FUvalue;
-		resistance_matrix_dblock[i18+6 ] += FUvalue;
-		resistance_matrix_dblock[i18+10] += FUvalue;
-		resistance_matrix_dblock[i18+12] += TWvalue;
-		resistance_matrix_dblock[i18+15] += TWvalue;
-		resistance_matrix_dblock[i18+17] += TWvalue;
+		resistance_matrix_dblock[i18   ] = FUvalue;
+		resistance_matrix_dblock[i18+6 ] = FUvalue;
+		resistance_matrix_dblock[i18+10] = FUvalue;
+		resistance_matrix_dblock[i18+12] = TWvalue;
+		resistance_matrix_dblock[i18+15] = TWvalue;
+		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
 	shear_strain = 0;
 	shear_disp = 0;
@@ -626,15 +626,6 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 		(this->*buildLubricationTerms)(false, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
 	}
 }
-
-//void
-//System::addStokesDrag(){
-//	double sd_coeff = 1;
-//	double torque_factor = 4./3;
-//    for (int i=0; i<np; i++) {
-//		 stokes_solver.addToDiag(i, sd_coeff*radius[i], sd_coeff*torque_factor*radius_cubic[i]);
-//    }
-//}
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
  * This method computes:
