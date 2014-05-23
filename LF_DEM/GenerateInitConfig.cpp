@@ -9,16 +9,15 @@
 #include <stdlib.h> // necessary for Linux
 #include "GenerateInitConfig.h"
 #include "Simulation.h"
-
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
-
 using namespace std;
-
 int
 GenerateInitConfig::generate(){
 	setParameters();
 	sys.set_np(np);
-	//	sys.brownian = false;
+	sys.brownian = false;
+	sys.friction = false;
+	sys.colloidalforce = false;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);
@@ -45,7 +44,6 @@ GenerateInitConfig::generate(){
 	gradientDescent();
 	step_size /= 4.;
 	gradientDescent();
-	
 	int count = 0;
 	double energy = 0;
 	ofstream fout;
@@ -69,16 +67,15 @@ GenerateInitConfig::generate(){
 		radius[i] = sys.radius[i];
 	}
 	outputPositionData();
-	
 	delete [] grad;
 	delete [] prev_grad;
-	
 	return 0;
 }
 
 void
 GenerateInitConfig::outputPositionData(){
 	ofstream fout;
+	ofstream fout_yap;
 	ostringstream ss_posdatafilename;
 	if (sys.twodimension) {
 		ss_posdatafilename << "D2";
@@ -95,7 +92,6 @@ GenerateInitConfig::outputPositionData(){
 		cerr << "disperse_type is wrong." << endl;
 		exit(1);
 	}
-
 	if (sys.twodimension) {
 		if (lx_lz == 1) {
 			ss_posdatafilename << "Square"; // square
@@ -112,6 +108,8 @@ GenerateInitConfig::outputPositionData(){
 	ss_posdatafilename << "_" << rand_seed << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
+	ss_posdatafilename << ".yap";
+	fout_yap.open(ss_posdatafilename.str().c_str());
 	fout << "# np1 np2 vf lx ly lz vf1 vf2" << endl;
 	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 	fout << lx << ' ' << ly << ' ' << lz << ' ';
@@ -121,6 +119,28 @@ GenerateInitConfig::outputPositionData(){
 		fout << position[i].y << ' ';
 		fout << position[i].z << ' ';
 		fout << radius[i] << endl;
+		fout_yap << "r ";
+		fout_yap << radius[i] << endl;
+		fout_yap << "c ";
+		fout_yap << position[i].x << ' ';
+		fout_yap << position[i].y << ' ';
+		fout_yap << position[i].z << endl;
+	}
+	fout_yap << "@ 4 \n";
+	fout_yap << "y 4 \n";
+	for (int k=0; k<sys.nb_interaction; k++) {
+		unsigned int i,j;
+		sys.interaction[k].get_par_num(i, j);
+		vec3d d_pos = position[i]-position[j];
+		if (d_pos.norm()< 10){
+			fout_yap << "l ";
+			fout_yap << position[i].x << ' ';
+			fout_yap << position[i].y << ' ';
+			fout_yap << position[i].z << ' ';
+			fout_yap << position[j].x << ' ';
+			fout_yap << position[j].y << ' ';
+			fout_yap << position[j].z << endl;
+		}
 	}
 	fout.close();
 }
@@ -156,12 +176,10 @@ GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	double grad_norm;
 	double gradient_power = 0.9;
 	vec3d step;
-
 	grad_norm = 0;
 	for (int i=0; i<np;i++) {
 		grad_norm += g[i].sq_norm();
 	}
-	
 	if (grad_norm != 0) {
 		double rescale = pow(grad_norm, gradient_power);
 		for (int i=0; i<np;i++) {
@@ -190,7 +208,6 @@ GenerateInitConfig::gradientDescent(){
 	storeGradient();
 	running_energy = computeGradient();
 	cerr << "  Starting Energy " << running_energy/np << endl;
-
 	do {
 		old_running_energy = running_energy;
 		moveAlongGradient(grad, 1);
@@ -202,7 +219,6 @@ GenerateInitConfig::gradientDescent(){
 		}
 		steps++;
 	} while(relative_en > 1e-6);
-
 	if (relative_en < 0) {
 		cerr << "    Steps = " << steps;
 		cerr << " :::   Last Step Upwards. Old Energy : " << old_running_energy/np;
@@ -212,7 +228,6 @@ GenerateInitConfig::gradientDescent(){
 		moveAlongGradient(prev_grad, -1);
 		return old_running_energy;
 	}
-
 	if (relative_en > 0
 		&& relative_en < 1e-6) {
 		cerr << "    Steps = " << steps;
@@ -251,7 +266,7 @@ GenerateInitConfig::updateInteractions(int i){
 		inter_list.push_back(*it);
 	}
 	for (unsigned int k=0; k<inter_list.size(); k++) {
-		if (inter_list[k]->is_active()){
+		if (inter_list[k]->is_active()) {
 			bool desactivated = false;
 			inter_list[k]->updateState(desactivated);
 			if (desactivated) {
@@ -312,21 +327,19 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);
 		updateInteractions(moved_part);
-		
 		//		int overlap_post_move = overlapNumber(moved_part);
 		double energy_post_move = particleEnergy(moved_part);
-		
 		//		if( overlap_pre_move <= overlap_post_move ){
-		if(energy_pre_move < energy_post_move) {
+		if (energy_pre_move < energy_post_move) {
 			sys.displacement(moved_part, -trial_move);
 			updateInteractions(moved_part);
 		}
+		//sys.checkNewInteraction();
 		steps ++;
 	}
-	
+	sys.boxset.update();
 	sys.checkNewInteraction();
 	sys.updateInteractions();
-	
 	int final_overlaps = 0;
 	double final_energy = 0;
 	for(int i=0; i<np; i++) {
@@ -335,16 +348,14 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 	for(int i=0; i<np; i++) {
 	 	final_energy += particleEnergy(i);
 	}
-	
 	cerr << " MC sweep : init energy " << init_energy/np << " final energy " << final_energy/np;
 	cerr << " init overlaps " << init_overlaps << " final overlaps " << final_overlaps << endl;
-	
 	return final_energy;
 }
 
 vec3d
 GenerateInitConfig::randUniformSphere(double r){
-	double z = 2*RANDOM - 1;
+	double z = 2*RANDOM-1;
 	double phi = 2*M_PI*RANDOM;
 	double sin_theta = sqrt(1-z*z);
 	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
@@ -378,25 +389,24 @@ GenerateInitConfig::setParameters(){
 	 *  Read parameters from standard input
 	 *
 	 */
-	np = readStdinDefault(200, "number of particle");
-	int dimension = readStdinDefault(3, "dimension (2 or 3)");
+	np = readStdinDefault(500, "number of particle");
+	int dimension = readStdinDefault(2, "dimension (2 or 3)");
 	if (dimension == 2) {
 		sys.twodimension = true;
 	} else {
 		sys.twodimension = false;
 	}
-
 	if (sys.twodimension) {
-		volume_fraction = readStdinDefault(0.7, "volume_fraction");
+		volume_fraction = readStdinDefault(0.78, "volume_fraction");
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
-	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: ");
+	lx_lz = readStdinDefault(1 , "Lx/Lz [1]: ");
 	if (!sys.twodimension) {
 		ly_lz = 1;
-		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: ");
+		ly_lz = readStdinDefault(1 , "Ly/Lz [1]: ");
 	}
-	disperse_type = readStdinDefault('m' , "(m)onodisperse or (b)idisperse");
+	disperse_type = readStdinDefault('b' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
 	a2 = 1;
 	volume_fraction1 = volume_fraction; // mono
@@ -443,7 +453,7 @@ GenerateInitConfig::setParameters(){
 	if (sys.twodimension) {
 		lz = sqrt(pvolume/(lx_lz*volume_fraction));
 		lx = lz*lx_lz;
-		ly = 0.0;
+		ly = 0;
 	} else {
 		lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1./3);
 		lx = lz*lx_lz;
@@ -458,89 +468,3 @@ GenerateInitConfig::setParameters(){
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
 }
-//
-//void
-//GenerateInitComononfig::setSystemParameters(){
-//	/*
-//	 * Simulation
-//	 *
-//	 * dt: the time step to integrate the equation of motion.
-//	 *     We need to give a good criterion to give.
-//	 * dt_mid: the intermediate time step for the mid-point
-//	 *     algortithm. dt/dt_mid = dt_ratio
-//	 *     Banchio/Brady (J Chem Phys) gives dt_ratio=100
-//	 *    ASD code from Brady has dt_ratio=150
-//	 *
-//	 */
-//	sys.Dt(1e-4);
-//	/*
-//	 * integration_method:
-//	 * 0 Euler's Method,
-//	 * 1 predictor-corrector,
-//	 * 2 Brownian (if kT > 0).
-//	 */
-//	sys.Integration_method(1);
-//	/*
-//	 * Shear flow
-//	 *  shear_rate: shear rate
-//	 *  strain(): total strain (length of simulation)
-//	 *
-//	 */
-//	/*
-//	 * Lubrication force
-//	 * lub_max: reduced large cutoff distance for lubrication
-//	 * I think lub_max = 2.5 and 3 generate different results.
-//	 * We should give suffiently larger value.
-//	 * The value 3 or 3.5 should be better (To be checked.)
-//	 */
-//	sys.Lub_max(2.5);
-//	/*
-//	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
-//	 *
-//	 */
-//	sys.lub_reduce_parameter = 1e-3;
-//	/*
-//	 * contact_relaxation_factor:
-//	 *
-//	 * This gives the coeffient of the resistance term for h < 0.
-//	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
-//	 *
-//	 */
-//	sys.contact_relaxation_time = 0.001;
-//	/*
-//	 * Brownian force
-//	 * kb_T: Thermal energy kb*T
-//	 * kb_T = 0 ---> non-brownian
-//	 * kb_T > 0 ---> brownian
-//	 */
-//	sys.kb_T = 0;
-//	/*
-//	 * Contact force parameters
-//	 * kn: normal spring constant
-//	 * kt: tangential spring constant
-//	 */
-//	sys.Kn(5000);
-//	sys.overlap_target = 0.03;
-//	sys.disp_tan_target = 0.03;
-//	/*
-//	 * Colloidal force parameter
-//	 * Short range repulsion is assumed.
-//	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
-//	 */
-//	/*
-//	 * mu_static: static friction coeffient
-//	 * mu_dynamic: dynamic friction coeffient
-//	 */
-//	sys.Mu_static(0);
-//	/*
-//	 * Output interval
-//	 */
-//	//strain_interval_output = 0.05;
-//	/*
-//	 *  Data output
-//	 */
-//	/*
-//	 * The middle height of the simulation box is set to the flow zero level.
-//	 */
-//
-//}

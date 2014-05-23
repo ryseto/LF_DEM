@@ -73,7 +73,6 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	int cnt_simu_loop = 1;
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
-
 	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
@@ -137,7 +136,6 @@ removeBlank(string &str){
 
 void
 Simulation::autoSetParameters(const string &keyword, const string &value){
-	
 	if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "friction_model") {
@@ -249,7 +247,6 @@ Simulation::openOutputFiles(){
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
 	string st_filename = "st_" +sys.simu_name + ".dat";
-	
 	fout_particle.open(particle_filename.c_str());
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
@@ -390,7 +387,7 @@ void
 Simulation::importInitialPositionFile(){
 	fstream file_import;
 	file_import.open(filename_import_positions.c_str());
-	if(!file_import) {
+	if (!file_import) {
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
@@ -449,7 +446,6 @@ Simulation::evaluateData(){
 	 */
 	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
 	total_colloidal_stress = sys.total_colloidal_stressXF+sys.total_colloidal_stressGU;
-	
 	total_stress = sys.total_hydro_stress;
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
@@ -463,11 +459,9 @@ Simulation::evaluateData(){
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
 	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
-	
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
-
 	viscosity_hydro = sys.total_hydro_stress.getStressXZ();
 	normalstress_diff_1_hydro = sys.total_hydro_stress.getNormalStress1();
 	normalstress_diff_2_hydro = sys.total_hydro_stress.getNormalStress2();
@@ -475,7 +469,6 @@ Simulation::evaluateData(){
 	normalstress_diff_1_cont_XF = total_contact_stressXF.getNormalStress1();
 	normalstress_diff_2_cont_XF = total_contact_stressXF.getNormalStress2();
 	particle_pressure_cont = total_contact_stressXF.getParticlePressure();
-	
 	viscosity_friction = sys.total_contact_stressXF_tan.getStressXZ();
 	normalstress_diff_1_friction = sys.total_contact_stressXF_tan.getNormalStress1();
 	normalstress_diff_2_friction = sys.total_contact_stressXF_tan.getNormalStress2();
@@ -489,7 +482,7 @@ Simulation::evaluateData(){
 	viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
 	normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
 	normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
-	if(sys.brownian){
+	if (sys.brownian) {
 		viscosity_brownian = sys.total_brownian_stressGU.getStressXZ();
 		normalstress_diff_1_brownian = sys.total_brownian_stressGU.getNormalStress1();
 		normalstress_diff_2_brownian = sys.total_brownian_stressGU.getNormalStress2();
@@ -693,7 +686,7 @@ Simulation::outputConfigurationData(){
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
 			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
 			double brownian_xzstressGU = 0;
-			if(sys.brownian){
+			if (sys.brownian) {
 				brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
 			}
 			/* 1: number of the particle
@@ -794,16 +787,7 @@ Simulation::outputConfigurationData(){
 					fout_interaction << 0 << ' ';
 				}
 				fout_interaction << endl;
-
 			}
 		}
 	}
 }
-
-
-
-
-
-
-
-

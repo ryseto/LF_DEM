@@ -111,6 +111,9 @@ System::setInteractions_GenerateInitConfig(){
 	}
 	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
+	shear_strain = 0;
+	shear_disp = 0;
+	vel_difference = 0;
 	initializeBoxing();
 	checkNewInteraction();
 }
@@ -257,7 +260,6 @@ System::setupSystem(){
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
-
 	/* t = beta/kn
 	 *  beta = t*kn
 	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
@@ -292,6 +294,8 @@ System::setupSystem(){
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	ts = 0;
 	shear_disp = 0;
+	/* shear rate is fixed to be 1 in dimensionless simulation
+	 */
 	vel_difference = lz;
 	after_parameter_changed = false;
 	stokes_solver.initialize();
@@ -580,8 +584,8 @@ System::checkNewInteraction(){
 void
 System::updateInteractions(){
 	for (int k=0; k<nb_interaction; k++) {
-		bool deactivated = false;
 		if (interaction[k].is_active()) {
+			bool deactivated = false;
 			interaction[k].updateState(deactivated);
 			if (deactivated) {
 				deactivated_interaction.push(k);
@@ -611,7 +615,6 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	//
 	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine 
 	// if you want GE to be the only rhs.
-
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -722,7 +725,6 @@ System::buildBrownianTerms(){
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
@@ -858,7 +860,6 @@ System::buildColloidalForceTerms(bool set_or_add){
 }
 
 void
-
 System::computeVelocities(bool divided_velocities){
 	stokes_solver.resetRHS();
 	if (divided_velocities) {
@@ -880,7 +881,6 @@ System::computeVelocities(bool divided_velocities){
 		buildColloidalForceTerms(false); // set rhs = F_Coll
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V_Coll
 	}
-
 	if (brownian) {
 		if (in_predictor) {
 			buildBrownianTerms(); // generate new F_B and set rhs = F_B
@@ -939,8 +939,8 @@ System::displacement(int i, const vec3d &dr){
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (z_shift) {
-		velocity[i].x += z_shift*lz;
+	if (z_shift != 0) {
+		velocity[i].x += z_shift*vel_difference;
 	}
 	boxset.box(i);
 }

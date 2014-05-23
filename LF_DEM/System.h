@@ -33,7 +33,6 @@ private:
 	int np;
 	int maxnb_interactionpair;
 	int nb_of_active_interactions;
-	BoxSet boxset;
 	int ts; // time steps
 	double dt;
 	double dt_max;
@@ -112,6 +111,7 @@ public:
 	double critical_normal_force; 
 	vec3d *position;
 	Interaction *interaction;
+	BoxSet boxset;
 	double *radius;
 	double *radius_cubic;
 	double *angle; // for 2D visualization
@@ -186,6 +186,10 @@ public:
 	double dimensionless_shear_rate;
 	/* Colloidal force to stabilize suspension
 	 * (This gives simple shear-rate depenedence.)
+	 */
+	/* Velocity difference between top and bottom
+	 * in Lees-Edwards boundary condition
+	 * vel_difference = shear_rate * lz
 	 */
 	double vel_difference;
 	double max_velocity;

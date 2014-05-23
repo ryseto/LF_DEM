@@ -89,7 +89,6 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool &deactivated);
-	void updateStateRelax(bool &deactivated);
 	void activate(int i, int j);
 	void deactivate();
 	inline bool is_overlap(){return r < ro;}

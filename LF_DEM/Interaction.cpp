@@ -123,9 +123,7 @@ Interaction::updateState(bool &deactivated){
 		calcRelativeVelocities();
 		contact.incrementTangentialDisplacement();
 	}
-	
 	calcNormalVectorDistanceGap();
-	
 	if (contact.active) {
 		if (gap_nondim > 0){
 			contact.deactivate();
@@ -155,35 +153,6 @@ Interaction::updateState(bool &deactivated){
 			/* separating */
 			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
 			f_colloidal = -f_colloidal_norm*nvec;
-		}
-	}
-}
-
-/* Relaxation to generate initial configuration.
- * This process should be reconsidered.
- */
-void
-Interaction::updateStateRelax(bool &deactivated){
-	deactivated = false;
-	if (active == false) {
-		return;
-	}
-	calcNormalVectorDistanceGap();
-	if (contact.active) {
-		contact.calcContactInteractionRelax();
-		if (gap_nondim > 0) {
-			contact.deactivate();
-		}
-		f_colloidal_norm = colloidalforce_amplitude;
-		f_colloidal = -f_colloidal_norm*nvec;
-	} else {
-		f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
-		f_colloidal = -f_colloidal_norm*nvec;
-		if (gap_nondim <= 0) {
-			contact.activate();
-		} else if (r > interaction_range_scaled) {
-			deactivate();
-			deactivated = true;
 		}
 	}
 }

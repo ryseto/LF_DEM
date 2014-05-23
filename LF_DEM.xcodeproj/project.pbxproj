@@ -17,7 +17,6 @@
 		D928F36917F4A15900145321 /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D928F36617F4A15900145321 /* libcolamd.2.8.0.a */; };
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
-		D92F19C31676450800411650 /* BrownianForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92F19C01676450800411650 /* BrownianForce.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D97C3B07167690DC009A6BF0 /* Interaction.cpp */; };
 		D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E016C2F45E00AD6E85 /* libbelos.dylib */; };
@@ -118,8 +117,6 @@
 		D92EAA0C17E39D5100C903F5 /* Contact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Contact.h; sourceTree = "<group>"; };
 		D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lubrication.cpp; sourceTree = "<group>"; };
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Lubrication.h; sourceTree = "<group>"; };
-		D92F19C01676450800411650 /* BrownianForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrownianForce.cpp; sourceTree = "<group>"; };
-		D92F19C11676450800411650 /* BrownianForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrownianForce.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
 		D932B8E016C2F45E00AD6E85 /* libbelos.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbelos.dylib; path = /usr/local/lib/libbelos.dylib; sourceTree = "<absolute>"; };
@@ -386,8 +383,6 @@
 				D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */,
 				D92EAA0E17E39D5100C903F5 /* Lubrication.h */,
 				D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */,
-				D92F19C01676450800411650 /* BrownianForce.cpp */,
-				D92F19C11676450800411650 /* BrownianForce.h */,
 				D9573FAE16797A000081E903 /* Box.cpp */,
 				D9573FAF16797A000081E903 /* Box.h */,
 				D9573FB016797A000081E903 /* BoxSet.cpp */,
@@ -587,7 +582,6 @@
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
-				D92F19C31676450800411650 /* BrownianForce.cpp in Sources */,
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
