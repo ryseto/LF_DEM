@@ -39,9 +39,7 @@ typedef Epetra_Operator MAT;
 using namespace std;
 
 class StokesSolver{
-
 	/*
-	 
 	  This class provides solver for the "Stokes" equation, which is an equation of motion of the type:
 	  
 	  ResistanceMatrix*Velocity = SomeForces
@@ -185,7 +183,7 @@ private:
     int packed;
     int xtype;
 	bool chol_L_to_be_freed;
-	
+
     // resistance matrix building
     double *dblocks;
     vector <double> *odblocks;

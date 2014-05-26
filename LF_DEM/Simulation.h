@@ -28,6 +28,7 @@ private:
 	double strain_interval_output;
 	double strain_interval_knkt_adjustment;
 	double volume_fraction;
+	string import_line[2];
 	/*
 	 * Resultant data
 	 */
@@ -90,6 +91,8 @@ private:
 	void outputRheologyData();
 	void outputStressTensorData();
 	void outputConfigurationData();
+	void outputFinalConfiguration();
+
 	vec3d shiftUpCoordinate(double x, double y, double z);
 public:
 	/* For DEMsystem*/

@@ -207,6 +207,9 @@ System::setupSystem(){
 	} else {
 		exit(1);
 	}
+	if (brownian) {
+		kb_T = 1/dimensionless_shear_rate;
+	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
@@ -434,18 +437,15 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
-
 		if (brownian) {
 			for (int i=0; i<np; i++) {
 				/*
 				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
 				 */
-				brownianstressGU[i] = 0.5*(brownianstressGU[i] - brownianstressGU_predictor[i]);
+				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
 			}
 		}
 	}
-	
-
 }
 
 /*
@@ -1020,6 +1020,7 @@ System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	max_relative_velocity = 0;
+	max_sliding_velocity = 0;
 	double sum_contact_velo_tan = 0;
 	double sum_contact_velo_normal = 0;
 	double sum_sliding_velocity = 0;
@@ -1043,6 +1044,9 @@ System::evaluateMaxContactVelocity(){
 			}
 			if (interaction[k].getRelativeVelocity() > max_relative_velocity) {
 				max_relative_velocity = interaction[k].getRelativeVelocity();
+			}
+			if (interaction[k].getContactVelocity() > max_sliding_velocity) {
+				max_sliding_velocity = interaction[k].getContactVelocity();
 			}
 		}
 	}

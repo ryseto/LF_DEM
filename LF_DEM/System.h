@@ -194,6 +194,7 @@ public:
 	double vel_difference;
 	double max_velocity;
 	double max_relative_velocity;
+	double max_sliding_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
 	double max_overlap; // = ro-r
@@ -207,8 +208,8 @@ public:
 	double ave_contact_velo_tan;
 	double ave_contact_velo_normal;
 	double ave_sliding_velocity;
-	int contact_nb;
-	int fric_contact_nb;
+	int contact_nb; // gap < 0
+	int fric_contact_nb; // fn > f* in the critical load model
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
@@ -269,7 +270,7 @@ public:
 		return system_volume;
 	}
 	double getParticleContactNumber(){
-		return (double)2*fric_contact_nb/np;
+		return (double)2*contact_nb/np;
 	}
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
