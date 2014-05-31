@@ -1032,7 +1032,7 @@ System::evaluateMaxContactVelocity(){
 			cnt_contact++;
 			sum_contact_velo_tan += interaction[k].getContactVelocity();
 			sum_contact_velo_normal += abs(interaction[k].getNormalVelocity());
-			if (interaction[k].contact.staticfriction == false) {
+			if (interaction[k].contact.state == 3) {
 				cnt_sliding++;
 				sum_sliding_velocity += interaction[k].getContactVelocity();
 			}
@@ -1118,7 +1118,7 @@ System::analyzeState(){
 				contact_nb ++;
 				if (interaction[k].is_friccontact()) {
 					fric_contact_nb ++;
-					if (interaction[k].contact.staticfriction == false) {
+					if (interaction[k].contact.state == 3) {
 						cnt_sliding_contact++;
 					}
 				}

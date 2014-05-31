@@ -769,33 +769,13 @@ Simulation::outputConfigurationData(){
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
 				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
-				if (sys.interaction[k].is_contact()){
-					/* 0 not frictional
-					 * 1 static friction
-					 * 2 sliding
-					 */
-					if (sys.friction_model == 1) {
-						// repulsive force model
-						if (sys.interaction[k].contact.staticfriction) {
-							fout_interaction << 1 << ' '; // non-sliding
-						} else {
-							fout_interaction << 2 << ' '; // sliding
-						}
-					} else {
-						// critical force model
-						if (sys.interaction[k].contact.staticfriction) {
-							fout_interaction << 1 << ' '; // non-sliding
-						} else {
-							if (sys.interaction[k].contact.is_activated_friction()){
-								fout_interaction << 2 << ' ';
-							} else {
-								fout_interaction << 0 << ' ';
-							}
-						}
-					}
-				} else {
-					fout_interaction << 0 << ' ';
-				}
+				/* contact.state:
+				 * 0 no contact
+				 * 1 Friction is not activated (critical load model)
+				 * 2 Static friction
+				 * 3 Sliding
+				 */
+				fout_interaction << sys.interaction[k].contact.state;
 				fout_interaction << endl;
 			}
 		}

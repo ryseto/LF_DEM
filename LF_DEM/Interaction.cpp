@@ -38,7 +38,7 @@ Interaction::calcNormalVectorDistanceGap(){
 	nyny = nvec.y*nvec.y;
 	nznz = nvec.z*nvec.z;
 	gap_nondim = r/ro_12-2;
-	if (contact.active) {
+	if (contact.state > 0) {
 		double overlap_12 = 0.5*(a0+a1-r);
 		a0_dash = a0-overlap_12;
 		a1_dash = a1-overlap_12;
@@ -124,7 +124,7 @@ Interaction::updateState(bool &deactivated){
 		contact.incrementTangentialDisplacement();
 	}
 	calcNormalVectorDistanceGap();
-	if (contact.active) {
+	if (contact.state > 0) {
 		if (gap_nondim > 0){
 			contact.deactivate();
 		}
@@ -138,11 +138,11 @@ Interaction::updateState(bool &deactivated){
 			return;
 		}
 	}
-	if (contact.active) {
+	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}
 	if (sys->colloidalforce) {
-		if (contact.active) {
+		if (contact.state > 0) {
 			/* For continuity, the colloidal force is kept as constant for h < 0.
 			 * This force does not affect the friction law,
 			 * i.e. it is separated from Fc_normal_norm.
@@ -198,7 +198,7 @@ Interaction::addColloidalStress(){
 /* observation */
 double
 Interaction::getContactVelocity(){
-	if (contact.active == false) {
+	if (contact.state == 0) {
 		return 0;
 	}
 	return relative_surface_velocity.norm();
