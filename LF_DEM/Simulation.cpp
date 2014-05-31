@@ -751,7 +751,7 @@ Simulation::outputConfigurationData(){
 				 *      1 = non-sliding
 				 *      2 = sliding
 				 */
-				unsigned int i, j;
+				unsigned short i, j;
 				sys.interaction[k].get_par_num(i, j);
 				vec3d nr_vec = sys.interaction[k].get_nvec();
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();

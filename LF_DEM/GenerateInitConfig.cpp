@@ -129,7 +129,7 @@ GenerateInitConfig::outputPositionData(){
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
 	for (int k=0; k<sys.nb_interaction; k++) {
-		unsigned int i,j;
+		unsigned short i,j;
 		sys.interaction[k].get_par_num(i, j);
 		vec3d d_pos = position[i]-position[j];
 		if (d_pos.norm()< 10){
@@ -150,7 +150,7 @@ GenerateInitConfig::computeGradient(){
 	for(int i=0; i<np; i++) {
 		grad[i].reset();
 	}
-	unsigned int i,j;
+	unsigned short i,j;
 	double r, rcont;
 	vec3d nr_vec;
 	double amp, amp2;

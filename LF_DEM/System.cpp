@@ -1131,8 +1131,8 @@ System::analyzeState(){
 					max_fc_tan = interaction[k].contact.get_f_contact_tan_norm();
 					intr_max_fc_tan = k;
 				}
-				if (interaction[k].contact.disp_tan_norm() > max_disp_tan) {
-					max_disp_tan = interaction[k].contact.disp_tan_norm();
+				if (interaction[k].contact.disp_tan.norm() > max_disp_tan) {
+					max_disp_tan = interaction[k].contact.disp_tan.norm();
 				}
 			}
 		}
@@ -1173,8 +1173,8 @@ System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;
 	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].contact.disp_tan_norm() > _max_disp_tan) {
-			_max_disp_tan = interaction[k].contact.disp_tan_norm();
+			interaction[k].contact.disp_tan.norm() > _max_disp_tan) {
+			_max_disp_tan = interaction[k].contact.disp_tan.norm();
 		}
 	}
 	return _max_disp_tan;

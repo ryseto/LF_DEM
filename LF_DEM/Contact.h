@@ -27,8 +27,8 @@ private:
 	System *sys;
 	Interaction *interaction;
 	void (Contact::*frictionlaw)();
-	unsigned int p0;
-	unsigned int p1;
+	unsigned short p0;
+	unsigned short p1;
 	//===== forces and stresses ==================== //
 	double kn_scaled;
 	double kt_scaled;
@@ -42,7 +42,6 @@ private:
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
-	vec3d tvec;
 protected:
 public:
 	/*********************************
@@ -70,18 +69,14 @@ public:
 	void frictionlaw_coulomb();
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
-
 	void incrementTangentialDisplacement();
 	void calcContactInteraction();
 	void addUpContactForceTorque();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
-	inline double disp_tan_norm(){return disp_tan.norm();}
 	void addContactStress();
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
 	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
 	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
-	vec3d get_disp_tan(){return disp_tan;}
-
 };
 #endif /* defined(__LF_DEM__Contact__) */

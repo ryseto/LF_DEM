@@ -54,7 +54,7 @@ Interaction::calcNormalVectorDistanceGap(){
  * Always j>i is satisfied.
  */
 void
-Interaction::activate(int i, int j){
+Interaction::activate(unsigned short i, unsigned short j){
 	active = true;
 	if (j > i) {
 		p0 = i;
