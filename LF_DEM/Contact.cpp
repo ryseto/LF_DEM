@@ -85,7 +85,7 @@ Contact::incrementTangentialDisplacement(){
 	if (sys->in_predictor) {
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan + interaction->relative_surface_velocity*sys->get_dt();
+	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->get_dt();
 }
 
 /*
@@ -96,7 +96,8 @@ Contact::incrementTangentialDisplacement(){
  */
 void
 Contact::calcContactInteraction(){
-	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); // gap_nondim is negative, therefore it is allways positive.
+	/* gap_nondim is negative, therefore it is allways positive. */
+	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
@@ -121,17 +122,20 @@ Contact::frictionlaw_coulomb(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce *=	mu;
 	if (supportable_tanforce < 0){
-		state = 0;
-		disp_tan.reset();
+		// !!!!!!!!!!!
+		// What is the state of this situation?
+		// !!!!!!!!!!
+		state = 3; // sliding ????
+		disp_tan.reset(); // no tangential force
 		f_contact_tan.reset();
 	} else {
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			state = 3;
+			state = 3; // sliding
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
 			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
 		} else {
-			state = 2;
+			state = 2; // static friction
 		}
 	}
 	return;
@@ -151,18 +155,18 @@ Contact::frictionlaw_criticalload(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
-		state = 1;
+		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
 		supportable_tanforce *= mu;
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			state = 3;
+			state = 3; // sliding
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
+			f_contact_tan = kt_scaled*disp_tan;
 		} else {
-			state = 2;
+			state = 2; // static friction
 		}
 	}
 	return;
@@ -182,11 +186,14 @@ Contact::frictionlaw_criticalload_mu_inf(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
-		state = 1;
+		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
-		state = 2;
+		// Never rescaled.
+		// [note]
+		// The tangential spring constant may be rescaled to control maximum strain
+		state = 2; // static friction
 	}
 	return;
 }
@@ -218,7 +225,6 @@ Contact::addContactStress(){
 	 * stress1 is a0*nvec[*]force.
 	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 	 */
-	
 	/* When we compose stress tensor,
 	 * even individual leverl, this part calculates symmetric tensor.
 	 * This symmetry is expected in the average ensumble.

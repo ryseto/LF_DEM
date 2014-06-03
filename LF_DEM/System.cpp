@@ -341,7 +341,7 @@ void
 System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	updateVelocityLubrication();
+	computeVelocities(calc_stress);
 	timeStepMove();
 	if (calc_stress) {
 		stressReset();
@@ -899,27 +899,6 @@ System::computeVelocities(bool divided_velocities){
 		ang_velocity[i] = na_ang_velocity[i];
 		velocity[i].x += position[i].z;
 		ang_velocity[i].y += 0.5;
-	}
-}
-
-/*
- * This function determines velocity[] and ang_velocity[].
- */
-void
-System::updateVelocityLubrication(){
-    stokes_solver.resetRHS();
-	buildHydroTerms(true, true);
-	buildContactTerms(false);// adding F_C
-	buildColloidalForceTerms(false); // add F_Coll
-	stokes_solver.solve(na_velocity, na_ang_velocity);
-	stokes_solver.solvingIsDone();
-	for (int i=0; i<np; i++) {
-		velocity[i] = na_velocity[i];
-		ang_velocity[i] = na_ang_velocity[i];
-		if (dimensionless_shear_rate != 0) {
-			velocity[i].x += position[i].z;
-			ang_velocity[i].y += 0.5;
-		}
 	}
 }
 
