@@ -33,9 +33,7 @@ shear_strain_end = 20;
 /*
  * Lubrication force
  * lub_max: reduced large cutoff distance for lubrication
- * I think lub_max = 2.5 and 3 generate different results.
- * We should give suffiently larger value. 
- * The value 3 or 3.5 should be better (To be checked.)
+ *
  */
 lub_max = 2.5;
 /*

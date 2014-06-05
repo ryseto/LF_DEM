@@ -59,7 +59,6 @@ private:
 	double sd_coeff;
 	double mu_static; // static friction coefficient.
 	double kb_T;
-	double coeff_stokes_drag;
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -143,7 +142,6 @@ public:
 	StressTensor* colloidalstressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
-	//	int brownianstress_calc_nb;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;

@@ -235,7 +235,7 @@ System::setupSystem(){
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
-	double torque_factor = 4./3;
+	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
 		double FUvalue = sd_coeff*radius[i];
@@ -254,6 +254,7 @@ System::setupSystem(){
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
+		
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
