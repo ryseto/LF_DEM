@@ -18,7 +18,7 @@
 #include "System.h"
 using namespace std;
 
-class GenerateInitConfig{
+class GenerateInitConfig {
 private:
 	System sys;
 	char disperse_type;
@@ -60,12 +60,9 @@ private:
 	double sqContactDistance(int i, int j, double contact_distance);
 	void putRandom();
 	void setParameters();
-//	void setSystemParameters();
 	void outputPositionData();
 public:
 	GenerateInitConfig(){};
 	int generate();
-	
 };
-
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

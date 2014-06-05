@@ -111,6 +111,9 @@ System::setInteractions_GenerateInitConfig(){
 	}
 	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
+	shear_strain = 0;
+	shear_disp = 0;
+	vel_difference = 0;
 	initializeBoxing();
 	checkNewInteraction();
 }
@@ -204,6 +207,9 @@ System::setupSystem(){
 	} else {
 		exit(1);
 	}
+	if (brownian) {
+		kb_T = 1/dimensionless_shear_rate;
+	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
@@ -229,7 +235,7 @@ System::setupSystem(){
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
-	double torque_factor = 4./3;
+	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
 		double FUvalue = sd_coeff*radius[i];
@@ -248,6 +254,7 @@ System::setupSystem(){
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
+		
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
@@ -257,7 +264,6 @@ System::setupSystem(){
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
-
 	/* t = beta/kn
 	 *  beta = t*kn
 	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
@@ -292,6 +298,8 @@ System::setupSystem(){
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	ts = 0;
 	shear_disp = 0;
+	/* shear rate is fixed to be 1 in dimensionless simulation
+	 */
 	vel_difference = lz;
 	after_parameter_changed = false;
 	stokes_solver.initialize();
@@ -334,7 +342,7 @@ void
 System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
-	updateVelocityLubrication();
+	computeVelocities(calc_stress);
 	timeStepMove();
 	if (calc_stress) {
 		stressReset();
@@ -430,18 +438,15 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
-
 		if (brownian) {
 			for (int i=0; i<np; i++) {
 				/*
 				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
 				 */
-				brownianstressGU[i] = 0.5*(brownianstressGU[i] - brownianstressGU_predictor[i]);
+				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
 			}
 		}
 	}
-	
-
 }
 
 /*
@@ -580,8 +585,8 @@ System::checkNewInteraction(){
 void
 System::updateInteractions(){
 	for (int k=0; k<nb_interaction; k++) {
-		bool deactivated = false;
 		if (interaction[k].is_active()) {
+			bool deactivated = false;
 			interaction[k].updateState(deactivated);
 			if (deactivated) {
 				deactivated_interaction.push(k);
@@ -611,7 +616,6 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	//
 	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine 
 	// if you want GE to be the only rhs.
-
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -722,7 +726,6 @@ System::buildBrownianTerms(){
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
@@ -879,7 +882,6 @@ System::computeVelocities(bool divided_velocities){
 		buildColloidalForceTerms(false); // set rhs = F_Coll
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V_Coll
 	}
-
 	if (brownian) {
 		if (in_predictor) {
 			buildBrownianTerms(); // generate new F_B and set rhs = F_B
@@ -901,27 +903,6 @@ System::computeVelocities(bool divided_velocities){
 	}
 }
 
-/*
- * This function determines velocity[] and ang_velocity[].
- */
-void
-System::updateVelocityLubrication(){
-    stokes_solver.resetRHS();
-	buildHydroTerms(true, true);
-	buildContactTerms(false);// adding F_C
-	buildColloidalForceTerms(false); // add F_Coll
-	stokes_solver.solve(na_velocity, na_ang_velocity);
-	stokes_solver.solvingIsDone();
-	for (int i=0; i<np; i++) {
-		velocity[i] = na_velocity[i];
-		ang_velocity[i] = na_ang_velocity[i];
-		if (dimensionless_shear_rate != 0) {
-			velocity[i].x += position[i].z;
-			ang_velocity[i].y += 0.5;
-		}
-	}
-}
-
 void
 System::updateVelocityRestingFluid(){
     for (int i=0; i<np; i++) {
@@ -938,8 +919,8 @@ System::displacement(int i, const vec3d &dr){
 	 * we need to modify the velocity, which was already evaluated.
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
-	if (z_shift) {
-		velocity[i].x += z_shift*lz;
+	if (z_shift != 0) {
+		velocity[i].x += z_shift*vel_difference;
 	}
 	boxset.box(i);
 }
@@ -1019,6 +1000,7 @@ System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	max_relative_velocity = 0;
+	max_sliding_velocity = 0;
 	double sum_contact_velo_tan = 0;
 	double sum_contact_velo_normal = 0;
 	double sum_sliding_velocity = 0;
@@ -1030,7 +1012,7 @@ System::evaluateMaxContactVelocity(){
 			cnt_contact++;
 			sum_contact_velo_tan += interaction[k].getContactVelocity();
 			sum_contact_velo_normal += abs(interaction[k].getNormalVelocity());
-			if (interaction[k].contact.staticfriction == false) {
+			if (interaction[k].contact.state == 3) {
 				cnt_sliding++;
 				sum_sliding_velocity += interaction[k].getContactVelocity();
 			}
@@ -1042,6 +1024,9 @@ System::evaluateMaxContactVelocity(){
 			}
 			if (interaction[k].getRelativeVelocity() > max_relative_velocity) {
 				max_relative_velocity = interaction[k].getRelativeVelocity();
+			}
+			if (interaction[k].getContactVelocity() > max_sliding_velocity) {
+				max_sliding_velocity = interaction[k].getContactVelocity();
 			}
 		}
 	}
@@ -1113,7 +1098,7 @@ System::analyzeState(){
 				contact_nb ++;
 				if (interaction[k].is_friccontact()) {
 					fric_contact_nb ++;
-					if (interaction[k].contact.staticfriction == false) {
+					if (interaction[k].contact.state == 3) {
 						cnt_sliding_contact++;
 					}
 				}
@@ -1126,8 +1111,8 @@ System::analyzeState(){
 					max_fc_tan = interaction[k].contact.get_f_contact_tan_norm();
 					intr_max_fc_tan = k;
 				}
-				if (interaction[k].contact.disp_tan_norm() > max_disp_tan) {
-					max_disp_tan = interaction[k].contact.disp_tan_norm();
+				if (interaction[k].contact.disp_tan.norm() > max_disp_tan) {
+					max_disp_tan = interaction[k].contact.disp_tan.norm();
 				}
 			}
 		}
@@ -1168,8 +1153,8 @@ System::evaluateMaxDispTan(){
 	double _max_disp_tan = 0;
 	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].contact.disp_tan_norm() > _max_disp_tan) {
-			_max_disp_tan = interaction[k].contact.disp_tan_norm();
+			interaction[k].contact.disp_tan.norm() > _max_disp_tan) {
+			_max_disp_tan = interaction[k].contact.disp_tan.norm();
 		}
 	}
 	return _max_disp_tan;

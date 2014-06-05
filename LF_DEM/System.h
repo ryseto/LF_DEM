@@ -33,7 +33,6 @@ private:
 	int np;
 	int maxnb_interactionpair;
 	int nb_of_active_interactions;
-	BoxSet boxset;
 	int ts; // time steps
 	double dt;
 	double dt_max;
@@ -60,7 +59,6 @@ private:
 	double sd_coeff;
 	double mu_static; // static friction coefficient.
 	double kb_T;
-	double coeff_stokes_drag;
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -112,6 +110,7 @@ public:
 	double critical_normal_force; 
 	vec3d *position;
 	Interaction *interaction;
+	BoxSet boxset;
 	double *radius;
 	double *radius_cubic;
 	double *angle; // for 2D visualization
@@ -143,7 +142,6 @@ public:
 	StressTensor* colloidalstressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
-	//	int brownianstress_calc_nb;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
@@ -187,9 +185,14 @@ public:
 	/* Colloidal force to stabilize suspension
 	 * (This gives simple shear-rate depenedence.)
 	 */
+	/* Velocity difference between top and bottom
+	 * in Lees-Edwards boundary condition
+	 * vel_difference = shear_rate * lz
+	 */
 	double vel_difference;
 	double max_velocity;
 	double max_relative_velocity;
+	double max_sliding_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
 	double max_overlap; // = ro-r
@@ -203,8 +206,8 @@ public:
 	double ave_contact_velo_tan;
 	double ave_contact_velo_normal;
 	double ave_sliding_velocity;
-	int contact_nb;
-	int fric_contact_nb;
+	int contact_nb; // gap < 0
+	int fric_contact_nb; // fn > f* in the critical load model
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
@@ -227,7 +230,6 @@ public:
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void computeVelocities(bool divided_velocities);
-	void updateVelocityLubrication();
 	void updateVelocityRestingFluid();
 	void forceReset();
 	void torqueReset();
@@ -265,7 +267,7 @@ public:
 		return system_volume;
 	}
 	double getParticleContactNumber(){
-		return (double)2*fric_contact_nb/np;
+		return (double)2*contact_nb/np;
 	}
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}

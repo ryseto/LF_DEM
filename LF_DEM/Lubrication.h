@@ -26,12 +26,12 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
-
 	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
 	//======= particles data  ====================//
-	int p0, p0_6;
-	int p1, p1_6;
-
+	unsigned short p0;
+	unsigned short p1;
+	unsigned short p0_6;
+	unsigned short p1_6;
 	vec3d *nvec;
 	double *nxnx;
 	double *nxny;
@@ -39,7 +39,6 @@ private:
 	double *nynz;
 	double *nyny;
 	double *nznz;
-
 	double lub_coeff;
 	double log_lub_coeff;
 	double a0;
@@ -106,17 +105,14 @@ private:
 	double g2_YM;
 	double g2_inv_YM;
 	double g5_YM;
-
  public:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
 	void getInteractionData();
 	void calcLubConstants();
-
 	//===== forces/stresses  ========================== //
 	void calcLubricationForce();
 	void calcLubricationForce_normal();
-
 	inline double get_lubforce_normal(){return -dot(lubforce_p0, nvec);} // positive for compression
 	inline double get_lubforce_normal_fast(){return -lubforce_p0_normal;}
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
@@ -132,7 +128,6 @@ private:
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	void setResistanceCoeffTang(double tangent_rc);
 	void calcTestStress();
-
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
@@ -176,6 +171,5 @@ private:
 	inline double scaledYM2(){return rororo_536*YM[2];}
 	inline double scaledXM3(){return a1a1a1_109*XM[3];}
 	inline double scaledYM3(){return a1a1a1_109*YM[3];}
-
 };
 #endif /* defined(__LF_DEM__Lubrication__) */

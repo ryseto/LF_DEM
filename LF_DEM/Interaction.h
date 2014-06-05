@@ -38,8 +38,8 @@ class Interaction{
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
-	unsigned int p0;
-	unsigned int p1;
+	unsigned short p0;
+	unsigned short p1;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
@@ -89,25 +89,22 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool &deactivated);
-	void updateStateRelax(bool &deactivated);
-	void activate(int i, int j);
+	void activate(unsigned short i, unsigned short j);
 	void deactivate();
 	inline bool is_overlap(){return r < ro;}
-	inline bool is_contact(){return contact.active;}
+	inline bool is_contact(){return contact.state > 0;}
 	inline bool is_friccontact(){return contact.disp_tan.is_not_zero();}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
-
 	//======= particles data  ====================//
 	inline int
 	partner(unsigned int i){
 		return (i == p0 ? p1 : p0);
 	}
 	inline void
-	get_par_num(unsigned int &i, unsigned int &j){
+	get_par_num(unsigned short &i, unsigned short &j){
 		i = p0, j = p1;
 	}
-	
 	inline void set_label(unsigned int val){label = val;}
 	inline unsigned int get_label(){return label;}
 	inline double get_a0(){return a0;}
@@ -133,12 +130,5 @@ public:
 	void calcTestStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	void integrateStress();
-	void info(){
-		cerr << "particles " << p0 << " " << p1 << endl;
-		cerr << "contact " << contact.active << endl;
-		cerr << "colloidal force amp " << colloidalforce_amplitude << endl;
-		cerr << "colloidal force length " << colloidalforce_length << endl;
-		contact.info();
-	}
 };
 #endif /* defined(__LF_DEM__Interaction__) */

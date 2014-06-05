@@ -6,11 +6,20 @@
 #include "Contact.h"
 #include "Interaction.h"
 
+Contact::Contact()
+{}
+
+Contact::Contact(const Contact& obj)
+{
+	disp_tan = obj.disp_tan;
+	state = obj.state;
+}
+
 void
 Contact::init(System *sys_, Interaction *interaction_){
 	sys = sys_;
 	interaction = interaction_;
-	active = false;
+	state = 0;
 	if (sys->friction_model == 1) {
 		frictionlaw = &Contact::frictionlaw_coulomb;
 	} else if (sys->friction_model == 2) {
@@ -24,7 +33,7 @@ Contact::init(System *sys_, Interaction *interaction_){
 
 void
 Contact::getInteractionData(){
-	interaction->get_par_num(i, j);
+	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -40,7 +49,7 @@ Contact::updateContactModel(){
 		double &ro_12 = interaction->ro_12;
 		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
-		if (active) {
+		if (state > 0) {
 			interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
 														sys->get_log_lub_coeff_dynamicfriction());
 		}
@@ -50,8 +59,7 @@ Contact::updateContactModel(){
 void
 Contact::activate(){
 	// r < a0 + a1
-	active = true;
-	staticfriction = true;
+	state = 1;
 	disp_tan.reset();
 	interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
 												sys->get_log_lub_coeff_dynamicfriction());
@@ -60,7 +68,7 @@ Contact::activate(){
 void
 Contact::deactivate(){
 	// r > a0 + a1
-	active = false;
+	state = 0;
 	disp_tan.reset();
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
@@ -77,7 +85,7 @@ Contact::incrementTangentialDisplacement(){
 	if (sys->in_predictor) {
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan + interaction->relative_surface_velocity*sys->get_dt();
+	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->get_dt();
 }
 
 /*
@@ -88,7 +96,8 @@ Contact::incrementTangentialDisplacement(){
  */
 void
 Contact::calcContactInteraction(){
-	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); // gap_nondim is negative, therefore it is allways positive.
+	/* gap_nondim is negative, therefore it is allways positive. */
+	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
@@ -113,17 +122,20 @@ Contact::frictionlaw_coulomb(){
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce *=	mu;
 	if (supportable_tanforce < 0){
-		staticfriction = false;
-		disp_tan.reset();
+		// !!!!!!!!!!!
+		// What is the state of this situation?
+		// !!!!!!!!!!
+		state = 3; // sliding ????
+		disp_tan.reset(); // no tangential force
 		f_contact_tan.reset();
 	} else {
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			staticfriction = false;
+			state = 3; // sliding
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
 			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
 		} else {
-			staticfriction = true;
+			state = 2; // static friction
 		}
 	}
 	return;
@@ -142,19 +154,19 @@ Contact::frictionlaw_criticalload(){
 	double supportable_tanforce = f_contact_normal_norm;
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
-	if (supportable_tanforce < 0){
- 		staticfriction = false;
+	if (supportable_tanforce < 0) {
+		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
 		supportable_tanforce *= mu;
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			staticfriction = false;
+			state = 3; // sliding
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-			f_contact_tan = kt_scaled*disp_tan; // added 04/30/2014
+			f_contact_tan = kt_scaled*disp_tan;
 		} else {
-			staticfriction = true;
+			state = 2; // static friction
 		}
 	}
 	return;
@@ -173,12 +185,15 @@ Contact::frictionlaw_criticalload_mu_inf(){
 	double supportable_tanforce = f_contact_normal_norm;
 	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
-	if (supportable_tanforce < 0){
- 		staticfriction = false;
+	if (supportable_tanforce < 0) {
+		state = 1; // frictionless contact
 		disp_tan.reset();
 		f_contact_tan.reset();
 	} else {
-		staticfriction = true;
+		// Never rescaled.
+		// [note]
+		// The tangential spring constant may be rescaled to control maximum strain
+		state = 2; // static friction
 	}
 	return;
 }
@@ -187,22 +202,16 @@ void
 Contact::frictionlaw_null(){;}
 
 void
-Contact::calcContactInteractionRelax(){
-	f_contact_normal_norm = -kn_scaled*(interaction->get_gap_nondim()-0.02);
-	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-}
-
-void
 Contact::addUpContactForceTorque(){
-	if (active) {
-		sys->contact_force[i] += f_contact_normal;
-		sys->contact_force[j] -= f_contact_normal;
-		if (sys->friction) {
-			sys->contact_force[i] += f_contact_tan;
-			sys->contact_force[j] -= f_contact_tan;
+	if (state > 0) {
+		sys->contact_force[p0] += f_contact_normal;
+		sys->contact_force[p1] -= f_contact_normal;
+		if (state >= 2) {
+			sys->contact_force[p0] += f_contact_tan;
+			sys->contact_force[p1] -= f_contact_tan;
 			vec3d t_ij = cross(interaction->nvec, f_contact_tan);
-			sys->contact_torque[i] += interaction->a0*t_ij;
-			sys->contact_torque[j] += interaction->a1*t_ij;
+			sys->contact_torque[p0] += interaction->a0*t_ij;
+			sys->contact_torque[p1] += interaction->a1*t_ij;
 		}
 	}
 }
@@ -216,13 +225,12 @@ Contact::addContactStress(){
 	 * stress1 is a0*nvec[*]force.
 	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 	 */
-	
 	/* When we compose stress tensor,
 	 * even individual leverl, this part calculates symmetric tensor.
 	 * This symmetry is expected in the average ensumble.
 	 * I'm not sure this is allowed or not.
 	 */
-	if (active) {
+	if (state > 0) {
 		/*
 		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
 		 * Fc_normal = -Fc_normal_norm*nvec;

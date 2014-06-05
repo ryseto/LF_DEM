@@ -12,20 +12,10 @@
 		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
-		D928F36717F4A15900145321 /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D928F36417F4A15900145321 /* libamd.2.3.1.a */; };
-		D928F36817F4A15900145321 /* libcholmod.2.1.2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D928F36517F4A15900145321 /* libcholmod.2.1.2.a */; };
-		D928F36917F4A15900145321 /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D928F36617F4A15900145321 /* libcolamd.2.8.0.a */; };
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
-		D92F19C31676450800411650 /* BrownianForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92F19C01676450800411650 /* BrownianForce.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
 		D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D97C3B07167690DC009A6BF0 /* Interaction.cpp */; };
-		D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E016C2F45E00AD6E85 /* libbelos.dylib */; };
-		D932B8E316C2F48800AD6E85 /* libbelosepetra.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E216C2F48800AD6E85 /* libbelosepetra.dylib */; };
-		D932B8E516C2F4BC00AD6E85 /* libepetra.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E416C2F4BC00AD6E85 /* libepetra.dylib */; };
-		D932B8E716C2F55C00AD6E85 /* libteuchos.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E616C2F55C00AD6E85 /* libteuchos.dylib */; };
-		D932B8E916C2F5A800AD6E85 /* libkokkosnodetsqr.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */; };
-		D932B8EB16C2F60200AD6E85 /* libifpack.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D932B8EA16C2F60200AD6E85 /* libifpack.dylib */; };
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
@@ -46,6 +36,9 @@
 		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
+		D9D2DFB8192FD3770014E568 /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D2DFAF192FD3770014E568 /* libamd.2.3.1.a */; };
+		D9D2DFC2192FD4A70014E568 /* libcholmod.2.1.2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D2DFC1192FD4A70014E568 /* libcholmod.2.1.2.a */; };
+		D9D2DFC4192FD4F60014E568 /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D2DFC3192FD4F60014E568 /* libcolamd.2.8.0.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -111,23 +104,12 @@
 		D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = analyze_data_LF_DEM.1; sourceTree = "<group>"; };
 		D921A0C7175C0041002F64B1 /* SystemParticles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemParticles.cpp; sourceTree = "<group>"; };
 		D921A0C8175C0041002F64B1 /* SystemParticles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemParticles.h; sourceTree = "<group>"; };
-		D928F36417F4A15900145321 /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = /usr/local/lib/libamd.2.3.1.a; sourceTree = "<absolute>"; };
-		D928F36517F4A15900145321 /* libcholmod.2.1.2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.1.2.a; path = /usr/local/lib/libcholmod.2.1.2.a; sourceTree = "<absolute>"; };
-		D928F36617F4A15900145321 /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = /usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<absolute>"; };
 		D92EAA0B17E39D5100C903F5 /* Contact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Contact.cpp; sourceTree = "<group>"; };
 		D92EAA0C17E39D5100C903F5 /* Contact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Contact.h; sourceTree = "<group>"; };
 		D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lubrication.cpp; sourceTree = "<group>"; };
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Lubrication.h; sourceTree = "<group>"; };
-		D92F19C01676450800411650 /* BrownianForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BrownianForce.cpp; sourceTree = "<group>"; };
-		D92F19C11676450800411650 /* BrownianForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrownianForce.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
-		D932B8E016C2F45E00AD6E85 /* libbelos.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbelos.dylib; path = /usr/local/lib/libbelos.dylib; sourceTree = "<absolute>"; };
-		D932B8E216C2F48800AD6E85 /* libbelosepetra.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbelosepetra.dylib; path = /usr/local/lib/libbelosepetra.dylib; sourceTree = "<absolute>"; };
-		D932B8E416C2F4BC00AD6E85 /* libepetra.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libepetra.dylib; path = /usr/local/lib/libepetra.dylib; sourceTree = "<absolute>"; };
-		D932B8E616C2F55C00AD6E85 /* libteuchos.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libteuchos.dylib; path = /usr/local/lib/libteuchos.dylib; sourceTree = "<absolute>"; };
-		D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libkokkosnodetsqr.dylib; path = /usr/local/lib/libkokkosnodetsqr.dylib; sourceTree = "<absolute>"; };
-		D932B8EA16C2F60200AD6E85 /* libifpack.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libifpack.dylib; path = /usr/local/lib/libifpack.dylib; sourceTree = "<absolute>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
@@ -186,6 +168,9 @@
 		D9BE3B73178CB8A800937C5C /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
 		D9CE560517555DE500719775 /* extract_normalvecdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extract_normalvecdata.pl; sourceTree = "<group>"; };
+		D9D2DFAF192FD3770014E568 /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = ../../../../usr/local/lib/libamd.2.3.1.a; sourceTree = "<group>"; };
+		D9D2DFC1192FD4A70014E568 /* libcholmod.2.1.2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.1.2.a; path = ../../../../usr/local/lib/libcholmod.2.1.2.a; sourceTree = "<group>"; };
+		D9D2DFC3192FD4F60014E568 /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = ../../../../usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<group>"; };
 		D9D805951889BAC700D139F5 /* generateSimpleData.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = generateSimpleData.pl; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
@@ -214,15 +199,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D928F36717F4A15900145321 /* libamd.2.3.1.a in Frameworks */,
-				D928F36817F4A15900145321 /* libcholmod.2.1.2.a in Frameworks */,
-				D928F36917F4A15900145321 /* libcolamd.2.8.0.a in Frameworks */,
-				D932B8EB16C2F60200AD6E85 /* libifpack.dylib in Frameworks */,
-				D932B8E916C2F5A800AD6E85 /* libkokkosnodetsqr.dylib in Frameworks */,
-				D932B8E716C2F55C00AD6E85 /* libteuchos.dylib in Frameworks */,
-				D932B8E516C2F4BC00AD6E85 /* libepetra.dylib in Frameworks */,
-				D932B8E316C2F48800AD6E85 /* libbelosepetra.dylib in Frameworks */,
-				D932B8E116C2F45E00AD6E85 /* libbelos.dylib in Frameworks */,
+				D9D2DFC4192FD4F60014E568 /* libcolamd.2.8.0.a in Frameworks */,
+				D9D2DFC2192FD4A70014E568 /* libcholmod.2.1.2.a in Frameworks */,
+				D9D2DFB8192FD3770014E568 /* libamd.2.3.1.a in Frameworks */,
 				D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -258,15 +237,6 @@
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				D928F36417F4A15900145321 /* libamd.2.3.1.a */,
-				D928F36517F4A15900145321 /* libcholmod.2.1.2.a */,
-				D928F36617F4A15900145321 /* libcolamd.2.8.0.a */,
-				D932B8E016C2F45E00AD6E85 /* libbelos.dylib */,
-				D932B8E216C2F48800AD6E85 /* libbelosepetra.dylib */,
-				D932B8E416C2F4BC00AD6E85 /* libepetra.dylib */,
-				D932B8E616C2F55C00AD6E85 /* libteuchos.dylib */,
-				D932B8E816C2F5A800AD6E85 /* libkokkosnodetsqr.dylib */,
-				D932B8EA16C2F60200AD6E85 /* libifpack.dylib */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
 			);
 			name = lib;
@@ -340,6 +310,9 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
+				D9D2DFC3192FD4F60014E568 /* libcolamd.2.8.0.a */,
+				D9D2DFC1192FD4A70014E568 /* libcholmod.2.1.2.a */,
+				D9D2DFAF192FD3770014E568 /* libamd.2.3.1.a */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
 				D972279C16AF8FF300DA851F /* Mathematica */,
@@ -386,8 +359,6 @@
 				D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */,
 				D92EAA0E17E39D5100C903F5 /* Lubrication.h */,
 				D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */,
-				D92F19C01676450800411650 /* BrownianForce.cpp */,
-				D92F19C11676450800411650 /* BrownianForce.h */,
 				D9573FAE16797A000081E903 /* Box.cpp */,
 				D9573FAF16797A000081E903 /* Box.h */,
 				D9573FB016797A000081E903 /* BoxSet.cpp */,
@@ -587,7 +558,6 @@
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
-				D92F19C31676450800411650 /* BrownianForce.cpp in Sources */,
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
