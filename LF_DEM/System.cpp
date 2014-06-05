@@ -858,7 +858,6 @@ System::buildColloidalForceTerms(bool set_or_add){
 }
 
 void
-
 System::computeVelocities(bool divided_velocities){
 	stokes_solver.resetRHS();
 	if (divided_velocities) {
