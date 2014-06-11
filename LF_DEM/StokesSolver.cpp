@@ -626,17 +626,28 @@ StokesSolver::getRHS(double* rhs){
 void
 StokesSolver::compute_LTRHS(double* X){
 	if (direct()) {
+		/*
+		  Cholmod gives a factorizationof a permutated resistance
+		  matrix LcLc^T = P^T RFU P
+		  
+		  That means P^T L = Lc, with  L L^T = RFU
+		  
+		  So for a rhs Y:
+		  X = L Y = P Lc Y
+		*/
 		if(!chol_L->is_ll){
 			cerr << " The factorization is LDL^T. compute_LTRHS(double* X) only works for LL^T factorization." << endl;
 		}
-		chol_Psolution = cholmod_solve(CHOLMOD_P, chol_L, chol_rhs, &chol_c) ; // X1 = P*RHS
+
 		double alpha [2] = {1,0};
 		double beta [2] = {0,0};
 		int transpose = 1;
-		chol_solution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
+		chol_Psolution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
 		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 		cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(chol_L_copy, &chol_c);
-		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_Psolution, chol_solution, &chol_c) ; // X = L^T*X1
+		cholmod_sdmult(cholmod_transpose(chol_L_sparse, 1, &chol_c), transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
+		
+		chol_solution = cholmod_solve(CHOLMOD_P, chol_L, chol_Psolution, &chol_c) ; // chol_solution = P*chol_Psolution
 
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			X[i] = ((double*)chol_solution->x)[i];
