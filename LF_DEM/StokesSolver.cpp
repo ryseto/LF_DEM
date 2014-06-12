@@ -622,18 +622,18 @@ StokesSolver::getRHS(double* rhs){
 
 
 
-// Computes X = L^T RHS
+// Computes X = L*RHS
 void
 StokesSolver::compute_LTRHS(double* X){
 	if (direct()) {
 		/*
 		  Cholmod gives a factorizationof a permutated resistance
-		  matrix LcLc^T = P^T RFU P
+		  matrix Lc*Lc^T = P*RFU*P^T
 		  
-		  That means P^T L = Lc, with  L L^T = RFU
+		  That means P*L = Lc, with  L*L^T = RFU
 		  
 		  So for a rhs Y:
-		  X = L Y = P Lc Y
+		  X = L*Y = P^T*Lc*Y
 		*/
 		if(!chol_L->is_ll){
 			cerr << " The factorization is LDL^T. compute_LTRHS(double* X) only works for LL^T factorization." << endl;
@@ -641,13 +641,13 @@ StokesSolver::compute_LTRHS(double* X){
 
 		double alpha [2] = {1,0};
 		double beta [2] = {0,0};
-		int transpose = 1;
+		int transpose = 0;
 		chol_Psolution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
 		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 		cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(chol_L_copy, &chol_c);
-		cholmod_sdmult(cholmod_transpose(chol_L_sparse, 1, &chol_c), transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
-		
-		chol_solution = cholmod_solve(CHOLMOD_P, chol_L, chol_Psolution, &chol_c) ; // chol_solution = P*chol_Psolution
+		//		cholmod_sdmult(cholmod_transpose(chol_L_sparse, 1, &chol_c), transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
+		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
+		chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_Psolution, &chol_c) ; // chol_solution = P^T*chol_Psolution
 
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			X[i] = ((double*)chol_solution->x)[i];
@@ -1014,11 +1014,34 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
 
 void
 StokesSolver::factorizeResistanceMatrix(){
-	//	chol_c.nmethods = 1;
-	//	chol_c.method[0].ordering = CHOLMOD_NATURAL;
+	/*debug
+	chol_c.nmethods = 1;
+	//   	chol_c.method[0].ordering = CHOLMOD_NATURAL;
+	//   	chol_c.method[0].ordering = CHOLMOD_GIVEN;
+	int *perm = new int [np];
+	int *fset = new int [np];
+	for(int i = 0;i<np-1;i++){
+		perm[i] = i+1;
+		fset[i] = i;
+	}
+	perm[np-1]=0;
+	fset[np-1]=np-1;
+
+	chol_L = cholmod_analyze_p(chol_res_matrix, perm, fset, np, &chol_c);
+	double beta [2] = {0,0};
+	cholmod_factorize_p(chol_res_matrix, beta, fset, np, chol_L, &chol_c);
+	 end debug*/
+
+
+	/*reference code */
+	chol_c.nmethods = 1;
+	chol_c.method[0].ordering = CHOLMOD_NATURAL;// force natural ordering (=no ordering) at the moment
+	chol_c.postorder = 0 ;
+
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
+	//	cout << chol_L->ordering << endl;
 
     if (chol_c.status) {
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
@@ -1297,6 +1320,67 @@ StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 #endif
 }
 
+void
+StokesSolver::printFactor(ostream &out){
+	if (direct()) {
+		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
+		cholmod_sparse* chol_L_sparse = cholmod_transpose(cholmod_factor_to_sparse(chol_L_copy, &chol_c), 1,  &chol_c);
+		cholmod_dense* chol_L_dense = cholmod_sparse_to_dense(chol_L_sparse, &chol_c);
+		//		cholmod_sparse* chol_PTL_sparse = cholmod_dense_to_sparse(cholmod_solve(CHOLMOD_Pt, chol_L, chol_L_dense, &chol_c), 1, &chol_c) ; // chol_solution = P^T*chol_Psolution
+		
+		//		cholmod_dense* chol_LT_dense = cholmod_sparse_to_dense(cholmod_transpose(chol_L_sparse, 1, &chol_c), &chol_c);
+
+
+		int transpose = 1;
+		double alpha [2] = {1,0};
+		double beta [2] = {0,0};
+
+		cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
+		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_L_dense, dense_res, &chol_c);
+
+		// out << " Cholesky factor" << endl;
+		// for (int i = 0; i < res_matrix_linear_size; i++) {
+			
+		// 		// if(i==0){
+		// 		// 	for (int j = 0; j < res_matrix_linear_size/6; j++) {
+		// 		// 		out << j << "\t \t \t \t \t \t" ;
+		// 		// 	}
+		// 		// 	out << endl;
+		// 		// }
+		// 	for (int j = 0; j < res_matrix_linear_size; j++) {
+		// 		out <<setprecision(3) <<  ((double*)chol_L_dense->x)[i+j*res_matrix_linear_size] << "\t" ;
+		// 	}
+		// 	out << endl;
+		// }
+		// out << endl;
+
+		//		out << " Cholesky squared  " << endl;
+		for (int i = 0; i < res_matrix_linear_size; i++) {
+			
+				// if(i==0){
+				// 	for (int j = 0; j < res_matrix_linear_size/6; j++) {
+				// 		out << j << "\t \t \t \t \t \t" ;
+				// 	}
+				// 	out << endl;
+				// }
+			for (int j = 0; j < res_matrix_linear_size; j++) {
+				out <<setprecision(3) <<  ((double*)dense_res->x)[i+j*res_matrix_linear_size] << "\t" ;
+			}
+			out << endl;
+		}
+		out << endl;
+
+
+		cholmod_free_sparse(&chol_L_sparse, &chol_c);
+		//		cholmod_free_dense(&chol_LT_dense, &chol_c);
+		//		cholmod_free_sparse(&chol_PTL_sparse, &chol_c);
+		cholmod_free_factor(&chol_L_copy, &chol_c);
+		cholmod_free_dense(&dense_res, &chol_c);
+
+
+	}
+
+}
 
 // testing
 void
