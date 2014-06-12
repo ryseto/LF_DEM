@@ -409,8 +409,8 @@ System::timeEvolutionEulersMethod(bool calc_stress){
    * <UU> - <U>^2 = (2kT/dt)R^{-1}
    * which gives the correct mean and variance for X_B.
    * 
-   * F_B is obtained as F_B = \sqrt(2kT/dt) * L^T.A, where A is a gaussian random vector with 
-   * <A> = 0 and <AA> = 1. In practice, we solve L^{-T}.F_B = \sqrt(2kT/dt) * A.
+   * F_B is obtained as F_B = \sqrt(2kT/dt) * L.A, where A is a gaussian random vector with 
+   * <A> = 0 and <AA> = 1.
    * 
    *
    ***************************************************************************************************/
@@ -452,126 +452,6 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	}
 }
 
-void
-System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
-	/* predictor */
-	in_predictor = true;
-	setContactForceToParticle();
-	setColloidalForceToParticle();
-	computeVelocities(calc_stress);
-	timeStepMovePredictor();
-	cout << "before" << endl;
-	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
-	if (calc_stress) {
-		stressReset();
-		calcStressPerParticle();
-		if (brownian) {
-			for (int i=0; i<np; i++) {
-				brownianstressGU_predictor[i] = brownianstressGU[i];
-			}
-		}
-	}
-	
-	/* corrector */
-	in_predictor = false;
-	setContactForceToParticle();
-	setColloidalForceToParticle();
-	computeVelocities(calc_stress);
-	brownianTestingTimeStepMoveCorrector();
-	cout << "after" << endl;
-	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
-	if (calc_stress) {
-		stressReset();
-		calcStressPerParticle();
-		if (brownian) {
-			for (int i=0; i<np; i++) {
-				/*
-				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
-				 */
-				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
-			}
-		}
-	}
-}
-
-void
-System::brownianTestingTimeEvolutionEulerMethod(bool calc_stress){
-	/* predictor */
-	in_predictor = true;
-	setContactForceToParticle();
-	setColloidalForceToParticle();
-	computeVelocities(calc_stress);
-	//	timeStepMovePredictor();
-
-}
-
-void
-System::brownianTesting(bool calc_stress){
-	double **avg_fbfb;
-	double *avg_udrift;
-	avg_fbfb = new double* [linalg_size];
-	avg_udrift = new double [linalg_size];
-	for(int i=0; i<linalg_size;i++){
-		avg_fbfb[i] = new double [linalg_size];
-		avg_udrift[i] = 0;
-		for(int j=0; j<linalg_size;j++){
-			avg_fbfb[i][j] = 0;
-		}
-	}
-	int sample=0;
-	int sample_max = 1000;
-	brownianTestingTimeEvolutionEulerMethod(true);
-	while(sample < sample_max){
-		sample++;
-		//		cout << sample << endl;
-		brownianTestingTimeEvolutionEulerMethod(false);
-
-		for (int i=0; i<linalg_size; i++) {
-			for (int j=0; j<linalg_size; j++) {
-				avg_fbfb[i][j] += brownian_force[i]*brownian_force[j];
-			}
-		}
-		for (int i=0; i<np; i++) {
-			avg_udrift[6*i  ] += vel_brownian[i].x;
-			avg_udrift[6*i+1] += vel_brownian[i].y;
-			avg_udrift[6*i+2] += vel_brownian[i].z;
-			avg_udrift[6*i+3] += ang_vel_brownian[i].x;
-			avg_udrift[6*i+4] += ang_vel_brownian[i].y;
-			avg_udrift[6*i+5] += ang_vel_brownian[i].z;
-		}
-	}
-
-
-	ofstream fout;
-	fout.open("fbfb.dat");	
-	//	fout << "normalized fbfb" << endl;
-	double kbT2_dt = 2*kb_T/dt;
-	for (int i=0; i<linalg_size; i++) {
-		for (int j=0; j<linalg_size; j++) {
-			fout << avg_fbfb[i][j]/sample_max/kbT2_dt << " ";
-		}
-		fout << endl;
-	}
-	fout << endl;
-
-   	fout.close();
-
-	cout << " done " << endl;
-	exit(1);
-	//	fout.open("udrift.dat");	
-	// cout << "drift" << endl;
-	// for (int i=0; i<linalg_size; i++) {
-	// 	cout << avg_udrift[i]/sample_max << endl;
-	// }
-	// cout << endl;
-	//	fout.close();
-	for(int i=0; i<linalg_size;i++){
-		delete [] avg_fbfb[i];
-	}
-	delete [] avg_udrift;
-	delete [] avg_fbfb;
-
-}
 
 /*
  * timeStepMove is used for only Euler method.
@@ -645,26 +525,6 @@ System::timeStepMoveCorrector(){
 
 
 void
-System::brownianTestingTimeStepMoveCorrector(){
-	for (int i=0; i<np; i++) {
-		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
-		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
-		na_ang_velocity[i] = 0.5*(na_ang_velocity[i]+na_ang_velocity_predictor[i]);
-		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
-	}
-	for (int i=0; i<np; i++) {
-		displacement(i, -velocity_predictor[i]*dt);  //go back to previous step
-	}
-	if (twodimension) {
-		for (int i=0; i<np; i++) {
-			angle[i] += -ang_velocity_predictor[i].y*dt;
-		}
-	}
-	checkNewInteraction();
-	updateInteractions();
-}
-
-void
 System::timeEvolution(double strain_next){
 
 	
@@ -674,7 +534,6 @@ System::timeEvolution(double strain_next){
 		firsttime = false;
 	}
 	while (shear_strain < strain_next-dt-1e-8) { // integrate until strain_next - 1 time step
-		//		brownianTestingTimeEvolutionEulerMethod(false);
 		//		brownianTesting(false);
 		(this->*timeEvolutionDt)(false);
 		ts++;
@@ -888,67 +747,6 @@ System::buildBrownianTerms(){
 }
 
 void
-System::brownianForceTest(){ // a test that < Fb Fb > = RFU
-	double **avg_fbfb;
-	avg_fbfb = new double* [linalg_size];
-	for(int i=0; i<linalg_size;i++){
-		avg_fbfb[i] = new double [linalg_size];
-		for(int j=0; j<linalg_size;j++){
-			avg_fbfb[i][j] = 0;
-		}
-	}
-	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
-	int sample=0;
-	int sample_max = 10;
-	while(sample < sample_max){
-		sample++;
-		
-		for (int i=0; i<linalg_size; i++) {
-			brownian_force[i] = sqrt_kbT2_dt*GRANDOM;
-		}
-		
-		stokes_solver.setRHS(brownian_force);
-		stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) *L^{-T}* A
-		
-		if (twodimension) {
-			for (int i=0; i<np; i++) {
-				int i6 = 6*i;
-				brownian_force[i6+1] = 0;
-				brownian_force[i6+3] = 0;
-				brownian_force[i6+5] = 0;
-			}
-		}
-	
-		for (int i=0; i<linalg_size; i++) {
-			for (int j=0; j<linalg_size; j++) {
-				avg_fbfb[i][j] += brownian_force[i]*brownian_force[j];
-			}
-		}
-	}
-
-	ofstream fout;
-	fout.open("fbfb.dat");	
-	for (int i=0; i<linalg_size; i++) {
-		for (int j=0; j<linalg_size; j++) {
-			fout << avg_fbfb[i][j]/sample_max << " ";
-		}
-		fout << endl;
-	}
-
-	stokes_solver.printResistanceMatrix(fout, "dense");
-	fout.close();
-	double var=0;
-	for(int i=0;i<10000;i++){
-		double rn = GRANDOM;
-		var+=rn*rn;
-	}
-	cout << var/10000. << endl;
-	cout << "done" << endl;
-
-	DELETE(avg_fbfb);
-}
-
-void
 System::setContactForceToParticle(){
 	for (int i=0; i<np; i++) {
 		contact_force[i].reset();
@@ -1015,7 +813,7 @@ System::computeVelocities(bool divided_velocities){
 
 	stokes_solver.resetRHS();
 	if (divided_velocities) {
-		// For seeing each stress contribution
+		// in case we want to compute the stress contributions
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
@@ -1026,18 +824,8 @@ System::computeVelocities(bool divided_velocities){
 			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_colloidal[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_colloidal[i];
 		}
-
-		/*debug*/
-		// ofstream fout;
-		// fout.open("resmat.dat");	
-		// stokes_solver.printResistanceMatrix(fout, "dense");
-		// fout.close();
-		
-		// fout.open("factor.dat");	
-		// stokes_solver.printFactor(fout);
-		// fout.close();
 	} else {
-		// For the most of time evolution
+		// for most of the time evolution
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		buildContactTerms(false); // set rhs = F_C
 		buildColloidalForceTerms(false); // set rhs = F_Coll
@@ -1453,4 +1241,155 @@ System::calcLubricationForce(){
 			interaction[k].lubrication.calcLubricationForce();
 		}
 	}
+}
+
+
+
+
+/************************************************************************************************
+
+/ testing routines
+
+/***********************************************************************************************/
+
+void
+System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
+	/* predictor */
+	in_predictor = true;
+	setContactForceToParticle();
+	setColloidalForceToParticle();
+	computeVelocities(calc_stress);
+	timeStepMovePredictor();
+	cout << "before" << endl;
+	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
+	if (calc_stress) {
+		stressReset();
+		calcStressPerParticle();
+		if (brownian) {
+			for (int i=0; i<np; i++) {
+				brownianstressGU_predictor[i] = brownianstressGU[i];
+			}
+		}
+	}
+	
+	/* corrector */
+	in_predictor = false;
+	setContactForceToParticle();
+	setColloidalForceToParticle();
+	computeVelocities(calc_stress);
+	brownianTestingTimeStepMoveCorrector();
+	cout << "after" << endl;
+	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
+	if (calc_stress) {
+		stressReset();
+		calcStressPerParticle();
+		if (brownian) {
+			for (int i=0; i<np; i++) {
+				/*
+				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
+				 */
+				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
+			}
+		}
+	}
+}
+
+void
+System::brownianTestingTimeEvolutionEulerMethod(bool calc_stress){
+	/* predictor */
+	in_predictor = true;
+	setContactForceToParticle();
+	setColloidalForceToParticle();
+	computeVelocities(calc_stress);
+	//	timeStepMovePredictor();
+
+}
+
+void
+System::brownianTesting(bool calc_stress){
+	double **avg_fbfb;
+	double *avg_udrift;
+	avg_fbfb = new double* [linalg_size];
+	avg_udrift = new double [linalg_size];
+	for(int i=0; i<linalg_size;i++){
+		avg_fbfb[i] = new double [linalg_size];
+		avg_udrift[i] = 0;
+		for(int j=0; j<linalg_size;j++){
+			avg_fbfb[i][j] = 0;
+		}
+	}
+	int sample=0;
+	int sample_max = 1000;
+	brownianTestingTimeEvolutionEulerMethod(true);
+	while(sample < sample_max){
+		sample++;
+		//		cout << sample << endl;
+		brownianTestingTimeEvolutionEulerMethod(false);
+
+		for (int i=0; i<linalg_size; i++) {
+			for (int j=0; j<linalg_size; j++) {
+				avg_fbfb[i][j] += brownian_force[i]*brownian_force[j];
+			}
+		}
+		for (int i=0; i<np; i++) {
+			avg_udrift[6*i  ] += vel_brownian[i].x;
+			avg_udrift[6*i+1] += vel_brownian[i].y;
+			avg_udrift[6*i+2] += vel_brownian[i].z;
+			avg_udrift[6*i+3] += ang_vel_brownian[i].x;
+			avg_udrift[6*i+4] += ang_vel_brownian[i].y;
+			avg_udrift[6*i+5] += ang_vel_brownian[i].z;
+		}
+	}
+
+
+	ofstream fout;
+	fout.open("fbfb.dat");	
+	//	fout << "normalized fbfb" << endl;
+	double kbT2_dt = 2*kb_T/dt;
+	for (int i=0; i<linalg_size; i++) {
+		for (int j=0; j<linalg_size; j++) {
+			fout << avg_fbfb[i][j]/sample_max/kbT2_dt << " ";
+		}
+		fout << endl;
+	}
+	fout << endl;
+
+   	fout.close();
+
+	cout << " done " << endl;
+	exit(1);
+	//	fout.open("udrift.dat");	
+	// cout << "drift" << endl;
+	// for (int i=0; i<linalg_size; i++) {
+	// 	cout << avg_udrift[i]/sample_max << endl;
+	// }
+	// cout << endl;
+	//	fout.close();
+	for(int i=0; i<linalg_size;i++){
+		delete [] avg_fbfb[i];
+	}
+	delete [] avg_udrift;
+	delete [] avg_fbfb;
+
+}
+
+
+void
+System::brownianTestingTimeStepMoveCorrector(){
+	for (int i=0; i<np; i++) {
+		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
+		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
+		na_ang_velocity[i] = 0.5*(na_ang_velocity[i]+na_ang_velocity_predictor[i]);
+		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
+	}
+	for (int i=0; i<np; i++) {
+		displacement(i, -velocity_predictor[i]*dt);  //go back to previous step
+	}
+	if (twodimension) {
+		for (int i=0; i<np; i++) {
+			angle[i] += -ang_velocity_predictor[i].y*dt;
+		}
+	}
+	checkNewInteraction();
+	updateInteractions();
 }
