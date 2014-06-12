@@ -1028,14 +1028,14 @@ System::computeVelocities(bool divided_velocities){
 		}
 
 		/*debug*/
-		ofstream fout;
-		fout.open("resmat.dat");	
-		stokes_solver.printResistanceMatrix(fout, "dense");
-		fout.close();
+		// ofstream fout;
+		// fout.open("resmat.dat");	
+		// stokes_solver.printResistanceMatrix(fout, "dense");
+		// fout.close();
 		
-		fout.open("factor.dat");	
-		stokes_solver.printFactor(fout);
-		fout.close();
+		// fout.open("factor.dat");	
+		// stokes_solver.printFactor(fout);
+		// fout.close();
 	} else {
 		// For the most of time evolution
 		buildHydroTerms(true, true); // build matrix and rhs force GE
