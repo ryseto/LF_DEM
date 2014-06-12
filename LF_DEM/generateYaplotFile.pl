@@ -240,7 +240,7 @@ sub InInteractions {
 		
 		$domega[$k] = $omegay[$i] - $omegay[$j];
 		
-		$F_lub[$k] = $f_lub;
+		$F_lub[$k] = $f_lub_norm;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_tan;
@@ -257,7 +257,7 @@ sub InInteractions {
 				$force[$k] = $f_normal;
 			}
 		} elsif ($f_normal < 0) {
-			$force[$k] =  $fcol + $f_lub;
+			$force[$k] = $fcol + $f_lub;
 		} else {
 			$force[$k] = 0;
 		}
