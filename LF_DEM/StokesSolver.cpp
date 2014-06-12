@@ -642,10 +642,9 @@ StokesSolver::compute_LTRHS(double* X){
 		double alpha [2] = {1,0};
 		double beta [2] = {0,0};
 		int transpose = 0;
-		chol_Psolution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
-		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
-		cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(chol_L_copy, &chol_c);
-		//		cholmod_sdmult(cholmod_transpose(chol_L_sparse, 1, &chol_c), transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
+
+		//		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
+		cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(cholmod_copy_factor(chol_L, &chol_c), &chol_c);
 		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
 		chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_Psolution, &chol_c) ; // chol_solution = P^T*chol_Psolution
 
@@ -653,9 +652,8 @@ StokesSolver::compute_LTRHS(double* X){
 			X[i] = ((double*)chol_solution->x)[i];
 		}
 		cholmod_free_sparse(&chol_L_sparse, &chol_c);
-		cholmod_free_factor(&chol_L_copy, &chol_c);
+		//		cholmod_free_factor(&chol_L_copy, &chol_c);
 		cholmod_free_dense(&chol_solution, &chol_c);
-		cholmod_free_dense(&chol_Psolution, &chol_c);
 	}
 #ifdef TRILINOS
 	if (iterative()) {
@@ -858,6 +856,7 @@ StokesSolver::allocateRessources(){
 	chol_init = true;
 
     chol_rhs = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
+	chol_Psolution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c); // used for Brownian motion
 	for (int i=0; i<np6; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
@@ -1034,9 +1033,9 @@ StokesSolver::factorizeResistanceMatrix(){
 
 
 	/*reference code */
-	chol_c.nmethods = 1;
-	chol_c.method[0].ordering = CHOLMOD_NATURAL;// force natural ordering (=no ordering) at the moment
-	chol_c.postorder = 0 ;
+	//	chol_c.nmethods = 1;
+	//   	chol_c.method[0].ordering = CHOLMOD_NATURAL;// force natural ordering (=no ordering) at the moment
+	//	chol_c.postorder = 0 ;
 
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
