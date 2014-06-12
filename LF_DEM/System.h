@@ -90,7 +90,13 @@ private:
 	void buildBrownianTerms();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
+
+
 	void brownianForceTest();
+	void brownianTesting(bool);
+	void brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress);
+	void brownianTestingTimeEvolutionEulerMethod(bool calc_stress);
+	void brownianTestingTimeStepMoveCorrector();
 
 	void updateResistanceMatrix();
 	void print_res();
@@ -131,6 +137,8 @@ public:
 	vec3d *ang_vel_hydro;
 	vec3d *vel_brownian;
 	vec3d *ang_vel_brownian;
+	vec3d *vel_brownian_predictor;
+	vec3d *ang_vel_brownian_predictor;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
