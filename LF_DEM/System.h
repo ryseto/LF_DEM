@@ -283,7 +283,7 @@ public:
 		kb_T = val;
 		if (kb_T > 0) {
 			brownian = true;
-			integration_method = 1;
+			//integration_method = 1;
 		}
 	}
 	double get_kb_T(){return kb_T;}

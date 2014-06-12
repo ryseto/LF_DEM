@@ -480,13 +480,16 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k]);
 		}
 	}
-	#	printf OUT "y 5\n";
-	#	printf OUT "@ 5\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		$radius = $ContVelo[$k]/10;
-	#		printf OUT "r $radius\n";
-	#		&OutCircle_middle($int0[$k],  $int1[$k]);
-	#    }
+	printf OUT "y 2\n";
+	printf OUT "@ 6\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($Gap[$k] < 0){
+			$force = $force[$k];
+			$string_width = 100*abs($Gap[$k]);
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
 	
 	#
 	#	printf OUT "y 10\n";

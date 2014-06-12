@@ -1053,8 +1053,14 @@ System::computeVelocities(bool divided_velocities){
 	}
 
 	stokes_solver.solvingIsDone();
+	
 	for (int i=0; i<np; i++) {
 		if (brownian) {
+			/**** quick trick for 2D (for test) ***/ 
+			vel_brownian[i].y = 0;
+			ang_vel_brownian[i].x = 0;
+			ang_vel_brownian[i].z = 0;
+			/************************************/
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
