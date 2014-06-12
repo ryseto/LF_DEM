@@ -21,7 +21,7 @@ Contact::init(System *sys_, Interaction *interaction_){
 	interaction = interaction_;
 	state = 0;
 	if (sys->friction_model == 1) {
-		frictionlaw = &Contact::frictionlaw_coulomb;
+		frictionlaw = &Contact::frictionlaw_standard;
 	} else if (sys->friction_model == 2) {
 		frictionlaw = &Contact::frictionlaw_criticalload;
 	} else if (sys->friction_model == 3) {
@@ -116,19 +116,23 @@ Contact::calcContactInteraction(){
 }
 
 void
-Contact::frictionlaw_coulomb(){
-	interaction->lubrication.calcLubricationForce_normal(); // dashpot for the squeezed mode.
+Contact::frictionlaw_standard(){
+	/* [!!!!! NOTE !!!!!]
+	 * 
+	 * In Brownian case,
+	 * "lubforce_normal" significantly affects the friction law.
+	 * The difference seems to be subtle in non-Brownian case.
+	 *
+	 */
+	//interaction->lubrication.calcLubricationForce_normal(); // dashpot for the squeezed mode.
 	double supportable_tanforce = f_contact_normal_norm;
-	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
-	supportable_tanforce *=	mu;
+	//supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	if (supportable_tanforce < 0){
-		// !!!!!!!!!!!
-		// What is the state of this situation?
-		// !!!!!!!!!!
-		state = 3; // sliding ????
+		state = 3; // sliding
 		disp_tan.reset(); // no tangential force
 		f_contact_tan.reset();
 	} else {
+		supportable_tanforce *=	mu;
 		double sq_f_tan = f_contact_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 			state = 3; // sliding
@@ -152,7 +156,7 @@ Contact::frictionlaw_criticalload(){
 	 *
 	 */
 	double supportable_tanforce = f_contact_normal_norm;
-	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
+	//supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
@@ -183,7 +187,7 @@ Contact::frictionlaw_criticalload_mu_inf(){
 	 *
 	 */
 	double supportable_tanforce = f_contact_normal_norm;
-	supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
+	//supportable_tanforce += interaction->lubrication.get_lubforce_normal_fast();
 	supportable_tanforce -= sys->critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact

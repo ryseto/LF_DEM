@@ -66,7 +66,7 @@ public:
 	void updateContactModel();
 	void frictionlaw_criticalload();
 	void frictionlaw_criticalload_mu_inf();
-	void frictionlaw_coulomb();
+	void frictionlaw_standard();
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
 	void incrementTangentialDisplacement();
