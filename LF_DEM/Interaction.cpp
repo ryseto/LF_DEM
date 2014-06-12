@@ -38,6 +38,10 @@ Interaction::calcNormalVectorDistanceGap(){
 	nyny = nvec.y*nvec.y;
 	nznz = nvec.z*nvec.z;
 	gap_nondim = r/ro_12-2;
+}
+
+void
+Interaction::calcResistance(){
 	if (contact.state > 0) {
 		double overlap_12 = 0.5*(a0+a1-r);
 		a0_dash = a0-overlap_12;
@@ -95,6 +99,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 	} else {
 		contact.deactivate();
 	}
+	calcResistance();
 	lubrication.getInteractionData();
 	lubrication.calcLubConstants();
 }
@@ -138,6 +143,7 @@ Interaction::updateState(bool &deactivated){
 			return;
 		}
 	}
+	calcResistance();
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}

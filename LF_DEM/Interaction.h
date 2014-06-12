@@ -67,6 +67,7 @@ class Interaction{
 	double f_colloidal_norm;
 	vec3d f_colloidal;
 	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
+	void calcResistance();
 protected:
 public:
 	Contact contact;

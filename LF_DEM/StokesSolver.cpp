@@ -643,7 +643,6 @@ StokesSolver::compute_LTRHS(double* X){
 		double beta [2] = {0,0};
 		int transpose = 0;
 
-		//		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 		cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(cholmod_copy_factor(chol_L, &chol_c), &chol_c);
 		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c) ; // chol_Psolution = Lc*Y
 		chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_Psolution, &chol_c) ; // chol_solution = P^T*chol_Psolution
@@ -652,7 +651,6 @@ StokesSolver::compute_LTRHS(double* X){
 			X[i] = ((double*)chol_solution->x)[i];
 		}
 		cholmod_free_sparse(&chol_L_sparse, &chol_c);
-		//		cholmod_free_factor(&chol_L_copy, &chol_c);
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
