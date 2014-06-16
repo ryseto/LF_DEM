@@ -838,16 +838,22 @@ System::computeVelocities(bool divided_velocities){
 			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		}
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+		//		double ave_vel_brownian = 0;
+		//		for (int i=0; i<np; i++) {
+		//			ave_vel_brownian += vel_brownian[i].norm();
+		//		}
+		//		ave_vel_brownian = ave_vel_brownian/np;
+		//		cerr << ave_vel_brownian*dt << endl;
 	}
-
 	stokes_solver.solvingIsDone();
-	
 	for (int i=0; i<np; i++) {
 		if (brownian) {
-			/**** quick trick for 2D (for test) ***/ 
-			vel_brownian[i].y = 0;
-			ang_vel_brownian[i].x = 0;
-			ang_vel_brownian[i].z = 0;
+			/**** quick trick for 2D (for test) ***/
+			if (twodimension) {
+				vel_brownian[i].y = 0;
+				ang_vel_brownian[i].x = 0;
+				ang_vel_brownian[i].z = 0;
+			}
 			/************************************/
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
@@ -1247,10 +1253,10 @@ System::calcLubricationForce(){
 
 
 /************************************************************************************************
-
-/ testing routines
-
-/***********************************************************************************************/
+ *
+ * testing routines
+ *
+ ***********************************************************************************************/
 
 void
 System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
