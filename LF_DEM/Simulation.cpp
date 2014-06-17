@@ -766,9 +766,10 @@ Simulation::outputConfigurationData(){
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan_norm() << ' '; // 11
 				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 12
+				fout_interaction << 6*M_PI*sys.interaction[k].lubrication.brownian_stress_xz << ' ';
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
-				fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
-				fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
+				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
+				//fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
 				/* contact.state:
 				 * 0 no contact
 				 * 1 Friction is not activated (critical load model)

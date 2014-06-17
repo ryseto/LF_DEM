@@ -117,6 +117,7 @@ private:
 	inline double get_lubforce_normal_fast(){return -lubforce_p0_normal;}
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
 	double lubforce_p0_normal;
+	double brownian_stress_xz;
 	vec3d get_lubforce_tan(){
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}

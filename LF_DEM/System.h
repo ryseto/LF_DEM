@@ -90,17 +90,13 @@ private:
 	void buildBrownianTerms();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
-
-
 	void brownianForceTest();
 	void brownianTesting(bool);
 	void brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress);
 	void brownianTestingTimeEvolutionEulerMethod(bool calc_stress);
 	void brownianTestingTimeStepMoveCorrector();
-
 	void updateResistanceMatrix();
 	void print_res();
-	void calcStressesHydroContact();
 	double evaluateMaxOverlap();
 	double evaluateMaxDispTan();
 	void evaluateMaxContactVelocity();
@@ -159,7 +155,7 @@ public:
 	StressTensor total_brownian_stressGU;
 	int friction_model;
 	bool friction;
-	bool colloidalforce;
+	bool colloidalforce; // "colloidalforce" should be replaced by "repulsion".
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	/*

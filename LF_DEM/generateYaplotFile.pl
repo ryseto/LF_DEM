@@ -246,6 +246,7 @@ sub InInteractions {
 		$Ft_t[$k] = $fc_tan;
 		$Fcol[$k] = $fcol;
 		$f_normal = $fc_n + $fcol + $f_lub_norm;
+		$S_bf[$k] = $sxz_cont_xF;
 		$fricstate[$k] = $friction;
 		#	$force[$k] = sqrt($f_normal)
 		if ($f_normal > 0){
@@ -480,12 +481,23 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k]);
 		}
 	}
+	
+	$stressfactor = 0.00001;
 	printf OUT "y 2\n";
 	printf OUT "@ 6\n";
 	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($Gap[$k] < 0){
-			$force = $force[$k];
-			$string_width = 100*abs($Gap[$k]);
+		if ($S_bf[$k] < 0){
+			#$force = $force[$k];
+			$string_width = $stressfactor*abs($S_bf[$k]);
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "@ 5\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($S_bf[$k] > 0){
+			#$force = $force[$k];
+			$string_width = $stressfactor*abs($S_bf[$k]);
 			#&OutString2($int0[$k], $int1[$k]);
 			&OutString_width($int0[$k], $int1[$k]);
 		}

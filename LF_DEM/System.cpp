@@ -431,7 +431,6 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 			}
 		}
 	}
-	
 	/* corrector */
 	in_predictor = false;
 	setContactForceToParticle();
@@ -451,7 +450,6 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 		}
 	}
 }
-
 
 /*
  * timeStepMove is used for only Euler method.
@@ -542,7 +540,6 @@ System::timeEvolution(double strain_next){
 	(this->*timeEvolutionDt)(true);
 	ts++;
 	shear_strain += dt;
-
 }
 
 void
@@ -609,8 +606,14 @@ System::stressReset(){
 	for (int i=0; i<np; i++) {
 		lubstress[i].reset();
 		contactstressGU[i].reset();
-		colloidalstressGU[i].reset();
-		if (brownian) {
+	}
+	if (colloidalforce) {
+		for (int i=0; i<np; i++) {
+			colloidalstressGU[i].reset();
+		}
+	}
+	if (brownian) {
+		for (int i=0; i<np; i++) {
 			brownianstressGU[i].reset();
 		}
 	}
@@ -810,7 +813,6 @@ System::buildColloidalForceTerms(bool set_or_add){
 
 void
 System::computeVelocities(bool divided_velocities){
-
 	stokes_solver.resetRHS();
 	if (divided_velocities) {
 		// in case we want to compute the stress contributions
@@ -863,6 +865,7 @@ System::computeVelocities(bool divided_velocities){
 		velocity[i].x += position[i].z;
 		ang_velocity[i].y += 0.5;
 	}
+	
 }
 
 void
