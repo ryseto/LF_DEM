@@ -64,18 +64,18 @@ Lubrication::calcLubConstants(){
 	lambda_p_1 = 1+lambda;
 	lambda_p_1_square = lambda_p_1*lambda_p_1;
 	lambda_p_1_cubic = lambda_p_1_square*lambda_p_1;
-	a0a0_23 = a0*a0*(2./3);
-	a1a1_23 = a1*a1*(2./3);
-	roro_16 = ro*ro*(1./6);
+	a0a0_23 = a0*a0*(2.0/3);
+	a1a1_23 = a1*a1*(2.0/3);
+	roro_16 = ro*ro*(1.0/6);
 	double a0a0a0 = a0*a0*a0;
 	double a1a1a1 = a1*a1*a1;
 	double rororo = ro*ro*ro;
-	a0a0a0_43 = a0a0a0*(4./3);
-	a1a1a1_43 = a1a1a1*(4./3);
-	rororo_16 = rororo*(1./6);
-	a0a0a0_109 = a0a0a0*(10./9);
-	a1a1a1_109 = a1a1a1*(10./9);
-	rororo_536 = rororo*(5./36);
+	a0a0a0_43 = a0a0a0*(4.0/3);
+	a1a1a1_43 = a1a1a1*(4.0/3);
+	rororo_16 = rororo*(1.0/6);
+	a0a0a0_109 = a0a0a0*(10.0/9);
+	a1a1a1_109 = a1a1a1*(10.0/9);
+	rororo_536 = rororo*(5.0/36);
 	/* XA
 	 * X_{a,b}(l) = X_{b,a}(l) = X_{3-a,3-b}(1/l)
 	 * X21(l) = X12(l)
@@ -549,8 +549,5 @@ Lubrication::addHydroStress(){
 		pairVelocityStresslet(vib, vjb, oib, ojb, stresslet_brownian_GU_i, stresslet_brownian_GU_j);
 		sys->brownianstressGU[p0] += stresslet_brownian_GU_i;
 		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
-		//### FOR DEBUG ###//
-		brownian_stress_xz = 0.5*(stresslet_brownian_GU_i.elm[2]+stresslet_brownian_GU_j.elm[2]);
-		//#################//
 	}
 }

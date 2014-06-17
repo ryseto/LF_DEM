@@ -521,11 +521,8 @@ System::timeStepMoveCorrector(){
 	updateInteractions();
 }
 
-
 void
 System::timeEvolution(double strain_next){
-
-	
 	static bool firsttime = true;
 	if (firsttime) {
 		checkNewInteraction();
@@ -738,14 +735,6 @@ System::buildBrownianTerms(){
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-	// if (twodimension) {
-	// 	for (int i=0; i<np; i++) {
-	// 		int i6 = 6*i;
-	// 		brownian_force[i6+1] = 0;
-	// 		brownian_force[i6+3] = 0;
-	// 		brownian_force[i6+5] = 0;
-	// 	}
-	// }
 	stokes_solver.setRHS(brownian_force);
 }
 
@@ -820,17 +809,25 @@ System::computeVelocities(bool divided_velocities){
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-		buildColloidalForceTerms(true); // set rhs = F_Coll
-		stokes_solver.solve(vel_colloidal, ang_vel_colloidal); // get V_Coll
 		for (int i=0; i<np; i++) {
-			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_colloidal[i];
-			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_colloidal[i];
+			na_velocity[i] = vel_hydro[i]+vel_contact[i];
+			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+		}
+		if (colloidalforce) {
+			buildColloidalForceTerms(true); // set rhs = F_Coll
+			stokes_solver.solve(vel_colloidal, ang_vel_colloidal); // get V_Coll
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += vel_colloidal[i];
+				na_ang_velocity[i] += ang_vel_colloidal[i];
+			}
 		}
 	} else {
 		// for most of the time evolution
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		buildContactTerms(false); // set rhs = F_C
-		buildColloidalForceTerms(false); // set rhs = F_Coll
+		if (colloidalforce) {
+			buildColloidalForceTerms(false); // set rhs = F_Coll
+		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V_Coll
 	}
 	if (brownian) {
@@ -840,10 +837,7 @@ System::computeVelocities(bool divided_velocities){
 			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		}
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-	}
-	stokes_solver.solvingIsDone();
-	for (int i=0; i<np; i++) {
-		if (brownian) {
+		for (int i=0; i<np; i++) {
 			/**** quick trick for 2D (for test) ***/
 			if (twodimension) {
 				vel_brownian[i].y = 0;
@@ -854,12 +848,14 @@ System::computeVelocities(bool divided_velocities){
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
+	}
+	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
 		velocity[i].x += position[i].z;
 		ang_velocity[i].y += 0.5;
 	}
-	
+	stokes_solver.solvingIsDone();
 }
 
 void
@@ -1271,7 +1267,6 @@ System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
 			}
 		}
 	}
-	
 	/* corrector */
 	in_predictor = false;
 	setContactForceToParticle();
