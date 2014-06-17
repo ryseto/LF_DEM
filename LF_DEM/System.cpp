@@ -840,12 +840,6 @@ System::computeVelocities(bool divided_velocities){
 			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		}
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-		//		double ave_vel_brownian = 0;
-		//		for (int i=0; i<np; i++) {
-		//			ave_vel_brownian += vel_brownian[i].norm();
-		//		}
-		//		ave_vel_brownian = ave_vel_brownian/np;
-		//		cerr << ave_vel_brownian*dt << endl;
 	}
 	stokes_solver.solvingIsDone();
 	for (int i=0; i<np; i++) {
@@ -1252,9 +1246,6 @@ System::calcLubricationForce(){
 	}
 }
 
-
-
-
 /************************************************************************************************
  *
  * testing routines
@@ -1311,7 +1302,6 @@ System::brownianTestingTimeEvolutionEulerMethod(bool calc_stress){
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
 	//	timeStepMovePredictor();
-
 }
 
 void

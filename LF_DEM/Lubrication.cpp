@@ -431,8 +431,6 @@ Lubrication::calcTestStress(){
 	vec3d vj(sys->na_velocity[p1]);
 	vec3d oi(sys->na_ang_velocity[p0]);
 	vec3d oj(sys->na_ang_velocity[p1]);
-
-
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */

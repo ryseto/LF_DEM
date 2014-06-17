@@ -13,16 +13,14 @@
 #include <iomanip>
 
 class StressTensor {
-private:
-
 public:
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
 	 */
 	double elm[6];
-	inline StressTensor(void)
+	inline StressTensor()
 	{
-		for (int i=0; i<6; i++){
+		for (int i=0; i<6; i++) {
 			elm[i] = 0;
 		}
 	}
@@ -65,7 +63,7 @@ public:
 	/* copy constructor */
 	inline StressTensor(const StressTensor& other)
 	{
-		for (int i=0; i<6; i++){
+		for (int i=0; i<6; i++) {
 			elm[i] = other.elm[i];
 		}
 	}
@@ -102,12 +100,12 @@ public:
 	inline friend StressTensor
 	operator - (const StressTensor &s)
 	{
-		return StressTensor(s.elm[0],
-							s.elm[1],
-							s.elm[2],
-							s.elm[3],
-							s.elm[4],
-							s.elm[5]);
+		return StressTensor(-s.elm[0],
+							-s.elm[1],
+							-s.elm[2],
+							-s.elm[3],
+							-s.elm[4],
+							-s.elm[5]);
 	}
 	
 	inline friend StressTensor
@@ -124,7 +122,12 @@ public:
 	inline friend StressTensor
 	operator * (const StressTensor &s, const double &d)
 	{
-		return d*s;
+		return StressTensor(d*s.elm[0],
+							d*s.elm[1],
+							d*s.elm[2],
+							d*s.elm[3],
+							d*s.elm[4],
+							d*s.elm[5]);
 	}
 	
 	inline friend StressTensor
@@ -150,16 +153,16 @@ public:
 	}
 	
 	inline StressTensor&
-	operator +=(const StressTensor &s)
+	operator += (const StressTensor &s)
 	{
-		for (int i=0; i<6; i++){
+		for (int i=0; i<6; i++) {
 			elm[i] += s.elm[i];
 		}
 		return *this;
 	}
 	
 	inline StressTensor&
-	operator -=(const StressTensor &s)
+	operator -= (const StressTensor &s)
 	{
 		for (int i=0; i<6; i++){
 			elm[i] -= s.elm[i];
@@ -168,9 +171,9 @@ public:
 	}
 	
 	inline StressTensor&
-	operator *=(const double &d)
+	operator *= (const double &d)
 	{
-		for (int i=0; i<6; i++){
+		for (int i=0; i<6; i++) {
 			elm[i] *= d;
 		}
 		return *this;
@@ -179,7 +182,7 @@ public:
 	inline StressTensor&
 	operator *=(const int &i)
 	{
-		for (int j=0; j<6; j++){
+		for (int j=0; j<6; j++) {
 			elm[j] *= i;
 		}
 		return *this;
@@ -188,7 +191,7 @@ public:
 	inline StressTensor&
 	operator /=(const double &d)
 	{
-		double d_inv = 1/d;
+		double d_inv = 1.0/d;
 		for (int i=0; i<6; i++) {
 			elm[i] *= d_inv;
 		}
@@ -198,7 +201,7 @@ public:
 	inline StressTensor&
 	operator /= (const int &i)
 	{
-		double d_inv = 1./i;
+		double d_inv = 1.0/i;
 		for (int j=0; j<6; j++) {
 			elm[j] *= d_inv;
 		}
@@ -248,7 +251,7 @@ public:
 	
 	inline void reset()
 	{
-		for (int i=0; i<6; i++){
+		for (int i=0; i<6; i++) {
 			elm[i] = 0;
 		}
 	}

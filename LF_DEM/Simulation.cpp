@@ -453,11 +453,13 @@ Simulation::evaluateData(){
 	 *
 	 */
 	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
-	total_colloidal_stress = sys.total_colloidal_stressXF+sys.total_colloidal_stressGU;
 	total_stress = sys.total_hydro_stress;
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
-	total_stress += total_colloidal_stress;
+	if (sys.colloidalforce) {
+		total_colloidal_stress = sys.total_colloidal_stressXF+sys.total_colloidal_stressGU;
+		total_stress += total_colloidal_stress;
+	}
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stressGU;
 	}

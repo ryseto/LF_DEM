@@ -620,8 +620,6 @@ StokesSolver::getRHS(double* rhs){
 #endif
 }
 
-
-
 // Computes X = L*RHS
 void
 StokesSolver::compute_LTRHS(double* X){
@@ -660,7 +658,6 @@ StokesSolver::compute_LTRHS(double* X){
 	}
 #endif
 }
-
 
 // Finds solutions to L^T X = RHS
 void

@@ -48,7 +48,7 @@ class StokesSolver{
 	  or more generally translational and rotational velocities (U and W) (a 6N vector, FT/UW case). 
 	  In the latter case it is stored as (U_1, W_1, U_2, W_2, ...., U_N, W_N).
 	  Accordingly, Forces are either forces alone (F) or torques and forces ( F and T, stored as (F_1, T_1,  ..., F_N, T_N) ).
-	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, ie is sparse.
+	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, i.e. is sparse.
 	  
 	  The descriptions given here are a priori written for the FT/UW case. Adaptation to the F/U case is straightforward.
 
