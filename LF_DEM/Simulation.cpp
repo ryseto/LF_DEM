@@ -106,7 +106,7 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 		cnt_simu_loop ++;
 		cerr << "strain: " << sys.get_shear_strain() << " / " << shear_strain_end << endl;
 	}
-	if (false) {
+	if (filename_parameters == "init_relax.txt") {
 		/* To prepar relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to expoert the position data.
@@ -788,7 +788,7 @@ Simulation::outputConfigurationData(){
 void
 Simulation::outputFinalConfiguration(){
 	ofstream fout_finalconfig;
-	string filename_final_configuration = "f_" + filename_import_positions;
+	string filename_final_configuration = "./after_relax/"+filename_import_positions;
 	fout_finalconfig.open(filename_final_configuration.c_str());
 	fout_finalconfig << import_line[0] << endl;
 	fout_finalconfig << import_line[1] << endl;
