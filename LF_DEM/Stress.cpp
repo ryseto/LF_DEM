@@ -92,41 +92,39 @@ System::calcStressPerParticle(){
 
 void
 System::calcStress(){
-
-
 	//////////////////////////////////////////////////////////////
 	total_hydro_stress.reset();
 	for (int i=0; i<np; i++) {
-		total_hydro_stress += avg_lubstress[i]/avg_stress_nb++;
+		total_hydro_stress += avg_lubstress[i]/avg_stress_nb;
 	}
 	total_hydro_stress /= System_volume();
 	//////////////////////////////////////////////////////////////
 	total_contact_stressGU.reset();
 	for (int i=0; i<np; i++) {
-		total_contact_stressGU += avg_contactstressGU[i]/avg_stress_nb++;
+		total_contact_stressGU += avg_contactstressGU[i]/avg_stress_nb;
 	}
 	total_contact_stressGU /= System_volume();
 	//////////////////////////////////////////////////////////////
-	total_contact_stressXF_normal = avg_contactstressXF_normal/avg_stress_nb++;
-	total_contact_stressXF_tan = avg_contactstressXF_tan/avg_stress_nb++;
+	total_contact_stressXF_normal = avg_contactstressXF_normal/avg_stress_nb;
+	total_contact_stressXF_tan = avg_contactstressXF_tan/avg_stress_nb;
 	total_contact_stressXF_normal /= System_volume();
 	total_contact_stressXF_tan /= System_volume();
 	//////////////////////////////////////////////////////////////
 	if (colloidalforce) {
 		total_colloidal_stressGU.reset();
 		for (int i=0; i<np; i++) {
-			total_colloidal_stressGU += avg_colloidalstressGU[i]/avg_stress_nb++;
+			total_colloidal_stressGU += avg_colloidalstressGU[i]/avg_stress_nb;
 		}
 		total_colloidal_stressGU /= System_volume();
 		//////////////////////////////////////////////////////////////
-		total_colloidal_stressXF = avg_colloidalstressXF/avg_stress_nb++;
+		total_colloidal_stressXF = avg_colloidalstressXF/avg_stress_nb;
 		total_colloidal_stressXF /= System_volume();
 	}
 	//////////////////////////////////////////////////////////////
 	if (brownian) {
 		total_brownian_stressGU.reset();
 		for (int i=0; i<np; i++) {
-			total_brownian_stressGU += avg_brownianstressGU[i]/avg_stress_nb++;
+			total_brownian_stressGU += avg_brownianstressGU[i]/avg_stress_nb;
 		}
 		total_brownian_stressGU /= System_volume();
 	}

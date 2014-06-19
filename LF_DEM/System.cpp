@@ -539,9 +539,10 @@ System::timeEvolution(double strain_next){
 		checkNewInteraction();
 		firsttime = false;
 	}
+	avgStressReset();
 	while (shear_strain < strain_next-dt-1e-8) { // integrate until strain_next - 1 time step
 		//		brownianTesting(false);
-		(this->*timeEvolutionDt)(true);
+		(this->*timeEvolutionDt)(false);
 		ts++;
 		shear_strain += dt;
 	};
@@ -629,7 +630,7 @@ System::stressReset(){
 
 void
 System::avgStressReset(){
-	avg_stress_nb=0;
+	avg_stress_nb = 0;
 	for (int i=0; i<np; i++) {
 		avg_lubstress[i].reset();
 		avg_contactstressGU[i].reset();
