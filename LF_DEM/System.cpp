@@ -647,8 +647,8 @@ System::avgStressReset(){
 	}
 	avg_contactstressXF_normal.reset();
 	avg_contactstressXF_tan.reset();
-	avg_colloidalstressXF.reset();
 	if (colloidalforce) {
+		avg_colloidalstressXF.reset();
 		for (int i=0; i<np; i++) {
 			avg_colloidalstressGU[i].reset();
 		}
@@ -928,13 +928,6 @@ System::computeVelocities(bool divided_velocities){
 		ang_velocity[i].y += 0.5;
 	}
 	stokes_solver.solvingIsDone();
-}
-
-void
-System::updateVelocityRestingFluid(){
-    for (int i=0; i<np; i++) {
-		velocity[i] = contact_force[i]+colloidal_force[i];
-    }
 }
 
 void

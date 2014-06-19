@@ -243,7 +243,6 @@ public:
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void computeVelocities(bool divided_velocities);
-	void updateVelocityRestingFluid();
 	void forceReset();
 	void torqueReset();
 	void stressReset();
