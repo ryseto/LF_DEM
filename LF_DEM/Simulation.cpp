@@ -485,13 +485,15 @@ Simulation::evaluateData(){
 	viscosity_cont_GU = sys.total_contact_stressGU.getStressXZ();
 	normalstress_diff_1_cont_GU = sys.total_contact_stressGU.getNormalStress1();
 	normalstress_diff_2_cont_GU = sys.total_contact_stressGU.getNormalStress2();
-	viscosity_col_XF = sys.total_colloidal_stressXF.getStressXZ();
-	normalstress_diff_1_col_XF = sys.total_colloidal_stressXF.getNormalStress1();
-	normalstress_diff_2_col_XF = sys.total_colloidal_stressXF.getNormalStress2();
-	particle_pressure_col = sys.total_colloidal_stressXF.getParticlePressure();
-	viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
-	normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
-	normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
+	if (sys.colloidalforce) {
+		viscosity_col_XF = sys.total_colloidal_stressXF.getStressXZ();
+		normalstress_diff_1_col_XF = sys.total_colloidal_stressXF.getNormalStress1();
+		normalstress_diff_2_col_XF = sys.total_colloidal_stressXF.getNormalStress2();
+		particle_pressure_col = sys.total_colloidal_stressXF.getParticlePressure();
+		viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
+		normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
+		normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
+	}
 	if (sys.brownian) {
 		viscosity_brownian = sys.total_brownian_stressGU.getStressXZ();
 		normalstress_diff_1_brownian = sys.total_brownian_stressGU.getNormalStress1();

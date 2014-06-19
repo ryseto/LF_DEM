@@ -75,7 +75,7 @@ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	Interaction(): contact(), lubrication(Lubrication(this)) {;}
+	Interaction(): contact(), lubrication(Lubrication(this)) {}
 	Interaction(const Interaction& obj): contact(), lubrication(Lubrication(this)){
 		contact = obj.contact;
 	}

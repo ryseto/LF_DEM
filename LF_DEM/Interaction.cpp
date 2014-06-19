@@ -13,6 +13,7 @@ Interaction::init(System *sys_){
 	active = false;
 	lubrication.init(sys);
 	contact.init(sys, this);
+	f_colloidal_norm = 0;
 }
 
 void
