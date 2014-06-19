@@ -32,6 +32,7 @@ class System{
 private:
 	int np;
 	int maxnb_interactionpair;
+	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
 	int ts; // time steps
 	double dt;
@@ -138,8 +139,8 @@ public:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-	double *contact_forces_predictor;
-	double *hydro_forces_predictor;
+//	double *contact_forces_predictor;
+//	double *hydro_forces_predictor;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle

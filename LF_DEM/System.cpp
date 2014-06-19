@@ -16,81 +16,97 @@ System::~System(){
 	DELETE(radius);
 	DELETE(radius_cubic);
 	DELETE(resistance_matrix_dblock);
-	DELETE(angle);
+	if (twodimension) {
+		DELETE(angle);
+	}
 	DELETE(velocity);
 	DELETE(ang_velocity);
 	DELETE(na_velocity);
 	DELETE(na_ang_velocity);
-	DELETE(vel_contact);
-	DELETE(ang_vel_contact);
-	DELETE(vel_hydro);
-	DELETE(ang_vel_hydro);
-	DELETE(vel_colloidal);
-	DELETE(ang_vel_colloidal);
-	if (brownian) {
-		DELETE(vel_brownian);
-		DELETE(ang_vel_brownian);
-		DELETE(brownian_force);
-	}
 	if (integration_method >= 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
 		DELETE(na_velocity_predictor);
 		DELETE(na_ang_velocity_predictor);
 	}
+	DELETE(vel_contact);
+	DELETE(ang_vel_contact);
+	DELETE(vel_hydro);
+	DELETE(ang_vel_hydro);
 	DELETE(contact_force);
 	DELETE(contact_torque);
 	DELETE(lubstress);
 	DELETE(contactstressGU);
-	DELETE(colloidalstressGU);
 	DELETE(avg_lubstress);
 	DELETE(avg_contactstressGU);
-	DELETE(avg_colloidalstressGU);
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
 	if (brownian) {
-		DELETE(contact_forces_predictor);
-		DELETE(hydro_forces_predictor);
+		DELETE(vel_brownian);
+		DELETE(ang_vel_brownian);
+		DELETE(brownian_force);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
 		DELETE(avg_brownianstressGU);
+	}
+	if (colloidalforce) {
+		DELETE(colloidalstressGU);
+		DELETE(vel_colloidal);
+		DELETE(ang_vel_colloidal);
+		DELETE(avg_colloidalstressGU);
 	}
 };
 
 void
 System::allocateRessources(){
+	linalg_size = 6*np;
+	maxnb_interactionpair_per_particle = 15;
+	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubic = new double [np];
 	resistance_matrix_dblock = new double [18*np];
-	angle = new double [np];
+	// Configuration
+	if (twodimension) {
+		angle = new double [np];
+	}
+	// Velocity
 	velocity = new vec3d [np];
 	ang_velocity = new vec3d [np];
 	na_velocity = new vec3d [np];
 	na_ang_velocity = new vec3d [np];
-	if (integration_method >= 1) {
+	if (integration_method == 1) {
 		ang_velocity_predictor = new vec3d [np];
 		velocity_predictor = new vec3d [np];
 		na_ang_velocity_predictor = new vec3d [np];
 		na_velocity_predictor = new vec3d [np];
 	}
-	vel_colloidal = new vec3d [np];
-	ang_vel_colloidal = new vec3d [np];
 	vel_contact = new vec3d [np];
 	ang_vel_contact = new vec3d [np];
 	vel_hydro = new vec3d [np];
 	ang_vel_hydro = new vec3d [np];
+	if (colloidalforce) {
+		vel_colloidal = new vec3d [np];
+		ang_vel_colloidal = new vec3d [np];
+	}
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
 		vel_brownian_predictor = new vec3d [np];
 		ang_vel_brownian_predictor = new vec3d [np];
 	}
+	// Forces
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
-	colloidal_force = new vec3d [np];
+	if (colloidalforce) {
+		colloidal_force = new vec3d [np];
+		colloidalstressGU = new StressTensor [np];
+	}
+	if (brownian) {
+		brownian_force = new double [linalg_size];
+	}
+	// Stress
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
-	colloidalstressGU = new StressTensor [np];
 	avg_lubstress = new StressTensor [np];
 	avg_contactstressGU = new StressTensor [np];
 	avg_colloidalstressGU = new StressTensor [np];
@@ -99,17 +115,9 @@ System::allocateRessources(){
 		brownianstressGU_predictor = new StressTensor [np];
 		avg_brownianstressGU = new StressTensor [np];
 	}
-	int maxnb_interactionpair_per_particle = 15;
-	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	linalg_size = 6*np;
-	if (brownian) {
-		contact_forces_predictor = new double [linalg_size];
-		hydro_forces_predictor = new double [linalg_size];
-		brownian_force = new double [linalg_size];
-	}
 	stokes_solver.init(np, false);
 }
 
@@ -234,10 +242,12 @@ System::setupSystem(){
 		na_ang_velocity[i].reset();
 		vel_contact[i].reset();
 		ang_vel_contact[i].reset();
-		vel_colloidal[i].reset();
-		ang_vel_colloidal[i].reset();
 		vel_hydro[i].reset();
 		ang_vel_hydro[i].reset();
+		if (colloidalforce) {
+			vel_colloidal[i].reset();
+			ang_vel_colloidal[i].reset();
+		}
 	}
 	/* Prepare
 	 *
