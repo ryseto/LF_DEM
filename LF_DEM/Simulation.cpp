@@ -668,7 +668,7 @@ Simulation::outputConfigurationData(){
 	int np = sys.get_np();
 	pos.resize(np);
 	vel.resize(np);
-	for (int i=0; i < np; i++) {
+	for (int i=0; i<np; i++) {
 		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
 								   sys.position[i].y-sys.Ly_half(),
 								   sys.position[i].z-sys.Lz_half());
@@ -691,7 +691,7 @@ Simulation::outputConfigurationData(){
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_shear_rate << endl;
-		for (int i=0; i < np; i++) {
+		for (int i=0; i<np; i++) {
 			vec3d &p = pos[i];
 			vec3d &v = vel[i];
 			vec3d &o = sys.ang_velocity[i];

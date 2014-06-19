@@ -431,7 +431,6 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
-	timeStepMovePredictor();
 	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
@@ -441,12 +440,12 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 			}
 		}
 	}
+	timeStepMovePredictor();
 	/* corrector */
 	in_predictor = false;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
-	timeStepMoveCorrector();
 	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
@@ -460,7 +459,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 		}
 		avgStressUpdate();
 	}
-
+	timeStepMoveCorrector();
 }
 
 /*
