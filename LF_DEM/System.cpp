@@ -635,6 +635,9 @@ System::avgStressReset(){
 		avg_lubstress[i].reset();
 		avg_contactstressGU[i].reset();
 	}
+	avg_contactstressXF_normal.reset();
+	avg_contactstressXF_tan.reset();
+	avg_colloidalstressXF.reset();
 	if (colloidalforce) {
 		for (int i=0; i<np; i++) {
 			avg_colloidalstressGU[i].reset();
@@ -674,7 +677,6 @@ System::avgStressUpdate(){
 		}
 	}
 }
-
 
 void
 System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
