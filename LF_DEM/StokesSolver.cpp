@@ -897,7 +897,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	int i3 = current_index_positions[3];
 	int i4 = current_index_positions[4];
 	int i5 = current_index_positions[5];
-	
+
 	odblocks[0][i0  ] = scaledXA*n0n0 + scaledYA*one_n0n0; // column 0
 	odblocks[0][i0+1] = (scaledXA-scaledYA)*n0n1;
 	odblocks[0][i0+2] = (scaledXA-scaledYA)*n0n2;

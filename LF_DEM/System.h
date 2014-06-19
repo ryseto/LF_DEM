@@ -146,6 +146,13 @@ public:
 	StressTensor* colloidalstressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
+	StressTensor* avg_lubstress; // G U + M E
+	StressTensor avg_contactstressXF_normal; // by particle
+	StressTensor avg_contactstressXF_tan; // by particle
+	StressTensor* avg_contactstressGU; // by particle
+	StressTensor avg_colloidalstressXF; // by particle
+	StressTensor* avg_colloidalstressGU; // by particle
+	StressTensor* avg_brownianstressGU; // by particle
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
@@ -153,6 +160,7 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stressGU;
+	int avg_stress_nb;
 	int friction_model;
 	bool friction;
 	bool colloidalforce; // "colloidalforce" should be replaced by "repulsion".
@@ -238,6 +246,8 @@ public:
 	void forceReset();
 	void torqueReset();
 	void stressReset();
+	void avgStressReset();
+	void avgStressUpdate();
 	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();

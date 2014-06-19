@@ -43,6 +43,9 @@ System::~System(){
 	DELETE(lubstress);
 	DELETE(contactstressGU);
 	DELETE(colloidalstressGU);
+	DELETE(avg_lubstress);
+	DELETE(avg_contactstressGU);
+	DELETE(avg_colloidalstressGU);
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
@@ -51,6 +54,7 @@ System::~System(){
 		DELETE(hydro_forces_predictor);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
+		DELETE(avg_brownianstressGU);
 	}
 };
 
@@ -87,9 +91,13 @@ System::allocateRessources(){
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
 	colloidalstressGU = new StressTensor [np];
+	avg_lubstress = new StressTensor [np];
+	avg_contactstressGU = new StressTensor [np];
+	avg_colloidalstressGU = new StressTensor [np];
 	if (brownian) {
 		brownianstressGU = new StressTensor [np];
 		brownianstressGU_predictor = new StressTensor [np];
+		avg_brownianstressGU = new StressTensor [np];
 	}
 	int maxnb_interactionpair_per_particle = 15;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
@@ -349,7 +357,9 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	if (calc_stress) {
 		stressReset();
 		calcStressPerParticle();
+		avgStressUpdate();
 	}
+
 }
 
 /****************************************************************************************************
@@ -448,11 +458,13 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
 			}
 		}
+		avgStressUpdate();
 	}
+
 }
 
 /*
- * timeStepMove is used for only Euler method.
+ * timeStepMove is used only for Euler method.
  */
 void
 System::timeStepMove(){
@@ -530,7 +542,7 @@ System::timeEvolution(double strain_next){
 	}
 	while (shear_strain < strain_next-dt-1e-8) { // integrate until strain_next - 1 time step
 		//		brownianTesting(false);
-		(this->*timeEvolutionDt)(false);
+		(this->*timeEvolutionDt)(true);
 		ts++;
 		shear_strain += dt;
 	};
@@ -615,6 +627,54 @@ System::stressReset(){
 		}
 	}
 }
+
+void
+System::avgStressReset(){
+	avg_stress_nb=0;
+	for (int i=0; i<np; i++) {
+		avg_lubstress[i].reset();
+		avg_contactstressGU[i].reset();
+	}
+	if (colloidalforce) {
+		for (int i=0; i<np; i++) {
+			avg_colloidalstressGU[i].reset();
+		}
+	}
+	if (brownian) {
+		for (int i=0; i<np; i++) {
+			avg_brownianstressGU[i].reset();
+		}
+	}
+}
+
+void
+System::avgStressUpdate(){
+	avg_stress_nb++;
+	for (int i=0; i<np; i++) {
+		avg_lubstress[i] += lubstress[i];
+		avg_contactstressGU[i] += contactstressGU[i];
+	}
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_contact()) {
+			avg_contactstressXF_normal += interaction[k].contact.getContactStressXF_normal();
+			avg_contactstressXF_tan += interaction[k].contact.getContactStressXF_tan();
+		}
+	}
+	if (colloidalforce) {
+		for (int i=0; i<np; i++) {
+			avg_colloidalstressGU[i] += colloidalstressGU[i];
+		}
+		for (int k=0; k<nb_interaction; k++) {
+			avg_colloidalstressXF += interaction[k].getColloidalStressXF();
+		}
+	}
+	if (brownian) {
+		for (int i=0; i<np; i++) {
+			avg_brownianstressGU[i] += brownianstressGU[i];
+		}
+	}
+}
+
 
 void
 System::buildHydroTerms(bool build_res_mat, bool build_force_GE){

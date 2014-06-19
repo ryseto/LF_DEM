@@ -151,6 +151,50 @@ public:
 							i*s.elm[4],
 							i*s.elm[5]);
 	}
+
+	inline friend StressTensor
+	operator / (const double &d, const StressTensor &s)
+	{
+		return StressTensor(s.elm[0]/d,
+							s.elm[1]/d,
+							s.elm[2]/d,
+							s.elm[3]/d,
+							s.elm[4]/d,
+							s.elm[5]/d);
+	}
+	
+	inline friend StressTensor
+	operator / (const StressTensor &s, const double &d)
+	{
+		return StressTensor(s.elm[0]/d,
+							s.elm[1]/d,
+							s.elm[2]/d,
+							s.elm[3]/d,
+							s.elm[4]/d,
+							s.elm[5]/d);
+	}
+	
+	inline friend StressTensor
+	operator / (const int &i, const StressTensor &s)
+	{
+		return StressTensor(s.elm[0]/i,
+							s.elm[1]/i,
+							s.elm[2]/i,
+							s.elm[3]/i,
+							s.elm[4]/i,
+							s.elm[5]/i);
+	}
+	
+	inline friend StressTensor
+	operator / (const StressTensor &s, const int &i)
+	{
+		return StressTensor(s.elm[0]/i,
+							s.elm[1]/i,
+							s.elm[2]/i,
+							s.elm[3]/i,
+							s.elm[4]/i,
+							s.elm[5]/i);
+	}
 	
 	inline StressTensor&
 	operator += (const StressTensor &s)
