@@ -765,6 +765,14 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
 				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
+				/* [NOTE] 
+				 * Lubricatino forces are reference values
+				 * in the Brownian case. The force balancing
+				 * velocities are recalculated without 
+				 * including Brownian forces.
+				 * It seems no better way to visualize
+				 * lubrication forces.
+				 */
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan().norm() << ' '; // 9
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10

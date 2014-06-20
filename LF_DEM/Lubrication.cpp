@@ -445,6 +445,8 @@ Lubrication::calcTestStress(){
  * Note that only the Brownian component of the velocity is NOT included here (IS THAT TRUE?).
  * This part is used for ouput data.
  * lubforce_p1 = -lubforce_p0
+ *
+ * See sys->calcLubricationForce() 
  */
 void
 Lubrication::calcLubricationForce(){
@@ -456,21 +458,10 @@ Lubrication::calcLubricationForce(){
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	/* [NOTE] WE SHOULD REWRITE THIS FUNCTION 
-	 * These velocities are not the same as the one
-	 * when the veolocities are solved. 
-	 * Already the positions are updated. 
-	 * For visualization of lubrication forces,
-	 * we should recompute the velocities.
-	 */
-	vec3d vi(sys->velocity[p0]);
-	vec3d vj(sys->velocity[p1]);
-	vec3d oi(sys->ang_velocity[p0]);
-	vec3d oj(sys->ang_velocity[p1]);
-	vi.x -= sys->position[p0].z;
-	vj.x -= sys->position[p1].z;
-	oi.y -= 0.5;
-	oj.y -= 0.5;
+	vec3d vi(sys->na_velocity[p0]);
+	vec3d vj(sys->na_velocity[p1]);
+	vec3d oi(sys->na_ang_velocity[p0]);
+	vec3d oj(sys->na_ang_velocity[p1]);
 	if (sys->lubrication_model == 1){
 		calcXFunctions();
 	} else if (sys->lubrication_model == 2){

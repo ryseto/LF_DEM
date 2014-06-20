@@ -1286,8 +1286,10 @@ System::calcLubricationForce(){
     buildHydroTerms(true, true);
     setContactForceToParticle();
 	buildContactTerms(false);
-	setColloidalForceToParticle();
-	buildColloidalForceTerms(false);
+	if (colloidalforce) {
+		setColloidalForceToParticle();
+		buildColloidalForceTerms(false);
+	}
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
 	for (int k=0; k<nb_interaction; k++) {
