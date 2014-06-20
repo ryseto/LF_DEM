@@ -23,7 +23,7 @@ System::~System(){
 	DELETE(ang_velocity);
 	DELETE(na_velocity);
 	DELETE(na_ang_velocity);
-	if (integration_method >= 1) {
+	if (integration_method == 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
 		DELETE(na_velocity_predictor);
@@ -75,10 +75,10 @@ System::allocateRessources(){
 	na_velocity = new vec3d [np];
 	na_ang_velocity = new vec3d [np];
 	if (integration_method == 1) {
-		ang_velocity_predictor = new vec3d [np];
 		velocity_predictor = new vec3d [np];
-		na_ang_velocity_predictor = new vec3d [np];
+		ang_velocity_predictor = new vec3d [np];
 		na_velocity_predictor = new vec3d [np];
+		na_ang_velocity_predictor = new vec3d [np];
 	}
 	vel_contact = new vec3d [np];
 	ang_vel_contact = new vec3d [np];
@@ -91,8 +91,6 @@ System::allocateRessources(){
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
-		vel_brownian_predictor = new vec3d [np];
-		ang_vel_brownian_predictor = new vec3d [np];
 	}
 	// Forces
 	contact_force = new vec3d [np];

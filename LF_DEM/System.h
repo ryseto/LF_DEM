@@ -134,24 +134,22 @@ public:
 	vec3d *ang_vel_hydro;
 	vec3d *vel_brownian;
 	vec3d *ang_vel_brownian;
-	vec3d *vel_brownian_predictor;
-	vec3d *ang_vel_brownian_predictor;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *colloidal_force;
-//	double *contact_forces_predictor;
-//	double *hydro_forces_predictor;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
 	StressTensor* colloidalstressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
+	/* We don't need to keep 'ave_*stress' by particle?
+	 */
 	StressTensor* avg_lubstress; // G U + M E
-	StressTensor avg_contactstressXF_normal; // by particle
-	StressTensor avg_contactstressXF_tan; // by particle
+	StressTensor avg_contactstressXF_normal;
+	StressTensor avg_contactstressXF_tan;
 	StressTensor* avg_contactstressGU; // by particle
-	StressTensor avg_colloidalstressXF; // by particle
+	StressTensor avg_colloidalstressXF;
 	StressTensor* avg_colloidalstressGU; // by particle
 	StressTensor* avg_brownianstressGU; // by particle
 	StressTensor total_hydro_stress;
