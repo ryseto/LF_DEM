@@ -456,10 +456,21 @@ Lubrication::calcLubricationForce(){
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	vec3d vi(sys->na_velocity[p0]);
-	vec3d vj(sys->na_velocity[p1]);
-	vec3d oi(sys->na_ang_velocity[p0]);
-	vec3d oj(sys->na_ang_velocity[p1]);
+	/* [NOTE] WE SHOULD REWRITE THIS FUNCTION 
+	 * These velocities are not the same as the one
+	 * when the veolocities are solved. 
+	 * Already the positions are updated. 
+	 * For visualization of lubrication forces,
+	 * we should recompute the velocities.
+	 */
+	vec3d vi(sys->velocity[p0]);
+	vec3d vj(sys->velocity[p1]);
+	vec3d oi(sys->ang_velocity[p0]);
+	vec3d oj(sys->ang_velocity[p1]);
+	vi.x -= sys->position[p0].z;
+	vj.x -= sys->position[p1].z;
+	oi.y -= 0.5;
+	oj.y -= 0.5;
 	if (sys->lubrication_model == 1){
 		calcXFunctions();
 	} else if (sys->lubrication_model == 2){
@@ -478,23 +489,23 @@ Lubrication::calcLubricationForce(){
 	lubforce_p0 = XAU_i+YAU_i+YBO_i+XGE_i+YGE_i;
 }
 
-void
-Lubrication::calcLubricationForce_normal(){
-	/*
-	 *  First: -A*(U-Uinf) term
-	 */
-	/* Eq. (1.6a) in Jeffrey&Onishi 1984
-	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
-	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
-	 *
-	 */
-	vec3d vi(sys->na_velocity[p0]);
-	vec3d vj(sys->na_velocity[p1]);
-	calcXFunctions();
-	double XAU_i_normal = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec);
-	double XGE_i_normal = (scaledXG0()+scaledXG2())*(*nxnz);
-	lubforce_p0_normal = XAU_i_normal+XGE_i_normal;
-}
+//void
+//Lubrication::calcLubricationForce_normal(){
+//	/*
+//	 *  First: -A*(U-Uinf) term
+//	 */
+//	/* Eq. (1.6a) in Jeffrey&Onishi 1984
+//	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
+//	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
+//	 *
+//	 */
+//	vec3d vi(sys->na_velocity[p0]);
+//	vec3d vj(sys->na_velocity[p1]);
+//	calcXFunctions();
+//	double XAU_i_normal = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec);
+//	double XGE_i_normal = (scaledXG0()+scaledXG2())*(*nxnz);
+//	lubforce_p0_normal = XAU_i_normal+XGE_i_normal;
+//}
 
 void
 Lubrication::addHydroStress(){

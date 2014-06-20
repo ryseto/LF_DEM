@@ -26,8 +26,6 @@ System::~System(){
 	if (integration_method == 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
-		DELETE(na_velocity_predictor);
-		DELETE(na_ang_velocity_predictor);
 	}
 	DELETE(vel_contact);
 	DELETE(ang_vel_contact);
@@ -77,8 +75,6 @@ System::allocateRessources(){
 	if (integration_method == 1) {
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
-		na_velocity_predictor = new vec3d [np];
-		na_ang_velocity_predictor = new vec3d [np];
 	}
 	vel_contact = new vec3d [np];
 	ang_vel_contact = new vec3d [np];
@@ -515,17 +511,13 @@ System::timeStepMovePredictor(){
 	for (int i=0; i<np; i++) {
 		velocity_predictor[i] = velocity[i];
 		ang_velocity_predictor[i] = ang_velocity[i];
-		na_velocity_predictor[i] = na_velocity[i];
-		na_ang_velocity_predictor[i] = na_ang_velocity[i];
 	}
 }
 
 void
 System::timeStepMoveCorrector(){
 	for (int i=0; i<np; i++) {
-		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
-		na_ang_velocity[i] = 0.5*(na_ang_velocity[i]+na_ang_velocity_predictor[i]);
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<np; i++) {
@@ -921,8 +913,8 @@ System::computeVelocities(bool divided_velocities){
 	}
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
-		ang_velocity[i] = na_ang_velocity[i];
 		velocity[i].x += position[i].z;
+		ang_velocity[i] = na_ang_velocity[i];
 		ang_velocity[i].y += 0.5;
 	}
 	stokes_solver.solvingIsDone();
@@ -1434,9 +1426,7 @@ System::brownianTesting(bool calc_stress){
 void
 System::brownianTestingTimeStepMoveCorrector(){
 	for (int i=0; i<np; i++) {
-		na_velocity[i] = 0.5*(na_velocity[i]+na_velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
-		na_ang_velocity[i] = 0.5*(na_ang_velocity[i]+na_ang_velocity_predictor[i]);
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<np; i++) {

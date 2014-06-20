@@ -122,8 +122,6 @@ public:
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
 	vec3d *na_ang_velocity;
-	vec3d *na_velocity_predictor;
-	vec3d *na_ang_velocity_predictor;
 	vec3d *ang_velocity;
 	vec3d *ang_velocity_predictor;
 	vec3d *vel_colloidal;
