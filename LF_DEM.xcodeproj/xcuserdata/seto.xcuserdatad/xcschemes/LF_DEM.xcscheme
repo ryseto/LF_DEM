@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/brownian2"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/init_config"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,15 +78,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "D2N100VF0.7Bidi1.4_0.5Square_1.dat"
+            argument = "D3N500VF0.45Bidi1.4_0.5Cubic_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "colloid.txt"
+            argument = "init_relax.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "1"
+            argument = "0.1"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

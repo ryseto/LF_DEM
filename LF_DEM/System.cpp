@@ -229,7 +229,9 @@ System::setupSystem(){
 	}
 	for (int i=0; i<np; i++) {
 		radius_cubic[i] = radius[i]*radius[i]*radius[i];
-		angle[i] = 0;
+		if (twodimension) {
+			angle[i] = 0;
+		}
 		velocity[i].reset();
 		na_velocity[i].reset();
 		ang_velocity[i].reset();
