@@ -128,7 +128,6 @@ public:
 	double getNormalVelocity();
 	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
 	void addColloidalStress();
-	void calcTestStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	void integrateStress();
 };

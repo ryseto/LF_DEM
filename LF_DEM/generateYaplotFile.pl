@@ -56,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.0008;
+$force_factor = 0.01;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
@@ -237,32 +237,20 @@ sub InInteractions {
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
-		
 		$domega[$k] = $omegay[$i] - $omegay[$j];
-		
 		$F_lub[$k] = $f_lub_norm;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
 		$Fc_n[$k] = $fc_n;
 		$Ft_t[$k] = $fc_tan;
 		$Fcol[$k] = $fcol;
 		$f_normal = $fc_n + $fcol + $f_lub_norm;
+		$force[$k] = $f_normal;
+		
 		$S_bf[$k] = $sxz_cont_xF;
 		$fricstate[$k] = $friction;
 		#	$force[$k] = sqrt($f_normal)
-		if ($f_normal > 0){
-			if ($gap < 0){
-				#$force[$k] = sqrt($f_normal*$f_normal + $fc_tan*$fc_tan)
-				#+ sqrt($f_lub_norm*$f_lub_norm + $f_lub_tan*$f_lub_tan);
-				$force[$k] = $f_normal + $f_lub_norm;
-			} else {
-				$force[$k] = $f_normal;
-			}
-		} elsif ($f_normal < 0) {
-			$force[$k] = $fcol + $f_lub;
-		} else {
-			$force[$k] = 0;
-		}
 		
+				
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;

@@ -125,7 +125,6 @@ private:
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	void setResistanceCoeffTang(double tangent_rc);
-	void calcTestStress();
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();

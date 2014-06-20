@@ -271,10 +271,10 @@ Lubrication::calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj){
 	GEj[0] = cGE_j*nvec->x+YG1_YG3*nvec->z;
 	GEj[1] = cGE_j*nvec->y;
 	GEj[2] = cGE_j*nvec->z+YG1_YG3*nvec->x;
-	HEi[0] =  cHE_i*(*nxny);
+	HEi[0] = cHE_i*(*nxny);
 	HEi[1] = -cHE_i*nxnx_nznz;
 	HEi[2] = -cHE_i*(*nynz);
-	HEj[0] =  cHE_j*(*nxny);
+	HEj[0] = cHE_j*(*nxny);
 	HEj[1] = -cHE_j*nxnx_nznz;
 	HEj[2] = -cHE_j*(*nynz);
 }
@@ -310,35 +310,35 @@ Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	StressTensor YGU_j;
 	double cYGUi_xx = nvec->x*vi.x+nvec->x*vi.x-2*nvec->x*nvec->x*dot(nvec, vi);
 	double cYGUj_xx = nvec->x*vj.x+nvec->x*vj.x-2*nvec->x*nvec->x*dot(nvec, vj);
-	YGU_i.elm[0]  = -scaledYG0()*cYGUi_xx-scaledYG1()*cYGUj_xx;
-	YGU_j.elm[0]  = -scaledYG2()*cYGUi_xx-scaledYG3()*cYGUj_xx;
+	YGU_i.elm[0] = -scaledYG0()*cYGUi_xx-scaledYG1()*cYGUj_xx;
+	YGU_j.elm[0] = -scaledYG2()*cYGUi_xx-scaledYG3()*cYGUj_xx;
 	
 	double cYGUi_xy = nvec->x*vi.y+nvec->y*vi.x-2*nvec->x*nvec->y*dot(nvec, vi);
 	double cYGUj_xy = nvec->x*vj.y+nvec->y*vj.x-2*nvec->x*nvec->y*dot(nvec, vj);
-	YGU_i.elm[1]  = -scaledYG0()*cYGUi_xy-scaledYG1()*cYGUj_xy;
-	YGU_j.elm[1]  = -scaledYG2()*cYGUi_xy-scaledYG3()*cYGUj_xy;
+	YGU_i.elm[1] = -scaledYG0()*cYGUi_xy-scaledYG1()*cYGUj_xy;
+	YGU_j.elm[1] = -scaledYG2()*cYGUi_xy-scaledYG3()*cYGUj_xy;
 	
 	double cYGUi_xz = nvec->x*vi.z+nvec->z*vi.x-2*nvec->x*nvec->z*dot(nvec, vi);
 	double cYGUj_xz = nvec->x*vj.z+nvec->z*vj.x-2*nvec->x*nvec->z*dot(nvec, vj);
-	YGU_i.elm[2]  = -scaledYG0()*cYGUi_xz-scaledYG1()*cYGUj_xz;
-	YGU_j.elm[2]  = -scaledYG2()*cYGUi_xz-scaledYG3()*cYGUj_xz;
+	YGU_i.elm[2] = -scaledYG0()*cYGUi_xz-scaledYG1()*cYGUj_xz;
+	YGU_j.elm[2] = -scaledYG2()*cYGUi_xz-scaledYG3()*cYGUj_xz;
 	
 	double cYGUi_yz = nvec->y*vi.z+nvec->z*vi.y-2*nvec->y*nvec->z*dot(nvec, vi);
 	double cYGUj_yz = nvec->y*vj.z+nvec->z*vj.y-2*nvec->y*nvec->z*dot(nvec, vj);
-	YGU_i.elm[3]  = -scaledYG0()*cYGUi_yz-scaledYG1()*cYGUj_yz;
-	YGU_j.elm[3]  = -scaledYG2()*cYGUi_yz-scaledYG3()*cYGUj_yz;
+	YGU_i.elm[3] = -scaledYG0()*cYGUi_yz-scaledYG1()*cYGUj_yz;
+	YGU_j.elm[3] = -scaledYG2()*cYGUi_yz-scaledYG3()*cYGUj_yz;
 
 	double cYGUi_yy = nvec->y*vi.y+nvec->y*vi.y-2*nvec->y*nvec->y*dot(nvec, vi);
 	double cYGUj_yy = nvec->y*vj.y+nvec->y*vj.y-2*nvec->y*nvec->y*dot(nvec, vj);
 	
-	YGU_i.elm[4]  = -scaledYG0()*cYGUi_yy-scaledYG1()*cYGUj_yy;
-	YGU_j.elm[4]  = -scaledYG2()*cYGUi_yy-scaledYG3()*cYGUj_yy;
+	YGU_i.elm[4] = -scaledYG0()*cYGUi_yy-scaledYG1()*cYGUj_yy;
+	YGU_j.elm[4] = -scaledYG2()*cYGUi_yy-scaledYG3()*cYGUj_yy;
 
 	double cYGUi_zz = nvec->z*vi.z+nvec->z*vi.z-2*nvec->z*nvec->z*dot(nvec, vi);
 	double cYGUj_zz = nvec->z*vj.z+nvec->z*vj.z-2*nvec->z*nvec->z*dot(nvec, vj);
 	
-	YGU_i.elm[5]  = -scaledYG0()*cYGUi_zz-scaledYG1()*cYGUj_zz;
-	YGU_j.elm[5]  = -scaledYG2()*cYGUi_zz-scaledYG3()*cYGUj_zz;
+	YGU_i.elm[5] = -scaledYG0()*cYGUi_zz-scaledYG1()*cYGUj_zz;
+	YGU_j.elm[5] = -scaledYG2()*cYGUi_zz-scaledYG3()*cYGUj_zz;
 	
 	stresslet_i += YGU_i;
 	stresslet_j += YGU_j;
@@ -347,33 +347,33 @@ Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	StressTensor YHO_j;
 	double cYHOi_xx = (*nxnz)*oi.y-(*nxny)*oi.z;
 	double cYHOj_xx = (*nxnz)*oj.y-(*nxny)*oj.z;
-	YHO_i.elm[0]  = -2*(scaledYM0()*cYHOi_xx+scaledYM1()*cYHOj_xx);
-	YHO_j.elm[0]  = -2*(scaledYM2()*cYHOi_xx+scaledYM3()*cYHOj_xx);
+	YHO_i.elm[0] = -2*(scaledYM0()*cYHOi_xx+scaledYM1()*cYHOj_xx);
+	YHO_j.elm[0] = -2*(scaledYM2()*cYHOi_xx+scaledYM3()*cYHOj_xx);
 
 	double cYHOi_xy = (*nxnx)*oi.z-(*nxnz)*oi.x+(*nynz)*oi.y-(*nyny)*oi.z;
 	double cYHOj_xy = (*nxnx)*oj.z-(*nxnz)*oj.x+(*nynz)*oj.y-(*nyny)*oj.z;
-	YHO_i.elm[1]  = -scaledYM0()*cYHOi_xy-scaledYM1()*cYHOj_xy;
-	YHO_j.elm[1]  = -scaledYM2()*cYHOi_xy-scaledYM3()*cYHOj_xy;
+	YHO_i.elm[1] = -scaledYM0()*cYHOi_xy-scaledYM1()*cYHOj_xy;
+	YHO_j.elm[1] = -scaledYM2()*cYHOi_xy-scaledYM3()*cYHOj_xy;
 	
 	double cYHOi_xz = (*nxny)*oi.x-(*nxnx)*oi.y+(*nznz)*oi.y-(*nynz)*oi.z;
 	double cYHOj_xz = (*nxny)*oj.x-(*nxnx)*oj.y+(*nznz)*oj.y-(*nynz)*oj.z;
-	YHO_i.elm[2]  = -scaledYM0()*cYHOi_xz-scaledYM1()*cYHOj_xz;
-	YHO_j.elm[2]  = -scaledYM2()*cYHOi_xz-scaledYM3()*cYHOj_xz;
+	YHO_i.elm[2] = -scaledYM0()*cYHOi_xz-scaledYM1()*cYHOj_xz;
+	YHO_j.elm[2] = -scaledYM2()*cYHOi_xz-scaledYM3()*cYHOj_xz;
 	
 	double cYHOi_yz = (*nyny)*oi.x-(*nynz)*oi.y+(*nxnz)*oi.z-(*nynz)*oi.x;
 	double cYHOj_yz = (*nyny)*oj.x-(*nynz)*oj.y+(*nxnz)*oj.z-(*nynz)*oj.x;
-	YHO_i.elm[3]  = -scaledYM0()*cYHOi_yz-scaledYM1()*cYHOj_yz;
-	YHO_j.elm[3]  = -scaledYM2()*cYHOi_yz-scaledYM3()*cYHOj_yz;
+	YHO_i.elm[3] = -scaledYM0()*cYHOi_yz-scaledYM1()*cYHOj_yz;
+	YHO_j.elm[3] = -scaledYM2()*cYHOi_yz-scaledYM3()*cYHOj_yz;
 	
 	double cYHOi_yy = (*nxny)*oi.z-(*nynz)*oi.x;
 	double cYHOj_yy = (*nxny)*oj.z-(*nynz)*oj.x;
-	YHO_i.elm[4]  = -2*(scaledYM0()*cYHOi_yy+scaledYM1()*cYHOj_yy);
-	YHO_j.elm[4]  = -2*(scaledYM2()*cYHOi_yy+scaledYM3()*cYHOj_yy);
+	YHO_i.elm[4] = -2*(scaledYM0()*cYHOi_yy+scaledYM1()*cYHOj_yy);
+	YHO_j.elm[4] = -2*(scaledYM2()*cYHOi_yy+scaledYM3()*cYHOj_yy);
 	
 	double cYHOi_zz = (*nynz)*oi.x-(*nxnz)*oi.y;
 	double cYHOj_zz = (*nynz)*oj.x-(*nxnz)*oj.y;
-	YHO_i.elm[5]  = -2*(scaledYM0()*cYHOi_zz+scaledYM1()*cYHOj_zz);
-	YHO_j.elm[5]  = -2*(scaledYM2()*cYHOi_zz+scaledYM3()*cYHOj_zz);
+	YHO_i.elm[5] = -2*(scaledYM0()*cYHOi_zz+scaledYM1()*cYHOj_zz);
+	YHO_j.elm[5] = -2*(scaledYM2()*cYHOi_zz+scaledYM3()*cYHOj_zz);
 	
 	stresslet_i += YHO_i;
 	stresslet_j += YHO_j;
@@ -394,51 +394,30 @@ Lubrication::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
      *   = XM_{11}(3/2)(ninj-(1/3)delta_ij)*(nznx) + XM_{12}(3/2)(ninj-(1/3)delta_ij)*(nznx)
 	 *   = [(3/2)(XM_{11}+XM_{12})*(*nxnz)]*(ninj-(1/3)delta_ij)
 	 */
-	double cXM_i = (3./2)*(scaledXM0()+scaledXM1())*(*nxnz);
-	double cXM_j = (3./2)*(scaledXM2()+scaledXM3())*(*nxnz);
+	double cXM_i = (3.0/2)*(scaledXM0()+scaledXM1())*(*nxnz);
+	double cXM_j = (3.0/2)*(scaledXM2()+scaledXM3())*(*nxnz);
 	StressTensor XME_i((*nxnx)-c13, (*nxny), (*nxnz), (*nynz), (*nyny)-c13, (*nznz)-c13);
 	StressTensor XME_j = XME_i;
 	XME_i *= cXM_i;
 	XME_j *= cXM_j;
 	stresslet_i = XME_i;
 	stresslet_j = XME_j;
-	if (sys->lubrication_model == 1){
+	if (sys->lubrication_model == 1) {
 		return;
 	}
-	double cYM_i = (1./2)*(scaledYM0()+scaledYM1());
-	double cYM_j = (1./2)*(scaledYM2()+scaledYM3());
-	StressTensor YME_i(2*(*nxnz)     -4*(*nxnx)*(*nxnz),
-					     (*nynz)     -4*(*nxny)*(*nxnz),
-						 (*nxnx)+(*nznz)-4*(*nxnz)*(*nxnz),
-					     (*nxny)     -4*(*nynz)*(*nxnz),
-								  -4*(*nyny)*(*nxnz),
-					   2*(*nxnz)     -4*(*nznz)*(*nxnz));
+	double cYM_i = (1.0/2)*(scaledYM0()+scaledYM1());
+	double cYM_j = (1.0/2)*(scaledYM2()+scaledYM3());
+	StressTensor YME_i(2*(*nxnz)-4*(*nxnx)*(*nxnz),
+					   (*nynz)-4*(*nxny)*(*nxnz),
+					   (*nxnx)+(*nznz)-4*(*nxnz)*(*nxnz),
+					   (*nxny)-4*(*nynz)*(*nxnz),
+					   -4*(*nyny)*(*nxnz),
+					   2*(*nxnz)-4*(*nznz)*(*nxnz));
 	StressTensor YME_j = YME_i;
 	YME_i *= cYM_i;
 	YME_j *= cYM_j;
 	stresslet_i += YME_i;
 	stresslet_j += YME_j;
-}
-
-void
-Lubrication::calcTestStress(){
-	// @@@@@ FOR TEST
-	StressTensor stresslet_GU_HO_i;
-	StressTensor stresslet_GU_HO_j;
-	StressTensor stresslet_ME_i;
-	StressTensor stresslet_ME_j;
-	vec3d vi(sys->na_velocity[p0]);
-	vec3d vj(sys->na_velocity[p1]);
-	vec3d oi(sys->na_ang_velocity[p0]);
-	vec3d oj(sys->na_ang_velocity[p1]);
-	/*
-	 *  First: -G*(U-Uinf) term
-	 */
-	pairVelocityStresslet(vi, vj, oi, oj, stresslet_GU_HO_i, stresslet_GU_HO_j);
-	/*
-	 *  Second: +M*Einf term
-	 */
-	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
 }
 
 /* Lubriction force between two particles is calculated.
@@ -479,24 +458,6 @@ Lubrication::calcLubricationForce(){
 	vec3d YGE_i = (scaledXG0()+scaledXG2())*(vec_z_x-2*(*nxnz)*(*nvec));
 	lubforce_p0 = XAU_i+YAU_i+YBO_i+XGE_i+YGE_i;
 }
-
-//void
-//Lubrication::calcLubricationForce_normal(){
-//	/*
-//	 *  First: -A*(U-Uinf) term
-//	 */
-//	/* Eq. (1.6a) in Jeffrey&Onishi 1984
-//	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
-//	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
-//	 *
-//	 */
-//	vec3d vi(sys->na_velocity[p0]);
-//	vec3d vj(sys->na_velocity[p1]);
-//	calcXFunctions();
-//	double XAU_i_normal = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec);
-//	double XGE_i_normal = (scaledXG0()+scaledXG2())*(*nxnz);
-//	lubforce_p0_normal = XAU_i_normal+XGE_i_normal;
-//}
 
 void
 Lubrication::addHydroStress(){
