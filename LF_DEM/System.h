@@ -106,11 +106,19 @@ private:
 	MTRand *r_gen;
 protected:
 public:
+	System();
 	~System();
 	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
-	double critical_normal_force; 
+	/* zero_shear:
+	 * To be used for relaxation to generate initial configuration.
+	 */
+	bool zero_shear;
+	double Pe_switch;
+	double shear_strain_end;
+	double critical_normal_force;
+	double scale_factor_SmallPe;
 	vec3d *position;
 	Interaction *interaction;
 	BoxSet boxset;

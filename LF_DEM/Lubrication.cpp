@@ -476,7 +476,9 @@ Lubrication::addHydroStress(){
 	/*
 	 *  Second: +M*Einf term
 	 */
-	pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
+	if (!sys->zero_shear) {
+		pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
+	}
 	sys->lubstress[p0] += stresslet_hydro_GU_i+stresslet_ME_i;
 	sys->lubstress[p1] += stresslet_hydro_GU_j+stresslet_ME_j;
 	// Add term G*V_cont

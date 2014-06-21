@@ -69,12 +69,22 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	outputDataHeader(fout_rheo);
 	outputDataHeader(fout_st);
 	sys.setupSystem();
+	if (sys.dimensionless_shear_rate <= sys.Pe_switch) {
+		strain_interval_output_data *= 1/sys.scale_factor_SmallPe;
+		strain_interval_output *= 1/sys.scale_factor_SmallPe;
+		cerr << "small Pe mode:" << endl;
+		cerr << "strain_interval_output_data = " << strain_interval_output_data << endl;
+		cerr << "strain_interval_output = " << strain_interval_output << endl;
+	}
+	if (filename_parameters == "init_relax.txt") {
+		sys.zero_shear = true;
+	}
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	int cnt_simu_loop = 1;
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
-	while (sys.get_shear_strain() < shear_strain_end-1e-8) {
+	while (sys.get_shear_strain() < sys.shear_strain_end-1e-8) {
 		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
 		double strain_next_config_out = cnt_config_out*strain_interval_output;
 		double strain_next = cnt_simu_loop*strain_interval_output_data;
@@ -104,7 +114,7 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 			}
 		}
 		cnt_simu_loop ++;
-		cerr << "strain: " << sys.get_shear_strain() << " / " << shear_strain_end << endl;
+		cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
 	}
 	if (filename_parameters == "init_relax.txt") {
 		/* To prepar relaxed initial configuration,
@@ -113,6 +123,9 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 		 */
 		outputFinalConfiguration();
 	}
+	
+
+	
 }
 
 bool
@@ -167,7 +180,7 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 	} else if (keyword == "disp_max") {
 		sys.set_disp_max(atof(value.c_str()));
 	} else if (keyword == "shear_strain_end") {
-		shear_strain_end = atof(value.c_str());
+		sys.shear_strain_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
 		sys.set_integration_method(atoi(value.c_str()));
 	} else if (keyword == "lub_max") {
@@ -306,7 +319,7 @@ Simulation::setDefaultParameters(){
 	 *  strain(): total strain (length of simulation)
 	 *
 	 */
-	shear_strain_end = 10;
+	sys.shear_strain_end = 10;
 	/*
 	 * Lubrication force
 	 * lub_max: reduced large cutoff distance for lubrication

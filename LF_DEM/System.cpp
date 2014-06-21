@@ -11,6 +11,11 @@
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
+System::System():
+zero_shear(false),
+maxnb_interactionpair_per_particle(15),
+Pe_switch(1)
+{}
 System::~System(){
 	DELETE(position);
 	DELETE(radius);
@@ -59,7 +64,6 @@ System::~System(){
 void
 System::allocateRessources(){
 	linalg_size = 6*np;
-	maxnb_interactionpair_per_particle = 15;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubic = new double [np];
 	resistance_matrix_dblock = new double [18*np];
@@ -176,7 +180,7 @@ System::setupSystem(){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (friction_model == 0 ) {
+	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		friction = false;
 	} else if (friction_model == 1) {
@@ -221,6 +225,17 @@ System::setupSystem(){
 	}
 	if (brownian) {
 		kb_T = 1/dimensionless_shear_rate;
+		if (dimensionless_shear_rate <= Pe_switch) {
+			scale_factor_SmallPe = 1/dimensionless_shear_rate;
+			kn *= scale_factor_SmallPe;
+			kt *= scale_factor_SmallPe;
+			dt_max *= 1/scale_factor_SmallPe;
+			shear_strain_end *= 1/scale_factor_SmallPe;
+			cerr << "small Pe mode:" << endl;
+			cerr << "kn = " << kn << endl;
+			cerr << "kt = " << kt << endl;
+			cerr << "dt_max = " << dt_max << endl;
+		}
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
@@ -270,7 +285,6 @@ System::setupSystem(){
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
-		
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
@@ -347,9 +361,11 @@ System::initializeBoxing(){// need to know radii first
 void
 System::timeStepBoxing(){
 	// evolve PBC
-	shear_disp += vel_difference*dt;
-	if (shear_disp > lx) {
-		shear_disp -= lx;
+	if (!zero_shear) {
+		shear_disp += vel_difference*dt;
+		if (shear_disp > lx) {
+			shear_disp -= lx;
+		}
 	}
 	boxset.update();
 }
@@ -869,7 +885,11 @@ System::computeVelocities(bool divided_velocities){
 	stokes_solver.resetRHS();
 	if (divided_velocities) {
 		// in case we want to compute the stress contributions
-		buildHydroTerms(true, true); // build matrix and rhs force GE
+		if (!zero_shear) {
+			buildHydroTerms(true, true); // build matrix and rhs force GE
+		} else {
+			buildHydroTerms(true, false); // zero shear-rate
+		}
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
@@ -887,7 +907,11 @@ System::computeVelocities(bool divided_velocities){
 		}
 	} else {
 		// for most of the time evolution
-		buildHydroTerms(true, true); // build matrix and rhs force GE
+		if (!zero_shear) {
+			buildHydroTerms(true, true); // build matrix and rhs force GE
+		} else {
+			buildHydroTerms(true, false); // zero shear-rate
+		}
 		buildContactTerms(false); // set rhs = F_C
 		if (colloidalforce) {
 			buildColloidalForceTerms(false); // set rhs = F_Coll
@@ -915,9 +939,11 @@ System::computeVelocities(bool divided_velocities){
 	}
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
-		velocity[i].x += position[i].z;
 		ang_velocity[i] = na_ang_velocity[i];
-		ang_velocity[i].y += 0.5;
+		if (!zero_shear) {
+			velocity[i].x += position[i].z;
+			ang_velocity[i].y += 0.5;
+		}
 	}
 	stokes_solver.solvingIsDone();
 }
