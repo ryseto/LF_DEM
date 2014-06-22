@@ -229,8 +229,8 @@ System::setupSystem(){
 			scale_factor_SmallPe = 1/dimensionless_shear_rate;
 			kn *= scale_factor_SmallPe;
 			kt *= scale_factor_SmallPe;
-			dt_max *= 1/scale_factor_SmallPe;
-			shear_strain_end *= 1/scale_factor_SmallPe;
+			dt_max /= scale_factor_SmallPe;
+			shear_strain_end /= scale_factor_SmallPe;
 			cerr << "small Pe mode:" << endl;
 			cerr << "kn = " << kn << endl;
 			cerr << "kt = " << kt << endl;
@@ -372,6 +372,7 @@ System::timeStepBoxing(){
 
 void
 System::timeEvolutionEulersMethod(bool calc_stress){
+	in_predictor = true;
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
@@ -501,7 +502,6 @@ System::timeStepMove(){
 		}
 	}
 	checkNewInteraction();
-	in_predictor = true;
 	updateInteractions();
 }
 
@@ -903,6 +903,7 @@ System::computeVelocities(bool divided_velocities){
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_colloidal[i];
 				na_ang_velocity[i] += ang_vel_colloidal[i];
+				ang_vel_colloidal[i].cerr();
 			}
 		}
 	} else {
@@ -1311,7 +1312,11 @@ System::calcLubricationForce(){
 	 * Calculate lubrication force to output
 	 */
 	stokes_solver.resetRHS();
-    buildHydroTerms(true, true);
+	if (!zero_shear) {
+		buildHydroTerms(true, true);
+	} else {
+		buildHydroTerms(true, false); // no GE
+	}
     setContactForceToParticle();
 	buildContactTerms(false);
 	if (colloidalforce) {

@@ -69,7 +69,7 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	outputDataHeader(fout_rheo);
 	outputDataHeader(fout_st);
 	sys.setupSystem();
-	if (sys.dimensionless_shear_rate <= sys.Pe_switch) {
+	if (sys.brownian && sys.dimensionless_shear_rate <= sys.Pe_switch) {
 		strain_interval_output_data *= 1/sys.scale_factor_SmallPe;
 		strain_interval_output *= 1/sys.scale_factor_SmallPe;
 		cerr << "small Pe mode:" << endl;
@@ -422,6 +422,7 @@ Simulation::importInitialPositionFile(){
 	ss >> buf >> n1 >> n2 >> volume_fraction_ >> lx >> ly >> lz >> vf1 >> vf2;
 	volume_fraction = volume_fraction_;
 	double x_, y_, z_, a_;
+	vector<vec3d> initial_position;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
 		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);

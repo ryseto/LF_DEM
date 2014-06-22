@@ -18,8 +18,6 @@
 class Simulation{
 private:
 	System sys;
-	string filename_;
-	vector<vec3d> initial_position;
 	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;
@@ -91,7 +89,6 @@ private:
 	void outputStressTensorData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
-
 	vec3d shiftUpCoordinate(double x, double y, double z);
 public:
 	/* For DEMsystem*/
