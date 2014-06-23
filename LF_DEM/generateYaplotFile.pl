@@ -56,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.01;
+$force_factor = 0.03;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;

@@ -444,17 +444,14 @@ Simulation::prepareSimulationName(){
 	} else {
 		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 	}
-	//	if (sys.brownian) {
-	//		ss_simu_name << "_T" << sys.get_kb_T();
-	//	}
 	sys.simu_name = ss_simu_name.str();
 }
 
 void
 Simulation::evaluateData(){
+	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	sys.analyzeState();
 	/* NOTE:
 	 * 
 	 * The total stress DID not include the contact GU terms,

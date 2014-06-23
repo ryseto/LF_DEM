@@ -1047,15 +1047,11 @@ System::evaluateMaxContactVelocity(){
 	int cnt_sliding = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
-			interaction[k].calcRelativeVelocities();
 			cnt_contact++;
 			sum_contact_velo_tan += interaction[k].getContactVelocity();
 			sum_contact_velo_normal += abs(interaction[k].getNormalVelocity());
-			if (interaction[k].contact.state == 3) {
-				cnt_sliding++;
-				sum_sliding_velocity += interaction[k].getContactVelocity();
-			}
 			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
+				// relative_surface_velocity for both static friction and sliding state.
 				max_contact_velo_tan = interaction[k].getContactVelocity();
 			}
 			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
@@ -1064,8 +1060,15 @@ System::evaluateMaxContactVelocity(){
 			if (interaction[k].getRelativeVelocity() > max_relative_velocity) {
 				max_relative_velocity = interaction[k].getRelativeVelocity();
 			}
-			if (interaction[k].getContactVelocity() > max_sliding_velocity) {
-				max_sliding_velocity = interaction[k].getContactVelocity();
+			if (interaction[k].contact.state == 3) {
+				/*
+				 * relative_surface_velocity for only sliding state.
+				 */
+				cnt_sliding++;
+				sum_sliding_velocity += interaction[k].getContactVelocity();
+				if (interaction[k].getContactVelocity() > max_sliding_velocity) {
+					max_sliding_velocity = interaction[k].getContactVelocity();
+				}
 			}
 		}
 	}
@@ -1087,10 +1090,12 @@ double
 System::evaluateMaxVelocity(){
 	double sq_max_velocity = 0;
 	for (int i = 0; i < np; i++) {
-		vec3d velocity_deviation = velocity[i];
-		velocity_deviation.x -= position[i].z;
-		if (velocity_deviation.sq_norm() > sq_max_velocity) {
-			sq_max_velocity = velocity_deviation.sq_norm();
+		vec3d na_velocity_tmp = velocity[i];
+		if (zero_shear) {
+			na_velocity_tmp.x -= position[i].z;
+		}
+		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
+			sq_max_velocity = na_velocity_tmp.sq_norm();
 		}
 	}
 	return sqrt(sq_max_velocity);
@@ -1100,10 +1105,10 @@ double
 System::evaluateMaxAngVelocity(){
 	double _max_ang_velocity = 0;
 	for (int i = 0; i < np; i++) {
-		vec3d ang_velocity_deviation = ang_velocity[i];
-		ang_velocity_deviation.y -= 0.5;
-		if (ang_velocity_deviation.norm() > _max_ang_velocity) {
-			_max_ang_velocity = ang_velocity_deviation.norm();
+		vec3d na_ang_velocity_tmp = ang_velocity[i];
+		na_ang_velocity_tmp.y -= 0.5;
+		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
+			_max_ang_velocity = na_ang_velocity_tmp.norm();
 		}
 	}
 	return _max_ang_velocity;
@@ -1111,6 +1116,10 @@ System::evaluateMaxAngVelocity(){
 
 void
 System::analyzeState(){
+	/*
+	 *
+	 *
+	 */
 	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
@@ -1118,6 +1127,7 @@ System::analyzeState(){
 	relative_velocity_history.push_back(max_relative_velocity);
 	cerr << "v contact tan = " << max_contact_velo_tan << endl;
 	cerr << "v relative = " << max_relative_velocity << endl;
+	////////////////////////////////////////////////////////////
 	contact_nb = 0;
 	fric_contact_nb = 0;
 	max_disp_tan = 0;
