@@ -603,15 +603,27 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*viscosity << ' '; //2
 	fout_rheo << 6*M_PI*normalstress_diff_1 << ' '; //3
 	fout_rheo << 6*M_PI*normalstress_diff_2 << ' '; //4
+	/*
+	 * Hydrodynamic contribution means
+	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
+	 * vel_hydro is obtained with GE for the rhs.
+	 */
 	fout_rheo << 6*M_PI*viscosity_hydro << ' '; //5
 	fout_rheo << 6*M_PI*normalstress_diff_1_hydro << ' '; //6
 	fout_rheo << 6*M_PI*normalstress_diff_2_hydro << ' '; //7
+	/*
+	 * Contact force contribution seems to be
+	 * the sum of viscosity_cont_XF and viscosity_cont_GU.
+	 */
 	fout_rheo << 6*M_PI*viscosity_cont_XF << ' '; //8
 	fout_rheo << 6*M_PI*normalstress_diff_1_cont_XF << ' '; //9
 	fout_rheo << 6*M_PI*normalstress_diff_2_cont_XF << ' '; //10
 	fout_rheo << 6*M_PI*viscosity_cont_GU << ' ' ; //11
 	fout_rheo << 6*M_PI*normalstress_diff_1_cont_GU << ' ' ; //12
 	fout_rheo << 6*M_PI*normalstress_diff_2_cont_GU << ' ' ; //13
+	/*
+	 *
+	 */
 	fout_rheo << 6*M_PI*viscosity_friction << ' '; //14
 	fout_rheo << 6*M_PI*normalstress_diff_1_friction << ' '; //15
 	fout_rheo << 6*M_PI*normalstress_diff_2_friction  << ' '; //16
