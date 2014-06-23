@@ -25,19 +25,19 @@ StokesSolver::~StokesSolver(){
     if (!current_index_positions) {
 		delete [] current_index_positions;
 	}
-	if(!chol_solution) {
+	if (!chol_solution) {
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
-	if(!chol_rhs) {
+	if (!chol_rhs) {
 		cholmod_free_dense(&chol_rhs, &chol_c);
 	}
 	if (brownian) {
 		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
 	}
-	if(!chol_res_matrix) {
+	if (!chol_res_matrix) {
 		cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	}
-	if(chol_init) {
+	if (chol_init) {
 		cholmod_finish(&chol_c);
 	}
 	
@@ -47,7 +47,7 @@ StokesSolver::~StokesSolver(){
 	}
 	delete [] columns;
 	delete [] columns_nb;
-	for (int i=0; i<res_matrix_linear_size; i++){
+	for (int i=0; i<res_matrix_linear_size; i++) {
 		delete [] values[i];
 	}
 	delete [] values;
@@ -180,7 +180,6 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 #endif
 }
 
-
 // Off-Diagonal Blocks Terms, FT/UW version
 void
 StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
@@ -305,7 +304,7 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 		((double*)chol_res_matrix->x)[pj6_5  ] = dblocks[j18+17];   // column j6+5
 		/*****  2  : off-diagonal blocks row indices and values ***********/
 		// 36 non-zero elements per block
-		for(int k = odbrows_table[j]; k < odbrows_table[j+1]; k++){
+		for(int k = odbrows_table[j]; k < odbrows_table[j+1]; k++) {
 			int u = 6*(k-odbrows_table[j]); 
 			// we are filling the "k-odbFrows_table[j]"th off-diag block of the column.
 			// For column j6, for exemple, the indices of the non-zero values are:
@@ -313,7 +312,7 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 			// + 6 for the diagonal block of column j6
 			// + u (=6*(k-odbFrows_table[j])) for the off-diag blocks of j6
 			// + index inside the current block
-			for(int s=0; s<6;s++){
+			for(int s=0; s<6; s++) {
 				((int*)chol_res_matrix->i)[pj6+6 + u +s] = odbrows[k]+s;
 				((int*)chol_res_matrix->i)[pj6_1+5 + u +s] = odbrows[k]+s;
 				((int*)chol_res_matrix->i)[pj6_2+4 + u +s] = odbrows[k]+s;
@@ -439,16 +438,16 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, 
 		tril_res_matrix = new Epetra_CrsMatrix(Copy, *Map, 20*dof+dof );
 		tril_l_precond = new Epetra_CrsMatrix(Copy, *Map, 3);
 		tril_res_matrix->PutScalar(0);
-		for (int i=0; i<res_matrix_linear_size; i++){
-			for (int j=0; j<columns_max_nb; j++){
+		for (int i=0; i<res_matrix_linear_size; i++) {
+			for (int j=0; j<columns_max_nb; j++) {
 				columns[i][j] = -1;
 				values[i][j] = 0;
 			}
 		}
 		// declare the diagonal blocks
-		for (int i=0; i<np; i++){
+		for (int i=0; i<np; i++) {
 			int idof = dof*i;
-			for (int j=0; j<dof; j++){
+			for (int j=0; j<dof; j++) {
 				columns[idof  ][j] = idof+j;
 				columns[idof+1][j] = idof+j;
 				columns[idof+2][j] = idof+j;
@@ -551,7 +550,6 @@ StokesSolver::addToRHS(double *rhs){
 			((double*)chol_rhs->x)[i] += rhs[i];
 		}
 	}
-	
 #ifdef TRILINOS
 	if (iterative()) {
 		for (int i=0; i<res_matrix_linear_size; i++) {
@@ -633,7 +631,7 @@ StokesSolver::compute_LTRHS(double* X){
 		  So for a rhs Y:
 		  X = L*Y = P^T*Lc*Y
 		*/
-		if(!chol_L->is_ll){
+		if (!chol_L->is_ll) {
 			cerr << " The factorization is LDL^T. compute_LTRHS(double* X) only works for LL^T factorization." << endl;
 		}
 		double alpha [2] = {1,0};
@@ -840,21 +838,17 @@ StokesSolver::allocateRessources(){
 		columns_nb[i] = 0;
 	}
 #endif
-
     dblocks = new double [dblocks_size];
     odblocks = new vector <double> [6];
 	current_index_positions = new int [6];
     odbrows_table = new int [np+1];
-
     cholmod_start (&chol_c);
 	chol_init = true;
-
     chol_rhs = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
 	chol_Psolution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c); // used for Brownian motion
 	for (int i=0; i<np6; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
-	
     chol_L = NULL;
 }
 
@@ -889,7 +883,7 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	double one_n2n2 = 1-n2n2;
 	
 	odbrows.push_back(6*jj);
-	
+
 	int i0 = current_index_positions[0];
 	int i1 = current_index_positions[1];
 	int i2 = current_index_positions[2];
@@ -1025,12 +1019,10 @@ StokesSolver::factorizeResistanceMatrix(){
 	cholmod_factorize_p(chol_res_matrix, beta, fset, np, chol_L, &chol_c);
 	 end debug*/
 
-
 	/*reference code */
 	//	chol_c.nmethods = 1;
 	//   	chol_c.method[0].ordering = CHOLMOD_NATURAL;// force natural ordering (=no ordering) at the moment
 	//	chol_c.postorder = 0 ;
-
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);

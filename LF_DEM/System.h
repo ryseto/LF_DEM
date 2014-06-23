@@ -212,7 +212,6 @@ public:
 	double max_sliding_velocity;
 	double max_ang_velocity;
 	double min_gap_nondim;
-	double max_overlap; // = ro-r
 	double max_disp_tan;
 	double overlap_target;
 	double disp_tan_target;
