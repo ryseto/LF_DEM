@@ -26,7 +26,6 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
-	double c13; // If c13 = 1/3, stress tensors are tressless. If c13=0, the traces are finite.
 	//======= particles data  ====================//
 	unsigned short p0;
 	unsigned short p1;
@@ -111,10 +110,12 @@ private:
 	void getInteractionData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
-	void calcLubricationForce();
-	inline double get_lubforce_normal(){return -dot(lubforce_p0, nvec);} // positive for compression
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
-	double brownian_stress_xz;
+	void calcLubricationForce();
+	double get_lubforce_normal(){
+		// positive for compression
+		return -dot(lubforce_p0, nvec);
+	}
 	vec3d get_lubforce_tan(){
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}

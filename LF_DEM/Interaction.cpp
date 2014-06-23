@@ -90,8 +90,10 @@ Interaction::activate(unsigned short i, unsigned short j){
 	 * a0*a1/(a1+a2)/2
 	 * Is
 	 */
-	colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
-	colloidalforce_length = sys->get_colloidalforce_length();
+	if (sys->colloidalforce) {
+		colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
+		colloidalforce_length = sys->get_colloidalforce_length();
+	}
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.getInteractionData();

@@ -1027,7 +1027,6 @@ StokesSolver::factorizeResistanceMatrix(){
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 	//	cout << chol_L->ordering << endl;
-
     if (chol_c.status) {
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
 		// It is very often enough to force another preconditioner to solve the problem.
@@ -1038,7 +1037,6 @@ StokesSolver::factorizeResistanceMatrix(){
 		cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " <<  chol_c.final_ll <<endl;
 		chol_c.supernodal = CHOLMOD_SUPERNODAL;
     }
-	
 }
 
 #ifdef TRILINOS
@@ -1073,18 +1071,15 @@ StokesSolver::factorizeResistanceMatrix(){
  */
 void
 StokesSolver::setDiagBlockPreconditioner(){
-
     double a00, a01, a02, a11, a12, a22;
     double det, idet;
     double *precond_row = new double [3];
     int *indices = new int [3];
     for (int i = 0; i < np; i++) {
 		int i3 = 3*i;
-		
 		indices[0] = i3;
 		indices[1] = i3+1;
 		indices[2] = i3+2;
-		
 	    // +2.5*r in the diagonal ? --> Amit Kumar, PhD Thesis
 		a00 = values[i3][0];
 		a01 = values[i3][1];
@@ -1092,37 +1087,27 @@ StokesSolver::setDiagBlockPreconditioner(){
 		a11 = values[i3+1][1];
 		a12 = values[i3+1][2];
 		a22 = values[i3+2][2];
-		
 		det = a00*(a22*a11-a12*a12)+a01*(-a01*a22+2*a12*a02)-a02*a02*a11;
 		idet = 1/det;
-		
 		// row i3
 		precond_row[0] = idet*(a11*a22-a12*a12);
 		precond_row[1] = idet*(a02*a12-a01*a22);
 		precond_row[2] = idet*(a01*a12-a02*a11);
-		
 		tril_l_precond->InsertGlobalValues(i3, 3, precond_row, indices);
-		
 		// row i3+1
 		precond_row[0] = precond_row[1]; // symmetric matrix!
 		precond_row[1] = idet*(a00*a22-a02*a02);
 		precond_row[2] = idet*(a02*a01-a00*a12);
-		
 		tril_l_precond->InsertGlobalValues(i3+1, 3, precond_row, indices);
-		
 		// row i3+2
 		precond_row[1] = precond_row[2]; // symmetric matrix!
 		precond_row[0] = idet*(a01*a12-a02*a11);
 		precond_row[2] = idet*(a00*a11-a01*a01);
-		
 		tril_l_precond->InsertGlobalValues(i3+2, 3, precond_row, indices);
     }
-	
     tril_l_precond->FillComplete();
-	
 	// give it to the LinearProblem
     tril_stokes_equation->setLeftPrec(rcp(tril_l_precond, false));
-	
     delete [] precond_row;
     delete [] indices;
 }
@@ -1141,7 +1126,6 @@ StokesSolver::setIncCholPreconditioner(){
 	//  parameters to be tuned
     int fill_level = 0;
 	//    double drop_tolerance = 1.;
-	
 	RCP <Ifpack_IC> tril_ICT_precond = rcp(new Ifpack_IC(tril_res_matrix));
 	
 	ParameterList precondParams;
@@ -1151,8 +1135,6 @@ StokesSolver::setIncCholPreconditioner(){
 	tril_ICT_precond->SetParameters(precondParams);
 	tril_ICT_precond->Initialize();
 	tril_ICT_precond->Compute();
-	
-	
 	/*****	 TESTING *****
 	 cout << " non zeros : " << tril_ICT_precond->NumGlobalNonzeros() << " " << tril_ICT_precond->IsInitialized() << " " << tril_ICT_precond->IsComputed() << endl;
 	 int nb;
@@ -1190,7 +1172,6 @@ StokesSolver::setIncCholPreconditioner(){
 	
 	// template conversion, to make Ifpack preconditioner compatible with belos
 	RCP<Belos::EpetraPrecOp> belos_ICT_precond = rcp (new Belos::EpetraPrecOp(tril_ICT_precond));
-	
 	tril_stokes_equation->setLeftPrec(belos_ICT_precond);
 }
 #endif
@@ -1200,7 +1181,7 @@ void
 StokesSolver::matrixChol2Tril(const cholmod_sparse *C, Epetra_CrsMatrix* &T){
 	vector <double> row_values;
 	vector <int> row_indices;
-	for(int i=0; i< res_matrix_linear_size;i++){
+	for (int i=0; i< res_matrix_linear_size;i++) {
 		int nz = C->
 		C->x
 	}
@@ -1223,7 +1204,6 @@ StokesSolver::setSpInvPreconditioner(){
 
 void
 StokesSolver::setSolverType(string solver_type){
-
 	if (solver_type == "direct") {
 		_direct = true;
 		_iterative = false;
@@ -1249,7 +1229,7 @@ StokesSolver::setSolverType(string solver_type){
 void
 StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 	if (direct()) {
-		if(sparse_or_dense=="sparse"){
+		if (sparse_or_dense=="sparse") {
 			//		out << endl<< " chol res " << endl;
 			for (int i = 0; i < res_matrix_linear_size; i++) {
 				for (int k =((int*)chol_res_matrix->p)[i] ; k < ((int*)chol_res_matrix->p)[i+1]; k++) {
@@ -1257,7 +1237,7 @@ StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 				}
 			}
 		}
-		if(sparse_or_dense=="dense"){
+		if (sparse_or_dense=="dense") {
 			cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
 			for (int i = 0; i < res_matrix_linear_size; i++) {
 				// if(i==0){
@@ -1274,7 +1254,6 @@ StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 			out << endl;
 			cholmod_free_dense(&dense_res, &chol_c);
 		}
-
 	}
 	//	exit(1);
 #ifdef TRILINOS
@@ -1312,20 +1291,14 @@ StokesSolver::printFactor(ostream &out){
 		cholmod_sparse* chol_L_sparse = cholmod_transpose(cholmod_factor_to_sparse(chol_L_copy, &chol_c), 1,  &chol_c);
 		cholmod_dense* chol_L_dense = cholmod_sparse_to_dense(chol_L_sparse, &chol_c);
 		//		cholmod_sparse* chol_PTL_sparse = cholmod_dense_to_sparse(cholmod_solve(CHOLMOD_Pt, chol_L, chol_L_dense, &chol_c), 1, &chol_c) ; // chol_solution = P^T*chol_Psolution
-		
 		//		cholmod_dense* chol_LT_dense = cholmod_sparse_to_dense(cholmod_transpose(chol_L_sparse, 1, &chol_c), &chol_c);
-
-
 		int transpose = 1;
 		double alpha [2] = {1,0};
 		double beta [2] = {0,0};
-
-		cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c); 
+		cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix,&chol_c);
 		cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_L_dense, dense_res, &chol_c);
-
 		// out << " Cholesky factor" << endl;
 		// for (int i = 0; i < res_matrix_linear_size; i++) {
-			
 		// 		// if(i==0){
 		// 		// 	for (int j = 0; j < res_matrix_linear_size/6; j++) {
 		// 		// 		out << j << "\t \t \t \t \t \t" ;
@@ -1338,10 +1311,8 @@ StokesSolver::printFactor(ostream &out){
 		// 	out << endl;
 		// }
 		// out << endl;
-
 		//		out << " Cholesky squared  " << endl;
 		for (int i = 0; i < res_matrix_linear_size; i++) {
-			
 				// if(i==0){
 				// 	for (int j = 0; j < res_matrix_linear_size/6; j++) {
 				// 		out << j << "\t \t \t \t \t \t" ;
@@ -1354,17 +1325,12 @@ StokesSolver::printFactor(ostream &out){
 			out << endl;
 		}
 		out << endl;
-
-
 		cholmod_free_sparse(&chol_L_sparse, &chol_c);
 		//		cholmod_free_dense(&chol_LT_dense, &chol_c);
 		//		cholmod_free_sparse(&chol_PTL_sparse, &chol_c);
 		cholmod_free_factor(&chol_L_copy, &chol_c);
 		cholmod_free_dense(&dense_res, &chol_c);
-
-
 	}
-
 }
 
 // testing
@@ -1372,7 +1338,7 @@ void
 StokesSolver::printRHS(){
 	if (direct()) {
 		for (int i = 0; i < res_matrix_linear_size; i++) {
-			cout << i << " (part " << " " << (i-i%6)/6 << " )  " << ((double*)chol_rhs->x)[i] <<  endl;
+			cout << i << " (part " << " " << (i-i%6)/6 << " )  " << ((double*)chol_rhs->x)[i] << endl;
 		}
 	}
 }

@@ -366,7 +366,7 @@ Simulation::setDefaultParameters(){
 	 * Short range repulsion is assumed.
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
 	 */
-	double _colloidalforce_length = 0.1;
+	double _colloidalforce_length = 0;
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
@@ -786,10 +786,12 @@ Simulation::outputConfigurationData(){
 				 */
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan().norm() << ' '; // 9
+				/*
+				 * Contact forces include only spring forces.
+				 */
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan_norm() << ' '; // 11
 				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 12
-				fout_interaction << 6*M_PI*sys.interaction[k].lubrication.brownian_stress_xz << ' ';
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15

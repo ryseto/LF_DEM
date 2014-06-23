@@ -31,7 +31,9 @@ System::calcStressPerParticle(){
 			}
 			interaction[k].lubrication.addHydroStress(); // - R_SU * v
 			interaction[k].contact.addContactStress(); //  - rF_cont
-			interaction[k].addColloidalStress(); //  - rF_colloid
+			if (colloidalforce) {
+				interaction[k].addColloidalStress(); //  - rF_colloid
+			}
 		}
 	}
 }

@@ -23,7 +23,6 @@ Lubrication::Lubrication(Interaction *int_){
 void
 Lubrication::init(System *sys_){
 	sys = sys_;
-	c13 = 0;
 }
 
 void
@@ -297,7 +296,7 @@ Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	 */
 	double cXG_i = -dot(nvec, scaledXG0()*vi+scaledXG1()*vj);
 	double cXG_j = -dot(nvec, scaledXG2()*vi+scaledXG3()*vj);
-	StressTensor XGU_i((*nxnx)-c13, (*nxny), (*nxnz), (*nynz), (*nyny)-c13, (*nznz)-c13);
+	StressTensor XGU_i((*nxnx), (*nxny), (*nxnz), (*nynz), (*nyny), (*nznz));
 	StressTensor XGU_j = XGU_i;
 	XGU_i *= cXG_i;
 	XGU_j *= cXG_j;
@@ -396,7 +395,7 @@ Lubrication::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
 	 */
 	double cXM_i = (3.0/2)*(scaledXM0()+scaledXM1())*(*nxnz);
 	double cXM_j = (3.0/2)*(scaledXM2()+scaledXM3())*(*nxnz);
-	StressTensor XME_i((*nxnx)-c13, (*nxny), (*nxnz), (*nynz), (*nyny)-c13, (*nznz)-c13);
+	StressTensor XME_i((*nxnx), (*nxny), (*nxnz), (*nynz), (*nyny), (*nznz));
 	StressTensor XME_j = XME_i;
 	XME_i *= cXM_i;
 	XME_j *= cXM_j;

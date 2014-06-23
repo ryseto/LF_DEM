@@ -107,7 +107,9 @@ System::allocateRessources(){
 	contactstressGU = new StressTensor [np];
 	avg_lubstress = new StressTensor [np];
 	avg_contactstressGU = new StressTensor [np];
-	avg_colloidalstressGU = new StressTensor [np];
+	if (colloidalforce) {
+		avg_colloidalstressGU = new StressTensor [np];
+	}
 	if (brownian) {
 		brownianstressGU = new StressTensor [np];
 		brownianstressGU_predictor = new StressTensor [np];
