@@ -1240,19 +1240,21 @@ System::adjustContactModelParameters(){
 	 */
 	/* determination of kn
 	 */
-//	double mean_max_fc_normal, stddev_max_fc_normal;
+	cerr << "We should make a simplar rule." << endl;
+	exit(1);
+	//	double mean_max_fc_normal, stddev_max_fc_normal;
 	//	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-//	double kn_try = mean_max_fc_normal/overlap_target;
-//	kn = kn_try;
-//	lub_coeff_contact = 4*kn*contact_relaxation_time;
+	//	double kn_try = mean_max_fc_normal/overlap_target;
+	//	kn = kn_try;
+	//	lub_coeff_contact = 4*kn*contact_relaxation_time;
 	/* determination of kt
 	 */
 	//	double mean_max_fc_tan, stddev_max_fc_tan;
 	//	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
 	//	double kt_try = mean_max_fc_tan/disp_tan_target;
 	//	kt = kt_try;
-//	double average_max_tanvelocity = 0;
-//	double max_max_tanvelocity = 0;
+	//	double average_max_tanvelocity = 0;
+	//	double max_max_tanvelocity = 0;
 	//for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
 	//	average_max_tanvelocity += sliding_velocity_history[j];
 	//	if (max_max_tanvelocity < sliding_velocity_history[j]){
@@ -1271,10 +1273,10 @@ System::adjustContactModelParameters(){
 	//	} else {
 	//		tmp_max_velocity = average_max_tanvelocity ;
 	//	}
-//	if (max_max_tanvelocity > 1000){
-//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
-//		return 1;
-//	}
+	//	if (max_max_tanvelocity > 1000){
+	//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
+	//		return 1;
+	//	}
 	double dt_try = disp_max/tmp_max_velocity;
 	if (dt_try < dt_max){
 		dt = dt_try;
