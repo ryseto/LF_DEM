@@ -229,8 +229,8 @@ System::setupSystem(){
 		kb_T = 1/dimensionless_shear_rate;
 		if (dimensionless_shear_rate <= Pe_switch) {
 			scale_factor_SmallPe = 1/dimensionless_shear_rate;
-			kn *= scale_factor_SmallPe;
-			kt *= scale_factor_SmallPe;
+			kn *= sqrt(scale_factor_SmallPe);
+			kt *= sqrt(scale_factor_SmallPe);
 			dt_max /= scale_factor_SmallPe;
 			shear_strain_end /= scale_factor_SmallPe;
 			cerr << "small Pe mode:" << endl;
@@ -1327,7 +1327,6 @@ System::calcLubricationForce(){
  * testing routines
  *
  ***********************************************************************************************/
-
 void
 System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* predictor */
