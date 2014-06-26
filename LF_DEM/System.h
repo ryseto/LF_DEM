@@ -68,8 +68,6 @@ private:
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
-//	int intr_max_fc_normal;
-//	int intr_max_fc_tan;
 	void (System::*timeEvolutionDt)(bool);
 	void timeEvolutionEulersMethod(bool calc_stress);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);

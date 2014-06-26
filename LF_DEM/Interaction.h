@@ -26,7 +26,7 @@ class Contact;
 class Interaction{
 	friend class Contact;
 	friend class Lubrication;
- private:
+private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
@@ -93,17 +93,15 @@ public:
 	void activate(unsigned short i, unsigned short j);
 	void deactivate();
 	inline bool is_overlap(){return r < ro;}
-	inline bool is_contact(){return contact.state > 0;}
-	inline bool is_friccontact(){return contact.disp_tan.is_not_zero();}
+	inline bool is_contact(){return contact.state >= 1;}
+	inline bool is_friccontact(){return contact.state >= 2;}
 	inline bool is_active(){return active;}
 	void calcNormalVectorDistanceGap();
 	//======= particles data  ====================//
-	inline int
-	partner(unsigned int i){
+	inline int partner(unsigned int i){
 		return (i == p0 ? p1 : p0);
 	}
-	inline void
-	get_par_num(unsigned short &i, unsigned short &j){
+	inline void	get_par_num(unsigned short &i, unsigned short &j){
 		i = p0, j = p1;
 	}
 	inline void set_label(unsigned int val){label = val;}

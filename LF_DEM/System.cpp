@@ -1155,21 +1155,19 @@ System::countNumberOfContact(){
 	contact_nb = 0;
 	fric_contact_nb = 0;
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			if (interaction[k].is_contact()) {
-				contact_nb ++;
-				if (interaction[k].is_friccontact()) {
-					fric_contact_nb ++;
-				}
+		if (interaction[k].is_active() &&
+			interaction[k].is_contact()) {
+			contact_nb ++;
+			if (interaction[k].is_friccontact()) {
+				fric_contact_nb ++;
 			}
 		}
 	}
-	
 }
 
 
 void
-System::analyzeState(){     
+System::analyzeState(){
 	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
