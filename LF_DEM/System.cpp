@@ -333,7 +333,7 @@ System::setupSystem(){
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference = lz;
-	after_parameter_changed = false;
+	//after_parameter_changed = false;
 	stokes_solver.initialize();
 	dt = dt_max;
 	initializeBoxing();
@@ -378,13 +378,11 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
-	timeStepMove();
 	if (calc_stress) {
-		stressReset();
 		calcStressPerParticle();
 		avgStressUpdate();
 	}
-
+	timeStepMove();
 }
 
 /****************************************************************************************************
@@ -457,13 +455,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
-		stressReset();
 		calcStressPerParticle();
-		if (brownian) {
-			for (int i=0; i<np; i++) {
-				brownianstressGU_predictor[i] = brownianstressGU[i];
-			}
-		}
 	}
 	timeStepMovePredictor();
 	/* corrector */
@@ -472,16 +464,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	setColloidalForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
-		stressReset();
 		calcStressPerParticle();
-		if (brownian) {
-			for (int i=0; i<np; i++) {
-				/*
-				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
-				 */
-				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
-			}
-		}
 		avgStressUpdate();
 	}
 	timeStepMoveCorrector();
@@ -928,14 +911,15 @@ System::computeVelocities(bool divided_velocities){
 			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		}
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-		for (int i=0; i<np; i++) {
-			/**** quick trick for 2D (for test) ***/
-			if (twodimension) {
+		/**** quick trick for 2D (for test) ***/
+		if (twodimension) {
+			for (int i=0; i<np; i++) {
 				vel_brownian[i].y = 0;
 				ang_vel_brownian[i].x = 0;
 				ang_vel_brownian[i].z = 0;
 			}
-			/************************************/
+		}
+		for (int i=0; i<np; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
@@ -1116,87 +1100,16 @@ System::evaluateMaxAngVelocity(){
 	return _max_ang_velocity;
 }
 
-void
-System::analyzeState(){
-	/*
-	 *
-	 *
-	 */
-	max_velocity = evaluateMaxVelocity();
-	max_ang_velocity = evaluateMaxAngVelocity();
-	evaluateMaxContactVelocity();
-	sliding_velocity_history.push_back(max_contact_velo_tan);
-	relative_velocity_history.push_back(max_relative_velocity);
-	cerr << "v contact tan = " << max_contact_velo_tan << endl;
-	cerr << "v relative = " << max_relative_velocity << endl;
-	////////////////////////////////////////////////////////////
-	contact_nb = 0;
-	fric_contact_nb = 0;
-	max_disp_tan = 0;
-	min_gap_nondim = lx;
-	double sum_fc_normal = 0;
-	max_fc_normal = 0;
-	max_fc_tan = 0;
-	intr_max_fc_normal = -1;
-	intr_max_fc_tan = -1;
-	int cnt_sliding_contact = 0;
+double
+System::evaluateMinGap(){
+	double _min_gap_nondim = 100000;
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			if (interaction[k].get_gap_nondim() < min_gap_nondim) {
-				min_gap_nondim = interaction[k].get_gap_nondim();
-			}
-			if (interaction[k].is_contact()) {
-				contact_nb ++;
-				if (interaction[k].is_friccontact()) {
-					fric_contact_nb ++;
-					if (interaction[k].contact.state == 3) {
-						cnt_sliding_contact++;
-					}
-				}
-				sum_fc_normal += interaction[k].contact.get_f_contact_normal_norm();
-				if (interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal) {
-					max_fc_normal = interaction[k].contact.get_f_contact_normal_norm();
-					intr_max_fc_normal = k;
-				}
-				if (interaction[k].contact.get_f_contact_tan_norm() > max_fc_tan) {
-					max_fc_tan = interaction[k].contact.get_f_contact_tan_norm();
-					intr_max_fc_tan = k;
-				}
-				if (interaction[k].contact.disp_tan.norm() > max_disp_tan) {
-					max_disp_tan = interaction[k].contact.disp_tan.norm();
-				}
-			}
+		if (interaction[k].is_active() &&
+			interaction[k].get_gap_nondim() < _min_gap_nondim) {
+			_min_gap_nondim = interaction[k].get_gap_nondim();
 		}
 	}
-	/*
-	 * History is recorded after the relaxation.
-	 *
-	 */
-	static double max_fc_normal_previous = 0;
-	if (after_parameter_changed) {
-		if (max_fc_normal > max_fc_normal_previous) {
-			after_parameter_changed = false;
-		}
-	}
-	max_fc_normal_previous = max_fc_normal;
-	if (after_parameter_changed == false) {
-		max_fc_normal_history.push_back(max_fc_normal);
-		max_fc_tan_history.push_back(max_fc_tan);
-	}
-	if (contact_nb > 0) {
-		average_fc_normal = sum_fc_normal/contact_nb;
-	} else {
-		average_fc_normal = 0;
-	}
-}
-
-void
-System::setSystemVolume(double depth){
-	if (twodimension) {
-		system_volume = lx*lz*depth;
-	} else {
-		system_volume = lx*ly*lz;
-	}
+	return _min_gap_nondim;
 }
 
 double
@@ -1209,6 +1122,71 @@ System::evaluateMaxDispTan(){
 		}
 	}
 	return _max_disp_tan;
+}
+
+double
+System::evaluateMaxFcNormal(){
+	double max_fc_normal_ = 0;
+ 	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active() &&
+			interaction[k].is_contact() &&
+			interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal_) {
+			max_fc_normal_ = interaction[k].contact.get_f_contact_normal_norm();
+		}
+	}
+	return max_fc_normal_;
+}
+
+double
+System::evaluateMaxFcTangential(){
+	double max_fc_tan_ = 0;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active() &&
+			interaction[k].is_contact() &&
+			interaction[k].contact.get_f_contact_tan_norm() > max_fc_tan_) {
+			max_fc_tan_ = interaction[k].contact.get_f_contact_tan_norm();
+		}
+	}
+	return max_fc_tan_;
+}
+
+void
+System::countNumberOfContact(){
+	contact_nb = 0;
+	fric_contact_nb = 0;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			if (interaction[k].is_contact()) {
+				contact_nb ++;
+				if (interaction[k].is_friccontact()) {
+					fric_contact_nb ++;
+				}
+			}
+		}
+	}
+	
+}
+
+
+void
+System::analyzeState(){     
+	max_velocity = evaluateMaxVelocity();
+	max_ang_velocity = evaluateMaxAngVelocity();
+	evaluateMaxContactVelocity();
+	min_gap_nondim = evaluateMinGap();
+	max_disp_tan = evaluateMaxDispTan();
+	max_fc_normal = evaluateMaxFcNormal();
+	max_fc_tan = evaluateMaxFcTangential();
+	countNumberOfContact();
+}
+
+void
+System::setSystemVolume(double depth){
+	if (twodimension) {
+		system_volume = lx*lz*depth;
+	} else {
+		system_volume = lx*ly*lz;
+	}
 }
 
 double
@@ -1264,41 +1242,41 @@ System::adjustContactModelParameters(){
 	 */
 	/* determination of kn
 	 */
-	double mean_max_fc_normal, stddev_max_fc_normal;
-	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-	double kn_try = mean_max_fc_normal/overlap_target;
-	kn = kn_try;
-	lub_coeff_contact = 4*kn*contact_relaxation_time;
+//	double mean_max_fc_normal, stddev_max_fc_normal;
+	//	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
+//	double kn_try = mean_max_fc_normal/overlap_target;
+//	kn = kn_try;
+//	lub_coeff_contact = 4*kn*contact_relaxation_time;
 	/* determination of kt
 	 */
-	double mean_max_fc_tan, stddev_max_fc_tan;
-	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-	double kt_try = mean_max_fc_tan/disp_tan_target;
-	kt = kt_try;
-	double average_max_tanvelocity = 0;
-	double max_max_tanvelocity = 0;
-	for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
-		average_max_tanvelocity += sliding_velocity_history[j];
-		if (max_max_tanvelocity < sliding_velocity_history[j]){
-			max_max_tanvelocity = sliding_velocity_history[j];
-		}
-	}
-	average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
-	double average_max_relative_velocity = 0;
-	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
-		average_max_relative_velocity += relative_velocity_history[j];
-	}
-	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
+	//	double mean_max_fc_tan, stddev_max_fc_tan;
+	//	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
+	//	double kt_try = mean_max_fc_tan/disp_tan_target;
+	//	kt = kt_try;
+//	double average_max_tanvelocity = 0;
+//	double max_max_tanvelocity = 0;
+	//for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
+	//	average_max_tanvelocity += sliding_velocity_history[j];
+	//	if (max_max_tanvelocity < sliding_velocity_history[j]){
+	//		max_max_tanvelocity = sliding_velocity_history[j];
+	//		}
+	//}
+	//average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
+	//	double average_max_relative_velocity = 0;
+	//	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
+	//		average_max_relative_velocity += relative_velocity_history[j];
+	//	}
+	//	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
 	double tmp_max_velocity = 0;
-	if (average_max_relative_velocity > average_max_tanvelocity){
-		tmp_max_velocity = average_max_relative_velocity ;
-	} else {
-		tmp_max_velocity = average_max_tanvelocity ;
-	}
-	if (max_max_tanvelocity > 1000){
-		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
-		return 1;
-	}
+	//	if (average_max_relative_velocity > average_max_tanvelocity){
+	//		tmp_max_velocity = average_max_relative_velocity ;
+	//	} else {
+	//		tmp_max_velocity = average_max_tanvelocity ;
+	//	}
+//	if (max_max_tanvelocity > 1000){
+//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
+//		return 1;
+//	}
 	double dt_try = disp_max/tmp_max_velocity;
 	if (dt_try < dt_max){
 		dt = dt_try;
@@ -1306,10 +1284,10 @@ System::adjustContactModelParameters(){
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].contact.updateContactModel();
 	}
-	max_fc_normal_history.clear();
-	max_fc_tan_history.clear();
-	sliding_velocity_history.clear();
-	after_parameter_changed = true;
+	//	max_fc_normal_history.clear();
+	//	max_fc_tan_history.clear();
+	//	sliding_velocity_history.clear();
+	//after_parameter_changed = true;
 	if (kn > max_kn){
 		cerr << "kn = " << kn << endl;
 		cerr << " kn > max_kn : exit" << endl;
@@ -1361,13 +1339,7 @@ System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	cout << "before" << endl;
 	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
 	if (calc_stress) {
-		stressReset();
 		calcStressPerParticle();
-		if (brownian) {
-			for (int i=0; i<np; i++) {
-				brownianstressGU_predictor[i] = brownianstressGU[i];
-			}
-		}
 	}
 	/* corrector */
 	in_predictor = false;
@@ -1378,16 +1350,7 @@ System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	cout << "after" << endl;
 	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
 	if (calc_stress) {
-		stressReset();
 		calcStressPerParticle();
-		if (brownian) {
-			for (int i=0; i<np; i++) {
-				/*
-				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
-				 */
-				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
-			}
-		}
 	}
 }
 

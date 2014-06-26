@@ -83,6 +83,10 @@ Contact::deactivate(){
 void
 Contact::incrementTangentialDisplacement(){
 	if (sys->in_predictor) {
+		/*
+		 * relative_surface_velocity is true velocity in predictor and corrector.
+		 * Thus, previous disp_tan is saved to use in corrector.
+		 */
 		prev_disp_tan = disp_tan;
 	}
 	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->get_dt();

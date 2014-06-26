@@ -571,8 +571,8 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#27: particle pressure contact" << endl;
 		fout_rheo << "#28: min gap (non-dim)" << endl;
 		fout_rheo << "#29: max tangential displacement" << endl;
-		fout_rheo << "#30: ave Fc_normal" << endl;
-		fout_rheo << "#31: max Fc_normal" << endl;
+		fout_rheo << "#30: max Fc_normal" << endl;
+		fout_rheo << "#31: max Fc_tan" << endl;
 		fout_rheo << "#32: max velocity" << endl;
 		fout_rheo << "#33: max angular velocity" << endl;
 		fout_rheo << "#34: ave contact normal velocity" << endl;
@@ -640,17 +640,17 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//27
 	fout_rheo << sys.min_gap_nondim << ' '; //28
 	fout_rheo << sys.max_disp_tan << ' '; //29
-	fout_rheo << sys.average_fc_normal << ' '; //30
-	fout_rheo << sys.max_fc_normal << ' '; //31
+	fout_rheo << sys.max_fc_normal << ' '; //30
+	fout_rheo << sys.max_fc_tan << ' ';//31
 	fout_rheo << sys.max_velocity << ' '; //32
 	fout_rheo << sys.max_ang_velocity << ' '; //33
-	fout_rheo << sys.ave_contact_velo_normal << ' '; // 34
+	fout_rheo << sys.ave_contact_velo_normal << ' '; //34
 	fout_rheo << sys.max_contact_velo_normal << ' '; //35
-	fout_rheo << sys.ave_contact_velo_tan << ' '; // 36
+	fout_rheo << sys.ave_contact_velo_tan << ' '; //36
 	fout_rheo << sys.max_contact_velo_tan << ' '; //37
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //38
 	fout_rheo << sys.max_sliding_velocity << ' ' ; //39
-	fout_rheo << sys.getParticleContactNumber() << ' '; //40
+	fout_rheo << sys.getParticleContactNumber() << ' ';//40
 	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
 	fout_rheo << sys.contact_nb << ' '; //42
 	fout_rheo << sys.fric_contact_nb << ' '; //43

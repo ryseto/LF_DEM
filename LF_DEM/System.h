@@ -68,13 +68,8 @@ private:
 	double colloidalforce_length; // colloidal force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
-	int intr_max_fc_normal;
-	int intr_max_fc_tan;
-	vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
-	vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
-	vector<double> sliding_velocity_history;
-	vector<double> relative_velocity_history;
-	bool after_parameter_changed;
+//	int intr_max_fc_normal;
+//	int intr_max_fc_tan;
 	void (System::*timeEvolutionDt)(bool);
 	void timeEvolutionEulersMethod(bool calc_stress);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
@@ -98,12 +93,21 @@ private:
 	void brownianTestingTimeStepMoveCorrector();
 	void updateResistanceMatrix();
 	void print_res();
-	double evaluateMaxOverlap();
+	double evaluateMinGap();
 	double evaluateMaxDispTan();
+	double evaluateMaxFcNormal();
+	double evaluateMaxFcTangential();
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
+	void countNumberOfContact();
 	MTRand *r_gen;
+	//vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
+	//vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
+	//vector<double> sliding_velocity_history;
+	//vector<double> relative_velocity_history;
+	//bool after_parameter_changed;
+
 protected:
 public:
 	System();

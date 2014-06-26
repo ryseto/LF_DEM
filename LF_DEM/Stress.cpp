@@ -14,25 +14,35 @@ System::calcStressPerParticle(){
 	// from the velocities V_H, V_C, V_Coll, V_B, 
 	// compute stresses R_SV * V
 	// and then add rF stress for F_C and F_Coll
+	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (lubrication_model == 1) {
 				interaction[k].lubrication.calcXFunctionsStress();
 			} else if (lubrication_model == 2) {
 				interaction[k].lubrication.calcXYFunctionsStress();
-			} else if (lubrication_model == 3) {
+			} else {
 				cerr << "lubrication_model = 3 is not implemented" << endl;
 				exit(1);
-				//	if (interaction[k].is_contact()){
-				//		interaction[k].lubrication.calcXYFunctionsStress();
-				//	} else {
-				//		interaction[k].lubrication.calcXFunctionsStress();
-				//	}
 			}
 			interaction[k].lubrication.addHydroStress(); // - R_SU * v
 			interaction[k].contact.addContactStress(); //  - rF_cont
 			if (colloidalforce) {
 				interaction[k].addColloidalStress(); //  - rF_colloid
+			}
+		}
+	}
+	if (brownian) {
+		if (in_predictor) {
+			for (int i=0; i<np; i++) {
+				brownianstressGU_predictor[i] = brownianstressGU[i];
+			}
+		} else {
+			for (int i=0; i<np; i++) {
+				/*
+				 * [ Banchio & Brady 2003 ] [ Ball & Melrose 1997 ]
+				 */
+				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
 			}
 		}
 	}

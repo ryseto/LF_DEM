@@ -184,6 +184,14 @@ Interaction::addUpColloidalForce(){
 void
 Interaction::calcRelativeVelocities(){
 	/* relative velocity particle 1 from particle 0.
+	 * [note]
+	 * velocity[] = velocity_predictor[] in predictor
+	 * and
+	 * velocity[] = 0.5*(velocity_predictor[]+velocity_corrector[]) in corrector.
+	 * Therefore, relative_velocity and relative_surface_velocity
+	 * are true velocities.
+	 * relative_surface_velocity is used to update `disp_tan' in contact object.
+	 *
 	 */
 	/*
 	 * v1' = v1 - Lz = v1 - zshift*lz;
