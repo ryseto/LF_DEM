@@ -1,91 +1,116 @@
 /*
- * Parameter auto adjustment.
- *
- */
-kn_kt_adjustment = false;
-overlap_target = 0.03;
-disp_tan_target = 0.03;
-/*
  * Simulation
  *
- * dt: the time step to integrate the equation of motion.
- *     We need to give a good criterion to give.
- * dt_mid: the intermediate time step for the mid-point
- *     algortithm. dt/dt_mid = dt_ratio
- *     Banchio/Brady (J Chem Phys) gives dt_ratio=100
- *    ASD code from Brady has dt_ratio=150
- *
  */
-dt = 1e-4;
+
+brownian = true;
+dt_max = 1e-4;
+dt_lowPeclet = 1e-4;
+Pe_switch = 5;
+
+disp_max = 5e-3;
 /*
  * integration_method:
  * 0 Euler's Method,
  * 1 predictor-corrector,
- * 2 Brownian (if kT > 0).
  */
+
 integration_method = 1;
+
 /*
- * Shear flow
- *  shear_strain: total strain (length of simulation)
- *
+ * shear_strain: total strain (length of simulation)
  */
-shear_strain_end = 20;
+
+shear_strain_end = 50;
+
 /*
- * Lubrication force
- * lub_max: reduced large cutoff distance for lubrication
- *
+ * 1 Linear friction law Ft < mu Fn
+ * 2 Threshold friction without repulsion
+ * 3 Threshold friction without repulsion + mu inf
  */
-lub_max = 2.5;
-/*
- * lub_reduce_parameter: gives reduced lubrication (maximum coeeffient).
- */
-lub_reduce_parameter = 1e-3;
-/*
- * contact_relaxation_time: to determine the coeffient of the dashpot
- * This need to be larger than dt.
- */
-contact_relaxation_time = 1e-3;
-/*
- * Brownian force
- * kb_T: Thermal energy kb*T
- * kb_T = 0 ---> non-brownian
- * kb_T > 0 ---> brownian
- */
-kb_T = 0;
-/*
- * Contact force parameters
- * kn: normal spring constant
- * kt: tangential spring constant
- */
-kn = 10000;
-kt = 5000;
-/* Colloidal force
- * Short range repulsion is assumed.
- */
-colloidalforce_length = 0.1;
+friction_model = 1;
+
 /*
  * mu_static: static friction coeffient
  * mu_dynamic: dynamic friction coeffient
  */
 mu_static = 1;
+
 /*
- * Output interval
+ * Contact force parameters
+ * kn: normal spring constant
+ * kt: tangential spring constant
  */
-strain_interval_out = 0.05;
+
+kn = 10000;
+kt = 6000;
+kn_lowPeclet = 10000;
+kt_lowPeclet = 6000;
+
+/*
+ * Lubrication model
+ * 0 no lubrication
+ * 1 1/xi lubrication (only squeeze mode)
+ * 2 log(1/xi) lubrication
+ */
+
+lubrication_model = 2;
+
+/*
+ * lub_max: reduced large cutoff distance for lubrication
+ */
+
+lub_max = 2.5;
+
+/*
+ * lub_reduce_parameter: gives reduced lubrication (maximum coeeffient).
+ */
+
+lub_reduce_parameter = 1e-3;
+
+/*
+ * contact_relaxation_time: to determine the coeffient of the dashpot
+ * This need to be larger than dt.
+ */
+
+contact_relaxation_time = -1;
+contact_relaxation_time_tan = 0;
+
+/* Colloidal force
+ * Short range repulsion is assumed.
+ */
+
+colloidalforce_length = 0;
+
+/*
+ *Parameter auto adjustment.
+ */
+kn_kt_adjustment = false;
+
 /*
  *  Data output
  */
+
 /*
- * The middle height of the simulation box is set to the flow zero level.
+ * Output interval
  */
-origin_zero_flow = true;
+
+strain_interval_out = 1e-2;
+
+/*
+ *  Data output
+ */
+strain_interval_out_data = 1e-2;
+
 /*
  * position and interaction data
  */
+
 out_data_particle = true;
 out_data_interaction = true;
+
 /*
- * Visualize rotations by crosses.
- * (for yaplot data)
+ * The middle height of the simulation box is set to the flow zero level.
  */
-draw_rotation_2d = true;
+
+origin_zero_flow = true;

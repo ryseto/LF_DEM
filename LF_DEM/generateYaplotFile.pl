@@ -8,7 +8,7 @@
 
 use Math::Trig;
 
-$force_factor = 0.01;
+$force_factor = 0.000001;
 
 $y_section = 0;
 $yap_radius = 1;
@@ -56,7 +56,7 @@ while (1) {
 #$fmax_ave = ${sum_fmax}/${cnt};
 #printf "fmax = $fmax_ave $cnt \n";
 #$force_factor = 0.3/$fmax_ave;
-$force_factor = 0.03;
+$force_factor = 0.0003;
 #$force_factor = 0.003;
 #printf  "$fmax_ave\n";
 #exit;
@@ -469,27 +469,26 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k]);
 		}
 	}
-	
-	$stressfactor = 0.00001;
-	printf OUT "y 2\n";
-	printf OUT "@ 6\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($S_bf[$k] < 0){
-			#$force = $force[$k];
-			$string_width = $stressfactor*abs($S_bf[$k]);
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-	}
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($S_bf[$k] > 0){
-			#$force = $force[$k];
-			$string_width = $stressfactor*abs($S_bf[$k]);
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-	}
+#	$stressfactor = 0.00001;
+#	printf OUT "y 2\n";
+#	printf OUT "@ 6\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		if ($S_bf[$k] < 0){
+#			#$force = $force[$k];
+#			$string_width = $stressfactor*abs($S_bf[$k]);
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
+#		}
+#	}
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		if ($S_bf[$k] > 0){
+#			#$force = $force[$k];
+#			$string_width = $stressfactor*abs($S_bf[$k]);
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
+#		}
+	#	}
 	
 	#
 	#	printf OUT "y 10\n";

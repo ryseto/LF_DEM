@@ -36,7 +36,6 @@ private:
 	int nb_of_active_interactions;
 	int ts; // time steps
 	double dt;
-	double dt_max;
 	double disp_max;
 	double lx;
 	double ly;
@@ -50,8 +49,6 @@ private:
 	double system_volume;
 	double sq_lub_max;
 	double shear_strain;
-	double kn;
-	double kt;
 	double lub_max;
 	double lub_coeff_contact; // resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
@@ -59,7 +56,7 @@ private:
 	double log_lub_coeff_contact_tan_total;
 	double sd_coeff;
 	double mu_static; // static friction coefficient.
-	double kb_T;
+	double kb_T; // dimensionless kb_T = 1/Pe
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -117,6 +114,12 @@ public:
 	 * To be used for relaxation to generate initial configuration.
 	 */
 	bool zero_shear;
+	/* When Pe is small, the simulation parameters need to be adjusted differently.
+	 * For high Pe, spring constants are scaled with shear rate being proportional to Pe.
+	 * In dimensionless simulation, kn and kt appear the same.
+	 * For low Pe, they need to be scaled with Pe.
+	 *
+	 */
 	double Pe_switch;
 	double shear_strain_end;
 	double critical_normal_force;
@@ -167,6 +170,12 @@ public:
 	StressTensor total_colloidal_stressXF;
 	StressTensor total_colloidal_stressGU;
 	StressTensor total_brownian_stressGU;
+	double dt_max;
+	double kn;
+	double kt;
+	double dt_lowPeclet;
+	double kn_lowPeclet;
+	double kt_lowPeclet;
 	int avg_stress_nb;
 	int friction_model;
 	bool friction;
@@ -229,6 +238,8 @@ public:
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
+	double strain_interval_output_data;
+	double strain_interval_output;
 	string simu_name;
 	bool kn_kt_adjustment;
 	void setSystemVolume(double depth = 0);
@@ -237,6 +248,7 @@ public:
 						  double lx_, double ly_, double lz_);
 	void setInteractions_GenerateInitConfig();
 	void setupSystem();
+	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(double strain_interval);
@@ -290,16 +302,9 @@ public:
 	}
 	void set_integration_method(int val){integration_method = val;}
 	void set_lubrication_model(int val){lubrication_model = val;}
-	void set_kb_T(double val){
-		kb_T = val;
-		if (kb_T > 0) {
-			brownian = true;
-			//integration_method = 1;
-		}
-	}
-	double get_kb_T(){return kb_T;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}
+	double get_time(){return shear_strain/dimensionless_shear_rate;}
 	inline double get_lz(){return lz;}
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}
@@ -307,14 +312,12 @@ public:
 	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
-	inline void set_kn(double val){kn = val;}
 	inline double get_kn(){return kn;}
 	inline void set_kt(double val){kt = val;}
 	inline double get_kt(){return kt;}
 	inline void set_lub_max(double val){lub_max = val;}
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}
-	void set_dt_max(double val){dt_max = val;}
 	void set_disp_max(double val){disp_max = val;}
 	inline double get_dt(){return dt;}
 	inline void set_colloidalforce_amplitude(double val){

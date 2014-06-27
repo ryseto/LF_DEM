@@ -20,9 +20,7 @@ private:
 	System sys;
 	vector<double> radius;
 	string filename_import_positions;
-	string filename_parameters;
-	double strain_interval_output_data;
-	double strain_interval_output;
+	string filename_parameters;	
 	double strain_interval_knkt_adjustment;
 	double volume_fraction;
 	string import_line[2];

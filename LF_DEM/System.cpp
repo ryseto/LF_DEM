@@ -11,11 +11,11 @@
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
-System::System():
+System::System() :
 zero_shear(false),
-maxnb_interactionpair_per_particle(15),
-Pe_switch(1)
+maxnb_interactionpair_per_particle(15)
 {}
+
 System::~System(){
 	DELETE(position);
 	DELETE(radius);
@@ -161,6 +161,34 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 }
 
 void
+System::setupBrownian(){
+	if (brownian) {
+		/* kb_T is dimensionless.
+		 * dimensionless_shear_rate is Peclet number
+		 * Dimensional kb_T is L0*F0 / Pe,
+		 * where F0 = 6*pi*eta0*a^2*rate and L0 = a
+		 *
+		 */
+		kb_T = 1/dimensionless_shear_rate;
+		if (dimensionless_shear_rate < Pe_switch) {
+			scale_factor_SmallPe = Pe_switch/dimensionless_shear_rate;
+			kn = scale_factor_SmallPe*kn_lowPeclet;
+			kt = scale_factor_SmallPe*kt_lowPeclet;
+			dt_max = dt_lowPeclet/scale_factor_SmallPe;
+			shear_strain_end /= scale_factor_SmallPe;
+			strain_interval_output_data *= 1/scale_factor_SmallPe;
+			strain_interval_output *= 1/scale_factor_SmallPe;
+			cerr << "[[small Pe mode]]" << endl;
+			cerr << "  kn = " << kn << endl;
+			cerr << "  kt = " << kt << endl;
+			cerr << "  dt_max = " << dt_max << endl;
+			cerr << "  strain_interval_output_data = " << strain_interval_output_data << endl;
+			cerr << "  strain_interval_output = " << strain_interval_output << endl;
+		}
+	}
+}
+
+void
 System::setupSystem(){
 	/* Giving a seed for debugging (Brownian)
 	 * r_gen = new MTRand(71);
@@ -224,20 +252,6 @@ System::setupSystem(){
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else {
 		exit(1);
-	}
-	if (brownian) {
-		kb_T = 1/dimensionless_shear_rate;
-		if (dimensionless_shear_rate <= Pe_switch) {
-			scale_factor_SmallPe = 1/dimensionless_shear_rate;
-			kn *= sqrt(scale_factor_SmallPe);
-			kt *= sqrt(scale_factor_SmallPe);
-			dt_max /= scale_factor_SmallPe;
-			shear_strain_end /= scale_factor_SmallPe;
-			cerr << "small Pe mode:" << endl;
-			cerr << "kn = " << kn << endl;
-			cerr << "kt = " << kt << endl;
-			cerr << "dt_max = " << dt_max << endl;
-		}
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {

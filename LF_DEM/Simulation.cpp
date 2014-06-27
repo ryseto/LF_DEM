@@ -43,9 +43,9 @@ Simulation::contactForceParameter(string filename){
 		}
 	}
 	fin_knktdt.clear();
-	sys.set_kn(kn_);
-	sys.set_kt(kt_);
-	sys.set_dt_max(dt_max_);
+	sys.kn = kn_;
+	sys.kt = kt_;
+	sys.dt_max = dt_max_;
 	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
 
@@ -68,14 +68,10 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	outputDataHeader(fout_interaction);
 	outputDataHeader(fout_rheo);
 	outputDataHeader(fout_st);
-	sys.setupSystem();
-	if (sys.brownian && sys.dimensionless_shear_rate <= sys.Pe_switch) {
-		strain_interval_output_data *= 1/sys.scale_factor_SmallPe;
-		strain_interval_output *= 1/sys.scale_factor_SmallPe;
-		cerr << "small Pe mode:" << endl;
-		cerr << "strain_interval_output_data = " << strain_interval_output_data << endl;
-		cerr << "strain_interval_output = " << strain_interval_output << endl;
+	if (sys.brownian) {
+		sys.setupBrownian();
 	}
+	sys.setupSystem();
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
@@ -85,9 +81,9 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 	int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
 	while (sys.get_shear_strain() < sys.shear_strain_end-1e-8) {
-		double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
-		double strain_next_config_out = cnt_config_out*strain_interval_output;
-		double strain_next = cnt_simu_loop*strain_interval_output_data;
+		//	double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
+		double strain_next_config_out = cnt_config_out*sys.strain_interval_output;
+		double strain_next = cnt_simu_loop*sys.strain_interval_output_data;
 		sys.timeEvolution(strain_next);
 		evaluateData();
 		outputRheologyData();
@@ -97,8 +93,8 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 			cnt_config_out ++;
 		}
 		if (sys.kn_kt_adjustment) {
-			cerr << strain_knkt_adjustment << endl;
-			if (sys.get_shear_strain() >= strain_knkt_adjustment-1e-8) {
+
+			if (sys.get_shear_strain() >=                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    -1e-8) {
 				if (sys.adjustContactModelParameters() == 1){
 					cout << "phi kn kt dt" << endl;
 					cout << volume_fraction << ' ';
@@ -123,9 +119,6 @@ Simulation::simulationConstantShearRate(int argc, const char * argv[]){
 		 */
 		outputFinalConfiguration();
 	}
-	
-
-	
 }
 
 bool
@@ -159,6 +152,8 @@ void
 Simulation::autoSetParameters(const string &keyword, const string &value){
 	if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
+	} else if (keyword == "brownian") {
+		sys.brownian = str2bool(value);
 	} else if (keyword == "friction_model") {
 		sys.friction_model = atoi(value.c_str());
 	} else if (keyword == "kn_kt_adjustment") {
@@ -173,10 +168,6 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		sys.contact_relaxation_time = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time_tan"){
 		sys.contact_relaxation_time_tan =  atof(value.c_str());
-	} else if (keyword == "kb_T") {
-		sys.set_kb_T(atof(value.c_str()));
-	} else if (keyword == "dt_max") {
-		sys.set_dt_max(atof(value.c_str()));
 	} else if (keyword == "disp_max") {
 		sys.set_disp_max(atof(value.c_str()));
 	} else if (keyword == "shear_strain_end") {
@@ -188,15 +179,25 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 	} else if (keyword == "sd_coeff") {
 		sys.set_sd_coeff(atof(value.c_str()));
 	} else if (keyword == "kn") {
-		sys.set_kn(atof(value.c_str()));
+		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt") {
-		sys.set_kt(atof(value.c_str()));
+		sys.kt = atof(value.c_str());
+	} else if (keyword == "dt_max") {
+		sys.dt_max = atof(value.c_str());
+	} else if (keyword == "kn_lowPeclet") {
+		sys.kn_lowPeclet = atof(value.c_str());
+	} else if (keyword == "kt_lowPeclet") {
+		sys.kt_lowPeclet = atof(value.c_str());
+	} else if (keyword == "dt_lowPeclet") {
+		sys.dt_lowPeclet = atof(value.c_str());
+	} else if (keyword == "Pe_switch") {
+		sys.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
 		sys.set_mu_static(atof(value.c_str()));
 	} else if (keyword == "strain_interval_out") {
-		strain_interval_output = atof(value.c_str());
+		sys.strain_interval_output = atof(value.c_str());
 	} else if (keyword == "strain_interval_out_data") {
-		strain_interval_output_data = atof(value.c_str());
+		sys.strain_interval_output_data = atof(value.c_str());
 	} else if (keyword == "out_data_particle") {
 		out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
@@ -287,7 +288,11 @@ Simulation::setDefaultParameters(){
 	 *    ASD code from Brady has dt_ratio=150
 	 *
 	 */
-	double _dt = 1e-4;
+	sys.brownian = true;
+	sys.Pe_switch = 5;
+	sys.dt_max = 1e-4;
+	sys.dt_lowPeclet = 1e-4;
+
 	/*
 	 * integration_method:
 	 * 0 Euler's Method,
@@ -343,19 +348,15 @@ Simulation::setDefaultParameters(){
 	sys.contact_relaxation_time = 1e-2;
 	sys.contact_relaxation_time_tan = 0;
 	/*
-	 * Brownian force
-	 * kb_T: Thermal energy kb*T
-	 * kb_T = 0 ---> non-brownian
-	 * kb_T > 0 ---> brownian
-	 */
-	sys.set_kb_T(0);
-	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	double _kn = 5000;
-	double _kt = 3000;
+	sys.kn = 10000;
+	sys.kt = 6000;
+	sys.kn_lowPeclet = 10000;
+	sys.kt_lowPeclet = 6000;
+
 	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.05;
@@ -377,8 +378,8 @@ Simulation::setDefaultParameters(){
 	 * strain_interval_output_data is for outputing rheo_...
 	 * strain_interval_output is for outputing int_... and par_...
 	 */
-	strain_interval_output_data = 0.01;
-	strain_interval_output = 0.05;
+	sys.strain_interval_output_data = 0.02;
+	sys.strain_interval_output = 0.02;
 	/*
 	 *  Data output
 	 */
@@ -396,9 +397,7 @@ Simulation::setDefaultParameters(){
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);
 	sys.set_lub_max(_lub_max);
-	sys.set_dt_max(_dt);
-	sys.set_kn(_kn);
-	sys.set_kt(_kt);
+	
 	sys.set_mu_static(_mu_static);
 	sys.set_colloidalforce_length(_colloidalforce_length);
 }
@@ -588,7 +587,7 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#44: kn" << endl;
 		fout_rheo << "#45: kt" << endl;
 		fout_rheo << "#46: dt" << endl;
-		fout_rheo << "#47: shearrate" << endl;
+		fout_rheo << "#47: time" << endl;
 	}
 	/*
 	 * hat(...) indicates dimensionless quantities.
@@ -657,7 +656,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.get_kn() << ' '; //44
 	fout_rheo << sys.get_kt() << ' '; //45
 	fout_rheo << sys.get_dt() << ' '; //46
-	fout_rheo << sys.dimensionless_shear_rate << ' ' ; //47
+	fout_rheo << sys.get_time() << ' ' ; //47
 	fout_rheo << endl;
 }
 
