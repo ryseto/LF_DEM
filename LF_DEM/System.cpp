@@ -306,6 +306,12 @@ System::setupSystem(){
 		/* t = beta/kn
 		 *  beta = t*kn
 		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
+		 *
+		 * For Low Peclet mode:
+		 * kn = scale_factor_SmallPe*kn_lowPeclet;
+		 * contact_relaxation_time = contact_relaxation_time/scale_factor_SmallPe;
+		 * This is why the coeffient is not scaled.
+		 * scale_factor_SmallPe*kn_lowPeclet * contact_relaxation_time/scale_factor_SmallPe;
 		 */
 		lub_coeff_contact = 4*kn*contact_relaxation_time;
 	}
