@@ -50,8 +50,8 @@ Contact::updateContactModel(){
 		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
 		if (state > 0) {
-			interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
-														sys->get_log_lub_coeff_dynamicfriction());
+			interaction->lubrication.setResistanceCoeff(sys->lub_coeff_contact,
+														sys->log_lub_coeff_contact_tan_total);
 		}
 	}
 }

@@ -47,11 +47,25 @@ Interaction::calcResistance(){
 		double overlap_12 = 0.5*(a0+a1-r);
 		a0_dash = a0-overlap_12;
 		a1_dash = a1-overlap_12;
+		if (!contact_state_changed_after_predictor) {
+			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
+										   sys->log_lub_coeff_contact_tan_total);
+		} else {
+			// to avoid discontinous change
+			double lub_coeff = 1/sys->lub_reduce_parameter;
+			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
+		}
 	} else {
-		double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
-		lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		a0_dash = a0;
 		a1_dash = a1;
+		if (!contact_state_changed_after_predictor) {
+			double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
+			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
+		} else {
+			// to avoid discontinous change
+			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
+										   sys->log_lub_coeff_contact_tan_total);
+		}
 	}
 }
 
@@ -132,13 +146,22 @@ Interaction::updateState(bool &deactivated){
 		contact.incrementTangentialDisplacement();
 	}
 	calcNormalVectorDistanceGap();
+	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
+		// contacting in previous step
 		if (gap_nondim > 0){
 			contact.deactivate();
+			if (sys->in_predictor) {
+				contact_state_changed_after_predictor = true;
+			}
 		}
 	} else {
+		// not contacting in previous step
 		if (gap_nondim <= 0) {
 			contact.activate();
+			if (sys->in_predictor) {
+				contact_state_changed_after_predictor = true;
+			}
 		} else if (r > interaction_range_scaled) {
 			/* all interaction is switched off. */
 			deactivate();

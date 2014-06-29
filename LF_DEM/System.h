@@ -50,10 +50,6 @@ private:
 	double sq_lub_max;
 	double shear_strain;
 	double lub_max;
-	double lub_coeff_contact; // resistance coeffient for normal mode
-	double log_lub_coeff_contact_tan_dashpot;
-	double log_lub_coeff_contact_tan_lubrication;
-	double log_lub_coeff_contact_tan_total;
 	double sd_coeff;
 	double mu_static; // static friction coefficient.
 	double kb_T; // dimensionless kb_T = 1/Pe
@@ -181,6 +177,10 @@ public:
 	int friction_model;
 	bool friction;
 	bool colloidalforce; // "colloidalforce" should be replaced by "repulsion".
+	double lub_coeff_contact; // resistance coeffient for normal mode
+	double log_lub_coeff_contact_tan_dashpot;
+	double log_lub_coeff_contact_tan_lubrication;
+	double log_lub_coeff_contact_tan_total;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
 	/*
@@ -329,15 +329,15 @@ public:
 	inline double get_colloidalforce_length(){return colloidalforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
-	inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-	inline double get_log_lub_coeff_dynamicfriction(){
+	//inline double get_lub_coeff_contact(){return lub_coeff_contact;}
+//	inline double get_log_lub_coeff_dynamicfriction(){
 		/* In a sliding state, the resistance coeffient is the sum of
 		 * lubrication and dashpot.
 		 * In our standard model, we do not set the dashpot.
 		 * Only tangential lubrications are considered.
 		 */
-		return log_lub_coeff_contact_tan_total;
-	}
+//		return log_lub_coeff_contact_tan_total;
+//	}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
 };
 #endif /* defined(__LF_DEM__System__) */

@@ -128,6 +128,6 @@ public:
 	void addColloidalStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	void integrateStress();
-	bool state_change_in_corrector;
+	bool contact_state_changed_after_predictor;
 };
 #endif /* defined(__LF_DEM__Interaction__) */
