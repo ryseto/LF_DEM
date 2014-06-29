@@ -73,7 +73,7 @@ lub_reduce_parameter = 1e-3;
  * This need to be larger than dt.
  */
 
-contact_relaxation_time = -1;
+contact_relaxation_time = 1e-3;
 contact_relaxation_time_tan = 0;
 
 /* Colloidal force

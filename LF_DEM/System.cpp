@@ -175,6 +175,7 @@ System::setupBrownian(){
 			kn = scale_factor_SmallPe*kn_lowPeclet;
 			kt = scale_factor_SmallPe*kt_lowPeclet;
 			dt_max = dt_lowPeclet/scale_factor_SmallPe;
+			contact_relaxation_time = contact_relaxation_time/scale_factor_SmallPe;
 			shear_strain_end /= scale_factor_SmallPe;
 			strain_interval_output_data *= 1/scale_factor_SmallPe;
 			strain_interval_output *= 1/scale_factor_SmallPe;
@@ -519,7 +520,7 @@ System::timeStepMovePredictor(){
 		}
 	}
 	/* In predictor, the values of interactions is updated,
-	 * but the statuses are fixed by using boolean `fix_interaction_status' (STILL USED?)
+	 * but the statuses are fixed by using boolean `fix_interaction_status' (STILL USED?) <== no.
 	 */
 	updateInteractions();
 	/*
@@ -557,7 +558,7 @@ System::timeEvolution(double strain_next){
 		firsttime = false;
 	}
 	avgStressReset();
-	while (shear_strain < strain_next-dt-1e-8) { // integrate until strain_next - 1 time step
+	while (shear_strain < strain_next-dt-dt*0.001) { // integrate until strain_next - 1 time step
 		//		brownianTesting(false);
 		(this->*timeEvolutionDt)(false);
 		ts++;
@@ -704,6 +705,7 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	//
 	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine 
 	// if you want GE to be the only rhs.
+	static int nb_of_active_interactions_in_predictor;
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -803,18 +805,21 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 }
 
 void
-System::buildBrownianTerms(){
+System::generateBrownianForces(){
 	// generates a Brownian force F_B with <F_B> = 0, and <F_B F_B> = (2kT/dt)*R
 	// where R is the current resistance matrix stored in the stokes_solver.
 	// note that it SETS the rhs of the solver as rhs = F_B
 	// F_B is also stored in sys->brownian_force
+	//
+	// kb_T = 1/Pe and dt = dt'*Pe/Pe0
+	// kb_T/dt = (1/Pe)/(dt'*Pe/Pe0) = Pe0/(dt'*Pe*Pe)
+	//
 	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_kbT2_dt*GRANDOM; // random vector A
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-	stokes_solver.setRHS(brownian_force);
 }
 
 void
@@ -902,7 +907,7 @@ System::computeVelocities(bool divided_velocities){
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_colloidal[i];
 				na_ang_velocity[i] += ang_vel_colloidal[i];
-				ang_vel_colloidal[i].cerr();
+				exit(1); // ang_vel_colloidal should be always zero;
 			}
 		}
 	} else {
@@ -912,18 +917,20 @@ System::computeVelocities(bool divided_velocities){
 		} else {
 			buildHydroTerms(true, false); // zero shear-rate
 		}
-		buildContactTerms(false); // set rhs = F_C
+		buildContactTerms(false); // add rhs += F_C
 		if (colloidalforce) {
-			buildColloidalForceTerms(false); // set rhs = F_Coll
+			buildColloidalForceTerms(false); // add rhs += F_Coll
 		}
-		stokes_solver.solve(na_velocity, na_ang_velocity); // get V_Coll
+		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
 	if (brownian) {
 		if (in_predictor) {
-			buildBrownianTerms(); // generate new F_B and set rhs = F_B
-		} else {
-			stokes_solver.setRHS(brownian_force); // set rhs = F_B
+			/* generate new F_B only in predictor
+			 * Resistance matrix is used.
+			 */
+			generateBrownianForces();
 		}
+		stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 		/**** quick trick for 2D (for test) ***/
 		if (twodimension) {
@@ -1179,7 +1186,6 @@ System::countNumberOfContact(){
 	}
 }
 
-
 void
 System::analyzeState(){
 	max_velocity = evaluateMaxVelocity();
@@ -1412,8 +1418,6 @@ System::brownianTesting(bool calc_stress){
 			avg_udrift[6*i+5] += ang_vel_brownian[i].z;
 		}
 	}
-
-
 	ofstream fout;
 	fout.open("fbfb.dat");	
 	//	fout << "normalized fbfb" << endl;

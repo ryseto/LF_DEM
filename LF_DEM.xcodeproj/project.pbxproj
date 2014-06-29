@@ -15,7 +15,6 @@
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
-		D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D97C3B07167690DC009A6BF0 /* Interaction.cpp */; };
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
@@ -135,7 +134,6 @@
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D972279B16AF02DC00DA851F /* generateYaplotFile.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = generateYaplotFile.pl; sourceTree = "<group>"; };
-		D97C3B07167690DC009A6BF0 /* Interaction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Interaction.cpp; sourceTree = "<group>"; };
 		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Interaction.h; sourceTree = "<group>"; };
 		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Simulation.cpp; sourceTree = "<group>"; };
 		D9878876165545680047A87E /* Simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Simulation.h; sourceTree = "<group>"; };
@@ -352,7 +350,6 @@
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */,
 				CDE4695916BC4CB800923139 /* StokesSolver.cpp */,
-				D97C3B07167690DC009A6BF0 /* Interaction.cpp */,
 				D97C3B08167690DC009A6BF0 /* Interaction.h */,
 				D92EAA0B17E39D5100C903F5 /* Contact.cpp */,
 				D92EAA0C17E39D5100C903F5 /* Contact.h */,
@@ -553,7 +550,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D932B8DD16C2E9C300AD6E85 /* Interaction.cpp in Sources */,
 				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,

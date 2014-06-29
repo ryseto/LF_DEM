@@ -61,8 +61,9 @@ Contact::activate(){
 	// r < a0 + a1
 	state = 1;
 	disp_tan.reset();
-	interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
-												sys->get_log_lub_coeff_dynamicfriction());
+	// This is calculated after that
+	//	interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
+	//												sys->get_log_lub_coeff_dynamicfriction());
 }
 
 void

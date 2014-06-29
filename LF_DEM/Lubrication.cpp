@@ -34,9 +34,9 @@ Lubrication::getInteractionData(){
 }
 
 void
-Lubrication::setResistanceCoeff(double normal_rc, double tangent_rc){
-	lub_coeff = normal_rc;
-	log_lub_coeff = tangent_rc;
+Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_){
+	lub_coeff = lub_coeff_; // normal
+	log_lub_coeff = log_lub_coeff_; // tangential
 }
 
 void

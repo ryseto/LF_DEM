@@ -78,7 +78,8 @@ private:
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
 	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
-	void buildBrownianTerms();
+	//void buildBrownianTerms();
+	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildColloidalForceTerms(bool);
 	void brownianForceTest();
