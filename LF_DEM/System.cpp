@@ -525,9 +525,6 @@ System::timeStepMovePredictor(){
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	/* In predictor, the values of interactions is updated,
-	 * but the statuses are fixed by using boolean `fix_interaction_status' (STILL USED?) <== no.
-	 */
 	updateInteractions();
 	/*
 	 * Keep V^{-} to use them in the corrector.

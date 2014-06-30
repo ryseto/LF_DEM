@@ -16,11 +16,6 @@ Interaction::init(System *sys_){
 	f_colloidal_norm = 0;
 }
 
-void
-Interaction::setResistanceCoeff(double normal_rc, double tangent_rc){
-	lubrication.setResistanceCoeff(normal_rc, tangent_rc);
-}
-
 /* Make a normal vector
  * Periodic boundaries are checked for all partices.
  * vector from particle 0 to particle 1. ( i --> j)
@@ -42,7 +37,7 @@ Interaction::calcNormalVectorDistanceGap(){
 }
 
 void
-Interaction::calcResistance(){
+Interaction::updateResistanceCoeff(){
 	if (contact.state > 0) {
 		double overlap_12 = 0.5*(a0+a1-r);
 		a0_dash = a0-overlap_12;
@@ -51,7 +46,13 @@ Interaction::calcResistance(){
 			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
 										   sys->log_lub_coeff_contact_tan_total);
 		} else {
-			// to avoid discontinous change
+			/* This is to avoid discontinous change.
+			 * Before the predictor, particles are separated.
+			 * The displacement in the predictor makes particle in contact.
+			 * In the corrector for the same time step,
+			 * the resistance coeffient is set to the maximum value of separating state.
+			 * Thus, no drift force is generated.
+			 */
 			double lub_coeff = 1/sys->lub_reduce_parameter;
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		}
@@ -62,7 +63,13 @@ Interaction::calcResistance(){
 			double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		} else {
-			// to avoid discontinous change
+			/* This is to avoid discontinous change.
+			 * Before the predictor, particles are in contact.
+			 * The displacement in the predictor makes particles apart.
+			 * In the corrector for the same time step,
+			 * the resistance coeffient is set to the ones used in contact state.
+			 * Thus, no drift force is generated.
+			 */
 			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
 										   sys->log_lub_coeff_contact_tan_total);
 		}
@@ -102,7 +109,6 @@ Interaction::activate(unsigned short i, unsigned short j){
 	/*
 	 * The size dependence of colloidal force:
 	 * a0*a1/(a1+a2)/2
-	 * Is
 	 */
 	if (sys->colloidalforce) {
 		colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
@@ -116,7 +122,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 	} else {
 		contact.deactivate();
 	}
-	calcResistance();
+	updateResistanceCoeff();
 	lubrication.getInteractionData();
 	lubrication.calcLubConstants();
 }
@@ -150,6 +156,7 @@ Interaction::updateState(bool &deactivated){
 	if (contact.state > 0) {
 		// contacting in previous step
 		if (gap_nondim > 0){
+			// now separate
 			contact.deactivate();
 			if (sys->in_predictor) {
 				contact_state_changed_after_predictor = true;
@@ -158,6 +165,7 @@ Interaction::updateState(bool &deactivated){
 	} else {
 		// not contacting in previous step
 		if (gap_nondim <= 0) {
+			// now contact
 			contact.activate();
 			if (sys->in_predictor) {
 				contact_state_changed_after_predictor = true;
@@ -169,7 +177,7 @@ Interaction::updateState(bool &deactivated){
 			return;
 		}
 	}
-	calcResistance();
+	updateResistanceCoeff();
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}

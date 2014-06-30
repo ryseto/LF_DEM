@@ -67,7 +67,7 @@ private:
 	double f_colloidal_norm;
 	vec3d f_colloidal;
 	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
-	void calcResistance();
+	void updateResistanceCoeff();
 protected:
 public:
 	Contact contact;
@@ -120,7 +120,6 @@ public:
 	double getContactVelocity();
 	double getRelativeVelocity(){return relative_velocity.norm();}
 	//===== forces/stresses  ========================== //
-	void setResistanceCoeff(double, double);
 	void calcRelativeVelocities();
 	void addUpColloidalForce();
 	double getNormalVelocity();
@@ -128,6 +127,9 @@ public:
 	void addColloidalStress();
 	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
 	void integrateStress();
+	/* To avoid discontinous change between predictor and corrector,
+	 * the change of contact state is informed in updateResiCoeff.
+	 */
 	bool contact_state_changed_after_predictor;
 };
 #endif /* defined(__LF_DEM__Interaction__) */

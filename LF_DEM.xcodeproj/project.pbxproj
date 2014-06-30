@@ -177,6 +177,7 @@
 		D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = calc_contact_fraction.pl; sourceTree = "<group>"; };
 		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StressTensor.h; sourceTree = "<group>"; };
 		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Interaction.cpp; sourceTree = "<group>"; };
+		D9FAAA3119608BAC00E601A9 /* colloid.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = colloid.txt; sourceTree = "<group>"; };
 		D9FF68A31732F24D0062236C /* force_chain.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = force_chain.pl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -345,6 +346,7 @@
 				D9CD258916E54DFF00A8E397 /* parameter_template.txt */,
 				D988AC3D1857666D00C9637A /* Makefile */,
 				D988E38D165441750009949F /* main.cpp */,
+				D9FAAA3119608BAC00E601A9 /* colloid.txt */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
