@@ -344,7 +344,7 @@ Simulation::setDefaultParameters(){
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	sys.contact_relaxation_time = 1e-2;
+	sys.contact_relaxation_time = 1e-3;
 	sys.contact_relaxation_time_tan = 0;
 	/*
 	 * Contact force parameters
@@ -378,7 +378,7 @@ Simulation::setDefaultParameters(){
 	 * strain_interval_output is for outputing int_... and par_...
 	 */
 	sys.strain_interval_output_data = 0.02;
-	sys.strain_interval_output = 0.02;
+	sys.strain_interval_output = 0.1;
 	/*
 	 *  Data output
 	 */

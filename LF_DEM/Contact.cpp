@@ -59,6 +59,11 @@ Contact::updateContactModel(){
 void
 Contact::activate(){
 	// r < a0 + a1
+	/* state = 1 means frictionless contact.
+	 * In frictional particle simulations,
+	 * this value will be updated to 2 or 3 in friction law.
+	 * In critical load model, the value can take 1 as well.
+	 */
 	state = 1;
 	disp_tan.reset();
 	// This is calculated after that
@@ -122,13 +127,6 @@ Contact::calcContactInteraction(){
 
 void
 Contact::frictionlaw_standard(){
-	/* [!!!!! NOTE !!!!!]
-	 * 
-	 * In Brownian case,
-	 * "lubforce_normal" significantly affects the friction law.
-	 * The difference seems to be subtle in non-Brownian case.
-	 *
-	 */
 	double supportable_tanforce = mu*f_contact_normal_norm;
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
@@ -193,7 +191,7 @@ Contact::frictionlaw_criticalload_mu_inf(){
 }
 
 void
-Contact::frictionlaw_null(){;}
+Contact::frictionlaw_null(){}
 
 void
 Contact::addUpContactForceTorque(){

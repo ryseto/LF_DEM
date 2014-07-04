@@ -171,11 +171,13 @@ System::setupBrownian(){
 		 */
 		kb_T = 1/dimensionless_shear_rate;
 		if (dimensionless_shear_rate < Pe_switch) {
+			// scale_factor_SmallPe > 1
 			scale_factor_SmallPe = Pe_switch/dimensionless_shear_rate;
 			kn = scale_factor_SmallPe*kn_lowPeclet;
 			kt = scale_factor_SmallPe*kt_lowPeclet;
 			dt_max = dt_lowPeclet/scale_factor_SmallPe;
 			contact_relaxation_time = contact_relaxation_time/scale_factor_SmallPe;
+			contact_relaxation_time_tan = contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
 			shear_strain_end /= scale_factor_SmallPe;
 			strain_interval_output_data *= 1/scale_factor_SmallPe;
 			strain_interval_output *= 1/scale_factor_SmallPe;
@@ -213,6 +215,7 @@ System::setupSystem(){
 	}
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
+		mu_static = 0;
 		friction = false;
 	} else if (friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
@@ -312,6 +315,7 @@ System::setupSystem(){
 		 * contact_relaxation_time = contact_relaxation_time/scale_factor_SmallPe;
 		 * This is why the coeffient is not scaled.
 		 * scale_factor_SmallPe*kn_lowPeclet * contact_relaxation_time/scale_factor_SmallPe;
+		 * = kn_lowPeclet * contact_relaxation_time
 		 */
 		lub_coeff_contact = 4*kn*contact_relaxation_time;
 	}
@@ -337,6 +341,8 @@ System::setupSystem(){
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
+	} else {
+		exit(1);
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (brownian) {
@@ -706,9 +712,9 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	//       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
 	//  - vector Gtilde*Einf if 'build_force_GE' is true (default behavior)
 	//
-	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine 
+	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine
 	// if you want GE to be the only rhs.
-	static int nb_of_active_interactions_in_predictor;
+	//static int nb_of_active_interactions_in_predictor;
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -816,13 +822,22 @@ System::generateBrownianForces(){
 	//
 	// kb_T = 1/Pe and dt = dt'*Pe/Pe0
 	// kb_T/dt = (1/Pe)/(dt'*Pe/Pe0) = Pe0/(dt'*Pe*Pe)
-	//
-	double sqrt_kbT2_dt = sqrt(2*kb_T/dt);
+	// Fb = sqrt(kb_T/dt) = sqrt(Pe0/dt')*1/Pe
+	// U = Fb
+	// U*dt = sqrt(Pe0/dt')*1/Pe * dt'*Pe/Pe0 = sqrt(dt'/Pe0)
+	double sqrt_kbT2_dt = sqrt(2*kb_T/dt); // proportional to 1/Pe.
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_kbT2_dt*GRANDOM; // random vector A
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+	if (twodimension) {
+		for (int i=0; i<np; i++) {
+			brownian_force[6*i+1] = 0; // Fy
+			brownian_force[6*i+3] = 0; // Tx
+			brownian_force[6*i+5] = 0; // Tz
+		}
+	}
 }
 
 void
@@ -935,14 +950,6 @@ System::computeVelocities(bool divided_velocities){
 		}
 		stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-		/**** quick trick for 2D (for test) ***/
-		if (twodimension) {
-			for (int i=0; i<np; i++) {
-				vel_brownian[i].y = 0;
-				ang_vel_brownian[i].x = 0;
-				ang_vel_brownian[i].z = 0;
-			}
-		}
 		for (int i=0; i<np; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
