@@ -159,8 +159,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
 		strain_interval_knkt_adjustment = atof(value.c_str());
-	} else if (keyword == "colloidalforce_length") {
-		sys.set_colloidalforce_length(atof(value.c_str()));
+	} else if (keyword == "repulsiveforce_length") {
+		sys.set_repulsiveforce_length(atof(value.c_str()));
 	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
@@ -291,7 +291,7 @@ Simulation::setDefaultParameters(){
 	sys.Pe_switch = 5;
 	sys.dt_max = 1e-4;
 	sys.dt_lowPeclet = 1e-4;
-
+	
 	/*
 	 * integration_method:
 	 * 0 Euler's Method,
@@ -362,11 +362,12 @@ Simulation::setDefaultParameters(){
 	sys.disp_tan_target = 0.05;
 	sys.max_kn = 1000000;
 	/*
-	 * Colloidal force parameter
+	 * repulsive force parameter
 	 * Short range repulsion is assumed.
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
 	 */
-	double _colloidalforce_length = 0;
+	double _repulsiveforce_length = 0;
+	double _repulsiveforce_amplitude = 0;
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
@@ -398,7 +399,8 @@ Simulation::setDefaultParameters(){
 	sys.set_lub_max(_lub_max);
 	
 	sys.set_mu_static(_mu_static);
-	sys.set_colloidalforce_length(_colloidalforce_length);
+	sys.set_repulsiveforce_length(_repulsiveforce_length);
+	sys.set_repulsiveforce_amplitude(_repulsiveforce_amplitude);
 }
 
 void
@@ -465,9 +467,9 @@ Simulation::evaluateData(){
 	total_stress = sys.total_hydro_stress;
 	total_stress += total_contact_stressXF;
 	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
-	if (sys.colloidalforce) {
-		total_colloidal_stress = sys.total_colloidal_stressXF+sys.total_colloidal_stressGU;
-		total_stress += total_colloidal_stress;
+	if (sys.repulsiveforce) {
+		total_repulsive_stress = sys.total_repulsive_stressXF+sys.total_repulsive_stressGU;
+		total_stress += total_repulsive_stress;
 	}
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stressGU;
@@ -494,14 +496,14 @@ Simulation::evaluateData(){
 	viscosity_cont_GU = sys.total_contact_stressGU.getStressXZ();
 	normalstress_diff_1_cont_GU = sys.total_contact_stressGU.getNormalStress1();
 	normalstress_diff_2_cont_GU = sys.total_contact_stressGU.getNormalStress2();
-	if (sys.colloidalforce) {
-		viscosity_col_XF = sys.total_colloidal_stressXF.getStressXZ();
-		normalstress_diff_1_col_XF = sys.total_colloidal_stressXF.getNormalStress1();
-		normalstress_diff_2_col_XF = sys.total_colloidal_stressXF.getNormalStress2();
-		particle_pressure_col = sys.total_colloidal_stressXF.getParticlePressure();
-		viscosity_col_GU = sys.total_colloidal_stressGU.getStressXZ();
-		normalstress_diff_1_col_GU = sys.total_colloidal_stressGU.getNormalStress1();
-		normalstress_diff_2_col_GU = sys.total_colloidal_stressGU.getNormalStress2();
+	if (sys.repulsiveforce) {
+		viscosity_repulsive_XF = sys.total_repulsive_stressXF.getStressXZ();
+		normalstress_diff_1_repulsive_XF = sys.total_repulsive_stressXF.getNormalStress1();
+		normalstress_diff_2_repulsive_XF = sys.total_repulsive_stressXF.getNormalStress2();
+		particle_pressure_repulsive = sys.total_repulsive_stressXF.getParticlePressure();
+		viscosity_repulsive_GU = sys.total_repulsive_stressGU.getStressXZ();
+		normalstress_diff_1_repulsive_GU = sys.total_repulsive_stressGU.getNormalStress1();
+		normalstress_diff_2_repulsive_GU = sys.total_repulsive_stressGU.getNormalStress2();
 	}
 	if (sys.brownian) {
 		viscosity_brownian = sys.total_brownian_stressGU.getStressXZ();
@@ -515,13 +517,13 @@ Simulation::outputStressTensorData(){
 	fout_st << sys.get_shear_strain() << ' ';
 	fout_st << 6*M_PI*viscosity << ' ';
 	/* total_stress = sys.total_hydro_stress;
-	 * + total_contact_stressXF + total_colloidal_stress;
+	 * + total_contact_stressXF + total_repulsive_stress;
 	 */
 	total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
 	sys.total_hydro_stress.outputStressTensor(fout_st); // (9,10,11,12,13,14)
 	total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
-	total_colloidal_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
+	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
 	fout_st << endl;
 }
@@ -556,12 +558,12 @@ Simulation::outputRheologyData(){
 		fout_rheo << "#14: Viscosity(friction)" << endl;
 		fout_rheo << "#15: N1(friction)" << endl;
 		fout_rheo << "#16: N2(friction)" << endl;
-		fout_rheo << "#17: Viscosity(Colloidal force XF)" << endl;
-		fout_rheo << "#18: N1(Colloidal force XF)" << endl;
-		fout_rheo << "#19: N2(Colloidal force XF)" << endl;
-		fout_rheo << "#20: Viscosity(Colloidal force GU)" << endl;
-		fout_rheo << "#21: N1(Colloidal force GU)" << endl;
-		fout_rheo << "#22: N2(Colloidal force GU)" << endl;
+		fout_rheo << "#17: Viscosity(repulsive force XF)" << endl;
+		fout_rheo << "#18: N1(repulsive force XF)" << endl;
+		fout_rheo << "#19: N2(repulsive force XF)" << endl;
+		fout_rheo << "#20: Viscosity(repulsive force GU)" << endl;
+		fout_rheo << "#21: N1(repulsive force GU)" << endl;
+		fout_rheo << "#22: N2(repulsive force GU)" << endl;
 		fout_rheo << "#23: Viscosity(brownian)" << endl;
 		fout_rheo << "#24: N1(brownian)" << endl;
 		fout_rheo << "#25: N2(brownian)" << endl;
@@ -625,12 +627,12 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*viscosity_friction << ' '; //14
 	fout_rheo << 6*M_PI*normalstress_diff_1_friction << ' '; //15
 	fout_rheo << 6*M_PI*normalstress_diff_2_friction  << ' '; //16
-	fout_rheo << 6*M_PI*viscosity_col_XF << ' '; //17
-	fout_rheo << 6*M_PI*normalstress_diff_1_col_XF << ' '; //18
-	fout_rheo << 6*M_PI*normalstress_diff_2_col_XF << ' '; //19
-	fout_rheo << 6*M_PI*viscosity_col_GU << ' '; //20
-	fout_rheo << 6*M_PI*normalstress_diff_1_col_GU << ' '; //21
-	fout_rheo << 6*M_PI*normalstress_diff_2_col_GU << ' '; //22
+	fout_rheo << 6*M_PI*viscosity_repulsive_XF << ' '; //17
+	fout_rheo << 6*M_PI*normalstress_diff_1_repulsive_XF << ' '; //18
+	fout_rheo << 6*M_PI*normalstress_diff_2_repulsive_XF << ' '; //19
+	fout_rheo << 6*M_PI*viscosity_repulsive_GU << ' '; //20
+	fout_rheo << 6*M_PI*normalstress_diff_1_repulsive_GU << ' '; //21
+	fout_rheo << 6*M_PI*normalstress_diff_2_repulsive_GU << ' '; //22
 	fout_rheo << 6*M_PI*viscosity_brownian << ' ' ; //23
 	fout_rheo << 6*M_PI*normalstress_diff_1_brownian << ' ' ; //24
 	fout_rheo << 6*M_PI*normalstress_diff_2_brownian << ' ' ; //25
@@ -767,7 +769,7 @@ Simulation::outputConfigurationData(){
 				 * 9: tangential of lubrication force
 				 * 10: normal part     of contact force
 				 * 11: tangential part of contact force
-				 * 12: normal colloidal force
+				 * 12: normal repulsive force
 				 * 13: Viscosity contribution of contact xF
 				 * 14: N1 contribution of contact xF
 				 * 15: N2 contribution of contact xF
@@ -801,7 +803,7 @@ Simulation::outputConfigurationData(){
 				 */
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan_norm() << ' '; // 11
-				fout_interaction << sys.interaction[k].get_f_colloidal_norm() << ' '; // 12
+				fout_interaction << sys.interaction[k].get_f_repulsive_norm() << ' '; // 12
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15

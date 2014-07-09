@@ -58,15 +58,15 @@ private:
 	vec3d relative_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range_scaled;  // max distance for lubrication
-	double colloidalforce_amplitude;
-	double colloidalforce_length;
+	double repulsiveforce_amplitude;
+	double repulsiveforce_length;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	double f_colloidal_norm;
-	vec3d f_colloidal;
-	StressTensor colloidal_stresslet_XF; //stress tensor of colloidal force
+	double f_repulsive_norm;
+	vec3d f_repulsive;
+	StressTensor repulsive_stresslet_XF; //stress tensor of repulsive force
 	void updateResistanceCoeff();
 protected:
 public:
@@ -121,11 +121,11 @@ public:
 	double getRelativeVelocity(){return relative_velocity.norm();}
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
-	void addUpColloidalForce();
+	void addUpRepulsiveForce();
 	double getNormalVelocity();
-	inline double get_f_colloidal_norm(){return f_colloidal_norm;}
-	void addColloidalStress();
-	StressTensor getColloidalStressXF(){return colloidal_stresslet_XF;}
+	inline double get_f_repulsive_norm(){return f_repulsive_norm;}
+	void addRepulsiveStress();
+	StressTensor getRepulsiveStressXF(){return repulsive_stresslet_XF;}
 	void integrateStress();
 	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.

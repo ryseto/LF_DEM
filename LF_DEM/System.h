@@ -57,8 +57,8 @@ private:
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
-	double colloidalforce_amplitude; // colloidal force dimensionless
-	double colloidalforce_length; // colloidal force length (dimensionless)
+	double repulsiveforce_amplitude; // repulsive force dimensionless
+	double repulsiveforce_length; // repulsive force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	void (System::*timeEvolutionDt)(bool);
@@ -69,7 +69,7 @@ private:
 	void timeStepMovePredictor();
 	void timeStepBoxing();
 	void setContactForceToParticle();
-	void setColloidalForceToParticle();
+	void setRepulsiveForceToParticle();
 	void buildHydroTerms(bool, bool);
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
@@ -77,7 +77,7 @@ private:
 	//void buildBrownianTerms();
 	void generateBrownianForces();
 	void buildContactTerms(bool);
-	void buildColloidalForceTerms(bool);
+	void buildRepulsiveForceTerms(bool);
 	void brownianForceTest();
 	void brownianTesting(bool);
 	void brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress);
@@ -134,8 +134,8 @@ public:
 	vec3d *ang_velocity;
 	vec3d *ang_velocity_predictor;
 	vec3d *na_ang_velocity;
-	vec3d *vel_colloidal;
-	vec3d *ang_vel_colloidal;
+	vec3d *vel_repulsive;
+	vec3d *ang_vel_repulsive;
 	vec3d *vel_contact;
 	vec3d *ang_vel_contact;
 	vec3d *vel_hydro;
@@ -144,11 +144,11 @@ public:
 	vec3d *ang_vel_brownian;
 	vec3d *contact_force;
 	vec3d *contact_torque;
-	vec3d *colloidal_force;
+	vec3d *repulsive_force;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
-	StressTensor* colloidalstressGU; // by particle
+	StressTensor* repulsivestressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
 	/* We don't need to keep 'ave_*stress' by particle?
@@ -157,15 +157,15 @@ public:
 	StressTensor avg_contactstressXF_normal;
 	StressTensor avg_contactstressXF_tan;
 	StressTensor* avg_contactstressGU; // by particle
-	StressTensor avg_colloidalstressXF;
-	StressTensor* avg_colloidalstressGU; // by particle
+	StressTensor avg_repulsivestressXF;
+	StressTensor* avg_repulsivestressGU; // by particle
 	StressTensor* avg_brownianstressGU; // by particle
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
 	StressTensor total_contact_stressGU;
-	StressTensor total_colloidal_stressXF;
-	StressTensor total_colloidal_stressGU;
+	StressTensor total_repulsive_stressXF;
+	StressTensor total_repulsive_stressGU;
 	StressTensor total_brownian_stressGU;
 	double dt_max;
 	double kn;
@@ -176,8 +176,9 @@ public:
 	int avg_stress_nb;
 	int friction_model;
 	bool friction;
-	bool colloidalforce; // "colloidalforce" should be replaced by "repulsion".
-	double lub_coeff_contact; // resistance coeffient for normal mode
+	bool repulsiveforce;
+	double lub_coeff_contact;
+	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
@@ -207,11 +208,11 @@ public:
 	double contact_relaxation_time_tan;
 	double shear_disp;
 	/* For non-Brownian suspension:
-	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_col(0)
+	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
 	 * For Brownian suspension, it should be Peclet number
 	 */
 	double dimensionless_shear_rate;
-	/* Colloidal force to stabilize suspension
+	/* Repulsive force to stabilize suspension
 	 * (This gives simple shear-rate depenedence.)
 	 */
 	/* Velocity difference between top and bottom
@@ -321,12 +322,12 @@ public:
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
 	inline double get_dt(){return dt;}
-	inline void set_colloidalforce_amplitude(double val){
-		colloidalforce_amplitude = val;}
-	inline double get_colloidalforce_amplitude(){return colloidalforce_amplitude;}
-	void set_colloidalforce_length(double val){colloidalforce_length = val;}
+	inline void set_repulsiveforce_amplitude(double val){
+		repulsiveforce_amplitude = val;}
+	inline double get_repulsiveforce_amplitude(){return repulsiveforce_amplitude;}
+	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}
 	void set_sd_coeff(double val){sd_coeff = val;}
-	inline double get_colloidalforce_length(){return colloidalforce_length;}
+	inline double get_repulsiveforce_length(){return repulsiveforce_length;}
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
 	//inline double get_lub_coeff_contact(){return lub_coeff_contact;}

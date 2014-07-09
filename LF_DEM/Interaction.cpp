@@ -13,7 +13,7 @@ Interaction::init(System *sys_){
 	active = false;
 	lubrication.init(sys);
 	contact.init(sys, this);
-	f_colloidal_norm = 0;
+	f_repulsive_norm = 0;
 }
 
 /* Make a normal vector
@@ -107,12 +107,12 @@ Interaction::activate(unsigned short i, unsigned short j){
 	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxation_time;
 	 */
 	/*
-	 * The size dependence of colloidal force:
+	 * The size dependence of repulsive force:
 	 * a0*a1/(a1+a2)/2
 	 */
-	if (sys->colloidalforce) {
-		colloidalforce_amplitude = sys->get_colloidalforce_amplitude()*a0*a1/ro;
-		colloidalforce_length = sys->get_colloidalforce_length();
+	if (sys->repulsiveforce) {
+		repulsiveforce_amplitude = sys->get_repulsiveforce_amplitude()*a0*a1/ro;
+		repulsiveforce_length = sys->get_repulsiveforce_length();
 	}
 	calcNormalVectorDistanceGap();
 	// deal with contact
@@ -181,29 +181,29 @@ Interaction::updateState(bool &deactivated){
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}
-	if (sys->colloidalforce) {
+	if (sys->repulsiveforce) {
 		if (contact.state > 0) {
-			/* For continuity, the colloidal force is kept as constant for h < 0.
+			/* For continuity, the repulsive force is kept as constant for h < 0.
 			 * This force does not affect the friction law,
 			 * i.e. it is separated from Fc_normal_norm.
 			 */
-			f_colloidal_norm = colloidalforce_amplitude;
-			f_colloidal = -f_colloidal_norm*nvec;
+			f_repulsive_norm = repulsiveforce_amplitude;
+			f_repulsive = -f_repulsive_norm*nvec;
 		} else {
 			/* separating */
-			f_colloidal_norm = colloidalforce_amplitude*exp(-(r-ro)/colloidalforce_length);
-			f_colloidal = -f_colloidal_norm*nvec;
+			f_repulsive_norm = repulsiveforce_amplitude*exp(-(r-ro)/repulsiveforce_length);
+			f_repulsive = -f_repulsive_norm*nvec;
 		}
 	}
 }
 
 /*
- * Colloidal stabilizing force
+ * Repulsive stabilizing force
  */
 void
-Interaction::addUpColloidalForce(){
-	sys->colloidal_force[p0] += f_colloidal;
-	sys->colloidal_force[p1] -= f_colloidal;
+Interaction::addUpRepulsiveForce(){
+	sys->repulsive_force[p0] += f_repulsive;
+	sys->repulsive_force[p1] -= f_repulsive;
 }
 
 /* Relative velocity of particle 1 from particle 0.
@@ -239,8 +239,8 @@ Interaction::calcRelativeVelocities(){
 }
 
 void
-Interaction::addColloidalStress(){
-	colloidal_stresslet_XF.set(rvec, f_colloidal);
+Interaction::addRepulsiveStress(){
+	repulsive_stresslet_XF.set(rvec, f_repulsive);
 }
 
 /* observation */

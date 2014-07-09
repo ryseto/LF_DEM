@@ -11,9 +11,9 @@
 void
 System::calcStressPerParticle(){
 	/////////////////////////////////////////////////
-	// from the velocities V_H, V_C, V_Coll, V_B, 
+	// from the velocities V_H, V_C, V_Rep, V_B,
 	// compute stresses R_SV * V
-	// and then add rF stress for F_C and F_Coll
+	// and then add rF stress for F_C and F_Rep
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -27,8 +27,8 @@ System::calcStressPerParticle(){
 			}
 			interaction[k].lubrication.addHydroStress(); // - R_SU * v
 			interaction[k].contact.addContactStress(); //  - rF_cont
-			if (colloidalforce) {
-				interaction[k].addColloidalStress(); //  - rF_colloid
+			if (repulsiveforce) {
+				interaction[k].addRepulsiveStress(); //  - rF_rep
 			}
 		}
 	}
@@ -76,20 +76,20 @@ System::calcStressPerParticle(){
 // 	total_contact_stressXF_normal /= System_volume();
 // 	total_contact_stressXF_tan /= System_volume();
 // 	//////////////////////////////////////////////////////////////
-// 	if (colloidalforce) {
-// 		total_colloidal_stressGU.reset();
+// 	if (repulsiveforce) {
+// 		total_repulsive_stressGU.reset();
 // 		for (int i=0; i<np; i++) {
-// 			total_colloidal_stressGU += colloidalstressGU[i];
+// 			total_repulsive_stressGU += repulsivestressGU[i];
 // 		}
-// 		total_colloidal_stressGU /= System_volume();
+// 		total_repulsive_stressGU /= System_volume();
 // 		//////////////////////////////////////////////////////////////
-// 		total_colloidal_stressXF.reset();
+// 		total_repulsive_stressXF.reset();
 // 		for (int k=0; k<nb_interaction; k++) {
 // 			if (interaction[k].is_active()) {
-// 				total_colloidal_stressXF += interaction[k].getColloidalStressXF();
+// 				total_repulsive_stressXF += interaction[k].getRepulsiveStressXF();
 // 			}
 // 		}
-// 		total_colloidal_stressXF /= System_volume();
+// 		total_repulsive_stressXF /= System_volume();
 // 	}
 // 	//////////////////////////////////////////////////////////////
 // 	if (brownian) {
@@ -120,14 +120,14 @@ System::calcStress(){
 	total_contact_stressXF_normal = avg_contactstressXF_normal/(avg_stress_nb*System_volume());
 	total_contact_stressXF_tan = avg_contactstressXF_tan/(avg_stress_nb*System_volume());
 	//////////////////////////////////////////////////////////////
-	if (colloidalforce) {
-		total_colloidal_stressGU.reset();
+	if (repulsiveforce) {
+		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
-			total_colloidal_stressGU += avg_colloidalstressGU[i];
+			total_repulsive_stressGU += avg_repulsivestressGU[i];
 		}
-		total_colloidal_stressGU /= (avg_stress_nb*System_volume());
+		total_repulsive_stressGU /= (avg_stress_nb*System_volume());
 		//////////////////////////////////////////////////////////
-		total_colloidal_stressXF = avg_colloidalstressXF/(avg_stress_nb*System_volume());
+		total_repulsive_stressXF = avg_repulsivestressXF/(avg_stress_nb*System_volume());
 	}
 	//////////////////////////////////////////////////////////////
 	if (brownian) {

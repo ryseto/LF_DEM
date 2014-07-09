@@ -17,7 +17,7 @@ GenerateInitConfig::generate(){
 	sys.set_np(np);
 	sys.brownian = false;
 	sys.friction = false;
-	sys.colloidalforce = false;
+	sys.repulsiveforce = false;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);

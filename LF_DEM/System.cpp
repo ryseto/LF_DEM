@@ -53,11 +53,11 @@ System::~System(){
 		DELETE(brownianstressGU_predictor);
 		DELETE(avg_brownianstressGU);
 	}
-	if (colloidalforce) {
-		DELETE(colloidalstressGU);
-		DELETE(vel_colloidal);
-		DELETE(ang_vel_colloidal);
-		DELETE(avg_colloidalstressGU);
+	if (repulsiveforce) {
+		DELETE(repulsivestressGU);
+		DELETE(vel_repulsive);
+		DELETE(ang_vel_repulsive);
+		DELETE(avg_repulsivestressGU);
 	}
 };
 
@@ -84,9 +84,9 @@ System::allocateRessources(){
 	ang_vel_contact = new vec3d [np];
 	vel_hydro = new vec3d [np];
 	ang_vel_hydro = new vec3d [np];
-	if (colloidalforce) {
-		vel_colloidal = new vec3d [np];
-		ang_vel_colloidal = new vec3d [np];
+	if (repulsiveforce) {
+		vel_repulsive = new vec3d [np];
+		ang_vel_repulsive = new vec3d [np];
 	}
 	if (brownian) {
 		vel_brownian = new vec3d [np];
@@ -95,9 +95,9 @@ System::allocateRessources(){
 	// Forces
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
-	if (colloidalforce) {
-		colloidal_force = new vec3d [np];
-		colloidalstressGU = new StressTensor [np];
+	if (repulsiveforce) {
+		repulsive_force = new vec3d [np];
+		repulsivestressGU = new StressTensor [np];
 	}
 	if (brownian) {
 		brownian_force = new double [linalg_size];
@@ -107,8 +107,8 @@ System::allocateRessources(){
 	contactstressGU = new StressTensor [np];
 	avg_lubstress = new StressTensor [np];
 	avg_contactstressGU = new StressTensor [np];
-	if (colloidalforce) {
-		avg_colloidalstressGU = new StressTensor [np];
+	if (repulsiveforce) {
+		avg_repulsivestressGU = new StressTensor [np];
 	}
 	if (brownian) {
 		brownianstressGU = new StressTensor [np];
@@ -220,20 +220,20 @@ System::setupSystem(){
 	} else if (friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
 		friction = true;
-		if (colloidalforce_length <= 0) {
-			colloidalforce = false;
-			cerr << "No colloidal force" << endl;
+		if (repulsiveforce_length <= 0) {
+			repulsiveforce = false;
+			cerr << "No repulsive force" << endl;
 		} else {
 			/*
 			 * The diemnsionless shear rate is defined as follows:
-			 * dimensionless_shear_rate = F0/colloidalforce_amplitude
+			 * dimensionless_shear_rate = F0/repulsiveforce_amplitude
 			 * F0 = 6pi*eta*a^2*shear_rate
 			 * Under the unit of this simulation
 			 * 6pi*eta*a^2*shear_rate is set to 1.
 			 */
-			colloidalforce_amplitude = 1/dimensionless_shear_rate;
-			colloidalforce = true;
-			cerr << "Colloidal force" << endl;
+			repulsiveforce_amplitude = 1/dimensionless_shear_rate;
+			repulsiveforce = true;
+			cerr << "Repulsive force" << endl;
 		}
 	} else if (friction_model == 2 || friction_model == 3) {
 		cerr << "friction_model " << friction_model << endl;
@@ -252,7 +252,7 @@ System::setupSystem(){
 		} else {
 			critical_normal_force = 1/dimensionless_shear_rate;
 		}
-		colloidalforce = false;
+		repulsiveforce = false;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else {
 		exit(1);
@@ -275,9 +275,9 @@ System::setupSystem(){
 		ang_vel_contact[i].reset();
 		vel_hydro[i].reset();
 		ang_vel_hydro[i].reset();
-		if (colloidalforce) {
-			vel_colloidal[i].reset();
-			ang_vel_colloidal[i].reset();
+		if (repulsiveforce) {
+			vel_repulsive[i].reset();
+			ang_vel_repulsive[i].reset();
 		}
 	}
 	/* Prepare
@@ -403,7 +403,7 @@ void
 System::timeEvolutionEulersMethod(bool calc_stress){
 	in_predictor = true;
 	setContactForceToParticle();
-	setColloidalForceToParticle();
+	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -479,7 +479,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* predictor */
 	in_predictor = true;
 	setContactForceToParticle();
-	setColloidalForceToParticle();
+	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -488,7 +488,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* corrector */
 	in_predictor = false;
 	setContactForceToParticle();
-	setColloidalForceToParticle();
+	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -643,9 +643,9 @@ System::stressReset(){
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 	}
-	if (colloidalforce) {
+	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
-			colloidalstressGU[i].reset();
+			repulsivestressGU[i].reset();
 		}
 	}
 	if (brownian) {
@@ -664,10 +664,10 @@ System::avgStressReset(){
 	}
 	avg_contactstressXF_normal.reset();
 	avg_contactstressXF_tan.reset();
-	if (colloidalforce) {
-		avg_colloidalstressXF.reset();
+	if (repulsiveforce) {
+		avg_repulsivestressXF.reset();
 		for (int i=0; i<np; i++) {
-			avg_colloidalstressGU[i].reset();
+			avg_repulsivestressGU[i].reset();
 		}
 	}
 	if (brownian) {
@@ -690,12 +690,12 @@ System::avgStressUpdate(){
 			avg_contactstressXF_tan += interaction[k].contact.getContactStressXF_tan();
 		}
 	}
-	if (colloidalforce) {
+	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
-			avg_colloidalstressGU[i] += colloidalstressGU[i];
+			avg_repulsivestressGU[i] += repulsivestressGU[i];
 		}
 		for (int k=0; k<nb_interaction; k++) {
-			avg_colloidalstressXF += interaction[k].getColloidalStressXF();
+			avg_repulsivestressXF += interaction[k].getRepulsiveStressXF();
 		}
 	}
 	if (brownian) {
@@ -854,14 +854,14 @@ System::setContactForceToParticle(){
 }
 
 void
-System::setColloidalForceToParticle(){
-	if (colloidalforce) {
+System::setRepulsiveForceToParticle(){
+	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
-			colloidal_force[i].reset();
+			repulsive_force[i].reset();
 		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-				interaction[k].addUpColloidalForce();
+				interaction[k].addUpRepulsiveForce();
 			}
 		}
 	}
@@ -884,15 +884,15 @@ System::buildContactTerms(bool set_or_add){
 }
 
 void
-System::buildColloidalForceTerms(bool set_or_add){
-	if (colloidalforce) {
+System::buildRepulsiveForceTerms(bool set_or_add){
+	if (repulsiveforce) {
 		if (set_or_add) {
 			for (int i=0; i<np; i++) {
-				stokes_solver.addToRHSForce(i, colloidal_force[i]);
+				stokes_solver.addToRHSForce(i, repulsive_force[i]);
 			}
 		} else {
 			for (int i=0; i<np; i++) {
-				stokes_solver.setRHSForce(i, colloidal_force[i]);
+				stokes_solver.setRHSForce(i, repulsive_force[i]);
 			}
 		}
 	} else {
@@ -919,13 +919,13 @@ System::computeVelocities(bool divided_velocities){
 			na_velocity[i] = vel_hydro[i]+vel_contact[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
 		}
-		if (colloidalforce) {
-			buildColloidalForceTerms(true); // set rhs = F_Coll
-			stokes_solver.solve(vel_colloidal, ang_vel_colloidal); // get V_Coll
+		if (repulsiveforce) {
+			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
+			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 			for (int i=0; i<np; i++) {
-				na_velocity[i] += vel_colloidal[i];
-				na_ang_velocity[i] += ang_vel_colloidal[i];
-				exit(1); // ang_vel_colloidal should be always zero;
+				na_velocity[i] += vel_repulsive[i];
+				na_ang_velocity[i] += ang_vel_repulsive[i];
+				exit(1); // ang_vel_repulsive should be always zero;
 			}
 		}
 	} else {
@@ -936,8 +936,8 @@ System::computeVelocities(bool divided_velocities){
 			buildHydroTerms(true, false); // zero shear-rate
 		}
 		buildContactTerms(false); // add rhs += F_C
-		if (colloidalforce) {
-			buildColloidalForceTerms(false); // add rhs += F_Coll
+		if (repulsiveforce) {
+			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
@@ -1339,9 +1339,9 @@ System::calcLubricationForce(){
 	}
     setContactForceToParticle();
 	buildContactTerms(false);
-	if (colloidalforce) {
-		setColloidalForceToParticle();
-		buildColloidalForceTerms(false);
+	if (repulsiveforce) {
+		setRepulsiveForceToParticle();
+		buildRepulsiveForceTerms(false);
 	}
 	stokes_solver.solve(na_velocity, na_ang_velocity);
 	stokes_solver.solvingIsDone();
@@ -1362,7 +1362,7 @@ System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* predictor */
 	in_predictor = true;
 	setContactForceToParticle();
-	setColloidalForceToParticle();
+	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	timeStepMovePredictor();
 	cout << "before" << endl;
@@ -1373,7 +1373,7 @@ System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* corrector */
 	in_predictor = false;
 	setContactForceToParticle();
-	setColloidalForceToParticle();
+	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	brownianTestingTimeStepMoveCorrector();
 	cout << "after" << endl;
@@ -1388,7 +1388,7 @@ System::brownianTestingTimeEvolutionEulerMethod(bool calc_stress){
 	/* predictor */
 	in_predictor = true;
 	setContactForceToParticle();
-	setColloidalForceToParticle();
+	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	//	timeStepMovePredictor();
 }

@@ -33,7 +33,7 @@ private:
 	double particle_pressure;
 	StressTensor total_stress;
 	StressTensor total_contact_stressXF;
-	StressTensor total_colloidal_stress;
+	StressTensor total_repulsive_stress;
 	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;
@@ -47,13 +47,13 @@ private:
 	double viscosity_cont_GU;
 	double normalstress_diff_1_cont_GU;
 	double normalstress_diff_2_cont_GU;
-	double viscosity_col_XF;
-	double normalstress_diff_1_col_XF;
-	double normalstress_diff_2_col_XF;
-	double particle_pressure_col;
-	double viscosity_col_GU;
-	double normalstress_diff_1_col_GU;
-	double normalstress_diff_2_col_GU;
+	double viscosity_repulsive_XF;
+	double normalstress_diff_1_repulsive_XF;
+	double normalstress_diff_2_repulsive_XF;
+	double particle_pressure_repulsive;
+	double viscosity_repulsive_GU;
+	double normalstress_diff_1_repulsive_GU;
+	double normalstress_diff_2_repulsive_GU;
 	double viscosity_brownian;
 	double normalstress_diff_1_brownian;
 	double normalstress_diff_2_brownian;

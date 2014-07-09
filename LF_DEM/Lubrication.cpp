@@ -498,17 +498,17 @@ Lubrication::addHydroStress(){
 	pairVelocityStresslet(vict, vjct, oict, ojct, stresslet_contact_GU_i, stresslet_contact_GU_j);
 	sys->contactstressGU[p0] += stresslet_contact_GU_i;
 	sys->contactstressGU[p1] += stresslet_contact_GU_j;
-	// Add term G*V_colloidal
-	if (sys->colloidalforce) {
-		StressTensor stresslet_colloid_GU_i;
-		StressTensor stresslet_colloid_GU_j;
-		vec3d vicl(sys->vel_colloidal[p0]);
-		vec3d vjcl(sys->vel_colloidal[p1]);
-		vec3d oicl(sys->ang_vel_colloidal[p0]);
-		vec3d ojcl(sys->ang_vel_colloidal[p1]);
-		pairVelocityStresslet(vicl, vjcl, oicl, ojcl, stresslet_colloid_GU_i, stresslet_colloid_GU_j);
-		sys->colloidalstressGU[p0] += stresslet_colloid_GU_i;
-		sys->colloidalstressGU[p1] += stresslet_colloid_GU_j;
+	// Add term G*V_repulsive
+	if (sys->repulsiveforce) {
+		StressTensor stresslet_repulsive_GU_i;
+		StressTensor stresslet_repulsive_GU_j;
+		vec3d vicl(sys->vel_repulsive[p0]);
+		vec3d vjcl(sys->vel_repulsive[p1]);
+		vec3d oicl(sys->ang_vel_repulsive[p0]);
+		vec3d ojcl(sys->ang_vel_repulsive[p1]);
+		pairVelocityStresslet(vicl, vjcl, oicl, ojcl, stresslet_repulsive_GU_i, stresslet_repulsive_GU_j);
+		sys->repulsivestressGU[p0] += stresslet_repulsive_GU_i;
+		sys->repulsivestressGU[p1] += stresslet_repulsive_GU_j;
 	}
 	// Add term G*V_brownian
 	if (sys->brownian) {

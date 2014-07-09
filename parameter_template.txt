@@ -76,11 +76,13 @@ lub_reduce_parameter = 1e-3;
 contact_relaxation_time = 1e-3;
 contact_relaxation_time_tan = 0;
 
-/* Colloidal force
+/* Repulsive force
  * Short range repulsion is assumed.
  */
 
-colloidalforce_length = 0;
+repulsiveforce_length = 0;
+repulsiveforce_amplitude = 0;
+
 
 /*
  *Parameter auto adjustment.
