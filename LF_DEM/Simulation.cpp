@@ -65,7 +65,7 @@ Simulation::simulationConstantShearRate(int fnb, string *input_files, double Pec
 			sys.dimensionless_shear_rate = scaled_repulsion;
 		}
 		if(scaled_critical_load>0){
-			sys.dimensionless_shear_rate = scaled_repulsion;
+			sys.dimensionless_shear_rate = scaled_critical_load;
 		}
 	}
 
