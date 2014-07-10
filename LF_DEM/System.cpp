@@ -227,7 +227,7 @@ System::setupSystem(){
 		repulsiveforce = true;
 		cerr << "Repulsive force" << endl;
 	}
-
+	
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -409,68 +409,68 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 }
 
 /****************************************************************************************************
-******************************************** Mid-Point Scheme ***************************************
-****************************************************************************************************/
+ ******************************************** Mid-Point Scheme ***************************************
+ ****************************************************************************************************/
 
-   /************************************************************************************************
-   *                                   non-Brownian Case                                           *
-   *************************************************************************************************
-	* Simple mid-point method to solve at dt^2 order
-    * R.V = F_H + F_C + F_B
-    * where R is the resistance, F_H/F_C are hydro/contact forces.
-	*
-	* 1st step:
-	* x'(t+dt) = x(t) + V^{-}dt
-	* x(t)     = x'(t+dt) - V^{-}dt
-	*
- 	* 2nd step
-	* x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
-	*           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
-	*/
- 
-   /*************************************************************************************************
-   *                                   Brownian Case                                                *
-   **************************************************************************************************
-   * This routine implements a two-step algorithm for the dynamics with Brownian motion, 
-   * initially derived by [ Fixman 1978 ]. 
-   * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
-   *         
-   * The equation of motion is:
-   * 
-   * R.V = F_H + F_C + F_B
-   * where R is the resistance, F_H/F_C/F_B are hydro/contact/brownian forces.
-   * 
-   * Integrating this, we get a first order update of the positions as:
-   * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
-   * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
-   *  
-   * The divergence term comes from our naive way of taking the inertialess limit in the Langevin 
-   * equation correlated with the fact that our time step dt >> "Brownian_time" (the typical 
-   * time between 2 Brownian kicks). The sum of the many displacements due to Brownian kicks 
-   * happening during dt has a non-zero mean anywhere the mobility is non uniform, 
-   * and this is taken care of by the div term.
-   * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as 
-   * <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1} (which is nothing but the FD theorem). 
-   * 
-   * Reminding that we obtain the Cholesky decomposition R = L L^T in the stokes_solver, 
-   * we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
-   *   - generate a "Brownian force" F_B(t) such that:
-   *       < F_B F_B > = (2kT/dt) R(t) and <F_B> = 0
-   *   - (1) solve R(X(t)).V_{-} = F_H(t) + F_C(t) + F_B(t)
-   *   - move to X_pred = X(t) + V_{-}dt
-   *   - (2) solve R(X_pred).V_{+} = F_H(t+dt) + F_C(t+dt) + F_B(t)  (note: F_B at time t)
-   *   - set X(t+dt) = X(t) + 0.5*( V_{-} + V_{+} )*dt = X_pred + 0.5*( V_{+} - V_{-} )*dt
-   * 
-   * One can check that the velocity U = 0.5*( V_{-} + V_{+} ) has the properties:
-   * <U> = R^{-1}.( F_H + F_C ) + kT*div R^{-1} 
-   * <UU> - <U>^2 = (2kT/dt)R^{-1}
-   * which gives the correct mean and variance for X_B.
-   * 
-   * F_B is obtained as F_B = \sqrt(2kT/dt) * L.A, where A is a gaussian random vector with 
-   * <A> = 0 and <AA> = 1.
-   * 
-   *
-   ***************************************************************************************************/
+/************************************************************************************************
+ *                                   non-Brownian Case                                           *
+ *************************************************************************************************
+ * Simple mid-point method to solve at dt^2 order
+ * R.V = F_H + F_C + F_B
+ * where R is the resistance, F_H/F_C are hydro/contact forces.
+ *
+ * 1st step:
+ * x'(t+dt) = x(t) + V^{-}dt
+ * x(t)     = x'(t+dt) - V^{-}dt
+ *
+ * 2nd step
+ * x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
+ *           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
+ */
+
+/*************************************************************************************************
+ *                                   Brownian Case                                                *
+ **************************************************************************************************
+ * This routine implements a two-step algorithm for the dynamics with Brownian motion,
+ * initially derived by [ Fixman 1978 ].
+ * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
+ *
+ * The equation of motion is:
+ *
+ * R.V = F_H + F_C + F_B
+ * where R is the resistance, F_H/F_C/F_B are hydro/contact/brownian forces.
+ *
+ * Integrating this, we get a first order update of the positions as:
+ * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
+ * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
+ *
+ * The divergence term comes from our naive way of taking the inertialess limit in the Langevin
+ * equation correlated with the fact that our time step dt >> "Brownian_time" (the typical
+ * time between 2 Brownian kicks). The sum of the many displacements due to Brownian kicks
+ * happening during dt has a non-zero mean anywhere the mobility is non uniform,
+ * and this is taken care of by the div term.
+ * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as
+ * <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1} (which is nothing but the FD theorem).
+ *
+ * Reminding that we obtain the Cholesky decomposition R = L L^T in the stokes_solver,
+ * we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
+ *   - generate a "Brownian force" F_B(t) such that:
+ *       < F_B F_B > = (2kT/dt) R(t) and <F_B> = 0
+ *   - (1) solve R(X(t)).V_{-} = F_H(t) + F_C(t) + F_B(t)
+ *   - move to X_pred = X(t) + V_{-}dt
+ *   - (2) solve R(X_pred).V_{+} = F_H(t+dt) + F_C(t+dt) + F_B(t)  (note: F_B at time t)
+ *   - set X(t+dt) = X(t) + 0.5*( V_{-} + V_{+} )*dt = X_pred + 0.5*( V_{+} - V_{-} )*dt
+ *
+ * One can check that the velocity U = 0.5*( V_{-} + V_{+} ) has the properties:
+ * <U> = R^{-1}.( F_H + F_C ) + kT*div R^{-1}
+ * <UU> - <U>^2 = (2kT/dt)R^{-1}
+ * which gives the correct mean and variance for X_B.
+ *
+ * F_B is obtained as F_B = \sqrt(2kT/dt) * L.A, where A is a gaussian random vector with
+ * <A> = 0 and <AA> = 1.
+ *
+ *
+ ***************************************************************************************************/
 void
 System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/* predictor */
@@ -1409,7 +1409,7 @@ System::brownianTesting(bool calc_stress){
 		sample++;
 		//		cout << sample << endl;
 		brownianTestingTimeEvolutionEulerMethod(false);
-
+		
 		for (int i=0; i<linalg_size; i++) {
 			for (int j=0; j<linalg_size; j++) {
 				avg_fbfb[i][j] += brownian_force[i]*brownian_force[j];
@@ -1425,7 +1425,7 @@ System::brownianTesting(bool calc_stress){
 		}
 	}
 	ofstream fout;
-	fout.open("fbfb.dat");	
+	fout.open("fbfb.dat");
 	//	fout << "normalized fbfb" << endl;
 	double kbT2_dt = 2*kb_T/dt;
 	for (int i=0; i<linalg_size; i++) {
@@ -1435,12 +1435,12 @@ System::brownianTesting(bool calc_stress){
 		fout << endl;
 	}
 	fout << endl;
-
+	
    	fout.close();
-
+	
 	cout << " done " << endl;
 	exit(1);
-	//	fout.open("udrift.dat");	
+	//	fout.open("udrift.dat");
 	// cout << "drift" << endl;
 	// for (int i=0; i<linalg_size; i++) {
 	// 	cout << avg_udrift[i]/sample_max << endl;
@@ -1452,7 +1452,7 @@ System::brownianTesting(bool calc_stress){
 	}
 	delete [] avg_udrift;
 	delete [] avg_fbfb;
-
+	
 }
 
 

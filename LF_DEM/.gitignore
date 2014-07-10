@@ -29,9 +29,6 @@ LF_DEM
 # local bash scripts
 *.sh
 
-# text files
-*.txt
-
 #subdirectories
 LF_DEM*/
 
