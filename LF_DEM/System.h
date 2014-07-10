@@ -57,7 +57,6 @@ private:
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
-	double repulsiveforce_amplitude; // repulsive force dimensionless
 	double repulsiveforce_length; // repulsive force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
@@ -214,9 +213,7 @@ public:
 	 * For Brownian suspension, it should be Peclet number
 	 */
 	double dimensionless_shear_rate;
-	/* Repulsive force to stabilize suspension
-	 * (This gives simple shear-rate depenedence.)
-	 */
+	double repulsiveforce_amplitude; // dimensionless
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz

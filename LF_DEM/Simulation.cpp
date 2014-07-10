@@ -57,15 +57,33 @@ Simulation::simulationConstantShearRate(int fnb, string *input_files, double Pec
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 
+	if(scaled_repulsion>0&&scaled_critical_load>0){
+		cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
+		exit(1);
+	}
+
 	if(Peclet>0){
 		sys.dimensionless_shear_rate = Peclet;
+		if(scaled_repulsion>0){
+			sys.repulsiveforce_amplitude = scaled_repulsion/Peclet;
+		}
+		if(scaled_critical_load>0){
+			sys.critical_normal_force = scaled_critical_load/Peclet;
+		}
 	}
 	else{
 		if(scaled_repulsion>0){
-			sys.dimensionless_shear_rate = scaled_repulsion;
+			sys.dimensionless_shear_rate = 1/scaled_repulsion;
+			sys.repulsiveforce_amplitude = scaled_repulsion;
 		}
 		if(scaled_critical_load>0){
-			sys.dimensionless_shear_rate = scaled_critical_load;
+			sys.dimensionless_shear_rate = 1/scaled_critical_load;
+			if(sys.dimensionless_shear_rate == -1){
+				sys.critical_normal_force = 0;
+			}
+			else{
+				sys.critical_normal_force = scaled_critical_load;
+			}
 		}
 	}
 

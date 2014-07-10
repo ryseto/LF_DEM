@@ -213,6 +213,22 @@ System::setupSystem(){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
+
+	if (repulsiveforce_length <= 0) {
+		repulsiveforce = false;
+		cerr << "No repulsive force" << endl;
+	} else {
+		/*
+		 * The dimensionless shear rate is defined as follows:
+		 * dimensionless_shear_rate = F0/repulsiveforce_amplitude
+		 * F0 = 6pi*eta*a^2*shear_rate
+		 * Under the unit of this simulation
+		 * 6pi*eta*a^2*shear_rate is set to 1.
+		 */
+		repulsiveforce = true;
+		cerr << "Repulsive force" << endl;
+	}
+
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -220,25 +236,10 @@ System::setupSystem(){
 	} else if (friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
 		friction = true;
-		if (repulsiveforce_length <= 0) {
-			repulsiveforce = false;
-			cerr << "No repulsive force" << endl;
-		} else {
-			/*
-			 * The dimensionless shear rate is defined as follows:
-			 * dimensionless_shear_rate = F0/repulsiveforce_amplitude
-			 * F0 = 6pi*eta*a^2*shear_rate
-			 * Under the unit of this simulation
-			 * 6pi*eta*a^2*shear_rate is set to 1.
-			 */
-			repulsiveforce_amplitude = 1/dimensionless_shear_rate;
-			repulsiveforce = true;
-			cerr << "Repulsive force" << endl;
-		}
 	} else if (friction_model == 2 || friction_model == 3) {
 		cerr << "friction_model " << friction_model << endl;
 		/*
-		 * The diemnsionless shear rate is defined as follows:
+		 * The dimensionless shear rate is defined as follows:
 		 * dimensionless_shear_rate = F0/F^{*}
 		 * F0 = 6pi*eta*a^2*shear_rate
 		 * The force unit is changed by the considering shear rate.
@@ -247,12 +248,6 @@ System::setupSystem(){
 		 *
 		 */
 		friction = true;
-		if (dimensionless_shear_rate == -1) {
-			critical_normal_force = 0;
-		} else {
-			critical_normal_force = 1/dimensionless_shear_rate;
-		}
-		repulsiveforce = false;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else {
 		exit(1);

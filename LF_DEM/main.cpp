@@ -14,7 +14,7 @@
 int main(int argc, char **argv)
 {
 	int c;
-	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet ] [-c Scaled_Critical_Load] [-r Scaled_Repulsion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR (2) Generate initial configuration\n $ LF_DEM -g\n\n Note: $ LF_DEM -c -1 corresponds to infinite shear rate";
+	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR (2) Generate initial configuration\n $ LF_DEM -g\n\n Note: $ LF_DEM -c -1 corresponds to infinite shear rate";
      
 	double Peclet = 0;
 	double scaled_repulsion = 0;
