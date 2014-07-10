@@ -19,7 +19,7 @@ maxnb_interactionpair_per_particle(15)
 System::~System(){
 	DELETE(position);
 	DELETE(radius);
-	DELETE(radius_cubic);
+	DELETE(radius_cubed);
 	DELETE(resistance_matrix_dblock);
 	if (twodimension) {
 		DELETE(angle);
@@ -65,7 +65,7 @@ void
 System::allocateRessources(){
 	linalg_size = 6*np;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
-	radius_cubic = new double [np];
+	radius_cubed = new double [np];
 	resistance_matrix_dblock = new double [18*np];
 	// Configuration
 	if (twodimension) {
@@ -225,7 +225,7 @@ System::setupSystem(){
 			cerr << "No repulsive force" << endl;
 		} else {
 			/*
-			 * The diemnsionless shear rate is defined as follows:
+			 * The dimensionless shear rate is defined as follows:
 			 * dimensionless_shear_rate = F0/repulsiveforce_amplitude
 			 * F0 = 6pi*eta*a^2*shear_rate
 			 * Under the unit of this simulation
@@ -263,7 +263,7 @@ System::setupSystem(){
 		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
-		radius_cubic[i] = radius[i]*radius[i]*radius[i];
+		radius_cubed[i] = radius[i]*radius[i]*radius[i];
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -290,7 +290,7 @@ System::setupSystem(){
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
 		double FUvalue = sd_coeff*radius[i];
-		double TWvalue = sd_coeff*torque_factor*radius_cubic[i];
+		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
 		resistance_matrix_dblock[i18   ] = FUvalue;
 		resistance_matrix_dblock[i18+6 ] = FUvalue;
 		resistance_matrix_dblock[i18+10] = FUvalue;
@@ -448,8 +448,9 @@ System::timeEvolutionEulersMethod(bool calc_stress){
    * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
    * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
    *  
-   * The divergence term comes from the fact that dt >> "Brownian_time", the typical 
-   * time between 2 Brownian kicks. The sum of the many displacements due to Brownian kicks 
+   * The divergence term comes from our naive way of taking the inertialess limit in the Langevin 
+   * equation correlated with the fact that our time step dt >> "Brownian_time" (the typical 
+   * time between 2 Brownian kicks). The sum of the many displacements due to Brownian kicks 
    * happening during dt has a non-zero mean anywhere the mobility is non uniform, 
    * and this is taken care of by the div term.
    * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as 

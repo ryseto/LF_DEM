@@ -13,6 +13,7 @@
 #include <fstream>
 #include <queue>
 #include <sstream>
+#include <string>
 #include "System.h"
 
 class Simulation{
@@ -92,7 +93,8 @@ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	void simulationConstantShearRate(int argc, const char * argv[]);
+	//	void simulationConstantShearRate(int argc, const char * argv[]);
+	void simulationConstantShearRate(int fnb, string *input_files, double Peclet, double scaled_repulsion, double scaled_critical_load);
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 

@@ -53,15 +53,27 @@ Simulation::contactForceParameter(string filename){
  * Main simulation
  */
 void
-Simulation::simulationConstantShearRate(int argc, const char * argv[]){
-	filename_import_positions = argv[1];
-	filename_parameters = argv[2];
-	sys.dimensionless_shear_rate = atof(argv[3]);
+Simulation::simulationConstantShearRate(int fnb, string *input_files, double Peclet, double scaled_repulsion, double scaled_critical_load){
+	filename_import_positions = input_files[0];
+	filename_parameters = input_files[1];
+
+	if(Peclet>0){
+		sys.dimensionless_shear_rate = Peclet;
+	}
+	else{
+		if(scaled_repulsion>0){
+			sys.dimensionless_shear_rate = scaled_repulsion;
+		}
+		if(scaled_critical_load>0){
+			sys.dimensionless_shear_rate = scaled_repulsion;
+		}
+	}
+
 	setDefaultParameters();
 	readParameterFile();
 	importInitialPositionFile();
-	if (argc == 5) {
-		contactForceParameter(argv[4]);
+	if (fnb == 3) {
+		contactForceParameter(input_files[2]);
 	}
 	openOutputFiles();
 	outputDataHeader(fout_particle);
@@ -367,7 +379,7 @@ Simulation::setDefaultParameters(){
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
 	 */
 	double _repulsiveforce_length = 0;
-	double _repulsiveforce_amplitude = 0;
+	//	double _repulsiveforce_amplitude = 0;
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
@@ -400,7 +412,7 @@ Simulation::setDefaultParameters(){
 	
 	sys.set_mu_static(_mu_static);
 	sys.set_repulsiveforce_length(_repulsiveforce_length);
-	sys.set_repulsiveforce_amplitude(_repulsiveforce_amplitude);
+	//	sys.set_repulsiveforce_amplitude(_repulsiveforce_amplitude);
 }
 
 void
@@ -789,7 +801,7 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.z << ' '; // 6
 				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
 				/* [NOTE] 
-				 * Lubricatino forces are reference values
+				 * Lubrication forces are reference values
 				 * in the Brownian case. The force balancing
 				 * velocities are recalculated without 
 				 * including Brownian forces.

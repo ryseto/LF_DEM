@@ -100,6 +100,8 @@ private:
 	//vector<double> relative_velocity_history;
 	//bool after_parameter_changed;
 
+	double *radius_cubed;
+
 protected:
 public:
 	System();
@@ -125,7 +127,7 @@ public:
 	Interaction *interaction;
 	BoxSet boxset;
 	double *radius;
-	double *radius_cubic;
+
 	double *angle; // for 2D visualization
 	double *resistance_matrix_dblock;
 	vec3d *velocity;
@@ -322,8 +324,8 @@ public:
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
 	inline double get_dt(){return dt;}
-	inline void set_repulsiveforce_amplitude(double val){
-		repulsiveforce_amplitude = val;}
+	/* inline void set_repulsiveforce_amplitude(double val){ */
+	/* 	repulsiveforce_amplitude = val;} */
 	inline double get_repulsiveforce_amplitude(){return repulsiveforce_amplitude;}
 	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}
 	void set_sd_coeff(double val){sd_coeff = val;}
