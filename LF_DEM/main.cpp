@@ -15,123 +15,81 @@ int main(int argc, char **argv)
 {
 	int c;
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR (2) Generate initial configuration\n $ LF_DEM -g\n\n Note: $ LF_DEM -c -1 corresponds to infinite shear rate";
-     
+	
 	double Peclet = 0;
 	double scaled_repulsion = 0;
 	double scaled_critical_load = 0;
-
+	
 	bool generate_init = false;
 	bool knkt = false;
-
+	
 	string config_filename;
 	string param_filename;
 	string knkt_filename;
 	
-
-	while ((c = getopt(argc, argv, "ghp:r:c:k:")) != -1)
-		{
-           switch (c)
-			   {
-
-			   case 'p':
-				   Peclet = atof(optarg);
-				   cerr << "Peclet " << Peclet << endl;
-				   break;
-				   
-			   case 'r':
-				   scaled_repulsion = atof(optarg);
-				   cerr << "scaled repulsion " << scaled_repulsion << endl;
-				   break;
-				   
-			   case 'c':
-				   scaled_critical_load = atof(optarg);
-				   cerr << "scaled critical load " << scaled_critical_load << endl;
-				   break;
-
-			   case 'k':
-				   knkt = true;
-				   knkt_filename = optarg;
-				   break;
-
-			   case 'g':
-				   generate_init = true;
-				   break;
-
-			   case 'h':
-				   cerr << usage << endl;
-				   exit(1);
-
-			   case '?':
-				   /* getopt already printed an error message. */
-				   break;
-				   
-			   default:
-               abort ();
-			   }
+	while ((c = getopt(argc, argv, "ghp:r:c:k:")) != -1) {
+		switch (c) {
+			case 'p':
+				Peclet = atof(optarg);
+				cerr << "Peclet " << Peclet << endl;
+				break;
+			case 'r':
+				scaled_repulsion = atof(optarg);
+				cerr << "scaled repulsion " << scaled_repulsion << endl;
+				break;
+			case 'c':
+				scaled_critical_load = atof(optarg);
+				cerr << "scaled critical load " << scaled_critical_load << endl;
+				break;
+			case 'k':
+				knkt = true;
+				knkt_filename = optarg;
+				break;
+			case 'g':
+				generate_init = true;
+				break;
+			case 'h':
+				cerr << usage << endl;
+				exit(1);
+			case '?':
+				/* getopt already printed an error message. */
+				break;
+			default:
+				abort ();
 		}
+	}
 	
-
-	if(generate_init){
+	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate();
-	}
-	else{
-
-		if (optind == argc-2){
+	} else {
+		if (optind == argc-2) {
 			config_filename = argv[optind++];
 			param_filename = argv[optind++];
-		}
-		else{
+		} else {
 			cerr << usage << endl;
 			exit(1);
 		}
-
 		string *input_files;
 		int fnb;
-		if(knkt){
+		if (knkt) {
 			fnb = 3;
 			input_files = new string [fnb];
 			input_files[0] = config_filename;
 			input_files[1] = param_filename;
 			input_files[2] = knkt_filename;
-		}
-		else{
+		} else {
 			fnb = 2;
 			input_files = new string [fnb];
 			input_files[0] = config_filename;
 			input_files[1] = param_filename;
 		}
-		
-		if(scaled_repulsion>0&&scaled_critical_load>0){
+		if (scaled_repulsion>0 && scaled_critical_load > 0) {
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 			exit(1);
 		}
-		
 		Simulation simulation;
-		simulation.simulationConstantShearRate(fnb, input_files, Peclet, scaled_repulsion, scaled_critical_load);
+		simulation.simulationConstantShearRate(fnb, input_files, Peclet,
+											   scaled_repulsion, scaled_critical_load);
 	}
-	
-
-	// if (argc == 1){
-	// 	cerr << "usage:" << endl;
-	// 	cerr << "(1) Simulation" << endl;
-	// 	cerr << "  $ LF_DEM ARG1 ARG2 ARG3" << endl;
-	// 	cerr << " ARG1: file name of initial configuration" << endl;
-	// 	cerr << " ARG2: parameter file" << endl;
-	// 	cerr << " ARG3: dimensionless shear rate" << endl;
-	// 	cerr << " ARG4: dimensionless shear rate" << endl;
-	// 	cerr << " ARG5: dimensionless shear rate" << endl;
-	// 	cerr << "       (`-1' is considered as infinity)" << endl;
-	// 	cerr << "(2) Generate initial configuration" << endl;
-	// 	cerr << "  $ LF_DEM g" << endl;
-	// 	return 0;
-	// }
-	// if (argv[1][0] == 'g'){
-	// 	GenerateInitConfig generate_init_config;
-	// 	generate_init_config.generate();
-	// } else {
-	// Simulation simulation;
-	// simulation.simulationConstantShearRate(argc, argv);
-	// }
-    // return 0;
 }

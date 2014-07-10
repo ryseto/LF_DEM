@@ -38,7 +38,7 @@ Simulation::contactForceParameter(string filename){
 	double kt_;
 	double dt_max_;
 	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_max_) {
-		if (phi_ == volume_fraction){
+		if (phi_ == volume_fraction) {
 			break;
 		}
 	}
@@ -53,40 +53,40 @@ Simulation::contactForceParameter(string filename){
  * Main simulation
  */
 void
-Simulation::simulationConstantShearRate(int fnb, string *input_files, double Peclet, double scaled_repulsion, double scaled_critical_load){
+Simulation::simulationConstantShearRate(int fnb, string *input_files,
+										double Peclet, double scaled_repulsion,
+										double scaled_critical_load){
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-
-	if(scaled_repulsion>0&&scaled_critical_load>0){
+	
+	if (scaled_repulsion > 0 &&
+		scaled_critical_load > 0) {
 		cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 		exit(1);
 	}
-
-	if(Peclet>0){
+	
+	if (Peclet > 0) {
 		sys.dimensionless_shear_rate = Peclet;
-		if(scaled_repulsion>0){
+		if(scaled_repulsion > 0) {
 			sys.repulsiveforce_amplitude = scaled_repulsion/Peclet;
 		}
-		if(scaled_critical_load>0){
+		if(scaled_critical_load > 0) {
 			sys.critical_normal_force = scaled_critical_load/Peclet;
 		}
-	}
-	else{
-		if(scaled_repulsion>0){
+	} else {
+		if (scaled_repulsion > 0) {
 			sys.dimensionless_shear_rate = 1/scaled_repulsion;
 			sys.repulsiveforce_amplitude = scaled_repulsion;
 		}
-		if(scaled_critical_load>0){
+		if (scaled_critical_load > 0) {
 			sys.dimensionless_shear_rate = 1/scaled_critical_load;
-			if(sys.dimensionless_shear_rate == -1){
+			if (sys.dimensionless_shear_rate == -1) {
 				sys.critical_normal_force = 0;
-			}
-			else{
+			} else {
 				sys.critical_normal_force = scaled_critical_load;
 			}
 		}
 	}
-
 	setDefaultParameters();
 	readParameterFile();
 	importInitialPositionFile();

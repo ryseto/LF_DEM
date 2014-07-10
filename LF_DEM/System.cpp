@@ -213,7 +213,6 @@ System::setupSystem(){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-
 	if (repulsiveforce_length <= 0) {
 		repulsiveforce = false;
 		cerr << "No repulsive force" << endl;
@@ -250,6 +249,7 @@ System::setupSystem(){
 		friction = true;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else {
+		cerr << "friction_model..." << endl;
 		exit(1);
 	}
 	allocateRessources();
@@ -337,6 +337,7 @@ System::setupSystem(){
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
 	} else {
+		cerr << "lubrication_model..." << endl;
 		exit(1);
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
@@ -921,7 +922,6 @@ System::computeVelocities(bool divided_velocities){
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_repulsive[i];
 				na_ang_velocity[i] += ang_vel_repulsive[i];
-				exit(1); // ang_vel_repulsive should be always zero;
 			}
 		}
 	} else {
