@@ -31,9 +31,9 @@ StokesSolver::~StokesSolver(){
 	if (!chol_rhs) {
 		cholmod_free_dense(&chol_rhs, &chol_c);
 	}
-	if (brownian) {
-		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
-	}
+//	if (brownian) {
+//		cholmod_free_dense(&chol_brownian_rhs, &chol_c);
+//	}
 	if (!chol_res_matrix) {
 		cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	}
@@ -55,10 +55,10 @@ StokesSolver::~StokesSolver(){
 }
 
 void
-StokesSolver::init(int n, bool is_brownian){
+StokesSolver::init(int n){
 	np = n;
     np6 = 6*np;
-	brownian = is_brownian;
+	//brownian = is_brownian;
 	// initializing values that can be changed later
 	_direct = true;
 	_iterative = false;

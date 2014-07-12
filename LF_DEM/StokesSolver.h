@@ -155,7 +155,6 @@ private:
     int res_matrix_linear_size;
 	int odblocks_nb;
 	int dblocks_size;
-	bool brownian;
 	bool _iterative;
 	bool _direct;
 	// Cholmod variables
@@ -169,7 +168,6 @@ private:
     cholmod_dense *chol_v_nonBrownian;
     cholmod_dense *chol_v_Brownian_init;
     cholmod_dense *chol_v_Brownian_mid;
-    cholmod_dense *chol_brownian_rhs;
 	bool chol_init;
     int stype;
     int sorted;
@@ -236,7 +234,7 @@ private:
 	void setSolverType(string);
 public:
     ~StokesSolver();
-	void init(int np, bool is_brownian);
+	void init(int np);
     void initialize();
 	bool direct() {
 		return _direct;
