@@ -3,7 +3,6 @@
  *
  */
 
-brownian = true;
 dt_max = 1e-4;
 dt_lowPeclet = 1e-4;
 Pe_switch = 5;

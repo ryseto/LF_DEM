@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/demo"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/SD_check"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,15 +78,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 0.01"
+            argument = "-p 10"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "-p 11"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "D3N500VF0.2MonoCubic_1.dat"
+            argument = "D3N27VF0.45MonoCubic_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

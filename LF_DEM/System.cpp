@@ -118,7 +118,7 @@ System::allocateRessources(){
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	stokes_solver.init(np, false);
+	stokes_solver.init(np, brownian);
 }
 
 void

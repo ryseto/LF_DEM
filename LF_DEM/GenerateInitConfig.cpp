@@ -15,7 +15,6 @@ int
 GenerateInitConfig::generate(){
 	setParameters();
 	sys.set_np(np);
-	sys.brownian = false;
 	sys.friction = false;
 	sys.repulsiveforce = false;
 	sys.allocateRessources();

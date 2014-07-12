@@ -53,27 +53,29 @@ Simulation::contactForceParameter(string filename){
  * Main simulation
  */
 void
-Simulation::simulationConstantShearRate(int fnb, string *input_files,
-										double Peclet, double scaled_repulsion,
+Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
+										double peclet_num, double scaled_repulsion,
 										double scaled_critical_load){
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	
 	if (scaled_repulsion > 0 &&
 		scaled_critical_load > 0) {
 		cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 		exit(1);
 	}
-	
-	if (Peclet > 0) {
-		sys.dimensionless_shear_rate = Peclet;
+	if (peclet_num > 0) {
+		sys.brownian = true;
+		cerr << "Brownian" << endl;
+		sys.dimensionless_shear_rate = peclet_num;
 		if(scaled_repulsion > 0) {
-			sys.repulsiveforce_amplitude = scaled_repulsion/Peclet;
+			sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
 		}
 		if(scaled_critical_load > 0) {
-			sys.critical_normal_force = scaled_critical_load/Peclet;
+			sys.critical_normal_force = scaled_critical_load/peclet_num;
 		}
 	} else {
+		sys.brownian = false;
+		cerr << "non-Brownian" << endl;
 		if (scaled_repulsion > 0) {
 			sys.dimensionless_shear_rate = 1/scaled_repulsion;
 			sys.repulsiveforce_amplitude = scaled_repulsion;
@@ -181,8 +183,6 @@ void
 Simulation::autoSetParameters(const string &keyword, const string &value){
 	if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
-	} else if (keyword == "brownian") {
-		sys.brownian = str2bool(value);
 	} else if (keyword == "friction_model") {
 		sys.friction_model = atoi(value.c_str());
 	} else if (keyword == "kn_kt_adjustment") {
@@ -317,7 +317,6 @@ Simulation::setDefaultParameters(){
 	 *    ASD code from Brady has dt_ratio=150
 	 *
 	 */
-	sys.brownian = true;
 	sys.Pe_switch = 5;
 	sys.dt_max = 1e-4;
 	sys.dt_lowPeclet = 1e-4;

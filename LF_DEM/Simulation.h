@@ -94,8 +94,8 @@ public:
 	Simulation();
 	~Simulation();
 	//	void simulationConstantShearRate(int argc, const char * argv[]);
-	void simulationConstantShearRate(int fnb, string *input_files,
-									 double Peclet, double scaled_repulsion, double scaled_critical_load);
+	void simulationConstantShearRate(int fnb, vector<string> &input_files,
+									 double peclet_num, double scaled_repulsion, double scaled_critical_load);
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 
