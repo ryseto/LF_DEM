@@ -13,7 +13,11 @@
 
 System::System() :
 zero_shear(false),
-maxnb_interactionpair_per_particle(15)
+maxnb_interactionpair_per_particle(15),
+repulsiveforce(false),
+brownian(false),
+friction_model(-1),
+repulsiveforce_length(0)
 {}
 
 System::~System(){
@@ -213,21 +217,6 @@ System::setupSystem(){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (repulsiveforce_length <= 0) {
-		repulsiveforce = false;
-		cerr << "No repulsive force" << endl;
-	} else {
-		/*
-		 * The dimensionless shear rate is defined as follows:
-		 * dimensionless_shear_rate = F0/repulsiveforce_amplitude
-		 * F0 = 6pi*eta*a^2*shear_rate
-		 * Under the unit of this simulation
-		 * 6pi*eta*a^2*shear_rate is set to 1.
-		 */
-		repulsiveforce = true;
-		cerr << "Repulsive force" << endl;
-	}
-	
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;

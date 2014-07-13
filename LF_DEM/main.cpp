@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 			input_files[0] = config_filename;
 			input_files[1] = param_filename;
 		}
-		if (scaled_repulsion>0 && scaled_critical_load > 0) {
+		if (scaled_repulsion > 0 && scaled_critical_load > 0) {
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 			exit(1);
 		}

@@ -64,26 +64,33 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		exit(1);
 	}
 	if (peclet_num > 0) {
-		sys.brownian = true;
 		cerr << "Brownian" << endl;
+		sys.brownian = true;
 		sys.dimensionless_shear_rate = peclet_num;
 		if(scaled_repulsion > 0) {
+			cerr << "Repulsive force" << endl;
 			sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
+			sys.repulsiveforce = true;
 		}
 		if(scaled_critical_load > 0) {
+			cerr << "Critical load" << endl;
 			sys.critical_normal_force = scaled_critical_load/peclet_num;
+			sys.friction_model = 2;
 		}
 	} else {
-		sys.brownian = false;
 		cerr << "non-Brownian" << endl;
 		if (scaled_repulsion > 0) {
+			cerr << "Repulsive force" << endl;
 			sys.dimensionless_shear_rate = 1/scaled_repulsion;
 			sys.repulsiveforce_amplitude = scaled_repulsion;
+			sys.repulsiveforce = true;
 		}
 		if (scaled_critical_load > 0) {
 			sys.dimensionless_shear_rate = 1/scaled_critical_load;
+			sys.friction_model = 2;
+			cerr << "Critical load" << endl;
 			if (sys.dimensionless_shear_rate == -1) {
-				sys.critical_normal_force = 0;
+				sys.critical_normal_force = 0; // <== why do we need this?
 			} else {
 				sys.critical_normal_force = scaled_critical_load;
 			}
@@ -184,13 +191,19 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 	if (keyword == "lubrication_model") {
 		sys.set_lubrication_model(atoi(value.c_str()));
 	} else if (keyword == "friction_model") {
-		sys.friction_model = atoi(value.c_str());
+		if (sys.friction_model == 2) {
+			cerr << "!!Neglected friction_model in parameter file!!" << endl;
+		} else {
+			sys.friction_model = atoi(value.c_str());
+		}
 	} else if (keyword == "kn_kt_adjustment") {
 		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
 		strain_interval_knkt_adjustment = atof(value.c_str());
 	} else if (keyword == "repulsiveforce_length") {
-		sys.set_repulsiveforce_length(atof(value.c_str()));
+		if (sys.repulsiveforce) {
+			sys.set_repulsiveforce_length(atof(value.c_str()));
+		}
 	} else if (keyword == "lub_reduce_parameter") {
 		sys.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
@@ -320,7 +333,6 @@ Simulation::setDefaultParameters(){
 	sys.Pe_switch = 5;
 	sys.dt_max = 1e-4;
 	sys.dt_lowPeclet = 1e-4;
-	
 	/*
 	 * integration_method:
 	 * 0 Euler's Method,
@@ -345,7 +357,9 @@ Simulation::setDefaultParameters(){
 	 * 2 Threshold friction without repulsive force
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
-	int _friction_model = 1;
+	if (sys.friction_model != 2) {
+		sys.friction_model = 1;
+	}
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
@@ -384,7 +398,6 @@ Simulation::setDefaultParameters(){
 	sys.kt = 6000;
 	sys.kn_lowPeclet = 10000;
 	sys.kt_lowPeclet = 6000;
-
 	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.05;
@@ -395,8 +408,9 @@ Simulation::setDefaultParameters(){
 	 * Short range repulsion is assumed.
 	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
 	 */
-	double _repulsiveforce_length = 0;
-	//	double _repulsiveforce_amplitude = 0;
+	if (sys.repulsiveforce) {
+		sys.set_repulsiveforce_length(0.05);
+	}
 	/*
 	 * mu_static: static friction coeffient
 	 * mu_dynamic: dynamic friction coeffient
@@ -422,14 +436,10 @@ Simulation::setDefaultParameters(){
 	out_data_particle = true;
 	out_data_interaction = true;
 	sys.set_sd_coeff(_sd_coeff);
-	sys.friction_model = _friction_model;
 	sys.set_integration_method(_integration_method);
 	sys.set_lubrication_model(_lubrication_model);
 	sys.set_lub_max(_lub_max);
-	
 	sys.set_mu_static(_mu_static);
-	sys.set_repulsiveforce_length(_repulsiveforce_length);
-	//	sys.set_repulsiveforce_amplitude(_repulsiveforce_amplitude);
 }
 
 void
