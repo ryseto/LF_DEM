@@ -103,10 +103,6 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		contactForceParameter(input_files[2]);
 	}
 	openOutputFiles();
-	outputDataHeader(fout_particle);
-	outputDataHeader(fout_interaction);
-	outputDataHeader(fout_rheo);
-	outputDataHeader(fout_st);
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
@@ -315,6 +311,102 @@ Simulation::openOutputFiles(){
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
+
+	outputDataHeader(fout_particle);
+	outputDataHeader(fout_interaction);
+	outputDataHeader(fout_rheo);
+	outputDataHeader(fout_st);
+
+	string fout_int_col_def=
+		"#1: particle 1 label\n"
+		"#2: particle 2 label\n"
+		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
+		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+		"#7: dimensionless gap = s - 2, s = 2r/(a1+a2)\n"
+		"#8: norm of the normal part of the lubrication force\n"
+		"#9: tangential part of the lubrication force x\n"
+		"#10: tangential part of the lubrication force y\n"
+		"#11: tangential part of the lubrication force z\n"
+		"#12: norm of the normal part of the contact force\n"
+		"#13: tangential part of the contact force, x\n"
+		"#14: tangential part of the contact force, y\n"
+		"#15: tangential part of the contact force, z\n"
+		"#16: norm of the normal repulsive force\n"
+		"#17: Viscosity contribution of contact xF\n"
+		;
+	fout_interaction << fout_int_col_def << endl;
+
+	string fout_rheo_col_def=
+		"#1: shear strain\n"
+		"#2: Viscosity\n"
+		"#3: N1\n"
+		"#4: N2\n"
+		"#5: Viscosity(lub)\n"
+		"#6: N1(lub)\n"
+		"#7: N2(lub)\n"
+		"#8: Viscosity(xF_contact part)\n"
+		"#9: N1(xF_contact part)\n"
+		"#10: N2(xF_contact part)\n"
+		"#11: Viscosity(GU_contact part)\n"
+		"#12: N1(GU_contact part)\n"
+		"#13: N2(GU_contact part)\n"
+		"#14: Viscosity(friction)\n"
+		"#15: N1(friction)\n"
+		"#16: N2(friction)\n"
+		"#17: Viscosity(repulsive force XF)\n"
+		"#18: N1(repulsive force XF)\n"
+		"#19: N2(repulsive force XF)\n"
+		"#20: Viscosity(repulsive force GU)\n"
+		"#21: N1(repulsive force GU)\n"
+		"#22: N2(repulsive force GU)\n"
+		"#23: Viscosity(brownian)\n"
+		"#24: N1(brownian)\n"
+		"#25: N2(brownian)\n"
+		"#26: particle pressure\n"
+		"#27: particle pressure contact\n"
+		"#28: min gap (non-dim)\n"
+		"#29: max tangential displacement\n"
+		"#30: max Fc_normal\n"
+		"#31: max Fc_tan\n"
+		"#32: max velocity\n"
+		"#33: max angular velocity\n"
+		"#34: ave contact normal velocity\n"
+		"#35: max contact normal velocity\n"
+		"#36: ave contact tangential velocity\n"
+		"#37: max contact tangential velocity\n"
+		"#38: ave sliding velocity\n"
+		"#39: max sliding velocity\n"
+		"#40: ave contact number per particle\n"
+		"#41: num of interaction\n"
+		"#42: num of contacts\n"
+		"#43: num of frictional contacts\n"
+		"#44: kn\n"
+		"#45: kt\n"
+		"#46: dt\n"
+		"#47: time\n"
+		;
+	fout_rheo << fout_rheo_col_def << endl;
+
+	string fout_par_col_def=
+		"#1: number of the particle\n"
+		"#2: radius\n"
+		"#3: position x\n"
+		"#4: position y\n"
+		"#5: position z\n"
+		"#6: velocity x\n" 
+		"#7: velocity y\n" 
+		"#8: velocity z\n"
+		"#9: angular velocity x\n"
+		"#10: angular velocity y\n"
+		"#11: angular velocity z\n"
+		"#12: viscosity contribution of lubrication\n"
+		"#13: viscosity contributon of contact GU xz\n"
+		"#14: viscosity contributon of brownian xz\n"
+		"#15: angle (for 2D simulation only)\n"
+		;
+	fout_particle << fout_par_col_def << endl;
 }
 
 void
@@ -578,57 +670,7 @@ Simulation::outputRheologyData(){
 	 *
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	static bool firsttime = true;
-	if (firsttime) {
-		firsttime = false;
-		fout_rheo << "#1: shear strain" << endl;
-		fout_rheo << "#2: Viscosity" << endl;
-		fout_rheo << "#3: N1" << endl;
-		fout_rheo << "#4: N2" << endl;
-		fout_rheo << "#5: Viscosity(lub)" << endl;
-		fout_rheo << "#6: N1(lub)" << endl;
-		fout_rheo << "#7: N2(lub)" << endl;
-		fout_rheo << "#8: Viscosity(xF_contact part)" << endl;
-		fout_rheo << "#9: N1(xF_contact part)" << endl;
-		fout_rheo << "#10: N2(xF_contact part)" << endl;
-		fout_rheo << "#11: Viscosity(GU_contact part)" << endl;
-		fout_rheo << "#12: N1(GU_contact part)" << endl;
-		fout_rheo << "#13: N2(GU_contact part)" << endl;
-		fout_rheo << "#14: Viscosity(friction)" << endl;
-		fout_rheo << "#15: N1(friction)" << endl;
-		fout_rheo << "#16: N2(friction)" << endl;
-		fout_rheo << "#17: Viscosity(repulsive force XF)" << endl;
-		fout_rheo << "#18: N1(repulsive force XF)" << endl;
-		fout_rheo << "#19: N2(repulsive force XF)" << endl;
-		fout_rheo << "#20: Viscosity(repulsive force GU)" << endl;
-		fout_rheo << "#21: N1(repulsive force GU)" << endl;
-		fout_rheo << "#22: N2(repulsive force GU)" << endl;
-		fout_rheo << "#23: Viscosity(brownian)" << endl;
-		fout_rheo << "#24: N1(brownian)" << endl;
-		fout_rheo << "#25: N2(brownian)" << endl;
-		fout_rheo << "#26: particle pressure" << endl;
-		fout_rheo << "#27: particle pressure contact" << endl;
-		fout_rheo << "#28: min gap (non-dim)" << endl;
-		fout_rheo << "#29: max tangential displacement" << endl;
-		fout_rheo << "#30: max Fc_normal" << endl;
-		fout_rheo << "#31: max Fc_tan" << endl;
-		fout_rheo << "#32: max velocity" << endl;
-		fout_rheo << "#33: max angular velocity" << endl;
-		fout_rheo << "#34: ave contact normal velocity" << endl;
-		fout_rheo << "#35: max contact normal velocity" << endl;
-		fout_rheo << "#36: ave contact tangential velocity" << endl;
-		fout_rheo << "#37: max contact tangential velocity" << endl;
-		fout_rheo << "#38: ave sliding velocity" << endl;
-		fout_rheo << "#39: max sliding velocity" << endl;
-		fout_rheo << "#40: ave contact number per particle" << endl;
-		fout_rheo << "#41: num of interaction" << endl;
-		fout_rheo << "#42: num of contacts" << endl;
-		fout_rheo << "#43: num of frictional contacts" << endl;
-		fout_rheo << "#44: kn" << endl;
-		fout_rheo << "#45: kt" << endl;
-		fout_rheo << "#46: dt" << endl;
-		fout_rheo << "#47: time" << endl;
-	}
+
 	/*
 	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
@@ -765,16 +807,6 @@ Simulation::outputConfigurationData(){
 			if (sys.brownian) {
 				brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
 			}
-			/* 1: number of the particle
-			 * 2: radius
-			 * 3, 4, 5: position
-			 * 6, 7, 8: velocity
-			 * 9, 10, 11: angular velocity
-			 * 12: viscosity contribution of lubrication
-			 * 13: viscosity contributon of contact GU xz
-			 * 14: viscosity contributon of brownian xz
-			 * (15: angle for 2D simulation)
-			 */
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
 			fout_particle << ' ' << p.x << ' ' << p.y << ' ' << p.z; //3, 4, 5: position
@@ -800,29 +832,18 @@ Simulation::outputConfigurationData(){
 		fout_interaction << ' ' << cnt_interaction << endl;
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
-				/* 1, 2: numbers of the interacting particles
-				 * 3: 1=contact, 0=apart
-				 * 4, 5, 6: normal vector
-				 * 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-				 * 8: normal     of lubrication force
-				 * 9: tangential of lubrication force
-				 * 10: normal part     of contact force
-				 * 11: tangential part of contact force
-				 * 12: normal repulsive force
-				 * 13: Viscosity contribution of contact xF
-				 * 14: N1 contribution of contact xF
-				 * 15: N2 contribution of contact xF
-				 * 16: friction state
-				 *      0 = not frictional
-				 *      1 = non-sliding
-				 *      2 = sliding
-				 */
 				unsigned short i, j;
 				sys.interaction[k].get_par_num(i, j);
 				vec3d nr_vec = sys.interaction[k].get_nvec();
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
-				fout_interaction << sys.interaction[k].is_contact() << ' '; // 3
+				/* contact.state:
+				 * 0 no contact
+				 * 1 Friction is not activated (critical load model)
+				 * 2 Static friction
+				 * 3 Sliding
+				 */
+				fout_interaction << sys.interaction[k].contact.state << ' '; //3
 				fout_interaction << nr_vec.x << ' '; // 4
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
@@ -831,28 +852,21 @@ Simulation::outputConfigurationData(){
 				 * Lubrication forces are reference values
 				 * in the Brownian case. The force balancing
 				 * velocities are recalculated without 
-				 * including Brownian forces.
-				 * It seems no better way to visualize
-				 * lubrication forces.
+				 * including the Brownian forces.
+				 * It seems there is no better way to visualize
+				 * the lubrication forces.
 				 */
 				fout_interaction << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
-				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan().norm() << ' '; // 9
+				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9, 10, 11
 				/*
 				 * Contact forces include only spring forces.
 				 */
-				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 10
-				fout_interaction << sys.interaction[k].contact.get_f_contact_tan_norm() << ' '; // 11
-				fout_interaction << sys.interaction[k].get_f_repulsive_norm() << ' '; // 12
-				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 13
-				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' '; // 14
-				//fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' '; // 15
-				/* contact.state:
-				 * 0 no contact
-				 * 1 Friction is not activated (critical load model)
-				 * 2 Static friction
-				 * 3 Sliding
-				 */
-				fout_interaction << sys.interaction[k].contact.state;
+				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
+				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
+				fout_interaction << sys.interaction[k].get_f_repulsive_norm() << ' '; // 16
+				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 17
+				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' ';
+				//fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' ';
 				fout_interaction << endl;
 			}
 		}

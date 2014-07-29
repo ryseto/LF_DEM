@@ -73,6 +73,7 @@ public:
 	void calcContactInteraction();
 	void addUpContactForceTorque();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
+	vec3d get_f_contact_tan(){return f_contact_tan;}
 	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
 	void addContactStress();
 	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
