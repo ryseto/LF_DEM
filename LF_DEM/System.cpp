@@ -12,12 +12,12 @@
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
 System::System() :
-zero_shear(false),
 maxnb_interactionpair_per_particle(15),
-repulsiveforce(false),
+repulsiveforce_length(0),
 brownian(false),
+zero_shear(false),
 friction_model(-1),
-repulsiveforce_length(0)
+repulsiveforce(false)
 {}
 
 System::~System(){
@@ -559,7 +559,6 @@ System::timeEvolution(double strain_next){
 	}
 	avgStressReset();
 	while (shear_strain < strain_next-dt-dt*0.001) { // integrate until strain_next - 1 time step
-		//		brownianTesting(false);
 		(this->*timeEvolutionDt)(false);
 		ts++;
 		shear_strain += dt;
@@ -1342,128 +1341,3 @@ System::calcLubricationForce(){
 	}
 }
 
-/************************************************************************************************
- *
- * testing routines
- *
- ***********************************************************************************************/
-void
-System::brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress){
-	/* predictor */
-	in_predictor = true;
-	setContactForceToParticle();
-	setRepulsiveForceToParticle();
-	computeVelocities(calc_stress);
-	timeStepMovePredictor();
-	cout << "before" << endl;
-	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
-	if (calc_stress) {
-		calcStressPerParticle();
-	}
-	/* corrector */
-	in_predictor = false;
-	setContactForceToParticle();
-	setRepulsiveForceToParticle();
-	computeVelocities(calc_stress);
-	brownianTestingTimeStepMoveCorrector();
-	cout << "after" << endl;
-	cout << position[0].x << " " << position[0].y << " " << position[0].z << " " <<endl;
-	if (calc_stress) {
-		calcStressPerParticle();
-	}
-}
-
-void
-System::brownianTestingTimeEvolutionEulerMethod(bool calc_stress){
-	/* predictor */
-	in_predictor = true;
-	setContactForceToParticle();
-	setRepulsiveForceToParticle();
-	computeVelocities(calc_stress);
-	//	timeStepMovePredictor();
-}
-
-void
-System::brownianTesting(bool calc_stress){
-	double **avg_fbfb;
-	double *avg_udrift;
-	avg_fbfb = new double* [linalg_size];
-	avg_udrift = new double [linalg_size];
-	for(int i=0; i<linalg_size;i++){
-		avg_fbfb[i] = new double [linalg_size];
-		avg_udrift[i] = 0;
-		for(int j=0; j<linalg_size;j++){
-			avg_fbfb[i][j] = 0;
-		}
-	}
-	int sample=0;
-	int sample_max = 1000;
-	brownianTestingTimeEvolutionEulerMethod(true);
-	while(sample < sample_max){
-		sample++;
-		//		cout << sample << endl;
-		brownianTestingTimeEvolutionEulerMethod(false);
-		
-		for (int i=0; i<linalg_size; i++) {
-			for (int j=0; j<linalg_size; j++) {
-				avg_fbfb[i][j] += brownian_force[i]*brownian_force[j];
-			}
-		}
-		for (int i=0; i<np; i++) {
-			avg_udrift[6*i  ] += vel_brownian[i].x;
-			avg_udrift[6*i+1] += vel_brownian[i].y;
-			avg_udrift[6*i+2] += vel_brownian[i].z;
-			avg_udrift[6*i+3] += ang_vel_brownian[i].x;
-			avg_udrift[6*i+4] += ang_vel_brownian[i].y;
-			avg_udrift[6*i+5] += ang_vel_brownian[i].z;
-		}
-	}
-	ofstream fout;
-	fout.open("fbfb.dat");
-	//	fout << "normalized fbfb" << endl;
-	double kbT2_dt = 2*kb_T/dt;
-	for (int i=0; i<linalg_size; i++) {
-		for (int j=0; j<linalg_size; j++) {
-			fout << avg_fbfb[i][j]/sample_max/kbT2_dt << " ";
-		}
-		fout << endl;
-	}
-	fout << endl;
-	
-   	fout.close();
-	
-	cout << " done " << endl;
-	exit(1);
-	//	fout.open("udrift.dat");
-	// cout << "drift" << endl;
-	// for (int i=0; i<linalg_size; i++) {
-	// 	cout << avg_udrift[i]/sample_max << endl;
-	// }
-	// cout << endl;
-	//	fout.close();
-	for(int i=0; i<linalg_size;i++){
-		delete [] avg_fbfb[i];
-	}
-	delete [] avg_udrift;
-	delete [] avg_fbfb;
-	
-}
-
-
-void
-System::brownianTestingTimeStepMoveCorrector(){
-	for (int i=0; i<np; i++) {
-		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
-		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
-	}
-	for (int i=0; i<np; i++) {
-		displacement(i, -velocity_predictor[i]*dt);  //go back to previous step
-	}
-	if (twodimension) {
-		for (int i=0; i<np; i++) {
-			angle[i] += -ang_velocity_predictor[i].y*dt;
-		}
-	}
-	checkNewInteraction();
-	updateInteractions();
-}
