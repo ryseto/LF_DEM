@@ -437,26 +437,39 @@ GenerateInitConfig::setParameters(){
 		pvolume1 = M_PI*a1*a1;
 		pvolume2 = M_PI*a2*a2;
 	} else {
-		pvolume1 = (4./3)*M_PI*a1*a1*a1;
-		pvolume2 = (4./3)*M_PI*a2*a2*a2;
+		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
+		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
 	}
-	total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
-	double np1_tmp = volume_fraction1*total_volume/pvolume1;
-	if (np1_tmp-(int)np1_tmp <= 0.5) {
-		np1 = (int)np1_tmp;
+	
+	if (np > 0) {
+		total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
+		double np1_tmp = volume_fraction1*total_volume/pvolume1;
+		if (np1_tmp-(int)np1_tmp <= 0.5) {
+			np1 = (int)np1_tmp;
+		} else {
+			np1 = (int)np1_tmp+1;
+		}
+		np2 = np-np1;
+		double pvolume = np1*pvolume1+np2*pvolume2;
+		if (sys.twodimension) {
+			lz = sqrt(pvolume/(lx_lz*volume_fraction));
+			lx = lz*lx_lz;
+			ly = 0;
+		} else {
+			lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1.0/3);
+			lx = lz*lx_lz;
+			ly = lz*ly_lz;
+		}
 	} else {
-		np1 = (int)np1_tmp+1;
-	}
-	np2 = np-np1;
-	double pvolume = np1*pvolume1+np2*pvolume2;
-	if (sys.twodimension) {
-		lz = sqrt(pvolume/(lx_lz*volume_fraction));
-		lx = lz*lx_lz;
-		ly = 0;
-	} else {
-		lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1./3);
+		lz = readStdinDefault(10, "lz");
 		lx = lz*lx_lz;
 		ly = lz*ly_lz;
+		double pvolume1_ = lx*ly*lz*volume_fraction1;
+		double pvolume2_ = lx*ly*lz*volume_fraction2;
+		np1 = (int)(pvolume1_/pvolume1+0.5);
+		np2 = (int)(pvolume2_/pvolume2+0.5);
+		np = np1 + np2;
+		total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
 	}
 	lx_half = lx/2;
 	ly_half = ly/2;

@@ -197,6 +197,11 @@ System::setupBrownian(){
 
 void
 System::setupSystem(){
+	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	 * @ We have to consider contact_relaxation_time in Brownian case.
+	 * @ The resistance coeffient affects Brownian force.
+	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	 */
 	/* Giving a seed for debugging (Brownian)
 	 * r_gen = new MTRand(71);
 	 */

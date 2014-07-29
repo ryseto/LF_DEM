@@ -17,15 +17,12 @@ BoxSet::init(double interaction_dist, System *sys_){
 	z_box_nb = (int)zratio;
 	if (x_box_nb == 0) {
 		x_box_nb = 1;
-		box_xsize = sys->get_lx();
 	}
 	if (y_box_nb == 0) {
 		y_box_nb = 1;
-		box_ysize = sys->get_ly();
 	}
 	if (z_box_nb == 0) {
 		z_box_nb = 1;
-		box_zsize = sys->get_lz();
 	}
 	
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system

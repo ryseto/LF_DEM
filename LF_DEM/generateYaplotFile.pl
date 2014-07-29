@@ -237,6 +237,7 @@ sub InInteractions {
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
+		$is_contact[$k] = $contact;
 		$domega[$k] = $omegay[$i] - $omegay[$j];
 		$F_lub[$k] = $f_lub_norm;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
@@ -469,6 +470,18 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k]);
 		}
 	}
+	printf OUT "y 2\n";
+	printf OUT "@ 6\n";
+	printf OUT "r 0.2\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+#		if ($Gap[$k] < 0) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+		if ($is_contact[$k] == 1) {
+			
+			&OutString2($int0[$k], $int1[$k]);
+		}
+	}
 #	$stressfactor = 0.00001;
 #	printf OUT "y 2\n";
 #	printf OUT "@ 6\n";
@@ -513,14 +526,8 @@ sub OutYaplotData{
 	#		}
 	#    }
 	#	$ff=1.0/1000;
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		if ($Gap[$k] < 0) {
-	#			$xx = $sp_x[$k] + $ff*$ft_x[$k];
-	#			$yy = $sp_y[$k] + $ff*$ft_y[$k];
-	#			$zz = $sp_z[$k] + $ff*$ft_z[$k];
-	#			printf OUT "l $sp_x[$k] $sp_y[$k] $sp_z[$k] $xx $yy $zz\n";
-	#		}
-	#    }
+	#	$stressfactor = 0.00001;
+
 	#	$ff=1.0/1000;
 	#	printf OUT "@ 3\n";
 	#	for ($k = 0; $k < $num_interaction; $k ++){
