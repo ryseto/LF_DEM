@@ -79,9 +79,9 @@ ifeq ($(OS_version), SI)
        Cholmod_Linking_Flags     =
 endif
 
-#ifeq ($(UseMetis),yes)
-#	Cholmod_Linking_Flags += -lmetis 
-#endif
+ifeq ($(UseMetis),yes)
+	Cholmod_Linking_Flags += -lmetis 
+endif
 
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
