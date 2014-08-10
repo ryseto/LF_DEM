@@ -37,6 +37,8 @@ public:
 
 	/* operators */
 	inline vec3d& operator = (const vec3d& v){
+		if(this==&v)
+			return *this;
 		x = v.x, y = v.y, z = v.z;
 		return *this;
 	}
@@ -210,6 +212,14 @@ public:
 		return *this;
 	}
 	
+	// output stream operator
+	inline friend ostream&
+		operator << (ostream &out, const vec3d &v){
+		out << v.x << " " << v.y << " " << v.z;
+		return out;
+	}
+
+
 	/* utility */
 	inline void
 	set(const double &_x, const double &_y, const double &_z){

@@ -77,12 +77,6 @@ private:
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
-	void brownianForceTest();
-	void brownianTesting(bool);
-	void brownianTestingTimeEvolutionPredictorCorrectorMethod(bool calc_stress);
-	void brownianTestingTimeEvolutionEulerMethod(bool calc_stress);
-	void brownianTestingTimeStepMoveCorrector();
-	void updateResistanceMatrix();
 	void print_res();
 	double evaluateMinGap();
 	double evaluateMaxDispTan();
