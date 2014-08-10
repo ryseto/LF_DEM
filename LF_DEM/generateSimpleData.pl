@@ -163,7 +163,7 @@ sub OutData{
 	printf OUT "# $shear_disp\n";
 	if ($dim == 2) {
 		for ($i = 0; $i < $np; $i ++){
-			printf OUT "$i $posx[$i] $posz[$i] $ang[$i] $radius[$i] \n";
+			printf OUT "$i $posx[$i] $posz[$i] $ang[$i] $radius[$i] $ang[$i]\n";
 #			if ($posz[$i] < -$Lz/2+$radius[$i]){
 #				$x = $posx[$i] + $shear_disp;
 #				while ($x > $Lx/2){
@@ -176,7 +176,7 @@ sub OutData{
 		
 	} else {
 		for ($i = 0; $i < $np; $i ++){
-			printf OUT "$i $posx[$i] $posy[$i] $posz[$i] $radius[$i] \n";
+			printf OUT "$i $posx[$i] $posy[$i] $posz[$i] $radius[$i] $ang[$i]\n";
 		}
 	}
 	
