@@ -931,6 +931,7 @@ System::computeVelocities(bool divided_velocities){
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
+	
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
