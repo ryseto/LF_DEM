@@ -22,7 +22,6 @@
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
-		D988AC3E1857666D00C9637A /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D988AC3D1857666D00C9637A /* Makefile */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
 		D988E39C1654A18D0009949F /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E39A1654A18D0009949F /* System.cpp */; };
@@ -155,6 +154,7 @@
 		D99535211807276D00FC99C9 /* StrainSnapShot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrainSnapShot.cpp; sourceTree = "<group>"; };
 		D99535221807276D00FC99C9 /* StrainSnapShot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrainSnapShot.h; sourceTree = "<group>"; };
 		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
+		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
 		D9BE3B63178C838100937C5C /* cluster_detector */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_detector; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9BE3B65178C838100937C5C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -323,6 +323,7 @@
 				D96731B217A042AD005D02F8 /* percolation_LF_DEM */,
 				D9953513180713FB00FC99C9 /* cluster_life */,
 				D988E38A165441750009949F /* Products */,
+				D9B659F71998FD14003DA63E /* OptimizationProfiles */,
 			);
 			sourceTree = "<group>";
 		};
@@ -385,6 +386,14 @@
 				D9953516180713FB00FC99C9 /* cluster_life.1 */,
 			);
 			path = cluster_life;
+			sourceTree = "<group>";
+		};
+		D9B659F71998FD14003DA63E /* OptimizationProfiles */ = {
+			isa = PBXGroup;
+			children = (
+				D9B659F81998FD14003DA63E /* LF_DEM.profdata */,
+			);
+			path = OptimizationProfiles;
 			sourceTree = "<group>";
 		};
 		D9BE3B64178C838100937C5C /* cluster_detector */ = {
@@ -562,7 +571,6 @@
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
 				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
 				D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */,
-				D988AC3E1857666D00C9637A /* Makefile in Sources */,
 				D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */,
 				D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */,
 			);
@@ -679,7 +687,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_SHADOW = YES;
@@ -720,6 +728,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_USE_OPTIMIZATION_PROFILE = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;

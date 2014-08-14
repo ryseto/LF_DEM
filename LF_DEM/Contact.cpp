@@ -13,12 +13,17 @@ Contact::Contact(const Contact& obj)
 {
 	disp_tan = obj.disp_tan;
 	state = obj.state;
+	
+	
 }
 
 void
 Contact::init(System *sys_, Interaction *interaction_){
+	kr_scaled = 100;// @@@@ tmp
+
 	sys = sys_;
 	interaction = interaction_;
+	
 	state = 0;
 	if (sys->friction_model == 1) {
 		frictionlaw = &Contact::frictionlaw_standard;
@@ -66,6 +71,7 @@ Contact::activate(){
 	 */
 	state = 1;
 	disp_tan.reset();
+	disp_rolling.reset();
 	// This is calculated after that
 	//	interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
 	//												sys->get_log_lub_coeff_dynamicfriction());
@@ -76,9 +82,11 @@ Contact::deactivate(){
 	// r > a0 + a1
 	state = 0;
 	disp_tan.reset();
+	disp_rolling.reset();
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
 	f_contact_tan.reset();
+	t_contact.reset();
 }
 
 /*********************************
@@ -98,6 +106,18 @@ Contact::incrementTangentialDisplacement(){
 	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->get_dt();
 }
 
+void
+Contact::incrementRollingDisplacement(){
+	if (sys->in_predictor) {
+		/*
+		 * relative_surface_velocity is true velocity in predictor and corrector.
+		 * Thus, previous disp_tan is saved to use in corrector.
+		 */
+		prev_disp_rolling = disp_rolling;
+	}
+	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->get_dt();
+}
+
 /*
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.
@@ -111,18 +131,10 @@ Contact::calcContactInteraction(){
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
+	if (sys->rolling_friction) {
+		f_rolling = kr_scaled*disp_rolling;
+	}
 	(this->*frictionlaw)();
-	// if( f_contact_tan.y != 0){
-	// 	cout << "weird tan" << endl;
-	// 	cout <<  f_contact_tan.x << " " << f_contact_tan.y << " " << f_contact_tan.z << endl;
-	// 	cout <<  interaction->nvec.x << " " << interaction->nvec.y << " " << interaction->nvec.z << endl;
-	// 	getchar();
-	// }
-	// if( f_contact_normal.y != 0){
-	// 	cout << "weird normal" << endl;
-	// 	cout <<  f_contact_normal.x << " " << f_contact_normal.y << " " << f_contact_normal.z << endl;
-	// 	cout <<  interaction->nvec.x << " " << interaction->nvec.y << " " << interaction->nvec.z << endl;
-	// }
 }
 
 void
@@ -135,6 +147,13 @@ Contact::frictionlaw_standard(){
 		f_contact_tan = kt_scaled*disp_tan;
 	} else {
 		state = 2; // static friction
+	}
+	if (sys->rolling_friction) {
+		double sq_f_rolling = f_rolling.sq_norm();
+		if (sq_f_rolling > supportable_tanforce*supportable_tanforce){
+			disp_rolling *= supportable_tanforce/sqrt(sq_f_rolling);
+			f_rolling = kr_scaled*disp_rolling;
+		}
 	}
 	return;
 }
@@ -204,6 +223,11 @@ Contact::addUpContactForceTorque(){
 			vec3d t_ij = cross(interaction->nvec, f_contact_tan);
 			sys->contact_torque[p0] += interaction->a0*t_ij;
 			sys->contact_torque[p1] += interaction->a1*t_ij;
+			if (sys->rolling_friction) {
+				vec3d t_rolling = cross(interaction->nvec, f_rolling);
+				sys->contact_torque[p0] += interaction->a0*t_rolling;
+				sys->contact_torque[p1] -= interaction->a1*t_rolling;
+			}
 		}
 	}
 }

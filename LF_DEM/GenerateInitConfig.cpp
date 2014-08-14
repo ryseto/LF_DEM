@@ -469,7 +469,6 @@ GenerateInitConfig::setParameters(){
 		np1 = (int)(pvolume1_/pvolume1+0.5);
 		np2 = (int)(pvolume2_/pvolume2+0.5);
 		np = np1 + np2;
-		total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
 	}
 	lx_half = lx/2;
 	ly_half = ly/2;

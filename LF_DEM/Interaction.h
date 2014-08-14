@@ -56,6 +56,7 @@ private:
 	double a0_dash; // radius - 0.5*overlap
 	double a1_dash; // second radius > a0
 	vec3d relative_velocity;
+	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range_scaled;  // max distance for lubrication
 	double repulsiveforce_amplitude;
@@ -121,6 +122,7 @@ public:
 	double getRelativeVelocity(){return relative_velocity.norm();}
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
+	void calcRollingVelocities();
 	void addUpRepulsiveForce();
 	double getNormalVelocity();
 	inline double get_f_repulsive_norm(){return f_repulsive_norm;}

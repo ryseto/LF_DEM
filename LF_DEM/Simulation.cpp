@@ -192,6 +192,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		} else {
 			sys.friction_model = atoi(value.c_str());
 		}
+	} else if (keyword == "rolling_friction") {
+		sys.rolling_friction = str2bool(value);
 	} else if (keyword == "kn_kt_adjustment") {
 		sys.kn_kt_adjustment = str2bool(value);
 	} else if (keyword == "strain_interval_knkt_adjustment") {
@@ -451,6 +453,7 @@ Simulation::setDefaultParameters(){
 	if (sys.friction_model != 2) {
 		sys.friction_model = 1;
 	}
+	sys.rolling_friction = true;
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate

@@ -32,6 +32,7 @@ private:
 	//===== forces and stresses ==================== //
 	double kn_scaled;
 	double kt_scaled;
+	double kr_scaled;
 	double mu;
 	/*********************************
 	 *       Private Methods         *
@@ -42,6 +43,8 @@ private:
 	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
+	vec3d f_rolling;
+	vec3d t_contact;
 protected:
 public:
 	/*********************************
@@ -55,7 +58,9 @@ public:
 	void activate();
 	void deactivate();
 	vec3d disp_tan; // tangential displacement
+	vec3d disp_rolling;
 	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
+	vec3d prev_disp_rolling;
 	unsigned short state;
 	/* state:
 	 * 0 No contact
@@ -70,6 +75,7 @@ public:
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
 	void incrementTangentialDisplacement();
+	void incrementRollingDisplacement();
 	void calcContactInteraction();
 	void addUpContactForceTorque();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}

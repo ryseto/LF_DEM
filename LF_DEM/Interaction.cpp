@@ -47,9 +47,9 @@ Interaction::updateResistanceCoeff(){
 										   sys->log_lub_coeff_contact_tan_total);
 		} else {
 			/* This is to avoid discontinous change.
-			 * Before the predictor, particles are separated.
-			 * The displacement in the predictor makes particle in contact.
-			 * In the corrector for the same time step,
+			 * Before the predictor, particles are apart.
+			 * The displacement in the predictor makes the particles in contact.
+			 * In the corrector of the same time step,
 			 * the resistance coeffient is set to the maximum value of separating state.
 			 * Thus, no drift force is generated.
 			 */
@@ -64,7 +64,7 @@ Interaction::updateResistanceCoeff(){
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		} else {
 			/* This is to avoid discontinous change.
-			 * Before the predictor, particles are in contact.
+			 * Before the predictor, the particles are in contact.
 			 * The displacement in the predictor makes particles apart.
 			 * In the corrector for the same time step,
 			 * the resistance coeffient is set to the ones used in contact state.
@@ -150,6 +150,10 @@ Interaction::updateState(bool &deactivated){
 	if (sys->friction && is_contact()) {
 		calcRelativeVelocities();
 		contact.incrementTangentialDisplacement();
+		if (sys->rolling_friction) {
+			calcRollingVelocities();
+			contact.incrementRollingDisplacement();
+		}
 	}
 	calcNormalVectorDistanceGap();
 	contact_state_changed_after_predictor = false;
@@ -236,6 +240,11 @@ Interaction::calcRelativeVelocities(){
 	relative_velocity.x += zshift*sys->vel_difference;
 	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
+}
+
+void
+Interaction::calcRollingVelocities(){
+	rolling_velocity = -cross(a0*sys->ang_velocity[p0]-a1*sys->ang_velocity[p1], nvec);
 }
 
 void

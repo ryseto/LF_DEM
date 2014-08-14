@@ -93,12 +93,12 @@ sub readHeader{
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
+	for ($i = 0; $i < 16; $i++) {
+		$line = <IN_particle>;
+	}
+	for ($i = 0; $i < 21; $i++) {
+		$line = <IN_interaction>;
+	}
 	printf "$np, $VF, $Lx, $Ly, $Lz\n";
 }
 
@@ -207,37 +207,37 @@ sub InInteractions {
 	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-		#		/* 1, 2: numbers of the interacting particles
-		#		* 3: 1=contact, 0=apart
-		#		* 4, 5, 6: normal vector
-		#		* 7: dimensionless gap = s - 2, s = 2r/(a1+a2)
-		#		* 8: normal     of lubrication force
-		#		* 9: tangential of lubrication force
-		#		* 10: normal part     of contact force
-		#		* 11: tangential part of contact force
-		#		* 12: normal colloidal force
-		#		* 13: Viscosity contribution of contact xF
-		#		* 14: N1 contribution of contact xF
-		#		* 15: N2 contribution of contact xF
-		#		* 16: friction state
-		#		*      0 = not frictional
-		#		*      1 = non-sliding
-		#		*      2 = sliding
-		#		*/
-		
+#		"#1: particle 1 label\n"
+#		"#2: particle 2 label\n"
+#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
+#		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+#		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+#		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+#		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
+#		"#8: norm of the normal part of the lubrication force\n"
+#		"#9: tangential part of the lubrication force x\n"
+#		"#10: tangential part of the lubrication force y\n"
+#		"#11: tangential part of the lubrication force z\n"
+#		"#12: norm of the normal part of the contact force\n"
+#		"#13: tangential part of the contact force, x\n"
+#		"#14: tangential part of the contact force, y\n"
+#		"#15: tangential part of the contact force, z\n"
+#		"#16: norm of the normal repulsive force\n"
+#		"#17: Viscosity contribution of contact xF\n";
 		($i, $j, $contact, $nx, $ny, $nz, #1---6
-		$gap, $f_lub_norm, $f_lub_tan , $fc_n, $fc_tan, $fcol, #7--12
-		$sxz_cont_xF, $n1_cont_xF, $n2_cont_xF, $friction, # 13--16
+		$gap, $f_lub_norm, # 7, 8
+		$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
+		$fc_norm, # 12
+		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
+		$fr_norm, $s_xF
 		) = split(/\s+/, $line);
-		
-		
 		if ($num==$num_mathm){
 			printf OUTMI "$line";
 		}
 		# $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
 		$int0[$k] = $i;
 		$int1[$k] = $j;
-		$is_contact[$k] = $contact;
+		$contactstate[$k] = $contact;
 		$domega[$k] = $omegay[$i] - $omegay[$j];
 		$F_lub[$k] = $f_lub_norm;
 		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
@@ -246,26 +246,16 @@ sub InInteractions {
 		$Fcol[$k] = $fcol;
 		$f_normal = $fc_n + $fcol + $f_lub_norm;
 		$force[$k] = $f_normal;
-		
 		$S_bf[$k] = $sxz_cont_xF;
 		$fricstate[$k] = $friction;
 		#	$force[$k] = sqrt($f_normal)
-		
-				
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
-		$sp_x[$k] = $lsx;
-		$sp_y[$k] = $lsy;
-		$sp_z[$k] = $lsz;
-		
-		$xi_x[$k] = $xix;
-		$xi_y[$k] = $xiy;
-		$xi_z[$k] = $xiz;
-		
-		$ft_x[$k] = $ftx;
-		$ft_y[$k] = $fty;
-		$ft_z[$k] = $ftz;
+
+		$ft_x[$k] = $f_lub_tan_x + $fc_tan_x;
+		$ft_y[$k] = $f_lub_tan_y + $fc_tan_y;
+		$ft_z[$k] = $f_lub_tan_z + $fc_tan_z;
 		
 		$Gap[$k] = $gap;
 		printf OUTG "$gap ";

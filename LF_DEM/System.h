@@ -171,6 +171,7 @@ public:
 	int avg_stress_nb;
 	int friction_model;
 	bool friction;
+	bool rolling_friction;
 	bool repulsiveforce;
 	double lub_coeff_contact;
 	// resistance coeffient for normal mode
