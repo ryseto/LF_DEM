@@ -13,8 +13,6 @@ Contact::Contact(const Contact& obj)
 {
 	disp_tan = obj.disp_tan;
 	state = obj.state;
-	
-	
 }
 
 void
