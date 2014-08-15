@@ -876,19 +876,14 @@ System::buildContactTerms(bool set_or_add){
 
 void
 System::buildRepulsiveForceTerms(bool set_or_add){
-	if (repulsiveforce) {
-		if (set_or_add) {
-			for (int i=0; i<np; i++) {
-				stokes_solver.addToRHSForce(i, repulsive_force[i]);
-			}
-		} else {
-			for (int i=0; i<np; i++) {
-				stokes_solver.setRHSForce(i, repulsive_force[i]);
-			}
+    // sets or adds ( set_or_add = t or f resp) repulsive forces to the rhs of the stokes_solver.
+	if (set_or_add) {
+		for (int i=0; i<np; i++) {
+			stokes_solver.setRHSForce(i, repulsive_force[i]);
 		}
 	} else {
-		if (set_or_add) {
-			stokes_solver.resetRHS();
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, repulsive_force[i]);
 		}
 	}
 }
