@@ -424,6 +424,9 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			StressTensor total_contact_stress;
 			StressTensor total_repulsive_stress;
 
+			avgStressReset();
+			calcStressPerParticle();
+			avgStressUpdate();
 			calcStress();
 			total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan + total_contact_stressGU;
 			if (repulsiveforce) {
@@ -438,22 +441,27 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			dimensionless_shear_rate = sr/repulsiveforce_amplitude;
 			
 			for (int i=0; i<np; i++) {
-				na_velocity[i] = vel_hydro[i]+vel_contact[i];
-				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+				na_velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
+				na_ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
+				velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
+				ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
 			}
 			for (int i=0; i<np; i++) {
-				na_velocity[i] += vel_repulsive[i]/sr;
-				na_ang_velocity[i] += ang_vel_repulsive[i]/sr;
+				vel_repulsive[i] /= sr;
+				ang_vel_repulsive[i] /= sr;
 			}
-			for (int i=0; i<np; i++) {
-				velocity[i] = na_velocity[i];
-				ang_velocity[i] = na_ang_velocity[i];
-				if (!zero_shear) {
-					velocity[i].x += position[i].z;
-					ang_velocity[i].y += 0.5;
-				}
+			avgStressReset();
+			calcStressPerParticle();
+			avgStressUpdate();
+			calcStress();
+			total_contact_stress = total_contact_stressXF_normal + total_contact_stressXF_tan + total_contact_stressGU;
+			if (repulsiveforce) {
+				total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
 			}
-			//			cout << dimensionless_shear_rate << endl;
+			StressTensor total_stress = total_hydro_stress + total_contact_stress + total_repulsive_stress;
+			//			cout << total_contact_stress.getStressXZ() << " " << total_hydro_stress.getStressXZ() << " " << total_repulsive_stress.getStressXZ() << endl; 
+			//			cout << dimensionless_shear_rate << " " << total_stress.getStressXZ()*sr << endl;
+			//			getchar();
 		}
 		/****** </exp> ********/
 
