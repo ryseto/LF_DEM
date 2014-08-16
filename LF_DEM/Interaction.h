@@ -53,8 +53,6 @@ private:
 	double nynz;
 	double nyny;
 	double nznz;
-	double a0_dash; // radius - 0.5*overlap
-	double a1_dash; // second radius > a0
 	vec3d relative_velocity;
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //

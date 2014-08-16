@@ -13,7 +13,6 @@
 
 System::System() :
 maxnb_interactionpair_per_particle(15),
-repulsiveforce_length(0),
 brownian(false),
 zero_shear(false),
 friction_model(-1),
@@ -360,7 +359,6 @@ System::setupSystem(){
 	} else {
 		setSystemVolume();
 	}
-
 }
 
 void
@@ -876,19 +874,13 @@ System::buildContactTerms(bool set_or_add){
 
 void
 System::buildRepulsiveForceTerms(bool set_or_add){
-	if (repulsiveforce) {
-		if (set_or_add) {
-			for (int i=0; i<np; i++) {
-				stokes_solver.addToRHSForce(i, repulsive_force[i]);
-			}
-		} else {
-			for (int i=0; i<np; i++) {
-				stokes_solver.setRHSForce(i, repulsive_force[i]);
-			}
+	if (set_or_add) {
+		for (int i=0; i<np; i++) {
+			stokes_solver.setRHSForce(i, repulsive_force[i]);
 		}
 	} else {
-		if (set_or_add) {
-			stokes_solver.resetRHS();
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, repulsive_force[i]);
 		}
 	}
 }

@@ -39,9 +39,12 @@ Interaction::calcNormalVectorDistanceGap(){
 void
 Interaction::updateResistanceCoeff(){
 	if (contact.state > 0) {
-		double overlap_12 = 0.5*(a0+a1-r);
-		a0_dash = a0-overlap_12;
-		a1_dash = a1-overlap_12;
+		//		double overlap_12 = 0.5*(a0+a1-r);
+		//		if (overlap_12 < 0) {
+		//			overlap_12 = 0;
+		//		}
+		////		a0_dash = a0-overlap_12;
+		//		a1_dash = a1-overlap_12;
 		if (!contact_state_changed_after_predictor) {
 			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
 										   sys->log_lub_coeff_contact_tan_total);
@@ -57,8 +60,8 @@ Interaction::updateResistanceCoeff(){
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		}
 	} else {
-		a0_dash = a0;
-		a1_dash = a1;
+		//		a0_dash = a0;
+		//		a1_dash = a1;
 		if (!contact_state_changed_after_predictor) {
 			double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
@@ -159,7 +162,8 @@ Interaction::updateState(bool &deactivated){
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
 		// contacting in previous step
-		if (gap_nondim > 0){
+		if (contact.kn_scaled*gap_nondim > sys->cohesive_force){
+			cerr << gap_nondim << endl;
 			// now separate
 			contact.deactivate();
 			if (sys->in_predictor) {

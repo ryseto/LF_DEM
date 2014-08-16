@@ -55,7 +55,7 @@ Simulation::contactForceParameter(string filename){
 void
 Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 										double peclet_num, double scaled_repulsion,
-										double scaled_critical_load){
+										double scaled_cohesion, double scaled_critical_load){
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (scaled_repulsion > 0 &&
@@ -67,12 +67,16 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		cerr << "Brownian" << endl;
 		sys.brownian = true;
 		sys.dimensionless_shear_rate = peclet_num;
-		if(scaled_repulsion > 0) {
+		if (scaled_repulsion > 0) {
 			cerr << "Repulsive force" << endl;
 			sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
 			sys.repulsiveforce = true;
 		}
-		if(scaled_critical_load > 0) {
+		if (scaled_cohesion > 0) {
+			cerr << "Cohesive force" << endl;
+			sys.cohesive_force = scaled_cohesion/peclet_num;
+		}
+		if (scaled_critical_load > 0) {
 			cerr << "Critical load" << endl;
 			sys.critical_normal_force = scaled_critical_load/peclet_num;
 			sys.friction_model = 2;
@@ -84,6 +88,11 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 			sys.dimensionless_shear_rate = 1/scaled_repulsion;
 			sys.repulsiveforce_amplitude = scaled_repulsion;
 			sys.repulsiveforce = true;
+		}
+		if (scaled_cohesion > 0) {
+			cerr << "Cohesive force" << endl;
+			sys.dimensionless_shear_rate = 1/scaled_cohesion;
+			sys.cohesive_force = scaled_cohesion;
 		}
 		if (scaled_critical_load > 0) {
 			sys.dimensionless_shear_rate = 1/scaled_critical_load;
@@ -98,6 +107,10 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 	}
 	setDefaultParameters();
 	readParameterFile();
+	if (sys.cohesive_force > 0) {
+		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate;
+	}
+	
 	importInitialPositionFile();
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
@@ -222,6 +235,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt") {
 		sys.kt = atof(value.c_str());
+	} else if (keyword == "kr") {
+		sys.kr = atof(value.c_str());
 	} else if (keyword == "dt_max") {
 		sys.dt_max = atof(value.c_str());
 	} else if (keyword == "kn_lowPeclet") {
@@ -313,7 +328,6 @@ Simulation::openOutputFiles(){
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
-	
 	outputDataHeader(fout_particle);
 	outputDataHeader(fout_interaction);
 	outputDataHeader(fout_rheo);
@@ -453,7 +467,7 @@ Simulation::setDefaultParameters(){
 	if (sys.friction_model != 2) {
 		sys.friction_model = 1;
 	}
-	sys.rolling_friction = true;
+	sys.rolling_friction = false;
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
@@ -490,8 +504,10 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.kn = 10000;
 	sys.kt = 6000;
+	sys.kr = 6000;
 	sys.kn_lowPeclet = 10000;
 	sys.kt_lowPeclet = 6000;
+	sys.kr_lowPeclet = 6000;
 	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.05;
@@ -504,6 +520,8 @@ Simulation::setDefaultParameters(){
 	 */
 	if (sys.repulsiveforce) {
 		sys.set_repulsiveforce_length(0.05);
+	} else {
+		sys.set_repulsiveforce_length(0);
 	}
 	/*
 	 * mu_static: static friction coeffient

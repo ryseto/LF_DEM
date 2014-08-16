@@ -120,7 +120,6 @@ public:
 	Interaction *interaction;
 	BoxSet boxset;
 	double *radius;
-
 	double *angle; // for 2D visualization
 	double *resistance_matrix_dblock;
 	vec3d *velocity;
@@ -165,15 +164,18 @@ public:
 	double dt_max;
 	double kn;
 	double kt;
+	double kr;
 	double dt_lowPeclet;
 	double kn_lowPeclet;
 	double kt_lowPeclet;
+	double kr_lowPeclet;
 	int avg_stress_nb;
 	int friction_model;
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
 	double lub_coeff_contact;
+	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
@@ -311,6 +313,8 @@ public:
 	inline double get_kn(){return kn;}
 	inline void set_kt(double val){kt = val;}
 	inline double get_kt(){return kt;}
+	inline void set_kr(double val){kr = val;}
+	inline double get_kr(){return kr;}
 	inline void set_lub_max(double val){lub_max = val;}
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}

@@ -30,7 +30,6 @@ private:
 	unsigned short p0;
 	unsigned short p1;
 	//===== forces and stresses ==================== //
-	double kn_scaled;
 	double kt_scaled;
 	double kr_scaled;
 	double mu;
@@ -40,11 +39,9 @@ private:
 	//===== forces and stresses computations =====//
 	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
-	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
 	vec3d f_rolling;
-	vec3d t_contact;
 protected:
 public:
 	/*********************************
@@ -68,6 +65,9 @@ public:
 	 * 2 Static friction
 	 * 3 Sliding
 	 */
+	double f_contact_normal_norm; // normal contact force
+	double kn_scaled;
+
 	void updateContactModel();
 	void frictionlaw_criticalload();
 	void frictionlaw_criticalload_mu_inf();
