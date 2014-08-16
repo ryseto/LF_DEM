@@ -94,7 +94,10 @@ private:
 	//bool after_parameter_changed;
 
 	double *radius_cubed;
-
+	
+	bool strain_controlled;
+	bool stress_controlled;
+	double target_stress;
 protected:
 public:
 	System();

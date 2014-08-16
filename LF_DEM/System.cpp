@@ -397,6 +397,54 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	if (calc_stress) {
 		calcStressPerParticle();
 		avgStressUpdate();
+
+		/****** <exp> ********/
+		if(stress_controlled){
+			StressTensor total_contact_stress;
+			StressTensor total_repulsive_stress;
+
+			avgStressReset();
+			calcStressPerParticle();
+			avgStressUpdate();
+			calcStress();
+			total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan + total_contact_stressGU;
+			if (repulsiveforce) {
+				total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
+			}
+			if (brownian) {
+				cerr << " Stress controlled Brownian simulations not implemented ! " << endl;
+				exit(1);
+			}
+			double sr = target_stress - total_repulsive_stress.getStressXZ();
+			sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
+			dimensionless_shear_rate = sr/repulsiveforce_amplitude;
+			
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
+				na_ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
+				velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
+				ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
+			}
+			for (int i=0; i<np; i++) {
+				vel_repulsive[i] /= sr;
+				ang_vel_repulsive[i] /= sr;
+			}
+			avgStressReset();
+			calcStressPerParticle();
+			avgStressUpdate();
+			calcStress();
+			total_contact_stress = total_contact_stressXF_normal + total_contact_stressXF_tan + total_contact_stressGU;
+			if (repulsiveforce) {
+				total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
+			}
+			StressTensor total_stress = total_hydro_stress + total_contact_stress + total_repulsive_stress;
+			//			cout << total_contact_stress.getStressXZ() << " " << total_hydro_stress.getStressXZ() << " " << total_repulsive_stress.getStressXZ() << endl; 
+			//			cout << dimensionless_shear_rate << " " << total_stress.getStressXZ()*sr << endl;
+			//			getchar();
+		}
+		/****** </exp> ********/
+
+
 	}
 	timeStepMove();
 }
@@ -557,12 +605,23 @@ System::timeEvolution(double strain_next){
 		firsttime = false;
 	}
 	avgStressReset();
-	while (shear_strain < strain_next-dt-dt*0.001) { // integrate until strain_next - 1 time step
-		(this->*timeEvolutionDt)(false);
-		ts++;
-		shear_strain += dt;
-	};
-	(this->*timeEvolutionDt)(true);
+	if(strain_controlled){
+		while (shear_strain < strain_next-dt-dt*0.001) { // integrate until strain_next - 1 time step
+			(this->*timeEvolutionDt)(false); // no stress computation
+			ts++;
+			shear_strain += dt;
+		};
+		(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	}
+
+	if(stress_controlled){
+		while (shear_strain < strain_next-dt*0.001) { // integrate until strain_next
+			(this->*timeEvolutionDt)(true); // stress computation
+			ts++;
+			shear_strain += dt;
+		};
+	}
+
 	ts++;
 	shear_strain += dt;
 }
