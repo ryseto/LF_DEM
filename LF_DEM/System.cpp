@@ -196,7 +196,7 @@ System::setupBrownian(){
 }
 
 void
-System::setupSystem(){
+System::setupSystem(string control){
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 * @ We have to consider contact_relaxation_time in Brownian case.
 	 * @ The resistance coeffient affects Brownian force.
@@ -361,25 +361,15 @@ System::setupSystem(){
 		setSystemVolume();
 	}
 
-	strain_controlled = false;
-	stress_controlled = !strain_controlled;
-	if(stress_controlled){
-
-		if(brownian){
-			cerr << " Stress controlled Brownian simulations not implemented ! " << endl;
-			exit(1);
-		}
-		if(friction_model > 1){
-			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
-			exit(1);
-		}			
-		if(!repulsiveforce){
-			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
-			exit(1);
-		}
-		repulsiveforce_amplitude = 1;
-		target_stress = 1;
+	
+	if(control=="strain"){
+		strain_controlled = true;
+	} 
+	if(control=="stress"){
+		strain_controlled = false;		
 	}
+	stress_controlled = !strain_controlled;
+
 }
 
 void

@@ -97,7 +97,7 @@ private:
 	
 	bool strain_controlled;
 	bool stress_controlled;
-	double target_stress;
+
 protected:
 public:
 	System();
@@ -241,12 +241,13 @@ public:
 	double strain_interval_output;
 	string simu_name;
 	bool kn_kt_adjustment;
+	double target_stress;
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,
 						  double lx_, double ly_, double lz_);
 	void setInteractions_GenerateInitConfig();
-	void setupSystem();
+	void setupSystem(string control);
 	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
@@ -337,5 +338,6 @@ public:
 //		return log_lub_coeff_contact_tan_total;
 //	}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
+
 };
 #endif /* defined(__LF_DEM__System__) */

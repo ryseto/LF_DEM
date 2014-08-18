@@ -73,8 +73,8 @@ private:
 	 */
 	void setDefaultParameters();
 	void readParameterFile();
-	void openOutputFiles();
-	void prepareSimulationName();
+	void openOutputFiles(string);
+	void prepareSimulationName(string);
 	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();
@@ -89,13 +89,13 @@ private:
 	void outputConfigurationData();
 	void outputFinalConfiguration();
 	vec3d shiftUpCoordinate(double x, double y, double z);
+	void setupSimulation(int fnb, vector<string> &input_files, double peclet_num, double scaled_repulsion, double scaled_critical_load, string control_variable);
 public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	//	void simulationConstantShearRate(int argc, const char * argv[]);
-	void simulationConstantShearRate(int fnb, vector<string> &input_files,
-									 double peclet_num, double scaled_repulsion, double scaled_critical_load);
+	void simulationSteadyShear(int fnb, vector<string> &input_files, double peclet_num, double scaled_repulsion, double scaled_critical_load, string control_variable);
+
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 

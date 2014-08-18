@@ -49,69 +49,101 @@ Simulation::contactForceParameter(string filename){
 	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
 
-/*
- * Main simulation
- */
+
 void
-Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
+Simulation::setupSimulation(int fnb, vector<string> &input_files,
 										double peclet_num, double scaled_repulsion,
-										double scaled_critical_load){
+							double scaled_critical_load, string control_variable){
+	
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	if (scaled_repulsion > 0 &&
-		scaled_critical_load > 0) {
-		cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
-		exit(1);
-	}
-	if (peclet_num > 0) {
-		cerr << "Brownian" << endl;
-		sys.brownian = true;
-		sys.dimensionless_shear_rate = peclet_num;
-		if(scaled_repulsion > 0) {
-			cerr << "Repulsive force" << endl;
-			sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
-			sys.repulsiveforce = true;
+	if(control_variable=="strain"){
+		if (scaled_repulsion > 0 &&
+			scaled_critical_load > 0) {
+			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
+			exit(1);
 		}
-		if(scaled_critical_load > 0) {
-			cerr << "Critical load" << endl;
-			sys.critical_normal_force = scaled_critical_load/peclet_num;
-			sys.friction_model = 2;
-		}
-	} else {
-		cerr << "non-Brownian" << endl;
-		if (scaled_repulsion > 0) {
-			cerr << "Repulsive force" << endl;
-			sys.dimensionless_shear_rate = 1/scaled_repulsion;
-			sys.repulsiveforce_amplitude = scaled_repulsion;
-			sys.repulsiveforce = true;
-		}
-		if (scaled_critical_load > 0) {
-			sys.dimensionless_shear_rate = 1/scaled_critical_load;
-			sys.friction_model = 2;
-			cerr << "Critical load" << endl;
-			if (sys.dimensionless_shear_rate == -1) {
-				sys.critical_normal_force = 0; // <== why do we need this?
-			} else {
-				sys.critical_normal_force = scaled_critical_load;
+		
+		if (peclet_num > 0) {
+			cerr << "Brownian" << endl;
+			sys.brownian = true;
+			sys.dimensionless_shear_rate = peclet_num;
+			if(scaled_repulsion > 0) {
+				cerr << "Repulsive force" << endl;
+				sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
+				sys.repulsiveforce = true;
+			}
+			if(scaled_critical_load > 0) {
+				cerr << "Critical load" << endl;
+				sys.critical_normal_force = scaled_critical_load/peclet_num;
+				sys.friction_model = 2;
+			}
+		} else {
+			cerr << "non-Brownian" << endl;
+			if (scaled_repulsion > 0) {
+				cerr << "Repulsive force" << endl;
+				sys.dimensionless_shear_rate = 1/scaled_repulsion;
+				sys.repulsiveforce_amplitude = scaled_repulsion;
+				sys.repulsiveforce = true;
+			}
+			if (scaled_critical_load > 0) {
+				sys.dimensionless_shear_rate = 1/scaled_critical_load;
+				sys.friction_model = 2;
+				cerr << "Critical load" << endl;
+				if (sys.dimensionless_shear_rate == -1) {
+					sys.critical_normal_force = 0; // <== why do we need this?
+				} else {
+					sys.critical_normal_force = scaled_critical_load;
+				}
 			}
 		}
 	}
+	if(control_variable=="stress"){
+		sys.brownian = false;
+
+		if(scaled_critical_load > 0){
+			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
+			exit(1);
+		}			
+		if(scaled_repulsion == 0){
+			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
+			exit(1);
+		}
+		else{
+			sys.repulsiveforce = true;
+			sys.repulsiveforce_amplitude = 1;
+			sys.target_stress = 1/scaled_repulsion;
+		}
+	}
+
 	setDefaultParameters();
 	readParameterFile();
 	importInitialPositionFile();
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
 	}
-	openOutputFiles();
+	openOutputFiles(control_variable);
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
-	sys.setupSystem();
+	sys.setupSystem(control_variable);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
 	outputConfigurationData();
 	sys.setupShearFlow(true);
+}
+
+/*
+ * Main simulation
+ */
+void
+Simulation::simulationSteadyShear(int fnb, vector<string> &input_files,
+										double peclet_num, double scaled_repulsion,
+								  double scaled_critical_load, string control_variable){
+
+	setupSimulation(fnb, input_files, peclet_num,
+					scaled_repulsion, scaled_critical_load, control_variable);
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
@@ -154,6 +186,7 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		outputFinalConfiguration();
 	}
 }
+
 
 bool
 str2bool(string value){
@@ -300,11 +333,11 @@ Simulation::readParameterFile(){
 }
 
 void
-Simulation::openOutputFiles(){
+Simulation::openOutputFiles(string control_variable){
 	/*
 	 * Set simulation name and name of output files.
 	 */
-	prepareSimulationName();
+	prepareSimulationName(control_variable);
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
@@ -565,18 +598,24 @@ Simulation::importInitialPositionFile(){
 }
 
 void
-Simulation::prepareSimulationName(){
+Simulation::prepareSimulationName(string control_variable){
 	ostringstream ss_simu_name;
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	if (sys.dimensionless_shear_rate == -1) {
-		ss_simu_name << "_srinf" ; // shear rate infinity
-	} else {
-		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+
+	if(control_variable == "strain"){
+		if (sys.dimensionless_shear_rate == -1) {
+			ss_simu_name << "_srinf" ; // shear rate infinity
+		} else {
+			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+		}
 	}
+	if(control_variable == "stress"){
+		ss_simu_name << "_st" << sys.target_stress;
+	}	
 	sys.simu_name = ss_simu_name.str();
 }
 
