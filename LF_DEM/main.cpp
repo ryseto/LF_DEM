@@ -27,8 +27,10 @@ int main(int argc, char **argv)
 	string config_filename;
 	string param_filename;
 	string knkt_filename;
-	
-	while ((c = getopt(argc, argv, "ghp:r:c:k:a:")) != -1) {
+	bool strain_controlled = true;
+	bool stress_controlled = !strain_controlled;
+
+	while ((c = getopt(argc, argv, "ghsp:r:c:a:k:")) != -1) {
 		switch (c) {
 			case 'p':
 				peclet_num = atof(optarg);
@@ -100,7 +102,15 @@ int main(int argc, char **argv)
 		}
 
 		Simulation simulation;
-		simulation.simulationConstantShearRate(fnb, input_files, peclet_num,
-											   scaled_repulsion, scaled_cohesion, scaled_critical_load);
+		if (strain_controlled) {
+			simulation.simulationSteadyShear(fnb, input_files, peclet_num,
+											 scaled_repulsion, scaled_cohesion, scaled_critical_load, "strain");
+		}
+		if (stress_controlled) {
+			simulation.simulationSteadyShear(fnb, input_files, peclet_num,
+											 scaled_repulsion, scaled_cohesion, scaled_critical_load, "stress");
+		}
+
+			
 	}
 }

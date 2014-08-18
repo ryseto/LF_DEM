@@ -398,14 +398,14 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	if(stress_controlled){
 		StressTensor total_contact_stress;
 		StressTensor total_repulsive_stress;
-
+		
 		avgStressReset();
 		calcStressPerParticle();
 		avgStressUpdate();
 		calcStress();
 		total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan + total_contact_stressGU;
 		total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
-
+		
 		double sr = target_stress - total_repulsive_stress.getStressXZ();
 		sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
 		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
@@ -417,40 +417,40 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			velocity[i] += vel_repulsive[i]*inv_sr_m1;
 			ang_velocity[i] += ang_vel_repulsive[i]*inv_sr_m1;
 		}
-
-			avgStressReset();
-			calcStressPerParticle();
-			avgStressUpdate();
-			calcStress();
-			total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan+total_contact_stressGU;
-			if (repulsiveforce) {
-				total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
-			}
-			if (brownian) {
-				cerr << " Stress controlled Brownian simulations not implemented ! " << endl;
-				exit(1);
-			}
-			double sr = target_stress - total_repulsive_stress.getStressXZ();
-			sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
-			dimensionless_shear_rate = sr/repulsiveforce_amplitude;
-			
-			for (int i=0; i<np; i++) {
-				na_velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
-				na_ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
-				velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
-				ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
-			}
-			for (int i=0; i<np; i++) {
-				vel_repulsive[i] /= sr;
-				ang_vel_repulsive[i] /= sr;
-			}
-			avgStressReset();
-			calcStressPerParticle();
-			avgStressUpdate();
+		
+		avgStressReset();
+		calcStressPerParticle();
+		avgStressUpdate();
+		calcStress();
+		total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan+total_contact_stressGU;
+		if (repulsiveforce) {
+			total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
 		}
+		if (brownian) {
+			cerr << " Stress controlled Brownian simulations not implemented ! " << endl;
+			exit(1);
+		}
+		double sr = target_stress - total_repulsive_stress.getStressXZ();
+		sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
+		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
+		
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
+			na_ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
+			velocity[i] += vel_repulsive[i]*( 1/sr - 1 );
+			ang_velocity[i] += ang_vel_repulsive[i]*( 1/sr - 1 );
+		}
+		for (int i=0; i<np; i++) {
+			vel_repulsive[i] /= sr;
+			ang_vel_repulsive[i] /= sr;
+		}
+		avgStressReset();
+		calcStressPerParticle();
+		avgStressUpdate();
 	}
+}
 
-	timeStepMove();
+timeStepMove();
 }
 
 /****************************************************************************************************
@@ -617,7 +617,7 @@ System::timeEvolution(double strain_next){
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
-
+	
 	if(stress_controlled){
 		while (shear_strain < strain_next-dt*0.001) { // integrate until strain_next
 			(this->*timeEvolutionDt)(true); // stress computation
@@ -625,7 +625,7 @@ System::timeEvolution(double strain_next){
 			shear_strain += dt;
 		};
 	}
-
+	
 	ts++;
 	shear_strain += dt;
 }

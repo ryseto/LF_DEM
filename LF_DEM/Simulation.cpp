@@ -52,63 +52,81 @@ Simulation::contactForceParameter(string filename){
 
 void
 Simulation::setupSimulation(int fnb, vector<string> &input_files,
-										double peclet_num, double scaled_repulsion,
-										double scaled_cohesion, double scaled_critical_load){
+							double peclet_num, double scaled_repulsion,
+							double scaled_cohesion,
+							double scaled_critical_load,
+							string control_variable){
+	
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	if (scaled_repulsion > 0 &&
-		scaled_critical_load > 0) {
-		cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
-		exit(1);
-	}
-	if (peclet_num > 0) {
-		cerr << "Brownian" << endl;
-		sys.brownian = true;
-		sys.dimensionless_shear_rate = peclet_num;
-		if (scaled_repulsion > 0 && scaled_cohesion == 0) {
-			cerr << "Repulsive force" << endl;
-			sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
-			sys.repulsiveforce = true;
-		}
-		if (scaled_cohesion > 0 && scaled_cohesion == 0) {
-			cerr << "Cohesive force" << endl;
-			sys.cohesive_force = scaled_cohesion/peclet_num;
+	if (control_variable=="strain") {
+		if (scaled_repulsion > 0 &&
+			scaled_critical_load > 0) {
+			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
+			exit(1);
 		}
 		
-		if (scaled_critical_load > 0) {
-			cerr << "Critical load" << endl;
-			sys.critical_normal_force = scaled_critical_load/peclet_num;
-			sys.friction_model = 2;
-		}
-	} else {
-		cerr << "non-Brownian" << endl;
-		if (scaled_repulsion > 0 && scaled_cohesion == 0) {
-			cerr << "Repulsive force" << endl;
-			sys.dimensionless_shear_rate = 1/scaled_repulsion;
-			sys.repulsiveforce_amplitude = scaled_repulsion;
-			sys.repulsiveforce = true;
-		}
-		if (scaled_repulsion == 0 && scaled_cohesion > 0) {
-			cerr << "Cohesive force" << endl;
-			sys.dimensionless_shear_rate = 1/scaled_cohesion;
-			sys.cohesive_force = scaled_cohesion;
-		}
-		if (scaled_repulsion > 0 && scaled_cohesion > 0) {
-			cerr << "Repulsive force + Cohesive force" << endl;
-			sys.dimensionless_shear_rate = 1/scaled_repulsion;
-			sys.repulsiveforce_amplitude = 1/sys.dimensionless_shear_rate;
-			sys.repulsiveforce = true;
-			sys.cohesive_force = scaled_cohesion;
-		}
-		if (scaled_critical_load > 0) {
-			sys.dimensionless_shear_rate = 1/scaled_critical_load;
-			sys.friction_model = 2;
-			cerr << "Critical load" << endl;
-			if (sys.dimensionless_shear_rate == -1) {
-				sys.critical_normal_force = 0; // <== why do we need this?
-			} else {
-				sys.critical_normal_force = scaled_critical_load;
+		if (peclet_num > 0) {
+			cerr << "Brownian" << endl;
+			sys.brownian = true;
+			sys.dimensionless_shear_rate = peclet_num;
+			if(scaled_repulsion > 0) {
+				cerr << "Repulsive force" << endl;
+				sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
+				sys.repulsiveforce = true;
 			}
+			if(scaled_critical_load > 0) {
+				cerr << "Critical load" << endl;
+				sys.critical_normal_force = scaled_critical_load/peclet_num;
+				sys.friction_model = 2;
+			}
+		} else {
+			cerr << "non-Brownian" << endl;
+			if (scaled_repulsion > 0 && scaled_cohesion == 0) {
+				cerr << "Repulsive force" << endl;
+				sys.dimensionless_shear_rate = 1/scaled_repulsion;
+				sys.repulsiveforce_amplitude = scaled_repulsion;
+				sys.repulsiveforce = true;
+			}
+			if (scaled_critical_load > 0 && scaled_cohesion == 0) {
+				sys.dimensionless_shear_rate = 1/scaled_critical_load;
+				sys.friction_model = 2;
+				cerr << "Critical load" << endl;
+				if (sys.dimensionless_shear_rate == -1) {
+					sys.critical_normal_force = 0; // <== why do we need this?
+				} else {
+					sys.critical_normal_force = scaled_critical_load;
+				}
+			}
+			if (scaled_repulsion == 0 && scaled_cohesion > 0) {
+				cerr << "Cohesive force" << endl;
+				sys.dimensionless_shear_rate = 1/scaled_cohesion;
+				sys.cohesive_force = scaled_cohesion;
+			}
+			if (scaled_repulsion > 0 && scaled_cohesion > 0) {
+				cerr << "Repulsive force + Cohesive force" << endl;
+				sys.dimensionless_shear_rate = 1/scaled_repulsion;
+				sys.repulsiveforce_amplitude = 1/sys.dimensionless_shear_rate;
+				sys.repulsiveforce = true;
+				sys.cohesive_force = scaled_cohesion;
+			}
+		}
+	}
+	if(control_variable=="stress"){
+		sys.brownian = false;
+
+		if(scaled_critical_load > 0){
+			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
+			exit(1);
+		}			
+		if(scaled_repulsion == 0){
+			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
+			exit(1);
+		}
+		else{
+			sys.repulsiveforce = true;
+			sys.repulsiveforce_amplitude = 1;
+			sys.target_stress = 1/scaled_repulsion;
 		}
 	}
 

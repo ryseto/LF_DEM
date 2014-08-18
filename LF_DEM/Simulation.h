@@ -94,10 +94,10 @@ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	//	void simulationConstantShearRate(int argc, const char * argv[]);
-	void simulationConstantShearRate(int fnb, vector<string> &input_files,
-									 double peclet_num, double scaled_repulsion,
-									 double scaled_cohesion, double scaled_critical_load);
+	void simulationSteadyShear(int fnb, vector<string> &input_files, double peclet_num, double scaled_repulsion,
+							   double scaled_cohesion,
+							   double scaled_critical_load, string control_variable);
+
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 
