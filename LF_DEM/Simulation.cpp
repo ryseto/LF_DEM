@@ -158,11 +158,11 @@ Simulation::setupSimulation(int fnb, vector<string> &input_files,
  */
 void
 Simulation::simulationSteadyShear(int fnb, vector<string> &input_files,
-										double peclet_num, double scaled_repulsion,
+										double peclet_num, double scaled_repulsion, double scaled_cohesion,
 								  double scaled_critical_load, string control_variable){
 
 	setupSimulation(fnb, input_files, peclet_num,
-					scaled_repulsion, scaled_critical_load, control_variable);
+					scaled_repulsion, scaled_cohesion, scaled_critical_load, control_variable);
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
