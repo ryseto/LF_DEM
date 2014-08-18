@@ -419,6 +419,7 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 
 		double sr = target_stress - total_repulsive_stress.getStressXZ();
 		sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
+
 		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
 		
 		double inv_sr_m1 =  1/sr - 1;
@@ -434,17 +435,20 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			ang_vel_repulsive[i] /= sr;
 		}
 
+		// avgStressReset();
 		// calcStressPerParticle();
 		// avgStressUpdate();
 		// calcStress();
 		// total_contact_stress = total_contact_stressXF_normal + total_contact_stressXF_tan + total_contact_stressGU;
 		// if (repulsiveforce) {
-		// 	total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
+		//  	total_repulsive_stress = total_repulsive_stressXF/sr+total_repulsive_stressGU;
 		// }
 		// StressTensor total_stress = total_hydro_stress + total_contact_stress + total_repulsive_stress;
-		//			cout << total_contact_stress.getStressXZ() << " " << total_hydro_stress.getStressXZ() << " " << total_repulsive_stress.getStressXZ() << endl; 
-		//			cout << dimensionless_shear_rate << " " << total_stress.getStressXZ()*sr << endl;
-		//			getchar();
+		// cout << " b " << endl;
+		// cout << total_contact_stress.getStressXZ() << " " << total_hydro_stress.getStressXZ() << " " << total_repulsive_stress.getStressXZ() << endl; 
+		// cout << total_repulsive_stressXF.getStressXZ()/sr << " " << total_repulsive_stressGU.getStressXZ() << endl; 
+		// cout << dimensionless_shear_rate << " " << total_stress.getStressXZ()*sr << endl;
+		// getchar();
 	}
 	else{
 		if (calc_stress) {
@@ -753,6 +757,10 @@ System::avgStressUpdate(){
 			avg_repulsivestressXF += interaction[k].getRepulsiveStressXF();
 		}
 	}
+	if(stress_controlled){
+		avg_repulsivestressXF /= dimensionless_shear_rate;
+	}
+
 	if (brownian) {
 		for (int i=0; i<np; i++) {
 			avg_brownianstressGU[i] += brownianstressGU[i];
