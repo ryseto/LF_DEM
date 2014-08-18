@@ -407,7 +407,7 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			calcStressPerParticle();
 			avgStressUpdate();
 			calcStress();
-			total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan + total_contact_stressGU;
+			total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan+total_contact_stressGU;
 			if (repulsiveforce) {
 				total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
 			}

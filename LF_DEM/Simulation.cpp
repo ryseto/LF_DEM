@@ -67,15 +67,16 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		cerr << "Brownian" << endl;
 		sys.brownian = true;
 		sys.dimensionless_shear_rate = peclet_num;
-		if (scaled_repulsion > 0) {
+		if (scaled_repulsion > 0 && scaled_cohesion == 0) {
 			cerr << "Repulsive force" << endl;
 			sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
 			sys.repulsiveforce = true;
 		}
-		if (scaled_cohesion > 0) {
+		if (scaled_cohesion > 0 && scaled_cohesion == 0) {
 			cerr << "Cohesive force" << endl;
 			sys.cohesive_force = scaled_cohesion/peclet_num;
 		}
+		
 		if (scaled_critical_load > 0) {
 			cerr << "Critical load" << endl;
 			sys.critical_normal_force = scaled_critical_load/peclet_num;
@@ -83,15 +84,22 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		}
 	} else {
 		cerr << "non-Brownian" << endl;
-		if (scaled_repulsion > 0) {
+		if (scaled_repulsion > 0 && scaled_cohesion == 0) {
 			cerr << "Repulsive force" << endl;
 			sys.dimensionless_shear_rate = 1/scaled_repulsion;
 			sys.repulsiveforce_amplitude = scaled_repulsion;
 			sys.repulsiveforce = true;
 		}
-		if (scaled_cohesion > 0) {
+		if (scaled_repulsion == 0 && scaled_cohesion > 0) {
 			cerr << "Cohesive force" << endl;
 			sys.dimensionless_shear_rate = 1/scaled_cohesion;
+			sys.cohesive_force = scaled_cohesion;
+		}
+		if (scaled_repulsion > 0 && scaled_cohesion > 0) {
+			cerr << "Repulsive force + Cohesive force" << endl;
+			sys.dimensionless_shear_rate = 1/scaled_repulsion;
+			sys.repulsiveforce_amplitude = 1/sys.dimensionless_shear_rate;
+			sys.repulsiveforce = true;
 			sys.cohesive_force = scaled_cohesion;
 		}
 		if (scaled_critical_load > 0) {
