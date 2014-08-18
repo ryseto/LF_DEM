@@ -408,6 +408,7 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 		
 		double sr = target_stress - total_repulsive_stress.getStressXZ();
 		sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
+
 		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
 		
 		double inv_sr_m1 =  1/sr - 1;
@@ -750,6 +751,10 @@ System::avgStressUpdate(){
 			avg_repulsivestressXF += interaction[k].getRepulsiveStressXF();
 		}
 	}
+	if(stress_controlled){
+		avg_repulsivestressXF /= dimensionless_shear_rate;
+	}
+
 	if (brownian) {
 		for (int i=0; i<np; i++) {
 			avg_brownianstressGU[i] += brownianstressGU[i];
