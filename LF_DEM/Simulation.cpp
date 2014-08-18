@@ -49,11 +49,9 @@ Simulation::contactForceParameter(string filename){
 	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
 
-/*
- * Main simulation
- */
+
 void
-Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
+Simulation::setupSimulation(int fnb, vector<string> &input_files,
 										double peclet_num, double scaled_repulsion,
 										double scaled_cohesion, double scaled_critical_load){
 	filename_import_positions = input_files[0];
@@ -113,6 +111,7 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 			}
 		}
 	}
+
 	setDefaultParameters();
 	readParameterFile();
 	if (sys.cohesive_force > 0) {
@@ -123,16 +122,28 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
 	}
-	openOutputFiles();
+	openOutputFiles(control_variable);
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
-	sys.setupSystem();
+	sys.setupSystem(control_variable);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
 	outputConfigurationData();
 	sys.setupShearFlow(true);
+}
+
+/*
+ * Main simulation
+ */
+void
+Simulation::simulationSteadyShear(int fnb, vector<string> &input_files,
+										double peclet_num, double scaled_repulsion,
+								  double scaled_critical_load, string control_variable){
+
+	setupSimulation(fnb, input_files, peclet_num,
+					scaled_repulsion, scaled_critical_load, control_variable);
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
@@ -175,6 +186,7 @@ Simulation::simulationConstantShearRate(int fnb, vector<string> &input_files,
 		outputFinalConfiguration();
 	}
 }
+
 
 bool
 str2bool(string value){
@@ -323,11 +335,11 @@ Simulation::readParameterFile(){
 }
 
 void
-Simulation::openOutputFiles(){
+Simulation::openOutputFiles(string control_variable){
 	/*
 	 * Set simulation name and name of output files.
 	 */
-	prepareSimulationName();
+	prepareSimulationName(control_variable);
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
@@ -591,18 +603,24 @@ Simulation::importInitialPositionFile(){
 }
 
 void
-Simulation::prepareSimulationName(){
+Simulation::prepareSimulationName(string control_variable){
 	ostringstream ss_simu_name;
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	if (sys.dimensionless_shear_rate == -1) {
-		ss_simu_name << "_srinf" ; // shear rate infinity
-	} else {
-		ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+
+	if(control_variable == "strain"){
+		if (sys.dimensionless_shear_rate == -1) {
+			ss_simu_name << "_srinf" ; // shear rate infinity
+		} else {
+			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
+		}
 	}
+	if(control_variable == "stress"){
+		ss_simu_name << "_st" << sys.target_stress;
+	}	
 	sys.simu_name = ss_simu_name.str();
 }
 

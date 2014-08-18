@@ -195,7 +195,7 @@ System::setupBrownian(){
 }
 
 void
-System::setupSystem(){
+System::setupSystem(string control){
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 * @ We have to consider contact_relaxation_time in Brownian case.
 	 * @ The resistance coeffient affects Brownian force.
@@ -394,14 +394,29 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
-	if (calc_stress) {
+
+	if(stress_controlled){
+		StressTensor total_contact_stress;
+		StressTensor total_repulsive_stress;
+
+		avgStressReset();
 		calcStressPerParticle();
 		avgStressUpdate();
+		calcStress();
+		total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan + total_contact_stressGU;
+		total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
 
-		/****** <exp> ********/
-		if(stress_controlled){
-			StressTensor total_contact_stress;
-			StressTensor total_repulsive_stress;
+		double sr = target_stress - total_repulsive_stress.getStressXZ();
+		sr /= total_hydro_stress.getStressXZ() + total_contact_stress.getStressXZ();
+		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
+		
+		double inv_sr_m1 =  1/sr - 1;
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += vel_repulsive[i]*inv_sr_m1;
+			na_ang_velocity[i] += ang_vel_repulsive[i]*inv_sr_m1;
+			velocity[i] += vel_repulsive[i]*inv_sr_m1;
+			ang_velocity[i] += ang_vel_repulsive[i]*inv_sr_m1;
+		}
 
 			avgStressReset();
 			calcStressPerParticle();
@@ -432,20 +447,9 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			avgStressReset();
 			calcStressPerParticle();
 			avgStressUpdate();
-			calcStress();
-			total_contact_stress = total_contact_stressXF_normal + total_contact_stressXF_tan + total_contact_stressGU;
-			if (repulsiveforce) {
-				total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
-			}
-			StressTensor total_stress = total_hydro_stress + total_contact_stress + total_repulsive_stress;
-			//			cout << total_contact_stress.getStressXZ() << " " << total_hydro_stress.getStressXZ() << " " << total_repulsive_stress.getStressXZ() << endl; 
-			//			cout << dimensionless_shear_rate << " " << total_stress.getStressXZ()*sr << endl;
-			//			getchar();
 		}
-		/****** </exp> ********/
-
-
 	}
+
 	timeStepMove();
 }
 

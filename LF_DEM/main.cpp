@@ -53,6 +53,10 @@ int main(int argc, char **argv)
 			case 'g':
 				generate_init = true;
 				break;
+			case 's':
+				stress_controlled = true;
+				strain_controlled = !stress_controlled;
+				break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -64,6 +68,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
+
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate();
@@ -93,6 +98,7 @@ int main(int argc, char **argv)
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 			exit(1);
 		}
+
 		Simulation simulation;
 		simulation.simulationConstantShearRate(fnb, input_files, peclet_num,
 											   scaled_repulsion, scaled_cohesion, scaled_critical_load);
