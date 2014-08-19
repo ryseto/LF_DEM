@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/SD_check"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/rollingfriction"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,15 +78,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-p 10"
+            argument = "-r 0.001"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "D3N27VF0.45MonoCubic_1.dat"
+            argument = "D2N50VF0.6MonoSquare_1.dat"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "colloid.txt"
+            argument = "nobrownian.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

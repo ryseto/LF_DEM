@@ -17,11 +17,8 @@ Contact::Contact(const Contact& obj)
 
 void
 Contact::init(System *sys_, Interaction *interaction_){
-	kr_scaled = 100;// @@@@ tmp
-
 	sys = sys_;
 	interaction = interaction_;
-	
 	state = 0;
 	if (sys->friction_model == 1) {
 		frictionlaw = &Contact::frictionlaw_standard;
@@ -40,6 +37,7 @@ Contact::getInteractionData(){
 	double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
 	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
+	kr_scaled = ro_12*sys->get_kr(); // F = kt_scaled * disp_tan <-- disp is not scaled
 	mu = sys->get_mu_static();
 }
 
@@ -84,7 +82,6 @@ Contact::deactivate(){
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
 	f_contact_tan.reset();
-	t_contact.reset();
 }
 
 /*********************************

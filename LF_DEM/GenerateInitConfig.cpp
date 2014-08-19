@@ -48,7 +48,7 @@ GenerateInitConfig::generate(){
 	ofstream fout;
 	fout.open("energy_decay.dat");
 	double energy_previous = 0;
-	double diff_energy;
+	double diff_energy = 99999;
 	do {
 		energy = zeroTMonteCarloSweep();
 		cerr << energy << endl;

@@ -351,22 +351,16 @@ sub OutYaplotData{
 			}
 		
     }
-	#
-	#	printf OUT "y 2\n";
-	#	printf OUT "r 0.4\n";
-	#	printf OUT "@ 5\n"; # static
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		$force = $Fc_n[$k];
-	#        if ($F_lub[$k] < 0) {
-	#			$force += - $F_lub[$k];
-	#		}
-	#		if ($Gap[$k] < 0) {
-	#			if ($fricstate[$k] != 0) {
-	#				&OutString2($int0[$k],  $int1[$k]);
-	#			}
-	#		}
-	#    }
-	#
+
+	printf OUT "y 2\n";
+	printf OUT "r 0.4\n";
+	printf OUT "@ 5\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($contactstate[$k] != 0) {
+			&OutString2($int0[$k],  $int1[$k]);
+		}
+	}
+	
 	#
 	#
 	#	printf OUT "y 4\n";

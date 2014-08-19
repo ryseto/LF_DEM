@@ -52,41 +52,42 @@ Simulation::contactForceParameter(string filename){
 
 void
 Simulation::setupSimulation(int fnb, vector<string> &input_files,
-										double peclet_num, double scaled_repulsion,
-							double scaled_critical_load, string control_variable){
+							double peclet_num, double scaled_repulsion,
+							double scaled_cohesion,
+							double scaled_critical_load,
+							string control_variable){
 	
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	if(control_variable=="strain"){
+	if (control_variable == "strain") {
 		if (scaled_repulsion > 0 &&
 			scaled_critical_load > 0) {
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 			exit(1);
 		}
-		
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
 			sys.dimensionless_shear_rate = peclet_num;
-			if(scaled_repulsion > 0) {
+			if (scaled_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
 				sys.repulsiveforce = true;
 			}
-			if(scaled_critical_load > 0) {
+			if (scaled_critical_load > 0) {
 				cerr << "Critical load" << endl;
 				sys.critical_normal_force = scaled_critical_load/peclet_num;
 				sys.friction_model = 2;
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
-			if (scaled_repulsion > 0) {
+			if (scaled_repulsion > 0 && scaled_cohesion == 0) {
 				cerr << "Repulsive force" << endl;
 				sys.dimensionless_shear_rate = 1/scaled_repulsion;
 				sys.repulsiveforce_amplitude = scaled_repulsion;
 				sys.repulsiveforce = true;
 			}
-			if (scaled_critical_load > 0) {
+			if (scaled_critical_load > 0 && scaled_cohesion == 0) {
 				sys.dimensionless_shear_rate = 1/scaled_critical_load;
 				sys.friction_model = 2;
 				cerr << "Critical load" << endl;
@@ -96,29 +97,40 @@ Simulation::setupSimulation(int fnb, vector<string> &input_files,
 					sys.critical_normal_force = scaled_critical_load;
 				}
 			}
+			if (scaled_repulsion == 0 && scaled_cohesion > 0) {
+				cerr << "Cohesive force" << endl;
+				sys.dimensionless_shear_rate = 1/scaled_cohesion;
+				sys.cohesive_force = scaled_cohesion;
+			}
+			if (scaled_repulsion > 0 && scaled_cohesion > 0) {
+				cerr << "Repulsive force + Cohesive force" << endl;
+				sys.dimensionless_shear_rate = 1/scaled_repulsion;
+				sys.repulsiveforce_amplitude = 1/sys.dimensionless_shear_rate;
+				sys.repulsiveforce = true;
+				sys.cohesive_force = scaled_cohesion;
+			}
 		}
-	}
-	if(control_variable=="stress"){
+	} else if (control_variable == "stress") {
 		sys.brownian = false;
-
-		if(scaled_critical_load > 0){
+		if (scaled_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
-		}			
-		if(scaled_repulsion == 0){
+		}
+		if (scaled_repulsion == 0) {
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
-		}
-		else{
+		} else {
 			sys.repulsiveforce = true;
 			sys.repulsiveforce_amplitude = 1;
 			sys.target_stress = 1/scaled_repulsion;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		}
 	}
-
 	setDefaultParameters();
 	readParameterFile();
+	if (sys.cohesive_force > 0) {
+		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate;
+	}
 	importInitialPositionFile();
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
@@ -140,11 +152,10 @@ Simulation::setupSimulation(int fnb, vector<string> &input_files,
  */
 void
 Simulation::simulationSteadyShear(int fnb, vector<string> &input_files,
-										double peclet_num, double scaled_repulsion,
+								  double peclet_num, double scaled_repulsion, double scaled_cohesion,
 								  double scaled_critical_load, string control_variable){
-
 	setupSimulation(fnb, input_files, peclet_num,
-					scaled_repulsion, scaled_critical_load, control_variable);
+					scaled_repulsion, scaled_cohesion, scaled_critical_load, control_variable);
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
@@ -256,6 +267,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		sys.kn = atof(value.c_str());
 	} else if (keyword == "kt") {
 		sys.kt = atof(value.c_str());
+	} else if (keyword == "kr") {
+		sys.kr = atof(value.c_str());
 	} else if (keyword == "dt_max") {
 		sys.dt_max = atof(value.c_str());
 	} else if (keyword == "kn_lowPeclet") {
@@ -314,7 +327,7 @@ Simulation::readParameterFile(){
 				break;
 			}
 			str_parameter = str_parameter.substr(end_comment+2);
-		} while(true);
+		} while (true);
 		if (begin_comment > end_comment ) {
 			cerr << str_parameter.find("/*") << endl;
 			cerr << str_parameter.find("*/") << endl;
@@ -347,7 +360,6 @@ Simulation::openOutputFiles(string control_variable){
 	fout_interaction.open(interaction_filename.c_str());
 	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
-	
 	outputDataHeader(fout_particle);
 	outputDataHeader(fout_interaction);
 	outputDataHeader(fout_rheo);
@@ -487,7 +499,7 @@ Simulation::setDefaultParameters(){
 	if (sys.friction_model != 2) {
 		sys.friction_model = 1;
 	}
-	sys.rolling_friction = true;
+	sys.rolling_friction = false;
 	/*
 	 * Shear flow
 	 *  shear_rate: shear rate
@@ -524,8 +536,10 @@ Simulation::setDefaultParameters(){
 	 */
 	sys.kn = 10000;
 	sys.kt = 6000;
+	sys.kr = 6000;
 	sys.kn_lowPeclet = 10000;
 	sys.kt_lowPeclet = 6000;
+	sys.kr_lowPeclet = 6000;
 	sys.kn_kt_adjustment = false;
 	strain_interval_knkt_adjustment = 5;
 	sys.overlap_target = 0.05;
@@ -538,6 +552,8 @@ Simulation::setDefaultParameters(){
 	 */
 	if (sys.repulsiveforce) {
 		sys.set_repulsiveforce_length(0.05);
+	} else {
+		sys.set_repulsiveforce_length(0);
 	}
 	/*
 	 * mu_static: static friction coeffient
@@ -606,7 +622,7 @@ Simulation::prepareSimulationName(string control_variable){
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-
+	
 	if(control_variable == "strain"){
 		if (sys.dimensionless_shear_rate == -1) {
 			ss_simu_name << "_srinf" ; // shear rate infinity
@@ -616,7 +632,7 @@ Simulation::prepareSimulationName(string control_variable){
 	}
 	if(control_variable == "stress"){
 		ss_simu_name << "_st" << sys.target_stress;
-	}	
+	}
 	sys.simu_name = ss_simu_name.str();
 }
 

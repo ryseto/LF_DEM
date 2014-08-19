@@ -14,10 +14,11 @@
 int main(int argc, char **argv)
 {
 	int c;
-	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n\n Note: $ LF_DEM -c -1 corresponds to infinite shear rate";
+	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-a Scaled_Cohesion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n\n Note: $ LF_DEM -c -1 corresponds to infinite shear rate";
 	
 	double peclet_num = 0;
 	double scaled_repulsion = 0;
+	double scaled_cohesion = 0;
 	double scaled_critical_load = 0;
 	
 	bool generate_init = false;
@@ -29,7 +30,7 @@ int main(int argc, char **argv)
 	bool strain_controlled = true;
 	bool stress_controlled = !strain_controlled;
 
-	while ((c = getopt(argc, argv, "ghsp:r:c:k:")) != -1) {
+	while ((c = getopt(argc, argv, "ghsp:r:c:a:k:")) != -1) {
 		switch (c) {
 			case 'p':
 				peclet_num = atof(optarg);
@@ -38,6 +39,10 @@ int main(int argc, char **argv)
 			case 'r':
 				scaled_repulsion = atof(optarg);
 				cerr << "scaled repulsion " << scaled_repulsion << endl;
+				break;
+			case 'a':
+				scaled_cohesion = atof(optarg);
+				cerr << "scaled cohesion " << scaled_cohesion << endl;
 				break;
 			case 'c':
 				scaled_critical_load = atof(optarg);
@@ -65,7 +70,6 @@ int main(int argc, char **argv)
 		}
 	}
 	
-
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate();
@@ -95,15 +99,14 @@ int main(int argc, char **argv)
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 			exit(1);
 		}
-
+		
 		Simulation simulation;
-		if(strain_controlled){
+		if (strain_controlled) {
 			simulation.simulationSteadyShear(fnb, input_files, peclet_num,
-												   scaled_repulsion, scaled_critical_load, "strain");
-		}
-		if(stress_controlled){
+											 scaled_repulsion, scaled_cohesion, scaled_critical_load, "strain");
+		} else if (stress_controlled) {
 			simulation.simulationSteadyShear(fnb, input_files, peclet_num,
-												   scaled_repulsion, scaled_critical_load, "stress");
+											 scaled_repulsion, scaled_cohesion, scaled_critical_load, "stress");
 		}
 
 			
