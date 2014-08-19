@@ -163,8 +163,6 @@ Interaction::updateState(bool &deactivated){
 	if (contact.state > 0) {
 		// contacting in previous step
 		if (contact.kn_scaled*gap_nondim > sys->cohesive_force){
-			cerr << gap_nondim << endl;
-			// now separate
 			contact.deactivate();
 			if (sys->in_predictor) {
 				contact_state_changed_after_predictor = true;

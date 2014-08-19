@@ -70,7 +70,6 @@ int main(int argc, char **argv)
 		}
 	}
 	
-
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate();
@@ -100,13 +99,12 @@ int main(int argc, char **argv)
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
 			exit(1);
 		}
-
+		
 		Simulation simulation;
 		if (strain_controlled) {
 			simulation.simulationSteadyShear(fnb, input_files, peclet_num,
 											 scaled_repulsion, scaled_cohesion, scaled_critical_load, "strain");
-		}
-		if (stress_controlled) {
+		} else if (stress_controlled) {
 			simulation.simulationSteadyShear(fnb, input_files, peclet_num,
 											 scaled_repulsion, scaled_cohesion, scaled_critical_load, "stress");
 		}
