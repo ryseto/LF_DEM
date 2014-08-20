@@ -401,49 +401,16 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
-	if (stress_controlled) {
-		StressTensor total_contact_stress;
-		StressTensor total_repulsive_stress;
-		dimensionless_shear_rate = 1;	
-
-		avgStressReset();
-		calcStressPerParticle();
-		avgStressUpdate();
-		calcStress();
-		total_contact_stress = total_contact_stressXF_normal+total_contact_stressXF_tan+total_contact_stressGU;
-		total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
-		
-		double sr = target_stress-total_repulsive_stress.getStressXZ();
-		sr /= total_hydro_stress.getStressXZ()+total_contact_stress.getStressXZ();
-		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
-
-
-		double inv_sr_m1 =  1/sr-1;
-		for (int i=0; i<np; i++) {
-			na_velocity[i] += vel_repulsive[i]*inv_sr_m1;
-			na_ang_velocity[i] += ang_vel_repulsive[i]*inv_sr_m1;
-			velocity[i] += vel_repulsive[i]*inv_sr_m1;
-			ang_velocity[i] += ang_vel_repulsive[i]*inv_sr_m1;
-		}
-		for (int i=0; i<np; i++) {
-			vel_repulsive[i] /= sr;
-			ang_vel_repulsive[i] /= sr;
-		}
-
-		if (calc_stress) {
+	if (calc_stress) {
+		if (stress_controlled) {
 			avgStressReset();
 			calcStressPerParticle();
 			avgStressUpdate();
-		}
-
-	}
-    else {
-		if (calc_stress) {
+		} else {
 			calcStressPerParticle();
 			avgStressUpdate();
 		}
 	}
-	
 	timeStepMove();
 }
 
@@ -734,23 +701,19 @@ System::avgStressUpdate(){
 			avg_contactstressXF_tan += interaction[k].contact.getContactStressXF_tan();
 		}
 	}
-
 	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
 			avg_repulsivestressGU[i] += repulsivestressGU[i];
 		}
-		
 		StressTensor inst_repulsivestress;
 		for (int k=0; k<nb_interaction; k++) {
 			inst_repulsivestress += interaction[k].getRepulsiveStressXF();
 		}
-		if(stress_controlled){
+		if (stress_controlled) {
 			inst_repulsivestress /= dimensionless_shear_rate;
 		}
-
 		avg_repulsivestressXF += inst_repulsivestress;
 	}
-
 	if (brownian) {
 		for (int i=0; i<np; i++) {
 			avg_brownianstressGU[i] += brownianstressGU[i];
@@ -954,54 +917,83 @@ System::buildRepulsiveForceTerms(bool set_or_add){
 void
 System::computeVelocities(bool divided_velocities){
 	stokes_solver.resetRHS();
-	if (divided_velocities) {
+	if (stress_controlled) {
 		// in case we want to compute the stress contributions
-		if (!zero_shear) {
-			buildHydroTerms(true, true); // build matrix and rhs force GE
-		} else {
-			buildHydroTerms(true, false); // zero shear-rate
-		}
+		buildHydroTerms(true, true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
+		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
+		dimensionless_shear_rate = 1;
+		avgStressReset();
+		calcStressPerParticle();
+		avgStressUpdate();
+		calcStress();
+		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
+		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+		double shearstress_rep = \
+		+total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+		double shearstress_hyd = total_hydro_stress.getStressXZ();
+		double sr = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
 		for (int i=0; i<np; i++) {
-			na_velocity[i] = vel_hydro[i]+vel_contact[i];
-			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+			vel_repulsive[i] /= sr;
+			ang_vel_repulsive[i] /= sr;
 		}
-		if (repulsiveforce) {
-			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
-			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
-			for (int i=0; i<np; i++) {
-				na_velocity[i] += vel_repulsive[i];
-				na_ang_velocity[i] += ang_vel_repulsive[i];
-			}
+		for (int i=0; i<np; i++) {
+			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
+			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
 		}
 	} else {
-		// for most of the time evolution
-		if (!zero_shear) {
-			buildHydroTerms(true, true); // build matrix and rhs force GE
+		if (divided_velocities) {
+			// in case we want to compute the stress contributions
+			if (!zero_shear) {
+				buildHydroTerms(true, true); // build matrix and rhs force GE
+			} else {
+				buildHydroTerms(true, false); // zero shear-rate
+			}
+			stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
+			buildContactTerms(true); // set rhs = F_C
+			stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+			for (int i=0; i<np; i++) {
+				na_velocity[i] = vel_hydro[i]+vel_contact[i];
+				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+			}
+			if (repulsiveforce) {
+				buildRepulsiveForceTerms(true); // set rhs = F_repulsive
+				stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
+				for (int i=0; i<np; i++) {
+					na_velocity[i] += vel_repulsive[i];
+					na_ang_velocity[i] += ang_vel_repulsive[i];
+				}
+			}
 		} else {
-			buildHydroTerms(true, false); // zero shear-rate
+			// for most of the time evolution
+			if (!zero_shear) {
+				buildHydroTerms(true, true); // build matrix and rhs force GE
+			} else {
+				buildHydroTerms(true, false); // zero shear-rate
+			}
+			buildContactTerms(false); // add rhs += F_C
+			if (repulsiveforce) {
+				buildRepulsiveForceTerms(false); // add rhs += F_repulsive
+			}
+			stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 		}
-		buildContactTerms(false); // add rhs += F_C
-		if (repulsiveforce) {
-			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
-		}
-		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
-	}
-	
-	if (brownian) {
-		if (in_predictor) {
-			/* generate new F_B only in predictor
-			 * Resistance matrix is used.
-			 */
-			generateBrownianForces();
-		}
-		stokes_solver.setRHS(brownian_force); // set rhs = F_B
-		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-		for (int i=0; i<np; i++) {
-			na_velocity[i] += vel_brownian[i];
-			na_ang_velocity[i] += ang_vel_brownian[i];
+		if (brownian) {
+			if (in_predictor) {
+				/* generate new F_B only in predictor
+				 * Resistance matrix is used.
+				 */
+				generateBrownianForces();
+			}
+			stokes_solver.setRHS(brownian_force); // set rhs = F_B
+			stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += vel_brownian[i];
+				na_ang_velocity[i] += ang_vel_brownian[i];
+			}
 		}
 	}
 	for (int i=0; i<np; i++) {
