@@ -51,7 +51,7 @@ Simulation::contactForceParameter(string filename){
 
 
 void
-Simulation::setupSimulation(int fnb, vector<string> &input_files,
+Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 							double peclet_num, double scaled_repulsion,
 							double scaled_cohesion,
 							double scaled_critical_load,
@@ -91,11 +91,7 @@ Simulation::setupSimulation(int fnb, vector<string> &input_files,
 				sys.dimensionless_shear_rate = 1/scaled_critical_load;
 				sys.friction_model = 2;
 				cerr << "Critical load" << endl;
-				if (sys.dimensionless_shear_rate == -1) {
-					sys.critical_normal_force = 0; // <== why do we need this?
-				} else {
-					sys.critical_normal_force = scaled_critical_load;
-				}
+				sys.critical_normal_force = scaled_critical_load;
 			}
 			if (scaled_repulsion == 0 && scaled_cohesion > 0) {
 				cerr << "Cohesive force" << endl;
@@ -129,9 +125,11 @@ Simulation::setupSimulation(int fnb, vector<string> &input_files,
 	setDefaultParameters();
 	readParameterFile();
 	if (sys.cohesive_force > 0) {
-		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate;
+		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate; // < Why is that here? It seems it gives sys.cohesive_force = scaled_cohesion^2 for pure cohesion. Is this what is intended?
 	}
 	importInitialPositionFile();
+
+	int fnb = input_files.size();
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
 	}
@@ -151,10 +149,10 @@ Simulation::setupSimulation(int fnb, vector<string> &input_files,
  * Main simulation
  */
 void
-Simulation::simulationSteadyShear(int fnb, vector<string> &input_files,
+Simulation::simulationSteadyShear(vector<string> &input_files,
 								  double peclet_num, double scaled_repulsion, double scaled_cohesion,
 								  double scaled_critical_load, string control_variable){
-	setupSimulation(fnb, input_files, peclet_num,
+	setupSimulationSteadyShear(input_files, peclet_num,
 					scaled_repulsion, scaled_cohesion, scaled_critical_load, control_variable);
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
@@ -198,6 +196,88 @@ Simulation::simulationSteadyShear(int fnb, vector<string> &input_files,
 		outputFinalConfiguration();
 	}
 }
+
+
+/*
+ * Main simulation
+ */
+void
+Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable){
+	
+	if(seq_type != "r" || control_variable != "stress"){
+		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment "; exit(1);
+	}
+	
+	cout << " User Defined Sequence, Repulsive Force " << endl;
+	sys.repulsiveforce = true;
+	sys.repulsiveforce_amplitude = 1;
+	sys.dimensionless_shear_rate = 1; // needed for 1st time step
+
+	filename_import_positions = input_files[0];
+	filename_parameters = input_files[1];
+
+	setDefaultParameters();
+	readParameterFile();
+
+	importInitialPositionFile();
+
+	int fnb = input_files.size();
+	if (fnb == 4) {
+		contactForceParameter(input_files[2]);
+	}
+	
+	openOutputFiles(control_variable);
+
+	sys.setupSystem(control_variable);
+	outputConfigurationData();
+
+	sys.setupShearFlow(true);
+
+
+	vector <double> strain_sequence;
+	vector <double> rsequence;
+
+	ifstream fin_seq;
+	fin_seq.open(input_files[fnb-1].c_str());
+	
+
+	double strain;
+	double targ_st;
+
+	while (fin_seq >> strain >> targ_st){
+		strain_sequence.push_back(strain);
+		rsequence.push_back(targ_st);
+	}
+	
+
+	
+	int cnt_simu_loop = 1;
+	int cnt_config_out = 1;
+	double next_strain=0;
+	for(unsigned int step=0; step<strain_sequence.size();step++){
+		sys.target_stress = 1/rsequence[step];
+		next_strain += strain_sequence[step];
+		while (sys.get_shear_strain() < next_strain-1e-8) {
+			double strain_next_config_out = cnt_config_out*sys.strain_interval_output;
+			double strain_next = cnt_simu_loop*sys.strain_interval_output_data;
+			sys.timeEvolution(strain_next);
+			evaluateData();
+			outputRheologyData();
+			outputStressTensorData();
+			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+
+			cnt_simu_loop ++;
+			cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
+		}
+	}
+
+
+}
+
+
 
 
 bool
