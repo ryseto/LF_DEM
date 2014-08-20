@@ -22,9 +22,12 @@ private:
 	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;	
+	string filename_sequence;	
 	double strain_interval_knkt_adjustment;
 	double volume_fraction;
 	string import_line[2];
+	string control_var;
+	bool user_sequence;
 	/*
 	 * Resultant data
 	 */
@@ -73,8 +76,8 @@ private:
 	 */
 	void setDefaultParameters();
 	void readParameterFile();
-	void openOutputFiles(string);
-	void prepareSimulationName(string);
+	void openOutputFiles();
+	void prepareSimulationName();
 	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();

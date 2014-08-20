@@ -57,9 +57,10 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 							double scaled_critical_load,
 							string control_variable){
 	
+	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	if (control_variable == "strain") {
+	if (control_var == "strain") {
 		if (scaled_repulsion > 0 &&
 			scaled_critical_load > 0) {
 			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
@@ -106,7 +107,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.cohesive_force = scaled_cohesion;
 			}
 		}
-	} else if (control_variable == "stress") {
+	} else if (control_var == "stress") {
 		sys.brownian = false;
 		if (scaled_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
@@ -133,11 +134,11 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
 	}
-	openOutputFiles(control_variable);
+	openOutputFiles();
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
-	sys.setupSystem(control_variable);
+	sys.setupSystem(control_var);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
@@ -152,8 +153,11 @@ void
 Simulation::simulationSteadyShear(vector<string> &input_files,
 								  double peclet_num, double scaled_repulsion, double scaled_cohesion,
 								  double scaled_critical_load, string control_variable){
+	user_sequence = false;
+	control_var = control_variable;
+
 	setupSimulationSteadyShear(input_files, peclet_num,
-					scaled_repulsion, scaled_cohesion, scaled_critical_load, control_variable);
+					scaled_repulsion, scaled_cohesion, scaled_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
@@ -203,8 +207,10 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
  */
 void
 Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable){
-	
-	if(seq_type != "r" || control_variable != "stress"){
+
+	user_sequence = true;
+	control_var = control_variable;
+	if(seq_type != "r" || control_var != "stress"){
 		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment "; exit(1);
 	}
 	
@@ -225,10 +231,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	if (fnb == 4) {
 		contactForceParameter(input_files[2]);
 	}
+	filename_sequence = input_files[fnb-1];
 	
-	openOutputFiles(control_variable);
+	openOutputFiles();
 
-	sys.setupSystem(control_variable);
+	sys.setupSystem(control_var);
 	outputConfigurationData();
 
 	sys.setupShearFlow(true);
@@ -237,8 +244,9 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	vector <double> strain_sequence;
 	vector <double> rsequence;
 
+
 	ifstream fin_seq;
-	fin_seq.open(input_files[fnb-1].c_str());
+	fin_seq.open(filename_sequence.c_str());
 	
 
 	double strain;
@@ -427,11 +435,11 @@ Simulation::readParameterFile(){
 }
 
 void
-Simulation::openOutputFiles(string control_variable){
+Simulation::openOutputFiles(){
 	/*
 	 * Set simulation name and name of output files.
 	 */
-	prepareSimulationName(control_variable);
+	prepareSimulationName();
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
@@ -695,23 +703,31 @@ Simulation::importInitialPositionFile(){
 }
 
 void
-Simulation::prepareSimulationName(string control_variable){
+Simulation::prepareSimulationName(){
 	ostringstream ss_simu_name;
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
+	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
+	cout << filename_sequence << endl;
+	cout << filename_sequence.substr(0, pos_ext_sequence) << endl << endl;
+
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
 	
-	if(control_variable == "strain"){
+	if(control_var == "strain"){
 		if (sys.dimensionless_shear_rate == -1) {
 			ss_simu_name << "_srinf" ; // shear rate infinity
 		} else {
 			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 		}
 	}
-	if(control_variable == "stress"){
-		ss_simu_name << "_st" << sys.target_stress;
+	if(control_var == "stress"){
+		if(user_sequence){
+			ss_simu_name << "_st_" << filename_sequence.substr(0, pos_ext_sequence);
+		}else{
+			ss_simu_name << "_st" << sys.target_stress;
+		}
 	}
 	sys.simu_name = ss_simu_name.str();
 }
