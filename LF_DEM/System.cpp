@@ -401,7 +401,6 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
-
 	if (stress_controlled) {
 		StressTensor total_contact_stress;
 		StressTensor total_repulsive_stress;
@@ -417,6 +416,7 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 		double sr = target_stress-total_repulsive_stress.getStressXZ();
 		sr /= total_hydro_stress.getStressXZ()+total_contact_stress.getStressXZ();
 		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
+
 
 		double inv_sr_m1 =  1/sr-1;
 		for (int i=0; i<np; i++) {
@@ -435,6 +435,7 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 			calcStressPerParticle();
 			avgStressUpdate();
 		}
+
 	}
     else {
 		if (calc_stress) {
