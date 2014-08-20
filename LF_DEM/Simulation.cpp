@@ -144,6 +144,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	outputConfigurationData();
 	sys.setupShearFlow(true);
+
+	if(control_var == "stress"){
+		sys.set_integration_method(0);
+	}
+
+
 }
 
 /*
@@ -158,6 +164,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 
 	setupSimulationSteadyShear(input_files, peclet_num,
 					scaled_repulsion, scaled_cohesion, scaled_critical_load, control_var);
+
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
@@ -224,6 +231,10 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 
 	setDefaultParameters();
 	readParameterFile();
+	
+	if(control_var == "stress"){
+		sys.set_integration_method(0);
+	}
 
 	importInitialPositionFile();
 
