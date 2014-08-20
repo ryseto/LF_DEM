@@ -419,7 +419,6 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
 
 		double inv_sr_m1 =  1/sr-1;
-
 		for (int i=0; i<np; i++) {
 			na_velocity[i] += vel_repulsive[i]*inv_sr_m1;
 			na_ang_velocity[i] += ang_vel_repulsive[i]*inv_sr_m1;

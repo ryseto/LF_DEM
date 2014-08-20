@@ -472,14 +472,12 @@ Lubrication::addHydroStress(){
 	StressTensor stresslet_hydro_GU_j;
 	StressTensor stresslet_ME_i;
 	StressTensor stresslet_ME_j;
-	vec3d vih(sys->vel_hydro[p0]);
-	vec3d vjh(sys->vel_hydro[p1]);
-	vec3d oih(sys->ang_vel_hydro[p0]);
-	vec3d ojh(sys->ang_vel_hydro[p1]);
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
-	pairVelocityStresslet(vih, vjh, oih, ojh, stresslet_hydro_GU_i, stresslet_hydro_GU_j);
+	pairVelocityStresslet(sys->vel_hydro[p0], sys->vel_hydro[p1],
+						  sys->ang_vel_hydro[p0], sys->ang_vel_hydro[p1],
+						  stresslet_hydro_GU_i, stresslet_hydro_GU_j);
 	/*
 	 *  Second: +M*Einf term
 	 */
@@ -491,22 +489,18 @@ Lubrication::addHydroStress(){
 	// Add term G*V_cont
 	StressTensor stresslet_contact_GU_i;
 	StressTensor stresslet_contact_GU_j;
-	vec3d vict(sys->vel_contact[p0]);
-	vec3d vjct(sys->vel_contact[p1]);
-	vec3d oict(sys->ang_vel_contact[p0]);
-	vec3d ojct(sys->ang_vel_contact[p1]);
-	pairVelocityStresslet(vict, vjct, oict, ojct, stresslet_contact_GU_i, stresslet_contact_GU_j);
+	pairVelocityStresslet(sys->vel_contact[p0], sys->vel_contact[p1],
+						  sys->ang_vel_contact[p0], sys->ang_vel_contact[p1],
+						  stresslet_contact_GU_i, stresslet_contact_GU_j);
 	sys->contactstressGU[p0] += stresslet_contact_GU_i;
 	sys->contactstressGU[p1] += stresslet_contact_GU_j;
 	// Add term G*V_repulsive
 	if (sys->repulsiveforce) {
 		StressTensor stresslet_repulsive_GU_i;
 		StressTensor stresslet_repulsive_GU_j;
-		vec3d vicl(sys->vel_repulsive[p0]);
-		vec3d vjcl(sys->vel_repulsive[p1]);
-		vec3d oicl(sys->ang_vel_repulsive[p0]);
-		vec3d ojcl(sys->ang_vel_repulsive[p1]);
-		pairVelocityStresslet(vicl, vjcl, oicl, ojcl, stresslet_repulsive_GU_i, stresslet_repulsive_GU_j);
+		pairVelocityStresslet(sys->vel_repulsive[p0], sys->vel_repulsive[p1],
+							  sys->ang_vel_repulsive[p0], sys->ang_vel_repulsive[p1],
+							  stresslet_repulsive_GU_i, stresslet_repulsive_GU_j);
 		sys->repulsivestressGU[p0] += stresslet_repulsive_GU_i;
 		sys->repulsivestressGU[p1] += stresslet_repulsive_GU_j;
 	}
@@ -514,11 +508,9 @@ Lubrication::addHydroStress(){
 	if (sys->brownian) {
 		StressTensor stresslet_brownian_GU_i;
 		StressTensor stresslet_brownian_GU_j;
-		vec3d vib(sys->vel_brownian[p0]);
-		vec3d vjb(sys->vel_brownian[p1]);
-		vec3d oib(sys->ang_vel_brownian[p0]);
-		vec3d ojb(sys->ang_vel_brownian[p1]);
-		pairVelocityStresslet(vib, vjb, oib, ojb, stresslet_brownian_GU_i, stresslet_brownian_GU_j);
+		pairVelocityStresslet(sys->vel_brownian[p0], sys->vel_brownian[p1],
+							  sys->ang_vel_brownian[p0], sys->ang_vel_brownian[p1],
+							  stresslet_brownian_GU_i, stresslet_brownian_GU_j);
 		sys->brownianstressGU[p0] += stresslet_brownian_GU_i;
 		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
 	}
