@@ -119,7 +119,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		} else {
 			sys.repulsiveforce = true;
 			sys.repulsiveforce_amplitude = 1;
-			sys.target_stress = 1/scaled_repulsion;
+			sys.target_stress = scaled_repulsion/(6*M_PI);
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		}
 	}
@@ -214,10 +214,9 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
  */
 void
 Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable){
-
 	user_sequence = true;
 	control_var = control_variable;
-	if(seq_type != "r" || control_var != "stress"){
+	if (seq_type != "r" || control_var != "stress") {
 		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment "; exit(1);
 	}
 	
@@ -232,7 +231,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	setDefaultParameters();
 	readParameterFile();
 	
-	if(control_var == "stress"){
+	if (control_var == "stress") {
 		sys.set_integration_method(0);
 	}
 
@@ -251,14 +250,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 
 	sys.setupShearFlow(true);
 
-
 	vector <double> strain_sequence;
 	vector <double> rsequence;
 
-
 	ifstream fin_seq;
 	fin_seq.open(filename_sequence.c_str());
-	
 
 	double strain;
 	double targ_st;
@@ -267,9 +263,6 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		strain_sequence.push_back(strain);
 		rsequence.push_back(targ_st);
 	}
-	
-
-	
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain=0;
@@ -287,17 +280,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 				outputConfigurationData();
 				cnt_config_out ++;
 			}
-
 			cnt_simu_loop ++;
 			cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
 		}
 	}
-
-
 }
-
-
-
 
 bool
 str2bool(string value){
@@ -726,17 +713,17 @@ Simulation::prepareSimulationName(){
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
 	
-	if(control_var == "strain"){
+	if (control_var == "strain") {
 		if (sys.dimensionless_shear_rate == -1) {
 			ss_simu_name << "_srinf" ; // shear rate infinity
 		} else {
 			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
 		}
 	}
-	if(control_var == "stress"){
-		if(user_sequence){
+	if (control_var == "stress") {
+		if (user_sequence) {
 			ss_simu_name << "_st_" << filename_sequence.substr(0, pos_ext_sequence);
-		}else{
+		} else {
 			ss_simu_name << "_st" << sys.target_stress;
 		}
 	}
