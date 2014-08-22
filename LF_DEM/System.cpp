@@ -44,7 +44,7 @@ System::~System(){
 	DELETE(lubstress);
 	DELETE(contactstressGU);
 	DELETE(avg_lubstress);
-	DELETE(avg_contactstressGU);
+//	DELETE(avg_contactstressGU);
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
@@ -54,13 +54,13 @@ System::~System(){
 		DELETE(brownian_force);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
-		DELETE(avg_brownianstressGU);
+//		DELETE(avg_brownianstressGU);
 	}
 	if (repulsiveforce) {
 		DELETE(repulsivestressGU);
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
-		DELETE(avg_repulsivestressGU);
+//		DELETE(avg_repulsivestressGU);
 	}
 };
 
@@ -109,14 +109,14 @@ System::allocateRessources(){
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
 	avg_lubstress = new StressTensor [np];
-	avg_contactstressGU = new StressTensor [np];
-	if (repulsiveforce) {
-		avg_repulsivestressGU = new StressTensor [np];
-	}
+//	avg_contactstressGU = new StressTensor [np];
+//	if (repulsiveforce) {
+//		avg_repulsivestressGU = new StressTensor [np];
+//	}
 	if (brownian) {
 		brownianstressGU = new StressTensor [np];
 		brownianstressGU_predictor = new StressTensor [np];
-		avg_brownianstressGU = new StressTensor [np];
+//		avg_brownianstressGU = new StressTensor [np];
 	}
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
@@ -402,14 +402,8 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
-		if (stress_controlled) {
-			avgStressReset();
-			calcStressPerParticle();
-			avgStressUpdate();
-		} else {
-			calcStressPerParticle();
-			avgStressUpdate();
-		}
+		calcStressPerParticle();
+
 	}
 	timeStepMove();
 }
@@ -495,7 +489,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
-		avgStressUpdate();
+		//avgStressUpdate();
 	}
 	timeStepMoveCorrector();
 }
@@ -569,7 +563,6 @@ System::timeEvolution(double strain_next){
 		checkNewInteraction();
 		firsttime = false;
 	}
-	avgStressReset();
 	if (strain_controlled) {
 		while (shear_strain < strain_next-dt-dt*0.001) { // integrate until strain_next - 1 time step
 			(this->*timeEvolutionDt)(false); // no stress computation
@@ -666,60 +659,47 @@ System::stressReset(){
 	}
 }
 
-void
-System::avgStressReset(){
-	avg_stress_nb = 0;
-	for (int i=0; i<np; i++) {
-		avg_lubstress[i].reset();
-		avg_contactstressGU[i].reset();
-	}
-	avg_contactstressXF_normal.reset();
-	avg_contactstressXF_tan.reset();
-	if (repulsiveforce) {
-		avg_repulsivestressXF.reset();
-		for (int i=0; i<np; i++) {
-			avg_repulsivestressGU[i].reset();
-		}
-	}
-	if (brownian) {
-		for (int i=0; i<np; i++) {
-			avg_brownianstressGU[i].reset();
-		}
-	}
-}
-
-void
-System::avgStressUpdate(){
-	avg_stress_nb++;
-	for (int i=0; i<np; i++) {
-		avg_lubstress[i] += lubstress[i];
-		avg_contactstressGU[i] += contactstressGU[i];
-	}
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
-			avg_contactstressXF_normal += interaction[k].contact.getContactStressXF_normal();
-			avg_contactstressXF_tan += interaction[k].contact.getContactStressXF_tan();
-		}
-	}
-	if (repulsiveforce) {
-		for (int i=0; i<np; i++) {
-			avg_repulsivestressGU[i] += repulsivestressGU[i];
-		}
-		StressTensor inst_repulsivestress;
-		for (int k=0; k<nb_interaction; k++) {
-			inst_repulsivestress += interaction[k].getRepulsiveStressXF();
-		}
-		if (stress_controlled) {
-			inst_repulsivestress /= dimensionless_shear_rate;
-		}
-		avg_repulsivestressXF += inst_repulsivestress;
-	}
-	if (brownian) {
-		for (int i=0; i<np; i++) {
-			avg_brownianstressGU[i] += brownianstressGU[i];
-		}
-	}
-}
+//void
+//System::avgStressReset(){
+////	avg_stress_nb = 0;
+////	for (int i=0; i<np; i++) {
+////		avg_lubstress[i].reset();
+////		avg_contactstressGU[i].reset();
+////	}
+////	avg_contactstressXF_normal.reset();
+////	avg_contactstressXF_tan.reset();
+////	if (repulsiveforce) {
+////		avg_repulsivestressXF.reset();
+////		for (int i=0; i<np; i++) {
+////			avg_repulsivestressGU[i].reset();
+////		}
+////	}
+////	if (brownian) {
+////		for (int i=0; i<np; i++) {
+////			avg_brownianstressGU[i].reset();
+////		}
+////	}
+//}
+//
+//void
+//System::avgStressUpdate(){
+//	//	avg_stress_nb++;
+//	//	for (int i=0; i<np; i++) {
+//	//		avg_lubstress[i] += lubstress[i];
+//	//		avg_contactstressGU[i] += contactstressGU[i];
+//	//	}
+//
+//	//	if (repulsiveforce) {
+//	//		for (int i=0; i<np; i++) {
+//	//			avg_repulsivestressGU[i] += repulsivestressGU[i];
+//	//		}
+//	//	}
+//	//	if (brownian) {
+//	//		for (int i=0; i<np; i++) {
+//	//			avg_brownianstressGU[i] += brownianstressGU[i];
+//	//		}
+//	//	}
+//}
 
 void
 System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
@@ -926,9 +906,7 @@ System::computeVelocities(bool divided_velocities){
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		dimensionless_shear_rate = 1;
-		avgStressReset();
 		calcStressPerParticle();
-		avgStressUpdate();
 		calcStress();
 		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();

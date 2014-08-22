@@ -151,12 +151,12 @@ public:
 	/* We don't need to keep 'ave_*stress' by particle?
 	 */
 	StressTensor* avg_lubstress; // G U + M E
-	StressTensor avg_contactstressXF_normal;
-	StressTensor avg_contactstressXF_tan;
-	StressTensor* avg_contactstressGU; // by particle
-	StressTensor avg_repulsivestressXF;
-	StressTensor* avg_repulsivestressGU; // by particle
-	StressTensor* avg_brownianstressGU; // by particle
+	StressTensor contactstressXF_normal;
+	StressTensor contactstressXF_tan;
+//	StressTensor* avg_contactstressGU; // by particle
+//	StressTensor avg_repulsivestressXF;
+//	StressTensor* avg_repulsivestressGU; // by particle
+//	StressTensor* avg_brownianstressGU; // by particle
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
@@ -172,7 +172,7 @@ public:
 	double kn_lowPeclet;
 	double kt_lowPeclet;
 	double kr_lowPeclet;
-	int avg_stress_nb;
+//	int avg_stress_nb;
 	int friction_model;
 	bool friction;
 	bool rolling_friction;
@@ -265,8 +265,6 @@ public:
 	void forceReset();
 	void torqueReset();
 	void stressReset();
-	void avgStressReset();
-	void avgStressUpdate();
 	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();
