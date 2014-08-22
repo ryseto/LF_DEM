@@ -107,7 +107,7 @@ System::calcStress(){
 	//////////////////////////////////////////////////////////////
 	total_hydro_stress.reset();
 	for (int i=0; i<np; i++) {
-		total_hydro_stress += avg_lubstress[i];
+		total_hydro_stress += lubstress[i];
 	}
 	total_hydro_stress /= System_volume();
 	//////////////////////////////////////////////////////////////

@@ -43,7 +43,7 @@ System::~System(){
 	DELETE(contact_torque);
 	DELETE(lubstress);
 	DELETE(contactstressGU);
-	DELETE(avg_lubstress);
+//	DELETE(avg_lubstress);
 //	DELETE(avg_contactstressGU);
 	DELETE(interaction);
 	DELETE(interaction_list);
@@ -108,7 +108,7 @@ System::allocateRessources(){
 	// Stress
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
-	avg_lubstress = new StressTensor [np];
+//	avg_lubstress = new StressTensor [np];
 //	avg_contactstressGU = new StressTensor [np];
 //	if (repulsiveforce) {
 //		avg_repulsivestressGU = new StressTensor [np];

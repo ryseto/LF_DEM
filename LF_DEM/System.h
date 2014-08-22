@@ -150,7 +150,7 @@ public:
 	StressTensor* brownianstressGU_predictor; // by particle
 	/* We don't need to keep 'ave_*stress' by particle?
 	 */
-	StressTensor* avg_lubstress; // G U + M E
+//	StressTensor* avg_lubstress; // G U + M E
 	StressTensor contactstressXF_normal;
 	StressTensor contactstressXF_tan;
 //	StressTensor* avg_contactstressGU; // by particle
