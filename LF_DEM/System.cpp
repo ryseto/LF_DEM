@@ -1228,6 +1228,7 @@ void
 System::setSystemVolume(double depth){
 	if (twodimension) {
 		system_volume = lx*lz*depth;
+		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
 	} else {
 		system_volume = lx*ly*lz;
 	}

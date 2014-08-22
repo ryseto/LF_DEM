@@ -48,60 +48,6 @@ System::calcStressPerParticle(){
 	}
 }
 
-// void
-// System::calcStress(){
-
-
-// 	//////////////////////////////////////////////////////////////
-// 	total_hydro_stress.reset();
-// 	for (int i=0; i<np; i++) {
-// 		total_hydro_stress += lubstress[i];
-// 	}
-// 	total_hydro_stress /= System_volume();
-// 	//////////////////////////////////////////////////////////////
-// 	total_contact_stressGU.reset();
-// 	for (int i=0; i<np; i++) {
-// 		total_contact_stressGU += contactstressGU[i];
-// 	}
-// 	total_contact_stressGU /= System_volume();
-// 	//////////////////////////////////////////////////////////////
-// 	total_contact_stressXF_normal.reset();
-// 	total_contact_stressXF_tan.reset();
-// 	for (int k=0; k<nb_interaction; k++) {
-// 		if (interaction[k].is_contact()) {
-// 			total_contact_stressXF_normal += interaction[k].contact.getContactStressXF_normal();
-// 			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
-// 		}
-// 	}
-// 	total_contact_stressXF_normal /= System_volume();
-// 	total_contact_stressXF_tan /= System_volume();
-// 	//////////////////////////////////////////////////////////////
-// 	if (repulsiveforce) {
-// 		total_repulsive_stressGU.reset();
-// 		for (int i=0; i<np; i++) {
-// 			total_repulsive_stressGU += repulsivestressGU[i];
-// 		}
-// 		total_repulsive_stressGU /= System_volume();
-// 		//////////////////////////////////////////////////////////////
-// 		total_repulsive_stressXF.reset();
-// 		for (int k=0; k<nb_interaction; k++) {
-// 			if (interaction[k].is_active()) {
-// 				total_repulsive_stressXF += interaction[k].getRepulsiveStressXF();
-// 			}
-// 		}
-// 		total_repulsive_stressXF /= System_volume();
-// 	}
-// 	//////////////////////////////////////////////////////////////
-// 	if (brownian) {
-// 		total_brownian_stressGU.reset();
-// 		for (int i=0; i<np; i++) {
-// 			total_brownian_stressGU += brownianstressGU[i];
-// 		}
-// 		total_brownian_stressGU /= System_volume();
-// 	}
-// }
-
-
 void
 System::calcStress(){
 	//////////////////////////////////////////////////////////////
@@ -109,13 +55,13 @@ System::calcStress(){
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 	}
-	total_hydro_stress /= System_volume();
+	total_hydro_stress /= system_volume;
 	//////////////////////////////////////////////////////////////
 	total_contact_stressGU.reset();
 	for (int i=0; i<np; i++) {
 		total_contact_stressGU += contactstressGU[i];
 	}
-	total_contact_stressGU /= System_volume();
+	total_contact_stressGU /= system_volume;
 	//////////////////////////////////////////////////////////////
 	total_contact_stressXF_normal.reset();
 	total_contact_stressXF_tan.reset();
@@ -125,27 +71,24 @@ System::calcStress(){
 			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
 		}
 	}
-	total_contact_stressXF_normal /= System_volume();
-	total_contact_stressXF_tan /= System_volume();
+	total_contact_stressXF_normal /= system_volume;
+	total_contact_stressXF_tan /= system_volume;
 	//////////////////////////////////////////////////////////////
 	if (repulsiveforce) {
 		total_repulsive_stressXF.reset();
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].getRepulsiveStressXF();
 		}
-		total_repulsive_stressXF /= System_volume();
+		total_repulsive_stressXF /= system_volume;
 		if (stress_controlled) {
 			total_repulsive_stressXF /= dimensionless_shear_rate;
-		}
-		if (dimensionless_shear_rate != 1){
-			cerr << "dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
 		}
 		//////////////////////////////////////////////////////////
 		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
 			total_repulsive_stressGU += repulsivestressGU[i];
 		}
-		total_repulsive_stressGU /= System_volume();
+		total_repulsive_stressGU /= system_volume;
 	}
 	//////////////////////////////////////////////////////////////
 	if (brownian) {
@@ -153,6 +96,6 @@ System::calcStress(){
 		for (int i=0; i<np; i++) {
 			total_brownian_stressGU += brownianstressGU[i];
 		}
-		total_brownian_stressGU /= System_volume();
+		total_brownian_stressGU /= system_volume;
 	}
 }

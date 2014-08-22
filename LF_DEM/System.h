@@ -148,15 +148,8 @@ public:
 	StressTensor* repulsivestressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
-	/* We don't need to keep 'ave_*stress' by particle?
-	 */
-//	StressTensor* avg_lubstress; // G U + M E
 	StressTensor contactstressXF_normal;
 	StressTensor contactstressXF_tan;
-//	StressTensor* avg_contactstressGU; // by particle
-//	StressTensor avg_repulsivestressXF;
-//	StressTensor* avg_repulsivestressGU; // by particle
-//	StressTensor* avg_brownianstressGU; // by particle
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
@@ -172,7 +165,6 @@ public:
 	double kn_lowPeclet;
 	double kt_lowPeclet;
 	double kr_lowPeclet;
-//	int avg_stress_nb;
 	int friction_model;
 	bool friction;
 	bool rolling_friction;
@@ -294,9 +286,9 @@ public:
 		lz_half = 0.5*lz;
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
-	inline double System_volume(){
-		return system_volume;
-	}
+//	inline double System_volume(){
+//		return system_volume;
+//	}
 	double getParticleContactNumber(){
 		return (double)2*contact_nb/np;
 	}
@@ -331,14 +323,14 @@ public:
 	void set_mu_static(double val){mu_static = val;}
 	inline double get_mu_static(){return mu_static;}
 	//inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-//	inline double get_log_lub_coeff_dynamicfriction(){
-		/* In a sliding state, the resistance coeffient is the sum of
-		 * lubrication and dashpot.
-		 * In our standard model, we do not set the dashpot.
-		 * Only tangential lubrications are considered.
-		 */
-//		return log_lub_coeff_contact_tan_total;
-//	}
+	//	inline double get_log_lub_coeff_dynamicfriction(){
+	/* In a sliding state, the resistance coeffient is the sum of
+	 * lubrication and dashpot.
+	 * In our standard model, we do not set the dashpot.
+	 * Only tangential lubrications are considered.
+	 */
+	//		return log_lub_coeff_contact_tan_total;
+	//	}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
 
 };
