@@ -124,7 +124,7 @@ public:
 	void addUpRepulsiveForce();
 	double getNormalVelocity();
 	inline double get_f_repulsive_norm(){return f_repulsive_norm;}
-	void addRepulsiveStress();
+	void calcRepulsiveStress();
 	StressTensor getRepulsiveStressXF(){return repulsive_stresslet_XF;}
 	void integrateStress();
 	/* To avoid discontinous change between predictor and corrector,

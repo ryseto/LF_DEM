@@ -62,7 +62,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/rollingfriction"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/simu2D"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -78,15 +78,19 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 0.001"
+            argument = "-s"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "D2N50VF0.6MonoSquare_1.dat"
+            argument = "-r 1"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "nobrownian.txt"
+            argument = "D2N500VF0.78Bidi1.4_0.5Square_1.dat"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "nobrownian2.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

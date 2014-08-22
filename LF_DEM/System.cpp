@@ -401,10 +401,9 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
-	if (calc_stress) {
-		calcStressPerParticle();
-
-	}
+	//	if (calc_stress) {
+	//		calcStressPerParticle();
+	//	}
 	timeStepMove();
 }
 
@@ -489,7 +488,6 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
-		//avgStressUpdate();
 	}
 	timeStepMoveCorrector();
 }
@@ -913,11 +911,10 @@ System::computeVelocities(bool divided_velocities){
 		double shearstress_rep = \
 		+total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = total_hydro_stress.getStressXZ();
-		double sr = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
-		dimensionless_shear_rate = sr/repulsiveforce_amplitude;
+		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 		for (int i=0; i<np; i++) {
-			vel_repulsive[i] /= sr;
-			ang_vel_repulsive[i] /= sr;
+			vel_repulsive[i] /= dimensionless_shear_rate;
+			ang_vel_repulsive[i] /= dimensionless_shear_rate;
 		}
 		for (int i=0; i<np; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];

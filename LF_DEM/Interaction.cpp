@@ -251,7 +251,7 @@ Interaction::calcRollingVelocities(){
 }
 
 void
-Interaction::addRepulsiveStress(){
+Interaction::calcRepulsiveStress(){
 	repulsive_stresslet_XF.set(rvec, f_repulsive);
 }
 

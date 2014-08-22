@@ -26,9 +26,9 @@ System::calcStressPerParticle(){
 				exit(1);
 			}
 			interaction[k].lubrication.addHydroStress(); // - R_SU * v
-			interaction[k].contact.addContactStress(); //  - rF_cont
+			interaction[k].contact.calcContactStress(); //  - rF_cont
 			if (repulsiveforce) {
-				interaction[k].addRepulsiveStress(); //  - rF_rep
+				interaction[k].calcRepulsiveStress(); //  - rF_rep
 			}
 		}
 	}
@@ -137,10 +137,13 @@ System::calcStress(){
 		if (stress_controlled) {
 			total_repulsive_stressXF /= dimensionless_shear_rate;
 		}
+		if (dimensionless_shear_rate != 1){
+			cerr << "dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
+		}
 		//////////////////////////////////////////////////////////
 		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
-			total_contact_stressGU += repulsivestressGU[i];
+			total_repulsive_stressGU += repulsivestressGU[i];
 		}
 		total_repulsive_stressGU /= System_volume();
 	}

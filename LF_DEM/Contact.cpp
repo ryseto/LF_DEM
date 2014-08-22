@@ -228,7 +228,7 @@ Contact::addUpContactForceTorque(){
 }
 
 void
-Contact::addContactStress(){
+Contact::calcContactStress(){
 	/*
 	 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
 	 * Fc_normal = -Fc_normal_norm*nvec;

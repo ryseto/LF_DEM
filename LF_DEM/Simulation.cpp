@@ -119,7 +119,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		} else {
 			sys.repulsiveforce = true;
 			sys.repulsiveforce_amplitude = 1;
-			sys.target_stress = scaled_repulsion/(6*M_PI);
+			sys.target_stress = 1/scaled_repulsion;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		}
 	}
