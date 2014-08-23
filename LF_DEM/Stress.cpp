@@ -26,9 +26,9 @@ System::calcStressPerParticle(){
 				exit(1);
 			}
 			interaction[k].lubrication.addHydroStress(); // - R_SU * v
-			interaction[k].contact.calcContactStress(); //  - rF_cont
+			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {
-				interaction[k].calcRepulsiveStress(); //  - rF_rep
+				interaction[k].calcRepulsiveStress(); // - rF_rep
 			}
 		}
 	}

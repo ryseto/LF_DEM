@@ -39,16 +39,13 @@ Interaction::calcNormalVectorDistanceGap(){
 void
 Interaction::updateResistanceCoeff(){
 	if (contact.state > 0) {
-		//		double overlap_12 = 0.5*(a0+a1-r);
-		//		if (overlap_12 < 0) {
-		//			overlap_12 = 0;
-		//		}
-		////		a0_dash = a0-overlap_12;
-		//		a1_dash = a1-overlap_12;
 		if (!contact_state_changed_after_predictor) {
 			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
 										   sys->log_lub_coeff_contact_tan_total);
 		} else {
+			/*
+			 * This is only brownian
+			 */
 			/* This is to avoid discontinous change.
 			 * Before the predictor, particles are apart.
 			 * The displacement in the predictor makes the particles in contact.
@@ -60,12 +57,13 @@ Interaction::updateResistanceCoeff(){
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		}
 	} else {
-		//		a0_dash = a0;
-		//		a1_dash = a1;
 		if (!contact_state_changed_after_predictor) {
 			double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		} else {
+			/*
+			 * This is only brownian
+			 */
 			/* This is to avoid discontinous change.
 			 * Before the predictor, the particles are in contact.
 			 * The displacement in the predictor makes particles apart.
@@ -165,7 +163,7 @@ Interaction::updateState(bool &deactivated){
 		//		if (contact.kn_scaled*gap_nondim > sys->cohesive_force){
 		if (gap_nondim > 0){
 			contact.deactivate();
-			if (sys->in_predictor) {
+			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
 		}
@@ -174,7 +172,7 @@ Interaction::updateState(bool &deactivated){
 		if (gap_nondim <= 0) {
 			// now contact
 			contact.activate();
-			if (sys->in_predictor) {
+			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
 		} else if (r > interaction_range_scaled) {

@@ -87,12 +87,6 @@ private:
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
 	MTRand *r_gen;
-	//vector<double> max_fc_normal_history; // for kn-kt ajusting algorithm
-	//vector<double> max_fc_tan_history; // for kn-kt ajusting algorithm
-	//vector<double> sliding_velocity_history;
-	//vector<double> relative_velocity_history;
-	//bool after_parameter_changed;
-
 	double *radius_cubed;
 	
 	bool strain_controlled;

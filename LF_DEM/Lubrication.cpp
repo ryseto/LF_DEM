@@ -468,19 +468,19 @@ Lubrication::calcLubricationForce(){
 
 void
 Lubrication::addHydroStress(){
-	StressTensor stresslet_hydro_GU_i;
-	StressTensor stresslet_hydro_GU_j;
-	StressTensor stresslet_ME_i;
-	StressTensor stresslet_ME_j;
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
+	StressTensor stresslet_hydro_GU_i;
+	StressTensor stresslet_hydro_GU_j;
 	pairVelocityStresslet(sys->vel_hydro[p0], sys->vel_hydro[p1],
 						  sys->ang_vel_hydro[p0], sys->ang_vel_hydro[p1],
 						  stresslet_hydro_GU_i, stresslet_hydro_GU_j);
 	/*
 	 *  Second: +M*Einf term
 	 */
+	StressTensor stresslet_ME_i;
+	StressTensor stresslet_ME_j;
 	if (!sys->zero_shear) {
 		pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
 	}

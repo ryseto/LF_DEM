@@ -339,7 +339,6 @@ System::setupSystem(string control){
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference = lz;
-	//after_parameter_changed = false;
 	stokes_solver.initialize();
 	dt = dt_max;
 	initializeBoxing();
@@ -391,9 +390,9 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
-	//	if (calc_stress) {
-	//		calcStressPerParticle();
-	//	}
+	if (calc_stress) {
+		calcStressPerParticle();
+	}
 	timeStepMove();
 }
 
@@ -549,6 +548,7 @@ System::timeEvolution(double strain_next){
 	static bool firsttime = true;
 	if (firsttime) {
 		checkNewInteraction();
+		updateInteractions();
 		firsttime = false;
 	}
 	if (strain_controlled) {
@@ -558,6 +558,8 @@ System::timeEvolution(double strain_next){
 			shear_strain += dt;
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
+		ts++;
+		shear_strain += dt;
 	} else if (stress_controlled) {
 		while (shear_strain < strain_next-dt*0.001) { // integrate until strain_next
 			(this->*timeEvolutionDt)(true); // stress computation
@@ -565,9 +567,6 @@ System::timeEvolution(double strain_next){
 			shear_strain += dt;
 		};
 	}
-	
-	ts++;
-	shear_strain += dt;
 }
 
 void
@@ -828,7 +827,6 @@ System::buildContactTerms(bool set_or_add){
 void
 System::buildRepulsiveForceTerms(bool set_or_add){
 	// sets or adds ( set_or_add = t or f resp) repulsive forces to the rhs of the stokes_solver.
-
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, repulsive_force[i]);
@@ -858,6 +856,7 @@ System::computeVelocities(bool divided_velocities){
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = total_hydro_stress.getStressXZ();
+		//dimensionless_shear_rate = 6*M_PI*(target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 		for (int i=0; i<np; i++) {
 			vel_repulsive[i] /= dimensionless_shear_rate;
@@ -866,6 +865,30 @@ System::computeVelocities(bool divided_velocities){
 		for (int i=0; i<np; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
+		}
+		static int cnt = 0;
+		if (cnt++ % 100 == 0){
+			double total_v_hydro = 0;
+			double total_v_contact = 0;
+			double total_v_repulsive = 0;
+			double total_av_hydro = 0;
+			double total_av_contact = 0;
+			double total_av_repulsive = 0;
+			for (int i=0; i<np; i++) {
+				total_v_hydro += vel_hydro[i].norm();
+				total_v_contact += vel_contact[i].norm();
+				total_v_repulsive += vel_repulsive[i].norm();
+				total_av_hydro += ang_vel_hydro[i].norm();
+				total_av_contact += ang_vel_contact[i].norm();
+				total_av_repulsive += ang_vel_repulsive[i].norm();
+			}
+			cerr << dimensionless_shear_rate << " : " ;
+			cerr << total_v_hydro/np << ' ';
+			cerr << total_v_contact/np << ' ';
+			cerr << total_v_repulsive/np << ' ';
+			cerr << total_av_hydro/np << ' ';
+			cerr << total_av_contact/np << ' ';
+			cerr << total_av_repulsive/np << endl;
 		}
 	} else {
 		if (divided_velocities) {
@@ -889,6 +912,29 @@ System::computeVelocities(bool divided_velocities){
 					na_velocity[i] += vel_repulsive[i];
 					na_ang_velocity[i] += ang_vel_repulsive[i];
 				}
+			}
+			static int cnt = 0;
+			if (true|| cnt++ % 100 == 0){
+				double total_v_hydro = 0;
+				double total_v_contact = 0;
+				double total_v_repulsive = 0;
+				double total_av_hydro = 0;
+				double total_av_contact = 0;
+				double total_av_repulsive = 0;
+				for (int i=0; i<np; i++) {
+					total_v_hydro += vel_hydro[i].norm();
+					total_v_contact += vel_contact[i].norm();
+					total_v_repulsive += vel_repulsive[i].norm();
+					total_av_hydro += ang_vel_hydro[i].norm();
+					total_av_contact += ang_vel_contact[i].norm();
+					total_av_repulsive += ang_vel_repulsive[i].norm();
+				}
+				cerr << total_v_hydro/np << ' ';
+				cerr << total_v_contact/np << ' ';
+				cerr << total_v_repulsive/np << ' ';
+				cerr << total_av_hydro/np << ' ';
+				cerr << total_av_contact/np << ' ';
+				cerr << total_av_repulsive/np << endl;
 			}
 		} else {
 			// for most of the time evolution
@@ -1278,10 +1324,6 @@ System::adjustContactModelParameters(){
 	for (int k=0; k<nb_interaction; k++) {
 		interaction[k].contact.updateContactModel();
 	}
-	//	max_fc_normal_history.clear();
-	//	max_fc_tan_history.clear();
-	//	sliding_velocity_history.clear();
-	//after_parameter_changed = true;
 	if (kn > max_kn){
 		cerr << "kn = " << kn << endl;
 		cerr << " kn > max_kn : exit" << endl;
