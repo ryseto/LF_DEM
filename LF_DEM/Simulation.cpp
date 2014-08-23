@@ -810,7 +810,7 @@ Simulation::outputStressTensorData(){
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate/6/M_PI << ' '; // 39
+	fout_st << sys.dimensionless_shear_rate << ' '; // 39
 	fout_st << endl;
 }
 

@@ -856,8 +856,8 @@ System::computeVelocities(bool divided_velocities){
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = total_hydro_stress.getStressXZ();
-		dimensionless_shear_rate = 6*M_PI*(target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
-		//dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		dimensionless_shear_rate /= 6*M_PI;
 		for (int i=0; i<np; i++) {
 			vel_repulsive[i] /= dimensionless_shear_rate;
 			ang_vel_repulsive[i] /= dimensionless_shear_rate;
