@@ -802,7 +802,6 @@ Simulation::outputStressTensorData(){
 	/* total_stress = sys.total_hydro_stress;
 	 * + total_contact_stressXF + total_repulsive_stress;
 	 */
-
 	// As it is, the output stress lacks a 6pi factor (as the viscosity)
 	total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
 	sys.total_hydro_stress.outputStressTensor(fout_st); // (9,10,11,12,13,14)

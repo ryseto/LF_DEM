@@ -475,6 +475,22 @@ StokesSolver::resetRHS(){
 }
 
 void
+StokesSolver::resetRHStorque(){
+	if (direct()) {
+		for (int i=0; i<np; i++){
+			int i6_3 = 6*i+3;
+			((double*)chol_rhs->x)[i6_3  ] = 0;
+			((double*)chol_rhs->x)[i6_3+1] = 0;
+			((double*)chol_rhs->x)[i6_3+2] = 0;
+		}
+	}
+#ifdef TRILINOS
+	cerr << "not implemented" << endl;
+	exit(1);
+#endif
+}
+
+void
 StokesSolver::addToRHSForce(int i, double *force_i){
 	int i6 = 6*i;
 	if (direct()) {

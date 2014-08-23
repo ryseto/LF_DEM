@@ -831,6 +831,7 @@ System::buildRepulsiveForceTerms(bool set_or_add){
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, repulsive_force[i]);
 		}
+		stokes_solver.resetRHStorque();
 	} else {
 		for (int i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, repulsive_force[i]);
@@ -856,8 +857,9 @@ System::computeVelocities(bool divided_velocities){
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = total_hydro_stress.getStressXZ();
+		//sys.dimensionless_shear_rate = 1/scaled_repulsion;
+		//sys.repulsiveforce_amplitude = scaled_repulsion;
 		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
-		dimensionless_shear_rate /= 6*M_PI;
 		for (int i=0; i<np; i++) {
 			vel_repulsive[i] /= dimensionless_shear_rate;
 			ang_vel_repulsive[i] /= dimensionless_shear_rate;
