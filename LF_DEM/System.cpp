@@ -43,8 +43,6 @@ System::~System(){
 	DELETE(contact_torque);
 	DELETE(lubstress);
 	DELETE(contactstressGU);
-//	DELETE(avg_lubstress);
-//	DELETE(avg_contactstressGU);
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
@@ -54,13 +52,11 @@ System::~System(){
 		DELETE(brownian_force);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
-//		DELETE(avg_brownianstressGU);
 	}
 	if (repulsiveforce) {
 		DELETE(repulsivestressGU);
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
-//		DELETE(avg_repulsivestressGU);
 	}
 };
 
@@ -108,15 +104,9 @@ System::allocateRessources(){
 	// Stress
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
-//	avg_lubstress = new StressTensor [np];
-//	avg_contactstressGU = new StressTensor [np];
-//	if (repulsiveforce) {
-//		avg_repulsivestressGU = new StressTensor [np];
-//	}
 	if (brownian) {
 		brownianstressGU = new StressTensor [np];
 		brownianstressGU_predictor = new StressTensor [np];
-//		avg_brownianstressGU = new StressTensor [np];
 	}
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
@@ -657,48 +647,6 @@ System::stressReset(){
 	}
 }
 
-//void
-//System::avgStressReset(){
-////	avg_stress_nb = 0;
-////	for (int i=0; i<np; i++) {
-////		avg_lubstress[i].reset();
-////		avg_contactstressGU[i].reset();
-////	}
-////	avg_contactstressXF_normal.reset();
-////	avg_contactstressXF_tan.reset();
-////	if (repulsiveforce) {
-////		avg_repulsivestressXF.reset();
-////		for (int i=0; i<np; i++) {
-////			avg_repulsivestressGU[i].reset();
-////		}
-////	}
-////	if (brownian) {
-////		for (int i=0; i<np; i++) {
-////			avg_brownianstressGU[i].reset();
-////		}
-////	}
-//}
-//
-//void
-//System::avgStressUpdate(){
-//	//	avg_stress_nb++;
-//	//	for (int i=0; i<np; i++) {
-//	//		avg_lubstress[i] += lubstress[i];
-//	//		avg_contactstressGU[i] += contactstressGU[i];
-//	//	}
-//
-//	//	if (repulsiveforce) {
-//	//		for (int i=0; i<np; i++) {
-//	//			avg_repulsivestressGU[i] += repulsivestressGU[i];
-//	//		}
-//	//	}
-//	//	if (brownian) {
-//	//		for (int i=0; i<np; i++) {
-//	//			avg_brownianstressGU[i] += brownianstressGU[i];
-//	//		}
-//	//	}
-//}
-
 void
 System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
 	// Builds the following terms, according to the value of 'build_res_mat' and 'build_force_GE':
@@ -908,8 +856,7 @@ System::computeVelocities(bool divided_velocities){
 		calcStress();
 		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-		double shearstress_rep = \
-		+total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = total_hydro_stress.getStressXZ();
 		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 		for (int i=0; i<np; i++) {
