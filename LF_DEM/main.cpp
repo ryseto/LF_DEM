@@ -50,8 +50,7 @@ int main(int argc, char **argv)
 
 	bool strain_controlled = true;
 	bool stress_controlled = !strain_controlled;
-	
-	
+
 	const struct option longopts[] = {
 		{"peclet", required_argument, 0, 'p'},
 		{"pe-seq-file", required_argument, 0, 'P'},
@@ -102,12 +101,11 @@ int main(int argc, char **argv)
 				cerr << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 'r':
-				if(!stress_controlled){
+				if (!stress_controlled) {
 					ratio_repulsion = atof(optarg);
 					repulsion = true;					
 					cerr << "Repulsion, shear rate " << ratio_repulsion << endl;
-				}
-				else{
+				} else {
 					cerr << "option -r ignored for stress controlled simulations " << endl;
 				}
 				break;
@@ -163,19 +161,18 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	
 	// Incompatibilities
-	if(peclet&&stress_controlled)
+	if (peclet && stress_controlled) {
 		incompatibility_exiting("peclet", "stress_controlled");
-	if(cohesion&&stress_controlled)
+	} else if (cohesion && stress_controlled) {
 		incompatibility_exiting("cohesion", "stress_controlled");
-	if(critical_load&&stress_controlled)
+	} else if (critical_load && stress_controlled) {
 		incompatibility_exiting("critical_load", "stress_controlled");
-	if(critical_load&&repulsion)
+	} else if (critical_load && repulsion) {
 		incompatibility_exiting("critical_load", "repulsion");
-	if(peclet&&cohesion)
+	} else if (peclet && cohesion) {
 		incompatibility_exiting("peclet", "cohesion");
-
+	}
 
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
@@ -198,7 +195,6 @@ int main(int argc, char **argv)
 		if (sequence) {
 			input_files.push_back(seq_filename);
 		}
-		
 		
 		Simulation simulation;
 		if (!sequence) {

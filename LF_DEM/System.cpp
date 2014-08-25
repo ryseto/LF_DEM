@@ -857,9 +857,7 @@ System::computeVelocities(bool divided_velocities){
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = total_hydro_stress.getStressXZ();
-		//sys.dimensionless_shear_rate = 1/scaled_repulsion;
-		//sys.repulsiveforce_amplitude = scaled_repulsion;
-		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con); // @@@ <--- numerical factors need to be checked
 		for (int i=0; i<np; i++) {
 			vel_repulsive[i] /= dimensionless_shear_rate;
 			ang_vel_repulsive[i] /= dimensionless_shear_rate;
@@ -867,30 +865,6 @@ System::computeVelocities(bool divided_velocities){
 		for (int i=0; i<np; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
-		}
-		static int cnt = 0;
-		if (cnt++ % 100 == 0){
-			double total_v_hydro = 0;
-			double total_v_contact = 0;
-			double total_v_repulsive = 0;
-			double total_av_hydro = 0;
-			double total_av_contact = 0;
-			double total_av_repulsive = 0;
-			for (int i=0; i<np; i++) {
-				total_v_hydro += vel_hydro[i].norm();
-				total_v_contact += vel_contact[i].norm();
-				total_v_repulsive += vel_repulsive[i].norm();
-				total_av_hydro += ang_vel_hydro[i].norm();
-				total_av_contact += ang_vel_contact[i].norm();
-				total_av_repulsive += ang_vel_repulsive[i].norm();
-			}
-			cerr << dimensionless_shear_rate << " : " ;
-			cerr << total_v_hydro/np << ' ';
-			cerr << total_v_contact/np << ' ';
-			cerr << total_v_repulsive/np << ' ';
-			cerr << total_av_hydro/np << ' ';
-			cerr << total_av_contact/np << ' ';
-			cerr << total_av_repulsive/np << endl;
 		}
 	} else {
 		if (divided_velocities) {

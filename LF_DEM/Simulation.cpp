@@ -49,14 +49,12 @@ Simulation::contactForceParameter(string filename){
 	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
 
-
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
-							double peclet_num, double ratio_repulsion,
-							double ratio_cohesion,
-							double ratio_critical_load,
-							string control_variable){
-	
+									   double peclet_num, double ratio_repulsion,
+									   double ratio_cohesion,
+									   double ratio_critical_load,
+									   string control_variable){
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
@@ -120,11 +118,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	setDefaultParameters();
 	readParameterFile();
-	if (sys.cohesive_force > 0) {
-		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate; // < Why is that here? It seems it gives sys.cohesive_force = ratio_cohesion^2 for pure cohesion. Is this what is intended?
-	}
 	importInitialPositionFile();
-
+	
 	int fnb = input_files.size();
 	if (fnb == 3) {
 		contactForceParameter(input_files[2]);
@@ -139,12 +134,10 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	outputConfigurationData();
 	sys.setupShearFlow(true);
-
-	if(control_var == "stress"){
+	
+	if (control_var == "stress") {
 		sys.set_integration_method(0);
 	}
-
-
 }
 
 /*
@@ -156,10 +149,10 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 								  double ratio_critical_load, string control_variable){
 	user_sequence = false;
 	control_var = control_variable;
-
+	
 	setupSimulationSteadyShear(input_files, peclet_num,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
-
+	
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
@@ -175,22 +168,6 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			outputConfigurationData();
 			cnt_config_out ++;
 		}
-		//if (sys.kn_kt_adjustment) {
-		//			if (sys.get_shear_strain() >= strain_knkt_adjustment-1e-8) {
-		//				if (sys.adjustContactModelParameters() == 1){
-		//					cout << "phi kn kt dt" << endl;
-		//					cout << volume_fraction << ' ';
-		//					cout << sys.get_kn() << ' ' ;
-		//					cout << sys.get_kt() << ' ';
-		//					cout << sys.get_dt() << endl;
-		//					if (sys.get_kn() > sys.max_kn){
-		//						cout << "kn cannot be determined. It can be larger than the upper limit." << endl;
-		//					}
-		//					return;
-		//				}
-		//				cnt_knkt_adjustment ++;
-		//			}
-		//}
 		cnt_simu_loop ++;
 		cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
 	}
@@ -202,7 +179,6 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		outputFinalConfiguration();
 	}
 }
-
 
 /*
  * Main simulation
@@ -219,19 +195,19 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	sys.repulsiveforce = true;
 	sys.repulsiveforce_amplitude = 1;
 	sys.dimensionless_shear_rate = 1; // needed for 1st time step
-
+	
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-
+	
 	setDefaultParameters();
 	readParameterFile();
 	
 	if (control_var == "stress") {
 		sys.set_integration_method(0);
 	}
-
+	
 	importInitialPositionFile();
-
+	
 	int fnb = input_files.size();
 	if (fnb == 4) {
 		contactForceParameter(input_files[2]);
@@ -239,21 +215,21 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	filename_sequence = input_files[fnb-1];
 	
 	openOutputFiles();
-
+	
 	sys.setupSystem(control_var);
 	outputConfigurationData();
-
+	
 	sys.setupShearFlow(true);
-
+	
 	vector <double> strain_sequence;
 	vector <double> rsequence;
-
+	
 	ifstream fin_seq;
 	fin_seq.open(filename_sequence.c_str());
-
+	
 	double strain;
 	double targ_st;
-
+	
 	while (fin_seq >> strain >> targ_st){
 		strain_sequence.push_back(strain);
 		rsequence.push_back(targ_st);
@@ -261,7 +237,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain=0;
-	for(unsigned int step=0; step<strain_sequence.size();step++){
+	for (unsigned int step=0; step<strain_sequence.size();step++){
 		sys.target_stress = rsequence[step];
 		next_strain += strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
@@ -513,7 +489,8 @@ Simulation::openOutputFiles(){
 	"#44: kn\n"
 	"#45: kt\n"
 	"#46: dt\n"
-	"#47: time\n";
+	"#47: time\n"
+	"#48: dimensionless_shear_rate\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
 	//
@@ -703,7 +680,7 @@ Simulation::prepareSimulationName(){
 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
 	cout << filename_sequence << endl;
 	cout << filename_sequence.substr(0, pos_ext_sequence) << endl << endl;
-
+	
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
@@ -804,7 +781,7 @@ Simulation::outputStressTensorData(){
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate << ' '; // 39
+	fout_st << sys.dimensionless_shear_rate << ' '; // 39 @@@@@ <==== Do we need to give the factor (1/6pi)?
 	fout_st << endl;
 }
 
@@ -888,6 +865,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.get_kt() << ' '; //45
 	fout_rheo << sys.get_dt() << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
+	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48 @@@@@ <==== Do we need to give the factor (1/6pi)?
 	fout_rheo << endl;
 }
 
