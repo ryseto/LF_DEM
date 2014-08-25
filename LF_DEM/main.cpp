@@ -104,6 +104,7 @@ int main(int argc, char **argv)
 			case 'r':
 				if(!stress_controlled){
 					ratio_repulsion = atof(optarg);
+					repulsion = true;					
 					cerr << "Repulsion, shear rate " << ratio_repulsion << endl;
 				}
 				else{
