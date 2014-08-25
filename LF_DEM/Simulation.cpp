@@ -52,81 +52,76 @@ Simulation::contactForceParameter(string filename){
 
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
-							double peclet_num, double scaled_repulsion,
-							double scaled_cohesion,
-							double scaled_critical_load,
+							double peclet_num, double ratio_repulsion,
+							double ratio_cohesion,
+							double ratio_critical_load,
 							string control_variable){
 	
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (control_var == "strain") {
-		if (scaled_repulsion > 0 &&
-			scaled_critical_load > 0) {
-			cerr << " Repulsion AND Critical Load cannot be used at the same time" << endl;
-			exit(1);
-		}
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
 			sys.dimensionless_shear_rate = peclet_num;
-			if (scaled_repulsion > 0) {
+			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
-				sys.repulsiveforce_amplitude = scaled_repulsion/peclet_num;
+				sys.repulsiveforce_amplitude = ratio_repulsion/peclet_num;
 				sys.repulsiveforce = true;
 			}
-			if (scaled_critical_load > 0) {
+			if (ratio_critical_load > 0) {
 				cerr << "Critical load" << endl;
-				sys.critical_normal_force = scaled_critical_load/peclet_num;
+				sys.critical_normal_force = ratio_critical_load/peclet_num;
 				sys.friction_model = 2;
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
-			if (scaled_repulsion > 0 && scaled_cohesion == 0) {
+			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
 				cerr << "Repulsive force" << endl;
-				sys.dimensionless_shear_rate = 1/scaled_repulsion;
-				sys.repulsiveforce_amplitude = scaled_repulsion;
+				sys.dimensionless_shear_rate = ratio_repulsion;
+				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 			}
-			if (scaled_critical_load > 0 && scaled_cohesion == 0) {
-				sys.dimensionless_shear_rate = 1/scaled_critical_load;
-				sys.friction_model = 2;
+			if (ratio_critical_load > 0 && ratio_cohesion == 0) {
 				cerr << "Critical load" << endl;
-				sys.critical_normal_force = scaled_critical_load;
+				sys.dimensionless_shear_rate = ratio_critical_load;
+				sys.friction_model = 2;
+				sys.critical_normal_force = 1/ratio_critical_load;
 			}
-			if (scaled_repulsion == 0 && scaled_cohesion > 0) {
+			if (ratio_repulsion == 0 && ratio_cohesion > 0) {
 				cerr << "Cohesive force" << endl;
-				sys.dimensionless_shear_rate = 1/scaled_cohesion;
-				sys.cohesive_force = scaled_cohesion;
+				sys.dimensionless_shear_rate = ratio_cohesion;
+				sys.cohesive_force = 1/ratio_cohesion;
 			}
-			if (scaled_repulsion > 0 && scaled_cohesion > 0) {
+			if (ratio_repulsion > 0 && ratio_cohesion > 0) {
 				cerr << "Repulsive force + Cohesive force" << endl;
-				sys.dimensionless_shear_rate = 1/scaled_repulsion;
-				sys.repulsiveforce_amplitude = 1/sys.dimensionless_shear_rate;
+				sys.dimensionless_shear_rate = ratio_repulsion;
+				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
-				sys.cohesive_force = scaled_cohesion;
+				sys.cohesive_force = ratio_cohesion/ratio_repulsion;
 			}
 		}
 	} else if (control_var == "stress") {
 		sys.brownian = false;
-		if (scaled_critical_load > 0) {
+		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
 		}
-		if (scaled_repulsion == 0) {
+		if (ratio_repulsion == 0) {
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
 			sys.repulsiveforce = true;
 			sys.repulsiveforce_amplitude = 1;
-			sys.target_stress = 1/scaled_repulsion;
+			sys.target_stress = ratio_repulsion;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		}
 	}
 	setDefaultParameters();
 	readParameterFile();
 	if (sys.cohesive_force > 0) {
-		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate; // < Why is that here? It seems it gives sys.cohesive_force = scaled_cohesion^2 for pure cohesion. Is this what is intended?
+		sys.cohesive_force = sys.cohesive_force/sys.dimensionless_shear_rate; // < Why is that here? It seems it gives sys.cohesive_force = ratio_cohesion^2 for pure cohesion. Is this what is intended?
 	}
 	importInitialPositionFile();
 
@@ -157,13 +152,13 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
  */
 void
 Simulation::simulationSteadyShear(vector<string> &input_files,
-								  double peclet_num, double scaled_repulsion, double scaled_cohesion,
-								  double scaled_critical_load, string control_variable){
+								  double peclet_num, double ratio_repulsion, double ratio_cohesion,
+								  double ratio_critical_load, string control_variable){
 	user_sequence = false;
 	control_var = control_variable;
 
 	setupSimulationSteadyShear(input_files, peclet_num,
-							   scaled_repulsion, scaled_cohesion, scaled_critical_load, control_var);
+							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 
 	int cnt_simu_loop = 1;
 	//int cnt_knkt_adjustment = 1;
@@ -267,7 +262,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	int cnt_config_out = 1;
 	double next_strain=0;
 	for(unsigned int step=0; step<strain_sequence.size();step++){
-		sys.target_stress = 1/rsequence[step];
+		sys.target_stress = rsequence[step];
 		next_strain += strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			double strain_next_config_out = cnt_config_out*sys.strain_interval_output;
