@@ -229,6 +229,7 @@ public:
 	double strain_interval_output;
 	string simu_name;
 	bool kn_kt_adjustment;
+	double target_stress_input;
 	double target_stress;
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,

@@ -116,6 +116,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			 * with an unit stres: eta_0*gammmadot_0.
 			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
 			 */
+			sys.target_stress_input = ratio_repulsion;
 			sys.target_stress = ratio_repulsion/6/M_PI;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		}
@@ -153,7 +154,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 								  double ratio_critical_load, string control_variable){
 	user_sequence = false;
 	control_var = control_variable;
-	
+
 	setupSimulationSteadyShear(input_files, peclet_num,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	
@@ -246,6 +247,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		 * with an unit stres: eta_0*gammmadot_0.
 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
 		 */
+		sys.target_stress_input = rsequence[step];
 		sys.target_stress = rsequence[step]/6/M_PI;
 		next_strain += strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
@@ -704,7 +706,7 @@ Simulation::prepareSimulationName(){
 		if (user_sequence) {
 			ss_simu_name << "_st_" << filename_sequence.substr(0, pos_ext_sequence);
 		} else {
-			ss_simu_name << "_st" << sys.target_stress;
+			ss_simu_name << "_st" << sys.target_stress_input;
 		}
 	}
 	sys.simu_name = ss_simu_name.str();
