@@ -889,29 +889,6 @@ System::computeVelocities(bool divided_velocities){
 					na_ang_velocity[i] += ang_vel_repulsive[i];
 				}
 			}
-			static int cnt = 0;
-			if (true|| cnt++ % 100 == 0){
-				double total_v_hydro = 0;
-				double total_v_contact = 0;
-				double total_v_repulsive = 0;
-				double total_av_hydro = 0;
-				double total_av_contact = 0;
-				double total_av_repulsive = 0;
-				for (int i=0; i<np; i++) {
-					total_v_hydro += vel_hydro[i].norm();
-					total_v_contact += vel_contact[i].norm();
-					total_v_repulsive += vel_repulsive[i].norm();
-					total_av_hydro += ang_vel_hydro[i].norm();
-					total_av_contact += ang_vel_contact[i].norm();
-					total_av_repulsive += ang_vel_repulsive[i].norm();
-				}
-				cerr << total_v_hydro/np << ' ';
-				cerr << total_v_contact/np << ' ';
-				cerr << total_v_repulsive/np << ' ';
-				cerr << total_av_hydro/np << ' ';
-				cerr << total_av_contact/np << ' ';
-				cerr << total_av_repulsive/np << endl;
-			}
 		} else {
 			// for most of the time evolution
 			if (!zero_shear) {
