@@ -112,7 +112,11 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		} else {
 			sys.repulsiveforce = true;
 			sys.repulsiveforce_amplitude = 1;
-			sys.target_stress = ratio_repulsion;
+			/* The target stress (``ratio_repulsion'') is given trough the command argument 
+			 * with an unit stres: eta_0*gammmadot_0.
+			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
+			 */
+			sys.target_stress = ratio_repulsion/6/M_PI;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		}
 	}
@@ -238,7 +242,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	int cnt_config_out = 1;
 	double next_strain=0;
 	for (unsigned int step=0; step<strain_sequence.size();step++){
-		sys.target_stress = rsequence[step];
+		/* The target stress (``rsequence'') is given trough the command argument
+		 * with an unit stres: eta_0*gammmadot_0.
+		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
+		 */
+		sys.target_stress = rsequence[step]/6/M_PI;
 		next_strain += strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			double strain_next_config_out = cnt_config_out*sys.strain_interval_output;
@@ -781,7 +789,7 @@ Simulation::outputStressTensorData(){
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate << ' '; // 39 @@@@@ <==== Do we need to give the factor (1/6pi)?
+	fout_st << sys.dimensionless_shear_rate << ' '; // 39
 	fout_st << endl;
 }
 
@@ -865,7 +873,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.get_kt() << ' '; //45
 	fout_rheo << sys.get_dt() << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
-	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48 @@@@@ <==== Do we need to give the factor (1/6pi)?
+	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
 	fout_rheo << endl;
 }
 

@@ -280,9 +280,9 @@ public:
 		lz_half = 0.5*lz;
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
-//	inline double System_volume(){
-//		return system_volume;
-//	}
+	//	inline double System_volume(){
+	//		return system_volume;
+	//	}
 	double getParticleContactNumber(){
 		return (double)2*contact_nb/np;
 	}
