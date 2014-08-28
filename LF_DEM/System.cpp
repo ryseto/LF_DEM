@@ -351,12 +351,11 @@ System::setupSystem(string control){
 	}
 	
 	double particle_volume = 0;
-	for (int i=0; i<np; i++){
+	for (int i=0; i<np; i++) {
 		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
 	}
 	volume_fraction = particle_volume/system_volume;
 	cerr << "volume_fraction = " << volume_fraction << endl;
-	exit(1);
 	if (control == "strain") {
 		strain_controlled = true;
 	}
