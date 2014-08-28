@@ -35,7 +35,8 @@ private:
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
 	int ts; // time steps
-	double dt;
+	double time;
+	double dt; // <=== It should be called d_strain.
 	double disp_max;
 	double lx;
 	double ly;
@@ -47,6 +48,7 @@ private:
 	 * threshold distance which can intaract each other as periodic image.
 	 */
 	double system_volume;
+	double volume_fraction;
 	double sq_lub_max;
 	double shear_strain;
 	double lub_max;
@@ -291,7 +293,7 @@ public:
 	void set_lubrication_model(int val){lubrication_model = val;}
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}
-	double get_time(){return shear_strain/dimensionless_shear_rate;}
+	double get_time(){return time;}
 	inline double get_lz(){return lz;}
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}

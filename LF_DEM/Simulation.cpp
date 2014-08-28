@@ -744,7 +744,7 @@ Simulation::evaluateData(){
 	 * The total viscosity should be
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
-	viscosity = total_stress.getStressXZ()+5*volume_fraction/(12*M_PI);
+	viscosity = total_stress.getStressXZ()+(1+2.5*volume_fraction)/(6*M_PI);
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();

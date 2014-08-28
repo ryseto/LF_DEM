@@ -335,6 +335,7 @@ System::setupSystem(string control){
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	ts = 0;
+	time = 0;
 	shear_disp = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
@@ -348,10 +349,18 @@ System::setupSystem(string control){
 	} else {
 		setSystemVolume();
 	}
-	if(control=="strain"){
+	
+	double particle_volume = 0;
+	for (int i=0; i<np; i++){
+		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
+	}
+	volume_fraction = particle_volume/system_volume;
+	cerr << "volume_fraction = " << volume_fraction << endl;
+	exit(1);
+	if (control == "strain") {
 		strain_controlled = true;
 	}
-	if(control=="stress"){
+	if (control == "stress") {
 		strain_controlled = false;
 	}
 	stress_controlled = !strain_controlled;
@@ -486,6 +495,9 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
  */
 void
 System::timeStepMove(){
+	dt = disp_max/max_velocity;
+	
+	time += dt/dimensionless_shear_rate;
 	/* evolve PBC */
 	timeStepBoxing();
 	/* move particles */
@@ -850,14 +862,19 @@ System::computeVelocities(bool divided_velocities){
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
-		dimensionless_shear_rate = 1;
+		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
 		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-		double shearstress_hyd = total_hydro_stress.getStressXZ();
+		double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
 		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		if (dimensionless_shear_rate < 0) {
+			cerr << "negative: dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
+			cerr << "shearstress_rep = " << shearstress_rep << endl;
+			exit(1);
+		}
 		for (int i=0; i<np; i++) {
 			vel_repulsive[i] /= dimensionless_shear_rate;
 			ang_vel_repulsive[i] /= dimensionless_shear_rate;
@@ -917,6 +934,19 @@ System::computeVelocities(bool divided_velocities){
 			}
 		}
 	}
+	/*
+	 * The max velocity is used to find dt from max displacement
+	 * at each time step.
+	 */
+	double sq_max_na_velocity = 0;
+	for (int i=0; i<np; i++) {
+		double sq_na_velocity = na_velocity[i].sq_norm();
+		if (sq_max_na_velocity < sq_na_velocity) {
+			sq_max_na_velocity = sq_na_velocity;
+		}
+	}
+	max_velocity = sqrt(sq_max_na_velocity);
+	
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
@@ -1160,7 +1190,7 @@ System::countNumberOfContact(){
 
 void
 System::analyzeState(){
-	max_velocity = evaluateMaxVelocity();
+	//	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	min_gap_nondim = evaluateMinGap();

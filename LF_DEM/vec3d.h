@@ -37,8 +37,6 @@ public:
 
 	/* operators */
 	inline vec3d& operator = (const vec3d& v){
-		if(this==&v)
-			return *this;
 		x = v.x, y = v.y, z = v.z;
 		return *this;
 	}
