@@ -48,7 +48,7 @@ public:
 	 *       Public Methods          *
 	 *********************************/
 	//======= internal state =====================//
-	Contact();
+	Contact(){};
 	Contact(const Contact& obj);
 	void init(System *sys_, Interaction *int_);
 	void getInteractionData();

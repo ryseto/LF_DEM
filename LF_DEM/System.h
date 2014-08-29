@@ -90,7 +90,6 @@ private:
 	void countNumberOfContact();
 	MTRand *r_gen;
 	double *radius_cubed;
-	
 	bool strain_controlled;
 	bool stress_controlled;
 

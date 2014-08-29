@@ -6,15 +6,6 @@
 #include "Contact.h"
 #include "Interaction.h"
 
-Contact::Contact()
-{}
-
-Contact::Contact(const Contact& obj)
-{
-	disp_tan = obj.disp_tan;
-	state = obj.state;
-}
-
 void
 Contact::init(System *sys_, Interaction *interaction_){
 	sys = sys_;
