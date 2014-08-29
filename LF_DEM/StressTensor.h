@@ -60,14 +60,6 @@ public:
 		elm[5] = _zz;
 	}
 
-	/* copy constructor */
-	inline StressTensor(const StressTensor& other)
-	{
-		for (int i=0; i<6; i++) {
-			elm[i] = other.elm[i];
-		}
-	}
-	
 	inline friend StressTensor
 	operator + (const StressTensor &a1, const StressTensor &a2)
 	{

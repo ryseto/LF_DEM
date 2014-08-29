@@ -28,19 +28,6 @@ public:
 				  const double &_y,
 				  const double &_z): x(_x), y(_y), z(_z) {}
 	
-	/* copy constructor */
-	inline vec3d(const vec3d& other){
-		x = other.x;
-		y = other.y;
-		z = other.z;
-	}
-
-	/* operators */
-	inline vec3d& operator = (const vec3d& v){
-		x = v.x, y = v.y, z = v.z;
-		return *this;
-	}
-	
 	inline friend bool
 	operator == (const vec3d &v1, const vec3d &v2){
 		if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z) {
