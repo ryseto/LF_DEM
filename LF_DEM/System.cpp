@@ -22,6 +22,7 @@ repulsiveforce(false)
 System::~System(){
 	DELETE(position);
 	DELETE(radius);
+	DELETE(radius_squared);
 	DELETE(radius_cubed);
 	DELETE(resistance_matrix_dblock);
 	if (twodimension) {
@@ -65,6 +66,7 @@ System::allocateRessources(){
 	linalg_size = 6*np;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
+	radius_squared = new double [np];
 	resistance_matrix_dblock = new double [18*np];
 	// Configuration
 	if (twodimension) {
@@ -242,6 +244,7 @@ System::setupSystem(string control){
 	}
 	for (int i=0; i<np; i++) {
 		radius_cubed[i] = radius[i]*radius[i]*radius[i];
+		radius_squared[i] = radius[i]*radius[i];
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -938,10 +941,15 @@ System::computeVelocities(bool divided_velocities){
 	 * at each time step.
 	 */
 	double sq_max_na_velocity = 0;
+	double sq_na_velocity, sq_na_ang_velocity;
 	for (int i=0; i<np; i++) {
-		double sq_na_velocity = na_velocity[i].sq_norm();
+		sq_na_velocity = na_velocity[i].sq_norm();
 		if (sq_max_na_velocity < sq_na_velocity) {
 			sq_max_na_velocity = sq_na_velocity;
+		}
+		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
+		if (sq_max_na_velocity < sq_na_ang_velocity) {
+			sq_max_na_velocity = sq_na_ang_velocity;
 		}
 	}
 	max_velocity = sqrt(sq_max_na_velocity);
