@@ -864,6 +864,7 @@ System::computeVelocities(bool divided_velocities){
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
+
 		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
@@ -871,12 +872,15 @@ System::computeVelocities(bool divided_velocities){
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
+
 		dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+
 		if (dimensionless_shear_rate < 0) {
-			cerr << "negative: dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
+			cerr << "negative dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
 			cerr << "shearstress_rep = " << shearstress_rep << endl;
 			exit(1);
 		}
+
 		for (int i=0; i<np; i++) {
 			vel_repulsive[i] /= dimensionless_shear_rate;
 			ang_vel_repulsive[i] /= dimensionless_shear_rate;
@@ -885,6 +889,7 @@ System::computeVelocities(bool divided_velocities){
 			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
 		}
+
 	} else {
 		if (divided_velocities) {
 			// in case we want to compute the stress contributions
@@ -896,6 +901,7 @@ System::computeVelocities(bool divided_velocities){
 			stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 			buildContactTerms(true); // set rhs = F_C
 			stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+
 			for (int i=0; i<np; i++) {
 				na_velocity[i] = vel_hydro[i]+vel_contact[i];
 				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
@@ -908,6 +914,7 @@ System::computeVelocities(bool divided_velocities){
 					na_ang_velocity[i] += ang_vel_repulsive[i];
 				}
 			}
+
 		} else {
 			// for most of the time evolution
 			if (!zero_shear) {
@@ -928,12 +935,15 @@ System::computeVelocities(bool divided_velocities){
 				 */
 				generateBrownianForces();
 			}
+
 			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 			stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_brownian[i];
 				na_ang_velocity[i] += ang_vel_brownian[i];
 			}
+
 		}
 	}
 	/*
