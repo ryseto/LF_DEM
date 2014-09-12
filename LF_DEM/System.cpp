@@ -497,8 +497,13 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
  */
 void
 System::timeStepMove(){
+	/* Changing dt for every timestep 
+	 * So far, this is only in Eular method.
+	 */
 	dt = disp_max/max_velocity;
-	
+	/* [note] 
+	 * We need to make clear time/strain/dimensionlesstime.
+	 */
 	time += dt/dimensionless_shear_rate;
 	/* evolve PBC */
 	timeStepBoxing();
