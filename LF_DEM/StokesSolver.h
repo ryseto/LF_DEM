@@ -350,5 +350,7 @@ public:
 	 solvingIsDone()
 	 */
     void solvingIsDone();
+	void multiplyByResMat(double *vec);
+	void multiplySolutionByResMat(double *vec);
 };
 #endif /* defined(__LF_DEM__StokesSolver__) */
