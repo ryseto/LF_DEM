@@ -51,13 +51,15 @@ Simulation::contactForceParameter(string filename){
 
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
-									   double peclet_num, double ratio_repulsion,
+									   double peclet_num,
+									   double ratio_repulsion,
 									   double ratio_cohesion,
 									   double ratio_critical_load,
 									   string control_variable){
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
+	
 	if (control_var == "strain") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
@@ -65,13 +67,22 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			sys.dimensionless_shear_rate = peclet_num;
 			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
+				/* When both Brownian and repulsive forces exist
+				 * `ratio_repulsion' = F_rep(0)/(kT/a)
+				 * Filename includes "RepXXXX_PeXXXX".
+				 */
+				sys.set_ratio_repulsion(ratio_repulsion);
 				sys.repulsiveforce_amplitude = ratio_repulsion/peclet_num;
 				sys.repulsiveforce = true;
-			}
-			if (ratio_critical_load > 0) {
+				string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
+			} else if (ratio_critical_load > 0) {
 				cerr << "Critical load" << endl;
 				sys.critical_normal_force = ratio_critical_load/peclet_num;
 				sys.friction_model = 2;
+				string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
+			} else {
+				cerr << "strain -> Brownian -> ???" << endl;
+				exit(1);
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
@@ -80,24 +91,29 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.dimensionless_shear_rate = ratio_repulsion;
 				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
-			}
-			if (ratio_critical_load > 0 && ratio_cohesion == 0) {
+				string_control_parameters << "_r" << ratio_repulsion;
+				
+				cerr << "**" << string_control_parameters << endl;
+			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
 				cerr << "Critical load" << endl;
 				sys.dimensionless_shear_rate = ratio_critical_load;
 				sys.friction_model = 2;
 				sys.critical_normal_force = 1/ratio_critical_load;
-			}
-			if (ratio_repulsion == 0 && ratio_cohesion > 0) {
+				string_control_parameters << "_c" << ratio_critical_load;
+			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
 				cerr << "Cohesive force" << endl;
 				sys.dimensionless_shear_rate = ratio_cohesion;
 				sys.cohesive_force = 1/ratio_cohesion;
-			}
-			if (ratio_repulsion > 0 && ratio_cohesion > 0) {
+				string_control_parameters << "_a" << ratio_cohesion;
+			} else if (ratio_repulsion > 0 && ratio_cohesion > 0) {
 				cerr << "Repulsive force + Cohesive force" << endl;
 				sys.dimensionless_shear_rate = ratio_repulsion;
 				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				sys.cohesive_force = ratio_cohesion/ratio_repulsion;
+				string_control_parameters << "_a" << ratio_cohesion << "_r" << ratio_repulsion;
+			} else {
+				cerr << "strain -> non-Brownian -> ???" << endl;
 			}
 		}
 	} else if (control_var == "stress") {
@@ -119,6 +135,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			sys.target_stress_input = ratio_repulsion;
 			sys.target_stress = ratio_repulsion/6/M_PI;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
+			string_control_parameters << "_s" << ratio_repulsion << endl;
 		}
 	}
 	setDefaultParameters();
@@ -193,10 +210,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	user_sequence = true;
 	control_var = control_variable;
 	if (seq_type != "r" || control_var != "stress") {
-		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment "; exit(1);
+		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment ";
+		exit(1);
 	}
 	
-	cout << " User Defined Sequence, Repulsive Force " << endl;
+	cerr << " User Defined Sequence, Repulsive Force " << endl;
 	sys.repulsiveforce = true;
 	sys.repulsiveforce_amplitude = 1;
 	sys.dimensionless_shear_rate = 1; // needed for 1st time step
@@ -218,7 +236,10 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		contactForceParameter(input_files[2]);
 	}
 	filename_sequence = input_files[fnb-1];
-	
+
+	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
+	string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
+
 	openOutputFiles();
 	
 	sys.setupSystem(control_var);
@@ -687,29 +708,15 @@ Simulation::prepareSimulationName(){
 	ostringstream ss_simu_name;
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
-	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
-	cout << filename_sequence << endl;
-	cout << filename_sequence.substr(0, pos_ext_sequence) << endl << endl;
-	
+
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
-	
-	if (control_var == "strain") {
-		if (sys.dimensionless_shear_rate == -1) {
-			ss_simu_name << "_srinf" ; // shear rate infinity
-		} else {
-			ss_simu_name << "_sr" << sys.dimensionless_shear_rate;
-		}
-	}
-	if (control_var == "stress") {
-		if (user_sequence) {
-			ss_simu_name << "_st_" << filename_sequence.substr(0, pos_ext_sequence);
-		} else {
-			ss_simu_name << "_st" << sys.target_stress_input;
-		}
-	}
+	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
+	
+
+	cerr << "filename: " << sys.simu_name << endl;
 }
 
 void
@@ -769,11 +776,21 @@ Simulation::evaluateData(){
 		viscosity_repulsive_GU = sys.total_repulsive_stressGU.getStressXZ();
 		normalstress_diff_1_repulsive_GU = sys.total_repulsive_stressGU.getNormalStress1();
 		normalstress_diff_2_repulsive_GU = sys.total_repulsive_stressGU.getNormalStress2();
+	} else {
+		viscosity_repulsive_XF = 0;
+		normalstress_diff_1_repulsive_XF = 0;
+		normalstress_diff_2_repulsive_XF = 0;
+		particle_pressure_repulsive = 0;
+		viscosity_repulsive_GU = 0;
+		normalstress_diff_1_repulsive_GU = 0;
+		normalstress_diff_2_repulsive_GU = 0;
 	}
 	if (sys.brownian) {
 		viscosity_brownian = sys.total_brownian_stressGU.getStressXZ();
 		normalstress_diff_1_brownian = sys.total_brownian_stressGU.getNormalStress1();
 		normalstress_diff_2_brownian = sys.total_brownian_stressGU.getNormalStress2();
+	} else {
+		
 	}
 }
 

@@ -60,6 +60,7 @@ private:
 	int dof;
 	int max_lub_int;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
+	double ratio_repulsion; // For the case where both repulsive force and Brownian force exist.
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	void (System::*timeEvolutionDt)(bool);
@@ -313,8 +314,11 @@ public:
 	inline double get_dt(){return dt;}
 	/* inline void set_repulsiveforce_amplitude(double val){ */
 	/* 	repulsiveforce_amplitude = val;} */
+	
 	inline double get_repulsiveforce_amplitude(){return repulsiveforce_amplitude;}
 	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}
+	void set_ratio_repulsion(double val){ratio_repulsion = val;}
+	inline double get_ratio_repulsion(){return ratio_repulsion;}
 	void set_sd_coeff(double val){sd_coeff = val;}
 	inline double get_repulsiveforce_length(){return repulsiveforce_length;}
 	void set_mu_static(double val){mu_static = val;}
