@@ -6,7 +6,7 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#define VERSION "3.0"
+//#define VERSION "3.0"
 #include "Simulation.h"
 #include <cmath>
 #include <map>

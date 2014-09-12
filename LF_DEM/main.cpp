@@ -20,6 +20,7 @@ void incompatibility_exiting(string a, string b){
 	exit(1);
 }
 
+
 int main(int argc, char **argv)
 {
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-a Scaled_Cohesion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n";

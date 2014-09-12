@@ -7,23 +7,23 @@
 # OS_version: OSX or Linux or SI 
 OS_version=OSX
 #SysEnv=Energy_seto
-# Build : debug or optimized
+GIT_VERSION := $(shell git describe --dirty --always) 
 
 # Compiler
 ifeq ($(OS_version),SI)
 	CXX=icc
-	CXXFLAGS_optimized=  -O3
-	CXXFLAGS_debug=  -g
+	CXXFLAGS_optimized=  -O3 -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
 endif
 ifeq ($(OS_version),Linux)
 	CXX=g++
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow
-	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow
+	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
 endif
 ifeq ($(OS_version),OSX)
 	CXX=clang
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow
-	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow
+	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
 endif
 
 # Enable use of Trilinos library ( yes / no )
@@ -121,11 +121,14 @@ all:	$(OUT_CODE)
 debug:	CXXFLAGS= $(CXXFLAGS_debug)
 debug:	$(OUT_CODE)
 
-$(OUT_CODE):$(OBJ)
+$(OUT_CODE): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp) 
+
+gitversion.h: ../.git/HEAD ../.git/index
+    echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
 
 tar:
 	tar cvfz LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB)  LF_DEM_sources_$(DATE).ps Makefile input.*
