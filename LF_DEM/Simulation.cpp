@@ -92,6 +92,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_r" << ratio_repulsion;
+			} else if (ratio_repulsion == -1 && ratio_cohesion == 0) {
+				cerr << "Infinite shear rate" << endl;
+				sys.dimensionless_shear_rate = -1;
+				sys.repulsiveforce_amplitude = 0;
+				sys.repulsiveforce = true;
+				string_control_parameters << "_rINF";
 			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
 				cerr << "Critical load" << endl;
 				sys.dimensionless_shear_rate = ratio_critical_load;
