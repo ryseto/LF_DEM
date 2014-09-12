@@ -794,7 +794,9 @@ Simulation::evaluateData(){
 		normalstress_diff_1_brownian = sys.total_brownian_stressGU.getNormalStress1();
 		normalstress_diff_2_brownian = sys.total_brownian_stressGU.getNormalStress2();
 	} else {
-		
+		viscosity_brownian = 0;
+		normalstress_diff_1_brownian = 0;
+		normalstress_diff_2_brownian = 0;
 	}
 }
 
