@@ -522,6 +522,11 @@ System::timeStepMove(){
 
 void
 System::timeStepMovePredictor(){
+	if (!brownian){ // adaptative time-step for non-Brownian cases
+		dt = disp_max/max_velocity;
+		time += dt/dimensionless_shear_rate;
+	}
+
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
