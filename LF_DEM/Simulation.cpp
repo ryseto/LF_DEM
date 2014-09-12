@@ -455,7 +455,7 @@ Simulation::openOutputFiles(){
 	"#14: tangential part of the contact force, y\n"
 	"#15: tangential part of the contact force, z\n"
 	"#16: norm of the normal repulsive force\n"
-	"#17: Viscosity contribution of contact xF\n"
+		"#17: Viscosity contribution of contact xF\n";
 	fout_interaction << fout_int_col_def << endl;
 	//
 	string fout_rheo_col_def =
