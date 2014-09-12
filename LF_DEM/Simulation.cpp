@@ -198,7 +198,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
 	}
 	if (filename_parameters == "init_relax.txt") {
-		/* To prepar relaxed initial configuration,
+		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to expoert the position data.
 		 */
@@ -474,7 +474,7 @@ Simulation::openOutputFiles(){
 	"#14: tangential part of the contact force, y\n"
 	"#15: tangential part of the contact force, z\n"
 	"#16: norm of the normal repulsive force\n"
-	"#17: Viscosity contribution of contact xF\n";
+		"#17: Viscosity contribution of contact xF\n";
 	fout_interaction << fout_int_col_def << endl;
 	//
 	string fout_rheo_col_def =
@@ -709,6 +709,7 @@ Simulation::importInitialPositionFile(){
 
 void
 Simulation::prepareSimulationName(){
+
 	ostringstream ss_simu_name;
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
@@ -990,6 +991,7 @@ Simulation::outputConfigurationData(){
 	if (out_data_interaction) {
 		fout_interaction << "# " << sys.get_shear_strain();
 		fout_interaction << ' ' << cnt_interaction << endl;
+
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
@@ -1025,6 +1027,7 @@ Simulation::outputConfigurationData(){
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
 				fout_interaction << sys.interaction[k].get_f_repulsive_norm() << ' '; // 16
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 17
+				sys.interaction[k].contact.addUpContactForceTorque();
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' ';
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress2() << ' ';
 				fout_interaction << endl;

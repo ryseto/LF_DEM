@@ -758,7 +758,7 @@ StokesSolver::solve(double* velocity){
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			velocity[i] = ((double*)chol_solution->x)[i];
-		}				
+		}			
 		cholmod_free_dense(&chol_solution, &chol_c);
 	}
 #ifdef TRILINOS
@@ -781,6 +781,39 @@ StokesSolver::solve(double* velocity){
 	}
 #endif
 }
+
+// testing function, don't use it in production code, very slow and unclean
+void
+StokesSolver::multiplySolutionByResMat(double* vec){
+	chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
+	cholmod_dense *r;
+   	r = cholmod_copy_dense(chol_rhs, &chol_c);
+	double one [2] = {1,0}; 
+	double zero [2] = {0,0}; 
+	cholmod_sdmult(chol_res_matrix,0,one,zero, chol_solution, r, &chol_c);
+	for (int i=0; i<res_matrix_linear_size; i++) {
+			vec[i] = ((double*)r->x)[i];
+	}
+	cholmod_free_dense(&r, &chol_c);
+	cholmod_free_dense(&chol_solution, &chol_c);
+}
+void
+StokesSolver::multiplyByResMat(double* vec){
+	cholmod_dense *r;
+	r = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
+	for (int i=0; i<res_matrix_linear_size; i++) {
+		((double*)r->x)[i] = vec[i];
+	}
+
+	double one [2] = {1,0}; 
+	double zero [2] = {0,0}; 
+	cholmod_sdmult(chol_res_matrix,0,one,zero, r, r, &chol_c);
+	for (int i=0; i<res_matrix_linear_size; i++) {
+			vec[i] = ((double*)r->x)[i];
+	}
+	cholmod_free_dense(&r, &chol_c);
+}
+
 
 void
 StokesSolver::convertDirectToIterative(){
@@ -1017,32 +1050,11 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
 
 void
 StokesSolver::factorizeResistanceMatrix(){
-	/*debug
-	chol_c.nmethods = 1;
-	//   	chol_c.method[0].ordering = CHOLMOD_NATURAL;
-	//   	chol_c.method[0].ordering = CHOLMOD_GIVEN;
-	int *perm = new int [np];
-	int *fset = new int [np];
-	for(int i = 0;i<np-1;i++){
-		perm[i] = i+1;
-		fset[i] = i;
-	}
-	perm[np-1]=0;
-	fset[np-1]=np-1;
-
-	chol_L = cholmod_analyze_p(chol_res_matrix, perm, fset, np, &chol_c);
-	double beta [2] = {0,0};
-	cholmod_factorize_p(chol_res_matrix, beta, fset, np, chol_L, &chol_c);
-	 end debug*/
 
 	/*reference code */
-	//	chol_c.nmethods = 1;
-	//   	chol_c.method[0].ordering = CHOLMOD_NATURAL;// force natural ordering (=no ordering) at the moment
-	//	chol_c.postorder = 0 ;
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
-	//	cout << chol_L->ordering << endl;
     if (chol_c.status) {
 		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
 		// It is very often enough to force another preconditioner to solve the problem.
