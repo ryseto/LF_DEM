@@ -709,18 +709,14 @@ Simulation::importInitialPositionFile(){
 
 void
 Simulation::prepareSimulationName(){
-
 	ostringstream ss_simu_name;
 	string::size_type pos_ext_position = filename_import_positions.find(".dat");
 	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
-
 	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
-	
-
 	cerr << "filename: " << sys.simu_name << endl;
 }
 
