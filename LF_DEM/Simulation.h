@@ -7,8 +7,6 @@
 //
 #ifndef __LF_DEM__Simulation__
 #define __LF_DEM__Simulation__
-
-
 #include <iostream>
 #include <fstream>
 #include <queue>

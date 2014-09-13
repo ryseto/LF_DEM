@@ -6,8 +6,19 @@
 //  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#define VERSION "3.0"
 #include "Simulation.h"
+#include "VersionInfo.h"
+/*
+ * VersionInfo.h is automatically generated
+ * before compiling source codes.
+ * In Xcode, the following script is run in the Pre-Action of Build.
+ * -----------------------------------
+ * git=/usr/bin/git
+ * cd ${PROJECT_DIR}/LF_DEM
+ * version=`$git describe --dirty`
+ * echo "#define GIT_VERSION \"$version\"" > VersionInfo.h
+ * -----------------------------------
+ */
 #include <cmath>
 #include <map>
 #include <string>
@@ -916,7 +927,7 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 
 void
 Simulation::outputDataHeader(ofstream &fout){
-	fout << "# LF_DEM version " << VERSION << endl;
+	fout << "# LF_DEM version " << GIT_VERSION << endl;
 	fout << "# np " << sys.get_np() << endl;
 	fout << "# VF " << volume_fraction << endl;
 	fout << "# Lx " << sys.get_lx() << endl;

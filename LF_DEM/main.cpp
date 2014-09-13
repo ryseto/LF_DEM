@@ -10,7 +10,6 @@
 #include <getopt.h>
 #include "Simulation.h"
 #include "GenerateInitConfig.h"
-
 #define no_argument 0
 #define required_argument 1
 #define optional_argument 2
@@ -24,6 +23,7 @@ int main(int argc, char **argv)
 {
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-a Scaled_Cohesion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n";
 	
+
 	bool peclet=false;
 	double peclet_num = 0;
 
