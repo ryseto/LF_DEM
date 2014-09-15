@@ -243,8 +243,8 @@ System::setupSystem(string control){
 		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
-		radius_cubed[i] = radius[i]*radius[i]*radius[i];
 		radius_squared[i] = radius[i]*radius[i];
+		radius_cubed[i] = radius[i]*radius[i]*radius[i];
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -959,19 +959,21 @@ System::computeVelocities(bool divided_velocities){
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	double sq_max_na_velocity = 0;
-	double sq_na_velocity, sq_na_ang_velocity;
-	for (int i=0; i<np; i++) {
-		sq_na_velocity = na_velocity[i].sq_norm();
-		if (sq_max_na_velocity < sq_na_velocity) {
-			sq_max_na_velocity = sq_na_velocity;
+	if (in_predictor) {
+		double sq_max_na_velocity = 0;
+		double sq_na_velocity, sq_na_ang_velocity;
+		for (int i=0; i<np; i++) {
+			sq_na_velocity = na_velocity[i].sq_norm();
+			if (sq_max_na_velocity < sq_na_velocity) {
+				sq_max_na_velocity = sq_na_velocity;
+			}
+			sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
+			if (sq_max_na_velocity < sq_na_ang_velocity) {
+				sq_max_na_velocity = sq_na_ang_velocity;
+			}
 		}
-		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
-		if (sq_max_na_velocity < sq_na_ang_velocity) {
-			sq_max_na_velocity = sq_na_ang_velocity;
-		}
+		max_velocity = sqrt(sq_max_na_velocity);
 	}
-	max_velocity = sqrt(sq_max_na_velocity);
 	
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];

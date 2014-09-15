@@ -70,7 +70,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	
 	if (control_var == "strain") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
@@ -92,8 +91,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.friction_model = 2;
 				string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
 			} else {
-				cerr << "strain -> Brownian -> ???" << endl;
-				exit(1);
+				cerr << "Only Brownian" << endl;
+				string_control_parameters << "_p" << peclet_num;
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
