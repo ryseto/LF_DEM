@@ -149,7 +149,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			sys.target_stress_input = ratio_repulsion;
 			sys.target_stress = ratio_repulsion/6/M_PI;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
-			string_control_parameters << "_s" << ratio_repulsion << endl;
+			string_control_parameters << "_s" << ratio_repulsion;
 		}
 	}
 	setDefaultParameters();
