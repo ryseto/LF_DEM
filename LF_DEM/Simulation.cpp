@@ -149,7 +149,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			sys.target_stress_input = ratio_repulsion;
 			sys.target_stress = ratio_repulsion/6/M_PI;
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
-			string_control_parameters << "_s" << ratio_repulsion << endl;
+			string_control_parameters << "_s" << ratio_repulsion;
 		}
 	}
 	setDefaultParameters();
@@ -997,7 +997,6 @@ Simulation::outputConfigurationData(){
 	if (out_data_interaction) {
 		fout_interaction << "# " << sys.get_shear_strain();
 		fout_interaction << ' ' << cnt_interaction << endl;
-
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
@@ -1050,7 +1049,7 @@ Simulation::outputFinalConfiguration(){
 	fout_finalconfig << import_line[0] << endl;
 	fout_finalconfig << import_line[1] << endl;
 	int np = sys.get_np();
-	for (int i = 0; i < np; i++) {
+	for (int i=0; i<np; i++) {
 		fout_finalconfig << sys.position[i].x << ' ';
 		fout_finalconfig << sys.position[i].y << ' ';
 		fout_finalconfig << sys.position[i].z << ' ';

@@ -25,18 +25,18 @@ int main(int argc, char **argv)
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-a Scaled_Cohesion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n";
 	
 
-	bool peclet=false;
+	bool peclet = false;
 	double peclet_num = 0;
 
-	bool repulsion=false;
+	bool repulsion = false;
 	double ratio_repulsion = 0;
 
-	bool critical_load=false;
+	bool critical_load = false;
 	double ratio_critical_load = 0;
 
-	bool cohesion=false;
+	bool cohesion = false;
 	double ratio_cohesion = 0;
-
+	
 	bool generate_init = false;
 
 	bool knkt = false;

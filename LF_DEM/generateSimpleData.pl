@@ -66,20 +66,20 @@ sub readHeader{
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	$line = <IN_interaction>;
-	printf "$np, $VF, $Lx, $Ly, $Lz\n";
+	for ($i = 0; $i < 16; $i++) {
+		$line = <IN_particle>;
+	}
+	for ($i = 0; $i < 23; $i++) {
+		$line = <IN_interaction>;
+	}
+	printf "--- $np, $VF, $Lx, $Ly, $Lz\n";
+
 }
 
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
     ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
-	
 	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
 	# 1: number of the particle
 	# 2: radius
@@ -151,9 +151,7 @@ sub calcsqdist {
 	return $dist;
 }
 
-
 sub OutData{
-	
 #	$npp = $np;
 #	for ($i = 0; $i < $np; $i ++){
 #		if ($posz[$i] < -$Lz/2+$radius[$i]){

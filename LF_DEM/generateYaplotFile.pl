@@ -87,6 +87,7 @@ while (1){
 close (OUT);
 
 sub readHeader{
+	
 	$line = <IN_particle>;
 	$line = <IN_particle>; ($buf, $buf, $np) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $VF) = split(/\s+/, $line);
@@ -96,6 +97,8 @@ sub readHeader{
 	for ($i = 0; $i < 16; $i++) {
 		$line = <IN_particle>;
 	}
+
+	
 	for ($i = 0; $i < 21; $i++) {
 		$line = <IN_interaction>;
 	}
@@ -105,7 +108,7 @@ sub readHeader{
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
-    ($buf, $shear_strain, $shear_disp) = split(/\s+/, $line);
+    ($buf, $shear_strain, $shear_disp, $shear_rate) = split(/\s+/, $line);
 	
 	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
 	# 1: number of the particle
@@ -186,7 +189,7 @@ sub calcsqdist {
 
 sub InInteractions {
 	$line = <IN_interaction>;
-	($buf, $shear_rate, $num_interaction) = split(/\s+/, $line);
+	($buf, $tmptmp, $num_interaction) = split(/\s+/, $line);
 	printf "$line\n";
 	if ($buf != "#"){
 		exit;
@@ -271,9 +274,9 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	$postext = $Lz/2+2;
-	#	printf OUT "y 10\n";
-	#	printf OUT "@ 3\n";
-	#	printf OUT "t -2 0 $postext strain=$shear_strain\n";
+	printf OUT "y 10\n";
+	printf OUT "@ 3\n";
+	printf OUT "t -2 0 $postext shear rate = $shear_rate \n";
 	#
 	#	printf OUT "y 7\n";
 	#	printf OUT "r 0.1\n";

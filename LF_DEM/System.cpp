@@ -162,9 +162,9 @@ System::setupBrownian(){
 		 * dimensionless_shear_rate is Peclet number
 		 * Dimensional kb_T is L0*F0 / Pe,
 		 * where F0 = 6*pi*eta0*a^2*rate and L0 = a
-		 *
+		 * Dimensionalless brownian force kb_T/a is 1/Pe,
 		 */
-		kb_T = 1/dimensionless_shear_rate;
+		kb_T = 1/dimensionless_shear_rate; // = 1/Pe
 		if (dimensionless_shear_rate < Pe_switch) {
 			// scale_factor_SmallPe > 1
 			scale_factor_SmallPe = Pe_switch/dimensionless_shear_rate;
@@ -501,7 +501,7 @@ System::timeStepMove(){
 	 * So far, this is only in Eular method.
 	 */
 	dt = disp_max/max_velocity;
-	/* [note] 
+	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime.
 	 */
 	time += dt/dimensionless_shear_rate;

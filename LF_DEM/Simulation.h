@@ -101,8 +101,6 @@ public:
 							   double scaled_cohesion,
 							   double scaled_critical_load, string control_variable);
 	void simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable);
-	
-
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 
