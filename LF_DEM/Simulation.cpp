@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <cctype>
 
-Simulation::Simulation(){};
+Simulation::Simulation(): shear_rate_expectation(-1) {};
 
 Simulation::~Simulation(){
 	if (fout_rheo.is_open()) {
@@ -61,6 +61,20 @@ Simulation::contactForceParameter(string filename){
 }
 
 void
+Simulation::importPreSimulationData(string filename){
+	ifstream fin_PreSimulationData;
+	fin_PreSimulationData.open(filename.c_str());
+	double stress_;
+	double shear_rate_;
+	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
+		if (stress_ == sys.target_stress_input) {
+			break;
+		}
+	}
+	shear_rate_expectation = shear_rate_;
+}
+
+void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   double peclet_num,
 									   double ratio_repulsion,
@@ -71,6 +85,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (control_var == "strain") {
+		sys.unscaled_contactmodel = false;
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
@@ -131,6 +146,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			}
 		}
 	} else if (control_var == "stress") {
+		sys.unscaled_contactmodel = true;
 		sys.brownian = false;
 		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
@@ -155,10 +171,17 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	setDefaultParameters();
 	readParameterFile();
 	importInitialPositionFile();
-	
-	int fnb = input_files.size();
-	if (fnb == 3) {
+	if (input_files[2] != "not_given") {
 		contactForceParameter(input_files[2]);
+	}
+	if (input_files[3] != "not_given") {
+		importPreSimulationData(input_files[3]);
+		// strain_interval_out
+		time_interval_output_data = sys.strain_interval_output_data/shear_rate_expectation;
+		time_interval_output_config = sys.strain_interval_output_config/shear_rate_expectation;
+	} else {
+		time_interval_output_data = -1;
+		time_interval_output_config = -1;
 	}
 	openOutputFiles();
 	if (sys.brownian) {
@@ -170,7 +193,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	outputConfigurationData();
 	sys.setupShearFlow(true);
-	
 	if (control_var == "stress") {
 		sys.set_integration_method(0);
 	}
@@ -185,26 +207,40 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 								  double ratio_critical_load, string control_variable){
 	user_sequence = false;
 	control_var = control_variable;
-
 	setupSimulationSteadyShear(input_files, peclet_num,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
-	
 	int cnt_simu_loop = 1;
-	//int cnt_knkt_adjustment = 1;
 	int cnt_config_out = 1;
+	double strain_output_data = 0;
+	double strain_output_config = 0;
+	double time_output_data = 0;
+	double time_output_config = 0;
 	while (sys.get_shear_strain() < sys.shear_strain_end-1e-8) {
-		//double strain_knkt_adjustment = cnt_knkt_adjustment*strain_interval_knkt_adjustment;
-		double strain_next_config_out = cnt_config_out*sys.strain_interval_output;
-		double strain_next = cnt_simu_loop*sys.strain_interval_output_data;
-		sys.timeEvolution(strain_next);
+		if (time_interval_output_data == -1) {
+			strain_output_data = cnt_simu_loop*sys.strain_interval_output_data;
+			strain_output_config = cnt_config_out*sys.strain_interval_output_config;
+		} else {
+			time_output_data = cnt_simu_loop*time_interval_output_data;
+			time_output_config = cnt_config_out*time_interval_output_config;
+		}
+		sys.timeEvolution(strain_output_data, time_output_data);
+		cnt_simu_loop ++;
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
-		if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
-			outputConfigurationData();
-			cnt_config_out ++;
+		if (time_interval_output_data == -1) {
+			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+				cerr << "   out config: " << sys.get_shear_strain() << endl;
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+		} else {
+			if (sys.get_time() >= time_output_config-1e-8) {
+				cerr << "   out config: " << sys.get_shear_strain() << endl;
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
 		}
-		cnt_simu_loop ++;
 		cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
 	}
 	if (filename_parameters == "init_relax.txt") {
@@ -244,12 +280,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	}
 	
 	importInitialPositionFile();
-	
-	int fnb = input_files.size();
-	if (fnb == 4) {
+
+	if (input_files[2] != "not_given") {
 		contactForceParameter(input_files[2]);
 	}
-	filename_sequence = input_files[fnb-1];
+	filename_sequence = input_files[4];
 
 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
 	string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
@@ -286,12 +321,16 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		sys.target_stress = rsequence[step]/6/M_PI;
 		next_strain += strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
-			double strain_next_config_out = cnt_config_out*sys.strain_interval_output;
+			double strain_next_config_out = cnt_config_out*sys.strain_interval_output_config;
 			double strain_next = cnt_simu_loop*sys.strain_interval_output_data;
-			sys.timeEvolution(strain_next);
+			sys.timeEvolution(strain_next, 0);
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
+			if (sys.simulation_stop) {
+				outputConfigurationData();
+				return;
+			}
 			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
 				outputConfigurationData();
 				cnt_config_out ++;
@@ -384,7 +423,7 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 	} else if (keyword == "mu_static") {
 		sys.set_mu_static(atof(value.c_str()));
 	} else if (keyword == "strain_interval_out") {
-		sys.strain_interval_output = atof(value.c_str());
+		sys.strain_interval_output_config = atof(value.c_str());
 	} else if (keyword == "strain_interval_out_data") {
 		sys.strain_interval_output_data = atof(value.c_str());
 	} else if (keyword == "out_data_particle") {
@@ -535,7 +574,8 @@ Simulation::openOutputFiles(){
 	"#45: kt\n"
 	"#46: dt\n"
 	"#47: time\n"
-	"#48: dimensionless_shear_rate\n";
+	"#48: dimensionless_shear_rate\n"
+	"#49: stress\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
 	//
@@ -668,8 +708,8 @@ Simulation::setDefaultParameters(){
 	 * strain_interval_output_data is for outputing rheo_...
 	 * strain_interval_output is for outputing int_... and par_...
 	 */
-	sys.strain_interval_output_data = 0.02;
-	sys.strain_interval_output = 0.1;
+	sys.strain_interval_output_data = 0.01;
+	sys.strain_interval_output_config = 0.1;
 	/*
 	 *  Data output
 	 */
@@ -901,11 +941,12 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
 	fout_rheo << sys.contact_nb << ' '; //42
 	fout_rheo << sys.fric_contact_nb << ' '; //43
-	fout_rheo << sys.get_kn() << ' '; //44
-	fout_rheo << sys.get_kt() << ' '; //45
+	fout_rheo << sys.kn << ' '; //44
+	fout_rheo << sys.kt << ' '; //45
 	fout_rheo << sys.get_dt() << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
 	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
+	fout_rheo << sys.dimensionless_shear_rate*6*M_PI*viscosity << ' '; // 49
 	fout_rheo << endl;
 }
 

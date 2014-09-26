@@ -27,6 +27,9 @@ private:
 	string import_line[2];
 	string control_var;
 	bool user_sequence;
+	double shear_rate_expectation;
+	double time_interval_output_data;
+	double time_interval_output_config;		
 	/*
 	 * Resultant data
 	 */
@@ -81,6 +84,7 @@ private:
 						   const string &value);
 	void importInitialPositionFile();
 	void contactForceParameter(string filename);
+	void importPreSimulationData(string filename);
 	/*
 	 * For outputs
 	 */

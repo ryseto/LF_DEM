@@ -34,7 +34,6 @@ private:
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
-	int ts; // time steps
 	double time;
 	double dt; // <=== It should be called d_strain.
 	double disp_max;
@@ -102,6 +101,7 @@ public:
 	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
+	bool simulation_stop;
 	/* zero_shear:
 	 * To be used for relaxation to generate initial configuration.
 	 */
@@ -163,6 +163,12 @@ public:
 	double kt_lowPeclet;
 	double kr_lowPeclet;
 	int friction_model;
+	/* Usually, we use scaled contact model
+	 * to realize Newtonian behavior with contact force.
+	 * However, unscaled contact model may be better for
+	 * stress controled simulation.
+	 */
+	bool unscaled_contactmodel;
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
@@ -229,7 +235,7 @@ public:
 	double max_fc_normal;
 	double max_fc_tan;
 	double strain_interval_output_data;
-	double strain_interval_output;
+	double strain_interval_output_config;
 	string simu_name;
 	bool kn_kt_adjustment;
 	double target_stress_input;
@@ -243,7 +249,7 @@ public:
 	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(double strain_interval);
+	void timeEvolution(double strain_output_data, double time_output_data);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();
@@ -302,11 +308,11 @@ public:
 	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
-	inline double get_kn(){return kn;}
-	inline void set_kt(double val){kt = val;}
-	inline double get_kt(){return kt;}
-	inline void set_kr(double val){kr = val;}
-	inline double get_kr(){return kr;}
+	//	inline double get_kn(){return kn;}
+	//	inline void set_kt(double val){kt = val;}
+	//	inline double get_kt(){return kt;}
+	//	inline void set_kr(double val){kr = val;}
+	//	inline double get_kr(){return kr;}
 	inline void set_lub_max(double val){lub_max = val;}
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}

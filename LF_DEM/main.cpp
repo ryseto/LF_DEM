@@ -23,7 +23,6 @@ void incompatibility_exiting(string a, string b){
 int main(int argc, char **argv)
 {
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-a Scaled_Cohesion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n";
-	
 
 	bool peclet = false;
 	double peclet_num = 0;
@@ -38,20 +37,15 @@ int main(int argc, char **argv)
 	double ratio_cohesion = 0;
 	
 	bool generate_init = false;
-
-	bool knkt = false;
-	string knkt_filename;
-
-	bool sequence = false;
-	string seq_filename;
+	string config_filename = "not_given";
+	string param_filename = "not_given";
+	string knkt_filename = "not_given";
+	string stress_rate_filename = "not_given";
+	string seq_filename = "not_given";
 	string seq_type;
-	
-	string config_filename;
-	string param_filename;
 
 	bool strain_controlled = true;
 	bool stress_controlled = !strain_controlled;
-
 	const struct option longopts[] = {
 		{"peclet", required_argument, 0, 'p'},
 		{"pe-seq-file", required_argument, 0, 'P'},
@@ -70,7 +64,7 @@ int main(int argc, char **argv)
 	};
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "ghs:S:p:P:r:R:c:C:a:A:k:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "ghs:S:p:P:r:R:c:C:a:A:k:i:", longopts, &index)) != -1) {
 		switch (c) {
 			case 'p':
 				peclet = true;
@@ -78,9 +72,9 @@ int main(int argc, char **argv)
 				cerr << "Brownian, Peclet number " << peclet_num << endl;
 				break;
 			case 'P':
-				if (sequence) { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				peclet = true;
-				sequence = true;
+				//	sequence = true;
 				seq_filename = optarg;
 				seq_type = "p";
 				cerr << "Brownian, Peclet sequence, file " << seq_filename << endl;
@@ -93,10 +87,10 @@ int main(int argc, char **argv)
 				cerr << "Repulsion, stress " << ratio_repulsion << endl;
 				break;
 			case 'S':
-				if (sequence) { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				repulsion = true;
 				stress_controlled = true;
-				sequence = true;
+				//sequence = true;
 				seq_filename = optarg;
 				seq_type = "r";
 				cerr << "Stress sequence, file " << seq_filename << endl;
@@ -111,9 +105,9 @@ int main(int argc, char **argv)
 				}
 				break;
 			case 'R':
-				if (sequence) { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				repulsion = true;
-				sequence = true;
+				//	sequence = true;
 				seq_filename = optarg;
 				seq_type = "r";
 				cerr << "Repulsion, sequence, file " << seq_filename << endl;
@@ -124,9 +118,9 @@ int main(int argc, char **argv)
 				cerr << "Cohesion, shear rate " << ratio_cohesion << endl;
 				break;
 			case 'A':
-				if (sequence) { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				cohesion = true;
-				sequence = true;
+				//				sequence = true;
 				seq_filename = optarg;
 				seq_type = "a";
 				cerr << "Cohesion, sequence, file " << seq_filename << endl;
@@ -137,16 +131,20 @@ int main(int argc, char **argv)
 				cerr << "Critical load, shear rate " << ratio_critical_load << endl;
 				break;
 			case 'C':
-				if(sequence){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				if(seq_filename != "not_given"){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				critical_load = true;
-				sequence = true;
+				//				sequence = true;
 				seq_filename = optarg;
 				seq_type = "c";
 				cerr << "Critical load, sequence, file " << seq_filename << endl;
 				break;
 			case 'k':
-				knkt = true;
+				//knkt = true;
 				knkt_filename = optarg;
+				break;
+			case 'i':
+				//	output_constant_strain_interval = false;
+				stress_rate_filename = optarg;
 				break;
 			case 'g':
 				generate_init = true;
@@ -161,7 +159,6 @@ int main(int argc, char **argv)
 				abort ();
 		}
 	}
-	
 	// Incompatibilities
 	if (peclet && stress_controlled) {
 		incompatibility_exiting("peclet", "stress_controlled");
@@ -174,7 +171,6 @@ int main(int argc, char **argv)
 	} else if (peclet && cohesion) {
 		incompatibility_exiting("peclet", "cohesion");
 	}
-
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate();
@@ -187,18 +183,15 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 		vector <string> input_files;
-		input_files.push_back(config_filename);
-		input_files.push_back(param_filename);
-		
-		if (knkt) {
-			input_files.push_back(knkt_filename);
-		}
-		if (sequence) {
-			input_files.push_back(seq_filename);
-		}
-		
+		input_files.resize(5);
+		input_files[0] = config_filename;
+		input_files[1] = param_filename;
+		input_files[2] = knkt_filename;
+		input_files[3] = stress_rate_filename;
+		input_files[4] = seq_filename;
+
 		Simulation simulation;
-		if (!sequence) {
+		if (seq_filename == "not_given") {
 			if (strain_controlled) {
 				simulation.simulationSteadyShear(input_files, peclet_num,
 												 ratio_repulsion, ratio_cohesion, ratio_critical_load, "strain");

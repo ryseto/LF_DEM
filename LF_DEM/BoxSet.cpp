@@ -24,7 +24,6 @@ BoxSet::init(double interaction_dist, System *sys_){
 	if (z_box_nb == 0) {
 		z_box_nb = 1;
 	}
-	
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
 		cerr << "boxing useless: a neighborhood is the whole system" << endl;
 		_is_boxed = false;

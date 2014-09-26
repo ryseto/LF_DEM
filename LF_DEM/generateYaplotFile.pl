@@ -190,9 +190,12 @@ sub calcsqdist {
 sub InInteractions {
 	$line = <IN_interaction>;
 	($buf, $tmptmp, $num_interaction) = split(/\s+/, $line);
-	printf "$line\n";
+	printf "$line === $shear_rate\n";
+	if (!($shear_rate > 0)){
+		exit(1);
+	}
 	if ($buf != "#"){
-		exit;
+		exit(1);
 	}
 	printf OUTG "$shear_rate\n";
 	
@@ -210,23 +213,23 @@ sub InInteractions {
 	
 	for ($k = 0; $k < $num_interaction; $k ++){
 		$line = <IN_interaction> ;
-#		"#1: particle 1 label\n"
-#		"#2: particle 2 label\n"
-#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
-#		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-#		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-#		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-#		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-#		"#8: norm of the normal part of the lubrication force\n"
-#		"#9: tangential part of the lubrication force x\n"
-#		"#10: tangential part of the lubrication force y\n"
-#		"#11: tangential part of the lubrication force z\n"
-#		"#12: norm of the normal part of the contact force\n"
-#		"#13: tangential part of the contact force, x\n"
-#		"#14: tangential part of the contact force, y\n"
-#		"#15: tangential part of the contact force, z\n"
-#		"#16: norm of the normal repulsive force\n"
-#		"#17: Viscosity contribution of contact xF\n";
+		#		"#1: particle 1 label\n"
+		#		"#2: particle 2 label\n"
+		#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
+		#		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+		#		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+		#		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+		#		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
+		#		"#8: norm of the normal part of the lubrication force\n"
+		#		"#9: tangential part of the lubrication force x\n"
+		#		"#10: tangential part of the lubrication force y\n"
+		#		"#11: tangential part of the lubrication force z\n"
+		#		"#12: norm of the normal part of the contact force\n"
+		#		"#13: tangential part of the contact force, x\n"
+		#		"#14: tangential part of the contact force, y\n"
+		#		"#15: tangential part of the contact force, z\n"
+		#		"#16: norm of the normal repulsive force\n"
+		#		"#17: Viscosity contribution of contact xF\n";
 		($i, $j, $contact, $nx, $ny, $nz, #1---6
 		$gap, $f_lub_norm, # 7, 8
 		$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
@@ -274,9 +277,12 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	$postext = $Lz/2+2;
+	$shear_rate_text = int($shear_rate*1e5);
+	$shear_rate_text *= 1e-5;
+	
 	printf OUT "y 10\n";
 	printf OUT "@ 3\n";
-	printf OUT "t -2 0 $postext shear rate = $shear_rate \n";
+	printf OUT "t -2 0 $postext shear rate = $shear_rate_text \n";
 	#
 	#	printf OUT "y 7\n";
 	#	printf OUT "r 0.1\n";
@@ -356,14 +362,14 @@ sub OutYaplotData{
     }
 
 	printf OUT "y 2\n";
-	printf OUT "r 0.4\n";
+	printf OUT "r 0.08\n";
 	printf OUT "@ 5\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
 		if ($contactstate[$k] != 0) {
-			&OutString2($int0[$k],  $int1[$k]);
+			#&OutString2($int0[$k],  $int1[$k]);
+			&OutContact($int0[$k], $int1[$k]);
 		}
 	}
-	
 	#
 	#
 	#	printf OUT "y 4\n";
@@ -433,43 +439,43 @@ sub OutYaplotData{
 	#    }
 	
 	
-	#printf OUT "r 0.2\n";
-	printf OUT "y 3\n";
-	printf OUT "@ 3\n";
-	for ($k=0; $k<$num_interaction; $k++){
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		#$force = $Fcol[$k];
-		#$force = $Fc_n[$k];
-		if ($force[$k] <0){
-			$force = -$force[$k];
-			$string_width = ${force_factor}*${force};
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-	}
-	printf OUT "y 4\n";
-	printf OUT "@ 4\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($force[$k] > 0){
-			$force = $force[$k];
-			$string_width = ${force_factor}*${force};
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-	}
-	printf OUT "y 2\n";
-	printf OUT "@ 6\n";
-	printf OUT "r 0.2\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($Gap[$k] < 0) {
-#			&OutString2($int0[$k], $int1[$k]);
+#	#printf OUT "r 0.2\n";
+#	printf OUT "y 3\n";
+#	printf OUT "@ 3\n";
+#	for ($k=0; $k<$num_interaction; $k++){
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		#$force = $Fcol[$k];
+#		#$force = $Fc_n[$k];
+#		if ($force[$k] <0){
+#			$force = -$force[$k];
+#			$string_width = ${force_factor}*${force};
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
 #		}
-		if ($is_contact[$k] == 1) {
-			
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
-#	$stressfactor = 0.00001;
+#	}
+#	printf OUT "y 4\n";
+#	printf OUT "@ 4\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		if ($force[$k] > 0){
+#			$force = $force[$k];
+#			$string_width = ${force_factor}*${force};
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
+#		}
+##	}
+#	printf OUT "y 2\n";
+#	printf OUT "@ 6\n";
+#	printf OUT "r 0.2\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+##		if ($Gap[$k] < 0) {
+##			&OutString2($int0[$k], $int1[$k]);
+##		}
+#		if ($is_contact[$k] == 1) {
+#			&OutContact($int0[$k], $int1[$k]);
+#			#&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
+##	$stressfactor = 0.00001;
 #	printf OUT "y 2\n";
 #	printf OUT "@ 6\n";
 #	for ($k = 0; $k < $num_interaction; $k ++){
@@ -643,7 +649,7 @@ sub OutString_width {
     $xj = $posx[$j];
     $yj = $posy[$j] - 0.01;
     $zj = $posz[$j];
-	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
+	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2 ;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
 		printf OUT "r ${string_width}\n";
 		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
@@ -663,7 +669,32 @@ sub OutString2{
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
 		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
 	}
+}
+
+sub OutContact{
+	($i, $j) = @_;
+	$xi = $posx[$i];
+	$xj = $posx[$j];
 	
+	$yi = $posy[$i] - 0.01;
+	$yj = $posy[$j] - 0.01;
+	
+	$zi = $posz[$i];
+	$zj = $posz[$j];
+	
+	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
+	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
+		$xm = ($radius[$j]*$xi+$radius[$i]*$xj)/($radius[$i]+$radius[$j]);
+		$zm = ($radius[$j]*$zi+$radius[$i]*$zj)/($radius[$i]+$radius[$j]);
+		$norm = sqrt(($posx[$j]-$posx[$i])**2+($posz[$j]-$posz[$i])**2);
+		$vecx = ($posx[$j] - $posx[$i])/$norm;
+		$vecz = ($posz[$j] - $posz[$i])/$norm;
+		$contact_xi = $xm + 0.2*$vecz;
+		$contact_zi = $zm - 0.2*$vecx;
+		$contact_xj = $xm - 0.2*$vecz;
+		$contact_zj = $zm + 0.2*$vecx;
+		printf OUT "s $contact_xi $yi $contact_zi $contact_xj $yj $contact_zj\n";
+	}
 }
 
 

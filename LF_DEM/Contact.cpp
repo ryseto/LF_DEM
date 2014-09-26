@@ -26,26 +26,12 @@ void
 Contact::getInteractionData(){
 	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
-	kt_scaled = ro_12*sys->get_kt(); // F = kt_scaled * disp_tan <-- disp is not scaled
-	kr_scaled = ro_12*sys->get_kr(); // F = kt_scaled * disp_tan <-- disp is not scaled
-	mu = sys->get_mu_static();
-}
-
-/*
- * This is just used in the parameter determination code.
- */
-void
-Contact::updateContactModel(){
-	if (interaction->active) {
-		double &ro_12 = interaction->ro_12;
-		kn_scaled = ro_12*ro_12*sys->get_kn(); // F = kn_scaled * _gap_nondim;  <-- gap is scaled
-		kt_scaled = ro_12*sys->get_kt(); // F = kt_s
-		if (state > 0) {
-			interaction->lubrication.setResistanceCoeff(sys->lub_coeff_contact,
-														sys->log_lub_coeff_contact_tan_total);
-		}
+	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+	if (sys->rolling_friction) {
+		kr_scaled = ro_12; // F = kt_scaled * disp_tan <-- disp is not scaled
 	}
+	mu = sys->get_mu_static();
 }
 
 void
@@ -59,9 +45,6 @@ Contact::activate(){
 	state = 1;
 	disp_tan.reset();
 	disp_rolling.reset();
-	// This is calculated after that
-	//	interaction->lubrication.setResistanceCoeff(sys->get_lub_coeff_contact(),
-	//												sys->get_log_lub_coeff_dynamicfriction());
 }
 
 void

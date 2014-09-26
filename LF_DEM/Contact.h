@@ -32,6 +32,7 @@ private:
 	//===== forces and stresses ==================== //
 	double kt_scaled;
 	double kr_scaled;
+	double kn_scaled;
 	double mu;
 	/*********************************
 	 *       Private Methods         *
@@ -66,9 +67,6 @@ public:
 	 * 3 Sliding
 	 */
 	double f_contact_normal_norm; // normal contact force
-	double kn_scaled;
-
-	void updateContactModel();
 	void frictionlaw_criticalload();
 	void frictionlaw_criticalload_mu_inf();
 	void frictionlaw_standard();
