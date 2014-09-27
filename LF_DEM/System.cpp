@@ -284,9 +284,9 @@ System::setupSystem(string control){
 	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (unscaled_contactmodel) {
-		kn = 1000;
-		kt = 500;
-		kr = 500;
+		kn = 2000*target_stress;
+		kt = 1000*target_stress;
+		kr = 1000*target_stress;
 	}
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -406,7 +406,6 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	simulation_stop = false;
 	computeVelocities(calc_stress);
 	if (simulation_stop) {
-		calcStressPerParticle();
 		return;
 	}
 	if (calc_stress) {
@@ -591,7 +590,6 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 			if (simulation_stop) {
 				return;
 			}
-			cerr << shear_strain << " / " << strain_output_data << endl;
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {

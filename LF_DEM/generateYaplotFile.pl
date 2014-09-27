@@ -99,7 +99,7 @@ sub readHeader{
 	}
 
 	
-	for ($i = 0; $i < 21; $i++) {
+	for ($i = 0; $i < 24; $i++) {
 		$line = <IN_interaction>;
 	}
 	printf "$np, $VF, $Lx, $Ly, $Lz\n";
@@ -189,11 +189,16 @@ sub calcsqdist {
 
 sub InInteractions {
 	$line = <IN_interaction>;
-	($buf, $tmptmp, $num_interaction) = split(/\s+/, $line);
-	printf "$line === $shear_rate\n";
+	($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
+
 	if (!($shear_rate > 0)){
+		printf "shear rate negative $shear_rate \n";
+	}
+	if ($shear_strain_i != $shear_strain) {
+		printf "$shear_strain_i  !=  $shear_strain\n";
 		exit(1);
 	}
+
 	if ($buf != "#"){
 		exit(1);
 	}
@@ -362,12 +367,12 @@ sub OutYaplotData{
     }
 
 	printf OUT "y 2\n";
-	printf OUT "r 0.08\n";
+
 	printf OUT "@ 5\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($contactstate[$k] != 0) {
+		if ($contactstate[$k] > 1) {
 			#&OutString2($int0[$k],  $int1[$k]);
-			&OutContact($int0[$k], $int1[$k]);
+			&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
 		}
 	}
 	#
@@ -672,27 +677,40 @@ sub OutString2{
 }
 
 sub OutContact{
-	($i, $j) = @_;
+	($i, $j, $cs) = @_;
 	$xi = $posx[$i];
 	$xj = $posx[$j];
 	
-	$yi = $posy[$i] - 0.01;
-	$yj = $posy[$j] - 0.01;
+	$yi = $posy[$i]-0.01;
+	$yj = $posy[$j]-0.01;
 	
 	$zi = $posz[$i];
 	$zj = $posz[$j];
 	
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
+	
+	
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
+
+		if ( sqrt($sq_dist) > $radius[$i] + $radius[$j]+0.001) {
+			$tmp = sqrt($sq_dist);
+			printf "$tmp $radius[$i]  $radius[$j] $contactstate[$k]\n";
+			exit(1)
+		}
+		if ($cs == 2) {
+			printf OUT "r 0.3\n";
+		} elsif ($cs == 3) {
+			printf OUT "r 0.1\n";
+		}
 		$xm = ($radius[$j]*$xi+$radius[$i]*$xj)/($radius[$i]+$radius[$j]);
 		$zm = ($radius[$j]*$zi+$radius[$i]*$zj)/($radius[$i]+$radius[$j]);
 		$norm = sqrt(($posx[$j]-$posx[$i])**2+($posz[$j]-$posz[$i])**2);
 		$vecx = ($posx[$j] - $posx[$i])/$norm;
 		$vecz = ($posz[$j] - $posz[$i])/$norm;
-		$contact_xi = $xm + 0.2*$vecz;
-		$contact_zi = $zm - 0.2*$vecx;
-		$contact_xj = $xm - 0.2*$vecz;
-		$contact_zj = $zm + 0.2*$vecx;
+		$contact_xi = $xm + 0.15*$vecz;
+		$contact_zi = $zm - 0.15*$vecx;
+		$contact_xj = $xm - 0.15*$vecz;
+		$contact_zj = $zm + 0.15*$vecx;
 		printf OUT "s $contact_xi $yi $contact_zi $contact_xj $yj $contact_zj\n";
 	}
 }

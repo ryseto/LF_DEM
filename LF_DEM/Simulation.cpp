@@ -228,6 +228,10 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
+		if (sys.simulation_stop) {
+			outputConfigurationData();
+			return;
+		}
 		if (time_interval_output_data == -1) {
 			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
@@ -1004,7 +1008,8 @@ Simulation::outputConfigurationData(){
 	if (out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		fout_particle << sys.dimensionless_shear_rate << endl;
+		fout_particle << sys.dimensionless_shear_rate << ' ';
+		fout_particle << sys.simulation_stop << endl;
 		for (int i=0; i<np; i++) {
 			vec3d &p = pos[i];
 			vec3d &v = vel[i];
@@ -1052,6 +1057,12 @@ Simulation::outputConfigurationData(){
 				 * 3 Sliding
 				 */
 				fout_interaction << sys.interaction[k].contact.state << ' '; //3
+				if ( sys.interaction[k].contact.state != 0){
+					if (sys.interaction[k].get_gap_nondim() > 0){
+						cerr << sys.interaction[k].get_gap_nondim() << endl;
+						exit(1);
+					}
+				}
 				fout_interaction << nr_vec.x << ' '; // 4
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
