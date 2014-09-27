@@ -597,6 +597,9 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		// d_strain = d_time * dimensionless_she
 		while (time < time_output_data - dt/dimensionless_shear_rate) { // integrate until strain_next
 			(this->*timeEvolutionDt)(false); // stress computation
+			if (simulation_stop) {
+				return;
+			}
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}

@@ -78,11 +78,17 @@ while (1){
 	&InParticles;
 	
 	&InInteractions;
-	last unless defined $line;
 	
+	printf "$shear_rate $simulation_stop\n";
+	last unless defined $line;
 	&OutYaplotData;
 	$num ++;
-	printf "$shear_rate\n";
+
+	if ($shear_rate < 0){
+		exit(1);
+	}
+		
+
 }
 close (OUT);
 
@@ -108,7 +114,7 @@ sub readHeader{
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
-    ($buf, $shear_strain, $shear_disp, $shear_rate) = split(/\s+/, $line);
+    ($buf, $shear_strain, $shear_disp, $shear_rate, $simulation_stop) = split(/\s+/, $line);
 	
 	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
 	# 1: number of the particle
@@ -191,9 +197,6 @@ sub InInteractions {
 	$line = <IN_interaction>;
 	($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
 
-	if (!($shear_rate > 0)){
-		printf "shear rate negative $shear_rate \n";
-	}
 	if ($shear_strain_i != $shear_strain) {
 		printf "$shear_strain_i  !=  $shear_strain\n";
 		exit(1);
@@ -367,7 +370,6 @@ sub OutYaplotData{
     }
 
 	printf OUT "y 2\n";
-
 	printf OUT "@ 5\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
 		if ($contactstate[$k] > 1) {
@@ -686,12 +688,9 @@ sub OutContact{
 	
 	$zi = $posz[$i];
 	$zj = $posz[$j];
-	
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
 	
-	
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
-
 		if ( sqrt($sq_dist) > $radius[$i] + $radius[$j]+0.001) {
 			$tmp = sqrt($sq_dist);
 			printf "$tmp $radius[$i]  $radius[$j] $contactstate[$k]\n";
@@ -707,10 +706,10 @@ sub OutContact{
 		$norm = sqrt(($posx[$j]-$posx[$i])**2+($posz[$j]-$posz[$i])**2);
 		$vecx = ($posx[$j] - $posx[$i])/$norm;
 		$vecz = ($posz[$j] - $posz[$i])/$norm;
-		$contact_xi = $xm + 0.15*$vecz;
-		$contact_zi = $zm - 0.15*$vecx;
-		$contact_xj = $xm - 0.15*$vecz;
-		$contact_zj = $zm + 0.15*$vecx;
+		$contact_xi = $xm + 0.3*$vecz;
+		$contact_zi = $zm - 0.3*$vecx;
+		$contact_xj = $xm - 0.3*$vecz;
+		$contact_zj = $zm + 0.3*$vecx;
 		printf OUT "s $contact_xi $yi $contact_zi $contact_xj $yj $contact_zj\n";
 	}
 }
@@ -784,17 +783,3 @@ sub OutCross {
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
