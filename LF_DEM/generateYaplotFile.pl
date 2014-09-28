@@ -350,7 +350,7 @@ sub OutYaplotData{
 	#	}
 	
 	printf OUT "y 1\n";
-    printf OUT "@ 2\n";
+    printf OUT "@ 10\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
@@ -368,7 +368,29 @@ sub OutYaplotData{
 			}
 		
     }
+	printf OUT "y 3\n";
+	printf OUT "@ 4\n";
+	$r = 1.02*$yap_radius*$radius[0];
+	printf OUT "r $r\n";
+	for ($i = 0; $i < $np; $i ++){
+		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
+			$r = 1.02*$yap_radius*$radius[$i];
+			printf OUT "r $r\n";
+		}
+		#		if ($i % 100 == 0){
+		#			$col = $i/100 + 2;
+		#			printf OUT "@ $col\n";
+		#		}
+		if ($y_section == 0 ||
+			abs($posy[$i]) < $y_section ){
+				$yy = $posy[$i]+0.1;
+				printf OUT "c $posx[$i] $yy $posz[$i] \n";
+			}
+		
+	}
 
+
+	
 	printf OUT "y 2\n";
 	printf OUT "@ 5\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
@@ -551,7 +573,7 @@ sub OutYaplotData{
 	
 	if ($Ly == 0){
 		printf OUT "y 6\n";
-		printf OUT "@ 0\n";
+		printf OUT "@ 2\n";
 		for ($i = 0; $i < $np; $i ++){
 			&OutCross($i);
 		}
@@ -683,8 +705,8 @@ sub OutContact{
 	$xi = $posx[$i];
 	$xj = $posx[$j];
 	
-	$yi = $posy[$i]-0.01;
-	$yj = $posy[$j]-0.01;
+	$yi = $posy[$i]-0.022;
+	$yj = $posy[$j]-0.022;
 	
 	$zi = $posz[$i];
 	$zj = $posz[$j];

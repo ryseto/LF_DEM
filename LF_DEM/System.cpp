@@ -915,7 +915,6 @@ System::computeVelocities(bool divided_velocities){
 			cerr << "shearstress_con = " << shearstress_con << endl;
 			cerr << "shearstress_hyd = " << shearstress_hyd << endl;
 			cerr << "negative dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
-			cerr << "shearstress_rep = " << shearstress_rep << endl;
 			return;
 		}
 		for (int i=0; i<np; i++) {
