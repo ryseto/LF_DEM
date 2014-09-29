@@ -91,8 +91,7 @@ private:
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
-	bool strain_controlled;
-	bool stress_controlled;
+	
 
 protected:
 public:
@@ -102,6 +101,8 @@ public:
 	bool in_predictor;
 	bool twodimension;
 	bool simulation_stop;
+	bool strain_controlled;
+	bool stress_controlled;
 	/* zero_shear:
 	 * To be used for relaxation to generate initial configuration.
 	 */
@@ -237,7 +238,6 @@ public:
 	double strain_interval_output_data;
 	double strain_interval_output_config;
 	string simu_name;
-	bool kn_kt_adjustment;
 	double target_stress_input;
 	double target_stress;
 	void setSystemVolume(double depth = 0);

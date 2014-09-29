@@ -73,11 +73,9 @@ System::calcStress(){
 	}
 	total_contact_stressXF_normal /= system_volume;
 	total_contact_stressXF_tan /= system_volume;
-	if (unscaled_contactmodel) {
-		if (stress_controlled) {
-			total_contact_stressXF_normal /= dimensionless_shear_rate;
-			total_contact_stressXF_tan /= dimensionless_shear_rate;
-		}
+	if (stress_controlled && unscaled_contactmodel) {
+		total_contact_stressXF_normal /= dimensionless_shear_rate;
+		total_contact_stressXF_tan /= dimensionless_shear_rate;
 	}
 	//////////////////////////////////////////////////////////////
 	if (repulsiveforce) {

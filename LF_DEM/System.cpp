@@ -284,9 +284,9 @@ System::setupSystem(string control){
 	nb_interaction = 0;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (unscaled_contactmodel) {
-		kn = 2000*target_stress;
-		kt = 1000*target_stress;
-		kr = 1000*target_stress;
+		kn *= target_stress;
+		kt *= target_stress;
+		kr *= target_stress;
 	}
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -593,8 +593,6 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {
-		// time += d_strain/dimensionless_shear_rate;
-		// d_strain = d_time * dimensionless_she
 		while (time < time_output_data - dt/dimensionless_shear_rate) { // integrate until strain_next
 			(this->*timeEvolutionDt)(false); // stress computation
 			if (simulation_stop) {
@@ -893,19 +891,19 @@ System::computeVelocities(bool divided_velocities){
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
-		if (!unscaled_contactmodel) {
-			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
-			for (int i=0; i<np; i++) {
-				vel_repulsive[i] /= dimensionless_shear_rate;
-				ang_vel_repulsive[i] /= dimensionless_shear_rate;
-			}
-		} else {
+		if (unscaled_contactmodel) {
 			dimensionless_shear_rate = (target_stress-shearstress_rep-shearstress_con)/shearstress_hyd;
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;
 				ang_vel_repulsive[i] /= dimensionless_shear_rate;
 				vel_contact[i] /= dimensionless_shear_rate;
 				ang_vel_contact[i] /= dimensionless_shear_rate;
+			}
+		} else {
+			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+			for (int i=0; i<np; i++) {
+				vel_repulsive[i] /= dimensionless_shear_rate;
+				ang_vel_repulsive[i] /= dimensionless_shear_rate;
 			}
 		}
 		if (dimensionless_shear_rate < 0) {
@@ -1257,6 +1255,7 @@ System::setSystemVolume(double depth){
 		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
 	} else {
 		system_volume = lx*ly*lz;
+		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
 	}
 }
 

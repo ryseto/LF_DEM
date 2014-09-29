@@ -22,7 +22,6 @@ private:
 	string filename_parameters;
 	string filename_sequence;
 	ostringstream string_control_parameters;
-	double strain_interval_knkt_adjustment;
 	double volume_fraction;
 	string import_line[2];
 	string control_var;

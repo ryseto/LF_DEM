@@ -309,6 +309,7 @@ public:
 	{
 		return elm[0]-elm[5];
 	}
+
 	/*	N2 = Szz-Syy;
 	 */
 	double getNormalStress2()

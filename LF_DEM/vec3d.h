@@ -305,10 +305,5 @@ public:
 	cerr(){
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
 	}
-	
-
 };
-
-
-
 #endif

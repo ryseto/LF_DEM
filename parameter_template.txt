@@ -81,13 +81,7 @@ contact_relaxation_time_tan = 0;
 
 repulsiveforce_length = 0;
 repulsiveforce_amplitude = 0;
-
-
-/*
- *Parameter auto adjustment.
- */
-kn_kt_adjustment = false;
-
+                                                                                                                                                   
 /*
  *  Data output
  */

@@ -85,7 +85,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (control_var == "strain") {
-		sys.unscaled_contactmodel = false;
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
@@ -384,10 +383,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		}
 	} else if (keyword == "rolling_friction") {
 		sys.rolling_friction = str2bool(value);
-	} else if (keyword == "kn_kt_adjustment") {
-		sys.kn_kt_adjustment = str2bool(value);
-	} else if (keyword == "strain_interval_knkt_adjustment") {
-		strain_interval_knkt_adjustment = atof(value.c_str());
+	} else if (keyword == "unscaled_contactmodel") {
+		sys.unscaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
 		if (sys.repulsiveforce) {
 			sys.set_repulsiveforce_length(atof(value.c_str()));
@@ -681,14 +678,23 @@ Simulation::setDefaultParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	sys.kn = 10000;
-	sys.kt = 6000;
-	sys.kr = 6000;
-	sys.kn_lowPeclet = 10000;
-	sys.kt_lowPeclet = 6000;
-	sys.kr_lowPeclet = 6000;
-	sys.kn_kt_adjustment = false;
-	strain_interval_knkt_adjustment = 5;
+	if (control_var == "stress") {
+		sys.unscaled_contactmodel = true;
+		sys.kn = 2000;
+		sys.kt = 1000;
+		sys.kr = 1000;
+		sys.kn_lowPeclet = 0;
+		sys.kt_lowPeclet = 0;
+		sys.kr_lowPeclet = 0;
+	} else {
+		sys.unscaled_contactmodel = false;
+		sys.kn = 10000;
+		sys.kt = 6000;
+		sys.kr = 6000;
+		sys.kn_lowPeclet = 10000;
+		sys.kt_lowPeclet = 6000;
+		sys.kr_lowPeclet = 6000;
+	}
 	sys.overlap_target = 0.05;
 	sys.disp_tan_target = 0.05;
 	sys.max_kn = 1000000;
@@ -1057,12 +1063,6 @@ Simulation::outputConfigurationData(){
 				 * 3 Sliding
 				 */
 				fout_interaction << sys.interaction[k].contact.state << ' '; //3
-				if ( sys.interaction[k].contact.state != 0){
-					if (sys.interaction[k].get_gap_nondim() > 0){
-						cerr << sys.interaction[k].get_gap_nondim() << endl;
-						exit(1);
-					}
-				}
 				fout_interaction << nr_vec.x << ' '; // 4
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
