@@ -49,7 +49,7 @@ Simulation::contactForceParameter(string filename){
 	double kt_;
 	double dt_max_;
 	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_max_) {
-		if (phi_ == volume_fraction) {
+		if (phi_ == volume_or_area_fraction) {
 			break;
 		}
 	}
@@ -748,15 +748,13 @@ Simulation::importInitialPositionFile(){
 		exit(1);
 	}
 	int n1, n2;
-	double volume_fraction_;
 	double lx, ly, lz;
 	double vf1, vf2;
 	char buf;
 	getline(file_import, import_line[0]);
 	getline(file_import, import_line[1]);
 	stringstream ss(import_line[1]);
-	ss >> buf >> n1 >> n2 >> volume_fraction_ >> lx >> ly >> lz >> vf1 >> vf2;
-	volume_fraction = volume_fraction_;
+	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2;
 	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
@@ -812,7 +810,10 @@ Simulation::evaluateData(){
 	 * The total viscosity should be
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
-	viscosity = total_stress.getStressXZ()+(1+2.5*volume_fraction)/(6*M_PI);
+	viscosity = total_stress.getStressXZ();
+
+	viscosity += (1+2.5*sys.volume_fraction)/(6*M_PI);
+
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
@@ -979,7 +980,7 @@ void
 Simulation::outputDataHeader(ofstream &fout){
 	fout << "# LF_DEM version " << GIT_VERSION << endl;
 	fout << "# np " << sys.get_np() << endl;
-	fout << "# VF " << volume_fraction << endl;
+	fout << "# VF " << sys.volume_fraction << endl;
 	fout << "# Lx " << sys.get_lx() << endl;
 	fout << "# Ly " << sys.get_ly() << endl;
 	fout << "# Lz " << sys.get_lz() << endl;

@@ -47,7 +47,6 @@ private:
 	 * threshold distance which can intaract each other as periodic image.
 	 */
 	double system_volume;
-	double volume_fraction;
 	double sq_lub_max;
 	double shear_strain;
 	double lub_max;
@@ -117,6 +116,7 @@ public:
 	double shear_strain_end;
 	double critical_normal_force;
 	double scale_factor_SmallPe;
+	double volume_fraction;
 	vec3d *position;
 	Interaction *interaction;
 	BoxSet boxset;

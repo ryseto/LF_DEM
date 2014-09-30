@@ -22,7 +22,7 @@ private:
 	string filename_parameters;
 	string filename_sequence;
 	ostringstream string_control_parameters;
-	double volume_fraction;
+	double volume_or_area_fraction;
 	string import_line[2];
 	string control_var;
 	bool user_sequence;
