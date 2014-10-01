@@ -227,10 +227,6 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
-		if (sys.simulation_stop) {
-			outputConfigurationData();
-			return;
-		}
 		if (time_interval_output_data == -1) {
 			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
@@ -330,10 +326,6 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
-			if (sys.simulation_stop) {
-				outputConfigurationData();
-				return;
-			}
 			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
 				outputConfigurationData();
 				cnt_config_out ++;
@@ -810,10 +802,7 @@ Simulation::evaluateData(){
 	 * The total viscosity should be
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
-	viscosity = total_stress.getStressXZ();
-
-	viscosity += (1+2.5*sys.volume_fraction)/(6*M_PI);
-
+	viscosity = (1+2.5*sys.volume_fraction)/(6*M_PI)+total_stress.getStressXZ();
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
@@ -872,7 +861,7 @@ Simulation::outputStressTensorData(){
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate << ' '; // 39
+	fout_st << sys.dimensionless_shear_rate_averaged << ' '; // 39
 	fout_st << endl;
 }
 
@@ -896,6 +885,9 @@ Simulation::outputRheologyData(){
 	 *
 	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
 	 *
+	 * [note] In stress controlled simulation,
+	 * Averaged viscosity need to be calculated with dimensionless_shear_rate_averaged,
+	 * i.e. <viscosity> = taget_stress / dimensionless_shear_rate_averaged.
 	 */
 	fout_rheo << sys.get_shear_strain() << ' '; //1
 	fout_rheo << 6*M_PI*viscosity << ' '; //2
@@ -905,6 +897,9 @@ Simulation::outputRheologyData(){
 	 * Hydrodynamic contribution means
 	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
 	 * vel_hydro is obtained with GE for the rhs.
+	 *
+	 * "_hydro" might be bit confusing. 
+	 * Something indicating "E_inf" would be better.
 	 */
 	fout_rheo << 6*M_PI*viscosity_hydro << ' '; //5
 	fout_rheo << 6*M_PI*normalstress_diff_1_hydro << ' '; //6
@@ -954,10 +949,16 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.fric_contact_nb << ' '; //43
 	fout_rheo << sys.kn << ' '; //44
 	fout_rheo << sys.kt << ' '; //45
-	fout_rheo << sys.get_dt() << ' '; //46
+	fout_rheo << sys.dt << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
-	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
-	fout_rheo << sys.dimensionless_shear_rate*6*M_PI*viscosity << ' '; // 49
+	/* In stress control simulation,
+	 * shear jammed state may cause oscilation of dimensionless_shear_rate around 0.
+	 * Then, time step also oscilate.
+	 * This is why we need to take time average to have correct value of dimensionless_shear_rate.
+	 */
+	fout_rheo << sys.dimensionless_shear_rate_averaged << ' '; // 48
+	fout_rheo << sys.dimensionless_shear_rate_averaged*6*M_PI*viscosity << ' '; // 49
+	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << endl;
 }
 
@@ -1015,8 +1016,7 @@ Simulation::outputConfigurationData(){
 	if (out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		fout_particle << sys.dimensionless_shear_rate << ' ';
-		fout_particle << sys.simulation_stop << endl;
+		fout_particle << sys.dimensionless_shear_rate_averaged << endl;
 		for (int i=0; i<np; i++) {
 			vec3d &p = pos[i];
 			vec3d &v = vel[i];

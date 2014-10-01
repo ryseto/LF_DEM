@@ -72,7 +72,7 @@ Contact::incrementTangentialDisplacement(){
 		 */
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->get_dt();
+	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt;
 }
 
 void
@@ -84,7 +84,7 @@ Contact::incrementRollingDisplacement(){
 		 */
 		prev_disp_rolling = disp_rolling;
 	}
-	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->get_dt();
+	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt;
 }
 
 /*

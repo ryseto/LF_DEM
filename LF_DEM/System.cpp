@@ -282,6 +282,7 @@ System::setupSystem(string control){
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
+	shear_direction = 1;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (unscaled_contactmodel) {
 		kn *= target_stress;
@@ -369,6 +370,7 @@ System::setupSystem(string control){
 		strain_controlled = false;
 	}
 	stress_controlled = !strain_controlled;
+	dimensionless_shear_rate_averaged = 1;
 }
 
 void
@@ -390,10 +392,12 @@ void
 System::timeStepBoxing(){
 	// evolve PBC
 	if (!zero_shear) {
-		shear_disp += vel_difference*dt;
-		if (shear_disp > lx) {
-			shear_disp -= lx;
+		shear_disp = shear_strain*lz;
+		int m = (int)(shear_disp/lx);
+		if (shear_disp < 0){
+			m--;
 		}
+		shear_disp = shear_disp-m*lx;
 	}
 	boxset.update();
 }
@@ -403,11 +407,7 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	in_predictor = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
-	simulation_stop = false;
 	computeVelocities(calc_stress);
-	if (simulation_stop) {
-		return;
-	}
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
@@ -504,15 +504,21 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
  */
 void
 System::timeStepMove(){
-	/* Changing dt for every timestep 
+	/* Changing dt for every timestep
 	 * So far, this is only in Eular method.
 	 */
-	dt = disp_max/max_velocity;
+	if (max_velocity > max_sliding_velocity) {
+		dt = disp_max/max_velocity;
+	} else {
+		dt = disp_max/max_sliding_velocity;
+	}
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime.
 	 */
-	shear_strain += dt;
-	time += dt/dimensionless_shear_rate;
+	shear_strain += shear_direction*dt;
+	double time_increment = dt/abs(dimensionless_shear_rate);
+	time += time_increment;
+	dimensionless_shear_rate_time_integral += dimensionless_shear_rate*time_increment;
 	/* evolve PBC */
 	timeStepBoxing();
 	/* move particles */
@@ -533,8 +539,8 @@ System::timeStepMovePredictor(){
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
-	shear_strain += dt;
-	time += dt/dimensionless_shear_rate;
+	shear_strain += shear_direction*dt;
+	time += dt/abs(dimensionless_shear_rate);
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
@@ -583,24 +589,21 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		updateInteractions();
 		firsttime = false;
 	}
+	dimensionless_shear_rate_time_integral = 0;
+	double time0 = time;
 	if (time_output_data == 0) {
 		/* integrate until strain_next - 1 time step */
 		while (shear_strain < strain_output_data-dt) {
 			(this->*timeEvolutionDt)(false); // no stress computation
-			if (simulation_stop) {
-				return;
-			}
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {
-		while (time < time_output_data - dt/dimensionless_shear_rate) { // integrate until strain_next
+		while (time < time_output_data-dt/abs(dimensionless_shear_rate)) { // integrate until strain_next
 			(this->*timeEvolutionDt)(false); // stress computation
-			if (simulation_stop) {
-				return;
-			}
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
+	dimensionless_shear_rate_averaged = dimensionless_shear_rate_time_integral/(time-time0);
 }
 
 void
@@ -651,6 +654,7 @@ System::checkNewInteraction(){
  */
 void
 System::updateInteractions(){
+	double sq_max_sliding_velocity = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -658,8 +662,13 @@ System::updateInteractions(){
 			if (deactivated) {
 				deactivated_interaction.push(k);
 			}
+			double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
+			if (sq_max_sliding_velocity < sq_sliding_velocity) {
+				sq_max_sliding_velocity = sq_sliding_velocity;
+			}
 		}
 	}
+	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
 }
 
 void
@@ -906,15 +915,6 @@ System::computeVelocities(bool divided_velocities){
 				ang_vel_repulsive[i] /= dimensionless_shear_rate;
 			}
 		}
-		if (dimensionless_shear_rate < 0) {
-			simulation_stop = true;
-			cerr << "target_stress = " << target_stress << endl;
-			cerr << "shearstress_rep = " << shearstress_rep << endl;
-			cerr << "shearstress_con = " << shearstress_con << endl;
-			cerr << "shearstress_hyd = " << shearstress_hyd << endl;
-			cerr << "negative dimensionless_shear_rate = " << dimensionless_shear_rate << endl;
-			return;
-		}
 		for (int i=0; i<np; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
@@ -943,7 +943,6 @@ System::computeVelocities(bool divided_velocities){
 					na_ang_velocity[i] += ang_vel_repulsive[i];
 				}
 			}
-
 		} else {
 			// for most of the time evolution
 			if (!zero_shear) {
@@ -964,15 +963,12 @@ System::computeVelocities(bool divided_velocities){
 				 */
 				generateBrownianForces();
 			}
-
 			stokes_solver.setRHS(brownian_force); // set rhs = F_B
 			stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_brownian[i];
 				na_ang_velocity[i] += ang_vel_brownian[i];
 			}
-
 		}
 	}
 	/*
@@ -994,7 +990,6 @@ System::computeVelocities(bool divided_velocities){
 		}
 		max_velocity = sqrt(sq_max_na_velocity);
 	}
-	
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
@@ -1002,6 +997,17 @@ System::computeVelocities(bool divided_velocities){
 			velocity[i].x += position[i].z;
 			ang_velocity[i].y += 0.5;
 		}
+	}
+	if (dimensionless_shear_rate < 0) {
+		shear_direction = -1;
+		vel_difference = -lz;
+		for (int i=0; i<np; i++) {
+			velocity[i] *= -1;
+			ang_velocity[i] *= -1;
+		}
+	} else {
+		shear_direction = 1;
+		vel_difference = lz;
 	}
 	stokes_solver.solvingIsDone();
 }

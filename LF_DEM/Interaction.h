@@ -46,7 +46,6 @@ private:
 	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
-	vec3d relative_surface_velocity;
 	double nxnx;
 	double nxny;
 	double nxnz;
@@ -71,6 +70,7 @@ protected:
 public:
 	Contact contact;
 	Lubrication lubrication;
+	vec3d relative_surface_velocity;
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/

@@ -55,7 +55,11 @@ System::calcStress(){
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 	}
-	total_hydro_stress /= system_volume;
+	if (dimensionless_shear_rate > 0) {
+		total_hydro_stress /= system_volume;
+	} else {
+		total_hydro_stress /= -system_volume;
+	}
 	//////////////////////////////////////////////////////////////
 	total_contact_stressGU.reset();
 	for (int i=0; i<np; i++) {
@@ -74,8 +78,8 @@ System::calcStress(){
 	total_contact_stressXF_normal /= system_volume;
 	total_contact_stressXF_tan /= system_volume;
 	if (stress_controlled && unscaled_contactmodel) {
-		total_contact_stressXF_normal /= dimensionless_shear_rate;
-		total_contact_stressXF_tan /= dimensionless_shear_rate;
+		total_contact_stressXF_normal /= abs(dimensionless_shear_rate);
+		total_contact_stressXF_tan /= abs(dimensionless_shear_rate);
 	}
 	//////////////////////////////////////////////////////////////
 	if (repulsiveforce) {
@@ -85,7 +89,7 @@ System::calcStress(){
 		}
 		total_repulsive_stressXF /= system_volume;
 		if (stress_controlled) {
-			total_repulsive_stressXF /= dimensionless_shear_rate;
+			total_repulsive_stressXF /= abs(dimensionless_shear_rate);
 		}
 		//////////////////////////////////////////////////////////
 		total_repulsive_stressGU.reset();

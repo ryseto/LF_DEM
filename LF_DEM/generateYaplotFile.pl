@@ -84,11 +84,6 @@ while (1){
 	&OutYaplotData;
 	$num ++;
 
-	if ($shear_rate < 0){
-		exit(1);
-	}
-		
-
 }
 close (OUT);
 
@@ -289,7 +284,7 @@ sub OutYaplotData{
 	$shear_rate_text *= 1e-5;
 	
 	printf OUT "y 10\n";
-	printf OUT "@ 3\n";
+	printf OUT "@ 2\n";
 	printf OUT "t -2 0 $postext shear rate = $shear_rate_text \n";
 	#
 	#	printf OUT "y 7\n";

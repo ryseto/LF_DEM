@@ -35,7 +35,6 @@ private:
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
 	double time;
-	double dt; // <=== It should be called d_strain.
 	double disp_max;
 	double lx;
 	double ly;
@@ -90,8 +89,7 @@ private:
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
-	
-
+	double dimensionless_shear_rate_time_integral;
 protected:
 public:
 	System();
@@ -99,13 +97,13 @@ public:
 	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
-	bool simulation_stop;
 	bool strain_controlled;
 	bool stress_controlled;
 	/* zero_shear:
 	 * To be used for relaxation to generate initial configuration.
 	 */
 	bool zero_shear;
+	int shear_direction; // 1: positive shear rate, -1: negative shear rate 
 	/* When Pe is small, the simulation parameters need to be adjusted differently.
 	 * For high Pe, spring constants are scaled with shear rate being proportional to Pe.
 	 * In dimensionless simulation, kn and kt appear the same.
@@ -155,6 +153,7 @@ public:
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
 	StressTensor total_brownian_stressGU;
+	double dt; // <=== It should be called d_strain.
 	double dt_max;
 	double kn;
 	double kt;
@@ -209,6 +208,7 @@ public:
 	 * For Brownian suspension, it should be Peclet number
 	 */
 	double dimensionless_shear_rate;
+	double dimensionless_shear_rate_averaged;
 	double repulsiveforce_amplitude; // dimensionless
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
@@ -317,7 +317,6 @@ public:
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
-	inline double get_dt(){return dt;}
 	/* inline void set_repulsiveforce_amplitude(double val){ */
 	/* 	repulsiveforce_amplitude = val;} */
 	
