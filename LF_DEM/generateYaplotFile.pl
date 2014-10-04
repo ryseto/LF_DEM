@@ -192,10 +192,10 @@ sub InInteractions {
 	$line = <IN_interaction>;
 	($buf, $shear_strain_i, $num_interaction) = split(/\s+/, $line);
 
-	if ($shear_strain_i != $shear_strain) {
-		printf "$shear_strain_i  !=  $shear_strain\n";
-		exit(1);
-	}
+#	if ($shear_strain_i != $shear_strain) {
+#		printf "$shear_strain_i  !=  $shear_strain\n";
+#		exit(1);
+#	}
 
 	if ($buf != "#"){
 		exit(1);
@@ -363,35 +363,37 @@ sub OutYaplotData{
 			}
 		
     }
-	printf OUT "y 3\n";
-	printf OUT "@ 4\n";
-	$r = 1.02*$yap_radius*$radius[0];
-	printf OUT "r $r\n";
-	for ($i = 0; $i < $np; $i ++){
-		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-			$r = 1.02*$yap_radius*$radius[$i];
-			printf OUT "r $r\n";
-		}
-		#		if ($i % 100 == 0){
-		#			$col = $i/100 + 2;
-		#			printf OUT "@ $col\n";
-		#		}
-		if ($y_section == 0 ||
-			abs($posy[$i]) < $y_section ){
-				$yy = $posy[$i]+0.1;
-				printf OUT "c $posx[$i] $yy $posz[$i] \n";
-			}
-		
-	}
-
+#	printf OUT "y 3\n";
+#	printf OUT "@ 4\n";
+#	$r = 1.02*$yap_radius*$radius[0];
+#	printf OUT "r $r\n";
+#	for ($i = 0; $i < $np; $i ++){
+#		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
+#			$r = 1.02*$yap_radius*$radius[$i];
+#			printf OUT "r $r\n";
+#		}
+#		#		if ($i % 100 == 0){
+#		#			$col = $i/100 + 2;
+#		#			printf OUT "@ $col\n";
+#		#		}
+#		if ($y_section == 0 ||
+#			abs($posy[$i]) < $y_section ){
+#				$yy = $posy[$i]+0.1;
+#				printf OUT "c $posx[$i] $yy $posz[$i] \n";
+#			}
+#		
+#	}
+#
 
 	
 	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+
 	printf OUT "@ 5\n"; # static
 	for ($k = 0; $k < $num_interaction; $k ++){
 		if ($contactstate[$k] > 1) {
-			#&OutString2($int0[$k],  $int1[$k]);
-			&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
+			&OutString2($int0[$k],  $int1[$k]);
+			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
 		}
 	}
 	#

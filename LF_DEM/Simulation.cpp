@@ -957,7 +957,7 @@ Simulation::outputRheologyData(){
 	 * This is why we need to take time average to have correct value of dimensionless_shear_rate.
 	 */
 	fout_rheo << sys.dimensionless_shear_rate_averaged << ' '; // 48
-	fout_rheo << sys.dimensionless_shear_rate_averaged*6*M_PI*viscosity << ' '; // 49
+	fout_rheo << sys.dimensionless_shear_rate*6*M_PI*viscosity << ' '; // 49
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << endl;
 }
