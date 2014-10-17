@@ -372,7 +372,7 @@ T readStdinDefault(T default_value,	string message){
 	T value;
 	cerr << message << "[" << default_value << "]: ";
 	getline(cin, input);
-	if ( !input.empty() ) {
+	if (!input.empty()) {
 		istringstream stream( input );
 		stream >> value;
 	} else {
@@ -400,10 +400,9 @@ GenerateInitConfig::setParameters(){
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
-	lx_lz = readStdinDefault(1 , "Lx/Lz [1]: ");
+	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
 	if (!sys.twodimension) {
-		ly_lz = 1;
-		ly_lz = readStdinDefault(1 , "Ly/Lz [1]: ");
+		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
 	}
 	disperse_type = readStdinDefault('b' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
