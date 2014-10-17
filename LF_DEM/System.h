@@ -290,9 +290,6 @@ public:
 		lz_half = 0.5*lz;
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
-	//	inline double System_volume(){
-	//		return system_volume;
-	//	}
 	double getParticleContactNumber(){
 		return (double)2*contact_nb/np;
 	}
@@ -308,11 +305,6 @@ public:
 	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
-	//	inline double get_kn(){return kn;}
-	//	inline void set_kt(double val){kt = val;}
-	//	inline double get_kt(){return kt;}
-	//	inline void set_kr(double val){kr = val;}
-	//	inline double get_kr(){return kr;}
 	inline void set_lub_max(double val){lub_max = val;}
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}
