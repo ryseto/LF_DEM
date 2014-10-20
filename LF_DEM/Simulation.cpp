@@ -182,11 +182,11 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		time_interval_output_data = -1;
 		time_interval_output_config = -1;
 	}
-	openOutputFiles();
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
+	openOutputFiles();
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
@@ -287,10 +287,8 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 
 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
 	string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
-
-	openOutputFiles();
-	
 	sys.setupSystem(control_var);
+	openOutputFiles();
 	outputConfigurationData();
 	
 	sys.setupShearFlow(true);
