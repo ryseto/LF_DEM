@@ -662,9 +662,11 @@ System::updateInteractions(){
 			if (deactivated) {
 				deactivated_interaction.push(k);
 			}
-			double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
-			if (sq_max_sliding_velocity < sq_sliding_velocity) {
-				sq_max_sliding_velocity = sq_sliding_velocity;
+			if (interaction[k].is_contact()) {
+				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
+				if (sq_sliding_velocity > sq_max_sliding_velocity) {
+					sq_max_sliding_velocity = sq_sliding_velocity;
+				}
 			}
 		}
 	}
@@ -1102,7 +1104,6 @@ System::evaluateMaxContactVelocity(){
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	max_relative_velocity = 0;
-	max_sliding_velocity = 0;
 	double sum_contact_velo_tan = 0;
 	double sum_contact_velo_normal = 0;
 	double sum_sliding_velocity = 0;
@@ -1129,9 +1130,6 @@ System::evaluateMaxContactVelocity(){
 				 */
 				cnt_sliding++;
 				sum_sliding_velocity += interaction[k].getContactVelocity();
-				if (interaction[k].getContactVelocity() > max_sliding_velocity) {
-					max_sliding_velocity = interaction[k].getContactVelocity();
-				}
 			}
 		}
 	}
