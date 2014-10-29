@@ -258,78 +258,87 @@ void
 Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable){
 	user_sequence = true;
 	control_var = control_variable;
-	if (seq_type != "r" || control_var != "stress") {
+	filename_import_positions = input_files[0];
+	filename_parameters = input_files[1];
+	if (seq_type != "s" || control_var != "stress") {
 		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment ";
 		exit(1);
 	}
-	
 	cerr << " User Defined Sequence, Repulsive Force " << endl;
 	sys.repulsiveforce = true;
+	sys.unscaled_contactmodel = true;
+	sys.brownian = false;
+	sys.repulsiveforce = true;
 	sys.repulsiveforce_amplitude = 1;
-	sys.dimensionless_shear_rate = 1; // needed for 1st time step
-	
-	filename_import_positions = input_files[0];
-	filename_parameters = input_files[1];
-	
 	setDefaultParameters();
+	sys.set_integration_method(0);
 	readParameterFile();
-	
-	if (control_var == "stress") {
-		sys.set_integration_method(0);
-	}
-	
 	importInitialPositionFile();
-
-	if (input_files[2] != "not_given") {
-		contactForceParameter(input_files[2]);
-	}
 	filename_sequence = input_files[4];
-
 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
 	string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
+	if (input_files[3] != "not_given") {
+		importPreSimulationData(input_files[3]);
+		// strain_interval_out
+		time_interval_output_data = sys.strain_interval_output_data/shear_rate_expectation;
+		time_interval_output_config = sys.strain_interval_output_config/shear_rate_expectation;
+	} else {
+		time_interval_output_data = -1;
+		time_interval_output_config = -1;
+	}
+	
 	sys.setupSystem(control_var);
 	openOutputFiles();
 	outputConfigurationData();
 	
 	sys.setupShearFlow(true);
-	
 	vector <double> strain_sequence;
 	vector <double> rsequence;
-	
 	ifstream fin_seq;
 	fin_seq.open(filename_sequence.c_str());
-	
 	double strain;
 	double targ_st;
-	
 	while (fin_seq >> strain >> targ_st){
 		strain_sequence.push_back(strain);
 		rsequence.push_back(targ_st);
 	}
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-	double next_strain=0;
-	for (unsigned int step=0; step<strain_sequence.size();step++){
+	double next_strain = 0;
+	double strain_output_data = 0;
+	double strain_output_config = 0;
+	double time_output_data = 0;
+	double time_output_config = 0;
+	for (unsigned int step = 0; step<strain_sequence.size(); step++){
 		/* The target stress (``rsequence'') is given trough the command argument
 		 * with an unit stres: eta_0*gammmadot_0.
 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
 		 */
 		sys.target_stress_input = rsequence[step];
 		sys.target_stress = rsequence[step]/6/M_PI;
+		sys.updateUnscaledContactmodel();
+		sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		next_strain += strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
-			double strain_next_config_out = cnt_config_out*sys.strain_interval_output_config;
-			double strain_next = cnt_simu_loop*sys.strain_interval_output_data;
-			sys.timeEvolution(strain_next, 0);
+			if (time_interval_output_data == -1) {
+				strain_output_data = cnt_simu_loop*sys.strain_interval_output_data;
+				strain_output_config = cnt_config_out*sys.strain_interval_output_config;
+			} else {
+				time_output_data = cnt_simu_loop*time_interval_output_data;
+				time_output_config = cnt_config_out*time_interval_output_config;
+			}
+			sys.timeEvolution(strain_output_data, time_output_data);
+			cnt_simu_loop ++;
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
-			if (sys.get_shear_strain() >= strain_next_config_out-1e-8) {
+			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+				cerr << "   out config: " << sys.get_shear_strain() << endl;
 				outputConfigurationData();
 				cnt_config_out ++;
 			}
-			cnt_simu_loop ++;
-			cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
+			cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end;
+			cerr << "      stress = " << sys.target_stress_input << endl;
 		}
 	}
 }

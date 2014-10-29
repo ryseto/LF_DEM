@@ -19,11 +19,13 @@ void incompatibility_exiting(string a, string b){
 	exit(1);
 }
 
-
 int main(int argc, char **argv)
 {
-	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-a Scaled_Cohesion] [-k kn_kt_File] Configuration_File Parameter_File \n\n OR \n\n (2) Generate initial configuration\n $ LF_DEM -g\n";
-
+	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] \
+	[-r Scaled_Repulsion ] [-s Stress ] [-a Scaled_Cohesion ] \
+	[-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] \
+	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
+	
 	bool peclet = false;
 	double peclet_num = 0;
 
@@ -37,6 +39,7 @@ int main(int argc, char **argv)
 	double ratio_cohesion = 0;
 	
 	bool generate_init = false;
+	int random_seed = 1;
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -64,7 +67,7 @@ int main(int argc, char **argv)
 	};
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "ghs:S:p:P:r:R:c:C:a:A:k:i:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hg:s:S:p:P:r:R:c:C:a:A:k:i:", longopts, &index)) != -1) {
 		switch (c) {
 			case 'p':
 				peclet = true;
@@ -74,7 +77,6 @@ int main(int argc, char **argv)
 			case 'P':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				peclet = true;
-				//	sequence = true;
 				seq_filename = optarg;
 				seq_type = "p";
 				cerr << "Brownian, Peclet sequence, file " << seq_filename << endl;
@@ -90,9 +92,9 @@ int main(int argc, char **argv)
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				repulsion = true;
 				stress_controlled = true;
-				//sequence = true;
+				strain_controlled = !stress_controlled;
 				seq_filename = optarg;
-				seq_type = "r";
+				seq_type = "s";
 				cerr << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 'r':
@@ -107,7 +109,6 @@ int main(int argc, char **argv)
 			case 'R':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				repulsion = true;
-				//	sequence = true;
 				seq_filename = optarg;
 				seq_type = "r";
 				cerr << "Repulsion, sequence, file " << seq_filename << endl;
@@ -120,7 +121,6 @@ int main(int argc, char **argv)
 			case 'A':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				cohesion = true;
-				//				sequence = true;
 				seq_filename = optarg;
 				seq_type = "a";
 				cerr << "Cohesion, sequence, file " << seq_filename << endl;
@@ -133,21 +133,19 @@ int main(int argc, char **argv)
 			case 'C':
 				if(seq_filename != "not_given"){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				critical_load = true;
-				//				sequence = true;
 				seq_filename = optarg;
 				seq_type = "c";
 				cerr << "Critical load, sequence, file " << seq_filename << endl;
 				break;
 			case 'k':
-				//knkt = true;
 				knkt_filename = optarg;
 				break;
 			case 'i':
-				//	output_constant_strain_interval = false;
 				stress_rate_filename = optarg;
 				break;
 			case 'g':
 				generate_init = true;
+				random_seed = atoi(optarg);
 				break;
 			case 'h':
 				cerr << usage << endl;
@@ -173,7 +171,7 @@ int main(int argc, char **argv)
 	}
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate();
+		generate_init_config.generate(random_seed);
 	} else {
 		if (optind == argc-2) {
 			config_filename = argv[optind++];

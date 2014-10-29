@@ -156,6 +156,36 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 }
 
 void
+System::updateUnscaledContactmodel(){
+	kn = kn_master*abs(target_stress);
+	kt = kt_master*abs(target_stress);
+	kr = kr_master*abs(target_stress);
+	lub_coeff_contact = 4*kn*contact_relaxation_time;
+	if (lubrication_model == 1) {
+		log_lub_coeff_contact_tan_lubrication = 0;
+		log_lub_coeff_contact_tan_dashpot = 0;
+	} else if (lubrication_model == 2) {
+		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+		/* [Note]
+		 * We finally do not introduce a dashpot for the sliding mode.
+		 * This is set in the parameter file, i.e. contact_relaxation_time_tan = 0
+		 * So log_lub_coeff_contact_tan_dashpot = 0;
+		 */
+		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
+	} else {
+		cerr << "lubrication_model..." << endl;
+		exit(1);
+	}
+	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+	
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			interaction[k].contact.getInteractionData();
+		}
+	}
+}
+
+void
 System::setupBrownian(){
 	if (brownian) {
 		/* kb_T is dimensionless.
@@ -285,9 +315,10 @@ System::setupSystem(string control){
 	shear_direction = 1;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (unscaled_contactmodel) {
-		kn *= target_stress;
-		kt *= target_stress;
-		kr *= target_stress;
+		kn_master = kn;
+		kt_master = kt;
+		kr_master = kr;
+		updateUnscaledContactmodel();
 	}
 	if (contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -901,9 +932,15 @@ System::computeVelocities(bool divided_velocities){
 		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
 		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 		double shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-		double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
 		if (unscaled_contactmodel) {
-			dimensionless_shear_rate = (target_stress-shearstress_rep-shearstress_con)/shearstress_hyd;
+			double shear_rate_numerator = target_stress-shearstress_rep-shearstress_con;
+			if (shear_rate_numerator > 0) {
+				double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
+				dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
+			} else {
+				double shearstress_hyd = -(1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
+				dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
+			}
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;
 				ang_vel_repulsive[i] /= dimensionless_shear_rate;
@@ -911,6 +948,7 @@ System::computeVelocities(bool divided_velocities){
 				ang_vel_contact[i] /= dimensionless_shear_rate;
 			}
 		} else {
+			double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
 			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;

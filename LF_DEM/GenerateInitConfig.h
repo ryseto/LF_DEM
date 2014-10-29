@@ -63,6 +63,6 @@ private:
 	void outputPositionData();
 public:
 	GenerateInitConfig(){};
-	int generate();
+	int generate(int rand_seed_);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

@@ -21,6 +21,19 @@
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
+		D96810D619FAFDB400FB4537 /* libbtf.1.2.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C219FAFD7B00FB4537 /* libbtf.1.2.1.a */; };
+		D96810D719FAFDB400FB4537 /* libcamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C319FAFD7B00FB4537 /* libcamd.2.4.1.a */; };
+		D96810D819FAFDB400FB4537 /* libccolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C419FAFD7B00FB4537 /* libccolamd.2.9.1.a */; };
+		D96810D919FAFDB400FB4537 /* libcxsparse.3.1.4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C519FAFD7B00FB4537 /* libcxsparse.3.1.4.a */; };
+		D96810DA19FAFDB400FB4537 /* libklu.1.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C619FAFD7B00FB4537 /* libklu.1.3.1.a */; };
+		D96810DB19FAFDB400FB4537 /* libldl.2.2.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C719FAFD7B00FB4537 /* libldl.2.2.1.a */; };
+		D96810DC19FAFDB400FB4537 /* librbio.2.2.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C819FAFD7B00FB4537 /* librbio.2.2.1.a */; };
+		D96810DD19FAFDB400FB4537 /* libspqr.2.0.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810C919FAFD7B00FB4537 /* libspqr.2.0.0.a */; };
+		D96810DE19FAFDB400FB4537 /* libsuitesparseconfig.4.4.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810CA19FAFD7B00FB4537 /* libsuitesparseconfig.4.4.0.a */; };
+		D96810DF19FAFDB400FB4537 /* libumfpack.5.7.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D96810CB19FAFD7B00FB4537 /* libumfpack.5.7.1.a */; };
+		D96810E019FAFDB400FB4537 /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9EFF99A19FAFC0200F12F5B /* libamd.2.4.1.a */; };
+		D96810E119FAFDB400FB4537 /* libcholmod.3.0.2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9EFF99B19FAFC0200F12F5B /* libcholmod.3.0.2.a */; };
+		D96810E219FAFDB400FB4537 /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9EFF99819FAFBB200F12F5B /* libcolamd.2.9.1.a */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
@@ -34,9 +47,6 @@
 		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
-		D9D2DFB8192FD3770014E568 /* libamd.2.3.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D2DFAF192FD3770014E568 /* libamd.2.3.1.a */; };
-		D9D2DFC2192FD4A70014E568 /* libcholmod.2.1.2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D2DFC1192FD4A70014E568 /* libcholmod.2.1.2.a */; };
-		D9D2DFC4192FD4F60014E568 /* libcolamd.2.8.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D2DFC3192FD4F60014E568 /* libcolamd.2.8.0.a */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
@@ -134,6 +144,16 @@
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		D96810C219FAFD7B00FB4537 /* libbtf.1.2.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbtf.1.2.1.a; path = /usr/local/lib/libbtf.1.2.1.a; sourceTree = "<absolute>"; };
+		D96810C319FAFD7B00FB4537 /* libcamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcamd.2.4.1.a; path = /usr/local/lib/libcamd.2.4.1.a; sourceTree = "<absolute>"; };
+		D96810C419FAFD7B00FB4537 /* libccolamd.2.9.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libccolamd.2.9.1.a; path = /usr/local/lib/libccolamd.2.9.1.a; sourceTree = "<absolute>"; };
+		D96810C519FAFD7B00FB4537 /* libcxsparse.3.1.4.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcxsparse.3.1.4.a; path = /usr/local/lib/libcxsparse.3.1.4.a; sourceTree = "<absolute>"; };
+		D96810C619FAFD7B00FB4537 /* libklu.1.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libklu.1.3.1.a; path = /usr/local/lib/libklu.1.3.1.a; sourceTree = "<absolute>"; };
+		D96810C719FAFD7B00FB4537 /* libldl.2.2.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libldl.2.2.1.a; path = /usr/local/lib/libldl.2.2.1.a; sourceTree = "<absolute>"; };
+		D96810C819FAFD7B00FB4537 /* librbio.2.2.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = librbio.2.2.1.a; path = /usr/local/lib/librbio.2.2.1.a; sourceTree = "<absolute>"; };
+		D96810C919FAFD7B00FB4537 /* libspqr.2.0.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspqr.2.0.0.a; path = /usr/local/lib/libspqr.2.0.0.a; sourceTree = "<absolute>"; };
+		D96810CA19FAFD7B00FB4537 /* libsuitesparseconfig.4.4.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.0.a; path = /usr/local/lib/libsuitesparseconfig.4.4.0.a; sourceTree = "<absolute>"; };
+		D96810CB19FAFD7B00FB4537 /* libumfpack.5.7.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libumfpack.5.7.1.a; path = /usr/local/lib/libumfpack.5.7.1.a; sourceTree = "<absolute>"; };
 		D972279B16AF02DC00DA851F /* generateYaplotFile.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = generateYaplotFile.pl; sourceTree = "<group>"; };
 		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Interaction.h; sourceTree = "<group>"; };
 		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Simulation.cpp; sourceTree = "<group>"; };
@@ -168,14 +188,14 @@
 		D9BE3B73178CB8A800937C5C /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
 		D9CE560517555DE500719775 /* extract_normalvecdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extract_normalvecdata.pl; sourceTree = "<group>"; };
-		D9D2DFAF192FD3770014E568 /* libamd.2.3.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.3.1.a; path = /usr/local/lib/libamd.2.3.1.a; sourceTree = "<absolute>"; };
-		D9D2DFC1192FD4A70014E568 /* libcholmod.2.1.2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.2.1.2.a; path = /usr/local/lib/libcholmod.2.1.2.a; sourceTree = "<absolute>"; };
-		D9D2DFC3192FD4F60014E568 /* libcolamd.2.8.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.8.0.a; path = /usr/local/lib/libcolamd.2.8.0.a; sourceTree = "<absolute>"; };
 		D9D805951889BAC700D139F5 /* generateSimpleData.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = generateSimpleData.pl; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = calc_contact_fraction.pl; sourceTree = "<group>"; };
+		D9EFF99819FAFBB200F12F5B /* libcolamd.2.9.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.9.1.a; path = /usr/local/lib/libcolamd.2.9.1.a; sourceTree = "<absolute>"; };
+		D9EFF99A19FAFC0200F12F5B /* libamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.4.1.a; path = /usr/local/lib/libamd.2.4.1.a; sourceTree = "<absolute>"; };
+		D9EFF99B19FAFC0200F12F5B /* libcholmod.3.0.2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.2.a; path = /usr/local/lib/libcholmod.3.0.2.a; sourceTree = "<absolute>"; };
 		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StressTensor.h; sourceTree = "<group>"; };
 		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Interaction.cpp; sourceTree = "<group>"; };
 		D9FF68A31732F24D0062236C /* force_chain.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = force_chain.pl; sourceTree = "<group>"; };
@@ -200,10 +220,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9D2DFC4192FD4F60014E568 /* libcolamd.2.8.0.a in Frameworks */,
-				D9D2DFC2192FD4A70014E568 /* libcholmod.2.1.2.a in Frameworks */,
-				D9D2DFB8192FD3770014E568 /* libamd.2.3.1.a in Frameworks */,
+				D96810DC19FAFDB400FB4537 /* librbio.2.2.1.a in Frameworks */,
+				D96810E219FAFDB400FB4537 /* libcolamd.2.9.1.a in Frameworks */,
+				D96810D719FAFDB400FB4537 /* libcamd.2.4.1.a in Frameworks */,
+				D96810DB19FAFDB400FB4537 /* libldl.2.2.1.a in Frameworks */,
+				D96810DF19FAFDB400FB4537 /* libumfpack.5.7.1.a in Frameworks */,
+				D96810DA19FAFDB400FB4537 /* libklu.1.3.1.a in Frameworks */,
+				D96810DE19FAFDB400FB4537 /* libsuitesparseconfig.4.4.0.a in Frameworks */,
+				D96810D819FAFDB400FB4537 /* libccolamd.2.9.1.a in Frameworks */,
+				D96810D619FAFDB400FB4537 /* libbtf.1.2.1.a in Frameworks */,
 				D91B041E166EF0A600DC63CA /* Accelerate.framework in Frameworks */,
+				D96810E119FAFDB400FB4537 /* libcholmod.3.0.2.a in Frameworks */,
+				D96810DD19FAFDB400FB4537 /* libspqr.2.0.0.a in Frameworks */,
+				D96810D919FAFDB400FB4537 /* libcxsparse.3.1.4.a in Frameworks */,
+				D96810E019FAFDB400FB4537 /* libamd.2.4.1.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,9 +268,19 @@
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				D9D2DFC3192FD4F60014E568 /* libcolamd.2.8.0.a */,
-				D9D2DFC1192FD4A70014E568 /* libcholmod.2.1.2.a */,
-				D9D2DFAF192FD3770014E568 /* libamd.2.3.1.a */,
+				D96810C219FAFD7B00FB4537 /* libbtf.1.2.1.a */,
+				D96810C319FAFD7B00FB4537 /* libcamd.2.4.1.a */,
+				D96810C419FAFD7B00FB4537 /* libccolamd.2.9.1.a */,
+				D96810C519FAFD7B00FB4537 /* libcxsparse.3.1.4.a */,
+				D96810C619FAFD7B00FB4537 /* libklu.1.3.1.a */,
+				D96810C719FAFD7B00FB4537 /* libldl.2.2.1.a */,
+				D96810C819FAFD7B00FB4537 /* librbio.2.2.1.a */,
+				D96810C919FAFD7B00FB4537 /* libspqr.2.0.0.a */,
+				D96810CA19FAFD7B00FB4537 /* libsuitesparseconfig.4.4.0.a */,
+				D96810CB19FAFD7B00FB4537 /* libumfpack.5.7.1.a */,
+				D9EFF99A19FAFC0200F12F5B /* libamd.2.4.1.a */,
+				D9EFF99B19FAFC0200F12F5B /* libcholmod.3.0.2.a */,
+				D9EFF99819FAFBB200F12F5B /* libcolamd.2.9.1.a */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
 			);
 			name = lib;

@@ -12,8 +12,9 @@
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 using namespace std;
 int
-GenerateInitConfig::generate(){
+GenerateInitConfig::generate(int rand_seed_){
 	setParameters();
+	rand_seed = rand_seed_;
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
@@ -382,6 +383,7 @@ T readStdinDefault(T default_value,	string message){
 	return value;
 }
 
+
 void
 GenerateInitConfig::setParameters(){
 	/*
@@ -419,7 +421,7 @@ GenerateInitConfig::setParameters(){
 	} else {
 		vf_ratio = 1;
 	}
-	rand_seed = readStdinDefault(1, "random seed");
+	//rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */

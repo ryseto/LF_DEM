@@ -158,6 +158,9 @@ public:
 	double kn;
 	double kt;
 	double kr;
+	double kn_master;
+	double kt_master;
+	double kr_master;
 	double dt_lowPeclet;
 	double kn_lowPeclet;
 	double kt_lowPeclet;
@@ -254,6 +257,7 @@ public:
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions();
+	void updateUnscaledContactmodel();
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
