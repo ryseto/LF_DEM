@@ -97,7 +97,7 @@ public:
 	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
-	bool strain_controlled;
+	bool rate_controlled;
 	bool stress_controlled;
 	/* zero_shear:
 	 * To be used for relaxation to generate initial configuration.

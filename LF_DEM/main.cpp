@@ -46,9 +46,7 @@ int main(int argc, char **argv)
 	string stress_rate_filename = "not_given";
 	string seq_filename = "not_given";
 	string seq_type;
-
-	bool strain_controlled = true;
-	bool stress_controlled = !strain_controlled;
+	string rheology_control = "rate";
 	const struct option longopts[] = {
 		{"peclet", required_argument, 0, 'p'},
 		{"pe-seq-file", required_argument, 0, 'P'},
@@ -83,31 +81,31 @@ int main(int argc, char **argv)
 				break;
 			case 's':
 				repulsion = true;
-				stress_controlled = true;
-				strain_controlled = !stress_controlled;
+				rheology_control = "stress";
 				ratio_repulsion = atof(optarg);
 				cerr << "Repulsion, stress " << ratio_repulsion << endl;
 				break;
 			case 'S':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				repulsion = true;
-				stress_controlled = true;
-				strain_controlled = !stress_controlled;
+				rheology_control = "stress";
 				seq_filename = optarg;
 				seq_type = "s";
 				cerr << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 'r':
-				if (!stress_controlled) {
-					ratio_repulsion = atof(optarg);
-					repulsion = true;					
-					cerr << "Repulsion, shear rate " << ratio_repulsion << endl;
-				} else {
-					cerr << "option -r ignored for stress controlled simulations " << endl;
-				}
+				//if (!stress_controlled) {
+				rheology_control = "rate";
+				ratio_repulsion = atof(optarg);
+				repulsion = true;
+				cerr << "Repulsion, shear rate " << ratio_repulsion << endl;
+				//} else {
+				//	cerr << "option -r ignored for stress controlled simulations " << endl;
+				//}
 				break;
 			case 'R':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				rheology_control = "rate";
 				repulsion = true;
 				seq_filename = optarg;
 				seq_type = "r";
@@ -158,11 +156,11 @@ int main(int argc, char **argv)
 		}
 	}
 	// Incompatibilities
-	if (peclet && stress_controlled) {
+	if (peclet && rheology_control == "stress") {
 		incompatibility_exiting("peclet", "stress_controlled");
-	} else if (cohesion && stress_controlled) {
+	} else if (cohesion && rheology_control == "stress") {
 		incompatibility_exiting("cohesion", "stress_controlled");
-	} else if (critical_load && stress_controlled) {
+	} else if (critical_load && rheology_control == "stress") {
 		incompatibility_exiting("critical_load", "stress_controlled");
 	} else if (critical_load && repulsion) {
 		incompatibility_exiting("critical_load", "repulsion");
@@ -190,19 +188,11 @@ int main(int argc, char **argv)
 
 		Simulation simulation;
 		if (seq_filename == "not_given") {
-			if (strain_controlled) {
-				simulation.simulationSteadyShear(input_files, peclet_num,
-												 ratio_repulsion, ratio_cohesion, ratio_critical_load, "strain");
-			} else if (stress_controlled) {
-				simulation.simulationSteadyShear(input_files, peclet_num,
-												 ratio_repulsion, ratio_cohesion, ratio_critical_load, "stress");
-			}
+			simulation.simulationSteadyShear(input_files, peclet_num,
+											 ratio_repulsion, ratio_cohesion, ratio_critical_load,
+											 rheology_control);
 		} else {
-			if (strain_controlled) {
-				simulation.simulationUserDefinedSequence(seq_type, input_files, "strain");
-			} else if (stress_controlled) {
-				simulation.simulationUserDefinedSequence(seq_type, input_files, "stress");
-			}
+			simulation.simulationUserDefinedSequence(seq_type, input_files, rheology_control);
 		}
 		
 	}

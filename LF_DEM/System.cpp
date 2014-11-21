@@ -394,13 +394,13 @@ System::setupSystem(string control){
 	}
 	volume_fraction = particle_volume/system_volume;
 	cerr << "volume_fraction = " << volume_fraction << endl;
-	if (control == "strain") {
-		strain_controlled = true;
+	if (control == "rate") {
+		rate_controlled = true;
 	}
 	if (control == "stress") {
-		strain_controlled = false;
+		rate_controlled = false;
 	}
-	stress_controlled = !strain_controlled;
+	stress_controlled = !rate_controlled;
 	dimensionless_shear_rate_averaged = 1;
 }
 

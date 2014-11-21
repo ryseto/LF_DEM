@@ -84,7 +84,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	if (control_var == "strain") {
+	if (control_var == "rate") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
