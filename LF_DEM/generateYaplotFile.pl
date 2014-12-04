@@ -79,7 +79,7 @@ while (1){
 	
 	&InInteractions;
 	
-	printf "$shear_rate $simulation_stop\n";
+	printf "$shear_rate $shear_stress\n";
 	last unless defined $line;
 	&OutYaplotData;
 	$num ++;
@@ -109,7 +109,7 @@ sub readHeader{
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
-    ($buf, $shear_strain, $shear_disp, $shear_rate, $simulation_stop) = split(/\s+/, $line);
+    ($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
 	
 	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
 	# 1: number of the particle
@@ -280,12 +280,27 @@ sub OutYaplotData{
 		$first = 0;
 	}
 	$postext = $Lz/2+2;
+	$postext2 = $Lz/2+3;
 	$shear_rate_text = int($shear_rate*1e5);
 	$shear_rate_text *= 1e-5;
+
 	
-	printf OUT "y 10\n";
-	printf OUT "@ 2\n";
-	printf OUT "t -2 0 $postext shear rate = $shear_rate_text \n";
+	#printf OUT "y 10\n";
+	#printf OUT "@ 2\n";
+	#printf OUT "t -2 0 $postext shear rate = $shear_rate_text \n";
+	#printf OUT "t -2 0 $postext2 shear stress = $shear_stress \n";
+	
+	#$meterx = $Lx/2+1;
+	#$meterbottom = -$Lz/2;
+	#$metertop = $meterbottom + $shear_rate*1000;
+	printf OUT "@ 3\n";
+	&OutMeter($shear_rate, 0.01, $Lx/2+2, -$Lz/2+2);
+	printf OUT "@ 4\n";
+	#&OutMeter($shear_stress, 2, -$Lx/2-3.5, -$Lz/2+2);
+	&OutStress($shear_stress, 5);
+
+
+	
 	#
 	#	printf OUT "y 7\n";
 	#	printf OUT "r 0.1\n";
@@ -566,11 +581,10 @@ sub OutYaplotData{
 	#		}
 	#    }
 	
-	
-	
+
 	if ($Ly == 0){
 		printf OUT "y 6\n";
-		printf OUT "@ 2\n";
+		printf OUT "@ 1\n";
 		for ($i = 0; $i < $np; $i ++){
 			&OutCross($i);
 		}
@@ -620,17 +634,23 @@ sub OutBoundaryBox{
 	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
+#	printf OUT "r 0.2\n";
+#	if ($shear_stress == 0.5) {
+#		printf OUT "@ 6\n";
+#	} else {
+#		printf OUT "@ 3\n";
+#	}
 	#	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 	#	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
 	#	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
 	
 	
-	
+	#$yb = 0.1;
 	if($Ly == 0){
 		$lx2 = $Lx/2+1;
 		$ly2 = $Ly/2+1;
 		$lz2 = $Lz/2+1;
-		
+		#printf OUT "p 4 -$lx2 $yb $lz2 $lx2 $yb $lz2 $lx2 $yb -$lz2 -$lx2 $yb -$lz2\n";
 		printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
 		printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
 		printf OUT "l -$lx2 0 -$lz2  -$lx2 0 $lz2\n";
@@ -652,8 +672,7 @@ sub OutBoundaryBox{
 		printf OUT "l $lx2 $ly2 $lz2    $lx2 -$ly2 $lz2\n";
 		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
-		
-		
+
 		
 	}
 	
@@ -735,7 +754,7 @@ sub OutContact{
 
 
 sub OutString {
-    ($i, $j) = @_;
+	($i, $j) = @_;
     $xi = $posx[$i];
     $yi = $posy[$i];
     $zi = $posz[$i];
@@ -753,6 +772,38 @@ sub OutString {
 				}
 		}
 }
+
+sub OutMeter {
+	($value, $maxvalue, $xx, $zz) = @_;
+	if ( $value > 3*$maxvalue ){
+		$value = 0;
+	}
+	if ( $value > $maxvalue ){
+		$value = $maxvalue;
+	}
+	$metertop = $zz + ($Lz-4)*$value/$maxvalue;
+	$xx2 = $xx + 1.5;
+	printf OUT "p 4 $xx 0 $zz $xx 0 $metertop $xx2 0 $metertop $xx2 0 $zz\n";
+}
+
+sub OutStress {
+	($value, $maxvalue) = @_;
+	$xx = 0.5*$Lz*$value/$maxvalue;
+	$xxTip = $xx + 2;
+	$arrowhead = 1;
+	$arrowwidth = 0.5;
+	$zz0 = $Lz/2+2;
+
+	$zzB1 = $zz0-$arrowwidth;
+	$zzB2 = $zz0-$arrowhead;
+	$zzT1 = $zz0+$arrowwidth;
+	$zzT2 = $zz0+$arrowhead;
+
+	$xxTip = $xx + 2*$arrowhead;
+	printf OUT "p 7 -$xx 0 $zzB1 $xx 0 $zzB1 $xx 0 $zzB2 $xxTip 0 $zz0 $xx 0 $zzT2 $xx 0 $zzT1 -$xx 0 $zzT1\n";
+	printf OUT "p 7 $xx 0 -$zzB1 -$xx 0 -$zzB1 -$xx 0 -$zzB2 -$xxTip 0 -$zz0 -$xx 0 -$zzT2 -$xx 0 -$zzT1 $xx 0 -$zzT1\n";
+}
+
 
 sub OutCircle_middle {
     ($i, $j) = @_;

@@ -258,7 +258,7 @@ public:
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii 
 	 */
-    void addToDiag(int ii, double FUvalue, double TWvalue);
+	//void addToDiag(int ii, double FUvalue, double TWvalue);
     /* addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC);
 	  Adds to block (ii, ii):
 	 - scaledXA * |nvec><nvec| + scaledYA(1-|nvec><nvec|) on FU part

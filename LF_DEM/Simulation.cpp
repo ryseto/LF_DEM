@@ -190,7 +190,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
-	outputConfigurationData();
 	sys.setupShearFlow(true);
 	if (control_var == "stress") {
 		sys.set_integration_method(0);
@@ -270,6 +269,8 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	sys.brownian = false;
 	sys.repulsiveforce = true;
 	sys.repulsiveforce_amplitude = 1;
+	sys.target_stress_input = 0;
+	sys.target_stress = 0;
 	setDefaultParameters();
 	sys.set_integration_method(0);
 	readParameterFile();
@@ -309,6 +310,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
+	int jammed = 0;
 	for (unsigned int step = 0; step<strain_sequence.size(); step++){
 		/* The target stress (``rsequence'') is given trough the command argument
 		 * with an unit stres: eta_0*gammmadot_0.
@@ -318,7 +320,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		sys.target_stress = rsequence[step]/6/M_PI;
 		sys.updateUnscaledContactmodel();
 		sys.dimensionless_shear_rate = 1; // needed for 1st time step
-		next_strain += strain_sequence[step];
+		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			if (time_interval_output_data == -1) {
 				strain_output_data = cnt_simu_loop*sys.strain_interval_output_data;
@@ -336,6 +338,18 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
 				outputConfigurationData();
 				cnt_config_out ++;
+			}
+			
+			if (sys.dimensionless_shear_rate_averaged < 1e-6){
+				cerr << "shear jamming " << jammed << endl;
+				jammed ++;
+				if (jammed > 5) {
+					jammed = 0;
+					cerr << "shear jamming";
+					break;
+				}
+			} else {
+				jammed = 0;
 			}
 			cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end;
 			cerr << "      stress = " << sys.target_stress_input << endl;
@@ -1023,7 +1037,8 @@ Simulation::outputConfigurationData(){
 	if (out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		fout_particle << sys.dimensionless_shear_rate_averaged << endl;
+		fout_particle << sys.dimensionless_shear_rate_averaged << ' ';
+		fout_particle << sys.target_stress_input << endl;
 		for (int i=0; i<np; i++) {
 			vec3d &p = pos[i];
 			vec3d &v = vel[i];

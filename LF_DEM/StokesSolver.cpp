@@ -81,7 +81,7 @@ StokesSolver::initialize(){
 	int blocksize = 10;
 	int maxiters = 400;
 	double tol = 1.e-6;
-	solverParams->set("Block Size", blocksize);              // Blocksize to be used by iterative solver
+	solverParams->set("Block Size",  );              // Blocksize to be used by iterative solver
 	solverParams->set("Maximum Iterations", maxiters);       // Maximum number of iterations allowed
 	solverParams->set("Convergence Tolerance", tol);         // Relative convergence tolerance requested
 	solverParams->set("Verbosity", Belos::Errors + Belos::Warnings);
@@ -98,29 +98,29 @@ StokesSolver::initialize(){
 
 /************* Matrix filling methods **********************/
 
-// Diagonal Terms, FT/UW version
-void
-StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
-	if (direct()) {
-		int ii18 = 18*ii;
-		dblocks[ii18   ] += FUvalue;
-		dblocks[ii18+6 ] += FUvalue;
-		dblocks[ii18+10] += FUvalue;
-		dblocks[ii18+12] += TWvalue;
-		dblocks[ii18+15] += TWvalue;
-		dblocks[ii18+17] += TWvalue;
-	}
-#ifdef TRILINOS
-	if (iterative()) {
-		cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
-		exit(1);
-		int ii3 = 3*ii;
-		for (int j = 0; j < 3; j ++) {
-			values[ii3+j][j] += FUvalue;
-		}
-	}
-#endif
-}
+//// Diagonal Terms, FT/UW version
+//void
+//StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
+//	if (direct()) {
+//		int ii18 = 18*ii;
+//		dblocks[ii18   ] += FUvalue;
+//		dblocks[ii18+6 ] += FUvalue;
+//		dblocks[ii18+10] += FUvalue;
+//		dblocks[ii18+12] += TWvalue;
+//		dblocks[ii18+15] += TWvalue;
+//		dblocks[ii18+17] += TWvalue;
+//	}
+//#ifdef TRILINOS
+//	if (iterative()) {
+//		cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
+//		exit(1);
+//		int ii3 = 3*ii;
+//		for (int j = 0; j < 3; j ++) {
+//			values[ii3+j][j] += FUvalue;
+//		}
+//	}
+//#endif
+//}
 
 // Diagonal Blocks Terms, FT/UW version
 void
