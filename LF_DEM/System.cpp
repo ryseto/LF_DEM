@@ -386,7 +386,11 @@ System::setupSystem(string control){
 	dimensionless_shear_rate_averaged = 1;
 	/* Pre-calculation
 	 */
-	einstein_viscosity = (1+2.5*pow(sd_coeff,3)*volume_fraction)/(6*M_PI);
+	/* einstein_viscosity may be affected by sd_coeff.
+	 * However, the reason to set value of sd_coeff is not very certain for the moment.
+	 * This is why we limit sd_coeff dependence only the diagonal constant.
+	 */
+	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI);
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -401,6 +405,7 @@ System::setupSystem(string control){
 		resistance_matrix_dblock[i18+12] = TWvalue;
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
+		cerr << FUvalue << ' ' << TWvalue << ' ' << sd_coeff << endl;
 	}
 }
 
