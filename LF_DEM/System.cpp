@@ -405,7 +405,6 @@ System::setupSystem(string control){
 		resistance_matrix_dblock[i18+12] = TWvalue;
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
-		cerr << FUvalue << ' ' << TWvalue << ' ' << sd_coeff << endl;
 	}
 }
 
