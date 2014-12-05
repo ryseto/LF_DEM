@@ -249,19 +249,18 @@ sub InInteractions {
 		$contactstate[$k] = $contact;
 		$domega[$k] = $omegay[$i] - $omegay[$j];
 		$F_lub[$k] = $f_lub_norm;
-		$Sxz_lub[$k] = -($f_lub+$fc_n)*($radius[$i]+$radius[$j])*$nx*$nz;
-		$Fc_n[$k] = $fc_n;
-		$Ft_t[$k] = $fc_tan;
-		$Fcol[$k] = $fcol;
-		$f_normal = $fc_n + $fcol + $f_lub_norm;
+		$Fc_n[$k] = $fc_norm;
+		$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
+		#$f_normal = $fc_norm + $fr_norm + $f_lub_norm;
+		#$f_normal = $f_lub_norm;
+		$f_normal = $fc_norm;
 		$force[$k] = $f_normal;
-		$S_bf[$k] = $sxz_cont_xF;
+
+		$S_bf[$k] =  $s_xF;
 		$fricstate[$k] = $friction;
-		#	$force[$k] = sqrt($f_normal)
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;
-
 		$ft_x[$k] = $f_lub_tan_x + $fc_tan_x;
 		$ft_y[$k] = $f_lub_tan_y + $fc_tan_y;
 		$ft_z[$k] = $f_lub_tan_z + $fc_tan_z;
@@ -413,22 +412,22 @@ sub OutYaplotData{
 	}
 	#
 	#
-	#	printf OUT "y 4\n";
-	#	printf OUT "r 0.4\n";
-	#	printf OUT "@ 0\n"; # static
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		$force = $Fc_n[$k];
-	#        if ($F_lub[$k] < 0) {
-	#			$force += - $F_lub[$k];
-	#		}
-	#		if ($Gap[$k] < 0) {
-	#			if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
-	#				if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
-	#					&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
-	#						$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
-	#						$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
-	#						$tmpoy = int $oy;
-	#						printf OUT "t $xx -0.2 $zz $tmpoy \n";
+#		printf OUT "y 4\n";
+#		printf OUT "r 0.4\n";
+#		printf OUT "@ 0\n"; # static
+#		for ($k = 0; $k < $num_interaction; $k ++){
+#			$force = $Fc_n[$k];
+#	        if ($F_lub[$k] < 0) {
+#				$force += - $F_lub[$k];
+#			}
+#			if ($Gap[$k] < 0) {
+#				if ($fricstate[$k] == 1 && abs($domega[$k]) < 100) {
+#					if ( abs($posx[$int0[$k]]-$posx[$int1[$k]]) < 10
+#						&& abs($posz[$int0[$k]]-$posz[$int1[$k]]) < 10){
+#							$xx = 0.5*($posx[$int0[$k]] + $posx[$int1[$k]]);
+#							$zz = 0.5*($posz[$int0[$k]] + $posz[$int1[$k]]);
+#							$tmpoy = int $oy;
+#							printf OUT "t $xx -0.2 $zz $tmpoy \n";
 	#					}
 	#
 	#			}
@@ -480,31 +479,32 @@ sub OutYaplotData{
 	#    }
 	
 	
-#	#printf OUT "r 0.2\n";
-#	printf OUT "y 3\n";
-#	printf OUT "@ 3\n";
-#	for ($k=0; $k<$num_interaction; $k++){
-#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-#		#$force = $Fcol[$k];
-#		#$force = $Fc_n[$k];
-#		if ($force[$k] <0){
-#			$force = -$force[$k];
-#			$string_width = ${force_factor}*${force};
-#			#&OutString2($int0[$k], $int1[$k]);
-#			&OutString_width($int0[$k], $int1[$k]);
-#		}
-#	}
-#	printf OUT "y 4\n";
-#	printf OUT "@ 4\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($force[$k] > 0){
-#			$force = $force[$k];
-#			$string_width = ${force_factor}*${force};
-#			#&OutString2($int0[$k], $int1[$k]);
-#			&OutString_width($int0[$k], $int1[$k]);
-#		}
-##	}
-#	printf OUT "y 2\n";
+	#printf OUT "r 0.2\n";
+	$force_factor = 0.05;
+	printf OUT "y 3\n";
+	printf OUT "@ 3\n";
+	for ($k=0; $k<$num_interaction; $k++){
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		#$force = $Fcol[$k];
+		#$force = $Fc_n[$k];
+		if ($force[$k] < 0){
+			$force = -$force[$k];
+			$string_width = ${force_factor}*${force};
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
+	printf OUT "y 4\n";
+	printf OUT "@ 4\n";
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($force[$k] > 0){
+			$force = $force[$k];
+			$string_width = ${force_factor}*${force};
+			#&OutString2($int0[$k], $int1[$k]);
+			&OutString_width($int0[$k], $int1[$k]);
+		}
+	}
+	#	printf OUT "y 2\n";
 #	printf OUT "@ 6\n";
 #	printf OUT "r 0.2\n";
 #	for ($k = 0; $k < $num_interaction; $k ++){
@@ -516,17 +516,15 @@ sub OutYaplotData{
 #			#&OutString2($int0[$k], $int1[$k]);
 #		}
 #	}
-##	$stressfactor = 0.00001;
-#	printf OUT "y 2\n";
-#	printf OUT "@ 6\n";
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($S_bf[$k] < 0){
-#			#$force = $force[$k];
-#			$string_width = $stressfactor*abs($S_bf[$k]);
-#			#&OutString2($int0[$k], $int1[$k]);
-#			&OutString_width($int0[$k], $int1[$k]);
-#		}
-#	}
+	#	$stressfactor = 0.005;
+	#	printf OUT "y 4\n";
+	#	printf OUT "@ 3\n";
+	#for ($k = 0; $k < $num_interaction; $k ++){
+	#		#$force = $force[$k];
+	#	$string_width = $stressfactor*abs($S_bf[$k]);
+	#		#&OutString2($int0[$k], $int1[$k]);
+	#		&OutString_width($int0[$k], $int1[$k]);
+	#}
 #	printf OUT "@ 5\n";
 #	for ($k = 0; $k < $num_interaction; $k ++){
 #		if ($S_bf[$k] > 0){
@@ -582,13 +580,13 @@ sub OutYaplotData{
 	#    }
 	
 
-	if ($Ly == 0){
-		printf OUT "y 6\n";
-		printf OUT "@ 1\n";
-		for ($i = 0; $i < $np; $i ++){
-			&OutCross($i);
-		}
-	}
+#	if ($Ly == 0){
+#		printf OUT "y 6\n";
+#		printf OUT "@ 1\n";
+#		for ($i = 0; $i < $np; $i ++){
+#			&OutCross($i);
+#		}
+#	}
 	
 	&OutBoundaryBox;
 	

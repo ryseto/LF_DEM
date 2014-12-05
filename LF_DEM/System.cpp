@@ -291,24 +291,6 @@ System::setupSystem(string control){
 			ang_vel_repulsive[i].reset();
 		}
 	}
-	/* Prepare
-	 *
-	 */
-	for (int i=0; i<18*np; i++) {
-		resistance_matrix_dblock[i] = 0;
-	}
-	double torque_factor = 4.0/3;
-	for (int i=0; i<np; i++) {
-		int i18 = 18*i;
-		double FUvalue = sd_coeff*radius[i];
-		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
-		resistance_matrix_dblock[i18   ] = FUvalue;
-		resistance_matrix_dblock[i18+6 ] = FUvalue;
-		resistance_matrix_dblock[i18+10] = FUvalue;
-		resistance_matrix_dblock[i18+12] = TWvalue;
-		resistance_matrix_dblock[i18+15] = TWvalue;
-		resistance_matrix_dblock[i18+17] = TWvalue;
-	}
 	shear_strain = 0;
 	shear_disp = 0;
 	nb_interaction = 0;
@@ -402,6 +384,24 @@ System::setupSystem(string control){
 	}
 	stress_controlled = !rate_controlled;
 	dimensionless_shear_rate_averaged = 1;
+	/* Pre-calculation
+	 */
+	einstein_viscosity = (1+2.5*pow(sd_coeff,3)*volume_fraction)/(6*M_PI);
+	for (int i=0; i<18*np; i++) {
+		resistance_matrix_dblock[i] = 0;
+	}
+	double torque_factor = 4.0/3;
+	for (int i=0; i<np; i++) {
+		int i18 = 18*i;
+		double FUvalue = sd_coeff*radius[i];
+		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
+		resistance_matrix_dblock[i18   ] = FUvalue;
+		resistance_matrix_dblock[i18+6 ] = FUvalue;
+		resistance_matrix_dblock[i18+10] = FUvalue;
+		resistance_matrix_dblock[i18+12] = TWvalue;
+		resistance_matrix_dblock[i18+15] = TWvalue;
+		resistance_matrix_dblock[i18+17] = TWvalue;
+	}
 }
 
 void
@@ -935,10 +935,10 @@ System::computeVelocities(bool divided_velocities){
 		if (unscaled_contactmodel) {
 			double shear_rate_numerator = target_stress-shearstress_rep-shearstress_con;
 			if (shear_rate_numerator > 0) {
-				double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
+				double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 				dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
 			} else {
-				double shearstress_hyd = -(1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
+				double shearstress_hyd = -einstein_viscosity+total_hydro_stress.getStressXZ();
 				dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
 			}
 			for (int i=0; i<np; i++) {
@@ -948,7 +948,7 @@ System::computeVelocities(bool divided_velocities){
 				ang_vel_contact[i] /= dimensionless_shear_rate;
 			}
 		} else {
-			double shearstress_hyd = (1+2.5*volume_fraction)/(6*M_PI)+total_hydro_stress.getStressXZ();
+			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;
@@ -970,7 +970,6 @@ System::computeVelocities(bool divided_velocities){
 			stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 			buildContactTerms(true); // set rhs = F_C
 			stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-
 			for (int i=0; i<np; i++) {
 				na_velocity[i] = vel_hydro[i]+vel_contact[i];
 				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
@@ -1431,4 +1430,6 @@ System::calcLubricationForce(){
 		}
 	}
 }
+
+
 

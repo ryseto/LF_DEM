@@ -49,7 +49,6 @@ private:
 	double sq_lub_max;
 	double shear_strain;
 	double lub_max;
-	double sd_coeff;
 	double mu_static; // static friction coefficient.
 	double kb_T; // dimensionless kb_T = 1/Pe
 	int linalg_size;
@@ -103,7 +102,7 @@ public:
 	 * To be used for relaxation to generate initial configuration.
 	 */
 	bool zero_shear;
-	int shear_direction; // 1: positive shear rate, -1: negative shear rate 
+	int shear_direction; // 1: positive shear rate, -1: negative shear rate
 	/* When Pe is small, the simulation parameters need to be adjusted differently.
 	 * For high Pe, spring constants are scaled with shear rate being proportional to Pe.
 	 * In dimensionless simulation, kn and kt appear the same.
@@ -176,6 +175,14 @@ public:
 	bool rolling_friction;
 	bool repulsiveforce;
 	double lub_coeff_contact;
+	/* sd_coeff:
+	 * Full Stokes drag is given by sd_coeff = 1.
+	 * sd_coeff = 0 makes the resistance matrix singular.
+	 * sd_coeff = 1e-3 may be reasonable way to remove effect of
+	 * 
+	 */
+	double sd_coeff;
+	double einstein_viscosity;
 	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;

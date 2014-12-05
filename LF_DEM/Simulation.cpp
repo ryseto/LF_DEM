@@ -27,7 +27,6 @@
 #include <cctype>
 
 Simulation::Simulation(): shear_rate_expectation(-1) {};
-
 Simulation::~Simulation(){
 	if (fout_rheo.is_open()) {
 		fout_rheo.close();
@@ -823,7 +822,7 @@ Simulation::evaluateData(){
 	 * The total viscosity should be
 	 * eta_r = eta/eta_0 = 1 + del_eta.
 	 */
-	viscosity = (1+2.5*sys.volume_fraction)/(6*M_PI)+total_stress.getStressXZ();
+	viscosity = sys.einstein_viscosity+total_stress.getStressXZ();
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();
 	particle_pressure = total_stress.getParticlePressure();
