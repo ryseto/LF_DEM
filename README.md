@@ -5,10 +5,10 @@ overdamped suspensions of spherical particles.
 
  Physical interactions included:
 
-Hydrodynamics
-"Hard" contacts (with sliding friction)
-Potential interaction
-Brownian motion
+-Hydrodynamics
+-"Hard" contacts (with sliding friction)
+-Potential interaction
+-Brownian motion
 
 
 ##Requirements
