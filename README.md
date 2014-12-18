@@ -1,4 +1,4 @@
-*LF_DEM*
+# LF_DEM
 
 A code simulating simple shear flow of dense,
 overdamped suspensions of spherical particles.
@@ -11,13 +11,13 @@ Potential interaction
 Brownian motion
 
 
-**Requirements**
+##Requirements
 
 LF_DEM requires the sparse linear algebra software
 [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) to
 be installed. Optionally, SuiteSparse can use [Metis](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) for matrix ordering.
 
-**Installation**
+##Installation
 
 First, edit the Makefile and change the variables ```OS_version``` to
 "OSX" or "Linux" depending on your environment. This variable controls
@@ -32,4 +32,4 @@ Once those changes to Makefile saved, you can simply compile in a terminal via:
 $ make
 ```
 
-**Usage**
+##Usage
