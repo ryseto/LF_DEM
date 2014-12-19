@@ -38,11 +38,12 @@ $ make
 
 LF_DEM takes two kinds of inputs, command-line arguments and parameter
 files.  The general syntax is:
-``` $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-s Stress ] [-a Scaled_Cohesion ] [-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] Configuration_File Parameter_File
+```
+$ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] [-r Scaled_Repulsion ] [-s Stress ] [-a Scaled_Cohesion ] [-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] Configuration_File Parameter_File
 ```
 where the only
-two required arguments are the initial positions in ```Configuration_File``` and
-the (many) simulation parameters file ```Parameter_File```.
+two required arguments are the initial positions in `Configuration_File` and
+the (many) simulation parameters file `Parameter_File`.
 
 All the others are optional. If none is given, the code runs only with the hydrodynamics and the contacts (Peclet=0, no repulsion), under rate-controlled conditions (note that in this mode the code is strictly shear-rate independant). Some options are incompatible, LF_DEM should inform you so at running time.
 
