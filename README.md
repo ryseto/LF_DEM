@@ -39,7 +39,7 @@ and that's it!
 
 ### By direct download
 
-Download by clicking the download icon (cloud) and unzip.
+Download from here (bitbucket.org) by clicking the download icon (cloud), select "Download repository" and unzip.
 
 
 ##Installation
