@@ -17,9 +17,34 @@ LF_DEM requires the sparse linear algebra software
 [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) to
 be installed. Optionally, SuiteSparse can use [Metis](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) for matrix ordering.
 
+##Getting the code
+
+### By using git
+
+We strongly encourage to use the version control system Git (for [Mac OS X](http://git-scm.com/download/mac), for [Linux](http://git-scm.com/download/linux)). This will allow you to get updates
+of the code in a very easy and clean way and to contribute to the code
+by sending bug fixes or new features with a minimal effort.
+
+You can get the code by typing in a terminal:
+```
+$ git clone https://rmari@bitbucket.org/rmari/lf_dem.git
+```
+This will download the current sources (and also the past sources).
+
+If at any point in the future you want the latest sources of the code:
+```
+$ git pull
+```
+and that's it!
+
+### By direct download
+
+Download by clicking the download icon (cloud) and unzip.
+
+
 ##Installation
 
-First, edit the Makefile and change the variables ```OS_version``` to
+In the source folder, edit the Makefile and change the variables ```OS_version``` to
 "OSX" or "Linux" depending on your environment. This variable controls
 the include paths and flags to be used to compile. This has been
 tested on very few machines, and is probably not generic.
