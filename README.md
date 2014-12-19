@@ -15,7 +15,7 @@ overdamped suspensions of spherical particles.
 
 LF_DEM requires the sparse linear algebra software
 [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) to
-be installed. Optionally, SuiteSparse can use [Metis](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) for matrix ordering.
+be installed. Optionally, SuiteSparse can use [Metis](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) for matrix ordering, in which case Metis has to be installed first.
 
 ##Getting the code
 
