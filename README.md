@@ -120,7 +120,7 @@ $ LF_DEM -g Random_Seed
 
 LF_DEM will ask to input a series of parameters (number of particles,
 dimension, etc). The generated configuration is written in a file with
-a parameter dependant filename `D\*N\*VF\*.dat`. An extra
+a parameter dependant filename `D*N*VF*.dat`. An extra
 `D*N*VF*.dat.yap` is also generated to visualize the generated
 configuration with [yaplot](https://github.com/vitroid/Yaplot) or
 [homer](https://github.com/rmari/homer).
