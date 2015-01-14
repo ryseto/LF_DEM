@@ -82,6 +82,7 @@ $ cp SuiteSparse_config_GPU_icc.mk SuiteSparse_config.mk
 ```
 
 Then edit this makefile and apply the following changes:
+
 - define `CC = icc` and `CXX = icpc` (on Andy it is NOT the default)
 - remove the `-lrt` flag from the variable `LIB`
 - if you want to install locally in the `~/usr/` directory, define `INSTALL_LIB` as `~/usr/lib` and `INSTALL_INCLUDE` as `~/usr/include`
