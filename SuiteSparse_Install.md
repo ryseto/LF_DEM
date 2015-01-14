@@ -50,13 +50,11 @@ Then edit this makefile and apply the following changes:
 - define `CC = icc` and `CXX = icpc` (on Andy it is NOT the default)
 - remove the `-lrt` flag from the variable `LIB`
 - uncomment the flags set to use MKL BLAS. You must obtain the following two sets of lines:
-	+
-```
+	+```
 # for the MKL BLAS:
   CF = $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O3 -fexceptions -fPIC -I$(MKLROOT)/include -D_GNU_SOURCE
 ```
-	+
-```
+	+```
 # MKL
   BLAS = -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_core.a $(MKLROOT)/lib/intel64/libmkl_intel_thread.a -Wl,--end-group -lpthread -lm
   LAPACK =	
