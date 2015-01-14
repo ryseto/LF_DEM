@@ -47,7 +47,7 @@ $ cp SuiteSparse_config_linux.mk SuiteSparse_config.mk
 
 Then edit this makefile `SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk` and apply the following changes:
 
-- define `CC = icc` and `CXX = icpc` (on Andy it is NOT the default)
+- define `CC = icc` and `CXX = icpc`
 - remove the `-lrt` flag from the variable `LIB`
 - uncomment the flags set to use MKL BLAS. You must obtain the following two sets of lines:
 	+ `# for the MKL BLAS:`  
