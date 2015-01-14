@@ -66,6 +66,8 @@ $ make install
 
 ## Penzias
 
+### SuiteSparse
+
 First create `~/usr/lib` and `~/usr/include` if you don't have such directories.
 ```
 $ mkdir ~/usr; mkdir ~usr/local; mkdir ~usr/include
