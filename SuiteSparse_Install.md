@@ -45,7 +45,7 @@ $ cd path/to/yr/lib/SuiteSparse/SuiteSparse_config
 $ cp SuiteSparse_config_linux.mk SuiteSparse_config.mk
 ```
 
-Then edit this makefile and apply the following changes:
+Then edit this makefile `SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk` and apply the following changes:
 
 - define `CC = icc` and `CXX = icpc` (on Andy it is NOT the default)
 - remove the `-lrt` flag from the variable `LIB`
@@ -56,6 +56,8 @@ Then edit this makefile and apply the following changes:
 	  `BLAS = -Wl -mkl`  
 	  `LAPACK = `
 - if you want to install locally in the `~/usr/` directory, define `INSTALL_LIB` as `~/usr/lib` and `INSTALL_INCLUDE` as `~/usr/include`
+
+If you are also installing Metis, edit `SuiteSparse/Makefile` and append the line `( $(CP) metis-4.0/libmetis.a $(INSTALL_LIB)/ && chmod 644 $(INSTALL_LIB)/libmetis.a  )` to the `install:` rule.
 
 Then you can compile, by getting back to the main SuiteSparse directory and make:
 ```

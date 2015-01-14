@@ -97,7 +97,7 @@ ifeq ($(OS_version), SI)
        Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
        ifeq ($(UseMetis),yes)
 #               Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
-			Cholmod_Linking_Flags +=  Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/metis-4.0/libmetis.a
+			Cholmod_Linking_Flags +=  Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
        endif
 endif
 
