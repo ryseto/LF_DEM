@@ -53,7 +53,7 @@ Then edit this makefile and apply the following changes:
 	+ `# for the MKL BLAS:`  
     `CF = $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O3 -fexceptions -fPIC -I$(MKLROOT)/include -D_GNU_SOURCE`  
 	+ `# MKL`  
-	  `BLAS = -Wl -mkl`
+	  `BLAS = -Wl -mkl`  
 	  `LAPACK = `
 - if you want to install locally in the `~/usr/` directory, define `INSTALL_LIB` as `~/usr/lib` and `INSTALL_INCLUDE` as `~/usr/include`
 
