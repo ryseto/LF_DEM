@@ -19,7 +19,7 @@ be installed. Optionally, SuiteSparse can use
 [Metis](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) for
 matrix ordering.
 
-To install SuiteSparse and Metis on CUNY-HPPC, see [these instructions](lf_dem/SuiteSparse_Install.md).
+To install SuiteSparse and Metis on CUNY-HPPC, see [these instructions](src/master/SuiteSparse_Install.md).
 
 ##Getting the code
 
