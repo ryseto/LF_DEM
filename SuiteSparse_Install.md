@@ -82,12 +82,6 @@ $ cp SuiteSparse_config_GPU_icc.mk SuiteSparse_config.mk
 Then edit this makefile and apply the following changes:
 - define `CC = icc` and `CXX = icpc` (on Andy it is NOT the default)
 - remove the `-lrt` flag from the variable `LIB`
-- uncomment the flags set to use MKL BLAS. You must obtain the following two sets of lines:
-  * `# for the MKL BLAS:
-       CF = $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O3 -fexceptions -fPIC -I$(MKLROOT)/include -D_GNU_SOURCE`
-  * `# MKL
-       BLAS = -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_core.a $(MKLROOT)/lib/intel64/libmkl_intel_thread.a -Wl,--end-group -lpthread -lm
-	   LAPACK =`
 - if you want to install locally in the `~/usr/` directory, define `INSTALL_LIB` as `~/usr/lib` and `INSTALL_INCLUDE` as `~/usr/include`
 
 Then you can compile, by getting back to the main SuiteSparse directory and make:
