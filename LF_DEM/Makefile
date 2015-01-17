@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version=OSX
+OS_version = OIST
 #SysEnv=Energy_seto
 GIT_VERSION := $(shell git describe --dirty --always) 
 
@@ -83,11 +83,15 @@ endif
 # Cholmod
 Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd 
 ifeq ($(SysEnv),Energy_seto)
-	Cholmod_Linking_Flags     =
+	Cholmod_Linking_Flags  =
 endif
 
 ifeq ($(OS_version), SI)
-       Cholmod_Linking_Flags     =
+    Cholmod_Linking_Flags  =
+endif
+
+ifeq ($(OS_version), OIST)
+    Cholmod_Linking_Flags  =
 endif
 
 ifeq ($(UseMetis),yes)
