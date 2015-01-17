@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version=OSX
+OS_version=OIST
 #SysEnv=Energy_seto
 GIT_VERSION := $(shell git describe --dirty --always) 
 
@@ -15,6 +15,12 @@ ifeq ($(OS_version),SI)
 	CXXFLAGS_optimized=  -O3 -DVERSION="\"$(GIT_VERSION)\""
 	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
 endif
+ifeq ($(OS_version),OIST)
+	CXX=icpc
+	CXXFLAGS_optimized=  -O3 -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
+endif
+
 ifeq ($(OS_version),Linux)
 	CXX=g++
 	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
@@ -29,7 +35,7 @@ endif
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no
 # Enable use of Metis library ( yes / no )
-UseMetis=no
+UseMetis=yes
 
 
 #======== Include Paths =============
@@ -39,9 +45,9 @@ ifeq ($(SysEnv),Energy_seto)
 	Cholmod_include_path_OSX     = ~/usr/local/include/
 endif
 
-
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
 Cholmod_include_path_SI  = ~/usr/include/
+Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
 
 ifeq ($(UseTrilinos),yes)
 	Trilinos_include_path_Linux  = /home/romain/romain/recherche/trilinos-11.0.3-Source/
@@ -69,8 +75,14 @@ ifeq ($(OS_version), SI)
 	Lapack_Linking_Flags =
 endif
 
+ifeq ($(OS_version), OIST)
+	Blas_Linking_Flags = -mkl -lrt
+	Lapack_Linking_Flags =
+endif
+
+
 # Cholmod
-Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd 
 ifeq ($(SysEnv),Energy_seto)
 	Cholmod_Linking_Flags     =
 endif
@@ -79,14 +91,22 @@ ifeq ($(OS_version), SI)
        Cholmod_Linking_Flags     =
 endif
 
-ifeq ($(UseMetis),yes)
-	Cholmod_Linking_Flags += -lmetis 
+ifeq ($(OS_version), OIST)
+       Cholmod_Linking_Flags     =
 endif
+
+#ifeq ($(UseMetis),yes)
+#ifneq ($(OS_version), OIST)
+#       Cholmod_Linking_Flags += -lmetis 
+#endif		
+#endif
+
+
 
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
+	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a $(Cholmod_lib_path)/
 	ifeq ($(UseMetis),yes)
 		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
 	endif
@@ -97,16 +117,22 @@ ifeq ($(OS_version), SI)
        Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
        ifeq ($(UseMetis),yes)
 #               Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
-			Cholmod_Linking_Flags += ~/SuiteSparse/metis-4.0/libmetis.a
+	Cholmod_Linking_Flags += ~/SuiteSparse/metis-4.0/libmetis.a
        endif
+endif
+
+ifeq ($(OS_version), OIST)
+       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
+       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a $(Cholmod_lib_path)/libcamd.a  $(Cholmod_lib_path)/libccolamd.a  $(Cholmod_lib_path)/libsuitesparseconfig.a
+       ifeq ($(UseMetis),yes)
+             Cholmod_Linking_Flags += $(Cholmod_lib_path)/libmetis.a
+       endif	
 endif
 
 # Trilinos
 ifeq ($(UseTrilinos),yes)
 	Trilinos_Linking_Flags =  -lbelosepetra -lbelos -lifpack -lepetra -lkokkosnodetsqr -lteuchos
 endif
-
-
 
 OUT_CODE=LF_DEM
 SRC= $(shell ls *.cpp)
