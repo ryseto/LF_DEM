@@ -3,8 +3,15 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 12/10/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
+
+/**
+ \class Contact
+ \brief Contact object, to be called from an Interaction object
+ \author Ryohei Seto
+ \author Romain Mari
+ */
 
 #ifndef __LF_DEM__Contact__
 #define __LF_DEM__Contact__

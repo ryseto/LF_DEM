@@ -1,11 +1,19 @@
 /*
  *  vec3d.h
- *  CCN_3D
+ *  LF_DEM
  *
  *  Created by seto on 09/08/11.
- *  Copyright 2009 Ryohei Seto. All rights reserved.
+ *  Copyright 2009-2014 Ryohei Seto and Romain Mari. All rights reserved.
  *
  */
+
+/**
+ \class vec3d
+ \brief 3d vector object.
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
 #ifndef vec3d_h
 #define vec3d_h 1
 #include <iostream>

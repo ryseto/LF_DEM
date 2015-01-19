@@ -3,8 +3,16 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
+
+/**
+ \class System
+ \brief Central class holding the suspension's configuration and the methods to evolve the dynamics
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__

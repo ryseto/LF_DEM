@@ -373,6 +373,7 @@ Str2KeyValue(string &str_parameter,
 			 string &keyword,
 			 string &value){
 	string::size_type pos_equal = str_parameter.find("=");
+
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
 	return;
@@ -472,6 +473,7 @@ Simulation::readParameterFile(){
 		string str_parameter;
 		removeBlank(line);
 		str_parameter = line;
+		
 		string::size_type begin_comment;
 		string::size_type end_comment;
 		do {
@@ -490,7 +492,7 @@ Simulation::readParameterFile(){
 		}
 		string::size_type pos_slashslash = str_parameter.find("//");
 		if( pos_slashslash != string::npos) {
-			cerr << " // is not syntax for comment out." << endl;
+			cerr << " // is not the syntax to comment out. Use /* comment */" << endl;
 			exit(1);
 		}
 		Str2KeyValue(str_parameter, keyword, value);
@@ -625,19 +627,19 @@ Simulation::setDefaultParameters(){
 	 *    ASD code from Brady has dt_ratio=150
 	 *
 	 */
-	sys.Pe_switch = 5;
-	sys.dt_max = 1e-4;
-	sys.dt_lowPeclet = 1e-4;
+	p.Pe_switch = 5;
+	p.dt_max = 1e-4;
+	p.dt_lowPeclet = 1e-4;
 	/*
 	 * integration_method:
 	 * 0 Euler's Method,
 	 * 1 predictor-corrector,
 	 */
-	int _integration_method = 1;
+	p._integration_method = 1;
 	/*
 	 * Stokes drag coeffient
 	 */
-	double _sd_coeff = 1;
+	p._sd_coeff = 1;
 	/*
 	 * Lubrication model
 	 * 0 no lubrication
@@ -645,13 +647,14 @@ Simulation::setDefaultParameters(){
 	 * 2 log(1/xi) lubrication
 	 * 3 ???
 	 */
-	int _lubrication_model = 2;
+	p._lubrication_model = 2;
 	/*
 	 * 0 No friction
 	 * 1 Linear friction law Ft < mu Fn
 	 * 2 Threshold friction without repulsive force
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
+	p.friction_model = 1;
 	if (sys.friction_model != 2) {
 		sys.friction_model = 1;
 	}

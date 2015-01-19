@@ -1,3 +1,11 @@
+/**
+ \class Simulation
+ \brief Class launching the simulation by setting up the System class and performing predefined shear evolution
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
+
 //
 //  Simulation.h
 //  LF_DEM
@@ -13,10 +21,12 @@
 #include <sstream>
 #include <string>
 #include "System.h"
+#include "ParameterSet.h"
 
 class Simulation{
 private:
 	System sys;
+	ParameterSet p;
 	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;

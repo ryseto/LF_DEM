@@ -1,3 +1,18 @@
+//
+//  BoxSet.h
+//  LF_DEM
+//
+//  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
+//
+
+/**
+ \class BoxSet
+ \brief Set of Box objects making a partition of the simulation box.
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
+
 #ifndef __LF_DEM__BoxSet__
 #define __LF_DEM__BoxSet__
 #include "Box.h"
