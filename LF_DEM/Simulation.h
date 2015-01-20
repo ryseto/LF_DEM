@@ -79,9 +79,6 @@ private:
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
-	bool out_data_particle;
-	bool out_data_interaction;
-	bool origin_zero_flow;
 	/*
 	 * For inputs
 	 */
@@ -106,7 +103,8 @@ private:
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void setupSimulationSteadyShear(vector<string> &input_files, double peclet_num,
 						 double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable);
-public:
+	void exportParameterSet();
+ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
