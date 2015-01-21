@@ -174,12 +174,13 @@ public:
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
+	bool cohesion;
 	double lub_coeff_contact;
 	/* sd_coeff:
 	 * Full Stokes drag is given by sd_coeff = 1.
 	 * sd_coeff = 0 makes the resistance matrix singular.
 	 * sd_coeff = 1e-3 may be reasonable way to remove effect of
-	 * 
+	 *
 	 */
 	double sd_coeff;
 	double einstein_viscosity;
@@ -200,13 +201,13 @@ public:
 	int lubrication_model;
 	int nb_interaction;
 	/*
-	 * Leading term of lubrication force is 1/gap_nondim, 
+	 * Leading term of lubrication force is 1/gap_nondim,
 	 * with gap_nondim the gap
 	 * gap_nondim = 2r/(a0+a1) - 2.
 	 * we set a cutoff for the lubrication interaction,
 	 * such that the lub term is proportional to:
-	 * 
-	 * 1/(gap_nondim+lub_reduce_parameter) 
+	 *
+	 * 1/(gap_nondim+lub_reduce_parameter)
 	 * when gap_nondim > 0.
 	 */
 	double lub_reduce_parameter;
@@ -334,6 +335,6 @@ public:
 	//		return log_lub_coeff_contact_tan_total;
 	//	}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-
+	
 };
 #endif /* defined(__LF_DEM__System__) */

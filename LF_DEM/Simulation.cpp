@@ -150,20 +150,31 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
 		}
-		if (ratio_repulsion == 0) {
+		if (ratio_repulsion == 0 && ratio_cohesion == 0) {
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
-			sys.repulsiveforce = true;
-			sys.repulsiveforce_amplitude = 1;
-			/* The target stress (``ratio_repulsion'') is given trough the command argument 
+			if (ratio_repulsion != 0) {
+				cerr << "Repulsive force" << endl;
+				sys.repulsiveforce = true;
+				sys.repulsiveforce_amplitude = 1;
+				sys.target_stress_input = ratio_repulsion;
+				sys.target_stress = ratio_repulsion/6/M_PI;
+				string_control_parameters << "_s" << ratio_repulsion;
+			} else if (ratio_cohesion != 0) {
+				cerr << "Cohesive force" << endl;
+				sys.cohesion = true;
+				//sys.dimensionless_shear_rate = ratio_cohesion;
+				sys.cohesive_force = 1;
+				sys.target_stress_input = ratio_cohesion;
+				sys.target_stress = ratio_cohesion/6/M_PI;
+				string_control_parameters << "_b" << ratio_cohesion;
+			}
+			sys.dimensionless_shear_rate = 1; // needed for 1st time step
+			/* The target stress (``ratio_repulsion'') is given trough the command argument
 			 * with an unit stres: eta_0*gammmadot_0.
 			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
 			 */
-			sys.target_stress_input = ratio_repulsion;
-			sys.target_stress = ratio_repulsion/6/M_PI;
-			sys.dimensionless_shear_rate = 1; // needed for 1st time step
-			string_control_parameters << "_s" << ratio_repulsion;
 		}
 	}
 	setDefaultParameters();
@@ -539,7 +550,7 @@ Simulation::openOutputFiles(){
 	"#14: tangential part of the contact force, y\n"
 	"#15: tangential part of the contact force, z\n"
 	"#16: norm of the normal repulsive force\n"
-		"#17: Viscosity contribution of contact xF\n";
+	"#17: Viscosity contribution of contact xF\n";
 	fout_interaction << fout_int_col_def << endl;
 	//
 	string fout_rheo_col_def =
@@ -809,7 +820,7 @@ Simulation::outputRheologyData(){
 	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
 	 * vel_hydro is obtained with GE for the rhs.
 	 *
-	 * "_hydro" might be bit confusing. 
+	 * "_hydro" might be bit confusing.
 	 * Something indicating "E_inf" would be better.
 	 */
 	fout_rheo << 6*M_PI*viscosity_hydro << ' '; //5

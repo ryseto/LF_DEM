@@ -16,8 +16,8 @@ ifeq ($(OS_version),SI)
 	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
 endif
 ifeq ($(OS_version),OIST)
-	CXX=icpc
-	CXXFLAGS_optimized=  -O3 -DVERSION="\"$(GIT_VERSION)\""
+	CXX=icc
+	CXXFLAGS_optimized= -O3 -Wall -DVERSION="\"$(GIT_VERSION)\""
 	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
 endif
 
