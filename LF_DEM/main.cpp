@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	};
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hg:s:S:p:P:r:R:c:C:a:A:k:i:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hg:s:S:p:P:r:R:c:C:a:A:b:B:k:i:", longopts, &index)) != -1) {
 		switch (c) {
 			case 'p':
 				peclet = true;
@@ -113,16 +113,25 @@ int main(int argc, char **argv)
 				break;
 			case 'a':
 				cohesion = true;
+				rheology_control = "rate";
 				ratio_cohesion = atof(optarg);
 				cerr << "Cohesion, shear rate " << ratio_cohesion << endl;
 				break;
 			case 'A':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				cohesion = true;
+				rheology_control = "rate";
 				seq_filename = optarg;
 				seq_type = "a";
 				cerr << "Cohesion, sequence, file " << seq_filename << endl;
 				break;
+			case 'b':
+				cohesion = true;
+				rheology_control = "stress";
+				ratio_cohesion = atof(optarg);
+				cerr << "Cohesion, shear rate " << ratio_cohesion << endl;
+				break;
+
 			case 'c':
 				critical_load = true;
 				ratio_critical_load = atof(optarg);
@@ -158,8 +167,8 @@ int main(int argc, char **argv)
 	// Incompatibilities
 	if (peclet && rheology_control == "stress") {
 		incompatibility_exiting("peclet", "stress_controlled");
-	} else if (cohesion && rheology_control == "stress") {
-		incompatibility_exiting("cohesion", "stress_controlled");
+//	} else if (cohesion && rheology_control == "stress") {
+//		incompatibility_exiting("cohesion", "stress_controlled");
 	} else if (critical_load && rheology_control == "stress") {
 		incompatibility_exiting("critical_load", "stress_controlled");
 	} else if (critical_load && repulsion) {
