@@ -403,7 +403,7 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 	} else if (keyword == "friction_model") {
 		if (p.friction_model == 2) {
 			cerr << "!!Neglected friction_model in parameter file!!" << endl;
-		} else {
+	} else {
 			p.friction_model = atoi(value.c_str());
 		}
 	} else if (keyword == "rolling_friction") {
@@ -458,6 +458,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.out_data_interaction = str2bool(value);
 	} else if (keyword == "origin_zero_flow") {
 		p.origin_zero_flow = str2bool(value);
+	} else if (keyword == "auto_determine_knkt") {
+		p.auto_determine_knkt = str2bool(value.c_str());
 	} else if (keyword == "overlap_target") {
 		p.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
@@ -634,6 +636,81 @@ Simulation::exportParameterSet(){
 
 void
 Simulation::setDefaultParameters(){
+	p.Pe_switch = 5;
+	p.dt_max = 1e-4;
+	p.dt_lowPeclet = 1e-4;
+	p.disp_max = 2e-3;
+	
+	p.integration_method = 1;
+
+	/*
+	 * Stokes drag coeffient
+	 */
+	p.sd_coeff = 1;
+	/*
+	 * Lubrication model
+	 * 0 no lubrication
+	 * 1 1/xi lubrication (only squeeze mode)
+	 * 2 log(1/xi) lubrication
+	 * 3 ???
+	 */
+	p.lubrication_model = 2;
+	/*
+	 * 0 No friction
+	 * 1 Linear friction law Ft < mu Fn
+	 * 2 Threshold friction without repulsive force
+	 * 3 Threshold friction without repulsion + mu inf
+	 */
+	p.friction_model = 1;
+
+	p.rolling_friction = false;
+	p.shear_strain_end = 10;
+	p.lub_max = 2.5;
+	/*
+	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
+	 *
+	 */
+	p.lub_reduce_parameter = 1e-3;
+	/*
+	 * contact_relaxation_factor:
+	 *
+	 * This gives the coeffient of the resistance term for h < 0.
+	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
+	 *
+	 */
+	p.contact_relaxation_time = 1e-3;
+	p.contact_relaxation_time_tan = 0;
+	/*
+	 * Contact force parameters
+	 * kn: normal spring constant
+	 * kt: tangential spring constant
+	 */
+	p.unscaled_contactmodel;
+	p.kn;
+	p.kt;
+	p.kr;
+	p.kn_lowPeclet;
+	p.kt_lowPeclet;
+	p.kr_lowPeclet;
+
+	p.auto_determine_knkt = false;
+	p.overlap_target = 0.05;
+	p.disp_tan_target = 0.05;
+	p.max_kn = 1000000;
+
+	p.repulsive_length = 0.05;
+
+	p.mu_static = 1;
+
+	p.strain_interval_output_data = 0.01;
+	p.strain_interval_output_config = 0.1;
+	p.origin_zero_flow = true;
+
+	p.out_data_particle = true;
+	p.out_data_interaction = true;
+
+
+
 	if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
 		p.kn = 2000;
