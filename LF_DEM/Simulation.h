@@ -28,7 +28,7 @@ private:
 	bool user_sequence;
 	double shear_rate_expectation;
 	double time_interval_output_data;
-	double time_interval_output_config;		
+	double time_interval_output_config;
 	/*
 	 * Resultant data
 	 */
@@ -95,7 +95,8 @@ private:
 	void outputFinalConfiguration();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void setupSimulationSteadyShear(vector<string> &input_files, double peclet_num,
-						 double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable);
+									double scaled_repulsion, double scaled_cohesion,
+									double scaled_critical_load, string control_variable);
 public:
 	/* For DEMsystem*/
 	Simulation();

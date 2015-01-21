@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/stresscontrol2D"
+      customWorkingDirectory = "/Users/seto/Documents/work/gel1"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -96,7 +96,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-s 1 D2N500VF0.78Bidi1.4_0.5Square_1.dat nobrownian.txt"
+            argument = "-a 1"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "D2N80VF0.5MonoSquare_3.dat"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "nobrownian3.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

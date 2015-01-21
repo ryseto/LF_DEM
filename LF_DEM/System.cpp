@@ -267,6 +267,9 @@ System::setupSystem(string control){
 		cerr << "friction_model..." << endl;
 		exit(1);
 	}
+	if (cohesive_force > 0) {
+		cohesion = true;
+	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
@@ -890,7 +893,7 @@ System::setRepulsiveForceToParticle(){
 
 void
 System::buildContactTerms(bool set_or_add){
-    // sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
+	// sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
@@ -901,7 +904,7 @@ System::buildContactTerms(bool set_or_add){
 			stokes_solver.addToRHSForce(i, contact_force[i]);
 			stokes_solver.addToRHSTorque(i, contact_torque[i]);
 		}
-    }
+	}
 }
 
 void
@@ -1243,7 +1246,7 @@ System::evaluateMaxDispTan(){
 double
 System::evaluateMaxFcNormal(){
 	double max_fc_normal_ = 0;
- 	for (int k=0; k<nb_interaction; k++) {
+	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
 			interaction[k].is_contact() &&
 			interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal_) {
@@ -1420,7 +1423,7 @@ System::calcLubricationForce(){
 	} else {
 		buildHydroTerms(true, false); // no GE
 	}
-    setContactForceToParticle();
+	setContactForceToParticle();
 	buildContactTerms(false);
 	if (repulsiveforce) {
 		setRepulsiveForceToParticle();

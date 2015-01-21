@@ -82,7 +82,7 @@ printf OUT "\@4 50 200 50 \n";
 printf OUT "\@5 255 100 100 \n";
 printf OUT "\@6 50 200 50 \n";
 printf OUT "\@7 200 200 200 \n";
-printf OUT "\@8 0 70 50 \n";
+printf OUT "\@8 255 255 255\n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";

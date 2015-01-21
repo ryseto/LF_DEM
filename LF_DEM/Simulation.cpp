@@ -156,7 +156,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		} else {
 			sys.repulsiveforce = true;
 			sys.repulsiveforce_amplitude = 1;
-			/* The target stress (``ratio_repulsion'') is given trough the command argument 
+			/* The target stress (``ratio_repulsion'') is given trough the command argument
 			 * with an unit stres: eta_0*gammmadot_0.
 			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
 			 */
@@ -536,7 +536,7 @@ Simulation::openOutputFiles(){
 	"#14: tangential part of the contact force, y\n"
 	"#15: tangential part of the contact force, z\n"
 	"#16: norm of the normal repulsive force\n"
-		"#17: Viscosity contribution of contact xF\n";
+	"#17: Viscosity contribution of contact xF\n";
 	fout_interaction << fout_int_col_def << endl;
 	//
 	string fout_rheo_col_def =
@@ -918,7 +918,7 @@ Simulation::outputRheologyData(){
 	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
 	 * vel_hydro is obtained with GE for the rhs.
 	 *
-	 * "_hydro" might be bit confusing. 
+	 * "_hydro" might be bit confusing.
 	 * Something indicating "E_inf" would be better.
 	 */
 	fout_rheo << 6*M_PI*viscosity_hydro << ' '; //5

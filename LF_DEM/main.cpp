@@ -185,7 +185,6 @@ int main(int argc, char **argv)
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
-
 		Simulation simulation;
 		if (seq_filename == "not_given") {
 			simulation.simulationSteadyShear(input_files, peclet_num,
@@ -194,7 +193,6 @@ int main(int argc, char **argv)
 		} else {
 			simulation.simulationUserDefinedSequence(seq_type, input_files, rheology_control);
 		}
-		
 	}
 	return 0;
 }

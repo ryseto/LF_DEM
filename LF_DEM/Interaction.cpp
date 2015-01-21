@@ -142,10 +142,10 @@ Interaction::deactivate(){
 void
 Interaction::updateState(bool &deactivated){
 	/* update tangential displacement: we do it before updating nvec as:
-     *  - it should be along the tangential vector defined in the previous time step
-	 *  - (VERY IMPORTANT) it must compute the relative velocities with PBC at time t. 
+	 *  - it should be along the tangential vector defined in the previous time step
+	 *  - (VERY IMPORTANT) it must compute the relative velocities with PBC at time t.
 	 *    This is encoded in variable zshift which takes care of Lees-Edwards in the z direction.
-	 *    zshift is updated for time t+1 in calcNormalVectorDistanceGap(), 
+	 *    zshift is updated for time t+1 in calcNormalVectorDistanceGap(),
 	 *    so this function should be called after calcRelativeVelocities();
 	 */
 	if (sys->friction && is_contact()) {
@@ -160,8 +160,8 @@ Interaction::updateState(bool &deactivated){
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
 		// contacting in previous step
-		//		if (contact.kn_scaled*gap_nondim > sys->cohesive_force){
-		if (gap_nondim > 0){
+		if ((!sys->cohesion && gap_nondim>0)
+			|| (sys->cohesion && -contact.f_contact_normal_norm>sys->cohesive_force)) {
 			contact.deactivate();
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
