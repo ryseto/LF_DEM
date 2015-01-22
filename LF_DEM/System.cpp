@@ -379,7 +379,7 @@ System::setupSystem(string control){
 		 * r_gen = new MTRand;
 		 */
 
-		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG "
+		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 	}
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
@@ -1496,9 +1496,13 @@ System::adjustContactModelParameters(){
 
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
 	double dkn = (kn_target-kn)*deltat/p.memory_time_k;
-	if(fabs(dkn)>0.1*kn){
+	if(dkn>0.1*kn){
 		dkn = 0.1*kn;
 	}
+	if(dkn<-0.1*kn){
+		dkn = -0.1*kn;
+	}
+
 	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
 	kn += dkn;
 	if(kn<p.kn_lowPeclet){
@@ -1508,8 +1512,11 @@ System::adjustContactModelParameters(){
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
 	double dkt = (kt_target-kt)*deltat/p.memory_time_k;
-	if(fabs(dkt)>0.1*kt){
+	if(dkt>0.1*kt){
 		dkt = 0.1*kt;
+	}
+	if(dkt<-0.1*kt){
+		dkt = -0.1*kt;
 	}
 	kt += dkt;
 	if(kt<p.kt_lowPeclet){
