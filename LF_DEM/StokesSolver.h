@@ -1,3 +1,10 @@
+/**
+ \class StokesSolver
+ \brief Class dealing with the linear algebra.
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
 //
 //  StokesSolver.h
 //  LF_DEM

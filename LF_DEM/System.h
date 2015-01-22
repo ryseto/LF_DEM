@@ -3,8 +3,16 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
+
+/**
+ \class System
+ \brief Central class holding the suspension's configuration and the methods to evolve the dynamics
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
 
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
@@ -20,8 +28,10 @@
 #include "vec3d.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
+#include "ParameterSet.h"
 #include "cholmod.h"
 #include "MersenneTwister.h"
+
 using namespace std;
 
 class Simulation;
@@ -89,11 +99,13 @@ private:
 	double *radius_cubed;
 	double *radius_squared;
 	double dimensionless_shear_rate_time_integral;
+	ParameterSet p;
 protected:
 public:
 	System();
 	~System();
-	bool brownian;
+	void importParameterSet(ParameterSet &ps);
+	bool brownian;	
 	bool in_predictor;
 	bool twodimension;
 	bool rate_controlled;
@@ -109,7 +121,6 @@ public:
 	 * For low Pe, they need to be scaled with Pe.
 	 *
 	 */
-	double Pe_switch;
 	double shear_strain_end;
 	double critical_normal_force;
 	double scale_factor_SmallPe;
@@ -153,24 +164,13 @@ public:
 	StressTensor total_repulsive_stressGU;
 	StressTensor total_brownian_stressGU;
 	double dt; // <=== It should be called d_strain.
-	double dt_max;
 	double kn;
 	double kt;
 	double kr;
 	double kn_master;
 	double kt_master;
 	double kr_master;
-	double dt_lowPeclet;
-	double kn_lowPeclet;
-	double kt_lowPeclet;
-	double kr_lowPeclet;
 	int friction_model;
-	/* Usually, we use scaled contact model
-	 * to realize Newtonian behavior with contact force.
-	 * However, unscaled contact model may be better for
-	 * stress controled simulation.
-	 */
-	bool unscaled_contactmodel;
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
@@ -211,8 +211,6 @@ public:
 	 * when gap_nondim > 0.
 	 */
 	double lub_reduce_parameter;
-	double contact_relaxation_time;
-	double contact_relaxation_time_tan;
 	double shear_disp;
 	/* For non-Brownian suspension:
 	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -232,9 +230,6 @@ public:
 	double max_ang_velocity;
 	double min_gap_nondim;
 	double max_disp_tan;
-	double overlap_target;
-	double disp_tan_target;
-	double max_kn;
 	queue<int> deactivated_interaction;
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;
@@ -246,8 +241,6 @@ public:
 	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
-	double strain_interval_output_data;
-	double strain_interval_output_config;
 	string simu_name;
 	double target_stress_input;
 	double target_stress;

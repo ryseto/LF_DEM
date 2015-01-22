@@ -1,3 +1,17 @@
+//
+//  Box.h
+//  LF_DEM
+//
+//  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
+//
+
+/**
+ \class Box
+ \brief Box object holding identities of the particles in a subset of the whole suspension, to be used in a BoxSet object.
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
 #ifndef __LF_DEM__Box__
 #define __LF_DEM__Box__
 #define __vector_container__

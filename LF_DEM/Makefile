@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version = OIST
+OS_version = OSX
 #SysEnv=Energy_seto
 GIT_VERSION := $(shell git describe --dirty --always) 
 
@@ -35,7 +35,7 @@ endif
 # Enable use of Trilinos library ( yes / no )
 UseTrilinos=no
 # Enable use of Metis library ( yes / no )
-UseMetis=yes
+UseMetis=no
 
 
 #======== Include Paths =============
@@ -103,7 +103,7 @@ endif
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a $(Cholmod_lib_path)/
+	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a 
 	ifeq ($(UseMetis),yes)
 		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
 	endif

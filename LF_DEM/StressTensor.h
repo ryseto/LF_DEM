@@ -6,6 +6,15 @@
 //  Copyright (c) 2013 Ryohei Seto. All rights reserved.
 //
 
+/**
+ \class StressTensor
+ \brief Stress tensor object
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
+
+
 #ifndef LF_DEM_StressTensor_h
 #define LF_DEM_StressTensor_h
 #include "vec3d.h"

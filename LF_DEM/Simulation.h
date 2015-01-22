@@ -1,3 +1,11 @@
+/**
+ \class Simulation
+ \brief Class launching the simulation by setting up the System class and performing predefined shear evolution
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
+
 //
 //  Simulation.h
 //  LF_DEM
@@ -13,10 +21,12 @@
 #include <sstream>
 #include <string>
 #include "System.h"
+#include "ParameterSet.h"
 
 class Simulation{
 private:
 	System sys;
+	ParameterSet p;
 	vector<double> radius;
 	string filename_import_positions;
 	string filename_parameters;
@@ -69,9 +79,6 @@ private:
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
-	bool out_data_particle;
-	bool out_data_interaction;
-	bool origin_zero_flow;
 	/*
 	 * For inputs
 	 */
@@ -94,9 +101,12 @@ private:
 	void outputConfigurationData();
 	void outputFinalConfiguration();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulationSteadyShear(vector<string> &input_files, double peclet_num,
-									double scaled_repulsion, double scaled_cohesion,
-									double scaled_critical_load, string control_variable);
+	void setupSimulationSteadyShear(vector<string> &input_files,
+									double peclet_num, double scaled_repulsion,
+									double scaled_cohesion, double scaled_critical_load,
+									string control_variable);
+	void exportParameterSet();
+
 public:
 	/* For DEMsystem*/
 	Simulation();

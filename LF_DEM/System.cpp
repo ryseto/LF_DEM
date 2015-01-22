@@ -62,6 +62,28 @@ System::~System(){
 };
 
 void
+System::importParameterSet(ParameterSet &ps){
+	p = ps;
+	friction_model = p.friction_model;
+	rolling_friction = p.rolling_friction;
+	set_lub_max(p.lub_max);
+	lub_reduce_parameter = p.lub_reduce_parameter;
+	set_lubrication_model(p.lubrication_model);
+	kn = p.kn; 
+	kt = p.kt; 
+	kr = p.kr; 
+	if (repulsiveforce) {
+		set_repulsiveforce_length(p.repulsive_length);
+	} else {
+		set_repulsiveforce_length(0);
+	}
+	set_sd_coeff(p.sd_coeff);
+	set_integration_method(p.integration_method);
+	set_mu_static(p.mu_static);
+	set_disp_max(p.disp_max);
+}
+
+void
 System::allocateRessources(){
 	linalg_size = 6*np;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
@@ -160,7 +182,7 @@ System::updateUnscaledContactmodel(){
 	kn = kn_master*abs(target_stress);
 	kt = kt_master*abs(target_stress);
 	kr = kr_master*abs(target_stress);
-	lub_coeff_contact = 4*kn*contact_relaxation_time;
+	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
@@ -168,10 +190,10 @@ System::updateUnscaledContactmodel(){
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. contact_relaxation_time_tan = 0
+		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
+		log_lub_coeff_contact_tan_dashpot = 6*kt*p.contact_relaxation_time_tan;
 	} else {
 		cerr << "lubrication_model..." << endl;
 		exit(1);
@@ -195,23 +217,23 @@ System::setupBrownian(){
 		 * Dimensionalless brownian force kb_T/a is 1/Pe,
 		 */
 		kb_T = 1/dimensionless_shear_rate; // = 1/Pe
-		if (dimensionless_shear_rate < Pe_switch) {
+		if (dimensionless_shear_rate < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
-			scale_factor_SmallPe = Pe_switch/dimensionless_shear_rate;
-			kn = scale_factor_SmallPe*kn_lowPeclet;
-			kt = scale_factor_SmallPe*kt_lowPeclet;
-			dt_max = dt_lowPeclet/scale_factor_SmallPe;
-			contact_relaxation_time = contact_relaxation_time/scale_factor_SmallPe;
-			contact_relaxation_time_tan = contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
-			shear_strain_end /= scale_factor_SmallPe;
-			strain_interval_output_data *= 1/scale_factor_SmallPe;
-			strain_interval_output_config *= 1/scale_factor_SmallPe;
+			scale_factor_SmallPe = p.Pe_switch/dimensionless_shear_rate;
+			kn = scale_factor_SmallPe*p.kn_lowPeclet;
+			kt = scale_factor_SmallPe*p.kt_lowPeclet;
+			p.dt_max = p.dt_lowPeclet/scale_factor_SmallPe;
+			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
+			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
+			p.shear_strain_end /= scale_factor_SmallPe;
+			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
+			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
-			cerr << "  dt_max = " << dt_max << endl;
-			cerr << "  strain_interval_output_data = " << strain_interval_output_data << endl;
-			cerr << "  strain_interval_output_config = " << strain_interval_output_config << endl;
+			cerr << "  dt_max = " << p.dt_max << endl;
+			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
+			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		}
 	}
 }
@@ -219,13 +241,14 @@ System::setupBrownian(){
 void
 System::setupSystem(string control){
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	 * @ We have to consider contact_relaxation_time in Brownian case.
+	 * @ We have to consider p.contact_relaxation_time in Brownian case.
 	 * @ The resistance coeffient affects Brownian force.
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
 	/* Giving a seed for debugging (Brownian)
 	 * r_gen = new MTRand(71);
 	 */
+	
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -296,34 +319,34 @@ System::setupSystem(string control){
 	nb_interaction = 0;
 	shear_direction = 1;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
-	if (unscaled_contactmodel) {
+	if (p.unscaled_contactmodel) {
 		kn_master = kn;
 		kt_master = kt;
 		kr_master = kr;
 		updateUnscaledContactmodel();
 	}
-	if (contact_relaxation_time < 0) {
+	if (p.contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
 		lub_coeff_contact = 1/lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
+		 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
 		 *
 		 * For Low Peclet mode:
 		 * kn = scale_factor_SmallPe*kn_lowPeclet;
-		 * contact_relaxation_time = contact_relaxation_time/scale_factor_SmallPe;
+		 * p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 		 * This is why the coeffient is not scaled.
-		 * scale_factor_SmallPe*kn_lowPeclet * contact_relaxation_time/scale_factor_SmallPe;
-		 * = kn_lowPeclet * contact_relaxation_time
+		 * scale_factor_SmallPe*kn_lowPeclet * p.contact_relaxation_time/scale_factor_SmallPe;
+		 * = kn_lowPeclet * p.contact_relaxation_time
 		 */
-		lub_coeff_contact = 4*kn*contact_relaxation_time;
+		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
 	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
 	/* t = beta/kn
 	 *  beta = t*kn
-	 * lub_coeff_contact = 4*beta = 4*kn*contact_relaxation_time
+	 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
 	 */
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
@@ -337,10 +360,10 @@ System::setupSystem(string control){
 		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. contact_relaxation_time_tan = 0
+		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*contact_relaxation_time_tan;
+		log_lub_coeff_contact_tan_dashpot = 6*kt*p.contact_relaxation_time_tan;
 	} else {
 		cerr << "lubrication_model..." << endl;
 		exit(1);
@@ -352,7 +375,8 @@ System::setupSystem(string control){
 		 *
 		 * r_gen = new MTRand;
 		 */
-		r_gen = new MTRand(17);
+
+		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG "
 	}
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
@@ -362,7 +386,7 @@ System::setupSystem(string control){
 	 */
 	vel_difference = lz;
 	stokes_solver.initialize();
-	dt = dt_max;
+	dt = p.dt_max;
 	initializeBoxing();
 	checkNewInteraction();
 	if (twodimension) {
@@ -639,6 +663,9 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
 	dimensionless_shear_rate_averaged = dimensionless_shear_rate_time_integral/(time-time0);
+
+	if(p.auto_determine_knkt&&shear_strain>0.3)
+		adjustContactModelParameters();
 }
 
 void
@@ -920,7 +947,7 @@ System::buildRepulsiveForceTerms(bool set_or_add){
 }
 
 void
-System::computeVelocities(bool divided_velocities){
+System::computeVelocities(bool divided_velocities){ // this function is slowly becoming a mess. We should refactor to restore readability.
 	stokes_solver.resetRHS();
 	if (stress_controlled) {
 		double shearstress_rep = 0;
@@ -933,6 +960,9 @@ System::computeVelocities(bool divided_velocities){
 			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
+
+
+		// Back out the shear rate
 		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
@@ -1362,69 +1392,151 @@ void calcMean_StdDev(vector<double> history,
 	std_dev = sqrt(sum_sq_deviation/(ne-1));
 }
 
+// int
+// System::adjustContactModelParameters(){
+// 	/*
+// 	 * kn, kt and dt are determined in one test simulation.
+// 	 * We give small values of kn and kt as the initial values.
+// 	 * With target values of spring strech,
+// 	 * spring constants are determined by the maximum foces in a certain interaval.
+// 	 * In order to avoid unusual large values of forces,
+// 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
+// 	 * Only increases of kn and kt are accepted.
+// 	 */
+// 	/* determination of kn
+// 	 */
+// 	cerr << "We should make a simpler rule." << endl;
+// 	exit(1);
+// 	//	double mean_max_fc_normal, stddev_max_fc_normal;
+// 	//	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
+// 	//	double kn_try = mean_max_fc_normal/p.overlap_target;
+// 	//	kn = kn_try;
+// 	//	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+// 	/* determination of kt
+// 	 */
+// 	//	double mean_max_fc_tan, stddev_max_fc_tan;
+// 	//	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
+// 	//	double kt_try = mean_max_fc_tan/p.disp_tan_target;
+// 	//	kt = kt_try;
+// 	//	double average_max_tanvelocity = 0;
+// 	//	double max_max_tanvelocity = 0;
+// 	//for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
+// 	//	average_max_tanvelocity += sliding_velocity_history[j];
+// 	//	if (max_max_tanvelocity < sliding_velocity_history[j]){
+// 	//		max_max_tanvelocity = sliding_velocity_history[j];
+// 	//		}
+// 	//}
+// 	//average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
+// 	//	double average_max_relative_velocity = 0;
+// 	//	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
+// 	//		average_max_relative_velocity += relative_velocity_history[j];
+// 	//	}
+// 	//	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
+// 	//	double tmp_max_velocity = 0;
+// 	//	if (average_max_relative_velocity > average_max_tanvelocity){
+// 	//		tmp_max_velocity = average_max_relative_velocity ;
+// 	//	} else {
+// 	//		tmp_max_velocity = average_max_tanvelocity ;
+// 	//	}
+// 	//	if (max_max_tanvelocity > 1000){
+// 	//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
+// 	//		return 1;
+// 	//	}
+// 	//	double dt_try = disp_max/tmp_max_velocity;
+// 	//	if (dt_try < p.dt_max){
+// 	//		dt = dt_try;
+// 	//	}
+// 	//	for (int k=0; k<nb_interaction; k++) {
+// 	//		interaction[k].contact.updateContactModel();
+// 	//	}
+// 	//	if (kn > p.max_kn){
+// 	//		cerr << "kn = " << kn << endl;
+// 	//		cerr << " kn > max_kn : exit" << endl;
+// 	//		return 1;
+// 	//	}
+// 	return 0;
+// }
+
 int
 System::adjustContactModelParameters(){
-	/*
-	 * kn, kt and dt are determined in one test simulation.
-	 * We give small values of kn and kt as the initial values.
-	 * With target values of spring strech,
-	 * spring constants are determined by the maximum foces in a certain interaval.
-	 * In order to avoid unusual large values of forces,
-	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
-	 * Only increases of kn and kt are accepted.
-	 */
-	/* determination of kn
-	 */
-	cerr << "We should make a simplar rule." << endl;
-	exit(1);
-	//	double mean_max_fc_normal, stddev_max_fc_normal;
-	//	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-	//	double kn_try = mean_max_fc_normal/overlap_target;
-	//	kn = kn_try;
-	//	lub_coeff_contact = 4*kn*contact_relaxation_time;
-	/* determination of kt
-	 */
-	//	double mean_max_fc_tan, stddev_max_fc_tan;
-	//	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-	//	double kt_try = mean_max_fc_tan/disp_tan_target;
-	//	kt = kt_try;
-	//	double average_max_tanvelocity = 0;
-	//	double max_max_tanvelocity = 0;
-	//for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
-	//	average_max_tanvelocity += sliding_velocity_history[j];
-	//	if (max_max_tanvelocity < sliding_velocity_history[j]){
-	//		max_max_tanvelocity = sliding_velocity_history[j];
-	//		}
-	//}
-	//average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
-	//	double average_max_relative_velocity = 0;
-	//	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
-	//		average_max_relative_velocity += relative_velocity_history[j];
-	//	}
-	//	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
-	//	double tmp_max_velocity = 0;
-	//	if (average_max_relative_velocity > average_max_tanvelocity){
-	//		tmp_max_velocity = average_max_relative_velocity ;
-	//	} else {
-	//		tmp_max_velocity = average_max_tanvelocity ;
-	//	}
-	//	if (max_max_tanvelocity > 1000){
-	//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
-	//		return 1;
-	//	}
-	//	double dt_try = disp_max/tmp_max_velocity;
-	//	if (dt_try < dt_max){
-	//		dt = dt_try;
-	//	}
-	//	for (int k=0; k<nb_interaction; k++) {
-	//		interaction[k].contact.updateContactModel();
-	//	}
-	//	if (kn > max_kn){
-	//		cerr << "kn = " << kn << endl;
-	//		cerr << " kn > max_kn : exit" << endl;
-	//		return 1;
-	//	}
-	return 0;
+	analyzeState();
+	
+	
+	// Calculate a time average with an exponential memory kernel
+	static double previous_kernel_norm = 1;
+	static double previous_overlap_avg = 0;
+	static double previous_max_disp_tan_avg = 0;
+	static double previous_time = 0;
+	static double previous_kn_avg = 0;
+	static double previous_kt_avg = 0;
+	
+	//	double memory_time = 0.01;
+	double deltat = (time-previous_time);
+	double etn = exp(-deltat/p.memory_time_avg);
+
+	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
+	if(previous_time==0){
+		inv_kernel_norm=1/deltat;
+	}
+	
+	double overlap = 0;
+	if(min_gap_nondim<0){
+		overlap = -min_gap_nondim;
+	}
+	
+	double overlap_avg = inv_kernel_norm*( overlap*deltat + etn*previous_overlap_avg/previous_kernel_norm );
+	double max_disp_tan_avg = inv_kernel_norm*( max_disp_tan*deltat + etn*previous_max_disp_tan_avg/previous_kernel_norm );
+	double kn_avg = inv_kernel_norm*( kn*deltat + etn*previous_kn_avg/previous_kernel_norm );
+	double kt_avg = inv_kernel_norm*( kt*deltat + etn*previous_kt_avg/previous_kernel_norm );
+
+	
+   	cout << time << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
+	//	max_disp_tan;
+
+	previous_time = time;
+	previous_kernel_norm = inv_kernel_norm;
+	previous_overlap_avg = overlap_avg;
+	previous_max_disp_tan_avg = max_disp_tan_avg;
+	previous_kn_avg = kn_avg;
+	previous_kt_avg = kt_avg;
+
+	double kn_target = kn_avg*overlap_avg/p.overlap_target;
+	double dkn = (kn_target-kn)*deltat/p.memory_time_k;
+	if(fabs(dkn)>0.1*kn){
+		dkn = 0.1*kn;
+	}
+	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
+	kn += dkn;
+	if(kn<p.kn_lowPeclet){
+		kn = p.kn_lowPeclet;
+	}
+
+	
+	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
+	double dkt = (kt_target-kt)*deltat/p.memory_time_k;
+	if(fabs(dkt)>0.1*kt){
+		dkt = 0.1*kt;
+	}
+	kt += dkt;
+	if(kt<p.kt_lowPeclet){
+		kt = p.kt_lowPeclet;
+	}
+
+
+
+	if (max_velocity > max_sliding_velocity) {
+		dt = disp_max/max_velocity;
+	} else {
+		dt = disp_max/max_sliding_velocity;
+	}
+
+	// // adapt time step
+	// double relative_change = dkn/kn;
+	// if (dkt/kt>relative_change){
+	// 	relative_change = dkt/kt;
+	// }
+	// dt += -dt*relative_change;
+	cout << dt << " " << kn << " " << kt << endl;
 }
 
 void

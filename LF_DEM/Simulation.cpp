@@ -53,9 +53,9 @@ Simulation::contactForceParameter(string filename){
 		}
 	}
 	fin_knktdt.clear();
-	sys.kn = kn_;
-	sys.kt = kt_;
-	sys.dt_max = dt_max_;
+	p.kn = kn_;
+	p.kt = kt_;
+    p.dt_max = dt_max_;
 	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
 }
 
@@ -101,7 +101,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			} else if (ratio_critical_load > 0) {
 				cerr << "Critical load" << endl;
 				sys.critical_normal_force = ratio_critical_load/peclet_num;
-				sys.friction_model = 2;
+				p.friction_model = 2;
 				string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
 			} else {
 				cerr << "Only Brownian" << endl;
@@ -124,7 +124,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
 				cerr << "Critical load" << endl;
 				sys.dimensionless_shear_rate = ratio_critical_load;
-				sys.friction_model = 2;
+				p.friction_model = 2;
 				sys.critical_normal_force = 1/ratio_critical_load;
 				string_control_parameters << "_c" << ratio_critical_load;
 			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
@@ -144,7 +144,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			}
 		}
 	} else if (control_var == "stress") {
-		sys.unscaled_contactmodel = true;
+		p.unscaled_contactmodel = true;
 		sys.brownian = false;
 		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
@@ -186,12 +186,13 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		// strain_interval_out
-		time_interval_output_data = sys.strain_interval_output_data/shear_rate_expectation;
-		time_interval_output_config = sys.strain_interval_output_config/shear_rate_expectation;
+		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
+		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
 		time_interval_output_data = -1;
 		time_interval_output_config = -1;
 	}
+	exportParameterSet();
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
@@ -202,7 +203,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	sys.setupShearFlow(true);
 	if (control_var == "stress") {
-		sys.set_integration_method(0);
+		p.integration_method = 0;
 	}
 }
 
@@ -223,10 +224,10 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
-	while (sys.get_shear_strain() < sys.shear_strain_end-1e-8) {
+	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
 		if (time_interval_output_data == -1) {
-			strain_output_data = cnt_simu_loop*sys.strain_interval_output_data;
-			strain_output_config = cnt_config_out*sys.strain_interval_output_config;
+			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
+			strain_output_config = cnt_config_out*p.strain_interval_output_config;
 		} else {
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
@@ -249,12 +250,12 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 				cnt_config_out ++;
 			}
 		}
-		cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end << endl;
+		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
 	}
 	if (filename_parameters == "init_relax.txt") {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
-		 * Here is just to expoert the position data.
+		 * Here is just to export the position data.
 		 */
 		outputFinalConfiguration();
 	}
@@ -275,14 +276,14 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	}
 	cerr << " User Defined Sequence, Repulsive Force " << endl;
 	sys.repulsiveforce = true;
-	sys.unscaled_contactmodel = true;
+	p.unscaled_contactmodel = true;
 	sys.brownian = false;
 	sys.repulsiveforce = true;
 	sys.repulsiveforce_amplitude = 1;
 	sys.target_stress_input = 0;
 	sys.target_stress = 0;
 	setDefaultParameters();
-	sys.set_integration_method(0);
+	p.integration_method = 0;
 	readParameterFile();
 	importInitialPositionFile();
 	filename_sequence = input_files[4];
@@ -291,8 +292,8 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		// strain_interval_out
-		time_interval_output_data = sys.strain_interval_output_data/shear_rate_expectation;
-		time_interval_output_config = sys.strain_interval_output_config/shear_rate_expectation;
+		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
+		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
 		time_interval_output_data = -1;
 		time_interval_output_config = -1;
@@ -333,8 +334,8 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			if (time_interval_output_data == -1) {
-				strain_output_data = cnt_simu_loop*sys.strain_interval_output_data;
-				strain_output_config = cnt_config_out*sys.strain_interval_output_config;
+				strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
+				strain_output_config = cnt_config_out*p.strain_interval_output_config;
 			} else {
 				time_output_data = cnt_simu_loop*time_interval_output_data;
 				time_output_config = cnt_config_out*time_interval_output_config;
@@ -361,7 +362,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 			} else {
 				jammed = 0;
 			}
-			cerr << "strain: " << sys.get_shear_strain() << " / " << sys.shear_strain_end;
+			cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end;
 			cerr << "      stress = " << sys.target_stress_input << endl;
 		}
 	}
@@ -384,6 +385,7 @@ Str2KeyValue(string &str_parameter,
 			 string &keyword,
 			 string &value){
 	string::size_type pos_equal = str_parameter.find("=");
+
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
 	return;
@@ -397,69 +399,75 @@ removeBlank(string &str){
 void
 Simulation::autoSetParameters(const string &keyword, const string &value){
 	if (keyword == "lubrication_model") {
-		sys.set_lubrication_model(atoi(value.c_str()));
+		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
-		if (sys.friction_model == 2) {
+		if (p.friction_model == 2) {
 			cerr << "!!Neglected friction_model in parameter file!!" << endl;
-		} else {
-			sys.friction_model = atoi(value.c_str());
+	} else {
+			p.friction_model = atoi(value.c_str());
 		}
 	} else if (keyword == "rolling_friction") {
-		sys.rolling_friction = str2bool(value);
+		p.rolling_friction = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
-		sys.unscaled_contactmodel = str2bool(value);
+		p.unscaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
 		if (sys.repulsiveforce) {
-			sys.set_repulsiveforce_length(atof(value.c_str()));
+			p.repulsive_length = atof(value.c_str());
 		}
 	} else if (keyword == "lub_reduce_parameter") {
-		sys.lub_reduce_parameter = atof(value.c_str());
+		p.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
-		sys.contact_relaxation_time = atof(value.c_str());
+		p.contact_relaxation_time = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time_tan"){
-		sys.contact_relaxation_time_tan =  atof(value.c_str());
+		p.contact_relaxation_time_tan =  atof(value.c_str());
 	} else if (keyword == "disp_max") {
-		sys.set_disp_max(atof(value.c_str()));
+		p.disp_max = atof(value.c_str());
 	} else if (keyword == "shear_strain_end") {
-		sys.shear_strain_end = atof(value.c_str());
+		p.shear_strain_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
-		sys.set_integration_method(atoi(value.c_str()));
+		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max") {
-		sys.set_lub_max(atof(value.c_str()));
+		p.lub_max = atof(value.c_str());
 	} else if (keyword == "sd_coeff") {
-		sys.set_sd_coeff(atof(value.c_str()));
+		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		sys.kn = atof(value.c_str());
+		p.kn = atof(value.c_str());
 	} else if (keyword == "kt") {
-		sys.kt = atof(value.c_str());
+		p.kt = atof(value.c_str());
 	} else if (keyword == "kr") {
-		sys.kr = atof(value.c_str());
+		p.kr = atof(value.c_str());
 	} else if (keyword == "dt_max") {
-		sys.dt_max = atof(value.c_str());
+		p.dt_max = atof(value.c_str());
 	} else if (keyword == "kn_lowPeclet") {
-		sys.kn_lowPeclet = atof(value.c_str());
+		p.kn_lowPeclet = atof(value.c_str());
 	} else if (keyword == "kt_lowPeclet") {
-		sys.kt_lowPeclet = atof(value.c_str());
+		p.kt_lowPeclet = atof(value.c_str());
 	} else if (keyword == "dt_lowPeclet") {
-		sys.dt_lowPeclet = atof(value.c_str());
+		p.dt_lowPeclet = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
-		sys.Pe_switch = atof(value.c_str());
+		p.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
-		sys.set_mu_static(atof(value.c_str()));
+		p.mu_static = atof(value.c_str());
 	} else if (keyword == "strain_interval_out") {
-		sys.strain_interval_output_config = atof(value.c_str());
+		p.strain_interval_output_config = atof(value.c_str());
 	} else if (keyword == "strain_interval_out_data") {
-		sys.strain_interval_output_data = atof(value.c_str());
+		p.strain_interval_output_data = atof(value.c_str());
 	} else if (keyword == "out_data_particle") {
-		out_data_particle = str2bool(value);
+		p.out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
-		out_data_interaction = str2bool(value);
+		p.out_data_interaction = str2bool(value);
 	} else if (keyword == "origin_zero_flow") {
-		origin_zero_flow = str2bool(value);
+		p.origin_zero_flow = str2bool(value);
+	} else if (keyword == "auto_determine_knkt") {
+		p.auto_determine_knkt = str2bool(value.c_str());
 	} else if (keyword == "overlap_target") {
-		sys.overlap_target = atof(value.c_str());
+		p.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
-		sys.disp_tan_target = atof(value.c_str());
+		p.disp_tan_target = atof(value.c_str());
+	} else if (keyword == "memory_time_avg") {
+		p.memory_time_avg = atof(value.c_str());
+	} else if (keyword == "memory_time_k") {
+		p.memory_time_k = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -483,6 +491,7 @@ Simulation::readParameterFile(){
 		string str_parameter;
 		removeBlank(line);
 		str_parameter = line;
+		
 		string::size_type begin_comment;
 		string::size_type end_comment;
 		do {
@@ -501,7 +510,7 @@ Simulation::readParameterFile(){
 		}
 		string::size_type pos_slashslash = str_parameter.find("//");
 		if( pos_slashslash != string::npos) {
-			cerr << " // is not syntax for comment out." << endl;
+			cerr << " // is not the syntax to comment out. Use /* comment */" << endl;
 			exit(1);
 		}
 		Str2KeyValue(str_parameter, keyword, value);
@@ -623,32 +632,25 @@ Simulation::openOutputFiles(){
 	fout_particle << fout_par_col_def << endl;
 }
 
+
+void
+Simulation::exportParameterSet(){
+	sys.importParameterSet(p);
+}
+
 void
 Simulation::setDefaultParameters(){
-	/*
-	 * Simulation
-	 *
-	 * dt: the time step to integrate the equation of motion.
-	 *     We need to give a good criterion to give.
-	 * dt_mid: the intermediate time step for the mid-point
-	 *     algortithm. dt/dt_mid = dt_ratio
-	 *     Banchio/Brady (J Chem Phys) gives dt_ratio=100
-	 *    ASD code from Brady has dt_ratio=150
-	 *
-	 */
-	sys.Pe_switch = 5;
-	sys.dt_max = 1e-4;
-	sys.dt_lowPeclet = 1e-4;
-	/*
-	 * integration_method:
-	 * 0 Euler's Method,
-	 * 1 predictor-corrector,
-	 */
-	int _integration_method = 1;
+	p.Pe_switch = 5;
+	p.dt_max = 1e-4;
+	p.dt_lowPeclet = 1e-4;
+	p.disp_max = 2e-3;
+	
+	p.integration_method = 1;
+
 	/*
 	 * Stokes drag coeffient
 	 */
-	double _sd_coeff = 1;
+	p.sd_coeff = 1;
 	/*
 	 * Lubrication model
 	 * 0 no lubrication
@@ -656,37 +658,23 @@ Simulation::setDefaultParameters(){
 	 * 2 log(1/xi) lubrication
 	 * 3 ???
 	 */
-	int _lubrication_model = 2;
+	p.lubrication_model = 2;
 	/*
 	 * 0 No friction
 	 * 1 Linear friction law Ft < mu Fn
 	 * 2 Threshold friction without repulsive force
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
-	if (sys.friction_model != 2) {
-		sys.friction_model = 1;
-	}
-	sys.rolling_friction = false;
-	/*
-	 * Shear flow
-	 *  shear_rate: shear rate
-	 *  strain(): total strain (length of simulation)
-	 *
-	 */
-	sys.shear_strain_end = 10;
-	/*
-	 * Lubrication force
-	 * lub_max: reduced large cutoff distance for lubrication
-	 * I think lub_max = 2.5 and 3 generate different results.
-	 * We should give suffiently larger value.
-	 * The value 3 or 3.5 should be better (To be checked.)
-	 */
-	double _lub_max = 2.5;
+	p.friction_model = 1;
+
+	p.rolling_friction = false;
+	p.shear_strain_end = 10;
+	p.lub_max = 2.5;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
 	 */
-	sys.lub_reduce_parameter = 1e-3;
+	p.lub_reduce_parameter = 1e-3;
 	/*
 	 * contact_relaxation_factor:
 	 *
@@ -694,72 +682,59 @@ Simulation::setDefaultParameters(){
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	sys.contact_relaxation_time = 1e-3;
-	sys.contact_relaxation_time_tan = 0;
+	p.contact_relaxation_time = 1e-3;
+	p.contact_relaxation_time_tan = 0;
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
+	p.unscaled_contactmodel;
+	p.kn;
+	p.kt;
+	p.kr;
+	p.kn_lowPeclet;
+	p.kt_lowPeclet;
+	p.kr_lowPeclet;
+
+	p.auto_determine_knkt = false;
+	p.overlap_target = 0.05;
+	p.disp_tan_target = 0.05;
+	p.memory_time_avg = 0.01;
+	p.memory_time_k = 0.02;
+
+	p.max_kn = 1000000;
+
+	p.repulsive_length = 0.05;
+
+	p.mu_static = 1;
+
+	p.strain_interval_output_data = 0.01;
+	p.strain_interval_output_config = 0.1;
+	p.origin_zero_flow = true;
+
+	p.out_data_particle = true;
+	p.out_data_interaction = true;
+
+
+
 	if (control_var == "stress") {
-		sys.unscaled_contactmodel = true;
-		sys.kn = 2000;
-		sys.kt = 1000;
-		sys.kr = 1000;
-		sys.kn_lowPeclet = 0;
-		sys.kt_lowPeclet = 0;
-		sys.kr_lowPeclet = 0;
+		p.unscaled_contactmodel = true;
+		p.kn = 2000;
+		p.kt = 1000;
+		p.kr = 1000;
+		p.kn_lowPeclet = 0;
+		p.kt_lowPeclet = 0;
+		p.kr_lowPeclet = 0;
 	} else {
-		sys.unscaled_contactmodel = false;
-		sys.kn = 10000;
-		sys.kt = 6000;
-		sys.kr = 6000;
-		sys.kn_lowPeclet = 10000;
-		sys.kt_lowPeclet = 6000;
-		sys.kr_lowPeclet = 6000;
+		p.unscaled_contactmodel = false;
+		p.kn = 10000;
+		p.kt = 6000;
+		p.kr = 6000;
+		p.kn_lowPeclet = 10000;
+		p.kt_lowPeclet = 6000;
+		p.kr_lowPeclet = 6000;
 	}
-	sys.overlap_target = 0.05;
-	sys.disp_tan_target = 0.05;
-	sys.max_kn = 1000000;
-	/*
-	 * repulsive force parameter
-	 * Short range repulsion is assumed.
-	 * cf_amp_dl0: cf_amp_dl at shearrate = 1
-	 */
-	if (sys.repulsiveforce) {
-		sys.set_repulsiveforce_length(0.05);
-	} else {
-		sys.set_repulsiveforce_length(0);
-	}
-	/*
-	 * mu_static: static friction coeffient
-	 * mu_dynamic: dynamic friction coeffient
-	 */
-	double _mu_static = 1;
-	/*
-	 * Output interval:
-	 * strain_interval_output_data is for outputing rheo_...
-	 * strain_interval_output is for outputing int_... and par_...
-	 */
-	sys.strain_interval_output_data = 0.01;
-	sys.strain_interval_output_config = 0.1;
-	/*
-	 *  Data output
-	 */
-	/*
-	 * The middle height of the simulation box is set to the flow zero level.
-	 */
-	origin_zero_flow = true;
-	/*
-	 * position and interaction data
-	 */
-	out_data_particle = true;
-	out_data_interaction = true;
-	sys.set_sd_coeff(_sd_coeff);
-	sys.set_integration_method(_integration_method);
-	sys.set_lubrication_model(_lubrication_model);
-	sys.set_lub_max(_lub_max);
-	sys.set_mu_static(_mu_static);
 }
 
 void
@@ -995,7 +970,7 @@ Simulation::outputRheologyData(){
 
 vec3d
 Simulation::shiftUpCoordinate(double x, double y, double z){
-	if (origin_zero_flow) {
+	if (p.origin_zero_flow) {
 		z += sys.Lz_half();
 		if (z > sys.Lz_half()) {
 			x -= sys.shear_disp;
@@ -1033,7 +1008,7 @@ Simulation::outputConfigurationData(){
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
 	 */
-	if (origin_zero_flow) {
+	if (p.origin_zero_flow) {
 		for (int i=0; i<np; i++) {
 			vel[i] = sys.velocity[i];
 			if (pos[i].z < 0) {
@@ -1044,13 +1019,13 @@ Simulation::outputConfigurationData(){
 	/*
 	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
-	if (out_data_particle) {
+	if (p.out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_shear_rate_averaged << ' ';
 		fout_particle << sys.target_stress_input << endl;
 		for (int i=0; i<np; i++) {
-			vec3d &p = pos[i];
+			vec3d &r = pos[i];
 			vec3d &v = vel[i];
 			vec3d &o = sys.ang_velocity[i];
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
@@ -1061,7 +1036,7 @@ Simulation::outputConfigurationData(){
 			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
-			fout_particle << ' ' << p.x << ' ' << p.y << ' ' << p.z; //3, 4, 5: position
+			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
 			fout_particle << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
@@ -1079,7 +1054,7 @@ Simulation::outputConfigurationData(){
 			cnt_interaction++;
 		}
 	}
-	if (out_data_interaction) {
+	if (p.out_data_interaction) {
 		fout_interaction << "# " << sys.get_shear_strain();
 		fout_interaction << ' ' << cnt_interaction << endl;
 		for (int k=0; k<sys.nb_interaction; k++) {

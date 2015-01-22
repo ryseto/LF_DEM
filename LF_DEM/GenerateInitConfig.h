@@ -3,8 +3,16 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 12/6/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2014 Ryohei Seto and Romain Mari. All rights reserved.
 //
+
+/**
+ \class GenerateInitConfig
+ \brief Class to generate initial configurations (option -g). Not used by shear simulations.
+ \author Ryohei Seto
+ \author Romain Mari
+ */
+
 
 #ifndef __LF_DEM__GenerateInitConfig__
 #define __LF_DEM__GenerateInitConfig__
