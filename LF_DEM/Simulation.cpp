@@ -704,19 +704,25 @@ Simulation::setDefaultParameters(){
 	 */
 	p.contact_relaxation_time = 1e-3;
 	p.contact_relaxation_time_tan = 0;
-	/*
-	 * Contact force parameters
-	 * kn: normal spring constant
-	 * kt: tangential spring constant
-	 */
-	//	p.unscaled_contactmodel;
-	//	p.kn;
-	//	p.kt;
-	//	p.kr;
-	//	p.kn_lowPeclet;
-	//	p.kt_lowPeclet;
-	//	p.kr_lowPeclet;
-	
+
+	if (control_var == "stress") {
+		p.unscaled_contactmodel = true;
+		p.kn = 2000;
+		p.kt = 1000;
+		p.kr = 1000;
+		p.kn_lowPeclet = 0;
+		p.kt_lowPeclet = 0;
+		p.kr_lowPeclet = 0;
+	} else {
+		p.unscaled_contactmodel = false;
+		p.kn = 10000;
+		p.kt = 6000;
+		p.kr = 6000;
+		p.kn_lowPeclet = 10000;
+		p.kt_lowPeclet = 6000;
+		p.kr_lowPeclet = 6000;
+	}
+
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;
@@ -736,23 +742,6 @@ Simulation::setDefaultParameters(){
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
 
-	if (control_var == "stress") {
-		p.unscaled_contactmodel = true;
-		p.kn = 2000;
-		p.kt = 1000;
-		p.kr = 1000;
-		p.kn_lowPeclet = 0;
-		p.kt_lowPeclet = 0;
-		p.kr_lowPeclet = 0;
-	} else {
-		p.unscaled_contactmodel = false;
-		p.kn = 10000;
-		p.kt = 6000;
-		p.kr = 6000;
-		p.kn_lowPeclet = 10000;
-		p.kt_lowPeclet = 6000;
-		p.kr_lowPeclet = 6000;
-	}
 }
 
 void
