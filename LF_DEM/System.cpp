@@ -572,6 +572,8 @@ System::timeStepMove(){
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
+	//dt = 0.001*abs(dimensionless_shear_rate);
+	//cerr << "dt = " << dt << endl;
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime.
 	 */
