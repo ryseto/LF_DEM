@@ -1498,13 +1498,15 @@ System::adjustContactModelParameters(){
 	previous_kn_avg = kn_avg;
 	previous_kt_avg = kt_avg;
 
+	double limiting_change = 0.05;
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
 	double dkn = (kn_target-kn)*deltat/p.memory_time_k;
-	if(dkn>0.1*kn){
-		dkn = 0.1*kn;
+	
+	if(dkn>limiting_change*kn){
+		dkn = limiting_change*kn;
 	}
-	if(dkn<-0.1*kn){
-		dkn = -0.1*kn;
+	if(dkn<-limiting_change*kn){
+		dkn = -limiting_change*kn;
 	}
 
 	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
@@ -1516,11 +1518,11 @@ System::adjustContactModelParameters(){
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
 	double dkt = (kt_target-kt)*deltat/p.memory_time_k;
-	if(dkt>0.1*kt){
-		dkt = 0.1*kt;
+	if(dkt>limiting_change*kt){
+		dkt = limiting_change*kt;
 	}
-	if(dkt<-0.1*kt){
-		dkt = -0.1*kt;
+	if(dkt<-limiting_change*kt){
+		dkt = -limiting_change*kt;
 	}
 	kt += dkt;
 	if(kt<p.kt_lowPeclet){
