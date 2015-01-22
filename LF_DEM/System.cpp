@@ -228,6 +228,10 @@ System::setupBrownian(){
 			p.shear_strain_end /= scale_factor_SmallPe;
 			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
 			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
+
+			p.memory_strain_k /= scale_factor_SmallPe;
+			p.memory_strain_avg /= scale_factor_SmallPe;
+			
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
@@ -1464,16 +1468,16 @@ System::adjustContactModelParameters(){
 	static double previous_kernel_norm = 1;
 	static double previous_overlap_avg = 0;
 	static double previous_max_disp_tan_avg = 0;
-	static double previous_time = 0;
+	static double previous_shear_strain = 0;
 	static double previous_kn_avg = 0;
 	static double previous_kt_avg = 0;
 	
-	//	double memory_time = 0.01;
-	double deltat = (time-previous_time);
-	double etn = exp(-deltat/p.memory_time_avg);
+	//	double memory_shear_strain = 0.01;
+	double deltat = (shear_strain-previous_shear_strain);
+	double etn = exp(-deltat/p.memory_strain_avg);
 
 	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
-	if(previous_time==0){
+	if(previous_shear_strain==0){
 		inv_kernel_norm=1/deltat;
 	}
 	
@@ -1488,10 +1492,10 @@ System::adjustContactModelParameters(){
 	double kt_avg = inv_kernel_norm*( kt*deltat + etn*previous_kt_avg/previous_kernel_norm );
 
 	
-   	cout << time << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
+   	cout << shear_strain << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
 	//	max_disp_tan;
 
-	previous_time = time;
+	previous_shear_strain = shear_strain;
 	previous_kernel_norm = inv_kernel_norm;
 	previous_overlap_avg = overlap_avg;
 	previous_max_disp_tan_avg = max_disp_tan_avg;
@@ -1500,7 +1504,7 @@ System::adjustContactModelParameters(){
 
 	double limiting_change = 0.05;
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
-	double dkn = (kn_target-kn)*deltat/p.memory_time_k;
+	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
 	
 	if(dkn>limiting_change*kn){
 		dkn = limiting_change*kn;
@@ -1517,7 +1521,7 @@ System::adjustContactModelParameters(){
 
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
-	double dkt = (kt_target-kt)*deltat/p.memory_time_k;
+	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
 	if(dkt>limiting_change*kt){
 		dkt = limiting_change*kt;
 	}

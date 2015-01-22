@@ -484,10 +484,10 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
 		p.disp_tan_target = atof(value.c_str());
-	} else if (keyword == "memory_time_avg") {
-		p.memory_time_avg = atof(value.c_str());
-	} else if (keyword == "memory_time_k") {
-		p.memory_time_k = atof(value.c_str());
+	} else if (keyword == "memory_strain_avg") {
+		p.memory_strain_avg = atof(value.c_str());
+	} else if (keyword == "memory_strain_k") {
+		p.memory_strain_k = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -726,8 +726,8 @@ Simulation::setDefaultParameters(){
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;
-	p.memory_time_avg = 0.01;
-	p.memory_time_k = 0.02;
+	p.memory_strain_avg = 0.01;
+	p.memory_strain_k = 0.02;
 
 	p.max_kn = 1000000;
 
