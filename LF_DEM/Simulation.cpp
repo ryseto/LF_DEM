@@ -345,13 +345,20 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
-			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-				cerr << "   out config: " << sys.get_shear_strain() << endl;
-				outputConfigurationData();
-				cnt_config_out ++;
+			if (time_interval_output_data == -1) {
+				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+					cerr << "   out config: " << sys.get_shear_strain() << endl;
+					outputConfigurationData();
+					cnt_config_out ++;
+				}
+			} else {
+				if (sys.get_time() >= time_output_config-1e-8) {
+					cerr << "   out config: " << sys.get_shear_strain() << endl;
+					outputConfigurationData();
+					cnt_config_out ++;
+				}
 			}
-			
-			if (sys.dimensionless_shear_rate_averaged < 1e-6){
+ 			if (sys.dimensionless_shear_rate_averaged < 1e-6){
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
 				if (jammed > 5) {
@@ -689,14 +696,14 @@ Simulation::setDefaultParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	p.unscaled_contactmodel;
-	p.kn;
-	p.kt;
-	p.kr;
-	p.kn_lowPeclet;
-	p.kt_lowPeclet;
-	p.kr_lowPeclet;
-
+	//	p.unscaled_contactmodel;
+	//	p.kn;
+	//	p.kt;
+	//	p.kr;
+	//	p.kn_lowPeclet;
+	//	p.kt_lowPeclet;
+	//	p.kr_lowPeclet;
+	
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;
@@ -715,8 +722,6 @@ Simulation::setDefaultParameters(){
 
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
-
-
 
 	if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
