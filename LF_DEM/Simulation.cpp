@@ -270,25 +270,37 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	if (seq_type != "s" || control_var != "stress") {
-		cerr << " User Defined Sequence only implemented for pure repulsive force under stress control at the moment ";
-		exit(1);
-	}
-	cerr << " User Defined Sequence, Repulsive Force " << endl;
-	sys.repulsiveforce = true;
-	p.unscaled_contactmodel = true;
-	sys.brownian = false;
-	sys.repulsiveforce = true;
-	sys.repulsiveforce_amplitude = 1;
-	sys.target_stress_input = 0;
-	sys.target_stress = 0;
-	setDefaultParameters();
-	p.integration_method = 0;
-	readParameterFile();
-	importInitialPositionFile();
 	filename_sequence = input_files[4];
 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
-	string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
+	sys.brownian = false;
+	sys.target_stress_input = 0;
+	sys.target_stress = 0;
+	cerr << seq_type << endl;
+	if (seq_type == "S") {
+		p.unscaled_contactmodel = true;
+		cerr << "Repulsive force" << endl;
+		sys.repulsiveforce = true;
+		sys.repulsiveforce_amplitude = 1;
+		string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
+	} else if (seq_type == "R") {
+		//p.unscaled_contactmodel
+		sys.repulsiveforce = true;
+		cerr << "Repulsive force" << endl;
+		cerr << " User Defined Sequence only implemented for ....\n";
+		exit(1);
+	} else if (seq_type == "B") {
+		cerr << "Cohesive force" << endl;
+		sys.repulsiveforce = false;
+		sys.cohesion = true;
+		sys.cohesive_force = 1;
+		string_control_parameters << "_B" << filename_sequence.substr(0, pos_ext_sequence);
+	} else {
+		cerr << " User Defined Sequence only implemented for ....\n";
+		exit(1);
+	}
+	setDefaultParameters();
+	readParameterFile();
+	importInitialPositionFile();
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		// strain_interval_out
@@ -298,11 +310,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		time_interval_output_data = -1;
 		time_interval_output_config = -1;
 	}
-	
+	p.integration_method = 0;
+	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
 	openOutputFiles();
 	outputConfigurationData();
-	
 	sys.setupShearFlow(true);
 	vector <double> strain_sequence;
 	vector <double> rsequence;
@@ -345,16 +357,24 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
-			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-				cerr << "   out config: " << sys.get_shear_strain() << endl;
-				outputConfigurationData();
-				cnt_config_out ++;
+			if (time_interval_output_data == -1) {
+				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+					cerr << "   out config: " << sys.get_shear_strain() << endl;
+					outputConfigurationData();
+					cnt_config_out ++;
+				}
+			} else {
+				if (sys.get_time() >= time_output_config-1e-8) {
+					cerr << "   out config: " << sys.get_shear_strain() << endl;
+					outputConfigurationData();
+					cnt_config_out ++;
+				}
 			}
-			
-			if (sys.dimensionless_shear_rate_averaged < 1e-6){
+ 			if (abs(sys.dimensionless_shear_rate_averaged) < 1e-4 &&
+				sys.target_stress_input > 0.1){
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
-				if (jammed > 5) {
+				if (jammed > 3) {
 					jammed = 0;
 					cerr << "shear jamming";
 					break;
@@ -689,14 +709,14 @@ Simulation::setDefaultParameters(){
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	p.unscaled_contactmodel;
-	p.kn;
-	p.kt;
-	p.kr;
-	p.kn_lowPeclet;
-	p.kt_lowPeclet;
-	p.kr_lowPeclet;
-
+	//	p.unscaled_contactmodel;
+	//	p.kn;
+	//	p.kt;
+	//	p.kr;
+	//	p.kn_lowPeclet;
+	//	p.kt_lowPeclet;
+	//	p.kr_lowPeclet;
+	
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;
@@ -715,8 +735,6 @@ Simulation::setDefaultParameters(){
 
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
-
-
 
 	if (control_var == "stress") {
 		p.unscaled_contactmodel = true;

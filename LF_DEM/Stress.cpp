@@ -25,7 +25,7 @@ System::calcStressPerParticle(){
 				cerr << "lubrication_model = 3 is not implemented" << endl;
 				exit(1);
 			}
-			interaction[k].lubrication.addHydroStress(); // - R_SU * v
+			interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v 
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {
 				interaction[k].calcRepulsiveStress(); // - rF_rep

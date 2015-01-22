@@ -290,9 +290,6 @@ System::setupSystem(string control){
 		cerr << "friction_model..." << endl;
 		exit(1);
 	}
-	if (cohesive_force > 0) {
-		cohesion = true;
-	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
@@ -376,9 +373,7 @@ System::setupSystem(string control){
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.
 		 *
-		 * r_gen = new MTRand;
 		 */
-
 		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 	}
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
@@ -574,6 +569,8 @@ System::timeStepMove(){
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
+	//dt = 0.001*abs(dimensionless_shear_rate);
+	//cerr << "dt = " << dt << endl;
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime.
 	 */
@@ -954,7 +951,6 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 	stokes_solver.resetRHS();
 	if (stress_controlled) {
 		double shearstress_rep = 0;
-
 		// Compute the stress contributions
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
@@ -964,8 +960,6 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
-
-
 		// Back out the shear rate
 		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
@@ -977,13 +971,8 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 			shear_rate_numerator -= shearstress_rep;
 		}
-		if (shear_rate_numerator > 0) {
-			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
-			dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
-		} else {
-			double shearstress_hyd = -einstein_viscosity+total_hydro_stress.getStressXZ();
-			dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
-		}
+		double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+		dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
 		if (repulsiveforce) {
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;
@@ -996,6 +985,12 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
 			}
 		} else {
+			/*
+			 * Contact velocity remains the same direction for shear rate < 0.
+			 * Velocity from strain should become opposite directino.
+			 * To reduce the number of calculation step, the overall sign of velocities
+			 * will be invesed later.
+			 */
 			for (int i=0; i<np; i++) {
 				vel_contact[i] /= dimensionless_shear_rate;
 				ang_vel_contact[i] /= dimensionless_shear_rate;
@@ -1075,12 +1070,21 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 		}
 		max_velocity = sqrt(sq_max_na_velocity);
 	}
-	for (int i=0; i<np; i++) {
-		velocity[i] = na_velocity[i];
-		ang_velocity[i] = na_ang_velocity[i];
-		if (!zero_shear) {
+	if (!zero_shear) {
+		/* Background flow should be diffrent direction
+		 * if shear rate is negative.
+		 * But, the sign of velocity will be invesed later.
+		 */
+		for (int i=0; i<np; i++) {
+			velocity[i] = na_velocity[i];
+			ang_velocity[i] = na_ang_velocity[i];
 			velocity[i].x += position[i].z;
 			ang_velocity[i].y += 0.5;
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			velocity[i] = na_velocity[i];
+			ang_velocity[i] = na_ang_velocity[i];
 		}
 	}
 	if (dimensionless_shear_rate < 0) {

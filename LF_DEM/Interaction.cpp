@@ -161,7 +161,7 @@ Interaction::updateState(bool &deactivated){
 	if (contact.state > 0) {
 		// contacting in previous step
 		if ((!sys->cohesion && gap_nondim>0)
-			|| (sys->cohesion && -contact.f_contact_normal_norm>1.0/sys->dimensionless_shear_rate)) {
+			|| (sys->cohesion && -contact.f_contact_normal_norm>1/abs(sys->dimensionless_shear_rate))) {
 			contact.deactivate();
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
