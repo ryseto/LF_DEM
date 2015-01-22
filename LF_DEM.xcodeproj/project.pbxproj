@@ -105,6 +105,7 @@
 
 /* Begin PBXFileReference section */
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StokesSolver.cpp; sourceTree = "<group>"; };
+		D90B4F681A70942500C51ACD /* ParameterSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParameterSet.h; sourceTree = "<group>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -390,6 +391,7 @@
 				D988E38D165441750009949F /* main.cpp */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
+				D90B4F681A70942500C51ACD /* ParameterSet.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,

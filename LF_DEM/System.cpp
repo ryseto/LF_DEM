@@ -375,8 +375,9 @@ System::setupSystem(string control){
 		 *
 		 * r_gen = new MTRand;
 		 */
-
-		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG "
+		r_gen = new MTRand(17);
+		//r_gen = new MTRand;
+		cerr << " WARNING : debug mode: hard coded seed is given to the RNG \n";
 	}
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
@@ -951,7 +952,7 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 	stokes_solver.resetRHS();
 	if (stress_controlled) {
 		double shearstress_rep = 0;
-		// in case we want to compute the stress contributions
+		// Compute the stress contributions
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
@@ -960,8 +961,6 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
-
-
 		// Back out the shear rate
 		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
