@@ -90,6 +90,7 @@ private:
 						   const string &value);
 	void importInitialPositionFile();
 	void contactForceParameter(string filename);
+	void contactForceParameterPeclet(string filename);
 	void importPreSimulationData(string filename);
 	/*
 	 * For outputs

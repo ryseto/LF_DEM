@@ -60,6 +60,27 @@ Simulation::contactForceParameter(string filename){
 }
 
 void
+Simulation::contactForceParameterPeclet(string filename){
+	ifstream fin_knktdt;
+	fin_knktdt.open(filename.c_str());
+	double phi_;
+	double peclet_;
+	double kn_;
+	double kt_;
+	double dt_max_;
+	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_max_) {
+		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_shear_rate) {
+			break;
+		}
+	}
+	fin_knktdt.clear();
+	p.kn = kn_;
+	p.kt = kt_;
+    p.dt_max = dt_max_;
+	cerr << phi_ << ' ' << peclet_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
+}
+
+void
 Simulation::importPreSimulationData(string filename){
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
@@ -72,6 +93,9 @@ Simulation::importPreSimulationData(string filename){
 	}
 	shear_rate_expectation = shear_rate_;
 }
+
+
+
 
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
@@ -728,7 +752,7 @@ Simulation::setDefaultParameters(){
 	p.disp_tan_target = 0.05;
 	p.memory_strain_avg = 0.01;
 	p.memory_strain_k = 0.02;
-
+	p.start_adjust = 0.2;
 	p.max_kn = 1000000;
 
 	p.repulsive_length = 0.05;

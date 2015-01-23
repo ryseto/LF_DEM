@@ -231,6 +231,7 @@ System::setupBrownian(){
 
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
+			p.start_adjust /= scale_factor_SmallPe;
 			
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
@@ -668,7 +669,7 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 	}
 	dimensionless_shear_rate_averaged = dimensionless_shear_rate_time_integral/(time-time0);
 
-	if(p.auto_determine_knkt&&shear_strain>0.3)
+	if(p.auto_determine_knkt&&shear_strain>p.start_adjust)
 		adjustContactModelParameters();
 }
 

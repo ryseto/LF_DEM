@@ -68,10 +68,11 @@ struct ParameterSet{
 	bool auto_determine_knkt;                ///< auto-determine stiffnesses knowing overlap and tangential displacement targets
 	double overlap_target;                   ///< max overlap to reach when auto-determining stiffness
 	double disp_tan_target;                  ///< max tangential displacement to reach when auto-determining stiffness
-	double memory_strain_k;                    ///< relaxation time for the stiffness determination
-	double memory_strain_avg;                  ///< averaging time for the stiffness determination
+	double memory_strain_k;                  ///< relaxation time for the stiffness determination
+	double memory_strain_avg;                ///< averaging time for the stiffness determination
 	double max_kn;                           ///< max normal spring constant when auto-determining stiffness (auto-determination exits with failure return if kn>max_kn)
-
+	double start_adjust;                     ///< strain after which aut-determination of stiffnesses starts
+	
 	double repulsive_length;                 ///< max normal spring constant when auto-determining stiffness (auto-determination exits with failure return if kn>max_kn)
 
 	double mu_static;                        ///< friction coefficient (static)
