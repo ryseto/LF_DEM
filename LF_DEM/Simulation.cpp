@@ -484,10 +484,10 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.overlap_target = atof(value.c_str());
 	} else if (keyword == "disp_tan_target") {
 		p.disp_tan_target = atof(value.c_str());
-	} else if (keyword == "memory_time_avg") {
-		p.memory_time_avg = atof(value.c_str());
-	} else if (keyword == "memory_time_k") {
-		p.memory_time_k = atof(value.c_str());
+	} else if (keyword == "memory_strain_avg") {
+		p.memory_strain_avg = atof(value.c_str());
+	} else if (keyword == "memory_strain_k") {
+		p.memory_strain_k = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -704,37 +704,6 @@ Simulation::setDefaultParameters(){
 	 */
 	p.contact_relaxation_time = 1e-3;
 	p.contact_relaxation_time_tan = 0;
-	/*
-	 * Contact force parameters
-	 * kn: normal spring constant
-	 * kt: tangential spring constant
-	 */
-	//	p.unscaled_contactmodel;
-	//	p.kn;
-	//	p.kt;
-	//	p.kr;
-	//	p.kn_lowPeclet;
-	//	p.kt_lowPeclet;
-	//	p.kr_lowPeclet;
-	
-	p.auto_determine_knkt = false;
-	p.overlap_target = 0.05;
-	p.disp_tan_target = 0.05;
-	p.memory_time_avg = 0.01;
-	p.memory_time_k = 0.02;
-
-	p.max_kn = 1000000;
-
-	p.repulsive_length = 0.05;
-
-	p.mu_static = 1;
-
-	p.strain_interval_output_data = 0.01;
-	p.strain_interval_output_config = 0.1;
-	p.origin_zero_flow = true;
-
-	p.out_data_particle = true;
-	p.out_data_interaction = true;
 
 	if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
@@ -753,6 +722,26 @@ Simulation::setDefaultParameters(){
 		p.kt_lowPeclet = 6000;
 		p.kr_lowPeclet = 6000;
 	}
+
+	p.auto_determine_knkt = false;
+	p.overlap_target = 0.05;
+	p.disp_tan_target = 0.05;
+	p.memory_strain_avg = 0.01;
+	p.memory_strain_k = 0.02;
+
+	p.max_kn = 1000000;
+
+	p.repulsive_length = 0.05;
+
+	p.mu_static = 1;
+
+	p.strain_interval_output_data = 0.01;
+	p.strain_interval_output_config = 0.1;
+	p.origin_zero_flow = true;
+
+	p.out_data_particle = true;
+	p.out_data_interaction = true;
+
 }
 
 void
