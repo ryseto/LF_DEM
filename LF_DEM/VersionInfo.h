@@ -1,1 +1,1 @@
-#define GIT_VERSION "v1.0-293-gff5d3e3-dirty"
+#define GIT_VERSION "v1.0-294-gbe4d8c3-dirty"
