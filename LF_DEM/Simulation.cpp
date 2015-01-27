@@ -94,9 +94,6 @@ Simulation::importPreSimulationData(string filename){
 	shear_rate_expectation = shear_rate_;
 }
 
-
-
-
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   double peclet_num,
@@ -192,6 +189,11 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.cohesive_force = 1;
 				sys.target_stress_input = ratio_cohesion;
 				sys.target_stress = ratio_cohesion/6/M_PI;
+				/* Initial relaxation for stress control simulation.
+				 * (To avoid breaking bonds due to startup flows.)
+				 */
+				sys.init_strain_shear_rate_limit = 0.001;
+				sys.init_shear_rate_limit = 0.0001;
 				string_control_parameters << "_b" << ratio_cohesion;
 			}
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
@@ -204,12 +206,16 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	setDefaultParameters();
 	readParameterFile();
 	importInitialPositionFile();
+	if (initial_lees_edwards_disp > 0){
+		sys.shear_disp = initial_lees_edwards_disp;
+	} else {
+		sys.shear_disp = 0;
+	}
 	if (input_files[2] != "not_given") {
 		contactForceParameter(input_files[2]);
 	}
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
-		// strain_interval_out
 		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
@@ -248,6 +254,18 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
+	sys.new_contact_gap = 0.02;
+//	if (sys.stress_controlled && sys.cohesion) {
+//		/*
+//		 * if the startup shear rate is too high,
+//		 * cohesions are broken.
+//		 * They shold be conserved.
+//		 */
+//		cerr << "activate startup mode!!" << endl;
+//		sys.startup_flow = true;
+//	} else {
+	sys.startup_flow = false;
+//	}
 	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
 		if (time_interval_output_data == -1) {
 			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
@@ -266,6 +284,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
 				outputConfigurationData();
 				cnt_config_out ++;
+				
 			}
 		} else {
 			if (sys.get_time() >= time_output_config-1e-8) {
@@ -275,6 +294,12 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
+//		if (sys.cohesion && sys.stress_controlled) {
+//			if (sys.dimensionless_shear_rate < 0.02) {
+//				sys.startup_flow = false;
+//			}
+//		}
+		sys.new_contact_gap = 0;
 	}
 	if (filename_parameters == "init_relax.txt") {
 		/* To prepare relaxed initial configuration,
@@ -334,6 +359,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		time_interval_output_data = -1;
 		time_interval_output_config = -1;
 	}
+	
 	p.integration_method = 0;
 	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
@@ -365,6 +391,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		 */
 		sys.target_stress_input = rsequence[step];
 		sys.target_stress = rsequence[step]/6/M_PI;
+		cerr << "Target stress " << sys.target_stress_input << endl;
 		sys.updateUnscaledContactmodel();
 		sys.dimensionless_shear_rate = 1; // needed for 1st time step
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
@@ -394,11 +421,10 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 					cnt_config_out ++;
 				}
 			}
- 			if (abs(sys.dimensionless_shear_rate_averaged) < 1e-4 &&
-				sys.target_stress_input > 0.1){
+ 			if (abs(sys.dimensionless_shear_rate) < 1e-4 ){
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
-				if (jammed > 3) {
+				if (jammed > 10) {
 					jammed = 0;
 					cerr << "shear jamming";
 					break;
@@ -653,6 +679,7 @@ Simulation::openOutputFiles(){
 	"#47: time\n"
 	"#48: dimensionless_shear_rate\n"
 	"#49: stress\n";
+	"#50: shear_disp\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
 	//
@@ -779,11 +806,12 @@ Simulation::importInitialPositionFile(){
 	int n1, n2;
 	double lx, ly, lz;
 	double vf1, vf2;
+	
 	char buf;
 	getline(file_import, import_line[0]);
 	getline(file_import, import_line[1]);
 	stringstream ss(import_line[1]);
-	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2;
+	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
 	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
@@ -898,7 +926,7 @@ Simulation::outputStressTensorData(){
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate_averaged << ' '; // 39
+	fout_st << sys.dimensionless_shear_rate << ' '; // 39
 	fout_st << endl;
 }
 
@@ -993,8 +1021,8 @@ Simulation::outputRheologyData(){
 	 * Then, time step also oscilate.
 	 * This is why we need to take time average to have correct value of dimensionless_shear_rate.
 	 */
-	fout_rheo << sys.dimensionless_shear_rate_averaged << ' '; // 48
-	fout_rheo << sys.dimensionless_shear_rate*6*M_PI*viscosity << ' '; // 49
+	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
+	fout_rheo << sys.target_stress_input << ' '; // 49
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << endl;
 }
@@ -1053,7 +1081,7 @@ Simulation::outputConfigurationData(){
 	if (p.out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		fout_particle << sys.dimensionless_shear_rate_averaged << ' ';
+		fout_particle << sys.dimensionless_shear_rate << ' ';
 		fout_particle << sys.target_stress_input << endl;
 		for (int i=0; i<np; i++) {
 			vec3d &r = pos[i];

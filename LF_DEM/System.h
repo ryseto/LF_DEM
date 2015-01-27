@@ -75,7 +75,7 @@ private:
 	void timeStepMove();
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
-	void timeStepBoxing();
+	void timeStepBoxing(const double strain_increment);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void buildHydroTerms(bool, bool);
@@ -175,6 +175,7 @@ public:
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool cohesion;
+	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
 	/* sd_coeff:
 	 * Full Stokes drag is given by sd_coeff = 1.
@@ -217,7 +218,7 @@ public:
 	 * For Brownian suspension, it should be Peclet number
 	 */
 	double dimensionless_shear_rate;
-	double dimensionless_shear_rate_averaged;
+//	double dimensionless_shear_rate_averaged;
 	double repulsiveforce_amplitude; // dimensionless
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
@@ -244,6 +245,10 @@ public:
 	string simu_name;
 	double target_stress_input;
 	double target_stress;
+	double init_strain_shear_rate_limit;
+	double init_shear_rate_limit;
+	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
+	bool startup_flow;
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,

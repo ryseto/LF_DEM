@@ -95,7 +95,14 @@ Contact::incrementRollingDisplacement(){
  */
 void
 Contact::calcContactInteraction(){
-	/* gap_nondim is negative, therefore it is allways positive. */
+	/* h < 0
+	 * f_contact_normal_norm > 0 ..... repulsive force
+	 * h > 0
+	 * f_contact_normal_norm < 0 ..... attractive force
+	 *
+	 *
+	 gap_nondim is negative,
+	 positive. */
 	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
@@ -108,7 +115,12 @@ Contact::calcContactInteraction(){
 
 void
 Contact::frictionlaw_standard(){
-	double supportable_tanforce = mu*f_contact_normal_norm;
+	double supportable_tanforce;
+	if (!sys->cohesion) {
+		supportable_tanforce = mu*f_contact_normal_norm;
+	} else {
+		supportable_tanforce = mu*(f_contact_normal_norm+sys->dimensionless_cohesive_force);
+	}
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		state = 3; // sliding

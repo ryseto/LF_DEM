@@ -72,6 +72,7 @@ private:
 	double viscosity_brownian;
 	double normalstress_diff_1_brownian;
 	double normalstress_diff_2_brownian;
+	double initial_lees_edwards_disp;
 	/*
 	 * For output data.
 	 */
