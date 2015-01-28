@@ -110,10 +110,10 @@ GenerateInitConfig::outputPositionData(){
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-	fout << "# np1 np2 vf lx ly lz vf1 vf2" << endl;
+	fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
 	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 	fout << lx << ' ' << ly << ' ' << lz << ' ';
-	fout << volume_fraction1 << ' ' << volume_fraction2 << endl;
+	fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
 	for (int i = 0; i < np; i++) {
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
