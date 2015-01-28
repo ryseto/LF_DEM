@@ -73,6 +73,7 @@ Interaction::updateResistanceCoeff(){
 			 */
 			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
 										   sys->log_lub_coeff_contact_tan_total);
+			
 		}
 	}
 }
@@ -160,18 +161,40 @@ Interaction::updateState(bool &deactivated){
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
 		// contacting in previous step
-		if ((!sys->cohesion && gap_nondim>0)
-			|| (sys->cohesion && -contact.f_contact_normal_norm>1/abs(sys->dimensionless_shear_rate))) {
+		bool breakup_contact_bond = false;
+		if (!sys->cohesion) {
+			if (gap_nondim > 0) {
+				breakup_contact_bond = true;
+			}
+		} else {
+			/*
+			 * Checking cohesive bond breaking.
+			 */
+			if (sys->startup_flow == false) {
+				if (sys->target_stress != 0
+					&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
+					//cerr << contact.f_contact_normal_norm << ' ' << gap_nondim << endl;
+					breakup_contact_bond = true;
+				}
+			}
+		}
+		if (breakup_contact_bond) {
 			contact.deactivate();
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
+				exit(1);
 			}
 		}
 	} else {
 		// not contacting in previous step
-		if (gap_nondim <= 0) {
+		if (gap_nondim <= sys->new_contact_gap) {
 			// now contact
 			contact.activate();
+			if (gap_nondim < -0.1){
+				cerr << "new contact may have problem\n";
+				cerr << "gap = " << gap_nondim << endl;
+				exit(1);
+			}
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}

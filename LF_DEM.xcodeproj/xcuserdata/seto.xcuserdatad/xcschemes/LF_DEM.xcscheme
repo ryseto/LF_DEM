@@ -96,15 +96,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-a 1"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "D2N80VF0.5MonoSquare_3.dat"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "nobrownian3.txt"
+            argument = "-b 1 -i rate_table.txt D2N1000VF0.6MonoSquare_1_gels.dat nobrownian3.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

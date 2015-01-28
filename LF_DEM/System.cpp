@@ -16,7 +16,11 @@ maxnb_interactionpair_per_particle(15),
 brownian(false),
 zero_shear(false),
 friction_model(-1),
-repulsiveforce(false)
+repulsiveforce(false),
+new_contact_gap(0),
+startup_flow(false),
+init_strain_shear_rate_limit(0),
+init_shear_rate_limit(999)
 {}
 
 System::~System(){
@@ -179,9 +183,17 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void
 System::updateUnscaledContactmodel(){
-	kn = kn_master*abs(target_stress);
-	kt = kt_master*abs(target_stress);
-	kr = kr_master*abs(target_stress);
+	if (abs(target_stress) != 0) {
+		/* What is the reasonable way
+		 * when the target stress is changed during a simulation?
+		 * 
+		 * [temporally chagne]
+		 * For destressing tests, the spring constants are fixed at the previous values.
+		 */
+		kn = kn_master*abs(target_stress);
+		kt = kt_master*abs(target_stress);
+		kr = kr_master*abs(target_stress);
+	}
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
@@ -320,7 +332,6 @@ System::setupSystem(string control){
 		}
 	}
 	shear_strain = 0;
-	shear_disp = 0;
 	nb_interaction = 0;
 	shear_direction = 1;
 	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
@@ -384,7 +395,7 @@ System::setupSystem(string control){
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	time = 0;
-	shear_disp = 0;
+	
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference = lz;
@@ -410,7 +421,7 @@ System::setupSystem(string control){
 		rate_controlled = false;
 	}
 	stress_controlled = !rate_controlled;
-	dimensionless_shear_rate_averaged = 1;
+//	dimensionless_shear_rate_averaged = 1;
 	/* Pre-calculation
 	 */
 	/* einstein_viscosity may be affected by sd_coeff.
@@ -451,10 +462,11 @@ System::initializeBoxing(){// need to know radii first
 }
 
 void
-System::timeStepBoxing(){
+System::timeStepBoxing(const double strain_increment){
 	// evolve PBC
 	if (!zero_shear) {
-		shear_disp = shear_strain*lz;
+		shear_strain += strain_increment;
+		shear_disp += strain_increment*lz;
 		int m = (int)(shear_disp/lx);
 		if (shear_disp < 0){
 			m--;
@@ -569,22 +581,40 @@ System::timeStepMove(){
 	/* Changing dt for every timestep
 	 * So far, this is only in Eular method.
 	 */
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
+	if (stress_controlled) {
+		/* This strain step criteria needs to be improved.
+		 *
+		 * For jammed state or unyielded state, shear rate is very small.
+		 * In this case, the strain step (=dt) should be small, as well.
+		 */
+		double dt_1 = 1e-3*abs(dimensionless_shear_rate);
+		double dt_2;
+		if (max_velocity > max_sliding_velocity) {
+			dt_2 = disp_max/max_velocity;
+		} else {
+			dt_2 = disp_max/max_sliding_velocity;
+		}
+		if (dt_1 < dt_2) {
+			dt = dt_1;
+		} else {
+			dt = dt_2;
+		}
+		//}
 	} else {
-		dt = disp_max/max_sliding_velocity;
+		if (max_velocity > max_sliding_velocity) {
+			dt = disp_max/max_velocity;
+		} else {
+			dt = disp_max/max_sliding_velocity;
+		}
 	}
-	//dt = 0.001*abs(dimensionless_shear_rate);
-	//cerr << "dt = " << dt << endl;
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime.
 	 */
-	shear_strain += shear_direction*dt;
+
 	double time_increment = dt/abs(dimensionless_shear_rate);
 	time += time_increment;
-	dimensionless_shear_rate_time_integral += dimensionless_shear_rate*time_increment;
 	/* evolve PBC */
-	timeStepBoxing();
+	timeStepBoxing(shear_direction*dt);
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -603,12 +633,11 @@ System::timeStepMovePredictor(){
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
-	shear_strain += shear_direction*dt;
 	time += dt/abs(dimensionless_shear_rate);
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	timeStepBoxing();
+	timeStepBoxing(shear_direction*dt);
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -653,8 +682,6 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		updateInteractions();
 		firsttime = false;
 	}
-	dimensionless_shear_rate_time_integral = 0;
-	double time0 = time;
 	if (time_output_data == 0) {
 		/* integrate until strain_next - 1 time step */
 		while (shear_strain < strain_output_data-dt) {
@@ -667,9 +694,7 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
-	dimensionless_shear_rate_averaged = dimensionless_shear_rate_time_integral/(time-time0);
-
-	if(p.auto_determine_knkt&&shear_strain>p.start_adjust)
+	if (p.auto_determine_knkt && shear_strain>p.start_adjust)
 		adjustContactModelParameters();
 }
 
@@ -722,6 +747,7 @@ System::checkNewInteraction(){
 void
 System::updateInteractions(){
 	double sq_max_sliding_velocity = 0;
+	dimensionless_cohesive_force = 0.1/abs(dimensionless_shear_rate);
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -978,6 +1004,11 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 		}
 		double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 		dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
+		if (shear_strain < init_strain_shear_rate_limit) {
+			if (dimensionless_shear_rate > init_shear_rate_limit) {
+				dimensionless_shear_rate = init_shear_rate_limit;
+			}
+		}
 		if (repulsiveforce) {
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;
@@ -1463,8 +1494,6 @@ void calcMean_StdDev(vector<double> history,
 int
 System::adjustContactModelParameters(){
 	analyzeState();
-	
-	
 	// Calculate a time average with an exponential memory kernel
 	static double previous_kernel_norm = 1;
 	static double previous_overlap_avg = 0;
@@ -1478,7 +1507,7 @@ System::adjustContactModelParameters(){
 	double etn = exp(-deltat/p.memory_strain_avg);
 
 	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
-	if(previous_shear_strain==0){
+	if (previous_shear_strain == 0) {
 		inv_kernel_norm=1/deltat;
 	}
 	

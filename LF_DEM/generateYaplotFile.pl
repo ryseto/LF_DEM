@@ -14,13 +14,13 @@ $yap_radius = 1;
 
 $particle_data = $ARGV[0];
 
-if ($#ARGV >= 1){
-	$force_factor = $ARGV[1];
-}
-if ($#ARGV == 2){
-	$y_section = $ARGV[2];
-	printf "section $y_section\n";
-}
+#if ($#ARGV >= 1){
+#	$force_factor = $ARGV[1];
+#}
+#if ($#ARGV == 2){
+#	$y_section = $ARGV[2];
+#	printf "section $y_section\n";
+#}
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -116,9 +116,8 @@ $shear_strain_next = 1;
 $shear_strain_previous = 0;
 while (1){
 	&InParticles;
-	&InInteractions;
-
 	last unless defined $line;
+	&InInteractions;
 	&OutYaplotData;
 	
 	$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
@@ -133,6 +132,20 @@ while (1){
 	
 	$num ++;
 }
+
+
+open (OUTLAST, "> LastConfig.dat");
+
+printf OUTLAST "$shear_disp\n";
+for ($i = 0; $i < $np; $i ++){
+	$xx = 0.5*$Lx + $posx[$i];
+	$yy = 0.5*$Ly + $posy[$i];
+	$zz = 0.5*$Lz + $posz[$i];
+	printf OUTLAST "$xx $yy $zz $radius[$i]\n";
+}
+close (OUTLAST);
+
+
 
 close (OUT);
 close (OUTE);
@@ -160,86 +173,49 @@ sub readHeader{
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
-    ($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
-	# shear_rate/shear_rate0
-	# shear_rate0 = Fr(0)/(6 pi eta0 a) = 1/6pi
-
-	$shear_rate = $shear_rate;
-	
-	# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
-	# 1: number of the particle
-	# 2: radius
-	# 3, 4, 5: position
-	# 6, 7, 8: velocity
-	# 9, 10, 11: angular velocity
-	# 12: viscosity contribution of lubrication
-	# 13: viscosity contributon of contact GU xz
-	# 14: viscosity contributon of brownian xz
-	# (15: angle for 2D simulation)
-	
-    for ($i = 0; $i < $np; $i ++){
-        $line = <IN_particle> ;
-        ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-		$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+	if (defined $line){
+		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
+		# shear_rate/shear_rate0
+		# shear_rate0 = Fr(0)/(6 pi eta0 a) = 1/6pi
+		$shear_rate = $shear_rate;
+		# h_xzstress << sp << c_xzstressXF << sp << c_xzstressGU << sp << b_xzstress
+		# 1: number of the particle
+		# 2: radius
+		# 3, 4, 5: position
+		# 6, 7, 8: velocity
+		# 9, 10, 11: angular velocity
+		# 12: viscosity contribution of lubrication
+		# 13: viscosity contributon of contact GU xz
+		# 14: viscosity contributon of brownian xz
+		# (15: angle for 2D simulation)
 		
-#		if (true){
-#			#printf OUTMP "$line";
-#			printf OUTMP "$i $x $y $z $a\n";
-#		}
-		
-		$radius[$i] = $a;
-        $posx[$i] = $x;
-        $posy[$i] = $y;
-        $posz[$i] = $z;
-		$velx[$i] = $vx;
-		$vely[$i] = $vy;
-		$velz[$i] = $vz;
-		$omegax[$i] = $ox;
-		$omegay[$i] = $oy;
-		$omegaz[$i] = $oz;
-		
-		$omegay[$i] = $oy;
-		$ang[$i] = $angle;
-		if ($radius_max < $a){
-			$radius_max = $a;
+		for ($i = 0; $i < $np; $i ++){
+			$line = <IN_particle> ;
+			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			#		if (true){
+			#			#printf OUTMP "$line";
+			#			printf OUTMP "$i $x $y $z $a\n";
+			#		}
+			$radius[$i] = $a;
+			$posx[$i] = $x;
+			$posy[$i] = $y;
+			$posz[$i] = $z;
+			$velx[$i] = $vx;
+			$vely[$i] = $vy;
+			$velz[$i] = $vz;
+			$omegax[$i] = $ox;
+			$omegay[$i] = $oy;
+			$omegaz[$i] = $oz;
+			
+			$omegay[$i] = $oy;
+			$ang[$i] = $angle;
+			if ($radius_max < $a){
+				$radius_max = $a;
+			}
 		}
-    }
-	
-	#	if ($c_traj == 0) {
-	#		$min_dist_origin = 100;
-	#		$min_dist_origin1 = 100;
-	#		$min_dist_origin2 = 100;
-	#		for ($i = 0; $i < $np; $i ++) {
-	#			#$sqdistance = ($posx[$i]*$posx[$i]+$posy[$i]*$posy[$i]+$posz[$i]*$posz[$i]);
-	#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,0);
-	#			if ($sqdistance < $min_dist_origin) {
-	#				$min_dist_origin = $sqdistance;
-	#				$center = $i;
-	#			}
-	#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,5);
-	#			if ($sqdistance < $min_dist_origin1) {
-	#				$min_dist_origin1 = $sqdistance;
-	#				$uppder = $i;
-	#			}
-	#			$sqdistance = &calcsqdist($posx[$i],$posy[$i],$posz[$i], 0,0,-5);
-	#			if ($sqdistance < $min_dist_origin2) {
-	#				$min_dist_origin2 = $sqdistance;
-	#				$lower = $i;
-	#			}
-	#
-	#		}
-	#	}
-	#
-	#	$trajx[$c_traj] = $posx[$center];
-	#	$trajy[$c_traj] = $posy[$center];
-	#	$trajz[$c_traj] = $posz[$center];
-	#	$trajx2[$c_traj] = $posx[$uppder];
-	#	$trajy2[$c_traj] = $posy[$uppder];
-	#	$trajz2[$c_traj] = $posz[$uppder];
-	#	$trajx3[$c_traj] = $posx[$lower];
-	#	$trajy3[$c_traj] = $posy[$lower];
-	#	$trajz3[$c_traj] = $posz[$lower];
-	$c_traj++;
+		$c_traj++;
+	}
 }
 
 sub calcsqdist {
