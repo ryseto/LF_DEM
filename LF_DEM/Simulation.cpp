@@ -184,6 +184,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				string_control_parameters << "_s" << ratio_repulsion;
 			} else if (ratio_cohesion != 0) {
 				cerr << "Cohesive force" << endl;
+				p.unscaled_contactmodel = false;
 				sys.cohesion = true;
 				//sys.dimensionless_shear_rate = ratio_cohesion;
 				sys.cohesive_force = 1;
@@ -192,8 +193,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				/* Initial relaxation for stress control simulation.
 				 * (To avoid breaking bonds due to startup flows.)
 				 */
-				sys.init_strain_shear_rate_limit = 0.001;
-				sys.init_shear_rate_limit = 0.0001;
+				sys.init_strain_shear_rate_limit = -9999;
+				sys.init_shear_rate_limit = 9999;
 				string_control_parameters << "_b" << ratio_cohesion;
 			}
 			sys.dimensionless_shear_rate = 1; // needed for 1st time step
@@ -255,17 +256,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	double time_output_data = 0;
 	double time_output_config = 0;
 	sys.new_contact_gap = 0.02;
-//	if (sys.stress_controlled && sys.cohesion) {
-//		/*
-//		 * if the startup shear rate is too high,
-//		 * cohesions are broken.
-//		 * They shold be conserved.
-//		 */
-//		cerr << "activate startup mode!!" << endl;
-//		sys.startup_flow = true;
-//	} else {
-	sys.startup_flow = false;
-//	}
+	int jammed = 0;
 	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
 		if (time_interval_output_data == -1) {
 			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
@@ -274,6 +265,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
 		}
+
 		sys.timeEvolution(strain_output_data, time_output_data);
 		cnt_simu_loop ++;
 		evaluateData();
@@ -294,11 +286,17 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
-//		if (sys.cohesion && sys.stress_controlled) {
-//			if (sys.dimensionless_shear_rate < 0.02) {
-//				sys.startup_flow = false;
-//			}
-//		}
+		if (abs(sys.dimensionless_shear_rate) < 1e-4 ){
+			cerr << "shear jamming " << jammed << endl;
+			jammed ++;
+			if (jammed > 10) {
+				jammed = 0;
+				cerr << "shear jamming";
+				break;
+			}
+		} else {
+			jammed = 0;
+		}
 		sys.new_contact_gap = 0;
 	}
 	if (filename_parameters == "init_relax.txt") {

@@ -76,7 +76,7 @@ $num = 0;
 
 printf OUT "\@0 0 0 0 \n";
 printf OUT "\@1 50 100 205 \n";
-printf OUT "\@2 100 100 100 \n";
+printf OUT "\@2 200 200 200 \n";
 printf OUT "\@3 50 150 255 \n";
 printf OUT "\@4 50 200 50 \n";
 printf OUT "\@5 255 100 100 \n";
@@ -421,7 +421,7 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 8\n";
-	$r = $yap_radius*$radius[0];
+	$r = 0.5*$yap_radius*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){

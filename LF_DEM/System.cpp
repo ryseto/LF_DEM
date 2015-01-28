@@ -18,7 +18,6 @@ zero_shear(false),
 friction_model(-1),
 repulsiveforce(false),
 new_contact_gap(0),
-startup_flow(false),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999)
 {}
@@ -73,9 +72,9 @@ System::importParameterSet(ParameterSet &ps){
 	set_lub_max(p.lub_max);
 	lub_reduce_parameter = p.lub_reduce_parameter;
 	set_lubrication_model(p.lubrication_model);
-	kn = p.kn; 
-	kt = p.kt; 
-	kr = p.kr; 
+	kn = p.kn;
+	kt = p.kt;
+	kr = p.kr;
 	if (repulsiveforce) {
 		set_repulsiveforce_length(p.repulsive_length);
 	} else {
@@ -186,13 +185,19 @@ System::updateUnscaledContactmodel(){
 	if (abs(target_stress) != 0) {
 		/* What is the reasonable way
 		 * when the target stress is changed during a simulation?
-		 * 
+		 *
 		 * [temporally chagne]
 		 * For destressing tests, the spring constants are fixed at the previous values.
 		 */
-		kn = kn_master*abs(target_stress);
-		kt = kt_master*abs(target_stress);
-		kr = kr_master*abs(target_stress);
+		if (!cohesion) {
+ 		kn = kn_master*abs(target_stress);
+			kt = kt_master*abs(target_stress);
+			kr = kr_master*abs(target_stress);
+		} else {
+			kn = kn_master;
+			kt = kt_master;
+			kr = kr_master;
+		}
 	}
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	if (lubrication_model == 1) {
@@ -240,7 +245,7 @@ System::setupBrownian(){
 			p.shear_strain_end /= scale_factor_SmallPe;
 			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
 			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
-
+			
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
 			p.start_adjust /= scale_factor_SmallPe;
@@ -421,7 +426,7 @@ System::setupSystem(string control){
 		rate_controlled = false;
 	}
 	stress_controlled = !rate_controlled;
-//	dimensionless_shear_rate_averaged = 1;
+	//	dimensionless_shear_rate_averaged = 1;
 	/* Pre-calculation
 	 */
 	/* einstein_viscosity may be affected by sd_coeff.
@@ -610,7 +615,7 @@ System::timeStepMove(){
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime.
 	 */
-
+	
 	double time_increment = dt/abs(dimensionless_shear_rate);
 	time += time_increment;
 	/* evolve PBC */
@@ -995,45 +1000,63 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
-		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-		double shear_rate_numerator = target_stress-shearstress_con;
-		if (repulsiveforce) {
-			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-			shear_rate_numerator -= shearstress_rep;
-		}
-		double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
-		dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
-		if (shear_strain < init_strain_shear_rate_limit) {
-			if (dimensionless_shear_rate > init_shear_rate_limit) {
-				dimensionless_shear_rate = init_shear_rate_limit;
+		if (p.unscaled_contactmodel) {
+			double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
+			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+			double shear_rate_numerator = target_stress-shearstress_con;
+			if (repulsiveforce) {
+				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+				shear_rate_numerator -= shearstress_rep;
 			}
-		}
-		if (repulsiveforce) {
+			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+			dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
+			if (shear_strain < init_strain_shear_rate_limit) {
+				if (dimensionless_shear_rate > init_shear_rate_limit) {
+					dimensionless_shear_rate = init_shear_rate_limit;
+				}
+			}
+			if (repulsiveforce) {
+				for (int i=0; i<np; i++) {
+					vel_repulsive[i] /= dimensionless_shear_rate;
+					ang_vel_repulsive[i] /= dimensionless_shear_rate;
+					vel_contact[i] /= dimensionless_shear_rate;
+					ang_vel_contact[i] /= dimensionless_shear_rate;
+				}
+				for (int i=0; i<np; i++) {
+					na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
+					na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
+				}
+			} else {
+				/*
+				 * Contact velocity remains the same direction for shear rate < 0.
+				 * Velocity from strain should become opposite directino.
+				 * To reduce the number of calculation step, the overall sign of velocities
+				 * will be invesed later.
+				 */
+				for (int i=0; i<np; i++) {
+					vel_contact[i] /= dimensionless_shear_rate;
+					ang_vel_contact[i] /= dimensionless_shear_rate;
+				}
+				for (int i=0; i<np; i++) {
+					na_velocity[i] = vel_hydro[i]+vel_contact[i];
+					na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+				}
+			}
+		} else {
+			cerr << "not implemented yet" << endl;
+			exit(1);
+			double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
+			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+			double shear_rate_numerator = target_stress-shearstress_con;
+			if (repulsiveforce) {
+				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+				shear_rate_numerator -= shearstress_rep;
+			}
+			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_shear_rate;
 				ang_vel_repulsive[i] /= dimensionless_shear_rate;
-				vel_contact[i] /= dimensionless_shear_rate;
-				ang_vel_contact[i] /= dimensionless_shear_rate;
-			}
-			for (int i=0; i<np; i++) {
-				na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
-				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
-			}
-		} else {
-			/*
-			 * Contact velocity remains the same direction for shear rate < 0.
-			 * Velocity from strain should become opposite directino.
-			 * To reduce the number of calculation step, the overall sign of velocities
-			 * will be invesed later.
-			 */
-			for (int i=0; i<np; i++) {
-				vel_contact[i] /= dimensionless_shear_rate;
-				ang_vel_contact[i] /= dimensionless_shear_rate;
-			}
-			for (int i=0; i<np; i++) {
-				na_velocity[i] = vel_hydro[i]+vel_contact[i];
-				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
 			}
 		}
 	} else {
@@ -1505,7 +1528,7 @@ System::adjustContactModelParameters(){
 	//	double memory_shear_strain = 0.01;
 	double deltat = (shear_strain-previous_shear_strain);
 	double etn = exp(-deltat/p.memory_strain_avg);
-
+	
 	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
 	if (previous_shear_strain == 0) {
 		inv_kernel_norm=1/deltat;
@@ -1520,18 +1543,18 @@ System::adjustContactModelParameters(){
 	double max_disp_tan_avg = inv_kernel_norm*( max_disp_tan*deltat + etn*previous_max_disp_tan_avg/previous_kernel_norm );
 	double kn_avg = inv_kernel_norm*( kn*deltat + etn*previous_kn_avg/previous_kernel_norm );
 	double kt_avg = inv_kernel_norm*( kt*deltat + etn*previous_kt_avg/previous_kernel_norm );
-
 	
-   	cout << shear_strain << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
+	
+	cout << shear_strain << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
 	//	max_disp_tan;
-
+	
 	previous_shear_strain = shear_strain;
 	previous_kernel_norm = inv_kernel_norm;
 	previous_overlap_avg = overlap_avg;
 	previous_max_disp_tan_avg = max_disp_tan_avg;
 	previous_kn_avg = kn_avg;
 	previous_kt_avg = kt_avg;
-
+	
 	double limiting_change = 0.05;
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
 	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
@@ -1542,24 +1565,23 @@ System::adjustContactModelParameters(){
 	if(dkn<-limiting_change*kn){
 		dkn = -limiting_change*kn;
 	}
-
+	
 	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
 	kn += dkn;
 	if(kn<p.kn_lowPeclet){
 		kn = p.kn_lowPeclet;
 	}
-
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
 	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
-	if(dkt>limiting_change*kt){
+	if (dkt >limiting_change*kt) {
 		dkt = limiting_change*kt;
 	}
-	if(dkt<-limiting_change*kt){
+	if (dkt < -limiting_change*kt) {
 		dkt = -limiting_change*kt;
 	}
 	kt += dkt;
-	if(kt<p.kt_lowPeclet){
+	if (kt < p.kt_lowPeclet) {
 		kt = p.kt_lowPeclet;
 	}
 	if (max_velocity > max_sliding_velocity) {
@@ -1567,7 +1589,6 @@ System::adjustContactModelParameters(){
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-
 	// // adapt time step
 	// double relative_change = dkn/kn;
 	// if (dkt/kt>relative_change){

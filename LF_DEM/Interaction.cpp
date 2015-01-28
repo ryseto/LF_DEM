@@ -170,19 +170,16 @@ Interaction::updateState(bool &deactivated){
 			/*
 			 * Checking cohesive bond breaking.
 			 */
-			if (sys->startup_flow == false) {
-				if (sys->target_stress != 0
-					&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
-					//cerr << contact.f_contact_normal_norm << ' ' << gap_nondim << endl;
-					breakup_contact_bond = true;
-				}
+			if (sys->target_stress != 0
+				&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
+				//cerr << contact.f_contact_normal_norm << ' ' << gap_nondim << endl;
+				breakup_contact_bond = true;
 			}
 		}
 		if (breakup_contact_bond) {
 			contact.deactivate();
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
-				exit(1);
 			}
 		}
 	} else {
@@ -193,7 +190,7 @@ Interaction::updateState(bool &deactivated){
 			if (gap_nondim < -0.1){
 				cerr << "new contact may have problem\n";
 				cerr << "gap = " << gap_nondim << endl;
-				exit(1);
+				//exit(1);
 			}
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
