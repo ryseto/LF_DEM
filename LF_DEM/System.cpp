@@ -1507,33 +1507,39 @@ System::adjustContactModelParameters(){
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
 	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
 	
-	if(dkn>limiting_change*kn){
-		dkn = limiting_change*kn;
-	}
-	if(dkn<-limiting_change*kn){
-		dkn = -limiting_change*kn;
-	}
+	// if(dkn>limiting_change*kn){
+	// 	dkn = limiting_change*kn;
+	// }
+	// if(dkn<-limiting_change*kn){
+	// 	dkn = -limiting_change*kn;
+	// }
 
 	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
 	kn += dkn;
-	if(kn<p.kn_lowPeclet){
-		kn = p.kn_lowPeclet;
+	if(kn<p.min_kn){
+		kn = p.min_kn;
 	}
+	if(kn>p.max_kn){
+		kn = p.max_kn;
+	}
+
 
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
 	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
-	if(dkt>limiting_change*kt){
-		dkt = limiting_change*kt;
-	}
-	if(dkt<-limiting_change*kt){
-		dkt = -limiting_change*kt;
-	}
+	// if(dkt>limiting_change*kt){
+	// 	dkt = limiting_change*kt;
+	// }
+	// if(dkt<-limiting_change*kt){
+	// 	dkt = -limiting_change*kt;
+	// }
 	kt += dkt;
-	if(kt<p.kt_lowPeclet){
-		kt = p.kt_lowPeclet;
+	if(kt<p.min_kt){
+		kt = p.min_kt;
 	}
-
+	if(kt>p.max_kt){
+		kt = p.max_kt;
+	}
 
 
 	if (max_velocity > max_sliding_velocity) {

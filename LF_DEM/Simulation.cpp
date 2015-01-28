@@ -492,9 +492,9 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
 		p.mu_static = atof(value.c_str());
-	} else if (keyword == "strain_interval_out") {
+	} else if (keyword == "strain_interval_output_config") {
 		p.strain_interval_output_config = atof(value.c_str());
-	} else if (keyword == "strain_interval_out_data") {
+	} else if (keyword == "strain_interval_output_data") {
 		p.strain_interval_output_data = atof(value.c_str());
 	} else if (keyword == "out_data_particle") {
 		p.out_data_particle = str2bool(value);
@@ -512,6 +512,16 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.memory_strain_avg = atof(value.c_str());
 	} else if (keyword == "memory_strain_k") {
 		p.memory_strain_k = atof(value.c_str());
+	} else if (keyword == "start_adjust") {
+		p.start_adjust = atof(value.c_str());
+	} else if (keyword == "min_kn") {
+		p.min_kn = atof(value.c_str());
+	} else if (keyword == "max_kn") {
+		p.max_kn = atof(value.c_str());
+	} else if (keyword == "min_kt") {
+		p.min_kt = atof(value.c_str());
+	} else if (keyword == "max_kt") {
+		p.max_kt = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -753,7 +763,10 @@ Simulation::setDefaultParameters(){
 	p.memory_strain_avg = 0.01;
 	p.memory_strain_k = 0.02;
 	p.start_adjust = 0.2;
+	p.min_kn = 1000;
 	p.max_kn = 1000000;
+	p.min_kt = 1000;
+	p.max_kt = 1000000;
 
 	p.repulsive_length = 0.05;
 
