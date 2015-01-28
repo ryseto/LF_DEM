@@ -1534,14 +1534,14 @@ System::adjustContactModelParameters(){
 
 	double limiting_change = 0.05;
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
-	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
+	double dkn = 0.1*(kn_target-kn)*deltat/p.memory_strain_k;
 	
-	// if(dkn>limiting_change*kn){
-	// 	dkn = limiting_change*kn;
-	// }
-	// if(dkn<-limiting_change*kn){
-	// 	dkn = -limiting_change*kn;
-	// }
+	if(dkn>limiting_change*kn){
+		dkn = limiting_change*kn;
+	}
+	if(dkn<-limiting_change*kn){
+		dkn = -limiting_change*kn;
+	}
 
 	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
 	kn += dkn;
@@ -1555,13 +1555,13 @@ System::adjustContactModelParameters(){
 
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
-	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
-	// if(dkt>limiting_change*kt){
-	// 	dkt = limiting_change*kt;
-	// }
-	// if(dkt<-limiting_change*kt){
-	// 	dkt = -limiting_change*kt;
-	// }
+	double dkt = 0.1*(kt_target-kt)*deltat/p.memory_strain_k;
+	if(dkt>limiting_change*kt){
+		dkt = limiting_change*kt;
+	}
+	if(dkt<-limiting_change*kt){
+		dkt = -limiting_change*kt;
+	}
 	kt += dkt;
 	if(kt<p.min_kt){
 		kt = p.min_kt;
