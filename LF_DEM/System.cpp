@@ -1568,8 +1568,8 @@ System::adjustContactModelParameters(){
 	
 	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
 	kn += dkn;
-	if(kn<p.kn_lowPeclet){
-		kn = p.kn_lowPeclet;
+	if(kn<p.min_kn){
+		kn = p.min_kn;
 	}
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
@@ -1584,6 +1584,11 @@ System::adjustContactModelParameters(){
 	if (kt < p.kt_lowPeclet) {
 		kt = p.kt_lowPeclet;
 	}
+	if(kt>p.max_kt){
+		kt = p.max_kt;
+	}
+
+
 	if (max_velocity > max_sliding_velocity) {
 		dt = disp_max/max_velocity;
 	} else {
