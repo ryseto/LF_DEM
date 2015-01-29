@@ -699,8 +699,9 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
-	if (p.auto_determine_knkt && shear_strain>p.start_adjust)
+	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
+	}
 }
 
 void
@@ -1514,50 +1515,49 @@ void calcMean_StdDev(vector<double> history,
 // 	return 0;
 // }
 
-int
-System::adjustContactModelParameters(){
-	analyzeState();
+void
+System::averageExpKernel(double x, double & x_avg, double deltat){
 	// Calculate a time average with an exponential memory kernel
 	static double previous_kernel_norm = 1;
-	static double previous_overlap_avg = 0;
-	static double previous_max_disp_tan_avg = 0;
-	static double previous_shear_strain = 0;
-	static double previous_kn_avg = 0;
-	static double previous_kt_avg = 0;
-	
+
 	//	double memory_shear_strain = 0.01;
-	double deltat = (shear_strain-previous_shear_strain);
 	double etn = exp(-deltat/p.memory_strain_avg);
-	
 	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
-	if (previous_shear_strain == 0) {
+	if (previous_kernel_norm == 1) { // = it is the first iteration
 		inv_kernel_norm=1/deltat;
 	}
 	
-	double overlap = 0;
-	if(min_gap_nondim<0){
-		overlap = -min_gap_nondim;
-	}
+	x_avg = inv_kernel_norm*( x*deltat + etn*x_avg/previous_kernel_norm );
 	
-	double overlap_avg = inv_kernel_norm*( overlap*deltat + etn*previous_overlap_avg/previous_kernel_norm );
-	double max_disp_tan_avg = inv_kernel_norm*( max_disp_tan*deltat + etn*previous_max_disp_tan_avg/previous_kernel_norm );
-	double kn_avg = inv_kernel_norm*( kn*deltat + etn*previous_kn_avg/previous_kernel_norm );
-	double kt_avg = inv_kernel_norm*( kt*deltat + etn*previous_kt_avg/previous_kernel_norm );
+	previous_kernel_norm = inv_kernel_norm;
+}
+
+void
+System::adjustContactModelParameters(){
+	analyzeState();
+	static double previous_shear_strain = 0;
+	double deltat = (shear_strain-previous_shear_strain);
 	
+	static double overlap_avg = 0;
+	static double max_disp_tan_avg = 0;
+	static double kn_avg = 0;
+	static double kt_avg = 0;
 	
-	cout << shear_strain << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
+	double overlap = -min_gap_nondim;
+	
+	averageExpKernel(overlap, overlap_avg, deltat);
+	averageExpKernel(max_disp_tan, max_disp_tan_avg, deltat);
+	averageExpKernel(kn, kn_avg, deltat);
+	averageExpKernel(kt, kt_avg, deltat);
+
+
+
 	//	max_disp_tan;
 	
-	previous_shear_strain = shear_strain;
-	previous_kernel_norm = inv_kernel_norm;
-	previous_overlap_avg = overlap_avg;
-	previous_max_disp_tan_avg = max_disp_tan_avg;
-	previous_kn_avg = kn_avg;
-	previous_kt_avg = kt_avg;
-	
-	double limiting_change = 0.05;
+
+	double limiting_change = 0.01;
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
-	double dkn = 0.1*(kn_target-kn)*deltat/p.memory_strain_k;
+	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
 	
 	if(dkn>limiting_change*kn){
 		dkn = limiting_change*kn;
@@ -1566,7 +1566,7 @@ System::adjustContactModelParameters(){
 		dkn = -limiting_change*kn;
 	}
 
-	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
+
 	kn += dkn;
 	if(kn<p.min_kn){
 		kn = p.min_kn;
@@ -1576,9 +1576,10 @@ System::adjustContactModelParameters(){
 	}
 
 
+
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
-	double dkt = 0.1*(kt_target-kt)*deltat/p.memory_strain_k;
+	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
 	if(dkt>limiting_change*kt){
 		dkt = limiting_change*kt;
 	}
@@ -1605,7 +1606,9 @@ System::adjustContactModelParameters(){
 	// 	relative_change = dkt/kt;
 	// }
 	// dt += -dt*relative_change;
-	cout << dt << " " << kn << " " << kt << endl;
+	cout << shear_strain <<" " << dt << " " << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << overlap << endl;
+
+	previous_shear_strain = shear_strain;
 }
 
 void

@@ -278,7 +278,8 @@ public:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	int adjustContactModelParameters();
+	void averageExpKernel(double,double&,double);
+	void adjustContactModelParameters();
 	void setupShearFlow(bool activate){
 		if (activate) {
 			/* In dimensionless simulations for non Browninan simulation,

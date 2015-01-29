@@ -466,6 +466,7 @@ removeBlank(string &str){
 
 void
 Simulation::autoSetParameters(const string &keyword, const string &value){
+	
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
