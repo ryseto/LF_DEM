@@ -435,7 +435,7 @@ Romain Mari </dd></dl>
 <div class="memdoc">
 <p>This method tries to determine the values of the contact parameters kn, kt required to reach given maximum normal / tangential spring stretches (= overlap / tangential displacement ) in steady state.</p>
 <p>The algorithm is a simple adaptative scheme trying to resp. increase or decrease the spring constants when the stretches are too large or too small.</p>
-<p>The stretch values used are average of maximal values weighted with an exponential memory kernel: <img class="formulaInl" alt="$k_{avg}(\gamma_n) = \frac{1}{C_n} \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_5.png"/> where <img class="formulaInl" alt="$\gamma_{avg}$" src="form_6.png"/> is the user-defined parameter <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2" title="averaging time for the stiffness determination">ParameterSet::memory_strain_avg</a>.</p>
+<p>The stretch values used are average of maximal values weighted with an exponential memory kernel: <img class="formulaInl" alt="$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_13.png"/> where <img class="formulaInl" alt="$\gamma_{avg}$" src="form_6.png"/> is the user-defined parameter <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2" title="averaging time for the stiffness determination">ParameterSet::memory_strain_avg</a>.</p>
 <p>The kn and kt are bounded by user-defined parameters <a class="el" href="struct_parameter_set.html#a429e042257696a91c08faacea9edf720" title="min normal spring constant when auto-determining stiffness">ParameterSet::min_kn</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness">ParameterSet::max_kn</a>, <a class="el" href="struct_parameter_set.html#accd52cadba30c830a6658f0fc4263914" title="min tangential spring constant when auto-determining stiffness">ParameterSet::min_kt</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness">ParameterSet::max_kn</a>.</p>
 <p>The target stretches are given by <a class="el" href="struct_parameter_set.html#a892cd33f6c89910724a7cc9e8c83546b" title="max overlap to reach when auto-determining stiffness">ParameterSet::overlap_target</a> and <a class="el" href="struct_parameter_set.html#ad74cb563e7c778a115963d23e0755d14" title="max tangential displacement to reach when auto-determining stiffness">ParameterSet::disp_tan_target</a>.</p>
 <p>Additionally, this routine estimates the time step dt.</p>
@@ -473,7 +473,7 @@ Romain Mari </dd></dl>
 </div>
 <div class="memdoc">
 <p>Updates the average value x_avg with an exponential memory kernel</p>
-<p>The average x_avg is defined as: <img class="formulaInl" alt="$x_{avg}(\gamma_n) = \frac{1}{C_n} \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_1.png"/></p>
+<p>The average x_avg is defined as: <img class="formulaInl" alt="$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_12.png"/></p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">x</td><td>: <img class="formulaInl" alt="$x_n $" src="form_7.png"/> </td></tr>
@@ -514,7 +514,7 @@ Romain Mari </dd></dl>
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jan 29 2015 14:21:58 for Documentation for LF_DEM by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 29 2015 14:45:09 for Documentation for LF_DEM by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>

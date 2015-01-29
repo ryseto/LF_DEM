@@ -1450,70 +1450,6 @@ void calcMean_StdDev(vector<double> history,
 	std_dev = sqrt(sum_sq_deviation/(ne-1));
 }
 
-// int
-// System::adjustContactModelParameters(){
-// 	/*
-// 	 * kn, kt and dt are determined in one test simulation.
-// 	 * We give small values of kn and kt as the initial values.
-// 	 * With target values of spring strech,
-// 	 * spring constants are determined by the maximum foces in a certain interaval.
-// 	 * In order to avoid unusual large values of forces,
-// 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
-// 	 * Only increases of kn and kt are accepted.
-// 	 */
-// 	/* determination of kn
-// 	 */
-// 	cerr << "We should make a simpler rule." << endl;
-// 	exit(1);
-// 	//	double mean_max_fc_normal, stddev_max_fc_normal;
-// 	//	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-// 	//	double kn_try = mean_max_fc_normal/p.overlap_target;
-// 	//	kn = kn_try;
-// 	//	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-// 	/* determination of kt
-// 	 */
-// 	//	double mean_max_fc_tan, stddev_max_fc_tan;
-// 	//	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-// 	//	double kt_try = mean_max_fc_tan/p.disp_tan_target;
-// 	//	kt = kt_try;
-// 	//	double average_max_tanvelocity = 0;
-// 	//	double max_max_tanvelocity = 0;
-// 	//for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
-// 	//	average_max_tanvelocity += sliding_velocity_history[j];
-// 	//	if (max_max_tanvelocity < sliding_velocity_history[j]){
-// 	//		max_max_tanvelocity = sliding_velocity_history[j];
-// 	//		}
-// 	//}
-// 	//average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
-// 	//	double average_max_relative_velocity = 0;
-// 	//	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
-// 	//		average_max_relative_velocity += relative_velocity_history[j];
-// 	//	}
-// 	//	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
-// 	//	double tmp_max_velocity = 0;
-// 	//	if (average_max_relative_velocity > average_max_tanvelocity){
-// 	//		tmp_max_velocity = average_max_relative_velocity ;
-// 	//	} else {
-// 	//		tmp_max_velocity = average_max_tanvelocity ;
-// 	//	}
-// 	//	if (max_max_tanvelocity > 1000){
-// 	//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
-// 	//		return 1;
-// 	//	}
-// 	//	double dt_try = disp_max/tmp_max_velocity;
-// 	//	if (dt_try < p.dt_max){
-// 	//		dt = dt_try;
-// 	//	}
-// 	//	for (int k=0; k<nb_interaction; k++) {
-// 	//		interaction[k].contact.updateContactModel();
-// 	//	}
-// 	//	if (kn > p.max_kn){
-// 	//		cerr << "kn = " << kn << endl;
-// 	//		cerr << " kn > max_kn : exit" << endl;
-// 	//		return 1;
-// 	//	}
-// 	return 0;
-// }
 
 void
 System::averageExpKernel(double x, double & x_avg, double deltagamma){
@@ -1521,7 +1457,7 @@ System::averageExpKernel(double x, double & x_avg, double deltagamma){
 	 * \brief Updates the average value x_avg with an exponential memory kernel
 	 * 
 	 * The average x_avg is defined as:
-	 * \f$x_{avg}(\gamma_n) = \frac{1}{C_n} \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
+	 * \f$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
 	 *
 	 * \param  x : \f$x_n \f$ 
 	 * \param  x_avg : \f$x_{avg}(\gamma_{n-1}) \f$ (at strain \f$n-1\f$)
@@ -1559,7 +1495,7 @@ System::adjustContactModelParameters(){
 	 *
 	 * The stretch values used are average of maximal values 
 	 * weighted with an exponential memory kernel:
-	 *    \f$k_{avg}(\gamma_n) = \frac{1}{C_n} \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
+	 *    \f$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
 	 * where \f$\gamma_{avg}\f$ is the user-defined parameter ParameterSet::memory_strain_avg.
 	 * 
 	 * The kn and kt are bounded by user-defined parameters ParameterSet::min_kn, ParameterSet::max_kn, ParameterSet::min_kt, ParameterSet::max_kn.
