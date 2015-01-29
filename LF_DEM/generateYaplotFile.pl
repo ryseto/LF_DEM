@@ -421,7 +421,7 @@ sub OutYaplotData{
 	
 	printf OUT "y 1\n";
     printf OUT "@ 8\n";
-	$r = 0.5*$yap_radius*$radius[0];
+	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
