@@ -1516,27 +1516,62 @@ void calcMean_StdDev(vector<double> history,
 // }
 
 void
-System::averageExpKernel(double x, double & x_avg, double deltat){
-	// Calculate a time average with an exponential memory kernel
+System::averageExpKernel(double x, double & x_avg, double deltagamma){
+	/**	  
+	 * \brief Updates the average value x_avg with an exponential memory kernel
+	 * 
+	 * The average x_avg is defined as:
+	 * \f$x_{avg}(\gamma_n) = \frac{1}{C_n} \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
+	 *
+	 * \param  x : \f$x_n \f$ 
+	 * \param  x_avg : \f$x_{avg}(\gamma_{n-1}) \f$ (at strain \f$n-1\f$)
+	 * \param  deltagamma : \f$\gamma_n-\gamma_{n-1} \f$.
+	 * 
+	 * On return, x_avg contains the value of \f$x_{avg}(\gamma_{n}) \f$ (at strain \f$n\f$)
+	 *
+	 * This method uses the fact the following recursions:
+	 * - \f$ C_n = \frac{C_{n-1}}{(\gamma_n-\gamma_{n-1})C_{n-1}} + e^{(\gamma_n-\gamma_{n-1})/\gamma_{avg}} \f$
+	 * - \f$ x_{avg}(\gamma_n) = C_{n}\left[ (\gamma_n-\gamma_{n-1}) + e^{(\gamma_n-\gamma_{n-1})/\gamma_{avg}} x_{avg}(\gamma_{n-1})/C_{n-1} \right] \f$
+	 */
 	static double previous_kernel_norm = 1;
-
-	//	double memory_shear_strain = 0.01;
-	double etn = exp(-deltat/p.memory_strain_avg);
-	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
+	
+	double etn = exp(-deltagamma/p.memory_strain_avg);
+	double inv_kernel_norm = previous_kernel_norm/(deltagamma*previous_kernel_norm+etn);
 	if (previous_kernel_norm == 1) { // = it is the first iteration
-		inv_kernel_norm=1/deltat;
+		inv_kernel_norm=1/deltagamma;
 	}
 	
-	x_avg = inv_kernel_norm*( x*deltat + etn*x_avg/previous_kernel_norm );
+	x_avg = inv_kernel_norm*( x*deltagamma + etn*x_avg/previous_kernel_norm );
 	
 	previous_kernel_norm = inv_kernel_norm;
 }
 
 void
 System::adjustContactModelParameters(){
+	/**
+	 * This method tries to determine 
+	 * the values of the contact parameters kn, kt 
+	 * required to reach given maximum normal / tangential spring stretches
+	 * (= overlap / tangential displacement ) in steady state.
+	 * 
+	 * The algorithm is a simple adaptative scheme trying to resp. increase or decrease
+	 * the spring constants when the stretches are too large or too small.
+	 *
+	 * The stretch values used are average of maximal values 
+	 * weighted with an exponential memory kernel:
+	 *    \f$k_{avg}(\gamma_n) = \frac{1}{C_n} \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
+	 * where \f$\gamma_{avg}\f$ is the user-defined parameter ParameterSet::memory_strain_avg.
+	 * 
+	 * The kn and kt are bounded by user-defined parameters ParameterSet::min_kn, ParameterSet::max_kn, ParameterSet::min_kt, ParameterSet::max_kn.
+	 *
+	 * The target stretches are given by ParameterSet::overlap_target and ParameterSet::disp_tan_target.
+	 *
+	 * Additionally, this routine estimates the time step dt.
+	 */
+
 	analyzeState();
 	static double previous_shear_strain = 0;
-	double deltat = (shear_strain-previous_shear_strain);
+	double deltagamma = (shear_strain-previous_shear_strain);
 	
 	static double overlap_avg = 0;
 	static double max_disp_tan_avg = 0;
@@ -1545,28 +1580,14 @@ System::adjustContactModelParameters(){
 	
 	double overlap = -min_gap_nondim;
 	
-	averageExpKernel(overlap, overlap_avg, deltat);
-	averageExpKernel(max_disp_tan, max_disp_tan_avg, deltat);
-	averageExpKernel(kn, kn_avg, deltat);
-	averageExpKernel(kt, kt_avg, deltat);
+	averageExpKernel(overlap, overlap_avg, deltagamma);
+	averageExpKernel(max_disp_tan, max_disp_tan_avg, deltagamma);
+	averageExpKernel(kn, kn_avg, deltagamma);
+	averageExpKernel(kt, kt_avg, deltagamma);
 
-
-
-	//	max_disp_tan;
-	
-
-	double limiting_change = 0.01;
 	double kn_target = kn_avg*overlap_avg/p.overlap_target;
-	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
+	double dkn = (kn_target-kn)*deltagamma/p.memory_strain_k;
 	
-	if(dkn>limiting_change*kn){
-		dkn = limiting_change*kn;
-	}
-	if(dkn<-limiting_change*kn){
-		dkn = -limiting_change*kn;
-	}
-
-
 	kn += dkn;
 	if(kn<p.min_kn){
 		kn = p.min_kn;
@@ -1575,17 +1596,10 @@ System::adjustContactModelParameters(){
 		kn = p.max_kn;
 	}
 
-
-
 	
 	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
-	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
-	if(dkt>limiting_change*kt){
-		dkt = limiting_change*kt;
-	}
-	if(dkt<-limiting_change*kt){
-		dkt = -limiting_change*kt;
-	}
+	double dkt = (kt_target-kt)*deltagamma/p.memory_strain_k;
+
 	kt += dkt;
 	if(kt<p.min_kt){
 		kt = p.min_kt;
@@ -1600,12 +1614,7 @@ System::adjustContactModelParameters(){
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-	// // adapt time step
-	// double relative_change = dkn/kn;
-	// if (dkt/kt>relative_change){
-	// 	relative_change = dkt/kt;
-	// }
-	// dt += -dt*relative_change;
+
 	cout << shear_strain <<" " << dt << " " << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << overlap << endl;
 
 	previous_shear_strain = shear_strain;

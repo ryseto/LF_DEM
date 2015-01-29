@@ -65,7 +65,7 @@ struct ParameterSet{
 	double kt_lowPeclet;                     ///< Particle stiffness: tangential spring constant in low Peclet mode
 	double kr_lowPeclet;                     ///< Particle stiffness: rolling spring constant in low Peclet mode
 
-	bool auto_determine_knkt;                ///< auto-determine stiffnesses knowing overlap and tangential displacement targets
+	bool auto_determine_knkt;                ///< auto-determine stiffnesses knowing overlap and tangential displacement targets, see System::adjustContactModelParameters for details
 	double overlap_target;                   ///< max overlap to reach when auto-determining stiffness
 	double disp_tan_target;                  ///< max tangential displacement to reach when auto-determining stiffness
 	double memory_strain_k;                  ///< relaxation time for the stiffness determination

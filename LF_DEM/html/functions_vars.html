@@ -77,6 +77,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow3" class="tabs2">
     <ul class="tablist">
       <li><a href="functions.html"><span>All</span></a></li>
+      <li><a href="functions_func.html"><span>Functions</span></a></li>
       <li class="current"><a href="functions_vars.html"><span>Variables</span></a></li>
     </ul>
   </div>
@@ -187,11 +188,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>max_kn
 : <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943">ParameterSet</a>
 </li>
-<li>memory_time_avg
-: <a class="el" href="struct_parameter_set.html#afaf912016b835ba4f3f81484c80e4cb1">ParameterSet</a>
+<li>max_kt
+: <a class="el" href="struct_parameter_set.html#ad3a750d73e7ae118c43c20e720042303">ParameterSet</a>
 </li>
-<li>memory_time_k
-: <a class="el" href="struct_parameter_set.html#aabc304802875addd5fde35887fe001d0">ParameterSet</a>
+<li>memory_strain_avg
+: <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2">ParameterSet</a>
+</li>
+<li>memory_strain_k
+: <a class="el" href="struct_parameter_set.html#a1c1ed1f8bcc786ff2f30c2325000a501">ParameterSet</a>
+</li>
+<li>min_kn
+: <a class="el" href="struct_parameter_set.html#a429e042257696a91c08faacea9edf720">ParameterSet</a>
+</li>
+<li>min_kt
+: <a class="el" href="struct_parameter_set.html#accd52cadba30c830a6658f0fc4263914">ParameterSet</a>
 </li>
 <li>mu_static
 : <a class="el" href="struct_parameter_set.html#aab005331fd7290c4fbdce123e774de54">ParameterSet</a>
@@ -239,6 +249,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>shear_strain_end
 : <a class="el" href="struct_parameter_set.html#a82b77a8490e88ea0591a1f41cbd57b5a">ParameterSet</a>
 </li>
+<li>start_adjust
+: <a class="el" href="struct_parameter_set.html#ac53858a21f1981835b6a1f1b1610c43d">ParameterSet</a>
+</li>
 <li>strain_interval_output_config
 : <a class="el" href="struct_parameter_set.html#a34aeabfc952b904a233209ad55dcc6d6">ParameterSet</a>
 </li>
@@ -259,7 +272,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -271,7 +284,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Jan 22 2015 11:43:45 for Documentation for LF_DEM by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 29 2015 14:21:58 for Documentation for LF_DEM by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.7.6.1
 </small></address>
