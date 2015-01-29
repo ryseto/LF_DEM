@@ -9,8 +9,8 @@
 
 struct ParameterSet{
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
-	double dt_max;                           ///< [Euler]: initial time/strain step value. [Pedictor/Corrector or Brownian]: time/strain step value
-	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
+	double dt;                           ///< [Euler]: initial time/strain step value. [Pedictor/Corrector or Brownian]: time/strain step value
+	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
 	
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector
@@ -61,9 +61,9 @@ struct ParameterSet{
 	double kn;                               ///< Particle stiffness: normal spring constant
 	double kt;                               ///< Particle stiffness: tangential spring constant
 	double kr;                               ///< Particle stiffness: rolling spring constant
-	double kn_lowPeclet;                     ///< Particle stiffness: normal spring constant in low Peclet mode
-	double kt_lowPeclet;                     ///< Particle stiffness: tangential spring constant in low Peclet mode
-	double kr_lowPeclet;                     ///< Particle stiffness: rolling spring constant in low Peclet mode
+	//	double kn_lowPeclet;                     ///< Particle stiffness: normal spring constant in low Peclet mode
+	//	double kt_lowPeclet;                     ///< Particle stiffness: tangential spring constant in low Peclet mode
+	//	double kr_lowPeclet;                     ///< Particle stiffness: rolling spring constant in low Peclet mode
 
 	bool auto_determine_knkt;                ///< auto-determine stiffnesses knowing overlap and tangential displacement targets, see System::adjustContactModelParameters for details
 	double overlap_target;                   ///< max overlap to reach when auto-determining stiffness

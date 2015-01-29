@@ -46,8 +46,8 @@ Simulation::contactForceParameter(string filename){
 	double phi_;
 	double kn_;
 	double kt_;
-	double dt_max_;
-	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_max_) {
+	double dt_;
+	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
 		if (phi_ == volume_or_area_fraction) {
 			break;
 		}
@@ -55,20 +55,20 @@ Simulation::contactForceParameter(string filename){
 	fin_knktdt.clear();
 	p.kn = kn_;
 	p.kt = kt_;
-    p.dt_max = dt_max_;
-	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
+    p.dt = dt_;
+	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 }
 
 void
-Simulation::contactForceParameterPeclet(string filename){
+Simulation::contactForceParameterBrownian(string filename){
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	double phi_;
 	double peclet_;
 	double kn_;
 	double kt_;
-	double dt_max_;
-	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_max_) {
+	double dt_;
+	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
 		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_shear_rate) {
 			break;
 		}
@@ -76,8 +76,8 @@ Simulation::contactForceParameterPeclet(string filename){
 	fin_knktdt.clear();
 	p.kn = kn_;
 	p.kt = kt_;
-    p.dt_max = dt_max_;
-	cerr << phi_ << ' ' << peclet_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
+    p.dt = dt_;
+	cerr << " Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 }
 
 void
@@ -213,7 +213,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		sys.shear_disp = 0;
 	}
 	if (input_files[2] != "not_given") {
-		contactForceParameter(input_files[2]);
+		if(sys.brownian){
+			contactForceParameterBrownian(input_files[2]);
+		}
+		else{
+			contactForceParameter(input_files[2]);
+		}
 	}
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
@@ -505,14 +510,14 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.kt = atof(value.c_str());
 	} else if (keyword == "kr") {
 		p.kr = atof(value.c_str());
-	} else if (keyword == "dt_max") {
-		p.dt_max = atof(value.c_str());
-	} else if (keyword == "kn_lowPeclet") {
-		p.kn_lowPeclet = atof(value.c_str());
-	} else if (keyword == "kt_lowPeclet") {
-		p.kt_lowPeclet = atof(value.c_str());
-	} else if (keyword == "dt_lowPeclet") {
-		p.dt_lowPeclet = atof(value.c_str());
+	} else if (keyword == "dt") {
+		p.dt = atof(value.c_str());
+		//	} else if (keyword == "kn_lowPeclet") {
+		//		p.kn_lowPeclet = atof(value.c_str());
+		//	} else if (keyword == "kt_lowPeclet") {
+		//		p.kt_lowPeclet = atof(value.c_str());
+		//	} else if (keyword == "dt_lowPeclet") {
+		//		p.dt_lowPeclet = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
 		p.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
@@ -721,8 +726,8 @@ Simulation::exportParameterSet(){
 void
 Simulation::setDefaultParameters(){
 	p.Pe_switch = 5;
-	p.dt_max = 1e-4;
-	p.dt_lowPeclet = 1e-4;
+	p.dt = 1e-4;
+	//	p.dt_lowPeclet = 1e-4;
 	p.disp_max = 2e-3;
 	
 	p.integration_method = 1;
@@ -770,17 +775,17 @@ Simulation::setDefaultParameters(){
 		p.kn = 2000;
 		p.kt = 1000;
 		p.kr = 1000;
-		p.kn_lowPeclet = 0;
-		p.kt_lowPeclet = 0;
-		p.kr_lowPeclet = 0;
+		//		p.kn_lowPeclet = 0;
+		//		p.kt_lowPeclet = 0;
+		//		p.kr_lowPeclet = 0;
 	} else {
 		p.unscaled_contactmodel = false;
 		p.kn = 10000;
 		p.kt = 6000;
 		p.kr = 6000;
-		p.kn_lowPeclet = 10000;
-		p.kt_lowPeclet = 6000;
-		p.kr_lowPeclet = 6000;
+		//		p.kn_lowPeclet = 10000;
+		//		p.kt_lowPeclet = 6000;
+		//		p.kr_lowPeclet = 6000;
 	}
 
 	p.auto_determine_knkt = false;

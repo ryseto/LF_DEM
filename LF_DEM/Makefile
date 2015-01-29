@@ -162,3 +162,5 @@ clean:
 ps:
 	enscript --pretty-print --color --fancy-header -r -2 -p LF_DEM_sources_$(DATE).ps $(LIB) $(SRC)
 
+doc:
+	doxygen Doxyfile

@@ -237,9 +237,9 @@ System::setupBrownian(){
 		if (dimensionless_shear_rate < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
 			scale_factor_SmallPe = p.Pe_switch/dimensionless_shear_rate;
-			kn = scale_factor_SmallPe*p.kn_lowPeclet;
-			kt = scale_factor_SmallPe*p.kt_lowPeclet;
-			p.dt_max = p.dt_lowPeclet/scale_factor_SmallPe;
+			//			kn = scale_factor_SmallPe*p.kn_lowPeclet;
+			//			kt = scale_factor_SmallPe*p.kt_lowPeclet;
+			//			p.dt = p.dt_lowPeclet/scale_factor_SmallPe;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
 			p.shear_strain_end /= scale_factor_SmallPe;
@@ -253,7 +253,7 @@ System::setupBrownian(){
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
-			cerr << "  dt_max = " << p.dt_max << endl;
+			cerr << "  dt = " << p.dt << endl;
 			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
 			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		}
@@ -405,7 +405,7 @@ System::setupSystem(string control){
 	 */
 	vel_difference = lz;
 	stokes_solver.initialize();
-	dt = p.dt_max;
+	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
 	if (twodimension) {
