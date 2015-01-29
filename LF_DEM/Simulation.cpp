@@ -52,7 +52,7 @@ Simulation::contactForceParameter(string filename){
 			break;
 		}
 	}
-	fin_knktdt.clear();
+	fin_knktdt.close();
 	p.kn = kn_;
 	p.kt = kt_;
     p.dt = dt_;
@@ -68,16 +68,24 @@ Simulation::contactForceParameterBrownian(string filename){
 	double kn_;
 	double kt_;
 	double dt_;
+	bool found=false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
 		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_shear_rate) {
+			found = true;
 			break;
 		}
 	}
-	fin_knktdt.clear();
-	p.kn = kn_;
-	p.kt = kt_;
-    p.dt = dt_;
-	cerr << " Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+	fin_knktdt.close();
+	if(found){
+		p.kn = kn_;
+		p.kt = kt_;
+		p.dt = dt_;
+		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+	}
+	else{
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << " and Pe = " << peclet_ << endl;
+		exit(1);
+	}
 }
 
 void
