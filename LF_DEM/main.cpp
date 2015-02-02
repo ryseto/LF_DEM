@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 {
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] \
 	[-r Scaled_Repulsion ] [-s Stress ] [-a Scaled_Cohesion ] \
-	[-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] \
+	[-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
 	
 	bool peclet = false;
@@ -40,6 +40,9 @@ int main(int argc, char **argv)
 	
 	bool generate_init = false;
 	int random_seed = 1;
+
+	bool binary_conf = false;
+	
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -60,12 +63,14 @@ int main(int argc, char **argv)
 		{"kn-kt-file", required_argument, 0, 'k'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"stress-seq-file", required_argument, 0, 'S'},
+		{"binary", no_argument, 0, 'n'},
 		{"help", no_argument, 0, 'h'},
 		{0,0,0,0},
 	};
+
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hg:s:S:p:P:r:R:c:C:a:A:b:B:k:i:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hng:s:S:p:P:r:R:c:C:a:A:b:B:k:i:", longopts, &index)) != -1) {
 		switch (c) {
 			case 'p':
 				peclet = true;
@@ -157,9 +162,12 @@ int main(int argc, char **argv)
 			case 'i':
 				stress_rate_filename = optarg;
 				break;
-			case 'g':
+ 			case 'g':
 				generate_init = true;
 				random_seed = atoi(optarg);
+				break;
+ 			case 'n':
+				binary_conf = true;
 				break;
 			case 'h':
 				cerr << usage << endl;
@@ -171,6 +179,7 @@ int main(int argc, char **argv)
 				abort ();
 		}
 	}
+
 	// Incompatibilities
 	if (peclet && rheology_control == "stress") {
 		incompatibility_exiting("peclet", "stress_controlled");
@@ -181,6 +190,8 @@ int main(int argc, char **argv)
 	} else if (peclet && cohesion) {
 		incompatibility_exiting("peclet", "cohesion");
 	}
+
+
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate(random_seed);
@@ -200,12 +211,13 @@ int main(int argc, char **argv)
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
 		Simulation simulation;
+
 		if (seq_filename == "not_given") {
-			simulation.simulationSteadyShear(input_files, peclet_num,
+			simulation.simulationSteadyShear(input_files, binary_conf, peclet_num,
 											 ratio_repulsion, ratio_cohesion, ratio_critical_load,
 											 rheology_control);
 		} else {
-			simulation.simulationUserDefinedSequence(seq_type, input_files, rheology_control);
+			simulation.simulationUserDefinedSequence(seq_type, input_files, binary_conf, rheology_control);
 		}
 	}
 	return 0;

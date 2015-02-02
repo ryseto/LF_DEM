@@ -83,7 +83,7 @@ Simulation::contactForceParameterBrownian(string filename){
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	}
 	else{
-		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << " and Pe = " << peclet_ << endl;
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << sys.dimensionless_shear_rate << endl;
 		exit(1);
 	}
 }
@@ -104,6 +104,7 @@ Simulation::importPreSimulationData(string filename){
 
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
+									   bool binary_conf,
 									   double peclet_num,
 									   double ratio_repulsion,
 									   double ratio_cohesion,
@@ -214,12 +215,20 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	setDefaultParameters();
 	readParameterFile();
-	importInitialPositionFile();
+
+ 	if(binary_conf){
+		importConfigurationBinary();
+	}
+	else{
+		importInitialPositionFile();
+	}
 	if (initial_lees_edwards_disp > 0){
 		sys.shear_disp = initial_lees_edwards_disp;
 	} else {
 		sys.shear_disp = 0;
 	}
+
+
 	if (input_files[2] != "not_given") {
 		if(sys.brownian){
 			contactForceParameterBrownian(input_files[2]);
@@ -256,11 +265,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
  */
 void
 Simulation::simulationSteadyShear(vector<string> &input_files,
+								  bool binary_conf,
 								  double peclet_num, double ratio_repulsion, double ratio_cohesion,
 								  double ratio_critical_load, string control_variable){
 	user_sequence = false;
 	control_var = control_variable;
-	setupSimulationSteadyShear(input_files, peclet_num,
+	setupSimulationSteadyShear(input_files, binary_conf, peclet_num,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
@@ -284,6 +294,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
+		outputConfigurationBinary();
 		if (time_interval_output_data == -1) {
 			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
@@ -325,7 +336,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
  * Main simulation
  */
 void
-Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable){
+Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable){
 	user_sequence = true;
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
@@ -360,7 +371,12 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	}
 	setDefaultParameters();
 	readParameterFile();
-	importInitialPositionFile();
+ 	if(binary_conf){
+		importConfigurationBinary();
+	}
+	else{
+		importInitialPositionFile();
+	}
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		// strain_interval_out
@@ -419,6 +435,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
+			outputConfigurationBinary();
 			if (time_interval_output_data == -1) {
 				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
 					cerr << "   out config: " << sys.get_shear_strain() << endl;
@@ -839,12 +856,96 @@ Simulation::importInitialPositionFile(){
 	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
 	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
+	vector <double> radius;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
 		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);
 	}
 	file_import.close();
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
+}
+
+void
+Simulation::outputConfigurationBinary(){
+	string conf_filename;
+	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
+	conf_filename =  "conf_" + sys.simu_name + ".dat";
+	outputConfigurationBinary(conf_filename);
+}
+void
+Simulation::outputConfigurationBinary(string conf_filename){
+
+	vector < vector <double> > pos;
+	int np = sys.get_np();
+	int dims = 4;
+	pos.resize(np);
+	
+	for (int i=0; i<np; i++) {
+		pos[i].resize(dims);
+		pos[i][0] = sys.position[i].x;
+		pos[i][1] = sys.position[i].y;
+		pos[i][2] = sys.position[i].z;
+		pos[i][3] = sys.radius[i];
+	}
+	
+	ofstream conf_export;
+	double lx = sys.get_lx();
+	double ly = sys.get_ly();
+	double lz = sys.get_lz();
+	double shear_disp = sys.shear_disp;
+
+	conf_export.open(conf_filename, ios::binary | ios::out);
+	conf_export.write((char*)&np, sizeof(int));
+	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
+	conf_export.write((char*)&lx, sizeof(double));
+	conf_export.write((char*)&ly, sizeof(double));
+	conf_export.write((char*)&lz, sizeof(double));
+	conf_export.write((char*)&shear_disp, sizeof(double));
+	for (int i=0; i<np; i++) {
+		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
+	}
+	
+	conf_export.close();
+}
+
+void
+Simulation::importConfigurationBinary(){
+	ifstream file_import;
+	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+	if (!file_import) {
+		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
+		exit(1);
+	}
+
+	int np;
+	double lx;
+	double ly;
+	double lz;
+	file_import.read((char*)&np, sizeof(int));
+	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
+	file_import.read((char*)&lx, sizeof(double));
+	file_import.read((char*)&ly, sizeof(double));
+	file_import.read((char*)&lz, sizeof(double));
+	file_import.read((char*)&initial_lees_edwards_disp, sizeof(double));
+
+	double x_;
+	double y_;
+	double z_;
+	double r_;
+	vector <vec3d> initial_position;
+	vector <double> radius;
+	for (int i=0; i<np; i++) {
+		file_import.read((char*)&x_, sizeof(double));
+		file_import.read((char*)&y_, sizeof(double));
+		file_import.read((char*)&z_, sizeof(double));
+		file_import.read((char*)&r_, sizeof(double));
+		initial_position.push_back(vec3d(x_,y_,z_));
+		radius.push_back(r_);
+	}
+	file_import.close();
+
+	sys.setConfiguration(initial_position, radius, lx, ly, lz);
+	cout << endl<<endl<<endl<< " conf set with " << lx << endl<<endl<< endl;
 }
 
 void
@@ -1199,5 +1300,16 @@ Simulation::outputFinalConfiguration(){
 		fout_finalconfig << sys.position[i].z << ' ';
 		fout_finalconfig << sys.radius[i] << endl;
 	}
+
+	string filename_bin = filename_final_configuration;
+	string ext=".dat";
+	size_t start_pos = filename_bin.find(ext);
+    if(start_pos == string::npos){
+		cerr << " WARNING, no binary output generated " << endl;
+        return;
+	}
+    filename_bin.replace(start_pos, ext.length(), ".bin");
+	outputConfigurationBinary(filename_bin);
 }
+
 

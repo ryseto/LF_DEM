@@ -27,12 +27,11 @@ class Simulation{
 private:
 	System sys;
 	ParameterSet p;
-	vector<double> radius;
+	double volume_or_area_fraction;
 	string filename_import_positions;
 	string filename_parameters;
 	string filename_sequence;
 	ostringstream string_control_parameters;
-	double volume_or_area_fraction;
 	string import_line[2];
 	string control_var;
 	bool user_sequence;
@@ -93,6 +92,7 @@ private:
 	void contactForceParameter(string filename);
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
+	void importConfigurationBinary();
 	/*
 	 * For outputs
 	 */
@@ -102,8 +102,11 @@ private:
 	void outputStressTensorData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
+	void outputConfigurationBinary();
+	void outputConfigurationBinary(string);
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void setupSimulationSteadyShear(vector<string> &input_files,
+									bool binary_conf,
 									double peclet_num, double scaled_repulsion,
 									double scaled_cohesion, double scaled_critical_load,
 									string control_variable);
@@ -113,10 +116,10 @@ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	void simulationSteadyShear(vector<string> &input_files, double peclet_num, double scaled_repulsion,
+	void simulationSteadyShear(vector<string> &input_files, bool binary_conf,double peclet_num, double scaled_repulsion,
 							   double scaled_cohesion,
 							   double scaled_critical_load, string control_variable);
-	void simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable);
+	void simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable);
 };
 #endif /* defined(__LF_DEM__Simulation__) */
 

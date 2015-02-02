@@ -168,6 +168,7 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 						 double lx_, double ly_, double lz_){
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
+
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
@@ -178,6 +179,19 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 	} else {
 		twodimension = false;
 	}
+
+	if (twodimension) {
+		setSystemVolume(2*radius[np-1]);
+	} else {
+		setSystemVolume();
+	}
+
+	double particle_volume = 0;
+	for (int i=0; i<np; i++) {
+		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
+	}
+	volume_fraction = particle_volume/system_volume;
+	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
 void
@@ -408,17 +422,6 @@ System::setupSystem(string control){
 	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
-	if (twodimension) {
-		setSystemVolume(2*radius[np-1]);
-	} else {
-		setSystemVolume();
-	}
-	double particle_volume = 0;
-	for (int i=0; i<np; i++) {
-		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
-	}
-	volume_fraction = particle_volume/system_volume;
-	cerr << "volume_fraction = " << volume_fraction << endl;
 	if (control == "rate") {
 		rate_controlled = true;
 	}
