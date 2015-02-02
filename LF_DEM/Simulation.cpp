@@ -230,7 +230,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 
 
 	if (input_files[2] != "not_given") {
-		if(sys.brownian){
+		if(sys.brownian&&!p.auto_determine_knkt){
 			contactForceParameterBrownian(input_files[2]);
 		}
 		else{
@@ -800,17 +800,11 @@ Simulation::setDefaultParameters(){
 		p.kn = 2000;
 		p.kt = 1000;
 		p.kr = 1000;
-		//		p.kn_lowPeclet = 0;
-		//		p.kt_lowPeclet = 0;
-		//		p.kr_lowPeclet = 0;
 	} else {
 		p.unscaled_contactmodel = false;
 		p.kn = 10000;
 		p.kt = 6000;
 		p.kr = 6000;
-		//		p.kn_lowPeclet = 10000;
-		//		p.kt_lowPeclet = 6000;
-		//		p.kr_lowPeclet = 6000;
 	}
 
 	p.auto_determine_knkt = false;
@@ -894,7 +888,7 @@ Simulation::outputConfigurationBinary(string conf_filename){
 	double lz = sys.get_lz();
 	double shear_disp = sys.shear_disp;
 
-	conf_export.open(conf_filename, ios::binary | ios::out);
+	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
 	conf_export.write((char*)&np, sizeof(int));
 	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
 	conf_export.write((char*)&lx, sizeof(double));
@@ -945,7 +939,6 @@ Simulation::importConfigurationBinary(){
 	file_import.close();
 
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-	cout << endl<<endl<<endl<< " conf set with " << lx << endl<<endl<< endl;
 }
 
 void

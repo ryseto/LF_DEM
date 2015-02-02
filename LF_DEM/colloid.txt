@@ -3,9 +3,9 @@
  *
  */
 
-dt_max = 1e-5;
+dt = 1e-4;
 Pe_switch = 5;
-disp_max = 1e-3;
+disp_max = 5e-3;
 rolling_friction = false;
 
 /*
@@ -14,13 +14,13 @@ rolling_friction = false;
  * 1 predictor-corrector,
  */
 
-integration_method = 0;
+integration_method = 1;
 
 /*
  * shear_strain: total strain (length of simulation)
  */
 
-shear_strain_end = 40;
+shear_strain_end = 50;
 
 /*
  * 1 Linear friction law Ft < mu Fn
@@ -41,8 +41,8 @@ mu_static = 1;
  * kt: tangential spring constant
  */
 
-kn = 2000;
-kt = 1000;
+kn = 10000;
+kt = 6000;
 
 /*
  * Lubrication model
@@ -73,11 +73,11 @@ lub_reduce_parameter = 1e-3;
 contact_relaxation_time = 1e-3;
 contact_relaxation_time_tan = 0;
 
-/* Repulsive force
- * Short range repulsion is assumed.
+/*
+ * Repulsive force
  */
 
-repulsiveforce_length = 0.02;
+repulsiveforce_length = 0;
 
 /*
  *  Data output
@@ -87,22 +87,33 @@ repulsiveforce_length = 0.02;
  * Output interval
  */
 
-strain_interval_out = 0.05;
+strain_interval_output_config = 1e-1;
 
 /*
  *  Data output
  */
-strain_interval_out_data = 0.005;
+strain_interval_output_data = 1e-2;
 
 /*
  * position and interaction data
  */
 
-out_data_particle = false;
-out_data_interaction = false;
+out_data_particle = true;
+out_data_interaction = true;
 
 /*
  * The middle height of the simulation box is set to the flow zero level.
  */
 
 origin_zero_flow = true;
+
+auto_determine_knkt = false;
+overlap_target = 0.02;
+disp_tan_target = 0.02;
+memory_strain_k = 3;
+memory_strain_avg = 2;
+min_kn = 1000;
+max_kn = 5000000;
+min_kt = 1000;
+max_kt = 5000000;
+start_adjust = 0;

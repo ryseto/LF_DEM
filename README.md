@@ -92,7 +92,7 @@ none of this works for you, the complete list of parameters is kept in
 Although none of these parameters is
 compulsory (the simulation can run with default hard-coded values), as
 much as possible they should be provided by the user. One example of input parameter file is
-given in the file `nobrownian.txt`.
+given in the file `colloid.txt`.
 
 #### Rate-controlled mode
 
