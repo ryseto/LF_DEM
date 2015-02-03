@@ -944,14 +944,22 @@ Simulation::importConfigurationBinary(){
 void
 Simulation::prepareSimulationName(){
 	ostringstream ss_simu_name;
-	string::size_type pos_ext_position = filename_import_positions.find(".dat");
-	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
-	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
+	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
+	string::size_type param_name_end = filename_parameters.find_last_of(".");
+	string::size_type pos_name_start = filename_import_positions.find_last_of("/");
+	string::size_type param_name_start = filename_parameters.find_last_of("/");
+	if(pos_name_start == std::string::npos){
+		pos_name_start = -1;
+	}
+	if(param_name_start == std::string::npos){
+		param_name_start = -1;
+	}
+	ss_simu_name << filename_import_positions.substr(pos_name_start+1, pos_name_end);
 	ss_simu_name << "_";
-	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
+	ss_simu_name << filename_parameters.substr(param_name_start+1, param_name_end);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
-	cerr << "filename: " << sys.simu_name << endl;
+	cerr << "filename: " << sys.simu_name << endl;	
 }
 
 void
