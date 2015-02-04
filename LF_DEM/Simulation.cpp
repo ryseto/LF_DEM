@@ -954,9 +954,11 @@ Simulation::prepareSimulationName(){
 	if(param_name_start == std::string::npos){
 		param_name_start = -1;
 	}
-	ss_simu_name << filename_import_positions.substr(pos_name_start+1, pos_name_end);
+	pos_name_start += 1;
+	param_name_start += 1;
+	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
 	ss_simu_name << "_";
-	ss_simu_name << filename_parameters.substr(param_name_start+1, param_name_end);
+	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
 	cerr << "filename: " << sys.simu_name << endl;	
