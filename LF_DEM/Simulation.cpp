@@ -1016,11 +1016,7 @@ Simulation::evaluateData(){
 	if (sys.brownian) {
 		total_stress += sys.total_brownian_stressGU;
 	}
-	/*
-	 * Viscosity is only the increment of stress (=del_eta).
-	 * The total viscosity should be
-	 * eta_r = eta/eta_0 = 1 + del_eta.
-	 */
+	
 	viscosity = sys.einstein_viscosity+total_stress.getStressXZ();
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();

@@ -145,8 +145,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>stressReset</b> ()</t
 void&#160;</td><td class="memItemRight" valign="bottom"><b>stressBrownianReset</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2057dbc73fea6c9100f966f0bd446cb7"></a><!-- doxytag: member="System::calcStress" ref="a2057dbc73fea6c9100f966f0bd446cb7" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcStress</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05d663034ce639977969d04cc9d64e57"></a><!-- doxytag: member="System::calcStressPerParticle" ref="a05d663034ce639977969d04cc9d64e57" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calcStressPerParticle</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a05d663034ce639977969d04cc9d64e57">calcStressPerParticle</a> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78d8a56bccac3975b85ccc1a14e3a846"></a><!-- doxytag: member="System::analyzeState" ref="a78d8a56bccac3975b85ccc1a14e3a846" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>analyzeState</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7207e2165a582059b25f6b85c7743c1c"></a><!-- doxytag: member="System::lubricationStress" ref="a7207e2165a582059b25f6b85c7743c1c" args="(int i, int j)" -->
@@ -155,8 +154,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>lubricationStress</b>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeBoxing</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf55e39687ea5c9c32780e7b005b28d2"></a><!-- doxytag: member="System::calcLubricationForce" ref="abf55e39687ea5c9c32780e7b005b28d2" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcLubricationForce</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a565a8176dc5c95372725f50f2e9e82f2">averageExpKernel</a> (double, double &amp;, double)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">adjustContactModelParameters</a> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1f556299d16473a1de2bb19ffe946e82"></a><!-- doxytag: member="System::setupShearFlow" ref="a1f556299d16473a1de2bb19ffe946e82" args="(bool activate)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setupShearFlow</b> (bool activate)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83be954fc7bf3b0457098381cc1f39b7"></a><!-- doxytag: member="System::setBoxSize" ref="a83be954fc7bf3b0457098381cc1f39b7" args="(double lx_, double ly_, double lz_)" -->
@@ -426,12 +423,12 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>new_contact_gap</b>
 <dd>
 Romain Mari </dd></dl>
 </div><hr/><h2>Member Function Documentation</h2>
-<a class="anchor" id="a7b3733e4824baf06f73b0b919ab7cfb2"></a><!-- doxytag: member="System::adjustContactModelParameters" ref="a7b3733e4824baf06f73b0b919ab7cfb2" args="()" -->
+<a class="anchor" id="a05d663034ce639977969d04cc9d64e57"></a><!-- doxytag: member="System::calcStressPerParticle" ref="a05d663034ce639977969d04cc9d64e57" args="()" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">System::adjustContactModelParameters</a> </td>
+          <td class="memname">void <a class="el" href="class_system.html#a05d663034ce639977969d04cc9d64e57">System::calcStressPerParticle</a> </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -439,61 +436,12 @@ Romain Mari </dd></dl>
       </table>
 </div>
 <div class="memdoc">
-<p>This method tries to determine the values of the contact parameters kn, kt required to reach given maximum normal / tangential spring stretches (= overlap / tangential displacement ) in steady state.</p>
-<p>The algorithm is a simple adaptative scheme trying to resp. increase or decrease the spring constants when the stretches are too large or too small.</p>
-<p>The stretch values used are average of maximal values weighted with an exponential memory kernel: <img class="formulaInl" alt="$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_13.png"/> where <img class="formulaInl" alt="$\gamma_{avg}$" src="form_6.png"/> is the user-defined parameter <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2" title="averaging time for the stiffness determination">ParameterSet::memory_strain_avg</a>.</p>
-<p>The kn and kt are bounded by user-defined parameters <a class="el" href="struct_parameter_set.html#a429e042257696a91c08faacea9edf720" title="min normal spring constant when auto-determining stiffness">ParameterSet::min_kn</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness">ParameterSet::max_kn</a>, <a class="el" href="struct_parameter_set.html#accd52cadba30c830a6658f0fc4263914" title="min tangential spring constant when auto-determining stiffness">ParameterSet::min_kt</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness">ParameterSet::max_kn</a>.</p>
-<p>The target stretches are given by <a class="el" href="struct_parameter_set.html#a892cd33f6c89910724a7cc9e8c83546b" title="max overlap to reach when auto-determining stiffness">ParameterSet::overlap_target</a> and <a class="el" href="struct_parameter_set.html#ad74cb563e7c778a115963d23e0755d14" title="max tangential displacement to reach when auto-determining stiffness">ParameterSet::disp_tan_target</a>.</p>
-<p>Additionally, this routine estimates the time step dt.</p>
-
-</div>
-</div>
-<a class="anchor" id="a565a8176dc5c95372725f50f2e9e82f2"></a><!-- doxytag: member="System::averageExpKernel" ref="a565a8176dc5c95372725f50f2e9e82f2" args="(double, double &amp;, double)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void <a class="el" href="class_system.html#a565a8176dc5c95372725f50f2e9e82f2">System::averageExpKernel</a> </td>
-          <td>(</td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double &amp;&#160;</td>
-          <td class="paramname"><em>x_avg</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>deltagamma</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-<p>Updates the average value x_avg with an exponential memory kernel</p>
-<p>The average x_avg is defined as: <img class="formulaInl" alt="$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_12.png"/></p>
-<dl class="params"><dt><b>Parameters:</b></dt><dd>
-  <table class="params">
-    <tr><td class="paramname">x</td><td>: <img class="formulaInl" alt="$x_n $" src="form_7.png"/> </td></tr>
-    <tr><td class="paramname">x_avg</td><td>: <img class="formulaInl" alt="$x_{avg}(\gamma_{n-1}) $" src="form_8.png"/> (at strain <img class="formulaInl" alt="$n-1$" src="form_9.png"/>) </td></tr>
-    <tr><td class="paramname">deltagamma</td><td>: <img class="formulaInl" alt="$\gamma_n-\gamma_{n-1} $" src="form_2.png"/>.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>On return, x_avg contains the value of <img class="formulaInl" alt="$x_{avg}(\gamma_{n}) $" src="form_10.png"/> (at strain <img class="formulaInl" alt="$n$" src="form_11.png"/>)</p>
-<p>This method uses the fact the following recursions:</p>
-<ul>
-<li><img class="formulaInl" alt="$ C_n = \frac{C_{n-1}}{(\gamma_n-\gamma_{n-1})C_{n-1}} + e^{(\gamma_n-\gamma_{n-1})/\gamma_{avg}} $" src="form_3.png"/></li>
-<li><img class="formulaInl" alt="$ x_{avg}(\gamma_n) = C_{n}\left[ (\gamma_n-\gamma_{n-1}) + e^{(\gamma_n-\gamma_{n-1})/\gamma_{avg}} x_{avg}(\gamma_{n-1})/C_{n-1} \right] $" src="form_4.png"/></li>
-</ul>
+<p>This method computes the stresses per particle, split by components (hydro, contact, ...).</p>
+<p>From velocities <img class="formulaInl" alt="$ V_{\mathrm{I}}$" src="form_23.png"/> associated with interaction <img class="formulaInl" alt="$\mathrm{I}$" src="form_24.png"/>, this method gets the stresses <img class="formulaInl" alt="$ - GV_{\mathrm{I}} $" src="form_25.png"/>. (This corresponds to <img class="formulaInl" alt="$- GU_{\mathrm{I}} - H\Omega_{\mathrm{I}} $" src="form_26.png"/> in Jeffrey notations <a class="el" href="citelist.html#CITEREF_jeffrey_calculation_1992">[3]</a>, and <img class="formulaInl" alt="$- R_{\mathrm{SU}} U_{\mathrm{I}} $" src="form_27.png"/> in Bossis and Brady <a class="el" href="citelist.html#CITEREF_brady_stokesian_1988">[2]</a> notations.)</p>
+<p>For the hydrodynamic component, it also gets the <img class="formulaInl" alt="$ M E_{\infty}$" src="form_28.png"/> term ( <img class="formulaInl" alt="$R_{\mathrm{SE}} E_{\infty}$" src="form_29.png"/> is B&amp;B notations), so that all in all <img class="formulaInl" alt="$ S_{\mathrm{H}} = - GV_{\mathrm{H}} + M E_{\infty}$" src="form_30.png"/>.</p>
+<p>For the point forces, it also gets the <img class="formulaInl" alt="$ -xF_{\mathrm{I}} $" src="form_31.png"/> term, so that <img class="formulaInl" alt="$ S_{\mathrm{I}} = - GV_{\mathrm{I}} - xF_{\mathrm{I}} $" src="form_32.png"/>.</p>
+<p>For the Brownian forces, it computes (in B&amp;B notations) <img class="formulaInl" alt="$ S_{\mathrm{B}} = - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) $" src="form_33.png"/> with the mid-step algorithm of Banchio and Brady <a class="el" href="citelist.html#CITEREF_banchio_accelerated_2003">[1]</a> with <img class="formulaInl" alt="$ n=1 $" src="form_34.png"/>.</p>
+<p>In the Brownian mode, because of the mid-point scheme for the Brownian stress, you should be careful when calling this method from outside of the System::timeStepMoveCorrector() and System::timeStepMovePredictor() methods.</p>
 
 </div>
 </div>
@@ -522,7 +470,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_system.html">System</a>      </li>
 
-    <li class="footer">Generated on Thu Jan 29 2015 17:04:19 for Documentation for LF_DEM by
+    <li class="footer">Generated on Thu Feb 5 2015 11:35:42 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

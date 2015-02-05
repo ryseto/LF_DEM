@@ -10,10 +10,33 @@
 
 void
 System::calcStressPerParticle(){
-	/////////////////////////////////////////////////
-	// from the velocities V_H, V_C, V_Rep, V_B,
-	// compute stresses R_SV * V
-	// and then add rF stress for F_C and F_Rep
+	/**
+	   This method computes the stresses per particle, split by components (hydro, contact, ...).
+	   
+	   From velocities \f$ V_{\mathrm{I}}\f$ associated with
+	   interaction \f$\mathrm{I}\f$, this method gets the stresses \f$ - GV_{\mathrm{I}} \f$. (This corresponds to
+	   \f$- GU_{\mathrm{I}} - H\Omega_{\mathrm{I}} \f$ in Jeffrey
+	   notations \cite jeffrey_calculation_1992, and
+	   \f$- R_{\mathrm{SU}} U_{\mathrm{I}} \f$ in Bossis and Brady 
+	   \cite brady_stokesian_1988 notations.)
+
+	   For the hydrodynamic component, it also gets the \f$ M
+	   E_{\infty}\f$ term (\f$R_{\mathrm{SE}} E_{\infty}\f$ is B&B
+	   notations), so that all in all \f$ S_{\mathrm{H}} =
+	   - GV_{\mathrm{H}} + M E_{\infty}\f$.
+
+	   For the point forces, it also gets the \f$ -xF_{\mathrm{I}} \f$ term, so that \f$ S_{\mathrm{I}} =
+	   - GV_{\mathrm{I}} - xF_{\mathrm{I}} \f$.
+
+	   For the Brownian forces, it computes (in B&B notations) \f$ S_{\mathrm{B}} =
+	   - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) \f$ with the mid-step algorithm of Banchio and Brady 
+	   \cite banchio_accelerated_2003 with \f$ n=1 \f$.
+
+	   In the Brownian mode, because of the mid-point scheme for the Brownian stress, you
+	   should be careful when calling this method from outside of the
+	   System::timeStepMoveCorrector() and
+	   System::timeStepMovePredictor() methods.
+	*/
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
