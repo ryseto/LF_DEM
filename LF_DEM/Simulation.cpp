@@ -994,29 +994,7 @@ Simulation::evaluateData(){
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	/* NOTE:
-	 *
-	 * The total stress DID not include the contact GU terms,
-	 * because we consider that the relative motion is not expected hard spheres
-	 * and artificial in the soft-sphere contact model.
-	 * [Aug 15, 2013]
-	 * In the contact model, force is divided into two parts (spring and dash-pot).
-	 * In physics, the total force is important.
-	 * Therefore, both should be included for the stress calculation.
-	 *
-	 */
-	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
-	total_stress = sys.total_hydro_stress;
-	total_stress += total_contact_stressXF;
-	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
-	if (sys.repulsiveforce) {
-		total_repulsive_stress = sys.total_repulsive_stressXF+sys.total_repulsive_stressGU;
-		total_stress += total_repulsive_stress;
-	}
-	if (sys.brownian) {
-		total_stress += sys.total_brownian_stressGU;
-	}
-	
+		
 	viscosity = sys.einstein_viscosity+total_stress.getStressXZ();
 	normalstress_diff_1 = total_stress.getNormalStress1();
 	normalstress_diff_2 = total_stress.getNormalStress2();

@@ -106,6 +106,8 @@ private:
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
+	bool lowPeclet;
+
  protected:
  public:
 	System();
@@ -162,13 +164,17 @@ private:
 	StressTensor* brownianstressGU_predictor; // by particle
 	StressTensor contactstressXF_normal;
 	StressTensor contactstressXF_tan;
+	StressTensor total_stress;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
+	StressTensor total_contact_stressXF;
 	StressTensor total_contact_stressGU;
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
+	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
+	Averager<StressTensor> *stress_avg;
 	double dt; // <=== It should be called d_strain.
 	double kn;
 	double kt;

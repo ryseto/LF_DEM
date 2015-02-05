@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #include "System.h"
@@ -146,6 +146,9 @@ System::allocateRessources(){
 		overlap_avg = new Averager<double>(p.memory_strain_avg);
 		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
 	}
+	if(lowPeclet){
+		stress_avg = new Averager<StressTensor>(0.01);
+	}
 }
 
 void
@@ -257,10 +260,8 @@ System::setupBrownian(){
 		kb_T = 1/dimensionless_shear_rate; // = 1/Pe
 		if (dimensionless_shear_rate < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
+			lowPeclet = true;
 			scale_factor_SmallPe = p.Pe_switch/dimensionless_shear_rate;
-			//			kn = scale_factor_SmallPe*p.kn_lowPeclet;
-			//			kt = scale_factor_SmallPe*p.kt_lowPeclet;
-			//			p.dt = p.dt_lowPeclet/scale_factor_SmallPe;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
 			p.shear_strain_end /= scale_factor_SmallPe;
@@ -583,6 +584,9 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
+	if(lowPeclet){
+		calcStress();
+	}
 	timeStepMoveCorrector();
 }
 
@@ -592,7 +596,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 void
 System::timeStepMove(){
 	/* Changing dt for every timestep
-	 * So far, this is only in Eular method.
+	 * So far, this is only in Euler method.
 	 */
 	if (stress_controlled) {
 		/* This strain step criteria needs to be improved.
@@ -621,7 +625,7 @@ System::timeStepMove(){
 		}
 	}
 	/* [note]
-	 * We need to make clear time/strain/dimensionlesstime.
+	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
 	 */
 	
 	double time_increment = dt/abs(dimensionless_shear_rate);
@@ -695,15 +699,19 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		updateInteractions();
 		firsttime = false;
 	}
+	bool calc_stress = false;
+	if(lowPeclet){
+		calc_stress = true;
+	}
 	if (time_output_data == 0) {
 		/* integrate until strain_next - 1 time step */
 		while (shear_strain < strain_output_data-dt) {
-			(this->*timeEvolutionDt)(false); // no stress computation
+			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {
 		while (time < time_output_data-dt/abs(dimensionless_shear_rate)) { // integrate until strain_next
-			(this->*timeEvolutionDt)(false); // stress computation
+			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
@@ -1469,16 +1477,17 @@ System::adjustContactModelParameters(){
 	 */
 
 	analyzeState();
-	static double previous_shear_strain = 0;
-	double deltagamma = (shear_strain-previous_shear_strain);
-	
+
 	double overlap = -min_gap_nondim;
 	
-	overlap_avg->update(overlap, deltagamma);
-	max_disp_tan_avg->update(max_disp_tan, deltagamma);
-    kn_avg->update(kn, deltagamma);
-	kt_avg->update(kt, deltagamma);
+	overlap_avg->update(overlap, shear_strain);
+	max_disp_tan_avg->update(max_disp_tan, shear_strain);
+    kn_avg->update(kn, shear_strain);
+	kt_avg->update(kt, shear_strain);
 
+ 	static double previous_shear_strain = 0;
+	double deltagamma = (shear_strain-previous_shear_strain);
+	
 	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
 	double dkn = (kn_target-kn)*deltagamma/p.memory_strain_k;
 	

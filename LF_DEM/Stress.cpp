@@ -1,9 +1,9 @@
 //
-//  System.cpp
+//  Stress.cpp
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 02/21/13.
-//  Copyright (c) 2013 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #include "System.h"
@@ -34,8 +34,7 @@ System::calcStressPerParticle(){
 
 	   In the Brownian mode, because of the mid-point scheme for the Brownian stress, you
 	   should be careful when calling this method from outside of the
-	   System::timeStepMoveCorrector() and
-	   System::timeStepMovePredictor() methods.
+	   System::timeEvolutionPredictorCorrectorMethod method.
 	*/
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
@@ -108,6 +107,8 @@ System::calcStress(){
 		total_contact_stressXF_normal /= abs(dimensionless_shear_rate);
 		total_contact_stressXF_tan /= abs(dimensionless_shear_rate);
 	}
+	total_contact_stressXF = total_contact_stressXF_normal + total_contact_stressXF_tan;
+	
 	//////////////////////////////////////////////////////////////
 	if (repulsiveforce) {
 		total_repulsive_stressXF.reset();
@@ -133,4 +134,36 @@ System::calcStress(){
 		}
 		total_brownian_stressGU /= system_volume;
 	}
+
+	/* NOTE:
+	 *
+	 * The total stress DID not include the contact GU terms,
+	 * because we consider that the relative motion is not expected hard spheres
+	 * and artificial in the soft-sphere contact model.
+	 * [Aug 15, 2013]
+	 * In the contact model, force is divided into two parts (spring and dash-pot).
+	 * In physics, the total force is important.
+	 * Therefore, both should be included for the stress calculation.
+	 *
+	 */
+
+	total_stress = total_hydro_stress;
+	total_stress += total_contact_stressXF;
+	total_stress += total_contact_stressGU; // added (Aug 15 2013)
+	if (repulsiveforce) {
+		total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
+		total_stress += total_repulsive_stress;
+	}
+	if (brownian) {
+		total_stress += total_brownian_stressGU;
+	}
+	
+ 	if(lowPeclet){ // take an averaged stress instead of instantaneous
+		stress_avg->update(total_stress,time);
+		cout << time << " " << total_stress.getStressXZ() << " ";
+		total_stress = stress_avg->get();
+		cout << total_stress.getStressXZ() << endl;
+	}
+
 }
+
