@@ -13,6 +13,7 @@
  The average x_avg of quantity x is defined as:
  \f$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
 
+
  \author Ryohei Seto
  \author Romain Mari
  */
@@ -36,9 +37,8 @@ class Averager{
 		 * The average x_avg is defined as:
 		 * \f$x_{avg}(t_n) = C_n \sum_{i=1}^n x(t_i)e^{(t_n-t_i)/t_{avg}} \f$
 		 *
-		 * \param  x : \f$x_n \f$ 
-		 * \param  x_avg : \f$x_{avg}(t_{n-1}) \f$ (at strain \f$n-1\f$)
-		 * \param  time : \f$t_n\f$.
+		 * \param  x  \f$x_n \f$ 
+		 * \param  time  \f$t_n\f$ (Note: it does not have to be a "time", but it should be consistent with the nature of the relaxation parameter \f$ t_{avg}\f$ defined on creation.)
 		 * 
 		 * On return, x_avg contains the value of \f$x_{avg}(t_{n}) \f$ (at time \f$t_n\f$)
 		 *
@@ -46,6 +46,10 @@ class Averager{
 		 * - \f$ C_n = \frac{C_{n-1}}{(t_n-t_{n-1})C_{n-1}} + e^{(t_n-t_{n-1})/t_{avg}} \f$
 		 * - \f$ x_{avg}(t_n) = C_{n}\left[ (t_n-t_{n-1}) + e^{(t_n-t_{n-1})/t_{avg}} x_{avg}(t_{n-1})/C_{n-1} \right] \f$
 		 */
+		if(relaxation_time==0){
+			x_avg = x;
+			return;
+		}
 		double deltat = time - previous_time;
 		double etn = exp(-deltat/relaxation_time);
 		double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
@@ -59,7 +63,11 @@ class Averager{
 		previous_time = time;
 	};
 	
- 
+	/**
+	   \brief Creates an Averager instance.
+
+	   \param rtime  Relaxation "time". It does not have to be a time, it can be e.g. a strain. If rtime=0, there is no averaging and the average is equal to the last instantaneous value provided in the update method.
+	 */
  Averager(double rtime) :
 	x_avg(0),
 		previous_kernel_norm(1),

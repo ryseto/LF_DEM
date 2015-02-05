@@ -147,7 +147,8 @@ System::allocateRessources(){
 		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
 	}
 	if(lowPeclet){
-		stress_avg = new Averager<StressTensor>(0.01);
+		double stress_avg_relaxation_parameter = 0; // 0 --> no average
+		stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 	}
 }
 
