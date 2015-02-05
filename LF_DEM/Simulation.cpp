@@ -43,6 +43,11 @@ void
 Simulation::contactForceParameter(string filename){
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
+		exit(1);
+	}
+
 	double phi_;
 	double kn_;
 	double kt_;
@@ -63,6 +68,11 @@ void
 Simulation::contactForceParameterBrownian(string filename){
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
+		exit(1);
+	}
+
 	double phi_;
 	double peclet_;
 	double kn_;
@@ -92,6 +102,11 @@ void
 Simulation::importPreSimulationData(string filename){
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
+	if (!fin_PreSimulationData) {
+		cerr << " Pre-simulation data file '" << filename << "' not found." <<endl;
+		exit(1);
+	}
+
 	double stress_;
 	double shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
@@ -397,6 +412,11 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	vector <double> rsequence;
 	ifstream fin_seq;
 	fin_seq.open(filename_sequence.c_str());
+	if (!fin_seq) {
+		cerr << " Sequence file '" << filename_sequence << "' not found." <<endl;
+		exit(1);
+	}
+		
 	double strain;
 	double targ_st;
 	while (fin_seq >> strain >> targ_st){
@@ -587,6 +607,11 @@ void
 Simulation::readParameterFile(){
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
+	if (!fin) {
+		cerr << " Parameter file '" << filename_parameters << "' not found." <<endl;
+		exit(1);
+	}
+
 	string keyword;
 	string value;
 	while (!fin.eof()) {
