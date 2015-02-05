@@ -29,6 +29,7 @@
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "ParameterSet.h"
+#include "Averager.h"
 #include "cholmod.h"
 #include "MersenneTwister.h"
 
@@ -100,8 +101,13 @@ private:
 	double *radius_squared;
 	double dimensionless_shear_rate_time_integral;
 	ParameterSet p;
-protected:
-public:
+	void adjustContactModelParameters();
+	Averager<double> *kn_avg;
+	Averager<double> *kt_avg;
+	Averager<double> *overlap_avg;
+	Averager<double> *max_disp_tan_avg;
+ protected:
+ public:
 	System();
 	~System();
 	void importParameterSet(ParameterSet &ps);
@@ -278,8 +284,6 @@ public:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	void averageExpKernel(double,double&,double);
-	void adjustContactModelParameters();
 	void setupShearFlow(bool activate){
 		if (activate) {
 			/* In dimensionless simulations for non Browninan simulation,
