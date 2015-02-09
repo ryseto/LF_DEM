@@ -662,38 +662,15 @@ Simulation::openOutputFiles(bool binary_conf){
 	 * Set simulation name and name of output files.
 	 */
 	prepareSimulationName(binary_conf);
-	string particle_filename = "par_" + sys.simu_name + ".dat";
-	string interaction_filename = "int_" + sys.simu_name + ".dat";
-	string vel_filename = "rheo_" + sys.simu_name + ".dat";
+
+
 	string st_filename = "st_" +sys.simu_name + ".dat";
-	fout_particle.open(particle_filename.c_str());
-	fout_interaction.open(interaction_filename.c_str());
-	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
-	outputDataHeader(fout_particle);
-	outputDataHeader(fout_interaction);
-	outputDataHeader(fout_rheo);
 	outputDataHeader(fout_st);
-	//
-	string fout_int_col_def =
-	"#1: particle 1 label\n"
-	"#2: particle 2 label\n"
-	"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
-	"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-	"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-	"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-	"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-	"#8: norm of the normal part of the lubrication force\n"
-	"#9: tangential part of the lubrication force x\n"
-	"#10: tangential part of the lubrication force y\n"
-	"#11: tangential part of the lubrication force z\n"
-	"#12: norm of the normal part of the contact force\n"
-	"#13: tangential part of the contact force, x\n"
-	"#14: tangential part of the contact force, y\n"
-	"#15: tangential part of the contact force, z\n"
-	"#16: norm of the normal repulsive force\n"
-	"#17: Viscosity contribution of contact xF\n";
-	fout_interaction << fout_int_col_def << endl;
+
+	string rheo_filename = "rheo_" + sys.simu_name + ".dat";
+	fout_rheo.open(rheo_filename.c_str());
+	outputDataHeader(fout_rheo);
 	//
 	string fout_rheo_col_def =
 	"#1: shear strain\n"
@@ -748,25 +725,58 @@ Simulation::openOutputFiles(bool binary_conf){
 	"#50: shear_disp\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
-	//
-	string fout_par_col_def =
-	"#1: number of the particle\n"
-	"#2: radius\n"
-	"#3: position x\n"
-	"#4: position y\n"
-	"#5: position z\n"
-	"#6: velocity x\n"
-	"#7: velocity y\n"
-	"#8: velocity z\n"
-	"#9: angular velocity x\n"
-	"#10: angular velocity y\n"
-	"#11: angular velocity z\n"
-	"#12: viscosity contribution of lubrication\n"
-	"#13: viscosity contributon of contact GU xz\n"
-	"#14: viscosity contributon of brownian xz\n"
-	"#15: angle (for 2D simulation only)\n";
-	//
-	fout_particle << fout_par_col_def << endl;
+
+	
+	if(p.out_data_particle){
+		string particle_filename = "par_" + sys.simu_name + ".dat";
+		fout_particle.open(particle_filename.c_str());
+		outputDataHeader(fout_particle);
+		//
+		string fout_par_col_def =
+			"#1: number of the particle\n"
+			"#2: radius\n"
+			"#3: position x\n"
+			"#4: position y\n"
+			"#5: position z\n"
+			"#6: velocity x\n"
+			"#7: velocity y\n"
+			"#8: velocity z\n"
+			"#9: angular velocity x\n"
+			"#10: angular velocity y\n"
+			"#11: angular velocity z\n"
+			"#12: viscosity contribution of lubrication\n"
+			"#13: viscosity contributon of contact GU xz\n"
+			"#14: viscosity contributon of brownian xz\n"
+			"#15: angle (for 2D simulation only)\n";
+		//
+		fout_particle << fout_par_col_def << endl;
+	}
+
+	if(p.out_data_interaction){
+		string interaction_filename = "int_" + sys.simu_name + ".dat";
+		fout_interaction.open(interaction_filename.c_str());
+		outputDataHeader(fout_interaction);
+		string fout_int_col_def =
+			"#1: particle 1 label\n"
+			"#2: particle 2 label\n"
+			"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
+			"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+			"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+			"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+			"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
+			"#8: norm of the normal part of the lubrication force\n"
+			"#9: tangential part of the lubrication force x\n"
+			"#10: tangential part of the lubrication force y\n"
+			"#11: tangential part of the lubrication force z\n"
+			"#12: norm of the normal part of the contact force\n"
+			"#13: tangential part of the contact force, x\n"
+			"#14: tangential part of the contact force, y\n"
+			"#15: tangential part of the contact force, z\n"
+			"#16: norm of the normal repulsive force\n"
+			"#17: Viscosity contribution of contact xF\n";
+		fout_interaction << fout_int_col_def << endl;
+	}
+	
 }
 
 
@@ -1157,7 +1167,12 @@ Simulation::outputRheologyData(){
 	 * This is why we need to take time average to have correct value of dimensionless_shear_rate.
 	 */
 	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
-	fout_rheo << sys.target_stress_input << ' '; // 49
+	if(control_var == "stress"){
+		fout_rheo << sys.target_stress_input << ' '; // 49
+	}
+	else{
+		fout_rheo << 6*M_PI*viscosity*sys.dimensionless_shear_rate << ' '; // 49
+	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << endl;
 }
