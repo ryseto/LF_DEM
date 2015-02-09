@@ -84,8 +84,8 @@ private:
 	 */
 	void setDefaultParameters();
 	void readParameterFile();
-	void openOutputFiles();
-	void prepareSimulationName();
+	void openOutputFiles(bool);
+	void prepareSimulationName(bool);
 	void autoSetParameters(const string &keyword,
 						   const string &value);
 	void importInitialPositionFile();

@@ -160,9 +160,9 @@ System::calcStress(){
 	
  	if(lowPeclet){ // take an averaged stress instead of instantaneous
 		stress_avg->update(total_stress,time);
-		cout << time << " " << total_stress.getStressXZ() << " ";
+		//		cout << time << " " << total_stress.getStressXZ() << " ";
 		total_stress = stress_avg->get();
-		cout << total_stress.getStressXZ() << endl;
+		//		cout << total_stress.getStressXZ() << endl;
 	}
 
 }

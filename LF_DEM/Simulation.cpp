@@ -7,7 +7,9 @@
 //
 #define _USE_MATH_DEFINES
 #include "Simulation.h"
+#ifndef GIT_VERSION
 #include "VersionInfo.h"
+#endif
 /*
  * VersionInfo.h is automatically generated
  * before compiling source codes.
@@ -265,7 +267,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
-	openOutputFiles();
+	openOutputFiles(binary_conf);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
@@ -405,7 +407,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	p.integration_method = 0;
 	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
-	openOutputFiles();
+	openOutputFiles(binary_conf);
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	vector <double> strain_sequence;
@@ -655,11 +657,11 @@ Simulation::readParameterFile(){
 }
 
 void
-Simulation::openOutputFiles(){
+Simulation::openOutputFiles(bool binary_conf){
 	/*
 	 * Set simulation name and name of output files.
 	 */
-	prepareSimulationName();
+	prepareSimulationName(binary_conf);
 	string particle_filename = "par_" + sys.simu_name + ".dat";
 	string interaction_filename = "int_" + sys.simu_name + ".dat";
 	string vel_filename = "rheo_" + sys.simu_name + ".dat";
@@ -967,11 +969,16 @@ Simulation::importConfigurationBinary(){
 }
 
 void
-Simulation::prepareSimulationName(){
+Simulation::prepareSimulationName(bool binary_conf){
 	ostringstream ss_simu_name;
 	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
 	string::size_type param_name_end = filename_parameters.find_last_of(".");
-	string::size_type pos_name_start = filename_import_positions.find_last_of("/");
+	string::size_type pos_name_start;
+	if(binary_conf){ // TO DO: improve name generation for binary input
+		pos_name_start = filename_import_positions.find_last_of("/");
+	}else{
+		pos_name_start = filename_import_positions.find_last_of("/");
+	}
 	string::size_type param_name_start = filename_parameters.find_last_of("/");
 	if(pos_name_start == std::string::npos){
 		pos_name_start = -1;
