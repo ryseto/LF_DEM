@@ -45,9 +45,6 @@ private:
 	double normalstress_diff_1;
 	double normalstress_diff_2;
 	double particle_pressure;
-	StressTensor total_stress;
-	StressTensor total_contact_stressXF;
-	StressTensor total_repulsive_stress;
 	double viscosity_hydro; // Only lubrication...
 	double normalstress_diff_1_hydro;
 	double normalstress_diff_2_hydro;

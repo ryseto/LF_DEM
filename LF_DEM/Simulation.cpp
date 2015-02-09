@@ -1012,17 +1012,17 @@ Simulation::evaluateData(){
 	sys.calcStress();
 	sys.calcLubricationForce();
 		
-	viscosity = sys.einstein_viscosity+total_stress.getStressXZ();
-	normalstress_diff_1 = total_stress.getNormalStress1();
-	normalstress_diff_2 = total_stress.getNormalStress2();
-	particle_pressure = total_stress.getParticlePressure();
+	viscosity = sys.einstein_viscosity+sys.total_stress.getStressXZ();
+	normalstress_diff_1 = sys.total_stress.getNormalStress1();
+	normalstress_diff_2 = sys.total_stress.getNormalStress2();
+	particle_pressure = sys.total_stress.getParticlePressure();
 	viscosity_hydro = sys.total_hydro_stress.getStressXZ();
 	normalstress_diff_1_hydro = sys.total_hydro_stress.getNormalStress1();
 	normalstress_diff_2_hydro = sys.total_hydro_stress.getNormalStress2();
-	viscosity_cont_XF = total_contact_stressXF.getStressXZ();
-	normalstress_diff_1_cont_XF = total_contact_stressXF.getNormalStress1();
-	normalstress_diff_2_cont_XF = total_contact_stressXF.getNormalStress2();
-	particle_pressure_cont = total_contact_stressXF.getParticlePressure();
+	viscosity_cont_XF = sys.total_contact_stressXF.getStressXZ();
+	normalstress_diff_1_cont_XF = sys.total_contact_stressXF.getNormalStress1();
+	normalstress_diff_2_cont_XF = sys.total_contact_stressXF.getNormalStress2();
+	particle_pressure_cont = sys.total_contact_stressXF.getParticlePressure();
 	viscosity_friction = sys.total_contact_stressXF_tan.getStressXZ();
 	normalstress_diff_1_friction = sys.total_contact_stressXF_tan.getNormalStress1();
 	normalstress_diff_2_friction = sys.total_contact_stressXF_tan.getNormalStress2();
@@ -1065,11 +1065,11 @@ Simulation::outputStressTensorData(){
 	 * + total_contact_stressXF + total_repulsive_stress;
 	 */
 	// As it is, the output stress lacks a 6pi factor (as the viscosity)
-	total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
+	sys.total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
 	sys.total_hydro_stress.outputStressTensor(fout_st); // (9,10,11,12,13,14)
-	total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
+	sys.total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
-	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
+	sys.total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
 	fout_st << sys.dimensionless_shear_rate << ' '; // 39
 	fout_st << endl;
