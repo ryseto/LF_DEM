@@ -151,6 +151,9 @@ debug:	$(OUT_CODE)
 dev:	CXXFLAGS= $(CXXFLAGS_dev)
 dev:	$(OUT_CODE)
 
+check:
+	(cd check;	make test)
+
 $(OUT_CODE): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
 
@@ -162,13 +165,12 @@ gitversion.h: ../.git/HEAD ../.git/index
 
 tar:
 	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
-	tar cvfz LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB)  LF_DEM_sources_$(DATE).ps Makefile input.*
+	tar -czvf LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB) Makefile
 
 clean:
 	rm -f  $(OBJ)
 
-ps:
-	enscript --pretty-print --color --fancy-header -r -2 -p LF_DEM_sources_$(DATE).ps $(LIB) $(SRC)
 
 doc:
 	doxygen Doxyfile
+
