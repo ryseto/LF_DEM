@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<title>Documentation for LF_DEM: Main Page</title>
+<title>Documentation for LF_DEM: Simulation Class Reference</title>
 
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
@@ -78,25 +78,42 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-  initNavTree('index.html','');
+  initNavTree('class_simulation.html','');
 </script>
 <div id="doc-content">
 <div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
-<div class="title">Documentation for LF_DEM Documentation</div>  </div>
+<div class="title">Simulation Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<ul><li><a href="index.html"><span>Main&#160;Page</span></a>
-</li><li><a href="pages.html"><span>Related&#160;Pages</span></a>
-</li><li><a href="annotated.html"><span>Classes</span></a>
-<ul><li><a href="annotated.html"><span>Class&#160;List</span></a>
-</li><li><a href="functions.html"><span>Class&#160;Members</span></a>
-</li></ul>
-</li><li><a href="files.html"><span>Files</span></a>
-<ul><li><a href="files.html"><span>File&#160;List</span></a>
-</li></ul>
-</li></ul>
+<!-- doxytag: class="Simulation" -->
+<p>Class launching the simulation by setting up the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class and performing predefined shear evolution.  
+ <a href="class_simulation.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="_simulation_8h_source.html">Simulation.h</a>&gt;</code></p>
+
+<p><a href="class_simulation-members.html">List of all members.</a></p>
+<table class="memberdecls">
+<tr><td colspan="2"><h2><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9d663926b04612eafad617f3ad44330"></a><!-- doxytag: member="Simulation::simulationSteadyShear" ref="ab9d663926b04612eafad617f3ad44330" args="(vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear</b> (vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e769d7a1392034c2792204cb8be97dd"></a><!-- doxytag: member="Simulation::simulationUserDefinedSequence" ref="a4e769d7a1392034c2792204cb8be97dd" args="(string seq_type, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationUserDefinedSequence</b> (string seq_type, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)</td></tr>
+</table>
+<hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
+<div class="textblock"><p>Class launching the simulation by setting up the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class and performing predefined shear evolution. </p>
+<dl class="author"><dt><b>Author:</b></dt><dd>Ryohei Seto </dd>
+<dd>
+Romain Mari </dd></dl>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
+<li><a class="el" href="_simulation_8h_source.html">Simulation.h</a></li>
+<li>Simulation.cpp</li>
+</ul>
 </div><!-- contents -->
+</div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -111,11 +128,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
-</div>
   <div id="nav-path" class="navpath">
     <ul>
+      <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a>      </li>
 
-    <li class="footer">Generated on Tue Feb 10 2015 18:32:49 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Feb 10 2015 18:32:27 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>
