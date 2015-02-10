@@ -1,0 +1,22 @@
+\form#0:$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $
+\form#1:$x_{avg}(t_n) = C_n \sum_{i=1}^n x(t_i)e^{(t_n-t_i)/t_{avg}} $
+\form#2:$x_n $
+\form#3:$t_n$
+\form#4:$ t_{avg}$
+\form#5:$x_{avg}(t_{n}) $
+\form#6:$ C_n = \frac{C_{n-1}}{(t_n-t_{n-1})C_{n-1}} + e^{(t_n-t_{n-1})/t_{avg}} $
+\form#7:$ x_{avg}(t_n) = C_{n}\left[ (t_n-t_{n-1}) + e^{(t_n-t_{n-1})/t_{avg}} x_{avg}(t_{n-1})/C_{n-1} \right] $
+\form#8:$ V_{\mathrm{I}}$
+\form#9:$\mathrm{I}$
+\form#10:$ - GV_{\mathrm{I}} $
+\form#11:$- GU_{\mathrm{I}} - H\Omega_{\mathrm{I}} $
+\form#12:$- R_{\mathrm{SU}} U_{\mathrm{I}} $
+\form#13:$ M E_{\infty}$
+\form#14:$R_{\mathrm{SE}} E_{\infty}$
+\form#15:$ S_{\mathrm{H}} = - GV_{\mathrm{H}} + M E_{\infty}$
+\form#16:$ -xF_{\mathrm{I}} $
+\form#17:$ S_{\mathrm{I}} = - GV_{\mathrm{I}} - xF_{\mathrm{I}} $
+\form#18:$ S_{\mathrm{B}} = - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) $
+\form#19:$ n=1 $
+\form#20:$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $
+\form#21:$\gamma_{avg}$
