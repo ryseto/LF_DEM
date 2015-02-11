@@ -1299,7 +1299,7 @@ Simulation::outputConfigurationData(){
 				 */
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
-				fout_interaction << sys.interaction[k].get_f_repulsive_norm() << ' '; // 16
+				fout_interaction << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 17
 				sys.interaction[k].contact.addUpContactForceTorque();
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' ';

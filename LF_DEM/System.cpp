@@ -967,7 +967,7 @@ System::setRepulsiveForceToParticle(){
 		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-				interaction[k].addUpRepulsiveForce();
+				interaction[k].repulsion.addUpForce();
 			}
 		}
 	}

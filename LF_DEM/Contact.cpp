@@ -26,7 +26,7 @@ void
 Contact::getInteractionData(){
 	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _gap_nondim;  <-- gap is scaled @@@@ Why use gap_nondim? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
 		kr_scaled = ro_12; // F = kt_scaled * disp_tan <-- disp is not scaled

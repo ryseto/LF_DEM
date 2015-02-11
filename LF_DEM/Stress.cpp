@@ -50,7 +50,7 @@ System::calcStressPerParticle(){
 			interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {
-				interaction[k].calcRepulsiveStress(); // - rF_rep
+				interaction[k].repulsion.calcStressXF(); // - rF_rep
 			}
 		}
 	}
@@ -113,7 +113,7 @@ System::calcStress(){
 	if (repulsiveforce) {
 		total_repulsive_stressXF.reset();
 		for (int k=0; k<nb_interaction; k++) {
-			total_repulsive_stressXF += interaction[k].getRepulsiveStressXF();
+			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
 		if (stress_controlled) {

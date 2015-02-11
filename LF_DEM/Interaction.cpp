@@ -13,7 +13,7 @@ Interaction::init(System *sys_){
 	active = false;
 	lubrication.init(sys);
 	contact.init(sys, this);
-	f_repulsive_norm = 0;
+	repulsion.init(sys, this);
 }
 
 /* Make a normal vector
@@ -108,13 +108,8 @@ Interaction::activate(unsigned short i, unsigned short j){
 	 * I don't understand this point yet.
 	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxation_time;
 	 */
-	/*
-	 * The size dependence of repulsive force:
-	 * a0*a1/(a1+a2)/2
-	 */
 	if (sys->repulsiveforce) {
-		repulsiveforce_amplitude = sys->get_repulsiveforce_amplitude()*a0*a1/ro;
-		repulsiveforce_length = sys->get_repulsiveforce_length();
+		repulsion.activate();
 	}
 	calcNormalVectorDistanceGap();
 	// deal with contact
@@ -197,29 +192,10 @@ Interaction::updateState(bool &deactivated){
 		contact.calcContactInteraction();
 	}
 	if (sys->repulsiveforce) {
-		if (contact.state > 0) {
-			/* For continuity, the repulsive force is kept as constant for h < 0.
-			 * This force does not affect the friction law,
-			 * i.e. it is separated from Fc_normal_norm.
-			 */
-			f_repulsive_norm = repulsiveforce_amplitude;
-			f_repulsive = -f_repulsive_norm*nvec;
-		} else {
-			/* separating */
-			f_repulsive_norm = repulsiveforce_amplitude*exp(-(r-ro)/repulsiveforce_length);
-			f_repulsive = -f_repulsive_norm*nvec;
-		}
+		repulsion.calcForce();
 	}
 }
 
-/*
- * Repulsive stabilizing force
- */
-void
-Interaction::addUpRepulsiveForce(){
-	sys->repulsive_force[p0] += f_repulsive;
-	sys->repulsive_force[p1] -= f_repulsive;
-}
 
 /* Relative velocity of particle 1 from particle 0.
  *
@@ -258,11 +234,6 @@ Interaction::calcRelativeVelocities(){
 void
 Interaction::calcRollingVelocities(){
 	rolling_velocity = -cross(a0*sys->ang_velocity[p0]-a1*sys->ang_velocity[p1], nvec);
-}
-
-void
-Interaction::calcRepulsiveStress(){
-	repulsive_stresslet_XF.set(rvec, f_repulsive);
 }
 
 /* observation */
