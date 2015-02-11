@@ -141,7 +141,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				 * `ratio_repulsion' = F_rep(0)/(kT/a)
 				 * Filename includes "RepXXXX_PeXXXX".
 				 */
-				sys.set_ratio_repulsion(ratio_repulsion);
 				sys.amplitudes.repulsion = ratio_repulsion/peclet_num;
 				sys.repulsiveforce = true;				
 				string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
