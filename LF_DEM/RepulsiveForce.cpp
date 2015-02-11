@@ -37,7 +37,8 @@ RepulsiveForce::calcForce(){
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	*/
 	double gap = interaction->get_gap();
-	if(gap>0){
+	//	if(gap>0){
+	if(interaction->contact.state==0){ // why not testing for gap? When particles separate, there is a time step for which gap>0 and contact.state>0, is that the reason?
 		force_norm = amplitude*exp(-gap/length);
 		force_vector = -force_norm*interaction->nvec;
 	}
@@ -45,7 +46,6 @@ RepulsiveForce::calcForce(){
 		force_norm = amplitude;
 		force_vector = -force_norm*interaction->nvec;
 	}
-	cout << force_vector << endl;
 }
 
 void
