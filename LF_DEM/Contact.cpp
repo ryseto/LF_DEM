@@ -87,6 +87,27 @@ Contact::incrementRollingDisplacement(){
 	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt;
 }
 
+void
+Contact::incrementDisplacements(){
+	/**
+	   \brief This method increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
+	   
+	   This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction). 
+	   This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
+	   This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
+	 */
+	if (sys->friction) {
+		interaction->calcRelativeVelocities();
+		incrementTangentialDisplacement();
+		if (sys->rolling_friction) {
+			interaction->calcRollingVelocities();
+			incrementRollingDisplacement();
+		}
+	}
+}
+
+
+
 /*
  * Calculate interaction.
  * Force acts on particle 0 from particle 1.

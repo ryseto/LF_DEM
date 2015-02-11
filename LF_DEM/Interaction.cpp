@@ -142,21 +142,18 @@ Interaction::deactivate(){
 
 void
 Interaction::updateState(bool &deactivated){
-	/* update tangential displacement: we do it before updating nvec as:
-	 *  - it should be along the tangential vector defined in the previous time step
-	 *  - (VERY IMPORTANT) it must compute the relative velocities with PBC at time t.
-	 *    This is encoded in variable zshift which takes care of Lees-Edwards in the z direction.
-	 *    zshift is updated for time t+1 in calcNormalVectorDistanceGap(),
-	 *    so this function should be called after calcRelativeVelocities();
-	 */
-	if (sys->friction && is_contact()) {
-		calcRelativeVelocities();
-		contact.incrementTangentialDisplacement();
-		if (sys->rolling_friction) {
-			calcRollingVelocities();
-			contact.incrementRollingDisplacement();
-		}
+	if(is_contact()){
+		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
+		contact.incrementDisplacements();
 	}
+	// if (sys->friction && is_contact()) {
+	// 	calcRelativeVelocities();
+	// 	contact.incrementTangentialDisplacement();
+	// 	if (sys->rolling_friction) {
+	// 		calcRollingVelocities();
+	// 		contact.incrementRollingDisplacement();
+	// 	}
+	// }
 	calcNormalVectorDistanceGap();
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {

@@ -109,6 +109,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>getInteractionData</b
 void&#160;</td><td class="memItemRight" valign="bottom"><b>activate</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af9e8a6b30c4a47dc480bb65a04eb30fe"></a><!-- doxytag: member="Contact::deactivate" ref="af9e8a6b30c4a47dc480bb65a04eb30fe" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>deactivate</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_contact.html#a035503d61c0fd90011bae30e0b68eea4">incrementDisplacements</a> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3f1d7b0a0927595b68af971a7d4fb43"></a><!-- doxytag: member="Contact::frictionlaw_criticalload" ref="ae3f1d7b0a0927595b68af971a7d4fb43" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_criticalload</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba1686f54ddc00b9d9bfc2f66fc8c3d9"></a><!-- doxytag: member="Contact::frictionlaw_criticalload_mu_inf" ref="aba1686f54ddc00b9d9bfc2f66fc8c3d9" args="()" -->
@@ -117,10 +118,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_criticall
 void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_standard</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca89a00068d1846da8ac4bee4d44d0aa"></a><!-- doxytag: member="Contact::frictionlaw_null" ref="aca89a00068d1846da8ac4bee4d44d0aa" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_null</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6036288e4de33351de102ae08049eb5"></a><!-- doxytag: member="Contact::incrementTangentialDisplacement" ref="ae6036288e4de33351de102ae08049eb5" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>incrementTangentialDisplacement</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e5524630217f00193e37b7017108c36"></a><!-- doxytag: member="Contact::incrementRollingDisplacement" ref="a8e5524630217f00193e37b7017108c36" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>incrementRollingDisplacement</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca6315b88196cd3cdfce9f79f06de963"></a><!-- doxytag: member="Contact::calcContactInteraction" ref="aca6315b88196cd3cdfce9f79f06de963" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcContactInteraction</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48fc3348a5cb94e88b0cd5760fb711b8"></a><!-- doxytag: member="Contact::addUpContactForceTorque" ref="a48fc3348a5cb94e88b0cd5760fb711b8" args="()" -->
@@ -159,7 +156,26 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal_no
 <dl class="author"><dt><b>Author:</b></dt><dd>Ryohei Seto </dd>
 <dd>
 Romain Mari </dd></dl>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><hr/><h2>Member Function Documentation</h2>
+<a class="anchor" id="a035503d61c0fd90011bae30e0b68eea4"></a><!-- doxytag: member="Contact::incrementDisplacements" ref="a035503d61c0fd90011bae30e0b68eea4" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_contact.html#a035503d61c0fd90011bae30e0b68eea4">Contact::incrementDisplacements</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>This method increment the tangential and rolling spring stretches from relative velocities, <b>without</b> checking the friction laws.</p>
+<p>This should be called <b>BEFORE</b> updating the relative positions (ie normal and tangential vectors in the interaction). This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC. This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.</p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_contact_8h_source.html">Contact.h</a></li>
 <li>Contact.cpp</li>
 </ul>
@@ -183,7 +199,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_contact.html">Contact</a>      </li>
 
-    <li class="footer">Generated on Tue Feb 10 2015 18:56:41 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

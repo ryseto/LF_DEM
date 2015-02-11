@@ -50,8 +50,12 @@ private:
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
 	vec3d f_rolling;
-protected:
-public:
+
+	void incrementTangentialDisplacement();
+	void incrementRollingDisplacement();
+
+ protected:
+ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
@@ -66,6 +70,7 @@ public:
 	vec3d disp_rolling;
 	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
 	vec3d prev_disp_rolling;
+	void incrementDisplacements();
 	unsigned short state;
 	/* state:
 	 * 0 No contact
@@ -79,8 +84,6 @@ public:
 	void frictionlaw_standard();
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
-	void incrementTangentialDisplacement();
-	void incrementRollingDisplacement();
 	void calcContactInteraction();
 	void addUpContactForceTorque();
 	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
