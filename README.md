@@ -139,3 +139,7 @@ a parameter dependant filename `D*N*VF*.dat`. An extra
 `D*N*VF*.dat.yap` is also generated to visualize the generated
 configuration with [yaplot](https://github.com/vitroid/Yaplot) or
 [homer](https://github.com/rmari/homer).
+
+##Documentation
+
+A more complete documentation of the code is slowly building up [here](http://rmari.bitbucket.org/LF_DEM_doc/).
