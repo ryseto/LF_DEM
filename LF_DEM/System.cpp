@@ -1345,14 +1345,14 @@ System::evaluateMaxAngVelocity(){
 
 double
 System::evaluateMinGap(){
-	double _min_gap_nondim = 100000;
+	double _min_reduced_gap = 100000;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].get_gap_nondim() < _min_gap_nondim) {
-			_min_gap_nondim = interaction[k].get_gap_nondim();
+			interaction[k].get_reduced_gap() < _min_reduced_gap) {
+			_min_reduced_gap = interaction[k].get_reduced_gap();
 		}
 	}
-	return _min_gap_nondim;
+	return _min_reduced_gap;
 }
 
 double
@@ -1413,7 +1413,7 @@ System::analyzeState(){
 	//	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
-	min_gap_nondim = evaluateMinGap();
+	min_reduced_gap = evaluateMinGap();
 	max_disp_tan = evaluateMaxDispTan();
 	max_fc_normal = evaluateMaxFcNormal();
 	max_fc_tan = evaluateMaxFcTangential();
@@ -1483,7 +1483,7 @@ System::adjustContactModelParameters(){
 
 	analyzeState();
 
-	double overlap = -min_gap_nondim;
+	double overlap = -min_reduced_gap;
 	
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);

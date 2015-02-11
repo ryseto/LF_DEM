@@ -53,7 +53,7 @@ private:
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
-	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
+	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 	double nxnx;
@@ -117,7 +117,7 @@ public:
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
-	inline double get_gap_nondim(){return gap_nondim;}
+	inline double get_reduced_gap(){return reduced_gap;}
 	inline double get_gap(){return r-ro;}
 	inline vec3d get_nvec(){return nvec;}
 	double getContactVelocity();

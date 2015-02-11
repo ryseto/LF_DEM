@@ -214,14 +214,14 @@ private:
 	int lubrication_model;
 	int nb_interaction;
 	/*
-	 * Leading term of lubrication force is 1/gap_nondim,
-	 * with gap_nondim the gap
-	 * gap_nondim = 2r/(a0+a1) - 2.
+	 * Leading term of lubrication force is 1/reduced_gap,
+	 * with reduced_gap the gap
+	 * reduced_gap = 2r/(a0+a1) - 2.
 	 * we set a cutoff for the lubrication interaction,
 	 * such that the lub term is proportional to:
 	 *
-	 * 1/(gap_nondim+lub_reduce_parameter)
-	 * when gap_nondim > 0.
+	 * 1/(reduced_gap+lub_reduce_parameter)
+	 * when reduced_gap > 0.
 	 */
 	double lub_reduce_parameter;
 	double shear_disp;
@@ -241,7 +241,7 @@ private:
 	double max_relative_velocity;
 	double max_sliding_velocity;
 	double max_ang_velocity;
-	double min_gap_nondim;
+	double min_reduced_gap;
 	double max_disp_tan;
 	queue<int> deactivated_interaction;
 	double max_contact_velo_tan;

@@ -33,7 +33,7 @@ Interaction::calcNormalVectorDistanceGap(){
 	nynz = nvec.y*nvec.z;
 	nyny = nvec.y*nvec.y;
 	nznz = nvec.z*nvec.z;
-	gap_nondim = r/ro_12-2;
+	reduced_gap = r/ro_12-2;
 }
 
 void
@@ -58,7 +58,7 @@ Interaction::updateResistanceCoeff(){
 		}
 	} else {
 		if (!contact_state_changed_after_predictor) {
-			double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
+			double lub_coeff = 1/(reduced_gap+sys->lub_reduce_parameter);
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		} else {
 			/*
@@ -114,7 +114,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.getInteractionData();
-	if (gap_nondim <= 0) {
+	if (reduced_gap <= 0) {
 		contact.activate();
 	} else {
 		contact.deactivate();
@@ -148,7 +148,7 @@ Interaction::updateState(bool &deactivated){
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
-			if (gap_nondim > 0) {
+			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
@@ -157,7 +157,7 @@ Interaction::updateState(bool &deactivated){
 			 */
 			if (sys->target_stress != 0
 				&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
-				//cerr << contact.f_contact_normal_norm << ' ' << gap_nondim << endl;
+				//cerr << contact.f_contact_normal_norm << ' ' << reduced_gap << endl;
 				breakup_contact_bond = true;
 			}
 		}
@@ -169,12 +169,12 @@ Interaction::updateState(bool &deactivated){
 		}
 	} else {
 		// not contacting in previous step
-		if (gap_nondim <= sys->new_contact_gap) {
+		if (reduced_gap <= sys->new_contact_gap) {
 			// now contact
 			contact.activate();
-			if (gap_nondim < -0.1){
+			if (reduced_gap < -0.1){
 				cerr << "new contact may have problem\n";
-				cerr << "gap = " << gap_nondim << endl;
+				cerr << "gap = " << reduced_gap << endl;
 				//exit(1);
 			}
 			if (sys->in_predictor && sys->brownian) {

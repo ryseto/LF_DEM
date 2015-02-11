@@ -26,7 +26,7 @@ void
 Contact::getInteractionData(){
 	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _gap_nondim;  <-- gap is scaled @@@@ Why use gap_nondim? Why not gap?
+	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
 		kr_scaled = ro_12; // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -120,9 +120,9 @@ Contact::calcContactInteraction(){
 	 * f_contact_normal_norm < 0 ..... attractive force
 	 *
 	 *
-	 gap_nondim is negative,
+	 reduced_gap is negative,
 	 positive. */
-	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim();
+	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
@@ -160,8 +160,8 @@ Contact::frictionlaw_standard(){
 
 void
 Contact::frictionlaw_criticalload(){
-	/* Since gap_nondim < 0, f_contact_normal_norm is always positive.
-	 * f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
+	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
+	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
 	 * 
 	 * supportable_tanforce = mu*(F_normal - critical_force)
@@ -188,8 +188,8 @@ Contact::frictionlaw_criticalload(){
 
 void
 Contact::frictionlaw_criticalload_mu_inf(){
-	/* Since gap_nondim < 0, f_contact_normal_norm is always positive.
-	 * f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
+	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
+	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
 	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
@@ -235,7 +235,7 @@ Contact::addUpContactForceTorque(){
 void
 Contact::calcContactStress(){
 	/*
-	 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+	 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
 	 * Fc_normal = -Fc_normal_norm*nvec;
 	 * This force acts on particle 1.
 	 * stress1 is a0*nvec[*]force.
@@ -248,7 +248,7 @@ Contact::calcContactStress(){
 	 */
 	if (state > 0) {
 		/*
-		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+		 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
 		 * Fc_normal = -Fc_normal_norm*nvec;
 		 * This force acts on particle 1.
 		 * stress1 is a0*nvec[*]force.

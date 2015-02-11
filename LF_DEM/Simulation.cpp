@@ -818,7 +818,7 @@ Simulation::setDefaultParameters(){
 	p.shear_strain_end = 10;
 	p.lub_max = 2.5;
 	/*
-	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
+	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
 	 *
 	 */
 	p.lub_reduce_parameter = 1e-3;
@@ -1141,7 +1141,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*normalstress_diff_2_brownian << ' ' ; //25
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//26
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//27
-	fout_rheo << sys.min_gap_nondim << ' '; //28
+	fout_rheo << sys.min_reduced_gap << ' '; //28
 	fout_rheo << sys.max_disp_tan << ' '; //29
 	fout_rheo << sys.max_fc_normal << ' '; //30
 	fout_rheo << sys.max_fc_tan << ' ';//31
@@ -1283,7 +1283,7 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.x << ' '; // 4
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
-				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
+				fout_interaction << sys.interaction[k].get_reduced_gap() << ' '; // 7
 				/* [NOTE]
 				 * Lubrication forces are reference values
 				 * in the Brownian case. The force balancing
