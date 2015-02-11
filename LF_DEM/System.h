@@ -39,6 +39,13 @@ class Simulation;
 class Interaction;
 class BoxSet;
 
+struct ForceAmplitudes{
+	double hydro;
+	double repulsion;
+	double brownian;
+};
+
+
 class System{
 private:
 	int np;
@@ -231,7 +238,7 @@ private:
 	 */
 	double dimensionless_shear_rate;
 //	double dimensionless_shear_rate_averaged;
-	double repulsiveforce_amplitude; // dimensionless
+//	double repulsiveforce_amplitude; // dimensionless
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz
@@ -329,10 +336,6 @@ private:
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
-	/* inline void set_repulsiveforce_amplitude(double val){ */
-	/* 	repulsiveforce_amplitude = val;} */
-	
-	inline double get_repulsiveforce_amplitude(){return repulsiveforce_amplitude;}
 	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}
 	void set_ratio_repulsion(double val){ratio_repulsion = val;}
 	inline double get_ratio_repulsion(){return ratio_repulsion;}
@@ -350,6 +353,8 @@ private:
 	//		return log_lub_coeff_contact_tan_total;
 	//	}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-	
+
+	struct ForceAmplitudes amplitudes;
+
 };
 #endif /* defined(__LF_DEM__System__) */

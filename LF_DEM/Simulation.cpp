@@ -142,8 +142,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				 * Filename includes "RepXXXX_PeXXXX".
 				 */
 				sys.set_ratio_repulsion(ratio_repulsion);
-				sys.repulsiveforce_amplitude = ratio_repulsion/peclet_num;
-				sys.repulsiveforce = true;
+				sys.amplitudes.repulsion = ratio_repulsion/peclet_num;
+				sys.repulsiveforce = true;				
 				string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
 			} else if (ratio_critical_load > 0) {
 				cerr << "Critical load" << endl;
@@ -159,13 +159,13 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
 				cerr << "Repulsive force" << endl;
 				sys.dimensionless_shear_rate = ratio_repulsion;
-				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
+				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_r" << ratio_repulsion;
 			} else if (ratio_repulsion == -1 && ratio_cohesion == 0) {
 				cerr << "Infinite shear rate" << endl;
 				sys.dimensionless_shear_rate = -1;
-				sys.repulsiveforce_amplitude = 0;
+				sys.amplitudes.repulsion = 0;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_rINF";
 			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
@@ -182,7 +182,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			} else if (ratio_repulsion > 0 && ratio_cohesion > 0) {
 				cerr << "Repulsive force + Cohesive force" << endl;
 				sys.dimensionless_shear_rate = ratio_repulsion;
-				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
+				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				sys.cohesive_force = ratio_cohesion/ratio_repulsion;
 				string_control_parameters << "_a" << ratio_cohesion << "_r" << ratio_repulsion;
@@ -204,7 +204,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			if (ratio_repulsion != 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce = true;
-				sys.repulsiveforce_amplitude = 1;
+				sys.amplitudes.repulsion = 1;
 				sys.target_stress_input = ratio_repulsion;
 				sys.target_stress = ratio_repulsion/6/M_PI;
 				string_control_parameters << "_s" << ratio_repulsion;
@@ -368,7 +368,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		p.unscaled_contactmodel = true;
 		cerr << "Repulsive force" << endl;
 		sys.repulsiveforce = true;
-		sys.repulsiveforce_amplitude = 1;
+		sys.amplitudes.repulsion = 1;
 		string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
 	} else if (seq_type == "R") {
 		//p.unscaled_contactmodel

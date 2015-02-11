@@ -20,7 +20,7 @@ RepulsiveForce::activate(){
 	 * The size dependence of repulsive force:
 	 * a0*a1/(a1+a2)/2
 	 */
-	amplitude = sys->get_repulsiveforce_amplitude()*interaction->a0*interaction->a1/interaction->ro;
+	amplitude = sys->amplitudes.repulsion*interaction->a0*interaction->a1/interaction->ro;
 	length = sys->get_repulsiveforce_length();
 	force_vector.reset();
 	force_norm = 0;
