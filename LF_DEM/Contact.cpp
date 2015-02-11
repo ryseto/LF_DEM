@@ -72,7 +72,7 @@ Contact::incrementTangentialDisplacement(){
 		 */
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt;
+	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void
@@ -84,13 +84,13 @@ Contact::incrementRollingDisplacement(){
 		 */
 		prev_disp_rolling = disp_rolling;
 	}
-	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt;
+	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void
 Contact::incrementDisplacements(){
 	/**
-	   \brief This method increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
+	   \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
 	   
 	   This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction). 
 	   This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
@@ -108,14 +108,12 @@ Contact::incrementDisplacements(){
 
 
 
-/*
- * Calculate interaction.
- * Force acts on particle 0 from particle 1.
- * rvec = p[1] - p[0]
- * Fc_normal_norm is positive (for overlapping particles r < ro)
- */
 void
 Contact::calcContactInteraction(){
+	/** 
+		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.
+	*/
+	
 	/* h < 0
 	 * f_contact_normal_norm > 0 ..... repulsive force
 	 * h > 0

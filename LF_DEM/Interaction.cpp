@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 12/10/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #include "Interaction.h"
 
@@ -146,14 +146,7 @@ Interaction::updateState(bool &deactivated){
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
-	// if (sys->friction && is_contact()) {
-	// 	calcRelativeVelocities();
-	// 	contact.incrementTangentialDisplacement();
-	// 	if (sys->rolling_friction) {
-	// 		calcRollingVelocities();
-	// 		contact.incrementRollingDisplacement();
-	// 	}
-	// }
+
 	calcNormalVectorDistanceGap();
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
