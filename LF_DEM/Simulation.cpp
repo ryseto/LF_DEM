@@ -140,6 +140,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
 			sys.dimensionless_shear_rate = peclet_num;
+			sys.amplitudes.brownian = 1./sqrt(peclet_num);
+			sys.amplitudes.hydro = 1;
 			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
 				/* When both Brownian and repulsive forces exist
@@ -160,6 +162,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
+			sys.amplitudes.hydro = 1;
 			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
 				cerr << "Repulsive force" << endl;
 				sys.dimensionless_shear_rate = ratio_repulsion;
@@ -205,6 +208,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
+			sys.amplitudes.hydro = 1;
 			if (ratio_repulsion != 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce = true;

@@ -68,7 +68,6 @@ private:
 	double shear_strain;
 	double lub_max;
 	double mu_static; // static friction coefficient.
-	double kb_T; // dimensionless kb_T = 1/Pe
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;

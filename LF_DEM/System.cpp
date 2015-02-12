@@ -252,13 +252,6 @@ System::updateUnscaledContactmodel(){
 void
 System::setupBrownian(){
 	if (brownian) {
-		/* kb_T is dimensionless.
-		 * dimensionless_shear_rate is Peclet number
-		 * Dimensional kb_T is L0*F0 / Pe,
-		 * where F0 = 6*pi*eta0*a^2*rate and L0 = a
-		 * Dimensionalless brownian force kb_T/a is 1/Pe,
-		 */
-		kb_T = 1/dimensionless_shear_rate; // = 1/Pe
 		if (dimensionless_shear_rate < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
 			lowPeclet = true;
@@ -412,11 +405,11 @@ System::setupSystem(string control){
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (brownian) {
+#ifdef DEV
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.
-		 *
+		 * DEV is defined as a preprocessor option in the Makefile
 		 */
-#ifdef DEV
 		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #ifndef DEV
@@ -455,8 +448,8 @@ System::setupSystem(string control){
 	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
-		double FUvalue = sd_coeff*radius[i];
-		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
+		double FUvalue = amplitudes.hydro*sd_coeff*radius[i];
+		double TWvalue = amplitudes.hydro*sd_coeff*torque_factor*radius_cubed[i];
 		resistance_matrix_dblock[i18   ] = FUvalue;
 		resistance_matrix_dblock[i18+6 ] = FUvalue;
 		resistance_matrix_dblock[i18+10] = FUvalue;
@@ -916,19 +909,15 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 
 void
 System::generateBrownianForces(){
-	// generates a Brownian force F_B with <F_B> = 0, and <F_B F_B> = (2kT/dt)*R
-	// where R is the current resistance matrix stored in the stokes_solver.
-	// note that it SETS the rhs of the solver as rhs = F_B
-	// F_B is also stored in sys->brownian_force
-	//
-	// kb_T = 1/Pe and dt = dt'*Pe/Pe0
-	// kb_T/dt = (1/Pe)/(dt'*Pe/Pe0) = Pe0/(dt'*Pe*Pe)
-	// Fb = sqrt(kb_T/dt) = sqrt(Pe0/dt')*1/Pe
-	// U = Fb
-	// U*dt = sqrt(Pe0/dt')*1/Pe * dt'*Pe/Pe0 = sqrt(dt'/Pe0)
-	double sqrt_kbT2_dt = sqrt(2*kb_T/dt); // proportional to 1/Pe.
+	/**
+	   \brief Generates a Brownian force \f$F_B\f$ with \f$ \langle F_B \rangle = 0\f$, and \f$\langleF_B F_B\rangle = \frac{2kT/dt} R\f$ where \f$R\f$ is the current resistance matrix stored in the stokes_solver.
+
+	   Note that it SETS the rhs of the solver as \f$ rhs = F_B \f$
+	   \f$ F_B\f$ is also stored in sys->brownian_force
+	*/
+	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.brownian; // proportional to 1/Pe.
 	for (int i=0; i<linalg_size; i++) {
-		brownian_force[i] = sqrt_kbT2_dt*GRANDOM; // random vector A
+		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
