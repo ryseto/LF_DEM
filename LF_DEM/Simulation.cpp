@@ -130,6 +130,11 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
+
+	sys.cohesion = false;
+	sys.brownian = false;
+	sys.repulsiveforce = false;
+	
 	if (control_var == "rate") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;

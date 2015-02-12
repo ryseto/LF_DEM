@@ -949,7 +949,6 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 	odblocks[1][i1  ] = scaledXA*n1n1 + scaledYA*one_n1n1; // column 1
 	odblocks[1][i1+1] = (scaledXA-scaledYA)*n1n2;
 	odblocks[1][i1+2] = 0;
-	//	cout << " scaledYB	" << scaledYB << " scaledYBtilde	" << scaledYBtilde << endl;
 	odblocks[1][i1+3] = -scaledYB*nvec.x;
 	odblocks[2][i2  ] = scaledXA*n2n2 + scaledYA*one_n2n2; // column 2
 	odblocks[2][i2+1] = 0;

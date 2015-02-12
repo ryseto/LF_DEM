@@ -119,6 +119,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 	} else {
 		contact.deactivate();
 	}
+	contact_state_changed_after_predictor = false;
 	updateResistanceCoeff();
 	lubrication.getInteractionData();
 	lubrication.calcLubConstants();

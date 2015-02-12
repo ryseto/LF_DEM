@@ -308,6 +308,7 @@ System::setupSystem(string control){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
+	friction = false;
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -699,6 +700,7 @@ System::timeStepMoveCorrector(){
 void
 System::timeEvolution(double strain_output_data, double time_output_data){
 	static bool firsttime = true;
+	in_predictor=false;
 	if (firsttime) {
 		checkNewInteraction();
 		updateInteractions();
@@ -763,14 +765,7 @@ System::checkNewInteraction(){
 	}
 }
 
-/* Check the distance between separating particles.
- * i < j
- *
- * A patch-up prescription to avoid
- * contact_pair[i][j] < 0 indicates separating particles to be checked.
- * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
- * contact_pair[i][j] < -1, the particles have some distance.
- */
+
 void
 System::updateInteractions(){
 	double sq_max_sliding_velocity = 0;

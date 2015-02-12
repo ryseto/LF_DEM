@@ -14,24 +14,24 @@ VERSION := $(shell git describe --dirty --always)
 ifeq ($(OS_version),SI)
 	CXX=icc
 	CXXFLAGS_optimized=  -O3
-	CXXFLAGS_debug=  -g
+	CXXFLAGS_debug=  -g -DDEV="1"
 endif
 ifeq ($(OS_version),OIST)
 	CXX=icc
 	CXXFLAGS_optimized= -O3 -Wall -DVERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -DVERSION="\"$(VERSION)\""
+	CXXFLAGS_debug=  -g -DVERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 
 ifeq ($(OS_version),Linux)
 	CXX=g++
 	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 	CXXFLAGS_dev=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 ifeq ($(OS_version),OSX)
 	CXX=clang
 	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 	CXXFLAGS_dev=  -O3  -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 
