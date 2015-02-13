@@ -82,7 +82,7 @@ Simulation::contactForceParameterBrownian(string filename){
 	double dt_;
 	bool found=false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_shear_rate) {
+		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_number) {
 			found = true;
 			break;
 		}
@@ -95,7 +95,7 @@ Simulation::contactForceParameterBrownian(string filename){
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	}
 	else{
-		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << sys.dimensionless_shear_rate << endl;
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << sys.dimensionless_number << endl;
 		exit(1);
 	}
 }
@@ -139,9 +139,9 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
-			sys.dimensionless_shear_rate = peclet_num;
+			sys.dimensionless_number = peclet_num;
 			sys.amplitudes.brownian = 1./sqrt(peclet_num);
-			sys.amplitudes.hydro = 1;
+			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
 				/* When both Brownian and repulsive forces exist
@@ -162,33 +162,33 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
-			sys.amplitudes.hydro = 1;
+			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
 				cerr << "Repulsive force" << endl;
-				sys.dimensionless_shear_rate = ratio_repulsion;
+				sys.dimensionless_number = ratio_repulsion;
 				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_r" << ratio_repulsion;
 			} else if (ratio_repulsion == -1 && ratio_cohesion == 0) {
 				cerr << "Infinite shear rate" << endl;
-				sys.dimensionless_shear_rate = -1;
+				sys.dimensionless_number = -1;
 				sys.amplitudes.repulsion = 0;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_rINF";
 			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
 				cerr << "Critical load" << endl;
-				sys.dimensionless_shear_rate = ratio_critical_load;
+				sys.dimensionless_number = ratio_critical_load;
 				p.friction_model = 2;
 				sys.critical_normal_force = 1/ratio_critical_load;
 				string_control_parameters << "_c" << ratio_critical_load;
 			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
 				cerr << "Cohesive force" << endl;
-				sys.dimensionless_shear_rate = ratio_cohesion;
+				sys.dimensionless_number = ratio_cohesion;
 				sys.cohesive_force = 1/ratio_cohesion;
 				string_control_parameters << "_a" << ratio_cohesion;
 			} else if (ratio_repulsion > 0 && ratio_cohesion > 0) {
 				cerr << "Repulsive force + Cohesive force" << endl;
-				sys.dimensionless_shear_rate = ratio_repulsion;
+				sys.dimensionless_number = ratio_repulsion;
 				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				sys.cohesive_force = ratio_cohesion/ratio_repulsion;
@@ -208,7 +208,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
-			sys.amplitudes.hydro = 1;
+			sys.set_shear_rate(1);
 			if (ratio_repulsion != 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce = true;
@@ -220,7 +220,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				cerr << "Cohesive force" << endl;
 				p.unscaled_contactmodel = false;
 				sys.cohesion = true;
-				//sys.dimensionless_shear_rate = ratio_cohesion;
+				//sys.dimensionless_number = ratio_cohesion;
 				sys.cohesive_force = 1;
 				sys.target_stress_input = ratio_cohesion;
 				sys.target_stress = ratio_cohesion/6/M_PI;
@@ -231,7 +231,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.init_shear_rate_limit = 9999;
 				string_control_parameters << "_b" << ratio_cohesion;
 			}
-			sys.dimensionless_shear_rate = 1; // needed for 1st time step
+			sys.dimensionless_number = 1; // needed for 1st time step
 			/* The target stress (``ratio_repulsion'') is given trough the command argument
 			 * with an unit stres: eta_0*gammmadot_0.
 			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
@@ -335,7 +335,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
-		if (abs(sys.dimensionless_shear_rate) < 1e-4 ){
+		if (abs(sys.dimensionless_number) < 1e-4 ){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
@@ -450,7 +450,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		sys.target_stress = rsequence[step]/6/M_PI;
 		cerr << "Target stress " << sys.target_stress_input << endl;
 		sys.updateUnscaledContactmodel();
-		sys.dimensionless_shear_rate = 1; // needed for 1st time step
+		sys.dimensionless_number = 1; // needed for 1st time step
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			if (time_interval_output_data == -1) {
@@ -479,7 +479,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 					cnt_config_out ++;
 				}
 			}
- 			if (abs(sys.dimensionless_shear_rate) < 1e-4 ){
+ 			if (abs(sys.dimensionless_number) < 1e-4 ){
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
 				if (jammed > 10) {
@@ -728,7 +728,7 @@ Simulation::openOutputFiles(bool binary_conf){
 	"#45: kt\n"
 	"#46: dt\n"
 	"#47: time\n"
-	"#48: dimensionless_shear_rate\n"
+	"#48: dimensionless_number\n"
 	"#49: stress\n"
 	"#50: shear_disp\n";
 	//
@@ -1079,7 +1079,7 @@ Simulation::outputStressTensorData(){
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	sys.total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate << ' '; // 39
+	fout_st << sys.dimensionless_number << ' '; // 39
 	fout_st << endl;
 }
 
@@ -1104,8 +1104,8 @@ Simulation::outputRheologyData(){
 	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
 	 *
 	 * [note] In stress controlled simulation,
-	 * Averaged viscosity need to be calculated with dimensionless_shear_rate_averaged,
-	 * i.e. <viscosity> = taget_stress / dimensionless_shear_rate_averaged.
+	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
+	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
 	fout_rheo << sys.get_shear_strain() << ' '; //1
 	fout_rheo << 6*M_PI*viscosity << ' '; //2
@@ -1170,16 +1170,16 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.dt << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
 	/* In stress control simulation,
-	 * shear jammed state may cause oscilation of dimensionless_shear_rate around 0.
+	 * shear jammed state may cause oscilation of dimensionless_number around 0.
 	 * Then, time step also oscilate.
-	 * This is why we need to take time average to have correct value of dimensionless_shear_rate.
+	 * This is why we need to take time average to have correct value of dimensionless_number.
 	 */
-	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
+	fout_rheo << sys.dimensionless_number << ' '; // 48
 	if(control_var == "stress"){
 		fout_rheo << sys.target_stress_input << ' '; // 49
 	}
 	else{
-		fout_rheo << 6*M_PI*viscosity*sys.dimensionless_shear_rate << ' '; // 49
+		fout_rheo << 6*M_PI*viscosity*sys.dimensionless_number << ' '; // 49
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << endl;
@@ -1239,7 +1239,7 @@ Simulation::outputConfigurationData(){
 	if (p.out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		fout_particle << sys.dimensionless_shear_rate << ' ';
+		fout_particle << sys.dimensionless_number << ' ';
 		fout_particle << sys.target_stress_input << endl;
 		for (int i=0; i<np; i++) {
 			vec3d &r = pos[i];

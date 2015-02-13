@@ -252,10 +252,10 @@ System::updateUnscaledContactmodel(){
 void
 System::setupBrownian(){
 	if (brownian) {
-		if (dimensionless_shear_rate < p.Pe_switch) {
+		if (dimensionless_number < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
 			lowPeclet = true;
-			scale_factor_SmallPe = p.Pe_switch/dimensionless_shear_rate;
+			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
 			p.shear_strain_end /= scale_factor_SmallPe;
@@ -313,11 +313,11 @@ System::setupSystem(string control){
 		cerr << "friction_model " << friction_model << endl;
 		/*
 		 * The dimensionless shear rate is defined as follows:
-		 * dimensionless_shear_rate = F0/F^{*}
+		 * dimensionless_number = F0/F^{*}
 		 * F0 = 6pi*eta*a^2*shear_rate
 		 * The force unit is changed by the considering shear rate.
 		 * In the simulation, the critical force F^{*} = \tilde{F^{*}} F_0.
-		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_shear_rate.
+		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_number.
 		 *
 		 */
 		friction = true;
@@ -434,7 +434,7 @@ System::setupSystem(string control){
 		rate_controlled = false;
 	}
 	stress_controlled = !rate_controlled;
-	//	dimensionless_shear_rate_averaged = 1;
+	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
 	/* einstein_viscosity may be affected by sd_coeff.
@@ -448,8 +448,8 @@ System::setupSystem(string control){
 	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
-		double FUvalue = amplitudes.hydro*sd_coeff*radius[i];
-		double TWvalue = amplitudes.hydro*sd_coeff*torque_factor*radius_cubed[i];
+		double FUvalue = sd_coeff*radius[i];
+		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
 		resistance_matrix_dblock[i18   ] = FUvalue;
 		resistance_matrix_dblock[i18+6 ] = FUvalue;
 		resistance_matrix_dblock[i18+10] = FUvalue;
@@ -603,7 +603,7 @@ System::timeStepMove(){
 		 * For jammed state or unyielded state, shear rate is very small.
 		 * In this case, the strain step (=dt) should be small, as well.
 		 */
-		double dt_1 = 1e-3*abs(dimensionless_shear_rate);
+		double dt_1 = 1e-3*abs(dimensionless_number);
 		double dt_2;
 		if (max_velocity > max_sliding_velocity) {
 			dt_2 = disp_max/max_velocity;
@@ -627,7 +627,7 @@ System::timeStepMove(){
 	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
 	 */
 	
-	double time_increment = dt/abs(dimensionless_shear_rate);
+	double time_increment = dt/abs(dimensionless_number);
 	time += time_increment;
 	/* evolve PBC */
 	timeStepBoxing(shear_direction*dt);
@@ -649,7 +649,7 @@ System::timeStepMovePredictor(){
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
-	time += dt/abs(dimensionless_shear_rate);
+	time += dt/abs(dimensionless_number);
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
@@ -710,7 +710,7 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {
-		while (time < time_output_data-dt/abs(dimensionless_shear_rate)) { // integrate until strain_next
+		while (time < time_output_data-dt/abs(dimensionless_number)) { // integrate until strain_next
 			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
@@ -762,7 +762,7 @@ System::checkNewInteraction(){
 void
 System::updateInteractions(){
 	double sq_max_sliding_velocity = 0;
-	dimensionless_cohesive_force = 0.1/abs(dimensionless_shear_rate);
+	dimensionless_cohesive_force = 0.1/abs(dimensionless_number);
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -1003,7 +1003,7 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
 		// Back out the shear rate
-		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
+		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
 		if (p.unscaled_contactmodel) {
@@ -1015,18 +1015,18 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				shear_rate_numerator -= shearstress_rep;
 			}
 			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
-			dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
+			dimensionless_number = shear_rate_numerator/shearstress_hyd;
 			if (shear_strain < init_strain_shear_rate_limit) {
-				if (dimensionless_shear_rate > init_shear_rate_limit) {
-					dimensionless_shear_rate = init_shear_rate_limit;
+				if (dimensionless_number > init_shear_rate_limit) {
+					dimensionless_number = init_shear_rate_limit;
 				}
 			}
 			if (repulsiveforce) {
 				for (int i=0; i<np; i++) {
-					vel_repulsive[i] /= dimensionless_shear_rate;
-					ang_vel_repulsive[i] /= dimensionless_shear_rate;
-					vel_contact[i] /= dimensionless_shear_rate;
-					ang_vel_contact[i] /= dimensionless_shear_rate;
+					vel_repulsive[i] /= dimensionless_number;
+					ang_vel_repulsive[i] /= dimensionless_number;
+					vel_contact[i] /= dimensionless_number;
+					ang_vel_contact[i] /= dimensionless_number;
 				}
 				for (int i=0; i<np; i++) {
 					na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
@@ -1040,8 +1040,8 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				 * will be invesed later.
 				 */
 				for (int i=0; i<np; i++) {
-					vel_contact[i] /= dimensionless_shear_rate;
-					ang_vel_contact[i] /= dimensionless_shear_rate;
+					vel_contact[i] /= dimensionless_number;
+					ang_vel_contact[i] /= dimensionless_number;
 				}
 				for (int i=0; i<np; i++) {
 					na_velocity[i] = vel_hydro[i]+vel_contact[i];
@@ -1059,10 +1059,10 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				shear_rate_numerator -= shearstress_rep;
 			}
 			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
-			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+			dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
-				vel_repulsive[i] /= dimensionless_shear_rate;
-				ang_vel_repulsive[i] /= dimensionless_shear_rate;
+				vel_repulsive[i] /= dimensionless_number;
+				ang_vel_repulsive[i] /= dimensionless_number;
 			}
 		}
 	} else {
@@ -1152,7 +1152,7 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			ang_velocity[i] = na_ang_velocity[i];
 		}
 	}
-	if (dimensionless_shear_rate < 0) {
+	if (dimensionless_number < 0) {
 		shear_direction = -1;
 		vel_difference = -lz;
 		for (int i=0; i<np; i++) {

@@ -40,7 +40,6 @@ class Interaction;
 class BoxSet;
 
 struct ForceAmplitudes{
-	double hydro;
 	double repulsion;
 	double brownian;
 };
@@ -53,6 +52,7 @@ private:
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
 	double time;
+	double shear_rate;
 	double disp_max;
 	double lx;
 	double ly;
@@ -103,7 +103,7 @@ private:
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
-	double dimensionless_shear_rate_time_integral;
+	double dimensionless_number_time_integral;
 	ParameterSet p;
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
@@ -230,10 +230,10 @@ private:
 	double lub_reduce_parameter;
 	double shear_disp;
 	/* For non-Brownian suspension:
-	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
+	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
 	 * For Brownian suspension, it should be Peclet number
 	 */
-	double dimensionless_shear_rate;
+	double dimensionless_number;
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz
@@ -320,6 +320,8 @@ private:
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}
 	double get_time(){return time;}
+	inline double get_shear_rate(){return shear_rate;}
+	inline void set_shear_rate(double sr){shear_rate=sr;}
 	inline double get_lz(){return lz;}
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}
