@@ -326,6 +326,9 @@ System::setupSystem(string control){
 		cerr << "friction_model..." << endl;
 		exit(1);
 	}
+	if(!brownian){
+		lowPeclet = false;
+	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
