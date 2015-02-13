@@ -83,7 +83,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div id="doc-content">
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">BoxSet Class Reference</div>  </div>
 </div><!--header-->
@@ -114,6 +116,80 @@ vector&lt; int &gt;::iterator&#160;</td><td class="memItemRight" valign="bottom"
 vector&lt; int &gt;::iterator&#160;</td><td class="memItemRight" valign="bottom"><b>neighborhood_end</b> (int i)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a873704e357dce45fce6e77a36e7d3018"></a><!-- doxytag: member="BoxSet::printBoxNetwork" ref="a873704e357dce45fce6e77a36e7d3018" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printBoxNetwork</b> ()</td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ddaac55279cf78b38cdc3fb2b479769"></a><!-- doxytag: member="BoxSet::WhichBox" ref="a7ddaac55279cf78b38cdc3fb2b479769" args="(vec3d *)" -->
+<a class="el" href="class_box.html">Box</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>WhichBox</b> (<a class="el" href="classvec3d.html">vec3d</a> *)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a730e1f303821ca8c69d5bfa4084adb4f"></a><!-- doxytag: member="BoxSet::updateNeighbors" ref="a730e1f303821ca8c69d5bfa4084adb4f" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateNeighbors</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8251f7277e849772c35ec3c727b80092"></a><!-- doxytag: member="BoxSet::updateNeighbors" ref="a8251f7277e849772c35ec3c727b80092" args="(Box *)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateNeighbors</b> (<a class="el" href="class_box.html">Box</a> *)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a173ac8490389a830e9b363eb39c58f7d"></a><!-- doxytag: member="BoxSet::allocateBoxes" ref="a173ac8490389a830e9b363eb39c58f7d" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>allocateBoxes</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa74b8437c99b8ebf8bccd03e2d8c9fb8"></a><!-- doxytag: member="BoxSet::positionBoxes" ref="aa74b8437c99b8ebf8bccd03e2d8c9fb8" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>positionBoxes</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec3c42f0a8221e62b87ed1ef82a94335"></a><!-- doxytag: member="BoxSet::assignNeighbors" ref="aec3c42f0a8221e62b87ed1ef82a94335" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assignNeighbors</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd033f1cebbc978bf8e554d29be28c9a"></a><!-- doxytag: member="BoxSet::assignNeighborsBulk" ref="abd033f1cebbc978bf8e554d29be28c9a" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assignNeighborsBulk</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e394ada8ef21384a14214a3fa5d415d"></a><!-- doxytag: member="BoxSet::assignNeighborsTop" ref="a1e394ada8ef21384a14214a3fa5d415d" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assignNeighborsTop</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a7ae972a5922e3da7f8fd35fe256e5c"></a><!-- doxytag: member="BoxSet::assignNeighborsBottom" ref="a4a7ae972a5922e3da7f8fd35fe256e5c" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assignNeighborsBottom</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a444e18c705b9f661267f59d5df22df97"></a><!-- doxytag: member="BoxSet::assignNeighborsTopBottom" ref="a444e18c705b9f661267f59d5df22df97" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>assignNeighborsTopBottom</b> ()</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac526ff5913780e98faaf81db924317c1"></a><!-- doxytag: member="BoxSet::box_xsize" ref="ac526ff5913780e98faaf81db924317c1" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>box_xsize</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4224bf77ba6d05f977762c63045a9f37"></a><!-- doxytag: member="BoxSet::box_ysize" ref="a4224bf77ba6d05f977762c63045a9f37" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>box_ysize</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a375a561728bc170f74844954e68aea12"></a><!-- doxytag: member="BoxSet::box_zsize" ref="a375a561728bc170f74844954e68aea12" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>box_zsize</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d3117378a2f2b68a72d187c69dd33dd"></a><!-- doxytag: member="BoxSet::box_xsize_half" ref="a1d3117378a2f2b68a72d187c69dd33dd" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>box_xsize_half</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc2e76583e14ab8c9d19be96ebd1a3e8"></a><!-- doxytag: member="BoxSet::box_ysize_half" ref="afc2e76583e14ab8c9d19be96ebd1a3e8" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>box_ysize_half</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacb5172cdd60e9da61c5870f92a7ca9c"></a><!-- doxytag: member="BoxSet::box_zsize_half" ref="aacb5172cdd60e9da61c5870f92a7ca9c" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>box_zsize_half</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb7ed18be68087a38257c9373ba45dca"></a><!-- doxytag: member="BoxSet::x_box_nb" ref="afb7ed18be68087a38257c9373ba45dca" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>x_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae32b5e5ef957e33074a3e2a95e0e0fe7"></a><!-- doxytag: member="BoxSet::y_box_nb" ref="ae32b5e5ef957e33074a3e2a95e0e0fe7" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>y_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a699b68cb7c36af2551ecdd2729a2c2b2"></a><!-- doxytag: member="BoxSet::z_box_nb" ref="a699b68cb7c36af2551ecdd2729a2c2b2" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>z_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2b8d5a8ccafa59c36b8a7eb6daccd75"></a><!-- doxytag: member="BoxSet::box_nb" ref="ac2b8d5a8ccafa59c36b8a7eb6daccd75" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6d36d3f0b18b4385b4b6c6ff333e73f3"></a><!-- doxytag: member="BoxSet::bottom_box_nb" ref="a6d36d3f0b18b4385b4b6c6ff333e73f3" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>bottom_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf0048bf0cbcbb18f251c80029a7c875"></a><!-- doxytag: member="BoxSet::top_box_nb" ref="abf0048bf0cbcbb18f251c80029a7c875" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>top_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a325b27f09406746a2d2cfb8b3ca2a705"></a><!-- doxytag: member="BoxSet::bulk_box_nb" ref="a325b27f09406746a2d2cfb8b3ca2a705" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>bulk_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a0e12fe5940b4249b6c0850333f1b29"></a><!-- doxytag: member="BoxSet::topbottom_box_nb" ref="a8a0e12fe5940b4249b6c0850333f1b29" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>topbottom_box_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4162f7c6529126f35943a194cf9d7b9c"></a><!-- doxytag: member="BoxSet::_is_boxed" ref="a4162f7c6529126f35943a194cf9d7b9c" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>_is_boxed</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85bd642bbb5556e9892653ad4abbff7b"></a><!-- doxytag: member="BoxSet::Boxes" ref="a85bd642bbb5556e9892653ad4abbff7b" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>Boxes</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab79d39478d5ee903a40d12078102423c"></a><!-- doxytag: member="BoxSet::BulkBoxes" ref="ab79d39478d5ee903a40d12078102423c" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>BulkBoxes</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a390dc4d8ae628c092c32bd18cb468557"></a><!-- doxytag: member="BoxSet::TopBoxes" ref="a390dc4d8ae628c092c32bd18cb468557" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>TopBoxes</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afd0ea082f4f0d1a20803b477799801d1"></a><!-- doxytag: member="BoxSet::BottomBoxes" ref="afd0ea082f4f0d1a20803b477799801d1" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>BottomBoxes</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f448eab8ca6d8fa666c7ca9aea15c47"></a><!-- doxytag: member="BoxSet::TopBottomBoxes" ref="a9f448eab8ca6d8fa666c7ca9aea15c47" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>TopBottomBoxes</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adccb05fb655c98c243eeaf501a7953d0"></a><!-- doxytag: member="BoxSet::sys" ref="adccb05fb655c98c243eeaf501a7953d0" args="" -->
+<a class="el" href="class_system.html">System</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>sys</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2265072977d5fa64e5401981a1359368"></a><!-- doxytag: member="BoxSet::amax" ref="a2265072977d5fa64e5401981a1359368" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>amax</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5650f06be64f82778269b0a28e19183"></a><!-- doxytag: member="BoxSet::bmax" ref="ad5650f06be64f82778269b0a28e19183" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>bmax</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa97d2f2bfd0a9f77e0d3e5f489d5a1f2"></a><!-- doxytag: member="BoxSet::cmax" ref="aa97d2f2bfd0a9f77e0d3e5f489d5a1f2" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>cmax</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8c28949f1145318bea1bdeeffe5b8f2"></a><!-- doxytag: member="BoxSet::boxMap" ref="aa8c28949f1145318bea1bdeeffe5b8f2" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>boxMap</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Set of <a class="el" href="class_box.html" title="Box object holding identities of the particles in a subset of the whole suspension, to be used in a BoxSet object.">Box</a> objects making a partition of the simulation box. </p>
@@ -144,7 +220,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_box_set.html">BoxSet</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

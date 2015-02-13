@@ -913,7 +913,7 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 void
 System::generateBrownianForces(){
 	/**
-	   \brief Generates a Brownian force \f$F_B\f$ with \f$ \langle F_B \rangle = 0\f$, and \f$\langleF_B F_B\rangle = \frac{2kT/dt} R\f$ where \f$R\f$ is the current resistance matrix stored in the stokes_solver.
+	   \brief Generates a Brownian force \f$F_B\f$ with \f$ \langle F_B \rangle = 0\f$, and \f$\langle F_B F_B\rangle = \frac{2kT}{dt} R\f$ where \f$R\f$ is the current resistance matrix stored in the stokes_solver.
 
 	   Note that it SETS the rhs of the solver as \f$ rhs = F_B \f$
 	   \f$ F_B\f$ is also stored in sys->brownian_force

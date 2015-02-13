@@ -87,11 +87,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 This is the complete list of members for <a class="el" href="class_interaction.html">Interaction</a>, including all inherited members.<table>
+  <tr bgcolor="#f0f0f0"><td><b>a0</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>a1</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>activate</b>(unsigned short i, unsigned short j) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>addUpRepulsiveForce</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>active</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>calcNormalVectorDistanceGap</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>calcRelativeVelocities</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>calcRepulsiveStress</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>calcRollingVelocities</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>Contact</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [friend]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>contact</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
@@ -99,31 +100,53 @@ This is the complete list of members for <a class="el" href="class_interaction.h
   <tr bgcolor="#f0f0f0"><td><b>deactivate</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_a0</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_a1</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>get_f_repulsive_norm</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>get_gap_nondim</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>get_gap</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_label</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_nvec</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_par_num</b>(unsigned short &amp;i, unsigned short &amp;j) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_r</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>get_reduced_gap</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>get_ro</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>getContactVelocity</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>getNormalVelocity</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>getRelativeVelocity</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>getRepulsiveStressXF</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>init</b>(System *sys_) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>integrateStress</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>Interaction</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>interaction_range_scaled</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>is_active</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>is_contact</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>is_friccontact</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>is_overlap</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>lubrication</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>label</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>Lubrication</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [friend]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>lubrication</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nvec</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nxnx</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nxny</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nxnz</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nyny</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nynz</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>nznz</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>p0</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>p1</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>partner</b>(unsigned int i) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>r</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>reduced_gap</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>relative_surface_velocity</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>relative_velocity</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>repulsion</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>RepulsiveForce</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [friend]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>ro</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>ro_12</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>rolling_velocity</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>rvec</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>set_label</b>(unsigned int val) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>set_ro</b>(double val) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [inline]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>sys</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>updateResistanceCoeff</b>() (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>updateState</b>(bool &amp;deactivated) (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>zshift</b> (defined in <a class="el" href="class_interaction.html">Interaction</a>)</td><td><a class="el" href="class_interaction.html">Interaction</a></td><td><code> [private]</code></td></tr>
 </table></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -143,7 +166,7 @@ This is the complete list of members for <a class="el" href="class_interaction.h
   <div id="nav-path" class="navpath">
     <ul>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

@@ -87,10 +87,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 This is the complete list of members for <a class="el" href="class_box.html">Box</a>, including all inherited members.<table>
+  <tr bgcolor="#f0f0f0"><td><b>_is_bottom</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_is_top</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_moving_neigh_nb</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_moving_neighbors</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_neigh_nb</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_neighbors</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_probe_nb</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_probing_positions</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>_still_neigh_nb</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>add</b>(int) (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>begin</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>Box</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>build_neighborhood_container</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>can_be_added</b>(int, Box *) (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>container</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>container_size</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>end</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
@@ -103,6 +113,7 @@ This is the complete list of members for <a class="el" href="class_box.html">Box
   <tr bgcolor="#f0f0f0"><td><b>neigh_nb</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>neighbor</b>(int label, Box *neigh_box) (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>neighborhood_begin</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>neighborhood_container</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>neighborhood_end</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>neighbors</b>() (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>position</b> (defined in <a class="el" href="class_box.html">Box</a>)</td><td><a class="el" href="class_box.html">Box</a></td><td></td></tr>
@@ -131,7 +142,7 @@ This is the complete list of members for <a class="el" href="class_box.html">Box
   <div id="nav-path" class="navpath">
     <ul>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

@@ -83,7 +83,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div id="doc-content">
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">Simulation Class Reference</div>  </div>
 </div><!--header-->
@@ -102,6 +104,142 @@ Public Member Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear</b> (vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e769d7a1392034c2792204cb8be97dd"></a><!-- doxytag: member="Simulation::simulationUserDefinedSequence" ref="a4e769d7a1392034c2792204cb8be97dd" args="(string seq_type, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationUserDefinedSequence</b> (string seq_type, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)</td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a828e1320e5f80450b4967a87bb840c"></a><!-- doxytag: member="Simulation::setDefaultParameters" ref="a1a828e1320e5f80450b4967a87bb840c" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setDefaultParameters</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02ed6985fac96d595daf2ab830f2b76c"></a><!-- doxytag: member="Simulation::readParameterFile" ref="a02ed6985fac96d595daf2ab830f2b76c" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>readParameterFile</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0373196320b3ec5ae8a785549370ae40"></a><!-- doxytag: member="Simulation::openOutputFiles" ref="a0373196320b3ec5ae8a785549370ae40" args="(bool)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>openOutputFiles</b> (bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0677c2d30c34216fa24e7a035012ed31"></a><!-- doxytag: member="Simulation::prepareSimulationName" ref="a0677c2d30c34216fa24e7a035012ed31" args="(bool)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>prepareSimulationName</b> (bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ea39843d1763c67c248b0417163472f"></a><!-- doxytag: member="Simulation::autoSetParameters" ref="a2ea39843d1763c67c248b0417163472f" args="(const string &amp;keyword, const string &amp;value)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>autoSetParameters</b> (const string &amp;keyword, const string &amp;value)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11575d897a1cd4003b6143489c884f8a"></a><!-- doxytag: member="Simulation::importInitialPositionFile" ref="a11575d897a1cd4003b6143489c884f8a" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>importInitialPositionFile</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe2a026cb1527e70bdf19a969de9de9c"></a><!-- doxytag: member="Simulation::contactForceParameter" ref="afe2a026cb1527e70bdf19a969de9de9c" args="(string filename)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>contactForceParameter</b> (string filename)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44d8267f50aedd80c29d25e91943ceb3"></a><!-- doxytag: member="Simulation::contactForceParameterBrownian" ref="a44d8267f50aedd80c29d25e91943ceb3" args="(string filename)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>contactForceParameterBrownian</b> (string filename)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac5d7a3be23f6b310ed1dbf1a7ee31882"></a><!-- doxytag: member="Simulation::importPreSimulationData" ref="ac5d7a3be23f6b310ed1dbf1a7ee31882" args="(string filename)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>importPreSimulationData</b> (string filename)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c86b63dff8eb379655ec7df1ed44192"></a><!-- doxytag: member="Simulation::importConfigurationBinary" ref="a0c86b63dff8eb379655ec7df1ed44192" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>importConfigurationBinary</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ed9b69cf273dbade9825e5c606c0e0d"></a><!-- doxytag: member="Simulation::evaluateData" ref="a2ed9b69cf273dbade9825e5c606c0e0d" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateData</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0343a8d24623b8fdf0478f62a106d25"></a><!-- doxytag: member="Simulation::outputDataHeader" ref="ac0343a8d24623b8fdf0478f62a106d25" args="(ofstream &amp;fout)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputDataHeader</b> (ofstream &amp;fout)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9de6d1c7e4cb4fa69ff11d46f53cdb45"></a><!-- doxytag: member="Simulation::outputRheologyData" ref="a9de6d1c7e4cb4fa69ff11d46f53cdb45" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputRheologyData</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a49da35ea4eb81dbebfce1bd3217ecd47"></a><!-- doxytag: member="Simulation::outputStressTensorData" ref="a49da35ea4eb81dbebfce1bd3217ecd47" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputStressTensorData</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51c36077a295a0f1e265bfd59bed8df8"></a><!-- doxytag: member="Simulation::outputConfigurationData" ref="a51c36077a295a0f1e265bfd59bed8df8" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputConfigurationData</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33fe5f84116b7c262959eb3f104a8e87"></a><!-- doxytag: member="Simulation::outputFinalConfiguration" ref="a33fe5f84116b7c262959eb3f104a8e87" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputFinalConfiguration</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aac7d2c88abe1450511bf7509718e9649"></a><!-- doxytag: member="Simulation::outputConfigurationBinary" ref="aac7d2c88abe1450511bf7509718e9649" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputConfigurationBinary</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f897105fb2d9a8590d04dc8c2fd00b6"></a><!-- doxytag: member="Simulation::outputConfigurationBinary" ref="a4f897105fb2d9a8590d04dc8c2fd00b6" args="(string)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputConfigurationBinary</b> (string)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1221947d9fcaa6bbb625c91d143be5e7"></a><!-- doxytag: member="Simulation::shiftUpCoordinate" ref="a1221947d9fcaa6bbb625c91d143be5e7" args="(double x, double y, double z)" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>shiftUpCoordinate</b> (double x, double y, double z)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92e2f06b26117c5e2867ace2441d922e"></a><!-- doxytag: member="Simulation::setupSimulationSteadyShear" ref="a92e2f06b26117c5e2867ace2441d922e" args="(vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSimulationSteadyShear</b> (vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4718b611095fdfa734ba5b65eed8f34b"></a><!-- doxytag: member="Simulation::exportParameterSet" ref="a4718b611095fdfa734ba5b65eed8f34b" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>exportParameterSet</b> ()</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad036bbf8cacedcab4c099a00358e6a6d"></a><!-- doxytag: member="Simulation::sys" ref="ad036bbf8cacedcab4c099a00358e6a6d" args="" -->
+<a class="el" href="class_system.html">System</a>&#160;</td><td class="memItemRight" valign="bottom"><b>sys</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8211b57acfea04248b46daf56e21f1bb"></a><!-- doxytag: member="Simulation::p" ref="a8211b57acfea04248b46daf56e21f1bb" args="" -->
+<a class="el" href="struct_parameter_set.html">ParameterSet</a>&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af931919108a6e69a97df94dd8bcf4c26"></a><!-- doxytag: member="Simulation::volume_or_area_fraction" ref="af931919108a6e69a97df94dd8bcf4c26" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>volume_or_area_fraction</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6da10776d91d5e8a5eceb9b46a7705ab"></a><!-- doxytag: member="Simulation::filename_import_positions" ref="a6da10776d91d5e8a5eceb9b46a7705ab" args="" -->
+string&#160;</td><td class="memItemRight" valign="bottom"><b>filename_import_positions</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a681f62ac24ee0f2059a904f9bc7cdc28"></a><!-- doxytag: member="Simulation::filename_parameters" ref="a681f62ac24ee0f2059a904f9bc7cdc28" args="" -->
+string&#160;</td><td class="memItemRight" valign="bottom"><b>filename_parameters</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae4fc3f3d949bdfb811e0c1067df1bcec"></a><!-- doxytag: member="Simulation::filename_sequence" ref="ae4fc3f3d949bdfb811e0c1067df1bcec" args="" -->
+string&#160;</td><td class="memItemRight" valign="bottom"><b>filename_sequence</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6d3407bc703f777c79d3edf967193190"></a><!-- doxytag: member="Simulation::string_control_parameters" ref="a6d3407bc703f777c79d3edf967193190" args="" -->
+ostringstream&#160;</td><td class="memItemRight" valign="bottom"><b>string_control_parameters</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67b187f5d042deae2a5a3d220ed0feaa"></a><!-- doxytag: member="Simulation::import_line" ref="a67b187f5d042deae2a5a3d220ed0feaa" args="[2]" -->
+string&#160;</td><td class="memItemRight" valign="bottom"><b>import_line</b> [2]</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4822d6685a736235492a45bb168bd7bb"></a><!-- doxytag: member="Simulation::control_var" ref="a4822d6685a736235492a45bb168bd7bb" args="" -->
+string&#160;</td><td class="memItemRight" valign="bottom"><b>control_var</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0945f4111b3b61cf365f6583db5cc2c4"></a><!-- doxytag: member="Simulation::user_sequence" ref="a0945f4111b3b61cf365f6583db5cc2c4" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>user_sequence</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a68ff4c76051381ed9bc174d2a493d5e4"></a><!-- doxytag: member="Simulation::shear_rate_expectation" ref="a68ff4c76051381ed9bc174d2a493d5e4" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>shear_rate_expectation</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7e7e72e6c8e7652b3df7443875bb0119"></a><!-- doxytag: member="Simulation::time_interval_output_data" ref="a7e7e72e6c8e7652b3df7443875bb0119" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>time_interval_output_data</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a326268b92e8adfb5d868ec50b8ce3b87"></a><!-- doxytag: member="Simulation::time_interval_output_config" ref="a326268b92e8adfb5d868ec50b8ce3b87" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>time_interval_output_config</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdb7edf995134ffa4a5ace41091079e4"></a><!-- doxytag: member="Simulation::viscosity" ref="acdb7edf995134ffa4a5ace41091079e4" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a949bfef5fed887d2cc152473a754f9c6"></a><!-- doxytag: member="Simulation::normalstress_diff_1" ref="a949bfef5fed887d2cc152473a754f9c6" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9dfd7a3127792f2d0f201af28a25464"></a><!-- doxytag: member="Simulation::normalstress_diff_2" ref="ab9dfd7a3127792f2d0f201af28a25464" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c98c0effe69c1e16e28b3025278315a"></a><!-- doxytag: member="Simulation::particle_pressure" ref="a3c98c0effe69c1e16e28b3025278315a" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>particle_pressure</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad11c25d31add4192032b6c42eb17b80e"></a><!-- doxytag: member="Simulation::viscosity_hydro" ref="ad11c25d31add4192032b6c42eb17b80e" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_hydro</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad797da03d2e49185f99cca7a2327dc02"></a><!-- doxytag: member="Simulation::normalstress_diff_1_hydro" ref="ad797da03d2e49185f99cca7a2327dc02" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_hydro</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afeb1dd7496365b0121ff34f214cff6c1"></a><!-- doxytag: member="Simulation::normalstress_diff_2_hydro" ref="afeb1dd7496365b0121ff34f214cff6c1" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_hydro</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2f58cc4915060d1b7a0d0601e51ec0a6"></a><!-- doxytag: member="Simulation::viscosity_cont_XF" ref="a2f58cc4915060d1b7a0d0601e51ec0a6" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_cont_XF</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a40c7a268168f868faa17dcd525436b"></a><!-- doxytag: member="Simulation::normalstress_diff_1_cont_XF" ref="a4a40c7a268168f868faa17dcd525436b" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_cont_XF</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3d6b894f82a54c114a506aed91cc92e"></a><!-- doxytag: member="Simulation::normalstress_diff_2_cont_XF" ref="ae3d6b894f82a54c114a506aed91cc92e" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_cont_XF</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3e033b9ac2d9a07a72953dd29191f56"></a><!-- doxytag: member="Simulation::particle_pressure_cont" ref="ae3e033b9ac2d9a07a72953dd29191f56" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>particle_pressure_cont</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61f792f3c09f70ce59c63f1b32c6a488"></a><!-- doxytag: member="Simulation::viscosity_friction" ref="a61f792f3c09f70ce59c63f1b32c6a488" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_friction</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3b1a0eabbdcc5e0a43ac078b5575969"></a><!-- doxytag: member="Simulation::normalstress_diff_1_friction" ref="ae3b1a0eabbdcc5e0a43ac078b5575969" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_friction</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b435815dce1ea751ad9c3a79ad571b8"></a><!-- doxytag: member="Simulation::normalstress_diff_2_friction" ref="a7b435815dce1ea751ad9c3a79ad571b8" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_friction</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed820b7a84f755471ef191134886a800"></a><!-- doxytag: member="Simulation::viscosity_cont_GU" ref="aed820b7a84f755471ef191134886a800" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_cont_GU</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c0bdb2de7954958eefb42877bd12baa"></a><!-- doxytag: member="Simulation::normalstress_diff_1_cont_GU" ref="a2c0bdb2de7954958eefb42877bd12baa" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_cont_GU</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a264252512ada154146984ac23da98ff3"></a><!-- doxytag: member="Simulation::normalstress_diff_2_cont_GU" ref="a264252512ada154146984ac23da98ff3" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_cont_GU</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a89e387e7c02e9aa36b2fd20292563e"></a><!-- doxytag: member="Simulation::viscosity_repulsive_XF" ref="a6a89e387e7c02e9aa36b2fd20292563e" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_repulsive_XF</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad0b7c8fec8cf49087516607ad7eedd11"></a><!-- doxytag: member="Simulation::normalstress_diff_1_repulsive_XF" ref="ad0b7c8fec8cf49087516607ad7eedd11" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_repulsive_XF</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a80f2c67128dcda7d23f7298aff9d379b"></a><!-- doxytag: member="Simulation::normalstress_diff_2_repulsive_XF" ref="a80f2c67128dcda7d23f7298aff9d379b" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_repulsive_XF</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c96311d9cbb8ae31ff8458c2a45e01d"></a><!-- doxytag: member="Simulation::particle_pressure_repulsive" ref="a9c96311d9cbb8ae31ff8458c2a45e01d" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>particle_pressure_repulsive</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27ae16e62a785ef282633f8519f1de45"></a><!-- doxytag: member="Simulation::viscosity_repulsive_GU" ref="a27ae16e62a785ef282633f8519f1de45" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_repulsive_GU</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0150a55da4c18feceea64a5a42c3c3b"></a><!-- doxytag: member="Simulation::normalstress_diff_1_repulsive_GU" ref="aa0150a55da4c18feceea64a5a42c3c3b" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_repulsive_GU</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a545f82550f5ccef39c011c733bfa234a"></a><!-- doxytag: member="Simulation::normalstress_diff_2_repulsive_GU" ref="a545f82550f5ccef39c011c733bfa234a" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_repulsive_GU</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca614b994384f833174f9802d5013749"></a><!-- doxytag: member="Simulation::viscosity_brownian" ref="aca614b994384f833174f9802d5013749" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity_brownian</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24904df634148da11325cc1f8c5b888c"></a><!-- doxytag: member="Simulation::normalstress_diff_1_brownian" ref="a24904df634148da11325cc1f8c5b888c" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_1_brownian</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afccef0f32c0d44feaaf851fe275aadab"></a><!-- doxytag: member="Simulation::normalstress_diff_2_brownian" ref="afccef0f32c0d44feaaf851fe275aadab" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normalstress_diff_2_brownian</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca5e07a6cd1ceb3930af276cc2ee50e2"></a><!-- doxytag: member="Simulation::initial_lees_edwards_disp" ref="aca5e07a6cd1ceb3930af276cc2ee50e2" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>initial_lees_edwards_disp</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a539ef9855bd2abdc384cfb24cdb4e090"></a><!-- doxytag: member="Simulation::fout_rheo" ref="a539ef9855bd2abdc384cfb24cdb4e090" args="" -->
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_rheo</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a974a18626d8fba328e6203415975a481"></a><!-- doxytag: member="Simulation::fout_particle" ref="a974a18626d8fba328e6203415975a481" args="" -->
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_particle</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af69a5bb305632dccbbb0c3787afb4570"></a><!-- doxytag: member="Simulation::fout_interaction" ref="af69a5bb305632dccbbb0c3787afb4570" args="" -->
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_interaction</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd048c5258ba51d0a4b0a4ce34c48fc2"></a><!-- doxytag: member="Simulation::fout_st" ref="acd048c5258ba51d0a4b0a4ce34c48fc2" args="" -->
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_st</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Class launching the simulation by setting up the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class and performing predefined shear evolution. </p>
@@ -132,7 +270,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

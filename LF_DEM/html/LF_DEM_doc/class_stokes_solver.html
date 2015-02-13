@@ -83,7 +83,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div id="doc-content">
 <div class="header">
   <div class="summary">
-<a href="#pub-methods">Public Member Functions</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">StokesSolver Class Reference</div>  </div>
 </div><!--header-->
@@ -162,6 +164,96 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>solvingIsDone</b> ()<
 void&#160;</td><td class="memItemRight" valign="bottom"><b>multiplyByResMat</b> (double *vec)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f945cb4185c1e961f3fafaf04d1fd3a"></a><!-- doxytag: member="StokesSolver::multiplySolutionByResMat" ref="a4f945cb4185c1e961f3fafaf04d1fd3a" args="(double *vec)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>multiplySolutionByResMat</b> (double *vec)</td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8d1a17ac04c7871a3dae205a6dbceb2"></a><!-- doxytag: member="StokesSolver::factorizeResistanceMatrix" ref="ad8d1a17ac04c7871a3dae205a6dbceb2" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>factorizeResistanceMatrix</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7de28ad5e45ebc8ede7e8066a6ecb4ef"></a><!-- doxytag: member="StokesSolver::setRow" ref="a7de28ad5e45ebc8ede7e8066a6ecb4ef" args="(const vec3d &amp;nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYBtilde, double scaledYB, double scaledYC)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setRow</b> (const <a class="el" href="classvec3d.html">vec3d</a> &amp;nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYBtilde, double scaledYB, double scaledYC)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60b22e849cd687002d64993883c9c894"></a><!-- doxytag: member="StokesSolver::setColumn" ref="a60b22e849cd687002d64993883c9c894" args="(const vec3d &amp;nvec, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setColumn</b> (const <a class="el" href="classvec3d.html">vec3d</a> &amp;nvec, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5e65358133fabbc87ffdf9e395c0272"></a><!-- doxytag: member="StokesSolver::allocateResistanceMatrix" ref="aa5e65358133fabbc87ffdf9e395c0272" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>allocateResistanceMatrix</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4387b39e01a272d20c72fd9968e46cf"></a><!-- doxytag: member="StokesSolver::completeResistanceMatrix_cholmod" ref="af4387b39e01a272d20c72fd9968e46cf" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>completeResistanceMatrix_cholmod</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab85d119ca02ddcf410f27719ff5929f5"></a><!-- doxytag: member="StokesSolver::completeResistanceMatrix_trilinos" ref="ab85d119ca02ddcf410f27719ff5929f5" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>completeResistanceMatrix_trilinos</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a328792630dd7cd3077e9dd181f95379d"></a><!-- doxytag: member="StokesSolver::allocateRessources" ref="a328792630dd7cd3077e9dd181f95379d" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>allocateRessources</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adcff32ebca0c4dea0c7b1ff54a3546ca"></a><!-- doxytag: member="StokesSolver::setDiagBlockPreconditioner" ref="adcff32ebca0c4dea0c7b1ff54a3546ca" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setDiagBlockPreconditioner</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a722ac3db055abe1075931bb4a8bf5e95"></a><!-- doxytag: member="StokesSolver::setIncCholPreconditioner" ref="a722ac3db055abe1075931bb4a8bf5e95" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setIncCholPreconditioner</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad4e18e3af3966cda49ed8a8526314b57"></a><!-- doxytag: member="StokesSolver::setSpInvPreconditioner" ref="ad4e18e3af3966cda49ed8a8526314b57" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setSpInvPreconditioner</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3166bbf2582966f892c60389547bdb40"></a><!-- doxytag: member="StokesSolver::setSolverType" ref="a3166bbf2582966f892c60389547bdb40" args="(string)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setSolverType</b> (string)</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a912d1ec41abccf847dfae5bd161c0449"></a><!-- doxytag: member="StokesSolver::np" ref="a912d1ec41abccf847dfae5bd161c0449" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>np</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff4aafbc8ce7ceb1d0e41be8c8bbac2d"></a><!-- doxytag: member="StokesSolver::np6" ref="aff4aafbc8ce7ceb1d0e41be8c8bbac2d" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>np6</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe529a34406ef2dba9c68598ffc033f3"></a><!-- doxytag: member="StokesSolver::res_matrix_linear_size" ref="afe529a34406ef2dba9c68598ffc033f3" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>res_matrix_linear_size</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4a8dc8ed1a05e6e2a5ae210523582ae"></a><!-- doxytag: member="StokesSolver::odblocks_nb" ref="aa4a8dc8ed1a05e6e2a5ae210523582ae" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>odblocks_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a375c740f78e0c9a0ece468a8d49a09a3"></a><!-- doxytag: member="StokesSolver::dblocks_size" ref="a375c740f78e0c9a0ece468a8d49a09a3" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>dblocks_size</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a618f503d4f51d90c36c35f08e7eddfd5"></a><!-- doxytag: member="StokesSolver::_iterative" ref="a618f503d4f51d90c36c35f08e7eddfd5" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>_iterative</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab16af144cdaf33f8ed73801805ebc80f"></a><!-- doxytag: member="StokesSolver::_direct" ref="ab16af144cdaf33f8ed73801805ebc80f" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>_direct</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61dfe32af2e397eda9b95e7614ba6ea9"></a><!-- doxytag: member="StokesSolver::chol_L" ref="a61dfe32af2e397eda9b95e7614ba6ea9" args="" -->
+cholmod_factor *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_L</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a87246a8a69a7fbef0a4d4c386bc880"></a><!-- doxytag: member="StokesSolver::chol_c" ref="a4a87246a8a69a7fbef0a4d4c386bc880" args="" -->
+cholmod_common&#160;</td><td class="memItemRight" valign="bottom"><b>chol_c</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a14c2f97d0389f9eecbbe34644a5d9bb7"></a><!-- doxytag: member="StokesSolver::chol_rhs" ref="a14c2f97d0389f9eecbbe34644a5d9bb7" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_rhs</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa2211fca44524042d3a85cf97c0f016"></a><!-- doxytag: member="StokesSolver::chol_res_matrix" ref="aaa2211fca44524042d3a85cf97c0f016" args="" -->
+cholmod_sparse *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_res_matrix</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6718495dff06c28696f8d6ec7768e587"></a><!-- doxytag: member="StokesSolver::chol_solution" ref="a6718495dff06c28696f8d6ec7768e587" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_solution</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af03582655c1983606e05b5f9e77eca05"></a><!-- doxytag: member="StokesSolver::chol_PTsolution" ref="af03582655c1983606e05b5f9e77eca05" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_PTsolution</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73f69eff8f67ff75a5ffe81f8c3b5174"></a><!-- doxytag: member="StokesSolver::chol_Psolution" ref="a73f69eff8f67ff75a5ffe81f8c3b5174" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_Psolution</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ddf96d84fe4523a66978e651ed5881b"></a><!-- doxytag: member="StokesSolver::chol_v_nonBrownian" ref="a6ddf96d84fe4523a66978e651ed5881b" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_v_nonBrownian</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a68a2e1261ea3a88b5ada69be194d638a"></a><!-- doxytag: member="StokesSolver::chol_v_Brownian_init" ref="a68a2e1261ea3a88b5ada69be194d638a" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_v_Brownian_init</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae8f238f617278d1a8cada4c6e32c97fe"></a><!-- doxytag: member="StokesSolver::chol_v_Brownian_mid" ref="ae8f238f617278d1a8cada4c6e32c97fe" args="" -->
+cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><b>chol_v_Brownian_mid</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83e22051446b72eef11f62c3d2bc9774"></a><!-- doxytag: member="StokesSolver::chol_init" ref="a83e22051446b72eef11f62c3d2bc9774" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>chol_init</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f160013183bd2fda960ca046af8ba4d"></a><!-- doxytag: member="StokesSolver::stype" ref="a9f160013183bd2fda960ca046af8ba4d" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>stype</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab60864582a5dbd9c0de29dad3fa2584c"></a><!-- doxytag: member="StokesSolver::sorted" ref="ab60864582a5dbd9c0de29dad3fa2584c" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>sorted</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aab5300d6ad1e0ae4314a4226cc610fdf"></a><!-- doxytag: member="StokesSolver::packed" ref="aab5300d6ad1e0ae4314a4226cc610fdf" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>packed</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a394b305858a1a49b137f5730a40cc5ad"></a><!-- doxytag: member="StokesSolver::xtype" ref="a394b305858a1a49b137f5730a40cc5ad" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>xtype</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af1e4ed4d4eafd83edb99285746d57783"></a><!-- doxytag: member="StokesSolver::chol_L_to_be_freed" ref="af1e4ed4d4eafd83edb99285746d57783" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>chol_L_to_be_freed</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6293a071e32d1973bcc04144690137a7"></a><!-- doxytag: member="StokesSolver::dblocks" ref="a6293a071e32d1973bcc04144690137a7" args="" -->
+double *&#160;</td><td class="memItemRight" valign="bottom"><b>dblocks</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3bff4cf201e5265c18e21fdcfb40df51"></a><!-- doxytag: member="StokesSolver::odblocks" ref="a3bff4cf201e5265c18e21fdcfb40df51" args="" -->
+vector&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>odblocks</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af19a2e5a33cd3ad4751a1889adaa2d2d"></a><!-- doxytag: member="StokesSolver::odbrows" ref="af19a2e5a33cd3ad4751a1889adaa2d2d" args="" -->
+vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>odbrows</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a198ea5a82618e72902b159de5e4ba1c4"></a><!-- doxytag: member="StokesSolver::odbrows_table" ref="a198ea5a82618e72902b159de5e4ba1c4" args="" -->
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>odbrows_table</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5bf6fa4f3f1b90f0824d6609453d9aa4"></a><!-- doxytag: member="StokesSolver::current_index_positions" ref="a5bf6fa4f3f1b90f0824d6609453d9aa4" args="" -->
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>current_index_positions</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ad767f35afcef05c41892eaa5a1104e"></a><!-- doxytag: member="StokesSolver::columns" ref="a6ad767f35afcef05c41892eaa5a1104e" args="" -->
+int **&#160;</td><td class="memItemRight" valign="bottom"><b>columns</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09a432ae310c8204896cd35ec6946498"></a><!-- doxytag: member="StokesSolver::columns_nb" ref="a09a432ae310c8204896cd35ec6946498" args="" -->
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>columns_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10c2818c48668a0b8530d9ec4da083b7"></a><!-- doxytag: member="StokesSolver::columns_max_nb" ref="a10c2818c48668a0b8530d9ec4da083b7" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>columns_max_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a785145133109455dca10756ea75fb2c7"></a><!-- doxytag: member="StokesSolver::values" ref="a785145133109455dca10756ea75fb2c7" args="" -->
+double **&#160;</td><td class="memItemRight" valign="bottom"><b>values</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Class dealing with the linear algebra. </p>
@@ -192,7 +284,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_stokes_solver.html">StokesSolver</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

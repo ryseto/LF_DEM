@@ -84,7 +84,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a>  </div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">System Class Reference</div>  </div>
 </div><!--header-->
@@ -170,6 +172,10 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>get_lx</b> ()</td><
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_ly</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91466f5db348ee603f8ada5772f6d6fa"></a><!-- doxytag: member="System::get_time" ref="a91466f5db348ee603f8ada5772f6d6fa" args="()" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_time</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac82d60aab327db7e14eb9f6dd69a6fce"></a><!-- doxytag: member="System::get_shear_rate" ref="ac82d60aab327db7e14eb9f6dd69a6fce" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>get_shear_rate</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad6339132dddf4ca480094783e41b8515"></a><!-- doxytag: member="System::set_shear_rate" ref="ad6339132dddf4ca480094783e41b8515" args="(double sr)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>set_shear_rate</b> (double sr)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44f4b78657577b8cd358688c76ea9aee"></a><!-- doxytag: member="System::get_lz" ref="a44f4b78657577b8cd358688c76ea9aee" args="()" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_lz</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc35aad1740687ab8315c20f71a2e66e"></a><!-- doxytag: member="System::Lx_half" ref="afc35aad1740687ab8315c20f71a2e66e" args="()" -->
@@ -192,14 +198,8 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>get_lub_max</b> ()<
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_dt</b> (double val)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8023cb52fe4710ee0b2d8c2a96dc6b9"></a><!-- doxytag: member="System::set_disp_max" ref="af8023cb52fe4710ee0b2d8c2a96dc6b9" args="(double val)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_disp_max</b> (double val)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e0d7fcdfaf7accb4f09f3d2c2f9614b"></a><!-- doxytag: member="System::get_repulsiveforce_amplitude" ref="a6e0d7fcdfaf7accb4f09f3d2c2f9614b" args="()" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>get_repulsiveforce_amplitude</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c984823e89860f62b90cbd4d0b0b2f5"></a><!-- doxytag: member="System::set_repulsiveforce_length" ref="a0c984823e89860f62b90cbd4d0b0b2f5" args="(double val)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_repulsiveforce_length</b> (double val)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ee32c99831e586c0aec628e461ba645"></a><!-- doxytag: member="System::set_ratio_repulsion" ref="a6ee32c99831e586c0aec628e461ba645" args="(double val)" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_ratio_repulsion</b> (double val)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae06464ea7020580bbb7bf47494f95356"></a><!-- doxytag: member="System::get_ratio_repulsion" ref="ae06464ea7020580bbb7bf47494f95356" args="()" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>get_ratio_repulsion</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90e08f0cd70d5fb371e0213cc1678c04"></a><!-- doxytag: member="System::set_sd_coeff" ref="a90e08f0cd70d5fb371e0213cc1678c04" args="(double val)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>set_sd_coeff</b> (double val)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91f93014256af53707c0f07f00df37dc"></a><!-- doxytag: member="System::get_repulsiveforce_length" ref="a91f93014256af53707c0f07f00df37dc" args="()" -->
@@ -370,10 +370,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>nb_interaction</b></td
 double&#160;</td><td class="memItemRight" valign="bottom"><b>lub_reduce_parameter</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40db372aa84dddb75e33f3a02267526b"></a><!-- doxytag: member="System::shear_disp" ref="a40db372aa84dddb75e33f3a02267526b" args="" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>shear_disp</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2b63719e4c0ae045bce2b3db766b677"></a><!-- doxytag: member="System::dimensionless_shear_rate" ref="ac2b63719e4c0ae045bce2b3db766b677" args="" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionless_shear_rate</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a332ee91ed3aebff7052946e7f8ad440c"></a><!-- doxytag: member="System::repulsiveforce_amplitude" ref="a332ee91ed3aebff7052946e7f8ad440c" args="" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>repulsiveforce_amplitude</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af6b154e16bd176e64f0215c2e677a836"></a><!-- doxytag: member="System::dimensionless_number" ref="af6b154e16bd176e64f0215c2e677a836" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionless_number</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3eef4adb3924dc2cbd699823bd4a549"></a><!-- doxytag: member="System::vel_difference" ref="ac3eef4adb3924dc2cbd699823bd4a549" args="" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>vel_difference</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c826e66ab007bfa0e2161606eb278ca"></a><!-- doxytag: member="System::max_velocity" ref="a8c826e66ab007bfa0e2161606eb278ca" args="" -->
@@ -384,8 +382,8 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>max_relative_veloci
 double&#160;</td><td class="memItemRight" valign="bottom"><b>max_sliding_velocity</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4354fc193103ced4792d2039596435fe"></a><!-- doxytag: member="System::max_ang_velocity" ref="a4354fc193103ced4792d2039596435fe" args="" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>max_ang_velocity</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06c5e860fe8fd21bc12a9f2c458dd962"></a><!-- doxytag: member="System::min_gap_nondim" ref="a06c5e860fe8fd21bc12a9f2c458dd962" args="" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>min_gap_nondim</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8708ec2d0dbf3372942139fd62d78df7"></a><!-- doxytag: member="System::min_reduced_gap" ref="a8708ec2d0dbf3372942139fd62d78df7" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>min_reduced_gap</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf343497fa0235906cc4583249505232"></a><!-- doxytag: member="System::max_disp_tan" ref="adf343497fa0235906cc4583249505232" args="" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>max_disp_tan</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9e83c5e9141d7d65084aeebe09cf506"></a><!-- doxytag: member="System::deactivated_interaction" ref="aa9e83c5e9141d7d65084aeebe09cf506" args="" -->
@@ -424,6 +422,130 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>init_shear_rate_lim
 double&#160;</td><td class="memItemRight" valign="bottom"><b>new_contact_gap</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a00905d085255931d763769b844e21966"></a><!-- doxytag: member="System::stokes_solver" ref="a00905d085255931d763769b844e21966" args="" -->
 <a class="el" href="class_stokes_solver.html">StokesSolver</a>&#160;</td><td class="memItemRight" valign="bottom"><b>stokes_solver</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad470b9fcdf279a22db8c9de075285c75"></a><!-- doxytag: member="System::amplitudes" ref="ad470b9fcdf279a22db8c9de075285c75" args="" -->
+struct <a class="el" href="struct_force_amplitudes.html">ForceAmplitudes</a>&#160;</td><td class="memItemRight" valign="bottom"><b>amplitudes</b></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace218c4c9df1e99090acfe721b6fdb15"></a><!-- doxytag: member="System::timeEvolutionEulersMethod" ref="ace218c4c9df1e99090acfe721b6fdb15" args="(bool calc_stress)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>timeEvolutionEulersMethod</b> (bool calc_stress)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa3aa4d909d2a4e8a9b3c883b09b090cd"></a><!-- doxytag: member="System::timeEvolutionPredictorCorrectorMethod" ref="aa3aa4d909d2a4e8a9b3c883b09b090cd" args="(bool calc_stress)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>timeEvolutionPredictorCorrectorMethod</b> (bool calc_stress)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a50cdcf8f5a2de0afb279ad9b0fcf2831"></a><!-- doxytag: member="System::timeStepMove" ref="a50cdcf8f5a2de0afb279ad9b0fcf2831" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>timeStepMove</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaa42c0d51099a3340ee386feb61d0e67"></a><!-- doxytag: member="System::timeStepMoveCorrector" ref="aaa42c0d51099a3340ee386feb61d0e67" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>timeStepMoveCorrector</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c89605892e1787cbecf465c5b253582"></a><!-- doxytag: member="System::timeStepMovePredictor" ref="a3c89605892e1787cbecf465c5b253582" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>timeStepMovePredictor</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0a62c00b7fc82494a12afaff6ebf759"></a><!-- doxytag: member="System::timeStepBoxing" ref="ab0a62c00b7fc82494a12afaff6ebf759" args="(const double strain_increment)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>timeStepBoxing</b> (const double strain_increment)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a376cbc62c7c0cd950d11b0ba16cefeaf"></a><!-- doxytag: member="System::setContactForceToParticle" ref="a376cbc62c7c0cd950d11b0ba16cefeaf" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setContactForceToParticle</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a18431039b24e030b12ed8d5b651c8dac"></a><!-- doxytag: member="System::setRepulsiveForceToParticle" ref="a18431039b24e030b12ed8d5b651c8dac" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setRepulsiveForceToParticle</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78fc03133650a0632cd9d975e13ee402"></a><!-- doxytag: member="System::buildHydroTerms" ref="a78fc03133650a0632cd9d975e13ee402" args="(bool, bool)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>buildHydroTerms</b> (bool, bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac8dbe2a7adaa21241464a8658add15ab"></a><!-- doxytag: member="System::buildLubricationTerms_squeeze" ref="ac8dbe2a7adaa21241464a8658add15ab" args="(bool mat, bool rhs)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>buildLubricationTerms_squeeze</b> (bool mat, bool rhs)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23ceff270743a647a5b6cef83fdd2779"></a><!-- doxytag: member="System::buildLubricationTerms_squeeze_tangential" ref="a23ceff270743a647a5b6cef83fdd2779" args="(bool mat, bool rhs)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>buildLubricationTerms_squeeze_tangential</b> (bool mat, bool rhs)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a59d8c192e1395d9f6637d2506bb82443">generateBrownianForces</a> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae333ca9eb5a56acd295cfb3511c71a3c"></a><!-- doxytag: member="System::buildContactTerms" ref="ae333ca9eb5a56acd295cfb3511c71a3c" args="(bool)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>buildContactTerms</b> (bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27bd8840ae95328990df5cfb46540a44"></a><!-- doxytag: member="System::buildRepulsiveForceTerms" ref="a27bd8840ae95328990df5cfb46540a44" args="(bool)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>buildRepulsiveForceTerms</b> (bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeaf64273992b81dd30df544fc377bcd4"></a><!-- doxytag: member="System::print_res" ref="aeaf64273992b81dd30df544fc377bcd4" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>print_res</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7306e4968b1db8dd6e7d861ad8783aea"></a><!-- doxytag: member="System::evaluateMinGap" ref="a7306e4968b1db8dd6e7d861ad8783aea" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMinGap</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af9c4a878323f792579f2f422c3f8ff11"></a><!-- doxytag: member="System::evaluateMaxDispTan" ref="af9c4a878323f792579f2f422c3f8ff11" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxDispTan</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a095a3a3995420e2904e30353b309976f"></a><!-- doxytag: member="System::evaluateMaxFcNormal" ref="a095a3a3995420e2904e30353b309976f" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxFcNormal</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab993f516f39dea60d43b8c70c8c3e697"></a><!-- doxytag: member="System::evaluateMaxFcTangential" ref="ab993f516f39dea60d43b8c70c8c3e697" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxFcTangential</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a047bfc54077ea5cc7f3570a150aff80d"></a><!-- doxytag: member="System::evaluateMaxContactVelocity" ref="a047bfc54077ea5cc7f3570a150aff80d" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxContactVelocity</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c090a22b4801d8038072226e5521912"></a><!-- doxytag: member="System::evaluateMaxVelocity" ref="a7c090a22b4801d8038072226e5521912" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxVelocity</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af187711a0d39fe0bc834ec9d2669c24d"></a><!-- doxytag: member="System::evaluateMaxAngVelocity" ref="af187711a0d39fe0bc834ec9d2669c24d" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxAngVelocity</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af44da13a80151300de71f85142c28dfa"></a><!-- doxytag: member="System::countNumberOfContact" ref="af44da13a80151300de71f85142c28dfa" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>countNumberOfContact</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">adjustContactModelParameters</a> ()</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a656572d1d416ffee7d049db18c12967c"></a><!-- doxytag: member="System::np" ref="a656572d1d416ffee7d049db18c12967c" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>np</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f685c55ade1eae3c98f134f65f35ce1"></a><!-- doxytag: member="System::maxnb_interactionpair" ref="a5f685c55ade1eae3c98f134f65f35ce1" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>maxnb_interactionpair</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f38b193edca6ceca1b8217bd3898c00"></a><!-- doxytag: member="System::maxnb_interactionpair_per_particle" ref="a9f38b193edca6ceca1b8217bd3898c00" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>maxnb_interactionpair_per_particle</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a816cc1d9a215be39fb4d420c7ba5c637"></a><!-- doxytag: member="System::nb_of_active_interactions" ref="a816cc1d9a215be39fb4d420c7ba5c637" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>nb_of_active_interactions</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9e002a5f2f169e37c545b76ee67e724"></a><!-- doxytag: member="System::time" ref="aa9e002a5f2f169e37c545b76ee67e724" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>time</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a493b7225cca40f2c3b255b905fb4dfd5"></a><!-- doxytag: member="System::shear_rate" ref="a493b7225cca40f2c3b255b905fb4dfd5" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>shear_rate</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ce3a4c1e12ae51057bad6fbb52fe43a"></a><!-- doxytag: member="System::disp_max" ref="a4ce3a4c1e12ae51057bad6fbb52fe43a" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>disp_max</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa31fd874bff06a080d25d5291fd1aab3"></a><!-- doxytag: member="System::lx" ref="aa31fd874bff06a080d25d5291fd1aab3" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>lx</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a50c58a367195cad52124ed98a2a88a"></a><!-- doxytag: member="System::ly" ref="a8a50c58a367195cad52124ed98a2a88a" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>ly</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a931459c67b663047cea93cbde03d7f8d"></a><!-- doxytag: member="System::lz" ref="a931459c67b663047cea93cbde03d7f8d" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>lz</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d39f22550a5b3a8c9c9302d5c15eb58"></a><!-- doxytag: member="System::lx_half" ref="a5d39f22550a5b3a8c9c9302d5c15eb58" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>lx_half</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93158052f8d9aa34db043ba7998438e1"></a><!-- doxytag: member="System::ly_half" ref="a93158052f8d9aa34db043ba7998438e1" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>ly_half</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e7aa9c03780125563492a06cb380b92"></a><!-- doxytag: member="System::lz_half" ref="a1e7aa9c03780125563492a06cb380b92" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>lz_half</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa32dec2f7aee39dc0fa38110a53d1019"></a><!-- doxytag: member="System::system_volume" ref="aa32dec2f7aee39dc0fa38110a53d1019" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>system_volume</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5bb476664a367a6d30fcaa14fe1b56f2"></a><!-- doxytag: member="System::sq_lub_max" ref="a5bb476664a367a6d30fcaa14fe1b56f2" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>sq_lub_max</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87d0b90cfa9200331f1cc505bc2f6cd0"></a><!-- doxytag: member="System::shear_strain" ref="a87d0b90cfa9200331f1cc505bc2f6cd0" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>shear_strain</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2fbebdad1991aa12274a886b1fcf30e"></a><!-- doxytag: member="System::lub_max" ref="ad2fbebdad1991aa12274a886b1fcf30e" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>lub_max</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dfd4a358cc3341fef9ad76c06489a41"></a><!-- doxytag: member="System::mu_static" ref="a4dfd4a358cc3341fef9ad76c06489a41" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>mu_static</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9c9f014d239a164679dabdd05b773a1"></a><!-- doxytag: member="System::linalg_size" ref="ad9c9f014d239a164679dabdd05b773a1" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>linalg_size</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34e27c7966ff39d72dfd9159040844ee"></a><!-- doxytag: member="System::linalg_size_per_particle" ref="a34e27c7966ff39d72dfd9159040844ee" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>linalg_size_per_particle</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adae99b9e4bbc2c9848b4498a31657b20"></a><!-- doxytag: member="System::dof" ref="adae99b9e4bbc2c9848b4498a31657b20" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>dof</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afdec89a77b541dd0823cecd0b2d8f4af"></a><!-- doxytag: member="System::max_lub_int" ref="afdec89a77b541dd0823cecd0b2d8f4af" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>max_lub_int</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7854fa45b5d177c36d5ece168d747109"></a><!-- doxytag: member="System::repulsiveforce_length" ref="a7854fa45b5d177c36d5ece168d747109" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>repulsiveforce_length</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a198266bbed15f739bdc30fb0a7bb4ea6"></a><!-- doxytag: member="System::integration_method" ref="a198266bbed15f739bdc30fb0a7bb4ea6" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>integration_method</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1eda3898545ae07e98ee029b00f081f"></a><!-- doxytag: member="System::timeEvolutionDt" ref="ae1eda3898545ae07e98ee029b00f081f" args=")(bool)" -->
+void(System::*&#160;</td><td class="memItemRight" valign="bottom"><b>timeEvolutionDt</b> )(bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a56678be969da6bf2cb60add6d79058c6"></a><!-- doxytag: member="System::buildLubricationTerms" ref="a56678be969da6bf2cb60add6d79058c6" args=")(bool, bool)" -->
+void(System::*&#160;</td><td class="memItemRight" valign="bottom"><b>buildLubricationTerms</b> )(bool, bool)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa387fd38c13a8d8e23a138d48402507d"></a><!-- doxytag: member="System::r_gen" ref="aa387fd38c13a8d8e23a138d48402507d" args="" -->
+MTRand *&#160;</td><td class="memItemRight" valign="bottom"><b>r_gen</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a07fbaadde549e25ed29900e2c36c7a0e"></a><!-- doxytag: member="System::radius_cubed" ref="a07fbaadde549e25ed29900e2c36c7a0e" args="" -->
+double *&#160;</td><td class="memItemRight" valign="bottom"><b>radius_cubed</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a216ed5b5cbecac8444a61cbb232ad7e7"></a><!-- doxytag: member="System::radius_squared" ref="a216ed5b5cbecac8444a61cbb232ad7e7" args="" -->
+double *&#160;</td><td class="memItemRight" valign="bottom"><b>radius_squared</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac659f7f4177d8307677947b38ae94543"></a><!-- doxytag: member="System::dimensionless_number_time_integral" ref="ac659f7f4177d8307677947b38ae94543" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionless_number_time_integral</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a762358074fe4c4c1ef45d7cec63e2b55"></a><!-- doxytag: member="System::p" ref="a762358074fe4c4c1ef45d7cec63e2b55" args="" -->
+<a class="el" href="struct_parameter_set.html">ParameterSet</a>&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afebccafa1f2877ac680cb50276f44a8b"></a><!-- doxytag: member="System::kn_avg" ref="afebccafa1f2877ac680cb50276f44a8b" args="" -->
+<a class="el" href="class_averager.html">Averager</a>&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>kn_avg</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34d81d03be18bf7be41f30e4ee103971"></a><!-- doxytag: member="System::kt_avg" ref="a34d81d03be18bf7be41f30e4ee103971" args="" -->
+<a class="el" href="class_averager.html">Averager</a>&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>kt_avg</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a413f782312a9e1658af06649c772b6e5"></a><!-- doxytag: member="System::overlap_avg" ref="a413f782312a9e1658af06649c772b6e5" args="" -->
+<a class="el" href="class_averager.html">Averager</a>&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>overlap_avg</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb49a21d008c4a6ce0b06662b63e05af"></a><!-- doxytag: member="System::max_disp_tan_avg" ref="abb49a21d008c4a6ce0b06662b63e05af" args="" -->
+<a class="el" href="class_averager.html">Averager</a>&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>max_disp_tan_avg</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1fc456bd017fd9b9495630415682dc4"></a><!-- doxytag: member="System::lowPeclet" ref="ac1fc456bd017fd9b9495630415682dc4" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>lowPeclet</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Central class holding the suspension's configuration and the methods to evolve the dynamics. </p>
@@ -431,6 +553,28 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>new_contact_gap</b>
 <dd>
 Romain Mari </dd></dl>
 </div><hr/><h2>Member Function Documentation</h2>
+<a class="anchor" id="a7b3733e4824baf06f73b0b919ab7cfb2"></a><!-- doxytag: member="System::adjustContactModelParameters" ref="a7b3733e4824baf06f73b0b919ab7cfb2" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">System::adjustContactModelParameters</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>This method tries to determine the values of the contact parameters kn, kt required to reach given maximum normal / tangential spring stretches (= overlap / tangential displacement ) in steady state.</p>
+<p>The algorithm is a simple adaptative scheme trying to resp. increase or decrease the spring constants when the stretches are too large or too small. It works reasonably well away from transitions. Close to discontinuous shear thickening, one cannot expect satisfying results, as gigantic stress fluctuations confuse the algorithm.</p>
+<p>The stretch values used are average of maximal values weighted with an exponential memory kernel: <img class="formulaInl" alt="$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_20.png"/> where <img class="formulaInl" alt="$\gamma_{avg}$" src="form_21.png"/> is the user-defined parameter <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2" title="averaging time for the stiffness determination">ParameterSet::memory_strain_avg</a>.</p>
+<p>The kn and kt are bounded by user-defined parameters <a class="el" href="struct_parameter_set.html#a429e042257696a91c08faacea9edf720" title="min normal spring constant when auto-determining stiffness">ParameterSet::min_kn</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness">ParameterSet::max_kn</a>, <a class="el" href="struct_parameter_set.html#accd52cadba30c830a6658f0fc4263914" title="min tangential spring constant when auto-determining stiffness">ParameterSet::min_kt</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness">ParameterSet::max_kn</a>.</p>
+<p>The target stretches are given by <a class="el" href="struct_parameter_set.html#a892cd33f6c89910724a7cc9e8c83546b" title="max overlap to reach when auto-determining stiffness">ParameterSet::overlap_target</a> and <a class="el" href="struct_parameter_set.html#ad74cb563e7c778a115963d23e0755d14" title="max tangential displacement to reach when auto-determining stiffness">ParameterSet::disp_tan_target</a>.</p>
+<p>Additionally, this routine estimates the time step dt.</p>
+
+</div>
+</div>
 <a class="anchor" id="a05d663034ce639977969d04cc9d64e57"></a><!-- doxytag: member="System::calcStressPerParticle" ref="a05d663034ce639977969d04cc9d64e57" args="()" -->
 <div class="memitem">
 <div class="memproto">
@@ -450,6 +594,24 @@ Romain Mari </dd></dl>
 <p>For the point forces, it also gets the <img class="formulaInl" alt="$ -xF_{\mathrm{I}} $" src="form_16.png"/> term, so that <img class="formulaInl" alt="$ S_{\mathrm{I}} = - GV_{\mathrm{I}} - xF_{\mathrm{I}} $" src="form_17.png"/>.</p>
 <p>For the Brownian forces, it computes (in B&amp;B notations) <img class="formulaInl" alt="$ S_{\mathrm{B}} = - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) $" src="form_18.png"/> with the mid-step algorithm of Banchio and Brady <a class="el" href="citelist.html#CITEREF_banchio_accelerated_2003">[1]</a> with <img class="formulaInl" alt="$ n=1 $" src="form_19.png"/>.</p>
 <p>In the Brownian mode, because of the mid-point scheme for the Brownian stress, you should be careful when calling this method from outside of the System::timeEvolutionPredictorCorrectorMethod method.</p>
+
+</div>
+</div>
+<a class="anchor" id="a59d8c192e1395d9f6637d2506bb82443"></a><!-- doxytag: member="System::generateBrownianForces" ref="a59d8c192e1395d9f6637d2506bb82443" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_system.html#a59d8c192e1395d9f6637d2506bb82443">System::generateBrownianForces</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td><code> [private]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Generates a Brownian force <img class="formulaInl" alt="$F_B$" src="form_27.png"/> with <img class="formulaInl" alt="$ \langle F_B \rangle = 0$" src="form_28.png"/>, and <img class="formulaInl" alt="$\langle F_B F_B\rangle = \frac{2kT}{dt} R$" src="form_34.png"/> where <img class="formulaInl" alt="$R$" src="form_30.png"/> is the current resistance matrix stored in the stokes_solver.</p>
+<p>Note that it SETS the rhs of the solver as <img class="formulaInl" alt="$ rhs = F_B $" src="form_31.png"/> <img class="formulaInl" alt="$ F_B$" src="form_32.png"/> is also stored in sys-&gt;brownian_force</p>
 
 </div>
 </div>
@@ -478,7 +640,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_system.html">System</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

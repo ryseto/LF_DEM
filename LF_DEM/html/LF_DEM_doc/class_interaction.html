@@ -85,6 +85,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="#friends">Friends</a>  </div>
   <div class="headertitle">
 <div class="title">Interaction Class Reference</div>  </div>
@@ -136,8 +138,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>set_ro</b> (double va
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_ro</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9e7e06d986268d04f24055b36dcada4"></a><!-- doxytag: member="Interaction::get_r" ref="ab9e7e06d986268d04f24055b36dcada4" args="()" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_r</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a160cd1ac67e7b0ea5f1b3504107f15e0"></a><!-- doxytag: member="Interaction::get_gap_nondim" ref="a160cd1ac67e7b0ea5f1b3504107f15e0" args="()" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>get_gap_nondim</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8a6617c60f016723688ff5a2e7014050"></a><!-- doxytag: member="Interaction::get_reduced_gap" ref="a8a6617c60f016723688ff5a2e7014050" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>get_reduced_gap</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3585ba453fe897932dcbedd9d0ef33e"></a><!-- doxytag: member="Interaction::get_gap" ref="ac3585ba453fe897932dcbedd9d0ef33e" args="()" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>get_gap</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdac4188c886fed9134fbb4bb095ac92"></a><!-- doxytag: member="Interaction::get_nvec" ref="acdac4188c886fed9134fbb4bb095ac92" args="()" -->
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_nvec</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a509849ada55ef45a17c54e420c182911"></a><!-- doxytag: member="Interaction::getContactVelocity" ref="a509849ada55ef45a17c54e420c182911" args="()" -->
@@ -148,16 +152,8 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getRelativeVelocity
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcRelativeVelocities</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6d1c13c4fca9c1e49f12953ba5708fb"></a><!-- doxytag: member="Interaction::calcRollingVelocities" ref="aa6d1c13c4fca9c1e49f12953ba5708fb" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcRollingVelocities</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1544d88f8a33363c29e54eb84be778c0"></a><!-- doxytag: member="Interaction::addUpRepulsiveForce" ref="a1544d88f8a33363c29e54eb84be778c0" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addUpRepulsiveForce</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4fb92b972ee30dc7595f5e8a08f721ce"></a><!-- doxytag: member="Interaction::getNormalVelocity" ref="a4fb92b972ee30dc7595f5e8a08f721ce" args="()" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getNormalVelocity</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a112600b06a51726127baa81b2fcbe601"></a><!-- doxytag: member="Interaction::get_f_repulsive_norm" ref="a112600b06a51726127baa81b2fcbe601" args="()" -->
-double&#160;</td><td class="memItemRight" valign="bottom"><b>get_f_repulsive_norm</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b43435538c427e0c085895d4edf7e01"></a><!-- doxytag: member="Interaction::calcRepulsiveStress" ref="a3b43435538c427e0c085895d4edf7e01" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calcRepulsiveStress</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ee6c0e305a6f8dbdff13516a88101e5"></a><!-- doxytag: member="Interaction::getRepulsiveStressXF" ref="a7ee6c0e305a6f8dbdff13516a88101e5" args="()" -->
-<a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getRepulsiveStressXF</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90c3d5a0136c340a78a3ad66c7daad6f"></a><!-- doxytag: member="Interaction::integrateStress" ref="a90c3d5a0136c340a78a3ad66c7daad6f" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>integrateStress</b> ()</td></tr>
 <tr><td colspan="2"><h2><a name="pub-attribs"></a>
@@ -166,14 +162,70 @@ Public Attributes</h2></td></tr>
 <a class="el" href="class_contact.html">Contact</a>&#160;</td><td class="memItemRight" valign="bottom"><b>contact</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add3b7e8ca402dcbb011d43087f8584b9"></a><!-- doxytag: member="Interaction::lubrication" ref="add3b7e8ca402dcbb011d43087f8584b9" args="" -->
 <a class="el" href="class_lubrication.html">Lubrication</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lubrication</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adeab7f37eb0d456b32dbbffa3d7d3faf"></a><!-- doxytag: member="Interaction::repulsion" ref="adeab7f37eb0d456b32dbbffa3d7d3faf" args="" -->
+<a class="el" href="class_repulsive_force.html">RepulsiveForce</a>&#160;</td><td class="memItemRight" valign="bottom"><b>repulsion</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b1e443d727be922c80e0913816a7f24"></a><!-- doxytag: member="Interaction::relative_surface_velocity" ref="a2b1e443d727be922c80e0913816a7f24" args="" -->
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>relative_surface_velocity</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa019e897ffc0246dbb7567cf7216f1c1"></a><!-- doxytag: member="Interaction::contact_state_changed_after_predictor" ref="aa019e897ffc0246dbb7567cf7216f1c1" args="" -->
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>contact_state_changed_after_predictor</b></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23851f0bfcd9fddb4df6677b97fb748e"></a><!-- doxytag: member="Interaction::updateResistanceCoeff" ref="a23851f0bfcd9fddb4df6677b97fb748e" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateResistanceCoeff</b> ()</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67d0fa066515813e6e1e4725c5e8ce1b"></a><!-- doxytag: member="Interaction::sys" ref="a67d0fa066515813e6e1e4725c5e8ce1b" args="" -->
+<a class="el" href="class_system.html">System</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>sys</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acbc294ded898e7bf3a3c47e425fb1694"></a><!-- doxytag: member="Interaction::a0" ref="acbc294ded898e7bf3a3c47e425fb1694" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>a0</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a10082f42bc3f8ce5f311872aa5e64f11"></a><!-- doxytag: member="Interaction::a1" ref="a10082f42bc3f8ce5f311872aa5e64f11" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>a1</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b19e405cf05ccd9dcefdea22460222f"></a><!-- doxytag: member="Interaction::ro" ref="a4b19e405cf05ccd9dcefdea22460222f" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>ro</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae23bf5b4b17fcc0c79c55d21afa87221"></a><!-- doxytag: member="Interaction::ro_12" ref="ae23bf5b4b17fcc0c79c55d21afa87221" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>ro_12</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbad0d4d970c66effbce1b9a01b3c988"></a><!-- doxytag: member="Interaction::active" ref="afbad0d4d970c66effbce1b9a01b3c988" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>active</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2c9211f4f6016d136ec70dee3076ccd"></a><!-- doxytag: member="Interaction::label" ref="ae2c9211f4f6016d136ec70dee3076ccd" args="" -->
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>label</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6518ce9a4aea92553da27bc6a99fac84"></a><!-- doxytag: member="Interaction::p0" ref="a6518ce9a4aea92553da27bc6a99fac84" args="" -->
+unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>p0</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afaccc334703d9b6b2b4dcd62a8a555e7"></a><!-- doxytag: member="Interaction::p1" ref="afaccc334703d9b6b2b4dcd62a8a555e7" args="" -->
+unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>p1</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02f4b27af3b1835368bf7e2be63feae1"></a><!-- doxytag: member="Interaction::r" ref="a02f4b27af3b1835368bf7e2be63feae1" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>r</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9faeca7c9aa663b16eecc1b7adc4b6b"></a><!-- doxytag: member="Interaction::zshift" ref="ac9faeca7c9aa663b16eecc1b7adc4b6b" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>zshift</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a40f2585fd7f7afb4f019bd14ce8a6c"></a><!-- doxytag: member="Interaction::reduced_gap" ref="a5a40f2585fd7f7afb4f019bd14ce8a6c" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>reduced_gap</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40f0ad201464f3f7fbb918d2fd3cdea1"></a><!-- doxytag: member="Interaction::rvec" ref="a40f0ad201464f3f7fbb918d2fd3cdea1" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>rvec</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9038b9c7398554da12cd23efe5e6d36"></a><!-- doxytag: member="Interaction::nvec" ref="ac9038b9c7398554da12cd23efe5e6d36" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>nvec</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01bef8426a2421e729e9b5547c3b6d33"></a><!-- doxytag: member="Interaction::nxnx" ref="a01bef8426a2421e729e9b5547c3b6d33" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nxnx</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ed16688422e03a30a33b9ac5f0993e8"></a><!-- doxytag: member="Interaction::nxny" ref="a7ed16688422e03a30a33b9ac5f0993e8" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nxny</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17df9b806665ac6ed1beb20d11653d7f"></a><!-- doxytag: member="Interaction::nxnz" ref="a17df9b806665ac6ed1beb20d11653d7f" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nxnz</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8b3210476c889113d5b09c46e92d26d1"></a><!-- doxytag: member="Interaction::nynz" ref="a8b3210476c889113d5b09c46e92d26d1" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nynz</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a22663338f06da71ac38aec72abf40c67"></a><!-- doxytag: member="Interaction::nyny" ref="a22663338f06da71ac38aec72abf40c67" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nyny</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcfb6291f057ea4521dd1013f3f61567"></a><!-- doxytag: member="Interaction::nznz" ref="abcfb6291f057ea4521dd1013f3f61567" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nznz</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51112d23655ec13c3ba614b552dd430d"></a><!-- doxytag: member="Interaction::relative_velocity" ref="a51112d23655ec13c3ba614b552dd430d" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>relative_velocity</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93fe38319cc5c336bb4a187285785f6a"></a><!-- doxytag: member="Interaction::rolling_velocity" ref="a93fe38319cc5c336bb4a187285785f6a" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>rolling_velocity</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8d9dc8cedba2cc8ceca47004b11a6a7"></a><!-- doxytag: member="Interaction::interaction_range_scaled" ref="ad8d9dc8cedba2cc8ceca47004b11a6a7" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>interaction_range_scaled</b></td></tr>
 <tr><td colspan="2"><h2><a name="friends"></a>
 Friends</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a76d4b1c8c6040df20040808941b7e764"></a><!-- doxytag: member="Interaction::Contact" ref="a76d4b1c8c6040df20040808941b7e764" args="" -->
 class&#160;</td><td class="memItemRight" valign="bottom"><b>Contact</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aab532e21cc5d4407f5fda2ce31ef3346"></a><!-- doxytag: member="Interaction::RepulsiveForce" ref="aab532e21cc5d4407f5fda2ce31ef3346" args="" -->
+class&#160;</td><td class="memItemRight" valign="bottom"><b>RepulsiveForce</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4bcc75aa3d3b6683a3de6ca8b734f47"></a><!-- doxytag: member="Interaction::Lubrication" ref="aa4bcc75aa3d3b6683a3de6ca8b734f47" args="" -->
 class&#160;</td><td class="memItemRight" valign="bottom"><b>Lubrication</b></td></tr>
 </table>
@@ -206,7 +258,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_interaction.html">Interaction</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

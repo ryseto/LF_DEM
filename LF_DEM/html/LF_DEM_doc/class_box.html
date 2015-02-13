@@ -84,7 +84,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a>  </div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">Box Class Reference</div>  </div>
 </div><!--header-->
@@ -147,6 +149,32 @@ Public Attributes</h2></td></tr>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>position</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a783c00355152ce57bd96e96586db91f0"></a><!-- doxytag: member="Box::container" ref="a783c00355152ce57bd96e96586db91f0" args="" -->
 set&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>container</b></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36611056c740d1e96e7de74e284754c8"></a><!-- doxytag: member="Box::can_be_added" ref="a36611056c740d1e96e7de74e284754c8" args="(int, Box *)" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>can_be_added</b> (int, <a class="el" href="class_box.html">Box</a> *)</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca04d9999eb26c2afebf3aaa48c7e6b7"></a><!-- doxytag: member="Box::_neighbors" ref="aca04d9999eb26c2afebf3aaa48c7e6b7" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>_neighbors</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ecadecfb27030d7caa04c7c880a4d00"></a><!-- doxytag: member="Box::_moving_neighbors" ref="a9ecadecfb27030d7caa04c7c880a4d00" args="" -->
+<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>_moving_neighbors</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad58a0f9742345bab8d19514ed3e7a0fe"></a><!-- doxytag: member="Box::_neigh_nb" ref="ad58a0f9742345bab8d19514ed3e7a0fe" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_neigh_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8af3041f7b45de1d6d321204c308cec9"></a><!-- doxytag: member="Box::_moving_neigh_nb" ref="a8af3041f7b45de1d6d321204c308cec9" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_moving_neigh_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a007b26675fa4ff7d3f16114fe23b9c82"></a><!-- doxytag: member="Box::_still_neigh_nb" ref="a007b26675fa4ff7d3f16114fe23b9c82" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_still_neigh_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90b5f57ce7b195e8427ea4f053b2402b"></a><!-- doxytag: member="Box::_is_bottom" ref="a90b5f57ce7b195e8427ea4f053b2402b" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>_is_bottom</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66eaea5e8619e05d7b1a8f94f16cd739"></a><!-- doxytag: member="Box::_is_top" ref="a66eaea5e8619e05d7b1a8f94f16cd739" args="" -->
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>_is_top</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad440d63c517f51389fb512fbe9e71168"></a><!-- doxytag: member="Box::_probing_positions" ref="ad440d63c517f51389fb512fbe9e71168" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>_probing_positions</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ca7da73910d22636c4e27f285a609b1"></a><!-- doxytag: member="Box::_probe_nb" ref="a6ca7da73910d22636c4e27f285a609b1" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>_probe_nb</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af93d57715a32edd0f04755de275c7a35"></a><!-- doxytag: member="Box::neighborhood_container" ref="af93d57715a32edd0f04755de275c7a35" args="" -->
+vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>neighborhood_container</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="class_box.html" title="Box object holding identities of the particles in a subset of the whole suspension, to be used in a BoxSet object.">Box</a> object holding identities of the particles in a subset of the whole suspension, to be used in a <a class="el" href="class_box_set.html" title="Set of Box objects making a partition of the simulation box.">BoxSet</a> object. </p>
@@ -177,7 +205,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_box.html">Box</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

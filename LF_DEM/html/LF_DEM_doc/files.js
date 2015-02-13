@@ -9,6 +9,7 @@ var files =
     [ "Lubrication.h", null, null ],
     [ "LubricationFunctions.h", null, null ],
     [ "ParameterSet.h", null, null ],
+    [ "RepulsiveForce.h", null, null ],
     [ "Simulation.h", null, null ],
     [ "StokesSolver.h", null, null ],
     [ "StressTensor.h", null, null ],

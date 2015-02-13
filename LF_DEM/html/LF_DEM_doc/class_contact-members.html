@@ -89,14 +89,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 This is the complete list of members for <a class="el" href="class_contact.html">Contact</a>, including all inherited members.<table>
   <tr bgcolor="#f0f0f0"><td><b>activate</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>addUpContactForceTorque</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>calcContactInteraction</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_contact.html#aca6315b88196cd3cdfce9f79f06de963">calcContactInteraction</a>()</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>calcContactStress</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>Contact</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>Contact</b>(const Contact &amp;obj) (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>contact_stresslet_XF_normal</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>contact_stresslet_XF_tan</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>deactivate</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>disp_rolling</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>disp_tan</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>f_contact_normal</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>f_contact_normal_norm</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>f_contact_tan</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>f_rolling</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>frictionlaw</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>frictionlaw_criticalload</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>frictionlaw_criticalload_mu_inf</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>frictionlaw_null</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
@@ -109,10 +115,20 @@ This is the complete list of members for <a class="el" href="class_contact.html"
   <tr bgcolor="#f0f0f0"><td><b>getContactStressXF_tan</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [inline]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>getInteractionData</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_contact.html#a035503d61c0fd90011bae30e0b68eea4">incrementDisplacements</a>()</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>incrementRollingDisplacement</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>incrementTangentialDisplacement</b>() (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>init</b>(System *sys_, Interaction *int_) (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>interaction</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>kn_scaled</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>kr_scaled</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>kt_scaled</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>mu</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>p0</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>p1</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>prev_disp_rolling</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>prev_disp_tan</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>state</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>sys</b> (defined in <a class="el" href="class_contact.html">Contact</a>)</td><td><a class="el" href="class_contact.html">Contact</a></td><td><code> [private]</code></td></tr>
 </table></div><!-- contents -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -132,7 +148,7 @@ This is the complete list of members for <a class="el" href="class_contact.html"
   <div id="nav-path" class="navpath">
     <ul>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>

@@ -20,3 +20,16 @@
 \form#19:$ n=1 $
 \form#20:$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $
 \form#21:$\gamma_{avg}$
+\form#22:$ f_{R} = f_{R}^0 \exp(-h/\lambda) $
+\form#23:$h>0$
+\form#24:$ f_{R} = f_{R}^0 $
+\form#25:$h<0$
+\form#26:$h$
+\form#27:$F_B$
+\form#28:$ \langle F_B \rangle = 0$
+\form#29:$\langleF_B F_B\rangle = \frac{2kT/dt} R$
+\form#30:$R$
+\form#31:$ rhs = F_B $
+\form#32:$ F_B$
+\form#33:$\langle F_B F_B\rangle = \frac{2kT/dt} R$
+\form#34:$\langle F_B F_B\rangle = \frac{2kT}{dt} R$

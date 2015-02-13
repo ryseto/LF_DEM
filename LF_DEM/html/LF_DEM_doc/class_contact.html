@@ -84,7 +84,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a>  </div>
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
+<a href="#pri-attribs">Private Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">Contact Class Reference</div>  </div>
 </div><!--header-->
@@ -118,8 +120,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_criticall
 void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_standard</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca89a00068d1846da8ac4bee4d44d0aa"></a><!-- doxytag: member="Contact::frictionlaw_null" ref="aca89a00068d1846da8ac4bee4d44d0aa" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_null</b> ()</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca6315b88196cd3cdfce9f79f06de963"></a><!-- doxytag: member="Contact::calcContactInteraction" ref="aca6315b88196cd3cdfce9f79f06de963" args="()" -->
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calcContactInteraction</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_contact.html#aca6315b88196cd3cdfce9f79f06de963">calcContactInteraction</a> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48fc3348a5cb94e88b0cd5760fb711b8"></a><!-- doxytag: member="Contact::addUpContactForceTorque" ref="a48fc3348a5cb94e88b0cd5760fb711b8" args="()" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addUpContactForceTorque</b> ()</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5eabaa91ef335d9778d736ab4427cf6"></a><!-- doxytag: member="Contact::get_f_contact_normal_norm" ref="ad5eabaa91ef335d9778d736ab4427cf6" args="()" -->
@@ -150,6 +151,42 @@ Public Attributes</h2></td></tr>
 unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa191d649aa83d3725d029c522b9fa98c"></a><!-- doxytag: member="Contact::f_contact_normal_norm" ref="aa191d649aa83d3725d029c522b9fa98c" args="" -->
 double&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal_norm</b></td></tr>
+<tr><td colspan="2"><h2><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6036288e4de33351de102ae08049eb5"></a><!-- doxytag: member="Contact::incrementTangentialDisplacement" ref="ae6036288e4de33351de102ae08049eb5" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>incrementTangentialDisplacement</b> ()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e5524630217f00193e37b7017108c36"></a><!-- doxytag: member="Contact::incrementRollingDisplacement" ref="a8e5524630217f00193e37b7017108c36" args="()" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>incrementRollingDisplacement</b> ()</td></tr>
+<tr><td colspan="2"><h2><a name="pri-attribs"></a>
+Private Attributes</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d87082cffb7aa508823b165fb5f00fa"></a><!-- doxytag: member="Contact::sys" ref="a4d87082cffb7aa508823b165fb5f00fa" args="" -->
+<a class="el" href="class_system.html">System</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>sys</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab81e0aa64449f2c63f7e8232db955fcf"></a><!-- doxytag: member="Contact::interaction" ref="ab81e0aa64449f2c63f7e8232db955fcf" args="" -->
+<a class="el" href="class_interaction.html">Interaction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>interaction</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2cb7e9adb85c6d2017c141913f735732"></a><!-- doxytag: member="Contact::frictionlaw" ref="a2cb7e9adb85c6d2017c141913f735732" args=")()" -->
+void(Contact::*&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw</b> )()</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a86f0f5ec69ab5d3a4acbf7ae06bee4ae"></a><!-- doxytag: member="Contact::p0" ref="a86f0f5ec69ab5d3a4acbf7ae06bee4ae" args="" -->
+unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>p0</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23cc0b9e0b7a2b5ab4c0df6a6fa5d6dc"></a><!-- doxytag: member="Contact::p1" ref="a23cc0b9e0b7a2b5ab4c0df6a6fa5d6dc" args="" -->
+unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>p1</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7f509f9de2b50cb83ddbe6ec6c6fa44"></a><!-- doxytag: member="Contact::kt_scaled" ref="ac7f509f9de2b50cb83ddbe6ec6c6fa44" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>kt_scaled</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1137d4bd869aa1b1a5c47f70a5e429b2"></a><!-- doxytag: member="Contact::kr_scaled" ref="a1137d4bd869aa1b1a5c47f70a5e429b2" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>kr_scaled</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e611dac88e9c7cf5d3d3c8fcff98076"></a><!-- doxytag: member="Contact::kn_scaled" ref="a2e611dac88e9c7cf5d3d3c8fcff98076" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>kn_scaled</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afce620556d14fe80b71cfdf05a91f296"></a><!-- doxytag: member="Contact::mu" ref="afce620556d14fe80b71cfdf05a91f296" args="" -->
+double&#160;</td><td class="memItemRight" valign="bottom"><b>mu</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97ec7122aeaa635ea04882a9d0697644"></a><!-- doxytag: member="Contact::contact_stresslet_XF_normal" ref="a97ec7122aeaa635ea04882a9d0697644" args="" -->
+<a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>contact_stresslet_XF_normal</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5666574a6976d5b34fd7980df8383d92"></a><!-- doxytag: member="Contact::contact_stresslet_XF_tan" ref="a5666574a6976d5b34fd7980df8383d92" args="" -->
+<a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>contact_stresslet_XF_tan</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc104e6047e41942758fec65e47cfd79"></a><!-- doxytag: member="Contact::f_contact_normal" ref="afc104e6047e41942758fec65e47cfd79" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad468df4633b4bfaa5dad2ba5926a0c96"></a><!-- doxytag: member="Contact::f_contact_tan" ref="ad468df4633b4bfaa5dad2ba5926a0c96" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_tan</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a733d1c255360dbb4d6b5ec665a35f9d1"></a><!-- doxytag: member="Contact::f_rolling" ref="a733d1c255360dbb4d6b5ec665a35f9d1" args="" -->
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>f_rolling</b></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="class_contact.html" title="Contact object, to be called from an Interaction object.">Contact</a> object, to be called from an <a class="el" href="class_interaction.html" title="Interaction object, master class holding any interaction between two particles.">Interaction</a> object. </p>
@@ -157,6 +194,23 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal_no
 <dd>
 Romain Mari </dd></dl>
 </div><hr/><h2>Member Function Documentation</h2>
+<a class="anchor" id="aca6315b88196cd3cdfce9f79f06de963"></a><!-- doxytag: member="Contact::calcContactInteraction" ref="aca6315b88196cd3cdfce9f79f06de963" args="()" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_contact.html#aca6315b88196cd3cdfce9f79f06de963">Contact::calcContactInteraction</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+<p>Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.</p>
+
+</div>
+</div>
 <a class="anchor" id="a035503d61c0fd90011bae30e0b68eea4"></a><!-- doxytag: member="Contact::incrementDisplacements" ref="a035503d61c0fd90011bae30e0b68eea4" args="()" -->
 <div class="memitem">
 <div class="memproto">
@@ -170,7 +224,7 @@ Romain Mari </dd></dl>
       </table>
 </div>
 <div class="memdoc">
-<p>This method increment the tangential and rolling spring stretches from relative velocities, <b>without</b> checking the friction laws.</p>
+<p>Increment the tangential and rolling spring stretches from relative velocities, <b>without</b> checking the friction laws.</p>
 <p>This should be called <b>BEFORE</b> updating the relative positions (ie normal and tangential vectors in the interaction). This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC. This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.</p>
 
 </div>
@@ -199,7 +253,7 @@ Romain Mari </dd></dl>
     <ul>
       <li class="navelem"><a class="el" href="class_contact.html">Contact</a>      </li>
 
-    <li class="footer">Generated on Wed Feb 11 2015 10:46:29 for Documentation for LF_DEM by
+    <li class="footer">Generated on Fri Feb 13 2015 11:54:08 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>
