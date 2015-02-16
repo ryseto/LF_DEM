@@ -33,3 +33,40 @@
 \form#32:$ F_B$
 \form#33:$\langle F_B F_B\rangle = \frac{2kT/dt} R$
 \form#34:$\langle F_B F_B\rangle = \frac{2kT}{dt} R$
+\form#35:$\langle F_B F_B\rangle = \frac{2kT}{dt} A$
+\form#36:$A $
+\form#37:$R_{\mathrm{FU}}$
+\form#38:$ A(U-U_{\infty}) = F $
+\form#39:$F $
+\form#40:$ X' = X(t) + U^{-}dt $
+\form#41:$ X(t + dt) = x(t) + \frac{1}{2}*(U^{+}+U^{-})*dt = X' + \frac{1}{2}*(U^{+}-U^{-})*dt $
+\form#42:$ X(t + dt) = X(t) + \frac{1}{2}(U^{+}+U^{-})*dt = X' + \frac{1}{2}(U^{+}-U^{-})*dt $
+\form#43:$ A(U-U_{\infty}) = F + F_\mathrm{B} + kT A \nabla A^{-1}$
+\form#44:$ \langle F_\mathrm{B} \rangle = 0$
+\form#45:$\langle F_\mathrm{B} F_\mathrm{B}\rangle = \frac{2kT}{dt} A$
+\form#46:$ \bm{A}(U-U_{\infty}) = F + F_\mathrm{B} + kT A \nabla A^{-1}$
+\form#47:$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} $
+\form#48:$\bm{A} $
+\form#49:$\bm{R}_{\mathrm{FU}}$
+\form#50:$\bm{F} $
+\form#51:$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) ) $
+\form#52:$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt $
+\form#53:$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} ) $
+\form#54:$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})*dt = \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})*dt $
+\form#55:$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla\dot \bm{A}^{-1}$
+\form#56:$ \langle \bm{F}_\mathrm{B} \rangle = 0$
+\form#57:$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}$
+\form#58:$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \dot \bm{A}^{-1} $
+\form#59:$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \dot \bm{A} $
+\form#60:$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} $
+\form#61:$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt = \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt $
+\form#62:$ \bm{A} = \bm{L} \bm{L}^T $
+\form#63:$ \bm{F}_\mathrm{B}= \sqrt(\frac{2}{dt} \bm{L} \psi $
+\form#64:$ \langle \psi = 0 $
+\form#65:$ \langle \psi \psi \rangle = 1$
+\form#66:$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) ) $
+\form#67:$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) ) $
+\form#68:$\bm{F}_\mathrm{B}$
+\form#69:$ \langle \psi \rangle = 0 $
+\form#70:$ \bm{F}_\mathrm{B}= \sqrt(\frac{2}{dt}) \bm{L} \psi $
+\form#71:$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi $

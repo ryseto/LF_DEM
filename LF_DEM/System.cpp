@@ -494,6 +494,12 @@ System::timeStepBoxing(const double strain_increment){
 
 void
 System::timeEvolutionEulersMethod(bool calc_stress){
+	/**
+	   \brief One full time step, predictor-corrector method.
+
+	   This method is never used when running a Brownian simulation.
+	*/
+
 	in_predictor = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
@@ -508,67 +514,56 @@ System::timeEvolutionEulersMethod(bool calc_stress){
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
 
-/************************************************************************************************
- *                                   non-Brownian Case                                           *
- *************************************************************************************************
- * Simple mid-point method to solve at dt^2 order
- * R.V = F_H + F_C + F_B
- * where R is the resistance, F_H/F_C are hydro/contact forces.
- *
- * 1st step:
- * x'(t+dt) = x(t) + V^{-}dt
- * x(t)     = x'(t+dt) - V^{-}dt
- *
- * 2nd step
- * x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
- *           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
- */
-
-/*************************************************************************************************
- *                                   Brownian Case                                                *
- **************************************************************************************************
- * This routine implements a two-step algorithm for the dynamics with Brownian motion,
- * initially derived by [ Fixman 1978 ].
- * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
- *
- * The equation of motion is:
- *
- * R.V = F_H + F_C + F_B
- * where R is the resistance, F_H/F_C/F_B are hydro/contact/brownian forces.
- *
- * Integrating this, we get a first order update of the positions as:
- * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
- * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
- *
- * The divergence term comes from our naive way of taking the inertialess limit in the Langevin
- * equation correlated with the fact that our time step dt >> "Brownian_time" (the typical
- * time between 2 Brownian kicks). The sum of the many displacements due to Brownian kicks
- * happening during dt has a non-zero mean anywhere the mobility is non uniform,
- * and this is taken care of by the div term.
- * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as
- * <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1} (which is nothing but the FD theorem).
- *
- * Reminding that we obtain the Cholesky decomposition R = L L^T in the stokes_solver,
- * we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
- *   - generate a "Brownian force" F_B(t) such that:
- *       < F_B F_B > = (2kT/dt) R(t) and <F_B> = 0
- *   - (1) solve R(X(t)).V_{-} = F_H(t) + F_C(t) + F_B(t)
- *   - move to X_pred = X(t) + V_{-}dt
- *   - (2) solve R(X_pred).V_{+} = F_H(t+dt) + F_C(t+dt) + F_B(t)  (note: F_B at time t)
- *   - set X(t+dt) = X(t) + 0.5*( V_{-} + V_{+} )*dt = X_pred + 0.5*( V_{+} - V_{-} )*dt
- *
- * One can check that the velocity U = 0.5*( V_{-} + V_{+} ) has the properties:
- * <U> = R^{-1}.( F_H + F_C ) + kT*div R^{-1}
- * <UU> - <U>^2 = (2kT/dt)R^{-1}
- * which gives the correct mean and variance for X_B.
- *
- * F_B is obtained as F_B = \sqrt(2kT/dt) * L.A, where A is a gaussian random vector with
- * <A> = 0 and <AA> = 1.
- *
- *
- ***************************************************************************************************/
 void
 System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
+	/**
+	   \brief One full time step, predictor-corrector method.
+
+	   This method is always used when running a Brownian simulation.
+
+	   ### non-Brownian Case
+
+	   Simple mid-point method to solve at dt^2 order
+	   \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} \f$
+	   where \f$\bm{A} \f$ (in Jeffrey notations \cite
+	   jeffrey_calculation_1992, that is \f$\bm{R}_{\mathrm{FU}}\f$ in Bossis and Brady 
+	   \cite brady_stokesian_1988 notations) is the current resistance matrix
+	   stored in the stokes_solver, and \f$\bm{F} \f$ are the forces included by the parameter files. 
+	
+	   - 1st step:
+	     - \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) )  \f$
+	     - \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$ 
+	   
+	   - 2nd step:
+	     - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} )  \f$
+	     - \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
+
+	   ### Brownian Case
+
+	   This routine implements a two-step algorithm for the dynamics with Brownian motion,
+	   initially derived by Fixman \cite fixman_1978.
+	   The basis of this algorithm is exposed in \cite Ball_1997 and \cite banchio_accelerated_2003.
+	   
+	   The equation of motion is:
+	   \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} \f$
+	   with 
+	   \f$ \langle \bm{F}_\mathrm{B} \rangle = 0\f$ 
+	   and
+	   \f$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}\f$,
+	   and \f$\bm{F} \f$ are all the other forces included by the parameter files. 
+
+	    Reminding that we obtain the Cholesky decomposition \f$ \bm{A} = \bm{L} \bm{L}^T \f$ in the stokes_solver,
+	    we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
+		- 1st step:
+		   + generate a Brownian force \f$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi \f$ with \f$ \langle \psi \rangle = 0 \f$ and \f$ \langle \psi \psi \rangle = 1\f$
+		   + \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) )  \f$
+		   + \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$ 
+		- 2nd step:
+		   + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
+		   + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
+	   
+	   */
+
 	/* predictor */
 	in_predictor = true;
 	setContactForceToParticle();
@@ -592,11 +587,12 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	timeStepMoveCorrector();
 }
 
-/*
- * timeStepMove is used only for Euler method.
- */
 void
 System::timeStepMove(){
+	/**
+	   \brief Moves particle positions according to previously computed velocities, Euler method step.
+	*/
+
 	/* Changing dt for every timestep
 	 * So far, this is only in Euler method.
 	 */
@@ -633,7 +629,7 @@ System::timeStepMove(){
 	double time_increment = dt/abs(dimensionless_number);
 	time += time_increment;
 	/* evolve PBC */
-	timeStepBoxing(shear_direction*dt);
+	timeStepBoxing(shear_direction*shear_rate*dt);
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -649,6 +645,10 @@ System::timeStepMove(){
 
 void
 System::timeStepMovePredictor(){
+	/**
+	   \brief Moves particle positions according to previously computed velocities, predictor step.
+	*/
+
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
@@ -656,7 +656,7 @@ System::timeStepMovePredictor(){
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	timeStepBoxing(shear_direction*dt);
+	timeStepBoxing(shear_direction*shear_rate*dt);
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -677,6 +677,10 @@ System::timeStepMovePredictor(){
 
 void
 System::timeStepMoveCorrector(){
+	/**
+	   \brief Moves particle positions according to previously computed velocities, corrector step.
+	*/
+
 	for (int i=0; i<np; i++) {
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
@@ -695,6 +699,12 @@ System::timeStepMoveCorrector(){
 
 void
 System::timeEvolution(double strain_output_data, double time_output_data){
+	/**
+	   \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
+
+	   This method essentially loops the appropriate one time step method method, according to the Euler vs predictor-corrector or strain rate vs stress controlled choices.
+	*/
+
 	static bool firsttime = true;
 	in_predictor=false;
 	if (firsttime) {
@@ -725,6 +735,12 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 
 void
 System::checkNewInteraction(){
+	/**
+	   \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
+
+	   To be called after particle moved.
+	*/
+
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
@@ -764,6 +780,15 @@ System::checkNewInteraction(){
 
 void
 System::updateInteractions(){
+	/**
+	   \brief Updates the state of active interactions.
+
+	   To be called after particle moved.
+	   Note that this routine does not look for new interactions (this is done by System::checkNewInteraction), it only updates already known active interactions.
+	   It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
+
+	*/
+	
 	double sq_max_sliding_velocity = 0;
 	dimensionless_cohesive_force = 0.1/abs(dimensionless_number);
 	for (int k=0; k<nb_interaction; k++) {
@@ -913,10 +938,20 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 void
 System::generateBrownianForces(){
 	/**
-	   \brief Generates a Brownian force \f$F_B\f$ with \f$ \langle F_B \rangle = 0\f$, and \f$\langle F_B F_B\rangle = \frac{2kT}{dt} R\f$ where \f$R\f$ is the current resistance matrix stored in the stokes_solver.
+	   \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
 
-	   Note that it SETS the rhs of the solver as \f$ rhs = F_B \f$
-	   \f$ F_B\f$ is also stored in sys->brownian_force
+	   The generated Brownian force \f$F_B\f$ satisfies
+	   \f$ \langle F_\mathrm{B} \rangle = 0\f$ 
+	   and
+	   \f$\langle F_\mathrm{B} F_\mathrm{B}\rangle = \frac{2kT}{dt} A\f$ 
+	   where \f$A \f$ (in Jeffrey notations \cite
+	   jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady 
+	   \cite brady_stokesian_1988 notations) is the current resistance matrix
+	   stored in the stokes_solver.
+
+	   Note that it \b sets the rhs of the solver as \f$ rhs = F_B \f$.
+
+	   \f$ F_B\f$ is also stored in sys->brownian_force.
 	*/
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.brownian; // proportional to 1/Pe.
 	for (int i=0; i<linalg_size; i++) {
