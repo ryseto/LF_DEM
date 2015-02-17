@@ -62,7 +62,7 @@ BoxSet::init(double interaction_dist, System *sys_){
 		// tell them their neighbors
 		assignNeighbors();
 	}
-	cerr << box_nb << " " << interaction_dist << " " << box_xsize << endl;
+	cerr << "Interaction distance: " << interaction_dist << endl << "Boxes' size (x,y,z): " << box_xsize << " " << box_ysize << " " << box_zsize << endl << endl;
 }
 
 void

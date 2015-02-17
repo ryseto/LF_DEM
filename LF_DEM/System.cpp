@@ -69,7 +69,7 @@ System::importParameterSet(ParameterSet &ps){
 	p = ps;
 	friction_model = p.friction_model;
 	rolling_friction = p.rolling_friction;
-	set_lub_max(p.lub_max);
+	set_lub_max_gap(p.lub_max_gap);
 	lub_reduce_parameter = p.lub_reduce_parameter;
 	set_lubrication_model(p.lubrication_model);
 	kn = p.kn;
@@ -159,7 +159,6 @@ System::setInteractions_GenerateInitConfig(){
 		interaction[k].set_label(k);
 	}
 	nb_interaction = 0;
-	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	shear_strain = 0;
 	shear_disp = 0;
 	vel_difference = 0;
@@ -273,6 +272,9 @@ System::setupBrownian(){
 			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
 			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		}
+		else{
+			lowPeclet = true;
+		}
 	}
 }
 
@@ -326,9 +328,6 @@ System::setupSystem(string control){
 		cerr << "friction_model..." << endl;
 		exit(1);
 	}
-	if(!brownian){
-		lowPeclet = false;
-	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
 		interaction[k].init(this);
@@ -356,7 +355,6 @@ System::setupSystem(string control){
 	shear_strain = 0;
 	nb_interaction = 0;
 	shear_direction = 1;
-	sq_lub_max = lub_max*lub_max; // square of lubrication cutoff length.
 	if (p.unscaled_contactmodel) {
 		kn_master = kn;
 		kt_master = kt;
@@ -465,12 +463,14 @@ System::setupSystem(string control){
 void
 System::initializeBoxing(){// need to know radii first
 	double max_radius = 0;
+	double second_max_radius = 0;
 	for (int i=0; i < np; i++) {
 		if (radius[i] > max_radius) {
+			second_max_radius = max_radius;
 			max_radius = radius[i];
 		}
 	}
-	boxset.init(lub_max*max_radius, this);
+	boxset.init(lub_max_gap+second_max_radius+max_radius, this);
 	for (int i=0; i<np; i++) {
 		boxset.box(i);
 	}
@@ -755,8 +755,8 @@ System::checkNewInteraction(){
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double ro_2 = 0.5*(radius[i]+radius[*it]);
-					double sq_dist_lim = sq_lub_max*ro_2*ro_2;
+					double ro_lub = radius[i]+radius[*it]+lub_max_gap;
+					double sq_dist_lim = ro_lub*ro_lub;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
 						if (deactivated_interaction.empty()) {

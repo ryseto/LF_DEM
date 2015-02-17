@@ -100,7 +100,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
 	set_ro(a0+a1); // ro=a0+a1
-	interaction_range_scaled = ro_12*sys->get_lub_max();
+	interaction_range_scaled = ro + sys->get_lub_max_gap();
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -127,7 +127,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 
 void
 Interaction::deactivate(){
-	// r > lub_max
+	// r > interaction_range
 	contact.deactivate();
 	active = false;
 	sys->interaction_list[p0].erase(this);

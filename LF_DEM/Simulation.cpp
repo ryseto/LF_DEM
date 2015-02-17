@@ -555,8 +555,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.shear_strain_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
-	} else if (keyword == "lub_max") {
-		p.lub_max = atof(value.c_str());
+	} else if (keyword == "lub_max_gap") {
+		p.lub_max_gap = atof(value.c_str());
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
@@ -567,12 +567,6 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.kr = atof(value.c_str());
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
-		//	} else if (keyword == "kn_lowPeclet") {
-		//		p.kn_lowPeclet = atof(value.c_str());
-		//	} else if (keyword == "kt_lowPeclet") {
-		//		p.kt_lowPeclet = atof(value.c_str());
-		//	} else if (keyword == "dt_lowPeclet") {
-		//		p.dt_lowPeclet = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
 		p.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
@@ -797,7 +791,6 @@ void
 Simulation::setDefaultParameters(){
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
-	//	p.dt_lowPeclet = 1e-4;
 	p.disp_max = 2e-3;
 	
 	p.integration_method = 1;
@@ -824,7 +817,7 @@ Simulation::setDefaultParameters(){
 
 	p.rolling_friction = false;
 	p.shear_strain_end = 10;
-	p.lub_max = 2.5;
+	p.lub_max_gap = 0.5;
 	/*
 	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
 	 *

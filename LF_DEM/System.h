@@ -60,13 +60,9 @@ private:
 	double lx_half; // =lx/2
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
-	/* l_periodic_threshold = lz - a1*lub_max (a1 is larger particle)
-	 * threshold distance which can intaract each other as periodic image.
-	 */
 	double system_volume;
-	double sq_lub_max;
 	double shear_strain;
-	double lub_max;
+	double lub_max_gap;
 	double mu_static; // static friction coefficient.
 	int linalg_size;
 	int linalg_size_per_particle;
@@ -329,8 +325,8 @@ private:
 	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
-	inline void set_lub_max(double val){lub_max = val;}
-	inline double get_lub_max(){return lub_max;}
+	inline void set_lub_max_gap(double val){lub_max_gap = val;}
+	inline double get_lub_max_gap(){return lub_max_gap;}
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
 	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}

@@ -57,7 +57,7 @@ lubrication_model = 2;
  * lub_max: reduced large cutoff distance for lubrication
  */
 
-lub_max = 2.5;
+lub_max_gap = 0.5;
 
 /*
  * lub_reduce_parameter: gives reduced lubrication (maximum coeeffient).

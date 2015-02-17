@@ -21,7 +21,7 @@ GenerateInitConfig::generate(int rand_seed_){
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);
-	sys.set_lub_max(2.5);
+	sys.set_lub_max_gap(0.5);
 	sys.in_predictor = false;
 	sys.set_integration_method(0);
 	putRandom();

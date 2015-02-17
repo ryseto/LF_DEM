@@ -37,7 +37,7 @@ struct ParameterSet{
 
 	bool rolling_friction;                   ///< Activate rolling friction.
 	double shear_strain_end;                 ///< Length of the simulation, in strain units.
-	double lub_max;                          ///< Lubrication range (center-to-center distance)
+	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
