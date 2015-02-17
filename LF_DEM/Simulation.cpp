@@ -728,7 +728,7 @@ Simulation::openOutputFiles(bool binary_conf){
 	"#45: kt\n"
 	"#46: dt\n"
 	"#47: time\n"
-	"#48: dimensionless_shear_rate\n"
+	"#48: dimensionless_number\n"
 	"#49: stress\n"
 	"#50: shear_disp\n";
 	//
