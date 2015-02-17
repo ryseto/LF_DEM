@@ -686,7 +686,7 @@ Simulation::openOutputFiles(){
 	"#46: dt\n"
 	"#47: time\n"
 	"#48: dimensionless_shear_rate\n"
-	"#49: stress\n";
+	"#49: stress\n"
 	"#50: shear_disp\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
