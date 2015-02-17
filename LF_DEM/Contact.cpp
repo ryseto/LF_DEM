@@ -26,7 +26,7 @@ void
 Contact::getInteractionData(){
 	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _gap_nondim;  <-- gap is scaled
+	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
 		kr_scaled = ro_12; // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -72,7 +72,7 @@ Contact::incrementTangentialDisplacement(){
 		 */
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt;
+	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void
@@ -84,26 +84,45 @@ Contact::incrementRollingDisplacement(){
 		 */
 		prev_disp_rolling = disp_rolling;
 	}
-	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt;
+	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
-/*
- * Calculate interaction.
- * Force acts on particle 0 from particle 1.
- * rvec = p[1] - p[0]
- * Fc_normal_norm is positive (for overlapping particles r < ro)
- */
+void
+Contact::incrementDisplacements(){
+	/**
+	   \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
+	   
+	   This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction). 
+	   This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
+	   This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
+	 */
+	if (sys->friction) {
+		interaction->calcRelativeVelocities();
+		incrementTangentialDisplacement();
+		if (sys->rolling_friction) {
+			interaction->calcRollingVelocities();
+			incrementRollingDisplacement();
+		}
+	}
+}
+
+
+
 void
 Contact::calcContactInteraction(){
+	/** 
+		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.
+	*/
+	
 	/* h < 0
 	 * f_contact_normal_norm > 0 ..... repulsive force
 	 * h > 0
 	 * f_contact_normal_norm < 0 ..... attractive force
 	 *
 	 *
-	 gap_nondim is negative,
+	 reduced_gap is negative,
 	 positive. */
-	f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim();
+	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
@@ -141,8 +160,8 @@ Contact::frictionlaw_standard(){
 
 void
 Contact::frictionlaw_criticalload(){
-	/* Since gap_nondim < 0, f_contact_normal_norm is always positive.
-	 * f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
+	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
+	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
 	 * 
 	 * supportable_tanforce = mu*(F_normal - critical_force)
@@ -169,8 +188,8 @@ Contact::frictionlaw_criticalload(){
 
 void
 Contact::frictionlaw_criticalload_mu_inf(){
-	/* Since gap_nondim < 0, f_contact_normal_norm is always positive.
-	 * f_contact_normal_norm = -kn_scaled*interaction->get_gap_nondim(); > 0
+	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
+	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
 	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
@@ -216,7 +235,7 @@ Contact::addUpContactForceTorque(){
 void
 Contact::calcContactStress(){
 	/*
-	 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+	 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
 	 * Fc_normal = -Fc_normal_norm*nvec;
 	 * This force acts on particle 1.
 	 * stress1 is a0*nvec[*]force.
@@ -229,7 +248,7 @@ Contact::calcContactStress(){
 	 */
 	if (state > 0) {
 		/*
-		 * Fc_normal_norm = -kn_scaled*gap_nondim; --> positive
+		 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
 		 * Fc_normal = -Fc_normal_norm*nvec;
 		 * This force acts on particle 1.
 		 * stress1 is a0*nvec[*]force.

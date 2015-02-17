@@ -33,6 +33,12 @@ public:
 			elm[i] = 0;
 		}
 	}
+	inline StressTensor(double a)
+	{
+		for (int i=0; i<6; i++) {
+			elm[i] = a;
+		}
+	}
 
 	void outputStressTensor(ofstream &fout)
 	{

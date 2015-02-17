@@ -23,15 +23,18 @@
 #include "System.h"
 #include "Contact.h"
 #include "Lubrication.h"
+#include "RepulsiveForce.h"
 #include "StressTensor.h"
 
 using namespace std;
 class System;
 class Lubrication;
 class Contact;
+class RepulsiveForce;
 
 class Interaction{
 	friend class Contact;
+	friend class RepulsiveForce;
 	friend class Lubrication;
 private:
 	/*********************************
@@ -50,7 +53,7 @@ private:
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
 	int zshift;
-	double gap_nondim; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
+	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 	double nxnx;
@@ -63,20 +66,16 @@ private:
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range_scaled;  // max distance for lubrication
-	double repulsiveforce_amplitude;
-	double repulsiveforce_length;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	double f_repulsive_norm;
-	vec3d f_repulsive;
-	StressTensor repulsive_stresslet_XF; //stress tensor of repulsive force
 	void updateResistanceCoeff();
 protected:
 public:
 	Contact contact;
 	Lubrication lubrication;
+	RepulsiveForce repulsion;
 	vec3d relative_surface_velocity;
 	/*********************************
 	 *       Public Methods          *
@@ -118,18 +117,15 @@ public:
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
-	inline double get_gap_nondim(){return gap_nondim;}
+	inline double get_reduced_gap(){return reduced_gap;}
+	inline double get_gap(){return r-ro;}
 	inline vec3d get_nvec(){return nvec;}
 	double getContactVelocity();
 	double getRelativeVelocity(){return relative_velocity.norm();}
 	//===== forces/stresses  ========================== //
 	void calcRelativeVelocities();
 	void calcRollingVelocities();
-	void addUpRepulsiveForce();
 	double getNormalVelocity();
-	inline double get_f_repulsive_norm(){return f_repulsive_norm;}
-	void calcRepulsiveStress();
-	StressTensor getRepulsiveStressXF(){return repulsive_stresslet_XF;}
 	void integrateStress();
 	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.

@@ -7,7 +7,9 @@
 //
 #define _USE_MATH_DEFINES
 #include "Simulation.h"
+#ifndef GIT_VERSION
 #include "VersionInfo.h"
+#endif
 /*
  * VersionInfo.h is automatically generated
  * before compiling source codes.
@@ -43,47 +45,70 @@ void
 Simulation::contactForceParameter(string filename){
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
+		exit(1);
+	}
+
 	double phi_;
 	double kn_;
 	double kt_;
-	double dt_max_;
-	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_max_) {
+	double dt_;
+	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
 		if (phi_ == volume_or_area_fraction) {
 			break;
 		}
 	}
-	fin_knktdt.clear();
+	fin_knktdt.close();
 	p.kn = kn_;
 	p.kt = kt_;
-    p.dt_max = dt_max_;
-	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
+    p.dt = dt_;
+	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 }
 
 void
-Simulation::contactForceParameterPeclet(string filename){
+Simulation::contactForceParameterBrownian(string filename){
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
+	if (!fin_knktdt) {
+		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
+		exit(1);
+	}
+
 	double phi_;
 	double peclet_;
 	double kn_;
 	double kt_;
-	double dt_max_;
-	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_max_) {
-		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_shear_rate) {
+	double dt_;
+	bool found=false;
+	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
+		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_number) {
+			found = true;
 			break;
 		}
 	}
-	fin_knktdt.clear();
-	p.kn = kn_;
-	p.kt = kt_;
-    p.dt_max = dt_max_;
-	cerr << phi_ << ' ' << peclet_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_max_ << endl;
+	fin_knktdt.close();
+	if(found){
+		p.kn = kn_;
+		p.kt = kt_;
+		p.dt = dt_;
+		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+	}
+	else{
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << sys.dimensionless_number << endl;
+		exit(1);
+	}
 }
 
 void
 Simulation::importPreSimulationData(string filename){
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
+	if (!fin_PreSimulationData) {
+		cerr << " Pre-simulation data file '" << filename << "' not found." <<endl;
+		exit(1);
+	}
+
 	double stress_;
 	double shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
@@ -96,6 +121,7 @@ Simulation::importPreSimulationData(string filename){
 
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
+									   bool binary_conf,
 									   double peclet_num,
 									   double ratio_repulsion,
 									   double ratio_cohesion,
@@ -104,20 +130,26 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
+
+	sys.cohesion = false;
+	sys.brownian = false;
+	sys.repulsiveforce = false;
+	
 	if (control_var == "rate") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
-			sys.dimensionless_shear_rate = peclet_num;
+			sys.dimensionless_number = peclet_num;
+			sys.amplitudes.brownian = 1./sqrt(peclet_num);
+			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
 				/* When both Brownian and repulsive forces exist
 				 * `ratio_repulsion' = F_rep(0)/(kT/a)
 				 * Filename includes "RepXXXX_PeXXXX".
 				 */
-				sys.set_ratio_repulsion(ratio_repulsion);
-				sys.repulsiveforce_amplitude = ratio_repulsion/peclet_num;
-				sys.repulsiveforce = true;
+				sys.amplitudes.repulsion = ratio_repulsion/peclet_num;
+				sys.repulsiveforce = true;				
 				string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
 			} else if (ratio_critical_load > 0) {
 				cerr << "Critical load" << endl;
@@ -130,33 +162,34 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			}
 		} else {
 			cerr << "non-Brownian" << endl;
+			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
 				cerr << "Repulsive force" << endl;
-				sys.dimensionless_shear_rate = ratio_repulsion;
-				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
+				sys.dimensionless_number = ratio_repulsion;
+				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_r" << ratio_repulsion;
 			} else if (ratio_repulsion == -1 && ratio_cohesion == 0) {
 				cerr << "Infinite shear rate" << endl;
-				sys.dimensionless_shear_rate = -1;
-				sys.repulsiveforce_amplitude = 0;
+				sys.dimensionless_number = -1;
+				sys.amplitudes.repulsion = 0;
 				sys.repulsiveforce = true;
 				string_control_parameters << "_rINF";
 			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
 				cerr << "Critical load" << endl;
-				sys.dimensionless_shear_rate = ratio_critical_load;
+				sys.dimensionless_number = ratio_critical_load;
 				p.friction_model = 2;
 				sys.critical_normal_force = 1/ratio_critical_load;
 				string_control_parameters << "_c" << ratio_critical_load;
 			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
 				cerr << "Cohesive force" << endl;
-				sys.dimensionless_shear_rate = ratio_cohesion;
+				sys.dimensionless_number = ratio_cohesion;
 				sys.cohesive_force = 1/ratio_cohesion;
 				string_control_parameters << "_a" << ratio_cohesion;
 			} else if (ratio_repulsion > 0 && ratio_cohesion > 0) {
 				cerr << "Repulsive force + Cohesive force" << endl;
-				sys.dimensionless_shear_rate = ratio_repulsion;
-				sys.repulsiveforce_amplitude = 1/ratio_repulsion;
+				sys.dimensionless_number = ratio_repulsion;
+				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
 				sys.cohesive_force = ratio_cohesion/ratio_repulsion;
 				string_control_parameters << "_a" << ratio_cohesion << "_r" << ratio_repulsion;
@@ -175,10 +208,11 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
+			sys.set_shear_rate(1);
 			if (ratio_repulsion != 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce = true;
-				sys.repulsiveforce_amplitude = 1;
+				sys.amplitudes.repulsion = 1;
 				sys.target_stress_input = ratio_repulsion;
 				sys.target_stress = ratio_repulsion/6/M_PI;
 				string_control_parameters << "_s" << ratio_repulsion;
@@ -186,7 +220,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				cerr << "Cohesive force" << endl;
 				p.unscaled_contactmodel = false;
 				sys.cohesion = true;
-				//sys.dimensionless_shear_rate = ratio_cohesion;
+				//sys.dimensionless_number = ratio_cohesion;
 				sys.cohesive_force = 1;
 				sys.target_stress_input = ratio_cohesion;
 				sys.target_stress = ratio_cohesion/6/M_PI;
@@ -197,7 +231,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.init_shear_rate_limit = 9999;
 				string_control_parameters << "_b" << ratio_cohesion;
 			}
-			sys.dimensionless_shear_rate = 1; // needed for 1st time step
+			sys.dimensionless_number = 1; // needed for 1st time step
 			/* The target stress (``ratio_repulsion'') is given trough the command argument
 			 * with an unit stres: eta_0*gammmadot_0.
 			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
@@ -206,14 +240,27 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	setDefaultParameters();
 	readParameterFile();
-	importInitialPositionFile();
+
+ 	if(binary_conf){
+		importConfigurationBinary();
+	}
+	else{
+		importInitialPositionFile();
+	}
 	if (initial_lees_edwards_disp > 0){
 		sys.shear_disp = initial_lees_edwards_disp;
 	} else {
 		sys.shear_disp = 0;
 	}
+
+
 	if (input_files[2] != "not_given") {
-		contactForceParameter(input_files[2]);
+		if(sys.brownian&&!p.auto_determine_knkt){
+			contactForceParameterBrownian(input_files[2]);
+		}
+		else{
+			contactForceParameter(input_files[2]);
+		}
 	}
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
@@ -228,7 +275,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
-	openOutputFiles();
+	openOutputFiles(binary_conf);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
@@ -243,11 +290,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
  */
 void
 Simulation::simulationSteadyShear(vector<string> &input_files,
+								  bool binary_conf,
 								  double peclet_num, double ratio_repulsion, double ratio_cohesion,
 								  double ratio_critical_load, string control_variable){
 	user_sequence = false;
 	control_var = control_variable;
-	setupSimulationSteadyShear(input_files, peclet_num,
+	setupSimulationSteadyShear(input_files, binary_conf, peclet_num,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
@@ -271,6 +319,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
+		outputConfigurationBinary();
 		if (time_interval_output_data == -1) {
 			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
@@ -286,7 +335,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
-		if (abs(sys.dimensionless_shear_rate) < 1e-4 ){
+		if (abs(sys.dimensionless_number) < 1e-4 ){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
@@ -312,7 +361,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
  * Main simulation
  */
 void
-Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, string control_variable){
+Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable){
 	user_sequence = true;
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
@@ -327,7 +376,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		p.unscaled_contactmodel = true;
 		cerr << "Repulsive force" << endl;
 		sys.repulsiveforce = true;
-		sys.repulsiveforce_amplitude = 1;
+		sys.amplitudes.repulsion = 1;
 		string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
 	} else if (seq_type == "R") {
 		//p.unscaled_contactmodel
@@ -347,7 +396,12 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	}
 	setDefaultParameters();
 	readParameterFile();
-	importInitialPositionFile();
+ 	if(binary_conf){
+		importConfigurationBinary();
+	}
+	else{
+		importInitialPositionFile();
+	}
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		// strain_interval_out
@@ -361,13 +415,18 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	p.integration_method = 0;
 	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
-	openOutputFiles();
+	openOutputFiles(binary_conf);
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	vector <double> strain_sequence;
 	vector <double> rsequence;
 	ifstream fin_seq;
 	fin_seq.open(filename_sequence.c_str());
+	if (!fin_seq) {
+		cerr << " Sequence file '" << filename_sequence << "' not found." <<endl;
+		exit(1);
+	}
+		
 	double strain;
 	double targ_st;
 	while (fin_seq >> strain >> targ_st){
@@ -391,7 +450,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		sys.target_stress = rsequence[step]/6/M_PI;
 		cerr << "Target stress " << sys.target_stress_input << endl;
 		sys.updateUnscaledContactmodel();
-		sys.dimensionless_shear_rate = 1; // needed for 1st time step
+		sys.dimensionless_number = 1; // needed for 1st time step
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			if (time_interval_output_data == -1) {
@@ -406,6 +465,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
+			outputConfigurationBinary();
 			if (time_interval_output_data == -1) {
 				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
 					cerr << "   out config: " << sys.get_shear_strain() << endl;
@@ -419,7 +479,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 					cnt_config_out ++;
 				}
 			}
- 			if (abs(sys.dimensionless_shear_rate) < 1e-4 ){
+ 			if (abs(sys.dimensionless_number) < 1e-4 ){
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
 				if (jammed > 10) {
@@ -466,6 +526,7 @@ removeBlank(string &str){
 
 void
 Simulation::autoSetParameters(const string &keyword, const string &value){
+	
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
@@ -504,14 +565,14 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.kt = atof(value.c_str());
 	} else if (keyword == "kr") {
 		p.kr = atof(value.c_str());
-	} else if (keyword == "dt_max") {
-		p.dt_max = atof(value.c_str());
-	} else if (keyword == "kn_lowPeclet") {
-		p.kn_lowPeclet = atof(value.c_str());
-	} else if (keyword == "kt_lowPeclet") {
-		p.kt_lowPeclet = atof(value.c_str());
-	} else if (keyword == "dt_lowPeclet") {
-		p.dt_lowPeclet = atof(value.c_str());
+	} else if (keyword == "dt") {
+		p.dt = atof(value.c_str());
+		//	} else if (keyword == "kn_lowPeclet") {
+		//		p.kn_lowPeclet = atof(value.c_str());
+		//	} else if (keyword == "kt_lowPeclet") {
+		//		p.kt_lowPeclet = atof(value.c_str());
+		//	} else if (keyword == "dt_lowPeclet") {
+		//		p.dt_lowPeclet = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
 		p.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
@@ -556,6 +617,11 @@ void
 Simulation::readParameterFile(){
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
+	if (!fin) {
+		cerr << " Parameter file '" << filename_parameters << "' not found." <<endl;
+		exit(1);
+	}
+
 	string keyword;
 	string value;
 	while (!fin.eof()) {
@@ -599,43 +665,20 @@ Simulation::readParameterFile(){
 }
 
 void
-Simulation::openOutputFiles(){
+Simulation::openOutputFiles(bool binary_conf){
 	/*
 	 * Set simulation name and name of output files.
 	 */
-	prepareSimulationName();
-	string particle_filename = "par_" + sys.simu_name + ".dat";
-	string interaction_filename = "int_" + sys.simu_name + ".dat";
-	string vel_filename = "rheo_" + sys.simu_name + ".dat";
+	prepareSimulationName(binary_conf);
+
+
 	string st_filename = "st_" +sys.simu_name + ".dat";
-	fout_particle.open(particle_filename.c_str());
-	fout_interaction.open(interaction_filename.c_str());
-	fout_rheo.open(vel_filename.c_str());
 	fout_st.open(st_filename.c_str());
-	outputDataHeader(fout_particle);
-	outputDataHeader(fout_interaction);
-	outputDataHeader(fout_rheo);
 	outputDataHeader(fout_st);
-	//
-	string fout_int_col_def =
-	"#1: particle 1 label\n"
-	"#2: particle 2 label\n"
-	"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
-	"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-	"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-	"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-	"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-	"#8: norm of the normal part of the lubrication force\n"
-	"#9: tangential part of the lubrication force x\n"
-	"#10: tangential part of the lubrication force y\n"
-	"#11: tangential part of the lubrication force z\n"
-	"#12: norm of the normal part of the contact force\n"
-	"#13: tangential part of the contact force, x\n"
-	"#14: tangential part of the contact force, y\n"
-	"#15: tangential part of the contact force, z\n"
-	"#16: norm of the normal repulsive force\n"
-	"#17: Viscosity contribution of contact xF\n";
-	fout_interaction << fout_int_col_def << endl;
+
+	string rheo_filename = "rheo_" + sys.simu_name + ".dat";
+	fout_rheo.open(rheo_filename.c_str());
+	outputDataHeader(fout_rheo);
 	//
 	string fout_rheo_col_def =
 	"#1: shear strain\n"
@@ -690,25 +733,58 @@ Simulation::openOutputFiles(){
 	"#50: shear_disp\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
-	//
-	string fout_par_col_def =
-	"#1: number of the particle\n"
-	"#2: radius\n"
-	"#3: position x\n"
-	"#4: position y\n"
-	"#5: position z\n"
-	"#6: velocity x\n"
-	"#7: velocity y\n"
-	"#8: velocity z\n"
-	"#9: angular velocity x\n"
-	"#10: angular velocity y\n"
-	"#11: angular velocity z\n"
-	"#12: viscosity contribution of lubrication\n"
-	"#13: viscosity contributon of contact GU xz\n"
-	"#14: viscosity contributon of brownian xz\n"
-	"#15: angle (for 2D simulation only)\n";
-	//
-	fout_particle << fout_par_col_def << endl;
+
+	
+	if(p.out_data_particle){
+		string particle_filename = "par_" + sys.simu_name + ".dat";
+		fout_particle.open(particle_filename.c_str());
+		outputDataHeader(fout_particle);
+		//
+		string fout_par_col_def =
+			"#1: number of the particle\n"
+			"#2: radius\n"
+			"#3: position x\n"
+			"#4: position y\n"
+			"#5: position z\n"
+			"#6: velocity x\n"
+			"#7: velocity y\n"
+			"#8: velocity z\n"
+			"#9: angular velocity x\n"
+			"#10: angular velocity y\n"
+			"#11: angular velocity z\n"
+			"#12: viscosity contribution of lubrication\n"
+			"#13: viscosity contributon of contact GU xz\n"
+			"#14: viscosity contributon of brownian xz\n"
+			"#15: angle (for 2D simulation only)\n";
+		//
+		fout_particle << fout_par_col_def << endl;
+	}
+
+	if(p.out_data_interaction){
+		string interaction_filename = "int_" + sys.simu_name + ".dat";
+		fout_interaction.open(interaction_filename.c_str());
+		outputDataHeader(fout_interaction);
+		string fout_int_col_def =
+			"#1: particle 1 label\n"
+			"#2: particle 2 label\n"
+			"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
+			"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+			"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+			"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+			"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
+			"#8: norm of the normal part of the lubrication force\n"
+			"#9: tangential part of the lubrication force x\n"
+			"#10: tangential part of the lubrication force y\n"
+			"#11: tangential part of the lubrication force z\n"
+			"#12: norm of the normal part of the contact force\n"
+			"#13: tangential part of the contact force, x\n"
+			"#14: tangential part of the contact force, y\n"
+			"#15: tangential part of the contact force, z\n"
+			"#16: norm of the normal repulsive force\n"
+			"#17: Viscosity contribution of contact xF\n";
+		fout_interaction << fout_int_col_def << endl;
+	}
+	
 }
 
 
@@ -720,8 +796,8 @@ Simulation::exportParameterSet(){
 void
 Simulation::setDefaultParameters(){
 	p.Pe_switch = 5;
-	p.dt_max = 1e-4;
-	p.dt_lowPeclet = 1e-4;
+	p.dt = 1e-4;
+	//	p.dt_lowPeclet = 1e-4;
 	p.disp_max = 2e-3;
 	
 	p.integration_method = 1;
@@ -750,7 +826,7 @@ Simulation::setDefaultParameters(){
 	p.shear_strain_end = 10;
 	p.lub_max = 2.5;
 	/*
-	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
+	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
 	 *
 	 */
 	p.lub_reduce_parameter = 1e-3;
@@ -769,17 +845,11 @@ Simulation::setDefaultParameters(){
 		p.kn = 2000;
 		p.kt = 1000;
 		p.kr = 1000;
-		p.kn_lowPeclet = 0;
-		p.kt_lowPeclet = 0;
-		p.kr_lowPeclet = 0;
 	} else {
 		p.unscaled_contactmodel = false;
 		p.kn = 10000;
 		p.kt = 6000;
 		p.kr = 6000;
-		p.kn_lowPeclet = 10000;
-		p.kt_lowPeclet = 6000;
-		p.kr_lowPeclet = 6000;
 	}
 
 	p.auto_determine_knkt = false;
@@ -825,6 +895,7 @@ Simulation::importInitialPositionFile(){
 	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
 	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
+	vector <double> radius;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
 		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);
@@ -834,16 +905,113 @@ Simulation::importInitialPositionFile(){
 }
 
 void
-Simulation::prepareSimulationName(){
+Simulation::outputConfigurationBinary(){
+	string conf_filename;
+	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
+	conf_filename =  "conf_" + sys.simu_name + ".dat";
+	outputConfigurationBinary(conf_filename);
+}
+void
+Simulation::outputConfigurationBinary(string conf_filename){
+
+	vector < vector <double> > pos;
+	int np = sys.get_np();
+	int dims = 4;
+	pos.resize(np);
+	
+	for (int i=0; i<np; i++) {
+		pos[i].resize(dims);
+		pos[i][0] = sys.position[i].x;
+		pos[i][1] = sys.position[i].y;
+		pos[i][2] = sys.position[i].z;
+		pos[i][3] = sys.radius[i];
+	}
+	
+	ofstream conf_export;
+	double lx = sys.get_lx();
+	double ly = sys.get_ly();
+	double lz = sys.get_lz();
+	double shear_disp = sys.shear_disp;
+
+	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
+	conf_export.write((char*)&np, sizeof(int));
+	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
+	conf_export.write((char*)&lx, sizeof(double));
+	conf_export.write((char*)&ly, sizeof(double));
+	conf_export.write((char*)&lz, sizeof(double));
+	conf_export.write((char*)&shear_disp, sizeof(double));
+	for (int i=0; i<np; i++) {
+		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
+	}
+	
+	conf_export.close();
+}
+
+void
+Simulation::importConfigurationBinary(){
+	ifstream file_import;
+	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+	if (!file_import) {
+		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
+		exit(1);
+	}
+
+	int np;
+	double lx;
+	double ly;
+	double lz;
+	file_import.read((char*)&np, sizeof(int));
+	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
+	file_import.read((char*)&lx, sizeof(double));
+	file_import.read((char*)&ly, sizeof(double));
+	file_import.read((char*)&lz, sizeof(double));
+	file_import.read((char*)&initial_lees_edwards_disp, sizeof(double));
+
+	double x_;
+	double y_;
+	double z_;
+	double r_;
+	vector <vec3d> initial_position;
+	vector <double> radius;
+	for (int i=0; i<np; i++) {
+		file_import.read((char*)&x_, sizeof(double));
+		file_import.read((char*)&y_, sizeof(double));
+		file_import.read((char*)&z_, sizeof(double));
+		file_import.read((char*)&r_, sizeof(double));
+		initial_position.push_back(vec3d(x_,y_,z_));
+		radius.push_back(r_);
+	}
+	file_import.close();
+
+	sys.setConfiguration(initial_position, radius, lx, ly, lz);
+}
+
+void
+Simulation::prepareSimulationName(bool binary_conf){
 	ostringstream ss_simu_name;
-	string::size_type pos_ext_position = filename_import_positions.find(".dat");
-	string::size_type pos_ext_parameter = filename_parameters.find(".txt");
-	ss_simu_name << filename_import_positions.substr(0, pos_ext_position);
+	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
+	string::size_type param_name_end = filename_parameters.find_last_of(".");
+	string::size_type pos_name_start;
+	if(binary_conf){ // TO DO: improve name generation for binary input
+		pos_name_start = filename_import_positions.find_last_of("/");
+	}else{
+		pos_name_start = filename_import_positions.find_last_of("/");
+	}
+	string::size_type param_name_start = filename_parameters.find_last_of("/");
+	if(pos_name_start == std::string::npos){
+		pos_name_start = -1;
+	}
+	if(param_name_start == std::string::npos){
+		param_name_start = -1;
+	}
+	pos_name_start += 1;
+	param_name_start += 1;
+	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
 	ss_simu_name << "_";
-	ss_simu_name << filename_parameters.substr(0, pos_ext_parameter);
+	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
-	cerr << "filename: " << sys.simu_name << endl;
+	cerr << "filename: " << sys.simu_name << endl;	
 }
 
 void
@@ -851,44 +1019,18 @@ Simulation::evaluateData(){
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	/* NOTE:
-	 *
-	 * The total stress DID not include the contact GU terms,
-	 * because we consider that the relative motion is not expected hard spheres
-	 * and artificial in the soft-sphere contact model.
-	 * [Aug 15, 2013]
-	 * In the contact model, force is divided into two parts (spring and dash-pot).
-	 * In physics, the total force is important.
-	 * Therefore, both should be included for the stress calculation.
-	 *
-	 */
-	total_contact_stressXF = sys.total_contact_stressXF_normal+sys.total_contact_stressXF_tan;
-	total_stress = sys.total_hydro_stress;
-	total_stress += total_contact_stressXF;
-	total_stress += sys.total_contact_stressGU; // added (Aug 15 2013)
-	if (sys.repulsiveforce) {
-		total_repulsive_stress = sys.total_repulsive_stressXF+sys.total_repulsive_stressGU;
-		total_stress += total_repulsive_stress;
-	}
-	if (sys.brownian) {
-		total_stress += sys.total_brownian_stressGU;
-	}
-	/*
-	 * Viscosity is only the increment of stress (=del_eta).
-	 * The total viscosity should be
-	 * eta_r = eta/eta_0 = 1 + del_eta.
-	 */
-	viscosity = sys.einstein_viscosity+total_stress.getStressXZ();
-	normalstress_diff_1 = total_stress.getNormalStress1();
-	normalstress_diff_2 = total_stress.getNormalStress2();
-	particle_pressure = total_stress.getParticlePressure();
+		
+	viscosity = sys.einstein_viscosity+sys.total_stress.getStressXZ();
+	normalstress_diff_1 = sys.total_stress.getNormalStress1();
+	normalstress_diff_2 = sys.total_stress.getNormalStress2();
+	particle_pressure = sys.total_stress.getParticlePressure();
 	viscosity_hydro = sys.total_hydro_stress.getStressXZ();
 	normalstress_diff_1_hydro = sys.total_hydro_stress.getNormalStress1();
 	normalstress_diff_2_hydro = sys.total_hydro_stress.getNormalStress2();
-	viscosity_cont_XF = total_contact_stressXF.getStressXZ();
-	normalstress_diff_1_cont_XF = total_contact_stressXF.getNormalStress1();
-	normalstress_diff_2_cont_XF = total_contact_stressXF.getNormalStress2();
-	particle_pressure_cont = total_contact_stressXF.getParticlePressure();
+	viscosity_cont_XF = sys.total_contact_stressXF.getStressXZ();
+	normalstress_diff_1_cont_XF = sys.total_contact_stressXF.getNormalStress1();
+	normalstress_diff_2_cont_XF = sys.total_contact_stressXF.getNormalStress2();
+	particle_pressure_cont = sys.total_contact_stressXF.getParticlePressure();
 	viscosity_friction = sys.total_contact_stressXF_tan.getStressXZ();
 	normalstress_diff_1_friction = sys.total_contact_stressXF_tan.getNormalStress1();
 	normalstress_diff_2_friction = sys.total_contact_stressXF_tan.getNormalStress2();
@@ -931,13 +1073,13 @@ Simulation::outputStressTensorData(){
 	 * + total_contact_stressXF + total_repulsive_stress;
 	 */
 	// As it is, the output stress lacks a 6pi factor (as the viscosity)
-	total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
+	sys.total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
 	sys.total_hydro_stress.outputStressTensor(fout_st); // (9,10,11,12,13,14)
-	total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
+	sys.total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
-	total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
+	sys.total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << sys.dimensionless_shear_rate << ' '; // 39
+	fout_st << sys.dimensionless_number << ' '; // 39
 	fout_st << endl;
 }
 
@@ -962,8 +1104,8 @@ Simulation::outputRheologyData(){
 	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
 	 *
 	 * [note] In stress controlled simulation,
-	 * Averaged viscosity need to be calculated with dimensionless_shear_rate_averaged,
-	 * i.e. <viscosity> = taget_stress / dimensionless_shear_rate_averaged.
+	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
+	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
 	fout_rheo << sys.get_shear_strain() << ' '; //1
 	fout_rheo << 6*M_PI*viscosity << ' '; //2
@@ -1007,7 +1149,7 @@ Simulation::outputRheologyData(){
 	fout_rheo << 6*M_PI*normalstress_diff_2_brownian << ' ' ; //25
 	fout_rheo << 6*M_PI*particle_pressure << ' ';//26
 	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//27
-	fout_rheo << sys.min_gap_nondim << ' '; //28
+	fout_rheo << sys.min_reduced_gap << ' '; //28
 	fout_rheo << sys.max_disp_tan << ' '; //29
 	fout_rheo << sys.max_fc_normal << ' '; //30
 	fout_rheo << sys.max_fc_tan << ' ';//31
@@ -1028,12 +1170,17 @@ Simulation::outputRheologyData(){
 	fout_rheo << sys.dt << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
 	/* In stress control simulation,
-	 * shear jammed state may cause oscilation of dimensionless_shear_rate around 0.
+	 * shear jammed state may cause oscilation of dimensionless_number around 0.
 	 * Then, time step also oscilate.
-	 * This is why we need to take time average to have correct value of dimensionless_shear_rate.
+	 * This is why we need to take time average to have correct value of dimensionless_number.
 	 */
-	fout_rheo << sys.dimensionless_shear_rate << ' '; // 48
-	fout_rheo << sys.target_stress_input << ' '; // 49
+	fout_rheo << sys.dimensionless_number << ' '; // 48
+	if(control_var == "stress"){
+		fout_rheo << sys.target_stress_input << ' '; // 49
+	}
+	else{
+		fout_rheo << 6*M_PI*viscosity*sys.dimensionless_number << ' '; // 49
+	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << endl;
 }
@@ -1092,7 +1239,7 @@ Simulation::outputConfigurationData(){
 	if (p.out_data_particle) {
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		fout_particle << sys.dimensionless_shear_rate << ' ';
+		fout_particle << sys.dimensionless_number << ' ';
 		fout_particle << sys.target_stress_input << endl;
 		for (int i=0; i<np; i++) {
 			vec3d &r = pos[i];
@@ -1144,7 +1291,7 @@ Simulation::outputConfigurationData(){
 				fout_interaction << nr_vec.x << ' '; // 4
 				fout_interaction << nr_vec.y << ' '; // 5
 				fout_interaction << nr_vec.z << ' '; // 6
-				fout_interaction << sys.interaction[k].get_gap_nondim() << ' '; // 7
+				fout_interaction << sys.interaction[k].get_reduced_gap() << ' '; // 7
 				/* [NOTE]
 				 * Lubrication forces are reference values
 				 * in the Brownian case. The force balancing
@@ -1160,7 +1307,7 @@ Simulation::outputConfigurationData(){
 				 */
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
-				fout_interaction << sys.interaction[k].get_f_repulsive_norm() << ' '; // 16
+				fout_interaction << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
 				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 17
 				sys.interaction[k].contact.addUpContactForceTorque();
 				//fout_interaction << 6*M_PI*stress_contact.getNormalStress1() << ' ';
@@ -1185,5 +1332,16 @@ Simulation::outputFinalConfiguration(){
 		fout_finalconfig << sys.position[i].z << ' ';
 		fout_finalconfig << sys.radius[i] << endl;
 	}
+
+	string filename_bin = filename_final_configuration;
+	string ext=".dat";
+	size_t start_pos = filename_bin.find(ext);
+    if(start_pos == string::npos){
+		cerr << " WARNING, no binary output generated " << endl;
+        return;
+	}
+    filename_bin.replace(start_pos, ext.length(), ".bin");
+	outputConfigurationBinary(filename_bin);
 }
+
 

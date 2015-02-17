@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 12/10/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #include "Interaction.h"
 
@@ -13,7 +13,7 @@ Interaction::init(System *sys_){
 	active = false;
 	lubrication.init(sys);
 	contact.init(sys, this);
-	f_repulsive_norm = 0;
+	repulsion.init(sys, this);
 }
 
 /* Make a normal vector
@@ -33,7 +33,7 @@ Interaction::calcNormalVectorDistanceGap(){
 	nynz = nvec.y*nvec.z;
 	nyny = nvec.y*nvec.y;
 	nznz = nvec.z*nvec.z;
-	gap_nondim = r/ro_12-2;
+	reduced_gap = r/ro_12-2;
 }
 
 void
@@ -58,7 +58,7 @@ Interaction::updateResistanceCoeff(){
 		}
 	} else {
 		if (!contact_state_changed_after_predictor) {
-			double lub_coeff = 1/(gap_nondim+sys->lub_reduce_parameter);
+			double lub_coeff = 1/(reduced_gap+sys->lub_reduce_parameter);
 			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
 		} else {
 			/*
@@ -108,22 +108,18 @@ Interaction::activate(unsigned short i, unsigned short j){
 	 * I don't understand this point yet.
 	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxation_time;
 	 */
-	/*
-	 * The size dependence of repulsive force:
-	 * a0*a1/(a1+a2)/2
-	 */
 	if (sys->repulsiveforce) {
-		repulsiveforce_amplitude = sys->get_repulsiveforce_amplitude()*a0*a1/ro;
-		repulsiveforce_length = sys->get_repulsiveforce_length();
+		repulsion.activate();
 	}
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.getInteractionData();
-	if (gap_nondim <= 0) {
+	if (reduced_gap <= 0) {
 		contact.activate();
 	} else {
 		contact.deactivate();
 	}
+	contact_state_changed_after_predictor = false;
 	updateResistanceCoeff();
 	lubrication.getInteractionData();
 	lubrication.calcLubConstants();
@@ -142,28 +138,18 @@ Interaction::deactivate(){
 
 void
 Interaction::updateState(bool &deactivated){
-	/* update tangential displacement: we do it before updating nvec as:
-	 *  - it should be along the tangential vector defined in the previous time step
-	 *  - (VERY IMPORTANT) it must compute the relative velocities with PBC at time t.
-	 *    This is encoded in variable zshift which takes care of Lees-Edwards in the z direction.
-	 *    zshift is updated for time t+1 in calcNormalVectorDistanceGap(),
-	 *    so this function should be called after calcRelativeVelocities();
-	 */
-	if (sys->friction && is_contact()) {
-		calcRelativeVelocities();
-		contact.incrementTangentialDisplacement();
-		if (sys->rolling_friction) {
-			calcRollingVelocities();
-			contact.incrementRollingDisplacement();
-		}
+	if(is_contact()){
+		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
+		contact.incrementDisplacements();
 	}
+
 	calcNormalVectorDistanceGap();
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
-			if (gap_nondim > 0) {
+			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
@@ -172,7 +158,7 @@ Interaction::updateState(bool &deactivated){
 			 */
 			if (sys->target_stress != 0
 				&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
-				//cerr << contact.f_contact_normal_norm << ' ' << gap_nondim << endl;
+				//cerr << contact.f_contact_normal_norm << ' ' << reduced_gap << endl;
 				breakup_contact_bond = true;
 			}
 		}
@@ -184,12 +170,12 @@ Interaction::updateState(bool &deactivated){
 		}
 	} else {
 		// not contacting in previous step
-		if (gap_nondim <= sys->new_contact_gap) {
+		if (reduced_gap <= sys->new_contact_gap) {
 			// now contact
 			contact.activate();
-			if (gap_nondim < -0.1){
+			if (reduced_gap < -0.1){
 				cerr << "new contact may have problem\n";
-				cerr << "gap = " << gap_nondim << endl;
+				cerr << "gap = " << reduced_gap << endl;
 				//exit(1);
 			}
 			if (sys->in_predictor && sys->brownian) {
@@ -207,29 +193,10 @@ Interaction::updateState(bool &deactivated){
 		contact.calcContactInteraction();
 	}
 	if (sys->repulsiveforce) {
-		if (contact.state > 0) {
-			/* For continuity, the repulsive force is kept as constant for h < 0.
-			 * This force does not affect the friction law,
-			 * i.e. it is separated from Fc_normal_norm.
-			 */
-			f_repulsive_norm = repulsiveforce_amplitude;
-			f_repulsive = -f_repulsive_norm*nvec;
-		} else {
-			/* separating */
-			f_repulsive_norm = repulsiveforce_amplitude*exp(-(r-ro)/repulsiveforce_length);
-			f_repulsive = -f_repulsive_norm*nvec;
-		}
+		repulsion.calcForce();
 	}
 }
 
-/*
- * Repulsive stabilizing force
- */
-void
-Interaction::addUpRepulsiveForce(){
-	sys->repulsive_force[p0] += f_repulsive;
-	sys->repulsive_force[p1] -= f_repulsive;
-}
 
 /* Relative velocity of particle 1 from particle 0.
  *
@@ -268,11 +235,6 @@ Interaction::calcRelativeVelocities(){
 void
 Interaction::calcRollingVelocities(){
 	rolling_velocity = -cross(a0*sys->ang_velocity[p0]-a1*sys->ang_velocity[p1], nvec);
-}
-
-void
-Interaction::calcRepulsiveStress(){
-	repulsive_stresslet_XF.set(rvec, f_repulsive);
 }
 
 /* observation */

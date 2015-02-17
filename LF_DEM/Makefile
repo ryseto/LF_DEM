@@ -7,29 +7,32 @@
 # OS_version: OSX or Linux or SI 
 OS_version = OSX
 #SysEnv=Energy_seto
-GIT_VERSION := $(shell git describe --dirty --always) 
+VERSION := $(shell git describe --dirty --always)
+
 
 # Compiler
 ifeq ($(OS_version),SI)
 	CXX=icc
-	CXXFLAGS_optimized=  -O3 -DVERSION="\"$(GIT_VERSION)\""
-	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_optimized=  -O3
+	CXXFLAGS_debug=  -g -DDEV="1"
 endif
 ifeq ($(OS_version),OIST)
 	CXX=icc
-	CXXFLAGS_optimized= -O3 -Wall -DVERSION="\"$(GIT_VERSION)\""
-	CXXFLAGS_debug=  -g -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_optimized= -O3 -Wall -DVERSION="\"$(VERSION)\""
+	CXXFLAGS_debug=  -g -DVERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 
 ifeq ($(OS_version),Linux)
 	CXX=g++
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
-	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
+	CXXFLAGS_dev=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 ifeq ($(OS_version),OSX)
 	CXX=clang
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
-	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow -DVERSION="\"$(GIT_VERSION)\""
+	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
+	CXXFLAGS_dev=  -O3  -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 
 # Enable use of Trilinos library ( yes / no )
@@ -82,6 +85,12 @@ endif
 
 # Cholmod
 Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd 
+ifeq ($(UseMetis),yes)
+     ifneq ($(OS_version), OIST)
+          Cholmod_Linking_Flags += -lmetis
+     endif
+endif
+
 ifeq ($(SysEnv),Energy_seto)
 	Cholmod_Linking_Flags  =
 endif
@@ -94,11 +103,6 @@ ifeq ($(OS_version), OIST)
     Cholmod_Linking_Flags  =
 endif
 
-ifeq ($(UseMetis),yes)
-     ifneq ($(OS_version), OIST)
-          Cholmod_Linking_Flags += -lmetis
-     endif
-endif
 
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
@@ -114,7 +118,7 @@ ifeq ($(OS_version), SI)
        Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
        ifeq ($(UseMetis),yes)
 #               Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
-			Cholmod_Linking_Flags +=  Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
+			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
        endif
 endif
 
@@ -144,6 +148,12 @@ all:	$(OUT_CODE)
 debug:	CXXFLAGS= $(CXXFLAGS_debug)
 debug:	$(OUT_CODE)
 
+dev:	CXXFLAGS= $(CXXFLAGS_dev)
+dev:	$(OUT_CODE)
+
+check:
+	(cd check;	make test)
+
 $(OUT_CODE): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
 
@@ -154,11 +164,13 @@ gitversion.h: ../.git/HEAD ../.git/index
     echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
 
 tar:
-	tar cvfz LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB)  LF_DEM_sources_$(DATE).ps Makefile input.*
+	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
+	tar -czvf LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB) Makefile
 
 clean:
 	rm -f  $(OBJ)
 
-ps:
-	enscript --pretty-print --color --fancy-header -r -2 -p LF_DEM_sources_$(DATE).ps $(LIB) $(SRC)
+
+doc:
+	doxygen Doxyfile
 

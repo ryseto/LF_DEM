@@ -29,6 +29,7 @@
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "ParameterSet.h"
+#include "Averager.h"
 #include "cholmod.h"
 #include "MersenneTwister.h"
 
@@ -38,6 +39,12 @@ class Simulation;
 class Interaction;
 class BoxSet;
 
+struct ForceAmplitudes{
+	double repulsion;
+	double brownian;
+};
+
+
 class System{
 private:
 	int np;
@@ -45,6 +52,7 @@ private:
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
 	double time;
+	double shear_rate;
 	double disp_max;
 	double lx;
 	double ly;
@@ -60,13 +68,11 @@ private:
 	double shear_strain;
 	double lub_max;
 	double mu_static; // static friction coefficient.
-	double kb_T; // dimensionless kb_T = 1/Pe
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
 	int max_lub_int;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
-	double ratio_repulsion; // For the case where both repulsive force and Brownian force exist.
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	void (System::*timeEvolutionDt)(bool);
@@ -82,7 +88,6 @@ private:
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
 	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
-	//void buildBrownianTerms();
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
@@ -98,10 +103,17 @@ private:
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
-	double dimensionless_shear_rate_time_integral;
+	double dimensionless_number_time_integral;
 	ParameterSet p;
-protected:
-public:
+	void adjustContactModelParameters();
+	Averager<double> *kn_avg;
+	Averager<double> *kt_avg;
+	Averager<double> *overlap_avg;
+	Averager<double> *max_disp_tan_avg;
+	bool lowPeclet;
+
+ protected:
+ public:
 	System();
 	~System();
 	void importParameterSet(ParameterSet &ps);
@@ -156,13 +168,17 @@ public:
 	StressTensor* brownianstressGU_predictor; // by particle
 	StressTensor contactstressXF_normal;
 	StressTensor contactstressXF_tan;
+	StressTensor total_stress;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
 	StressTensor total_contact_stressXF_tan;
+	StressTensor total_contact_stressXF;
 	StressTensor total_contact_stressGU;
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
+	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
+	Averager<StressTensor> *stress_avg;
 	double dt; // <=== It should be called d_strain.
 	double kn;
 	double kt;
@@ -202,24 +218,22 @@ public:
 	int lubrication_model;
 	int nb_interaction;
 	/*
-	 * Leading term of lubrication force is 1/gap_nondim,
-	 * with gap_nondim the gap
-	 * gap_nondim = 2r/(a0+a1) - 2.
+	 * Leading term of lubrication force is 1/reduced_gap,
+	 * with reduced_gap the gap
+	 * reduced_gap = 2r/(a0+a1) - 2.
 	 * we set a cutoff for the lubrication interaction,
 	 * such that the lub term is proportional to:
 	 *
-	 * 1/(gap_nondim+lub_reduce_parameter)
-	 * when gap_nondim > 0.
+	 * 1/(reduced_gap+lub_reduce_parameter)
+	 * when reduced_gap > 0.
 	 */
 	double lub_reduce_parameter;
 	double shear_disp;
 	/* For non-Brownian suspension:
-	 * dimensionless_shear_rate = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
+	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
 	 * For Brownian suspension, it should be Peclet number
 	 */
-	double dimensionless_shear_rate;
-//	double dimensionless_shear_rate_averaged;
-	double repulsiveforce_amplitude; // dimensionless
+	double dimensionless_number;
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz
@@ -229,7 +243,7 @@ public:
 	double max_relative_velocity;
 	double max_sliding_velocity;
 	double max_ang_velocity;
-	double min_gap_nondim;
+	double min_reduced_gap;
 	double max_disp_tan;
 	queue<int> deactivated_interaction;
 	double max_contact_velo_tan;
@@ -278,7 +292,6 @@ public:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	int adjustContactModelParameters();
 	void setupShearFlow(bool activate){
 		if (activate) {
 			/* In dimensionless simulations for non Browninan simulation,
@@ -307,6 +320,8 @@ public:
 	double get_lx(){return lx;}
 	double get_ly(){return ly;}
 	double get_time(){return time;}
+	inline double get_shear_rate(){return shear_rate;}
+	inline void set_shear_rate(double sr){shear_rate=sr;}
 	inline double get_lz(){return lz;}
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}
@@ -318,13 +333,7 @@ public:
 	inline double get_lub_max(){return lub_max;}
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
-	/* inline void set_repulsiveforce_amplitude(double val){ */
-	/* 	repulsiveforce_amplitude = val;} */
-	
-	inline double get_repulsiveforce_amplitude(){return repulsiveforce_amplitude;}
 	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}
-	void set_ratio_repulsion(double val){ratio_repulsion = val;}
-	inline double get_ratio_repulsion(){return ratio_repulsion;}
 	void set_sd_coeff(double val){sd_coeff = val;}
 	inline double get_repulsiveforce_length(){return repulsiveforce_length;}
 	void set_mu_static(double val){mu_static = val;}
@@ -339,6 +348,8 @@ public:
 	//		return log_lub_coeff_contact_tan_total;
 	//	}
 	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-	
+
+	struct ForceAmplitudes amplitudes;
+
 };
 #endif /* defined(__LF_DEM__System__) */

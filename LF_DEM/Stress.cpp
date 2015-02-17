@@ -1,19 +1,41 @@
 //
-//  System.cpp
+//  Stress.cpp
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 02/21/13.
-//  Copyright (c) 2013 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #include "System.h"
 
 void
 System::calcStressPerParticle(){
-	/////////////////////////////////////////////////
-	// from the velocities V_H, V_C, V_Rep, V_B,
-	// compute stresses R_SV * V
-	// and then add rF stress for F_C and F_Rep
+	/**
+	   This method computes the stresses per particle, split by components (hydro, contact, ...).
+	   
+	   From velocities \f$ V_{\mathrm{I}}\f$ associated with
+	   interaction \f$\mathrm{I}\f$, this method gets the stresses \f$ - GV_{\mathrm{I}} \f$. (This corresponds to
+	   \f$- GU_{\mathrm{I}} - H\Omega_{\mathrm{I}} \f$ in Jeffrey
+	   notations \cite jeffrey_calculation_1992, and
+	   \f$- R_{\mathrm{SU}} U_{\mathrm{I}} \f$ in Bossis and Brady 
+	   \cite brady_stokesian_1988 notations.)
+
+	   For the hydrodynamic component, it also gets the \f$ M
+	   E_{\infty}\f$ term (\f$R_{\mathrm{SE}} E_{\infty}\f$ is B&B
+	   notations), so that all in all \f$ S_{\mathrm{H}} =
+	   - GV_{\mathrm{H}} + M E_{\infty}\f$.
+
+	   For the point forces, it also gets the \f$ -xF_{\mathrm{I}} \f$ term, so that \f$ S_{\mathrm{I}} =
+	   - GV_{\mathrm{I}} - xF_{\mathrm{I}} \f$.
+
+	   For the Brownian forces, it computes (in B&B notations) \f$ S_{\mathrm{B}} =
+	   - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) \f$ with the mid-step algorithm of Banchio and Brady 
+	   \cite banchio_accelerated_2003 with \f$ n=1 \f$.
+
+	   In the Brownian mode, because of the mid-point scheme for the Brownian stress, you
+	   should be careful when calling this method from outside of the
+	   System::timeEvolutionPredictorCorrectorMethod method.
+	*/
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -28,7 +50,7 @@ System::calcStressPerParticle(){
 			interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {
-				interaction[k].calcRepulsiveStress(); // - rF_rep
+				interaction[k].repulsion.calcStressXF(); // - rF_rep
 			}
 		}
 	}
@@ -55,7 +77,7 @@ System::calcStress(){
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 	}
-	if (dimensionless_shear_rate > 0) {
+	if (dimensionless_number > 0) {
 		total_hydro_stress /= system_volume;
 	} else {
 		total_hydro_stress /= -system_volume;
@@ -82,18 +104,20 @@ System::calcStress(){
 	 * Why only unscalled contact model case?
 	 */
 	if (stress_controlled && p.unscaled_contactmodel) {
-		total_contact_stressXF_normal /= abs(dimensionless_shear_rate);
-		total_contact_stressXF_tan /= abs(dimensionless_shear_rate);
+		total_contact_stressXF_normal /= abs(dimensionless_number);
+		total_contact_stressXF_tan /= abs(dimensionless_number);
 	}
+	total_contact_stressXF = total_contact_stressXF_normal + total_contact_stressXF_tan;
+	
 	//////////////////////////////////////////////////////////////
 	if (repulsiveforce) {
 		total_repulsive_stressXF.reset();
 		for (int k=0; k<nb_interaction; k++) {
-			total_repulsive_stressXF += interaction[k].getRepulsiveStressXF();
+			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
 		if (stress_controlled) {
-			total_repulsive_stressXF /= abs(dimensionless_shear_rate);
+			total_repulsive_stressXF /= abs(dimensionless_number);
 		}
 		//////////////////////////////////////////////////////////
 		total_repulsive_stressGU.reset();
@@ -110,4 +134,36 @@ System::calcStress(){
 		}
 		total_brownian_stressGU /= system_volume;
 	}
+
+	/* NOTE:
+	 *
+	 * The total stress DID not include the contact GU terms,
+	 * because we consider that the relative motion is not expected hard spheres
+	 * and artificial in the soft-sphere contact model.
+	 * [Aug 15, 2013]
+	 * In the contact model, force is divided into two parts (spring and dash-pot).
+	 * In physics, the total force is important.
+	 * Therefore, both should be included for the stress calculation.
+	 *
+	 */
+
+	total_stress = total_hydro_stress;
+	total_stress += total_contact_stressXF;
+	total_stress += total_contact_stressGU; // added (Aug 15 2013)
+	if (repulsiveforce) {
+		total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
+		total_stress += total_repulsive_stress;
+	}
+	if (brownian) {
+		total_stress += total_brownian_stressGU;
+	}
+	
+ 	if(lowPeclet){ // take an averaged stress instead of instantaneous
+		stress_avg->update(total_stress,time);
+		//		cout << time << " " << total_stress.getStressXZ() << " ";
+		total_stress = stress_avg->get();
+		//		cout << total_stress.getStressXZ() << endl;
+	}
+
 }
+

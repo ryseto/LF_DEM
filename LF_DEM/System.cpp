@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 11/14/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 #include "System.h"
@@ -139,6 +139,17 @@ System::allocateRessources(){
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	stokes_solver.init(np);
+	
+	if(p.auto_determine_knkt){
+		kn_avg = new Averager<double>(p.memory_strain_avg);
+		kt_avg = new Averager<double>(p.memory_strain_avg);
+		overlap_avg = new Averager<double>(p.memory_strain_avg);
+		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
+	}
+	if(lowPeclet){
+		double stress_avg_relaxation_parameter = 0; // 0 --> no average
+		stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
+	}
 }
 
 void
@@ -168,6 +179,7 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 						 double lx_, double ly_, double lz_){
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
+
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
@@ -178,6 +190,19 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 	} else {
 		twodimension = false;
 	}
+
+	if (twodimension) {
+		setSystemVolume(2*radius[np-1]);
+	} else {
+		setSystemVolume();
+	}
+
+	double particle_volume = 0;
+	for (int i=0; i<np; i++) {
+		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
+	}
+	volume_fraction = particle_volume/system_volume;
+	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
 void
@@ -186,7 +211,7 @@ System::updateUnscaledContactmodel(){
 		/* What is the reasonable way
 		 * when the target stress is changed during a simulation?
 		 *
-		 * [temporally chagne]
+		 * [temporally change]
 		 * For destressing tests, the spring constants are fixed at the previous values.
 		 */
 		if (!cohesion) {
@@ -227,19 +252,10 @@ System::updateUnscaledContactmodel(){
 void
 System::setupBrownian(){
 	if (brownian) {
-		/* kb_T is dimensionless.
-		 * dimensionless_shear_rate is Peclet number
-		 * Dimensional kb_T is L0*F0 / Pe,
-		 * where F0 = 6*pi*eta0*a^2*rate and L0 = a
-		 * Dimensionalless brownian force kb_T/a is 1/Pe,
-		 */
-		kb_T = 1/dimensionless_shear_rate; // = 1/Pe
-		if (dimensionless_shear_rate < p.Pe_switch) {
+		if (dimensionless_number < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
-			scale_factor_SmallPe = p.Pe_switch/dimensionless_shear_rate;
-			kn = scale_factor_SmallPe*p.kn_lowPeclet;
-			kt = scale_factor_SmallPe*p.kt_lowPeclet;
-			p.dt_max = p.dt_lowPeclet/scale_factor_SmallPe;
+			lowPeclet = true;
+			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
 			p.shear_strain_end /= scale_factor_SmallPe;
@@ -253,7 +269,7 @@ System::setupBrownian(){
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
-			cerr << "  dt_max = " << p.dt_max << endl;
+			cerr << "  dt = " << p.dt << endl;
 			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
 			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		}
@@ -267,10 +283,7 @@ System::setupSystem(string control){
 	 * @ The resistance coeffient affects Brownian force.
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
-	/* Giving a seed for debugging (Brownian)
-	 * r_gen = new MTRand(71);
-	 */
-	
+
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -288,6 +301,7 @@ System::setupSystem(string control){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
+	friction = false;
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -299,11 +313,11 @@ System::setupSystem(string control){
 		cerr << "friction_model " << friction_model << endl;
 		/*
 		 * The dimensionless shear rate is defined as follows:
-		 * dimensionless_shear_rate = F0/F^{*}
+		 * dimensionless_number = F0/F^{*}
 		 * F0 = 6pi*eta*a^2*shear_rate
 		 * The force unit is changed by the considering shear rate.
 		 * In the simulation, the critical force F^{*} = \tilde{F^{*}} F_0.
-		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_shear_rate.
+		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_number.
 		 *
 		 */
 		friction = true;
@@ -311,6 +325,9 @@ System::setupSystem(string control){
 	} else {
 		cerr << "friction_model..." << endl;
 		exit(1);
+	}
+	if(!brownian){
+		lowPeclet = false;
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair ; k++) {
@@ -391,11 +408,16 @@ System::setupSystem(string control){
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (brownian) {
+#ifdef DEV
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.
-		 *
+		 * DEV is defined as a preprocessor option in the Makefile
 		 */
 		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+#endif
+#ifndef DEV
+		r_gen = new MTRand;
+#endif
 	}
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
@@ -405,20 +427,9 @@ System::setupSystem(string control){
 	 */
 	vel_difference = lz;
 	stokes_solver.initialize();
-	dt = p.dt_max;
+	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
-	if (twodimension) {
-		setSystemVolume(2*radius[np-1]);
-	} else {
-		setSystemVolume();
-	}
-	double particle_volume = 0;
-	for (int i=0; i<np; i++) {
-		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
-	}
-	volume_fraction = particle_volume/system_volume;
-	cerr << "volume_fraction = " << volume_fraction << endl;
 	if (control == "rate") {
 		rate_controlled = true;
 	}
@@ -426,7 +437,7 @@ System::setupSystem(string control){
 		rate_controlled = false;
 	}
 	stress_controlled = !rate_controlled;
-	//	dimensionless_shear_rate_averaged = 1;
+	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
 	/* einstein_viscosity may be affected by sd_coeff.
@@ -483,6 +494,12 @@ System::timeStepBoxing(const double strain_increment){
 
 void
 System::timeEvolutionEulersMethod(bool calc_stress){
+	/**
+	   \brief One full time step, predictor-corrector method.
+
+	   This method is never used when running a Brownian simulation.
+	*/
+
 	in_predictor = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
@@ -497,67 +514,56 @@ System::timeEvolutionEulersMethod(bool calc_stress){
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
 
-/************************************************************************************************
- *                                   non-Brownian Case                                           *
- *************************************************************************************************
- * Simple mid-point method to solve at dt^2 order
- * R.V = F_H + F_C + F_B
- * where R is the resistance, F_H/F_C are hydro/contact forces.
- *
- * 1st step:
- * x'(t+dt) = x(t) + V^{-}dt
- * x(t)     = x'(t+dt) - V^{-}dt
- *
- * 2nd step
- * x(t + dt) = x(t)     + 0.5*(V^{+}+V^{-})*dt
- *           = x'(t+dt) + 0.5*(V^{+}-V^{-})*dt
- */
-
-/*************************************************************************************************
- *                                   Brownian Case                                                *
- **************************************************************************************************
- * This routine implements a two-step algorithm for the dynamics with Brownian motion,
- * initially derived by [ Fixman 1978 ].
- * The basis of this algorithm is exposed in [ Ball & Melrose 1997 ] and [ Banchio & Brady 2003 ].
- *
- * The equation of motion is:
- *
- * R.V = F_H + F_C + F_B
- * where R is the resistance, F_H/F_C/F_B are hydro/contact/brownian forces.
- *
- * Integrating this, we get a first order update of the positions as:
- * X(t+dt) = X(t) + dt*R^{-1}.( F_H + F_C ) + X_B
- * with <X_B> = kT*dt*div R^{-1} and <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1}
- *
- * The divergence term comes from our naive way of taking the inertialess limit in the Langevin
- * equation correlated with the fact that our time step dt >> "Brownian_time" (the typical
- * time between 2 Brownian kicks). The sum of the many displacements due to Brownian kicks
- * happening during dt has a non-zero mean anywhere the mobility is non uniform,
- * and this is taken care of by the div term.
- * This sum has a variance scaling as \sqrt(kT*dt), taken care of by the X_B term, as
- * <X_B X_B> - < X_B >^2 = (2kTdt)R^{-1} (which is nothing but the FD theorem).
- *
- * Reminding that we obtain the Cholesky decomposition R = L L^T in the stokes_solver,
- * we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
- *   - generate a "Brownian force" F_B(t) such that:
- *       < F_B F_B > = (2kT/dt) R(t) and <F_B> = 0
- *   - (1) solve R(X(t)).V_{-} = F_H(t) + F_C(t) + F_B(t)
- *   - move to X_pred = X(t) + V_{-}dt
- *   - (2) solve R(X_pred).V_{+} = F_H(t+dt) + F_C(t+dt) + F_B(t)  (note: F_B at time t)
- *   - set X(t+dt) = X(t) + 0.5*( V_{-} + V_{+} )*dt = X_pred + 0.5*( V_{+} - V_{-} )*dt
- *
- * One can check that the velocity U = 0.5*( V_{-} + V_{+} ) has the properties:
- * <U> = R^{-1}.( F_H + F_C ) + kT*div R^{-1}
- * <UU> - <U>^2 = (2kT/dt)R^{-1}
- * which gives the correct mean and variance for X_B.
- *
- * F_B is obtained as F_B = \sqrt(2kT/dt) * L.A, where A is a gaussian random vector with
- * <A> = 0 and <AA> = 1.
- *
- *
- ***************************************************************************************************/
 void
 System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
+	/**
+	   \brief One full time step, predictor-corrector method.
+
+	   This method is always used when running a Brownian simulation.
+
+	   ### non-Brownian Case
+
+	   Simple mid-point method to solve at dt^2 order
+	   \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} \f$
+	   where \f$\bm{A} \f$ (in Jeffrey notations \cite
+	   jeffrey_calculation_1992, that is \f$\bm{R}_{\mathrm{FU}}\f$ in Bossis and Brady 
+	   \cite brady_stokesian_1988 notations) is the current resistance matrix
+	   stored in the stokes_solver, and \f$\bm{F} \f$ are the forces included by the parameter files. 
+	
+	   - 1st step:
+	     - \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) )  \f$
+	     - \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$ 
+	   
+	   - 2nd step:
+	     - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} )  \f$
+	     - \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
+
+	   ### Brownian Case
+
+	   This routine implements a two-step algorithm for the dynamics with Brownian motion,
+	   initially derived by Fixman \cite fixman_1978.
+	   The basis of this algorithm is exposed in \cite Ball_1997 and \cite banchio_accelerated_2003.
+	   
+	   The equation of motion is:
+	   \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} \f$
+	   with 
+	   \f$ \langle \bm{F}_\mathrm{B} \rangle = 0\f$ 
+	   and
+	   \f$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}\f$,
+	   and \f$\bm{F} \f$ are all the other forces included by the parameter files. 
+
+	    Reminding that we obtain the Cholesky decomposition \f$ \bm{A} = \bm{L} \bm{L}^T \f$ in the stokes_solver,
+	    we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
+		- 1st step:
+		   + generate a Brownian force \f$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi \f$ with \f$ \langle \psi \rangle = 0 \f$ and \f$ \langle \psi \psi \rangle = 1\f$
+		   + \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) )  \f$
+		   + \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$ 
+		- 2nd step:
+		   + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
+		   + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
+	   
+	   */
+
 	/* predictor */
 	in_predictor = true;
 	setContactForceToParticle();
@@ -575,16 +581,20 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
+	if(lowPeclet){
+		calcStress();
+	}
 	timeStepMoveCorrector();
 }
 
-/*
- * timeStepMove is used only for Euler method.
- */
 void
 System::timeStepMove(){
+	/**
+	   \brief Moves particle positions according to previously computed velocities, Euler method step.
+	*/
+
 	/* Changing dt for every timestep
-	 * So far, this is only in Eular method.
+	 * So far, this is only in Euler method.
 	 */
 	if (stress_controlled) {
 		/* This strain step criteria needs to be improved.
@@ -592,7 +602,7 @@ System::timeStepMove(){
 		 * For jammed state or unyielded state, shear rate is very small.
 		 * In this case, the strain step (=dt) should be small, as well.
 		 */
-		double dt_1 = 1e-3*abs(dimensionless_shear_rate);
+		double dt_1 = 1e-3*abs(dimensionless_number);
 		double dt_2;
 		if (max_velocity > max_sliding_velocity) {
 			dt_2 = disp_max/max_velocity;
@@ -613,13 +623,13 @@ System::timeStepMove(){
 		}
 	}
 	/* [note]
-	 * We need to make clear time/strain/dimensionlesstime.
+	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
 	 */
 	
-	double time_increment = dt/abs(dimensionless_shear_rate);
+	double time_increment = dt/abs(dimensionless_number);
 	time += time_increment;
 	/* evolve PBC */
-	timeStepBoxing(shear_direction*dt);
+	timeStepBoxing(shear_direction*shear_rate*dt);
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -635,14 +645,18 @@ System::timeStepMove(){
 
 void
 System::timeStepMovePredictor(){
+	/**
+	   \brief Moves particle positions according to previously computed velocities, predictor step.
+	*/
+
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
-	time += dt/abs(dimensionless_shear_rate);
+	time += dt/abs(dimensionless_number);
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	timeStepBoxing(shear_direction*dt);
+	timeStepBoxing(shear_direction*shear_rate*dt);
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -663,6 +677,10 @@ System::timeStepMovePredictor(){
 
 void
 System::timeStepMoveCorrector(){
+	/**
+	   \brief Moves particle positions according to previously computed velocities, corrector step.
+	*/
+
 	for (int i=0; i<np; i++) {
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
@@ -681,30 +699,48 @@ System::timeStepMoveCorrector(){
 
 void
 System::timeEvolution(double strain_output_data, double time_output_data){
+	/**
+	   \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
+
+	   This method essentially loops the appropriate one time step method method, according to the Euler vs predictor-corrector or strain rate vs stress controlled choices.
+	*/
+
 	static bool firsttime = true;
+	in_predictor=false;
 	if (firsttime) {
 		checkNewInteraction();
 		updateInteractions();
 		firsttime = false;
 	}
+	bool calc_stress = false;
+	if(lowPeclet){
+		calc_stress = true;
+	}
 	if (time_output_data == 0) {
 		/* integrate until strain_next - 1 time step */
 		while (shear_strain < strain_output_data-dt) {
-			(this->*timeEvolutionDt)(false); // no stress computation
+			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {
-		while (time < time_output_data-dt/abs(dimensionless_shear_rate)) { // integrate until strain_next
-			(this->*timeEvolutionDt)(false); // stress computation
+		while (time < time_output_data-dt/abs(dimensionless_number)) { // integrate until strain_next
+			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	}
-	if (p.auto_determine_knkt && shear_strain>p.start_adjust)
+	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
+	}
 }
 
 void
 System::checkNewInteraction(){
+	/**
+	   \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
+
+	   To be called after particle moved.
+	*/
+
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
@@ -741,18 +777,20 @@ System::checkNewInteraction(){
 	}
 }
 
-/* Check the distance between separating particles.
- * i < j
- *
- * A patch-up prescription to avoid
- * contact_pair[i][j] < 0 indicates separating particles to be checked.
- * contact_pair[i][j] = -1, the particles are near contact. So every time step, distance should be checked.a
- * contact_pair[i][j] < -1, the particles have some distance.
- */
+
 void
 System::updateInteractions(){
+	/**
+	   \brief Updates the state of active interactions.
+
+	   To be called after particle moved.
+	   Note that this routine does not look for new interactions (this is done by System::checkNewInteraction), it only updates already known active interactions.
+	   It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
+
+	*/
+	
 	double sq_max_sliding_velocity = 0;
-	dimensionless_cohesive_force = 0.1/abs(dimensionless_shear_rate);
+	dimensionless_cohesive_force = 0.1/abs(dimensionless_number);
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -899,19 +937,25 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 
 void
 System::generateBrownianForces(){
-	// generates a Brownian force F_B with <F_B> = 0, and <F_B F_B> = (2kT/dt)*R
-	// where R is the current resistance matrix stored in the stokes_solver.
-	// note that it SETS the rhs of the solver as rhs = F_B
-	// F_B is also stored in sys->brownian_force
-	//
-	// kb_T = 1/Pe and dt = dt'*Pe/Pe0
-	// kb_T/dt = (1/Pe)/(dt'*Pe/Pe0) = Pe0/(dt'*Pe*Pe)
-	// Fb = sqrt(kb_T/dt) = sqrt(Pe0/dt')*1/Pe
-	// U = Fb
-	// U*dt = sqrt(Pe0/dt')*1/Pe * dt'*Pe/Pe0 = sqrt(dt'/Pe0)
-	double sqrt_kbT2_dt = sqrt(2*kb_T/dt); // proportional to 1/Pe.
+	/**
+	   \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
+
+	   The generated Brownian force \f$F_B\f$ satisfies
+	   \f$ \langle F_\mathrm{B} \rangle = 0\f$ 
+	   and
+	   \f$\langle F_\mathrm{B} F_\mathrm{B}\rangle = \frac{2kT}{dt} A\f$ 
+	   where \f$A \f$ (in Jeffrey notations \cite
+	   jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady 
+	   \cite brady_stokesian_1988 notations) is the current resistance matrix
+	   stored in the stokes_solver.
+
+	   Note that it \b sets the rhs of the solver as \f$ rhs = F_B \f$.
+
+	   \f$ F_B\f$ is also stored in sys->brownian_force.
+	*/
+	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.brownian; // proportional to 1/Pe.
 	for (int i=0; i<linalg_size; i++) {
-		brownian_force[i] = sqrt_kbT2_dt*GRANDOM; // random vector A
+		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
@@ -945,7 +989,7 @@ System::setRepulsiveForceToParticle(){
 		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-				interaction[k].addUpRepulsiveForce();
+				interaction[k].repulsion.addUpForce();
 			}
 		}
 	}
@@ -997,7 +1041,7 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
 		// Back out the shear rate
-		dimensionless_shear_rate = 1; // To obtain normalized stress from repulsive force.
+		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
 		if (p.unscaled_contactmodel) {
@@ -1009,18 +1053,18 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				shear_rate_numerator -= shearstress_rep;
 			}
 			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
-			dimensionless_shear_rate = shear_rate_numerator/shearstress_hyd;
+			dimensionless_number = shear_rate_numerator/shearstress_hyd;
 			if (shear_strain < init_strain_shear_rate_limit) {
-				if (dimensionless_shear_rate > init_shear_rate_limit) {
-					dimensionless_shear_rate = init_shear_rate_limit;
+				if (dimensionless_number > init_shear_rate_limit) {
+					dimensionless_number = init_shear_rate_limit;
 				}
 			}
 			if (repulsiveforce) {
 				for (int i=0; i<np; i++) {
-					vel_repulsive[i] /= dimensionless_shear_rate;
-					ang_vel_repulsive[i] /= dimensionless_shear_rate;
-					vel_contact[i] /= dimensionless_shear_rate;
-					ang_vel_contact[i] /= dimensionless_shear_rate;
+					vel_repulsive[i] /= dimensionless_number;
+					ang_vel_repulsive[i] /= dimensionless_number;
+					vel_contact[i] /= dimensionless_number;
+					ang_vel_contact[i] /= dimensionless_number;
 				}
 				for (int i=0; i<np; i++) {
 					na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
@@ -1034,8 +1078,8 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				 * will be invesed later.
 				 */
 				for (int i=0; i<np; i++) {
-					vel_contact[i] /= dimensionless_shear_rate;
-					ang_vel_contact[i] /= dimensionless_shear_rate;
+					vel_contact[i] /= dimensionless_number;
+					ang_vel_contact[i] /= dimensionless_number;
 				}
 				for (int i=0; i<np; i++) {
 					na_velocity[i] = vel_hydro[i]+vel_contact[i];
@@ -1053,10 +1097,10 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 				shear_rate_numerator -= shearstress_rep;
 			}
 			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
-			dimensionless_shear_rate = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+			dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
-				vel_repulsive[i] /= dimensionless_shear_rate;
-				ang_vel_repulsive[i] /= dimensionless_shear_rate;
+				vel_repulsive[i] /= dimensionless_number;
+				ang_vel_repulsive[i] /= dimensionless_number;
 			}
 		}
 	} else {
@@ -1146,7 +1190,7 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 			ang_velocity[i] = na_ang_velocity[i];
 		}
 	}
-	if (dimensionless_shear_rate < 0) {
+	if (dimensionless_number < 0) {
 		shear_direction = -1;
 		vel_difference = -lz;
 		for (int i=0; i<np; i++) {
@@ -1323,14 +1367,14 @@ System::evaluateMaxAngVelocity(){
 
 double
 System::evaluateMinGap(){
-	double _min_gap_nondim = 100000;
+	double _min_reduced_gap = 100000;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].get_gap_nondim() < _min_gap_nondim) {
-			_min_gap_nondim = interaction[k].get_gap_nondim();
+			interaction[k].get_reduced_gap() < _min_reduced_gap) {
+			_min_reduced_gap = interaction[k].get_reduced_gap();
 		}
 	}
-	return _min_gap_nondim;
+	return _min_reduced_gap;
 }
 
 double
@@ -1391,7 +1435,7 @@ System::analyzeState(){
 	//	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
-	min_gap_nondim = evaluateMinGap();
+	min_reduced_gap = evaluateMinGap();
 	max_disp_tan = evaluateMaxDispTan();
 	max_fc_normal = evaluateMaxFcNormal();
 	max_fc_tan = evaluateMaxFcTangential();
@@ -1432,141 +1476,48 @@ averageList(list<double> &_list, bool remove_max_min){
 	}
 }
 
-void calcMean_StdDev(vector<double> history,
-					 double &mean,
-					 double &std_dev){
-	int ne = history.size();
-	double sum = 0;
-	for (int i=0; i<ne; i++) {
-		sum += history[i];
-	}
-	mean = sum/ne;
-	double sum_sq_deviation = 0;
-	for (int i=0; i<ne; i++) {
-		double tmp = history[i]-mean;
-		sum_sq_deviation += tmp*tmp;
-	}
-	std_dev = sqrt(sum_sq_deviation/(ne-1));
-}
 
-// int
-// System::adjustContactModelParameters(){
-// 	/*
-// 	 * kn, kt and dt are determined in one test simulation.
-// 	 * We give small values of kn and kt as the initial values.
-// 	 * With target values of spring strech,
-// 	 * spring constants are determined by the maximum foces in a certain interaval.
-// 	 * In order to avoid unusual large values of forces,
-// 	 * the maximum force in the interaval is defined by mean + std_dev of the maximum values.
-// 	 * Only increases of kn and kt are accepted.
-// 	 */
-// 	/* determination of kn
-// 	 */
-// 	cerr << "We should make a simpler rule." << endl;
-// 	exit(1);
-// 	//	double mean_max_fc_normal, stddev_max_fc_normal;
-// 	//	calcMean_StdDev(max_fc_normal_history, mean_max_fc_normal, stddev_max_fc_normal);
-// 	//	double kn_try = mean_max_fc_normal/p.overlap_target;
-// 	//	kn = kn_try;
-// 	//	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-// 	/* determination of kt
-// 	 */
-// 	//	double mean_max_fc_tan, stddev_max_fc_tan;
-// 	//	calcMean_StdDev(max_fc_tan_history, mean_max_fc_tan, stddev_max_fc_tan);
-// 	//	double kt_try = mean_max_fc_tan/p.disp_tan_target;
-// 	//	kt = kt_try;
-// 	//	double average_max_tanvelocity = 0;
-// 	//	double max_max_tanvelocity = 0;
-// 	//for (unsigned int j=0; j<sliding_velocity_history.size(); j++){
-// 	//	average_max_tanvelocity += sliding_velocity_history[j];
-// 	//	if (max_max_tanvelocity < sliding_velocity_history[j]){
-// 	//		max_max_tanvelocity = sliding_velocity_history[j];
-// 	//		}
-// 	//}
-// 	//average_max_tanvelocity = average_max_tanvelocity/sliding_velocity_history.size();
-// 	//	double average_max_relative_velocity = 0;
-// 	//	for (unsigned int j=0; j<relative_velocity_history.size(); j++){
-// 	//		average_max_relative_velocity += relative_velocity_history[j];
-// 	//	}
-// 	//	average_max_relative_velocity = average_max_relative_velocity/relative_velocity_history.size();
-// 	//	double tmp_max_velocity = 0;
-// 	//	if (average_max_relative_velocity > average_max_tanvelocity){
-// 	//		tmp_max_velocity = average_max_relative_velocity ;
-// 	//	} else {
-// 	//		tmp_max_velocity = average_max_tanvelocity ;
-// 	//	}
-// 	//	if (max_max_tanvelocity > 1000){
-// 	//		cerr << "max_max_tanvelocity = " << max_max_tanvelocity << endl;
-// 	//		return 1;
-// 	//	}
-// 	//	double dt_try = disp_max/tmp_max_velocity;
-// 	//	if (dt_try < p.dt_max){
-// 	//		dt = dt_try;
-// 	//	}
-// 	//	for (int k=0; k<nb_interaction; k++) {
-// 	//		interaction[k].contact.updateContactModel();
-// 	//	}
-// 	//	if (kn > p.max_kn){
-// 	//		cerr << "kn = " << kn << endl;
-// 	//		cerr << " kn > max_kn : exit" << endl;
-// 	//		return 1;
-// 	//	}
-// 	return 0;
-// }
-
-int
+void
 System::adjustContactModelParameters(){
-	analyzeState();
-	// Calculate a time average with an exponential memory kernel
-	static double previous_kernel_norm = 1;
-	static double previous_overlap_avg = 0;
-	static double previous_max_disp_tan_avg = 0;
-	static double previous_shear_strain = 0;
-	static double previous_kn_avg = 0;
-	static double previous_kt_avg = 0;
-	
-	//	double memory_shear_strain = 0.01;
-	double deltat = (shear_strain-previous_shear_strain);
-	double etn = exp(-deltat/p.memory_strain_avg);
-	
-	double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
-	if (previous_shear_strain == 0) {
-		inv_kernel_norm=1/deltat;
-	}
-	
-	double overlap = 0;
-	if(min_gap_nondim<0){
-		overlap = -min_gap_nondim;
-	}
-	
-	double overlap_avg = inv_kernel_norm*( overlap*deltat + etn*previous_overlap_avg/previous_kernel_norm );
-	double max_disp_tan_avg = inv_kernel_norm*( max_disp_tan*deltat + etn*previous_max_disp_tan_avg/previous_kernel_norm );
-	double kn_avg = inv_kernel_norm*( kn*deltat + etn*previous_kn_avg/previous_kernel_norm );
-	double kt_avg = inv_kernel_norm*( kt*deltat + etn*previous_kt_avg/previous_kernel_norm );
-	
-	
-	cout << shear_strain << " " << overlap << " " << max_disp_tan << " " << overlap_avg << " " << max_disp_tan_avg << endl;
-	//	max_disp_tan;
-	
-	previous_shear_strain = shear_strain;
-	previous_kernel_norm = inv_kernel_norm;
-	previous_overlap_avg = overlap_avg;
-	previous_max_disp_tan_avg = max_disp_tan_avg;
-	previous_kn_avg = kn_avg;
-	previous_kt_avg = kt_avg;
-	
-	double limiting_change = 0.05;
-	double kn_target = kn_avg*overlap_avg/p.overlap_target;
-	double dkn = (kn_target-kn)*deltat/p.memory_strain_k;
-	
-	// if(dkn>limiting_change*kn){
-	// 	dkn = limiting_change*kn;
-	// }
-	// if(dkn<-limiting_change*kn){
-	// 	dkn = -limiting_change*kn;
-	// }
+	/**
+	 * This method tries to determine 
+	 * the values of the contact parameters kn, kt 
+	 * required to reach given maximum normal / tangential spring stretches
+	 * (= overlap / tangential displacement ) in steady state.
+	 * 
+	 * The algorithm is a simple adaptative scheme trying to resp. increase or decrease
+	 * the spring constants when the stretches are too large or too small. 
+	 * It works reasonably well away from transitions. 
+	 * Close to discontinuous shear thickening, one cannot expect satisfying results, 
+	 * as gigantic stress fluctuations confuse the algorithm.
+	 *
+	 * The stretch values used are average of maximal values 
+	 * weighted with an exponential memory kernel:
+	 *    \f$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
+	 * where \f$\gamma_{avg}\f$ is the user-defined parameter ParameterSet::memory_strain_avg.
+	 * 
+	 * The kn and kt are bounded by user-defined parameters ParameterSet::min_kn, ParameterSet::max_kn, ParameterSet::min_kt, ParameterSet::max_kn.
+	 *
+	 * The target stretches are given by ParameterSet::overlap_target and ParameterSet::disp_tan_target.
+	 *
+	 * Additionally, this routine estimates the time step dt.
+	 */
 
-	cout << kn << " " << kn_target << " " << kn_avg << " " << overlap_avg << " " << p.overlap_target << endl;
+	analyzeState();
+
+	double overlap = -min_reduced_gap;
+	
+	overlap_avg->update(overlap, shear_strain);
+	max_disp_tan_avg->update(max_disp_tan, shear_strain);
+    kn_avg->update(kn, shear_strain);
+	kt_avg->update(kt, shear_strain);
+
+ 	static double previous_shear_strain = 0;
+	double deltagamma = (shear_strain-previous_shear_strain);
+	
+	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
+	double dkn = (kn_target-kn)*deltagamma/p.memory_strain_k;
+	
 	kn += dkn;
 	if(kn<p.min_kn){
 		kn = p.min_kn;
@@ -1575,16 +1526,10 @@ System::adjustContactModelParameters(){
 		kn = p.max_kn;
 	}
 
-
 	
-	double kt_target = kt_avg*max_disp_tan_avg/p.disp_tan_target;
-	double dkt = (kt_target-kt)*deltat/p.memory_strain_k;
-	// if(dkt>limiting_change*kt){
-	// 	dkt = limiting_change*kt;
-	// }
-	// if(dkt<-limiting_change*kt){
-	// 	dkt = -limiting_change*kt;
-	// }
+	double kt_target = kt_avg->get()*max_disp_tan_avg->get()/p.disp_tan_target;
+	double dkt = (kt_target-kt)*deltagamma/p.memory_strain_k;
+
 	kt += dkt;
 	if(kt<p.min_kt){
 		kt = p.min_kt;
@@ -1599,13 +1544,8 @@ System::adjustContactModelParameters(){
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-	// // adapt time step
-	// double relative_change = dkn/kn;
-	// if (dkt/kt>relative_change){
-	// 	relative_change = dkt/kt;
-	// }
-	// dt += -dt*relative_change;
-	cout << dt << " " << kn << " " << kt << endl;
+
+	previous_shear_strain = shear_strain;
 }
 
 void
