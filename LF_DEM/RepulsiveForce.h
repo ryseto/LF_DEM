@@ -52,7 +52,6 @@ private:
 	void addUpForce();
 	inline double getForceNorm(){return force_norm;}
 	vec3d getForceVector(){return force_vector;}
-
 	void calcStressXF();
 	StressTensor getStressXF(){return stresslet_XF;}
 	
