@@ -465,10 +465,14 @@ System::initializeBoxing(){// need to know radii first
 	double max_radius = 0;
 	double second_max_radius = 0;
 	for (int i=0; i < np; i++) {
+		if (radius[i] <= max_radius && radius[i] > second_max_radius) {
+			second_max_radius = radius[i];
+		}
 		if (radius[i] > max_radius) {
 			second_max_radius = max_radius;
 			max_radius = radius[i];
 		}
+
 	}
 	boxset.init(lub_max_gap+second_max_radius+max_radius, this);
 	for (int i=0; i<np; i++) {
