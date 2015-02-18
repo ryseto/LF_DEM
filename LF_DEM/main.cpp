@@ -10,6 +10,9 @@
 #include <getopt.h>
 #include "Simulation.h"
 #include "GenerateInitConfig.h"
+#ifndef GIT_VERSION
+#include "VersionInfo.h"
+#endif
 #define no_argument 0
 #define required_argument 1
 #define optional_argument 2
@@ -21,6 +24,7 @@ void incompatibility_exiting(string a, string b){
 
 int main(int argc, char **argv)
 {
+	cerr << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-p Peclet_Num ] [-c Scaled_Critical_Load ] \
 	[-r Scaled_Repulsion ] [-s Stress ] [-a Scaled_Cohesion ] \
 	[-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] [-n]\
