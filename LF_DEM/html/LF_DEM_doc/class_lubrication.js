@@ -54,6 +54,7 @@ var class_lubrication =
     [ "scaledYM3", "class_lubrication.html#a15a750ea21a806f7c5a7693a8eb3af01", null ],
     [ "setResistanceCoeff", "class_lubrication.html#abb1f9d2be2d885da124f9f237ee2d32d", null ],
     [ "setResistanceCoeffTang", "class_lubrication.html#a60d29d09ebf48a3775216a51a4c6020a", null ],
+    [ "updateResistanceCoeff", "class_lubrication.html#a40d8720383a2b32b0ba85e7af8c6ea0f", null ],
     [ "a0", "class_lubrication.html#a8aab3039d2253fad7dad980770784008", null ],
     [ "a0a0_23", "class_lubrication.html#a6cbdaa5976cbfc240d08c66b982f77e5", null ],
     [ "a0a0a0_109", "class_lubrication.html#a716a0c8ab7a6687101b7f735cc54dd40", null ],

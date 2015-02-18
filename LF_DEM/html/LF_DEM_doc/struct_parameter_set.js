@@ -11,7 +11,7 @@ var struct_parameter_set =
     [ "kn", "struct_parameter_set.html#a44d27130189d0b9c986078c3d3828ecb", null ],
     [ "kr", "struct_parameter_set.html#a61ff41c569015d7e01f2791407e1a85c", null ],
     [ "kt", "struct_parameter_set.html#af711f75072215d8b371f9fd68ff0f0f7", null ],
-    [ "lub_max", "struct_parameter_set.html#a945170b3bd9762b1d12329c661e45cd1", null ],
+    [ "lub_max_gap", "struct_parameter_set.html#a7651be3c755be367a7a1047de63e6c79", null ],
     [ "lub_reduce_parameter", "struct_parameter_set.html#a72f2ed681dafae96f563d91d1e978355", null ],
     [ "lubrication_model", "struct_parameter_set.html#a4fdc2f2c4c18f0a7a89dc966001ff949", null ],
     [ "max_kn", "struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943", null ],

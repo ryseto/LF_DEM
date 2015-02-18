@@ -1,6 +1,6 @@
 var annotated =
 [
-    [ "Averager", "class_averager.html", "class_averager" ],
+    [ "Averager< XType >", "class_averager.html", "class_averager" ],
     [ "Box", "class_box.html", "class_box" ],
     [ "BoxSet", "class_box_set.html", "class_box_set" ],
     [ "Contact", "class_contact.html", "class_contact" ],

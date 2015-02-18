@@ -1,7 +1,7 @@
 var class_interaction =
 [
     [ "Interaction", "class_interaction.html#aadfd0e254296043c26508d47090ace76", null ],
-    [ "activate", "class_interaction.html#a51ef13d37a1d08ee93a0106c6afd24dc", null ],
+    [ "activate", "class_interaction.html#a4735642bf99495e8c8b24921851598f9", null ],
     [ "calcNormalVectorDistanceGap", "class_interaction.html#a8eceb6c64cbeffbe84b2a688a10b0708", null ],
     [ "calcRelativeVelocities", "class_interaction.html#a6ee3e08c455a729a687d87124a9a7216", null ],
     [ "calcRollingVelocities", "class_interaction.html#aa6d1c13c4fca9c1e49f12953ba5708fb", null ],
@@ -27,7 +27,6 @@ var class_interaction =
     [ "partner", "class_interaction.html#a450274be9a41eeb45e058efe6c873e25", null ],
     [ "set_label", "class_interaction.html#af76e3abb64010e8cfd0960015c183da0", null ],
     [ "set_ro", "class_interaction.html#a366b38a0b68561fefac6c70d36cd4bc2", null ],
-    [ "updateResistanceCoeff", "class_interaction.html#a23851f0bfcd9fddb4df6677b97fb748e", null ],
     [ "updateState", "class_interaction.html#a9b91a18ad31902e723e4214c6686b67f", null ],
     [ "Contact", "class_interaction.html#a76d4b1c8c6040df20040808941b7e764", null ],
     [ "Lubrication", "class_interaction.html#aa4bcc75aa3d3b6683a3de6ca8b734f47", null ],
@@ -37,7 +36,7 @@ var class_interaction =
     [ "active", "class_interaction.html#afbad0d4d970c66effbce1b9a01b3c988", null ],
     [ "contact", "class_interaction.html#ab6d6fd67f6a25a35100732b68dd31827", null ],
     [ "contact_state_changed_after_predictor", "class_interaction.html#aa019e897ffc0246dbb7567cf7216f1c1", null ],
-    [ "interaction_range_scaled", "class_interaction.html#ad8d9dc8cedba2cc8ceca47004b11a6a7", null ],
+    [ "interaction_range", "class_interaction.html#aa615d2c7d48d5a86011fc95c209793e3", null ],
     [ "label", "class_interaction.html#ae2c9211f4f6016d136ec70dee3076ccd", null ],
     [ "lubrication", "class_interaction.html#add3b7e8ca402dcbb011d43087f8584b9", null ],
     [ "nvec", "class_interaction.html#ac9038b9c7398554da12cd23efe5e6d36", null ],
