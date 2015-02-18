@@ -30,7 +30,8 @@ LF_DEM
 *.sh
 
 #subdirectories
-LF_DEM*/
+LF_DEM.dSYM/
+LF_DEM.dtps/
 
 # archives
 *.gz

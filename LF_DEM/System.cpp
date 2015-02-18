@@ -214,7 +214,7 @@ System::updateUnscaledContactmodel(){
 		 * For destressing tests, the spring constants are fixed at the previous values.
 		 */
 		if (!cohesion) {
- 		kn = kn_master*abs(target_stress);
+			kn = kn_master*abs(target_stress);
 			kt = kt_master*abs(target_stress);
 			kr = kr_master*abs(target_stress);
 		} else {
@@ -222,6 +222,7 @@ System::updateUnscaledContactmodel(){
 			kt = kt_master;
 			kr = kr_master;
 		}
+		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	if (lubrication_model == 1) {
@@ -1385,6 +1386,9 @@ System::evaluateMinGap(){
 		if (interaction[k].is_active() &&
 			interaction[k].get_reduced_gap() < _min_reduced_gap) {
 			_min_reduced_gap = interaction[k].get_reduced_gap();
+			// unsigned short i, j;
+			// interaction[k].get_par_num(i,j);
+			// cout << i << " " << j << " " << interaction[k].get_a0() << " " << interaction[k].get_a1() << " " << interaction[k].get_reduced_gap() << endl;
 		}
 	}
 	return _min_reduced_gap;
