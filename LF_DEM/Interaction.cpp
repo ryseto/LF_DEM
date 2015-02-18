@@ -40,7 +40,7 @@ Interaction::calcNormalVectorDistanceGap(){
  * Always j>i is satisfied.
  */
 void
-Interaction::activate(unsigned short i, unsigned short j){
+Interaction::activate(unsigned short i, unsigned short j, double range){
 	active = true;
 	if (j > i) {
 		p0 = i;
@@ -58,7 +58,7 @@ Interaction::activate(unsigned short i, unsigned short j){
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
 	set_ro(a0+a1); // ro=a0+a1
-	interaction_range_scaled = ro + sys->get_lub_max_gap();
+	interaction_range = range;
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -139,7 +139,7 @@ Interaction::updateState(bool &deactivated){
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-		} else if (r > interaction_range_scaled) {
+		} else if (r > interaction_range) {
 			/* all interaction is switched off. */
 			deactivate();
 			deactivated = true;

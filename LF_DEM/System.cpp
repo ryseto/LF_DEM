@@ -303,6 +303,7 @@ System::setupSystem(string control){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
+	calcInteractionRange = &System::calcLubricationRange;
 	friction = false;
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
@@ -461,20 +462,25 @@ System::setupSystem(string control){
 }
 
 void
-System::initializeBoxing(){// need to know radii first
-	double max_radius = 0;
-	double second_max_radius = 0;
-	for (int i=0; i < np; i++) {
-		if (radius[i] <= max_radius && radius[i] > second_max_radius) {
-			second_max_radius = radius[i];
-		}
-		if (radius[i] > max_radius) {
-			second_max_radius = max_radius;
-			max_radius = radius[i];
-		}
+System::initializeBoxing(){
+	/** 
+		\brief Initialize the boxing system.
+		
+		Initialize the BoxSet instance using as a minimal Box size the maximal interaction range between any two particles in the System.
+	*/
 
+	double range;
+	double max_range=0;
+	for (int i=0; i < np-1; i++) { // N^2 init, sorry :(
+		for (int j=i+1; j < np; j++) {
+			range = (this->*calcInteractionRange)(i,j);
+			if(range>max_range){
+				max_range = range;
+			}
+		}
 	}
-	boxset.init(lub_max_gap+second_max_radius+max_radius, this);
+	boxset.init(max_range, this);
+	
 	for (int i=0; i<np; i++) {
 		boxset.box(i);
 	}
@@ -483,7 +489,10 @@ System::initializeBoxing(){// need to know radii first
 
 void
 System::timeStepBoxing(const double strain_increment){
-	// evolve PBC
+	/** 
+		\brief Apply a strain step to the boxing system.
+	*/
+
 	if (!zero_shear) {
 		shear_strain += strain_increment;
 		shear_disp += strain_increment*lz;
@@ -759,8 +768,8 @@ System::checkNewInteraction(){
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double ro_lub = radius[i]+radius[*it]+lub_max_gap;
-					double sq_dist_lim = ro_lub*ro_lub;
+					double range = (this->*calcInteractionRange)(i,*it);
+					double sq_dist_lim = range*range;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
 						if (deactivated_interaction.empty()) {
@@ -773,7 +782,7 @@ System::checkNewInteraction(){
 							deactivated_interaction.pop();
 						}
 						// new interaction
-						interaction[interaction_new].activate(i, *it);
+						interaction[interaction_new].activate(i, *it, range);
 					}
 				}
 			}
@@ -1457,30 +1466,6 @@ System::setSystemVolume(double depth){
 	}
 }
 
-double
-averageList(list<double> &_list, bool remove_max_min){
-	double sum = 0;
-	double max_one = 0;
-	double min_one = 999999;
-	for(list<double>::iterator j=_list.begin(); j != _list.end(); ++j) {
-		if (remove_max_min) {
-			if (*j > max_one) {
-				max_one = *j;
-			}
-			if (*j < min_one) {
-				min_one = *j;
-			}
-		}
-		sum += *j;
-	}
-	if (remove_max_min) {
-		return (sum-max_one-min_one)/(_list.size()-2);
-	} else {
-		return sum/_list.size();
-	}
-}
-
-
 void
 System::adjustContactModelParameters(){
 	/**
@@ -1579,4 +1564,8 @@ System::calcLubricationForce(){
 }
 
 
-
+double
+System::calcLubricationRange(const int& i, const int& j){
+//System::calcLubricationRange(int i, int j){
+	return radius[i]+radius[j]+lub_max_gap;
+}

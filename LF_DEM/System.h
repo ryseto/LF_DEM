@@ -87,7 +87,10 @@ private:
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
-	void print_res();
+	double (System::*calcInteractionRange)(const int&, const int&);
+	double calcLubricationRange(const int&, const int&);
+	//	double (System::*calcInteractionRange)(int, int);
+	//	double calcLubricationRange(int, int);
 	double evaluateMinGap();
 	double evaluateMaxDispTan();
 	double evaluateMaxFcNormal();

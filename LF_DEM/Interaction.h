@@ -65,7 +65,7 @@ private:
 	vec3d relative_velocity;
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
-	double interaction_range_scaled;  // max distance for lubrication
+	double interaction_range;  // max distance
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -107,7 +107,7 @@ private:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool &deactivated);
-	void activate(unsigned short i, unsigned short j);
+	void activate(unsigned short i, unsigned short j, double range);
 	void deactivate();
 	inline bool is_overlap(){return r < ro;}
 	inline bool is_contact(){return contact.state >= 1;}
