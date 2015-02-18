@@ -112,6 +112,7 @@ private:
 	double g2_YM;
 	double g2_inv_YM;
 	double g5_YM;
+	
  public:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
@@ -132,6 +133,7 @@ private:
 							   const vec3d &oi, const vec3d &oj,
 							   StressTensor &stresslet_i, StressTensor &stresslet_j);
 	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
+	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
@@ -177,5 +179,6 @@ private:
 	inline double scaledYM2(){return rororo_536*YM[2];}
 	inline double scaledXM3(){return a1a1a1_109*XM[3];}
 	inline double scaledYM3(){return a1a1a1_109*YM[3];}
+
 };
 #endif /* defined(__LF_DEM__Lubrication__) */

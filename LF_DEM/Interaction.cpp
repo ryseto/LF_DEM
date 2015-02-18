@@ -36,48 +36,6 @@ Interaction::calcNormalVectorDistanceGap(){
 	reduced_gap = r/ro_12-2;
 }
 
-void
-Interaction::updateResistanceCoeff(){
-	if (contact.state > 0) {
-		if (!contact_state_changed_after_predictor) {
-			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
-										   sys->log_lub_coeff_contact_tan_total);
-		} else {
-			/*
-			 * This is only brownian
-			 */
-			/* This is to avoid discontinous change.
-			 * Before the predictor, particles are apart.
-			 * The displacement in the predictor makes the particles in contact.
-			 * In the corrector of the same time step,
-			 * the resistance coeffient is set to the maximum value of separating state.
-			 * Thus, no drift force is generated.
-			 */
-			double lub_coeff = 1/sys->lub_reduce_parameter;
-			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
-		}
-	} else {
-		if (!contact_state_changed_after_predictor) {
-			double lub_coeff = 1/(reduced_gap+sys->lub_reduce_parameter);
-			lubrication.setResistanceCoeff(lub_coeff, log(lub_coeff));
-		} else {
-			/*
-			 * This is only brownian
-			 */
-			/* This is to avoid discontinous change.
-			 * Before the predictor, the particles are in contact.
-			 * The displacement in the predictor makes particles apart.
-			 * In the corrector for the same time step,
-			 * the resistance coeffient is set to the ones used in contact state.
-			 * Thus, no drift force is generated.
-			 */
-			lubrication.setResistanceCoeff(sys->lub_coeff_contact,
-										   sys->log_lub_coeff_contact_tan_total);
-			
-		}
-	}
-}
-
 /* Activate interaction between particles i and j.
  * Always j>i is satisfied.
  */
@@ -120,8 +78,8 @@ Interaction::activate(unsigned short i, unsigned short j){
 		contact.deactivate();
 	}
 	contact_state_changed_after_predictor = false;
-	updateResistanceCoeff();
 	lubrication.getInteractionData();
+	lubrication.updateResistanceCoeff();
 	lubrication.calcLubConstants();
 }
 
@@ -188,7 +146,7 @@ Interaction::updateState(bool &deactivated){
 			return;
 		}
 	}
-	updateResistanceCoeff();
+	lubrication.updateResistanceCoeff();
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}

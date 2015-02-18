@@ -70,9 +70,24 @@ private:
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	void updateResistanceCoeff();
-protected:
-public:
+	inline void set_ro(double val){
+		ro = val; // ro = a0 + a1
+		ro_12 = ro/2;
+	};
+	void calcNormalVectorDistanceGap();
+
+	void calcRelativeVelocities();
+	void calcRollingVelocities();
+	void integrateStress();
+
+	//===== forces/stresses  ========================== //
+		/* To avoid discontinous change between predictor and corrector,
+	 * the change of contact state is informed in updateResiCoeff.
+	 */
+	bool contact_state_changed_after_predictor;
+
+ protected:
+ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
@@ -98,7 +113,7 @@ public:
 	inline bool is_contact(){return contact.state >= 1;}
 	inline bool is_friccontact(){return contact.state >= 2;}
 	inline bool is_active(){return active;}
-	void calcNormalVectorDistanceGap();
+
 	//======= particles data  ====================//
 	inline int partner(unsigned int i){
 		return (i == p0 ? p1 : p0);
@@ -110,26 +125,17 @@ public:
 	inline unsigned int get_label(){return label;}
 	inline double get_a0(){return a0;}
 	inline double get_a1(){return a1;}
-	inline void set_ro(double val){
-		ro = val; // ro = a0 + a1
-		ro_12 = ro/2;
-	};
 	inline double get_ro(){return ro;}
 	//======= relative position/velocity  ========//
 	inline double get_r(){return r;}
 	inline double get_reduced_gap(){return reduced_gap;}
 	inline double get_gap(){return r-ro;}
 	inline vec3d get_nvec(){return nvec;}
-	double getContactVelocity();
-	double getRelativeVelocity(){return relative_velocity.norm();}
-	//===== forces/stresses  ========================== //
-	void calcRelativeVelocities();
-	void calcRollingVelocities();
+	//	double getNormalVelocity(){return dot(relative_velocity, nvec);};
 	double getNormalVelocity();
-	void integrateStress();
-	/* To avoid discontinous change between predictor and corrector,
-	 * the change of contact state is informed in updateResiCoeff.
-	 */
-	bool contact_state_changed_after_predictor;
+	double getRelativeVelocity(){return relative_velocity.norm();}
+	double getContactVelocity();
+	//	double getContactVelocity(){return (contact.state == 0 ? 0 : relative_surface_velocity.norm()); };
+
 };
 #endif /* defined(__LF_DEM__Interaction__) */
