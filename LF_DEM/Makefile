@@ -172,5 +172,5 @@ clean:
 
 
 doc:
-	doxygen Doxyfile
+	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
 
