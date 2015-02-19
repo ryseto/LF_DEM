@@ -1573,5 +1573,6 @@ System::calcLubricationForce(){
 
 double
 System::calcLubricationRange(const int& i, const int& j){
-	return radius[i]+radius[j]+lub_max_gap;
+	double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+	return radius[i]+radius[j]+lub_max_gap*minradius;
 }
