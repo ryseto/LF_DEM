@@ -106,8 +106,6 @@ Contact::incrementDisplacements(){
 	}
 }
 
-
-
 void
 Contact::calcContactInteraction(){
 	/** 

@@ -44,6 +44,7 @@ System::calcStressPerParticle(){
 			} else if (lubrication_model == 2) {
 				interaction[k].lubrication.calcXYFunctionsStress();
 			} else {
+				cerr << "lubrication_model = " << lubrication_model << endl;
 				cerr << "lubrication_model = 3 is not implemented" << endl;
 				exit(1);
 			}
