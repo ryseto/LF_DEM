@@ -25,6 +25,13 @@ GenerateInitConfig::generate(int rand_seed_){
 	sys.in_predictor = false;
 	sys.set_integration_method(0);
 	putRandom();
+	
+	double inflate_ratio = 1.03;
+	for (int i=0; i<np;i++) {
+		sys.radius[i] *= inflate_ratio;
+	}
+
+
 	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
@@ -53,13 +60,25 @@ GenerateInitConfig::generate(int rand_seed_){
 	do {
 		energy = zeroTMonteCarloSweep();
 		cerr << energy << endl;
+		diff_energy = energy-energy_previous;
+		energy_previous = energy;
 		if (count % 100 == 0) {
-			diff_energy = energy-energy_previous;
 			fout << count << ' ' << energy << ' ' <<  diff_energy << endl;
-			energy_previous = energy;
 		}
 		count ++;
-	} while (abs(diff_energy) > 1e-4);
+	} while (abs(diff_energy) > 1e-7);
+
+
+	//deflate
+	for (int i=0; i < np; i++) {
+		if (i < np1) {
+			sys.radius[i] = a1;
+		} else {
+			sys.radius[i] = a2;
+		}
+	}
+
+
 	position.resize(np);
 	radius.resize(np);
 	for (int i=0; i<sys.get_np(); i++) {
@@ -320,9 +339,9 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 		double energy_pre_move = particleEnergy(moved_part);
 		vec3d trial_move;
 		if (sys.twodimension) {
-			trial_move = randUniformCircle(0.02);
+			trial_move = randUniformCircle(0.04);
 		} else {
-			trial_move = randUniformSphere(0.02);
+			trial_move = randUniformSphere(0.04);
 		}
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);
