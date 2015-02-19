@@ -339,7 +339,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
-		if (abs(sys.dimensionless_number) < 1e-4 ){
+		if (abs(sys.dimensionless_number) < 1e-5){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
@@ -390,6 +390,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		exit(1);
 	} else if (seq_type == "B") {
 		cerr << "Cohesive force" << endl;
+		sys.set_shear_rate(1);
 		sys.repulsiveforce = false;
 		sys.cohesion = true;
 		sys.cohesive_force = 1;
@@ -400,10 +401,9 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	}
 	setDefaultParameters();
 	readParameterFile();
- 	if(binary_conf){
+ 	if (binary_conf) {
 		importConfigurationBinary();
-	}
-	else{
+	} else {
 		importInitialPositionFile();
 	}
 	if (input_files[3] != "not_given") {
@@ -415,7 +415,6 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		time_interval_output_data = -1;
 		time_interval_output_config = -1;
 	}
-	
 	p.integration_method = 0;
 	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
@@ -433,7 +432,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		
 	double strain;
 	double targ_st;
-	while (fin_seq >> strain >> targ_st){
+	while (fin_seq >> strain >> targ_st) {
 		strain_sequence.push_back(strain);
 		rsequence.push_back(targ_st);
 	}
@@ -445,7 +444,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	double time_output_data = 0;
 	double time_output_config = 0;
 	int jammed = 0;
-	for (unsigned int step = 0; step<strain_sequence.size(); step++){
+	for (unsigned int step = 0; step<strain_sequence.size(); step++) {
 		/* The target stress (``rsequence'') is given trough the command argument
 		 * with an unit stres: eta_0*gammmadot_0.
 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
@@ -483,7 +482,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 					cnt_config_out ++;
 				}
 			}
- 			if (abs(sys.dimensionless_number) < 1e-4 ){
+ 			if (abs(sys.dimensionless_number) < p.rest_threshold) {
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
 				if (jammed > 10) {
@@ -605,6 +604,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 		p.min_kt = atof(value.c_str());
 	} else if (keyword == "max_kt") {
 		p.max_kt = atof(value.c_str());
+	} else if (keyword == "rest_threshold") {
+		p.rest_threshold = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -796,6 +797,7 @@ Simulation::setDefaultParameters(){
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
+	p.rest_threshold = 1e-4;
 	
 	p.integration_method = 1;
 

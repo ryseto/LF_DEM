@@ -15,6 +15,7 @@ struct ParameterSet{
 	
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector
 
+	double rest_threshold; ///< criteria to judge saturation of deformation, i.e. jammed state etc.
 	/*
 	 * Stokes drag coeffient
 	 */
