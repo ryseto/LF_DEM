@@ -155,6 +155,7 @@ System::allocateRessources(){
 
 void
 System::setInteractions_GenerateInitConfig(){
+	calcInteractionRange = &System::calcLubricationRange;
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
