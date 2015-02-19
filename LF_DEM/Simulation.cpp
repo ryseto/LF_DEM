@@ -184,7 +184,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
 				cerr << "Cohesive force" << endl;
 				sys.dimensionless_number = ratio_cohesion;
-				sys.cohesive_force = 1/ratio_cohesion;
+				/* In the rate control simulation,
+				 * dimensionless_cohesive_force can be given.
+				 */
+				/* @@@@@@@@@@@@@@@
+				 */
+				//sys.cohesive_force = 1/ratio_cohesion;
 				string_control_parameters << "_a" << ratio_cohesion;
 			} else if (ratio_repulsion > 0 && ratio_cohesion > 0) {
 				cerr << "Repulsive force + Cohesive force" << endl;
@@ -220,7 +225,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				cerr << "Cohesive force" << endl;
 				p.unscaled_contactmodel = false;
 				sys.cohesion = true;
-				//sys.dimensionless_number = ratio_cohesion;
 				sys.cohesive_force = 1;
 				sys.target_stress_input = ratio_cohesion;
 				sys.target_stress = ratio_cohesion/6/M_PI;

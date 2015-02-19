@@ -8,6 +8,7 @@
 
 #include "System.h"
 #include <sstream>
+#include <cmath>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
@@ -139,14 +140,14 @@ System::allocateRessources(){
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
 	stokes_solver.init(np);
-	
-	if(p.auto_determine_knkt){
+	//
+	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
 		kt_avg = new Averager<double>(p.memory_strain_avg);
 		overlap_avg = new Averager<double>(p.memory_strain_avg);
 		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
 	}
-	if(lowPeclet){
+	if (lowPeclet) {
 		double stress_avg_relaxation_parameter = 0; // 0 --> no average
 		stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 	}
@@ -178,7 +179,7 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 						 double lx_, double ly_, double lz_){
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
-
+	
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
@@ -189,16 +190,20 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 	} else {
 		twodimension = false;
 	}
-
 	if (twodimension) {
-		setSystemVolume(2*radius[np-1]);
+		/* [note]
+		 * The depth of mono-layer is the diameter of the largest particles.e
+		 * The sample needs to be labeled from smaller particles to larger particles
+		 * in the configuration file.
+		 */
+		double largest_diameter = 2*radius[np-1];
+		setSystemVolume(largest_diameter);
 	} else {
 		setSystemVolume();
 	}
-
 	double particle_volume = 0;
 	for (int i=0; i<np; i++) {
-		particle_volume += (4*M_PI/3)*radius[i]*radius[i]*radius[i];
+		particle_volume += (4*M_PI/3)*pow(radius[i],3);
 	}
 	volume_fraction = particle_volume/system_volume;
 	cerr << "volume_fraction = " << volume_fraction << endl;
@@ -272,8 +277,7 @@ System::setupBrownian(){
 			cerr << "  dt = " << p.dt << endl;
 			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
 			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
-		}
-		else{
+		} else {
 			lowPeclet = true;
 		}
 	}
@@ -286,7 +290,7 @@ System::setupSystem(string control){
 	 * @ The resistance coeffient affects Brownian force.
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
-
+	
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -464,24 +468,22 @@ System::setupSystem(string control){
 
 void
 System::initializeBoxing(){
-	/** 
+	/**
 		\brief Initialize the boxing system.
 		
 		Initialize the BoxSet instance using as a minimal Box size the maximal interaction range between any two particles in the System.
-	*/
-
+	 */
 	double range;
-	double max_range=0;
+	double max_range = 0;
 	for (int i=0; i < np-1; i++) { // N^2 init, sorry :(
 		for (int j=i+1; j < np; j++) {
 			range = (this->*calcInteractionRange)(i,j);
-			if(range>max_range){
+			if (range > max_range) {
 				max_range = range;
 			}
 		}
 	}
 	boxset.init(max_range, this);
-	
 	for (int i=0; i<np; i++) {
 		boxset.box(i);
 	}
@@ -490,15 +492,14 @@ System::initializeBoxing(){
 
 void
 System::timeStepBoxing(const double strain_increment){
-	/** 
+	/**
 		\brief Apply a strain step to the boxing system.
-	*/
-
+	 */
 	if (!zero_shear) {
 		shear_strain += strain_increment;
 		shear_disp += strain_increment*lz;
 		int m = (int)(shear_disp/lx);
-		if (shear_disp < 0){
+		if (shear_disp < 0) {
 			m--;
 		}
 		shear_disp = shear_disp-m*lx;
@@ -509,11 +510,11 @@ System::timeStepBoxing(const double strain_increment){
 void
 System::timeEvolutionEulersMethod(bool calc_stress){
 	/**
-	   \brief One full time step, predictor-corrector method.
-
-	   This method is never used when running a Brownian simulation.
-	*/
-
+	 \brief One full time step, Euler's method.
+	 
+	 This method is never used when running a Brownian simulation.
+	 */
+	
 	in_predictor = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
@@ -531,53 +532,53 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 void
 System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	/**
-	   \brief One full time step, predictor-corrector method.
-
-	   This method is always used when running a Brownian simulation.
-
-	   ### non-Brownian Case
-
-	   Simple mid-point method to solve at dt^2 order
-	   \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} \f$
-	   where \f$\bm{A} \f$ (in Jeffrey notations \cite
-	   jeffrey_calculation_1992, that is \f$\bm{R}_{\mathrm{FU}}\f$ in Bossis and Brady 
-	   \cite brady_stokesian_1988 notations) is the current resistance matrix
-	   stored in the stokes_solver, and \f$\bm{F} \f$ are the forces included by the parameter files. 
-	
-	   - 1st step:
-	     - \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) )  \f$
-	     - \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$ 
-	   
-	   - 2nd step:
-	     - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} )  \f$
-	     - \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
-
-	   ### Brownian Case
-
-	   This routine implements a two-step algorithm for the dynamics with Brownian motion,
-	   initially derived by Fixman \cite fixman_1978.
-	   The basis of this algorithm is exposed in \cite Ball_1997 and \cite banchio_accelerated_2003.
-	   
-	   The equation of motion is:
-	   \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} \f$
-	   with 
-	   \f$ \langle \bm{F}_\mathrm{B} \rangle = 0\f$ 
-	   and
-	   \f$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}\f$,
-	   and \f$\bm{F} \f$ are all the other forces included by the parameter files. 
-
-	    Reminding that we obtain the Cholesky decomposition \f$ \bm{A} = \bm{L} \bm{L}^T \f$ in the stokes_solver,
-	    we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
+	 \brief One full time step, predictor-corrector method.
+	 
+	 This method is always used when running a Brownian simulation.
+	 
+	 ### non-Brownian Case
+	 
+	 Simple mid-point method to solve at dt^2 order
+	 \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} \f$
+	 where \f$\bm{A} \f$ (in Jeffrey notations \cite
+	 jeffrey_calculation_1992, that is \f$\bm{R}_{\mathrm{FU}}\f$ in Bossis and Brady
+	 \cite brady_stokesian_1988 notations) is the current resistance matrix
+	 stored in the stokes_solver, and \f$\bm{F} \f$ are the forces included by the parameter files.
+	 
+	 - 1st step:
+	 - \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) )  \f$
+	 - \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$
+	 
+	 - 2nd step:
+	 - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} )  \f$
+	 - \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
+	 
+	 ### Brownian Case
+	 
+	 This routine implements a two-step algorithm for the dynamics with Brownian motion,
+	 initially derived by Fixman \cite fixman_1978.
+	 The basis of this algorithm is exposed in \cite Ball_1997 and \cite banchio_accelerated_2003.
+	 
+	 The equation of motion is:
+	 \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} \f$
+	 with
+	 \f$ \langle \bm{F}_\mathrm{B} \rangle = 0\f$
+	 and
+	 \f$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}\f$,
+	 and \f$\bm{F} \f$ are all the other forces included by the parameter files.
+	 
+	 Reminding that we obtain the Cholesky decomposition \f$ \bm{A} = \bm{L} \bm{L}^T \f$ in the stokes_solver,
+	 we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
 		- 1st step:
-		   + generate a Brownian force \f$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi \f$ with \f$ \langle \psi \rangle = 0 \f$ and \f$ \langle \psi \psi \rangle = 1\f$
-		   + \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) )  \f$
-		   + \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$ 
+	 + generate a Brownian force \f$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi \f$ with \f$ \langle \psi \rangle = 0 \f$ and \f$ \langle \psi \psi \rangle = 1\f$
+	 + \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) )  \f$
+	 + \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$
 		- 2nd step:
-		   + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
-		   + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
-	   
-	   */
-
+	 + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
+	 + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
+	 
+	 */
+	
 	/* predictor */
 	in_predictor = true;
 	setContactForceToParticle();
@@ -595,7 +596,7 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
-	if(lowPeclet){
+	if (lowPeclet) {
 		calcStress();
 	}
 	timeStepMoveCorrector();
@@ -604,9 +605,9 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 void
 System::timeStepMove(){
 	/**
-	   \brief Moves particle positions according to previously computed velocities, Euler method step.
-	*/
-
+	 \brief Moves particle positions according to previously computed velocities, Euler method step.
+	 */
+	
 	/* Changing dt for every timestep
 	 * So far, this is only in Euler method.
 	 */
@@ -628,7 +629,6 @@ System::timeStepMove(){
 		} else {
 			dt = dt_2;
 		}
-		//}
 	} else {
 		if (max_velocity > max_sliding_velocity) {
 			dt = disp_max/max_velocity;
@@ -660,9 +660,9 @@ System::timeStepMove(){
 void
 System::timeStepMovePredictor(){
 	/**
-	   \brief Moves particle positions according to previously computed velocities, predictor step.
-	*/
-
+	 \brief Moves particle positions according to previously computed velocities, predictor step.
+	 */
+	
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
@@ -692,9 +692,9 @@ System::timeStepMovePredictor(){
 void
 System::timeStepMoveCorrector(){
 	/**
-	   \brief Moves particle positions according to previously computed velocities, corrector step.
-	*/
-
+	 \brief Moves particle positions according to previously computed velocities, corrector step.
+	 */
+	
 	for (int i=0; i<np; i++) {
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
@@ -714,20 +714,20 @@ System::timeStepMoveCorrector(){
 void
 System::timeEvolution(double strain_output_data, double time_output_data){
 	/**
-	   \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
-
-	   This method essentially loops the appropriate one time step method method, according to the Euler vs predictor-corrector or strain rate vs stress controlled choices.
-	*/
-
+	 \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
+	 
+	 This method essentially loops the appropriate one time step method method, according to the Euler vs predictor-corrector or strain rate vs stress controlled choices.
+	 */
+	
 	static bool firsttime = true;
-	in_predictor=false;
+	in_predictor = false;
 	if (firsttime) {
 		checkNewInteraction();
 		updateInteractions();
 		firsttime = false;
 	}
 	bool calc_stress = false;
-	if(lowPeclet){
+	if (lowPeclet) {
 		calc_stress = true;
 	}
 	if (time_output_data == 0) {
@@ -750,11 +750,11 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 void
 System::checkNewInteraction(){
 	/**
-	   \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
-
-	   To be called after particle moved.
-	*/
-
+	 \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
+	 
+	 To be called after particle moved.
+	 */
+	
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
@@ -791,20 +791,25 @@ System::checkNewInteraction(){
 	}
 }
 
-
 void
 System::updateInteractions(){
 	/**
-	   \brief Updates the state of active interactions.
-
-	   To be called after particle moved.
-	   Note that this routine does not look for new interactions (this is done by System::checkNewInteraction), it only updates already known active interactions.
-	   It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
-
-	*/
-	
+	 \brief Updates the state of active interactions.
+	 
+	 To be called after particle moved.
+	 Note that this routine does not look for new interactions (this is done by System::checkNewInteraction), it only updates already known active interactions.
+	 It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
+	 
+	 */
 	double sq_max_sliding_velocity = 0;
-	dimensionless_cohesive_force = 0.1/abs(dimensionless_number);
+	/*
+	 * In the simulation, the unit of force is proportional to the shear rate.
+	 * In the dimensionless simulation,
+	 * the cohesive force
+	 */
+	if (cohesion) {
+		dimensionless_cohesive_force = cohesive_force/abs(dimensionless_number);
+	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -952,21 +957,21 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 void
 System::generateBrownianForces(){
 	/**
-	   \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
-
-	   The generated Brownian force \f$F_B\f$ satisfies
-	   \f$ \langle F_\mathrm{B} \rangle = 0\f$ 
-	   and
-	   \f$\langle F_\mathrm{B} F_\mathrm{B}\rangle = \frac{2kT}{dt} A\f$ 
-	   where \f$A \f$ (in Jeffrey notations \cite
-	   jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady 
-	   \cite brady_stokesian_1988 notations) is the current resistance matrix
-	   stored in the stokes_solver.
-
-	   Note that it \b sets the rhs of the solver as \f$ rhs = F_B \f$.
-
-	   \f$ F_B\f$ is also stored in sys->brownian_force.
-	*/
+	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
+	 
+	 The generated Brownian force \f$F_B\f$ satisfies
+	 \f$ \langle F_\mathrm{B} \rangle = 0\f$
+	 and
+	 \f$\langle F_\mathrm{B} F_\mathrm{B}\rangle = \frac{2kT}{dt} A\f$
+	 where \f$A \f$ (in Jeffrey notations \cite
+	 jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady
+	 \cite brady_stokesian_1988 notations) is the current resistance matrix
+	 stored in the stokes_solver.
+	 
+	 Note that it \b sets the rhs of the solver as \f$ rhs = F_B \f$.
+	 
+	 \f$ F_B\f$ is also stored in sys->brownian_force.
+	 */
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.brownian; // proportional to 1/Pe.
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A
@@ -1473,71 +1478,69 @@ System::setSystemVolume(double depth){
 void
 System::adjustContactModelParameters(){
 	/**
-	 * This method tries to determine 
-	 * the values of the contact parameters kn, kt 
+	 * This method tries to determine
+	 * the values of the contact parameters kn, kt
 	 * required to reach given maximum normal / tangential spring stretches
 	 * (= overlap / tangential displacement ) in steady state.
-	 * 
+	 *
 	 * The algorithm is a simple adaptative scheme trying to resp. increase or decrease
-	 * the spring constants when the stretches are too large or too small. 
-	 * It works reasonably well away from transitions. 
-	 * Close to discontinuous shear thickening, one cannot expect satisfying results, 
+	 * the spring constants when the stretches are too large or too small.
+	 * It works reasonably well away from transitions.
+	 * Close to discontinuous shear thickening, one cannot expect satisfying results,
 	 * as gigantic stress fluctuations confuse the algorithm.
 	 *
-	 * The stretch values used are average of maximal values 
+	 * The stretch values used are average of maximal values
 	 * weighted with an exponential memory kernel:
 	 *    \f$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
 	 * where \f$\gamma_{avg}\f$ is the user-defined parameter ParameterSet::memory_strain_avg.
-	 * 
+	 *
 	 * The kn and kt are bounded by user-defined parameters ParameterSet::min_kn, ParameterSet::max_kn, ParameterSet::min_kt, ParameterSet::max_kn.
 	 *
 	 * The target stretches are given by ParameterSet::overlap_target and ParameterSet::disp_tan_target.
 	 *
 	 * Additionally, this routine estimates the time step dt.
 	 */
-
+	
 	analyzeState();
-
+	
 	double overlap = -min_reduced_gap;
 	
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);
-    kn_avg->update(kn, shear_strain);
+	kn_avg->update(kn, shear_strain);
 	kt_avg->update(kt, shear_strain);
-
- 	static double previous_shear_strain = 0;
+	
+	static double previous_shear_strain = 0;
 	double deltagamma = (shear_strain-previous_shear_strain);
 	
 	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
 	double dkn = (kn_target-kn)*deltagamma/p.memory_strain_k;
 	
 	kn += dkn;
-	if(kn<p.min_kn){
+	if (kn < p.min_kn) {
 		kn = p.min_kn;
 	}
-	if(kn>p.max_kn){
+	if (kn > p.max_kn) {
 		kn = p.max_kn;
 	}
-
 	
 	double kt_target = kt_avg->get()*max_disp_tan_avg->get()/p.disp_tan_target;
 	double dkt = (kt_target-kt)*deltagamma/p.memory_strain_k;
-
+	
 	kt += dkt;
-	if(kt<p.min_kt){
+	if (kt < p.min_kt) {
 		kt = p.min_kt;
 	}
-	if(kt>p.max_kt){
+	if (kt > p.max_kt) {
 		kt = p.max_kt;
 	}
-
-
+	
 	if (max_velocity > max_sliding_velocity) {
 		dt = disp_max/max_velocity;
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-
+	
 	previous_shear_strain = shear_strain;
 }
 
@@ -1567,9 +1570,7 @@ System::calcLubricationForce(){
 	}
 }
 
-
 double
 System::calcLubricationRange(const int& i, const int& j){
-//System::calcLubricationRange(int i, int j){
 	return radius[i]+radius[j]+lub_max_gap;
 }

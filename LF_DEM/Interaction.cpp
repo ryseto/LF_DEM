@@ -96,7 +96,7 @@ Interaction::deactivate(){
 
 void
 Interaction::updateState(bool &deactivated){
-	if(is_contact()){
+	if (is_contact()) {
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
@@ -116,7 +116,6 @@ Interaction::updateState(bool &deactivated){
 			 */
 			if (sys->target_stress != 0
 				&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
-				//cerr << contact.f_contact_normal_norm << ' ' << reduced_gap << endl;
 				breakup_contact_bond = true;
 			}
 		}
