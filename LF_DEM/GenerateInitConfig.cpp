@@ -28,22 +28,22 @@ GenerateInitConfig::generate(int rand_seed_){
 	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
-	step_size = 10;
+	step_size = 20;
 	gradientDescent();
 	step_size /= 4.;
 	gradientDescent();
 	step_size /= 4.;
 	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
+	// step_size /= 4.;
+	// gradientDescent();
+	// step_size /= 4.;
+	// gradientDescent();
+	// step_size /= 4.;
+	// gradientDescent();
+	// step_size /= 4.;
+	// gradientDescent();
+	// step_size /= 4.;
+	// gradientDescent();
 	int count = 0;
 	double energy = 0;
 	ofstream fout;
@@ -59,7 +59,7 @@ GenerateInitConfig::generate(int rand_seed_){
 			energy_previous = energy;
 		}
 		count ++;
-	} while (abs(diff_energy) > 0.01);
+	} while (abs(diff_energy) > 1e-4);
 	position.resize(np);
 	radius.resize(np);
 	for (int i=0; i<sys.get_np(); i++) {
@@ -174,7 +174,7 @@ GenerateInitConfig::computeGradient(){
 void
 GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	double grad_norm;
-	double gradient_power = 0.9;
+	double gradient_power = 0.5;
 	vec3d step;
 	grad_norm = 0;
 	for (int i=0; i<np;i++) {
@@ -296,8 +296,8 @@ GenerateInitConfig::particleEnergy(int i){
 		if ((*it)->is_overlap()) {
 			double r = (*it)->get_r();
 			double rcont = (*it)->get_ro();
-			double amp = (r/rcont-1); // negative
-			energy += 2*amp*amp;
+			double amp = (1/rcont-1/r); // negative
+			energy += r*amp*amp;
 		}
 	}
 	return energy;
@@ -320,9 +320,9 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 		double energy_pre_move = particleEnergy(moved_part);
 		vec3d trial_move;
 		if (sys.twodimension) {
-			trial_move = randUniformCircle(0.002);
+			trial_move = randUniformCircle(0.02);
 		} else {
-			trial_move = randUniformSphere(0.002);
+			trial_move = randUniformSphere(0.02);
 		}
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);
@@ -350,7 +350,7 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 	}
 	cerr << " MC sweep : init energy " << init_energy/np << " final energy " << final_energy/np;
 	cerr << " init overlaps " << init_overlaps << " final overlaps " << final_overlaps << endl;
-	return final_energy;
+	return final_energy/np;
 }
 
 vec3d
