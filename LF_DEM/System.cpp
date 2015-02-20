@@ -147,9 +147,11 @@ System::allocateRessources(){
 		overlap_avg = new Averager<double>(p.memory_strain_avg);
 		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
 	}
-	if (lowPeclet) {
-		double stress_avg_relaxation_parameter = 0; // 0 --> no average
-		stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
+	if (brownian){
+		if (lowPeclet) {
+			double stress_avg_relaxation_parameter = 0; // 0 --> no average
+			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
+		}
 	}
 }
 
