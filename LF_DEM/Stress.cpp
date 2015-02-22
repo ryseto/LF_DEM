@@ -157,14 +157,12 @@ System::calcStress(){
 	}
 	if (brownian) {
 		total_stress += total_brownian_stressGU;
+		if (lowPeclet) { // take an averaged stress instead of instantaneous
+			stress_avg->update(total_stress, time);
+			//		cout << time << " " << total_stress.getStressXZ() << " ";
+			total_stress = stress_avg->get();
+			//		cout << total_stress.getStressXZ() << endl;
+		}
 	}
-	
- 	if(lowPeclet){ // take an averaged stress instead of instantaneous
-		stress_avg->update(total_stress,time);
-		//		cout << time << " " << total_stress.getStressXZ() << " ";
-		total_stress = stress_avg->get();
-		//		cout << total_stress.getStressXZ() << endl;
-	}
-
 }
 

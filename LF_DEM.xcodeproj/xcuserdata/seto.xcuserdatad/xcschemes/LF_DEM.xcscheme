@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/work/gel1"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/gels"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -96,7 +96,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-b 1 -i rate_table.txt D2N1000VF0.6MonoSquare_1_gels.dat nobrownian3.txt"
+            argument = "-b 1 -i rate_table.txt D2N200VF0.6MonoSquare_1.dat nobrownian3.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

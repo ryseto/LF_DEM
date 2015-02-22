@@ -46,18 +46,18 @@ class Averager{
 		 * - \f$ C_n = \frac{C_{n-1}}{(t_n-t_{n-1})C_{n-1}} + e^{(t_n-t_{n-1})/t_{avg}} \f$
 		 * - \f$ x_{avg}(t_n) = C_{n}\left[ (t_n-t_{n-1}) + e^{(t_n-t_{n-1})/t_{avg}} x_{avg}(t_{n-1})/C_{n-1} \right] \f$
 		 */
-		if(relaxation_time==0){
+		if (relaxation_time == 0) {
 			x_avg = x;
 			return;
 		}
-		double deltat = time - previous_time;
+		double deltat = time-previous_time;
 		double etn = exp(-deltat/relaxation_time);
 		double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
 		if (previous_kernel_norm == 1) { // = it is the first iteration
-			inv_kernel_norm=1/deltat;
+			inv_kernel_norm = 1/deltat;
 		}
 		
-		x_avg = inv_kernel_norm*( x*deltat + etn*x_avg/previous_kernel_norm );
+		x_avg = inv_kernel_norm*(x*deltat+etn*x_avg/previous_kernel_norm);
 		
 		previous_kernel_norm = inv_kernel_norm;
 		previous_time = time;
@@ -70,12 +70,12 @@ class Averager{
 	 */
  Averager(double rtime) :
 	x_avg(0),
-		previous_kernel_norm(1),
-		relaxation_time(rtime),
-		previous_time(0)
+	previous_kernel_norm(1),
+	relaxation_time(rtime),
+	previous_time(0)
 	{};
 	~Averager();
 	
-	XType get(){ return x_avg;};
+	XType get(){return x_avg;};
 };
 #endif /* defined(__LF_DEM__Averager__) */

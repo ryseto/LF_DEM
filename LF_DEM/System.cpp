@@ -15,6 +15,7 @@
 System::System() :
 maxnb_interactionpair_per_particle(15),
 brownian(false),
+lowPeclet(false),
 zero_shear(false),
 friction_model(-1),
 repulsiveforce(false),
@@ -147,7 +148,7 @@ System::allocateRessources(){
 		overlap_avg = new Averager<double>(p.memory_strain_avg);
 		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
 	}
-	if (brownian){
+	if (brownian) {
 		if (lowPeclet) {
 			double stress_avg_relaxation_parameter = 0; // 0 --> no average
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
@@ -281,7 +282,7 @@ System::setupBrownian(){
 			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
 			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		} else {
-			lowPeclet = true;
+			lowPeclet = true; // <--- Always true?
 		}
 	}
 }
