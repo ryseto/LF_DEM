@@ -9,11 +9,11 @@
 /**
  \class Averager
  \brief Small class computing and storing observable averages with an exponential memory kernel.
-
+ 
  The average x_avg of quantity x is defined as:
  \f$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
-
-
+ 
+ 
  \author Ryohei Seto
  \author Romain Mari
  */
@@ -24,22 +24,22 @@
 
 template <typename XType>
 class Averager{
- private:
+private:
 	XType x_avg;
 	double previous_kernel_norm;
 	double relaxation_time;
 	double previous_time;
- public:
+public:
 	void update(XType x, double time){
-		/**	  
+		/**
 		 * \brief Updates the average value x_avg with an exponential memory kernel
-		 * 
+		 *
 		 * The average x_avg is defined as:
 		 * \f$x_{avg}(t_n) = C_n \sum_{i=1}^n x(t_i)e^{(t_n-t_i)/t_{avg}} \f$
 		 *
-		 * \param  x  \f$x_n \f$ 
+		 * \param  x  \f$x_n \f$
 		 * \param  time  \f$t_n\f$ (Note: it does not have to be a "time", but it should be consistent with the nature of the relaxation parameter \f$ t_{avg}\f$ defined on creation.)
-		 * 
+		 *
 		 * On return, x_avg contains the value of \f$x_{avg}(t_{n}) \f$ (at time \f$t_n\f$)
 		 *
 		 * This method uses the following recursions:
@@ -56,24 +56,23 @@ class Averager{
 		if (previous_kernel_norm == 1) { // = it is the first iteration
 			inv_kernel_norm = 1/deltat;
 		}
-		
 		x_avg = inv_kernel_norm*(x*deltat+etn*x_avg/previous_kernel_norm);
-		
 		previous_kernel_norm = inv_kernel_norm;
 		previous_time = time;
 	};
 	
 	/**
-	   \brief Creates an Averager instance.
-
-	   \param rtime  Relaxation "time". It does not have to be a time, it can be e.g. a strain. If rtime=0, there is no averaging and the average is equal to the last instantaneous value provided in the update method.
+	 \brief Creates an Averager instance.
+	 
+	 \param rtime  Relaxation "time". It does not have to be a time, it can be e.g. a strain. If rtime=0, there is no averaging and the average is equal to the last instantaneous value provided in the update method.
 	 */
- Averager(double rtime) :
+	Averager(double rtime):
 	x_avg(0),
 	previous_kernel_norm(1),
 	relaxation_time(rtime),
 	previous_time(0)
 	{};
+	
 	~Averager();
 	
 	XType get(){return x_avg;};

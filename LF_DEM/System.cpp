@@ -12,7 +12,7 @@
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 
-System::System() :
+System::System():
 maxnb_interactionpair_per_particle(15),
 brownian(false),
 lowPeclet(false),

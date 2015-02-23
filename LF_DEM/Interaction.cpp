@@ -100,7 +100,6 @@ Interaction::updateState(bool &deactivated){
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
-
 	calcNormalVectorDistanceGap();
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
@@ -153,7 +152,6 @@ Interaction::updateState(bool &deactivated){
 		repulsion.calcForce();
 	}
 }
-
 
 /* Relative velocity of particle 1 from particle 0.
  *

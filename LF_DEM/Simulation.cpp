@@ -28,7 +28,9 @@
 #include <algorithm>
 #include <cctype>
 
-Simulation::Simulation(): shear_rate_expectation(-1) {};
+Simulation::Simulation():
+shear_rate_expectation(-1) {};
+
 Simulation::~Simulation(){
 	if (fout_rheo.is_open()) {
 		fout_rheo.close();

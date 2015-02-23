@@ -75,7 +75,6 @@ private:
 		ro_12 = ro/2;
 	};
 	void calcNormalVectorDistanceGap();
-
 	void calcRelativeVelocities();
 	void calcRollingVelocities();
 	void integrateStress();
@@ -131,11 +130,8 @@ private:
 	inline double get_reduced_gap(){return reduced_gap;}
 	inline double get_gap(){return r-ro;}
 	inline vec3d get_nvec(){return nvec;}
-	//	double getNormalVelocity(){return dot(relative_velocity, nvec);};
 	double getNormalVelocity();
 	double getRelativeVelocity(){return relative_velocity.norm();}
 	double getContactVelocity();
-	//	double getContactVelocity(){return (contact.state == 0 ? 0 : relative_surface_velocity.norm()); };
-
 };
 #endif /* defined(__LF_DEM__Interaction__) */
