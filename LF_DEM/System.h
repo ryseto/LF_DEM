@@ -87,7 +87,8 @@ private:
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
 	double (System::*calcInteractionRange)(const int&, const int&);
-	double calcLubricationRange(const int&, const int&);
+	double calcLubricationRange_largeratio(const int&, const int&);
+	double calcLubricationRange_normal(const int&, const int&);
 	//	double (System::*calcInteractionRange)(int, int);
 	//	double calcLubricationRange(int, int);
 	double evaluateMinGap();
@@ -319,7 +320,7 @@ private:
 	double get_ly(){return ly;}
 	double get_time(){return time;}
 	inline double get_shear_rate(){return shear_rate;}
-	inline void set_shear_rate(double sr){shear_rate=sr;}
+	inline void set_shear_rate(double sr){shear_rate = sr;}
 	inline double get_lz(){return lz;}
 	inline double Lx_half(){return lx_half;}
 	inline double Ly_half(){return ly_half;}
@@ -327,7 +328,15 @@ private:
 	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
-	inline void set_lub_max_gap(double val){lub_max_gap = val;}
+	inline void set_lub_max_gap(double val){
+		lub_max_gap = val;
+		if (lub_max_gap > 1) {
+			cerr << "lub_max_gap must be smaller than 1!\n";
+			cerr << "  The leading term of tangential lubrication is log(1/xi).)\n";
+			cerr << "  Therefore, xi < 1 to keep positive value.\n";
+			exit(1);
+		}
+	}
 	inline double get_lub_max_gap(){return lub_max_gap;}
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}
