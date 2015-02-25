@@ -309,7 +309,12 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
-	sys.new_contact_gap = 0.02;
+	if (sys.cohesion) {
+		// To keep network structure of imported configuratinos.
+		sys.new_contact_gap = 0.02;
+	} else {
+		sys.new_contact_gap = 0;
+	}
 	int jammed = 0;
 	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
 		if (time_interval_output_data == -1) {

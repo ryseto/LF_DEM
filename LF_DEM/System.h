@@ -66,7 +66,6 @@ private:
 	double mu_static; // static friction coefficient.
 	int linalg_size;
 	int linalg_size_per_particle;
-	int dof;
 	int max_lub_int;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
