@@ -158,7 +158,7 @@ System::allocateRessources(){
 
 void
 System::setInteractions_GenerateInitConfig(){
-	calcInteractionRange = &System::calcLubricationRange;
+	calcInteractionRange = &System::calcLubricationRange_normal;
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -312,7 +312,7 @@ System::setupSystem(string control){
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	calcInteractionRange = &System::calcLubricationRange;
+	calcInteractionRange = &System::calcLubricationRange_normal;
 	friction = false;
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
