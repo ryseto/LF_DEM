@@ -13,7 +13,6 @@
  \author Romain Mari
  */
 
-
 #ifndef __LF_DEM__System__
 #define __LF_DEM__System__
 #include <iostream>
@@ -93,6 +92,7 @@ private:
 	//	double calcLubricationRange(int, int);
 	double evaluateMinGap();
 	double evaluateMaxDispTan();
+	double evaluateMaxDispRolling();
 	double evaluateMaxFcNormal();
 	double evaluateMaxFcTangential();
 	void evaluateMaxContactVelocity();
@@ -244,6 +244,7 @@ private:
 	double max_ang_velocity;
 	double min_reduced_gap;
 	double max_disp_tan;
+	double max_disp_rolling;
 	queue<int> deactivated_interaction;
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;

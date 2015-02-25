@@ -494,7 +494,7 @@ GenerateInitConfig::setParameters(){
 	ly_half = ly/2;
 	lz_half = lz/2;
 	cerr << "np = " << np1+np2 << endl;
-	cerr << "np1 : np2 " << np1  << ":" << np2 << endl;
+	cerr << "np1 : np2 " << np1 << ":" << np2 << endl;
 	cerr << "vf = " << volume_fraction << endl;
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;

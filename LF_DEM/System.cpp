@@ -339,7 +339,7 @@ System::setupSystem(string control){
 		exit(1);
 	}
 	allocateRessources();
-	for (int k=0; k<maxnb_interactionpair ; k++) {
+	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
@@ -389,7 +389,7 @@ System::setupSystem(string control){
 		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cerr << "1/lub_reduce_parameter = " <<  1/lub_reduce_parameter << endl;
+	cerr << "1/lub_reduce_parameter = " << 1/lub_reduce_parameter << endl;
 	/* t = beta/kn
 	 *  beta = t*kn
 	 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
@@ -430,7 +430,6 @@ System::setupSystem(string control){
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	time = 0;
-	
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference = lz;
@@ -518,7 +517,6 @@ System::timeEvolutionEulersMethod(bool calc_stress){
 	 
 	 This method is never used when running a Brownian simulation.
 	 */
-	
 	in_predictor = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
@@ -643,7 +641,6 @@ System::timeStepMove(){
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
 	 */
-	
 	double time_increment = dt/abs(dimensionless_number);
 	time += time_increment;
 	/* evolve PBC */
@@ -666,7 +663,6 @@ System::timeStepMovePredictor(){
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
-	
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		dt = disp_max/max_velocity;
 	}
@@ -698,7 +694,6 @@ System::timeStepMoveCorrector(){
 	/**
 	 \brief Moves particle positions according to previously computed velocities, corrector step.
 	 */
-	
 	for (int i=0; i<np; i++) {
 		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
@@ -1416,6 +1411,19 @@ System::evaluateMaxDispTan(){
 }
 
 double
+System::evaluateMaxDispRolling(){
+	double _max_disp_rolling = 0;
+	for (int k= 0; k<nb_interaction; k++) {
+		if (interaction[k].is_active() &&
+			interaction[k].contact.disp_rolling.norm() > _max_disp_rolling) {
+			_max_disp_rolling = interaction[k].contact.disp_rolling.norm();
+		}
+	}
+	return _max_disp_rolling;
+	
+}
+
+double
 System::evaluateMaxFcNormal(){
 	double max_fc_normal_ = 0;
 	for (int k=0; k<nb_interaction; k++) {
@@ -1463,6 +1471,9 @@ System::analyzeState(){
 	evaluateMaxContactVelocity();
 	min_reduced_gap = evaluateMinGap();
 	max_disp_tan = evaluateMaxDispTan();
+	if (rolling_friction) {
+		max_disp_rolling = evaluateMaxDispRolling();
+	}
 	max_fc_normal = evaluateMaxFcNormal();
 	max_fc_tan = evaluateMaxFcTangential();
 	countNumberOfContact();
@@ -1576,6 +1587,6 @@ System::calcLubricationForce(){
 
 double
 System::calcLubricationRange(const int& i, const int& j){
-	double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+	double minradius = (radius[i] < radius[j] ? radius[i] : radius[j]);
 	return radius[i]+radius[j]+lub_max_gap*minradius;
 }

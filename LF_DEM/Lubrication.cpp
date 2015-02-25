@@ -247,7 +247,6 @@ Lubrication::calcGE(double *GEi, double *GEj){
 	GEj[0] = sr*cGE_p1*nvec->x;
 	GEj[1] = sr*cGE_p1*nvec->y;
 	GEj[2] = sr*cGE_p1*nvec->z;
-	
 }
 
 void
@@ -526,7 +525,7 @@ Lubrication::updateResistanceCoeff(){
 	if (interaction->is_contact() > 0) {
 		if (!interaction->contact_state_changed_after_predictor) {
 			setResistanceCoeff(sys->lub_coeff_contact,
-										   sys->log_lub_coeff_contact_tan_total);
+							   sys->log_lub_coeff_contact_tan_total);
 		} else {
 			/*
 			 * This is only brownian
@@ -561,5 +560,4 @@ Lubrication::updateResistanceCoeff(){
 			
 		}
 	}
-
 }

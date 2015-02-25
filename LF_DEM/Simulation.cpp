@@ -51,21 +51,25 @@ Simulation::contactForceParameter(string filename){
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
-
-	double phi_;
-	double kn_;
-	double kt_;
-	double dt_;
+	// temporal variables to keep imported values.
+	double phi_, kn_, kt_, dt_;
+	// To find parameters for considered volume fraction phi.
+	bool found = false;
 	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
 		if (phi_ == volume_or_area_fraction) {
+			found = true;
 			break;
 		}
 	}
 	fin_knktdt.close();
-	p.kn = kn_;
-	p.kt = kt_;
-    p.dt = dt_;
-	cerr << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+	if (found) {
+		// Set the parameter object
+		p.kn = kn_, p.kt = kt_, p.dt = dt_;
+		cerr << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+	} else {
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
+		exit(1);
+	}
 }
 
 void
@@ -76,13 +80,9 @@ Simulation::contactForceParameterBrownian(string filename){
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
-
-	double phi_;
-	double peclet_;
-	double kn_;
-	double kt_;
-	double dt_;
-	bool found=false;
+	// temporal variables to keep imported values.
+	double phi_, peclet_, kn_, kt_, dt_;
+	bool found = false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
 		if (phi_ == volume_or_area_fraction && peclet_ == sys.dimensionless_number) {
 			found = true;
@@ -90,13 +90,10 @@ Simulation::contactForceParameterBrownian(string filename){
 		}
 	}
 	fin_knktdt.close();
-	if(found){
-		p.kn = kn_;
-		p.kt = kt_;
-		p.dt = dt_;
+	if (found) {
+		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
-	}
-	else{
+	} else {
 		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << sys.dimensionless_number << endl;
 		exit(1);
 	}
@@ -107,12 +104,10 @@ Simulation::importPreSimulationData(string filename){
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
 	if (!fin_PreSimulationData) {
-		cerr << " Pre-simulation data file '" << filename << "' not found." <<endl;
+		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-
-	double stress_;
-	double shear_rate_;
+	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == sys.target_stress_input) {
 			break;
@@ -246,25 +241,20 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	setDefaultParameters();
 	readParameterFile();
-
- 	if(binary_conf){
+ 	if (binary_conf) {
 		importConfigurationBinary();
-	}
-	else{
+	} else {
 		importInitialPositionFile();
 	}
-	if (initial_lees_edwards_disp > 0){
+	if (initial_lees_edwards_disp > 0) {
 		sys.shear_disp = initial_lees_edwards_disp;
 	} else {
 		sys.shear_disp = 0;
 	}
-
-
 	if (input_files[2] != "not_given") {
-		if(sys.brownian&&!p.auto_determine_knkt){
+		if (sys.brownian&&!p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
-		}
-		else{
+		} else {
 			contactForceParameter(input_files[2]);
 		}
 	}
@@ -319,7 +309,6 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
 		}
-
 		sys.timeEvolution(strain_output_data, time_output_data);
 		cnt_simu_loop ++;
 		evaluateData();
@@ -331,7 +320,6 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 				cerr << "   out config: " << sys.get_shear_strain() << endl;
 				outputConfigurationData();
 				cnt_config_out ++;
-				
 			}
 		} else {
 			if (sys.get_time() >= time_output_config-1e-8) {
@@ -431,7 +419,6 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		cerr << " Sequence file '" << filename_sequence << "' not found." <<endl;
 		exit(1);
 	}
-		
 	double strain;
 	double targ_st;
 	while (fin_seq >> strain >> targ_st) {
@@ -531,7 +518,6 @@ removeBlank(string &str){
 
 void
 Simulation::autoSetParameters(const string &keyword, const string &value){
-	
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
@@ -622,9 +608,7 @@ Simulation::readParameterFile(){
 		cerr << " Parameter file '" << filename_parameters << "' not found." <<endl;
 		exit(1);
 	}
-
-	string keyword;
-	string value;
+	string keyword, value;
 	while (!fin.eof()) {
 		string line;
 		if (!getline(fin, line, ';')) {
@@ -636,7 +620,6 @@ Simulation::readParameterFile(){
 		string str_parameter;
 		removeBlank(line);
 		str_parameter = line;
-		
 		string::size_type begin_comment;
 		string::size_type end_comment;
 		do {
@@ -647,14 +630,14 @@ Simulation::readParameterFile(){
 			}
 			str_parameter = str_parameter.substr(end_comment+2);
 		} while (true);
-		if (begin_comment > end_comment ) {
+		if (begin_comment > end_comment) {
 			cerr << str_parameter.find("/*") << endl;
 			cerr << str_parameter.find("*/") << endl;
 			cerr << "syntax error in the parameter file." << endl;
 			exit(1);
 		}
 		string::size_type pos_slashslash = str_parameter.find("//");
-		if( pos_slashslash != string::npos) {
+		if (pos_slashslash != string::npos) {
 			cerr << " // is not the syntax to comment out. Use /* comment */" << endl;
 			exit(1);
 		}
@@ -671,8 +654,7 @@ Simulation::openOutputFiles(bool binary_conf){
 	 * Set simulation name and name of output files.
 	 */
 	prepareSimulationName(binary_conf);
-
-
+	
 	string st_filename = "st_" +sys.simu_name + ".dat";
 	fout_st.open(st_filename.c_str());
 	outputDataHeader(fout_st);
@@ -731,12 +713,12 @@ Simulation::openOutputFiles(bool binary_conf){
 	"#47: time\n"
 	"#48: dimensionless_number\n"
 	"#49: stress\n"
-	"#50: shear_disp\n";
+	"#50: shear_disp\n"
+	"#51: max rolling displacement\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
 
-	
-	if(p.out_data_particle){
+	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";
 		fout_particle.open(particle_filename.c_str());
 		outputDataHeader(fout_particle);
@@ -760,8 +742,8 @@ Simulation::openOutputFiles(bool binary_conf){
 		//
 		fout_particle << fout_par_col_def << endl;
 	}
-
-	if(p.out_data_interaction){
+	
+	if (p.out_data_interaction) {
 		string interaction_filename = "int_" + sys.simu_name + ".dat";
 		fout_interaction.open(interaction_filename.c_str());
 		outputDataHeader(fout_interaction);
@@ -785,9 +767,7 @@ Simulation::openOutputFiles(bool binary_conf){
 			"#17: Viscosity contribution of contact xF\n";
 		fout_interaction << fout_int_col_def << endl;
 	}
-	
 }
-
 
 void
 Simulation::exportParameterSet(){
@@ -800,9 +780,7 @@ Simulation::setDefaultParameters(){
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
 	p.rest_threshold = 1e-4;
-	
 	p.integration_method = 1;
-
 	/*
 	 * Stokes drag coeffient
 	 */
@@ -822,7 +800,6 @@ Simulation::setDefaultParameters(){
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
 	p.friction_model = 1;
-
 	p.rolling_friction = false;
 	p.shear_strain_end = 10;
 	p.lub_max_gap = 0.5;
@@ -863,18 +840,13 @@ Simulation::setDefaultParameters(){
 	p.max_kn = 1000000;
 	p.min_kt = 1000;
 	p.max_kt = 1000000;
-
 	p.repulsive_length = 0.05;
-
 	p.mu_static = 1;
-
 	p.strain_interval_output_data = 0.01;
 	p.strain_interval_output_config = 0.1;
 	p.origin_zero_flow = true;
-
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
-
 }
 
 void
@@ -885,11 +857,9 @@ Simulation::importInitialPositionFile(){
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
-	int n1, n2;
-	double lx, ly, lz;
-	double vf1, vf2;
-	
 	char buf;
+	int n1, n2;
+	double lx, ly, lz, vf1, vf2;
 	getline(file_import, import_line[0]);
 	getline(file_import, import_line[1]);
 	stringstream ss(import_line[1]);
@@ -912,14 +882,13 @@ Simulation::outputConfigurationBinary(){
 	conf_filename =  "conf_" + sys.simu_name + ".dat";
 	outputConfigurationBinary(conf_filename);
 }
+
 void
 Simulation::outputConfigurationBinary(string conf_filename){
-
 	vector < vector <double> > pos;
 	int np = sys.get_np();
 	int dims = 4;
 	pos.resize(np);
-	
 	for (int i=0; i<np; i++) {
 		pos[i].resize(dims);
 		pos[i][0] = sys.position[i].x;
@@ -927,13 +896,11 @@ Simulation::outputConfigurationBinary(string conf_filename){
 		pos[i][2] = sys.position[i].z;
 		pos[i][3] = sys.radius[i];
 	}
-	
 	ofstream conf_export;
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
 	double shear_disp = sys.shear_disp;
-
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
 	conf_export.write((char*)&np, sizeof(int));
 	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
@@ -944,7 +911,6 @@ Simulation::outputConfigurationBinary(string conf_filename){
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
-	
 	conf_export.close();
 }
 
@@ -956,22 +922,15 @@ Simulation::importConfigurationBinary(){
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
-
 	int np;
-	double lx;
-	double ly;
-	double lz;
+	double lx, ly, lz;
 	file_import.read((char*)&np, sizeof(int));
 	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
 	file_import.read((char*)&lx, sizeof(double));
 	file_import.read((char*)&ly, sizeof(double));
 	file_import.read((char*)&lz, sizeof(double));
 	file_import.read((char*)&initial_lees_edwards_disp, sizeof(double));
-
-	double x_;
-	double y_;
-	double z_;
-	double r_;
+	double x_, y_, z_, r_;
 	vector <vec3d> initial_position;
 	vector <double> radius;
 	for (int i=0; i<np; i++) {
@@ -983,7 +942,6 @@ Simulation::importConfigurationBinary(){
 		radius.push_back(r_);
 	}
 	file_import.close();
-
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 }
 
@@ -993,16 +951,16 @@ Simulation::prepareSimulationName(bool binary_conf){
 	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
 	string::size_type param_name_end = filename_parameters.find_last_of(".");
 	string::size_type pos_name_start;
-	if(binary_conf){ // TO DO: improve name generation for binary input
+	if (binary_conf) { // TO DO: improve name generation for binary input
 		pos_name_start = filename_import_positions.find_last_of("/");
-	}else{
+	} else {
 		pos_name_start = filename_import_positions.find_last_of("/");
 	}
 	string::size_type param_name_start = filename_parameters.find_last_of("/");
-	if(pos_name_start == std::string::npos){
+	if (pos_name_start == std::string::npos) {
 		pos_name_start = -1;
 	}
-	if(param_name_start == std::string::npos){
+	if (param_name_start == std::string::npos) {
 		param_name_start = -1;
 	}
 	pos_name_start += 1;
@@ -1020,7 +978,6 @@ Simulation::evaluateData(){
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-		
 	viscosity = sys.einstein_viscosity+sys.total_stress.getStressXZ();
 	normalstress_diff_1 = sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = sys.total_stress.getNormalStress2();
@@ -1176,13 +1133,13 @@ Simulation::outputRheologyData(){
 	 * This is why we need to take time average to have correct value of dimensionless_number.
 	 */
 	fout_rheo << sys.dimensionless_number << ' '; // 48
-	if(control_var == "stress"){
+	if (control_var == "stress") {
 		fout_rheo << sys.target_stress_input << ' '; // 49
-	}
-	else{
+	} else {
 		fout_rheo << 6*M_PI*viscosity*sys.dimensionless_number << ' '; // 49
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
+	fout_rheo << sys.max_disp_rolling << ' '; //51
 	fout_rheo << endl;
 }
 
@@ -1269,7 +1226,7 @@ Simulation::outputConfigurationData(){
 	int cnt_interaction = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_active()) {
-			cnt_interaction++;
+			cnt_interaction ++;
 		}
 	}
 	if (p.out_data_interaction) {
@@ -1333,16 +1290,13 @@ Simulation::outputFinalConfiguration(){
 		fout_finalconfig << sys.position[i].z << ' ';
 		fout_finalconfig << sys.radius[i] << endl;
 	}
-
 	string filename_bin = filename_final_configuration;
 	string ext=".dat";
 	size_t start_pos = filename_bin.find(ext);
-    if(start_pos == string::npos){
+    if (start_pos == string::npos) {
 		cerr << " WARNING, no binary output generated " << endl;
         return;
 	}
     filename_bin.replace(start_pos, ext.length(), ".bin");
 	outputConfigurationBinary(filename_bin);
 }
-
-

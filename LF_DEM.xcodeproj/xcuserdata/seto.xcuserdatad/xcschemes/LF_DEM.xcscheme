@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/gels"
+      customWorkingDirectory = "/Users/seto/Documents/work/interlock"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -96,7 +96,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-b 1 -i rate_table.txt D2N200VF0.6MonoSquare_1.dat nobrownian3.txt"
+            argument = "-s 5 -i tmp_stress_rate.dat D2N500VF0.6MonoSquare_1.dat interlocking.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

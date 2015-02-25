@@ -148,7 +148,7 @@ Contact::frictionlaw_standard(){
 	}
 	if (sys->rolling_friction) {
 		double sq_f_rolling = f_rolling.sq_norm();
-		if (sq_f_rolling > supportable_tanforce*supportable_tanforce){
+		if (sq_f_rolling > supportable_tanforce*supportable_tanforce) {
 			disp_rolling *= supportable_tanforce/sqrt(sq_f_rolling);
 			f_rolling = kr_scaled*disp_rolling;
 		}
