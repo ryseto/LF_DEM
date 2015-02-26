@@ -331,7 +331,13 @@ private:
 	inline void set_np(int val){np = val;}
 	inline int get_np(){return np;}
 	inline double get_shear_strain(){return shear_strain;}
-	inline void set_lub_max_gap(double val){lub_max_gap = val;}
+	inline void set_lub_max_gap(double val){
+		lub_max_gap = val;
+		if (lub_max_gap >= 1) {
+			cerr << "lub_max_gap must be smaller than 1\n";
+			exit(1);
+		}
+	}
 	inline double get_lub_max_gap(){return lub_max_gap;}
 	inline void set_dt(double val){dt = val;}
 	void set_disp_max(double val){disp_max = val;}

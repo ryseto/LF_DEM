@@ -768,7 +768,7 @@ System::checkNewInteraction(){
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double range = (this->*calcInteractionRange)(i,*it);
+					double range = (this->*calcInteractionRange)(i, *it);
 					double sq_dist_lim = range*range;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;

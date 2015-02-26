@@ -43,11 +43,9 @@ void
 Interaction::activate(unsigned short i, unsigned short j, double range){
 	active = true;
 	if (j > i) {
-		p0 = i;
-		p1 = j;
+		p0 = i, p1 = j;
 	} else {
-		p0 = j;
-		p1 = i;
+		p0 = j, p1 = i;
 	}
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);

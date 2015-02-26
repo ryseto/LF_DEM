@@ -29,7 +29,7 @@ Contact::getInteractionData(){
 	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
-		kr_scaled = ro_12; // F = kt_scaled * disp_tan <-- disp is not scaled
+		kr_scaled = ro_12*sys->kr;; // F = kt_scaled * disp_tan <-- disp is not scaled
 	}
 	mu = sys->get_mu_static();
 }
