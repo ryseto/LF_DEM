@@ -329,7 +329,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
-		if (abs(sys.dimensionless_number) < 1e-5){
+		if (abs(sys.dimensionless_number) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {

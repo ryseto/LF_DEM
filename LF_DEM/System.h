@@ -104,7 +104,6 @@ private:
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
-	double dimensionless_number_time_integral;
 	ParameterSet p;
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;

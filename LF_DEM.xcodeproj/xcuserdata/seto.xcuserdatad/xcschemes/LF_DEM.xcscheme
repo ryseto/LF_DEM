@@ -96,7 +96,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-s 5 -i tmp_stress_rate.dat D2N500VF0.6MonoSquare_1.dat interlocking.txt"
+            argument = "-s 5 D2N500VF0.55MonoSquare_1.dat interlocking_s.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

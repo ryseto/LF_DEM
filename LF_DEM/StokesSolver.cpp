@@ -1049,7 +1049,6 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
 
 void
 StokesSolver::factorizeResistanceMatrix(){
-
 	/*reference code */
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
