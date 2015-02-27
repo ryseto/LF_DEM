@@ -28,16 +28,16 @@ Box::~Box(){
  * important for top/bottom boxes, as the number of moving neighbors
  * can be smaller than _moving_neigh_nb
  */
-void
-Box::reset_moving_neighbors(){
+void Box::reset_moving_neighbors()
+{
 	for (int label=0; label<_moving_neigh_nb; label++) {
 		_neighbors[label+_still_neigh_nb] = NULL;
 		_moving_neighbors[label] = NULL;
 	}
 }
 
-void
-Box::neigh_nb(int n, int moving_n){
+void Box::neigh_nb(int n, int moving_n)
+{
 	_neigh_nb = n;
 	_moving_neigh_nb = moving_n;
 	_still_neigh_nb = n-moving_n;
@@ -52,8 +52,8 @@ Box::neigh_nb(int n, int moving_n){
 	reset_moving_neighbors();
 }
 
-bool
-Box::can_be_added(int label, Box* neigh_box){
+bool Box::can_be_added(int label, Box* neigh_box)
+{
 	if (neigh_box == this) {
 		return false;
 	}
@@ -65,8 +65,8 @@ Box::can_be_added(int label, Box* neigh_box){
 	return true;
 }
 
-bool
-Box::neighbor(int label, Box* neigh_box){
+bool Box::neighbor(int label, Box* neigh_box)
+{
 	// we have to check that we don't list two times the same neighbor (for top AND bottom boxes)
 	// or don't the the box as its own neighbor (for every box)
 	if (can_be_added(label, neigh_box)) {
@@ -80,35 +80,35 @@ Box::neighbor(int label, Box* neigh_box){
 	}
 }
 
-void
-Box::probing_positions(int label, const vec3d &pos){
+void Box::probing_positions(int label, const vec3d &pos)
+{
 	//  cout << label-_still_neigh_nb << endl;
 	_probing_positions[label-_still_neigh_nb] = pos;
 }
 
-bool
-Box::moving_neighbor(int moving_label, Box* neigh_box){
+bool Box::moving_neighbor(int moving_label, Box* neigh_box)
+{
 	bool success = neighbor(moving_label+_still_neigh_nb, neigh_box);
 	return success;
 }
 
-void
-Box::is_top(bool it){
+void Box::is_top(bool it)
+{
 	_is_top = it;
 }
 
-void
-Box::is_bottom(bool ib){
+void Box::is_bottom(bool ib)
+{
 	_is_bottom = ib;
 }
 
-bool
-Box::is_top(){
+bool Box::is_top()
+{
 	return _is_top;
 }
 
-bool
-Box::is_bottom(){
+bool Box::is_bottom()
+{
 	return _is_bottom;
 }
 
@@ -132,18 +132,18 @@ Box::is_bottom(){
 // #endif
 // }
 
-void
-Box::add(int i){
+void Box::add(int i)
+{
 	container.insert(i);
 }
 
-void
-Box::remove(int i){
+void Box::remove(int i)
+{
 	container.erase(i);
 }
 
-void
-Box::build_neighborhood_container(){
+void Box::build_neighborhood_container()
+{
 	neighborhood_container.clear();
 	int size = (int)container_size();
 	for (int i=0; i<neigh_nb(); i++) {

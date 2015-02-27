@@ -15,13 +15,11 @@
 
 #ifndef __LF_DEM__RepulsiveForce__
 #define __LF_DEM__RepulsiveForce__
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
-
 using namespace std;
 class System;
 class Interaction;
@@ -32,7 +30,6 @@ private:
 	Interaction *interaction;
 	unsigned short p0;
 	unsigned short p1;
-
 	//===== forces and stresses ==================== //
 	double amplitude;
 	double length;
@@ -40,20 +37,26 @@ private:
 	double force_norm;
 	StressTensor stresslet_XF;
 	
- protected:
- public:
- RepulsiveForce(): force_norm(0) {};
+public:
+	RepulsiveForce(): force_norm(0) {};
 	~RepulsiveForce(){};
 	void init(System *sys_, Interaction *int_);
 	void activate();
-
 	//===== forces/stresses  ========================== //
 	void calcForce();
 	void addUpForce();
-	inline double getForceNorm(){return force_norm;}
-	vec3d getForceVector(){return force_vector;}
+	inline double getForceNorm()
+	{
+		return force_norm;
+	}
+	vec3d getForceVector()
+	{
+		return force_vector;
+	}
 	void calcStressXF();
-	StressTensor getStressXF(){return stresslet_XF;}
-	
+	StressTensor getStressXF()
+	{
+		return stresslet_XF;
+	}
 };
 #endif /* defined(__LF_DEM__RepulsiveForce__) */

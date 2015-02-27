@@ -15,13 +15,11 @@
 
 #ifndef __LF_DEM__Contact__
 #define __LF_DEM__Contact__
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
-
 using namespace std;
 class System;
 class Interaction;
@@ -50,12 +48,10 @@ private:
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
 	vec3d f_rolling;
-
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
 
- protected:
- public:
+public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
@@ -86,12 +82,30 @@ private:
 	//===== forces/stresses  ========================== //
 	void calcContactInteraction();
 	void addUpContactForceTorque();
-	inline double get_f_contact_normal_norm(){return f_contact_normal_norm;}
-	vec3d get_f_contact_tan(){return f_contact_tan;}
-	inline double get_f_contact_tan_norm(){return f_contact_tan.norm();}
+	inline double get_f_contact_normal_norm()
+	{
+		return f_contact_normal_norm;
+	}
+	vec3d get_f_contact_tan()
+	{
+		return f_contact_tan;
+	}
+	inline double get_f_contact_tan_norm()
+	{
+		return f_contact_tan.norm();
+	}
 	void calcContactStress();
-	StressTensor getContactStressXF(){return contact_stresslet_XF_normal+contact_stresslet_XF_tan;}
-	StressTensor getContactStressXF_normal(){return contact_stresslet_XF_normal;}
-	StressTensor getContactStressXF_tan(){return contact_stresslet_XF_tan;}
+	StressTensor getContactStressXF()
+	{
+		return contact_stresslet_XF_normal+contact_stresslet_XF_tan;
+	}
+	StressTensor getContactStressXF_normal()
+	{
+		return contact_stresslet_XF_normal;
+	}
+	StressTensor getContactStressXF_tan()
+	{
+		return contact_stresslet_XF_tan;
+	}
 };
 #endif /* defined(__LF_DEM__Contact__) */

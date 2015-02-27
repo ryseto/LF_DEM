@@ -2,8 +2,8 @@
 #include "System.h"
 using namespace std;
 
-void
-BoxSet::init(double interaction_dist, System *sys_){
+void BoxSet::init(double interaction_dist, System *sys_)
+{
 	sys = sys_;
 	boxMap = new Box* [sys->get_np()];
 	for (int i=0; i<sys->get_np(); i++) {
@@ -65,8 +65,8 @@ BoxSet::init(double interaction_dist, System *sys_){
 	cerr << "Interaction distance: " << interaction_dist << endl << "Boxes' size (x,y,z): " << box_xsize << " " << box_ysize << " " << box_zsize << endl << endl;
 }
 
-void
-BoxSet::allocateBoxes(){
+void BoxSet::allocateBoxes()
+{
 	box_nb = x_box_nb*y_box_nb*z_box_nb;
 	top_box_nb = x_box_nb*y_box_nb;
 	bottom_box_nb = top_box_nb;
@@ -99,8 +99,8 @@ BoxSet::allocateBoxes(){
 	}
 }
 
-void
-BoxSet::positionBoxes(){
+void BoxSet::positionBoxes()
+{
 	if (x_box_nb > 3) {
 		amax = 3;
 	} else {
@@ -177,8 +177,8 @@ BoxSet::positionBoxes(){
 	}
 }
 
-void
-BoxSet::assignNeighborsBulk(){
+void BoxSet::assignNeighborsBulk()
+{
 	for (int i=0; i<bulk_box_nb; i++) {
 		vec3d pos = BulkBoxes[i]->position;
 		vec3d delta;
@@ -202,8 +202,8 @@ BoxSet::assignNeighborsBulk(){
 	}
 }
 
-void
-BoxSet::assignNeighborsBottom(){
+void BoxSet::assignNeighborsBottom()
+{
 	for (int i=0; i<bottom_box_nb; i++) {
 		vec3d pos = BottomBoxes[i]->position;
 		vec3d delta;
@@ -242,8 +242,8 @@ BoxSet::assignNeighborsBottom(){
 	}
 }
 
-void
-BoxSet::assignNeighborsTop(){
+void BoxSet::assignNeighborsTop()
+{
 	for (int i=0; i<top_box_nb; i++) {
 		vec3d pos = TopBoxes[i]->position;
 		vec3d delta;
@@ -282,8 +282,8 @@ BoxSet::assignNeighborsTop(){
 	}
 }
 
-void
-BoxSet::assignNeighborsTopBottom(){
+void BoxSet::assignNeighborsTopBottom()
+{
 	for (int i=0; i<topbottom_box_nb; i++) {
 		vec3d pos = TopBottomBoxes[i]->position;
 		vec3d delta;
@@ -332,8 +332,8 @@ BoxSet::assignNeighborsTopBottom(){
 	}
 }
 
-void
-BoxSet::assignNeighbors(){
+void BoxSet::assignNeighbors()
+{
 	// bulk boxes
 	assignNeighborsBulk();
 	// bottom boxes
@@ -361,8 +361,8 @@ BoxSet::~BoxSet(){
 	DELETE(boxMap);
 }
 
-void
-BoxSet::updateNeighbors(Box* b){
+void BoxSet::updateNeighbors(Box* b)
+{
 	b->reset_moving_neighbors();
 	vec3d *probes = b->probing_positions();
 	int probes_nb = b->probe_nb();
@@ -382,8 +382,8 @@ BoxSet::updateNeighbors(Box* b){
  At each time step, we need to check if neighborhood on top and bottom boxes have changed.
  Bulk boxes do not need to be updated.
  *****/
-void
-BoxSet::updateNeighbors(){
+void BoxSet::updateNeighbors()
+{
 	// top boxes
 	for(int i=0; i<top_box_nb; i++) {
 		updateNeighbors(TopBoxes[i]);
@@ -399,8 +399,8 @@ BoxSet::updateNeighbors(){
 }
 
 //public methods
-void
-BoxSet::update(){
+void BoxSet::update()
+{
 	if (is_boxed()) {
 		updateNeighbors();
 	}
@@ -409,18 +409,18 @@ BoxSet::update(){
 	}
 }
 
-bool
-BoxSet::is_boxed(){
+bool BoxSet::is_boxed()
+{
 	return _is_boxed;
 }
 
-Box*
-BoxSet::WhichBox(vec3d pos){
+Box* BoxSet::WhichBox(vec3d pos)
+{
 	return WhichBox(&pos);
 }
 
-Box*
-BoxSet::WhichBox(vec3d *pos){
+Box* BoxSet::WhichBox(vec3d *pos)
+{
 	sys->periodize(*pos);
 	int ix = (int)(pos->x/box_xsize);
 	int iy;
@@ -438,8 +438,8 @@ BoxSet::WhichBox(vec3d *pos){
 	return Boxes[label];
 }
 
-void
-BoxSet::box(int i){
+void BoxSet::box(int i)
+{
 	Box *b = WhichBox(sys->position[i]);
 	if( b != boxMap[i]) {
 		b->add(i);
@@ -450,18 +450,18 @@ BoxSet::box(int i){
 	}
 }
 
-vector<int>::iterator
-BoxSet::neighborhood_begin(int i){
+vector<int>::iterator BoxSet::neighborhood_begin(int i)
+{
 	return (boxMap[i])->neighborhood_begin();
 }
 
-vector<int>::iterator
-BoxSet::neighborhood_end(int i){
+vector<int>::iterator BoxSet::neighborhood_end(int i)
+{
 	return (boxMap[i])->neighborhood_end();
 }
 
-void
-BoxSet::printBoxNetwork(){
+void BoxSet::printBoxNetwork()
+{
 	for (int i=0; i<box_nb; i++) {
 		Box** neighbors = (Boxes[i])->neighbors();
 		int nneigh = (Boxes[i])->neigh_nb();

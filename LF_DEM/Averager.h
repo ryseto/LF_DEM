@@ -29,8 +29,10 @@ private:
 	double previous_kernel_norm;
 	double relaxation_time;
 	double previous_time;
+
 public:
-	void update(XType x, double time){
+	void update(XType x, double time)
+	{
 		/**
 		 * \brief Updates the average value x_avg with an exponential memory kernel
 		 *
@@ -75,6 +77,9 @@ public:
 	
 	~Averager();
 	
-	XType get(){return x_avg;};
+	XType get()
+	{
+		return x_avg;
+	};
 };
 #endif /* defined(__LF_DEM__Averager__) */

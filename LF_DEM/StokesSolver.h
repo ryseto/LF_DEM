@@ -156,6 +156,7 @@ class StokesSolver{
 	  TO BE DONE. TRILINOS NOT YET ADAPTED FOR FT/UW VERSION.
 				  
 	 */
+
 private:
 	int np;
 	int np6;
@@ -239,14 +240,17 @@ private:
     void setIncCholPreconditioner();
     void setSpInvPreconditioner();
 	void setSolverType(string);
+
 public:
     ~StokesSolver();
 	void init(int np);
     void initialize();
-	bool direct() {
+	bool direct()
+	{
 		return _direct;
 	}
-	bool iterative() {
+	bool iterative()
+	{
 		return _iterative;
 	}
 	void printResistanceMatrix(ostream &, string);

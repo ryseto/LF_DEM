@@ -12,7 +12,6 @@
  \author Romain Mari
  */
 
-
 #ifndef __LF_DEM__BoxSet__
 #define __LF_DEM__BoxSet__
 #include "Box.h"
@@ -57,12 +56,10 @@ private:
 	void assignNeighborsTopBottom();
 	Box ** boxMap;
 	
-protected:
 public:
 	BoxSet(){;}
 	~BoxSet();
 	void init(double interaction_dist, System *sys_);
-	
 	/*****
 	 update()
 	 
@@ -71,7 +68,6 @@ public:
 	 Those relations change at each time step for boxes on top or bottom
 	 *****/
 	void update();
-	
 	/*****
 	 is_boxed()
 	 
@@ -86,21 +82,18 @@ public:
 	 
 	 *****/
 	bool is_boxed();
-	
 	/*****
 	 WhichBox(vec3d pos)
 	 
 	 returns a pointer on the box containg position pos
 	 *****/
 	Box* WhichBox(vec3d);
-	
 	/*****
 	 box(int i)
 	 boxes particles i
 	 should be called after moving particle i
 	 *****/
 	void box(int i);
-	
 	/*****
 	 neighborhood_begin(int i) and neighborhood_end(int i)
 	 gives iterators to beginning and ending point of the container including
@@ -108,8 +101,6 @@ public:
 	 *****/
 	vector<int>::iterator neighborhood_begin(int i);
 	vector<int>::iterator neighborhood_end(int i);
-	
-	
 	void printBoxNetwork();
 };
 #endif /* defined(__LF_DEM__BoxSet__) */

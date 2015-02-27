@@ -13,16 +13,13 @@
  \author Romain Mari
  */
 
-
 #ifndef __LF_DEM__Lubrication__
 #define __LF_DEM__Lubrication__
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
-
 using namespace std;
 class System;
 class Interaction;
@@ -121,11 +118,13 @@ private:
 	//===== forces/stresses  ========================== //
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
 	void calcLubricationForce();
-	double get_lubforce_normal(){
+	double get_lubforce_normal()
+	{
 		// positive for compression
 		return -dot(lubforce_p0, nvec);
 	}
-	vec3d get_lubforce_tan(){
+	vec3d get_lubforce_tan()
+	{
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
 	void addHydroStress();
@@ -179,6 +178,5 @@ private:
 	inline double scaledYM2(){return rororo_536*YM[2];}
 	inline double scaledXM3(){return a1a1a1_109*XM[3];}
 	inline double scaledYM3(){return a1a1a1_109*YM[3];}
-
 };
 #endif /* defined(__LF_DEM__Lubrication__) */

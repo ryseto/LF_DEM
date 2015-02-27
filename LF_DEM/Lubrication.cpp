@@ -9,7 +9,8 @@
 #include "LubricationFunctions.h"
 #include "Interaction.h"
 
-Lubrication::Lubrication(Interaction *int_){
+Lubrication::Lubrication(Interaction *int_)
+{
 	interaction = int_;
 	nvec = &(interaction->nvec);
 	nxnx = &(interaction->nxnx); 
@@ -20,27 +21,27 @@ Lubrication::Lubrication(Interaction *int_){
 	nznz = &(interaction->nznz);
 }
 
-void
-Lubrication::init(System *sys_){
+void Lubrication::init(System *sys_)
+{
 	sys = sys_;
 }
 
-void
-Lubrication::getInteractionData(){
+void Lubrication::getInteractionData()
+{
 	p0 = interaction->p0;
 	p1 = interaction->p1;
 	p0_6 = 6*p0;
 	p1_6 = 6*p1;
 }
 
-void
-Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_){
+void Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_)
+{
 	lub_coeff = lub_coeff_; // normal
 	log_lub_coeff = log_lub_coeff_; // tangential
 }
 
-void
-Lubrication::setResistanceCoeffTang(double tangent_rc){
+void Lubrication::setResistanceCoeffTang(double tangent_rc)
+{
 	log_lub_coeff = tangent_rc;
 }
 
@@ -50,8 +51,8 @@ Lubrication::setResistanceCoeffTang(double tangent_rc){
  *                                *
  *********************************/
 
-void
-Lubrication::calcLubConstants(){
+void Lubrication::calcLubConstants()
+{
 	a0 = interaction->a0;
 	a1 = interaction->a1;
 	ro = interaction->ro;
@@ -182,16 +183,16 @@ Lubrication::calcLubConstants(){
 }
 
 // Resistance functions
-void
-Lubrication::calcXFunctions(){
+void Lubrication::calcXFunctions()
+{
 	for (int j=0; j<4; j++) {
 		XA[j] = cXA[j]*lub_coeff;
 		XG[j] = cXG[j]*lub_coeff;
 	}
 }
 
-void
-Lubrication::calcXFunctionsStress(){
+void Lubrication::calcXFunctionsStress()
+{
 	for (int j=0; j<4; j++) {
 		XA[j] = cXA[j]*lub_coeff;
 		XG[j] = cXG[j]*lub_coeff;
@@ -199,8 +200,8 @@ Lubrication::calcXFunctionsStress(){
 	}
 }
 
-void
-Lubrication::calcXYFunctions(){
+void Lubrication::calcXYFunctions()
+{
 	for (int j=0; j<4; j++) {
 		XA[j] = cXA[j]*lub_coeff;
 		YA[j] = cYA[j]*log_lub_coeff;
@@ -212,8 +213,8 @@ Lubrication::calcXYFunctions(){
 	}
 }
 
-void
-Lubrication::calcXYFunctionsStress(){
+void Lubrication::calcXYFunctionsStress()
+{
 	for (int j=0; j<4; j++) {
 		XA[j] = cXA[j]*lub_coeff;
 		YA[j] = cYA[j]*log_lub_coeff;
@@ -227,8 +228,8 @@ Lubrication::calcXYFunctionsStress(){
 	}
 }
 
-void
-Lubrication::calcGE(double *GEi, double *GEj){
+void Lubrication::calcGE(double *GEi, double *GEj)
+{
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
 	 *
@@ -249,8 +250,9 @@ Lubrication::calcGE(double *GEi, double *GEj){
 	GEj[2] = sr*cGE_p1*nvec->z;
 }
 
-void
-Lubrication::calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj){
+void Lubrication::calcGEHE(double *GEi, double *GEj,
+						   double *HEi, double *HEj)
+{
 	/*
 	 * lubrication_model = 1
 	 * upto log(1/xi) level
@@ -285,10 +287,11 @@ Lubrication::calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj){
 // ie fills :
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
-void
-Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-								   const vec3d &oi, const vec3d &oj,
-								   StressTensor &stresslet_i, StressTensor &stresslet_j){
+void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
+										const vec3d &oi, const vec3d &oj,
+										StressTensor &stresslet_i,
+										StressTensor &stresslet_j)
+{
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
 	 *
@@ -380,8 +383,9 @@ Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	stresslet_j += YHO_j;
 }
 
-void
-Lubrication::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j){
+void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
+									  StressTensor &stresslet_j)
+{
 	/*
 	 * S_{ab} = M_{ijxz}E_{xz}+M_{ijzx}E_{zx}
 	 *        = (rate/2)*(M_{ijxz}+M_{ijzx})
@@ -429,8 +433,8 @@ Lubrication::pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stress
  *
  * See sys->calcLubricationForce() 
  */
-void
-Lubrication::calcLubricationForce(){
+void Lubrication::calcLubricationForce()
+{
 	/*
 	 *  First: -A*(U-Uinf) term
 	 */
@@ -470,8 +474,8 @@ Lubrication::calcLubricationForce(){
 	}
 }
 
-void
-Lubrication::addHydroStress(){
+void Lubrication::addHydroStress()
+{
 	/*
 	 *  First: -G*(U-Uinf) term
 	 */
@@ -520,8 +524,8 @@ Lubrication::addHydroStress(){
 	}
 }
 
-void
-Lubrication::updateResistanceCoeff(){
+void Lubrication::updateResistanceCoeff()
+{
 	if (interaction->is_contact() > 0) {
 		if (!interaction->contact_state_changed_after_predictor) {
 			setResistanceCoeff(sys->lub_coeff_contact,

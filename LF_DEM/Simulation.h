@@ -4,8 +4,6 @@
  \author Ryohei Seto
  \author Romain Mari
  */
-
-
 //
 //  Simulation.h
 //  LF_DEM
@@ -22,7 +20,6 @@
 #include <string>
 #include "System.h"
 #include "ParameterSet.h"
-
 
 class Simulation{
 private:
@@ -84,8 +81,7 @@ private:
 	void readParameterFile();
 	void openOutputFiles(bool);
 	void prepareSimulationName(bool);
-	void autoSetParameters(const string &keyword,
-						   const string &value);
+	void autoSetParameters(const string &keyword, const string &value);
 	void importInitialPositionFile();
 	void contactForceParameter(string filename);
 	void contactForceParameterBrownian(string filename);
@@ -120,4 +116,3 @@ public:
 	void simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable);
 };
 #endif /* defined(__LF_DEM__Simulation__) */
-

@@ -9,7 +9,8 @@
 #include "System.h"
 
 void
-System::calcStressPerParticle(){
+System::calcStressPerParticle()
+{
 	/**
 	   This method computes the stresses per particle, split by components (hydro, contact, ...).
 	   
@@ -72,7 +73,8 @@ System::calcStressPerParticle(){
 }
 
 void
-System::calcStress(){
+System::calcStress()
+{
 	//////////////////////////////////////////////////////////////
 	total_hydro_stress.reset();
 	for (int i=0; i<np; i++) {
