@@ -6,14 +6,14 @@
 #include "RepulsiveForce.h"
 #include "Interaction.h"
 
-void
-RepulsiveForce::init(System *sys_, Interaction *interaction_){
+void RepulsiveForce::init(System *sys_, Interaction *interaction_)
+{
 	sys = sys_;
 	interaction = interaction_;
 }
 
-void
-RepulsiveForce::activate(){
+void RepulsiveForce::activate()
+{
 	interaction->get_par_num(p0, p1);
 	/*
 	 * The size dependence of repulsive force:
@@ -26,8 +26,8 @@ RepulsiveForce::activate(){
 	stresslet_XF = 0;
 }
 
-void
-RepulsiveForce::calcForce(){
+void RepulsiveForce::calcForce()
+{
 	/** 
 		\brief Compute the repulsive force.
 		
@@ -49,13 +49,13 @@ RepulsiveForce::calcForce(){
 	}
 }
 
-void
-RepulsiveForce::addUpForce(){
+void RepulsiveForce::addUpForce()
+{
 	sys->repulsive_force[p0] += force_vector;
 	sys->repulsive_force[p1] -= force_vector;
 }
 
-void
-RepulsiveForce::calcStressXF(){
+void RepulsiveForce::calcStressXF()
+{
 	stresslet_XF.set(interaction->rvec, force_vector);
 }

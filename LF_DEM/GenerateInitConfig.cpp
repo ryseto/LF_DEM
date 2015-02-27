@@ -11,8 +11,9 @@
 #include "Simulation.h"
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 using namespace std;
-int
-GenerateInitConfig::generate(int rand_seed_){
+
+int GenerateInitConfig::generate(int rand_seed_)
+{
 	setParameters();
 	rand_seed = rand_seed_;
 	sys.set_np(np);
@@ -25,13 +26,10 @@ GenerateInitConfig::generate(int rand_seed_){
 	sys.in_predictor = false;
 	sys.set_integration_method(0);
 	putRandom();
-	
 	double inflate_ratio = 1.03;
 	for (int i=0; i<np;i++) {
 		sys.radius[i] *= inflate_ratio;
 	}
-
-
 	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
@@ -67,8 +65,6 @@ GenerateInitConfig::generate(int rand_seed_){
 		}
 		count ++;
 	} while (abs(diff_energy) > 1e-7);
-
-
 	//deflate
 	for (int i=0; i < np; i++) {
 		if (i < np1) {
@@ -77,8 +73,6 @@ GenerateInitConfig::generate(int rand_seed_){
 			sys.radius[i] = a2;
 		}
 	}
-
-
 	position.resize(np);
 	radius.resize(np);
 	for (int i=0; i<sys.get_np(); i++) {
@@ -91,8 +85,8 @@ GenerateInitConfig::generate(int rand_seed_){
 	return 0;
 }
 
-void
-GenerateInitConfig::outputPositionData(){
+void GenerateInitConfig::outputPositionData()
+{
 	ofstream fout;
 	ofstream fout_yap;
 	ostringstream ss_posdatafilename;
@@ -164,8 +158,8 @@ GenerateInitConfig::outputPositionData(){
 	fout.close();
 }
 
-double
-GenerateInitConfig::computeGradient(){
+double GenerateInitConfig::computeGradient()
+{
 	for(int i=0; i<np; i++) {
 		grad[i].reset();
 	}
@@ -190,8 +184,8 @@ GenerateInitConfig::computeGradient(){
 	return energy;
 }
 
-void
-GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
+void GenerateInitConfig::moveAlongGradient(vec3d *g, int dir)
+{
 	double grad_norm;
 	double gradient_power = 0.5;
 	vec3d step;
@@ -210,15 +204,15 @@ GenerateInitConfig::moveAlongGradient(vec3d *g, int dir){
 	}
 }
 
-void
-GenerateInitConfig::storeGradient(){
+void GenerateInitConfig::storeGradient()
+{
 	for (int i=0; i<np; i++) {
 		prev_grad[i] = grad[i];
 	}
 }
 
-double
-GenerateInitConfig::gradientDescent(){
+double GenerateInitConfig::gradientDescent()
+{
 	double old_running_energy;
 	double running_energy;
 	double relative_en;
@@ -257,8 +251,8 @@ GenerateInitConfig::gradientDescent(){
 	return running_energy;
 }
 
-void
-GenerateInitConfig::putRandom(){
+void GenerateInitConfig::putRandom()
+{
 	sys.allocatePositionRadius();
 	rand_gen.seed(rand_seed);
 	for (int i=0; i < np; i++) {
@@ -277,8 +271,8 @@ GenerateInitConfig::putRandom(){
 	}
 }
 
-void
-GenerateInitConfig::updateInteractions(int i){
+void GenerateInitConfig::updateInteractions(int i)
+{
 	vector <Interaction*> inter_list;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
@@ -295,8 +289,8 @@ GenerateInitConfig::updateInteractions(int i){
 	}
 }
 
-int
-GenerateInitConfig::overlapNumber(int i){
+int GenerateInitConfig::overlapNumber(int i)
+{
 	int overlaps = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
@@ -307,8 +301,8 @@ GenerateInitConfig::overlapNumber(int i){
 	return overlaps;
 }
 
-double
-GenerateInitConfig::particleEnergy(int i){
+double GenerateInitConfig::particleEnergy(int i)
+{
 	double energy = 0;
 	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
 		 it != sys.interaction_list[i].end(); it ++) {
@@ -322,8 +316,8 @@ GenerateInitConfig::particleEnergy(int i){
 	return energy;
 }
 
-double
-GenerateInitConfig::zeroTMonteCarloSweep(){
+double GenerateInitConfig::zeroTMonteCarloSweep()
+{
 	int steps = 0;
 	int init_overlaps = 0;
 	double init_energy = 0;
@@ -372,22 +366,22 @@ GenerateInitConfig::zeroTMonteCarloSweep(){
 	return final_energy/np;
 }
 
-vec3d
-GenerateInitConfig::randUniformSphere(double r){
+vec3d GenerateInitConfig::randUniformSphere(double r)
+{
 	double z = 2*RANDOM-1;
 	double phi = 2*M_PI*RANDOM;
 	double sin_theta = sqrt(1-z*z);
 	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
 }
 
-vec3d
-GenerateInitConfig::randUniformCircle(double r){
+vec3d GenerateInitConfig::randUniformCircle(double r)
+{
 	double phi = 2*M_PI*RANDOM;
 	return vec3d(r*cos(phi), 0, r*sin(phi));
 }
 
-template<typename T>
-T readStdinDefault(T default_value,	string message){
+template<typename T> T readStdinDefault(T default_value, string message)
+{
 	string input;
 	T value;
 	cerr << message << "[" << default_value << "]: ";
@@ -402,9 +396,8 @@ T readStdinDefault(T default_value,	string message){
 	return value;
 }
 
-
-void
-GenerateInitConfig::setParameters(){
+void GenerateInitConfig::setParameters()
+{
 	/*
 	 *  Read parameters from standard input
 	 *
@@ -460,7 +453,6 @@ GenerateInitConfig::setParameters(){
 		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
 		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
 	}
-	
 	if (np > 0) {
 		total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
 		double np1_tmp = volume_fraction1*total_volume/pvolume1;

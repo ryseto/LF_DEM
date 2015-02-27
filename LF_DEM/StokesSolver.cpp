@@ -12,7 +12,8 @@ using namespace std;
  *                                                     *
  ******************************************************/
 
-StokesSolver::~StokesSolver(){
+StokesSolver::~StokesSolver()
+{
     if (!dblocks) {
 		delete [] dblocks;
 	}
@@ -54,8 +55,8 @@ StokesSolver::~StokesSolver(){
 #endif
 }
 
-void
-StokesSolver::init(int n){
+void StokesSolver::init(int n)
+{
 	np = n;
     np6 = 6*np;
 	//brownian = is_brownian;
@@ -66,8 +67,8 @@ StokesSolver::init(int n){
 	//	FTcoupling = false;
 }
 
-void
-StokesSolver::initialize(){
+void StokesSolver::initialize()
+{
 	// CHOLMOD parameters
 	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
 	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
@@ -123,9 +124,8 @@ StokesSolver::initialize(){
 //}
 
 // Diagonal Blocks Terms, FT/UW version
-void
-
-StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC){
+void StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC)
+{
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
 	double n0n2 = nvec.x*nvec.z;
@@ -181,9 +181,11 @@ StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double 
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
-void
-StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
-							  double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
+void StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
+								   double scaledXA,
+								   double scaledYA, double scaledYB,
+								   double scaledYBtilde, double scaledYC)
+{
 	if (direct()) {
 		setColumn(nvec, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	}
@@ -219,9 +221,8 @@ StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
  
  
  *****************************************************/
-void
-StokesSolver::completeResistanceMatrix_cholmod(){
-
+void StokesSolver::completeResistanceMatrix_cholmod()
+{
 	// this function is commented, but you are strongly advised to read 
 	// the description of storage in the header file first :)
 
@@ -370,7 +371,6 @@ StokesSolver::completeResistanceMatrix_cholmod(){
 	factorizeResistanceMatrix();
 }
 
-
 /*************** Epetra_CrsMatrix Filling *************
  Epetra_CrsMatrix we are using are defined in row major order.
  
@@ -381,8 +381,8 @@ StokesSolver::completeResistanceMatrix_cholmod(){
  
  *****************************************************/
 
-void
-StokesSolver::completeResistanceMatrix_trilinos(){
+void StokesSolver::completeResistanceMatrix_trilinos()
+{
 #ifdef TRILINOS
     for (int i = 0; i < res_matrix_linear_size; i++) {
 		tril_res_matrix->InsertGlobalValues(i, columns_nb[i] , values[i], columns[i]);
@@ -396,8 +396,8 @@ StokesSolver::completeResistanceMatrix_trilinos(){
 #endif
 }
 
-void
-StokesSolver::completeResistanceMatrix(){
+void StokesSolver::completeResistanceMatrix()
+{
 	if (direct()) {
 		completeResistanceMatrix_cholmod();
 	}
@@ -408,8 +408,10 @@ StokesSolver::completeResistanceMatrix(){
 #endif
 }
 
-void
-StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, double *reset_resmat_dblocks){
+void StokesSolver::resetResistanceMatrix(string solver_type,
+										 int nb_of_interactions,
+										 double *reset_resmat_dblocks)
+{
 	setSolverType(solver_type);
 	odblocks_nb = nb_of_interactions;
 	if (direct()) {
@@ -460,8 +462,8 @@ StokesSolver::resetResistanceMatrix(string solver_type, int nb_of_interactions, 
 #endif
 }
 
-void
-StokesSolver::resetRHS(){
+void StokesSolver::resetRHS()
+{
 	if (direct()) {
 		for (int i=0; i<res_matrix_linear_size; i++){
 			((double*)chol_rhs->x)[i] = 0;
@@ -474,8 +476,8 @@ StokesSolver::resetRHS(){
 #endif
 }
 
-void
-StokesSolver::resetRHStorque(){
+void StokesSolver::resetRHStorque()
+{
 	if (direct()) {
 		for (int i=0; i<np; i++){
 			int i6_3 = 6*i+3;
@@ -490,8 +492,8 @@ StokesSolver::resetRHStorque(){
 #endif
 }
 
-void
-StokesSolver::addToRHSForce(int i, double *force_i){
+void StokesSolver::addToRHSForce(int i, double *force_i)
+{
 	int i6 = 6*i;
 	if (direct()) {
 		for (int u=0; u<3; u++) {
@@ -507,8 +509,8 @@ StokesSolver::addToRHSForce(int i, double *force_i){
 #endif
 }
 
-void
-StokesSolver::addToRHSForce(int i, const vec3d &force_i){
+void StokesSolver::addToRHSForce(int i, const vec3d &force_i)
+{
 	int i6 = 6*i;
 	if (direct()) {
 		((double*)chol_rhs->x)[i6  ] += force_i.x;
@@ -525,25 +527,25 @@ StokesSolver::addToRHSForce(int i, const vec3d &force_i){
 }
 
 
-void
-StokesSolver::addToRHSTorque(int i, double *torque_i){
+void StokesSolver::addToRHSTorque(int i, double *torque_i)
+{
 	int i6_3 = 6*i+3;
 	if (direct()) {
-		for(int u=0; u<3;u++){
+		for (int u=0; u<3;u++) {
 			((double*)chol_rhs->x)[i6_3+u] += torque_i[u];
 		}
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-		for(int u=0; u<3;u++){
+		for (int u=0; u<3;u++) {
 			tril_rhs->SumIntoGlobalValue(i6_3+u, 0, torque_i[u]);
 		}
 	}
 #endif
 }
 
-void
-StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
+void StokesSolver::addToRHSTorque(int i, const vec3d &torque_i)
+{
 	int i6_3 = 6*i+3;
 	if (direct()) {
 		((double*)chol_rhs->x)[i6_3  ] += torque_i.x;
@@ -559,8 +561,8 @@ StokesSolver::addToRHSTorque(int i, const vec3d &torque_i){
 #endif
 }
 
-void
-StokesSolver::addToRHS(double *rhs){
+void StokesSolver::addToRHS(double *rhs)
+{
 	if (direct()) {
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			((double*)chol_rhs->x)[i] += rhs[i];
@@ -575,8 +577,8 @@ StokesSolver::addToRHS(double *rhs){
 #endif
 }
 
-void
-StokesSolver::setRHS(double* rhs){
+void StokesSolver::setRHS(double* rhs)
+{
 	if (direct()) {
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			((double*)chol_rhs->x)[i] = rhs[i];
@@ -588,8 +590,8 @@ StokesSolver::setRHS(double* rhs){
 	}
 }
 
-void
-StokesSolver::setRHSForce(int i, const vec3d &force_i){
+void StokesSolver::setRHSForce(int i, const vec3d &force_i)
+{
 	int i6 = 6*i;
 	if (direct()) {
 		((double*)chol_rhs->x)[i6  ] = force_i.x;
@@ -604,8 +606,8 @@ StokesSolver::setRHSForce(int i, const vec3d &force_i){
 #endif
 }
 
-void
-StokesSolver::setRHSTorque(int i, const vec3d &torque_i){
+void StokesSolver::setRHSTorque(int i, const vec3d &torque_i)
+{
 	int i6_3 = 6*i+3;
 	if (direct()) {
 		((double*)chol_rhs->x)[i6_3  ] = torque_i.x;
@@ -620,8 +622,8 @@ StokesSolver::setRHSTorque(int i, const vec3d &torque_i){
 #endif
 }
 
-void
-StokesSolver::getRHS(double* rhs){
+void StokesSolver::getRHS(double* rhs)
+{
 	if (direct()) {
 		for (int i=0; i<res_matrix_linear_size; i++) {
 			rhs[i] = ((double*)chol_rhs->x)[i];
@@ -635,8 +637,8 @@ StokesSolver::getRHS(double* rhs){
 }
 
 // Computes X = L*RHS
-void
-StokesSolver::compute_LTRHS(double* X){
+void StokesSolver::compute_LTRHS(double* X)
+{
 	if (direct()) {
 		/*
 		  Cholmod gives a factorizationof a permutated resistance
@@ -673,8 +675,8 @@ StokesSolver::compute_LTRHS(double* X){
 }
 
 // Finds solutions to L^T X = RHS
-void
-StokesSolver::solve_LT(double* X){
+void StokesSolver::solve_LT(double* X)
+{
 	if (direct()) {
 		chol_PTsolution = cholmod_solve(CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 		chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
@@ -692,8 +694,8 @@ StokesSolver::solve_LT(double* X){
 #endif
 }
 
-void
-StokesSolver::solve_LT(vec3d* X, vec3d* ang_X){
+void StokesSolver::solve_LT(vec3d* X, vec3d* ang_X)
+{
 	if (direct()) {
 		chol_PTsolution = cholmod_solve (CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 		chol_solution = cholmod_solve (CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
@@ -717,8 +719,8 @@ StokesSolver::solve_LT(vec3d* X, vec3d* ang_X){
 #endif
 }
 
-void
-StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity){
+void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
+{
 	if (direct()) {
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 		for (int i=0; i<np; i++) {
@@ -752,8 +754,8 @@ StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity){
 	}
 #endif
 }
-void
-StokesSolver::solve(double* velocity){
+void StokesSolver::solve(double* velocity)
+{
 	if (direct()) {
 		chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 		for (int i=0; i<res_matrix_linear_size; i++) {
@@ -783,8 +785,8 @@ StokesSolver::solve(double* velocity){
 }
 
 // testing function, don't use it in production code, very slow and unclean
-void
-StokesSolver::multiplySolutionByResMat(double* vec){
+void StokesSolver::multiplySolutionByResMat(double* vec)
+{
 	chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 	cholmod_dense *r;
    	r = cholmod_copy_dense(chol_rhs, &chol_c);
@@ -797,8 +799,9 @@ StokesSolver::multiplySolutionByResMat(double* vec){
 	cholmod_free_dense(&r, &chol_c);
 	cholmod_free_dense(&chol_solution, &chol_c);
 }
-void
-StokesSolver::multiplyByResMat(double* vec){
+
+void StokesSolver::multiplyByResMat(double* vec)
+{
 	cholmod_dense *r;
 	r = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
 	for (int i=0; i<res_matrix_linear_size; i++) {
@@ -814,9 +817,8 @@ StokesSolver::multiplyByResMat(double* vec){
 	cholmod_free_dense(&r, &chol_c);
 }
 
-
-void
-StokesSolver::convertDirectToIterative(){
+void StokesSolver::convertDirectToIterative()
+{
 #ifdef TRILINOS
 	// don't free the Cholesky factor, but rememver to do it when solvingIsDone
 	cholmod_free_sparse(&chol_res_matrix, &chol_c);
@@ -833,8 +835,8 @@ StokesSolver::convertDirectToIterative(){
 #endif
 }
 
-void
-StokesSolver::solvingIsDone(){
+void StokesSolver::solvingIsDone()
+{
 	if (direct()) {
 		cholmod_free_factor(&chol_L, &chol_c);
 		cholmod_free_sparse(&chol_res_matrix, &chol_c);
@@ -857,8 +859,8 @@ StokesSolver::solvingIsDone(){
  *                                                     *
  ******************************************************/
 
-void
-StokesSolver::allocateRessources(){
+void StokesSolver::allocateRessources()
+{
 #ifdef TRILINOS
     int maxnum_interactionpair_per_particle = 20;
     columns_max_nb = 6*maxnum_interactionpair_per_particle;
@@ -902,8 +904,8 @@ StokesSolver::allocateRessources(){
 }
 
 // only needed for Cholmod
-void
-StokesSolver::allocateResistanceMatrix(){
+void StokesSolver::allocateResistanceMatrix()
+{
 	// allocate
 	int nzmax; // non-zero values
 	nzmax = 21*np; // diagonal blocks
@@ -911,16 +913,19 @@ StokesSolver::allocateResistanceMatrix(){
 	chol_res_matrix = cholmod_allocate_sparse(np6, np6, nzmax, sorted, packed, stype,xtype, &chol_c);
 }
 
-void
-StokesSolver::doneBlocks(int i){
+void StokesSolver::doneBlocks(int i)
+{
 	if (direct()) {
 		odbrows_table[i+1] = (unsigned int)odbrows.size();
 	}
 }
 
 // odblocks fillings, for FT/UW version
-void
-StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
+void StokesSolver::setColumn(const vec3d &nvec, int jj,
+							 double scaledXA,
+							 double scaledYA, double scaledYB,
+							 double scaledYBtilde, double scaledYC)
+{
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
 	double n0n2 = nvec.x*nvec.z;
@@ -974,8 +979,12 @@ StokesSolver::setColumn(const vec3d &nvec, int jj, double scaledXA, double scale
 }
 
 #ifdef TRILINOS
-void
-StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC){
+void StokesSolver::setRow(const vec3d &nvec,
+						  int ii, int jj,
+						  double scaledXA,
+						  double scaledYA, double scaledYB,
+						  double scaledYBtilde, double scaledYC)
+{
 	cerr << " Error : StokesSolver::addToDiag(const vec3d &nvec, int ii, double FUvalue, double TWvalue) not implemented for TRILINOS yet ! " << endl;
 	exit(1);
 
@@ -1047,9 +1056,8 @@ StokesSolver::setRow(const vec3d &nvec, int ii, int jj, double scaledXA, double 
 }
 #endif
 
-void
-StokesSolver::factorizeResistanceMatrix(){
-
+void StokesSolver::factorizeResistanceMatrix()
+{
 	/*reference code */
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
@@ -1096,8 +1104,8 @@ StokesSolver::factorizeResistanceMatrix(){
  
  This method stores P^{-1} in tril_l_precond.
  */
-void
-StokesSolver::setDiagBlockPreconditioner(){
+void StokesSolver::setDiagBlockPreconditioner()
+{
     double a00, a01, a02, a11, a12, a22;
     double det, idet;
     double *precond_row = new double [3];
@@ -1148,8 +1156,8 @@ StokesSolver::setDiagBlockPreconditioner(){
  with values being the inverse of the ones on R_FU diagonal.
  I (Romain) don't understand this behavior so far.
  */
-void
-StokesSolver::setIncCholPreconditioner(){
+void StokesSolver::setIncCholPreconditioner()
+{
 	//  parameters to be tuned
     int fill_level = 0;
 	//    double drop_tolerance = 1.;
@@ -1204,8 +1212,8 @@ StokesSolver::setIncCholPreconditioner(){
 #endif
 
 #ifdef TRILINOS
-void
-StokesSolver::matrixChol2Tril(const cholmod_sparse *C, Epetra_CrsMatrix* &T){
+void StokesSolver::matrixChol2Tril(const cholmod_sparse *C, Epetra_CrsMatrix* &T)
+{
 	vector <double> row_values;
 	vector <int> row_indices;
 	for (int i=0; i< res_matrix_linear_size;i++) {
@@ -1222,15 +1230,15 @@ StokesSolver::matrixChol2Tril(const cholmod_sparse *C, Epetra_CrsMatrix* &T){
  cholmod-extra routine by Jaakko Luttinen
  
  */
-void
-StokesSolver::setSpInvPreconditioner(){
+void StokesSolver::setSpInvPreconditioner()
+{
 	cholmod_sparse *sparse_inv = cholmod_spinv(chol_L, &chol_c);
 	cholmod_free_sparse(&sparse_inv, &chol_c);
 }
 #endif
 
-void
-StokesSolver::setSolverType(string solver_type){
+void StokesSolver::setSolverType(string solver_type)
+{
 	if (solver_type == "direct") {
 		_direct = true;
 		_iterative = false;
@@ -1253,8 +1261,8 @@ StokesSolver::setSolverType(string solver_type){
 }
 
 // testing
-void
-StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
+void StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense)
+{
 	if (direct()) {
 		if (sparse_or_dense=="sparse") {
 			//		out << endl<< " chol res " << endl;
@@ -1311,8 +1319,8 @@ StokesSolver::printResistanceMatrix(ostream &out, string sparse_or_dense){
 #endif
 }
 
-void
-StokesSolver::printFactor(ostream &out){
+void StokesSolver::printFactor(ostream &out)
+{
 	if (direct()) {
 		cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 		cholmod_sparse* chol_L_sparse = cholmod_transpose(cholmod_factor_to_sparse(chol_L_copy, &chol_c), 1,  &chol_c);
@@ -1361,8 +1369,8 @@ StokesSolver::printFactor(ostream &out){
 }
 
 // testing
-void
-StokesSolver::printRHS(){
+void StokesSolver::printRHS()
+{
 	if (direct()) {
 		for (int i = 0; i < res_matrix_linear_size; i++) {
 			cout << i << " (part " << " " << (i-i%6)/6 << " )  " << ((double*)chol_rhs->x)[i] << endl;

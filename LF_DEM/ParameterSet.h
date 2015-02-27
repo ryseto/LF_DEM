@@ -7,7 +7,8 @@
 #ifndef __LF_DEM__ParameterSet__
 #define __LF_DEM__ParameterSet__
 
-struct ParameterSet{
+struct ParameterSet
+{
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time/strain step value. [Pedictor/Corrector or Brownian]: time/strain step value
 	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode

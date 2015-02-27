@@ -31,7 +31,8 @@
 Simulation::Simulation():
 shear_rate_expectation(-1) {};
 
-Simulation::~Simulation(){
+Simulation::~Simulation()
+{
 	if (fout_rheo.is_open()) {
 		fout_rheo.close();
 	}
@@ -44,11 +45,12 @@ Simulation::~Simulation(){
 };
 
 void
-Simulation::contactForceParameter(string filename){
+Simulation::contactForceParameter(string filename)
+{
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
-		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
+		cerr << " Contact parameter file '" << filename << "' not found." << endl;
 		exit(1);
 	}
 	// temporal variables to keep imported values.
@@ -73,7 +75,8 @@ Simulation::contactForceParameter(string filename){
 }
 
 void
-Simulation::contactForceParameterBrownian(string filename){
+Simulation::contactForceParameterBrownian(string filename)
+{
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -100,7 +103,8 @@ Simulation::contactForceParameterBrownian(string filename){
 }
 
 void
-Simulation::importPreSimulationData(string filename){
+Simulation::importPreSimulationData(string filename)
+{
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
 	if (!fin_PreSimulationData) {
@@ -123,7 +127,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   double ratio_repulsion,
 									   double ratio_cohesion,
 									   double ratio_critical_load,
-									   string control_variable){
+									   string control_variable)
+{
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
@@ -131,7 +136,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	sys.cohesion = false;
 	sys.brownian = false;
 	sys.repulsiveforce = false;
-	
+
 	if (control_var == "rate") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
@@ -252,7 +257,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		sys.shear_disp = 0;
 	}
 	if (input_files[2] != "not_given") {
-		if (sys.brownian&&!p.auto_determine_knkt) {
+		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
 		} else {
 			contactForceParameter(input_files[2]);
@@ -288,7 +293,8 @@ void
 Simulation::simulationSteadyShear(vector<string> &input_files,
 								  bool binary_conf,
 								  double peclet_num, double ratio_repulsion, double ratio_cohesion,
-								  double ratio_critical_load, string control_variable){
+								  double ratio_critical_load, string control_variable)
+{
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulationSteadyShear(input_files, binary_conf, peclet_num,
@@ -354,8 +360,11 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 /*
  * Main simulation
  */
-void
-Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable){
+void Simulation::simulationUserDefinedSequence(string seq_type,
+											   vector<string> &input_files,
+											   bool binary_conf,
+											   string control_variable)
+{
 	user_sequence = true;
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
@@ -419,8 +428,7 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 		cerr << " Sequence file '" << filename_sequence << "' not found." <<endl;
 		exit(1);
 	}
-	double strain;
-	double targ_st;
+	double strain, targ_st;
 	while (fin_seq >> strain >> targ_st) {
 		strain_sequence.push_back(strain);
 		rsequence.push_back(targ_st);
@@ -488,8 +496,8 @@ Simulation::simulationUserDefinedSequence(string seq_type, vector<string> &input
 	}
 }
 
-bool
-str2bool(string value){
+bool str2bool(string value)
+{
 	if (value == "true") {
 		return true;
 	} else if (value == "false") {
@@ -500,30 +508,29 @@ str2bool(string value){
 	}
 }
 
-void
-Str2KeyValue(string &str_parameter,
+void Str2KeyValue(string &str_parameter,
 			 string &keyword,
-			 string &value){
+			 string &value)
+{
 	string::size_type pos_equal = str_parameter.find("=");
-
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
 	return;
 }
 
-void
-removeBlank(string &str){
+void removeBlank(string &str)
+{
 	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-void
-Simulation::autoSetParameters(const string &keyword, const string &value){
+void Simulation::autoSetParameters(const string &keyword, const string &value)
+{
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
 		if (p.friction_model == 2) {
 			cerr << "!!Neglected friction_model in parameter file!!" << endl;
-	} else {
+		} else {
 			p.friction_model = atoi(value.c_str());
 		}
 	} else if (keyword == "rolling_friction") {
@@ -600,8 +607,8 @@ Simulation::autoSetParameters(const string &keyword, const string &value){
 	}
 }
 
-void
-Simulation::readParameterFile(){
+void Simulation::readParameterFile()
+{
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
@@ -648,17 +655,15 @@ Simulation::readParameterFile(){
 	return;
 }
 
-void
-Simulation::openOutputFiles(bool binary_conf){
+void Simulation::openOutputFiles(bool binary_conf)
+{
 	/*
 	 * Set simulation name and name of output files.
 	 */
 	prepareSimulationName(binary_conf);
-	
 	string st_filename = "st_" +sys.simu_name + ".dat";
 	fout_st.open(st_filename.c_str());
 	outputDataHeader(fout_st);
-
 	string rheo_filename = "rheo_" + sys.simu_name + ".dat";
 	fout_rheo.open(rheo_filename.c_str());
 	outputDataHeader(fout_rheo);
@@ -717,7 +722,6 @@ Simulation::openOutputFiles(bool binary_conf){
 	"#51: max rolling displacement\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
-
 	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";
 		fout_particle.open(particle_filename.c_str());
@@ -742,7 +746,6 @@ Simulation::openOutputFiles(bool binary_conf){
 		//
 		fout_particle << fout_par_col_def << endl;
 	}
-	
 	if (p.out_data_interaction) {
 		string interaction_filename = "int_" + sys.simu_name + ".dat";
 		fout_interaction.open(interaction_filename.c_str());
@@ -769,13 +772,13 @@ Simulation::openOutputFiles(bool binary_conf){
 	}
 }
 
-void
-Simulation::exportParameterSet(){
+void Simulation::exportParameterSet()
+{
 	sys.importParameterSet(p);
 }
 
-void
-Simulation::setDefaultParameters(){
+void Simulation::setDefaultParameters()
+{
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
@@ -849,8 +852,8 @@ Simulation::setDefaultParameters(){
 	p.out_data_interaction = true;
 }
 
-void
-Simulation::importInitialPositionFile(){
+void Simulation::importInitialPositionFile()
+{
 	fstream file_import;
 	file_import.open(filename_import_positions.c_str());
 	if (!file_import) {
@@ -875,16 +878,16 @@ Simulation::importInitialPositionFile(){
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 }
 
-void
-Simulation::outputConfigurationBinary(){
+void Simulation::outputConfigurationBinary()
+{
 	string conf_filename;
 	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
 	conf_filename =  "conf_" + sys.simu_name + ".dat";
 	outputConfigurationBinary(conf_filename);
 }
 
-void
-Simulation::outputConfigurationBinary(string conf_filename){
+void Simulation::outputConfigurationBinary(string conf_filename)
+{
 	vector < vector <double> > pos;
 	int np = sys.get_np();
 	int dims = 4;
@@ -914,8 +917,8 @@ Simulation::outputConfigurationBinary(string conf_filename){
 	conf_export.close();
 }
 
-void
-Simulation::importConfigurationBinary(){
+void Simulation::importConfigurationBinary()
+{
 	ifstream file_import;
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
@@ -945,8 +948,8 @@ Simulation::importConfigurationBinary(){
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 }
 
-void
-Simulation::prepareSimulationName(bool binary_conf){
+void Simulation::prepareSimulationName(bool binary_conf)
+{
 	ostringstream ss_simu_name;
 	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
 	string::size_type param_name_end = filename_parameters.find_last_of(".");
@@ -973,8 +976,8 @@ Simulation::prepareSimulationName(bool binary_conf){
 	cerr << "filename: " << sys.simu_name << endl;	
 }
 
-void
-Simulation::evaluateData(){
+void Simulation::evaluateData()
+{
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
@@ -1023,8 +1026,8 @@ Simulation::evaluateData(){
 	}
 }
 
-void
-Simulation::outputStressTensorData(){
+void Simulation::outputStressTensorData()
+{
 	fout_st << sys.get_shear_strain() << ' ';
 	fout_st << 6*M_PI*viscosity << ' ';
 	/* total_stress = sys.total_hydro_stress;
@@ -1041,8 +1044,8 @@ Simulation::outputStressTensorData(){
 	fout_st << endl;
 }
 
-void
-Simulation::outputRheologyData(){
+void Simulation::outputRheologyData()
+{
 	/*
 	 * Output the sum of the normal forces.
 	 *
@@ -1143,8 +1146,8 @@ Simulation::outputRheologyData(){
 	fout_rheo << endl;
 }
 
-vec3d
-Simulation::shiftUpCoordinate(double x, double y, double z){
+vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
+{
 	if (p.origin_zero_flow) {
 		z += sys.Lz_half();
 		if (z > sys.Lz_half()) {
@@ -1158,8 +1161,8 @@ Simulation::shiftUpCoordinate(double x, double y, double z){
 	return vec3d(x,y,z);
 }
 
-void
-Simulation::outputDataHeader(ofstream &fout){
+void Simulation::outputDataHeader(ofstream &fout)
+{
 	fout << "# LF_DEM version " << GIT_VERSION << endl;
 	fout << "# np " << sys.get_np() << endl;
 	fout << "# VF " << sys.volume_fraction << endl;
@@ -1168,8 +1171,8 @@ Simulation::outputDataHeader(ofstream &fout){
 	fout << "# Lz " << sys.get_lz() << endl;
 }
 
-void
-Simulation::outputConfigurationData(){
+void Simulation::outputConfigurationData()
+{
 	vector<vec3d> pos;
 	vector<vec3d> vel;
 	int np = sys.get_np();
@@ -1276,8 +1279,8 @@ Simulation::outputConfigurationData(){
 	}
 }
 
-void
-Simulation::outputFinalConfiguration(){
+void Simulation::outputFinalConfiguration()
+{
 	ofstream fout_finalconfig;
 	string filename_final_configuration = "./after_relax/"+filename_import_positions;
 	fout_finalconfig.open(filename_final_configuration.c_str());

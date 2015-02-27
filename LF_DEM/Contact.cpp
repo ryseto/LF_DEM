@@ -6,8 +6,8 @@
 #include "Contact.h"
 #include "Interaction.h"
 
-void
-Contact::init(System *sys_, Interaction *interaction_){
+void Contact::init(System *sys_, Interaction *interaction_)
+{
 	sys = sys_;
 	interaction = interaction_;
 	state = 0;
@@ -22,8 +22,8 @@ Contact::init(System *sys_, Interaction *interaction_){
 	}
 }
 
-void
-Contact::getInteractionData(){
+void Contact::getInteractionData()
+{
 	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
@@ -34,8 +34,8 @@ Contact::getInteractionData(){
 	mu = sys->get_mu_static();
 }
 
-void
-Contact::activate(){
+void Contact::activate()
+{
 	// r < a0 + a1
 	/* state = 1 means frictionless contact.
 	 * In frictional particle simulations,
@@ -47,8 +47,8 @@ Contact::activate(){
 	disp_rolling.reset();
 }
 
-void
-Contact::deactivate(){
+void Contact::deactivate()
+{
 	// r > a0 + a1
 	state = 0;
 	disp_tan.reset();
@@ -63,8 +63,8 @@ Contact::deactivate(){
  *	   Contact Forces Methods    *
  *                                *
  *********************************/
-void
-Contact::incrementTangentialDisplacement(){
+void Contact::incrementTangentialDisplacement()
+{
 	if (sys->in_predictor) {
 		/*
 		 * relative_surface_velocity is true velocity in predictor and corrector.
@@ -75,8 +75,8 @@ Contact::incrementTangentialDisplacement(){
 	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
-void
-Contact::incrementRollingDisplacement(){
+void Contact::incrementRollingDisplacement()
+{
 	if (sys->in_predictor) {
 		/*
 		 * relative_surface_velocity is true velocity in predictor and corrector.
@@ -87,8 +87,8 @@ Contact::incrementRollingDisplacement(){
 	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
-void
-Contact::incrementDisplacements(){
+void Contact::incrementDisplacements()
+{
 	/**
 	   \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
 	   
@@ -106,8 +106,8 @@ Contact::incrementDisplacements(){
 	}
 }
 
-void
-Contact::calcContactInteraction(){
+void Contact::calcContactInteraction()
+{
 	/** 
 		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.
 	*/
@@ -130,8 +130,8 @@ Contact::calcContactInteraction(){
 	(this->*frictionlaw)();
 }
 
-void
-Contact::frictionlaw_standard(){
+void Contact::frictionlaw_standard()
+{
 	double supportable_tanforce;
 	if (!sys->cohesion) {
 		supportable_tanforce = mu*f_contact_normal_norm;
@@ -156,8 +156,8 @@ Contact::frictionlaw_standard(){
 	return;
 }
 
-void
-Contact::frictionlaw_criticalload(){
+void Contact::frictionlaw_criticalload()
+{
 	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
 	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
@@ -184,8 +184,8 @@ Contact::frictionlaw_criticalload(){
 	return;
 }
 
-void
-Contact::frictionlaw_criticalload_mu_inf(){
+void Contact::frictionlaw_criticalload_mu_inf()
+{
 	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
 	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
@@ -207,11 +207,10 @@ Contact::frictionlaw_criticalload_mu_inf(){
 	return;
 }
 
-void
-Contact::frictionlaw_null(){}
+void Contact::frictionlaw_null(){}
 
-void
-Contact::addUpContactForceTorque(){
+void Contact::addUpContactForceTorque()
+{
 	if (state > 0) {
 		sys->contact_force[p0] += f_contact_normal;
 		sys->contact_force[p1] -= f_contact_normal;
@@ -230,8 +229,8 @@ Contact::addUpContactForceTorque(){
 	}
 }
 
-void
-Contact::calcContactStress(){
+void Contact::calcContactStress()
+{
 	/*
 	 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
 	 * Fc_normal = -Fc_normal_norm*nvec;

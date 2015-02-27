@@ -36,6 +36,7 @@ class Interaction{
 	friend class Contact;
 	friend class RepulsiveForce;
 	friend class Lubrication;
+	
 private:
 	/*********************************
 	 *        Members                *
@@ -70,7 +71,8 @@ private:
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	inline void set_ro(double val){
+	inline void set_ro(double val)
+	{
 		ro = val; // ro = a0 + a1
 		ro_12 = ro/2;
 	};
@@ -78,15 +80,13 @@ private:
 	void calcRelativeVelocities();
 	void calcRollingVelocities();
 	void integrateStress();
-
 	//===== forces/stresses  ========================== //
-		/* To avoid discontinous change between predictor and corrector,
+	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.
 	 */
 	bool contact_state_changed_after_predictor;
-
- protected:
- public:
+	
+public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
@@ -108,30 +108,73 @@ private:
 	void updateState(bool &deactivated);
 	void activate(unsigned short i, unsigned short j, double range);
 	void deactivate();
-	inline bool is_overlap(){return r < ro;}
-	inline bool is_contact(){return contact.state >= 1;}
-	inline bool is_friccontact(){return contact.state >= 2;}
-	inline bool is_active(){return active;}
-
+	inline bool is_overlap()
+	{
+		return r < ro;
+	}
+	inline bool is_contact()
+	{
+		return contact.state >= 1;
+	}
+	inline bool is_friccontact()
+	{
+		return contact.state >= 2;
+	}
+	inline bool is_active()
+	{
+		return active;
+	}
 	//======= particles data  ====================//
-	inline int partner(unsigned int i){
+	inline int partner(unsigned int i)
+	{
 		return (i == p0 ? p1 : p0);
 	}
-	inline void	get_par_num(unsigned short &i, unsigned short &j){
+	inline void	get_par_num(unsigned short &i, unsigned short &j)
+	{
 		i = p0, j = p1;
 	}
-	inline void set_label(unsigned int val){label = val;}
-	inline unsigned int get_label(){return label;}
-	inline double get_a0(){return a0;}
-	inline double get_a1(){return a1;}
-	inline double get_ro(){return ro;}
+	inline void set_label(unsigned int val)
+	{
+		label = val;
+	}
+	inline unsigned int get_label()
+	{
+		return label;
+	}
+	inline double get_a0()
+	{
+		return a0;
+	}
+	inline double get_a1()
+	{
+		return a1;
+	}
+	inline double get_ro()
+	{
+		return ro;
+	}
 	//======= relative position/velocity  ========//
-	inline double get_r(){return r;}
-	inline double get_reduced_gap(){return reduced_gap;}
-	inline double get_gap(){return r-ro;}
-	inline vec3d get_nvec(){return nvec;}
+	inline double get_r()
+	{
+		return r;
+	}
+	inline double get_reduced_gap()
+	{
+		return reduced_gap;
+	}
+	inline double get_gap()
+	{
+		return r-ro;
+	}
+	inline vec3d get_nvec()
+	{
+		return nvec;
+	}
 	double getNormalVelocity();
-	double getRelativeVelocity(){return relative_velocity.norm();}
+	double getRelativeVelocity()
+	{
+		return relative_velocity.norm();
+	}
 	double getContactVelocity();
 };
 #endif /* defined(__LF_DEM__Interaction__) */

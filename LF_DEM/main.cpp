@@ -17,7 +17,8 @@
 #define required_argument 1
 #define optional_argument 2
 
-void incompatibility_exiting(string a, string b){
+void incompatibility_exiting(string a, string b)
+{
 	cerr << a << " and " << b << " not compatible " << endl;
 	exit(1);
 }

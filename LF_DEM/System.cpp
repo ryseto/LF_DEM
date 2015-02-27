@@ -24,7 +24,8 @@ init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999)
 {}
 
-System::~System(){
+System::~System()
+{
 	DELETE(position);
 	DELETE(radius);
 	DELETE(radius_squared);
@@ -66,8 +67,8 @@ System::~System(){
 	}
 };
 
-void
-System::importParameterSet(ParameterSet &ps){
+void System::importParameterSet(ParameterSet &ps)
+{
 	p = ps;
 	friction_model = p.friction_model;
 	rolling_friction = p.rolling_friction;
@@ -88,8 +89,8 @@ System::importParameterSet(ParameterSet &ps){
 	set_disp_max(p.disp_max);
 }
 
-void
-System::allocateRessources(){
+void System::allocateRessources()
+{
 	linalg_size = 6*np;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
@@ -156,8 +157,8 @@ System::allocateRessources(){
 	}
 }
 
-void
-System::setInteractions_GenerateInitConfig(){
+void System::setInteractions_GenerateInitConfig()
+{
 	calcInteractionRange = &System::calcLubricationRange_normal;
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
@@ -171,19 +172,18 @@ System::setInteractions_GenerateInitConfig(){
 	checkNewInteraction();
 }
 
-void
-System::allocatePositionRadius(){
+void System::allocatePositionRadius()
+{
 	position = new vec3d [np];
 	radius = new double [np];
 }
 
-void
-System::setConfiguration(const vector <vec3d> &initial_positions,
+void System::setConfiguration(const vector <vec3d> &initial_positions,
 						 const vector <double> &radii,
-						 double lx_, double ly_, double lz_){
+						 double lx_, double ly_, double lz_)
+{
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
-	
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
@@ -213,8 +213,8 @@ System::setConfiguration(const vector <vec3d> &initial_positions,
 	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
-void
-System::updateUnscaledContactmodel(){
+void System::updateUnscaledContactmodel()
+{
 	if (abs(target_stress) != 0) {
 		/* What is the reasonable way
 		 * when the target stress is changed during a simulation?
@@ -250,7 +250,6 @@ System::updateUnscaledContactmodel(){
 		exit(1);
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].contact.getInteractionData();
@@ -258,8 +257,8 @@ System::updateUnscaledContactmodel(){
 	}
 }
 
-void
-System::setupBrownian(){
+void System::setupBrownian()
+{
 	if (brownian) {
 		if (dimensionless_number < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
@@ -270,11 +269,9 @@ System::setupBrownian(){
 			p.shear_strain_end /= scale_factor_SmallPe;
 			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
 			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
-			
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
 			p.start_adjust /= scale_factor_SmallPe;
-			
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
@@ -287,8 +284,8 @@ System::setupBrownian(){
 	}
 }
 
-void
-System::setupSystem(string control){
+void System::setupSystem(string control)
+{
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 * @ We have to consider p.contact_relaxation_time in Brownian case.
 	 * @ The resistance coeffient affects Brownian force.
@@ -344,8 +341,8 @@ System::setupSystem(string control){
 		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
-		radius_squared[i] = radius[i]*radius[i];
-		radius_cubed[i] = radius[i]*radius[i]*radius[i];
+		radius_squared[i] = pow(radius[i],2);
+		radius_cubed[i] = pow(radius[i],3);
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -469,8 +466,8 @@ System::setupSystem(string control){
 	}
 }
 
-void
-System::initializeBoxing(){
+void System::initializeBoxing()
+{
 	/**
 		\brief Initialize the boxing system.
 		
@@ -493,8 +490,8 @@ System::initializeBoxing(){
 	boxset.update();
 }
 
-void
-System::timeStepBoxing(const double strain_increment){
+void System::timeStepBoxing(const double strain_increment)
+{
 	/**
 		\brief Apply a strain step to the boxing system.
 	 */
@@ -510,8 +507,8 @@ System::timeStepBoxing(const double strain_increment){
 	boxset.update();
 }
 
-void
-System::timeEvolutionEulersMethod(bool calc_stress){
+void System::timeEvolutionEulersMethod(bool calc_stress)
+{
 	/**
 	 \brief One full time step, Euler's method.
 	 
@@ -531,8 +528,8 @@ System::timeEvolutionEulersMethod(bool calc_stress){
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
 
-void
-System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
+void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
+{
 	/**
 	 \brief One full time step, predictor-corrector method.
 	 
@@ -604,8 +601,8 @@ System::timeEvolutionPredictorCorrectorMethod(bool calc_stress){
 	timeStepMoveCorrector();
 }
 
-void
-System::timeStepMove(){
+void System::timeStepMove()
+{
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
@@ -658,8 +655,8 @@ System::timeStepMove(){
 	updateInteractions();
 }
 
-void
-System::timeStepMovePredictor(){
+void System::timeStepMovePredictor()
+{
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
@@ -689,8 +686,8 @@ System::timeStepMovePredictor(){
 	}
 }
 
-void
-System::timeStepMoveCorrector(){
+void System::timeStepMoveCorrector()
+{
 	/**
 	 \brief Moves particle positions according to previously computed velocities, corrector step.
 	 */
@@ -710,14 +707,13 @@ System::timeStepMoveCorrector(){
 	updateInteractions();
 }
 
-void
-System::timeEvolution(double strain_output_data, double time_output_data){
+void System::timeEvolution(double strain_output_data, double time_output_data)
+{
 	/**
 	 \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
 	 
 	 This method essentially loops the appropriate one time step method method, according to the Euler vs predictor-corrector or strain rate vs stress controlled choices.
 	 */
-	
 	static bool firsttime = true;
 	in_predictor = false;
 	if (firsttime) {
@@ -746,14 +742,13 @@ System::timeEvolution(double strain_output_data, double time_output_data){
 	}
 }
 
-void
-System::checkNewInteraction(){
+void System::checkNewInteraction()
+{
 	/**
 	 \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
 	 
 	 To be called after particle moved.
 	 */
-	
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
@@ -790,8 +785,8 @@ System::checkNewInteraction(){
 	}
 }
 
-void
-System::updateInteractions(){
+void System::updateInteractions()
+{
 	/**
 	 \brief Updates the state of active interactions.
 	 
@@ -827,8 +822,8 @@ System::updateInteractions(){
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
 }
 
-void
-System::stressReset(){
+void System::stressReset()
+{
 	for (int i=0; i<np; i++) {
 		lubstress[i].reset();
 		contactstressGU[i].reset();
@@ -845,8 +840,8 @@ System::stressReset(){
 	}
 }
 
-void
-System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
+void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
+{
 	// Builds the following terms, according to the value of 'build_res_mat' and 'build_force_GE':
 	//  - elements of the resistance matrix if 'build_res_mat' is true
 	//       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
@@ -879,8 +874,8 @@ System::buildHydroTerms(bool build_res_mat, bool build_force_GE){
  *       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
-void
-System::buildLubricationTerms_squeeze(bool mat, bool rhs){
+void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
+{
 	for (int i=0; i<np-1; i ++) {
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
@@ -909,8 +904,8 @@ System::buildLubricationTerms_squeeze(bool mat, bool rhs){
 	}
 }
 
-void
-System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
+void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
+{
 	for (int i=0; i<np-1; i ++) {
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
@@ -953,8 +948,8 @@ System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs){
 	}
 }
 
-void
-System::generateBrownianForces(){
+void System::generateBrownianForces()
+{
 	/**
 	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
 	 
@@ -986,8 +981,8 @@ System::generateBrownianForces(){
 	}
 }
 
-void
-System::setContactForceToParticle(){
+void System::setContactForceToParticle()
+{
 	for (int i=0; i<np; i++) {
 		contact_force[i].reset();
 		contact_torque[i].reset();
@@ -999,8 +994,8 @@ System::setContactForceToParticle(){
 	}
 }
 
-void
-System::setRepulsiveForceToParticle(){
+void System::setRepulsiveForceToParticle()
+{
 	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
 			repulsive_force[i].reset();
@@ -1013,8 +1008,8 @@ System::setRepulsiveForceToParticle(){
 	}
 }
 
-void
-System::buildContactTerms(bool set_or_add){
+void System::buildContactTerms(bool set_or_add)
+{
 	// sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
@@ -1029,8 +1024,8 @@ System::buildContactTerms(bool set_or_add){
 	}
 }
 
-void
-System::buildRepulsiveForceTerms(bool set_or_add){
+void System::buildRepulsiveForceTerms(bool set_or_add)
+{
 	// sets or adds ( set_or_add = t or f resp) repulsive forces to the rhs of the stokes_solver.
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
@@ -1044,8 +1039,8 @@ System::buildRepulsiveForceTerms(bool set_or_add){
 	}
 }
 
-void
-System::computeVelocities(bool divided_velocities){ // this function is slowly becoming a mess. We should refactor to restore readability.
+void System::computeVelocities(bool divided_velocities)
+{ // this function is slowly becoming a mess. We should refactor to restore readability.
 	stokes_solver.resetRHS();
 	if (stress_controlled) {
 		double shearstress_rep = 0;
@@ -1222,8 +1217,8 @@ System::computeVelocities(bool divided_velocities){ // this function is slowly b
 	stokes_solver.solvingIsDone();
 }
 
-void
-System::displacement(int i, const vec3d &dr){
+void System::displacement(int i, const vec3d &dr)
+{
 	position[i] += dr;
 	int z_shift = periodize(position[i]);
 	/* Note:
@@ -1238,8 +1233,8 @@ System::displacement(int i, const vec3d &dr){
 }
 
 // [0,l]
-int
-System::periodize(vec3d &pos){
+int System::periodize(vec3d &pos)
+{
 	int z_shift;
 	if (pos.z >= lz) {
 		pos.z -= lz;
@@ -1272,8 +1267,8 @@ System::periodize(vec3d &pos){
 }
 
 // periodize + give z_shift= number of boundaries crossed in z-direction
-void
-System::periodize_diff(vec3d &pos_diff, int &zshift){
+void System::periodize_diff(vec3d &pos_diff, int &zshift)
+{
 	/*
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
@@ -1307,8 +1302,8 @@ System::periodize_diff(vec3d &pos_diff, int &zshift){
 	}
 }
 
-void
-System::evaluateMaxContactVelocity(){
+void System::evaluateMaxContactVelocity()
+{
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
 	max_relative_velocity = 0;
@@ -1355,8 +1350,8 @@ System::evaluateMaxContactVelocity(){
 	}
 }
 
-double
-System::evaluateMaxVelocity(){
+double System::evaluateMaxVelocity()
+{
 	double sq_max_velocity = 0;
 	for (int i = 0; i < np; i++) {
 		vec3d na_velocity_tmp = velocity[i];
@@ -1370,8 +1365,8 @@ System::evaluateMaxVelocity(){
 	return sqrt(sq_max_velocity);
 }
 
-double
-System::evaluateMaxAngVelocity(){
+double System::evaluateMaxAngVelocity()
+{
 	double _max_ang_velocity = 0;
 	for (int i = 0; i < np; i++) {
 		vec3d na_ang_velocity_tmp = ang_velocity[i];
@@ -1383,8 +1378,8 @@ System::evaluateMaxAngVelocity(){
 	return _max_ang_velocity;
 }
 
-double
-System::evaluateMinGap(){
+double System::evaluateMinGap()
+{
 	double _min_reduced_gap = 100000;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
@@ -1398,8 +1393,8 @@ System::evaluateMinGap(){
 	return _min_reduced_gap;
 }
 
-double
-System::evaluateMaxDispTan(){
+double System::evaluateMaxDispTan()
+{
 	double _max_disp_tan = 0;
 	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
@@ -1410,8 +1405,8 @@ System::evaluateMaxDispTan(){
 	return _max_disp_tan;
 }
 
-double
-System::evaluateMaxDispRolling(){
+double System::evaluateMaxDispRolling()
+{
 	double _max_disp_rolling = 0;
 	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
@@ -1423,8 +1418,8 @@ System::evaluateMaxDispRolling(){
 	
 }
 
-double
-System::evaluateMaxFcNormal(){
+double System::evaluateMaxFcNormal()
+{
 	double max_fc_normal_ = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
@@ -1436,8 +1431,8 @@ System::evaluateMaxFcNormal(){
 	return max_fc_normal_;
 }
 
-double
-System::evaluateMaxFcTangential(){
+double System::evaluateMaxFcTangential()
+{
 	double max_fc_tan_ = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
@@ -1449,8 +1444,8 @@ System::evaluateMaxFcTangential(){
 	return max_fc_tan_;
 }
 
-void
-System::countNumberOfContact(){
+void System::countNumberOfContact()
+{
 	contact_nb = 0;
 	fric_contact_nb = 0;
 	for (int k=0; k<nb_interaction; k++) {
@@ -1464,8 +1459,8 @@ System::countNumberOfContact(){
 	}
 }
 
-void
-System::analyzeState(){
+void System::analyzeState()
+{
 	//	max_velocity = evaluateMaxVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
@@ -1479,8 +1474,8 @@ System::analyzeState(){
 	countNumberOfContact();
 }
 
-void
-System::setSystemVolume(double depth){
+void System::setSystemVolume(double depth)
+{
 	if (twodimension) {
 		system_volume = lx*lz*depth;
 		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
@@ -1490,8 +1485,8 @@ System::setSystemVolume(double depth){
 	}
 }
 
-void
-System::adjustContactModelParameters(){
+void System::adjustContactModelParameters()
+{
 	/**
 	 * This method tries to determine
 	 * the values of the contact parameters kn, kt
@@ -1517,9 +1512,8 @@ System::adjustContactModelParameters(){
 	 */
 	
 	analyzeState();
-	
+
 	double overlap = -min_reduced_gap;
-	
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);
 	kn_avg->update(kn, shear_strain);
@@ -1527,7 +1521,6 @@ System::adjustContactModelParameters(){
 	
 	static double previous_shear_strain = 0;
 	double deltagamma = (shear_strain-previous_shear_strain);
-	
 	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
 	double dkn = (kn_target-kn)*deltagamma/p.memory_strain_k;
 	
@@ -1538,10 +1531,8 @@ System::adjustContactModelParameters(){
 	if (kn > p.max_kn) {
 		kn = p.max_kn;
 	}
-	
 	double kt_target = kt_avg->get()*max_disp_tan_avg->get()/p.disp_tan_target;
 	double dkt = (kt_target-kt)*deltagamma/p.memory_strain_k;
-	
 	kt += dkt;
 	if (kt < p.min_kt) {
 		kt = p.min_kt;
@@ -1549,18 +1540,16 @@ System::adjustContactModelParameters(){
 	if (kt > p.max_kt) {
 		kt = p.max_kt;
 	}
-	
 	if (max_velocity > max_sliding_velocity) {
 		dt = disp_max/max_velocity;
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-	
 	previous_shear_strain = shear_strain;
 }
 
-void
-System::calcLubricationForce(){
+void System::calcLubricationForce()
+{
 	/*
 	 * Calculate lubrication force to output
 	 */
@@ -1585,13 +1574,13 @@ System::calcLubricationForce(){
 	}
 }
 
-double
-System::calcLubricationRange_normal(const int& i, const int& j){
+double System::calcLubricationRange_normal(const int& i, const int& j)
+{
 	return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
 }
 
-double
-System::calcLubricationRange_largeratio(const int& i, const int& j){
+double System::calcLubricationRange_largeratio(const int& i, const int& j)
+{
 	double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
 	return radius[i]+radius[j]+lub_max_gap*minradius;
 }

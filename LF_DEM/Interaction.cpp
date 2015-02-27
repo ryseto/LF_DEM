@@ -7,8 +7,8 @@
 //
 #include "Interaction.h"
 
-void
-Interaction::init(System *sys_){
+void Interaction::init(System *sys_)
+{
 	sys = sys_;
 	active = false;
 	lubrication.init(sys);
@@ -21,8 +21,8 @@ Interaction::init(System *sys_){
  * vector from particle 0 to particle 1. ( i --> j)
  * pd_z : Periodic boundary condition
  */
-void
-Interaction::calcNormalVectorDistanceGap(){
+void Interaction::calcNormalVectorDistanceGap()
+{
 	rvec = sys->position[p1]-sys->position[p0];
 	sys->periodize_diff(rvec, zshift);
 	r = rvec.norm();
@@ -39,8 +39,8 @@ Interaction::calcNormalVectorDistanceGap(){
 /* Activate interaction between particles i and j.
  * Always j>i is satisfied.
  */
-void
-Interaction::activate(unsigned short i, unsigned short j, double range){
+void Interaction::activate(unsigned short i, unsigned short j, double range)
+{
 	active = true;
 	if (j > i) {
 		p0 = i, p1 = j;
@@ -81,8 +81,8 @@ Interaction::activate(unsigned short i, unsigned short j, double range){
 	lubrication.calcLubConstants();
 }
 
-void
-Interaction::deactivate(){
+void Interaction::deactivate()
+{
 	// r > interaction_range
 	contact.deactivate();
 	active = false;
@@ -92,8 +92,8 @@ Interaction::deactivate(){
 	sys->interaction_partners[p1].erase(p0);
 }
 
-void
-Interaction::updateState(bool &deactivated){
+void Interaction::updateState(bool &deactivated)
+{
 	if (is_contact()) {
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
@@ -157,8 +157,8 @@ Interaction::updateState(bool &deactivated){
  *  sys->velocity and ang_velocity
  *
  */
-void
-Interaction::calcRelativeVelocities(){
+void Interaction::calcRelativeVelocities()
+{
 	/* relative velocity particle 1 from particle 0.
 	 * [note]
 	 * velocity[] = velocity_predictor[] in predictor
@@ -185,14 +185,14 @@ Interaction::calcRelativeVelocities(){
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
-void
-Interaction::calcRollingVelocities(){
+void Interaction::calcRollingVelocities()
+{
 	rolling_velocity = -cross(a0*sys->ang_velocity[p0]-a1*sys->ang_velocity[p1], nvec);
 }
 
 /* observation */
-double
-Interaction::getContactVelocity(){
+double Interaction::getContactVelocity()
+{
 	if (contact.state == 0) {
 		return 0;
 	}
@@ -200,8 +200,8 @@ Interaction::getContactVelocity(){
 }
 
 /* observation */
-double
-Interaction::getNormalVelocity(){
+double Interaction::getNormalVelocity()
+{
 	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0];
 	if (zshift != 0) {
 		d_velocity.x += zshift*sys->vel_difference;

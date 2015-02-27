@@ -38,7 +38,8 @@ class Simulation;
 class Interaction;
 class BoxSet;
 
-struct ForceAmplitudes{
+struct ForceAmplitudes
+{
 	double repulsion;
 	double brownian;
 };
@@ -89,7 +90,6 @@ private:
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double calcLubricationRange_normal(const int& i, const int& j);
 	double calcLubricationRange_largeratio(const int& i, const int& j);
-
 	//	double (System::*calcInteractionRange)(int, int);
 	//	double calcLubricationRange(int, int);
 	double evaluateMinGap();
@@ -294,7 +294,8 @@ private:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
-	void setupShearFlow(bool activate){
+	void setupShearFlow(bool activate)
+	{
 		if (activate) {
 			/* In dimensionless simulations for non Browninan simulation,
 			 * shear rate is always 1.
@@ -305,7 +306,8 @@ private:
 		}
 	}
 	/*************************************************************/
-	void setBoxSize(double lx_, double ly_, double lz_){
+	void setBoxSize(double lx_, double ly_, double lz_)
+	{
 		lx = lx_;
 		lx_half = 0.5*lx;
 		ly = ly_;
@@ -314,38 +316,106 @@ private:
 		lz_half = 0.5*lz;
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
-	double getParticleContactNumber(){
+	double getParticleContactNumber()
+	{
 		return (double)2*contact_nb/np;
 	}
-	void set_integration_method(int val){integration_method = val;}
-	void set_lubrication_model(int val){lubrication_model = val;}
-	double get_lx(){return lx;}
-	double get_ly(){return ly;}
-	double get_time(){return time;}
-	inline double get_shear_rate(){return shear_rate;}
-	inline void set_shear_rate(double sr){shear_rate=sr;}
-	inline double get_lz(){return lz;}
-	inline double Lx_half(){return lx_half;}
-	inline double Ly_half(){return ly_half;}
-	inline double Lz_half(){return lz_half;}
-	inline void set_np(int val){np = val;}
-	inline int get_np(){return np;}
-	inline double get_shear_strain(){return shear_strain;}
-	inline void set_lub_max_gap(double val){
+	void set_integration_method(int val)
+	{
+		integration_method = val;
+	}
+	void set_lubrication_model(int val)
+	{
+		lubrication_model = val;
+	}
+	double get_lx()
+	{
+		return lx;
+	}
+	double get_ly()
+	{
+		return ly;
+	}
+	double get_time()
+	{
+		return time;
+	}
+	inline double get_shear_rate()
+	{
+		return shear_rate;
+	}
+	inline void set_shear_rate(double sr)
+	{
+		shear_rate = sr;
+	}
+	inline double get_lz()
+	{
+		return lz;
+	}
+	inline double Lx_half()
+	{
+		return lx_half;
+	}
+	inline double Ly_half()
+	{
+		return ly_half;
+	}
+	inline double Lz_half()
+	{
+		return lz_half;
+	}
+	inline void set_np(int val)
+	{
+		np = val;
+	}
+	inline int get_np()
+	{
+		return np;
+	}
+	inline double get_shear_strain()
+	{
+		return shear_strain;
+	}
+	inline void set_lub_max_gap(double val)
+	{
 		lub_max_gap = val;
 		if (lub_max_gap >= 1) {
 			cerr << "lub_max_gap must be smaller than 1\n";
 			exit(1);
 		}
 	}
-	inline double get_lub_max_gap(){return lub_max_gap;}
-	inline void set_dt(double val){dt = val;}
-	void set_disp_max(double val){disp_max = val;}
-	void set_repulsiveforce_length(double val){repulsiveforce_length = val;}
-	void set_sd_coeff(double val){sd_coeff = val;}
-	inline double get_repulsiveforce_length(){return repulsiveforce_length;}
-	void set_mu_static(double val){mu_static = val;}
-	inline double get_mu_static(){return mu_static;}
+	inline double get_lub_max_gap()
+	{
+		return lub_max_gap;
+	}
+	inline void set_dt(double val)
+	{
+		dt = val;
+	}
+	void set_disp_max(double val)
+	{
+		disp_max = val;
+	}
+	void set_repulsiveforce_length(double val)
+	{
+		repulsiveforce_length = val;
+	}
+	void set_sd_coeff(double val)
+	{
+		sd_coeff = val;
+	}
+	inline double get_repulsiveforce_length()
+	{
+		return repulsiveforce_length;
+	}
+	void set_mu_static(double val)
+	{
+		mu_static = val;
+	}
+	inline double get_mu_static()
+	{
+		return mu_static;
+	}
 	//inline double get_lub_coeff_contact(){return lub_coeff_contact;}
 	//	inline double get_log_lub_coeff_dynamicfriction(){
 	/* In a sliding state, the resistance coeffient is the sum of
@@ -355,9 +425,10 @@ private:
 	 */
 	//		return log_lub_coeff_contact_tan_total;
 	//	}
-	inline double get_nb_of_active_interactions(){return nb_of_active_interactions;}
-
+	inline double get_nb_of_active_interactions()
+	{
+		return nb_of_active_interactions;
+	}
 	struct ForceAmplitudes amplitudes;
-
 };
 #endif /* defined(__LF_DEM__System__) */

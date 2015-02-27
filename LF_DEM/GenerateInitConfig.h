@@ -26,7 +26,7 @@
 #include "System.h"
 using namespace std;
 
-class GenerateInitConfig {
+class GenerateInitConfig{
 private:
 	System sys;
 	char disperse_type;
@@ -69,6 +69,7 @@ private:
 	void putRandom();
 	void setParameters();
 	void outputPositionData();
+
 public:
 	GenerateInitConfig(){};
 	int generate(int rand_seed_);
