@@ -47,6 +47,8 @@ private:
 	double ro; // ro = a0+a1;
 	double ro_12; // ro_12 = ro/2
 	double a_reduced;
+	double c_rolling_veolocity;
+	bool a0_eq_a1;
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;

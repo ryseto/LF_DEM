@@ -117,7 +117,11 @@ void Contact::calcContactInteraction()
 {
 	/** 
 		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.
-	*/
+	
+	 f_something is the force acting on the particle 0.
+	 disp_something is the relative displacement of the particle 1 from the particle 0.
+	 Therefore, the sign of force is same as the one of the displacement.
+	 */
 	
 	/* h < 0
 	 * f_contact_normal_norm > 0 ..... repulsive force
@@ -127,6 +131,7 @@ void Contact::calcContactInteraction()
 	 *
 	 reduced_gap is negative,
 	 positive. */
+	
 	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;

@@ -56,6 +56,13 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
 	a_reduced = a0*a1/(a0+a1);
+	if (a0 == a1) {
+		a0_eq_a1 = true;
+		c_rolling_veolocity = 0;
+	} else {
+		a0_eq_a1 = false;
+		c_rolling_veolocity = 0.5*(a1-a0)/(a1+a0);
+	}
 	set_ro(a0+a1); // ro=a0+a1
 	interaction_range = range;
 	/* NOTE:
@@ -179,20 +186,24 @@ void Interaction::calcRelativeVelocities()
 	 *
 	 ******************************************************/
 	relative_velocity = sys->velocity[p1]-sys->velocity[p0]; //true velocity, in predictor and in corrector
-	if (zshift != 0){
+	if (zshift != 0) {
 		relative_velocity.x += zshift*sys->vel_difference;
 	}
-	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
+	relative_surface_velocity = relative_velocity-cross(a1*sys->ang_velocity[p1]+a0*sys->ang_velocity[p0], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
 void Interaction::calcRollingVelocities()
 {
 	/**
-	  Objective rolling velocity (ref: Luding 2008).
-	 @@@@@@@@@@@@@@@@@@@ Need to be checked.
+	 Calculate rolling velocity
+	 Book by Marshall and Li 
+	 equation 3.6.13 ??
 	 */
-	rolling_velocity = -a_reduced*cross(sys->ang_velocity[p0]-sys->ang_velocity[p1], nvec);
+	rolling_velocity = a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], nvec);
+//	if (!a0_eq_a1) {
+//		rolling_velocity -= c_rolling_veolocity*relative_surface_velocity;
+//	}
 }
 
 /* observation */
