@@ -44,7 +44,6 @@ struct ForceAmplitudes
 	double brownian;
 };
 
-
 class System{
 private:
 	int np;
@@ -63,7 +62,6 @@ private:
 	double system_volume;
 	double shear_strain;
 	double lub_max_gap;
-	double mu_static; // static friction coefficient.
 	int linalg_size;
 	int linalg_size_per_particle;
 	int dof;
@@ -191,6 +189,9 @@ private:
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool cohesion;
+	double mu_static; // static friction coefficient
+	double mu_dynamic; // dynamic friction coefficient
+	double mu_rolling; // rolling friction coeffient
 	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
 	/* sd_coeff:
@@ -407,14 +408,14 @@ private:
 	{
 		return repulsiveforce_length;
 	}
-	void set_mu_static(double val)
-	{
-		mu_static = val;
-	}
-	inline double get_mu_static()
-	{
-		return mu_static;
-	}
+//	void set_mu_static(double val)
+//	{
+//		mu_static = val;
+//	}
+//	inline double get_mu_static()
+//	{
+//		return mu_static;
+//	}
 	//inline double get_lub_coeff_contact(){return lub_coeff_contact;}
 	//	inline double get_log_lub_coeff_dynamicfriction(){
 	/* In a sliding state, the resistance coeffient is the sum of

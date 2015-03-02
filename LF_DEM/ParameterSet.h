@@ -81,6 +81,8 @@ struct ParameterSet
 	double repulsive_length;                 ///< max normal spring constant when auto-determining stiffness (auto-determination exits with failure return if kn>max_kn)
 
 	double mu_static;                        ///< friction coefficient (static)
+	double mu_dynamic;                        ///< friction coefficient (dynamic) if not defined, dynamic = static
+	double mu_rolling;                        ///< friction coefficient (rolling)
 
 	double strain_interval_output_data;      ///< Output interval for outputing rheo_* file
 	double strain_interval_output_config;    ///< Output interval for outputing int_* and par_* files

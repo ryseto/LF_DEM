@@ -38,7 +38,9 @@ private:
 	double kt_scaled;
 	double kr_scaled;
 	double kn_scaled;
-	double mu;
+	double mu_static;
+	double mu_dynamic;
+	double mu_rolling;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/

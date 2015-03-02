@@ -34,6 +34,7 @@ friction_model = 1;
  * mu_dynamic: dynamic friction coeffient
  */
 mu_static = 1;
+mu_dynamic = -1;
 
 /*
  * Contact force parameters

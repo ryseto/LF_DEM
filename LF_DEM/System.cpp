@@ -85,7 +85,13 @@ void System::importParameterSet(ParameterSet &ps)
 	}
 	set_sd_coeff(p.sd_coeff);
 	set_integration_method(p.integration_method);
-	set_mu_static(p.mu_static);
+	mu_static = p.mu_static;
+	if (p.mu_dynamic == -1) {
+		mu_dynamic = p.mu_static;
+	} else {
+		mu_dynamic = p.mu_dynamic;
+	}
+	mu_rolling = p.mu_rolling;
 	set_disp_max(p.disp_max);
 }
 

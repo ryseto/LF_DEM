@@ -55,6 +55,7 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	sys->interaction_partners[j].insert(i);
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
+	a_reduced = a0*a1/(a0+a1);
 	set_ro(a0+a1); // ro=a0+a1
 	interaction_range = range;
 	/* NOTE:
@@ -187,7 +188,11 @@ void Interaction::calcRelativeVelocities()
 
 void Interaction::calcRollingVelocities()
 {
-	rolling_velocity = -cross(a0*sys->ang_velocity[p0]-a1*sys->ang_velocity[p1], nvec);
+	/**
+	  Objective rolling velocity (ref: Luding 2008).
+	 @@@@@@@@@@@@@@@@@@@ Need to be checked.
+	 */
+	rolling_velocity = -a_reduced*cross(sys->ang_velocity[p0]-sys->ang_velocity[p1], nvec);
 }
 
 /* observation */

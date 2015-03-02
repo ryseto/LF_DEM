@@ -305,7 +305,11 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
-	sys.new_contact_gap = 0.02;
+	if (sys.cohesion) {
+		sys.new_contact_gap = 0.02;
+	} else {
+		sys.new_contact_gap = 0;
+	}
 	int jammed = 0;
 	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
 		if (time_interval_output_data == -1) {
@@ -569,6 +573,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.Pe_switch = atof(value.c_str());
 	} else if (keyword == "mu_static") {
 		p.mu_static = atof(value.c_str());
+	} else if (keyword == "mu_dynamic") {
+		p.mu_dynamic = atof(value.c_str());
+	} else if (keyword == "mu_rolling") {
+		p.mu_rolling = atof(value.c_str());
 	} else if (keyword == "strain_interval_output_config") {
 		p.strain_interval_output_config = atof(value.c_str());
 	} else if (keyword == "strain_interval_output_data") {
@@ -820,7 +828,6 @@ void Simulation::setDefaultParameters()
 	 */
 	p.contact_relaxation_time = 1e-3;
 	p.contact_relaxation_time_tan = 0;
-
 	if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
 		p.kn = 2000;
@@ -832,7 +839,6 @@ void Simulation::setDefaultParameters()
 		p.kt = 6000;
 		p.kr = 6000;
 	}
-
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;
@@ -845,6 +851,7 @@ void Simulation::setDefaultParameters()
 	p.max_kt = 1000000;
 	p.repulsive_length = 0.05;
 	p.mu_static = 1;
+	p.mu_dynamic = -1;
 	p.strain_interval_output_data = 0.01;
 	p.strain_interval_output_config = 0.1;
 	p.origin_zero_flow = true;

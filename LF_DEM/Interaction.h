@@ -46,6 +46,7 @@ private:
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
 	double ro_12; // ro_12 = ro/2
+	double a_reduced;
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
