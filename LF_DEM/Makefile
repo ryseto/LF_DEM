@@ -174,4 +174,4 @@ doc:
 	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
 
 install:
-	cp -p LF_DEM ~/bin/
+	cp -p $(OUT_CODE) ~/bin/
