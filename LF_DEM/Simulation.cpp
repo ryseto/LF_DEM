@@ -1150,9 +1150,9 @@ void Simulation::outputRheologyData()
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51
-	//	fout_rheo << sys.dt_1 << ' '; // 52;
-	//	fout_rheo << sys.dt_2 << ' '; // 53;
-	//	fout_rheo << sys.dt_3 << ' '; // 54;
+	fout_rheo << sys.dt_1 << ' '; // 52;
+	fout_rheo << sys.dt_2 << ' '; // 53;
+	fout_rheo << sys.dt_3 << ' '; // 54;
 	fout_rheo << endl;
 }
 
