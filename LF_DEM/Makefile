@@ -170,7 +170,8 @@ tar:
 clean:
 	rm -f  $(OBJ)
 
-
 doc:
 	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
 
+install:
+	cp -p LF_DEM ~/bin/
