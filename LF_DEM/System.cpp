@@ -616,34 +616,10 @@ void System::timeStepMove()
 	/* Changing dt for every timestep
 	 * So far, this is only in Euler method.
 	 */
-	if (stress_controlled) {
-		/* This strain step criteria needs to be improved.
-		 *
-		 * For jammed state or unyielded state, shear rate is very small.
-		 * In this case, the strain step (=dt) should be small, as well.
-		 */
-		dt_1 = 1e-3*abs(dimensionless_number);
-		dt_2 = disp_max/max_velocity;
-		dt_3 = disp_max/max_sliding_velocity;
-		if (dt_1 < dt_2) {
-			if (dt_1 < dt_3) {
-				dt = dt_1;
-			} else {
-				dt = dt_3;
-			}
-		} else {
-			if (dt_2 < dt_3) {
-				dt = dt_2;
-			} else {
-				dt = dt_3;
-			}
-		}
+	if (max_velocity > max_sliding_velocity) {
+		dt = disp_max/max_velocity;
 	} else {
-		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
-		} else {
-			dt = disp_max/max_sliding_velocity;
-		}
+		dt = disp_max/max_sliding_velocity;
 	}
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
