@@ -7,6 +7,7 @@
 #include "Interaction.h"
 
 const double spring_stretch_factor = 0.99999;
+const double spring_slight_repulsion = 1e-5;
 
 void Contact::init(System *sys_, Interaction *interaction_)
 {
@@ -132,7 +133,7 @@ void Contact::calcContactInteraction()
 	 reduced_gap is negative,
 	 positive. */
 	
-	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
+	f_contact_normal_norm = -kn_scaled*(interaction->get_reduced_gap()-spring_slight_repulsion);
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
 	f_contact_tan = kt_scaled*disp_tan;
@@ -181,7 +182,7 @@ void Contact::frictionlaw_standard()
 		double supportable_rollingforce = mu_rolling*normal_load;
 		double sq_f_rolling = f_rolling.sq_norm();
 		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
+			disp_rolling *= spring_stretch_factor*supportable_rollingforce/sqrt(sq_f_rolling);
 			f_rolling = kr_scaled*disp_rolling;
 		}
 	}

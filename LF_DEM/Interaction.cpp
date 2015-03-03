@@ -55,14 +55,14 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	sys->interaction_partners[j].insert(i);
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
+	/* [note]
+	 * The reduced (or effective) radius is defined as
+	 * 1/a_reduced = 1/a0 + 1/a1
+	 * This definition comes from sphere vs half-plane geometory of contact mechanics.
+	 * If sphere contacts with a half-plane (a1 = infinity), a_reduced = a0.
+	 * For equal sized spheres, a_reduced = 0.5*a0 = 0.5*a1
+	 */
 	a_reduced = a0*a1/(a0+a1);
-	if (a0 == a1) {
-		a0_eq_a1 = true;
-		c_rolling_veolocity = 0;
-	} else {
-		a0_eq_a1 = false;
-		c_rolling_veolocity = 0.5*(a1-a0)/(a1+a0);
-	}
 	set_ro(a0+a1); // ro=a0+a1
 	interaction_range = range;
 	/* NOTE:
@@ -189,7 +189,7 @@ void Interaction::calcRelativeVelocities()
 	if (zshift != 0) {
 		relative_velocity.x += zshift*sys->vel_difference;
 	}
-	relative_surface_velocity = relative_velocity-cross(a1*sys->ang_velocity[p1]+a0*sys->ang_velocity[p0], nvec);
+	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
@@ -197,13 +197,12 @@ void Interaction::calcRollingVelocities()
 {
 	/**
 	 Calculate rolling velocity
-	 Book by Marshall and Li 
+	 We follow Luding(2008).
+	 The factor 2 is added.
+	 cf. Book by Marshall and Li
 	 equation 3.6.13 ??
 	 */
-	rolling_velocity = a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], nvec);
-//	if (!a0_eq_a1) {
-//		rolling_velocity -= c_rolling_veolocity*relative_surface_velocity;
-//	}
+	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], nvec);
 }
 
 /* observation */

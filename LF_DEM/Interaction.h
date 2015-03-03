@@ -46,9 +46,7 @@ private:
 	double a1; // second raddi > a0
 	double ro; // ro = a0+a1;
 	double ro_12; // ro_12 = ro/2
-	double a_reduced;
-	double c_rolling_veolocity;
-	bool a0_eq_a1;
+	double a_reduced; // 1/a_reduced = 1/a0 + 1/a1
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
@@ -155,6 +153,10 @@ public:
 	inline double get_ro()
 	{
 		return ro;
+	}
+	inline double get_a_reduced()
+	{
+		return a_reduced;
 	}
 	//======= relative position/velocity  ========//
 	inline double get_r()

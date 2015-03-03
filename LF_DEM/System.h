@@ -178,6 +178,9 @@ private:
 	StressTensor total_brownian_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt; // <=== It should be called d_strain.
+	double dt_1;
+	double dt_2;
+	double dt_3;
 	double kn;
 	double kt;
 	double kr;

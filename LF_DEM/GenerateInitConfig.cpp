@@ -64,7 +64,7 @@ int GenerateInitConfig::generate(int rand_seed_)
 			fout << count << ' ' << energy << ' ' <<  diff_energy << endl;
 		}
 		count ++;
-	} while (abs(diff_energy) > 1e-7);
+	} while (abs(diff_energy) > 1e-10);
 	//deflate
 	for (int i=0; i < np; i++) {
 		if (i < np1) {
@@ -309,7 +309,7 @@ double GenerateInitConfig::particleEnergy(int i)
 		if ((*it)->is_overlap()) {
 			double r = (*it)->get_r();
 			double rcont = (*it)->get_ro();
-			double amp = (1/rcont-1/r); // negative
+			double amp = (*it)->get_a_reduced()*(1/rcont-1/r); // negative
 			energy += r*amp*amp;
 		}
 	}
