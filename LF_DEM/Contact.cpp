@@ -50,7 +50,11 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
-	state = 1;
+	if (sys->friction_model == 1) {
+		state = 2; // static friction
+	} else {
+		state = 1; // critical load model
+	}
 	disp_tan.reset();
 	disp_rolling.reset();
 }
@@ -151,7 +155,7 @@ void Contact::frictionlaw_standard()
 	 from the value given by the frictional law.
 	 Thanks to this, when the system is jammed, all frictional contacts can turn to static friction.
 	 */
-	double supportable_tanforce;
+	double supportable_tanforce = 0;
 	double sq_f_tan = f_contact_tan.sq_norm();
 	double normal_load = f_contact_normal_norm;
 	if (sys->cohesion) {
