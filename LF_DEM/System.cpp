@@ -337,6 +337,9 @@ void System::setupSystem(string control)
 		 */
 		friction = true;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
+	} else if (friction_model == 4) {
+		cerr << "friction_model = 4" << endl;
+		friction = true;
 	} else {
 		cerr << "friction_model..." << endl;
 		exit(1);
