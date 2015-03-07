@@ -229,6 +229,7 @@ void Contact::frictionlaw_test()
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
 		f_contact_tan = supportable_tanforce*interaction->relative_surface_velocity_direction();
+		disp_tan = spring_stretch_factor*f_contact_tan/kt_scaled;
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
