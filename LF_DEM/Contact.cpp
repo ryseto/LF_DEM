@@ -52,10 +52,10 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
-	if (sys->friction_model == 1 || sys->friction_model == 4) {
-		state = 2; // static friction
-	} else {
+	if (sys->friction_model == 2 || sys->friction_model == 3) {
 		state = 1; // critical load model
+	} else {
+		state = 2; // static friction
 	}
 	disp_tan.reset();
 	disp_rolling.reset();
