@@ -109,6 +109,9 @@ public:
 	void updateState(bool &deactivated);
 	void activate(unsigned short i, unsigned short j, double range);
 	void deactivate();
+	inline vec3d relative_surface_velocity_direction() {
+		return relative_surface_velocity/relative_surface_velocity.norm();
+	}
 	inline bool is_overlap()
 	{
 		return r < ro;

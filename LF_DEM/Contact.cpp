@@ -20,6 +20,8 @@ void Contact::init(System *sys_, Interaction *interaction_)
 		frictionlaw = &Contact::frictionlaw_criticalload;
 	} else if (sys->friction_model == 3) {
 		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
+	} else if (sys->friction_model == 4) {
+		frictionlaw = &Contact::frictionlaw_test;
 	} else {
 		frictionlaw = &Contact::frictionlaw_null;
 	}
@@ -151,7 +153,7 @@ void Contact::frictionlaw_standard()
 {
 	/**
 	 \brief Friction law
-	 In dynamic friction, the spring stretch is set to slightly smaller value 
+	 In dynamic friction, the spring stretch is set to slightly smaller value
 	 from the value given by the frictional law.
 	 Thanks to this, when the system is jammed, all frictional contacts can turn to static friction.
 	 */
@@ -181,6 +183,52 @@ void Contact::frictionlaw_standard()
 		// adjust the sliding spring for dynamic friction law
 		disp_tan *= spring_stretch_factor*supportable_tanforce/sqrt(sq_f_tan);
 		f_contact_tan = kt_scaled*disp_tan;
+	}
+	if (sys->rolling_friction) {
+		double supportable_rollingforce = mu_rolling*normal_load;
+		double sq_f_rolling = f_rolling.sq_norm();
+		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
+			disp_rolling *= spring_stretch_factor*supportable_rollingforce/sqrt(sq_f_rolling);
+			f_rolling = kr_scaled*disp_rolling;
+		}
+	}
+	return;
+}
+
+void Contact::frictionlaw_test()
+{
+	/**
+	 \brief Friction law
+	 In dynamic friction, the spring stretch is set to slightly smaller value 
+	 from the value given by the frictional law.
+	 Thanks to this, when the system is jammed, all frictional contacts can turn to static friction.
+	 */
+	double supportable_tanforce = 0;
+	double sq_f_tan = f_contact_tan.sq_norm();
+	double normal_load = f_contact_normal_norm;
+	if (sys->cohesion) {
+		normal_load += sys->dimensionless_cohesive_force;
+	}
+	if (state == 2) {
+		// static friction in previous step
+		supportable_tanforce = mu_static*normal_load;
+		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+			// switch to dynamic friction
+			state = 3; // dynamic friction
+			supportable_tanforce = mu_dynamic*normal_load;
+		}
+	} else {
+		// dynamic friction in previous step
+		supportable_tanforce = mu_dynamic*normal_load;
+		if (dot(f_contact_tan, interaction->relative_surface_velocity) < 0) {
+			state = 2;
+			f_contact_tan = supportable_tanforce*interaction->relative_surface_velocity_direction();
+			disp_tan = spring_stretch_factor*f_contact_tan/kt_scaled;
+		}
+	}
+	if (state == 3) {
+		// adjust the sliding spring for dynamic friction law
+		f_contact_tan = spring_stretch_factor*supportable_tanforce*interaction->relative_surface_velocity_direction();
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;

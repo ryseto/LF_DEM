@@ -75,11 +75,13 @@ public:
 	 * 1 Friction is not activated (critical load model)
 	 * 2 Static friction
 	 * 3 Sliding
+	 * 4 New criteria to switch between static and dynamic friction
 	 */
 	double f_contact_normal_norm; // normal contact force
 	void frictionlaw_criticalload();
 	void frictionlaw_criticalload_mu_inf();
 	void frictionlaw_standard();
+	void frictionlaw_test();
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
 	void calcContactInteraction();
