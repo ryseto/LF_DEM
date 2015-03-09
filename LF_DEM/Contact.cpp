@@ -112,7 +112,21 @@ void Contact::incrementDisplacements()
 	 */
 	if (sys->friction) {
 		interaction->calcRelativeVelocities();
-		incrementTangentialDisplacement();
+		if (sys->friction_model == 4) {
+			if (state == 3) {
+				// tangential displacement is not used for dynamic friction.
+				if (sys->in_corrector
+					&& dot(f_contact_tan, interaction->relative_surface_velocity) < 0) {
+					/* static, but some adjustments are required after this switching.
+					 */
+					state = -2;
+				}
+			} else {
+				incrementTangentialDisplacement();
+			}
+		} else {
+			incrementTangentialDisplacement();
+		}
 		if (sys->rolling_friction) {
 			interaction->calcRollingVelocities();
 			incrementRollingDisplacement();
@@ -141,8 +155,15 @@ void Contact::calcContactInteraction()
 	
 	f_contact_normal_norm = -kn_scaled*(interaction->get_reduced_gap()-spring_slight_repulsion);
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-	disp_tan -= dot(disp_tan, interaction->nvec)*interaction->nvec;
-	f_contact_tan = kt_scaled*disp_tan;
+	if (sys->friction_model == 4) {
+		if (state == 2) {
+			disp_tan.vertical_projection(interaction->nvec);
+			f_contact_tan = kt_scaled*disp_tan;
+		}
+	} else {
+		disp_tan.vertical_projection(interaction->nvec);
+		f_contact_tan = kt_scaled*disp_tan;
+	}
 	if (sys->rolling_friction) {
 		f_rolling = kr_scaled*disp_rolling;
 	}
@@ -199,37 +220,43 @@ void Contact::frictionlaw_test()
 {
 	/**
 	 \brief Friction law
-	 In dynamic friction, the spring stretch is set to slightly smaller value 
-	 from the value given by the frictional law.
-	 Thanks to this, when the system is jammed, all frictional contacts can turn to static friction.
+	 - Dynamic friction force is opposite direction to the sliding velocity.
+	 - The strength of dynamic friction is proportional to the normal load.
+	 -
 	 */
 	double supportable_tanforce = 0;
-	double sq_f_tan = f_contact_tan.sq_norm();
 	double normal_load = f_contact_normal_norm;
 	if (sys->cohesion) {
 		normal_load += sys->dimensionless_cohesive_force;
 	}
-	if (state == 2) {
-		// static friction in previous step
-		supportable_tanforce = mu_static*normal_load;
-		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			// switch to dynamic friction
-			state = 3; // dynamic friction
+	/* Check frictional state 
+	 */
+	if (sys->in_corrector) {
+		if (state == 2) {
+			// static friction in previous step
+			double sq_f_tan = f_contact_tan.sq_norm();
+			supportable_tanforce = mu_static*normal_load;
+			if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+				// switch to dynamic friction
+				state = 3; // dynamic friction
+				disp_tan.reset();
+			}
+		} else if (state == -2) {
+			state = 2; // static friction, but just switched from dynamic friction
 			supportable_tanforce = mu_dynamic*normal_load;
-		}
-	} else {
-		// dynamic friction in previous step
-		supportable_tanforce = mu_dynamic*normal_load;
-		if (dot(f_contact_tan, interaction->relative_surface_velocity) < 0) {
-			state = 2;
-			f_contact_tan = supportable_tanforce*interaction->relative_surface_velocity_direction();
-			disp_tan = spring_stretch_factor*f_contact_tan/kt_scaled;
+			slid_direction = interaction->relative_surface_velocity_direction();
+			slid_direction.vertical_projection(interaction->nvec);
+			f_contact_tan = supportable_tanforce*slid_direction;
+			disp_tan = f_contact_tan/kt_scaled;
 		}
 	}
+	/* Force from dynamic friction
+	 */
 	if (state == 3) {
-		// adjust the sliding spring for dynamic friction law
-		f_contact_tan = supportable_tanforce*interaction->relative_surface_velocity_direction();
-		disp_tan = spring_stretch_factor*f_contact_tan/kt_scaled;
+		slid_direction = interaction->relative_surface_velocity_direction();
+		slid_direction.vertical_projection(interaction->nvec);
+		supportable_tanforce = mu_dynamic*normal_load;
+		f_contact_tan = supportable_tanforce*slid_direction;
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
@@ -293,7 +320,10 @@ void Contact::frictionlaw_criticalload_mu_inf()
 	return;
 }
 
-void Contact::frictionlaw_null(){}
+void Contact::frictionlaw_null()
+{
+	// null
+}
 
 void Contact::addUpContactForceTorque()
 {

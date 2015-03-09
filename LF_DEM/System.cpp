@@ -524,6 +524,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	 This method is never used when running a Brownian simulation.
 	 */
 	in_predictor = true;
+	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
@@ -589,6 +590,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	
 	/* predictor */
 	in_predictor = true;
+	in_corrector = false;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
@@ -598,6 +600,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	timeStepMovePredictor();
 	/* corrector */
 	in_predictor = false;
+	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	computeVelocities(calc_stress);
@@ -650,7 +653,12 @@ void System::timeStepMovePredictor()
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
-		dt = disp_max/max_velocity;
+		//dt = disp_max/max_velocity;
+		if (max_velocity > max_sliding_velocity) {
+			dt = disp_max/max_velocity;
+		} else {
+			dt = disp_max/max_sliding_velocity;
+		}
 	}
 	time += dt/abs(dimensionless_number);
 	/* The periodic boundary condition is updated in predictor.
@@ -705,6 +713,7 @@ void System::timeEvolution(double strain_output_data, double time_output_data)
 	 */
 	static bool firsttime = true;
 	in_predictor = false;
+	in_corrector = false;
 	if (firsttime) {
 		checkNewInteraction();
 		updateInteractions();

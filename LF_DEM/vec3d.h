@@ -298,6 +298,12 @@ public:
 		(*this) += cross(dphi, *this);
 	}
 	
+	inline void	vertical_projection(const vec3d &v)
+	{
+		/* dphi must be small vector. */
+		(*this) -= dot(*this, v)*v;
+	}
+	
 	inline vec3d product_rate_of_strain(double * E)
 	{
 		vec3d product(E[0]*x+E[1]*y+E[2]*z,

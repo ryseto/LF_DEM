@@ -117,6 +117,7 @@ private:
 	void importParameterSet(ParameterSet &ps);
 	bool brownian;	
 	bool in_predictor;
+	bool in_corrector;
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;

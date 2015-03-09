@@ -343,7 +343,6 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
-				jammed = 0;
 				cerr << "shear jamming";
 				break;
 			}

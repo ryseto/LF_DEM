@@ -107,12 +107,29 @@ void Interaction::updateState(bool &deactivated)
 		contact.incrementDisplacements();
 	}
 	calcNormalVectorDistanceGap();
-	contact_state_changed_after_predictor = false;
+	if (sys->friction_model == 4) {
+		if (sys->in_corrector) {
+			updateContactState(deactivated);
+		}
+	} else {
+		updateContactState(deactivated);
+	}
+	lubrication.updateResistanceCoeff();
+	if (contact.state > 0) {
+		contact.calcContactInteraction();
+	}
+	if (sys->repulsiveforce) {
+		repulsion.calcForce();
+	}
+}
+
+void Interaction::updateContactState(bool &deactivated)
+{
 	if (contact.state > 0) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
-			if (reduced_gap > 0) {
+			if ( reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
@@ -150,14 +167,8 @@ void Interaction::updateState(bool &deactivated)
 			return;
 		}
 	}
-	lubrication.updateResistanceCoeff();
-	if (contact.state > 0) {
-		contact.calcContactInteraction();
-	}
-	if (sys->repulsiveforce) {
-		repulsion.calcForce();
-	}
 }
+
 
 /* Relative velocity of particle 1 from particle 0.
  *

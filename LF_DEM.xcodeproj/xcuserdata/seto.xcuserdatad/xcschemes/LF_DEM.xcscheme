@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/rollingfriction2"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/dynamic_friction"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -96,7 +96,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-s 10 -i rate_table.txt D2N200VF0.78Bidi5_0.5Square_1.dat rolling.txt"
+            argument = "-s 5 -i rate.txt D2N500VF0.8Bidi1.4_0.5Square_1.dat dynamic3SD001.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

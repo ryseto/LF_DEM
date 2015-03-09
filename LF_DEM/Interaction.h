@@ -107,6 +107,7 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool &deactivated);
+	void updateContactState(bool &deactivated);
 	void activate(unsigned short i, unsigned short j, double range);
 	void deactivate();
 	inline vec3d relative_surface_velocity_direction() {

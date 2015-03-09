@@ -68,14 +68,15 @@ public:
 	vec3d disp_rolling;
 	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
 	vec3d prev_disp_rolling;
+	vec3d slid_direction;
 	void incrementDisplacements();
-	unsigned short state;
+	int state;
 	/* state:
 	 * 0 No contact
 	 * 1 Friction is not activated (critical load model)
 	 * 2 Static friction
 	 * 3 Sliding
-	 * 4 New criteria to switch between static and dynamic friction
+	 * -2 Switching dynamic to static
 	 */
 	double f_contact_normal_norm; // normal contact force
 	void frictionlaw_criticalload();
