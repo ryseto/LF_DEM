@@ -178,6 +178,7 @@
 		D9BC20981AAD60900033D4A8 /* fig.graffle */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = fig.graffle; sourceTree = "<group>"; };
 		D9BC20991AAD60AB0033D4A8 /* kumars_Rfu0.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = kumars_Rfu0.pdf; sourceTree = "<group>"; };
 		D9BC209A1AAD60AB0033D4A8 /* Lub_orientation_dependence.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Lub_orientation_dependence.pdf; sourceTree = "<group>"; };
+		D9BC209B1AAE7D280033D4A8 /* dynamic_friction.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = dynamic_friction.pdf; sourceTree = "<group>"; };
 		D9BE3B63178C838100937C5C /* cluster_detector */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_detector; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9BE3B65178C838100937C5C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9BE3B67178C838100937C5C /* cluster_detector.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_detector.1; sourceTree = "<group>"; };
@@ -475,6 +476,7 @@
 			children = (
 				D9BC20991AAD60AB0033D4A8 /* kumars_Rfu0.pdf */,
 				D9BC209A1AAD60AB0033D4A8 /* Lub_orientation_dependence.pdf */,
+				D9BC209B1AAE7D280033D4A8 /* dynamic_friction.pdf */,
 				D9BC20981AAD60900033D4A8 /* fig.graffle */,
 				D9BC20971AAD607B0033D4A8 /* algorithm.graffle */,
 				D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */,
