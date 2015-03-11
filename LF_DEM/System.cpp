@@ -14,8 +14,8 @@
 
 System::System():
 maxnb_interactionpair_per_particle(15),
-brownian(false),
 lowPeclet(false),
+brownian(false),
 zero_shear(false),
 friction_model(-1),
 repulsiveforce(false),
@@ -165,7 +165,7 @@ void System::allocateRessources()
 
 void System::setInteractions_GenerateInitConfig()
 {
-	calcInteractionRange = &System::calcLubricationRange_normal;
+	calcInteractionRange = &System::calcLubricationRange;
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -272,9 +272,6 @@ void System::setupBrownian()
 			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
-			p.shear_strain_end /= scale_factor_SmallPe;
-			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
-			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
 			p.start_adjust /= scale_factor_SmallPe;
@@ -282,8 +279,6 @@ void System::setupBrownian()
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
 			cerr << "  dt = " << p.dt << endl;
-			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
-			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		} else {
 			lowPeclet = true; // <--- Always true?
 		}
@@ -315,7 +310,7 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	calcInteractionRange = &System::calcLubricationRange_normal;
+	calcInteractionRange = &System::calcLubricationRange;
 	friction = false;
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
@@ -326,15 +321,6 @@ void System::setupSystem(string control)
 		friction = true;
 	} else if (friction_model == 2 || friction_model == 3) {
 		cerr << "friction_model " << friction_model << endl;
-		/*
-		 * The dimensionless shear rate is defined as follows:
-		 * dimensionless_number = F0/F^{*}
-		 * F0 = 6pi*eta*a^2*shear_rate
-		 * The force unit is changed by the considering shear rate.
-		 * In the simulation, the critical force F^{*} = \tilde{F^{*}} F_0.
-		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_number.
-		 *
-		 */
 		friction = true;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else if (friction_model == 4) {
@@ -453,11 +439,11 @@ void System::setupSystem(string control)
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
-	/* einstein_viscosity may be affected by sd_coeff.
+	/* einstein_stress may be affected by sd_coeff.
 	 * However, the reason to set value of sd_coeff is not very certain for the moment.
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
-	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI);
+	einstein_stress = (1+2.5*volume_fraction)*shear_rate/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -627,13 +613,10 @@ void System::timeStepMove()
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-	/* [note]
-	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
-	 */
-	double time_increment = dt/abs(dimensionless_number);
-	time += time_increment;
+	time += dt;
 	/* evolve PBC */
-	timeStepBoxing(shear_direction*shear_rate*dt);
+	double strain_increment = dt*abs(shear_rate);
+	timeStepBoxing(strain_increment);
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -660,11 +643,14 @@ void System::timeStepMovePredictor()
 			dt = disp_max/max_sliding_velocity;
 		}
 	}
-	time += dt/abs(dimensionless_number);
+	time += dt;
+	/* evolve PBC */
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	timeStepBoxing(shear_direction*shear_rate*dt);
+	double strain_increment = dt*abs(shear_rate);
+	timeStepBoxing(strain_increment);
+
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -704,7 +690,7 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-void System::timeEvolution(double strain_output_data, double time_output_data)
+void System::timeEvolution(double time_output_data)
 {
 	/**
 	 \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
@@ -723,18 +709,18 @@ void System::timeEvolution(double strain_output_data, double time_output_data)
 	if (lowPeclet) {
 		calc_stress = true;
 	}
-	if (time_output_data == 0) {
-		/* integrate until strain_next - 1 time step */
-		while (shear_strain < strain_output_data-dt) {
-			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-		};
-		(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	} else {
-		while (time < time_output_data-dt/abs(dimensionless_number)) { // integrate until strain_next
-			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-		};
-		(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	}
+	// if (time_output_data == 0) {
+	// 	/* integrate until strain_next - 1 time step */
+	// 	while (shear_strain < strain_output_data-dt*shear_rate) {
+	// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+	// 	};
+	// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	// } else {
+	while (time < time_output_data-dt) { // integrate until strain_next
+		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+	};
+	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	//	}
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
 	}
@@ -964,7 +950,7 @@ void System::generateBrownianForces()
 	 
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
-	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.brownian; // proportional to 1/Pe.
+	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A
 	}
@@ -1047,12 +1033,15 @@ void System::computeVelocities(bool divided_velocities)
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+
+		// Back out the shear rate
+		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
+		amplitudes.repulsion = 1/abs(dimensionless_number);
+
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
-		// Back out the shear rate
-		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
 		if (p.unscaled_contactmodel) {
@@ -1063,13 +1052,15 @@ void System::computeVelocities(bool divided_velocities)
 				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 				shear_rate_numerator -= shearstress_rep;
 			}
-			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
+
 			dimensionless_number = shear_rate_numerator/shearstress_hyd;
 			if (shear_strain < init_strain_shear_rate_limit) {
 				if (dimensionless_number > init_shear_rate_limit) {
 					dimensionless_number = init_shear_rate_limit;
 				}
 			}
+			amplitudes.repulsion = 1/abs(dimensionless_number);
 			if (repulsiveforce) {
 				for (int i=0; i<np; i++) {
 					vel_repulsive[i] /= dimensionless_number;
@@ -1107,7 +1098,7 @@ void System::computeVelocities(bool divided_velocities)
 				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 				shear_rate_numerator -= shearstress_rep;
 			}
-			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
 			dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_number;
@@ -1572,13 +1563,14 @@ void System::calcLubricationForce()
 	}
 }
 
-double System::calcLubricationRange_normal(const int& i, const int& j)
+double System::calcLubricationRange(const int& i, const int& j)
 {
-	return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
-}
-
-double System::calcLubricationRange_largeratio(const int& i, const int& j)
-{
-	double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-	return radius[i]+radius[j]+lub_max_gap*minradius;
+	double rad_ratio = radius[i]/radius[j];
+	if(rad_ratio<2.&&rad_ratio>0.5){
+		return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
+	}
+	else{
+		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+		return radius[i]+radius[j]+lub_max_gap*minradius;
+	}
 }

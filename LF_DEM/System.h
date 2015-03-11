@@ -41,7 +41,8 @@ class BoxSet;
 struct ForceAmplitudes
 {
 	double repulsion;
-	double brownian;
+	double sqrt_temperature;
+	double contact;
 };
 
 class System{
@@ -86,10 +87,7 @@ private:
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
 	double (System::*calcInteractionRange)(const int&, const int&);
-	double calcLubricationRange_normal(const int& i, const int& j);
-	double calcLubricationRange_largeratio(const int& i, const int& j);
-	//	double (System::*calcInteractionRange)(int, int);
-	//	double calcLubricationRange(int, int);
+	double calcLubricationRange(const int& i, const int& j);
 	double evaluateMinGap();
 	double evaluateMaxDispTan();
 	double evaluateMaxDispRolling();
@@ -109,7 +107,7 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
-
+	
  protected:
  public:
 	System();
@@ -202,7 +200,7 @@ private:
 	 *
 	 */
 	double sd_coeff;
-	double einstein_viscosity;
+	double einstein_stress;
 	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
@@ -274,7 +272,7 @@ private:
 	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(double strain_output_data, double time_output_data);
+	void timeEvolution(double time_output_data);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();

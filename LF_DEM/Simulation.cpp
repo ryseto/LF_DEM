@@ -29,7 +29,9 @@
 #include <cctype>
 
 Simulation::Simulation():
-shear_rate_expectation(-1) {};
+	shear_rate_expectation(-1),
+	unit_scales("hydro")
+{};
 
 Simulation::~Simulation()
 {
@@ -53,6 +55,7 @@ Simulation::contactForceParameter(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." << endl;
 		exit(1);
 	}
+
 	// temporal variables to keep imported values.
 	double phi_, kn_, kt_, dt_;
 	// To find parameters for considered volume fraction phi.
@@ -64,6 +67,7 @@ Simulation::contactForceParameter(string filename)
 		}
 	}
 	fin_knktdt.close();
+
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
@@ -83,6 +87,7 @@ Simulation::contactForceParameterBrownian(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
+
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
@@ -93,6 +98,7 @@ Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
+
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
@@ -111,6 +117,7 @@ Simulation::importPreSimulationData(string filename)
 		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
 		exit(1);
 	}
+
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == sys.target_stress_input) {
@@ -120,6 +127,23 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
+
+void
+Simulation::setUnitScalesBrownian(){
+	if(sys.dimensionless_number>p.Pe_switch){
+		unit_scales = "hydro";
+		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
+		sys.set_shear_rate(1);
+	}
+	else{
+		unit_scales = "thermal";
+		sys.amplitudes.sqrt_temperature = 1;
+		sys.set_shear_rate(sys.dimensionless_number);
+	}
+
+}
+
+	
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   bool binary_conf,
@@ -142,8 +166,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
 			sys.dimensionless_number = peclet_num;
-			sys.amplitudes.brownian = 1./sqrt(peclet_num);
-			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
 				/* When both Brownian and repulsive forces exist
@@ -207,6 +229,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	} else if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
 		sys.brownian = false;
+		sys.set_shear_rate(1);
+
 		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
@@ -215,7 +239,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
-			sys.set_shear_rate(1);
 			if (ratio_repulsion != 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce = true;
@@ -244,9 +267,17 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			 */
 		}
 	}
+
+
 	setDefaultParameters();
 	readParameterFile();
- 	if (binary_conf) {
+	
+	if(sys.brownian == true){
+		setUnitScalesBrownian();
+	}
+		
+	
+	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
 		importInitialPositionFile();
@@ -263,19 +294,35 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			contactForceParameter(input_files[2]);
 		}
 	}
+	
+	if (sys.dimensionless_number < p.Pe_switch) {// lowPeclet
+	 	// scale_factor_SmallPe > 1
+	 	double scale_factor_SmallPe = p.Pe_switch/sys.dimensionless_number;
+	 	p.strain_interval_output_data *= 1/scale_factor_SmallPe;
+	 	p.strain_interval_output_config *= 1/scale_factor_SmallPe;
+	}
+
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
-		time_interval_output_data = -1;
-		time_interval_output_config = -1;
+		time_interval_output_data = p.strain_interval_output_data/sys.get_shear_rate();
+		time_interval_output_config = p.strain_interval_output_config/sys.get_shear_rate();
 	}
+	cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;	
+	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
+	cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
+	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
+	
+	
 	exportParameterSet();
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
+
+
 	openOutputFiles(binary_conf);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
@@ -311,15 +358,15 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		sys.new_contact_gap = 0;
 	}
 	int jammed = 0;
-	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
-		if (time_interval_output_data == -1) {
-			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
-			strain_output_config = cnt_config_out*p.strain_interval_output_config;
-		} else {
-			time_output_data = cnt_simu_loop*time_interval_output_data;
-			time_output_config = cnt_config_out*time_interval_output_config;
-		}
-		sys.timeEvolution(strain_output_data, time_output_data);
+	while (sys.get_time() < p.time_end-1e-8) {
+		// if (time_interval_output_data == -1) {
+		// 	strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
+		// 	strain_output_config = cnt_config_out*p.strain_interval_output_config;
+		// } else {
+		time_output_data = cnt_simu_loop*time_interval_output_data;
+		time_output_config = cnt_config_out*time_interval_output_config;
+		//		}
+		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
 		evaluateData();
 		outputRheologyData();
@@ -338,7 +385,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 				cnt_config_out ++;
 			}
 		}
-		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
+		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (abs(sys.dimensionless_number) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
@@ -414,8 +461,8 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
-		time_interval_output_data = -1;
-		time_interval_output_config = -1;
+		time_interval_output_data = p.strain_interval_output_data/sys.get_shear_rate();
+		time_interval_output_config = p.strain_interval_output_config/sys.get_shear_rate();
 	}
 	p.integration_method = 0;
 	sys.importParameterSet(p);
@@ -453,17 +500,18 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		sys.target_stress = rsequence[step]/6/M_PI;
 		cerr << "Target stress " << sys.target_stress_input << endl;
 		sys.updateUnscaledContactmodel();
-		sys.dimensionless_number = 1; // needed for 1st time step
+		sys.amplitudes.repulsion = 1; // needed for 1st time step
+		sys.dimensionless_number = 1;
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
-			if (time_interval_output_data == -1) {
-				strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
-				strain_output_config = cnt_config_out*p.strain_interval_output_config;
-			} else {
+			// if (time_interval_output_data == -1) {
+			// 	strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
+			// 	strain_output_config = cnt_config_out*p.strain_interval_output_config;
+			// } else {
 				time_output_data = cnt_simu_loop*time_interval_output_data;
 				time_output_config = cnt_config_out*time_interval_output_config;
-			}
-			sys.timeEvolution(strain_output_data, time_output_data);
+				//			}
+			sys.timeEvolution(time_output_data);
 			cnt_simu_loop ++;
 			evaluateData();
 			outputRheologyData();
@@ -493,7 +541,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 			} else {
 				jammed = 0;
 			}
-			cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end;
+			cerr << "strain: " << sys.get_time() << " / " << p.time_end;
 			cerr << "      stress = " << sys.target_stress_input << endl;
 		}
 	}
@@ -552,8 +600,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.contact_relaxation_time_tan =  atof(value.c_str());
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
-	} else if (keyword == "shear_strain_end") {
-		p.shear_strain_end = atof(value.c_str());
+	} else if (keyword == "time_end") {
+		p.time_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
@@ -811,7 +859,7 @@ void Simulation::setDefaultParameters()
 	 */
 	p.friction_model = 1;
 	p.rolling_friction = false;
-	p.shear_strain_end = 10;
+	p.time_end = 10;
 	p.lub_max_gap = 0.5;
 	/*
 	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
@@ -987,7 +1035,10 @@ void Simulation::evaluateData()
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	viscosity = sys.einstein_viscosity+sys.total_stress.getStressXZ();
+
+	
+
+	viscosity = sys.einstein_stress+sys.total_stress.getStressXZ();
 	normalstress_diff_1 = sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = sys.total_stress.getNormalStress2();
 	particle_pressure = sys.total_stress.getParticlePressure();

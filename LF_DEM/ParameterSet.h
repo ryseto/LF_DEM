@@ -38,7 +38,7 @@ struct ParameterSet
 	double friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. 3 infinite mu Coulomb with threshold
 
 	bool rolling_friction;                   ///< Activate rolling friction.
-	double shear_strain_end;                 ///< Length of the simulation, in strain units.
+	double time_end;                 ///< Length of the simulation, in strain units.
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
