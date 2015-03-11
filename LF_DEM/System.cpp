@@ -19,8 +19,8 @@ brownian(false),
 zero_shear(false),
 friction_model(-1),
 repulsiveforce(false),
-init_strain_shear_rate_limit(0),
 new_contact_gap(0),
+init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999)
 {}
 
@@ -272,8 +272,6 @@ void System::setupBrownian()
 			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
-			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
-			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
 			p.start_adjust /= scale_factor_SmallPe;
@@ -281,8 +279,6 @@ void System::setupBrownian()
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
 			cerr << "  dt = " << p.dt << endl;
-			cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;
-			cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 		} else {
 			lowPeclet = true; // <--- Always true?
 		}
@@ -694,7 +690,7 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-void System::timeEvolution(double strain_output_data, double time_output_data)
+void System::timeEvolution(double time_output_data)
 {
 	/**
 	 \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
@@ -713,18 +709,18 @@ void System::timeEvolution(double strain_output_data, double time_output_data)
 	if (lowPeclet) {
 		calc_stress = true;
 	}
-	if (time_output_data == 0) {
-		/* integrate until strain_next - 1 time step */
-		while (shear_strain < strain_output_data-dt*shear_rate) {
-			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-		};
-		(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	} else {
-		while (time < time_output_data-dt) { // integrate until strain_next
-			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-		};
-		(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	}
+	// if (time_output_data == 0) {
+	// 	/* integrate until strain_next - 1 time step */
+	// 	while (shear_strain < strain_output_data-dt*shear_rate) {
+	// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+	// 	};
+	// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	// } else {
+	while (time < time_output_data-dt) { // integrate until strain_next
+		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+	};
+	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	//	}
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
 	}

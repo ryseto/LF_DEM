@@ -107,7 +107,7 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
-
+	
  protected:
  public:
 	System();
@@ -272,7 +272,7 @@ private:
 	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(double strain_output_data, double time_output_data);
+	void timeEvolution(double time_output_data);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();

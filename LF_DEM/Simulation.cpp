@@ -294,19 +294,35 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			contactForceParameter(input_files[2]);
 		}
 	}
+	
+	if (sys.dimensionless_number < p.Pe_switch) {// lowPeclet
+	 	// scale_factor_SmallPe > 1
+	 	double scale_factor_SmallPe = p.Pe_switch/sys.dimensionless_number;
+	 	p.strain_interval_output_data *= 1/scale_factor_SmallPe;
+	 	p.strain_interval_output_config *= 1/scale_factor_SmallPe;
+	}
+
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
-		time_interval_output_data = -1;
-		time_interval_output_config = -1;
+		time_interval_output_data = p.strain_interval_output_data/sys.get_shear_rate();
+		time_interval_output_config = p.strain_interval_output_config/sys.get_shear_rate();
 	}
+	cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;	
+	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
+	cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
+	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
+	
+	
 	exportParameterSet();
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
+
+
 	openOutputFiles(binary_conf);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
@@ -343,14 +359,14 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	}
 	int jammed = 0;
 	while (sys.get_time() < p.time_end-1e-8) {
-		if (time_interval_output_data == -1) {
-			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
-			strain_output_config = cnt_config_out*p.strain_interval_output_config;
-		} else {
-			time_output_data = cnt_simu_loop*time_interval_output_data;
-			time_output_config = cnt_config_out*time_interval_output_config;
-		}
-		sys.timeEvolution(strain_output_data, time_output_data);
+		// if (time_interval_output_data == -1) {
+		// 	strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
+		// 	strain_output_config = cnt_config_out*p.strain_interval_output_config;
+		// } else {
+		time_output_data = cnt_simu_loop*time_interval_output_data;
+		time_output_config = cnt_config_out*time_interval_output_config;
+		//		}
+		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
 		evaluateData();
 		outputRheologyData();
@@ -445,8 +461,8 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
 	} else {
-		time_interval_output_data = -1;
-		time_interval_output_config = -1;
+		time_interval_output_data = p.strain_interval_output_data/sys.get_shear_rate();
+		time_interval_output_config = p.strain_interval_output_config/sys.get_shear_rate();
 	}
 	p.integration_method = 0;
 	sys.importParameterSet(p);
@@ -488,14 +504,14 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		sys.dimensionless_number = 1;
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
-			if (time_interval_output_data == -1) {
-				strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
-				strain_output_config = cnt_config_out*p.strain_interval_output_config;
-			} else {
+			// if (time_interval_output_data == -1) {
+			// 	strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
+			// 	strain_output_config = cnt_config_out*p.strain_interval_output_config;
+			// } else {
 				time_output_data = cnt_simu_loop*time_interval_output_data;
 				time_output_config = cnt_config_out*time_interval_output_config;
-			}
-			sys.timeEvolution(strain_output_data, time_output_data);
+				//			}
+			sys.timeEvolution(time_output_data);
 			cnt_simu_loop ++;
 			evaluateData();
 			outputRheologyData();
