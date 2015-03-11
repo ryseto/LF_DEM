@@ -6,9 +6,6 @@
 #include "Contact.h"
 #include "Interaction.h"
 
-const double spring_stretch_factor = 0.99999;
-const double spring_slight_repulsion = 1e-5;
-
 void Contact::init(System *sys_, Interaction *interaction_)
 {
 	sys = sys_;
@@ -153,7 +150,7 @@ void Contact::calcContactInteraction()
 	 reduced_gap is negative,
 	 positive. */
 	
-	f_contact_normal_norm = -kn_scaled*(interaction->get_reduced_gap()-spring_slight_repulsion);
+	f_contact_normal_norm = -kn_scaled*(interaction->get_reduced_gap());
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	if (sys->friction_model == 4) {
 		if (state == 2) {
@@ -174,9 +171,6 @@ void Contact::frictionlaw_standard()
 {
 	/**
 	 \brief Friction law
-	 In dynamic friction, the spring stretch is set to slightly smaller value
-	 from the value given by the frictional law.
-	 Thanks to this, when the system is jammed, all frictional contacts can turn to static friction.
 	 */
 	double supportable_tanforce = 0;
 	double sq_f_tan = f_contact_tan.sq_norm();
@@ -187,29 +181,28 @@ void Contact::frictionlaw_standard()
 	if (state == 2) {
 		// static friction in previous step
 		supportable_tanforce = mu_static*normal_load;
-		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-			// switch to dynamic friction
-			state = 3; // dynamic friction
-			supportable_tanforce = mu_dynamic*normal_load;
-		}
 	} else {
 		// dynamic friction in previous step
 		supportable_tanforce = mu_dynamic*normal_load;
-		if (sq_f_tan < supportable_tanforce*supportable_tanforce) {
-			// turn to static friction from dynamic friction
-			state = 2;
-		}
+	}
+	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		// switch to dynamic friction
+		state = 3; // dynamic friction
+		supportable_tanforce = mu_dynamic*normal_load;
+	} else {
+		// turn to static friction from dynamic friction
+		state = 2;
 	}
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
-		disp_tan *= spring_stretch_factor*supportable_tanforce/sqrt(sq_f_tan);
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
 		f_contact_tan = kt_scaled*disp_tan;
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
 		double sq_f_rolling = f_rolling.sq_norm();
 		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= spring_stretch_factor*supportable_rollingforce/sqrt(sq_f_rolling);
+			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
 			f_rolling = kr_scaled*disp_rolling;
 		}
 	}
@@ -262,7 +255,7 @@ void Contact::frictionlaw_test()
 		double supportable_rollingforce = mu_rolling*normal_load;
 		double sq_f_rolling = f_rolling.sq_norm();
 		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= spring_stretch_factor*supportable_rollingforce/sqrt(sq_f_rolling);
+			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
 			f_rolling = kr_scaled*disp_rolling;
 		}
 	}
