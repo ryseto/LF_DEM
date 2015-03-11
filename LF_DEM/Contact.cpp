@@ -186,12 +186,10 @@ void Contact::frictionlaw_standard()
 		supportable_tanforce = mu_dynamic*normal_load;
 	}
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-		// switch to dynamic friction
 		state = 3; // dynamic friction
 		supportable_tanforce = mu_dynamic*normal_load;
 	} else {
-		// turn to static friction from dynamic friction
-		state = 2;
+		state = 2; // static friction
 	}
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
