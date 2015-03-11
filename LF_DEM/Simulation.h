@@ -67,6 +67,7 @@ private:
 	double normalstress_diff_1_brownian;
 	double normalstress_diff_2_brownian;
 	double initial_lees_edwards_disp;
+	string unit_scales;
 	/*
 	 * For output data.
 	 */
@@ -87,6 +88,8 @@ private:
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
+	void setUnitScalesBrownian();
+
 	/*
 	 * For outputs
 	 */
@@ -106,6 +109,7 @@ private:
 									string control_variable);
 	void exportParameterSet();
 
+	
 public:
 	/* For DEMsystem*/
 	Simulation();

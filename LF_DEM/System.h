@@ -41,7 +41,8 @@ class BoxSet;
 struct ForceAmplitudes
 {
 	double repulsion;
-	double brownian;
+	double sqrt_temperature;
+	double contact;
 };
 
 class System{
@@ -199,7 +200,7 @@ private:
 	 *
 	 */
 	double sd_coeff;
-	double einstein_viscosity;
+	double einstein_stress;
 	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;

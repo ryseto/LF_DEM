@@ -29,7 +29,9 @@
 #include <cctype>
 
 Simulation::Simulation():
-shear_rate_expectation(-1) {};
+	shear_rate_expectation(-1),
+	unit_scales("hydro")
+{};
 
 Simulation::~Simulation()
 {
@@ -53,6 +55,7 @@ Simulation::contactForceParameter(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." << endl;
 		exit(1);
 	}
+
 	// temporal variables to keep imported values.
 	double phi_, kn_, kt_, dt_;
 	// To find parameters for considered volume fraction phi.
@@ -64,6 +67,7 @@ Simulation::contactForceParameter(string filename)
 		}
 	}
 	fin_knktdt.close();
+
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
@@ -83,6 +87,7 @@ Simulation::contactForceParameterBrownian(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
+
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
@@ -93,6 +98,7 @@ Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
+
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
@@ -111,6 +117,7 @@ Simulation::importPreSimulationData(string filename)
 		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
 		exit(1);
 	}
+
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == sys.target_stress_input) {
@@ -120,6 +127,23 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
+
+void
+Simulation::setUnitScalesBrownian(){
+	if(sys.dimensionless_number>p.Pe_switch){
+		unit_scales = "hydro";
+		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
+		sys.set_shear_rate(1);
+	}
+	else{
+		unit_scales = "thermal";
+		sys.amplitudes.sqrt_temperature = 1;
+		sys.set_shear_rate(sys.dimensionless_number);
+	}
+
+}
+
+	
 void
 Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   bool binary_conf,
@@ -142,8 +166,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
 			sys.dimensionless_number = peclet_num;
-			sys.amplitudes.brownian = 1./sqrt(peclet_num);
-			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0) {
 				cerr << "Repulsive force" << endl;
 				/* When both Brownian and repulsive forces exist
@@ -207,6 +229,8 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	} else if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
 		sys.brownian = false;
+		sys.set_shear_rate(1);
+
 		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
@@ -215,7 +239,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
 			exit(1);
 		} else {
-			sys.set_shear_rate(1);
 			if (ratio_repulsion != 0) {
 				cerr << "Repulsive force" << endl;
 				sys.repulsiveforce = true;
@@ -244,9 +267,17 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			 */
 		}
 	}
+
+
 	setDefaultParameters();
 	readParameterFile();
- 	if (binary_conf) {
+	
+	if(sys.brownian == true){
+		setUnitScalesBrownian();
+	}
+		
+	
+	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
 		importInitialPositionFile();
@@ -987,7 +1018,10 @@ void Simulation::evaluateData()
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	viscosity = sys.einstein_viscosity+sys.total_stress.getStressXZ();
+
+	
+
+	viscosity = sys.einstein_stress+sys.total_stress.getStressXZ();
 	normalstress_diff_1 = sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = sys.total_stress.getNormalStress2();
 	particle_pressure = sys.total_stress.getParticlePressure();

@@ -14,13 +14,13 @@
 
 System::System():
 maxnb_interactionpair_per_particle(15),
-brownian(false),
 lowPeclet(false),
+brownian(false),
 zero_shear(false),
 friction_model(-1),
 repulsiveforce(false),
-new_contact_gap(0),
 init_strain_shear_rate_limit(0),
+new_contact_gap(0),
 init_shear_rate_limit(999)
 {}
 
@@ -272,7 +272,6 @@ void System::setupBrownian()
 			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
 			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
 			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
-			p.shear_strain_end /= scale_factor_SmallPe;
 			p.strain_interval_output_data *= 1/scale_factor_SmallPe;
 			p.strain_interval_output_config *= 1/scale_factor_SmallPe;
 			p.memory_strain_k /= scale_factor_SmallPe;
@@ -453,11 +452,11 @@ void System::setupSystem(string control)
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
-	/* einstein_viscosity may be affected by sd_coeff.
+	/* einstein_stress may be affected by sd_coeff.
 	 * However, the reason to set value of sd_coeff is not very certain for the moment.
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
-	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI);
+	einstein_stress = (1+2.5*volume_fraction)*shear_rate/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -964,7 +963,7 @@ void System::generateBrownianForces()
 	 
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
-	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.brownian; // proportional to 1/Pe.
+	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A
 	}
@@ -1063,7 +1062,7 @@ void System::computeVelocities(bool divided_velocities)
 				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 				shear_rate_numerator -= shearstress_rep;
 			}
-			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
 			dimensionless_number = shear_rate_numerator/shearstress_hyd;
 			if (shear_strain < init_strain_shear_rate_limit) {
 				if (dimensionless_number > init_shear_rate_limit) {
@@ -1107,7 +1106,7 @@ void System::computeVelocities(bool divided_velocities)
 				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 				shear_rate_numerator -= shearstress_rep;
 			}
-			double shearstress_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
 			dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_number;
