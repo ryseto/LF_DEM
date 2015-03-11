@@ -86,10 +86,7 @@ private:
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
 	double (System::*calcInteractionRange)(const int&, const int&);
-	double calcLubricationRange_normal(const int& i, const int& j);
-	double calcLubricationRange_largeratio(const int& i, const int& j);
-	//	double (System::*calcInteractionRange)(int, int);
-	//	double calcLubricationRange(int, int);
+	double calcLubricationRange(const int& i, const int& j);
 	double evaluateMinGap();
 	double evaluateMaxDispTan();
 	double evaluateMaxDispRolling();

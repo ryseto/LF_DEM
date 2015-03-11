@@ -165,7 +165,7 @@ void System::allocateRessources()
 
 void System::setInteractions_GenerateInitConfig()
 {
-	calcInteractionRange = &System::calcLubricationRange_normal;
+	calcInteractionRange = &System::calcLubricationRange;
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -315,7 +315,7 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	calcInteractionRange = &System::calcLubricationRange_normal;
+	calcInteractionRange = &System::calcLubricationRange;
 	friction = false;
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
@@ -1572,13 +1572,14 @@ void System::calcLubricationForce()
 	}
 }
 
-double System::calcLubricationRange_normal(const int& i, const int& j)
+double System::calcLubricationRange(const int& i, const int& j)
 {
-	return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
-}
-
-double System::calcLubricationRange_largeratio(const int& i, const int& j)
-{
-	double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-	return radius[i]+radius[j]+lub_max_gap*minradius;
+	double rad_ratio = radius[i]/radius[j];
+	if(rad_ratio<2.&&rad_ratio>0.5){
+		return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
+	}
+	else{
+		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+		return radius[i]+radius[j]+lub_max_gap*minradius;
+	}
 }
