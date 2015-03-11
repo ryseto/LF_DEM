@@ -325,15 +325,6 @@ void System::setupSystem(string control)
 		friction = true;
 	} else if (friction_model == 2 || friction_model == 3) {
 		cerr << "friction_model " << friction_model << endl;
-		/*
-		 * The dimensionless shear rate is defined as follows:
-		 * dimensionless_number = F0/F^{*}
-		 * F0 = 6pi*eta*a^2*shear_rate
-		 * The force unit is changed by the considering shear rate.
-		 * In the simulation, the critical force F^{*} = \tilde{F^{*}} F_0.
-		 * Thus, \tilde{F^{*}} = F^{*} / F_0 = 1/dimensionless_number.
-		 *
-		 */
 		friction = true;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
 	} else if (friction_model == 4) {
@@ -626,13 +617,10 @@ void System::timeStepMove()
 	} else {
 		dt = disp_max/max_sliding_velocity;
 	}
-	/* [note]
-	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
-	 */
-	double time_increment = dt/abs(dimensionless_number);
-	time += time_increment;
+	time += dt;
 	/* evolve PBC */
-	timeStepBoxing(shear_direction*shear_rate*dt);
+	double strain_increment = dt*abs(shear_rate);
+	timeStepBoxing(strain_increment);
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -659,11 +647,14 @@ void System::timeStepMovePredictor()
 			dt = disp_max/max_sliding_velocity;
 		}
 	}
-	time += dt/abs(dimensionless_number);
+	time += dt;
+	/* evolve PBC */
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	timeStepBoxing(shear_direction*shear_rate*dt);
+	double strain_increment = dt*abs(shear_rate);
+	timeStepBoxing(strain_increment);
+
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -724,12 +715,12 @@ void System::timeEvolution(double strain_output_data, double time_output_data)
 	}
 	if (time_output_data == 0) {
 		/* integrate until strain_next - 1 time step */
-		while (shear_strain < strain_output_data-dt) {
+		while (shear_strain < strain_output_data-dt*shear_rate) {
 			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	} else {
-		while (time < time_output_data-dt/abs(dimensionless_number)) { // integrate until strain_next
+		while (time < time_output_data-dt) { // integrate until strain_next
 			(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 		};
 		(this->*timeEvolutionDt)(true); // last time step, compute the stress
@@ -1046,12 +1037,15 @@ void System::computeVelocities(bool divided_velocities)
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 		buildContactTerms(true); // set rhs = F_C
 		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+
+		// Back out the shear rate
+		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
+		amplitudes.repulsion = 1/abs(dimensionless_number);
+
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 		}
-		// Back out the shear rate
-		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
 		calcStressPerParticle();
 		calcStress();
 		if (p.unscaled_contactmodel) {
@@ -1063,12 +1057,14 @@ void System::computeVelocities(bool divided_velocities)
 				shear_rate_numerator -= shearstress_rep;
 			}
 			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
+
 			dimensionless_number = shear_rate_numerator/shearstress_hyd;
 			if (shear_strain < init_strain_shear_rate_limit) {
 				if (dimensionless_number > init_shear_rate_limit) {
 					dimensionless_number = init_shear_rate_limit;
 				}
 			}
+			amplitudes.repulsion = 1/abs(dimensionless_number);
 			if (repulsiveforce) {
 				for (int i=0; i<np; i++) {
 					vel_repulsive[i] /= dimensionless_number;

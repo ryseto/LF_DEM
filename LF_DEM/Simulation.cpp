@@ -342,7 +342,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		sys.new_contact_gap = 0;
 	}
 	int jammed = 0;
-	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
+	while (sys.get_time() < p.time_end-1e-8) {
 		if (time_interval_output_data == -1) {
 			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
 			strain_output_config = cnt_config_out*p.strain_interval_output_config;
@@ -369,7 +369,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 				cnt_config_out ++;
 			}
 		}
-		cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end << endl;
+		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (abs(sys.dimensionless_number) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
@@ -484,7 +484,8 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		sys.target_stress = rsequence[step]/6/M_PI;
 		cerr << "Target stress " << sys.target_stress_input << endl;
 		sys.updateUnscaledContactmodel();
-		sys.dimensionless_number = 1; // needed for 1st time step
+		sys.amplitudes.repulsion = 1; // needed for 1st time step
+		sys.dimensionless_number = 1;
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			if (time_interval_output_data == -1) {
@@ -524,7 +525,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 			} else {
 				jammed = 0;
 			}
-			cerr << "strain: " << sys.get_shear_strain() << " / " << p.shear_strain_end;
+			cerr << "strain: " << sys.get_time() << " / " << p.time_end;
 			cerr << "      stress = " << sys.target_stress_input << endl;
 		}
 	}
@@ -583,8 +584,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.contact_relaxation_time_tan =  atof(value.c_str());
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
-	} else if (keyword == "shear_strain_end") {
-		p.shear_strain_end = atof(value.c_str());
+	} else if (keyword == "time_end") {
+		p.time_end = atof(value.c_str());
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
@@ -842,7 +843,7 @@ void Simulation::setDefaultParameters()
 	 */
 	p.friction_model = 1;
 	p.rolling_friction = false;
-	p.shear_strain_end = 10;
+	p.time_end = 10;
 	p.lub_max_gap = 0.5;
 	/*
 	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).

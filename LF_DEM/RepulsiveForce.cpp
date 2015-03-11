@@ -19,7 +19,7 @@ void RepulsiveForce::activate()
 	 * The size dependence of repulsive force:
 	 * a0*a1/(a1+a2)/2
 	 */
-	amplitude = sys->amplitudes.repulsion*interaction->a0*interaction->a1/interaction->ro;
+	amplitude = interaction->a0*interaction->a1/interaction->ro;
 	length = sys->get_repulsiveforce_length();
 	force_vector.reset();
 	force_norm = 0;
@@ -40,11 +40,11 @@ void RepulsiveForce::calcForce()
 	if (interaction->contact.state == 0) { // why not testing for gap? When particles separate, there is a time step for which gap>0 and contact.state>0, is that the reason?
 		// ---> I forgot why I did so:-)
 		/* separating */
-		force_norm = amplitude*exp(-gap/length);
+		force_norm = sys->amplitudes.repulsion*amplitude*exp(-gap/length);
 		force_vector = -force_norm*interaction->nvec;
 	} else {
 		/* contacting */
-		force_norm = amplitude;
+		force_norm = sys->amplitudes.repulsion*amplitude;
 		force_vector = -force_norm*interaction->nvec;
 	}
 }
