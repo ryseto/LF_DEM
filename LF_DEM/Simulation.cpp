@@ -726,29 +726,29 @@ void Simulation::openOutputFiles(bool binary_conf)
 	string fout_rheo_col_def =
 	"#1: shear strain\n"
 	"#2: Viscosity\n"
-	"#3: N1\n"
-	"#4: N2\n"
+	"#3: N1 viscosity\n"
+	"#4: N2 viscosity\n"
 	"#5: Viscosity(lub)\n"
-	"#6: N1(lub)\n"
-	"#7: N2(lub)\n"
+	"#6: N1 viscosity(lub)\n"
+	"#7: N2 viscosity(lub)\n"
 	"#8: Viscosity(xF_contact part)\n"
-	"#9: N1(xF_contact part)\n"
-	"#10: N2(xF_contact part)\n"
+	"#9: N1 viscosity(xF_contact part)\n"
+	"#10: N2 viscosity(xF_contact part)\n"
 	"#11: Viscosity(GU_contact part)\n"
-	"#12: N1(GU_contact part)\n"
-	"#13: N2(GU_contact part)\n"
+	"#12: N1 viscosity(GU_contact part)\n"
+	"#13: N2 viscosity(GU_contact part)\n"
 	"#14: Viscosity(friction)\n"
-	"#15: N1(friction)\n"
-	"#16: N2(friction)\n"
+	"#15: N1 viscosity(friction)\n"
+	"#16: N2 viscosity(friction)\n"
 	"#17: Viscosity(repulsive force XF)\n"
-	"#18: N1(repulsive force XF)\n"
-	"#19: N2(repulsive force XF)\n"
+	"#18: N1 viscosity(repulsive force XF)\n"
+	"#19: N2 viscosity(repulsive force XF)\n"
 	"#20: Viscosity(repulsive force GU)\n"
-	"#21: N1(repulsive force GU)\n"
-	"#22: N2(repulsive force GU)\n"
+	"#21: N1 viscosity(repulsive force GU)\n"
+	"#22: N2 viscosity(repulsive force GU)\n"
 	"#23: Viscosity(brownian)\n"
-	"#24: N1(brownian)\n"
-	"#25: N2(brownian)\n"
+	"#24: N1 viscosity(brownian)\n"
+	"#25: N2 viscosity(brownian)\n"
 	"#26: particle pressure\n"
 	"#27: particle pressure contact\n"
 	"#28: min gap (non-dim)\n"
@@ -1036,8 +1036,14 @@ void Simulation::evaluateData()
 	sys.calcStress();
 	sys.calcLubricationForce();
 
+	double stress_unity_converter;
+	if( unit_scales == "hydro" ){
+		stress_unity_converter =1;
+	}
+	if( unit_scales == "thermal" ){
+		stress_unity_converter =1/sys.dimensionless_number;
+	}
 	
-
 	viscosity = sys.einstein_stress+sys.total_stress.getStressXZ();
 	normalstress_diff_1 = sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = sys.total_stress.getNormalStress2();
