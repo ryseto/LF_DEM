@@ -46,8 +46,7 @@ Simulation::~Simulation()
 	}
 };
 
-void
-Simulation::contactForceParameter(string filename)
+void Simulation::contactForceParameter(string filename)
 {
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
@@ -78,8 +77,7 @@ Simulation::contactForceParameter(string filename)
 	}
 }
 
-void
-Simulation::contactForceParameterBrownian(string filename)
+void Simulation::contactForceParameterBrownian(string filename)
 {
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
@@ -98,7 +96,7 @@ Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
-
+	
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
@@ -127,25 +125,20 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-
-void
-Simulation::setUnitScalesBrownian(){
-	if(sys.dimensionless_number>p.Pe_switch){
+void Simulation::setUnitScalesBrownian()
+{
+	if (sys.dimensionless_number > p.Pe_switch) {
 		unit_scales = "hydro";
 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
 		sys.set_shear_rate(1);
-	}
-	else{
+	} else {
 		unit_scales = "thermal";
 		sys.amplitudes.sqrt_temperature = 1;
 		sys.set_shear_rate(sys.dimensionless_number);
 	}
-
 }
 
-	
-void
-Simulation::setupSimulationSteadyShear(vector<string> &input_files,
+void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   bool binary_conf,
 									   double peclet_num,
 									   double ratio_repulsion,
@@ -156,7 +149,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-
 	sys.cohesion = false;
 	sys.brownian = false;
 	sys.repulsiveforce = false;
@@ -230,7 +222,6 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		p.unscaled_contactmodel = true;
 		sys.brownian = false;
 		sys.set_shear_rate(1);
-
 		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
@@ -268,15 +259,13 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		}
 	}
 
-
 	setDefaultParameters();
 	readParameterFile();
 	
-	if(sys.brownian == true){
+	if (sys.brownian == true) {
 		setUnitScalesBrownian();
 	}
-		
-	
+
 	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
@@ -299,8 +288,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
-	}
-	else{
+	} else {
 		time_interval_output_data = p.time_interval_output_data;
 		time_interval_output_config = p.time_interval_output_config;
 	}
@@ -308,14 +296,12 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
 	
-	
 	exportParameterSet();
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
-
-
+	
 	openOutputFiles(binary_conf);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
@@ -329,8 +315,7 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 /*
  * Main simulation
  */
-void
-Simulation::simulationSteadyShear(vector<string> &input_files,
+void Simulation::simulationSteadyShear(vector<string> &input_files,
 								  bool binary_conf,
 								  double peclet_num, double ratio_repulsion, double ratio_cohesion,
 								  double ratio_critical_load, string control_variable)
@@ -341,7 +326,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-	double strain_output_data = 0;
+//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
@@ -475,7 +460,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain = 0;
-	double strain_output_data = 0;
+//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
@@ -1021,15 +1006,15 @@ void Simulation::evaluateData()
 	sys.calcStress();
 	sys.calcLubricationForce();
 
-	double stress_unit_converter;
-	if( unit_scales == "hydro" ){
-		stress_unit_converter =1;
+	double stress_unit_converter = 0;
+	if (unit_scales == "hydro") {
+		stress_unit_converter = 1;
 	}
-	if( unit_scales == "thermal" ){
-		stress_unit_converter =1/sys.dimensionless_number;
+	if (unit_scales == "thermal") {
+		stress_unit_converter = 1/sys.dimensionless_number;
 	}
 	
-	viscosity = stress_unit_converter*sys.einstein_stress+sys.total_stress.getStressXZ();
+	viscosity = stress_unit_converter*(sys.einstein_stress+sys.total_stress.getStressXZ());
 	normalstress_diff_1 = stress_unit_converter*sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = stress_unit_converter*sys.total_stress.getNormalStress2();
 	particle_pressure = stress_unit_converter*sys.total_stress.getParticlePressure();
