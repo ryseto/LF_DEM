@@ -348,7 +348,7 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-	double strain_output_data = 0;
+//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
@@ -486,7 +486,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain = 0;
-	double strain_output_data = 0;
+//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
