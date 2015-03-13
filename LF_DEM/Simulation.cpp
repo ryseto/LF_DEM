@@ -295,24 +295,17 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		}
 	}
 	
-	if (sys.dimensionless_number < p.Pe_switch) {// lowPeclet
-	 	// scale_factor_SmallPe > 1
-	 	double scale_factor_SmallPe = p.Pe_switch/sys.dimensionless_number;
-	 	p.strain_interval_output_data *= 1/scale_factor_SmallPe;
-	 	p.strain_interval_output_config *= 1/scale_factor_SmallPe;
-	}
-
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
-		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
-		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
-	} else {
-		time_interval_output_data = p.strain_interval_output_data/sys.get_shear_rate();
-		time_interval_output_config = p.strain_interval_output_config/sys.get_shear_rate();
+		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
+		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
 	}
-	cerr << "  strain_interval_output_data = " << p.strain_interval_output_data << endl;	
+	else{
+		time_interval_output_data = p.time_interval_output_data;
+		time_interval_output_config = p.time_interval_output_config;
+	}
+	
 	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
-	cerr << "  strain_interval_output_config = " << p.strain_interval_output_config << endl;
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
 	
 	
@@ -359,13 +352,9 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 	}
 	int jammed = 0;
 	while (sys.get_time() < p.time_end-1e-8) {
-		// if (time_interval_output_data == -1) {
-		// 	strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
-		// 	strain_output_config = cnt_config_out*p.strain_interval_output_config;
-		// } else {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
-		//		}
+
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
 		evaluateData();
@@ -457,12 +446,12 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	}
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
-		// strain_interval_out
-		time_interval_output_data = p.strain_interval_output_data/shear_rate_expectation;
-		time_interval_output_config = p.strain_interval_output_config/shear_rate_expectation;
+		// time_interval_out
+		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
+		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
 	} else {
-		time_interval_output_data = p.strain_interval_output_data/sys.get_shear_rate();
-		time_interval_output_config = p.strain_interval_output_config/sys.get_shear_rate();
+		time_interval_output_data = p.time_interval_output_data;
+		time_interval_output_config = p.time_interval_output_config;
 	}
 	p.integration_method = 0;
 	sys.importParameterSet(p);
@@ -504,13 +493,9 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		sys.dimensionless_number = 1;
 		next_strain = sys.get_shear_strain()+strain_sequence[step];
 		while (sys.get_shear_strain() < next_strain-1e-8) {
-			// if (time_interval_output_data == -1) {
-			// 	strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
-			// 	strain_output_config = cnt_config_out*p.strain_interval_output_config;
-			// } else {
-				time_output_data = cnt_simu_loop*time_interval_output_data;
-				time_output_config = cnt_config_out*time_interval_output_config;
-				//			}
+			time_output_data = cnt_simu_loop*time_interval_output_data;
+			time_output_config = cnt_config_out*time_interval_output_config;
+
 			sys.timeEvolution(time_output_data);
 			cnt_simu_loop ++;
 			evaluateData();
@@ -624,10 +609,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.mu_dynamic = atof(value.c_str());
 	} else if (keyword == "mu_rolling") {
 		p.mu_rolling = atof(value.c_str());
-	} else if (keyword == "strain_interval_output_config") {
-		p.strain_interval_output_config = atof(value.c_str());
-	} else if (keyword == "strain_interval_output_data") {
-		p.strain_interval_output_data = atof(value.c_str());
+	} else if (keyword == "time_interval_output_config") {
+		p.time_interval_output_config = atof(value.c_str());
+	} else if (keyword == "time_interval_output_data") {
+		p.time_interval_output_data = atof(value.c_str());
 	} else if (keyword == "out_data_particle") {
 		p.out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
@@ -726,29 +711,29 @@ void Simulation::openOutputFiles(bool binary_conf)
 	string fout_rheo_col_def =
 	"#1: shear strain\n"
 	"#2: Viscosity\n"
-	"#3: N1\n"
-	"#4: N2\n"
+	"#3: N1 viscosity\n"
+	"#4: N2 viscosity\n"
 	"#5: Viscosity(lub)\n"
-	"#6: N1(lub)\n"
-	"#7: N2(lub)\n"
+	"#6: N1 viscosity(lub)\n"
+	"#7: N2 viscosity(lub)\n"
 	"#8: Viscosity(xF_contact part)\n"
-	"#9: N1(xF_contact part)\n"
-	"#10: N2(xF_contact part)\n"
+	"#9: N1 viscosity(xF_contact part)\n"
+	"#10: N2 viscosity(xF_contact part)\n"
 	"#11: Viscosity(GU_contact part)\n"
-	"#12: N1(GU_contact part)\n"
-	"#13: N2(GU_contact part)\n"
+	"#12: N1 viscosity(GU_contact part)\n"
+	"#13: N2 viscosity(GU_contact part)\n"
 	"#14: Viscosity(friction)\n"
-	"#15: N1(friction)\n"
-	"#16: N2(friction)\n"
+	"#15: N1 viscosity(friction)\n"
+	"#16: N2 viscosity(friction)\n"
 	"#17: Viscosity(repulsive force XF)\n"
-	"#18: N1(repulsive force XF)\n"
-	"#19: N2(repulsive force XF)\n"
+	"#18: N1 viscosity(repulsive force XF)\n"
+	"#19: N2 viscosity(repulsive force XF)\n"
 	"#20: Viscosity(repulsive force GU)\n"
-	"#21: N1(repulsive force GU)\n"
-	"#22: N2(repulsive force GU)\n"
+	"#21: N1 viscosity(repulsive force GU)\n"
+	"#22: N2 viscosity(repulsive force GU)\n"
 	"#23: Viscosity(brownian)\n"
-	"#24: N1(brownian)\n"
-	"#25: N2(brownian)\n"
+	"#24: N1 viscosity(brownian)\n"
+	"#25: N2 viscosity(brownian)\n"
 	"#26: particle pressure\n"
 	"#27: particle pressure contact\n"
 	"#28: min gap (non-dim)\n"
@@ -899,8 +884,8 @@ void Simulation::setDefaultParameters()
 	p.repulsive_length = 0.05;
 	p.mu_static = 1;
 	p.mu_dynamic = -1;
-	p.strain_interval_output_data = 0.01;
-	p.strain_interval_output_config = 0.1;
+	p.time_interval_output_data = 0.01;
+	p.time_interval_output_config = 0.1;
 	p.origin_zero_flow = true;
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
@@ -1036,33 +1021,39 @@ void Simulation::evaluateData()
 	sys.calcStress();
 	sys.calcLubricationForce();
 
+	double stress_unit_converter;
+	if( unit_scales == "hydro" ){
+		stress_unit_converter =1;
+	}
+	if( unit_scales == "thermal" ){
+		stress_unit_converter =1/sys.dimensionless_number;
+	}
 	
-
-	viscosity = sys.einstein_stress+sys.total_stress.getStressXZ();
-	normalstress_diff_1 = sys.total_stress.getNormalStress1();
-	normalstress_diff_2 = sys.total_stress.getNormalStress2();
-	particle_pressure = sys.total_stress.getParticlePressure();
-	viscosity_hydro = sys.total_hydro_stress.getStressXZ();
-	normalstress_diff_1_hydro = sys.total_hydro_stress.getNormalStress1();
-	normalstress_diff_2_hydro = sys.total_hydro_stress.getNormalStress2();
-	viscosity_cont_XF = sys.total_contact_stressXF.getStressXZ();
-	normalstress_diff_1_cont_XF = sys.total_contact_stressXF.getNormalStress1();
-	normalstress_diff_2_cont_XF = sys.total_contact_stressXF.getNormalStress2();
-	particle_pressure_cont = sys.total_contact_stressXF.getParticlePressure();
-	viscosity_friction = sys.total_contact_stressXF_tan.getStressXZ();
-	normalstress_diff_1_friction = sys.total_contact_stressXF_tan.getNormalStress1();
-	normalstress_diff_2_friction = sys.total_contact_stressXF_tan.getNormalStress2();
-	viscosity_cont_GU = sys.total_contact_stressGU.getStressXZ();
-	normalstress_diff_1_cont_GU = sys.total_contact_stressGU.getNormalStress1();
-	normalstress_diff_2_cont_GU = sys.total_contact_stressGU.getNormalStress2();
+	viscosity = stress_unit_converter*sys.einstein_stress+sys.total_stress.getStressXZ();
+	normalstress_diff_1 = stress_unit_converter*sys.total_stress.getNormalStress1();
+	normalstress_diff_2 = stress_unit_converter*sys.total_stress.getNormalStress2();
+	particle_pressure = stress_unit_converter*sys.total_stress.getParticlePressure();
+	viscosity_hydro = stress_unit_converter*sys.total_hydro_stress.getStressXZ();
+	normalstress_diff_1_hydro = stress_unit_converter*sys.total_hydro_stress.getNormalStress1();
+	normalstress_diff_2_hydro = stress_unit_converter*sys.total_hydro_stress.getNormalStress2();
+	viscosity_cont_XF = stress_unit_converter*sys.total_contact_stressXF.getStressXZ();
+	normalstress_diff_1_cont_XF = stress_unit_converter*sys.total_contact_stressXF.getNormalStress1();
+	normalstress_diff_2_cont_XF = stress_unit_converter*sys.total_contact_stressXF.getNormalStress2();
+	particle_pressure_cont = stress_unit_converter*sys.total_contact_stressXF.getParticlePressure();
+	viscosity_friction = stress_unit_converter*sys.total_contact_stressXF_tan.getStressXZ();
+	normalstress_diff_1_friction = stress_unit_converter*sys.total_contact_stressXF_tan.getNormalStress1();
+	normalstress_diff_2_friction = stress_unit_converter*sys.total_contact_stressXF_tan.getNormalStress2();
+	viscosity_cont_GU = stress_unit_converter*sys.total_contact_stressGU.getStressXZ();
+	normalstress_diff_1_cont_GU = stress_unit_converter*sys.total_contact_stressGU.getNormalStress1();
+	normalstress_diff_2_cont_GU = stress_unit_converter*sys.total_contact_stressGU.getNormalStress2();
 	if (sys.repulsiveforce) {
-		viscosity_repulsive_XF = sys.total_repulsive_stressXF.getStressXZ();
-		normalstress_diff_1_repulsive_XF = sys.total_repulsive_stressXF.getNormalStress1();
-		normalstress_diff_2_repulsive_XF = sys.total_repulsive_stressXF.getNormalStress2();
-		particle_pressure_repulsive = sys.total_repulsive_stressXF.getParticlePressure();
-		viscosity_repulsive_GU = sys.total_repulsive_stressGU.getStressXZ();
-		normalstress_diff_1_repulsive_GU = sys.total_repulsive_stressGU.getNormalStress1();
-		normalstress_diff_2_repulsive_GU = sys.total_repulsive_stressGU.getNormalStress2();
+		viscosity_repulsive_XF = stress_unit_converter*sys.total_repulsive_stressXF.getStressXZ();
+		normalstress_diff_1_repulsive_XF = stress_unit_converter*sys.total_repulsive_stressXF.getNormalStress1();
+		normalstress_diff_2_repulsive_XF = stress_unit_converter*sys.total_repulsive_stressXF.getNormalStress2();
+		particle_pressure_repulsive = stress_unit_converter*sys.total_repulsive_stressXF.getParticlePressure();
+		viscosity_repulsive_GU = stress_unit_converter*sys.total_repulsive_stressGU.getStressXZ();
+		normalstress_diff_1_repulsive_GU = stress_unit_converter*sys.total_repulsive_stressGU.getNormalStress1();
+		normalstress_diff_2_repulsive_GU = stress_unit_converter*sys.total_repulsive_stressGU.getNormalStress2();
 	} else {
 		viscosity_repulsive_XF = 0;
 		normalstress_diff_1_repulsive_XF = 0;
@@ -1073,9 +1064,9 @@ void Simulation::evaluateData()
 		normalstress_diff_2_repulsive_GU = 0;
 	}
 	if (sys.brownian) {
-		viscosity_brownian = sys.total_brownian_stressGU.getStressXZ();
-		normalstress_diff_1_brownian = sys.total_brownian_stressGU.getNormalStress1();
-		normalstress_diff_2_brownian = sys.total_brownian_stressGU.getNormalStress2();
+		viscosity_brownian = stress_unit_converter*sys.total_brownian_stressGU.getStressXZ();
+		normalstress_diff_1_brownian = stress_unit_converter*sys.total_brownian_stressGU.getNormalStress1();
+		normalstress_diff_2_brownian = stress_unit_converter*sys.total_brownian_stressGU.getNormalStress2();
 	} else {
 		viscosity_brownian = 0;
 		normalstress_diff_1_brownian = 0;

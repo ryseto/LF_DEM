@@ -240,6 +240,10 @@ void System::updateUnscaledContactmodel()
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+	if(lowPeclet){
+		lub_coeff_contact *= p.Pe_switch;
+	}
+	
 	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
@@ -270,17 +274,16 @@ void System::setupBrownian()
 			// scale_factor_SmallPe > 1
 			lowPeclet = true;
 			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
-			p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
-			p.contact_relaxation_time_tan = p.contact_relaxation_time_tan/scale_factor_SmallPe; // should be zero.
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
 			p.start_adjust /= scale_factor_SmallPe;
+			p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
 			cerr << "  dt = " << p.dt << endl;
 		} else {
-			lowPeclet = true; // <--- Always true?
+			lowPeclet = false; // <--- Always true?
 		}
 	}
 }
@@ -1115,6 +1118,7 @@ void System::computeVelocities(bool divided_velocities)
 			}
 			stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 			buildContactTerms(true); // set rhs = F_C
+			
 			stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 			for (int i=0; i<np; i++) {
 				na_velocity[i] = vel_hydro[i]+vel_contact[i];
@@ -1139,8 +1143,10 @@ void System::computeVelocities(bool divided_velocities)
 			if (repulsiveforce) {
 				buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 			}
+
 			stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 		}
+		
 		if (brownian) {
 			if (in_predictor) {
 				/* generate new F_B only in predictor
@@ -1155,6 +1161,7 @@ void System::computeVelocities(bool divided_velocities)
 				na_ang_velocity[i] += ang_vel_brownian[i];
 			}
 		}
+		
 	}
 	/*
 	 * The max velocity is used to find dt from max displacement

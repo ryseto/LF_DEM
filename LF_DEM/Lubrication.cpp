@@ -268,12 +268,12 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*(*nxnz);
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
-	GEi[0] =  sr*cGE_i*nvec->x+YG0_YG2*nvec->z;
+	GEi[0] =  sr*(cGE_i*nvec->x+YG0_YG2*nvec->z);
 	GEi[1] =  sr*cGE_i*nvec->y;
-	GEi[2] =  sr*cGE_i*nvec->z+YG0_YG2*nvec->x;
-	GEj[0] =  sr*cGE_j*nvec->x+YG1_YG3*nvec->z;
+	GEi[2] =  sr*(cGE_i*nvec->z+YG0_YG2*nvec->x);
+	GEj[0] =  sr*(cGE_j*nvec->x+YG1_YG3*nvec->z);
 	GEj[1] =  sr*cGE_j*nvec->y;
-	GEj[2] =  sr*cGE_j*nvec->z+YG1_YG3*nvec->x;
+	GEj[2] =  sr*(cGE_j*nvec->z+YG1_YG3*nvec->x);
 	HEi[0] =  sr*cHE_i*(*nxny);
 	HEi[1] = -sr*cHE_i*nxnx_nznz;
 	HEi[2] = -sr*cHE_i*(*nynz);

@@ -10,7 +10,7 @@
 struct ParameterSet
 {
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
-	double dt;                           ///< [Euler]: initial time/strain step value. [Pedictor/Corrector or Brownian]: time/strain step value
+	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
 	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
 	
@@ -38,7 +38,7 @@ struct ParameterSet
 	double friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. 3 infinite mu Coulomb with threshold
 
 	bool rolling_friction;                   ///< Activate rolling friction.
-	double time_end;                 ///< Length of the simulation, in strain units.
+	double time_end;                 ///< Time of the simulation.
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
@@ -59,19 +59,16 @@ struct ParameterSet
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	bool unscaled_contactmodel;              ///< Scale the particles' stiffness with shear rate
+	bool unscaled_contactmodel;              ///< Scale the particles' stiffness with force scale
 	double kn;                               ///< Particle stiffness: normal spring constant
 	double kt;                               ///< Particle stiffness: tangential spring constant
 	double kr;                               ///< Particle stiffness: rolling spring constant
-	//	double kn_lowPeclet;                     ///< Particle stiffness: normal spring constant in low Peclet mode
-	//	double kt_lowPeclet;                     ///< Particle stiffness: tangential spring constant in low Peclet mode
-	//	double kr_lowPeclet;                     ///< Particle stiffness: rolling spring constant in low Peclet mode
 
 	bool auto_determine_knkt;                ///< auto-determine stiffnesses knowing overlap and tangential displacement targets, see System::adjustContactModelParameters for details
 	double overlap_target;                   ///< max overlap to reach when auto-determining stiffness
 	double disp_tan_target;                  ///< max tangential displacement to reach when auto-determining stiffness
-	double memory_strain_k;                  ///< relaxation time for the stiffness determination
-	double memory_strain_avg;                ///< averaging time for the stiffness determination
+	double memory_strain_k;                  ///< relaxation strain for the stiffness determination
+	double memory_strain_avg;                ///< averaging strain for the stiffness determination
 	double min_kn;                           ///< min normal spring constant when auto-determining stiffness
 	double max_kn;                           ///< max normal spring constant when auto-determining stiffness
 	double min_kt;                           ///< min tangential spring constant when auto-determining stiffness
@@ -84,8 +81,8 @@ struct ParameterSet
 	double mu_dynamic;                        ///< friction coefficient (dynamic) if not defined, dynamic = static
 	double mu_rolling;                        ///< friction coefficient (rolling)
 
-	double strain_interval_output_data;      ///< Output interval for outputing rheo_* file
-	double strain_interval_output_config;    ///< Output interval for outputing int_* and par_* files
+	double time_interval_output_data;      ///< Output interval for outputing rheo_* file
+	double time_interval_output_config;    ///< Output interval for outputing int_* and par_* files
 	bool origin_zero_flow;                   ///< Output: the middle height of the simulation box is set to the flow zero level.
 
 	bool out_data_particle;                  ///< Output par_* file
