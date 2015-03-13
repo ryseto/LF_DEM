@@ -87,12 +87,12 @@ repulsiveforce_length = 0.05;
  * Output interval
  */
 
-strain_interval_output_config = 1e-1;
+time_interval_output_config = 1e-1;
 
 /*
  *  Data output
  */
-strain_interval_output_data = 1e-3;
+time_interval_output_data = 1e-3;
 
 /*
  * position and interaction data

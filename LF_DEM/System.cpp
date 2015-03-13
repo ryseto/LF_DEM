@@ -240,6 +240,10 @@ void System::updateUnscaledContactmodel()
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+	if(stress_controlled){
+		lub_coeff_contact /= abs(dimensionless_number);
+	}
+	
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
@@ -1044,10 +1048,8 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 	}
 }
 
-void System::computeVelocities(bool divided_velocities)
-{ // this function is slowly becoming a mess. We should refactor to restore readability.
-	stokes_solver.resetRHS();
-	if (stress_controlled) {
+void System::computeVelocitiesStressControlled()
+{
 		double shearstress_rep = 0;
 		// Compute the stress contributions
 		buildHydroTerms(true, true); // build matrix and rhs force GE
@@ -1126,6 +1128,15 @@ void System::computeVelocities(bool divided_velocities)
 				ang_vel_repulsive[i] /= dimensionless_number;
 			}
 		}
+}
+	
+
+void System::computeVelocities(bool divided_velocities)
+{ // this function is slowly becoming a mess. We should refactor to restore readability.
+	stokes_solver.resetRHS();
+
+	if (stress_controlled) {
+		computeVelocitiesStressControlled();
 	} else {
 		if (divided_velocities) {
 			// in case we want to compute the stress contributions

@@ -266,6 +266,10 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		setUnitScalesBrownian();
 	}
 
+	if (control_var == "stress") {
+		p.integration_method = 0;
+	}
+
 	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
@@ -276,6 +280,7 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	} else {
 		sys.shear_disp = 0;
 	}
+
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -307,9 +312,6 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		sys.zero_shear = true;
 	}
 	sys.setupShearFlow(true);
-	if (control_var == "stress") {
-		p.integration_method = 0;
-	}
 }
 
 /*
