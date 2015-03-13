@@ -600,6 +600,13 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		calcStress();
 	}
 	timeStepMoveCorrector();
+
+	// try to adapt dt
+	if (max_velocity > max_sliding_velocity) {
+		dt = disp_max/max_velocity;
+	} else {
+		dt = disp_max/max_sliding_velocity;
+	}
 }
 
 void System::timeStepMove()
