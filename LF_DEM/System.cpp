@@ -624,9 +624,12 @@ void System::timeStepMove()
 		dt = disp_max/max_sliding_velocity;
 	}
 	time += dt;
+
 	/* evolve PBC */
-	double strain_increment = dt*abs(shear_rate)/abs(dimensionless_number); // @@@ << ???
+	//	double strain_increment = dt*abs(shear_rate)/abs(dimensionless_number); // @@@ << ???
+	double strain_increment = dt*abs(shear_rate); // the dimensionless_number should not be here I think. \delta\gamma = \tilde{\delta t} * \tilde{\dot\gamma} is all we need here. 
 	timeStepBoxing(strain_increment);
+	
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -636,6 +639,7 @@ void System::timeStepMove()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+	
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -654,6 +658,7 @@ void System::timeStepMovePredictor()
 		}
 	}
 	time += dt;
+
 	/* evolve PBC */
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
@@ -669,7 +674,9 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+
 	updateInteractions();
+
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
