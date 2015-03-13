@@ -57,5 +57,6 @@ void RepulsiveForce::addUpForce()
 
 void RepulsiveForce::calcStressXF()
 {
+	calcForce();
 	stresslet_XF.set(interaction->rvec, force_vector);
 }
