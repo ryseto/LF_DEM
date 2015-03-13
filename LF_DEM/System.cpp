@@ -626,8 +626,12 @@ void System::timeStepMove()
 	time += dt;
 
 	/* evolve PBC */
-	//	double strain_increment = dt*abs(shear_rate)/abs(dimensionless_number); // @@@ << ???
-	double strain_increment = dt*abs(shear_rate); // the dimensionless_number should not be here I think. \delta\gamma = \tilde{\delta t} * \tilde{\dot\gamma} is all we need here. 
+	double strain_increment = 0;
+	if(stress_controlled){ // to be fixed: the stress_controlled case should not behave differently
+		strain_increment = dt*abs(shear_rate)/abs(dimensionless_number); // @@@ << ???
+	} else {
+		strain_increment = dt*abs(shear_rate); // the dimensionless_number should not be here I think. \delta\gamma = \tilde{\delta t} * \tilde{\dot\gamma} is all we need here.
+	}
 	timeStepBoxing(strain_increment);
 	
 	/* move particles */
