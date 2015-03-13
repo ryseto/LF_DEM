@@ -531,13 +531,13 @@ void StokesSolver::addToRHSTorque(int i, double *torque_i)
 {
 	int i6_3 = 6*i+3;
 	if (direct()) {
-		for (int u=0; u<3;u++) {
+		for (int u=0; u<3; u++) {
 			((double*)chol_rhs->x)[i6_3+u] += torque_i[u];
 		}
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-		for (int u=0; u<3;u++) {
+		for (int u=0; u<3; u++) {
 			tril_rhs->SumIntoGlobalValue(i6_3+u, 0, torque_i[u]);
 		}
 	}

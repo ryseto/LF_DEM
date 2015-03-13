@@ -240,10 +240,10 @@ void System::updateUnscaledContactmodel()
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-	if(lowPeclet){
+	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
-	
+
 	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
@@ -618,7 +618,7 @@ void System::timeStepMove()
 	}
 	time += dt;
 	/* evolve PBC */
-	double strain_increment = dt*abs(shear_rate);
+	double strain_increment = dt*abs(shear_rate)/abs(dimensionless_number); // @@@ << ???
 	timeStepBoxing(strain_increment);
 	/* move particles */
 	for (int i=0; i<np; i++) {
@@ -1161,7 +1161,6 @@ void System::computeVelocities(bool divided_velocities)
 				na_ang_velocity[i] += ang_vel_brownian[i];
 			}
 		}
-		
 	}
 	/*
 	 * The max velocity is used to find dt from max displacement
@@ -1573,10 +1572,9 @@ void System::calcLubricationForce()
 double System::calcLubricationRange(const int& i, const int& j)
 {
 	double rad_ratio = radius[i]/radius[j];
-	if(rad_ratio<2.&&rad_ratio>0.5){
+	if (rad_ratio < 2 && rad_ratio > 0.5) {
 		return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
-	}
-	else{
+	} else {
 		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
 		return radius[i]+radius[j]+lub_max_gap*minradius;
 	}

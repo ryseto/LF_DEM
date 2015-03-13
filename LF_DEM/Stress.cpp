@@ -119,8 +119,9 @@ System::calcStress()
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
+		// @@@@ Why?
 		// if (stress_controlled) {
-		// 	total_repulsive_stressXF *= amplitudes.repulsion;
+		//	total_repulsive_stressXF *= amplitudes.repulsion;
 		// }
 		//////////////////////////////////////////////////////////
 		total_repulsive_stressGU.reset();
