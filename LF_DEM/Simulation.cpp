@@ -246,6 +246,10 @@ Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	}
 	setDefaultParameters();
 	readParameterFile();
+	if (p.repulsive_length == 0) {
+		// @@@@@@@@@@@@@@@@@@@ TEMPORAL @@@@@@@@@@@@@@@@@@@@
+		sys.repulsiveforce = false;
+	}
  	if (binary_conf) {
 		importConfigurationBinary();
 	} else {

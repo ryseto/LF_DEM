@@ -297,7 +297,6 @@ void System::setupSystem(string control)
 	 * @ The resistance coeffient affects Brownian force.
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
-	
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
