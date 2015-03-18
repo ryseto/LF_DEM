@@ -104,7 +104,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="separator:a3a33d766c925f5c3dc12bf9dab8d40b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1aa8b72e085e17d8f1c2d23a2e76bd75"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1aa8b72e085e17d8f1c2d23a2e76bd75"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a1aa8b72e085e17d8f1c2d23a2e76bd75">dt</a></td></tr>
-<tr class="memdesc:a1aa8b72e085e17d8f1c2d23a2e76bd75"><td class="mdescLeft">&#160;</td><td class="mdescRight">[Euler]: initial time/strain step value. [Pedictor/Corrector or Brownian]: time/strain step value <br /></td></tr>
+<tr class="memdesc:a1aa8b72e085e17d8f1c2d23a2e76bd75"><td class="mdescLeft">&#160;</td><td class="mdescRight">[Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value <br /></td></tr>
 <tr class="separator:a1aa8b72e085e17d8f1c2d23a2e76bd75"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae681d078752b83a1d3fa0812cdc8cc45"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae681d078752b83a1d3fa0812cdc8cc45"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ae681d078752b83a1d3fa0812cdc8cc45">disp_max</a></td></tr>
@@ -114,6 +114,10 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a7ff916f2c0c7391773d286aecac8dd48">integration_method</a></td></tr>
 <tr class="memdesc:a7ff916f2c0c7391773d286aecac8dd48"><td class="mdescLeft">&#160;</td><td class="mdescRight">Integrator. 0: Euler's Method, 1: predictor-corrector. <br /></td></tr>
 <tr class="separator:a7ff916f2c0c7391773d286aecac8dd48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac756bf776b9d1ca9c521e7eda50c6dcd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac756bf776b9d1ca9c521e7eda50c6dcd"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ac756bf776b9d1ca9c521e7eda50c6dcd">rest_threshold</a></td></tr>
+<tr class="memdesc:ac756bf776b9d1ca9c521e7eda50c6dcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">criteria to judge saturation of deformation, i.e. jammed state etc. <br /></td></tr>
+<tr class="separator:ac756bf776b9d1ca9c521e7eda50c6dcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaab168f5c31818ce0064adaabeab4c8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaab168f5c31818ce0064adaabeab4c8c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aaab168f5c31818ce0064adaabeab4c8c">sd_coeff</a></td></tr>
 <tr class="memdesc:aaab168f5c31818ce0064adaabeab4c8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stokes drag coeffient. Full drag is 1. <br /></td></tr>
@@ -130,10 +134,10 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a413a8b08d91f9b490921e33040fa37ad">rolling_friction</a></td></tr>
 <tr class="memdesc:a413a8b08d91f9b490921e33040fa37ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Activate rolling friction. <br /></td></tr>
 <tr class="separator:a413a8b08d91f9b490921e33040fa37ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82b77a8490e88ea0591a1f41cbd57b5a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a82b77a8490e88ea0591a1f41cbd57b5a"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a82b77a8490e88ea0591a1f41cbd57b5a">shear_strain_end</a></td></tr>
-<tr class="memdesc:a82b77a8490e88ea0591a1f41cbd57b5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Length of the simulation, in strain units. <br /></td></tr>
-<tr class="separator:a82b77a8490e88ea0591a1f41cbd57b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad368e3977ec73cc10f3b60ccdd0c41d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad368e3977ec73cc10f3b60ccdd0c41d5"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ad368e3977ec73cc10f3b60ccdd0c41d5">time_end</a></td></tr>
+<tr class="memdesc:ad368e3977ec73cc10f3b60ccdd0c41d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time of the simulation. <br /></td></tr>
+<tr class="separator:ad368e3977ec73cc10f3b60ccdd0c41d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7651be3c755be367a7a1047de63e6c79"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7651be3c755be367a7a1047de63e6c79"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a7651be3c755be367a7a1047de63e6c79">lub_max_gap</a></td></tr>
 <tr class="memdesc:a7651be3c755be367a7a1047de63e6c79"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_lubrication.html" title="Lubrication interaction, to be called from an Interaction object. ">Lubrication</a> range (in interparticle gap distance) <br /></td></tr>
@@ -152,7 +156,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="separator:a28dae162ee00c725ec7042c61f4d7727"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a92089dbcc54265ae7e2b325fd694fbe5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92089dbcc54265ae7e2b325fd694fbe5"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a92089dbcc54265ae7e2b325fd694fbe5">unscaled_contactmodel</a></td></tr>
-<tr class="memdesc:a92089dbcc54265ae7e2b325fd694fbe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale the particles' stiffness with shear rate. <br /></td></tr>
+<tr class="memdesc:a92089dbcc54265ae7e2b325fd694fbe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale the particles' stiffness with force scale. <br /></td></tr>
 <tr class="separator:a92089dbcc54265ae7e2b325fd694fbe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44d27130189d0b9c986078c3d3828ecb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44d27130189d0b9c986078c3d3828ecb"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a44d27130189d0b9c986078c3d3828ecb">kn</a></td></tr>
@@ -180,11 +184,11 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="separator:ad74cb563e7c778a115963d23e0755d14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c1ed1f8bcc786ff2f30c2325000a501"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c1ed1f8bcc786ff2f30c2325000a501"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a1c1ed1f8bcc786ff2f30c2325000a501">memory_strain_k</a></td></tr>
-<tr class="memdesc:a1c1ed1f8bcc786ff2f30c2325000a501"><td class="mdescLeft">&#160;</td><td class="mdescRight">relaxation time for the stiffness determination <br /></td></tr>
+<tr class="memdesc:a1c1ed1f8bcc786ff2f30c2325000a501"><td class="mdescLeft">&#160;</td><td class="mdescRight">relaxation strain for the stiffness determination <br /></td></tr>
 <tr class="separator:a1c1ed1f8bcc786ff2f30c2325000a501"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba761741aba1a8bcfadcb0b3fe28acc2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba761741aba1a8bcfadcb0b3fe28acc2"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2">memory_strain_avg</a></td></tr>
-<tr class="memdesc:aba761741aba1a8bcfadcb0b3fe28acc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">averaging time for the stiffness determination <br /></td></tr>
+<tr class="memdesc:aba761741aba1a8bcfadcb0b3fe28acc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">averaging strain for the stiffness determination <br /></td></tr>
 <tr class="separator:aba761741aba1a8bcfadcb0b3fe28acc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a429e042257696a91c08faacea9edf720"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a429e042257696a91c08faacea9edf720"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a429e042257696a91c08faacea9edf720">min_kn</a></td></tr>
@@ -214,14 +218,22 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aab005331fd7290c4fbdce123e774de54">mu_static</a></td></tr>
 <tr class="memdesc:aab005331fd7290c4fbdce123e774de54"><td class="mdescLeft">&#160;</td><td class="mdescRight">friction coefficient (static) <br /></td></tr>
 <tr class="separator:aab005331fd7290c4fbdce123e774de54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f3e9b81544f76da7633b221f266dc07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f3e9b81544f76da7633b221f266dc07"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a4f3e9b81544f76da7633b221f266dc07">strain_interval_output_data</a></td></tr>
-<tr class="memdesc:a4f3e9b81544f76da7633b221f266dc07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output interval for outputing rheo_* file. <br /></td></tr>
-<tr class="separator:a4f3e9b81544f76da7633b221f266dc07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34aeabfc952b904a233209ad55dcc6d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34aeabfc952b904a233209ad55dcc6d6"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a34aeabfc952b904a233209ad55dcc6d6">strain_interval_output_config</a></td></tr>
-<tr class="memdesc:a34aeabfc952b904a233209ad55dcc6d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output interval for outputing int_* and par_* files. <br /></td></tr>
-<tr class="separator:a34aeabfc952b904a233209ad55dcc6d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad698a5200b667d13133ac1dde010f815"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad698a5200b667d13133ac1dde010f815"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ad698a5200b667d13133ac1dde010f815">mu_dynamic</a></td></tr>
+<tr class="memdesc:ad698a5200b667d13133ac1dde010f815"><td class="mdescLeft">&#160;</td><td class="mdescRight">friction coefficient (dynamic) if not defined, dynamic = static <br /></td></tr>
+<tr class="separator:ad698a5200b667d13133ac1dde010f815"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d50b829afe690b111b91e32530309f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2d50b829afe690b111b91e32530309f9"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a2d50b829afe690b111b91e32530309f9">mu_rolling</a></td></tr>
+<tr class="memdesc:a2d50b829afe690b111b91e32530309f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">friction coefficient (rolling) <br /></td></tr>
+<tr class="separator:a2d50b829afe690b111b91e32530309f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51bb46cd8a6fd6a4d08f283905ff8171"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51bb46cd8a6fd6a4d08f283905ff8171"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a51bb46cd8a6fd6a4d08f283905ff8171">time_interval_output_data</a></td></tr>
+<tr class="memdesc:a51bb46cd8a6fd6a4d08f283905ff8171"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output interval for outputing rheo_* file. <br /></td></tr>
+<tr class="separator:a51bb46cd8a6fd6a4d08f283905ff8171"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb7c7058e4d69bc74a3e2f315c7f755c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb7c7058e4d69bc74a3e2f315c7f755c"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#afb7c7058e4d69bc74a3e2f315c7f755c">time_interval_output_config</a></td></tr>
+<tr class="memdesc:afb7c7058e4d69bc74a3e2f315c7f755c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output interval for outputing int_* and par_* files. <br /></td></tr>
+<tr class="separator:afb7c7058e4d69bc74a3e2f315c7f755c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5b0e1b44afe6ca3f45125767fd75742"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5b0e1b44afe6ca3f45125767fd75742"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ab5b0e1b44afe6ca3f45125767fd75742">origin_zero_flow</a></td></tr>
 <tr class="memdesc:ab5b0e1b44afe6ca3f45125767fd75742"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output: the middle height of the simulation box is set to the flow zero level. <br /></td></tr>
@@ -244,7 +256,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="struct_parameter_set.html">ParameterSet</a></li>
-    <li class="footer">Generated on Wed Feb 18 2015 15:38:24 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Mar 18 2015 11:12:36 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

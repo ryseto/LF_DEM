@@ -130,8 +130,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>allocatePositionRadiu
 <tr class="memitem:ad126564a02aec97f7492943df296fc1d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad126564a02aec97f7492943df296fc1d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>allocateRessources</b> ()</td></tr>
 <tr class="separator:ad126564a02aec97f7492943df296fc1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d6d1acff41560dd8c8a53083b89c836"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a0d6d1acff41560dd8c8a53083b89c836">timeEvolution</a> (double strain_output_data, double time_output_data)</td></tr>
-<tr class="separator:a0d6d1acff41560dd8c8a53083b89c836"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80cccf4b135491dc0adc63993c0d4107"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a80cccf4b135491dc0adc63993c0d4107">timeEvolution</a> (double time_output_data)</td></tr>
+<tr class="separator:a80cccf4b135491dc0adc63993c0d4107"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf3ff4d405227b50f3c84e5e5bc88a35"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf3ff4d405227b50f3c84e5e5bc88a35"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>displacement</b> (int i, const <a class="el" href="classvec3d.html">vec3d</a> &amp;dr)</td></tr>
 <tr class="separator:acf3ff4d405227b50f3c84e5e5bc88a35"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -157,6 +157,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>periodize_diff</b> (<
 <tr class="memitem:aafa87b69481dbd17f8d3dc67c940a0f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aafa87b69481dbd17f8d3dc67c940a0f9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>computeVelocities</b> (bool divided_velocities)</td></tr>
 <tr class="separator:aafa87b69481dbd17f8d3dc67c940a0f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf5ba246da754491d999864ee84ab454"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf5ba246da754491d999864ee84ab454"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>computeVelocitiesStressControlled</b> ()</td></tr>
+<tr class="separator:abf5ba246da754491d999864ee84ab454"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41550bfa89c5883744cdc7fa1d8a4c48"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41550bfa89c5883744cdc7fa1d8a4c48"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>forceReset</b> ()</td></tr>
 <tr class="separator:a41550bfa89c5883744cdc7fa1d8a4c48"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -257,12 +260,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>set_sd_coeff</b> (dou
 <tr class="memitem:a91f93014256af53707c0f07f00df37dc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91f93014256af53707c0f07f00df37dc"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_repulsiveforce_length</b> ()</td></tr>
 <tr class="separator:a91f93014256af53707c0f07f00df37dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0765a62d72f5a776d696feba6c8d275"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad0765a62d72f5a776d696feba6c8d275"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>set_mu_static</b> (double val)</td></tr>
-<tr class="separator:ad0765a62d72f5a776d696feba6c8d275"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9120c5fda3e878a3eeb172e945fe65d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9120c5fda3e878a3eeb172e945fe65d8"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>get_mu_static</b> ()</td></tr>
-<tr class="separator:a9120c5fda3e878a3eeb172e945fe65d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af45b627f504813aab09684ce0452e6f8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af45b627f504813aab09684ce0452e6f8"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_nb_of_active_interactions</b> ()</td></tr>
 <tr class="separator:af45b627f504813aab09684ce0452e6f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -275,6 +272,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>brownian</b></td></tr
 <tr class="memitem:a192ffc7928767ac5e05e8b50be45dba3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a192ffc7928767ac5e05e8b50be45dba3"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>in_predictor</b></td></tr>
 <tr class="separator:a192ffc7928767ac5e05e8b50be45dba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabb237f29edf621458015a61e04905ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aabb237f29edf621458015a61e04905ec"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>in_corrector</b></td></tr>
+<tr class="separator:aabb237f29edf621458015a61e04905ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a135ca092c8adcdbd27ab74edfe14f70a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a135ca092c8adcdbd27ab74edfe14f70a"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>twodimension</b></td></tr>
 <tr class="separator:a135ca092c8adcdbd27ab74edfe14f70a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -464,6 +464,15 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>repulsiveforce</b></t
 <tr class="memitem:a74740a524d2e90eac2494623aed2009b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a74740a524d2e90eac2494623aed2009b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>cohesion</b></td></tr>
 <tr class="separator:a74740a524d2e90eac2494623aed2009b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4dfd4a358cc3341fef9ad76c06489a41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dfd4a358cc3341fef9ad76c06489a41"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>mu_static</b></td></tr>
+<tr class="separator:a4dfd4a358cc3341fef9ad76c06489a41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4062c3b226faac2a1247c51e270ee7c7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4062c3b226faac2a1247c51e270ee7c7"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>mu_dynamic</b></td></tr>
+<tr class="separator:a4062c3b226faac2a1247c51e270ee7c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5727df2704b97d547edb3f8207650070"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5727df2704b97d547edb3f8207650070"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>mu_rolling</b></td></tr>
+<tr class="separator:a5727df2704b97d547edb3f8207650070"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b4c407b91b0b1d19d8c9543dfdeb23f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b4c407b91b0b1d19d8c9543dfdeb23f"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionless_cohesive_force</b></td></tr>
 <tr class="separator:a1b4c407b91b0b1d19d8c9543dfdeb23f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -473,9 +482,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>lub_coeff_contact</
 <tr class="memitem:a4d4366edebe3aeb13e2a389bd34c6f22"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4d4366edebe3aeb13e2a389bd34c6f22"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>sd_coeff</b></td></tr>
 <tr class="separator:a4d4366edebe3aeb13e2a389bd34c6f22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a226eb6fb76a467b8582a2eda8ddd2465"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a226eb6fb76a467b8582a2eda8ddd2465"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>einstein_viscosity</b></td></tr>
-<tr class="separator:a226eb6fb76a467b8582a2eda8ddd2465"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad056d3629c1f22e72b0144f3d1cd1590"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad056d3629c1f22e72b0144f3d1cd1590"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>einstein_stress</b></td></tr>
+<tr class="separator:ad056d3629c1f22e72b0144f3d1cd1590"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7493730bcac159e79cd84a4391ff18c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7493730bcac159e79cd84a4391ff18c9"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>cohesive_force</b></td></tr>
 <tr class="separator:a7493730bcac159e79cd84a4391ff18c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -530,6 +539,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>min_reduced_gap</b>
 <tr class="memitem:adf343497fa0235906cc4583249505232"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf343497fa0235906cc4583249505232"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>max_disp_tan</b></td></tr>
 <tr class="separator:adf343497fa0235906cc4583249505232"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeac28151fae6cd55dfd8f9043976d146"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeac28151fae6cd55dfd8f9043976d146"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>max_disp_rolling</b></td></tr>
+<tr class="separator:aeac28151fae6cd55dfd8f9043976d146"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9e83c5e9141d7d65084aeebe09cf506"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9e83c5e9141d7d65084aeebe09cf506"></a>
 queue&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>deactivated_interaction</b></td></tr>
 <tr class="separator:aa9e83c5e9141d7d65084aeebe09cf506"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -625,15 +637,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>buildContactTerms</b>
 <tr class="memitem:a27bd8840ae95328990df5cfb46540a44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27bd8840ae95328990df5cfb46540a44"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>buildRepulsiveForceTerms</b> (bool)</td></tr>
 <tr class="separator:a27bd8840ae95328990df5cfb46540a44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e000374475116b9fb8a5f464d31cc67"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e000374475116b9fb8a5f464d31cc67"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>calcLubricationRange</b> (const int &amp;, const int &amp;)</td></tr>
-<tr class="separator:a4e000374475116b9fb8a5f464d31cc67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fc9da1d9af69e2b93f813503b3c6607"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3fc9da1d9af69e2b93f813503b3c6607"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>calcLubricationRange</b> (const int &amp;i, const int &amp;j)</td></tr>
+<tr class="separator:a3fc9da1d9af69e2b93f813503b3c6607"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7306e4968b1db8dd6e7d861ad8783aea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7306e4968b1db8dd6e7d861ad8783aea"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMinGap</b> ()</td></tr>
 <tr class="separator:a7306e4968b1db8dd6e7d861ad8783aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9c4a878323f792579f2f422c3f8ff11"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af9c4a878323f792579f2f422c3f8ff11"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxDispTan</b> ()</td></tr>
 <tr class="separator:af9c4a878323f792579f2f422c3f8ff11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca14fed078a5e53394304ab91428ddcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca14fed078a5e53394304ab91428ddcc"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxDispRolling</b> ()</td></tr>
+<tr class="separator:aca14fed078a5e53394304ab91428ddcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a095a3a3995420e2904e30353b309976f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a095a3a3995420e2904e30353b309976f"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateMaxFcNormal</b> ()</td></tr>
 <tr class="separator:a095a3a3995420e2904e30353b309976f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -705,9 +720,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>shear_strain</b></t
 <tr class="memitem:a54759d05094a6cae15daa9856bc0ae73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a54759d05094a6cae15daa9856bc0ae73"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>lub_max_gap</b></td></tr>
 <tr class="separator:a54759d05094a6cae15daa9856bc0ae73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4dfd4a358cc3341fef9ad76c06489a41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dfd4a358cc3341fef9ad76c06489a41"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>mu_static</b></td></tr>
-<tr class="separator:a4dfd4a358cc3341fef9ad76c06489a41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9c9f014d239a164679dabdd05b773a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9c9f014d239a164679dabdd05b773a1"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>linalg_size</b></td></tr>
 <tr class="separator:ad9c9f014d239a164679dabdd05b773a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -744,9 +756,6 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><b>radius_cubed</b><
 <tr class="memitem:a216ed5b5cbecac8444a61cbb232ad7e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a216ed5b5cbecac8444a61cbb232ad7e7"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>radius_squared</b></td></tr>
 <tr class="separator:a216ed5b5cbecac8444a61cbb232ad7e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac659f7f4177d8307677947b38ae94543"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac659f7f4177d8307677947b38ae94543"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionless_number_time_integral</b></td></tr>
-<tr class="separator:ac659f7f4177d8307677947b38ae94543"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a762358074fe4c4c1ef45d7cec63e2b55"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a762358074fe4c4c1ef45d7cec63e2b55"></a>
 <a class="el" href="struct_parameter_set.html">ParameterSet</a>&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
 <tr class="separator:a762358074fe4c4c1ef45d7cec63e2b55"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -794,7 +803,7 @@ Romain Mari </dd></dl>
 </div><div class="memdoc">
 <p>This method tries to determine the values of the contact parameters kn, kt required to reach given maximum normal / tangential spring stretches (= overlap / tangential displacement ) in steady state.</p>
 <p>The algorithm is a simple adaptative scheme trying to resp. increase or decrease the spring constants when the stretches are too large or too small. It works reasonably well away from transitions. Close to discontinuous shear thickening, one cannot expect satisfying results, as gigantic stress fluctuations confuse the algorithm.</p>
-<p>The stretch values used are average of maximal values weighted with an exponential memory kernel: <img class="formulaInl" alt="$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_20.png"/> where <img class="formulaInl" alt="$\gamma_{avg}$" src="form_21.png"/> is the user-defined parameter <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2" title="averaging time for the stiffness determination ">ParameterSet::memory_strain_avg</a>.</p>
+<p>The stretch values used are average of maximal values weighted with an exponential memory kernel: <img class="formulaInl" alt="$k_{avg}(\gamma_n) = C_n \sum_{i=1}^n k(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} $" src="form_20.png"/> where <img class="formulaInl" alt="$\gamma_{avg}$" src="form_21.png"/> is the user-defined parameter <a class="el" href="struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2" title="averaging strain for the stiffness determination ">ParameterSet::memory_strain_avg</a>.</p>
 <p>The kn and kt are bounded by user-defined parameters <a class="el" href="struct_parameter_set.html#a429e042257696a91c08faacea9edf720" title="min normal spring constant when auto-determining stiffness ">ParameterSet::min_kn</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness ">ParameterSet::max_kn</a>, <a class="el" href="struct_parameter_set.html#accd52cadba30c830a6658f0fc4263914" title="min tangential spring constant when auto-determining stiffness ">ParameterSet::min_kt</a>, <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943" title="max normal spring constant when auto-determining stiffness ">ParameterSet::max_kn</a>.</p>
 <p>The target stretches are given by <a class="el" href="struct_parameter_set.html#a892cd33f6c89910724a7cc9e8c83546b" title="max overlap to reach when auto-determining stiffness ">ParameterSet::overlap_target</a> and <a class="el" href="struct_parameter_set.html#ad74cb563e7c778a115963d23e0755d14" title="max tangential displacement to reach when auto-determining stiffness ">ParameterSet::disp_tan_target</a>.</p>
 <p>Additionally, this routine estimates the time step dt.</p>
@@ -883,7 +892,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a0d6d1acff41560dd8c8a53083b89c836"></a>
+<a class="anchor" id="a80cccf4b135491dc0adc63993c0d4107"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -891,18 +900,8 @@ Romain Mari </dd></dl>
           <td class="memname">void System::timeEvolution </td>
           <td>(</td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>strain_output_data</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramname"><em>time_output_data</em></td><td>)</td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>time_output_data</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -932,7 +931,7 @@ Romain Mari </dd></dl>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>One full time step, predictor-corrector method.</p>
+<p>One full time step, Euler's method.</p>
 <p>This method is never used when running a Brownian simulation.</p>
 
 </div>
@@ -963,32 +962,27 @@ Romain Mari </dd></dl>
 <h3>non-Brownian Case</h3>
 <p>Simple mid-point method to solve at dt^2 order <img class="formulaInl" alt="$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} $" src="form_47.png"/> where <img class="formulaInl" alt="$\bm{A} $" src="form_48.png"/> (in Jeffrey notations <a class="el" href="citelist.html#CITEREF_jeffrey_calculation_1992">[5]</a>, that is <img class="formulaInl" alt="$\bm{R}_{\mathrm{FU}}$" src="form_49.png"/> in Bossis and Brady <a class="el" href="citelist.html#CITEREF_brady_stokesian_1988">[3]</a> notations) is the current resistance matrix stored in the stokes_solver, and <img class="formulaInl" alt="$\bm{F} $" src="form_50.png"/> are the forces included by the parameter files.</p>
 <ul>
-<li>1st step:<ul>
+<li>1st step:</li>
 <li><img class="formulaInl" alt="$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) ) $" src="form_51.png"/></li>
 <li><img class="formulaInl" alt="$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt $" src="form_52.png"/></li>
-</ul>
-</li>
-<li>2nd step:<ul>
+<li>2nd step:</li>
 <li><img class="formulaInl" alt="$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} ) $" src="form_53.png"/></li>
 <li><img class="formulaInl" alt="$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt = \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt $" src="form_61.png"/></li>
-</ul>
-</li>
 </ul>
 <h3>Brownian Case</h3>
 <p>This routine implements a two-step algorithm for the dynamics with Brownian motion, initially derived by Fixman <a class="el" href="citelist.html#CITEREF_fixman_1978">[4]</a>. The basis of this algorithm is exposed in <a class="el" href="citelist.html#CITEREF_Ball_1997">[1]</a> and <a class="el" href="citelist.html#CITEREF_banchio_accelerated_2003">[2]</a>.</p>
 <p>The equation of motion is: <img class="formulaInl" alt="$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} $" src="form_60.png"/> with <img class="formulaInl" alt="$ \langle \bm{F}_\mathrm{B} \rangle = 0$" src="form_56.png"/> and <img class="formulaInl" alt="$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}$" src="form_57.png"/>, and <img class="formulaInl" alt="$\bm{F} $" src="form_50.png"/> are all the other forces included by the parameter files.</p>
 <p>Reminding that we obtain the Cholesky decomposition <img class="formulaInl" alt="$ \bm{A} = \bm{L} \bm{L}^T $" src="form_62.png"/> in the stokes_solver, we obtain X_B in a 2-step algorithm [ B &amp; M 1997 ]:</p><ul>
-<li>1st step:<ul>
-<li>generate a Brownian force <img class="formulaInl" alt="$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi $" src="form_71.png"/> with <img class="formulaInl" alt="$ \langle \psi \rangle = 0 $" src="form_69.png"/> and <img class="formulaInl" alt="$ \langle \psi \psi \rangle = 1$" src="form_65.png"/></li>
+<li>1st step:</li>
+</ul>
+<p>generate a Brownian force <img class="formulaInl" alt="$ \bm{F}_\mathrm{B}= \sqrt{\frac{2}{dt}} \bm{L} \psi $" src="form_71.png"/> with <img class="formulaInl" alt="$ \langle \psi \rangle = 0 $" src="form_69.png"/> and <img class="formulaInl" alt="$ \langle \psi \psi \rangle = 1$" src="form_65.png"/></p><ul>
 <li><img class="formulaInl" alt="$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) )( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}(t) ) ) $" src="form_66.png"/></li>
-<li><img class="formulaInl" alt="$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt $" src="form_52.png"/></li>
+<li><img class="formulaInl" alt="$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt $" src="form_52.png"/><ul>
+<li>2nd step:</li>
 </ul>
 </li>
-<li>2nd step:<ul>
 <li><img class="formulaInl" alt="$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) ) $" src="form_67.png"/> (<b>same</b> <img class="formulaInl" alt="$\bm{F}_\mathrm{B}$" src="form_68.png"/> as in the first step)</li>
 <li><img class="formulaInl" alt="$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt = \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt $" src="form_61.png"/></li>
-</ul>
-</li>
 </ul>
 
 </div>
@@ -1118,7 +1112,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_system.html">System</a></li>
-    <li class="footer">Generated on Wed Feb 18 2015 15:38:24 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Mar 18 2015 11:12:36 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

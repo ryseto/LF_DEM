@@ -24,6 +24,7 @@ var classvec3d =
     [ "sq_norm_xy", "classvec3d.html#a004078657ad6980392223a2366cf88a4", null ],
     [ "sq_norm_xz", "classvec3d.html#a00e8fba5a92fa53655f4c5a70d0e5abd", null ],
     [ "unitvector", "classvec3d.html#ac03972719b361e01aaec6d6a7e0e05bf", null ],
+    [ "vertical_projection", "classvec3d.html#aa488cce08723de30200b92b51b244e78", null ],
     [ "cross", "classvec3d.html#a75d74803b22cc8e4dc1eee393ce075ff", null ],
     [ "cross", "classvec3d.html#a2fc72f6526ba2288e78e3e5282ed88b0", null ],
     [ "cross_vec_array", "classvec3d.html#a7e2617554730b2a53aa8870ddf7f144f", null ],
