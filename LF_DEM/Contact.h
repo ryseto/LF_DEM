@@ -50,6 +50,7 @@ private:
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
 	vec3d f_rolling;
+	double ft_max; // friction_model = 5;
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
 
@@ -83,6 +84,7 @@ public:
 	void frictionlaw_criticalload_mu_inf();
 	void frictionlaw_standard();
 	void frictionlaw_test();
+	void frictionlaw_ft_max();
 	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
 	void calcContactInteraction();

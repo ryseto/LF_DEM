@@ -612,6 +612,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.max_kt = atof(value.c_str());
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
+	} else if (keyword == "ft_max") {
+		p.ft_max = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -860,6 +862,7 @@ void Simulation::setDefaultParameters()
 	p.origin_zero_flow = true;
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
+	p.ft_max = 1;
 }
 
 void Simulation::importInitialPositionFile()

@@ -78,6 +78,7 @@ void System::importParameterSet(ParameterSet &ps)
 	kn = p.kn;
 	kt = p.kt;
 	kr = p.kr;
+	ft_max = p.ft_max;
 	if (repulsiveforce) {
 		set_repulsiveforce_length(p.repulsive_length);
 	} else {
@@ -339,6 +340,9 @@ void System::setupSystem(string control)
 	} else if (friction_model == 4) {
 		cerr << "friction_model = 4" << endl;
 		friction = true;
+	} else if (friction_model == 5) {
+		cerr << "friction_model = 5: ft_max" << endl;
+		friction = true;
 	} else {
 		cerr << "friction_model..." << endl;
 		exit(1);
@@ -441,13 +445,16 @@ void System::setupSystem(string control)
 	stokes_solver.initialize();
 	dt = p.dt;
 	initializeBoxing();
+
 	checkNewInteraction();
+
 	if (control == "rate") {
 		rate_controlled = true;
 	}
 	if (control == "stress") {
 		rate_controlled = false;
 	}
+
 	stress_controlled = !rate_controlled;
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation

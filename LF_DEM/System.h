@@ -185,6 +185,7 @@ private:
 	double kn_master;
 	double kt_master;
 	double kr_master;
+	double ft_max;
 	int friction_model;
 	bool friction;
 	bool rolling_friction;

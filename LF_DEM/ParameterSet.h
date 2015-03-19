@@ -90,6 +90,8 @@ struct ParameterSet
 
 	bool out_data_particle;                  ///< Output par_* file
 	bool out_data_interaction;               ///< Output int_* file
+	
+	double ft_max;							///< max tangential force in friction_model = 5
 };
 
 

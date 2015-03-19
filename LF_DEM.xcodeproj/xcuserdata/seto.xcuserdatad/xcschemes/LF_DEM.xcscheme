@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "git=/usr/bin/git&#10;cd ${PROJECT_DIR}/LF_DEM&#10;version=`$git describe --dirty`&#10;echo &quot;#define GIT_VERSION \&quot;$version\&quot;&quot; &gt; VersionInfo.h&#10;">
+               scriptText = "git=/usr/bin/git&#10;cd ${PROJECT_DIR}/LF_DEM&#10;version=`$git describe --dirty`&#10;echo &quot;#define GIT_VERSION \&quot;$version\&quot;&quot; &gt; VersionInfo.h&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateSimpleData.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/LeesEdwards.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/reduce_rheodata.pl $HOME/bin/&#10;&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -28,7 +28,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateSimpleData.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/LeesEdwards.pl $HOME/bin/&#10;&#10;">
+               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -80,12 +80,13 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/dynamic_friction"
+      customWorkingDirectory = "/Users/seto/Documents/work/ft_max"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D988E388165441750009949F"
@@ -96,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-s 5 -i rate.txt D2N500VF0.8Bidi1.4_0.5Square_1.dat dynamic3SD001.txt"
+            argument = "-s 1 -i tmp_stress_rate.dat D2N200VF0.78Bidi1.4_0.5Square_1.dat ft_max1.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -109,7 +110,8 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D988E388165441750009949F"

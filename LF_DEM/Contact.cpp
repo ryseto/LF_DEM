@@ -19,6 +19,9 @@ void Contact::init(System *sys_, Interaction *interaction_)
 		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
 	} else if (sys->friction_model == 4) {
 		frictionlaw = &Contact::frictionlaw_test;
+	} else if (sys->friction_model == 5) {
+		frictionlaw = &Contact::frictionlaw_ft_max;
+		ft_max = sys->ft_max;
 	} else {
 		frictionlaw = &Contact::frictionlaw_null;
 	}
@@ -32,7 +35,6 @@ void Contact::getInteractionData()
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
 		kr_scaled = ro_12*sys->kr;; // F = kt_scaled * disp_tan <-- disp is not scaled
-		
 	}
 	mu_static = sys->mu_static;
 	mu_dynamic = sys->mu_dynamic;
@@ -306,6 +308,23 @@ void Contact::frictionlaw_criticalload_mu_inf()
 		// Never rescaled.
 		// [note]
 		// The tangential spring constant may be rescaled to control maximum strain
+		state = 2; // static friction
+	}
+	return;
+}
+
+void Contact::frictionlaw_ft_max()
+{
+	/**
+	 \brief Friction law
+	 */
+	double sq_f_tan = f_contact_tan.sq_norm();
+	double supportable_tanforce = ft_max/abs(sys->dimensionless_number);
+	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		state = 3; // dynamic friction
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+		f_contact_tan = kt_scaled*disp_tan;
+	} else {
 		state = 2; // static friction
 	}
 	return;
