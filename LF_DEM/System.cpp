@@ -343,6 +343,9 @@ void System::setupSystem(string control)
 	} else if (friction_model == 5) {
 		cerr << "friction_model = 5: ft_max" << endl;
 		friction = true;
+	} else if (friction_model == 6) {
+		cerr << "friction_model = 6: Coulomb law + ft_max" << endl;
+		friction = true;
 	} else {
 		cerr << "friction_model..." << endl;
 		exit(1);

@@ -22,6 +22,9 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	} else if (sys->friction_model == 5) {
 		frictionlaw = &Contact::frictionlaw_ft_max;
 		ft_max = sys->ft_max;
+	} else if (sys->friction_model == 6) {
+		frictionlaw = &Contact::frictionlaw_coulomb_max;
+		ft_max = sys->ft_max;
 	} else {
 		frictionlaw = &Contact::frictionlaw_null;
 	}
@@ -329,6 +332,54 @@ void Contact::frictionlaw_ft_max()
 	}
 	return;
 }
+
+void Contact::frictionlaw_coulomb_max()
+{
+	/**
+	 \brief Friction law
+	 */
+	double supportable_tanforce = 0;
+	double sq_f_tan = f_contact_tan.sq_norm();
+	double normal_load = f_contact_normal_norm;
+	if (sys->cohesion) {
+		normal_load += sys->dimensionless_cohesive_force;
+	}
+	if (state == 2) {
+		// static friction in previous step
+		supportable_tanforce = mu_static*normal_load;
+	} else {
+		// dynamic friction in previous step
+		supportable_tanforce = mu_dynamic*normal_load;
+	}
+	if (supportable_tanforce > ft_max/abs(sys->dimensionless_number)){
+		supportable_tanforce = ft_max/abs(sys->dimensionless_number);
+	}
+	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		state = 3; // dynamic friction
+		supportable_tanforce = mu_dynamic*normal_load;
+		if (supportable_tanforce > ft_max/abs(sys->dimensionless_number)){
+			supportable_tanforce = ft_max/abs(sys->dimensionless_number);
+		}
+	} else {
+		state = 2; // static friction
+	}
+	if (state == 3) {
+		// adjust the sliding spring for dynamic friction law
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+		f_contact_tan = kt_scaled*disp_tan;
+	}
+	if (sys->rolling_friction) {
+		double supportable_rollingforce = mu_rolling*normal_load;
+		double sq_f_rolling = f_rolling.sq_norm();
+		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
+			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
+			f_rolling = kr_scaled*disp_rolling;
+		}
+	}
+	return;
+}
+
+
 
 void Contact::frictionlaw_null()
 {
