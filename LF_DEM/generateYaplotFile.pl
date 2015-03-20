@@ -14,9 +14,9 @@ $yap_radius = 1;
 
 $particle_data = $ARGV[0];
 
-#if ($#ARGV >= 1){
-#	$force_factor = $ARGV[1];
-#}
+if ($#ARGV >= 1){
+	$force_factor = $ARGV[1];
+}
 #if ($#ARGV == 2){
 #	$y_section = $ARGV[2];
 #	printf "section $y_section\n";
@@ -544,7 +544,7 @@ sub OutYaplotData{
 	#		}
 	#    }
 	#$force_factor = 0.005;
-	$force_factor = 0.02;
+	#	$force_factor = 0.02;
 #	printf OUT "y 3\n";
 #	printf OUT "@ 6\n";
 #	for ($k=0; $k<$num_interaction; $k++){

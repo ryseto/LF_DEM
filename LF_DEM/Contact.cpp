@@ -37,7 +37,7 @@ void Contact::getInteractionData()
 	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
-		kr_scaled = ro_12*sys->kr;; // F = kt_scaled * disp_tan <-- disp is not scaled
+		kr_scaled = ro_12*sys->kr; // F = kt_scaled * disp_tan <-- disp is not scaled
 	}
 	mu_static = sys->mu_static;
 	mu_dynamic = sys->mu_dynamic;
@@ -339,47 +339,30 @@ void Contact::frictionlaw_coulomb_max()
 	 \brief Friction law
 	 */
 	double supportable_tanforce = 0;
-	double sq_f_tan = f_contact_tan.sq_norm();
 	double normal_load = f_contact_normal_norm;
-	if (sys->cohesion) {
-		normal_load += sys->dimensionless_cohesive_force;
-	}
 	if (state == 2) {
 		// static friction in previous step
 		supportable_tanforce = mu_static*normal_load;
-	} else {
+	} else if (state == 3) {
 		// dynamic friction in previous step
 		supportable_tanforce = mu_dynamic*normal_load;
+	} else {
+		exit(1);
 	}
-	if (supportable_tanforce > ft_max/abs(sys->dimensionless_number)){
-		supportable_tanforce = ft_max/abs(sys->dimensionless_number);
+	double scaled_ft_max = ft_max/abs(sys->dimensionless_number);
+	if (supportable_tanforce > scaled_ft_max) {
+		supportable_tanforce = scaled_ft_max;
 	}
+	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		state = 3; // dynamic friction
-		supportable_tanforce = mu_dynamic*normal_load;
-		if (supportable_tanforce > ft_max/abs(sys->dimensionless_number)){
-			supportable_tanforce = ft_max/abs(sys->dimensionless_number);
-		}
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+		f_contact_tan = kt_scaled*disp_tan;
 	} else {
 		state = 2; // static friction
 	}
-	if (state == 3) {
-		// adjust the sliding spring for dynamic friction law
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_contact_tan = kt_scaled*disp_tan;
-	}
-	if (sys->rolling_friction) {
-		double supportable_rollingforce = mu_rolling*normal_load;
-		double sq_f_rolling = f_rolling.sq_norm();
-		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
-			f_rolling = kr_scaled*disp_rolling;
-		}
-	}
 	return;
 }
-
-
 
 void Contact::frictionlaw_null()
 {
