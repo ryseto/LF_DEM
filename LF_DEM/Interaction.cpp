@@ -125,6 +125,7 @@ void Interaction::updateState(bool &deactivated)
 
 void Interaction::updateContactState(bool &deactivated)
 {
+	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
