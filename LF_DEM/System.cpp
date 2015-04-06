@@ -157,7 +157,7 @@ void System::allocateRessources()
 	}
 	if (brownian) {
 		if (lowPeclet) {
-			double stress_avg_relaxation_parameter = 0; // 0 --> no average
+			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
@@ -431,7 +431,7 @@ void System::setupSystem(string control)
 	time = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
-	vel_difference = lz;
+	vel_difference = abs(shear_rate)*lz;
 	stokes_solver.initialize();
 	dt = p.dt;
 	initializeBoxing();
@@ -606,11 +606,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	timeStepMoveCorrector();
 
 	// try to adapt dt
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
-	} else {
-		dt = disp_max/max_sliding_velocity;
-	}
+	// if (max_velocity > max_sliding_velocity) {
+	// 	dt = disp_max/max_velocity;
+	// } else {
+	// 	dt = disp_max/max_sliding_velocity;
+	// }
 }
 
 void System::timeStepMove()
@@ -1218,8 +1218,8 @@ void System::computeVelocities(bool divided_velocities)
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			velocity[i].x += position[i].z;
-			ang_velocity[i].y += 0.5;
+			velocity[i].x += abs(shear_rate)*position[i].z;
+			ang_velocity[i].y += 0.5*abs(shear_rate);
 		}
 	} else {
 		for (int i=0; i<np; i++) {
@@ -1229,14 +1229,14 @@ void System::computeVelocities(bool divided_velocities)
 	}
 	if (dimensionless_number < 0) {
 		shear_direction = -1;
-		vel_difference = -lz;
+		vel_difference = -abs(shear_rate)*lz;
 		for (int i=0; i<np; i++) {
 			velocity[i] *= -1;
 			ang_velocity[i] *= -1;
 		}
 	} else {
 		shear_direction = 1;
-		vel_difference = lz;
+		vel_difference = abs(shear_rate)*lz;
 	}
 	stokes_solver.solvingIsDone();
 }
@@ -1380,7 +1380,7 @@ double System::evaluateMaxVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_velocity_tmp = velocity[i];
 		if (zero_shear) {
-			na_velocity_tmp.x -= position[i].z;
+			na_velocity_tmp.x -= abs(shear_rate)*position[i].z;
 		}
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
 			sq_max_velocity = na_velocity_tmp.sq_norm();
@@ -1394,7 +1394,7 @@ double System::evaluateMaxAngVelocity()
 	double _max_ang_velocity = 0;
 	for (int i = 0; i < np; i++) {
 		vec3d na_ang_velocity_tmp = ang_velocity[i];
-		na_ang_velocity_tmp.y -= 0.5;
+		na_ang_velocity_tmp.y -= 0.5*abs(shear_rate);
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
 			_max_ang_velocity = na_ang_velocity_tmp.norm();
 		}

@@ -350,13 +350,11 @@ void Simulation::simulationSteadyShear(vector<string> &input_files,
 		outputConfigurationBinary();
 		if (time_interval_output_data == -1) {
 			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-				cerr << "   out config: " << sys.get_shear_strain() << endl;
 				outputConfigurationData();
 				cnt_config_out ++;
 			}
 		} else {
 			if (sys.get_time() >= time_output_config-1e-8) {
-				cerr << "   out config: " << sys.get_shear_strain() << endl;
 				outputConfigurationData();
 				cnt_config_out ++;
 			}
@@ -491,13 +489,11 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 			outputConfigurationBinary();
 			if (time_interval_output_data == -1) {
 				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-					cerr << "   out config: " << sys.get_shear_strain() << endl;
 					outputConfigurationData();
 					cnt_config_out ++;
 				}
 			} else {
 				if (sys.get_time() >= time_output_config-1e-8) {
-					cerr << "   out config: " << sys.get_shear_strain() << endl;
 					outputConfigurationData();
 					cnt_config_out ++;
 				}
@@ -1225,7 +1221,7 @@ void Simulation::outputConfigurationData()
 		for (int i=0; i<np; i++) {
 			vel[i] = sys.velocity[i];
 			if (pos[i].z < 0) {
-				vel[i].x -= sys.get_lz();
+				vel[i].x -= sys.get_shear_rate()*sys.get_lz();
 			}
 		}
 	}
@@ -1233,6 +1229,8 @@ void Simulation::outputConfigurationData()
 	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
 	if (p.out_data_particle) {
+		cerr << "   out config: " << sys.get_shear_strain() << endl;
+		
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_number << ' ';
