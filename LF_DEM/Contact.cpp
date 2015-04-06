@@ -155,7 +155,7 @@ void Contact::calcContactInteraction()
 	 reduced_gap is negative,
 	 positive. */
 	
-	f_contact_normal_norm = -kn_scaled*(interaction->get_reduced_gap());
+	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	if (sys->friction_model == 4) {
 		if (state == 2) {
@@ -337,6 +337,14 @@ void Contact::frictionlaw_coulomb_max()
 {
 	/**
 	 \brief Friction law
+	 *
+	 * [NOTE]
+	 * In the rate controlled simulation, the results look weird.
+	 * There should be a bug.
+	 *
+	 * The calculated forces in calcContactInteraction() seem to be different
+	 * between the rate-controlled and stress-controlled simulation.
+	 * The current implementation is quite confusing, and should be fixed.
 	 */
 	double supportable_tanforce = 0;
 	double normal_load = f_contact_normal_norm;
