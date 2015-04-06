@@ -24,7 +24,7 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	}
 }
 
-void Contact::getInteractionData()
+void Contact::setInteractionData()
 {
 	interaction->get_par_num(p0, p1);
 	double &ro_12 = interaction->ro_12;
@@ -165,6 +165,8 @@ void Contact::calcContactInteraction()
 		f_rolling = kr_scaled*disp_rolling;
 	}
 	(this->*frictionlaw)();
+
+	//	calcScaledForce();
 }
 
 void Contact::frictionlaw_standard()
@@ -315,6 +317,19 @@ void Contact::frictionlaw_null()
 {
 	// null
 }
+
+// void Contact::calcScaledForce()
+// {
+// 	/** 
+// 		\brief Get the force in System class units.
+
+// 		\b NOTE: it does not recompute the force, just convert it to System units.
+// 	*/
+// 	f_contact_normal_norm_scaled = sys->amplitudes.contact*f_contact_normal_norm;
+// 	f_contact_normal_scaled = sys->amplitudes.contact*f_contact_normal;
+// 	f_contact_tan_scaled = sys->amplitudes.contact*f_contact_tan;
+// 	f_rolling_scaled = sys->amplitudes.contact*f_rolling;
+// }
 
 void Contact::addUpContactForceTorque()
 {

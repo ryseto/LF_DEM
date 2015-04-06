@@ -147,14 +147,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>importConfigurationBi
 <tr class="memitem:a7ac4dfbaf14f5b98d4ed6cada8b9aaff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ac4dfbaf14f5b98d4ed6cada8b9aaff"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesBrownian</b> ()</td></tr>
 <tr class="separator:a7ac4dfbaf14f5b98d4ed6cada8b9aaff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ed9b69cf273dbade9825e5c606c0e0d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>evaluateData</b> ()</td></tr>
+<tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">evaluateData</a> ()</td></tr>
 <tr class="separator:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0343a8d24623b8fdf0478f62a106d25"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0343a8d24623b8fdf0478f62a106d25"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputDataHeader</b> (ofstream &amp;fout)</td></tr>
 <tr class="separator:ac0343a8d24623b8fdf0478f62a106d25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9de6d1c7e4cb4fa69ff11d46f53cdb45"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9de6d1c7e4cb4fa69ff11d46f53cdb45"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>outputRheologyData</b> ()</td></tr>
+<tr class="memitem:a9de6d1c7e4cb4fa69ff11d46f53cdb45"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a9de6d1c7e4cb4fa69ff11d46f53cdb45">outputRheologyData</a> ()</td></tr>
 <tr class="separator:a9de6d1c7e4cb4fa69ff11d46f53cdb45"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49da35ea4eb81dbebfce1bd3217ecd47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a49da35ea4eb81dbebfce1bd3217ecd47"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputStressTensorData</b> ()</td></tr>
@@ -327,7 +325,59 @@ ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_st</b></td><
 <dl class="section author"><dt>Author</dt><dd>Ryohei Seto </dd>
 <dd>
 Romain Mari </dd></dl>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a2ed9b69cf273dbade9825e5c606c0e0d"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::evaluateData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Get rheological data from the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class.</p>
+<p>Data are converted in hydrodynamic units, independently from the actual units used in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class.</p>
+
+</div>
+</div>
+<a class="anchor" id="a9de6d1c7e4cb4fa69ff11d46f53cdb45"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::outputRheologyData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Output rheological data.</p>
+<p>Stress data are converted in units of <img class="formulaInl" alt="$\eta_0\dot\gamma$" src="form_72.png"/>. Other data are output in the units used in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class (these can be hydrodynamic, brownian or repulsive force units).</p>
+<p><b>NOTE:</b> this behavior should be changed and made more consistent in the future.</p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_simulation_8h_source.html">Simulation.h</a></li>
 <li>Simulation.cpp</li>
 </ul>
@@ -337,7 +387,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a></li>
-    <li class="footer">Generated on Wed Mar 18 2015 11:12:36 for Documentation for LF_DEM by
+    <li class="footer">Generated on Mon Apr 6 2015 15:00:15 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

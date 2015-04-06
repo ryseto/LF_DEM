@@ -266,7 +266,7 @@ void System::updateUnscaledContactmodel()
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].contact.getInteractionData();
+			interaction[k].contact.setInteractionData();
 		}
 	}
 }
@@ -1050,84 +1050,86 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 
 void System::computeVelocitiesStressControlled()
 {
-		double shearstress_rep = 0;
-		// Compute the stress contributions
-		buildHydroTerms(true, true); // build matrix and rhs force GE
-		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
-		buildContactTerms(true); // set rhs = F_C
-		stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 
-		// Back out the shear rate
-		dimensionless_number = 1; // To obtain normalized stress from repulsive force.
-		amplitudes.repulsion = 1/abs(dimensionless_number);
+	double shearstress_rep = 0;
+	// Compute the stress contributions
+	shear_rate = 1;
+	buildHydroTerms(true, true); // build matrix and rhs force GE
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
+	buildContactTerms(true); // set rhs = F_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 
+	// Back out the shear rate
+	dimensionless_number = 1; // To obtain normalized stress from repulsive force.
+
+	
+	if (repulsiveforce) {
+		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
+		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
+	}
+	calcStressPerParticle();
+	calcStress();
+	if (p.unscaled_contactmodel) {
+		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
+			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+		double shear_rate_numerator = target_stress-shearstress_con;
 		if (repulsiveforce) {
-			buildRepulsiveForceTerms(true); // set rhs = F_repulsive
-			stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
+			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+			shear_rate_numerator -= shearstress_rep;
 		}
-		calcStressPerParticle();
-		calcStress();
-		if (p.unscaled_contactmodel) {
-			double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-			double shear_rate_numerator = target_stress-shearstress_con;
-			if (repulsiveforce) {
-				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-				shear_rate_numerator -= shearstress_rep;
-			}
-			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
+		double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
 
-			dimensionless_number = shear_rate_numerator/shearstress_hyd;
-			if (shear_strain < init_strain_shear_rate_limit) {
-				if (dimensionless_number > init_shear_rate_limit) {
-					dimensionless_number = init_shear_rate_limit;
-				}
+		dimensionless_number = shear_rate_numerator/shearstress_hyd;
+		if (shear_strain < init_strain_shear_rate_limit) {
+			if (dimensionless_number > init_shear_rate_limit) {
+				dimensionless_number = init_shear_rate_limit;
 			}
-			amplitudes.repulsion = 1/abs(dimensionless_number);
-			if (repulsiveforce) {
-				for (int i=0; i<np; i++) {
-					vel_repulsive[i] /= dimensionless_number;
-					ang_vel_repulsive[i] /= dimensionless_number;
-					vel_contact[i] /= dimensionless_number;
-					ang_vel_contact[i] /= dimensionless_number;
-				}
-				for (int i=0; i<np; i++) {
-					na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
-					na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
-				}
-			} else {
-				/*
-				 * Contact velocity remains the same direction for shear rate < 0.
-				 * Velocity from strain should become opposite directino.
-				 * To reduce the number of calculation step, the overall sign of velocities
-				 * will be invesed later.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_contact[i] /= dimensionless_number;
-					ang_vel_contact[i] /= dimensionless_number;
-				}
-				for (int i=0; i<np; i++) {
-					na_velocity[i] = vel_hydro[i]+vel_contact[i];
-					na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
-				}
-			}
-		} else {
-			cerr << "not implemented yet" << endl;
-			exit(1);
-			double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-			double shear_rate_numerator = target_stress-shearstress_con;
-			if (repulsiveforce) {
-				shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-				shear_rate_numerator -= shearstress_rep;
-			}
-			double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
-			dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		}
+		amplitudes.repulsion = 1/abs(dimensionless_number);
+		if (repulsiveforce) {
 			for (int i=0; i<np; i++) {
 				vel_repulsive[i] /= dimensionless_number;
 				ang_vel_repulsive[i] /= dimensionless_number;
+				vel_contact[i] /= dimensionless_number;
+				ang_vel_contact[i] /= dimensionless_number;
+			}
+			for (int i=0; i<np; i++) {
+				na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
+				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
+			}
+		} else {
+			/*
+			 * Contact velocity remains the same direction for shear rate < 0.
+			 * Velocity from strain should become opposite directino.
+			 * To reduce the number of calculation step, the overall sign of velocities
+			 * will be invesed later.
+			 */
+			for (int i=0; i<np; i++) {
+				vel_contact[i] /= dimensionless_number;
+				ang_vel_contact[i] /= dimensionless_number;
+			}
+			for (int i=0; i<np; i++) {
+				na_velocity[i] = vel_hydro[i]+vel_contact[i];
+				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
 			}
 		}
+	} else {
+		cerr << "not implemented yet" << endl;
+		exit(1);
+		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
+			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+		double shear_rate_numerator = target_stress-shearstress_con;
+		if (repulsiveforce) {
+			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+			shear_rate_numerator -= shearstress_rep;
+		}
+		double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
+		dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
+		for (int i=0; i<np; i++) {
+			vel_repulsive[i] /= dimensionless_number;
+			ang_vel_repulsive[i] /= dimensionless_number;
+		}
+	}
 }
 	
 

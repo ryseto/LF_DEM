@@ -47,6 +47,7 @@ private:
 	//===== forces and stresses computations =====//
 	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
+	double f_contact_normal_norm; // normal contact force
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
 	vec3d f_rolling;
@@ -61,7 +62,7 @@ public:
 	Contact(){};
 	Contact(const Contact& obj);
 	void init(System *sys_, Interaction *int_);
-	void getInteractionData();
+	void setInteractionData();
 	void activate();
 	void deactivate();
 	vec3d disp_tan; // tangential displacement
@@ -78,7 +79,6 @@ public:
 	 * 3 Sliding
 	 * -2 Switching dynamic to static
 	 */
-	double f_contact_normal_norm; // normal contact force
 	void frictionlaw_criticalload();
 	void frictionlaw_criticalload_mu_inf();
 	void frictionlaw_standard();

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['generatebrownianforces',['generateBrownianForces',['../class_system.html#a59d8c192e1395d9f6637d2506bb82443',1,'System']]]
+  ['frictionlaw_5fstandard',['frictionlaw_standard',['../class_contact.html#a120699da5f9b6a5ee55764056d414a29',1,'Contact']]],
+  ['frictionlaw_5ftest',['frictionlaw_test',['../class_contact.html#a896c6a14ba7c8726ed34fbf97ae6a23f',1,'Contact']]]
 ];

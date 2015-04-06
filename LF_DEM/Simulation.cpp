@@ -138,6 +138,7 @@ void Simulation::setUnitScalesBrownian()
 	}
 }
 
+
 void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 									   bool binary_conf,
 									   double peclet_num,
@@ -221,6 +222,8 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	} else if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
 		sys.brownian = false;
+		unit_scales = "repulsion";
+		sys.amplitudes.repulsion = 1;
 		sys.set_shear_rate(1);
 		if (ratio_critical_load > 0) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
@@ -1000,6 +1003,12 @@ void Simulation::prepareSimulationName(bool binary_conf)
 
 void Simulation::evaluateData()
 {
+	/**
+	   \brief Get rheological data from the System class. 
+
+	   Data are converted in hydrodynamic units, independently from the actual units used in the System class.
+	 */
+		
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
@@ -1009,6 +1018,9 @@ void Simulation::evaluateData()
 		stress_unit_converter = 1;
 	}
 	if (unit_scales == "thermal") {
+		stress_unit_converter = 1/sys.dimensionless_number;
+	}
+	if (unit_scales == "repulsion") {
 		stress_unit_converter = 1/sys.dimensionless_number;
 	}
 	
@@ -1077,6 +1089,21 @@ void Simulation::outputStressTensorData()
 
 void Simulation::outputRheologyData()
 {
+	/**
+	   \brief Output rheological data. 
+
+	   
+	   Stress data are converted in units of
+	   \f$\eta_0\dot\gamma\f$. Other data are output in the units used
+	   in the System class (these can be hydrodynamic, Brownian or
+	   repulsive force units). 
+
+	   \b NOTE: this behavior should be changed
+	   and made more consistent in the future.
+	 */
+
+
+	
 	/*
 	 * Output the sum of the normal forces.
 	 *

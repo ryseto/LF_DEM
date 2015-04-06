@@ -77,7 +77,7 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	}
 	calcNormalVectorDistanceGap();
 	// deal with contact
-	contact.getInteractionData();
+	contact.setInteractionData();
 	if (reduced_gap <= 0) {
 		contact.activate();
 	} else {
@@ -138,7 +138,7 @@ void Interaction::updateContactState(bool &deactivated)
 			 * Checking cohesive bond breaking.
 			 */
 			if (sys->target_stress != 0
-				&& contact.f_contact_normal_norm+sys->dimensionless_cohesive_force < 0) {
+				&& contact.get_f_contact_normal_norm()+sys->dimensionless_cohesive_force < 0) {
 				breakup_contact_bond = true;
 			}
 		}

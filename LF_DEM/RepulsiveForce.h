@@ -31,12 +31,14 @@ private:
 	unsigned short p0;
 	unsigned short p1;
 	//===== forces and stresses ==================== //
-	double amplitude;
+	double geometric_factor;
 	double length;
 	vec3d force_vector; // normal contact force
 	double force_norm;
+	double reduced_force_norm;
 	StressTensor stresslet_XF;
-	
+	void calcReducedForceNorm();
+	void calcScaledForce();
 public:
 	RepulsiveForce(): force_norm(0) {};
 	~RepulsiveForce(){};
