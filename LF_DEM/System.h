@@ -123,13 +123,6 @@ private:
 	 * To be used for relaxation to generate initial configuration.
 	 */
 	bool zero_shear;
-	int shear_direction; // 1: positive shear rate, -1: negative shear rate
-	/* When Pe is small, the simulation parameters need to be adjusted differently.
-	 * For high Pe, spring constants are scaled with shear rate being proportional to Pe.
-	 * In dimensionless simulation, kn and kt appear the same.
-	 * For low Pe, they need to be scaled with Pe.
-	 *
-	 */
 	double shear_strain_end;
 	double critical_normal_force;
 	double scale_factor_SmallPe;
@@ -201,6 +194,7 @@ private:
 	 */
 	double sd_coeff;
 	double einstein_stress;
+	double einstein_viscosity;
 	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
@@ -297,10 +291,7 @@ private:
 	void setupShearFlow(bool activate)
 	{
 		if (activate) {
-			/* In dimensionless simulations for non Browninan simulation,
-			 * shear rate is always 1.
-			 */
-			vel_difference = lz;
+			vel_difference = lz*shear_rate;
 		} else {
 			vel_difference = 0;
 		}

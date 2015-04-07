@@ -102,14 +102,6 @@ System::calcStress()
 	}
 	total_contact_stressXF_normal /= system_volume;
 	total_contact_stressXF_tan /= system_volume;
-	/*
-	 * Why contact stress are rescaled?
-	 * Why only unscalled contact model case?
-	 */
-	if (stress_controlled && p.unscaled_contactmodel) {
-		total_contact_stressXF_normal /= abs(dimensionless_number);
-		total_contact_stressXF_tan /= abs(dimensionless_number);
-	}
 	total_contact_stressXF = total_contact_stressXF_normal + total_contact_stressXF_tan;
 	
 	//////////////////////////////////////////////////////////////
@@ -119,10 +111,6 @@ System::calcStress()
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
-		// @@@@ Why?
-		// if (stress_controlled) {
-		//	total_repulsive_stressXF *= amplitudes.repulsion;
-		// }
 		//////////////////////////////////////////////////////////
 		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
@@ -167,5 +155,6 @@ System::calcStress()
 			//		cout << total_stress.getStressXZ() << endl;
 		}
 	}
+	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
 }
 

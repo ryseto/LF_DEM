@@ -363,7 +363,7 @@ void Simulation::simulationSteadyShear(vector<string> &input_files,
 			}
 		}
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
-		if (abs(sys.dimensionless_number) < p.rest_threshold){
+		if (abs(sys.get_shear_rate()) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
@@ -501,7 +501,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 					cnt_config_out ++;
 				}
 			}
- 			if (abs(sys.dimensionless_number) < p.rest_threshold) {
+ 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
 				if (jammed > 10) {

@@ -78,6 +78,9 @@ void System::importParameterSet(ParameterSet &ps)
 	kn = p.kn;
 	kt = p.kt;
 	kr = p.kr;
+	if(p.repulsive_length<=0){
+		repulsiveforce = false;
+	}
 	if (repulsiveforce) {
 		set_repulsiveforce_length(p.repulsive_length);
 	} else {
@@ -238,10 +241,13 @@ void System::updateUnscaledContactmodel()
 			kr = kr_master;
 		}
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
+		
 	}
-	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-	if(stress_controlled){
-		lub_coeff_contact /= abs(dimensionless_number);
+	if(!stress_controlled) {
+		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+	}
+	else {
+		lub_coeff_contact = 4*kn_master*p.contact_relaxation_time;
 	}
 	
 	if (lowPeclet) {
@@ -300,6 +306,14 @@ void System::setupSystem(string control)
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
 	
+	if (control == "rate") {
+		rate_controlled = true;
+	}
+	if (control == "stress") {
+		rate_controlled = false;
+	}
+	stress_controlled = !rate_controlled;
+
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -363,12 +377,11 @@ void System::setupSystem(string control)
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
-	shear_direction = 1;
 	if (p.unscaled_contactmodel) {
 		kn_master = kn;
 		kt_master = kt;
 		kr_master = kr;
-		updateUnscaledContactmodel();
+		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	if (p.contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -387,8 +400,6 @@ void System::setupSystem(string control)
 		 */
 		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	}
-	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cerr << "1/lub_reduce_parameter = " << 1/lub_reduce_parameter << endl;
 	/* t = beta/kn
 	 *  beta = t*kn
 	 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
@@ -414,6 +425,14 @@ void System::setupSystem(string control)
 		exit(1);
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+	if (p.unscaled_contactmodel) {
+		updateUnscaledContactmodel();
+	}
+	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	cerr << "1/lub_reduce_parameter = " << 1/lub_reduce_parameter << endl;
+	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
+	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
+	
 	if (brownian) {
 #ifdef DEV
 		/* In developing and debugging phases,
@@ -426,23 +445,15 @@ void System::setupSystem(string control)
 		r_gen = new MTRand;
 #endif
 	}
-	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
-	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
+
 	time = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
-	vel_difference = abs(shear_rate)*lz;
+	vel_difference = shear_rate*lz;
 	stokes_solver.initialize();
 	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
-		rate_controlled = false;
-	}
-	stress_controlled = !rate_controlled;
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
@@ -450,7 +461,8 @@ void System::setupSystem(string control)
 	 * However, the reason to set value of sd_coeff is not very certain for the moment.
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
-	einstein_stress = (1+2.5*volume_fraction)*shear_rate/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
+	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
+
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -631,11 +643,7 @@ void System::timeStepMove()
 
 	/* evolve PBC */
 	double strain_increment = 0;
-	if(stress_controlled){ // to be fixed: the stress_controlled case should not behave differently
-		strain_increment = dt*abs(shear_rate)/abs(dimensionless_number); // @@@ << ???
-	} else {
-		strain_increment = dt*abs(shear_rate); // the dimensionless_number should not be here I think. \delta\gamma = \tilde{\delta t} * \tilde{\dot\gamma} is all we need here.
-	}
+	strain_increment = dt*shear_rate;
 	timeStepBoxing(strain_increment);
 	
 	/* move particles */
@@ -1059,10 +1067,6 @@ void System::computeVelocitiesStressControlled()
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 
-	// Back out the shear rate
-	dimensionless_number = 1; // To obtain normalized stress from repulsive force.
-
-	
 	if (repulsiveforce) {
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
@@ -1072,63 +1076,39 @@ void System::computeVelocitiesStressControlled()
 	if (p.unscaled_contactmodel) {
 		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
 			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-		double shear_rate_numerator = target_stress-shearstress_con;
+		double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 		if (repulsiveforce) {
 			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-			shear_rate_numerator -= shearstress_rep;
+			shearstress_hyd -= shearstress_rep;
 		}
-		double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
+		// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
+		double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ(); 
 
-		dimensionless_number = shear_rate_numerator/shearstress_hyd;
+		shear_rate = shearstress_hyd/viscosity_hyd;
+		dimensionless_number = shear_rate;
 		if (shear_strain < init_strain_shear_rate_limit) {
-			if (dimensionless_number > init_shear_rate_limit) {
-				dimensionless_number = init_shear_rate_limit;
+			if (shear_rate > init_shear_rate_limit) {
+				shear_rate = init_shear_rate_limit;
 			}
 		}
-		amplitudes.repulsion = 1/abs(dimensionless_number);
+		
+		for (int i=0; i<np; i++) {
+			vel_hydro[i] *= shear_rate;
+			ang_vel_hydro[i] *= shear_rate;
+		}
+		for (int i=0; i<np; i++) {
+			na_velocity[i] = vel_hydro[i]+vel_contact[i];
+			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+		}
 		if (repulsiveforce) {
 			for (int i=0; i<np; i++) {
-				vel_repulsive[i] /= dimensionless_number;
-				ang_vel_repulsive[i] /= dimensionless_number;
-				vel_contact[i] /= dimensionless_number;
-				ang_vel_contact[i] /= dimensionless_number;
-			}
-			for (int i=0; i<np; i++) {
-				na_velocity[i] = vel_hydro[i]+vel_contact[i]+vel_repulsive[i];
-				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i]+ang_vel_repulsive[i];
-			}
-		} else {
-			/*
-			 * Contact velocity remains the same direction for shear rate < 0.
-			 * Velocity from strain should become opposite directino.
-			 * To reduce the number of calculation step, the overall sign of velocities
-			 * will be invesed later.
-			 */
-			for (int i=0; i<np; i++) {
-				vel_contact[i] /= dimensionless_number;
-				ang_vel_contact[i] /= dimensionless_number;
-			}
-			for (int i=0; i<np; i++) {
-				na_velocity[i] = vel_hydro[i]+vel_contact[i];
-				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+				na_velocity[i] += vel_repulsive[i];
+				na_ang_velocity[i] += ang_vel_repulsive[i];
 			}
 		}
 	} else {
 		cerr << "not implemented yet" << endl;
 		exit(1);
-		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-		double shear_rate_numerator = target_stress-shearstress_con;
-		if (repulsiveforce) {
-			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-			shear_rate_numerator -= shearstress_rep;
-		}
-		double shearstress_hyd = einstein_stress+total_hydro_stress.getStressXZ();
-		dimensionless_number = (target_stress-shearstress_rep)/(shearstress_hyd+shearstress_con);
-		for (int i=0; i<np; i++) {
-			vel_repulsive[i] /= dimensionless_number;
-			ang_vel_repulsive[i] /= dimensionless_number;
-		}
 	}
 }
 	
@@ -1213,14 +1193,10 @@ void System::computeVelocities(bool divided_velocities)
 		max_velocity = sqrt(sq_max_na_velocity);
 	}
 	if (!zero_shear) {
-		/* Background flow should be diffrent direction
-		 * if shear rate is negative.
-		 * But, the sign of velocity will be invesed later.
-		 */
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			velocity[i].x += abs(shear_rate)*position[i].z;
+			velocity[i].x += shear_rate*position[i].z;
 			ang_velocity[i].y += 0.5*abs(shear_rate);
 		}
 	} else {
@@ -1229,17 +1205,8 @@ void System::computeVelocities(bool divided_velocities)
 			ang_velocity[i] = na_ang_velocity[i];
 		}
 	}
-	if (dimensionless_number < 0) {
-		shear_direction = -1;
-		vel_difference = -abs(shear_rate)*lz;
-		for (int i=0; i<np; i++) {
-			velocity[i] *= -1;
-			ang_velocity[i] *= -1;
-		}
-	} else {
-		shear_direction = 1;
-		vel_difference = abs(shear_rate)*lz;
-	}
+
+	vel_difference = shear_rate*lz;
 	stokes_solver.solvingIsDone();
 }
 
