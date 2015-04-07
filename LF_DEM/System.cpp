@@ -442,6 +442,7 @@ void System::setupSystem(string control)
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	time = 0;
+	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference = lz;
@@ -639,8 +640,8 @@ void System::timeStepMove()
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
 	 */
-	double time_increment = dt/abs(dimensionless_number);
-	time += time_increment;
+	time += dt/abs(dimensionless_number);
+	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing(shear_direction*shear_rate*dt);
 	/* move particles */
@@ -670,6 +671,7 @@ void System::timeStepMovePredictor()
 		}
 	}
 	time += dt/abs(dimensionless_number);
+	total_num_timesteps ++;
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */

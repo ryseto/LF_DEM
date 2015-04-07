@@ -732,7 +732,8 @@ void Simulation::openOutputFiles(bool binary_conf)
 	"#48: dimensionless_number\n"
 	"#49: stress\n"
 	"#50: shear_disp\n"
-	"#51: max rolling displacement\n";
+	"#51: max rolling displacement\n"
+	"#52: total num of time steps\n";
 	//
 	fout_rheo << fout_rheo_col_def << endl;
 	if (p.out_data_particle) {
@@ -1156,6 +1157,7 @@ void Simulation::outputRheologyData()
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51
+	fout_rheo << sys.get_total_num_timesteps() << ' '; //52
 	fout_rheo << endl;
 }
 
