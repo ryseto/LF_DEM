@@ -61,6 +61,7 @@ System::~System()
 		DELETE(brownianstressGU_predictor);
 	}
 	if (repulsiveforce) {
+		DELETE(repulsive_force);
 		DELETE(repulsivestressGU);
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);

@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/work/ft_max"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/benchmark"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-g 1"
+            argument = "-r 0.1 D3N128VF0.54Bidi1.4_0.5Cubic_1.dat static_friction_imac.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
