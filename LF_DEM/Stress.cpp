@@ -7,6 +7,30 @@
 //
 
 #include "System.h"
+void System::stressReset()
+{
+	/**
+	   \brief Sets stresses arrays to zero.
+
+	   To be called by System::calcStressPerParticle()
+	*/
+	
+	for (int i=0; i<np; i++) {
+		lubstress[i].reset();
+		contactstressGU[i].reset();
+	}
+	if (repulsiveforce) {
+		for (int i=0; i<np; i++) {
+			repulsivestressGU[i].reset();
+		}
+	}
+	if (brownian) {
+		for (int i=0; i<np; i++) {
+			brownianstressGU[i].reset();
+		}
+	}
+}
+
 
 void
 System::calcStressPerParticle()

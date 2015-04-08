@@ -90,6 +90,7 @@ $(document).ready(function(){initNavTree('class_repulsive_force.html','');});
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="class_repulsive_force-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -121,12 +122,18 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getForceNorm</b> ()
 <tr class="memitem:ab2913afd840051050816dd6f45a5bf14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab2913afd840051050816dd6f45a5bf14"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getForceVector</b> ()</td></tr>
 <tr class="separator:ab2913afd840051050816dd6f45a5bf14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac220eda9cc505b188ce9bbf941efd543"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac220eda9cc505b188ce9bbf941efd543"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>calcStressXF</b> ()</td></tr>
+<tr class="memitem:ac220eda9cc505b188ce9bbf941efd543"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_repulsive_force.html#ac220eda9cc505b188ce9bbf941efd543">calcStressXF</a> ()</td></tr>
 <tr class="separator:ac220eda9cc505b188ce9bbf941efd543"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30c9d5954b4ab3c505ca17501408a187"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a30c9d5954b4ab3c505ca17501408a187"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getStressXF</b> ()</td></tr>
 <tr class="separator:a30c9d5954b4ab3c505ca17501408a187"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a56255fb93621611c5de2ab49a2607889"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_repulsive_force.html#a56255fb93621611c5de2ab49a2607889">calcReducedForceNorm</a> ()</td></tr>
+<tr class="separator:a56255fb93621611c5de2ab49a2607889"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aceeec27a0c869febbbb4762ebaee6d3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_repulsive_force.html#aceeec27a0c869febbbb4762ebaee6d3f">calcScaledForce</a> ()</td></tr>
+<tr class="separator:aceeec27a0c869febbbb4762ebaee6d3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -142,9 +149,9 @@ unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>p0</b></td>
 <tr class="memitem:ab6932397a7f3651ea83efda4045a38f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab6932397a7f3651ea83efda4045a38f4"></a>
 unsigned short&#160;</td><td class="memItemRight" valign="bottom"><b>p1</b></td></tr>
 <tr class="separator:ab6932397a7f3651ea83efda4045a38f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a081dfc7d86d282176c2b2bdf8fa4114d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a081dfc7d86d282176c2b2bdf8fa4114d"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>amplitude</b></td></tr>
-<tr class="separator:a081dfc7d86d282176c2b2bdf8fa4114d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8a5301ba11d45159f3a4173738ea0d9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab8a5301ba11d45159f3a4173738ea0d9"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>geometric_factor</b></td></tr>
+<tr class="separator:ab8a5301ba11d45159f3a4173738ea0d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bca2c2ccce2082cc69dd762a8aa802c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0bca2c2ccce2082cc69dd762a8aa802c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>length</b></td></tr>
 <tr class="separator:a0bca2c2ccce2082cc69dd762a8aa802c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,6 +161,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>length</b></td></tr
 <tr class="memitem:a1477f9f7ac7fe270540b4bc2e1fe72f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1477f9f7ac7fe270540b4bc2e1fe72f9"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>force_norm</b></td></tr>
 <tr class="separator:a1477f9f7ac7fe270540b4bc2e1fe72f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9e1720275ba641af6fe81032250c00b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9e1720275ba641af6fe81032250c00b"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>reduced_force_norm</b></td></tr>
+<tr class="separator:ab9e1720275ba641af6fe81032250c00b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c2f757a3b2b988acb354e3771ea5c90"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6c2f757a3b2b988acb354e3771ea5c90"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>stresslet_XF</b></td></tr>
 <tr class="separator:a6c2f757a3b2b988acb354e3771ea5c90"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -176,8 +186,75 @@ Romain Mari </dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Compute the repulsive force.</p>
+<p>Compute the repulsive force in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class units.</p>
 <p>The force is normal and has an amplitude <img class="formulaInl" alt="$ f_{R} = f_{R}^0 \exp(-h/\lambda) $" src="form_22.png"/> if <img class="formulaInl" alt="$h>0$" src="form_23.png"/> and <img class="formulaInl" alt="$ f_{R} = f_{R}^0 $" src="form_24.png"/> if <img class="formulaInl" alt="$h<0$" src="form_25.png"/>, where <img class="formulaInl" alt="$h$" src="form_26.png"/> is the interparticle gap.</p>
+
+</div>
+</div>
+<a class="anchor" id="a56255fb93621611c5de2ab49a2607889"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RepulsiveForce::calcReducedForceNorm </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Compute the repulsive force in its own units.</p>
+<p>The force is normal and has an amplitude <img class="formulaInl" alt="$ f_{R} = f_{R}^0 \exp(-h/\lambda) $" src="form_22.png"/> if <img class="formulaInl" alt="$h>0$" src="form_23.png"/> and <img class="formulaInl" alt="$ f_{R} = f_{R}^0 $" src="form_24.png"/> if <img class="formulaInl" alt="$h<0$" src="form_25.png"/>, where <img class="formulaInl" alt="$h$" src="form_26.png"/> is the interparticle gap.</p>
+<p>This method returns an amplitude <img class="formulaInl" alt="$ \hat{f}_{R} = \exp(-h/\lambda)$" src="form_73.png"/>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aceeec27a0c869febbbb4762ebaee6d3f"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RepulsiveForce::calcScaledForce </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Computes the force in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class from a previously computed reduced force.</p>
+
+</div>
+</div>
+<a class="anchor" id="ac220eda9cc505b188ce9bbf941efd543"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void RepulsiveForce::calcStressXF </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Compute the XF stress associated with the repulsive force.</p>
+<p><b>NOTE:</b> this method does not recompute the reduced force, this force must be first computed by calcReducedForce(). This method however converts the force in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> units from the reduced force.</p>
 
 </div>
 </div>
@@ -191,7 +268,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_repulsive_force.html">RepulsiveForce</a></li>
-    <li class="footer">Generated on Mon Apr 6 2015 15:00:15 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Apr 8 2015 18:03:09 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
