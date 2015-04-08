@@ -723,12 +723,18 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-void System::timeEvolution(double time_output_data)
+void System::timeEvolution(double time_end)
 {
 	/**
-	 \brief Main time evolution routine. Evolves the system until strain_output_data or time_output_data if time_output_data>0.
+	 \brief Main time evolution routine: evolves the system untile time_end
 	 
-	 This method essentially loops the appropriate one time step method method, according to the Euler vs predictor-corrector or strain rate vs stress controlled choices.
+	 This method essentially loops the appropriate one time step
+	 method method, according to the Euler vs predictor-corrector or
+	 strain rate vs stress controlled choices. On the last time step,
+	 the stress is computed. 
+	 (In the case of low Peclet simulations, the stress is computed at every time step.)
+
+	 \param time_end Time to reach.
 	 */
 	static bool firsttime = true;
 	in_predictor = false;
@@ -742,18 +748,10 @@ void System::timeEvolution(double time_output_data)
 	if (lowPeclet) {
 		calc_stress = true;
 	}
-	// if (time_output_data == 0) {
-	// 	/* integrate until strain_next - 1 time step */
-	// 	while (shear_strain < strain_output_data-dt*shear_rate) {
-	// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-	// 	};
-	// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	// } else {
-	while (time < time_output_data-dt) { // integrate until strain_next
+	while (time < time_end-dt) { // integrate until strain_next
 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 	};
 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	//	}
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
 	}
@@ -839,49 +837,34 @@ void System::updateInteractions()
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
 }
 
-void System::stressReset()
-{
-	for (int i=0; i<np; i++) {
-		lubstress[i].reset();
-		contactstressGU[i].reset();
-	}
-	if (repulsiveforce) {
-		for (int i=0; i<np; i++) {
-			repulsivestressGU[i].reset();
-		}
-	}
-	if (brownian) {
-		for (int i=0; i<np; i++) {
-			brownianstressGU[i].reset();
-		}
-	}
-}
-
 void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 {
-	// Builds the following terms, according to the value of 'build_res_mat' and 'build_force_GE':
-	//  - elements of the resistance matrix if 'build_res_mat' is true
-	//       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
-	//  - vector Gtilde*Einf if 'build_force_GE' is true (default behavior)
-	//
-	// Note that it ADDS the rhs of the solver as rhs += GE. You need to call stokes_solver.resetRHS() before this routine
-	// if you want GE to be the only rhs.
-	//static int nb_of_active_interactions_in_predictor;
+	/**
+	   \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
+	    
+	   @param build_res_mat Build the resistance matrix
+	   \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	   brady_stokesian_1988 notations) and set it as the current
+	   resistance in the StokesSolver. If false, the resistance in the
+	   StokesSolver is untouched, it is not reset.
+	   @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
+	   and \b add it to the right-hand-side of the StokesSolver
+	*/
+
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
 		stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions, resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
-		 * which is calculated at the begining.
-		 * addStokesDrag() is no more used.
+		 * which is calculated at the beginning.
 		 */
 		// add GE in the rhs and lubrication terms in the resistance matrix
-		(this->*buildLubricationTerms)(true, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
+		(this->*buildLubricationTerms)(true, build_force_GE);
 		stokes_solver.completeResistanceMatrix();
 	} else {
 		// add GE in the rhs
-		(this->*buildLubricationTerms)(false, build_force_GE); // false: don't modify rhs, as we want rhs=F_B
+		(this->*buildLubricationTerms)(false, build_force_GE);
 	}
 }
 
@@ -1056,45 +1039,105 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 	}
 }
 
-void System::computeVelocitiesStressControlled()
+void System::computeMaxNAVelocity()
 {
+	/**
+	   \brief Compute the maximum non-affine velocity
+	   
+	   Note: it does \b not compute the velocities, just takes the maximum.
+	*/
+	
+	double sq_max_na_velocity = 0;
+	double sq_na_velocity, sq_na_ang_velocity;
+	for (int i=0; i<np; i++) {
+		sq_na_velocity = na_velocity[i].sq_norm();
+		if (sq_max_na_velocity < sq_na_velocity) {
+			sq_max_na_velocity = sq_na_velocity;
+		}
+		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
+		if (sq_max_na_velocity < sq_na_ang_velocity) {
+				sq_max_na_velocity = sq_na_ang_velocity;
+		}
+	}
+	max_velocity = sqrt(sq_max_na_velocity);
+}
 
-	double shearstress_rep = 0;
-	// Compute the stress contributions
-	shear_rate = 1;
-	buildHydroTerms(true, true); // build matrix and rhs force GE
+void System::computeVelocityComponents()
+{
+	/**
+	   \brief Compute velocities component by component.
+	*/
+	if (!zero_shear) {
+		buildHydroTerms(true, true); // build matrix and rhs force GE
+	} else {
+		buildHydroTerms(true, false); // zero shear-rate
+	}
 	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-
 	if (repulsiveforce) {
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
+	
+}
+
+void System::computeShearRate()
+{
+	/**
+	   \brief Compute the shear rate under stress control conditions.
+	*/
 	calcStressPerParticle();
 	calcStress();
-	if (p.unscaled_contactmodel) {
-		double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-			+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
-		double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
-		if (repulsiveforce) {
-			shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
-			shearstress_hyd -= shearstress_rep;
+	
+	double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
+		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
+	double shearstress_rep = 0;
+	if (repulsiveforce) {
+		shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+		shearstress_hyd -= shearstress_rep;
+	}
+	// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
+	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ(); 
+	
+	shear_rate = shearstress_hyd/viscosity_hyd;
+	dimensionless_number = shear_rate;
+	if (shear_strain < init_strain_shear_rate_limit) {
+		if (shear_rate > init_shear_rate_limit) {
+			shear_rate = init_shear_rate_limit;
 		}
-		// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
-		double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ(); 
+	}
+	
+	for (int i=0; i<np; i++) {
+		vel_hydro[i] *= shear_rate;
+		ang_vel_hydro[i] *= shear_rate;
+	}
+}
+	
 
-		shear_rate = shearstress_hyd/viscosity_hyd;
-		dimensionless_number = shear_rate;
-		if (shear_strain < init_strain_shear_rate_limit) {
-			if (shear_rate > init_shear_rate_limit) {
-				shear_rate = init_shear_rate_limit;
-			}
+void System::computeVelocities(bool divided_velocities)
+{
+	/**
+	   \brief Compute velocities in the current configuration.
+	   
+	   \param divided_velocities Divide the velocities in components
+	   (hydro, contacts, Brownian, ...). (Note that in Brownian
+	   simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
+	*/
+
+	// this function is slowly becoming a mess. We should refactor to restore readability.
+	stokes_solver.resetRHS();
+	
+	if (divided_velocities||stress_controlled) {
+		if(stress_controlled){
+			shear_rate = 1;
 		}
+		// in case we want to compute the stress contributions
+		computeVelocityComponents();
 		
-		for (int i=0; i<np; i++) {
-			vel_hydro[i] *= shear_rate;
-			ang_vel_hydro[i] *= shear_rate;
+		if(stress_controlled){
+			computeShearRate();
 		}
 		for (int i=0; i<np; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i];
@@ -1107,90 +1150,42 @@ void System::computeVelocitiesStressControlled()
 			}
 		}
 	} else {
-		cerr << "not implemented yet" << endl;
-		exit(1);
-	}
-}
-	
-
-void System::computeVelocities(bool divided_velocities)
-{ // this function is slowly becoming a mess. We should refactor to restore readability.
-	stokes_solver.resetRHS();
-
-	if (stress_controlled) {
-		computeVelocitiesStressControlled();
-	} else {
-		if (divided_velocities) {
-			// in case we want to compute the stress contributions
-			if (!zero_shear) {
-				buildHydroTerms(true, true); // build matrix and rhs force GE
-			} else {
-				buildHydroTerms(true, false); // zero shear-rate
-			}
-			stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
-			buildContactTerms(true); // set rhs = F_C
-			
-			stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-			for (int i=0; i<np; i++) {
-				na_velocity[i] = vel_hydro[i]+vel_contact[i];
-				na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
-			}
-			if (repulsiveforce) {
-				buildRepulsiveForceTerms(true); // set rhs = F_repulsive
-				stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
-				for (int i=0; i<np; i++) {
-					na_velocity[i] += vel_repulsive[i];
-					na_ang_velocity[i] += ang_vel_repulsive[i];
-				}
-			}
+		if (!zero_shear) {
+			buildHydroTerms(true, true); // build matrix and rhs force GE
 		} else {
-			// for most of the time evolution
-			if (!zero_shear) {
-				buildHydroTerms(true, true); // build matrix and rhs force GE
-			} else {
-				buildHydroTerms(true, false); // zero shear-rate
-			}
-			buildContactTerms(false); // add rhs += F_C
-			if (repulsiveforce) {
-				buildRepulsiveForceTerms(false); // add rhs += F_repulsive
-			}
-
-			stokes_solver.solve(na_velocity, na_ang_velocity); // get V
+			buildHydroTerms(true, false); // zero shear-rate
+		}
+		// for most of the time evolution
+		buildContactTerms(false); // add rhs += F_C
+		if (repulsiveforce) {
+			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
 		
-		if (brownian) {
-			if (in_predictor) {
-				/* generate new F_B only in predictor
-				 * Resistance matrix is used.
-				 */
-				generateBrownianForces();
-			}
-			stokes_solver.setRHS(brownian_force); // set rhs = F_B
-			stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-			for (int i=0; i<np; i++) {
-				na_velocity[i] += vel_brownian[i];
-				na_ang_velocity[i] += ang_vel_brownian[i];
-			}
+		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
+	}
+		
+	if (brownian) {
+		if (in_predictor) {
+			/* generate new F_B only in predictor
+			 * Resistance matrix is used.
+			 */
+			generateBrownianForces();
+		}
+		stokes_solver.setRHS(brownian_force); // set rhs = F_B
+		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += vel_brownian[i];
+			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
+
+
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
 	if (in_predictor) {
-		double sq_max_na_velocity = 0;
-		double sq_na_velocity, sq_na_ang_velocity;
-		for (int i=0; i<np; i++) {
-			sq_na_velocity = na_velocity[i].sq_norm();
-			if (sq_max_na_velocity < sq_na_velocity) {
-				sq_max_na_velocity = sq_na_velocity;
-			}
-			sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
-			if (sq_max_na_velocity < sq_na_ang_velocity) {
-				sq_max_na_velocity = sq_na_ang_velocity;
-			}
-		}
-		max_velocity = sqrt(sq_max_na_velocity);
+		computeMaxNAVelocity();
 	}
 	if (!zero_shear) {
 		for (int i=0; i<np; i++) {
