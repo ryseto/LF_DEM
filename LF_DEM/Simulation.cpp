@@ -708,7 +708,7 @@ void Simulation::openOutputFiles(bool binary_conf)
 	string rheo_filename = "rheo_" + sys.simu_name + ".dat";
 	fout_rheo.open(rheo_filename.c_str());
 	string time_filename = "t_" + sys.simu_name + ".dat";
-	fout_time.open(time_filename);
+	fout_time.open(time_filename.c_str());
 	outputDataHeader(fout_rheo);
 	//
 	string fout_rheo_col_def =
