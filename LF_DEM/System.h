@@ -88,6 +88,12 @@ private:
 	void buildRepulsiveForceTerms(bool);
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
+	void computeVelocities(bool divided_velocities);
+	void computeVelocityComponents();
+	void computeShearRate();
+	void forceReset();
+	void torqueReset();
+	void stressReset();
 	void computeMaxNAVelocity();
 	double evaluateMinGap();
 	double evaluateMaxDispTan();
@@ -276,12 +282,6 @@ private:
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
-	void computeVelocities(bool divided_velocities);
-	void computeVelocityComponents();
-	void computeShearRate();
-	void forceReset();
-	void torqueReset();
-	void stressReset();
 	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();
