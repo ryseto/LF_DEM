@@ -18,6 +18,7 @@
 #include <queue>
 #include <sstream>
 #include <string>
+#include <ctime>
 #include "System.h"
 #include "ParameterSet.h"
 
@@ -67,6 +68,11 @@ private:
 	double normalstress_diff_1_brownian;
 	double normalstress_diff_2_brownian;
 	double initial_lees_edwards_disp;
+	int time_strain_0;
+	int time_strain_1;
+	int time_strain_end;
+	int timestep_1;
+	int timestep_end;
 	/*
 	 * For output data.
 	 */
@@ -74,6 +80,7 @@ private:
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
+	ofstream fout_time;
 	/*
 	 * For inputs
 	 */
@@ -105,6 +112,7 @@ private:
 									double scaled_cohesion, double scaled_critical_load,
 									string control_variable);
 	void exportParameterSet();
+	void outputComputationTime();
 
 public:
 	/* For DEMsystem*/

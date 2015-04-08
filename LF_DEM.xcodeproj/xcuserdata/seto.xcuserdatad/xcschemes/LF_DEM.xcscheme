@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-s 1 -i tmp_stress_rate.dat D2N200VF0.78Bidi1.4_0.5Square_1.dat ft_max1.txt"
+            argument = "-g 1"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -315,6 +315,10 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		sys.new_contact_gap = 0;
 	}
 	int jammed = 0;
+	time_t now;
+	time_strain_1 = 0;
+	now = time(NULL);
+	time_strain_0 = now;
 	while (sys.get_shear_strain() < p.shear_strain_end-1e-8) {
 		if (time_interval_output_data == -1) {
 			strain_output_data = cnt_simu_loop*p.strain_interval_output_data;
@@ -354,8 +358,16 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 			jammed = 0;
 		}
 		sys.new_contact_gap = 0;
+		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
+			now = time(NULL);
+			time_strain_1 = now;
+			timestep_1 = sys.get_total_num_timesteps();
+		}
 	}
-	cout << "total time steps " << sys.get_total_num_timesteps() << endl;	
+	now = time(NULL);
+	time_strain_end = now;
+	timestep_end = sys.get_total_num_timesteps();
+	outputComputationTime();
 	if (filename_parameters == "init_relax.txt") {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
@@ -363,6 +375,19 @@ Simulation::simulationSteadyShear(vector<string> &input_files,
 		 */
 		outputFinalConfiguration();
 	}
+}
+
+void Simulation::outputComputationTime()
+{
+	int time_from_1 = time_strain_end-time_strain_1;
+	int time_from_0 = time_strain_end-time_strain_0;
+	int timestep_from_1 = timestep_end-timestep_1;
+	fout_time << "# np time_from_0 time_from_1 timestep_end timestep_from_1" << endl;
+	fout_time << sys.get_np() << ' ';
+	fout_time << time_from_0 << ' ';
+	fout_time << time_from_1 << ' ';
+	fout_time << timestep_end << ' ';
+	fout_time << timestep_from_1 << endl;
 }
 
 /*
@@ -682,6 +707,8 @@ void Simulation::openOutputFiles(bool binary_conf)
 	outputDataHeader(fout_st);
 	string rheo_filename = "rheo_" + sys.simu_name + ".dat";
 	fout_rheo.open(rheo_filename.c_str());
+	string time_filename = "t_" + sys.simu_name + ".dat";
+	fout_time.open(time_filename);
 	outputDataHeader(fout_rheo);
 	//
 	string fout_rheo_col_def =
