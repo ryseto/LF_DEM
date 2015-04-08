@@ -448,6 +448,7 @@ void System::setupSystem(string control)
 	vel_difference = lz;
 	stokes_solver.initialize();
 	dt = p.dt;
+	fixed_dt = p.fixed_dt;
 	initializeBoxing();
 
 	checkNewInteraction();
@@ -632,10 +633,12 @@ void System::timeStepMove()
 	/* Changing dt for every timestep
 	 * So far, this is only in Euler method.
 	 */
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
-	} else {
-		dt = disp_max/max_sliding_velocity;
+	if (!fixed_dt) {
+		if (max_velocity > max_sliding_velocity) {
+			dt = disp_max/max_velocity;
+		} else {
+			dt = disp_max/max_sliding_velocity;
+		}
 	}
 	/* [note]
 	 * We need to make clear time/strain/dimensionlesstime. <-- I agree :)
@@ -664,10 +667,12 @@ void System::timeStepMovePredictor()
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		//dt = disp_max/max_velocity;
-		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
-		} else {
-			dt = disp_max/max_sliding_velocity;
+		if (!fixed_dt) {
+			if (max_velocity > max_sliding_velocity) {
+				dt = disp_max/max_velocity;
+			} else {
+				dt = disp_max/max_sliding_velocity;
+			}
 		}
 	}
 	time += dt/abs(dimensionless_number);

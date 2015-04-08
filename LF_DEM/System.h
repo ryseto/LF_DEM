@@ -110,7 +110,7 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
-
+	bool fixed_dt;
  protected:
  public:
 	System();

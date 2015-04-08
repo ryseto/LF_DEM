@@ -92,6 +92,7 @@ struct ParameterSet
 	bool out_data_interaction;               ///< Output int_* file
 	
 	double ft_max;							///< max tangential force in friction_model = 5
+	bool fixed_dt;							///< Use constant dt 
 };
 
 
