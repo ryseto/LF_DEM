@@ -80,11 +80,7 @@ System::calcStress()
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 	}
-	if (dimensionless_number > 0) {
-		total_hydro_stress /= system_volume;
-	} else {
-		total_hydro_stress /= -system_volume;
-	}
+	total_hydro_stress /= system_volume;
 	//////////////////////////////////////////////////////////////
 	total_contact_stressGU.reset();
 	for (int i=0; i<np; i++) {
