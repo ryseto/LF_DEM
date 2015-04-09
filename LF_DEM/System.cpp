@@ -293,7 +293,7 @@ void System::setupBrownian()
 			cerr << "  kt = " << kt << endl;
 			cerr << "  dt = " << p.dt << endl;
 		} else {
-			lowPeclet = false; // <--- Always true?
+			lowPeclet = false;
 		}
 	}
 }

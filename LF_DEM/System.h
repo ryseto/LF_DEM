@@ -176,7 +176,7 @@ private:
 	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
 	Averager<StressTensor> *stress_avg;
-	double dt; // <=== It should be called d_strain.
+	double dt;
 	double kn;
 	double kt;
 	double kr;
