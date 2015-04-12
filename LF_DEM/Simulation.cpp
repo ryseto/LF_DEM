@@ -29,8 +29,8 @@
 #include <cctype>
 
 Simulation::Simulation():
-	shear_rate_expectation(-1),
-	unit_scales("hydro")
+shear_rate_expectation(-1),
+unit_scales("hydro")
 {};
 
 Simulation::~Simulation()
@@ -54,7 +54,7 @@ void Simulation::contactForceParameter(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-
+	
 	// temporal variables to keep imported values.
 	double phi_, kn_, kt_, dt_;
 	// To find parameters for considered volume fraction phi.
@@ -66,7 +66,7 @@ void Simulation::contactForceParameter(string filename)
 		}
 	}
 	fin_knktdt.close();
-
+	
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
@@ -85,7 +85,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
-
+	
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
@@ -115,7 +115,7 @@ Simulation::importPreSimulationData(string filename)
 		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-
+	
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == sys.target_stress_input) {
@@ -140,12 +140,12 @@ void Simulation::setUnitScalesBrownian()
 
 
 void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
-									   bool binary_conf,
-									   double peclet_num,
-									   double ratio_repulsion,
-									   double ratio_cohesion,
-									   double ratio_critical_load,
-									   string control_variable)
+											bool binary_conf,
+											double peclet_num,
+											double ratio_repulsion,
+											double ratio_cohesion,
+											double ratio_critical_load,
+											string control_variable)
 {
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
@@ -153,7 +153,7 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	sys.cohesion = false;
 	sys.brownian = false;
 	sys.repulsiveforce = false;
-
+	
 	if (control_var == "rate") {
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
@@ -166,7 +166,7 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				 * Filename includes "RepXXXX_PeXXXX".
 				 */
 				sys.amplitudes.repulsion = ratio_repulsion/peclet_num;
-				sys.repulsiveforce = true;				
+				sys.repulsiveforce = true;
 				string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
 			} else if (ratio_critical_load > 0) {
 				cerr << "Critical load" << endl;
@@ -261,18 +261,21 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 			 */
 		}
 	}
-
+	
 	setDefaultParameters();
 	readParameterFile();
-	
+	if (p.repulsive_length == 0) {
+		// @@@@@@@@@@@@@@@@@@@ TEMPORAL @@@@@@@@@@@@@@@@@@@@
+		sys.repulsiveforce = false;
+	}
 	if (sys.brownian == true) {
 		setUnitScalesBrownian();
 	}
-
+	
 	if (control_var == "stress") {
 		p.integration_method = 0;
 	}
-
+	
 	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
@@ -283,7 +286,7 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	} else {
 		sys.shear_disp = 0;
 	}
-
+	
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -321,9 +324,9 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
  * Main simulation
  */
 void Simulation::simulationSteadyShear(vector<string> &input_files,
-								  bool binary_conf,
-								  double peclet_num, double ratio_repulsion, double ratio_cohesion,
-								  double ratio_critical_load, string control_variable)
+									   bool binary_conf,
+									   double peclet_num, double ratio_repulsion, double ratio_cohesion,
+									   double ratio_critical_load, string control_variable)
 {
 	user_sequence = false;
 	control_var = control_variable;
@@ -331,7 +334,7 @@ void Simulation::simulationSteadyShear(vector<string> &input_files,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-//	double strain_output_data = 0;
+	//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
@@ -341,10 +344,14 @@ void Simulation::simulationSteadyShear(vector<string> &input_files,
 		sys.new_contact_gap = 0;
 	}
 	int jammed = 0;
+	time_t now;
+	time_strain_1 = 0;
+	now = time(NULL);
+	time_strain_0 = now;
+	
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
-
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
 		evaluateData();
@@ -449,7 +456,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	}
 	setDefaultParameters();
 	readParameterFile();
- 	if (binary_conf) {
+	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
 		importInitialPositionFile();
@@ -485,7 +492,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain = 0;
-//	double strain_output_data = 0;
+	//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
@@ -505,7 +512,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
-
+			
 			sys.timeEvolution(time_output_data);
 			cnt_simu_loop ++;
 			evaluateData();
@@ -523,7 +530,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 					cnt_config_out ++;
 				}
 			}
- 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
+			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
 				if (jammed > 10) {
@@ -553,8 +560,8 @@ bool str2bool(string value)
 }
 
 void Str2KeyValue(string &str_parameter,
-			 string &keyword,
-			 string &value)
+				  string &keyword,
+				  string &value)
 {
 	string::size_type pos_equal = str_parameter.find("=");
 	keyword = str_parameter.substr(0, pos_equal);
@@ -782,21 +789,21 @@ void Simulation::openOutputFiles(bool binary_conf)
 		outputDataHeader(fout_particle);
 		//
 		string fout_par_col_def =
-			"#1: number of the particle\n"
-			"#2: radius\n"
-			"#3: position x\n"
-			"#4: position y\n"
-			"#5: position z\n"
-			"#6: velocity x\n"
-			"#7: velocity y\n"
-			"#8: velocity z\n"
-			"#9: angular velocity x\n"
-			"#10: angular velocity y\n"
-			"#11: angular velocity z\n"
-			"#12: viscosity contribution of lubrication\n"
-			"#13: viscosity contributon of contact GU xz\n"
-			"#14: viscosity contributon of brownian xz\n"
-			"#15: angle (for 2D simulation only)\n";
+		"#1: number of the particle\n"
+		"#2: radius\n"
+		"#3: position x\n"
+		"#4: position y\n"
+		"#5: position z\n"
+		"#6: velocity x\n"
+		"#7: velocity y\n"
+		"#8: velocity z\n"
+		"#9: angular velocity x\n"
+		"#10: angular velocity y\n"
+		"#11: angular velocity z\n"
+		"#12: viscosity contribution of lubrication\n"
+		"#13: viscosity contributon of contact GU xz\n"
+		"#14: viscosity contributon of brownian xz\n"
+		"#15: angle (for 2D simulation only)\n";
 		//
 		fout_particle << fout_par_col_def << endl;
 	}
@@ -805,23 +812,23 @@ void Simulation::openOutputFiles(bool binary_conf)
 		fout_interaction.open(interaction_filename.c_str());
 		outputDataHeader(fout_interaction);
 		string fout_int_col_def =
-			"#1: particle 1 label\n"
-			"#2: particle 2 label\n"
-			"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
-			"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-			"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-			"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-			"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-			"#8: norm of the normal part of the lubrication force\n"
-			"#9: tangential part of the lubrication force x\n"
-			"#10: tangential part of the lubrication force y\n"
-			"#11: tangential part of the lubrication force z\n"
-			"#12: norm of the normal part of the contact force\n"
-			"#13: tangential part of the contact force, x\n"
-			"#14: tangential part of the contact force, y\n"
-			"#15: tangential part of the contact force, z\n"
-			"#16: norm of the normal repulsive force\n"
-			"#17: Viscosity contribution of contact xF\n";
+		"#1: particle 1 label\n"
+		"#2: particle 2 label\n"
+		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
+		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
+		"#8: norm of the normal part of the lubrication force\n"
+		"#9: tangential part of the lubrication force x\n"
+		"#10: tangential part of the lubrication force y\n"
+		"#11: tangential part of the lubrication force z\n"
+		"#12: norm of the normal part of the contact force\n"
+		"#13: tangential part of the contact force, x\n"
+		"#14: tangential part of the contact force, y\n"
+		"#15: tangential part of the contact force, z\n"
+		"#16: norm of the normal repulsive force\n"
+		"#17: Viscosity contribution of contact xF\n";
 		fout_interaction << fout_int_col_def << endl;
 	}
 }
@@ -905,7 +912,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-
+	
 }
 
 void Simulation::importInitialPositionFile()
@@ -1029,21 +1036,21 @@ void Simulation::prepareSimulationName(bool binary_conf)
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
-	cerr << "filename: " << sys.simu_name << endl;	
+	cerr << "filename: " << sys.simu_name << endl;
 }
 
 void Simulation::evaluateData()
 {
 	/**
-	   \brief Get rheological data from the System class. 
-
-	   Data are converted in hydrodynamic units, independently from the actual units used in the System class.
+	 \brief Get rheological data from the System class.
+	 
+	 Data are converted in hydrodynamic units, independently from the actual units used in the System class.
 	 */
-		
+	
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-
+	
 	double stress_unit_converter = 0;
 	if (unit_scales == "hydro") {
 		stress_unit_converter = 1;
@@ -1121,19 +1128,19 @@ void Simulation::outputStressTensorData()
 void Simulation::outputRheologyData()
 {
 	/**
-	   \brief Output rheological data. 
-
-	   
-	   Stress data are converted in units of
-	   \f$\eta_0\dot\gamma\f$. Other data are output in the units used
-	   in the System class (these can be hydrodynamic, Brownian or
-	   repulsive force units). 
-
-	   \b NOTE: this behavior should be changed
-	   and made more consistent in the future.
+	 \brief Output rheological data.
+	 
+	 
+	 Stress data are converted in units of
+	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
+	 in the System class (these can be hydrodynamic, Brownian or
+	 repulsive force units).
+	 
+	 \b NOTE: this behavior should be changed
+	 and made more consistent in the future.
 	 */
-
-
+	
+	
 	
 	/*
 	 * Output the sum of the normal forces.
@@ -1387,10 +1394,10 @@ void Simulation::outputFinalConfiguration()
 	string filename_bin = filename_final_configuration;
 	string ext=".dat";
 	size_t start_pos = filename_bin.find(ext);
-    if (start_pos == string::npos) {
+	if (start_pos == string::npos) {
 		cerr << " WARNING, no binary output generated " << endl;
-        return;
+		return;
 	}
-    filename_bin.replace(start_pos, ext.length(), ".bin");
+	filename_bin.replace(start_pos, ext.length(), ".bin");
 	outputConfigurationBinary(filename_bin);
 }

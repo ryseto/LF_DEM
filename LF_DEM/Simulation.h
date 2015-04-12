@@ -69,6 +69,11 @@ private:
 	double normalstress_diff_2_brownian;
 	double initial_lees_edwards_disp;
 	string unit_scales;
+	int time_strain_0;
+	int time_strain_1;
+	int time_strain_end;
+	int timestep_1;
+	int timestep_end;
 	/*
 	 * For output data.
 	 */

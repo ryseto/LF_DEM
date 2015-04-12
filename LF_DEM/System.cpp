@@ -79,6 +79,7 @@ void System::importParameterSet(ParameterSet &ps)
 	kn = p.kn;
 	kt = p.kt;
 	kr = p.kr;
+	ft_max = p.ft_max;
 	if(p.repulsive_length<=0){
 		repulsiveforce = false;
 	}
@@ -464,6 +465,15 @@ void System::setupSystem(string control)
 	initializeBoxing();
 
 	checkNewInteraction();
+
+	if (control == "rate") {
+		rate_controlled = true;
+	}
+	if (control == "stress") {
+		rate_controlled = false;
+	}
+
+	stress_controlled = !rate_controlled;
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
@@ -652,6 +662,7 @@ void System::timeStepMove()
 		}
 	}
 	time += dt;
+	total_num_timesteps ++;
 
 	/* evolve PBC */
 	double strain_increment = 0;
@@ -688,8 +699,8 @@ void System::timeStepMovePredictor()
 		}
 	}
 	time += dt;
+	total_num_timesteps ++;
 
-	/* evolve PBC */
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
