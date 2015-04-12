@@ -18,6 +18,7 @@
 #include <queue>
 #include <sstream>
 #include <string>
+#include <ctime>
 #include "System.h"
 #include "ParameterSet.h"
 
@@ -75,6 +76,7 @@ private:
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
+	ofstream fout_time;
 	/*
 	 * For inputs
 	 */
@@ -108,6 +110,7 @@ private:
 									double scaled_cohesion, double scaled_critical_load,
 									string control_variable);
 	void exportParameterSet();
+	void outputComputationTime();
 
 	
 public:
