@@ -107,13 +107,8 @@ void Interaction::updateState(bool &deactivated)
 		contact.incrementDisplacements();
 	}
 	calcNormalVectorDistanceGap();
-	if (sys->friction_model == 4) {
-		if (sys->in_corrector) {
-			updateContactState(deactivated);
-		}
-	} else {
-		updateContactState(deactivated);
-	}
+	updateContactState(deactivated);
+
 	lubrication.updateResistanceCoeff();
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
