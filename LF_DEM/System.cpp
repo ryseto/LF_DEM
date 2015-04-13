@@ -61,6 +61,7 @@ System::~System()
 		DELETE(brownianstressGU_predictor);
 	}
 	if (repulsiveforce) {
+		DELETE(repulsive_force);
 		DELETE(repulsivestressGU);
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
@@ -78,6 +79,7 @@ void System::importParameterSet(ParameterSet &ps)
 	kn = p.kn;
 	kt = p.kt;
 	kr = p.kr;
+	ft_max = p.ft_max;
 	if(p.repulsive_length<=0){
 		repulsiveforce = false;
 	}
@@ -344,8 +346,11 @@ void System::setupSystem(string control)
 		cerr << "friction_model " << friction_model << endl;
 		friction = true;
 		cerr << "critical_normal_force = " << critical_normal_force << endl;
-	} else if (friction_model == 4) {
-		cerr << "friction_model = 4" << endl;
+	} else if (friction_model == 5) {
+		cerr << "friction_model = 5: ft_max" << endl;
+		friction = true;
+	} else if (friction_model == 6) {
+		cerr << "friction_model = 6: Coulomb law + ft_max" << endl;
 		friction = true;
 	} else {
 		cerr << "friction_model..." << endl;
@@ -447,13 +452,25 @@ void System::setupSystem(string control)
 	}
 
 	time = 0;
+	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference = shear_rate*lz;
 	stokes_solver.initialize();
 	dt = p.dt;
+	fixed_dt = p.fixed_dt;
 	initializeBoxing();
+
 	checkNewInteraction();
+
+	if (control == "rate") {
+		rate_controlled = true;
+	}
+	if (control == "stress") {
+		rate_controlled = false;
+	}
+
+	stress_controlled = !rate_controlled;
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
@@ -634,12 +651,15 @@ void System::timeStepMove()
 	/* Changing dt for every timestep
 	 * So far, this is only in Euler method.
 	 */
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
-	} else {
-		dt = disp_max/max_sliding_velocity;
+	if (!fixed_dt) {
+		if (max_velocity > max_sliding_velocity) {
+			dt = disp_max/max_velocity;
+		} else {
+			dt = disp_max/max_sliding_velocity;
+		}
 	}
 	time += dt;
+	total_num_timesteps ++;
 
 	/* evolve PBC */
 	double strain_increment = 0;
@@ -667,15 +687,17 @@ void System::timeStepMovePredictor()
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		//dt = disp_max/max_velocity;
-		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
-		} else {
-			dt = disp_max/max_sliding_velocity;
+		if (!fixed_dt) {
+			if (max_velocity > max_sliding_velocity) {
+				dt = disp_max/max_velocity;
+			} else {
+				dt = disp_max/max_sliding_velocity;
+			}
 		}
 	}
 	time += dt;
+	total_num_timesteps ++;
 
-	/* evolve PBC */
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */

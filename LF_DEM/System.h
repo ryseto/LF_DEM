@@ -51,6 +51,7 @@ private:
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
+	int total_num_timesteps;
 	double time;
 	double shear_rate;
 	double disp_max;
@@ -114,7 +115,7 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
-	
+	bool fixed_dt;
  protected:
  public:
 	System();
@@ -183,6 +184,7 @@ private:
 	double kn_master;
 	double kt_master;
 	double kr_master;
+	double ft_max;
 	int friction_model;
 	bool friction;
 	bool rolling_friction;
@@ -421,6 +423,10 @@ private:
 	inline double get_nb_of_active_interactions()
 	{
 		return nb_of_active_interactions;
+	}
+	int get_total_num_timesteps()
+	{
+		return total_num_timesteps;
 	}
 	struct ForceAmplitudes amplitudes;
 };

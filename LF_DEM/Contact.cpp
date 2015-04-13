@@ -17,8 +17,12 @@ void Contact::init(System *sys_, Interaction *interaction_)
 		frictionlaw = &Contact::frictionlaw_criticalload;
 	} else if (sys->friction_model == 3) {
 		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
-	} else if (sys->friction_model == 4) {
-		frictionlaw = &Contact::frictionlaw_test;
+	} else if (sys->friction_model == 5) {
+		frictionlaw = &Contact::frictionlaw_ft_max;
+		ft_max = sys->ft_max;
+	} else if (sys->friction_model == 6) {
+		frictionlaw = &Contact::frictionlaw_coulomb_max;
+		ft_max = sys->ft_max;
 	} else {
 		frictionlaw = &Contact::frictionlaw_null;
 	}
@@ -31,8 +35,7 @@ void Contact::setInteractionData()
 	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
-		kr_scaled = ro_12*sys->kr;; // F = kt_scaled * disp_tan <-- disp is not scaled
-		
+		kr_scaled = ro_12*sys->kr; // F = kt_scaled * disp_tan <-- disp is not scaled
 	}
 	mu_static = sys->mu_static;
 	mu_dynamic = sys->mu_dynamic;
@@ -109,21 +112,7 @@ void Contact::incrementDisplacements()
 	 */
 	if (sys->friction) {
 		interaction->calcRelativeVelocities();
-		if (sys->friction_model == 4) {
-			if (state == 3) {
-				// tangential displacement is not used for dynamic friction.
-				if (sys->in_corrector
-					&& dot(f_contact_tan, interaction->relative_surface_velocity) < 0) {
-					/* static, but some adjustments are required after this switching.
-					 */
-					state = -2;
-				}
-			} else {
-				incrementTangentialDisplacement();
-			}
-		} else {
-			incrementTangentialDisplacement();
-		}
+		incrementTangentialDisplacement();
 		if (sys->rolling_friction) {
 			interaction->calcRollingVelocities();
 			incrementRollingDisplacement();
@@ -150,17 +139,11 @@ void Contact::calcContactInteraction()
 	 reduced_gap is negative,
 	 positive. */
 	
-	f_contact_normal_norm = -kn_scaled*(interaction->get_reduced_gap());
+	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-	if (sys->friction_model == 4) {
-		if (state == 2) {
-			disp_tan.vertical_projection(interaction->nvec);
-			f_contact_tan = kt_scaled*disp_tan;
-		}
-	} else {
-		disp_tan.vertical_projection(interaction->nvec);
-		f_contact_tan = kt_scaled*disp_tan;
-	}
+	disp_tan.vertical_projection(interaction->nvec);
+	f_contact_tan = kt_scaled*disp_tan;
+	
 	if (sys->rolling_friction) {
 		f_rolling = kr_scaled*disp_rolling;
 	}
@@ -197,59 +180,6 @@ void Contact::frictionlaw_standard()
 		// adjust the sliding spring for dynamic friction law
 		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
 		f_contact_tan = kt_scaled*disp_tan;
-	}
-	if (sys->rolling_friction) {
-		double supportable_rollingforce = mu_rolling*normal_load;
-		double sq_f_rolling = f_rolling.sq_norm();
-		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
-			f_rolling = kr_scaled*disp_rolling;
-		}
-	}
-	return;
-}
-
-void Contact::frictionlaw_test()
-{
-	/**
-	 \brief Friction law
-	 - Dynamic friction force is opposite direction to the sliding velocity.
-	 - The strength of dynamic friction is proportional to the normal load.
-	 -
-	 */
-	double supportable_tanforce = 0;
-	double normal_load = f_contact_normal_norm;
-	if (sys->cohesion) {
-		normal_load += sys->dimensionless_cohesive_force;
-	}
-	/* Check frictional state 
-	 */
-	if (sys->in_corrector) {
-		if (state == 2) {
-			// static friction in previous step
-			double sq_f_tan = f_contact_tan.sq_norm();
-			supportable_tanforce = mu_static*normal_load;
-			if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-				// switch to dynamic friction
-				state = 3; // dynamic friction
-				disp_tan.reset();
-			}
-		} else if (state == -2) {
-			state = 2; // static friction, but just switched from dynamic friction
-			supportable_tanforce = mu_dynamic*normal_load;
-			slid_direction = interaction->relative_surface_velocity_direction();
-			slid_direction.vertical_projection(interaction->nvec);
-			f_contact_tan = supportable_tanforce*slid_direction;
-			disp_tan = f_contact_tan/kt_scaled;
-		}
-	}
-	/* Force from dynamic friction
-	 */
-	if (state == 3) {
-		slid_direction = interaction->relative_surface_velocity_direction();
-		slid_direction.vertical_projection(interaction->nvec);
-		supportable_tanforce = mu_dynamic*normal_load;
-		f_contact_tan = supportable_tanforce*slid_direction;
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
@@ -308,6 +238,62 @@ void Contact::frictionlaw_criticalload_mu_inf()
 		// Never rescaled.
 		// [note]
 		// The tangential spring constant may be rescaled to control maximum strain
+		state = 2; // static friction
+	}
+	return;
+}
+
+void Contact::frictionlaw_ft_max()
+{
+	/**
+	 \brief Friction law
+	 */
+	double sq_f_tan = f_contact_tan.sq_norm();
+	double supportable_tanforce = ft_max/abs(sys->dimensionless_number);
+	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		state = 3; // dynamic friction
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+		f_contact_tan = kt_scaled*disp_tan;
+	} else {
+		state = 2; // static friction
+	}
+	return;
+}
+
+void Contact::frictionlaw_coulomb_max()
+{
+	/**
+	 \brief Friction law
+	 *
+	 * [NOTE]
+	 * In the rate controlled simulation, the results look weird.
+	 * There should be a bug.
+	 *
+	 * The calculated forces in calcContactInteraction() seem to be different
+	 * between the rate-controlled and stress-controlled simulation.
+	 * The current implementation is quite confusing, and should be fixed.
+	 */
+	double supportable_tanforce = 0;
+	double normal_load = f_contact_normal_norm;
+	if (state == 2) {
+		// static friction in previous step
+		supportable_tanforce = mu_static*normal_load;
+	} else if (state == 3) {
+		// dynamic friction in previous step
+		supportable_tanforce = mu_dynamic*normal_load;
+	} else {
+		exit(1);
+	}
+	double scaled_ft_max = ft_max/abs(sys->dimensionless_number);
+	if (supportable_tanforce > scaled_ft_max) {
+		supportable_tanforce = scaled_ft_max;
+	}
+	double sq_f_tan = f_contact_tan.sq_norm();
+	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+		state = 3; // dynamic friction
+		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+		f_contact_tan = kt_scaled*disp_tan;
+	} else {
 		state = 2; // static friction
 	}
 	return;

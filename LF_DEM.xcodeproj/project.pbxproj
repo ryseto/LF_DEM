@@ -127,6 +127,7 @@
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StokesSolver.h; sourceTree = "<group>"; };
 		D936367019C3E5F1005C0204 /* VersionInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VersionInfo.h; sourceTree = "<group>"; };
+		D94F42151AB5028600237D7E /* reduce_rheodata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = reduce_rheodata.pl; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Box.h; sourceTree = "<group>"; };
@@ -354,6 +355,7 @@
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D9130BDD1A96AE5E0070E19F /* LeesEdwards.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
+				D94F42151AB5028600237D7E /* reduce_rheodata.pl */,
 				D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */,
 				D9D805951889BAC700D139F5 /* generateSimpleData.pl */,
 				D99437CE1800F65000B756D5 /* particleconfig.pl */,
