@@ -3,9 +3,9 @@
  *
  */
 
-dt = 1e-4;
+dt = 0.5e-4;
 Pe_switch = 5;
-disp_max = 5e-3;
+disp_max = 2e-3;
 rolling_friction = false;
 
 /*
@@ -14,13 +14,13 @@ rolling_friction = false;
  * 1 predictor-corrector,
  */
 
-integration_method = 1;
+integration_method = 0;
 
 /*
  * shear_strain: total strain (length of simulation)
  */
 
-shear_strain_end = 50;
+time_end = 50;
 
 /*
  * 1 Linear friction law Ft < mu Fn
@@ -41,8 +41,8 @@ mu_static = 1;
  * kt: tangential spring constant
  */
 
-kn = 10000;
-kt = 6000;
+kn = 5000;
+kt = 2000;
 
 /*
  * Lubrication model
@@ -57,13 +57,13 @@ lubrication_model = 2;
  * lub_max: reduced large cutoff distance for lubrication
  */
 
-lub_max = 2.5;
+lub_max_gap = 0.5;
 
 /*
  * lub_reduce_parameter: gives reduced lubrication (maximum coeeffient).
  */
 
-lub_reduce_parameter = 1e-3;
+lub_reduce_parameter = 1e-2;
 
 /*
  * contact_relaxation_time: to determine the coeffient of the dashpot
@@ -73,11 +73,12 @@ lub_reduce_parameter = 1e-3;
 contact_relaxation_time = 1e-3;
 contact_relaxation_time_tan = 0;
 
-/*
- * Repulsive force
+/* Repulsive force
+ * Short range repulsion is assumed.
  */
 
-repulsiveforce_length = 0;
+repulsiveforce_length = 0.02;
+
 
 /*
  *  Data output
@@ -87,12 +88,12 @@ repulsiveforce_length = 0;
  * Output interval
  */
 
-strain_interval_output_config = 1e-1;
+time_interval_output_config = 1;
 
 /*
  *  Data output
  */
-strain_interval_output_data = 1e-2;
+time_interval_output_data = 1e-2;
 
 /*
  * position and interaction data
@@ -106,14 +107,3 @@ out_data_interaction = true;
  */
 
 origin_zero_flow = true;
-
-auto_determine_knkt = false;
-overlap_target = 0.02;
-disp_tan_target = 0.02;
-memory_strain_k = 3;
-memory_strain_avg = 2;
-min_kn = 1000;
-max_kn = 5000000;
-min_kt = 1000;
-max_kt = 5000000;
-start_adjust = 0;

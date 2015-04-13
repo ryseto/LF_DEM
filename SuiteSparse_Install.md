@@ -3,7 +3,13 @@
 Right now this HOWTO describes the installation of SuiteSparse (and optionally Metis) to run on CPUs on Andy and to run on GPUs Penzias.
 The latest version of SuiteSparse is available [here](http://faculty.cse.tamu.edu/davis/suitesparse.html).
 
-## Andy  ##
+## Note on the use of Metis
+
+Metis sometimes causes a segmentation fault, leading to a
+crash of LF\_DEM. This is a Metis bug. We therefore do not recommend
+the use of Metis with LF\_DEM at the moment.
+
+## Andy
 
 ### Metis
 
@@ -93,4 +99,3 @@ $ cd ..
 $ make
 $ make install
 ```
-

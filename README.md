@@ -15,11 +15,9 @@ overdamped suspensions of spherical particles.
 
 LF_DEM requires the sparse linear algebra software
 [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) to
-be installed. Optionally, SuiteSparse can use
-[Metis](http://glaros.dtc.umn.edu/gkhome/metis/metis/overview) for
-matrix ordering.
+be installed.
 
-To install SuiteSparse and Metis on CUNY-HPPC, see [these instructions](lf_dem/src/master/SuiteSparse_Install.md).
+To install SuiteSparse on CUNY-HPPC, see [these instructions](lf_dem/src/master/SuiteSparse_Install.md).
 
 ##Getting the code
 
@@ -52,8 +50,6 @@ In the source folder, edit the Makefile and change the variables ```OS_version``
 "OSX" or "Linux" depending on your environment. This variable controls
 the include paths and flags to be used to compile. This has been
 tested on very few machines, and is probably not generic.
-
-If Metis is installed, also switch ```UseMetis``` to "yes". 
 
 Once those changes to Makefile saved, you can simply compile in a terminal via:
 
