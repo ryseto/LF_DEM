@@ -917,6 +917,10 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 					double GEi[3];
 					double GEj[3];
 					(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+					for(int u=0; u<3; u++){
+						GEi[u] *= shear_rate;
+						GEj[u] *= shear_rate;
+					}
 					stokes_solver.addToRHSForce(i, GEi);
 					stokes_solver.addToRHSForce(j, GEj);
 				}
@@ -959,6 +963,12 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 					double HEi[3];
 					double HEj[3];
 					(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+					for(int u=0; u<3; u++){
+						GEi[u] *= shear_rate;
+						GEj[u] *= shear_rate;
+						HEi[u] *= shear_rate;
+						HEj[u] *= shear_rate;
+					}
 					stokes_solver.addToRHSForce(i, GEi);
 					stokes_solver.addToRHSForce(j, GEj);
 					stokes_solver.addToRHSTorque(i, HEi);

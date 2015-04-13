@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version = OIST
+OS_version = OSX
 #SysEnv=Energy_seto
 VERSION := $(shell git describe --dirty --always)
 
