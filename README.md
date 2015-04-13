@@ -88,7 +88,7 @@ none of this works for you, the complete list of parameters is kept in
 Although none of these parameters is
 compulsory (the simulation can run with default hard-coded values), as
 much as possible they should be provided by the user. One example of input parameter file is
-given in the file `colloid.txt`.
+given in the file `nobrownian_2D.txt`.
 
 #### Rate-controlled mode
 
@@ -118,7 +118,7 @@ Option                   | Role
 `-k  kn_kt_File`         | list of `volume_fraction kn kt dtmax` to use volume fraction dependent spring constants
 `-i Provisional_Data`    | expected shear rates in stress-controlled mode to tune the output frequency
 `-S Stress_Sequence`     | a sequence of `strain stress` to be followed by LF_DEM
-						 
+
 
 
 
