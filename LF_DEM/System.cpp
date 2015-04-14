@@ -898,6 +898,10 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
  */
 void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 {
+	bool shearrate_is_1 = true;
+	if (shear_rate != 1) {
+		shearrate_is_1 = false;
+	}
 	for (int i=0; i<np-1; i ++) {
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
@@ -917,9 +921,11 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 					double GEi[3];
 					double GEj[3];
 					(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
-					for(int u=0; u<3; u++){
-						GEi[u] *= shear_rate;
-						GEj[u] *= shear_rate;
+					if (shearrate_is_1 == false) {
+						for (int u=0; u<3; u++) {
+							GEi[u] *= shear_rate;
+							GEj[u] *= shear_rate;
+						}
 					}
 					stokes_solver.addToRHSForce(i, GEi);
 					stokes_solver.addToRHSForce(j, GEj);
@@ -932,6 +938,10 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 
 void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 {
+	bool shearrate_is_1 = true;
+	if (shear_rate != 1) {
+		shearrate_is_1 = false;
+	}
 	for (int i=0; i<np-1; i ++) {
 		for (set<Interaction*>::iterator it = interaction_list[i].begin();
 			 it != interaction_list[i].end(); it ++) {
@@ -963,11 +973,13 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 					double HEi[3];
 					double HEj[3];
 					(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
-					for(int u=0; u<3; u++){
-						GEi[u] *= shear_rate;
-						GEj[u] *= shear_rate;
-						HEi[u] *= shear_rate;
-						HEj[u] *= shear_rate;
+					if (shearrate_is_1 == false) {
+						for (int u=0; u<3; u++) {
+							GEi[u] *= shear_rate;
+							GEj[u] *= shear_rate;
+							HEi[u] *= shear_rate;
+							HEj[u] *= shear_rate;
+						}
 					}
 					stokes_solver.addToRHSForce(i, GEi);
 					stokes_solver.addToRHSForce(j, GEj);
