@@ -104,14 +104,9 @@ int main(int argc, char **argv)
 				cerr << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 'r':
-				//if (!stress_controlled) {
 				rheology_control = "rate";
 				ratio_repulsion = atof(optarg);
 				repulsion = true;
-				cerr << "Repulsion, shear rate " << ratio_repulsion << endl;
-				//} else {
-				//	cerr << "option -r ignored for stress controlled simulations " << endl;
-				//}
 				break;
 			case 'R':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
@@ -125,7 +120,6 @@ int main(int argc, char **argv)
 				cohesion = true;
 				rheology_control = "rate";
 				ratio_cohesion = atof(optarg);
-				cerr << "Cohesion, shear rate " << ratio_cohesion << endl;
 				break;
 			case 'A':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
@@ -152,7 +146,6 @@ int main(int argc, char **argv)
 			case 'c':
 				critical_load = true;
 				ratio_critical_load = atof(optarg);
-				cerr << "Critical load, shear rate " << ratio_critical_load << endl;
 				break;
 			case 'C':
 				if(seq_filename != "not_given"){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};

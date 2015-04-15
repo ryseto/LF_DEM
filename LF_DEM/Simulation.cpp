@@ -127,7 +127,6 @@ Simulation::importPreSimulationData(string filename)
 
 void Simulation::setUnitScalesBrownian(double peclet_num,
 									   double ratio_repulsion,
-									   double ratio_cohesion,
 									   double ratio_critical_load)
 
 {
@@ -141,7 +140,7 @@ void Simulation::setUnitScalesBrownian(double peclet_num,
 		sys.set_shear_rate(1);
 
 		if (ratio_repulsion > 0) {
-			cerr << "Repulsive force" << endl;
+			cerr << "Repulsive force, ratio to kT/a^3 : " << ratio_repulsion << endl;
 			/* When both Brownian and repulsive forces exist
 			   
 			 * `ratio_repulsion' = F_rep(0)/(kT/a)
@@ -151,7 +150,7 @@ void Simulation::setUnitScalesBrownian(double peclet_num,
 			sys.repulsiveforce = true;
 			string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
 		} else if (ratio_critical_load > 0) {
-			cerr << "Critical load" << endl;
+			cerr << "Critical load, ratio to kT/a^3 : " << ratio_critical_load << endl;
 			sys.critical_normal_force = ratio_critical_load/sys.dimensionless_number;
 			p.friction_model = 2;
 			string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
@@ -205,14 +204,14 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	
 	if (control_var == "rate") {
 		if (peclet_num > 0) {
-			cerr << "Brownian" << endl;
+			cerr << "Brownian, Peclet number " << peclet_num << endl;
 			sys.brownian = true;
-			setUnitScalesBrownian(peclet_num, ratio_repulsion, ratio_cohesion, ratio_critical_load);
+			setUnitScalesBrownian(peclet_num, ratio_repulsion, ratio_critical_load);
 		} else {
 			cerr << "non-Brownian" << endl;
 			sys.set_shear_rate(1);
 			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
-				cerr << "Repulsive force" << endl;
+				cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << ratio_repulsion << endl;
 				sys.dimensionless_number = ratio_repulsion;
 				sys.amplitudes.repulsion = 1/ratio_repulsion;
 				sys.repulsiveforce = true;
@@ -224,13 +223,13 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 				sys.repulsiveforce = true;
 				string_control_parameters << "_rINF";
 			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
-				cerr << "Critical load" << endl;
+				cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << ratio_critical_load << endl;
 				sys.dimensionless_number = ratio_critical_load;
 				p.friction_model = 2;
 				sys.critical_normal_force = 1/ratio_critical_load;
 				string_control_parameters << "_c" << ratio_critical_load;
 			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
-				cerr << "Cohesive force" << endl;
+				cerr << "Cohesive force, shear rate (in units of F_R(0)/6 pi eta_0 a^2)): " << ratio_cohesion << endl;
 				sys.dimensionless_number = ratio_cohesion;
 				/* In the rate control simulation,
 				 * dimensionless_cohesive_force can be given.
