@@ -125,16 +125,65 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-void Simulation::setUnitScalesBrownian()
+void Simulation::setUnitScalesBrownian(double peclet_num,
+									   double ratio_repulsion,
+									   double ratio_cohesion,
+									   double ratio_critical_load)
+
 {
+
+
+	sys.dimensionless_number = peclet_num;
+
 	if (sys.dimensionless_number > p.Pe_switch) {
 		unit_scales = "hydro";
 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
 		sys.set_shear_rate(1);
+
+		if (ratio_repulsion > 0) {
+			cerr << "Repulsive force" << endl;
+			/* When both Brownian and repulsive forces exist
+			   
+			 * `ratio_repulsion' = F_rep(0)/(kT/a)
+			 * Filename includes "rXXXX_pXXXX".
+			 */
+			sys.amplitudes.repulsion = ratio_repulsion/sys.dimensionless_number;
+			sys.repulsiveforce = true;
+			string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
+		} else if (ratio_critical_load > 0) {
+			cerr << "Critical load" << endl;
+			sys.critical_normal_force = ratio_critical_load/sys.dimensionless_number;
+			p.friction_model = 2;
+			string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
+		} else {
+			cerr << "Only Brownian" << endl;
+			string_control_parameters << "_p" << peclet_num;
+		}
 	} else {
 		unit_scales = "thermal";
 		sys.amplitudes.sqrt_temperature = 1;
 		sys.set_shear_rate(sys.dimensionless_number);
+
+		if (ratio_repulsion > 0) {
+			cerr << "Repulsive force" << endl;
+			/* When both Brownian and repulsive forces exist
+			   
+			 * `ratio_repulsion' = F_rep(0)/(kT/a)
+			 * Filename includes "rXXXX_pXXXX".
+			 */
+			sys.amplitudes.repulsion = ratio_repulsion;
+			sys.repulsiveforce = true;
+			string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
+		} else if (ratio_critical_load > 0) {
+			cerr << "Critical load" << endl;
+			sys.critical_normal_force = ratio_critical_load;
+			p.friction_model = 2;
+			string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
+		} else {
+			cerr << "Only Brownian" << endl;
+			string_control_parameters << "_p" << peclet_num;
+		}
+
 	}
 }
 
@@ -158,25 +207,7 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 		if (peclet_num > 0) {
 			cerr << "Brownian" << endl;
 			sys.brownian = true;
-			sys.dimensionless_number = peclet_num;
-			if (ratio_repulsion > 0) {
-				cerr << "Repulsive force" << endl;
-				/* When both Brownian and repulsive forces exist
-				 * `ratio_repulsion' = F_rep(0)/(kT/a)
-				 * Filename includes "RepXXXX_PeXXXX".
-				 */
-				sys.amplitudes.repulsion = ratio_repulsion/peclet_num;
-				sys.repulsiveforce = true;
-				string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
-			} else if (ratio_critical_load > 0) {
-				cerr << "Critical load" << endl;
-				sys.critical_normal_force = ratio_critical_load/peclet_num;
-				p.friction_model = 2;
-				string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
-			} else {
-				cerr << "Only Brownian" << endl;
-				string_control_parameters << "_p" << peclet_num;
-			}
+			setUnitScalesBrownian(peclet_num, ratio_repulsion, ratio_cohesion, ratio_critical_load);
 		} else {
 			cerr << "non-Brownian" << endl;
 			sys.set_shear_rate(1);
@@ -265,11 +296,8 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	setDefaultParameters();
 	readParameterFile();
 	if (p.repulsive_length == 0) {
-		// @@@@@@@@@@@@@@@@@@@ TEMPORAL @@@@@@@@@@@@@@@@@@@@
+		// @@@@@@@@@@@@@@@@@@@ TEMPORAL @@@@@@@@@@@@@@@@@@@@ why temporal?
 		sys.repulsiveforce = false;
-	}
-	if (sys.brownian == true) {
-		setUnitScalesBrownian();
 	}
 	
 	if (control_var == "stress") {

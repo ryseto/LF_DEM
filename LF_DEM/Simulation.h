@@ -95,7 +95,8 @@ private:
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
-	void setUnitScalesBrownian();
+	void setUnitScalesBrownian(double peclet_num, double scaled_repulsion,
+							   double scaled_cohesion, double scaled_critical_load);
 
 	/*
 	 * For outputs
