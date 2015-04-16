@@ -70,7 +70,6 @@ public:
 	vec3d disp_rolling;
 	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
 	vec3d prev_disp_rolling;
-	vec3d slid_direction;
 	void incrementDisplacements();
 	int state;
 	/* state:

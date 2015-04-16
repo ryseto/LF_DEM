@@ -65,9 +65,7 @@ private:
 	double shear_strain;
 	double lub_max_gap;
 	int linalg_size;
-	int linalg_size_per_particle;
 	int dof;
-	int max_lub_int;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
@@ -136,15 +134,12 @@ private:
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;
-	bool zero_shear;///< To be used for relaxation to generate initial configuration.
-	double shear_strain_end;
+	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
 	double critical_normal_force;
 	double volume_fraction;
 	
 	bool in_predictor;
 	bool in_corrector;
-
-
 
 	vec3d *position;
 	Interaction *interaction;
@@ -175,8 +170,6 @@ private:
 	StressTensor* repulsivestressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
-	StressTensor contactstressXF_normal;
-	StressTensor contactstressXF_tan;
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
@@ -263,7 +256,6 @@ private:
 	double ave_sliding_velocity;
 	int contact_nb; // gap < 0
 	int fric_contact_nb; // fn > f* in the critical load model
-	double average_fc_normal;
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;

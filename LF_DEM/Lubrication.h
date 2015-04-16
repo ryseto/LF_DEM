@@ -77,9 +77,6 @@ private:
 	double a0a0_23;
 	double a1a1_23;
 	double roro_16;
-	double a0a0a0_53;
-	double a1a1a1_53;
-	double rororo_524;
 	double a0a0a0_43;
 	double a1a1a1_43;
 	double rororo_16;

@@ -8,7 +8,7 @@ do
 	do
 		for v in `grep $T $header | grep ";" | awk '{print $2}' | grep ";" | sed -e "s/;//g" | grep -v "(" | sed -e "s/\*//g"` # quick and dirty parsing of members of type T in header
 		do
-			if ((`grep "$v" *.cpp | wc -l` < 1)) # no match in any .cpp file
+			if ((`grep "$v" *.cpp *.h | wc -l` < 2)) # only one match: in the header
 			then
 				echo $header ": " $T $v
 			fi
