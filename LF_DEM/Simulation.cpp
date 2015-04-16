@@ -164,7 +164,7 @@ void Simulation::setUnitScalesBrownian(double peclet_num,
 		sys.set_shear_rate(sys.dimensionless_number);
 
 		if (ratio_repulsion > 0) {
-			cerr << "Repulsive force" << endl;
+			cerr << "Repulsive force, ratio to kT/a^3 : " << ratio_repulsion << endl;
 			/* When both Brownian and repulsive forces exist
 			   
 			 * `ratio_repulsion' = F_rep(0)/(kT/a)
@@ -174,7 +174,7 @@ void Simulation::setUnitScalesBrownian(double peclet_num,
 			sys.repulsiveforce = true;
 			string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
 		} else if (ratio_critical_load > 0) {
-			cerr << "Critical load" << endl;
+			cerr << "Critical load, ratio to kT/a^3 : " << ratio_critical_load << endl;
 			sys.critical_normal_force = ratio_critical_load;
 			p.friction_model = 2;
 			string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;

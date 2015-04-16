@@ -80,7 +80,6 @@ int main(int argc, char **argv)
 			case 'p':
 				peclet = true;
 				peclet_num = atof(optarg);
-				cerr << "Brownian, Peclet number " << peclet_num << endl;
 				break;
 			case 'P':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};

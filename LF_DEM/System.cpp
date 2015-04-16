@@ -1170,14 +1170,12 @@ void System::computeVelocities(bool divided_velocities)
 	   simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	*/
 
-	// this function is slowly becoming a mess. We should refactor to restore readability.
 	stokes_solver.resetRHS();
 	
 	if (divided_velocities||stress_controlled) {
 		if(stress_controlled){
 			shear_rate = 1;
 		}
-		// in case we want to compute the stress contributions
 		computeVelocityComponents();
 		
 		if(stress_controlled){
@@ -1223,7 +1221,7 @@ void System::computeVelocities(bool divided_velocities)
 		}
 	}
 
-
+	
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
