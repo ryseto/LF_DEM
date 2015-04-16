@@ -301,6 +301,7 @@ private:
 		}
 	}
 	/*************************************************************/
+
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
@@ -311,66 +312,82 @@ private:
 		lz_half = 0.5*lz;
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
+
 	double getParticleContactNumber()
 	{
 		return (double)2*contact_nb/np;
 	}
+
 	void set_integration_method(int val)
 	{
 		integration_method = val;
 	}
+
 	void set_lubrication_model(int val)
 	{
 		lubrication_model = val;
 	}
+
 	double get_lx()
 	{
 		return lx;
 	}
+
 	double get_ly()
 	{
 		return ly;
 	}
+
 	double get_time()
 	{
 		return time;
 	}
+
 	inline double get_shear_rate()
 	{
 		return shear_rate;
 	}
+
 	inline void set_shear_rate(double sr)
 	{
 		shear_rate = sr;
 	}
+
 	inline double get_lz()
 	{
 		return lz;
 	}
+
 	inline double Lx_half()
 	{
 		return lx_half;
 	}
+
 	inline double Ly_half()
 	{
 		return ly_half;
 	}
+
 	inline double Lz_half()
 	{
 		return lz_half;
 	}
+
 	inline void set_np(int val)
 	{
 		np = val;
 	}
+
 	inline int get_np()
 	{
 		return np;
 	}
+
 	inline double get_shear_strain()
 	{
 		return shear_strain;
 	}
+
 	inline void set_lub_max_gap(double val)
 	{
 		lub_max_gap = val;
@@ -379,55 +396,47 @@ private:
 			exit(1);
 		}
 	}
+
 	inline double get_lub_max_gap()
 	{
 		return lub_max_gap;
 	}
+
 	inline void set_dt(double val)
 	{
 		dt = val;
 	}
+
 	void set_disp_max(double val)
 	{
 		disp_max = val;
 	}
+
 	void set_repulsiveforce_length(double val)
 	{
 		repulsiveforce_length = val;
 	}
+
 	void set_sd_coeff(double val)
 	{
 		sd_coeff = val;
 	}
+
 	inline double get_repulsiveforce_length()
 	{
 		return repulsiveforce_length;
 	}
-//	void set_mu_static(double val)
-//	{
-//		mu_static = val;
-//	}
-//	inline double get_mu_static()
-//	{
-//		return mu_static;
-//	}
-	//inline double get_lub_coeff_contact(){return lub_coeff_contact;}
-	//	inline double get_log_lub_coeff_dynamicfriction(){
-	/* In a sliding state, the resistance coeffient is the sum of
-	 * lubrication and dashpot.
-	 * In our standard model, we do not set the dashpot.
-	 * Only tangential lubrications are considered.
-	 */
-	//		return log_lub_coeff_contact_tan_total;
-	//	}
+
 	inline double get_nb_of_active_interactions()
 	{
 		return nb_of_active_interactions;
 	}
+
 	int get_total_num_timesteps()
 	{
 		return total_num_timesteps;
 	}
+
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */
