@@ -14,11 +14,15 @@
 
 System::System():
 maxnb_interactionpair_per_particle(15),
-lowPeclet(false),
+cohesion(false),
 brownian(false),
-zero_shear(false),
-friction_model(-1),
 repulsiveforce(false),
+zero_shear(false),
+lowPeclet(false),
+critical_normal_force(0),
+twodimension(false),
+friction(false),
+friction_model(-1),
 new_contact_gap(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999)
@@ -285,7 +289,7 @@ void System::setupBrownian()
 		if (dimensionless_number < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
 			lowPeclet = true;
-			scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
+			double scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
 			p.memory_strain_k /= scale_factor_SmallPe;
 			p.memory_strain_avg /= scale_factor_SmallPe;
 			p.start_adjust /= scale_factor_SmallPe;
@@ -334,7 +338,7 @@ void System::setupSystem(string control)
 		exit(1);
 	}
 	calcInteractionRange = &System::calcLubricationRange;
-	friction = false;
+
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -395,20 +399,9 @@ void System::setupSystem(string control)
 		/* t = beta/kn
 		 *  beta = t*kn
 		 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
-		 *
-		 * For Low Peclet mode:
-		 * kn = scale_factor_SmallPe*kn_lowPeclet;
-		 * p.contact_relaxation_time = p.contact_relaxation_time/scale_factor_SmallPe;
-		 * This is why the coeffient is not scaled.
-		 * scale_factor_SmallPe*kn_lowPeclet * p.contact_relaxation_time/scale_factor_SmallPe;
-		 * = kn_lowPeclet * p.contact_relaxation_time
 		 */
 		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	}
-	/* t = beta/kn
-	 *  beta = t*kn
-	 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
-	 */
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.

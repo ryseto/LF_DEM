@@ -47,7 +47,7 @@ struct ForceAmplitudes
 
 class System{
 private:
-	int np;
+	int np; ///< nb of particles
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
@@ -116,25 +116,36 @@ private:
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
 	bool fixed_dt;
+
  protected:
  public:
 	System();
 	~System();
 	void importParameterSet(ParameterSet &ps);
+
+	// Interaction types
 	bool brownian;	
-	bool in_predictor;
-	bool in_corrector;
+	bool friction;
+	int friction_model;
+	bool rolling_friction;
+	bool repulsiveforce;
+	bool cohesion;
+
+
+	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;
-	/* zero_shear:
-	 * To be used for relaxation to generate initial configuration.
-	 */
-	bool zero_shear;
+	bool zero_shear;///< To be used for relaxation to generate initial configuration.
 	double shear_strain_end;
 	double critical_normal_force;
-	double scale_factor_SmallPe;
 	double volume_fraction;
+	
+	bool in_predictor;
+	bool in_corrector;
+
+
+
 	vec3d *position;
 	Interaction *interaction;
 	BoxSet boxset;
@@ -185,11 +196,6 @@ private:
 	double kt_master;
 	double kr_master;
 	double ft_max;
-	int friction_model;
-	bool friction;
-	bool rolling_friction;
-	bool repulsiveforce;
-	bool cohesion;
 	double mu_static; // static friction coefficient
 	double mu_dynamic; // dynamic friction coefficient
 	double mu_rolling; // rolling friction coeffient
