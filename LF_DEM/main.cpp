@@ -188,7 +188,10 @@ int main(int argc, char **argv)
 		incompatibility_exiting("peclet", "cohesion");
 	}
 
-
+	ostringstream in_args;
+	for (int i=0; i<argc; i++){
+		in_args << argv[i] << " ";
+	}
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
 		generate_init_config.generate(random_seed);
@@ -210,11 +213,11 @@ int main(int argc, char **argv)
 		Simulation simulation;
 
 		if (seq_filename == "not_given") {
-			simulation.simulationSteadyShear(input_files, binary_conf, peclet_num,
+			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf, peclet_num,
 											 ratio_repulsion, ratio_cohesion, ratio_critical_load,
 											 rheology_control);
 		} else {
-			simulation.simulationUserDefinedSequence(seq_type, input_files, binary_conf, rheology_control);
+			simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}
 	}
 	return 0;

@@ -82,6 +82,7 @@ private:
 	ofstream fout_interaction;
 	ofstream fout_st;
 	ofstream fout_time;
+	ofstream fout_input;
 	/*
 	 * For inputs
 	 */
@@ -89,6 +90,7 @@ private:
 	void readParameterFile();
 	void openOutputFiles(bool);
 	void prepareSimulationName(bool);
+	void echoInputFiles(string in_args, vector<string> &input_files);
 	void autoSetParameters(const string &keyword, const string &value);
 	void importInitialPositionFile();
 	void contactForceParameter(string filename);
@@ -109,7 +111,7 @@ private:
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(string);
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulationSteadyShear(vector<string> &input_files,
+	void setupSimulationSteadyShear(string in_args, vector<string> &input_files,
 									bool binary_conf,
 									double peclet_num, double scaled_repulsion,
 									double scaled_cohesion, double scaled_critical_load,
@@ -122,9 +124,9 @@ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	void simulationSteadyShear(vector<string> &input_files, bool binary_conf,double peclet_num, double scaled_repulsion,
+	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,double peclet_num, double scaled_repulsion,
 							   double scaled_cohesion,
 							   double scaled_critical_load, string control_variable);
-	void simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable);
+	void simulationUserDefinedSequence(string seq_type, string in_args, vector<string> &input_files, bool binary_conf, string control_variable);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

@@ -125,7 +125,30 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-void Simulation::setUnitScalesBrownian(double peclet_num,
+void
+Simulation::echoInputFiles(string in_args, vector<string> &input_files)
+{
+	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
+	fout_input << in_args << endl << endl;
+	  
+	for(std::vector<string>::iterator it = input_files.begin(); it != input_files.end(); ++it) {
+		ifstream in_f;
+		string line;
+		in_f.open(*it);
+		if(in_f.is_open()){
+			fout_input << "********** File " << *it << " ************" << endl << endl;
+			while(in_f.good()){
+				getline(in_f, line);
+				fout_input << line << endl;
+			}
+			fout_input << endl << endl;
+		}
+		in_f.close();
+	}
+	fout_input.close();
+}
+void
+Simulation::setUnitScalesBrownian(double peclet_num,
 									   double ratio_repulsion,
 									   double ratio_critical_load)
 
@@ -187,7 +210,8 @@ void Simulation::setUnitScalesBrownian(double peclet_num,
 }
 
 
-void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
+void Simulation::setupSimulationSteadyShear(string in_args,
+											vector<string> &input_files,
 											bool binary_conf,
 											double peclet_num,
 											double ratio_repulsion,
@@ -338,6 +362,7 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 	sys.setupSystem(control_var);
 	
 	openOutputFiles(binary_conf);
+	echoInputFiles(in_args, input_files);
 	if (filename_parameters == "init_relax.txt") {
 		sys.zero_shear = true;
 	}
@@ -347,14 +372,15 @@ void Simulation::setupSimulationSteadyShear(vector<string> &input_files,
 /*
  * Main simulation
  */
-void Simulation::simulationSteadyShear(vector<string> &input_files,
+void Simulation::simulationSteadyShear(string in_args,
+									   vector<string> &input_files,
 									   bool binary_conf,
 									   double peclet_num, double ratio_repulsion, double ratio_cohesion,
 									   double ratio_critical_load, string control_variable)
 {
 	user_sequence = false;
 	control_var = control_variable;
-	setupSimulationSteadyShear(input_files, binary_conf, peclet_num,
+	setupSimulationSteadyShear(in_args, input_files, binary_conf, peclet_num,
 							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
@@ -441,6 +467,7 @@ void Simulation::outputComputationTime()
  * Main simulation
  */
 void Simulation::simulationUserDefinedSequence(string seq_type,
+											   string in_args, 
 											   vector<string> &input_files,
 											   bool binary_conf,
 											   string control_variable)
@@ -498,6 +525,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
 	openOutputFiles(binary_conf);
+	echoInputFiles(in_args, input_files);
 	outputConfigurationData();
 	sys.setupShearFlow(true);
 	vector <double> strain_sequence;
@@ -751,6 +779,8 @@ void Simulation::openOutputFiles(bool binary_conf)
 	fout_rheo.open(rheo_filename.c_str());
 	string time_filename = "t_" + sys.simu_name + ".dat";
 	fout_time.open(time_filename.c_str());
+	string input_filename = "input_" + sys.simu_name + ".dat";
+	fout_input.open(input_filename.c_str());
 	outputDataHeader(fout_rheo);
 	//
 	string fout_rheo_col_def =
