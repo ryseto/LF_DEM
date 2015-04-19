@@ -106,8 +106,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	}
 }
 
-void
-Simulation::importPreSimulationData(string filename)
+void Simulation::importPreSimulationData(string filename)
 {
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
@@ -125,8 +124,7 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-void
-Simulation::echoInputFiles(string in_args, vector<string> &input_files)
+void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 {
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
@@ -147,9 +145,8 @@ Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 	}
 	fout_input.close();
 }
-void
-Simulation::setUnitScalesBrownian(double dimensionless_number)
 
+void Simulation::setUnitScalesBrownian(double dimensionless_number)
 {
 	sys.dimensionless_number = dimensionless_number; // Peclet number
 	if (sys.dimensionless_number > p.Pe_switch) {
@@ -238,6 +235,99 @@ Simulation::setUnitScalesBrownian(double dimensionless_number)
 	}
 }
 
+void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
+{
+	if (p.repulsiveforce == true
+		&& p.critical_load == false
+		&& p.cohesion == false) {
+		cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
+		sys.dimensionless_number = dimensionlessnumber;
+		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
+		string_control_parameters << "_r" << sys.dimensionless_number;
+	} else if (p.repulsiveforce == false
+			   && p.critical_load == false
+			   && p.cohesion == false) {
+		cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
+		sys.dimensionless_number = -1;
+		sys.amplitudes.repulsion = 0;
+		string_control_parameters << "_quasi_Newtonian";
+	} else if (p.critical_load == true
+			   && p.repulsiveforce == false
+			   && p.cohesion == false) {
+		cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		p.friction_model = 2;
+		sys.critical_normal_force = 1/sys.dimensionless_number;
+		string_control_parameters << "_c" << sys.dimensionless_number;
+	} else if (p.cohesion == true
+			   && p.repulsiveforce == false
+			   && p.critical_load == false) {
+		cerr << "Cohesive force, shear rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		/* In the rate control simulation,
+		 * dimensionless_cohesive_force can be given.
+		 */
+		string_control_parameters << "_a" << dimensionlessnumber;
+	} else if (p.repulsiveforce == true
+			   && p.cohesion == true
+			   && p.critical_load == false) {
+		cerr << "Repulsive force + Cohesive force" << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
+		sys.cohesive_force = p.ratio_cohesion;
+		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+	} else {
+		cerr << "strain -> non-Brownian -> ???" << endl;
+		exit(1);
+	}
+}
+
+void Simulation::setUnitScalesNonBrownianStress(double dimensionlessnumber){
+	if (p.repulsiveforce == false && p.cohesion == false) {
+		cerr << " Stress controlled simulations need a repulsive force ! " << endl;
+		cerr << " ===> This is not correct. We can make stress controlled simulation without any additional force." << endl;
+		exit(1);
+	} else {
+		if (p.repulsiveforce == true
+			&& p.critical_load == false
+			&& p.cohesion == false) {
+			cerr << "Repulsive force" << endl;
+			sys.amplitudes.repulsion = 1;
+			sys.target_stress_input = dimensionlessnumber;
+			sys.target_stress = sys.target_stress_input/6/M_PI;
+			string_control_parameters << "_s" << sys.target_stress_input;
+		} else if (p.cohesion == true
+				   && p.repulsiveforce == false
+				   && p.critical_load == false) {
+			cerr << "Cohesive force" << endl;
+			p.unscaled_contactmodel = false;
+			sys.cohesive_force = 1;
+			sys.target_stress_input = dimensionlessnumber;
+			sys.target_stress = sys.target_stress_input/6/M_PI;
+			/* Initial relaxation for stress control simulation.
+			 * (To avoid breaking bonds due to startup flows.)
+			 */
+			sys.init_strain_shear_rate_limit = -9999;
+			sys.init_shear_rate_limit = 9999;
+			string_control_parameters << "_b" << sys.target_stress_input;
+		} else if (p.cohesion == true
+				   && p.repulsiveforce == true
+				   && p.critical_load == false) {
+			string_control_parameters << "_b" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+			cerr << "not yet implemented" << endl;
+			exit(1);
+		} else {
+			cerr << "stress -> non-Brownian -> ???" << endl;
+			exit(1);
+		}
+		sys.dimensionless_number = 1; // needed for 1st time step
+		/* The target stress (``ratio_repulsion'') is given trough the command argument
+		 * with an unit stres: eta_0*gammmadot_0.
+		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
+		 */
+	}
+}
+
 void Simulation::setupSimulationSteadyShear(string in_args,
 											vector<string> &input_files,
 											bool binary_conf,
@@ -263,49 +353,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		} else {
 			cerr << "non-Brownian" << endl;
 			sys.set_shear_rate(1);
-			if (p.repulsiveforce == true
-				&& p.critical_load == false
-				&& p.cohesion == false) {
-				cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
-				sys.dimensionless_number = dimensionlessnumber;
-				sys.amplitudes.repulsion = 1/sys.dimensionless_number;
-				string_control_parameters << "_r" << sys.dimensionless_number;
-			} else if (p.repulsiveforce == false
-					   && p.critical_load == false
-					   && p.cohesion == false) {
-				cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
-				sys.dimensionless_number = -1;
-				sys.amplitudes.repulsion = 0;
-				string_control_parameters << "_quasi_Newtonian";
-			} else if (p.critical_load == true
-					   && p.repulsiveforce == false
-					   && p.cohesion == false) {
-				cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
-				sys.dimensionless_number = dimensionlessnumber;
-				p.friction_model = 2;
-				sys.critical_normal_force = 1/sys.dimensionless_number;
-				string_control_parameters << "_c" << sys.dimensionless_number;
-			} else if (p.cohesion == true
-					   && p.repulsiveforce == false
-					   && p.critical_load == false) {
-				cerr << "Cohesive force, shear rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
-				sys.dimensionless_number = dimensionlessnumber;
-				/* In the rate control simulation,
-				 * dimensionless_cohesive_force can be given.
-				 */
-				string_control_parameters << "_a" << dimensionlessnumber;
-			} else if (p.repulsiveforce == true
-					   && p.cohesion == true
-					   && p.critical_load == false) {
-				cerr << "Repulsive force + Cohesive force" << endl;
-				sys.dimensionless_number = dimensionlessnumber;
-				sys.amplitudes.repulsion = 1/sys.dimensionless_number;
-				sys.cohesive_force = p.ratio_cohesion;
-				string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-			} else {
-				cerr << "strain -> non-Brownian -> ???" << endl;
-				exit(1);
-			}
+			setUnitScalesNonBrownianRate(dimensionlessnumber);
 		}
 	} else if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
@@ -316,49 +364,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
 		}
-		if (p.repulsiveforce == false && p.cohesion == false) {
-			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
-			cerr << " ===> This is not correct. We can make stress controlled simulation without any additional force." << endl;
-			exit(1);
-		} else {
-			if (p.repulsiveforce == true
-				&& p.critical_load == false
-				&& p.cohesion == false) {
-				cerr << "Repulsive force" << endl;
-				sys.amplitudes.repulsion = 1;
-				sys.target_stress_input = dimensionlessnumber;
-				sys.target_stress = sys.target_stress_input/6/M_PI;
-				string_control_parameters << "_s" << sys.target_stress_input;
-			} else if (p.cohesion == true
-					   && p.repulsiveforce == false
-					   && p.critical_load == false) {
-				cerr << "Cohesive force" << endl;
-				p.unscaled_contactmodel = false;
-				sys.cohesive_force = 1;
-				sys.target_stress_input = dimensionlessnumber;
-				sys.target_stress = sys.target_stress_input/6/M_PI;
-				/* Initial relaxation for stress control simulation.
-				 * (To avoid breaking bonds due to startup flows.)
-				 */
-				sys.init_strain_shear_rate_limit = -9999;
-				sys.init_shear_rate_limit = 9999;
-				string_control_parameters << "_b" << sys.target_stress_input;
-			} else if (p.cohesion == true
-					   && p.repulsiveforce == true
-					   && p.critical_load == false) {
-				string_control_parameters << "_b" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-				cerr << "not yet implemented" << endl;
-				exit(1);
-			} else {
-				cerr << "stress -> non-Brownian -> ???" << endl;
-				exit(1);
-			}
-			sys.dimensionless_number = 1; // needed for 1st time step
-			/* The target stress (``ratio_repulsion'') is given trough the command argument
-			 * with an unit stres: eta_0*gammmadot_0.
-			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
-			 */
-		}
+		setUnitScalesNonBrownianStress(dimensionlessnumber);
 	}
 
 	if (control_var == "stress") {

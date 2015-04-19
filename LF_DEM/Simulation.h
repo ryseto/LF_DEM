@@ -98,7 +98,8 @@ private:
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
 	void setUnitScalesBrownian(double dimensionlessnumber);
-
+	void setUnitScalesNonBrownianRate(double dimensionlessnumber);
+	void setUnitScalesNonBrownianStress(double dimensionlessnumber);
 	/*
 	 * For outputs
 	 */
