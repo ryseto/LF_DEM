@@ -125,15 +125,14 @@ void Interaction::updateContactState(bool &deactivated)
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
-			if ( reduced_gap > 0) {
+			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
 			/*
 			 * Checking cohesive bond breaking.
 			 */
-			if (sys->target_stress != 0
-				&& contact.get_f_contact_normal_norm()+sys->dimensionless_cohesive_force < 0) {
+			if (contact.get_f_contact_normal_norm()+sys->dimensionless_cohesive_force < 0) {
 				breakup_contact_bond = true;
 			}
 		}

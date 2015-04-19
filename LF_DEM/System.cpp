@@ -84,7 +84,8 @@ void System::importParameterSet(ParameterSet &ps)
 	kt = p.kt;
 	kr = p.kr;
 	ft_max = p.ft_max;
-	if(p.repulsive_length<=0){
+	repulsiveforce = p.repulsiveforce;
+	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 	}
 	if (repulsiveforce) {
@@ -92,6 +93,9 @@ void System::importParameterSet(ParameterSet &ps)
 	} else {
 		set_repulsiveforce_length(0);
 	}
+	cohesion = p.cohesion;
+	brownian = p.brownian;
+	critical_load = p.critical_load;
 	set_sd_coeff(p.sd_coeff);
 	set_integration_method(p.integration_method);
 	mu_static = p.mu_static;
@@ -194,8 +198,8 @@ void System::allocatePositionRadius()
 }
 
 void System::setConfiguration(const vector <vec3d> &initial_positions,
-						 const vector <double> &radii,
-						 double lx_, double ly_, double lz_)
+							  const vector <double> &radii,
+							  double lx_, double ly_, double lz_)
 {
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
@@ -259,7 +263,7 @@ void System::updateUnscaledContactmodel()
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
-
+	
 	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
@@ -319,7 +323,7 @@ void System::setupSystem(string control)
 		rate_controlled = false;
 	}
 	stress_controlled = !rate_controlled;
-
+	
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -338,7 +342,7 @@ void System::setupSystem(string control)
 		exit(1);
 	}
 	calcInteractionRange = &System::calcLubricationRange;
-
+	
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -443,7 +447,7 @@ void System::setupSystem(string control)
 		r_gen = new MTRand;
 #endif
 	}
-
+	
 	time = 0;
 	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
@@ -453,16 +457,16 @@ void System::setupSystem(string control)
 	dt = p.dt;
 	fixed_dt = p.fixed_dt;
 	initializeBoxing();
-
+	
 	checkNewInteraction();
-
+	
 	if (control == "rate") {
 		rate_controlled = true;
 	}
 	if (control == "stress") {
 		rate_controlled = false;
 	}
-
+	
 	stress_controlled = !rate_controlled;
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
@@ -472,7 +476,7 @@ void System::setupSystem(string control)
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
-
+	
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -626,7 +630,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		calcStress();
 	}
 	timeStepMoveCorrector();
-
+	
 	// try to adapt dt
 	// if (max_velocity > max_sliding_velocity) {
 	// 	dt = disp_max/max_velocity;
@@ -653,7 +657,7 @@ void System::timeStepMove()
 	}
 	time += dt;
 	total_num_timesteps ++;
-
+	
 	/* evolve PBC */
 	double strain_increment = 0;
 	strain_increment = dt*shear_rate;
@@ -668,7 +672,7 @@ void System::timeStepMove()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-
+	
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -690,13 +694,13 @@ void System::timeStepMovePredictor()
 	}
 	time += dt;
 	total_num_timesteps ++;
-
+	
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
 	double strain_increment = dt*shear_rate;
 	timeStepBoxing(strain_increment);
-
+	
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -705,9 +709,9 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-
+	
 	updateInteractions();
-
+	
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
@@ -746,9 +750,9 @@ void System::timeEvolution(double time_end)
 	 This method essentially loops the appropriate one time step
 	 method method, according to the Euler vs predictor-corrector or
 	 strain rate vs stress controlled choices. On the last time step,
-	 the stress is computed. 
+	 the stress is computed.
 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-
+	 
 	 \param time_end Time to reach.
 	 */
 	static bool firsttime = true;
@@ -855,17 +859,17 @@ void System::updateInteractions()
 void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 {
 	/**
-	   \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
-	    
-	   @param build_res_mat Build the resistance matrix
-	   \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	   brady_stokesian_1988 notations) and set it as the current
-	   resistance in the StokesSolver. If false, the resistance in the
-	   StokesSolver is untouched, it is not reset.
-	   @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
-	   and \b add it to the right-hand-side of the StokesSolver
-	*/
-
+	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
+	 
+	 @param build_res_mat Build the resistance matrix
+	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) and set it as the current
+	 resistance in the StokesSolver. If false, the resistance in the
+	 StokesSolver is untouched, it is not reset.
+	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
+	 and \b add it to the right-hand-side of the StokesSolver
+	 */
+	
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -1079,10 +1083,10 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 void System::computeMaxNAVelocity()
 {
 	/**
-	   \brief Compute the maximum non-affine velocity
-	   
-	   Note: it does \b not compute the velocities, just takes the maximum.
-	*/
+	 \brief Compute the maximum non-affine velocity
+	 
+	 Note: it does \b not compute the velocities, just takes the maximum.
+	 */
 	
 	double sq_max_na_velocity = 0;
 	double sq_na_velocity, sq_na_ang_velocity;
@@ -1093,7 +1097,7 @@ void System::computeMaxNAVelocity()
 		}
 		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
 		if (sq_max_na_velocity < sq_na_ang_velocity) {
-				sq_max_na_velocity = sq_na_ang_velocity;
+			sq_max_na_velocity = sq_na_ang_velocity;
 		}
 	}
 	max_velocity = sqrt(sq_max_na_velocity);
@@ -1102,8 +1106,8 @@ void System::computeMaxNAVelocity()
 void System::computeVelocityComponents()
 {
 	/**
-	   \brief Compute velocities component by component.
-	*/
+	 \brief Compute velocities component by component.
+	 */
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
@@ -1122,13 +1126,13 @@ void System::computeVelocityComponents()
 void System::computeShearRate()
 {
 	/**
-	   \brief Compute the shear rate under stress control conditions.
-	*/
+	 \brief Compute the shear rate under stress control conditions.
+	 */
 	calcStressPerParticle();
 	calcStress();
 	
 	double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+	+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
@@ -1136,7 +1140,7 @@ void System::computeShearRate()
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
-	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ(); 
+	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	dimensionless_number = shear_rate;
@@ -1151,18 +1155,18 @@ void System::computeShearRate()
 		ang_vel_hydro[i] *= shear_rate;
 	}
 }
-	
+
 
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
-	   \brief Compute velocities in the current configuration.
-	   
-	   \param divided_velocities Divide the velocities in components
-	   (hydro, contacts, Brownian, ...). (Note that in Brownian
-	   simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
-	*/
-
+	 \brief Compute velocities in the current configuration.
+	 
+	 \param divided_velocities Divide the velocities in components
+	 (hydro, contacts, Brownian, ...). (Note that in Brownian
+	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
+	 */
+	
 	stokes_solver.resetRHS();
 	
 	if (divided_velocities||stress_controlled) {
@@ -1198,7 +1202,7 @@ void System::computeVelocities(bool divided_velocities)
 		
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
-		
+	
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
@@ -1213,7 +1217,7 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-
+	
 	
 	/*
 	 * The max velocity is used to find dt from max displacement
@@ -1235,7 +1239,7 @@ void System::computeVelocities(bool divided_velocities)
 			ang_velocity[i] = na_ang_velocity[i];
 		}
 	}
-
+	
 	vel_difference = shear_rate*lz;
 	stokes_solver.solvingIsDone();
 }
@@ -1535,7 +1539,7 @@ void System::adjustContactModelParameters()
 	 */
 	
 	analyzeState();
-
+	
 	double overlap = -min_reduced_gap;
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);

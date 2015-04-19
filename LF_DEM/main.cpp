@@ -31,17 +31,19 @@ int main(int argc, char **argv)
 	[-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] [-n]\
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
 	
-	bool peclet = false;
-	double peclet_num = 0;
-
-	bool repulsion = false;
-	double ratio_repulsion = 0;
-
-	bool critical_load = false;
-	double ratio_critical_load = 0;
-
-	bool cohesion = false;
-	double ratio_cohesion = 0;
+	double dimensionless_number = 0;
+	
+	//	bool peclet = false;
+	//	double peclet_num = 0;
+	
+	//	bool repulsiveforce = false;
+	//double ratio_repulsion = 0;
+	
+	//	bool critical_load = false;
+	//double ratio_critical_load = 0;
+	
+	//	bool cohesion = false;
+	//double ratio_cohesion = 0;
 	
 	bool generate_init = false;
 	int random_seed = 1;
@@ -77,26 +79,26 @@ int main(int argc, char **argv)
 	int c;
 	while ((c = getopt_long(argc, argv, "hng:s:S:p:P:r:R:c:C:a:A:b:B:k:i:", longopts, &index)) != -1) {
 		switch (c) {
-			case 'p':
-				peclet = true;
-				peclet_num = atof(optarg);
-				break;
-			case 'P':
-				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				peclet = true;
-				seq_filename = optarg;
-				seq_type = "p";
-				cerr << "Brownian, Peclet sequence, file " << seq_filename << endl;
-				break;
+				//			case 'p':
+				//				peclet = true;
+				//				dimensionless_number = atof(optarg);
+				//				break;
+				//			case 'P':
+				//				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				//				peclet = true;
+				//				seq_filename = optarg;
+				//				seq_type = "p";
+				//				cerr << "Brownian, Peclet sequence, file " << seq_filename << endl;
+				//				break;
 			case 's':
-				repulsion = true;
+				//	repulsiveforce = true;
 				rheology_control = "stress";
-				ratio_repulsion = atof(optarg);
-				cerr << "Repulsion, stress " << ratio_repulsion << endl;
+				dimensionless_number = atof(optarg);
+				cerr << "Repulsion, stress " << dimensionless_number << endl;
 				break;
 			case 'S':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				repulsion = true;
+				//	repulsiveforce = true;
 				rheology_control = "stress";
 				seq_filename = optarg;
 				seq_type = "s";
@@ -104,55 +106,55 @@ int main(int argc, char **argv)
 				break;
 			case 'r':
 				rheology_control = "rate";
-				ratio_repulsion = atof(optarg);
-				repulsion = true;
+				dimensionless_number = atof(optarg);
+				//	repulsiveforce = true;
 				break;
 			case 'R':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				rheology_control = "rate";
-				repulsion = true;
+				//				repulsion = true;
 				seq_filename = optarg;
 				seq_type = "r";
 				cerr << "Repulsion, sequence, file " << seq_filename << endl;
 				break;
-			case 'a':
-				cohesion = true;
-				rheology_control = "rate";
-				ratio_cohesion = atof(optarg);
-				break;
-			case 'A':
-				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				cohesion = true;
-				rheology_control = "rate";
-				seq_filename = optarg;
-				seq_type = "a";
-				cerr << "Cohesion, sequence, file " << seq_filename << endl;
-				break;
-			case 'b':
-				cohesion = true;
-				rheology_control = "stress";
-				ratio_cohesion = atof(optarg);
-				cerr << "Cohesion, shear stress " << ratio_cohesion << endl;
-				break;
-			case 'B':
-				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				cohesion = true;
-				rheology_control = "stress";
-				seq_filename = optarg;
-				seq_type = "B";
-				cerr << "Cohesion, shear stress " << seq_filename << endl;
-				break;
-			case 'c':
-				critical_load = true;
-				ratio_critical_load = atof(optarg);
-				break;
-			case 'C':
-				if(seq_filename != "not_given"){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};
-				critical_load = true;
-				seq_filename = optarg;
-				seq_type = "c";
-				cerr << "Critical load, sequence, file " << seq_filename << endl;
-				break;
+//			case 'a':
+				//				cohesion = true;
+				//				rheology_control = "rate";
+				//				ratio_cohesion = atof(optarg);
+//				break;
+//			case 'A':
+//				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+//				cohesion = true;
+//				rheology_control = "rate";
+//				seq_filename = optarg;
+//				seq_type = "a";
+//				cerr << "Cohesion, sequence, file " << seq_filename << endl;
+//				break;
+//			case 'b':
+//				cohesion = true;
+//				rheology_control = "stress";
+//				ratio_cohesion = atof(optarg);
+//				cerr << "Cohesion, shear stress " << ratio_cohesion << endl;
+//				break;
+//			case 'B':
+//				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+//				cohesion = true;
+//				rheology_control = "stress";
+//				seq_filename = optarg;
+//				seq_type = "B";
+//				cerr << "Cohesion, shear stress " << seq_filename << endl;
+//				break;
+//			case 'c':
+//				critical_load = true;
+//				dimensionless_number = atof(optarg);
+//				break;
+//			case 'C':
+//				if(seq_filename != "not_given"){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+//				critical_load = true;
+//				seq_filename = optarg;
+//				seq_type = "c";
+//				cerr << "Critical load, sequence, file " << seq_filename << endl;
+//				break;
 			case 'k':
 				knkt_filename = optarg;
 				break;
@@ -178,18 +180,18 @@ int main(int argc, char **argv)
 	}
 
 	// Incompatibilities
-	if (peclet && rheology_control == "stress") {
-		incompatibility_exiting("peclet", "stress_controlled");
-	} else if (critical_load && rheology_control == "stress") {
-		incompatibility_exiting("critical_load", "stress_controlled");
-	} else if (critical_load && repulsion) {
-		incompatibility_exiting("critical_load", "repulsion");
-	} else if (peclet && cohesion) {
-		incompatibility_exiting("peclet", "cohesion");
-	}
-
+	//	if (peclet && rheology_control == "stress") {
+	//		incompatibility_exiting("peclet", "stress_controlled");
+	//	} else if (critical_load && rheology_control == "stress") {
+	//		incompatibility_exiting("critical_load", "stress_controlled");
+	//	} else if (critical_load && repulsion) {
+	//		incompatibility_exiting("critical_load", "repulsion");
+	//	} else if (peclet && cohesion) {
+	//		incompatibility_exiting("peclet", "cohesion");
+	//	}
+	
 	ostringstream in_args;
-	for (int i=0; i<argc; i++){
+	for (int i=0; i<argc; i++) {
 		in_args << argv[i] << " ";
 	}
 	if (generate_init) {
@@ -213,9 +215,8 @@ int main(int argc, char **argv)
 		Simulation simulation;
 
 		if (seq_filename == "not_given") {
-			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf, peclet_num,
-											 ratio_repulsion, ratio_cohesion, ratio_critical_load,
-											 rheology_control);
+			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
+											 dimensionless_number, rheology_control);
 		} else {
 			simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}

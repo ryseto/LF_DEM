@@ -97,7 +97,7 @@ private:
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
-	void setUnitScalesBrownian(double peclet_num, double scaled_repulsion, double scaled_critical_load);
+	void setUnitScalesBrownian(double dimensionlessnumber);
 
 	/*
 	 * For outputs
@@ -113,10 +113,9 @@ private:
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void setupSimulationSteadyShear(string in_args, vector<string> &input_files,
 									bool binary_conf,
-									double peclet_num, double scaled_repulsion,
-									double scaled_cohesion, double scaled_critical_load,
+									double dimensionlessnumber,
 									string control_variable);
-	void exportParameterSet();
+//	void exportParameterSet();
 	void outputComputationTime();
 
 	
@@ -124,9 +123,8 @@ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,double peclet_num, double scaled_repulsion,
-							   double scaled_cohesion,
-							   double scaled_critical_load, string control_variable);
+	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,
+							   double dimensionless_number, string control_variable);
 	void simulationUserDefinedSequence(string seq_type, string in_args, vector<string> &input_files, bool binary_conf, string control_variable);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

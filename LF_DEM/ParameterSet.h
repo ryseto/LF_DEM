@@ -9,6 +9,14 @@
 
 struct ParameterSet
 {
+	bool brownian;
+	bool repulsiveforce;
+	bool cohesion;
+	bool critical_load;
+	double ratio_repulsion;
+	double ratio_critical_load;
+	double ratio_cohesion;
+	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
 	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode

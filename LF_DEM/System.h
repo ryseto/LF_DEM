@@ -128,7 +128,7 @@ private:
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool cohesion;
-
+	bool critical_load;
 
 	// Simulation parameters
 	bool twodimension;
