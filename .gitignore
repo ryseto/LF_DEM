@@ -1,4 +1,4 @@
-.DS_Store
+.Ds_Store
 build/
 *.pbxuser
 !default.pbxuser
