@@ -78,6 +78,7 @@ private:
 	void timeStepBoxing(const double strain_increment);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
+	void setMagneticForceToParticle();
 	void buildHydroTerms(bool, bool);
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
@@ -128,7 +129,7 @@ private:
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool cohesion;
-
+	bool magnetic;
 
 	// Simulation parameters
 	bool twodimension;
@@ -164,6 +165,9 @@ private:
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
+	vec3d *magnetic_moment;
+	vec3d *magnetic_force;
+	vec3d *magnetic_torque;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle

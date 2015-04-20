@@ -170,6 +170,9 @@ void System::allocateRessources()
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
+	if (magnetic) {
+		magnetic_moment = new vec3d [np];
+	}
 }
 
 void System::setInteractions_GenerateInitConfig()
@@ -383,6 +386,9 @@ void System::setupSystem(string control)
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
 		}
+		if (magnetic) {
+			magnetic_moment[i].reset();
+		}
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -542,6 +548,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -1044,6 +1051,22 @@ void System::setRepulsiveForceToParticle()
 		}
 	}
 }
+
+void System::setMagneticForceToParticle(){
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_force[i].reset();
+			magnetic_torque[i].reset();
+		}
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+//				interaction[k].magnetic.addUpForce();
+			}
+		}
+	}
+}
+
+
 
 void System::buildContactTerms(bool set_or_add)
 {

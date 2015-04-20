@@ -130,8 +130,6 @@ void Simulation::setUnitScalesBrownian(double peclet_num,
 									   double ratio_critical_load)
 
 {
-
-
 	sys.dimensionless_number = peclet_num;
 
 	if (sys.dimensionless_number > p.Pe_switch) {
@@ -423,6 +421,14 @@ void Simulation::simulationSteadyShear(vector<string> &input_files,
 		outputFinalConfiguration();
 	}
 }
+
+void Simulation::simulationRestFluid()
+{
+	
+	
+	return;
+}
+
 
 void Simulation::outputComputationTime()
 {

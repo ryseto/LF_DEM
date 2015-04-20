@@ -69,13 +69,14 @@ int main(int argc, char **argv)
 		{"stress-controlled", required_argument, 0, 's'},
 		{"stress-seq-file", required_argument, 0, 'S'},
 		{"binary", no_argument, 0, 'n'},
+		{"magnetic", no_argument, 0, 'm'},
 		{"help", no_argument, 0, 'h'},
 		{0,0,0,0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hng:s:S:p:P:r:R:c:C:a:A:b:B:k:i:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hng:s:S:p:P:r:R:c:C:a:A:b:B:k:i:m:", longopts, &index)) != -1) {
 		switch (c) {
 			case 'p':
 				peclet = true;
@@ -147,7 +148,7 @@ int main(int argc, char **argv)
 				ratio_critical_load = atof(optarg);
 				break;
 			case 'C':
-				if(seq_filename != "not_given"){ cerr << " Only one parameter sequence allowed " << endl; exit(1);};
+				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
 				critical_load = true;
 				seq_filename = optarg;
 				seq_type = "c";
@@ -187,7 +188,6 @@ int main(int argc, char **argv)
 	} else if (peclet && cohesion) {
 		incompatibility_exiting("peclet", "cohesion");
 	}
-
 
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;

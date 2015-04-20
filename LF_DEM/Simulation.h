@@ -96,7 +96,6 @@ private:
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
 	void setUnitScalesBrownian(double peclet_num, double scaled_repulsion, double scaled_critical_load);
-
 	/*
 	 * For outputs
 	 */
@@ -116,7 +115,6 @@ private:
 									string control_variable);
 	void exportParameterSet();
 	void outputComputationTime();
-
 	
 public:
 	/* For DEMsystem*/
@@ -126,5 +124,6 @@ public:
 							   double scaled_cohesion,
 							   double scaled_critical_load, string control_variable);
 	void simulationUserDefinedSequence(string seq_type, vector<string> &input_files, bool binary_conf, string control_variable);
+	void simulationRestFluid();
 };
 #endif /* defined(__LF_DEM__Simulation__) */
