@@ -24,6 +24,7 @@
 #include "Contact.h"
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
+#include "MagneticForce.h"
 #include "StressTensor.h"
 
 using namespace std;
@@ -31,6 +32,7 @@ class System;
 class Lubrication;
 class Contact;
 class RepulsiveForce;
+class MagneticForce;
 
 class Interaction{
 	friend class Contact;
@@ -91,6 +93,7 @@ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
+	MagneticForce magneticforce;
 	vec3d relative_surface_velocity;
 	/*********************************
 	 *       Public Methods          *

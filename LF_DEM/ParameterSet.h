@@ -13,6 +13,8 @@ struct ParameterSet
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
+	bool magnetic;
+
 	double ratio_repulsion;
 	double ratio_critical_load;
 	double ratio_cohesion;
@@ -21,6 +23,7 @@ struct ParameterSet
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
 	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
+	bool monolayer;
 	
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector
 

@@ -43,6 +43,7 @@ struct ForceAmplitudes
 	double repulsion;
 	double sqrt_temperature;
 	double contact;
+	double magnetic;
 };
 
 class System{
@@ -78,6 +79,7 @@ private:
 	void timeStepBoxing(const double strain_increment);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
+	void setMagneticForceToParticle();
 	void buildHydroTerms(bool, bool);
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
@@ -85,6 +87,7 @@ private:
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
+	void buildMagneticForceTerms(bool);
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
 	void computeVelocities(bool divided_velocities);
@@ -104,6 +107,7 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
+	vec3d randUniformSphere(double);
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
@@ -115,6 +119,7 @@ private:
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
 	bool fixed_dt;
+	MTRand rand_gen;
 
  protected:
  public:
@@ -130,15 +135,19 @@ private:
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
+	bool magnetic;
 
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
+	bool monolayer;
+
 	double critical_normal_force;
 	double volume_fraction;
-	
+
+
 	bool in_predictor;
 	bool in_corrector;
 
@@ -162,9 +171,15 @@ private:
 	vec3d *ang_vel_hydro;
 	vec3d *vel_brownian;
 	vec3d *ang_vel_brownian;
+	vec3d *vel_magnetic;
+	vec3d *ang_vel_magnetic;
+	
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
+	vec3d *magnetic_moment;
+	vec3d *magnetic_force;
+	vec3d *magnetic_torque;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle

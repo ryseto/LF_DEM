@@ -118,7 +118,6 @@ private:
 									string control_variable);
 //	void exportParameterSet();
 	void outputComputationTime();
-
 	
 public:
 	/* For DEMsystem*/

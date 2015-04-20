@@ -52,6 +52,7 @@ int main(int argc, char **argv)
 		{"generate", no_argument, 0, 'g'},
 		{"kn-kt-file", required_argument, 0, 'k'},
 		{"binary", no_argument, 0, 'n'},
+		{"magnetic", no_argument, 0, 'm'},
 		{"help", no_argument, 0, 'h'},
 		{0,0,0,0},
 	};

@@ -11,6 +11,7 @@
 #include <cmath>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
+#define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 
 System::System():
 maxnb_interactionpair_per_particle(15),
@@ -27,6 +28,14 @@ new_contact_gap(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999)
 {}
+
+vec3d System::randUniformSphere(double r)
+{
+	double z = 2*RANDOM-1;
+	double phi = 2*M_PI*RANDOM;
+	double sin_theta = sqrt(1-z*z);
+	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
+}
 
 System::~System()
 {
@@ -96,6 +105,8 @@ void System::importParameterSet(ParameterSet &ps)
 	cohesion = p.cohesion;
 	brownian = p.brownian;
 	critical_load = p.critical_load;
+	magnetic = p.magnetic;
+	monolayer = p.monolayer;
 	set_sd_coeff(p.sd_coeff);
 	set_integration_method(p.integration_method);
 	mu_static = p.mu_static;
@@ -140,6 +151,10 @@ void System::allocateRessources()
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
 	}
+	if (magnetic) {
+		vel_magnetic = new vec3d [np];
+		ang_vel_magnetic = new vec3d [np];
+	}
 	// Forces
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
@@ -173,6 +188,11 @@ void System::allocateRessources()
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
+	}
+	if (magnetic) {
+		magnetic_moment = new vec3d [np];
+		magnetic_force = new vec3d [np];
+		magnetic_torque = new vec3d [np];
 	}
 }
 
@@ -386,6 +406,10 @@ void System::setupSystem(string control)
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
 		}
+		if (magnetic) {
+			vel_magnetic[i].reset();
+			ang_vel_magnetic[i].reset();
+		}
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -491,6 +515,11 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] = randUniformSphere(20);
+		}
+	}
 }
 
 void System::initializeBoxing()
@@ -543,8 +572,10 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	 */
 	in_predictor = true;
 	in_corrector = true;
+
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -611,6 +642,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	in_corrector = false;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -621,6 +653,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -666,12 +699,16 @@ void System::timeStepMove()
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+		}
+	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -708,7 +745,11 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+		}
+	}
 	updateInteractions();
 	
 	/*
@@ -735,6 +776,11 @@ void System::timeStepMoveCorrector()
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
+		}
+	}
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 		}
 	}
 	checkNewInteraction();
@@ -1048,6 +1094,21 @@ void System::setRepulsiveForceToParticle()
 	}
 }
 
+void System::setMagneticForceToParticle()
+{
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_force[i].reset();
+			magnetic_torque[i].reset();
+		}
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+				interaction[k].magneticforce.addUpForceTorque();
+			}
+		}
+	}
+}
+
 void System::buildContactTerms(bool set_or_add)
 {
 	// sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
@@ -1075,6 +1136,21 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 	} else {
 		for (int i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, repulsive_force[i]);
+		}
+	}
+}
+
+void System::buildMagneticForceTerms(bool set_or_add)
+{
+	if (set_or_add) {
+		for (int i=0; i<np; i++) {
+			stokes_solver.setRHSForce(i, magnetic_force[i]);
+			stokes_solver.setRHSTorque(i, magnetic_torque[i]);
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, magnetic_force[i]);
+			stokes_solver.addToRHSTorque(i, magnetic_torque[i]);
 		}
 	}
 }
@@ -1119,7 +1195,10 @@ void System::computeVelocityComponents()
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
-	
+	if (magnetic) {
+		buildMagneticForceTerms(true);
+		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
+	}
 }
 
 void System::computeShearRate()
@@ -1168,12 +1247,11 @@ void System::computeVelocities(bool divided_velocities)
 	
 	stokes_solver.resetRHS();
 	
-	if (divided_velocities||stress_controlled) {
+	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
 		computeVelocityComponents();
-		
 		if (stress_controlled) {
 			computeShearRate();
 		}
@@ -1185,6 +1263,12 @@ void System::computeVelocities(bool divided_velocities)
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_repulsive[i];
 				na_ang_velocity[i] += ang_vel_repulsive[i];
+			}
+		}
+		if (magnetic) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += vel_magnetic[i];
+				na_ang_velocity[i] += ang_vel_magnetic[i];
 			}
 		}
 	} else {
@@ -1199,6 +1283,10 @@ void System::computeVelocities(bool divided_velocities)
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
 		
+		
+		if (magnetic) {
+			buildMagneticForceTerms(false);
+		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
 	
@@ -1216,8 +1304,7 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-	
-	
+
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
@@ -1245,7 +1332,12 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::displacement(int i, const vec3d &dr)
 {
-	position[i] += dr;
+	if (monolayer) {
+		position[i].x += dr.x;
+		position[i].z += dr.z;
+	} else {
+		position[i] += dr;
+	}
 	int z_shift = periodize(position[i]);
 	/* Note:
 	 * When the position of the particle is periodized,

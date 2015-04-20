@@ -189,8 +189,14 @@ sub InParticles {
 		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle> ;
+
+#			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+#			
 			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+
+			
 			#		if (true){
 			#			#printf OUTMP "$line";
 			#			printf OUTMP "$i $x $y $z $a\n";
@@ -207,7 +213,11 @@ sub InParticles {
 			$omegaz[$i] = $oz;
 			
 			$omegay[$i] = $oy;
-			$ang[$i] = $angle;
+			#	$ang[$i] = $angle;
+			$magmom_x[$i] = $mx;
+			$magmom_y[$i] = $my;
+			$magmom_z[$i] = $mz;
+			
 			if ($radius_max < $a){
 				$radius_max = $a;
 			}
@@ -459,16 +469,15 @@ sub OutYaplotData{
 #
 
 	
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	
-	printf OUT "@ 5\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($contactstate[$k] > 1) {
-			&OutString2($int0[$k],  $int1[$k]);
-			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
-		}
-	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 5\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		if ($contactstate[$k] > 1) {
+#			&OutString2($int0[$k],  $int1[$k]);
+#			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
+#		}
+#	}
 	#
 	#
 #		printf OUT "y 4\n";
@@ -550,23 +559,23 @@ sub OutYaplotData{
 #			&OutString_width($int0[$k], $int1[$k]);
 #		}
 #	}
-	printf OUT "y 4\n";
-	printf OUT "@ 7\n";
-	for ($k = 0; $k < $num_interaction; $k ++){
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] > 0){
-			if ( $contactstate[$k] == 2 ){
-				printf OUT "@ 7\n"; # static
-			}
-			if ( $contactstate[$k] == 3 ){
-				printf OUT "@ 5\n"; # dynamic
-			}
-			$forceA = $force[$k];
-			$string_width = ${force_factor}*$forceA;
-			#&OutString2($int0[$k], $int1[$k]);
-			&OutString_width($int0[$k], $int1[$k]);
-		}
-	}
+#	printf OUT "y 4\n";
+#	printf OUT "@ 7\n";
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($force[$k] > 0){
+#			if ( $contactstate[$k] == 2 ){
+#				printf OUT "@ 7\n"; # static
+#			}
+#			if ( $contactstate[$k] == 3 ){
+#				printf OUT "@ 5\n"; # dynamic
+#			}
+#			$forceA = $force[$k];
+#			$string_width = ${force_factor}*$forceA;
+#			#&OutString2($int0[$k], $int1[$k]);
+#			&OutString_width($int0[$k], $int1[$k]);
+#		}
+#	}
 	
 #	printf OUT "y 4\n";
 #	printf OUT "@ 4\n";
@@ -651,15 +660,20 @@ sub OutYaplotData{
 	#		}
 	#    }
 	
-
-	if ($Ly == 0){
-		printf OUT "y 6\n";
-		printf OUT "@ 1\n";
-		for ($i = 0; $i < $np; $i ++){
-			&OutCross($i);
-		}
+	printf OUT "y 6\n";
+	printf OUT "@ 0\n";
+	printf OUT "r 0.1\n";
+	for ($i = 0; $i < $np; $i ++){
+		&OutMagMoment($i);
 	}
-	
+#	if ($Ly == 0){
+#		printf OUT "y 6\n";
+#		printf OUT "@ 1\n";
+#		for ($i = 0; $i < $np; $i ++){
+#			&OutCross($i);
+#		}
+#	}
+#	
 	&OutBoundaryBox;
 	
 	#	$maxS=0;
@@ -742,8 +756,6 @@ sub OutBoundaryBox{
 		printf OUT "l $lx2 $ly2 $lz2    $lx2 -$ly2 $lz2\n";
 		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
-
-		
 	}
 	
 }
@@ -807,9 +819,6 @@ sub OutEnergyDissipation {
 		}
 	}
 }
-
-
-
 
 sub OutString_width {
     ($i, $j) = @_;
@@ -976,5 +985,25 @@ sub OutCross {
 	$yb = $yi - 0.01;
 	$zb = $zi + $uz;
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
-	
 }
+
+sub OutMagMoment {
+	($i) = @_;
+	$a = $radius[$i];
+	$xi = $posx[$i];
+	$yi = $posy[$i]-0.02;
+	$zi = $posz[$i];
+	#	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
+	#	printf "$mm\n";
+	$mm = 20;
+	
+	$xa = $xi; #- $magmom_x[$i]/$mm ;
+	$ya = $yi; #- $magmom_y[$i]/$mm ;
+	$za = $zi; #- $magmom_z[$i]/$mm ;
+	$xb = $xi + $magmom_x[$i]/$mm ;
+	$yb = $yi + $magmom_y[$i]/$mm ;
+	$zb = $zi + $magmom_z[$i]/$mm ;
+	printf OUT "s $xa $ya $za $xb $yb $zb\n";
+
+}
+

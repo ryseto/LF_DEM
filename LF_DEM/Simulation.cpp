@@ -239,21 +239,24 @@ void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
 {
 	if (p.repulsiveforce == true
 		&& p.critical_load == false
-		&& p.cohesion == false) {
+		&& p.cohesion == false
+		&& p.magnetic == false) {
 		cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
 		sys.dimensionless_number = dimensionlessnumber;
 		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
 		string_control_parameters << "_r" << sys.dimensionless_number;
 	} else if (p.repulsiveforce == false
 			   && p.critical_load == false
-			   && p.cohesion == false) {
+			   && p.cohesion == false
+			   && p.magnetic == false) {
 		cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
 		sys.dimensionless_number = -1;
 		sys.amplitudes.repulsion = 0;
 		string_control_parameters << "_quasi_Newtonian";
 	} else if (p.critical_load == true
 			   && p.repulsiveforce == false
-			   && p.cohesion == false) {
+			   && p.cohesion == false
+			   && p.magnetic == false) {
 		cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
 		sys.dimensionless_number = dimensionlessnumber;
 		p.friction_model = 2;
@@ -261,7 +264,8 @@ void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
 		string_control_parameters << "_c" << sys.dimensionless_number;
 	} else if (p.cohesion == true
 			   && p.repulsiveforce == false
-			   && p.critical_load == false) {
+			   && p.critical_load == false
+			   && p.magnetic == false) {
 		cerr << "Cohesive force, shear rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
 		sys.dimensionless_number = dimensionlessnumber;
 		/* In the rate control simulation,
@@ -270,12 +274,22 @@ void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
 		string_control_parameters << "_a" << dimensionlessnumber;
 	} else if (p.repulsiveforce == true
 			   && p.cohesion == true
-			   && p.critical_load == false) {
+			   && p.critical_load == false
+			   && p.magnetic == false) {
 		cerr << "Repulsive force + Cohesive force" << endl;
 		sys.dimensionless_number = dimensionlessnumber;
 		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
 		sys.cohesive_force = p.ratio_cohesion;
 		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+	} else if (p.magnetic == true
+			   && p.repulsiveforce == false
+			   && p.cohesion == false
+			   && p.critical_load == false) {
+		cerr << "Magnetic interaction" << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		sys.amplitudes.magnetic = 1/sys.dimensionless_number;
+		string_control_parameters << "_mag" << sys.dimensionless_number << "_r" << sys.dimensionless_number;
+
 	} else {
 		cerr << "strain -> non-Brownian -> ???" << endl;
 		exit(1);
@@ -702,12 +716,14 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.brownian = str2bool(value);
 	} else if (keyword == "critical_load") {
 		p.critical_load = str2bool(value);
+	} else if (keyword == "magnetic") {
+		p.magnetic = str2bool(value);
+	} else if (keyword == "monolayer") {
+		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
 		p.unscaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
-		if (sys.repulsiveforce) {
-			p.repulsive_length = atof(value.c_str());
-		}
+		p.repulsive_length = atof(value.c_str());
 	} else if (keyword == "ratio_repulsion") {
 		p.ratio_repulsion = atof(value.c_str());
 	} else if (keyword == "ratio_critical_load") {
@@ -971,6 +987,7 @@ void Simulation::setDefaultParameters()
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
+	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
 	/*
@@ -1447,8 +1464,14 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.twodimension) {
-				fout_particle << ' ' << sys.angle[i]; // 15
+			if (sys.magnetic) {
+				fout_particle << ' ' << sys.magnetic_moment[i].x;
+				fout_particle << ' ' << sys.magnetic_moment[i].y;
+				fout_particle << ' ' << sys.magnetic_moment[i].z;
+			} else {
+				if (sys.twodimension) {
+					fout_particle << ' ' << sys.angle[i]; // 15
+				}
 			}
 			fout_particle << endl;
 		}
