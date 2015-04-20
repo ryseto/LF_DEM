@@ -33,29 +33,27 @@ private:
 	unsigned short p0;
 	unsigned short p1;
 	//===== forces and stresses ==================== //
-	double geometric_factor;
-	double length;
-	vec3d force_vector; // normal contact force
+	vec3d force_vector0; // normal contact force
+	vec3d torque0;
+	vec3d torque1;
+	
 	double force_norm;
-	double reduced_force_norm;
 	StressTensor stresslet_XF;
-	void calcReducedForceNorm();
-	void calcScaledForce();
 public:
 	MagneticForce(): force_norm(0) {};
 	~MagneticForce(){};
 	void init(System *sys_, Interaction *int_);
 	void activate();
 	//===== forces/stresses  ========================== //
-	void calcForce();
-	void addUpForce();
+	void calcForceToruqe();
+	void addUpForceTorque();
 	inline double getForceNorm()
 	{
 		return force_norm;
 	}
 	vec3d getForceVector()
 	{
-		return force_vector;
+		return force_vector0;
 	}
 	void calcStressXF();
 	StressTensor getStressXF()

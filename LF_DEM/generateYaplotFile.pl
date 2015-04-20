@@ -189,8 +189,14 @@ sub InParticles {
 		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle> ;
+
+#			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+#			
 			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+
+			
 			#		if (true){
 			#			#printf OUTMP "$line";
 			#			printf OUTMP "$i $x $y $z $a\n";
@@ -207,7 +213,11 @@ sub InParticles {
 			$omegaz[$i] = $oz;
 			
 			$omegay[$i] = $oy;
-			$ang[$i] = $angle;
+			#	$ang[$i] = $angle;
+			$magmom_x[$i] = $mx;
+			$magmom_y[$i] = $my;
+			$magmom_z[$i] = $mz;
+			
 			if ($radius_max < $a){
 				$radius_max = $a;
 			}
@@ -651,15 +661,19 @@ sub OutYaplotData{
 	#		}
 	#    }
 	
-
-	if ($Ly == 0){
-		printf OUT "y 6\n";
-		printf OUT "@ 1\n";
-		for ($i = 0; $i < $np; $i ++){
-			&OutCross($i);
-		}
+	printf OUT "y 6\n";
+	printf OUT "@ 4\n";
+	for ($i = 0; $i < $np; $i ++){
+		&OutMagMoment($i);
 	}
-	
+#	if ($Ly == 0){
+#		printf OUT "y 6\n";
+#		printf OUT "@ 1\n";
+#		for ($i = 0; $i < $np; $i ++){
+#			&OutCross($i);
+#		}
+#	}
+#	
 	&OutBoundaryBox;
 	
 	#	$maxS=0;
@@ -976,5 +990,26 @@ sub OutCross {
 	$yb = $yi - 0.01;
 	$zb = $zi + $uz;
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
-	
 }
+
+sub OutMagMoment {
+	($i) = @_;
+	$a = $radius[$i];
+	$xi = $posx[$i];
+	$yi = $posy[$i] - 0.01;
+	$zi = $posz[$i];
+	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
+	printf "$mm\n";
+	
+	$xa = $xi - $magmom_x[$i]/$mm ;
+	$ya = $yi - $magmom_y[$i]/$mm ;
+	$za = $zi - $magmom_z[$i]/$mm ;
+	$xb = $xi + $magmom_x[$i]/$mm ;
+	$yb = $yi + $magmom_y[$i]/$mm ;
+	$zb = $zi + $magmom_z[$i]/$mm ;
+	printf OUT "s $xa $ya $za $xb $yb $zb\n";
+	printf OUT "r 0.2\n" ;
+	printf OUT "c $xb $yb $zb\n";
+
+}
+

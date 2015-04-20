@@ -93,6 +93,7 @@ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
+	MagneticForce magneticforce;
 	vec3d relative_surface_velocity;
 	/*********************************
 	 *       Public Methods          *

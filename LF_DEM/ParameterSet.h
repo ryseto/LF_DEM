@@ -13,6 +13,8 @@ struct ParameterSet
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
+	bool magnetic;
+
 	double ratio_repulsion;
 	double ratio_critical_load;
 	double ratio_cohesion;

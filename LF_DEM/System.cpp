@@ -96,6 +96,7 @@ void System::importParameterSet(ParameterSet &ps)
 	cohesion = p.cohesion;
 	brownian = p.brownian;
 	critical_load = p.critical_load;
+	magnetic = p.magnetic;
 	set_sd_coeff(p.sd_coeff);
 	set_integration_method(p.integration_method);
 	mu_static = p.mu_static;
@@ -140,6 +141,10 @@ void System::allocateRessources()
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
 	}
+	if (magnetic) {
+		vel_magnetic = new vec3d [np];
+		ang_vel_magnetic = new vec3d [np];
+	}
 	// Forces
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
@@ -176,6 +181,8 @@ void System::allocateRessources()
 	}
 	if (magnetic) {
 		magnetic_moment = new vec3d [np];
+		magnetic_force = new vec3d [np];
+		magnetic_torque = new vec3d [np];
 	}
 }
 
@@ -390,7 +397,8 @@ void System::setupSystem(string control)
 			ang_vel_repulsive[i].reset();
 		}
 		if (magnetic) {
-			magnetic_moment[i].reset();
+			vel_magnetic[i].reset();
+			ang_vel_magnetic[i].reset();
 		}
 	}
 	shear_strain = 0;
@@ -497,6 +505,11 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i].set(10,0,0);
+		}
+	}
 }
 
 void System::initializeBoxing()
@@ -549,6 +562,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	 */
 	in_predictor = true;
 	in_corrector = true;
+
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
@@ -557,6 +571,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 		calcStressPerParticle();
 	}
 	timeStepMove();
+
 }
 
 /****************************************************************************************************
@@ -673,12 +688,16 @@ void System::timeStepMove()
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+		}
+	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -1055,7 +1074,8 @@ void System::setRepulsiveForceToParticle()
 	}
 }
 
-void System::setMagneticForceToParticle(){
+void System::setMagneticForceToParticle()
+{
 	if (magnetic) {
 		for (int i=0; i<np; i++) {
 			magnetic_force[i].reset();
@@ -1063,13 +1083,11 @@ void System::setMagneticForceToParticle(){
 		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-//				interaction[k].magnetic.addUpForce();
+				interaction[k].magneticforce.addUpForceTorque();
 			}
 		}
 	}
 }
-
-
 
 void System::buildContactTerms(bool set_or_add)
 {
@@ -1098,6 +1116,21 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 	} else {
 		for (int i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, repulsive_force[i]);
+		}
+	}
+}
+
+void System::buildMagneticForceTerms(bool set_or_add)
+{
+	if (set_or_add) {
+		for (int i=0; i<np; i++) {
+			stokes_solver.setRHSForce(i, magnetic_force[i]);
+			stokes_solver.setRHSTorque(i, magnetic_torque[i]);
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, magnetic_force[i]);
+			stokes_solver.addToRHSTorque(i, magnetic_torque[i]);
 		}
 	}
 }
@@ -1142,7 +1175,10 @@ void System::computeVelocityComponents()
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
-	
+	if (magnetic) {
+		buildMagneticForceTerms(true);
+		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
+	}
 }
 
 void System::computeShearRate()
@@ -1191,12 +1227,11 @@ void System::computeVelocities(bool divided_velocities)
 	
 	stokes_solver.resetRHS();
 	
-	if (divided_velocities||stress_controlled) {
+	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
 		computeVelocityComponents();
-		
 		if (stress_controlled) {
 			computeShearRate();
 		}
@@ -1208,6 +1243,12 @@ void System::computeVelocities(bool divided_velocities)
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_repulsive[i];
 				na_ang_velocity[i] += ang_vel_repulsive[i];
+			}
+		}
+		if (magnetic) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += vel_magnetic[i];
+				na_ang_velocity[i] += ang_vel_magnetic[i];
 			}
 		}
 	} else {
@@ -1222,6 +1263,10 @@ void System::computeVelocities(bool divided_velocities)
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
 		
+		
+		if (magnetic) {
+			buildMagneticForceTerms(false);
+		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
 	
@@ -1239,8 +1284,7 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-	
-	
+
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.

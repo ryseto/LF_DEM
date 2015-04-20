@@ -43,6 +43,7 @@ struct ForceAmplitudes
 	double repulsion;
 	double sqrt_temperature;
 	double contact;
+	double magnetic;
 };
 
 class System{
@@ -86,6 +87,7 @@ private:
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
+	void buildMagneticForceTerms(bool);
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
 	void computeVelocities(bool divided_velocities);
@@ -131,6 +133,7 @@ private:
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
+	bool magnetic;
 
 	// Simulation parameters
 	bool twodimension;
@@ -163,6 +166,9 @@ private:
 	vec3d *ang_vel_hydro;
 	vec3d *vel_brownian;
 	vec3d *ang_vel_brownian;
+	vec3d *vel_magnetic;
+	vec3d *ang_vel_magnetic;
+	
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;

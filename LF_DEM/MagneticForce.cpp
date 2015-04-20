@@ -22,68 +22,38 @@ void MagneticForce::activate()
 	 * The size dependence of repulsive force:
 	 * a0*a1/(a1+a2)/2
 	 */
-//	geometric_factor = interaction->a0*interaction->a1/interaction->ro;
-	length = sys->get_repulsiveforce_length();
-	force_vector.reset();
-	force_norm = 0;
-	reduced_force_norm = 0;
-	stresslet_XF = 0;
+	force_vector0.reset();
+	torque0.reset();
+	torque1.reset();
 }
 
-void MagneticForce::calcReducedForceNorm()
+void MagneticForce::calcForceToruqe()
 {
 	/**
-		\brief Compute the repulsive force in its own units.
-		
-		The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
-		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
-		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
-		
-		This method returns an amplitude \f$ \hat{f}_{R} = \exp(-h/\lambda)\f$.
-	 */
-	double gap = interaction->get_gap();
-	//	if(gap>0){
-	if (interaction->contact.state == 0) { // why not testing for gap? When particles separate, there is a time step for which gap>0 and contact.state>0, is that the reason?
-		// ---> I forgot why I did so:-)
-		/* separating */
-		reduced_force_norm = geometric_factor*exp(-gap/length);
-		//		reduced_force_vector = -force_norm*interaction->nvec;
-	} else {
-		/* contacting */
-		reduced_force_norm = geometric_factor;
-		//		reduced_force_vector = -force_norm*interaction->nvec;
-	}
-	
-	
-}
-
-void MagneticForce::calcScaledForce()
-{
-	/**
-		\brief Computes the force in the System class from a previously computed reduced force.
-	 */
-	
-//	force_norm = sys->amplitudes.repulsion*reduced_force_norm;
-//	force_vector = -force_norm*interaction->nvec;
-}
-
-void MagneticForce::calcForce()
-{
-	/**
-		\brief Compute the repulsive force in the System class units.
+		\brief Compute the magnetic force in the System class units.
 		
 		The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
 		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	 */
-	
-	calcReducedForceNorm();
-	calcScaledForce();
+	double r = interaction->get_r();
+	vec3d nvec = interaction->get_nvec();
+	vec3d m0 = sys->magnetic_moment[p0];
+	vec3d m1 = sys->magnetic_moment[p1];
+	force_vector0 = pow(r,-4)*(dot(m0, nvec)*m1
+							  +dot(m1,nvec)*m0
+							  +dot(m0,m1)*nvec
+							  -5*dot(m0,nvec)*dot(m1,nvec)*nvec);
+	vec3d b0 = pow(r,-3)*(3*dot(nvec, m0)*nvec - m0);
+	vec3d b1 = pow(r,-3)*(3*dot(nvec, m1)*nvec - m1);
+	torque0 = cross(m0, b1);
+	torque1 = cross(m1, b0);
 }
 
-void MagneticForce::addUpForce()
+void MagneticForce::addUpForceTorque()
 {
-	sys->magnetic_force[p0] += force_vector;
-	sys->magnetic_force[p1] -= force_vector;
+	sys->magnetic_force[p0] += force_vector0;
+	sys->magnetic_force[p1] -= force_vector0;
+	sys->magnetic_torque[p0] += torque0;
+	sys->magnetic_torque[p1] += torque1;
 }
-
