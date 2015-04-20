@@ -253,10 +253,9 @@ void System::updateUnscaledContactmodel()
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 		
 	}
-	if(!stress_controlled) {
+	if (!stress_controlled) {
 		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-	}
-	else {
+	} else {
 		lub_coeff_contact = 4*kn_master*p.contact_relaxation_time;
 	}
 	
@@ -835,7 +834,7 @@ void System::updateInteractions()
 	 * In the dimensionless simulation,
 	 * the cohesive force
 	 */
-	if (cohesion) {
+	if (cohesion && stress_controlled) {
 		dimensionless_cohesive_force = cohesive_force/abs(dimensionless_number);
 	}
 	for (int k=0; k<nb_interaction; k++) {
@@ -1170,12 +1169,12 @@ void System::computeVelocities(bool divided_velocities)
 	stokes_solver.resetRHS();
 	
 	if (divided_velocities||stress_controlled) {
-		if(stress_controlled){
+		if (stress_controlled) {
 			shear_rate = 1;
 		}
 		computeVelocityComponents();
 		
-		if(stress_controlled){
+		if (stress_controlled) {
 			computeShearRate();
 		}
 		for (int i=0; i<np; i++) {
@@ -1412,12 +1411,31 @@ double System::evaluateMinGap()
 		if (interaction[k].is_active() &&
 			interaction[k].get_reduced_gap() < _min_reduced_gap) {
 			_min_reduced_gap = interaction[k].get_reduced_gap();
+			
+			if (interaction[k].get_reduced_gap() < 0
+				&& interaction[k].contact.state == 0) {
+				cerr << interaction[k].get_reduced_gap() << endl;
+				exit(1);
+			}
 			// unsigned short i, j;
 			// interaction[k].get_par_num(i,j);
 			// cout << i << " " << j << " " << interaction[k].get_a0() << " " << interaction[k].get_a1() << " " << interaction[k].get_reduced_gap() << endl;
 		}
 	}
 	return _min_reduced_gap;
+}
+
+double System::evaluateMaxContactGap()
+{
+	double _max_contact_gap = 0;
+	for (int k= 0; k<nb_interaction; k++) {
+		if (interaction[k].is_active() &&
+			interaction[k].contact.state > 0 &&
+			interaction[k].get_reduced_gap() > _max_contact_gap) {
+			_max_contact_gap = interaction[k].get_reduced_gap();
+		}
+	}
+	return _max_contact_gap;
 }
 
 double System::evaluateMaxDispTan()
@@ -1492,6 +1510,9 @@ void System::analyzeState()
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	min_reduced_gap = evaluateMinGap();
+	if (cohesion) {
+		max_contact_gap = evaluateMaxContactGap();
+	}
 	max_disp_tan = evaluateMaxDispTan();
 	if (rolling_friction) {
 		max_disp_rolling = evaluateMaxDispRolling();

@@ -143,7 +143,6 @@ void Contact::calcContactInteraction()
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	disp_tan.vertical_projection(interaction->nvec);
 	f_contact_tan = kt_scaled*disp_tan;
-	
 	if (sys->rolling_friction) {
 		f_rolling = kr_scaled*disp_rolling;
 	}
@@ -159,7 +158,7 @@ void Contact::frictionlaw_standard()
 	 */
 	double supportable_tanforce = 0;
 	double sq_f_tan = f_contact_tan.sq_norm();
-	double normal_load = f_contact_normal_norm;
+	normal_load = f_contact_normal_norm;
 	if (sys->cohesion) {
 		normal_load += sys->dimensionless_cohesive_force;
 	}
@@ -274,7 +273,7 @@ void Contact::frictionlaw_coulomb_max()
 	 * The current implementation is quite confusing, and should be fixed.
 	 */
 	double supportable_tanforce = 0;
-	double normal_load = f_contact_normal_norm;
+	normal_load = f_contact_normal_norm;
 	if (state == 2) {
 		// static friction in previous step
 		supportable_tanforce = mu_static*normal_load;

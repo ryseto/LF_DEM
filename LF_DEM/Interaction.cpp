@@ -132,7 +132,7 @@ void Interaction::updateContactState(bool &deactivated)
 			/*
 			 * Checking cohesive bond breaking.
 			 */
-			if (contact.get_f_contact_normal_norm()+sys->dimensionless_cohesive_force < 0) {
+			if (contact.get_normal_load() < 0) {
 				breakup_contact_bond = true;
 			}
 		}

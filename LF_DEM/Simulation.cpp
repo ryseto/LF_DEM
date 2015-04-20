@@ -182,7 +182,7 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 				   && p.repulsiveforce == false
 				   && p.critical_load == false) {
 			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
-			sys.cohesive_force = p.ratio_cohesion;
+			sys.dimensionless_cohesive_force = p.ratio_cohesion/sys.dimensionless_number;
 			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
 		} else {
 			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
@@ -1367,6 +1367,7 @@ void Simulation::outputRheologyData()
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51
+	fout_rheo << sys.max_contact_gap << ' '; //52
 	fout_rheo << endl;
 }
 

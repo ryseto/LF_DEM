@@ -95,6 +95,7 @@ private:
 	void stressReset();
 	void computeMaxNAVelocity();
 	double evaluateMinGap();
+	double evaluateMaxContactGap();
 	double evaluateMaxDispTan();
 	double evaluateMaxDispRolling();
 	double evaluateMaxFcNormal();
@@ -246,6 +247,7 @@ private:
 	double max_sliding_velocity;
 	double max_ang_velocity;
 	double min_reduced_gap;
+	double max_contact_gap;
 	double max_disp_tan;
 	double max_disp_rolling;
 	queue<int> deactivated_interaction;

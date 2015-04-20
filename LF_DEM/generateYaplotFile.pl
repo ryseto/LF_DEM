@@ -459,25 +459,16 @@ sub OutYaplotData{
 #
 
 	
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	
-#	printf OUT "@ 5\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($contactstate[$k] > 1) {
-#			if ( $contactstate[$k] == 2 ){
-#				printf OUT "@ 4\n"; # static
-#			}
-#			if ( $contactstate[$k] == 3 ){
-#				printf OUT "@ 5\n"; # static
-#			}
-#			if ( $contactstate[$k] == 1 ){
-#				printf OUT "@ 6\n"; # static
-#			}
-#			&OutString2($int0[$k],  $int1[$k]);
-#			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
-#		}
-#	}
+	printf OUT "y 2\n";
+	printf OUT "r 0.2\n";
+	
+	printf OUT "@ 5\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($contactstate[$k] > 1) {
+			&OutString2($int0[$k],  $int1[$k]);
+			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
+		}
+	}
 	#
 	#
 #		printf OUT "y 4\n";
