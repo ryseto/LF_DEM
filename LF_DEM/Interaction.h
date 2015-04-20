@@ -24,6 +24,7 @@
 #include "Contact.h"
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
+#include "MagneticForce.h"
 #include "StressTensor.h"
 
 using namespace std;
@@ -31,6 +32,7 @@ class System;
 class Lubrication;
 class Contact;
 class RepulsiveForce;
+class MagneticForce;
 
 class Interaction{
 	friend class Contact;

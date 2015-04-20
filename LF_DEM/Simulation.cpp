@@ -501,6 +501,14 @@ void Simulation::simulationSteadyShear(string in_args,
 	}
 }
 
+void Simulation::simulationRestFluid()
+{
+	
+	
+	return;
+}
+
+
 void Simulation::outputComputationTime()
 {
 	int time_from_1 = time_strain_end-time_strain_1;
