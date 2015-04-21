@@ -145,7 +145,7 @@ void GenerateInitConfig::outputPositionData()
 		unsigned short i,j;
 		sys.interaction[k].get_par_num(i, j);
 		vec3d d_pos = position[i]-position[j];
-		if (d_pos.norm()< 10){
+		if (d_pos.norm() < 10){
 			fout_yap << "l ";
 			fout_yap << position[i].x << ' ';
 			fout_yap << position[i].y << ' ';

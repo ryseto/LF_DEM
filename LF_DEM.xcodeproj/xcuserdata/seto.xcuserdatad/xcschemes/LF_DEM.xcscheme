@@ -29,6 +29,15 @@
             <ActionContent
                title = "Run Script"
                scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/generateSimpleData.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/LF_DEM/LeesEdwards.pl $HOME/bin/&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "D988E388165441750009949F"
+                     BuildableName = "LF_DEM"
+                     BlueprintName = "LF_DEM"
+                     ReferencedContainer = "container:LF_DEM.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
             </ActionContent>
          </ExecutionAction>
       </PostActions>

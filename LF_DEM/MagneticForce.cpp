@@ -25,6 +25,11 @@ void MagneticForce::activate()
 	force_vector0.reset();
 	torque0.reset();
 	torque1.reset();
+	/*
+	 *
+	 *
+	 */
+	coeffient = sys->magnetic_coeffient;
 }
 
 void MagneticForce::calcForceToruqe()
@@ -37,13 +42,17 @@ void MagneticForce::calcForceToruqe()
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	 */
 	double r = interaction->get_r();
+	double r_cubic = r*r*r;
 	vec3d nvec = interaction->get_nvec();
 	vec3d m0 = sys->magnetic_moment[p0];
 	vec3d m1 = sys->magnetic_moment[p1];
-	force_vector0 = -pow(r,-4)*(dot(m0, nvec)*m1+dot(m1,nvec)*m0+dot(m0,m1)*nvec
-							   -5*dot(m0,nvec)*dot(m1,nvec)*nvec);
-	vec3d b0 = pow(r,-3)*(3*dot(nvec, m0)*nvec-m0);
-	vec3d b1 = pow(r,-3)*(3*dot(nvec, m1)*nvec-m1);
+
+	force_vector0 = -(coeffient/r_cubic/r)*(dot(m0, nvec)*m1
+											+dot(m1, nvec)*m0
+											+dot(m0, m1)*nvec
+											-5*dot(m0,nvec)*dot(m1,nvec)*nvec);
+	vec3d b0 = (coeffient/r_cubic)*(3*dot(nvec, m0)*nvec-m0);
+	vec3d b1 = (coeffient/r_cubic)*(3*dot(nvec, m1)*nvec-m1);
 	torque0 = cross(m0, b1);
 	torque1 = cross(m1, b0);
 }

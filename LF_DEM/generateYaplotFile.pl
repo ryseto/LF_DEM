@@ -1004,6 +1004,5 @@ sub OutMagMoment {
 	$yb = $yi + $magmom_y[$i]/$mm ;
 	$zb = $zi + $magmom_z[$i]/$mm ;
 	printf OUT "s $xa $ya $za $xb $yb $zb\n";
-
 }
 

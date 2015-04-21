@@ -210,6 +210,7 @@ private:
 	double mu_rolling; // rolling friction coeffient
 	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
+	double magnetic_coeffient;
 	/* sd_coeff:
 	 * Full Stokes drag is given by sd_coeff = 1.
 	 * sd_coeff = 0 makes the resistance matrix singular.

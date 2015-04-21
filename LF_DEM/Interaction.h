@@ -95,6 +95,7 @@ public:
 	RepulsiveForce repulsion;
 	MagneticForce magneticforce;
 	vec3d relative_surface_velocity;
+
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/

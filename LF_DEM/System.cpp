@@ -26,7 +26,8 @@ friction(false),
 friction_model(-1),
 new_contact_gap(0),
 init_strain_shear_rate_limit(0),
-init_shear_rate_limit(999)
+init_shear_rate_limit(999),
+magnetic_coeffient(1)
 {}
 
 vec3d System::randUniformSphere(double r)
@@ -516,6 +517,9 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
 	if (magnetic) {
+		/* force unit =
+		 *
+		 */
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] = randUniformSphere(20);
 		}
@@ -662,7 +666,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		calcStress();
 	}
 	timeStepMoveCorrector();
-	
 	// try to adapt dt
 	// if (max_velocity > max_sliding_velocity) {
 	// 	dt = disp_max/max_velocity;
@@ -1282,8 +1285,6 @@ void System::computeVelocities(bool divided_velocities)
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
-		
-		
 		if (magnetic) {
 			buildMagneticForceTerms(false);
 		}
@@ -1309,7 +1310,7 @@ void System::computeVelocities(bool divided_velocities)
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (in_predictor) {
+	if (!fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
 	if (!zero_shear) {
@@ -1325,7 +1326,7 @@ void System::computeVelocities(bool divided_velocities)
 			ang_velocity[i] = na_ang_velocity[i];
 		}
 	}
-	
+
 	vel_difference = shear_rate*lz;
 	stokes_solver.solvingIsDone();
 }
@@ -1599,6 +1600,7 @@ void System::countNumberOfContact()
 void System::analyzeState()
 {
 	//	max_velocity = evaluateMaxVelocity();
+	computeMaxNAVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	min_reduced_gap = evaluateMinGap();

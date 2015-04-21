@@ -36,7 +36,7 @@ private:
 	vec3d force_vector0; // normal contact force
 	vec3d torque0;
 	vec3d torque1;
-	
+	double coeffient;
 	double force_norm;
 	StressTensor stresslet_XF;
 public:
@@ -47,18 +47,10 @@ public:
 	//===== forces/stresses  ========================== //
 	void calcForceToruqe();
 	void addUpForceTorque();
-	inline double getForceNorm()
-	{
-		return force_norm;
-	}
 	vec3d getForceVector()
 	{
 		return force_vector0;
 	}
 	void calcStressXF();
-	StressTensor getStressXF()
-	{
-		return stresslet_XF;
-	}
 };
 #endif /* defined(__LF_DEM__MagneticForce__) */
