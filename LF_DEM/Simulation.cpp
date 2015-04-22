@@ -134,7 +134,7 @@ Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 	for(std::vector<string>::iterator it = input_files.begin(); it != input_files.end(); ++it) {
 		ifstream in_f;
 		string line;
-		in_f.open(*it);
+		in_f.open((*it).c_str());
 		if(in_f.is_open()){
 			fout_input << "********** File " << *it << " ************" << endl << endl;
 			while(in_f.good()){
