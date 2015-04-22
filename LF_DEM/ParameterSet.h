@@ -13,8 +13,7 @@ struct ParameterSet
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
-	bool magnetic;
-
+	
 	double ratio_repulsion;
 	double ratio_critical_load;
 	double ratio_cohesion;
@@ -100,7 +99,10 @@ struct ParameterSet
 	bool out_data_interaction;               ///< Output int_* file
 	
 	double ft_max;							///< max tangential force in friction_model = 5
-	bool fixed_dt;							///< Use constant dt 
+	bool fixed_dt;							///< Use constant dt
+	
+	bool magnetic;
+	double magnetic_range; 
 };
 
 

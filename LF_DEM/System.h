@@ -65,6 +65,7 @@ private:
 	double system_volume;
 	double shear_strain;
 	double lub_max_gap;
+	double magnetic_range;
 	int linalg_size;
 	int dof;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
@@ -88,8 +89,6 @@ private:
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
 	void buildMagneticForceTerms(bool);
-	double (System::*calcInteractionRange)(const int&, const int&);
-	double calcLubricationRange(const int& i, const int& j);
 	void computeVelocities(bool divided_velocities);
 	void computeVelocityComponents();
 	void computeShearRate();
@@ -317,6 +316,9 @@ private:
 		}
 	}
 	/*************************************************************/
+	double (System::*calcInteractionRange)(const int&, const int&);
+	double calcLubricationRange(const int& i, const int& j);
+	double calcMagneticInteractionRange(const int&, const int&);
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{

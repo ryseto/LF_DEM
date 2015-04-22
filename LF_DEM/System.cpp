@@ -108,6 +108,7 @@ void System::importParameterSet(ParameterSet &ps)
 	critical_load = p.critical_load;
 	magnetic = p.magnetic;
 	monolayer = p.monolayer;
+	magnetic_range = p.magnetic_range;
 	set_sd_coeff(p.sd_coeff);
 	set_integration_method(p.integration_method);
 	mu_static = p.mu_static;
@@ -361,7 +362,11 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	calcInteractionRange = &System::calcLubricationRange;
+	if (magnetic) {
+		calcInteractionRange = &System::calcMagneticInteractionRange;
+	} else {
+		calcInteractionRange = &System::calcLubricationRange;
+	}
 	
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
@@ -952,6 +957,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
+	//			if (  )
 				if (mat) {
 					vec3d nr_vec = (*it)->get_nvec();
 					(*it)->lubrication.calcXFunctions();
@@ -1726,3 +1732,11 @@ double System::calcLubricationRange(const int& i, const int& j)
 		return radius[i]+radius[j]+lub_max_gap*minradius;
 	}
 }
+
+double System::calcMagneticInteractionRange(const int& i, const int& j)
+{
+	return magnetic_range*0.5*(radius[i]+radius[j]);
+}
+
+
+

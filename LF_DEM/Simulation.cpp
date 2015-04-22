@@ -718,6 +718,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.critical_load = str2bool(value);
 	} else if (keyword == "magnetic") {
 		p.magnetic = str2bool(value);
+	} else if (keyword == "magnetic_range") {
+		p.magnetic_range = atof(value.c_str());
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {

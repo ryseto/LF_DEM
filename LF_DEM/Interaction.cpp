@@ -79,6 +79,14 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	if (sys->magnetic) {
 		magneticforce.activate();
 	}
+	
+//	double lub_range = (sys->*System::calcInteractionRange)(p0, p1);
+	
+
+	
+//	sq_lub_range = lub_range*lub_range;
+
+	
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.setInteractionData();
@@ -87,6 +95,11 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	} else {
 		contact.deactivate();
 	}
+	
+	
+	
+	
+	
 	contact_state_changed_after_predictor = false;
 	lubrication.getInteractionData();
 	lubrication.updateResistanceCoeff();

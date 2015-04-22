@@ -49,6 +49,7 @@ private:
 	double ro; // ro = a0+a1;
 	double ro_12; // ro_12 = ro/2
 	double a_reduced; // 1/a_reduced = 1/a0 + 1/a1
+	double sq_lub_range;
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
