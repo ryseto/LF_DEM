@@ -14,7 +14,7 @@
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 
 System::System():
-maxnb_interactionpair_per_particle(15),
+maxnb_interactionpair_per_particle(100),
 cohesion(false),
 brownian(false),
 repulsiveforce(false),
@@ -108,7 +108,7 @@ void System::importParameterSet(ParameterSet &ps)
 	critical_load = p.critical_load;
 	magnetic = p.magnetic;
 	monolayer = p.monolayer;
-	magnetic_range = p.magnetic_range;
+	interaction_range = p.interaction_range;
 	set_sd_coeff(p.sd_coeff);
 	set_integration_method(p.integration_method);
 	mu_static = p.mu_static;
@@ -363,7 +363,7 @@ void System::setupSystem(string control)
 		exit(1);
 	}
 	if (magnetic) {
-		calcInteractionRange = &System::calcMagneticInteractionRange;
+		calcInteractionRange = &System::calcLongInteractionRange;
 	} else {
 		calcInteractionRange = &System::calcLubricationRange;
 	}
@@ -525,8 +525,14 @@ void System::setupSystem(string control)
 		/* force unit =
 		 *
 		 */
+		magnetic_moment_norm.resize(np);
 		for (int i=0; i<np; i++) {
-			magnetic_moment[i] = randUniformSphere(20);
+			if (i < 250) {
+				magnetic_moment[i] = randUniformSphere(20);
+			} else {
+				magnetic_moment[i] = randUniformSphere(1);
+			}
+			magnetic_moment_norm[i] = magnetic_moment[i].norm();
 		}
 	}
 }
@@ -788,7 +794,7 @@ void System::timeStepMoveCorrector()
 	}
 	if (magnetic) {
 		for (int i=0; i<np; i++) {
-			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
 		}
 	}
 	checkNewInteraction();
@@ -805,7 +811,7 @@ void System::timeEvolution(double time_end)
 	 strain rate vs stress controlled choices. On the last time step,
 	 the stress is computed.
 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-	 
+	 r
 	 \param time_end Time to reach.
 	 */
 	static bool firsttime = true;
@@ -826,6 +832,12 @@ void System::timeEvolution(double time_end)
 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
+	}
+	if (magnetic) {
+		for (int i=0; i<np ; i++) {
+			double norm = magnetic_moment[i].norm();
+			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
+		}
 	}
 }
 
@@ -850,8 +862,8 @@ void System::checkNewInteraction()
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double range = (this->*calcInteractionRange)(i, *it);
-					double sq_dist_lim = range*range;
+					double scaled_interaction_range = (this->*calcInteractionRange)(i, *it);
+					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
 						if (deactivated_interaction.empty()) {
@@ -864,7 +876,13 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
-						interaction[interaction_new].activate(i, *it, range);
+						double lub_range;
+						if (!magnetic) {
+							lub_range = scaled_interaction_range;
+						} else {
+							lub_range = calcLubricationRange(i, *it);
+						}
+						interaction[interaction_new].activate(i, *it, scaled_interaction_range, lub_range);
 					}
 				}
 			}
@@ -957,29 +975,30 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-	//			if (  )
-				if (mat) {
-					vec3d nr_vec = (*it)->get_nvec();
-					(*it)->lubrication.calcXFunctions();
-					stokes_solver.addToDiagBlock(nr_vec, i,
-												 (*it)->lubrication.scaledXA0(), 0, 0, 0);
-					stokes_solver.addToDiagBlock(nr_vec, j,
-												 (*it)->lubrication.scaledXA3(), 0, 0, 0);
-					stokes_solver.setOffDiagBlock(nr_vec, i, j,
-												  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
-				}
-				if (rhs) {
-					double GEi[3];
-					double GEj[3];
-					(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
-					if (shearrate_is_1 == false) {
-						for (int u=0; u<3; u++) {
-							GEi[u] *= shear_rate;
-							GEj[u] *= shear_rate;
-						}
+				if ((*it)->activatedLubrication()) {
+					if (mat) {
+						vec3d nr_vec = (*it)->get_nvec();
+						(*it)->lubrication.calcXFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 (*it)->lubrication.scaledXA0(), 0, 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 (*it)->lubrication.scaledXA3(), 0, 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+													  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
-					stokes_solver.addToRHSForce(i, GEi);
-					stokes_solver.addToRHSForce(j, GEj);
+					if (rhs) {
+						double GEi[3];
+						double GEj[3];
+						(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+						if (shearrate_is_1 == false) {
+							for (int u=0; u<3; u++) {
+								GEi[u] *= shear_rate;
+								GEj[u] *= shear_rate;
+							}
+						}
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+					}
 				}
 			}
 		}
@@ -998,44 +1017,46 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				if (mat) {
-					vec3d nr_vec = (*it)->get_nvec();
-					(*it)->lubrication.calcXYFunctions();
-					stokes_solver.addToDiagBlock(nr_vec, i,
-												 (*it)->lubrication.scaledXA0(),
-												 (*it)->lubrication.scaledYA0(),
-												 (*it)->lubrication.scaledYB0(),
-												 (*it)->lubrication.scaledYC0());
-					stokes_solver.addToDiagBlock(nr_vec, j,
-												 (*it)->lubrication.scaledXA3(),
-												 (*it)->lubrication.scaledYA3(),
-												 (*it)->lubrication.scaledYB3(),
-												 (*it)->lubrication.scaledYC3());
-					stokes_solver.setOffDiagBlock(nr_vec, i, j,
-												  (*it)->lubrication.scaledXA1(),
-												  (*it)->lubrication.scaledYA1(),
-												  (*it)->lubrication.scaledYB2(),
-												  (*it)->lubrication.scaledYB1(),
-												  (*it)->lubrication.scaledYC1());
-				}
-				if (rhs) {
-					double GEi[3];
-					double GEj[3];
-					double HEi[3];
-					double HEj[3];
-					(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
-					if (shearrate_is_1 == false) {
+				if ((*it)->activatedLubrication()) {
+					if (mat) {
+						vec3d nr_vec = (*it)->get_nvec();
+						(*it)->lubrication.calcXYFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 (*it)->lubrication.scaledXA0(),
+													 (*it)->lubrication.scaledYA0(),
+													 (*it)->lubrication.scaledYB0(),
+													 (*it)->lubrication.scaledYC0());
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 (*it)->lubrication.scaledXA3(),
+													 (*it)->lubrication.scaledYA3(),
+													 (*it)->lubrication.scaledYB3(),
+													 (*it)->lubrication.scaledYC3());
+						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+													  (*it)->lubrication.scaledXA1(),
+													  (*it)->lubrication.scaledYA1(),
+													  (*it)->lubrication.scaledYB2(),
+													  (*it)->lubrication.scaledYB1(),
+													  (*it)->lubrication.scaledYC1());
+					}
+					if (rhs) {
+						double GEi[3];
+						double GEj[3];
+						double HEi[3];
+						double HEj[3];
+						(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+						if (shearrate_is_1 == false) {
 						for (int u=0; u<3; u++) {
 							GEi[u] *= shear_rate;
 							GEj[u] *= shear_rate;
 							HEi[u] *= shear_rate;
 							HEj[u] *= shear_rate;
 						}
+						}
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+						stokes_solver.addToRHSTorque(i, HEi);
+						stokes_solver.addToRHSTorque(j, HEj);
 					}
-					stokes_solver.addToRHSForce(i, GEi);
-					stokes_solver.addToRHSForce(j, GEj);
-					stokes_solver.addToRHSTorque(i, HEi);
-					stokes_solver.addToRHSTorque(j, HEj);
 				}
 			}
 		}
@@ -1620,6 +1641,7 @@ void System::analyzeState()
 	max_fc_normal = evaluateMaxFcNormal();
 	max_fc_tan = evaluateMaxFcTangential();
 	countNumberOfContact();
+	cerr << "magnetic_moment[0] " << magnetic_moment[0].norm() << endl;
 }
 
 void System::setSystemVolume(double depth)
@@ -1733,9 +1755,9 @@ double System::calcLubricationRange(const int& i, const int& j)
 	}
 }
 
-double System::calcMagneticInteractionRange(const int& i, const int& j)
+double System::calcLongInteractionRange(const int& i, const int& j)
 {
-	return magnetic_range*0.5*(radius[i]+radius[j]);
+	return interaction_range*0.5*(radius[i]+radius[j]);
 }
 
 

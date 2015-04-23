@@ -40,7 +40,8 @@ void Interaction::calcNormalVectorDistanceGap()
 /* Activate interaction between particles i and j.
  * Always j>i is satisfied.
  */
-void Interaction::activate(unsigned short i, unsigned short j, double range)
+void Interaction::activate(unsigned short i, unsigned short j,
+						   double interaction_range_, double lub_range_)
 {
 	active = true;
 	if (j > i) {
@@ -65,7 +66,8 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	 */
 	a_reduced = a0*a1/(a0+a1);
 	set_ro(a0+a1); // ro=a0+a1
-	interaction_range = range;
+	interaction_range = interaction_range_;
+	lub_range = lub_range_;
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -80,13 +82,6 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 		magneticforce.activate();
 	}
 	
-//	double lub_range = (sys->*System::calcInteractionRange)(p0, p1);
-	
-
-	
-//	sq_lub_range = lub_range*lub_range;
-
-	
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.setInteractionData();
@@ -95,10 +90,6 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	} else {
 		contact.deactivate();
 	}
-	
-	
-	
-	
 	
 	contact_state_changed_after_predictor = false;
 	lubrication.getInteractionData();
@@ -125,8 +116,9 @@ void Interaction::updateState(bool &deactivated)
 	}
 	calcNormalVectorDistanceGap();
 	updateContactState(deactivated);
-
-	lubrication.updateResistanceCoeff();
+	if (activatedLubrication()) {
+		lubrication.updateResistanceCoeff();
+	}
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}
@@ -249,3 +241,4 @@ double Interaction::getNormalVelocity()
 	}
 	return dot(d_velocity, nvec);
 }
+

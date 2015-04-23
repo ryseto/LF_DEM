@@ -65,7 +65,7 @@ private:
 	double system_volume;
 	double shear_strain;
 	double lub_max_gap;
-	double magnetic_range;
+	double interaction_range;
 	int linalg_size;
 	int dof;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
@@ -96,6 +96,7 @@ private:
 	void torqueReset();
 	void stressReset();
 	void computeMaxNAVelocity();
+	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
 	double evaluateMaxDispTan();
@@ -172,13 +173,13 @@ private:
 	vec3d *ang_vel_brownian;
 	vec3d *vel_magnetic;
 	vec3d *ang_vel_magnetic;
-	
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
 	vec3d *magnetic_moment;
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
+	vector <double> magnetic_moment_norm;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
@@ -316,9 +317,8 @@ private:
 		}
 	}
 	/*************************************************************/
-	double (System::*calcInteractionRange)(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
-	double calcMagneticInteractionRange(const int&, const int&);
+	double calcLongInteractionRange(const int&, const int&);
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{

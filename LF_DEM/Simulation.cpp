@@ -429,7 +429,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
-	if (filename_parameters == "init_relax.txt") {
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
 	}
 	sys.setupShearFlow(true);
@@ -506,7 +507,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
-	if (filename_parameters == "init_relax.txt") {
+	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
@@ -718,8 +719,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.critical_load = str2bool(value);
 	} else if (keyword == "magnetic") {
 		p.magnetic = str2bool(value);
-	} else if (keyword == "magnetic_range") {
-		p.magnetic_range = atof(value.c_str());
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
@@ -746,6 +745,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
 		p.lub_max_gap = atof(value.c_str());
+	} else if (keyword == "interaction_range") {
+		p.interaction_range = atof(value.c_str());
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {

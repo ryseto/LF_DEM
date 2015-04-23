@@ -50,6 +50,7 @@ struct ParameterSet
 	bool rolling_friction;                   ///< Activate rolling friction.
 	double time_end;                 ///< Time of the simulation.
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
+	double interaction_range;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -102,7 +103,7 @@ struct ParameterSet
 	bool fixed_dt;							///< Use constant dt
 	
 	bool magnetic;
-	double magnetic_range; 
+
 };
 
 

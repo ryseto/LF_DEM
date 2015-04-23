@@ -49,7 +49,6 @@ private:
 	double ro; // ro = a0+a1;
 	double ro_12; // ro_12 = ro/2
 	double a_reduced; // 1/a_reduced = 1/a0 + 1/a1
-	double sq_lub_range;
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
@@ -71,6 +70,7 @@ private:
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
+	double lub_range;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -113,8 +113,13 @@ public:
 	 */
 	void updateState(bool &deactivated);
 	void updateContactState(bool &deactivated);
-	void activate(unsigned short i, unsigned short j, double range);
+	void activate(unsigned short i, unsigned short j,
+				  double interaction_range_, double lub_range_);
 	void deactivate();
+	inline bool activatedLubrication() {
+		return (r < lub_range);
+	}
+
 	inline vec3d relative_surface_velocity_direction() {
 		return relative_surface_velocity/relative_surface_velocity.norm();
 	}

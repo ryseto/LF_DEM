@@ -83,6 +83,7 @@ printf OUT "\@5 255 100 100 \n";
 printf OUT "\@6 50 200 50 \n";
 printf OUT "\@7 255 255 0 \n";
 printf OUT "\@8 255 255 255\n";
+printf OUT "\@9 150 150 150\n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";
@@ -119,7 +120,6 @@ while (1){
 	last unless defined $line;
 	&InInteractions;
 	&OutYaplotData;
-	
 	$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 	$energy_diff = $total_energy_dis - $total_energy;
 	if ($shear_strain > $shear_strain_next ) {
@@ -217,7 +217,7 @@ sub InParticles {
 			$magmom_x[$i] = $mx;
 			$magmom_y[$i] = $my;
 			$magmom_z[$i] = $mz;
-			
+			$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
 			if ($radius_max < $a){
 				$radius_max = $a;
 			}
@@ -428,14 +428,24 @@ sub OutYaplotData{
 	#	}
 	
 	printf OUT "y 1\n";
+	
+	
     printf OUT "@ 8\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
+	$switch = 0;
     for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
 		}
+		
+		if ($switch == 0 && 
+			$i >= 1 && abs($mm[$i]-$mm[$i-1]) > 0.01){
+			printf OUT "@ 9\n";
+			$switch = 1;
+		}
+		
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
 		#			printf OUT "@ $col\n";
