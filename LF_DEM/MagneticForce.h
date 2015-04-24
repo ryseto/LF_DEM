@@ -46,11 +46,19 @@ public:
 	void activate();
 	//===== forces/stresses  ========================== //
 	void calcForceToruqe();
+	void resetForceToruqe()
+	{
+		force_vector0.reset();
+		torque0.reset();
+		torque1.reset();
+	}
 	void addUpForceTorque();
 	vec3d getForceVector()
 	{
 		return force_vector0;
 	}
+	double calcEnergy();
 	void calcStressXF();
+	
 };
 #endif /* defined(__LF_DEM__MagneticForce__) */

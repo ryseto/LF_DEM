@@ -682,6 +682,34 @@ bool str2bool(string value)
 	}
 }
 
+vec3d str2vec3d(string value)
+{
+	string::size_type l1 = value.find("(", 0);
+	if (l1 == string::npos) {
+		exit(1);
+	}
+	string::size_type l2 = value.find(",", l1);
+	if (l2 == string::npos) {
+		exit(1);
+	}
+	string::size_type l3 = value.find(",", l2+1);
+	if (l3 == string::npos) {
+		exit(1);
+	}
+	string::size_type l4 = value.find(")", l3+1);
+	if (l4 == string::npos) {
+		exit(1);
+	}
+	cerr << l1 << ' ';
+	cerr << (string::size_type)l2 << ' ' ;
+	cerr << (string::size_type)l3 << ' ' << l4 << endl;
+	cerr << value << endl;
+	double vx = atof(value.substr(l1+1, l2-l1-1).c_str());
+	double vy = atof(value.substr(l2+1, l3-l2-1).c_str());
+	double vz = atof(value.substr(l3+1, l4-l3-1).c_str());
+	return vec3d(vx,vy,vz);
+}
+
 void Str2KeyValue(string &str_parameter,
 				  string &keyword,
 				  string &value)
@@ -801,6 +829,12 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.ft_max = atof(value.c_str());
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
+	} else if (keyword == "ratio_nonmagnetic") {
+		p.ratio_nonmagnetic = atof(value.c_str());
+	} else if (keyword == "magnetic_dipole_moment") {
+		p.magnetic_dipole_moment = atof(value.c_str());
+	} else if (keyword == "external_magnetic_field") {
+		p.external_magnetic_field =  str2vec3d(value);
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -1060,7 +1094,8 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-	
+	p.magnetic_dipole_moment = 1;
+	p.ratio_nonmagnetic = 0;
 }
 
 void Simulation::importInitialPositionFile()
@@ -1388,6 +1423,7 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51
 	fout_rheo << sys.max_contact_gap << ' '; //52
+	fout_rheo << sys.get_total_energy() << ' '; // 53;
 	fout_rheo << endl;
 }
 

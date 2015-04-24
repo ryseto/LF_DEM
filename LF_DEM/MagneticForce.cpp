@@ -46,13 +46,14 @@ void MagneticForce::calcForceToruqe()
 	vec3d nvec = interaction->get_nvec();
 	vec3d m0 = sys->magnetic_moment[p0];
 	vec3d m1 = sys->magnetic_moment[p1];
-
-	force_vector0 = -(coeffient/r_cubic/r)*(dot(m0, nvec)*m1
-											+dot(m1, nvec)*m0
-											+dot(m0, m1)*nvec
-											-5*dot(m0,nvec)*dot(m1,nvec)*nvec);
-	vec3d b0 = (coeffient/r_cubic)*(3*dot(nvec, m0)*nvec-m0);
-	vec3d b1 = (coeffient/r_cubic)*(3*dot(nvec, m1)*nvec-m1);
+	/*
+	 * magnetic_coeffient = (3*mu0)/(4*M_PI)
+	 */
+	force_vector0 = -(coeffient/(r_cubic*r))*(dot(m1, nvec)*m0+dot(m0, nvec)*m1
+											  +dot(m1, m0)*nvec
+											  -5*dot(m0,nvec)*dot(m1,nvec)*nvec);
+	vec3d b0 = (coeffient/r_cubic)*(3*dot(nvec, m0)*(nvec)-m0);
+	vec3d b1 = (coeffient/r_cubic)*(3*dot(nvec, m1)*(nvec)-m1);
 	torque0 = cross(m0, b1);
 	torque1 = cross(m1, b0);
 }
@@ -63,4 +64,19 @@ void MagneticForce::addUpForceTorque()
 	sys->magnetic_force[p1] -= force_vector0;
 	sys->magnetic_torque[p0] += torque0;
 	sys->magnetic_torque[p1] += torque1;
+}
+
+double MagneticForce::calcEnergy()
+{
+	double energy;
+	double r = interaction->get_r();
+	double r_cubic = r*r*r;
+	vec3d m0 = sys->magnetic_moment[p0];
+	vec3d m1 = sys->magnetic_moment[p1];
+	vec3d rvec = interaction->get_rvec();
+	/*
+	 * magnetic_coeffient/3 = mu0/(4*M_PI)
+	 */
+	energy = -(coeffient/(3*r_cubic))*(3*dot(m0, rvec)*dot(m1, rvec)-dot(m0,m1));
+	return energy;
 }

@@ -128,11 +128,8 @@ while (1){
 		printf OUTE "$shear_strain $total_energy_dis $total_energy $energy_diff  $shear_stress\n";
 		$total_energy_dis = 0;
 		$shear_strain_previous = $shear_strain;
-	}
-	
-	$num ++;
+	}	
 }
-
 
 open (OUTLAST, "> LastConfig.dat");
 
@@ -144,8 +141,6 @@ for ($i = 0; $i < $np; $i ++){
 	printf OUTLAST "$xx $yy $zz $radius[$i]\n";
 }
 close (OUTLAST);
-
-
 
 close (OUT);
 close (OUTE);
@@ -441,7 +436,7 @@ sub OutYaplotData{
 		}
 		
 		if ($switch == 0 && 
-			$i >= 1 && abs($mm[$i]-$mm[$i-1]) > 0.01){
+			$i >= 1 && $mm[$i] == 0){
 			printf OUT "@ 9\n";
 			$switch = 1;
 		}
@@ -1001,18 +996,19 @@ sub OutMagMoment {
 	($i) = @_;
 	$a = $radius[$i];
 	$xi = $posx[$i];
-	$yi = $posy[$i]-0.02;
+	$yi = $posy[$i];
 	$zi = $posz[$i];
-	#	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
+	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
 	#	printf "$mm\n";
-	$mm = 20;
 	
-	$xa = $xi; #- $magmom_x[$i]/$mm ;
-	$ya = $yi; #- $magmom_y[$i]/$mm ;
-	$za = $zi; #- $magmom_z[$i]/$mm ;
-	$xb = $xi + $magmom_x[$i]/$mm ;
-	$yb = $yi + $magmom_y[$i]/$mm ;
-	$zb = $zi + $magmom_z[$i]/$mm ;
-	printf OUT "s $xa $ya $za $xb $yb $zb\n";
+	if ($mm > 0) {
+		$xa = $xi; #- $magmom_x[$i]/$mm ;
+		$ya = $yi; #- $magmom_y[$i]/$mm ;
+		$za = $zi; #- $magmom_z[$i]/$mm ;
+		$xb = $xi + $magmom_x[$i]/$mm ;
+		$yb = $yi - $magmom_y[$i]/$mm ;
+		$zb = $zi + $magmom_z[$i]/$mm ;
+		printf OUT "s $xa $ya $za $xb $yb $zb\n";
+	}
 }
 

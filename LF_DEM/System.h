@@ -66,6 +66,7 @@ private:
 	double shear_strain;
 	double lub_max_gap;
 	double interaction_range;
+	double total_energy;
 	int linalg_size;
 	int dof;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
@@ -210,7 +211,11 @@ private:
 	double mu_rolling; // rolling friction coeffient
 	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
-	double magnetic_coeffient;
+	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
+	double magnetic_dipole_moment;
+	double ratio_nonmagnetic; //
+	int num_magnetic;
+	vec3d external_magnetic_field;
 	/* sd_coeff:
 	 * Full Stokes drag is given by sd_coeff = 1.
 	 * sd_coeff = 0 makes the resistance matrix singular.
@@ -308,6 +313,7 @@ private:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
+	void calcPotentialEnergy();
 	void setupShearFlow(bool activate)
 	{
 		if (activate) {
@@ -319,7 +325,7 @@ private:
 	/*************************************************************/
 	double calcLubricationRange(const int& i, const int& j);
 	double calcLongInteractionRange(const int&, const int&);
-
+	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
@@ -455,6 +461,11 @@ private:
 		return total_num_timesteps;
 	}
 
+	double get_total_energy()
+	{
+		return total_energy;
+	}
+	
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */

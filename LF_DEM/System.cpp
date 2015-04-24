@@ -110,7 +110,7 @@ void System::importParameterSet(ParameterSet &ps)
 	monolayer = p.monolayer;
 	interaction_range = p.interaction_range;
 	set_sd_coeff(p.sd_coeff);
-	set_integration_method(p.integration_method);
+	integration_method = p.integration_method;
 	mu_static = p.mu_static;
 	if (p.mu_dynamic == -1) {
 		mu_dynamic = p.mu_static;
@@ -119,6 +119,9 @@ void System::importParameterSet(ParameterSet &ps)
 	}
 	mu_rolling = p.mu_rolling;
 	set_disp_max(p.disp_max);
+	ratio_nonmagnetic = p.ratio_nonmagnetic;
+	magnetic_dipole_moment = p.magnetic_dipole_moment;
+	external_magnetic_field = p.external_magnetic_field;
 }
 
 void System::allocateRessources()
@@ -195,6 +198,10 @@ void System::allocateRessources()
 		magnetic_moment = new vec3d [np];
 		magnetic_force = new vec3d [np];
 		magnetic_torque = new vec3d [np];
+		for (int i=0; i<np; i++) {
+			magnetic_force[i].reset();
+			magnetic_torque[i].reset();
+		}
 	}
 }
 
@@ -526,11 +533,14 @@ void System::setupSystem(string control)
 		 *
 		 */
 		magnetic_moment_norm.resize(np);
+		num_magnetic = np-round(np*ratio_nonmagnetic);
+		cerr << "number of magnetic particles: " << num_magnetic << endl;
 		for (int i=0; i<np; i++) {
-			if (i < 250) {
-				magnetic_moment[i] = randUniformSphere(20);
+			if (i < num_magnetic) {
+				magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
+				//magnetic_moment[i].set(0, magnetic_dipole_moment, 0);
 			} else {
-				magnetic_moment[i] = randUniformSphere(1);
+				magnetic_moment[i].set(0,0,0);
 			}
 			magnetic_moment_norm[i] = magnetic_moment[i].norm();
 		}
@@ -714,8 +724,10 @@ void System::timeStepMove()
 		displacement(i, velocity[i]*dt);
 	}
 	if (magnetic) {
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<num_magnetic; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+			double norm = magnetic_moment[i].norm();
+			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
 		}
 	}
 	if (twodimension) {
@@ -760,12 +772,11 @@ void System::timeStepMovePredictor()
 		}
 	}
 	if (magnetic) {
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<num_magnetic; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 		}
 	}
 	updateInteractions();
-	
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
@@ -793,8 +804,10 @@ void System::timeStepMoveCorrector()
 		}
 	}
 	if (magnetic) {
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<num_magnetic; i++) {
 			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
+			double norm = magnetic_moment[i].norm();
+			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
 		}
 	}
 	checkNewInteraction();
@@ -832,12 +845,6 @@ void System::timeEvolution(double time_end)
 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
-	}
-	if (magnetic) {
-		for (int i=0; i<np ; i++) {
-			double norm = magnetic_moment[i].norm();
-			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
-		}
 	}
 }
 
@@ -1088,7 +1095,8 @@ void System::generateBrownianForces()
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-	if (twodimension) {
+	if (twodimension
+		&& !monolayer) {
 		for (int i=0; i<np; i++) {
 			brownian_force[6*i+1] = 0; // Fy
 			brownian_force[6*i+3] = 0; // Tx
@@ -1127,9 +1135,16 @@ void System::setRepulsiveForceToParticle()
 void System::setMagneticForceToParticle()
 {
 	if (magnetic) {
-		for (int i=0; i<np; i++) {
-			magnetic_force[i].reset();
-			magnetic_torque[i].reset();
+		if (external_magnetic_field.is_zero()) {
+			for (int i=0; i<num_magnetic; i++) {
+				magnetic_force[i].reset();
+				magnetic_torque[i].reset();
+			}
+		} else {
+			for (int i=0; i<num_magnetic; i++) {
+				magnetic_force[i].reset();
+				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
+			}
 		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
@@ -1641,8 +1656,31 @@ void System::analyzeState()
 	max_fc_normal = evaluateMaxFcNormal();
 	max_fc_tan = evaluateMaxFcTangential();
 	countNumberOfContact();
+	calcPotentialEnergy();
 	cerr << "magnetic_moment[0] " << magnetic_moment[0].norm() << endl;
 }
+
+void System::calcPotentialEnergy()
+{
+	total_energy = 0;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			if (interaction[k].is_contact()){
+				total_energy += interaction[k].contact.calcEnergy();
+			}
+			if (repulsive_force) {
+				total_energy +=  interaction[k].repulsion.calcEnergy();
+			}
+			if (magnetic) {
+				total_energy +=  interaction[k].magneticforce.calcEnergy();
+			}
+		}
+	}
+	for (int i=0; i<num_magnetic; i++) {
+		total_energy += -dot(magnetic_moment[i], external_magnetic_field);
+	}
+}
+
 
 void System::setSystemVolume(double depth)
 {

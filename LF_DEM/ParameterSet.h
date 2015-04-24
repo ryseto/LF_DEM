@@ -103,7 +103,9 @@ struct ParameterSet
 	bool fixed_dt;							///< Use constant dt
 	
 	bool magnetic;
-
+	double magnetic_dipole_moment;
+	double ratio_nonmagnetic;
+	vec3d external_magnetic_field;
 };
 
 

@@ -126,7 +126,12 @@ void Interaction::updateState(bool &deactivated)
 		repulsion.calcForce();
 	}
 	if (sys->magnetic) {
-		magneticforce.calcForceToruqe();
+		if (sys->magnetic_moment_norm[p0] != 0
+			&& sys->magnetic_moment_norm[p1] != 0) {
+			magneticforce.calcForceToruqe();
+		} else {
+			magneticforce.resetForceToruqe();
+		}
 	}
 }
 

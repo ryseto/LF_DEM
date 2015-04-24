@@ -366,3 +366,18 @@ void Contact::calcContactStress()
 		contact_stresslet_XF_tan.reset();
 	}
 }
+
+double Contact::calcEnergy()
+{
+	double energy = 0;
+	double overlap = -interaction->get_reduced_gap();
+	double sq_tan_norm = disp_tan.sq_norm();
+	double sq_disp_rolling = disp_rolling.sq_norm();
+	energy += 0.5*kn_scaled*overlap*overlap;
+	energy += 0.5*kt_scaled*sq_tan_norm;
+	if (sys->rolling_friction) {
+		energy += 0.5*kr_scaled*sq_disp_rolling;
+	}
+	return energy;
+}
+

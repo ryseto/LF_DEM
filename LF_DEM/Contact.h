@@ -118,5 +118,6 @@ public:
 	{
 		return contact_stresslet_XF_tan;
 	}
+	double calcEnergy();
 };
 #endif /* defined(__LF_DEM__Contact__) */
