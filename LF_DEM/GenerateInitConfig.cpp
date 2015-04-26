@@ -165,7 +165,6 @@ double GenerateInitConfig::computeGradient()
 	}
 	unsigned short i,j;
 	double r, rcont;
-	vec3d nr_vec;
 	double amp, amp2;
 	double energy = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
@@ -173,7 +172,7 @@ double GenerateInitConfig::computeGradient()
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();
 			rcont = sys.interaction[k].get_ro();
-			nr_vec = sys.interaction[k].get_nvec();
+			vec3d &nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;

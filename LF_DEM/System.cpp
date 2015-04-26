@@ -280,8 +280,8 @@ void System::updateUnscaledContactmodel()
 			kr = kr_master;
 		}
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
-		
 	}
+	
 	if (!stress_controlled) {
 		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	} else {
@@ -984,7 +984,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			if (j > i) {
 				if ((*it)->activatedLubrication()) {
 					if (mat) {
-						vec3d nr_vec = (*it)->get_nvec();
+						vec3d &nr_vec = (*it)->nvec;
 						(*it)->lubrication.calcXFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i,
 													 (*it)->lubrication.scaledXA0(), 0, 0, 0);
@@ -1026,7 +1026,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			if (j > i) {
 				if ((*it)->activatedLubrication()) {
 					if (mat) {
-						vec3d nr_vec = (*it)->get_nvec();
+						vec3d &nr_vec = (*it)->nvec;
 						(*it)->lubrication.calcXYFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i,
 													 (*it)->lubrication.scaledXA0(),

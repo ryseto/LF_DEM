@@ -1020,13 +1020,13 @@ void Simulation::setDefaultParameters()
 	p.brownian = false;
 	p.repulsiveforce = false;
 	p.cohesion = false;
-	
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
+	p.interaction_range = 5;
 	/*
 	 * Stokes drag coeffient
 	 */
@@ -1528,7 +1528,7 @@ void Simulation::outputConfigurationData()
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d nr_vec = sys.interaction[k].get_nvec();
+				vec3d& nr_vec = sys.interaction[k].nvec;
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
 				/* contact.state:

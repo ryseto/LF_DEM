@@ -9,14 +9,15 @@
 
 struct ParameterSet
 {
-	bool brownian;
-	bool repulsiveforce;
-	bool cohesion;
-	bool critical_load;
+	bool brownian;						///< Brownian force
+	bool repulsiveforce;				///< Repulsive force exp(-kh)
+	bool cohesion;						///< Cohesive force
+	bool critical_load;					///< Normal force required to activate friction
+	bool magnetic;						///< Magnetic
 	
-	double ratio_repulsion;
-	double ratio_critical_load;
-	double ratio_cohesion;
+	double ratio_repulsion;				///<
+	double ratio_critical_load;			///<
+	double ratio_cohesion;				///<
 	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
@@ -102,7 +103,7 @@ struct ParameterSet
 	double ft_max;							///< max tangential force in friction_model = 5
 	bool fixed_dt;							///< Use constant dt
 	
-	bool magnetic;
+
 	double magnetic_dipole_moment;
 	double ratio_nonmagnetic;
 	vec3d external_magnetic_field;

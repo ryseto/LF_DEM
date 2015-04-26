@@ -58,8 +58,6 @@ private:
 	double r; // center-center distance
 	int zshift;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	vec3d rvec; // vector center to center
-	vec3d nvec; // normal vector
 	double nxnx;
 	double nxny;
 	double nxnz;
@@ -96,6 +94,8 @@ public:
 	RepulsiveForce repulsion;
 	MagneticForce magneticforce;
 	vec3d relative_surface_velocity;
+	vec3d rvec; // vector center to center
+	vec3d nvec; // normal vector
 
 	/*********************************
 	 *       Public Methods          *
@@ -185,14 +185,14 @@ public:
 	{
 		return r-ro;
 	}
-	inline vec3d get_nvec()
-	{
-		return nvec;
-	}
-	inline vec3d get_rvec()
-	{
-		return rvec;
-	}
+//	inline vec3d get_nvec()
+//	{
+//		return nvec;
+//	}
+//	inline vec3d get_rvec()
+//	{
+//		return rvec;
+//	}
 	double getNormalVelocity();
 	double getRelativeVelocity()
 	{
