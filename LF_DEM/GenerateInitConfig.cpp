@@ -172,7 +172,7 @@ double GenerateInitConfig::computeGradient()
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();
 			rcont = sys.interaction[k].get_ro();
-			vec3d &nr_vec = sys.interaction[k].nvec;
+			const vec3d &nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;

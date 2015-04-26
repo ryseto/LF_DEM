@@ -31,7 +31,6 @@
 #include "Averager.h"
 #include "cholmod.h"
 #include "MersenneTwister.h"
-
 using namespace std;
 
 class Simulation;
@@ -144,14 +143,10 @@ private:
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
 	bool monolayer;
-
 	double critical_normal_force;
 	double volume_fraction;
-
-
 	bool in_predictor;
 	bool in_corrector;
-
 	vec3d *position;
 	Interaction *interaction;
 	BoxSet boxset;

@@ -185,14 +185,6 @@ public:
 	{
 		return r-ro;
 	}
-//	inline vec3d get_nvec()
-//	{
-//		return nvec;
-//	}
-//	inline vec3d get_rvec()
-//	{
-//		return rvec;
-//	}
 	double getNormalVelocity();
 	double getRelativeVelocity()
 	{

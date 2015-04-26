@@ -43,9 +43,9 @@ void MagneticForce::calcForceToruqe()
 	 */
 	double r = interaction->get_r();
 	double r_cubic = r*r*r;
-	vec3d &nvec = interaction->nvec;
-	vec3d &m0 = sys->magnetic_moment[p0];
-	vec3d &m1 = sys->magnetic_moment[p1];
+	const vec3d &nvec = interaction->nvec;
+	const vec3d &m0 = sys->magnetic_moment[p0];
+	const vec3d &m1 = sys->magnetic_moment[p1];
 	/*
 	 * magnetic_coeffient = (3*mu0)/(4*M_PI)
 	 */
@@ -71,9 +71,9 @@ double MagneticForce::calcEnergy()
 	double energy;
 	double r = interaction->get_r();
 	double r_cubic = r*r*r;
-	vec3d &m0 = sys->magnetic_moment[p0];
-	vec3d &m1 = sys->magnetic_moment[p1];
-	vec3d &rvec = interaction->rvec;
+	const vec3d &m0 = sys->magnetic_moment[p0];
+	const vec3d &m1 = sys->magnetic_moment[p1];
+	const vec3d &rvec = interaction->rvec;
 	/*
 	 * magnetic_coeffient/3 = mu0/(4*M_PI)
 	 */

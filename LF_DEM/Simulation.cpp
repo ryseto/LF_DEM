@@ -1486,9 +1486,9 @@ void Simulation::outputConfigurationData()
 		fout_particle << sys.dimensionless_number << ' ';
 		fout_particle << sys.target_stress_input << endl;
 		for (int i=0; i<np; i++) {
-			vec3d &r = pos[i];
-			vec3d &v = vel[i];
-			vec3d &o = sys.ang_velocity[i];
+			const vec3d &r = pos[i];
+			const vec3d &v = vel[i];
+			const vec3d &o = sys.ang_velocity[i];
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
 			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
 			double brownian_xzstressGU = 0;

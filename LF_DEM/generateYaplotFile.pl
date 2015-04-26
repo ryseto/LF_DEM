@@ -669,7 +669,12 @@ sub OutYaplotData{
 	printf OUT "@ 0\n";
 	printf OUT "r 0.1\n";
 	for ($i = 0; $i < $np; $i ++){
-		&OutMagMoment($i);
+		&OutMagMomentN($i);
+	}
+	printf OUT "@ 3\n";
+	printf OUT "r 0.1\n";
+	for ($i = 0; $i < $np; $i ++){
+		&OutMagMomentS($i);
 	}
 #	if ($Ly == 0){
 #		printf OUT "y 6\n";
@@ -992,7 +997,7 @@ sub OutCross {
 	printf OUT "l $xa $ya $za $xb $yb $zb\n";
 }
 
-sub OutMagMoment {
+sub OutMagMomentN {
 	($i) = @_;
 	$a = $radius[$i];
 	$xi = $posx[$i];
@@ -1006,9 +1011,29 @@ sub OutMagMoment {
 		$ya = $yi; #- $magmom_y[$i]/$mm ;
 		$za = $zi; #- $magmom_z[$i]/$mm ;
 		$xb = $xi + $magmom_x[$i]/$mm ;
-		$yb = $yi - $magmom_y[$i]/$mm ;
+		$yb = $yi + $magmom_y[$i]/$mm ;
 		$zb = $zi + $magmom_z[$i]/$mm ;
 		printf OUT "s $xa $ya $za $xb $yb $zb\n";
 	}
 }
+sub OutMagMomentS {
+	($i) = @_;
+	$a = $radius[$i];
+	$xi = $posx[$i];
+	$yi = $posy[$i];
+	$zi = $posz[$i];
+	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
+	#	printf "$mm\n";
+	
+	if ($mm > 0) {
+		$xa = $xi; #- $magmom_x[$i]/$mm ;
+		$ya = $yi; #- $magmom_y[$i]/$mm ;
+		$za = $zi; #- $magmom_z[$i]/$mm ;
+		$xb = $xi - $magmom_x[$i]/$mm ;
+		$yb = $yi - $magmom_y[$i]/$mm ;
+		$zb = $zi - $magmom_z[$i]/$mm ;
+		printf OUT "s $xa $ya $za $xb $yb $zb\n";
+	}
+}
+
 

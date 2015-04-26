@@ -50,8 +50,6 @@ void RepulsiveForce::calcReducedForceNorm()
 		reduced_force_norm = geometric_factor;
 		//		reduced_force_vector = -force_norm*interaction->nvec;
 	}
-
-
 }
 	
 void RepulsiveForce::calcScaledForce()
@@ -99,7 +97,6 @@ void RepulsiveForce::calcStressXF()
 double RepulsiveForce::calcEnergy()
 {
 	double energy;
-	
 	double gap = interaction->get_gap();
 	if (interaction->contact.state == 0) {
 		/* separating */
