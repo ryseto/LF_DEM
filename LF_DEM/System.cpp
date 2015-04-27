@@ -875,8 +875,6 @@ void System::checkNewInteraction()
 		for (vector<int>::iterator it = it_beg; it != it_end; it++) {
 			if (*it > i) {
 				if (interaction_partners[i].find(*it) == interaction_partners[i].end()) {
-					// distance is done in 3 steps
-					// because we need each information for Interaction creation
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
@@ -894,13 +892,7 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
-						double lub_range;
-						if (!magnetic) {
-							lub_range = scaled_interaction_range;
-						} else {
-							lub_range = calcLubricationRange(i, *it);
-						}
-						interaction[interaction_new].activate(i, *it, scaled_interaction_range, lub_range);
+						interaction[interaction_new].activate(i, *it, scaled_interaction_range);
 					}
 				}
 			}
@@ -993,7 +985,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				if ((*it)->activatedLubrication()) {
+				if ((*it)->lubrication.is_active()) {
 					if (mat) {
 						const vec3d &nr_vec = (*it)->nvec;
 						(*it)->lubrication.calcXFunctions();
@@ -1035,7 +1027,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				if ((*it)->activatedLubrication()) {
+				if ((*it)->lubrication.is_active()) {
 					if (mat) {
 						const vec3d &nr_vec = (*it)->nvec;
 						(*it)->lubrication.calcXYFunctions();

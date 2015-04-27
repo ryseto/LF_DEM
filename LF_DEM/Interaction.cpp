@@ -41,7 +41,7 @@ void Interaction::calcNormalVectorDistanceGap()
  * Always j>i is satisfied.
  */
 void Interaction::activate(unsigned short i, unsigned short j,
-						   double interaction_range_, double lub_range_)
+						   double interaction_range_)
 {
 	active = true;
 	if (j > i) {
@@ -67,7 +67,6 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	a_reduced = a0*a1/(a0+a1);
 	set_ro(a0+a1); // ro=a0+a1
 	interaction_range = interaction_range_;
-	lub_range = lub_range_;
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -116,7 +115,7 @@ void Interaction::updateState(bool &deactivated)
 	}
 	calcNormalVectorDistanceGap();
 	updateContactState(deactivated);
-	if (activatedLubrication()) {
+	if (lubrication.is_active()) {
 		lubrication.updateResistanceCoeff();
 	}
 	if (contact.state > 0) {

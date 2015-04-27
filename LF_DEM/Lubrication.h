@@ -20,6 +20,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
+
 using namespace std;
 class System;
 class Interaction;
@@ -36,6 +37,7 @@ private:
 	unsigned short p1;
 	unsigned short p0_6;
 	unsigned short p1_6;
+	double range;
 	vec3d *nvec;
 	double *nxnx;
 	double *nxny;
@@ -106,10 +108,12 @@ private:
 	double g2_YM;
 	double g2_inv_YM;
 	double g5_YM;
-	
+
  public:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
+	bool is_active();
+ 
 	void getInteractionData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //

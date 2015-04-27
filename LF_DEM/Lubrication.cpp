@@ -32,6 +32,12 @@ void Lubrication::getInteractionData()
 	p1 = interaction->p1;
 	p0_6 = 6*p0;
 	p1_6 = 6*p1;
+	range = sys->calcLubricationRange(p0, p1); 
+}
+
+bool Lubrication::is_active()
+{
+	return interaction->r < range;
 }
 
 void Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_)

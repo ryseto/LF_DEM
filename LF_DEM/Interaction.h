@@ -68,7 +68,6 @@ private:
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
-	double lub_range;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -114,11 +113,8 @@ public:
 	void updateState(bool &deactivated);
 	void updateContactState(bool &deactivated);
 	void activate(unsigned short i, unsigned short j,
-				  double interaction_range_, double lub_range_);
+				  double interaction_range_);
 	void deactivate();
-	inline bool activatedLubrication() {
-		return (r < lub_range);
-	}
 
 	inline vec3d relative_surface_velocity_direction() {
 		return relative_surface_velocity/relative_surface_velocity.norm();
