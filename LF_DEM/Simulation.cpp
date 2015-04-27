@@ -106,8 +106,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	}
 }
 
-void
-Simulation::importPreSimulationData(string filename)
+void Simulation::importPreSimulationData(string filename)
 {
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
@@ -125,12 +124,11 @@ Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-void
-Simulation::echoInputFiles(string in_args, vector<string> &input_files)
+void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 {
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
-	  
+	
 	for(std::vector<string>::iterator it = input_files.begin(); it != input_files.end(); ++it) {
 		ifstream in_f;
 		string line;
@@ -147,180 +145,264 @@ Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 	}
 	fout_input.close();
 }
-void
-Simulation::setUnitScalesBrownian(double peclet_num,
-									   double ratio_repulsion,
-									   double ratio_critical_load)
 
+void Simulation::setUnitScalesBrownian(double dimensionless_number)
 {
-
-
-	sys.dimensionless_number = peclet_num;
-
+	sys.dimensionless_number = dimensionless_number; // Peclet number
 	if (sys.dimensionless_number > p.Pe_switch) {
 		unit_scales = "hydro";
 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
 		sys.set_shear_rate(1);
-
-		if (ratio_repulsion > 0) {
-			cerr << "Repulsive force, ratio to kT/a^3 : " << ratio_repulsion << endl;
+		
+		if (p.repulsiveforce == false
+			&& p.cohesion == false
+			&& p.critical_load == false
+			&& p.magnetic == false) {
+			cerr << "Only Brownian" << endl;
+			string_control_parameters << "_p" << sys.dimensionless_number;
+		} else if (p.repulsiveforce == true
+				   && p.critical_load == false
+				   && p.cohesion == false
+				   && p.magnetic == false) {
+			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
 			/* When both Brownian and repulsive forces exist
-			   
+			 
 			 * `ratio_repulsion' = F_rep(0)/(kT/a)
 			 * Filename includes "rXXXX_pXXXX".
 			 */
-			sys.amplitudes.repulsion = ratio_repulsion/sys.dimensionless_number;
-			sys.repulsiveforce = true;
-			string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
-		} else if (ratio_critical_load > 0) {
-			cerr << "Critical load, ratio to kT/a^3 : " << ratio_critical_load << endl;
-			sys.critical_normal_force = ratio_critical_load/sys.dimensionless_number;
+			sys.amplitudes.repulsion = p.ratio_repulsion/sys.dimensionless_number;
+			string_control_parameters << "_r" << p.ratio_repulsion  << "_p" << sys.dimensionless_number;
+		} else if (p.critical_load == true
+				   && p.repulsiveforce == false
+				   && p.cohesion == false
+				   && p.magnetic == false) {
+			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
+			sys.critical_normal_force = p.ratio_critical_load/sys.dimensionless_number;
 			p.friction_model = 2;
-			string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
+			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
+		} else if (p.cohesion == true
+				   && p.repulsiveforce == false
+				   && p.critical_load == false
+				   && p.magnetic == false) {
+			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
+			sys.dimensionless_cohesive_force = p.ratio_cohesion/sys.dimensionless_number;
+			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
+		} else if (p.magnetic == true
+				   && p.repulsiveforce == false
+				   && p.cohesion == false
+				   && p.critical_load == false) {
+			cerr << "Brownian Magnetic" << endl;
+			string_control_parameters << "_mag_p" << sys.dimensionless_number;
 		} else {
-			cerr << "Only Brownian" << endl;
-			string_control_parameters << "_p" << peclet_num;
+			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
+			cerr << "critical_load: " << p.critical_load << endl;
+			cerr << "cohesion: " << p.cohesion << endl;
+			cerr << "not yet implemented" << endl;
+			exit(1);
 		}
 	} else {
 		unit_scales = "thermal";
 		sys.amplitudes.sqrt_temperature = 1;
 		sys.set_shear_rate(sys.dimensionless_number);
-
-		if (ratio_repulsion > 0) {
-			cerr << "Repulsive force, ratio to kT/a^3 : " << ratio_repulsion << endl;
+		if (p.repulsiveforce == false
+			&& p.cohesion == false
+			&& p.critical_load == false
+			&& p.magnetic == false) {
+			cerr << "Only Brownian" << endl;
+			string_control_parameters << "_p" << sys.dimensionless_number;
+		} else if (p.repulsiveforce == true
+				   && p.critical_load == false
+				   && p.cohesion == false
+				   && p.magnetic == false) {
+			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
 			/* When both Brownian and repulsive forces exist
-			   
+			 *
 			 * `ratio_repulsion' = F_rep(0)/(kT/a)
 			 * Filename includes "rXXXX_pXXXX".
 			 */
-			sys.amplitudes.repulsion = ratio_repulsion;
-			sys.repulsiveforce = true;
-			string_control_parameters << "_r" << ratio_repulsion << "_p" << peclet_num;
-		} else if (ratio_critical_load > 0) {
-			cerr << "Critical load, ratio to kT/a^3 : " << ratio_critical_load << endl;
-			sys.critical_normal_force = ratio_critical_load;
+			sys.amplitudes.repulsion = p.ratio_repulsion;
+			string_control_parameters << "_r" << p.ratio_repulsion << "_p" << sys.dimensionless_number;
+		} else if (p.critical_load == true
+				   && p.repulsiveforce == false
+				   && p.cohesion == false
+				   && p.magnetic == false) {
+			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
+			sys.critical_normal_force = p.ratio_critical_load;
 			p.friction_model = 2;
-			string_control_parameters << "_c" << ratio_critical_load << "_p" << peclet_num;
+			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
+		} else if (p.cohesion == true
+				   && p.repulsiveforce == false
+				   && p.critical_load == false
+				   && p.magnetic == false) {
+			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
+			sys.cohesive_force = p.ratio_cohesion;
+			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
+		} else if (p.magnetic == true
+				   && p.repulsiveforce == false
+				   && p.cohesion == false
+				   && p.critical_load == false) {
+			cerr << "Brownian Magnetic" << endl;
+			string_control_parameters << "_mag_p" << sys.dimensionless_number;
 		} else {
-			cerr << "Only Brownian" << endl;
-			string_control_parameters << "_p" << peclet_num;
+			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
+			cerr << "critical_load: " << p.critical_load << endl;
+			cerr << "cohesion: " << p.cohesion << endl;
+			cerr << "not yet implemented" << endl;
+			exit(1);
 		}
-
 	}
 }
 
+void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
+{
+	if (p.repulsiveforce == true
+		&& p.critical_load == false
+		&& p.cohesion == false
+		&& p.magnetic == false) {
+		cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
+		sys.dimensionless_number = dimensionlessnumber;
+		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
+		string_control_parameters << "_r" << sys.dimensionless_number;
+	} else if (p.repulsiveforce == false
+			   && p.critical_load == false
+			   && p.cohesion == false
+			   && p.magnetic == false) {
+		cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
+		sys.dimensionless_number = -1;
+		sys.amplitudes.repulsion = 0;
+		string_control_parameters << "_quasi_Newtonian";
+	} else if (p.critical_load == true
+			   && p.repulsiveforce == false
+			   && p.cohesion == false
+			   && p.magnetic == false) {
+		cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		p.friction_model = 2;
+		sys.critical_normal_force = 1/sys.dimensionless_number;
+		string_control_parameters << "_c" << sys.dimensionless_number;
+	} else if (p.cohesion == true
+			   && p.repulsiveforce == false
+			   && p.critical_load == false
+			   && p.magnetic == false) {
+		cerr << "Cohesive force, sheafr rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		/* In the rate control simulation,
+		 * dimensionless_cohesive_force can be given.
+		 */
+		string_control_parameters << "_a" << dimensionlessnumber;
+	} else if (p.repulsiveforce == true
+			   && p.cohesion == true
+			   && p.critical_load == false
+			   && p.magnetic == false) {
+		cerr << "Repulsive force + Cohesive force" << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
+		sys.cohesive_force = p.ratio_cohesion;
+		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+	} else if (p.magnetic == true
+			   && p.repulsiveforce == false
+			   && p.cohesion == false
+			   && p.critical_load == false) {
+		cerr << "Magnetic interaction" << endl;
+		sys.dimensionless_number = dimensionlessnumber;
+		sys.amplitudes.magnetic = 1/sys.dimensionless_number;
+		string_control_parameters << "_mag" << sys.dimensionless_number << "_r" << sys.dimensionless_number;
+
+	} else {
+		cerr << "strain -> non-Brownian -> ???" << endl;
+		exit(1);
+	}
+}
+
+void Simulation::setUnitScalesNonBrownianStress(double dimensionlessnumber){
+	if (p.repulsiveforce == false && p.cohesion == false) {
+		cerr << " Stress controlled simulations need a repulsive force ! " << endl;
+		cerr << " ===> This is not correct. We can make stress controlled simulation without any additional force." << endl;
+		exit(1);
+	} else {
+		if (p.repulsiveforce == true
+			&& p.critical_load == false
+			&& p.cohesion == false) {
+			cerr << "Repulsive force" << endl;
+			sys.amplitudes.repulsion = 1;
+			sys.target_stress_input = dimensionlessnumber;
+			sys.target_stress = sys.target_stress_input/6/M_PI;
+			string_control_parameters << "_s" << sys.target_stress_input;
+		} else if (p.cohesion == true
+				   && p.repulsiveforce == false
+				   && p.critical_load == false) {
+			cerr << "Cohesive force" << endl;
+			p.unscaled_contactmodel = false;
+			sys.cohesive_force = 1;
+			sys.target_stress_input = dimensionlessnumber;
+			sys.target_stress = sys.target_stress_input/6/M_PI;
+			/* Initial relaxation for stress control simulation.
+			 * (To avoid breaking bonds due to startup flows.)
+			 */
+			sys.init_strain_shear_rate_limit = -9999;
+			sys.init_shear_rate_limit = 9999;
+			string_control_parameters << "_b" << sys.target_stress_input;
+		} else if (p.cohesion == true
+				   && p.repulsiveforce == true
+				   && p.critical_load == false) {
+			string_control_parameters << "_b" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+			cerr << "not yet implemented" << endl;
+			exit(1);
+		} else {
+			cerr << "stress -> non-Brownian -> ???" << endl;
+			exit(1);
+		}
+		sys.dimensionless_number = 1; // needed for 1st time step
+		/* The target stress (``ratio_repulsion'') is given trough the command argument
+		 * with an unit stres: eta_0*gammmadot_0.
+		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
+		 */
+	}
+}
 
 void Simulation::setupSimulationSteadyShear(string in_args,
 											vector<string> &input_files,
 											bool binary_conf,
-											double peclet_num,
-											double ratio_repulsion,
-											double ratio_cohesion,
-											double ratio_critical_load,
+											double dimensionlessnumber,
 											string control_variable)
 {
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	
+	setDefaultParameters();
+	readParameterFile();
+	
 	if (control_var == "rate") {
-		if (peclet_num > 0) {
-			cerr << "Brownian, Peclet number " << peclet_num << endl;
-			sys.brownian = true;
-			setUnitScalesBrownian(peclet_num, ratio_repulsion, ratio_critical_load);
+		if (p.brownian == true) {
+			cerr << "Brownian, Peclet number " << dimensionlessnumber << endl;
+			if (p.integration_method != 1) {
+				cerr << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
+				cerr << "Modify the parameter file: " << filename_parameters << endl;
+				exit(1);
+			}
+			setUnitScalesBrownian(dimensionlessnumber);
 		} else {
 			cerr << "non-Brownian" << endl;
 			sys.set_shear_rate(1);
-			if (ratio_repulsion > 0 && ratio_cohesion == 0) {
-				cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << ratio_repulsion << endl;
-				sys.dimensionless_number = ratio_repulsion;
-				sys.amplitudes.repulsion = 1/ratio_repulsion;
-				sys.repulsiveforce = true;
-				string_control_parameters << "_r" << ratio_repulsion;
-			} else if (ratio_repulsion == -1 && ratio_cohesion == 0) {
-				cerr << "Infinite shear rate" << endl;
-				sys.dimensionless_number = -1;
-				sys.amplitudes.repulsion = 0;
-				sys.repulsiveforce = true;
-				string_control_parameters << "_rINF";
-			} else if (ratio_critical_load > 0 && ratio_cohesion == 0) {
-				cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << ratio_critical_load << endl;
-				sys.dimensionless_number = ratio_critical_load;
-				p.friction_model = 2;
-				sys.critical_normal_force = 1/ratio_critical_load;
-				string_control_parameters << "_c" << ratio_critical_load;
-			} else if (ratio_repulsion == 0 && ratio_cohesion > 0) {
-				cerr << "Cohesive force, shear rate (in units of F_R(0)/6 pi eta_0 a^2)): " << ratio_cohesion << endl;
-				sys.dimensionless_number = ratio_cohesion;
-				/* In the rate control simulation,
-				 * dimensionless_cohesive_force can be given.
-				 */
-				/* @@@@@@@@@@@@@@@
-				 */
-				//sys.cohesive_force = 1/ratio_cohesion;
-				string_control_parameters << "_a" << ratio_cohesion;
-			} else if (ratio_repulsion > 0 && ratio_cohesion > 0) {
-				cerr << "Repulsive force + Cohesive force" << endl;
-				sys.dimensionless_number = ratio_repulsion;
-				sys.amplitudes.repulsion = 1/ratio_repulsion;
-				sys.repulsiveforce = true;
-				sys.cohesive_force = ratio_cohesion/ratio_repulsion;
-				string_control_parameters << "_a" << ratio_cohesion << "_r" << ratio_repulsion;
-			} else {
-				cerr << "strain -> non-Brownian -> ???" << endl;
-			}
+			setUnitScalesNonBrownianRate(dimensionlessnumber);
 		}
 	} else if (control_var == "stress") {
 		p.unscaled_contactmodel = true;
-		sys.brownian = false;
 		unit_scales = "repulsion";
 		sys.amplitudes.repulsion = 1;
 		sys.set_shear_rate(1);
-		if (ratio_critical_load > 0) {
+		if (p.critical_load == true) {
 			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
 			exit(1);
 		}
-		if (ratio_repulsion == 0 && ratio_cohesion == 0) {
-			cerr << " Stress controlled simulations need a repulsive force ! " << endl;
-			exit(1);
-		} else {
-			if (ratio_repulsion != 0) {
-				cerr << "Repulsive force" << endl;
-				sys.repulsiveforce = true;
-				sys.amplitudes.repulsion = 1;
-				sys.target_stress_input = ratio_repulsion;
-				sys.target_stress = ratio_repulsion/6/M_PI;
-				string_control_parameters << "_s" << ratio_repulsion;
-			} else if (ratio_cohesion != 0) {
-				cerr << "Cohesive force" << endl;
-				p.unscaled_contactmodel = false;
-				sys.cohesion = true;
-				sys.cohesive_force = 1;
-				sys.target_stress_input = ratio_cohesion;
-				sys.target_stress = ratio_cohesion/6/M_PI;
-				/* Initial relaxation for stress control simulation.
-				 * (To avoid breaking bonds due to startup flows.)
-				 */
-				sys.init_strain_shear_rate_limit = -9999;
-				sys.init_shear_rate_limit = 9999;
-				string_control_parameters << "_b" << ratio_cohesion;
-			}
-			sys.dimensionless_number = 1; // needed for 1st time step
-			/* The target stress (``ratio_repulsion'') is given trough the command argument
-			 * with an unit stres: eta_0*gammmadot_0.
-			 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
-			 */
-		}
+		setUnitScalesNonBrownianStress(dimensionlessnumber);
 	}
-	
-	setDefaultParameters();
-	readParameterFile();
-	if (p.repulsive_length == 0) {
-		// @@@@@@@@@@@@@@@@@@@ TEMPORAL @@@@@@@@@@@@@@@@@@@@ why temporal?
-		sys.repulsiveforce = false;
-	}
-	
+
 	if (control_var == "stress") {
+		if (p.integration_method != 0) {
+			cerr << "Must be Euler method for stress controlled simulation" << endl;
+		}
 		p.integration_method = 0;
 	}
 	
@@ -355,15 +437,18 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
 	
-	exportParameterSet();
+	//exportParameterSet();
+	sys.importParameterSet(p);
+
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
-	
+
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
-	if (filename_parameters == "init_relax.txt") {
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
 	}
 	sys.setupShearFlow(true);
@@ -375,13 +460,12 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 void Simulation::simulationSteadyShear(string in_args,
 									   vector<string> &input_files,
 									   bool binary_conf,
-									   double peclet_num, double ratio_repulsion, double ratio_cohesion,
-									   double ratio_critical_load, string control_variable)
+									   double dimensionless_number,
+									   string control_variable)
 {
 	user_sequence = false;
 	control_var = control_variable;
-	setupSimulationSteadyShear(in_args, input_files, binary_conf, peclet_num,
-							   ratio_repulsion, ratio_cohesion, ratio_critical_load, control_var);
+	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, control_var);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	//	double strain_output_data = 0;
@@ -398,12 +482,22 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
-	
+
+	/******************** OUTPUT INITIAL DATA ********************/
+	evaluateData();
+	outputRheologyData();
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
+
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
+
+		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
@@ -419,6 +513,8 @@ void Simulation::simulationSteadyShear(string in_args,
 				cnt_config_out ++;
 			}
 		}
+		/*****************************************************/
+		
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (abs(sys.get_shear_rate()) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
@@ -441,7 +537,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
-	if (filename_parameters == "init_relax.txt") {
+	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
@@ -467,7 +563,7 @@ void Simulation::outputComputationTime()
  * Main simulation
  */
 void Simulation::simulationUserDefinedSequence(string seq_type,
-											   string in_args, 
+											   string in_args,
 											   vector<string> &input_files,
 											   bool binary_conf,
 											   string control_variable)
@@ -521,7 +617,12 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		time_interval_output_data = p.time_interval_output_data;
 		time_interval_output_config = p.time_interval_output_config;
 	}
-	p.integration_method = 0;
+	if (control_var == "stress") {
+		if (p.integration_method != 0) {
+			cerr << "Must be Euler method for stress controlled simulation" << endl;
+		}
+		p.integration_method = 0;
+	}
 	sys.importParameterSet(p);
 	sys.setupSystem(control_var);
 	openOutputFiles(binary_conf);
@@ -544,11 +645,17 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain = 0;
-	//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
 	int jammed = 0;
+	/******************** OUTPUT INITIAL DATA ********************/
+	evaluateData();
+	outputRheologyData();
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
 	for (unsigned int step = 0; step<strain_sequence.size(); step++) {
 		/* The target stress (``rsequence'') is given trough the command argument
 		 * with an unit stres: eta_0*gammmadot_0.
@@ -564,9 +671,10 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
-			
 			sys.timeEvolution(time_output_data);
 			cnt_simu_loop ++;
+			
+			/******************** OUTPUT DATA ********************/
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
@@ -582,6 +690,8 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 					cnt_config_out ++;
 				}
 			}
+			/******************************************************/
+			
 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
@@ -611,6 +721,34 @@ bool str2bool(string value)
 	}
 }
 
+vec3d str2vec3d(string value)
+{
+	string::size_type l1 = value.find("(", 0);
+	if (l1 == string::npos) {
+		exit(1);
+	}
+	string::size_type l2 = value.find(",", l1);
+	if (l2 == string::npos) {
+		exit(1);
+	}
+	string::size_type l3 = value.find(",", l2+1);
+	if (l3 == string::npos) {
+		exit(1);
+	}
+	string::size_type l4 = value.find(")", l3+1);
+	if (l4 == string::npos) {
+		exit(1);
+	}
+	cerr << l1 << ' ';
+	cerr << (string::size_type)l2 << ' ' ;
+	cerr << (string::size_type)l3 << ' ' << l4 << endl;
+	cerr << value << endl;
+	double vx = atof(value.substr(l1+1, l2-l1-1).c_str());
+	double vy = atof(value.substr(l2+1, l3-l2-1).c_str());
+	double vz = atof(value.substr(l3+1, l4-l3-1).c_str());
+	return vec3d(vx,vy,vz);
+}
+
 void Str2KeyValue(string &str_parameter,
 				  string &keyword,
 				  string &value)
@@ -638,12 +776,28 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		}
 	} else if (keyword == "rolling_friction") {
 		p.rolling_friction = str2bool(value);
+	} else if (keyword == "repulsiveforce") {
+		p.repulsiveforce = str2bool(value);
+	} else if (keyword == "cohesion") {
+		p.cohesion = str2bool(value);
+	} else if (keyword == "brownian") {
+		p.brownian = str2bool(value);
+	} else if (keyword == "critical_load") {
+		p.critical_load = str2bool(value);
+	} else if (keyword == "magnetic") {
+		p.magnetic = str2bool(value);
+	} else if (keyword == "monolayer") {
+		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
 		p.unscaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
-		if (sys.repulsiveforce) {
-			p.repulsive_length = atof(value.c_str());
-		}
+		p.repulsive_length = atof(value.c_str());
+	} else if (keyword == "ratio_repulsion") {
+		p.ratio_repulsion = atof(value.c_str());
+	} else if (keyword == "ratio_critical_load") {
+		p.ratio_critical_load = atof(value.c_str());
+	} else if (keyword == "ratio_cohesion") {
+		p.ratio_cohesion = atof(value.c_str());
 	} else if (keyword == "lub_reduce_parameter") {
 		p.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
@@ -658,6 +812,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
 		p.lub_max_gap = atof(value.c_str());
+	} else if (keyword == "interaction_range") {
+		p.interaction_range = atof(value.c_str());
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
@@ -712,6 +868,12 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.ft_max = atof(value.c_str());
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
+	} else if (keyword == "ratio_nonmagnetic") {
+		p.ratio_nonmagnetic = atof(value.c_str());
+	} else if (keyword == "magnetic_dipole_moment") {
+		p.magnetic_dipole_moment = atof(value.c_str());
+	} else if (keyword == "external_magnetic_field") {
+		p.external_magnetic_field =  str2vec3d(value);
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -887,18 +1049,23 @@ void Simulation::openOutputFiles(bool binary_conf)
 	}
 }
 
-void Simulation::exportParameterSet()
-{
-	sys.importParameterSet(p);
-}
+//void Simulation::exportParameterSet()
+//{
+//	sys.importParameterSet(p);
+//}
 
 void Simulation::setDefaultParameters()
 {
+	p.brownian = false;
+	p.repulsiveforce = false;
+	p.cohesion = false;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
+	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
+	p.interaction_range = 5;
 	/*
 	 * Stokes drag coeffient
 	 */
@@ -966,7 +1133,8 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-	
+	p.magnetic_dipole_moment = 1;
+	p.ratio_nonmagnetic = 0;
 }
 
 void Simulation::importInitialPositionFile()
@@ -1293,6 +1461,8 @@ void Simulation::outputRheologyData()
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51
+	fout_rheo << sys.max_contact_gap << ' '; //52
+	fout_rheo << sys.get_total_energy() << ' '; // 53;
 	fout_rheo << endl;
 }
 
@@ -1353,11 +1523,13 @@ void Simulation::outputConfigurationData()
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_number << ' ';
-		fout_particle << sys.target_stress_input << endl;
+		fout_particle << sys.target_stress_input << ' ';
+		fout_particle << sys.get_time() << endl;
+		
 		for (int i=0; i<np; i++) {
-			vec3d &r = pos[i];
-			vec3d &v = vel[i];
-			vec3d &o = sys.ang_velocity[i];
+			const vec3d &r = pos[i];
+			const vec3d &v = vel[i];
+			const vec3d &o = sys.ang_velocity[i];
 			double lub_xzstress = sys.lubstress[i].getStressXZ();
 			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
 			double brownian_xzstressGU = 0;
@@ -1372,8 +1544,14 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.twodimension) {
-				fout_particle << ' ' << sys.angle[i]; // 15
+			if (sys.magnetic) {
+				fout_particle << ' ' << sys.magnetic_moment[i].x;
+				fout_particle << ' ' << sys.magnetic_moment[i].y;
+				fout_particle << ' ' << sys.magnetic_moment[i].z;
+			} else {
+				if (sys.twodimension) {
+					fout_particle << ' ' << sys.angle[i]; // 15
+				}
 			}
 			fout_particle << endl;
 		}
@@ -1386,12 +1564,14 @@ void Simulation::outputConfigurationData()
 	}
 	if (p.out_data_interaction) {
 		fout_interaction << "# " << sys.get_shear_strain();
-		fout_interaction << ' ' << cnt_interaction << endl;
+		fout_interaction << ' ' << cnt_interaction;
+		fout_interaction << ' ' << sys.get_time();
+		fout_interaction << endl;
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d nr_vec = sys.interaction[k].get_nvec();
+				vec3d& nr_vec = sys.interaction[k].nvec;
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
 				/* contact.state:

@@ -6,9 +6,7 @@
 
 # OS_version: OSX or Linux or SI 
 OS_version = OSX
-#SysEnv=Energy_seto
 VERSION := $(shell git describe --dirty --always)
-
 
 # Compiler
 ifeq ($(OS_version),SI)
@@ -29,9 +27,9 @@ ifeq ($(OS_version),Linux)
 	CXXFLAGS_dev=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 ifeq ($(OS_version),OSX)
-	CXX=clang
+	CXX=clang++
 	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
+	CXXFLAGS_debug=  -g -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 	CXXFLAGS_dev=  -O3  -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 
@@ -40,14 +38,8 @@ UseTrilinos=no
 # Enable use of Metis library ( yes / no )
 UseMetis=no
 
-
 #======== Include Paths =============
 Cholmod_include_path_OSX     = /usr/local/include/
-
-ifeq ($(SysEnv),Energy_seto)
-	Cholmod_include_path_OSX     = ~/usr/local/include/
-endif
-
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
 Cholmod_include_path_SI  = ~/usr/include/
 Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
@@ -56,7 +48,6 @@ ifeq ($(UseTrilinos),yes)
 	Trilinos_include_path_Linux  = /home/romain/romain/recherche/trilinos-11.0.3-Source/
 	Trilinos_include_path_OSX    = /usr/local/include/
 endif
-
 
 Trilinos_path = $(Trilinos_include_path_$(OS_version))
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
@@ -84,25 +75,18 @@ ifeq ($(OS_version), OIST)
 endif
 
 # Cholmod
-Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd 
-ifeq ($(UseMetis),yes)
-     ifneq ($(OS_version), OIST)
-          Cholmod_Linking_Flags += -lmetis
-     endif
-endif
-
-ifeq ($(SysEnv),Energy_seto)
-	Cholmod_Linking_Flags  =
-endif
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
 
 ifeq ($(OS_version), SI)
     Cholmod_Linking_Flags  =
 endif
 
 ifeq ($(OS_version), OIST)
-    Cholmod_Linking_Flags  =
+	Cholmod_Linking_Flags  =
+	ifeq ($(UseMetis),yes)
+		Cholmod_Linking_Flags += -lmetis
+	endif
 endif
-
 
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
@@ -136,8 +120,8 @@ ifeq ($(UseTrilinos),yes)
 endif
 
 OUT_CODE=LF_DEM
-SRC= $(shell ls *.cpp)
-LIB=  $(shell ls *.h)  
+SRC=$(shell ls *.cpp)
+LIB=$(shell ls *.h)  
 OBJ=$(SRC:.cpp=.o)
 
 DATE=$(shell date +%D | sed "s./..g")

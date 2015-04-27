@@ -11,22 +11,32 @@
 #include <cmath>
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
+#define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 
 System::System():
-maxnb_interactionpair_per_particle(15),
-cohesion(false),
-brownian(false),
-repulsiveforce(false),
-zero_shear(false),
 lowPeclet(false),
-critical_normal_force(0),
-twodimension(false),
+brownian(false),
 friction(false),
 friction_model(-1),
-new_contact_gap(0),
+repulsiveforce(false),
+cohesion(false),
+twodimension(false),
+zero_shear(false),
+critical_normal_force(0),
+magnetic_coeffient(1),
+target_stress_input(0),
 init_strain_shear_rate_limit(0),
-init_shear_rate_limit(999)
+init_shear_rate_limit(999),
+new_contact_gap(0)
 {}
+
+vec3d System::randUniformSphere(double r)
+{
+	double z = 2*RANDOM-1;
+	double phi = 2*M_PI*RANDOM;
+	double sin_theta = sqrt(1-z*z);
+	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
+}
 
 System::~System()
 {
@@ -84,7 +94,8 @@ void System::importParameterSet(ParameterSet &ps)
 	kt = p.kt;
 	kr = p.kr;
 	ft_max = p.ft_max;
-	if(p.repulsive_length<=0){
+	repulsiveforce = p.repulsiveforce;
+	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 	}
 	if (repulsiveforce) {
@@ -92,8 +103,14 @@ void System::importParameterSet(ParameterSet &ps)
 	} else {
 		set_repulsiveforce_length(0);
 	}
+	cohesion = p.cohesion;
+	brownian = p.brownian;
+	critical_load = p.critical_load;
+	magnetic = p.magnetic;
+	monolayer = p.monolayer;
+	interaction_range = p.interaction_range;
 	set_sd_coeff(p.sd_coeff);
-	set_integration_method(p.integration_method);
+	integration_method = p.integration_method;
 	mu_static = p.mu_static;
 	if (p.mu_dynamic == -1) {
 		mu_dynamic = p.mu_static;
@@ -102,11 +119,25 @@ void System::importParameterSet(ParameterSet &ps)
 	}
 	mu_rolling = p.mu_rolling;
 	set_disp_max(p.disp_max);
+	ratio_nonmagnetic = p.ratio_nonmagnetic;
+	magnetic_dipole_moment = p.magnetic_dipole_moment;
+	external_magnetic_field = p.external_magnetic_field;
 }
 
 void System::allocateRessources()
 {
 	linalg_size = 6*np;
+	double interaction_volume;
+	if (twodimension) {
+		interaction_volume = M_PI*interaction_range*interaction_range;
+		double particle_volume = M_PI*radius[0]*radius[0];
+		maxnb_interactionpair_per_particle = 0.83*interaction_volume/particle_volume;
+	} else {
+		interaction_volume = (4*M_PI/3)*interaction_range*interaction_range*interaction_range;
+		double particle_volume = (4*M_PI/3)*radius[0]*radius[0]*radius[0];
+		maxnb_interactionpair_per_particle = 0.64*interaction_volume/particle_volume;
+	}
+	cerr << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
@@ -135,6 +166,10 @@ void System::allocateRessources()
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
+	}
+	if (magnetic) {
+		vel_magnetic = new vec3d [np];
+		ang_vel_magnetic = new vec3d [np];
 	}
 	// Forces
 	contact_force = new vec3d [np];
@@ -170,6 +205,15 @@ void System::allocateRessources()
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
+	if (magnetic) {
+		magnetic_moment = new vec3d [np];
+		magnetic_force = new vec3d [np];
+		magnetic_torque = new vec3d [np];
+		for (int i=0; i<np; i++) {
+			magnetic_force[i].reset();
+			magnetic_torque[i].reset();
+		}
+	}
 }
 
 void System::setInteractions_GenerateInitConfig()
@@ -194,8 +238,8 @@ void System::allocatePositionRadius()
 }
 
 void System::setConfiguration(const vector <vec3d> &initial_positions,
-						 const vector <double> &radii,
-						 double lx_, double ly_, double lz_)
+							  const vector <double> &radii,
+							  double lx_, double ly_, double lz_)
 {
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
@@ -247,19 +291,18 @@ void System::updateUnscaledContactmodel()
 			kr = kr_master;
 		}
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
-		
 	}
-	if(!stress_controlled) {
+	
+	if (!stress_controlled) {
 		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-	}
-	else {
+	} else {
 		lub_coeff_contact = 4*kn_master*p.contact_relaxation_time;
 	}
 	
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
-
+	
 	if (lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
@@ -319,7 +362,7 @@ void System::setupSystem(string control)
 		rate_controlled = false;
 	}
 	stress_controlled = !rate_controlled;
-
+	
 	if (integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (integration_method == 1) {
@@ -337,8 +380,12 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	calcInteractionRange = &System::calcLubricationRange;
-
+	if (magnetic) {
+		calcInteractionRange = &System::calcLongInteractionRange;
+	} else {
+		calcInteractionRange = &System::calcLubricationRange;
+	}
+	
 	if (friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -382,6 +429,10 @@ void System::setupSystem(string control)
 		if (repulsiveforce) {
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
+		}
+		if (magnetic) {
+			vel_magnetic[i].reset();
+			ang_vel_magnetic[i].reset();
 		}
 	}
 	shear_strain = 0;
@@ -443,7 +494,7 @@ void System::setupSystem(string control)
 		r_gen = new MTRand;
 #endif
 	}
-
+	
 	time = 0;
 	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
@@ -453,16 +504,16 @@ void System::setupSystem(string control)
 	dt = p.dt;
 	fixed_dt = p.fixed_dt;
 	initializeBoxing();
-
+	
 	checkNewInteraction();
-
+	
 	if (control == "rate") {
 		rate_controlled = true;
 	}
 	if (control == "stress") {
 		rate_controlled = false;
 	}
-
+	
 	stress_controlled = !rate_controlled;
 	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
@@ -472,7 +523,7 @@ void System::setupSystem(string control)
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
-
+	
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -487,6 +538,23 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+12] = TWvalue;
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
+	}
+	if (magnetic) {
+		/* force unit =
+		 *
+		 */
+		magnetic_moment_norm.resize(np);
+		num_magnetic = np-round(np*ratio_nonmagnetic);
+		cerr << "number of magnetic particles: " << num_magnetic << endl;
+		for (int i=0; i<np; i++) {
+			if (i < num_magnetic) {
+				magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
+				//magnetic_moment[i].set(0, magnetic_dipole_moment, 0);
+			} else {
+				magnetic_moment[i].set(0,0,0);
+			}
+			magnetic_moment_norm[i] = magnetic_moment[i].norm();
+		}
 	}
 }
 
@@ -540,8 +608,10 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	 */
 	in_predictor = true;
 	in_corrector = true;
+
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -608,6 +678,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	in_corrector = false;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -618,6 +689,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
+	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
 		calcStressPerParticle();
@@ -626,7 +698,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		calcStress();
 	}
 	timeStepMoveCorrector();
-
 	// try to adapt dt
 	// if (max_velocity > max_sliding_velocity) {
 	// 	dt = disp_max/max_velocity;
@@ -653,7 +724,7 @@ void System::timeStepMove()
 	}
 	time += dt;
 	total_num_timesteps ++;
-
+	
 	/* evolve PBC */
 	double strain_increment = 0;
 	strain_increment = dt*shear_rate;
@@ -663,12 +734,18 @@ void System::timeStepMove()
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+	if (magnetic) {
+		for (int i=0; i<num_magnetic; i++) {
+			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+			double norm = magnetic_moment[i].norm();
+			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
+		}
+	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -690,13 +767,13 @@ void System::timeStepMovePredictor()
 	}
 	time += dt;
 	total_num_timesteps ++;
-
+	
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
 	double strain_increment = dt*shear_rate;
 	timeStepBoxing(strain_increment);
-
+	
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -705,9 +782,12 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-
+	if (magnetic) {
+		for (int i=0; i<num_magnetic; i++) {
+			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
+		}
+	}
 	updateInteractions();
-
 	/*
 	 * Keep V^{-} to use them in the corrector.
 	 */
@@ -734,6 +814,13 @@ void System::timeStepMoveCorrector()
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
 	}
+	if (magnetic) {
+		for (int i=0; i<num_magnetic; i++) {
+			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
+			double norm = magnetic_moment[i].norm();
+			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
+		}
+	}
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -746,9 +833,9 @@ void System::timeEvolution(double time_end)
 	 This method essentially loops the appropriate one time step
 	 method method, according to the Euler vs predictor-corrector or
 	 strain rate vs stress controlled choices. On the last time step,
-	 the stress is computed. 
+	 the stress is computed.
 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-
+	 r
 	 \param time_end Time to reach.
 	 */
 	static bool firsttime = true;
@@ -793,8 +880,8 @@ void System::checkNewInteraction()
 					pos_diff = position[*it]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double range = (this->*calcInteractionRange)(i, *it);
-					double sq_dist_lim = range*range;
+					double scaled_interaction_range = (this->*calcInteractionRange)(i, *it);
+					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
 						if (deactivated_interaction.empty()) {
@@ -807,7 +894,13 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
-						interaction[interaction_new].activate(i, *it, range);
+						double lub_range;
+						if (!magnetic) {
+							lub_range = scaled_interaction_range;
+						} else {
+							lub_range = calcLubricationRange(i, *it);
+						}
+						interaction[interaction_new].activate(i, *it, scaled_interaction_range, lub_range);
 					}
 				}
 			}
@@ -831,7 +924,7 @@ void System::updateInteractions()
 	 * In the dimensionless simulation,
 	 * the cohesive force
 	 */
-	if (cohesion) {
+	if (cohesion && stress_controlled) {
 		dimensionless_cohesive_force = cohesive_force/abs(dimensionless_number);
 	}
 	for (int k=0; k<nb_interaction; k++) {
@@ -855,17 +948,17 @@ void System::updateInteractions()
 void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 {
 	/**
-	   \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
-	    
-	   @param build_res_mat Build the resistance matrix
-	   \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	   brady_stokesian_1988 notations) and set it as the current
-	   resistance in the StokesSolver. If false, the resistance in the
-	   StokesSolver is untouched, it is not reset.
-	   @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
-	   and \b add it to the right-hand-side of the StokesSolver
-	*/
-
+	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
+	 
+	 @param build_res_mat Build the resistance matrix
+	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
+	 brady_stokesian_1988 notations) and set it as the current
+	 resistance in the StokesSolver. If false, the resistance in the
+	 StokesSolver is untouched, it is not reset.
+	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
+	 and \b add it to the right-hand-side of the StokesSolver
+	 */
+	
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -900,28 +993,30 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				if (mat) {
-					vec3d nr_vec = (*it)->get_nvec();
-					(*it)->lubrication.calcXFunctions();
-					stokes_solver.addToDiagBlock(nr_vec, i,
-												 (*it)->lubrication.scaledXA0(), 0, 0, 0);
-					stokes_solver.addToDiagBlock(nr_vec, j,
-												 (*it)->lubrication.scaledXA3(), 0, 0, 0);
-					stokes_solver.setOffDiagBlock(nr_vec, i, j,
-												  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
-				}
-				if (rhs) {
-					double GEi[3];
-					double GEj[3];
-					(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
-					if (shearrate_is_1 == false) {
-						for (int u=0; u<3; u++) {
-							GEi[u] *= shear_rate;
-							GEj[u] *= shear_rate;
-						}
+				if ((*it)->activatedLubrication()) {
+					if (mat) {
+						const vec3d &nr_vec = (*it)->nvec;
+						(*it)->lubrication.calcXFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 (*it)->lubrication.scaledXA0(), 0, 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 (*it)->lubrication.scaledXA3(), 0, 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+													  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
-					stokes_solver.addToRHSForce(i, GEi);
-					stokes_solver.addToRHSForce(j, GEj);
+					if (rhs) {
+						double GEi[3];
+						double GEj[3];
+						(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+						if (shearrate_is_1 == false) {
+							for (int u=0; u<3; u++) {
+								GEi[u] *= shear_rate;
+								GEj[u] *= shear_rate;
+							}
+						}
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+					}
 				}
 			}
 		}
@@ -940,44 +1035,46 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			 it != interaction_list[i].end(); it ++) {
 			int j = (*it)->partner(i);
 			if (j > i) {
-				if (mat) {
-					vec3d nr_vec = (*it)->get_nvec();
-					(*it)->lubrication.calcXYFunctions();
-					stokes_solver.addToDiagBlock(nr_vec, i,
-												 (*it)->lubrication.scaledXA0(),
-												 (*it)->lubrication.scaledYA0(),
-												 (*it)->lubrication.scaledYB0(),
-												 (*it)->lubrication.scaledYC0());
-					stokes_solver.addToDiagBlock(nr_vec, j,
-												 (*it)->lubrication.scaledXA3(),
-												 (*it)->lubrication.scaledYA3(),
-												 (*it)->lubrication.scaledYB3(),
-												 (*it)->lubrication.scaledYC3());
-					stokes_solver.setOffDiagBlock(nr_vec, i, j,
-												  (*it)->lubrication.scaledXA1(),
-												  (*it)->lubrication.scaledYA1(),
-												  (*it)->lubrication.scaledYB2(),
-												  (*it)->lubrication.scaledYB1(),
-												  (*it)->lubrication.scaledYC1());
-				}
-				if (rhs) {
-					double GEi[3];
-					double GEj[3];
-					double HEi[3];
-					double HEj[3];
-					(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
-					if (shearrate_is_1 == false) {
+				if ((*it)->activatedLubrication()) {
+					if (mat) {
+						const vec3d &nr_vec = (*it)->nvec;
+						(*it)->lubrication.calcXYFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 (*it)->lubrication.scaledXA0(),
+													 (*it)->lubrication.scaledYA0(),
+													 (*it)->lubrication.scaledYB0(),
+													 (*it)->lubrication.scaledYC0());
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 (*it)->lubrication.scaledXA3(),
+													 (*it)->lubrication.scaledYA3(),
+													 (*it)->lubrication.scaledYB3(),
+													 (*it)->lubrication.scaledYC3());
+						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+													  (*it)->lubrication.scaledXA1(),
+													  (*it)->lubrication.scaledYA1(),
+													  (*it)->lubrication.scaledYB2(),
+													  (*it)->lubrication.scaledYB1(),
+													  (*it)->lubrication.scaledYC1());
+					}
+					if (rhs) {
+						double GEi[3];
+						double GEj[3];
+						double HEi[3];
+						double HEj[3];
+						(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+						if (shearrate_is_1 == false) {
 						for (int u=0; u<3; u++) {
 							GEi[u] *= shear_rate;
 							GEj[u] *= shear_rate;
 							HEi[u] *= shear_rate;
 							HEj[u] *= shear_rate;
 						}
+						}
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+						stokes_solver.addToRHSTorque(i, HEi);
+						stokes_solver.addToRHSTorque(j, HEj);
 					}
-					stokes_solver.addToRHSForce(i, GEi);
-					stokes_solver.addToRHSForce(j, GEj);
-					stokes_solver.addToRHSTorque(i, HEi);
-					stokes_solver.addToRHSTorque(j, HEj);
 				}
 			}
 		}
@@ -1009,7 +1106,8 @@ void System::generateBrownianForces()
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-	if (twodimension) {
+	if (twodimension
+		&& !monolayer) {
 		for (int i=0; i<np; i++) {
 			brownian_force[6*i+1] = 0; // Fy
 			brownian_force[6*i+3] = 0; // Tx
@@ -1040,6 +1138,28 @@ void System::setRepulsiveForceToParticle()
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
 				interaction[k].repulsion.addUpForce();
+			}
+		}
+	}
+}
+
+void System::setMagneticForceToParticle()
+{
+	if (magnetic) {
+		if (external_magnetic_field.is_zero()) {
+			for (int i=0; i<num_magnetic; i++) {
+				magnetic_force[i].reset();
+				magnetic_torque[i].reset();
+			}
+		} else {
+			for (int i=0; i<num_magnetic; i++) {
+				magnetic_force[i].reset();
+				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
+			}
+		}
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+				interaction[k].magneticforce.addUpForceTorque();
 			}
 		}
 	}
@@ -1076,13 +1196,28 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 	}
 }
 
+void System::buildMagneticForceTerms(bool set_or_add)
+{
+	if (set_or_add) {
+		for (int i=0; i<np; i++) {
+			stokes_solver.setRHSForce(i, magnetic_force[i]);
+			stokes_solver.setRHSTorque(i, magnetic_torque[i]);
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, magnetic_force[i]);
+			stokes_solver.addToRHSTorque(i, magnetic_torque[i]);
+		}
+	}
+}
+
 void System::computeMaxNAVelocity()
 {
 	/**
-	   \brief Compute the maximum non-affine velocity
-	   
-	   Note: it does \b not compute the velocities, just takes the maximum.
-	*/
+	 \brief Compute the maximum non-affine velocity
+	 
+	 Note: it does \b not compute the velocities, just takes the maximum.
+	 */
 	
 	double sq_max_na_velocity = 0;
 	double sq_na_velocity, sq_na_ang_velocity;
@@ -1093,7 +1228,7 @@ void System::computeMaxNAVelocity()
 		}
 		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
 		if (sq_max_na_velocity < sq_na_ang_velocity) {
-				sq_max_na_velocity = sq_na_ang_velocity;
+			sq_max_na_velocity = sq_na_ang_velocity;
 		}
 	}
 	max_velocity = sqrt(sq_max_na_velocity);
@@ -1102,8 +1237,8 @@ void System::computeMaxNAVelocity()
 void System::computeVelocityComponents()
 {
 	/**
-	   \brief Compute velocities component by component.
-	*/
+	 \brief Compute velocities component by component.
+	 */
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
@@ -1116,19 +1251,22 @@ void System::computeVelocityComponents()
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
-	
+	if (magnetic) {
+		buildMagneticForceTerms(true);
+		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
+	}
 }
 
 void System::computeShearRate()
 {
 	/**
-	   \brief Compute the shear rate under stress control conditions.
-	*/
+	 \brief Compute the shear rate under stress control conditions.
+	 */
 	calcStressPerParticle();
 	calcStress();
 	
 	double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-		+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+	+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
@@ -1136,7 +1274,7 @@ void System::computeShearRate()
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
-	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ(); 
+	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	dimensionless_number = shear_rate;
@@ -1151,27 +1289,26 @@ void System::computeShearRate()
 		ang_vel_hydro[i] *= shear_rate;
 	}
 }
-	
+
 
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
-	   \brief Compute velocities in the current configuration.
-	   
-	   \param divided_velocities Divide the velocities in components
-	   (hydro, contacts, Brownian, ...). (Note that in Brownian
-	   simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
-	*/
-
+	 \brief Compute velocities in the current configuration.
+	 
+	 \param divided_velocities Divide the velocities in components
+	 (hydro, contacts, Brownian, ...). (Note that in Brownian
+	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
+	 */
+	
 	stokes_solver.resetRHS();
 	
-	if (divided_velocities||stress_controlled) {
-		if(stress_controlled){
+	if (divided_velocities || stress_controlled) {
+		if (stress_controlled) {
 			shear_rate = 1;
 		}
 		computeVelocityComponents();
-		
-		if(stress_controlled){
+		if (stress_controlled) {
 			computeShearRate();
 		}
 		for (int i=0; i<np; i++) {
@@ -1182,6 +1319,12 @@ void System::computeVelocities(bool divided_velocities)
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_repulsive[i];
 				na_ang_velocity[i] += ang_vel_repulsive[i];
+			}
+		}
+		if (magnetic) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += vel_magnetic[i];
+				na_ang_velocity[i] += ang_vel_magnetic[i];
 			}
 		}
 	} else {
@@ -1195,10 +1338,12 @@ void System::computeVelocities(bool divided_velocities)
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
-		
+		if (magnetic) {
+			buildMagneticForceTerms(false);
+		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
-		
+	
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
@@ -1214,12 +1359,11 @@ void System::computeVelocities(bool divided_velocities)
 		}
 	}
 
-	
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (in_predictor) {
+	if (!fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
 	if (!zero_shear) {
@@ -1242,7 +1386,12 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::displacement(int i, const vec3d &dr)
 {
-	position[i] += dr;
+	if (monolayer) {
+		position[i].x += dr.x;
+		position[i].z += dr.z;
+	} else {
+		position[i] += dr;
+	}
 	int z_shift = periodize(position[i]);
 	/* Note:
 	 * When the position of the particle is periodized,
@@ -1408,12 +1557,31 @@ double System::evaluateMinGap()
 		if (interaction[k].is_active() &&
 			interaction[k].get_reduced_gap() < _min_reduced_gap) {
 			_min_reduced_gap = interaction[k].get_reduced_gap();
+			
+			if (interaction[k].get_reduced_gap() < 0
+				&& interaction[k].contact.state == 0) {
+				cerr << interaction[k].get_reduced_gap() << endl;
+				exit(1);
+			}
 			// unsigned short i, j;
 			// interaction[k].get_par_num(i,j);
 			// cout << i << " " << j << " " << interaction[k].get_a0() << " " << interaction[k].get_a1() << " " << interaction[k].get_reduced_gap() << endl;
 		}
 	}
 	return _min_reduced_gap;
+}
+
+double System::evaluateMaxContactGap()
+{
+	double _max_contact_gap = 0;
+	for (int k= 0; k<nb_interaction; k++) {
+		if (interaction[k].is_active() &&
+			interaction[k].contact.state > 0 &&
+			interaction[k].get_reduced_gap() > _max_contact_gap) {
+			_max_contact_gap = interaction[k].get_reduced_gap();
+		}
+	}
+	return _max_contact_gap;
 }
 
 double System::evaluateMaxDispTan()
@@ -1485,9 +1653,13 @@ void System::countNumberOfContact()
 void System::analyzeState()
 {
 	//	max_velocity = evaluateMaxVelocity();
+	computeMaxNAVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
 	evaluateMaxContactVelocity();
 	min_reduced_gap = evaluateMinGap();
+	if (cohesion) {
+		max_contact_gap = evaluateMaxContactGap();
+	}
 	max_disp_tan = evaluateMaxDispTan();
 	if (rolling_friction) {
 		max_disp_rolling = evaluateMaxDispRolling();
@@ -1495,7 +1667,31 @@ void System::analyzeState()
 	max_fc_normal = evaluateMaxFcNormal();
 	max_fc_tan = evaluateMaxFcTangential();
 	countNumberOfContact();
+	calcPotentialEnergy();
+	cerr << "magnetic_moment[0] " << magnetic_moment[0].norm() << endl;
 }
+
+void System::calcPotentialEnergy()
+{
+	total_energy = 0;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			if (interaction[k].is_contact()){
+				total_energy += interaction[k].contact.calcEnergy();
+			}
+			if (repulsive_force) {
+				total_energy +=  interaction[k].repulsion.calcEnergy();
+			}
+			if (magnetic) {
+				total_energy +=  interaction[k].magneticforce.calcEnergy();
+			}
+		}
+	}
+	for (int i=0; i<num_magnetic; i++) {
+		total_energy += -dot(magnetic_moment[i], external_magnetic_field);
+	}
+}
+
 
 void System::setSystemVolume(double depth)
 {
@@ -1535,7 +1731,7 @@ void System::adjustContactModelParameters()
 	 */
 	
 	analyzeState();
-
+	
 	double overlap = -min_reduced_gap;
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);
@@ -1607,3 +1803,11 @@ double System::calcLubricationRange(const int& i, const int& j)
 		return radius[i]+radius[j]+lub_max_gap*minradius;
 	}
 }
+
+double System::calcLongInteractionRange(const int& i, const int& j)
+{
+	return interaction_range*0.5*(radius[i]+radius[j]);
+}
+
+
+

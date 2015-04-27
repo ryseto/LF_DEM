@@ -9,10 +9,21 @@
 
 struct ParameterSet
 {
+	bool brownian;						///< Brownian force
+	bool repulsiveforce;				///< Repulsive force exp(-kh)
+	bool cohesion;						///< Cohesive force
+	bool critical_load;					///< Normal force required to activate friction
+	bool magnetic;						///< Magnetic
+	
+	double ratio_repulsion;				///<
+	double ratio_critical_load;			///<
+	double ratio_cohesion;				///<
+	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
 	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
+	bool monolayer;
 	
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector
 
@@ -40,6 +51,7 @@ struct ParameterSet
 	bool rolling_friction;                   ///< Activate rolling friction.
 	double time_end;                 ///< Time of the simulation.
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
+	double interaction_range;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -89,7 +101,12 @@ struct ParameterSet
 	bool out_data_interaction;               ///< Output int_* file
 	
 	double ft_max;							///< max tangential force in friction_model = 5
-	bool fixed_dt;							///< Use constant dt 
+	bool fixed_dt;							///< Use constant dt
+	
+
+	double magnetic_dipole_moment;
+	double ratio_nonmagnetic;
+	vec3d external_magnetic_field;
 };
 
 

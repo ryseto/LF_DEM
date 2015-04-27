@@ -24,6 +24,7 @@
 #include "Contact.h"
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
+#include "MagneticForce.h"
 #include "StressTensor.h"
 
 using namespace std;
@@ -31,6 +32,7 @@ class System;
 class Lubrication;
 class Contact;
 class RepulsiveForce;
+class MagneticForce;
 
 class Interaction{
 	friend class Contact;
@@ -56,8 +58,6 @@ private:
 	double r; // center-center distance
 	int zshift;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	vec3d rvec; // vector center to center
-	vec3d nvec; // normal vector
 	double nxnx;
 	double nxny;
 	double nxnz;
@@ -68,6 +68,7 @@ private:
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
+	double lub_range;
 	/*********************************
 	 *       Private Methods         *
 	 *********************************/
@@ -91,7 +92,11 @@ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
+	MagneticForce magneticforce;
 	vec3d relative_surface_velocity;
+	vec3d rvec; // vector center to center
+	vec3d nvec; // normal vector
+
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
@@ -108,8 +113,13 @@ public:
 	 */
 	void updateState(bool &deactivated);
 	void updateContactState(bool &deactivated);
-	void activate(unsigned short i, unsigned short j, double range);
+	void activate(unsigned short i, unsigned short j,
+				  double interaction_range_, double lub_range_);
 	void deactivate();
+	inline bool activatedLubrication() {
+		return (r < lub_range);
+	}
+
 	inline vec3d relative_surface_velocity_direction() {
 		return relative_surface_velocity/relative_surface_velocity.norm();
 	}
@@ -174,10 +184,6 @@ public:
 	inline double get_gap()
 	{
 		return r-ro;
-	}
-	inline vec3d get_nvec()
-	{
-		return nvec;
 	}
 	double getNormalVelocity();
 	double getRelativeVelocity()

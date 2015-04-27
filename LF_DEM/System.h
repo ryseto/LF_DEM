@@ -31,7 +31,6 @@
 #include "Averager.h"
 #include "cholmod.h"
 #include "MersenneTwister.h"
-
 using namespace std;
 
 class Simulation;
@@ -43,6 +42,7 @@ struct ForceAmplitudes
 	double repulsion;
 	double sqrt_temperature;
 	double contact;
+	double magnetic;
 };
 
 class System{
@@ -64,6 +64,8 @@ private:
 	double system_volume;
 	double shear_strain;
 	double lub_max_gap;
+	double interaction_range;
+	double total_energy;
 	int linalg_size;
 	int dof;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
@@ -78,6 +80,7 @@ private:
 	void timeStepBoxing(const double strain_increment);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
+	void setMagneticForceToParticle();
 	void buildHydroTerms(bool, bool);
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
@@ -85,8 +88,7 @@ private:
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
-	double (System::*calcInteractionRange)(const int&, const int&);
-	double calcLubricationRange(const int& i, const int& j);
+	void buildMagneticForceTerms(bool);
 	void computeVelocities(bool divided_velocities);
 	void computeVelocityComponents();
 	void computeShearRate();
@@ -94,7 +96,9 @@ private:
 	void torqueReset();
 	void stressReset();
 	void computeMaxNAVelocity();
+	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
+	double evaluateMaxContactGap();
 	double evaluateMaxDispTan();
 	double evaluateMaxDispRolling();
 	double evaluateMaxFcNormal();
@@ -103,6 +107,7 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
+	vec3d randUniformSphere(double);
 	MTRand *r_gen;
 	double *radius_cubed;
 	double *radius_squared;
@@ -114,6 +119,7 @@ private:
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
 	bool fixed_dt;
+	MTRand rand_gen;
 
  protected:
  public:
@@ -128,19 +134,19 @@ private:
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool cohesion;
-
+	bool critical_load;
+	bool magnetic;
 
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
+	bool monolayer;
 	double critical_normal_force;
 	double volume_fraction;
-	
 	bool in_predictor;
 	bool in_corrector;
-
 	vec3d *position;
 	Interaction *interaction;
 	BoxSet boxset;
@@ -161,9 +167,15 @@ private:
 	vec3d *ang_vel_hydro;
 	vec3d *vel_brownian;
 	vec3d *ang_vel_brownian;
+	vec3d *vel_magnetic;
+	vec3d *ang_vel_magnetic;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
+	vec3d *magnetic_moment;
+	vec3d *magnetic_force;
+	vec3d *magnetic_torque;
+	vector <double> magnetic_moment_norm;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
@@ -194,6 +206,11 @@ private:
 	double mu_rolling; // rolling friction coeffient
 	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
+	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
+	double magnetic_dipole_moment;
+	double ratio_nonmagnetic; //
+	int num_magnetic;
+	vec3d external_magnetic_field;
 	/* sd_coeff:
 	 * Full Stokes drag is given by sd_coeff = 1.
 	 * sd_coeff = 0 makes the resistance matrix singular.
@@ -246,6 +263,7 @@ private:
 	double max_sliding_velocity;
 	double max_ang_velocity;
 	double min_reduced_gap;
+	double max_contact_gap;
 	double max_disp_tan;
 	double max_disp_rolling;
 	queue<int> deactivated_interaction;
@@ -290,6 +308,7 @@ private:
 	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
+	void calcPotentialEnergy();
 	void setupShearFlow(bool activate)
 	{
 		if (activate) {
@@ -299,7 +318,9 @@ private:
 		}
 	}
 	/*************************************************************/
-
+	double calcLubricationRange(const int& i, const int& j);
+	double calcLongInteractionRange(const int&, const int&);
+	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
@@ -435,6 +456,11 @@ private:
 		return total_num_timesteps;
 	}
 
+	double get_total_energy()
+	{
+		return total_energy;
+	}
+	
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */

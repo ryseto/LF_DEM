@@ -48,6 +48,7 @@ private:
 	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
 	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
 	double f_contact_normal_norm; // normal contact force
+	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
 	vec3d f_rolling;
@@ -92,6 +93,10 @@ public:
 	{
 		return f_contact_normal_norm;
 	}
+	inline double get_normal_load()
+	{
+		return normal_load;
+	}
 	vec3d get_f_contact_tan()
 	{
 		return f_contact_tan;
@@ -113,5 +118,6 @@ public:
 	{
 		return contact_stresslet_XF_tan;
 	}
+	double calcEnergy();
 };
 #endif /* defined(__LF_DEM__Contact__) */

@@ -14,6 +14,7 @@ void Interaction::init(System *sys_)
 	lubrication.init(sys);
 	contact.init(sys, this);
 	repulsion.init(sys, this);
+	magneticforce.init(sys, this);
 }
 
 /* Make a normal vector
@@ -39,7 +40,8 @@ void Interaction::calcNormalVectorDistanceGap()
 /* Activate interaction between particles i and j.
  * Always j>i is satisfied.
  */
-void Interaction::activate(unsigned short i, unsigned short j, double range)
+void Interaction::activate(unsigned short i, unsigned short j,
+						   double interaction_range_, double lub_range_)
 {
 	active = true;
 	if (j > i) {
@@ -64,7 +66,8 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	 */
 	a_reduced = a0*a1/(a0+a1);
 	set_ro(a0+a1); // ro=a0+a1
-	interaction_range = range;
+	interaction_range = interaction_range_;
+	lub_range = lub_range_;
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
 	 * If the scaled kn is used there,
@@ -75,6 +78,10 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	if (sys->repulsiveforce) {
 		repulsion.activate();
 	}
+	if (sys->magnetic) {
+		magneticforce.activate();
+	}
+	
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.setInteractionData();
@@ -83,6 +90,7 @@ void Interaction::activate(unsigned short i, unsigned short j, double range)
 	} else {
 		contact.deactivate();
 	}
+	
 	contact_state_changed_after_predictor = false;
 	lubrication.getInteractionData();
 	lubrication.updateResistanceCoeff();
@@ -108,13 +116,22 @@ void Interaction::updateState(bool &deactivated)
 	}
 	calcNormalVectorDistanceGap();
 	updateContactState(deactivated);
-
-	lubrication.updateResistanceCoeff();
+	if (activatedLubrication()) {
+		lubrication.updateResistanceCoeff();
+	}
 	if (contact.state > 0) {
 		contact.calcContactInteraction();
 	}
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
+	}
+	if (sys->magnetic) {
+		if (sys->magnetic_moment_norm[p0] != 0
+			&& sys->magnetic_moment_norm[p1] != 0) {
+			magneticforce.calcForceToruqe();
+		} else {
+			magneticforce.resetForceToruqe();
+		}
 	}
 }
 
@@ -125,15 +142,14 @@ void Interaction::updateContactState(bool &deactivated)
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
-			if ( reduced_gap > 0) {
+			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
 			/*
 			 * Checking cohesive bond breaking.
 			 */
-			if (sys->target_stress != 0
-				&& contact.get_f_contact_normal_norm()+sys->dimensionless_cohesive_force < 0) {
+			if (contact.get_normal_load() < 0) {
 				breakup_contact_bond = true;
 			}
 		}
@@ -230,3 +246,4 @@ double Interaction::getNormalVelocity()
 	}
 	return dot(d_velocity, nvec);
 }
+

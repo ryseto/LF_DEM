@@ -145,7 +145,7 @@ void GenerateInitConfig::outputPositionData()
 		unsigned short i,j;
 		sys.interaction[k].get_par_num(i, j);
 		vec3d d_pos = position[i]-position[j];
-		if (d_pos.norm()< 10){
+		if (d_pos.norm() < 10){
 			fout_yap << "l ";
 			fout_yap << position[i].x << ' ';
 			fout_yap << position[i].y << ' ';
@@ -165,7 +165,6 @@ double GenerateInitConfig::computeGradient()
 	}
 	unsigned short i,j;
 	double r, rcont;
-	vec3d nr_vec;
 	double amp, amp2;
 	double energy = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
@@ -173,7 +172,7 @@ double GenerateInitConfig::computeGradient()
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();
 			rcont = sys.interaction[k].get_ro();
-			nr_vec = sys.interaction[k].get_nvec();
+			const vec3d &nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
