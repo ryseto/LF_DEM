@@ -156,12 +156,14 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 		
 		if (p.repulsiveforce == false
 			&& p.cohesion == false
-			&& p.critical_load == false) {
+			&& p.critical_load == false
+			&& p.magnetic == false) {
 			cerr << "Only Brownian" << endl;
 			string_control_parameters << "_p" << sys.dimensionless_number;
 		} else if (p.repulsiveforce == true
 				   && p.critical_load == false
-				   && p.cohesion == false) {
+				   && p.cohesion == false
+				   && p.magnetic == false) {
 			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
 			/* When both Brownian and repulsive forces exist
 			 
@@ -169,21 +171,28 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 			 * Filename includes "rXXXX_pXXXX".
 			 */
 			sys.amplitudes.repulsion = p.ratio_repulsion/sys.dimensionless_number;
-			sys.repulsiveforce = true;
 			string_control_parameters << "_r" << p.ratio_repulsion  << "_p" << sys.dimensionless_number;
 		} else if (p.critical_load == true
 				   && p.repulsiveforce == false
-				   && p.cohesion == false) {
+				   && p.cohesion == false
+				   && p.magnetic == false) {
 			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
 			sys.critical_normal_force = p.ratio_critical_load/sys.dimensionless_number;
 			p.friction_model = 2;
 			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
 		} else if (p.cohesion == true
 				   && p.repulsiveforce == false
-				   && p.critical_load == false) {
+				   && p.critical_load == false
+				   && p.magnetic == false) {
 			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
 			sys.dimensionless_cohesive_force = p.ratio_cohesion/sys.dimensionless_number;
 			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
+		} else if (p.magnetic == true
+				   && p.repulsiveforce == false
+				   && p.cohesion == false
+				   && p.critical_load == false) {
+			cerr << "Brownian Magnetic" << endl;
+			string_control_parameters << "_mag_p" << sys.dimensionless_number;
 		} else {
 			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
 			cerr << "critical_load: " << p.critical_load << endl;
@@ -197,12 +206,14 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 		sys.set_shear_rate(sys.dimensionless_number);
 		if (p.repulsiveforce == false
 			&& p.cohesion == false
-			&& p.critical_load == false) {
+			&& p.critical_load == false
+			&& p.magnetic == false) {
 			cerr << "Only Brownian" << endl;
 			string_control_parameters << "_p" << sys.dimensionless_number;
 		} else if (p.repulsiveforce == true
 				   && p.critical_load == false
-				   && p.cohesion == false) {
+				   && p.cohesion == false
+				   && p.magnetic == false) {
 			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
 			/* When both Brownian and repulsive forces exist
 			 *
@@ -213,18 +224,25 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 			string_control_parameters << "_r" << p.ratio_repulsion << "_p" << sys.dimensionless_number;
 		} else if (p.critical_load == true
 				   && p.repulsiveforce == false
-				   && p.cohesion == false) {
+				   && p.cohesion == false
+				   && p.magnetic == false) {
 			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
 			sys.critical_normal_force = p.ratio_critical_load;
 			p.friction_model = 2;
 			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
 		} else if (p.cohesion == true
 				   && p.repulsiveforce == false
-				   && p.critical_load == false) {
+				   && p.critical_load == false
+				   && p.magnetic == false) {
 			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
 			sys.cohesive_force = p.ratio_cohesion;
 			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
-			
+		} else if (p.magnetic == true
+				   && p.repulsiveforce == false
+				   && p.cohesion == false
+				   && p.critical_load == false) {
+			cerr << "Brownian Magnetic" << endl;
+			string_control_parameters << "_mag_p" << sys.dimensionless_number;
 		} else {
 			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
 			cerr << "critical_load: " << p.critical_load << endl;
@@ -266,7 +284,7 @@ void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
 			   && p.repulsiveforce == false
 			   && p.critical_load == false
 			   && p.magnetic == false) {
-		cerr << "Cohesive force, shear rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+		cerr << "Cohesive force, sheafr rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
 		sys.dimensionless_number = dimensionlessnumber;
 		/* In the rate control simulation,
 		 * dimensionless_cohesive_force can be given.
@@ -464,12 +482,22 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
-	
+
+	/******************** OUTPUT INITIAL DATA ********************/
+	evaluateData();
+	outputRheologyData();
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
+
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
+
+		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputRheologyData();
 		outputStressTensorData();
@@ -485,6 +513,8 @@ void Simulation::simulationSteadyShear(string in_args,
 				cnt_config_out ++;
 			}
 		}
+		/*****************************************************/
+		
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (abs(sys.get_shear_rate()) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
@@ -615,11 +645,17 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double next_strain = 0;
-	//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
 	int jammed = 0;
+	/******************** OUTPUT INITIAL DATA ********************/
+	evaluateData();
+	outputRheologyData();
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
 	for (unsigned int step = 0; step<strain_sequence.size(); step++) {
 		/* The target stress (``rsequence'') is given trough the command argument
 		 * with an unit stres: eta_0*gammmadot_0.
@@ -635,9 +671,10 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 		while (sys.get_shear_strain() < next_strain-1e-8) {
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
-			
 			sys.timeEvolution(time_output_data);
 			cnt_simu_loop ++;
+			
+			/******************** OUTPUT DATA ********************/
 			evaluateData();
 			outputRheologyData();
 			outputStressTensorData();
@@ -653,6 +690,8 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 					cnt_config_out ++;
 				}
 			}
+			/******************************************************/
+			
 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
 				cerr << "shear jamming " << jammed << endl;
 				jammed ++;
@@ -1484,7 +1523,9 @@ void Simulation::outputConfigurationData()
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_number << ' ';
-		fout_particle << sys.target_stress_input << endl;
+		fout_particle << sys.target_stress_input << ' ';
+		fout_particle << sys.get_time() << endl;
+		
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];
@@ -1523,7 +1564,9 @@ void Simulation::outputConfigurationData()
 	}
 	if (p.out_data_interaction) {
 		fout_interaction << "# " << sys.get_shear_strain();
-		fout_interaction << ' ' << cnt_interaction << endl;
+		fout_interaction << ' ' << cnt_interaction;
+		fout_interaction << ' ' << sys.get_time();
+		fout_interaction << endl;
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;

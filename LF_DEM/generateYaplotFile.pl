@@ -10,7 +10,7 @@ use Math::Trig;
 use IO::Handle;
 $y_section = 0;
 $yap_radius = 1;
-$magnetoffset_y = -0.0g1;
+$magnetoffset_y = -0.01;
 
 $particle_data = $ARGV[0];
 $output_interval = 1;
@@ -292,7 +292,6 @@ sub InInteractions {
 		#		"#16: norm of the normal repulsive force\n"
 		#		"#17: Viscosity contribution of contact xF\n";
 		if ($output == 1) {
-			
 			($i, $j, $contact, $nx, $ny, $nz, #1---6
 			$gap, $f_lub_norm, # 7, 8
 			$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
@@ -1019,16 +1018,15 @@ sub OutMagMomentN {
 	$xi = $posx[$i];
 	$yi = $posy[$i]+$magnetoffset_y;
 	$zi = $posz[$i];
-	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
 	#	printf "$mm\n";
 	
-	if ($mm > 0) {
+	if ($mm[$i] > 0) {
 		$xa = $xi; #- $magmom_x[$i]/$mm ;
 		$ya = $yi; #- $magmom_y[$i]/$mm ;
 		$za = $zi; #- $magmom_z[$i]/$mm ;
-		$xb = $xi + $magmom_x[$i]/$mm ;
-		$yb = $yi + $magmom_y[$i]/$mm ;
-		$zb = $zi + $magmom_z[$i]/$mm ;
+		$xb = $xi + $magmom_x[$i]/$mm[$i];
+		$yb = $yi + $magmom_y[$i]/$mm[$i];
+		$zb = $zi + $magmom_z[$i]/$mm[$i];
 		printf OUT "s $xa $ya $za $xb $yb $zb\n";
 	}
 }
@@ -1038,16 +1036,13 @@ sub OutMagMomentS {
 	$xi = $posx[$i];
 	$yi = $posy[$i]+$magnetoffset_y;
 	$zi = $posz[$i];
-	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
-	#	printf "$mm\n";
-	
-	if ($mm > 0) {
+	if ($mm[$i] > 0) {
 		$xa = $xi; #- $magmom_x[$i]/$mm ;
 		$ya = $yi; #- $magmom_y[$i]/$mm ;
 		$za = $zi; #- $magmom_z[$i]/$mm ;
-		$xb = $xi - $magmom_x[$i]/$mm ;
-		$yb = $yi - $magmom_y[$i]/$mm ;
-		$zb = $zi - $magmom_z[$i]/$mm ;
+		$xb = $xi - $magmom_x[$i]/$mm[$i];
+		$yb = $yi - $magmom_y[$i]/$mm[$i];
+		$zb = $zi - $magmom_z[$i]/$mm[$i];
 		printf OUT "s $xa $ya $za $xb $yb $zb\n";
 	}
 }

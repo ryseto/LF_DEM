@@ -14,7 +14,6 @@
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 
 System::System():
-maxnb_interactionpair_per_particle(100),
 lowPeclet(false),
 brownian(false),
 friction(false),
@@ -25,6 +24,7 @@ twodimension(false),
 zero_shear(false),
 critical_normal_force(0),
 magnetic_coeffient(1),
+target_stress_input(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0)
@@ -127,6 +127,17 @@ void System::importParameterSet(ParameterSet &ps)
 void System::allocateRessources()
 {
 	linalg_size = 6*np;
+	double interaction_volume;
+	if (twodimension) {
+		interaction_volume = M_PI*interaction_range*interaction_range;
+		double particle_volume = M_PI*radius[0]*radius[0];
+		maxnb_interactionpair_per_particle = 0.83*interaction_volume/particle_volume;
+	} else {
+		interaction_volume = (4*M_PI/3)*interaction_range*interaction_range*interaction_range;
+		double particle_volume = (4*M_PI/3)*radius[0]*radius[0]*radius[0];
+		maxnb_interactionpair_per_particle = 0.64*interaction_volume/particle_volume;
+	}
+	cerr << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
