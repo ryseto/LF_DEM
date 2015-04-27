@@ -8,18 +8,19 @@
 
 use Math::Trig;
 use IO::Handle;
-
 $y_section = 0;
 $yap_radius = 1;
+$magnetoffset_y = -0.0g1;
 
 $particle_data = $ARGV[0];
-
+$output_interval = 1;
 if ($#ARGV >= 1){
 	$output_interval = $ARGV[1];
 }
-if ($#ARGV == 2){
-	$force_factor = $ARGV[1];
-}
+
+#if ($#ARGV == 2){
+#	$force_factor = $ARGV[2];
+#}
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -29,7 +30,7 @@ $name = substr($particle_data, $i, $j-$i);
 $interaction_data = "int_${name}.dat";
 #printf "$interaction_data\n";
 $output = "y_$name.yap";
-$outputed = "ed_$name.dat";
+#$outputed = "ed_$name.dat";
 #$output2 = "nvec_$name.dat";
 #$outenergy = "energy_$name.dat";
 #$out_gaps = "gaps_$name.dat";
@@ -60,9 +61,8 @@ while (1) {
 #printf  "$fmax_ave\n";
 #exit;$
 
-open (OUTE, "> $outputed");
-
-OUTE->autoflush(1);
+#open (OUTE, "> $outputed");
+#OUTE->autoflush(1);
 
 open (OUT, "> ${output}");
 
@@ -117,6 +117,7 @@ $shear_strain_previous = 0;
 $cnt_interval = 0;
 
 while (1){
+	
 	if ($cnt_interval % $output_interval == 0) {
 		$output = 1;
 	} else {
@@ -1016,7 +1017,7 @@ sub OutMagMomentN {
 	($i) = @_;
 	$a = $radius[$i];
 	$xi = $posx[$i];
-	$yi = $posy[$i];
+	$yi = $posy[$i]+$magnetoffset_y;
 	$zi = $posz[$i];
 	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
 	#	printf "$mm\n";
@@ -1035,7 +1036,7 @@ sub OutMagMomentS {
 	($i) = @_;
 	$a = $radius[$i];
 	$xi = $posx[$i];
-	$yi = $posy[$i];
+	$yi = $posy[$i]+$magnetoffset_y;
 	$zi = $posz[$i];
 	$mm = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]+$magmom_z[$i]*$magmom_z[$i]);
 	#	printf "$mm\n";

@@ -75,8 +75,7 @@ ifeq ($(OS_version), OIST)
 endif
 
 # Cholmod
-Cholmod_Linking_Flags =  -lcholmod -lamd -lcamd -lcolamd -lccolamd
-#Cholmod_Linking_Flags = 
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
 
 ifeq ($(OS_version), SI)
     Cholmod_Linking_Flags  =
@@ -88,7 +87,6 @@ ifeq ($(OS_version), OIST)
 		Cholmod_Linking_Flags += -lmetis
 	endif
 endif
-
 
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
