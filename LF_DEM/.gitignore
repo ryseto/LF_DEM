@@ -33,6 +33,10 @@ LF_DEM
 LF_DEM.dSYM/
 LF_DEM.dtps/
 
+# version file
+VersionInfo.h
+
+
 # archives
 *.gz
 *.tgz
