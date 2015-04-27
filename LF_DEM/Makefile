@@ -38,7 +38,6 @@ UseTrilinos=no
 # Enable use of Metis library ( yes / no )
 UseMetis=no
 
-
 #======== Include Paths =============
 Cholmod_include_path_OSX     = /usr/local/include/
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
@@ -49,7 +48,6 @@ ifeq ($(UseTrilinos),yes)
 	Trilinos_include_path_Linux  = /home/romain/romain/recherche/trilinos-11.0.3-Source/
 	Trilinos_include_path_OSX    = /usr/local/include/
 endif
-
 
 Trilinos_path = $(Trilinos_include_path_$(OS_version))
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
@@ -77,8 +75,8 @@ ifeq ($(OS_version), OIST)
 endif
 
 # Cholmod
-#Cholmod_Linking_Flags =  -lcholmod -lamd -lcamd -lcolamd -lccolamd
-Cholmod_Linking_Flags = 
+Cholmod_Linking_Flags =  -lcholmod -lamd -lcamd -lcolamd -lccolamd
+#Cholmod_Linking_Flags = 
 
 ifeq ($(OS_version), SI)
     Cholmod_Linking_Flags  =
@@ -124,8 +122,8 @@ ifeq ($(UseTrilinos),yes)
 endif
 
 OUT_CODE=LF_DEM
-SRC= $(shell ls *.cpp)
-LIB=  $(shell ls *.h)  
+SRC=$(shell ls *.cpp)
+LIB=$(shell ls *.h)  
 OBJ=$(SRC:.cpp=.o)
 
 DATE=$(shell date +%D | sed "s./..g")

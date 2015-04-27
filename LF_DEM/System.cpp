@@ -15,19 +15,19 @@
 
 System::System():
 maxnb_interactionpair_per_particle(100),
-cohesion(false),
-brownian(false),
-repulsiveforce(false),
-zero_shear(false),
 lowPeclet(false),
-critical_normal_force(0),
-twodimension(false),
+brownian(false),
 friction(false),
 friction_model(-1),
-new_contact_gap(0),
+repulsiveforce(false),
+cohesion(false),
+twodimension(false),
+zero_shear(false),
+critical_normal_force(0),
+magnetic_coeffient(1),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
-magnetic_coeffient(1)
+new_contact_gap(0)
 {}
 
 vec3d System::randUniformSphere(double r)
