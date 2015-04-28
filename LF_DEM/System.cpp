@@ -553,23 +553,45 @@ void System::setupSystem(string control)
 			if (i < num_magnetic) {
 				switch (p.dipole_orientation) {
 					case 0:
+					{
 						magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
 						break;
+					}
 					case 1:
+					{
 						magnetic_moment[i].set(magnetic_dipole_moment,0,0);
 						break;
+					}
 					case 2:
+					{
 						magnetic_moment[i].set(0,magnetic_dipole_moment,0);
 						break;
+					}
 					case 3:
+					{
 						magnetic_moment[i].set(0,0,magnetic_dipole_moment);
 						break;
+					}
 					case 4:
-						double xx = position[i].x-20;
-						double yy = position[i].y-20;
+					{
+						double xx = position[i].x-lx_half;
+						double yy = position[i].y-ly_half;
 						double theta = atan2(yy,xx);
-						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI), magnetic_dipole_moment*cos(theta),0);
+						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI),
+											   magnetic_dipole_moment*cos(theta),
+											   0);
 						break;
+					}
+					case 5:
+					{
+						double xx = position[i].x-lx_half;
+						double yy = position[i].y-ly_half;
+						double theta = atan2(yy,xx);
+						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI)*cos(M_PI/3),
+											   magnetic_dipole_moment*cos(theta)*cos(M_PI/3),
+											   magnetic_dipole_moment*sin(M_PI/3));
+						break;
+					}
 				}
 			} else {
 				magnetic_moment[i].set(0,0,0);
@@ -1700,8 +1722,10 @@ void System::calcPotentialEnergy()
 			}
 		}
 	}
-	for (int i=0; i<num_magnetic; i++) {
-		total_energy += -dot(magnetic_moment[i], external_magnetic_field);
+	if (external_magnetic_field.is_not_zero()) {
+		for (int i=0; i<num_magnetic; i++) {
+			total_energy += -dot(magnetic_moment[i], external_magnetic_field);
+		}
 	}
 }
 

@@ -73,10 +73,10 @@ double MagneticForce::calcEnergy()
 	double r_cubic = r*r*r;
 	const vec3d &m0 = sys->magnetic_moment[p0];
 	const vec3d &m1 = sys->magnetic_moment[p1];
-	const vec3d &rvec = interaction->rvec;
+	const vec3d &nvec = interaction->nvec;
 	/*
 	 * magnetic_coeffient/3 = mu0/(4*M_PI)
 	 */
-	energy = -(coeffient/(3*r_cubic))*(3*dot(m0, rvec)*dot(m1, rvec)-dot(m0,m1));
+	energy = -(coeffient/(3*r_cubic))*(3*dot(m0, nvec)*dot(m1, nvec)-dot(m0,m1));
 	return energy;
 }
