@@ -873,7 +873,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "magnetic_dipole_moment") {
 		p.magnetic_dipole_moment = atof(value.c_str());
 	} else if (keyword == "external_magnetic_field") {
-		p.external_magnetic_field =  str2vec3d(value);
+		p.external_magnetic_field = str2vec3d(value);
+	} else if (keyword == "dipole_orientation") {
+		p.dipole_orientation = atoi(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -1135,6 +1137,7 @@ void Simulation::setDefaultParameters()
 	p.fixed_dt = false;
 	p.magnetic_dipole_moment = 1;
 	p.ratio_nonmagnetic = 0;
+	p.dipole_orientation = 0;
 }
 
 void Simulation::importInitialPositionFile()

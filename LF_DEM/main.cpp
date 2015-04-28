@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hng:s:S:r:R:k:i:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hng:s:S:r:R:k:i:h:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
 	// Incompatibilities
 	//	if (peclet && rheology_control == "stress") {
-	//		incompatibility_exiting("peclet", "stress_controlled");
+	//		incompatibility_exiting("peclet", "strss_controlled");
 	//	} else if (critical_load && rheology_control == "stress") {
 	//		incompatibility_exiting("critical_load", "stress_controlled");
 	//	} else if (critical_load && repulsion) {

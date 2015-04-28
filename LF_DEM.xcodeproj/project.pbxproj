@@ -120,7 +120,6 @@
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Lubrication.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
-		D936367019C3E5F1005C0204 /* VersionInfo.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = VersionInfo.h; sourceTree = "<group>"; };
 		D94F42151AB5028600237D7E /* reduce_rheodata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = reduce_rheodata.pl; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Box.cpp; sourceTree = "<group>"; };
@@ -396,7 +395,6 @@
 				D9F6A29A171DA1C20034E186 /* StressTensor.h */,
 				D91539E316718D3200FBD57E /* GenerateInitConfig.h */,
 				D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */,
-				D936367019C3E5F1005C0204 /* VersionInfo.h */,
 				D9278EA61A93050700ABCD87 /* Averager.h */,
 				D988E399165443C10009949F /* vec3d.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
