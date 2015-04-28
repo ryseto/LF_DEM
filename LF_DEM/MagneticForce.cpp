@@ -52,8 +52,8 @@ void MagneticForce::calcForceToruqe()
 	force_vector0 = -(coeffient/(r_cubic*r))*(dot(m1, nvec)*m0+dot(m0, nvec)*m1
 											  +dot(m1, m0)*nvec
 											  -5*dot(m0,nvec)*dot(m1,nvec)*nvec);
-	vec3d b0 = (coeffient/r_cubic)*(3*dot(nvec, m0)*(nvec)-m0);
-	vec3d b1 = (coeffient/r_cubic)*(3*dot(nvec, m1)*(nvec)-m1);
+	vec3d b0 = (coeffient/r_cubic)*(3*dot(nvec, m0)*nvec-m0);
+	vec3d b1 = (coeffient/r_cubic)*(3*dot(nvec, m1)*nvec-m1);
 	torque0 = cross(m0, b1);
 	torque1 = cross(m1, b0);
 }

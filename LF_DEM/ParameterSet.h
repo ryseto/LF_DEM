@@ -103,9 +103,9 @@ struct ParameterSet
 	double ft_max;							///< max tangential force in friction_model = 5
 	bool fixed_dt;							///< Use constant dt
 	
-
-	double magnetic_dipole_moment;
-	double ratio_nonmagnetic;
+	double magnetic_dipole_moment;			///<
+	double ratio_nonmagnetic;				///<
+	int dipole_orientation;					///<
 	vec3d external_magnetic_field;
 };
 

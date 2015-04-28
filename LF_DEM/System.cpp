@@ -544,12 +544,33 @@ void System::setupSystem(string control)
 		 *
 		 */
 		magnetic_moment_norm.resize(np);
+
 		num_magnetic = np-round(np*ratio_nonmagnetic);
+		cerr << "np = " << np << endl;
+		cerr << ratio_nonmagnetic << endl;
 		cerr << "number of magnetic particles: " << num_magnetic << endl;
 		for (int i=0; i<np; i++) {
 			if (i < num_magnetic) {
-				magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
-				//magnetic_moment[i].set(0, magnetic_dipole_moment, 0);
+				switch (p.dipole_orientation) {
+					case 0:
+						magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
+						break;
+					case 1:
+						magnetic_moment[i].set(magnetic_dipole_moment,0,0);
+						break;
+					case 2:
+						magnetic_moment[i].set(0,magnetic_dipole_moment,0);
+						break;
+					case 3:
+						magnetic_moment[i].set(0,0,magnetic_dipole_moment);
+						break;
+					case 4:
+						double xx = position[i].x-20;
+						double yy = position[i].y-20;
+						double theta = atan2(yy,xx);
+						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI), magnetic_dipole_moment*cos(theta),0);
+						break;
+				}
 			} else {
 				magnetic_moment[i].set(0,0,0);
 			}
