@@ -311,6 +311,7 @@ private:
 	void calcPotentialEnergy();
 	void setupShearFlow(bool activate)
 	{
+		// @@@@ This function looks omittable.
 		if (activate) {
 			vel_difference = lz*shear_rate;
 		} else {

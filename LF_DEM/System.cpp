@@ -499,7 +499,11 @@ void System::setupSystem(string control)
 	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
-	vel_difference = shear_rate*lz;
+	if (!zero_shear) {
+		vel_difference = shear_rate*lz;
+	} else {
+		vel_difference = 0;
+	}
 	stokes_solver.initialize();
 	dt = p.dt;
 	fixed_dt = p.fixed_dt;
@@ -1578,7 +1582,9 @@ double System::evaluateMaxAngVelocity()
 	double _max_ang_velocity = 0;
 	for (int i = 0; i < np; i++) {
 		vec3d na_ang_velocity_tmp = ang_velocity[i];
-		na_ang_velocity_tmp.y -= 0.5*shear_rate;
+		if (!zero_shear) {
+			na_ang_velocity_tmp.y -= 0.5*shear_rate;
+		}
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
 			_max_ang_velocity = na_ang_velocity_tmp.norm();
 		}
