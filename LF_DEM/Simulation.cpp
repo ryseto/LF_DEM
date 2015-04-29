@@ -450,8 +450,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
+		sys.setupShearFlow(false);
+	} else {
+		sys.setupShearFlow(true);
 	}
-	sys.setupShearFlow(true);
 }
 
 /*
@@ -484,12 +486,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_0 = now;
 
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
-	outputRheologyData();
-	outputStressTensorData();
-	outputConfigurationBinary();
-	outputConfigurationData();
-	/*************************************************************/
+//	evaluateData();
+//	outputRheologyData();
+//	outputStressTensorData();
+//	outputConfigurationBinary();
+//	outputConfigurationData();
+//	/*************************************************************/
 
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
@@ -739,10 +741,6 @@ vec3d str2vec3d(string value)
 	if (l4 == string::npos) {
 		exit(1);
 	}
-	cerr << l1 << ' ';
-	cerr << (string::size_type)l2 << ' ' ;
-	cerr << (string::size_type)l3 << ' ' << l4 << endl;
-	cerr << value << endl;
 	double vx = atof(value.substr(l1+1, l2-l1-1).c_str());
 	double vy = atof(value.substr(l2+1, l3-l2-1).c_str());
 	double vz = atof(value.substr(l3+1, l4-l3-1).c_str());

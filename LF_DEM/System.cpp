@@ -767,10 +767,11 @@ void System::timeStepMove()
 	}
 	time += dt;
 	total_num_timesteps ++;
-	
 	/* evolve PBC */
 	double strain_increment = 0;
-	strain_increment = dt*shear_rate;
+	if (!zero_shear){
+		strain_increment = dt*shear_rate;
+	}
 	timeStepBoxing(strain_increment);
 	
 	/* move particles */

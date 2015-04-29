@@ -31,7 +31,7 @@ void Contact::init(System *sys_, Interaction *interaction_)
 void Contact::setInteractionData()
 {
 	interaction->get_par_num(p0, p1);
-	double &ro_12 = interaction->ro_12;
+	const double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
@@ -141,13 +141,14 @@ void Contact::calcContactInteraction()
 	
 	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-	disp_tan.vertical_projection(interaction->nvec);
-	f_contact_tan = kt_scaled*disp_tan;
-	if (sys->rolling_friction) {
-		f_rolling = kr_scaled*disp_rolling;
+	if (sys->friction) {
+		disp_tan.vertical_projection(interaction->nvec);
+		f_contact_tan = kt_scaled*disp_tan;
+		if (sys->rolling_friction) {
+			f_rolling = kr_scaled*disp_rolling;
+		}
+		(this->*frictionlaw)();
 	}
-	(this->*frictionlaw)();
-
 	//	calcScaledForce();
 }
 
@@ -369,12 +370,13 @@ void Contact::calcContactStress()
 
 double Contact::calcEnergy()
 {
-	double energy = 0;
 	double overlap = -interaction->get_reduced_gap();
 	double sq_tan_norm = disp_tan.sq_norm();
 	double sq_disp_rolling = disp_rolling.sq_norm();
-	energy += 0.5*kn_scaled*overlap*overlap;
-	energy += 0.5*kt_scaled*sq_tan_norm;
+	double energy = 0.5*kn_scaled*overlap*overlap;
+	if (state >= 2) {
+		energy += 0.5*kt_scaled*sq_tan_norm;
+	}
 	if (sys->rolling_friction) {
 		energy += 0.5*kr_scaled*sq_disp_rolling;
 	}

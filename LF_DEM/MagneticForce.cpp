@@ -18,17 +18,9 @@ void MagneticForce::init(System *sys_, Interaction *interaction_)
 void MagneticForce::activate()
 {
 	interaction->get_par_num(p0, p1);
-	/*
-	 * The size dependence of repulsive force:
-	 * a0*a1/(a1+a2)/2
-	 */
 	force_vector0.reset();
 	torque0.reset();
 	torque1.reset();
-	/*
-	 *
-	 *
-	 */
 	coeffient = sys->magnetic_coeffient;
 }
 
@@ -36,10 +28,6 @@ void MagneticForce::calcForceToruqe()
 {
 	/**
 		\brief Compute the magnetic force in the System class units.
-		
-		The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
-		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
-		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	 */
 	double r = interaction->get_r();
 	double r_cubic = r*r*r;
