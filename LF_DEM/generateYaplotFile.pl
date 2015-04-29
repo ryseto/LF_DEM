@@ -137,7 +137,7 @@ while (1){
 	&InParticles;
 	last unless defined $line;
 	&InInteractions;
-	if ($output == 1) {
+	if ($cnt_interval == 0 || $output == 1) {
 		&OutYaplotData;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;
