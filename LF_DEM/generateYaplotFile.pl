@@ -30,6 +30,18 @@ $name = substr($particle_data, $i, $j-$i);
 $interaction_data = "int_${name}.dat";
 #printf "$interaction_data\n";
 $output = "y_$name.yap";
+
+my $pos;
+$pos = index($name, "Cylinder");
+if ($pos != -1) {
+	$cylinder = 1;
+} else {
+	$cylinder = 0;
+}
+if ($cylinder) {
+	$outputmp = "magprofile_$name.dat";
+	open (OUTMAGPROF, "> $outputmp");
+}
 #$outputed = "ed_$name.dat";
 #$output2 = "nvec_$name.dat";
 #$outenergy = "energy_$name.dat";
@@ -117,21 +129,26 @@ $shear_strain_previous = 0;
 $cnt_interval = 0;
 
 while (1){
-	
 	if ($cnt_interval % $output_interval == 0) {
 		$output = 1;
 	} else {
 		$output = 0;
 	}
-	
 	&InParticles;
 	last unless defined $line;
 	&InInteractions;
-	if ($output == 1) {
+	if ($cnt_interval == 0 || $output == 1) {
 		&OutYaplotData;
-
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;
+		if ($cylinder) {
+			for ($i = 0; $i < $np; $i++){
+				$magmom_xy = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]);
+				$magangle = atan2($magmom_z[$i], $magmom_xy);
+				printf OUTMAGPROF "$posz[$i] $magangle \n";
+			}
+			printf OUTMAGPROF "\n";
+		}
 	}
 	if ($shear_strain > $shear_strain_next ) {
 		$shear_strain_next += 0.1;
@@ -146,13 +163,17 @@ while (1){
 open (OUTLAST, "> LastConfig.dat");
 
 printf OUTLAST "$shear_disp\n";
-for ($i = 0; $i < $np; $i ++){
+for ($i = 0; $i < $np; $i++){
 	$xx = 0.5*$Lx + $posx[$i];
 	$yy = 0.5*$Ly + $posy[$i];
 	$zz = 0.5*$Lz + $posz[$i];
 	printf OUTLAST "$xx $yy $zz $radius[$i]\n";
 }
 close (OUTLAST);
+	
+if ($cylinder) {
+	close (OUTMAGPROF);
+}
 
 close (OUT);
 close (OUTE);
@@ -196,15 +217,12 @@ sub InParticles {
 		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle> ;
-			
 			#			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			#
 			if ($output == 1) {
 				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 				$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
-				
-				
 				#		if (true){
 				#			#printf OUTMP "$line";
 				#			printf OUTMP "$i $x $y $z $a\n";
@@ -688,7 +706,7 @@ sub OutYaplotData{
 	for ($i = 0; $i < $np; $i ++){
 		&OutMagMoment($i);
 	}
-
+	
 	#	if ($Ly == 0){
 	#		printf OUT "y 6\n";
 	#		printf OUT "@ 1\n";
