@@ -72,6 +72,20 @@ $ make
 $ make install
 ```
 
+<!---
+### PBS scripts
+
+
+```
+#!/bin/bash
+#
+#PBS -q production
+#PBS -N your_job_name
+#PBS -l select=1:ncpus=1
+#PBS -l place=free
+```
+-->
+
 ## Penzias
 
 ### SuiteSparse
@@ -81,7 +95,7 @@ First create `~/usr/lib` and `~/usr/include` if you don't have such directories.
 $ mkdir ~/usr; mkdir ~usr/local; mkdir ~usr/include
 ```
 
-Select the Makefile configuration file for a compilation on Linux:
+Select the Makefile configuration file for a compilation on Linux for GPU:
 ```
 $ cd path/to/yr/lib/SuiteSparse/SuiteSparse_config
 $ cp SuiteSparse_config_GPU_icc.mk SuiteSparse_config.mk
