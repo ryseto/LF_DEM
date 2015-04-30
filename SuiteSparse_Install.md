@@ -72,10 +72,9 @@ $ make
 $ make install
 ```
 
-<!---
 ### PBS scripts
 
-
+Header of a job script file on Andy:
 ```
 #!/bin/bash
 #
@@ -83,8 +82,14 @@ $ make install
 #PBS -N your_job_name
 #PBS -l select=1:ncpus=1
 #PBS -l place=free
+#PBS -V
+
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export CHOLMOD_OMP_NUM_THREADS=1
 ```
--->
+
+
 
 ## Penzias
 
@@ -112,4 +117,19 @@ Then you can compile, by getting back to the main SuiteSparse directory and make
 $ cd ..
 $ make
 $ make install
+```
+
+### PBS scripts
+
+Header of a GPU job script file on Penzias:
+```
+#!/bin/bash
+#
+# My serial PBS test job.
+#
+#PBS -q production
+#PBS -l select=1:ncpus=1:ngpus=1:mem=2880mb:accel=kepler
+#PBS -N your_script_name
+#PBS -l place=free
+#PBS -V
 ```
