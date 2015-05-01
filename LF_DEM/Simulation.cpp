@@ -1066,6 +1066,7 @@ void Simulation::setDefaultParameters()
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
 	p.interaction_range = 5;
+	p.ratio_cohesion = 1;
 	/*
 	 * Stokes drag coeffient
 	 */
