@@ -17,7 +17,7 @@ LF_DEM requires the sparse linear algebra software
 [SuiteSparse](http://faculty.cse.tamu.edu/davis/suitesparse.html) to
 be installed.
 
-To install SuiteSparse on CUNY-HPPC, see [these instructions](lf_dem/src/master/SuiteSparse_Install.md).
+To install SuiteSparse on CUNY-HPPC, see [these instructions](./SuiteSparse_Install.md).
 
 ##Getting the code
 
