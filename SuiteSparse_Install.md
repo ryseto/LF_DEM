@@ -72,6 +72,25 @@ $ make
 $ make install
 ```
 
+### PBS scripts
+
+Header of a job script file on Andy:
+```
+#!/bin/bash
+#
+#PBS -q production
+#PBS -N your_job_name
+#PBS -l select=1:ncpus=1
+#PBS -l place=free
+#PBS -V
+
+export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export CHOLMOD_OMP_NUM_THREADS=1
+```
+
+
+
 ## Penzias
 
 ### SuiteSparse
@@ -81,7 +100,7 @@ First create `~/usr/lib` and `~/usr/include` if you don't have such directories.
 $ mkdir ~/usr; mkdir ~usr/local; mkdir ~usr/include
 ```
 
-Select the Makefile configuration file for a compilation on Linux:
+Select the Makefile configuration file for a compilation on Linux for GPU:
 ```
 $ cd path/to/yr/lib/SuiteSparse/SuiteSparse_config
 $ cp SuiteSparse_config_GPU_icc.mk SuiteSparse_config.mk
@@ -98,4 +117,19 @@ Then you can compile, by getting back to the main SuiteSparse directory and make
 $ cd ..
 $ make
 $ make install
+```
+
+### PBS scripts
+
+Header of a GPU job script file on Penzias:
+```
+#!/bin/bash
+#
+# My serial PBS test job.
+#
+#PBS -q production
+#PBS -l select=1:ncpus=1:ngpus=1:mem=2880mb:accel=kepler
+#PBS -N your_script_name
+#PBS -l place=free
+#PBS -V
 ```
