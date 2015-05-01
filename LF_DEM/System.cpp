@@ -130,11 +130,11 @@ void System::allocateRessources()
 	double interaction_volume;
 	if (twodimension) {
 		interaction_volume = M_PI*interaction_range*interaction_range;
-		double particle_volume = M_PI*radius[0]*radius[0];
+		double particle_volume = M_PI;
 		maxnb_interactionpair_per_particle = 0.83*interaction_volume/particle_volume;
 	} else {
 		interaction_volume = (4*M_PI/3)*interaction_range*interaction_range*interaction_range;
-		double particle_volume = (4*M_PI/3)*radius[0]*radius[0]*radius[0];
+		double particle_volume = 4*M_PI/3;
 		maxnb_interactionpair_per_particle = 0.64*interaction_volume/particle_volume;
 	}
 	cerr << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
