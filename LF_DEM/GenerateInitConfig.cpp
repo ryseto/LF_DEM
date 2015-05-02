@@ -19,10 +19,11 @@ int GenerateInitConfig::generate(int rand_seed_)
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
+	sys.interaction_range = 2.5;
+	sys.set_lub_max_gap(0.5);
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);
-	sys.set_lub_max_gap(0.5);
 	sys.in_predictor = false;
 	sys.set_integration_method(0);
 	putRandom();
@@ -442,7 +443,6 @@ void GenerateInitConfig::setParameters()
 	} else {
 		volume_fraction2 = 0;
 	}
-	cerr << "vf = " << volume_fraction1 << ' ' << volume_fraction2 << endl;
 	double total_volume;
 	double pvolume1, pvolume2;
 	if (sys.twodimension) {
@@ -486,7 +486,7 @@ void GenerateInitConfig::setParameters()
 	lz_half = lz/2;
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1 << ":" << np2 << endl;
-	cerr << "vf = " << volume_fraction << endl;
+	cerr << "vf1 = " << volume_fraction << endl;
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
 }

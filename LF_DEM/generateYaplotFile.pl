@@ -11,6 +11,7 @@ use IO::Handle;
 $y_section = 0;
 $yap_radius = 1;
 $magnetoffset_y = -0.01;
+$magdipole = 0;
 
 $particle_data = $ARGV[0];
 $output_interval = 1;
@@ -221,8 +222,18 @@ sub InParticles {
 			#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			#
 			if ($output == 1) {
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+				if ($magdipole) {
+					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+					$magmom_x[$i] = $mx;
+					$magmom_y[$i] = $my;
+					$magmom_z[$i] = $mz;
+					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
+				} else {
+					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+					$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+					$ang[$i] = $angle;
+				}
 				#		if (true){
 				#			#printf OUTMP "$line";
 				#			printf OUTMP "$i $x $y $z $a\n";
@@ -237,13 +248,7 @@ sub InParticles {
 				$omegax[$i] = $ox;
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
-				
 				$omegay[$i] = $oy;
-				#	$ang[$i] = $angle;
-				$magmom_x[$i] = $mx;
-				$magmom_y[$i] = $my;
-				$magmom_z[$i] = $mz;
-				$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
 				if ($radius_max < $a){
 					$radius_max = $a;
 				}
@@ -459,7 +464,7 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	
 	
-	printf OUT "@ 8\n";
+	printf OUT "@ 9\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
 	$switch = 0;
@@ -469,11 +474,13 @@ sub OutYaplotData{
 			printf OUT "r $r\n";
 		}
 		
-		if ($switch == 0 &&
-			$i >= 1 && $mm[$i] == 0){
-				printf OUT "@ 9\n";
-				$switch = 1;
-			}
+		if (magdipole) {
+			if ($switch == 0 &&
+				$i >= 1 && $mm[$i] == 0){
+					printf OUT "@ 8\n";
+					$switch = 1;
+				}
+		}
 		
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -699,22 +706,23 @@ sub OutYaplotData{
 	#		}
 	#    }
 	
-	printf OUT "y 6\n";
-	printf OUT "@ 0\n";
-	printf OUT "r 0.2\n";
-	printf OUT "a 1\n";
-	for ($i = 0; $i < $np; $i ++){
-		&OutMagMoment($i);
+	if ($magdipole) {
+		printf OUT "y 6\n";
+		printf OUT "@ 0\n";
+		printf OUT "r 0.2\n";
+		printf OUT "a 1\n";
+		for ($i = 0; $i < $np; $i ++){
+			&OutMagMoment($i);
+		}
+	} else {
+		if ($Ly == 0){
+			printf OUT "y 6\n";
+			printf OUT "@ 1\n";
+			for ($i = 0; $i < $np; $i ++){
+				OutCross($i);
+			}
+		}
 	}
-	
-	#	if ($Ly == 0){
-	#		printf OUT "y 6\n";
-	#		printf OUT "@ 1\n";
-	#		for ($i = 0; $i < $np; $i ++){
-	#			&OutCross($i);
-	#		}
-	#	}
-	#
 	&OutBoundaryBox;
 	
 	#	$maxS=0;

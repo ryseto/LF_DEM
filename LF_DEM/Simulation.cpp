@@ -153,7 +153,6 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 		unit_scales = "hydro";
 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
 		sys.set_shear_rate(1);
-		
 		if (p.repulsiveforce == false
 			&& p.cohesion == false
 			&& p.critical_load == false
@@ -236,7 +235,9 @@ void Simulation::setUnitScalesBrownian(double dimensionless_number)
 				   && p.magnetic == false) {
 			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
 			sys.cohesive_force = p.ratio_cohesion;
+			sys.dimensionless_cohesive_force = sys.cohesive_force;
 			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
+			cerr << "dimensionless_cohesive_force : " << sys.dimensionless_cohesive_force << endl;
 		} else if (p.magnetic == true
 				   && p.repulsiveforce == false
 				   && p.cohesion == false
@@ -518,7 +519,8 @@ void Simulation::simulationSteadyShear(string in_args,
 		/*****************************************************/
 		
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
-		if (abs(sys.get_shear_rate()) < p.rest_threshold){
+		if (!sys.zero_shear
+			&& abs(sys.get_shear_rate()) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
@@ -1066,6 +1068,7 @@ void Simulation::setDefaultParameters()
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
 	p.interaction_range = 5;
+	p.ratio_cohesion = 1;
 	/*
 	 * Stokes drag coeffient
 	 */

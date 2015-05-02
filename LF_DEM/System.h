@@ -64,7 +64,6 @@ private:
 	double system_volume;
 	double shear_strain;
 	double lub_max_gap;
-	double interaction_range;
 	double total_energy;
 	int linalg_size;
 	int dof;
@@ -136,6 +135,7 @@ private:
 	bool cohesion;
 	bool critical_load;
 	bool magnetic;
+	double interaction_range;
 
 	// Simulation parameters
 	bool twodimension;
