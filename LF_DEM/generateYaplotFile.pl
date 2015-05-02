@@ -464,7 +464,7 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	
 	
-	printf OUT "@ 9\n";
+	printf OUT "@ 8\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
 	$switch = 0;
@@ -474,10 +474,10 @@ sub OutYaplotData{
 			printf OUT "r $r\n";
 		}
 		
-		if (magdipole) {
+		if ($magdipole) {
 			if ($switch == 0 &&
 				$i >= 1 && $mm[$i] == 0){
-					printf OUT "@ 8\n";
+					printf OUT "@ 9\n";
 					$switch = 1;
 				}
 		}
