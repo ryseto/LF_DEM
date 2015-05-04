@@ -46,18 +46,32 @@ Download from here (bitbucket.org) by clicking the download icon (cloud), select
 
 ##Installation
 
-In the source folder, edit the Makefile and change the variables ```OS_version``` to
-"OSX" or "Linux" depending on your environment. This variable controls
-the include paths and flags to be used to compile. This has been
-tested on very few machines, and is probably not generic.
+In the `LF_DEM` folder, edit the Makefile and change the variables
+```OS_version``` to "OSX" or "Linux" depending on your
+environment. This variable controls the include paths and flags to be
+used to compile. This has been tested on very few machines, and is
+probably not generic. If you want to install `LF_DEM` to a specific
+location listed in your `$PATH`, you can set the variable
+`install_dir` in the Makefile.
 
 Once those changes to Makefile saved, you can simply compile in a terminal via:
 
 ```
 $ make
+$ make install
 ```
 
+The second command is only needed if you want to install `LF_DEM` in the given `install_dir`.
+
 ##Usage
+
+### Unit scales
+
+To understand the command-line behavior of `LF_DEM`, it is useful to
+know how `LF_DEM` deals with unit scales internally.
+
+`LF_DEM` can internally work with different unit scales depending on the conditions. These unit scales are detailed in [this file](lf_dem/units.rst).
+
 
 ###Running a simulation
 
