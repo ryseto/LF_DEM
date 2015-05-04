@@ -1,11 +1,9 @@
 # LF_DEM
 
-A code simulating simple shear flow of dense,
-overdamped suspensions of spherical particles.
+---------------------------------------------------------------------------------------------|--------------------
+A code simulating simple shear flow of dense, overdamped suspensions of spherical particles. | ![](./snapshot.png)
 
-<div style="float: right">
-	<img src="./snapshot.png" alt="" title="Title" width=300px/>
-</div>
+
 	
 Physical interactions included:
 
