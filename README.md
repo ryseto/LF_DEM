@@ -2,7 +2,7 @@
 
 ---------------------------------------------------------------------------------------------|--------------------
 A code simulating simple shear flow of dense, overdamped suspensions of spherical particles. | ![](./snapshot.png)
-
+                                                                                             |
 
 	
 Physical interactions included:
