@@ -11,18 +11,18 @@ correct stress units, that is, if :math:`\eta\dot\gamma= S` then
 :math:`\tilde{\eta}\tilde{\dot\gamma} = 6\pi\tilde{S}`, where
 :math:`\tilde{X}=X/X_0` is the dimensionless :math:`X`.
 
-Some scales are common to all the scales sets: 
+Some scales are common to all the scales sets:
 
 - length: particle radius :math:`a`
 - viscosity: suspending fluid viscosity :math:`\eta_0`
-- resistance (:math:`\b{R}_{\mathrm{FU}}`): :math:`6\pi\eta_0 a`
-- resistance (:math:`\b{R}_{\mathrm{FE}}`): :math:`6\pi\eta_0 a^2`
-- resistance (:math:`\b{R}_{\mathrm{SU}}`): :math:`6\pi\eta_0/a`
+- resistance (:math:`{R}_{\mathrm{FU}}`): :math:`6\pi\eta_0 a`
+- resistance (:math:`{R}_{\mathrm{FE}}`): :math:`6\pi\eta_0 a^2`
+- resistance (:math:`{R}_{\mathrm{SU}}`): :math:`6\pi\eta_0/a`
 
 That for example means that in the code the Stokes drag is always
-:math:`\tilde{\b{F}}_{\mathrm{SD}} = - (\tilde{\b{U}}-\tilde{\b{U}}_{\infty})`,
+:math:`\tilde{{F}}_{\mathrm{SD}} = - (\tilde{{U}}-\tilde{{U}}_{\infty})`,
 as the force-velocity part of the diagonal of
-:math:`\tilde{\b{R}}_{\mathrm{FU}}` is 1.
+:math:`\tilde{{R}}_{\mathrm{FU}}` is 1.
 
 Hydrodynamic scales
 -------------------
@@ -35,7 +35,7 @@ Hydrodynamic scales
 
 For example, with these units:
 
-- the Brownian force is :math:`\tilde{\b{F}}_{\mathrm{B}}  = \sqrt{\frac{2}{\Delta\tilde{t}{\mathrm{Pe}}}}  \tilde{\b{L}}^{T} \cdot \b{\psi}`
+- the Brownian force is :math:`\tilde{{F}}_{\mathrm{B}}  = \sqrt{\frac{2}{\Delta\tilde{t}{\mathrm{Pe}}}}  \tilde{{L}}^{T} \cdot {\psi}`
 - the stress coming from Einstein viscosity is :math:`(1+\frac{5}{2}\phi)/(6\pi)`
 
 Brownian scales
@@ -49,7 +49,7 @@ Brownian scales
 
 For example, with these units:
 
-- the Brownian force is :math:`\tilde{\b{F}}_{\mathrm{B}}  = \sqrt{\frac{2}{\Delta\tilde{t}}}  \tilde{\b{L}}^{T} \cdot \b{\psi}`
+- the Brownian force is :math:`\tilde{{F}}_{\mathrm{B}}  = \sqrt{\frac{2}{\Delta\tilde{t}}}  \tilde{{L}}^{T} \cdot {\psi}`
 - the stress coming from Einstein viscosity is :math:`(1+\frac{5}{2}\phi)\mathrm{Pe}/(6\pi)`
 
 Repulsive scales
