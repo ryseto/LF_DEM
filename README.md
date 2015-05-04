@@ -2,16 +2,7 @@
 
 |                                      |                             |
 |--------------------------------------|-----------------------------|
-|A code simulating simple shear flow of dense, overdamped suspensions of spherical particles. | ![](./snapshot.png) |
-
-
-
-Physical interactions included:
-
-- Hydrodynamics
-- "Hard" contacts (with several contact models)
-- Potential interaction
-- Brownian motion
+|**A code simulating simple shear flow of dense, overdamped suspensions of spherical particles. It includes hydrodynamics, contacts (with several contact models), potential interactions, and Brownian motion.** | ![](./snapshot.png) |
 
 
 ##Requirements
