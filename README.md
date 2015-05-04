@@ -70,7 +70,7 @@ The second command is only needed if you want to install `LF_DEM` in the given `
 To understand the command-line behavior of `LF_DEM`, it is useful to
 know how `LF_DEM` deals with unit scales internally.
 
-`LF_DEM` can internally work with different unit scales depending on the conditions. These unit scales are detailed in [this file](lf_dem/units.rst).
+`LF_DEM` can internally work with different unit scales depending on the conditions. These unit scales are detailed in [this file](./LF_DEM/units.rst).
 
 
 ###Running a simulation
