@@ -1,10 +1,11 @@
 # LF_DEM
 
----------------------------------------------------------------------------------------------|--------------------
-A code simulating simple shear flow of dense, overdamped suspensions of spherical particles. | ![](./snapshot.png)
-                                                                                             |
+|                                      |                             |
+|--------------------------------------|-----------------------------|
+|A code simulating simple shear flow of dense, overdamped suspensions of spherical particles. | ![](./snapshot.png) |
 
-	
+
+
 Physical interactions included:
 
 - Hydrodynamics
@@ -68,4 +69,3 @@ The second command is only needed if you want to install `LF_DEM` in the given `
 ##Usage
 
 See our [wiki](https://bitbucket.org/rmari/lf_dem/wiki/Home)!
-
