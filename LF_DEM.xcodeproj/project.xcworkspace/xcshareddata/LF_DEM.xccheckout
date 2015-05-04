@@ -7,14 +7,14 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>F7182151-D91E-45BC-A8AA-F917900CFD56</string>
 	<key>IDESourceControlProjectName</key>
-	<string>project</string>
+	<string>LF_DEM</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>DC6A13AD95D22EAD527A0DD088C8D62B6828D260</key>
 		<string>https://bitbucket.org/rmari/lf_dem.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>LF_DEM.xcodeproj/project.xcworkspace</string>
+	<string>LF_DEM.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>DC6A13AD95D22EAD527A0DD088C8D62B6828D260</key>

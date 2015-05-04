@@ -33,13 +33,13 @@ $interaction_data = "int_${name}.dat";
 $output = "y_$name.yap";
 
 my $pos;
-$pos = index($name, "Cylinder");
+$pos = index($name, "mag");
 if ($pos != -1) {
-	$cylinder = 1;
+	$mag = 1;
 } else {
-	$cylinder = 0;
+	$mag = 0;
 }
-if ($cylinder) {
+if ($mag) {
 	$outputmp = "magprofile_$name.dat";
 	open (OUTMAGPROF, "> $outputmp");
 }
@@ -142,7 +142,7 @@ while (1){
 		&OutYaplotData;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;
-		if ($cylinder) {
+		if ($mag) {
 			for ($i = 0; $i < $np; $i++){
 				$magmom_xy = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]);
 				$magangle = atan2($magmom_z[$i], $magmom_xy);
@@ -172,7 +172,7 @@ for ($i = 0; $i < $np; $i++){
 }
 close (OUTLAST);
 	
-if ($cylinder) {
+if ($mag) {
 	close (OUTMAGPROF);
 }
 
@@ -222,7 +222,7 @@ sub InParticles {
 			#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			#
 			if ($output == 1) {
-				if ($magdipole) {
+				if ($mag) {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
 					$magmom_x[$i] = $mx;
@@ -464,7 +464,7 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	
 	
-	printf OUT "@ 9\n";
+	printf OUT "@ 8\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
 	$switch = 0;
@@ -474,10 +474,10 @@ sub OutYaplotData{
 			printf OUT "r $r\n";
 		}
 		
-		if (magdipole) {
+		if ($mag) {
 			if ($switch == 0 &&
 				$i >= 1 && $mm[$i] == 0){
-					printf OUT "@ 8\n";
+					printf OUT "@ 9\n";
 					$switch = 1;
 				}
 		}
@@ -706,7 +706,7 @@ sub OutYaplotData{
 	#		}
 	#    }
 	
-	if ($magdipole) {
+	if ($mag) {
 		printf OUT "y 6\n";
 		printf OUT "@ 0\n";
 		printf OUT "r 0.2\n";
