@@ -33,12 +33,9 @@ $output = "y_$name.yap";
 my $pos;
 $pos = index($name, "mag");
 if ($pos != -1) {
-	$cylinder = 1;
-	$magdipole = 1;
-	$magnetoffset_y = -0.01;
+	$mag = 1;
 } else {
-	$cylinder = 0;
-	$magnetoffset_y = 0;
+	$mag = 0;
 }
 if ($mag) {
 	$outputmp = "magprofile_$name.dat";
@@ -222,7 +219,7 @@ sub InParticles {
 			#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			#
 			if ($output == 1) {
-				if ($cylinder) {
+				if ($mag) {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
 					$magmom_x[$i] = $mx;
@@ -474,7 +471,7 @@ sub OutYaplotData{
 			printf OUT "r $r\n";
 		}
 		
-		if ($cylinder) {
+		if ($mag) {
 			if ($switch == 0 &&
 				$i >= 1 && $mm[$i] == 0){
 					printf OUT "@ 9\n";

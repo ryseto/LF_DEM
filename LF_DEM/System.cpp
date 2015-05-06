@@ -329,7 +329,9 @@ void System::updateUnscaledContactmodel()
 void System::setupBrownian()
 {
 	if (brownian) {
-		if (dimensionless_number < p.Pe_switch) {
+		if (zero_shear) {
+			lowPeclet = false;
+		} else if (dimensionless_number < p.Pe_switch) {
 			// scale_factor_SmallPe > 1
 			lowPeclet = true;
 			double scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
@@ -1734,7 +1736,6 @@ void System::calcPotentialEnergy()
 		}
 	}
 }
-
 
 void System::setSystemVolume(double depth)
 {

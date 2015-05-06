@@ -149,7 +149,7 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 void Simulation::setUnitScalesBrownian(double dimensionless_number)
 {
 	sys.dimensionless_number = dimensionless_number; // Peclet number
-	if (sys.dimensionless_number > p.Pe_switch) {
+	if (sys.dimensionless_number > p.Pe_switch && !sys.zero_shear) {
 		unit_scales = "hydro";
 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
 		sys.set_shear_rate(1);
@@ -374,6 +374,13 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	setDefaultParameters();
 	readParameterFile();
 	
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		cerr << "init_relax" << endl;
+		sys.zero_shear = true;
+	} else {
+		sys.zero_shear = false;
+	}
+	
 	if (control_var == "rate") {
 		if (p.brownian == true) {
 			cerr << "Brownian, Peclet number " << dimensionlessnumber << endl;
@@ -448,13 +455,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
-	if (filename_parameters.find("init_relax", 0) != string::npos) {
-		cerr << "init_relax" << endl;
-		sys.zero_shear = true;
-		sys.setupShearFlow(false);
-	} else {
-		sys.setupShearFlow(true);
-	}
 }
 
 /*
@@ -632,7 +632,6 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
 	outputConfigurationData();
-	sys.setupShearFlow(true);
 	vector <double> strain_sequence;
 	vector <double> rsequence;
 	ifstream fin_seq;

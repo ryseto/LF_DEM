@@ -309,15 +309,6 @@ private:
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
-	void setupShearFlow(bool activate)
-	{
-		// @@@@ This function looks omittable.
-		if (activate) {
-			vel_difference = lz*shear_rate;
-		} else {
-			vel_difference = 0;
-		}
-	}
 	/*************************************************************/
 	double calcLubricationRange(const int& i, const int& j);
 	double calcLongInteractionRange(const int&, const int&);
