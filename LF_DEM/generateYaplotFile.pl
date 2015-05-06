@@ -474,7 +474,7 @@ sub OutYaplotData{
 			printf OUT "r $r\n";
 		}
 		
-		if ($magdipole) {
+		if ($mag) {
 			if ($switch == 0 &&
 				$i >= 1 && $mm[$i] == 0){
 					printf OUT "@ 9\n";
