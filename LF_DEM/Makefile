@@ -6,6 +6,9 @@
 
 # OS_version: OSX or Linux or SI 
 OS_version = OSX
+# install directory
+install_dir = ~/bin/
+
 VERSION := $(shell git describe --dirty --always)
 
 # Compiler
@@ -159,4 +162,4 @@ doc:
 	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
 
 install:
-	cp -p $(OUT_CODE) ~/bin/
+	cp -p $(OUT_CODE) $(install_dir)

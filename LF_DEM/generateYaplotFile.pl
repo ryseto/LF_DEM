@@ -31,7 +31,7 @@ $interaction_data = "int_${name}.dat";
 $output = "y_$name.yap";
 
 my $pos;
-$pos = index($name, "Cylinder");
+$pos = index($name, "mag");
 if ($pos != -1) {
 	$cylinder = 1;
 	$magdipole = 1;
@@ -40,7 +40,7 @@ if ($pos != -1) {
 	$cylinder = 0;
 	$magnetoffset_y = 0;
 }
-if ($cylinder) {
+if ($mag) {
 	$outputmp = "magprofile_$name.dat";
 	open (OUTMAGPROF, "> $outputmp");
 }
@@ -142,7 +142,7 @@ while (1){
 		&OutYaplotData;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;
-		if ($cylinder) {
+		if ($mag) {
 			for ($i = 0; $i < $np; $i++){
 				$magmom_xy = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]);
 				$magangle = atan2($magmom_z[$i], $magmom_xy);
@@ -172,7 +172,7 @@ for ($i = 0; $i < $np; $i++){
 }
 close (OUTLAST);
 	
-if ($cylinder) {
+if ($mag) {
 	close (OUTMAGPROF);
 }
 
@@ -706,7 +706,7 @@ sub OutYaplotData{
 	#		}
 	#    }
 	
-	if ($magdipole) {
+	if ($mag) {
 		printf OUT "y 6\n";
 		printf OUT "@ 0\n";
 		printf OUT "r 0.2\n";
