@@ -10,8 +10,6 @@ use Math::Trig;
 use IO::Handle;
 $y_section = 0;
 $yap_radius = 1;
-$magnetoffset_y = -0.01;
-$magdipole = 0;
 
 $particle_data = $ARGV[0];
 $output_interval = 1;
@@ -78,7 +76,6 @@ while (1) {
 #OUTE->autoflush(1);
 
 open (OUT, "> ${output}");
-
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
@@ -123,14 +120,14 @@ printf OUT "\@33 20 20 20 \n";
 printf OUT "\@34 10 10 10 \n";
 printf OUT "\@35 0 0 0 \n";
 
-
 $total_energy_dis = 0;
 $shear_strain_next = 1;
 $shear_strain_previous = 0;
 $cnt_interval = 0;
 
 while (1){
-	if ($cnt_interval % $output_interval == 0) {
+	if ($cnt_interval == 0 ||
+		$cnt_interval % $output_interval == 0) {
 		$output = 1;
 	} else {
 		$output = 0;
@@ -138,7 +135,7 @@ while (1){
 	&InParticles;
 	last unless defined $line;
 	&InInteractions;
-	if ($cnt_interval == 0 || $output == 1) {
+	if ($output == 1) {
 		&OutYaplotData;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;

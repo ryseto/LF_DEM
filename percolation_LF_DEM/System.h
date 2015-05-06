@@ -34,8 +34,7 @@ private:
 	ofstream fout_yap;
 	ofstream fout_data;
 	int **contact_table;
-	vector <vector<int>> contact_list;
-
+	vector < vector<int> > contact_list;
 	
 protected:
 public:
@@ -94,8 +93,8 @@ public:
 	void importConfiguration(){
 		char buf[1024];
 		fin_p >> buf >> strain >> shear_disp >> dimensionless_shear_rate;
-		int i;
 		for (int j=0; j < np; j ++){
+			int i;
 			fin_p >> i >> radius[i];
 			fin_p >> position[i].x >> position[i].y >> position[i].z;
 //			fin_p >> velocity[i].x >> velocity[i].y >> velocity[i].z;
