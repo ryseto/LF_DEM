@@ -487,12 +487,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_0 = now;
 
 	/******************** OUTPUT INITIAL DATA ********************/
-//	evaluateData();
-//	outputRheologyData();
-//	outputStressTensorData();
-//	outputConfigurationBinary();
-//	outputConfigurationData();
-//	/*************************************************************/
+	evaluateData();
+	outputRheologyData();
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
 
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;

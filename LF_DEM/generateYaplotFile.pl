@@ -10,8 +10,6 @@ use Math::Trig;
 use IO::Handle;
 $y_section = 0;
 $yap_radius = 1;
-$magnetoffset_y = -0.01;
-$magdipole = 0;
 
 $particle_data = $ARGV[0];
 $output_interval = 1;
@@ -36,8 +34,11 @@ my $pos;
 $pos = index($name, "Cylinder");
 if ($pos != -1) {
 	$cylinder = 1;
+	$magdipole = 1;
+	$magnetoffset_y = -0.01;
 } else {
 	$cylinder = 0;
+	$magnetoffset_y = 0;
 }
 if ($cylinder) {
 	$outputmp = "magprofile_$name.dat";
@@ -78,7 +79,6 @@ while (1) {
 #OUTE->autoflush(1);
 
 open (OUT, "> ${output}");
-
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
@@ -123,14 +123,14 @@ printf OUT "\@33 20 20 20 \n";
 printf OUT "\@34 10 10 10 \n";
 printf OUT "\@35 0 0 0 \n";
 
-
 $total_energy_dis = 0;
 $shear_strain_next = 1;
 $shear_strain_previous = 0;
 $cnt_interval = 0;
 
 while (1){
-	if ($cnt_interval % $output_interval == 0) {
+	if ($cnt_interval == 0 ||
+		$cnt_interval % $output_interval == 0) {
 		$output = 1;
 	} else {
 		$output = 0;
@@ -138,7 +138,7 @@ while (1){
 	&InParticles;
 	last unless defined $line;
 	&InInteractions;
-	if ($cnt_interval == 0 || $output == 1) {
+	if ($output == 1) {
 		&OutYaplotData;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;
@@ -222,7 +222,7 @@ sub InParticles {
 			#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			#
 			if ($output == 1) {
-				if ($magdipole) {
+				if ($cylinder) {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
 					$magmom_x[$i] = $mx;
@@ -464,7 +464,7 @@ sub OutYaplotData{
 	printf OUT "y 1\n";
 	
 	
-	printf OUT "@ 9\n";
+	printf OUT "@ 8\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
 	$switch = 0;
@@ -474,10 +474,10 @@ sub OutYaplotData{
 			printf OUT "r $r\n";
 		}
 		
-		if (magdipole) {
+		if ($cylinder) {
 			if ($switch == 0 &&
 				$i >= 1 && $mm[$i] == 0){
-					printf OUT "@ 8\n";
+					printf OUT "@ 9\n";
 					$switch = 1;
 				}
 		}
