@@ -23,6 +23,7 @@
 //	exit(1);
 //}
 
+
 int main(int argc, char **argv)
 {
 	cerr << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
@@ -31,7 +32,7 @@ int main(int argc, char **argv)
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
 	
 	double dimensionless_number = 0;
-
+	
 	bool generate_init = false;
 	int random_seed = 1;
 

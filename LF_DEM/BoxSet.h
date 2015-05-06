@@ -101,6 +101,7 @@ public:
 	 *****/
 	vector<int>::iterator neighborhood_begin(int i);
 	vector<int>::iterator neighborhood_end(int i);
+	vector <int> & neighborhood(int i);
 	void printBoxNetwork();
 };
 #endif /* defined(__LF_DEM__BoxSet__) */

@@ -918,15 +918,13 @@ void System::checkNewInteraction()
 	int zshift;
 	double sq_dist;
 	for (int i=0; i<np-1; i++) {
-		vector<int>::iterator it_beg = boxset.neighborhood_begin(i);
-		vector<int>::iterator it_end = boxset.neighborhood_end(i);
-		for (vector<int>::iterator it = it_beg; it != it_end; it++) {
-			if (*it > i) {
-				if (interaction_partners[i].find(*it) == interaction_partners[i].end()) {
-					pos_diff = position[*it]-position[i];
+		for (const int &j : boxset.neighborhood(i)) {
+			if (j > i) {
+				if (interaction_partners[i].find(j) == interaction_partners[i].end()) {
+					pos_diff = position[j]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();
-					double scaled_interaction_range = (this->*calcInteractionRange)(i, *it);
+					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
 					if (sq_dist < sq_dist_lim) {
 						int interaction_new;
@@ -940,7 +938,7 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
-						interaction[interaction_new].activate(i, *it, scaled_interaction_range);
+						interaction[interaction_new].activate(i, j, scaled_interaction_range);
 					}
 				}
 			}
@@ -1029,25 +1027,24 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (set<Interaction*>::iterator it = interaction_list[i].begin();
-			 it != interaction_list[i].end(); it ++) {
-			int j = (*it)->partner(i);
+		for (auto&& inter : interaction_list[i]){
+			int j = inter->partner(i);
 			if (j > i) {
-				if ((*it)->lubrication.is_active()) {
+				if (inter->lubrication.is_active()) {
 					if (mat) {
-						const vec3d &nr_vec = (*it)->nvec;
-						(*it)->lubrication.calcXFunctions();
+						const vec3d &nr_vec = inter->nvec;
+						inter->lubrication.calcXFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i,
-													 (*it)->lubrication.scaledXA0(), 0, 0, 0);
+													 inter->lubrication.scaledXA0(), 0, 0, 0);
 						stokes_solver.addToDiagBlock(nr_vec, j,
-													 (*it)->lubrication.scaledXA3(), 0, 0, 0);
+													 inter->lubrication.scaledXA3(), 0, 0, 0);
 						stokes_solver.setOffDiagBlock(nr_vec, i, j,
-													  (*it)->lubrication.scaledXA2(), 0, 0, 0, 0);
+													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
 					if (rhs) {
 						double GEi[3];
 						double GEj[3];
-						(*it)->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+						inter->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
 						if (shearrate_is_1 == false) {
 							for (int u=0; u<3; u++) {
 								GEi[u] *= shear_rate;
@@ -1071,37 +1068,36 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (set<Interaction*>::iterator it = interaction_list[i].begin();
-			 it != interaction_list[i].end(); it ++) {
-			int j = (*it)->partner(i);
+		for (auto&& inter : interaction_list[i]){
+			int j = inter->partner(i);
 			if (j > i) {
-				if ((*it)->lubrication.is_active()) {
+				if (inter->lubrication.is_active()) {
 					if (mat) {
-						const vec3d &nr_vec = (*it)->nvec;
-						(*it)->lubrication.calcXYFunctions();
+						const vec3d &nr_vec = inter->nvec;
+						inter->lubrication.calcXYFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i,
-													 (*it)->lubrication.scaledXA0(),
-													 (*it)->lubrication.scaledYA0(),
-													 (*it)->lubrication.scaledYB0(),
-													 (*it)->lubrication.scaledYC0());
+													 inter->lubrication.scaledXA0(),
+													 inter->lubrication.scaledYA0(),
+													 inter->lubrication.scaledYB0(),
+													 inter->lubrication.scaledYC0());
 						stokes_solver.addToDiagBlock(nr_vec, j,
-													 (*it)->lubrication.scaledXA3(),
-													 (*it)->lubrication.scaledYA3(),
-													 (*it)->lubrication.scaledYB3(),
-													 (*it)->lubrication.scaledYC3());
+													 inter->lubrication.scaledXA3(),
+													 inter->lubrication.scaledYA3(),
+													 inter->lubrication.scaledYB3(),
+													 inter->lubrication.scaledYC3());
 						stokes_solver.setOffDiagBlock(nr_vec, i, j,
-													  (*it)->lubrication.scaledXA1(),
-													  (*it)->lubrication.scaledYA1(),
-													  (*it)->lubrication.scaledYB2(),
-													  (*it)->lubrication.scaledYB1(),
-													  (*it)->lubrication.scaledYC1());
+													  inter->lubrication.scaledXA1(),
+													  inter->lubrication.scaledYA1(),
+													  inter->lubrication.scaledYB2(),
+													  inter->lubrication.scaledYB1(),
+													  inter->lubrication.scaledYC1());
 					}
 					if (rhs) {
 						double GEi[3];
 						double GEj[3];
 						double HEi[3];
 						double HEj[3];
-						(*it)->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+						inter->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
 						if (shearrate_is_1 == false) {
 						for (int u=0; u<3; u++) {
 							GEi[u] *= shear_rate;

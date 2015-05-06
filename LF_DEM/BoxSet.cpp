@@ -450,6 +450,10 @@ void BoxSet::box(int i)
 	}
 }
 
+vector <int> & BoxSet::neighborhood(int i){
+	return (boxMap[i])->neighborhood_container;
+}
+
 vector<int>::iterator BoxSet::neighborhood_begin(int i)
 {
 	return (boxMap[i])->neighborhood_begin();

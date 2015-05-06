@@ -42,7 +42,7 @@ private:
 	/*   forward_list <int> *container; */
 	/* #endif */
 	/*   map <int,int> key; */
-	vector <int> neighborhood_container;
+
 	
 public:
 	Box();
@@ -92,6 +92,7 @@ public:
 	{
 		return neighborhood_container.end();
 	}
+	vector <int> neighborhood_container;
 	size_t container_size()
 	{
 		return container.size();
