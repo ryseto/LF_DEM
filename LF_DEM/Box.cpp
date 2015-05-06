@@ -4,13 +4,6 @@ using namespace std;
 Box::Box(){
 	_is_top=false;
 	_is_bottom=false;
-	// #ifdef __vector_container__
-	//   container = new vector <int>;
-	// #endif
-	// #ifdef __flist_container__
-	//   container = new forward_list <int>;
-	// #endif
-	//container = new set <int>;
 }
 
 Box::~Box(){
@@ -21,7 +14,6 @@ Box::~Box(){
 		delete [] _moving_neighbors;
 		delete [] _probing_positions;
 	}
-	//delete container;
 }
 
 /* reset every moving neighbor:
@@ -82,7 +74,6 @@ bool Box::neighbor(int label, Box* neigh_box)
 
 void Box::probing_positions(int label, const vec3d &pos)
 {
-	//  cout << label-_still_neigh_nb << endl;
 	_probing_positions[label-_still_neigh_nb] = pos;
 }
 
@@ -112,26 +103,6 @@ bool Box::is_bottom()
 	return _is_bottom;
 }
 
-// void
-// Box::add(int i){
-// #ifdef __vector_container__
-//   container->push_back(i);
-// #endif
-// #ifdef __flist_container__
-//   container->push_front(i);
-// #endif
-// }
-
-// void
-// Box::remove(int i){
-// #ifdef __vector_container__
-//   container->push_back(i);
-// #endif
-// #ifdef __flist_container__
-//   container->push_front(i);
-// #endif
-// }
-
 void Box::add(int i)
 {
 	container.insert(i);
@@ -152,15 +123,14 @@ void Box::build_neighborhood_container()
 	neighborhood_container.resize(size);
 	int j = 0;
 	// own box
-	for (set<int>::iterator it = begin(); it != end(); it++) {
-		neighborhood_container[j] = *it;
+	for (const int &k : container) {
+		neighborhood_container[j] = k;
 		j++;
 	}
 	// neighboring boxes
 	for (int i=0; i<neigh_nb(); i++) {
-		for(set<int>::iterator it = (_neighbors[i])->begin();
-			it != (_neighbors[i])->end(); it++) {
-			neighborhood_container[j] = *it;
+		for (const int &k : (_neighbors[i])->container) {
+			neighborhood_container[j] = k;
 			j++;
 		}
 	}

@@ -35,13 +35,6 @@ private:
 	vec3d *_probing_positions;// if box is at top/bottom, these positions allow to figure out which boxes are above/below you
 	int _probe_nb;
 	bool can_be_added(int, Box*);
-	/* #ifdef __vector_container__ */
-	/*   vector <int> *container; */
-	/* #endif */
-	/* #ifdef __flist_container__ */
-	/*   forward_list <int> *container; */
-	/* #endif */
-	/*   map <int,int> key; */
 
 	
 public:
