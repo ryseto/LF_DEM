@@ -128,13 +128,12 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 {
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
-	
-	for(std::vector<string>::iterator it = input_files.begin(); it != input_files.end(); ++it) {
+	for (auto &in_file : input_files) {
 		ifstream in_f;
 		string line;
-		in_f.open((*it).c_str());
+		in_f.open(in_file.c_str());
 		if(in_f.is_open()){
-			fout_input << "********** File " << *it << " ************" << endl << endl;
+			fout_input << "********** File " << in_file << " ************" << endl << endl;
 			while(in_f.good()){
 				getline(in_f, line);
 				fout_input << line << endl;

@@ -274,16 +274,16 @@ void GenerateInitConfig::putRandom()
 void GenerateInitConfig::updateInteractions(int i)
 {
 	vector <Interaction*> inter_list;
-	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
-		 it != sys.interaction_list[i].end(); it ++) {
-		inter_list.push_back(*it);
+	for (auto&& inter : sys.interaction_list[i]){
+		inter_list.push_back(inter);
 	}
-	for (unsigned int k=0; k<inter_list.size(); k++) {
-		if (inter_list[k]->is_active()) {
+
+	for (auto &il : inter_list) {
+		if (il->is_active()) {
 			bool desactivated = false;
-			inter_list[k]->updateState(desactivated);
+			il->updateState(desactivated);
 			if (desactivated) {
-				sys.deactivated_interaction.push(inter_list[k]->get_label());
+				sys.deactivated_interaction.push(il->get_label());
 			}
 		}
 	}
@@ -292,9 +292,8 @@ void GenerateInitConfig::updateInteractions(int i)
 int GenerateInitConfig::overlapNumber(int i)
 {
 	int overlaps = 0;
-	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
-		 it != sys.interaction_list[i].end(); it ++) {
-		if ((*it)->is_overlap()) {
+	for (auto&& inter : sys.interaction_list[i]){
+		if (inter->is_overlap()) {
 			overlaps++;
 		}
 	}
@@ -304,12 +303,11 @@ int GenerateInitConfig::overlapNumber(int i)
 double GenerateInitConfig::particleEnergy(int i)
 {
 	double energy = 0;
-	for (set<Interaction*>::iterator it = sys.interaction_list[i].begin();
-		 it != sys.interaction_list[i].end(); it ++) {
-		if ((*it)->is_overlap()) {
-			double r = (*it)->get_r();
-			double rcont = (*it)->get_ro();
-			double amp = (*it)->get_a_reduced()*(1/rcont-1/r); // negative
+	for (auto&& inter : sys.interaction_list[i]){
+		if (inter->is_overlap()) {
+			double r = inter->get_r();
+			double rcont = inter->get_ro();
+			double amp = inter->get_a_reduced()*(1/rcont-1/r); // negative
 			energy += r*amp*amp;
 		}
 	}

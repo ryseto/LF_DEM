@@ -640,7 +640,8 @@
 			children = (
 				D90AF33C1AF9FFBA00E15C7E /* LF_DEM_doc */,
 			);
-			path = html;
+			name = html;
+			path = LF_DEM/html;
 			sourceTree = "<group>";
 		};
 		D90AF33C1AF9FFBA00E15C7E /* LF_DEM_doc */ = {
@@ -1146,6 +1147,7 @@
 			children = (
 				D90AF4C61AFA000900E15C7E /* README.md */,
 				D988E38C165441750009949F /* LF_DEM */,
+				D90AF33B1AF9FFBA00E15C7E /* html */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,
 				D972279C16AF8FF300DA851F /* Mathematica */,
 				D958B1DF1684141B003F94B4 /* python */,
@@ -1174,7 +1176,6 @@
 		D988E38C165441750009949F /* LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
-				D90AF33B1AF9FFBA00E15C7E /* html */,
 				D932B8DE16C2EA1B00AD6E85 /* lib */,
 				D9CD258916E54DFF00A8E397 /* parameter_template.txt */,
 				D988AC3D1857666D00C9637A /* Makefile */,
