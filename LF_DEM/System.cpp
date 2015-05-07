@@ -23,7 +23,7 @@ cohesion(false),
 twodimension(false),
 zero_shear(false),
 critical_normal_force(0),
-magnetic_coeffient(12),
+magnetic_coeffient(24),
 target_stress_input(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -596,6 +596,16 @@ void System::setupSystem(string control)
 						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI)*cos(M_PI/3),
 											   magnetic_dipole_moment*cos(theta)*cos(M_PI/3),
 											   magnetic_dipole_moment*sin(M_PI/3));
+						break;
+					}
+					case 6:
+					{
+						if (i%2 == 0){
+							double delta = 0;
+							magnetic_moment[i].set(magnetic_dipole_moment*sin(delta),magnetic_dipole_moment*cos(delta),0);
+						} else {
+							magnetic_moment[i].set(0,-magnetic_dipole_moment,0);
+						}
 						break;
 					}
 				}
@@ -1712,6 +1722,7 @@ void System::analyzeState()
 
 void System::calcPotentialEnergy()
 {
+	magnetic_energy = 0;
 	total_energy = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -1722,13 +1733,17 @@ void System::calcPotentialEnergy()
 				total_energy +=  interaction[k].repulsion.calcEnergy();
 			}
 			if (magnetic) {
-				total_energy +=  interaction[k].magneticforce.calcEnergy();
+				double tmp_magnetic_energy = interaction[k].magneticforce.calcEnergy();
+				total_energy += tmp_magnetic_energy;
+				magnetic_energy += tmp_magnetic_energy;
 			}
 		}
 	}
 	if (external_magnetic_field.is_not_zero()) {
 		for (int i=0; i<num_magnetic; i++) {
-			total_energy += -dot(magnetic_moment[i], external_magnetic_field);
+			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
+			total_energy += tmp_magnetic_energy_ex;
+			magnetic_energy += tmp_magnetic_energy_ex;
 		}
 	}
 }

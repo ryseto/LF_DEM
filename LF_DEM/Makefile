@@ -19,7 +19,7 @@ ifeq ($(OS_version),SI)
 endif
 ifeq ($(OS_version),OIST)
 	CXX=icc
-	CXXFLAGS_optimized= -O3 -Wall -DVERSION="\"$(VERSION)\""
+	CXXFLAGS_optimized= -O3 -Wall -std=c++11 -DVERSION="\"$(VERSION)\""
 	CXXFLAGS_debug=  -g -DVERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 

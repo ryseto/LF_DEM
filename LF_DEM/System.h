@@ -65,6 +65,7 @@ private:
 	double shear_strain;
 	double lub_max_gap;
 	double total_energy;
+	double magnetic_energy;
 	int linalg_size;
 	int dof;
 	double repulsiveforce_length; // repulsive force length (dimensionless)
@@ -451,6 +452,11 @@ private:
 	double get_total_energy()
 	{
 		return total_energy;
+	}
+	
+	double get_magnetic_energy()
+	{
+		return magnetic_energy;
 	}
 	
 	struct ForceAmplitudes amplitudes;

@@ -1466,6 +1466,7 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.max_disp_rolling << ' '; //51
 	fout_rheo << sys.max_contact_gap << ' '; //52
 	fout_rheo << sys.get_total_energy() << ' '; // 53;
+	fout_rheo << sys.get_magnetic_energy() << ' ';
 	fout_rheo << endl;
 }
 

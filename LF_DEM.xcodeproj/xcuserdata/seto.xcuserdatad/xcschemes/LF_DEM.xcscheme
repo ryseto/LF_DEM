@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/gel2"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/cylinder_mb"
       buildConfiguration = "Debug"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 1 D2N500VF0.3MonoSquare_1.dat init_relax.txt"
+            argument = "-r 0 D3N300Cylinder.dat init_relax_6.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
