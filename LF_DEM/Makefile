@@ -163,3 +163,7 @@ doc:
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)
+	ifeq ($(OS_version),OIST)
+        cp -p generateYaplotFile.pl $(install_dir)
+	endif
+
