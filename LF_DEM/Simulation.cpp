@@ -996,8 +996,11 @@ void Simulation::openOutputFiles(bool binary_conf)
 	"#48: dimensionless_number\n"
 	"#49: stress\n"
 	"#50: shear_disp\n"
-	"#51: max rolling displacement\n";
-	//
+	"#51: max rolling displacement\n"
+	"#52: max_contact_gap\n"
+	"#53: total_energy\n"
+	"#54: magnetic_energy\n";
+	
 	fout_rheo << fout_rheo_col_def << endl;
 	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";
@@ -1465,7 +1468,7 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.max_disp_rolling << ' '; //51
 	fout_rheo << sys.max_contact_gap << ' '; //52
 	fout_rheo << sys.get_total_energy() << ' '; // 53;
-	fout_rheo << sys.get_magnetic_energy() << ' ';
+	fout_rheo << sys.get_magnetic_energy() << ' ';// 54;
 	fout_rheo << endl;
 }
 

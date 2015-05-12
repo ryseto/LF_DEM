@@ -779,9 +779,9 @@ sub OutBoundaryBox{
 	
 	#$yb = 0.1;
 	if($Ly == 0){
-		$lx2 = $Lx/2+1;
-		$ly2 = $Ly/2+1;
-		$lz2 = $Lz/2+1;
+		$lx2 = $Lx/2;
+		$ly2 = $Ly/2;
+		$lz2 = $Lz/2;
 		#printf OUT "p 4 -$lx2 $yb $lz2 $lx2 $yb $lz2 $lx2 $yb -$lz2 -$lx2 $yb -$lz2\n";
 		printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
 		printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
