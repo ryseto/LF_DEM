@@ -134,7 +134,9 @@ while (1){
 	}
 	&InParticles;
 	last unless defined $line;
-	&InInteractions;
+	if ($mag == 0) {
+		&InInteractions;
+	}
 	if ($output == 1) {
 		&OutYaplotData;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
