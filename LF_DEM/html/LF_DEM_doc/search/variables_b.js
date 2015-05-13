@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['sd_5fcoeff',['sd_coeff',['../struct_parameter_set.html#aaab168f5c31818ce0064adaabeab4c8c',1,'ParameterSet']]],
-  ['start_5fadjust',['start_adjust',['../struct_parameter_set.html#ac53858a21f1981835b6a1f1b1610c43d',1,'ParameterSet']]]
+  ['pe_5fswitch',['Pe_switch',['../struct_parameter_set.html#a3a33d766c925f5c3dc12bf9dab8d40b6',1,'ParameterSet']]]
 ];

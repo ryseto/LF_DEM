@@ -131,8 +131,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_criticall
 <tr class="separator:aba1686f54ddc00b9d9bfc2f66fc8c3d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a120699da5f9b6a5ee55764056d414a29"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_contact.html#a120699da5f9b6a5ee55764056d414a29">frictionlaw_standard</a> ()</td></tr>
 <tr class="separator:a120699da5f9b6a5ee55764056d414a29"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a896c6a14ba7c8726ed34fbf97ae6a23f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_contact.html#a896c6a14ba7c8726ed34fbf97ae6a23f">frictionlaw_test</a> ()</td></tr>
-<tr class="separator:a896c6a14ba7c8726ed34fbf97ae6a23f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85f00328eb36467e60a6b74adadde254"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_contact.html#a85f00328eb36467e60a6b74adadde254">frictionlaw_ft_max</a> ()</td></tr>
+<tr class="separator:a85f00328eb36467e60a6b74adadde254"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a401c1e60d16a15f93f05a5cdb112bca6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_contact.html#a401c1e60d16a15f93f05a5cdb112bca6">frictionlaw_coulomb_max</a> ()</td></tr>
+<tr class="separator:a401c1e60d16a15f93f05a5cdb112bca6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca89a00068d1846da8ac4bee4d44d0aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca89a00068d1846da8ac4bee4d44d0aa"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_null</b> ()</td></tr>
 <tr class="separator:aca89a00068d1846da8ac4bee4d44d0aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,6 +146,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>frictionlaw_null</b> 
 <tr class="memitem:ad5eabaa91ef335d9778d736ab4427cf6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5eabaa91ef335d9778d736ab4427cf6"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_f_contact_normal_norm</b> ()</td></tr>
 <tr class="separator:ad5eabaa91ef335d9778d736ab4427cf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a792d2bd9d1f80977a1efb0ad049f68b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a792d2bd9d1f80977a1efb0ad049f68b5"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>get_normal_load</b> ()</td></tr>
+<tr class="separator:a792d2bd9d1f80977a1efb0ad049f68b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad01056bcca57a0fa17156ea403ebc2ab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad01056bcca57a0fa17156ea403ebc2ab"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_f_contact_tan</b> ()</td></tr>
 <tr class="separator:ad01056bcca57a0fa17156ea403ebc2ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,6 +167,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>calcContactStress</b>
 <tr class="memitem:ac29c7f04814de843f80f2b9f6b03190a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac29c7f04814de843f80f2b9f6b03190a"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getContactStressXF_tan</b> ()</td></tr>
 <tr class="separator:ac29c7f04814de843f80f2b9f6b03190a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbd0ca15c4f9fdef674af6347bc5c3d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acbd0ca15c4f9fdef674af6347bc5c3d2"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>calcEnergy</b> ()</td></tr>
+<tr class="separator:acbd0ca15c4f9fdef674af6347bc5c3d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -177,9 +185,6 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a4ae0664415fc0880471525e2ed1b3940"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ae0664415fc0880471525e2ed1b3940"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>prev_disp_rolling</b></td></tr>
 <tr class="separator:a4ae0664415fc0880471525e2ed1b3940"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e6aa3b724ba25d2e35fd7709783a9df"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e6aa3b724ba25d2e35fd7709783a9df"></a>
-<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>slid_direction</b></td></tr>
-<tr class="separator:a2e6aa3b724ba25d2e35fd7709783a9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49712be41bc7514ab771946ec22493f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a49712be41bc7514ab771946ec22493f9"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>state</b></td></tr>
 <tr class="separator:a49712be41bc7514ab771946ec22493f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -237,6 +242,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>mu_rolling</b></td>
 <tr class="memitem:aa191d649aa83d3725d029c522b9fa98c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa191d649aa83d3725d029c522b9fa98c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal_norm</b></td></tr>
 <tr class="separator:aa191d649aa83d3725d029c522b9fa98c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58d2c0b76a2e533c635ad53bb04fbba8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58d2c0b76a2e533c635ad53bb04fbba8"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>normal_load</b></td></tr>
+<tr class="separator:a58d2c0b76a2e533c635ad53bb04fbba8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc104e6047e41942758fec65e47cfd79"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc104e6047e41942758fec65e47cfd79"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal</b></td></tr>
 <tr class="separator:afc104e6047e41942758fec65e47cfd79"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -246,6 +254,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>f_contact_normal_no
 <tr class="memitem:a733d1c255360dbb4d6b5ec665a35f9d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a733d1c255360dbb4d6b5ec665a35f9d1"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>f_rolling</b></td></tr>
 <tr class="separator:a733d1c255360dbb4d6b5ec665a35f9d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc67562dad903d5ae75cfbdd4c38c007"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc67562dad903d5ae75cfbdd4c38c007"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>ft_max</b></td></tr>
+<tr class="separator:afc67562dad903d5ae75cfbdd4c38c007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="class_contact.html" title="Contact object, to be called from an Interaction object. ">Contact</a> object, to be called from an <a class="el" href="class_interaction.html" title="Interaction object, master class holding any interaction between two particles. ">Interaction</a> object. </p>
@@ -288,6 +299,40 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
+<a class="anchor" id="a401c1e60d16a15f93f05a5cdb112bca6"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Contact::frictionlaw_coulomb_max </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Friction law</p>
+<p>[NOTE] In the rate controlled simulation, the results look weird. There should be a bug.</p>
+<p>The calculated forces in <a class="el" href="class_contact.html#aca6315b88196cd3cdfce9f79f06de963">calcContactInteraction()</a> seem to be different between the rate-controlled and stress-controlled simulation. The current implementation is quite confusing, and should be fixed.</p>
+
+</div>
+</div>
+<a class="anchor" id="a85f00328eb36467e60a6b74adadde254"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Contact::frictionlaw_ft_max </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Friction law</p>
+
+</div>
+</div>
 <a class="anchor" id="a120699da5f9b6a5ee55764056d414a29"></a>
 <div class="memitem">
 <div class="memproto">
@@ -301,26 +346,6 @@ Romain Mari </dd></dl>
       </table>
 </div><div class="memdoc">
 <p>Friction law</p>
-
-</div>
-</div>
-<a class="anchor" id="a896c6a14ba7c8726ed34fbf97ae6a23f"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Contact::frictionlaw_test </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Friction law</p><ul>
-<li>Dynamic friction force is opposite direction to the sliding velocity.</li>
-<li>The strength of dynamic friction is proportional to the normal load.</li>
-<li></li>
-</ul>
 
 </div>
 </div>
@@ -351,7 +376,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_contact.html">Contact</a></li>
-    <li class="footer">Generated on Wed Apr 8 2015 18:09:08 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed May 13 2015 18:10:49 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

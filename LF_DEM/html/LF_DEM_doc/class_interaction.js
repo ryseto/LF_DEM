@@ -1,7 +1,7 @@
 var class_interaction =
 [
     [ "Interaction", "class_interaction.html#aadfd0e254296043c26508d47090ace76", null ],
-    [ "activate", "class_interaction.html#a4735642bf99495e8c8b24921851598f9", null ],
+    [ "activate", "class_interaction.html#a1c1b0c66d58bf8fb04311b80c1409abc", null ],
     [ "calcNormalVectorDistanceGap", "class_interaction.html#a8eceb6c64cbeffbe84b2a688a10b0708", null ],
     [ "calcRelativeVelocities", "class_interaction.html#a6ee3e08c455a729a687d87124a9a7216", null ],
     [ "calcRollingVelocities", "class_interaction.html#aa6d1c13c4fca9c1e49f12953ba5708fb", null ],
@@ -11,7 +11,6 @@ var class_interaction =
     [ "get_a_reduced", "class_interaction.html#ad0e551107b1c68613ebfcda392ecd851", null ],
     [ "get_gap", "class_interaction.html#ac3585ba453fe897932dcbedd9d0ef33e", null ],
     [ "get_label", "class_interaction.html#ac24ebf826b274cbc4c1a938aba882797", null ],
-    [ "get_nvec", "class_interaction.html#acdac4188c886fed9134fbb4bb095ac92", null ],
     [ "get_par_num", "class_interaction.html#a86dde132e2923d352cf2f667c81edb83", null ],
     [ "get_r", "class_interaction.html#ab9e7e06d986268d04f24055b36dcada4", null ],
     [ "get_reduced_gap", "class_interaction.html#a8a6617c60f016723688ff5a2e7014050", null ],
@@ -43,6 +42,7 @@ var class_interaction =
     [ "interaction_range", "class_interaction.html#aa615d2c7d48d5a86011fc95c209793e3", null ],
     [ "label", "class_interaction.html#ae2c9211f4f6016d136ec70dee3076ccd", null ],
     [ "lubrication", "class_interaction.html#add3b7e8ca402dcbb011d43087f8584b9", null ],
+    [ "magneticforce", "class_interaction.html#a4e01a2ceddb61f9df3fc4ea3282932e0", null ],
     [ "nvec", "class_interaction.html#ac9038b9c7398554da12cd23efe5e6d36", null ],
     [ "nxnx", "class_interaction.html#a01bef8426a2421e729e9b5547c3b6d33", null ],
     [ "nxny", "class_interaction.html#a7ed16688422e03a30a33b9ac5f0993e8", null ],

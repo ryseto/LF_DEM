@@ -2,8 +2,9 @@
 *.dat
 *.yap
 
-# emacs backups
+# emacs temp
 *~
+\#*\#
 
 # other backups
 *.bak
@@ -21,7 +22,7 @@ LF_DEM
 *.o
 
 # pdf's
-./*.pdf
+*.pdf
 
 # tests
 ./test*
@@ -32,6 +33,8 @@ LF_DEM
 #subdirectories
 LF_DEM.dSYM/
 LF_DEM.dtps/
+sandbox/
+auto/
 
 # version file
 VersionInfo.h
@@ -41,3 +44,6 @@ VersionInfo.h
 *.tgz
 *.bz2
 *.tz2
+
+# text files
+*.txt

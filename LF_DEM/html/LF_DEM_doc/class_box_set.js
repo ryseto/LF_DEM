@@ -11,6 +11,7 @@ var class_box_set =
     [ "box", "class_box_set.html#a3d2b1ccd7a898adf1b8411f8acd438b7", null ],
     [ "init", "class_box_set.html#a84a7ce065040839c3b31dd9412baf996", null ],
     [ "is_boxed", "class_box_set.html#ada8f233abfd77a1201586a214d2745a3", null ],
+    [ "neighborhood", "class_box_set.html#aa3699a363116fdb687ac72ae136beac9", null ],
     [ "neighborhood_begin", "class_box_set.html#ab5bec91a4eda161d1f557888756b5bb0", null ],
     [ "neighborhood_end", "class_box_set.html#a529d4f32ddee492c50d75d4d349c0be8", null ],
     [ "positionBoxes", "class_box_set.html#aa74b8437c99b8ebf8bccd03e2d8c9fb8", null ],
