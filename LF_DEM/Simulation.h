@@ -112,7 +112,8 @@ private:
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(string);
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulationSteadyShear(string in_args, vector<string> &input_files,
+	void setupSimulationSteadyShear(string in_args,
+									vector<string> &input_files,
 									bool binary_conf,
 									double dimensionlessnumber,
 									string control_variable);

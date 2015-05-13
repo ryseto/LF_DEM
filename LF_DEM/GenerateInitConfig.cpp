@@ -274,7 +274,7 @@ void GenerateInitConfig::putRandom()
 void GenerateInitConfig::updateInteractions(int i)
 {
 	vector <Interaction*> inter_list;
-	for (auto&& inter : sys.interaction_list[i]){
+	for (auto && inter : sys.interaction_list[i]){
 		inter_list.push_back(inter);
 	}
 

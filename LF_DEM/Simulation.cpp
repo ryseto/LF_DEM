@@ -128,7 +128,7 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 {
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
-	for (auto &in_file : input_files) {
+	for (const string &in_file : input_files) {
 		ifstream in_f;
 		string line;
 		in_f.open(in_file.c_str());
@@ -711,7 +711,7 @@ void Simulation::simulationUserDefinedSequence(string seq_type,
 	}
 }
 
-bool str2bool(string value)
+bool str2bool(const string &value)
 {
 	if (value == "true") {
 		return true;
@@ -723,7 +723,7 @@ bool str2bool(string value)
 	}
 }
 
-vec3d str2vec3d(string value)
+vec3d str2vec3d(const string &value)
 {
 	string::size_type l1 = value.find("(", 0);
 	if (l1 == string::npos) {
@@ -747,7 +747,7 @@ vec3d str2vec3d(string value)
 	return vec3d(vx,vy,vz);
 }
 
-void Str2KeyValue(string &str_parameter,
+void Str2KeyValue(const string &str_parameter,
 				  string &keyword,
 				  string &value)
 {
