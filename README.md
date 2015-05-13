@@ -23,7 +23,7 @@ by sending bug fixes or new features with a minimal effort.
 
 You can get the code by typing in a terminal:
 ```
-$ git clone https://rmari@bitbucket.org/rmari/lf_dem.git
+$ git clone https://bitbucket.org/rmari/lf_dem.git
 ```
 This will download the current sources (and also the past sources).
 
