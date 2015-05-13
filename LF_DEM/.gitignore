@@ -36,7 +36,6 @@ LF_DEM.dtps/
 # version file
 VersionInfo.h
 
-
 # archives
 *.gz
 *.tgz
