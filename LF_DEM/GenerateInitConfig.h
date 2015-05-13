@@ -52,7 +52,12 @@ private:
 	void storeGradient();
 	double step_size;
 	int rand_seed;
+#ifndef USE_DSFMT
 	MTRand rand_gen;
+#endif
+#ifdef USE_DSFMT
+	dsfmt_t rand_gen;
+#endif
 	double zeroTMonteCarloSweep();
 	int overlapNumber(int);
 	double particleEnergy(int);

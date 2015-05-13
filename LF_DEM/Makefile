@@ -9,6 +9,8 @@ OS_version = OSX
 # install directory
 install_dir = ~/bin/
 
+DSFMT_RNG = no
+
 VERSION := $(shell git describe --dirty --always)
 
 # Compiler
@@ -34,6 +36,12 @@ ifeq ($(OS_version),OSX)
 	CXXFLAGS_optimized=  -O3 -std=c++11 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
 	CXXFLAGS_debug=  -g -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 	CXXFLAGS_dev=  -O3  -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
+endif
+
+ifeq ($(DSFMT_RNG),yes)
+	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	CXXFLAGS_debug += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
 endif
 
 # Enable use of Trilinos library ( yes / no )
@@ -125,9 +133,9 @@ endif
 
 OUT_CODE=LF_DEM
 SRC=$(shell ls *.cpp)
-LIB=$(shell ls *.h)  
+LIB=$(shell ls *.h)
 OBJ=$(SRC:.cpp=.o)
-
+DSFMT_OBJ += $(DSFMT_SRC:.c=.o)
 DATE=$(shell date +%D | sed "s./..g")
 
 all:	CXXFLAGS= $(CXXFLAGS_optimized)
@@ -142,11 +150,14 @@ dev:	$(OUT_CODE)
 check:
 	(cd check;	make test)
 
-$(OUT_CODE): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
+$(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp) 
+
+$(DSFMT_OBJ): $(DSFMT_SRC)
+	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c) 
 
 gitversion.h: ../.git/HEAD ../.git/index
     echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
