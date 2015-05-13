@@ -425,7 +425,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	}
 	
 	if (input_files[2] != "not_given") {
-		if (sys.brownian && !p.auto_determine_knkt) {
+		if (p.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
 		} else {
 			contactForceParameter(input_files[2]);
@@ -447,7 +447,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	//exportParameterSet();
 	sys.importParameterSet(p);
 
-	if (sys.brownian) {
+	if (p.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
