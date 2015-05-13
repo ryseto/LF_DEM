@@ -1062,6 +1062,7 @@ void Simulation::setDefaultParameters()
 	p.brownian = false;
 	p.repulsiveforce = false;
 	p.cohesion = false;
+	p.magnetic = false;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;

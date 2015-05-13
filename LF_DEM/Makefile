@@ -31,7 +31,7 @@ ifeq ($(OS_version),Linux)
 endif
 ifeq ($(OS_version),OSX)
 	CXX=clang++
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_optimized=  -O3 -std=c++11 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
 	CXXFLAGS_debug=  -g -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 	CXXFLAGS_dev=  -O3  -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
