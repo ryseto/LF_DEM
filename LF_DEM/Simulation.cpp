@@ -1150,6 +1150,11 @@ void Simulation::importInitialPositionFile()
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
+	bool include_magnetic_moment = false;
+	if (filename_import_positions.find("mag", 0) != string::npos) {
+		cerr << "The initial configuration file includes magnetic moment." << endl;
+		include_magnetic_moment = true;
+	}
 	char buf;
 	int n1, n2;
 	double lx, ly, lz, vf1, vf2;
@@ -1160,9 +1165,18 @@ void Simulation::importInitialPositionFile()
 	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
 	vector <double> radius;
-	while (file_import >> x_ >> y_ >> z_ >> a_) {
-		initial_position.push_back(vec3d(x_, y_, z_));
-		radius.push_back(a_);
+	if (include_magnetic_moment == false) {
+		while (file_import >> x_ >> y_ >> z_ >> a_) {
+			initial_position.push_back(vec3d(x_, y_, z_));
+			radius.push_back(a_);
+		}
+	} else {
+		double mx_, my_, mz_;
+		while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ ) {
+			initial_position.push_back(vec3d(x_, y_, z_));
+			radius.push_back(a_);
+			sys.init_magnetic_moment.push_back(vec3d(mx_, my_, mz_));
+		}
 	}
 	file_import.close();
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
