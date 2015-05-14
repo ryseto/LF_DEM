@@ -585,6 +585,7 @@
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
+		D9E06B3A1B04523900B81F62 /* dSFMT-src-2.2.3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "dSFMT-src-2.2.3"; path = "LF_DEM/dSFMT-src-2.2.3"; sourceTree = "<group>"; };
 		D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = calc_contact_fraction.pl; sourceTree = "<group>"; };
 		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StressTensor.h; sourceTree = "<group>"; };
 		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Interaction.cpp; sourceTree = "<group>"; };
@@ -1065,6 +1066,7 @@
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
+				D9E06B3A1B04523900B81F62 /* dSFMT-src-2.2.3 */,
 				D9D712161A995E36009CC269 /* libamd.2.4.1.a */,
 				D9D7121A1A995E36009CC269 /* libcholmod.3.0.5.a */,
 				D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */,
@@ -1560,7 +1562,14 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				OTHER_CPLUSPLUSFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = (
+					"-DUSE_DSFMT=\"$DSFMT_RNG\"",
+					"-DDSFMT_MEXP=19937",
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+					"-std=c++11",
+				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;
@@ -1580,7 +1589,14 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				OTHER_CPLUSPLUSFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = (
+					"-DUSE_DSFMT=\"$DSFMT_RNG\"",
+					"-DDSFMT_MEXP=19937",
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+					"-std=c++11",
+				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = NO;

@@ -70,7 +70,6 @@ ifeq ($(DSFMT_RNG),yes)
 	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
 endif
 
-
 # Enable use of Metis library ( yes / no )
 UseMetis=no
 
