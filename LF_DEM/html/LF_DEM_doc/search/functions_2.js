@@ -2,6 +2,7 @@ var searchData=
 [
   ['calccontactinteraction',['calcContactInteraction',['../class_contact.html#aca6315b88196cd3cdfce9f79f06de963',1,'Contact']]],
   ['calcforce',['calcForce',['../class_repulsive_force.html#aabe69a720e7859ecfb580d4a811c0bf9',1,'RepulsiveForce']]],
+  ['calcforcetoruqe',['calcForceToruqe',['../class_magnetic_force.html#add93a2d659d8b8046fd6aeb902e63455',1,'MagneticForce']]],
   ['calcreducedforcenorm',['calcReducedForceNorm',['../class_repulsive_force.html#a56255fb93621611c5de2ab49a2607889',1,'RepulsiveForce']]],
   ['calcrollingvelocities',['calcRollingVelocities',['../class_interaction.html#aa6d1c13c4fca9c1e49f12953ba5708fb',1,'Interaction']]],
   ['calcscaledforce',['calcScaledForce',['../class_repulsive_force.html#aceeec27a0c869febbbb4762ebaee6d3f',1,'RepulsiveForce']]],

@@ -116,9 +116,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>updateState</b> (bool
 <tr class="memitem:ad68586fe2c0ba27ea7639ee14e1feebe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad68586fe2c0ba27ea7639ee14e1feebe"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateContactState</b> (bool &amp;deactivated)</td></tr>
 <tr class="separator:ad68586fe2c0ba27ea7639ee14e1feebe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4735642bf99495e8c8b24921851598f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4735642bf99495e8c8b24921851598f9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>activate</b> (unsigned short i, unsigned short j, double range)</td></tr>
-<tr class="separator:a4735642bf99495e8c8b24921851598f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c1b0c66d58bf8fb04311b80c1409abc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c1b0c66d58bf8fb04311b80c1409abc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>activate</b> (unsigned short i, unsigned short j, double interaction_range_)</td></tr>
+<tr class="separator:a1c1b0c66d58bf8fb04311b80c1409abc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acd5c51630bbf2c8371f09b53cc847508"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd5c51630bbf2c8371f09b53cc847508"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>deactivate</b> ()</td></tr>
 <tr class="separator:acd5c51630bbf2c8371f09b53cc847508"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -170,9 +170,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>get_reduced_gap</b>
 <tr class="memitem:ac3585ba453fe897932dcbedd9d0ef33e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3585ba453fe897932dcbedd9d0ef33e"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>get_gap</b> ()</td></tr>
 <tr class="separator:ac3585ba453fe897932dcbedd9d0ef33e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acdac4188c886fed9134fbb4bb095ac92"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdac4188c886fed9134fbb4bb095ac92"></a>
-<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>get_nvec</b> ()</td></tr>
-<tr class="separator:acdac4188c886fed9134fbb4bb095ac92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fb92b972ee30dc7595f5e8a08f721ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4fb92b972ee30dc7595f5e8a08f721ce"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getNormalVelocity</b> ()</td></tr>
 <tr class="separator:a4fb92b972ee30dc7595f5e8a08f721ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -194,9 +191,18 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:adeab7f37eb0d456b32dbbffa3d7d3faf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adeab7f37eb0d456b32dbbffa3d7d3faf"></a>
 <a class="el" href="class_repulsive_force.html">RepulsiveForce</a>&#160;</td><td class="memItemRight" valign="bottom"><b>repulsion</b></td></tr>
 <tr class="separator:adeab7f37eb0d456b32dbbffa3d7d3faf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e01a2ceddb61f9df3fc4ea3282932e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e01a2ceddb61f9df3fc4ea3282932e0"></a>
+<a class="el" href="class_magnetic_force.html">MagneticForce</a>&#160;</td><td class="memItemRight" valign="bottom"><b>magneticforce</b></td></tr>
+<tr class="separator:a4e01a2ceddb61f9df3fc4ea3282932e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b1e443d727be922c80e0913816a7f24"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b1e443d727be922c80e0913816a7f24"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>relative_surface_velocity</b></td></tr>
 <tr class="separator:a2b1e443d727be922c80e0913816a7f24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40f0ad201464f3f7fbb918d2fd3cdea1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40f0ad201464f3f7fbb918d2fd3cdea1"></a>
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>rvec</b></td></tr>
+<tr class="separator:a40f0ad201464f3f7fbb918d2fd3cdea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9038b9c7398554da12cd23efe5e6d36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9038b9c7398554da12cd23efe5e6d36"></a>
+<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>nvec</b></td></tr>
+<tr class="separator:ac9038b9c7398554da12cd23efe5e6d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -256,12 +262,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>zshift</b></td></tr>
 <tr class="memitem:a5a40f2585fd7f7afb4f019bd14ce8a6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a40f2585fd7f7afb4f019bd14ce8a6c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>reduced_gap</b></td></tr>
 <tr class="separator:a5a40f2585fd7f7afb4f019bd14ce8a6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40f0ad201464f3f7fbb918d2fd3cdea1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40f0ad201464f3f7fbb918d2fd3cdea1"></a>
-<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>rvec</b></td></tr>
-<tr class="separator:a40f0ad201464f3f7fbb918d2fd3cdea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9038b9c7398554da12cd23efe5e6d36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9038b9c7398554da12cd23efe5e6d36"></a>
-<a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>nvec</b></td></tr>
-<tr class="separator:ac9038b9c7398554da12cd23efe5e6d36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01bef8426a2421e729e9b5547c3b6d33"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01bef8426a2421e729e9b5547c3b6d33"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>nxnx</b></td></tr>
 <tr class="separator:a01bef8426a2421e729e9b5547c3b6d33"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -345,7 +345,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_interaction.html">Interaction</a></li>
-    <li class="footer">Generated on Wed Apr 8 2015 18:09:08 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed May 13 2015 18:10:49 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

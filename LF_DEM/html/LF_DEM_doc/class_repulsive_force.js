@@ -4,6 +4,7 @@ var class_repulsive_force =
     [ "~RepulsiveForce", "class_repulsive_force.html#a8b7a4a02ab7d72b5a861eef7398cb424", null ],
     [ "activate", "class_repulsive_force.html#aebacc5edc28b84e56ce08fcae9420aa9", null ],
     [ "addUpForce", "class_repulsive_force.html#aefccc0fd74eea15d47f4bba0081a074b", null ],
+    [ "calcEnergy", "class_repulsive_force.html#a98447c1a459b7c208da7fafdc1c7a713", null ],
     [ "calcForce", "class_repulsive_force.html#aabe69a720e7859ecfb580d4a811c0bf9", null ],
     [ "calcReducedForceNorm", "class_repulsive_force.html#a56255fb93621611c5de2ab49a2607889", null ],
     [ "calcScaledForce", "class_repulsive_force.html#aceeec27a0c869febbbb4762ebaee6d3f", null ],

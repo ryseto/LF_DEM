@@ -1,5 +1,7 @@
 var searchData=
 [
+  ['magnetic',['magnetic',['../struct_parameter_set.html#a8ba235ffb68e752460572c58a6010f61',1,'ParameterSet']]],
+  ['magneticforce',['MagneticForce',['../class_magnetic_force.html',1,'']]],
   ['max_5fkn',['max_kn',['../struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943',1,'ParameterSet']]],
   ['max_5fkt',['max_kt',['../struct_parameter_set.html#ad3a750d73e7ae118c43c20e720042303',1,'ParameterSet']]],
   ['memory_5fstrain_5favg',['memory_strain_avg',['../struct_parameter_set.html#aba761741aba1a8bcfadcb0b3fe28acc2',1,'ParameterSet']]],

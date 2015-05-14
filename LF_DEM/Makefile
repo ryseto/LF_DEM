@@ -9,35 +9,68 @@ OS_version = OSX
 # install directory
 install_dir = ~/bin/
 
+DSFMT_RNG = no
+
 VERSION := $(shell git describe --dirty --always)
 
 # Compiler
 ifeq ($(OS_version),SI)
 	CXX=icc
-	CXXFLAGS_optimized=  -O3
-	CXXFLAGS_debug=  -g -DDEV="1"
 endif
 ifeq ($(OS_version),OIST)
 	CXX=icc
-	CXXFLAGS_optimized= -O3 -Wall -std=c++11 -DVERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -DVERSION="\"$(VERSION)\"" -DDEV="1"
 endif
-
 ifeq ($(OS_version),Linux)
 	CXX=g++
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -pg -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
-	CXXFLAGS_dev=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 ifeq ($(OS_version),OSX)
 	CXX=clang++
-	CXXFLAGS_optimized=  -O3 -Wall  -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\""
-	CXXFLAGS_debug=  -g -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
-	CXXFLAGS_dev=  -O3  -Wall -Wextra -Wshadow -DGIT_VERSION="\"$(VERSION)\"" -DDEV="1"
 endif
 
-# Enable use of Trilinos library ( yes / no )
-UseTrilinos=no
+CXXFLAGS_optimized = -O3
+CXXFLAGS_debug = -g -DDEV="1"
+CXXFLAGS_dev = -O3 -DDEV="1"
+
+CXXFLAGS_optimized += -std=c++11
+CXXFLAGS_debug += -std=c++11
+CXXFLAGS_dev += -std=c++11
+
+GPP_Warnings = -Wall  -Wextra -Wshadow
+ifeq ($(CXX),$(filter $(CXX),g++ clang++))
+	CXXFLAGS_optimized += $(GPP_Warnings)
+	CXXFLAGS_debug += -pg $(GPP_Warnings)
+	CXXFLAGS_dev += $(GPP_Warnings)
+endif
+
+ICC_Warnings = -Wall
+ifeq ($(CXX),icc)
+	CXXFLAGS_optimized += $(ICC_Warnings)
+	CXXFLAGS_debug += -pg $(ICC_Warnings)
+	CXXFLAGS_dev += $(ICC_Warnings)
+endif
+
+ifeq ($(OS_version),$(filter $(OS_version),Linux OSX))
+	CXXFLAGS_optimized += -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_debug += -pg -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
+endif
+
+ifeq ($(OS_version),OIST)
+	CXXFLAGS_optimized += -DVERSION="\"$(VERSION)\""
+	CXXFLAGS_debug += -DVERSION="\"$(VERSION)\""
+endif
+
+ifeq ($(OS_version),Linux)
+	CXXFLAGS_debug += -pg
+endif
+
+ifeq ($(DSFMT_RNG),yes)
+	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	CXXFLAGS_debug += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
+endif
+
+
 # Enable use of Metis library ( yes / no )
 UseMetis=no
 
@@ -47,20 +80,11 @@ Cholmod_include_path_Linux   = /usr/include/suitesparse/
 Cholmod_include_path_SI  = ~/usr/include/
 Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
 
-ifeq ($(UseTrilinos),yes)
-	Trilinos_include_path_Linux  = /home/romain/romain/recherche/trilinos-11.0.3-Source/
-	Trilinos_include_path_OSX    = /usr/local/include/
-endif
-
-Trilinos_path = $(Trilinos_include_path_$(OS_version))
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
 Metis_path = /opt/local/lib/
 
 # Includes
 Includes = -I $(Cholmod_path) 
-ifeq ($(UseTrilinos),yes)
-	Includes += -I $(Trilinos_path)
-endif
 
 #======== Linking ==================
 # Blas and Lapack
@@ -118,16 +142,12 @@ ifeq ($(OS_version), OIST)
        endif	
 endif
 
-# Trilinos
-ifeq ($(UseTrilinos),yes)
-	Trilinos_Linking_Flags =  -lbelosepetra -lbelos -lifpack -lepetra -lkokkosnodetsqr -lteuchos
-endif
 
 OUT_CODE=LF_DEM
 SRC=$(shell ls *.cpp)
-LIB=$(shell ls *.h)  
+LIB=$(shell ls *.h)
 OBJ=$(SRC:.cpp=.o)
-
+DSFMT_OBJ += $(DSFMT_SRC:.c=.o)
 DATE=$(shell date +%D | sed "s./..g")
 
 all:	CXXFLAGS= $(CXXFLAGS_optimized)
@@ -142,11 +162,14 @@ dev:	$(OUT_CODE)
 check:
 	(cd check;	make test)
 
-$(OUT_CODE): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags) $(Trilinos_Linking_Flags)
+$(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp) 
+
+$(DSFMT_OBJ): $(DSFMT_SRC)
+	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c) 
 
 gitversion.h: ../.git/HEAD ../.git/index
     echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
@@ -164,6 +187,6 @@ doc:
 install:
 	cp -p $(OUT_CODE) $(install_dir)
 	ifeq ($(OS_version),OIST)
-        cp -p generateYaplotFile.pl $(install_dir)
+		cp -p generateYaplotFile.pl $(install_dir)
 	endif
 

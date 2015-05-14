@@ -3,6 +3,12 @@
  *
  */
 
+brownian = false;
+repulsiveforce = true;
+cohesion = false;
+critical_load = false;
+magnetic = false;
+
 dt = 1e-4;
 Pe_switch = 5;
 disp_max = 5e-3;

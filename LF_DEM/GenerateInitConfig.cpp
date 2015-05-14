@@ -9,7 +9,12 @@
 #include <stdlib.h> // necessary for Linux
 #include "GenerateInitConfig.h"
 #include "Simulation.h"
+#ifndef USE_DSFMT
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
+#endif
+#ifdef USE_DSFMT
+#define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
+#endif
 using namespace std;
 
 int GenerateInitConfig::generate(int rand_seed_)
@@ -254,7 +259,12 @@ double GenerateInitConfig::gradientDescent()
 void GenerateInitConfig::putRandom()
 {
 	sys.allocatePositionRadius();
+#ifndef USE_DSFMT
 	rand_gen.seed(rand_seed);
+#endif
+#ifdef USE_DSFMT
+	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
+#endif
 	for (int i=0; i < np; i++) {
 		sys.position[i].x = lx*RANDOM;
 		sys.position[i].z = lz*RANDOM;

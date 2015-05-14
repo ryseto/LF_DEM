@@ -425,7 +425,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	}
 	
 	if (input_files[2] != "not_given") {
-		if (sys.brownian && !p.auto_determine_knkt) {
+		if (p.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
 		} else {
 			contactForceParameter(input_files[2]);
@@ -447,7 +447,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	//exportParameterSet();
 	sys.importParameterSet(p);
 
-	if (sys.brownian) {
+	if (p.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
@@ -1062,6 +1062,8 @@ void Simulation::setDefaultParameters()
 	p.brownian = false;
 	p.repulsiveforce = false;
 	p.cohesion = false;
+	p.critical_load = false;
+	p.magnetic = false;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;

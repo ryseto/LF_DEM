@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['parameterset',['ParameterSet',['../struct_parameter_set.html',1,'']]]
+  ['magneticforce',['MagneticForce',['../class_magnetic_force.html',1,'']]]
 ];

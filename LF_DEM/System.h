@@ -30,7 +30,13 @@
 #include "ParameterSet.h"
 #include "Averager.h"
 #include "cholmod.h"
+#ifndef USE_DSFMT
 #include "MersenneTwister.h"
+#endif
+#ifdef USE_DSFMT
+#include "dSFMT-src-2.2.3/dSFMT.h"
+#endif
+
 using namespace std;
 
 class Simulation;
@@ -108,7 +114,15 @@ private:
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
 	vec3d randUniformSphere(double);
+#ifndef USE_DSFMT
 	MTRand *r_gen;
+	MTRand rand_gen;
+#endif
+#ifdef USE_DSFMT
+	dsfmt_t r_gen;
+	dsfmt_t rand_gen;
+	unsigned long hash(time_t, clock_t);
+#endif
 	double *radius_cubed;
 	double *radius_squared;
 	ParameterSet p;
@@ -119,7 +133,7 @@ private:
 	Averager<double> *max_disp_tan_avg;
 	bool lowPeclet;
 	bool fixed_dt;
-	MTRand rand_gen;
+
 
  protected:
  public:

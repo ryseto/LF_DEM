@@ -9,11 +9,22 @@
 #include "System.h"
 #include <sstream>
 #include <cmath>
+#ifdef USE_DSFMT
+#include <time.h>
+#endif
 #define DELETE(x) if(x){delete [] x; x = NULL;}
+#ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 #define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
+#endif
+#ifdef USE_DSFMT
+#define GRANDOM  ( sqrt( -2.0 * log( 1.0 - dsfmt_genrand_open_open(&r_gen) ) ) * cos(2.0 * 3.14159265358979323846264338328 * dsfmt_genrand_close_open(&r_gen) ) ) // RNG gaussian with mean 0. and variance 1.
+#define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
+#endif
+
 
 System::System():
+	
 lowPeclet(false),
 brownian(false),
 friction(false),
@@ -37,6 +48,37 @@ vec3d System::randUniformSphere(double r)
 	double sin_theta = sqrt(1-z*z);
 	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
 }
+
+#ifdef USE_DSFMT
+unsigned long
+System::hash( time_t t, clock_t c )
+{
+	// From MersenneTwister v1.0 by Richard J. Wagner
+	// comments below are from the original code.
+	
+	// Get a unsigned long from t and c
+	// Better than unsigned long(x) in case x is floating point in [0,1]
+	// Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
+
+	static unsigned long differ = 0;  // guarantee time-based seeds will change
+
+	unsigned long h1 = 0;
+	unsigned char *pp = (unsigned char *) &t;
+	for( size_t i = 0; i < sizeof(t); ++i )
+	{
+		h1 *= UCHAR_MAX + 2U;
+		h1 += pp[i];
+	}
+	unsigned long h2 = 0;
+	pp = (unsigned char *) &c;
+	for( size_t j = 0; j < sizeof(c); ++j )
+	{
+		h2 *= UCHAR_MAX + 2U;
+		h2 += pp[j];
+	}
+	return ( h1 + differ++ ) ^ h2;
+}
+#endif
 
 System::~System()
 {
@@ -490,10 +532,23 @@ void System::setupSystem(string control)
 		 * we give a seed to generate the same series of random number.
 		 * DEV is defined as a preprocessor option in the Makefile
 		 */
+#ifndef USE_DSFMT
 		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
+#ifdef USE_DSFMT
+		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+		dsfmt_init_gen_rand(&rand_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+#endif		
+#endif
+		
 #ifndef DEV
+#ifndef USE_DSFMT
 		r_gen = new MTRand;
+#endif
+#ifdef USE_DSFMT
+		dsfmt_init_gen_rand(&r_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
+		dsfmt_init_gen_rand(&rand_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
+#endif
 #endif
 	}
 	

@@ -105,12 +105,12 @@ $(document).ready(function(){initNavTree('class_simulation.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab9d663926b04612eafad617f3ad44330"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab9d663926b04612eafad617f3ad44330"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear</b> (vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)</td></tr>
-<tr class="separator:ab9d663926b04612eafad617f3ad44330"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e769d7a1392034c2792204cb8be97dd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e769d7a1392034c2792204cb8be97dd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationUserDefinedSequence</b> (string seq_type, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)</td></tr>
-<tr class="separator:a4e769d7a1392034c2792204cb8be97dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9475c9e97ae8f9588879768ea4900a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9475c9e97ae8f9588879768ea4900a0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionless_number, string control_variable)</td></tr>
+<tr class="separator:ac9475c9e97ae8f9588879768ea4900a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af04118205ed1a09deb387cb9c6fe00a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af04118205ed1a09deb387cb9c6fe00a1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationUserDefinedSequence</b> (string seq_type, string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)</td></tr>
+<tr class="separator:af04118205ed1a09deb387cb9c6fe00a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -126,6 +126,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>openOutputFiles</b> (
 <tr class="memitem:a0677c2d30c34216fa24e7a035012ed31"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0677c2d30c34216fa24e7a035012ed31"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>prepareSimulationName</b> (bool)</td></tr>
 <tr class="separator:a0677c2d30c34216fa24e7a035012ed31"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace8b1e0cbdffb96a3a68e7510be05b22"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace8b1e0cbdffb96a3a68e7510be05b22"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>echoInputFiles</b> (string in_args, vector&lt; string &gt; &amp;input_files)</td></tr>
+<tr class="separator:ace8b1e0cbdffb96a3a68e7510be05b22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ea39843d1763c67c248b0417163472f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ea39843d1763c67c248b0417163472f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>autoSetParameters</b> (const string &amp;keyword, const string &amp;value)</td></tr>
 <tr class="separator:a2ea39843d1763c67c248b0417163472f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,9 +147,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>importPreSimulationDa
 <tr class="memitem:a0c86b63dff8eb379655ec7df1ed44192"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c86b63dff8eb379655ec7df1ed44192"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>importConfigurationBinary</b> ()</td></tr>
 <tr class="separator:a0c86b63dff8eb379655ec7df1ed44192"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ac4dfbaf14f5b98d4ed6cada8b9aaff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ac4dfbaf14f5b98d4ed6cada8b9aaff"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesBrownian</b> ()</td></tr>
-<tr class="separator:a7ac4dfbaf14f5b98d4ed6cada8b9aaff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5defc0764fcd9d3e96ebc832007763a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5defc0764fcd9d3e96ebc832007763a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesBrownian</b> (double dimensionlessnumber)</td></tr>
+<tr class="separator:ab5defc0764fcd9d3e96ebc832007763a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a941be735613c519b1a95149bb75d2e6d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a941be735613c519b1a95149bb75d2e6d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesNonBrownianRate</b> (double dimensionlessnumber)</td></tr>
+<tr class="separator:a941be735613c519b1a95149bb75d2e6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4820bfa06f399b52a890f2271808763"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4820bfa06f399b52a890f2271808763"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesNonBrownianStress</b> (double dimensionlessnumber)</td></tr>
+<tr class="separator:af4820bfa06f399b52a890f2271808763"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">evaluateData</a> ()</td></tr>
 <tr class="separator:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0343a8d24623b8fdf0478f62a106d25"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0343a8d24623b8fdf0478f62a106d25"></a>
@@ -172,12 +181,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>outputConfigurationBi
 <tr class="memitem:a1221947d9fcaa6bbb625c91d143be5e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1221947d9fcaa6bbb625c91d143be5e7"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>shiftUpCoordinate</b> (double x, double y, double z)</td></tr>
 <tr class="separator:a1221947d9fcaa6bbb625c91d143be5e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92e2f06b26117c5e2867ace2441d922e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92e2f06b26117c5e2867ace2441d922e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSimulationSteadyShear</b> (vector&lt; string &gt; &amp;input_files, bool binary_conf, double peclet_num, double scaled_repulsion, double scaled_cohesion, double scaled_critical_load, string control_variable)</td></tr>
-<tr class="separator:a92e2f06b26117c5e2867ace2441d922e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4718b611095fdfa734ba5b65eed8f34b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4718b611095fdfa734ba5b65eed8f34b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>exportParameterSet</b> ()</td></tr>
-<tr class="separator:a4718b611095fdfa734ba5b65eed8f34b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a34ef7116655a2497c0e738d6f0cdc6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a34ef7116655a2497c0e738d6f0cdc6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSimulationSteadyShear</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionlessnumber, string control_variable)</td></tr>
+<tr class="separator:a7a34ef7116655a2497c0e738d6f0cdc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0614d1d87addd8c5120c9546c765c37b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0614d1d87addd8c5120c9546c765c37b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>outputComputationTime</b> ()</td></tr>
+<tr class="separator:a0614d1d87addd8c5120c9546c765c37b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -307,6 +316,21 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>initial_lees_edward
 <tr class="memitem:a3b36ca9eee04f2fe6a08f23ee98d3d5b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b36ca9eee04f2fe6a08f23ee98d3d5b"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>unit_scales</b></td></tr>
 <tr class="separator:a3b36ca9eee04f2fe6a08f23ee98d3d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4dca931bf76c2b461b147677c583e052"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dca931bf76c2b461b147677c583e052"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>time_strain_0</b></td></tr>
+<tr class="separator:a4dca931bf76c2b461b147677c583e052"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4a1021de14b34bc32a38ea9b744b0cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab4a1021de14b34bc32a38ea9b744b0cd"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>time_strain_1</b></td></tr>
+<tr class="separator:ab4a1021de14b34bc32a38ea9b744b0cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a525827f3e073717bffc6854625ccea52"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a525827f3e073717bffc6854625ccea52"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>time_strain_end</b></td></tr>
+<tr class="separator:a525827f3e073717bffc6854625ccea52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a13e67e93c8f0553a7f1336fa3967c7a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13e67e93c8f0553a7f1336fa3967c7a6"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>timestep_1</b></td></tr>
+<tr class="separator:a13e67e93c8f0553a7f1336fa3967c7a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bad70ba597b3464c12c8efd88a7a53e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1bad70ba597b3464c12c8efd88a7a53e"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>timestep_end</b></td></tr>
+<tr class="separator:a1bad70ba597b3464c12c8efd88a7a53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a539ef9855bd2abdc384cfb24cdb4e090"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a539ef9855bd2abdc384cfb24cdb4e090"></a>
 ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_rheo</b></td></tr>
 <tr class="separator:a539ef9855bd2abdc384cfb24cdb4e090"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -319,6 +343,12 @@ ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_interaction<
 <tr class="memitem:acd048c5258ba51d0a4b0a4ce34c48fc2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd048c5258ba51d0a4b0a4ce34c48fc2"></a>
 ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_st</b></td></tr>
 <tr class="separator:acd048c5258ba51d0a4b0a4ce34c48fc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a901e8a1b470cfde652c262e5dd52e560"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a901e8a1b470cfde652c262e5dd52e560"></a>
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_time</b></td></tr>
+<tr class="separator:a901e8a1b470cfde652c262e5dd52e560"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a399fb0e6d4e85f15aeeb0adef0dad507"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a399fb0e6d4e85f15aeeb0adef0dad507"></a>
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_input</b></td></tr>
+<tr class="separator:a399fb0e6d4e85f15aeeb0adef0dad507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class launching the simulation by setting up the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class and performing predefined shear evolution. </p>
@@ -387,7 +417,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a></li>
-    <li class="footer">Generated on Wed Apr 8 2015 18:09:08 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed May 13 2015 18:10:49 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
