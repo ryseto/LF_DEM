@@ -9,15 +9,17 @@
 
 struct ParameterSet
 {
-	bool brownian;						///< Brownian force
-	bool repulsiveforce;				///< Repulsive force exp(-kh)
-	bool cohesion;						///< Cohesive force
-	bool critical_load;					///< Normal force required to activate friction
-	bool magnetic;						///< Magnetic
-	
-	double ratio_repulsion;				///<
-	double ratio_critical_load;			///<
-	double ratio_cohesion;				///<
+	//	bool brownian;						///< Brownian force
+	//	bool repulsiveforce;				///< Repulsive force exp(-kh)
+	//	bool cohesion;						///< Cohesive force
+	//	bool critical_load;					///< Normal force required to activate friction
+	//	bool magnetic;						///< Magnetic
+
+	double repulsion_amplitude;				///<
+	double critical_load_amplitude;			///<
+	double cohesion_amplitude;				///<
+	double brownian_amplitude;				///<
+	double magnetic_amplitude;				///<
 	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value

@@ -19,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <ctime>
+#include <map>
 #include "System.h"
 #include "ParameterSet.h"
 
@@ -26,6 +27,10 @@ class Simulation{
 private:
 	System sys;
 	ParameterSet p;
+	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
+	std::map <string, string> values;   // pairs: (force_type, values_in_suffix_units)
+	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
+	
 	double volume_or_area_fraction;
 	string filename_import_positions;
 	string filename_parameters;
@@ -37,6 +42,7 @@ private:
 	double shear_rate_expectation;
 	double time_interval_output_data;
 	double time_interval_output_config;
+	
 	/*
 	 * Resultant data
 	 */
@@ -100,6 +106,7 @@ private:
 	void setUnitScalesBrownian(double dimensionlessnumber);
 	void setUnitScalesNonBrownianRate(double dimensionlessnumber);
 	void setUnitScalesNonBrownianStress(double dimensionlessnumber);
+	void convertForceUnitsRateControlled(double &force, string from_unit);
 	/*
 	 * For outputs
 	 */

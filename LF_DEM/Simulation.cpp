@@ -145,233 +145,336 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 	fout_input.close();
 }
 
-void Simulation::setUnitScalesBrownian(double dimensionless_number)
-{
-	sys.dimensionless_number = dimensionless_number; // Peclet number
-	if (sys.dimensionless_number > p.Pe_switch && !sys.zero_shear) {
-		unit_scales = "hydro";
-		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
-		sys.set_shear_rate(1);
-		if (p.repulsiveforce == false
-			&& p.cohesion == false
-			&& p.critical_load == false
-			&& p.magnetic == false) {
-			cerr << "Only Brownian" << endl;
-			string_control_parameters << "_p" << sys.dimensionless_number;
-		} else if (p.repulsiveforce == true
-				   && p.critical_load == false
-				   && p.cohesion == false
-				   && p.magnetic == false) {
-			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
-			/* When both Brownian and repulsive forces exist
+// void Simulation::setUnitScalesBrownian(double dimensionless_number)
+// {
+// 	sys.dimensionless_number = dimensionless_number; // Peclet number
+// 	if (sys.dimensionless_number > p.Pe_switch && !sys.zero_shear) {
+// 		unit_scales = "hydro";
+// 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
+// 		sys.set_shear_rate(1);
+// 		if (p.repulsiveforce == false
+// 			&& p.cohesion == false
+// 			&& p.critical_load == false
+// 			&& p.magnetic == false) {
+// 			cerr << "Only Brownian" << endl;
+// 			string_control_parameters << "_p" << sys.dimensionless_number;
+// 		} else if (p.repulsiveforce == true
+// 				   && p.critical_load == false
+// 				   && p.cohesion == false
+// 				   && p.magnetic == false) {
+// 			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
+// 			/* When both Brownian and repulsive forces exist
 			 
-			 * `ratio_repulsion' = F_rep(0)/(kT/a)
-			 * Filename includes "rXXXX_pXXXX".
-			 */
-			sys.amplitudes.repulsion = p.ratio_repulsion/sys.dimensionless_number;
-			string_control_parameters << "_r" << p.ratio_repulsion  << "_p" << sys.dimensionless_number;
-		} else if (p.critical_load == true
-				   && p.repulsiveforce == false
-				   && p.cohesion == false
-				   && p.magnetic == false) {
-			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
-			sys.critical_normal_force = p.ratio_critical_load/sys.dimensionless_number;
-			p.friction_model = 2;
-			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
-		} else if (p.cohesion == true
-				   && p.repulsiveforce == false
-				   && p.critical_load == false
-				   && p.magnetic == false) {
-			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
-			sys.dimensionless_cohesive_force = p.ratio_cohesion/sys.dimensionless_number;
-			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
-		} else if (p.magnetic == true
-				   && p.repulsiveforce == false
-				   && p.cohesion == false
-				   && p.critical_load == false) {
-			cerr << "Brownian Magnetic" << endl;
-			string_control_parameters << "_mag_p" << sys.dimensionless_number;
-		} else {
-			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
-			cerr << "critical_load: " << p.critical_load << endl;
-			cerr << "cohesion: " << p.cohesion << endl;
-			cerr << "not yet implemented" << endl;
-			exit(1);
-		}
-	} else {
-		unit_scales = "thermal";
-		sys.amplitudes.sqrt_temperature = 1;
-		sys.set_shear_rate(sys.dimensionless_number);
-		if (p.repulsiveforce == false
-			&& p.cohesion == false
-			&& p.critical_load == false
-			&& p.magnetic == false) {
-			cerr << "Only Brownian" << endl;
-			string_control_parameters << "_p" << sys.dimensionless_number;
-		} else if (p.repulsiveforce == true
-				   && p.critical_load == false
-				   && p.cohesion == false
-				   && p.magnetic == false) {
-			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
-			/* When both Brownian and repulsive forces exist
-			 *
-			 * `ratio_repulsion' = F_rep(0)/(kT/a)
-			 * Filename includes "rXXXX_pXXXX".
-			 */
-			sys.amplitudes.repulsion = p.ratio_repulsion;
-			string_control_parameters << "_r" << p.ratio_repulsion << "_p" << sys.dimensionless_number;
-		} else if (p.critical_load == true
-				   && p.repulsiveforce == false
-				   && p.cohesion == false
-				   && p.magnetic == false) {
-			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
-			sys.critical_normal_force = p.ratio_critical_load;
-			p.friction_model = 2;
-			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
-		} else if (p.cohesion == true
-				   && p.repulsiveforce == false
-				   && p.critical_load == false
-				   && p.magnetic == false) {
-			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
-			sys.cohesive_force = p.ratio_cohesion;
-			sys.dimensionless_cohesive_force = sys.cohesive_force;
-			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
-			cerr << "dimensionless_cohesive_force : " << sys.dimensionless_cohesive_force << endl;
-		} else if (p.magnetic == true
-				   && p.repulsiveforce == false
-				   && p.cohesion == false
-				   && p.critical_load == false) {
-			cerr << "Brownian Magnetic" << endl;
-			string_control_parameters << "_mag_p" << sys.dimensionless_number;
-		} else {
-			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
-			cerr << "critical_load: " << p.critical_load << endl;
-			cerr << "cohesion: " << p.cohesion << endl;
-			cerr << "not yet implemented" << endl;
-			exit(1);
-		}
-	}
-}
+// 			 * `ratio_repulsion' = F_rep(0)/(kT/a)
+// 			 * Filename includes "rXXXX_pXXXX".
+// 			 */
+// 			sys.amplitudes.repulsion = p.ratio_repulsion/sys.dimensionless_number;
+// 			string_control_parameters << "_r" << p.ratio_repulsion  << "_p" << sys.dimensionless_number;
+// 		} else if (p.critical_load == true
+// 				   && p.repulsiveforce == false
+// 				   && p.cohesion == false
+// 				   && p.magnetic == false) {
+// 			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
+// 			sys.critical_normal_force = p.ratio_critical_load/sys.dimensionless_number;
+// 			p.friction_model = 2;
+// 			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
+// 		} else if (p.cohesion == true
+// 				   && p.repulsiveforce == false
+// 				   && p.critical_load == false
+// 				   && p.magnetic == false) {
+// 			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
+// 			sys.dimensionless_cohesive_force = p.ratio_cohesion/sys.dimensionless_number;
+// 			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
+// 		} else if (p.magnetic == true
+// 				   && p.repulsiveforce == false
+// 				   && p.cohesion == false
+// 				   && p.critical_load == false) {
+// 			cerr << "Brownian Magnetic" << endl;
+// 			string_control_parameters << "_mag_p" << sys.dimensionless_number;
+// 		} else {
+// 			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
+// 			cerr << "critical_load: " << p.critical_load << endl;
+// 			cerr << "cohesion: " << p.cohesion << endl;
+// 			cerr << "not yet implemented" << endl;
+// 			exit(1);
+// 		}
+// 	} else {
+// 		unit_scales = "thermal";
+// 		sys.amplitudes.sqrt_temperature = 1;
+// 		sys.set_shear_rate(sys.dimensionless_number);
+// 		if (p.repulsiveforce == false
+// 			&& p.cohesion == false
+// 			&& p.critical_load == false
+// 			&& p.magnetic == false) {
+// 			cerr << "Only Brownian" << endl;
+// 			string_control_parameters << "_p" << sys.dimensionless_number;
+// 		} else if (p.repulsiveforce == true
+// 				   && p.critical_load == false
+// 				   && p.cohesion == false
+// 				   && p.magnetic == false) {
+// 			cerr << "Repulsive force, ratio to kT/a^3 : " << p.ratio_repulsion << endl;
+// 			/* When both Brownian and repulsive forces exist
+// 			 *
+// 			 * `ratio_repulsion' = F_rep(0)/(kT/a)
+// 			 * Filename includes "rXXXX_pXXXX".
+// 			 */
+// 			sys.amplitudes.repulsion = p.ratio_repulsion;
+// 			string_control_parameters << "_r" << p.ratio_repulsion << "_p" << sys.dimensionless_number;
+// 		} else if (p.critical_load == true
+// 				   && p.repulsiveforce == false
+// 				   && p.cohesion == false
+// 				   && p.magnetic == false) {
+// 			cerr << "Critical load, ratio to kT/a^3 : " << p.ratio_critical_load << endl;
+// 			sys.critical_normal_force = p.ratio_critical_load;
+// 			p.friction_model = 2;
+// 			string_control_parameters << "_c" << p.ratio_critical_load << "_p" << sys.dimensionless_number;
+// 		} else if (p.cohesion == true
+// 				   && p.repulsiveforce == false
+// 				   && p.critical_load == false
+// 				   && p.magnetic == false) {
+// 			cerr << "Cohesion, ratio to kT/a^3 : " << p.ratio_cohesion << endl;
+// 			sys.cohesive_force = p.ratio_cohesion;
+// 			sys.dimensionless_cohesive_force = sys.cohesive_force;
+// 			string_control_parameters << "_a" << p.ratio_cohesion << "_p" << sys.dimensionless_number;
+// 			cerr << "dimensionless_cohesive_force : " << sys.dimensionless_cohesive_force << endl;
+// 		} else if (p.magnetic == true
+// 				   && p.repulsiveforce == false
+// 				   && p.cohesion == false
+// 				   && p.critical_load == false) {
+// 			cerr << "Brownian Magnetic" << endl;
+// 			string_control_parameters << "_mag_p" << sys.dimensionless_number;
+// 		} else {
+// 			cerr << "repulsiveforce: " << p.repulsiveforce << endl;
+// 			cerr << "critical_load: " << p.critical_load << endl;
+// 			cerr << "cohesion: " << p.cohesion << endl;
+// 			cerr << "not yet implemented" << endl;
+// 			exit(1);
+// 		}
 
-void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
+// 	}
+
+// }
+
+
+// void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
+// {
+// 	if (p.repulsiveforce == true
+// 		&& p.critical_load == false
+// 		&& p.cohesion == false
+// 		&& p.magnetic == false) {
+// 		cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
+// 		sys.dimensionless_number = dimensionlessnumber;
+// 		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
+// 		string_control_parameters << "_r" << sys.dimensionless_number;
+// 	} else if (p.repulsiveforce == false
+// 			   && p.critical_load == false
+// 			   && p.cohesion == false
+// 			   && p.magnetic == false) {
+// 		cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
+// 		sys.dimensionless_number = -1;
+// 		sys.amplitudes.repulsion = 0;
+// 		string_control_parameters << "_quasi_Newtonian";
+// 	} else if (p.critical_load == true
+// 			   && p.repulsiveforce == false
+// 			   && p.cohesion == false
+// 			   && p.magnetic == false) {
+// 		cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+// 		sys.dimensionless_number = dimensionlessnumber;
+// 		p.friction_model = 2;
+// 		sys.critical_normal_force = 1/sys.dimensionless_number;
+// 		string_control_parameters << "_c" << sys.dimensionless_number;
+// 	} else if (p.cohesion == true
+// 			   && p.repulsiveforce == false
+// 			   && p.critical_load == false
+// 			   && p.magnetic == false) {
+// 		cerr << "Cohesive force, sheafr rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
+// 		sys.dimensionless_number = dimensionlessnumber;
+// 		/* In the rate control simulation,
+// 		 * dimensionless_cohesive_force can be given.
+// 		 */
+// 		string_control_parameters << "_a" << dimensionlessnumber;
+// 	} else if (p.repulsiveforce == true
+// 			   && p.cohesion == true
+// 			   && p.critical_load == false
+// 			   && p.magnetic == false) {
+// 		cerr << "Repulsive force + Cohesive force" << endl;
+// 		sys.dimensionless_number = dimensionlessnumber;
+// 		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
+// 		sys.cohesive_force = p.ratio_cohesion;
+// 		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+// 	} else if (p.magnetic == true
+// 			   && p.repulsiveforce == false
+// 			   && p.cohesion == false
+// 			   && p.critical_load == false) {
+// 		cerr << "Magnetic interaction" << endl;
+// 		sys.dimensionless_number = dimensionlessnumber;
+// 		sys.amplitudes.magnetic = 1/sys.dimensionless_number;
+// 		string_control_parameters << "_mag" << sys.dimensionless_number << "_r" << sys.dimensionless_number;
+
+// 	} else {
+// 		cerr << "strain -> non-Brownian -> ???" << endl;
+// 		exit(1);
+// 	}
+// }
+
+// void Simulation::setUnitScalesNonBrownianStress(double dimensionlessnumber){
+// 	if (p.repulsiveforce == false && p.cohesion == false) {
+// 		cerr << " Stress controlled simulations need a repulsive force ! " << endl;
+// 		cerr << " ===> This is not correct. We can make stress controlled simulation without any additional force." << endl;
+// 		exit(1);
+// 	} else {
+// 		if (p.repulsiveforce == true
+// 			&& p.critical_load == false
+// 			&& p.cohesion == false) {
+// 			cerr << "Repulsive force" << endl;
+// 			sys.amplitudes.repulsion = 1;
+// 			sys.target_stress_input = dimensionlessnumber;
+// 			sys.target_stress = sys.target_stress_input/6/M_PI;
+// 			string_control_parameters << "_s" << sys.target_stress_input;
+// 		} else if (p.cohesion == true
+// 				   && p.repulsiveforce == false
+// 				   && p.critical_load == false) {
+// 			cerr << "Cohesive force" << endl;
+// 			p.unscaled_contactmodel = false;
+// 			sys.cohesive_force = 1;
+// 			sys.target_stress_input = dimensionlessnumber;
+// 			sys.target_stress = sys.target_stress_input/6/M_PI;
+// 			/* Initial relaxation for stress control simulation.
+// 			 * (To avoid breaking bonds due to startup flows.)
+// 			 */
+// 			sys.init_strain_shear_rate_limit = -9999;
+// 			sys.init_shear_rate_limit = 9999;
+// 			string_control_parameters << "_b" << sys.target_stress_input;
+// 		} else if (p.cohesion == true
+// 				   && p.repulsiveforce == true
+// 				   && p.critical_load == false) {
+// 			string_control_parameters << "_b" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
+// 			cerr << "not yet implemented" << endl;
+// 			exit(1);
+// 		} else {
+// 			cerr << "stress -> non-Brownian -> ???" << endl;
+// 			exit(1);
+// 		}
+// 		sys.dimensionless_number = 1; // needed for 1st time step
+// 		/* The target stress (``ratio_repulsion'') is given trough the command argument
+// 		 * with an unit stres: eta_0*gammmadot_0.
+// 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
+// 		 */
+// 	}
+// }
+
+
+void Simulation::determineUnitScales(double dimensionlessnumber, string rate_unit)
 {
-	if (p.repulsiveforce == true
-		&& p.critical_load == false
-		&& p.cohesion == false
-		&& p.magnetic == false) {
-		cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
-		sys.dimensionless_number = dimensionlessnumber;
-		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
-		string_control_parameters << "_r" << sys.dimensionless_number;
-	} else if (p.repulsiveforce == false
-			   && p.critical_load == false
-			   && p.cohesion == false
-			   && p.magnetic == false) {
-		cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
-		sys.dimensionless_number = -1;
-		sys.amplitudes.repulsion = 0;
-		string_control_parameters << "_quasi_Newtonian";
-	} else if (p.critical_load == true
-			   && p.repulsiveforce == false
-			   && p.cohesion == false
-			   && p.magnetic == false) {
-		cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		p.friction_model = 2;
-		sys.critical_normal_force = 1/sys.dimensionless_number;
-		string_control_parameters << "_c" << sys.dimensionless_number;
-	} else if (p.cohesion == true
-			   && p.repulsiveforce == false
-			   && p.critical_load == false
-			   && p.magnetic == false) {
-		cerr << "Cohesive force, sheafr rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		/* In the rate control simulation,
-		 * dimensionless_cohesive_force can be given.
-		 */
-		string_control_parameters << "_a" << dimensionlessnumber;
-	} else if (p.repulsiveforce == true
-			   && p.cohesion == true
-			   && p.critical_load == false
-			   && p.magnetic == false) {
-		cerr << "Repulsive force + Cohesive force" << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
-		sys.cohesive_force = p.ratio_cohesion;
-		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-	} else if (p.magnetic == true
-			   && p.repulsiveforce == false
-			   && p.cohesion == false
-			   && p.critical_load == false) {
-		cerr << "Magnetic interaction" << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		sys.amplitudes.magnetic = 1/sys.dimensionless_number;
-		string_control_parameters << "_mag" << sys.dimensionless_number << "_r" << sys.dimensionless_number;
-
-	} else {
-		cerr << "strain -> non-Brownian -> ???" << endl;
-		exit(1);
+	// determine the dimensionless numbers
+	double largest_force; // in hydro units
+	for(auto t: { "b", "r", "c", "cl", "m" }){
+		dimensionless_numbers[t] = 0;
 	}
-}
+	
+	string force_type = rate_unit; // our force defining the shear rate
+	bool unresolved = false;
+	dimensionless_numbers[force_type] = dimensionlessnumber;
+	if(values[force_type]>0){
+		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl; exit(1);
+	}
+	// switch this force in hydro units
+	values[force_type] = 1/dimensionless_numbers[force_type];
+	suffixes[force_type] = "h";
 
-void Simulation::setUnitScalesNonBrownianStress(double dimensionlessnumber){
-	if (p.repulsiveforce == false && p.cohesion == false) {
-		cerr << " Stress controlled simulations need a repulsive force ! " << endl;
-		cerr << " ===> This is not correct. We can make stress controlled simulation without any additional force." << endl;
-		exit(1);
-	} else {
-		if (p.repulsiveforce == true
-			&& p.critical_load == false
-			&& p.cohesion == false) {
-			cerr << "Repulsive force" << endl;
-			sys.amplitudes.repulsion = 1;
-			sys.target_stress_input = dimensionlessnumber;
-			sys.target_stress = sys.target_stress_input/6/M_PI;
-			string_control_parameters << "_s" << sys.target_stress_input;
-		} else if (p.cohesion == true
-				   && p.repulsiveforce == false
-				   && p.critical_load == false) {
-			cerr << "Cohesive force" << endl;
-			p.unscaled_contactmodel = false;
-			sys.cohesive_force = 1;
-			sys.target_stress_input = dimensionlessnumber;
-			sys.target_stress = sys.target_stress_input/6/M_PI;
-			/* Initial relaxation for stress control simulation.
-			 * (To avoid breaking bonds due to startup flows.)
-			 */
-			sys.init_strain_shear_rate_limit = -9999;
-			sys.init_shear_rate_limit = 9999;
-			string_control_parameters << "_b" << sys.target_stress_input;
-		} else if (p.cohesion == true
-				   && p.repulsiveforce == true
-				   && p.critical_load == false) {
-			string_control_parameters << "_b" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-			cerr << "not yet implemented" << endl;
-			exit(1);
-		} else {
-			cerr << "stress -> non-Brownian -> ???" << endl;
-			exit(1);
+	
+	// now resolve the other force units
+	set <string> resolved_units;
+	resolved_units.reset();
+	resolved_units.insert(force_type);
+	do{
+		for(auto&& f: suffixes){
+			string force_type = f.first;
+			string suffix = f.second;
+			if ( suffix == "h" ){
+				dimensionless_numbers[force_type] = 1./values[force_type];
+				resolved_units.insert(force_type);
+			}
+			else if (resolved_units.find(suffix) != resolved_units.end()){  // then we know how to convert to hydro
+				values[force_type] /= dimensionless_numbers[suffix];
+				suffixes[force_type] = "h";
+				dimensionless_numbers[force_type] = 1./values[force_type];
+				resolved_units.insert(force_type);
+			}
+			else  {
+				unresolved = true;
+			}
 		}
-		sys.dimensionless_number = 1; // needed for 1st time step
-		/* The target stress (``ratio_repulsion'') is given trough the command argument
-		 * with an unit stres: eta_0*gammmadot_0.
-		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
-		 */
-	}
+	}while(unresolved);
+
+if (sys.dimensionless_number > p.Pe_switch && !sys.zero_shear) {
+// 		unit_scales = "hydro";
+// 		sys.amplitudes.sqrt_temperature = 1/sqrt(sys.dimensionless_number);
+// 		sys.set_shear_rate(1);
+
+
 }
+
+
+void Simulation::convertForceUnitsRateControlled()
+{
+	double converter = 1;
+	if (unit_scales == "thermal") {
+		converter = dimensionless_numbers["b"];
+	}
+	if (unit_scales == "repulsive") {
+		converter = dimensionless_numbers["r"];
+	}
+	for(auto&& f: suffixes){
+		string force_type = f.first;
+		string suffix = f.second;
+		value[force_type] *= converter;
+	}
+	
+
+}
+
+
 
 void Simulation::setupSimulationSteadyShear(string in_args,
 											vector<string> &input_files,
 											bool binary_conf,
 											double dimensionlessnumber,
+											string input_rate_unit,
 											string control_variable)
 {
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
+	//	rate_unit = input_rate_unit;
 	
 	setDefaultParameters();
 	readParameterFile();
+
+	
+	convertForceUnitsRateControlled();
+	
+	if(dimensionless_numbers["b"]>0){
+		sys.brownian = true;
+		p.brownian_amplitude = value["b"];
+	}
+	if(dimensionless_numbers["r"]>0){
+		sys.repulsiveforce = true;
+		p.repulsion_amplitude = value["r"];
+	}
+	if(dimensionless_numbers["cl"]>0){
+		sys.critical_load = true;
+		p.critical_load_amplitude = value["cl"];
+	}
+	if(dimensionless_numbers["c"]>0){
+		sys.cohesion = true;
+		p.cohesion_amplitude = value["c"];
+	}
+	if(dimensionless_numbers["m"]>0){
+		sys.magnetic = true;
+		p.magnetic_amplitude = value["m"];
+	}
+
 	
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
@@ -379,15 +482,11 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	
+
+			
 	if (control_var == "rate") {
 		if (p.brownian == true) {
 			cerr << "Brownian, Peclet number " << dimensionlessnumber << endl;
-			if (p.integration_method != 1) {
-				cerr << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
-				cerr << "Modify the parameter file: " << filename_parameters << endl;
-				exit(1);
-			}
 			setUnitScalesBrownian(dimensionlessnumber);
 		} else {
 			cerr << "non-Brownian" << endl;
@@ -406,6 +505,14 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		setUnitScalesNonBrownianStress(dimensionlessnumber);
 	}
 
+	// test for incompatibilities
+	if (sys.brownian == true) {
+		if (p.integration_method != 1) {
+			cerr << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
+			cerr << "Modify the parameter file: " << filename_parameters << endl;
+			exit(1);
+		}
+	}
 	if (control_var == "stress") {
 		if (p.integration_method != 0) {
 			cerr << "Must be Euler method for stress controlled simulation" << endl;
@@ -762,8 +869,15 @@ void removeBlank(string &str)
 	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
+void getSuffix(const string &str, string &value, string &suffix){
+	std::size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
+	value = str.substr(0, suffix_pos);
+	suffix = str.substr(suffix_pos, str.length());
+}
+
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
+	string numeral, suffix;
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
@@ -774,16 +888,36 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		}
 	} else if (keyword == "rolling_friction") {
 		p.rolling_friction = str2bool(value);
-	} else if (keyword == "repulsiveforce") {
-		p.repulsiveforce = str2bool(value);
-	} else if (keyword == "cohesion") {
-		p.cohesion = str2bool(value);
-	} else if (keyword == "brownian") {
-		p.brownian = str2bool(value);
-	} else if (keyword == "critical_load") {
-		p.critical_load = str2bool(value);
-	} else if (keyword == "magnetic") {
-		p.magnetic = str2bool(value);
+	} else if (keyword == "repulsion_amplitude") {
+		getSuffix(value, numeral, suffix);
+		suffixes["r"] = suffix;
+		values["r"] = stof(numeral);
+		//	} else if (keyword == "repulsiveforce") {
+		//		p.repulsiveforce = str2bool(value);
+	} else if (keyword == "cohesion_amplitude") {
+		getSuffix(value, numeral, suffix);
+		suffixes["c"] = suffix;
+		values["c"] = stof(numeral);
+		//	} else if (keyword == "cohesion") {
+		//		p.cohesion = str2bool(value);
+	} else if (keyword == "brownian_amplitude") {
+		getSuffix(value, numeral, suffix);
+		suffixes["b"] = suffix;
+		values["b"] = stof(numeral);
+		// } else if (keyword == "brownian") {
+		// 	p.brownian = str2bool(value);
+	} else if (keyword == "critical_load_amplitude") {
+		getSuffix(value, numeral, suffix);
+		suffixes["cl"] = suffix;
+		values["cl"] = stof(numeral);
+		// } else if (keyword == "critical_load") {
+		// 	p.critical_load = str2bool(value);
+	} else if (keyword == "magnetic_amplitude") {
+		getSuffix(value, numeral, suffix);
+		suffixes["m"] = suffix;
+		values["m"] = stof(numeral);
+		// } else if (keyword == "magnetic") {
+		// 	p.magnetic = str2bool(value);
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
@@ -1052,18 +1186,19 @@ void Simulation::openOutputFiles(bool binary_conf)
 	}
 }
 
-//void Simulation::exportParameterSet()
-//{
-//	sys.importParameterSet(p);
-//}
-
 void Simulation::setDefaultParameters()
 {
-	p.brownian = false;
-	p.repulsiveforce = false;
-	p.cohesion = false;
-	p.critical_load = false;
-	p.magnetic = false;
+	// p.brownian = false;
+	// p.repulsiveforce = false;
+	// p.cohesion = false;
+	// p.critical_load = false;
+	// p.magnetic = false;
+	p.brownian_amplitude = 0;
+	p.repulsion_amplitude = 0;
+	p.cohesion_amplitude = 0;
+	p.critical_load_amplitude = 0;
+	p.magnetic_amplitude = 0;
+
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
