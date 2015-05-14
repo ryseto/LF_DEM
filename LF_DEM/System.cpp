@@ -601,74 +601,89 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
 	if (magnetic) {
-		/* force unit =
-		 *
-		 */
-		magnetic_moment_norm.resize(np);
+		setupMagneticMoment();
+	}
+}
 
-		num_magnetic = np-round(np*ratio_nonmagnetic);
-		cerr << "np = " << np << endl;
-		cerr << ratio_nonmagnetic << endl;
-		cerr << "number of magnetic particles: " << num_magnetic << endl;
-		for (int i=0; i<np; i++) {
-			if (i < num_magnetic) {
-				switch (p.dipole_orientation) {
-					case 0:
-					{
-						magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
-						break;
+void System::setupMagneticMoment()
+{
+	/*
+	 *
+	 */
+	magnetic_moment_norm.resize(np);
+	num_magnetic = np-round(np*ratio_nonmagnetic);
+	cerr << "np = " << np << endl;
+	cerr << ratio_nonmagnetic << endl;
+	cerr << "number of magnetic particles: " << num_magnetic << endl;
+	cerr << "dipole_orientation: " << p.dipole_orientation << endl;
+	for (int i=0; i<np; i++) {
+		if (i < num_magnetic) {
+			switch (p.dipole_orientation) {
+				case 0:
+				{
+					if (init_magnetic_moment.empty()) {
+						cerr << "Initial config file needs to include magnetic moment.\n";
+						cerr << "Or, dipole_orientation needs to be given: 1-7.\n";
+						exit(1);
 					}
-					case 1:
-					{
-						magnetic_moment[i].set(magnetic_dipole_moment,0,0);
-						break;
-					}
-					case 2:
-					{
-						magnetic_moment[i].set(0,magnetic_dipole_moment,0);
-						break;
-					}
-					case 3:
-					{
-						magnetic_moment[i].set(0,0,magnetic_dipole_moment);
-						break;
-					}
-					case 4:
-					{
-						double xx = position[i].x-lx_half;
-						double yy = position[i].y-ly_half;
-						double theta = atan2(yy,xx);
-						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI),
-											   magnetic_dipole_moment*cos(theta),
-											   0);
-						break;
-					}
-					case 5:
-					{
-						double xx = position[i].x-lx_half;
-						double yy = position[i].y-ly_half;
-						double theta = atan2(yy,xx);
-						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI)*cos(M_PI/3),
-											   magnetic_dipole_moment*cos(theta)*cos(M_PI/3),
-											   magnetic_dipole_moment*sin(M_PI/3));
-						break;
-					}
-					case 6:
-					{
-						if (i%2 == 0){
-							double delta = 0;
-							magnetic_moment[i].set(magnetic_dipole_moment*sin(delta),magnetic_dipole_moment*cos(delta),0);
-						} else {
-							magnetic_moment[i].set(0,-magnetic_dipole_moment,0);
-						}
-						break;
-					}
+					magnetic_moment[i] = init_magnetic_moment[i];
+					break;
 				}
-			} else {
-				magnetic_moment[i].set(0,0,0);
+				case 1:
+				{
+					magnetic_moment[i].set(magnetic_dipole_moment,0,0);
+					break;
+				}
+				case 2:
+				{
+					magnetic_moment[i].set(0,magnetic_dipole_moment,0);
+					break;
+				}
+				case 3:
+				{
+					magnetic_moment[i].set(0,0,magnetic_dipole_moment);
+					break;
+				}
+				case 4:
+				{
+					double xx = position[i].x-lx_half;
+					double yy = position[i].y-ly_half;
+					double theta = atan2(yy,xx);
+					magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI),
+										   magnetic_dipole_moment*cos(theta),
+										   0);
+					break;
+				}
+				case 5:
+				{
+					double xx = position[i].x-lx_half;
+					double yy = position[i].y-ly_half;
+					double theta = atan2(yy,xx);
+					magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI)*cos(M_PI/3),
+										   magnetic_dipole_moment*cos(theta)*cos(M_PI/3),
+										   magnetic_dipole_moment*sin(M_PI/3));
+					break;
+				}
+				case 6:
+				{
+					if (i%2 == 0){
+						double delta = 0;
+						magnetic_moment[i].set(magnetic_dipole_moment*sin(delta),magnetic_dipole_moment*cos(delta),0);
+					} else {
+						magnetic_moment[i].set(0,-magnetic_dipole_moment,0);
+					}
+					break;
+				}
+				case 7:
+				{
+					magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
+					break;
+				}
 			}
-			magnetic_moment_norm[i] = magnetic_moment[i].norm();
+		} else {
+			magnetic_moment[i].set(0,0,0);
 		}
+		magnetic_moment_norm[i] = magnetic_moment[i].norm();
 	}
 }
 

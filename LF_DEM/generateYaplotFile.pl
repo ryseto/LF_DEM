@@ -10,7 +10,7 @@ use Math::Trig;
 use IO::Handle;
 $y_section = 0;
 $yap_radius = 1;
-
+$magnetoffset_y = -0.1;
 $particle_data = $ARGV[0];
 $output_interval = 1;
 if ($#ARGV >= 1){
@@ -84,15 +84,18 @@ $c_traj=0;
 $num = 0;
 
 printf OUT "\@0 0 0 0 \n";
-printf OUT "\@1 50 100 205 \n";
+# printf OUT "\@1 50 100 205 \n";
+printf OUT "\@1 255 255 255 \n";
 printf OUT "\@2 200 200 200 \n";
 printf OUT "\@3 50 150 255 \n";
 printf OUT "\@4 50 200 50 \n";
 printf OUT "\@5 255 100 100 \n";
 printf OUT "\@6 50 200 50 \n";
 printf OUT "\@7 255 255 0 \n";
-printf OUT "\@8 255 255 255\n";
-printf OUT "\@9 150 150 150\n";
+# printf OUT "\@8 255 255 255\n";
+# printf OUT "\@9 150 150 150\n";
+printf OUT "\@8 224 143 0 \n";
+printf OUT "\@9 67 163 230 \n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";
@@ -461,8 +464,6 @@ sub OutYaplotData{
 	#	}
 	
 	printf OUT "y 1\n";
-	
-	
 	printf OUT "@ 8\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
@@ -708,7 +709,7 @@ sub OutYaplotData{
 	if ($mag) {
 		printf OUT "y 6\n";
 		printf OUT "@ 0\n";
-		printf OUT "r 0.2\n";
+		printf OUT "r 0.5\n";
 		printf OUT "a 1\n";
 		for ($i = 0; $i < $np; $i ++){
 			&OutMagMoment($i);
