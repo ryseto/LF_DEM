@@ -77,9 +77,12 @@ int main(int argc, char **argv)
 				break;
 			case 'r':
 				rheology_control = "rate";
-				getSuffix(optarg, numeral, suffix);
-				dimensionless_number = stof(numeral);
-				cerr << "Rate control: " << dimensionless_number << endl;
+				if (getSuffix(optarg, numeral, suffix)) {
+					dimensionless_number = stof(numeral);
+					cerr << "Rate control: " << dimensionless_number << endl;
+				} else {
+					errorNoSuffix("shear rate");
+				}
 				break;
 			case 'R':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
@@ -110,6 +113,7 @@ int main(int argc, char **argv)
 			default:
 				abort ();
 		}
+
 	}
 
 	ostringstream in_args;

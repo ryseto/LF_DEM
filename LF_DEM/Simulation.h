@@ -29,15 +29,21 @@ inline void removeBlank(string &str)
 	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-inline void getSuffix(const string &str, string &value, string &suffix){
+inline bool getSuffix(const string &str, string &value, string &suffix){
 	std::size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
 	value = str.substr(0, suffix_pos);
 	suffix = str.substr(suffix_pos, str.length());
-	if(suffix.empty()){ // temporary, we should have a default value for suffix
-	  cerr << " No suffix, sorry " << endl; exit(1);
+	if (suffix.empty()) {
+		return false;
 	}
+	return true;
 }
 
+inline void errorNoSuffix(string quantity){
+	cerr << "Error : no unit scale (suffix) provided for " << quantity << endl; exit(1);
+}
+
+	
 class Simulation{
 private:
 	System sys;

@@ -917,9 +917,11 @@ void Str2KeyValue(const string &str_parameter,
 }
 
 
+
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
 	string numeral, suffix;
+	bool caught_suffix = true;
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
@@ -931,23 +933,23 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rolling_friction") {
 		p.rolling_friction = str2bool(value);
 	} else if (keyword == "repulsion_amplitude") {
-		getSuffix(value, numeral, suffix);
+		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["r"] = suffix;
 		values["r"] = stof(numeral);
 	} else if (keyword == "cohesion_amplitude") {
-		getSuffix(value, numeral, suffix);
+		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["c"] = suffix;
 		values["c"] = stof(numeral);
 	} else if (keyword == "brownian_amplitude") {
-		getSuffix(value, numeral, suffix);
+		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["b"] = suffix;
 		values["b"] = stof(numeral);
 	} else if (keyword == "critical_load_amplitude") {
-		getSuffix(value, numeral, suffix);
+		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["cl"] = suffix;
 		values["cl"] = stof(numeral);
 	} else if (keyword == "magnetic_amplitude") {
-		getSuffix(value, numeral, suffix);
+		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["m"] = suffix;
 		values["m"] = stof(numeral);
 	} else if (keyword == "monolayer") {
@@ -1023,7 +1025,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
-		getSuffix(value, numeral, suffix);
+		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["ft"] = suffix;
 		values["ft"] = stof(numeral);
 	} else if (keyword == "fixed_dt") {
@@ -1040,6 +1042,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
 	}
+	
+	if (!caught_suffix) {
+		errorNoSuffix(keyword);
+	}
+
 }
 
 void Simulation::readParameterFile()
