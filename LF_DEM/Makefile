@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version = OSX
+OS_version = Linux
 # install directory
 install_dir = ~/bin/
 

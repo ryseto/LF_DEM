@@ -330,7 +330,7 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 void Simulation::resolveUnitSystem(string long_unit) // can we express all forces in unit?
 {
 	string unit = unit_shortname[long_unit];
-	
+
 	// now resolve the other force units
 	set <string> resolved_units;
 	resolved_units.clear();
@@ -403,7 +403,6 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	unit_scales = unit_longname[force_type];
 	target_stress_input = dimensionlessnumber;
 	sys.target_stress = target_stress_input/6/M_PI;
-		
 	// convert all other forces to hydro
 	resolveUnitSystem(unit_scales);
 	

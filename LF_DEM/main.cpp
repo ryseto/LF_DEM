@@ -65,8 +65,12 @@ int main(int argc, char **argv)
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
-				dimensionless_number = atof(optarg);
-				cerr << "Stress control: " << dimensionless_number << endl;
+				if (getSuffix(optarg, numeral, suffix)) {
+					dimensionless_number = stof(numeral);
+					cerr << "Stress control: " << dimensionless_number << endl;
+				} else {
+					errorNoSuffix("shear stress");
+				}
 				break;
 			case 'S':
 				if (seq_filename != "not_given") { cerr << " Only one parameter sequence allowed " << endl; exit(1);};
