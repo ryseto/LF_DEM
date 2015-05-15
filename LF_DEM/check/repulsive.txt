@@ -9,8 +9,6 @@ cohesion = false;
 critical_load = false;
 magnetic = false;
 
-repulsivemagnitude = 1.59b;
-
 dt = 1e-4;
 Pe_switch = 5;
 disp_max = 5e-3;

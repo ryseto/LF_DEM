@@ -368,6 +368,9 @@ void Simulation::determineDimensionlessNumbers(double dimensionlessnumber, strin
 	// determine the dimensionless numbers
 	
 	string force_type = rate_unit; // our force defining the shear rate
+	if (force_type == "h"){
+		cerr << "Error: cannot define the shear rate in hydro unit." << endl; exit(1);
+	}
 	dimensionless_numbers[force_type] = dimensionlessnumber;
 	if(values[force_type]>0){
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl; exit(1);
