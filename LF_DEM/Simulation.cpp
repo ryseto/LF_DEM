@@ -443,15 +443,19 @@ void Simulation::setLowPeclet()
 void Simulation::convertForceValues()
 {
 	double converter = 1;
+	string suffix = "h";
 	if (unit_scales == "thermal") {
 		converter = dimensionless_numbers["b"];
+		suffix = "b";
 	}
 	if (unit_scales == "repulsive") {
 		converter = dimensionless_numbers["r"];
+		suffix = "r";
 	}
+	
 	for(auto&& f: suffixes){
 		string force_type = f.first;
-		string suffix = f.second;
+		f.second = suffix;
 		values[force_type] *= converter;
 	}	
 }
@@ -460,7 +464,6 @@ void Simulation::setUnitScale()
 {
   bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
   if(is_brownian){
-	  //	  sys.dimensionless_number = dimensionless_numbers["b"]; // Peclet number
 	  if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
 		unit_scales = "hydro";
 		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["b"]);
@@ -477,7 +480,8 @@ void Simulation::setUnitScale()
 	unit_scales = "hydro";
 	sys.set_shear_rate(1);
   }
-  
+  cerr << " Internal unit scale : " << unit_scales << endl;
+
   // convert from hydro scale to chosen scale
   convertForceValues();
 
@@ -489,29 +493,35 @@ void Simulation::setUnitScale()
   else{
 	cerr << "non-Brownian" << endl;
   }
+
   bool is_repulsive = dimensionless_numbers.find("r") != dimensionless_numbers.end();
   if(is_repulsive){
 	sys.repulsiveforce = true;
 	sys.amplitudes.repulsion = values["r"];
+	cerr << " Repulsive force (in \"" << suffixes["r"] << "\" units): " << sys.amplitudes.repulsion << endl;
   }
   bool is_critical_load = dimensionless_numbers.find("cl") != dimensionless_numbers.end();
   if(is_critical_load){
 	sys.critical_load = true;
 	sys.amplitudes.critical_normal_force = values["cl"];
+	cerr << " Critical Load (in \"" << suffixes["cl"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
   }
   bool is_cohesive = dimensionless_numbers.find("c") != dimensionless_numbers.end();
   if(is_cohesive){
 	sys.cohesion = true;
 	sys.amplitudes.cohesion = values["c"];
+	cerr << " Cohesion (in \"" << suffixes["c"] << "\" units): " << sys.amplitudes.cohesion << endl;
   }
   bool is_magnetic = dimensionless_numbers.find("m") != dimensionless_numbers.end();
   if(is_magnetic){
 	sys.magnetic = true;
 	p.magnetic_amplitude = values["m"];
+	cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
   }
   bool is_ft_max = dimensionless_numbers.find("ft") != dimensionless_numbers.end();
   if(is_ft_max){
 	sys.amplitudes.ft_max = values["ft"];
+	cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
   }
 
 

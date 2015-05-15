@@ -24,15 +24,16 @@
 
 
 System::System():
-	
-lowPeclet(false),
 brownian(false),
+repulsiveforce(false),
+critical_load(false),
+cohesion(false),
+magnetic(false),
 friction(false),
 friction_model(-1),
-repulsiveforce(false),
-cohesion(false),
 twodimension(false),
 zero_shear(false),
+lowPeclet(false),
 magnetic_coeffient(24),
 target_stress_input(0),
 init_strain_shear_rate_limit(0),
