@@ -20,15 +20,30 @@
 #include <string>
 #include <ctime>
 #include <map>
+#include <algorithm>
 #include "System.h"
 #include "ParameterSet.h"
+
+inline void removeBlank(string &str)
+{
+	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
+}
+
+inline void getSuffix(const string &str, string &value, string &suffix){
+	std::size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
+	value = str.substr(0, suffix_pos);
+	suffix = str.substr(suffix_pos, str.length());
+	if(suffix.empty()){ // temporary, we should have a default value for suffix
+	  cerr << " No suffix, sorry " << endl; exit(1);
+	}
+}
 
 class Simulation{
 private:
 	System sys;
 	ParameterSet p;
 	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
-	std::map <string, string> values;   // pairs: (force_type, values_in_suffix_units)
+	std::map <string, double> values;   // pairs: (force_type, values_in_suffix_units)
 	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
 	
 	double volume_or_area_fraction;
@@ -103,10 +118,13 @@ private:
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
-	void setUnitScalesBrownian(double dimensionlessnumber);
-	void setUnitScalesNonBrownianRate(double dimensionlessnumber);
+	//	void setUnitScalesBrownian(double dimensionlessnumber);
+	//	void setUnitScalesNonBrownianRate(double dimensionlessnumber);
 	void setUnitScalesNonBrownianStress(double dimensionlessnumber);
-	void convertForceUnitsRateControlled(double &force, string from_unit);
+	void determineDimensionlessNumbers(double dimensionlessnumber, string rate_unit);
+	void setLowPeclet();
+	void convertForceValues();
+	void setUnitScale();
 	/*
 	 * For outputs
 	 */
@@ -123,6 +141,7 @@ private:
 									vector<string> &input_files,
 									bool binary_conf,
 									double dimensionlessnumber,
+									string input_scale,
 									string control_variable);
 //	void exportParameterSet();
 	void outputComputationTime();
@@ -132,7 +151,7 @@ public:
 	Simulation();
 	~Simulation();
 	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,
-							   double dimensionless_number, string control_variable);
+							   double dimensionless_number, string input_scale, string control_variable);
 	void simulationUserDefinedSequence(string seq_type, string in_args, vector<string> &input_files, bool binary_conf, string control_variable);
 };
 #endif /* defined(__LF_DEM__Simulation__) */

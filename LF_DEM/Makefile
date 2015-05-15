@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version = OSX
+OS_version = Linux
 # install directory
 install_dir = ~/bin/
 
@@ -101,8 +101,11 @@ ifeq ($(OS_version), OIST)
 endif
 
 # Cholmod
-#Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+
 Cholmod_Linking_Flags = 
+ifeq ($(OS_version), Linux)
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+endif
 
 ifeq ($(OS_version), SI)
     Cholmod_Linking_Flags  =

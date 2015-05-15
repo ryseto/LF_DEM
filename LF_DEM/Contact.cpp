@@ -17,9 +17,9 @@ void Contact::init(System *sys_, Interaction *interaction_)
 		frictionlaw = &Contact::frictionlaw_criticalload;
 	} else if (sys->friction_model == 3) {
 		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
-	} else if (sys->friction_model == 5) {
-		frictionlaw = &Contact::frictionlaw_ft_max;
-		ft_max = sys->ft_max;
+	// } else if (sys->friction_model == 5) {
+	// 	frictionlaw = &Contact::frictionlaw_ft_max;
+	// 	ft_max = sys->ft_max;
 	} else if (sys->friction_model == 6) {
 		frictionlaw = &Contact::frictionlaw_coulomb_max;
 		ft_max = sys->ft_max;
@@ -243,22 +243,22 @@ void Contact::frictionlaw_criticalload_mu_inf()
 	return;
 }
 
-void Contact::frictionlaw_ft_max()
-{
-	/**
-	 \brief Friction law
-	 */
-	double sq_f_tan = f_contact_tan.sq_norm();
-	double supportable_tanforce = ft_max/abs(sys->dimensionless_number);
-	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-		state = 3; // dynamic friction
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_contact_tan = kt_scaled*disp_tan;
-	} else {
-		state = 2; // static friction
-	}
-	return;
-}
+// void Contact::frictionlaw_ft_max()
+// {
+// 	/**
+// 	 \brief Friction law
+// 	 */
+// 	double sq_f_tan = f_contact_tan.sq_norm();
+// 	double supportable_tanforce = ft_max/abs(sys->dimensionless_number);
+// 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
+// 		state = 3; // dynamic friction
+// 		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
+// 		f_contact_tan = kt_scaled*disp_tan;
+// 	} else {
+// 		state = 2; // static friction
+// 	}
+// 	return;
+// }
 
 void Contact::frictionlaw_coulomb_max()
 {
@@ -284,10 +284,10 @@ void Contact::frictionlaw_coulomb_max()
 	} else {
 		exit(1);
 	}
-	double scaled_ft_max = ft_max/abs(sys->dimensionless_number);
-	if (supportable_tanforce > scaled_ft_max) {
-		supportable_tanforce = scaled_ft_max;
-	}
+	// double scaled_ft_max = ft_max/abs(sys->dimensionless_number);
+	// if (supportable_tanforce > scaled_ft_max) {
+	// 	supportable_tanforce = scaled_ft_max;
+	// }
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		state = 3; // dynamic friction

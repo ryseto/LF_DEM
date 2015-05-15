@@ -74,7 +74,7 @@ private:
 	double magnetic_energy;
 	int linalg_size;
 	int dof;
-	double repulsiveforce_length; // repulsive force length (dimensionless)
+	double repulsiveforce_length; // repulsive force length
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	void (System::*timeEvolutionDt)(bool);
@@ -131,7 +131,6 @@ private:
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
-	bool lowPeclet;
 	bool fixed_dt;
 
 
@@ -151,6 +150,7 @@ private:
 	bool critical_load;
 	bool magnetic;
 	double interaction_range;
+	bool lowPeclet;
 
 	// Simulation parameters
 	bool twodimension;
@@ -267,7 +267,7 @@ private:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
 	 * For Brownian suspension, it should be Peclet number
 	 */
-	double dimensionless_number;
+	//	double dimensionless_number;
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz

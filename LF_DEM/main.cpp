@@ -32,7 +32,8 @@ int main(int argc, char **argv)
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
 	
 	double dimensionless_number = 0;
-	
+	string numeral, suffix;
+		
 	bool generate_init = false;
 	int random_seed = 1;
 
@@ -76,7 +77,8 @@ int main(int argc, char **argv)
 				break;
 			case 'r':
 				rheology_control = "rate";
-				dimensionless_number = atof(optarg);
+				getSuffix(optarg, numeral, suffix);
+				dimensionless_number = stof(numeral);
 				cerr << "Rate control: " << dimensionless_number << endl;
 				break;
 			case 'R':
@@ -110,17 +112,6 @@ int main(int argc, char **argv)
 		}
 	}
 
-	// Incompatibilities
-	//	if (peclet && rheology_control == "stress") {
-	//		incompatibility_exiting("peclet", "strss_controlled");
-	//	} else if (critical_load && rheology_control == "stress") {
-	//		incompatibility_exiting("critical_load", "stress_controlled");
-	//	} else if (critical_load && repulsion) {
-	//		incompatibility_exiting("critical_load", "repulsion");
-	//	} else if (peclet && cohesion) {
-	//		incompatibility_exiting("peclet", "cohesion");
-	//	}
-	
 	ostringstream in_args;
 	for (int i=0; i<argc; i++) {
 		in_args << argv[i] << " ";
@@ -147,9 +138,11 @@ int main(int argc, char **argv)
 
 		if (seq_filename == "not_given") {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 dimensionless_number, rheology_control);
-		} else {
-			simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
+											 dimensionless_number, suffix, rheology_control);
+		} 
+		else {
+		  cerr << " User def sequence temporarily disabled " << endl;
+		  //		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}
 	}
 	return 0;
