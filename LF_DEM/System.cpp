@@ -33,13 +33,19 @@ repulsiveforce(false),
 cohesion(false),
 twodimension(false),
 zero_shear(false),
-critical_normal_force(0),
 magnetic_coeffient(24),
 target_stress_input(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0)
-{}
+{
+	amplitudes.repulsion = 0;
+	amplitudes.sqrt_temperature = 0;
+	amplitudes.contact = 0;
+	amplitudes.cohesion = 0;
+	amplitudes.magnetic = 0;
+	amplitudes.critical_normal_force = 0;
+}
 
 vec3d System::randUniformSphere(double r)
 {
@@ -424,7 +430,7 @@ void System::setupSystem(string control)
 	} else if (friction_model == 2 || friction_model == 3) {
 		cerr << "friction_model " << friction_model << endl;
 		friction = true;
-		cerr << "critical_normal_force = " << critical_normal_force << endl;
+		cerr << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
 	} else if (friction_model == 5) {
 		cerr << "friction_model = 5: ft_max" << endl;
 		friction = true;
@@ -1023,14 +1029,7 @@ void System::updateInteractions()
 	 
 	 */
 	double sq_max_sliding_velocity = 0;
-	/*
-	 * In the simulation, the unit of force is proportional to the shear rate.
-	 * In the dimensionless simulation,
-	 * the cohesive force
-	 */
-	// if (cohesion && stress_controlled) {
-	// 	dimensionless_cohesive_force = cohesive_force/abs(dimensionless_number);
-	// }
+
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -1379,7 +1378,6 @@ void System::computeShearRate()
 	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
-	//	dimensionless_number = shear_rate;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;

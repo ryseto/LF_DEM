@@ -48,7 +48,10 @@ struct ForceAmplitudes
 	double repulsion;
 	double sqrt_temperature;
 	double contact;
+	double cohesion;
 	double magnetic;
+	double critical_normal_force;
+	double ft_max;
 };
 
 class System{
@@ -158,7 +161,6 @@ private:
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
 	bool monolayer;
-	double critical_normal_force;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
@@ -219,7 +221,6 @@ private:
 	double mu_static; // static friction coefficient
 	double mu_dynamic; // dynamic friction coefficient
 	double mu_rolling; // rolling friction coeffient
-	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double magnetic_dipole_moment;
@@ -235,7 +236,6 @@ private:
 	double sd_coeff;
 	double einstein_stress;
 	double einstein_viscosity;
-	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;

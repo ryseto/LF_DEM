@@ -489,23 +489,29 @@ void Simulation::setUnitScale()
   bool is_repulsive = dimensionless_numbers.find("r") != dimensionless_numbers.end();
   if(is_repulsive){
 	sys.repulsiveforce = true;
-	p.repulsion_amplitude = values["r"];
+	sys.amplitudes.repulsion = values["r"];
   }
   bool is_critical_load = dimensionless_numbers.find("cl") != dimensionless_numbers.end();
   if(is_critical_load){
 	sys.critical_load = true;
-	p.critical_load_amplitude = values["cl"];
+	sys.amplitudes.critical_normal_force = values["cl"];
   }
   bool is_cohesive = dimensionless_numbers.find("c") != dimensionless_numbers.end();
   if(is_cohesive){
 	sys.cohesion = true;
-	p.cohesion_amplitude = values["c"];
+	sys.amplitudes.cohesion = values["c"];
   }
   bool is_magnetic = dimensionless_numbers.find("m") != dimensionless_numbers.end();
   if(is_magnetic){
 	sys.magnetic = true;
 	p.magnetic_amplitude = values["m"];
   }
+  bool is_ft_max = dimensionless_numbers.find("ft") != dimensionless_numbers.end();
+  if(is_ft_max){
+	sys.amplitudes.ft_max = values["ft"];
+  }
+
+
 }
 
 
@@ -1017,7 +1023,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
-		p.ft_max = atof(value.c_str());
+		getSuffix(value, numeral, suffix);
+		suffixes["ft"] = suffix;
+		values["ft"] = stof(numeral);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "ratio_nonmagnetic") {
