@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 11/15/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
 #include "Simulation.h"
@@ -30,7 +30,18 @@
 Simulation::Simulation():
 shear_rate_expectation(-1),
 unit_scales("hydro")
-{};
+{
+	unit_longname["h"] = "hydro";
+	unit_longname["r"] = "repulsive";
+	unit_longname["b"] = "thermal";
+	unit_longname["c"] = "cohesive";
+	unit_longname["cl"] = "critical_load";
+	unit_longname["m"] = "magnetic";
+	for(auto&& f : unit_longname){
+		unit_shortname[f.second] = f.first;
+	}
+
+};
 
 Simulation::~Simulation()
 {
@@ -116,7 +127,7 @@ void Simulation::importPreSimulationData(string filename)
 	
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
-		if (stress_ == sys.target_stress_input) {
+		if (stress_ == target_stress_input) {
 			break;
 		}
 	}
@@ -316,55 +327,144 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 // 	}
 // }
 
-// void Simulation::setUnitScalesStressControlled(double dimensionlessnumber){
-//   if (p.repulsiveforce == false && p.cohesion == false) {
-// 	cerr << " Stress controlled simulations need a repulsive force ! " << endl;
-// 	cerr << " ===> This is not correct. We can make stress controlled simulation without any additional force." << endl;
-// 	exit(1);
-//   } else {
-// 	if (p.repulsiveforce == true
-// 		&& p.critical_load == false
-// 		&& p.cohesion == false) {
-// 	  cerr << "Repulsive force" << endl;
-//  			sys.amplitudes.repulsion = 1;
-//  			sys.target_stress_input = dimensionlessnumber;
-//  			sys.target_stress = sys.target_stress_input/6/M_PI;
-//  			string_control_parameters << "_s" << sys.target_stress_input;
-// 	} else if (p.cohesion == true
-// 				   && p.repulsiveforce == false
-// 				   && p.critical_load == false) {
-// 			cerr << "Cohesive force" << endl;
-// 			p.unscaled_contactmodel = false;
-// 			sys.cohesive_force = 1;
-// 			sys.target_stress_input = dimensionlessnumber;
-// 			sys.target_stress = sys.target_stress_input/6/M_PI;
-// 			/* Initial relaxation for stress control simulation.
-// 			 * (To avoid breaking bonds due to startup flows.)
-// 			 */
-// 			sys.init_strain_shear_rate_limit = -9999;
-// 			sys.init_shear_rate_limit = 9999;
-// 			string_control_parameters << "_b" << sys.target_stress_input;
-// 		} else if (p.cohesion == true
-// 				   && p.repulsiveforce == true
-// 				   && p.critical_load == false) {
-// 			string_control_parameters << "_b" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-// 			cerr << "not yet implemented" << endl;
-// 			exit(1);
-// 		} else {
-// 			cerr << "stress -> non-Brownian -> ???" << endl;
-// 			exit(1);
-// 		}
-// 		sys.dimensionless_number = 1; // needed for 1st time step
-// 		/* The target stress (``ratio_repulsion'') is given trough the command argument
-// 		 * with an unit stres: eta_0*gammmadot_0.
-// 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
-// 		 */
-// 	}
-// }
-
-
-void Simulation::determineDimensionlessNumbers(double dimensionlessnumber, string rate_unit)
+void Simulation::resolveUnitSystem(string long_unit) // can we express all forces in unit?
 {
+	string unit = unit_shortname[long_unit];
+	
+	// now resolve the other force units
+	set <string> resolved_units;
+	resolved_units.clear();
+
+	// some of them are already in correct units
+	for(auto&& f: suffixes){
+		string force_type = f.first;
+		string suffix = f.second;
+		if ( suffix == unit ){
+			resolved_units.insert(force_type);
+		}
+	}
+	
+	// now the "non-trivial" ones, we solve iteratively
+	unsigned int resolved = resolved_units.size();
+	unsigned int previous_resolved;
+
+	do{
+		previous_resolved = resolved;
+		for(auto&& f: suffixes){
+			string force_type = f.first;
+			string suffix = f.second;
+			if (resolved_units.find(suffix) != resolved_units.end()){  // then we know how to convert to unit
+				values[force_type] *= values[suffix];
+				suffixes[force_type] = unit;
+				resolved_units.insert(force_type);
+			}
+		}
+		resolved = resolved_units.size();
+	}while(previous_resolved < resolved);
+	
+	// check we found everyone
+	if( resolved < suffixes.size() ){
+		for(auto&& f: suffixes){
+			string force_type = f.first;
+			string suffix = f.second;
+			if (resolved_units.find(suffix) == resolved_units.end()){
+				cerr << "Error: force type \"" << force_type << "\" has an unknown scale \"" << suffix << "\"" << endl;
+			}
+		}
+		exit(1);
+	}
+}
+
+
+void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
+	
+	string force_type = rate_unit; // our force defining the shear rate
+
+	if (force_type == "h"){
+		cerr << " Error: please give a stress in non-hydro units." << endl; exit(1);
+		/*
+		  Note: 
+		  Although it is in some cases possible to run under stress control without any non-hydro force scale, 
+		  it is not always possible and as a consequence it is a bit dangerous to let the user do so.
+
+		  With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
+		  \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
+		  --> It is limited to the available range of viscosity. 
+		  If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
+		*/
+	}
+	if (force_type == "b"){
+		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl; exit(1);
+	}
+
+	sys.set_shear_rate(1);
+	// we take as a unit scale the one given by the user with the stress
+	// TODO: other choices may be better when several forces are used.
+	unit_scales = unit_longname[force_type];
+	target_stress_input = dimensionlessnumber;
+	sys.target_stress = target_stress_input/6/M_PI;
+		
+	// convert all other forces to hydro
+	resolveUnitSystem(unit_scales);
+	
+}
+
+
+void Simulation::setLowPeclet()
+{
+  sys.lowPeclet = true;
+  double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["b"];
+  p.memory_strain_k /= scale_factor_SmallPe;
+  p.memory_strain_avg /= scale_factor_SmallPe;
+  p.start_adjust /= scale_factor_SmallPe;
+  p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
+}
+
+
+void Simulation::convertForceValues(string new_long_unit)
+{
+	string new_unit = unit_shortname[new_long_unit];
+	if(dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()){
+		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
+	}
+
+	for(auto&& f: suffixes){
+		string force_type = f.first;
+		string old_unit = f.second;
+		if (old_unit != "h") {
+			values[force_type] /= dimensionless_numbers[old_unit];
+		}
+		values[force_type] *= dimensionless_numbers[new_unit];
+		f.second = new_unit;
+	}	
+}
+
+void Simulation::setUnitScaleRateControlled()
+{
+
+	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
+	if(is_brownian){
+		if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
+			unit_scales = "hydro";
+			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["b"]);
+			sys.set_shear_rate(1);
+		}
+		else{ // low Peclet mode
+			unit_scales = "thermal";
+			sys.amplitudes.sqrt_temperature = 1;
+			sys.set_shear_rate(dimensionless_numbers["b"]);
+			setLowPeclet();
+		}
+	}
+	else{
+		unit_scales = "hydro";
+		sys.set_shear_rate(1);
+	}
+}
+
+void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
+{
+	
 	// determine the dimensionless numbers
 	
 	string force_type = rate_unit; // our force defining the shear rate
@@ -379,154 +479,64 @@ void Simulation::determineDimensionlessNumbers(double dimensionlessnumber, strin
 	values[force_type] = 1/dimensionless_numbers[force_type];
 	suffixes[force_type] = "h";
 
-	
-	// now resolve the other force units
-	set <string> resolved_units;
-	resolved_units.clear();
 
-	// already done the one which gives the shear rate
-	resolved_units.insert(force_type);
+	// convert all other forces to hydro
+	resolveUnitSystem("hydro");
 
-	// some of them are already in hydro
 	for(auto&& f: suffixes){
-	  force_type = f.first;
-	  string suffix = f.second;
-	  if ( suffix == "h" ){
-		dimensionless_numbers[force_type] = 1./values[force_type];
-		resolved_units.insert(force_type);
-	  }
-	}
-
-	// now the "non-trivial" ones, we solve iteratively
-	unsigned int resolved = resolved_units.size();
-	unsigned int previous_resolved;
-	do{
-	  previous_resolved = resolved;
-	  for(auto&& f: suffixes){
 		force_type = f.first;
-		string suffix = f.second;
-		if (resolved_units.find(suffix) != resolved_units.end()){  // then we know how to convert to hydro
-		  values[force_type] /= dimensionless_numbers[suffix];
-		  suffixes[force_type] = "h";
-		  dimensionless_numbers[force_type] = 1./values[force_type];
-		  resolved_units.insert(force_type);
-		}
-	  }
-	  resolved = resolved_units.size();
-	}while(previous_resolved < resolved);
-
-	// check we found everyone
-	if( resolved < suffixes.size() ){
-	  for(auto&& f: suffixes){
-		force_type = f.first;
-		string suffix = f.second;
-		if (resolved_units.find(suffix) == resolved_units.end()){
-		  cerr << "Error: force type \"" << force_type << "\" has an unknown scale \"" << suffix << "\"" << endl;
-		}
-	  }
-	  exit(1);
-	}
-	  
-}
-
-void Simulation::setLowPeclet()
-{
-  sys.lowPeclet = true;
-  double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["b"];
-  p.memory_strain_k /= scale_factor_SmallPe;
-  p.memory_strain_avg /= scale_factor_SmallPe;
-  p.start_adjust /= scale_factor_SmallPe;
-  p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
-}
-
-
-void Simulation::convertForceValues()
-{
-	double converter = 1;
-	string suffix = "h";
-	if (unit_scales == "thermal") {
-		converter = dimensionless_numbers["b"];
-		suffix = "b";
-	}
-	if (unit_scales == "repulsive") {
-		converter = dimensionless_numbers["r"];
-		suffix = "r";
+		dimensionless_numbers[force_type] = 1/values[force_type];
 	}
 	
-	for(auto&& f: suffixes){
-		string force_type = f.first;
-		f.second = suffix;
-		values[force_type] *= converter;
-	}	
+	setUnitScaleRateControlled();	
+
+	// convert from hydro scale to chosen scale
+	convertForceValues(unit_scales);
+
+	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
+	if(is_brownian){
+		sys.brownian = true;
+		p.brownian_amplitude = values["b"];
+		cerr << "Brownian, Peclet number " << dimensionless_numbers["b"] << endl;
+	}
+	else{
+		cerr << "non-Brownian" << endl;
+	}
+
 }
 
-void Simulation::setUnitScale()
+void Simulation::exportForceAmplitudes()
 {
-  bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
-  if(is_brownian){
-	  if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
-		unit_scales = "hydro";
-		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["b"]);
-		sys.set_shear_rate(1);
-	  }
-	  else{ // low Peclet mode
- 		unit_scales = "thermal";
- 		sys.amplitudes.sqrt_temperature = 1;
- 		sys.set_shear_rate(dimensionless_numbers["b"]);
-		setLowPeclet();
-	  }
-  }
-  else{
-	unit_scales = "hydro";
-	sys.set_shear_rate(1);
-  }
-  cerr << " Internal unit scale : " << unit_scales << endl;
-
-  // convert from hydro scale to chosen scale
-  convertForceValues();
-
-  if(is_brownian){
-	sys.brownian = true;
-	p.brownian_amplitude = values["b"];
-	cerr << "Brownian, Peclet number " << dimensionless_numbers["b"] << endl;
-  }
-  else{
-	cerr << "non-Brownian" << endl;
-  }
-
-  bool is_repulsive = dimensionless_numbers.find("r") != dimensionless_numbers.end();
-  if(is_repulsive){
-	sys.repulsiveforce = true;
-	sys.amplitudes.repulsion = values["r"];
-	cerr << " Repulsive force (in \"" << suffixes["r"] << "\" units): " << sys.amplitudes.repulsion << endl;
-  }
-  bool is_critical_load = dimensionless_numbers.find("cl") != dimensionless_numbers.end();
-  if(is_critical_load){
-	sys.critical_load = true;
-	sys.amplitudes.critical_normal_force = values["cl"];
-	cerr << " Critical Load (in \"" << suffixes["cl"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
-  }
-  bool is_cohesive = dimensionless_numbers.find("c") != dimensionless_numbers.end();
-  if(is_cohesive){
-	sys.cohesion = true;
-	sys.amplitudes.cohesion = values["c"];
-	cerr << " Cohesion (in \"" << suffixes["c"] << "\" units): " << sys.amplitudes.cohesion << endl;
-  }
-  bool is_magnetic = dimensionless_numbers.find("m") != dimensionless_numbers.end();
-  if(is_magnetic){
-	sys.magnetic = true;
-	p.magnetic_amplitude = values["m"];
-	cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-  }
-  bool is_ft_max = dimensionless_numbers.find("ft") != dimensionless_numbers.end();
-  if(is_ft_max){
-	sys.amplitudes.ft_max = values["ft"];
-	cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
-  }
-
-
+	bool is_repulsive = values.find("r") != values.end();
+	if(is_repulsive){
+		sys.repulsiveforce = true;
+		sys.amplitudes.repulsion = values["r"];
+		cerr << " Repulsive force (in \"" << suffixes["r"] << "\" units): " << sys.amplitudes.repulsion << endl;
+	}
+	bool is_critical_load = values.find("cl") != values.end();
+	if(is_critical_load){
+		sys.critical_load = true;
+		sys.amplitudes.critical_normal_force = values["cl"];
+		cerr << " Critical Load (in \"" << suffixes["cl"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+	}
+	bool is_cohesive = values.find("c") != values.end();
+	if(is_cohesive){
+		sys.cohesion = true;
+		sys.amplitudes.cohesion = values["c"];
+		cerr << " Cohesion (in \"" << suffixes["c"] << "\" units): " << sys.amplitudes.cohesion << endl;
+	}
+	bool is_magnetic = values.find("m") != values.end();
+	if(is_magnetic){
+		sys.magnetic = true;
+		p.magnetic_amplitude = values["m"];
+		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
+	}
+	bool is_ft_max = values.find("ft") != values.end();
+	if(is_ft_max){
+		sys.amplitudes.ft_max = values["ft"];
+		cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+	}
 }
-
 
 void Simulation::setupSimulationSteadyShear(string in_args,
 											vector<string> &input_files,
@@ -549,23 +559,15 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	readParameterFile();
 
 	if (control_var == "rate") {
-	  determineDimensionlessNumbers(dimensionlessnumber, input_scale);	
-	  setUnitScale();
+		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	}
 	else if (control_var == "stress") {
+		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
 		p.unscaled_contactmodel = true;
-		unit_scales = "repulsion";
-		sys.amplitudes.repulsion = 1;
-		sys.set_shear_rate(1);
-		bool is_critical_load = values.find("cl") != values.end();
-		if (is_critical_load) {
-			cerr << " Stress controlled simulations for CLM not implemented ! " << endl;
-			exit(1);
-		}
-		cerr << " stress controlled temporarily disabled " << endl; exit(1);
-		//		setUnitScalesNonBrownianStress(dimensionlessnumber);
 	}
-
+	cerr << " Internal unit scale : " << unit_scales << endl;
+	exportForceAmplitudes();
+	
 	// test for incompatibilities
 	if (sys.brownian == true) {
 		if (p.integration_method != 1) {
@@ -615,7 +617,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
 	
-	//exportParameterSet();
 	sys.importParameterSet(p);
 
 	if (sys.brownian) {
@@ -750,7 +751,7 @@ void Simulation::outputComputationTime()
 // 	filename_sequence = input_files[4];
 // 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
 // 	sys.brownian = false;
-// 	sys.target_stress_input = 0;
+// 	target_stress_input = 0;
 // 	sys.target_stress = 0;
 // 	cerr << seq_type << endl;
 // 	if (seq_type == "S") {
@@ -835,9 +836,9 @@ void Simulation::outputComputationTime()
 // 		 * with an unit stres: eta_0*gammmadot_0.
 // 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
 // 		 */
-// 		sys.target_stress_input = rsequence[step];
+// 		target_stress_input = rsequence[step];
 // 		sys.target_stress = rsequence[step]/6/M_PI;
-// 		cerr << "Target stress " << sys.target_stress_input << endl;
+// 		cerr << "Target stress " << target_stress_input << endl;
 // 		sys.updateUnscaledContactmodel();
 // 		sys.amplitudes.repulsion = 1; // needed for 1st time step
 // 		sys.dimensionless_number = 1;
@@ -878,7 +879,7 @@ void Simulation::outputComputationTime()
 // 				jammed = 0;
 // 			}
 // 			cerr << "strain: " << sys.get_time() << " / " << p.time_end;
-// 			cerr << "      stress = " << sys.target_stress_input << endl;
+// 			cerr << "      stress = " << target_stress_input << endl;
 // 		}
 // 	}
 // }
@@ -1653,7 +1654,7 @@ void Simulation::outputRheologyData()
 	 */
 	//	fout_rheo << sys.dimensionless_number << ' '; // 48
 	// if (control_var == "stress") {
-	// 	fout_rheo << sys.target_stress_input << ' '; // 49
+	// 	fout_rheo << target_stress_input << ' '; // 49
 	// } else {
 	// 	fout_rheo << 6*M_PI*viscosity*sys.dimensionless_number << ' '; // 49
 	// }
@@ -1722,7 +1723,7 @@ void Simulation::outputConfigurationData()
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		//		fout_particle << sys.dimensionless_number << ' ';
-		fout_particle << sys.target_stress_input << ' ';
+		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << endl;
 		
 		for (int i=0; i<np; i++) {

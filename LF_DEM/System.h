@@ -292,7 +292,6 @@ private:
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
-	double target_stress_input;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;

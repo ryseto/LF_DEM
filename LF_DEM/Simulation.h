@@ -51,7 +51,10 @@ private:
 	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
 	std::map <string, double> values;   // pairs: (force_type, values_in_suffix_units)
 	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
-	
+
+	std::map <string, string> unit_longname; // it's temporary: should find a more elegant way :)
+	std::map <string, string> unit_shortname;
+
 	double volume_or_area_fraction;
 	string filename_import_positions;
 	string filename_parameters;
@@ -96,6 +99,7 @@ private:
 	double normalstress_diff_2_brownian;
 	double initial_lees_edwards_disp;
 	string unit_scales;
+	double target_stress_input;
 	int time_strain_0;
 	int time_strain_1;
 	int time_strain_end;
@@ -124,13 +128,13 @@ private:
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
-	//	void setUnitScalesBrownian(double dimensionlessnumber);
-	//	void setUnitScalesNonBrownianRate(double dimensionlessnumber);
-	void setUnitScalesNonBrownianStress(double dimensionlessnumber);
-	void determineDimensionlessNumbers(double dimensionlessnumber, string rate_unit);
+	void exportForceAmplitudes();
 	void setLowPeclet();
-	void convertForceValues();
-	void setUnitScale();
+	void convertForceValues(string new_long_unit);
+	void resolveUnitSystem(string long_unit);
+	void setUnitScaleRateControlled();
+	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
+	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
 	/*
 	 * For outputs
 	 */

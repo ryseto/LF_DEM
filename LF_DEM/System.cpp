@@ -35,7 +35,6 @@ twodimension(false),
 zero_shear(false),
 lowPeclet(false),
 magnetic_coeffient(24),
-target_stress_input(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0)
@@ -1375,7 +1374,7 @@ void System::computeShearRate()
 		shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		shearstress_hyd -= shearstress_rep;
 	}
-	// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
+	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
