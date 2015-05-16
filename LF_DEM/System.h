@@ -48,7 +48,10 @@ struct ForceAmplitudes
 	double repulsion;
 	double sqrt_temperature;
 	double contact;
+	double cohesion;
 	double magnetic;
+	double critical_normal_force;
+	double ft_max;
 };
 
 class System{
@@ -74,7 +77,7 @@ private:
 	double magnetic_energy;
 	int linalg_size;
 	int dof;
-	double repulsiveforce_length; // repulsive force length (dimensionless)
+	double repulsiveforce_length; // repulsive force length
 	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	void (System::*timeEvolutionDt)(bool);
@@ -131,7 +134,6 @@ private:
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
-	bool lowPeclet;
 	bool fixed_dt;
 
 
@@ -151,6 +153,7 @@ private:
 	bool critical_load;
 	bool magnetic;
 	double interaction_range;
+	bool lowPeclet;
 
 	// Simulation parameters
 	bool twodimension;
@@ -158,7 +161,6 @@ private:
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
 	bool monolayer;
-	double critical_normal_force;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
@@ -219,7 +221,6 @@ private:
 	double mu_static; // static friction coefficient
 	double mu_dynamic; // dynamic friction coefficient
 	double mu_rolling; // rolling friction coeffient
-	double dimensionless_cohesive_force;
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double magnetic_dipole_moment;
@@ -235,7 +236,6 @@ private:
 	double sd_coeff;
 	double einstein_stress;
 	double einstein_viscosity;
-	double cohesive_force;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
@@ -267,7 +267,7 @@ private:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
 	 * For Brownian suspension, it should be Peclet number
 	 */
-	double dimensionless_number;
+	//	double dimensionless_number;
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz
@@ -292,7 +292,6 @@ private:
 	double max_fc_normal;
 	double max_fc_tan;
 	string simu_name;
-	double target_stress_input;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;

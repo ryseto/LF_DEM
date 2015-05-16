@@ -18,8 +18,8 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	} else if (sys->friction_model == 3) {
 		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
 	} else if (sys->friction_model == 5) {
-		frictionlaw = &Contact::frictionlaw_ft_max;
-		ft_max = sys->ft_max;
+	 	frictionlaw = &Contact::frictionlaw_ft_max;
+    	ft_max = sys->ft_max;
 	} else if (sys->friction_model == 6) {
 		frictionlaw = &Contact::frictionlaw_coulomb_max;
 		ft_max = sys->ft_max;
@@ -161,7 +161,7 @@ void Contact::frictionlaw_standard()
 	double sq_f_tan = f_contact_tan.sq_norm();
 	normal_load = f_contact_normal_norm;
 	if (sys->cohesion) {
-		normal_load += sys->dimensionless_cohesive_force;
+		normal_load += sys->amplitudes.cohesion;
 	}
 	if (state == 2) {
 		// static friction in previous step
@@ -201,7 +201,7 @@ void Contact::frictionlaw_criticalload()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_contact_normal_norm-sys->critical_normal_force; // critical load model.
+	double supportable_tanforce = f_contact_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
@@ -229,7 +229,7 @@ void Contact::frictionlaw_criticalload_mu_inf()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_contact_normal_norm-sys->critical_normal_force; // critical load model.
+	double supportable_tanforce = f_contact_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
@@ -245,19 +245,18 @@ void Contact::frictionlaw_criticalload_mu_inf()
 
 void Contact::frictionlaw_ft_max()
 {
-	/**
-	 \brief Friction law
-	 */
-	double sq_f_tan = f_contact_tan.sq_norm();
-	double supportable_tanforce = ft_max/abs(sys->dimensionless_number);
-	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
-		state = 3; // dynamic friction
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_contact_tan = kt_scaled*disp_tan;
-	} else {
-		state = 2; // static friction
-	}
-	return;
+ 	/**
+	   \brief Friction law
+	*/
+ 	double sq_f_tan = f_contact_tan.sq_norm();
+ 	if (sq_f_tan > ft_max*ft_max) {
+ 		state = 3; // dynamic friction
+ 		disp_tan *= ft_max/sqrt(sq_f_tan);
+ 		f_contact_tan = kt_scaled*disp_tan;
+ 	} else {
+ 		state = 2; // static friction
+ 	}
+ 	return;
 }
 
 void Contact::frictionlaw_coulomb_max()
@@ -284,9 +283,8 @@ void Contact::frictionlaw_coulomb_max()
 	} else {
 		exit(1);
 	}
-	double scaled_ft_max = ft_max/abs(sys->dimensionless_number);
-	if (supportable_tanforce > scaled_ft_max) {
-		supportable_tanforce = scaled_ft_max;
+	if (supportable_tanforce > ft_max) {
+	 	supportable_tanforce = ft_max;
 	}
 	double sq_f_tan = f_contact_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
@@ -304,18 +302,6 @@ void Contact::frictionlaw_null()
 	// null
 }
 
-// void Contact::calcScaledForce()
-// {
-// 	/** 
-// 		\brief Get the force in System class units.
-
-// 		\b NOTE: it does not recompute the force, just convert it to System units.
-// 	*/
-// 	f_contact_normal_norm_scaled = sys->amplitudes.contact*f_contact_normal_norm;
-// 	f_contact_normal_scaled = sys->amplitudes.contact*f_contact_normal;
-// 	f_contact_tan_scaled = sys->amplitudes.contact*f_contact_tan;
-// 	f_rolling_scaled = sys->amplitudes.contact*f_rolling;
-// }
 
 void Contact::addUpContactForceTorque()
 {
