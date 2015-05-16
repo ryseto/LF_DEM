@@ -9,12 +9,6 @@
 
 struct ParameterSet
 {
-	//	bool brownian;						///< Brownian force
-	//	bool repulsiveforce;				///< Repulsive force exp(-kh)
-	//	bool cohesion;						///< Cohesive force
-	//	bool critical_load;					///< Normal force required to activate friction
-	//	bool magnetic;						///< Magnetic
-
 	double repulsion_amplitude;				///<
 	double critical_load_amplitude;			///<
 	double cohesion_amplitude;				///<
@@ -23,7 +17,6 @@ struct ParameterSet
 	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
-	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
 	bool monolayer;
 	
