@@ -356,7 +356,7 @@ void Simulation::exportForceAmplitudes()
 	bool is_magnetic = values.find("m") != values.end();
 	if(is_magnetic){
 		sys.magnetic = true;
-		p.magnetic_amplitude = values["m"];
+		sys.amplitudes.magnetic = values["m"];
 		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
 	}
 	bool is_ft_max = values.find("ft") != values.end();
@@ -376,6 +376,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	control_var = control_variable;
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
+	if (control_var == "rate") {
+	  input_rate = dimensionlessnumber;
+	  input_rate_unit = input_scale;
+	}
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -1298,6 +1302,18 @@ void Simulation::prepareSimulationName(bool binary_conf)
 	cerr << "filename: " << sys.simu_name << endl;
 }
 
+double Simulation::getRate(){
+  if (control_var == "rate") {
+	return input_rate;
+  }
+  else if (control_var == "stress") {
+	return sys.get_shear_rate();
+  }
+  else{
+	return 1;
+  }
+}
+
 void Simulation::evaluateData()
 {
 	/**
@@ -1380,7 +1396,7 @@ void Simulation::outputStressTensorData()
 	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
 	sys.total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
 	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	//	fout_st << sys.dimensionless_number << ' '; // 39
+	fout_st << getRate() << ' '; // 39
 	fout_st << endl;
 }
 
@@ -1490,12 +1506,12 @@ void Simulation::outputRheologyData()
 	 * Then, time step also oscilate.
 	 * This is why we need to take time average to have correct value of dimensionless_number.
 	 */
-	//	fout_rheo << sys.dimensionless_number << ' '; // 48
-	// if (control_var == "stress") {
-	// 	fout_rheo << target_stress_input << ' '; // 49
-	// } else {
-	// 	fout_rheo << 6*M_PI*viscosity*sys.dimensionless_number << ' '; // 49
-	// }
+	fout_rheo << getRate() << ' '; // 48
+	if (control_var == "stress") {
+	  fout_rheo << target_stress_input << ' '; // 49
+	} else {
+	  fout_rheo << 6*M_PI*viscosity*getRate() << ' '; // 49
+	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51
 	fout_rheo << sys.max_contact_gap << ' '; //52
@@ -1560,7 +1576,7 @@ void Simulation::outputConfigurationData()
 		
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
-		//		fout_particle << sys.dimensionless_number << ' ';
+		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << endl;
 		

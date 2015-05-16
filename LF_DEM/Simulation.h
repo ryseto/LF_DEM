@@ -100,6 +100,8 @@ private:
 	double initial_lees_edwards_disp;
 	string unit_scales;
 	double target_stress_input;
+	double input_rate;
+	string input_rate_unit;
 	int time_strain_0;
 	int time_strain_1;
 	int time_strain_end;
@@ -146,6 +148,7 @@ private:
 	void outputFinalConfiguration();
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(string);
+	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void setupSimulationSteadyShear(string in_args,
 									vector<string> &input_files,
