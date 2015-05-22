@@ -97,7 +97,7 @@ export CHOLMOD_OMP_NUM_THREADS=1
 
 First create `~/usr/lib` and `~/usr/include` if you don't have such directories.
 ```
-$ mkdir ~/usr; mkdir ~usr/local; mkdir ~usr/include
+$ mkdir ~/usr; mkdir ~/usr/local; mkdir ~/usr/include
 ```
 
 Select the Makefile configuration file for a compilation on Linux for GPU:
