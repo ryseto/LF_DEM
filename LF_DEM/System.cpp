@@ -45,6 +45,9 @@ new_contact_gap(0)
 	amplitudes.cohesion = 0;
 	amplitudes.magnetic = 0;
 	amplitudes.critical_normal_force = 0;
+	max_sliding_velocity = 0;
+	max_contact_gap = 0;
+	max_disp_rolling = 0;
 }
 
 vec3d System::randUniformSphere(double r)
@@ -835,10 +838,15 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
-		} else {
-			dt = disp_max/max_sliding_velocity;
+		if (max_velocity > 0 && max_sliding_velocity > 0){ // small density system can have na_velocity=0
+			if (max_velocity > max_sliding_velocity) {
+				dt = disp_max/max_velocity;
+			} else {
+				dt = disp_max/max_sliding_velocity;
+			}
+		}
+		else{
+			dt = 1e-2/shear_rate;
 		}
 	}
 	time += dt;
@@ -1866,10 +1874,12 @@ void System::adjustContactModelParameters()
 	if (kt > p.max_kt) {
 		kt = p.max_kt;
 	}
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
-	} else {
-		dt = disp_max/max_sliding_velocity;
+	if (max_velocity > 0 && max_sliding_velocity > 0) {
+		if (max_velocity > max_sliding_velocity) {
+			dt = disp_max/max_velocity;
+		} else {
+			dt = disp_max/max_sliding_velocity;
+		}
 	}
 	previous_shear_strain = shear_strain;
 }

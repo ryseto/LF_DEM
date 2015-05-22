@@ -29,6 +29,7 @@
 
 Simulation::Simulation():
 shear_rate_expectation(-1),
+target_stress_input(0),
 unit_scales("hydro")
 {
 	unit_longname["h"] = "hydro";
@@ -252,7 +253,7 @@ void Simulation::setLowPeclet()
 void Simulation::convertForceValues(string new_long_unit)
 {
 	string new_unit = unit_shortname[new_long_unit];
-	if(dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()){
+	if(dimensionless_numbers.find(new_unit) == dimensionless_numbers.end() && new_unit != "h"){
 		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
 	}
 
@@ -262,14 +263,16 @@ void Simulation::convertForceValues(string new_long_unit)
 		if (old_unit != "h") {
 			values[force_type] /= dimensionless_numbers[old_unit];
 		}
-		values[force_type] *= dimensionless_numbers[new_unit];
+		if (new_unit != "h") {
+			values[force_type] *= dimensionless_numbers[new_unit];
+		}
 		f.second = new_unit;
 	}	
 }
 
 void Simulation::setUnitScaleRateControlled()
 {
-
+	
 	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
 	if(is_brownian){
 		if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
