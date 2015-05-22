@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version = Linux
+OS_version = OSX
 # install directory
 install_dir = ~/bin/
 
@@ -188,7 +188,6 @@ doc:
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)
-	ifeq ($(OS_version),OIST)
-		cp -p generateYaplotFile.pl $(install_dir)
-	endif
+	(if [ "$(OS_version)" == "OIST" ]; then cp -p generateYaplotFile.pl $(install_dir); fi)
+
 
