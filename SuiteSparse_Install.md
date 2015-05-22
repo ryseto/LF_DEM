@@ -42,7 +42,7 @@ Now we can go on and compile the whole SuiteSparse+Metis.
 
 First create `~/usr/lib` and `~/usr/include` if you don't have such directories.
 ```
-$ mkdir ~/usr; mkdir ~usr/local; mkdir ~usr/include
+$ mkdir ~/usr; mkdir ~/usr/local; mkdir ~/usr/include
 ```
 
 Select the Makefile configuration file for a compilation on Linux:
