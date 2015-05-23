@@ -241,58 +241,13 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 
 void Simulation::setLowPeclet()
 {
-	if (p.repulsiveforce == true
-		&& p.critical_load == false
-		&& p.cohesion == false
-		&& p.magnetic == false) {
-		cerr << "Repulsive force, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl; //@???
-		sys.dimensionless_number = dimensionlessnumber;
-		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
-		string_control_parameters << "_r" << sys.dimensionless_number;
-	} else if (p.repulsiveforce == false
-			   && p.critical_load == false
-			   && p.cohesion == false
-			   && p.magnetic == false) {
-		cerr << "Infinite shear rate (quasi-Newtonian)" << endl;
-		sys.dimensionless_number = -1;
-		sys.amplitudes.repulsion = 0;
-		string_control_parameters << "_quasi_Newtonian";
-	} else if (p.critical_load == true
-			   && p.repulsiveforce == false
-			   && p.cohesion == false
-			   && p.magnetic == false) {
-		cerr << "Critical load, shear rate (in units of F_R(0)/(6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		p.friction_model = 2;
-		sys.critical_normal_force = 1/sys.dimensionless_number;
-		string_control_parameters << "_c" << sys.dimensionless_number;
-	} else if (p.cohesion == true
-			   && p.repulsiveforce == false
-			   && p.critical_load == false
-			   && p.magnetic == false) {
-		cerr << "Cohesive force, sheafr rate (in units of F_R(0)/6 pi eta_0 a^2)): " << dimensionlessnumber << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		/* In the rate control simulation,
-		 * dimensionless_cohesive_force can be given.
-		 */
-		string_control_parameters << "_a" << dimensionlessnumber;
-	} else if (p.repulsiveforce == true
-			   && p.cohesion == true
-			   && p.critical_load == false
-			   && p.magnetic == false) {
-		cerr << "Repulsive force + Cohesive force" << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
-		sys.cohesive_force = p.ratio_cohesion;
-		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-	} else if (p.magnetic != 0
-			   && p.repulsiveforce == false
-			   && p.cohesion == false
-			   && p.critical_load == false) {
-		cerr << "Magnetic interaction" << endl;
-		sys.dimensionless_number = dimensionlessnumber;
-		sys.amplitudes.magnetic = 1/sys.dimensionless_number;
-		string_control_parameters << "_mag" << sys.dimensionless_number << "_r" << sys.dimensionless_number;
+  sys.lowPeclet = true;
+  double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["b"];
+  p.memory_strain_k /= scale_factor_SmallPe;
+  p.memory_strain_avg /= scale_factor_SmallPe;
+  p.start_adjust /= scale_factor_SmallPe;
+  p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
+}
 
 
 void Simulation::convertForceValues(string new_long_unit)
@@ -836,16 +791,26 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		}
 	} else if (keyword == "rolling_friction") {
 		p.rolling_friction = str2bool(value);
-	} else if (keyword == "repulsiveforce") {
-		p.repulsiveforce = str2bool(value);
-	} else if (keyword == "cohesion") {
-		p.cohesion = str2bool(value);
-	} else if (keyword == "brownian") {
-		p.brownian = str2bool(value);
-	} else if (keyword == "critical_load") {
-		p.critical_load = str2bool(value);
-	} else if (keyword == "magnetic") {
-		p.magnetic = atoi(value.c_str());
+	} else if (keyword == "repulsion_amplitude") {
+		caught_suffix = getSuffix(value, numeral, suffix);
+		suffixes["r"] = suffix;
+		values["r"] = stof(numeral);
+	} else if (keyword == "cohesion_amplitude") {
+		caught_suffix = getSuffix(value, numeral, suffix);
+		suffixes["c"] = suffix;
+		values["c"] = stof(numeral);
+	} else if (keyword == "brownian_amplitude") {
+		caught_suffix = getSuffix(value, numeral, suffix);
+		suffixes["b"] = suffix;
+		values["b"] = stof(numeral);
+	} else if (keyword == "critical_load_amplitude") {
+		caught_suffix = getSuffix(value, numeral, suffix);
+		suffixes["cl"] = suffix;
+		values["cl"] = stof(numeral);
+	} else if (keyword == "magnetic_amplitude") {
+		caught_suffix = getSuffix(value, numeral, suffix);
+		suffixes["m"] = suffix;
+		values["m"] = stof(numeral);
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
@@ -1117,21 +1082,22 @@ void Simulation::openOutputFiles(bool binary_conf)
 
 void Simulation::setDefaultParameters()
 {
-	p.brownian = false;
-	p.repulsiveforce = false;
-	p.cohesion = false;
-	p.critical_load = false;
+//	p.brownian = false;
+//	p.repulsiveforce = false;
+//	p.cohesion = false;
+//	p.critical_load = false;
 	p.magnetic = 0;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
-	p.integration_method = 1;
-	p.interaction_range = 5;
-	/*
-	 * Stokes drag coeffient
-	 */
+	p.brownian_amplitude = 0;
+	p.repulsion_amplitude = 0;
+	p.cohesion_amplitude = 0;
+	p.critical_load_amplitude = 0;
+	p.magnetic_amplitude = 0;
+	p.magnetic = 0;
 	p.sd_coeff = 1;
 	/*
 	 * Lubrication model

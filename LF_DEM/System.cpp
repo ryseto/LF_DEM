@@ -24,13 +24,13 @@
 
 
 System::System():
-
-lowPeclet(false),
 brownian(false),
 repulsiveforce(false),
 critical_load(false),
 cohesion(false),
-permanent_magnet(false),
+magnetic(false),
+friction(false),
+friction_model(-1),
 twodimension(false),
 zero_shear(false),
 lowPeclet(false),
