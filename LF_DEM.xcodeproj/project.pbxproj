@@ -1563,8 +1563,6 @@
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_CPLUSPLUSFLAGS = (
-					"-DUSE_DSFMT=\"$DSFMT_RNG\"",
-					"-DDSFMT_MEXP=19937",
 					"-Wall",
 					"-Wextra",
 					"-Wshadow",
@@ -1590,8 +1588,6 @@
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				OTHER_CPLUSPLUSFLAGS = (
-					"-DUSE_DSFMT=\"$DSFMT_RNG\"",
-					"-DDSFMT_MEXP=19937",
 					"-Wall",
 					"-Wextra",
 					"-Wshadow",

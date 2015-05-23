@@ -13,7 +13,7 @@ struct ParameterSet
 	bool repulsiveforce;				///< Repulsive force exp(-kh)
 	bool cohesion;						///< Cohesive force
 	bool critical_load;					///< Normal force required to activate friction
-	bool magnetic;						///< Magnetic
+	int magnetic;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
 	
 	double ratio_repulsion;				///<
 	double ratio_critical_load;			///<

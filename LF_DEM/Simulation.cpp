@@ -299,7 +299,7 @@ void Simulation::setUnitScalesNonBrownianRate(double dimensionlessnumber)
 		sys.amplitudes.repulsion = 1/sys.dimensionless_number;
 		sys.cohesive_force = p.ratio_cohesion;
 		string_control_parameters << "_a" <<  p.ratio_cohesion << "_r" << sys.dimensionless_number;
-	} else if (p.magnetic == true
+	} else if (p.magnetic != 0
 			   && p.repulsiveforce == false
 			   && p.cohesion == false
 			   && p.critical_load == false) {
@@ -783,7 +783,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "critical_load") {
 		p.critical_load = str2bool(value);
 	} else if (keyword == "magnetic") {
-		p.magnetic = str2bool(value);
+		p.magnetic = atoi(value.c_str());
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
@@ -1063,7 +1063,7 @@ void Simulation::setDefaultParameters()
 	p.repulsiveforce = false;
 	p.cohesion = false;
 	p.critical_load = false;
-	p.magnetic = false;
+	p.magnetic = 0;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
@@ -1528,9 +1528,9 @@ void Simulation::outputConfigurationData()
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
 	 */
-	if (p.origin_zero_flow) {
-		for (int i=0; i<np; i++) {
-			vel[i] = sys.velocity[i];
+	for (int i=0; i<np; i++) {
+		vel[i] = sys.velocity[i];
+		if (p.origin_zero_flow) {
 			if (pos[i].z < 0) {
 				vel[i].x -= sys.get_shear_rate()*sys.get_lz();
 			}
@@ -1541,13 +1541,11 @@ void Simulation::outputConfigurationData()
 	 */
 	if (p.out_data_particle) {
 		cerr << "   out config: " << sys.get_shear_strain() << endl;
-		
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << sys.dimensionless_number << ' ';
 		fout_particle << sys.target_stress_input << ' ';
 		fout_particle << sys.get_time() << endl;
-		
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];

@@ -149,7 +149,8 @@ private:
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
-	bool magnetic;
+	int magnetic; // 1: fixed magnetic dipole, 2: magnetic susceptible particles
+	bool permanent_magnet;
 	double interaction_range;
 
 	// Simulation parameters
@@ -223,7 +224,7 @@ private:
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double magnetic_dipole_moment;
-	double ratio_nonmagnetic; //
+	double ratio_nonmagnetic;
 	int num_magnetic;
 	vec3d external_magnetic_field;
 	/* sd_coeff:
