@@ -31,7 +31,7 @@ $interaction_data = "int_${name}.dat";
 $output = "y_$name.yap";
 
 my $pos;
-$pos = index($name, "mag");
+$pos = index($name, "_m");
 if ($pos != -1) {
 	$mag = 1;
 } else {

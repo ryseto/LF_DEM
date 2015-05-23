@@ -29,8 +29,8 @@
 
 Simulation::Simulation():
 shear_rate_expectation(-1),
-target_stress_input(0),
-unit_scales("hydro")
+unit_scales("hydro"),
+target_stress_input(0)
 {
 	unit_longname["h"] = "hydro";
 	unit_longname["r"] = "repulsive";
@@ -158,11 +158,11 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 void Simulation::resolveUnitSystem(string long_unit) // can we express all forces in unit "long_unit"?
 {
 	string unit = unit_shortname[long_unit];
-
+	
 	// now resolve the other force units
 	set <string> resolved_units;
 	resolved_units.clear();
-
+	
 	// some of them are already in correct units
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
@@ -175,7 +175,7 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 	// now the "non-trivial" ones, we solve iteratively
 	unsigned int resolved = resolved_units.size();
 	unsigned int previous_resolved;
-
+	
 	do {
 		previous_resolved = resolved;
 		for (auto&& f: suffixes) {
@@ -205,26 +205,26 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 
 
 void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
-
+	
 	string force_type = rate_unit; // our force defining the shear rate
-
+	
 	if (force_type == "h"){
 		cerr << " Error: please give a stress in non-hydro units." << endl; exit(1);
 		/*
-		  Note: 
-		  Although it is in some cases possible to run under stress control without any non-hydro force scale, 
-		  it is not always possible and as a consequence it is a bit dangerous to let the user do so.
-
-		  With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
-		  \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
-		  --> It is limited to the available range of viscosity. 
-		  If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
-		*/
+		 Note:
+		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
+		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
+		 
+		 With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
+		 \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
+		 --> It is limited to the available range of viscosity.
+		 If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
+		 */
 	}
 	if (force_type == "b"){
 		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl; exit(1);
 	}
-
+	
 	sys.set_shear_rate(1);
 	// we take as a unit scale the one given by the user with the stress
 	// TODO: other choices may be better when several forces are used.
@@ -248,10 +248,10 @@ void Simulation::setLowPeclet()
 void Simulation::convertForceValues(string new_long_unit)
 {
 	string new_unit = unit_shortname[new_long_unit];
-	if (dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()) {
+	if(dimensionless_numbers.find(new_unit) == dimensionless_numbers.end() && new_unit != "h"){
 		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
 	}
-
+	
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
@@ -302,20 +302,20 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	// switch this force in hydro units
 	values[force_type] = 1/dimensionless_numbers[force_type];
 	suffixes[force_type] = "h";
-
+	
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
-
+	
 	for (auto&& f: suffixes) {
 		force_type = f.first;
 		dimensionless_numbers[force_type] = 1/values[force_type];
 	}
 	
-	setUnitScaleRateControlled();	
-
+	setUnitScaleRateControlled();
+	
 	// convert from hydro scale to chosen scale
 	convertForceValues(unit_scales);
-
+	
 	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
 	if (is_brownian) {
 		sys.brownian = true;
@@ -371,8 +371,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (control_var == "rate") {
-	  input_rate = dimensionlessnumber;
-	  input_rate_unit = input_scale;
+		input_rate = dimensionlessnumber;
+		input_rate_unit = input_scale;
 	}
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
@@ -384,15 +384,15 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	setDefaultParameters();
 	readParameterFile();
 	for (auto&& f: suffixes) {
-	  string_control_parameters << "_" << f.first << values[f.first] << f.second;
+		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
 	if (control_var == "rate") {
-	  string_control_parameters << "_r";
+		string_control_parameters << "_r";
 	} else if (control_var == "stress") {
-	  	  string_control_parameters << "_s";
+		string_control_parameters << "_s";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
-
+	
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
@@ -452,12 +452,12 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
 	
 	sys.importParameterSet(p);
-
+	
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
-
+	
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
 }
@@ -498,13 +498,13 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
+	
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
-
+		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputRheologyData();
@@ -681,7 +681,7 @@ void Simulation::outputComputationTime()
 // 			time_output_config = cnt_config_out*time_interval_output_config;
 // 			sys.timeEvolution(time_output_data);
 // 			cnt_simu_loop ++;
-			
+
 // 			/******************** OUTPUT DATA ********************/
 // 			evaluateData();
 // 			outputRheologyData();
@@ -699,7 +699,7 @@ void Simulation::outputComputationTime()
 // 				}
 // 			}
 // 			/******************************************************/
-			
+
 // 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
 // 				cerr << "shear jamming " << jammed << endl;
 // 				jammed ++;
@@ -893,7 +893,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
-
+	
 }
 
 void Simulation::readParameterFile()
@@ -1075,7 +1075,7 @@ void Simulation::setDefaultParameters()
 	p.cohesion_amplitude = 0;
 	p.critical_load_amplitude = 0;
 	p.magnetic_amplitude = 0;
-
+	
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
@@ -1294,15 +1294,15 @@ void Simulation::prepareSimulationName(bool binary_conf)
 }
 
 double Simulation::getRate(){
-  if (control_var == "rate") {
-	return input_rate;
-  }
-  else if (control_var == "stress") {
-	return sys.get_shear_rate();
-  }
-  else{
-	return 1;
-  }
+	if (control_var == "rate") {
+		return input_rate;
+	}
+	else if (control_var == "stress") {
+		return sys.get_shear_rate();
+	}
+	else{
+		return 1;
+	}
 }
 
 void Simulation::evaluateData()
@@ -1499,9 +1499,9 @@ void Simulation::outputRheologyData()
 	 */
 	fout_rheo << getRate() << ' '; // 48
 	if (control_var == "stress") {
-	  fout_rheo << target_stress_input << ' '; // 49
+		fout_rheo << target_stress_input << ' '; // 49
 	} else {
-	  fout_rheo << 6*M_PI*viscosity*getRate() << ' '; // 49
+		fout_rheo << 6*M_PI*viscosity*getRate() << ' '; // 49
 	}
 	fout_rheo << sys.shear_disp << ' '; // 50
 	fout_rheo << sys.max_disp_rolling << ' '; //51

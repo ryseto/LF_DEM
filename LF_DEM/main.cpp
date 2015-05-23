@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 {
 	cerr << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate ] [-s Stress ] \
-	[-R Rate_Sequence ] [-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] [-n] \
+	[-R Rate_Sequence ] [-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] [-n] [-m]\
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
 	
 	double dimensionless_number = 0;
