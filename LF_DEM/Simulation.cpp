@@ -29,8 +29,8 @@
 
 Simulation::Simulation():
 shear_rate_expectation(-1),
-unit_scales("hydro")
-target_stress_input(0),
+unit_scales("hydro"),
+target_stress_input(0)
 {
 	unit_longname["h"] = "hydro";
 	unit_longname["r"] = "repulsive";
@@ -1070,22 +1070,17 @@ void Simulation::openOutputFiles(bool binary_conf)
 
 void Simulation::setDefaultParameters()
 {
-	p.brownian_amplitude = 0;
-	p.repulsion_amplitude = 0;
-	p.cohesion_amplitude = 0;
-	p.critical_load_amplitude = 0;
-	p.magnetic_amplitude = 0;
-	
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
-	p.integration_method = 1;
-	p.interaction_range = 5;
-	/*
-	 * Stokes drag coeffient
-	 */
+	p.brownian_amplitude = 0;
+	p.repulsion_amplitude = 0;
+	p.cohesion_amplitude = 0;
+	p.critical_load_amplitude = 0;
+	p.magnetic_amplitude = 0;
+	p.magnetic = 0;
 	p.sd_coeff = 1;
 	/*
 	 * Lubrication model
@@ -1551,9 +1546,9 @@ void Simulation::outputConfigurationData()
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
 	 */
-	if (p.origin_zero_flow) {
-		for (int i=0; i<np; i++) {
-			vel[i] = sys.velocity[i];
+	for (int i=0; i<np; i++) {
+		vel[i] = sys.velocity[i];
+		if (p.origin_zero_flow) {
 			if (pos[i].z < 0) {
 				vel[i].x -= sys.get_shear_rate()*sys.get_lz();
 			}
@@ -1564,13 +1559,11 @@ void Simulation::outputConfigurationData()
 	 */
 	if (p.out_data_particle) {
 		cerr << "   out config: " << sys.get_shear_strain() << endl;
-		
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << endl;
-		
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];

@@ -14,6 +14,7 @@ struct ParameterSet
 	double cohesion_amplitude;				///<
 	double brownian_amplitude;				///<
 	double magnetic_amplitude;				///<
+	int magnetic;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
 	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value

@@ -77,7 +77,7 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	if (sys->repulsiveforce) {
 		repulsion.activate();
 	}
-	if (sys->magnetic) {
+	if (sys->magnetic != 0) {
 		magneticforce.activate();
 	}
 	
@@ -124,7 +124,7 @@ void Interaction::updateState(bool &deactivated)
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
 	}
-	if (sys->magnetic) {
+	if (sys->magnetic != 0) {
 		if (sys->magnetic_moment_norm[p0] != 0
 			&& sys->magnetic_moment_norm[p1] != 0) {
 			magneticforce.calcForceToruqe();
