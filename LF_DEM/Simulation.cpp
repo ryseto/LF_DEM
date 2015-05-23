@@ -29,8 +29,8 @@
 
 Simulation::Simulation():
 shear_rate_expectation(-1),
-unit_scales("hydro"),
-target_stress_input(0)
+unit_scales("hydro")
+target_stress_input(0),
 {
 	unit_longname["h"] = "hydro";
 	unit_longname["r"] = "repulsive";
