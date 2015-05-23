@@ -11,6 +11,7 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	sys = sys_;
 	interaction = interaction_;
 	state = 0;
+	f_contact_normal_norm = 0;
 	if (sys->friction_model == 1) {
 		frictionlaw = &Contact::frictionlaw_standard;
 	} else if (sys->friction_model == 2) {

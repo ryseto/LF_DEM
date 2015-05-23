@@ -29,6 +29,7 @@
 
 Simulation::Simulation():
 shear_rate_expectation(-1),
+target_stress_input(0),
 unit_scales("hydro")
 {
 	unit_longname["h"] = "hydro";
@@ -257,14 +258,16 @@ void Simulation::convertForceValues(string new_long_unit)
 		if (old_unit != "h") {
 			values[force_type] /= dimensionless_numbers[old_unit];
 		}
-		values[force_type] *= dimensionless_numbers[new_unit];
+		if (new_unit != "h") {
+			values[force_type] *= dimensionless_numbers[new_unit];
+		}
 		f.second = new_unit;
 	}
 }
 
 void Simulation::setUnitScaleRateControlled()
 {
-
+	
 	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
 	if (is_brownian) {
 		if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
