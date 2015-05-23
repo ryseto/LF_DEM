@@ -117,7 +117,6 @@ int main(int argc, char **argv)
 			default:
 				abort ();
 		}
-
 	}
 
 	ostringstream in_args;
@@ -147,8 +146,7 @@ int main(int argc, char **argv)
 		if (seq_filename == "not_given") {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
-		} 
-		else {
+		} else {
 		  cerr << " User def sequence temporarily disabled " << endl;
 		  //		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}

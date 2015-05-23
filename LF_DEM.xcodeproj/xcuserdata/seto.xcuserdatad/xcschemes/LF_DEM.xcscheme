@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/magnetic2"
+      customWorkingDirectory = "/Users/seto/Desktop/testsimulation"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 0 D2N240SquareLattice.dat init_relax_dt.txt"
+            argument = "-r 0 D2N1520SquareLattice0.01_wide.dat init_relax_45_5.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
