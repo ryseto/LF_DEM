@@ -27,20 +27,28 @@ System::System():
 
 lowPeclet(false),
 brownian(false),
-friction(false),
-friction_model(-1),
 repulsiveforce(false),
+critical_load(false),
 cohesion(false),
 permanent_magnet(false),
 twodimension(false),
 zero_shear(false),
-critical_normal_force(0),
+lowPeclet(false),
 magnetic_coeffient(24),
-target_stress_input(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0)
-{}
+{
+	amplitudes.repulsion = 0;
+	amplitudes.sqrt_temperature = 0;
+	amplitudes.contact = 0;
+	amplitudes.cohesion = 0;
+	amplitudes.magnetic = 0;
+	amplitudes.critical_normal_force = 0;
+	max_sliding_velocity = 0;
+	max_contact_gap = 0;
+	max_disp_rolling = 0;
+}
 
 vec3d System::randUniformSphere(double r)
 {
@@ -137,7 +145,6 @@ void System::importParameterSet(ParameterSet &ps)
 	kt = p.kt;
 	kr = p.kr;
 	ft_max = p.ft_max;
-	repulsiveforce = p.repulsiveforce;
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 	}
@@ -146,10 +153,6 @@ void System::importParameterSet(ParameterSet &ps)
 	} else {
 		set_repulsiveforce_length(0);
 	}
-	cohesion = p.cohesion;
-	brownian = p.brownian;
-	critical_load = p.critical_load;
-	magnetic = p.magnetic;
 	monolayer = p.monolayer;
 	interaction_range = p.interaction_range;
 	set_sd_coeff(p.sd_coeff);
@@ -372,22 +375,11 @@ void System::updateUnscaledContactmodel()
 void System::setupBrownian()
 {
 	if (brownian) {
-		if (zero_shear) {
-			lowPeclet = false;
-		} else if (dimensionless_number < p.Pe_switch) {
-			// scale_factor_SmallPe > 1
-			lowPeclet = true;
-			double scale_factor_SmallPe = p.Pe_switch/dimensionless_number;
-			p.memory_strain_k /= scale_factor_SmallPe;
-			p.memory_strain_avg /= scale_factor_SmallPe;
-			p.start_adjust /= scale_factor_SmallPe;
-			p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
+		if (lowPeclet) {
 			cerr << "[[small Pe mode]]" << endl;
 			cerr << "  kn = " << kn << endl;
 			cerr << "  kt = " << kt << endl;
 			cerr << "  dt = " << p.dt << endl;
-		} else {
-			lowPeclet = false;
 		}
 	}
 }
@@ -441,7 +433,7 @@ void System::setupSystem(string control)
 	} else if (friction_model == 2 || friction_model == 3) {
 		cerr << "friction_model " << friction_model << endl;
 		friction = true;
-		cerr << "critical_normal_force = " << critical_normal_force << endl;
+		cerr << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
 	} else if (friction_model == 5) {
 		cerr << "friction_model = 5: ft_max" << endl;
 		friction = true;
@@ -867,10 +859,15 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
-		} else {
-			dt = disp_max/max_sliding_velocity;
+		if (max_velocity > 0 && max_sliding_velocity > 0){ // small density system can have na_velocity=0
+			if (max_velocity > max_sliding_velocity) {
+				dt = disp_max/max_velocity;
+			} else {
+				dt = disp_max/max_sliding_velocity;
+			}
+		}
+		else{
+			dt = 1e-2/shear_rate;
 		}
 	}
 	time += dt;
@@ -1061,14 +1058,7 @@ void System::updateInteractions()
 	 
 	 */
 	double sq_max_sliding_velocity = 0;
-	/*
-	 * In the simulation, the unit of force is proportional to the shear rate.
-	 * In the dimensionless simulation,
-	 * the cohesive force
-	 */
-	if (cohesion && stress_controlled) {
-		dimensionless_cohesive_force = cohesive_force/abs(dimensionless_number);
-	}
+
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -1414,11 +1404,10 @@ void System::computeShearRate()
 		shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
 		shearstress_hyd -= shearstress_rep;
 	}
-	// the total_hydro_stress is computed above with shear_rate = 1, so here it is actually the viscosity.
+	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
-	dimensionless_number = shear_rate;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
@@ -1909,10 +1898,12 @@ void System::adjustContactModelParameters()
 	if (kt > p.max_kt) {
 		kt = p.max_kt;
 	}
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
-	} else {
-		dt = disp_max/max_sliding_velocity;
+	if (max_velocity > 0 && max_sliding_velocity > 0) {
+		if (max_velocity > max_sliding_velocity) {
+			dt = disp_max/max_velocity;
+		} else {
+			dt = disp_max/max_sliding_velocity;
+		}
 	}
 	previous_shear_strain = shear_strain;
 }

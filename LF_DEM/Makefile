@@ -101,8 +101,11 @@ ifeq ($(OS_version), OIST)
 endif
 
 # Cholmod
-#Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+
 Cholmod_Linking_Flags = 
+ifeq ($(OS_version), Linux)
+Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
+endif
 
 ifeq ($(OS_version), SI)
     Cholmod_Linking_Flags  =
@@ -185,7 +188,6 @@ doc:
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)
-	ifeq ($(OS_version),OIST)
-		cp -p generateYaplotFile.pl $(install_dir)
-	endif
+	(if [ "$(OS_version)" == "OIST" ]; then cp -p generateYaplotFile.pl $(install_dir); fi)
+
 

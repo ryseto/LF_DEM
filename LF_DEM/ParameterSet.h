@@ -21,7 +21,6 @@ struct ParameterSet
 	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
-	//	double dt_lowPeclet;                     ///< [Brownian]: time step (not strain) in low Peclet mode
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
 	bool monolayer;
 	

@@ -36,6 +36,7 @@
 		D9BE3B6E178C83C900937C5C /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6C178C83C900937C5C /* System.cpp */; };
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
+		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
 		D9D712231A995E36009CC269 /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D712161A995E36009CC269 /* libamd.2.4.1.a */; };
 		D9D712271A995E36009CC269 /* libcholmod.3.0.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D7121A1A995E36009CC269 /* libcholmod.3.0.5.a */; };
 		D9D712281A995E36009CC269 /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */; };
@@ -576,6 +577,11 @@
 		D9BE3B72178CB8A800937C5C /* Cluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Cluster.cpp; sourceTree = "<group>"; };
 		D9BE3B73178CB8A800937C5C /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
+		D9CE1B411B066B3400E052D9 /* dSFMT.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dSFMT.c; path = "dSFMT-src-2.2.3/dSFMT.c"; sourceTree = "<group>"; };
+		D9CE1B431B066B4200E052D9 /* dSFMT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dSFMT.h; path = "dSFMT-src-2.2.3/dSFMT.h"; sourceTree = "<group>"; };
+		D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-common.h"; path = "dSFMT-src-2.2.3/dSFMT-common.h"; sourceTree = "<group>"; };
+		D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params.h"; path = "dSFMT-src-2.2.3/dSFMT-params.h"; sourceTree = "<group>"; };
+		D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params19937.h"; path = "dSFMT-src-2.2.3/dSFMT-params19937.h"; sourceTree = "<group>"; };
 		D9CE560517555DE500719775 /* extract_normalvecdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extract_normalvecdata.pl; sourceTree = "<group>"; };
 		D9D712161A995E36009CC269 /* libamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.4.1.a; path = /usr/local/lib/libamd.2.4.1.a; sourceTree = "<absolute>"; };
 		D9D7121A1A995E36009CC269 /* libcholmod.3.0.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.5.a; path = /usr/local/lib/libcholmod.3.0.5.a; sourceTree = "<absolute>"; };
@@ -585,7 +591,6 @@
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
-		D9E06B3A1B04523900B81F62 /* dSFMT-src-2.2.3 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "dSFMT-src-2.2.3"; path = "LF_DEM/dSFMT-src-2.2.3"; sourceTree = "<group>"; };
 		D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = calc_contact_fraction.pl; sourceTree = "<group>"; };
 		D9F6A29A171DA1C20034E186 /* StressTensor.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StressTensor.h; sourceTree = "<group>"; };
 		D9FAAA2F1960685B00E601A9 /* Interaction.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Interaction.cpp; sourceTree = "<group>"; };
@@ -1066,7 +1071,6 @@
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				D9E06B3A1B04523900B81F62 /* dSFMT-src-2.2.3 */,
 				D9D712161A995E36009CC269 /* libamd.2.4.1.a */,
 				D9D7121A1A995E36009CC269 /* libcholmod.3.0.5.a */,
 				D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */,
@@ -1181,6 +1185,11 @@
 				D932B8DE16C2EA1B00AD6E85 /* lib */,
 				D9CD258916E54DFF00A8E397 /* parameter_template.txt */,
 				D988AC3D1857666D00C9637A /* Makefile */,
+				D9CE1B431B066B4200E052D9 /* dSFMT.h */,
+				D9CE1B411B066B3400E052D9 /* dSFMT.c */,
+				D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */,
+				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
+				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
 				D988E38D165441750009949F /* main.cpp */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
@@ -1413,6 +1422,7 @@
 				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
 				D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,
+				D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
@@ -1567,6 +1577,8 @@
 					"-Wextra",
 					"-Wshadow",
 					"-std=c++11",
+					"-DUSE_DSFMT=\"SFMT_RNG\"",
+					"-DDSFMT_MEXP=19937",
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1592,6 +1604,8 @@
 					"-Wextra",
 					"-Wshadow",
 					"-std=c++11",
+					"-DUSE_DSFMT=\"SFMT_RNG\"",
+					"-DDSFMT_MEXP=19937",
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
