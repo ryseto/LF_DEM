@@ -164,8 +164,6 @@ void System::importParameterSet(ParameterSet &ps)
 	}
 	mu_rolling = p.mu_rolling;
 	set_disp_max(p.disp_max);
-	magnetic_dipole_moment = p.magnetic_dipole_moment;
-	external_magnetic_field = p.external_magnetic_field;
 }
 
 void System::allocateRessources()
@@ -249,15 +247,6 @@ void System::allocateRessources()
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
-	if (p.magnetic_type != 0) {
-		magnetic_moment = new vec3d [np];
-		magnetic_force = new vec3d [np];
-		magnetic_torque = new vec3d [np];
-		for (int i=0; i<np; i++) {
-			magnetic_force[i].reset();
-			magnetic_torque[i].reset();
-		}
-	}
 }
 
 void System::setInteractions_GenerateInitConfig()
@@ -314,6 +303,53 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	}
 	volume_fraction = particle_volume/system_volume;
 	cerr << "volume_fraction = " << volume_fraction << endl;
+}
+
+void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
+									  const vector <double> &magnetic_susceptibility_)
+{
+	magnetic_moment_norm.resize(np);
+	magnetic_susceptibility.resize(np);
+	magnetic_moment = new vec3d [np];
+	magnetic_force = new vec3d [np];
+	magnetic_torque = new vec3d [np];
+	for (int i=0; i<np; i++) {
+		magnetic_force[i].reset();
+		magnetic_torque[i].reset();
+	}
+	cerr << "p.magnetic_type = " << p.magnetic_type << endl;
+	if (p.magnetic_type == 1) {
+		/* Each particle has magnetic dipole moment.
+		 * Ferromagnetism.
+		 */
+		int i_magnetic = 0;
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] = magnetic_moment_[i];
+			magnetic_moment_norm[i] = magnetic_moment[i].norm();
+			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
+			if (magnetic_moment_norm[i] != 0
+				|| magnetic_susceptibility[i] != 0) {
+				i_magnetic = i+1;
+			}
+		}
+		num_magnetic_particles = i_magnetic;
+	} else if (p.magnetic_type == 2) {
+		/* Particle can have magnetic moment when external magnetic field is applied.
+		 * Paramagnetism
+		 * Magnetic susceptibility.
+		 * Magnetic moments are fixed as long as external field is unchanged.
+		 */
+		int i_magnetic = 0;
+		for (int i=0; i<np; i++) {
+			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
+			magnetic_moment[i] = magnetic_susceptibility[i]*external_magnetic_field;
+			magnetic_moment_norm[i] = magnetic_moment[i].norm();
+			if (magnetic_susceptibility[i] != 0) {
+				i_magnetic = i+1;
+			}
+		}
+		num_magnetic_particles = i_magnetic;
+	}
 }
 
 void System::updateUnscaledContactmodel()
@@ -590,122 +626,6 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+12] = TWvalue;
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
-	}
-	if (p.magnetic_type != 0) {
-		setupMagneticMoment();
-	}
-}
-
-void System::setupMagneticMoment()
-{
-	/*
-	 *
-	 */
-	magnetic_moment_norm.resize(np);
-	magnetic_susceptibility.resize(np);
-	num_magnetic_first = round(np*p.magnetic_binary_ratio);
-	num_magnetic_second = np-num_magnetic_first;
-	cerr << "dipole_orientation: " << p.dipole_orientation << endl;
-	if (p.magnetic_type == 1) {
-		/* Each particle has magnetic dipole moment.
-		 * Ferromagnetism.
-		 */
-		cerr << "number of magnetic particles: " << num_magnetic_first << endl;
-		cerr << "number of non-magnetic particles " << num_magnetic_second << endl;
-		num_magnetic_particles = num_magnetic_first;
-		for (int i=0; i<np; i++) {
-			if (i < num_magnetic_first) {
-				switch (p.dipole_orientation) {
-					case 0:
-					{
-						if (init_magnetic_moment.empty()) {
-							cerr << "Initial config file needs to include magnetic moment.\n";
-							cerr << "Or, dipole_orientation needs to be given: 1-7.\n";
-							exit(1);
-						}
-						magnetic_moment[i] = init_magnetic_moment[i];
-						break;
-					}
-					case 1:
-					{
-						magnetic_moment[i].set(magnetic_dipole_moment,0,0);
-						break;
-					}
-					case 2:
-					{
-						magnetic_moment[i].set(0,magnetic_dipole_moment,0);
-						break;
-					}
-					case 3:
-					{
-						magnetic_moment[i].set(0,0,magnetic_dipole_moment);
-						break;
-					}
-					case 4:
-					{
-						double xx = position[i].x-lx_half;
-						double yy = position[i].y-ly_half;
-						double theta = atan2(yy,xx);
-						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI),
-											   magnetic_dipole_moment*cos(theta),
-											   0);
-						break;
-					}
-					case 5:
-					{
-						double xx = position[i].x-lx_half;
-						double yy = position[i].y-ly_half;
-						double theta = atan2(yy,xx);
-						magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI)*cos(M_PI/3),
-											   magnetic_dipole_moment*cos(theta)*cos(M_PI/3),
-											   magnetic_dipole_moment*sin(M_PI/3));
-						break;
-					}
-					case 6:
-					{
-						if (i%2 == 0){
-							double delta = 0;
-							magnetic_moment[i].set(magnetic_dipole_moment*sin(delta),magnetic_dipole_moment*cos(delta),0);
-						} else {
-							magnetic_moment[i].set(0,-magnetic_dipole_moment,0);
-						}
-						break;
-					}
-					case 7:
-					{
-						magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
-						break;
-					}
-				}
-			} else {
-				magnetic_moment[i].set(0,0,0);
-			}
-			magnetic_moment_norm[i] = magnetic_moment[i].norm();
-		}
-	} else if (p.magnetic_type == 2) {
-		/* Particle can have magnetic moment when external magnetic field is applied.
-		 * Paramagnetism
-		 * Magnetic susceptibility.
-		 * Magnetic moments are fixed as long as external field is unchanged.
-		 */
-		cerr << "number of first kind magnetic particles: " << num_magnetic_first << endl;
-		cerr << "number of second kind magnetic particles: " << num_magnetic_second << endl;
-		num_magnetic_particles = np;
-		double chi_magnetic = 1;
-		double chi_nonmagnetic = -1;
-		double chi;
-		for (int i=0; i<np; i++) {
-			if (i < num_magnetic_first) {
-				chi = chi_magnetic;
-				magnetic_susceptibility[i] = chi_magnetic;
-			} else {
-				chi = chi_nonmagnetic;
-				magnetic_susceptibility[i] = chi_nonmagnetic;
-			}
-			magnetic_moment[i] = chi*external_magnetic_field;
-			magnetic_moment_norm[i] = magnetic_moment[i].norm();
-		}
-
 	}
 }
 

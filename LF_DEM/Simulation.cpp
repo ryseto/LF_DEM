@@ -348,12 +348,6 @@ void Simulation::exportForceAmplitudes()
 	}
 	bool is_magnetic = values.find("m") != values.end();
 	if (is_magnetic) {
-		if (sys.p.magnetic_type == 0) {
-			cerr << "magnetic_type needs to be 1 or 2" << endl;
-			cerr << " 1: particles have dipole moment" << endl;
-			cerr << " 2: particles have magnetic susceptibility" << endl;
-			exit(1);
-		}
 		sys.amplitudes.magnetic = values["m"];
 		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
 		cerr << " values[m] = "  << values["m"] << endl;
@@ -385,9 +379,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	
+
 	setDefaultParameters();
 	readParameterFile();
+	
 	for (auto&& f: suffixes) {
 		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
@@ -404,9 +399,9 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
 		p.unscaled_contactmodel = true;
 	}
+	
 	cerr << " Internal unit scale : " << unit_scales << endl;
 	exportForceAmplitudes();
-	
 	// test for incompatibilities
 	if (sys.brownian == true) {
 		if (p.integration_method != 1) {
@@ -425,10 +420,11 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		p.friction_model = 2;
 	}
 	
+	sys.importParameterSet(p);
 	if (binary_conf) {
 		importConfigurationBinary();
 	} else {
-		importInitialPositionFile();
+		importConfiguration();
 	}
 	if (initial_lees_edwards_disp > 0) {
 		sys.shear_disp = initial_lees_edwards_disp;
@@ -455,8 +451,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	
 	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
-	
-	sys.importParameterSet(p);
 	
 	if (sys.brownian) {
 		sys.setupBrownian();
@@ -884,18 +878,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
 		p.magnetic_type = atoi(value.c_str());
-	} else if (keyword == "magnetic_binary_ratio") {
-		p.magnetic_binary_ratio = atof(value.c_str());
-	} else if (keyword == "magnetic_dipole_moment") {
-		p.magnetic_dipole_moment = atof(value.c_str());
 	} else if (keyword == "external_magnetic_field") {
 		p.external_magnetic_field = str2vec3d(value);
-	} else if (keyword == "magnetic_suscept1") {
-		p.magnetic_suscept1 = atof(value.c_str());
-	} else if (keyword == "magnetic_suscept2") {
-		p.magnetic_suscept2 = atof(value.c_str());
-	} else if (keyword == "dipole_orientation") {
-		p.dipole_orientation = atoi(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -1160,12 +1144,10 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-	p.magnetic_dipole_moment = 1;
-	p.magnetic_binary_ratio = 1;
-	p.dipole_orientation = 0;
+	p.external_magnetic_field.set(0, 0, 0);
 }
 
-void Simulation::importInitialPositionFile()
+void Simulation::importConfiguration()
 {
 	fstream file_import;
 	file_import.open(filename_import_positions.c_str());
@@ -1173,36 +1155,36 @@ void Simulation::importInitialPositionFile()
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
-	bool include_magnetic_moment = false;
-	if (filename_import_positions.find("mag", 0) != string::npos) {
-		cerr << "The initial configuration file includes magnetic moment." << endl;
-		include_magnetic_moment = true;
-	}
 	char buf;
 	int n1, n2;
 	double lx, ly, lz, vf1, vf2;
-	getline(file_import, import_line[0]);
-	getline(file_import, import_line[1]);
-	stringstream ss(import_line[1]);
+	getline(file_import, header_imported_configulation[0]);
+	getline(file_import, header_imported_configulation[1]);
+	stringstream ss(header_imported_configulation[1]);
 	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
-	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
 	vector <double> radius;
-	if (include_magnetic_moment == false) {
+	if (sys.p.magnetic_type == 0) {
+		double x_, y_, z_, a_;
 		while (file_import >> x_ >> y_ >> z_ >> a_) {
 			initial_position.push_back(vec3d(x_, y_, z_));
 			radius.push_back(a_);
 		}
+		sys.setConfiguration(initial_position, radius, lx, ly, lz);
 	} else {
-		double mx_, my_, mz_;
-		while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ ) {
+		double x_, y_, z_, a_, mx_, my_, mz_, sus_;
+		vector<vec3d> magnetic_moment;
+		vector<double> magnetic_susceptibility;
+		while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ >> sus_) {
 			initial_position.push_back(vec3d(x_, y_, z_));
 			radius.push_back(a_);
-			sys.init_magnetic_moment.push_back(vec3d(mx_, my_, mz_));
+			magnetic_moment.push_back(vec3d(mx_, my_, mz_));
+			magnetic_susceptibility.push_back(sus_);
 		}
+		sys.setConfiguration(initial_position, radius, lx, ly, lz);
+		sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
 	}
 	file_import.close();
-	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 }
 
 void Simulation::outputConfigurationBinary()
@@ -1668,8 +1650,8 @@ void Simulation::outputFinalConfiguration()
 	ofstream fout_finalconfig;
 	string filename_final_configuration = "./after_relax/"+filename_import_positions;
 	fout_finalconfig.open(filename_final_configuration.c_str());
-	fout_finalconfig << import_line[0] << endl;
-	fout_finalconfig << import_line[1] << endl;
+	fout_finalconfig << header_imported_configulation[0] << endl;
+	fout_finalconfig << header_imported_configulation[1] << endl;
 	int np = sys.get_np();
 	for (int i=0; i<np; i++) {
 		fout_finalconfig << sys.position[i].x << ' ';
