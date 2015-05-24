@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 0 D2N1520SquareLattice0.01_wide.dat init_relax_45_5.txt"
+            argument = "-m D2N20VF0.5MonoSquare_1.dat init_relax_45_5.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

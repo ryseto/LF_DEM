@@ -30,7 +30,6 @@ friction_model(-1),
 repulsiveforce(false),
 cohesion(false),
 critical_load(false),
-magnetic(false),
 lowPeclet(false),
 twodimension(false),
 zero_shear(false),
@@ -165,7 +164,6 @@ void System::importParameterSet(ParameterSet &ps)
 	}
 	mu_rolling = p.mu_rolling;
 	set_disp_max(p.disp_max);
-	ratio_nonmagnetic = p.ratio_nonmagnetic;
 	magnetic_dipole_moment = p.magnetic_dipole_moment;
 	external_magnetic_field = p.external_magnetic_field;
 }
@@ -213,7 +211,7 @@ void System::allocateRessources()
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
 	}
-	if (magnetic != 0) {
+	if (p.magnetic_type != 0) {
 		vel_magnetic = new vec3d [np];
 		ang_vel_magnetic = new vec3d [np];
 	}
@@ -251,7 +249,7 @@ void System::allocateRessources()
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
-	if (magnetic != 0) {
+	if (p.magnetic_type != 0) {
 		magnetic_moment = new vec3d [np];
 		magnetic_force = new vec3d [np];
 		magnetic_torque = new vec3d [np];
@@ -417,7 +415,7 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (p.magnetic != 0) {
+	if (p.magnetic_type != 0) {
 		calcInteractionRange = &System::calcLongInteractionRange;
 	} else {
 		calcInteractionRange = &System::calcLubricationRange;
@@ -467,7 +465,7 @@ void System::setupSystem(string control)
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
 		}
-		if (magnetic != 0) {
+		if (p.magnetic_type != 0) {
 			vel_magnetic[i].reset();
 			ang_vel_magnetic[i].reset();
 		}
@@ -593,7 +591,7 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
-	if (p.magnetic != 0) {
+	if (p.magnetic_type != 0) {
 		setupMagneticMoment();
 	}
 }
@@ -604,19 +602,19 @@ void System::setupMagneticMoment()
 	 *
 	 */
 	magnetic_moment_norm.resize(np);
-	num_magnetic = np-round(np*ratio_nonmagnetic);
-	cerr << "np = " << np << endl;
-	cerr << ratio_nonmagnetic << endl;
-	cerr << "number of magnetic particles: " << num_magnetic << endl;
+	magnetic_susceptibility.resize(np);
+	num_magnetic_first = round(np*p.magnetic_binary_ratio);
+	num_magnetic_second = np-num_magnetic_first;
 	cerr << "dipole_orientation: " << p.dipole_orientation << endl;
-	if (p.dipole_orientation == 8) {
-		permanent_magnet = false;
-	} else {
-		permanent_magnet = true;
-	}
-	if (p.magnetic == 1) {
+	if (p.magnetic_type == 1) {
+		/* Each particle has magnetic dipole moment.
+		 * Ferromagnetism.
+		 */
+		cerr << "number of magnetic particles: " << num_magnetic_first << endl;
+		cerr << "number of non-magnetic particles " << num_magnetic_second << endl;
+		num_magnetic_particles = num_magnetic_first;
 		for (int i=0; i<np; i++) {
-			if (i < num_magnetic) {
+			if (i < num_magnetic_first) {
 				switch (p.dipole_orientation) {
 					case 0:
 					{
@@ -684,20 +682,30 @@ void System::setupMagneticMoment()
 			}
 			magnetic_moment_norm[i] = magnetic_moment[i].norm();
 		}
-	} else if (p.magnetic == 2) {
+	} else if (p.magnetic_type == 2) {
+		/* Particle can have magnetic moment when external magnetic field is applied.
+		 * Paramagnetism
+		 * Magnetic susceptibility.
+		 * Magnetic moments are fixed as long as external field is unchanged.
+		 */
+		cerr << "number of first kind magnetic particles: " << num_magnetic_first << endl;
+		cerr << "number of second kind magnetic particles: " << num_magnetic_second << endl;
+		num_magnetic_particles = np;
 		double chi_magnetic = 1;
-		double chi_nonmagnetic = -0.5;
+		double chi_nonmagnetic = -1;
 		double chi;
 		for (int i=0; i<np; i++) {
-			if (i < num_magnetic) {
+			if (i < num_magnetic_first) {
 				chi = chi_magnetic;
+				magnetic_susceptibility[i] = chi_magnetic;
 			} else {
 				chi = chi_nonmagnetic;
+				magnetic_susceptibility[i] = chi_nonmagnetic;
 			}
 			magnetic_moment[i] = chi*external_magnetic_field;
 			magnetic_moment_norm[i] = magnetic_moment[i].norm();
 		}
-		num_magnetic = np;
+
 	}
 }
 
@@ -883,8 +891,8 @@ void System::timeStepMove()
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (permanent_magnet) {
-		for (int i=0; i<num_magnetic; i++) {
+	if (p.magnetic_type == 1) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 			double norm = magnetic_moment[i].norm();
 			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
@@ -931,8 +939,8 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	if (permanent_magnet) {
-		for (int i=0; i<num_magnetic; i++) {
+	if (p.magnetic_type == 1) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 		}
 	}
@@ -963,8 +971,8 @@ void System::timeStepMoveCorrector()
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
 	}
-	if (permanent_magnet) {
-		for (int i=0; i<num_magnetic; i++) {
+	if (p.magnetic_type == 1) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
 			double norm = magnetic_moment[i].norm();
 			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
@@ -1275,15 +1283,15 @@ void System::setRepulsiveForceToParticle()
 
 void System::setMagneticForceToParticle()
 {
-	if (magnetic) {
+	if (p.magnetic_type != 0) {
 		if (external_magnetic_field.is_zero() ||
-			permanent_magnet == false) {
-			for (int i=0; i<num_magnetic; i++) {
+			p.magnetic_type == 2) {
+			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
 				magnetic_torque[i].reset();
 			}
 		} else {
-			for (int i=0; i<num_magnetic; i++) {
+			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
 				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
@@ -1382,7 +1390,7 @@ void System::computeVelocityComponents()
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
-	if (magnetic) {
+	if (p.magnetic_type != 0) {
 		buildMagneticForceTerms(true);
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
@@ -1451,7 +1459,7 @@ void System::computeVelocities(bool divided_velocities)
 				na_ang_velocity[i] += ang_vel_repulsive[i];
 			}
 		}
-		if (magnetic) {
+		if (p.magnetic_type != 0) {
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_magnetic[i];
 				na_ang_velocity[i] += ang_vel_magnetic[i];
@@ -1468,7 +1476,7 @@ void System::computeVelocities(bool divided_velocities)
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
-		if (magnetic) {
+		if (p.magnetic_type != 0) {
 			buildMagneticForceTerms(false);
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
@@ -1816,7 +1824,7 @@ void System::calcPotentialEnergy()
 			if (repulsive_force) {
 				total_energy +=  interaction[k].repulsion.calcEnergy();
 			}
-			if (magnetic) {
+			if (p.magnetic_type != 0) {
 				double tmp_magnetic_energy = interaction[k].magneticforce.calcEnergy();
 				total_energy += tmp_magnetic_energy;
 				magnetic_energy += tmp_magnetic_energy;
@@ -1824,7 +1832,7 @@ void System::calcPotentialEnergy()
 		}
 	}
 	if (external_magnetic_field.is_not_zero()) {
-		for (int i=0; i<num_magnetic; i++) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 			total_energy += tmp_magnetic_energy_ex;
 			magnetic_energy += tmp_magnetic_energy_ex;

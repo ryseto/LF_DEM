@@ -74,7 +74,6 @@ private:
 	double shear_strain;
 	double lub_max_gap;
 	double total_energy;
-	double magnetic_energy;
 	int linalg_size;
 	int dof;
 	double repulsiveforce_length; // repulsive force length
@@ -128,21 +127,28 @@ private:
 #endif
 	double *radius_cubed;
 	double *radius_squared;
-	ParameterSet p;
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	bool fixed_dt;
+	/*
+	 * Simulation for magnetic particles
+	 */
+	double magnetic_energy;
+	double num_magnetic_particles;
+	double num_magnetic_first;
+	double num_magnetic_second;
 
-
+	
  protected:
  public:
 	System();
 	~System();
 	void importParameterSet(ParameterSet &ps);
 
+	ParameterSet p;
 	// Interaction types
 	bool brownian;	
 	bool friction;
@@ -151,8 +157,6 @@ private:
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
-	int magnetic; // 1: fixed magnetic dipole, 2: magnetic susceptible particles
-	bool permanent_magnet;
 	double interaction_range;
 	bool lowPeclet;
 
@@ -194,6 +198,7 @@ private:
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
 	vector <double> magnetic_moment_norm;
+	vector <double> magnetic_susceptibility;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
@@ -225,8 +230,6 @@ private:
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double magnetic_dipole_moment;
-	double ratio_nonmagnetic;
-	int num_magnetic;
 	vec3d external_magnetic_field;
 	/* sd_coeff:
 	 * Full Stokes drag is given by sd_coeff = 1.
@@ -297,7 +300,13 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
+
+	/*
+	 * Simulation for magnetic particles
+	 */
 	vector<vec3d> init_magnetic_moment;
+
+	
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
 						  const vector <double> &radii,

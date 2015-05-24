@@ -14,7 +14,7 @@ struct ParameterSet
 	double cohesion_amplitude;				///<
 	double brownian_amplitude;				///<
 	double magnetic_amplitude;				///<
-	int magnetic;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
+	int magnetic_type;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
 	
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
@@ -100,7 +100,9 @@ struct ParameterSet
 	bool fixed_dt;							///< Use constant dt
 	
 	double magnetic_dipole_moment;			///<
-	double ratio_nonmagnetic;				///<
+	double magnetic_binary_ratio;			///<
+	double magnetic_suscept1;		///<
+	double magnetic_suscept2;		///<
 	int dipole_orientation;					///<
 	vec3d external_magnetic_field;
 };

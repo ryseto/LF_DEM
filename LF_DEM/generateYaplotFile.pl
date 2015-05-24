@@ -230,10 +230,11 @@ sub InParticles {
 			if ($output == 1) {
 				if ($mag) {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz, $ms) = split(/\s+/, $line);
 					$magmom_x[$i] = $mx;
 					$magmom_y[$i] = $my;
 					$magmom_z[$i] = $mz;
+					$magsusceptibility[$i] = $ms;
 					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
 				} else {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
@@ -490,7 +491,7 @@ sub OutYaplotData{
 		
 		if ($mag) {
 			if ($switch == 0 &&
-				$i >= 1 && $i == 50){
+				$magsusceptibility[$i] < 0){
 					printf OUT "@ 9\n";
 					$switch = 1;
 				}

@@ -348,7 +348,12 @@ void Simulation::exportForceAmplitudes()
 	}
 	bool is_magnetic = values.find("m") != values.end();
 	if (is_magnetic) {
-		sys.magnetic = true;
+		if (sys.p.magnetic_type == 0) {
+			cerr << "magnetic_type needs to be 1 or 2" << endl;
+			cerr << " 1: particles have dipole moment" << endl;
+			cerr << " 2: particles have magnetic susceptibility" << endl;
+			exit(1);
+		}
 		sys.amplitudes.magnetic = values["m"];
 		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
 		cerr << " values[m] = "  << values["m"] << endl;
@@ -877,12 +882,18 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		values["ft"] = stof(numeral);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
-	} else if (keyword == "ratio_nonmagnetic") {
-		p.ratio_nonmagnetic = atof(value.c_str());
+	} else if (keyword == "magnetic_type") {
+		p.magnetic_type = atoi(value.c_str());
+	} else if (keyword == "magnetic_binary_ratio") {
+		p.magnetic_binary_ratio = atof(value.c_str());
 	} else if (keyword == "magnetic_dipole_moment") {
 		p.magnetic_dipole_moment = atof(value.c_str());
 	} else if (keyword == "external_magnetic_field") {
 		p.external_magnetic_field = str2vec3d(value);
+	} else if (keyword == "magnetic_suscept1") {
+		p.magnetic_suscept1 = atof(value.c_str());
+	} else if (keyword == "magnetic_suscept2") {
+		p.magnetic_suscept2 = atof(value.c_str());
 	} else if (keyword == "dipole_orientation") {
 		p.dipole_orientation = atoi(value.c_str());
 	} else {
@@ -893,7 +904,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
-	
 }
 
 void Simulation::readParameterFile()
@@ -1070,17 +1080,22 @@ void Simulation::openOutputFiles(bool binary_conf)
 
 void Simulation::setDefaultParameters()
 {
-	p.Pe_switch = 5;
-	p.dt = 1e-4;
-	p.disp_max = 2e-3;
-	p.monolayer = false;
-	p.rest_threshold = 1e-4;
 	p.brownian_amplitude = 0;
 	p.repulsion_amplitude = 0;
 	p.cohesion_amplitude = 0;
 	p.critical_load_amplitude = 0;
 	p.magnetic_amplitude = 0;
-	p.magnetic = 0;
+	p.magnetic_type = 0;
+	p.Pe_switch = 5;
+	p.dt = 1e-4;
+	p.disp_max = 2e-3;
+	p.monolayer = false;
+	p.rest_threshold = 1e-4;
+	p.integration_method = 1;
+	p.interaction_range = 5;
+	/*
+	 * Stokes drag coeffient
+	 */
 	p.sd_coeff = 1;
 	/*
 	 * Lubrication model
@@ -1146,7 +1161,7 @@ void Simulation::setDefaultParameters()
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.magnetic_dipole_moment = 1;
-	p.ratio_nonmagnetic = 0;
+	p.magnetic_binary_ratio = 1;
 	p.dipole_orientation = 0;
 }
 
@@ -1291,11 +1306,9 @@ void Simulation::prepareSimulationName(bool binary_conf)
 double Simulation::getRate(){
 	if (control_var == "rate") {
 		return input_rate;
-	}
-	else if (control_var == "stress") {
+	} else if (control_var == "stress") {
 		return sys.get_shear_rate();
-	}
-	else{
+	} else{
 		return 1;
 	}
 }
@@ -1582,14 +1595,15 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.magnetic) {
-				fout_particle << ' ' << sys.magnetic_moment[i].x;
-				fout_particle << ' ' << sys.magnetic_moment[i].y;
-				fout_particle << ' ' << sys.magnetic_moment[i].z;
-			} else {
+			if (sys.p.magnetic_type == 0) {
 				if (sys.twodimension) {
 					fout_particle << ' ' << sys.angle[i]; // 15
 				}
+			} else {
+				fout_particle << ' ' << sys.magnetic_moment[i].x;
+				fout_particle << ' ' << sys.magnetic_moment[i].y;
+				fout_particle << ' ' << sys.magnetic_moment[i].z;
+				fout_particle << ' ' << sys.magnetic_susceptibility[i];
 			}
 			fout_particle << endl;
 		}
