@@ -136,11 +136,9 @@ private:
 	/*
 	 * Simulation for magnetic particles
 	 */
-	double magnetic_energy;
 	double num_magnetic_particles;
 	double num_magnetic_first;
 	double num_magnetic_second;
-
 	
  protected:
  public:
@@ -300,7 +298,11 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
-
+	/*
+	 * Simulation for magnetic particles
+	 */
+	bool magnetic_rotation_active;
+	double magnetic_energy;
 	/////////////////////////////////
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
@@ -311,7 +313,6 @@ private:
 	void setInteractions_GenerateInitConfig();
 	void setupSystem(string control);
 	void setupBrownian();
-//	void setupMagneticMoment();
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(double time_output_data);
@@ -474,11 +475,6 @@ private:
 	double get_total_energy()
 	{
 		return total_energy;
-	}
-	
-	double get_magnetic_energy()
-	{
-		return magnetic_energy;
 	}
 	
 	struct ForceAmplitudes amplitudes;

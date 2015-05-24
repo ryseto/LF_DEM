@@ -366,7 +366,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 											string input_scale,
 											string control_variable)
 {
-	control_var = control_variable;
+	control_var = control_variable; // @@@ This is redundancy
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (control_var == "rate") {
@@ -1497,7 +1497,7 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.max_disp_rolling << ' '; //51
 	fout_rheo << sys.max_contact_gap << ' '; //52
 	fout_rheo << sys.get_total_energy() << ' '; // 53;
-	fout_rheo << sys.get_magnetic_energy() << ' ';// 54;
+	fout_rheo << sys.magnetic_energy << ' ';// 54;
 	fout_rheo << endl;
 }
 

@@ -24,6 +24,7 @@
 
 
 System::System():
+magnetic_rotation_active(false),
 brownian(false),
 friction(false),
 friction_model(-1),
@@ -130,6 +131,13 @@ System::~System()
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
 	}
+	if (p.magnetic_type != 0) {
+		DELETE(magnetic_moment);
+		DELETE(magnetic_force);
+		DELETE(magnetic_torque);
+		DELETE(vel_magnetic);
+		DELETE(ang_vel_magnetic);
+	}
 };
 
 void System::importParameterSet(ParameterSet &ps)
@@ -208,10 +216,6 @@ void System::allocateRessources()
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
-	}
-	if (p.magnetic_type != 0) {
-		vel_magnetic = new vec3d [np];
-		ang_vel_magnetic = new vec3d [np];
 	}
 	// Forces
 	contact_force = new vec3d [np];
@@ -313,11 +317,14 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 	magnetic_moment = new vec3d [np];
 	magnetic_force = new vec3d [np];
 	magnetic_torque = new vec3d [np];
+	vel_magnetic = new vec3d [np];
+	ang_vel_magnetic = new vec3d [np];
 	for (int i=0; i<np; i++) {
 		magnetic_force[i].reset();
 		magnetic_torque[i].reset();
+		vel_magnetic[i].reset();
+		ang_vel_magnetic[i].reset();
 	}
-	cerr << "p.magnetic_type = " << p.magnetic_type << endl;
 	if (p.magnetic_type == 1) {
 		/* Each particle has magnetic dipole moment.
 		 * Ferromagnetism.
@@ -451,10 +458,15 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (p.magnetic_type != 0) {
-		calcInteractionRange = &System::calcLongInteractionRange;
-	} else {
+	if (p.magnetic_type == 0) {
+		/* Short range non-contact interaction
+		 */
 		calcInteractionRange = &System::calcLubricationRange;
+	} else {
+		/* Long range non-contact interaction
+		 * - Magnetic dipole-dipole interaction
+		 */
+		calcInteractionRange = &System::calcLongInteractionRange;
 	}
 	
 	if (friction_model == 0) {
@@ -484,8 +496,8 @@ void System::setupSystem(string control)
 		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
-		radius_squared[i] = pow(radius[i],2);
-		radius_cubed[i] = pow(radius[i],3);
+		radius_squared[i] = pow(radius[i], 2);
+		radius_cubed[i] = pow(radius[i], 3);
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -500,10 +512,6 @@ void System::setupSystem(string control)
 		if (repulsiveforce) {
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
-		}
-		if (p.magnetic_type != 0) {
-			vel_magnetic[i].reset();
-			ang_vel_magnetic[i].reset();
 		}
 	}
 	shear_strain = 0;
@@ -577,6 +585,17 @@ void System::setupSystem(string control)
 		dsfmt_init_gen_rand(&rand_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
+	}
+	
+	if (p.magnetic_type != 0) {
+		if (p.magnetic_type == 1) {
+			magnetic_rotation_active = true;
+		} else if (p.magnetic_type == 2) {
+			magnetic_rotation_active = false;
+		} else {
+			cerr << "magnetic_type needs to be 1 or 2\n";
+			exit(1);
+		}
 	}
 	
 	time = 0;
@@ -811,7 +830,7 @@ void System::timeStepMove()
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (p.magnetic_type == 1) {
+	if (magnetic_rotation_active) {
 		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 			double norm = magnetic_moment[i].norm();
@@ -859,7 +878,7 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	if (p.magnetic_type == 1) {
+	if (magnetic_rotation_active) {
 		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 		}
@@ -891,7 +910,7 @@ void System::timeStepMoveCorrector()
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
 	}
-	if (p.magnetic_type == 1) {
+	if (magnetic_rotation_active) {
 		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
 			double norm = magnetic_moment[i].norm();
