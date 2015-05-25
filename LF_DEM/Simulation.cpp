@@ -390,15 +390,18 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		string_control_parameters << "_s";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
+	cerr << "@ dimensionlessnumber = " << dimensionlessnumber << endl;
+	cerr << "@ input_scale = " << input_scale << endl;
 	
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
 		p.unscaled_contactmodel = true;
+	} else {
+		exit(1);
 	}
-	
-	cerr << " Internal unit scale : " << unit_scales << endl;
+	cerr << "@ Internal unit scale : " << unit_scales << endl;
 	exportForceAmplitudes();
 	// test for incompatibilities
 	if (sys.brownian == true) {
@@ -1070,7 +1073,7 @@ void Simulation::setDefaultParameters()
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
-	p.interaction_range = 5;
+	p.interaction_range = 10;
 	/*
 	 * Stokes drag coeffient
 	 */

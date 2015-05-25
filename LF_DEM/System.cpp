@@ -339,7 +339,7 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		int i_magnetic = 0;
 		for (int i=0; i<np; i++) {
 			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
-			magnetic_moment[i] = magnetic_susceptibility[i]*external_magnetic_field;
+			magnetic_moment[i] = magnetic_susceptibility[i]*p.external_magnetic_field;
 			magnetic_moment_norm[i] = magnetic_moment[i].norm();
 			if (magnetic_susceptibility[i] != 0) {
 				i_magnetic = i+1;
@@ -1216,7 +1216,7 @@ void System::setRepulsiveForceToParticle()
 void System::setMagneticForceToParticle()
 {
 	if (p.magnetic_type != 0) {
-		if (external_magnetic_field.is_zero() ||
+		if (p.external_magnetic_field.is_zero() ||
 			p.magnetic_type == 2) {
 			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
@@ -1225,7 +1225,7 @@ void System::setMagneticForceToParticle()
 		} else {
 			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
-				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
+				magnetic_torque[i] = cross(magnetic_moment[i], p.external_magnetic_field);
 			}
 		}
 		for (int k=0; k<nb_interaction; k++) {
@@ -1763,9 +1763,9 @@ void System::calcPotentialEnergy()
 			}
 		}
 	}
-	if (external_magnetic_field.is_not_zero()) {
+	if (p.external_magnetic_field.is_not_zero()) {
 		for (int i=0; i<num_magnetic_particles; i++) {
-			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
+			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], p.external_magnetic_field);
 			total_energy += tmp_magnetic_energy_ex;
 			magnetic_energy += tmp_magnetic_energy_ex;
 		}

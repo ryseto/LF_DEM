@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m D3N100Cylinder_mag.dat init_relax.txt"
+            argument = "-m two_mag.txt init_relax_test.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

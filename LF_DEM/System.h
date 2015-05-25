@@ -222,8 +222,6 @@ private:
 	double mu_rolling; // rolling friction coeffient
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
-	double magnetic_dipole_moment;
-	vec3d external_magnetic_field;
 	double einstein_stress;
 	double einstein_viscosity;
 	// resistance coeffient for normal mode
