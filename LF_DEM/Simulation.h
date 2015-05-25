@@ -54,7 +54,6 @@ private:
 	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
 	std::map <string, double> values;   // pairs: (force_type, values_in_suffix_units)
 	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
-
 	std::map <string, string> unit_longname; // it's temporary: should find a more elegant way :)
 	std::map <string, string> unit_shortname;
 
@@ -128,7 +127,6 @@ private:
 	void prepareSimulationName(bool);
 	void echoInputFiles(string in_args, vector<string> &input_files);
 	void autoSetParameters(const string &keyword, const string &value);
-
 	void contactForceParameter(string filename);
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
@@ -158,9 +156,7 @@ private:
 									vector<string> &input_files,
 									bool binary_conf,
 									double dimensionlessnumber,
-									string input_scale,
-									string control_variable);
-//	void exportParameterSet();
+									string input_scale);
 	void outputComputationTime();
 	
 public:

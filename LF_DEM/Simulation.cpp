@@ -363,10 +363,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 											vector<string> &input_files,
 											bool binary_conf,
 											double dimensionlessnumber,
-											string input_scale,
-											string control_variable)
+											string input_scale)
 {
-	control_var = control_variable; // @@@ This is redundancy
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	if (control_var == "rate") {
@@ -473,10 +471,9 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	user_sequence = false;
 	control_var = control_variable;
-	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale, control_var);
+	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-	//	double strain_output_data = 0;
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
