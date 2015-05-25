@@ -63,7 +63,6 @@ private:
 	int total_num_timesteps;
 	double time;
 	double shear_rate;
-	double disp_max;
 	double lx;
 	double ly;
 	double lz;
@@ -72,12 +71,11 @@ private:
 	double lz_half; // =lz/2
 	double system_volume;
 	double shear_strain;
-	double lub_max_gap;
 	double total_energy;
 	int linalg_size;
 	int dof;
-	double repulsiveforce_length; // repulsive force length
-	int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
+	//double repulsiveforce_length; // repulsive force length
+	//int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	void (System::*timeEvolutionDt)(bool);
 	void timeEvolutionEulersMethod(bool calc_stress);
@@ -148,14 +146,12 @@ private:
 
 	ParameterSet p;
 	// Interaction types
-	bool brownian;	
+	bool brownian;
 	bool friction;
-	int friction_model;
 	bool rolling_friction;
 	bool repulsiveforce;
 	bool cohesion;
 	bool critical_load;
-	double interaction_range;
 	bool lowPeclet;
 
 	// Simulation parameters
@@ -163,7 +159,6 @@ private:
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
-	bool monolayer;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
@@ -229,13 +224,6 @@ private:
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double magnetic_dipole_moment;
 	vec3d external_magnetic_field;
-	/* sd_coeff:
-	 * Full Stokes drag is given by sd_coeff = 1.
-	 * sd_coeff = 0 makes the resistance matrix singular.
-	 * sd_coeff = 1e-3 may be reasonable way to remove effect of
-	 *
-	 */
-	double sd_coeff;
 	double einstein_stress;
 	double einstein_viscosity;
 	// resistance coeffient for normal mode
@@ -244,26 +232,7 @@ private:
 	double log_lub_coeff_contact_tan_total;
 	set <Interaction*> *interaction_list;
 	set <int> *interaction_partners;
-	/*
-	 * Lubrication model
-	 * 0 no lubrication
-	 * 1 1/xi lubrication (only squeeze mode)
-	 * 2 log(1/xi) lubrication
-	 * 3 1/xi lubrication for h>0 and tangential dashpot.
-	 */
-	int lubrication_model;
 	int nb_interaction;
-	/*
-	 * Leading term of lubrication force is 1/reduced_gap,
-	 * with reduced_gap the gap
-	 * reduced_gap = 2r/(a0+a1) - 2.
-	 * we set a cutoff for the lubrication interaction,
-	 * such that the lub term is proportional to:
-	 *
-	 * 1/(reduced_gap+lub_reduce_parameter)
-	 * when reduced_gap > 0.
-	 */
-	double lub_reduce_parameter;
 	double shear_disp;
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -353,16 +322,6 @@ private:
 		return (double)2*contact_nb/np;
 	}
 
-	void set_integration_method(int val)
-	{
-		integration_method = val;
-	}
-
-	void set_lubrication_model(int val)
-	{
-		lubrication_model = val;
-	}
-
 	double get_lx()
 	{
 		return lx;
@@ -423,43 +382,9 @@ private:
 		return shear_strain;
 	}
 
-	inline void set_lub_max_gap(double val)
-	{
-		lub_max_gap = val;
-		if (lub_max_gap >= 1) {
-			cerr << "lub_max_gap must be smaller than 1\n";
-			exit(1);
-		}
-	}
-
-	inline double get_lub_max_gap()
-	{
-		return lub_max_gap;
-	}
-
 	inline void set_dt(double val)
 	{
 		dt = val;
-	}
-
-	void set_disp_max(double val)
-	{
-		disp_max = val;
-	}
-
-	void set_repulsiveforce_length(double val)
-	{
-		repulsiveforce_length = val;
-	}
-
-	void set_sd_coeff(double val)
-	{
-		sd_coeff = val;
-	}
-
-	inline double get_repulsiveforce_length()
-	{
-		return repulsiveforce_length;
 	}
 
 	inline double get_nb_of_active_interactions()

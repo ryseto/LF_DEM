@@ -19,13 +19,18 @@ struct ParameterSet
 	double Pe_switch;                        ///< Value of Peclet below which low Peclet mode is enabled
 	double dt;                           ///< [Euler]: initial time step value. [Pedictor/Corrector or Brownian]: time step value
 	double disp_max;                         ///< [Euler]: maximum displacement at each time step. Time step size dt is determined from disp_max at every step.
-	bool monolayer;
+	bool monolayer;							///< Particle movements are confined in monolayer. 3D rotations are allowed.
 	
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector
 
 	double rest_threshold; ///< criteria to judge saturation of deformation, i.e. jammed state etc.
 	/*
 	 * Stokes drag coeffient
+	 */
+	/* sd_coeff:
+	 * Full Stokes drag is given by sd_coeff = 1.
+	 * sd_coeff = 0 makes the resistance matrix singular.
+	 * sd_coeff = 1e-3 may be reasonable way to remove effect of
 	 */
 	double sd_coeff;                         ///< Stokes drag coeffient. Full drag is 1
 	/*
@@ -44,13 +49,22 @@ struct ParameterSet
 	 */
 	double friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. 3 infinite mu Coulomb with threshold
 
-	bool rolling_friction;                   ///< Activate rolling friction.
 	double time_end;                 ///< Time of the simulation.
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
 	double interaction_range;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *
+	 */
+	/*
+	 * Leading term of lubrication force is 1/reduced_gap,
+	 * with reduced_gap the gap
+	 * reduced_gap = 2r/(a0+a1) - 2.
+	 * we set a cutoff for the lubrication interaction,
+	 * such that the lub term is proportional to:
+	 *
+	 * 1/(reduced_gap+lub_reduce_parameter)
+	 * when reduced_gap > 0.
 	 */
 	double lub_reduce_parameter;             ///< Lubrication regularization length ("roughness length")
 	/*

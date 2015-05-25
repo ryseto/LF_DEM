@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Desktop/testsimulation"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/magnetic1"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m D2N20VF0.5MonoSquare_1.dat init_relax_45_5.txt"
+            argument = "-m D3N100Cylinder_mag.dat init_relax.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -776,8 +776,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		} else {
 			p.friction_model = atoi(value.c_str());
 		}
-	} else if (keyword == "rolling_friction") {
-		p.rolling_friction = str2bool(value);
 	} else if (keyword == "repulsion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["r"] = suffix;
@@ -1068,7 +1066,6 @@ void Simulation::setDefaultParameters()
 	p.repulsion_amplitude = 0;
 	p.cohesion_amplitude = 0;
 	p.critical_load_amplitude = 0;
-	p.magnetic_amplitude = 0;
 	p.magnetic_type = 0;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
@@ -1096,7 +1093,6 @@ void Simulation::setDefaultParameters()
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
 	p.friction_model = 1;
-	p.rolling_friction = false;
 	p.time_end = 10;
 	p.lub_max_gap = 0.5;
 	/*
@@ -1137,6 +1133,7 @@ void Simulation::setDefaultParameters()
 	p.repulsive_length = 0.05;
 	p.mu_static = 1;
 	p.mu_dynamic = -1;
+	p.mu_rolling = 0;
 	p.time_interval_output_data = 0.01;
 	p.time_interval_output_config = 0.1;
 	p.origin_zero_flow = true;

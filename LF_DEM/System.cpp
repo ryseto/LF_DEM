@@ -24,10 +24,9 @@
 
 
 System::System():
-magnetic_rotation_active(false),
 brownian(false),
 friction(false),
-friction_model(-1),
+rolling_friction(false),
 repulsiveforce(false),
 cohesion(false),
 critical_load(false),
@@ -37,7 +36,8 @@ zero_shear(false),
 magnetic_coeffient(24),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
-new_contact_gap(0)
+new_contact_gap(0),
+magnetic_rotation_active(false)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -103,7 +103,7 @@ System::~System()
 	DELETE(ang_velocity);
 	DELETE(na_velocity);
 	DELETE(na_ang_velocity);
-	if (integration_method == 1) {
+	if (p.integration_method == 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
 	}
@@ -143,27 +143,18 @@ System::~System()
 void System::importParameterSet(ParameterSet &ps)
 {
 	p = ps;
-	friction_model = p.friction_model;
-	rolling_friction = p.rolling_friction;
-	set_lub_max_gap(p.lub_max_gap);
-	lub_reduce_parameter = p.lub_reduce_parameter;
-	set_lubrication_model(p.lubrication_model);
+	if (p.lub_max_gap >= 1) {
+		cerr << "lub_max_gap must be smaller than 1\n";
+		exit(1);
+	}
 	kn = p.kn;
 	kt = p.kt;
 	kr = p.kr;
 	ft_max = p.ft_max;
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
+		p.repulsive_length = 0;
 	}
-	if (repulsiveforce) {
-		set_repulsiveforce_length(p.repulsive_length);
-	} else {
-		set_repulsiveforce_length(0);
-	}
-	monolayer = p.monolayer;
-	interaction_range = p.interaction_range;
-	set_sd_coeff(p.sd_coeff);
-	integration_method = p.integration_method;
 	mu_static = p.mu_static;
 	if (p.mu_dynamic == -1) {
 		mu_dynamic = p.mu_static;
@@ -171,7 +162,6 @@ void System::importParameterSet(ParameterSet &ps)
 		mu_dynamic = p.mu_dynamic;
 	}
 	mu_rolling = p.mu_rolling;
-	set_disp_max(p.disp_max);
 }
 
 void System::allocateRessources()
@@ -179,11 +169,11 @@ void System::allocateRessources()
 	linalg_size = 6*np;
 	double interaction_volume;
 	if (twodimension) {
-		interaction_volume = M_PI*interaction_range*interaction_range;
+		interaction_volume = M_PI*pow(p.interaction_range, 2);
 		double particle_volume = M_PI;
 		maxnb_interactionpair_per_particle = 1.5*interaction_volume/particle_volume;
 	} else {
-		interaction_volume = (4*M_PI/3)*interaction_range*interaction_range*interaction_range;
+		interaction_volume = (4*M_PI/3)*pow(p.interaction_range, 3);
 		double particle_volume = 4*M_PI/3;
 		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
 	}
@@ -201,7 +191,7 @@ void System::allocateRessources()
 	ang_velocity = new vec3d [np];
 	na_velocity = new vec3d [np];
 	na_ang_velocity = new vec3d [np];
-	if (integration_method == 1) {
+	if (p.integration_method == 1) {
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
 	}
@@ -390,11 +380,11 @@ void System::updateUnscaledContactmodel()
 		lub_coeff_contact *= p.Pe_switch;
 	}
 	
-	if (lubrication_model == 1) {
+	if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
-	} else if (lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+	} else if (p.lubrication_model == 2) {
+		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
 		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
@@ -441,18 +431,18 @@ void System::setupSystem(string control)
 	}
 	stress_controlled = !rate_controlled;
 	
-	if (integration_method == 0) {
+	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
-	} else if (integration_method == 1) {
+	} else if (p.integration_method == 1) {
 		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
 	} else {
-		cerr << "integration_method = " << integration_method << endl;
+		cerr << "integration_method = " << p.integration_method << endl;
 		cerr << "The integration method is not impremented yet." << endl;
 		exit(1);
 	}
-	if (lubrication_model == 1) {
+	if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (lubrication_model == 2) {
+	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
@@ -469,26 +459,29 @@ void System::setupSystem(string control)
 		calcInteractionRange = &System::calcLongInteractionRange;
 	}
 	
-	if (friction_model == 0) {
+	if (p.friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
 		friction = false;
-	} else if (friction_model == 1) {
+	} else if (p.friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
 		friction = true;
-	} else if (friction_model == 2 || friction_model == 3) {
-		cerr << "friction_model " << friction_model << endl;
+	} else if (p.friction_model == 2 || p.friction_model == 3) {
+		cerr << "friction_model " << p.friction_model << endl;
 		friction = true;
 		cerr << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
-	} else if (friction_model == 5) {
+	} else if (p.friction_model == 5) {
 		cerr << "friction_model = 5: ft_max" << endl;
 		friction = true;
-	} else if (friction_model == 6) {
+	} else if (p.friction_model == 6) {
 		cerr << "friction_model = 6: Coulomb law + ft_max" << endl;
 		friction = true;
 	} else {
 		cerr << "friction_model..." << endl;
 		exit(1);
+	}
+	if (p.mu_rolling > 0) {
+		rolling_friction = true;
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair; k++) {
@@ -524,7 +517,7 @@ void System::setupSystem(string control)
 	}
 	if (p.contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
-		lub_coeff_contact = 1/lub_reduce_parameter;
+		lub_coeff_contact = 1/p.lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
@@ -537,11 +530,11 @@ void System::setupSystem(string control)
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
 	 *
 	 */
-	if (lubrication_model == 1) {
+	if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
-	} else if (lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+	} else if (p.lubrication_model == 2) {
+		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
 		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
@@ -557,7 +550,7 @@ void System::setupSystem(string control)
 		updateUnscaledContactmodel();
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cerr << "1/lub_reduce_parameter = " << 1/lub_reduce_parameter << endl;
+	cerr << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	
@@ -637,8 +630,8 @@ void System::setupSystem(string control)
 	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
-		double FUvalue = sd_coeff*radius[i];
-		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
+		double FUvalue = p.sd_coeff*radius[i];
+		double TWvalue = p.sd_coeff*torque_factor*radius_cubed[i];
 		resistance_matrix_dblock[i18   ] = FUvalue;
 		resistance_matrix_dblock[i18+6 ] = FUvalue;
 		resistance_matrix_dblock[i18+10] = FUvalue;
@@ -808,9 +801,9 @@ void System::timeStepMove()
 	if (!fixed_dt) {
 		if (max_velocity > 0 && max_sliding_velocity > 0){ // small density system can have na_velocity=0
 			if (max_velocity > max_sliding_velocity) {
-				dt = disp_max/max_velocity;
+				dt = p.disp_max/max_velocity;
 			} else {
-				dt = disp_max/max_sliding_velocity;
+				dt = p.disp_max/max_sliding_velocity;
 			}
 		}
 		else{
@@ -855,9 +848,9 @@ void System::timeStepMovePredictor()
 		//dt = disp_max/max_velocity;
 		if (!fixed_dt) {
 			if (max_velocity > max_sliding_velocity) {
-				dt = disp_max/max_velocity;
+				dt = p.disp_max/max_velocity;
 			} else {
-				dt = disp_max/max_sliding_velocity;
+				dt = p.disp_max/max_sliding_velocity;
 			}
 		}
 	}
@@ -1184,7 +1177,7 @@ void System::generateBrownianForces()
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
 	if (twodimension
-		&& !monolayer) {
+		&& !p.monolayer) {
 		for (int i=0; i<np; i++) {
 			brownian_force[6*i+1] = 0; // Fy
 			brownian_force[6*i+3] = 0; // Tx
@@ -1449,13 +1442,13 @@ void System::computeVelocities(bool divided_velocities)
 			ang_velocity[i] = na_ang_velocity[i];
 			velocity[i].x += shear_rate*position[i].z;
 			ang_velocity[i].y += 0.5*shear_rate;
-			if (monolayer) { velocity[i].y = 0; }
+			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	} else {
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			if (monolayer) { velocity[i].y = 0; }
+			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	}
 	
@@ -1465,7 +1458,7 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::displacement(int i, const vec3d &dr)
 {
-	if (monolayer) {
+	if (p.monolayer) {
 		position[i].x += dr.x;
 		position[i].z += dr.z;
 	} else {
@@ -1847,9 +1840,9 @@ void System::adjustContactModelParameters()
 	}
 	if (max_velocity > 0 && max_sliding_velocity > 0) {
 		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
+			dt = p.disp_max/max_velocity;
 		} else {
-			dt = disp_max/max_sliding_velocity;
+			dt = p.disp_max/max_sliding_velocity;
 		}
 	}
 	previous_shear_strain = shear_strain;
@@ -1885,16 +1878,16 @@ double System::calcLubricationRange(const int& i, const int& j)
 {
 	double rad_ratio = radius[i]/radius[j];
 	if (rad_ratio < 2 && rad_ratio > 0.5) {
-		return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
+		return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
 	} else {
 		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-		return radius[i]+radius[j]+lub_max_gap*minradius;
+		return radius[i]+radius[j]+p.lub_max_gap*minradius;
 	}
 }
 
 double System::calcLongInteractionRange(const int& i, const int& j)
 {
-	return interaction_range*0.5*(radius[i]+radius[j]);
+	return p.interaction_range*0.5*(radius[i]+radius[j]);
 }
 
 

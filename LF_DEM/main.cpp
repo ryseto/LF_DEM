@@ -17,13 +17,6 @@
 #define required_argument 1
 #define optional_argument 2
 
-//void incompatibility_exiting(string a, string b)
-//{
-//	cerr << a << " and " << b << " not compatible " << endl;
-//	exit(1);
-//}
-
-
 int main(int argc, char **argv)
 {
 	cerr << endl << "LF_DEM version " << GIT_VERSION << endl << endl;

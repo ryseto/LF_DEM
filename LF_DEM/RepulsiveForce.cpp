@@ -20,7 +20,7 @@ void RepulsiveForce::activate()
 	 * a0*a1/(a1+a2)/2
 	 */
 	geometric_factor = interaction->a0*interaction->a1/interaction->ro;
-	length = sys->get_repulsiveforce_length();
+	length = sys->p.repulsive_length;
 	force_vector.reset();
 	force_norm = 0;
 	reduced_force_norm = 0;

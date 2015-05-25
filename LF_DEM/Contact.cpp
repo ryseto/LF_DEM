@@ -12,16 +12,16 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	interaction = interaction_;
 	state = 0;
 	f_contact_normal_norm = 0;
-	if (sys->friction_model == 1) {
+	if (sys->p.friction_model == 1) {
 		frictionlaw = &Contact::frictionlaw_standard;
-	} else if (sys->friction_model == 2) {
+	} else if (sys->p.friction_model == 2) {
 		frictionlaw = &Contact::frictionlaw_criticalload;
-	} else if (sys->friction_model == 3) {
+	} else if (sys->p.friction_model == 3) {
 		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
-	} else if (sys->friction_model == 5) {
+	} else if (sys->p.friction_model == 5) {
 	 	frictionlaw = &Contact::frictionlaw_ft_max;
     	ft_max = sys->ft_max;
-	} else if (sys->friction_model == 6) {
+	} else if (sys->p.friction_model == 6) {
 		frictionlaw = &Contact::frictionlaw_coulomb_max;
 		ft_max = sys->ft_max;
 	} else {
@@ -33,10 +33,10 @@ void Contact::setInteractionData()
 {
 	interaction->get_par_num(p0, p1);
 	const double &ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
-	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
+	kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
 	if (sys->rolling_friction) {
-		kr_scaled = ro_12*sys->kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+		kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
 	}
 	mu_static = sys->mu_static;
 	mu_dynamic = sys->mu_dynamic;
@@ -53,7 +53,7 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
-	if (sys->friction_model == 2 || sys->friction_model == 3) {
+	if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
 		state = 1; // critical load model
 	} else {
 		state = 2; // static friction
