@@ -17,18 +17,11 @@
 #define required_argument 1
 #define optional_argument 2
 
-//void incompatibility_exiting(string a, string b)
-//{
-//	cerr << a << " and " << b << " not compatible " << endl;
-//	exit(1);
-//}
-
-
 int main(int argc, char **argv)
 {
 	cerr << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate ] [-s Stress ] \
-	[-R Rate_Sequence ] [-S Stress_Sequence ] [-k kn_kt_File] [-i Provisional_Data] [-n] \
+	[-R Rate_Sequence ] [-S Stress_Sequence ] [-m ?] [-k kn_kt_File] [-i Provisional_Data] [-n] \
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
 	
 	double dimensionless_number = 0;
@@ -51,17 +44,17 @@ int main(int argc, char **argv)
 		{"rep-seq-file", required_argument, 0, 'R'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"stress-seq-file", required_argument, 0, 'S'},
-		{"generate", no_argument, 0, 'g'},
+		{"magnetic", no_argument, 0, 'm'},
+		{"generate", required_argument, 0, 'g'},
 		{"kn-kt-file", required_argument, 0, 'k'},
 		{"binary", no_argument, 0, 'n'},
-		{"magnetic", no_argument, 0, 'm'},
 		{"help", no_argument, 0, 'h'},
 		{0,0,0,0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hng:s:S:r:R:k:i:h:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hnmg:s:S:r:R:k:i:h:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -95,6 +88,10 @@ int main(int argc, char **argv)
 				seq_type = "r";
 				cerr << "Rate sequence, file " << seq_filename << endl;
 				break;
+			case 'm':
+				rheology_control = "rate"; // ---> zero_shear
+				cerr << "Magnetic simulation" << endl;
+				break;
 			case 'k':
 				knkt_filename = optarg;
 				break;
@@ -117,7 +114,6 @@ int main(int argc, char **argv)
 			default:
 				abort ();
 		}
-
 	}
 
 	ostringstream in_args;
@@ -143,12 +139,10 @@ int main(int argc, char **argv)
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
 		Simulation simulation;
-
 		if (seq_filename == "not_given") {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
-		} 
-		else {
+		} else {
 		  cerr << " User def sequence temporarily disabled " << endl;
 		  //		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}

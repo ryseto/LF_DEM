@@ -311,7 +311,7 @@ void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	XGU_j *= cXG_j;
 	stresslet_i = XGU_i;
 	stresslet_j = XGU_j;
-	if (sys->lubrication_model == 1){
+	if (sys->p.lubrication_model == 1){
 		return;
 	}
 	StressTensor YGU_i;
@@ -411,7 +411,7 @@ void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
 	XME_j *= cXM_j;
 	stresslet_i = XME_i;
 	stresslet_j = XME_j;
-	if (sys->lubrication_model == 1) {
+	if (sys->p.lubrication_model == 1) {
 		return;
 	}
 	double cYM_i = (1.0/2)*(scaledYM0()+scaledYM1());
@@ -451,14 +451,14 @@ void Lubrication::calcLubricationForce()
 	vec3d vj(sys->na_velocity[p1]);
 	vec3d oi(sys->na_ang_velocity[p0]);
 	vec3d oj(sys->na_ang_velocity[p1]);
-	if (sys->lubrication_model == 1) {
+	if (sys->p.lubrication_model == 1) {
 		calcXFunctions();
-	} else if (sys->lubrication_model == 2) {
+	} else if (sys->p.lubrication_model == 2) {
 		calcXYFunctions();
 	}
 	vec3d XAU_i = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*(*nvec);
 	vec3d XGE_i = sr*(scaledXG0()+scaledXG2())*(*nxnz)*(*nvec);
-	if (sys->lubrication_model == 1) {
+	if (sys->p.lubrication_model == 1) {
 		if (!sys->zero_shear) {
 			lubforce_p0 = XAU_i+XGE_i;
 		} else {
@@ -547,12 +547,12 @@ void Lubrication::updateResistanceCoeff()
 			 * the resistance coeffient is set to the maximum value of separating state.
 			 * Thus, no drift force is generated.
 			 */
-			double coeff = 1/sys->lub_reduce_parameter;
+			double coeff = 1/sys->p.lub_reduce_parameter;
 			setResistanceCoeff(coeff, log(coeff));
 		}
 	} else {
 		if (!interaction->contact_state_changed_after_predictor) {
-			double coeff = 1/(interaction->reduced_gap+sys->lub_reduce_parameter);
+			double coeff = 1/(interaction->reduced_gap+sys->p.lub_reduce_parameter);
 			setResistanceCoeff(coeff, log(coeff));
 		} else {
 			/*

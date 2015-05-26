@@ -24,13 +24,13 @@ int GenerateInitConfig::generate(int rand_seed_)
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
-	sys.interaction_range = 2.5;
-	sys.set_lub_max_gap(0.5);
+	sys.p.interaction_range = 2.5;
+	sys.p.lub_max_gap = 0.5;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);
 	sys.in_predictor = false;
-	sys.set_integration_method(0);
+	sys.p.integration_method = 0;
 	putRandom();
 	double inflate_ratio = 1.03;
 	for (int i=0; i<np;i++) {

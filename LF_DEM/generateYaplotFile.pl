@@ -17,9 +17,10 @@ if ($#ARGV >= 1){
 	$output_interval = $ARGV[1];
 }
 
-#if ($#ARGV == 2){
-#	$force_factor = $ARGV[2];
-#}
+
+if ($#ARGV == 2){
+	$xz_shift = $ARGV[2];
+}
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -31,7 +32,7 @@ $interaction_data = "int_${name}.dat";
 $output = "y_$name.yap";
 
 my $pos;
-$pos = index($name, "mag");
+$pos = index($name, "_m");
 if ($pos != -1) {
 	$mag = 1;
 } else {
@@ -170,7 +171,10 @@ for ($i = 0; $i < $np; $i++){
 	$xx = 0.5*$Lx + $posx[$i];
 	$yy = 0.5*$Ly + $posy[$i];
 	$zz = 0.5*$Lz + $posz[$i];
-	printf OUTLAST "$xx $yy $zz $radius[$i]\n";
+#	$mx = $magmom_x[$i];
+#	$my = $magmom_y[$i];
+#	$mz = $magmom_z[$i];
+	printf OUTLAST "$xx $yy $zz $radius[$i] \n";
 }
 close (OUTLAST);
 	
@@ -226,10 +230,11 @@ sub InParticles {
 			if ($output == 1) {
 				if ($mag) {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz, $ms) = split(/\s+/, $line);
 					$magmom_x[$i] = $mx;
 					$magmom_y[$i] = $my;
 					$magmom_z[$i] = $mz;
+					$magsusceptibility[$i] = $ms;
 					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
 				} else {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
@@ -241,6 +246,16 @@ sub InParticles {
 				#			printf OUTMP "$i $x $y $z $a\n";
 				#		}
 				$radius[$i] = $a;
+				if ($xz_shift) {
+					$x += $xz_shift;
+					$z += $xz_shift;
+					if ($x > $Lx/2) {
+						$x -= $Lx;
+					}
+					if ($z > $Lz/2) {
+						$z -= $Lz;
+					}
+				}
 				$posx[$i] = $x;
 				$posy[$i] = $y;
 				$posz[$i] = $z;
@@ -476,7 +491,7 @@ sub OutYaplotData{
 		
 		if ($mag) {
 			if ($switch == 0 &&
-				$i >= 1 && $mm[$i] == 0){
+				$magsusceptibility[$i] < 0){
 					printf OUT "@ 9\n";
 					$switch = 1;
 				}
@@ -712,7 +727,7 @@ sub OutYaplotData{
 		printf OUT "r 0.5\n";
 		printf OUT "a 1\n";
 		for ($i = 0; $i < $np; $i ++){
-			&OutMagMoment($i);
+				&OutMagMoment($i);
 		}
 	} else {
 		if ($Ly == 0){
@@ -1043,14 +1058,23 @@ sub OutMagMoment {
 	$yi = $posy[$i]+$magnetoffset_y;
 	$zi = $posz[$i];
 	#	printf "$mm\n";
-	
-	if ($mm[$i] > 0) {
-		$xa = $xi - $magmom_x[$i]/$mm[$i] ;
-		$ya = $yi - $magmom_y[$i]/$mm[$i] ;
-		$za = $zi - $magmom_z[$i]/$mm[$i] ;
-		$xb = $xi + $magmom_x[$i]/$mm[$i];
-		$yb = $yi + $magmom_y[$i]/$mm[$i];
-		$zb = $zi + $magmom_z[$i]/$mm[$i];
+	$m0 = 1;
+	if (abs($mm[$i]) > 0) {
+#		$xa = $xi - $magmom_x[$i]/$mm[$i] ;
+#		$ya = $yi - $magmom_y[$i]/$mm[$i] ;
+#		$za = $zi - $magmom_z[$i]/$mm[$i] ;
+#		$xb = $xi + $magmom_x[$i]/$mm[$i];
+#		$yb = $yi + $magmom_y[$i]/$mm[$i];
+#		$zb = $zi + $magmom_z[$i]/$mm[$i];
+		$xa = $xi - $magmom_x[$i]/$m0;
+		$ya = $yi - $magmom_y[$i]/$m0;
+		$za = $zi - $magmom_z[$i]/$m0;
+		$xb = $xi + $magmom_x[$i]/$m0;
+		$yb = $yi + $magmom_y[$i]/$m0;
+		$zb = $zi + $magmom_z[$i]/$m0;
 		printf OUT "s $xa $ya $za $xb $yb $zb\n";
 	}
 }
+
+
+
