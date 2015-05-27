@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 			case 's':
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
-					dimensionless_number = stof(numeral);
+					dimensionless_number = atof(numeral.c_str());
 					cerr << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 			case 'r':
 				rheology_control = "rate";
 				if (getSuffix(optarg, numeral, suffix)) {
-					dimensionless_number = stof(numeral);
+					dimensionless_number = atof(numeral.c_str());
 					cerr << "Rate control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear rate");

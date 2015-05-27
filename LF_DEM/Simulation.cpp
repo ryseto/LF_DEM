@@ -779,23 +779,23 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "repulsion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["r"] = suffix;
-		values["r"] = stof(numeral);
+		values["r"] = atof(numeral.c_str());
 	} else if (keyword == "cohesion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["c"] = suffix;
-		values["c"] = stof(numeral);
+		values["c"] = atof(numeral.c_str());
 	} else if (keyword == "brownian_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["b"] = suffix;
-		values["b"] = stof(numeral);
+		values["b"] = atof(numeral.c_str());
 	} else if (keyword == "critical_load_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["cl"] = suffix;
-		values["cl"] = stof(numeral);
+		values["cl"] = atof(numeral.c_str());
 	} else if (keyword == "magnetic_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["m"] = suffix;
-		values["m"] = stof(numeral);
+		values["m"] = atof(numeral.c_str());
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
@@ -871,7 +871,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "ft_max") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffixes["ft"] = suffix;
-		values["ft"] = stof(numeral);
+		values["ft"] = atof(numeral.c_str());
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
