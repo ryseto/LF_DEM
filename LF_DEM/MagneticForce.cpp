@@ -18,10 +18,19 @@ void MagneticForce::init(System *sys_, Interaction *interaction_)
 void MagneticForce::activate()
 {
 	interaction->get_par_num(p0, p1);
+	if (sys->magnetic_moment_norm[p0] != 0
+		&& sys->magnetic_moment_norm[p1] != 0) {
+		active = true;
+		coeffient = sys->magnetic_coeffient;
+		if (sys->magnetic_rotation_active == false){
+			chi0chi1 = sys->magnetic_susceptibility[p0]*sys->magnetic_susceptibility[p1];
+		}
+	} else {
+		active = false;
+	}
 	force_vector0.reset();
 	torque0.reset();
 	torque1.reset();
-	coeffient = sys->magnetic_coeffient;
 }
 
 void MagneticForce::calcForceToruqe()
@@ -29,18 +38,25 @@ void MagneticForce::calcForceToruqe()
 	/**
 		\brief Compute the magnetic force in the System class units.
 	 */
+	if (active == false) {
+		return;
+	}
 	double r = interaction->get_r();
 	double r_cubic = r*r*r;
 	const vec3d &nvec = interaction->nvec;
-	const vec3d &m0 = sys->magnetic_moment[p0];
-	const vec3d &m1 = sys->magnetic_moment[p1];
 	/*
 	 * magnetic_coeffient = (3*mu0)/(4*M_PI)
 	 */
-	force_vector0 = -(coeffient/(r_cubic*r))*(dot(m1, nvec)*m0+dot(m0, nvec)*m1
-											  +dot(m1, m0)*nvec
-											  -5*dot(m0,nvec)*dot(m1,nvec)*nvec);
-	if (sys->magnetic_rotation_active) {
+	if (sys->magnetic_rotation_active == false){
+		double H_dot_n = dot(sys->p.external_magnetic_field, nvec);
+		force_vector0 = -(coeffient/(r_cubic*r))*chi0chi1*(2*H_dot_n*sys->p.external_magnetic_field
+														   +(sys->magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
+	} else {
+		const vec3d &m0 = sys->magnetic_moment[p0];
+		const vec3d &m1 = sys->magnetic_moment[p1];
+		force_vector0 = -(coeffient/(r_cubic*r))*(dot(m1, nvec)*m0+dot(m0, nvec)*m1
+												  +dot(m1, m0)*nvec
+												  -5*dot(m0,nvec)*dot(m1,nvec)*nvec);
 		vec3d b0 = (coeffient/r_cubic)*(3*dot(nvec, m0)*nvec-m0);
 		vec3d b1 = (coeffient/r_cubic)*(3*dot(nvec, m1)*nvec-m1);
 		torque0 = cross(m0, b1);

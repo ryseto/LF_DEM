@@ -52,6 +52,14 @@ private:
 	void storeGradient();
 	double step_size;
 	int rand_seed;
+	/*
+	 * This can generate configurations consisting of identical particles
+	 * or binary system, consisting of two types of particles. 
+	 * It is indicated by "bidispese" option.
+	 * Ones have magnetic susceptibility 1
+	 * The otheres have magnetic susceptibility -1.
+	 */
+	bool magnetic_config;
 #ifndef USE_DSFMT
 	MTRand rand_gen;
 #endif
@@ -77,6 +85,6 @@ private:
 
 public:
 	GenerateInitConfig(){};
-	int generate(int rand_seed_);
+	int generate(int rand_seed_, bool magnetic_config);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

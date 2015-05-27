@@ -37,7 +37,8 @@ magnetic_coeffient(24),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-magnetic_rotation_active(false)
+magnetic_rotation_active(false),
+magnetic_field_square(0)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -345,6 +346,7 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 				i_magnetic = i+1;
 			}
 		}
+		magnetic_field_square = p.external_magnetic_field.sq_norm();
 		num_magnetic_particles = i_magnetic;
 	}
 }
