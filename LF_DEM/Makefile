@@ -11,7 +11,9 @@ install_dir = ~/bin/
 
 DSFMT_RNG = no
 
-VERSION := $(shell git describe --dirty --always)
+
+
+
 
 # Compiler
 ifeq ($(OS_version),SI)
@@ -49,13 +51,16 @@ ifeq ($(CXX),icc)
 	CXXFLAGS_dev += $(ICC_Warnings)
 endif
 
-ifeq ($(OS_version),$(filter $(OS_version),Linux OSX))
+is_git_repo := $(shell if [ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1; then echo true;fi)
+ifeq ($(is_git_repo),"true")
+	VERSION := $(shell git describe --dirty --always)	
 	CXXFLAGS_optimized += -DGIT_VERSION="\"$(VERSION)\""
-	CXXFLAGS_debug += -pg -DGIT_VERSION="\"$(VERSION)\""
+	CXXFLAGS_debug += -DGIT_VERSION="\"$(VERSION)\""
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
 ifeq ($(OS_version),OIST)
+	VERSION := $(shell git describe --dirty --always)	
 	CXXFLAGS_optimized += -DVERSION="\"$(VERSION)\""
 	CXXFLAGS_debug += -DVERSION="\"$(VERSION)\""
 endif
@@ -175,7 +180,7 @@ $(DSFMT_OBJ): $(DSFMT_SRC)
 
 tar:
 	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
-	tar -czvf LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB) Makefile
+	tar -czvf LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB) VersionInfo.h Makefile
 
 clean:
 	rm -f  $(OBJ)
