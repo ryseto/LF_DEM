@@ -21,29 +21,9 @@
 #include <ctime>
 #include <map>
 #include <algorithm>
+#include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
-
-inline void removeBlank(string &str)
-{
-	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
-}
-
-inline bool getSuffix(const string &str, string &value, string &suffix)
-{
-	std::size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
-	value = str.substr(0, suffix_pos);
-	suffix = str.substr(suffix_pos, str.length());
-	if (suffix.empty()) {
-		return false;
-	}
-	return true;
-}
-
-inline void errorNoSuffix(string quantity)
-{
-	cerr << "Error : no unit scale (suffix) provided for " << quantity << endl; exit(1);
-}
 
 	
 class Simulation

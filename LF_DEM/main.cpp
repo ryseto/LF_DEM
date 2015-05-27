@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <getopt.h>
+#include "global.h"
 #include "Simulation.h"
 #include "GenerateInitConfig.h"
 #ifndef GIT_VERSION
