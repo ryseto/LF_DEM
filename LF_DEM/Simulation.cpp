@@ -7,20 +7,6 @@
 //
 #define _USE_MATH_DEFINES
 #include "Simulation.h"
-#ifndef GIT_VERSION
-#include "VersionInfo.h"
-#endif
-/*
- * VersionInfo.h is automatically generated
- * before compiling source codes.
- * In Xcode, the following script is run in the Pre-Action of Build.
- * -----------------------------------
- * git=/usr/bin/git
- * cd ${PROJECT_DIR}/LF_DEM
- * version=`$git describe --dirty`
- * echo "#define GIT_VERSION \"$version\"" > VersionInfo.h
- * -----------------------------------
- */
 #include <cmath>
 #include <map>
 #include <string>

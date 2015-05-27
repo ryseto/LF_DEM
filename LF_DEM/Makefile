@@ -173,9 +173,6 @@ $(OBJ): $(SRC)
 $(DSFMT_OBJ): $(DSFMT_SRC)
 	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c) 
 
-gitversion.h: ../.git/HEAD ../.git/index
-    echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
-
 tar:
 	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
 	tar -czvf LF_DEM_sources_$(DATE).tar.gz $(SRC) $(LIB) Makefile
