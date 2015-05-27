@@ -174,7 +174,8 @@ for ($i = 0; $i < $np; $i++){
 #	$mx = $magmom_x[$i];
 #	$my = $magmom_y[$i];
 #	$mz = $magmom_z[$i];
-	printf OUTLAST "$xx $yy $zz $radius[$i] \n";
+	$ms = $magsusceptibility[$i];
+	printf OUTLAST "$xx $yy $zz $radius[$i] 0 0 0 $ms \n";
 }
 close (OUTLAST);
 	

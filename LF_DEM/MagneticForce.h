@@ -30,6 +30,7 @@ class MagneticForce{
 private:
 	System *sys;
 	Interaction *interaction;
+	bool active;
 	unsigned short p0;
 	unsigned short p1;
 	//===== forces and stresses ==================== //
@@ -38,6 +39,7 @@ private:
 	vec3d torque1;
 	double coeffient;
 	double force_norm;
+	double chi0chi1;
 	StressTensor stresslet_XF;
 public:
 	MagneticForce(): force_norm(0) {};

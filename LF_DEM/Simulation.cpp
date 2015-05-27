@@ -188,7 +188,7 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 			}
 		}
 		resolved = resolved_units.size();
-	} while(previous_resolved < resolved);
+	} while (previous_resolved < resolved);
 	
 	// check we found everyone
 	if (resolved < suffixes.size()) {
@@ -248,7 +248,8 @@ void Simulation::setLowPeclet()
 void Simulation::convertForceValues(string new_long_unit)
 {
 	string new_unit = unit_shortname[new_long_unit];
-	if(dimensionless_numbers.find(new_unit) == dimensionless_numbers.end() && new_unit != "h"){
+	if (dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()
+		&& new_unit != "h") {
 		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
 	}
 	
@@ -288,7 +289,6 @@ void Simulation::setUnitScaleRateControlled()
 
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
 {
-	
 	// determine the dimensionless numbers
 	
 	string force_type = rate_unit; // our force defining the shear rate
@@ -297,7 +297,8 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	}
 	dimensionless_numbers[force_type] = dimensionlessnumber;
 	if (values[force_type] > 0) {
-		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl; exit(1);
+		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
+		exit(1);
 	}
 	// switch this force in hydro units
 	values[force_type] = 1/dimensionless_numbers[force_type];
@@ -346,12 +347,12 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.cohesion = values["c"];
 		cerr << " Cohesion (in \"" << suffixes["c"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
-	bool is_magnetic = values.find("m") != values.end();
-	if (is_magnetic) {
-		sys.amplitudes.magnetic = values["m"];
-		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-		cerr << " values[m] = "  << values["m"] << endl;
-	}
+	//	bool is_magnetic = values.find("m") != values.end();
+	//	if (is_magnetic) {
+	//		sys.amplitudes.magnetic = values["m"];
+	//		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
+	//		cerr << " values[m] = "  << values["m"] << endl;
+	//	}
 	bool is_ft_max = values.find("ft") != values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = values["ft"];
@@ -372,6 +373,9 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		input_rate_unit = input_scale;
 	}
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
+		/* [TODO]
+		 * To be changed to something better way.
+		 */
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
 	} else {
@@ -380,7 +384,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 
 	setDefaultParameters();
 	readParameterFile();
-	
 	for (auto&& f: suffixes) {
 		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
@@ -388,6 +391,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		string_control_parameters << "_r";
 	} else if (control_var == "stress") {
 		string_control_parameters << "_s";
+	} else if (control_var == "magnetic") {
+		string_control_parameters << "_m";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
 	cerr << "@ dimensionlessnumber = " << dimensionlessnumber << endl;
@@ -398,6 +403,9 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else if (control_var == "stress") {
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
 		p.unscaled_contactmodel = true;
+	} else if (control_var == "magnetic") {
+		cerr << "magnetic" << endl;
+		cerr << " input_scale = "<< input_scale << endl;
 	} else {
 		exit(1);
 	}

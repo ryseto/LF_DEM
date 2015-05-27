@@ -270,6 +270,7 @@ private:
 	 */
 	bool magnetic_rotation_active;
 	double magnetic_energy;
+	double magnetic_field_square;
 	/////////////////////////////////
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,

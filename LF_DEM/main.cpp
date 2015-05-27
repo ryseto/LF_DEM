@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 				cerr << "Rate sequence, file " << seq_filename << endl;
 				break;
 			case 'm':
-				rheology_control = "rate"; // ---> zero_shear
+				rheology_control = "magnetic";
 				cerr << "Magnetic simulation" << endl;
 				break;
 			case 'k':
@@ -115,14 +115,17 @@ int main(int argc, char **argv)
 				abort ();
 		}
 	}
-
 	ostringstream in_args;
 	for (int i=0; i<argc; i++) {
 		in_args << argv[i] << " ";
 	}
 	if (generate_init) {
 		GenerateInitConfig generate_init_config;
-		generate_init_config.generate(random_seed);
+		bool magnetic_config = false;
+		if (rheology_control == "magnetic") {
+			magnetic_config = true;
+		}
+		generate_init_config.generate(random_seed, magnetic_config);
 	} else {
 		if (optind == argc-2) {
 			config_filename = argv[optind++];

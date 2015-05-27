@@ -17,10 +17,11 @@
 #endif
 using namespace std;
 
-int GenerateInitConfig::generate(int rand_seed_)
+int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 {
 	setParameters();
 	rand_seed = rand_seed_;
+	magnetic_config = magnetic_config_;
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
@@ -124,6 +125,15 @@ void GenerateInitConfig::outputPositionData()
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 		}
 	}
+	vector<double> magnetic_susceptibility;
+	for (int i=0; i< np; i++) {
+		if (i < np1) {
+			magnetic_susceptibility.push_back(1);
+		} else {
+			magnetic_susceptibility.push_back(-1);
+		}
+	}
+	
 	ss_posdatafilename << "_" << rand_seed << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
@@ -137,7 +147,14 @@ void GenerateInitConfig::outputPositionData()
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
 		fout << position[i].z << ' ';
-		fout << radius[i] << endl;
+		fout << radius[i] << ' ';
+		if (magnetic_config) {
+			fout << 0 << ' ';
+			fout << 0 << ' ';
+			fout << 0 << ' ';
+			fout << magnetic_susceptibility[i];
+		}
+		fout << endl;
 		fout_yap << "r ";
 		fout_yap << radius[i] << endl;
 		fout_yap << "c ";
