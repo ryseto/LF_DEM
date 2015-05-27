@@ -10,6 +10,8 @@ var class_magnetic_force =
     [ "getForceVector", "class_magnetic_force.html#a001184584e94ef85b348c239cce5741f", null ],
     [ "init", "class_magnetic_force.html#aeedbe1337d8a45beacf520d40662194b", null ],
     [ "resetForceToruqe", "class_magnetic_force.html#a7ed477ccad835b25e2b8b2ae74159e98", null ],
+    [ "active", "class_magnetic_force.html#a2c2edf022b7948077bb5f8cb67a55807", null ],
+    [ "chi0chi1", "class_magnetic_force.html#a251268dc91874c84d517376042241076", null ],
     [ "coeffient", "class_magnetic_force.html#a9d3cd6c093569f5952373639f4d88c86", null ],
     [ "force_norm", "class_magnetic_force.html#a184bc5a1fa85d7e873bc4358bbccec1f", null ],
     [ "force_vector0", "class_magnetic_force.html#a1a88bb133e07ef13e50862d586265302", null ],

@@ -105,9 +105,9 @@ $(document).ready(function(){initNavTree('class_simulation.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac9475c9e97ae8f9588879768ea4900a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9475c9e97ae8f9588879768ea4900a0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionless_number, string control_variable)</td></tr>
-<tr class="separator:ac9475c9e97ae8f9588879768ea4900a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef3ac1144eddaf0af714aaef85f4fde6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef3ac1144eddaf0af714aaef85f4fde6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionless_number, string input_scale, string control_variable)</td></tr>
+<tr class="separator:aef3ac1144eddaf0af714aaef85f4fde6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af04118205ed1a09deb387cb9c6fe00a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af04118205ed1a09deb387cb9c6fe00a1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationUserDefinedSequence</b> (string seq_type, string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)</td></tr>
 <tr class="separator:af04118205ed1a09deb387cb9c6fe00a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -132,9 +132,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>echoInputFiles</b> (s
 <tr class="memitem:a2ea39843d1763c67c248b0417163472f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ea39843d1763c67c248b0417163472f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>autoSetParameters</b> (const string &amp;keyword, const string &amp;value)</td></tr>
 <tr class="separator:a2ea39843d1763c67c248b0417163472f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11575d897a1cd4003b6143489c884f8a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11575d897a1cd4003b6143489c884f8a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>importInitialPositionFile</b> ()</td></tr>
-<tr class="separator:a11575d897a1cd4003b6143489c884f8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe2a026cb1527e70bdf19a969de9de9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe2a026cb1527e70bdf19a969de9de9c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>contactForceParameter</b> (string filename)</td></tr>
 <tr class="separator:afe2a026cb1527e70bdf19a969de9de9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,18 +141,33 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>contactForceParameter
 <tr class="memitem:ac5d7a3be23f6b310ed1dbf1a7ee31882"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac5d7a3be23f6b310ed1dbf1a7ee31882"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>importPreSimulationData</b> (string filename)</td></tr>
 <tr class="separator:ac5d7a3be23f6b310ed1dbf1a7ee31882"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a310edb9f961c54047e10f44ee4541a15"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a310edb9f961c54047e10f44ee4541a15"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>importConfiguration</b> ()</td></tr>
+<tr class="separator:a310edb9f961c54047e10f44ee4541a15"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0c86b63dff8eb379655ec7df1ed44192"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c86b63dff8eb379655ec7df1ed44192"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>importConfigurationBinary</b> ()</td></tr>
 <tr class="separator:a0c86b63dff8eb379655ec7df1ed44192"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5defc0764fcd9d3e96ebc832007763a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5defc0764fcd9d3e96ebc832007763a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesBrownian</b> (double dimensionlessnumber)</td></tr>
-<tr class="separator:ab5defc0764fcd9d3e96ebc832007763a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a941be735613c519b1a95149bb75d2e6d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a941be735613c519b1a95149bb75d2e6d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesNonBrownianRate</b> (double dimensionlessnumber)</td></tr>
-<tr class="separator:a941be735613c519b1a95149bb75d2e6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4820bfa06f399b52a890f2271808763"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4820bfa06f399b52a890f2271808763"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScalesNonBrownianStress</b> (double dimensionlessnumber)</td></tr>
-<tr class="separator:af4820bfa06f399b52a890f2271808763"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19623ec0109f77e40e0848e0513fca41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a19623ec0109f77e40e0848e0513fca41"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>exportForceAmplitudes</b> ()</td></tr>
+<tr class="separator:a19623ec0109f77e40e0848e0513fca41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacd9691d49638078ee0d2b3577ea22f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacd9691d49638078ee0d2b3577ea22f7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setLowPeclet</b> ()</td></tr>
+<tr class="separator:aacd9691d49638078ee0d2b3577ea22f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d2d4cb1f45d970cfa2f691b8538cb51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d2d4cb1f45d970cfa2f691b8538cb51"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>convertForceValues</b> (string new_long_unit)</td></tr>
+<tr class="separator:a0d2d4cb1f45d970cfa2f691b8538cb51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d53dd43bf7082c63b2767bac2c692b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d53dd43bf7082c63b2767bac2c692b4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resolveUnitSystem</b> (string long_unit)</td></tr>
+<tr class="separator:a5d53dd43bf7082c63b2767bac2c692b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12286fd02cb452adf672a5a656798856"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12286fd02cb452adf672a5a656798856"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScaleRateControlled</b> ()</td></tr>
+<tr class="separator:a12286fd02cb452adf672a5a656798856"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec57867509f177ec49ee8d750806f61e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec57867509f177ec49ee8d750806f61e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>convertInputForcesRateControlled</b> (double dimensionlessnumber, string rate_unit)</td></tr>
+<tr class="separator:aec57867509f177ec49ee8d750806f61e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a8aa2748a480d3b7573d080bc7bc9d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a8aa2748a480d3b7573d080bc7bc9d5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>convertInputForcesStressControlled</b> (double dimensionlessnumber, string rate_unit)</td></tr>
+<tr class="separator:a2a8aa2748a480d3b7573d080bc7bc9d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">evaluateData</a> ()</td></tr>
 <tr class="separator:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0343a8d24623b8fdf0478f62a106d25"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0343a8d24623b8fdf0478f62a106d25"></a>
@@ -178,12 +190,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>outputConfigurationBi
 <tr class="memitem:a4f897105fb2d9a8590d04dc8c2fd00b6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f897105fb2d9a8590d04dc8c2fd00b6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputConfigurationBinary</b> (string)</td></tr>
 <tr class="separator:a4f897105fb2d9a8590d04dc8c2fd00b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acedd732cb47dbf6a218e59f6aeea7742"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acedd732cb47dbf6a218e59f6aeea7742"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>getRate</b> ()</td></tr>
+<tr class="separator:acedd732cb47dbf6a218e59f6aeea7742"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1221947d9fcaa6bbb625c91d143be5e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1221947d9fcaa6bbb625c91d143be5e7"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>shiftUpCoordinate</b> (double x, double y, double z)</td></tr>
 <tr class="separator:a1221947d9fcaa6bbb625c91d143be5e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a34ef7116655a2497c0e738d6f0cdc6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a34ef7116655a2497c0e738d6f0cdc6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSimulationSteadyShear</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionlessnumber, string control_variable)</td></tr>
-<tr class="separator:a7a34ef7116655a2497c0e738d6f0cdc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35c1ea3ed0e5934cfad4cce9e03ce084"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35c1ea3ed0e5934cfad4cce9e03ce084"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSimulationSteadyShear</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionlessnumber, string input_scale)</td></tr>
+<tr class="separator:a35c1ea3ed0e5934cfad4cce9e03ce084"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0614d1d87addd8c5120c9546c765c37b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0614d1d87addd8c5120c9546c765c37b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputComputationTime</b> ()</td></tr>
 <tr class="separator:a0614d1d87addd8c5120c9546c765c37b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,6 +211,21 @@ Private Attributes</h2></td></tr>
 <tr class="memitem:a8211b57acfea04248b46daf56e21f1bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8211b57acfea04248b46daf56e21f1bb"></a>
 <a class="el" href="struct_parameter_set.html">ParameterSet</a>&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
 <tr class="separator:a8211b57acfea04248b46daf56e21f1bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81f77b3b699f0591ad7690e62ece8f40"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a81f77b3b699f0591ad7690e62ece8f40"></a>
+std::map&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>suffixes</b></td></tr>
+<tr class="separator:a81f77b3b699f0591ad7690e62ece8f40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44f973f48cd43cf5252bfd33db0d54e7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44f973f48cd43cf5252bfd33db0d54e7"></a>
+std::map&lt; string, double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>values</b></td></tr>
+<tr class="separator:a44f973f48cd43cf5252bfd33db0d54e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c3367daf869f61556efb6ac5fe854db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c3367daf869f61556efb6ac5fe854db"></a>
+std::map&lt; string, double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dimensionless_numbers</b></td></tr>
+<tr class="separator:a7c3367daf869f61556efb6ac5fe854db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6adf23ab0cb2253b60a852c00ee50fb1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6adf23ab0cb2253b60a852c00ee50fb1"></a>
+std::map&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unit_longname</b></td></tr>
+<tr class="separator:a6adf23ab0cb2253b60a852c00ee50fb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01a1e64516d5b9323e094530459ad2ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01a1e64516d5b9323e094530459ad2ba"></a>
+std::map&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unit_shortname</b></td></tr>
+<tr class="separator:a01a1e64516d5b9323e094530459ad2ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af931919108a6e69a97df94dd8bcf4c26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af931919108a6e69a97df94dd8bcf4c26"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>volume_or_area_fraction</b></td></tr>
 <tr class="separator:af931919108a6e69a97df94dd8bcf4c26"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -211,9 +241,9 @@ string&#160;</td><td class="memItemRight" valign="bottom"><b>filename_sequence</
 <tr class="memitem:a6d3407bc703f777c79d3edf967193190"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6d3407bc703f777c79d3edf967193190"></a>
 ostringstream&#160;</td><td class="memItemRight" valign="bottom"><b>string_control_parameters</b></td></tr>
 <tr class="separator:a6d3407bc703f777c79d3edf967193190"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67b187f5d042deae2a5a3d220ed0feaa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67b187f5d042deae2a5a3d220ed0feaa"></a>
-string&#160;</td><td class="memItemRight" valign="bottom"><b>import_line</b> [2]</td></tr>
-<tr class="separator:a67b187f5d042deae2a5a3d220ed0feaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a393b4c624040486489352095dc5505bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a393b4c624040486489352095dc5505bf"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>header_imported_configulation</b> [2]</td></tr>
+<tr class="separator:a393b4c624040486489352095dc5505bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4822d6685a736235492a45bb168bd7bb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4822d6685a736235492a45bb168bd7bb"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>control_var</b></td></tr>
 <tr class="separator:a4822d6685a736235492a45bb168bd7bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -316,6 +346,15 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>initial_lees_edward
 <tr class="memitem:a3b36ca9eee04f2fe6a08f23ee98d3d5b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b36ca9eee04f2fe6a08f23ee98d3d5b"></a>
 string&#160;</td><td class="memItemRight" valign="bottom"><b>unit_scales</b></td></tr>
 <tr class="separator:a3b36ca9eee04f2fe6a08f23ee98d3d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2772327de868eef8c8cd8d69510f9491"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2772327de868eef8c8cd8d69510f9491"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>target_stress_input</b></td></tr>
+<tr class="separator:a2772327de868eef8c8cd8d69510f9491"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc38488f765a6d8faa3f9d72bec12b19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abc38488f765a6d8faa3f9d72bec12b19"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>input_rate</b></td></tr>
+<tr class="separator:abc38488f765a6d8faa3f9d72bec12b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c616b4c5d31681ee074d0913630805f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c616b4c5d31681ee074d0913630805f"></a>
+string&#160;</td><td class="memItemRight" valign="bottom"><b>input_rate_unit</b></td></tr>
+<tr class="separator:a5c616b4c5d31681ee074d0913630805f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4dca931bf76c2b461b147677c583e052"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dca931bf76c2b461b147677c583e052"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>time_strain_0</b></td></tr>
 <tr class="separator:a4dca931bf76c2b461b147677c583e052"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -417,7 +456,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a></li>
-    <li class="footer">Generated on Wed May 13 2015 18:10:49 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed May 27 2015 10:56:14 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
