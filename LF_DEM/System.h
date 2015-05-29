@@ -302,8 +302,9 @@ private:
 	void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
 	/*************************************************************/
+	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
-	double calcLongInteractionRange(const int&, const int&);
+
 	
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{

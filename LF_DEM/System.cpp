@@ -450,15 +450,13 @@ void System::setupSystem(string control)
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (p.magnetic_type == 0) {
-		/* Short range non-contact interaction
+	if (p.interaction_range == -1) {
+		/* If interaction_range is not indicated,
+		 * interaction object is created at the lubrication cutoff.
 		 */
 		calcInteractionRange = &System::calcLubricationRange;
 	} else {
-		/* Long range non-contact interaction
-		 * - Magnetic dipole-dipole interaction
-		 */
-		calcInteractionRange = &System::calcLongInteractionRange;
+		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
 	
 	if (p.friction_model == 0) {
@@ -1876,6 +1874,11 @@ void System::calcLubricationForce()
 	}
 }
 
+double System::calcInteractionRangeDefault(const int& i, const int& j)
+{
+	return p.interaction_range*0.5*(radius[i]+radius[j]);
+}
+
 double System::calcLubricationRange(const int& i, const int& j)
 {
 	double rad_ratio = radius[i]/radius[j];
@@ -1887,10 +1890,6 @@ double System::calcLubricationRange(const int& i, const int& j)
 	}
 }
 
-double System::calcLongInteractionRange(const int& i, const int& j)
-{
-	return p.interaction_range*0.5*(radius[i]+radius[j]);
-}
 
 
 

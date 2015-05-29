@@ -1022,7 +1022,6 @@ void Simulation::setDefaultParameters()
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
-	p.interaction_range = 10;
 	/*
 	 * Stokes drag coeffient
 	 */
@@ -1044,6 +1043,10 @@ void Simulation::setDefaultParameters()
 	p.friction_model = 1;
 	p.time_end = 10;
 	p.lub_max_gap = 0.5;
+	/* This is cutoff distance (center-to-center) for interactions (repulsive force, magnetic force, etc.).
+	 * If interaction_range is not indicated, this value will be set from lub_max_gap.
+	 */
+	p.interaction_range = -1;
 	/*
 	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
 	 *

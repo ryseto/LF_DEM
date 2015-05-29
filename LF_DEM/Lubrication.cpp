@@ -37,7 +37,11 @@ void Lubrication::getInteractionData()
 
 bool Lubrication::is_active()
 {
-	return interaction->r < range;
+	if (interaction->is_contact()) {
+		return true;
+	} else {
+		return interaction->r < range;
+	}
 }
 
 void Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_)

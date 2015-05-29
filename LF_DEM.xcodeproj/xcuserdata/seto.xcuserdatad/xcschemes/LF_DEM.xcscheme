@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/data/simulation/magnetic1"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/shear_thickening_1"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m two_mag.txt init_relax_test.txt"
+            argument = "-r 0.02 D2N100VF0.78MonoSquare_1.dat shear.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
