@@ -540,6 +540,7 @@
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D972279B16AF02DC00DA851F /* generateYaplotFile.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = generateYaplotFile.pl; sourceTree = "<group>"; };
+		D9752C881B18285100DDE5E4 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
 		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Interaction.h; sourceTree = "<group>"; };
 		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Simulation.cpp; sourceTree = "<group>"; };
 		D9878876165545680047A87E /* Simulation.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Simulation.h; sourceTree = "<group>"; };
@@ -1191,6 +1192,7 @@
 				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
 				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
 				D988E38D165441750009949F /* main.cpp */,
+				D9752C881B18285100DDE5E4 /* global.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D988E39B1654A18D0009949F /* System.h */,
