@@ -1,0 +1,183 @@
+\RequirePackage[l2tabu, orthodox]{nag}
+\documentclass[fontsize=11pt]{scrartcl}
+\usepackage{amsmath,amsfonts,amsthm}
+\usepackage{bm}
+\usepackage[a4paper]{geometry}
+\usepackage[protrusion=true,expansion=true]{microtype}
+\usepackage{siunitx}
+\usepackage{xcolor}
+\usepackage[pdftex]{graphicx}
+\usepackage[pdftex,bookmarks,colorlinks]{hyperref}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext}
+\usepackage[varg]{newtxmath}
+\usepackage{booktabs}
+\usepackage{datetime}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{cleveref}
+\usepackage[numbers]{natbib}
+\bibliographystyle{abbrvnat}
+\setlist{itemsep=-3pt}
+\title{Nondimentionalization}
+\date{\shortdate\today \, \ampmtime }
+\author{seto}
+\begin{document}
+\maketitle
+
+\subsection*{Force balance equation}
+
+The following force balance equation is considered here;
+\begin{equation}
+ \bm{F}_{\mathrm{H}} +  \bm{F}_{\mathrm{R}}  = 0.
+\end{equation}
+%
+The hydrodynamic interaction is
+assumed to be linear form of velocities.
+%
+\begin{equation}
+ \bm{F}_{\mathrm{H}} = - \bm{R}\cdot\bm{U}.
+\end{equation}
+
+\subsection*{Representative quantities}
+
+\subsubsection*{From shear rate}
+Particle radius is commonly considered
+as the representative length in
+our particle simulations: $L^{\ast} = a$.
+
+One way to give the representative particle velocity
+in a sheared suspension is
+\begin{equation}
+U_{\mathrm{H}}^{\ast} = a \dot{\gamma}.
+\end{equation}
+%
+%
+The typical hydrodynamic force is given
+by the typical velocity $U_{\mathrm{H}}^{\ast} $
+and Stokes-drag form;
+\begin{equation}
+  F_{\mathrm{H}}^{\ast} = 6 \pi \eta_0 a U_{\mathrm{H}}^{\ast}.
+\end{equation}
+Here, we indicate nondimensionalized variables
+in the hydrodynamic unit by using `tilde',
+i.e.,
+$\bm{F}_{\mathrm{H}} = F_{\mathrm{H}}^{\ast} \tilde{\bm{F}}_{\mathrm{H}} $,
+etc.
+
+\subsubsection*{From repulsive force}
+
+The repulsive force $\bm{F}_{\mathrm{R}}$ 
+is a function of particle-to-particle distance.
+%
+We take the amplitude $F_{\mathrm{R}}^{\ast}$
+to represent the typical strength:
+%
+\begin{equation}
+ \bm{F}_{\mathrm{R}} =  F_{\mathrm{R}}^{\ast}
+\hat{\bm{F}}_{\mathrm{R}},
+\end{equation}
+where `hat' indicates nondimensionalized variables
+based on this repulsive force.
+%
+The corresponding velocity can also be
+given via the Stokes-drag form;
+\begin{equation}
+ U^{\ast}_{\mathrm{R}}
+  = \frac{F_{\mathrm{R}}^{\ast}}{6\pi\eta_0 a}.
+\end{equation}
+%
+
+\subsection*{Hydrodynamic (or shear-rate) unit}
+
+In the hydrodynamic unit, the nondimensionalized
+force balance equation is
+\begin{equation}
+ \frac{\bm{F}_{\mathrm{H}}}{F^{\ast}_{\mathrm{H}}}
+  +
+  \frac{\bm{F}_{\mathrm{R}}}{F^{\ast}_{\mathrm{H}}}  = 0
+  \quad
+  \Longrightarrow 
+    \quad
+ - \bm{R}' \cdot \tilde{\bm{U}} + \tilde{\bm{F}}_{\mathrm{R}} = 0
+\end{equation}
+where
+$\bm{R}' \equiv \bm{R} / 6 \pi \eta_0 a $.
+
+In order to see the shear rate dependence,
+it is convenient to represent
+the typical repulsive force $F_{\mathrm{R}}^{\ast}$.
+%
+\begin{equation}
+ - \tilde{\bm{R}} \cdot \tilde{\bm{U}} +
+\frac{1}{\alpha}  \hat{\bm{F}}_{\mathrm{R}} = 0
+\end{equation}
+%
+This $\alpha$ is the nondenominational shear rate:
+\begin{equation}
+ \alpha \equiv
+\frac{\bm{F}_{\mathrm{H}}^{\ast}}{\bm{F}_{\mathrm{R}}^{\ast}}
+=
+  \frac{\dot{\gamma}}{F_{\mathrm{R}}^{\ast}/6\pi\eta_0 a^2}\label{102734_31May15}
+\end{equation}
+
+The unit of time is
+\begin{equation}
+ t_{\mathrm{H}}^{\ast} \equiv \frac{L^{\ast}}{U_{\mathrm{H}}^{\ast}}
+  = \frac{1}{\dot{\gamma}}.
+\end{equation}
+Therefore, the nondenominational time $\tilde{t}$
+is shear strain (when shear rate is constant):
+\begin{equation} 
+ \tilde{t} = \frac{t}{t_{\mathrm{H}}^{\ast}} = t \dot{\gamma}
+\end{equation}
+
+[note]
+We call this unit system ``hydrodynamic''.
+But, the essential origin for this unit system
+is the way to give typical velocity,
+i.e., $U^{\ast} = a \dot{\gamma}$.
+%
+``Simple shear'' unit would be more proper name.
+
+
+\subsection*{Repulsive force unit}
+
+In the repulsive unit,
+the nondimensionalized
+force balance equation is
+\begin{equation}
+ \frac{\bm{F}_{\mathrm{H}}}{F^{\ast}_{\mathrm{R}}}
+  +
+  \frac{\bm{F}_{\mathrm{R}}}{F^{\ast}_{\mathrm{R}}}  = 0
+  \Longrightarrow
+    \quad
+    - \bm{R}' \cdot \hat{\bm{U}} +
+    \hat{\bm{F}}_{\mathrm{R}} = 0
+\end{equation}
+The time unit is
+\begin{equation}
+ t_{\mathrm{R}}^{\ast}
+  \equiv \frac{L^{\ast}}{U_{\mathrm{R}}^{\ast}}
+  = \frac{6 \pi \eta_0 a^2}{F_{\mathrm{R}}^{\ast}}
+\end{equation}
+
+In rate controlled simulations,
+the relation between
+the nondimensionalized time
+$\hat{t} \equiv t /t_{\mathrm{R}}^{\ast}$
+and shear strain is
+\begin{equation}
+ \gamma
+  \equiv \dot{\gamma} t 
+  = \dot{\gamma} t_{\mathrm{R}}^{\ast} \hat{t} 
+   = 
+\frac{F_{\mathrm{H}}^{\ast}}{F_{\mathrm{R}}^{\ast}}
+\hat{t} = \alpha \hat{t}
+\end{equation}
+where $\alpha$ is defined in \eqref{102734_31May15}.
+
+
+\end{document}
