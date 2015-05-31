@@ -71,10 +71,10 @@ etc.
 [note]
 $F_{\mathrm{H}}^{\ast}$ is a function of shear rate $\dot{\gamma}$.
 %
-Therefore,
-(1) it is not constant in the stress controlled simulation.
-(2) If system is not sheared,
-  $F_{\mathrm{H}}^{\ast} $ is zero and useless.
+Thus,
+it is not constant in the stress controlled simulation,
+and zero if system is not sheared.
+
 
 
 
@@ -143,7 +143,8 @@ The unit of time is
 Therefore, the nondenominational time $\tilde{t}$
 is shear strain (when shear rate is constant):
 \begin{equation} 
- \tilde{t} = \frac{t}{t_{\mathrm{H}}^{\ast}} = t \dot{\gamma}
+ \tilde{t} \equiv \frac{t}{t_{\mathrm{H}}^{\ast}} = t \dot{\gamma}
+   = \gamma
 \end{equation}
 %
 The nondimensionalized shear rate is
@@ -183,14 +184,14 @@ The time unit is
 \begin{equation}
  t_{\mathrm{R}}^{\ast}
   \equiv \frac{L^{\ast}}{U_{\mathrm{R}}^{\ast}}
-  = \frac{6 \pi \eta_0 a^2}{F_{\mathrm{R}}^{\ast}}
+  = \frac{6 \pi \eta_0 a^2}{F_{\mathrm{R}}^{\ast}}.
 \end{equation}
 %
 The nondimensionalized shear rate is
 \begin{equation}
  \hat{\dot{\gamma}} =
   \dot{\gamma} t_{\mathrm{R}}^{\ast}
-  = \alpha 
+  = \alpha.
 \end{equation}
 
 
@@ -223,33 +224,24 @@ the strain is simply given by
 \subsection*{Simulation data}
 
 
-\subsubsection*{Hydrodynamic (or shear-rate) unit}
 \begin{center}
-\begin{tabular}{ll}
-  ND time & $\tilde{t}$  \\
-  strain & $\gamma = \tilde{t}$ \\
-  relative viscosity &
-  $ \eta_{\mathrm{r}}
-     = 6 \pi \tilde{\sigma}$ \\
- ND shear rate & 1 \\
-ND stress & $\tilde{\sigma} $
-\end{tabular} 
-\end{center}
-
-\subsubsection*{Repulsive force unit}
-
-\begin{center}
-  \begin{tabular}{ll}
-    ND time & $\hat{t}$  \\
-    strain  &
-    $\gamma $ \\
-    relative viscosity &
-    $ \eta_{\mathrm{r}}
-    = 6 \pi \hat{\sigma} /\alpha$
+  \begin{tabular}{lccccc}
+    &   {\bf Output} & {\bf Output in H.U.} &  {\bf Calc in H.U.}
+    & {\bf Output in R.U.} &  {\bf Calc in R.U.}
     \\
-    ND shear rate &
-    $\hat{\dot{\gamma}} = \alpha$ \\
-    ND stress & $\hat{\sigma} $
+    {\bf strain} & $\gamma $ & $ \tilde{t}$
+    & & $\gamma $
+    \\
+    {\bf relative viscosity}   &  $ \eta_{\mathrm{r}}$ &
+    $6 \pi \tilde{\sigma}$ &  &
+    $6 \pi \hat{\sigma}/\alpha$  & \\
+    {\bf time}  & $\hat{t}$ & $ \tilde{t}/\alpha$
+    &  $\tilde{t} $ & $\hat{t}$ & $\hat{t}$\\
+    {\bf shear rate}& $\hat{\dot{\gamma}}$ & $\alpha$ & $\tilde{\dot{\gamma}} = 1$
+    & $\hat{\dot{\gamma}}$ & $\hat{\dot{\gamma}}$  \\
+    {\bf stress} & $\hat{\sigma}$
+       & $\alpha\tilde{\sigma}$  & $\tilde{\sigma} $  &
+      $\hat{\sigma}$ &  $\hat{\sigma}$ 
   \end{tabular} 
 \end{center}
 
