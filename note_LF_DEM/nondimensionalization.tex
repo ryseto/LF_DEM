@@ -115,13 +115,14 @@ the typical repulsive force $F_{\mathrm{R}}^{\ast}$.
 \frac{1}{\alpha}  \hat{\bm{F}}_{\mathrm{R}} = 0
 \end{equation}
 %
-This $\alpha$ is the nondenominational shear rate:
+This $\alpha$ indicates the competition between two forces:
 \begin{equation}
  \alpha \equiv
 \frac{\bm{F}_{\mathrm{H}}^{\ast}}{\bm{F}_{\mathrm{R}}^{\ast}}
 =
   \frac{\dot{\gamma}}{F_{\mathrm{R}}^{\ast}/6\pi\eta_0 a^2}\label{102734_31May15}
 \end{equation}
+
 
 The unit of time is
 \begin{equation}
@@ -133,6 +134,15 @@ is shear strain (when shear rate is constant):
 \begin{equation} 
  \tilde{t} = \frac{t}{t_{\mathrm{H}}^{\ast}} = t \dot{\gamma}
 \end{equation}
+%
+The nondimensionalized shear rate is
+\begin{equation}
+ \tilde{\dot{\gamma}}
+  =
+  \dot{\gamma} t_{\mathrm{H}}^{\ast} = 1
+\end{equation}
+
+
 
 [note]
 We call this unit system ``hydrodynamic''.
@@ -152,6 +162,7 @@ force balance equation is
  \frac{\bm{F}_{\mathrm{H}}}{F^{\ast}_{\mathrm{R}}}
   +
   \frac{\bm{F}_{\mathrm{R}}}{F^{\ast}_{\mathrm{R}}}  = 0
+      \quad
   \Longrightarrow
     \quad
     - \bm{R}' \cdot \hat{\bm{U}} +
@@ -163,6 +174,15 @@ The time unit is
   \equiv \frac{L^{\ast}}{U_{\mathrm{R}}^{\ast}}
   = \frac{6 \pi \eta_0 a^2}{F_{\mathrm{R}}^{\ast}}
 \end{equation}
+%
+The nondimensionalized shear rate is
+\begin{equation}
+ \hat{\dot{\gamma}} =
+  \dot{\gamma} t_{\mathrm{R}}^{\ast}
+  = \alpha 
+\end{equation}
+
+
 
 In rate controlled simulations,
 the relation between
@@ -178,6 +198,49 @@ and shear strain is
 \hat{t} = \alpha \hat{t}
 \end{equation}
 where $\alpha$ is defined in \eqref{102734_31May15}.
+
+In stress controlled simulations,
+the strain is simply given by
+\begin{equation}
+ \gamma
+ = \int^{t} \dot{\gamma} dt
+ = \int^{t} \alpha d\hat{t}.
+\end{equation}
+
+
+
+\subsection*{Simulation data}
+
+
+\subsubsection*{Hydrodynamic (or shear-rate) unit}
+\begin{center}
+\begin{tabular}{ll}
+  ND time & $\tilde{t}$  \\
+  strain & $\gamma = \tilde{t}$ \\
+  relative viscosity &
+  $ \eta_{\mathrm{r}}
+     = 6 \pi \tilde{\sigma}$ \\
+ ND shear rate & 1 \\
+ND stress & $\tilde{\sigma} $
+\end{tabular} 
+\end{center}
+
+\subsubsection*{Repulsive force unit}
+
+\begin{center}
+  \begin{tabular}{ll}
+    ND time & $\hat{t}$  \\
+    strain (rate controlled) &
+    $\gamma = \alpha \hat{t}$ \\
+    relative viscosity &
+    $ \eta_{\mathrm{r}}
+    = 6 \pi \hat{\sigma} /\alpha$
+    \\
+    ND shear rate &
+    $\hat{\dot{\gamma}} = \alpha$ \\
+    ND stress & $\hat{\sigma} $
+  \end{tabular} 
+\end{center}
 
 
 \end{document}
