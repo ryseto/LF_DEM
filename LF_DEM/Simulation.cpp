@@ -1497,11 +1497,10 @@ void Simulation::outputData()
 	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
 	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
-	
 	outdata.init(36);
 	
-	outdata.entryData(0, "time", sys.get_time());
-	outdata.entryData(1, "shear strain", sys.get_shear_strain());
+	outdata.entryData(1, "time", sys.get_time());
+	outdata.entryData(2, "shear strain", sys.get_shear_strain());
 	/*
 	 * shear rate
 	 */
@@ -1510,11 +1509,10 @@ void Simulation::outputData()
 	//	} else {
 	//		ND_shear_rate = dimensionless_numbers["r"];
 	//	}
-	outdata.entryData(2, "shear rate", sys.get_shear_rate());
+	outdata.entryData(3, "shear rate", sys.get_shear_rate());
 	/*
 	 * Rheology data
 	 */
-	outdata.entryData(4, "viscosity", 6*M_PI*viscosity);
 	/*
 	 * Hydrodynamic contribution means
 	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
@@ -1527,12 +1525,13 @@ void Simulation::outputData()
 	 * Contact force contribution seems to be
 	 * the sum of viscosity_cont_XF and viscosity_cont_GU.
 	 */
-	outdata.entryData(5, "Viscosity(lub)", 6*M_PI*viscosity_hydro);
-	outdata.entryData(6, "Viscosity(xF_contact part)", 6*M_PI*viscosity_cont_XF);
-	outdata.entryData(7, "Viscosity(GU_contact part)", 6*M_PI*viscosity_cont_GU);
-	outdata.entryData(8, "Viscosity(repulsive force XF)", 6*M_PI*viscosity_repulsive_XF);
-	outdata.entryData(9, "Viscosity(repulsive force GU)", 6*M_PI*viscosity_repulsive_GU);
-	outdata.entryData(10, "Viscosity(brownian)", 6*M_PI*viscosity_brownian);
+	outdata.entryData(5, "viscosity", 6*M_PI*viscosity);
+	outdata.entryData(6, "Viscosity(lub)", 6*M_PI*viscosity_hydro);
+	outdata.entryData(7, "Viscosity(xF_contact part)", 6*M_PI*viscosity_cont_XF);
+	outdata.entryData(8, "Viscosity(GU_contact part)", 6*M_PI*viscosity_cont_GU);
+	outdata.entryData(9, "Viscosity(repulsive force XF)", 6*M_PI*viscosity_repulsive_XF);
+	outdata.entryData(10, "Viscosity(repulsive force GU)", 6*M_PI*viscosity_repulsive_GU);
+	outdata.entryData(11, "Viscosity(brownian)", 6*M_PI*viscosity_brownian);
 	/*
 	 * Stress
 	 */
@@ -1540,40 +1539,38 @@ void Simulation::outputData()
 	if (unit_scales == "hydro") {
 		ND_shear_stress *= dimensionless_numbers["r"];
 	}
-	outdata.entryData(13, "shear stress", ND_shear_stress);
-	outdata.entryData(14, "N1 viscosity", 6*M_PI*normalstress_diff_1);
-	outdata.entryData(15, "N2 viscosity", 6*M_PI*normalstress_diff_2);
-	outdata.entryData(16, "particle pressure", 6*M_PI*particle_pressure);
-	outdata.entryData(17, "particle pressure contact", 6*M_PI*particle_pressure_cont);
+	outdata.entryData(14, "shear stress", ND_shear_stress);
+	outdata.entryData(15, "N1 viscosity", 6*M_PI*normalstress_diff_1);
+	outdata.entryData(16, "N2 viscosity", 6*M_PI*normalstress_diff_2);
+	outdata.entryData(17, "particle pressure", 6*M_PI*particle_pressure);
+	outdata.entryData(18, "particle pressure contact", 6*M_PI*particle_pressure_cont);
 	/* energy
 	 */
-	outdata.entryData(20, "energy", sys.get_total_energy());
-
+	outdata.entryData(21, "energy", sys.get_total_energy());
 	/* maximum deformation of contact bond
 	 */
-
-	outdata.entryData(21, "min gap", sys.min_reduced_gap);
-	outdata.entryData(22, "max gap(cohesion)", sys.max_contact_gap);
-	outdata.entryData(23, "max tangential displacement", sys.max_disp_tan);
-	outdata.entryData(24, "max rolling displacement", sys.max_disp_rolling);
+	outdata.entryData(22, "min gap", sys.min_reduced_gap);
+	outdata.entryData(23, "max gap(cohesion)", sys.max_contact_gap);
+	outdata.entryData(24, "max tangential displacement", sys.max_disp_tan);
+	outdata.entryData(25, "max rolling displacement", sys.max_disp_rolling);
 	/* contact number
 	 */
-	outdata.entryData(25, "contact number", sys.getContactNumber());
-	outdata.entryData(26, "frictional contact number", sys.getFrictionalContactNumber());
-	outdata.entryData(27, "number of interaction", sys.get_nb_of_active_interactions());
+	outdata.entryData(26, "contact number", sys.getContactNumber());
+	outdata.entryData(27, "frictional contact number", sys.getFrictionalContactNumber());
+	outdata.entryData(28, "number of interaction", sys.get_nb_of_active_interactions());
 	/* maximum velocity
 	 */
-	outdata.entryData(28, "max velocity",  sys.max_velocity);
-	outdata.entryData(29, "max angular velocity",  sys.max_ang_velocity);
+	outdata.entryData(29, "max velocity",  sys.max_velocity);
+	outdata.entryData(30, "max angular velocity",  sys.max_ang_velocity);
 	/* simulation parameter
 	 */
-	outdata.entryData(30, "dt", sys.dt);
-	outdata.entryData(31, "kn", sys.kn);
-	outdata.entryData(32, "kt", sys.kt);
-	outdata.entryData(33, "kr", sys.kr);
-	outdata.entryData(34, "shear displacement", sys.shear_disp);
+	outdata.entryData(31, "dt", sys.dt);
+	outdata.entryData(32, "kn", sys.kn);
+	outdata.entryData(33, "kt", sys.kt);
+	outdata.entryData(34, "kr", sys.kr);
+	outdata.entryData(35, "shear displacement", sys.shear_disp);
 	if (p.magnetic_type != 0) {
-		outdata.entryData(35, "magnetic energy", sys.magnetic_energy);
+		outdata.entryData(36, "magnetic energy", sys.magnetic_energy);
 	}
 	outdata.exportFile(fout_data);
 }

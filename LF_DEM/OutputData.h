@@ -45,17 +45,18 @@ public:
 	template<typename T>
 	void entryData(int num, string name, T value)
 	{
+		int index = num-1;
 		ostringstream str_value;
 		str_value << value;
 		if (first_time) {
-			if (output_data_name[num] != "blank") {
-				cerr << "data["<< num << "] is redefined." << endl;
+			if (output_data_name[index] != "blank") {
+				cerr << "data["<< index << "] is redefined." << endl;
 				exit(1);
 			} else {
-				output_data_name[num] = name;
+				output_data_name[index] = name;
 			}
 		}
-		output_data[num] = str_value.str();
+		output_data[index] = str_value.str();
 	}
 	
 	void exportFile(ofstream &fout_data)
