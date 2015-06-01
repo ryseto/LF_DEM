@@ -24,7 +24,7 @@
 #include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
-
+#include "OutputData.h"
 	
 class Simulation
 {
@@ -99,6 +99,7 @@ private:
 	ofstream fout_st;
 	ofstream fout_time;
 	ofstream fout_input;
+	OutputData outdata;
 	/*
 	 * For inputs
 	 */

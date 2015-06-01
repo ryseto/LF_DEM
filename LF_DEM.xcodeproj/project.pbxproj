@@ -564,6 +564,7 @@
 		D9A80BF31B1A9BA700F4BFD3 /* nondimensionalization.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = nondimensionalization.pdf; sourceTree = "<group>"; };
 		D9A80BF41B1A9BA700F4BFD3 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9A80BF51B1A9BC200F4BFD3 /* nondimensionalization.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = nondimensionalization.tex; sourceTree = "<group>"; };
+		D9A80BF61B1C87D000F4BFD3 /* OutputData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OutputData.h; sourceTree = "<group>"; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
 		D9BC20971AAD607B0033D4A8 /* algorithm.graffle */ = {isa = PBXFileReference; lastKnownFileType = file; path = algorithm.graffle; sourceTree = "<group>"; };
@@ -1198,6 +1199,7 @@
 				D9752C881B18285100DDE5E4 /* global.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
+				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
