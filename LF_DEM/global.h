@@ -2,6 +2,7 @@
 #define __LF_DEM__global__
 
 #include <string>
+#include <algorithm>
 #include "vec3d.h"
 #ifndef GIT_VERSION
 /*
@@ -31,12 +32,12 @@ using namespace std;
 
 inline void removeBlank(string &str)
 {
-	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
+	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
 inline bool getSuffix(const string &str, string &value, string &suffix)
 {
-	std::size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
+	size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
 	value = str.substr(0, suffix_pos);
 	suffix = str.substr(suffix_pos, str.length());
 	if (suffix.empty()) {

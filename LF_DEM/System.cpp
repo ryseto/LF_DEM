@@ -802,14 +802,13 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > 0 && max_sliding_velocity > 0){ // small density system can have na_velocity=0
+		if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
 			if (max_velocity > max_sliding_velocity) {
 				dt = p.disp_max/max_velocity;
 			} else {
 				dt = p.disp_max/max_sliding_velocity;
 			}
-		}
-		else{
+		} else {
 			dt = 1e-2/shear_rate;
 		}
 	}
