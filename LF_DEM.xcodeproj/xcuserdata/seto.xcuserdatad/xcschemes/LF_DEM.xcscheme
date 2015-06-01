@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/data/simulation/shear_thickening_1"
+      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/newsimulation"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 0.02 D2N100VF0.78MonoSquare_1.dat shear.txt"
+            argument = "-r 0.1r D3N100VF0.5Bidi1.4_0.5Cubic_1.dat shear.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

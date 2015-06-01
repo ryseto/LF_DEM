@@ -92,7 +92,8 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_rheo;
+	ofstream fout_data; // New (trial) version of fout_rheo
+	ofstream fout_rheo; // Old version
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
@@ -125,6 +126,7 @@ private:
 	void evaluateData();
 	void outputDataHeader(ofstream &fout);
 	void outputRheologyData();
+	void outputData();
 	void outputStressTensorData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();

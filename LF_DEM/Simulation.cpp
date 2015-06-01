@@ -31,9 +31,12 @@ target_stress_input(0)
 
 Simulation::~Simulation()
 {
-	if (fout_rheo.is_open()) {
-		fout_rheo.close();
+	if (fout_data.is_open()) {
+		fout_data.close();
 	}
+	if (fout_rheo.is_open()) { //@@ old
+		fout_rheo.close(); //@@ old
+	} //@@ old
 	if (fout_particle.is_open()) {
 		fout_particle.close();
 	}
@@ -195,7 +198,8 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	string force_type = rate_unit; // our force defining the shear rate
 	
 	if (force_type == "h"){
-		cerr << " Error: please give a stress in non-hydro units." << endl; exit(1);
+		cerr << " Error: please give a stress in non-hydro units." << endl;
+		exit(1);
 		/*
 		 Note:
 		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
@@ -208,7 +212,8 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		 */
 	}
 	if (force_type == "b"){
-		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl; exit(1);
+		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl;
+		exit(1);
 	}
 	
 	sys.set_shear_rate(1);
@@ -236,7 +241,8 @@ void Simulation::convertForceValues(string new_long_unit)
 	string new_unit = unit_shortname[new_long_unit];
 	if (dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()
 		&& new_unit != "h") {
-		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
+		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl;
+		exit(1);
 	}
 	
 	for (auto&& f: suffixes) {
@@ -279,7 +285,8 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	
 	string force_type = rate_unit; // our force defining the shear rate
 	if (force_type == "h") {
-		cerr << "Error: cannot define the shear rate in hydro unit." << endl; exit(1);
+		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
+		exit(1);
 	}
 	dimensionless_numbers[force_type] = dimensionlessnumber;
 	if (values[force_type] > 0) {
@@ -486,7 +493,8 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
 	evaluateData();
-	outputRheologyData();
+	outputData(); // new
+	outputRheologyData(); // old
 	outputStressTensorData();
 	outputConfigurationBinary();
 	outputConfigurationData();
@@ -500,7 +508,8 @@ void Simulation::simulationSteadyShear(string in_args,
 		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
-		outputRheologyData();
+		outputData(); // new
+		outputRheologyData(); // old
 		outputStressTensorData();
 		outputConfigurationBinary();
 		if (time_interval_output_data == -1) {
@@ -894,8 +903,10 @@ void Simulation::openOutputFiles(bool binary_conf)
 	string st_filename = "st_" +sys.simu_name + ".dat";
 	fout_st.open(st_filename.c_str());
 	outputDataHeader(fout_st);
-	string rheo_filename = "rheo_" + sys.simu_name + ".dat";
-	fout_rheo.open(rheo_filename.c_str());
+	string data_filename = "data_" + sys.simu_name + ".dat";
+	fout_data.open(data_filename.c_str());
+	string rheo_filename = "rheo_" + sys.simu_name + ".dat"; //@@ old
+	fout_rheo.open(rheo_filename.c_str()); //@@ old
 	string time_filename = "t_" + sys.simu_name + ".dat";
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_" + sys.simu_name + ".dat";
@@ -1263,10 +1274,12 @@ void Simulation::evaluateData()
 	if (unit_scales == "thermal") {
 		stress_unit_converter = 1/dimensionless_numbers["b"];
 	}
-	if (unit_scales == "repulsion") {
-		stress_unit_converter = 1/dimensionless_numbers["r"];
+	if (unit_scales == "repulsive") {
+		//stress_unit_converter = 1/dimensionless_numbers["r"];
+		stress_unit_converter = 1/sys.get_shear_rate(); //@@@@@@
 	}
-	
+	cerr << unit_scales << ' ' << stress_unit_converter << endl;
+
 	viscosity = stress_unit_converter*(sys.einstein_stress+sys.total_stress.getStressXZ());
 	normalstress_diff_1 = stress_unit_converter*sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = stress_unit_converter*sys.total_stress.getNormalStress2();
@@ -1423,7 +1436,7 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.max_contact_velo_tan << ' '; //37
 	fout_rheo << sys.ave_sliding_velocity << ' ' ; //38
 	fout_rheo << sys.max_sliding_velocity << ' ' ; //39
-	fout_rheo << sys.getParticleContactNumber() << ' ';//40
+	fout_rheo << sys.getContactNumber() << ' ';//40
 	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
 	fout_rheo << sys.contact_nb << ' '; //42
 	fout_rheo << sys.fric_contact_nb << ' '; //43
@@ -1448,6 +1461,116 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.get_total_energy() << ' '; // 53;
 	fout_rheo << sys.magnetic_energy << ' ';// 54;
 	fout_rheo << endl;
+}
+
+
+void Simulation::outputData()
+{
+	/**
+	 \brief Output data.
+	 
+	 Stress data are converted in units of
+	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
+	 in the System class (these can be hydrodynamic, Brownian or
+	 repulsive force units).
+	 
+	 \b NOTE: this behavior should be changed
+	 and made more consistent in the future.
+	 */
+	
+	/*
+	 * Output the sum of the normal forces.
+	 *
+	 *  Viscosity = S_{xz} / shear_rate
+	 *  N1 = S_{xx}-S_{zz}
+	 *  N2 = S_{zz}-S_{yy} = S_zz-(-S_xx-S_zz) = S_xx+2*S_zz
+	 *
+	 * Relative viscosity = Viscosity / viscosity_solvent
+	 */
+	
+	/*
+	 * hat(...) indicates dimensionless quantities.
+	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
+	 * (2) N1/(eta0*shear_rate) = 6*pi*hat(N1)
+	 * (3) N2/(eta0*shear_rate) = 6*pi*hat(N2)
+	 *
+	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
+	 *
+	 * [note] In stress controlled simulation,
+	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
+	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
+	 */
+	fout_data << sys.get_time() << ' '; // 1
+	fout_data << sys.get_shear_strain() << ' '; // 2
+	/*
+	 * shear rate
+	 */
+	double ND_shear_rate = 	sys.get_shear_rate();
+
+//	if (unit_scales == "thermal") {
+//		ND_shear_rate = dimensionless_numbers["b"];
+//	} else {
+//		ND_shear_rate = dimensionless_numbers["r"];
+//	}
+	fout_data << ND_shear_rate << ' '; // 3
+	/*
+	 * Rheology data
+	 */
+	fout_data << 6*M_PI*viscosity << ' '; //4
+	/*
+	 * Hydrodynamic contribution means
+	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
+	 * vel_hydro is obtained with GE for the rhs.
+	 *
+	 * "_hydro" might be bit confusing.
+	 * Something indicating "E_inf" would be better.
+	 */
+	fout_data << 6*M_PI*viscosity_hydro << ' '; //5
+	/*
+	 * Contact force contribution seems to be
+	 * the sum of viscosity_cont_XF and viscosity_cont_GU.
+	 */
+	fout_data << 6*M_PI*viscosity_cont_XF << ' '; //6
+	fout_data << 6*M_PI*viscosity_cont_GU << ' ' ; //7
+	fout_data << 6*M_PI*viscosity_repulsive_XF << ' '; //8
+	fout_data << 6*M_PI*viscosity_repulsive_GU << ' '; //9
+	fout_data << 6*M_PI*viscosity_brownian << ' ' ; //10
+	/*
+	 * Stress
+	 */
+	double ND_shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
+	if (unit_scales == "hydro") {
+		ND_shear_stress *= dimensionless_numbers["r"];
+	}
+	fout_data << ND_shear_stress << ' '; // 11
+	fout_data << 6*M_PI*normalstress_diff_1 << ' '; //12
+	fout_data << 6*M_PI*normalstress_diff_2 << ' '; //13
+	fout_data << 6*M_PI*particle_pressure << ' ';//14
+	fout_data << 6*M_PI*particle_pressure_cont << ' ';//15
+	/* energy
+	 */
+	fout_data << sys.get_total_energy() << ' '; // 16
+	/* maximum deformation of contact bond
+	 */
+	fout_data << sys.min_reduced_gap << ' '; //17
+	fout_data << sys.max_contact_gap << ' '; //18
+	fout_data << sys.max_disp_tan << ' '; //19
+	fout_data << sys.max_disp_rolling << ' '; //20
+	/* contact number
+	 */
+	fout_data << sys.getContactNumber() << ' ';//21
+	fout_data << sys.getFrictionalContactNumber() << ' ';//22
+	fout_data << sys.get_nb_of_active_interactions() << ' ';//23
+	/* maximum velocity
+	 */
+	fout_data << sys.max_velocity << ' '; //24
+	fout_data << sys.max_ang_velocity << ' '; //25
+	/* simulation parameter
+	 */
+	fout_data << sys.dt << ' '; //26
+	fout_data << sys.shear_disp << ' '; // 27
+	fout_data << sys.magnetic_energy << ' ';// 28
+	fout_data << endl;
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)

@@ -317,11 +317,16 @@ private:
 		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
 	}
 
-	double getParticleContactNumber()
+	double getContactNumber()
 	{
 		return (double)2*contact_nb/np;
 	}
 
+	double getFrictionalContactNumber()
+	{
+		return (double)2*contact_nb/np;
+	}
+	
 	double get_lx()
 	{
 		return lx;

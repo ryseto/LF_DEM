@@ -455,6 +455,7 @@ void System::setupSystem(string control)
 		 * interaction object is created at the lubrication cutoff.
 		 */
 		calcInteractionRange = &System::calcLubricationRange;
+		p.interaction_range = 2+p.lub_max_gap;
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
@@ -483,7 +484,9 @@ void System::setupSystem(string control)
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
 	}
+	
 	allocateRessources();
+
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -818,7 +821,6 @@ void System::timeStepMove()
 		strain_increment = dt*shear_rate;
 	}
 	timeStepBoxing(strain_increment);
-	
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
