@@ -557,6 +557,87 @@ void Simulation::simulationSteadyShear(string in_args,
 	}
 }
 
+void Simulation::simulationMagnetic(string in_args,
+									vector<string> &input_files,
+									bool binary_conf,
+									double dimensionless_number,
+									string input_scale,
+									string control_variable)
+{
+	user_sequence = false;
+	control_var = control_variable;
+	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	int cnt_simu_loop = 1;
+	int cnt_config_out = 1;
+	double strain_output_config = 0;
+	double time_output_data = 0;
+	double time_output_config = 0;
+	time_t now;
+	time_strain_1 = 0;
+	now = time(NULL);
+	time_strain_0 = now;
+	/******************** OUTPUT INITIAL DATA ********************/
+	evaluateData();
+	outputData(); // new
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
+	double time_end = 0;
+	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
+	cerr << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
+	while (sys.get_time() < p.time_end) {
+		time_end = sys.get_time()+p.step_interval_external_magnetic_field;
+		sys.external_magnetic_field.set(abs(sin(sys.angle_external_magnetic_field)),abs(cos(sys.angle_external_magnetic_field)),0);
+		sys.external_magnetic_field.cerr();
+		sys.setMagneticMomentExternalField();
+		while (sys.get_time() < time_end) {
+			cerr << sys.get_time() << ' ' << time_end << endl;
+			time_output_data = cnt_simu_loop*time_interval_output_data;
+			time_output_config = cnt_config_out*time_interval_output_config;
+			sys.timeEvolution(time_output_data);
+			cnt_simu_loop ++;
+			/******************** OUTPUT DATA ********************/
+			evaluateData();
+			outputData(); // new
+			outputStressTensorData();
+			outputConfigurationBinary();
+			if (time_interval_output_data == -1) {
+				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+					outputConfigurationData();
+					cnt_config_out ++;
+				}
+			} else {
+				if (sys.get_time() >= time_output_config-1e-8) {
+					outputConfigurationData();
+					cnt_config_out ++;
+				}
+			}
+			/*****************************************************/
+			cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
+			sys.new_contact_gap = 0;
+			if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
+				now = time(NULL);
+				time_strain_1 = now;
+				timestep_1 = sys.get_total_num_timesteps();
+			}
+		}
+		sys.angle_external_magnetic_field += d_angle_external_magnetic_field;
+	}
+	now = time(NULL);
+	time_strain_end = now;
+	timestep_end = sys.get_total_num_timesteps();
+	outputComputationTime();
+	if (filename_parameters.find("init_relax", 0)) {
+		/* To prepare relaxed initial configuration,
+		 * we can use Brownian simulation for a short interval.
+		 * Here is just to export the position data.
+		 */
+		outputFinalConfiguration();
+	}
+}
+
+
 void Simulation::outputComputationTime()
 {
 	int time_from_1 = time_strain_end-time_strain_1;
@@ -834,13 +915,16 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
 		p.magnetic_type = atoi(value.c_str());
-	} else if (keyword == "external_magnetic_field") {
-		p.external_magnetic_field = str2vec3d(value);
+	} else if (keyword == "init_angle_external_magnetic_field") {
+		p.init_angle_external_magnetic_field = atof(value.c_str());
+	} else if (keyword == "rot_step_external_magnetic_field") {
+		p.rot_step_external_magnetic_field = atof(value.c_str());
+	} else if (keyword == "step_interval_external_magnetic_field") {
+		p.step_interval_external_magnetic_field = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
 	}
-	
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
@@ -1104,7 +1188,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-	p.external_magnetic_field.set(0, 0, 0);
+//	p.external_magnetic_field.set(0, 0, 0);
 }
 
 void Simulation::importConfiguration()
@@ -1497,7 +1581,11 @@ void Simulation::outputData()
 	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
 	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
-	outdata.init(36);
+	if (sys.p.magnetic_type == 0) {
+		outdata.init(36);
+	} else {
+		outdata.init(40);
+	}
 	
 	outdata.entryData(1, "time", sys.get_time());
 	outdata.entryData(2, "shear strain", sys.get_shear_strain());
@@ -1570,7 +1658,8 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", sys.kr);
 	outdata.entryData(35, "shear displacement", sys.shear_disp);
 	if (p.magnetic_type != 0) {
-		outdata.entryData(36, "magnetic energy", sys.magnetic_energy);
+		outdata.entryData(37, "magnetic energy", sys.magnetic_energy);
+		outdata.entryData(38, "magnetic field angle", sys.angle_external_magnetic_field);
 	}
 	outdata.exportFile(fout_data);
 }

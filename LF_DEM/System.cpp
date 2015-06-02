@@ -300,6 +300,15 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
+void System::setMagneticMomentExternalField()
+{
+	for (int i=0; i<num_magnetic_particles; i++) {
+		magnetic_moment[i] = magnetic_susceptibility[i]*external_magnetic_field;
+		magnetic_moment_norm[i] = magnetic_moment[i].norm();
+	}
+	magnetic_field_square = external_magnetic_field.sq_norm();
+}
+
 void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 									  const vector <double> &magnetic_susceptibility_)
 {
@@ -340,14 +349,15 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		int i_magnetic = 0;
 		for (int i=0; i<np; i++) {
 			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
-			magnetic_moment[i] = magnetic_susceptibility[i]*p.external_magnetic_field;
-			magnetic_moment_norm[i] = magnetic_moment[i].norm();
 			if (magnetic_susceptibility[i] != 0) {
 				i_magnetic = i+1;
 			}
 		}
-		magnetic_field_square = p.external_magnetic_field.sq_norm();
 		num_magnetic_particles = i_magnetic;
+		angle_external_magnetic_field = p.init_angle_external_magnetic_field;
+		external_magnetic_field.set(abs(sin(angle_external_magnetic_field)),abs(cos(angle_external_magnetic_field)),0);
+		external_magnetic_field.cerr();
+		setMagneticMomentExternalField();
 	}
 }
 
@@ -1217,7 +1227,7 @@ void System::setRepulsiveForceToParticle()
 void System::setMagneticForceToParticle()
 {
 	if (p.magnetic_type != 0) {
-		if (p.external_magnetic_field.is_zero() ||
+		if (external_magnetic_field.is_zero() ||
 			p.magnetic_type == 2) {
 			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
@@ -1226,7 +1236,7 @@ void System::setMagneticForceToParticle()
 		} else {
 			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
-				magnetic_torque[i] = cross(magnetic_moment[i], p.external_magnetic_field);
+				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
 		}
 		for (int k=0; k<nb_interaction; k++) {
@@ -1764,9 +1774,9 @@ void System::calcPotentialEnergy()
 			}
 		}
 	}
-	if (p.external_magnetic_field.is_not_zero()) {
+	if (external_magnetic_field.is_not_zero()) {
 		for (int i=0; i<num_magnetic_particles; i++) {
-			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], p.external_magnetic_field);
+			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 			total_energy += tmp_magnetic_energy_ex;
 			magnetic_energy += tmp_magnetic_energy_ex;
 		}

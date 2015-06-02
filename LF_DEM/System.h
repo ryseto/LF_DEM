@@ -271,6 +271,9 @@ private:
 	bool magnetic_rotation_active;
 	double magnetic_energy;
 	double magnetic_field_square;
+	double angle_external_magnetic_field;
+	vec3d external_magnetic_field;
+
 	/////////////////////////////////
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const vector <vec3d> &initial_positions,
@@ -278,6 +281,8 @@ private:
 						  double lx_, double ly_, double lz_);
 	void setMagneticConfiguration(const vector <vec3d> &magnetic_moment,
 								  const vector <double> &magnetic_susceptibility);
+	void setMagneticMomentExternalField();
+
 	void setInteractions_GenerateInitConfig();
 	void setupSystem(string control);
 	void setupBrownian();

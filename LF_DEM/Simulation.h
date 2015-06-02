@@ -149,5 +149,10 @@ public:
 	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,
 							   double dimensionless_number, string input_scale, string control_variable);
 	void simulationUserDefinedSequence(string seq_type, string in_args, vector<string> &input_files, bool binary_conf, string control_variable);
+	
+	void simulationMagnetic(string in_args,	vector<string> &input_files,
+							bool binary_conf, double dimensionless_number,
+							string input_scale, string control_variable);
+	
 };
 #endif /* defined(__LF_DEM__Simulation__) */

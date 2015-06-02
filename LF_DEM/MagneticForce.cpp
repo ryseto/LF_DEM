@@ -48,8 +48,8 @@ void MagneticForce::calcForceToruqe()
 	 * magnetic_coeffient = (3*mu0)/(4*M_PI)
 	 */
 	if (sys->magnetic_rotation_active == false){
-		double H_dot_n = dot(sys->p.external_magnetic_field, nvec);
-		force_vector0 = -(coeffient/(r_cubic*r))*chi0chi1*(2*H_dot_n*sys->p.external_magnetic_field
+		double H_dot_n = dot(sys->external_magnetic_field, nvec);
+		force_vector0 = -(coeffient/(r_cubic*r))*chi0chi1*(2*H_dot_n*sys->external_magnetic_field
 														   +(sys->magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
 	} else {
 		const vec3d &m0 = sys->magnetic_moment[p0];

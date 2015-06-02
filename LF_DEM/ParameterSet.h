@@ -112,8 +112,10 @@ struct ParameterSet
 	
 	double ft_max;							///< max tangential force in friction_model = 5
 	bool fixed_dt;							///< Use constant dt
-	vec3d external_magnetic_field;          ///< External magnetic field
+	double init_angle_external_magnetic_field;  ///< Initial angle of external magnetic field
+	double rot_step_external_magnetic_field;  ///<
+	double step_interval_external_magnetic_field;  ///<
+	
 };
-
 
 #endif/* defined(__LF_DEM__ParameterSet__) */

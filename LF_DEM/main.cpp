@@ -143,7 +143,10 @@ int main(int argc, char **argv)
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
 		Simulation simulation;
-		if (seq_filename == "not_given") {
+		if (rheology_control == "magnetic") {
+			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
+											 dimensionless_number, suffix, rheology_control);
+		} else if (seq_filename == "not_given") {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
 		} else {
