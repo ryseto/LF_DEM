@@ -584,11 +584,13 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 	double time_end = 0;
+	double angle_external_magnetic_field = 0;
 	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
 	cerr << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
 	while (sys.get_time() < p.time_end) {
 		time_end = sys.get_time()+p.step_interval_external_magnetic_field;
-		sys.external_magnetic_field.set(abs(sin(sys.angle_external_magnetic_field)),abs(cos(sys.angle_external_magnetic_field)),0);
+		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
+										cos(sys.angle_external_magnetic_field), 0);
 		sys.external_magnetic_field.cerr();
 		sys.setMagneticMomentExternalField();
 		while (sys.get_time() < time_end) {
@@ -622,7 +624,13 @@ void Simulation::simulationMagnetic(string in_args,
 				timestep_1 = sys.get_total_num_timesteps();
 			}
 		}
-		sys.angle_external_magnetic_field += d_angle_external_magnetic_field;
+		angle_external_magnetic_field += d_angle_external_magnetic_field;
+		if (abs(cos(angle_external_magnetic_field)) < 1e-5) {
+			sys.angle_external_magnetic_field = M_PI/2;
+		} else {
+			double tangent = sin(angle_external_magnetic_field)/cos(angle_external_magnetic_field);
+			sys.angle_external_magnetic_field = atan(abs(tangent));
+		}
 	}
 	now = time(NULL);
 	time_strain_end = now;
