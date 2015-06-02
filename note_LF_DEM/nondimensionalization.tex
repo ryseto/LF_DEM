@@ -43,15 +43,17 @@ assumed to be linear form of velocities.
 
 \subsection*{Representative quantities}
 
-\subsubsection*{From shear rate}
 Particle radius is commonly considered
 as the representative length in
 our particle simulations: $L^{\ast} = a$.
 
+
+\subsubsection*{From shear rate}
+
 One way to give the representative particle velocity
 in a sheared suspension is
 \begin{equation}
-U_{\mathrm{H}}^{\ast} = a \dot{\gamma}.
+U_{\mathrm{H}}^{\ast} = L^{\ast} \dot{\gamma}.
 \end{equation}
 %
 %
@@ -64,18 +66,14 @@ and Stokes-drag form;
 Here, we indicate nondimensionalized variables
 in the hydrodynamic unit by using `tilde',
 i.e.,
-$\bm{F}_{\mathrm{H}} = F_{\mathrm{H}}^{\ast} \tilde{\bm{F}}_{\mathrm{H}} $,
+$\tilde{\bm{F}}  = \bm{F}/ F_{\mathrm{H}}^{\ast} $,
 etc.
 %
 
 [note]
-$F_{\mathrm{H}}^{\ast}$ is a function of shear rate $\dot{\gamma}$.
-%
-Thus,
-it is not constant in the stress controlled simulation,
+Since $F_{\mathrm{H}}^{\ast}$ is a function of shear rate $\dot{\gamma}$,
+it is not constant in stress controlled simulations
 and zero if system is not sheared.
-
-
 
 
 \subsubsection*{From repulsive force}
@@ -84,7 +82,7 @@ The repulsive force $\bm{F}_{\mathrm{R}}$
 is a function of particle-to-particle distance.
 %
 We take the amplitude $F_{\mathrm{R}}^{\ast}$
-to represent the typical strength:
+to represent its typical strength:
 %
 \begin{equation}
  \bm{F}_{\mathrm{R}} =  F_{\mathrm{R}}^{\ast}
@@ -97,7 +95,7 @@ The corresponding velocity can also be
 given via the Stokes-drag form;
 \begin{equation}
  U^{\ast}_{\mathrm{R}}
-  = \frac{F_{\mathrm{R}}^{\ast}}{6\pi\eta_0 a}.
+  \equiv \frac{F_{\mathrm{R}}^{\ast}}{6\pi\eta_0 a}.
 \end{equation}
 %
 
@@ -112,26 +110,27 @@ force balance equation is
   \quad
   \Longrightarrow 
     \quad
- - \bm{R}' \cdot \tilde{\bm{U}} + \tilde{\bm{F}}_{\mathrm{R}} = 0
+ - \bm{R}' \cdot \tilde{\bm{U}} + \tilde{\bm{F}}_{\mathrm{R}} = 0,
 \end{equation}
 where
 $\bm{R}' \equiv \bm{R} / 6 \pi \eta_0 a $.
 
-In order to see the shear rate dependence,
-it is convenient to represent
-the typical repulsive force $F_{\mathrm{R}}^{\ast}$.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The origin of shear-rate dependence
+becomes clear if the repulsive force
+is expressed with the typical value $F_{\mathrm{R}}^{\ast}$;
 %
 \begin{equation}
  - \tilde{\bm{R}} \cdot \tilde{\bm{U}} +
-\frac{1}{\alpha}  \hat{\bm{F}}_{\mathrm{R}} = 0
+\frac{1}{\alpha}  \hat{\bm{F}}_{\mathrm{R}} = 0.
 \end{equation}
 %
-This $\alpha$ indicates the competition between two forces:
+This $\alpha$ indicates the competition between two representative forces:
 \begin{equation}
  \alpha \equiv
 \frac{\bm{F}_{\mathrm{H}}^{\ast}}{\bm{F}_{\mathrm{R}}^{\ast}}
 =
-  \frac{\dot{\gamma}}{F_{\mathrm{R}}^{\ast}/6\pi\eta_0 a^2}\label{102734_31May15}
+  \frac{\dot{\gamma}}{F_{\mathrm{R}}^{\ast}/6\pi\eta_0 a^2}\label{102734_31May15}.
 \end{equation}
 
 
@@ -144,16 +143,16 @@ Therefore, the nondenominational time $\tilde{t}$
 is shear strain (when shear rate is constant):
 \begin{equation} 
  \tilde{t} \equiv \frac{t}{t_{\mathrm{H}}^{\ast}} = t \dot{\gamma}
-   = \gamma
+   = \gamma.
 \end{equation}
 %
 The nondimensionalized shear rate is
 \begin{equation}
  \tilde{\dot{\gamma}}
   =
-  \dot{\gamma} t_{\mathrm{H}}^{\ast} = 1
+  \frac{ \dot{\gamma}}{1/t_{\mathrm{H}}^{\ast}}
+   = 1.
 \end{equation}
-
 
 
 [note]
@@ -162,7 +161,7 @@ But, the essential origin for this unit system
 is the way to give typical velocity,
 i.e., $U^{\ast} = a \dot{\gamma}$.
 %
-``Simple shear'' unit would be more proper name.
+``Shear-rate'' unit might be proper name.
 
 
 \subsection*{Repulsive force unit}
@@ -178,7 +177,7 @@ force balance equation is
   \Longrightarrow
     \quad
     - \bm{R}' \cdot \hat{\bm{U}} +
-    \hat{\bm{F}}_{\mathrm{R}} = 0
+    \hat{\bm{F}}_{\mathrm{R}} = 0.
 \end{equation}
 The time unit is
 \begin{equation}
@@ -196,18 +195,18 @@ The nondimensionalized shear rate is
 
 
 
-In rate controlled simulations,
+In rate-controlled simulations,
 the relation between
 the nondimensionalized time
 $\hat{t} \equiv t /t_{\mathrm{R}}^{\ast}$
-and shear strain is
+and shear strain $\gamma$ is
 \begin{equation}
  \gamma
   \equiv \dot{\gamma} t 
   = \dot{\gamma} t_{\mathrm{R}}^{\ast} \hat{t} 
    = 
 \frac{F_{\mathrm{H}}^{\ast}}{F_{\mathrm{R}}^{\ast}}
-\hat{t} = \alpha \hat{t}
+\hat{t} = \alpha \hat{t},
 \end{equation}
 where $\alpha$ is defined in \eqref{102734_31May15}.
 
@@ -219,10 +218,10 @@ the strain is simply given by
  = \int^{\hat{t}} \alpha d\hat{t}.
 \end{equation}
 
-
-
 \subsection*{Simulation data}
 
+In both ways of nondimensionalization,
+we can unify the output data with ones nondimensionalized by repulsive force.
 
 \begin{center}
   \begin{tabular}{lccccc}
