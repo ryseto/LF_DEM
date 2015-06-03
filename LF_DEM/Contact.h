@@ -85,7 +85,6 @@ public:
 	void frictionlaw_standard();
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
-	void frictionlaw_null();
 	//===== forces/stresses  ========================== //
 	void calcContactInteraction();
 	void addUpContactForceTorque();

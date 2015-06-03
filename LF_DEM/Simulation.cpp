@@ -388,9 +388,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		string_control_parameters << "_m";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
-	cerr << "@ dimensionlessnumber = " << dimensionlessnumber << endl;
-	cerr << "@ input_scale = " << input_scale << endl;
-	
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
@@ -402,7 +399,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		exit(1);
 	}
-	cerr << "@ Internal unit scale : " << unit_scales << endl;
 	exportForceAmplitudes();
 	// test for incompatibilities
 	if (sys.brownian == true) {
@@ -494,7 +490,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	/******************** OUTPUT INITIAL DATA ********************/
 	evaluateData();
 	outputData(); // new
-	outputRheologyData(); // old
 	outputStressTensorData();
 	outputConfigurationBinary();
 	outputConfigurationData();
@@ -509,7 +504,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
-		outputRheologyData(); // old
 		outputStressTensorData();
 		outputConfigurationBinary();
 		if (time_interval_output_data == -1) {
@@ -587,14 +581,19 @@ void Simulation::simulationMagnetic(string in_args,
 	double angle_external_magnetic_field = 0;
 	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
 	cerr << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
+	int cnt_external_magnetic_field = 0;
 	while (sys.get_time() < p.time_end) {
-		time_end = sys.get_time()+p.step_interval_external_magnetic_field;
+		cnt_external_magnetic_field++;
+		time_end = p.step_interval_external_magnetic_field*cnt_external_magnetic_field;
 		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
 										cos(sys.angle_external_magnetic_field), 0);
+
+		cerr << "External magnetic field = ";
 		sys.external_magnetic_field.cerr();
+		cerr << endl;
+		
 		sys.setMagneticMomentExternalField();
 		while (sys.get_time() < time_end) {
-			cerr << sys.get_time() << ' ' << time_end << endl;
 			time_output_data = cnt_simu_loop*time_interval_output_data;
 			time_output_config = cnt_config_out*time_interval_output_config;
 			sys.timeEvolution(time_output_data);
@@ -616,13 +615,7 @@ void Simulation::simulationMagnetic(string in_args,
 				}
 			}
 			/*****************************************************/
-			cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
-			sys.new_contact_gap = 0;
-			if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
-				now = time(NULL);
-				time_strain_1 = now;
-				timestep_1 = sys.get_total_num_timesteps();
-			}
+			cerr << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
 		}
 		angle_external_magnetic_field += d_angle_external_magnetic_field;
 		if (abs(cos(angle_external_magnetic_field)) < 1e-5) {
@@ -644,7 +637,6 @@ void Simulation::simulationMagnetic(string in_args,
 		outputFinalConfiguration();
 	}
 }
-
 
 void Simulation::outputComputationTime()
 {
@@ -1370,8 +1362,6 @@ void Simulation::evaluateData()
 		//stress_unit_converter = 1/dimensionless_numbers["r"];
 		stress_unit_converter = 1/sys.get_shear_rate(); //@@@@@@
 	}
-	cerr << unit_scales << ' ' << stress_unit_converter << endl;
-
 	viscosity = stress_unit_converter*(sys.einstein_stress+sys.total_stress.getStressXZ());
 	normalstress_diff_1 = stress_unit_converter*sys.total_stress.getNormalStress1();
 	normalstress_diff_2 = stress_unit_converter*sys.total_stress.getNormalStress2();

@@ -493,6 +493,10 @@ void System::setupSystem(string control)
 	}
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
+		if (friction == false) {
+			cerr << "Sliding friction is not set!" << endl;
+			exit(1);
+		}
 	}
 	
 	allocateRessources();

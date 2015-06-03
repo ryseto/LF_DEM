@@ -12,20 +12,20 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	interaction = interaction_;
 	state = 0;
 	f_contact_normal_norm = 0;
-	if (sys->p.friction_model == 1) {
-		frictionlaw = &Contact::frictionlaw_standard;
-	} else if (sys->p.friction_model == 2) {
-		frictionlaw = &Contact::frictionlaw_criticalload;
-	} else if (sys->p.friction_model == 3) {
-		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
-	} else if (sys->p.friction_model == 5) {
+	if (sys->p.friction_model != 0) {
+		if (sys->p.friction_model == 1) {
+			frictionlaw = &Contact::frictionlaw_standard;
+		} else if (sys->p.friction_model == 2) {
+			frictionlaw = &Contact::frictionlaw_criticalload;
+		} else if (sys->p.friction_model == 3) {
+			frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
+		} else if (sys->p.friction_model == 5) {
 	 	frictionlaw = &Contact::frictionlaw_ft_max;
-    	ft_max = sys->ft_max;
-	} else if (sys->p.friction_model == 6) {
-		frictionlaw = &Contact::frictionlaw_coulomb_max;
-		ft_max = sys->ft_max;
-	} else {
-		frictionlaw = &Contact::frictionlaw_null;
+			ft_max = sys->ft_max;
+		} else if (sys->p.friction_model == 6) {
+			frictionlaw = &Contact::frictionlaw_coulomb_max;
+			ft_max = sys->ft_max;
+		}
 	}
 }
 
@@ -34,14 +34,14 @@ void Contact::setInteractionData()
 	interaction->get_par_num(p0, p1);
 	const double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
-	kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
-	if (sys->rolling_friction) {
-		kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
-	}
-	mu_static = sys->mu_static;
-	mu_dynamic = sys->mu_dynamic;
-	if (sys->rolling_friction) {
-		mu_rolling = sys->mu_rolling;
+	if (sys->friction) {
+		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+		mu_static = sys->mu_static;
+		mu_dynamic = sys->mu_dynamic;
+		if (sys->rolling_friction) {
+			kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+			mu_rolling = sys->mu_rolling;
+		}
 	}
 }
 
@@ -297,12 +297,6 @@ void Contact::frictionlaw_coulomb_max()
 	}
 	return;
 }
-
-void Contact::frictionlaw_null()
-{
-	// null
-}
-
 
 void Contact::addUpContactForceTorque()
 {

@@ -28,13 +28,15 @@ void Interaction::calcNormalVectorDistanceGap()
 	sys->periodize_diff(rvec, zshift);
 	r = rvec.norm();
 	nvec = rvec/r;
-	nxnx = nvec.x*nvec.x;
-	nxny = nvec.x*nvec.y;
-	nxnz = nvec.x*nvec.z;
-	nynz = nvec.y*nvec.z;
-	nyny = nvec.y*nvec.y;
-	nznz = nvec.z*nvec.z;
 	reduced_gap = r/ro_12-2;
+	if (lubrication.is_active()) {
+		nxnx = nvec.x*nvec.x;
+		nxny = nvec.x*nvec.y;
+		nxnz = nvec.x*nvec.z;
+		nynz = nvec.y*nvec.z;
+		nyny = nvec.y*nvec.y;
+		nznz = nvec.z*nvec.z;
+	}
 }
 
 /* Activate interaction between particles i and j.
@@ -80,7 +82,6 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	if (sys->p.magnetic_type != 0) {
 		magneticforce.activate();
 	}
-	
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.setInteractionData();

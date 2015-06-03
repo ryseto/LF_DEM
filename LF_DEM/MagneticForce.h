@@ -40,7 +40,7 @@ private:
 	double coeffient;
 	double force_norm;
 	double chi0chi1;
-	StressTensor stresslet_XF;
+	//StressTensor stresslet_XF;
 public:
 	MagneticForce(): force_norm(0) {};
 	~MagneticForce(){};
