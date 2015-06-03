@@ -38,14 +38,42 @@ The hydrodynamic interaction is
 assumed to be linear form of velocities.
 %
 \begin{equation}
- \bm{F}_{\mathrm{H}} = - \bm{R}\cdot\bm{U}.
+ \bm{F}_{\mathrm{H}} = - \bm{R}\cdot\bm{U}.\label{110733_3Jun15}
 \end{equation}
+
+Once we set unit of force,
+force balance equations can be nondimensionalized.
+%
+Then, we also need to select
+relation between force unit and velocity unit.
+%
+Since our force balance equations include
+Stokes  hydrodynamic interactions \eqref{110733_3Jun15},
+the simplest way is use of Stokes drag formula
+for any force units:
+\begin{equation}
+ F^{\ast} = 6 \pi \eta_{0} a U^{\ast}.
+\end{equation}
+%
+Thanks to this,
+the hydrodynamic interaction is nondimensionalized as follows,
+\begin{equation}
+ \bm{F}_{\mathrm{H}}/F^{\ast}
+  = -(\bm{R}/6\pi\eta_0 a) \cdot (\bm{U}/U^{\ast})
+     = -\bm{R}' \cdot (\bm{U}/U^{\ast}),
+\end{equation}
+%
+and the resistance matrix in our codes
+is the identity matrix
+in the dilute limit: $\bm{R}'(\phi\to 0) = \bm{I}$
 
 \subsection*{Representative quantities}
 
 Particle radius is commonly considered
 as the representative length in
 our particle simulations: $L^{\ast} = a$.
+
+
 
 
 \subsubsection*{From shear rate}
