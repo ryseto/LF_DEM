@@ -80,7 +80,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/Working/work_LF_DEM/newsimulation"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/mag_phase_trans"
       buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-r 0.1r D3N100VF0.5Bidi1.4_0.5Cubic_1.dat shear.txt"
+            argument = "-m D2N3000VF0.7Bidi1_0.5Square_1.dat memory_check.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

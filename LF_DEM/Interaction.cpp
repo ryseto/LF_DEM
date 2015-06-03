@@ -113,8 +113,18 @@ void Interaction::updateState(bool &deactivated)
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
+
 	calcNormalVectorDistanceGap();
-	updateContactState(deactivated);
+
+	if (r > interaction_range) {
+		/* all interaction is switched off. */
+		deactivate();
+		deactivated = true;
+		return;
+	}
+
+	updateContactState();
+	
 	if (lubrication.is_active()) {
 		lubrication.updateResistanceCoeff();
 	}
@@ -129,7 +139,7 @@ void Interaction::updateState(bool &deactivated)
 	}
 }
 
-void Interaction::updateContactState(bool &deactivated)
+void Interaction::updateContactState()
 {
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
@@ -166,11 +176,6 @@ void Interaction::updateContactState(bool &deactivated)
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-		} else if (r > interaction_range) {
-			/* all interaction is switched off. */
-			deactivate();
-			deactivated = true;
-			return;
 		}
 	}
 }

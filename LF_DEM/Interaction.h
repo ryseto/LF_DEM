@@ -111,7 +111,7 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool &deactivated);
-	void updateContactState(bool &deactivated);
+	void updateContactState();
 	void activate(unsigned short i, unsigned short j,
 				  double interaction_range_);
 	void deactivate();

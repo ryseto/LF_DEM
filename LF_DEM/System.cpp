@@ -172,7 +172,7 @@ void System::allocateRessources()
 	if (twodimension) {
 		interaction_volume = M_PI*pow(p.interaction_range, 2);
 		double particle_volume = M_PI;
-		maxnb_interactionpair_per_particle = 1.5*interaction_volume/particle_volume;
+		maxnb_interactionpair_per_particle = interaction_volume/particle_volume;
 	} else {
 		interaction_volume = (4*M_PI/3)*pow(p.interaction_range, 3);
 		double particle_volume = 4*M_PI/3;
