@@ -566,10 +566,6 @@ void Simulation::simulationMagnetic(string in_args,
 	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
-	time_t now;
-	time_strain_1 = 0;
-	now = time(NULL);
-	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
 	evaluateData();
 	outputData(); // new
@@ -591,7 +587,6 @@ void Simulation::simulationMagnetic(string in_args,
 		cerr << "External magnetic field = ";
 		sys.external_magnetic_field.cerr();
 		cerr << endl;
-		
 		sys.setMagneticMomentExternalField();
 		while (sys.get_time() < time_end) {
 			time_output_data = cnt_simu_loop*time_interval_output_data;
@@ -625,9 +620,6 @@ void Simulation::simulationMagnetic(string in_args,
 			sys.angle_external_magnetic_field = atan(abs(tangent));
 		}
 	}
-	now = time(NULL);
-	time_strain_end = now;
-	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,

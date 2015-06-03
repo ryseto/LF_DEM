@@ -52,7 +52,7 @@ Stokes  hydrodynamic interactions \eqref{110733_3Jun15},
 the simplest way is use of Stokes drag formula
 for any force units:
 \begin{equation}
- F^{\ast} = 6 \pi \eta_{0} a U^{\ast}.
+ F^{\ast} = 6 \pi \eta_{0} a U^{\ast}.\label{220656_3Jun15}
 \end{equation}
 %
 Thanks to this,
@@ -66,6 +66,11 @@ the hydrodynamic interaction is nondimensionalized as follows,
 and the resistance matrix in our codes
 is the identity matrix
 in the dilute limit: $\bm{R}'(\phi\to 0) = \bm{I}$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 
 \subsection*{Representative quantities}
 
@@ -271,6 +276,48 @@ we can unify the output data with ones nondimensionalized by repulsive force.
       $\hat{\sigma}$ &  $\hat{\sigma}$ 
   \end{tabular} 
 \end{center}
+
+
+\subsection*{Note}
+
+This choice of relating
+velocity scale and force scale \eqref{220656_3Jun15}
+is specific.
+%
+This is why
+we see numerical factor $6\pi$ at several places.
+
+This may generate a little confusion
+on nondimensionalization of stresses.
+%
+In viscous suspensions,
+the representative value of stress
+can be given by the solvent viscosity $\eta_0$
+and shear rate.
+\begin{equation}
+ \sigma^{\ast} = \eta_0 \dot{\gamma}^{\ast}.
+\end{equation}
+%
+We need to give a typical shear rate in the system.
+%
+If a repulsive force plays
+the critical role on the shear rate dependence,
+we can set the corresponding shear rate $\dot{\gamma}^{\ast}_{\mathrm{R}}$:
+\begin{equation}
+ F_{\mathrm{R}}^{\ast} =
+  6 \pi \eta_0 a^2 \dot{\gamma}^{\ast}_{\mathrm{R}}
+\end{equation}
+So, the unit of stress can be given as follows,
+\begin{align}
+ \sigma^{\ast}_{\mathrm{R}}
+ &= \eta_0 \dot{\gamma}^{\ast}_{\mathrm{R}} \notag \\
+  &=  F_{\mathrm{R}}^{\ast}/6\pi a^2
+\end{align}
+Thus, the numerical factor $6\pi$
+comes from the way to relate force and velocity.
+
+
+
 
 
 \end{document}

@@ -552,6 +552,7 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		D98C23DA1B1EF22A00A175A6 /* extractConfigdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extractConfigdata.pl; sourceTree = "<group>"; };
 		D99437CE1800F65000B756D5 /* particleconfig.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = particleconfig.pl; sourceTree = "<group>"; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -1141,6 +1142,7 @@
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D9130BDD1A96AE5E0070E19F /* LeesEdwards.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
+				D98C23DA1B1EF22A00A175A6 /* extractConfigdata.pl */,
 				D94F42151AB5028600237D7E /* reduce_rheodata.pl */,
 				D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */,
 				D9D805951889BAC700D139F5 /* generateSimpleData.pl */,
