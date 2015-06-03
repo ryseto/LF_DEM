@@ -374,7 +374,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-
+	
 	setDefaultParameters();
 	readParameterFile();
 	for (auto&& f: suffixes) {
@@ -587,7 +587,7 @@ void Simulation::simulationMagnetic(string in_args,
 		time_end = p.step_interval_external_magnetic_field*cnt_external_magnetic_field;
 		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
 										cos(sys.angle_external_magnetic_field), 0);
-
+		
 		cerr << "External magnetic field = ";
 		sys.external_magnetic_field.cerr();
 		cerr << endl;
@@ -989,71 +989,76 @@ void Simulation::openOutputFiles(bool binary_conf)
 	outputDataHeader(fout_st);
 	string data_filename = "data_" + sys.simu_name + ".dat";
 	fout_data.open(data_filename.c_str());
-	string rheo_filename = "rheo_" + sys.simu_name + ".dat"; //@@ old
-	fout_rheo.open(rheo_filename.c_str()); //@@ old
+	if (sys.p.magnetic_type == 0) {
+		string rheo_filename = "rheo_" + sys.simu_name + ".dat"; //@@ old
+		fout_rheo.open(rheo_filename.c_str()); //@@ old
+	}
 	string time_filename = "t_" + sys.simu_name + ".dat";
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_" + sys.simu_name + ".dat";
 	fout_input.open(input_filename.c_str());
 	
 	outputDataHeader(fout_data);
-	outputDataHeader(fout_rheo);
-	string fout_rheo_col_def =
-	"#1: shear strain\n"
-	"#2: Viscosity\n"
-	"#3: N1 viscosity\n"
-	"#4: N2 viscosity\n"
-	"#5: Viscosity(lub)\n"
-	"#6: N1 viscosity(lub)\n"
-	"#7: N2 viscosity(lub)\n"
-	"#8: Viscosity(xF_contact part)\n"
-	"#9: N1 viscosity(xF_contact part)\n"
-	"#10: N2 viscosity(xF_contact part)\n"
-	"#11: Viscosity(GU_contact part)\n"
-	"#12: N1 viscosity(GU_contact part)\n"
-	"#13: N2 viscosity(GU_contact part)\n"
-	"#14: Viscosity(friction)\n"
-	"#15: N1 viscosity(friction)\n"
-	"#16: N2 viscosity(friction)\n"
-	"#17: Viscosity(repulsive force XF)\n"
-	"#18: N1 viscosity(repulsive force XF)\n"
-	"#19: N2 viscosity(repulsive force XF)\n"
-	"#20: Viscosity(repulsive force GU)\n"
-	"#21: N1 viscosity(repulsive force GU)\n"
-	"#22: N2 viscosity(repulsive force GU)\n"
-	"#23: Viscosity(brownian)\n"
-	"#24: N1 viscosity(brownian)\n"
-	"#25: N2 viscosity(brownian)\n"
-	"#26: particle pressure\n"
-	"#27: particle pressure contact\n"
-	"#28: min gap (non-dim)\n"
-	"#29: max tangential displacement\n"
-	"#30: max Fc_normal\n"
-	"#31: max Fc_tan\n"
-	"#32: max velocity\n"
-	"#33: max angular velocity\n"
-	"#34: ave contact normal velocity\n"
-	"#35: max contact normal velocity\n"
-	"#36: ave contact tangential velocity\n"
-	"#37: max contact tangential velocity\n"
-	"#38: ave sliding velocity\n"
-	"#39: max sliding velocity\n"
-	"#40: ave contact number per particle\n"
-	"#41: num of interaction\n"
-	"#42: num of contacts\n"
-	"#43: num of frictional contacts\n"
-	"#44: kn\n"
-	"#45: kt\n"
-	"#46: dt\n"
-	"#47: time\n"
-	"#48: dimensionless_number\n"
-	"#49: stress\n"
-	"#50: shear_disp\n"
-	"#51: max rolling displacement\n"
-	"#52: max_contact_gap\n"
-	"#53: total_energy\n"
-	"#54: magnetic_energy\n";
-	fout_rheo << fout_rheo_col_def << endl;
+	if (sys.p.magnetic_type == 0) {
+		outputDataHeader(fout_rheo);
+		
+		string fout_rheo_col_def =
+		"#1: shear strain\n"
+		"#2: Viscosity\n"
+		"#3: N1 viscosity\n"
+		"#4: N2 viscosity\n"
+		"#5: Viscosity(lub)\n"
+		"#6: N1 viscosity(lub)\n"
+		"#7: N2 viscosity(lub)\n"
+		"#8: Viscosity(xF_contact part)\n"
+		"#9: N1 viscosity(xF_contact part)\n"
+		"#10: N2 viscosity(xF_contact part)\n"
+		"#11: Viscosity(GU_contact part)\n"
+		"#12: N1 viscosity(GU_contact part)\n"
+		"#13: N2 viscosity(GU_contact part)\n"
+		"#14: Viscosity(friction)\n"
+		"#15: N1 viscosity(friction)\n"
+		"#16: N2 viscosity(friction)\n"
+		"#17: Viscosity(repulsive force XF)\n"
+		"#18: N1 viscosity(repulsive force XF)\n"
+		"#19: N2 viscosity(repulsive force XF)\n"
+		"#20: Viscosity(repulsive force GU)\n"
+		"#21: N1 viscosity(repulsive force GU)\n"
+		"#22: N2 viscosity(repulsive force GU)\n"
+		"#23: Viscosity(brownian)\n"
+		"#24: N1 viscosity(brownian)\n"
+		"#25: N2 viscosity(brownian)\n"
+		"#26: particle pressure\n"
+		"#27: particle pressure contact\n"
+		"#28: min gap (non-dim)\n"
+		"#29: max tangential displacement\n"
+		"#30: max Fc_normal\n"
+		"#31: max Fc_tan\n"
+		"#32: max velocity\n"
+		"#33: max angular velocity\n"
+		"#34: ave contact normal velocity\n"
+		"#35: max contact normal velocity\n"
+		"#36: ave contact tangential velocity\n"
+		"#37: max contact tangential velocity\n"
+		"#38: ave sliding velocity\n"
+		"#39: max sliding velocity\n"
+		"#40: ave contact number per particle\n"
+		"#41: num of interaction\n"
+		"#42: num of contacts\n"
+		"#43: num of frictional contacts\n"
+		"#44: kn\n"
+		"#45: kt\n"
+		"#46: dt\n"
+		"#47: time\n"
+		"#48: dimensionless_number\n"
+		"#49: stress\n"
+		"#50: shear_disp\n"
+		"#51: max rolling displacement\n"
+		"#52: max_contact_gap\n"
+		"#53: total_energy\n"
+		"#54: magnetic_energy\n";
+		fout_rheo << fout_rheo_col_def << endl;
+	}
 	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";
 		fout_particle.open(particle_filename.c_str());
@@ -1188,7 +1193,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-//	p.external_magnetic_field.set(0, 0, 0);
+	//	p.external_magnetic_field.set(0, 0, 0);
 }
 
 void Simulation::importConfiguration()
