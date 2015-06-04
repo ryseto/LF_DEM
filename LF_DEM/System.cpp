@@ -325,10 +325,15 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		vel_magnetic[i].reset();
 		ang_vel_magnetic[i].reset();
 	}
+	magnetic_pair.resize(np-1);
+	sq_magnetic_interaction_range = pow(p.magnetic_interaction_range, 2);
+	time_update_magnetic_pair = 0;
 	if (p.magnetic_type == 1) {
 		/* Each particle has magnetic dipole moment.
 		 * Ferromagnetism.
 		 */
+		cerr << "This is not implemented yet" << endl;
+		exit(1);
 		int i_magnetic = 0;
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] = magnetic_moment_[i];
@@ -355,7 +360,8 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		}
 		num_magnetic_particles = i_magnetic;
 		angle_external_magnetic_field = p.init_angle_external_magnetic_field;
-		external_magnetic_field.set(abs(sin(angle_external_magnetic_field)),abs(cos(angle_external_magnetic_field)),0);
+		external_magnetic_field.set(abs(sin(angle_external_magnetic_field)),
+									abs(cos(angle_external_magnetic_field)), 0);
 		external_magnetic_field.cerr();
 		setMagneticMomentExternalField();
 	}
@@ -1004,6 +1010,30 @@ void System::checkNewInteraction()
 			}
 		}
 	}
+	if (p.magnetic_type != 0) {
+		if (time > time_update_magnetic_pair) {
+			updateMagneticPair();
+			time_update_magnetic_pair += p.timeinterval_update_magnetic_pair;
+		}
+	}
+}
+
+void System::updateMagneticPair()
+{
+	for (int i=0; i<np-1; i++) {
+		magnetic_pair[i].clear();
+	}
+	vec3d pos_diff;
+	for (int i=0; i<np-1; i++) {
+		for (int j=i+1; j<np; j++) {
+			pos_diff = position[j]-position[i];
+			periodize_diff_unsheared(pos_diff);
+			double sq_dist = pos_diff.sq_norm();
+			if (sq_dist < sq_magnetic_interaction_range){
+				magnetic_pair[i].push_back(j);
+			}
+		}
+	}
 }
 
 void System::updateInteractions()
@@ -1017,7 +1047,6 @@ void System::updateInteractions()
 	 
 	 */
 	double sq_max_sliding_velocity = 0;
-
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -1034,6 +1063,33 @@ void System::updateInteractions()
 		}
 	}
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
+	if (p.magnetic_type == 2) {
+		updateMagneticInteractions();
+	}
+}
+
+void System::updateMagneticInteractions()
+{
+	magnetic_force_stored.clear();
+//	magnetic_force_p0.clear();
+//	magnetic_force_p1.clear();
+	vec3d pos_diff;
+	for (int p0=0; p0<np-1; p0++){
+		for (const int p1: magnetic_pair[p0]) {
+			pos_diff = position[p1]-position[p0];
+			periodize_diff_unsheared(pos_diff);
+			double r = pos_diff.norm();
+			double r_cubic = r*r*r;
+			vec3d nvec = pos_diff/r;
+			double H_dot_n = dot(external_magnetic_field, nvec);
+			double coeff = magnetic_coeffient*magnetic_susceptibility[p0]*magnetic_susceptibility[p1]/(r_cubic*r);
+			vec3d force_vector0 = -coeff*(2*H_dot_n*external_magnetic_field+(magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
+			magnetic_force_stored.push_back(make_pair(force_vector0, make_pair(p0, p1)));
+//			magnetic_force_stored.push_back(force_vector0);
+//			magnetic_force_p0.push_back(p0);
+//			magnetic_force_p1.push_back(p1);
+		}
+	}
 }
 
 void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
@@ -1247,10 +1303,11 @@ void System::setMagneticForceToParticle()
 				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
 		}
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].magneticforce.addUpForceTorque();
-			}
+		for (auto && magforce : magnetic_force_stored) {
+			int p0 = magforce.second.first;
+			int p1 = magforce.second.second;
+			magnetic_force[p0] += magforce.first;
+			magnetic_force[p1] -= magforce.first;
 		}
 	}
 }
@@ -1565,6 +1622,38 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	}
 }
 
+void System::periodize_diff_unsheared(vec3d &pos_diff)
+{
+	/*
+	 * The displacement of the second particle along z direction
+	 * is zshift * lz;
+	 */
+	if (pos_diff.z > lz_half) {
+		pos_diff.z -= lz;
+	} else if (pos_diff.z < -lz_half) {
+		pos_diff.z += lz;
+	} else {
+	}
+	if (pos_diff.x > lx_half) {
+		pos_diff.x -= lx;
+		if (pos_diff.x > lx_half) {
+			pos_diff.x -= lx;
+		}
+	} else if (pos_diff.x < -lx_half) {
+		pos_diff.x += lx;
+		if (pos_diff.x < -lx_half) {
+			pos_diff.x += lx;
+		}
+	}
+	if (pos_diff.y > ly_half) {
+		pos_diff.y -= ly;
+	} else if (pos_diff.y < -ly_half) {
+		pos_diff.y += ly;
+	}
+}
+
+
+
 void System::evaluateMaxContactVelocity()
 {
 	max_contact_velo_tan = 0;
@@ -1765,7 +1854,6 @@ void System::analyzeState()
 
 void System::calcPotentialEnergy()
 {
-	magnetic_energy = 0;
 	total_energy = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -1773,13 +1861,34 @@ void System::calcPotentialEnergy()
 				total_energy += interaction[k].contact.calcEnergy();
 			}
 			if (repulsive_force) {
-				total_energy +=  interaction[k].repulsion.calcEnergy();
+				total_energy += interaction[k].repulsion.calcEnergy();
 			}
-			if (p.magnetic_type != 0) {
-				double tmp_magnetic_energy = interaction[k].magneticforce.calcEnergy();
-				total_energy += tmp_magnetic_energy;
-				magnetic_energy += tmp_magnetic_energy;
-			}
+		}
+	}
+	if (p.magnetic_type != 0) {
+		calcMagneticEnergy();
+	}
+}
+
+void System::calcMagneticEnergy()
+{
+	magnetic_energy = 0;
+	vec3d pos_diff;
+	for (int p0=0; p0<np-1; p0++){
+		for (const int p1: magnetic_pair[p0]) {
+			pos_diff = position[p1]-position[p0];
+			periodize_diff_unsheared(pos_diff);
+			double r = pos_diff.norm();
+			double r_cubic = r*r*r;
+			vec3d nvec = pos_diff/r;
+			const vec3d &m0 = magnetic_moment[p0];
+			const vec3d &m1 = magnetic_moment[p1];
+			/*
+			 * magnetic_coeffient/3 = mu0/(4*M_PI)
+			 */
+			double energy = -(magnetic_coeffient/(3*r_cubic))*(3*dot(m0, nvec)*dot(m1, nvec)-dot(m0, m1));
+			magnetic_energy += energy;
+			total_energy += energy;
 		}
 	}
 	if (external_magnetic_field.is_not_zero()) {

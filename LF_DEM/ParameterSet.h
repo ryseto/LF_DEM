@@ -52,6 +52,8 @@ struct ParameterSet
 	double time_end;                 ///< Time of the simulation.
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance)
 	double interaction_range;
+	double magnetic_interaction_range;
+	double timeinterval_update_magnetic_pair;
 	/*
 	 * gap_nondim_min: gives reduced lubrication (maximum coeeffient).
 	 *

@@ -913,6 +913,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.rot_step_external_magnetic_field = atof(value.c_str());
 	} else if (keyword == "step_interval_external_magnetic_field") {
 		p.step_interval_external_magnetic_field = atof(value.c_str());
+	} else if (keyword == "magnetic_interaction_range") {
+		p.magnetic_interaction_range = atof(value.c_str());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -1139,6 +1141,7 @@ void Simulation::setDefaultParameters()
 	 * If interaction_range is not indicated, this value will be set from lub_max_gap.
 	 */
 	p.interaction_range = -1;
+	p.magnetic_interaction_range = 20;
 	/*
 	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -1185,7 +1188,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
-	//	p.external_magnetic_field.set(0, 0, 0);
+	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
 void Simulation::importConfiguration()
@@ -1717,7 +1720,11 @@ void Simulation::outputConfigurationData()
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
-		fout_particle << sys.get_time() << endl;
+		fout_particle << sys.get_time() << ' ';
+		if (sys.p.magnetic_type != 0) {
+			fout_particle << sys.angle_external_magnetic_field;
+		}
+		fout_particle << endl;
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];

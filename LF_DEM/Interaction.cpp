@@ -14,7 +14,6 @@ void Interaction::init(System *sys_)
 	lubrication.init(sys);
 	contact.init(sys, this);
 	repulsion.init(sys, this);
-	magneticforce.init(sys, this);
 }
 
 /* Make a normal vector
@@ -79,9 +78,6 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	if (sys->repulsiveforce) {
 		repulsion.activate();
 	}
-	if (sys->p.magnetic_type != 0) {
-		magneticforce.activate();
-	}
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.setInteractionData();
@@ -134,9 +130,6 @@ void Interaction::updateState(bool &deactivated)
 	}
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
-	}
-	if (sys->p.magnetic_type != 0) {
-		magneticforce.calcForceToruqe();
 	}
 }
 

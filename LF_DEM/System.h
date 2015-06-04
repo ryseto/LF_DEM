@@ -137,6 +137,14 @@ private:
 	double num_magnetic_particles;
 	double num_magnetic_first;
 	double num_magnetic_second;
+	double sq_magnetic_interaction_range;
+	vector<pair<vec3d, pair<int,int>>> magnetic_force_stored;
+//	vector<vec3d> magnetic_force_stored;
+	vector<int> magnetic_force_p0;
+	vector<int> magnetic_force_p1;
+	vector<vector<int>> magnetic_pair;
+	void updateMagneticPair();
+	double time_update_magnetic_pair;
 	
  protected:
  public:
@@ -293,10 +301,12 @@ private:
 	void checkNewInteraction();
 	void checkInteractionEnd();
 	void updateInteractions();
+	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
+	void periodize_diff_unsheared(vec3d &);
 	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();
@@ -306,6 +316,7 @@ private:
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
+	void calcMagneticEnergy();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);

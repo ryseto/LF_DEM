@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m D2N3000VF0.7Bidi1_0.5Square_1.dat memory_check.txt"
+            argument = "-m D2N3000VF0.7Bidi1_0.5Square_1.dat init_relax_test.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
