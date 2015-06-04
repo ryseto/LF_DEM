@@ -1071,8 +1071,6 @@ void System::updateInteractions()
 void System::updateMagneticInteractions()
 {
 	magnetic_force_stored.clear();
-//	magnetic_force_p0.clear();
-//	magnetic_force_p1.clear();
 	vec3d pos_diff;
 	for (int p0=0; p0<np-1; p0++){
 		for (const int p1: magnetic_pair[p0]) {
@@ -1085,9 +1083,6 @@ void System::updateMagneticInteractions()
 			double coeff = magnetic_coeffient*magnetic_susceptibility[p0]*magnetic_susceptibility[p1]/(r_cubic*r);
 			vec3d force_vector0 = -coeff*(2*H_dot_n*external_magnetic_field+(magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
 			magnetic_force_stored.push_back(make_pair(force_vector0, make_pair(p0, p1)));
-//			magnetic_force_stored.push_back(force_vector0);
-//			magnetic_force_p0.push_back(p0);
-//			magnetic_force_p1.push_back(p1);
 		}
 	}
 }
@@ -1099,7 +1094,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 
 	 @param build_res_mat Build the resistance matrix
 	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_stokesian_1988 notations) and set it as the current
+	 brady_s∫tokesian_1988 notations) and set it as the current
 	 resistance in the StokesSolver. If false, the resistance in the
 	 StokesSolver is untouched, it is not reset.
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
@@ -1436,7 +1431,6 @@ void System::computeShearRate()
 	}
 }
 
-
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
@@ -1615,10 +1609,12 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 			pos_diff.x += lx;
 		}
 	}
-	if (pos_diff.y > ly_half) {
-		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_half) {
-		pos_diff.y += ly;
+	if (!twodimension) {
+		if (pos_diff.y > ly_half) {
+			pos_diff.y -= ly;
+		} else if (pos_diff.y < -ly_half) {
+			pos_diff.y += ly;
+		}
 	}
 }
 
@@ -1632,7 +1628,6 @@ void System::periodize_diff_unsheared(vec3d &pos_diff)
 		pos_diff.z -= lz;
 	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
-	} else {
 	}
 	if (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
@@ -1645,14 +1640,14 @@ void System::periodize_diff_unsheared(vec3d &pos_diff)
 			pos_diff.x += lx;
 		}
 	}
-	if (pos_diff.y > ly_half) {
-		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_half) {
-		pos_diff.y += ly;
+	if (!twodimension) {
+		if (pos_diff.y > ly_half) {
+			pos_diff.y -= ly;
+		} else if (pos_diff.y < -ly_half) {
+			pos_diff.y += ly;
+		}
 	}
 }
-
-
 
 void System::evaluateMaxContactVelocity()
 {

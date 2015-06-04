@@ -25,6 +25,9 @@ open (IN_data, "< data_${name}.dat");
 
 $angle_magneticfield_old = -1;
 $cnt = 0;
+
+
+
 while (1) {
 	$line = <IN_data>;
 	($d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9, $d10,
@@ -32,14 +35,20 @@ while (1) {
 	$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
 	$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38, $d39, $d40) = split(/\s+/, $line);
 	last unless defined $line;
-	$angle_magneticfield = $d38;
-	$time = $d1;
-	if ($angle_magneticfield_old != -1
-		&& $angle_magneticfield != $angle_magneticfield_old) {
-			$time[$cnt++] = $time_old;
-		}
-	$angle_magneticfield_old = 	$angle_magneticfield;
-	$time_old = $time;
+	if ($d1 != "#") {
+		$angle_magneticfield = $d38;
+		printf "ang = $angle_magneticfield_old\n";
+		$time = $d1;
+		if ($angle_magneticfield_old != -1
+			&& $angle_magneticfield != $angle_magneticfield_old) {
+				$time[$cnt] = $time_old;
+				$angle[$cnt] = $angle_magneticfield_old;
+				$cnt++;
+			}
+		$angle_magneticfield_old =	$angle_magneticfield;
+		printf "$angle_magneticfield_old\n" ;
+		$time_old = $time;
+	}
 }
 
 open (OUT, "> ${output}");
@@ -81,18 +90,23 @@ sub InParticles {
 	if (defined $line){
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress, $time) = split(/\s+/, $line);
 		if ($time == $time[$cnt]){
-			$cnt++;
+
 			$output = 1;
+			$ang =$angle[$cnt];
+			$cnt++;
+			printf OUT "# $ang\n";
 		} else {
 			$output = 0;
 		}
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle> ;
 			if ($output == 1) {
-				printf $line;
 				printf OUT "$line";
 			}
 		}
 	}
 }
+
+
+
 
