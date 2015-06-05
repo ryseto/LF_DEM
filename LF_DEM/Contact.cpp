@@ -300,20 +300,18 @@ void Contact::frictionlaw_coulomb_max()
 
 void Contact::addUpContactForceTorque()
 {
-	if (state > 0) {
-		sys->contact_force[p0] += f_contact_normal;
-		sys->contact_force[p1] -= f_contact_normal;
-		if (state >= 2) {
-			sys->contact_force[p0] += f_contact_tan;
-			sys->contact_force[p1] -= f_contact_tan;
-			vec3d t_ij = cross(interaction->nvec, f_contact_tan);
-			sys->contact_torque[p0] += interaction->a0*t_ij;
-			sys->contact_torque[p1] += interaction->a1*t_ij;
-			if (sys->rolling_friction) {
-				vec3d t_rolling = cross(interaction->nvec, f_rolling);
-				sys->contact_torque[p0] += interaction->a0*t_rolling;
-				sys->contact_torque[p1] -= interaction->a1*t_rolling;
-			}
+	sys->contact_force[p0] += f_contact_normal;
+	sys->contact_force[p1] -= f_contact_normal;
+	if (state >= 2) {
+		sys->contact_force[p0] += f_contact_tan;
+		sys->contact_force[p1] -= f_contact_tan;
+		vec3d t_ij = cross(interaction->nvec, f_contact_tan);
+		sys->contact_torque[p0] += interaction->a0*t_ij;
+		sys->contact_torque[p1] += interaction->a1*t_ij;
+		if (sys->rolling_friction) {
+			vec3d t_rolling = cross(interaction->nvec, f_rolling);
+			sys->contact_torque[p0] += interaction->a0*t_rolling;
+			sys->contact_torque[p1] -= interaction->a1*t_rolling;
 		}
 	}
 }

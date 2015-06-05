@@ -1134,7 +1134,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		for (auto&& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) {
+				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
 						const vec3d &nr_vec = inter->nvec;
 						inter->lubrication.calcXFunctions();
@@ -1175,7 +1175,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		for (auto&& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) {
+				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
 						const vec3d &nr_vec = inter->nvec;
 						inter->lubrication.calcXYFunctions();
@@ -1263,7 +1263,7 @@ void System::setContactForceToParticle()
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
+		if (interaction[k].is_contact()) {
 			interaction[k].contact.addUpContactForceTorque();
 		}
 	}
