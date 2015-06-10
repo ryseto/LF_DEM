@@ -366,6 +366,39 @@ void Simulation::exportForceAmplitudes()
 	}
 }
 
+void Simulation::convertInputValues(string new_long_unit)
+{
+	string new_unit = unit_shortname[new_long_unit];
+	if(new_unit != "h" && dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()){
+		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
+	}
+
+	for(auto&& inv: input_values){
+		string old_unit = inv.unit;
+		if(old_unit != "h" && dimensionless_numbers.find(old_unit) == dimensionless_numbers.end()){
+		  cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit << "\"" << endl; exit(1);
+		}
+
+		if (old_unit != "h") {
+			inv.value /= dimensionless_numbers[old_unit];
+		}
+		if (new_unit != "h") {
+		  inv.value *= dimensionless_numbers[new_unit];
+		}
+		inv.unit = new_unit;
+	}
+}
+
+void Simulation::exportInputValues(){
+	for(auto&& inv: input_values){
+		string name = inv.name;
+		if(name == "time_end"){
+		  p.time_end = inv.value;
+		  cerr << " Simulation time (in \"" << inv.unit << "\" units): " << p.time_end << endl;
+		}
+	}
+}
+
 void Simulation::setupSimulationSteadyShear(string in_args,
 											vector<string> &input_files,
 											bool binary_conf,
@@ -409,7 +442,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	}
 	cerr << " Internal unit scale : " << unit_scales << endl;
 	exportForceAmplitudes();
-	
+
+	convertInputValues(unit_scales);
+	exportInputValues();
+
 	// test for incompatibilities
 	if (sys.brownian == true) {
 		if (p.integration_method != 1) {
@@ -823,7 +859,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
 	} else if (keyword == "time_end") {
-		p.time_end = atof(value.c_str());
+		caught_suffix = getSuffix(value, numeral, suffix);
+		InputValue inv;
+		inv.name = keyword;
+		inv.type = "time";
+		inv.value = atof(numeral.c_str());
+		inv.unit = suffix;
+		input_values.push_back(inv);
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {

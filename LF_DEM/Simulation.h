@@ -23,6 +23,7 @@
 #include <algorithm>
 #include "System.h"
 #include "ParameterSet.h"
+#include "InputValue.h"
 
 inline void removeBlank(string &str)
 {
@@ -54,6 +55,8 @@ private:
 
 	std::map <string, string> unit_longname; // it's temporary: should find a more elegant way :)
 	std::map <string, string> unit_shortname;
+	
+	std::list <InputValue> input_values;
 
 	double volume_or_area_fraction;
 	string filename_import_positions;
@@ -131,8 +134,10 @@ private:
 	void importPreSimulationData(string filename);
 	void importConfigurationBinary();
 	void exportForceAmplitudes();
+	void exportInputValues();
 	void setLowPeclet();
 	void convertForceValues(string new_long_unit);
+	void convertInputValues(string new_long_unit);
 	void resolveUnitSystem(string long_unit);
 	void setUnitScaleRateControlled();
 	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
