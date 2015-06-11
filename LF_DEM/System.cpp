@@ -829,7 +829,8 @@ void System::timeStepMove()
 				dt = p.disp_max/max_sliding_velocity;
 			}
 		} else {
-			dt = 1e-3/shear_rate; //
+			dt = p.disp_max/max_velocity;
+			//			dt = 1e-3/shear_rate; //
 		}
 	}
 	time += dt;

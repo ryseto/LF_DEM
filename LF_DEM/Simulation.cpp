@@ -323,13 +323,14 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 void Simulation::exportForceAmplitudes()
 {
 	bool is_repulsive = values.find("r") != values.end();
+
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
 		sys.amplitudes.repulsion = values["r"];
 		cerr << " Repulsive force (in \"" << suffixes["r"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
 	bool is_critical_load = values.find("cl") != values.end();
-	if (is_critical_load) {
+		if (is_critical_load) {
 		sys.critical_load = true;
 		sys.amplitudes.critical_normal_force = values["cl"];
 		cerr << " Critical Load (in \"" << suffixes["cl"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
@@ -351,6 +352,7 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.ft_max = values["ft"];
 		cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
+	cerr << "***" << sys.amplitudes.repulsion  << endl;
 }
 
 void Simulation::setupSimulationSteadyShear(string in_args,
@@ -454,6 +456,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
+
+	cerr << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
+	cerr << "repulsive_length = " << p.repulsive_length << endl;
+	
 	
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
@@ -613,9 +619,14 @@ void Simulation::simulationInverseYield(string in_args,
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
-			if (jammed > 10) {
-				cerr << "shear jamming";
-				break;
+			if (jammed > 20) {
+				sys.set_shear_rate(1);
+				cerr << "target_stress = " << target_stress_input << endl;
+				target_stress_input *= 0.8;
+				sys.target_stress = target_stress_input/6/M_PI;
+				sys.updateUnscaledContactmodel();
+				cerr << "new target_stress = " << target_stress_input << endl;
+				jammed = 0;
 			}
 		} else {
 			jammed = 0;
@@ -627,6 +638,8 @@ void Simulation::simulationInverseYield(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 	}
+	
+	
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
@@ -899,6 +912,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		}
 	} else if (keyword == "repulsion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
+		p.repulsion_amplitude = atof(numeral.c_str());
 		suffixes["r"] = suffix;
 		values["r"] = atof(numeral.c_str());
 	} else if (keyword == "cohesion_amplitude") {

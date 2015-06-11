@@ -63,9 +63,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 	double energy_previous = 0;
 	double diff_energy = 99999;
 	do {
-		for (int i = 0; i<20; i++) {
-			energy = zeroTMonteCarloSweep();
-		}
+		energy = zeroTMonteCarloSweep();
 		cerr << energy << endl;
 		diff_energy = energy-energy_previous;
 		energy_previous = energy;
@@ -74,7 +72,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 		}
 		count ++;
 		cerr << "diff = " << abs(diff_energy) << endl;
-	} while (abs(diff_energy) > 1e-12);
+	} while (abs(diff_energy) > 1e-10);
 	//deflate
 	for (int i=0; i < np; i++) {
 		if (i < np1) {

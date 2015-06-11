@@ -75,6 +75,12 @@ int main(int argc, char **argv)
 				break;
 			case 't':
 				rheology_control = "stress";
+				if (getSuffix(optarg, numeral, suffix)) {
+					dimensionless_number = atof(numeral.c_str());
+					cerr << "Stress control: " << dimensionless_number << endl;
+				} else {
+					errorNoSuffix("shear stress");
+				}
 				seq_type = "iy";
 				break;
 			case 'r':
