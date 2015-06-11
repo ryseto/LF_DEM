@@ -388,11 +388,7 @@ void System::updateUnscaledContactmodel()
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	
-	if (!stress_controlled) {
-		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-	} else {
-		lub_coeff_contact = 4*kn_master*p.contact_relaxation_time;
-	}
+	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
