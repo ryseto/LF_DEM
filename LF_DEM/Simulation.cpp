@@ -551,6 +551,96 @@ void Simulation::simulationSteadyShear(string in_args,
 	}
 }
 
+void Simulation::simulationInverseYield(string in_args,
+									   vector<string> &input_files,
+									   bool binary_conf,
+									   double dimensionless_number,
+									   string input_scale,
+									   string control_variable)
+{
+	user_sequence = false;
+	control_var = control_variable;
+	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	int cnt_simu_loop = 1;
+	int cnt_config_out = 1;
+	double strain_output_config = 0;
+	double time_output_data = 0;
+	double time_output_config = 0;
+	if (sys.cohesion) {
+		sys.new_contact_gap = 0.02;
+	} else {
+		sys.new_contact_gap = 0;
+	}
+	int jammed = 0;
+	time_t now;
+	time_strain_1 = 0;
+	now = time(NULL);
+	time_strain_0 = now;
+	/******************** OUTPUT INITIAL DATA ********************/
+	evaluateData();
+	outputData(); // new
+	outputStressTensorData();
+	outputConfigurationBinary();
+	outputConfigurationData();
+	/*************************************************************/
+	
+	while (sys.get_time() < p.time_end-1e-8) {
+		time_output_data = cnt_simu_loop*time_interval_output_data;
+		time_output_config = cnt_config_out*time_interval_output_config;
+		sys.timeEvolution(time_output_data);
+		cnt_simu_loop ++;
+		
+		/******************** OUTPUT DATA ********************/
+		evaluateData();
+		outputData(); // new
+		outputStressTensorData();
+		outputConfigurationBinary();
+		if (time_interval_output_data == -1) {
+			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+		} else {
+			if (sys.get_time() >= time_output_config-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+		}
+		/*****************************************************/
+		
+		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
+		if (!sys.zero_shear
+			&& abs(sys.get_shear_rate()) < p.rest_threshold){
+			cerr << "shear jamming " << jammed << endl;
+			jammed ++;
+			if (jammed > 10) {
+				cerr << "shear jamming";
+				break;
+			}
+		} else {
+			jammed = 0;
+		}
+		sys.new_contact_gap = 0;
+		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
+			now = time(NULL);
+			time_strain_1 = now;
+			timestep_1 = sys.get_total_num_timesteps();
+		}
+	}
+	now = time(NULL);
+	time_strain_end = now;
+	timestep_end = sys.get_total_num_timesteps();
+	outputComputationTime();
+	if (filename_parameters.find("init_relax", 0)) {
+		/* To prepare relaxed initial configuration,
+		 * we can use Brownian simulation for a short interval.
+		 * Here is just to export the position data.
+		 */
+		outputFinalConfiguration();
+	}
+}
+
+
 void Simulation::simulationMagnetic(string in_args,
 									vector<string> &input_files,
 									bool binary_conf,

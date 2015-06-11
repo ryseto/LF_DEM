@@ -63,7 +63,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 	double energy_previous = 0;
 	double diff_energy = 99999;
 	do {
-		for (int i = 0; i<100; i++) {
+		for (int i = 0; i<20; i++) {
 			energy = zeroTMonteCarloSweep();
 		}
 		cerr << energy << endl;
@@ -74,7 +74,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 		}
 		count ++;
 		cerr << "diff = " << abs(diff_energy) << endl;
-	} while (abs(diff_energy) > 1e-20);
+	} while (abs(diff_energy) > 1e-12);
 	//deflate
 	for (int i=0; i < np; i++) {
 		if (i < np1) {
@@ -355,15 +355,16 @@ double GenerateInitConfig::zeroTMonteCarloSweep()
 	for(int i=0; i<np; i++) {
 	 	init_energy += particleEnergy(i);
 	}
+	double dx = 0.04;
 	while (steps < np) {
 		int moved_part = (int)(RANDOM*np);
 		//		int overlap_pre_move = overlapNumber(moved_part);
 		double energy_pre_move = particleEnergy(moved_part);
 		vec3d trial_move;
 		if (sys.twodimension) {
-			trial_move = randUniformCircle(0.04);
+			trial_move = randUniformCircle(dx);
 		} else {
-			trial_move = randUniformSphere(0.04);
+			trial_move = randUniformSphere(dx);
 		}
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);

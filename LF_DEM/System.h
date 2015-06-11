@@ -135,13 +135,8 @@ private:
 	 * Simulation for magnetic particles
 	 */
 	double num_magnetic_particles;
-	double num_magnetic_first;
-	double num_magnetic_second;
 	double sq_magnetic_interaction_range;
 	vector<pair<vec3d, pair<int,int>>> magnetic_force_stored;
-//	vector<vec3d> magnetic_force_stored;
-	vector<int> magnetic_force_p0;
-	vector<int> magnetic_force_p1;
 	vector<vector<int>> magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;

@@ -85,18 +85,18 @@ $c_traj=0;
 $num = 0;
 
 printf OUT "\@0 0 0 0 \n";
-# printf OUT "\@1 50 100 205 \n";
-printf OUT "\@1 255 255 255 \n";
+printf OUT "\@1 50 100 205 \n";
+#printf OUT "\@1 255 255 255 \n";
 printf OUT "\@2 200 200 200 \n";
 printf OUT "\@3 50 150 255 \n";
 printf OUT "\@4 50 200 50 \n";
 printf OUT "\@5 255 100 100 \n";
 printf OUT "\@6 50 200 50 \n";
 printf OUT "\@7 255 255 0 \n";
-# printf OUT "\@8 255 255 255\n";
-# printf OUT "\@9 150 150 150\n";
-printf OUT "\@8 224 143 0 \n";
-printf OUT "\@9 67 163 230 \n";
+printf OUT "\@8 255 255 255\n";
+printf OUT "\@9 150 150 150\n";
+#printf OUT "\@8 224 143 0 \n";
+#printf OUT "\@9 67 163 230 \n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";
@@ -605,39 +605,39 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#    }
-	#$force_factor = 0.005;
+	$force_factor = 0.1;
 	#	$force_factor = 0.02;
-	#	printf OUT "y 3\n";
-	#	printf OUT "@ 6\n";
-	#	for ($k=0; $k<$num_interaction; $k++){
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		#$force = $Fcol[$k];
-	#		#$force = $Fc_n[$k];
-	#		if ($force[$k] < 0){
-	#
-	#			$forceA = -$force[$k];
-	#			$string_width = ${force_factor}*$forceA;
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#			&OutString_width($int0[$k], $int1[$k]);
-	#		}
-	#	}
-	#	printf OUT "y 4\n";
-	#	printf OUT "@ 7\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		if ($force[$k] > 0){
-	#			if ( $contactstate[$k] == 2 ){
-	#				printf OUT "@ 7\n"; # static
-	#			}
-	#			if ( $contactstate[$k] == 3 ){
-	#				printf OUT "@ 5\n"; # dynamic
-	#			}
-	#			$forceA = $force[$k];
-	#			$string_width = ${force_factor}*$forceA;
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#			&OutString_width($int0[$k], $int1[$k]);
-	#		}
-	#	}
+		printf OUT "y 3\n";
+		printf OUT "@ 6\n";
+		for ($k=0; $k<$num_interaction; $k++){
+			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+			#$force = $Fcol[$k];
+			#$force = $Fc_n[$k];
+			if ($force[$k] < 0){
+	
+				$forceA = -$force[$k];
+			$string_width = ${force_factor}*$forceA;
+				#&OutString2($int0[$k], $int1[$k]);
+				&OutString_width($int0[$k], $int1[$k]);
+			}
+		}
+		printf OUT "y 4\n";
+	printf OUT "@ 7\n";
+		for ($k = 0; $k < $num_interaction; $k ++){
+			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+			if ($force[$k] > 0){
+				if ( $contactstate[$k] == 2 ){
+					printf OUT "@ 7\n"; # static
+				}
+				if ( $contactstate[$k] == 3 ){
+					printf OUT "@ 5\n"; # dynamic
+				}
+				$forceA = $force[$k];
+				$string_width = ${force_factor}*$forceA;
+				#&OutString2($int0[$k], $int1[$k]);
+				&OutString_width($int0[$k], $int1[$k]);
+			}
+		}
 	
 	#	printf OUT "y 4\n";
 	#	printf OUT "@ 4\n";

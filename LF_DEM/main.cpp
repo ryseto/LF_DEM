@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hnmg:s:S:r:R:k:i:h:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hnmg:s:S:t:r:R:k:i:h:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -72,6 +72,10 @@ int main(int argc, char **argv)
 				seq_filename = optarg;
 				seq_type = "s";
 				cerr << "Stress sequence, file " << seq_filename << endl;
+				break;
+			case 't':
+				rheology_control = "stress";
+				seq_type = "iy";
 				break;
 			case 'r':
 				rheology_control = "rate";
@@ -146,6 +150,10 @@ int main(int argc, char **argv)
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
+		} else if (seq_type == "iy") {
+			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
+											  dimensionless_number, suffix, rheology_control);
+			
 		} else if (seq_filename == "not_given") {
 			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
