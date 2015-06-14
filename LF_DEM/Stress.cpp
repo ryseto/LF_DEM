@@ -64,12 +64,12 @@ System::calcStressPerParticle()
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			if (lubrication_model == 1) {
+			if (p.lubrication_model == 1) {
 				interaction[k].lubrication.calcXFunctionsStress();
-			} else if (lubrication_model == 2) {
+			} else if (p.lubrication_model == 2) {
 				interaction[k].lubrication.calcXYFunctionsStress();
 			} else {
-				cerr << "lubrication_model = " << lubrication_model << endl;
+				cerr << "lubrication_model = " << p.lubrication_model << endl;
 				cerr << "lubrication_model = 3 is not implemented" << endl;
 				exit(1);
 			}

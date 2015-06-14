@@ -17,20 +17,21 @@
 #endif
 using namespace std;
 
-int GenerateInitConfig::generate(int rand_seed_)
+int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 {
 	setParameters();
 	rand_seed = rand_seed_;
+	magnetic_config = magnetic_config_;
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
-	sys.interaction_range = 2.5;
-	sys.set_lub_max_gap(0.5);
+	sys.p.interaction_range = 2.5;
+	sys.p.lub_max_gap = 0.5;
 	sys.allocateRessources();
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume(2*a2);
 	sys.in_predictor = false;
-	sys.set_integration_method(0);
+	sys.p.integration_method = 0;
 	putRandom();
 	double inflate_ratio = 1.03;
 	for (int i=0; i<np;i++) {
@@ -70,6 +71,7 @@ int GenerateInitConfig::generate(int rand_seed_)
 			fout << count << ' ' << energy << ' ' <<  diff_energy << endl;
 		}
 		count ++;
+		cerr << "diff = " << abs(diff_energy) << endl;
 	} while (abs(diff_energy) > 1e-10);
 	//deflate
 	for (int i=0; i < np; i++) {
@@ -124,6 +126,15 @@ void GenerateInitConfig::outputPositionData()
 			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 		}
 	}
+	vector<double> magnetic_susceptibility;
+	for (int i=0; i< np; i++) {
+		if (i < np1) {
+			magnetic_susceptibility.push_back(1);
+		} else {
+			magnetic_susceptibility.push_back(-1);
+		}
+	}
+	
 	ss_posdatafilename << "_" << rand_seed << ".dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
@@ -137,7 +148,14 @@ void GenerateInitConfig::outputPositionData()
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
 		fout << position[i].z << ' ';
-		fout << radius[i] << endl;
+		fout << radius[i] << ' ';
+		if (magnetic_config) {
+			fout << 0 << ' ';
+			fout << 0 << ' ';
+			fout << 0 << ' ';
+			fout << magnetic_susceptibility[i];
+		}
+		fout << endl;
 		fout_yap << "r ";
 		fout_yap << radius[i] << endl;
 		fout_yap << "c ";
@@ -335,15 +353,16 @@ double GenerateInitConfig::zeroTMonteCarloSweep()
 	for(int i=0; i<np; i++) {
 	 	init_energy += particleEnergy(i);
 	}
+	double dx = 0.04;
 	while (steps < np) {
 		int moved_part = (int)(RANDOM*np);
 		//		int overlap_pre_move = overlapNumber(moved_part);
 		double energy_pre_move = particleEnergy(moved_part);
 		vec3d trial_move;
 		if (sys.twodimension) {
-			trial_move = randUniformCircle(0.04);
+			trial_move = randUniformCircle(dx);
 		} else {
-			trial_move = randUniformSphere(0.04);
+			trial_move = randUniformSphere(dx);
 		}
 		trial_move *= RANDOM;
 		sys.displacement(moved_part, trial_move);

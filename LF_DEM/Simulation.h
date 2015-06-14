@@ -21,38 +21,20 @@
 #include <ctime>
 #include <map>
 #include <algorithm>
+#include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
 #include "InputValue.h"
-
-inline void removeBlank(string &str)
-{
-	str.erase(std::remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
-}
-
-inline bool getSuffix(const string &str, string &value, string &suffix){
-	std::size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
-	value = str.substr(0, suffix_pos);
-	suffix = str.substr(suffix_pos, str.length());
-	if (suffix.empty()) {
-		return false;
-	}
-	return true;
-}
-
-inline void errorNoSuffix(string quantity){
-	cerr << "Error : no unit scale (suffix) provided for " << quantity << endl; exit(1);
-}
-
+#include "OutputData.h"
 	
-class Simulation{
+class Simulation
+{
 private:
 	System sys;
 	ParameterSet p;
 	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
 	std::map <string, double> values;   // pairs: (force_type, values_in_suffix_units)
 	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
-
 	std::map <string, string> unit_longname; // it's temporary: should find a more elegant way :)
 	std::map <string, string> unit_shortname;
 	
@@ -63,7 +45,7 @@ private:
 	string filename_parameters;
 	string filename_sequence;
 	ostringstream string_control_parameters;
-	string import_line[2];
+	string header_imported_configulation[2];
 	string control_var;
 	bool user_sequence;
 	double shear_rate_expectation;
@@ -113,12 +95,14 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_rheo;
+	ofstream fout_data; // New (trial) version of fout_rheo
+	ofstream fout_rheo; // Old version
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
 	ofstream fout_time;
 	ofstream fout_input;
+	OutputData outdata;
 	/*
 	 * For inputs
 	 */
@@ -128,10 +112,10 @@ private:
 	void prepareSimulationName(bool);
 	void echoInputFiles(string in_args, vector<string> &input_files);
 	void autoSetParameters(const string &keyword, const string &value);
-	void importInitialPositionFile();
 	void contactForceParameter(string filename);
 	void contactForceParameterBrownian(string filename);
 	void importPreSimulationData(string filename);
+	void importConfiguration();
 	void importConfigurationBinary();
 	void exportForceAmplitudes();
 	void exportInputValues();
@@ -148,6 +132,7 @@ private:
 	void evaluateData();
 	void outputDataHeader(ofstream &fout);
 	void outputRheologyData();
+	void outputData();
 	void outputStressTensorData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
@@ -159,9 +144,7 @@ private:
 									vector<string> &input_files,
 									bool binary_conf,
 									double dimensionlessnumber,
-									string input_scale,
-									string control_variable);
-//	void exportParameterSet();
+									string input_scale);
 	void outputComputationTime();
 	
 public:
@@ -171,5 +154,17 @@ public:
 	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,
 							   double dimensionless_number, string input_scale, string control_variable);
 	void simulationUserDefinedSequence(string seq_type, string in_args, vector<string> &input_files, bool binary_conf, string control_variable);
+	
+	void simulationInverseYield(string in_args,
+								vector<string> &input_files,
+								bool binary_conf,
+								double dimensionless_number,
+								string input_scale,
+								string control_variable);
+	
+	void simulationMagnetic(string in_args,	vector<string> &input_files,
+							bool binary_conf, double dimensionless_number,
+							string input_scale, string control_variable);
+	
 };
 #endif /* defined(__LF_DEM__Simulation__) */

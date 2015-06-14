@@ -14,7 +14,6 @@ void Interaction::init(System *sys_)
 	lubrication.init(sys);
 	contact.init(sys, this);
 	repulsion.init(sys, this);
-	magneticforce.init(sys, this);
 }
 
 /* Make a normal vector
@@ -28,13 +27,15 @@ void Interaction::calcNormalVectorDistanceGap()
 	sys->periodize_diff(rvec, zshift);
 	r = rvec.norm();
 	nvec = rvec/r;
-	nxnx = nvec.x*nvec.x;
-	nxny = nvec.x*nvec.y;
-	nxnz = nvec.x*nvec.z;
-	nynz = nvec.y*nvec.z;
-	nyny = nvec.y*nvec.y;
-	nznz = nvec.z*nvec.z;
 	reduced_gap = r/ro_12-2;
+	if (lubrication.is_active()) {
+		nxnx = nvec.x*nvec.x;
+		nxny = nvec.x*nvec.y;
+		nxnz = nvec.x*nvec.z;
+		nynz = nvec.y*nvec.z;
+		nyny = nvec.y*nvec.y;
+		nznz = nvec.z*nvec.z;
+	}
 }
 
 /* Activate interaction between particles i and j.
@@ -77,10 +78,6 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	if (sys->repulsiveforce) {
 		repulsion.activate();
 	}
-	if (sys->magnetic) {
-		magneticforce.activate();
-	}
-	
 	calcNormalVectorDistanceGap();
 	// deal with contact
 	contact.setInteractionData();
@@ -113,8 +110,18 @@ void Interaction::updateState(bool &deactivated)
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
+
 	calcNormalVectorDistanceGap();
-	updateContactState(deactivated);
+
+	if (r > interaction_range) {
+		/* all interaction is switched off. */
+		deactivate();
+		deactivated = true;
+		return;
+	}
+
+	updateContactState();
+	
 	if (lubrication.is_active()) {
 		lubrication.updateResistanceCoeff();
 	}
@@ -124,17 +131,9 @@ void Interaction::updateState(bool &deactivated)
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
 	}
-	if (sys->magnetic) {
-		if (sys->magnetic_moment_norm[p0] != 0
-			&& sys->magnetic_moment_norm[p1] != 0) {
-			magneticforce.calcForceToruqe();
-		} else {
-			magneticforce.resetForceToruqe();
-		}
-	}
 }
 
-void Interaction::updateContactState(bool &deactivated)
+void Interaction::updateContactState()
 {
 	contact_state_changed_after_predictor = false;
 	if (contact.state > 0) {
@@ -171,11 +170,6 @@ void Interaction::updateContactState(bool &deactivated)
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-		} else if (r > interaction_range) {
-			/* all interaction is switched off. */
-			deactivate();
-			deactivated = true;
-			return;
 		}
 	}
 }

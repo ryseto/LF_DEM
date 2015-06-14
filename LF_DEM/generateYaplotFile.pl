@@ -17,9 +17,10 @@ if ($#ARGV >= 1){
 	$output_interval = $ARGV[1];
 }
 
-#if ($#ARGV == 2){
-#	$force_factor = $ARGV[2];
-#}
+
+if ($#ARGV == 2){
+	$xz_shift = $ARGV[2];
+}
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -31,7 +32,7 @@ $interaction_data = "int_${name}.dat";
 $output = "y_$name.yap";
 
 my $pos;
-$pos = index($name, "mag");
+$pos = index($name, "_m");
 if ($pos != -1) {
 	$mag = 1;
 } else {
@@ -84,18 +85,18 @@ $c_traj=0;
 $num = 0;
 
 printf OUT "\@0 0 0 0 \n";
-# printf OUT "\@1 50 100 205 \n";
-printf OUT "\@1 255 255 255 \n";
+printf OUT "\@1 50 100 205 \n";
+#printf OUT "\@1 255 255 255 \n";
 printf OUT "\@2 200 200 200 \n";
 printf OUT "\@3 50 150 255 \n";
 printf OUT "\@4 50 200 50 \n";
 printf OUT "\@5 255 100 100 \n";
 printf OUT "\@6 50 200 50 \n";
 printf OUT "\@7 255 255 0 \n";
-# printf OUT "\@8 255 255 255\n";
-# printf OUT "\@9 150 150 150\n";
-printf OUT "\@8 224 143 0 \n";
-printf OUT "\@9 67 163 230 \n";
+printf OUT "\@8 255 255 255\n";
+printf OUT "\@9 150 150 150\n";
+#printf OUT "\@8 224 143 0 \n";
+#printf OUT "\@9 67 163 230 \n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";
@@ -170,7 +171,11 @@ for ($i = 0; $i < $np; $i++){
 	$xx = 0.5*$Lx + $posx[$i];
 	$yy = 0.5*$Ly + $posy[$i];
 	$zz = 0.5*$Lz + $posz[$i];
-	printf OUTLAST "$xx $yy $zz $radius[$i]\n";
+#	$mx = $magmom_x[$i];
+#	$my = $magmom_y[$i];
+#	$mz = $magmom_z[$i];
+	$ms = $magsusceptibility[$i];
+	printf OUTLAST "$xx $yy $zz $radius[$i] 0 0 0 $ms \n";
 }
 close (OUTLAST);
 	
@@ -226,10 +231,11 @@ sub InParticles {
 			if ($output == 1) {
 				if ($mag) {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz) = split(/\s+/, $line);
+					$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz, $ms) = split(/\s+/, $line);
 					$magmom_x[$i] = $mx;
 					$magmom_y[$i] = $my;
 					$magmom_z[$i] = $mz;
+					$magsusceptibility[$i] = $ms;
 					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
 				} else {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
@@ -241,6 +247,16 @@ sub InParticles {
 				#			printf OUTMP "$i $x $y $z $a\n";
 				#		}
 				$radius[$i] = $a;
+				if ($xz_shift) {
+					$x += $xz_shift;
+					$z += $xz_shift;
+					if ($x > $Lx/2) {
+						$x -= $Lx;
+					}
+					if ($z > $Lz/2) {
+						$z -= $Lz;
+					}
+				}
 				$posx[$i] = $x;
 				$posy[$i] = $y;
 				$posz[$i] = $z;
@@ -476,7 +492,7 @@ sub OutYaplotData{
 		
 		if ($mag) {
 			if ($switch == 0 &&
-				$i >= 1 && $mm[$i] == 0){
+				$magsusceptibility[$i] < 0){
 					printf OUT "@ 9\n";
 					$switch = 1;
 				}
@@ -589,39 +605,39 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#    }
-	#$force_factor = 0.005;
+	$force_factor = 0.04;
 	#	$force_factor = 0.02;
-	#	printf OUT "y 3\n";
-	#	printf OUT "@ 6\n";
-	#	for ($k=0; $k<$num_interaction; $k++){
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		#$force = $Fcol[$k];
-	#		#$force = $Fc_n[$k];
-	#		if ($force[$k] < 0){
-	#
-	#			$forceA = -$force[$k];
-	#			$string_width = ${force_factor}*$forceA;
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#			&OutString_width($int0[$k], $int1[$k]);
-	#		}
-	#	}
-	#	printf OUT "y 4\n";
-	#	printf OUT "@ 7\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		if ($force[$k] > 0){
-	#			if ( $contactstate[$k] == 2 ){
-	#				printf OUT "@ 7\n"; # static
-	#			}
-	#			if ( $contactstate[$k] == 3 ){
-	#				printf OUT "@ 5\n"; # dynamic
-	#			}
-	#			$forceA = $force[$k];
-	#			$string_width = ${force_factor}*$forceA;
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#			&OutString_width($int0[$k], $int1[$k]);
-	#		}
-	#	}
+		printf OUT "y 3\n";
+		printf OUT "@ 6\n";
+		for ($k=0; $k<$num_interaction; $k++){
+			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+			#$force = $Fcol[$k];
+			#$force = $Fc_n[$k];
+			if ($force[$k] < 0){
+	
+				$forceA = -$force[$k];
+			$string_width = ${force_factor}*$forceA;
+				#&OutString2($int0[$k], $int1[$k]);
+				&OutString_width($int0[$k], $int1[$k]);
+			}
+		}
+		printf OUT "y 4\n";
+	printf OUT "@ 7\n";
+		for ($k = 0; $k < $num_interaction; $k ++){
+			#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+			if ($force[$k] > 0){
+				if ( $contactstate[$k] == 2 ){
+					printf OUT "@ 7\n"; # static
+				}
+				if ( $contactstate[$k] == 3 ){
+					printf OUT "@ 5\n"; # dynamic
+				}
+				$forceA = $force[$k];
+				$string_width = ${force_factor}*$forceA;
+				#&OutString2($int0[$k], $int1[$k]);
+				&OutString_width($int0[$k], $int1[$k]);
+			}
+		}
 	
 	#	printf OUT "y 4\n";
 	#	printf OUT "@ 4\n";
@@ -712,7 +728,7 @@ sub OutYaplotData{
 		printf OUT "r 0.5\n";
 		printf OUT "a 1\n";
 		for ($i = 0; $i < $np; $i ++){
-			&OutMagMoment($i);
+				&OutMagMoment($i);
 		}
 	} else {
 		if ($Ly == 0){
@@ -1043,14 +1059,23 @@ sub OutMagMoment {
 	$yi = $posy[$i]+$magnetoffset_y;
 	$zi = $posz[$i];
 	#	printf "$mm\n";
-	
-	if ($mm[$i] > 0) {
-		$xa = $xi - $magmom_x[$i]/$mm[$i] ;
-		$ya = $yi - $magmom_y[$i]/$mm[$i] ;
-		$za = $zi - $magmom_z[$i]/$mm[$i] ;
-		$xb = $xi + $magmom_x[$i]/$mm[$i];
-		$yb = $yi + $magmom_y[$i]/$mm[$i];
-		$zb = $zi + $magmom_z[$i]/$mm[$i];
+	$m0 = 1;
+	if (abs($mm[$i]) > 0) {
+#		$xa = $xi - $magmom_x[$i]/$mm[$i] ;
+#		$ya = $yi - $magmom_y[$i]/$mm[$i] ;
+#		$za = $zi - $magmom_z[$i]/$mm[$i] ;
+#		$xb = $xi + $magmom_x[$i]/$mm[$i];
+#		$yb = $yi + $magmom_y[$i]/$mm[$i];
+#		$zb = $zi + $magmom_z[$i]/$mm[$i];
+		$xa = $xi - $magmom_x[$i]/$m0;
+		$ya = $yi - $magmom_y[$i]/$m0;
+		$za = $zi - $magmom_z[$i]/$m0;
+		$xb = $xi + $magmom_x[$i]/$m0;
+		$yb = $yi + $magmom_y[$i]/$m0;
+		$zb = $zi + $magmom_z[$i]/$m0;
 		printf OUT "s $xa $ya $za $xb $yb $zb\n";
 	}
 }
+
+
+

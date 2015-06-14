@@ -540,6 +540,7 @@
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
 		D972279B16AF02DC00DA851F /* generateYaplotFile.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = generateYaplotFile.pl; sourceTree = "<group>"; };
+		D9752C881B18285100DDE5E4 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
 		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Interaction.h; sourceTree = "<group>"; };
 		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Simulation.cpp; sourceTree = "<group>"; };
 		D9878876165545680047A87E /* Simulation.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Simulation.h; sourceTree = "<group>"; };
@@ -551,6 +552,7 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		D98C23DA1B1EF22A00A175A6 /* extractConfigdata.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = extractConfigdata.pl; sourceTree = "<group>"; };
 		D99437CE1800F65000B756D5 /* particleconfig.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = particleconfig.pl; sourceTree = "<group>"; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -560,6 +562,10 @@
 		D99535211807276D00FC99C9 /* StrainSnapShot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrainSnapShot.cpp; sourceTree = "<group>"; };
 		D99535221807276D00FC99C9 /* StrainSnapShot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrainSnapShot.h; sourceTree = "<group>"; };
 		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
+		D9A80BF31B1A9BA700F4BFD3 /* nondimensionalization.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = nondimensionalization.pdf; sourceTree = "<group>"; };
+		D9A80BF41B1A9BA700F4BFD3 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
+		D9A80BF51B1A9BC200F4BFD3 /* nondimensionalization.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = nondimensionalization.tex; sourceTree = "<group>"; };
+		D9A80BF61B1C87D000F4BFD3 /* OutputData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OutputData.h; sourceTree = "<group>"; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = initconfig_scale_size.pl; sourceTree = "<group>"; };
 		D9BC20971AAD607B0033D4A8 /* algorithm.graffle */ = {isa = PBXFileReference; lastKnownFileType = file; path = algorithm.graffle; sourceTree = "<group>"; };
@@ -1136,6 +1142,7 @@
 				D9B8C6A21715AEC500608F62 /* initconfig_scale_size.pl */,
 				D9130BDD1A96AE5E0070E19F /* LeesEdwards.pl */,
 				D972279B16AF02DC00DA851F /* generateYaplotFile.pl */,
+				D98C23DA1B1EF22A00A175A6 /* extractConfigdata.pl */,
 				D94F42151AB5028600237D7E /* reduce_rheodata.pl */,
 				D9E6006A189AAA8E00603854 /* calc_contact_fraction.pl */,
 				D9D805951889BAC700D139F5 /* generateSimpleData.pl */,
@@ -1191,8 +1198,10 @@
 				D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */,
 				D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */,
 				D988E38D165441750009949F /* main.cpp */,
+				D9752C881B18285100DDE5E4 /* global.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
+				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
@@ -1265,6 +1274,9 @@
 		D9DA50D51678F61E00E864E4 /* note_LF_DEM */ = {
 			isa = PBXGroup;
 			children = (
+				D9A80BF51B1A9BC200F4BFD3 /* nondimensionalization.tex */,
+				D9A80BF31B1A9BA700F4BFD3 /* nondimensionalization.pdf */,
+				D9A80BF41B1A9BA700F4BFD3 /* note_LF_DEM.tex */,
 				D9BC20991AAD60AB0033D4A8 /* kumars_Rfu0.pdf */,
 				D9BC209A1AAD60AB0033D4A8 /* Lub_orientation_dependence.pdf */,
 				D9BC209B1AAE7D280033D4A8 /* dynamic_friction.pdf */,

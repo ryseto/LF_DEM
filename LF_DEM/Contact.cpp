@@ -11,20 +11,21 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	sys = sys_;
 	interaction = interaction_;
 	state = 0;
-	if (sys->friction_model == 1) {
-		frictionlaw = &Contact::frictionlaw_standard;
-	} else if (sys->friction_model == 2) {
-		frictionlaw = &Contact::frictionlaw_criticalload;
-	} else if (sys->friction_model == 3) {
-		frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
-	} else if (sys->friction_model == 5) {
+	f_contact_normal_norm = 0;
+	if (sys->p.friction_model != 0) {
+		if (sys->p.friction_model == 1) {
+			frictionlaw = &Contact::frictionlaw_standard;
+		} else if (sys->p.friction_model == 2) {
+			frictionlaw = &Contact::frictionlaw_criticalload;
+		} else if (sys->p.friction_model == 3) {
+			frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
+		} else if (sys->p.friction_model == 5) {
 	 	frictionlaw = &Contact::frictionlaw_ft_max;
-    	ft_max = sys->ft_max;
-	} else if (sys->friction_model == 6) {
-		frictionlaw = &Contact::frictionlaw_coulomb_max;
-		ft_max = sys->ft_max;
-	} else {
-		frictionlaw = &Contact::frictionlaw_null;
+			ft_max = sys->ft_max;
+		} else if (sys->p.friction_model == 6) {
+			frictionlaw = &Contact::frictionlaw_coulomb_max;
+			ft_max = sys->ft_max;
+		}
 	}
 }
 
@@ -32,15 +33,15 @@ void Contact::setInteractionData()
 {
 	interaction->get_par_num(p0, p1);
 	const double &ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
-	kt_scaled = ro_12*sys->kt; // F = kt_scaled * disp_tan <-- disp is not scaled
-	if (sys->rolling_friction) {
-		kr_scaled = ro_12*sys->kr; // F = kt_scaled * disp_tan <-- disp is not scaled
-	}
-	mu_static = sys->mu_static;
-	mu_dynamic = sys->mu_dynamic;
-	if (sys->rolling_friction) {
-		mu_rolling = sys->mu_rolling;
+	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
+	if (sys->friction) {
+		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+		mu_static = sys->mu_static;
+		mu_dynamic = sys->mu_dynamic;
+		if (sys->rolling_friction) {
+			kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+			mu_rolling = sys->mu_rolling;
+		}
 	}
 }
 
@@ -52,7 +53,7 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
-	if (sys->friction_model == 2 || sys->friction_model == 3) {
+	if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
 		state = 1; // critical load model
 	} else {
 		state = 2; // static friction
@@ -297,28 +298,20 @@ void Contact::frictionlaw_coulomb_max()
 	return;
 }
 
-void Contact::frictionlaw_null()
-{
-	// null
-}
-
-
 void Contact::addUpContactForceTorque()
 {
-	if (state > 0) {
-		sys->contact_force[p0] += f_contact_normal;
-		sys->contact_force[p1] -= f_contact_normal;
-		if (state >= 2) {
-			sys->contact_force[p0] += f_contact_tan;
-			sys->contact_force[p1] -= f_contact_tan;
-			vec3d t_ij = cross(interaction->nvec, f_contact_tan);
-			sys->contact_torque[p0] += interaction->a0*t_ij;
-			sys->contact_torque[p1] += interaction->a1*t_ij;
-			if (sys->rolling_friction) {
-				vec3d t_rolling = cross(interaction->nvec, f_rolling);
-				sys->contact_torque[p0] += interaction->a0*t_rolling;
-				sys->contact_torque[p1] -= interaction->a1*t_rolling;
-			}
+	sys->contact_force[p0] += f_contact_normal;
+	sys->contact_force[p1] -= f_contact_normal;
+	if (state >= 2) {
+		sys->contact_force[p0] += f_contact_tan;
+		sys->contact_force[p1] -= f_contact_tan;
+		vec3d t_ij = cross(interaction->nvec, f_contact_tan);
+		sys->contact_torque[p0] += interaction->a0*t_ij;
+		sys->contact_torque[p1] += interaction->a1*t_ij;
+		if (sys->rolling_friction) {
+			vec3d t_rolling = cross(interaction->nvec, f_rolling);
+			sys->contact_torque[p0] += interaction->a0*t_rolling;
+			sys->contact_torque[p1] -= interaction->a1*t_rolling;
 		}
 	}
 }

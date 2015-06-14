@@ -755,6 +755,7 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 	}
 #endif
 }
+
 void StokesSolver::solve(double* velocity)
 {
 	if (direct()) {

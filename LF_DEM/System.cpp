@@ -25,19 +25,20 @@
 
 System::System():
 brownian(false),
-repulsiveforce(false),
-critical_load(false),
-cohesion(false),
-magnetic(false),
 friction(false),
-friction_model(-1),
+rolling_friction(false),
+repulsiveforce(false),
+cohesion(false),
+critical_load(false),
+lowPeclet(false),
 twodimension(false),
 zero_shear(false),
-lowPeclet(false),
 magnetic_coeffient(24),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
-new_contact_gap(0)
+new_contact_gap(0),
+magnetic_rotation_active(false),
+magnetic_field_square(0)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -45,6 +46,9 @@ new_contact_gap(0)
 	amplitudes.cohesion = 0;
 	amplitudes.magnetic = 0;
 	amplitudes.critical_normal_force = 0;
+	max_sliding_velocity = 0;
+	max_contact_gap = 0;
+	max_disp_rolling = 0;
 }
 
 vec3d System::randUniformSphere(double r)
@@ -65,9 +69,9 @@ System::hash( time_t t, clock_t c )
 	// Get a unsigned long from t and c
 	// Better than unsigned long(x) in case x is floating point in [0,1]
 	// Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
-
+	
 	static unsigned long differ = 0;  // guarantee time-based seeds will change
-
+	
 	unsigned long h1 = 0;
 	unsigned char *pp = (unsigned char *) &t;
 	for( size_t i = 0; i < sizeof(t); ++i )
@@ -100,7 +104,7 @@ System::~System()
 	DELETE(ang_velocity);
 	DELETE(na_velocity);
 	DELETE(na_ang_velocity);
-	if (integration_method == 1) {
+	if (p.integration_method == 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
 	}
@@ -128,32 +132,30 @@ System::~System()
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
 	}
+	if (p.magnetic_type != 0) {
+		DELETE(magnetic_moment);
+		DELETE(magnetic_force);
+		DELETE(magnetic_torque);
+		DELETE(vel_magnetic);
+		DELETE(ang_vel_magnetic);
+	}
 };
 
 void System::importParameterSet(ParameterSet &ps)
 {
 	p = ps;
-	friction_model = p.friction_model;
-	rolling_friction = p.rolling_friction;
-	set_lub_max_gap(p.lub_max_gap);
-	lub_reduce_parameter = p.lub_reduce_parameter;
-	set_lubrication_model(p.lubrication_model);
+	if (p.lub_max_gap >= 1) {
+		cerr << "lub_max_gap must be smaller than 1\n";
+		exit(1);
+	}
 	kn = p.kn;
 	kt = p.kt;
 	kr = p.kr;
 	ft_max = p.ft_max;
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
+		p.repulsive_length = 0;
 	}
-	if (repulsiveforce) {
-		set_repulsiveforce_length(p.repulsive_length);
-	} else {
-		set_repulsiveforce_length(0);
-	}
-	monolayer = p.monolayer;
-	interaction_range = p.interaction_range;
-	set_sd_coeff(p.sd_coeff);
-	integration_method = p.integration_method;
 	mu_static = p.mu_static;
 	if (p.mu_dynamic == -1) {
 		mu_dynamic = p.mu_static;
@@ -161,10 +163,6 @@ void System::importParameterSet(ParameterSet &ps)
 		mu_dynamic = p.mu_dynamic;
 	}
 	mu_rolling = p.mu_rolling;
-	set_disp_max(p.disp_max);
-	ratio_nonmagnetic = p.ratio_nonmagnetic;
-	magnetic_dipole_moment = p.magnetic_dipole_moment;
-	external_magnetic_field = p.external_magnetic_field;
 }
 
 void System::allocateRessources()
@@ -172,11 +170,11 @@ void System::allocateRessources()
 	linalg_size = 6*np;
 	double interaction_volume;
 	if (twodimension) {
-		interaction_volume = M_PI*interaction_range*interaction_range;
+		interaction_volume = M_PI*pow(p.interaction_range, 2);
 		double particle_volume = M_PI;
-		maxnb_interactionpair_per_particle = 1.5*interaction_volume/particle_volume;
+		maxnb_interactionpair_per_particle = interaction_volume/particle_volume;
 	} else {
-		interaction_volume = (4*M_PI/3)*interaction_range*interaction_range*interaction_range;
+		interaction_volume = (4*M_PI/3)*pow(p.interaction_range, 3);
 		double particle_volume = 4*M_PI/3;
 		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
 	}
@@ -194,7 +192,7 @@ void System::allocateRessources()
 	ang_velocity = new vec3d [np];
 	na_velocity = new vec3d [np];
 	na_ang_velocity = new vec3d [np];
-	if (integration_method == 1) {
+	if (p.integration_method == 1) {
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
 	}
@@ -209,10 +207,6 @@ void System::allocateRessources()
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
-	}
-	if (magnetic) {
-		vel_magnetic = new vec3d [np];
-		ang_vel_magnetic = new vec3d [np];
 	}
 	// Forces
 	contact_force = new vec3d [np];
@@ -246,15 +240,6 @@ void System::allocateRessources()
 		if (lowPeclet) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
-		}
-	}
-	if (magnetic) {
-		magnetic_moment = new vec3d [np];
-		magnetic_force = new vec3d [np];
-		magnetic_torque = new vec3d [np];
-		for (int i=0; i<np; i++) {
-			magnetic_force[i].reset();
-			magnetic_torque[i].reset();
 		}
 	}
 }
@@ -315,6 +300,73 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
+void System::setMagneticMomentExternalField()
+{
+	for (int i=0; i<num_magnetic_particles; i++) {
+		magnetic_moment[i] = magnetic_susceptibility[i]*external_magnetic_field;
+		magnetic_moment_norm[i] = magnetic_moment[i].norm();
+	}
+	magnetic_field_square = external_magnetic_field.sq_norm();
+}
+
+void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
+									  const vector <double> &magnetic_susceptibility_)
+{
+	magnetic_moment_norm.resize(np);
+	magnetic_susceptibility.resize(np);
+	magnetic_moment = new vec3d [np];
+	magnetic_force = new vec3d [np];
+	magnetic_torque = new vec3d [np];
+	vel_magnetic = new vec3d [np];
+	ang_vel_magnetic = new vec3d [np];
+	for (int i=0; i<np; i++) {
+		magnetic_force[i].reset();
+		magnetic_torque[i].reset();
+		vel_magnetic[i].reset();
+		ang_vel_magnetic[i].reset();
+	}
+	magnetic_pair.resize(np-1);
+	sq_magnetic_interaction_range = pow(p.magnetic_interaction_range, 2);
+	time_update_magnetic_pair = 0;
+	if (p.magnetic_type == 1) {
+		/* Each particle has magnetic dipole moment.
+		 * Ferromagnetism.
+		 */
+		cerr << "This is not implemented yet" << endl;
+		exit(1);
+		int i_magnetic = 0;
+		for (int i=0; i<np; i++) {
+			magnetic_moment[i] = magnetic_moment_[i];
+			magnetic_moment_norm[i] = magnetic_moment[i].norm();
+			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
+			if (magnetic_moment_norm[i] != 0
+				|| magnetic_susceptibility[i] != 0) {
+				i_magnetic = i+1;
+			}
+		}
+		num_magnetic_particles = i_magnetic;
+	} else if (p.magnetic_type == 2) {
+		/* Particle can have magnetic moment when external magnetic field is applied.
+		 * Paramagnetism
+		 * Magnetic susceptibility.
+		 * Magnetic moments are fixed as long as external field is unchanged.
+		 */
+		int i_magnetic = 0;
+		for (int i=0; i<np; i++) {
+			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
+			if (magnetic_susceptibility[i] != 0) {
+				i_magnetic = i+1;
+			}
+		}
+		num_magnetic_particles = i_magnetic;
+		angle_external_magnetic_field = p.init_angle_external_magnetic_field;
+		external_magnetic_field.set(abs(sin(angle_external_magnetic_field)),
+									abs(cos(angle_external_magnetic_field)), 0);
+		external_magnetic_field.cerr();
+		setMagneticMomentExternalField();
+	}
+}
+
 void System::updateUnscaledContactmodel()
 {
 	if (abs(target_stress) != 0) {
@@ -336,21 +388,17 @@ void System::updateUnscaledContactmodel()
 		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	
-	if (!stress_controlled) {
-		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
-	} else {
-		lub_coeff_contact = 4*kn_master*p.contact_relaxation_time;
-	}
+	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
 	
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
 	
-	if (lubrication_model == 1) {
+	if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
-	} else if (lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+	} else if (p.lubrication_model == 2) {
+		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
 		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
@@ -397,58 +445,71 @@ void System::setupSystem(string control)
 	}
 	stress_controlled = !rate_controlled;
 	
-	if (integration_method == 0) {
+	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
-	} else if (integration_method == 1) {
+	} else if (p.integration_method == 1) {
 		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
 	} else {
-		cerr << "integration_method = " << integration_method << endl;
+		cerr << "integration_method = " << p.integration_method << endl;
 		cerr << "The integration method is not impremented yet." << endl;
 		exit(1);
 	}
-	if (lubrication_model == 1) {
+	if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (lubrication_model == 2) {
+	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
 		cerr << "lubrication_model = 0 is not implemented yet.\n";
 		exit(1);
 	}
-	if (magnetic) {
-		calcInteractionRange = &System::calcLongInteractionRange;
-	} else {
+	if (p.interaction_range == -1) {
+		/* If interaction_range is not indicated,
+		 * interaction object is created at the lubrication cutoff.
+		 */
 		calcInteractionRange = &System::calcLubricationRange;
+		p.interaction_range = 2+p.lub_max_gap;
+	} else {
+		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
 	
-	if (friction_model == 0) {
+	if (p.friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
 		friction = false;
-	} else if (friction_model == 1) {
+	} else if (p.friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
 		friction = true;
-	} else if (friction_model == 2 || friction_model == 3) {
-		cerr << "friction_model " << friction_model << endl;
+	} else if (p.friction_model == 2 || p.friction_model == 3) {
+		cerr << "friction_model " << p.friction_model << endl;
 		friction = true;
 		cerr << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
-	} else if (friction_model == 5) {
+	} else if (p.friction_model == 5) {
 		cerr << "friction_model = 5: ft_max" << endl;
 		friction = true;
-	} else if (friction_model == 6) {
+	} else if (p.friction_model == 6) {
 		cerr << "friction_model = 6: Coulomb law + ft_max" << endl;
 		friction = true;
 	} else {
 		cerr << "friction_model..." << endl;
 		exit(1);
 	}
+	if (p.mu_rolling > 0) {
+		rolling_friction = true;
+		if (friction == false) {
+			cerr << "Sliding friction is not set!" << endl;
+			exit(1);
+		}
+	}
+	
 	allocateRessources();
+
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
 	for (int i=0; i<np; i++) {
-		radius_squared[i] = pow(radius[i],2);
-		radius_cubed[i] = pow(radius[i],3);
+		radius_squared[i] = pow(radius[i], 2);
+		radius_cubed[i] = pow(radius[i], 3);
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -464,10 +525,6 @@ void System::setupSystem(string control)
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
 		}
-		if (magnetic) {
-			vel_magnetic[i].reset();
-			ang_vel_magnetic[i].reset();
-		}
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -479,7 +536,7 @@ void System::setupSystem(string control)
 	}
 	if (p.contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
-		lub_coeff_contact = 1/lub_reduce_parameter;
+		lub_coeff_contact = 1/p.lub_reduce_parameter;
 	} else {
 		/* t = beta/kn
 		 *  beta = t*kn
@@ -492,11 +549,11 @@ void System::setupSystem(string control)
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
 	 *
 	 */
-	if (lubrication_model == 1) {
+	if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
-	} else if (lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/lub_reduce_parameter);
+	} else if (p.lubrication_model == 2) {
+		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
 		/* [Note]
 		 * We finally do not introduce a dashpot for the sliding mode.
 		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
@@ -512,7 +569,7 @@ void System::setupSystem(string control)
 		updateUnscaledContactmodel();
 	}
 	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cerr << "1/lub_reduce_parameter = " << 1/lub_reduce_parameter << endl;
+	cerr << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	
@@ -528,7 +585,7 @@ void System::setupSystem(string control)
 #ifdef USE_DSFMT
 		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 		dsfmt_init_gen_rand(&rand_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
-#endif		
+#endif
 #endif
 		
 #ifndef DEV
@@ -540,6 +597,17 @@ void System::setupSystem(string control)
 		dsfmt_init_gen_rand(&rand_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
+	}
+	
+	if (p.magnetic_type != 0) {
+		if (p.magnetic_type == 1) {
+			magnetic_rotation_active = true;
+		} else if (p.magnetic_type == 2) {
+			magnetic_rotation_active = false;
+		} else {
+			cerr << "magnetic_type needs to be 1 or 2\n";
+			exit(1);
+		}
 	}
 	
 	time = 0;
@@ -581,99 +649,14 @@ void System::setupSystem(string control)
 	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
-		double FUvalue = sd_coeff*radius[i];
-		double TWvalue = sd_coeff*torque_factor*radius_cubed[i];
+		double FUvalue = p.sd_coeff*radius[i];
+		double TWvalue = p.sd_coeff*torque_factor*radius_cubed[i];
 		resistance_matrix_dblock[i18   ] = FUvalue;
 		resistance_matrix_dblock[i18+6 ] = FUvalue;
 		resistance_matrix_dblock[i18+10] = FUvalue;
 		resistance_matrix_dblock[i18+12] = TWvalue;
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
-	}
-	if (magnetic) {
-		setupMagneticMoment();
-	}
-}
-
-void System::setupMagneticMoment()
-{
-	/*
-	 *
-	 */
-	magnetic_moment_norm.resize(np);
-	num_magnetic = np-round(np*ratio_nonmagnetic);
-	cerr << "np = " << np << endl;
-	cerr << ratio_nonmagnetic << endl;
-	cerr << "number of magnetic particles: " << num_magnetic << endl;
-	cerr << "dipole_orientation: " << p.dipole_orientation << endl;
-	for (int i=0; i<np; i++) {
-		if (i < num_magnetic) {
-			switch (p.dipole_orientation) {
-				case 0:
-				{
-					if (init_magnetic_moment.empty()) {
-						cerr << "Initial config file needs to include magnetic moment.\n";
-						cerr << "Or, dipole_orientation needs to be given: 1-7.\n";
-						exit(1);
-					}
-					magnetic_moment[i] = init_magnetic_moment[i];
-					break;
-				}
-				case 1:
-				{
-					magnetic_moment[i].set(magnetic_dipole_moment,0,0);
-					break;
-				}
-				case 2:
-				{
-					magnetic_moment[i].set(0,magnetic_dipole_moment,0);
-					break;
-				}
-				case 3:
-				{
-					magnetic_moment[i].set(0,0,magnetic_dipole_moment);
-					break;
-				}
-				case 4:
-				{
-					double xx = position[i].x-lx_half;
-					double yy = position[i].y-ly_half;
-					double theta = atan2(yy,xx);
-					magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI),
-										   magnetic_dipole_moment*cos(theta),
-										   0);
-					break;
-				}
-				case 5:
-				{
-					double xx = position[i].x-lx_half;
-					double yy = position[i].y-ly_half;
-					double theta = atan2(yy,xx);
-					magnetic_moment[i].set(magnetic_dipole_moment*sin(theta+M_PI)*cos(M_PI/3),
-										   magnetic_dipole_moment*cos(theta)*cos(M_PI/3),
-										   magnetic_dipole_moment*sin(M_PI/3));
-					break;
-				}
-				case 6:
-				{
-					if (i%2 == 0){
-						double delta = 0;
-						magnetic_moment[i].set(magnetic_dipole_moment*sin(delta),magnetic_dipole_moment*cos(delta),0);
-					} else {
-						magnetic_moment[i].set(0,-magnetic_dipole_moment,0);
-					}
-					break;
-				}
-				case 7:
-				{
-					magnetic_moment[i] = randUniformSphere(magnetic_dipole_moment);
-					break;
-				}
-			}
-		} else {
-			magnetic_moment[i].set(0,0,0);
-		}
-		magnetic_moment_norm[i] = magnetic_moment[i].norm();
 	}
 }
 
@@ -727,7 +710,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	 */
 	in_predictor = true;
 	in_corrector = true;
-
+	
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
@@ -835,10 +818,15 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > max_sliding_velocity) {
-			dt = disp_max/max_velocity;
+		if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
+			if (max_velocity > max_sliding_velocity) {
+				dt = p.disp_max/max_velocity;
+			} else {
+				dt = p.disp_max/max_sliding_velocity;
+			}
 		} else {
-			dt = disp_max/max_sliding_velocity;
+			dt = p.disp_max/max_velocity;
+			//			dt = 1e-3/shear_rate; //
 		}
 	}
 	time += dt;
@@ -849,13 +837,12 @@ void System::timeStepMove()
 		strain_increment = dt*shear_rate;
 	}
 	timeStepBoxing(strain_increment);
-	
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (magnetic) {
-		for (int i=0; i<num_magnetic; i++) {
+	if (magnetic_rotation_active) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 			double norm = magnetic_moment[i].norm();
 			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
@@ -878,10 +865,14 @@ void System::timeStepMovePredictor()
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		//dt = disp_max/max_velocity;
 		if (!fixed_dt) {
-			if (max_velocity > max_sliding_velocity) {
-				dt = disp_max/max_velocity;
+			if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
+				if (max_velocity > max_sliding_velocity) {
+					dt = p.disp_max/max_velocity;
+				} else {
+					dt = p.disp_max/max_sliding_velocity;
+				}
 			} else {
-				dt = disp_max/max_sliding_velocity;
+				dt = 1e-2/shear_rate;
 			}
 		}
 	}
@@ -902,8 +893,8 @@ void System::timeStepMovePredictor()
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-	if (magnetic) {
-		for (int i=0; i<num_magnetic; i++) {
+	if (magnetic_rotation_active) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 		}
 	}
@@ -934,8 +925,8 @@ void System::timeStepMoveCorrector()
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
 		}
 	}
-	if (magnetic) {
-		for (int i=0; i<num_magnetic; i++) {
+	if (magnetic_rotation_active) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
 			double norm = magnetic_moment[i].norm();
 			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
@@ -1016,6 +1007,30 @@ void System::checkNewInteraction()
 			}
 		}
 	}
+	if (p.magnetic_type != 0) {
+		if (time > time_update_magnetic_pair) {
+			updateMagneticPair();
+			time_update_magnetic_pair += p.timeinterval_update_magnetic_pair;
+		}
+	}
+}
+
+void System::updateMagneticPair()
+{
+	for (int i=0; i<np-1; i++) {
+		magnetic_pair[i].clear();
+	}
+	vec3d pos_diff;
+	for (int i=0; i<np-1; i++) {
+		for (int j=i+1; j<np; j++) {
+			pos_diff = position[j]-position[i];
+			periodize_diff_unsheared(pos_diff);
+			double sq_dist = pos_diff.sq_norm();
+			if (sq_dist < sq_magnetic_interaction_range){
+				magnetic_pair[i].push_back(j);
+			}
+		}
+	}
 }
 
 void System::updateInteractions()
@@ -1029,7 +1044,6 @@ void System::updateInteractions()
 	 
 	 */
 	double sq_max_sliding_velocity = 0;
-
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			bool deactivated = false;
@@ -1046,6 +1060,28 @@ void System::updateInteractions()
 		}
 	}
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
+	if (p.magnetic_type == 2) {
+		updateMagneticInteractions();
+	}
+}
+
+void System::updateMagneticInteractions()
+{
+	magnetic_force_stored.clear();
+	vec3d pos_diff;
+	for (int p0=0; p0<np-1; p0++){
+		for (const int p1: magnetic_pair[p0]) {
+			pos_diff = position[p1]-position[p0];
+			periodize_diff_unsheared(pos_diff);
+			double r = pos_diff.norm();
+			double r_cubic = r*r*r;
+			vec3d nvec = pos_diff/r;
+			double H_dot_n = dot(external_magnetic_field, nvec);
+			double coeff = magnetic_coeffient*magnetic_susceptibility[p0]*magnetic_susceptibility[p1]/(r_cubic*r);
+			vec3d force_vector0 = -coeff*(2*H_dot_n*external_magnetic_field+(magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
+			magnetic_force_stored.push_back(make_pair(force_vector0, make_pair(p0, p1)));
+		}
+	}
 }
 
 void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
@@ -1055,7 +1091,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 
 	 @param build_res_mat Build the resistance matrix
 	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_stokesian_1988 notations) and set it as the current
+	 brady_s∫tokesian_1988 notations) and set it as the current
 	 resistance in the StokesSolver. If false, the resistance in the
 	 StokesSolver is untouched, it is not reset.
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
@@ -1095,7 +1131,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		for (auto&& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) {
+				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
 						const vec3d &nr_vec = inter->nvec;
 						inter->lubrication.calcXFunctions();
@@ -1136,7 +1172,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		for (auto&& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) {
+				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
 						const vec3d &nr_vec = inter->nvec;
 						inter->lubrication.calcXYFunctions();
@@ -1164,12 +1200,12 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 						double HEj[3];
 						inter->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
 						if (shearrate_is_1 == false) {
-						for (int u=0; u<3; u++) {
-							GEi[u] *= shear_rate;
-							GEj[u] *= shear_rate;
-							HEi[u] *= shear_rate;
-							HEj[u] *= shear_rate;
-						}
+							for (int u=0; u<3; u++) {
+								GEi[u] *= shear_rate;
+								GEj[u] *= shear_rate;
+								HEi[u] *= shear_rate;
+								HEj[u] *= shear_rate;
+							}
 						}
 						stokes_solver.addToRHSForce(i, GEi);
 						stokes_solver.addToRHSForce(j, GEj);
@@ -1208,7 +1244,7 @@ void System::generateBrownianForces()
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
 	if (twodimension
-		&& !monolayer) {
+		&& !p.monolayer) {
 		for (int i=0; i<np; i++) {
 			brownian_force[6*i+1] = 0; // Fy
 			brownian_force[6*i+3] = 0; // Tx
@@ -1224,7 +1260,7 @@ void System::setContactForceToParticle()
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
+		if (interaction[k].is_contact()) {
 			interaction[k].contact.addUpContactForceTorque();
 		}
 	}
@@ -1246,22 +1282,24 @@ void System::setRepulsiveForceToParticle()
 
 void System::setMagneticForceToParticle()
 {
-	if (magnetic) {
-		if (external_magnetic_field.is_zero()) {
-			for (int i=0; i<num_magnetic; i++) {
+	if (p.magnetic_type != 0) {
+		if (external_magnetic_field.is_zero() ||
+			p.magnetic_type == 2) {
+			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
 				magnetic_torque[i].reset();
 			}
 		} else {
-			for (int i=0; i<num_magnetic; i++) {
+			for (int i=0; i<num_magnetic_particles; i++) {
 				magnetic_force[i].reset();
 				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
 		}
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].magneticforce.addUpForceTorque();
-			}
+		for (auto && magforce : magnetic_force_stored) {
+			int p0 = magforce.second.first;
+			int p1 = magforce.second.second;
+			magnetic_force[p0] += magforce.first;
+			magnetic_force[p1] -= magforce.first;
 		}
 	}
 }
@@ -1352,7 +1390,7 @@ void System::computeVelocityComponents()
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
-	if (magnetic) {
+	if (p.magnetic_type != 0) {
 		buildMagneticForceTerms(true);
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
@@ -1390,7 +1428,6 @@ void System::computeShearRate()
 	}
 }
 
-
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
@@ -1421,7 +1458,7 @@ void System::computeVelocities(bool divided_velocities)
 				na_ang_velocity[i] += ang_vel_repulsive[i];
 			}
 		}
-		if (magnetic) {
+		if (p.magnetic_type != 0) {
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_magnetic[i];
 				na_ang_velocity[i] += ang_vel_magnetic[i];
@@ -1438,7 +1475,7 @@ void System::computeVelocities(bool divided_velocities)
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
-		if (magnetic) {
+		if (p.magnetic_type != 0) {
 			buildMagneticForceTerms(false);
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
@@ -1458,7 +1495,7 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-
+	
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
@@ -1472,21 +1509,23 @@ void System::computeVelocities(bool divided_velocities)
 			ang_velocity[i] = na_ang_velocity[i];
 			velocity[i].x += shear_rate*position[i].z;
 			ang_velocity[i].y += 0.5*shear_rate;
+			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	} else {
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
+			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	}
-
+	
 	vel_difference = shear_rate*lz;
 	stokes_solver.solvingIsDone();
 }
 
 void System::displacement(int i, const vec3d &dr)
 {
-	if (monolayer) {
+	if (p.monolayer) {
 		position[i].x += dr.x;
 		position[i].z += dr.z;
 	} else {
@@ -1567,10 +1606,43 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 			pos_diff.x += lx;
 		}
 	}
-	if (pos_diff.y > ly_half) {
-		pos_diff.y -= ly;
-	} else if (pos_diff.y < -ly_half) {
-		pos_diff.y += ly;
+	if (!twodimension) {
+		if (pos_diff.y > ly_half) {
+			pos_diff.y -= ly;
+		} else if (pos_diff.y < -ly_half) {
+			pos_diff.y += ly;
+		}
+	}
+}
+
+void System::periodize_diff_unsheared(vec3d &pos_diff)
+{
+	/*
+	 * The displacement of the second particle along z direction
+	 * is zshift * lz;
+	 */
+	if (pos_diff.z > lz_half) {
+		pos_diff.z -= lz;
+	} else if (pos_diff.z < -lz_half) {
+		pos_diff.z += lz;
+	}
+	if (pos_diff.x > lx_half) {
+		pos_diff.x -= lx;
+		if (pos_diff.x > lx_half) {
+			pos_diff.x -= lx;
+		}
+	} else if (pos_diff.x < -lx_half) {
+		pos_diff.x += lx;
+		if (pos_diff.x < -lx_half) {
+			pos_diff.x += lx;
+		}
+	}
+	if (!twodimension) {
+		if (pos_diff.y > ly_half) {
+			pos_diff.y -= ly;
+		} else if (pos_diff.y < -ly_half) {
+			pos_diff.y += ly;
+		}
 	}
 }
 
@@ -1774,7 +1846,6 @@ void System::analyzeState()
 
 void System::calcPotentialEnergy()
 {
-	magnetic_energy = 0;
 	total_energy = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
@@ -1782,17 +1853,38 @@ void System::calcPotentialEnergy()
 				total_energy += interaction[k].contact.calcEnergy();
 			}
 			if (repulsive_force) {
-				total_energy +=  interaction[k].repulsion.calcEnergy();
-			}
-			if (magnetic) {
-				double tmp_magnetic_energy = interaction[k].magneticforce.calcEnergy();
-				total_energy += tmp_magnetic_energy;
-				magnetic_energy += tmp_magnetic_energy;
+				total_energy += interaction[k].repulsion.calcEnergy();
 			}
 		}
 	}
+	if (p.magnetic_type != 0) {
+		calcMagneticEnergy();
+	}
+}
+
+void System::calcMagneticEnergy()
+{
+	magnetic_energy = 0;
+	vec3d pos_diff;
+	for (int p0=0; p0<np-1; p0++){
+		for (const int p1: magnetic_pair[p0]) {
+			pos_diff = position[p1]-position[p0];
+			periodize_diff_unsheared(pos_diff);
+			double r = pos_diff.norm();
+			double r_cubic = r*r*r;
+			vec3d nvec = pos_diff/r;
+			const vec3d &m0 = magnetic_moment[p0];
+			const vec3d &m1 = magnetic_moment[p1];
+			/*
+			 * magnetic_coeffient/3 = mu0/(4*M_PI)
+			 */
+			double energy = -(magnetic_coeffient/(3*r_cubic))*(3*dot(m0, nvec)*dot(m1, nvec)-dot(m0, m1));
+			magnetic_energy += energy;
+			total_energy += energy;
+		}
+	}
 	if (external_magnetic_field.is_not_zero()) {
-		for (int i=0; i<num_magnetic; i++) {
+		for (int i=0; i<num_magnetic_particles; i++) {
 			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 			total_energy += tmp_magnetic_energy_ex;
 			magnetic_energy += tmp_magnetic_energy_ex;
@@ -1866,10 +1958,12 @@ void System::adjustContactModelParameters()
 	if (kt > p.max_kt) {
 		kt = p.max_kt;
 	}
-	if (max_velocity > max_sliding_velocity) {
-		dt = disp_max/max_velocity;
-	} else {
-		dt = disp_max/max_sliding_velocity;
+	if (max_velocity > 0 && max_sliding_velocity > 0) {
+		if (max_velocity > max_sliding_velocity) {
+			dt = p.disp_max/max_velocity;
+		} else {
+			dt = p.disp_max/max_sliding_velocity;
+		}
 	}
 	previous_shear_strain = shear_strain;
 }
@@ -1900,21 +1994,22 @@ void System::calcLubricationForce()
 	}
 }
 
+double System::calcInteractionRangeDefault(const int& i, const int& j)
+{
+	return p.interaction_range*0.5*(radius[i]+radius[j]);
+}
+
 double System::calcLubricationRange(const int& i, const int& j)
 {
 	double rad_ratio = radius[i]/radius[j];
 	if (rad_ratio < 2 && rad_ratio > 0.5) {
-		return (2+lub_max_gap)*0.5*(radius[i]+radius[j]);
+		return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
 	} else {
 		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-		return radius[i]+radius[j]+lub_max_gap*minradius;
+		return radius[i]+radius[j]+p.lub_max_gap*minradius;
 	}
 }
 
-double System::calcLongInteractionRange(const int& i, const int& j)
-{
-	return interaction_range*0.5*(radius[i]+radius[j]);
-}
 
 
 
