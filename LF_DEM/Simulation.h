@@ -126,6 +126,7 @@ private:
 	void setUnitScaleRateControlled();
 	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
+	void catchSuffixedValue(string type, string keyword, string value);
 	/*
 	 * For outputs
 	 */

@@ -3,16 +3,9 @@
  *
  */
 
-brownian = false;
-repulsiveforce = true;
-cohesion = false;
-critical_load = false;
-magnetic = false;
-
 dt = 1e-4;
 Pe_switch = 5;
 disp_max = 5e-3;
-rolling_friction = false;
 
 /*
  * integration_method:
@@ -26,7 +19,7 @@ integration_method = 1;
  * shear_strain: total strain (length of simulation)
  */
 
-time_end = 0.01;
+time_end = 0.01h;
 
 /*
  * 1 Linear friction law Ft < mu Fn
@@ -47,8 +40,8 @@ mu_static = 1;
  * kt: tangential spring constant
  */
 
-kn = 10000;
-kt = 6000;
+kn = 10000h;
+kt = 6000h;
 
 /*
  * Lubrication model

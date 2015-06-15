@@ -382,8 +382,12 @@ void Simulation::exportInputValues(){
 	for(auto&& inv: input_values){
 		string name = inv.name;
 		if(name == "time_end"){
-		  p.time_end = inv.value;
-		  cerr << " Simulation time (in \"" << inv.unit << "\" units): " << p.time_end << endl;
+			p.time_end = inv.value;
+			cerr << " Simulation time (in \"" << inv.unit << "\" units): " << p.time_end << endl;
+		}
+		if(name == "kn"){
+			p.kn = inv.value;
+			cerr << " Normal contact stiffness kn (in \"" << inv.unit << "\" units): " << p.kn << endl;
 		}
 	}
 }
@@ -933,7 +937,23 @@ void Simulation::outputComputationTime()
 // }
 
 
+void Simulation::catchSuffixedValue(string type, string keyword, string value){
 
+	string numeral, suffix;
+	bool caught_suffix = true;
+
+	caught_suffix = getSuffix(value, numeral, suffix);
+	InputValue inv;
+	inv.name = keyword;
+	inv.type = type;
+	inv.value = atof(numeral.c_str());
+	inv.unit = suffix;
+	input_values.push_back(inv);
+
+	if (!caught_suffix) {
+		errorNoSuffix(keyword);
+	}
+}
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
@@ -983,13 +1003,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
 	} else if (keyword == "time_end") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		InputValue inv;
-		inv.name = keyword;
-		inv.type = "time";
-		inv.value = atof(numeral.c_str());
-		inv.unit = suffix;
-		input_values.push_back(inv);
+		catchSuffixedValue("time", keyword, value);
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
@@ -999,11 +1013,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		p.kn = atof(value.c_str());
+		catchSuffixedValue("stiffness", keyword, value);
 	} else if (keyword == "kt") {
-		p.kt = atof(value.c_str());
+		catchSuffixedValue("stiffness", keyword, value);
 	} else if (keyword == "kr") {
-		p.kr = atof(value.c_str());
+		catchSuffixedValue("stiffness", keyword, value);
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
@@ -1069,6 +1083,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
+
 }
 
 void Simulation::readParameterFile()
