@@ -369,26 +369,23 @@ void Simulation::convertInputValues(string new_long_unit)
 		}
 
 		if (old_unit != "h") {
-			inv.value /= dimensionless_numbers[old_unit];
+		  if(inv.type == "stiffness"){
+			*(inv.value) /= dimensionless_numbers[old_unit];
+		  }
+		  if(inv.type == "time"){
+			*(inv.value) *= dimensionless_numbers[old_unit];
+		  }
 		}
 		if (new_unit != "h") {
-		  inv.value *= dimensionless_numbers[new_unit];
+		  if(inv.type == "stiffness"){
+			*(inv.value) *= dimensionless_numbers[new_unit];
+		  }
+		  if(inv.type == "time"){
+			*(inv.value) /= dimensionless_numbers[new_unit];
+		  }
 		}
 		inv.unit = new_unit;
-	}
-}
-
-void Simulation::exportInputValues(){
-	for(auto&& inv: input_values){
-		string name = inv.name;
-		if(name == "time_end"){
-			p.time_end = inv.value;
-			cerr << " Simulation time (in \"" << inv.unit << "\" units): " << p.time_end << endl;
-		}
-		if(name == "kn"){
-			p.kn = inv.value;
-			cerr << " Normal contact stiffness kn (in \"" << inv.unit << "\" units): " << p.kn << endl;
-		}
+		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -441,7 +438,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	exportForceAmplitudes();
 
 	convertInputValues(unit_scales);
-	exportInputValues();
 
 	// test for incompatibilities
 	if (sys.brownian == true) {
@@ -460,7 +456,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	if (sys.critical_load) {
 		p.friction_model = 2;
 	}
-	
+
 	sys.importParameterSet(p);
 	if (binary_conf) {
 		importConfigurationBinary();
@@ -937,16 +933,16 @@ void Simulation::outputComputationTime()
 // }
 
 
-void Simulation::catchSuffixedValue(string type, string keyword, string value){
+ void Simulation::catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr){
+	InputValue inv;
+	inv.type = type;
+	inv.name = keyword;
+	inv.value = value_ptr;
 
 	string numeral, suffix;
 	bool caught_suffix = true;
-
-	caught_suffix = getSuffix(value, numeral, suffix);
-	InputValue inv;
-	inv.name = keyword;
-	inv.type = type;
-	inv.value = atof(numeral.c_str());
+	caught_suffix = getSuffix(value_str, numeral, suffix);
+	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
 	input_values.push_back(inv);
 
@@ -999,11 +995,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "contact_relaxation_time") {
 		p.contact_relaxation_time = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time_tan"){
-		p.contact_relaxation_time_tan =  atof(value.c_str());
+		p.contact_relaxation_time_tan = atof(value.c_str());
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
 	} else if (keyword == "time_end") {
-		catchSuffixedValue("time", keyword, value);
+	  catchSuffixedValue("time", keyword, value, &p.time_end);
 	} else if (keyword == "integration_method") {
 		p.integration_method = atoi(value.c_str());
 	} else if (keyword == "lub_max_gap") {
@@ -1013,11 +1009,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		catchSuffixedValue("stiffness", keyword, value);
+		catchSuffixedValue("stiffness", keyword, value, &p.kn);
 	} else if (keyword == "kt") {
-		catchSuffixedValue("stiffness", keyword, value);
+		catchSuffixedValue("stiffness", keyword, value, &p.kt);
 	} else if (keyword == "kr") {
-		catchSuffixedValue("stiffness", keyword, value);
+		catchSuffixedValue("stiffness", keyword, value, &p.kr);
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
@@ -1029,9 +1025,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "mu_rolling") {
 		p.mu_rolling = atof(value.c_str());
 	} else if (keyword == "time_interval_output_config") {
-		p.time_interval_output_config = atof(value.c_str());
+		catchSuffixedValue("time", keyword, value, &p.time_interval_output_config);
 	} else if (keyword == "time_interval_output_data") {
-		p.time_interval_output_data = atof(value.c_str());
+		catchSuffixedValue("time", keyword, value, &p.time_interval_output_data);
 	} else if (keyword == "out_data_particle") {
 		p.out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {

@@ -118,7 +118,6 @@ private:
 	void importConfiguration();
 	void importConfigurationBinary();
 	void exportForceAmplitudes();
-	void exportInputValues();
 	void setLowPeclet();
 	void convertForceValues(string new_long_unit);
 	void convertInputValues(string new_long_unit);
@@ -126,7 +125,7 @@ private:
 	void setUnitScaleRateControlled();
 	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
-	void catchSuffixedValue(string type, string keyword, string value);
+	void catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr);
 	/*
 	 * For outputs
 	 */

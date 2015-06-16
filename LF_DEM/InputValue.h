@@ -1,6 +1,6 @@
 struct InputValue{
-  string name;
   string type;
-  double value;
+  string name; // the name of the ParameterSet member
+  double *value; // a pointer to the actual ParameterSet member
   string unit;
 };
