@@ -457,8 +457,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		p.friction_model = 2;
 	}
 
-	p.contact_relaxation_time *= p.dt;
-	p.contact_relaxation_time_tan *= p.dt;
+	//	p.contact_relaxation_time *= p.dt;
+	//	p.contact_relaxation_time_tan *= p.dt;
 
 	sys.importParameterSet(p);
 	if (binary_conf) {
