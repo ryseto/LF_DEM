@@ -76,8 +76,8 @@ struct ParameterSet
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model
-	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model
+	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model (in units of p.dt)
+	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model (in units of p.dt)
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
