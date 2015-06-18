@@ -52,7 +52,7 @@ Download from here (bitbucket.org) by clicking the download icon (cloud), select
 
 In the `LF_DEM` folder, edit the Makefile and change the variables
 ```OS_version``` to "OSX" or "Linux" depending on your
-environment. This variable controls the include paths and flags to be
+environment. This variable controls the compiler, the include paths and flags to be
 used to compile. This has been tested on very few machines, and is
 probably not generic. If you want to install `LF_DEM` to a specific
 location listed in your `$PATH`, you can set the variable
