@@ -13,6 +13,16 @@ be installed.
 
 To install SuiteSparse on CUNY-HPPC, see [these instructions](./SuiteSparse_Install.md).
 
+You also need a C++ compiler compatible with at least part of the C++11 standard (at the moment `auto` type and range-based `for` loops). The following compilers should be fine:
+
+| compiler   |   version       |
+|------------|-----------------|
+| gcc        |   >= 4.6        |
+| icc        |   >= 13.0       |
+| clang      |   >= 3.0        |
+
+
+
 ##Getting the code
 
 ### By using git
