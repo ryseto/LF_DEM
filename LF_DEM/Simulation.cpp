@@ -89,7 +89,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == volume_or_area_fraction && peclet_ == dimensionless_numbers["b"]) {
+		if (phi_ == volume_or_area_fraction && peclet_ == dimensionless_numbers["h/b"]) {
 			found = true;
 			break;
 		}
@@ -100,7 +100,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	} else {
-		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["b"] << endl;
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["h/b"] << endl;
 		exit(1);
 	}
 }
@@ -222,14 +222,25 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	unit_scales = unit_longname[force_type];
 	target_stress_input = dimensionlessnumber;
 	sys.target_stress = target_stress_input/6/M_PI;
-	// convert all other forces to hydro
+	
+	// convert all other forces to unit_scales
 	resolveUnitSystem(unit_scales);
+	values[force_type] = 1;
+	suffixes[force_type] = force_type;
+	for (auto&& f1: suffixes) {
+		string force1_type = f1.first;
+		for (auto&& f2: suffixes) {
+			string force2_type = f2.first;
+			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
+			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
+		}
+	}
 }
 
 void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
-	double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["b"];
+	double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["h/b"];
 	p.memory_strain_k /= scale_factor_SmallPe;
 	p.memory_strain_avg /= scale_factor_SmallPe;
 	p.start_adjust /= scale_factor_SmallPe;
@@ -239,38 +250,30 @@ void Simulation::setLowPeclet()
 void Simulation::convertForceValues(string new_long_unit)
 {
 	string new_unit = unit_shortname[new_long_unit];
-	if (dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()
-		&& new_unit != "h") {
-		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl;
-		exit(1);
-	}
 
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
-		if (old_unit != "h") {
-			values[force_type] /= dimensionless_numbers[old_unit];
+		if(old_unit != new_unit){
+			values[force_type] *= dimensionless_numbers[old_unit+'/'+new_unit];
+			f.second = new_unit;
 		}
-		if (new_unit != "h") {
-			values[force_type] *= dimensionless_numbers[new_unit];
-		}
-		f.second = new_unit;
 	}
 }
 
 void Simulation::setUnitScaleRateControlled()
 {
 
-	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
+	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
 	if (is_brownian) {
-		if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
+		if (dimensionless_numbers["h/b"] > p.Pe_switch && !sys.zero_shear) {
 			unit_scales = "hydro";
-			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["b"]);
+			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["h/b"]);
 			sys.set_shear_rate(1);
 		} else { // low Peclet mode
 			unit_scales = "thermal";
 			sys.amplitudes.sqrt_temperature = 1;
-			sys.set_shear_rate(dimensionless_numbers["b"]);
+			sys.set_shear_rate(dimensionless_numbers["h/b"]);
 			setLowPeclet();
 		}
 	} else {
@@ -288,21 +291,32 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
 		exit(1);
 	}
-	dimensionless_numbers[force_type] = dimensionlessnumber;
+	dimensionless_numbers["h/"+force_type] = dimensionlessnumber;
+	dimensionless_numbers[force_type+"/h"] = 1/dimensionless_numbers["h/"+force_type];
 	if (values[force_type] > 0) {
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
 	// switch this force in hydro units
-	values[force_type] = 1/dimensionless_numbers[force_type];
+	values[force_type] = dimensionless_numbers[force_type+"/h"];
 	suffixes[force_type] = "h";
 
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
 
+	// determine all the dimensionless numbers	
 	for (auto&& f: suffixes) {
-		force_type = f.first;
-		dimensionless_numbers[force_type] = 1/values[force_type];
+		string force1_type = f.first;
+		dimensionless_numbers["h/"+force_type] = 1/values[force_type];
+		dimensionless_numbers[force_type+"/h"] = 1/dimensionless_numbers["h/"+force_type];
+	}
+	for (auto&& f1: suffixes) {
+		string force1_type = f1.first;
+		for (auto&& f2: suffixes) {
+			string force2_type = f2.first;
+			dimensionless_numbers[force2_type+'/'+force1_type] =  dimensionless_numbers[force2_type+"/h"]/dimensionless_numbers[force1_type+"/h"];
+			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
+		}
 	}
 
 	setUnitScaleRateControlled();
@@ -310,11 +324,11 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	// convert from hydro scale to chosen scale
 	convertForceValues(unit_scales);
 
-	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
+	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
 	if (is_brownian) {
 		sys.brownian = true;
 		p.brownian_amplitude = values["b"];
-		cerr << "Brownian, Peclet number " << dimensionless_numbers["b"] << endl;
+		cerr << "Brownian, Peclet number " << dimensionless_numbers["h/b"] << endl;
 	} else {
 		cerr << "non-Brownian" << endl;
 	}
@@ -361,29 +375,19 @@ void Simulation::convertInputValues(string new_long_unit)
 	for(auto&& inv: input_values){
 		string old_unit = inv.unit;
 		if(old_unit != new_unit){
-			if(old_unit != "h" && dimensionless_numbers.find(old_unit) == 	dimensionless_numbers.end()){
+			if(old_unit != "h" && values.find(old_unit) == values.end()){
 				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl; exit(1);
 			}
 
-			if (old_unit != "h") {
-				if(inv.type == "stiffness"){
-					*(inv.value) /= dimensionless_numbers[old_unit];
-				}
-				if(inv.type == "time"){
-					*(inv.value) *= dimensionless_numbers[old_unit];
-				}
+			if(inv.type == "stiffness"){
+				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
 			}
-			if (new_unit != "h") {
-				if(inv.type == "stiffness"){
-					*(inv.value) *= dimensionless_numbers[new_unit];
-				}
-				if(inv.type == "time"){
-					*(inv.value) /= dimensionless_numbers[new_unit];
-				}
+			if(inv.type == "time"){
+				*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
 			}
 			inv.unit = new_unit;
-			cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 		}
+		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -1515,7 +1519,7 @@ void Simulation::evaluateData()
 		stress_unit_converter = 1;
 	}
 	if (unit_scales == "thermal") {
-		stress_unit_converter = 1/dimensionless_numbers["b"];
+		stress_unit_converter = 1/dimensionless_numbers["h/b"];
 	}
 	if (unit_scales == "repulsive") {
 		//stress_unit_converter = 1/dimensionless_numbers["r"];
@@ -1782,7 +1786,7 @@ void Simulation::outputData()
 	 */
 	double ND_shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
 	if (unit_scales == "hydro") {
-		ND_shear_stress *= dimensionless_numbers["r"];
+		ND_shear_stress *= dimensionless_numbers["h/r"];
 	}
 	outdata.entryData(14, "shear stress", ND_shear_stress);
 	outdata.entryData(15, "N1 viscosity", 6*M_PI*normalstress_diff_1);
