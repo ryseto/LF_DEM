@@ -53,7 +53,7 @@ void Simulation::contactForceParameter(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-	
+
 	// temporal variables to keep imported values.
 	double phi_, kn_, kt_, dt_;
 	// To find parameters for considered volume fraction phi.
@@ -65,7 +65,7 @@ void Simulation::contactForceParameter(string filename)
 		}
 	}
 	fin_knktdt.close();
-	
+
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
@@ -84,7 +84,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
-	
+
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
@@ -95,7 +95,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
-	
+
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
@@ -113,7 +113,7 @@ void Simulation::importPreSimulationData(string filename)
 		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-	
+
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == target_stress_input) {
@@ -147,11 +147,11 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 void Simulation::resolveUnitSystem(string long_unit) // can we express all forces in unit "long_unit"?
 {
 	string unit = unit_shortname[long_unit];
-	
+
 	// now resolve the other force units
 	set <string> resolved_units;
 	resolved_units.clear();
-	
+
 	// some of them are already in correct units
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
@@ -160,11 +160,11 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 			resolved_units.insert(force_type);
 		}
 	}
-	
+
 	// now the "non-trivial" ones, we solve iteratively
 	unsigned int resolved = resolved_units.size();
 	unsigned int previous_resolved;
-	
+
 	do {
 		previous_resolved = resolved;
 		for (auto&& f: suffixes) {
@@ -178,7 +178,7 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 		}
 		resolved = resolved_units.size();
 	} while (previous_resolved < resolved);
-	
+
 	// check we found everyone
 	if (resolved < suffixes.size()) {
 		for (auto&& f: suffixes) {
@@ -194,9 +194,9 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 
 
 void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
-	
+
 	string force_type = rate_unit; // our force defining the shear rate
-	
+
 	if (force_type == "h"){
 		cerr << " Error: please give a stress in non-hydro units." << endl;
 		exit(1);
@@ -204,7 +204,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		 Note:
 		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
 		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
-		 
+
 		 With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
 		 \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
 		 --> It is limited to the available range of viscosity.
@@ -215,7 +215,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl;
 		exit(1);
 	}
-	
+
 	sys.set_shear_rate(1);
 	// we take as a unit scale the one given by the user with the stress
 	// TODO: other choices may be better when several forces are used.
@@ -244,7 +244,7 @@ void Simulation::convertForceValues(string new_long_unit)
 		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl;
 		exit(1);
 	}
-	
+
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
@@ -260,7 +260,7 @@ void Simulation::convertForceValues(string new_long_unit)
 
 void Simulation::setUnitScaleRateControlled()
 {
-	
+
 	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
 	if (is_brownian) {
 		if (dimensionless_numbers["b"] > p.Pe_switch && !sys.zero_shear) {
@@ -282,7 +282,7 @@ void Simulation::setUnitScaleRateControlled()
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
 {
 	// determine the dimensionless numbers
-	
+
 	string force_type = rate_unit; // our force defining the shear rate
 	if (force_type == "h") {
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
@@ -296,20 +296,20 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	// switch this force in hydro units
 	values[force_type] = 1/dimensionless_numbers[force_type];
 	suffixes[force_type] = "h";
-	
+
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
-	
+
 	for (auto&& f: suffixes) {
 		force_type = f.first;
 		dimensionless_numbers[force_type] = 1/values[force_type];
 	}
-	
+
 	setUnitScaleRateControlled();
-	
+
 	// convert from hydro scale to chosen scale
 	convertForceValues(unit_scales);
-	
+
 	bool is_brownian = dimensionless_numbers.find("b") != dimensionless_numbers.end();
 	if (is_brownian) {
 		sys.brownian = true;
@@ -352,40 +352,38 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.ft_max = values["ft"];
 		cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
-	cerr << "***" << sys.amplitudes.repulsion  << endl;
 }
 
 void Simulation::convertInputValues(string new_long_unit)
 {
 	string new_unit = unit_shortname[new_long_unit];
-	if(new_unit != "h" && dimensionless_numbers.find(new_unit) == dimensionless_numbers.end()){
-		cerr << " Error: trying to convert to invalid unit \"" << new_long_unit << "\"" << endl; exit(1);
-	}
 
 	for(auto&& inv: input_values){
 		string old_unit = inv.unit;
-		if(old_unit != "h" && dimensionless_numbers.find(old_unit) == dimensionless_numbers.end()){
-		  cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit << "\"" << endl; exit(1);
-		}
+		if(old_unit != new_unit){
+			if(old_unit != "h" && dimensionless_numbers.find(old_unit) == 	dimensionless_numbers.end()){
+				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl; exit(1);
+			}
 
-		if (old_unit != "h") {
-		  if(inv.type == "stiffness"){
-			*(inv.value) /= dimensionless_numbers[old_unit];
-		  }
-		  if(inv.type == "time"){
-			*(inv.value) *= dimensionless_numbers[old_unit];
-		  }
+			if (old_unit != "h") {
+				if(inv.type == "stiffness"){
+					*(inv.value) /= dimensionless_numbers[old_unit];
+				}
+				if(inv.type == "time"){
+					*(inv.value) *= dimensionless_numbers[old_unit];
+				}
+			}
+			if (new_unit != "h") {
+				if(inv.type == "stiffness"){
+					*(inv.value) *= dimensionless_numbers[new_unit];
+				}
+				if(inv.type == "time"){
+					*(inv.value) /= dimensionless_numbers[new_unit];
+				}
+			}
+			inv.unit = new_unit;
+			cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 		}
-		if (new_unit != "h") {
-		  if(inv.type == "stiffness"){
-			*(inv.value) *= dimensionless_numbers[new_unit];
-		  }
-		  if(inv.type == "time"){
-			*(inv.value) /= dimensionless_numbers[new_unit];
-		  }
-		}
-		inv.unit = new_unit;
-		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -410,7 +408,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	
+
 	setDefaultParameters();
 	readParameterFile();
 	for (auto&& f: suffixes) {
@@ -471,7 +469,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		sys.shear_disp = 0;
 	}
-	
+
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -479,7 +477,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 			contactForceParameter(input_files[2]);
 		}
 	}
-	
+
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
@@ -488,10 +486,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		time_interval_output_data = p.time_interval_output_data;
 		time_interval_output_config = p.time_interval_output_config;
 	}
-	
+
 	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
 	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
-	
+
 	if (sys.brownian) {
 		sys.setupBrownian();
 	}
@@ -499,8 +497,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 
 	cerr << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
 	cerr << "repulsive_length = " << p.repulsive_length << endl;
-	
-	
+
+
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
 }
@@ -540,13 +538,13 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
-		
+
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -564,7 +562,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			}
 		}
 		/*****************************************************/
-		
+
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
@@ -629,13 +627,13 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
 	while (sys.get_time() < p.time_end-1e-8) {
 		time_output_data = cnt_simu_loop*time_interval_output_data;
 		time_output_config = cnt_config_out*time_interval_output_config;
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
-		
+
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -653,7 +651,7 @@ void Simulation::simulationInverseYield(string in_args,
 			}
 		}
 		/*****************************************************/
-		
+
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
@@ -678,8 +676,8 @@ void Simulation::simulationInverseYield(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 	}
-	
-	
+
+
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
@@ -726,7 +724,7 @@ void Simulation::simulationMagnetic(string in_args,
 		time_end = p.step_interval_external_magnetic_field*cnt_external_magnetic_field;
 		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
 										cos(sys.angle_external_magnetic_field), 0);
-		
+
 		cerr << "External magnetic field = ";
 		sys.external_magnetic_field.cerr();
 		cerr << endl;
@@ -1152,11 +1150,11 @@ void Simulation::openOutputFiles(bool binary_conf)
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_" + sys.simu_name + ".dat";
 	fout_input.open(input_filename.c_str());
-	
+
 	outputDataHeader(fout_data);
 	if (sys.p.magnetic_type == 0) {
 		outputDataHeader(fout_rheo);
-		
+
 		string fout_rheo_col_def =
 		"#1: shear strain\n"
 		"#2: Viscosity\n"
@@ -1504,14 +1502,14 @@ void Simulation::evaluateData()
 {
 	/**
 	 \brief Get rheological data from the System class.
-	 
+
 	 Data are converted in hydrodynamic units, independently from the actual units used in the System class.
 	 */
-	
+
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	
+
 	double stress_unit_converter = 0;
 	if (unit_scales == "hydro") {
 		stress_unit_converter = 1;
@@ -1590,13 +1588,13 @@ void Simulation::outputRheologyData()
 {
 	/**
 	 \brief Output rheological data.
-	 
-	 
+
+
 	 Stress data are converted in units of
 	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
 	 in the System class (these can be hydrodynamic, Brownian or
 	 repulsive force units).
-	 
+
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
@@ -1609,7 +1607,7 @@ void Simulation::outputRheologyData()
 	 *
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	
+
 	/*
 	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
@@ -1708,16 +1706,16 @@ void Simulation::outputData()
 {
 	/**
 	 \brief Output data.
-	 
+
 	 Stress data are converted in units of
 	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
 	 in the System class (these can be hydrodynamic, Brownian or
 	 repulsive force units).
-	 
+
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
-	
+
 	/*
 	 * Output the sum of the normal forces.
 	 *
@@ -1727,7 +1725,7 @@ void Simulation::outputData()
 	 *
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	
+
 	/*
 	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
@@ -1745,7 +1743,7 @@ void Simulation::outputData()
 	} else {
 		outdata.init(40);
 	}
-	
+
 	outdata.entryData(1, "time", sys.get_time());
 	outdata.entryData(2, "shear strain", sys.get_shear_strain());
 	/*
