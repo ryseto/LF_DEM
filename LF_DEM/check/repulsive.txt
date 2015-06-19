@@ -4,7 +4,6 @@
  */
 
 dt = 1e-4;
-Pe_switch = 5;
 disp_max = 5e-3;
 
 /*
@@ -86,12 +85,12 @@ repulsiveforce_length = 0.05;
  * Output interval
  */
 
-time_interval_output_config = 1e-1;
+time_interval_output_config = 1e-1h;
 
 /*
  *  Data output
  */
-time_interval_output_data = 1e-3;
+time_interval_output_data = 1e-3h;
 
 /*
  * position and interaction data
@@ -106,13 +105,3 @@ out_data_interaction = false;
 
 origin_zero_flow = true;
 
-auto_determine_knkt = false;
-overlap_target = 0.02;
-disp_tan_target = 0.02;
-memory_strain_k = 3;
-memory_strain_avg = 2;
-min_kn = 1000;
-max_kn = 5000000;
-min_kt = 1000;
-max_kt = 5000000;
-start_adjust = 0;
