@@ -148,22 +148,16 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 {
 	string unit = unit_shortname[long_unit];
 
+	values[unit] = 1;
+	suffixes[unit] = unit;
+	
 	// now resolve the other force units
 	set <string> resolved_units;
 	resolved_units.clear();
-
-	// some of them are already in correct units
-	for (auto&& f: suffixes) {
-		string force_type = f.first;
-		string suffix = f.second;
-		if (suffix == unit) {
-			resolved_units.insert(force_type);
-		}
-	}
-
-	// now the "non-trivial" ones, we solve iteratively
+	resolved_units.insert(unit);
 	unsigned int resolved = resolved_units.size();
 	unsigned int previous_resolved;
+
 
 	do {
 		previous_resolved = resolved;
@@ -190,11 +184,35 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 		}
 		exit(1);
 	}
+	
+	// determine the dimensionless_numbers
+	for (auto&& f1: suffixes) {
+		string force1_type = f1.first;
+		for (auto&& f2: suffixes) {
+			string force2_type = f2.first;
+			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
+			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
+		}
+	}
+	
+	
 }
 
 
 void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
-
+	/** 
+	\brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
+	
+	The strategy is the following:
+	1. Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie:
+		a. w = 1w
+		b. y = mw
+		c. z = oy = omw
+		d. etc...
+		
+	In the future, we may allow other unit scale than the one given by the input stress.
+	*/
+	
 	string force_type = rate_unit; // our force defining the shear rate
 
 	if (force_type == "h"){
@@ -225,17 +243,58 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	
 	// convert all other forces to unit_scales
 	resolveUnitSystem(unit_scales);
-	values[force_type] = 1;
-	suffixes[force_type] = force_type;
-	for (auto&& f1: suffixes) {
-		string force1_type = f1.first;
-		for (auto&& f2: suffixes) {
-			string force2_type = f2.first;
-			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
-			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
-		}
+
+}
+
+void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
+{
+	
+	/** 
+	\brief Chooses units for the simulation and convert the forces to this unit (rate controlled case).
+	
+	The strategy is the following:
+	1. Convert all the forces in hydro force unit, by solving recursively, ie:
+		a. h = 1h
+		b. "LF_DEM -r nx" --> x = (1/n)h (the rate given in input is also the ratio of forces h/x)
+		c. y = mx = (m/n)h
+		d. z = oy = (om/n)h
+		e. etc...
+	2. Decide the unit "w" for the simulation 
+	3. Convert all the forces to this unit (by multiplying every force by h/w)
+	*/
+	string force_type = rate_unit; // our force defining the shear rate
+	if (force_type == "h") {
+		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
+		exit(1);
+	}
+
+	if (values[force_type] > 0) {
+		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
+		exit(1);
+	}
+	// switch this force in hydro units
+	values[force_type] = 1/dimensionlessnumber;
+	suffixes[force_type] = "h";
+
+	// convert all other forces to hydro
+	resolveUnitSystem("hydro");
+
+	//	chose simulation unit
+	setUnitScaleRateControlled();
+
+	// convert from hydro scale to chosen scale
+	convertForceValues(unit_scales);
+
+	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
+	if (is_brownian) {
+		sys.brownian = true;
+		p.brownian_amplitude = values["b"];
+		cerr << "Brownian, Peclet number " << dimensionless_numbers["h/b"] << endl;
+	} else {
+		cerr << "non-Brownian" << endl;
 	}
 }
+
 
 void Simulation::setLowPeclet()
 {
@@ -282,57 +341,7 @@ void Simulation::setUnitScaleRateControlled()
 	}
 }
 
-void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
-{
-	// determine the dimensionless numbers
 
-	string force_type = rate_unit; // our force defining the shear rate
-	if (force_type == "h") {
-		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
-		exit(1);
-	}
-	dimensionless_numbers["h/"+force_type] = dimensionlessnumber;
-	dimensionless_numbers[force_type+"/h"] = 1/dimensionless_numbers["h/"+force_type];
-	if (values[force_type] > 0) {
-		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
-		exit(1);
-	}
-	// switch this force in hydro units
-	values[force_type] = dimensionless_numbers[force_type+"/h"];
-	suffixes[force_type] = "h";
-
-	// convert all other forces to hydro
-	resolveUnitSystem("hydro");
-
-	// determine all the dimensionless numbers	
-	for (auto&& f: suffixes) {
-		string force1_type = f.first;
-		dimensionless_numbers["h/"+force_type] = 1/values[force_type];
-		dimensionless_numbers[force_type+"/h"] = 1/dimensionless_numbers["h/"+force_type];
-	}
-	for (auto&& f1: suffixes) {
-		string force1_type = f1.first;
-		for (auto&& f2: suffixes) {
-			string force2_type = f2.first;
-			dimensionless_numbers[force2_type+'/'+force1_type] =  dimensionless_numbers[force2_type+"/h"]/dimensionless_numbers[force1_type+"/h"];
-			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
-		}
-	}
-
-	setUnitScaleRateControlled();
-
-	// convert from hydro scale to chosen scale
-	convertForceValues(unit_scales);
-
-	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
-	if (is_brownian) {
-		sys.brownian = true;
-		p.brownian_amplitude = values["b"];
-		cerr << "Brownian, Peclet number " << dimensionless_numbers["h/b"] << endl;
-	} else {
-		cerr << "non-Brownian" << endl;
-	}
-}
 
 void Simulation::exportForceAmplitudes()
 {
@@ -1522,7 +1531,7 @@ void Simulation::evaluateData()
 		stress_unit_converter = 1/dimensionless_numbers["h/b"];
 	}
 	if (unit_scales == "repulsive") {
-		//stress_unit_converter = 1/dimensionless_numbers["r"];
+		//stress_unit_converter = 1/dimensionless_numbers["h/r"];
 		stress_unit_converter = 1/sys.get_shear_rate(); //@@@@@@
 	}
 	viscosity = stress_unit_converter*(sys.einstein_stress+sys.total_stress.getStressXZ());
