@@ -51,6 +51,10 @@ private:
 	double shear_rate_expectation;
 	double time_interval_output_data;
 	double time_interval_output_config;
+	double strain_interval_output_data;
+	double strain_interval_output_config;
+	double strain_end;
+	double time_end;
 	
 	/*
 	 * Resultant data
@@ -146,8 +150,10 @@ private:
 									double dimensionlessnumber,
 									string input_scale);
 	void outputComputationTime();
-	
-public:
+
+	bool keepRunning();	
+
+ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();

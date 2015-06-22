@@ -390,11 +390,18 @@ void Simulation::convertInputValues(string new_long_unit)
 
 			if(inv.type == "stiffness"){
 				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
+				inv.unit = new_unit;
 			}
 			if(inv.type == "time"){
-				*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
+				if(old_unit == "h"){ // = it is a strain, better keeping it that way
+					inv.unit = "strain";
+				}
+				else{
+					*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
+					inv.unit = new_unit;
+				}
 			}
-			inv.unit = new_unit;
+
 		}
 		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
@@ -491,17 +498,54 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		}
 	}
 
+	for(auto&& inv: input_values){
+		if(inv.name == "time_end"){
+			if(inv.unit == "strain"){
+				time_end = -1;
+				strain_end = p.time_end;
+				cerr << "  strain_end = " << strain_end << endl;
+			}
+			else{
+				time_end = p.time_end;
+				cerr << "  time_end = " << time_end << endl;
+			}
+		}
+	}
+
+
+	
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
 	} else {
-		time_interval_output_data = p.time_interval_output_data;
-		time_interval_output_config = p.time_interval_output_config;
+		for(auto&& inv: input_values){
+			if(inv.name == "time_interval_output_data"){
+				if(inv.unit == "strain"){
+					time_interval_output_data = -1;
+					strain_interval_output_data = p.time_interval_output_data;
+					cerr << "  strain_interval_output_data = " << strain_interval_output_data << endl;
+				}
+				else{
+					time_interval_output_data = p.time_interval_output_data;
+					cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
+				}
+			}
+			if(inv.name == "time_interval_output_config"){
+				if(inv.unit == "strain"){
+					time_interval_output_config = -1;
+					strain_interval_output_config = p.time_interval_output_config;
+					cerr << "  strain_interval_output_config = " << strain_interval_output_config << endl;
+				}
+				else{
+					time_interval_output_config = p.time_interval_output_config;
+					cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
+				}
+			}
+		}
 	}
 
-	cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
-	cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
+			
 
 	if (sys.brownian) {
 		sys.setupBrownian();
@@ -516,6 +560,18 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	echoInputFiles(in_args, input_files);
 }
 
+
+bool Simulation::keepRunning(){
+
+	if (time_end == -1) {
+		return sys.get_shear_strain() < strain_end-1e-8;
+	}
+	else{
+		return sys.get_time() < time_end-1e-8;
+	}
+}
+
+
 /*
  * Main simulation
  */
@@ -529,11 +585,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-	int cnt_simu_loop = 1;
-	int cnt_config_out = 1;
-	double strain_output_config = 0;
-	double time_output_data = 0;
-	double time_output_config = 0;
+
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -552,31 +604,40 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 
-	while (sys.get_time() < p.time_end-1e-8) {
-		time_output_data = cnt_simu_loop*time_interval_output_data;
-		time_output_config = cnt_config_out*time_interval_output_config;
-		sys.timeEvolution(time_output_data);
-		cnt_simu_loop ++;
+	
+	double next_output_data = 0;
+	double next_output_config = 0;
+	
+	while (keepRunning()) {
+		if (time_interval_output_data == -1) {
+			next_output_data += strain_interval_output_data;
+			sys.timeEvolution("strain", next_output_data);
+		}
+		else{
+			next_output_data +=  time_interval_output_data;
+			sys.timeEvolution("time", next_output_data);
+		}
+
 
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
 		outputStressTensorData();
 		outputConfigurationBinary();
-		if (time_interval_output_data == -1) {
-			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+		if (time_interval_output_config == -1) {
+			if (sys.get_shear_strain() >= next_output_config-1e-8) {
 				outputConfigurationData();
-				cnt_config_out ++;
+				next_output_config += strain_interval_output_config;
 			}
 		} else {
-			if (sys.get_time() >= time_output_config-1e-8) {
+			if (sys.get_time() >= next_output_config-1e-8) {
 				outputConfigurationData();
-				cnt_config_out ++;
+				next_output_config +=  time_interval_output_config;
 			}
 		}
 		/*****************************************************/
 
-		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
+		cerr << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
 			cerr << "shear jamming " << jammed << endl;
@@ -618,11 +679,7 @@ void Simulation::simulationInverseYield(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-	int cnt_simu_loop = 1;
-	int cnt_config_out = 1;
-	double strain_output_config = 0;
-	double time_output_data = 0;
-	double time_output_config = 0;
+
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -641,26 +698,33 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 
-	while (sys.get_time() < p.time_end-1e-8) {
-		time_output_data = cnt_simu_loop*time_interval_output_data;
-		time_output_config = cnt_config_out*time_interval_output_config;
-		sys.timeEvolution(time_output_data);
-		cnt_simu_loop ++;
+	double next_output_data = 0;
+	double next_output_config = 0;
+	
+	while (keepRunning()) {
+		if (time_interval_output_data == -1) {
+			next_output_data += strain_interval_output_data;
+			sys.timeEvolution("strain", next_output_data);
+		}
+		else{
+			next_output_data +=  time_interval_output_data;
+			sys.timeEvolution("time", next_output_data);
+		}
 
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
 		outputStressTensorData();
 		outputConfigurationBinary();
-		if (time_interval_output_data == -1) {
-			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+		if (time_interval_output_config == -1) {
+			if (sys.get_shear_strain() >= next_output_config-1e-8) {
 				outputConfigurationData();
-				cnt_config_out ++;
+				next_output_config += strain_interval_output_config;
 			}
 		} else {
-			if (sys.get_time() >= time_output_config-1e-8) {
+			if (sys.get_time() >= next_output_config-1e-8) {
 				outputConfigurationData();
-				cnt_config_out ++;
+				next_output_config +=  time_interval_output_config;
 			}
 		}
 		/*****************************************************/

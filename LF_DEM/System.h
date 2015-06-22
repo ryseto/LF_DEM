@@ -77,6 +77,7 @@ private:
 	//double repulsiveforce_length; // repulsive force length
 	//int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
+	bool keepRunning(string, double);
 	void (System::*timeEvolutionDt)(bool);
 	void timeEvolutionEulersMethod(bool calc_stress);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
@@ -291,7 +292,8 @@ private:
 	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(double time_output_data);
+	void timeEvolution(string time_or_strain, double value_end);
+	void timeEvolution(double value_end);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();
