@@ -219,11 +219,10 @@ parameter dependant filename ``D*N*VF*.dat``. An extra
 configuration with `yaplot <https://github.com/vitroid/Yaplot>`__ or
 `homer <https://github.com/rmari/homer>`__.
 
-Documentation
--------------
+Complementary documentation
+---------------------------
 
-A more complete documentation of the code is slowly building up
-`here <http://rmari.bitbucket.org/LF_DEM_doc/>`__.
+A source code documentation is maintained `here <http://rmari.bitbucket.org/LF_DEM_doc/>`__.
 
 .. |image0| image:: ./snapshot.png
 .. |image1| image:: ./rate_units_example.gif
