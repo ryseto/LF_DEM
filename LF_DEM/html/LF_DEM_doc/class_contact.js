@@ -33,7 +33,7 @@ var class_contact =
     [ "f_contact_normal_norm", "class_contact.html#aa191d649aa83d3725d029c522b9fa98c", null ],
     [ "f_contact_tan", "class_contact.html#ad468df4633b4bfaa5dad2ba5926a0c96", null ],
     [ "f_rolling", "class_contact.html#a733d1c255360dbb4d6b5ec665a35f9d1", null ],
-    [ "frictionlaw", "class_contact.html#a2cb7e9adb85c6d2017c141913f735732", null ],
+    [ "frictionlaw", "class_contact.html#a99f959e0815780309424b4eae68069eb", null ],
     [ "ft_max", "class_contact.html#afc67562dad903d5ae75cfbdd4c38c007", null ],
     [ "interaction", "class_contact.html#ab81e0aa64449f2c63f7e8232db955fcf", null ],
     [ "kn_scaled", "class_contact.html#a2e611dac88e9c7cf5d3d3c8fcff98076", null ],

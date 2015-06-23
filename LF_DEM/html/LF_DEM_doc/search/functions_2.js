@@ -11,5 +11,7 @@ var searchData=
   ['computemaxnavelocity',['computeMaxNAVelocity',['../class_system.html#a34a5f1e6790979deae33cb9e7fef029a',1,'System']]],
   ['computeshearrate',['computeShearRate',['../class_system.html#ad726330ebec27152a7d124e773c0b9f9',1,'System']]],
   ['computevelocities',['computeVelocities',['../class_system.html#aafa87b69481dbd17f8d3dc67c940a0f9',1,'System']]],
-  ['computevelocitycomponents',['computeVelocityComponents',['../class_system.html#a82bd46fc5da6765556e39b020454b6d2',1,'System']]]
+  ['computevelocitycomponents',['computeVelocityComponents',['../class_system.html#a82bd46fc5da6765556e39b020454b6d2',1,'System']]],
+  ['convertinputforcesratecontrolled',['convertInputForcesRateControlled',['../class_simulation.html#aec57867509f177ec49ee8d750806f61e',1,'Simulation']]],
+  ['convertinputforcesstresscontrolled',['convertInputForcesStressControlled',['../class_simulation.html#a2a8aa2748a480d3b7573d080bc7bc9d5',1,'Simulation']]]
 ];
