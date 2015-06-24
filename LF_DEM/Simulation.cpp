@@ -597,7 +597,8 @@ void Simulation::simulationSteadyShear(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
+	//@@@ is it useful before any step is done?
+	evaluateData(); // 
 	outputData(); // new
 	outputStressTensorData();
 	outputConfigurationBinary();

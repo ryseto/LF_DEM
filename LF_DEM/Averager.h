@@ -53,6 +53,9 @@ public:
 			return;
 		}
 		double deltat = time-previous_time;
+        if(deltat==0){
+            return;
+        }
 		double etn = exp(-deltat/relaxation_time);
 		double inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);
 		if (previous_kernel_norm == 1) { // = it is the first iteration
