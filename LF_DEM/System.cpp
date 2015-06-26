@@ -389,6 +389,7 @@ void System::updateUnscaledContactmodel()
 	}
 	
 	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+
 	
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;

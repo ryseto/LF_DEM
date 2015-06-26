@@ -363,6 +363,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 {
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
+	
 	if (control_var == "rate") {
 		input_rate = dimensionlessnumber;
 		input_rate_unit = input_scale;
@@ -622,7 +623,7 @@ void Simulation::simulationInverseYield(string in_args,
 			if (jammed > 20) {
 				sys.set_shear_rate(1);
 				cerr << "target_stress = " << target_stress_input << endl;
-				target_stress_input *= 0.8;
+				target_stress_input *= 0.95;
 				sys.target_stress = target_stress_input/6/M_PI;
 				sys.updateUnscaledContactmodel();
 				cerr << "new target_stress = " << target_stress_input << endl;
