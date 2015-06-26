@@ -194,10 +194,7 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
 		}
 	}
-	
-	
 }
-
 
 void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
 	/** 
@@ -243,7 +240,6 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	
 	// convert all other forces to unit_scales
 	resolveUnitSystem(unit_scales);
-
 }
 
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
@@ -381,27 +377,25 @@ void Simulation::convertInputValues(string new_long_unit)
 {
 	string new_unit = unit_shortname[new_long_unit];
 
-	for(auto&& inv: input_values){
+	for (auto&& inv: input_values) {
 		string old_unit = inv.unit;
-		if(old_unit != new_unit){
-			if(old_unit != "h" && values.find(old_unit) == values.end()){
+		if (old_unit != new_unit) {
+			if (old_unit != "h" && values.find(old_unit) == values.end()) {
 				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl; exit(1);
 			}
 
-			if(inv.type == "stiffness"){
+			if (inv.type == "stiffness") {
 				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
 				inv.unit = new_unit;
 			}
-			if(inv.type == "time"){
-				if(old_unit == "h"){ // = it is a strain, better keeping it that way
+			if (inv.type == "time") {
+				if (old_unit == "h") { // = it is a strain, better keeping it that way
 					inv.unit = "strain";
-				}
-				else{
+				} else {
 					*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
 					inv.unit = new_unit;
 				}
 			}
-
 		}
 		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
@@ -499,54 +493,47 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		}
 	}
 
-	for(auto&& inv: input_values){
-		if(inv.name == "time_end"){
-			if(inv.unit == "strain"){
+	for (auto&& inv: input_values) {
+		if (inv.name == "time_end") {
+			if (inv.unit == "strain") {
 				time_end = -1;
 				strain_end = p.time_end;
 				cerr << "  strain_end = " << strain_end << endl;
-			}
-			else{
+			} else {
 				time_end = p.time_end;
 				cerr << "  time_end = " << time_end << endl;
 			}
 		}
 	}
 
-
-	
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
 	} else {
-		for(auto&& inv: input_values){
-			if(inv.name == "time_interval_output_data"){
-				if(inv.unit == "strain"){
+		for (auto&& inv: input_values) {
+			if (inv.name == "time_interval_output_data") {
+				if (inv.unit == "strain") {
 					time_interval_output_data = -1;
 					strain_interval_output_data = p.time_interval_output_data;
 					cerr << "  strain_interval_output_data = " << strain_interval_output_data << endl;
-				}
-				else{
+				} else {
 					time_interval_output_data = p.time_interval_output_data;
 					cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
 				}
 			}
-			if(inv.name == "time_interval_output_config"){
-				if(inv.unit == "strain"){
+			if (inv.name == "time_interval_output_config") {
+				if (inv.unit == "strain") {
 					time_interval_output_config = -1;
 					strain_interval_output_config = p.time_interval_output_config;
 					cerr << "  strain_interval_output_config = " << strain_interval_output_config << endl;
-				}
-				else{
+				} else {
 					time_interval_output_config = p.time_interval_output_config;
 					cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
 				}
 			}
 		}
 	}
-
-			
 
 	if (sys.brownian) {
 		sys.setupBrownian();
@@ -555,7 +542,6 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 
 	cerr << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
 	cerr << "repulsive_length = " << p.repulsive_length << endl;
-
 
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
@@ -571,7 +557,6 @@ bool Simulation::keepRunning(){
 		return sys.get_time() < time_end-1e-8;
 	}
 }
-
 
 /*
  * Main simulation
@@ -605,7 +590,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
 	
 	double next_output_data = 0;
 	double next_output_config = 0;
@@ -707,8 +691,7 @@ void Simulation::simulationInverseYield(string in_args,
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
 			sys.timeEvolution("strain", next_output_data);
-		}
-		else{
+		} else{
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
@@ -756,7 +739,6 @@ void Simulation::simulationInverseYield(string in_args,
 		}
 	}
 
-
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
@@ -769,7 +751,6 @@ void Simulation::simulationInverseYield(string in_args,
 		outputFinalConfiguration();
 	}
 }
-
 
 void Simulation::simulationMagnetic(string in_args,
 									vector<string> &input_files,
@@ -1159,7 +1140,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
-
 }
 
 void Simulation::readParameterFile()

@@ -940,12 +940,11 @@ void System::timeStepMoveCorrector()
 bool System::keepRunning(string time_or_strain, double value_end){
 	if (time_or_strain == "strain") {
 		return get_shear_strain() < value_end-1e-8;
-	}
-	else{
+	} else {
 		return get_time() < value_end-1e-8;
 	}
-
 }
+
 void System::timeEvolution(string time_or_strain, double value_end)
 {
 	/**
@@ -980,6 +979,7 @@ void System::timeEvolution(string time_or_strain, double value_end)
 		adjustContactModelParameters();
 	}
 }
+
 void System::timeEvolution(double time_end)
 {
 	/**
