@@ -24,6 +24,7 @@
 #include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
+#include "InputValue.h"
 #include "OutputData.h"
 	
 class Simulation
@@ -36,6 +37,8 @@ private:
 	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
 	std::map <string, string> unit_longname; // it's temporary: should find a more elegant way :)
 	std::map <string, string> unit_shortname;
+	
+	std::list <InputValue> input_values;
 
 	double volume_or_area_fraction;
 	string filename_import_positions;
@@ -48,6 +51,10 @@ private:
 	double shear_rate_expectation;
 	double time_interval_output_data;
 	double time_interval_output_config;
+	double strain_interval_output_data;
+	double strain_interval_output_config;
+	double strain_end;
+	double time_end;
 	
 	/*
 	 * Resultant data
@@ -117,10 +124,12 @@ private:
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void convertForceValues(string new_long_unit);
+	void convertInputValues(string new_long_unit);
 	void resolveUnitSystem(string long_unit);
 	void setUnitScaleRateControlled();
 	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
+	void catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr);
 	/*
 	 * For outputs
 	 */
@@ -141,8 +150,10 @@ private:
 									double dimensionlessnumber,
 									string input_scale);
 	void outputComputationTime();
-	
-public:
+
+	bool keepRunning();	
+
+ public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();

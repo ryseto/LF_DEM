@@ -6,7 +6,6 @@
 dt = 0.5e-4;
 Pe_switch = 5;
 disp_max = 2e-3;
-rolling_friction = false;
 
 /*
  * integration_method:
@@ -20,7 +19,7 @@ integration_method = 0;
  * shear_strain: total strain (length of simulation)
  */
 
-time_end = 50;
+time_end = 50h;
 
 /*
  * 1 Linear friction law Ft < mu Fn
@@ -41,8 +40,8 @@ mu_static = 1;
  * kt: tangential spring constant
  */
 
-kn = 5000;
-kt = 2000;
+kn = 5000h;
+kt = 2000h;
 
 /*
  * Lubrication model
@@ -88,12 +87,12 @@ repulsiveforce_length = 0.02;
  * Output interval
  */
 
-time_interval_output_config = 1;
+time_interval_output_config = 1e-1h;
 
 /*
  *  Data output
  */
-time_interval_output_data = 1e-2;
+time_interval_output_data = 1e-2h;
 
 /*
  * position and interaction data

@@ -111,6 +111,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationSteadyShear
 <tr class="memitem:af04118205ed1a09deb387cb9c6fe00a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af04118205ed1a09deb387cb9c6fe00a1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationUserDefinedSequence</b> (string seq_type, string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, string control_variable)</td></tr>
 <tr class="separator:af04118205ed1a09deb387cb9c6fe00a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0291cfa7d7e194fc0625111d50e88b0b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0291cfa7d7e194fc0625111d50e88b0b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationInverseYield</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionless_number, string input_scale, string control_variable)</td></tr>
+<tr class="separator:a0291cfa7d7e194fc0625111d50e88b0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a20ea7ad353ed155cd9a02f20036cdd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a20ea7ad353ed155cd9a02f20036cdd"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>simulationMagnetic</b> (string in_args, vector&lt; string &gt; &amp;input_files, bool binary_conf, double dimensionless_number, string input_scale, string control_variable)</td></tr>
+<tr class="separator:a2a20ea7ad353ed155cd9a02f20036cdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -156,18 +162,22 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setLowPeclet</b> ()</
 <tr class="memitem:a0d2d4cb1f45d970cfa2f691b8538cb51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d2d4cb1f45d970cfa2f691b8538cb51"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>convertForceValues</b> (string new_long_unit)</td></tr>
 <tr class="separator:a0d2d4cb1f45d970cfa2f691b8538cb51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c74b7a4df6e9c48ca2d07bc54ef4c87"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c74b7a4df6e9c48ca2d07bc54ef4c87"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>convertInputValues</b> (string new_long_unit)</td></tr>
+<tr class="separator:a2c74b7a4df6e9c48ca2d07bc54ef4c87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d53dd43bf7082c63b2767bac2c692b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d53dd43bf7082c63b2767bac2c692b4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resolveUnitSystem</b> (string long_unit)</td></tr>
 <tr class="separator:a5d53dd43bf7082c63b2767bac2c692b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12286fd02cb452adf672a5a656798856"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12286fd02cb452adf672a5a656798856"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setUnitScaleRateControlled</b> ()</td></tr>
 <tr class="separator:a12286fd02cb452adf672a5a656798856"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec57867509f177ec49ee8d750806f61e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec57867509f177ec49ee8d750806f61e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>convertInputForcesRateControlled</b> (double dimensionlessnumber, string rate_unit)</td></tr>
+<tr class="memitem:aec57867509f177ec49ee8d750806f61e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#aec57867509f177ec49ee8d750806f61e">convertInputForcesRateControlled</a> (double dimensionlessnumber, string rate_unit)</td></tr>
 <tr class="separator:aec57867509f177ec49ee8d750806f61e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a8aa2748a480d3b7573d080bc7bc9d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a8aa2748a480d3b7573d080bc7bc9d5"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>convertInputForcesStressControlled</b> (double dimensionlessnumber, string rate_unit)</td></tr>
+<tr class="memitem:a2a8aa2748a480d3b7573d080bc7bc9d5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2a8aa2748a480d3b7573d080bc7bc9d5">convertInputForcesStressControlled</a> (double dimensionlessnumber, string rate_unit)</td></tr>
 <tr class="separator:a2a8aa2748a480d3b7573d080bc7bc9d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e9d1d2b36058eaec9ae1beaad8b5b20"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e9d1d2b36058eaec9ae1beaad8b5b20"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>catchSuffixedValue</b> (string type, string keyword, string value_str, double *value_ptr)</td></tr>
+<tr class="separator:a8e9d1d2b36058eaec9ae1beaad8b5b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">evaluateData</a> ()</td></tr>
 <tr class="separator:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0343a8d24623b8fdf0478f62a106d25"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0343a8d24623b8fdf0478f62a106d25"></a>
@@ -175,6 +185,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>outputDataHeader</b> 
 <tr class="separator:ac0343a8d24623b8fdf0478f62a106d25"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9de6d1c7e4cb4fa69ff11d46f53cdb45"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a9de6d1c7e4cb4fa69ff11d46f53cdb45">outputRheologyData</a> ()</td></tr>
 <tr class="separator:a9de6d1c7e4cb4fa69ff11d46f53cdb45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03b1b3a373aa202644584d5023ec50f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a03b1b3a373aa202644584d5023ec50f9">outputData</a> ()</td></tr>
+<tr class="separator:a03b1b3a373aa202644584d5023ec50f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49da35ea4eb81dbebfce1bd3217ecd47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a49da35ea4eb81dbebfce1bd3217ecd47"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputStressTensorData</b> ()</td></tr>
 <tr class="separator:a49da35ea4eb81dbebfce1bd3217ecd47"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -202,6 +214,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSimulationSteady
 <tr class="memitem:a0614d1d87addd8c5120c9546c765c37b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0614d1d87addd8c5120c9546c765c37b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputComputationTime</b> ()</td></tr>
 <tr class="separator:a0614d1d87addd8c5120c9546c765c37b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4287cb4a8ef6d7ac4f0b0e28a0f3605"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4287cb4a8ef6d7ac4f0b0e28a0f3605"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>keepRunning</b> ()</td></tr>
+<tr class="separator:aa4287cb4a8ef6d7ac4f0b0e28a0f3605"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -226,6 +241,9 @@ std::map&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bott
 <tr class="memitem:a01a1e64516d5b9323e094530459ad2ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01a1e64516d5b9323e094530459ad2ba"></a>
 std::map&lt; string, string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>unit_shortname</b></td></tr>
 <tr class="separator:a01a1e64516d5b9323e094530459ad2ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58e26e9eac758b8eec6540bb0ee6e190"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58e26e9eac758b8eec6540bb0ee6e190"></a>
+std::list&lt; <a class="el" href="struct_input_value.html">InputValue</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>input_values</b></td></tr>
+<tr class="separator:a58e26e9eac758b8eec6540bb0ee6e190"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af931919108a6e69a97df94dd8bcf4c26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af931919108a6e69a97df94dd8bcf4c26"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>volume_or_area_fraction</b></td></tr>
 <tr class="separator:af931919108a6e69a97df94dd8bcf4c26"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -259,6 +277,18 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>time_interval_outpu
 <tr class="memitem:a326268b92e8adfb5d868ec50b8ce3b87"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a326268b92e8adfb5d868ec50b8ce3b87"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>time_interval_output_config</b></td></tr>
 <tr class="separator:a326268b92e8adfb5d868ec50b8ce3b87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab27b4d4216ee92461e9107a2a8de778b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab27b4d4216ee92461e9107a2a8de778b"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>strain_interval_output_data</b></td></tr>
+<tr class="separator:ab27b4d4216ee92461e9107a2a8de778b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a361006e1fff7e34f076bed6b3713d53e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a361006e1fff7e34f076bed6b3713d53e"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>strain_interval_output_config</b></td></tr>
+<tr class="separator:a361006e1fff7e34f076bed6b3713d53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a750653236eaaee7d2d0157ad54c1a49c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a750653236eaaee7d2d0157ad54c1a49c"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>strain_end</b></td></tr>
+<tr class="separator:a750653236eaaee7d2d0157ad54c1a49c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a685c24e5fd4472c455b8086fcffc511a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a685c24e5fd4472c455b8086fcffc511a"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>time_end</b></td></tr>
+<tr class="separator:a685c24e5fd4472c455b8086fcffc511a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdb7edf995134ffa4a5ace41091079e4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdb7edf995134ffa4a5ace41091079e4"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>viscosity</b></td></tr>
 <tr class="separator:acdb7edf995134ffa4a5ace41091079e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -370,6 +400,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>timestep_1</b></td></t
 <tr class="memitem:a1bad70ba597b3464c12c8efd88a7a53e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1bad70ba597b3464c12c8efd88a7a53e"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>timestep_end</b></td></tr>
 <tr class="separator:a1bad70ba597b3464c12c8efd88a7a53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7882dc31b19b1fdc8dc828a5b3cd6ba2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7882dc31b19b1fdc8dc828a5b3cd6ba2"></a>
+ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_data</b></td></tr>
+<tr class="separator:a7882dc31b19b1fdc8dc828a5b3cd6ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a539ef9855bd2abdc384cfb24cdb4e090"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a539ef9855bd2abdc384cfb24cdb4e090"></a>
 ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_rheo</b></td></tr>
 <tr class="separator:a539ef9855bd2abdc384cfb24cdb4e090"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -388,6 +421,9 @@ ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_time</b></td
 <tr class="memitem:a399fb0e6d4e85f15aeeb0adef0dad507"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a399fb0e6d4e85f15aeeb0adef0dad507"></a>
 ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_input</b></td></tr>
 <tr class="separator:a399fb0e6d4e85f15aeeb0adef0dad507"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ee05af41f998c1bac516f92ff064c5a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ee05af41f998c1bac516f92ff064c5a"></a>
+<a class="el" href="class_output_data.html">OutputData</a>&#160;</td><td class="memItemRight" valign="bottom"><b>outdata</b></td></tr>
+<tr class="separator:a4ee05af41f998c1bac516f92ff064c5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class launching the simulation by setting up the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class and performing predefined shear evolution. </p>
@@ -395,6 +431,85 @@ ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_input</b></t
 <dd>
 Romain Mari </dd></dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="aec57867509f177ec49ee8d750806f61e"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::convertInputForcesRateControlled </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dimensionlessnumber</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>rate_unit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Chooses units for the simulation and convert the forces to this unit (rate controlled case).</p>
+<p>The strategy is the following:</p><ol type="1">
+<li>Convert all the forces in hydro force unit, by solving recursively, ie: a. h = 1h b. "LF_DEM -r nx" &ndash;&gt; x = (1/n)h (the rate given in input is also the ratio of forces h/x) c. y = mx = (m/n)h d. z = oy = (om/n)h e. etc...</li>
+<li>Decide the unit "w" for the simulation</li>
+<li>Convert all the forces to this unit (by multiplying every force by h/w)</li>
+</ol>
+
+</div>
+</div>
+<a class="anchor" id="a2a8aa2748a480d3b7573d080bc7bc9d5"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::convertInputForcesStressControlled </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dimensionlessnumber</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>rate_unit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Chooses units for the simulation and convert the forces to this unit (stress controlled case).</p>
+<p>The strategy is the following:</p><ol type="1">
+<li>Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie: a. w = 1w b. y = mw c. z = oy = omw d. etc...</li>
+</ol>
+<p>In the future, we may allow other unit scale than the one given by the input stress.</p>
+
+</div>
+</div>
 <a class="anchor" id="a2ed9b69cf273dbade9825e5c606c0e0d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -417,6 +532,32 @@ Romain Mari </dd></dl>
 </div><div class="memdoc">
 <p>Get rheological data from the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class.</p>
 <p>Data are converted in hydrodynamic units, independently from the actual units used in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class.</p>
+
+</div>
+</div>
+<a class="anchor" id="a03b1b3a373aa202644584d5023ec50f9"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::outputData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Output data.</p>
+<p>Stress data are converted in units of <img class="formulaInl" alt="$\eta_0\dot\gamma$" src="form_72.png"/>. Other data are output in the units used in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class (these can be hydrodynamic, Brownian or repulsive force units).</p>
+<p><b>NOTE:</b> this behavior should be changed and made more consistent in the future.</p>
 
 </div>
 </div>
@@ -456,7 +597,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a></li>
-    <li class="footer">Generated on Wed May 27 2015 10:56:14 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Jun 23 2015 14:45:16 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -37,13 +37,14 @@ inline void removeBlank(string &str)
 
 inline bool getSuffix(const string &str, string &value, string &suffix)
 {
-	size_t suffix_pos = str.find_first_of("abcdefghijklmnopqrstuvwxyz");
+  size_t suffix_pos = str.find_first_of("abcdfghijklmnopqrstuvwxyz"); // omission of "e" is intended, to allow for scientific notation like "1e5h"
 	value = str.substr(0, suffix_pos);
-	suffix = str.substr(suffix_pos, str.length());
-	if (suffix.empty()) {
+	if(suffix_pos!=str.npos){
+		suffix = str.substr(suffix_pos, str.length());
+		return true;
+	} else {
 		return false;
 	}
-	return true;
 }
 
 inline void errorNoSuffix(string quantity)

@@ -1,4 +1,4 @@
-# LF_DEM version v1.0-460-ga7b9176-dirty
+# LF_DEM version v1.0-715-g32e4c41-dirty	
 # np 500
 # VF 0.449998
 # Lx 18.9728
@@ -6,29 +6,29 @@
 # Lz 18.9728
 #1: shear strain
 #2: Viscosity
-#3: N1
-#4: N2
+#3: N1 viscosity
+#4: N2 viscosity
 #5: Viscosity(lub)
-#6: N1(lub)
-#7: N2(lub)
+#6: N1 viscosity(lub)
+#7: N2 viscosity(lub)
 #8: Viscosity(xF_contact part)
-#9: N1(xF_contact part)
-#10: N2(xF_contact part)
+#9: N1 viscosity(xF_contact part)
+#10: N2 viscosity(xF_contact part)
 #11: Viscosity(GU_contact part)
-#12: N1(GU_contact part)
-#13: N2(GU_contact part)
+#12: N1 viscosity(GU_contact part)
+#13: N2 viscosity(GU_contact part)
 #14: Viscosity(friction)
-#15: N1(friction)
-#16: N2(friction)
+#15: N1 viscosity(friction)
+#16: N2 viscosity(friction)
 #17: Viscosity(repulsive force XF)
-#18: N1(repulsive force XF)
-#19: N2(repulsive force XF)
+#18: N1 viscosity(repulsive force XF)
+#19: N2 viscosity(repulsive force XF)
 #20: Viscosity(repulsive force GU)
-#21: N1(repulsive force GU)
-#22: N2(repulsive force GU)
+#21: N1 viscosity(repulsive force GU)
+#22: N2 viscosity(repulsive force GU)
 #23: Viscosity(brownian)
-#24: N1(brownian)
-#25: N2(brownian)
+#24: N1 viscosity(brownian)
+#25: N2 viscosity(brownian)
 #26: particle pressure
 #27: particle pressure contact
 #28: min gap (non-dim)
@@ -55,5 +55,7 @@
 #49: stress
 #50: shear_disp
 #51: max rolling displacement
+#52: max_contact_gap
+#53: total_energy
+#54: magnetic_energy
 
-0.00100054 11.229 -10.9961 17.0969 -0.324187 -0.00118773 0.00143572 -9.58396 68.6602 -58.4565 20.1646 -80.4476 75.614 -0.41766 2.42582 1.96303 0 0 0 0 0 0 0.95134 0.792378 -0.0619463 -5.58906 70.2211 -0.82289 0.0830003 2221.6 145.448 230.494 228.702 5.22724 38.6917 78.8088 236.656 95.9292 236.656 0.852 1818 213 213 2065.99 1315.69 0.000197345 0.100054 0.01 0.11229 0.403217 6.95322e-310 

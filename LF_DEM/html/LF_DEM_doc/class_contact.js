@@ -12,7 +12,6 @@ var class_contact =
     [ "frictionlaw_criticalload", "class_contact.html#ae3f1d7b0a0927595b68af971a7d4fb43", null ],
     [ "frictionlaw_criticalload_mu_inf", "class_contact.html#aba1686f54ddc00b9d9bfc2f66fc8c3d9", null ],
     [ "frictionlaw_ft_max", "class_contact.html#a85f00328eb36467e60a6b74adadde254", null ],
-    [ "frictionlaw_null", "class_contact.html#aca89a00068d1846da8ac4bee4d44d0aa", null ],
     [ "frictionlaw_standard", "class_contact.html#a120699da5f9b6a5ee55764056d414a29", null ],
     [ "get_f_contact_normal_norm", "class_contact.html#ad5eabaa91ef335d9778d736ab4427cf6", null ],
     [ "get_f_contact_tan", "class_contact.html#ad01056bcca57a0fa17156ea403ebc2ab", null ],

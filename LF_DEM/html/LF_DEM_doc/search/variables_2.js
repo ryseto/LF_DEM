@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['disp_5fmax',['disp_max',['../struct_parameter_set.html#ae681d078752b83a1d3fa0812cdc8cc45',1,'ParameterSet']]],
-  ['disp_5ftan_5ftarget',['disp_tan_target',['../struct_parameter_set.html#ad74cb563e7c778a115963d23e0755d14',1,'ParameterSet']]],
-  ['dt',['dt',['../struct_parameter_set.html#a1aa8b72e085e17d8f1c2d23a2e76bd75',1,'ParameterSet']]]
+  ['cohesion_5famplitude',['cohesion_amplitude',['../struct_parameter_set.html#ac3e5e4d6832d1a6e6add805acb8e167d',1,'ParameterSet']]],
+  ['contact_5frelaxation_5ftime',['contact_relaxation_time',['../struct_parameter_set.html#a0a3c2c51f992f6621390fb85984579e2',1,'ParameterSet']]],
+  ['contact_5frelaxation_5ftime_5ftan',['contact_relaxation_time_tan',['../struct_parameter_set.html#a28dae162ee00c725ec7042c61f4d7727',1,'ParameterSet']]],
+  ['critical_5fload_5famplitude',['critical_load_amplitude',['../struct_parameter_set.html#a92f2b836a94c4fb8f61fc7870d84f1b9',1,'ParameterSet']]]
 ];
