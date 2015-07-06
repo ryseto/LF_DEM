@@ -5,7 +5,7 @@
 #=======================================#
 
 # OS_version: OSX or Linux or SI 
-OS_version = OSX
+OS_version = Linux
 # install directory
 install_dir = ~/bin/
 
@@ -37,11 +37,11 @@ CXXFLAGS_optimized += -std=c++11
 CXXFLAGS_debug += -std=c++11
 CXXFLAGS_dev += -std=c++11
 
-GPP_Warnings = -Wall  -Wextra -Wshadow
+GPP_Warnings = -Wall
 ifeq ($(CXX),$(filter $(CXX),g++ clang++))
 	CXXFLAGS_optimized += $(GPP_Warnings)
-	CXXFLAGS_debug += -pg $(GPP_Warnings)
-	CXXFLAGS_dev += $(GPP_Warnings)
+	CXXFLAGS_debug += -pg $(GPP_Warnings) -Wextra -Wshadow
+	CXXFLAGS_dev += $(GPP_Warnings) -Wextra -Wshadow
 endif
 
 ICC_Warnings = -Wall

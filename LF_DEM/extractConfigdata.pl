@@ -10,10 +10,11 @@ use Math::Trig;
 use IO::Handle;
 
 $particle_data = $ARGV[0];
-$output_interval = 1;
-if ($#ARGV >= 1){
-	$output_interval = $ARGV[1];
+if ($#ARGV == 1){
+	$xz_shift = $ARGV[1];
 }
+
+
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
@@ -101,7 +102,20 @@ sub InParticles {
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle> ;
 			if ($output == 1) {
-				printf OUT "$line";
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+				$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz, $ms) = split(/\s+/, $line);
+				if ($xz_shift) {
+					$x += $xz_shift;
+					$z += $xz_shift;
+					if ($x > $Lx/2) {
+						$x -= $Lx;
+					}
+					if ($z > $Lz/2) {
+						$z -= $Lz;
+					}
+				}
+				#printf OUT "$line";
+				printf OUT "$ip $a $x $y $z $vx $vy $vz $ox $oy $oz $h_xzstress $c_xzstressGU $b_xzstress $mx $my $mz $ms\n";
 			}
 		}
 	}
