@@ -66,9 +66,8 @@ struct ParameterSet
 	 * 0 No friction
 	 * 1 Linear friction law Ft < mu Fn
 	 * 2 Threshold friction without repulsive force
-	 * 3 Threshold friction without repulsion + mu inf
 	 */
-	double friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. 3 infinite mu Coulomb with threshold [1]
+	double friction_model;                   ///< Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. [1]
 	double mu_static;                        ///< friction coefficient (static) [1]
 	double mu_dynamic;                        ///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 	double mu_rolling;                        ///< friction coefficient (rolling) [0]
