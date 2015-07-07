@@ -526,16 +526,16 @@ sub OutYaplotData{
 	#	}
 	#
 	
-#	
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 5\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++){
-#		if ($contactstate[$k] == 2 && $force[$k] > 1) {
-#			&OutString2($int0[$k],  $int1[$k]);
-#			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
-#		}
-#	}
+
+	printf OUT "y 2\n";
+	printf OUT "r 0.3\n";
+	printf OUT "@ 5\n"; # static
+	for ($k = 0; $k < $num_interaction; $k ++){
+		if ($contactstate[$k] == 2 && 0.035* $force[$k] > 0.05) {
+			&OutString2($int0[$k],  $int1[$k]);
+			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
+		}
+	}
 	#
 	#
 	#		printf OUT "y 4\n";
@@ -601,7 +601,7 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#    }
-	$force_factor = 0.02;
+	$force_factor = 0.035;
 	#	$force_factor = 0.02;
 #		printf OUT "y 3\n";
 #		printf OUT "@ 6\n";
@@ -643,18 +643,18 @@ sub OutYaplotData{
 	#	}
 	
 	
-	#	printf OUT "y 2\n";
-	#	printf OUT "@ 6\n";
-	#	printf OUT "r 0.2\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++){
-	##		if ($Gap[$k] < 0) {
-	##			&OutString2($int0[$k], $int1[$k]);
-	##		}
-	#		if ($is_contact[$k] == 1) {
-	#			&OutContact($int0[$k], $int1[$k]);
-	#			#&OutString2($int0[$k], $int1[$k]);
-	#		}
-	#	}
+#		printf OUT "y 2\n";
+#		printf OUT "@ 6\n";
+#		printf OUT "r 0.2\n";
+#		for ($k = 0; $k < $num_interaction; $k ++){
+#	#		if ($Gap[$k] < 0) {
+#	#			&OutString2($int0[$k], $int1[$k]);
+#	#		}
+#			if ($is_contact[$k] == 1) {
+#				&OutContact($int0[$k], $int1[$k]);
+#				#&OutString2($int0[$k], $int1[$k]);
+#			}
+#		}
 	#	$stressfactor = 0.005;
 	#	printf OUT "y 4\n";
 	#	printf OUT "@ 3\n";

@@ -20,7 +20,7 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 #printf "$interaction_data\n";
-$output = "config_$name.dat";
+$outputfilename = "config_$name.dat";
 
 open (IN_data, "< data_${name}.dat");
 
@@ -38,7 +38,7 @@ while (1) {
 	last unless defined $line;
 	if ($d1 != "#") {
 		$angle_magneticfield = $d38;
-		printf "ang = $angle_magneticfield_old\n";
+		#printf "ang = $angle_magneticfield_old\n";
 		$time = $d1;
 		if ($angle_magneticfield_old != -1
 			&& $angle_magneticfield != $angle_magneticfield_old) {
@@ -47,12 +47,12 @@ while (1) {
 				$cnt++;
 			}
 		$angle_magneticfield_old =	$angle_magneticfield;
-		printf "$angle_magneticfield_old\n" ;
+		#printf "$angle_magneticfield_old\n" ;
 		$time_old = $time;
 	}
 }
 
-open (OUT, "> ${output}");
+open (OUT, "> ${outputfilename}");
 open (IN_particle, "< ${particle_data}");
 &readHeader;
 $first=1;
@@ -91,13 +91,15 @@ sub InParticles {
 	if (defined $line){
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress, $time) = split(/\s+/, $line);
 		if ($time == $time[$cnt]){
-
 			$output = 1;
 			$ang =$angle[$cnt];
 			$cnt++;
 			printf OUT "# $ang\n";
 		} else {
 			$output = 0;
+		}
+		if ($output == 1) {
+			printf "$ang\n";
 		}
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle> ;
