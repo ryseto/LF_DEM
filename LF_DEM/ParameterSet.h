@@ -17,14 +17,18 @@ struct ParameterSet
 	double critical_load_amplitude;			///< Amplitude of the critical load [0]
 	double cohesion_amplitude;				///< Amplitude of the cohesion [0]
 	double brownian_amplitude;				///< Amplitude of the Brownian force [0]
-	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
 	double repulsive_length;				///< "Debye" length for the repulsive force [0.05]
-	int magnetic_type;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, magnetic force, etc.). If -1, lub_max_gap is used as cutoff [-1]
+	
+	/* magnetic */
+	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
+	int magnetic_type;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
+	int magnetic_field_type;				///< Magnetic field, 1: x-z tilting/raising cycle 2: rotating along z-axis
 	double magnetic_interaction_range; ///< [20]
 	double init_angle_external_magnetic_field;  ///< Initial angle of external magnetic field
 	double rot_step_external_magnetic_field;  ///<
 	double step_interval_external_magnetic_field;  ///<
+	double timeinterval_update_magnetic_pair; ///< [0.02] Interval to check magnetic interaction
 
 	/*******************************************************
 	 HYDRODYNAMICS 
@@ -106,7 +110,6 @@ struct ParameterSet
 	/*******************************************************
 	 OUTPUT
 	********************************************************/
-	double timeinterval_update_magnetic_pair; ///< [0.02]
 
 	double time_interval_output_data;      ///< Output interval for outputing data_* file [0.01 time unit]
 	double time_interval_output_config;    ///< Output interval for outputing int_* and par_* files [0.1 time unit]

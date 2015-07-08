@@ -416,7 +416,7 @@ sub OutYaplotData{
 	#&OutMeter($shear_rate, 0.3, $Lx/2+2, -$Lz/2+2);
 	#printf OUT "@ 4\n";
 	#&OutMeter($shear_stress, 2, -$Lx/2-3.5, -$Lz/2+2);
-	&OutStress($shear_stress, 25);
+	#&OutStress($shear_stress, 25);
 	#
 	#	printf OUT "y 7\n";
 	#	printf OUT "r 0.1\n";
@@ -488,7 +488,7 @@ sub OutYaplotData{
 		
 		if ($mag) {
 			if ($switch == 0 &&
-				$magsusceptibility[$i] < 0){
+				$magsusceptibility[$i] <= 0){
 					printf OUT "@ 9\n";
 					$switch = 1;
 				}

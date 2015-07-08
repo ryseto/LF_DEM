@@ -158,7 +158,6 @@ void Simulation::resolveUnitSystem(string long_unit) // can we express all force
 	unsigned int resolved = resolved_units.size();
 	unsigned int previous_resolved;
 
-
 	do {
 		previous_resolved = resolved;
 		for (auto&& f: suffixes) {
@@ -212,7 +211,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	
 	string force_type = rate_unit; // our force defining the shear rate
 
-	if (force_type == "h"){
+	if (force_type == "h") {
 		cerr << " Error: please give a stress in non-hydro units." << endl;
 		exit(1);
 		/*
@@ -226,7 +225,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		 If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
 		 */
 	}
-	if (force_type == "b"){
+	if (force_type == "b") {
 		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl;
 		exit(1);
 	}
@@ -244,8 +243,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
 {
-	
-	/** 
+	/**
 	\brief Chooses units for the simulation and convert the forces to this unit (rate controlled case).
 	
 	The strategy is the following:
@@ -291,7 +289,6 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	}
 }
 
-
 void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
@@ -309,7 +306,7 @@ void Simulation::convertForceValues(string new_long_unit)
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
-		if(old_unit != new_unit){
+		if (old_unit != new_unit) {
 			values[force_type] *= dimensionless_numbers[old_unit+'/'+new_unit];
 			f.second = new_unit;
 		}
@@ -318,8 +315,8 @@ void Simulation::convertForceValues(string new_long_unit)
 
 void Simulation::setUnitScaleRateControlled()
 {
-
 	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
+	
 	if (is_brownian) {
 		if (dimensionless_numbers["h/b"] > p.Pe_switch && !sys.zero_shear) {
 			unit_scales = "hydro";
@@ -336,8 +333,6 @@ void Simulation::setUnitScaleRateControlled()
 		sys.set_shear_rate(1);
 	}
 }
-
-
 
 void Simulation::exportForceAmplitudes()
 {
@@ -360,6 +355,7 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.cohesion = values["c"];
 		cerr << " Cohesion (in \"" << suffixes["c"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
+
 	//	bool is_magnetic = values.find("m") != values.end();
 	//	if (is_magnetic) {
 	//		sys.amplitudes.magnetic = values["m"];
@@ -416,7 +412,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	}
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* [TODO]
-		 * To be changed to something better way.
+		 * Should be changed to something better way.
 		 */
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -444,12 +440,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		p.unscaled_contactmodel = true;
 	} else if (control_var == "magnetic") {
 		cerr << "magnetic" << endl;
-		cerr << " input_scale = "<< input_scale << endl;
 	} else {
 		exit(1);
 	}
 	exportForceAmplitudes();
-
 	convertInputValues(unit_scales);
 
 	// test for incompatibilities
@@ -548,8 +542,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 }
 
 
-bool Simulation::keepRunning(){
-
+bool Simulation::keepRunning()
+{
 	if (time_end == -1) {
 		return sys.get_shear_strain() < strain_end-1e-8;
 	}
@@ -583,7 +577,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	//@@@ is it useful before any step is done?
+	//@@@ is it useful before any step is done? ---> Outputing t=0 data may be useful.
 	evaluateData(); // 
 	outputData(); // new
 	outputStressTensorData();
@@ -598,12 +592,10 @@ void Simulation::simulationSteadyShear(string in_args,
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
 			sys.timeEvolution("strain", next_output_data);
-		}
-		else{
+		} else {
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
-
 
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
@@ -716,7 +708,7 @@ void Simulation::simulationInverseYield(string in_args,
 
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
-			&& abs(sys.get_shear_rate()) < p.rest_threshold){
+			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
 			cerr << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 20) {
@@ -762,6 +754,7 @@ void Simulation::simulationMagnetic(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double strain_output_config = 0;
@@ -774,6 +767,7 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
+
 	double time_end = 0;
 	double angle_external_magnetic_field = 0;
 	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
@@ -782,9 +776,15 @@ void Simulation::simulationMagnetic(string in_args,
 	while (sys.get_time() < p.time_end) {
 		cnt_external_magnetic_field++;
 		time_end = p.step_interval_external_magnetic_field*cnt_external_magnetic_field;
-		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
-										cos(sys.angle_external_magnetic_field), 0);
-
+		if (p.magnetic_field_type == 1) {
+			sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
+											cos(sys.angle_external_magnetic_field),
+											0);
+		} else if (p.magnetic_field_type == 2) {
+			sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
+											0,
+											sin(sys.angle_external_magnetic_field));
+		}
 		cerr << "External magnetic field = ";
 		sys.external_magnetic_field.cerr();
 		cerr << endl;
@@ -814,11 +814,15 @@ void Simulation::simulationMagnetic(string in_args,
 			cerr << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
 		}
 		angle_external_magnetic_field += d_angle_external_magnetic_field;
-		if (abs(cos(angle_external_magnetic_field)) < 1e-5) {
-			sys.angle_external_magnetic_field = M_PI/2;
-		} else {
-			double tangent = sin(angle_external_magnetic_field)/cos(angle_external_magnetic_field);
-			sys.angle_external_magnetic_field = atan(abs(tangent));
+		if (p.magnetic_field_type == 1) {
+			if (abs(cos(angle_external_magnetic_field)) < 1e-5) {
+				sys.angle_external_magnetic_field = M_PI/2;
+			} else {
+				double tangent = sin(angle_external_magnetic_field)/cos(angle_external_magnetic_field);
+				sys.angle_external_magnetic_field = atan(abs(tangent));
+			}
+		} else if (p.magnetic_field_type == 2) {
+			sys.angle_external_magnetic_field = angle_external_magnetic_field;
 		}
 	}
 	outputComputationTime();
@@ -876,7 +880,7 @@ void Simulation::outputComputationTime()
 // 		cerr << " User Defined Sequence only implemented for ....\n";
 // 		exit(1);
 // 	} else if (seq_type == "B") {
-// 		cerr << "Cohesive force" << endl;
+// 		cerr << "Cohesive force" << endl;e
 // 		sys.set_shear_rate(1);
 // 		sys.repulsiveforce = false;
 // 		sys.cohesion = true;
@@ -1125,6 +1129,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
 		p.magnetic_type = atoi(value.c_str());
+	} else if (keyword == "magnetic_field_type") {
+		p.magnetic_field_type = atoi(value.c_str());
 	} else if (keyword == "init_angle_external_magnetic_field") {
 		p.init_angle_external_magnetic_field = atof(value.c_str());
 	} else if (keyword == "rot_step_external_magnetic_field") {
@@ -1327,7 +1333,6 @@ void Simulation::setDefaultParameters()
 	p.repulsion_amplitude = 0;
 	p.cohesion_amplitude = 0;
 	p.critical_load_amplitude = 0;
-	p.magnetic_type = 0;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 2e-3;
@@ -1359,7 +1364,6 @@ void Simulation::setDefaultParameters()
 	 * If interaction_range is not indicated, this value will be set from lub_max_gap.
 	 */
 	p.interaction_range = -1;
-	p.magnetic_interaction_range = 20;
 	/*
 	 * reduced_gap_min: gives reduced lubrication (maximum coeeffient).
 	 *
@@ -1406,6 +1410,12 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
+	/*
+	 * Parameters for magnetic colloid simulation.
+	 */
+	p.magnetic_type = 0;
+	p.magnetic_field_type = 1;
+	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
@@ -1552,7 +1562,7 @@ double Simulation::getRate(){
 		return input_rate;
 	} else if (control_var == "stress") {
 		return sys.get_shear_rate();
-	} else{
+	} else {
 		return 1;
 	}
 }
