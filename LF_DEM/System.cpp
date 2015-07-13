@@ -148,9 +148,6 @@ void System::importParameterSet(ParameterSet &ps)
 		cerr << "lub_max_gap must be smaller than 1\n";
 		exit(1);
 	}
-	kn = p.kn;
-	kt = p.kt;
-	kr = p.kr;
 	ft_max = p.ft_max;
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
@@ -377,18 +374,18 @@ void System::updateUnscaledContactmodel()
 		 * For destressing tests, the spring constants are fixed at the previous values.
 		 */
 		if (!cohesion) {
-			kn = kn_master*abs(target_stress);
-			kt = kt_master*abs(target_stress);
-			kr = kr_master*abs(target_stress);
+			p.kn = kn_master*abs(target_stress);
+			p.kt = kt_master*abs(target_stress);
+			p.kr = kr_master*abs(target_stress);
 		} else {
-			kn = kn_master;
-			kt = kt_master;
-			kr = kr_master;
+			p.kn = kn_master;
+			p.kt = kt_master;
+			p.kr = kr_master;
 		}
-		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
+		cout << " kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	
-	lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+	lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
 
 	
 	if (lowPeclet) {
@@ -405,7 +402,7 @@ void System::updateUnscaledContactmodel()
 		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*p.contact_relaxation_time_tan;
+		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
 		cerr << "lubrication_model..." << endl;
 		exit(1);
@@ -423,8 +420,8 @@ void System::setupBrownian()
 	if (brownian) {
 		if (lowPeclet) {
 			cerr << "[[small Pe mode]]" << endl;
-			cerr << "  kn = " << kn << endl;
-			cerr << "  kt = " << kt << endl;
+			cerr << "  kn = " << p.kn << endl;
+			cerr << "  kt = " << p.kt << endl;
 			cerr << "  dt = " << p.dt << endl;
 		}
 	}
@@ -530,10 +527,10 @@ void System::setupSystem(string control)
 	shear_strain = 0;
 	nb_interaction = 0;
 	if (p.unscaled_contactmodel) {
-		kn_master = kn;
-		kt_master = kt;
-		kr_master = kr;
-		cout << " kn " << kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
+		kn_master = p.kn;
+		kt_master = p.kt;
+		kr_master = p.kr;
+		cout << " kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	if (p.contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -543,7 +540,7 @@ void System::setupSystem(string control)
 		 *  beta = t*kn
 		 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
 		 */
-		lub_coeff_contact = 4*kn*p.contact_relaxation_time;
+		lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
 	}
 	/* If a contact is in sliding mode,
 	 * lubrication and dashpot forces are activated.
@@ -560,7 +557,7 @@ void System::setupSystem(string control)
 		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
-		log_lub_coeff_contact_tan_dashpot = 6*kt*p.contact_relaxation_time_tan;
+		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
 		cerr << "lubrication_model..." << endl;
 		exit(1);
@@ -1979,29 +1976,29 @@ void System::adjustContactModelParameters()
 	double overlap = -min_reduced_gap;
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);
-	kn_avg->update(kn, shear_strain);
-	kt_avg->update(kt, shear_strain);
+	kn_avg->update(p.kn, shear_strain);
+	kt_avg->update(p.kt, shear_strain);
 	
 	static double previous_shear_strain = 0;
 	double deltagamma = (shear_strain-previous_shear_strain);
 	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
-	double dkn = (kn_target-kn)*deltagamma/p.memory_strain_k;
-	
-	kn += dkn;
-	if (kn < p.min_kn) {
-		kn = p.min_kn;
+	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
+
+	p.kn += dkn;
+	if (p.kn < p.min_kn) {
+		p.kn = p.min_kn;
 	}
-	if (kn > p.max_kn) {
-		kn = p.max_kn;
+	if (p.kn > p.max_kn) {
+		p.kn = p.max_kn;
 	}
 	double kt_target = kt_avg->get()*max_disp_tan_avg->get()/p.disp_tan_target;
-	double dkt = (kt_target-kt)*deltagamma/p.memory_strain_k;
-	kt += dkt;
-	if (kt < p.min_kt) {
-		kt = p.min_kt;
+	double dkt = (kt_target-p.kt)*deltagamma/p.memory_strain_k;
+	p.kt += dkt;
+	if (p.kt < p.min_kt) {
+		p.kt = p.min_kt;
 	}
-	if (kt > p.max_kt) {
-		kt = p.max_kt;
+	if (p.kt > p.max_kt) {
+		p.kt = p.max_kt;
 	}
 	if (max_velocity > 0 && max_sliding_velocity > 0) {
 		if (max_velocity > max_sliding_velocity) {
@@ -2011,6 +2008,13 @@ void System::adjustContactModelParameters()
 		}
 	}
 	previous_shear_strain = shear_strain;
+
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active() && interaction[k].contact.state>0 ) {
+			interaction[k].contact.setSpringConstants();
+		}
+	}
+
 }
 
 void System::calcLubricationForce()

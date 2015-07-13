@@ -65,6 +65,7 @@ public:
 	Contact(const Contact& obj);
 	void init(System *sys_, Interaction *int_);
 	void setInteractionData();
+	void setSpringConstants();
 	void activate();
 	void deactivate();
 	vec3d disp_tan; // tangential displacement

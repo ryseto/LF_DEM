@@ -1747,8 +1747,8 @@ void Simulation::outputRheologyData()
 	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
 	fout_rheo << sys.contact_nb << ' '; //42
 	fout_rheo << sys.fric_contact_nb << ' '; //43
-	fout_rheo << sys.kn << ' '; //44
-	fout_rheo << sys.kt << ' '; //45
+	fout_rheo << p.kn << ' '; //44
+	fout_rheo << p.kt << ' '; //45
 	fout_rheo << sys.dt << ' '; //46
 	fout_rheo << sys.get_time() << ' ' ; //47
 	/* In stress control simulation,
@@ -1879,9 +1879,9 @@ void Simulation::outputData()
 	/* simulation parameter
 	 */
 	outdata.entryData(31, "dt", sys.dt);
-	outdata.entryData(32, "kn", sys.kn);
-	outdata.entryData(33, "kt", sys.kt);
-	outdata.entryData(34, "kr", sys.kr);
+	outdata.entryData(32, "kn", sys.p.kn);
+	outdata.entryData(33, "kt", sys.p.kt);
+	outdata.entryData(34, "kr", sys.p.kr);
 	outdata.entryData(35, "shear displacement", sys.shear_disp);
 	if (p.magnetic_type != 0) {
 		outdata.entryData(37, "magnetic energy", sys.magnetic_energy);
