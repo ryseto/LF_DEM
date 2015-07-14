@@ -32,7 +32,9 @@ private:
 	unsigned short p1;
 	//===== forces and stresses ==================== //
 	double geometric_factor;
-	double length;
+	double screening_length;
+	double max_length;
+	bool check_max_length;
 	vec3d force_vector; // normal contact force
 	double force_norm;
 	double reduced_force_norm;

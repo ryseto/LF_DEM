@@ -208,7 +208,17 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
 	if (defined $line){
-		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
+		# 1 sys.get_shear_strain()
+		# 2 sys.shear_disp
+		# 3 getRate()
+		# 4 target_stress_input
+		# 5 sys.get_time()
+		# 6 sys.angle_external_magnetic_field
+		if ($mag) {
+			($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress, $time, $fieldangle) = split(/\s+/, $line);
+		} else {
+			($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
+		}
 		# shear_rate/shear_rate0
 		# shear_rate0 = Fr(0)/(6 pi eta0 a) = 1/6pi
 		$shear_rate = $shear_rate;
@@ -778,6 +788,25 @@ sub OutBoundaryBox{
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
+	
+	if ($mag) {
+		$fieldx = 3*sin($fieldangle);
+		$fieldz = 3*cos($fieldangle);
+		
+		$xs = 23;
+		$xe = $xs + $fieldx;
+		$zs = 0;
+		$ze = $zs + $fieldz;
+		$xx = $xs + 3.2;
+		$zz = $zs + 3.2;
+
+		printf OUT "r 0.1 \n";
+		printf OUT "s  $xs 0 $zs  $xe 0 $ze \n";
+		printf OUT "t  $xx 0 $zs x \n";
+		printf OUT "t  $xs 0 $zz z \n";
+		
+	}
+	
 	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";

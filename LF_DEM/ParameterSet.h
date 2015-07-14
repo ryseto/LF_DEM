@@ -17,7 +17,8 @@ struct ParameterSet
 	double critical_load_amplitude;			///< Amplitude of the critical load [0]
 	double cohesion_amplitude;				///< Amplitude of the cohesion [0]
 	double brownian_amplitude;				///< Amplitude of the Brownian force [0]
-	double repulsive_length;				///< "Debye" length for the repulsive force [0.05]
+	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
+	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, magnetic force, etc.). If -1, lub_max_gap is used as cutoff [-1]
 	
 	/* magnetic */
