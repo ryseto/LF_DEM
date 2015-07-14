@@ -29,17 +29,26 @@ void Contact::init(System *sys_, Interaction *interaction_)
 	}
 }
 
-void Contact::setInteractionData()
+void Contact::setSpringConstants()
 {
-	interaction->get_par_num(p0, p1);
 	const double &ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	if (sys->friction) {
 		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+	}
+	if (sys->rolling_friction) {
+		kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+	}
+}
+
+void Contact::setInteractionData()
+{
+	interaction->get_par_num(p0, p1);
+	setSpringConstants();
+	if (sys->friction) {
 		mu_static = sys->mu_static;
 		mu_dynamic = sys->mu_dynamic;
 		if (sys->rolling_friction) {
-			kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
 			mu_rolling = sys->mu_rolling;
 		}
 	}

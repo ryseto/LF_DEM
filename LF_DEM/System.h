@@ -214,9 +214,9 @@ private:
 	StressTensor total_brownian_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt;
-	double kn;
-	double kt;
-	double kr;
+	/* double kn; */
+	/* double kt; */
+	/* double kr; */
 	double kn_master;
 	double kt_master;
 	double kr_master;
