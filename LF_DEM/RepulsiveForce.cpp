@@ -30,6 +30,7 @@ void RepulsiveForce::activate()
 	force_norm = 0;
 	reduced_force_norm = 0;
 	stresslet_XF = 0;
+	active = true;
 }
 
 void RepulsiveForce::calcReducedForceNorm()
@@ -62,7 +63,6 @@ void RepulsiveForce::calcScaledForce()
 	/** 
 		\brief Computes the force in the System class from a previously computed reduced force.
 	*/
-
 	force_norm = sys->amplitudes.repulsion*reduced_force_norm;
 	force_vector = -force_norm*interaction->nvec;
 }
@@ -76,12 +76,20 @@ void RepulsiveForce::calcForce()
 		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	*/
-	if (check_max_length
-		&& interaction->get_gap() > max_length) {
-		force_vector.reset();
-	} else {
+	
+	if (sys->in_predictor) {
+		if (check_max_length
+			&& interaction->get_gap() > max_length) {
+			active = false;
+		} else {
+			active = true;
+		}
+	}
+	if (active) {
 		calcReducedForceNorm();
 		calcScaledForce();
+	} else {
+		force_vector.reset();
 	}
 }
 
@@ -99,12 +107,11 @@ void RepulsiveForce::calcStressXF()
 	 \b NOTE: this method does not recompute the reduced force, this force must be first computed by calcReducedForce().
 	 This method however converts the force in the System units from the reduced force.
 	 */
-	if (check_max_length
-		&& interaction->get_gap() > max_length) {
-		stresslet_XF.reset();
-	} else {
+	if (active) {
 		calcScaledForce();
 		stresslet_XF.set(interaction->rvec, force_vector);
+	} else {
+		stresslet_XF.reset();
 	}
 }
 
@@ -114,11 +121,10 @@ double RepulsiveForce::calcEnergy()
 	double gap = interaction->get_gap();
 	if (interaction->contact.state == 0) {
 		/* separating */
-		if (check_max_length
-			&& interaction->get_gap() > max_length) {
-			energy = 0;
-		} else {
+		if (active) {
 			energy = geometric_factor*screening_length*exp(-gap/screening_length);
+		} else {
+			energy = 0;
 		}
 		//		reduced_force_vector = -force_norm*interaction->nvec;
 	} else {
