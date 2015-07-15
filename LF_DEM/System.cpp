@@ -251,6 +251,7 @@ void System::setInteractions_GenerateInitConfig()
 	nb_interaction = 0;
 	shear_strain = 0;
 	shear_disp = 0;
+	y_shear_disp = 0;
 	vel_difference = 0;
 	initializeBoxing();
 	checkNewInteraction();
@@ -1592,10 +1593,12 @@ int System::periodize(vec3d &pos)
 	if (pos.z >= lz) {
 		pos.z -= lz;
 		pos.x -= shear_disp;
+		pos.y -= y_shear_disp;
 		z_shift = -1;
 	} else if (pos.z < 0) {
 		pos.z += lz;
 		pos.x += shear_disp;
+		pos.y += y_shear_disp;
 		z_shift = 1;
 	} else {
 		z_shift = 0;
@@ -1629,10 +1632,12 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff.x -= shear_disp;
+		pos_diff.y -= y_shear_disp;
 		zshift = -1;
 	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 		pos_diff.x += shear_disp;
+		pos_diff.y += y_shear_disp;
 		zshift = 1;
 	} else {
 		zshift = 0;
@@ -2058,7 +2063,3 @@ double System::calcLubricationRange(const int& i, const int& j)
 		return radius[i]+radius[j]+p.lub_max_gap*minradius;
 	}
 }
-
-
-
-

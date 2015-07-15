@@ -236,6 +236,7 @@ private:
 	set <int> *interaction_partners;
 	int nb_interaction;
 	double shear_disp;
+	double y_shear_disp;
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
 	 * For Brownian suspension, it should be Peclet number

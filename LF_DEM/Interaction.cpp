@@ -114,7 +114,7 @@ void Interaction::updateState(bool &deactivated)
 	calcNormalVectorDistanceGap();
 
 	if (r > interaction_range) {
-		/* all interaction is switched off. */
+		/* all interactions are switched off. */
 		deactivate();
 		deactivated = true;
 		return;
@@ -239,4 +239,3 @@ double Interaction::getNormalVelocity()
 	}
 	return dot(d_velocity, nvec);
 }
-

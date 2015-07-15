@@ -87,6 +87,7 @@ private:
 	double normalstress_diff_1_brownian;
 	double normalstress_diff_2_brownian;
 	double initial_lees_edwards_disp;
+	double initial_y_shear_disp;
 	string unit_scales;
 	double target_stress_input;
 	double input_rate;

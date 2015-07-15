@@ -478,7 +478,11 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		sys.shear_disp = 0;
 	}
-
+	if (initial_y_shear_disp > 0) {
+		sys.y_shear_disp = initial_y_shear_disp;
+	} else {
+		sys.y_shear_disp = 0;
+	}
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -1434,6 +1438,13 @@ void Simulation::importConfiguration()
 	getline(file_import, header_imported_configulation[1]);
 	stringstream ss(header_imported_configulation[1]);
 	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
+	double a;
+	if(ss >> a) {
+		initial_y_shear_disp = a;
+	}
+	else {
+		initial_y_shear_disp = 0;
+	}
 	vector<vec3d> initial_position;
 	vector <double> radius;
 	if (sys.p.magnetic_type == 0) {
