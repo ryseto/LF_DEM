@@ -69,7 +69,7 @@ void RepulsiveForce::calcScaledForce()
 
 void RepulsiveForce::calcForce()
 {
-	/** 
+	/**
 		\brief Compute the repulsive force in the System class units.
 		
 		The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
@@ -78,7 +78,6 @@ void RepulsiveForce::calcForce()
 	*/
 	if (check_max_length
 		&& interaction->get_gap() > max_length) {
-		force_norm = 0;
 		force_vector.reset();
 	} else {
 		calcReducedForceNorm();
@@ -95,13 +94,18 @@ void RepulsiveForce::addUpForce()
 void RepulsiveForce::calcStressXF()
 {
 	/**
-	   \brief Compute the XF stress associated with the repulsive force.
-
-	   \b NOTE: this method does not recompute the reduced force, this force must be first computed by calcReducedForce().
-	   This method however converts the force in the System units from the reduced force.
-	*/
-	calcScaledForce();
-	stresslet_XF.set(interaction->rvec, force_vector);
+	 \brief Compute the XF stress associated with the repulsive force.
+	 
+	 \b NOTE: this method does not recompute the reduced force, this force must be first computed by calcReducedForce().
+	 This method however converts the force in the System units from the reduced force.
+	 */
+	if (check_max_length
+		&& interaction->get_gap() > max_length) {
+		stresslet_XF.reset();
+	} else {
+		calcScaledForce();
+		stresslet_XF.set(interaction->rvec, force_vector);
+	}
 }
 
 double RepulsiveForce::calcEnergy()
