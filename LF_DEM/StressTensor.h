@@ -40,14 +40,17 @@ public:
 		}
 	}
 	
-	void outputStressTensor(ofstream &fout)
+	// output stream operator
+	inline friend ostream& operator << (ostream &out,
+										const StressTensor &st)
 	{
-		fout << elm[0] << ' ';
-		fout << elm[1] << ' ';
-		fout << elm[2] << ' ';
-		fout << elm[3] << ' ';
-		fout << elm[4] << ' ';
-		fout << elm[5] << ' ';
+		out << st.elm[0] << ' ';
+		out << st.elm[1] << ' ';
+		out << st.elm[2] << ' ';
+		out << st.elm[3] << ' ';
+		out << st.elm[4] << ' ';
+		out << st.elm[5] << ' ';
+		return out;
 	}
 	
 	inline StressTensor(const vec3d & v1, const vec3d & v2)

@@ -35,8 +35,7 @@ private:
 	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
 	std::map <string, double> values;   // pairs: (force_type, values_in_suffix_units)
 	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
-	std::map <string, string> unit_longname; // it's temporary: should find a more elegant way :)
-	std::map <string, string> unit_shortname;
+	std::map <string, string> unit_longname;
 	
 	std::list <InputValue> input_values;
 
@@ -59,36 +58,10 @@ private:
 	/*
 	 * Resultant data
 	 */
-	double viscosity;
-	double normalstress_diff_1;
-	double normalstress_diff_2;
-	double particle_pressure;
-	double viscosity_hydro; // Only lubrication...
-	double normalstress_diff_1_hydro;
-	double normalstress_diff_2_hydro;
-	double viscosity_cont_XF;
-	double normalstress_diff_1_cont_XF;
-	double normalstress_diff_2_cont_XF;
-	double particle_pressure_cont;
-	double viscosity_friction; // Fc_tan contribution.
-	double normalstress_diff_1_friction;
-	double normalstress_diff_2_friction;
-	double viscosity_cont_GU;
-	double normalstress_diff_1_cont_GU;
-	double normalstress_diff_2_cont_GU;
-	double viscosity_repulsive_XF;
-	double normalstress_diff_1_repulsive_XF;
-	double normalstress_diff_2_repulsive_XF;
-	double particle_pressure_repulsive;
-	double viscosity_repulsive_GU;
-	double normalstress_diff_1_repulsive_GU;
-	double normalstress_diff_2_repulsive_GU;
-	double viscosity_brownian;
-	double normalstress_diff_1_brownian;
-	double normalstress_diff_2_brownian;
 	double initial_lees_edwards_disp;
 	double initial_y_shear_disp;
-	string unit_scales;
+	string internal_unit_scales;
+	string output_unit_scales;
 	double target_stress_input;
 	double input_rate;
 	string input_rate_unit;
@@ -100,14 +73,14 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_data; // New (trial) version of fout_rheo
-	ofstream fout_rheo; // Old version
+	ofstream fout_data;
 	ofstream fout_particle;
 	ofstream fout_interaction;
 	ofstream fout_st;
 	ofstream fout_time;
 	ofstream fout_input;
 	OutputData outdata;
+	OutputData outdata_st;
 	/*
 	 * For inputs
 	 */
@@ -138,7 +111,6 @@ private:
 	void outputDataHeader(ofstream &fout);
 	void outputRheologyData();
 	void outputData();
-	void outputStressTensorData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
 	void outputConfigurationBinary();

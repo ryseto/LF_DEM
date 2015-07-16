@@ -15,7 +15,7 @@
 
 Simulation::Simulation():
 shear_rate_expectation(-1),
-unit_scales("hydro"),
+internal_unit_scales("hydro"),
 target_stress_input(0)
 {
 	unit_longname["h"] = "hydro";
@@ -24,9 +24,7 @@ target_stress_input(0)
 	unit_longname["c"] = "cohesive";
 	unit_longname["cl"] = "critical_load";
 	unit_longname["m"] = "magnetic";
-	for (auto&& f : unit_longname) {
-		unit_shortname[f.second] = f.first;
-	}
+	unit_longname["ft"] = "ft";
 };
 
 Simulation::~Simulation()
@@ -34,9 +32,6 @@ Simulation::~Simulation()
 	if (fout_data.is_open()) {
 		fout_data.close();
 	}
-	if (fout_rheo.is_open()) { //@@ old
-		fout_rheo.close(); //@@ old
-	} //@@ old
 	if (fout_particle.is_open()) {
 		fout_particle.close();
 	}
@@ -144,9 +139,8 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 	fout_input.close();
 }
 
-void Simulation::resolveUnitSystem(string long_unit) // can we express all forces in unit "long_unit"?
+void Simulation::resolveUnitSystem(string unit) // can we express all forces in unit "unit"?
 {
-	string unit = unit_shortname[long_unit];
 
 	values[unit] = 1;
 	suffixes[unit] = unit;
@@ -211,7 +205,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	
 	string force_type = rate_unit; // our force defining the shear rate
 
-	if (force_type == "h") {
+	if (force_type == "hydro") {
 		cerr << " Error: please give a stress in non-hydro units." << endl;
 		exit(1);
 		/*
@@ -225,7 +219,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		 If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
 		 */
 	}
-	if (force_type == "b") {
+	if (force_type == "thermal") {
 		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl;
 		exit(1);
 	}
@@ -233,12 +227,12 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	sys.set_shear_rate(1);
 	// we take as a unit scale the one given by the user with the stress
 	// TODO: other choices may be better when several forces are used.
-	unit_scales = unit_longname[force_type];
+	internal_unit_scales = force_type;
 	target_stress_input = dimensionlessnumber;
 	sys.target_stress = target_stress_input/6/M_PI;
 	
-	// convert all other forces to unit_scales
-	resolveUnitSystem(unit_scales);
+	// convert all other forces to internal_unit_scales
+	resolveUnitSystem(internal_unit_scales);
 }
 
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
@@ -257,7 +251,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	3. Convert all the forces to this unit (by multiplying every force by h/w)
 	*/
 	string force_type = rate_unit; // our force defining the shear rate
-	if (force_type == "h") {
+	if (force_type == "hydro") {
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
 		exit(1);
 	}
@@ -268,7 +262,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	}
 	// switch this force in hydro units
 	values[force_type] = 1/dimensionlessnumber;
-	suffixes[force_type] = "h";
+	suffixes[force_type] = "hydro";
 
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
@@ -277,13 +271,13 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	setUnitScaleRateControlled();
 
 	// convert from hydro scale to chosen scale
-	convertForceValues(unit_scales);
+	convertForceValues(internal_unit_scales);
 
-	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
+	bool is_brownian = dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end();
 	if (is_brownian) {
 		sys.brownian = true;
-		p.brownian_amplitude = values["b"];
-		cerr << "Brownian, Peclet number " << dimensionless_numbers["h/b"] << endl;
+		p.brownian_amplitude = values["thermal"];
+		cerr << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
 	} else {
 		cerr << "non-Brownian" << endl;
 	}
@@ -299,9 +293,8 @@ void Simulation::setLowPeclet()
 	p.dt *= p.Pe_switch; // to make things continuous at Pe_switch
 }
 
-void Simulation::convertForceValues(string new_long_unit)
+void Simulation::convertForceValues(string new_unit)
 {
-	string new_unit = unit_shortname[new_long_unit];
 
 	for (auto&& f: suffixes) {
 		string force_type = f.first;
@@ -318,42 +311,42 @@ void Simulation::setUnitScaleRateControlled()
 	bool is_brownian = dimensionless_numbers.find("h/b") != dimensionless_numbers.end();
 	
 	if (is_brownian) {
-		if (dimensionless_numbers["h/b"] > p.Pe_switch && !sys.zero_shear) {
-			unit_scales = "hydro";
+		if (dimensionless_numbers["h/b"] > p.Pe_switch && !sys.zero_shear) { // hydro units
+			internal_unit_scales = "hydro";
 			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["h/b"]);
 			sys.set_shear_rate(1);
 		} else { // low Peclet mode
-			unit_scales = "thermal";
+			internal_unit_scales = "thermal";
 			sys.amplitudes.sqrt_temperature = 1;
 			sys.set_shear_rate(dimensionless_numbers["h/b"]);
 			setLowPeclet();
 		}
 	} else {
-		unit_scales = "hydro";
+		internal_unit_scales = "hydro";
 		sys.set_shear_rate(1);
 	}
 }
 
 void Simulation::exportForceAmplitudes()
 {
-	bool is_repulsive = values.find("r") != values.end();
+	bool is_repulsive = values.find("repulsive") != values.end();
 
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
-		sys.amplitudes.repulsion = values["r"];
-		cerr << " Repulsive force (in \"" << suffixes["r"] << "\" units): " << sys.amplitudes.repulsion << endl;
+		sys.amplitudes.repulsion = values["repulsive"];
+		cerr << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
-	bool is_critical_load = values.find("cl") != values.end();
+	bool is_critical_load = values.find("critical_load") != values.end();
 		if (is_critical_load) {
 		sys.critical_load = true;
-		sys.amplitudes.critical_normal_force = values["cl"];
-		cerr << " Critical Load (in \"" << suffixes["cl"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		sys.amplitudes.critical_normal_force = values["critical_load"];
+		cerr << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
 	}
-	bool is_cohesive = values.find("c") != values.end();
+	bool is_cohesive = values.find("cohesive") != values.end();
 	if (is_cohesive) {
 		sys.cohesion = true;
-		sys.amplitudes.cohesion = values["c"];
-		cerr << " Cohesion (in \"" << suffixes["c"] << "\" units): " << sys.amplitudes.cohesion << endl;
+		sys.amplitudes.cohesion = values["cohesive"];
+		cerr << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 
 	//	bool is_magnetic = values.find("m") != values.end();
@@ -369,14 +362,13 @@ void Simulation::exportForceAmplitudes()
 	}
 }
 
-void Simulation::convertInputValues(string new_long_unit)
+void Simulation::convertInputValues(string new_unit)
 {
-	string new_unit = unit_shortname[new_long_unit];
 
 	for (auto&& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
-			if (old_unit != "h" && values.find(old_unit) == values.end()) {
+			if (old_unit != "hydro" && values.find(old_unit) == values.end()) {
 				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl; exit(1);
 			}
 
@@ -385,7 +377,7 @@ void Simulation::convertInputValues(string new_long_unit)
 				inv.unit = new_unit;
 			}
 			if (inv.type == "time") {
-				if (old_unit == "h") { // = it is a strain, better keeping it that way
+				if (old_unit == "hydro") { // = it is a strain, better keeping it that way
 					inv.unit = "strain";
 				} else {
 					*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
@@ -405,7 +397,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 {
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	
+	input_scale = unit_longname[input_scale];
+		
 	if (control_var == "rate") {
 		input_rate = dimensionlessnumber;
 		input_rate_unit = input_scale;
@@ -444,7 +437,9 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		exit(1);
 	}
 	exportForceAmplitudes();
-	convertInputValues(unit_scales);
+	convertInputValues(internal_unit_scales);
+
+	output_unit_scales = input_scale;
 
 	// test for incompatibilities
 	if (sys.brownian == true) {
@@ -584,7 +579,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	//@@@ is it useful before any step is done? ---> Outputing t=0 data may be useful.
 	evaluateData(); // 
 	outputData(); // new
-	outputStressTensorData();
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
@@ -604,7 +598,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
-		outputStressTensorData();
 		outputConfigurationBinary();
 		if (time_interval_output_config == -1) {
 			if (sys.get_shear_strain() >= next_output_config-1e-8) {
@@ -675,7 +668,6 @@ void Simulation::simulationInverseYield(string in_args,
 	/******************** OUTPUT INITIAL DATA ********************/
 	evaluateData();
 	outputData(); // new
-	outputStressTensorData();
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
@@ -695,7 +687,6 @@ void Simulation::simulationInverseYield(string in_args,
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
-		outputStressTensorData();
 		outputConfigurationBinary();
 		if (time_interval_output_config == -1) {
 			if (sys.get_shear_strain() >= next_output_config-1e-8) {
@@ -767,7 +758,6 @@ void Simulation::simulationMagnetic(string in_args,
 	/******************** OUTPUT INITIAL DATA ********************/
 	evaluateData();
 	outputData(); // new
-	outputStressTensorData();
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
@@ -801,7 +791,6 @@ void Simulation::simulationMagnetic(string in_args,
 			/******************** OUTPUT DATA ********************/
 			evaluateData();
 			outputData(); // new
-			outputStressTensorData();
 			outputConfigurationBinary();
 			if (time_interval_output_data == -1) {
 				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
@@ -1011,6 +1000,7 @@ void Simulation::outputComputationTime()
 	string numeral, suffix;
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
+	suffix = unit_longname[suffix];
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
 	input_values.push_back(inv);
@@ -1034,25 +1024,30 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		}
 	} else if (keyword == "repulsion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
+		suffix = unit_longname[suffix];
 		p.repulsion_amplitude = atof(numeral.c_str());
-		suffixes["r"] = suffix;
-		values["r"] = atof(numeral.c_str());
+		suffixes["repulsive"] = suffix;
+		values["repulsive"] = atof(numeral.c_str());
 	} else if (keyword == "cohesion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
-		suffixes["c"] = suffix;
-		values["c"] = atof(numeral.c_str());
+		suffix = unit_longname[suffix];
+		suffixes["cohesive"] = suffix;
+		values["cohesive"] = atof(numeral.c_str());
 	} else if (keyword == "brownian_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
-		suffixes["b"] = suffix;
-		values["b"] = atof(numeral.c_str());
+		suffix = unit_longname[suffix];
+		suffixes["thermal"] = suffix;
+		values["thermal"] = atof(numeral.c_str());
 	} else if (keyword == "critical_load_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
-		suffixes["cl"] = suffix;
-		values["cl"] = atof(numeral.c_str());
+		suffix = unit_longname[suffix];
+		suffixes["critical_load"] = suffix;
+		values["critical_load"] = atof(numeral.c_str());
 	} else if (keyword == "magnetic_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
-		suffixes["m"] = suffix;
-		values["m"] = atof(numeral.c_str());
+		suffix = unit_longname[suffix];
+		suffixes["magnetic"] = suffix;
+		values["magnetic"] = atof(numeral.c_str());
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "unscaled_contactmodel") {
@@ -1127,6 +1122,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
 		caught_suffix = getSuffix(value, numeral, suffix);
+		suffix = unit_longname[suffix];
 		suffixes["ft"] = suffix;
 		values["ft"] = atof(numeral.c_str());
 	} else if (keyword == "fixed_dt") {
@@ -1211,76 +1207,13 @@ void Simulation::openOutputFiles(bool binary_conf)
 	outputDataHeader(fout_st);
 	string data_filename = "data_" + sys.simu_name + ".dat";
 	fout_data.open(data_filename.c_str());
-	if (sys.p.magnetic_type == 0) {
-		string rheo_filename = "rheo_" + sys.simu_name + ".dat"; //@@ old
-		fout_rheo.open(rheo_filename.c_str()); //@@ old
-	}
 	string time_filename = "t_" + sys.simu_name + ".dat";
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_" + sys.simu_name + ".dat";
 	fout_input.open(input_filename.c_str());
 
 	outputDataHeader(fout_data);
-	if (sys.p.magnetic_type == 0) {
-		outputDataHeader(fout_rheo);
-
-		string fout_rheo_col_def =
-		"#1: shear strain\n"
-		"#2: Viscosity\n"
-		"#3: N1 viscosity\n"
-		"#4: N2 viscosity\n"
-		"#5: Viscosity(lub)\n"
-		"#6: N1 viscosity(lub)\n"
-		"#7: N2 viscosity(lub)\n"
-		"#8: Viscosity(xF_contact part)\n"
-		"#9: N1 viscosity(xF_contact part)\n"
-		"#10: N2 viscosity(xF_contact part)\n"
-		"#11: Viscosity(GU_contact part)\n"
-		"#12: N1 viscosity(GU_contact part)\n"
-		"#13: N2 viscosity(GU_contact part)\n"
-		"#14: Viscosity(friction)\n"
-		"#15: N1 viscosity(friction)\n"
-		"#16: N2 viscosity(friction)\n"
-		"#17: Viscosity(repulsive force XF)\n"
-		"#18: N1 viscosity(repulsive force XF)\n"
-		"#19: N2 viscosity(repulsive force XF)\n"
-		"#20: Viscosity(repulsive force GU)\n"
-		"#21: N1 viscosity(repulsive force GU)\n"
-		"#22: N2 viscosity(repulsive force GU)\n"
-		"#23: Viscosity(brownian)\n"
-		"#24: N1 viscosity(brownian)\n"
-		"#25: N2 viscosity(brownian)\n"
-		"#26: particle pressure\n"
-		"#27: particle pressure contact\n"
-		"#28: min gap (non-dim)\n"
-		"#29: max tangential displacement\n"
-		"#30: max Fc_normal\n"
-		"#31: max Fc_tan\n"
-		"#32: max velocity\n"
-		"#33: max angular velocity\n"
-		"#34: ave contact normal velocity\n"
-		"#35: max contact normal velocity\n"
-		"#36: ave contact tangential velocity\n"
-		"#37: max contact tangential velocity\n"
-		"#38: ave sliding velocity\n"
-		"#39: max sliding velocity\n"
-		"#40: ave contact number per particle\n"
-		"#41: num of interaction\n"
-		"#42: num of contacts\n"
-		"#43: num of frictional contacts\n"
-		"#44: kn\n"
-		"#45: kt\n"
-		"#46: dt\n"
-		"#47: time\n"
-		"#48: dimensionless_number\n"
-		"#49: stress\n"
-		"#50: shear_disp\n"
-		"#51: max rolling displacement\n"
-		"#52: max_contact_gap\n"
-		"#53: total_energy\n"
-		"#54: magnetic_energy\n";
-		fout_rheo << fout_rheo_col_def << endl;
-	}
+	
 	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";
 		fout_particle.open(particle_filename.c_str());
@@ -1583,202 +1516,14 @@ void Simulation::evaluateData()
 	/**
 	 \brief Get rheological data from the System class.
 
-	 Data are converted in hydrodynamic units, independently from the actual units used in the System class.
+	 In this method we keep the internal units. There is no conversion to output units at this stage
+	 
 	 */
 
 	sys.analyzeState();
-	sys.calcStress();
-	sys.calcLubricationForce();
-
-	double stress_unit_converter = 0;
-	if (unit_scales == "hydro") {
-		stress_unit_converter = 1;
-	}
-	if (unit_scales == "thermal") {
-		stress_unit_converter = 1/dimensionless_numbers["h/b"];
-	}
-	if (unit_scales == "repulsive") {
-		//stress_unit_converter = 1/dimensionless_numbers["h/r"];
-		stress_unit_converter = 1/sys.get_shear_rate(); //@@@@@@
-	}
-	viscosity = stress_unit_converter*(sys.einstein_stress+sys.total_stress.getStressXZ());
-	normalstress_diff_1 = stress_unit_converter*sys.total_stress.getNormalStress1();
-	normalstress_diff_2 = stress_unit_converter*sys.total_stress.getNormalStress2();
-	particle_pressure = stress_unit_converter*sys.total_stress.getParticlePressure();
-	viscosity_hydro = stress_unit_converter*sys.total_hydro_stress.getStressXZ();
-	normalstress_diff_1_hydro = stress_unit_converter*sys.total_hydro_stress.getNormalStress1();
-	normalstress_diff_2_hydro = stress_unit_converter*sys.total_hydro_stress.getNormalStress2();
-	viscosity_cont_XF = stress_unit_converter*sys.total_contact_stressXF.getStressXZ();
-	normalstress_diff_1_cont_XF = stress_unit_converter*sys.total_contact_stressXF.getNormalStress1();
-	normalstress_diff_2_cont_XF = stress_unit_converter*sys.total_contact_stressXF.getNormalStress2();
-	particle_pressure_cont = stress_unit_converter*sys.total_contact_stressXF.getParticlePressure();
-	viscosity_friction = stress_unit_converter*sys.total_contact_stressXF_tan.getStressXZ();
-	normalstress_diff_1_friction = stress_unit_converter*sys.total_contact_stressXF_tan.getNormalStress1();
-	normalstress_diff_2_friction = stress_unit_converter*sys.total_contact_stressXF_tan.getNormalStress2();
-	viscosity_cont_GU = stress_unit_converter*sys.total_contact_stressGU.getStressXZ();
-	normalstress_diff_1_cont_GU = stress_unit_converter*sys.total_contact_stressGU.getNormalStress1();
-	normalstress_diff_2_cont_GU = stress_unit_converter*sys.total_contact_stressGU.getNormalStress2();
-	if (sys.repulsiveforce) {
-		viscosity_repulsive_XF = stress_unit_converter*sys.total_repulsive_stressXF.getStressXZ();
-		normalstress_diff_1_repulsive_XF = stress_unit_converter*sys.total_repulsive_stressXF.getNormalStress1();
-		normalstress_diff_2_repulsive_XF = stress_unit_converter*sys.total_repulsive_stressXF.getNormalStress2();
-		particle_pressure_repulsive = stress_unit_converter*sys.total_repulsive_stressXF.getParticlePressure();
-		viscosity_repulsive_GU = stress_unit_converter*sys.total_repulsive_stressGU.getStressXZ();
-		normalstress_diff_1_repulsive_GU = stress_unit_converter*sys.total_repulsive_stressGU.getNormalStress1();
-		normalstress_diff_2_repulsive_GU = stress_unit_converter*sys.total_repulsive_stressGU.getNormalStress2();
-	} else {
-		viscosity_repulsive_XF = 0;
-		normalstress_diff_1_repulsive_XF = 0;
-		normalstress_diff_2_repulsive_XF = 0;
-		particle_pressure_repulsive = 0;
-		viscosity_repulsive_GU = 0;
-		normalstress_diff_1_repulsive_GU = 0;
-		normalstress_diff_2_repulsive_GU = 0;
-	}
-	if (sys.brownian) {
-		viscosity_brownian = stress_unit_converter*sys.total_brownian_stressGU.getStressXZ();
-		normalstress_diff_1_brownian = stress_unit_converter*sys.total_brownian_stressGU.getNormalStress1();
-		normalstress_diff_2_brownian = stress_unit_converter*sys.total_brownian_stressGU.getNormalStress2();
-	} else {
-		viscosity_brownian = 0;
-		normalstress_diff_1_brownian = 0;
-		normalstress_diff_2_brownian = 0;
-	}
-}
-
-void Simulation::outputStressTensorData()
-{
-	fout_st << sys.get_shear_strain() << ' ';
-	fout_st << 6*M_PI*viscosity << ' ';
-	/* total_stress = sys.total_hydro_stress;
-	 * + total_contact_stressXF + total_repulsive_stress;
-	 */
-	// As it is, the output stress lacks a 6pi factor (as the viscosity)
-	sys.total_stress.outputStressTensor(fout_st); // (3,4,5,6,7,8)
-	sys.total_hydro_stress.outputStressTensor(fout_st); // (9,10,11,12,13,14)
-	sys.total_contact_stressXF.outputStressTensor(fout_st); // (15,16,17,18,19,20)
-	sys.total_contact_stressGU.outputStressTensor(fout_st); // (21,22,23,24,25,26)
-	sys.total_repulsive_stress.outputStressTensor(fout_st); // (27,28,29,30,31,32)
-	sys.total_brownian_stressGU.outputStressTensor(fout_st); // (33,34,35,36,37,38)
-	fout_st << getRate() << ' '; // 39
-	fout_st << endl;
-}
-
-void Simulation::outputRheologyData()
-{
-	/**
-	 \brief Output rheological data.
-
-
-	 Stress data are converted in units of
-	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
-	 in the System class (these can be hydrodynamic, Brownian or
-	 repulsive force units).
-
-	 \b NOTE: this behavior should be changed
-	 and made more consistent in the future.
-	 */
-	/*
-	 * Output the sum of the normal forces.
-	 *
-	 *  Viscosity = S_{xz} / shear_rate
-	 *  N1 = S_{xx}-S_{zz}
-	 *  N2 = S_{zz}-S_{yy} = S_zz-(-S_xx-S_zz) = S_xx+2*S_zz
-	 *
-	 * Relative viscosity = Viscosity / viscosity_solvent
-	 */
-
-	/*
-	 * hat(...) indicates dimensionless quantities.
-	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
-	 * (2) N1/(eta0*shear_rate) = 6*pi*hat(N1)
-	 * (3) N2/(eta0*shear_rate) = 6*pi*hat(N2)
-	 *
-	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
-	 *
-	 * [note] In stress controlled simulation,
-	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
-	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
-	 */
-	fout_rheo << sys.get_shear_strain() << ' '; //1
-	fout_rheo << 6*M_PI*viscosity << ' '; //2
-	fout_rheo << 6*M_PI*normalstress_diff_1 << ' '; //3
-	fout_rheo << 6*M_PI*normalstress_diff_2 << ' '; //4
-	/*
-	 * Hydrodynamic contribution means
-	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
-	 * vel_hydro is obtained with GE for the rhs.
-	 *
-	 * "_hydro" might be bit confusing.
-	 * Something indicating "E_inf" would be better.
-	 */
-	fout_rheo << 6*M_PI*viscosity_hydro << ' '; //5
-	fout_rheo << 6*M_PI*normalstress_diff_1_hydro << ' '; //6
-	fout_rheo << 6*M_PI*normalstress_diff_2_hydro << ' '; //7
-	/*
-	 * Contact force contribution seems to be
-	 * the sum of viscosity_cont_XF and viscosity_cont_GU.
-	 */
-	fout_rheo << 6*M_PI*viscosity_cont_XF << ' '; //8
-	fout_rheo << 6*M_PI*normalstress_diff_1_cont_XF << ' '; //9
-	fout_rheo << 6*M_PI*normalstress_diff_2_cont_XF << ' '; //10
-	fout_rheo << 6*M_PI*viscosity_cont_GU << ' ' ; //11
-	fout_rheo << 6*M_PI*normalstress_diff_1_cont_GU << ' ' ; //12
-	fout_rheo << 6*M_PI*normalstress_diff_2_cont_GU << ' ' ; //13
-	/*
-	 *
-	 */
-	fout_rheo << 6*M_PI*viscosity_friction << ' '; //14
-	fout_rheo << 6*M_PI*normalstress_diff_1_friction << ' '; //15
-	fout_rheo << 6*M_PI*normalstress_diff_2_friction  << ' '; //16
-	fout_rheo << 6*M_PI*viscosity_repulsive_XF << ' '; //17
-	fout_rheo << 6*M_PI*normalstress_diff_1_repulsive_XF << ' '; //18
-	fout_rheo << 6*M_PI*normalstress_diff_2_repulsive_XF << ' '; //19
-	fout_rheo << 6*M_PI*viscosity_repulsive_GU << ' '; //20
-	fout_rheo << 6*M_PI*normalstress_diff_1_repulsive_GU << ' '; //21
-	fout_rheo << 6*M_PI*normalstress_diff_2_repulsive_GU << ' '; //22
-	fout_rheo << 6*M_PI*viscosity_brownian << ' ' ; //23
-	fout_rheo << 6*M_PI*normalstress_diff_1_brownian << ' ' ; //24
-	fout_rheo << 6*M_PI*normalstress_diff_2_brownian << ' ' ; //25
-	fout_rheo << 6*M_PI*particle_pressure << ' ';//26
-	fout_rheo << 6*M_PI*particle_pressure_cont << ' ';//27
-	fout_rheo << sys.min_reduced_gap << ' '; //28
-	fout_rheo << sys.max_disp_tan << ' '; //29
-	fout_rheo << sys.max_fc_normal << ' '; //30
-	fout_rheo << sys.max_fc_tan << ' ';//31
-	fout_rheo << sys.max_velocity << ' '; //32
-	fout_rheo << sys.max_ang_velocity << ' '; //33
-	fout_rheo << sys.ave_contact_velo_normal << ' '; //34
-	fout_rheo << sys.max_contact_velo_normal << ' '; //35
-	fout_rheo << sys.ave_contact_velo_tan << ' '; //36
-	fout_rheo << sys.max_contact_velo_tan << ' '; //37
-	fout_rheo << sys.ave_sliding_velocity << ' ' ; //38
-	fout_rheo << sys.max_sliding_velocity << ' ' ; //39
-	fout_rheo << sys.getContactNumber() << ' ';//40
-	fout_rheo << sys.get_nb_of_active_interactions() << ' ';//41
-	fout_rheo << sys.contact_nb << ' '; //42
-	fout_rheo << sys.fric_contact_nb << ' '; //43
-	fout_rheo << p.kn << ' '; //44
-	fout_rheo << p.kt << ' '; //45
-	fout_rheo << sys.dt << ' '; //46
-	fout_rheo << sys.get_time() << ' ' ; //47
-	/* In stress control simulation,
-	 * shear jammed state may cause oscilation of dimensionless_number around 0.
-	 * Then, time step also oscilate.
-	 * This is why we need to take time average to have correct value of dimensionless_number.
-	 */
-	fout_rheo << getRate() << ' '; // 48
-	if (control_var == "stress") {
-		fout_rheo << target_stress_input << ' '; // 49
-	} else {
-		fout_rheo << 6*M_PI*viscosity*getRate() << ' '; // 49
-	}
-	fout_rheo << sys.shear_disp << ' '; // 50
-	fout_rheo << sys.max_disp_rolling << ' '; //51
-	fout_rheo << sys.max_contact_gap << ' '; //52
-	fout_rheo << sys.get_total_energy() << ' '; // 53;
-	fout_rheo << sys.magnetic_energy << ' ';// 54;
-	fout_rheo << endl;
+ 	sys.calcStress();
+ 	sys.calcLubricationForce();
+	
 }
 
 
@@ -1818,87 +1563,96 @@ void Simulation::outputData()
 	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
 	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
+	 
+	 string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
+	 if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+		 cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
+	 }
+	 outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	 
 	if (sys.p.magnetic_type == 0) {
 		outdata.init(36);
 	} else {
 		outdata.init(40);
 	}
 
-	outdata.entryData(1, "time", sys.get_time());
-	outdata.entryData(2, "shear strain", sys.get_shear_strain());
-	/*
-	 * shear rate
-	 */
-	//	if (unit_scales == "thermal") {
-	//		ND_shear_rate = dimensionless_numbers["b"];
-	//	} else {
-	//		ND_shear_rate = dimensionless_numbers["r"];
-	//	}
-	outdata.entryData(3, "shear rate", sys.get_shear_rate());
-	/*
-	 * Rheology data
-	 */
-	/*
-	 * Hydrodynamic contribution means
-	 * stresslet_hydro_GU_i+stresslet_ME_i from vel_hydro
-	 * vel_hydro is obtained with GE for the rhs.
-	 *
-	 * "_hydro" might be bit confusing.
-	 * Something indicating "E_inf" would be better.
-	 */
-	/*
-	 * Contact force contribution seems to be
-	 * the sum of viscosity_cont_XF and viscosity_cont_GU.
-	 */
-	outdata.entryData(5, "viscosity", 6*M_PI*viscosity);
-	outdata.entryData(6, "Viscosity(lub)", 6*M_PI*viscosity_hydro);
-	outdata.entryData(7, "Viscosity(xF_contact part)", 6*M_PI*viscosity_cont_XF);
-	outdata.entryData(8, "Viscosity(GU_contact part)", 6*M_PI*viscosity_cont_GU);
-	outdata.entryData(9, "Viscosity(repulsive force XF)", 6*M_PI*viscosity_repulsive_XF);
-	outdata.entryData(10, "Viscosity(repulsive force GU)", 6*M_PI*viscosity_repulsive_GU);
-	outdata.entryData(11, "Viscosity(brownian)", 6*M_PI*viscosity_brownian);
+
+	double sr = sys.get_shear_rate();
+	double shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
+
+	outdata.entryData(1, "time", "time", sys.get_time());
+	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
+	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
+	
+	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
+	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.getStressXZ()/sr);
+	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.getStressXZ()/sr);
+	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", sys.total_contact_stressGU.getStressXZ()/sr);
+	if (sys.repulsiveforce) {
+		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", sys.total_repulsive_stressXF.getStressXZ()/sr);
+		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", sys.total_repulsive_stressGU.getStressXZ()/sr);
+	}
+	if (sys.brownian) {
+		outdata.entryData(11, "Viscosity(brownian)", "viscosity", sys.total_brownian_stressGU.getStressXZ()/sr);
+	}
 	/*
 	 * Stress
 	 */
-	double ND_shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
-	if (unit_scales == "hydro") {
-		ND_shear_stress *= dimensionless_numbers["h/r"];
-	}
-	outdata.entryData(14, "shear stress", ND_shear_stress);
-	outdata.entryData(15, "N1 viscosity", 6*M_PI*normalstress_diff_1);
-	outdata.entryData(16, "N2 viscosity", 6*M_PI*normalstress_diff_2);
-	outdata.entryData(17, "particle pressure", 6*M_PI*particle_pressure);
-	outdata.entryData(18, "particle pressure contact", 6*M_PI*particle_pressure_cont);
+//	double ND_shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
+//	if (internal_unit_scales == "hydro") {
+//		ND_shear_stress *= dimensionless_numbers["h/r"];
+//	}
+	outdata.entryData(14, "shear stress", "stress", shear_stress);
+	outdata.entryData(15, "N1 viscosity", "viscosity", sys.total_stress.getNormalStress1()/sr);
+	outdata.entryData(16, "N2 viscosity", "viscosity", sys.total_stress.getNormalStress2()/sr);
+	outdata.entryData(17, "particle pressure", "stress", sys.total_stress.getParticlePressure());
+	outdata.entryData(18, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
 	/* energy
 	 */
-	outdata.entryData(21, "energy", sys.get_total_energy());
+	outdata.entryData(21, "energy", "none", sys.get_total_energy());
 	/* maximum deformation of contact bond
 	 */
-	outdata.entryData(22, "min gap", sys.min_reduced_gap);
-	outdata.entryData(23, "max gap(cohesion)", sys.max_contact_gap);
-	outdata.entryData(24, "max tangential displacement", sys.max_disp_tan);
-	outdata.entryData(25, "max rolling displacement", sys.max_disp_rolling);
+	outdata.entryData(22, "min gap", "none", sys.min_reduced_gap);
+	outdata.entryData(23, "max gap(cohesion)", "none", sys.max_contact_gap);
+	outdata.entryData(24, "max tangential displacement", "none", sys.max_disp_tan);
+	outdata.entryData(25, "max rolling displacement", "none", sys.max_disp_rolling);
 	/* contact number
 	 */
-	outdata.entryData(26, "contact number", sys.getContactNumber());
-	outdata.entryData(27, "frictional contact number", sys.getFrictionalContactNumber());
-	outdata.entryData(28, "number of interaction", sys.get_nb_of_active_interactions());
+	outdata.entryData(26, "contact number", "none", sys.getContactNumber());
+	outdata.entryData(27, "frictional contact number", "none", sys.getFrictionalContactNumber());
+	outdata.entryData(28, "number of interaction", "none", sys.get_nb_of_active_interactions());
 	/* maximum velocity
 	 */
-	outdata.entryData(29, "max velocity",  sys.max_velocity);
-	outdata.entryData(30, "max angular velocity",  sys.max_ang_velocity);
+	outdata.entryData(29, "max velocity", "velocity", sys.max_velocity);
+	outdata.entryData(30, "max angular velocity", "velocity", sys.max_ang_velocity);
 	/* simulation parameter
 	 */
-	outdata.entryData(31, "dt", sys.dt);
-	outdata.entryData(32, "kn", sys.p.kn);
-	outdata.entryData(33, "kt", sys.p.kt);
-	outdata.entryData(34, "kr", sys.p.kr);
-	outdata.entryData(35, "shear displacement", sys.shear_disp);
+	outdata.entryData(31, "dt", "time", sys.dt);
+	outdata.entryData(32, "kn", "none", sys.p.kn);
+	outdata.entryData(33, "kt", "none", sys.p.kt);
+	outdata.entryData(34, "kr", "none", sys.p.kr);
+	outdata.entryData(35, "shear displacement", "none", sys.shear_disp);
 	if (p.magnetic_type != 0) {
-		outdata.entryData(37, "magnetic energy", sys.magnetic_energy);
-		outdata.entryData(38, "magnetic field angle", sys.angle_external_magnetic_field);
+		outdata.entryData(37, "magnetic energy", "none", sys.magnetic_energy);
+		outdata.entryData(38, "magnetic field angle", "none", sys.angle_external_magnetic_field);
 	}
 	outdata.exportFile(fout_data);
+
+	/****************************   Stress Tensor Output *****************/
+	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	
+   	outdata_st.init(8);
+   
+	outdata_st.entryData(1, "time", "time", sys.get_time());
+    outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
+    outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
+	outdata_st.entryData(4, "total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_stress);
+	outdata_st.entryData(5, "hydro stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_hydro_stress);
+	outdata_st.entryData(6, "contact stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_contact_stressXF+sys.total_contact_stressGU);
+	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stress);
+	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
+	outdata_st.exportFile(fout_st);
+	
 }
 
 

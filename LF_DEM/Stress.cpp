@@ -125,39 +125,27 @@ System::calcStress()
 	total_contact_stressXF = total_contact_stressXF_normal + total_contact_stressXF_tan;
 	
 	//////////////////////////////////////////////////////////////
-	if (repulsiveforce) {
-		total_repulsive_stressXF.reset();
+	total_repulsive_stressXF.reset();
+	total_repulsive_stressGU.reset();
+	if (repulsiveforce) {	
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
 		//////////////////////////////////////////////////////////
-		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
 			total_repulsive_stressGU += repulsivestressGU[i];
 		}
 		total_repulsive_stressGU /= system_volume;
 	}
 	//////////////////////////////////////////////////////////////
-	if (brownian) {
-		total_brownian_stressGU.reset();
+	total_brownian_stressGU.reset();
+	if (brownian) {		
 		for (int i=0; i<np; i++) {
 			total_brownian_stressGU += brownianstressGU[i];
 		}
 		total_brownian_stressGU /= system_volume;
 	}
-
-	/* NOTE:
-	 *
-	 * The total stress DID not include the contact GU terms,
-	 * because we consider that the relative motion is not expected hard spheres
-	 * and artificial in the soft-sphere contact model.
-	 * [Aug 15, 2013]
-	 * In the contact model, force is divided into two parts (spring and dash-pot).
-	 * In physics, the total force is important.
-	 * Therefore, both should be included for the stress calculation.
-	 *
-	 */
 
 	total_stress = total_hydro_stress;
 	total_stress += total_contact_stressXF;
@@ -170,11 +158,8 @@ System::calcStress()
 		total_stress += total_brownian_stressGU;
 		if (lowPeclet) { // take an averaged stress instead of instantaneous
 			stress_avg->update(total_stress, time);
-			//		cout << time << " " << total_stress.getStressXZ() << " ";
 			total_stress = stress_avg->get();
-			//		cout << total_stress.getStressXZ() << endl;
 		}
 	}
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
 }
-
