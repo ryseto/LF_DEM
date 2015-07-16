@@ -47,7 +47,7 @@ void RepulsiveForce::calcReducedForceNorm()
 		if (max_length == -1) {
 			reduced_force_norm = geometric_factor*exp(-gap/screening_length);
 		} else {
-			reduced_force_norm = geometric_factor*exp(-gap/screening_length)*(1+tanh(-(gap-max_length)/cutoff_roundlength));
+			reduced_force_norm = geometric_factor*exp(-gap/screening_length)*0.5*(1+tanh(-(gap-max_length)/cutoff_roundlength));
 		}
 	} else {
 		/* contacting */
@@ -106,7 +106,7 @@ double RepulsiveForce::calcEnergy()
 			energy = geometric_factor*screening_length*exp(-gap/screening_length);
 		} else {
 			// This energy is not exact one to generate the cut-offed repulsive force.
-			energy = geometric_factor*screening_length*exp(-gap/screening_length)*(1+tanh(-(gap-max_length)/0.001));
+			energy = geometric_factor*screening_length*exp(-gap/screening_length)*0.5*(1+tanh(-(gap-max_length)/0.001));
 		}
 		//		reduced_force_vector = -force_norm*interaction->nvec;
 	} else {
