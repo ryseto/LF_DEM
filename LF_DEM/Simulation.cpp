@@ -397,12 +397,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 {
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	input_scale = unit_longname[input_scale];
 		
-	if (control_var == "rate") {
-		input_rate = dimensionlessnumber;
-		input_rate_unit = input_scale;
-	}
+	
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* [TODO]
 		 * Should be changed to something better way.
@@ -419,13 +415,20 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
 	if (control_var == "rate") {
-		string_control_parameters << "_r";
+		string_control_parameters << "_rate";
 	} else if (control_var == "stress") {
-		string_control_parameters << "_s";
+		string_control_parameters << "_stress";
 	} else if (control_var == "magnetic") {
 		string_control_parameters << "_m";
 	}
 	string_control_parameters << dimensionlessnumber << input_scale;
+	
+	input_scale = unit_longname[input_scale];
+	if (control_var == "rate") {
+		input_rate = dimensionlessnumber;
+		input_rate_unit = input_scale;
+	}
+	
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
