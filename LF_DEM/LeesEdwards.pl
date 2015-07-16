@@ -19,6 +19,17 @@ $name = substr($particle_data, $i, $j-$i);
 #printf "$interaction_data\n";
 $output = "le_$name.yap";
 
+my $pos;
+$pos = index($name, "_m");
+if ($pos != -1) {
+	$mag = 1;
+} else {
+	$mag = 0;
+}
+if ($mag) {
+	$outputmp = "magprofile_$name.dat";
+	open (OUTMAGPROF, "> $outputmp");
+}
 open (IN_particle, "< ${particle_data}");
 open (OUT, "> ${output}");
 
@@ -26,16 +37,19 @@ open (OUT, "> ${output}");
 $first=1;
 $c_traj=0;
 $num = 0;
-
 printf OUT "\@0 0 0 0 \n";
 printf OUT "\@1 50 100 205 \n";
-printf OUT "\@2 100 100 100 \n";
+#printf OUT "\@1 255 255 255 \n";
+printf OUT "\@2 200 200 200 \n";
 printf OUT "\@3 50 150 255 \n";
 printf OUT "\@4 50 200 50 \n";
 printf OUT "\@5 255 100 100 \n";
 printf OUT "\@6 50 200 50 \n";
-printf OUT "\@7 200 200 200 \n";
+printf OUT "\@7 255 255 0 \n";
 printf OUT "\@8 255 255 255\n";
+printf OUT "\@9 150 150 150\n";
+#printf OUT "\@8 224 143 0 \n";
+#printf OUT "\@9 67 163 230 \n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";
@@ -96,7 +110,18 @@ sub readHeader{
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
-	($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
+	# 1 sys.get_shear_strain()
+	# 2 sys.shear_disp
+	# 3 getRate()
+	# 4 target_stress_input
+	# 5 sys.get_time()
+	# 6 sys.angle_external_magnetic_field
+	if ($mag) {
+		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress, $time, $fieldangle) = split(/\s+/, $line);
+	} else {
+		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
+	}
+	
 	# shear_rate/shear_rate0
 	# shear_rate0 = Fr(0)/(6 pi eta0 a) = 1/6pi
 	$shear_rate = $shear_rate;
@@ -113,8 +138,20 @@ sub InParticles {
 	
 	for ($i = 0; $i < $np; $i ++){
 		$line = <IN_particle> ;
-		($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-		$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+		
+		if ($mag) {
+			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+			$h_xzstress, $c_xzstressGU, $b_xzstress, $mx, $my, $mz, $ms) = split(/\s+/, $line);
+			$magmom_x[$i] = $mx;
+			$magmom_y[$i] = $my;
+			$magmom_z[$i] = $mz;
+			$magsusceptibility[$i] = $ms;
+			$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
+		} else {
+			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			$ang[$i] = $angle;
+		}
 		$radius[$i] = $a;
 		$posx[$i] = $x;
 		$posy[$i] = $y;
@@ -163,10 +200,18 @@ sub OutYaplotData{
 	printf OUT "@ 8\n";
 	$r = $radius[0];
 	printf OUT "r $r\n";
+	$switch = 0;
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
+		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
 		}
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -174,12 +219,28 @@ sub OutYaplotData{
 		#		}
 		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 	}
+	
+	
+
+
+		
+	
+	$switch = 0;
+	printf OUT "@ 8\n";
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
 		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
+		}
+
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
 		#			printf OUT "@ $col\n";
@@ -187,12 +248,23 @@ sub OutYaplotData{
 		$x_image = $posx[$i] + $Lx;
 		printf OUT "c $x_image $posy[$i] $posz[$i] \n";
 	}
+	$switch = 0;
+	printf OUT "@ 8\n";
+
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
 		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
+		}
+
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
 		#			printf OUT "@ $col\n";
@@ -200,12 +272,22 @@ sub OutYaplotData{
 		$x_image = $posx[$i] - $Lx;
 		printf OUT "c $x_image $posy[$i] $posz[$i] \n";
 	}
+	$switch = 0;
+	printf OUT "@ 8\n";
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
 		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
+		}
+
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
 		#			printf OUT "@ $col\n";
@@ -214,11 +296,21 @@ sub OutYaplotData{
 		$z_image = $posz[$i] + $Lz;
 		printf OUT "c $x_image $posy[$i] $z_image \n";
 	}
+	$switch = 0;
+	printf OUT "@ 8\n";
+
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
+		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
 		}
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -228,12 +320,21 @@ sub OutYaplotData{
 		$z_image = $posz[$i] + $Lz;
 		printf OUT "c $x_image $posy[$i] $z_image \n";
 	}
+	$switch = 0;
+	printf OUT "@ 8\n";
 	
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
+		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
 		}
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -244,6 +345,8 @@ sub OutYaplotData{
 		printf OUT "c $x_image $posy[$i] $z_image \n";
 	}
 	
+	$switch = 0;
+	printf OUT "@ 8\n";
 	
 	
 	printf OUT "r $r\n";
@@ -251,6 +354,13 @@ sub OutYaplotData{
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
+		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
 		}
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -260,11 +370,22 @@ sub OutYaplotData{
 		$z_image = $posz[$i] - $Lz;
 		printf OUT "c $x_image $posy[$i] $z_image \n";
 	}
+	
+	$switch = 0;
+	printf OUT "@ 8\n";
+
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
+		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
 		}
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -274,11 +395,22 @@ sub OutYaplotData{
 		$z_image = $posz[$i] - $Lz;
 		printf OUT "c $x_image $posy[$i] $z_image \n";
 	}
+	
+	$switch = 0;
+	printf OUT "@ 8\n";
+
 	printf OUT "r $r\n";
 	for ($i = 0; $i < $np; $i ++){
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
+		}
+		if ($mag) {
+			if ($switch == 0 &&
+				$magsusceptibility[$i] <= 0){
+					printf OUT "@ 9\n";
+					$switch = 1;
+				}
 		}
 		#		if ($i % 100 == 0){
 		#			$col = $i/100 + 2;
@@ -364,6 +496,25 @@ sub OutBoundaryBox{
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
+	printf OUT "y 8\n";
+	printf OUT "@ 4\n";
+	printf OUT "r 0.5\n";
+	if ($mag) {
+		$fieldx = 20*cos($fieldangle);
+		$fieldz = 20*sin($fieldangle);
+		
+		$xs = 0;
+		$xe = $xs + $fieldx;
+		$zs = 0;
+		$ze = $zs + $fieldz;
+		$xx = $xs + 3.2;
+		$zz = $zs + 3.2;
+		
+		
+		printf OUT "s  $xs -0.1 $zs  $xe 0 $ze \n";
+		
+	}
+	
 	
 	printf OUT "y 7\n";
 	printf OUT "@ 0\n";
@@ -376,6 +527,10 @@ sub OutBoundaryBox{
 	#	printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 	#	printf OUT "l $x0 0.01 0 $x1 0.01 $z1\n";
 	#	printf OUT "l $x2 0.01 $z2 $x3 0.01 $z3\n";
+	
+	
+	
+
 	
 	
 	#$yb = 0.1;

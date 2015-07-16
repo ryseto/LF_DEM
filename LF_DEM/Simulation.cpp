@@ -1054,6 +1054,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.unscaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
 		p.repulsive_length = atof(value.c_str());
+	} else if (keyword == "repulsive_max_length") {
+		p.repulsive_max_length = atof(value.c_str());
 	} else if (keyword == "lub_reduce_parameter") {
 		p.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
@@ -1272,7 +1274,6 @@ void Simulation::setDefaultParameters()
 	p.critical_load_amplitude = 0;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
-	p.disp_max = 2e-3;
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
@@ -1307,7 +1308,7 @@ void Simulation::setDefaultParameters()
 	 */
 	p.lub_reduce_parameter = 1e-3;
 	/*
-	 * contact_relaxation_factor:
+	 * contact_relaxation_factore
 	 *
 	 * This gives the coeffient of the resistance term for h < 0.
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
@@ -1337,6 +1338,7 @@ void Simulation::setDefaultParameters()
 	p.min_kt = 1000;
 	p.max_kt = 1000000;
 	p.repulsive_length = 0.05;
+	p.repulsive_max_length = -1;
 	p.mu_static = 1;
 	p.mu_dynamic = -1;
 	p.mu_rolling = 0;
@@ -1598,10 +1600,6 @@ void Simulation::outputData()
 	/*
 	 * Stress
 	 */
-//	double ND_shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
-//	if (internal_unit_scales == "hydro") {
-//		ND_shear_stress *= dimensionless_numbers["h/r"];
-//	}
 	outdata.entryData(14, "shear stress", "stress", shear_stress);
 	outdata.entryData(15, "N1 viscosity", "viscosity", sys.total_stress.getNormalStress1()/sr);
 	outdata.entryData(16, "N2 viscosity", "viscosity", sys.total_stress.getNormalStress2()/sr);
