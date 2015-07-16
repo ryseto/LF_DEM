@@ -34,8 +34,7 @@ private:
 	double geometric_factor;
 	double screening_length;
 	double max_length;
-	bool check_max_length;
-	bool active;
+	double cutoff_roundlength;
 	vec3d force_vector; // normal contact force
 	double force_norm;
 	double reduced_force_norm;
