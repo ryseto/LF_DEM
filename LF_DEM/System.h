@@ -155,7 +155,8 @@ private:
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
-
+	bool cross_shear;
+	
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;

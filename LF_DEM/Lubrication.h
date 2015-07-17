@@ -39,12 +39,12 @@ private:
 	unsigned short p1_6;
 	double range;
 	vec3d *nvec;
-	double *nxnx;
-	double *nxny;
-	double *nxnz;
-	double *nynz;
-	double *nyny;
-	double *nznz;
+	double nxnx;
+	double nxny;
+	double nxnz;
+	double nynz;
+	double nyny;
+	double nznz;
 	double lub_coeff;
 	double log_lub_coeff;
 	double a0;
@@ -115,6 +115,7 @@ private:
 	bool is_active();
  
 	void getInteractionData();
+	void getGeometry();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0

@@ -31,12 +31,7 @@ void Interaction::calcNormalVectorDistanceGap()
 	nvec = rvec/r;
 	reduced_gap = r/ro_12-2;
 	if (lubrication.is_active()) {
-		nxnx = nvec.x*nvec.x;
-		nxny = nvec.x*nvec.y;
-		nxnz = nvec.x*nvec.z;
-		nynz = nvec.y*nvec.z;
-		nyny = nvec.y*nvec.y;
-		nznz = nvec.z*nvec.z;
+		lubrication.getGeometry();
 	}
 }
 
