@@ -25,16 +25,15 @@
 #include <string>
 #include <map>
 
-using namespace std;
 
 class OutputData {
 private:
 	int number_of_data;
 	bool first_time;
-	vector<string> output_data;
-	vector<string> output_data_name;
-	vector<string> output_data_type;
-	std::map <string, double> converter;
+	std::vector<std::string> output_data;
+	std::vector<std::string> output_data_name;
+	std::vector<std::string> output_data_type;
+	std::map <std::string, double> converter;
 	 
 public:
 	OutputData():
@@ -46,13 +45,13 @@ public:
 			output_data.resize(number_of_data);
 			output_data_name.resize(number_of_data);
 			output_data_type.resize(number_of_data);
-			for (string &od : output_data) {
+			for (std::string &od : output_data) {
 				od = "n";
 			}
-			for (string &odn : output_data_name) {
+			for (std::string &odn : output_data_name) {
 				odn = "blank";
 			}
-			for (string &odt : output_data_type) {
+			for (std::string &odt : output_data_type) {
 				odt = "none";
 			}
 		}
@@ -71,16 +70,16 @@ public:
 	
 	template<typename T>
 	void entryData(int num, 
-				string name, 
-				string type, 
+				std::string name, 
+				std::string type, 
 				T value)
 	{
 		int index = num-1;
-		ostringstream str_value;
+		std::ostringstream str_value;
 		str_value << converter[output_data_type[index]]*value;
 		if (first_time) {
 			if (output_data_name[index] != "blank") {
-				cerr << "data["<< index << "] is redefined." << endl;
+				std::cerr << "data["<< index << "] is redefined." << std::endl;
 				exit(1);
 			} else {
 				output_data_name[index] = name;
@@ -90,14 +89,14 @@ public:
 		output_data[index] = str_value.str();
 	}
 	
-	void exportFile(ofstream &fout_data)
+	void exportFile(std::ofstream &fout_data)
 	{
 
 		if (first_time) {
 			for (int i=0; i<number_of_data; i++) {
 				fout_data << "#" << i+1 << ": ";
 				fout_data << output_data_name[i];
-				fout_data << endl;
+				fout_data << std::endl;
 			}
 			first_time = false;
 		}
@@ -105,7 +104,7 @@ public:
 		for (int i=0; i<number_of_data; i++) {
 			fout_data << output_data[i] << ' ';
 		}
-		fout_data << endl;
+		fout_data << std::endl;
 	}
 };
 #endif

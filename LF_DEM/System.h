@@ -37,8 +37,6 @@
 #include "dSFMT-src-2.2.3/dSFMT.h"
 #endif
 
-using namespace std;
-
 class Simulation;
 class Interaction;
 class BoxSet;
@@ -77,7 +75,7 @@ private:
 	//double repulsiveforce_length; // repulsive force length
 	//int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
-	bool keepRunning(string, double);
+	bool keepRunning(std::string, double);
 	void (System::*timeEvolutionDt)(bool);
 	void timeEvolutionEulersMethod(bool calc_stress);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
@@ -137,8 +135,8 @@ private:
 	 */
 	double num_magnetic_particles;
 	double sq_magnetic_interaction_range;
-	vector<pair<vec3d, pair<int,int>>> magnetic_force_stored;
-	vector<vector<int>> magnetic_pair;
+	std::vector<std::pair<vec3d, std::pair<int,int>>> magnetic_force_stored;
+	std::vector<std::vector<int>> magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
 	
@@ -194,8 +192,8 @@ private:
 	vec3d *magnetic_moment;
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
-	vector <double> magnetic_moment_norm;
-	vector <double> magnetic_susceptibility;
+	std::vector <double> magnetic_moment_norm;
+	std::vector <double> magnetic_susceptibility;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // by particle
@@ -232,8 +230,8 @@ private:
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
-	set <Interaction*> *interaction_list;
-	set <int> *interaction_partners;
+	std::set <Interaction*> *interaction_list;
+	std::set <int> *interaction_partners;
 	int nb_interaction;
 	double shear_disp;
 	double y_shear_disp;
@@ -255,7 +253,7 @@ private:
 	double max_contact_gap;
 	double max_disp_tan;
 	double max_disp_rolling;
-	queue<int> deactivated_interaction;
+	std::queue<int> deactivated_interaction;
 	double max_contact_velo_tan;
 	double max_contact_velo_normal;
 	double ave_contact_velo_tan;
@@ -265,7 +263,7 @@ private:
 	int fric_contact_nb; // fn > f* in the critical load model
 	double max_fc_normal;
 	double max_fc_tan;
-	string simu_name;
+	std::string simu_name;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
@@ -281,19 +279,19 @@ private:
 
 	/////////////////////////////////
 	void setSystemVolume(double depth = 0);
-	void setConfiguration(const vector <vec3d> &initial_positions,
-						  const vector <double> &radii,
+	void setConfiguration(const std::vector <vec3d> &initial_positions,
+						  const std::vector <double> &radii,
 						  double lx_, double ly_, double lz_);
-	void setMagneticConfiguration(const vector <vec3d> &magnetic_moment,
-								  const vector <double> &magnetic_susceptibility);
+	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
+								  const std::vector <double> &magnetic_susceptibility);
 	void setMagneticMomentExternalField();
 
 	void setInteractions_GenerateInitConfig();
-	void setupSystem(string control);
+	void setupSystem(std::string control);
 	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(string time_or_strain, double value_end);
+	void timeEvolution(std::string time_or_strain, double value_end);
 	void timeEvolution(double value_end);
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
@@ -328,7 +326,7 @@ private:
 		ly_half = 0.5*ly;
 		lz = lz_;
 		lz_half = 0.5*lz;
-		cerr << "box: " << lx << ' ' << ly << ' ' << lz << endl;
+		std::cerr << "box: " << lx << ' ' << ly << ' ' << lz << std::endl;
 	}
 
 	double getContactNumber()

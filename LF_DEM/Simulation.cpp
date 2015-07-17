@@ -13,6 +13,8 @@
 #include <sstream>
 #include <cctype>
 
+using namespace std;
+
 Simulation::Simulation():
 shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
@@ -64,7 +66,7 @@ void Simulation::contactForceParameter(string filename)
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cerr << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+		cout << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 	} else {
 		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
 		exit(1);
@@ -277,9 +279,9 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	if (is_brownian) {
 		sys.brownian = true;
 		p.brownian_amplitude = values["thermal"];
-		cerr << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
+		cout << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
 	} else {
-		cerr << "non-Brownian" << endl;
+		cout << "non-Brownian" << endl;
 	}
 }
 
@@ -334,31 +336,31 @@ void Simulation::exportForceAmplitudes()
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
 		sys.amplitudes.repulsion = values["repulsive"];
-		cerr << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
+		cout << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
 	bool is_critical_load = values.find("critical_load") != values.end();
 		if (is_critical_load) {
 		sys.critical_load = true;
 		sys.amplitudes.critical_normal_force = values["critical_load"];
-		cerr << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		cout << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
 	}
 	bool is_cohesive = values.find("cohesive") != values.end();
 	if (is_cohesive) {
 		sys.cohesion = true;
 		sys.amplitudes.cohesion = values["cohesive"];
-		cerr << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
+		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 
 	//	bool is_magnetic = values.find("m") != values.end();
 	//	if (is_magnetic) {
 	//		sys.amplitudes.magnetic = values["m"];
-	//		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-	//		cerr << " values[m] = "  << values["m"] << endl;
+	//		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
+	//		cout << " values[m] = "  << values["m"] << endl;
 	//	}
 	bool is_ft_max = values.find("ft") != values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = values["ft"];
-		cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+		cout << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
 }
 
@@ -385,7 +387,7 @@ void Simulation::convertInputValues(string new_unit)
 				}
 			}
 		}
-		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+		cout << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -403,7 +405,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		/* [TODO]
 		 * Should be changed to something better way.
 		 */
-		cerr << "init_relax" << endl;
+		cout << "init_relax" << endl;
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
@@ -435,7 +437,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
 		p.unscaled_contactmodel = true;
 	} else if (control_var == "magnetic") {
-		cerr << "magnetic" << endl;
+		cout << "magnetic" << endl;
 	} else {
 		exit(1);
 	}
@@ -494,10 +496,10 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 			if (inv.unit == "strain") {
 				time_end = -1;
 				strain_end = p.time_end;
-				cerr << "  strain_end = " << strain_end << endl;
+				cout << "  strain_end = " << strain_end << endl;
 			} else {
 				time_end = p.time_end;
-				cerr << "  time_end = " << time_end << endl;
+				cout << "  time_end = " << time_end << endl;
 			}
 		}
 	}
@@ -512,20 +514,20 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 				if (inv.unit == "strain") {
 					time_interval_output_data = -1;
 					strain_interval_output_data = p.time_interval_output_data;
-					cerr << "  strain_interval_output_data = " << strain_interval_output_data << endl;
+					cout << "  strain_interval_output_data = " << strain_interval_output_data << endl;
 				} else {
 					time_interval_output_data = p.time_interval_output_data;
-					cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
+					cout << "  time_interval_output_data = " << time_interval_output_data << endl;
 				}
 			}
 			if (inv.name == "time_interval_output_config") {
 				if (inv.unit == "strain") {
 					time_interval_output_config = -1;
 					strain_interval_output_config = p.time_interval_output_config;
-					cerr << "  strain_interval_output_config = " << strain_interval_output_config << endl;
+					cout << "  strain_interval_output_config = " << strain_interval_output_config << endl;
 				} else {
 					time_interval_output_config = p.time_interval_output_config;
-					cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
+					cout << "  time_interval_output_config = " << time_interval_output_config << endl;
 				}
 			}
 		}
@@ -536,8 +538,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	}
 	sys.setupSystem(control_var);
 
-	cerr << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
-	cerr << "repulsive_length = " << p.repulsive_length << endl;
+	cout << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
+	cout << "repulsive_length = " << p.repulsive_length << endl;
 
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
@@ -615,13 +617,13 @@ void Simulation::simulationSteadyShear(string in_args,
 		}
 		/*****************************************************/
 
-		cerr << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
+		cout << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
-			cerr << "shear jamming " << jammed << endl;
+			cout << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
-				cerr << "shear jamming";
+				cout << "shear jamming";
 				break;
 			}
 		} else {
@@ -704,18 +706,18 @@ void Simulation::simulationInverseYield(string in_args,
 		}
 		/*****************************************************/
 
-		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
+		cout << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
-			cerr << "shear jamming " << jammed << endl;
+			cout << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 20) {
 				sys.set_shear_rate(1);
-				cerr << "target_stress = " << target_stress_input << endl;
+				cout << "target_stress = " << target_stress_input << endl;
 				target_stress_input *= 0.95;
 				sys.target_stress = target_stress_input/6/M_PI;
 				sys.updateUnscaledContactmodel();
-				cerr << "new target_stress = " << target_stress_input << endl;
+				cout << "new target_stress = " << target_stress_input << endl;
 				jammed = 0;
 			}
 		} else {
@@ -768,7 +770,7 @@ void Simulation::simulationMagnetic(string in_args,
 	double time_end = 0;
 	double angle_external_magnetic_field = 0;
 	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
-	cerr << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
+	cout << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
 	int cnt_external_magnetic_field = 0;
 	while (sys.get_time() < p.time_end) {
 		cnt_external_magnetic_field++;
@@ -807,7 +809,7 @@ void Simulation::simulationMagnetic(string in_args,
 				}
 			}
 			/*****************************************************/
-			cerr << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
+			cout << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
 		}
 		angle_external_magnetic_field += d_angle_external_magnetic_field;
 		if (p.magnetic_field_type == 1) {
@@ -862,28 +864,28 @@ void Simulation::outputComputationTime()
 // 	sys.brownian = false;
 // 	target_stress_input = 0;
 // 	sys.target_stress = 0;
-// 	cerr << seq_type << endl;
+// 	cout << seq_type << endl;
 // 	if (seq_type == "S") {
 // 		p.unscaled_contactmodel = true;
-// 		cerr << "Repulsive force" << endl;
+// 		cout << "Repulsive force" << endl;
 // 		sys.repulsiveforce = true;
 // 		sys.amplitudes.repulsion = 1;
 // 		string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
 // 	} else if (seq_type == "R") {
 // 		//p.unscaled_contactmodel
 // 		sys.repulsiveforce = true;
-// 		cerr << "Repulsive force" << endl;
-// 		cerr << " User Defined Sequence only implemented for ....\n";
+// 		cout << "Repulsive force" << endl;
+// 		cout << " User Defined Sequence only implemented for ....\n";
 // 		exit(1);
 // 	} else if (seq_type == "B") {
-// 		cerr << "Cohesive force" << endl;e
+// 		cout << "Cohesive force" << endl;e
 // 		sys.set_shear_rate(1);
 // 		sys.repulsiveforce = false;
 // 		sys.cohesion = true;
 // 		sys.cohesive_force = 1;
 // 		string_control_parameters << "_B" << filename_sequence.substr(0, pos_ext_sequence);
 // 	} else {
-// 		cerr << " User Defined Sequence only implemented for ....\n";
+// 		cout << " User Defined Sequence only implemented for ....\n";
 // 		exit(1);
 // 	}
 // 	setDefaultParameters();
@@ -947,7 +949,7 @@ void Simulation::outputComputationTime()
 // 		 */
 // 		target_stress_input = rsequence[step];
 // 		sys.target_stress = rsequence[step]/6/M_PI;
-// 		cerr << "Target stress " << target_stress_input << endl;
+// 		cout << "Target stress " << target_stress_input << endl;
 // 		sys.updateUnscaledContactmodel();
 // 		sys.amplitudes.repulsion = 1; // needed for 1st time step
 // 		sys.dimensionless_number = 1;
@@ -977,18 +979,18 @@ void Simulation::outputComputationTime()
 // 			/******************************************************/
 
 // 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
-// 				cerr << "shear jamming " << jammed << endl;
+// 				cout << "shear jamming " << jammed << endl;
 // 				jammed ++;
 // 				if (jammed > 10) {
 // 					jammed = 0;
-// 					cerr << "shear jamming";
+// 					cout << "shear jamming";
 // 					break;
 // 				}
 // 			} else {
 // 				jammed = 0;
 // 			}
-// 			cerr << "strain: " << sys.get_time() << " / " << p.time_end;
-// 			cerr << "      stress = " << target_stress_input << endl;
+// 			cout << "strain: " << sys.get_time() << " / " << p.time_end;
+// 			cout << "      stress = " << target_stress_input << endl;
 // 		}
 // 	}
 // }
@@ -1503,7 +1505,7 @@ void Simulation::prepareSimulationName(bool binary_conf)
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
-	cerr << "filename: " << sys.simu_name << endl;
+	cout << "filename: " << sys.simu_name << endl;
 }
 
 double Simulation::getRate(){
@@ -1709,7 +1711,7 @@ void Simulation::outputConfigurationData()
 	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
 	if (p.out_data_particle) {
-		cerr << "   out config: " << sys.get_shear_strain() << endl;
+		cout << "   out config: " << sys.get_shear_strain() << endl;
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
 		fout_particle << sys.shear_disp << ' ';
 		fout_particle << getRate() << ' ';

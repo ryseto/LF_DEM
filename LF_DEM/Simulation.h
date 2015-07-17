@@ -32,20 +32,20 @@ class Simulation
 private:
 	System sys;
 	ParameterSet p;
-	std::map <string, string> suffixes;   // pairs: (force_type, suffix)
-	std::map <string, double> values;   // pairs: (force_type, values_in_suffix_units)
-	std::map <string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
-	std::map <string, string> unit_longname;
+	std::map <std::string, std::string> suffixes;   // pairs: (force_type, suffix)
+	std::map <std::string, double> values;   // pairs: (force_type, values_in_suffix_units)
+	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
+	std::map <std::string, std::string> unit_longname;
 	
 	std::list <InputValue> input_values;
 
 	double volume_or_area_fraction;
-	string filename_import_positions;
-	string filename_parameters;
-	string filename_sequence;
-	ostringstream string_control_parameters;
-	string header_imported_configulation[2];
-	string control_var;
+	std::string filename_import_positions;
+	std::string filename_parameters;
+	std::string filename_sequence;
+	std::ostringstream string_control_parameters;
+	std::string header_imported_configulation[2];
+	std::string control_var;
 	bool user_sequence;
 	double shear_rate_expectation;
 	double time_interval_output_data;
@@ -60,11 +60,11 @@ private:
 	 */
 	double initial_lees_edwards_disp;
 	double initial_y_shear_disp;
-	string internal_unit_scales;
-	string output_unit_scales;
+	std::string internal_unit_scales;
+	std::string output_unit_scales;
 	double target_stress_input;
 	double input_rate;
-	string input_rate_unit;
+	std::string input_rate_unit;
 	int time_strain_0;
 	int time_strain_1;
 	int time_strain_end;
@@ -73,12 +73,12 @@ private:
 	/*
 	 * For output data.
 	 */
-	ofstream fout_data;
-	ofstream fout_particle;
-	ofstream fout_interaction;
-	ofstream fout_st;
-	ofstream fout_time;
-	ofstream fout_input;
+	std::ofstream fout_data;
+	std::ofstream fout_particle;
+	std::ofstream fout_interaction;
+	std::ofstream fout_st;
+	std::ofstream fout_time;
+	std::ofstream fout_input;
 	OutputData outdata;
 	OutputData outdata_st;
 	/*
@@ -88,40 +88,40 @@ private:
 	void readParameterFile();
 	void openOutputFiles(bool);
 	void prepareSimulationName(bool);
-	void echoInputFiles(string in_args, vector<string> &input_files);
-	void autoSetParameters(const string &keyword, const string &value);
-	void contactForceParameter(string filename);
-	void contactForceParameterBrownian(string filename);
-	void importPreSimulationData(string filename);
+	void echoInputFiles(std::string in_args, std::vector<std::string> &input_files);
+	void autoSetParameters(const std::string &keyword, const std::string &value);
+	void contactForceParameter(std::string filename);
+	void contactForceParameterBrownian(std::string filename);
+	void importPreSimulationData(std::string filename);
 	void importConfiguration();
 	void importConfigurationBinary();
 	void exportForceAmplitudes();
 	void setLowPeclet();
-	void convertForceValues(string new_long_unit);
-	void convertInputValues(string new_long_unit);
-	void resolveUnitSystem(string long_unit);
+	void convertForceValues(std::string new_long_unit);
+	void convertInputValues(std::string new_long_unit);
+	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
-	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
-	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
-	void catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr);
+	void convertInputForcesRateControlled(double dimensionlessnumber, std::string rate_unit);
+	void convertInputForcesStressControlled(double dimensionlessnumber, std::string rate_unit);
+	void catchSuffixedValue(std::string type, std::string keyword, std::string value_str, double *value_ptr);
 	/*
 	 * For outputs
 	 */
 	void evaluateData();
-	void outputDataHeader(ofstream &fout);
+	void outputDataHeader(std::ofstream &fout);
 	void outputRheologyData();
 	void outputData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
 	void outputConfigurationBinary();
-	void outputConfigurationBinary(string);
+	void outputConfigurationBinary(std::string);
 	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulationSteadyShear(string in_args,
-									vector<string> &input_files,
+	void setupSimulationSteadyShear(std::string in_args,
+									std::vector<std::string> &input_files,
 									bool binary_conf,
 									double dimensionlessnumber,
-									string input_scale);
+									std::string input_scale);
 	void outputComputationTime();
 
 	bool keepRunning();	
@@ -130,20 +130,20 @@ private:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
-	void simulationSteadyShear(string in_args, vector<string> &input_files, bool binary_conf,
-							   double dimensionless_number, string input_scale, string control_variable);
-	void simulationUserDefinedSequence(string seq_type, string in_args, vector<string> &input_files, bool binary_conf, string control_variable);
+	void simulationSteadyShear(std::string in_args, std::vector<std::string> &input_files, bool binary_conf,
+							   double dimensionless_number, std::string input_scale, std::string control_variable);
+	void simulationUserDefinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 	
-	void simulationInverseYield(string in_args,
-								vector<string> &input_files,
+	void simulationInverseYield(std::string in_args,
+								std::vector<std::string> &input_files,
 								bool binary_conf,
 								double dimensionless_number,
-								string input_scale,
-								string control_variable);
+								std::string input_scale,
+								std::string control_variable);
 	
-	void simulationMagnetic(string in_args,	vector<string> &input_files,
+	void simulationMagnetic(std::string in_args,	std::vector<std::string> &input_files,
 							bool binary_conf, double dimensionless_number,
-							string input_scale, string control_variable);
+							std::string input_scale, std::string control_variable);
 	
 };
 #endif /* defined(__LF_DEM__Simulation__) */

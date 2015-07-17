@@ -26,7 +26,7 @@
 #include "RepulsiveForce.h"
 #include "StressTensor.h"
 
-using namespace std;
+
 class System;
 class Lubrication;
 class Contact;

@@ -20,7 +20,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
-using namespace std;
+
 class System;
 class Interaction;
 

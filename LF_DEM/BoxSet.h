@@ -15,7 +15,7 @@
 #ifndef __LF_DEM__BoxSet__
 #define __LF_DEM__BoxSet__
 #include "Box.h"
-using namespace std;
+
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 class System;
 
@@ -99,9 +99,9 @@ public:
 	 gives iterators to beginning and ending point of the container including
 	 all particles in the box containing particle i and in the adjacent boxes.
 	 *****/
-	vector<int>::iterator neighborhood_begin(int i);
-	vector<int>::iterator neighborhood_end(int i);
-	vector <int> & neighborhood(int i);
+	std::vector<int>::iterator neighborhood_begin(int i);
+	std::vector<int>::iterator neighborhood_end(int i);
+	std::vector <int> & neighborhood(int i);
 	void printBoxNetwork();
 };
 #endif /* defined(__LF_DEM__BoxSet__) */

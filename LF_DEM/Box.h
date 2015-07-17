@@ -21,7 +21,6 @@
 #include "vec3d.h"
 #include <set>
 #include <vector>
-using namespace std;
 
 class Box{
 private:
@@ -41,7 +40,7 @@ public:
 	Box();
 	~Box();
 	vec3d position;
-	set <int> container;
+	std::set <int> container;
 	void neigh_nb(int n, int moving_n=0);
 	bool neighbor(int label, Box* neigh_box);
 	bool moving_neighbor(int moving_label, Box* neigh_box);
@@ -69,23 +68,23 @@ public:
 	bool is_bottom();
 	void add(int);
 	void remove(int);
-	set<int>::iterator begin()
+	std::set<int>::iterator begin()
 	{
 		return container.begin();
 	}
-	set<int>::iterator end()
+	std::set<int>::iterator end()
 	{
 		return container.end();
 	}
-	vector<int>::iterator neighborhood_begin()
+	std::vector<int>::iterator neighborhood_begin()
 	{
 		return neighborhood_container.begin();
 	}
-	vector<int>::iterator neighborhood_end()
+	std::vector<int>::iterator neighborhood_end()
 	{
 		return neighborhood_container.end();
 	}
-	vector <int> neighborhood_container;
+	std::vector <int> neighborhood_container;
 	size_t container_size()
 	{
 		return container.size();

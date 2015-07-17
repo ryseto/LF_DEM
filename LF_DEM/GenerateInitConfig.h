@@ -24,7 +24,6 @@
 #include <string>
 #include "vec3d.h"
 #include "System.h"
-using namespace std;
 
 class GenerateInitConfig{
 private:
@@ -70,8 +69,8 @@ private:
 	int overlapNumber(int);
 	double particleEnergy(int);
 	void updateInteractions(int);
-	vector<vec3d> position;
-	vector<double> radius;
+	std::vector<vec3d> position;
+	std::vector<double> radius;
 	int np;
 	int np1;
 	int np2;

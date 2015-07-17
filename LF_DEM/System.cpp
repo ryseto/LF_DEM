@@ -22,6 +22,7 @@
 #define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
 #endif
 
+using namespace std;
 
 System::System():
 brownian(false),

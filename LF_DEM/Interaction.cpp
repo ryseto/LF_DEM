@@ -7,6 +7,8 @@
 //
 #include "Interaction.h"
 
+using namespace std;
+
 void Interaction::init(System *sys_)
 {
 	sys = sys_;

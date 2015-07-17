@@ -3,7 +3,9 @@
 
 #include <string>
 #include <algorithm>
+#include <ostream>
 #include "vec3d.h"
+
 #ifndef GIT_VERSION
 /*
  * GIT_VERSION stores the output of `git describe --dirty --always`
@@ -28,14 +30,13 @@
 #include "VersionInfo.h"
 #endif
 
-using namespace std;
 
-inline void removeBlank(string &str)
+inline void removeBlank(std::string &str)
 {
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-inline bool getSuffix(const string &str, string &value, string &suffix)
+inline bool getSuffix(const std::string &str, std::string &value, std::string &suffix)
 {
 	size_t suffix_pos = str.find_first_of("abcdfghijklmnopqrstuvwxyz"); // omission of "e" is intended, to allow for scientific notation like "1e5h"
 	value = str.substr(0, suffix_pos);
@@ -47,39 +48,39 @@ inline bool getSuffix(const string &str, string &value, string &suffix)
 	}
 }
 
-inline void errorNoSuffix(string quantity)
+inline void errorNoSuffix(std::string quantity)
 {
-	cerr << "Error : no unit scale (suffix) provided for " << quantity << endl; exit(1);
+	std::cerr << "Error : no unit scale (suffix) provided for " << quantity << std::endl; exit(1);
 }
 
-inline bool str2bool(const string &value)
+inline bool str2bool(const std::string &value)
 {
 	if (value == "true") {
 		return true;
 	} else if (value == "false") {
 		return false;
 	} else {
-		cerr << "The value should be true or false" << endl;
+		std::cerr << "The value should be true or false" << std::endl;
 		exit(1);
 	}
 }
 
-inline vec3d str2vec3d(const string &value)
+inline vec3d str2vec3d(const std::string &value)
 {
-	string::size_type l1 = value.find("(", 0);
-	if (l1 == string::npos) {
+	std::string::size_type l1 = value.find("(", 0);
+	if (l1 == std::string::npos) {
 		exit(1);
 	}
-	string::size_type l2 = value.find(",", l1);
-	if (l2 == string::npos) {
+	std::string::size_type l2 = value.find(",", l1);
+	if (l2 == std::string::npos) {
 		exit(1);
 	}
-	string::size_type l3 = value.find(",", l2+1);
-	if (l3 == string::npos) {
+	std::string::size_type l3 = value.find(",", l2+1);
+	if (l3 == std::string::npos) {
 		exit(1);
 	}
-	string::size_type l4 = value.find(")", l3+1);
-	if (l4 == string::npos) {
+	std::string::size_type l4 = value.find(")", l3+1);
+	if (l4 == std::string::npos) {
 		exit(1);
 	}
 	double vx = atof(value.substr(l1+1, l2-l1-1).c_str());
@@ -88,11 +89,11 @@ inline vec3d str2vec3d(const string &value)
 	return vec3d(vx,vy,vz);
 }
 
-inline void Str2KeyValue(const string &str_parameter,
-				  string &keyword,
-				  string &value)
+inline void Str2KeyValue(const std::string &str_parameter,
+				  std::string &keyword,
+				  std::string &value)
 {
-	string::size_type pos_equal = str_parameter.find("=");
+	std::string::size_type pos_equal = str_parameter.find("=");
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
 	return;

@@ -42,7 +42,7 @@ typedef double SCAL;
 typedef Epetra_MultiVector VEC;
 typedef Epetra_Operator MAT;
 #endif
-using namespace std;
+
 
 class StokesSolver{
 	/*
@@ -184,8 +184,8 @@ private:
 	bool chol_L_to_be_freed;
     // resistance matrix building
     double *dblocks;
-    vector <double> *odblocks;
-    vector <int> odbrows;
+    std::vector <double> *odblocks;
+    std::vector <int> odbrows;
 	int *odbrows_table;
 	int *current_index_positions;
     void factorizeResistanceMatrix();
@@ -239,7 +239,7 @@ private:
     void setDiagBlockPreconditioner();
     void setIncCholPreconditioner();
     void setSpInvPreconditioner();
-	void setSolverType(string);
+	void setSolverType(std::string);
 
 public:
     ~StokesSolver();
@@ -253,8 +253,8 @@ public:
 	{
 		return _iterative;
 	}
-	void printResistanceMatrix(ostream &, string);
-	void printFactor(ostream &);
+	void printResistanceMatrix(std::ostream &, std::string);
+	void printFactor(std::ostream &);
 	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
@@ -264,7 +264,7 @@ public:
 	 - possible solver_type: "direct" or "iterative"
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
-    void resetResistanceMatrix(string solver_type, int nb_of_interactions, double *resetResistanceMatrix);
+    void resetResistanceMatrix(std::string solver_type, int nb_of_interactions, double *resetResistanceMatrix);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii 

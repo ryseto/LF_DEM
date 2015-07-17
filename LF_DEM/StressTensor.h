@@ -41,7 +41,7 @@ public:
 	}
 	
 	// output stream operator
-	inline friend ostream& operator << (ostream &out,
+	inline friend std::ostream& operator << (std::ostream &out,
 										const StressTensor &st)
 	{
 		out << st.elm[0] << ' ';
@@ -333,9 +333,9 @@ public:
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
 	
-	void cerr()
-	{
-		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
-	}
+//	void cerr()
+//	{
+//		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
+//	}
 };
 #endif
