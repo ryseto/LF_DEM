@@ -8,9 +8,12 @@ LF\_DEM
 Requirements
 ------------
 
-LF\_DEM requires the sparse linear algebra software
-`SuiteSparse <http://faculty.cse.tamu.edu/davis/suitesparse.html>`__ to
-be installed.
+LF\_DEM requires the sparse linear algebra software `SuiteSparse
+<http://faculty.cse.tamu.edu/davis/suitesparse.html>`__ to be
+installed. SuiteSparse is easy to compile from sources. For Ubuntu
+users, there is a SuiteSparse package `libsuitesparse-dev` which is
+not the latest SuiteSparse version, but is the simplest possible
+installation.
 
 To install SuiteSparse on CUNY-HPPC, see `these
 instructions <./SuiteSparse_Install.md>`__.
