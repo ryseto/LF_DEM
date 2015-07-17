@@ -45,6 +45,7 @@ private:
 	double nynz;
 	double nyny;
 	double nznz;
+	double nnE;
 	double lub_coeff;
 	double log_lub_coeff;
 	double a0;

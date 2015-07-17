@@ -24,6 +24,13 @@ void Lubrication::getGeometry()
 	nynz = (interaction->nvec).y*(interaction->nvec).z;
 	nyny = (interaction->nvec).y*(interaction->nvec).y;
 	nznz = (interaction->nvec).z*(interaction->nvec).z;
+	if(sys->cross_shear){
+		nnE = nynz;
+	}
+	else{
+		nnE = nxnz;
+	}
+	
 }
 
 void Lubrication::init(System *sys_)
@@ -251,11 +258,11 @@ void Lubrication::calcGE(double *GEi, double *GEj)
 	 * lubrication_model = 1
 	 * 1/xi level
 	 *
-	 * GE1 = nx*nz*(XG11+XG21)*nvec
-	 * GE2 = nx*nz*(XG12+XG22)*nvec
+	 * GE1 = (nvecnvec:E)*(XG11+XG21)*nvec
+	 * GE2 = (nvecnvec:E)*(XG12+XG22)*nvec
 	 */
-	double cGE_p0 = (scaledXG0()+scaledXG2())*nxnz;
-	double cGE_p1 = (scaledXG1()+scaledXG3())*nxnz;
+	double cGE_p0 = (scaledXG0()+scaledXG2())*nnE;
+	double cGE_p1 = (scaledXG1()+scaledXG3())*nnE;
 	GEi[0] = cGE_p0*nvec->x;
 	GEi[1] = cGE_p0*nvec->y;
 	GEi[2] = cGE_p0*nvec->z;
@@ -271,28 +278,46 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	 * lubrication_model = 2
 	 * upto log(1/xi) level
 	 *
-	 * GE1 = nx*nz*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(nz,0,nx);
-	 * GE2 = nx*nz*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(nz,0,nx);
+	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
+	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-	double nxnx_nznz = nxnx-nznz;
+	
 	double YG0_YG2 = scaledYG0()+scaledYG2();
 	double YG1_YG3 = scaledYG1()+scaledYG3();
-	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nxnz;
-	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nxnz;
+	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nnE;
+	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
-	GEi[0] =  (cGE_i*nvec->x+YG0_YG2*nvec->z);
-	GEi[1] =  cGE_i*nvec->y;
-	GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->x);
-	GEj[0] =  (cGE_j*nvec->x+YG1_YG3*nvec->z);
-	GEj[1] =  cGE_j*nvec->y;
-	GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->x);
-	HEi[0] =  cHE_i*nxny;
-	HEi[1] = -cHE_i*nxnx_nznz;
-	HEi[2] = -cHE_i*nynz;
-	HEj[0] =  cHE_j*nxny;
-	HEj[1] = -cHE_j*nxnx_nznz;
-	HEj[2] = -cHE_j*nynz;
+	if(!sys->cross_shear) {
+		GEi[0] =  (cGE_i*nvec->x+YG0_YG2*nvec->z);
+		GEi[1] =  cGE_i*nvec->y;
+		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->x);
+		GEj[0] =  (cGE_j*nvec->x+YG1_YG3*nvec->z);
+		GEj[1] =  cGE_j*nvec->y;
+		GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->x);
+		double nxnx_nznz = nxnx-nznz;
+		HEi[0] =  cHE_i*nxny;
+		HEi[1] = -cHE_i*nxnx_nznz;
+		HEi[2] = -cHE_i*nynz;
+		HEj[0] =  cHE_j*nxny;
+		HEj[1] = -cHE_j*nxnx_nznz;
+		HEj[2] = -cHE_j*nynz;
+	}
+	else {
+		GEi[0] =  cGE_i*nvec->x;
+		GEi[1] =  (cGE_i*nvec->y+YG0_YG2*nvec->z);
+		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->y);
+		GEj[0] =  cGE_j*nvec->x;
+		GEj[1] =  (cGE_j*nvec->y+YG1_YG3*nvec->z);
+		GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->y);
+		double nyny_nznz = nyny+nznz;
+		HEi[0] =  cHE_i*nyny_nznz;
+		HEi[1] = -cHE_i*nxny;
+		HEi[2] =  cHE_i*nxnz;
+		HEj[0] =  cHE_j*nyny_nznz;
+		HEj[1] = -cHE_j*nxny;
+		HEj[2] =  cHE_j*nxnz;
+	}
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
@@ -412,8 +437,8 @@ void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
      *   = XM_{11}(3/2)(ninj-(1/3)delta_ij)*(nznx) + XM_{12}(3/2)(ninj-(1/3)delta_ij)*(nznx)
 	 *   = [(3/2)(XM_{11}+XM_{12})*nxnz)]*(ninj-(1/3)delta_ij)
 	 */
-	double cXM_i = (3.0/2)*(scaledXM0()+scaledXM1())*nxnz;
-	double cXM_j = (3.0/2)*(scaledXM2()+scaledXM3())*nxnz;
+	double cXM_i = (3.0/2)*(scaledXM0()+scaledXM1())*nnE;
+	double cXM_j = (3.0/2)*(scaledXM2()+scaledXM3())*nnE;
 	StressTensor XME_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	StressTensor XME_j = XME_i;
 	XME_i *= cXM_i;
