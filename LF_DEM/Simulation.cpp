@@ -1578,9 +1578,9 @@ void Simulation::outputData()
 	 outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	 
 	if (sys.p.magnetic_type == 0) {
-		outdata.init(36);
+		outdata.init(36, output_unit_scales);
 	} else {
-		outdata.init(40);
+		outdata.init(40, output_unit_scales);
 	}
 
 
@@ -1644,7 +1644,7 @@ void Simulation::outputData()
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	
-   	outdata_st.init(8);
+   	outdata_st.init(8, output_unit_scales);
    
 	outdata_st.entryData(1, "time", "time", sys.get_time());
     outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
