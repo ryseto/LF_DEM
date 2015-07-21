@@ -31,7 +31,7 @@ private:
 	int _still_neigh_nb;
 	bool _is_bottom;
 	bool _is_top;
-	vec3d *_probing_positions;// if box is at top/bottom, these positions allow to figure out which boxes are above/below you
+	vec3d *_probing_positions;// if the box is at top/bottom, these positions allow to figure out which boxes are above/below it
 	int _probe_nb;
 	bool can_be_added(int, Box*);
 

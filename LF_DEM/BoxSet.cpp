@@ -4,6 +4,7 @@ using namespace std;
 
 void BoxSet::init(double interaction_dist, System *sys_)
 {
+	cout << " Setting up Cell List System ... ";
 	sys = sys_;
 	boxMap = new Box* [sys->get_np()];
 	for (int i=0; i<sys->get_np(); i++) {
@@ -25,7 +26,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		z_box_nb = 1;
 	}
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
-		cerr << "boxing useless: a neighborhood is the whole system" << endl;
+
 		_is_boxed = false;
 		box_xsize = sys->get_lx();
 		box_ysize = sys->get_ly();
@@ -63,6 +64,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		assignNeighbors();
 	}
 	cerr << "Interaction distance: " << interaction_dist << endl << "Boxes' size (x,y,z): " << box_xsize << " " << box_ysize << " " << box_zsize << endl << endl;
+	cout << " [ok] ";
 }
 
 void BoxSet::allocateBoxes()

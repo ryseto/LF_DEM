@@ -13,7 +13,6 @@ Lubrication::Lubrication(Interaction *int_)
 {
 	interaction = int_;
 	nvec = &(interaction->nvec);
-	getGeometry();
 }
 
 void Lubrication::getGeometry()
@@ -36,6 +35,7 @@ void Lubrication::getGeometry()
 void Lubrication::init(System *sys_)
 {
 	sys = sys_;
+	getGeometry();
 }
 
 void Lubrication::getInteractionData()
@@ -424,18 +424,22 @@ void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
 									  StressTensor &stresslet_j)
 {
-	/*
-	 * S_{ab} = M_{ijxz}E_{xz}+M_{ijzx}E_{zx}
-	 *        = (rate/2)*(M_{ijxz}+M_{ijzx})
-	 *        = M_{ijxz}
-	 * rate = 1 and M_{ijxz} = M_{ijzx}
-	 *   M_{ijxz} = XM_{ab}(3/2)(ninj-(1/3)delta_ij)*(nznx)
-	 *   M_{ijzx} = XM_{ab}(3/2)(ninj-(1/3)delta_ij)*(nznx)
-	 *
-	 * (S_{11}+S_{12})^{ME,X}
-	 *   = M11_{ijxz} + M12_{ijxz}
-     *   = XM_{11}(3/2)(ninj-(1/3)delta_ij)*(nznx) + XM_{12}(3/2)(ninj-(1/3)delta_ij)*(nznx)
-	 *   = [(3/2)(XM_{11}+XM_{12})*nxnz)]*(ninj-(1/3)delta_ij)
+	/**
+		\brief The \f$ M:\hat{E}^{\infty} \f$ component of the stress.
+	
+		(Jeffrey 1992 notations)
+		For a non-dimensionalized strain rate tensor \f$ \hat{E}^{\infty}_{ij} = \frac{1}{2}(\delta_{ia}\delta_{jb} + \delta_{ib}\delta_{ja}) \f$:
+		 
+		\f$ (M_{\alpha\beta}:\hat{E}^{\infty})_{ij} = \frac{3}{2} X_{\alpha\beta} n_i n_j n_a n_b \\ \qquad \qquad \qquad + \frac{1}{2} Y_{\alpha\beta} ( -4 n_i n_j n_a n_b + n_j\delta_{ib}n_a + n_j\delta_{ia}n_b + n_i \delta_{jb}n_a + n_i \delta_{ja}n_b )\f$
+
+		\b Note that we remove the explicit trace removal terms from Jeffrey's expressions. The stress tensors this method computes are \b NOT traceless.
+		
+		On return the stress on particle 1 is 
+		\f$ S_1 = (M_{11}+M_{12}):\hat{E}^{\infty} \f$
+		
+		On particle 2 it is 
+		\f$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} \f$
+
 	 */
 	double cXM_i = (3.0/2)*(scaledXM0()+scaledXM1())*nnE;
 	double cXM_j = (3.0/2)*(scaledXM2()+scaledXM3())*nnE;
@@ -450,12 +454,25 @@ void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
 	}
 	double cYM_i = (1.0/2)*(scaledYM0()+scaledYM1());
 	double cYM_j = (1.0/2)*(scaledYM2()+scaledYM3());
-	StressTensor YME_i(2*nxnz-4*nxnx*nxnz,
-					   nynz-4*nxny*nxnz,
-					   nxnx+nznz-4*nxnz*nxnz,
-					   nxny-4*nynz*nxnz,
-					   -4*nyny*nxnz,
-					   2*nxnz-4*nznz*nxnz);
+	
+	StressTensor YME_i;
+	if(!sys->cross_shear) {
+		YME_i.elm[0] = 2*nxnz-4*nxnx*nnE;
+		YME_i.elm[1] = nynz-4*nxny*nnE;
+		YME_i.elm[2] = nxnx+nznz-4*nxnz*nnE;
+		YME_i.elm[3] = nxny-4*nynz*nnE;
+		YME_i.elm[4] = -4*nyny*nnE;
+		YME_i.elm[5] = 2*nxnz-4*nznz*nnE;
+	}
+	if(sys->cross_shear) {
+		YME_i.elm[0] = -4*nxnx*nnE;
+		YME_i.elm[1] = nxnz-4*nxny*nnE;
+		YME_i.elm[2] = nxny-4*nxnz*nnE;
+		YME_i.elm[3] = nyny+nznz-4*nynz*nnE;
+		YME_i.elm[4] = 2*nynz-4*nyny*nnE;
+		YME_i.elm[5] = 2*nynz-4*nznz*nnE;
+	}
+	
 	StressTensor YME_j = YME_i;
 	YME_i *= cYM_i;
 	YME_j *= cYM_j;

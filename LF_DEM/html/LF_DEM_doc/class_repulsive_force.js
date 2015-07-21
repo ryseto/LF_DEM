@@ -13,14 +13,16 @@ var class_repulsive_force =
     [ "getForceVector", "class_repulsive_force.html#ab2913afd840051050816dd6f45a5bf14", null ],
     [ "getStressXF", "class_repulsive_force.html#a30c9d5954b4ab3c505ca17501408a187", null ],
     [ "init", "class_repulsive_force.html#ab72c1b2766f50f68936f33e47a63390e", null ],
+    [ "cutoff_roundlength", "class_repulsive_force.html#a3fde37760d31fdecc9315f52984bd8c6", null ],
     [ "force_norm", "class_repulsive_force.html#a1477f9f7ac7fe270540b4bc2e1fe72f9", null ],
     [ "force_vector", "class_repulsive_force.html#ac3de91b70a01a931861e5c98d1169928", null ],
     [ "geometric_factor", "class_repulsive_force.html#ab8a5301ba11d45159f3a4173738ea0d9", null ],
     [ "interaction", "class_repulsive_force.html#a690ad0a170f5f5c2486192de43103800", null ],
-    [ "length", "class_repulsive_force.html#a0bca2c2ccce2082cc69dd762a8aa802c", null ],
+    [ "max_length", "class_repulsive_force.html#a07600c08599e63582c4478881be4a7a1", null ],
     [ "p0", "class_repulsive_force.html#a061db72d56cf5988cf7b696c5306e12b", null ],
     [ "p1", "class_repulsive_force.html#ab6932397a7f3651ea83efda4045a38f4", null ],
     [ "reduced_force_norm", "class_repulsive_force.html#ab9e1720275ba641af6fe81032250c00b", null ],
+    [ "screening_length", "class_repulsive_force.html#a81f6133f1665dd1cc3e1fe9b943e59e3", null ],
     [ "stresslet_XF", "class_repulsive_force.html#a6c2f757a3b2b988acb354e3771ea5c90", null ],
     [ "sys", "class_repulsive_force.html#a5f8e3b5d8cdaada1f278b591d4800c00", null ]
 ];

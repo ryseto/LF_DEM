@@ -44,7 +44,7 @@ var classvec3d =
     [ "operator-", "classvec3d.html#ada8334cd93b501c148e63364c5fa09f8", null ],
     [ "operator/", "classvec3d.html#a2ab0f90fc4858a2a1c459d5c2cb7ec36", null ],
     [ "operator/", "classvec3d.html#a10e70ab79b96cb65359ca875a5d2dcae", null ],
-    [ "operator<<", "classvec3d.html#a657b9cbef11c5de4a03faf0ee63cc588", null ],
+    [ "operator<<", "classvec3d.html#a75dda43cb6de36a7c5118ef927d6edf7", null ],
     [ "operator==", "classvec3d.html#adf2075c3e0301828a82b3c8ecd3f4f1c", null ],
     [ "sq_dist", "classvec3d.html#adbd43702602fd4516250ec47375bba77", null ],
     [ "x", "classvec3d.html#a06cbd00203032f3ba256607c91a86224", null ],

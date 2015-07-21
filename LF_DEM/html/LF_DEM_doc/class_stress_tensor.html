@@ -108,9 +108,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa0c08b90f1d09876e571e4d90a471712"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0c08b90f1d09876e571e4d90a471712"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>StressTensor</b> (double a)</td></tr>
 <tr class="separator:aa0c08b90f1d09876e571e4d90a471712"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04285bc87f917098e8d48e7a3b230105"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04285bc87f917098e8d48e7a3b230105"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>outputStressTensor</b> (ofstream &amp;fout)</td></tr>
-<tr class="separator:a04285bc87f917098e8d48e7a3b230105"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6b755df17cc700f39dfb752d9fcd80d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac6b755df17cc700f39dfb752d9fcd80d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>StressTensor</b> (const <a class="el" href="classvec3d.html">vec3d</a> &amp;v1, const <a class="el" href="classvec3d.html">vec3d</a> &amp;v2)</td></tr>
 <tr class="separator:ac6b755df17cc700f39dfb752d9fcd80d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,9 +156,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>getStressXZ</b> ()<
 <tr class="memitem:a314c3738fd82f205acb7d3357b976078"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a314c3738fd82f205acb7d3357b976078"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getParticlePressure</b> ()</td></tr>
 <tr class="separator:a314c3738fd82f205acb7d3357b976078"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cf8a117c6d487011491be103e796193"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9cf8a117c6d487011491be103e796193"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>cerr</b> ()</td></tr>
-<tr class="separator:a9cf8a117c6d487011491be103e796193"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -171,6 +165,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>elm</b> [6]</td></t
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
+<tr class="memitem:a2775d9971f0f5f36c2dfdbbe0a307752"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2775d9971f0f5f36c2dfdbbe0a307752"></a>
+std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;out, const <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;st)</td></tr>
+<tr class="separator:a2775d9971f0f5f36c2dfdbbe0a307752"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aad58762fa7afdd663fb1d099c15391d2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aad58762fa7afdd663fb1d099c15391d2"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (const <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;a1, const <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;a2)</td></tr>
 <tr class="separator:aad58762fa7afdd663fb1d099c15391d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -225,7 +222,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_stress_tensor.html">StressTensor</a></li>
-    <li class="footer">Generated on Tue Jun 23 2015 14:45:16 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Jul 21 2015 15:55:54 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

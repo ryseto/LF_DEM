@@ -114,22 +114,30 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a3ed856cafb8c48a021a80899e85e519f">brownian_amplitude</a></td></tr>
 <tr class="memdesc:a3ed856cafb8c48a021a80899e85e519f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amplitude of the Brownian force [0]. <br /></td></tr>
 <tr class="separator:a3ed856cafb8c48a021a80899e85e519f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accc8a9b8f225df484b0f5e99b8dab676"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="accc8a9b8f225df484b0f5e99b8dab676"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#accc8a9b8f225df484b0f5e99b8dab676">magnetic_amplitude</a></td></tr>
-<tr class="memdesc:accc8a9b8f225df484b0f5e99b8dab676"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amplitude of the magnetic force [0]. <br /></td></tr>
-<tr class="separator:accc8a9b8f225df484b0f5e99b8dab676"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacc3938f973065affb8502c1766f7562"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacc3938f973065affb8502c1766f7562"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aacc3938f973065affb8502c1766f7562">repulsive_length</a></td></tr>
-<tr class="memdesc:aacc3938f973065affb8502c1766f7562"><td class="mdescLeft">&#160;</td><td class="mdescRight">"Debye" length for the repulsive force [0.05] <br /></td></tr>
+<tr class="memdesc:aacc3938f973065affb8502c1766f7562"><td class="mdescLeft">&#160;</td><td class="mdescRight">"Debye" screering length for the repulsive force [0.05] <br /></td></tr>
 <tr class="separator:aacc3938f973065affb8502c1766f7562"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a34d86e60bffc2939f97590a305e17da3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34d86e60bffc2939f97590a305e17da3"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a34d86e60bffc2939f97590a305e17da3">magnetic_type</a></td></tr>
-<tr class="memdesc:a34d86e60bffc2939f97590a305e17da3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles. <br /></td></tr>
-<tr class="separator:a34d86e60bffc2939f97590a305e17da3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad37d657197afbcf86b03481dae15e2e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad37d657197afbcf86b03481dae15e2e1"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ad37d657197afbcf86b03481dae15e2e1">repulsive_max_length</a></td></tr>
+<tr class="memdesc:ad37d657197afbcf86b03481dae15e2e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]. <br /></td></tr>
+<tr class="separator:ad37d657197afbcf86b03481dae15e2e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2cdf2b9ad405db353f57082c549ec5af"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2cdf2b9ad405db353f57082c549ec5af"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a2cdf2b9ad405db353f57082c549ec5af">interaction_range</a></td></tr>
 <tr class="memdesc:a2cdf2b9ad405db353f57082c549ec5af"><td class="mdescLeft">&#160;</td><td class="mdescRight">maximum range (center-to-center) for interactions (repulsive force, magnetic force, etc.). If -1, lub_max_gap is used as cutoff [-1] <br /></td></tr>
 <tr class="separator:a2cdf2b9ad405db353f57082c549ec5af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accc8a9b8f225df484b0f5e99b8dab676"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="accc8a9b8f225df484b0f5e99b8dab676"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#accc8a9b8f225df484b0f5e99b8dab676">magnetic_amplitude</a></td></tr>
+<tr class="memdesc:accc8a9b8f225df484b0f5e99b8dab676"><td class="mdescLeft">&#160;</td><td class="mdescRight">Amplitude of the magnetic force [0]. <br /></td></tr>
+<tr class="separator:accc8a9b8f225df484b0f5e99b8dab676"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a34d86e60bffc2939f97590a305e17da3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34d86e60bffc2939f97590a305e17da3"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a34d86e60bffc2939f97590a305e17da3">magnetic_type</a></td></tr>
+<tr class="memdesc:a34d86e60bffc2939f97590a305e17da3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles. <br /></td></tr>
+<tr class="separator:a34d86e60bffc2939f97590a305e17da3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a404df09596711788d6875c8bef015634"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a404df09596711788d6875c8bef015634"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a404df09596711788d6875c8bef015634">magnetic_field_type</a></td></tr>
+<tr class="memdesc:a404df09596711788d6875c8bef015634"><td class="mdescLeft">&#160;</td><td class="mdescRight">Magnetic field, 1: x-z tilting/raising cycle 2: rotating along z-axis. <br /></td></tr>
+<tr class="separator:a404df09596711788d6875c8bef015634"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad5d0f77928b5f2693ee6084882cd1d19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5d0f77928b5f2693ee6084882cd1d19"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ad5d0f77928b5f2693ee6084882cd1d19">magnetic_interaction_range</a></td></tr>
 <tr class="memdesc:ad5d0f77928b5f2693ee6084882cd1d19"><td class="mdescLeft">&#160;</td><td class="mdescRight">[20] <br /></td></tr>
@@ -144,6 +152,10 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>rot_step_external_m
 <tr class="memitem:a73659aec27a451383aa0cb2ec0545570"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73659aec27a451383aa0cb2ec0545570"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>step_interval_external_magnetic_field</b></td></tr>
 <tr class="separator:a73659aec27a451383aa0cb2ec0545570"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa56cb54de4be81513aa320e98aa4ae99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa56cb54de4be81513aa320e98aa4ae99"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aa56cb54de4be81513aa320e98aa4ae99">timeinterval_update_magnetic_pair</a></td></tr>
+<tr class="memdesc:aa56cb54de4be81513aa320e98aa4ae99"><td class="mdescLeft">&#160;</td><td class="mdescRight">[0.02] Interval to check magnetic interaction <br /></td></tr>
+<tr class="separator:aa56cb54de4be81513aa320e98aa4ae99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaab168f5c31818ce0064adaabeab4c8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaab168f5c31818ce0064adaabeab4c8c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aaab168f5c31818ce0064adaabeab4c8c">sd_coeff</a></td></tr>
 <tr class="memdesc:aaab168f5c31818ce0064adaabeab4c8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stokes drag coeffient. Full drag is 1. [1]. <br /></td></tr>
@@ -162,7 +174,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="separator:a7651be3c755be367a7a1047de63e6c79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2d4ba8e375a91a39654f49f33ce1c00c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2d4ba8e375a91a39654f49f33ce1c00c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a2d4ba8e375a91a39654f49f33ce1c00c">friction_model</a></td></tr>
-<tr class="memdesc:a2d4ba8e375a91a39654f49f33ce1c00c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. 3 infinite mu Coulomb with threshold [1]. <br /></td></tr>
+<tr class="memdesc:a2d4ba8e375a91a39654f49f33ce1c00c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Friction model. 0: No friction. 1: Coulomb. 2: Coulomb with threshold. [1]. <br /></td></tr>
 <tr class="separator:a2d4ba8e375a91a39654f49f33ce1c00c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab005331fd7290c4fbdce123e774de54"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aab005331fd7290c4fbdce123e774de54"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aab005331fd7290c4fbdce123e774de54">mu_static</a></td></tr>
@@ -224,10 +236,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ae681d078752b83a1d3fa0812cdc8cc45">disp_max</a></td></tr>
 <tr class="memdesc:ae681d078752b83a1d3fa0812cdc8cc45"><td class="mdescLeft">&#160;</td><td class="mdescRight">When fixed_dt == false only: maximum displacement at each time step, the time step size dt is determined from disp_max at every step. [2e-3 length unit]. <br /></td></tr>
 <tr class="separator:ae681d078752b83a1d3fa0812cdc8cc45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa56cb54de4be81513aa320e98aa4ae99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa56cb54de4be81513aa320e98aa4ae99"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aa56cb54de4be81513aa320e98aa4ae99">timeinterval_update_magnetic_pair</a></td></tr>
-<tr class="memdesc:aa56cb54de4be81513aa320e98aa4ae99"><td class="mdescLeft">&#160;</td><td class="mdescRight">[0.02] <br /></td></tr>
-<tr class="separator:aa56cb54de4be81513aa320e98aa4ae99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51bb46cd8a6fd6a4d08f283905ff8171"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51bb46cd8a6fd6a4d08f283905ff8171"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a51bb46cd8a6fd6a4d08f283905ff8171">time_interval_output_data</a></td></tr>
 <tr class="memdesc:a51bb46cd8a6fd6a4d08f283905ff8171"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output interval for outputing data_* file [0.01 time unit]. <br /></td></tr>
@@ -310,7 +318,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="struct_parameter_set.html">ParameterSet</a></li>
-    <li class="footer">Generated on Tue Jun 23 2015 14:45:16 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Jul 21 2015 15:55:54 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
