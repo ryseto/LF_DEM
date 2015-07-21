@@ -58,7 +58,7 @@ private:
 	/*
 	 * Resultant data
 	 */
-	double initial_lees_edwards_disp;
+	vec3d initial_lees_edwards_disp;
 	double initial_y_shear_disp;
 	std::string internal_unit_scales;
 	std::string output_unit_scales;

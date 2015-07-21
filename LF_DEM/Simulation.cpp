@@ -473,16 +473,8 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 	} else {
 		importConfiguration();
 	}
-	if (initial_lees_edwards_disp > 0) {
-		sys.shear_disp = initial_lees_edwards_disp;
-	} else {
-		sys.shear_disp = 0;
-	}
-	if (initial_y_shear_disp > 0) {
-		sys.y_shear_disp = initial_y_shear_disp;
-	} else {
-		sys.y_shear_disp = 0;
-	}
+	sys.shear_disp = initial_lees_edwards_disp;
+	
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -569,7 +561,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-
+	//sys.cross_shear = true;
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -1374,16 +1366,17 @@ void Simulation::importConfiguration()
 	char buf;
 	int n1, n2;
 	double lx, ly, lz, vf1, vf2;
+	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
 	stringstream ss(header_imported_configulation[1]);
-	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
+	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp.x;
 	double a;
 	if(ss >> a) {
-		initial_y_shear_disp = a;
+		initial_lees_edwards_disp.y = a;
 	}
 	else {
-		initial_y_shear_disp = 0;
+		initial_lees_edwards_disp.y = 0;
 	}
 	vector<vec3d> initial_position;
 	vector <double> radius;
@@ -1435,14 +1428,14 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
-	double shear_disp = sys.shear_disp;
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
 	conf_export.write((char*)&np, sizeof(int));
 	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
 	conf_export.write((char*)&lx, sizeof(double));
 	conf_export.write((char*)&ly, sizeof(double));
 	conf_export.write((char*)&lz, sizeof(double));
-	conf_export.write((char*)&shear_disp, sizeof(double));
+	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));
+	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
@@ -1452,6 +1445,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 void Simulation::importConfigurationBinary()
 {
 	ifstream file_import;
+	initial_lees_edwards_disp.reset();
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
@@ -1464,7 +1458,8 @@ void Simulation::importConfigurationBinary()
 	file_import.read((char*)&lx, sizeof(double));
 	file_import.read((char*)&ly, sizeof(double));
 	file_import.read((char*)&lz, sizeof(double));
-	file_import.read((char*)&initial_lees_edwards_disp, sizeof(double));
+	file_import.read((char*)&initial_lees_edwards_disp.x, sizeof(double));
+	file_import.read((char*)&initial_lees_edwards_disp.y, sizeof(double));
 	double x_, y_, z_, r_;
 	vector <vec3d> initial_position;
 	vector <double> radius;
@@ -1634,7 +1629,7 @@ void Simulation::outputData()
 	outdata.entryData(32, "kn", "none", sys.p.kn);
 	outdata.entryData(33, "kt", "none", sys.p.kt);
 	outdata.entryData(34, "kr", "none", sys.p.kr);
-	outdata.entryData(35, "shear displacement", "none", sys.shear_disp);
+	outdata.entryData(35, "shear displacement", "none", sys.shear_disp.x);
 	if (p.magnetic_type != 0) {
 		outdata.entryData(37, "magnetic energy", "none", sys.magnetic_energy);
 		outdata.entryData(38, "magnetic field angle", "none", sys.angle_external_magnetic_field);
@@ -1664,9 +1659,13 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	if (p.origin_zero_flow) {
 		z += sys.Lz_half();
 		if (z > sys.Lz_half()) {
-			x -= sys.shear_disp;
+			x -= sys.shear_disp.x;
+			y -= sys.shear_disp.y;
 			if (x < -sys.Lx_half()) {
 				x += sys.get_lx();
+			}
+			if (y < -sys.Ly_half()) {
+				y += sys.get_ly();
 			}
 			z -= sys.get_lz();
 		}
@@ -1713,7 +1712,7 @@ void Simulation::outputConfigurationData()
 	if (p.out_data_particle) {
 		cout << "   out config: " << sys.get_shear_strain() << endl;
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
-		fout_particle << sys.shear_disp << ' ';
+		fout_particle << sys.shear_disp.x << ' ';
 		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << ' ';
