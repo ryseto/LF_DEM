@@ -28,17 +28,10 @@ private:
 	double box_xsize;
 	double box_ysize;
 	double box_zsize;
-	double box_xsize_half; // = box_xsize/2
-	double box_ysize_half; // = box_ysize/2
-	double box_zsize_half; // = box_zsize/2
 	int x_box_nb;
 	int y_box_nb;
 	int z_box_nb;
 	int box_nb;
-	int bottom_box_nb;
-	int top_box_nb;
-	int bulk_box_nb;
-	int topbottom_box_nb;
 	bool _is_boxed;
 	std::set <Box*> Boxes;
 	std::set <Box*> BulkBoxes;
@@ -59,7 +52,6 @@ private:
 	void assignNeighborsBottom();
 	void assignNeighborsTopBottom();
 	Box ** boxMap;
-//	std::unordered_set <vec3d> probing_positions;
 
 	std::vector <vec3d> top_probing_positions;
 	std::vector <vec3d> bottom_probing_positions;

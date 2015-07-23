@@ -31,14 +31,8 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		box_xsize = sys->get_lx();
 		box_ysize = sys->get_ly();
 		box_zsize = sys->get_lz();
-		box_xsize_half = 0.5*box_xsize;
-		box_ysize_half = 0.5*box_ysize;
-		box_zsize_half = 0.5*box_zsize;
 		box_nb = 1;
-		top_box_nb = 0;
-		bottom_box_nb = 0;
-		topbottom_box_nb = 1;
-		bulk_box_nb = 0;
+
 		auto it = Boxes.insert(new Box());
 		Box* const box = (*it.first);
 		box->position.reset();
@@ -51,31 +45,10 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		box_xsize = sys->get_lx()/x_box_nb;
 		box_ysize = sys->get_ly()/y_box_nb;
 		box_zsize = sys->get_lz()/z_box_nb;
-		box_xsize_half = 0.5*box_xsize;
-		box_ysize_half = 0.5*box_ysize;
-		box_zsize_half = 0.5*box_zsize;
 
-		// for (int a : {-1,1} ) {// most general case if there is no alignement between boxes
-		// 	for (int b : {-1,1} ) {
-		// 		for (int c : {-1,1} ) {
-		// 			vec3d far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,c*box_zsize);
-		// 			probing_positions.insert(far_corner);
-		// 			probing_positions.insert(far_corner-vec3d(a*box_xsize,0,0));
-		// 			probing_positions.insert(far_corner-vec3d(a*box_xsize,b*box_ysize,0));
-		// 			probing_positions.insert(far_corner-vec3d(a*box_xsize,0,c*box_zsize));
-		// 			probing_positions.insert(far_corner-vec3d(0,b*box_ysize,0));
-		// 			probing_positions.insert(far_corner-vec3d(0,b*box_ysize,c*box_zsize));
-		// 			probing_positions.insert(far_corner-vec3d(0,0,c*box_zsize));
-		// 		}
-		// 	}
-		// }
 		for (int a : {-1,1} ) {
 			for (int b : {-1,1} ) {
 				vec3d far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,box_zsize);
-				// top_probing_positions.insert(far_corner);
-				// top_probing_positions.insert(far_corner-vec3d(a*box_xsize,0,0));
-				// top_probing_positions.insert(far_corner-vec3d(a*box_xsize,b*box_ysize,0));
-				// top_probing_positions.insert(far_corner-vec3d(0,b*box_ysize,0));
 				top_probing_positions.push_back(far_corner);
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,0,0));
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,b*box_ysize,0));
@@ -95,30 +68,12 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		// tell them their neighbors
 		assignNeighbors();
 	}
-	cerr << "Interaction distance: " << interaction_dist << endl << "Boxes' size (x,y,z): " << box_xsize << " " << box_ysize << " " << box_zsize << endl << endl;
-	cout << " [ok] " << endl;
-	
+	cout << " [ok]" << endl;
 }
 
 void BoxSet::allocateBoxes()
 {
 	box_nb = x_box_nb*y_box_nb*z_box_nb;
-	top_box_nb = x_box_nb*y_box_nb;
-	bottom_box_nb = top_box_nb;
-	bulk_box_nb = box_nb-top_box_nb-bottom_box_nb;
-	topbottom_box_nb = 0;
-	if (bulk_box_nb < 0) { // there is only one layer in the z direction ( ie BottomBoxes == TopBoxes )
-		bulk_box_nb = 0;
-		topbottom_box_nb = top_box_nb;
-		top_box_nb = 0;
-		bottom_box_nb = 0;
-	}
-	cerr << endl << "Boxer allocating :" << endl;
-	cerr << box_nb << " boxes" << endl;
-	cerr << top_box_nb << " top_boxes" << endl;
-	cerr << bottom_box_nb << " bottom_boxes" << endl;
-	cerr << bulk_box_nb << " bulk_boxes" << endl;
-	cerr << topbottom_box_nb << " topbottom_boxes" << endl;
 
 	for (int i=0; i<box_nb;i++) {
 		Boxes.emplace(new Box());
@@ -151,7 +106,7 @@ void BoxSet::positionBoxes()
 		for (int iy=0; iy<y_box_nb; iy++) {
 			for (int iz=0; iz<z_box_nb; iz++) {
 				Box* const box = (*it);
-				box->position = vec3d(box_xsize*ix, box_ysize*iy, box_zsize*iz);
+				box->position = vec3d(box_xsize*(ix+0.5), box_ysize*(iy+0.5), box_zsize*(iz+0.5)); // the center of the box
 				int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 				box_labels[label] = box;
 				if (iz == 0 && iz < z_box_nb-1) {// bottom box
@@ -184,10 +139,6 @@ void BoxSet::assignNeighborsBulk()
 	for (auto & box : BulkBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
-
 		
 		for (const auto& a : {-1,0,1}) {
 			delta.x = a*box_xsize;
@@ -207,9 +158,6 @@ void BoxSet::assignNeighborsBottom()
 	for (auto & box : BottomBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
 
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
 		for (const auto & a : {-1,0,1}) {
@@ -235,10 +183,7 @@ void BoxSet::assignNeighborsTop()
 	for (auto & box : TopBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
-				
+	
 		// boxes  at same level and bottom first: these are fixed once and for all in the simulation
 		for (const auto & a : {-1,0,1}) {
 			delta.x = a*box_xsize;
@@ -264,10 +209,7 @@ void BoxSet::assignNeighborsTopBottom()
 	for (auto & box : TopBottomBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
-				
+		
 		// boxes at same level first: these are fixed once and for all in the simulation
 		for (const auto & a : {-1,0,1}) {
 			delta.x = a*box_xsize;
@@ -305,7 +247,7 @@ BoxSet::~BoxSet(){
 	TopBoxes.clear();
 	BottomBoxes.clear();
 	TopBottomBoxes.clear();
-
+	box_labels.clear();
 	DELETE(boxMap);
 }
 
@@ -318,15 +260,17 @@ BoxSet::~BoxSet(){
  *****/
 void BoxSet::updateNeighbors()
 {
+	/**
+	 \brief Update the neighbors of top and bottom boxes have changed.
+
+		To be called when the boundary conditions have changed.
+	 **/
 
 	for (auto & box : TopBoxes) {
 		box->reset_moving_neighbors();
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
-				
+			
 		for (const auto& delta_prob : top_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
@@ -336,10 +280,7 @@ void BoxSet::updateNeighbors()
 		box->reset_moving_neighbors();
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
-				
+			
 		for (const auto& delta_prob : bottom_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
@@ -349,10 +290,7 @@ void BoxSet::updateNeighbors()
 		box->reset_moving_neighbors();
 		vec3d pos = box->position;
 		vec3d delta;
-		pos.x += box_xsize_half;
-		pos.y += box_ysize_half;
-		pos.z += box_zsize_half;
-				
+			
 		for (const auto& delta_prob : top_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
