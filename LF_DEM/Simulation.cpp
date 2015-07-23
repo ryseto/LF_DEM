@@ -156,7 +156,7 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 
 	do {
 		previous_resolved = resolved;
-		for (auto&& f: suffixes) {
+		for (const auto& f: suffixes) {
 			string force_type = f.first;
 			string suffix = f.second;
 			if (resolved_units.find(suffix) != resolved_units.end()) {  // then we know how to convert to unit
@@ -170,7 +170,7 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 
 	// check we found everyone
 	if (resolved < suffixes.size()) {
-		for (auto&& f: suffixes) {
+		for (const auto& f: suffixes) {
 			string force_type = f.first;
 			string suffix = f.second;
 			if (resolved_units.find(suffix) == resolved_units.end()) {
@@ -181,9 +181,9 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 	}
 	
 	// determine the dimensionless_numbers
-	for (auto&& f1: suffixes) {
+	for (const auto& f1: suffixes) {
 		string force1_type = f1.first;
-		for (auto&& f2: suffixes) {
+		for (const auto& f2: suffixes) {
 			string force2_type = f2.first;
 			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
 			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
@@ -298,7 +298,7 @@ void Simulation::setLowPeclet()
 void Simulation::convertForceValues(string new_unit)
 {
 
-	for (auto&& f: suffixes) {
+	for (auto& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
 		if (old_unit != new_unit) {
@@ -367,7 +367,7 @@ void Simulation::exportForceAmplitudes()
 void Simulation::convertInputValues(string new_unit)
 {
 
-	for (auto&& inv: input_values) {
+	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
 			if (old_unit != "hydro" && values.find(old_unit) == values.end()) {
@@ -413,7 +413,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 
 	setDefaultParameters();
 	readParameterFile();
-	for (auto&& f: suffixes) {
+	for (const auto& f: suffixes) {
 		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
 	if (control_var == "rate") {
@@ -483,7 +483,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		}
 	}
 
-	for (auto&& inv: input_values) {
+	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
 				time_end = -1;
@@ -501,7 +501,7 @@ void Simulation::setupSimulationSteadyShear(string in_args,
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
 	} else {
-		for (auto&& inv: input_values) {
+		for (const auto& inv: input_values) {
 			if (inv.name == "time_interval_output_data") {
 				if (inv.unit == "strain") {
 					time_interval_output_data = -1;
@@ -561,7 +561,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulationSteadyShear(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-	//sys.cross_shear = true;
+	
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -573,7 +573,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	//@@@ is it useful before any step is done? ---> Outputing t=0 data may be useful.
 	evaluateData(); // 
 	outputData(); // new
 	outputConfigurationBinary();
@@ -1138,6 +1137,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.step_interval_external_magnetic_field = atof(value.c_str());
 	} else if (keyword == "magnetic_interaction_range") {
 		p.magnetic_interaction_range = atof(value.c_str());
+	} else if (keyword == "cross_shear") {
+		sys.cross_shear = str2bool(value); // temporary, should get a parameter
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -1580,22 +1581,28 @@ void Simulation::outputData()
 
 
 	double sr = sys.get_shear_rate();
-	double shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
-
+	unsigned int shear_stress_index;
+	if (!sys.cross_shear) {
+		shear_stress_index = 2;
+	} else {
+		shear_stress_index = 3;
+	}
+	double shear_stress = sys.einstein_stress+sys.total_stress.elm[shear_stress_index];
+	
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
 	
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
-	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.getStressXZ()/sr);
-	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.getStressXZ()/sr);
-	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", sys.total_contact_stressGU.getStressXZ()/sr);
+	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.elm[shear_stress_index]/sr);
+	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.elm[shear_stress_index]/sr);
+	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", sys.total_contact_stressGU.elm[shear_stress_index]/sr);
 	if (sys.repulsiveforce) {
-		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", sys.total_repulsive_stressXF.getStressXZ()/sr);
-		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", sys.total_repulsive_stressGU.getStressXZ()/sr);
+		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", sys.total_repulsive_stressXF.elm[shear_stress_index]/sr);
+		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", sys.total_repulsive_stressGU.elm[shear_stress_index]/sr);
 	}
 	if (sys.brownian) {
-		outdata.entryData(11, "Viscosity(brownian)", "viscosity", sys.total_brownian_stressGU.getStressXZ()/sr);
+		outdata.entryData(11, "Viscosity(brownian)", "viscosity", sys.total_brownian_stressGU.elm[shear_stress_index]/sr);
 	}
 	/*
 	 * Stress
@@ -1720,15 +1727,22 @@ void Simulation::outputConfigurationData()
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
+		
+		unsigned int shear_stress_index;
+		if (!sys.cross_shear) {
+			shear_stress_index = 2;
+		} else {
+			shear_stress_index = 3;
+		}
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];
 			const vec3d &o = sys.ang_velocity[i];
-			double lub_xzstress = sys.lubstress[i].getStressXZ();
-			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
+			double lub_xzstress = sys.lubstress[i].elm[shear_stress_index];
+			double contact_xzstressGU = sys.contactstressGU[i].elm[shear_stress_index];
 			double brownian_xzstressGU = 0;
 			if (sys.brownian) {
-				brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
+				brownian_xzstressGU = sys.brownianstressGU[i].elm[shear_stress_index];
 			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
@@ -1762,6 +1776,12 @@ void Simulation::outputConfigurationData()
 		fout_interaction << ' ' << cnt_interaction;
 		fout_interaction << ' ' << sys.get_time();
 		fout_interaction << endl;
+		unsigned int shear_stress_index;
+		if (!sys.cross_shear) {
+			shear_stress_index = 2;
+		} else {
+			shear_stress_index = 3;
+		}
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
@@ -1796,7 +1816,7 @@ void Simulation::outputConfigurationData()
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
 				fout_interaction << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 17
+				fout_interaction << 6*M_PI*stress_contact.elm[shear_stress_index] << ' '; // 17
 				fout_interaction << endl;
 			}
 		}

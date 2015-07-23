@@ -25,7 +25,7 @@ public:
 	 * (xx, xy, xz, yz, yy, zz)
 	 */
 	double elm[6];
-
+		
 	inline StressTensor()
 	{
 		for (int i=0; i<6; i++) {
@@ -321,11 +321,6 @@ public:
 	double getNormalStress2()
 	{
 		return elm[5]-elm[4];
-	}
-	
-	double getStressXZ()
-	{
-		return elm[2];
 	}
 	
 	double getParticlePressure()

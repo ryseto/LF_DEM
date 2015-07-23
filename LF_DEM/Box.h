@@ -24,16 +24,10 @@
 
 class Box{
 private:
-	Box **_neighbors;
-	Box **_moving_neighbors;
-	int _neigh_nb;
-	int _moving_neigh_nb;
-	int _still_neigh_nb;
+	std::set <Box*> _neighbors;
+	std::set <Box*> _moving_neighbors;
 	bool _is_bottom;
 	bool _is_top;
-	vec3d *_probing_positions;// if the box is at top/bottom, these positions allow to figure out which boxes are above/below it
-	int _probe_nb;
-	bool can_be_added(int, Box*);
 
 	
 public:
@@ -41,27 +35,14 @@ public:
 	~Box();
 	vec3d position;
 	std::set <int> container;
-	void neigh_nb(int n, int moving_n=0);
-	bool neighbor(int label, Box* neigh_box);
-	bool moving_neighbor(int moving_label, Box* neigh_box);
+	void addStaticNeighbor(Box* neigh_box);
+	void addMovingNeighbor(Box* neigh_box);
 	void reset_moving_neighbors();
-	Box** neighbors()
+	std::set <Box*> neighbors()
 	{
 		return _neighbors;
 	}
-	int neigh_nb()
-	{
-		return _neigh_nb;
-	}
-	int probe_nb()
-	{
-		return _probe_nb;
-	}
-	vec3d* probing_positions()
-	{
-		return _probing_positions;
-	}
-	void probing_positions(int label, const vec3d &pos);
+	
 	void is_top(bool);
 	void is_bottom(bool);
 	bool is_top();

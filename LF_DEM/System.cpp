@@ -709,7 +709,6 @@ void System::timeStepBoxing(const double strain_increment)
 		}
 		
 	}
-	cout << shear_disp << endl;
 	boxset.update();
 }
 
@@ -1459,17 +1458,24 @@ void System::computeShearRate()
 	 */
 	calcStressPerParticle();
 	calcStress();
-	
-	double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-	+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+
+	unsigned int shear_stress_index;
+	if (!cross_shear) {
+		shear_stress_index = 2;
+	} else {
+		shear_stress_index = 3;
+	}
+
+	double shearstress_con = total_contact_stressXF_normal.elm[shear_stress_index] \
+	+total_contact_stressXF_tan.elm[shear_stress_index]+total_contact_stressGU.elm[shear_stress_index];
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
-		shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+		shearstress_rep = total_repulsive_stressXF.elm[shear_stress_index]+total_repulsive_stressGU.elm[shear_stress_index];
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+	double viscosity_hyd = einstein_viscosity+total_hydro_stress.elm[shear_stress_index];
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
@@ -1563,8 +1569,13 @@ void System::computeVelocities(bool divided_velocities)
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			velocity[i].x += shear_rate*position[i].z;
-			ang_velocity[i].y += 0.5*shear_rate;
+			if (!cross_shear) {
+				velocity[i].x += shear_rate*position[i].z;
+				ang_velocity[i].y += 0.5*shear_rate;
+			} else {
+				velocity[i].y += shear_rate*position[i].z;
+				ang_velocity[i].x += 0.5*shear_rate;
+			}			
 			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	} else {
@@ -1594,7 +1605,11 @@ void System::displacement(int i, const vec3d &dr)
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
 	if (z_shift != 0) {
-		velocity[i].x += z_shift*vel_difference;
+		if (!cross_shear) {
+			velocity[i].x += z_shift*vel_difference;
+		} else {
+			velocity[i].y += z_shift*vel_difference;
+		}
 	}
 	boxset.box(i);
 }
@@ -1756,7 +1771,11 @@ double System::evaluateMaxVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_velocity_tmp = velocity[i];
 		if (!zero_shear) {
-			na_velocity_tmp.x -= shear_rate*position[i].z;
+			if (!cross_shear) {
+				na_velocity_tmp.x -= shear_rate*position[i].z;
+			} else {
+				na_velocity_tmp.y -= shear_rate*position[i].z;
+			}
 		}
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
 			sq_max_velocity = na_velocity_tmp.sq_norm();

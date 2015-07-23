@@ -14,6 +14,10 @@
 
 #ifndef __LF_DEM__BoxSet__
 #define __LF_DEM__BoxSet__
+#include <set>
+#include <unordered_set>
+#include <vector>
+#include "vec3d.h"
 #include "Box.h"
 
 #define DELETE(x) if(x){delete [] x; x = NULL;}
@@ -36,16 +40,16 @@ private:
 	int bulk_box_nb;
 	int topbottom_box_nb;
 	bool _is_boxed;
-	Box** Boxes;
-	Box** BulkBoxes;
-	Box** TopBoxes;
-	Box** BottomBoxes;
-	Box** TopBottomBoxes;
+	std::set <Box*> Boxes;
+	std::set <Box*> BulkBoxes;
+	std::set <Box*> TopBoxes;
+	std::set <Box*> BottomBoxes;
+	std::set <Box*> TopBottomBoxes;
+	std::vector <Box*> box_labels;
 	System *sys;
 	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
 	Box* WhichBox(vec3d*);
 	void updateNeighbors();
-	void updateNeighbors(Box*);
 	// init methods
 	void allocateBoxes();
 	void positionBoxes();
@@ -55,7 +59,10 @@ private:
 	void assignNeighborsBottom();
 	void assignNeighborsTopBottom();
 	Box ** boxMap;
-	
+//	std::unordered_set <vec3d> probing_positions;
+
+	std::vector <vec3d> top_probing_positions;
+	std::vector <vec3d> bottom_probing_positions;
 public:
 	BoxSet(){;}
 	~BoxSet();
@@ -103,5 +110,8 @@ public:
 	std::vector<int>::iterator neighborhood_end(int i);
 	std::vector <int> & neighborhood(int i);
 	void printBoxNetwork();
+	void printBoxContainers();
+	void printNeighborhoodContainers();
+	void printBoxMap();
 };
 #endif /* defined(__LF_DEM__BoxSet__) */
