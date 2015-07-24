@@ -829,7 +829,7 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
+		if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 			if (max_velocity > max_sliding_velocity) {
 				dt = p.disp_max/max_velocity;
 			} else {
@@ -876,7 +876,7 @@ void System::timeStepMovePredictor()
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		//dt = disp_max/max_velocity;
 		if (!fixed_dt) {
-			if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
+			if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 				if (max_velocity > max_sliding_velocity) {
 					dt = p.disp_max/max_velocity;
 				} else {
