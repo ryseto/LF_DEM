@@ -310,7 +310,7 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 		GEj[0] =  cGE_j*nvec->x;
 		GEj[1] =  (cGE_j*nvec->y+YG1_YG3*nvec->z);
 		GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->y);
-		double nyny_nznz = nyny+nznz;
+		double nyny_nznz = nyny-nznz;
 		HEi[0] =  cHE_i*nyny_nznz;
 		HEi[1] = -cHE_i*nxny;
 		HEi[2] =  cHE_i*nxnz;
@@ -402,8 +402,8 @@ void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	YHO_i.elm[2] = -scaledYM0()*cYHOi_xz-scaledYM1()*cYHOj_xz;
 	YHO_j.elm[2] = -scaledYM2()*cYHOi_xz-scaledYM3()*cYHOj_xz;
 	
-	double cYHOi_yz = nyny*oi.x-nynz*oi.y+nxnz*oi.z-nynz*oi.x;
-	double cYHOj_yz = nyny*oj.x-nynz*oj.y+nxnz*oj.z-nynz*oj.x;
+	double cYHOi_yz = nyny*oi.x-nxny*oi.y+nxnz*oi.z-nznz*oi.x;
+	double cYHOj_yz = nyny*oj.x-nxny*oj.y+nxnz*oj.z-nznz*oj.x;
 	YHO_i.elm[3] = -scaledYM0()*cYHOi_yz-scaledYM1()*cYHOj_yz;
 	YHO_j.elm[3] = -scaledYM2()*cYHOi_yz-scaledYM3()*cYHOj_yz;
 	
