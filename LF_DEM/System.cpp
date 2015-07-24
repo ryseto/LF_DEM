@@ -253,7 +253,7 @@ void System::setInteractions_GenerateInitConfig()
 	nb_interaction = 0;
 	shear_strain = 0;
 	shear_disp.reset();
-	vel_difference = 0;
+	vel_difference.reset();
 	initializeBoxing();
 	checkNewInteraction();
 }
@@ -614,10 +614,11 @@ void System::setupSystem(string control)
 	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
-	if (!zero_shear) {
-		vel_difference = shear_rate*lz;
+	vel_difference.reset();
+	if (!cross_shear) {		
+		vel_difference.x = shear_rate*lz;
 	} else {
-		vel_difference = 0;
+		vel_difference.y = shear_rate*lz;
 	}
 	stokes_solver.initialize();
 	dt = p.dt;
@@ -1585,8 +1586,12 @@ void System::computeVelocities(bool divided_velocities)
 			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	}
-	
-	vel_difference = shear_rate*lz;
+
+	if (!cross_shear) {		
+		vel_difference.x = shear_rate*lz;
+	} else {
+		vel_difference.y = shear_rate*lz;
+	}	
 	stokes_solver.solvingIsDone();
 }
 
@@ -1605,11 +1610,7 @@ void System::displacement(int i, const vec3d &dr)
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
 	if (z_shift != 0) {
-		if (!cross_shear) {
-			velocity[i].x += z_shift*vel_difference;
-		} else {
-			velocity[i].y += z_shift*vel_difference;
-		}
+		velocity[i] += z_shift*vel_difference;
 	}
 	boxset.box(i);
 }

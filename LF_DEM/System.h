@@ -244,7 +244,7 @@ private:
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz
 	 */
-	double vel_difference;
+	vec3d vel_difference;
 	double max_velocity;
 	double max_relative_velocity;
 	double max_sliding_velocity;
