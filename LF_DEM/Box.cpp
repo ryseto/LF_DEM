@@ -38,9 +38,6 @@ void Box::addMovingNeighbor(Box* neigh_box)
 	if(neigh_box == this){
 		return;
 	}
-	if((long int)neigh_box<0x0000000100000000){
-		cout << neigh_box << endl; getchar();
-	}
 	_neighbors.insert(neigh_box);
 	_moving_neighbors.insert(neigh_box);
 }
