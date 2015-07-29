@@ -1618,32 +1618,28 @@ void System::displacement(int i, const vec3d &dr)
 // [0,l]
 int System::periodize(vec3d &pos)
 {
-	int z_shift;
-	if (pos.z >= lz) {
+	int z_shift = 0;
+	while (pos.z >= lz) {
 		pos.z -= lz;
 		pos -= shear_disp;
-		z_shift = -1;
-	} else if (pos.z < 0) {
+		z_shift--;
+	}
+ 	while (pos.z < 0) {
 		pos.z += lz;
 		pos += shear_disp;
-		z_shift = 1;
-	} else {
-		z_shift = 0;
+		z_shift++;
 	}
-	if (pos.x >= lx) {
+
+	while (pos.x >= lx) {
 		pos.x -= lx;
-		if (pos.x >= lx){
-			pos.x -= lx;
-		}
-	} else if (pos.x < 0) {
-		pos.x += lx;
-		if (pos.x < 0){
-			pos.x += lx;
-		}
 	}
-	if (pos.y >= ly) {
+	while (pos.x < 0) {
+		pos.x += lx;
+	}
+	while (pos.y >= ly) {
 		pos.y -= ly;
-	} else if (pos.y < 0) {
+	}
+	while (pos.y < 0) {
 		pos.y += ly;
 	}
 	return z_shift;
@@ -1656,63 +1652,50 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
-	if (pos_diff.z > lz_half) {
+	zshift = 0;
+	while (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff -= shear_disp;
-		zshift = -1;
-	} else if (pos_diff.z < -lz_half) {
+		zshift--;
+	} 
+	while (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 		pos_diff += shear_disp;
-		zshift = 1;
-	} else {
-		zshift = 0;
+		zshift++;
 	}
-	if (pos_diff.x > lx_half) {
+	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-		if (pos_diff.x > lx_half) {
-			pos_diff.x -= lx;
-		}
-	} else if (pos_diff.x < -lx_half) {
+	} 
+	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
-		if (pos_diff.x < -lx_half) {
-			pos_diff.x += lx;
-		}
 	}
-	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
-			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
-			pos_diff.y += ly;
-		}
+	while (pos_diff.y > ly_half) {
+		pos_diff.y -= ly;
+	} 
+	while (pos_diff.y < -ly_half) {
+		pos_diff.y += ly;
 	}
 }
 
-void System::periodize_diff_unsheared(vec3d &pos_diff)
+void System::periodize_diff_unsheared(vec3d &pos_diff) // @@@ is there really a gain duplicating the code for saving just a few addition operations?
 {
-	/*
-	 * The displacement of the second particle along z direction
-	 * is zshift * lz;
-	 */
-	if (pos_diff.z > lz_half) {
+	while (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
-	} else if (pos_diff.z < -lz_half) {
+	} 
+	while (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 	}
-	if (pos_diff.x > lx_half) {
+	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-		if (pos_diff.x > lx_half) {
-			pos_diff.x -= lx;
-		}
-	} else if (pos_diff.x < -lx_half) {
+	} 
+	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
-		if (pos_diff.x < -lx_half) {
-			pos_diff.x += lx;
-		}
 	}
 	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
+		while (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
+		} 
+		while (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
 	}

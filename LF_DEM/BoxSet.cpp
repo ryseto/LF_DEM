@@ -340,10 +340,7 @@ Box* BoxSet::WhichBox(vec3d *pos)
 	}
 	int iz = (int)(pos->z/box_zsize);
 	int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
-	// cout << " Which Box : " << label << endl;
-	// cout << x_box_nb << " " << y_box_nb << " " << z_box_nb<< " "<< ix  <<" "<< iy << " " << iz << endl;
-	// cout <<pos->x << " " << pos->y << " " << pos->z << endl;
-	// cout << (Boxes[label])->position.x<< " " << (Boxes[label])->position.y<< " " << (Boxes[label])->position.z<< endl;
+
 	return box_labels[label];
 }
 
