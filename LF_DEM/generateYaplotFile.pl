@@ -30,6 +30,7 @@ $name = substr($particle_data, $i, $j-$i);
 $interaction_data = "int_${name}.dat";
 #printf "$interaction_data\n";
 $output = "y_$name.yap";
+#$outputmag = "$name.txt";
 
 my $pos;
 $pos = index($name, "_m");
@@ -77,10 +78,12 @@ while (1) {
 #OUTE->autoflush(1);
 
 open (OUT, "> ${output}");
+#open (OUTMAG, "> ${outputmag}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
 $first=1;
+#$firstMag=1;
 $c_traj=0;
 $num = 0;
 
@@ -97,6 +100,8 @@ printf OUT "\@8 255 255 255\n";
 printf OUT "\@9 150 150 150\n";
 #printf OUT "\@8 224 143 0 \n";
 #printf OUT "\@9 67 163 230 \n";
+#printf OUT "\@8 253 105 6 \n";
+#printf OUT "\@9 109 109 109 \n";
 printf OUT "\@10 250 250 250 \n";
 printf OUT "\@11 240 240 240 \n";
 printf OUT "\@12 230 230 230 \n";
@@ -143,6 +148,7 @@ while (1){
 	}
 	if ($output == 1) {
 		&OutYaplotData;
+		#		&OutputTxtFile;
 		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
 		$energy_diff = $total_energy_dis - $total_energy;
 		if ($mag) {
@@ -403,6 +409,21 @@ sub InInteractions {
 	}
 	
 	#printf OUTG "\n";
+}
+
+
+sub OutputTxtFile{
+	if ($firstMag == 0){
+		printf OUTMAG "\n";
+	} else {
+		$firstMag = 0;
+	}
+	
+	for ($i = 0; $i < $np; $i ++){
+		#		printf OUTMAG "$i $posx[$i] $posy[$i] $posz[$i] $magmom_x[$i] $magmom_y[$i] $magmom_z[$i]\n";
+		printf OUTMAG ("%3d %.5f %.5f %.5f %.5f %.5f %.5f \n", $i, $posx[$i], $posy[$i], $posz[$i], $magmom_x[$i], $magmom_y[$i], $magmom_z[$i]);
+		
+	}
 }
 
 sub OutYaplotData{
@@ -789,7 +810,7 @@ sub OutBoundaryBox{
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
 	
-	if ($mag) {
+	if (0) {
 		$fieldx = 3*sin($fieldangle);
 		$fieldz = 3*cos($fieldangle);
 		

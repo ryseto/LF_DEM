@@ -45,7 +45,8 @@ int main(int argc, char **argv)
 		{"rep-seq-file", required_argument, 0, 'R'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"stress-seq-file", required_argument, 0, 'S'},
-		{"magnetic", no_argument, 0, 'm'},
+		{"magnetic", required_argument, 0, 'm'},
+		{"magnetic", no_argument, 0, 'M'},
 		{"generate", required_argument, 0, 'g'},
 		{"kn-kt-file", required_argument, 0, 'k'},
 		{"binary", no_argument, 0, 'n'},
@@ -55,7 +56,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hnmg:s:S:t:r:R:k:i:h:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hnMm:g:s:S:t:r:R:k:i:h:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -101,6 +102,12 @@ int main(int argc, char **argv)
 				break;
 			case 'm':
 				rheology_control = "magnetic";
+				if (getSuffix(optarg, numeral, suffix)) {
+					dimensionless_number = atof(numeral.c_str());
+					cerr << "magnetic field: " << dimensionless_number << endl;
+				} else {
+					errorNoSuffix("magnetic field");
+				}
 				cerr << "Magnetic simulation" << endl;
 				break;
 			case 'k':
@@ -112,6 +119,10 @@ int main(int argc, char **argv)
  			case 'g':
 				generate_init = true;
 				random_seed = atoi(optarg);
+				break;
+			case 'M':
+				rheology_control = "magnetic";
+				cerr << "Magnetic simulation" << endl;
 				break;
  			case 'n':
 				binary_conf = true;

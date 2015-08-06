@@ -103,13 +103,13 @@ private:
 	void setUnitScaleRateControlled();
 	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
+	void convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit);
 	void catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr);
 	/*
 	 * For outputs
 	 */
 	void evaluateData();
 	void outputDataHeader(ofstream &fout);
-	void outputRheologyData();
 	void outputData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
@@ -117,11 +117,11 @@ private:
 	void outputConfigurationBinary(string);
 	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulationSteadyShear(string in_args,
-									vector<string> &input_files,
-									bool binary_conf,
-									double dimensionlessnumber,
-									string input_scale);
+	void setupSimulation(string in_args,
+						 vector<string> &input_files,
+						 bool binary_conf,
+						 double dimensionlessnumber,
+						 string input_scale);
 	void outputComputationTime();
 
 	bool keepRunning();	
