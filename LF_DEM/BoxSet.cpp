@@ -347,7 +347,7 @@ Box* BoxSet::WhichBox(vec3d *pos)
 void BoxSet::box(int i)
 {
 	Box *b = WhichBox(sys->position[i]);
-	if( b != boxMap[i]) {
+	if (b != boxMap[i]) {
 		b->add(i);
 		if (boxMap[i] != NULL) {
 			boxMap[i]->remove(i);

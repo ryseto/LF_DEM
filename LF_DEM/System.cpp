@@ -692,15 +692,14 @@ void System::timeStepBoxing(const double strain_increment)
 	 */
 	if (!zero_shear) {
 		shear_strain += strain_increment;
-		if(!cross_shear){
+		if (!cross_shear) {
 			shear_disp.x += strain_increment*lz;
 			int m = (int)(shear_disp.x/lx);
 			if (shear_disp.x < 0) {
 				m--;
 			}
 			shear_disp.x = shear_disp.x-m*lx;
-		}
-		else{
+		} else {
 			shear_disp.y += strain_increment*lz;
 			int m = (int)(shear_disp.y/ly);
 			if (shear_disp.y < 0) {
@@ -708,7 +707,6 @@ void System::timeStepBoxing(const double strain_increment)
 			}
 			shear_disp.y = shear_disp.y-m*ly;
 		}
-		
 	}
 	boxset.update();
 }
@@ -1636,11 +1634,13 @@ int System::periodize(vec3d &pos)
 	while (pos.x < 0) {
 		pos.x += lx;
 	}
-	while (pos.y >= ly) {
-		pos.y -= ly;
-	}
-	while (pos.y < 0) {
-		pos.y += ly;
+	if (!twodimension) {
+		while (pos.y >= ly) {
+			pos.y -= ly;
+		}
+		while (pos.y < 0) {
+			pos.y += ly;
+		}
 	}
 	return z_shift;
 }
@@ -1669,11 +1669,13 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
 	}
-	while (pos_diff.y > ly_half) {
-		pos_diff.y -= ly;
-	} 
-	while (pos_diff.y < -ly_half) {
-		pos_diff.y += ly;
+	if (!twodimension) {
+		while (pos_diff.y > ly_half) {
+			pos_diff.y -= ly;
+		}
+		while (pos_diff.y < -ly_half) {
+			pos_diff.y += ly;
+		}
 	}
 }
 

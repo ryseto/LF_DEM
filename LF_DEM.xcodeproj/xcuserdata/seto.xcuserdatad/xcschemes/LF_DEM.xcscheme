@@ -97,7 +97,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-t 10 D2N200VF0.78Bidi1.4_0.5Square_1.dat nonbrownian.txt"
+            argument = "-g 1 -M"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -101,15 +101,15 @@ private:
 	void convertInputValues(std::string new_long_unit);
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
-	void convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit);
-	void convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit);
-	void convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit);
-	void catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr);
+	void convertInputForcesRateControlled(double dimensionlessnumber, std::string rate_unit);
+	void convertInputForcesStressControlled(double dimensionlessnumber, std::string rate_unit);
+	void convertInputForcesMagnetic(double dimensionlessnumber, std::string rate_unit);
+	void catchSuffixedValue(std::string type, std::string keyword, std::string value_str, double *value_ptr);
 	/*
 	 * For outputs
 	 */
 	void evaluateData();
-	void outputDataHeader(ofstream &fout);
+	void outputDataHeader(std::ofstream &fout);
 	void outputData();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
@@ -117,13 +117,12 @@ private:
 	void outputConfigurationBinary(std::string);
 	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulation(string in_args,
-						 vector<string> &input_files,
+	void setupSimulation(std::string in_args,
+						 std::vector<std::string> &input_files,
 						 bool binary_conf,
 						 double dimensionlessnumber,
-						 string input_scale);
+						 std::string input_scale);
 	void outputComputationTime();
-
 	bool keepRunning();	
 
  public:
@@ -141,7 +140,7 @@ private:
 								std::string input_scale,
 								std::string control_variable);
 	
-	void simulationMagnetic(std::string in_args,	std::vector<std::string> &input_files,
+	void simulationMagnetic(std::string in_args, std::vector<std::string> &input_files,
 							bool binary_conf, double dimensionless_number,
 							std::string input_scale, std::string control_variable);
 	

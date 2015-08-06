@@ -128,9 +128,9 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 		ifstream in_f;
 		string line;
 		in_f.open(in_file.c_str());
-		if(in_f.is_open()){
+		if (in_f.is_open()) {
 			fout_input << "********** File " << in_file << " ************" << endl << endl;
-			while(in_f.good()){
+			while (in_f.good()) {
 				getline(in_f, line);
 				fout_input << line << endl;
 			}
@@ -143,7 +143,6 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 
 void Simulation::resolveUnitSystem(string unit) // can we express all forces in unit "unit"?
 {
-	
 	values[unit] = 1;
 	suffixes[unit] = unit;
 	
@@ -331,8 +330,8 @@ void Simulation::setLowPeclet()
 
 void Simulation::convertForceValues(string new_unit)
 {
-	
-	for (auto&& f: suffixes) {
+
+	for (auto& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
 		if (old_unit != new_unit) {
@@ -373,7 +372,6 @@ void Simulation::setUnitScaleRateControlled()
 	if (control_var == "magnetic") {
 		sys.amplitudes.sqrt_temperature = 0.3;
 	}
-
 }
 
 void Simulation::exportForceAmplitudes()
@@ -412,8 +410,8 @@ void Simulation::exportForceAmplitudes()
 
 void Simulation::convertInputValues(string new_unit)
 {
-	
-	for (auto&& inv: input_values) {
+
+	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
 			if (old_unit != "hydro" && values.find(old_unit) == values.end()) {
@@ -456,11 +454,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters();
 	readParameterFile();
-	
-	/*
-	 * string_control_parameters is used for output filenames.
-	 */
-	for (auto&& f: suffixes) {
+	for (const auto& f: suffixes) {
 		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
 	if (control_var == "rate") {
@@ -538,8 +532,8 @@ void Simulation::setupSimulation(string in_args,
 			contactForceParameter(input_files[2]);
 		}
 	}
-	
-	for (auto&& inv: input_values) {
+
+	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
 				time_end = -1;
@@ -585,10 +579,10 @@ void Simulation::setupSimulation(string in_args,
 		sys.setupBrownian();
 	}
 	sys.setupSystem(control_var);
-	
-	cerr << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
-	cerr << "repulsive_length = " << p.repulsive_length << endl;
-	
+
+	cout << "repulsion_amplitude = " <<  p.repulsion_amplitude << endl;
+	cout << "repulsive_length = " << p.repulsive_length << endl;
+
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
 }
@@ -628,8 +622,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	//@@@ is it useful before any step is done? ---> Outputing t=0 data may be useful.
-	evaluateData(); //
+	evaluateData(); // 
 	outputData(); // new
 	outputConfigurationBinary();
 	outputConfigurationData();
@@ -663,8 +656,8 @@ void Simulation::simulationSteadyShear(string in_args,
 			}
 		}
 		/*****************************************************/
-		
-		cerr << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
+
+		cout << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
 			cout << "shear jamming " << jammed << endl;
@@ -752,8 +745,8 @@ void Simulation::simulationInverseYield(string in_args,
 			}
 		}
 		/*****************************************************/
-		
-		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
+
+		cout << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
 			cout << "shear jamming " << jammed << endl;
@@ -1641,7 +1634,13 @@ void Simulation::outputData()
 	
 	
 	double sr = sys.get_shear_rate();
-	double shear_stress = sys.einstein_stress+sys.total_stress.getStressXZ();
+	unsigned int shear_stress_index;
+	if (!sys.cross_shear) {
+		shear_stress_index = 2;
+	} else {
+		shear_stress_index = 3;
+	}
+	double shear_stress = sys.einstein_stress+sys.total_stress.elm[shear_stress_index];
 	
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
@@ -1700,8 +1699,8 @@ void Simulation::outputData()
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	
-	outdata_st.init(8);
-	
+   	outdata_st.init(8, output_unit_scales);
+   
 	outdata_st.entryData(1, "time", "time", sys.get_time());
 	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
