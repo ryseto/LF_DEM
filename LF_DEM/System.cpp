@@ -22,6 +22,7 @@
 #define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
 #endif
 
+using namespace std;
 
 System::System():
 brownian(false),
@@ -33,6 +34,7 @@ critical_load(false),
 lowPeclet(false),
 twodimension(false),
 zero_shear(false),
+cross_shear(false),
 magnetic_coeffient(24),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -250,9 +252,8 @@ void System::setInteractions_GenerateInitConfig()
 	}
 	nb_interaction = 0;
 	shear_strain = 0;
-	shear_disp = 0;
-	y_shear_disp = 0;
-	vel_difference = 0;
+	shear_disp.reset();
+	vel_difference.reset();
 	initializeBoxing();
 	checkNewInteraction();
 }
@@ -613,10 +614,11 @@ void System::setupSystem(string control)
 	total_num_timesteps = 0;
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
-	if (!zero_shear) {
-		vel_difference = shear_rate*lz;
+	vel_difference.reset();
+	if (!cross_shear) {		
+		vel_difference.x = shear_rate*lz;
 	} else {
-		vel_difference = 0;
+		vel_difference.y = shear_rate*lz;
 	}
 	stokes_solver.initialize();
 	dt = p.dt;
@@ -690,12 +692,23 @@ void System::timeStepBoxing(const double strain_increment)
 	 */
 	if (!zero_shear) {
 		shear_strain += strain_increment;
-		shear_disp += strain_increment*lz;
-		int m = (int)(shear_disp/lx);
-		if (shear_disp < 0) {
-			m--;
+		if(!cross_shear){
+			shear_disp.x += strain_increment*lz;
+			int m = (int)(shear_disp.x/lx);
+			if (shear_disp.x < 0) {
+				m--;
+			}
+			shear_disp.x = shear_disp.x-m*lx;
 		}
-		shear_disp = shear_disp-m*lx;
+		else{
+			shear_disp.y += strain_increment*lz;
+			int m = (int)(shear_disp.y/ly);
+			if (shear_disp.y < 0) {
+				m--;
+			}
+			shear_disp.y = shear_disp.y-m*ly;
+		}
+		
 	}
 	boxset.update();
 }
@@ -817,7 +830,7 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
+		if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 			if (max_velocity > max_sliding_velocity) {
 				dt = p.disp_max/max_velocity;
 			} else {
@@ -864,7 +877,7 @@ void System::timeStepMovePredictor()
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		//dt = disp_max/max_velocity;
 		if (!fixed_dt) {
-			if (max_velocity > 0 && max_sliding_velocity > 0) { // small density system can have na_velocity=0
+			if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 				if (max_velocity > max_sliding_velocity) {
 					dt = p.disp_max/max_velocity;
 				} else {
@@ -1446,17 +1459,24 @@ void System::computeShearRate()
 	 */
 	calcStressPerParticle();
 	calcStress();
-	
-	double shearstress_con = total_contact_stressXF_normal.getStressXZ() \
-	+total_contact_stressXF_tan.getStressXZ()+total_contact_stressGU.getStressXZ();
+
+	unsigned int shear_stress_index;
+	if (!cross_shear) {
+		shear_stress_index = 2;
+	} else {
+		shear_stress_index = 3;
+	}
+
+	double shearstress_con = total_contact_stressXF_normal.elm[shear_stress_index] \
+	+total_contact_stressXF_tan.elm[shear_stress_index]+total_contact_stressGU.elm[shear_stress_index];
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
-		shearstress_rep = total_repulsive_stressXF.getStressXZ()+total_repulsive_stressGU.getStressXZ();
+		shearstress_rep = total_repulsive_stressXF.elm[shear_stress_index]+total_repulsive_stressGU.elm[shear_stress_index];
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = einstein_viscosity+total_hydro_stress.getStressXZ();
+	double viscosity_hyd = einstein_viscosity+total_hydro_stress.elm[shear_stress_index];
 	
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
@@ -1550,8 +1570,13 @@ void System::computeVelocities(bool divided_velocities)
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			velocity[i].x += shear_rate*position[i].z;
-			ang_velocity[i].y += 0.5*shear_rate;
+			if (!cross_shear) {
+				velocity[i].x += shear_rate*position[i].z;
+				ang_velocity[i].y += 0.5*shear_rate;
+			} else {
+				velocity[i].y += shear_rate*position[i].z;
+				ang_velocity[i].x += 0.5*shear_rate;
+			}			
 			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	} else {
@@ -1561,8 +1586,12 @@ void System::computeVelocities(bool divided_velocities)
 			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	}
-	
-	vel_difference = shear_rate*lz;
+
+	if (!cross_shear) {		
+		vel_difference.x = shear_rate*lz;
+	} else {
+		vel_difference.y = shear_rate*lz;
+	}	
 	stokes_solver.solvingIsDone();
 }
 
@@ -1581,7 +1610,7 @@ void System::displacement(int i, const vec3d &dr)
 	 * The position and velocity will be used to calculate the contact forces.
 	 */
 	if (z_shift != 0) {
-		velocity[i].x += z_shift*vel_difference;
+		velocity[i] += z_shift*vel_difference;
 	}
 	boxset.box(i);
 }
@@ -1589,34 +1618,28 @@ void System::displacement(int i, const vec3d &dr)
 // [0,l]
 int System::periodize(vec3d &pos)
 {
-	int z_shift;
-	if (pos.z >= lz) {
+	int z_shift = 0;
+	while (pos.z >= lz) {
 		pos.z -= lz;
-		pos.x -= shear_disp;
-		pos.y -= y_shear_disp;
-		z_shift = -1;
-	} else if (pos.z < 0) {
+		pos -= shear_disp;
+		z_shift--;
+	}
+ 	while (pos.z < 0) {
 		pos.z += lz;
-		pos.x += shear_disp;
-		pos.y += y_shear_disp;
-		z_shift = 1;
-	} else {
-		z_shift = 0;
+		pos += shear_disp;
+		z_shift++;
 	}
-	if (pos.x >= lx) {
+
+	while (pos.x >= lx) {
 		pos.x -= lx;
-		if (pos.x >= lx){
-			pos.x -= lx;
-		}
-	} else if (pos.x < 0) {
-		pos.x += lx;
-		if (pos.x < 0){
-			pos.x += lx;
-		}
 	}
-	if (pos.y >= ly) {
+	while (pos.x < 0) {
+		pos.x += lx;
+	}
+	while (pos.y >= ly) {
 		pos.y -= ly;
-	} else if (pos.y < 0) {
+	}
+	while (pos.y < 0) {
 		pos.y += ly;
 	}
 	return z_shift;
@@ -1629,65 +1652,50 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
-	if (pos_diff.z > lz_half) {
+	zshift = 0;
+	while (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
-		pos_diff.x -= shear_disp;
-		pos_diff.y -= y_shear_disp;
-		zshift = -1;
-	} else if (pos_diff.z < -lz_half) {
+		pos_diff -= shear_disp;
+		zshift--;
+	} 
+	while (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
-		pos_diff.x += shear_disp;
-		pos_diff.y += y_shear_disp;
-		zshift = 1;
-	} else {
-		zshift = 0;
+		pos_diff += shear_disp;
+		zshift++;
 	}
-	if (pos_diff.x > lx_half) {
+	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-		if (pos_diff.x > lx_half) {
-			pos_diff.x -= lx;
-		}
-	} else if (pos_diff.x < -lx_half) {
+	} 
+	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
-		if (pos_diff.x < -lx_half) {
-			pos_diff.x += lx;
-		}
 	}
-	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
-			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
-			pos_diff.y += ly;
-		}
+	while (pos_diff.y > ly_half) {
+		pos_diff.y -= ly;
+	} 
+	while (pos_diff.y < -ly_half) {
+		pos_diff.y += ly;
 	}
 }
 
-void System::periodize_diff_unsheared(vec3d &pos_diff)
+void System::periodize_diff_unsheared(vec3d &pos_diff) // @@@ is there really a gain duplicating the code for saving just a few addition operations?
 {
-	/*
-	 * The displacement of the second particle along z direction
-	 * is zshift * lz;
-	 */
-	if (pos_diff.z > lz_half) {
+	while (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
-	} else if (pos_diff.z < -lz_half) {
+	} 
+	while (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 	}
-	if (pos_diff.x > lx_half) {
+	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-		if (pos_diff.x > lx_half) {
-			pos_diff.x -= lx;
-		}
-	} else if (pos_diff.x < -lx_half) {
+	} 
+	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
-		if (pos_diff.x < -lx_half) {
-			pos_diff.x += lx;
-		}
 	}
 	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
+		while (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
+		} 
+		while (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
 	}
@@ -1747,7 +1755,11 @@ double System::evaluateMaxVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_velocity_tmp = velocity[i];
 		if (!zero_shear) {
-			na_velocity_tmp.x -= shear_rate*position[i].z;
+			if (!cross_shear) {
+				na_velocity_tmp.x -= shear_rate*position[i].z;
+			} else {
+				na_velocity_tmp.y -= shear_rate*position[i].z;
+			}
 		}
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
 			sq_max_velocity = na_velocity_tmp.sq_norm();

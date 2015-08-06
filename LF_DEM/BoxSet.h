@@ -14,8 +14,12 @@
 
 #ifndef __LF_DEM__BoxSet__
 #define __LF_DEM__BoxSet__
+#include <set>
+#include <unordered_set>
+#include <vector>
+#include "vec3d.h"
 #include "Box.h"
-using namespace std;
+
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 class System;
 
@@ -24,28 +28,21 @@ private:
 	double box_xsize;
 	double box_ysize;
 	double box_zsize;
-	double box_xsize_half; // = box_xsize/2
-	double box_ysize_half; // = box_ysize/2
-	double box_zsize_half; // = box_zsize/2
 	int x_box_nb;
 	int y_box_nb;
 	int z_box_nb;
 	int box_nb;
-	int bottom_box_nb;
-	int top_box_nb;
-	int bulk_box_nb;
-	int topbottom_box_nb;
 	bool _is_boxed;
-	Box** Boxes;
-	Box** BulkBoxes;
-	Box** TopBoxes;
-	Box** BottomBoxes;
-	Box** TopBottomBoxes;
+	std::set <Box*> Boxes;
+	std::set <Box*> BulkBoxes;
+	std::set <Box*> TopBoxes;
+	std::set <Box*> BottomBoxes;
+	std::set <Box*> TopBottomBoxes;
+	std::vector <Box*> box_labels;
 	System *sys;
 	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
 	Box* WhichBox(vec3d*);
 	void updateNeighbors();
-	void updateNeighbors(Box*);
 	// init methods
 	void allocateBoxes();
 	void positionBoxes();
@@ -55,7 +52,9 @@ private:
 	void assignNeighborsBottom();
 	void assignNeighborsTopBottom();
 	Box ** boxMap;
-	
+
+	std::vector <vec3d> top_probing_positions;
+	std::vector <vec3d> bottom_probing_positions;
 public:
 	BoxSet(){;}
 	~BoxSet();
@@ -99,9 +98,12 @@ public:
 	 gives iterators to beginning and ending point of the container including
 	 all particles in the box containing particle i and in the adjacent boxes.
 	 *****/
-	vector<int>::iterator neighborhood_begin(int i);
-	vector<int>::iterator neighborhood_end(int i);
-	vector <int> & neighborhood(int i);
+	std::vector<int>::iterator neighborhood_begin(int i);
+	std::vector<int>::iterator neighborhood_end(int i);
+	std::vector <int> & neighborhood(int i);
 	void printBoxNetwork();
+	void printBoxContainers();
+	void printNeighborhoodContainers();
+	void printBoxMap();
 };
 #endif /* defined(__LF_DEM__BoxSet__) */

@@ -26,7 +26,7 @@
 #include "RepulsiveForce.h"
 #include "StressTensor.h"
 
-using namespace std;
+
 class System;
 class Lubrication;
 class Contact;
@@ -56,12 +56,6 @@ private:
 	double r; // center-center distance
 	int zshift;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	double nxnx;
-	double nxny;
-	double nxnz;
-	double nynz;
-	double nyny;
-	double nznz;
 	vec3d relative_velocity;
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //

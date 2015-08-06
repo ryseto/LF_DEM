@@ -20,7 +20,6 @@
 #include <iomanip>
 #include <cmath>
 #include <string>
-using namespace std;
 
 class vec3d {
 public:
@@ -224,7 +223,7 @@ public:
 	}
 	
 	// output stream operator
-	inline friend ostream& operator << (ostream &out,
+	inline friend std::ostream& operator << (std::ostream &out,
 										const vec3d &v)
 	{
 		out << v.x << " " << v.y << " " << v.z;

@@ -7,6 +7,8 @@
 //
 #include "Interaction.h"
 
+using namespace std;
+
 void Interaction::init(System *sys_)
 {
 	sys = sys_;
@@ -29,12 +31,7 @@ void Interaction::calcNormalVectorDistanceGap()
 	nvec = rvec/r;
 	reduced_gap = r/ro_12-2;
 	if (lubrication.is_active()) {
-		nxnx = nvec.x*nvec.x;
-		nxny = nvec.x*nvec.y;
-		nxnz = nvec.x*nvec.z;
-		nynz = nvec.y*nvec.z;
-		nyny = nvec.y*nvec.y;
-		nznz = nvec.z*nvec.z;
+		lubrication.getGeometry();
 	}
 }
 
@@ -203,7 +200,7 @@ void Interaction::calcRelativeVelocities()
 	 ******************************************************/
 	relative_velocity = sys->velocity[p1]-sys->velocity[p0]; //true velocity, in predictor and in corrector
 	if (zshift != 0) {
-		relative_velocity.x += zshift*sys->vel_difference;
+		relative_velocity += zshift*sys->vel_difference;
 	}
 	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
 	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
@@ -235,7 +232,7 @@ double Interaction::getNormalVelocity()
 {
 	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0];
 	if (zshift != 0) {
-		d_velocity.x += zshift*sys->vel_difference;
+		d_velocity += zshift*sys->vel_difference;
 	}
 	return dot(d_velocity, nvec);
 }

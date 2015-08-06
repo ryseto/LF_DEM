@@ -119,32 +119,35 @@ $(document).ready(function(){initNavTree('_averager_8h_source.html','');});
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;                        <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                }</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                <span class="keywordtype">double</span> deltat = time-previous_time;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                <span class="keywordtype">double</span> etn = exp(-deltat/relaxation_time);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;                <span class="keywordtype">double</span> inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                <span class="keywordflow">if</span> (previous_kernel_norm == 1) { <span class="comment">// = it is the first iteration</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                        inv_kernel_norm = 1/deltat;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                x_avg = inv_kernel_norm*(x*deltat+etn*x_avg/previous_kernel_norm);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                previous_kernel_norm = inv_kernel_norm;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                previous_time = time;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        };</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        </div>
-<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">   71</a></span>&#160;        <a class="code" href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">Averager</a>(<span class="keywordtype">double</span> rtime):</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        x_avg(0),</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        previous_kernel_norm(1),</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        relaxation_time(rtime),</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        previous_time(0)</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        {};</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        ~<a class="code" href="class_averager.html">Averager</a>();</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        XType <span class="keyword">get</span>()</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        {</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                <span class="keywordflow">return</span> x_avg;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        };</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;};</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* defined(__LF_DEM__Averager__) */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="class_averager_html_ab8b0512d722f624b24adf352a9cff9ed"><div class="ttname"><a href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">Averager::Averager</a></div><div class="ttdeci">Averager(double rtime)</div><div class="ttdoc">Creates an Averager instance. </div><div class="ttdef"><b>Definition:</b> Averager.h:71</div></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        <span class="keywordflow">if</span>(deltat==0){</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                <span class="keywordtype">double</span> etn = exp(-deltat/relaxation_time);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                <span class="keywordtype">double</span> inv_kernel_norm = previous_kernel_norm/(deltat*previous_kernel_norm+etn);</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                <span class="keywordflow">if</span> (previous_kernel_norm == 1) { <span class="comment">// = it is the first iteration</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                        inv_kernel_norm = 1/deltat;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                }</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                x_avg = inv_kernel_norm*(x*deltat+etn*x_avg/previous_kernel_norm);</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                previous_kernel_norm = inv_kernel_norm;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                previous_time = time;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        };</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        </div>
+<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">   74</a></span>&#160;        <a class="code" href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">Averager</a>(<span class="keywordtype">double</span> rtime):</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        x_avg(0),</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        previous_kernel_norm(1),</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        relaxation_time(rtime),</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        previous_time(0)</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        {};</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        ~<a class="code" href="class_averager.html">Averager</a>();</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        </div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        XType <span class="keyword">get</span>()</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                <span class="keywordflow">return</span> x_avg;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        };</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;};</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* defined(__LF_DEM__Averager__) */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="class_averager_html_ab8b0512d722f624b24adf352a9cff9ed"><div class="ttname"><a href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">Averager::Averager</a></div><div class="ttdeci">Averager(double rtime)</div><div class="ttdoc">Creates an Averager instance. </div><div class="ttdef"><b>Definition:</b> Averager.h:74</div></div>
 <div class="ttc" id="class_averager_html_ae5f0d55419b26b218cb16c7ce1c3dbf3"><div class="ttname"><a href="class_averager.html#ae5f0d55419b26b218cb16c7ce1c3dbf3">Averager::update</a></div><div class="ttdeci">void update(XType x, double time)</div><div class="ttdef"><b>Definition:</b> Averager.h:34</div></div>
 <div class="ttc" id="class_averager_html"><div class="ttname"><a href="class_averager.html">Averager</a></div><div class="ttdoc">Small class computing and storing observable averages with an exponential memory kernel. </div><div class="ttdef"><b>Definition:</b> Averager.h:26</div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -153,7 +156,7 @@ $(document).ready(function(){initNavTree('_averager_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>Averager.h</b></li>
-    <li class="footer">Generated on Tue Jun 23 2015 14:45:15 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Jul 21 2015 15:55:54 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

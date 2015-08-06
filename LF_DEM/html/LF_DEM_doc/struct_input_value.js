@@ -1,7 +1,7 @@
 var struct_input_value =
 [
-    [ "name", "struct_input_value.html#a06dd15c768e3d6c6b76c7f2a78f0daff", null ],
-    [ "type", "struct_input_value.html#a7d84c18625f429884f29403cec7a6d87", null ],
-    [ "unit", "struct_input_value.html#ab7ec3b67382fcd6ee46de1b7e4275b68", null ],
+    [ "name", "struct_input_value.html#a913675cf8486d2073a33688ec4f1be8b", null ],
+    [ "type", "struct_input_value.html#a556f4bc42882420cc7fbe8e3407bd365", null ],
+    [ "unit", "struct_input_value.html#a41bae2093ee8e3dbb8cf3c1febadd254", null ],
     [ "value", "struct_input_value.html#a6851f08e36f9543dc7d433927c52df25", null ]
 ];

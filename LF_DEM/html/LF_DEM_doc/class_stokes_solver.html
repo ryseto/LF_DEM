@@ -117,21 +117,21 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>direct</b> ()</td></t
 <tr class="memitem:a1e0807fda59ab10ba9abf282f4448a99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e0807fda59ab10ba9abf282f4448a99"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>iterative</b> ()</td></tr>
 <tr class="separator:a1e0807fda59ab10ba9abf282f4448a99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa808facf1ab14dd5fd3775cea752fb22"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa808facf1ab14dd5fd3775cea752fb22"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printResistanceMatrix</b> (ostream &amp;, string)</td></tr>
-<tr class="separator:aa808facf1ab14dd5fd3775cea752fb22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a785e16518adb651eba28b43504f271"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a785e16518adb651eba28b43504f271"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printFactor</b> (ostream &amp;)</td></tr>
-<tr class="separator:a4a785e16518adb651eba28b43504f271"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18df2a4ef8f25b78ef519242ee4614d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a18df2a4ef8f25b78ef519242ee4614d4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printResistanceMatrix</b> (std::ostream &amp;, std::string)</td></tr>
+<tr class="separator:a18df2a4ef8f25b78ef519242ee4614d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55ffe7d59529a3315c54334df8accd1c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55ffe7d59529a3315c54334df8accd1c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printFactor</b> (std::ostream &amp;)</td></tr>
+<tr class="separator:a55ffe7d59529a3315c54334df8accd1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7426ea0263a84fa420c1828658593734"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7426ea0263a84fa420c1828658593734"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printRHS</b> ()</td></tr>
 <tr class="separator:a7426ea0263a84fa420c1828658593734"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab61de097bf4b6fe4dfdba8b0183ca5e5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab61de097bf4b6fe4dfdba8b0183ca5e5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>convertDirectToIterative</b> ()</td></tr>
 <tr class="separator:ab61de097bf4b6fe4dfdba8b0183ca5e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adce97aa15b923a7dbb2bc219df6d1227"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adce97aa15b923a7dbb2bc219df6d1227"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resetResistanceMatrix</b> (string solver_type, int nb_of_interactions, double *resetResistanceMatrix)</td></tr>
-<tr class="separator:adce97aa15b923a7dbb2bc219df6d1227"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8dece9e3cc008673b71493ccf5047bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8dece9e3cc008673b71493ccf5047bc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resetResistanceMatrix</b> (std::string solver_type, int nb_of_interactions, double *resetResistanceMatrix)</td></tr>
+<tr class="separator:ad8dece9e3cc008673b71493ccf5047bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8df8c4ff9d63bfa299daaa223d8839f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8df8c4ff9d63bfa299daaa223d8839f9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addToDiagBlock</b> (const <a class="el" href="classvec3d.html">vec3d</a> &amp;nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC)</td></tr>
 <tr class="separator:a8df8c4ff9d63bfa299daaa223d8839f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -234,9 +234,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setIncCholPreconditio
 <tr class="memitem:ad4e18e3af3966cda49ed8a8526314b57"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad4e18e3af3966cda49ed8a8526314b57"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setSpInvPreconditioner</b> ()</td></tr>
 <tr class="separator:ad4e18e3af3966cda49ed8a8526314b57"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3166bbf2582966f892c60389547bdb40"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3166bbf2582966f892c60389547bdb40"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setSolverType</b> (string)</td></tr>
-<tr class="separator:a3166bbf2582966f892c60389547bdb40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a625e40f015c4afcd3177932ea5e4925e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a625e40f015c4afcd3177932ea5e4925e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setSolverType</b> (std::string)</td></tr>
+<tr class="separator:a625e40f015c4afcd3177932ea5e4925e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -312,12 +312,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>chol_L_to_be_freed</b
 <tr class="memitem:a6293a071e32d1973bcc04144690137a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6293a071e32d1973bcc04144690137a7"></a>
 double *&#160;</td><td class="memItemRight" valign="bottom"><b>dblocks</b></td></tr>
 <tr class="separator:a6293a071e32d1973bcc04144690137a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3bff4cf201e5265c18e21fdcfb40df51"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3bff4cf201e5265c18e21fdcfb40df51"></a>
-vector&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>odblocks</b></td></tr>
-<tr class="separator:a3bff4cf201e5265c18e21fdcfb40df51"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af19a2e5a33cd3ad4751a1889adaa2d2d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af19a2e5a33cd3ad4751a1889adaa2d2d"></a>
-vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>odbrows</b></td></tr>
-<tr class="separator:af19a2e5a33cd3ad4751a1889adaa2d2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05b32f7919a7531e9c58423dd7a37bd2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05b32f7919a7531e9c58423dd7a37bd2"></a>
+std::vector&lt; double &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>odblocks</b></td></tr>
+<tr class="separator:a05b32f7919a7531e9c58423dd7a37bd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc23b2540f2bcf93af4d8de1e02f1cbf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc23b2540f2bcf93af4d8de1e02f1cbf"></a>
+std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>odbrows</b></td></tr>
+<tr class="separator:acc23b2540f2bcf93af4d8de1e02f1cbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a198ea5a82618e72902b159de5e4ba1c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a198ea5a82618e72902b159de5e4ba1c4"></a>
 int *&#160;</td><td class="memItemRight" valign="bottom"><b>odbrows_table</b></td></tr>
 <tr class="separator:a198ea5a82618e72902b159de5e4ba1c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -352,7 +352,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_stokes_solver.html">StokesSolver</a></li>
-    <li class="footer">Generated on Tue Jun 23 2015 14:45:16 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Jul 21 2015 15:55:54 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

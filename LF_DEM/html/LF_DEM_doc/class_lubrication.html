@@ -117,6 +117,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_active</b> ()</td>
 <tr class="memitem:ae6fab632d9e5778e181800c699eacc1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6fab632d9e5778e181800c699eacc1a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>getInteractionData</b> ()</td></tr>
 <tr class="separator:ae6fab632d9e5778e181800c699eacc1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a072dfe14086a7805e5c813f21099e410"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a072dfe14086a7805e5c813f21099e410"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getGeometry</b> ()</td></tr>
+<tr class="separator:a072dfe14086a7805e5c813f21099e410"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13e7970215cb60873ef25a3999539326"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a13e7970215cb60873ef25a3999539326"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcLubConstants</b> ()</td></tr>
 <tr class="separator:a13e7970215cb60873ef25a3999539326"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,8 +138,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addHydroStress</b> ()
 <tr class="memitem:a7885171354d973b08cfb3bc4283814a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7885171354d973b08cfb3bc4283814a8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>pairVelocityStresslet</b> (const <a class="el" href="classvec3d.html">vec3d</a> &amp;vi, const <a class="el" href="classvec3d.html">vec3d</a> &amp;vj, const <a class="el" href="classvec3d.html">vec3d</a> &amp;oi, const <a class="el" href="classvec3d.html">vec3d</a> &amp;oj, <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;stresslet_i, <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;stresslet_j)</td></tr>
 <tr class="separator:a7885171354d973b08cfb3bc4283814a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a2b61f1058cc5798891844577082b59"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a2b61f1058cc5798891844577082b59"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pairStrainStresslet</b> (<a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;stresslet_i, <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;stresslet_j)</td></tr>
+<tr class="memitem:a1a2b61f1058cc5798891844577082b59"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_lubrication.html#a1a2b61f1058cc5798891844577082b59">pairStrainStresslet</a> (<a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;stresslet_i, <a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;stresslet_j)</td></tr>
 <tr class="separator:a1a2b61f1058cc5798891844577082b59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40d8720383a2b32b0ba85e7af8c6ea0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40d8720383a2b32b0ba85e7af8c6ea0f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateResistanceCoeff</b> ()</td></tr>
@@ -306,24 +308,27 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>range</b></td></tr>
 <tr class="memitem:a98806467fdafe634683df656e0494b22"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98806467fdafe634683df656e0494b22"></a>
 <a class="el" href="classvec3d.html">vec3d</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>nvec</b></td></tr>
 <tr class="separator:a98806467fdafe634683df656e0494b22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17d041725b99a15b36788df731f7c141"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17d041725b99a15b36788df731f7c141"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>nxnx</b></td></tr>
-<tr class="separator:a17d041725b99a15b36788df731f7c141"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac63ac878c9e316927ad5ee060eeb6863"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac63ac878c9e316927ad5ee060eeb6863"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>nxny</b></td></tr>
-<tr class="separator:ac63ac878c9e316927ad5ee060eeb6863"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a352e4d8f9b26c33f05f129efe6d7b8f3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a352e4d8f9b26c33f05f129efe6d7b8f3"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>nxnz</b></td></tr>
-<tr class="separator:a352e4d8f9b26c33f05f129efe6d7b8f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3c10bab0ef5f6bb1af32376813d772c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c10bab0ef5f6bb1af32376813d772c5"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>nynz</b></td></tr>
-<tr class="separator:a3c10bab0ef5f6bb1af32376813d772c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43f0eacceafa04c691dc1259fab5c85f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a43f0eacceafa04c691dc1259fab5c85f"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>nyny</b></td></tr>
-<tr class="separator:a43f0eacceafa04c691dc1259fab5c85f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c491dee3c2e9fb88e76283bb3ed6d41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c491dee3c2e9fb88e76283bb3ed6d41"></a>
-double *&#160;</td><td class="memItemRight" valign="bottom"><b>nznz</b></td></tr>
-<tr class="separator:a8c491dee3c2e9fb88e76283bb3ed6d41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00188ec0f054cf418f073c5f1d468448"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a00188ec0f054cf418f073c5f1d468448"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nxnx</b></td></tr>
+<tr class="separator:a00188ec0f054cf418f073c5f1d468448"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa17f8d99f7113844216e749959d3a8c8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa17f8d99f7113844216e749959d3a8c8"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nxny</b></td></tr>
+<tr class="separator:aa17f8d99f7113844216e749959d3a8c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae76a7ab7ac1bbcdfe999c1ffcf5a7ee2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae76a7ab7ac1bbcdfe999c1ffcf5a7ee2"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nxnz</b></td></tr>
+<tr class="separator:ae76a7ab7ac1bbcdfe999c1ffcf5a7ee2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0320cd24a522eb9af8a53bcb01f86677"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0320cd24a522eb9af8a53bcb01f86677"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nynz</b></td></tr>
+<tr class="separator:a0320cd24a522eb9af8a53bcb01f86677"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8408e1e77b702d0dfd0ac95c3714436c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8408e1e77b702d0dfd0ac95c3714436c"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nyny</b></td></tr>
+<tr class="separator:a8408e1e77b702d0dfd0ac95c3714436c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaefec153c621cedd1d205aee753ceba9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaefec153c621cedd1d205aee753ceba9"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nznz</b></td></tr>
+<tr class="separator:aaefec153c621cedd1d205aee753ceba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1da0b07b36284b8dd9812fba8ab05046"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1da0b07b36284b8dd9812fba8ab05046"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><b>nnE</b></td></tr>
+<tr class="separator:a1da0b07b36284b8dd9812fba8ab05046"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a708fc569f9e8b18cd55ff29efc483250"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a708fc569f9e8b18cd55ff29efc483250"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>lub_coeff</b></td></tr>
 <tr class="separator:a708fc569f9e8b18cd55ff29efc483250"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -519,7 +524,39 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>g5_YM</b></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Ryohei Seto </dd>
 <dd>
 Romain Mari </dd></dl>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a1a2b61f1058cc5798891844577082b59"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Lubrication::pairStrainStresslet </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;&#160;</td>
+          <td class="paramname"><em>stresslet_i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="class_stress_tensor.html">StressTensor</a> &amp;&#160;</td>
+          <td class="paramname"><em>stresslet_j</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>The <img class="formulaInl" alt="$ M:\hat{E}^{\infty} $" src="form_75.png"/> component of the stress.</p>
+<p>(Jeffrey 1992 notations) For a non-dimensionalized strain rate tensor <img class="formulaInl" alt="$ \hat{E}^{\infty}_{ij} = \frac{1}{2}(\delta_{ia}\delta_{jb} + \delta_{ib}\delta_{ja}) $" src="form_76.png"/>:</p>
+<p><img class="formulaInl" alt="$ (M_{\alpha\beta}:\hat{E}^{\infty})_{ij} = \frac{3}{2} X_{\alpha\beta} n_i n_j n_a n_b \\ \qquad \qquad \qquad + \frac{1}{2} Y_{\alpha\beta} ( -4 n_i n_j n_a n_b + n_j\delta_{ib}n_a + n_j\delta_{ia}n_b + n_i \delta_{jb}n_a + n_i \delta_{ja}n_b )$" src="form_81.png"/></p>
+<p><b>Note</b> that we remove the explicit trace removal terms from Jeffrey's expressions. The stress tensors this method computes are <b>NOT</b> traceless.</p>
+<p>The stress on particle 1 is: <img class="formulaInl" alt="$ S_1 = (M_{11}+M_{12}):\hat{E}^{\infty} $" src="form_78.png"/> On particle 2 <img class="formulaInl" alt="$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} $" src="form_79.png"/></p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_lubrication_8h_source.html">Lubrication.h</a></li>
 <li>Lubrication.cpp</li>
 </ul>
@@ -529,7 +566,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_lubrication.html">Lubrication</a></li>
-    <li class="footer">Generated on Tue Jun 23 2015 14:45:16 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Jul 21 2015 15:55:54 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

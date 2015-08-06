@@ -7,13 +7,8 @@ Box::Box(){
 }
 
 Box::~Box(){
-	if (_neigh_nb > 0) {
-		delete [] _neighbors;
-	}
-	if (_moving_neigh_nb > 0) {
-		delete [] _moving_neighbors;
-		delete [] _probing_positions;
-	}
+	_neighbors.clear();
+	_moving_neighbors.clear();
 }
 
 /* reset every moving neighbor:
@@ -22,66 +17,31 @@ Box::~Box(){
  */
 void Box::reset_moving_neighbors()
 {
-	for (int label=0; label<_moving_neigh_nb; label++) {
-		_neighbors[label+_still_neigh_nb] = NULL;
-		_moving_neighbors[label] = NULL;
+	for(const auto& box : _moving_neighbors){
+		_neighbors.erase(box);		
 	}
+	_moving_neighbors.clear();
 }
 
-void Box::neigh_nb(int n, int moving_n)
+
+void Box::addStaticNeighbor(Box* neigh_box)
 {
-	_neigh_nb = n;
-	_moving_neigh_nb = moving_n;
-	_still_neigh_nb = n-moving_n;
-	if (_neigh_nb > 0) {
-		_neighbors = new Box* [_neigh_nb];
+	if(neigh_box == this){
+		return;
 	}
-	if (_moving_neigh_nb > 0) {
-		_moving_neighbors = new Box* [_moving_neigh_nb];
-		_probing_positions = new vec3d [_moving_neigh_nb];
-		_probe_nb = _moving_neigh_nb;
-	}
-	reset_moving_neighbors();
+
+	_neighbors.insert(neigh_box);
 }
 
-bool Box::can_be_added(int label, Box* neigh_box)
+void Box::addMovingNeighbor(Box* neigh_box)
 {
-	if (neigh_box == this) {
-		return false;
+	if(neigh_box == this){
+		return;
 	}
-	for (int i=0; i<label; i++) {
-		if (neigh_box == _neighbors[i]) {
-			return false;
-		}
-	}
-	return true;
+	_neighbors.insert(neigh_box);
+	_moving_neighbors.insert(neigh_box);
 }
 
-bool Box::neighbor(int label, Box* neigh_box)
-{
-	// we have to check that we don't list two times the same neighbor (for top AND bottom boxes)
-	// or don't the the box as its own neighbor (for every box)
-	if (can_be_added(label, neigh_box)) {
-		_neighbors[label] = neigh_box;
-		if (label >= _still_neigh_nb) {
-			_moving_neighbors[label-_still_neigh_nb] = neigh_box;
-		}
-		return true;
-	} else {
-		return false;
-	}
-}
-
-void Box::probing_positions(int label, const vec3d &pos)
-{
-	_probing_positions[label-_still_neigh_nb] = pos;
-}
-
-bool Box::moving_neighbor(int moving_label, Box* neigh_box)
-{
-	bool success = neighbor(moving_label+_still_neigh_nb, neigh_box);
-	return success;
-}
 
 void Box::is_top(bool it)
 {
@@ -116,9 +76,9 @@ void Box::remove(int i)
 void Box::build_neighborhood_container()
 {
 	neighborhood_container.clear();
-	int size = (int)container_size();
-	for (int i=0; i<neigh_nb(); i++) {
-		size += _neighbors[i]->container_size();
+	size_t size = container_size();
+	for (const auto& box : _neighbors) {
+		size += box->container_size();
 	}
 	neighborhood_container.resize(size);
 	int j = 0;
@@ -128,8 +88,8 @@ void Box::build_neighborhood_container()
 		j++;
 	}
 	// neighboring boxes
-	for (int i=0; i<neigh_nb(); i++) {
-		for (const int &k : (_neighbors[i])->container) {
+	for (const auto& box : _neighbors) {
+		for (const int &k : box->container) {
 			neighborhood_container[j] = k;
 			j++;
 		}

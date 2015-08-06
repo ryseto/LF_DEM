@@ -18,9 +18,11 @@
 #define required_argument 1
 #define optional_argument 2
 
+using namespace std;
+
 int main(int argc, char **argv)
 {
-	cerr << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
+	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate ] [-s Stress ] \
 	[-R Rate_Sequence ] [-S Stress_Sequence ] [-m ?] [-k kn_kt_File] [-i Provisional_Data] [-n] \
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
@@ -62,7 +64,7 @@ int main(int argc, char **argv)
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cerr << "Stress control: " << dimensionless_number << endl;
+					cout << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
 				}
@@ -72,13 +74,13 @@ int main(int argc, char **argv)
 				rheology_control = "stress";
 				seq_filename = optarg;
 				seq_type = "s";
-				cerr << "Stress sequence, file " << seq_filename << endl;
+				cout << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 't':
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cerr << "Stress control: " << dimensionless_number << endl;
+					cout << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
 				}
@@ -88,7 +90,7 @@ int main(int argc, char **argv)
 				rheology_control = "rate";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cerr << "Rate control: " << dimensionless_number << endl;
+					cout << "Rate control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear rate");
 				}
@@ -98,7 +100,7 @@ int main(int argc, char **argv)
 				rheology_control = "rate";
 				seq_filename = optarg;
 				seq_type = "r";
-				cerr << "Rate sequence, file " << seq_filename << endl;
+				cout << "Rate sequence, file " << seq_filename << endl;
 				break;
 			case 'm':
 				rheology_control = "magnetic";

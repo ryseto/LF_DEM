@@ -1,6 +1,7 @@
 var searchData=
 [
   ['magnetic_5famplitude',['magnetic_amplitude',['../struct_parameter_set.html#accc8a9b8f225df484b0f5e99b8dab676',1,'ParameterSet']]],
+  ['magnetic_5ffield_5ftype',['magnetic_field_type',['../struct_parameter_set.html#a404df09596711788d6875c8bef015634',1,'ParameterSet']]],
   ['magnetic_5finteraction_5frange',['magnetic_interaction_range',['../struct_parameter_set.html#ad5d0f77928b5f2693ee6084882cd1d19',1,'ParameterSet']]],
   ['magnetic_5ftype',['magnetic_type',['../struct_parameter_set.html#a34d86e60bffc2939f97590a305e17da3',1,'ParameterSet']]],
   ['magneticforce',['MagneticForce',['../class_magnetic_force.html',1,'']]],

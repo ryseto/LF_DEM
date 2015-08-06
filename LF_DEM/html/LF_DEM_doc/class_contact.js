@@ -25,6 +25,7 @@ var class_contact =
     [ "incrementTangentialDisplacement", "class_contact.html#ae6036288e4de33351de102ae08049eb5", null ],
     [ "init", "class_contact.html#aa24b2a75cfb79d14959cb241d7915642", null ],
     [ "setInteractionData", "class_contact.html#a1b1608a8584c903b26fb321f8e595927", null ],
+    [ "setSpringConstants", "class_contact.html#a135a11903be84c15d380759eccef28f0", null ],
     [ "contact_stresslet_XF_normal", "class_contact.html#a97ec7122aeaa635ea04882a9d0697644", null ],
     [ "contact_stresslet_XF_tan", "class_contact.html#a5666574a6976d5b34fd7980df8383d92", null ],
     [ "disp_rolling", "class_contact.html#a49029c993a1d8538a1542e61a8c5ea06", null ],

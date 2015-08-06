@@ -25,7 +25,7 @@ public:
 	 * (xx, xy, xz, yz, yy, zz)
 	 */
 	double elm[6];
-
+		
 	inline StressTensor()
 	{
 		for (int i=0; i<6; i++) {
@@ -41,7 +41,7 @@ public:
 	}
 	
 	// output stream operator
-	inline friend ostream& operator << (ostream &out,
+	inline friend std::ostream& operator << (std::ostream &out,
 										const StressTensor &st)
 	{
 		out << st.elm[0] << ' ';
@@ -323,19 +323,14 @@ public:
 		return elm[5]-elm[4];
 	}
 	
-	double getStressXZ()
-	{
-		return elm[2];
-	}
-	
 	double getParticlePressure()
 	{
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
 	
-	void cerr()
-	{
-		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
-	}
+//	void cerr()
+//	{
+//		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
+//	}
 };
 #endif

@@ -13,6 +13,8 @@
 #include <sstream>
 #include <cctype>
 
+using namespace std;
+
 Simulation::Simulation():
 shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
@@ -64,7 +66,7 @@ void Simulation::contactForceParameter(string filename)
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cerr << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+		cout << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 	} else {
 		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
 		exit(1);
@@ -154,7 +156,7 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 	
 	do {
 		previous_resolved = resolved;
-		for (auto&& f: suffixes) {
+		for (const auto& f: suffixes) {
 			string force_type = f.first;
 			string suffix = f.second;
 			if (resolved_units.find(suffix) != resolved_units.end()) {  // then we know how to convert to unit
@@ -168,7 +170,7 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 	
 	// check we found everyone
 	if (resolved < suffixes.size()) {
-		for (auto&& f: suffixes) {
+		for (const auto& f: suffixes) {
 			string force_type = f.first;
 			string suffix = f.second;
 			if (resolved_units.find(suffix) == resolved_units.end()) {
@@ -179,9 +181,9 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 	}
 	
 	// determine the dimensionless_numbers
-	for (auto&& f1: suffixes) {
+	for (const auto& f1: suffixes) {
 		string force1_type = f1.first;
-		for (auto&& f2: suffixes) {
+		for (const auto& f2: suffixes) {
 			string force2_type = f2.first;
 			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
 			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
@@ -277,9 +279,9 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	if (is_brownian) {
 		sys.brownian = true;
 		p.brownian_amplitude = values["thermal"];
-		cerr << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
+		cout << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
 	} else {
-		cerr << "non-Brownian" << endl;
+		cout << "non-Brownian" << endl;
 	}
 }
 
@@ -380,31 +382,31 @@ void Simulation::exportForceAmplitudes()
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
 		sys.amplitudes.repulsion = values["repulsive"];
-		cerr << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
+		cout << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
 	bool is_critical_load = values.find("critical_load") != values.end();
 	if (is_critical_load) {
 		sys.critical_load = true;
 		sys.amplitudes.critical_normal_force = values["critical_load"];
-		cerr << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		cout << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
 	}
 	bool is_cohesive = values.find("cohesive") != values.end();
 	if (is_cohesive) {
 		sys.cohesion = true;
 		sys.amplitudes.cohesion = values["cohesive"];
-		cerr << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
+		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 	
 	//	bool is_magnetic = values.find("m") != values.end();
 	//	if (is_magnetic) {
 	//		sys.amplitudes.magnetic = values["m"];
-	//		cerr << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-	//		cerr << " values[m] = "  << values["m"] << endl;
+	//		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
+	//		cout << " values[m] = "  << values["m"] << endl;
 	//	}
 	bool is_ft_max = values.find("ft") != values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = values["ft"];
-		cerr << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+		cout << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
 }
 
@@ -431,7 +433,7 @@ void Simulation::convertInputValues(string new_unit)
 				}
 			}
 		}
-		cerr << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+		cout << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -527,16 +529,8 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		importConfiguration();
 	}
-	if (initial_lees_edwards_disp > 0) {
-		sys.shear_disp = initial_lees_edwards_disp;
-	} else {
-		sys.shear_disp = 0;
-	}
-	if (initial_y_shear_disp > 0) {
-		sys.y_shear_disp = initial_y_shear_disp;
-	} else {
-		sys.y_shear_disp = 0;
-	}
+	sys.shear_disp = initial_lees_edwards_disp;
+	
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -550,10 +544,10 @@ void Simulation::setupSimulation(string in_args,
 			if (inv.unit == "strain") {
 				time_end = -1;
 				strain_end = p.time_end;
-				cerr << "  strain_end = " << strain_end << endl;
+				cout << "  strain_end = " << strain_end << endl;
 			} else {
 				time_end = p.time_end;
-				cerr << "  time_end = " << time_end << endl;
+				cout << "  time_end = " << time_end << endl;
 			}
 		}
 	}
@@ -563,25 +557,25 @@ void Simulation::setupSimulation(string in_args,
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
 		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
 	} else {
-		for (auto&& inv: input_values) {
+		for (const auto& inv: input_values) {
 			if (inv.name == "time_interval_output_data") {
 				if (inv.unit == "strain") {
 					time_interval_output_data = -1;
 					strain_interval_output_data = p.time_interval_output_data;
-					cerr << "  strain_interval_output_data = " << strain_interval_output_data << endl;
+					cout << "  strain_interval_output_data = " << strain_interval_output_data << endl;
 				} else {
 					time_interval_output_data = p.time_interval_output_data;
-					cerr << "  time_interval_output_data = " << time_interval_output_data << endl;
+					cout << "  time_interval_output_data = " << time_interval_output_data << endl;
 				}
 			}
 			if (inv.name == "time_interval_output_config") {
 				if (inv.unit == "strain") {
 					time_interval_output_config = -1;
 					strain_interval_output_config = p.time_interval_output_config;
-					cerr << "  strain_interval_output_config = " << strain_interval_output_config << endl;
+					cout << "  strain_interval_output_config = " << strain_interval_output_config << endl;
 				} else {
 					time_interval_output_config = p.time_interval_output_config;
-					cerr << "  time_interval_output_config = " << time_interval_output_config << endl;
+					cout << "  time_interval_output_config = " << time_interval_output_config << endl;
 				}
 			}
 		}
@@ -673,10 +667,10 @@ void Simulation::simulationSteadyShear(string in_args,
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold){
-			cerr << "shear jamming " << jammed << endl;
+			cout << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
-				cerr << "shear jamming";
+				cout << "shear jamming";
 				break;
 			}
 		} else {
@@ -762,15 +756,15 @@ void Simulation::simulationInverseYield(string in_args,
 		cerr << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
-			cerr << "shear jamming " << jammed << endl;
+			cout << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 20) {
 				sys.set_shear_rate(1);
-				cerr << "target_stress = " << target_stress_input << endl;
+				cout << "target_stress = " << target_stress_input << endl;
 				target_stress_input *= 0.95;
 				sys.target_stress = target_stress_input/6/M_PI;
 				sys.updateUnscaledContactmodel();
-				cerr << "new target_stress = " << target_stress_input << endl;
+				cout << "new target_stress = " << target_stress_input << endl;
 				jammed = 0;
 			}
 		} else {
@@ -822,7 +816,7 @@ void Simulation::simulationMagnetic(string in_args,
 	double time_end = 0;
 	double angle_external_magnetic_field = 0;
 	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
-	cerr << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
+	cout << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
 	int cnt_external_magnetic_field = 0;
 	while (sys.get_time() < p.time_end) {
 		cnt_external_magnetic_field++;
@@ -861,7 +855,7 @@ void Simulation::simulationMagnetic(string in_args,
 				}
 			}
 			/*****************************************************/
-			cerr << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
+			cout << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
 		}
 		angle_external_magnetic_field += d_angle_external_magnetic_field;
 		if (p.magnetic_field_type == 1) {
@@ -916,28 +910,28 @@ void Simulation::outputComputationTime()
 // 	sys.brownian = false;
 // 	target_stress_input = 0;
 // 	sys.target_stress = 0;
-// 	cerr << seq_type << endl;
+// 	cout << seq_type << endl;
 // 	if (seq_type == "S") {
 // 		p.unscaled_contactmodel = true;
-// 		cerr << "Repulsive force" << endl;
+// 		cout << "Repulsive force" << endl;
 // 		sys.repulsiveforce = true;
 // 		sys.amplitudes.repulsion = 1;
 // 		string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
 // 	} else if (seq_type == "R") {
 // 		//p.unscaled_contactmodel
 // 		sys.repulsiveforce = true;
-// 		cerr << "Repulsive force" << endl;
-// 		cerr << " User Defined Sequence only implemented for ....\n";
+// 		cout << "Repulsive force" << endl;
+// 		cout << " User Defined Sequence only implemented for ....\n";
 // 		exit(1);
 // 	} else if (seq_type == "B") {
-// 		cerr << "Cohesive force" << endl;e
+// 		cout << "Cohesive force" << endl;e
 // 		sys.set_shear_rate(1);
 // 		sys.repulsiveforce = false;
 // 		sys.cohesion = true;
 // 		sys.cohesive_force = 1;
 // 		string_control_parameters << "_B" << filename_sequence.substr(0, pos_ext_sequence);
 // 	} else {
-// 		cerr << " User Defined Sequence only implemented for ....\n";
+// 		cout << " User Defined Sequence only implemented for ....\n";
 // 		exit(1);
 // 	}
 // 	setDefaultParameters();
@@ -1001,7 +995,7 @@ void Simulation::outputComputationTime()
 // 		 */
 // 		target_stress_input = rsequence[step];
 // 		sys.target_stress = rsequence[step]/6/M_PI;
-// 		cerr << "Target stress " << target_stress_input << endl;
+// 		cout << "Target stress " << target_stress_input << endl;
 // 		sys.updateUnscaledContactmodel();
 // 		sys.amplitudes.repulsion = 1; // needed for 1st time step
 // 		sys.dimensionless_number = 1;
@@ -1031,18 +1025,18 @@ void Simulation::outputComputationTime()
 // 			/******************************************************/
 
 // 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
-// 				cerr << "shear jamming " << jammed << endl;
+// 				cout << "shear jamming " << jammed << endl;
 // 				jammed ++;
 // 				if (jammed > 10) {
 // 					jammed = 0;
-// 					cerr << "shear jamming";
+// 					cout << "shear jamming";
 // 					break;
 // 				}
 // 			} else {
 // 				jammed = 0;
 // 			}
-// 			cerr << "strain: " << sys.get_time() << " / " << p.time_end;
-// 			cerr << "      stress = " << target_stress_input << endl;
+// 			cout << "strain: " << sys.get_time() << " / " << p.time_end;
+// 			cout << "      stress = " << target_stress_input << endl;
 // 		}
 // 	}
 // }
@@ -1200,6 +1194,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.step_interval_external_magnetic_field = atof(value.c_str());
 	} else if (keyword == "magnetic_interaction_range") {
 		p.magnetic_interaction_range = atof(value.c_str());
+	} else if (keyword == "cross_shear") {
+		sys.cross_shear = str2bool(value); // temporary, should get a parameter
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -1428,16 +1424,17 @@ void Simulation::importConfiguration()
 	char buf;
 	int n1, n2;
 	double lx, ly, lz, vf1, vf2;
+	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
 	stringstream ss(header_imported_configulation[1]);
-	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp;
+	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp.x;
 	double a;
 	if(ss >> a) {
-		initial_y_shear_disp = a;
+		initial_lees_edwards_disp.y = a;
 	}
 	else {
-		initial_y_shear_disp = 0;
+		initial_lees_edwards_disp.y = 0;
 	}
 	vector<vec3d> initial_position;
 	vector <double> radius;
@@ -1489,14 +1486,14 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	double lx = sys.get_lx();
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
-	double shear_disp = sys.shear_disp;
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
 	conf_export.write((char*)&np, sizeof(int));
 	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
 	conf_export.write((char*)&lx, sizeof(double));
 	conf_export.write((char*)&ly, sizeof(double));
 	conf_export.write((char*)&lz, sizeof(double));
-	conf_export.write((char*)&shear_disp, sizeof(double));
+	conf_export.write((char*)&(sys.shear_disp.x), sizeof(double));
+	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
@@ -1506,6 +1503,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 void Simulation::importConfigurationBinary()
 {
 	ifstream file_import;
+	initial_lees_edwards_disp.reset();
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
@@ -1518,7 +1516,8 @@ void Simulation::importConfigurationBinary()
 	file_import.read((char*)&lx, sizeof(double));
 	file_import.read((char*)&ly, sizeof(double));
 	file_import.read((char*)&lz, sizeof(double));
-	file_import.read((char*)&initial_lees_edwards_disp, sizeof(double));
+	file_import.read((char*)&initial_lees_edwards_disp.x, sizeof(double));
+	file_import.read((char*)&initial_lees_edwards_disp.y, sizeof(double));
 	double x_, y_, z_, r_;
 	vector <vec3d> initial_position;
 	vector <double> radius;
@@ -1559,7 +1558,7 @@ void Simulation::prepareSimulationName(bool binary_conf)
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters.str();
 	sys.simu_name = ss_simu_name.str();
-	cerr << "filename: " << sys.simu_name << endl;
+	cout << "filename: " << sys.simu_name << endl;
 }
 
 double Simulation::getRate(){
@@ -1635,9 +1634,9 @@ void Simulation::outputData()
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	
 	if (sys.p.magnetic_type == 0) {
-		outdata.init(36);
+		outdata.init(36, output_unit_scales);
 	} else {
-		outdata.init(40);
+		outdata.init(40, output_unit_scales);
 	}
 	
 	
@@ -1649,15 +1648,15 @@ void Simulation::outputData()
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
 	
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
-	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.getStressXZ()/sr);
-	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.getStressXZ()/sr);
-	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", sys.total_contact_stressGU.getStressXZ()/sr);
+	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.elm[shear_stress_index]/sr);
+	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.elm[shear_stress_index]/sr);
+	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", sys.total_contact_stressGU.elm[shear_stress_index]/sr);
 	if (sys.repulsiveforce) {
-		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", sys.total_repulsive_stressXF.getStressXZ()/sr);
-		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", sys.total_repulsive_stressGU.getStressXZ()/sr);
+		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", sys.total_repulsive_stressXF.elm[shear_stress_index]/sr);
+		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", sys.total_repulsive_stressGU.elm[shear_stress_index]/sr);
 	}
 	if (sys.brownian) {
-		outdata.entryData(11, "Viscosity(brownian)", "viscosity", sys.total_brownian_stressGU.getStressXZ()/sr);
+		outdata.entryData(11, "Viscosity(brownian)", "viscosity", sys.total_brownian_stressGU.elm[shear_stress_index]/sr);
 	}
 	/*
 	 * Stress
@@ -1691,7 +1690,7 @@ void Simulation::outputData()
 	outdata.entryData(32, "kn", "none", sys.p.kn);
 	outdata.entryData(33, "kt", "none", sys.p.kt);
 	outdata.entryData(34, "kr", "none", sys.p.kr);
-	outdata.entryData(35, "shear displacement", "none", sys.shear_disp);
+	outdata.entryData(35, "shear displacement", "none", sys.shear_disp.x);
 	if (p.magnetic_type != 0) {
 		outdata.entryData(37, "magnetic energy", "none", sys.magnetic_energy);
 		outdata.entryData(38, "magnetic field angle", "none", sys.angle_external_magnetic_field);
@@ -1721,9 +1720,13 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	if (p.origin_zero_flow) {
 		z += sys.Lz_half();
 		if (z > sys.Lz_half()) {
-			x -= sys.shear_disp;
+			x -= sys.shear_disp.x;
+			y -= sys.shear_disp.y;
 			if (x < -sys.Lx_half()) {
 				x += sys.get_lx();
+			}
+			if (y < -sys.Ly_half()) {
+				y += sys.get_ly();
 			}
 			z -= sys.get_lz();
 		}
@@ -1768,9 +1771,9 @@ void Simulation::outputConfigurationData()
 	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
 	 */
 	if (p.out_data_particle) {
-		cerr << "   out config: " << sys.get_shear_strain() << endl;
+		cout << "   out config: " << sys.get_shear_strain() << endl;
 		fout_particle << "# " << sys.get_shear_strain() << ' ';
-		fout_particle << sys.shear_disp << ' ';
+		fout_particle << sys.shear_disp.x << ' ';
 		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << ' ';
@@ -1778,15 +1781,22 @@ void Simulation::outputConfigurationData()
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
+		
+		unsigned int shear_stress_index;
+		if (!sys.cross_shear) {
+			shear_stress_index = 2;
+		} else {
+			shear_stress_index = 3;
+		}
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];
 			const vec3d &o = sys.ang_velocity[i];
-			double lub_xzstress = sys.lubstress[i].getStressXZ();
-			double contact_xzstressGU = sys.contactstressGU[i].getStressXZ();
+			double lub_xzstress = sys.lubstress[i].elm[shear_stress_index];
+			double contact_xzstressGU = sys.contactstressGU[i].elm[shear_stress_index];
 			double brownian_xzstressGU = 0;
 			if (sys.brownian) {
-				brownian_xzstressGU = sys.brownianstressGU[i].getStressXZ();
+				brownian_xzstressGU = sys.brownianstressGU[i].elm[shear_stress_index];
 			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
@@ -1820,6 +1830,12 @@ void Simulation::outputConfigurationData()
 		fout_interaction << ' ' << cnt_interaction;
 		fout_interaction << ' ' << sys.get_time();
 		fout_interaction << endl;
+		unsigned int shear_stress_index;
+		if (!sys.cross_shear) {
+			shear_stress_index = 2;
+		} else {
+			shear_stress_index = 3;
+		}
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
@@ -1854,7 +1870,7 @@ void Simulation::outputConfigurationData()
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
 				fout_interaction << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-				fout_interaction << 6*M_PI*stress_contact.getStressXZ() << ' '; // 17
+				fout_interaction << 6*M_PI*stress_contact.elm[shear_stress_index] << ' '; // 17
 				fout_interaction << endl;
 			}
 		}
