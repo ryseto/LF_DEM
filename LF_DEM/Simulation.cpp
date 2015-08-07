@@ -86,7 +86,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
 	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == volume_or_area_fraction && peclet_ == dimensionless_numbers["h/b"]) {
+		if (phi_ == volume_or_area_fraction && peclet_ == dimensionless_numbers["hydro/thermal"]) {
 			found = true;
 			break;
 		}
@@ -97,7 +97,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	} else {
-		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["h/b"] << endl;
+		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["hydro/thermal"] << endl;
 		exit(1);
 	}
 }
@@ -313,7 +313,7 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string r
 void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
-	double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["h/b"];
+	double scale_factor_SmallPe = p.Pe_switch/dimensionless_numbers["hydro/thermal"];
 	p.memory_strain_k /= scale_factor_SmallPe;
 	p.memory_strain_avg /= scale_factor_SmallPe;
 	p.start_adjust /= scale_factor_SmallPe;
@@ -336,23 +336,22 @@ void Simulation::setUnitScaleRateControlled()
 {
 	bool is_brownian;
 	
-	if (dimensionless_numbers.find("h/b") != dimensionless_numbers.end()
-		|| dimensionless_numbers.find("m/b") != dimensionless_numbers.end()) {
+	if (dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end()
+		|| dimensionless_numbers.find("magnetic/thermal") != dimensionless_numbers.end()) {
 		is_brownian = true;
 	} else {
 		is_brownian = false;
 	}
-	is_brownian = true;
 
 	if (is_brownian) {
-		if (dimensionless_numbers["h/b"] > p.Pe_switch && !sys.zero_shear) { // hydro units
+		if (dimensionless_numbers["hydro/thermal"] > p.Pe_switch && !sys.zero_shear) { // hydro units
 			internal_unit_scales = "hydro";
-			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["h/b"]);
+			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["hydro/thermal"]);
 			sys.set_shear_rate(1);
 		} else { // low Peclet mode
 			internal_unit_scales = "thermal";
 			sys.amplitudes.sqrt_temperature = 1;
-			sys.set_shear_rate(dimensionless_numbers["h/b"]);
+			sys.set_shear_rate(dimensionless_numbers["hydro/thermal"]);
 			setLowPeclet();
 		}
 	} else {
@@ -1608,7 +1607,7 @@ void Simulation::outputData()
 	 */
 	
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	cerr << internal_unit_scales << " " << output_unit_scales << endl;
+//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
 	
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
