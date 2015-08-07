@@ -103,10 +103,19 @@ int main(int argc, char **argv)
 				cout << "Rate sequence, file " << seq_filename << endl;
 				break;
 			case 'm':
+				/*
+				 * magnetic moment m
+				 * Typical magnetic force: (3 mu m^2)/(2 pi (2a)^4)
+				 * Typical Brownian force: kT/a
+				 * Dimensionless_number (Pe number) can be defined as the ratio between these two forces:
+				 * Typical magnetic force/Typical Brownian force = (3 mu m^2) / (32 pi kT a^3)
+				 *
+				 *
+				 */
 				rheology_control = "magnetic";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cerr << "magnetic field: " << dimensionless_number << endl;
+					cout << "Magnetic field control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("magnetic field");
 				}
@@ -168,7 +177,7 @@ int main(int argc, char **argv)
 		Simulation simulation;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
-											 dimensionless_number, suffix, rheology_control);
+										  dimensionless_number, suffix, rheology_control);
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
 											  dimensionless_number, suffix, rheology_control);

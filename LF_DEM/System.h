@@ -288,7 +288,6 @@ private:
 
 	void setInteractions_GenerateInitConfig();
 	void setupSystem(std::string control);
-	void setupBrownian();
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(std::string time_or_strain, double value_end);

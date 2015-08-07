@@ -26,26 +26,25 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		z_box_nb = 1;
 	}
 	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
-
 		_is_boxed = false;
 		box_xsize = sys->get_lx();
 		box_ysize = sys->get_ly();
 		box_zsize = sys->get_lz();
 		box_nb = 1;
-
+		
 		auto it = Boxes.insert(new Box());
 		Box* const box = (*it.first);
 		box->position.reset();
 		box->is_bottom(true);
 		box->is_top(true);
 		TopBottomBoxes.insert(box);
-		box_labels.push_back(box);	
+		box_labels.push_back(box);
 	} else {
 		_is_boxed = true;
 		box_xsize = sys->get_lx()/x_box_nb;
 		box_ysize = sys->get_ly()/y_box_nb;
 		box_zsize = sys->get_lz()/z_box_nb;
-
+		
 		for (int a : {-1,1} ) {
 			for (int b : {-1,1} ) {
 				vec3d far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,box_zsize);
@@ -53,7 +52,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,0,0));
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,b*box_ysize,0));
 				top_probing_positions.push_back(far_corner-vec3d(0,b*box_ysize,0));
-
+				
 				far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,-box_zsize);
 				bottom_probing_positions.push_back(far_corner);
 				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize,0,0));
@@ -74,7 +73,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 void BoxSet::allocateBoxes()
 {
 	box_nb = x_box_nb*y_box_nb*z_box_nb;
-
+	
 	for (int i=0; i<box_nb;i++) {
 		Boxes.emplace(new Box());
 	}
@@ -98,7 +97,7 @@ void BoxSet::positionBoxes()
 	} else {
 		cmax = z_box_nb;
 	}
-
+	
 	// position boxes
 	auto it = Boxes.begin();
 	
@@ -158,7 +157,7 @@ void BoxSet::assignNeighborsBottom()
 	for (auto & box : BottomBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
-
+		
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
 		for (const auto & a : {-1,0,1}) {
 			delta.x = a*box_xsize;
@@ -179,11 +178,10 @@ void BoxSet::assignNeighborsBottom()
 
 void BoxSet::assignNeighborsTop()
 {
-
 	for (auto & box : TopBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
-	
+		
 		// boxes  at same level and bottom first: these are fixed once and for all in the simulation
 		for (const auto & a : {-1,0,1}) {
 			delta.x = a*box_xsize;
@@ -195,7 +193,7 @@ void BoxSet::assignNeighborsTop()
 				}
 			}
 		}
-				
+		
 		for (const auto& delta_prob : top_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
@@ -205,7 +203,6 @@ void BoxSet::assignNeighborsTop()
 
 void BoxSet::assignNeighborsTopBottom()
 {
-
 	for (auto & box : TopBottomBoxes) {
 		vec3d pos = box->position;
 		vec3d delta;
@@ -219,7 +216,7 @@ void BoxSet::assignNeighborsTopBottom()
 				box->addStaticNeighbor(WhichBox(pos+delta));
 			}
 		}
-				
+		
 		for (const auto& delta_prob : top_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
@@ -262,42 +259,42 @@ void BoxSet::updateNeighbors()
 {
 	/**
 	 \brief Update the neighbors of top and bottom boxes have changed.
-
+	 
 		To be called when the boundary conditions have changed.
 	 **/
-
+	
 	for (auto & box : TopBoxes) {
 		box->reset_moving_neighbors();
 		vec3d pos = box->position;
 		vec3d delta;
-			
+		
 		for (const auto& delta_prob : top_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
-
+	
 	for (auto & box : BottomBoxes) {
 		box->reset_moving_neighbors();
 		vec3d pos = box->position;
 		vec3d delta;
-			
+		
 		for (const auto& delta_prob : bottom_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
-
+	
 	for (auto & box : TopBottomBoxes) {
 		box->reset_moving_neighbors();
 		vec3d pos = box->position;
 		vec3d delta;
-			
+		
 		for (const auto& delta_prob : top_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions){
 			box->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
-	}	
+	}
 }
 
 //public methods
@@ -309,12 +306,12 @@ void BoxSet::update()
 	for (const auto & box : Boxes) {
 		box->build_neighborhood_container();
 	}
-
+	
 	// if(sys->get_shear_strain()>0.237){
 	// 	printBoxNetwork();exit(1);
-	// }	
-//	printBoxContainers(); exit(1);
-//	printNeighborhoodContainers(); exit(1);	
+	// }
+	//	printBoxContainers(); exit(1);
+	//	printNeighborhoodContainers(); exit(1);
 	// printBoxMap(); exit(1);
 }
 
@@ -340,7 +337,7 @@ Box* BoxSet::WhichBox(vec3d *pos)
 	}
 	int iz = (int)(pos->z/box_zsize);
 	int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
-
+	
 	return box_labels[label];
 }
 
@@ -386,7 +383,7 @@ void BoxSet::printBoxContainers()
 {
 	for (const auto & box : Boxes) {
 		for(const auto& j : box->container){
-			cerr << box->position << " " << j << endl; 
+			cerr << box->position << " " << j << endl;
 		}
 	}
 }
@@ -395,7 +392,7 @@ void BoxSet::printNeighborhoodContainers()
 {
 	for (const auto & box : Boxes) {
 		for(const auto& j : box->neighborhood_container){
-			cerr << box->position << " " << j << endl; 
+			cerr << box->position << " " << j << endl;
 		}
 	}
 }

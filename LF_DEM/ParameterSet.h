@@ -24,7 +24,7 @@ struct ParameterSet
 	/* magnetic */
 	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
 	int magnetic_type;						///< Magnetic, 1: fixed magnetic dipole, 2: magnetic susceptible particles
-	int magnetic_field_type;				///< Magnetic field, 1: x-z tilting/raising cycle 2: rotating along z-axis
+	int magnetic_field_type;				///< Magnetic field, 0: constant field along z-axis 1: x-z tilting/raising cycle 2: rotating along z-axis
 	double magnetic_interaction_range; ///< [20]
 	double init_angle_external_magnetic_field;  ///< Initial angle of external magnetic field
 	double rot_step_external_magnetic_field;  ///<

@@ -28,7 +28,6 @@ private:
 	std::set <Box*> _moving_neighbors;
 	bool _is_bottom;
 	bool _is_top;
-
 	
 public:
 	Box();

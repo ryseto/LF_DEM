@@ -287,35 +287,27 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit)
 {
 	string force_type = rate_unit;
-	if (force_type == "hydro") {
-		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
+	if (force_type != "thermal") {
+		cerr << "unit needs to be thermal" << endl;
 		exit(1);
 	}
-	cerr << force_type << endl;
 	if (values[force_type] > 0) {
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
-	
 	// switch this force in hydro units
 	values[force_type] = 1/dimensionlessnumber;
 	suffixes[force_type] = "magnetic";
 	// convert all other forces to hydro
 	resolveUnitSystem("magnetic");
 	//	chose simulation unit
-	setUnitScaleRateControlled();
+	cerr << "setUnitScaleRateControlled" << endl;
+	setUnitScaleMagnetic();
 	// convert from hydro scale to chosen scale
 	convertForceValues(internal_unit_scales);
-	//	bool is_brownian = dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end();
-	bool is_brownian = true;
-	if (is_brownian) {
-		sys.brownian = true;
-		p.brownian_amplitude = values["thermal"];
-		cerr << "Brownian, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
-	} else {
-		cerr << "non-Brownian" << endl;
-	}
-	/***********************************/
+	sys.brownian = true;
+	p.brownian_amplitude = values["thermal"];
+	cerr << "Brownian, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
 }
 
 void Simulation::setLowPeclet()
@@ -330,7 +322,6 @@ void Simulation::setLowPeclet()
 
 void Simulation::convertForceValues(string new_unit)
 {
-
 	for (auto& f: suffixes) {
 		string force_type = f.first;
 		string old_unit = f.second;
@@ -374,6 +365,12 @@ void Simulation::setUnitScaleRateControlled()
 	}
 }
 
+void Simulation::setUnitScaleMagnetic()
+{
+	internal_unit_scales = "thermal";
+	sys.amplitudes.sqrt_temperature = 1;
+}
+
 void Simulation::exportForceAmplitudes()
 {
 	bool is_repulsive = values.find("repulsive") != values.end();
@@ -410,14 +407,13 @@ void Simulation::exportForceAmplitudes()
 
 void Simulation::convertInputValues(string new_unit)
 {
-
 	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
 			if (old_unit != "hydro" && values.find(old_unit) == values.end()) {
-				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl; exit(1);
+				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
+				exit(1);
 			}
-			
 			if (inv.type == "stiffness") {
 				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
 				inv.unit = new_unit;
@@ -443,7 +439,7 @@ void Simulation::setupSimulation(string in_args,
 {
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	
+
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -480,7 +476,6 @@ void Simulation::setupSimulation(string in_args,
 		p.unscaled_contactmodel = true;
 	} else if (control_var == "magnetic") {
 		convertInputForcesMagnetic(dimensionlessnumber, input_scale);
-		cerr << "magnetic" << endl;
 	} else {
 		exit(1);
 	}
@@ -503,14 +498,13 @@ void Simulation::setupSimulation(string in_args,
 	}
 	if (control_var == "stress") {
 		if (p.integration_method != 0) {
-			cerr << "Must be Euler method for stress controlled simulation" << endl;
+			cerr << "Need to be so far the Euler method for the stress controlled simulation." << endl;
 		}
 		p.integration_method = 0;
 	}
 	if (sys.critical_load) {
 		p.friction_model = 2;
 	}
-	
 	//	p.contact_relaxation_time *= p.dt;
 	//	p.contact_relaxation_time_tan *= p.dt;
 	/*
@@ -545,7 +539,10 @@ void Simulation::setupSimulation(string in_args,
 			}
 		}
 	}
-	
+	if (control_var == "magnetic") {
+		time_end = p.time_end;
+	}
+
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
@@ -576,7 +573,12 @@ void Simulation::setupSimulation(string in_args,
 	}
 	
 	if (sys.brownian) {
-		sys.setupBrownian();
+		if (sys.lowPeclet) {
+			cerr << "[[small Pe mode]]" << endl;
+			cerr << "  kn = " << p.kn << endl;
+			cerr << "  kt = " << p.kt << endl;
+			cerr << "  dt = " << p.dt << endl;
+		}
 	}
 	sys.setupSystem(control_var);
 
@@ -612,7 +614,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 	if (sys.cohesion) {
-		sys.new_contact_gap = 0.02;
+		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
 	} else {
 		sys.new_contact_gap = 0;
 	}
@@ -791,6 +793,10 @@ void Simulation::simulationMagnetic(string in_args,
 									string input_scale,
 									string control_variable)
 {
+	/* Monolayer: Particles are confined in y = 0 plane.
+	 *
+	 *
+	 */
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
@@ -806,62 +812,47 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 	
-	double time_end = 0;
-	double angle_external_magnetic_field = 0;
-	double d_angle_external_magnetic_field = (0.5*M_PI)/p.rot_step_external_magnetic_field;
-	cout << "angle step (degree) = " << 180*d_angle_external_magnetic_field/M_PI << endl;
-	int cnt_external_magnetic_field = 0;
-	while (sys.get_time() < p.time_end) {
-		cnt_external_magnetic_field++;
-		time_end = p.step_interval_external_magnetic_field*cnt_external_magnetic_field;
-		if (p.magnetic_field_type == 1) {
-			sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
-											cos(sys.angle_external_magnetic_field),
-											0);
-		} else if (p.magnetic_field_type == 2) {
-			sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
-											0,
-											sin(sys.angle_external_magnetic_field));
-		}
-		cerr << "External magnetic field = ";
-		sys.external_magnetic_field.cerr();
-		cerr << endl;
-		sys.setMagneticMomentExternalField();
-		while (sys.get_time() < time_end) {
-			time_output_data = cnt_simu_loop*time_interval_output_data;
-			time_output_config = cnt_config_out*time_interval_output_config;
-			sys.timeEvolution(time_output_data);
-			cnt_simu_loop ++;
-			/******************** OUTPUT DATA ********************/
-			evaluateData();
-			outputData(); // new
-			outputConfigurationBinary();
-			if (time_interval_output_data == -1) {
-				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-					outputConfigurationData();
-					cnt_config_out ++;
-				}
-			} else {
-				if (sys.get_time() >= time_output_config-1e-8) {
-					outputConfigurationData();
-					cnt_config_out ++;
-				}
-			}
-			/*****************************************************/
-			cout << "time: " << sys.get_time() << " / " << time_end << " / " << p.time_end << endl;
-		}
-		angle_external_magnetic_field += d_angle_external_magnetic_field;
-		if (p.magnetic_field_type == 1) {
-			if (abs(cos(angle_external_magnetic_field)) < 1e-5) {
-				sys.angle_external_magnetic_field = M_PI/2;
-			} else {
-				double tangent = sin(angle_external_magnetic_field)/cos(angle_external_magnetic_field);
-				sys.angle_external_magnetic_field = atan(abs(tangent));
-			}
-		} else if (p.magnetic_field_type == 2) {
-			sys.angle_external_magnetic_field = angle_external_magnetic_field;
-		}
+	double external_magnetic_field_norm = 2*sqrt(2*dimensionless_number); //@@@@@@ TO BE CHECKED!!
+	if (p.magnetic_field_type == 0) {
+		// Field direction is fixed
+		sys.external_magnetic_field.set(0, external_magnetic_field_norm, 0);
+	} else if (p.magnetic_field_type == 1) {
+		sys.external_magnetic_field.set(external_magnetic_field_norm*sin(sys.angle_external_magnetic_field),
+										external_magnetic_field_norm*cos(sys.angle_external_magnetic_field),
+										0);
+		exit(1);
+	} else if (p.magnetic_field_type == 2) {
+		sys.external_magnetic_field.set(external_magnetic_field_norm*cos(sys.angle_external_magnetic_field),
+										0,
+										external_magnetic_field_norm*sin(sys.angle_external_magnetic_field));
+		exit(1);
 	}
+	sys.setMagneticMomentExternalField();
+	// Main simulation loop
+	while (keepRunning()) {
+		time_output_data = cnt_simu_loop*time_interval_output_data;
+		time_output_config = cnt_config_out*time_interval_output_config;
+		sys.timeEvolution(time_output_data);
+		cnt_simu_loop ++;
+		/******************** OUTPUT DATA ********************/
+		evaluateData();
+		outputData();
+		outputConfigurationBinary();
+		if (time_interval_output_data == -1) {
+			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+		} else {
+			if (sys.get_time() >= time_output_config-1e-8) {
+				outputConfigurationData();
+				cnt_config_out ++;
+			}
+		}
+		/*****************************************************/
+		cout << "time: " << sys.get_time() << " / " << time_end << endl;
+	}
+	
 	outputComputationTime();
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
@@ -1401,7 +1392,7 @@ void Simulation::setDefaultParameters()
 	 * Parameters for magnetic colloid simulation.
 	 */
 	p.magnetic_type = 0;
-	p.magnetic_field_type = 1;
+	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
@@ -1576,7 +1567,6 @@ void Simulation::evaluateData()
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
-	
 }
 
 
@@ -1620,7 +1610,6 @@ void Simulation::outputData()
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	cerr << internal_unit_scales << " " << output_unit_scales << endl;
 	
-	
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
 	}
@@ -1631,7 +1620,6 @@ void Simulation::outputData()
 	} else {
 		outdata.init(40, output_unit_scales);
 	}
-	
 	
 	double sr = sys.get_shear_rate();
 	unsigned int shear_stress_index;
@@ -1710,7 +1698,6 @@ void Simulation::outputData()
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stress);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.exportFile(fout_st);
-	
 }
 
 

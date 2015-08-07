@@ -32,8 +32,8 @@ class Simulation
 private:
 	System sys;
 	ParameterSet p;
-	std::map <std::string, std::string> suffixes;   // pairs: (force_type, suffix)
-	std::map <std::string, double> values;   // pairs: (force_type, values_in_suffix_units)
+	std::map <std::string, std::string> suffixes;   // pairs: (force_type, suffix) @@@ Need to change to a self-explanatory variable name
+	std::map <std::string, double> values;   // pairs: (force_type, values_in_suffix_units) @@@ Need to change to a self-explanatory variable name
 	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
 	std::map <std::string, std::string> unit_longname;
 	
@@ -54,7 +54,6 @@ private:
 	double strain_interval_output_config;
 	double strain_end;
 	double time_end;
-	
 	/*
 	 * Resultant data
 	 */
@@ -101,6 +100,7 @@ private:
 	void convertInputValues(std::string new_long_unit);
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
+	void setUnitScaleMagnetic();
 	void convertInputForcesRateControlled(double dimensionlessnumber, std::string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, std::string rate_unit);
 	void convertInputForcesMagnetic(double dimensionlessnumber, std::string rate_unit);

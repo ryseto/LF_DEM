@@ -17,31 +17,28 @@ Box::~Box(){
  */
 void Box::reset_moving_neighbors()
 {
-	for(const auto& box : _moving_neighbors){
-		_neighbors.erase(box);		
+	for (const auto& box : _moving_neighbors) {
+		_neighbors.erase(box);
 	}
 	_moving_neighbors.clear();
 }
 
-
 void Box::addStaticNeighbor(Box* neigh_box)
 {
-	if(neigh_box == this){
+	if (neigh_box == this) {
 		return;
 	}
-
 	_neighbors.insert(neigh_box);
 }
 
 void Box::addMovingNeighbor(Box* neigh_box)
 {
-	if(neigh_box == this){
+	if (neigh_box == this) {
 		return;
 	}
 	_neighbors.insert(neigh_box);
 	_moving_neighbors.insert(neigh_box);
 }
-
 
 void Box::is_top(bool it)
 {

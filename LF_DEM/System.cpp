@@ -417,18 +417,6 @@ void System::updateUnscaledContactmodel()
 	}
 }
 
-void System::setupBrownian()
-{
-	if (brownian) {
-		if (lowPeclet) {
-			cerr << "[[small Pe mode]]" << endl;
-			cerr << "  kn = " << p.kn << endl;
-			cerr << "  kt = " << p.kt << endl;
-			cerr << "  dt = " << p.dt << endl;
-		}
-	}
-}
-
 void System::setupSystem(string control)
 {
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -437,13 +425,18 @@ void System::setupSystem(string control)
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
 	
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
+	if (control != "magnetic") {
+		if (control == "rate") {
+			rate_controlled = true;
+		}
+		if (control == "stress") {
+			rate_controlled = false;
+		}
+		stress_controlled = !rate_controlled;
+	} else {
 		rate_controlled = false;
+		stress_controlled = false;
 	}
-	stress_controlled = !rate_controlled;
 	
 	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
@@ -471,7 +464,6 @@ void System::setupSystem(string control)
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
-	
 	if (p.friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
 		mu_static = 0;
@@ -500,9 +492,7 @@ void System::setupSystem(string control)
 			exit(1);
 		}
 	}
-	
 	allocateRessources();
-
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -572,7 +562,6 @@ void System::setupSystem(string control)
 	cerr << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
 	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
 	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
-	
 	if (brownian) {
 #ifdef DEV
 		/* In developing and debugging phases,
@@ -626,16 +615,6 @@ void System::setupSystem(string control)
 	initializeBoxing();
 	
 	checkNewInteraction();
-	
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
-		rate_controlled = false;
-	}
-	
-	stress_controlled = !rate_controlled;
-	//	dimensionless_number_averaged = 1;
 	/* Pre-calculation
 	 */
 	/* einstein_stress may be affected by sd_coeff.
