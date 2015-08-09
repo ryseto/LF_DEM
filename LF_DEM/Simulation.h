@@ -111,6 +111,7 @@ private:
 	void evaluateData();
 	void outputDataHeader(std::ofstream &fout);
 	void outputData();
+	void outputDataMagnetic();
 	void outputConfigurationData();
 	void outputFinalConfiguration();
 	void outputConfigurationBinary();

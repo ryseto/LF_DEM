@@ -133,7 +133,7 @@ private:
 	/*
 	 * Simulation for magnetic particles
 	 */
-	double num_magnetic_particles;
+//	double num_magnetic_particles;
 	double sq_magnetic_interaction_range;
 	std::vector<std::pair<vec3d, std::pair<int,int>>> magnetic_force_stored;
 	std::vector<std::vector<int>> magnetic_pair;
@@ -193,7 +193,7 @@ private:
 	vec3d *magnetic_moment;
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
-	std::vector <double> magnetic_moment_norm;
+//	std::vector <double> magnetic_moment_norm;
 	std::vector <double> magnetic_susceptibility;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
@@ -272,8 +272,8 @@ private:
 	 * Simulation for magnetic particles
 	 */
 	bool magnetic_rotation_active;
-	double magnetic_energy;
-	double magnetic_field_square;
+	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
+//	double magnetic_field_square;
 	double angle_external_magnetic_field;
 	vec3d external_magnetic_field;
 

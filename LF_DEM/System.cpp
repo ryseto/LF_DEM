@@ -32,15 +32,14 @@ repulsiveforce(false),
 cohesion(false),
 critical_load(false),
 lowPeclet(false),
+cross_shear(false),
 twodimension(false),
 zero_shear(false),
-cross_shear(false),
 magnetic_coeffient(24),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-magnetic_rotation_active(false),
-magnetic_field_square(0)
+magnetic_rotation_active(false)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -301,28 +300,29 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void System::setMagneticMomentExternalField()
 {
-	for (int i=0; i<num_magnetic_particles; i++) {
+	for (int i=0; i<np; i++) {
 		magnetic_moment[i] = magnetic_susceptibility[i]*external_magnetic_field;
-		magnetic_moment_norm[i] = magnetic_moment[i].norm();
 	}
-	magnetic_field_square = external_magnetic_field.sq_norm();
 }
 
 void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 									  const vector <double> &magnetic_susceptibility_)
 {
-	magnetic_moment_norm.resize(np);
 	magnetic_susceptibility.resize(np);
 	magnetic_moment = new vec3d [np];
 	magnetic_force = new vec3d [np];
-	magnetic_torque = new vec3d [np];
 	vel_magnetic = new vec3d [np];
-	ang_vel_magnetic = new vec3d [np];
 	for (int i=0; i<np; i++) {
 		magnetic_force[i].reset();
-		magnetic_torque[i].reset();
 		vel_magnetic[i].reset();
-		ang_vel_magnetic[i].reset();
+	}
+	if (p.magnetic_type == 1) {
+		magnetic_torque = new vec3d [np];
+		ang_vel_magnetic = new vec3d [np];
+		for (int i=0; i<np; i++) {
+			magnetic_torque[i].reset();
+			ang_vel_magnetic[i].reset();
+		}
 	}
 	magnetic_pair.resize(np-1);
 	sq_magnetic_interaction_range = pow(p.magnetic_interaction_range, 2);
@@ -332,37 +332,20 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		 * Ferromagnetism.
 		 */
 		cerr << "This is not implemented yet" << endl;
-		exit(1);
-		int i_magnetic = 0;
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] = magnetic_moment_[i];
-			magnetic_moment_norm[i] = magnetic_moment[i].norm();
-			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
-			if (magnetic_moment_norm[i] != 0
-				|| magnetic_susceptibility[i] != 0) {
-				i_magnetic = i+1;
-			}
 		}
-		num_magnetic_particles = i_magnetic;
+		exit(1);
+		//num_magnetic_particles = i_magnetic;
 	} else if (p.magnetic_type == 2) {
 		/* Particle can have magnetic moment when external magnetic field is applied.
 		 * Paramagnetism
 		 * Magnetic susceptibility.
 		 * Magnetic moments are fixed as long as external field is unchanged.
 		 */
-		int i_magnetic = 0;
 		for (int i=0; i<np; i++) {
 			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
-			if (magnetic_susceptibility[i] != 0) {
-				i_magnetic = i+1;
-			}
 		}
-		num_magnetic_particles = i_magnetic;
-		angle_external_magnetic_field = p.init_angle_external_magnetic_field;
-		external_magnetic_field.set(abs(sin(angle_external_magnetic_field)),
-									abs(cos(angle_external_magnetic_field)), 0);
-		external_magnetic_field.cerr();
-		setMagneticMomentExternalField();
 	}
 }
 
@@ -831,10 +814,11 @@ void System::timeStepMove()
 		displacement(i, velocity[i]*dt);
 	}
 	if (magnetic_rotation_active) {
-		for (int i=0; i<num_magnetic_particles; i++) {
+		for (int i=0; i<np; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
-			double norm = magnetic_moment[i].norm();
-			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
+			// @@ Normalize
+			// double norm = magnetic_moment[i].norm();
+			//magnetic_moment[i] *= magnetic_moment_norm[i]
 		}
 	}
 	if (twodimension) {
@@ -883,7 +867,7 @@ void System::timeStepMovePredictor()
 		}
 	}
 	if (magnetic_rotation_active) {
-		for (int i=0; i<num_magnetic_particles; i++) {
+		for (int i=0; i<np; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
 		}
 	}
@@ -915,10 +899,9 @@ void System::timeStepMoveCorrector()
 		}
 	}
 	if (magnetic_rotation_active) {
-		for (int i=0; i<num_magnetic_particles; i++) {
+		for (int i=0; i<np; i++) {
 			magnetic_moment[i] += cross((ang_velocity[i]-ang_velocity_predictor[i]), magnetic_moment[i])*dt;
-			double norm = magnetic_moment[i].norm();
-			magnetic_moment[i] *= magnetic_moment_norm[i]/norm;
+			// @ Need to be normalized every time step(?)
 		}
 	}
 	checkNewInteraction();
@@ -1102,16 +1085,21 @@ void System::updateMagneticInteractions()
 {
 	magnetic_force_stored.clear();
 	vec3d pos_diff;
-	for (int p0=0; p0<np-1; p0++){
+	amplitudes.magnetic = 8;
+	for (int p0=0; p0<np-1; p0++) {
 		for (const int p1: magnetic_pair[p0]) {
 			pos_diff = position[p1]-position[p0];
 			periodize_diff_unsheared(pos_diff);
 			double r = pos_diff.norm();
 			double r_cubic = r*r*r;
 			vec3d nvec = pos_diff/r;
-			double H_dot_n = dot(external_magnetic_field, nvec);
-			double coeff = magnetic_coeffient*magnetic_susceptibility[p0]*magnetic_susceptibility[p1]/(r_cubic*r);
-			vec3d force_vector0 = -coeff*(2*H_dot_n*external_magnetic_field+(magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
+			vec3d force_vector0;
+
+
+			
+//			double coeff = magnetic_coeffient*magnetic_susceptibility[p0]*magnetic_susceptibility[p1]/(r_cubic*r);
+			//vec3d force_vector0 = -coeff*(2*H_dot_n*external_magnetic_field+(magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
+			
 			magnetic_force_stored.push_back(make_pair(force_vector0, make_pair(p0, p1)));
 		}
 	}
@@ -1318,12 +1306,12 @@ void System::setMagneticForceToParticle()
 	if (p.magnetic_type != 0) {
 		if (external_magnetic_field.is_zero() ||
 			p.magnetic_type == 2) {
-			for (int i=0; i<num_magnetic_particles; i++) {
+			for (int i=0; i<np; i++) {
 				magnetic_force[i].reset();
 				magnetic_torque[i].reset();
 			}
 		} else {
-			for (int i=0; i<num_magnetic_particles; i++) {
+			for (int i=0; i<np; i++) {
 				magnetic_force[i].reset();
 				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
@@ -1904,9 +1892,9 @@ void System::calcPotentialEnergy()
 
 void System::calcMagneticEnergy()
 {
-	magnetic_energy = 0;
+	magnetic_dd_energy = 0;
 	vec3d pos_diff;
-	for (int p0=0; p0<np-1; p0++){
+	for (int p0=0; p0<np-1; p0++) {
 		for (const int p1: magnetic_pair[p0]) {
 			pos_diff = position[p1]-position[p0];
 			periodize_diff_unsheared(pos_diff);
@@ -1919,15 +1907,16 @@ void System::calcMagneticEnergy()
 			 * magnetic_coeffient/3 = mu0/(4*M_PI)
 			 */
 			double energy = -(magnetic_coeffient/(3*r_cubic))*(3*dot(m0, nvec)*dot(m1, nvec)-dot(m0, m1));
-			magnetic_energy += energy;
+			magnetic_dd_energy += energy;
 			total_energy += energy;
 		}
 	}
+	magnetic_dd_energy = magnetic_dd_energy/np;
+	
 	if (external_magnetic_field.is_not_zero()) {
-		for (int i=0; i<num_magnetic_particles; i++) {
+		for (int i=0; i<np; i++) {
 			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 			total_energy += tmp_magnetic_energy_ex;
-			magnetic_energy += tmp_magnetic_energy_ex;
 		}
 	}
 }

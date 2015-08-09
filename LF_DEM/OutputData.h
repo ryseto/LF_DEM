@@ -25,7 +25,6 @@
 #include <string>
 #include <map>
 
-
 class OutputData {
 private:
 	int number_of_data;
@@ -35,11 +34,11 @@ private:
 	std::vector<std::string> output_data_name;
 	std::vector<std::string> output_data_type;
 	std::map <std::string, double> converter;
-	 
+	
 public:
 	OutputData():
 	first_time(true) {}
-
+	
 	void init(int number_of_data_, std::string output_unit) {
 		if (first_time) {
 			out_unit = output_unit;
@@ -71,10 +70,10 @@ public:
 	}
 	
 	template<typename T>
-	void entryData(int num, 
-				std::string name, 
-				std::string type, 
-				T value)
+	void entryData(int num,
+				   std::string name,
+				   std::string type,
+				   T value)
 	{
 		int index = num-1;
 		std::ostringstream str_value;
@@ -93,7 +92,6 @@ public:
 	
 	void exportFile(std::ofstream &fout_data)
 	{
-
 		if (first_time) {
 			fout_data << "# data in " << out_unit << " units." << std::endl;	
 			for (int i=0; i<number_of_data; i++) {

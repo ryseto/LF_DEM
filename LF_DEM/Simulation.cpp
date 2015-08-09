@@ -361,7 +361,8 @@ void Simulation::setUnitScaleRateControlled()
 	}
 	
 	if (control_var == "magnetic") {
-		sys.amplitudes.sqrt_temperature = 0.3;
+		sys.amplitudes.sqrt_temperature = 1;
+		sys.amplitudes.magnetic = dimensionless_numbers["m/b"];
 	}
 }
 
@@ -392,12 +393,15 @@ void Simulation::exportForceAmplitudes()
 		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 	
-	//	bool is_magnetic = values.find("m") != values.end();
-	//	if (is_magnetic) {
-	//		sys.amplitudes.magnetic = values["m"];
-	//		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-	//		cout << " values[m] = "  << values["m"] << endl;
-	//	}
+	bool is_magnetic = values.find("magnetic") != values.end();
+	cerr << "is_magnetic = " << is_magnetic << endl;
+	exit(1);
+	if (is_magnetic) {
+		exit(1);
+		sys.amplitudes.magnetic = values["m"];
+		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
+		cout << " values[m] = "  << values["m"] << endl;
+	}
 	bool is_ft_max = values.find("ft") != values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = values["ft"];
@@ -439,7 +443,7 @@ void Simulation::setupSimulation(string in_args,
 {
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-
+	exit(1);
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -460,6 +464,7 @@ void Simulation::setupSimulation(string in_args,
 	} else if (control_var == "magnetic") {
 		string_control_parameters << "_magnetic";
 	}
+
 	string_control_parameters << dimensionlessnumber << input_scale;
 	/*
 	 * Force unit
@@ -481,7 +486,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	exportForceAmplitudes();
 	cerr << "internal_unit_scales = " << internal_unit_scales << endl;
-	
+	exit(1);
 	convertInputValues(internal_unit_scales);
 	
 	output_unit_scales = input_scale;
@@ -807,24 +812,23 @@ void Simulation::simulationMagnetic(string in_args,
 	double time_output_config = 0;
 	/******************** OUTPUT INITIAL DATA ********************/
 	evaluateData();
-	outputData(); // new
+	outputDataMagnetic(); // new
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
-	double external_magnetic_field_norm = 2*sqrt(2*dimensionless_number); //@@@@@@ TO BE CHECKED!!
-	if (p.magnetic_field_type == 0) {
+
+	if (sys.p.magnetic_field_type == 0) {
 		// Field direction is fixed
-		sys.external_magnetic_field.set(0, external_magnetic_field_norm, 0);
+		sys.external_magnetic_field.set(0, 1, 0);
 	} else if (p.magnetic_field_type == 1) {
-		sys.external_magnetic_field.set(external_magnetic_field_norm*sin(sys.angle_external_magnetic_field),
-										external_magnetic_field_norm*cos(sys.angle_external_magnetic_field),
+		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
+										cos(sys.angle_external_magnetic_field),
 										0);
 		exit(1);
 	} else if (p.magnetic_field_type == 2) {
-		sys.external_magnetic_field.set(external_magnetic_field_norm*cos(sys.angle_external_magnetic_field),
+		sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
 										0,
-										external_magnetic_field_norm*sin(sys.angle_external_magnetic_field));
+										sin(sys.angle_external_magnetic_field));
 		exit(1);
 	}
 	sys.setMagneticMomentExternalField();
@@ -836,7 +840,7 @@ void Simulation::simulationMagnetic(string in_args,
 		cnt_simu_loop ++;
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
-		outputData();
+		outputDataMagnetic();
 		outputConfigurationBinary();
 		if (time_interval_output_data == -1) {
 			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
@@ -1170,12 +1174,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.magnetic_type = atoi(value.c_str());
 	} else if (keyword == "magnetic_field_type") {
 		p.magnetic_field_type = atoi(value.c_str());
-	} else if (keyword == "init_angle_external_magnetic_field") {
-		p.init_angle_external_magnetic_field = atof(value.c_str());
-	} else if (keyword == "rot_step_external_magnetic_field") {
-		p.rot_step_external_magnetic_field = atof(value.c_str());
-	} else if (keyword == "step_interval_external_magnetic_field") {
-		p.step_interval_external_magnetic_field = atof(value.c_str());
+	} else if (keyword == "external_magnetic_field_ang_theta") {
+		p.external_magnetic_field_ang_theta = atof(value.c_str());
+	} else if (keyword == "external_magnetic_field_ang_phi") {
+		p.external_magnetic_field_ang_phi = atof(value.c_str());
 	} else if (keyword == "magnetic_interaction_range") {
 		p.magnetic_interaction_range = atof(value.c_str());
 	} else if (keyword == "cross_shear") {
@@ -1615,11 +1617,7 @@ void Simulation::outputData()
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	
-	if (sys.p.magnetic_type == 0) {
-		outdata.init(36, output_unit_scales);
-	} else {
-		outdata.init(40, output_unit_scales);
-	}
+	outdata.init(36, output_unit_scales);
 	
 	double sr = sys.get_shear_rate();
 	unsigned int shear_stress_index;
@@ -1678,10 +1676,6 @@ void Simulation::outputData()
 	outdata.entryData(33, "kt", "none", sys.p.kt);
 	outdata.entryData(34, "kr", "none", sys.p.kr);
 	outdata.entryData(35, "shear displacement", "none", sys.shear_disp.x);
-	if (p.magnetic_type != 0) {
-		outdata.entryData(37, "magnetic energy", "none", sys.magnetic_energy);
-		outdata.entryData(38, "magnetic field angle", "none", sys.angle_external_magnetic_field);
-	}
 	outdata.exportFile(fout_data);
 	
 	/****************************   Stress Tensor Output *****************/
@@ -1698,6 +1692,57 @@ void Simulation::outputData()
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stress);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.exportFile(fout_st);
+}
+
+void Simulation::outputDataMagnetic()
+{
+	/**
+	 \brief Output data for magnetic colloid work
+	 */
+	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
+	cerr << internal_unit_scales << " " << output_unit_scales << endl;
+	
+	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
+	}
+	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata.init(25, output_unit_scales);
+
+	outdata.entryData(1, "time", "time", sys.get_time());
+	/* energy
+	 */
+	outdata.entryData(3, "energy", "none", sys.get_total_energy());
+	outdata.entryData(4, "magnetic energy", "none", sys.magnetic_dd_energy);
+
+	outdata.entryData(5, "particle pressure", "stress", sys.total_stress.getParticlePressure());
+	outdata.entryData(6, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
+	/* maximum deformation of contact bond
+	 */
+	outdata.entryData(8, "min gap", "none", sys.min_reduced_gap);
+	outdata.entryData(9, "max gap(cohesion)", "none", sys.max_contact_gap);
+
+	outdata.entryData(10, "magnetic field strength", "none", sys.p.external_magnetic_field_norm);
+	outdata.entryData(11, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_theta);
+	outdata.entryData(12, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_phi);
+
+	
+	/* contact number
+	 */
+	outdata.entryData(15, "contact number", "none", sys.getContactNumber());
+	outdata.entryData(16, "frictional contact number", "none", sys.getFrictionalContactNumber());
+	outdata.entryData(17, "number of interaction", "none", sys.get_nb_of_active_interactions());
+	/* maximum velocity
+	 */
+	outdata.entryData(20, "max velocity", "velocity", sys.max_velocity);
+	outdata.entryData(21, "max angular velocity", "velocity", sys.max_ang_velocity);
+	/* simulation parameter
+	 */
+	outdata.entryData(22, "dt", "time", sys.dt);
+	outdata.entryData(23, "kn", "none", sys.p.kn);
+	outdata.entryData(24, "kt", "none", sys.p.kt);
+	outdata.entryData(25, "kr", "none", sys.p.kr);
+	
+	outdata.exportFile(fout_data);
 }
 
 
