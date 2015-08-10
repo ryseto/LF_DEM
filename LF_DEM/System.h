@@ -29,6 +29,7 @@
 #include "StokesSolver.h"
 #include "ParameterSet.h"
 #include "Averager.h"
+#include "Events.h"
 #include "cholmod.h"
 #ifndef USE_DSFMT
 #include "MersenneTwister.h"
@@ -141,9 +142,11 @@ private:
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
 	
+	std::list <Event> &events;
+
  protected:
  public:
-	System(ParameterSet &ps);
+	System(ParameterSet &ps, std::list <Event> &ev);
 	~System();
 
 	ParameterSet &p;
@@ -155,7 +158,6 @@ private:
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
-	bool cross_shear;
 	
 	// Simulation parameters
 	bool twodimension;
@@ -312,7 +314,9 @@ private:
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
 
-	
+	void (System::*eventLookUp)();
+	void eventShearJamming();
+
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
@@ -413,7 +417,7 @@ private:
 	{
 		return total_energy;
 	}
-	
+
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */

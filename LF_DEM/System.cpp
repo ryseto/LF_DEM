@@ -24,8 +24,9 @@
 
 using namespace std;
 
-System::System(ParameterSet &ps):
+System::System(ParameterSet &ps, list <Event> &ev):
 p(ps),
+events(ev),
 brownian(false),
 friction(false),
 rolling_friction(false),
@@ -35,7 +36,6 @@ critical_load(false),
 lowPeclet(false),
 twodimension(false),
 zero_shear(false),
-cross_shear(false),
 magnetic_coeffient(24),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -592,7 +592,7 @@ void System::setupSystem(string control)
 	/* shear rate is fixed to be 1 in dimensionless simulation
 	 */
 	vel_difference.reset();
-	if (!cross_shear) {		
+	if (!p.cross_shear) {		
 		vel_difference.x = shear_rate*lz;
 	} else {
 		vel_difference.y = shear_rate*lz;
@@ -659,7 +659,7 @@ void System::timeStepBoxing(const double strain_increment)
 	 */
 	if (!zero_shear) {
 		shear_strain += strain_increment;
-		if (!cross_shear) {
+		if (!p.cross_shear) {
 			shear_disp.x += strain_increment*lz;
 			int m = (int)(shear_disp.x/lx);
 			if (shear_disp.x < 0) {
@@ -676,6 +676,14 @@ void System::timeStepBoxing(const double strain_increment)
 		}
 	}
 	boxset.update();
+}
+
+void System::eventShearJamming(){
+	if(shear_rate<0){
+		Event ev;
+		ev.type = "negative_shear_rate";
+		events.push_back(Event(ev));
+	}
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress)
@@ -696,6 +704,10 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 		calcStressPerParticle();
 	}
 	timeStepMove();
+
+	if (eventLookUp != NULL){
+		(this->*eventLookUp)();
+	}
 }
 
 /****************************************************************************************************
@@ -904,11 +916,13 @@ void System::timeStepMoveCorrector()
 }
 
 bool System::keepRunning(string time_or_strain, double value_end){
+	bool keep_running;
 	if (time_or_strain == "strain") {
-		return get_shear_strain() < value_end-1e-8;
+		keep_running = (get_shear_strain() < value_end-1e-8) && events.empty();
 	} else {
-		return get_time() < value_end-1e-8;
+		keep_running = (get_time() < value_end-1e-8) && events.empty();
 	}
+	return keep_running;
 }
 
 void System::timeEvolution(string time_or_strain, double value_end)
@@ -940,7 +954,12 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	while (keepRunning(time_or_strain, value_end)) {
 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 	};
-	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	if (events.empty()) {
+		if(rate_controlled){
+			(this->*timeEvolutionDt)(true); // last time step, compute the stress
+		}
+	}
+
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
 	}
@@ -1416,7 +1435,7 @@ void System::computeShearRate()
 	calcStress();
 
 	unsigned int shear_stress_index;
-	if (!cross_shear) {
+	if (!p.cross_shear) {
 		shear_stress_index = 2;
 	} else {
 		shear_stress_index = 3;
@@ -1532,7 +1551,7 @@ void System::computeVelocities(bool divided_velocities)
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			if (!cross_shear) {
+			if (!p.cross_shear) {
 				velocity[i].x += shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*shear_rate;
 			} else {
@@ -1549,7 +1568,7 @@ void System::computeVelocities(bool divided_velocities)
 		}
 	}
 
-	if (!cross_shear) {		
+	if (!p.cross_shear) {		
 		vel_difference.x = shear_rate*lz;
 	} else {
 		vel_difference.y = shear_rate*lz;
@@ -1721,7 +1740,7 @@ double System::evaluateMaxVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_velocity_tmp = velocity[i];
 		if (!zero_shear) {
-			if (!cross_shear) {
+			if (!p.cross_shear) {
 				na_velocity_tmp.x -= shear_rate*position[i].z;
 			} else {
 				na_velocity_tmp.y -= shear_rate*position[i].z;
@@ -1740,7 +1759,7 @@ double System::evaluateMaxAngVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_ang_velocity_tmp = ang_velocity[i];
 		if (!zero_shear) {
-			if (!cross_shear) {
+			if (!p.cross_shear) {
 				na_ang_velocity_tmp.y -= 0.5*shear_rate;
 			}
 			else {

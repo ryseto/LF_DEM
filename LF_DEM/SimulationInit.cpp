@@ -682,7 +682,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "magnetic_interaction_range") {
 		p.magnetic_interaction_range = atof(value.c_str());
 	} else if (keyword == "cross_shear") {
-		sys.cross_shear = str2bool(value); // temporary, should get a parameter
+		p.cross_shear = str2bool(value);
+	} else if (keyword == "event_handler") {
+		p.event_handler = value;
+		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
+value;
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -891,6 +895,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
+	p.event_handler = "";
 	/*
 	 * Parameters for magnetic colloid simulation.
 	 */

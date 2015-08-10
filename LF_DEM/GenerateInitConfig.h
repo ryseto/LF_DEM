@@ -25,11 +25,14 @@
 #include "vec3d.h"
 #include "System.h"
 #include "ParameterSet.h"
+#include "Events.h"
 
 class GenerateInitConfig{
 private:
 	System sys;
 	ParameterSet p;
+	std::list <Event> events;
+
 	char disperse_type;
 	double volume_fraction;
 	double volume_fraction1;
@@ -85,7 +88,7 @@ private:
 	void outputPositionData();
 
 public:
-	GenerateInitConfig(): sys(System(p)) {};
+	GenerateInitConfig(): sys(System(p,events)) {};
 	int generate(int rand_seed_, bool magnetic_config);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

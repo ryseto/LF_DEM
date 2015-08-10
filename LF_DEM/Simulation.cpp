@@ -16,7 +16,7 @@
 using namespace std;
 
 Simulation::Simulation():
-sys(System(p)),
+sys(System(p,events)),
 shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
 target_stress_input(0)
@@ -28,6 +28,8 @@ target_stress_input(0)
 	unit_longname["cl"] = "critical_load";
 	unit_longname["m"] = "magnetic";
 	unit_longname["ft"] = "ft";
+
+	kill = false;
 };
 
 Simulation::~Simulation()
@@ -47,11 +49,35 @@ Simulation::~Simulation()
 bool Simulation::keepRunning()
 {
 	if (time_end == -1) {
-		return sys.get_shear_strain() < strain_end-1e-8;
+		return (sys.get_shear_strain() < strain_end-1e-8) && !kill;
 	}
-	else{
-		return sys.get_time() < time_end-1e-8;
+	else {
+		return (sys.get_time() < time_end-1e-8) && !kill;
 	}
+}
+
+void Simulation::setupEvents(){
+	if (p.event_handler == "shear_jamming") {
+		sys.eventLookUp = &System::eventShearJamming;
+		return;
+	}
+	sys.eventLookUp = NULL;
+}
+
+void Simulation::handleEvents(){
+	if (p.event_handler == "shear_jamming") {
+		for (const auto &ev : events) {
+			if (ev.type == "negative_shear_rate") {
+				cout << " negative rate " << endl;
+				p.disp_max /= 2;
+			}
+		}
+		if(p.disp_max < 1e-6){	
+			cout << "jammed" << endl;
+			kill = true;
+		}
+	}	
+	events.clear();
 }
 
 /*
@@ -72,7 +98,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else {
 		sys.new_contact_gap = 0;
 	}
-	int jammed = 0;
+//	int jammed = 0;
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
@@ -84,6 +110,8 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 	
+	setupEvents();
+
 	double next_output_data = 0;
 	double next_output_config = 0;
 	
@@ -95,6 +123,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
+		handleEvents();
 		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
@@ -117,17 +146,18 @@ void Simulation::simulationSteadyShear(string in_args,
 		} else {
 			cout << "time: " << sys.get_time() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
-		if (!sys.zero_shear
-			&& abs(sys.get_shear_rate()) < p.rest_threshold){
-			cout << "shear jamming " << jammed << endl;
-			jammed ++;
-			if (jammed > 10) {
-				cout << "shear jamming";
-				break;
-			}
-		} else {
-			jammed = 0;
-		}
+
+		// if (!sys.zero_shear
+		// 	&& abs(sys.get_shear_rate()) < p.rest_threshold){
+		// 	cout << "shear jamming " << jammed << endl;
+		// 	jammed ++;
+		// 	if (jammed > 10) {
+		// 		cout << "shear jamming";
+		// 		break;
+		// 	}
+		// } else {
+		// 	jammed = 0;
+		// }
 		sys.new_contact_gap = 0;
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);
@@ -468,7 +498,7 @@ void Simulation::outputData()
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	
-	if (sys.p.magnetic_type == 0) {
+	if (p.magnetic_type == 0) {
 		outdata.init(36, output_unit_scales);
 	} else {
 		outdata.init(40, output_unit_scales);
@@ -476,7 +506,7 @@ void Simulation::outputData()
 	
 	double sr = sys.get_shear_rate();
 	unsigned int shear_stress_index;
-	if (!sys.cross_shear) {
+	if (!p.cross_shear) {
 		shear_stress_index = 2;
 	} else {
 		shear_stress_index = 3;
@@ -527,9 +557,9 @@ void Simulation::outputData()
 	/* simulation parameter
 	 */
 	outdata.entryData(31, "dt", "time", sys.dt);
-	outdata.entryData(32, "kn", "none", sys.p.kn);
-	outdata.entryData(33, "kt", "none", sys.p.kt);
-	outdata.entryData(34, "kr", "none", sys.p.kr);
+	outdata.entryData(32, "kn", "none", p.kn);
+	outdata.entryData(33, "kt", "none", p.kt);
+	outdata.entryData(34, "kr", "none", p.kr);
 	outdata.entryData(35, "shear displacement", "none", sys.shear_disp.x);
 	if (p.magnetic_type != 0) {
 		outdata.entryData(37, "magnetic energy", "none", sys.magnetic_energy);
@@ -616,13 +646,13 @@ void Simulation::outputConfigurationData()
 		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << ' ';
-		if (sys.p.magnetic_type != 0) {
+		if (p.magnetic_type != 0) {
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
 		
 		unsigned int shear_stress_index;
-		if (!sys.cross_shear) {
+		if (!p.cross_shear) {
 			shear_stress_index = 2;
 		} else {
 			shear_stress_index = 3;
@@ -645,7 +675,7 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.p.magnetic_type == 0) {
+			if (p.magnetic_type == 0) {
 				if (sys.twodimension) {
 					fout_particle << ' ' << sys.angle[i]; // 15
 				}
@@ -670,7 +700,7 @@ void Simulation::outputConfigurationData()
 		fout_interaction << ' ' << sys.get_time();
 		fout_interaction << endl;
 		unsigned int shear_stress_index;
-		if (!sys.cross_shear) {
+		if (!p.cross_shear) {
 			shear_stress_index = 2;
 		} else {
 			shear_stress_index = 3;

@@ -23,7 +23,7 @@ void Lubrication::getGeometry()
 	nynz = (interaction->nvec).y*(interaction->nvec).z;
 	nyny = (interaction->nvec).y*(interaction->nvec).y;
 	nznz = (interaction->nvec).z*(interaction->nvec).z;
-	if(sys->cross_shear){
+	if(sys->p.cross_shear){
 		nnE = nynz;
 	}
 	else{
@@ -288,7 +288,7 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
-	if(!sys->cross_shear) {
+	if(!sys->p.cross_shear) {
 		GEi[0] =  (cGE_i*nvec->x+YG0_YG2*nvec->z);
 		GEi[1] =  cGE_i*nvec->y;
 		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->x);
@@ -456,7 +456,7 @@ void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
 	double cYM_j = (1.0/2)*(scaledYM2()+scaledYM3());
 	
 	StressTensor YME_i;
-	if(!sys->cross_shear) {
+	if(!sys->p.cross_shear) {
 		YME_i.elm[0] = 2*nxnz-4*nxnx*nnE;
 		YME_i.elm[1] = nynz-4*nxny*nnE;
 		YME_i.elm[2] = nxnx+nznz-4*nxnz*nnE;
@@ -464,7 +464,7 @@ void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
 		YME_i.elm[4] = -4*nyny*nnE;
 		YME_i.elm[5] = 2*nxnz-4*nznz*nnE;
 	}
-	if(sys->cross_shear) {
+	if(sys->p.cross_shear) {
 		YME_i.elm[0] = -4*nxnx*nnE;
 		YME_i.elm[1] = nxnz-4*nxny*nnE;
 		YME_i.elm[2] = nxny-4*nxnz*nnE;
