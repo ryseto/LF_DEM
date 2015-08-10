@@ -101,6 +101,7 @@ private:
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
 	void setUnitScaleMagnetic();
+	void setupNonDimensionalization(double dimensionlessnumber, std::string input_scale);
 	void convertInputForcesRateControlled(double dimensionlessnumber, std::string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, std::string rate_unit);
 	void convertInputForcesMagnetic(double dimensionlessnumber, std::string rate_unit);

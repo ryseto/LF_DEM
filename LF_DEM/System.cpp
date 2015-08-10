@@ -24,7 +24,8 @@
 
 using namespace std;
 
-System::System():
+System::System(ParameterSet &ps):
+p(ps),
 brownian(false),
 friction(false),
 rolling_friction(false),
@@ -142,27 +143,6 @@ System::~System()
 		DELETE(ang_vel_magnetic);
 	}
 };
-
-void System::importParameterSet(ParameterSet &ps)
-{
-	p = ps;
-	if (p.lub_max_gap >= 1) {
-		cerr << "lub_max_gap must be smaller than 1\n";
-		exit(1);
-	}
-	ft_max = p.ft_max;
-	if (p.repulsive_length <= 0) {
-		repulsiveforce = false;
-		p.repulsive_length = 0;
-	}
-	mu_static = p.mu_static;
-	if (p.mu_dynamic == -1) {
-		mu_dynamic = p.mu_static;
-	} else {
-		mu_dynamic = p.mu_dynamic;
-	}
-	mu_rolling = p.mu_rolling;
-}
 
 void System::allocateRessources()
 {
@@ -466,7 +446,7 @@ void System::setupSystem(string control)
 	}
 	if (p.friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
-		mu_static = 0;
+		p.mu_static = 0;
 		friction = false;
 	} else if (p.friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
@@ -491,6 +471,14 @@ void System::setupSystem(string control)
 			cerr << "Sliding friction is not set!" << endl;
 			exit(1);
 		}
+	}
+	if (p.lub_max_gap >= 1) {
+		cerr << "lub_max_gap must be smaller than 1\n";
+		exit(1);
+	}
+	if (p.repulsive_length <= 0) {
+		repulsiveforce = false;
+		p.repulsive_length = 0;
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair; k++) {
@@ -712,7 +700,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 
 /****************************************************************************************************
  ******************************************** Mid-Point Scheme ***************************************
- ****************************************************************************************************/
+ ****************************************************************************************************/ 
 
 void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 {

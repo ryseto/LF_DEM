@@ -143,11 +143,10 @@ private:
 	
  protected:
  public:
-	System();
+	System(ParameterSet &ps);
 	~System();
-	void importParameterSet(ParameterSet &ps);
 
-	ParameterSet p;
+	ParameterSet &p;
 	// Interaction types
 	bool brownian;
 	bool friction;
@@ -220,10 +219,6 @@ private:
 	double kn_master;
 	double kt_master;
 	double kr_master;
-	double ft_max;
-	double mu_static; // static friction coefficient
-	double mu_dynamic; // dynamic friction coefficient
-	double mu_rolling; // rolling friction coeffient
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double einstein_stress;

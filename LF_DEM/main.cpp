@@ -43,8 +43,9 @@ int main(int argc, char **argv)
 	string seq_type;
 	string rheology_control = "rate";
 	const struct option longopts[] = {
-		{"repulsion", required_argument, 0, 'r'},
-		{"rep-seq-file", required_argument, 0, 'R'},
+		{"rate-controlled", required_argument, 0, 'r'},
+		{"rate-infty", required_argument, 0, '8'},
+		{"rate-seq-file", required_argument, 0, 'R'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"stress-seq-file", required_argument, 0, 'S'},
 		{"magnetic", required_argument, 0, 'm'},
@@ -58,7 +59,7 @@ int main(int argc, char **argv)
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hnMm:g:s:S:t:r:R:k:i:h:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hnM8m:g:s:S:t:r:R:k:i:h:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -101,6 +102,12 @@ int main(int argc, char **argv)
 				seq_filename = optarg;
 				seq_type = "r";
 				cout << "Rate sequence, file " << seq_filename << endl;
+				break;
+			case '8':
+				rheology_control = "rate";
+				dimensionless_number = 1;
+				suffix = "h";
+				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
 			case 'm':
 				/*
