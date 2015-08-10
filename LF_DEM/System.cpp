@@ -790,11 +790,19 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	}
 	timeStepMoveCorrector();
 	// try to adapt dt
-	// if (max_velocity > max_sliding_velocity) {
-	// 	dt = disp_max/max_velocity;
-	// } else {
-	// 	dt = disp_max/max_sliding_velocity;
-	// }
+
+}
+
+void System::adaptTimeStep(){
+	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
+		if (max_velocity > max_sliding_velocity) {
+			dt = p.disp_max/max_velocity;
+		} else {
+			dt = p.disp_max/max_sliding_velocity;
+		}
+	} else {
+		dt = p.disp_max/shear_rate;
+	}
 }
 
 void System::timeStepMove()
@@ -807,16 +815,7 @@ void System::timeStepMove()
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-			if (max_velocity > max_sliding_velocity) {
-				dt = p.disp_max/max_velocity;
-			} else {
-				dt = p.disp_max/max_sliding_velocity;
-			}
-		} else {
-			dt = p.disp_max/max_velocity;
-			//			dt = 1e-3/shear_rate; //
-		}
+		adaptTimeStep();
 	}
 	time += dt;
 	total_num_timesteps ++;
@@ -852,17 +851,8 @@ void System::timeStepMovePredictor()
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
-		//dt = disp_max/max_velocity;
 		if (!fixed_dt) {
-			if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-				if (max_velocity > max_sliding_velocity) {
-					dt = p.disp_max/max_velocity;
-				} else {
-					dt = p.disp_max/max_sliding_velocity;
-				}
-			} else {
-				dt = 1e-2/shear_rate;
-			}
+			adaptTimeStep();
 		}
 	}
 	time += dt;
@@ -1161,7 +1151,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto&& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
@@ -1202,7 +1192,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto&& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
@@ -1520,7 +1510,14 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
-	
+	// cout << " strain " << shear_strain << endl;
+	// cout << " matrix " << endl;
+ // 	stokes_solver.printResistanceMatrix(cout, "sparse");
+	// cout << endl;
+	// cout << " rhs " << endl;	
+	// stokes_solver.printRHS();
+	// cout << endl;
+	// getchar();
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
@@ -1552,7 +1549,7 @@ void System::computeVelocities(bool divided_velocities)
 				ang_velocity[i].y += 0.5*shear_rate;
 			} else {
 				velocity[i].y += shear_rate*position[i].z;
-				ang_velocity[i].x += 0.5*shear_rate;
+				ang_velocity[i].x -= 0.5*shear_rate;
 			}			
 			if (p.monolayer) { velocity[i].y = 0; }
 		}
@@ -1755,7 +1752,12 @@ double System::evaluateMaxAngVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_ang_velocity_tmp = ang_velocity[i];
 		if (!zero_shear) {
-			na_ang_velocity_tmp.y -= 0.5*shear_rate;
+			if (!cross_shear) {
+				na_ang_velocity_tmp.y -= 0.5*shear_rate;
+			}
+			else {
+				na_ang_velocity_tmp.x += 0.5*shear_rate;
+			}
 		}
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
 			_max_ang_velocity = na_ang_velocity_tmp.norm();
@@ -1998,13 +2000,9 @@ void System::adjustContactModelParameters()
 	if (p.kt > p.max_kt) {
 		p.kt = p.max_kt;
 	}
-	if (max_velocity > 0 && max_sliding_velocity > 0) {
-		if (max_velocity > max_sliding_velocity) {
-			dt = p.disp_max/max_velocity;
-		} else {
-			dt = p.disp_max/max_sliding_velocity;
-		}
-	}
+
+	adaptTimeStep();
+
 	previous_shear_strain = shear_strain;
 
 	for (int k=0; k<nb_interaction; k++) {

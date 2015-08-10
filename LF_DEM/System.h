@@ -83,6 +83,7 @@ private:
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
 	void timeStepBoxing(const double strain_increment);
+	void adaptTimeStep();
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -135,8 +136,8 @@ private:
 	 */
 	double num_magnetic_particles;
 	double sq_magnetic_interaction_range;
-	std::vector<std::pair<vec3d, std::pair<int,int>>> magnetic_force_stored;
-	std::vector<std::vector<int>> magnetic_pair;
+	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
+	std::vector<std::vector<int> > magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
 	
