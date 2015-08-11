@@ -69,14 +69,15 @@ void Simulation::handleEvents(){
 		for (const auto &ev : events) {
 			if (ev.type == "negative_shear_rate") {
 				cout << " negative rate " << endl;
-				p.disp_max /= 2;
+				p.disp_max /= 1.1;
 			}
 		}
-		if(p.disp_max < 1e-6){	
+		if(p.disp_max < 1e-6){
 			cout << "jammed" << endl;
-			kill = true;
+//			kill = true;
+			p.cross_shear = true;
 		}
-	}	
+	}
 	events.clear();
 }
 
@@ -104,17 +105,17 @@ void Simulation::simulationSteadyShear(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData(); // 
+	evaluateData(); //
 	outputData(); // new
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
 	setupEvents();
 
 	double next_output_data = 0;
 	double next_output_config = 0;
-	
+
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -124,7 +125,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			sys.timeEvolution("time", next_output_data);
 		}
 		handleEvents();
-		
+
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -188,7 +189,7 @@ void Simulation::simulationInverseYield(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-	
+
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -205,10 +206,10 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
 	double next_output_data = 0;
 	double next_output_config = 0;
-	
+
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -217,7 +218,7 @@ void Simulation::simulationInverseYield(string in_args,
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
-		
+
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -259,7 +260,7 @@ void Simulation::simulationInverseYield(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 	}
-	
+
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
@@ -298,7 +299,7 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
 	double external_magnetic_field_norm = 2*sqrt(2*dimensionless_number); //@@@@@@ TO BE CHECKED!!
 	if (p.magnetic_field_type == 0) {
 		// Field direction is fixed
@@ -339,7 +340,7 @@ void Simulation::simulationMagnetic(string in_args,
 		/*****************************************************/
 		cout << "time: " << sys.get_time() << " / " << time_end << endl;
 	}
-	
+
 	outputComputationTime();
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
@@ -370,7 +371,7 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	inv.type = type;
 	inv.name = keyword;
 	inv.value = value_ptr;
-	
+
 	string numeral, suffix;
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
@@ -378,7 +379,7 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
 	input_values.push_back(inv);
-	
+
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
@@ -442,11 +443,11 @@ void Simulation::evaluateData()
 {
 	/**
 	 \brief Get rheological data from the System class.
-	 
+
 	 In this method we keep the internal units. There is no conversion to output units at this stage
-	 
+
 	 */
-	
+
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
@@ -457,16 +458,16 @@ void Simulation::outputData()
 {
 	/**
 	 \brief Output data.
-	 
+
 	 Stress data are converted in units of
 	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
 	 in the System class (these can be hydrodynamic, Brownian or
 	 repulsive force units).
-	 
+
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
-	
+
 	/*
 	 * Output the sum of the normal forces.
 	 *
@@ -476,7 +477,7 @@ void Simulation::outputData()
 	 *
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	
+
 	/*
 	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
@@ -489,21 +490,21 @@ void Simulation::outputData()
 	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
 	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
-	
+
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 //	cerr << internal_unit_scales << " " << output_unit_scales << endl;
-	
+
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	
+
 	if (p.magnetic_type == 0) {
 		outdata.init(36, output_unit_scales);
 	} else {
 		outdata.init(40, output_unit_scales);
 	}
-	
+
 	double sr = sys.get_shear_rate();
 	unsigned int shear_stress_index;
 	if (!p.cross_shear) {
@@ -512,11 +513,11 @@ void Simulation::outputData()
 		shear_stress_index = 3;
 	}
 	double shear_stress = 6*M_PI*(sys.einstein_stress+sys.total_stress.elm[shear_stress_index]);
-	
+
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
-	
+
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
 	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.elm[shear_stress_index]/sr);
 	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.elm[shear_stress_index]/sr);
@@ -566,12 +567,12 @@ void Simulation::outputData()
 		outdata.entryData(38, "magnetic field angle", "none", sys.angle_external_magnetic_field);
 	}
 	outdata.exportFile(fout_data);
-	
+
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	
+
    	outdata_st.init(8, output_unit_scales);
-   
+
 	outdata_st.entryData(1, "time", "time", sys.get_time());
 	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
@@ -650,7 +651,7 @@ void Simulation::outputConfigurationData()
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
-		
+
 		unsigned int shear_stress_index;
 		if (!p.cross_shear) {
 			shear_stress_index = 2;

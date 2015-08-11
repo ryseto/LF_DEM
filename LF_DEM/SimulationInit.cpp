@@ -20,7 +20,7 @@ void Simulation::contactForceParameter(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-	
+
 	// temporal variables to keep imported values.
 	double phi_, kn_, kt_, dt_;
 	// To find parameters for considered volume fraction phi.
@@ -32,7 +32,7 @@ void Simulation::contactForceParameter(string filename)
 		}
 	}
 	fin_knktdt.close();
-	
+
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
@@ -51,7 +51,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
 		exit(1);
 	}
-	
+
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
@@ -62,7 +62,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		}
 	}
 	fin_knktdt.close();
-	
+
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
 		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
@@ -80,7 +80,7 @@ void Simulation::importPreSimulationData(string filename)
 		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
 		exit(1);
 	}
-	
+
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == target_stress_input) {
@@ -115,14 +115,14 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 {
 	values[unit] = 1;
 	suffixes[unit] = unit;
-	
+
 	// now resolve the other force units
 	set <string> resolved_units;
 	resolved_units.clear();
 	resolved_units.insert(unit);
 	unsigned int resolved = resolved_units.size();
 	unsigned int previous_resolved;
-	
+
 	do {
 		previous_resolved = resolved;
 		for (const auto& f: suffixes) {
@@ -136,7 +136,7 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 		}
 		resolved = resolved_units.size();
 	} while (previous_resolved < resolved);
-	
+
 	// check we found everyone
 	if (resolved < suffixes.size()) {
 		for (const auto& f: suffixes) {
@@ -148,7 +148,7 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 		}
 		exit(1);
 	}
-	
+
 	// determine the dimensionless_numbers
 	for (const auto& f1: suffixes) {
 		string force1_type = f1.first;
@@ -163,19 +163,19 @@ void Simulation::resolveUnitSystem(string unit) // can we express all forces in 
 void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
-	 
+
 	 The strategy is the following:
 	 1. Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie:
 		a. w = 1w
 		b. y = mw
 		c. z = oy = omw
 		d. etc...
-		
+
 	 In the future, we may allow other unit scale than the one given by the input stress.
 	 */
-	
+
 	string force_type = rate_unit; // our force defining the shear rate
-	
+
 	if (force_type == "hydro") {
 		cerr << " Error: please give a stress in non-hydro units." << endl;
 		exit(1);
@@ -183,7 +183,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		 Note:
 		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
 		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
-		 
+
 		 With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
 		 \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
 		 --> It is limited to the available range of viscosity.
@@ -194,14 +194,14 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl;
 		exit(1);
 	}
-	
+
 	sys.set_shear_rate(1);
 	// we take as a unit scale the one given by the user with the stress
 	// TODO: other choices may be better when several forces are used.
 	internal_unit_scales = force_type;
 	target_stress_input = dimensionlessnumber;
 	sys.target_stress = target_stress_input/6/M_PI;
-	
+
 	// convert all other forces to internal_unit_scales
 	resolveUnitSystem(internal_unit_scales);
 }
@@ -210,7 +210,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 {
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (rate controlled case).
-	 
+
 	 The strategy is the following:
 	 1. Convert all the forces in hydro force unit, by solving recursively, ie:
 		a. h = 1h
@@ -226,7 +226,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
 		exit(1);
 	}
-	
+
 	if (values[force_type] > 0) {
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
@@ -234,16 +234,16 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	// switch this force in hydro units
 	values[force_type] = 1/dimensionlessnumber;
 	suffixes[force_type] = "hydro";
-	
+
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
-	
+
 	//	chose simulation unit
 	setUnitScaleRateControlled();
-	
+
 	// convert from hydro scale to chosen scale
 	convertForceValues(internal_unit_scales);
-	
+
 	bool is_brownian = dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end();
 	if (is_brownian) {
 		sys.brownian = true;
@@ -305,7 +305,7 @@ void Simulation::convertForceValues(string new_unit)
 void Simulation::setUnitScaleRateControlled()
 {
 	bool is_brownian;
-	
+
 	if (dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end()
 		|| dimensionless_numbers.find("magnetic/thermal") != dimensionless_numbers.end()) {
 		is_brownian = true;
@@ -328,7 +328,7 @@ void Simulation::setUnitScaleRateControlled()
 		internal_unit_scales = "hydro";
 		sys.set_shear_rate(1);
 	}
-	
+
 	if (control_var == "magnetic") {
 		sys.amplitudes.sqrt_temperature = 0.3;
 	}
@@ -360,7 +360,7 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.cohesion = values["cohesive"];
 		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
-	
+
 	//	bool is_magnetic = values.find("m") != values.end();
 	//	if (is_magnetic) {
 	//		sys.amplitudes.magnetic = values["m"];
@@ -488,7 +488,7 @@ void Simulation::setupSimulation(string in_args,
 		importConfiguration();
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
-	
+
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -541,7 +541,7 @@ void Simulation::setupSimulation(string in_args,
 			}
 		}
 	}
-	
+
 	sys.setupSystem(control_var);
 
 	openOutputFiles(binary_conf);
@@ -686,7 +686,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
-value;
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -759,9 +758,9 @@ void Simulation::openOutputFiles(bool binary_conf)
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_" + sys.simu_name + ".dat";
 	fout_input.open(input_filename.c_str());
-	
+
 	outputDataHeader(fout_data);
-	
+
 	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";
 		fout_particle.open(particle_filename.c_str());

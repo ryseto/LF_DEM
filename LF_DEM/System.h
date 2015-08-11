@@ -141,7 +141,7 @@ private:
 	std::vector<std::vector<int> > magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
-	
+
 	std::list <Event> &events;
 
  protected:
@@ -158,7 +158,7 @@ private:
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
-	
+
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
@@ -337,7 +337,7 @@ private:
 	{
 		return (double)2*contact_nb/np;
 	}
-	
+
 	double get_lx()
 	{
 		return lx;
