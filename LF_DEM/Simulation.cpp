@@ -168,9 +168,9 @@ void Simulation::simulationSteadyShear(string in_args,
 		}
 		/*****************************************************/
 		if (time_end != -1) {
-			cout << "time: " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
+			cout << "time: " << sys.get_time_in_simulation_units() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
 		} else {
-			cout << "time: " << sys.get_time() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
+			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
 
 		// if (!sys.zero_shear
@@ -417,7 +417,7 @@ void Simulation::outputConfigurationBinary()
 
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
-	vector<vector<double>> pos;
+	vector< vector<double> > pos;
 	int np = sys.get_np();
 	int dims = 4;
 	pos.resize(np);

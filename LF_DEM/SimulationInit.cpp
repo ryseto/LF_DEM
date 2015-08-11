@@ -480,7 +480,7 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 	}
 	exportForceAmplitudes();
 	cerr << "internal_unit_scales = " << internal_unit_scales << endl;
-
+	sys.ratio_unit_time = &dimensionless_numbers[input_scale+"/"+internal_unit_scales];
 	convertInputValues(internal_unit_scales);
 
 	output_unit_scales = input_scale;

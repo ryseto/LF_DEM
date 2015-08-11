@@ -565,8 +565,8 @@ void System::setupSystem(string control)
 			exit(1);
 		}
 	}
-
 	time = 0;
+	time_in_simulation_units = 0;
 	total_num_timesteps = 0;
 
 	vel_difference.reset();
@@ -796,6 +796,7 @@ void System::timeStepMove()
 		adaptTimeStep();
 	}
 	time += dt;
+	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
 	/* evolve PBC */
 	double strain_increment = 0;
@@ -835,6 +836,7 @@ void System::timeStepMovePredictor()
 		}
 	}
 	time += dt;
+	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
 
 	/* The periodic boundary condition is updated in predictor.
@@ -969,7 +971,7 @@ void System::timeEvolution(double time_end)
 		calc_stress = true;
 	}
 
-	while (time < time_end-dt) { // integrate until strain_next
+	while (get_time() < time_end-dt) { // integrate until strain_next
 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 	};
 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
@@ -1016,7 +1018,7 @@ void System::checkNewInteraction()
 		}
 	}
 	if (p.magnetic_type != 0) {
-		if (time > time_update_magnetic_pair) {
+		if (get_time() > time_update_magnetic_pair) {
 			updateMagneticPair();
 			time_update_magnetic_pair += p.timeinterval_update_magnetic_pair;
 		}

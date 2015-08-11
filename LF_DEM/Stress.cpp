@@ -160,7 +160,7 @@ System::calcStress()
 	if (brownian) {
 		total_stress += total_brownian_stressGU;
 		if (lowPeclet) { // take an averaged stress instead of instantaneous
-			stress_avg->update(total_stress, time);
+			stress_avg->update(total_stress, get_time());
 			total_stress = stress_avg->get();
 		}
 	}

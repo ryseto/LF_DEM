@@ -60,7 +60,8 @@ private:
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions;
 	int total_num_timesteps;
-	double time;
+	double time; ///< time elapsed since beginning of the time evolution.
+	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
 	double shear_rate;
 	double lx;
 	double ly;
@@ -232,6 +233,7 @@ private:
 	std::set <Interaction*> *interaction_list;
 	std::set <int> *interaction_partners;
 	int nb_interaction;
+	double *ratio_unit_time; // to convert System time in Simulation time
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -346,6 +348,11 @@ private:
 	double get_ly()
 	{
 		return ly;
+	}
+
+	double get_time_in_simulation_units()
+	{
+		return time_in_simulation_units;
 	}
 
 	double get_time()
