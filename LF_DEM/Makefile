@@ -4,8 +4,8 @@
 #    Parameters to provide              #
 #=======================================#
 
-# OS_version: OSX or Linux or SI 
-OS_version = OSX
+# OS_version: OSX or Linux or SI
+OS_version = Linux
 # install directory
 install_dir = ~/bin/
 
@@ -53,14 +53,14 @@ endif
 
 is_git_repo := $(shell if [ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1; then echo true;fi)
 ifeq ($(is_git_repo),true)
-	VERSION := $(shell git describe --dirty --always)	
+	VERSION := $(shell git describe --dirty --always)
 	CXXFLAGS_optimized += -DGIT_VERSION="\"$(VERSION)\""
 	CXXFLAGS_debug += -DGIT_VERSION="\"$(VERSION)\""
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
 ifeq ($(OS_version),OIST)
-	VERSION := $(shell git describe --dirty --always)	
+	VERSION := $(shell git describe --dirty --always)
 	CXXFLAGS_optimized += -DVERSION="\"$(VERSION)\""
 	CXXFLAGS_debug += -DVERSION="\"$(VERSION)\""
 endif
@@ -88,11 +88,11 @@ Cholmod_path = $(Cholmod_include_path_$(OS_version))
 Metis_path = /opt/local/lib/
 
 # Includes
-Includes = -I $(Cholmod_path) 
+Includes = -I $(Cholmod_path)
 
 #======== Linking ==================
 # Blas and Lapack
-Blas_Linking_Flags = -lblas 
+Blas_Linking_Flags = -lblas
 Lapack_Linking_Flags = -llapack
 
 ifeq ($(OS_version), SI)
@@ -107,7 +107,7 @@ endif
 
 # Cholmod
 
-Cholmod_Linking_Flags = 
+Cholmod_Linking_Flags =
 ifeq ($(OS_version), Linux)
 Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
 endif
@@ -126,7 +126,7 @@ endif
 # extra linking flags for cholmod on Mac OSX
 ifeq ($(OS_version),OSX)
 	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a 
+	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
 	ifeq ($(UseMetis),yes)
 		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
 	endif
@@ -146,7 +146,7 @@ ifeq ($(OS_version), OIST)
        Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a $(Cholmod_lib_path)/libcamd.a  $(Cholmod_lib_path)/libccolamd.a  $(Cholmod_lib_path)/libsuitesparseconfig.a
        ifeq ($(UseMetis),yes)
              Cholmod_Linking_Flags += $(Cholmod_lib_path)/libmetis.a
-       endif	
+       endif
 endif
 
 
@@ -173,10 +173,10 @@ $(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
 
 $(OBJ): $(SRC)
-	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp) 
+	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp)
 
 $(DSFMT_OBJ): $(DSFMT_SRC)
-	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c) 
+	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c)
 
 tar:
 	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
@@ -191,5 +191,3 @@ doc:
 install:
 	cp -p $(OUT_CODE) $(install_dir)
 	(if [ "$(OS_version)" == "OIST" ]; then cp -p generateYaplotFile.pl $(install_dir); fi)
-
-

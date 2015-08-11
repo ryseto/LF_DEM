@@ -254,6 +254,7 @@ double GenerateInitConfig::gradientDescent()
 			cerr << "    Steps = " << steps << " :::   Energy : " << running_energy/np << endl;
 		}
 		steps++;
+		events.clear();
 	} while(relative_en > 1e-6);
 	if (relative_en < 0) {
 		cerr << "    Steps = " << steps;
@@ -376,6 +377,7 @@ double GenerateInitConfig::zeroTMonteCarloSweep()
 		}
 		//sys.checkNewInteraction();
 		steps ++;
+		events.clear();
 	}
 	sys.boxset.update();
 	sys.checkNewInteraction();

@@ -24,7 +24,9 @@
 
 using namespace std;
 
-System::System():
+System::System(ParameterSet &ps, list <Event> &ev):
+p(ps),
+events(ev),
 brownian(false),
 friction(false),
 rolling_friction(false),
@@ -67,13 +69,13 @@ System::hash( time_t t, clock_t c )
 {
 	// From MersenneTwister v1.0 by Richard J. Wagner
 	// comments below are from the original code.
-	
+
 	// Get a unsigned long from t and c
 	// Better than unsigned long(x) in case x is floating point in [0,1]
 	// Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
-	
+
 	static unsigned long differ = 0;  // guarantee time-based seeds will change
-	
+
 	unsigned long h1 = 0;
 	unsigned char *pp = (unsigned char *) &t;
 	for( size_t i = 0; i < sizeof(t); ++i )
@@ -142,27 +144,6 @@ System::~System()
 		DELETE(ang_vel_magnetic);
 	}
 };
-
-void System::importParameterSet(ParameterSet &ps)
-{
-	p = ps;
-	if (p.lub_max_gap >= 1) {
-		cerr << "lub_max_gap must be smaller than 1\n";
-		exit(1);
-	}
-	ft_max = p.ft_max;
-	if (p.repulsive_length <= 0) {
-		repulsiveforce = false;
-		p.repulsive_length = 0;
-	}
-	mu_static = p.mu_static;
-	if (p.mu_dynamic == -1) {
-		mu_dynamic = p.mu_static;
-	} else {
-		mu_dynamic = p.mu_dynamic;
-	}
-	mu_rolling = p.mu_rolling;
-}
 
 void System::allocateRessources()
 {
@@ -402,7 +383,7 @@ void System::setupSystem(string control)
 	 * @ The resistance coeffient affects Brownian force.
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 */
-	
+
 	if (control != "magnetic") {
 		if (control == "rate") {
 			rate_controlled = true;
@@ -415,7 +396,7 @@ void System::setupSystem(string control)
 		rate_controlled = false;
 		stress_controlled = false;
 	}
-	
+
 	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (p.integration_method == 1) {
@@ -444,7 +425,7 @@ void System::setupSystem(string control)
 	}
 	if (p.friction_model == 0) {
 		cerr << "friction_model = 0" << endl;
-		mu_static = 0;
+		p.mu_static = 0;
 		friction = false;
 	} else if (p.friction_model == 1) {
 		cerr << "friction_model = 1" << endl;
@@ -469,6 +450,14 @@ void System::setupSystem(string control)
 			cerr << "Sliding friction is not set!" << endl;
 			exit(1);
 		}
+	}
+	if (p.lub_max_gap >= 1) {
+		cerr << "lub_max_gap must be smaller than 1\n";
+		exit(1);
+	}
+	if (p.repulsive_length <= 0) {
+		repulsiveforce = false;
+		p.repulsive_length = 0;
 	}
 	allocateRessources();
 	for (int k=0; k<maxnb_interactionpair; k++) {
@@ -554,7 +543,7 @@ void System::setupSystem(string control)
 		dsfmt_init_gen_rand(&rand_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #endif
-		
+
 #ifndef DEV
 #ifndef USE_DSFMT
 		r_gen = new MTRand;
@@ -565,7 +554,7 @@ void System::setupSystem(string control)
 #endif
 #endif
 	}
-	
+
 	if (p.magnetic_type != 0) {
 		if (p.magnetic_type == 1) {
 			magnetic_rotation_active = true;
@@ -576,13 +565,12 @@ void System::setupSystem(string control)
 			exit(1);
 		}
 	}
-	
+
 	time = 0;
 	total_num_timesteps = 0;
-	/* shear rate is fixed to be 1 in dimensionless simulation
-	 */
+
 	vel_difference.reset();
-	if (!cross_shear) {		
+	if (!p.cross_shear) {
 		vel_difference.x = shear_rate*lz;
 	} else {
 		vel_difference.y = shear_rate*lz;
@@ -591,7 +579,7 @@ void System::setupSystem(string control)
 	dt = p.dt;
 	fixed_dt = p.fixed_dt;
 	initializeBoxing();
-	
+
 	checkNewInteraction();
 	/* Pre-calculation
 	 */
@@ -600,7 +588,7 @@ void System::setupSystem(string control)
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
-	
+
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
@@ -622,7 +610,7 @@ void System::initializeBoxing()
 {
 	/**
 		\brief Initialize the boxing system.
-		
+
 		Initialize the BoxSet instance using as a minimal Box size the maximal interaction range between any two particles in the System.
 	 */
 	double range;
@@ -649,7 +637,7 @@ void System::timeStepBoxing(const double strain_increment)
 	 */
 	if (!zero_shear) {
 		shear_strain += strain_increment;
-		if (!cross_shear) {
+		if (!p.cross_shear) {
 			shear_disp.x += strain_increment*lz;
 			int m = (int)(shear_disp.x/lx);
 			if (shear_disp.x < 0) {
@@ -668,16 +656,24 @@ void System::timeStepBoxing(const double strain_increment)
 	boxset.update();
 }
 
+void System::eventShearJamming(){
+	if(shear_rate<0){
+		Event ev;
+		ev.type = "negative_shear_rate";
+		events.push_back(Event(ev));
+	}
+}
+
 void System::timeEvolutionEulersMethod(bool calc_stress)
 {
 	/**
 	 \brief One full time step, Euler's method.
-	 
+
 	 This method is never used when running a Brownian simulation.
 	 */
 	in_predictor = true;
 	in_corrector = true;
-	
+
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
@@ -686,6 +682,10 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 		calcStressPerParticle();
 	}
 	timeStepMove();
+
+	if (eventLookUp != NULL){
+		(this->*eventLookUp)();
+	}
 }
 
 /****************************************************************************************************
@@ -696,32 +696,32 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
-	 
+
 	 This method is always used when running a Brownian simulation.
-	 
+
 	 ### non-Brownian Case
-	 
+
 	 Simple mid-point method to solve at dt^2 order
 	 \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} \f$
 	 where \f$\bm{A} \f$ (in Jeffrey notations \cite
 	 jeffrey_calculation_1992, that is \f$\bm{R}_{\mathrm{FU}}\f$ in Bossis and Brady
 	 \cite brady_stokesian_1988 notations) is the current resistance matrix
 	 stored in the stokes_solver, and \f$\bm{F} \f$ are the forces included by the parameter files.
-	 
+
 	 - 1st step:
 	 - \f$ \bm{U}^{-} = \bm{A}^{-1}( \bm{X}(t) ) \bm{F} ( \bm{X}(t) )  \f$
 	 - \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$
-	 
+
 	 - 2nd step:
 	 - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} )  \f$
 	 - \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
-	 
+
 	 ### Brownian Case
-	 
+
 	 This routine implements a two-step algorithm for the dynamics with Brownian motion,
 	 initially derived by Fixman \cite fixman_1978.
 	 The basis of this algorithm is exposed in \cite Ball_1997 and \cite banchio_accelerated_2003.
-	 
+
 	 The equation of motion is:
 	 \f$ \bm{A}(\bm{U}-\bm{U}_{\infty}) = \bm{F} + \bm{F}_\mathrm{B} + kT \bm{A} \nabla \bm{A}^{-1} \f$
 	 with
@@ -729,7 +729,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	 and
 	 \f$\langle \bm{F}_\mathrm{B} \bm{F}_\mathrm{B}\rangle = \frac{2kT}{dt} \bm{A}\f$,
 	 and \f$\bm{F} \f$ are all the other forces included by the parameter files.
-	 
+
 	 Reminding that we obtain the Cholesky decomposition \f$ \bm{A} = \bm{L} \bm{L}^T \f$ in the stokes_solver,
 	 we obtain X_B in a 2-step algorithm [ B & M 1997 ]:
 		- 1st step:
@@ -739,9 +739,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		- 2nd step:
 	 + \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) ( \bm{F}_\mathrm{B} + \bm{F} ( \bm{X}^{-} ) )  \f$ (\b same \f$\bm{F}_\mathrm{B}\f$ as in the first step)
 	 + \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
-	 
+
 	 */
-	
+
 	/* predictor */
 	in_predictor = true;
 	in_corrector = false;
@@ -768,11 +768,19 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	}
 	timeStepMoveCorrector();
 	// try to adapt dt
-	// if (max_velocity > max_sliding_velocity) {
-	// 	dt = disp_max/max_velocity;
-	// } else {
-	// 	dt = disp_max/max_sliding_velocity;
-	// }
+
+}
+
+void System::adaptTimeStep(){
+	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
+		if (max_velocity > max_sliding_velocity) {
+			dt = p.disp_max/max_velocity;
+		} else {
+			dt = p.disp_max/max_sliding_velocity;
+		}
+	} else {
+		dt = p.disp_max/shear_rate;
+	}
 }
 
 void System::timeStepMove()
@@ -780,21 +788,12 @@ void System::timeStepMove()
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
-	
+
 	/* Changing dt for every timestep
 	 * So far, this is only in Euler method.
 	 */
 	if (!fixed_dt) {
-		if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-			if (max_velocity > max_sliding_velocity) {
-				dt = p.disp_max/max_velocity;
-			} else {
-				dt = p.disp_max/max_sliding_velocity;
-			}
-		} else {
-			dt = p.disp_max/max_velocity;
-			//			dt = 1e-3/shear_rate; //
-		}
+		adaptTimeStep();
 	}
 	time += dt;
 	total_num_timesteps ++;
@@ -831,28 +830,19 @@ void System::timeStepMovePredictor()
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
-		//dt = disp_max/max_velocity;
 		if (!fixed_dt) {
-			if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-				if (max_velocity > max_sliding_velocity) {
-					dt = p.disp_max/max_velocity;
-				} else {
-					dt = p.disp_max/max_sliding_velocity;
-				}
-			} else {
-				dt = 1e-2/shear_rate;
-			}
+			adaptTimeStep();
 		}
 	}
 	time += dt;
 	total_num_timesteps ++;
-	
+
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
 	double strain_increment = dt*shear_rate;
 	timeStepBoxing(strain_increment);
-	
+
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -904,18 +894,20 @@ void System::timeStepMoveCorrector()
 }
 
 bool System::keepRunning(string time_or_strain, double value_end){
+	bool keep_running;
 	if (time_or_strain == "strain") {
-		return get_shear_strain() < value_end-1e-8;
+		keep_running = (get_shear_strain() < value_end-1e-8) && events.empty();
 	} else {
-		return get_time() < value_end-1e-8;
+		keep_running = (get_time() < value_end-1e-8) && events.empty();
 	}
+	return keep_running;
 }
 
 void System::timeEvolution(string time_or_strain, double value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system untile time_end
-	 
+
 	 This method essentially loops the appropriate one time step
 	 method method, according to the Euler vs predictor-corrector or
 	 strain rate vs stress controlled choices. On the last time step,
@@ -936,11 +928,16 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	if (lowPeclet) {
 		calc_stress = true;
 	}
-	
+
 	while (keepRunning(time_or_strain, value_end)) {
 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 	};
-	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+	if (events.empty()) {
+		if(rate_controlled){
+			(this->*timeEvolutionDt)(true); // last time step, compute the stress
+		}
+	}
+
 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
 		adjustContactModelParameters();
 	}
@@ -950,7 +947,7 @@ void System::timeEvolution(double time_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system untile time_end
-	 
+
 	 This method essentially loops the appropriate one time step
 	 method method, according to the Euler vs predictor-corrector or
 	 strain rate vs stress controlled choices. On the last time step,
@@ -971,7 +968,7 @@ void System::timeEvolution(double time_end)
 	if (lowPeclet) {
 		calc_stress = true;
 	}
-	
+
 	while (time < time_end-dt) { // integrate until strain_next
 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 	};
@@ -985,7 +982,7 @@ void System::checkNewInteraction()
 {
 	/**
 	 \brief Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding Interaction objects.
-	 
+
 	 To be called after particle moved.
 	 */
 	vec3d pos_diff;
@@ -1048,11 +1045,11 @@ void System::updateInteractions()
 {
 	/**
 	 \brief Updates the state of active interactions.
-	 
+
 	 To be called after particle moved.
 	 Note that this routine does not look for new interactions (this is done by System::checkNewInteraction), it only updates already known active interactions.
 	 It however desactivate interactions removes interactions that became inactive (ie when the distance between particles gets larger than the interaction range).
-	 
+
 	 */
 	double sq_max_sliding_velocity = 0;
 	for (int k=0; k<nb_interaction; k++) {
@@ -1103,7 +1100,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 {
 	/**
 	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
-	 
+
 	 @param build_res_mat Build the resistance matrix
 	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
 	 brady_s∫tokesian_1988 notations) and set it as the current
@@ -1112,7 +1109,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
-	
+
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
@@ -1143,7 +1140,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto&& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
@@ -1184,7 +1181,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto&& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]){
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
@@ -1238,7 +1235,7 @@ void System::generateBrownianForces()
 {
 	/**
 	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
-	 
+
 	 The generated Brownian force \f$F_B\f$ satisfies
 	 \f$ \langle F_\mathrm{B} \rangle = 0\f$
 	 and
@@ -1247,9 +1244,9 @@ void System::generateBrownianForces()
 	 jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady
 	 \cite brady_stokesian_1988 notations) is the current resistance matrix
 	 stored in the stokes_solver.
-	 
+
 	 Note that it \b sets the rhs of the solver as \f$ rhs = F_B \f$.
-	 
+
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
@@ -1389,10 +1386,10 @@ void System::computeMaxNAVelocity()
 {
 	/**
 	 \brief Compute the maximum non-affine velocity
-	 
+
 	 Note: it does \b not compute the velocities, just takes the maximum.
 	 */
-	
+
 	double sq_max_na_velocity = 0;
 	double sq_na_velocity, sq_na_ang_velocity;
 	for (int i=0; i<np; i++) {
@@ -1440,7 +1437,7 @@ void System::computeShearRate()
 	calcStress();
 
 	unsigned int shear_stress_index;
-	if (!cross_shear) {
+	if (!p.cross_shear) {
 		shear_stress_index = 2;
 	} else {
 		shear_stress_index = 3;
@@ -1456,14 +1453,14 @@ void System::computeShearRate()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = einstein_viscosity+total_hydro_stress.elm[shear_stress_index];
-	
+
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-	
+
 	for (int i=0; i<np; i++) {
 		vel_hydro[i] *= shear_rate;
 		ang_vel_hydro[i] *= shear_rate;
@@ -1474,14 +1471,14 @@ void System::computeVelocities(bool divided_velocities)
 {
 	/**
 	 \brief Compute velocities in the current configuration.
-	 
+
 	 \param divided_velocities Divide the velocities in components
 	 (hydro, contacts, Brownian, ...). (Note that in Brownian
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
-	
+
 	stokes_solver.resetRHS();
-	
+
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
@@ -1522,7 +1519,14 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
-	
+	// cout << " strain " << shear_strain << endl;
+	// cout << " matrix " << endl;
+ // 	stokes_solver.printResistanceMatrix(cout, "sparse");
+	// cout << endl;
+	// cout << " rhs " << endl;
+	// stokes_solver.printRHS();
+	// cout << endl;
+	// getchar();
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
@@ -1537,7 +1541,7 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-	
+
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
@@ -1549,13 +1553,13 @@ void System::computeVelocities(bool divided_velocities)
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			if (!cross_shear) {
+			if (!p.cross_shear) {
 				velocity[i].x += shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*shear_rate;
 			} else {
 				velocity[i].y += shear_rate*position[i].z;
-				ang_velocity[i].x += 0.5*shear_rate;
-			}			
+				ang_velocity[i].x -= 0.5*shear_rate;
+			}
 			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	} else {
@@ -1566,11 +1570,11 @@ void System::computeVelocities(bool divided_velocities)
 		}
 	}
 
-	if (!cross_shear) {		
+	if (!p.cross_shear) {
 		vel_difference.x = shear_rate*lz;
 	} else {
 		vel_difference.y = shear_rate*lz;
-	}	
+	}
 	stokes_solver.solvingIsDone();
 }
 
@@ -1638,7 +1642,7 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 		pos_diff.z -= lz;
 		pos_diff -= shear_disp;
 		zshift--;
-	} 
+	}
 	while (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 		pos_diff += shear_disp;
@@ -1646,7 +1650,7 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	}
 	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-	} 
+	}
 	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
 	}
@@ -1664,20 +1668,20 @@ void System::periodize_diff_unsheared(vec3d &pos_diff) // @@@ is there really a 
 {
 	while (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
-	} 
+	}
 	while (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 	}
 	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-	} 
+	}
 	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
 	}
 	if (!twodimension) {
 		while (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
-		} 
+		}
 		while (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
@@ -1738,7 +1742,7 @@ double System::evaluateMaxVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_velocity_tmp = velocity[i];
 		if (!zero_shear) {
-			if (!cross_shear) {
+			if (!p.cross_shear) {
 				na_velocity_tmp.x -= shear_rate*position[i].z;
 			} else {
 				na_velocity_tmp.y -= shear_rate*position[i].z;
@@ -1757,7 +1761,12 @@ double System::evaluateMaxAngVelocity()
 	for (int i = 0; i < np; i++) {
 		vec3d na_ang_velocity_tmp = ang_velocity[i];
 		if (!zero_shear) {
-			na_ang_velocity_tmp.y -= 0.5*shear_rate;
+			if (!p.cross_shear) {
+				na_ang_velocity_tmp.y -= 0.5*shear_rate;
+			}
+			else {
+				na_ang_velocity_tmp.x += 0.5*shear_rate;
+			}
 		}
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
 			_max_ang_velocity = na_ang_velocity_tmp.norm();
@@ -1773,7 +1782,7 @@ double System::evaluateMinGap()
 		if (interaction[k].is_active() &&
 			interaction[k].get_reduced_gap() < _min_reduced_gap) {
 			_min_reduced_gap = interaction[k].get_reduced_gap();
-			
+
 			if (interaction[k].get_reduced_gap() < 0
 				&& interaction[k].contact.state == 0) {
 				cerr << interaction[k].get_reduced_gap() << endl;
@@ -1822,7 +1831,7 @@ double System::evaluateMaxDispRolling()
 		}
 	}
 	return _max_disp_rolling;
-	
+
 }
 
 double System::evaluateMaxFcNormal()
@@ -1977,15 +1986,15 @@ void System::adjustContactModelParameters()
 	 *
 	 * Additionally, this routine estimates the time step dt.
 	 */
-	
+
 	analyzeState();
-	
+
 	double overlap = -min_reduced_gap;
 	overlap_avg->update(overlap, shear_strain);
 	max_disp_tan_avg->update(max_disp_tan, shear_strain);
 	kn_avg->update(p.kn, shear_strain);
 	kt_avg->update(p.kt, shear_strain);
-	
+
 	static double previous_shear_strain = 0;
 	double deltagamma = (shear_strain-previous_shear_strain);
 	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
@@ -2007,13 +2016,9 @@ void System::adjustContactModelParameters()
 	if (p.kt > p.max_kt) {
 		p.kt = p.max_kt;
 	}
-	if (max_velocity > 0 && max_sliding_velocity > 0) {
-		if (max_velocity > max_sliding_velocity) {
-			dt = p.disp_max/max_velocity;
-		} else {
-			dt = p.disp_max/max_sliding_velocity;
-		}
-	}
+
+	adaptTimeStep();
+
 	previous_shear_strain = shear_strain;
 
 	for (int k=0; k<nb_interaction; k++) {

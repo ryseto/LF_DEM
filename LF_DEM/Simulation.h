@@ -26,6 +26,7 @@
 #include "ParameterSet.h"
 #include "InputValue.h"
 #include "OutputData.h"
+#include "Events.h"
 	
 class Simulation
 {
@@ -38,6 +39,10 @@ private:
 	std::map <std::string, std::string> unit_longname;
 	
 	std::list <InputValue> input_values;
+
+	std::list <Event> events;
+	void setupEvents();
+	void handleEvents();
 
 	double volume_or_area_fraction;
 	std::string filename_import_positions;
@@ -101,6 +106,7 @@ private:
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
 	void setUnitScaleMagnetic();
+	void setupNonDimensionalization(double dimensionlessnumber, std::string input_scale);
 	void convertInputForcesRateControlled(double dimensionlessnumber, std::string rate_unit);
 	void convertInputForcesStressControlled(double dimensionlessnumber, std::string rate_unit);
 	void convertInputForcesMagnetic(double dimensionlessnumber, std::string rate_unit);
@@ -125,7 +131,7 @@ private:
 						 std::string input_scale);
 	void outputComputationTime();
 	bool keepRunning();	
-
+	bool kill;
  public:
 	/* For DEMsystem*/
 	Simulation();

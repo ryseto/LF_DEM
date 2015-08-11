@@ -29,6 +29,7 @@
 #include "StokesSolver.h"
 #include "ParameterSet.h"
 #include "Averager.h"
+#include "Events.h"
 #include "cholmod.h"
 #ifndef USE_DSFMT
 #include "MersenneTwister.h"
@@ -83,6 +84,7 @@ private:
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor();
 	void timeStepBoxing(const double strain_increment);
+	void adaptTimeStep();
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -135,18 +137,19 @@ private:
 	 */
 //	double num_magnetic_particles;
 	double sq_magnetic_interaction_range;
-	std::vector<std::pair<vec3d, std::pair<int,int>>> magnetic_force_stored;
-	std::vector<std::vector<int>> magnetic_pair;
+	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
+	std::vector<std::vector<int> > magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
-	
+
+	std::list <Event> &events;
+
  protected:
  public:
-	System();
+	System(ParameterSet &ps, std::list <Event> &ev);
 	~System();
-	void importParameterSet(ParameterSet &ps);
 
-	ParameterSet p;
+	ParameterSet &p;
 	// Interaction types
 	bool brownian;
 	bool friction;
@@ -155,8 +158,7 @@ private:
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
-	bool cross_shear;
-	
+
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
@@ -219,10 +221,6 @@ private:
 	double kn_master;
 	double kt_master;
 	double kr_master;
-	double ft_max;
-	double mu_static; // static friction coefficient
-	double mu_dynamic; // dynamic friction coefficient
-	double mu_rolling; // rolling friction coeffient
 	double lub_coeff_contact;
 	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double einstein_stress;
@@ -316,7 +314,9 @@ private:
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
 
-	
+	void (System::*eventLookUp)();
+	void eventShearJamming();
+
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
 		lx = lx_;
@@ -337,7 +337,7 @@ private:
 	{
 		return (double)2*contact_nb/np;
 	}
-	
+
 	double get_lx()
 	{
 		return lx;
@@ -417,7 +417,7 @@ private:
 	{
 		return total_energy;
 	}
-	
+
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */

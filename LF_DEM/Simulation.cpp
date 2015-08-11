@@ -16,6 +16,7 @@
 using namespace std;
 
 Simulation::Simulation():
+sys(System(p,events)),
 shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
 target_stress_input(0)
@@ -27,6 +28,8 @@ target_stress_input(0)
 	unit_longname["cl"] = "critical_load";
 	unit_longname["m"] = "magnetic";
 	unit_longname["ft"] = "ft";
+
+	kill = false;
 };
 
 Simulation::~Simulation()
@@ -42,199 +45,6 @@ Simulation::~Simulation()
 	}
 };
 
-void Simulation::contactForceParameter(string filename)
-{
-	ifstream fin_knktdt;
-	fin_knktdt.open(filename.c_str());
-	if (!fin_knktdt) {
-		cerr << " Contact parameter file '" << filename << "' not found." << endl;
-		exit(1);
-	}
-	
-	// temporal variables to keep imported values.
-	double phi_, kn_, kt_, dt_;
-	// To find parameters for considered volume fraction phi.
-	bool found = false;
-	while (fin_knktdt >> phi_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == volume_or_area_fraction) {
-			found = true;
-			break;
-		}
-	}
-	fin_knktdt.close();
-	
-	if (found) {
-		// Set the parameter object
-		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cout << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
-	} else {
-		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
-		exit(1);
-	}
-}
-
-void Simulation::contactForceParameterBrownian(string filename)
-{
-	ifstream fin_knktdt;
-	fin_knktdt.open(filename.c_str());
-	if (!fin_knktdt) {
-		cerr << " Contact parameter file '" << filename << "' not found." <<endl;
-		exit(1);
-	}
-	
-	// temporal variables to keep imported values.
-	double phi_, peclet_, kn_, kt_, dt_;
-	bool found = false;
-	while (fin_knktdt >> phi_ >> peclet_ >> kn_ >> kt_ >> dt_) {
-		if (phi_ == volume_or_area_fraction && peclet_ == dimensionless_numbers["hydro/thermal"]) {
-			found = true;
-			break;
-		}
-	}
-	fin_knktdt.close();
-	
-	if (found) {
-		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
-	} else {
-		cerr << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["hydro/thermal"] << endl;
-		exit(1);
-	}
-}
-
-void Simulation::importPreSimulationData(string filename)
-{
-	ifstream fin_PreSimulationData;
-	fin_PreSimulationData.open(filename.c_str());
-	if (!fin_PreSimulationData) {
-		cerr << " Pre-simulation data file '" << filename << "' not found." << endl;
-		exit(1);
-	}
-	
-	double stress_, shear_rate_;
-	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
-		if (stress_ == target_stress_input) {
-			break;
-		}
-	}
-	shear_rate_expectation = shear_rate_;
-}
-
-void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
-{
-	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
-	fout_input << in_args << endl << endl;
-	for (const string &in_file : input_files) {
-		ifstream in_f;
-		string line;
-		in_f.open(in_file.c_str());
-		if (in_f.is_open()) {
-			fout_input << "********** File " << in_file << " ************" << endl << endl;
-			while (in_f.good()) {
-				getline(in_f, line);
-				fout_input << line << endl;
-			}
-			fout_input << endl << endl;
-		}
-		in_f.close();
-	}
-	fout_input.close();
-}
-
-void Simulation::resolveUnitSystem(string unit) // can we express all forces in unit "unit"?
-{
-	values[unit] = 1;
-	suffixes[unit] = unit;
-	
-	// now resolve the other force units
-	set <string> resolved_units;
-	resolved_units.clear();
-	resolved_units.insert(unit);
-	unsigned int resolved = resolved_units.size();
-	unsigned int previous_resolved;
-	
-	do {
-		previous_resolved = resolved;
-		for (const auto& f: suffixes) {
-			string force_type = f.first;
-			string suffix = f.second;
-			if (resolved_units.find(suffix) != resolved_units.end()) {  // then we know how to convert to unit
-				values[force_type] *= values[suffix];
-				suffixes[force_type] = unit;
-				resolved_units.insert(force_type);
-			}
-		}
-		resolved = resolved_units.size();
-	} while (previous_resolved < resolved);
-	
-	// check we found everyone
-	if (resolved < suffixes.size()) {
-		for (const auto& f: suffixes) {
-			string force_type = f.first;
-			string suffix = f.second;
-			if (resolved_units.find(suffix) == resolved_units.end()) {
-				cerr << "Error: force type \"" << force_type << "\" has an unknown scale \"" << suffix << "\"" << endl;
-			}
-		}
-		exit(1);
-	}
-	
-	// determine the dimensionless_numbers
-	for (const auto& f1: suffixes) {
-		string force1_type = f1.first;
-		for (const auto& f2: suffixes) {
-			string force2_type = f2.first;
-			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
-			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
-		}
-	}
-}
-
-void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
-	/**
-	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
-	 
-	 The strategy is the following:
-	 1. Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie:
-		a. w = 1w
-		b. y = mw
-		c. z = oy = omw
-		d. etc...
-		
-	 In the future, we may allow other unit scale than the one given by the input stress.
-	 */
-	
-	string force_type = rate_unit; // our force defining the shear rate
-	
-	if (force_type == "hydro") {
-		cerr << " Error: please give a stress in non-hydro units." << endl;
-		exit(1);
-		/*
-		 Note:
-		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
-		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
-		 
-		 With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
-		 \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
-		 --> It is limited to the available range of viscosity.
-		 If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
-		 */
-	}
-	if (force_type == "thermal") {
-		cerr << " Error: stress controlled Brownian simulations are not yet implemented." << endl;
-		exit(1);
-	}
-	
-	sys.set_shear_rate(1);
-	// we take as a unit scale the one given by the user with the stress
-	// TODO: other choices may be better when several forces are used.
-	internal_unit_scales = force_type;
-	target_stress_input = dimensionlessnumber;
-	sys.target_stress = target_stress_input/6/M_PI;
-	
-	// convert all other forces to internal_unit_scales
-	resolveUnitSystem(internal_unit_scales);
-}
 
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
 {
@@ -373,23 +183,8 @@ void Simulation::setUnitScaleMagnetic()
 
 void Simulation::exportForceAmplitudes()
 {
-	bool is_repulsive = values.find("repulsive") != values.end();
-	if (is_repulsive) {
-		sys.repulsiveforce = true;
-		sys.amplitudes.repulsion = values["repulsive"];
-		cout << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
-	}
-	bool is_critical_load = values.find("critical_load") != values.end();
-	if (is_critical_load) {
-		sys.critical_load = true;
-		sys.amplitudes.critical_normal_force = values["critical_load"];
-		cout << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
-	}
-	bool is_cohesive = values.find("cohesive") != values.end();
-	if (is_cohesive) {
-		sys.cohesion = true;
-		sys.amplitudes.cohesion = values["cohesive"];
-		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
+	if (time_end == -1) {
+		return (sys.get_shear_strain() < strain_end-1e-8) && !kill;
 	}
 	
 //	bool is_magnetic = values.find("magnetic") != values.end();
@@ -407,30 +202,12 @@ void Simulation::exportForceAmplitudes()
 	}
 }
 
-void Simulation::convertInputValues(string new_unit)
-{
-	for (auto& inv: input_values) {
-		string old_unit = inv.unit;
-		if (old_unit != new_unit) {
-			if (old_unit != "hydro" && values.find(old_unit) == values.end()) {
-				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
-				exit(1);
-			}
-			if (inv.type == "stiffness") {
-				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
-				inv.unit = new_unit;
-			}
-			if (inv.type == "time") {
-				if (old_unit == "hydro") { // = it is a strain, better keeping it that way
-					inv.unit = "strain";
-				} else {
-					*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
-					inv.unit = new_unit;
-				}
-			}
-		}
-		cout << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+void Simulation::setupEvents(){
+	if (p.event_handler == "shear_jamming") {
+		sys.eventLookUp = &System::eventShearJamming;
+		return;
 	}
+	sys.eventLookUp = NULL;
 }
 
 void Simulation::setupSimulation(string in_args,
@@ -562,14 +339,11 @@ void Simulation::setupSimulation(string in_args,
 				}
 			}
 		}
-	}
-	
-	if (sys.brownian) {
-		if (sys.lowPeclet) {
-			cerr << "[[small Pe mode]]" << endl;
-			cerr << "  kn = " << p.kn << endl;
-			cerr << "  kt = " << p.kt << endl;
-			cerr << "  dt = " << p.dt << endl;
+		if(p.disp_max < 1e-6){
+			cout << "jammed" << endl;
+//			kill = true;
+			p.cross_shear = true;//!p.cross_shear;
+			p.disp_max = 1e-5;
 		}
 	}
 	sys.setupSystem(control_var);
@@ -608,21 +382,23 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else {
 		sys.new_contact_gap = 0;
 	}
-	int jammed = 0;
+//	int jammed = 0;
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData(); // 
+	evaluateData(); //
 	outputData(); // new
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
+	setupEvents();
+
 	double next_output_data = 0;
 	double next_output_config = 0;
-	
+
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -631,7 +407,8 @@ void Simulation::simulationSteadyShear(string in_args,
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
-		
+		handleEvents();
+
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -659,8 +436,20 @@ void Simulation::simulationSteadyShear(string in_args,
 				break;
 			}
 		} else {
-			jammed = 0;
+			cout << "time: " << sys.get_time() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
+
+		// if (!sys.zero_shear
+		// 	&& abs(sys.get_shear_rate()) < p.rest_threshold){
+		// 	cout << "shear jamming " << jammed << endl;
+		// 	jammed ++;
+		// 	if (jammed > 10) {
+		// 		cout << "shear jamming";
+		// 		break;
+		// 	}
+		// } else {
+		// 	jammed = 0;
+		// }
 		sys.new_contact_gap = 0;
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);
@@ -691,7 +480,7 @@ void Simulation::simulationInverseYield(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-	
+
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -708,10 +497,10 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
+
 	double next_output_data = 0;
 	double next_output_config = 0;
-	
+
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -720,7 +509,7 @@ void Simulation::simulationInverseYield(string in_args,
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
-		
+
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -762,7 +551,7 @@ void Simulation::simulationInverseYield(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 	}
-	
+
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
@@ -841,7 +630,7 @@ void Simulation::simulationMagnetic(string in_args,
 		/*****************************************************/
 		cout << "time: " << sys.get_time() << " / " << time_end << endl;
 	}
-	
+
 	outputComputationTime();
 	if (filename_parameters.find("init_relax", 0) < filename_parameters.size()) {
 		/* To prepare relaxed initial configuration,
@@ -865,154 +654,6 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_from_1 << endl;
 }
 
-/*
- * Main simulation
- */
-// void Simulation::simulationUserDefinedSequence(string seq_type,
-// 											   string in_args,
-// 											   vector<string> &input_files,
-// 											   bool binary_conf,
-// 											   string control_variable)
-// {
-// 	user_sequence = true;
-// 	control_var = control_variable;
-// 	filename_import_positions = input_files[0];
-// 	filename_parameters = input_files[1];
-// 	filename_sequence = input_files[4];
-// 	string::size_type pos_ext_sequence = filename_sequence.find(".dat");
-// 	sys.brownian = false;
-// 	target_stress_input = 0;
-// 	sys.target_stress = 0;
-// 	cout << seq_type << endl;
-// 	if (seq_type == "S") {
-// 		p.unscaled_contactmodel = true;
-// 		cout << "Repulsive force" << endl;
-// 		sys.repulsiveforce = true;
-// 		sys.amplitudes.repulsion = 1;
-// 		string_control_parameters << "_S" << filename_sequence.substr(0, pos_ext_sequence);
-// 	} else if (seq_type == "R") {
-// 		//p.unscaled_contactmodel
-// 		sys.repulsiveforce = true;
-// 		cout << "Repulsive force" << endl;
-// 		cout << " User Defined Sequence only implemented for ....\n";
-// 		exit(1);
-// 	} else if (seq_type == "B") {
-// 		cout << "Cohesive force" << endl;e
-// 		sys.set_shear_rate(1);
-// 		sys.repulsiveforce = false;
-// 		sys.cohesion = true;
-// 		sys.cohesive_force = 1;
-// 		string_control_parameters << "_B" << filename_sequence.substr(0, pos_ext_sequence);
-// 	} else {
-// 		cout << " User Defined Sequence only implemented for ....\n";
-// 		exit(1);
-// 	}
-// 	setDefaultParameters();
-// 	readParameterFile();
-// 	if (binary_conf) {
-// 		importConfigurationBinary();
-// 	} else {
-// 		importInitialPositionFile();
-// 	}
-// 	if (input_files[3] != "not_given") {
-// 		importPreSimulationData(input_files[3]);
-// 		// time_interval_out
-// 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
-// 		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
-// 	} else {
-// 		time_interval_output_data = p.time_interval_output_data;
-// 		time_interval_output_config = p.time_interval_output_config;
-// 	}
-// 	if (control_var == "stress") {
-// 		if (p.integration_method != 0) {
-// 			cerr << "Must be Euler method for stress controlled simulation" << endl;
-// 		}
-// 		p.integration_method = 0;
-// 	}
-// 	sys.importParameterSet(p);
-// 	sys.setupSystem(control_var);
-// 	openOutputFiles(binary_conf);
-// 	echoInputFiles(in_args, input_files);
-// 	outputConfigurationData();
-// 	vector <double> strain_sequence;
-// 	vector <double> rsequence;
-// 	ifstream fin_seq;
-// 	fin_seq.open(filename_sequence.c_str());
-// 	if (!fin_seq) {
-// 		cerr << " Sequence file '" << filename_sequence << "' not found." <<endl;
-// 		exit(1);
-// 	}
-// 	double strain, targ_st;
-// 	while (fin_seq >> strain >> targ_st) {
-// 		strain_sequence.push_back(strain);
-// 		rsequence.push_back(targ_st);
-// 	}
-// 	int cnt_simu_loop = 1;
-// 	int cnt_config_out = 1;
-// 	double next_strain = 0;
-// 	double strain_output_config = 0;
-// 	double time_output_data = 0;
-// 	double time_output_config = 0;
-// 	int jammed = 0;
-// 	/******************** OUTPUT INITIAL DATA ********************/
-// 	evaluateData();
-// 	outputRheologyData();
-// 	outputStressTensorData();
-// 	outputConfigurationBinary();
-// 	outputConfigurationData();
-// 	/*************************************************************/
-// 	for (unsigned int step = 0; step<strain_sequence.size(); step++) {
-// 		/* The target stress (``rsequence'') is given trough the command argument
-// 		 * with an unit stres: eta_0*gammmadot_0.
-// 		 * However, in the code, sys.target_stress is computed as an unit F_rep/a^2.
-// 		 */
-// 		target_stress_input = rsequence[step];
-// 		sys.target_stress = rsequence[step]/6/M_PI;
-// 		cout << "Target stress " << target_stress_input << endl;
-// 		sys.updateUnscaledContactmodel();
-// 		sys.amplitudes.repulsion = 1; // needed for 1st time step
-// 		sys.dimensionless_number = 1;
-// 		next_strain = sys.get_shear_strain()+strain_sequence[step];
-// 		while (sys.get_shear_strain() < next_strain-1e-8) {
-// 			time_output_data = cnt_simu_loop*time_interval_output_data;
-// 			time_output_config = cnt_config_out*time_interval_output_config;
-// 			sys.timeEvolution(time_output_data);
-// 			cnt_simu_loop ++;
-
-// 			/******************** OUTPUT DATA ********************/
-// 			evaluateData();
-// 			outputRheologyData();
-// 			outputStressTensorData();
-// 			outputConfigurationBinary();
-// 			if (time_interval_output_data == -1) {
-// 				if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-// 					outputConfigurationData();
-// 					cnt_config_out ++;
-// 				}
-// 			} else {
-// 				if (sys.get_time() >= time_output_config-1e-8) {
-// 					outputConfigurationData();
-// 					cnt_config_out ++;
-// 				}
-// 			}
-// 			/******************************************************/
-
-// 			if (abs(sys.get_shear_rate()) < p.rest_threshold) {
-// 				cout << "shear jamming " << jammed << endl;
-// 				jammed ++;
-// 				if (jammed > 10) {
-// 					jammed = 0;
-// 					cout << "shear jamming";
-// 					break;
-// 				}
-// 			} else {
-// 				jammed = 0;
-// 			}
-// 			cout << "strain: " << sys.get_time() << " / " << p.time_end;
-// 			cout << "      stress = " << target_stress_input << endl;
-// 		}
-// 	}
-// }
 
 
 void Simulation::catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr){
@@ -1020,7 +661,7 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	inv.type = type;
 	inv.name = keyword;
 	inv.value = value_ptr;
-	
+
 	string numeral, suffix;
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
@@ -1028,11 +669,6 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
 	input_values.push_back(inv);
-	
-	if (!caught_suffix) {
-		errorNoSuffix(keyword);
-	}
-}
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
@@ -1476,68 +1112,11 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	conf_export.close();
 }
 
-void Simulation::importConfigurationBinary()
-{
-	ifstream file_import;
-	initial_lees_edwards_disp.reset();
-	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
-	if (!file_import) {
-		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
-		exit(1);
-	}
-	int np;
-	double lx, ly, lz;
-	file_import.read((char*)&np, sizeof(int));
-	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
-	file_import.read((char*)&lx, sizeof(double));
-	file_import.read((char*)&ly, sizeof(double));
-	file_import.read((char*)&lz, sizeof(double));
-	file_import.read((char*)&initial_lees_edwards_disp.x, sizeof(double));
-	file_import.read((char*)&initial_lees_edwards_disp.y, sizeof(double));
-	double x_, y_, z_, r_;
-	vector <vec3d> initial_position;
-	vector <double> radius;
-	for (int i=0; i<np; i++) {
-		file_import.read((char*)&x_, sizeof(double));
-		file_import.read((char*)&y_, sizeof(double));
-		file_import.read((char*)&z_, sizeof(double));
-		file_import.read((char*)&r_, sizeof(double));
-		initial_position.push_back(vec3d(x_,y_,z_));
-		radius.push_back(r_);
-	}
-	file_import.close();
-	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-}
-
-void Simulation::prepareSimulationName(bool binary_conf)
-{
-	ostringstream ss_simu_name;
-	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
-	string::size_type param_name_end = filename_parameters.find_last_of(".");
-	string::size_type pos_name_start;
-	if (binary_conf) { // TO DO: improve name generation for binary input
-		pos_name_start = filename_import_positions.find_last_of("/");
-	} else {
-		pos_name_start = filename_import_positions.find_last_of("/");
-	}
-	string::size_type param_name_start = filename_parameters.find_last_of("/");
-	if (pos_name_start == std::string::npos) {
-		pos_name_start = -1;
-	}
-	if (param_name_start == std::string::npos) {
-		param_name_start = -1;
-	}
-	pos_name_start += 1;
-	param_name_start += 1;
-	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
-	ss_simu_name << "_";
-	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
-	ss_simu_name << string_control_parameters.str();
-	sys.simu_name = ss_simu_name.str();
-	cout << "filename: " << sys.simu_name << endl;
-}
 
 double Simulation::getRate(){
+/**
+	\brief The shear rate in the input units
+*/
 	if (control_var == "rate") {
 		return input_rate;
 	} else if (control_var == "stress") {
@@ -1551,11 +1130,11 @@ void Simulation::evaluateData()
 {
 	/**
 	 \brief Get rheological data from the System class.
-	 
+
 	 In this method we keep the internal units. There is no conversion to output units at this stage
-	 
+
 	 */
-	
+
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
@@ -1566,16 +1145,16 @@ void Simulation::outputData()
 {
 	/**
 	 \brief Output data.
-	 
+
 	 Stress data are converted in units of
 	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
 	 in the System class (these can be hydrodynamic, Brownian or
 	 repulsive force units).
-	 
+
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
-	
+
 	/*
 	 * Output the sum of the normal forces.
 	 *
@@ -1585,7 +1164,7 @@ void Simulation::outputData()
 	 *
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-	
+
 	/*
 	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
@@ -1598,10 +1177,10 @@ void Simulation::outputData()
 	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
 	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
-	
+
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 //	cerr << internal_unit_scales << " " << output_unit_scales << endl;
-	
+
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
 	}
@@ -1611,17 +1190,17 @@ void Simulation::outputData()
 	
 	double sr = sys.get_shear_rate();
 	unsigned int shear_stress_index;
-	if (!sys.cross_shear) {
+	if (!p.cross_shear) {
 		shear_stress_index = 2;
 	} else {
 		shear_stress_index = 3;
 	}
-	double shear_stress = sys.einstein_stress+sys.total_stress.elm[shear_stress_index];
-	
+	double shear_stress = 6*M_PI*(sys.einstein_stress+sys.total_stress.elm[shear_stress_index]);
+
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
-	
+
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
 	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.elm[shear_stress_index]/sr);
 	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.elm[shear_stress_index]/sr);
@@ -1667,12 +1246,12 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", "none", sys.p.kr);
 	outdata.entryData(35, "shear displacement", "none", sys.shear_disp.x);
 	outdata.exportFile(fout_data);
-	
+
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	
+
    	outdata_st.init(8, output_unit_scales);
-   
+
 	outdata_st.entryData(1, "time", "time", sys.get_time());
 	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
@@ -1798,13 +1377,13 @@ void Simulation::outputConfigurationData()
 		fout_particle << getRate() << ' ';
 		fout_particle << target_stress_input << ' ';
 		fout_particle << sys.get_time() << ' ';
-		if (sys.p.magnetic_type != 0) {
+		if (p.magnetic_type != 0) {
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
-		
+
 		unsigned int shear_stress_index;
-		if (!sys.cross_shear) {
+		if (!p.cross_shear) {
 			shear_stress_index = 2;
 		} else {
 			shear_stress_index = 3;
@@ -1827,7 +1406,7 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
 			fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-			if (sys.p.magnetic_type == 0) {
+			if (p.magnetic_type == 0) {
 				if (sys.twodimension) {
 					fout_particle << ' ' << sys.angle[i]; // 15
 				}
@@ -1852,7 +1431,7 @@ void Simulation::outputConfigurationData()
 		fout_interaction << ' ' << sys.get_time();
 		fout_interaction << endl;
 		unsigned int shear_stress_index;
-		if (!sys.cross_shear) {
+		if (!p.cross_shear) {
 			shear_stress_index = 2;
 		} else {
 			shear_stress_index = 3;

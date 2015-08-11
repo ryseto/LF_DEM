@@ -24,10 +24,15 @@
 #include <string>
 #include "vec3d.h"
 #include "System.h"
+#include "ParameterSet.h"
+#include "Events.h"
 
 class GenerateInitConfig{
 private:
 	System sys;
+	ParameterSet p;
+	std::list <Event> events;
+
 	char disperse_type;
 	double volume_fraction;
 	double volume_fraction1;
@@ -52,11 +57,11 @@ private:
 	double step_size;
 	int rand_seed;
 	/*
-	 * This can generate configurations consisting of identical particles
-	 * or binary system, consisting of two types of particles. 
-	 * It is indicated by "bidispese" option.
+	 * This can generate monodisperse or binary configurations consisting of two types of 
+	 * particles. 
+	 * It is indicated by "bidisperse" option.
 	 * Ones have magnetic susceptibility 1
-	 * The otheres have magnetic susceptibility -1.
+	 * The others have magnetic susceptibility -1.
 	 */
 	bool magnetic_config;
 #ifndef USE_DSFMT
@@ -83,7 +88,7 @@ private:
 	void outputPositionData();
 
 public:
-	GenerateInitConfig(){};
+	GenerateInitConfig(): sys(System(p,events)) {};
 	int generate(int rand_seed_, bool magnetic_config);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */
