@@ -36,6 +36,7 @@ cross_shear(false),
 twodimension(false),
 zero_shear(false),
 magnetic_coeffient(24),
+target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
@@ -316,13 +317,11 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		magnetic_force[i].reset();
 		vel_magnetic[i].reset();
 	}
-	if (p.magnetic_type == 1) {
-		magnetic_torque = new vec3d [np];
-		ang_vel_magnetic = new vec3d [np];
-		for (int i=0; i<np; i++) {
-			magnetic_torque[i].reset();
-			ang_vel_magnetic[i].reset();
-		}
+	magnetic_torque = new vec3d [np];
+	ang_vel_magnetic = new vec3d [np];
+	for (int i=0; i<np; i++) {
+		magnetic_torque[i].reset();
+		ang_vel_magnetic[i].reset();
 	}
 	magnetic_pair.resize(np-1);
 	sq_magnetic_interaction_range = pow(p.magnetic_interaction_range, 2);
@@ -369,14 +368,10 @@ void System::updateUnscaledContactmodel()
 		}
 		cout << " kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
-	
 	lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
-
-	
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
-	
 	if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
@@ -1042,7 +1037,7 @@ void System::updateMagneticPair()
 			pos_diff = position[j]-position[i];
 			periodize_diff_unsheared(pos_diff);
 			double sq_dist = pos_diff.sq_norm();
-			if (sq_dist < sq_magnetic_interaction_range){
+			if (sq_dist < sq_magnetic_interaction_range) {
 				magnetic_pair[i].push_back(j);
 			}
 		}
@@ -1085,22 +1080,21 @@ void System::updateMagneticInteractions()
 {
 	magnetic_force_stored.clear();
 	vec3d pos_diff;
-	amplitudes.magnetic = 8;
+	vec3d nvec;
+	vec3d force0;
 	for (int p0=0; p0<np-1; p0++) {
 		for (const int p1: magnetic_pair[p0]) {
 			pos_diff = position[p1]-position[p0];
 			periodize_diff_unsheared(pos_diff);
 			double r = pos_diff.norm();
-			double r_cubic = r*r*r;
-			vec3d nvec = pos_diff/r;
-			vec3d force_vector0;
-
-
-			
-//			double coeff = magnetic_coeffient*magnetic_susceptibility[p0]*magnetic_susceptibility[p1]/(r_cubic*r);
-			//vec3d force_vector0 = -coeff*(2*H_dot_n*external_magnetic_field+(magnetic_field_square-5*H_dot_n*H_dot_n)*nvec);
-			
-			magnetic_force_stored.push_back(make_pair(force_vector0, make_pair(p0, p1)));
+			double r_sq = r*r;
+			nvec = pos_diff/r;
+			double m0_n = dot(magnetic_moment[p0], nvec);
+			double m1_n = dot(magnetic_moment[p1], nvec);
+			double m0_m1 = dot(magnetic_moment[p0], magnetic_moment[p1]);
+			force0 = -(m1_n*magnetic_moment[p0]+m0_n*magnetic_moment[p1]+(m0_m1-5*m0_n*m1_n)*nvec)/(r_sq*r_sq);
+			force0 *= amplitudes.magnetic; // 8 Peclet number
+			magnetic_force_stored.push_back(make_pair(force0, make_pair(p0, p1)));
 		}
 	}
 }
@@ -1303,7 +1297,9 @@ void System::setRepulsiveForceToParticle()
 
 void System::setMagneticForceToParticle()
 {
-	if (p.magnetic_type != 0) {
+	if (p.magnetic_type == 1) {
+		cerr << "unfinished @ setMagneticForceToParticle " << endl;
+		exit(1);
 		if (external_magnetic_field.is_zero() ||
 			p.magnetic_type == 2) {
 			for (int i=0; i<np; i++) {
@@ -1316,11 +1312,17 @@ void System::setMagneticForceToParticle()
 				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
 		}
-		for (auto && magforce : magnetic_force_stored) {
-			int p0 = magforce.second.first;
-			int p1 = magforce.second.second;
-			magnetic_force[p0] += magforce.first;
-			magnetic_force[p1] -= magforce.first;
+		for (const auto & mf : magnetic_force_stored) {
+			magnetic_force[mf.second.first] += mf.first;
+			magnetic_force[mf.second.second] -= mf.first;
+		}
+	} else if (p.magnetic_type == 2) {
+		for (int i=0; i<np; i++) {
+			magnetic_force[i].reset();
+		}
+		for (const auto & mf : magnetic_force_stored) {
+			magnetic_force[mf.second.first] += mf.first;
+			magnetic_force[mf.second.second] -= mf.first;
 		}
 	}
 }
@@ -1358,15 +1360,27 @@ void System::buildRepulsiveForceTerms(bool set_or_add)
 
 void System::buildMagneticForceTerms(bool set_or_add)
 {
-	if (set_or_add) {
-		for (int i=0; i<np; i++) {
-			stokes_solver.setRHSForce(i, magnetic_force[i]);
-			stokes_solver.setRHSTorque(i, magnetic_torque[i]);
+	if (p.magnetic_type == 1) {
+		if (set_or_add) {
+			for (int i=0; i<np; i++) {
+				stokes_solver.setRHSForce(i, magnetic_force[i]);
+				stokes_solver.setRHSTorque(i, magnetic_torque[i]);
+			}
+		} else {
+			for (int i=0; i<np; i++) {
+				stokes_solver.addToRHSForce(i, magnetic_force[i]);
+				stokes_solver.addToRHSTorque(i, magnetic_torque[i]);
+			}
 		}
 	} else {
-		for (int i=0; i<np; i++) {
-			stokes_solver.addToRHSForce(i, magnetic_force[i]);
-			stokes_solver.addToRHSTorque(i, magnetic_torque[i]);
+		if (set_or_add) {
+			for (int i=0; i<np; i++) {
+				stokes_solver.setRHSForce(i, magnetic_force[i]);
+			}
+		} else {
+			for (int i=0; i<np; i++) {
+				stokes_solver.addToRHSForce(i, magnetic_force[i]);
+			}
 		}
 	}
 }
@@ -1892,33 +1906,39 @@ void System::calcPotentialEnergy()
 
 void System::calcMagneticEnergy()
 {
+	/* Magnetic energy is given in the thrmal unit.
+	 * \tilde{E}_M = E_M/kT = (E_M^{ast)/kT)*(E_M/E_M^{ast))
+	 * E_M^{ast} = (mu_f*m^2)/(16*pi*a**3)
+	 * F_M^{ast} = (3*mu_f*m^2)/(32*pi*a**4)
+	 */
 	magnetic_dd_energy = 0;
 	vec3d pos_diff;
+	vec3d nvec;
 	for (int p0=0; p0<np-1; p0++) {
 		for (const int p1: magnetic_pair[p0]) {
 			pos_diff = position[p1]-position[p0];
 			periodize_diff_unsheared(pos_diff);
 			double r = pos_diff.norm();
 			double r_cubic = r*r*r;
-			vec3d nvec = pos_diff/r;
-			const vec3d &m0 = magnetic_moment[p0];
-			const vec3d &m1 = magnetic_moment[p1];
+			nvec = pos_diff/r;
 			/*
-			 * magnetic_coeffient/3 = mu0/(4*M_PI)
+			 * amplitudes.magnetic = 8*Pe_magnetic
 			 */
-			double energy = -(magnetic_coeffient/(3*r_cubic))*(3*dot(m0, nvec)*dot(m1, nvec)-dot(m0, m1));
+			double energy = -(3*dot(magnetic_moment[p0], nvec)*dot(magnetic_moment[p1], nvec)-dot(magnetic_moment[p0], magnetic_moment[p1]))/r_cubic;
+			energy *= amplitudes.magnetic/3;
 			magnetic_dd_energy += energy;
 			total_energy += energy;
 		}
 	}
-	magnetic_dd_energy = magnetic_dd_energy/np;
 	
 	if (external_magnetic_field.is_not_zero()) {
 		for (int i=0; i<np; i++) {
 			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 			total_energy += tmp_magnetic_energy_ex;
+			magnetic_dd_energy += tmp_magnetic_energy_ex;
 		}
 	}
+	magnetic_dd_energy = magnetic_dd_energy/np;
 }
 
 void System::setSystemVolume(double depth)

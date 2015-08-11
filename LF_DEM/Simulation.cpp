@@ -295,19 +295,19 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string r
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
+	// Non-Brownian simulation is not implemented yet.
+	sys.brownian = true;
 	// switch this force in hydro units
-	values[force_type] = 1/dimensionlessnumber;
-	suffixes[force_type] = "magnetic";
-	// convert all other forces to hydro
+	values[force_type] = 1/dimensionlessnumber; //@@@ I don't understand this....
+	suffixes[force_type] = "magnetic"; //@@@@
 	resolveUnitSystem("magnetic");
 	//	chose simulation unit
 	cerr << "setUnitScaleRateControlled" << endl;
 	setUnitScaleMagnetic();
 	// convert from hydro scale to chosen scale
-	convertForceValues(internal_unit_scales);
-	sys.brownian = true;
-	p.brownian_amplitude = values["thermal"];
-	cerr << "Brownian, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
+	convertForceValues(internal_unit_scales); // @@@@ ???
+	//	p.brownian_amplitude = values["thermal"]; @@@ ???
+	cerr << "Magnetic, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
 }
 
 void Simulation::setLowPeclet()
@@ -335,14 +335,12 @@ void Simulation::convertForceValues(string new_unit)
 void Simulation::setUnitScaleRateControlled()
 {
 	bool is_brownian;
-	
 	if (dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end()
 		|| dimensionless_numbers.find("magnetic/thermal") != dimensionless_numbers.end()) {
 		is_brownian = true;
 	} else {
 		is_brownian = false;
 	}
-
 	if (is_brownian) {
 		if (dimensionless_numbers["hydro/thermal"] > p.Pe_switch && !sys.zero_shear) { // hydro units
 			internal_unit_scales = "hydro";
@@ -358,17 +356,19 @@ void Simulation::setUnitScaleRateControlled()
 		internal_unit_scales = "hydro";
 		sys.set_shear_rate(1);
 	}
-	
-	if (control_var == "magnetic") {
-		sys.amplitudes.sqrt_temperature = 1;
-		sys.amplitudes.magnetic = dimensionless_numbers["m/b"];
-	}
 }
 
 void Simulation::setUnitScaleMagnetic()
 {
 	internal_unit_scales = "thermal";
 	sys.amplitudes.sqrt_temperature = 1;
+	if (p.magnetic_type == 2) {
+		sys.amplitudes.magnetic = 8*dimensionless_numbers["magnetic/thermal"];
+		cerr << "amplitudes.magnetic = 8*Pe= " << sys.amplitudes.magnetic << endl;
+	} else {
+		cerr << "not implemented yet @ setUnitScaleMagnetic" << endl;
+		exit(1);
+	}
 }
 
 void Simulation::exportForceAmplitudes()
@@ -392,15 +392,14 @@ void Simulation::exportForceAmplitudes()
 		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 	
-	bool is_magnetic = values.find("magnetic") != values.end();
-	cerr << "is_magnetic = " << is_magnetic << endl;
-	exit(1);
-	if (is_magnetic) {
-		exit(1);
-		sys.amplitudes.magnetic = values["m"];
-		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-		cout << " values[m] = "  << values["m"] << endl;
-	}
+//	bool is_magnetic = values.find("magnetic") != values.end();
+//	if (is_magnetic) {
+//		sys.amplitudes.magnetic = values["magnetic"];
+//		
+//	
+//		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
+//		cout << " values[m] = "  << values["magnetic"] << endl;
+//	}
 	bool is_ft_max = values.find("ft") != values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = values["ft"];
@@ -442,7 +441,7 @@ void Simulation::setupSimulation(string in_args,
 {
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
-	exit(1);
+
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -456,15 +455,7 @@ void Simulation::setupSimulation(string in_args,
 	for (const auto& f: suffixes) {
 		string_control_parameters << "_" << f.first << values[f.first] << f.second;
 	}
-	if (control_var == "rate") {
-		string_control_parameters << "_rate";
-	} else if (control_var == "stress") {
-		string_control_parameters << "_stress";
-	} else if (control_var == "magnetic") {
-		string_control_parameters << "_magnetic";
-	}
-
-	string_control_parameters << dimensionlessnumber << input_scale;
+	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
 	/*
 	 * Force unit
 	 */
@@ -477,7 +468,6 @@ void Simulation::setupSimulation(string in_args,
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
-		p.unscaled_contactmodel = true;
 	} else if (control_var == "magnetic") {
 		convertInputForcesMagnetic(dimensionlessnumber, input_scale);
 	} else {
@@ -485,9 +475,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	exportForceAmplitudes();
 	cerr << "internal_unit_scales = " << internal_unit_scales << endl;
-	exit(1);
 	convertInputValues(internal_unit_scales);
-	
 	output_unit_scales = input_scale;
 	/*
 	 * Simulate parameters
@@ -593,13 +581,11 @@ void Simulation::setupSimulation(string in_args,
 	echoInputFiles(in_args, input_files);
 }
 
-
 bool Simulation::keepRunning()
 {
 	if (time_end == -1) {
 		return sys.get_shear_strain() < strain_end-1e-8;
-	}
-	else{
+	} else {
 		return sys.get_time() < time_end-1e-8;
 	}
 }
@@ -665,7 +651,7 @@ void Simulation::simulationSteadyShear(string in_args,
 
 		cout << "time: " << sys.get_time() << " / " << p.time_end << " , strain: " << sys.get_shear_strain() << endl; // @@@ to adapt in case the ending time is a strain but get_time() is not
 		if (!sys.zero_shear
-			&& abs(sys.get_shear_rate()) < p.rest_threshold){
+			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
 			cout << "shear jamming " << jammed << endl;
 			jammed ++;
 			if (jammed > 10) {
@@ -857,7 +843,7 @@ void Simulation::simulationMagnetic(string in_args,
 	}
 	
 	outputComputationTime();
-	if (filename_parameters.find("init_relax", 0)) {
+	if (filename_parameters.find("init_relax", 0) < filename_parameters.size()) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
@@ -1361,11 +1347,16 @@ void Simulation::setDefaultParameters()
 		p.kn = 2000;
 		p.kt = 1000;
 		p.kr = 1000;
-	} else {
+	} else if (control_var == "rate") {
 		p.unscaled_contactmodel = false;
 		p.kn = 10000;
 		p.kt = 6000;
 		p.kr = 6000;
+	} else if (control_var == "magnetic") {
+		p.unscaled_contactmodel = true;
+		p.kn = 2000;
+		p.kt = 1000;
+		p.kr = 1000;
 	}
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
@@ -1456,7 +1447,7 @@ void Simulation::outputConfigurationBinary()
 
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
-	vector < vector <double> > pos;
+	vector<vector<double>> pos;
 	int np = sys.get_np();
 	int dims = 4;
 	pos.resize(np);
@@ -1596,7 +1587,7 @@ void Simulation::outputData()
 	 */
 	
 	/*
-	 * hat(...) indicates dimensionless quantities.
+	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
 	 * (2) N1/(eta0*shear_rate) = 6*pi*hat(N1)
 	 * (3) N2/(eta0*shear_rate) = 6*pi*hat(N2)
@@ -1909,20 +1900,34 @@ void Simulation::outputConfigurationData()
 
 void Simulation::outputFinalConfiguration()
 {
+	cerr << "Output final configuration" << endl;
 	ofstream fout_finalconfig;
 	string filename_final_configuration = "./after_relax/"+filename_import_positions;
 	fout_finalconfig.open(filename_final_configuration.c_str());
 	fout_finalconfig << header_imported_configulation[0] << endl;
 	fout_finalconfig << header_imported_configulation[1] << endl;
 	int np = sys.get_np();
-	for (int i=0; i<np; i++) {
-		fout_finalconfig << sys.position[i].x << ' ';
-		fout_finalconfig << sys.position[i].y << ' ';
-		fout_finalconfig << sys.position[i].z << ' ';
-		fout_finalconfig << sys.radius[i] << endl;
+	if (control_var != "magnetic") {
+		for (int i=0; i<np; i++) {
+			fout_finalconfig << sys.position[i].x << ' ';
+			fout_finalconfig << sys.position[i].y << ' ';
+			fout_finalconfig << sys.position[i].z << ' ';
+			fout_finalconfig << sys.radius[i] << endl;
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			fout_finalconfig << sys.position[i].x << ' ';
+			fout_finalconfig << sys.position[i].y << ' ';
+			fout_finalconfig << sys.position[i].z << ' ';
+			fout_finalconfig << sys.radius[i] << ' ';
+			fout_finalconfig << sys.magnetic_moment[i].x << ' ';
+			fout_finalconfig << sys.magnetic_moment[i].y << ' ';
+			fout_finalconfig << sys.magnetic_moment[i].z << ' ';
+			fout_finalconfig << sys.magnetic_susceptibility[i] << endl;
+		}
 	}
 	string filename_bin = filename_final_configuration;
-	string ext=".dat";
+	string ext = ".dat";
 	size_t start_pos = filename_bin.find(ext);
 	if (start_pos == string::npos) {
 		cerr << " WARNING, no binary output generated " << endl;
