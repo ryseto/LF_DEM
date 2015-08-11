@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['forceamplitudes',['ForceAmplitudes',['../struct_force_amplitudes.html',1,'']]]
+  ['event',['Event',['../struct_event.html',1,'']]]
 ];

@@ -91,7 +91,6 @@ $(document).ready(function(){initNavTree('class_box.html','');});
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="class_box-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -106,33 +105,18 @@ $(document).ready(function(){initNavTree('class_box.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a743ad41ba6d972943b0a62f34768b83b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a743ad41ba6d972943b0a62f34768b83b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>neigh_nb</b> (int n, int moving_n=0)</td></tr>
-<tr class="separator:a743ad41ba6d972943b0a62f34768b83b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bcc43ef1c8777640834baf3a3195177"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0bcc43ef1c8777640834baf3a3195177"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>neighbor</b> (int label, <a class="el" href="class_box.html">Box</a> *neigh_box)</td></tr>
-<tr class="separator:a0bcc43ef1c8777640834baf3a3195177"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af529c03039b7acf5c489812bc31d7f19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af529c03039b7acf5c489812bc31d7f19"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>moving_neighbor</b> (int moving_label, <a class="el" href="class_box.html">Box</a> *neigh_box)</td></tr>
-<tr class="separator:af529c03039b7acf5c489812bc31d7f19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26ac77fb1c6c533e21a9769f457fe6b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a26ac77fb1c6c533e21a9769f457fe6b5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addStaticNeighbor</b> (<a class="el" href="class_box.html">Box</a> *neigh_box)</td></tr>
+<tr class="separator:a26ac77fb1c6c533e21a9769f457fe6b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b13b675eca5b267996373eaecd621aa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b13b675eca5b267996373eaecd621aa"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addMovingNeighbor</b> (<a class="el" href="class_box.html">Box</a> *neigh_box)</td></tr>
+<tr class="separator:a2b13b675eca5b267996373eaecd621aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af71617bca7249e8608bc77c58a44f813"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af71617bca7249e8608bc77c58a44f813"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset_moving_neighbors</b> ()</td></tr>
 <tr class="separator:af71617bca7249e8608bc77c58a44f813"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9966b61d48b177dbc68b30cad3e1ee89"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9966b61d48b177dbc68b30cad3e1ee89"></a>
-<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>neighbors</b> ()</td></tr>
-<tr class="separator:a9966b61d48b177dbc68b30cad3e1ee89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63321eeb6e93bde5d1ae2068da2e3ed1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63321eeb6e93bde5d1ae2068da2e3ed1"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>neigh_nb</b> ()</td></tr>
-<tr class="separator:a63321eeb6e93bde5d1ae2068da2e3ed1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d32a9584f1e9c08663f17bad2497322"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2d32a9584f1e9c08663f17bad2497322"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>probe_nb</b> ()</td></tr>
-<tr class="separator:a2d32a9584f1e9c08663f17bad2497322"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afef70475a88ee796290395bffcf1aba3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afef70475a88ee796290395bffcf1aba3"></a>
-<a class="el" href="classvec3d.html">vec3d</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>probing_positions</b> ()</td></tr>
-<tr class="separator:afef70475a88ee796290395bffcf1aba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0da76dc0ddfc4f557409f25f4ba87414"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0da76dc0ddfc4f557409f25f4ba87414"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>probing_positions</b> (int label, const <a class="el" href="classvec3d.html">vec3d</a> &amp;pos)</td></tr>
-<tr class="separator:a0da76dc0ddfc4f557409f25f4ba87414"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6ab8755bfbfeb8de5760af6ae496411"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6ab8755bfbfeb8de5760af6ae496411"></a>
+std::set&lt; <a class="el" href="class_box.html">Box</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>neighbors</b> ()</td></tr>
+<tr class="separator:aa6ab8755bfbfeb8de5760af6ae496411"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af21f01e6bceeed0a08f870919c6b9df8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af21f01e6bceeed0a08f870919c6b9df8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>is_top</b> (bool)</td></tr>
 <tr class="separator:af21f01e6bceeed0a08f870919c6b9df8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -182,41 +166,20 @@ std::set&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>cont
 std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>neighborhood_container</b></td></tr>
 <tr class="separator:a3da754777a022484307817bf0c60c2cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
-Private Member Functions</h2></td></tr>
-<tr class="memitem:a36611056c740d1e96e7de74e284754c8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36611056c740d1e96e7de74e284754c8"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>can_be_added</b> (int, <a class="el" href="class_box.html">Box</a> *)</td></tr>
-<tr class="separator:a36611056c740d1e96e7de74e284754c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
-<tr class="memitem:aca04d9999eb26c2afebf3aaa48c7e6b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca04d9999eb26c2afebf3aaa48c7e6b7"></a>
-<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>_neighbors</b></td></tr>
-<tr class="separator:aca04d9999eb26c2afebf3aaa48c7e6b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ecadecfb27030d7caa04c7c880a4d00"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ecadecfb27030d7caa04c7c880a4d00"></a>
-<a class="el" href="class_box.html">Box</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>_moving_neighbors</b></td></tr>
-<tr class="separator:a9ecadecfb27030d7caa04c7c880a4d00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad58a0f9742345bab8d19514ed3e7a0fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad58a0f9742345bab8d19514ed3e7a0fe"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_neigh_nb</b></td></tr>
-<tr class="separator:ad58a0f9742345bab8d19514ed3e7a0fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8af3041f7b45de1d6d321204c308cec9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8af3041f7b45de1d6d321204c308cec9"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_moving_neigh_nb</b></td></tr>
-<tr class="separator:a8af3041f7b45de1d6d321204c308cec9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a007b26675fa4ff7d3f16114fe23b9c82"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a007b26675fa4ff7d3f16114fe23b9c82"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_still_neigh_nb</b></td></tr>
-<tr class="separator:a007b26675fa4ff7d3f16114fe23b9c82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a245b64d1fa97fc086bf5f919a324ccd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a245b64d1fa97fc086bf5f919a324ccd8"></a>
+std::set&lt; <a class="el" href="class_box.html">Box</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_neighbors</b></td></tr>
+<tr class="separator:a245b64d1fa97fc086bf5f919a324ccd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1e34e25fe00a2e71519a1accf823c5e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1e34e25fe00a2e71519a1accf823c5e"></a>
+std::set&lt; <a class="el" href="class_box.html">Box</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_moving_neighbors</b></td></tr>
+<tr class="separator:ac1e34e25fe00a2e71519a1accf823c5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90b5f57ce7b195e8427ea4f053b2402b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90b5f57ce7b195e8427ea4f053b2402b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>_is_bottom</b></td></tr>
 <tr class="separator:a90b5f57ce7b195e8427ea4f053b2402b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66eaea5e8619e05d7b1a8f94f16cd739"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66eaea5e8619e05d7b1a8f94f16cd739"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>_is_top</b></td></tr>
 <tr class="separator:a66eaea5e8619e05d7b1a8f94f16cd739"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad440d63c517f51389fb512fbe9e71168"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad440d63c517f51389fb512fbe9e71168"></a>
-<a class="el" href="classvec3d.html">vec3d</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>_probing_positions</b></td></tr>
-<tr class="separator:ad440d63c517f51389fb512fbe9e71168"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ca7da73910d22636c4e27f285a609b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6ca7da73910d22636c4e27f285a609b1"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_probe_nb</b></td></tr>
-<tr class="separator:a6ca7da73910d22636c4e27f285a609b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="class_box.html" title="Box object holding identities of the particles in a subset of the whole suspension, to be used in a BoxSet object. ">Box</a> object holding identities of the particles in a subset of the whole suspension, to be used in a <a class="el" href="class_box_set.html" title="Set of Box objects making a partition of the simulation box. ">BoxSet</a> object. </p>
@@ -233,7 +196,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_box.html">Box</a></li>
-    <li class="footer">Generated on Tue Jul 21 2015 15:55:54 for Documentation for LF_DEM by
+    <li class="footer">Generated on Tue Aug 11 2015 16:37:28 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

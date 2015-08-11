@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['inputvalue',['InputValue',['../struct_input_value.html',1,'']]],
-  ['interaction',['Interaction',['../class_interaction.html',1,'']]]
+  ['generateinitconfig',['GenerateInitConfig',['../class_generate_init_config.html',1,'']]]
 ];

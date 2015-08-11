@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['magneticforce',['MagneticForce',['../class_magnetic_force.html',1,'']]]
+  ['lubrication',['Lubrication',['../class_lubrication.html',1,'']]]
 ];

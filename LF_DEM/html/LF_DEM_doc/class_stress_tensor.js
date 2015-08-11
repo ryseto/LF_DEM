@@ -7,7 +7,6 @@ var class_stress_tensor =
     [ "getNormalStress1", "class_stress_tensor.html#a2ccf483b66bf9f6e91e9908079fdbcaa", null ],
     [ "getNormalStress2", "class_stress_tensor.html#a1c83f075db052d69adaac5455bcb06f0", null ],
     [ "getParticlePressure", "class_stress_tensor.html#a314c3738fd82f205acb7d3357b976078", null ],
-    [ "getStressXZ", "class_stress_tensor.html#ae29f1143da31f2402581198f7c9ad117", null ],
     [ "operator*=", "class_stress_tensor.html#a61c4dbf8a50345d2fb0c9dcae9233f7c", null ],
     [ "operator*=", "class_stress_tensor.html#aa812ab73021d48b5cf30881197e70778", null ],
     [ "operator+=", "class_stress_tensor.html#a3f45693c247403d834012b3dd54572f2", null ],
