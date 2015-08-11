@@ -243,7 +243,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	resolveUnitSystem(internal_unit_scales);
 }
 
-void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
+void Simulation::convertInputForcesRateControlled(double rate_value, string rate_unit)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -263,14 +263,19 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
-	// switch this force in hydro units
-	input_force_values[force_type] = 1/dimensionlessnumber;
+	/* Switch this force in hydro units.
+	 The rate_value in input is the shear rate in "force_type" units,
+ 	i.e.  is the ratio between the hydrodynamic force and the "force_type" force. 
+	So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
+	*/
+	input_force_values[force_type] = 1/rate_value;
 	input_force_units[force_type] = "hydro";
 	
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
 	
-	//	chose simulation unit
+	// chose simulation unit
+	// the chosen unit is called internal_unit_scales
 	setUnitScaleRateControlled();
 	
 	// convert from hydro scale to chosen scale
