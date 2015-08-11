@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
+		D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */; };
 		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
@@ -100,6 +101,7 @@
 /* Begin PBXFileReference section */
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = StokesSolver.cpp; sourceTree = "<group>"; };
 		D9032D731B79D1A00062A6F3 /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
+		D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
 		D90AF33D1AF9FFBA00E15C7E /* _averager_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _averager_8h_source.html; sourceTree = "<group>"; };
 		D90AF33E1AF9FFBA00E15C7E /* _box_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _box_8h_source.html; sourceTree = "<group>"; };
 		D90AF33F1AF9FFBA00E15C7E /* _box_set_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _box_set_8h_source.html; sourceTree = "<group>"; };
@@ -1203,6 +1205,7 @@
 				D9032D731B79D1A00062A6F3 /* Events.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
+				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,
 				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
@@ -1442,6 +1445,7 @@
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
+				D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */,
 				D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */,
 				D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */,
 				D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */,
