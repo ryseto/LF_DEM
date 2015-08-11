@@ -62,20 +62,35 @@ void Simulation::setupEvents(){
 	sys.eventLookUp = NULL;
 }
 
+
+void Simulation::handleEventsShearJamming(){
+	/** \brief Event handler to test for shear jamming
+		
+		When a negative_shear_rate event is thrown, p.disp_max is decreased.
+ 		If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
+	*/
+	for (const auto &ev : events) {
+		if (ev.type == "negative_shear_rate") {
+			cout << " negative rate " << endl;
+			p.disp_max /= 1.1;
+		}
+	}
+	if(p.disp_max < 1e-6){
+		cout << "jammed" << endl;
+		//			kill = true;
+		p.cross_shear = true;//!p.cross_shear;
+		p.disp_max = 1e-5;
+	}
+
+}
+
 void Simulation::handleEvents(){
+	/** \brief Handle the list of events that appears in the previous time step
+		
+		This function dispatches to specialized handlers according to the value of ParameterSet::event_handler .
+	*/
 	if (p.event_handler == "shear_jamming") {
-		for (const auto &ev : events) {
-			if (ev.type == "negative_shear_rate") {
-				cout << " negative rate " << endl;
-				p.disp_max /= 1.1;
-			}
-		}
-		if(p.disp_max < 1e-6){
-			cout << "jammed" << endl;
-			//			kill = true;
-			p.cross_shear = true;//!p.cross_shear;
-			p.disp_max = 1e-5;
-		}
+		handleEventsShearJamming();		
 	}
 	events.clear();
 }

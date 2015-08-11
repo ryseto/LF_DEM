@@ -40,9 +40,11 @@ private:
 	
 	std::list <InputValue> input_values;
 
+	/*********** Events  ************/
 	std::list <Event> events;
 	void setupEvents();
 	void handleEvents();
+	void handleEventsShearJamming();
 
 	double volume_or_area_fraction;
 	std::string filename_import_positions;
