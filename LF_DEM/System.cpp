@@ -1567,7 +1567,7 @@ void System::computeVelocities(bool divided_velocities)
 		}
 	}
 
-	if (!p.cross_shear) {		
+	if (!p.cross_shear) {
 		vel_difference.x = shear_rate*lz;
 	} else {
 		vel_difference.y = shear_rate*lz;
