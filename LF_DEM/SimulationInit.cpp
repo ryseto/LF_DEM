@@ -14,6 +14,12 @@ using namespace std;
 
 void Simulation::contactForceParameter(string filename)
 {
+	/** 
+	\brief Load a file containing spring constants and time steps as functions of the volume fraction.
+		
+	Input file must be formatted as:
+	phi kn kt dt
+	*/
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -45,6 +51,12 @@ void Simulation::contactForceParameter(string filename)
 
 void Simulation::contactForceParameterBrownian(string filename)
 {
+	/** 
+	\brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
+		
+	Input file must be formatted as:
+	phi peclet kn kt dt
+	*/
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -92,6 +104,9 @@ void Simulation::importPreSimulationData(string filename)
 
 void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 {
+	/** 
+	\brief Print the entire information needed to reproduce the simulation in Simulation::fout_input
+	*/
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
 	for (const string &in_file : input_files) {
@@ -111,50 +126,72 @@ void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
 	fout_input.close();
 }
 
-void Simulation::resolveUnitSystem(string unit) // can we express all forces in unit "unit"?
+void Simulation::resolveUnitSystem(string unit_force) // can we express all forces in unit "unit"?
 {
-	values[unit] = 1;
-	suffixes[unit] = unit;
+	/** 
+		\brief Check force units consistency, expresses all input forces in unit given as a parameter.
+ 	
+		In input, forces are given with suffixes. This function checks that we can make sense of these suffixes, and if so, it converts all the forces in the unit given as a parameter.
+
+		It does it iteratively, ie:
+		1. I know that unit_force = 1*unit_force
+		2. I know the value of any force f1 that has been given in unit_force in input as 
+			f1 = value*unit_force
+		3. I can determine the value of any force f2 expressed as f2 = x*f1
+ 		4. I can then determine the value of any force f3 expressed as f3 = y*f2
+		5. etc
+
+		If there is any force undetermined at the end of this algorithm, the force unit system is inconsistent/incomplete.
+
+		If the force unit system is consistent, this function determines the dimensionless numbers, i.e., the ratios F_A/F_B for any pair of force scales present in the system.
+
+		\b Note: a priori, we could determine force A from force B if A is defined in B units or if B is defined in A units: for example in the step 3 of the above algorithm we could determine f2 knowing f1 if f1 is defined as f1=x^{-1}f2. However this is \b not implemented and will fail with the current implementation. 		
+	*/
 	
-	// now resolve the other force units
-	set <string> resolved_units;
-	resolved_units.clear();
-	resolved_units.insert(unit);
-	unsigned int resolved = resolved_units.size();
+	// we keep the forces for which we can convert in unit_force units in a set.
+	set <string> resolved_forces;
+	resolved_forces.clear();
+
+	// the unit_force has a value of 1*unit_force (says captain obvious)
+	input_force_values[unit_force] = 1;
+	input_force_units[unit_force] = unit_force;
+	resolved_forces.insert(unit_force);
+
+	// now resolve the other force units, iterativley
+	unsigned int resolved = resolved_forces.size();
 	unsigned int previous_resolved;
-	
 	do {
 		previous_resolved = resolved;
-		for (const auto& f: suffixes) {
+		for (const auto& f: input_force_units) {
 			string force_type = f.first;
-			string suffix = f.second;
-			if (resolved_units.find(suffix) != resolved_units.end()) {  // then we know how to convert to unit
-				values[force_type] *= values[suffix];
-				suffixes[force_type] = unit;
-				resolved_units.insert(force_type);
+			string unit = f.second;
+			if (resolved_forces.find(unit) != resolved_forces.end()) {  // the unit has a meaning
+				input_force_values[force_type] *= input_force_values[unit]; // input_force_values[unit] is in unit_force units
+				input_force_units[force_type] = unit_force;
+				resolved_forces.insert(force_type);
 			}
 		}
-		resolved = resolved_units.size();
+		resolved = resolved_forces.size();
 	} while (previous_resolved < resolved);
 	
 	// check we found everyone
-	if (resolved < suffixes.size()) {
-		for (const auto& f: suffixes) {
+	if (resolved < input_force_units.size()) {
+		for (const auto& f: input_force_units) {
 			string force_type = f.first;
-			string suffix = f.second;
-			if (resolved_units.find(suffix) == resolved_units.end()) {
-				cerr << "Error: force type \"" << force_type << "\" has an unknown scale \"" << suffix << "\"" << endl;
+			string unit = f.second;
+			if (resolved_forces.find(unit) == resolved_forces.end()) {
+				cerr << "Error: force type \"" << force_type << "\" has an unknown unit \"" << unit << "\"" << endl;
 			}
 		}
 		exit(1);
 	}
 	
 	// determine the dimensionless_numbers
-	for (const auto& f1: suffixes) {
+	for (const auto& f1: input_force_units) {
 		string force1_type = f1.first;
-		for (const auto& f2: suffixes) {
+		for (const auto& f2: input_force_units) {
 			string force2_type = f2.first;
-			dimensionless_numbers[force2_type+'/'+force1_type] = values[force2_type]/values[force1_type];
+			dimensionless_numbers[force2_type+'/'+force1_type] = input_force_values[force2_type]/input_force_values[force1_type];
 			dimensionless_numbers[force1_type+'/'+force2_type] = 1/dimensionless_numbers[force2_type+'/'+force1_type];
 		}
 	}
@@ -184,10 +221,10 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
 		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
 		 
-		 With only hydro, the problem is that the target stress \tilde{S} cannot take any possible value, as
-		 \tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0
+		 With only hydro, the problem is that the target stress \f$\tilde{S}\f$ cannot take any possible value, as
+		\f$\tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0\f$
 		 --> It is limited to the available range of viscosity.
-		 If you give a \tilde{S} outside this range (for example \tilde{S}=0.5), you run into troubles.
+		 If you give a \f$\tilde{S}\f$ outside this range (for example \f$\tilde{S}=0.5\f$), you run into troubles.
 		 */
 	}
 	if (force_type == "thermal") {
@@ -209,31 +246,26 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string rate_unit)
 {
 	/**
-	 \brief Chooses units for the simulation and convert the forces to this unit (rate controlled case).
+	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
 	 
 	 The strategy is the following:
-	 1. Convert all the forces in hydro force unit, by solving recursively, ie:
-		a. h = 1h
-		b. "LF_DEM -r nx" --> x = (1/n)h (the rate given in input is also the ratio of forces h/x)
-		c. y = mx = (m/n)h
-		d. z = oy = (om/n)h
-		e. etc...
-	 2. Decide the unit "w" for the simulation
-	 3. Convert all the forces to this unit (by multiplying every force by h/w)
+	 1. Convert all the forces in hydro force unit, ie the value for force f1 is f1/F_H
+	 2. Decide the unit force F_W for the simulation
+	 3. Convert all the forces to this unit (by multiplying every force by F_H/F_W)
 	 */
-	string force_type = rate_unit; // our force defining the shear rate
+	string force_type = rate_unit; // the force defining the shear rate
 	if (force_type == "hydro") {
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
 		exit(1);
 	}
 	
-	if (values[force_type] > 0) {
+	if (input_force_values[force_type] > 0) {
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
 	// switch this force in hydro units
-	values[force_type] = 1/dimensionlessnumber;
-	suffixes[force_type] = "hydro";
+	input_force_values[force_type] = 1/dimensionlessnumber;
+	input_force_units[force_type] = "hydro";
 	
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
@@ -247,7 +279,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	bool is_brownian = dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end();
 	if (is_brownian) {
 		sys.brownian = true;
-		p.brownian_amplitude = values["thermal"];
+		p.brownian_amplitude = input_force_values["thermal"];
 		cout << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
 	} else {
 		cout << "non-Brownian" << endl;
@@ -262,15 +294,15 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string r
 		cerr << "unit needs to be thermal" << endl;
 		exit(1);
 	}
-	if (values[force_type] > 0) {
+	if (input_force_values[force_type] > 0) {
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
 	// Non-Brownian simulation is not implemented yet.
 	sys.brownian = true;
 	// switch this force in hydro units
-	values[force_type] = 1/dimensionlessnumber; //@@@ I don't understand this....
-	suffixes[force_type] = "magnetic"; //@@@@
+	input_force_values[force_type] = 1/dimensionlessnumber; //@@@ I don't understand this....
+	input_force_units[force_type] = "magnetic"; //@@@@
 	resolveUnitSystem("magnetic");
 	//	chose simulation unit
 	cerr << "setUnitScaleRateControlled" << endl;
@@ -292,12 +324,17 @@ void Simulation::setLowPeclet()
 }
 
 void Simulation::convertForceValues(string new_unit)
-{
-	for (auto& f: suffixes) {
+{	
+	/**
+	 \brief Convert all the input forces to the unit given in parameter.
+
+		The input forces velues can be expressed in any units, but these units must be known before calling this function (e.g. by calling Simulation::resolveUnitSystem(string unit_force) beforehand).
+	 */
+	for (auto& f: input_force_units) {
 		string force_type = f.first;
 		string old_unit = f.second;
 		if (old_unit != new_unit) {
-			values[force_type] *= dimensionless_numbers[old_unit+'/'+new_unit];
+			input_force_values[force_type] *= dimensionless_numbers[old_unit+'/'+new_unit];
 			f.second = new_unit;
 		}
 	}
@@ -305,6 +342,11 @@ void Simulation::convertForceValues(string new_unit)
 
 void Simulation::setUnitScaleRateControlled()
 {
+	/**
+	 \brief Determine the best internal force scale to run the simulation (rate controlled case).
+
+		If the system is non-Brownian, the hydrodynamic force unit is taken (\b note: this will change in the future). If the system is Brownian, the Brownian force unit is selected at low Peclet (i.e., Peclet numbers smaller that ParameterSet::Pe_switch) and the hydrodynamic force unit is selected at high Peclet.
+	 */
 	bool is_brownian;
 	if (dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end()
 		|| dimensionless_numbers.find("magnetic/thermal") != dimensionless_numbers.end()) {
@@ -344,23 +386,27 @@ void Simulation::setUnitScaleMagnetic()
 
 void Simulation::exportForceAmplitudes()
 {
-	bool is_repulsive = values.find("repulsive") != values.end();
+	/**
+	 \brief Copy the input_force_values in the ForceAmplitude struct of the System class
+	 */
+
+	bool is_repulsive = input_force_values.find("repulsive") != input_force_values.end();
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
-		sys.amplitudes.repulsion = values["repulsive"];
-		cout << " Repulsive force (in \"" << suffixes["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
+		sys.amplitudes.repulsion = input_force_values["repulsive"];
+		cout << " Repulsive force (in \"" << input_force_units["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
-	bool is_critical_load = values.find("critical_load") != values.end();
+	bool is_critical_load = input_force_values.find("critical_load") != input_force_values.end();
 	if (is_critical_load) {
 		sys.critical_load = true;
-		sys.amplitudes.critical_normal_force = values["critical_load"];
-		cout << " Critical Load (in \"" << suffixes["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		sys.amplitudes.critical_normal_force = input_force_values["critical_load"];
+		cout << " Critical Load (in \"" << input_force_units["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
 	}
-	bool is_cohesive = values.find("cohesive") != values.end();
+	bool is_cohesive = input_force_values.find("cohesive") != input_force_values.end();
 	if (is_cohesive) {
 		sys.cohesion = true;
-		sys.amplitudes.cohesion = values["cohesive"];
-		cout << " Cohesion (in \"" << suffixes["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
+		sys.amplitudes.cohesion = input_force_values["cohesive"];
+		cout << " Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 	
 	//	bool is_magnetic = values.find("magnetic") != values.end();
@@ -371,19 +417,26 @@ void Simulation::exportForceAmplitudes()
 	//		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
 	//		cout << " values[m] = "  << values["magnetic"] << endl;
 	//	}
-	bool is_ft_max = values.find("ft") != values.end();
+	bool is_ft_max = input_force_values.find("ft") != input_force_values.end();
 	if (is_ft_max) {
-		sys.amplitudes.ft_max = values["ft"];
-		cout << " Max tangential load (in \"" << suffixes["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+		sys.amplitudes.ft_max = input_force_values["ft"];
+		cout << " Max tangential load (in \"" << input_force_units["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
 }
 
 void Simulation::convertInputValues(string new_unit)
 {
+	/**
+	 \brief Convert all the non-force input parameters given with units to the unit given in parameter.
+		
+		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
+	 */
+
+
 	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
-			if (old_unit != "hydro" && values.find(old_unit) == values.end()) {
+			if (old_unit != "hydro" && input_force_values.find(old_unit) == input_force_values.end()) {
 				cerr << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
 				exit(1);
 			}
@@ -405,8 +458,10 @@ void Simulation::convertInputValues(string new_unit)
 }
 
 void Simulation::setupNonDimensionalization(double dimensionlessnumber, string input_scale){
-	/*
-	 * Force unit
+	/**
+	 \brief Non-dimensionalize the simulation.
+		
+		This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
 	 */
 	input_scale = unit_longname[input_scale];
 	if (control_var == "rate") {
@@ -438,6 +493,12 @@ void Simulation::setupSimulation(string in_args,
 								 double dimensionlessnumber,
 								 string input_scale)
 {
+	/**
+	 \brief Set up the simulation.
+		
+		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
+	 */
+
 	filename_import_positions = input_files[0];
 	filename_parameters = input_files[1];
 	
@@ -451,8 +512,8 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters();
 	readParameterFile();
-	for (const auto& f: suffixes) {
-		string_control_parameters << "_" << f.first << values[f.first] << f.second;
+	for (const auto& f: input_force_units) {
+		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
 	}
 	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
 
@@ -555,6 +616,9 @@ void Simulation::setupSimulation(string in_args,
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
+	/**
+	 \brief Parse an input parameter	
+	 */
 	string numeral, suffix;
 	bool caught_suffix = true;
 	if (keyword == "lubrication_model") {
@@ -569,23 +633,23 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffix = unit_longname[suffix];
 		p.repulsion_amplitude = atof(numeral.c_str());
-		suffixes["repulsive"] = suffix;
-		values["repulsive"] = atof(numeral.c_str());
+		input_force_units["repulsive"] = suffix;
+		input_force_values["repulsive"] = atof(numeral.c_str());
 	} else if (keyword == "cohesion_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffix = unit_longname[suffix];
-		suffixes["cohesive"] = suffix;
-		values["cohesive"] = atof(numeral.c_str());
+		input_force_units["cohesive"] = suffix;
+		input_force_values["cohesive"] = atof(numeral.c_str());
 	} else if (keyword == "brownian_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffix = unit_longname[suffix];
-		suffixes["thermal"] = suffix;
-		values["thermal"] = atof(numeral.c_str());
+		input_force_units["thermal"] = suffix;
+		input_force_values["thermal"] = atof(numeral.c_str());
 	} else if (keyword == "critical_load_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffix = unit_longname[suffix];
-		suffixes["critical_load"] = suffix;
-		values["critical_load"] = atof(numeral.c_str());
+		input_force_units["critical_load"] = suffix;
+		input_force_values["critical_load"] = atof(numeral.c_str());
 	} else if (keyword == "magnetic_amplitude") {
 		//		caught_suffix = getSuffix(value, numeral, suffix);
 		//		suffix = unit_longname[suffix];
@@ -670,8 +734,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "ft_max") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffix = unit_longname[suffix];
-		suffixes["ft"] = suffix;
-		values["ft"] = atof(numeral.c_str());
+		input_force_units["ft"] = suffix;
+		input_force_values["ft"] = atof(numeral.c_str());
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
@@ -700,6 +764,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 
 void Simulation::readParameterFile()
 {
+	/**
+	 \brief Read and parse the parameter file	
+	 */
+
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
@@ -746,76 +814,12 @@ void Simulation::readParameterFile()
 	return;
 }
 
-void Simulation::openOutputFiles(bool binary_conf)
-{
-	/*
-	 * Set simulation name and name of output files.
-	 */
-	prepareSimulationName(binary_conf);
-	string st_filename = "st_" +sys.simu_name + ".dat";
-	fout_st.open(st_filename.c_str());
-	outputDataHeader(fout_st);
-	string data_filename = "data_" + sys.simu_name + ".dat";
-	fout_data.open(data_filename.c_str());
-	string time_filename = "t_" + sys.simu_name + ".dat";
-	fout_time.open(time_filename.c_str());
-	string input_filename = "input_" + sys.simu_name + ".dat";
-	fout_input.open(input_filename.c_str());
-	
-	outputDataHeader(fout_data);
-	
-	if (p.out_data_particle) {
-		string particle_filename = "par_" + sys.simu_name + ".dat";
-		fout_particle.open(particle_filename.c_str());
-		outputDataHeader(fout_particle);
-		//
-		string fout_par_col_def =
-		"#1: number of the particle\n"
-		"#2: radius\n"
-		"#3: position x\n"
-		"#4: position y\n"
-		"#5: position z\n"
-		"#6: velocity x\n"
-		"#7: velocity y\n"
-		"#8: velocity z\n"
-		"#9: angular velocity x\n"
-		"#10: angular velocity y\n"
-		"#11: angular velocity z\n"
-		"#12: viscosity contribution of lubrication\n"
-		"#13: viscosity contributon of contact GU xz\n"
-		"#14: viscosity contributon of brownian xz\n"
-		"#15: angle (for 2D simulation only)\n";
-		//
-		fout_particle << fout_par_col_def << endl;
-	}
-	if (p.out_data_interaction) {
-		string interaction_filename = "int_" + sys.simu_name + ".dat";
-		fout_interaction.open(interaction_filename.c_str());
-		outputDataHeader(fout_interaction);
-		string fout_int_col_def =
-		"#1: particle 1 label\n"
-		"#2: particle 2 label\n"
-		"#3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)\n"
-		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-		"#8: normal part of the lubrication force\n"
-		"#9: tangential part of the lubrication force x\n"
-		"#10: tangential part of the lubrication force y\n"
-		"#11: tangential part of the lubrication force z\n"
-		"#12: norm of the normal part of the contact force\n"
-		"#13: tangential part of the contact force, x\n"
-		"#14: tangential part of the contact force, y\n"
-		"#15: tangential part of the contact force, z\n"
-		"#16: norm of the normal repulsive force\n"
-		"#17: Viscosity contribution of contact xF\n";
-		fout_interaction << fout_int_col_def << endl;
-	}
-}
 
 void Simulation::setDefaultParameters()
 {
+	/**
+	  \brief Set default values for ParameterSet parameters.
+	*/	
 	p.brownian_amplitude = 0;
 	p.repulsion_amplitude = 0;
 	p.cohesion_amplitude = 0;
@@ -911,8 +915,81 @@ void Simulation::setDefaultParameters()
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
+void Simulation::openOutputFiles(bool binary_conf)
+{
+	/**
+	  \brief Set up the output files
+
+		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
+	 */
+	prepareSimulationName(binary_conf);
+	string st_filename = "st_" +sys.simu_name + ".dat";
+	fout_st.open(st_filename.c_str());
+	outputDataHeader(fout_st);
+	string data_filename = "data_" + sys.simu_name + ".dat";
+	fout_data.open(data_filename.c_str());
+	string time_filename = "t_" + sys.simu_name + ".dat";
+	fout_time.open(time_filename.c_str());
+	string input_filename = "input_" + sys.simu_name + ".dat";
+	fout_input.open(input_filename.c_str());
+	
+	outputDataHeader(fout_data);
+	
+	if (p.out_data_particle) {
+		string particle_filename = "par_" + sys.simu_name + ".dat";
+		fout_particle.open(particle_filename.c_str());
+		outputDataHeader(fout_particle);
+		//
+		string fout_par_col_def =
+		"#1: number of the particle\n"
+		"#2: radius\n"
+		"#3: position x\n"
+		"#4: position y\n"
+		"#5: position z\n"
+		"#6: velocity x\n"
+		"#7: velocity y\n"
+		"#8: velocity z\n"
+		"#9: angular velocity x\n"
+		"#10: angular velocity y\n"
+		"#11: angular velocity z\n"
+		"#12: viscosity contribution of lubrication\n"
+		"#13: viscosity contributon of contact GU xz\n"
+		"#14: viscosity contributon of brownian xz\n"
+		"#15: angle (for 2D simulation only)\n";
+		//
+		fout_particle << fout_par_col_def << endl;
+	}
+	if (p.out_data_interaction) {
+		string interaction_filename = "int_" + sys.simu_name + ".dat";
+		fout_interaction.open(interaction_filename.c_str());
+		outputDataHeader(fout_interaction);
+		string fout_int_col_def =
+		"#1: particle 1 label\n"
+		"#2: particle 2 label\n"
+		"#3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)\n"
+		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
+		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
+		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
+		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
+		"#8: normal part of the lubrication force\n"
+		"#9: tangential part of the lubrication force x\n"
+		"#10: tangential part of the lubrication force y\n"
+		"#11: tangential part of the lubrication force z\n"
+		"#12: norm of the normal part of the contact force\n"
+		"#13: tangential part of the contact force, x\n"
+		"#14: tangential part of the contact force, y\n"
+		"#15: tangential part of the contact force, z\n"
+		"#16: norm of the normal repulsive force\n"
+		"#17: Viscosity contribution of contact xF\n";
+		fout_interaction << fout_int_col_def << endl;
+	}
+}
+
 void Simulation::importConfiguration()
 {
+	/**
+	  \brief Read a text file input configuration.
+	*/
 	fstream file_import;
 	file_import.open(filename_import_positions.c_str());
 	if (!file_import) {
@@ -961,6 +1038,9 @@ void Simulation::importConfiguration()
 
 void Simulation::importConfigurationBinary()
 {
+	/**
+	  \brief Read a binary file input configuration.
+	*/
 	ifstream file_import;
 	initial_lees_edwards_disp.reset();
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
@@ -994,6 +1074,9 @@ void Simulation::importConfigurationBinary()
 
 void Simulation::prepareSimulationName(bool binary_conf)
 {
+	/**
+	  \brief Determine simulation name.
+	*/
 	ostringstream ss_simu_name;
 	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
 	string::size_type param_name_end = filename_parameters.find_last_of(".");
@@ -1019,4 +1102,3 @@ void Simulation::prepareSimulationName(bool binary_conf)
 	sys.simu_name = ss_simu_name.str();
 	cout << "filename: " << sys.simu_name << endl;
 }
-

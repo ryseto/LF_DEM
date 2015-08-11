@@ -33,18 +33,14 @@ class Simulation
 private:
 	System sys;
 	ParameterSet p;
-	std::map <std::string, std::string> suffixes;   // pairs: (force_type, suffix) @@@ Need to change to a self-explanatory variable name
-	std::map <std::string, double> values;   // pairs: (force_type, values_in_suffix_units) @@@ Need to change to a self-explanatory variable name
-	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type, rate/force_value)
+	std::map <std::string, std::string> input_force_units;   // pairs: (force_type, unit)
+	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
+	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
 	std::map <std::string, std::string> unit_longname;
 	
 	std::list <InputValue> input_values;
 
-	/*********** Events  ************/
-	std::list <Event> events;
-	void setupEvents();
-	void handleEvents();
-	void handleEventsShearJamming();
+
 
 	double volume_or_area_fraction;
 	std::string filename_import_positions;
@@ -134,6 +130,13 @@ private:
 	void outputComputationTime();
 	bool keepRunning();	
 	bool kill;
+
+	/*********** Events  ************/
+	std::list <Event> events;
+	void setupEvents();
+	void handleEvents();
+	void handleEventsShearJamming();
+
  public:
 	/* For DEMsystem*/
 	Simulation();

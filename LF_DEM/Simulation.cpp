@@ -46,6 +46,10 @@ Simulation::~Simulation()
 
 bool Simulation::keepRunning()
 {
+	/** \brief Determine if we reached the end of the simulation.
+ 	
+		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
+	*/ 
 	if (time_end == -1) {
 		return (sys.get_shear_strain() < strain_end-1e-8) && !kill;
 	}
@@ -54,7 +58,12 @@ bool Simulation::keepRunning()
 	}
 }
 
-void Simulation::setupEvents(){
+void Simulation::setupEvents()
+{
+	/** \brief Set up the types of events to be watched by the System class.
+
+		Links System::eventLookUp to a specialized function according to the value of ParameterSet::event_handler . 
+	*/ 
 	if (p.event_handler == "shear_jamming") {
 		sys.eventLookUp = &System::eventShearJamming;
 		return;
@@ -63,7 +72,8 @@ void Simulation::setupEvents(){
 }
 
 
-void Simulation::handleEventsShearJamming(){
+void Simulation::handleEventsShearJamming()
+{
 	/** \brief Event handler to test for shear jamming
 		
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
@@ -84,7 +94,8 @@ void Simulation::handleEventsShearJamming(){
 
 }
 
-void Simulation::handleEvents(){
+void Simulation::handleEvents()
+{
 	/** \brief Handle the list of events that appears in the previous time step
 		
 		This function dispatches to specialized handlers according to the value of ParameterSet::event_handler .
