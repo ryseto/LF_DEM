@@ -305,10 +305,14 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string r
 	}
 	// Non-Brownian simulation is not implemented yet.
 	sys.brownian = true;
-	// switch this force in hydro units
+	// switch this force in magnetic units (I assume you are giving Pe_M on the command-line)
+	// Pe_M is F_M/F_B.
+	// so F_B = F_M/Pe_M
+	// in magnetic units, that is F_B/F_M = 1/Pe_M
 	input_force_values[force_type] = 1/dimensionlessnumber; //@@@ I don't understand this....
 	input_force_units[force_type] = "magnetic"; //@@@@
 	resolveUnitSystem("magnetic");
+
 	//	chose simulation unit
 	cerr << "setUnitScaleRateControlled" << endl;
 	setUnitScaleMagnetic();
