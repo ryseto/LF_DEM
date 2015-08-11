@@ -266,7 +266,7 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
 	/* Switch this force in hydro units.
 	 The rate_value in input is the shear rate in "force_type" units,
  	i.e.  is the ratio between the hydrodynamic force and the "force_type" force. 
-	So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
+	So in hydrodynamic force units, the value of the "force_type" force is 1/rate_value.
 	*/
 	input_force_values[force_type] = 1/rate_value;
 	input_force_units[force_type] = "hydro";
