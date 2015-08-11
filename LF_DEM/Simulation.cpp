@@ -75,7 +75,8 @@ void Simulation::handleEvents(){
 		if(p.disp_max < 1e-6){
 			cout << "jammed" << endl;
 //			kill = true;
-			p.cross_shear = true;
+			p.cross_shear = true;//!p.cross_shear;
+			p.disp_max = 1e-5;
 		}
 	}
 	events.clear();
@@ -500,9 +501,9 @@ void Simulation::outputData()
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
 	if (p.magnetic_type == 0) {
-		outdata.init(36, output_unit_scales);
+		outdata.init(37, output_unit_scales);
 	} else {
-		outdata.init(40, output_unit_scales);
+		outdata.init(41, output_unit_scales);
 	}
 
 	double sr = sys.get_shear_rate();
@@ -561,7 +562,8 @@ void Simulation::outputData()
 	outdata.entryData(32, "kn", "none", p.kn);
 	outdata.entryData(33, "kt", "none", p.kt);
 	outdata.entryData(34, "kr", "none", p.kr);
-	outdata.entryData(35, "shear displacement", "none", sys.shear_disp.x);
+	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
+	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
 	if (p.magnetic_type != 0) {
 		outdata.entryData(37, "magnetic energy", "none", sys.magnetic_energy);
 		outdata.entryData(38, "magnetic field angle", "none", sys.angle_external_magnetic_field);
