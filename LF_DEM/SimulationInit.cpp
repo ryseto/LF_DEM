@@ -1095,7 +1095,10 @@ void Simulation::importContactsBinary(ifstream &file_import)
 		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
 		exit(1);
 	}
-	int ncont, p0, p1, dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
+	
+	int ncont;	
+	unsigned short p0, p1;
+ 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
 	for (int i=0; i<ncont; i++) {

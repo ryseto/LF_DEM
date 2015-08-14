@@ -283,6 +283,7 @@ private:
 						  const std::vector <double> &radii,
 						  double lx_, double ly_, double lz_);
 	void setContacts(const std::vector <struct contact_state> &cs);
+	void getContacts(std::vector <struct contact_state> &cs);
 	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
 								  const std::vector <double> &magnetic_susceptibility);
 	void setMagneticMomentExternalField();
@@ -330,7 +331,10 @@ private:
 		lz_half = 0.5*lz;
 		std::cerr << "box: " << lx << ' ' << ly << ' ' << lz << std::endl;
 	}
-
+	unsigned int getTotalNumberOfContacts()
+	{
+		return contact_nb;
+	}
 	double getContactNumber()
 	{
 		return (double)2*contact_nb/np;

@@ -471,6 +471,21 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
 	}
+	vector <struct contact_state> cs;
+	sys.getContacts(cs);
+	int ncont = cs.size();
+	conf_export.write((char*)&ncont, sizeof(unsigned int));
+	for (int i=0; i<ncont; i++) {
+		conf_export.write((char*)&(cs[i].p0), sizeof(unsigned short));
+		conf_export.write((char*)&(cs[i].p1), sizeof(unsigned short));
+		conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_tan.y), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_tan.z), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_rolling.x), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
+	}
+//	conf_export.write((char*)&(sys.dt), sizeof(double));
 	conf_export.close();
 }
 
