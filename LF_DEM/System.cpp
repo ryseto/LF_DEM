@@ -280,6 +280,19 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
+void System::setContacts(const vector <struct contact_state> &cs)
+{
+	for(const auto &c : cs){
+		for (int k=0; k<nb_interaction; k++) {
+			unsigned short p0, p1;
+			interaction[k].get_par_num(p0,p1);
+			if ( (p0 == c.p0) && (p1 == c.p1) ) {
+				interaction[k].contact.setState(c);
+			}
+		}
+	}
+}
+
 void System::setMagneticMomentExternalField()
 {
 	for (int i=0; i<np; i++) {
@@ -767,8 +780,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		calcStress();
 	}
 	timeStepMoveCorrector();
-	// try to adapt dt
-
 }
 
 void System::adaptTimeStep(){

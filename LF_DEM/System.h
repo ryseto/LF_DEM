@@ -282,6 +282,7 @@ private:
 	void setConfiguration(const std::vector <vec3d> &initial_positions,
 						  const std::vector <double> &radii,
 						  double lx_, double ly_, double lz_);
+	void setContacts(const std::vector <struct contact_state> &cs);
 	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
 								  const std::vector <double> &magnetic_susceptibility);
 	void setMagneticMomentExternalField();
