@@ -61,13 +61,10 @@ public:
 	void setDimensionlessNumber(double dimensionless_number)
 	// dimensionless_number = internal_force_unit/output_force_unit
 	{
-		// @@@
-		// Is this "dimensionless_number" general rule?
-		// I don't understand this part yet.
-		// If I do simulation with thermal unit(b),
-		// I expect generated data is given with [dimentionlesstime] in the thermal time scale.
-		// We can estimate real time for any system by using.
-		// t = [dimentionlesstime] * (6 pi eta0 a^3 / kT)
+		if (dimensionless_number == 0) {
+			std::cerr << "dimensionless_number (internal_force_unit/output_force_unit) = " << dimensionless_number << std::endl;
+			dimensionless_number = 1; // @@@@ To be checked.
+		}
 		converter["none"] = 1;
 		converter["viscosity"] = 6*M_PI;
 		converter["stress"] = dimensionless_number;

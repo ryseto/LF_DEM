@@ -87,7 +87,7 @@ void Simulation::handleEventsShearJamming()
 			p.disp_max /= 1.1;
 		}
 	}
-	if(p.disp_max < 1e-6){
+	if (p.disp_max < 1e-6) {
 		cout << "jammed" << endl;
 		//			kill = true;
 		p.cross_shear = true;//!p.cross_shear;
@@ -541,7 +541,8 @@ void Simulation::outputData()
 	//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
 	
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
-		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
+		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		exit(1);
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	
@@ -636,9 +637,7 @@ void Simulation::outputDataMagnetic()
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	outdata.init(25, output_unit_scales);
-	
-	outdata.entryData(1, "time", "none", sys.get_time());
-	outdata.entryData(2, "time_in_simulation_units", "none", sys.get_time_in_simulation_units());
+	outdata.entryData(1, "time", "time", sys.get_time());
 	/* energy
 	 */
 	outdata.entryData(3, "energy", "none", sys.get_total_energy());

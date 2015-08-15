@@ -381,6 +381,11 @@ void Simulation::setUnitScaleRateControlled()
 
 void Simulation::setUnitScaleMagnetic()
 {
+	/* [todo]
+	 * When Pe_magnetic is large
+	 * internal_unit_scales should be "magnetic"
+	 */
+	
 	internal_unit_scales = "thermal";
 	sys.amplitudes.sqrt_temperature = 1;
 	if (p.magnetic_type == 2) {
