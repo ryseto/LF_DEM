@@ -33,6 +33,7 @@ class Simulation
 private:
 	System sys;
 	ParameterSet p;
+	ParameterSet p_initial;
 	std::map <std::string, std::string> input_force_units;   // pairs: (force_type, unit)
 	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
 	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
@@ -96,7 +97,8 @@ private:
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
 	void importConfiguration();
-	void importConfigurationBinary();
+	std::ifstream importConfigurationBinary();
+	void importContactsBinary(std::ifstream &file_import);
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void convertForceValues(std::string new_long_unit);
@@ -136,6 +138,7 @@ private:
 	void setupEvents();
 	void handleEvents();
 	void handleEventsShearJamming();
+	void handleEventsFragility();
 
  public:
 	/* For DEMsystem*/

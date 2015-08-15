@@ -542,8 +542,9 @@ void Simulation::setupSimulation(string in_args,
 		p.friction_model = 2;
 	}
 
+	ifstream in_binary_conf;
 	if (binary_conf) {
-		importConfigurationBinary();
+		in_binary_conf = importConfigurationBinary();
 	} else {
 		importConfiguration();
 	}
@@ -611,6 +612,10 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 	sys.setupSystem(control_var);
+	if (binary_conf) {
+		importContactsBinary(in_binary_conf);
+	}		
+	p_initial = p;
 
 	openOutputFiles(binary_conf);
 	echoInputFiles(in_args, input_files);
@@ -1038,7 +1043,7 @@ void Simulation::importConfiguration()
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary()
+ifstream Simulation::importConfigurationBinary()
 {
 	/**
 	  \brief Read a binary file input configuration.
@@ -1070,8 +1075,43 @@ void Simulation::importConfigurationBinary()
 		initial_position.push_back(vec3d(x_,y_,z_));
 		radius.push_back(r_);
 	}
-	file_import.close();
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
+	return file_import;
+}
+
+void Simulation::importContactsBinary(ifstream &file_import)
+{
+	/**
+	  \brief Read a binary file input contacts.
+	*/
+	if (!file_import) {
+		cerr << " Position file '" << filename_import_positions << "' not found." <<endl;
+		exit(1);
+	}
+	
+	int ncont;	
+	unsigned short p0, p1;
+ 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
+	vector <struct contact_state> cont_states;
+	file_import.read((char*)&ncont, sizeof(unsigned int));
+	for (int i=0; i<ncont; i++) {
+		file_import.read((char*)&p0, sizeof(unsigned short));
+		file_import.read((char*)&p1, sizeof(unsigned short));
+		file_import.read((char*)&dt_x, sizeof(double));
+		file_import.read((char*)&dt_y, sizeof(double));
+		file_import.read((char*)&dt_z, sizeof(double));
+		file_import.read((char*)&dr_x, sizeof(double));
+		file_import.read((char*)&dr_y, sizeof(double));
+		file_import.read((char*)&dr_z, sizeof(double));
+		struct contact_state cs;
+		cs.p0 = p0;
+		cs.p1 = p1;
+		cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
+		cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
+		cont_states.push_back(cs);
+	}
+	file_import.close();
+	sys.setContacts(cont_states);
 }
 
 void Simulation::prepareSimulationName(bool binary_conf)

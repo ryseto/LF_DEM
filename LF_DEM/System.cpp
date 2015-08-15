@@ -280,6 +280,28 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	cerr << "volume_fraction = " << volume_fraction << endl;
 }
 
+void System::setContacts(const vector <struct contact_state> &cs)
+{
+	for(const auto &c : cs){
+		for (int k=0; k<nb_interaction; k++) {
+			unsigned short p0, p1;
+			interaction[k].get_par_num(p0,p1);
+			if ( (p0 == c.p0) && (p1 == c.p1) ) {
+				interaction[k].contact.setState(c);
+			}
+		}
+	}
+}
+
+void System::getContacts(vector <struct contact_state> &cs)
+{
+	for (int k=0; k<nb_interaction; k++) {
+		if(interaction[k].is_contact()){
+			cs.push_back(interaction[k].contact.getState());
+		}
+	}
+}
+
 void System::setMagneticMomentExternalField()
 {
 	for (int i=0; i<np; i++) {
@@ -767,8 +789,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 		calcStress();
 	}
 	timeStepMoveCorrector();
-	// try to adapt dt
-
 }
 
 void System::adaptTimeStep(){
@@ -922,8 +942,13 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	in_predictor = false;
 	in_corrector = false;
 	if (firsttime) {
+		double dt_bak = dt; // to avoid stretching contact spring
+		dt = 0;
 		checkNewInteraction();
+		in_predictor = true;
 		updateInteractions();
+		in_predictor = false;
+		dt = dt_bak;
 		firsttime = false;
 	}
 	bool calc_stress = false;

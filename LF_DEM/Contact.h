@@ -24,6 +24,14 @@
 class System;
 class Interaction;
 
+struct contact_state {
+	unsigned short p0;
+	unsigned short p1;
+	vec3d disp_tan;
+	vec3d disp_rolling;
+};
+
+
 class Contact{
 private:
 	/*********************************
@@ -119,5 +127,19 @@ public:
 		return contact_stresslet_XF_tan;
 	}
 	double calcEnergy();
+	struct contact_state getState(){
+		struct contact_state cs;
+		cs.p0 = p0;
+		cs.p1 = p1;
+		cs.disp_tan = disp_tan;
+		cs.disp_rolling = disp_rolling;
+		return cs;
+	};
+	void setState(const struct contact_state &cs){
+		p0 = cs.p0;
+		p1 = cs.p1;
+		disp_tan = cs.disp_tan;	
+		disp_rolling = cs.disp_rolling;
+	}
 };
 #endif /* defined(__LF_DEM__Contact__) */
