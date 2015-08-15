@@ -309,16 +309,13 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string r
 	// Pe_M is F_M/F_B.
 	// so F_B = F_M/Pe_M
 	// in magnetic units, that is F_B/F_M = 1/Pe_M
-	input_force_values[force_type] = 1/dimensionlessnumber; //@@@ I don't understand this....
-	input_force_units[force_type] = "magnetic"; //@@@@
+	input_force_values[force_type] = 1/dimensionlessnumber;
+	input_force_units[force_type] = "magnetic";
 	resolveUnitSystem("magnetic");
 
 	//	chose simulation unit
-	cerr << "setUnitScaleRateControlled" << endl;
 	setUnitScaleMagnetic();
-	// convert from hydro scale to chosen scale
-	convertForceValues(internal_unit_scales); // @@@@ ???
-	//	p.brownian_amplitude = values["thermal"]; @@@ ???
+	convertForceValues(internal_unit_scales);
 	cerr << "Magnetic, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
 }
 
@@ -417,7 +414,6 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.cohesion = input_force_values["cohesive"];
 		cout << " Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
-	
 	//	bool is_magnetic = values.find("magnetic") != values.end();
 	//	if (is_magnetic) {
 	//		sys.amplitudes.magnetic = values["magnetic"];
@@ -440,7 +436,6 @@ void Simulation::convertInputValues(string new_unit)
 		
 		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
 	 */
-
 
 	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
@@ -491,9 +486,7 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 	cerr << "internal_unit_scales = " << internal_unit_scales << endl;
 	sys.ratio_unit_time = &dimensionless_numbers[input_scale+"/"+internal_unit_scales];
 	convertInputValues(internal_unit_scales);
-
 	output_unit_scales = input_scale;
-
 }
 
 void Simulation::setupSimulation(string in_args,

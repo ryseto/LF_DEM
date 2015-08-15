@@ -52,8 +52,7 @@ bool Simulation::keepRunning()
 	*/ 
 	if (time_end == -1) {
 		return (sys.get_shear_strain() < strain_end-1e-8) && !kill;
-	}
-	else {
+	} else {
 		return (sys.get_time() < time_end-1e-8) && !kill;
 	}
 }
@@ -70,7 +69,6 @@ void Simulation::setupEvents()
 	}
 	sys.eventLookUp = NULL;
 }
-
 
 void Simulation::handleEventsShearJamming()
 {
@@ -91,7 +89,6 @@ void Simulation::handleEventsShearJamming()
 		p.cross_shear = true;//!p.cross_shear;
 		p.disp_max = 1e-5;
 	}
-
 }
 
 void Simulation::handleEvents()
@@ -101,7 +98,7 @@ void Simulation::handleEvents()
 		This function dispatches to specialized handlers according to the value of ParameterSet::event_handler .
 	*/
 	if (p.event_handler == "shear_jamming") {
-		handleEventsShearJamming();		
+		handleEventsShearJamming();
 	}
 	events.clear();
 }
@@ -124,7 +121,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else {
 		sys.new_contact_gap = 0;
 	}
-//	int jammed = 0;
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
@@ -173,17 +169,6 @@ void Simulation::simulationSteadyShear(string in_args,
 			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
 
-		// if (!sys.zero_shear
-		// 	&& abs(sys.get_shear_rate()) < p.rest_threshold){
-		// 	cout << "shear jamming " << jammed << endl;
-		// 	jammed ++;
-		// 	if (jammed > 10) {
-		// 		cout << "shear jamming";
-		// 		break;
-		// 	}
-		// } else {
-		// 	jammed = 0;
-		// }
 		sys.new_contact_gap = 0;
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);

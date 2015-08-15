@@ -25,8 +25,8 @@
 using namespace std;
 
 System::System(ParameterSet &ps, list <Event> &ev):
-p(ps),
 events(ev),
+p(ps),
 brownian(false),
 friction(false),
 rolling_friction(false),
