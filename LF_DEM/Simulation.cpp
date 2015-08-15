@@ -49,7 +49,7 @@ bool Simulation::keepRunning()
 	/** \brief Determine if we reached the end of the simulation.
  	
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
-	*/ 
+	 */
 	if (time_end == -1) {
 		return (sys.get_shear_strain() < strain_end-1e-8) && !kill;
 	} else {
@@ -60,9 +60,9 @@ bool Simulation::keepRunning()
 void Simulation::setupEvents()
 {
 	/** \brief Set up the types of events to be watched by the System class.
-
-		Links System::eventLookUp to a specialized function according to the value of ParameterSet::event_handler . 
-	*/ 
+	 
+		Links System::eventLookUp to a specialized function according to the value of ParameterSet::event_handler .
+	 */
 	if (p.event_handler == "shear_jamming") {
 		sys.eventLookUp = &System::eventShearJamming;
 		return;
@@ -79,8 +79,8 @@ void Simulation::handleEventsShearJamming()
 	/** \brief Event handler to test for shear jamming
 		
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
- 		If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
-	*/
+	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
+	 */
 	for (const auto &ev : events) {
 		if (ev.type == "negative_shear_rate") {
 			cout << " negative rate " << endl;
@@ -100,20 +100,19 @@ void Simulation::handleEventsFragility()
 	/** \brief Event handler to test for shear jamming
 		
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
- 		If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
-	*/
+	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
+	 */
 	for (const auto &ev : events) {
 		if (ev.type == "negative_shear_rate") {
 			cout << " negative rate " << endl;
 			p.disp_max /= 1.1;
 		}
 	}
-	if(p.disp_max < 1e-6 || sys.get_shear_strain()>3.){
-		p.cross_shear = true;//!p.cross_shear;
+	if (p.disp_max < 1e-6 || sys.get_shear_strain() > 3.) {
+		p.cross_shear = true; //!p.cross_shear;
 		p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
 	}
-
 }
 
 void Simulation::handleEvents()
@@ -121,12 +120,12 @@ void Simulation::handleEvents()
 	/** \brief Handle the list of events that appears in the previous time step
 		
 		This function dispatches to specialized handlers according to the value of ParameterSet::event_handler .
-	*/
+	 */
 	if (p.event_handler == "shear_jamming") {
 		handleEventsShearJamming();
 	}
 	if (p.event_handler == "fragility") {
-		handleEventsFragility();		
+		handleEventsFragility();
 	}
 	events.clear();
 }
@@ -159,12 +158,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
+	
 	setupEvents();
-
+	
 	double next_output_data = 0;
 	double next_output_config = 0;
-
+	
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -174,7 +173,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			sys.timeEvolution("time", next_output_data);
 		}
 		handleEvents();
-
+		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -196,7 +195,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		} else {
 			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
-
+		
 		sys.new_contact_gap = 0;
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);
@@ -227,7 +226,7 @@ void Simulation::simulationInverseYield(string in_args,
 	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-
+	
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02;
 	} else {
@@ -244,10 +243,10 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
+	
 	double next_output_data = 0;
 	double next_output_config = 0;
-
+	
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -256,7 +255,7 @@ void Simulation::simulationInverseYield(string in_args,
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
-
+		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -273,7 +272,7 @@ void Simulation::simulationInverseYield(string in_args,
 			}
 		}
 		/*****************************************************/
-
+		
 		cout << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
@@ -298,7 +297,7 @@ void Simulation::simulationInverseYield(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 	}
-
+	
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
@@ -337,7 +336,7 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
+	
 	if (sys.p.magnetic_field_type == 0) {
 		// Field direction is fixed
 		sys.external_magnetic_field.set(0, 1, 0);
@@ -377,7 +376,7 @@ void Simulation::simulationMagnetic(string in_args,
 		/*****************************************************/
 		cout << "time: " << sys.get_time() << " / " << time_end << endl;
 	}
-
+	
 	outputComputationTime();
 	if (filename_parameters.find("init_relax", 0) < filename_parameters.size()) {
 		/* To prepare relaxed initial configuration,
@@ -406,7 +405,7 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	inv.type = type;
 	inv.name = keyword;
 	inv.value = value_ptr;
-
+	
 	string numeral, suffix;
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
@@ -470,14 +469,14 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
 		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
 	}
-//	conf_export.write((char*)&(sys.dt), sizeof(double));
+	//	conf_export.write((char*)&(sys.dt), sizeof(double));
 	conf_export.close();
 }
 
 double Simulation::getRate(){
-/**
-	\brief The shear rate in the input units
-*/
+	/**
+	 \brief The shear rate in the input units
+	 */
 	if (control_var == "rate") {
 		return input_rate;
 	} else if (control_var == "stress") {
@@ -491,11 +490,11 @@ void Simulation::evaluateData()
 {
 	/**
 	 \brief Get rheological data from the System class.
-
+	 
 	 In this method we keep the internal units. There is no conversion to output units at this stage
-
+	 
 	 */
-
+	
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
@@ -505,16 +504,16 @@ void Simulation::outputData()
 {
 	/**
 	 \brief Output data.
-
+	 
 	 Stress data are converted in units of
 	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
 	 in the System class (these can be hydrodynamic, Brownian or
 	 repulsive force units).
-
+	 
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
-
+	
 	/*
 	 * Output the sum of the normal forces.
 	 *
@@ -524,9 +523,9 @@ void Simulation::outputData()
 	 *
 	 * Relative viscosity = Viscosity / viscosity_solvent
 	 */
-
+	
 	/*
-	 * hat(...) indicates dimensionless quantities.
+	 	 * hat(...) indicates dimensionless quantities.
 	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
 	 * (2) N1/(eta0*shear_rate) = 6*pi*hat(N1)
 	 * (3) N2/(eta0*shear_rate) = 6*pi*hat(N2)
@@ -537,10 +536,10 @@ void Simulation::outputData()
 	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
 	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
 	 */
-
+	
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
-
+	//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
+	
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
 	}
@@ -556,11 +555,11 @@ void Simulation::outputData()
 		shear_stress_index = 3;
 	}
 	double shear_stress = 6*M_PI*(sys.einstein_stress+sys.total_stress.elm[shear_stress_index]);
-
+	
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
-
+	
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
 	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.elm[shear_stress_index]/sr);
 	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.elm[shear_stress_index]/sr);
@@ -607,12 +606,12 @@ void Simulation::outputData()
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
 	outdata.exportFile(fout_data);
-
+	
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
-   	outdata_st.init(8, output_unit_scales);
-
+	
+	outdata_st.init(8, output_unit_scales);
+	
 	outdata_st.entryData(1, "time", "time", sys.get_time());
 	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
@@ -637,24 +636,25 @@ void Simulation::outputDataMagnetic()
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	outdata.init(25, output_unit_scales);
-
-	outdata.entryData(1, "time", "time", sys.get_time());
+	
+	outdata.entryData(1, "time", "none", sys.get_time());
+	outdata.entryData(2, "time_in_simulation_units", "none", sys.get_time_in_simulation_units());
 	/* energy
 	 */
 	outdata.entryData(3, "energy", "none", sys.get_total_energy());
 	outdata.entryData(4, "magnetic energy", "none", sys.magnetic_dd_energy);
-
+	
 	outdata.entryData(5, "particle pressure", "stress", sys.total_stress.getParticlePressure());
 	outdata.entryData(6, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
 	/* maximum deformation of contact bond
 	 */
 	outdata.entryData(8, "min gap", "none", sys.min_reduced_gap);
 	outdata.entryData(9, "max gap(cohesion)", "none", sys.max_contact_gap);
-
+	
 	outdata.entryData(10, "magnetic field strength", "none", sys.p.external_magnetic_field_norm);
 	outdata.entryData(11, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_theta);
 	outdata.entryData(12, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_phi);
-
+	
 	
 	/* contact number
 	 */
@@ -667,7 +667,7 @@ void Simulation::outputDataMagnetic()
 	outdata.entryData(21, "max angular velocity", "velocity", sys.max_ang_velocity);
 	/* simulation parameter
 	 */
-	outdata.entryData(22, "dt", "time", sys.dt);
+	outdata.entryData(22, "dt", "none", sys.dt);
 	outdata.entryData(23, "kn", "none", sys.p.kn);
 	outdata.entryData(24, "kt", "none", sys.p.kt);
 	outdata.entryData(25, "kr", "none", sys.p.kr);
@@ -741,7 +741,7 @@ void Simulation::outputConfigurationData()
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
-
+		
 		unsigned int shear_stress_index;
 		if (!p.cross_shear) {
 			shear_stress_index = 2;

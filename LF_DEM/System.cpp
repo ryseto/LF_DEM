@@ -282,11 +282,11 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void System::setContacts(const vector <struct contact_state> &cs)
 {
-	for(const auto &c : cs){
+	for (const auto &c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
-			interaction[k].get_par_num(p0,p1);
-			if ( (p0 == c.p0) && (p1 == c.p1) ) {
+			interaction[k].get_par_num(p0, p1);
+			if ((p0 == c.p0) && (p1 == c.p1)) {
 				interaction[k].contact.setState(c);
 			}
 		}
@@ -296,7 +296,7 @@ void System::setContacts(const vector <struct contact_state> &cs)
 void System::getContacts(vector <struct contact_state> &cs)
 {
 	for (int k=0; k<nb_interaction; k++) {
-		if(interaction[k].is_contact()){
+		if (interaction[k].is_contact()) {
 			cs.push_back(interaction[k].contact.getState());
 		}
 	}
@@ -1059,7 +1059,7 @@ void System::updateMagneticPair()
 	for (int i=0; i<np-1; i++) {
 		for (int j=i+1; j<np; j++) {
 			pos_diff = position[j]-position[i];
-			periodize_diff_unsheared(pos_diff);
+			periodize_diff(pos_diff);
 			double sq_dist = pos_diff.sq_norm();
 			if (sq_dist < sq_magnetic_interaction_range) {
 				magnetic_pair[i].push_back(j);
@@ -1102,23 +1102,51 @@ void System::updateInteractions()
 
 void System::updateMagneticInteractions()
 {
+	/**
+	 
+	 Magnetic force is noramlized with
+	 
+	 F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4
+	 
+	 \hat{F}_M = - (16/r**4)*( (m.n)m + (m.n)m + (m.m)n - 5(m.n)(m.n)n)
+	 (where r and m are dimensionless distance and dimensionless magnetic moment.)
+
+	 The nondimentinoal force in the themral unit is given by
+	 \tilde{F}_M = \hat{F}_M Pe_M
+	 */
 	magnetic_force_stored.clear();
 	vec3d pos_diff;
 	vec3d nvec;
 	vec3d force0;
-	for (int p0=0; p0<np-1; p0++) {
-		for (const int p1: magnetic_pair[p0]) {
-			pos_diff = position[p1]-position[p0];
-			periodize_diff_unsheared(pos_diff);
-			double r = pos_diff.norm();
-			double r_sq = r*r;
-			nvec = pos_diff/r;
-			double m0_n = dot(magnetic_moment[p0], nvec);
-			double m1_n = dot(magnetic_moment[p1], nvec);
-			double m0_m1 = dot(magnetic_moment[p0], magnetic_moment[p1]);
-			force0 = -(m1_n*magnetic_moment[p0]+m0_n*magnetic_moment[p1]+(m0_m1-5*m0_n*m1_n)*nvec)/(r_sq*r_sq);
-			force0 *= amplitudes.magnetic; // 8 Peclet number
-			magnetic_force_stored.push_back(make_pair(force0, make_pair(p0, p1)));
+	if (p.magnetic_field_type == 0) {
+		// External field is vertical.
+		// p.magnetic_type needs to be 2.
+		for (int p0=0; p0<np-1; p0++) {
+			for (const int p1: magnetic_pair[p0]) {
+				pos_diff = position[p1]-position[p0];
+				periodize_diff(pos_diff);
+				double r_sq = pos_diff.sq_norm();
+				nvec = pos_diff/sqrt(r_sq);
+				double m0_m1 = magnetic_moment[p0].y*magnetic_moment[p1].y;
+				force0 = -(16*m0_m1)/(r_sq*r_sq)*nvec;
+				force0 *= amplitudes.magnetic; // Peclet number
+				magnetic_force_stored.push_back(make_pair(force0, make_pair(p0, p1)));
+			}
+		}
+	} else {
+		for (int p0=0; p0<np-1; p0++) {
+			for (const int p1: magnetic_pair[p0]) {
+				pos_diff = position[p1]-position[p0];
+				periodize_diff(pos_diff);
+				double r_sq = pos_diff.sq_norm();
+				nvec = pos_diff/sqrt(r_sq);
+				double m0_n = dot(magnetic_moment[p0], nvec);
+				double m1_n = dot(magnetic_moment[p1], nvec);
+				double m0_m1 = dot(magnetic_moment[p0], magnetic_moment[p1]);
+				force0 = -16*(m1_n*magnetic_moment[p0]+m0_n*magnetic_moment[p1]+(m0_m1-5*m0_n*m1_n)*nvec)/(r_sq*r_sq);
+				force0 *= amplitudes.magnetic; // Peclet number
+				magnetic_force_stored.push_back(make_pair(force0, make_pair(p0, p1)));
+			}
 		}
 	}
 }
@@ -1691,25 +1719,31 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	}
 }
 
-void System::periodize_diff_unsheared(vec3d &pos_diff) // @@@ is there really a gain duplicating the code for saving just a few addition operations?
+void System::periodize_diff(vec3d &pos_diff)
 {
-	while (pos_diff.z > lz_half) {
+	/*
+	 @@@ is there really a gain duplicating the code for saving just a few addition operations?
+	 @ Ry: I agree. I will probably remove this part in near future.
+	 @     But, interparticle distances are more often calculated in the magnetic simulation,
+	 @     because the magnetic interactions are long range.
+	 */
+	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 	}
-	while (pos_diff.z < -lz_half) {
+	if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 	}
-	while (pos_diff.x > lx_half) {
+	if (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
 	}
-	while (pos_diff.x < -lx_half) {
+	if (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
 	}
 	if (!twodimension) {
-		while (pos_diff.y > ly_half) {
+		if (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
 		}
-		while (pos_diff.y < -ly_half) {
+		if (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
 	}
@@ -1942,36 +1976,44 @@ void System::calcPotentialEnergy()
 
 void System::calcMagneticEnergy()
 {
-	/* Magnetic energy is given in the thrmal unit.
-	 * \tilde{E}_M = E_M/kT = (E_M^{ast)/kT)*(E_M/E_M^{ast))
-	 * E_M^{ast} = (mu_f*m^2)/(16*pi*a**3)
-	 * F_M^{ast} = (3*mu_f*m^2)/(32*pi*a**4)
+	/* 
+	 Magnetic energy is given in the thrmal unit.
+	 
+	 E_M = -(mu_f)/(4 pi r**3) (3 (m1.n)(m2.n)-m1.m2)
+	 \tilde{E}_M = E_M/kT = (2/3)*Pe_M*\hat{E}_M
+	 \hat{E}_M = E_M / E_M^{*} = 8*(3*m0.n*m1.n-m0.m1)/r**3;
 	 */
+
 	magnetic_dd_energy = 0;
 	vec3d pos_diff;
 	vec3d nvec;
 	for (int p0=0; p0<np-1; p0++) {
 		for (const int p1: magnetic_pair[p0]) {
 			pos_diff = position[p1]-position[p0];
-			periodize_diff_unsheared(pos_diff);
+			periodize_diff(pos_diff);
 			double r = pos_diff.norm();
-			double r_cubic = r*r*r;
 			nvec = pos_diff/r;
 			/*
-			 * amplitudes.magnetic = 8*Pe_magnetic
+			 * amplitudes.magnetic = Pe_magnetic
 			 */
-			double energy = -(3*dot(magnetic_moment[p0], nvec)*dot(magnetic_moment[p1], nvec)-dot(magnetic_moment[p0], magnetic_moment[p1]))/r_cubic;
-			energy *= amplitudes.magnetic/3;
-			magnetic_dd_energy += energy;
-			total_energy += energy;
+			double m0_n = dot(magnetic_moment[p0], nvec);
+			double m1_n = dot(magnetic_moment[p1], nvec);
+			double m0_m1 = dot(magnetic_moment[p0], magnetic_moment[p1]);
+			double energy_mag = -8*(3*m0_n*m1_n-m0_m1)/(r*r*r); // = E_M/E_M0
+			energy_mag *= (2.0/3)*amplitudes.magnetic; // = E_M/E_B0
+			magnetic_dd_energy += energy_mag; //
+			total_energy += energy_mag;
 		}
 	}
-	
-	if (external_magnetic_field.is_not_zero()) {
-		for (int i=0; i<np; i++) {
-			double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
-			total_energy += tmp_magnetic_energy_ex;
-			magnetic_dd_energy += tmp_magnetic_energy_ex;
+	if (p.magnetic_type == 1) {
+		if (external_magnetic_field.is_not_zero()) {
+			cerr << "not implemented yet @ calcMagneticEnergy" << endl;
+			exit(1);
+			for (int i=0; i<np; i++) {
+				double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
+				total_energy += tmp_magnetic_energy_ex;
+				magnetic_dd_energy += tmp_magnetic_energy_ex;
+			}
 		}
 	}
 	magnetic_dd_energy = magnetic_dd_energy/np;
@@ -2053,7 +2095,6 @@ void System::adjustContactModelParameters()
 			interaction[k].contact.setSpringConstants();
 		}
 	}
-
 }
 
 void System::calcLubricationForce()

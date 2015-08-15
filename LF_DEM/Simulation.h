@@ -38,11 +38,7 @@ private:
 	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
 	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
 	std::map <std::string, std::string> unit_longname;
-	
 	std::list <InputValue> input_values;
-
-
-
 	double volume_or_area_fraction;
 	std::string filename_import_positions;
 	std::string filename_parameters;

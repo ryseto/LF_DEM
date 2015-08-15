@@ -112,12 +112,11 @@ int main(int argc, char **argv)
 			case 'm':
 				/*
 				 * magnetic moment m
-				 * Typical magnetic force: (3 mu m^2)/(2 pi (2a)^4)
+				 * Typical magnetic force: (3 mu m^2)/(4 pi (2a)^4)
 				 * Typical Brownian force: kT/a
 				 * Dimensionless_number (Pe number) can be defined as the ratio between these two forces:
-				 * Typical magnetic force/Typical Brownian force = (3 mu m^2) / (32 pi kT a^3)
-				 *
-				 *
+				 * Typical magnetic force/Typical Brownian force 
+				 * dimensionless_number = Pe_M = (3 mu m^2) / (64 pi kT a^3)
 				 */
 				rheology_control = "magnetic";
 				if (getSuffix(optarg, numeral, suffix)) {

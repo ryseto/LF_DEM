@@ -56,7 +56,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 		
 	Input file must be formatted as:
 	phi peclet kn kt dt
-	*/
+	 */
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -294,25 +294,27 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
 
 void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit)
 {
+	/* We plan to implement both non-Brownian and Brownian simulations.
+	 * Currently only Brownian simulation is implemented.
+	 */
 	string force_type = rate_unit;
 	if (force_type != "thermal") {
-		cerr << "unit needs to be thermal" << endl;
+		cerr << "Non-Brownian simulation for magnetic particles is not implemented yet." << endl;
+		cerr << "You need to give the dimensionless parameter with suffix b, i.e., -m [value]b" << endl;
 		exit(1);
 	}
 	if (input_force_values[force_type] > 0) {
-		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
+		cerr << "Error: redefinition of the magnetic force ratio (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
 	}
-	// Non-Brownian simulation is not implemented yet.
 	sys.brownian = true;
-	// switch this force in magnetic units (I assume you are giving Pe_M on the command-line)
-	// Pe_M is F_M/F_B.
+	// switch this force in magnetic units
+	// Pe_M is F_M0/F_B0.
 	// so F_B = F_M/Pe_M
 	// in magnetic units, that is F_B/F_M = 1/Pe_M
 	input_force_values[force_type] = 1/dimensionlessnumber;
 	input_force_units[force_type] = "magnetic";
 	resolveUnitSystem("magnetic");
-
 	//	chose simulation unit
 	setUnitScaleMagnetic();
 	convertForceValues(internal_unit_scales);
@@ -382,8 +384,8 @@ void Simulation::setUnitScaleMagnetic()
 	internal_unit_scales = "thermal";
 	sys.amplitudes.sqrt_temperature = 1;
 	if (p.magnetic_type == 2) {
-		sys.amplitudes.magnetic = 8*dimensionless_numbers["magnetic/thermal"];
-		cerr << "amplitudes.magnetic = 8*Pe= " << sys.amplitudes.magnetic << endl;
+		sys.amplitudes.magnetic = dimensionless_numbers["magnetic/thermal"];
+		cerr << "amplitudes.magnetic = Pe = " << sys.amplitudes.magnetic << endl;
 	} else {
 		cerr << "not implemented yet @ setUnitScaleMagnetic" << endl;
 		exit(1);

@@ -108,7 +108,11 @@ void GenerateInitConfig::outputPositionData()
 	if (disperse_type == 'm') {
 		ss_posdatafilename << "Mono";
 	} else if (disperse_type == 'b') {
-		ss_posdatafilename << "Bidi" << a2 << "_" << vf_ratio;
+		if (vf_ratio > 0) {
+			ss_posdatafilename << "Bidi" << a2 << "_" << vf_ratio;
+		} else {
+			ss_posdatafilename << "Bidi" << a2 << "_nr" << -vf_ratio;
+		}
 	} else {
 		cerr << "disperse_type is wrong." << endl;
 		exit(1);
@@ -457,8 +461,8 @@ void GenerateInitConfig::setParameters()
 			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
 		} while (a2 < a1);
 		do {
-			vf_ratio = readStdinDefault(0.5, "volume fraction ratio of smaller particle");
-		} while (vf_ratio < 0 || vf_ratio > 1);
+			vf_ratio = readStdinDefault(0.5, "volume fraction ratio of smaller particle (If negative, number ratio)");
+		} while (vf_ratio < -1 || vf_ratio > 1);
 	} else {
 		vf_ratio = 1;
 	}
@@ -466,12 +470,7 @@ void GenerateInitConfig::setParameters()
 	/*
 	 *  Calculate parameters
 	 */
-	volume_fraction1 = volume_fraction*vf_ratio;
-	if (disperse_type == 'b') {
-		volume_fraction2 = volume_fraction-volume_fraction1;
-	} else {
-		volume_fraction2 = 0;
-	}
+	
 	double total_volume;
 	double pvolume1, pvolume2;
 	if (sys.twodimension) {
@@ -481,14 +480,46 @@ void GenerateInitConfig::setParameters()
 		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
 		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
 	}
-	if (np > 0) {
-		total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
-		double np1_tmp = volume_fraction1*total_volume/pvolume1;
-		if (np1_tmp-(int)np1_tmp <= 0.5) {
-			np1 = (int)np1_tmp;
+	
+	if (vf_ratio > 0) {
+		volume_fraction1 = volume_fraction*vf_ratio;
+		if (disperse_type == 'b') {
+			volume_fraction2 = volume_fraction-volume_fraction1;
 		} else {
-			np1 = (int)np1_tmp+1;
+			volume_fraction2 = 0;
 		}
+		if (np > 0) {
+			total_volume = np/(volume_fraction1/pvolume1+volume_fraction2/pvolume2);
+			double np1_tmp = volume_fraction1*total_volume/pvolume1;
+			if (np1_tmp-(int)np1_tmp <= 0.5) {
+				np1 = (int)np1_tmp;
+			} else {
+				np1 = (int)np1_tmp+1;
+			}
+			np2 = np-np1;
+			double pvolume = np1*pvolume1+np2*pvolume2;
+			if (sys.twodimension) {
+				lz = sqrt(pvolume/(lx_lz*volume_fraction));
+				lx = lz*lx_lz;
+				ly = 0;
+			} else {
+				lz = pow(pvolume/(lx_lz*ly_lz*volume_fraction), 1.0/3);
+				lx = lz*lx_lz;
+				ly = lz*ly_lz;
+			}
+		} else {
+			lz = readStdinDefault(10, "lz");
+			lx = lz*lx_lz;
+			ly = lz*ly_lz;
+			double pvolume1_ = lx*ly*lz*volume_fraction1;
+			double pvolume2_ = lx*ly*lz*volume_fraction2;
+			np1 = (int)(pvolume1_/pvolume1+0.5);
+			np2 = (int)(pvolume2_/pvolume2+0.5);
+			np = np1 + np2;
+		}
+	} else {
+		double nf_ratio = -vf_ratio;
+		np1 = nf_ratio*np;
 		np2 = np-np1;
 		double pvolume = np1*pvolume1+np2*pvolume2;
 		if (sys.twodimension) {
@@ -500,16 +531,8 @@ void GenerateInitConfig::setParameters()
 			lx = lz*lx_lz;
 			ly = lz*ly_lz;
 		}
-	} else {
-		lz = readStdinDefault(10, "lz");
-		lx = lz*lx_lz;
-		ly = lz*ly_lz;
-		double pvolume1_ = lx*ly*lz*volume_fraction1;
-		double pvolume2_ = lx*ly*lz*volume_fraction2;
-		np1 = (int)(pvolume1_/pvolume1+0.5);
-		np2 = (int)(pvolume2_/pvolume2+0.5);
-		np = np1 + np2;
 	}
+
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;

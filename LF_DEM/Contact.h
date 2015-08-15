@@ -31,7 +31,6 @@ struct contact_state {
 	vec3d disp_rolling;
 };
 
-
 class Contact{
 private:
 	/*********************************

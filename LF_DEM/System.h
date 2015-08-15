@@ -133,18 +133,17 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	bool fixed_dt;
+	std::list <Event> &events;
+	
 	/*
 	 * Simulation for magnetic particles
 	 */
-//	double num_magnetic_particles;
 	double sq_magnetic_interaction_range;
 	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
 	std::vector<std::vector<int> > magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
-
-	std::list <Event> &events;
-
+	
  protected:
  public:
 	System(ParameterSet &ps, std::list <Event> &ev);
@@ -159,7 +158,6 @@ private:
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
-
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
@@ -196,7 +194,6 @@ private:
 	vec3d *magnetic_moment;
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
-//	std::vector <double> magnetic_moment_norm;
 	std::vector <double> magnetic_susceptibility;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
@@ -273,10 +270,8 @@ private:
 	 */
 	bool magnetic_rotation_active;
 	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
-//	double magnetic_field_square;
 	double angle_external_magnetic_field;
 	vec3d external_magnetic_field;
-
 	/////////////////////////////////
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d> &initial_positions,
@@ -287,7 +282,6 @@ private:
 	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
 								  const std::vector <double> &magnetic_susceptibility);
 	void setMagneticMomentExternalField();
-
 	void setInteractions_GenerateInitConfig();
 	void setupSystem(std::string control);
 	void allocatePositionRadius();
@@ -303,7 +297,7 @@ private:
 	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
-	void periodize_diff_unsheared(vec3d &);
+	void periodize_diff(vec3d &);
 	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();
@@ -317,7 +311,6 @@ private:
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
-
 	void (System::*eventLookUp)();
 	void eventShearJamming();
 
@@ -331,10 +324,12 @@ private:
 		lz_half = 0.5*lz;
 		std::cerr << "box: " << lx << ' ' << ly << ' ' << lz << std::endl;
 	}
+
 	unsigned int getTotalNumberOfContacts()
 	{
 		return contact_nb;
 	}
+
 	double getContactNumber()
 	{
 		return (double)2*contact_nb/np;
