@@ -840,7 +840,7 @@ void Simulation::outputFinalConfiguration()
 {
 	cerr << "Output final configuration" << endl;
 	ofstream fout_finalconfig;
-	string filename_final_configuration = "./after_relax/"+filename_import_positions;
+	string filename_final_configuration = "relaxed_"+filename_import_positions;
 	fout_finalconfig.open(filename_final_configuration.c_str());
 	fout_finalconfig << header_imported_configulation[0] << endl;
 	fout_finalconfig << header_imported_configulation[1] << endl;
@@ -858,10 +858,15 @@ void Simulation::outputFinalConfiguration()
 			fout_finalconfig << sys.position[i].y << ' ';
 			fout_finalconfig << sys.position[i].z << ' ';
 			fout_finalconfig << sys.radius[i] << ' ';
-			fout_finalconfig << sys.magnetic_moment[i].x << ' ';
-			fout_finalconfig << sys.magnetic_moment[i].y << ' ';
-			fout_finalconfig << sys.magnetic_moment[i].z << ' ';
-			fout_finalconfig << sys.magnetic_susceptibility[i] << endl;
+			if (sys.p.magnetic_type == 1) {
+				fout_finalconfig << sys.magnetic_moment[i].x << ' ';
+				fout_finalconfig << sys.magnetic_moment[i].y << ' ';
+				fout_finalconfig << sys.magnetic_moment[i].z << ' ';
+				fout_finalconfig << sys.magnetic_susceptibility[i] << endl;
+			} else if (sys.p.magnetic_type == 2) {
+				fout_finalconfig << "0 0 0 ";
+				fout_finalconfig << sys.magnetic_susceptibility[i] << endl;
+			}
 		}
 	}
 	string filename_bin = filename_final_configuration;
