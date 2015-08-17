@@ -243,13 +243,11 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	resolveUnitSystem(internal_unit_scales);
 }
 
-// @@ I think it is better to keep "dimensionlessnumber" and "input_scale".
-// @@ the relation between rate and force is implicitly assumed.
-//
+
 // Command option -r indicate "rate controlled" simulation.
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
-void Simulation::convertInputForcesRateControlled(double rate_value, string rate_unit)
+void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -259,7 +257,7 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
 	 2. Decide the unit force F_W for the simulation
 	 3. Convert all the forces to this unit (by multiplying every force by F_H/F_W)
 	 */
-	string force_type = rate_unit; // the force defining the shear rate
+	string force_type = input_scale; // the force defining the shear rate
 	if (force_type == "hydro") {
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
 		exit(1);
@@ -269,16 +267,16 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
 		exit(1);
 	}
 	/* Switch this force in hydro units.
-	 The rate_value in input is the shear rate in "force_type" units,
+	 The dimensionlessnumber in input is the shear rate in "force_type" units,
  	i.e.  is the ratio between the hydrodynamic force and the "force_type" force. 
-	So in hydrodynamic force units, the value of the "force_type" force is 1/rate_value.
+	So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
 	*/
-	if (rate_value == 0) {
-		cerr << "rate_value = " << rate_value << endl;
+	if (dimensionlessnumber == 0) {
+		cerr << "dimensionlessnumber = " << dimensionlessnumber << endl;
 		// @@ What is the correct way to handle this case?
 		exit(1);
 	}
-	input_force_values[force_type] = 1/rate_value;
+	input_force_values[force_type] = 1/dimensionlessnumber;
 	input_force_units[force_type] = "hydro";
 	
 	// convert all other forces to hydro
