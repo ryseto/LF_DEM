@@ -309,6 +309,7 @@ private:
 	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
 								  const std::vector <double> &magnetic_susceptibility);
 	void setMagneticMomentExternalField();
+	void setMagneticMomentZero();
 	void calcMagneticEnergy();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);

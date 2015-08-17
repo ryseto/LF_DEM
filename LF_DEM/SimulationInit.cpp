@@ -596,9 +596,9 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 	if (control_var == "magnetic") {
+		cerr << "time_end " << time_end  << " "<< p.time_end << endl;
 		time_end = p.time_end;
 	}
-	
 	if (input_files[3] != "not_given") {
 		importPreSimulationData(input_files[3]);
 		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
@@ -785,6 +785,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
+	} else if (keyword == "time_init_relax") {
+		catchSuffixedValue("time", keyword, value, &p.time_init_relax);
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -881,6 +883,7 @@ void Simulation::setDefaultParameters()
 	 */
 	p.friction_model = 1;
 	p.time_end = 10;
+	p.time_init_relax = 0;
 	p.lub_max_gap = 0.5;
 	/* This is cutoff distance (center-to-center) for interactions (repulsive force, magnetic force, etc.).
 	 * If interaction_range is not indicated, this value will be set from lub_max_gap.

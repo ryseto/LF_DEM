@@ -327,7 +327,6 @@ void Simulation::simulationMagnetic(string in_args,
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
-	double strain_output_config = 0;
 	double time_output_data = 0;
 	double time_output_config = 0;
 	/******************** OUTPUT INITIAL DATA ********************/
@@ -336,7 +335,6 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-	
 	if (sys.p.magnetic_field_type == 0) {
 		// Field direction is fixed
 		sys.external_magnetic_field.set(0, 1, 0);
@@ -351,32 +349,29 @@ void Simulation::simulationMagnetic(string in_args,
 										sin(sys.angle_external_magnetic_field));
 		exit(1);
 	}
-	sys.setMagneticMomentExternalField();
+	sys.setMagneticMomentZero();
+	bool initial_relax = true;
 	// Main simulation loop
+	double initial_time = sys.get_time();
 	while (keepRunning()) {
-		time_output_data = cnt_simu_loop*time_interval_output_data;
-		time_output_config = cnt_config_out*time_interval_output_config;
+		if (initial_relax && sys.get_time() >= 0) {
+			sys.setMagneticMomentExternalField();
+			initial_relax = false;
+		}
+		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
+		time_output_config = initial_time+cnt_config_out*time_interval_output_config;
 		sys.timeEvolution(time_output_data);
 		cnt_simu_loop ++;
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputDataMagnetic();
 		outputConfigurationBinary();
-		if (time_interval_output_data == -1) {
-			if (sys.get_shear_strain() >= strain_output_config-1e-8) {
-				outputConfigurationData();
-				cnt_config_out ++;
-			}
-		} else {
-			if (sys.get_time() >= time_output_config-1e-8) {
-				outputConfigurationData();
-				cnt_config_out ++;
-			}
+		if (sys.get_time() >= time_output_config-1e-8) {
+			outputConfigurationData();
+			cnt_config_out ++;
 		}
-		/*****************************************************/
 		cout << "time: " << sys.get_time() << " / " << time_end << endl;
 	}
-	
 	outputComputationTime();
 	if (filename_parameters.find("init_relax", 0) < filename_parameters.size()) {
 		/* To prepare relaxed initial configuration,

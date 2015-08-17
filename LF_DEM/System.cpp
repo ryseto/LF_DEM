@@ -317,6 +317,13 @@ void System::setMagneticMomentExternalField()
 	}
 }
 
+void System::setMagneticMomentZero()
+{
+	for (int i=0; i<np; i++) {
+		magnetic_moment[i].reset();
+	}
+}
+
 void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 									  const vector <double> &magnetic_susceptibility_)
 {
@@ -593,8 +600,14 @@ void System::setupSystem(string control)
 			exit(1);
 		}
 	}
-	time = 0;
-	time_in_simulation_units = 0;
+	if (p.time_init_relax > 0) {
+		time = -p.time_init_relax;
+		time_in_simulation_units = -p.time_init_relax*(*ratio_unit_time);
+		cerr << "@@" << endl;
+	} else {
+		time = 0;
+		time_in_simulation_units = 0;
+	}
 	total_num_timesteps = 0;
 
 	vel_difference.reset();

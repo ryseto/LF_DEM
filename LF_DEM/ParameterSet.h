@@ -144,6 +144,7 @@ struct ParameterSet
 	double rest_threshold; ///< criteria to judge saturation of deformation, i.e. jammed state etc. [1e-4]
 	std::string event_handler;  ///< Select event handler [""]
  	bool cross_shear;        ///< Shear along the y direction [false]
+	double time_init_relax;  ///< Initial relaxa
 };
 
 #endif/* defined(__LF_DEM__ParameterSet__) */
