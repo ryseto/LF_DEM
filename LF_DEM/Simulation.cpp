@@ -89,9 +89,11 @@ void Simulation::handleEventsShearJamming()
 	}
 	if (p.disp_max < 1e-6) {
 		cout << "jammed" << endl;
-		//			kill = true;
-		p.cross_shear = true;//!p.cross_shear;
-		p.disp_max = 1e-5;
+		evaluateData();
+		outputData(); // new
+		outputConfigurationBinary();
+		outputConfigurationData();
+		exit(1);
 	}
 }
 
