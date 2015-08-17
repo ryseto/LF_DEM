@@ -104,8 +104,8 @@ private:
 	void setUnitScaleRateControlled();
 	void setUnitScaleMagnetic();
 	void setupNonDimensionalization(double dimensionlessnumber, std::string input_scale);
-	void convertInputForcesRateControlled(double dimensionlessnumber, std::string rate_unit);
-	void convertInputForcesStressControlled(double dimensionlessnumber, std::string rate_unit);
+	void convertInputForcesRateControlled(double dimensionlessnumber, std::string input_scale);
+	void convertInputForcesStressControlled(double dimensionlessnumber, std::string input_scale);
 	void convertInputForcesMagnetic(double dimensionlessnumber, std::string rate_unit);
 	void catchSuffixedValue(std::string type, std::string keyword, std::string value_str, double *value_ptr);
 	/*

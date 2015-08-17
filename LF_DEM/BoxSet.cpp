@@ -44,9 +44,9 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		box_xsize = sys->get_lx()/x_box_nb;
 		box_ysize = sys->get_ly()/y_box_nb;
 		box_zsize = sys->get_lz()/z_box_nb;
-
-		for (int a : {-1,1} ) {
-			for (int b : {-1,1} ) {
+		int m1p1 [2] = {-1,1};
+		for (int a : m1p1 ) {
+			for (int b : m1p1 ) {
 				vec3d far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,box_zsize);
 				top_probing_positions.push_back(far_corner);
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,0,0));
@@ -73,9 +73,9 @@ void BoxSet::init(double interaction_dist, System *sys_)
 void BoxSet::allocateBoxes()
 {
 	box_nb = x_box_nb*y_box_nb*z_box_nb;
-
+	
 	for (int i=0; i<box_nb;i++) {
-		Boxes.emplace(new Box());
+		Boxes.insert(new Box());
 	}
 	box_labels.resize(box_nb);
 }
@@ -138,12 +138,12 @@ void BoxSet::assignNeighborsBulk()
 	for (auto & bx : BulkBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
-
-		for (const auto& a : {-1,0,1}) {
+		int m10p1 [3] = {-1,0,1};
+		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
-			for (const auto& b : {-1,0,1}) {
+			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
-				for (const auto& c : {-1,0,1}) {
+				for (const auto& c : m10p1) {
 					delta.z = c*box_zsize;
 					bx->addStaticNeighbor(WhichBox(pos+delta));
 				}
@@ -159,11 +159,13 @@ void BoxSet::assignNeighborsBottom()
 		vec3d delta;
 
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
-		for (const auto & a : {-1,0,1}) {
+		int m10p1 [3] = {-1,0,1};
+		int p10 [2] = {0,1};
+		for (const auto & a : m10p1) {
 			delta.x = a*box_xsize;
-			for (const auto& b : {-1,0,1}) {
+			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
-				for (const auto& c : {0,1}) {
+				for (const auto& c : p10) {
 					delta.z = c*box_zsize;
 					bx->addStaticNeighbor(WhichBox(pos+delta));
 				}
@@ -183,11 +185,13 @@ void BoxSet::assignNeighborsTop()
 		vec3d delta;
 
 		// boxes  at same level and bottom first: these are fixed once and for all in the simulation
-		for (const auto & a : {-1,0,1}) {
+		int m10p1 [3] = {-1,0,1};
+		int m10 [2] = {-1,0};
+		for (const auto & a : m10p1) {
 			delta.x = a*box_xsize;
-			for (const auto& b : {-1,0,1}) {
+			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
-				for (const auto& c : {-1,0}) {
+				for (const auto& c : m10) {
 					delta.z = c*box_zsize;
 					bx->addStaticNeighbor(WhichBox(pos+delta));
 				}
@@ -208,9 +212,10 @@ void BoxSet::assignNeighborsTopBottom()
 		vec3d delta;
 
 		// boxes at same level first: these are fixed once and for all in the simulation
-		for (const auto & a : {-1,0,1}) {
+		int m10p1 [3] = {-1,0,1};
+		for (const auto & a : m10p1) {
 			delta.x = a*box_xsize;
-			for (const auto& b : {-1,0,1}) {
+			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
 				delta.z = 0;
 				bx->addStaticNeighbor(WhichBox(pos+delta));
