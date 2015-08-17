@@ -93,7 +93,8 @@ private:
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
 	void importConfiguration();
-	std::ifstream importConfigurationBinary();
+//	std::ifstream importConfigurationBinary();
+	void importConfigurationBinary(std::ifstream &file_import);
 	void importContactsBinary(std::ifstream &file_import);
 	void exportForceAmplitudes();
 	void setLowPeclet();

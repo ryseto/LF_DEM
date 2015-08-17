@@ -17,7 +17,6 @@ void System::stressReset()
 
 	   To be called by System::calcStressPerParticle()
 	*/
-	
 	for (int i=0; i<np; i++) {
 		lubstress[i].reset();
 		contactstressGU[i].reset();
@@ -125,8 +124,7 @@ System::calcStress()
 	}
 	total_contact_stressXF_normal /= system_volume;
 	total_contact_stressXF_tan /= system_volume;
-	total_contact_stressXF = total_contact_stressXF_normal + total_contact_stressXF_tan;
-	
+	total_contact_stressXF = total_contact_stressXF_normal+total_contact_stressXF_tan;
 	//////////////////////////////////////////////////////////////
 	total_repulsive_stressXF.reset();
 	total_repulsive_stressGU.reset();

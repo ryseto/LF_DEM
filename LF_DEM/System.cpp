@@ -37,7 +37,6 @@ lowPeclet(false),
 //cross_shear(false),
 twodimension(false),
 zero_shear(false),
-magnetic_coeffient(24),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -404,6 +403,9 @@ void System::setupSystem(string control)
 	 * @ We have to consider p.contact_relaxation_time in Brownian case.
 	 * @ The resistance coeffient affects Brownian force.
 	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	 *
+	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
+	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	 */
 
 	if (control != "magnetic") {

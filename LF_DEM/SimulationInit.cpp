@@ -243,6 +243,12 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	resolveUnitSystem(internal_unit_scales);
 }
 
+// @@ I think it is better to keep "dimensionlessnumber" and "input_scale".
+// @@ the relation between rate and force is implicitly assumed.
+//
+// Command option -r indicate "rate controlled" simulation.
+// -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
+// -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::convertInputForcesRateControlled(double rate_value, string rate_unit)
 {
 	/**
@@ -258,7 +264,6 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
 		cerr << "Error: cannot define the shear rate in hydro unit." << endl;
 		exit(1);
 	}
-	
 	if (input_force_values[force_type] > 0) {
 		cerr << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		exit(1);
@@ -268,6 +273,11 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
  	i.e.  is the ratio between the hydrodynamic force and the "force_type" force. 
 	So in hydrodynamic force units, the value of the "force_type" force is 1/rate_value.
 	*/
+	if (rate_value == 0) {
+		cerr << "rate_value = " << rate_value << endl;
+		// @@ What is the correct way to handle this case?
+		exit(1);
+	}
 	input_force_values[force_type] = 1/rate_value;
 	input_force_units[force_type] = "hydro";
 	
@@ -291,7 +301,10 @@ void Simulation::convertInputForcesRateControlled(double rate_value, string rate
 	}
 }
 
-
+// Command option -m indicate "magnetic-field controlled" simulation.
+// -m [val]b  ---> val = F_M0/F_B0
+// -m [val]r  ---> val = F_M0/F_R0
+//
 void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit)
 {
 	/* We plan to implement both non-Brownian and Brownian simulations.
@@ -312,6 +325,11 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string r
 	// Pe_M is F_M0/F_B0.
 	// so F_B = F_M/Pe_M
 	// in magnetic units, that is F_B/F_M = 1/Pe_M
+	if (dimensionlessnumber == 0) {
+		cerr << "dimensionlessnumber = " << dimensionlessnumber << endl;
+		// @@ What is the correct way to handle this case?
+		exit(1);
+	}
 	input_force_values[force_type] = 1/dimensionlessnumber;
 	input_force_units[force_type] = "magnetic";
 	resolveUnitSystem("magnetic");
@@ -476,8 +494,8 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 	 */
 	input_scale = unit_longname[input_scale];
 	if (control_var == "rate") {
-		input_rate = dimensionlessnumber;
-		input_rate_unit = input_scale;
+		input_rate = dimensionlessnumber; // @@@ Renaming is required?
+		input_rate_unit = input_scale; // @@@ Not used
 	}
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
@@ -551,7 +569,7 @@ void Simulation::setupSimulation(string in_args,
 
 	ifstream in_binary_conf;
 	if (binary_conf) {
-		in_binary_conf = importConfigurationBinary();
+		importConfigurationBinary(in_binary_conf);
 	} else {
 		importConfiguration();
 	}
@@ -1050,12 +1068,12 @@ void Simulation::importConfiguration()
 	file_import.close();
 }
 
-ifstream Simulation::importConfigurationBinary()
+void Simulation::importConfigurationBinary(ifstream &file_import)
 {
 	/**
 	  \brief Read a binary file input configuration.
 	*/
-	ifstream file_import;
+//	ifstream file_import;
 	initial_lees_edwards_disp.reset();
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
@@ -1083,7 +1101,7 @@ ifstream Simulation::importConfigurationBinary()
 		radius.push_back(r_);
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-	return file_import;
+//	return file_import;
 }
 
 void Simulation::importContactsBinary(ifstream &file_import)

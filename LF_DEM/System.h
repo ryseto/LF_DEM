@@ -74,8 +74,6 @@ private:
 	double total_energy;
 	int linalg_size;
 	int dof;
-	//double repulsiveforce_length; // repulsive force length
-	//int integration_method; // 0: Euler's method 1: PredictorCorrectorMethod
 	/* data */
 	bool keepRunning(std::string, double);
 	void (System::*timeEvolutionDt)(bool);
@@ -220,7 +218,6 @@ private:
 	double kt_master;
 	double kr_master;
 	double lub_coeff_contact;
-	double magnetic_coeffient; // (3*mu0)/(4*M_PI)
 	double einstein_stress;
 	double einstein_viscosity;
 	// resistance coeffient for normal mode
@@ -265,23 +262,12 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
-	/*
-	 * Simulation for magnetic particles
-	 */
-	bool magnetic_rotation_active;
-	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
-	double angle_external_magnetic_field;
-	vec3d external_magnetic_field;
-	/////////////////////////////////
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d> &initial_positions,
 						  const std::vector <double> &radii,
 						  double lx_, double ly_, double lz_);
 	void setContacts(const std::vector <struct contact_state> &cs);
 	void getContacts(std::vector <struct contact_state> &cs);
-	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
-								  const std::vector <double> &magnetic_susceptibility);
-	void setMagneticMomentExternalField();
 	void setInteractions_GenerateInitConfig();
 	void setupSystem(std::string control);
 	void allocatePositionRadius();
@@ -307,6 +293,16 @@ private:
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
+	/*
+	 * Simulation for magnetic particles
+	 */
+	bool magnetic_rotation_active;
+	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
+	double angle_external_magnetic_field;
+	vec3d external_magnetic_field;
+	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
+								  const std::vector <double> &magnetic_susceptibility);
+	void setMagneticMomentExternalField();
 	void calcMagneticEnergy();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);

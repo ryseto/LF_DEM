@@ -630,8 +630,6 @@ void Simulation::outputDataMagnetic()
 	 \brief Output data for magnetic colloid work
 	 */
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	cerr << internal_unit_scales << " " << output_unit_scales << endl;
-	
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
 	}
