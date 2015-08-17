@@ -31,8 +31,12 @@ void System::stressReset()
 			brownianstressGU[i].reset();
 		}
 	}
+	if (magnetic) {
+		for (int i=0; i<np; i++) {
+			magneticstressGU[i].reset();
+		}
+	}
 }
-
 
 void
 System::calcStressPerParticle()
@@ -96,24 +100,41 @@ System::calcStressPerParticle()
 			}
 		}
 	}
+	if (magnetic) {
+		vec3d pos_diff;
+		vec3d nvec;
+		StressTensor magstressXF;
+		magneticstressXF.clear();
+		for (const auto & mf : magnetic_force_stored) {
+			int p0 = mf.second.first;
+			int p1 = mf.second.second;
+			pos_diff = position[p1]-position[p0];
+			periodize_diff(pos_diff);
+			double r = pos_diff.norm();
+			nvec = pos_diff/r;
+			magstressXF.set(nvec, mf.first);
+			magneticstressXF.push_back(magstressXF);
+		}
+	}
 }
 
 void
 System::calcStress()
 {
-	//////////////////////////////////////////////////////////////
+	// Lubrication stress
 	total_hydro_stress.reset();
 	for (int i=0; i<np; i++) {
 		total_hydro_stress += lubstress[i];
 	}
 	total_hydro_stress /= system_volume;
-	//////////////////////////////////////////////////////////////
+	// Stress from contact force
+	// GU contribution
 	total_contact_stressGU.reset();
 	for (int i=0; i<np; i++) {
 		total_contact_stressGU += contactstressGU[i];
 	}
 	total_contact_stressGU /= system_volume;
-	//////////////////////////////////////////////////////////////
+	// XF contribution
 	total_contact_stressXF_normal.reset();
 	total_contact_stressXF_tan.reset();
 	for (int k=0; k<nb_interaction; k++) {
@@ -125,29 +146,47 @@ System::calcStress()
 	total_contact_stressXF_normal /= system_volume;
 	total_contact_stressXF_tan /= system_volume;
 	total_contact_stressXF = total_contact_stressXF_normal+total_contact_stressXF_tan;
-	//////////////////////////////////////////////////////////////
-	total_repulsive_stressXF.reset();
-	total_repulsive_stressGU.reset();
-	if (repulsiveforce) {	
+	// Stress from repulsive force
+	if (repulsiveforce) {
+		// XF contribution
+		total_repulsive_stressXF.reset();
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
-		//////////////////////////////////////////////////////////
+
+		// GU contribution
+		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
 			total_repulsive_stressGU += repulsivestressGU[i];
 		}
 		total_repulsive_stressGU /= system_volume;
 	}
-	//////////////////////////////////////////////////////////////
-	total_brownian_stressGU.reset();
-	if (brownian) {		
+	// Stress from Brownian force
+	if (brownian) {
+		// GU contribution
+		total_brownian_stressGU.reset();
 		for (int i=0; i<np; i++) {
 			total_brownian_stressGU += brownianstressGU[i];
 		}
 		total_brownian_stressGU /= system_volume;
 	}
-
+	// Stress from magnetic force
+	if (magnetic) {
+		// XF contribution
+		total_magnetic_stressXF.reset();
+		for (const auto &ms : magneticstressXF) {
+			total_magnetic_stressXF += ms;
+		}
+		total_magnetic_stressXF /= system_volume;
+		// GU contribution
+		total_magnetic_stressGU.reset();
+		for (int i=0; i<np; i++) {
+			total_magnetic_stressGU += magneticstressGU[i];
+		}
+		total_magnetic_stressGU /= system_volume;
+	}
+	//
 	total_stress = total_hydro_stress;
 	total_stress += total_contact_stressXF;
 	total_stress += total_contact_stressGU; // added (Aug 15 2013)
@@ -157,10 +196,14 @@ System::calcStress()
 	}
 	if (brownian) {
 		total_stress += total_brownian_stressGU;
-		if (lowPeclet) { // take an averaged stress instead of instantaneous
+		if (lowPeclet) { // take an averaged stress instead of instantaneous //@@
 			stress_avg->update(total_stress, get_time());
 			total_stress = stress_avg->get();
 		}
+	}
+	if (magnetic) {
+		total_magnetic_stress = total_magnetic_stressXF+total_magnetic_stressGU;
+		total_stress += total_magnetic_stress;
 	}
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
 }

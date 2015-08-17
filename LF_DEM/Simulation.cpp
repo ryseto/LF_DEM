@@ -634,15 +634,22 @@ void Simulation::outputDataMagnetic()
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	outdata.init(25, output_unit_scales);
+	outdata.init(27, output_unit_scales);
 	outdata.entryData(1, "time", "time", sys.get_time());
+	
 	/* energy
 	 */
 	outdata.entryData(3, "energy", "none", sys.get_total_energy());
 	outdata.entryData(4, "magnetic energy", "none", sys.magnetic_dd_energy);
 	
-	outdata.entryData(5, "particle pressure", "stress", sys.total_stress.getParticlePressure());
-	outdata.entryData(6, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
+	
+	/* contact number
+	 */
+	outdata.entryData(5, "contact number", "none", sys.getContactNumber());
+	outdata.entryData(6, "frictional contact number", "none", sys.getFrictionalContactNumber());
+	outdata.entryData(7, "number of interaction", "none", sys.get_nb_of_active_interactions());
+
+	
 	/* maximum deformation of contact bond
 	 */
 	outdata.entryData(8, "min gap", "none", sys.min_reduced_gap);
@@ -652,12 +659,16 @@ void Simulation::outputDataMagnetic()
 	outdata.entryData(11, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_theta);
 	outdata.entryData(12, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_phi);
 	
-	
-	/* contact number
+	/* pressure
 	 */
-	outdata.entryData(15, "contact number", "none", sys.getContactNumber());
-	outdata.entryData(16, "frictional contact number", "none", sys.getFrictionalContactNumber());
-	outdata.entryData(17, "number of interaction", "none", sys.get_nb_of_active_interactions());
+	outdata.entryData(13, "particle pressure", "stress", sys.total_stress.getParticlePressure());
+	outdata.entryData(14, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
+	outdata.entryData(15, "particle pressure contact GU", "stress", sys.total_contact_stressGU.getParticlePressure());
+	outdata.entryData(16, "particle pressure brownian", "stress", sys.total_brownian_stressGU.getParticlePressure());
+	outdata.entryData(17, "particle pressure magnetic", "stress", sys.total_magnetic_stressXF.getParticlePressure());
+	outdata.entryData(18, "particle pressure magnetic GU", "stress", sys.total_magnetic_stressGU.getParticlePressure());
+
+	
 	/* maximum velocity
 	 */
 	outdata.entryData(20, "max velocity", "velocity", sys.max_velocity);
@@ -668,7 +679,10 @@ void Simulation::outputDataMagnetic()
 	outdata.entryData(23, "kn", "none", sys.p.kn);
 	outdata.entryData(24, "kt", "none", sys.p.kt);
 	outdata.entryData(25, "kr", "none", sys.p.kr);
-	
+	/* misc
+	 */
+
+
 	outdata.exportFile(fout_data);
 }
 

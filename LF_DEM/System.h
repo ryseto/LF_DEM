@@ -153,6 +153,7 @@ private:
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
+	bool magnetic;
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
@@ -199,6 +200,8 @@ private:
 	StressTensor* repulsivestressGU; // by particle
 	StressTensor* brownianstressGU; // by particle
 	StressTensor* brownianstressGU_predictor; // by particle
+	StressTensor* magneticstressGU; // by particle
+	std::vector<StressTensor> magneticstressXF;
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF_normal;
@@ -209,6 +212,9 @@ private:
 	StressTensor total_repulsive_stressGU;
 	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
+	StressTensor total_magnetic_stressXF;
+	StressTensor total_magnetic_stressGU;
+	StressTensor total_magnetic_stress;
 	Averager<StressTensor> *stress_avg;
 	double dt;
 	/* double kn; */

@@ -31,6 +31,7 @@ brownian(false),
 friction(false),
 rolling_friction(false),
 repulsiveforce(false),
+magnetic(false),
 cohesion(false),
 critical_load(false),
 lowPeclet(false),
@@ -135,12 +136,13 @@ System::~System()
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
 	}
-	if (p.magnetic_type != 0) {
+	if (magnetic) {
 		DELETE(magnetic_moment);
 		DELETE(magnetic_force);
 		DELETE(magnetic_torque);
 		DELETE(vel_magnetic);
 		DELETE(ang_vel_magnetic);
+		DELETE(magneticstressGU);
 	}
 };
 
@@ -187,23 +189,30 @@ void System::allocateRessources()
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
 	}
-	// Forces
+	if (magnetic) {
+		vel_magnetic = new vec3d [np];
+		ang_vel_magnetic = new vec3d [np];
+	}
+	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
+	lubstress = new StressTensor [np];
+	contactstressGU = new StressTensor [np];
 	if (repulsiveforce) {
 		repulsive_force = new vec3d [np];
 		repulsivestressGU = new StressTensor [np];
 	}
 	if (brownian) {
 		brownian_force = new double [linalg_size];
-	}
-	// Stress
-	lubstress = new StressTensor [np];
-	contactstressGU = new StressTensor [np];
-	if (brownian) {
 		brownianstressGU = new StressTensor [np];
 		brownianstressGU_predictor = new StressTensor [np];
 	}
+	if (magnetic) {
+		magnetic_force = new vec3d [np];
+		magnetic_torque = new vec3d [np];
+		magneticstressGU = new StressTensor [np];
+	}
+	//
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
@@ -313,18 +322,6 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 {
 	magnetic_susceptibility.resize(np);
 	magnetic_moment = new vec3d [np];
-	magnetic_force = new vec3d [np];
-	vel_magnetic = new vec3d [np];
-	for (int i=0; i<np; i++) {
-		magnetic_force[i].reset();
-		vel_magnetic[i].reset();
-	}
-	magnetic_torque = new vec3d [np];
-	ang_vel_magnetic = new vec3d [np];
-	for (int i=0; i<np; i++) {
-		magnetic_torque[i].reset();
-		ang_vel_magnetic[i].reset();
-	}
 	magnetic_pair.resize(np-1);
 	sq_magnetic_interaction_range = pow(p.magnetic_interaction_range, 2);
 	time_update_magnetic_pair = 0;
@@ -420,7 +417,9 @@ void System::setupSystem(string control)
 		rate_controlled = false;
 		stress_controlled = false;
 	}
-
+	if (p.magnetic_type != 0) {
+		magnetic = true;
+	}
 	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (p.integration_method == 1) {
@@ -483,7 +482,9 @@ void System::setupSystem(string control)
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
+	// Memory
 	allocateRessources();
+	//
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -505,6 +506,10 @@ void System::setupSystem(string control)
 		if (repulsiveforce) {
 			vel_repulsive[i].reset();
 			ang_vel_repulsive[i].reset();
+		}
+		if (magnetic) {
+			vel_magnetic[i].reset();
+			ang_vel_magnetic[i].reset();
 		}
 	}
 	shear_strain = 0;
@@ -578,8 +583,7 @@ void System::setupSystem(string control)
 #endif
 #endif
 	}
-
-	if (p.magnetic_type != 0) {
+	if (magnetic) {
 		if (p.magnetic_type == 1) {
 			magnetic_rotation_active = true;
 		} else if (p.magnetic_type == 2) {
@@ -1044,7 +1048,7 @@ void System::checkNewInteraction()
 			}
 		}
 	}
-	if (p.magnetic_type != 0) {
+	if (magnetic) {
 		if (get_time() > time_update_magnetic_pair) {
 			updateMagneticPair();
 			time_update_magnetic_pair += p.timeinterval_update_magnetic_pair;
@@ -1426,7 +1430,7 @@ void System::buildMagneticForceTerms(bool set_or_add)
 				stokes_solver.addToRHSTorque(i, magnetic_torque[i]);
 			}
 		}
-	} else {
+	} else if (p.magnetic_type == 2) {
 		if (set_or_add) {
 			for (int i=0; i<np; i++) {
 				stokes_solver.setRHSForce(i, magnetic_force[i]);
@@ -1479,7 +1483,7 @@ void System::computeVelocityComponents()
 		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
 		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
 	}
-	if (p.magnetic_type != 0) {
+	if (magnetic) {
 		buildMagneticForceTerms(true);
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
@@ -1554,7 +1558,7 @@ void System::computeVelocities(bool divided_velocities)
 				na_ang_velocity[i] += ang_vel_repulsive[i];
 			}
 		}
-		if (p.magnetic_type != 0) {
+		if (magnetic) {
 			for (int i=0; i<np; i++) {
 				na_velocity[i] += vel_magnetic[i];
 				na_ang_velocity[i] += ang_vel_magnetic[i];
@@ -1571,7 +1575,7 @@ void System::computeVelocities(bool divided_velocities)
 		if (repulsiveforce) {
 			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
 		}
-		if (p.magnetic_type != 0) {
+		if (magnetic) {
 			buildMagneticForceTerms(false);
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
@@ -1669,7 +1673,6 @@ int System::periodize(vec3d &pos)
 		pos += shear_disp;
 		z_shift++;
 	}
-
 	while (pos.x >= lx) {
 		pos.x -= lx;
 	}
@@ -1971,7 +1974,7 @@ void System::calcPotentialEnergy()
 			}
 		}
 	}
-	if (p.magnetic_type != 0) {
+	if (magnetic) {
 		calcMagneticEnergy();
 	}
 }
