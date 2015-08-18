@@ -939,6 +939,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_interaction = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
+	p.cross_shear = false;
 	/*
 	 * Parameters for magnetic colloid simulation.
 	 */
