@@ -62,13 +62,17 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
-	if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
-		state = 1; // critical load model
+	if (sys->friction) {
+		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
+			state = 1; // critical load model
+		} else {
+			state = 2; // static friction
+		}
+		disp_tan.reset();
+		disp_rolling.reset();
 	} else {
-		state = 2; // static friction
+		state = 1;
 	}
-	disp_tan.reset();
-	disp_rolling.reset();
 }
 
 void Contact::deactivate()
@@ -349,7 +353,9 @@ void Contact::calcContactStress()
 		 * stress1 + stress2 = (a1+a2)*nvec[*]force
 		 */
 		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);
-		contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
+		if (state >= 2) {
+			contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
+		}
 	} else {
 		contact_stresslet_XF_normal.reset();
 		contact_stresslet_XF_tan.reset();

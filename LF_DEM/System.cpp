@@ -1329,14 +1329,6 @@ void System::generateBrownianForces()
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
-	if (twodimension
-		&& !p.monolayer) {
-		for (int i=0; i<np; i++) {
-			brownian_force[6*i+1] = 0; // Fy
-			brownian_force[6*i+3] = 0; // Tx
-			brownian_force[6*i+5] = 0; // Tz
-		}
-	}
 }
 
 void System::setContactForceToParticle()
@@ -1595,7 +1587,7 @@ void System::computeVelocities(bool divided_velocities)
 	}
 	// cout << " strain " << shear_strain << endl;
 	// cout << " matrix " << endl;
- // 	stokes_solver.printResistanceMatrix(cout, "sparse");
+	// stokes_solver.printResistanceMatrix(cout, "sparse");
 	// cout << endl;
 	// cout << " rhs " << endl;
 	// stokes_solver.printRHS();
@@ -1610,12 +1602,29 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		stokes_solver.setRHS(brownian_force); // set rhs = F_B
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+		if (twodimension) {
+			if (p.monolayer) {
+				/* Particle (3D sphere) cannot move along y-direction.
+				 * All other degrees of freedom exist.
+				 */
+				for (int i=0; i<np; i++) {
+					vel_brownian[i].y = 0; // @@ To be checked
+				}
+			} else {
+				/* Particle (2D disk) can rotate only along y-axis.
+				 */
+				for (int i=0; i<np; i++) {
+					vel_brownian[i].y = 0; // @@ To be checked
+					ang_vel_brownian[i].x = 0;
+					ang_vel_brownian[i].z = 0;
+				}
+			}
+		}
 		for (int i=0; i<np; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
@@ -1634,13 +1643,11 @@ void System::computeVelocities(bool divided_velocities)
 				velocity[i].y += shear_rate*position[i].z;
 				ang_velocity[i].x -= 0.5*shear_rate;
 			}
-			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	} else {
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
-			if (p.monolayer) { velocity[i].y = 0; }
 		}
 	}
 
@@ -1654,12 +1661,7 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::displacement(int i, const vec3d &dr)
 {
-	if (p.monolayer) {
-		position[i].x += dr.x;
-		position[i].z += dr.z;
-	} else {
-		position[i] += dr;
-	}
+	position[i] += dr;
 	int z_shift = periodize(position[i]);
 	/* Note:
 	 * When the position of the particle is periodized,

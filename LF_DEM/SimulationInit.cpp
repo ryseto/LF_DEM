@@ -243,7 +243,6 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	resolveUnitSystem(internal_unit_scales);
 }
 
-
 // Command option -r indicate "rate controlled" simulation.
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0

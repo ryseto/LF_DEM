@@ -106,9 +106,7 @@ System::calcStressPerParticle()
 		StressTensor magstressXF;
 		magneticstressXF.clear();
 		for (const auto & mf : magnetic_force_stored) {
-			int p0 = mf.second.first;
-			int p1 = mf.second.second;
-			pos_diff = position[p1]-position[p0];
+			pos_diff = position[mf.second.second]-position[mf.second.first];
 			periodize_diff(pos_diff);
 			double r = pos_diff.norm();
 			nvec = pos_diff/r;
@@ -154,7 +152,6 @@ System::calcStress()
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 		}
 		total_repulsive_stressXF /= system_volume;
-
 		// GU contribution
 		total_repulsive_stressGU.reset();
 		for (int i=0; i<np; i++) {
