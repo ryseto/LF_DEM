@@ -51,6 +51,7 @@ var struct_parameter_set =
     [ "sd_coeff", "struct_parameter_set.html#aaab168f5c31818ce0064adaabeab4c8c", null ],
     [ "start_adjust", "struct_parameter_set.html#ac53858a21f1981835b6a1f1b1610c43d", null ],
     [ "time_end", "struct_parameter_set.html#ad368e3977ec73cc10f3b60ccdd0c41d5", null ],
+    [ "time_init_relax", "struct_parameter_set.html#aa2105b7da506bffd39d0ed2384df27fa", null ],
     [ "time_interval_output_config", "struct_parameter_set.html#afb7c7058e4d69bc74a3e2f315c7f755c", null ],
     [ "time_interval_output_data", "struct_parameter_set.html#a51bb46cd8a6fd6a4d08f283905ff8171", null ],
     [ "timeinterval_update_magnetic_pair", "struct_parameter_set.html#aa56cb54de4be81513aa320e98aa4ae99", null ],

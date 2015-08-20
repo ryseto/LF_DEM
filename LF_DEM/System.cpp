@@ -67,12 +67,16 @@ vec3d System::randUniformSphere(double r)
 unsigned long
 System::hash( time_t t, clock_t c )
 {
-	// From MersenneTwister v1.0 by Richard J. Wagner
-	// comments below are from the original code.
+	/** 
+		\brief Utility function to start up the DSFMT RNG with a nice seed.
 
-	// Get a unsigned long from t and c
-	// Better than unsigned long(x) in case x is floating point in [0,1]
-	// Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
+	 From MersenneTwister v1.0 by Richard J. Wagner
+	 comments below are from the original code.
+
+	 Get a unsigned long from t and c
+	 Better than unsigned long(x) in case x is floating point in [0,1]
+	 Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
+	*/
 
 	static unsigned long differ = 0;  // guarantee time-based seeds will change
 
@@ -257,6 +261,10 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 							  const vector <double> &radii,
 							  double lx_, double ly_, double lz_)
 {
+	/**
+		\brief Set positions of the particles for initialization.
+	 */
+
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
@@ -290,6 +298,11 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 
 void System::setContacts(const vector <struct contact_state> &cs)
 {
+	/**
+		\brief Set a list of contacts with their state variables.
+		
+		Used to restart the simulation from a given state.
+	 */
 	for (const auto &c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
@@ -303,6 +316,11 @@ void System::setContacts(const vector <struct contact_state> &cs)
 
 void System::getContacts(vector <struct contact_state> &cs)
 {
+	/**
+		\brief Get the list of contacts with their state variables.
+
+		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
+	 */
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
 			cs.push_back(interaction[k].contact.getState());
@@ -403,6 +421,10 @@ void System::updateUnscaledContactmodel()
 
 void System::setupSystem(string control)
 {
+	/**
+		\brief Initialize the system class for the simulation.
+	 */
+
 	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	 * @ We have to consider p.contact_relaxation_time in Brownian case.
 	 * @ The resistance coeffient affects Brownian force.
@@ -698,6 +720,9 @@ void System::timeStepBoxing(const double strain_increment)
 }
 
 void System::eventShearJamming(){
+	/**
+	 \brief Create an event when the shear rate is negative
+	*/
 	if(shear_rate<0){
 		Event ev;
 		ev.type = "negative_shear_rate";
