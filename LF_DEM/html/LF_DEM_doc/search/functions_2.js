@@ -15,7 +15,7 @@ var searchData=
   ['contactforceparameter',['contactForceParameter',['../class_simulation.html#a02db39dac79a8197839e02c753bf8340',1,'Simulation']]],
   ['contactforceparameterbrownian',['contactForceParameterBrownian',['../class_simulation.html#a94d2b9ca02cb1687348d36f8a2776760',1,'Simulation']]],
   ['convertforcevalues',['convertForceValues',['../class_simulation.html#ad7a3b629d1193ff7be69dfe5d30c8a5c',1,'Simulation']]],
-  ['convertinputforcesratecontrolled',['convertInputForcesRateControlled',['../class_simulation.html#abb252ff62094e0173bf9e1b0f58de410',1,'Simulation']]],
-  ['convertinputforcesstresscontrolled',['convertInputForcesStressControlled',['../class_simulation.html#aef5c41d1ca95cd0dcfd826e27e62ca24',1,'Simulation']]],
+  ['convertinputforcesratecontrolled',['convertInputForcesRateControlled',['../class_simulation.html#a1d49482a028c0a01251389e855a54dca',1,'Simulation']]],
+  ['convertinputforcesstresscontrolled',['convertInputForcesStressControlled',['../class_simulation.html#a3f620b3924dfb4eb8ef3e72b38c051d4',1,'Simulation']]],
   ['convertinputvalues',['convertInputValues',['../class_simulation.html#aa46fe5066cf757db5d894af3093378d6',1,'Simulation']]]
 ];

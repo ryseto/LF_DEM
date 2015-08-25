@@ -112,20 +112,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a71407d2935af9c28eab3f705fe432124"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71407d2935af9c28eab3f705fe432124"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setSystemVolume</b> (double depth=0)</td></tr>
 <tr class="separator:a71407d2935af9c28eab3f705fe432124"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a711e57caa49e1870f4bb1f88ce59555d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a711e57caa49e1870f4bb1f88ce59555d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setConfiguration</b> (const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;initial_positions, const std::vector&lt; double &gt; &amp;radii, double lx_, double ly_, double lz_)</td></tr>
+<tr class="memitem:a711e57caa49e1870f4bb1f88ce59555d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a711e57caa49e1870f4bb1f88ce59555d">setConfiguration</a> (const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;initial_positions, const std::vector&lt; double &gt; &amp;radii, double lx_, double ly_, double lz_)</td></tr>
 <tr class="separator:a711e57caa49e1870f4bb1f88ce59555d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5a295719c89b4f802c2468d9d5eca07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5a295719c89b4f802c2468d9d5eca07"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setMagneticConfiguration</b> (const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;magnetic_moment, const std::vector&lt; double &gt; &amp;magnetic_susceptibility)</td></tr>
-<tr class="separator:aa5a295719c89b4f802c2468d9d5eca07"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb6117c50abe8c3227ccb7a843f5711e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb6117c50abe8c3227ccb7a843f5711e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setMagneticMomentExternalField</b> ()</td></tr>
-<tr class="separator:adb6117c50abe8c3227ccb7a843f5711e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bfae3fe7224b08b98faca7f665670be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a1bfae3fe7224b08b98faca7f665670be">setContacts</a> (const std::vector&lt; struct <a class="el" href="structcontact__state.html">contact_state</a> &gt; &amp;cs)</td></tr>
+<tr class="separator:a1bfae3fe7224b08b98faca7f665670be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc17621ae7c6e8771ae6b1140dfc7c7d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">getContacts</a> (std::vector&lt; struct <a class="el" href="structcontact__state.html">contact_state</a> &gt; &amp;cs)</td></tr>
+<tr class="separator:abc17621ae7c6e8771ae6b1140dfc7c7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6893e8bed1008312c6167861da04e146"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6893e8bed1008312c6167861da04e146"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setInteractions_GenerateInitConfig</b> ()</td></tr>
 <tr class="separator:a6893e8bed1008312c6167861da04e146"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4daacacb59afa0f0a4bf2107685a03f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4daacacb59afa0f0a4bf2107685a03f1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>setupSystem</b> (std::string control)</td></tr>
+<tr class="memitem:a4daacacb59afa0f0a4bf2107685a03f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a4daacacb59afa0f0a4bf2107685a03f1">setupSystem</a> (std::string control)</td></tr>
 <tr class="separator:a4daacacb59afa0f0a4bf2107685a03f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0cbfcda888bf3cedd03002686606e25"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0cbfcda888bf3cedd03002686606e25"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>allocatePositionRadius</b> ()</td></tr>
@@ -148,8 +144,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>checkInteractionEnd</
 <tr class="separator:a9db9b01b7ff2098e9d58421834037b16"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaeb82ed6465c89cd08b4b4f94eca617e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">updateInteractions</a> ()</td></tr>
 <tr class="separator:aaeb82ed6465c89cd08b4b4f94eca617e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06720e1cc7c9aa036a50242e1759ec99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06720e1cc7c9aa036a50242e1759ec99"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateMagneticInteractions</b> ()</td></tr>
+<tr class="memitem:a06720e1cc7c9aa036a50242e1759ec99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a06720e1cc7c9aa036a50242e1759ec99">updateMagneticInteractions</a> ()</td></tr>
 <tr class="separator:a06720e1cc7c9aa036a50242e1759ec99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a73cb478c69ac6cc487250920f1d55f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a73cb478c69ac6cc487250920f1d55f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>updateUnscaledContactmodel</b> ()</td></tr>
@@ -163,9 +158,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>periodize</b> (<a clas
 <tr class="memitem:a0bdcb45d80e975c5a7f227aba8e9dee8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0bdcb45d80e975c5a7f227aba8e9dee8"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>periodize_diff</b> (<a class="el" href="classvec3d.html">vec3d</a> &amp;, int &amp;)</td></tr>
 <tr class="separator:a0bdcb45d80e975c5a7f227aba8e9dee8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a603a6ac20ee852cea1a8bb64930bdf9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a603a6ac20ee852cea1a8bb64930bdf9c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>periodize_diff_unsheared</b> (<a class="el" href="classvec3d.html">vec3d</a> &amp;)</td></tr>
-<tr class="separator:a603a6ac20ee852cea1a8bb64930bdf9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c606a229a02f65061ddff3bdc195b5a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c606a229a02f65061ddff3bdc195b5a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>periodize_diff</b> (<a class="el" href="classvec3d.html">vec3d</a> &amp;)</td></tr>
+<tr class="separator:a1c606a229a02f65061ddff3bdc195b5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a2583f11976202ed08d117ac44e086c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3a2583f11976202ed08d117ac44e086c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>stressBrownianReset</b> ()</td></tr>
 <tr class="separator:a3a2583f11976202ed08d117ac44e086c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -188,6 +183,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>calcLubricationForce<
 <tr class="memitem:acfb555bc013acef39e3f8382e583e4b2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acfb555bc013acef39e3f8382e583e4b2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcPotentialEnergy</b> ()</td></tr>
 <tr class="separator:acfb555bc013acef39e3f8382e583e4b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5a295719c89b4f802c2468d9d5eca07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5a295719c89b4f802c2468d9d5eca07"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setMagneticConfiguration</b> (const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;magnetic_moment, const std::vector&lt; double &gt; &amp;magnetic_susceptibility)</td></tr>
+<tr class="separator:aa5a295719c89b4f802c2468d9d5eca07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb6117c50abe8c3227ccb7a843f5711e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb6117c50abe8c3227ccb7a843f5711e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setMagneticMomentExternalField</b> ()</td></tr>
+<tr class="separator:adb6117c50abe8c3227ccb7a843f5711e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86be1460db854f207ffc6c11cd2462c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a86be1460db854f207ffc6c11cd2462c4"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setMagneticMomentZero</b> ()</td></tr>
+<tr class="separator:a86be1460db854f207ffc6c11cd2462c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae20a0c4e8f01cb73e2df51bf1773c119"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae20a0c4e8f01cb73e2df51bf1773c119"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>calcMagneticEnergy</b> ()</td></tr>
 <tr class="separator:ae20a0c4e8f01cb73e2df51bf1773c119"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -197,12 +201,14 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>calcInteractionRang
 <tr class="memitem:a3fc9da1d9af69e2b93f813503b3c6607"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3fc9da1d9af69e2b93f813503b3c6607"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>calcLubricationRange</b> (const int &amp;i, const int &amp;j)</td></tr>
 <tr class="separator:a3fc9da1d9af69e2b93f813503b3c6607"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21eecf49ee4bf2343c392e2767888167"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21eecf49ee4bf2343c392e2767888167"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>eventShearJamming</b> ()</td></tr>
+<tr class="memitem:a21eecf49ee4bf2343c392e2767888167"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a21eecf49ee4bf2343c392e2767888167">eventShearJamming</a> ()</td></tr>
 <tr class="separator:a21eecf49ee4bf2343c392e2767888167"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83be954fc7bf3b0457098381cc1f39b7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83be954fc7bf3b0457098381cc1f39b7"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>setBoxSize</b> (double lx_, double ly_, double lz_)</td></tr>
 <tr class="separator:a83be954fc7bf3b0457098381cc1f39b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4319d49db0b8590a8f7280b61fb08181"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4319d49db0b8590a8f7280b61fb08181"></a>
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>getTotalNumberOfContacts</b> ()</td></tr>
+<tr class="separator:a4319d49db0b8590a8f7280b61fb08181"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc4c294f679d50784286cf69cb82733a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc4c294f679d50784286cf69cb82733a"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>getContactNumber</b> ()</td></tr>
 <tr class="separator:afc4c294f679d50784286cf69cb82733a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -278,6 +284,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>rolling_friction</b><
 <tr class="memitem:afda455d7495aa38453daeb956306ec46"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afda455d7495aa38453daeb956306ec46"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>repulsiveforce</b></td></tr>
 <tr class="separator:afda455d7495aa38453daeb956306ec46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade645dacf1eebd9e96c92274906e259d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade645dacf1eebd9e96c92274906e259d"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>magnetic</b></td></tr>
+<tr class="separator:ade645dacf1eebd9e96c92274906e259d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a74740a524d2e90eac2494623aed2009b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a74740a524d2e90eac2494623aed2009b"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>cohesion</b></td></tr>
 <tr class="separator:a74740a524d2e90eac2494623aed2009b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -414,6 +423,12 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><b>brownian_force</b
 <tr class="memitem:a6f6773c55408661163b605a641b0e1d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f6773c55408661163b605a641b0e1d7"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>brownianstressGU_predictor</b></td></tr>
 <tr class="separator:a6f6773c55408661163b605a641b0e1d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7a208750c794e041ab90764eacede99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7a208750c794e041ab90764eacede99"></a>
+<a class="el" href="class_stress_tensor.html">StressTensor</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>magneticstressGU</b></td></tr>
+<tr class="separator:ac7a208750c794e041ab90764eacede99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a920eaafdcde1caf8607d0ebe2dc0e2c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a920eaafdcde1caf8607d0ebe2dc0e2c5"></a>
+std::vector&lt; <a class="el" href="class_stress_tensor.html">StressTensor</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>magneticstressXF</b></td></tr>
+<tr class="separator:a920eaafdcde1caf8607d0ebe2dc0e2c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adcc3405c1916efe3ea5c246fbfc3c2f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adcc3405c1916efe3ea5c246fbfc3c2f9"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>total_stress</b></td></tr>
 <tr class="separator:adcc3405c1916efe3ea5c246fbfc3c2f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -444,6 +459,15 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><b>brownian_force</b
 <tr class="memitem:a44c4fd4d46fa865c6fda534932cbaa6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44c4fd4d46fa865c6fda534932cbaa6c"></a>
 <a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>total_brownian_stressGU</b></td></tr>
 <tr class="separator:a44c4fd4d46fa865c6fda534932cbaa6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6de1e56043fdf6fa6a8200bc95e0710d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6de1e56043fdf6fa6a8200bc95e0710d"></a>
+<a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>total_magnetic_stressXF</b></td></tr>
+<tr class="separator:a6de1e56043fdf6fa6a8200bc95e0710d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52249352e08230bed504629e09bbf830"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52249352e08230bed504629e09bbf830"></a>
+<a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>total_magnetic_stressGU</b></td></tr>
+<tr class="separator:a52249352e08230bed504629e09bbf830"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6b350482ffe7e97df84b5709e8fbf6b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6b350482ffe7e97df84b5709e8fbf6b"></a>
+<a class="el" href="class_stress_tensor.html">StressTensor</a>&#160;</td><td class="memItemRight" valign="bottom"><b>total_magnetic_stress</b></td></tr>
+<tr class="separator:aa6b350482ffe7e97df84b5709e8fbf6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f3e5d75e0950842e9f37f9b901a5e86"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f3e5d75e0950842e9f37f9b901a5e86"></a>
 <a class="el" href="class_averager.html">Averager</a>&lt; <a class="el" href="class_stress_tensor.html">StressTensor</a> &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>stress_avg</b></td></tr>
 <tr class="separator:a9f3e5d75e0950842e9f37f9b901a5e86"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -462,9 +486,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>kr_master</b></td><
 <tr class="memitem:aff56d266da11ccc5858d4ab84f616e08"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff56d266da11ccc5858d4ab84f616e08"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>lub_coeff_contact</b></td></tr>
 <tr class="separator:aff56d266da11ccc5858d4ab84f616e08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22809d6bbdc82ad9ede69a77b9c4048c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a22809d6bbdc82ad9ede69a77b9c4048c"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><b>magnetic_coeffient</b></td></tr>
-<tr class="separator:a22809d6bbdc82ad9ede69a77b9c4048c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad056d3629c1f22e72b0144f3d1cd1590"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad056d3629c1f22e72b0144f3d1cd1590"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>einstein_stress</b></td></tr>
 <tr class="separator:ad056d3629c1f22e72b0144f3d1cd1590"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -567,6 +588,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>init_shear_rate_lim
 <tr class="memitem:a79c4a6c8f747ee0ce4b47d21cc38bf29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79c4a6c8f747ee0ce4b47d21cc38bf29"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>new_contact_gap</b></td></tr>
 <tr class="separator:a79c4a6c8f747ee0ce4b47d21cc38bf29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00905d085255931d763769b844e21966"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a00905d085255931d763769b844e21966"></a>
+<a class="el" href="class_stokes_solver.html">StokesSolver</a>&#160;</td><td class="memItemRight" valign="bottom"><b>stokes_solver</b></td></tr>
+<tr class="separator:a00905d085255931d763769b844e21966"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54372c35f07019f353e004f74b8fdba3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a54372c35f07019f353e004f74b8fdba3"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>magnetic_rotation_active</b></td></tr>
 <tr class="separator:a54372c35f07019f353e004f74b8fdba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -579,9 +603,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>angle_external_magn
 <tr class="memitem:aacbcab50bf52b2f1730ea346080dda08"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacbcab50bf52b2f1730ea346080dda08"></a>
 <a class="el" href="classvec3d.html">vec3d</a>&#160;</td><td class="memItemRight" valign="bottom"><b>external_magnetic_field</b></td></tr>
 <tr class="separator:aacbcab50bf52b2f1730ea346080dda08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00905d085255931d763769b844e21966"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a00905d085255931d763769b844e21966"></a>
-<a class="el" href="class_stokes_solver.html">StokesSolver</a>&#160;</td><td class="memItemRight" valign="bottom"><b>stokes_solver</b></td></tr>
-<tr class="separator:a00905d085255931d763769b844e21966"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97f3769f92adb1c3f5e81a0f96ee867b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97f3769f92adb1c3f5e81a0f96ee867b"></a>
 void(System::*&#160;</td><td class="memItemRight" valign="bottom"><b>eventLookUp</b> )()</td></tr>
 <tr class="separator:a97f3769f92adb1c3f5e81a0f96ee867b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -790,6 +811,9 @@ double *&#160;</td><td class="memItemRight" valign="bottom"><b>radius_squared</b
 <tr class="memitem:adbe94faa00e8a7c538e9d3d18537aeb9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbe94faa00e8a7c538e9d3d18537aeb9"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>fixed_dt</b></td></tr>
 <tr class="separator:adbe94faa00e8a7c538e9d3d18537aeb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee66a0c8c40560d7a4c677d580a84321"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee66a0c8c40560d7a4c677d580a84321"></a>
+std::list&lt; <a class="el" href="struct_event.html">Event</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>events</b></td></tr>
+<tr class="separator:aee66a0c8c40560d7a4c677d580a84321"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22a80450fbb0fd7880bf73664504dd5f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a22a80450fbb0fd7880bf73664504dd5f"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>sq_magnetic_interaction_range</b></td></tr>
 <tr class="separator:a22a80450fbb0fd7880bf73664504dd5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -802,9 +826,6 @@ std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight"
 <tr class="memitem:aff5aa50d60d814f164f26e58ffba98c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff5aa50d60d814f164f26e58ffba98c2"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><b>time_update_magnetic_pair</b></td></tr>
 <tr class="separator:aff5aa50d60d814f164f26e58ffba98c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee66a0c8c40560d7a4c677d580a84321"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee66a0c8c40560d7a4c677d580a84321"></a>
-std::list&lt; <a class="el" href="struct_event.html">Event</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>events</b></td></tr>
-<tr class="separator:aee66a0c8c40560d7a4c677d580a84321"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Central class holding the suspension's configuration and the methods to evolve the dynamics. </p>
@@ -1025,6 +1046,22 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
+<a class="anchor" id="a21eecf49ee4bf2343c392e2767888167"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::eventShearJamming </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create an event when the shear rate is negative</p>
+
+</div>
+</div>
 <a class="anchor" id="a59d8c192e1395d9f6637d2506bb82443"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1052,6 +1089,24 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
+<a class="anchor" id="abc17621ae7c6e8771ae6b1140dfc7c7d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::getContacts </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; struct <a class="el" href="structcontact__state.html">contact_state</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>cs</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Get the list of contacts with their state variables.</p>
+<p>Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.</p>
+
+</div>
+</div>
 <a class="anchor" id="a8682c5257b505fdc6025e1265371ed79"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1066,6 +1121,86 @@ Romain Mari </dd></dl>
 </div><div class="memdoc">
 <p>Initialize the boxing system.</p>
 <p>Initialize the <a class="el" href="class_box_set.html" title="Set of Box objects making a partition of the simulation box. ">BoxSet</a> instance using as a minimal <a class="el" href="class_box.html" title="Box object holding identities of the particles in a subset of the whole suspension, to be used in a BoxSet object. ">Box</a> size the maximal interaction range between any two particles in the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a711e57caa49e1870f4bb1f88ce59555d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::setConfiguration </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>initial_positions</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; double &gt; &amp;&#160;</td>
+          <td class="paramname"><em>radii</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>lx_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>ly_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>lz_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set positions of the particles for initialization.</p>
+
+</div>
+</div>
+<a class="anchor" id="a1bfae3fe7224b08b98faca7f665670be"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::setContacts </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; struct <a class="el" href="structcontact__state.html">contact_state</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>cs</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Set a list of contacts with their state variables.</p>
+<p>Used to restart the simulation from a given state.</p>
+
+</div>
+</div>
+<a class="anchor" id="a4daacacb59afa0f0a4bf2107685a03f1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::setupSystem </td>
+          <td>(</td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>control</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Initialize the system class for the simulation.</p>
 
 </div>
 </div>
@@ -1308,6 +1443,25 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
+<a class="anchor" id="a06720e1cc7c9aa036a50242e1759ec99"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::updateMagneticInteractions </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Magnetic force is noramlized with</p>
+<p>F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4</p>
+<p>{F}_M = - (16/r**4)*( (m.n)m + (m.n)m + (m.m)n - 5(m.n)(m.n)n) (where r and m are dimensionless distance and dimensionless magnetic moment.)</p>
+<p>The nondimentinoal force in the themral unit is given by {F}_M = {F}_M Pe_M</p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_system_8h_source.html">System.h</a></li>
 <li>Stress.cpp</li>
@@ -1319,7 +1473,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_system.html">System</a></li>
-    <li class="footer">Generated on Tue Aug 11 2015 16:37:28 for Documentation for LF_DEM by
+    <li class="footer">Generated on Thu Aug 20 2015 11:59:15 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

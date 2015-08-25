@@ -4,6 +4,7 @@ var annotated =
     [ "Box", "class_box.html", "class_box" ],
     [ "BoxSet", "class_box_set.html", "class_box_set" ],
     [ "Contact", "class_contact.html", "class_contact" ],
+    [ "contact_state", "structcontact__state.html", "structcontact__state" ],
     [ "Event", "struct_event.html", "struct_event" ],
     [ "ForceAmplitudes", "struct_force_amplitudes.html", "struct_force_amplitudes" ],
     [ "GenerateInitConfig", "class_generate_init_config.html", "class_generate_init_config" ],
