@@ -556,7 +556,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	if (control_var == "stress") {
 		if (p.integration_method != 0) {
-			cerr << "Warning : use of the Euler method for the stress controlled simulation is experimental." << endl;
+			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
 		p.integration_method = 0;
 	}
