@@ -23,13 +23,11 @@ void Lubrication::getGeometry()
 	nynz = (interaction->nvec).y*(interaction->nvec).z;
 	nyny = (interaction->nvec).y*(interaction->nvec).y;
 	nznz = (interaction->nvec).z*(interaction->nvec).z;
-	if(sys->p.cross_shear){
+	if (sys->p.cross_shear) {
 		nnE = nynz;
-	}
-	else{
+	} else {
 		nnE = nxnz;
 	}
-	
 }
 
 void Lubrication::init(System *sys_)
@@ -288,7 +286,7 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
-	if(!sys->p.cross_shear) {
+	if (!sys->p.cross_shear) {
 		GEi[0] =  (cGE_i*nvec->x+YG0_YG2*nvec->z);
 		GEi[1] =  cGE_i*nvec->y;
 		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->x);
@@ -302,8 +300,7 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 		HEj[0] =  cHE_j*nxny;
 		HEj[1] = -cHE_j*nxnx_nznz;
 		HEj[2] = -cHE_j*nynz;
-	}
-	else {
+	} else {
 		GEi[0] =  cGE_i*nvec->x;
 		GEi[1] =  (cGE_i*nvec->y+YG0_YG2*nvec->z);
 		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->y);
@@ -482,6 +479,7 @@ void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
 
 /* Lubriction force between two particles is calculated.
  * Note that only the Brownian component of the velocity is NOT included here (IS THAT TRUE?).
+ *     @@@@ na_velocity includes Brownian component(??)
  * This part is used for ouput data.
  * lubforce_p1 = -lubforce_p0
  *
@@ -626,7 +624,7 @@ void Lubrication::updateResistanceCoeff()
 			 * Thus, no drift force is generated.
 			 */
 			setResistanceCoeff(sys->lub_coeff_contact,
-										   sys->log_lub_coeff_contact_tan_total);
+							   sys->log_lub_coeff_contact_tan_total);
 			
 		}
 	}

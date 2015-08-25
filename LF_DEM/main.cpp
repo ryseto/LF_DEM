@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	
 	double dimensionless_number = 0;
 	string numeral, suffix;
-		
+
 	bool generate_init = false;
 	int random_seed = 1;
 
