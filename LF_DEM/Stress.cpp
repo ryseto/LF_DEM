@@ -146,7 +146,11 @@ System::calcStress()
 				interaction[k].get_par_num(i,j);
 				double r_ij = interaction[k].get_ro();
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
-				contactstressXF[j] += sc - contactstressXF[i];
+				contactstressXF[j] += (radius[j]/r_ij)*sc;
+				if(contactstressXF[i].elm[2]>1e6){
+					cout << " big value " << endl;
+					getchar();
+				}
 			}
 		}
 	}

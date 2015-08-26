@@ -113,7 +113,12 @@ public:
 		output_data[index].push_back(str_value.str());
 	}
 	
-	
+	void writeToFile(std::string header) 
+	{
+		fout << header;
+		writeToFile();
+	}
+
 	void writeToFile()
 	{
 		int line_nb = getLineNumber();

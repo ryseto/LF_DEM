@@ -960,7 +960,8 @@ void Simulation::openOutputFiles(bool binary_conf)
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
 	prepareSimulationName(binary_conf);
-	createDataHeader();
+	stringstream data_header;
+	createDataHeader(data_header);
 
 	outdata.setFile("data_" + sys.simu_name + ".dat", data_header.str());
 	outdata_st.setFile("st_" +sys.simu_name + ".dat", data_header.str());

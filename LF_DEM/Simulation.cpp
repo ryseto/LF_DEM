@@ -628,9 +628,24 @@ void Simulation::outputData()
 				outdata_pst.entryData(4, "repulsive stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
 			}
 		}
-		outdata_pst.writeToFile();
+
+		stringstream snapshot_header;
+		getSnapshotHeader(snapshot_header);
+		outdata_pst.writeToFile(snapshot_header.str());
 	}
 
+}
+
+void Simulation::getSnapshotHeader(stringstream &snapshot_header){
+	snapshot_header << "# " << sys.get_shear_strain() << ' ';
+	snapshot_header << sys.shear_disp.x << ' ';
+	snapshot_header << getRate() << ' ';
+	snapshot_header << target_stress_input << ' ';
+	snapshot_header << sys.get_time() << ' ';
+	if (p.magnetic_type != 0) {
+		snapshot_header << sys.angle_external_magnetic_field;
+	}
+	snapshot_header << endl;
 }
 
 void Simulation::outputDataMagnetic()
@@ -714,7 +729,7 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	return vec3d(x,y,z);
 }
 
-void Simulation::createDataHeader()
+void Simulation::createDataHeader(stringstream &data_header)
 {
 	data_header << "# LF_DEM version " << GIT_VERSION << endl;
 	data_header << "# np " << sys.get_np() << endl;
@@ -725,6 +740,8 @@ void Simulation::createDataHeader()
 }
 void Simulation::outputDataHeader(ofstream &fout)
 {
+	stringstream data_header;
+	createDataHeader(data_header);
 	fout << data_header.str();
 }
 

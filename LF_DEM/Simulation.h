@@ -72,7 +72,6 @@ private:
 	/*
 	 * For output data.
 	 */
-	std::stringstream data_header;
 	std::ofstream fout_particle;
 	std::ofstream fout_interaction;
 	std::ofstream fout_time;
@@ -112,8 +111,9 @@ private:
 	 * For outputs
 	 */
 	void evaluateData();
-	void createDataHeader();
+	void createDataHeader(std::stringstream &data_header);
 	void outputDataHeader(std::ofstream &fout);
+	void getSnapshotHeader(std::stringstream &snapshot_header);
 	void outputData();
 	void outputDataMagnetic();
 	void outputConfigurationData();
