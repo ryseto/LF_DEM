@@ -139,6 +139,9 @@ System::calcStress()
 	bool cstress_per_particle = false;
 	if (p.out_particle_stress.find('c') != string::npos){
 		cstress_per_particle = true;
+		for (int i=0; i<np; i++) {
+			contactstressXF[i] = 0;
+		}
 	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
@@ -164,6 +167,9 @@ System::calcStress()
 		bool rstress_per_particle = false;
  		if (p.out_particle_stress.find('r') != string::npos){
 			rstress_per_particle = true;
+			for (int i=0; i<np; i++) {
+				repulsivestressXF[i] = 0;
+			}
 		}
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
