@@ -10,6 +10,7 @@
 #include <cmath>
 #include <map>
 #include <string>
+#include <cstring>
 #include <sstream>
 #include <cctype>
 
