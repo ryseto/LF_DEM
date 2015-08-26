@@ -38,7 +38,7 @@ private:
 	
 	int getLineNumber() 
 	{
-		int line_nb = 0;
+		unsigned int line_nb = 0;
 		for (const auto & col : output_data) {
 			if ( line_nb == 0 && col.size() > 0 ) {
 				line_nb = col.size();

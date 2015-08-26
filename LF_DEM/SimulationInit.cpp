@@ -785,7 +785,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "time_init_relax") {
 		catchSuffixedValue("time", keyword, value, &p.time_init_relax);
 	} else if (keyword == "out_particle_stress") {
-		p.out_particle_stress = str2bool(value);
+		p.out_particle_stress = value;
+		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -938,7 +939,7 @@ void Simulation::setDefaultParameters()
 	p.origin_zero_flow = true;
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
-	p.out_particle_stress = false;
+	p.out_particle_stress = "";
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;
@@ -965,7 +966,7 @@ void Simulation::openOutputFiles(bool binary_conf)
 
 	outdata.setFile("data_" + sys.simu_name + ".dat", data_header.str());
 	outdata_st.setFile("st_" +sys.simu_name + ".dat", data_header.str());
-	if (p.out_particle_stress) {
+	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setFile("pst_" +sys.simu_name + ".dat", data_header.str());
 	}
 	string time_filename = "t_" + sys.simu_name + ".dat";

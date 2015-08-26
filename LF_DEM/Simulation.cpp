@@ -600,32 +600,36 @@ void Simulation::outputData()
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.writeToFile();
 
-	outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	int nb_of_fields = 3;
-	if (sys.brownian) {
-		nb_of_fields ++;
-	}
-	if (sys.repulsiveforce) {
-		nb_of_fields ++;
-	}
-	outdata_pst.init(nb_of_fields, output_unit_scales);
-	if (p.out_data_particle) {
+	
+	if (!p.out_particle_stress.empty()) {
+		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+
+		int nb_of_fields = strlen(p.out_particle_stress.c_str());
+		outdata_pst.init(nb_of_fields, output_unit_scales);
+		
 		for (int i=0; i<sys.get_np(); i++) {
-			StressTensor s = sys.lubstress[i] + sys.contactstressXF[i] + sys.contactstressGU[i];
-			if (sys.brownian) {
-				s += sys.brownianstressGU[i];				
+			int field_index = 0;
+			if (p.out_particle_stress.find('t') != string::npos) {
+				StressTensor s = sys.lubstress[i] + sys.contactstressXF[i] + sys.contactstressGU[i];
+				if (sys.brownian) {
+					s += sys.brownianstressGU[i];				
+				}
+				if (sys.repulsiveforce) {
+					s += sys.repulsivestressGU[i] + sys.repulsivestressXF[i];
+				}
+				outdata_pst.entryData(++field_index, "total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", s);
 			}
-			if (sys.repulsiveforce) {
-				s += sys.repulsivestressGU[i] + sys.repulsivestressXF[i];
+			if (p.out_particle_stress.find('l') != string::npos) {
+				outdata_pst.entryData(++field_index, "lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", sys.lubstress[i]);
 			}
-			outdata_pst.entryData(1, "total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", s);
-			outdata_pst.entryData(2, "lub stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.lubstress[i]);
-			outdata_pst.entryData(3, "contact stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.contactstressXF[i] + sys.contactstressGU[i]);
-			if (sys.brownian) {
-				outdata_pst.entryData(4, "Brownian stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.brownianstressGU[i]);
+			if (p.out_particle_stress.find('c') != string::npos) {
+				outdata_pst.entryData(++field_index, "contact stress (xx, xy, xz, yz, yy, zz)", "stress", sys.contactstressXF[i] + sys.contactstressGU[i]);
 			}
-			if (sys.repulsiveforce) {
-				outdata_pst.entryData(4, "repulsive stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
+			if (sys.brownian && p.out_particle_stress.find('b') != string::npos ) {
+				outdata_pst.entryData(++field_index, "Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", sys.brownianstressGU[i]);
+			}
+			if (sys.repulsiveforce && p.out_particle_stress.find('r') != string::npos ) {
+				outdata_pst.entryData(++field_index, "repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
 			}
 		}
 
