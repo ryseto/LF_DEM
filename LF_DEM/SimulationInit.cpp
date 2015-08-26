@@ -778,7 +778,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "magnetic_interaction_range") {
 		p.magnetic_interaction_range = atof(value.c_str());
 	} else if (keyword == "cross_shear") {
-		p.cross_shear = str2bool(value); // temporary, should get a parameter
+		p.cross_shear = str2bool(value);
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
@@ -787,6 +787,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "out_particle_stress") {
 		p.out_particle_stress = value;
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
+	} else if (keyword == "out_binary_conf") {
+		p.out_binary_conf = str2bool(value);
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -940,6 +942,7 @@ void Simulation::setDefaultParameters()
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
 	p.out_particle_stress = "";
+	p.out_binary_conf = false;
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;

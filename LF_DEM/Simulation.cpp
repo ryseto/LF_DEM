@@ -163,7 +163,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	
 	double next_output_data = 0;
 	double next_output_config = 0;
-	
+	int binconf_counter = 0;
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -177,15 +177,23 @@ void Simulation::simulationSteadyShear(string in_args,
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
-		outputConfigurationBinary();
+		outputConfigurationBinary(); // generic, for recovery if crash
 		if (time_interval_output_config == -1) {
 			if (sys.get_shear_strain() >= next_output_config-1e-8) {
 				outputConfigurationData();
+				if(p.out_binary_conf){
+					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(binconf_counter) + ".bin";
+					outputConfigurationBinary(binconf_filename);
+				}
 				next_output_config += strain_interval_output_config;
 			}
 		} else {
 			if (sys.get_time() >= next_output_config-1e-8) {
 				outputConfigurationData();
+				if(p.out_binary_conf){
+					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(binconf_counter) + ".bin";
+					outputConfigurationBinary(binconf_filename);
+				}
 				next_output_config +=  time_interval_output_config;
 			}
 		}
