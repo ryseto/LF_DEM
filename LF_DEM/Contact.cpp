@@ -352,7 +352,8 @@ void Contact::calcContactStress()
 		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 		 * stress1 + stress2 = (a1+a2)*nvec[*]force
 		 */
-		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);
+
+		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);		
 		if (state >= 2) {
 			contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
 		}

@@ -33,9 +33,6 @@ target_stress_input(0)
 
 Simulation::~Simulation()
 {
-	if (fout_data.is_open()) {
-		fout_data.close();
-	}
 	if (fout_particle.is_open()) {
 		fout_particle.close();
 	}
@@ -426,6 +423,11 @@ void Simulation::outputConfigurationBinary()
 
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
+	/** 
+		\brief Saves the current configuration of the system in a binary file.
+		
+		In the current implementation, it stores particle positions, x and y strain, and contact states.
+	*/
 	vector< vector<double> > pos;
 	int np = sys.get_np();
 	int dims = 4;
@@ -511,29 +513,7 @@ void Simulation::outputData()
 	 and made more consistent in the future.
 	 */
 	
-	/*
-	 * Output the sum of the normal forces.
-	 *
-	 *  Viscosity = S_{xz} / shear_rate
-	 *  N1 = S_{xx}-S_{zz}
-	 *  N2 = S_{zz}-S_{yy} = S_zz-(-S_xx-S_zz) = S_xx+2*S_zz
-	 *
-	 * Relative viscosity = Viscosity / viscosity_solvent
-	 */
-	
-	/*
-	 	 * hat(...) indicates dimensionless quantities.
-	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
-	 * (2) N1/(eta0*shear_rate) = 6*pi*hat(N1)
-	 * (3) N2/(eta0*shear_rate) = 6*pi*hat(N2)
-	 *
-	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
-	 *
-	 * [note] In stress controlled simulation,
-	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
-	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
-	 */
-	
+	 	
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
 	
@@ -603,7 +583,7 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", "none", p.kr);
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
-	outdata.exportFile(fout_data);
+	outdata.writeToFile();
 	
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
@@ -618,7 +598,39 @@ void Simulation::outputData()
 	outdata_st.entryData(6, "contact stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_contact_stressXF+sys.total_contact_stressGU);
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stress);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
-	outdata_st.exportFile(fout_st);
+	outdata_st.writeToFile();
+
+	outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	int nb_of_fields = 3;
+	if (sys.brownian) {
+		nb_of_fields ++;
+	}
+	if (sys.repulsiveforce) {
+		nb_of_fields ++;
+	}
+	outdata_pst.init(nb_of_fields, output_unit_scales);
+	if (p.out_data_particle) {
+		for (int i=0; i<sys.get_np(); i++) {
+			StressTensor s = sys.lubstress[i] + sys.contactstressXF[i] + sys.contactstressGU[i];
+			if (sys.brownian) {
+				s += sys.brownianstressGU[i];				
+			}
+			if (sys.repulsiveforce) {
+				s += sys.repulsivestressGU[i] + sys.repulsivestressXF[i];
+			}
+			outdata_pst.entryData(1, "total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", s);
+			outdata_pst.entryData(2, "lub stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.lubstress[i]);
+			outdata_pst.entryData(3, "contact stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.contactstressXF[i] + sys.contactstressGU[i]);
+			if (sys.brownian) {
+				outdata_pst.entryData(4, "Brownian stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.brownianstressGU[i]);
+			}
+			if (sys.repulsiveforce) {
+				outdata_pst.entryData(4, "repulsive stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
+			}
+		}
+		outdata_pst.writeToFile();
+	}
+
 }
 
 void Simulation::outputDataMagnetic()
@@ -680,7 +692,7 @@ void Simulation::outputDataMagnetic()
 	 */
 
 
-	outdata.exportFile(fout_data);
+	outdata.writeToFile();
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
@@ -702,14 +714,18 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	return vec3d(x,y,z);
 }
 
+void Simulation::createDataHeader()
+{
+	data_header << "# LF_DEM version " << GIT_VERSION << endl;
+	data_header << "# np " << sys.get_np() << endl;
+	data_header << "# VF " << sys.volume_fraction << endl;
+	data_header << "# Lx " << sys.get_lx() << endl;
+	data_header << "# Ly " << sys.get_ly() << endl;
+	data_header << "# Lz " << sys.get_lz() << endl;
+}
 void Simulation::outputDataHeader(ofstream &fout)
 {
-	fout << "# LF_DEM version " << GIT_VERSION << endl;
-	fout << "# np " << sys.get_np() << endl;
-	fout << "# VF " << sys.volume_fraction << endl;
-	fout << "# Lx " << sys.get_lx() << endl;
-	fout << "# Ly " << sys.get_ly() << endl;
-	fout << "# Lz " << sys.get_lz() << endl;
+	fout << data_header.str();
 }
 
 void Simulation::outputConfigurationData()

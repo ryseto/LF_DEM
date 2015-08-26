@@ -119,7 +119,7 @@ struct ParameterSet
 
 	bool out_data_particle;                  ///< Output par_* file [true]
 	bool out_data_interaction;               ///< Output int_* file [true]
-	
+	bool out_particle_stress;				///< Output stress per particle in pst_* file [false]
 	
 	/*******************************************************
 	 CONTACT PARAMETERS AUTO-DETERMINATION

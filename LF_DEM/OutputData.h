@@ -30,24 +30,48 @@ private:
 	int number_of_data;
 	bool first_time;
 	std::string out_unit;
-	std::vector<std::string> output_data;
-	std::vector<std::string> output_data_name;
-	std::vector<std::string> output_data_type;
+	std::vector < std::vector<std::string> > output_data;
+	std::vector <std::string> output_data_name;
+	std::vector <std::string> output_data_type;
 	std::map <std::string, double> converter;
+	std::ofstream fout;
 	
+	int getLineNumber() 
+	{
+		int line_nb = 0;
+		for (const auto & col : output_data) {
+			if ( line_nb == 0 && col.size() > 0 ) {
+				line_nb = col.size();
+			}
+			if ( col.size() > 0 && col.size() != line_nb ) {
+				std::cerr << " Error: inconsistent output. Number of lines to output is heterogeneous." << std::endl;
+				exit(1);
+			} 
+		}
+		return line_nb;
+	}
+
 public:
-	OutputData():
-	first_time(true) {}
+	OutputData():	first_time(true) {}
+	~OutputData() {
+		fout.close();
+	}
+	void setFile (const std::string & fname, const std::string & data_header) 
+	{
+		fout.open(fname.c_str());
+		fout << data_header;
+	}
 	
-	void init(int number_of_data_, std::string output_unit) {
+	void init(int number_of_data_, std::string output_unit) 
+	{
 		if (first_time) {
 			out_unit = output_unit;
 			number_of_data = number_of_data_;
 			output_data.resize(number_of_data);
 			output_data_name.resize(number_of_data);
 			output_data_type.resize(number_of_data);
-			for (std::string &od : output_data) {
-				od = "n";
+			for (auto &od : output_data) {
+				od.clear();
 			}
 			for (std::string &odn : output_data_name) {
 				odn = "blank";
@@ -83,33 +107,38 @@ public:
 		std::ostringstream str_value;
 		str_value << converter[output_data_type[index]]*value;
 		if (first_time) {
-			if (output_data_name[index] != "blank") {
-				std::cerr << "data["<< index << "] is redefined." << std::endl;
-				exit(1);
-			} else {
-				output_data_name[index] = name;
-			}
-		}
-		output_data_type[index] = type;
-		output_data[index] = str_value.str();
+			output_data_name[index] = name;
+			output_data_type[index] = type;
+		}		
+		output_data[index].push_back(str_value.str());
 	}
 	
-	void exportFile(std::ofstream &fout_data)
+	
+	void writeToFile()
 	{
+		int line_nb = getLineNumber();
 		if (first_time) {
-			fout_data << "# data in " << out_unit << " units." << std::endl;	
+			fout << "# data in " << out_unit << " units." << std::endl;	
 			for (int i=0; i<number_of_data; i++) {
-				fout_data << "#" << i+1 << ": ";
-				fout_data << output_data_name[i];
-				fout_data << std::endl;
+				fout << "#" << i+1 << ": ";
+				fout << output_data_name[i];
+				fout << std::endl;
 			}
 			first_time = false;
 		}
-		
-		for (int i=0; i<number_of_data; i++) {
-			fout_data << output_data[i] << ' ';
+		for (int i=0; i<line_nb; i++) {
+			for (const auto & od : output_data) {
+				if (!od.empty()) {
+					fout << od[i] << " ";
+				} else {
+					fout << "n ";
+				}
+			}
+			fout << std::endl;
 		}
-		fout_data << std::endl;
+		for (auto & od : output_data) {
+			od.clear();
+		}
 	}
 };
 #endif

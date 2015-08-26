@@ -124,6 +124,9 @@ System::~System()
 	DELETE(contact_torque);
 	DELETE(lubstress);
 	DELETE(contactstressGU);
+	if (p.out_particle_stress) {
+		DELETE(contactstressXF);
+	}
 	DELETE(interaction);
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
@@ -137,6 +140,9 @@ System::~System()
 	if (repulsiveforce) {
 		DELETE(repulsive_force);
 		DELETE(repulsivestressGU);
+		if (p.out_particle_stress) {
+			DELETE(repulsivestressXF);
+		}
 		DELETE(vel_repulsive);
 		DELETE(ang_vel_repulsive);
 	}
@@ -202,9 +208,15 @@ void System::allocateRessources()
 	contact_torque = new vec3d [np];
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
+	if (p.out_particle_stress) {
+		contactstressXF = new StressTensor [np];
+	}
 	if (repulsiveforce) {
 		repulsive_force = new vec3d [np];
 		repulsivestressGU = new StressTensor [np];
+		if (p.out_particle_stress) {
+			repulsivestressXF = new StressTensor [np];
+		}
 	}
 	if (brownian) {
 		brownian_force = new double [linalg_size];

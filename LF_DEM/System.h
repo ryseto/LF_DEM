@@ -196,11 +196,13 @@ private:
 	std::vector <double> magnetic_susceptibility;
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
-	StressTensor* contactstressGU; // by particle
-	StressTensor* repulsivestressGU; // by particle
-	StressTensor* brownianstressGU; // by particle
-	StressTensor* brownianstressGU_predictor; // by particle
-	StressTensor* magneticstressGU; // by particle
+	StressTensor* contactstressGU; // per particle
+	StressTensor* contactstressXF; // per particle
+	StressTensor* repulsivestressGU; // per particle
+	StressTensor* repulsivestressXF; // per particle
+	StressTensor* brownianstressGU; // per particle
+	StressTensor* brownianstressGU_predictor; // per particle
+	StressTensor* magneticstressGU; // per particle
 	std::vector<StressTensor> magneticstressXF;
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;

@@ -135,10 +135,19 @@ System::calcStress()
 	// XF contribution
 	total_contact_stressXF_normal.reset();
 	total_contact_stressXF_tan.reset();
+
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
 			total_contact_stressXF_normal += interaction[k].contact.getContactStressXF_normal();
 			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
+			if (p.out_particle_stress) {
+				StressTensor sc = interaction[k].contact.getContactStressXF();
+				unsigned short i,j;
+				interaction[k].get_par_num(i,j);
+				double r_ij = interaction[k].get_ro();
+				contactstressXF[i] += (radius[i]/r_ij)*sc;
+				contactstressXF[j] += sc - contactstressXF[i];
+			}
 		}
 	}
 	total_contact_stressXF_normal /= system_volume;
@@ -150,6 +159,16 @@ System::calcStress()
 		total_repulsive_stressXF.reset();
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
+			if (p.out_particle_stress) {
+				/* NOTE: 
+					As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
+				*/
+				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
+				unsigned short i,j;
+				interaction[k].get_par_num(i,j);
+				repulsivestressXF[i] += sc; 
+				repulsivestressXF[j] += sc;
+			}
 		}
 		total_repulsive_stressXF /= system_volume;
 		// GU contribution
