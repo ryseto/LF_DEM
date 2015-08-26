@@ -6,8 +6,6 @@ var class_interaction =
     [ "calcRelativeVelocities", "class_interaction.html#a6ee3e08c455a729a687d87124a9a7216", null ],
     [ "calcRollingVelocities", "class_interaction.html#aa6d1c13c4fca9c1e49f12953ba5708fb", null ],
     [ "deactivate", "class_interaction.html#acd5c51630bbf2c8371f09b53cc847508", null ],
-    [ "get_a0", "class_interaction.html#a9e8ec2a84f98849cdb6fb5915ac77b7c", null ],
-    [ "get_a1", "class_interaction.html#a3705774940d7db962befafbe5ed132c0", null ],
     [ "get_a_reduced", "class_interaction.html#ad0e551107b1c68613ebfcda392ecd851", null ],
     [ "get_gap", "class_interaction.html#ac3585ba453fe897932dcbedd9d0ef33e", null ],
     [ "get_label", "class_interaction.html#ac24ebf826b274cbc4c1a938aba882797", null ],

@@ -283,286 +283,288 @@ $(document).ready(function(){initNavTree('_system_8h_source.html','');});
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;        std::vector &lt;double&gt; magnetic_susceptibility;</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        <span class="keywordtype">double</span> *brownian_force;</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* lubstress; <span class="comment">// G U + M E</span></div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* contactstressGU; <span class="comment">// by particle</span></div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* repulsivestressGU; <span class="comment">// by particle</span></div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* brownianstressGU; <span class="comment">// by particle</span></div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* brownianstressGU_predictor; <span class="comment">// by particle</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* magneticstressGU; <span class="comment">// by particle</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;        std::vector&lt;StressTensor&gt; magneticstressXF;</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_stress;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_hydro_stress;</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressXF_normal;</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressXF_tan;</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressXF;</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressGU;</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_repulsive_stressXF;</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_repulsive_stressGU;</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_repulsive_stress;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_brownian_stressGU;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_magnetic_stressXF;</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_magnetic_stressGU;</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_magnetic_stress;</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;        <a class="code" href="class_averager.html">Averager&lt;StressTensor&gt;</a> *stress_avg;</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        <span class="keywordtype">double</span> dt;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        <span class="comment">/* double kn; */</span></div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        <span class="comment">/* double kt; */</span></div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        <span class="comment">/* double kr; */</span></div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="keywordtype">double</span> kn_master;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="keywordtype">double</span> kt_master;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <span class="keywordtype">double</span> kr_master;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <span class="keywordtype">double</span> lub_coeff_contact;</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keywordtype">double</span> einstein_stress;</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;        <span class="keywordtype">double</span> einstein_viscosity;</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        <span class="comment">// resistance coeffient for normal mode</span></div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;        <span class="keywordtype">double</span> log_lub_coeff_contact_tan_dashpot;</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordtype">double</span> log_lub_coeff_contact_tan_lubrication;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <span class="keywordtype">double</span> log_lub_coeff_contact_tan_total;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        std::set &lt;Interaction*&gt; *interaction_list;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        std::set &lt;int&gt; *interaction_partners;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        <span class="keywordtype">int</span> nb_interaction;</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        <span class="keywordtype">double</span> *ratio_unit_time; <span class="comment">// to convert System time in Simulation time</span></div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;        <a class="code" href="classvec3d.html">vec3d</a> shear_disp; <span class="comment">// lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used</span></div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        <span class="comment">/* For non-Brownian suspension:</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="comment">         * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)</span></div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="comment">         * For Brownian suspension, it should be Peclet number</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="comment">         */</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;        <span class="comment">//      double dimensionless_number;</span></div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;        <span class="comment">/* Velocity difference between top and bottom</span></div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="comment">         * in Lees-Edwards boundary condition</span></div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="comment">         * vel_difference = shear_rate * lz</span></div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="comment">         */</span></div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        <a class="code" href="classvec3d.html">vec3d</a> vel_difference;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;        <span class="keywordtype">double</span> max_velocity;</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;        <span class="keywordtype">double</span> max_relative_velocity;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;        <span class="keywordtype">double</span> max_sliding_velocity;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;        <span class="keywordtype">double</span> max_ang_velocity;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keywordtype">double</span> min_reduced_gap;</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;        <span class="keywordtype">double</span> max_contact_gap;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        <span class="keywordtype">double</span> max_disp_tan;</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        <span class="keywordtype">double</span> max_disp_rolling;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;        std::queue&lt;int&gt; deactivated_interaction;</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;        <span class="keywordtype">double</span> max_contact_velo_tan;</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;        <span class="keywordtype">double</span> max_contact_velo_normal;</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;        <span class="keywordtype">double</span> ave_contact_velo_tan;</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;        <span class="keywordtype">double</span> ave_contact_velo_normal;</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;        <span class="keywordtype">double</span> ave_sliding_velocity;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;        <span class="keywordtype">int</span> contact_nb; <span class="comment">// gap &lt; 0</span></div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;        <span class="keywordtype">int</span> fric_contact_nb; <span class="comment">// fn &gt; f* in the critical load model</span></div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;        <span class="keywordtype">double</span> max_fc_normal;</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        <span class="keywordtype">double</span> max_fc_tan;</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;        std::string simu_name;</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;        <span class="keywordtype">double</span> target_stress;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;        <span class="keywordtype">double</span> init_strain_shear_rate_limit;</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;        <span class="keywordtype">double</span> init_shear_rate_limit;</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;        <span class="keywordtype">double</span> new_contact_gap; <span class="comment">// When gel structure is imported it needs to be larger than 0 at the begining.</span></div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;        <span class="keywordtype">void</span> setSystemVolume(<span class="keywordtype">double</span> depth = 0);</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a711e57caa49e1870f4bb1f88ce59555d">setConfiguration</a>(<span class="keyword">const</span> std::vector &lt;vec3d&gt; &amp;initial_positions,</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;                                                  <span class="keyword">const</span> std::vector &lt;double&gt; &amp;radii,</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;                                                  <span class="keywordtype">double</span> lx_, <span class="keywordtype">double</span> ly_, <span class="keywordtype">double</span> lz_);</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a1bfae3fe7224b08b98faca7f665670be">setContacts</a>(<span class="keyword">const</span> std::vector &lt;struct contact_state&gt; &amp;cs);</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">getContacts</a>(std::vector &lt;struct contact_state&gt; &amp;cs);</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;        <span class="keywordtype">void</span> setInteractions_GenerateInitConfig();</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a4daacacb59afa0f0a4bf2107685a03f1">setupSystem</a>(std::string control);</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        <span class="keywordtype">void</span> allocatePositionRadius();</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        <span class="keywordtype">void</span> allocateRessources();</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        <span class="keywordtype">void</span> timeEvolution(std::string time_or_strain, <span class="keywordtype">double</span> value_end);</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        <span class="keywordtype">void</span> timeEvolution(<span class="keywordtype">double</span> value_end);</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        <span class="keywordtype">void</span> displacement(<span class="keywordtype">int</span> i, <span class="keyword">const</span> <a class="code" href="classvec3d.html">vec3d</a> &amp;dr);</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a3b996040c1a70b94c531562532c56f0c">checkNewInteraction</a>();</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;        <span class="keywordtype">void</span> checkInteractionEnd();</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">updateInteractions</a>();</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a06720e1cc7c9aa036a50242e1759ec99">updateMagneticInteractions</a>();</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keywordtype">void</span> updateUnscaledContactmodel();</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        <span class="keywordtype">double</span> lubricationForceFactor(<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> j);</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        <span class="keywordtype">int</span> periodize(<a class="code" href="classvec3d.html">vec3d</a> &amp;);</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <span class="keywordtype">void</span> periodize_diff(<a class="code" href="classvec3d.html">vec3d</a> &amp;, <span class="keywordtype">int</span> &amp;);</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordtype">void</span> periodize_diff(<a class="code" href="classvec3d.html">vec3d</a> &amp;);</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordtype">void</span> stressBrownianReset();</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <span class="keywordtype">void</span> calcStress();</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a05d663034ce639977969d04cc9d64e57">calcStressPerParticle</a>();</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;        <span class="keywordtype">void</span> analyzeState();</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;        <a class="code" href="class_stokes_solver.html">StokesSolver</a> stokes_solver;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordtype">void</span> lubricationStress(<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> j);</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a8682c5257b505fdc6025e1265371ed79">initializeBoxing</a>();</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordtype">void</span> calcLubricationForce(); <span class="comment">// for visualization of force chains</span></div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordtype">void</span> calcPotentialEnergy();</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        <span class="comment">/*</span></div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;<span class="comment">         * Simulation for magnetic particles</span></div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;<span class="comment">         */</span></div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="keywordtype">bool</span> magnetic_rotation_active;</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        <span class="keywordtype">double</span> magnetic_dd_energy; <span class="comment">// Magnetic dipole-dipole energy per particle</span></div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        <span class="keywordtype">double</span> angle_external_magnetic_field;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        <a class="code" href="classvec3d.html">vec3d</a> external_magnetic_field;</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <span class="keywordtype">void</span> setMagneticConfiguration(<span class="keyword">const</span> std::vector &lt;vec3d&gt; &amp;magnetic_moment,</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;                                                                  <span class="keyword">const</span> std::vector &lt;double&gt; &amp;magnetic_susceptibility);</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;        <span class="keywordtype">void</span> setMagneticMomentExternalField();</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;        <span class="keywordtype">void</span> setMagneticMomentZero();</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordtype">void</span> calcMagneticEnergy();</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;        <span class="comment">/*************************************************************/</span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keywordtype">double</span> calcInteractionRangeDefault(<span class="keyword">const</span> <span class="keywordtype">int</span>&amp;, <span class="keyword">const</span> <span class="keywordtype">int</span>&amp;);</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;        <span class="keywordtype">double</span> calcLubricationRange(<span class="keyword">const</span> <span class="keywordtype">int</span>&amp; i, <span class="keyword">const</span> <span class="keywordtype">int</span>&amp; j);</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        void (<a class="code" href="class_system.html">System</a>::*eventLookUp)();</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a21eecf49ee4bf2343c392e2767888167">eventShearJamming</a>();</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;        <span class="keywordtype">void</span> setBoxSize(<span class="keywordtype">double</span> lx_, <span class="keywordtype">double</span> ly_, <span class="keywordtype">double</span> lz_)</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;        {</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;                lx = lx_;</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;                lx_half = 0.5*lx;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;                ly = ly_;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;                ly_half = 0.5*ly;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;                lz = lz_;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                lz_half = 0.5*lz;</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;                std::cerr &lt;&lt; <span class="stringliteral">&quot;box: &quot;</span> &lt;&lt; lx &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; ly &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; lz &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        }</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> getTotalNumberOfContacts()</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;        {</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;                <span class="keywordflow">return</span> contact_nb;</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        }</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;        <span class="keywordtype">double</span> getContactNumber()</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;        {</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;                <span class="keywordflow">return</span> (<span class="keywordtype">double</span>)2*contact_nb/<a class="code" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a>;</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        }</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;        <span class="keywordtype">double</span> getFrictionalContactNumber()</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        {</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;                <span class="keywordflow">return</span> (<span class="keywordtype">double</span>)2*contact_nb/<a class="code" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a>;</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        }</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        <span class="keywordtype">double</span> get_lx()</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;        {</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;                <span class="keywordflow">return</span> lx;</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        }</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;        <span class="keywordtype">double</span> get_ly()</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;        {</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;                <span class="keywordflow">return</span> ly;</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;        }</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;        <span class="keywordtype">double</span> get_time_in_simulation_units()</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        {</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="class_system.html#ae8150cec4fd4f03e0bb130f022268af3">time_in_simulation_units</a>;</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        }</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;        <span class="keywordtype">double</span> get_time()</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;        {</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="class_system.html#aa9e002a5f2f169e37c545b76ee67e724">time</a>;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        }</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_shear_rate()</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        {</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;                <span class="keywordflow">return</span> shear_rate;</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        }</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> set_shear_rate(<span class="keywordtype">double</span> sr)</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;        {</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                shear_rate = sr;</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;        }</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_lz()</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;        {</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;                <span class="keywordflow">return</span> lz;</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        }</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> Lx_half()</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;        {</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;                <span class="keywordflow">return</span> lx_half;</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        }</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> Ly_half()</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;        {</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;                <span class="keywordflow">return</span> ly_half;</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;        }</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> Lz_half()</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;        {</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;                <span class="keywordflow">return</span> lz_half;</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;        }</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> set_np(<span class="keywordtype">int</span> val)</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;        {</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;                np = val;</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;        }</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">int</span> get_np()</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;        {</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a>;</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        }</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_shear_strain()</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;        {</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;                <span class="keywordflow">return</span> shear_strain;</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        }</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> set_dt(<span class="keywordtype">double</span> val)</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;        {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;                dt = val;</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;        }</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_nb_of_active_interactions()</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;        {</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;                <span class="keywordflow">return</span> nb_of_active_interactions;</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;        }</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;        <span class="keywordtype">int</span> get_total_num_timesteps()</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;        {</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;                <span class="keywordflow">return</span> total_num_timesteps;</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;        }</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;        <span class="keywordtype">double</span> get_total_energy()</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;        {</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;                <span class="keywordflow">return</span> total_energy;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        }</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;        <span class="keyword">struct </span><a class="code" href="struct_force_amplitudes.html">ForceAmplitudes</a> amplitudes;</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;};</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* defined(__LF_DEM__System__) */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="class_system_html_a7b3733e4824baf06f73b0b919ab7cfb2"><div class="ttname"><a href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">System::adjustContactModelParameters</a></div><div class="ttdeci">void adjustContactModelParameters()</div><div class="ttdef"><b>Definition:</b> System.cpp:2078</div></div>
-<div class="ttc" id="class_system_html_aaa42c0d51099a3340ee386feb61d0e67"><div class="ttname"><a href="class_system.html#aaa42c0d51099a3340ee386feb61d0e67">System::timeStepMoveCorrector</a></div><div class="ttdeci">void timeStepMoveCorrector()</div><div class="ttdef"><b>Definition:</b> System.cpp:935</div></div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* contactstressGU; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* contactstressXF; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* repulsivestressGU; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* repulsivestressXF; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* brownianstressGU; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* brownianstressGU_predictor; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a>* magneticstressGU; <span class="comment">// per particle</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;        std::vector&lt;StressTensor&gt; magneticstressXF;</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_stress;</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_hydro_stress;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressXF_normal;</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressXF_tan;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressXF;</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_contact_stressGU;</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_repulsive_stressXF;</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_repulsive_stressGU;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_repulsive_stress;</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_brownian_stressGU;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_magnetic_stressXF;</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_magnetic_stressGU;</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        <a class="code" href="class_stress_tensor.html">StressTensor</a> total_magnetic_stress;</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        <a class="code" href="class_averager.html">Averager&lt;StressTensor&gt;</a> *stress_avg;</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;        <span class="keywordtype">double</span> dt;</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        <span class="comment">/* double kn; */</span></div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="comment">/* double kt; */</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="comment">/* double kr; */</span></div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <span class="keywordtype">double</span> kn_master;</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <span class="keywordtype">double</span> kt_master;</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keywordtype">double</span> kr_master;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;        <span class="keywordtype">double</span> lub_coeff_contact;</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        <span class="keywordtype">double</span> einstein_stress;</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;        <span class="keywordtype">double</span> einstein_viscosity;</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="comment">// resistance coeffient for normal mode</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <span class="keywordtype">double</span> log_lub_coeff_contact_tan_dashpot;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        <span class="keywordtype">double</span> log_lub_coeff_contact_tan_lubrication;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        <span class="keywordtype">double</span> log_lub_coeff_contact_tan_total;</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        std::set &lt;Interaction*&gt; *interaction_list;</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        std::set &lt;int&gt; *interaction_partners;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;        <span class="keywordtype">int</span> nb_interaction;</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        <span class="keywordtype">double</span> *ratio_unit_time; <span class="comment">// to convert System time in Simulation time</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;        <a class="code" href="classvec3d.html">vec3d</a> shear_disp; <span class="comment">// lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;        <span class="comment">/* For non-Brownian suspension:</span></div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="comment">         * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)</span></div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="comment">         * For Brownian suspension, it should be Peclet number</span></div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="comment">         */</span></div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;        <span class="comment">//      double dimensionless_number;</span></div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;        <span class="comment">/* Velocity difference between top and bottom</span></div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="comment">         * in Lees-Edwards boundary condition</span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">         * vel_difference = shear_rate * lz</span></div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="comment">         */</span></div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;        <a class="code" href="classvec3d.html">vec3d</a> vel_difference;</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;        <span class="keywordtype">double</span> max_velocity;</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;        <span class="keywordtype">double</span> max_relative_velocity;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keywordtype">double</span> max_sliding_velocity;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;        <span class="keywordtype">double</span> max_ang_velocity;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        <span class="keywordtype">double</span> min_reduced_gap;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;        <span class="keywordtype">double</span> max_contact_gap;</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;        <span class="keywordtype">double</span> max_disp_tan;</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;        <span class="keywordtype">double</span> max_disp_rolling;</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;        std::queue&lt;int&gt; deactivated_interaction;</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;        <span class="keywordtype">double</span> max_contact_velo_tan;</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;        <span class="keywordtype">double</span> max_contact_velo_normal;</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;        <span class="keywordtype">double</span> ave_contact_velo_tan;</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;        <span class="keywordtype">double</span> ave_contact_velo_normal;</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;        <span class="keywordtype">double</span> ave_sliding_velocity;</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;        <span class="keywordtype">int</span> contact_nb; <span class="comment">// gap &lt; 0</span></div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        <span class="keywordtype">int</span> fric_contact_nb; <span class="comment">// fn &gt; f* in the critical load model</span></div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;        <span class="keywordtype">double</span> max_fc_normal;</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;        <span class="keywordtype">double</span> max_fc_tan;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;        std::string simu_name;</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;        <span class="keywordtype">double</span> target_stress;</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;        <span class="keywordtype">double</span> init_strain_shear_rate_limit;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;        <span class="keywordtype">double</span> init_shear_rate_limit;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;        <span class="keywordtype">double</span> new_contact_gap; <span class="comment">// When gel structure is imported it needs to be larger than 0 at the begining.</span></div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        <span class="keywordtype">void</span> setSystemVolume(<span class="keywordtype">double</span> depth = 0);</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a711e57caa49e1870f4bb1f88ce59555d">setConfiguration</a>(<span class="keyword">const</span> std::vector &lt;vec3d&gt; &amp;initial_positions,</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                                                  <span class="keyword">const</span> std::vector &lt;double&gt; &amp;radii,</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;                                                  <span class="keywordtype">double</span> lx_, <span class="keywordtype">double</span> ly_, <span class="keywordtype">double</span> lz_);</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a1bfae3fe7224b08b98faca7f665670be">setContacts</a>(<span class="keyword">const</span> std::vector &lt;struct contact_state&gt; &amp;cs);</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">getContacts</a>(std::vector &lt;struct contact_state&gt; &amp;cs);</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        <span class="keywordtype">void</span> setInteractions_GenerateInitConfig();</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a4daacacb59afa0f0a4bf2107685a03f1">setupSystem</a>(std::string control);</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        <span class="keywordtype">void</span> allocatePositionRadius();</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        <span class="keywordtype">void</span> allocateRessources();</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        <span class="keywordtype">void</span> timeEvolution(std::string time_or_strain, <span class="keywordtype">double</span> value_end);</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        <span class="keywordtype">void</span> timeEvolution(<span class="keywordtype">double</span> value_end);</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;        <span class="keywordtype">void</span> displacement(<span class="keywordtype">int</span> i, <span class="keyword">const</span> <a class="code" href="classvec3d.html">vec3d</a> &amp;dr);</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a3b996040c1a70b94c531562532c56f0c">checkNewInteraction</a>();</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="keywordtype">void</span> checkInteractionEnd();</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">updateInteractions</a>();</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a06720e1cc7c9aa036a50242e1759ec99">updateMagneticInteractions</a>();</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        <span class="keywordtype">void</span> updateUnscaledContactmodel();</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <span class="keywordtype">double</span> lubricationForceFactor(<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> j);</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordtype">int</span> periodize(<a class="code" href="classvec3d.html">vec3d</a> &amp;);</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordtype">void</span> periodize_diff(<a class="code" href="classvec3d.html">vec3d</a> &amp;, <span class="keywordtype">int</span> &amp;);</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <span class="keywordtype">void</span> periodize_diff(<a class="code" href="classvec3d.html">vec3d</a> &amp;);</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keywordtype">void</span> stressBrownianReset();</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;        <span class="keywordtype">void</span> calcStress();</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a05d663034ce639977969d04cc9d64e57">calcStressPerParticle</a>();</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordtype">void</span> analyzeState();</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <a class="code" href="class_stokes_solver.html">StokesSolver</a> stokes_solver;</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordtype">void</span> lubricationStress(<span class="keywordtype">int</span> i, <span class="keywordtype">int</span> j);</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a8682c5257b505fdc6025e1265371ed79">initializeBoxing</a>();</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        <span class="keywordtype">void</span> calcLubricationForce(); <span class="comment">// for visualization of force chains</span></div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        <span class="keywordtype">void</span> calcPotentialEnergy();</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <span class="comment">/*</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;<span class="comment">         * Simulation for magnetic particles</span></div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;<span class="comment">         */</span></div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        <span class="keywordtype">bool</span> magnetic_rotation_active;</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        <span class="keywordtype">double</span> magnetic_dd_energy; <span class="comment">// Magnetic dipole-dipole energy per particle</span></div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <span class="keywordtype">double</span> angle_external_magnetic_field;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;        <a class="code" href="classvec3d.html">vec3d</a> external_magnetic_field;</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;        <span class="keywordtype">void</span> setMagneticConfiguration(<span class="keyword">const</span> std::vector &lt;vec3d&gt; &amp;magnetic_moment,</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;                                                                  <span class="keyword">const</span> std::vector &lt;double&gt; &amp;magnetic_susceptibility);</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordtype">void</span> setMagneticMomentExternalField();</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;        <span class="keywordtype">void</span> setMagneticMomentZero();</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keywordtype">void</span> calcMagneticEnergy();</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;        <span class="comment">/*************************************************************/</span></div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        <span class="keywordtype">double</span> calcInteractionRangeDefault(<span class="keyword">const</span> <span class="keywordtype">int</span>&amp;, <span class="keyword">const</span> <span class="keywordtype">int</span>&amp;);</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        <span class="keywordtype">double</span> calcLubricationRange(<span class="keyword">const</span> <span class="keywordtype">int</span>&amp; i, <span class="keyword">const</span> <span class="keywordtype">int</span>&amp; j);</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;        void (<a class="code" href="class_system.html">System</a>::*eventLookUp)();</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="class_system.html#a21eecf49ee4bf2343c392e2767888167">eventShearJamming</a>();</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;        <span class="keywordtype">void</span> setBoxSize(<span class="keywordtype">double</span> lx_, <span class="keywordtype">double</span> ly_, <span class="keywordtype">double</span> lz_)</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;        {</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;                lx = lx_;</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;                lx_half = 0.5*lx;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;                ly = ly_;</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                ly_half = 0.5*ly;</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;                lz = lz_;</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;                lz_half = 0.5*lz;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;                std::cerr &lt;&lt; <span class="stringliteral">&quot;box: &quot;</span> &lt;&lt; lx &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; ly &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; lz &lt;&lt; std::endl;</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;        }</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> getTotalNumberOfContacts()</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        {</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;                <span class="keywordflow">return</span> contact_nb;</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;        }</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;        <span class="keywordtype">double</span> getContactNumber()</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        {</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;                <span class="keywordflow">return</span> (<span class="keywordtype">double</span>)2*contact_nb/<a class="code" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a>;</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;        }</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        <span class="keywordtype">double</span> getFrictionalContactNumber()</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        {</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;                <span class="keywordflow">return</span> (<span class="keywordtype">double</span>)2*contact_nb/<a class="code" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a>;</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;        }</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <span class="keywordtype">double</span> get_lx()</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        {</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;                <span class="keywordflow">return</span> lx;</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;        }</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;        <span class="keywordtype">double</span> get_ly()</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;        {</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;                <span class="keywordflow">return</span> ly;</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;        }</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;        <span class="keywordtype">double</span> get_time_in_simulation_units()</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        {</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="class_system.html#ae8150cec4fd4f03e0bb130f022268af3">time_in_simulation_units</a>;</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;        }</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;        <span class="keywordtype">double</span> get_time()</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        {</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="class_system.html#aa9e002a5f2f169e37c545b76ee67e724">time</a>;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        }</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_shear_rate()</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        {</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;                <span class="keywordflow">return</span> shear_rate;</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;        }</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> set_shear_rate(<span class="keywordtype">double</span> sr)</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;        {</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;                shear_rate = sr;</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;        }</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_lz()</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        {</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                <span class="keywordflow">return</span> lz;</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;        }</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> Lx_half()</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        {</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;                <span class="keywordflow">return</span> lx_half;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        }</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> Ly_half()</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;        {</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;                <span class="keywordflow">return</span> ly_half;</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;        }</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> Lz_half()</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;        {</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;                <span class="keywordflow">return</span> lz_half;</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        }</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> set_np(<span class="keywordtype">int</span> val)</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;        {</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                np = val;</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;        }</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">int</span> get_np()</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        {</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;                <span class="keywordflow">return</span> <a class="code" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a>;</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;        }</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_shear_strain()</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        {</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;                <span class="keywordflow">return</span> shear_strain;</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        }</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">void</span> set_dt(<span class="keywordtype">double</span> val)</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;        {</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;                dt = val;</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;        }</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;        <span class="keyword">inline</span> <span class="keywordtype">double</span> get_nb_of_active_interactions()</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;        {</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;                <span class="keywordflow">return</span> nb_of_active_interactions;</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;        }</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;        <span class="keywordtype">int</span> get_total_num_timesteps()</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;        {</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;                <span class="keywordflow">return</span> total_num_timesteps;</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;        }</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;        <span class="keywordtype">double</span> get_total_energy()</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        {</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;                <span class="keywordflow">return</span> total_energy;</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;        }</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;        <span class="keyword">struct </span><a class="code" href="struct_force_amplitudes.html">ForceAmplitudes</a> amplitudes;</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;};</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* defined(__LF_DEM__System__) */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="class_system_html_a7b3733e4824baf06f73b0b919ab7cfb2"><div class="ttname"><a href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">System::adjustContactModelParameters</a></div><div class="ttdeci">void adjustContactModelParameters()</div><div class="ttdef"><b>Definition:</b> System.cpp:2090</div></div>
+<div class="ttc" id="class_system_html_aaa42c0d51099a3340ee386feb61d0e67"><div class="ttname"><a href="class_system.html#aaa42c0d51099a3340ee386feb61d0e67">System::timeStepMoveCorrector</a></div><div class="ttdeci">void timeStepMoveCorrector()</div><div class="ttdef"><b>Definition:</b> System.cpp:947</div></div>
 <div class="ttc" id="class_system_html_ae8150cec4fd4f03e0bb130f022268af3"><div class="ttname"><a href="class_system.html#ae8150cec4fd4f03e0bb130f022268af3">System::time_in_simulation_units</a></div><div class="ttdeci">double time_in_simulation_units</div><div class="ttdoc">time elapsed since beginning of the time evolution. note: this is measured in Simulation (output) uni...</div><div class="ttdef"><b>Definition:</b> System.h:64</div></div>
-<div class="ttc" id="class_system_html_ab0a62c00b7fc82494a12afaff6ebf759"><div class="ttname"><a href="class_system.html#ab0a62c00b7fc82494a12afaff6ebf759">System::timeStepBoxing</a></div><div class="ttdeci">void timeStepBoxing(const double strain_increment)</div><div class="ttdef"><b>Definition:</b> System.cpp:696</div></div>
-<div class="ttc" id="class_system_html_a711e57caa49e1870f4bb1f88ce59555d"><div class="ttname"><a href="class_system.html#a711e57caa49e1870f4bb1f88ce59555d">System::setConfiguration</a></div><div class="ttdeci">void setConfiguration(const std::vector&lt; vec3d &gt; &amp;initial_positions, const std::vector&lt; double &gt; &amp;radii, double lx_, double ly_, double lz_)</div><div class="ttdef"><b>Definition:</b> System.cpp:260</div></div>
-<div class="ttc" id="class_system_html_a21eecf49ee4bf2343c392e2767888167"><div class="ttname"><a href="class_system.html#a21eecf49ee4bf2343c392e2767888167">System::eventShearJamming</a></div><div class="ttdeci">void eventShearJamming()</div><div class="ttdef"><b>Definition:</b> System.cpp:722</div></div>
-<div class="ttc" id="class_system_html_a8682c5257b505fdc6025e1265371ed79"><div class="ttname"><a href="class_system.html#a8682c5257b505fdc6025e1265371ed79">System::initializeBoxing</a></div><div class="ttdeci">void initializeBoxing()</div><div class="ttdef"><b>Definition:</b> System.cpp:672</div></div>
-<div class="ttc" id="class_system_html_a50cdcf8f5a2de0afb279ad9b0fcf2831"><div class="ttname"><a href="class_system.html#a50cdcf8f5a2de0afb279ad9b0fcf2831">System::timeStepMove</a></div><div class="ttdeci">void timeStepMove()</div><div class="ttdef"><b>Definition:</b> System.cpp:850</div></div>
-<div class="ttc" id="class_system_html_a78fc03133650a0632cd9d975e13ee402"><div class="ttname"><a href="class_system.html#a78fc03133650a0632cd9d975e13ee402">System::buildHydroTerms</a></div><div class="ttdeci">void buildHydroTerms(bool, bool)</div><div class="ttdef"><b>Definition:</b> System.cpp:1198</div></div>
-<div class="ttc" id="class_system_html_abc17621ae7c6e8771ae6b1140dfc7c7d"><div class="ttname"><a href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">System::getContacts</a></div><div class="ttdeci">void getContacts(std::vector&lt; struct contact_state &gt; &amp;cs)</div><div class="ttdef"><b>Definition:</b> System.cpp:317</div></div>
-<div class="ttc" id="class_system_html_aaeb82ed6465c89cd08b4b4f94eca617e"><div class="ttname"><a href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">System::updateInteractions</a></div><div class="ttdeci">void updateInteractions()</div><div class="ttdef"><b>Definition:</b> System.cpp:1115</div></div>
-<div class="ttc" id="class_system_html_a3c89605892e1787cbecf465c5b253582"><div class="ttname"><a href="class_system.html#a3c89605892e1787cbecf465c5b253582">System::timeStepMovePredictor</a></div><div class="ttdeci">void timeStepMovePredictor()</div><div class="ttdef"><b>Definition:</b> System.cpp:892</div></div>
+<div class="ttc" id="class_system_html_ab0a62c00b7fc82494a12afaff6ebf759"><div class="ttname"><a href="class_system.html#ab0a62c00b7fc82494a12afaff6ebf759">System::timeStepBoxing</a></div><div class="ttdeci">void timeStepBoxing(const double strain_increment)</div><div class="ttdef"><b>Definition:</b> System.cpp:708</div></div>
+<div class="ttc" id="class_system_html_a711e57caa49e1870f4bb1f88ce59555d"><div class="ttname"><a href="class_system.html#a711e57caa49e1870f4bb1f88ce59555d">System::setConfiguration</a></div><div class="ttdeci">void setConfiguration(const std::vector&lt; vec3d &gt; &amp;initial_positions, const std::vector&lt; double &gt; &amp;radii, double lx_, double ly_, double lz_)</div><div class="ttdef"><b>Definition:</b> System.cpp:272</div></div>
+<div class="ttc" id="class_system_html_a21eecf49ee4bf2343c392e2767888167"><div class="ttname"><a href="class_system.html#a21eecf49ee4bf2343c392e2767888167">System::eventShearJamming</a></div><div class="ttdeci">void eventShearJamming()</div><div class="ttdef"><b>Definition:</b> System.cpp:734</div></div>
+<div class="ttc" id="class_system_html_a8682c5257b505fdc6025e1265371ed79"><div class="ttname"><a href="class_system.html#a8682c5257b505fdc6025e1265371ed79">System::initializeBoxing</a></div><div class="ttdeci">void initializeBoxing()</div><div class="ttdef"><b>Definition:</b> System.cpp:684</div></div>
+<div class="ttc" id="class_system_html_a50cdcf8f5a2de0afb279ad9b0fcf2831"><div class="ttname"><a href="class_system.html#a50cdcf8f5a2de0afb279ad9b0fcf2831">System::timeStepMove</a></div><div class="ttdeci">void timeStepMove()</div><div class="ttdef"><b>Definition:</b> System.cpp:862</div></div>
+<div class="ttc" id="class_system_html_a78fc03133650a0632cd9d975e13ee402"><div class="ttname"><a href="class_system.html#a78fc03133650a0632cd9d975e13ee402">System::buildHydroTerms</a></div><div class="ttdeci">void buildHydroTerms(bool, bool)</div><div class="ttdef"><b>Definition:</b> System.cpp:1210</div></div>
+<div class="ttc" id="class_system_html_abc17621ae7c6e8771ae6b1140dfc7c7d"><div class="ttname"><a href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">System::getContacts</a></div><div class="ttdeci">void getContacts(std::vector&lt; struct contact_state &gt; &amp;cs)</div><div class="ttdef"><b>Definition:</b> System.cpp:329</div></div>
+<div class="ttc" id="class_system_html_aaeb82ed6465c89cd08b4b4f94eca617e"><div class="ttname"><a href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">System::updateInteractions</a></div><div class="ttdeci">void updateInteractions()</div><div class="ttdef"><b>Definition:</b> System.cpp:1127</div></div>
+<div class="ttc" id="class_system_html_a3c89605892e1787cbecf465c5b253582"><div class="ttname"><a href="class_system.html#a3c89605892e1787cbecf465c5b253582">System::timeStepMovePredictor</a></div><div class="ttdeci">void timeStepMovePredictor()</div><div class="ttdef"><b>Definition:</b> System.cpp:904</div></div>
 <div class="ttc" id="class_system_html_a656572d1d416ffee7d049db18c12967c"><div class="ttname"><a href="class_system.html#a656572d1d416ffee7d049db18c12967c">System::np</a></div><div class="ttdeci">int np</div><div class="ttdoc">nb of particles </div><div class="ttdef"><b>Definition:</b> System.h:58</div></div>
-<div class="ttc" id="class_system_html_aafa87b69481dbd17f8d3dc67c940a0f9"><div class="ttname"><a href="class_system.html#aafa87b69481dbd17f8d3dc67c940a0f9">System::computeVelocities</a></div><div class="ttdeci">void computeVelocities(bool divided_velocities)</div><div class="ttdef"><b>Definition:</b> System.cpp:1561</div></div>
-<div class="ttc" id="class_system_html_ad726330ebec27152a7d124e773c0b9f9"><div class="ttname"><a href="class_system.html#ad726330ebec27152a7d124e773c0b9f9">System::computeShearRate</a></div><div class="ttdeci">void computeShearRate()</div><div class="ttdef"><b>Definition:</b> System.cpp:1522</div></div>
+<div class="ttc" id="class_system_html_aafa87b69481dbd17f8d3dc67c940a0f9"><div class="ttname"><a href="class_system.html#aafa87b69481dbd17f8d3dc67c940a0f9">System::computeVelocities</a></div><div class="ttdeci">void computeVelocities(bool divided_velocities)</div><div class="ttdef"><b>Definition:</b> System.cpp:1573</div></div>
+<div class="ttc" id="class_system_html_ad726330ebec27152a7d124e773c0b9f9"><div class="ttname"><a href="class_system.html#ad726330ebec27152a7d124e773c0b9f9">System::computeShearRate</a></div><div class="ttdeci">void computeShearRate()</div><div class="ttdef"><b>Definition:</b> System.cpp:1534</div></div>
 <div class="ttc" id="class_box_set_html"><div class="ttname"><a href="class_box_set.html">BoxSet</a></div><div class="ttdoc">Set of Box objects making a partition of the simulation box. </div><div class="ttdef"><b>Definition:</b> BoxSet.h:26</div></div>
 <div class="ttc" id="classvec3d_html"><div class="ttname"><a href="classvec3d.html">vec3d</a></div><div class="ttdoc">3d vector object. </div><div class="ttdef"><b>Definition:</b> vec3d.h:24</div></div>
-<div class="ttc" id="class_system_html_ace218c4c9df1e99090acfe721b6fdb15"><div class="ttname"><a href="class_system.html#ace218c4c9df1e99090acfe721b6fdb15">System::timeEvolutionEulersMethod</a></div><div class="ttdeci">void timeEvolutionEulersMethod(bool calc_stress)</div><div class="ttdef"><b>Definition:</b> System.cpp:733</div></div>
-<div class="ttc" id="class_system_html_a3b996040c1a70b94c531562532c56f0c"><div class="ttname"><a href="class_system.html#a3b996040c1a70b94c531562532c56f0c">System::checkNewInteraction</a></div><div class="ttdeci">void checkNewInteraction()</div><div class="ttdef"><b>Definition:</b> System.cpp:1052</div></div>
+<div class="ttc" id="class_system_html_ace218c4c9df1e99090acfe721b6fdb15"><div class="ttname"><a href="class_system.html#ace218c4c9df1e99090acfe721b6fdb15">System::timeEvolutionEulersMethod</a></div><div class="ttdeci">void timeEvolutionEulersMethod(bool calc_stress)</div><div class="ttdef"><b>Definition:</b> System.cpp:745</div></div>
+<div class="ttc" id="class_system_html_a3b996040c1a70b94c531562532c56f0c"><div class="ttname"><a href="class_system.html#a3b996040c1a70b94c531562532c56f0c">System::checkNewInteraction</a></div><div class="ttdeci">void checkNewInteraction()</div><div class="ttdef"><b>Definition:</b> System.cpp:1064</div></div>
 <div class="ttc" id="class_system_html_a05d663034ce639977969d04cc9d64e57"><div class="ttname"><a href="class_system.html#a05d663034ce639977969d04cc9d64e57">System::calcStressPerParticle</a></div><div class="ttdeci">void calcStressPerParticle()</div><div class="ttdef"><b>Definition:</b> Stress.cpp:42</div></div>
-<div class="ttc" id="class_system_html_a1bfae3fe7224b08b98faca7f665670be"><div class="ttname"><a href="class_system.html#a1bfae3fe7224b08b98faca7f665670be">System::setContacts</a></div><div class="ttdeci">void setContacts(const std::vector&lt; struct contact_state &gt; &amp;cs)</div><div class="ttdef"><b>Definition:</b> System.cpp:299</div></div>
-<div class="ttc" id="class_system_html_a34a5f1e6790979deae33cb9e7fef029a"><div class="ttname"><a href="class_system.html#a34a5f1e6790979deae33cb9e7fef029a">System::computeMaxNAVelocity</a></div><div class="ttdeci">void computeMaxNAVelocity()</div><div class="ttdef"><b>Definition:</b> System.cpp:1476</div></div>
+<div class="ttc" id="class_system_html_a1bfae3fe7224b08b98faca7f665670be"><div class="ttname"><a href="class_system.html#a1bfae3fe7224b08b98faca7f665670be">System::setContacts</a></div><div class="ttdeci">void setContacts(const std::vector&lt; struct contact_state &gt; &amp;cs)</div><div class="ttdef"><b>Definition:</b> System.cpp:311</div></div>
+<div class="ttc" id="class_system_html_a34a5f1e6790979deae33cb9e7fef029a"><div class="ttname"><a href="class_system.html#a34a5f1e6790979deae33cb9e7fef029a">System::computeMaxNAVelocity</a></div><div class="ttdeci">void computeMaxNAVelocity()</div><div class="ttdef"><b>Definition:</b> System.cpp:1488</div></div>
 <div class="ttc" id="class_system_html_a60c98fd8b54e66526a2c413a4a443557"><div class="ttname"><a href="class_system.html#a60c98fd8b54e66526a2c413a4a443557">System::stressReset</a></div><div class="ttdeci">void stressReset()</div><div class="ttdef"><b>Definition:</b> Stress.cpp:13</div></div>
 <div class="ttc" id="class_averager_html"><div class="ttname"><a href="class_averager.html">Averager&lt; double &gt;</a></div></div>
 <div class="ttc" id="class_interaction_html"><div class="ttname"><a href="class_interaction.html">Interaction</a></div><div class="ttdoc">Interaction object, master class holding any interaction between two particles. </div><div class="ttdef"><b>Definition:</b> Interaction.h:35</div></div>
 <div class="ttc" id="class_stress_tensor_html"><div class="ttname"><a href="class_stress_tensor.html">StressTensor</a></div><div class="ttdoc">Stress tensor object. </div><div class="ttdef"><b>Definition:</b> StressTensor.h:22</div></div>
-<div class="ttc" id="class_system_html_a4daacacb59afa0f0a4bf2107685a03f1"><div class="ttname"><a href="class_system.html#a4daacacb59afa0f0a4bf2107685a03f1">System::setupSystem</a></div><div class="ttdeci">void setupSystem(std::string control)</div><div class="ttdef"><b>Definition:</b> System.cpp:422</div></div>
-<div class="ttc" id="class_system_html_a06720e1cc7c9aa036a50242e1759ec99"><div class="ttname"><a href="class_system.html#a06720e1cc7c9aa036a50242e1759ec99">System::updateMagneticInteractions</a></div><div class="ttdeci">void updateMagneticInteractions()</div><div class="ttdef"><b>Definition:</b> System.cpp:1147</div></div>
+<div class="ttc" id="class_system_html_a4daacacb59afa0f0a4bf2107685a03f1"><div class="ttname"><a href="class_system.html#a4daacacb59afa0f0a4bf2107685a03f1">System::setupSystem</a></div><div class="ttdeci">void setupSystem(std::string control)</div><div class="ttdef"><b>Definition:</b> System.cpp:434</div></div>
+<div class="ttc" id="class_system_html_a06720e1cc7c9aa036a50242e1759ec99"><div class="ttname"><a href="class_system.html#a06720e1cc7c9aa036a50242e1759ec99">System::updateMagneticInteractions</a></div><div class="ttdeci">void updateMagneticInteractions()</div><div class="ttdef"><b>Definition:</b> System.cpp:1159</div></div>
 <div class="ttc" id="class_simulation_html"><div class="ttname"><a href="class_simulation.html">Simulation</a></div><div class="ttdoc">Class launching the simulation by setting up the System class and performing predefined shear evoluti...</div><div class="ttdef"><b>Definition:</b> Simulation.h:31</div></div>
 <div class="ttc" id="class_system_html"><div class="ttname"><a href="class_system.html">System</a></div><div class="ttdoc">Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...</div><div class="ttdef"><b>Definition:</b> System.h:56</div></div>
 <div class="ttc" id="class_system_html_aa9e002a5f2f169e37c545b76ee67e724"><div class="ttname"><a href="class_system.html#aa9e002a5f2f169e37c545b76ee67e724">System::time</a></div><div class="ttdeci">double time</div><div class="ttdoc">time elapsed since beginning of the time evolution. </div><div class="ttdef"><b>Definition:</b> System.h:63</div></div>
 <div class="ttc" id="class_stokes_solver_html"><div class="ttname"><a href="class_stokes_solver.html">StokesSolver</a></div><div class="ttdoc">Class dealing with the linear algebra. </div><div class="ttdef"><b>Definition:</b> StokesSolver.h:47</div></div>
 <div class="ttc" id="class_system_html_af8c62edec403a8e2b0e64ebde3f4985e"><div class="ttname"><a href="class_system.html#af8c62edec403a8e2b0e64ebde3f4985e">System::zero_shear</a></div><div class="ttdeci">bool zero_shear</div><div class="ttdoc">To be used for relaxation to generate initial configuration. </div><div class="ttdef"><b>Definition:</b> System.h:164</div></div>
 <div class="ttc" id="struct_parameter_set_html"><div class="ttname"><a href="struct_parameter_set.html">ParameterSet</a></div><div class="ttdef"><b>Definition:</b> ParameterSet.h:11</div></div>
-<div class="ttc" id="class_system_html_a59d8c192e1395d9f6637d2506bb82443"><div class="ttname"><a href="class_system.html#a59d8c192e1395d9f6637d2506bb82443">System::generateBrownianForces</a></div><div class="ttdeci">void generateBrownianForces()</div><div class="ttdef"><b>Definition:</b> System.cpp:1333</div></div>
+<div class="ttc" id="class_system_html_a59d8c192e1395d9f6637d2506bb82443"><div class="ttname"><a href="class_system.html#a59d8c192e1395d9f6637d2506bb82443">System::generateBrownianForces</a></div><div class="ttdeci">void generateBrownianForces()</div><div class="ttdef"><b>Definition:</b> System.cpp:1345</div></div>
 <div class="ttc" id="struct_force_amplitudes_html"><div class="ttname"><a href="struct_force_amplitudes.html">ForceAmplitudes</a></div><div class="ttdef"><b>Definition:</b> System.h:45</div></div>
-<div class="ttc" id="class_system_html_a82bd46fc5da6765556e39b020454b6d2"><div class="ttname"><a href="class_system.html#a82bd46fc5da6765556e39b020454b6d2">System::computeVelocityComponents</a></div><div class="ttdeci">void computeVelocityComponents()</div><div class="ttdef"><b>Definition:</b> System.cpp:1499</div></div>
-<div class="ttc" id="class_system_html_aa3aa4d909d2a4e8a9b3c883b09b090cd"><div class="ttname"><a href="class_system.html#aa3aa4d909d2a4e8a9b3c883b09b090cd">System::timeEvolutionPredictorCorrectorMethod</a></div><div class="ttdeci">void timeEvolutionPredictorCorrectorMethod(bool calc_stress)</div><div class="ttdef"><b>Definition:</b> System.cpp:761</div></div>
+<div class="ttc" id="class_system_html_a82bd46fc5da6765556e39b020454b6d2"><div class="ttname"><a href="class_system.html#a82bd46fc5da6765556e39b020454b6d2">System::computeVelocityComponents</a></div><div class="ttdeci">void computeVelocityComponents()</div><div class="ttdef"><b>Definition:</b> System.cpp:1511</div></div>
+<div class="ttc" id="class_system_html_aa3aa4d909d2a4e8a9b3c883b09b090cd"><div class="ttname"><a href="class_system.html#aa3aa4d909d2a4e8a9b3c883b09b090cd">System::timeEvolutionPredictorCorrectorMethod</a></div><div class="ttdeci">void timeEvolutionPredictorCorrectorMethod(bool calc_stress)</div><div class="ttdef"><b>Definition:</b> System.cpp:773</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>System.h</b></li>
-    <li class="footer">Generated on Thu Aug 20 2015 11:59:15 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Aug 26 2015 15:52:36 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
