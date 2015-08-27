@@ -175,9 +175,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>catchSuffixedValue</b
 <tr class="separator:a73bf1e0902f00a68d3b7d547a6206f89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">evaluateData</a> ()</td></tr>
 <tr class="separator:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a648abcab794eaa030e3805042a8ad956"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a648abcab794eaa030e3805042a8ad956"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>createDataHeader</b> (std::stringstream &amp;data_header)</td></tr>
+<tr class="separator:a648abcab794eaa030e3805042a8ad956"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0e0618c85a9a8d9ef2045c1729f0e6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae0e0618c85a9a8d9ef2045c1729f0e6c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>outputDataHeader</b> (std::ofstream &amp;fout)</td></tr>
 <tr class="separator:ae0e0618c85a9a8d9ef2045c1729f0e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9980c5d692b6a19749792b78afdb267b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9980c5d692b6a19749792b78afdb267b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>getSnapshotHeader</b> (std::stringstream &amp;snapshot_header)</td></tr>
+<tr class="separator:a9980c5d692b6a19749792b78afdb267b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03b1b3a373aa202644584d5023ec50f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a03b1b3a373aa202644584d5023ec50f9">outputData</a> ()</td></tr>
 <tr class="separator:a03b1b3a373aa202644584d5023ec50f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9e36e14f1913faba6042bf7cd02e66ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a9e36e14f1913faba6042bf7cd02e66ea">outputDataMagnetic</a> ()</td></tr>
@@ -322,18 +328,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>timestep_1</b></td></t
 <tr class="memitem:a1bad70ba597b3464c12c8efd88a7a53e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1bad70ba597b3464c12c8efd88a7a53e"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>timestep_end</b></td></tr>
 <tr class="separator:a1bad70ba597b3464c12c8efd88a7a53e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e35a6039476d408ef19decafb36fbcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3e35a6039476d408ef19decafb36fbcc"></a>
-std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_data</b></td></tr>
-<tr class="separator:a3e35a6039476d408ef19decafb36fbcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1c48f03ab47be563d6e46c6fe95ac31"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab1c48f03ab47be563d6e46c6fe95ac31"></a>
 std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_particle</b></td></tr>
 <tr class="separator:ab1c48f03ab47be563d6e46c6fe95ac31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aacf32bd82de82888ecbaced7d56fa4fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aacf32bd82de82888ecbaced7d56fa4fb"></a>
 std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_interaction</b></td></tr>
 <tr class="separator:aacf32bd82de82888ecbaced7d56fa4fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adc427c2f9d98cf477619ef463c28dcff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adc427c2f9d98cf477619ef463c28dcff"></a>
-std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_st</b></td></tr>
-<tr class="separator:adc427c2f9d98cf477619ef463c28dcff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af5c363ee62aa3852bddc8b85a71afe94"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5c363ee62aa3852bddc8b85a71afe94"></a>
 std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_time</b></td></tr>
 <tr class="separator:af5c363ee62aa3852bddc8b85a71afe94"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -346,6 +346,9 @@ std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout_input</
 <tr class="memitem:adeee9348ca274ffeec56ef519beec1ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adeee9348ca274ffeec56ef519beec1ce"></a>
 <a class="el" href="class_output_data.html">OutputData</a>&#160;</td><td class="memItemRight" valign="bottom"><b>outdata_st</b></td></tr>
 <tr class="separator:adeee9348ca274ffeec56ef519beec1ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7beda171dd6deea7f758f016664a2826"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7beda171dd6deea7f758f016664a2826"></a>
+<a class="el" href="class_output_data.html">OutputData</a>&#160;</td><td class="memItemRight" valign="bottom"><b>outdata_pst</b></td></tr>
+<tr class="separator:a7beda171dd6deea7f758f016664a2826"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abdd6c4bb986e27e6bfafe2a64699d95a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abdd6c4bb986e27e6bfafe2a64699d95a"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>kill</b></td></tr>
 <tr class="separator:abdd6c4bb986e27e6bfafe2a64699d95a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1187,7 +1190,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a></li>
-    <li class="footer">Generated on Thu Aug 20 2015 11:59:15 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Aug 26 2015 15:52:36 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -556,9 +556,9 @@ void Simulation::setupSimulation(string in_args,
 	}
 	if (control_var == "stress") {
 		if (p.integration_method != 0) {
-			cerr << "Warning : use of the Euler method for the stress controlled simulation is experimental." << endl;
+			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
 		}
-		p.integration_method = 0;
+		//p.integration_method = 0;
 	}
 	if (sys.critical_load) {
 		p.friction_model = 2;
@@ -778,12 +778,17 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "magnetic_interaction_range") {
 		p.magnetic_interaction_range = atof(value.c_str());
 	} else if (keyword == "cross_shear") {
-		p.cross_shear = str2bool(value); // temporary, should get a parameter
+		p.cross_shear = str2bool(value);
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
 	} else if (keyword == "time_init_relax") {
 		catchSuffixedValue("time", keyword, value, &p.time_init_relax);
+	} else if (keyword == "out_particle_stress") {
+		p.out_particle_stress = value;
+		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
+	} else if (keyword == "out_binary_conf") {
+		p.out_binary_conf = str2bool(value);
 	} else {
 		cerr << "keyword " << keyword << " is not associated with an parameter" << endl;
 		exit(1);
@@ -936,6 +941,8 @@ void Simulation::setDefaultParameters()
 	p.origin_zero_flow = true;
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
+	p.out_particle_stress = "";
+	p.out_binary_conf = false;
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;
@@ -957,17 +964,18 @@ void Simulation::openOutputFiles(bool binary_conf)
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
 	prepareSimulationName(binary_conf);
-	string st_filename = "st_" +sys.simu_name + ".dat";
-	fout_st.open(st_filename.c_str());
-	outputDataHeader(fout_st);
-	string data_filename = "data_" + sys.simu_name + ".dat";
-	fout_data.open(data_filename.c_str());
+	stringstream data_header;
+	createDataHeader(data_header);
+
+	outdata.setFile("data_" + sys.simu_name + ".dat", data_header.str());
+	outdata_st.setFile("st_" +sys.simu_name + ".dat", data_header.str());
+	if (!p.out_particle_stress.empty()) {
+		outdata_pst.setFile("pst_" +sys.simu_name + ".dat", data_header.str());
+	}
 	string time_filename = "t_" + sys.simu_name + ".dat";
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_" + sys.simu_name + ".dat";
 	fout_input.open(input_filename.c_str());
-	
-	outputDataHeader(fout_data);
 	
 	if (p.out_data_particle) {
 		string particle_filename = "par_" + sys.simu_name + ".dat";

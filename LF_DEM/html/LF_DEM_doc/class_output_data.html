@@ -90,6 +90,7 @@ $(document).ready(function(){initNavTree('class_output_data.html','');});
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="class_output_data-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -104,6 +105,9 @@ $(document).ready(function(){initNavTree('class_output_data.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a72161fd3f0e40db5e05bbca3aa020fff"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a72161fd3f0e40db5e05bbca3aa020fff"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setFile</b> (const std::string &amp;fname, const std::string &amp;data_header)</td></tr>
+<tr class="separator:a72161fd3f0e40db5e05bbca3aa020fff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af1ae842b24e4b792bba32bdbfb01efd6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af1ae842b24e4b792bba32bdbfb01efd6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (int number_of_data_, std::string output_unit)</td></tr>
 <tr class="separator:af1ae842b24e4b792bba32bdbfb01efd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -114,9 +118,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setDimensionlessNumbe
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:aedae4fde0783d26e8c285d8124654120"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>entryData</b> (int num, std::string name, std::string type, T value)</td></tr>
 <tr class="separator:aedae4fde0783d26e8c285d8124654120"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16142aa6b109d33abc0beb47f3696ba0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16142aa6b109d33abc0beb47f3696ba0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>exportFile</b> (std::ofstream &amp;fout_data)</td></tr>
-<tr class="separator:a16142aa6b109d33abc0beb47f3696ba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba7555df203bf484d3227eb9023dc3ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba7555df203bf484d3227eb9023dc3ba"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>writeToFile</b> (std::string header)</td></tr>
+<tr class="separator:aba7555df203bf484d3227eb9023dc3ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2c1a77d7ad742f0c9fec787b8e72539"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2c1a77d7ad742f0c9fec787b8e72539"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>writeToFile</b> ()</td></tr>
+<tr class="separator:ad2c1a77d7ad742f0c9fec787b8e72539"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
+<tr class="memitem:a14f48e434c113a96fb491302fe67de8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a14f48e434c113a96fb491302fe67de8c"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>getLineNumber</b> ()</td></tr>
+<tr class="separator:a14f48e434c113a96fb491302fe67de8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -129,9 +142,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>first_time</b></td></
 <tr class="memitem:a6f93271c7807610b39e5577627740742"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6f93271c7807610b39e5577627740742"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><b>out_unit</b></td></tr>
 <tr class="separator:a6f93271c7807610b39e5577627740742"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59b8ee9e21da1ebd45258f33ffb9ff1d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59b8ee9e21da1ebd45258f33ffb9ff1d"></a>
-std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>output_data</b></td></tr>
-<tr class="separator:a59b8ee9e21da1ebd45258f33ffb9ff1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75344d9dd42fab0013a73f875b334f19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a75344d9dd42fab0013a73f875b334f19"></a>
+std::vector&lt; std::vector&lt; std::string &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>output_data</b></td></tr>
+<tr class="separator:a75344d9dd42fab0013a73f875b334f19"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fc99a3b704bb2ece6ff64b0deab0cf7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1fc99a3b704bb2ece6ff64b0deab0cf7"></a>
 std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>output_data_name</b></td></tr>
 <tr class="separator:a1fc99a3b704bb2ece6ff64b0deab0cf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,6 +154,9 @@ std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bott
 <tr class="memitem:a1efd9850ea0cf6f94d9f3ea92a2ab843"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1efd9850ea0cf6f94d9f3ea92a2ab843"></a>
 std::map&lt; std::string, double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>converter</b></td></tr>
 <tr class="separator:a1efd9850ea0cf6f94d9f3ea92a2ab843"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89a4992977c2c3dadd2bd5d1f93e1b77"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89a4992977c2c3dadd2bd5d1f93e1b77"></a>
+std::ofstream&#160;</td><td class="memItemRight" valign="bottom"><b>fout</b></td></tr>
+<tr class="separator:a89a4992977c2c3dadd2bd5d1f93e1b77"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Utility class to output data line-by-line, primitively dimension-aware. </p>
@@ -156,7 +172,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_output_data.html">OutputData</a></li>
-    <li class="footer">Generated on Thu Aug 20 2015 11:59:15 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Aug 26 2015 15:52:36 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

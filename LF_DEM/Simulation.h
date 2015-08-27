@@ -72,14 +72,13 @@ private:
 	/*
 	 * For output data.
 	 */
-	std::ofstream fout_data;
 	std::ofstream fout_particle;
 	std::ofstream fout_interaction;
-	std::ofstream fout_st;
 	std::ofstream fout_time;
 	std::ofstream fout_input;
 	OutputData outdata;
 	OutputData outdata_st;
+	OutputData outdata_pst;
 	/*
 	 * For inputs
 	 */
@@ -112,7 +111,9 @@ private:
 	 * For outputs
 	 */
 	void evaluateData();
+	void createDataHeader(std::stringstream &data_header);
 	void outputDataHeader(std::ofstream &fout);
+	void getSnapshotHeader(std::stringstream &snapshot_header);
 	void outputData();
 	void outputDataMagnetic();
 	void outputConfigurationData();

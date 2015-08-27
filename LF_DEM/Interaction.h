@@ -50,7 +50,7 @@ private:
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
-	unsigned short p0;
+	unsigned short p0; // @@@ is there a real gain to use short over int?
 	unsigned short p1;
 	//======= relative position/velocity data  =========//
 	double r; // center-center distance
@@ -142,14 +142,6 @@ public:
 	inline unsigned int get_label()
 	{
 		return label;
-	}
-	inline double get_a0()
-	{
-		return a0;
-	}
-	inline double get_a1()
-	{
-		return a1;
 	}
 	inline double get_ro()
 	{

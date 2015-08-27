@@ -10,6 +10,7 @@
 #include <cmath>
 #include <map>
 #include <string>
+#include <cstring>
 #include <sstream>
 #include <cctype>
 
@@ -33,9 +34,6 @@ target_stress_input(0)
 
 Simulation::~Simulation()
 {
-	if (fout_data.is_open()) {
-		fout_data.close();
-	}
 	if (fout_particle.is_open()) {
 		fout_particle.close();
 	}
@@ -165,7 +163,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	
 	double next_output_data = 0;
 	double next_output_config = 0;
-	
+	int binconf_counter = 0;
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -179,15 +177,23 @@ void Simulation::simulationSteadyShear(string in_args,
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
-		outputConfigurationBinary();
+		outputConfigurationBinary(); // generic, for recovery if crash
 		if (time_interval_output_config == -1) {
 			if (sys.get_shear_strain() >= next_output_config-1e-8) {
 				outputConfigurationData();
+				if(p.out_binary_conf){
+					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+					outputConfigurationBinary(binconf_filename);
+				}
 				next_output_config += strain_interval_output_config;
 			}
 		} else {
 			if (sys.get_time() >= next_output_config-1e-8) {
 				outputConfigurationData();
+				if(p.out_binary_conf){
+					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+					outputConfigurationBinary(binconf_filename);
+				}
 				next_output_config +=  time_interval_output_config;
 			}
 		}
@@ -426,6 +432,11 @@ void Simulation::outputConfigurationBinary()
 
 void Simulation::outputConfigurationBinary(string conf_filename)
 {
+	/** 
+		\brief Saves the current configuration of the system in a binary file.
+		
+		In the current implementation, it stores particle positions, x and y strain, and contact states.
+	*/
 	vector< vector<double> > pos;
 	int np = sys.get_np();
 	int dims = 4;
@@ -511,29 +522,7 @@ void Simulation::outputData()
 	 and made more consistent in the future.
 	 */
 	
-	/*
-	 * Output the sum of the normal forces.
-	 *
-	 *  Viscosity = S_{xz} / shear_rate
-	 *  N1 = S_{xx}-S_{zz}
-	 *  N2 = S_{zz}-S_{yy} = S_zz-(-S_xx-S_zz) = S_xx+2*S_zz
-	 *
-	 * Relative viscosity = Viscosity / viscosity_solvent
-	 */
-	
-	/*
-	 	 * hat(...) indicates dimensionless quantities.
-	 * (1) relative viscosity = Sxz/(eta0*shear_rate) = 6*pi*hat(Sxz)
-	 * (2) N1/(eta0*shear_rate) = 6*pi*hat(N1)
-	 * (3) N2/(eta0*shear_rate) = 6*pi*hat(N2)
-	 *
-	 * In simulation, we use the force unit where Stokes drag is F = -(U-U^inf)
-	 *
-	 * [note] In stress controlled simulation,
-	 * Averaged viscosity need to be calculated with dimensionless_number_averaged,
-	 * i.e. <viscosity> = taget_stress / dimensionless_number_averaged.
-	 */
-	
+	 	
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
 	
@@ -603,7 +592,7 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", "none", p.kr);
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
-	outdata.exportFile(fout_data);
+	outdata.writeToFile();
 	
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
@@ -618,7 +607,58 @@ void Simulation::outputData()
 	outdata_st.entryData(6, "contact stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_contact_stressXF+sys.total_contact_stressGU);
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stress);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
-	outdata_st.exportFile(fout_st);
+	outdata_st.writeToFile();
+
+	
+	if (!p.out_particle_stress.empty()) {
+		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+
+		int nb_of_fields = strlen(p.out_particle_stress.c_str());
+		outdata_pst.init(nb_of_fields, output_unit_scales);
+		
+		for (int i=0; i<sys.get_np(); i++) {
+			int field_index = 0;
+			if (p.out_particle_stress.find('t') != string::npos) {
+				StressTensor s = sys.lubstress[i] + sys.contactstressXF[i] + sys.contactstressGU[i];
+				if (sys.brownian) {
+					s += sys.brownianstressGU[i];				
+				}
+				if (sys.repulsiveforce) {
+					s += sys.repulsivestressGU[i] + sys.repulsivestressXF[i];
+				}
+				outdata_pst.entryData(++field_index, "total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", s);
+			}
+			if (p.out_particle_stress.find('l') != string::npos) {
+				outdata_pst.entryData(++field_index, "lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", sys.lubstress[i]);
+			}
+			if (p.out_particle_stress.find('c') != string::npos) {
+				outdata_pst.entryData(++field_index, "contact stress (xx, xy, xz, yz, yy, zz)", "stress", sys.contactstressXF[i] + sys.contactstressGU[i]);
+			}
+			if (sys.brownian && p.out_particle_stress.find('b') != string::npos ) {
+				outdata_pst.entryData(++field_index, "Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", sys.brownianstressGU[i]);
+			}
+			if (sys.repulsiveforce && p.out_particle_stress.find('r') != string::npos ) {
+				outdata_pst.entryData(++field_index, "repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
+			}
+		}
+
+		stringstream snapshot_header;
+		getSnapshotHeader(snapshot_header);
+		outdata_pst.writeToFile(snapshot_header.str());
+	}
+
+}
+
+void Simulation::getSnapshotHeader(stringstream &snapshot_header){
+	snapshot_header << "# " << sys.get_shear_strain() << ' ';
+	snapshot_header << sys.shear_disp.x << ' ';
+	snapshot_header << getRate() << ' ';
+	snapshot_header << target_stress_input << ' ';
+	snapshot_header << sys.get_time() << ' ';
+	if (p.magnetic_type != 0) {
+		snapshot_header << sys.angle_external_magnetic_field;
+	}
+	snapshot_header << endl;
 }
 
 void Simulation::outputDataMagnetic()
@@ -680,7 +720,7 @@ void Simulation::outputDataMagnetic()
 	 */
 
 
-	outdata.exportFile(fout_data);
+	outdata.writeToFile();
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
@@ -702,14 +742,20 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	return vec3d(x,y,z);
 }
 
+void Simulation::createDataHeader(stringstream &data_header)
+{
+	data_header << "# LF_DEM version " << GIT_VERSION << endl;
+	data_header << "# np " << sys.get_np() << endl;
+	data_header << "# VF " << sys.volume_fraction << endl;
+	data_header << "# Lx " << sys.get_lx() << endl;
+	data_header << "# Ly " << sys.get_ly() << endl;
+	data_header << "# Lz " << sys.get_lz() << endl;
+}
 void Simulation::outputDataHeader(ofstream &fout)
 {
-	fout << "# LF_DEM version " << GIT_VERSION << endl;
-	fout << "# np " << sys.get_np() << endl;
-	fout << "# VF " << sys.volume_fraction << endl;
-	fout << "# Lx " << sys.get_lx() << endl;
-	fout << "# Ly " << sys.get_ly() << endl;
-	fout << "# Lz " << sys.get_lz() << endl;
+	stringstream data_header;
+	createDataHeader(data_header);
+	fout << data_header.str();
 }
 
 void Simulation::outputConfigurationData()

@@ -339,8 +339,8 @@ void Contact::calcContactStress()
 	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 	 */
 	/* When we compose stress tensor,
-	 * even individual leverl, this part calculates symmetric tensor.
-	 * This symmetry is expected in the average ensumble.
+	 * even individual level, this part calculates symmetric tensor.
+	 * This symmetry is expected in the average ensemble.
 	 * I'm not sure this is allowed or not.
 	 */
 	if (state > 0) {
@@ -352,7 +352,8 @@ void Contact::calcContactStress()
 		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 		 * stress1 + stress2 = (a1+a2)*nvec[*]force
 		 */
-		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);
+
+		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);		
 		if (state >= 2) {
 			contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
 		}

@@ -161,8 +161,25 @@ System::calcStress()
 	if (repulsiveforce) {
 		// XF contribution
 		total_repulsive_stressXF.reset();
+		bool rstress_per_particle = false;
+ 		if (p.out_particle_stress.find('r') != string::npos){
+			rstress_per_particle = true;
+			for (int i=0; i<np; i++) {
+				repulsivestressXF[i] = 0;
+			}
+		}
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
+			if (rstress_per_particle) {
+				/* NOTE: 
+					As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
+				*/
+				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
+				unsigned short i,j;
+				interaction[k].get_par_num(i,j);
+				repulsivestressXF[i] += sc; 
+				repulsivestressXF[j] += sc;
+			}
 		}
 		total_repulsive_stressXF /= system_volume;
 		// GU contribution
