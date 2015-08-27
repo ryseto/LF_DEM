@@ -135,12 +135,25 @@ System::calcStress()
 	// XF contribution
 	total_contact_stressXF_normal.reset();
 	total_contact_stressXF_tan.reset();
+
+	for (auto & cpxf : contactPressureXF) {
+		cpxf = 0;
+	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
 			total_contact_stressXF_normal += interaction[k].contact.getContactStressXF_normal();
 			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
+			if (magnetic) {
+				unsigned short i, j;
+				interaction[k].get_par_num(i, j);
+				double pressure = total_contact_stressXF_normal.getParticlePressure();
+				contactPressureXF[i] += 0.5*pressure;
+				contactPressureXF[j] += 0.5*pressure;
+			}
 		}
 	}
+	
+	
 	total_contact_stressXF_normal /= system_volume;
 	total_contact_stressXF_tan /= system_volume;
 	total_contact_stressXF = total_contact_stressXF_normal+total_contact_stressXF_tan;

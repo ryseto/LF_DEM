@@ -215,6 +215,7 @@ void System::allocateRessources()
 		magnetic_force = new vec3d [np];
 		magnetic_torque = new vec3d [np];
 		magneticstressGU = new StressTensor [np];
+		contactPressureXF.resize(np);
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
@@ -1150,7 +1151,7 @@ void System::updateMagneticInteractions()
 	 
 	 Magnetic force is noramlized with
 	 
-	 F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4
+	 \f$ F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4 \f$ 
 	 
 	 \hat{F}_M = - (16/r**4)*( (m.n)m + (m.n)m + (m.m)n - 5(m.n)(m.n)n)
 	 (where r and m are dimensionless distance and dimensionless magnetic moment.)

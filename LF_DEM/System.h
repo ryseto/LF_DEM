@@ -215,6 +215,7 @@ private:
 	StressTensor total_magnetic_stressXF;
 	StressTensor total_magnetic_stressGU;
 	StressTensor total_magnetic_stress;
+	std::vector <double> contactPressureXF; // by contact for visualization
 	Averager<StressTensor> *stress_avg;
 	double dt;
 	/* double kn; */
