@@ -52,12 +52,12 @@ private:
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	StressTensor contact_stresslet_XF_normal; //stress tensor of normal contact force
-	StressTensor contact_stresslet_XF_tan; //stress tensor of frictional contact force
+	StressTensor contact_stresslet_XF; //stress tensor of contact force
 	double f_contact_normal_norm; // normal contact force
 	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
 	vec3d f_contact_normal; // normal contact force
 	vec3d f_contact_tan; // tangential contact force
+	vec3d f_contact;
 	vec3d f_rolling;
 	double ft_max; // friction_model = 5;
 	void incrementTangentialDisplacement();
@@ -115,15 +115,7 @@ public:
 	void calcContactStress();
 	StressTensor getContactStressXF()
 	{
-		return contact_stresslet_XF_normal+contact_stresslet_XF_tan;
-	}
-	StressTensor getContactStressXF_normal()
-	{
-		return contact_stresslet_XF_normal;
-	}
-	StressTensor getContactStressXF_tan()
-	{
-		return contact_stresslet_XF_tan;
+		return contact_stresslet_XF;
 	}
 	double calcEnergy();
 	struct contact_state getState(){

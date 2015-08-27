@@ -227,7 +227,6 @@ void System::allocateRessources()
 		magnetic_force = new vec3d [np];
 		magnetic_torque = new vec3d [np];
 		magneticstressGU = new StressTensor [np];
-		contactPressureXF.resize(np);
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
@@ -1547,8 +1546,7 @@ void System::computeShearRate()
 		shear_stress_index = 3;
 	}
 
-	double shearstress_con = total_contact_stressXF_normal.elm[shear_stress_index] \
-	+total_contact_stressXF_tan.elm[shear_stress_index]+total_contact_stressGU.elm[shear_stress_index];
+	double shearstress_con = total_contact_stressXF.elm[shear_stress_index]+total_contact_stressGU.elm[shear_stress_index];
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {

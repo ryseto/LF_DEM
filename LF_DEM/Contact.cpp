@@ -84,6 +84,7 @@ void Contact::deactivate()
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
 	f_contact_tan.reset();
+	f_contact.reset();
 }
 
 /*********************************
@@ -313,11 +314,18 @@ void Contact::frictionlaw_coulomb_max()
 
 void Contact::addUpContactForceTorque()
 {
-	sys->contact_force[p0] += f_contact_normal;
-	sys->contact_force[p1] -= f_contact_normal;
+	/* Force
+	 */
+	if (state <=1) {
+		f_contact = f_contact_normal;
+	} else {
+		f_contact = f_contact_normal+f_contact_tan;
+	}
+	sys->contact_force[p0] += f_contact;
+	sys->contact_force[p1] -= f_contact;
+	/* Torque 
+	 */
 	if (state >= 2) {
-		sys->contact_force[p0] += f_contact_tan;
-		sys->contact_force[p1] -= f_contact_tan;
 		vec3d t_ij = cross(interaction->nvec, f_contact_tan);
 		sys->contact_torque[p0] += interaction->a0*t_ij;
 		sys->contact_torque[p1] += interaction->a1*t_ij;
@@ -352,14 +360,9 @@ void Contact::calcContactStress()
 		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
 		 * stress1 + stress2 = (a1+a2)*nvec[*]force
 		 */
-
-		contact_stresslet_XF_normal.set(interaction->rvec, f_contact_normal);		
-		if (state >= 2) {
-			contact_stresslet_XF_tan.set(interaction->rvec, f_contact_tan);
-		}
+		contact_stresslet_XF.set(interaction->rvec, f_contact);
 	} else {
-		contact_stresslet_XF_normal.reset();
-		contact_stresslet_XF_tan.reset();
+		contact_stresslet_XF.reset();
 	}
 }
 

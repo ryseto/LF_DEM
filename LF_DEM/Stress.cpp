@@ -133,30 +133,28 @@ System::calcStress()
 	}
 	total_contact_stressGU /= system_volume;
 	// XF contribution
-	total_contact_stressXF_normal.reset();
-	total_contact_stressXF_tan.reset();
-
-	for (auto & cpxf : contactPressureXF) {
-		cpxf = 0;
+	total_contact_stressXF.reset();
+	bool cstress_per_particle = false;
+	if (p.out_particle_stress.find('c') != string::npos) {
+		cstress_per_particle = true;
+		for (int i=0; i<np; i++) {
+			contactstressXF[i].reset();
+		}
 	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_contact()) {
-			total_contact_stressXF_normal += interaction[k].contact.getContactStressXF_normal();
-			total_contact_stressXF_tan += interaction[k].contact.getContactStressXF_tan();
-			if (magnetic) {
+			total_contact_stressXF += interaction[k].contact.getContactStressXF();
+			if (cstress_per_particle) {
+				StressTensor sc = interaction[k].contact.getContactStressXF();
 				unsigned short i, j;
-				interaction[k].get_par_num(i, j);
-				double pressure = total_contact_stressXF_normal.getParticlePressure();
-				contactPressureXF[i] += 0.5*pressure;
-				contactPressureXF[j] += 0.5*pressure;
+				interaction[k].get_par_num(i,j);
+				double r_ij = interaction[k].get_ro();
+				contactstressXF[i] += (radius[i]/r_ij)*sc;
+				contactstressXF[j] += (radius[j]/r_ij)*sc;
 			}
 		}
 	}
-	
-	
-	total_contact_stressXF_normal /= system_volume;
-	total_contact_stressXF_tan /= system_volume;
-	total_contact_stressXF = total_contact_stressXF_normal+total_contact_stressXF_tan;
+	total_contact_stressXF /= system_volume;
 	// Stress from repulsive force
 	if (repulsiveforce) {
 		// XF contribution

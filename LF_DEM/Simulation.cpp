@@ -522,10 +522,7 @@ void Simulation::outputData()
 	 and made more consistent in the future.
 	 */
 	
-	 	
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	//	cerr << internal_unit_scales << " " << output_unit_scales << endl;
-	
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		exit(1);
@@ -609,7 +606,6 @@ void Simulation::outputData()
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.writeToFile();
 
-	
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
@@ -619,12 +615,12 @@ void Simulation::outputData()
 		for (int i=0; i<sys.get_np(); i++) {
 			int field_index = 0;
 			if (p.out_particle_stress.find('t') != string::npos) {
-				StressTensor s = sys.lubstress[i] + sys.contactstressXF[i] + sys.contactstressGU[i];
+				StressTensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
 				if (sys.brownian) {
 					s += sys.brownianstressGU[i];				
 				}
 				if (sys.repulsiveforce) {
-					s += sys.repulsivestressGU[i] + sys.repulsivestressXF[i];
+					s += sys.repulsivestressGU[i]+sys.repulsivestressXF[i];
 				}
 				outdata_pst.entryData(++field_index, "total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", s);
 			}
@@ -641,12 +637,10 @@ void Simulation::outputData()
 				outdata_pst.entryData(++field_index, "repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
 			}
 		}
-
 		stringstream snapshot_header;
 		getSnapshotHeader(snapshot_header);
 		outdata_pst.writeToFile(snapshot_header.str());
 	}
-
 }
 
 void Simulation::getSnapshotHeader(stringstream &snapshot_header){
@@ -673,53 +667,35 @@ void Simulation::outputDataMagnetic()
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	outdata.init(27, output_unit_scales);
 	outdata.entryData(1, "time", "time", sys.get_time());
-	
-	/* energy
-	 */
+	/* energy */
 	outdata.entryData(3, "energy", "none", sys.get_total_energy());
 	outdata.entryData(4, "magnetic energy", "none", sys.magnetic_dd_energy);
-	
-	
-	/* contact number
-	 */
+	/* contact number */
 	outdata.entryData(5, "contact number", "none", sys.getContactNumber());
 	outdata.entryData(6, "frictional contact number", "none", sys.getFrictionalContactNumber());
 	outdata.entryData(7, "number of interaction", "none", sys.get_nb_of_active_interactions());
-
-	
-	/* maximum deformation of contact bond
-	 */
+	/* maximum deformation of contact bond */
 	outdata.entryData(8, "min gap", "none", sys.min_reduced_gap);
 	outdata.entryData(9, "max gap(cohesion)", "none", sys.max_contact_gap);
-	
 	outdata.entryData(10, "magnetic field strength", "none", sys.p.external_magnetic_field_norm);
 	outdata.entryData(11, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_theta);
 	outdata.entryData(12, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_phi);
-	
-	/* pressure
-	 */
+	/* pressure */
 	outdata.entryData(13, "particle pressure", "stress", sys.total_stress.getParticlePressure());
 	outdata.entryData(14, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
 	outdata.entryData(15, "particle pressure contact GU", "stress", sys.total_contact_stressGU.getParticlePressure());
 	outdata.entryData(16, "particle pressure brownian", "stress", sys.total_brownian_stressGU.getParticlePressure());
 	outdata.entryData(17, "particle pressure magnetic", "stress", sys.total_magnetic_stressXF.getParticlePressure());
 	outdata.entryData(18, "particle pressure magnetic GU", "stress", sys.total_magnetic_stressGU.getParticlePressure());
-
-	
-	/* maximum velocity
-	 */
+	/* maximum velocity */
 	outdata.entryData(20, "max velocity", "velocity", sys.max_velocity);
 	outdata.entryData(21, "max angular velocity", "velocity", sys.max_ang_velocity);
-	/* simulation parameter
-	 */
+	/* simulation parameter */
 	outdata.entryData(22, "dt", "none", sys.dt);
 	outdata.entryData(23, "kn", "none", sys.p.kn);
 	outdata.entryData(24, "kt", "none", sys.p.kt);
 	outdata.entryData(25, "kr", "none", sys.p.kr);
-	/* misc
-	 */
-
-
+	/* misc */
 	outdata.writeToFile();
 }
 
@@ -818,22 +794,19 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
 			if (control_var != "magnetic") {
-				fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions
-				fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions
-				fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions
-				if (p.magnetic_type == 0) {
-					if (sys.twodimension) {
-						fout_particle << ' ' << sys.angle[i]; // 15
-					}
+				fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
+				fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
+				fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
+				if (sys.twodimension) {
+					fout_particle << ' ' << sys.angle[i]; // 15
 				}
 			} else {
 				fout_particle << ' ' << sys.magnetic_susceptibility[i];
 				fout_particle << ' ' << sys.brownianstressGU[i].getParticlePressure();
-				fout_particle << ' ' << sys.contactstressGU[i].getParticlePressure() + sys.contactPressureXF[i];
+				fout_particle << ' ' << sys.contactstressGU[i].getParticlePressure()+sys.contactstressXF[i].getParticlePressure();
 				//		fout_particle << ' ' << sys.magnetic_moment[i].x;
 				//		fout_particle << ' ' << sys.magnetic_moment[i].y;
 				//		fout_particle << ' ' << sys.magnetic_moment[i].z;
-				
 			}
 			fout_particle << endl;
 		}
