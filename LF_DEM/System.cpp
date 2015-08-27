@@ -637,7 +637,6 @@ void System::setupSystem(string control)
 	if (p.time_init_relax > 0) {
 		time = -p.time_init_relax;
 		time_in_simulation_units = -p.time_init_relax*(*ratio_unit_time);
-		cerr << "@@" << endl;
 	} else {
 		time = 0;
 		time_in_simulation_units = 0;

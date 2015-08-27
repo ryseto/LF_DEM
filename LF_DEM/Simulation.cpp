@@ -792,8 +792,8 @@ void Simulation::outputConfigurationData()
 			fout_particle << ' ' << sys.radius[i]; //2: radius
 			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
 			fout_particle << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
-			fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
 			if (control_var != "magnetic") {
+				fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
 				fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
 				fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
 				fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
@@ -801,12 +801,14 @@ void Simulation::outputConfigurationData()
 					fout_particle << ' ' << sys.angle[i]; // 15
 				}
 			} else {
-				fout_particle << ' ' << sys.magnetic_susceptibility[i];
-				fout_particle << ' ' << sys.brownianstressGU[i].getParticlePressure();
-				fout_particle << ' ' << sys.contactstressGU[i].getParticlePressure()+sys.contactstressXF[i].getParticlePressure();
-				//		fout_particle << ' ' << sys.magnetic_moment[i].x;
-				//		fout_particle << ' ' << sys.magnetic_moment[i].y;
-				//		fout_particle << ' ' << sys.magnetic_moment[i].z;
+				if (sys.p.magnetic_type == 1) {
+					fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
+					fout_particle << ' ' << sys.magnetic_moment[i].x;
+					fout_particle << ' ' << sys.magnetic_moment[i].y;
+					fout_particle << ' ' << sys.magnetic_moment[i].z;
+				} else {
+					fout_particle << ' ' << sys.magnetic_susceptibility[i];
+				}
 			}
 			fout_particle << endl;
 		}
