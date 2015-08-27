@@ -153,7 +153,6 @@ void Contact::calcContactInteraction()
 	 *
 	 reduced_gap is negative,
 	 positive. */
-	
 	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
 	if (sys->friction) {

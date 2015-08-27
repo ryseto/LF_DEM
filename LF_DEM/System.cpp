@@ -1492,7 +1492,6 @@ void System::computeMaxNAVelocity()
 
 	 Note: it does \b not compute the velocities, just takes the maximum.
 	 */
-
 	double sq_max_na_velocity = 0;
 	double sq_na_velocity, sq_na_ang_velocity;
 	for (int i=0; i<np; i++) {
@@ -1680,17 +1679,16 @@ void System::computeVelocities(bool divided_velocities)
 				ang_velocity[i].x -= 0.5*shear_rate;
 			}
 		}
+		if (!p.cross_shear) {
+			vel_difference.x = shear_rate*lz;
+		} else {
+			vel_difference.y = shear_rate*lz;
+		}
 	} else {
 		for (int i=0; i<np; i++) {
 			velocity[i] = na_velocity[i];
 			ang_velocity[i] = na_ang_velocity[i];
 		}
-	}
-
-	if (!p.cross_shear) {
-		vel_difference.x = shear_rate*lz;
-	} else {
-		vel_difference.y = shear_rate*lz;
 	}
 	stokes_solver.solvingIsDone();
 }

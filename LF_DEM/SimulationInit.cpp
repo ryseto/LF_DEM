@@ -862,6 +862,7 @@ void Simulation::setDefaultParameters()
 	p.critical_load_amplitude = 0;
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
+	p.disp_max = 1e-3;
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
