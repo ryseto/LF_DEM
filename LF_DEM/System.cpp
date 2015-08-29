@@ -457,8 +457,6 @@ void System::setupSystem(string control)
 	} else {
 		rate_controlled = false;
 		stress_controlled = false;
-	}
-	if (p.magnetic_type != 0) {
 		magnetic = true;
 	}
 	if (p.integration_method == 0) {
@@ -666,11 +664,10 @@ void System::setupSystem(string control)
 	for (int i=0; i<18*np; i++) {
 		resistance_matrix_dblock[i] = 0;
 	}
-	double torque_factor = 4.0/3;
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
 		double FUvalue = p.sd_coeff*radius[i];
-		double TWvalue = p.sd_coeff*torque_factor*radius_cubed[i];
+		double TWvalue = p.sd_coeff*radius_cubed[i]*4.0/3;
 		resistance_matrix_dblock[i18   ] = FUvalue;
 		resistance_matrix_dblock[i18+6 ] = FUvalue;
 		resistance_matrix_dblock[i18+10] = FUvalue;
@@ -691,7 +688,7 @@ void System::initializeBoxing()
 	double max_range = 0;
 	for (int i=0; i < np-1; i++) { // N^2 init, sorry :(
 		for (int j=i+1; j < np; j++) {
-			range = (this->*calcInteractionRange)(i,j);
+			range = (this->*calcInteractionRange)(i, j);
 			if (range > max_range) {
 				max_range = range;
 			}
@@ -734,7 +731,7 @@ void System::eventShearJamming(){
 	/**
 	 \brief Create an event when the shear rate is negative
 	*/
-	if(shear_rate<0){
+	if (shear_rate < 0) {
 		Event ev;
 		ev.type = "negative_shear_rate";
 		events.push_back(Event(ev));
@@ -875,7 +872,7 @@ void System::timeStepMove()
 	total_num_timesteps ++;
 	/* evolve PBC */
 	double strain_increment = 0;
-	if (!zero_shear){
+	if (!zero_shear) {
 		strain_increment = dt*shear_rate;
 	}
 	timeStepBoxing(strain_increment);
@@ -1361,7 +1358,7 @@ void System::generateBrownianForces()
 	 */
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
 	for (int i=0; i<linalg_size; i++) {
-		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A
+		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A (force and torque)
 	}
 	stokes_solver.setRHS(brownian_force);
 	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
@@ -1637,7 +1634,7 @@ void System::computeVelocities(bool divided_velocities)
 			 */
 			generateBrownianForces();
 		}
-		stokes_solver.setRHS(brownian_force); // set rhs = F_B
+		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 		if (twodimension) {
 			if (p.monolayer) {
@@ -1713,16 +1710,18 @@ void System::displacement(int i, const vec3d &dr)
 // [0,l]
 int System::periodize(vec3d &pos)
 {
+	/* Lees-Edwards boundary condition
+	 *
+	 */
 	int z_shift = 0;
-	while (pos.z >= lz) {
+	if (pos.z >= lz) {
 		pos.z -= lz;
 		pos -= shear_disp;
-		z_shift--;
-	}
- 	while (pos.z < 0) {
+		z_shift = -1;
+	} else if (pos.z < 0) {
 		pos.z += lz;
 		pos += shear_disp;
-		z_shift++;
+		z_shift = 1;
 	}
 	while (pos.x >= lx) {
 		pos.x -= lx;
@@ -1744,20 +1743,19 @@ int System::periodize(vec3d &pos)
 // periodize + give z_shift= number of boundaries crossed in z-direction
 void System::periodize_diff(vec3d &pos_diff, int &zshift)
 {
-	/*
+	/* Lees-Edwards boundary condition
 	 * The displacement of the second particle along z direction
 	 * is zshift * lz;
 	 */
 	zshift = 0;
-	while (pos_diff.z > lz_half) {
+	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff -= shear_disp;
-		zshift--;
-	}
-	while (pos_diff.z < -lz_half) {
+		zshift = -1;
+	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 		pos_diff += shear_disp;
-		zshift++;
+		zshift = 1;
 	}
 	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
@@ -1777,29 +1775,23 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 
 void System::periodize_diff(vec3d &pos_diff)
 {
-	/*
-	 @@@ is there really a gain duplicating the code for saving just a few addition operations?
-	 @ Ry: I agree. I will probably remove this part in near future.
-	 @     But, interparticle distances are more often calculated in the magnetic simulation,
-	 @     because the magnetic interactions are long range.
+	/* Used in simple periodic boundary condition
+	 * (not Lees-Edwards boundary condition)
 	 */
 	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
-	}
-	if (pos_diff.z < -lz_half) {
+	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
 	}
 	if (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-	}
-	if (pos_diff.x < -lx_half) {
+	} else if (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
 	}
 	if (!twodimension) {
 		if (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
-		}
-		if (pos_diff.y < -ly_half) {
+		} else if (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
 	}
@@ -1894,20 +1886,11 @@ double System::evaluateMaxAngVelocity()
 
 double System::evaluateMinGap()
 {
-	double _min_reduced_gap = 100000;
+	double _min_reduced_gap = p.lub_max_gap;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
 			interaction[k].get_reduced_gap() < _min_reduced_gap) {
 			_min_reduced_gap = interaction[k].get_reduced_gap();
-
-			if (interaction[k].get_reduced_gap() < 0
-				&& interaction[k].contact.state == 0) {
-				cerr << interaction[k].get_reduced_gap() << endl;
-				exit(1);
-			}
-			// unsigned short i, j;
-			// interaction[k].get_par_num(i,j);
-			// cout << i << " " << j << " " << interaction[k].get_a0() << " " << interaction[k].get_a1() << " " << interaction[k].get_reduced_gap() << endl;
 		}
 	}
 	return _min_reduced_gap;
@@ -1948,7 +1931,6 @@ double System::evaluateMaxDispRolling()
 		}
 	}
 	return _max_disp_rolling;
-
 }
 
 double System::evaluateMaxFcNormal()
@@ -1997,7 +1979,9 @@ void System::analyzeState()
 	//	max_velocity = evaluateMaxVelocity();
 	computeMaxNAVelocity();
 	max_ang_velocity = evaluateMaxAngVelocity();
-	evaluateMaxContactVelocity();
+	if (friction) {
+		evaluateMaxContactVelocity();
+	}
 	min_reduced_gap = evaluateMinGap();
 	if (cohesion) {
 		max_contact_gap = evaluateMaxContactGap();

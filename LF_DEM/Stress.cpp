@@ -102,15 +102,12 @@ System::calcStressPerParticle()
 	}
 	if (magnetic) {
 		vec3d pos_diff;
-		vec3d nvec;
 		StressTensor magstressXF;
 		magneticstressXF.clear();
 		for (const auto & mf : magnetic_force_stored) {
 			pos_diff = position[mf.second.second]-position[mf.second.first];
 			periodize_diff(pos_diff);
-			double r = pos_diff.norm();
-			nvec = pos_diff/r;
-			magstressXF.set(nvec, mf.first);
+			magstressXF.set(pos_diff, mf.first);
 			magneticstressXF.push_back(magstressXF);
 		}
 	}
