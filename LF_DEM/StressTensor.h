@@ -284,6 +284,9 @@ public:
 	
 	inline void set(const vec3d &v1, const vec3d &v2)
 	{
+		/* XF Stress tensor:
+		 * S = (r^{(j)}-r^{(i)}) F^{(i,j)}
+		 */
 		elm[0] = v1.x*v2.x;
 		elm[1] = 0.5*(v1.x*v2.y+v1.y*v2.x);
 		elm[2] = 0.5*(v1.x*v2.z+v1.z*v2.x);

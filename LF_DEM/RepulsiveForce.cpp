@@ -61,6 +61,9 @@ void RepulsiveForce::calcScaledForce()
 		\brief Computes the force in the System class from a previously computed reduced force.
 	*/
 	force_norm = sys->amplitudes.repulsion*reduced_force_norm;
+	/* nvec is from particle 0 to particle 1.
+	 * force_vector is force acting on particle 0
+	 */
 	force_vector = -force_norm*interaction->nvec;
 }
 
@@ -93,6 +96,9 @@ void RepulsiveForce::calcStressXF()
 	 This method however converts the force in the System units from the reduced force.
 	 */
 	calcScaledForce();
+	/* force_vector is force acting on particle 0
+	 * rvec is from particle 0 to particle 1
+	 */
 	stresslet_XF.set(interaction->rvec, force_vector);
 }
 

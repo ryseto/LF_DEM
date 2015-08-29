@@ -105,6 +105,8 @@ System::calcStressPerParticle()
 		StressTensor magstressXF;
 		magneticstressXF.clear();
 		for (const auto & mf : magnetic_force_stored) {
+			/* mf.first = force0
+			 */
 			pos_diff = position[mf.second.second]-position[mf.second.first];
 			periodize_diff(pos_diff);
 			magstressXF.set(pos_diff, mf.first);
