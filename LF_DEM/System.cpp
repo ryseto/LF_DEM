@@ -1492,17 +1492,20 @@ void System::computeMaxNAVelocity()
 	 Note: it does \b not compute the velocities, just takes the maximum.
 	 */
 	double sq_max_na_velocity = 0;
-	double sq_na_velocity, sq_na_ang_velocity;
+	double sq_na_velocity;
 	for (int i=0; i<np; i++) {
 		sq_na_velocity = na_velocity[i].sq_norm();
-		if (sq_max_na_velocity < sq_na_velocity) {
+		if (sq_na_velocity > sq_max_na_velocity) {
 			sq_max_na_velocity = sq_na_velocity;
 		}
-		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
-		if (sq_max_na_velocity < sq_na_ang_velocity) {
-			sq_max_na_velocity = sq_na_ang_velocity;
-		}
 	}
+	//	double sq_na_ang_velocity;
+	//	for (int i=0; i<np; i++) {
+	//		sq_na_ang_velocity = na_ang_velocity[i].sq_norm()*radius_squared[i];
+	//		if (sq_max_na_velocity < sq_na_ang_velocity) {
+	//			sq_max_na_velocity = sq_na_ang_velocity;
+	//		}
+	//	}
 	max_velocity = sqrt(sq_max_na_velocity);
 }
 

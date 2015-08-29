@@ -246,14 +246,15 @@ sub InParticles {
 			#
 			if ($output == 1) {
 				if ($mag) {
-					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $ms, $brownian_pressure, $contact_pressure) = split(/\s+/, $line);
+					# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $ms, $brownian_pressure, $contact_pressure) = split(/\s+/, $line);
+					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ms) = split(/\s+/, $line);
 					#					$magmom_x[$i] = $mx;
 					#$magmom_y[$i] = $my;
 					#$magmom_z[$i] = $mz;
 					$magsusceptibility[$i] = $ms;
-					$bpressure[$i] = $brownian_pressure;
-					$con_pressure[$i] = $contact_pressure;
-					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
+					#					$bpressure[$i] = $brownian_pressure;
+					#				$con_pressure[$i] = $contact_pressure;
+					#					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
 				} else {
 					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 					$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
