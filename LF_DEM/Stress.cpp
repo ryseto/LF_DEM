@@ -172,7 +172,7 @@ System::calcStress()
 					As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
 				*/
 				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
-				unsigned short i,j;
+				unsigned short i, j;
 				interaction[k].get_par_num(i,j);
 				repulsivestressXF[i] += sc; 
 				repulsivestressXF[j] += sc;

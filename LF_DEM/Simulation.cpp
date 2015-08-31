@@ -350,12 +350,12 @@ void Simulation::simulationMagnetic(string in_args,
 		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
 										cos(sys.angle_external_magnetic_field),
 										0);
-		exit(1);
+		exit(1);// @not yet
 	} else if (sys.p.magnetic_field_type == 2) {
 		sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
 										0,
 										sin(sys.angle_external_magnetic_field));
-		exit(1);
+		exit(1);// @not yet
 	}
 	sys.setMagneticMomentZero();
 	bool initial_relax = true;
@@ -363,7 +363,7 @@ void Simulation::simulationMagnetic(string in_args,
 	double initial_time = sys.get_time();
 	while (keepRunning()) {
 		if (initial_relax && sys.get_time() >= 0) {
-			sys.setMagneticMomentExternalField();
+			sys.setInducedMagneticMoment();
 			initial_relax = false;
 		}
 		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;

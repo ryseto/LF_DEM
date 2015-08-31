@@ -340,7 +340,7 @@ void System::getContacts(vector <struct contact_state> &cs)
 	}
 }
 
-void System::setMagneticMomentExternalField()
+void System::setInducedMagneticMoment()
 {
 	for (int i=0; i<np; i++) {
 		magnetic_moment[i] = magnetic_susceptibility[i]*external_magnetic_field;
