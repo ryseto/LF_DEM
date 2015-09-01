@@ -824,7 +824,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
-		calcStressPerParticle();
+		calcStressPerParticle(); // stress compornents
 	}
 	timeStepMovePredictor();
 	/* corrector */
@@ -835,9 +835,10 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
-		calcStressPerParticle();
+		calcStressPerParticle();  // stress compornents
 	}
 	if (lowPeclet) {
+		// Comupute total stress every time steps for better averaging
 		calcStress();
 	}
 	timeStepMoveCorrector();

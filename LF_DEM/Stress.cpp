@@ -215,19 +215,21 @@ System::calcStress()
 	total_stress += total_contact_stressXF;
 	total_stress += total_contact_stressGU; // added (Aug 15 2013)
 	if (repulsiveforce) {
-		total_repulsive_stress = total_repulsive_stressXF+total_repulsive_stressGU;
-		total_stress += total_repulsive_stress;
+		total_stress += total_repulsive_stressXF;
+		total_stress += total_repulsive_stressGU;
 	}
 	if (brownian) {
 		total_stress += total_brownian_stressGU;
-		if (lowPeclet) { // take an averaged stress instead of instantaneous //@@
+		if (lowPeclet) {
+			// take an averaged stress instead of instantaneous
 			stress_avg->update(total_stress, get_time());
 			total_stress = stress_avg->get();
 		}
 	}
 	if (magnetic) {
-		total_magnetic_stress = total_magnetic_stressXF+total_magnetic_stressGU;
-		total_stress += total_magnetic_stress;
+		//total_magnetic_stress =
+		total_stress += total_magnetic_stressXF;
+		total_stress += total_magnetic_stressGU;
 	}
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
 }

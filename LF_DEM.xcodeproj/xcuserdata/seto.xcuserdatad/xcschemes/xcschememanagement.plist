@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>CalcOrderParameter.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>5</integer>
+		</dict>
 		<key>LF_DEM.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -33,6 +38,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>D921A0BD175BF90D002F64B1</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D9532ADE1B9412FC0014831F</key>
 		<dict>
 			<key>primary</key>
 			<true/>

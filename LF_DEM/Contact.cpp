@@ -370,12 +370,15 @@ double Contact::calcEnergy()
 	double overlap = -interaction->get_reduced_gap();
 	double sq_tan_norm = disp_tan.sq_norm();
 	double sq_disp_rolling = disp_rolling.sq_norm();
+	/* normal */
 	double energy = 0.5*kn_scaled*overlap*overlap;
 	if (state >= 2) {
+			/* sliding */
 		energy += 0.5*kt_scaled*sq_tan_norm;
-	}
-	if (sys->rolling_friction) {
-		energy += 0.5*kr_scaled*sq_disp_rolling;
+		if (sys->rolling_friction) {
+			/* roling */
+			energy += 0.5*kr_scaled*sq_disp_rolling;
+		}
 	}
 	return energy;
 }
