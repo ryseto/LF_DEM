@@ -1013,12 +1013,11 @@ void System::timeEvolution(string time_or_strain, double value_end)
 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
 	};
 	if (events.empty()) {
-//		if(rate_controlled){
-			(this->*timeEvolutionDt)(true); // last time step, compute the stress
-//		}
+		calc_stress = true;
+		(this->*timeEvolutionDt)(calc_stress); // last time step, compute the stress
 	}
-
-	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
+	if (p.auto_determine_knkt
+		&& shear_strain > p.start_adjust){
 		adjustContactModelParameters();
 	}
 }
@@ -1148,8 +1147,12 @@ void System::updateInteractions()
 		}
 	}
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
-	if (p.magnetic_type == 2) {
-		updateMagneticInteractions();
+	if (magnetic) {
+		if (p.magnetic_type == 2) {
+			updateMagneticInteractions();
+		} else {
+			exit(1); // not yet
+		}
 	}
 }
 

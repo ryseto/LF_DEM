@@ -146,15 +146,15 @@ void Simulation::simulationSteadyShear(string in_args,
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
 	} else {
-		sys.new_contact_gap = 0;
+		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 	}
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData(); //
-	outputData(); // new
+	evaluateData();
+	outputData();
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
@@ -176,7 +176,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
-		outputData(); // new
+		outputData();
 		outputConfigurationBinary(); // generic, for recovery if crash
 		if (time_interval_output_config == -1) {
 			if (sys.get_shear_strain() >= next_output_config-1e-8) {
@@ -203,8 +203,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		} else {
 			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
-		
-		sys.new_contact_gap = 0;
+		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -236,9 +235,9 @@ void Simulation::simulationInverseYield(string in_args,
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 	
 	if (sys.cohesion) {
-		sys.new_contact_gap = 0.02;
+		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
 	} else {
-		sys.new_contact_gap = 0;
+		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 	}
 	int jammed = 0;
 	time_t now;
@@ -298,7 +297,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			jammed = 0;
 		}
-		sys.new_contact_gap = 0;
+		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -682,10 +681,10 @@ void Simulation::outputDataMagnetic()
 	outdata.entryData(12, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_phi);
 	/* pressure */
 	outdata.entryData(13, "particle pressure", "stress", sys.total_stress.getParticlePressure());
-	outdata.entryData(14, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
+	outdata.entryData(14, "particle pressure contact XF", "stress", sys.total_contact_stressXF.getParticlePressure());
 	outdata.entryData(15, "particle pressure contact GU", "stress", sys.total_contact_stressGU.getParticlePressure());
 	outdata.entryData(16, "particle pressure brownian", "stress", sys.total_brownian_stressGU.getParticlePressure());
-	outdata.entryData(17, "particle pressure magnetic", "stress", sys.total_magnetic_stressXF.getParticlePressure());
+	outdata.entryData(17, "particle pressure magnetic XF", "stress", sys.total_magnetic_stressXF.getParticlePressure());
 	outdata.entryData(18, "particle pressure magnetic GU", "stress", sys.total_magnetic_stressGU.getParticlePressure());
 	/* maximum velocity */
 	outdata.entryData(20, "max velocity", "velocity", sys.max_velocity);
