@@ -279,7 +279,6 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-	
 	double YG0_YG2 = scaledYG0()+scaledYG2();
 	double YG1_YG3 = scaledYG1()+scaledYG3();
 	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nnE;
@@ -550,6 +549,11 @@ void Lubrication::addHydroStress()
 	sys->lubstress[p0] += stresslet_hydro_GU_i+stresslet_ME_i;
 	sys->lubstress[p1] += stresslet_hydro_GU_j+stresslet_ME_j;
 	// Add term G*V_cont
+	/* [note] 
+	 * We don't need interaction->is_contact() condition,
+	 * because the contact velocities of p0 and p1 can be non-zero
+	 * even when they are not in contact.
+	 */
 	StressTensor stresslet_contact_GU_i;
 	StressTensor stresslet_contact_GU_j;
 	pairVelocityStresslet(sys->vel_contact[p0], sys->vel_contact[p1],
@@ -590,7 +594,7 @@ void Lubrication::addHydroStress()
 
 void Lubrication::updateResistanceCoeff()
 {
-	if (interaction->is_contact() > 0) {
+	if (interaction->is_contact()) {
 		if (!interaction->contact_state_changed_after_predictor) {
 			setResistanceCoeff(sys->lub_coeff_contact,
 							   sys->log_lub_coeff_contact_tan_total);
