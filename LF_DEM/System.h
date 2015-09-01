@@ -308,7 +308,7 @@ private:
 	vec3d external_magnetic_field;
 	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
 								  const std::vector <double> &magnetic_susceptibility);
-	void setMagneticMomentExternalField();
+	void setInducedMagneticMoment();
 	void setMagneticMomentZero();
 	void calcMagneticEnergy();
 	/*************************************************************/
