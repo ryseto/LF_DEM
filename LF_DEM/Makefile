@@ -12,15 +12,6 @@ install_dir = ~/bin/
 
 DSFMT_RNG = no
 
-# can define your own variables in a Makefile.in without having to commit every time, e.g. "OS_version = Linux"
-mymake = MyMakefile.in
-ifneq ("$(wildcard $(mymake))","")
-include $(mymake)
-endif
-
-
-
-
 # Compiler
 ifeq ($(OS_version),SI)
 	CXX=icc
@@ -34,6 +25,13 @@ endif
 ifeq ($(OS_version),OSX)
 	CXX=clang++
 endif
+
+# can define your own variables in a Makefile.in without having to commit every time, e.g. "OS_version = Linux"
+mymake = MyMakefile.in
+ifneq ("$(wildcard $(mymake))","")
+include $(mymake)
+endif
+
 
 CXXFLAGS_optimized = -O3
 CXXFLAGS_debug = -g -DDEV="1"

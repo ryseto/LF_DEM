@@ -632,7 +632,7 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#    }
-	$force_factor = 0.035;
+	$force_factor = 0.0002;
 	#	$force_factor = 0.02;
 #		printf OUT "y 3\n";
 #		printf OUT "@ 6\n";
