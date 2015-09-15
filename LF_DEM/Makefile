@@ -4,6 +4,7 @@
 #    Parameters to provide              #
 #=======================================#
 
+
 # OS_version: OSX or Linux or SI
 OS_version = OSX
 # install directory
@@ -11,6 +12,11 @@ install_dir = ~/bin/
 
 DSFMT_RNG = no
 
+# can define your own variables in a Makefile.in without having to commit every time, e.g. "OS_version = Linux"
+mymake = MyMakefile.in
+ifneq ("$(wildcard $(mymake))","")
+include $(mymake)
+endif
 
 
 
