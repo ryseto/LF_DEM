@@ -49,7 +49,7 @@ bool Simulation::keepRunning()
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
 	if (time_end == -1) {
-		return (sys.get_shear_strain() < strain_end-1e-8) && !kill;
+		return (fabs(sys.get_shear_strain()) < strain_end-1e-8) && !kill;
 	} else {
 		return (sys.get_time() < time_end-1e-8) && !kill;
 	}

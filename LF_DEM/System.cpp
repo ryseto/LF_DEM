@@ -66,7 +66,7 @@ vec3d System::randUniformSphere(double r)
 unsigned long
 System::hash( time_t t, clock_t c )
 {
-	/** 
+	/**
 		\brief Utility function to start up the DSFMT RNG with a nice seed.
 
 	 From MersenneTwister v1.0 by Richard J. Wagner
@@ -311,7 +311,7 @@ void System::setContacts(const vector <struct contact_state> &cs)
 {
 	/**
 		\brief Set a list of contacts with their state variables.
-		
+
 		Used to restart the simulation from a given state.
 	 */
 	for (const auto &c : cs) {
@@ -970,7 +970,7 @@ void System::timeStepMoveCorrector()
 bool System::keepRunning(string time_or_strain, double value_end){
 	bool keep_running;
 	if (time_or_strain == "strain") {
-		keep_running = (get_shear_strain() < value_end-1e-8) && events.empty();
+		keep_running = (fabs(get_shear_strain()) < value_end-1e-8) && events.empty();
 	} else {
 		keep_running = (get_time() < value_end-1e-8) && events.empty();
 	}
@@ -1158,11 +1158,11 @@ void System::updateInteractions()
 void System::updateMagneticInteractions()
 {
 	/**
-	 
+
 	 Magnetic force is noramlized with
-	 
-	 \f$ F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4 \f$ 
-	 
+
+	 \f$ F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4 \f$
+
 	 \hat{F}_M = - (16/r**4)*( (m.n)m + (m.n)m + (m.m)n - 5(m.n)(m.n)n)
 	 (where r and m are dimensionless distance and dimensionless magnetic moment.)
 
@@ -2019,9 +2019,9 @@ void System::calcPotentialEnergy()
 
 void System::calcMagneticEnergy()
 {
-	/* 
+	/*
 	 Magnetic energy is given in the thrmal unit.
-	 
+
 	 E_M = -(mu_f)/(4 pi r**3) (3 (m1.n)(m2.n)-m1.m2)
 	 \tilde{E}_M = E_M/kT = (2/3)*Pe_M*\hat{E}_M
 	 \hat{E}_M = E_M / E_M^{*} = 8*(3*m0.n*m1.n-m0.m1)/r**3;
