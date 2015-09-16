@@ -75,15 +75,16 @@ private:
 	int linalg_size;
 	int dof;
 	/* data */
-	bool keepRunning(std::string, double);
-	void (System::*timeEvolutionDt)(bool);
-	void timeEvolutionEulersMethod(bool calc_stress);
-	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
-	void timeStepMove();
+	bool keepRunning(const std::string & time_or_strain, const double & value_end);
+	void (System::*timeEvolutionDt)(bool, const std::string&, const double&);
+	void timeEvolutionEulersMethod(bool calc_stress, const std::string & time_or_strain, const double & value_end);
+	void timeEvolutionPredictorCorrectorMethod(bool calc_stress, const std::string & time_or_strain, const double & value_end);
+	void timeStepMove(const std::string & time_or_strain, const double & value_end);
 	void timeStepMoveCorrector();
-	void timeStepMovePredictor();
+	void timeStepMovePredictor(const std::string & time_or_strain, const double & value_end);
 	void timeStepBoxing(const double strain_increment);
 	void adaptTimeStep();
+	void adaptTimeStep(const std::string & time_or_strain, const double & value_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -132,7 +133,7 @@ private:
 	Averager<double> *max_disp_tan_avg;
 	bool fixed_dt;
 	std::list <Event> &events;
-	
+
 	/*
 	 * Simulation for magnetic particles
 	 */
@@ -141,7 +142,7 @@ private:
 	std::vector<std::vector<int> > magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
-	
+
  protected:
  public:
 	System(ParameterSet &ps, std::list <Event> &ev);
@@ -278,8 +279,8 @@ private:
 	void setupSystem(std::string control);
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(std::string time_or_strain, double value_end);
-	void timeEvolution(double value_end);
+	void timeEvolution(const std::string & time_or_strain, const double & value_end);
+//	void timeEvolution(double value_end); // @@@ DEPRECATED
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
 	void checkInteractionEnd();

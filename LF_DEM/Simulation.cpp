@@ -367,7 +367,7 @@ void Simulation::simulationMagnetic(string in_args,
 		}
 		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
 		time_output_config = initial_time+cnt_config_out*time_interval_output_config;
-		sys.timeEvolution(time_output_data);
+		sys.timeEvolution("time", time_output_data); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
 		cnt_simu_loop ++;
 		/******************** OUTPUT DATA ********************/
 		evaluateData();

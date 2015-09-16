@@ -737,7 +737,7 @@ void System::eventShearJamming(){
 	}
 }
 
-void System::timeEvolutionEulersMethod(bool calc_stress)
+void System::timeEvolutionEulersMethod(bool calc_stress, const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -754,7 +754,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
-	timeStepMove();
+	timeStepMove(time_or_strain, value_end);
 
 	if (eventLookUp != NULL){
 		(this->*eventLookUp)();
@@ -765,7 +765,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
 
-void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
+void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,  const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -825,7 +825,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 	}
-	timeStepMovePredictor();
+	timeStepMovePredictor(time_or_strain, value_end);
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
@@ -843,7 +843,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	timeStepMoveCorrector();
 }
 
-void System::adaptTimeStep(){
+void System::adaptTimeStep()
+{
+	/**
+	\brief Adapt the time step so that the maximum relative displacement is p.disp_max .
+	*/
 	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 		if (max_velocity > max_sliding_velocity) {
 			dt = p.disp_max/max_velocity;
@@ -855,18 +859,34 @@ void System::adaptTimeStep(){
 	}
 }
 
-void System::timeStepMove()
+void System::adaptTimeStep(const string & time_or_strain, const double & value_end){
+	/**
+	\brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
+	*/
+	adaptTimeStep();
+	if (time_or_strain == "strain") {
+		if ( fabs(dt*shear_rate) > (value_end - fabs(get_shear_strain())) ) {
+			dt = fabs((value_end - fabs(get_shear_strain()))/shear_rate);
+		}
+	} else {
+		if ( dt > (value_end - get_time()) ) {
+			dt = (value_end - get_time());
+		}
+	}
+}
+
+
+void System::timeStepMove(const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
 
-	/* Changing dt for every timestep
-	 * So far, this is only in Euler method.
-	 */
+	/* Adapt dt to get desired p.disp_max	 */
 	if (!fixed_dt) {
-		adaptTimeStep();
+		adaptTimeStep(time_or_strain, value_end);
 	}
+
 	time += dt;
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
@@ -875,6 +895,7 @@ void System::timeStepMove()
 	if (!zero_shear) {
 		strain_increment = dt*shear_rate;
 	}
+
 	timeStepBoxing(strain_increment);
 	/* move particles */
 	for (int i=0; i<np; i++) {
@@ -897,24 +918,29 @@ void System::timeStepMove()
 	updateInteractions();
 }
 
-void System::timeStepMovePredictor()
+void System::timeStepMovePredictor(const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		if (!fixed_dt) {
-			adaptTimeStep();
+			adaptTimeStep(time_or_strain, value_end);
 		}
 	}
+
 	time += dt;
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
+	/* evolve PBC */
+	double strain_increment = 0;
+	if (!zero_shear) {
+		strain_increment = dt*shear_rate;
+	}
 
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	double strain_increment = dt*shear_rate;
 	timeStepBoxing(strain_increment);
 
 	for (int i=0; i<np; i++) {
@@ -967,7 +993,8 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-bool System::keepRunning(string time_or_strain, double value_end){
+
+bool System::keepRunning(const string & time_or_strain, const double & value_end){
 	bool keep_running;
 	if (time_or_strain == "strain") {
 		keep_running = (fabs(get_shear_strain()) < value_end-1e-8) && events.empty();
@@ -977,7 +1004,7 @@ bool System::keepRunning(string time_or_strain, double value_end){
 	return keep_running;
 }
 
-void System::timeEvolution(string time_or_strain, double value_end)
+void System::timeEvolution(const string & time_or_strain, const double &  value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system untile time_end
@@ -1009,11 +1036,11 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	}
 
 	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // no stress computation except at low Peclet
 	};
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust){
@@ -1021,40 +1048,40 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	}
 }
 
-void System::timeEvolution(double time_end)
-{
-	/**
-	 \brief Main time evolution routine: evolves the system untile time_end
-
-	 This method essentially loops the appropriate one time step
-	 method method, according to the Euler vs predictor-corrector or
-	 strain rate vs stress controlled choices. On the last time step,
-	 the stress is computed.
-	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-	 r
-	 \param time_end Time to reach.
-	 */
-	static bool firsttime = true;
-	in_predictor = false;
-	in_corrector = false;
-	if (firsttime) {
-		checkNewInteraction();
-		updateInteractions();
-		firsttime = false;
-	}
-	bool calc_stress = false;
-	if (lowPeclet) {
-		calc_stress = true;
-	}
-
-	while (get_time() < time_end-dt) { // integrate until strain_next
-		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-	};
-	(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
-		adjustContactModelParameters();
-	}
-}
+// void System::timeEvolution(double time_end) // @@@ DEPRECATED, USE ABOVE
+// {
+// 	/**
+// 	 \brief Main time evolution routine: evolves the system untile time_end
+//
+// 	 This method essentially loops the appropriate one time step
+// 	 method method, according to the Euler vs predictor-corrector or
+// 	 strain rate vs stress controlled choices. On the last time step,
+// 	 the stress is computed.
+// 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
+// 	 r
+// 	 \param time_end Time to reach.
+// 	 */
+// 	static bool firsttime = true;
+// 	in_predictor = false;
+// 	in_corrector = false;
+// 	if (firsttime) {
+// 		checkNewInteraction();
+// 		updateInteractions();
+// 		firsttime = false;
+// 	}
+// 	bool calc_stress = false;
+// 	if (lowPeclet) {
+// 		calc_stress = true;
+// 	}
+//
+// 	while (get_time() < time_end-dt) { // integrate until strain_next
+// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+// 	};
+// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+// 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
+// 		adjustContactModelParameters();
+// 	}
+// }
 
 void System::checkNewInteraction()
 {
