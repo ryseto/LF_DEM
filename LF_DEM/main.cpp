@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate ] [-s Stress ] \
 	[-R Rate_Sequence ] [-S Stress_Sequence ] [-m ?] [-k kn_kt_File] [-i Provisional_Data] [-n] \
 	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
-	
+
 	double dimensionless_number = 0;
 	string numeral, suffix;
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	int random_seed = 1;
 
 	bool binary_conf = false;
-	
+
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 				 * Typical magnetic force: (3 mu m^2)/(4 pi (2a)^4)
 				 * Typical Brownian force: kT/a
 				 * Dimensionless_number (Pe number) can be defined as the ratio between these two forces:
-				 * Typical magnetic force/Typical Brownian force 
+				 * Typical magnetic force/Typical Brownian force
 				 * dimensionless_number = Pe_M = (3 mu m^2) / (64 pi kT a^3)
 				 */
 				rheology_control = "magnetic";
@@ -187,10 +187,18 @@ int main(int argc, char **argv)
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
 											  dimensionless_number, suffix, rheology_control);
-			
+
 		} else if (seq_filename == "not_given") {
-			simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
+			try
+			{
+				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
+			}
+			catch(runtime_error& e)
+			{
+				cerr << e.what() << endl;
+      	return 1;
+			}
 		} else {
 		  cerr << " User def sequence temporarily disabled " << endl;
 		  //		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);

@@ -91,7 +91,7 @@ void Simulation::handleEventsShearJamming()
 		outputData(); // new
 		outputConfigurationBinary();
 		outputConfigurationData();
-		exit(1);
+		kill = true;
 	}
 }
 
@@ -349,12 +349,12 @@ void Simulation::simulationMagnetic(string in_args,
 		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
 										cos(sys.angle_external_magnetic_field),
 										0);
-		exit(1);// @not yet
+		throw runtime_error("magnetic_field_type == 1 not yet implemented");// @not yet
 	} else if (sys.p.magnetic_field_type == 2) {
 		sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
 										0,
 										sin(sys.angle_external_magnetic_field));
-		exit(1);// @not yet
+		throw runtime_error("magnetic_field_type == 2 not yet implemented");// @not yet
 	}
 	sys.setMagneticMomentZero();
 	bool initial_relax = true;
@@ -523,8 +523,9 @@ void Simulation::outputData()
 
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
-		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
-		exit(1);
+		ostringstream error_str;
+		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
@@ -661,7 +662,9 @@ void Simulation::outputDataMagnetic()
 	 */
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
-		cerr << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl; exit(1);
+		ostringstream error_str;
+		error_str  << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	outdata.init(27, output_unit_scales);
@@ -872,7 +875,7 @@ void Simulation::outputConfigurationData()
 
 void Simulation::outputFinalConfiguration()
 {
-	cerr << "Output final configuration" << endl;
+	cout << "Output final configuration" << endl;
 	ofstream fout_finalconfig;
 	string filename_final_configuration = "relaxed_"+filename_import_positions;
 	fout_finalconfig.open(filename_final_configuration.c_str());

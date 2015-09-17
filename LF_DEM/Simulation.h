@@ -27,7 +27,7 @@
 #include "InputValue.h"
 #include "OutputData.h"
 #include "Events.h"
-	
+
 class Simulation
 {
 private:
@@ -128,7 +128,7 @@ private:
 						 double dimensionlessnumber,
 						 std::string input_scale);
 	void outputComputationTime();
-	bool keepRunning();	
+	bool keepRunning();
 	bool kill;
 
 	/*********** Events  ************/
@@ -144,18 +144,18 @@ private:
 	~Simulation();
 	void simulationSteadyShear(std::string in_args, std::vector<std::string> &input_files, bool binary_conf,
 							   double dimensionless_number, std::string input_scale, std::string control_variable);
-	void simulationUserDefinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
-	
+	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
+
 	void simulationInverseYield(std::string in_args,
 								std::vector<std::string> &input_files,
 								bool binary_conf,
 								double dimensionless_number,
 								std::string input_scale,
 								std::string control_variable);
-	
+
 	void simulationMagnetic(std::string in_args, std::vector<std::string> &input_files,
 							bool binary_conf, double dimensionless_number,
 							std::string input_scale, std::string control_variable);
-	
+
 };
 #endif /* defined(__LF_DEM__Simulation__) */

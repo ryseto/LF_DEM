@@ -168,7 +168,7 @@ void System::allocateRessources()
 		double particle_volume = 4*M_PI/3;
 		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
 	}
-	cerr << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
+	cout << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
@@ -304,7 +304,7 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 		particle_volume += (4*M_PI/3)*pow(radius[i],3);
 	}
 	volume_fraction = particle_volume/system_volume;
-	cerr << "volume_fraction = " << volume_fraction << endl;
+	cout << "volume_fraction = " << volume_fraction << endl;
 }
 
 void System::setContacts(const vector <struct contact_state> &cs)
@@ -365,11 +365,10 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		/* Each particle has magnetic dipole moment.
 		 * Ferromagnetism.
 		 */
-		cerr << "This is not implemented yet" << endl;
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] = magnetic_moment_[i];
 		}
-		exit(1);
+		throw runtime_error("This is not implemented yet");
 		//num_magnetic_particles = i_magnetic;
 	} else if (p.magnetic_type == 2) {
 		/* Particle can have magnetic moment when external magnetic field is applied.
@@ -419,8 +418,7 @@ void System::updateUnscaledContactmodel()
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
-		cerr << "lubrication_model..." << endl;
-		exit(1);
+		throw runtime_error("Error: lubrication_model>2 ???");
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	for (int k=0; k<nb_interaction; k++) {
@@ -463,17 +461,16 @@ void System::setupSystem(string control)
 	} else if (p.integration_method == 1) {
 		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
 	} else {
-		cerr << "integration_method = " << p.integration_method << endl;
-		cerr << "The integration method is not impremented yet." << endl;
-		exit(1);
+		ostringstream error_str;
+		error_str << "integration_method = " << p.integration_method << endl << "The integration method is not impremented yet." << endl;
+		throw runtime_error(error_str.str());
 	}
 	if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
 	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		cerr << "lubrication_model = 0 is not implemented yet.\n";
-		exit(1);
+		throw runtime_error("lubrication_model = 0 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -485,36 +482,33 @@ void System::setupSystem(string control)
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
 	if (p.friction_model == 0) {
-		cerr << "friction_model = 0" << endl;
+		cout << "friction_model = 0" << endl;
 		p.mu_static = 0;
 		friction = false;
 	} else if (p.friction_model == 1) {
-		cerr << "friction_model = 1" << endl;
+		cout << "friction_model = 1" << endl;
 		friction = true;
 	} else if (p.friction_model == 2 || p.friction_model == 3) {
-		cerr << "friction_model " << p.friction_model << endl;
+		cout << "friction_model " << p.friction_model << endl;
 		friction = true;
-		cerr << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
+		cout << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
 	} else if (p.friction_model == 5) {
-		cerr << "friction_model = 5: ft_max" << endl;
+		cout << "friction_model = 5: ft_max" << endl;
 		friction = true;
 	} else if (p.friction_model == 6) {
-		cerr << "friction_model = 6: Coulomb law + ft_max" << endl;
+		cout << "friction_model = 6: Coulomb law + ft_max" << endl;
 		friction = true;
 	} else {
-		cerr << "friction_model..." << endl;
-		exit(1);
+		throw runtime_error("Error: unknown friction model\n");
 	}
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
 		if (friction == false) {
-			cerr << "Sliding friction is not set!" << endl;
-			exit(1);
+			throw runtime_error("Error: Rolling friction without sliding friction?\n");
 		}
 	}
 	if (p.lub_max_gap >= 1) {
-		cerr << "lub_max_gap must be smaller than 1\n";
-		exit(1);
+		throw runtime_error("lub_max_gap must be smaller than 1\n");
 	}
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
@@ -585,17 +579,16 @@ void System::setupSystem(string control)
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
-		cerr << "lubrication_model..." << endl;
-		exit(1);
+		throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (p.unscaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
-	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cerr << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
-	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
-	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
+	cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	cout << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
+	cout << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
+	cout << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	if (brownian) {
 #ifdef DEV
 		/* In developing and debugging phases,
@@ -627,8 +620,7 @@ void System::setupSystem(string control)
 		} else if (p.magnetic_type == 2) {
 			magnetic_rotation_active = false;
 		} else {
-			cerr << "magnetic_type needs to be 1 or 2\n";
-			exit(1);
+			throw runtime_error("magnetic_type needs to be 1 or 2\n");
 		}
 	}
 	if (p.time_init_relax > 0) {
@@ -1424,8 +1416,7 @@ void System::setRepulsiveForceToParticle()
 void System::setMagneticForceToParticle()
 {
 	if (p.magnetic_type == 1) {
-		cerr << "unfinished @ setMagneticForceToParticle " << endl;
-		exit(1);
+		throw runtime_error("unfinished @ setMagneticForceToParticle\n");
 		if (external_magnetic_field.is_zero() ||
 			p.magnetic_type == 2) {
 			for (int i=0; i<np; i++) {
@@ -2077,8 +2068,7 @@ void System::calcMagneticEnergy()
 	}
 	if (p.magnetic_type == 1) {
 		if (external_magnetic_field.is_not_zero()) {
-			cerr << "not implemented yet @ calcMagneticEnergy" << endl;
-			exit(1);
+			throw runtime_error( "not implemented yet @ calcMagneticEnergy");
 			for (int i=0; i<np; i++) {
 				double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 				total_energy += tmp_magnetic_energy_ex;
@@ -2093,10 +2083,10 @@ void System::setSystemVolume(double depth)
 {
 	if (twodimension) {
 		system_volume = lx*lz*depth;
-		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
+		cout << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
 	} else {
 		system_volume = lx*ly*lz;
-		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
+		cout << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
 	}
 }
 

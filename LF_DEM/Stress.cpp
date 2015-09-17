@@ -5,7 +5,7 @@
 //  Created by Ryohei Seto and Romain Mari on 02/21/13.
 //  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
-
+#include <sstream>
 #include "System.h"
 
 using namespace std;
@@ -75,9 +75,9 @@ System::calcStressPerParticle()
 			} else if (p.lubrication_model == 2) {
 				interaction[k].lubrication.calcXYFunctionsStress();
 			} else {
-				cerr << "lubrication_model = " << p.lubrication_model << endl;
-				cerr << "lubrication_model = 3 is not implemented" << endl;
-				exit(1);
+				ostringstream error_str;
+				error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model = 3 is not implemented" << endl;
+				throw runtime_error(error_str.str());
 			}
 			interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			interaction[k].contact.calcContactStress(); // - rF_cont
