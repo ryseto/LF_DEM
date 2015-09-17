@@ -341,7 +341,7 @@ private:
 
 	double getFrictionalContactNumber()
 	{
-		return (double)2*contact_nb/np;
+		return (double)2*fric_contact_nb/np;
 	}
 
 	double get_lx()
