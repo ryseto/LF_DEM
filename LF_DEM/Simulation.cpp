@@ -179,7 +179,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		outputData();
 		outputConfigurationBinary(); // generic, for recovery if crash
 		if (time_interval_output_config == -1) {
-			if (sys.get_shear_strain() >= next_output_config-1e-8) {
+			if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
 				outputConfigurationData();
 				if(p.out_binary_conf){
 					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
@@ -204,7 +204,7 @@ void Simulation::simulationSteadyShear(string in_args,
 			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
 		}
 		sys.new_contact_gap = 0; //@@ To be changed to a better way.
-		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
+		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
