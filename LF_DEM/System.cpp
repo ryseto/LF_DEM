@@ -640,7 +640,6 @@ void System::setupSystem(string control)
 	}
 	stokes_solver.initialize();
 	dt = p.dt;
-	fixed_dt = p.fixed_dt;
 	initializeBoxing();
 
 	checkNewInteraction();
@@ -875,7 +874,7 @@ void System::timeStepMove(const string & time_or_strain, const double & value_en
 	 */
 
 	/* Adapt dt to get desired p.disp_max	 */
-	if (!fixed_dt) {
+	if (!p.fixed_dt) {
 		adaptTimeStep(time_or_strain, value_end);
 	}
 
@@ -916,7 +915,7 @@ void System::timeStepMovePredictor(const string & time_or_strain, const double &
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
-		if (!fixed_dt) {
+		if (!p.fixed_dt) {
 			adaptTimeStep(time_or_strain, value_end);
 		}
 	}
@@ -1684,7 +1683,7 @@ void System::computeVelocities(bool divided_velocities)
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (!fixed_dt && in_predictor) {
+	if (!p.fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
 	if (!zero_shear) {

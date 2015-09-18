@@ -577,7 +577,7 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		importConfiguration(filename_import_positions);
 	}
-	sys.shear_disp = initial_lees_edwards_disp;
+
 
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
@@ -632,14 +632,6 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 
-	if (sys.brownian) {
-		if (sys.lowPeclet) {
-			cerr << "[[small Pe mode]]" << endl;
-			cerr << "  kn = " << p.kn << endl;
-			cerr << "  kt = " << p.kt << endl;
-			cerr << "  dt = " << p.dt << endl;
-		}
-	}
 	sys.setupSystem(control_var);
 	if (binary_conf) {
 		importContactsBinary(in_binary_conf);
@@ -1050,11 +1042,13 @@ void Simulation::importConfiguration(const string & filename_import_positions)
 	char buf;
 	int n1, n2;
 	double lx, ly, lz, vf1, vf2;
+	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
 	stringstream ss(header_imported_configulation[1]);
 	ss >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp.x;
+
 	double a;
 	if(ss >> a) {
 		initial_lees_edwards_disp.y = a;
@@ -1062,6 +1056,8 @@ void Simulation::importConfiguration(const string & filename_import_positions)
 	else {
 		initial_lees_edwards_disp.y = 0;
 	}
+	sys.shear_disp = initial_lees_edwards_disp;
+
 	vector<vec3d> initial_position;
 	vector <double> radius;
 	if (sys.p.magnetic_type == 0) {
@@ -1084,6 +1080,7 @@ void Simulation::importConfiguration(const string & filename_import_positions)
 		sys.setConfiguration(initial_position, radius, lx, ly, lz);
 		sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
 	}
+
 	file_import.close();
 }
 
@@ -1092,7 +1089,8 @@ void Simulation::importConfigurationBinary(ifstream &file_import, const string &
 	/**
 	  \brief Read a binary file input configuration.
 	*/
-//	ifstream file_import;
+
+	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
@@ -1109,6 +1107,8 @@ void Simulation::importConfigurationBinary(ifstream &file_import, const string &
 	file_import.read((char*)&lz, sizeof(double));
 	file_import.read((char*)&initial_lees_edwards_disp.x, sizeof(double));
 	file_import.read((char*)&initial_lees_edwards_disp.y, sizeof(double));
+	sys.shear_disp = initial_lees_edwards_disp;
+
 	double x_, y_, z_, r_;
 	vector <vec3d> initial_position;
 	vector <double> radius;
@@ -1121,7 +1121,7 @@ void Simulation::importConfigurationBinary(ifstream &file_import, const string &
 		radius.push_back(r_);
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-//	return file_import;
+
 }
 
 void Simulation::importContactsBinary(ifstream &file_import)
@@ -1129,7 +1129,7 @@ void Simulation::importContactsBinary(ifstream &file_import)
 	/**
 	  \brief Read a binary file input contacts.
 	*/
-	
+
 	int ncont;
 	unsigned short p0, p1;
  	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;

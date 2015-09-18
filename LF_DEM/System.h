@@ -131,7 +131,6 @@ private:
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
-	bool fixed_dt;
 	std::list <Event> &events;
 
 	/*
@@ -283,20 +282,16 @@ private:
 //	void timeEvolution(double value_end); // @@@ DEPRECATED
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
-	void checkInteractionEnd();
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
-	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void periodize_diff(vec3d &);
-	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();
 	void analyzeState();
 	StokesSolver stokes_solver;
-	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();

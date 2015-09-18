@@ -130,6 +130,46 @@ void Simulation::handleEvents()
 	events.clear();
 }
 
+void Simulation::generateOutput(double &next_output_data, double &next_output_config, int &binconf_counter)
+{
+	/******************** OUTPUT DATA ********************/
+	evaluateData();
+	outputData();
+	outputConfigurationBinary(); // generic, for recovery if crash
+	if (time_interval_output_config == -1) {
+		if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
+			outputConfigurationData();
+			if(p.out_binary_conf){
+				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+				outputConfigurationBinary(binconf_filename);
+			}
+			next_output_config += strain_interval_output_config;
+		}
+	} else {
+		if (sys.get_time() >= next_output_config-1e-8) {
+			outputConfigurationData();
+			if(p.out_binary_conf){
+				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+				outputConfigurationBinary(binconf_filename);
+			}
+			next_output_config +=  time_interval_output_config;
+		}
+	}
+/*****************************************************/
+}
+
+void Simulation::timeEvolution(double next_output_data)
+{
+
+	if (time_interval_output_data == -1) {
+		next_output_data += strain_interval_output_data;
+		sys.timeEvolution("strain", next_output_data);
+	} else {
+		next_output_data +=  time_interval_output_data;
+		sys.timeEvolution("time", next_output_data);
+	}
+
+}
 /*
  * Main simulation
  */
@@ -164,39 +204,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	double next_output_config = 0;
 	int binconf_counter = 0;
 	while (keepRunning()) {
-		if (time_interval_output_data == -1) {
-			next_output_data += strain_interval_output_data;
-			sys.timeEvolution("strain", next_output_data);
-		} else {
-			next_output_data +=  time_interval_output_data;
-			sys.timeEvolution("time", next_output_data);
-		}
+		timeEvolution(next_output_data);
+
 		handleEvents();
 
-		/******************** OUTPUT DATA ********************/
-		evaluateData();
-		outputData();
-		outputConfigurationBinary(); // generic, for recovery if crash
-		if (time_interval_output_config == -1) {
-			if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
-				outputConfigurationData();
-				if(p.out_binary_conf){
-					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
-					outputConfigurationBinary(binconf_filename);
-				}
-				next_output_config += strain_interval_output_config;
-			}
-		} else {
-			if (sys.get_time() >= next_output_config-1e-8) {
-				outputConfigurationData();
-				if(p.out_binary_conf){
-					string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
-					outputConfigurationBinary(binconf_filename);
-				}
-				next_output_config +=  time_interval_output_config;
-			}
-		}
-		/*****************************************************/
+		generateOutput(next_output_data, next_output_config, binconf_counter);
+
 		if (time_end != -1) {
 			cout << "time: " << sys.get_time_in_simulation_units() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
 		} else {

@@ -32,7 +32,6 @@ class Simulation
 {
 private:
 	System sys;
-	ParameterSet p;
 	ParameterSet p_initial;
 	std::map <std::string, std::string> input_force_units;   // pairs: (force_type, unit)
 	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
@@ -52,8 +51,6 @@ private:
 	/*
 	 * Resultant data
 	 */
-	vec3d initial_lees_edwards_disp;
-	double initial_y_shear_disp;
 	std::string internal_unit_scales;
 	std::string output_unit_scales;
 	double target_stress_input;
@@ -116,19 +113,10 @@ private:
 	void outputConfigurationBinary(std::string);
 	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulation(std::string in_args,
-						 std::vector<std::string> &input_files,
-						 bool binary_conf,
-						 double dimensionlessnumber,
-						 std::string input_scale);
 	void outputComputationTime();
-	bool keepRunning();
 	bool kill;
 
 	/*********** Events  ************/
-	std::list <Event> events;
-	void setupEvents();
-	void handleEvents();
 	void handleEventsShearJamming();
 	void handleEventsFragility();
 
@@ -150,10 +138,22 @@ private:
 	void simulationMagnetic(std::string in_args, std::vector<std::string> &input_files,
 							bool binary_conf, double dimensionless_number,
 							std::string input_scale, std::string control_variable);
-
+	void setupSimulation(std::string in_args,
+												 std::vector<std::string> &input_files,
+												 bool binary_conf,
+												 double dimensionlessnumber,
+												 std::string input_scale);
 	void setControlVariable(const std::string & var){
 		control_var = var;
 	};
-
+	ParameterSet p;
+	bool keepRunning();
+	void timeEvolution(double next_output_data);
+	void generateOutput(double &next_output_data, double &next_output_config, int &binconf_counter);
+	/*********** Events  ************/
+	std::list <Event> events;
+	void setupEvents();
+	void handleEvents();
+	System &getSys(){ return sys;}
 };
 #endif /* defined(__LF_DEM__Simulation__) */
