@@ -140,7 +140,6 @@ void Simulation::simulationSteadyShear(string in_args,
 									   string input_scale,
 									   string control_variable)
 {
-	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 	if (sys.cohesion) {
@@ -214,12 +213,14 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
+	string	filename_parameters = input_files[1];
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
 		 */
-		outputFinalConfiguration();
+		string filename_configuration = input_files[0];
+		outputFinalConfiguration(filename_configuration);
 	}
 }
 
@@ -230,7 +231,6 @@ void Simulation::simulationInverseYield(string in_args,
 										string input_scale,
 										string control_variable)
 {
-	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 
@@ -309,12 +309,15 @@ void Simulation::simulationInverseYield(string in_args,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
+
+	string	filename_parameters = input_files[1];
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
 		 */
-		outputFinalConfiguration();
+		string filename_configuration = input_files[0];
+ 		outputFinalConfiguration(filename_configuration);
 	}
 }
 
@@ -329,7 +332,6 @@ void Simulation::simulationMagnetic(string in_args,
 	 *
 	 *
 	 */
-	user_sequence = false;
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
 	int cnt_simu_loop = 1;
@@ -380,12 +382,14 @@ void Simulation::simulationMagnetic(string in_args,
 		cout << "time: " << sys.get_time() << " / " << time_end << endl;
 	}
 	outputComputationTime();
+	string	filename_parameters = input_files[1];
 	if (filename_parameters.find("init_relax", 0) < filename_parameters.size()) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
 		 */
-		outputFinalConfiguration();
+		string filename_configuration = input_files[0];
+ 		outputFinalConfiguration(filename_configuration);
 	}
 }
 
@@ -873,7 +877,7 @@ void Simulation::outputConfigurationData()
 	}
 }
 
-void Simulation::outputFinalConfiguration()
+void Simulation::outputFinalConfiguration(const string & filename_import_positions)
 {
 	cout << "Output final configuration" << endl;
 	ofstream fout_finalconfig;

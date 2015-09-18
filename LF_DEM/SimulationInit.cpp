@@ -528,8 +528,8 @@ void Simulation::setupSimulation(string in_args,
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
 
-	filename_import_positions = input_files[0];
-	filename_parameters = input_files[1];
+	string filename_import_positions = input_files[0];
+	string filename_parameters = input_files[1];
 
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cerr << "init_relax" << endl;
@@ -540,7 +540,8 @@ void Simulation::setupSimulation(string in_args,
 		sys.zero_shear = false;
 	}
 	setDefaultParameters();
-	readParameterFile();
+	readParameterFile(filename_parameters);
+	ostringstream string_control_parameters;
 	for (const auto& f: input_force_units) {
 		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
 	}
@@ -572,9 +573,9 @@ void Simulation::setupSimulation(string in_args,
 
 	ifstream in_binary_conf;
 	if (binary_conf) {
-		importConfigurationBinary(in_binary_conf);
+		importConfigurationBinary(in_binary_conf, filename_import_positions);
 	} else {
-		importConfiguration();
+		importConfiguration(filename_import_positions);
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
 
@@ -645,7 +646,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	p_initial = p;
 
-	openOutputFiles(binary_conf);
+	openOutputFiles(binary_conf, filename_import_positions, filename_parameters, string_control_parameters.str());
 	echoInputFiles(in_args, input_files);
 }
 
@@ -805,7 +806,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	}
 }
 
-void Simulation::readParameterFile()
+void Simulation::readParameterFile(const string & filename_parameters)
 {
 	/**
 	 \brief Read and parse the parameter file
@@ -963,14 +964,14 @@ void Simulation::setDefaultParameters()
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
-void Simulation::openOutputFiles(bool binary_conf)
+void Simulation::openOutputFiles(bool binary_conf, const string & filename_import_positions, const string & filename_parameters, const string & string_control_parameters)
 {
 	/**
 	  \brief Set up the output files
 
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
-	prepareSimulationName(binary_conf);
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters, string_control_parameters);
 	stringstream data_header;
 	createDataHeader(data_header);
 
@@ -1034,7 +1035,7 @@ void Simulation::openOutputFiles(bool binary_conf)
 	}
 }
 
-void Simulation::importConfiguration()
+void Simulation::importConfiguration(const string & filename_import_positions)
 {
 	/**
 	  \brief Read a text file input configuration.
@@ -1086,7 +1087,7 @@ void Simulation::importConfiguration()
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary(ifstream &file_import)
+void Simulation::importConfigurationBinary(ifstream &file_import, const string & filename_import_positions)
 {
 	/**
 	  \brief Read a binary file input configuration.
@@ -1128,12 +1129,7 @@ void Simulation::importContactsBinary(ifstream &file_import)
 	/**
 	  \brief Read a binary file input contacts.
 	*/
-	if (!file_import) {
-		ostringstream error_str;
-		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
-		throw runtime_error(error_str.str());
-	}
-
+	
 	int ncont;
 	unsigned short p0, p1;
  	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
@@ -1159,7 +1155,7 @@ void Simulation::importContactsBinary(ifstream &file_import)
 	sys.setContacts(cont_states);
 }
 
-void Simulation::prepareSimulationName(bool binary_conf)
+void Simulation::prepareSimulationName(bool binary_conf, const string & filename_import_positions, const string & filename_parameters, const string & string_control_parameters)
 {
 	/**
 	  \brief Determine simulation name.
@@ -1185,7 +1181,7 @@ void Simulation::prepareSimulationName(bool binary_conf)
 	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
-	ss_simu_name << string_control_parameters.str();
+	ss_simu_name << string_control_parameters;
 	sys.simu_name = ss_simu_name.str();
 	cout << "filename: " << sys.simu_name << endl;
 }

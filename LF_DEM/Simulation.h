@@ -40,13 +40,8 @@ private:
 	std::map <std::string, std::string> unit_longname;
 	std::list <InputValue> input_values;
 	double volume_or_area_fraction;
-	std::string filename_import_positions;
-	std::string filename_parameters;
-	std::string filename_sequence;
-	std::ostringstream string_control_parameters;
 	std::string header_imported_configulation[2];
 	std::string control_var;
-	bool user_sequence;
 	double shear_rate_expectation;
 	double time_interval_output_data;
 	double time_interval_output_config;
@@ -83,17 +78,16 @@ private:
 	 * For inputs
 	 */
 	void setDefaultParameters();
-	void readParameterFile();
-	void openOutputFiles(bool);
-	void prepareSimulationName(bool);
+	void readParameterFile(const std::string &);
+	void openOutputFiles(bool, const std::string &, const std::string &, const std::string &);
+	void prepareSimulationName(bool, const std::string &, const std::string &, const std::string &);
 	void echoInputFiles(std::string in_args, std::vector<std::string> &input_files);
 	void autoSetParameters(const std::string &keyword, const std::string &value);
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
-	void importConfiguration();
-//	std::ifstream importConfigurationBinary();
-	void importConfigurationBinary(std::ifstream &file_import);
+	void importConfiguration(const std::string &);
+	void importConfigurationBinary(std::ifstream &file_import, const std::string &);
 	void importContactsBinary(std::ifstream &file_import);
 	void exportForceAmplitudes();
 	void setLowPeclet();
@@ -117,7 +111,7 @@ private:
 	void outputData();
 	void outputDataMagnetic();
 	void outputConfigurationData();
-	void outputFinalConfiguration();
+	void outputFinalConfiguration(const std::string &);
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(std::string);
 	double getRate();
@@ -156,6 +150,10 @@ private:
 	void simulationMagnetic(std::string in_args, std::vector<std::string> &input_files,
 							bool binary_conf, double dimensionless_number,
 							std::string input_scale, std::string control_variable);
+
+	void setControlVariable(const std::string & var){
+		control_var = var;
+	};
 
 };
 #endif /* defined(__LF_DEM__Simulation__) */
