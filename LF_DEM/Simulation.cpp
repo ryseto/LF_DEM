@@ -134,6 +134,8 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 {
 	/******************** OUTPUT DATA ********************/
 	evaluateData();
+	//@@@ if(fabs(sys.get_shear_strain()) >= next_output_data-1e-8)
+	//@@@ missing for outputData?
 	outputData();
 	outputConfigurationBinary(); // generic, for recovery if crash
 	if (time_interval_output_config == -1) {

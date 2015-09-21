@@ -1436,7 +1436,7 @@
 		D988E380165441750009949F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Ryohei Seto";
 				TargetAttributes = {
 					D9532ADE1B9412FC0014831F = {
@@ -1650,6 +1650,7 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -1831,6 +1832,7 @@
 				D9532AE41B9412FC0014831F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D96731B917A042AD005D02F8 /* Build configuration list for PBXNativeTarget "percolation_LF_DEM" */ = {
 			isa = XCConfigurationList;
