@@ -5,7 +5,7 @@
 //  Created by Ryohei Seto and Romain Mari on 02/21/13.
 //  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
-
+#include <sstream>
 #include "System.h"
 
 using namespace std;
@@ -43,12 +43,12 @@ System::calcStressPerParticle()
 {
 	/**
 	   This method computes the stresses per particle, split by components (hydro, contact, ...).
-	   
+
 	   From velocities \f$ V_{\mathrm{I}}\f$ associated with
 	   interaction \f$\mathrm{I}\f$, this method gets the stresses \f$ - GV_{\mathrm{I}} \f$. (This corresponds to
 	   \f$- GU_{\mathrm{I}} - H\Omega_{\mathrm{I}} \f$ in Jeffrey
 	   notations \cite jeffrey_calculation_1992, and
-	   \f$- R_{\mathrm{SU}} U_{\mathrm{I}} \f$ in Bossis and Brady 
+	   \f$- R_{\mathrm{SU}} U_{\mathrm{I}} \f$ in Bossis and Brady
 	   \cite brady_stokesian_1988 notations.)
 
 	   For the hydrodynamic component, it also gets the \f$ M
@@ -60,7 +60,7 @@ System::calcStressPerParticle()
 	   - GV_{\mathrm{I}} - xF_{\mathrm{I}} \f$.
 
 	   For the Brownian forces, it computes (in B&B notations) \f$ S_{\mathrm{B}} =
-	   - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) \f$ with the mid-step algorithm of Banchio and Brady 
+	   - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) \f$ with the mid-step algorithm of Banchio and Brady
 	   \cite banchio_accelerated_2003 with \f$ n=1 \f$.
 
 	   In the Brownian mode, because of the mid-point scheme for the Brownian stress, you
@@ -75,9 +75,9 @@ System::calcStressPerParticle()
 			} else if (p.lubrication_model == 2) {
 				interaction[k].lubrication.calcXYFunctionsStress();
 			} else {
-				cerr << "lubrication_model = " << p.lubrication_model << endl;
-				cerr << "lubrication_model = 3 is not implemented" << endl;
-				exit(1);
+				ostringstream error_str;
+				error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model = 3 is not implemented" << endl;
+				throw runtime_error(error_str.str());
 			}
 			interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			interaction[k].contact.calcContactStress(); // - rF_cont
@@ -168,13 +168,13 @@ System::calcStress()
 		for (int k=0; k<nb_interaction; k++) {
 			total_repulsive_stressXF += interaction[k].repulsion.getStressXF();
 			if (rstress_per_particle) {
-				/* NOTE: 
+				/* NOTE:
 					As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
 				*/
 				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
 				unsigned short i, j;
 				interaction[k].get_par_num(i,j);
-				repulsivestressXF[i] += sc; 
+				repulsivestressXF[i] += sc;
 				repulsivestressXF[j] += sc;
 			}
 		}
@@ -232,4 +232,13 @@ System::calcStress()
 		total_stress += total_magnetic_stressGU;
 	}
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
+
+	int shear_stress_index;
+	if (!p.cross_shear) {
+		shear_stress_index = 2;
+	} else {
+		shear_stress_index = 3;
+	}
+
+	total_stress.elm[shear_stress_index] += einstein_stress;
 }
