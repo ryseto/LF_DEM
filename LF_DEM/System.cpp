@@ -318,7 +318,7 @@ void System::setContacts(const vector <struct contact_state> &cs)
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
 			interaction[k].get_par_num(p0, p1);
-			if ((p0 == c.p0) && (p1 == c.p1)) {
+			if (p0 == c.p0 && p1 == c.p1) {
 				interaction[k].contact.setState(c);
 			}
 		}

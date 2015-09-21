@@ -91,11 +91,11 @@ printf OUT "\@0 0 0 0 \n";
 printf OUT "\@1 50 100 205 \n";
 #printf OUT "\@1 255 255 255 \n";
 printf OUT "\@2 200 200 200 \n";
-printf OUT "\@3 50 150 255 \n";
-printf OUT "\@4 50 200 50 \n";
-printf OUT "\@5 255 100 100 \n";
-printf OUT "\@6 50 200 50 \n";
-printf OUT "\@7 255 255 0 \n";
+printf OUT "\@3 255 255 0\n";
+printf OUT "\@4 50 200 50\n";
+printf OUT "\@5 255 100 100\n";
+printf OUT "\@6 50 150 255\n";
+printf OUT "\@7 255 255 0\n";
 printf OUT "\@8 255 255 255\n";
 printf OUT "\@9 150 150 150\n";
 #printf OUT "\@8 224 143 0 \n";
@@ -509,11 +509,15 @@ sub OutYaplotData{
 	#	}
 	
 	printf OUT "y 1\n";
-	printf OUT "@ 8\n";
+	printf OUT "@ 3\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
 	$switch = 0;
 	for ($i = 0; $i < $np; $i ++){
+		if ($i == 1) {
+			printf OUT "@ 8\n";
+		}
+		
 		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
 			$r = $yap_radius*$radius[$i];
 			printf OUT "r $r\n";
@@ -522,7 +526,7 @@ sub OutYaplotData{
 		if ($mag) {
 			if ($switch == 0 &&
 				$magsusceptibility[$i] <= 0){
-					printf OUT "@ 9\n";
+					printf OUT "@ 8\n";
 					$switch = 1;
 				}
 		}
@@ -572,6 +576,19 @@ sub OutYaplotData{
 		}
 	}
 
+	printf OUT "y 2\n";
+	printf OUT "r 0.3\n";
+	printf OUT "@ 5\n"; # static
+
+	for ($i = 0; $i < $np-1; $i ++){
+		for ($j = $i; $j < $np; $j ++){
+			$distancesq = ($posx[$i]-$posx[$j])**2 + ($posz[$i]-$posz[$j])**2;
+			if ($distancesq < 2){
+				&OutString2($i,  $j);
+			}
+		}
+	}
+
 	
 	#	printf OUT "y 3\n";
 	#	printf OUT "@ 4\n";
@@ -595,17 +612,18 @@ sub OutYaplotData{
 	#	}
 	#
 	
-	if (0) {
-	printf OUT "y 2\n";
-	printf OUT "r 0.3\n";
-	printf OUT "@ 5\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++){
-		if ($contactstate[$k] == 2 && 0.035* $force[$k] > 0.05) {
-			&OutString2($int0[$k],  $int1[$k]);
-			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
-		}
-	}
-	}
+	
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.3\n";
+#	printf OUT "@ 5\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++){
+#		exit(1);
+#		if ($contactstate[$k] != 0 ) {
+#
+#			&OutString2($int0[$k],  $int1[$k]);
+#			#&OutContact($int0[$k], $int1[$k], $contactstate[$k]);
+#		}
+#	}
 	#
 	#
 	#		printf OUT "y 4\n";
@@ -998,10 +1016,10 @@ sub OutString2{
 	$xj = $posx[$j];
 	$yj = $posy[$j] - 0.02;
 	$zj = $posz[$j];
-	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
-	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
+	#//	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
+	#if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
 		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
-	}
+	#}
 }
 
 sub OutContact{
