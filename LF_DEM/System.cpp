@@ -856,16 +856,15 @@ void System::adaptTimeStep(const string & time_or_strain, const double & value_e
 	*/
 	adaptTimeStep();
 	if (time_or_strain == "strain") {
-		if ( fabs(dt*shear_rate) > (value_end - fabs(get_shear_strain())) ) {
-			dt = fabs((value_end - fabs(get_shear_strain()))/shear_rate);
+		if (fabs(dt*shear_rate) > value_end-fabs(get_shear_strain())) {
+			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
 		}
 	} else {
-		if ( dt > (value_end - get_time()) ) {
-			dt = (value_end - get_time());
+		if (dt > value_end-get_time()) {
+			dt = value_end-get_time();
 		}
 	}
 }
-
 
 void System::timeStepMove(const string & time_or_strain, const double & value_end)
 {
@@ -984,7 +983,6 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-
 bool System::keepRunning(const string & time_or_strain, const double & value_end){
 	bool keep_running;
 	if (time_or_strain == "strain") {
@@ -995,7 +993,7 @@ bool System::keepRunning(const string & time_or_strain, const double & value_end
 	return keep_running;
 }
 
-void System::timeEvolution(const string & time_or_strain, const double &  value_end)
+void System::timeEvolution(const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system untile time_end
@@ -1027,11 +1025,11 @@ void System::timeEvolution(const string & time_or_strain, const double &  value_
 	}
 
 	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // no stress computation except at low Peclet
+		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
 	};
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust){

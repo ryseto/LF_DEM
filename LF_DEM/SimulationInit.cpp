@@ -64,7 +64,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
 		ostringstream error_str;
-		error_str  << " Contact parameter file '" << filename << "' not found." <<endl;
+		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
 		throw runtime_error(error_str.str());
 	}
 
