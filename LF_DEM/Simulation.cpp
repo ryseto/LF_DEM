@@ -134,6 +134,8 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 {
 	/******************** OUTPUT DATA ********************/
 	evaluateData();
+	//@@@ if(fabs(sys.get_shear_strain()) >= next_output_data-1e-8)
+	//@@@ missing for outputData?
 	outputData();
 	outputConfigurationBinary(); // generic, for recovery if crash
 	if (time_interval_output_config == -1) {
@@ -160,7 +162,6 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 
 void Simulation::timeEvolution(double &next_output_data)
 {
-
 	if (time_interval_output_data == -1) {
 		next_output_data += strain_interval_output_data;
 		sys.timeEvolution("strain", next_output_data);
@@ -168,7 +169,6 @@ void Simulation::timeEvolution(double &next_output_data)
 		next_output_data +=  time_interval_output_data;
 		sys.timeEvolution("time", next_output_data);
 	}
-
 }
 /*
  * Main simulation
@@ -205,7 +205,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		timeEvolution(next_output_data);
-
 		handleEvents();
 
 		generateOutput(next_output_data, next_output_config, binconf_counter);
