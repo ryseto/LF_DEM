@@ -5,6 +5,7 @@
 //
 #include "Contact.h"
 #include "Interaction.h"
+#include "System.h"
 
 void Contact::init(System *sys_, Interaction *interaction_)
 {
@@ -120,8 +121,8 @@ void Contact::incrementDisplacements()
 {
 	/**
 	   \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
-	   
-	   This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction). 
+
+	   This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction).
 	   This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
 	   This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
 	 */
@@ -137,14 +138,14 @@ void Contact::incrementDisplacements()
 
 void Contact::calcContactInteraction()
 {
-	/** 
+	/**
 		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.
-	
+
 	 f_something is the force acting on the particle 0.
 	 disp_something is the relative displacement of the particle 1 from the particle 0.
 	 Therefore, the sign of force is same as the one of the displacement.
 	 */
-	
+
 	/* h < 0
 	 * f_contact_normal_norm > 0 ..... repulsive force
 	 * h > 0
@@ -211,7 +212,7 @@ void Contact::frictionlaw_criticalload()
 	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
 	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
 	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
-	 * 
+	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
@@ -322,7 +323,7 @@ void Contact::addUpContactForceTorque()
 	}
 	sys->contact_force[p0] += f_contact;
 	sys->contact_force[p1] -= f_contact;
-	/* Torque 
+	/* Torque
 	 */
 	if (state >= 2) {
 		vec3d t_ij = cross(interaction->nvec, f_contact_tan);

@@ -20,23 +20,18 @@
 #include <iomanip>
 #include <fstream>
 #include "vec3d.h"
-#include "System.h"
 #include "Contact.h"
 #include "Lubrication.h"
 #include "RepulsiveForce.h"
 #include "StressTensor.h"
 
-
 class System;
-class Lubrication;
-class Contact;
-class RepulsiveForce;
 
 class Interaction{
 	friend class Contact;
 	friend class RepulsiveForce;
 	friend class Lubrication;
-	
+
 private:
 	/*********************************
 	 *        Members                *
@@ -78,7 +73,7 @@ private:
 	 * the change of contact state is informed in updateResiCoeff.
 	 */
 	bool contact_state_changed_after_predictor;
-	
+
 public:
 	Contact contact;
 	Lubrication lubrication;

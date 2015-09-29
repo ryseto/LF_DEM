@@ -5,6 +5,7 @@
 //
 #include "RepulsiveForce.h"
 #include "Interaction.h"
+#include "System.h"
 
 void RepulsiveForce::init(System *sys_, Interaction *interaction_)
 {
@@ -31,13 +32,13 @@ void RepulsiveForce::activate()
 
 void RepulsiveForce::calcReducedForceNorm()
 {
-	/** 
+	/**
 		\brief Compute the repulsive force in its own units.
-		
+
 		The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
 		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
-		
+
 		This method returns an amplitude \f$ \hat{f}_{R} = \exp(-h/\lambda)\f$.
 	*/
 	double gap = interaction->get_gap();
@@ -54,10 +55,10 @@ void RepulsiveForce::calcReducedForceNorm()
 		reduced_force_norm = geometric_factor;
 	}
 }
-	
+
 void RepulsiveForce::calcScaledForce()
 {
-	/** 
+	/**
 		\brief Computes the force in the System class from a previously computed reduced force.
 	*/
 	force_norm = sys->amplitudes.repulsion*reduced_force_norm;
@@ -71,12 +72,12 @@ void RepulsiveForce::calcForce()
 {
 	/**
 		\brief Compute the repulsive force in the System class units.
-		
+
 		The force is normal and has an amplitude \f$ f_{R} = f_{R}^0
 		\exp(-h/\lambda) \f$ if \f$h>0\f$ and \f$ f_{R} = f_{R}^0 \f$
 		if \f$h<0\f$, where \f$h\f$ is the interparticle gap.
 	*/
-	
+
 	calcReducedForceNorm();
 	calcScaledForce();
 }
@@ -91,7 +92,7 @@ void RepulsiveForce::calcStressXF()
 {
 	/**
 	 \brief Compute the XF stress associated with the repulsive force.
-	 
+
 	 \b NOTE: this method does not recompute the reduced force, this force must be first computed by calcReducedForce().
 	 This method however converts the force in the System units from the reduced force.
 	 */
