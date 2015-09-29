@@ -318,7 +318,7 @@ void System::setContacts(const vector <struct contact_state> &cs)
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
 			interaction[k].get_par_num(p0, p1);
-			if (p0 == c.p0 && p1 == c.p1) {
+			if ((p0 == c.p0) && (p1 == c.p1)) {
 				interaction[k].contact.setState(c);
 			}
 		}
@@ -866,15 +866,16 @@ void System::adaptTimeStep(const string & time_or_strain, const double & value_e
 	*/
 	adaptTimeStep();
 	if (time_or_strain == "strain") {
-		if (fabs(dt*shear_rate) > value_end-fabs(get_shear_strain())) {
-			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
+		if ( fabs(dt*shear_rate) > (value_end - fabs(get_shear_strain())) ) {
+			dt = fabs((value_end - fabs(get_shear_strain()))/shear_rate);
 		}
 	} else {
-		if (dt > value_end-get_time()) {
-			dt = value_end-get_time();
+		if ( dt > (value_end - get_time()) ) {
+			dt = (value_end - get_time());
 		}
 	}
 }
+
 
 void System::timeStepMove(const string & time_or_strain, const double & value_end)
 {
@@ -980,7 +981,7 @@ void System::timeStepMoveCorrector()
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
+			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
 		}
 	}
 	if (magnetic_rotation_active) {
@@ -993,6 +994,7 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
+
 bool System::keepRunning(const string & time_or_strain, const double & value_end){
 	bool keep_running;
 	if (time_or_strain == "strain") {
@@ -1003,7 +1005,7 @@ bool System::keepRunning(const string & time_or_strain, const double & value_end
 	return keep_running;
 }
 
-void System::timeEvolution(const string & time_or_strain, const double & value_end)
+void System::timeEvolution(const string & time_or_strain, const double &  value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system untile time_end
@@ -1035,11 +1037,11 @@ void System::timeEvolution(const string & time_or_strain, const double & value_e
 	}
 
 	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
+		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // no stress computation except at low Peclet
 	};
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust){
@@ -1701,7 +1703,7 @@ void System::computeVelocities(bool divided_velocities)
 			} else {
 				velocity[i].x += costheta_shear*shear_rate*position[i].z;
 				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
-				ang_velocity[i].y -= 0.5*costheta_shear*shear_rate;
+				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
 				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
 			}
 		}
