@@ -63,12 +63,6 @@ ifeq ($(is_git_repo),true)
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
-ifeq ($(OS_version),OIST)
-	VERSION := $(shell git describe --dirty --always)
-	CXXFLAGS_optimized += -DVERSION="\"$(VERSION)\""
-	CXXFLAGS_debug += -DVERSION="\"$(VERSION)\""
-endif
-
 ifeq ($(OS_version),Linux)
 	CXXFLAGS_debug += -pg
 endif
@@ -174,6 +168,9 @@ check:
 	(cd check;	make test)
 
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
+ifeq ($(is_git_repo),true)
+	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
+endif
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
 
 $(OBJ): $(SRC)
