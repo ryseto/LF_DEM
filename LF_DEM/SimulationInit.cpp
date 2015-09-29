@@ -778,6 +778,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.magnetic_interaction_range = atof(value.c_str());
 	} else if (keyword == "cross_shear") {
 		p.cross_shear = str2bool(value);
+	} else if (keyword == "theta_shear") {
+		p.theta_shear = atof(value.c_str());
+		p.theta_shear *= M_PI/180;  // convert in radians
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
@@ -946,6 +949,7 @@ void Simulation::setDefaultParameters()
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;
+	p.theta_shear = 0;
 	p.event_handler = "";
 	/*
 	 * Parameters for magnetic colloid simulation.

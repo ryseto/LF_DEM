@@ -148,7 +148,7 @@ private:
 	};
 	ParameterSet p;
 	bool keepRunning();
-	void timeEvolution(double next_output_data);
+	void timeEvolution(double &next_output_data);
 	void generateOutput(double &next_output_data, double &next_output_config, int &binconf_counter);
 	/*********** Events  ************/
 	std::list <Event> events;

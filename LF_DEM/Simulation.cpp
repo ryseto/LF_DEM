@@ -158,7 +158,7 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 /*****************************************************/
 }
 
-void Simulation::timeEvolution(double next_output_data)
+void Simulation::timeEvolution(double &next_output_data)
 {
 
 	if (time_interval_output_data == -1) {
@@ -549,28 +549,23 @@ void Simulation::outputData()
 	outdata.init(37, output_unit_scales);
 
 	double sr = sys.get_shear_rate();
-	unsigned int shear_stress_index;
-	if (!p.cross_shear) {
-		shear_stress_index = 2;
-	} else {
-		shear_stress_index = 3;
-	}
-	double shear_stress = sys.total_stress.elm[shear_stress_index];
+
+	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
 
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
-	outdata.entryData(6, "Viscosity(lub)", "viscosity", sys.total_hydro_stress.elm[shear_stress_index]/sr);
-	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", sys.total_contact_stressXF.elm[shear_stress_index]/sr);
-	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", sys.total_contact_stressGU.elm[shear_stress_index]/sr);
+	outdata.entryData(6, "Viscosity(lub)", "viscosity", shearStressComponent(sys.total_hydro_stress,p.theta_shear)/sr);
+	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressXF,p.theta_shear)/sr);
+	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressGU,p.theta_shear)/sr);
 	if (sys.repulsiveforce) {
-		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", sys.total_repulsive_stressXF.elm[shear_stress_index]/sr);
-		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", sys.total_repulsive_stressGU.elm[shear_stress_index]/sr);
+		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", shearStressComponent(sys.total_repulsive_stressXF,p.theta_shear)/sr);
+		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", shearStressComponent(sys.total_repulsive_stressGU,p.theta_shear)/sr);
 	}
 	if (sys.brownian) {
-		outdata.entryData(11, "Viscosity(brownian)", "viscosity", sys.total_brownian_stressGU.elm[shear_stress_index]/sr);
+		outdata.entryData(11, "Viscosity(brownian)", "viscosity", shearStressComponent(sys.total_brownian_stressGU,p.theta_shear)/sr);
 	}
 	/*
 	 * Stress
@@ -791,21 +786,15 @@ void Simulation::outputConfigurationData()
 		}
 		fout_particle << endl;
 
-		unsigned int shear_stress_index;
-		if (!p.cross_shear) {
-			shear_stress_index = 2;
-		} else {
-			shear_stress_index = 3;
-		}
 		for (int i=0; i<np; i++) {
 			const vec3d &r = pos[i];
 			const vec3d &v = vel[i];
 			const vec3d &o = sys.ang_velocity[i];
-			double lub_xzstress = sys.lubstress[i].elm[shear_stress_index];
-			double contact_xzstressGU = sys.contactstressGU[i].elm[shear_stress_index];
+			double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
+			double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
 			double brownian_xzstressGU = 0;
 			if (sys.brownian) {
-				brownian_xzstressGU = sys.brownianstressGU[i].elm[shear_stress_index];
+				brownian_xzstressGU = shearStressComponent(sys.brownianstressGU[i], p.theta_shear);
 			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
@@ -843,12 +832,7 @@ void Simulation::outputConfigurationData()
 		fout_interaction << ' ' << cnt_interaction;
 		fout_interaction << ' ' << sys.get_time();
 		fout_interaction << endl;
-		unsigned int shear_stress_index;
-		if (!p.cross_shear) {
-			shear_stress_index = 2;
-		} else {
-			shear_stress_index = 3;
-		}
+
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
@@ -883,7 +867,7 @@ void Simulation::outputConfigurationData()
 				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
 				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
 				fout_interaction << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-				fout_interaction << 6*M_PI*stress_contact.elm[shear_stress_index] << ' '; // 17
+				fout_interaction << 6*M_PI*shearStressComponent(stress_contact, p.theta_shear) << ' '; // 17
 				fout_interaction << endl;
 			}
 		}

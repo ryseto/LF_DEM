@@ -25,7 +25,7 @@ public:
 	 * (xx, xy, xz, yz, yy, zz)
 	 */
 	double elm[6];
-		
+
 	inline StressTensor()
 	{
 		for (int i=0; i<6; i++) {
@@ -39,7 +39,7 @@ public:
 			elm[i] = a;
 		}
 	}
-	
+
 	// output stream operator
 	inline friend std::ostream& operator << (std::ostream &out,
 										const StressTensor &st)
@@ -52,7 +52,7 @@ public:
 		out << st.elm[5] << ' ';
 		return out;
 	}
-	
+
 	inline StressTensor(const vec3d & v1, const vec3d & v2)
 	{
 		elm[0] = v1.x*v2.x;
@@ -62,7 +62,7 @@ public:
 		elm[4] = v1.y*v2.y;
 		elm[5] = v1.z*v2.z;
 	}
-	
+
 	inline StressTensor(const double &_xx,
 						const double &_xy,
 						const double &_xz,
@@ -77,7 +77,7 @@ public:
 		elm[4] = _yy;
 		elm[5] = _zz;
 	}
-	
+
 	inline friend StressTensor operator + (const StressTensor &a1,
 										   const StressTensor &a2)
 	{
@@ -88,12 +88,12 @@ public:
 							a1.elm[4]+a2.elm[4],
 							a1.elm[5]+a2.elm[5]);
 	}
-	
+
 	inline friend StressTensor operator + (const StressTensor &s)
 	{
 		return s;
 	}
-	
+
 	/* subtraction */
 	inline friend StressTensor operator - (const StressTensor &a1,
 										   const StressTensor &a2)
@@ -105,7 +105,7 @@ public:
 							a1.elm[4]-a2.elm[4],
 							a1.elm[5]-a2.elm[5]);
 	}
-	
+
 	inline friend StressTensor operator - (const StressTensor &s)
 	{
 		return StressTensor(-s.elm[0],
@@ -115,7 +115,7 @@ public:
 							-s.elm[4],
 							-s.elm[5]);
 	}
-	
+
 	inline friend StressTensor operator * (const double &d,
 										   const StressTensor &s)
 	{
@@ -126,7 +126,7 @@ public:
 							d*s.elm[4],
 							d*s.elm[5]);
 	}
-	
+
 	inline friend StressTensor operator * (const StressTensor &s,
 										   const double &d)
 	{
@@ -137,7 +137,7 @@ public:
 							d*s.elm[4],
 							d*s.elm[5]);
 	}
-	
+
 	inline friend StressTensor operator * (const int &i,
 										   const StressTensor &s)
 	{
@@ -148,7 +148,7 @@ public:
 							i*s.elm[4],
 							i*s.elm[5]);
 	}
-	
+
 	inline friend StressTensor operator * (const StressTensor &s,
 										   const int &i)
 	{
@@ -170,7 +170,7 @@ public:
 							s.elm[4]/d,
 							s.elm[5]/d);
 	}
-	
+
 	inline friend StressTensor operator / (const StressTensor &s,
 										   const double &d)
 	{
@@ -181,7 +181,7 @@ public:
 							s.elm[4]/d,
 							s.elm[5]/d);
 	}
-	
+
 	inline friend StressTensor operator / (const int &i,
 										   const StressTensor &s)
 	{
@@ -192,7 +192,7 @@ public:
 							s.elm[4]/i,
 							s.elm[5]/i);
 	}
-	
+
 	inline friend StressTensor operator / (const StressTensor &s,
 										   const int &i)
 	{
@@ -203,7 +203,7 @@ public:
 							s.elm[4]/i,
 							s.elm[5]/i);
 	}
-	
+
 	inline StressTensor& operator += (const StressTensor &s)
 	{
 		for (int i=0; i<6; i++) {
@@ -211,7 +211,7 @@ public:
 		}
 		return *this;
 	}
-	
+
 	inline StressTensor& operator -= (const StressTensor &s)
 	{
 		for (int i=0; i<6; i++) {
@@ -219,7 +219,7 @@ public:
 		}
 		return *this;
 	}
-	
+
 	inline StressTensor& operator *= (const double &d)
 	{
 		for (int i=0; i<6; i++) {
@@ -227,7 +227,7 @@ public:
 		}
 		return *this;
 	}
-	
+
 	inline StressTensor& operator *= (const int &i)
 	{
 		for (int j=0; j<6; j++) {
@@ -235,7 +235,7 @@ public:
 		}
 		return *this;
 	}
-	
+
 	inline StressTensor& operator /= (const double &d)
 	{
 		double d_inv = 1.0/d;
@@ -244,7 +244,7 @@ public:
 		}
 		return *this;
 	}
-	
+
 	inline StressTensor& operator /= (const int &i)
 	{
 		double d_inv = 1.0/i;
@@ -253,7 +253,7 @@ public:
 		}
 		return *this;
 	}
-	
+
 	/*
 	 * Finite trace
 	 */
@@ -267,7 +267,7 @@ public:
 		elm[4] = _yy;
 		elm[5] = _zz;
 	}
-	
+
 	/*
 	 * Traceless
 	 */
@@ -281,7 +281,7 @@ public:
 		elm[4] = _yy;
 		elm[5] = -(_xx+_yy);
 	}
-	
+
 	inline void set(const vec3d &v1, const vec3d &v2)
 	{
 		/* XF Stress tensor:
@@ -294,13 +294,13 @@ public:
 		elm[4] = v1.y*v2.y;
 		elm[5] = v1.z*v2.z;
 	}
-	
+
 	inline void reset() {
 		for (int i=0; i<6; i++) {
 			elm[i] = 0;
 		}
 	}
-	
+
 	inline friend StressTensor tensor_prod (const vec3d &v1,
 											const vec3d &v2)
 	{
@@ -311,29 +311,35 @@ public:
 							v1.y*v2.y,
 							v1.z*v2.z);
 	}
-	
+
 	/*	N1 = Sxx-Szz;
 	 */
 	double getNormalStress1()
 	{
 		return elm[0]-elm[5];
 	}
-	
+
 	/*	N2 = Szz-Syy;
 	 */
 	double getNormalStress2()
 	{
 		return elm[5]-elm[4];
 	}
-	
+
 	double getParticlePressure()
 	{
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
-	
+
 //	void cerr()
 //	{
 //		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
 //	}
 };
+
+// Helper functions
+inline double shearStressComponent(const StressTensor &s, double theta_shear)
+{
+		return cos(theta_shear)*s.elm[2] + sin(theta_shear)*s.elm[3];
+}
 #endif

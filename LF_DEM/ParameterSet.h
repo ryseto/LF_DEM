@@ -10,9 +10,9 @@
 
 struct ParameterSet
 {
-	
+
 	/*******************************************************
-	 INTERACTIONS 
+	 INTERACTIONS
 	********************************************************/
 	double repulsion_amplitude;				///< Amplitude of the repulsive force [0]
 	double critical_load_amplitude;			///< Amplitude of the critical load [0]
@@ -21,7 +21,7 @@ struct ParameterSet
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, magnetic force, etc.). If -1, lub_max_gap is used as cutoff [-1]
-	
+
 	/* magnetic */
 	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
 	int magnetic_type;						///< Magnetic, 1: parmanent magnetic dipole (Ferromagnetic), 2: induced dipole (Paramagnetic)
@@ -33,7 +33,7 @@ struct ParameterSet
 	double timeinterval_update_magnetic_pair; ///< [0.02] Interval to check magnetic interaction
 
 	/*******************************************************
-	 HYDRODYNAMICS 
+	 HYDRODYNAMICS
 	********************************************************/
 	/*
 	* Stokes drag coeffient
@@ -51,7 +51,7 @@ struct ParameterSet
 	* 2 log(1/xi) lubrication
 	* 3 ???
 	*/
-	int lubrication_model;                   ///< Lubrication type. 0: no lubrication, 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication. [2]	
+	int lubrication_model;                   ///< Lubrication type. 0: no lubrication, 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication. [2]
 	/*
 	* Leading term of lubrication force is 1/reduced_gap,
 	* with reduced_gap the gap
@@ -64,9 +64,9 @@ struct ParameterSet
 	*/
 	double lub_reduce_parameter;             ///< Lubrication regularization length ("roughness length") [1e-3]
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance) [0.5]
-	
+
 	/*******************************************************
-	 CONTACTS 
+	 CONTACTS
 	********************************************************/
 	/*
 	 * 0 No friction
@@ -77,7 +77,7 @@ struct ParameterSet
 	double mu_static;                        ///< friction coefficient (static) [1]
 	double mu_dynamic;                        ///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 	double mu_rolling;                        ///< friction coefficient (rolling) [0]
-	double ft_max;							///< max tangential force in friction_model = 5 [1]	
+	double ft_max;							///< max tangential force in friction_model = 5 [1]
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
@@ -86,7 +86,7 @@ struct ParameterSet
 	bool unscaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
 	double kn;                               ///< Particle stiffness: normal spring constant [2000 under stress control, 10000 under rate control]
 	double kt;                               ///< Particle stiffness: tangential spring constant [1000 under stress control, 6000 under rate control]
-	double kr;                               ///< Particle stiffness: rolling spring constant [1000 under stress control, 6000 under rate control]	
+	double kr;                               ///< Particle stiffness: rolling spring constant [1000 under stress control, 6000 under rate control]
 		/*
 		 * contact_relaxation_factor:
 		 *
@@ -96,7 +96,7 @@ struct ParameterSet
 		 */
 	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model (in units of p.dt) [1e-3]
 	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model (in units of p.dt) [0]
-		
+
 	/*******************************************************
 	 INTEGRATOR
 	********************************************************/
@@ -104,7 +104,7 @@ struct ParameterSet
 
 	int integration_method;                  ///< Integrator. 0: Euler's Method, 1: predictor-corrector. [1]
 	bool fixed_dt;							///< Use constant dt [false]
-	double dt;                           ///< When fixed_dt == false: initial time step value. When fixed_dt == true: time step value. [1e-4 time unit] 
+	double dt;                           ///< When fixed_dt == false: initial time step value. When fixed_dt == true: time step value. [1e-4 time unit]
 	double disp_max;                         ///< When fixed_dt == false only: maximum displacement at each time step, the time step size dt is determined from disp_max at every step. [2e-3 length unit]
 
 
@@ -121,7 +121,7 @@ struct ParameterSet
 	bool out_data_interaction;               ///< Output int_* file [true]
 	bool out_binary_conf;					///< Output binary configurations conf_*.bin files [false]
 	std::string out_particle_stress;				///< Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]
-	
+
 	/*******************************************************
 	 CONTACT PARAMETERS AUTO-DETERMINATION
 	********************************************************/
@@ -135,16 +135,17 @@ struct ParameterSet
 	double min_kt;                           ///< min tangential spring constant when auto-determining stiffness [1000]
 	double max_kt;                           ///< max tangential spring constant when auto-determining stiffness [1000000]
 	double start_adjust;                     ///< strain after which aut-determination of stiffnesses starts [0.2]
-	
+
 
 	/*******************************************************
 	OTHER PARAMETERS
 	********************************************************/
-	double Pe_switch;                        ///< Value of Peclet below which Brownian units are used [5]	
+	double Pe_switch;                        ///< Value of Peclet below which Brownian units are used [5]
 	bool monolayer;							///< Particle movements are confined in monolayer. 3D rotations are allowed. [false]
 	double rest_threshold; ///< criteria to judge saturation of deformation, i.e. jammed state etc. [1e-4]
 	std::string event_handler;  ///< Select event handler [""]
- 	bool cross_shear;        ///< Shear along the y direction [false]
+ 	bool cross_shear;        ///< Allow arbitrary shear in xy plane (actual direction set by theta_shear) [false]
+	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 	double time_init_relax;  ///< Initial relaxa
 };
 

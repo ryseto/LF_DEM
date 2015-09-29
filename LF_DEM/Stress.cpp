@@ -233,12 +233,11 @@ System::calcStress()
 	}
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
 
-	int shear_stress_index;
 	if (!p.cross_shear) {
-		shear_stress_index = 2;
+		total_stress.elm[2] += einstein_stress;
 	} else {
-		shear_stress_index = 3;
+		total_stress.elm[2] += costheta_shear*einstein_stress;
+		total_stress.elm[3] += sintheta_shear*einstein_stress;
 	}
 
-	total_stress.elm[shear_stress_index] += einstein_stress;
 }

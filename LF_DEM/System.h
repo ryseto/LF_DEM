@@ -22,6 +22,7 @@
 #include <queue>
 #include <list>
 #include <string>
+#include <tuple>
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
@@ -74,6 +75,8 @@ private:
 	double total_energy;
 	int linalg_size;
 	int dof;
+	double costheta_shear;
+	double sintheta_shear;
 	/* data */
 	bool keepRunning(const std::string & time_or_strain, const double & value_end);
 	void (System::*timeEvolutionDt)(bool, const std::string&, const double&);
@@ -424,6 +427,10 @@ private:
 		return total_energy;
 	}
 
+	std::tuple<double,double> getCosSinShearAngle()
+	{
+		return std::make_tuple(costheta_shear,sintheta_shear);
+	}
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */

@@ -514,6 +514,9 @@ void System::setupSystem(string control)
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
+	costheta_shear = cos(p.theta_shear);
+	sintheta_shear = sin(p.theta_shear);
+
 	// Memory
 	allocateRessources();
 	//
@@ -636,7 +639,8 @@ void System::setupSystem(string control)
 	if (!p.cross_shear) {
 		vel_difference.x = shear_rate*lz;
 	} else {
-		vel_difference.y = shear_rate*lz;
+		vel_difference.x = costheta_shear*shear_rate*lz;
+		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	stokes_solver.initialize();
 	dt = p.dt;
@@ -706,8 +710,14 @@ void System::timeStepBoxing(const double strain_increment)
 			}
 			shear_disp.x = shear_disp.x-m*lx;
 		} else {
-			shear_disp.y += strain_increment*lz;
-			int m = (int)(shear_disp.y/ly);
+			shear_disp.x += costheta_shear*strain_increment*lz;
+			shear_disp.y += sintheta_shear*strain_increment*lz;
+			int m = (int)(shear_disp.x/lx);
+			if (shear_disp.x < 0) {
+				m--;
+			}
+			shear_disp.x = shear_disp.x-m*lx;
+			m = (int)(shear_disp.y/ly);
 			if (shear_disp.y < 0) {
 				m--;
 			}
@@ -1549,6 +1559,7 @@ void System::computeVelocityComponents()
 	}
 }
 
+
 void System::computeShearRate()
 {
 	/**
@@ -1557,22 +1568,18 @@ void System::computeShearRate()
 	calcStressPerParticle();
 	calcStress();
 
-	unsigned int shear_stress_index;
-	if (!p.cross_shear) {
-		shear_stress_index = 2;
-	} else {
-		shear_stress_index = 3;
-	}
+	double shearstress_con;
 
-	double shearstress_con = total_contact_stressXF.elm[shear_stress_index]+total_contact_stressGU.elm[shear_stress_index];
+	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
+
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
-		shearstress_rep = total_repulsive_stressXF.elm[shear_stress_index]+total_repulsive_stressGU.elm[shear_stress_index];
+		shearstress_rep = shearStressComponent(total_repulsive_stressXF+total_repulsive_stressGU, p.theta_shear);
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = einstein_viscosity+total_hydro_stress.elm[shear_stress_index];
+	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
 
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
@@ -1694,14 +1701,17 @@ void System::computeVelocities(bool divided_velocities)
 				velocity[i].x += shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*shear_rate;
 			} else {
-				velocity[i].y += shear_rate*position[i].z;
-				ang_velocity[i].x -= 0.5*shear_rate;
+				velocity[i].x += costheta_shear*shear_rate*position[i].z;
+				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
+				ang_velocity[i].y -= 0.5*costheta_shear*shear_rate;
+				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
 			}
 		}
 		if (!p.cross_shear) {
 			vel_difference.x = shear_rate*lz;
 		} else {
-			vel_difference.y = shear_rate*lz;
+			vel_difference.x = costheta_shear*shear_rate*lz;
+			vel_difference.y = sintheta_shear*shear_rate*lz;
 		}
 	} else {
 		for (int i=0; i<np; i++) {
@@ -1874,7 +1884,8 @@ double System::evaluateMaxVelocity()
 			if (!p.cross_shear) {
 				na_velocity_tmp.x -= shear_rate*position[i].z;
 			} else {
-				na_velocity_tmp.y -= shear_rate*position[i].z;
+				na_velocity_tmp.x -= costheta_shear*shear_rate*position[i].z;
+				na_velocity_tmp.y -= sintheta_shear*shear_rate*position[i].z;
 			}
 		}
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
@@ -1894,7 +1905,8 @@ double System::evaluateMaxAngVelocity()
 				na_ang_velocity_tmp.y -= 0.5*shear_rate;
 			}
 			else {
-				na_ang_velocity_tmp.x += 0.5*shear_rate;
+				na_ang_velocity_tmp.y -= 0.5*costheta_shear*shear_rate;
+				na_ang_velocity_tmp.x += 0.5*sintheta_shear*shear_rate;
 			}
 		}
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
