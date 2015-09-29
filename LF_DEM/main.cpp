@@ -7,6 +7,7 @@
 //
 #include <iostream>
 #include <string>
+#include <stdexcept>
 #include <getopt.h>
 #include "global.h"
 #include "Simulation.h"
