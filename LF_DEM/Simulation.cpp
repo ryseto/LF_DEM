@@ -13,6 +13,7 @@
 #include <cstring>
 #include <sstream>
 #include <cctype>
+#include <stdexcept>
 
 using namespace std;
 

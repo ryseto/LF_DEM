@@ -9,6 +9,7 @@
 #include "System.h"
 #include <sstream>
 #include <cmath>
+#include <stdexcept>
 #ifdef USE_DSFMT
 #include <time.h>
 #endif
