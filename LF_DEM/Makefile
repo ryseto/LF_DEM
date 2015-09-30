@@ -5,8 +5,8 @@
 #=======================================#
 
 
-# OS_version: OSX or Linux or SI, UCam
-OS_version = UCam
+# OS_version: OSX or Linux or SI or UCam or OIST
+OS_version = OSX
 # install directory
 install_dir = ~/bin/
 
@@ -186,9 +186,6 @@ check:
 	(cd check;	make test)
 
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
-ifeq ($(is_git_repo),true)
-	echo "#define GIT_VERSION \"$(VERSION)\"" > VersionInfo.h
-endif
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
 
 $(OBJ): $(SRC)
