@@ -27,12 +27,11 @@
 #include "InputValue.h"
 #include "OutputData.h"
 #include "Events.h"
-	
+
 class Simulation
 {
 private:
 	System sys;
-	ParameterSet p;
 	ParameterSet p_initial;
 	std::map <std::string, std::string> input_force_units;   // pairs: (force_type, unit)
 	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
@@ -40,13 +39,8 @@ private:
 	std::map <std::string, std::string> unit_longname;
 	std::list <InputValue> input_values;
 	double volume_or_area_fraction;
-	std::string filename_import_positions;
-	std::string filename_parameters;
-	std::string filename_sequence;
-	std::ostringstream string_control_parameters;
 	std::string header_imported_configulation[2];
 	std::string control_var;
-	bool user_sequence;
 	double shear_rate_expectation;
 	double time_interval_output_data;
 	double time_interval_output_config;
@@ -57,8 +51,6 @@ private:
 	/*
 	 * Resultant data
 	 */
-	vec3d initial_lees_edwards_disp;
-	double initial_y_shear_disp;
 	std::string internal_unit_scales;
 	std::string output_unit_scales;
 	double target_stress_input;
@@ -83,17 +75,16 @@ private:
 	 * For inputs
 	 */
 	void setDefaultParameters();
-	void readParameterFile();
-	void openOutputFiles(bool);
-	void prepareSimulationName(bool);
+	void readParameterFile(const std::string &);
+	void openOutputFiles(bool, const std::string &, const std::string &, const std::string &);
+	void prepareSimulationName(bool, const std::string &, const std::string &, const std::string &);
 	void echoInputFiles(std::string in_args, std::vector<std::string> &input_files);
 	void autoSetParameters(const std::string &keyword, const std::string &value);
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
-	void importConfiguration();
-//	std::ifstream importConfigurationBinary();
-	void importConfigurationBinary(std::ifstream &file_import);
+	void importConfiguration(const std::string &);
+	void importConfigurationBinary(std::ifstream &file_import, const std::string &);
 	void importContactsBinary(std::ifstream &file_import);
 	void exportForceAmplitudes();
 	void setLowPeclet();
@@ -117,24 +108,15 @@ private:
 	void outputData();
 	void outputDataMagnetic();
 	void outputConfigurationData();
-	void outputFinalConfiguration();
+	void outputFinalConfiguration(const std::string &);
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(std::string);
 	double getRate();
 	vec3d shiftUpCoordinate(double x, double y, double z);
-	void setupSimulation(std::string in_args,
-						 std::vector<std::string> &input_files,
-						 bool binary_conf,
-						 double dimensionlessnumber,
-						 std::string input_scale);
 	void outputComputationTime();
-	bool keepRunning();	
 	bool kill;
 
 	/*********** Events  ************/
-	std::list <Event> events;
-	void setupEvents();
-	void handleEvents();
 	void handleEventsShearJamming();
 	void handleEventsFragility();
 
@@ -144,18 +126,34 @@ private:
 	~Simulation();
 	void simulationSteadyShear(std::string in_args, std::vector<std::string> &input_files, bool binary_conf,
 							   double dimensionless_number, std::string input_scale, std::string control_variable);
-	void simulationUserDefinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
-	
+	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
+
 	void simulationInverseYield(std::string in_args,
 								std::vector<std::string> &input_files,
 								bool binary_conf,
 								double dimensionless_number,
 								std::string input_scale,
 								std::string control_variable);
-	
+
 	void simulationMagnetic(std::string in_args, std::vector<std::string> &input_files,
 							bool binary_conf, double dimensionless_number,
 							std::string input_scale, std::string control_variable);
-	
+	void setupSimulation(std::string in_args,
+												 std::vector<std::string> &input_files,
+												 bool binary_conf,
+												 double dimensionlessnumber,
+												 std::string input_scale);
+	void setControlVariable(const std::string & var){
+		control_var = var;
+	};
+	ParameterSet p;
+	bool keepRunning();
+	void timeEvolution(double &next_output_data);
+	void generateOutput(double &next_output_data, double &next_output_config, int &binconf_counter);
+	/*********** Events  ************/
+	std::list <Event> events;
+	void setupEvents();
+	void handleEvents();
+	System &getSys(){ return sys;}
 };
 #endif /* defined(__LF_DEM__Simulation__) */

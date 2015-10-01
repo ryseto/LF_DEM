@@ -22,6 +22,7 @@
 #include <queue>
 #include <list>
 #include <string>
+#include <tuple>
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
@@ -74,16 +75,19 @@ private:
 	double total_energy;
 	int linalg_size;
 	int dof;
+	double costheta_shear;
+	double sintheta_shear;
 	/* data */
-	bool keepRunning(std::string, double);
-	void (System::*timeEvolutionDt)(bool);
-	void timeEvolutionEulersMethod(bool calc_stress);
-	void timeEvolutionPredictorCorrectorMethod(bool calc_stress);
-	void timeStepMove();
+	bool keepRunning(const std::string & time_or_strain, const double & value_end);
+	void (System::*timeEvolutionDt)(bool, const std::string&, const double&);
+	void timeEvolutionEulersMethod(bool calc_stress, const std::string & time_or_strain, const double & value_end);
+	void timeEvolutionPredictorCorrectorMethod(bool calc_stress, const std::string & time_or_strain, const double & value_end);
+	void timeStepMove(const std::string & time_or_strain, const double & value_end);
 	void timeStepMoveCorrector();
-	void timeStepMovePredictor();
+	void timeStepMovePredictor(const std::string & time_or_strain, const double & value_end);
 	void timeStepBoxing(const double strain_increment);
 	void adaptTimeStep();
+	void adaptTimeStep(const std::string & time_or_strain, const double & value_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -130,9 +134,8 @@ private:
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
-	bool fixed_dt;
 	std::list <Event> &events;
-	
+
 	/*
 	 * Simulation for magnetic particles
 	 */
@@ -141,7 +144,7 @@ private:
 	std::vector<std::vector<int> > magnetic_pair;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
-	
+
  protected:
  public:
 	System(ParameterSet &ps, std::list <Event> &ev);
@@ -278,24 +281,20 @@ private:
 	void setupSystem(std::string control);
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(std::string time_or_strain, double value_end);
-	void timeEvolution(double value_end);
+	void timeEvolution(const std::string & time_or_strain, const double & value_end);
+//	void timeEvolution(double value_end); // @@@ DEPRECATED
 	void displacement(int i, const vec3d &dr);
 	void checkNewInteraction();
-	void checkInteractionEnd();
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
-	double lubricationForceFactor(int i, int j);
 	int periodize(vec3d &);
 	void periodize_diff(vec3d &, int &);
 	void periodize_diff(vec3d &);
-	void stressBrownianReset();
 	void calcStress();
 	void calcStressPerParticle();
 	void analyzeState();
 	StokesSolver stokes_solver;
-	void lubricationStress(int i, int j);
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
@@ -340,7 +339,7 @@ private:
 
 	double getFrictionalContactNumber()
 	{
-		return (double)2*contact_nb/np;
+		return (double)2*fric_contact_nb/np;
 	}
 
 	double get_lx()
@@ -428,6 +427,10 @@ private:
 		return total_energy;
 	}
 
+	std::tuple<double,double> getCosSinShearAngle()
+	{
+		return std::make_tuple(costheta_shear,sintheta_shear);
+	}
 	struct ForceAmplitudes amplitudes;
 };
 #endif /* defined(__LF_DEM__System__) */

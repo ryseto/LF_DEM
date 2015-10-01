@@ -102,11 +102,11 @@ printf OUT "\@0 0 0 0 \n";
 printf OUT "\@1 50 100 205 \n";
 #printf OUT "\@1 255 255 255 \n";
 printf OUT "\@2 200 200 200 \n";
-printf OUT "\@3 50 150 255 \n";
-printf OUT "\@4 50 200 50 \n";
-printf OUT "\@5 255 100 100 \n";
-printf OUT "\@6 50 200 50 \n";
-printf OUT "\@7 255 255 0 \n";
+printf OUT "\@3 255 255 0\n";
+printf OUT "\@4 50 200 50\n";
+printf OUT "\@5 255 100 100\n";
+printf OUT "\@6 50 150 255\n";
+printf OUT "\@7 255 255 0\n";
 printf OUT "\@8 255 255 255\n";
 printf OUT "\@9 150 150 150\n";
 #printf OUT "\@8 224 143 0 \n";
@@ -626,7 +626,7 @@ sub OutYaplotData{
 	#	}
 	
 	printf OUT "y 1\n";
-	printf OUT "@ 8\n";
+	printf OUT "@ 3\n";
 	$r = $yap_radius*$radius[0];
 	printf OUT "r $r\n";
 	$switch = 0;
@@ -639,7 +639,7 @@ sub OutYaplotData{
 		if ($mag) {
 			if ($switch == 0 &&
 				$magsusceptibility[$i] <= 0){
-					printf OUT "@ 9\n";
+					printf OUT "@ 8\n";
 					$switch = 1;
 				}
 		}
@@ -1121,10 +1121,10 @@ sub OutString2{
 	$xj = $posx[$j];
 	$yj = $posy[$j] - 0.02;
 	$zj = $posz[$j];
-	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
-	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
+	#//	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
+	#if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
 		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
-	}
+	#}
 }
 
 sub OutContact{

@@ -6,6 +6,7 @@
 //  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #include "Interaction.h"
+#include "System.h"
 
 using namespace std;
 
@@ -83,7 +84,7 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	} else {
 		contact.deactivate();
 	}
-	
+
 	contact_state_changed_after_predictor = false;
 	lubrication.getInteractionData();
 	lubrication.updateResistanceCoeff();
@@ -118,7 +119,7 @@ void Interaction::updateState(bool &deactivated)
 	}
 
 	updateContactState();
-	
+
 	if (lubrication.is_active()) {
 		lubrication.updateResistanceCoeff();
 	}

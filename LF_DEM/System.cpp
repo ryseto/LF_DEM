@@ -9,6 +9,7 @@
 #include "System.h"
 #include <sstream>
 #include <cmath>
+#include <stdexcept>
 #ifdef USE_DSFMT
 #include <time.h>
 #endif
@@ -66,7 +67,7 @@ vec3d System::randUniformSphere(double r)
 unsigned long
 System::hash( time_t t, clock_t c )
 {
-	/** 
+	/**
 		\brief Utility function to start up the DSFMT RNG with a nice seed.
 
 	 From MersenneTwister v1.0 by Richard J. Wagner
@@ -168,7 +169,7 @@ void System::allocateRessources()
 		double particle_volume = 4*M_PI/3;
 		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
 	}
-	cerr << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
+	cout << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
@@ -304,21 +305,21 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 		particle_volume += (4*M_PI/3)*pow(radius[i],3);
 	}
 	volume_fraction = particle_volume/system_volume;
-	cerr << "volume_fraction = " << volume_fraction << endl;
+	cout << "volume_fraction = " << volume_fraction << endl;
 }
 
 void System::setContacts(const vector <struct contact_state> &cs)
 {
 	/**
 		\brief Set a list of contacts with their state variables.
-		
+
 		Used to restart the simulation from a given state.
 	 */
 	for (const auto &c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
 			interaction[k].get_par_num(p0, p1);
-			if ((p0 == c.p0) && (p1 == c.p1)) {
+			if (p0 == c.p0 && p1 == c.p1) {
 				interaction[k].contact.setState(c);
 			}
 		}
@@ -365,11 +366,10 @@ void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
 		/* Each particle has magnetic dipole moment.
 		 * Ferromagnetism.
 		 */
-		cerr << "This is not implemented yet" << endl;
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] = magnetic_moment_[i];
 		}
-		exit(1);
+		throw runtime_error("This is not implemented yet");
 		//num_magnetic_particles = i_magnetic;
 	} else if (p.magnetic_type == 2) {
 		/* Particle can have magnetic moment when external magnetic field is applied.
@@ -419,8 +419,7 @@ void System::updateUnscaledContactmodel()
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
-		cerr << "lubrication_model..." << endl;
-		exit(1);
+		throw runtime_error("Error: lubrication_model>2 ???");
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	for (int k=0; k<nb_interaction; k++) {
@@ -463,17 +462,16 @@ void System::setupSystem(string control)
 	} else if (p.integration_method == 1) {
 		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
 	} else {
-		cerr << "integration_method = " << p.integration_method << endl;
-		cerr << "The integration method is not impremented yet." << endl;
-		exit(1);
+		ostringstream error_str;
+		error_str << "integration_method = " << p.integration_method << endl << "The integration method is not impremented yet." << endl;
+		throw runtime_error(error_str.str());
 	}
 	if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
 	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		cerr << "lubrication_model = 0 is not implemented yet.\n";
-		exit(1);
+		throw runtime_error("lubrication_model = 0 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -485,41 +483,41 @@ void System::setupSystem(string control)
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
 	if (p.friction_model == 0) {
-		cerr << "friction_model = 0" << endl;
+		cout << "friction_model = 0" << endl;
 		p.mu_static = 0;
 		friction = false;
 	} else if (p.friction_model == 1) {
-		cerr << "friction_model = 1" << endl;
+		cout << "friction_model = 1" << endl;
 		friction = true;
 	} else if (p.friction_model == 2 || p.friction_model == 3) {
-		cerr << "friction_model " << p.friction_model << endl;
+		cout << "friction_model " << p.friction_model << endl;
 		friction = true;
-		cerr << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
+		cout << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
 	} else if (p.friction_model == 5) {
-		cerr << "friction_model = 5: ft_max" << endl;
+		cout << "friction_model = 5: ft_max" << endl;
 		friction = true;
 	} else if (p.friction_model == 6) {
-		cerr << "friction_model = 6: Coulomb law + ft_max" << endl;
+		cout << "friction_model = 6: Coulomb law + ft_max" << endl;
 		friction = true;
 	} else {
-		cerr << "friction_model..." << endl;
-		exit(1);
+		throw runtime_error("Error: unknown friction model\n");
 	}
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
 		if (friction == false) {
-			cerr << "Sliding friction is not set!" << endl;
-			exit(1);
+			throw runtime_error("Error: Rolling friction without sliding friction?\n");
 		}
 	}
 	if (p.lub_max_gap >= 1) {
-		cerr << "lub_max_gap must be smaller than 1\n";
-		exit(1);
+		throw runtime_error("lub_max_gap must be smaller than 1\n");
 	}
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
+	costheta_shear = cos(p.theta_shear);
+	sintheta_shear = sin(p.theta_shear);
+
 	// Memory
 	allocateRessources();
 	//
@@ -585,17 +583,16 @@ void System::setupSystem(string control)
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
-		cerr << "lubrication_model..." << endl;
-		exit(1);
+		throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (p.unscaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
-	cerr << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cerr << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
-	cerr << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
-	cerr << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
+	cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	cout << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
+	cout << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
+	cout << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	if (brownian) {
 #ifdef DEV
 		/* In developing and debugging phases,
@@ -627,8 +624,7 @@ void System::setupSystem(string control)
 		} else if (p.magnetic_type == 2) {
 			magnetic_rotation_active = false;
 		} else {
-			cerr << "magnetic_type needs to be 1 or 2\n";
-			exit(1);
+			throw runtime_error("magnetic_type needs to be 1 or 2\n");
 		}
 	}
 	if (p.time_init_relax > 0) {
@@ -644,11 +640,11 @@ void System::setupSystem(string control)
 	if (!p.cross_shear) {
 		vel_difference.x = shear_rate*lz;
 	} else {
-		vel_difference.y = shear_rate*lz;
+		vel_difference.x = costheta_shear*shear_rate*lz;
+		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	stokes_solver.initialize();
 	dt = p.dt;
-	fixed_dt = p.fixed_dt;
 	initializeBoxing();
 
 	checkNewInteraction();
@@ -715,8 +711,14 @@ void System::timeStepBoxing(const double strain_increment)
 			}
 			shear_disp.x = shear_disp.x-m*lx;
 		} else {
-			shear_disp.y += strain_increment*lz;
-			int m = (int)(shear_disp.y/ly);
+			shear_disp.x += costheta_shear*strain_increment*lz;
+			shear_disp.y += sintheta_shear*strain_increment*lz;
+			int m = (int)(shear_disp.x/lx);
+			if (shear_disp.x < 0) {
+				m--;
+			}
+			shear_disp.x = shear_disp.x-m*lx;
+			m = (int)(shear_disp.y/ly);
 			if (shear_disp.y < 0) {
 				m--;
 			}
@@ -737,7 +739,7 @@ void System::eventShearJamming(){
 	}
 }
 
-void System::timeEvolutionEulersMethod(bool calc_stress)
+void System::timeEvolutionEulersMethod(bool calc_stress, const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -754,7 +756,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
-	timeStepMove();
+	timeStepMove(time_or_strain, value_end);
 
 	if (eventLookUp != NULL){
 		(this->*eventLookUp)();
@@ -765,7 +767,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress)
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
 
-void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
+void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,  const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -825,7 +827,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 	}
-	timeStepMovePredictor();
+	timeStepMovePredictor(time_or_strain, value_end);
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
@@ -843,7 +845,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress)
 	timeStepMoveCorrector();
 }
 
-void System::adaptTimeStep(){
+void System::adaptTimeStep()
+{
+	/**
+	\brief Adapt the time step so that the maximum relative displacement is p.disp_max .
+	*/
 	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 		if (max_velocity > max_sliding_velocity) {
 			dt = p.disp_max/max_velocity;
@@ -855,18 +861,34 @@ void System::adaptTimeStep(){
 	}
 }
 
-void System::timeStepMove()
+void System::adaptTimeStep(const string & time_or_strain, const double & value_end)
+{
+	/**
+	\brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
+	*/
+	adaptTimeStep();
+	if (time_or_strain == "strain") {
+		if (fabs(dt*shear_rate) > value_end-fabs(get_shear_strain())) {
+			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
+		}
+	} else {
+		if (dt > (value_end-get_time())) {
+			dt = (value_end-get_time());
+		}
+	}
+}
+
+void System::timeStepMove(const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
 
-	/* Changing dt for every timestep
-	 * So far, this is only in Euler method.
-	 */
-	if (!fixed_dt) {
-		adaptTimeStep();
+	/* Adapt dt to get desired p.disp_max	 */
+	if (!p.fixed_dt) {
+		adaptTimeStep(time_or_strain, value_end);
 	}
+
 	time += dt;
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
@@ -875,6 +897,7 @@ void System::timeStepMove()
 	if (!zero_shear) {
 		strain_increment = dt*shear_rate;
 	}
+
 	timeStepBoxing(strain_increment);
 	/* move particles */
 	for (int i=0; i<np; i++) {
@@ -897,24 +920,29 @@ void System::timeStepMove()
 	updateInteractions();
 }
 
-void System::timeStepMovePredictor()
+void System::timeStepMovePredictor(const string & time_or_strain, const double & value_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
-		if (!fixed_dt) {
-			adaptTimeStep();
+		if (!p.fixed_dt) {
+			adaptTimeStep(time_or_strain, value_end);
 		}
 	}
+
 	time += dt;
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
+	/* evolve PBC */
+	double strain_increment = 0;
+	if (!zero_shear) {
+		strain_increment = dt*shear_rate;
+	}
 
 	/* The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	double strain_increment = dt*shear_rate;
 	timeStepBoxing(strain_increment);
 
 	for (int i=0; i<np; i++) {
@@ -954,7 +982,7 @@ void System::timeStepMoveCorrector()
 	}
 	if (twodimension) {
 		for (int i=0; i<np; i++) {
-			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt;
+			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
 		}
 	}
 	if (magnetic_rotation_active) {
@@ -967,17 +995,17 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-bool System::keepRunning(string time_or_strain, double value_end){
+bool System::keepRunning(const string & time_or_strain, const double & value_end){
 	bool keep_running;
 	if (time_or_strain == "strain") {
-		keep_running = (get_shear_strain() < value_end-1e-8) && events.empty();
+		keep_running = (fabs(get_shear_strain()) < value_end-1e-8) && events.empty();
 	} else {
 		keep_running = (get_time() < value_end-1e-8) && events.empty();
 	}
 	return keep_running;
 }
 
-void System::timeEvolution(string time_or_strain, double value_end)
+void System::timeEvolution(const string & time_or_strain, const double &  value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system untile time_end
@@ -1009,11 +1037,11 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	}
 
 	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
 	};
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust){
@@ -1021,40 +1049,40 @@ void System::timeEvolution(string time_or_strain, double value_end)
 	}
 }
 
-void System::timeEvolution(double time_end)
-{
-	/**
-	 \brief Main time evolution routine: evolves the system untile time_end
-
-	 This method essentially loops the appropriate one time step
-	 method method, according to the Euler vs predictor-corrector or
-	 strain rate vs stress controlled choices. On the last time step,
-	 the stress is computed.
-	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-	 r
-	 \param time_end Time to reach.
-	 */
-	static bool firsttime = true;
-	in_predictor = false;
-	in_corrector = false;
-	if (firsttime) {
-		checkNewInteraction();
-		updateInteractions();
-		firsttime = false;
-	}
-	bool calc_stress = false;
-	if (lowPeclet) {
-		calc_stress = true;
-	}
-
-	while (get_time() < time_end-dt) { // integrate until strain_next
-		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-	};
-	(this->*timeEvolutionDt)(true); // last time step, compute the stress
-	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
-		adjustContactModelParameters();
-	}
-}
+// void System::timeEvolution(double time_end) // @@@ DEPRECATED, USE ABOVE
+// {
+// 	/**
+// 	 \brief Main time evolution routine: evolves the system untile time_end
+//
+// 	 This method essentially loops the appropriate one time step
+// 	 method method, according to the Euler vs predictor-corrector or
+// 	 strain rate vs stress controlled choices. On the last time step,
+// 	 the stress is computed.
+// 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
+// 	 r
+// 	 \param time_end Time to reach.
+// 	 */
+// 	static bool firsttime = true;
+// 	in_predictor = false;
+// 	in_corrector = false;
+// 	if (firsttime) {
+// 		checkNewInteraction();
+// 		updateInteractions();
+// 		firsttime = false;
+// 	}
+// 	bool calc_stress = false;
+// 	if (lowPeclet) {
+// 		calc_stress = true;
+// 	}
+//
+// 	while (get_time() < time_end-dt) { // integrate until strain_next
+// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
+// 	};
+// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
+// 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
+// 		adjustContactModelParameters();
+// 	}
+// }
 
 void System::checkNewInteraction()
 {
@@ -1158,11 +1186,11 @@ void System::updateInteractions()
 void System::updateMagneticInteractions()
 {
 	/**
-	 
+
 	 Magnetic force is noramlized with
-	 
-	 \f$ F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4 \f$ 
-	 
+
+	 \f$ F_M^{ast} = 3*mu_f*m*n/4*pi*(2a)^4 \f$
+
 	 \hat{F}_M = - (16/r**4)*( (m.n)m + (m.n)m + (m.m)n - 5(m.n)(m.n)n)
 	 (where r and m are dimensionless distance and dimensionless magnetic moment.)
 
@@ -1397,8 +1425,7 @@ void System::setRepulsiveForceToParticle()
 void System::setMagneticForceToParticle()
 {
 	if (p.magnetic_type == 1) {
-		cerr << "unfinished @ setMagneticForceToParticle " << endl;
-		exit(1);
+		throw runtime_error("unfinished @ setMagneticForceToParticle\n");
 		if (external_magnetic_field.is_zero() ||
 			p.magnetic_type == 2) {
 			for (int i=0; i<np; i++) {
@@ -1540,22 +1567,17 @@ void System::computeShearRate()
 	calcStressPerParticle();
 	calcStress();
 
-	unsigned int shear_stress_index;
-	if (!p.cross_shear) {
-		shear_stress_index = 2;
-	} else {
-		shear_stress_index = 3;
-	}
+	double shearstress_con;
+	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
 
-	double shearstress_con = total_contact_stressXF.elm[shear_stress_index]+total_contact_stressGU.elm[shear_stress_index];
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
-		shearstress_rep = total_repulsive_stressXF.elm[shear_stress_index]+total_repulsive_stressGU.elm[shear_stress_index];
+		shearstress_rep = shearStressComponent(total_repulsive_stressXF+total_repulsive_stressGU, p.theta_shear);
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = einstein_viscosity+total_hydro_stress.elm[shear_stress_index];
+	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
 
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
@@ -1666,7 +1688,7 @@ void System::computeVelocities(bool divided_velocities)
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
 	 */
-	if (!fixed_dt && in_predictor) {
+	if (!p.fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
 	if (!zero_shear) {
@@ -1677,14 +1699,17 @@ void System::computeVelocities(bool divided_velocities)
 				velocity[i].x += shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*shear_rate;
 			} else {
-				velocity[i].y += shear_rate*position[i].z;
-				ang_velocity[i].x -= 0.5*shear_rate;
+				velocity[i].x += costheta_shear*shear_rate*position[i].z;
+				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
+				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
+				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
 			}
 		}
 		if (!p.cross_shear) {
 			vel_difference.x = shear_rate*lz;
 		} else {
-			vel_difference.y = shear_rate*lz;
+			vel_difference.x = costheta_shear*shear_rate*lz;
+			vel_difference.y = sintheta_shear*shear_rate*lz;
 		}
 	} else {
 		for (int i=0; i<np; i++) {
@@ -1857,7 +1882,8 @@ double System::evaluateMaxVelocity()
 			if (!p.cross_shear) {
 				na_velocity_tmp.x -= shear_rate*position[i].z;
 			} else {
-				na_velocity_tmp.y -= shear_rate*position[i].z;
+				na_velocity_tmp.x -= costheta_shear*shear_rate*position[i].z;
+				na_velocity_tmp.y -= sintheta_shear*shear_rate*position[i].z;
 			}
 		}
 		if (na_velocity_tmp.sq_norm() > sq_max_velocity) {
@@ -1877,7 +1903,8 @@ double System::evaluateMaxAngVelocity()
 				na_ang_velocity_tmp.y -= 0.5*shear_rate;
 			}
 			else {
-				na_ang_velocity_tmp.x += 0.5*shear_rate;
+				na_ang_velocity_tmp.y -= 0.5*costheta_shear*shear_rate;
+				na_ang_velocity_tmp.x += 0.5*sintheta_shear*shear_rate;
 			}
 		}
 		if (na_ang_velocity_tmp.norm() > _max_ang_velocity) {
@@ -2019,9 +2046,9 @@ void System::calcPotentialEnergy()
 
 void System::calcMagneticEnergy()
 {
-	/* 
+	/*
 	 Magnetic energy is given in the thrmal unit.
-	 
+
 	 E_M = -(mu_f)/(4 pi r**3) (3 (m1.n)(m2.n)-m1.m2)
 	 \tilde{E}_M = E_M/kT = (2/3)*Pe_M*\hat{E}_M
 	 \hat{E}_M = E_M / E_M^{*} = 8*(3*m0.n*m1.n-m0.m1)/r**3;
@@ -2050,8 +2077,7 @@ void System::calcMagneticEnergy()
 	}
 	if (p.magnetic_type == 1) {
 		if (external_magnetic_field.is_not_zero()) {
-			cerr << "not implemented yet @ calcMagneticEnergy" << endl;
-			exit(1);
+			throw runtime_error( "not implemented yet @ calcMagneticEnergy");
 			for (int i=0; i<np; i++) {
 				double tmp_magnetic_energy_ex = -dot(magnetic_moment[i], external_magnetic_field);
 				total_energy += tmp_magnetic_energy_ex;
@@ -2066,10 +2092,10 @@ void System::setSystemVolume(double depth)
 {
 	if (twodimension) {
 		system_volume = lx*lz*depth;
-		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
+		cout << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
 	} else {
 		system_volume = lx*ly*lz;
-		cerr << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
+		cout << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
 	}
 }
 
