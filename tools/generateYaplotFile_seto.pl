@@ -10,16 +10,15 @@ use Math::Trig;
 use IO::Handle;
 $y_section = 0;
 $yap_radius = 1;
-$avenumber = 10;
+$avenumber = 1;
+$mag = 1; ### magnetic simulation
 
-$magnetoffset_y = -0.1;
+$magnetoffset_y = -0.01;
 $particle_data = $ARGV[0];
 $output_interval = 1;
 if ($#ARGV >= 1){
 	$output_interval = $ARGV[1];
 }
-
-
 if ($#ARGV == 2){
 	$xz_shift = $ARGV[2];
 }
@@ -28,9 +27,7 @@ if ($#ARGV == 2){
 $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
-
 $interaction_data = "int_${name}.dat";
-#printf "$interaction_data\n";
 
 printf "${name}\n";
 if ($avenumber == 1){
@@ -38,28 +35,7 @@ if ($avenumber == 1){
 } else {
 	$yaplotfilename = "y_${name}_av.yap";
 }
-
 printf "$yaplotfilename\n";
-
-#$outputmag = "$name.txt";
-
-my $pos;
-$pos = index($name, "_m");
-if ($pos != -1) {
-	$mag = 1;
-} else {
-	$mag = 0;
-}
-#if ($mag) {
-#	$outputmp = "magprofile_$name.dat";
-#	open (OUTMAGPROF, "> $outputmp");
-#}
-#$outputed = "ed_$name.dat";
-#$output2 = "nvec_$name.dat";
-#$outenergy = "energy_$name.dat";
-#$out_gaps = "gaps_$name.dat";
-#$out_mathm_pos = "mpos_$name.dat";
-#$out_mathm_int = "mint_$name.dat";
 
 open (IN_rheo, "< rheo_${name}.dat");
 
@@ -79,100 +55,33 @@ while (1) {
 	}
 }
 
-#$fmax_ave = ${sum_fmax}/${cnt};
-#printf "fmax = $fmax_ave $cnt \n";
-#$force_factor = 0.3/$fmax_ave;
-#printf  "$fmax_ave\n";
-#exit;$
-
-#open (OUTE, "> $outputed");
-#OUTE->autoflush(1);
-
 open (OUT, "> ${yaplotfilename}");
-#open (OUTMAG, "> ${outputmag}");
 open (IN_particle, "< ${particle_data}");
 open (IN_interaction, "< ${interaction_data}");
 &readHeader;
 $first=1;
-#$firstMag=1;
 $c_traj=0;
 $num = 0;
 
-printf OUT "\@0 0 0 0 \n";
-printf OUT "\@1 50 100 205 \n";
-#printf OUT "\@1 255 255 255 \n";
-printf OUT "\@2 200 200 200 \n";
-printf OUT "\@3 255 255 0\n";
-printf OUT "\@4 50 200 50\n";
-printf OUT "\@5 255 100 100\n";
-printf OUT "\@6 50 150 255\n";
-printf OUT "\@7 255 255 0\n";
-printf OUT "\@8 255 255 255\n";
-printf OUT "\@9 150 150 150\n";
-#printf OUT "\@8 224 143 0 \n";
-#printf OUT "\@9 67 163 230 \n";
-#printf OUT "\@8 253 105 6 \n";
-#printf OUT "\@9 109 109 109 \n";
-printf OUT "\@10 250 250 250 \n";
-printf OUT "\@11 240 240 240 \n";
-printf OUT "\@12 230 230 230 \n";
-printf OUT "\@13 220 220 220 \n";
-printf OUT "\@14 210 210 210 \n";
-printf OUT "\@15 200 200 200 \n";
-printf OUT "\@16 190 190 190 \n";
-printf OUT "\@17 180 180 180 \n";
-printf OUT "\@18 170 170 170 \n";
-printf OUT "\@19 160 160 160 \n";
-printf OUT "\@20 150 150 150 \n";
-printf OUT "\@21 140 140 140 \n";
-printf OUT "\@22 130 130 130 \n";
-printf OUT "\@23 120 120 120 \n";
-printf OUT "\@24 110 110 110 \n";
-printf OUT "\@25 100 100 100 \n";
-printf OUT "\@26 90 90 90 \n";
-printf OUT "\@27 80 90 90 \n";
-printf OUT "\@28 70 70 70\n";
-printf OUT "\@29 60 60 60 \n";
-printf OUT "\@30 50 50 50 \n";
-printf OUT "\@31 40 40 40 \n";
-printf OUT "\@32 30 30 30 \n";
-printf OUT "\@33 20 20 20 \n";
-printf OUT "\@34 10 10 10 \n";
-printf OUT "\@35 0 0 0 \n";
+&outputColorTable;
 
-$total_energy_dis = 0;
 $shear_strain_next = 1;
 $shear_strain_previous = 0;
 $cnt_interval = 0;
 
-#for ($i=0; $i < $np; $i++) {#
-#	$aposx[$i] = 0;
-#	$aposy[$i] = 0;
-#	$aposz[$i] = 0;
-#}
 $avecount = 0;
-#$avenumber = 20;
 $output = 0;
 while (1){
-	#	if ($cnt_interval == 0 ||
-	#		$cnt_interval % $output_interval == 0) {
-	#		$output = 1;
-	#	} else {
-	#		$output = 0;
-	#	}
 	&InParticles;
 	last unless defined $line;
 	if ($mag == 0) {
 		&InInteractions;
 	}
-	
 	if ($avenumber >= 2) {
 		for ($i=0; $i < $np; $i++) {
 			$aposx[$avecount][$i] = $posx[$i];
 			$aposz[$avecount][$i] = $posz[$i];
 		}
-		
-		
 		for ($i=0; $i < $np; $i++) {
 			$averagex[$i] = $posx[$i];
 			$averagez[$i] = $posz[$i];
@@ -187,7 +96,6 @@ while (1){
 			for ($i=0; $i < $np; $i++) {
 				$xpd[$i] = $aposx[$jj][$i];
 				$zpd[$i] = $aposz[$jj][$i];
-				
 				if (abs($xpd[$i] - $posx[$i]) > 0.5*$Lx) {
 					if ($xpd[$i] > $posx[$i]){
 						$xpd[$i] -= $Lx;
@@ -202,7 +110,6 @@ while (1){
 						$zpd[$i] += $Lz;
 					}
 				}
-				
 				$averagex[$i] += $xpd[$i];
 				$averagez[$i] += $zpd[$i];
 			}
@@ -212,45 +119,34 @@ while (1){
 			$posy[$i] = 0;
 			$posz[$i] = $averagez[$i]/$avenumber;
 		}
-		for ($i=0; $i < $np; $i++) {
-			$stdev[$i] = 0;
-			for ($j=0; $j<$avenumber; $j++){
-				$jj = $avecount - $j;
-				if ($jj < 0) {
-					$jj += $avenumber;
-				}
-				$xpd[$i] = $aposx[$jj][$i];
-				$zpd[$i] = $aposz[$jj][$i];
-				if (abs($xpd[$i] - $posx[$i]) > 0.5*$Lx) {
-					if ($xpd[$i] > $posx[$i]){
-						$xpd[$i] -= $Lx;
-					} else {
-						$xpd[$i] += $Lx;
-					}
-				}
-				if (abs($zpd[$i] - $posz[$i]) > 0.5*$Lz) {
-					if ($zpd[$i] > $posz[$i]){
-						$zpd[$i] -= $Lz;
-					} else {
-						$zpd[$i] += $Lz;
-					}
-				}
-				
-				$stdev[$i] += sqrt(($xpd[$i]-$posx[$i])**2+($zpd[$i]-$posz[$i])**2);
-			}
-			$stdev[$i] *= 1/$avenumber;
-		}
-		
-		
-		
-		#	for ($i=0; $i < $np; $i++) {
+		#		for ($i=0; $i < $np; $i++) {
+		#			$stdev[$i] = 0;
+		#			for ($j=0; $j<$avenumber; $j++){
+		#				$jj = $avecount - $j;
+		#				if ($jj < 0) {
+		#					$jj += $avenumber;
+		#				}
+		#				$xpd[$i] = $aposx[$jj][$i];
+		#				$zpd[$i] = $aposz[$jj][$i];
+		#				if (abs($xpd[$i] - $posx[$i]) > 0.5*$Lx) {
+		#					if ($xpd[$i] > $posx[$i]){
+		#						$xpd[$i] -= $Lx;
+		#					} else {
+		#						$xpd[$i] += $Lx;
+		#					}
+		#				}
+		#				if (abs($zpd[$i] - $posz[$i]) > 0.5*$Lz) {
+		#					if ($zpd[$i] > $posz[$i]){
+		#						$zpd[$i] -= $Lz;
+		#					} else {
+		#						$zpd[$i] += $Lz;
+		#					}
+		#				}
 		#
-		#	for ($j=0; $j<$avenumber; $j++){
-		#
+		#				$stdev[$i] += sqrt(($xpd[$i]-$posx[$i])**2+($zpd[$i]-$posz[$i])**2);
 		#			}
-		#
+		#			$stdev[$i] *= 1/$avenumber;
 		#		}
-		#		$avecount = 0;
 		if ($avecount == $avenumber-1){
 			$output = 1;
 		}
@@ -260,23 +156,6 @@ while (1){
 	if ($output == 1) {
 		&OutYaplotData;
 		#		&OutputTxtFile;
-		$total_energy = ($shear_stress)*($shear_strain-$shear_strain_previous )*102.636;
-		$energy_diff = $total_energy_dis - $total_energy;
-		if ($mag) {
-			for ($i = 0; $i < $np; $i++){
-				$magmom_xy = sqrt($magmom_x[$i]*$magmom_x[$i]+$magmom_y[$i]*$magmom_y[$i]);
-				$magangle = atan2($magmom_z[$i], $magmom_xy);
-				printf OUTMAGPROF "$posz[$i] $magangle \n";
-			}
-			printf OUTMAGPROF "\n";
-		}
-	}
-	if ($shear_strain > $shear_strain_next ) {
-		$shear_strain_next += 0.1;
-		printf "$shear_strain $total_energy_dis $total_energy $energy_diff  $shear_stress\n";
-		printf OUTE "$shear_strain $total_energy_dis $total_energy $energy_diff  $shear_stress\n";
-		$total_energy_dis = 0;
-		$shear_strain_previous = $shear_strain;
 	}
 	$cnt_interval ++;
 	$avecount ++;
@@ -287,8 +166,8 @@ while (1){
 }
 
 open (OUTLAST, "> LastConfig.dat");
-
 printf OUTLAST "$shear_disp\n";
+
 for ($i = 0; $i < $np; $i++){
 	$xx = 0.5*$Lx + $posx[$i];
 	$yy = 0.5*$Ly + $posy[$i];
@@ -361,55 +240,100 @@ sub InParticles {
 			#			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 			#			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			#
-			
-				if ($mag) {
-					# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $ms, $brownian_pressure, $contact_pressure) = split(/\s+/, $line);
-					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ms) = split(/\s+/, $line);
-					#					$magmom_x[$i] = $mx;
-					#$magmom_y[$i] = $my;
-					#$magmom_z[$i] = $mz;
-					$magsusceptibility[$i] = $ms;
-					#					$bpressure[$i] = $brownian_pressure;
-					#				$con_pressure[$i] = $contact_pressure;
-					#					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
-				} else {
-					($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-					$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-					$ang[$i] = $angle;
+			if ($mag) {
+				# ($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $ms, $brownian_pressure, $contact_pressure) = split(/\s+/, $line);
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ms) = split(/\s+/, $line);
+				#					$magmom_x[$i] = $mx;
+				#$magmom_y[$i] = $my;
+				#$magmom_z[$i] = $mz;
+				$magsusceptibility[$i] = $ms;
+				#					$bpressure[$i] = $brownian_pressure;
+				#				$con_pressure[$i] = $contact_pressure;
+				#					$mm[$i] = sqrt($mx*$mx+$my*$my+$mz*$mz);
+			} else {
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+				$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+				$ang[$i] = $angle;
+			}
+			#		if (true){
+			#			#printf OUTMP "$line";
+			#			printf OUTMP "$i $x $y $z $a\n";
+			#		}
+			$radius[$i] = $a;
+			if ($xz_shift) {
+				$x += $xz_shift;
+				$z += $xz_shift;
+				if ($x > $Lx/2) {
+					$x -= $Lx;
 				}
-				#		if (true){
-				#			#printf OUTMP "$line";
-				#			printf OUTMP "$i $x $y $z $a\n";
-				#		}
-				$radius[$i] = $a;
-				if ($xz_shift) {
-					$x += $xz_shift;
-					$z += $xz_shift;
-					if ($x > $Lx/2) {
-						$x -= $Lx;
-					}
-					if ($z > $Lz/2) {
-						$z -= $Lz;
-					}
+				if ($z > $Lz/2) {
+					$z -= $Lz;
 				}
-				$posx[$i] = $x;
-				$posy[$i] = $y;
-				$posz[$i] = $z;
-				$velx[$i] = $vx;
-				$vely[$i] = $vy;
-				$velz[$i] = $vz;
-				$omegax[$i] = $ox;
-				$omegay[$i] = $oy;
-				$omegaz[$i] = $oz;
-				$omegay[$i] = $oy;
-				if ($radius_max < $a){
-					$radius_max = $a;
-				}
+			}
+			$posx[$i] = $x;
+			$posy[$i] = $y;
+			$posz[$i] = $z;
+			$velx[$i] = $vx;
+			$vely[$i] = $vy;
+			$velz[$i] = $vz;
+			$omegax[$i] = $ox;
+			$omegay[$i] = $oy;
+			$omegaz[$i] = $oz;
+			$omegay[$i] = $oy;
+			if ($radius_max < $a){
+				$radius_max = $a;
+			}
 			
 		}
 		$c_traj++;
 	}
 }
+
+sub outputColorTable {
+	printf OUT "\@0 0 0 0 \n";
+	printf OUT "\@1 50 100 205 \n";
+	#printf OUT "\@1 255 255 255 \n";
+	printf OUT "\@2 200 200 200 \n";
+	printf OUT "\@3 255 255 0\n";
+	printf OUT "\@4 50 200 50\n";
+	printf OUT "\@5 255 100 100\n";
+	printf OUT "\@6 50 150 255\n";
+	printf OUT "\@7 255 255 0\n";
+	printf OUT "\@8 255 255 255\n";
+	printf OUT "\@9 150 150 150\n";
+	#printf OUT "\@8 224 143 0 \n";
+	#printf OUT "\@9 67 163 230 \n";
+	#printf OUT "\@8 253 105 6 \n";
+	#printf OUT "\@9 109 109 109 \n";
+	printf OUT "\@10 250 250 250 \n";
+	printf OUT "\@11 240 240 240 \n";
+	printf OUT "\@12 230 230 230 \n";
+	printf OUT "\@13 220 220 220 \n";
+	printf OUT "\@14 210 210 210 \n";
+	printf OUT "\@15 200 200 200 \n";
+	printf OUT "\@16 190 190 190 \n";
+	printf OUT "\@17 180 180 180 \n";
+	printf OUT "\@18 170 170 170 \n";
+	printf OUT "\@19 160 160 160 \n";
+	printf OUT "\@20 150 150 150 \n";
+	printf OUT "\@21 140 140 140 \n";
+	printf OUT "\@22 130 130 130 \n";
+	printf OUT "\@23 120 120 120 \n";
+	printf OUT "\@24 110 110 110 \n";
+	printf OUT "\@25 100 100 100 \n";
+	printf OUT "\@26 90 90 90 \n";
+	printf OUT "\@27 80 90 90 \n";
+	printf OUT "\@28 70 70 70\n";
+	printf OUT "\@29 60 60 60 \n";
+	printf OUT "\@30 50 50 50 \n";
+	printf OUT "\@31 40 40 40 \n";
+	printf OUT "\@32 30 30 30 \n";
+	printf OUT "\@33 20 20 20 \n";
+	printf OUT "\@34 10 10 10 \n";
+	printf OUT "\@35 0 0 0 \n";
+	
+}
+
 
 sub calcsqdist {
 	($x1, $y1, $z1, $x2, $y2, $z2) = @_;
@@ -530,7 +454,6 @@ sub InInteractions {
 	#printf OUTG "\n";
 }
 
-
 sub OutputTxtFile{
 	if ($firstMag == 0){
 		printf OUTMAG "\n";
@@ -635,7 +558,6 @@ sub OutYaplotData{
 		#			$r = $yap_radius*$radius[$i];
 		#			printf OUT "r $r\n";
 		#		}
-		
 		if ($mag) {
 			if ($switch == 0 &&
 				$magsusceptibility[$i] <= 0){
@@ -656,67 +578,6 @@ sub OutYaplotData{
 		#		}
 		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 	}
-	#######################
-	#######################
-	#######################
-	$forcefactor = 0.01;
-	printf OUT "y 2\n";
-	printf OUT "@ 4\n";
-	for ($i = 0; $i < $np; $i ++){
-		if ($bpressure[$i] > 0) {
-			$r = $forcefactor*$bpressure[$i];
-			printf OUT "r $r\n";
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
-		}
-	}
-	printf OUT "@ 5\n";
-	for ($i = 0; $i < $np; $i ++){
-		if ($bpressure[$i] < 0) {
-			$r = -$forcefactor*$bpressure[$i];
-			printf OUT "r $r\n";
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
-		}
-	}
-	printf OUT "y 3\n";
-	printf OUT "@ 4\n";
-	for ($i = 0; $i < $np; $i ++){
-		if ($con_pressure[$i] > 0) {
-			$r = $forcefactor*$con_pressure[$i];
-			printf OUT "r $r\n";
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
-		}
-	}
-	printf OUT "@ 5\n";
-	for ($i = 0; $i < $np; $i ++){
-		if ($con_pressure[$i] < 0) {
-			$r = -$forcefactor*$con_pressure[$i];
-			printf OUT "r $r\n";
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
-		}
-	}
-	
-	
-	#	printf OUT "y 3\n";
-	#	printf OUT "@ 4\n";
-	#	$r = 1.02*$yap_radius*$radius[0];
-	#	printf OUT "r $r\n";
-	#	for ($i = 0; $i < $np; $i ++){
-	#		if ($i >= 1 && $radius[$i] != $radius[$i-1]){
-	#			$r = 1.02*$yap_radius*$radius[$i];
-	#			printf OUT "r $r\n";
-	#		}
-	#		#		if ($i % 100 == 0){
-	#		#			$col = $i/100 + 2;
-	#		#			printf OUT "@ $col\n";
-	#		#		}
-	#		if ($y_section == 0 ||
-	#			abs($posy[$i]) < $y_section ){
-	#				$yy = $posy[$i]+0.1;
-	#				printf OUT "c $posx[$i] $yy $posz[$i] \n";
-	#			}
-	#
-	#	}
-	#
 	
 	if (0) {
 		printf OUT "y 2\n";
@@ -1123,7 +984,7 @@ sub OutString2{
 	$zj = $posz[$j];
 	#//	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
 	#if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1){
-		printf OUT "s $xi $yi $zi $xj $yj $zj\n";
+	printf OUT "s $xi $yi $zi $xj $yj $zj\n";
 	#}
 }
 

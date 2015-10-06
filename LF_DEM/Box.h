@@ -48,27 +48,34 @@ public:
 	bool is_bottom();
 	void add(int);
 	void remove(int);
+	
 	std::set<int>::iterator begin()
 	{
 		return container.begin();
 	}
+	
 	std::set<int>::iterator end()
 	{
 		return container.end();
 	}
+	
 	std::vector<int>::iterator neighborhood_begin()
 	{
 		return neighborhood_container.begin();
 	}
+	
 	std::vector<int>::iterator neighborhood_end()
 	{
 		return neighborhood_container.end();
 	}
+	
 	std::vector <int> neighborhood_container;
+	
 	size_t container_size()
 	{
 		return container.size();
 	}
+	
 	void build_neighborhood_container();
 };
 

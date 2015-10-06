@@ -741,6 +741,7 @@ void Simulation::createDataHeader(stringstream &data_header)
 	data_header << "# Ly " << sys.get_ly() << endl;
 	data_header << "# Lz " << sys.get_lz() << endl;
 }
+
 void Simulation::outputDataHeader(ofstream &fout)
 {
 	stringstream data_header;
@@ -832,7 +833,6 @@ void Simulation::outputConfigurationData()
 		fout_interaction << ' ' << cnt_interaction;
 		fout_interaction << ' ' << sys.get_time();
 		fout_interaction << endl;
-
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned short i, j;
