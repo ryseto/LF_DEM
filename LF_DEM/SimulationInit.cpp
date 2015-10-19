@@ -403,24 +403,27 @@ void Simulation::exportForceAmplitudes()
 	/**
 	 \brief Copy the input_force_values in the ForceAmplitude struct of the System class
 	 */
+	string indent = "\t";
+	cout << indent+"Forces used:" << endl;
+	indent += "\t";
 
 	bool is_repulsive = input_force_values.find("repulsive") != input_force_values.end();
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
 		sys.amplitudes.repulsion = input_force_values["repulsive"];
-		cout << " Repulsive force (in \"" << input_force_units["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
+		cout << indent+"Repulsive force (in \"" << input_force_units["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
 	bool is_critical_load = input_force_values.find("critical_load") != input_force_values.end();
 	if (is_critical_load) {
 		sys.critical_load = true;
 		sys.amplitudes.critical_normal_force = input_force_values["critical_load"];
-		cout << " Critical Load (in \"" << input_force_units["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		cout << indent+"Critical Load (in \"" << input_force_units["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
 	}
 	bool is_cohesive = input_force_values.find("cohesive") != input_force_values.end();
 	if (is_cohesive) {
 		sys.cohesion = true;
 		sys.amplitudes.cohesion = input_force_values["cohesive"];
-		cout << " Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
+		cout << indent+"Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 	//	bool is_magnetic = values.find("magnetic") != values.end();
 	//	if (is_magnetic) {
@@ -433,7 +436,7 @@ void Simulation::exportForceAmplitudes()
 	bool is_ft_max = input_force_values.find("ft") != input_force_values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = input_force_values["ft"];
-		cout << " Max tangential load (in \"" << input_force_units["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+		cout << indent+"Max tangential load (in \"" << input_force_units["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
 
 	bool is_brownian = input_force_values.find("thermal") != input_force_values.end();
@@ -441,7 +444,7 @@ void Simulation::exportForceAmplitudes()
 		sys.brownian = true;
 		p.brownian_amplitude = input_force_values["thermal"];
 		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers[internal_unit_scales+"/thermal"]);
-		cout << "Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers[internal_unit_scales+"/thermal"] << endl;
+		cout << indent+"Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers[internal_unit_scales+"/thermal"] << endl;
 	}
 }
 
@@ -584,10 +587,8 @@ void Simulation::setupSimulation(string in_args,
 			if (inv.unit == "strain") {
 				time_end = -1;
 				strain_end = p.time_end;
-				cout << "  strain_end = " << strain_end << endl;
 			} else {
 				time_end = p.time_end;
-				cout << "  time_end = " << time_end << endl;
 			}
 		}
 	}
@@ -605,20 +606,16 @@ void Simulation::setupSimulation(string in_args,
 				if (inv.unit == "strain") {
 					time_interval_output_data = -1;
 					strain_interval_output_data = p.time_interval_output_data;
-					cout << "  strain_interval_output_data = " << strain_interval_output_data << endl;
 				} else {
 					time_interval_output_data = p.time_interval_output_data;
-					cout << "  time_interval_output_data = " << time_interval_output_data << endl;
 				}
 			}
 			if (inv.name == "time_interval_output_config") {
 				if (inv.unit == "strain") {
 					time_interval_output_config = -1;
 					strain_interval_output_config = p.time_interval_output_config;
-					cout << "  strain_interval_output_config = " << strain_interval_output_config << endl;
 				} else {
 					time_interval_output_config = p.time_interval_output_config;
-					cout << "  time_interval_output_config = " << time_interval_output_config << endl;
 				}
 			}
 		}

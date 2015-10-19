@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cout << "Stress control: " << dimensionless_number << endl;
+					// cout << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
 				}
@@ -76,13 +76,13 @@ int main(int argc, char **argv)
 				rheology_control = "stress";
 				seq_filename = optarg;
 				seq_type = "s";
-				cout << "Stress sequence, file " << seq_filename << endl;
+				// cout << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 't':
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cout << "Stress control: " << dimensionless_number << endl;
+					// cout << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
 				}

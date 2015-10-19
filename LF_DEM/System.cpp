@@ -1010,7 +1010,7 @@ bool System::keepRunning(const string & time_or_strain, const double & value_end
 void System::timeEvolution(const string & time_or_strain, const double &  value_end)
 {
 	/**
-	 \brief Main time evolution routine: evolves the system untile time_end
+	 \brief Main time evolution routine: evolves the system until time_end
 
 	 This method essentially loops the appropriate one time step
 	 method method, according to the Euler vs predictor-corrector or
@@ -1050,41 +1050,6 @@ void System::timeEvolution(const string & time_or_strain, const double &  value_
 		adjustContactModelParameters();
 	}
 }
-
-// void System::timeEvolution(double time_end) // @@@ DEPRECATED, USE ABOVE
-// {
-// 	/**
-// 	 \brief Main time evolution routine: evolves the system untile time_end
-//
-// 	 This method essentially loops the appropriate one time step
-// 	 method method, according to the Euler vs predictor-corrector or
-// 	 strain rate vs stress controlled choices. On the last time step,
-// 	 the stress is computed.
-// 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-// 	 r
-// 	 \param time_end Time to reach.
-// 	 */
-// 	static bool firsttime = true;
-// 	in_predictor = false;
-// 	in_corrector = false;
-// 	if (firsttime) {
-// 		checkNewInteraction();
-// 		updateInteractions();
-// 		firsttime = false;
-// 	}
-// 	bool calc_stress = false;
-// 	if (lowPeclet) {
-// 		calc_stress = true;
-// 	}
-//
-// 	while (get_time() < time_end-dt) { // integrate until strain_next
-// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-// 	};
-// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
-// 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
-// 		adjustContactModelParameters();
-// 	}
-// }
 
 void System::checkNewInteraction()
 {
