@@ -6,7 +6,7 @@
 
 
 # OS_version: OSX or Linux or SI or UCam or OIST
-OS_version = OSX
+OS_version = UCam
 # install directory
 install_dir = ~/bin/
 
