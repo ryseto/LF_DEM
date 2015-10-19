@@ -289,6 +289,8 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 		twodimension = false;
 	}
 	if (twodimension) {
+		// @@@ this is arbitrary. Is it really necessary?
+		// @@@ In particular, the stress calculation uses the system volume, and most users expect the volume to be lx*lz in this case.
 		/* [note]
 		 * The depth of mono-layer is the diameter of the largest particles.e
 		 * The sample needs to be labeled from smaller particles to larger particles
@@ -1115,6 +1117,9 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
+						if (nb_interaction >= maxnb_interactionpair){
+							throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
+						}
 						interaction[interaction_new].activate(i, j, scaled_interaction_range);
 					}
 				}
@@ -1646,14 +1651,6 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
-	// cout << " strain " << shear_strain << endl;
-	// cout << " matrix " << endl;
-	// stokes_solver.printResistanceMatrix(cout, "sparse");
-	// cout << endl;
-	// cout << " rhs " << endl;
-	// stokes_solver.printRHS();
-	// cout << endl;
-	// getchar();
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
