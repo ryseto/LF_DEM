@@ -14,6 +14,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>analyzeLFDEM.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>6</integer>
+		</dict>
 		<key>analyze_data_LF_DEM.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -63,6 +68,16 @@
 			<true/>
 		</dict>
 		<key>D9BE3B62178C838100937C5C</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D9EA97991BBCF2560041B4B0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>D9EA97A41BBCF29C0041B4B0</key>
 		<dict>
 			<key>primary</key>
 			<true/>

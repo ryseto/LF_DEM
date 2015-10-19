@@ -5,7 +5,7 @@
 #=======================================#
 
 
-# OS_version: OSX or Linux or SI
+# OS_version: OSX or Linux or SI or UCam or OIST
 OS_version = OSX
 # install directory
 install_dir = ~/bin/
@@ -14,6 +14,9 @@ DSFMT_RNG = no
 
 # Compiler
 ifeq ($(OS_version),SI)
+	CXX=icc
+endif
+ifeq ($(OS_version),UCam)
 	CXX=icc
 endif
 ifeq ($(OS_version),OIST)
@@ -63,14 +66,11 @@ ifeq ($(is_git_repo),true)
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
-ifeq ($(OS_version),OIST)
-	VERSION := $(shell git describe --dirty --always)
-	CXXFLAGS_optimized += -DVERSION="\"$(VERSION)\""
-	CXXFLAGS_debug += -DVERSION="\"$(VERSION)\""
-endif
-
 ifeq ($(OS_version),Linux)
 	CXXFLAGS_debug += -pg
+endif
+ifeq ($(OS_version),UCam)
+	CXXFLAGS_optimized += -xSSE4.2 -axAVX 
 endif
 
 ifeq ($(DSFMT_RNG),yes)
@@ -86,6 +86,7 @@ UseMetis=no
 Cholmod_include_path_OSX     = /usr/local/include/
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
 Cholmod_include_path_SI  = ~/usr/include/
+Cholmod_include_path_UCam  = ~/usr/include/
 Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
 
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
@@ -105,6 +106,10 @@ ifeq ($(OS_version), SI)
 endif
 
 ifeq ($(OS_version), OIST)
+	Blas_Linking_Flags = -mkl -lrt
+	Lapack_Linking_Flags =
+endif
+ifeq ($(OS_version), UCam)
 	Blas_Linking_Flags = -mkl -lrt
 	Lapack_Linking_Flags =
 endif
@@ -140,7 +145,14 @@ ifeq ($(OS_version), SI)
        Cholmod_lib_path=$(Cholmod_path:include/=lib/)
        Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
        ifeq ($(UseMetis),yes)
-#               Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
+			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
+       endif
+endif
+
+ifeq ($(OS_version), UCam)
+       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
+       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
+       ifeq ($(UseMetis),yes)
 			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
        endif
 endif
@@ -177,7 +189,7 @@ $(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
 
 $(OBJ): $(SRC)
-	$(CXX) $(CXXFLAGS) $(Includes) -o $@ -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
 
 $(DSFMT_OBJ): $(DSFMT_SRC)
 	$(CXX) $(CXXFLAGS) -o $@ -c $(@:.o=.c)

@@ -9,6 +9,7 @@
 #include "System.h"
 #include <sstream>
 #include <cmath>
+#include <stdexcept>
 #ifdef USE_DSFMT
 #include <time.h>
 #endif
@@ -319,7 +320,7 @@ void System::setContacts(const vector <struct contact_state> &cs)
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
 			interaction[k].get_par_num(p0, p1);
-			if ((p0 == c.p0) && (p1 == c.p1)) {
+			if (p0 == c.p0 && p1 == c.p1) {
 				interaction[k].contact.setState(c);
 			}
 		}
@@ -863,22 +864,22 @@ void System::adaptTimeStep()
 	}
 }
 
-void System::adaptTimeStep(const string & time_or_strain, const double & value_end){
+void System::adaptTimeStep(const string & time_or_strain, const double & value_end)
+{
 	/**
 	\brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
 	*/
 	adaptTimeStep();
 	if (time_or_strain == "strain") {
-		if ( fabs(dt*shear_rate) > (value_end - fabs(get_shear_strain())) ) {
-			dt = fabs((value_end - fabs(get_shear_strain()))/shear_rate);
+		if (fabs(dt*shear_rate) > value_end-fabs(get_shear_strain())) {
+			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
 		}
 	} else {
-		if ( dt > (value_end - get_time()) ) {
-			dt = (value_end - get_time());
+		if (dt > (value_end-get_time())) {
+			dt = (value_end-get_time());
 		}
 	}
 }
-
 
 void System::timeStepMove(const string & time_or_strain, const double & value_end)
 {
@@ -997,7 +998,6 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-
 bool System::keepRunning(const string & time_or_strain, const double & value_end){
 	bool keep_running;
 	if (time_or_strain == "strain") {
@@ -1040,11 +1040,11 @@ void System::timeEvolution(const string & time_or_strain, const double &  value_
 	}
 
 	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // no stress computation except at low Peclet
+		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
 	};
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress,time_or_strain, value_end); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust){
@@ -1530,7 +1530,6 @@ void System::computeVelocityComponents()
 	}
 }
 
-
 void System::computeShearRate()
 {
 	/**
@@ -1540,7 +1539,6 @@ void System::computeShearRate()
 	calcStress();
 
 	double shearstress_con;
-
 	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
 
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses

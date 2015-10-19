@@ -2,8 +2,8 @@
 using namespace std;
 
 Box::Box(){
-	_is_top=false;
-	_is_bottom=false;
+	_is_top = false;
+	_is_bottom = false;
 }
 
 Box::~Box(){

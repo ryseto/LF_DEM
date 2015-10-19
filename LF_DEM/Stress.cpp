@@ -6,6 +6,7 @@
 //  Copyright (c) 2013-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #include <sstream>
+#include <stdexcept>
 #include "System.h"
 
 using namespace std;

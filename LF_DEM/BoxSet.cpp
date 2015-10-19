@@ -48,20 +48,19 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		int m1p1 [2] = {-1,1};
 		for (int a : m1p1 ) {
 			for (int b : m1p1 ) {
-				vec3d far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,box_zsize);
+				vec3d far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
 				top_probing_positions.push_back(far_corner);
-				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,0,0));
-				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize,b*box_ysize,0));
-				top_probing_positions.push_back(far_corner-vec3d(0,b*box_ysize,0));
+				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
+				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
+				top_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
 
-				far_corner = 1.4999999*vec3d(a*box_xsize,b*box_ysize,-box_zsize);
+				far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, -box_zsize);
 				bottom_probing_positions.push_back(far_corner);
-				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize,0,0));
-				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize,b*box_ysize,0));
-				bottom_probing_positions.push_back(far_corner-vec3d(0,b*box_ysize,0));
+				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
+				bottom_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
+				bottom_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
 			}
 		}
-
 		allocateBoxes();
 		// give them their position
 		positionBoxes();
@@ -244,7 +243,9 @@ void BoxSet::assignNeighbors()
 	assignNeighborsTopBottom();
 
 }
-BoxSet::~BoxSet(){
+
+BoxSet::~BoxSet()
+{
 	Boxes.clear();
 	BulkBoxes.clear();
 	TopBoxes.clear();
@@ -253,7 +254,6 @@ BoxSet::~BoxSet(){
 	box_labels.clear();
 	DELETE(boxMap);
 }
-
 
 /*****
  UpdateNeighbors()
@@ -272,8 +272,6 @@ void BoxSet::updateNeighbors()
 	for (auto & bx : TopBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
-		vec3d delta;
-
 		for (const auto& delta_prob : top_probing_positions){
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
@@ -282,8 +280,6 @@ void BoxSet::updateNeighbors()
 	for (auto & bx : BottomBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
-		vec3d delta;
-
 		for (const auto& delta_prob : bottom_probing_positions){
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
@@ -292,8 +288,6 @@ void BoxSet::updateNeighbors()
 	for (auto & bx : TopBottomBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
-		vec3d delta;
-
 		for (const auto& delta_prob : top_probing_positions){
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
