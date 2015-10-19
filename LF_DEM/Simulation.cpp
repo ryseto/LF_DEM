@@ -140,10 +140,11 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 	outputConfigurationBinary(); // generic, for recovery if crash
 	if (time_interval_output_config == -1) {
 		if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
-			outputConfigurationData();
 			if(p.out_binary_conf){
 				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
 				outputConfigurationBinary(binconf_filename);
+			} else {
+				outputConfigurationData();
 			}
 			next_output_config += strain_interval_output_config;
 		}
@@ -153,6 +154,8 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 			if(p.out_binary_conf){
 				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
 				outputConfigurationBinary(binconf_filename);
+			} else {
+				outputConfigurationData();
 			}
 			next_output_config +=  time_interval_output_config;
 		}

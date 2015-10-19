@@ -248,7 +248,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	resolveUnitSystem(internal_unit_scales);
 }
 
-// Command option -r indicate "rate controlled" simulation.
+// Command option -r indicates "rate controlled" simulation.
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string input_scale)
@@ -262,10 +262,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	 3. Convert all the forces to this unit (by multiplying every force by F_H/F_W)
 	 */
 	string force_type = input_scale; // the force defining the shear rate
-	if (force_type == "hydro") {
-		throw runtime_error("Error: cannot define the shear rate in hydro unit.");
-	}
-	if (input_force_values[force_type] > 0) {
+	if (input_force_values[force_type] > 0) { // if the force defining the shear rate is redefined in the parameter file, throw an error
 		ostringstream error_str;
 		error_str  << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		throw runtime_error(error_str.str());
@@ -290,15 +287,6 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 
 	// convert from hydro scale to chosen scale
 	convertForceValues(internal_unit_scales);
-
-	bool is_brownian = dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end();
-	if (is_brownian) {
-		sys.brownian = true;
-		p.brownian_amplitude = input_force_values["thermal"];
-		cout << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
-	} else {
-		cout << "non-Brownian" << endl;
-	}
 }
 
 // Command option -m indicate "magnetic-field controlled" simulation.
@@ -383,18 +371,14 @@ void Simulation::setUnitScaleRateControlled()
 	if (is_brownian) {
 		if (dimensionless_numbers["hydro/thermal"] > p.Pe_switch && !sys.zero_shear) { // hydro units
 			internal_unit_scales = "hydro";
-			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["hydro/thermal"]);
-			sys.set_shear_rate(1);
 		} else { // low Peclet mode
 			internal_unit_scales = "thermal";
-			sys.amplitudes.sqrt_temperature = 1;
-			sys.set_shear_rate(dimensionless_numbers["hydro/thermal"]);
 			setLowPeclet();
 		}
 	} else {
 		internal_unit_scales = "hydro";
-		sys.set_shear_rate(1);
 	}
+	sys.set_shear_rate(dimensionless_numbers["hydro/"+internal_unit_scales]);
 }
 
 void Simulation::setUnitScaleMagnetic()
@@ -451,6 +435,14 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.ft_max = input_force_values["ft"];
 		cout << " Max tangential load (in \"" << input_force_units["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
 	}
+
+	bool is_brownian = input_force_values.find("thermal") != input_force_values.end();
+	if (is_brownian) {
+		sys.brownian = true;
+		p.brownian_amplitude = input_force_values["thermal"];
+		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers[internal_unit_scales+"/thermal"]);
+		cout << "Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers[internal_unit_scales+"/thermal"] << endl;
+	}
 }
 
 void Simulation::convertInputValues(string new_unit)
@@ -495,7 +487,6 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 	input_scale = unit_longname[input_scale];
 	if (control_var == "rate") {
 		input_rate = dimensionlessnumber; // @@@ Renaming is required?
-		input_rate_unit = input_scale; // @@@ Not used
 	}
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
@@ -509,8 +500,9 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 		error_str  << " Error: unknown control variable \"" << control_var 	<< "\"" << endl;
 		throw runtime_error(error_str.str());
 	}
+
 	exportForceAmplitudes();
-	cerr << "internal_unit_scales = " << internal_unit_scales << endl;
+	cout << "internal_unit_scales = " << internal_unit_scales << endl;
 	sys.ratio_unit_time = &dimensionless_numbers[input_scale+"/"+internal_unit_scales];
 	convertInputValues(internal_unit_scales);
 	output_unit_scales = input_scale;

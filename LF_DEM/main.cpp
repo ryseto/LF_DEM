@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 				} else {
 					errorNoSuffix("magnetic field");
 				}
-				cerr << "Magnetic simulation" << endl;
+				cout << "Magnetic simulation" << endl;
 				break;
 			case 'k':
 				knkt_filename = optarg;
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 				break;
 			case 'M':
 				rheology_control = "magnetic";
-				cerr << "Magnetic simulation" << endl;
+				cout << "Magnetic simulation" << endl;
 				break;
  			case 'n':
 				binary_conf = true;
