@@ -44,7 +44,8 @@ void Simulation::contactForceParameter(string filename)
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cout << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 	} else {
 		ostringstream error_str;
 		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
@@ -81,7 +82,8 @@ void Simulation::contactForceParameterBrownian(string filename)
 
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	} else {
 		ostringstream error_str;
 		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["hydro/thermal"] << endl;
@@ -403,7 +405,7 @@ void Simulation::exportForceAmplitudes()
 	/**
 	 \brief Copy the input_force_values in the ForceAmplitude struct of the System class
 	 */
-	string indent = "\t";
+	string indent = "  Simulation::\t";
 	cout << indent+"Forces used:" << endl;
 	indent += "\t";
 
@@ -477,7 +479,8 @@ void Simulation::convertInputValues(string new_unit)
 				}
 			}
 		}
-		cout << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+		string indent = "  Simulation::\t";
+		cout << indent << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -505,7 +508,8 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 	}
 
 	exportForceAmplitudes();
-	cout << "internal_unit_scales = " << internal_unit_scales << endl;
+	string indent = "  Simulation::\t";
+	cout << indent << "internal_unit_scales = " << internal_unit_scales << endl;
 	sys.ratio_unit_time = &dimensionless_numbers[input_scale+"/"+internal_unit_scales];
 	convertInputValues(internal_unit_scales);
 	output_unit_scales = input_scale;
@@ -522,7 +526,8 @@ void Simulation::setupSimulation(string in_args,
 
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
-
+	string indent = "  Simulation::\t";
+	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
 
@@ -629,6 +634,7 @@ void Simulation::setupSimulation(string in_args,
 
 	openOutputFiles(binary_conf, filename_import_positions, filename_parameters, string_control_parameters.str());
 	echoInputFiles(in_args, input_files);
+	cout << indent << "Simulation setup [ok]" << endl;
 }
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
@@ -1176,5 +1182,6 @@ void Simulation::prepareSimulationName(bool binary_conf, const string & filename
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters;
 	sys.simu_name = ss_simu_name.str();
-	cout << "filename: " << sys.simu_name << endl;
+	string indent = "  Simulation::\t";
+	cout << indent << "filename: " << sys.simu_name << endl;
 }

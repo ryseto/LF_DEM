@@ -4,7 +4,8 @@ using namespace std;
 
 void BoxSet::init(double interaction_dist, System *sys_)
 {
-	cout << " Setting up Cell List System ... ";
+	string indent = "  BoxSet::\t";
+	cout << indent << "Setting up Cell List System ... ";
 	sys = sys_;
 	boxMap = new Box* [sys->get_np()];
 	for (int i=0; i<sys->get_np(); i++) {
@@ -73,7 +74,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 void BoxSet::allocateBoxes()
 {
 	box_nb = x_box_nb*y_box_nb*z_box_nb;
-	
+
 	for (int i=0; i<box_nb;i++) {
 		Boxes.insert(new Box());
 	}

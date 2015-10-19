@@ -203,6 +203,9 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	setupEvents();
 
+	string indent = "  Simulation::\t";
+	cout << indent << "Time evolution started" << endl << endl;
+
 	double next_output_data = 0;
 	double next_output_config = 0;
 	int binconf_counter = 0;
@@ -237,6 +240,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		string filename_configuration = input_files[0];
 		outputFinalConfiguration(filename_configuration);
 	}
+	cout << indent << "Time evolution done" << endl << endl;
 }
 
 void Simulation::simulationInverseYield(string in_args,
