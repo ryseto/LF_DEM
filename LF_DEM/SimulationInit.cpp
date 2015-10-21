@@ -44,7 +44,8 @@ void Simulation::contactForceParameter(string filename)
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cout << " Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 	} else {
 		ostringstream error_str;
 		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
@@ -81,7 +82,8 @@ void Simulation::contactForceParameterBrownian(string filename)
 
 	if (found) {
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
-		cout << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
+		string indent = "  Simulation::\t";
+		cout << indent << "Input for vf = " << phi_ << " and Pe = " << peclet_ << " : kn = " << kn_ << ", kt = " << kt_ << " and dt = " << dt_ << endl;
 	} else {
 		ostringstream error_str;
 		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << " and Pe = " << dimensionless_numbers["hydro/thermal"] << endl;
@@ -251,7 +253,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 	resolveUnitSystem(internal_unit_scales);
 }
 
-// Command option -r indicate "rate controlled" simulation.
+// Command option -r indicates "rate controlled" simulation.
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
@@ -266,10 +268,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
 	 3. Convert all the forces to this unit (by multiplying every force by F_H/F_W)
 	 */
 	string force_type = input_scale; // the force defining the shear rate
-	if (force_type == "hydro") {
-		throw runtime_error("Error: cannot define the shear rate in hydro unit.");
-	}
-	if (input_force_values[force_type] > 0) {
+	if (input_force_values[force_type] > 0) { // if the force defining the shear rate is redefined in the parameter file, throw an error
 		ostringstream error_str;
 		error_str  << "Error: redefinition of the rate (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
 		throw runtime_error(error_str.str());
@@ -294,15 +293,6 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
 
 	// convert from hydro scale to chosen scale
 	convertForceValues(internal_unit_scales);
-
-	bool is_brownian = dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end();
-	if (is_brownian) {
-		sys.brownian = true;
-		p.brownian_amplitude = input_force_values["thermal"];
-		cout << "Brownian, Peclet number " << dimensionless_numbers["hydro/thermal"] << endl;
-	} else {
-		cout << "non-Brownian" << endl;
-	}
 }
 
 // Command option -m indicate "magnetic-field controlled" simulation.
@@ -388,18 +378,14 @@ void Simulation::setUnitScaleRateControlled()
 	if (is_brownian) {
 		if (dimensionless_numbers["hydro/thermal"] > p.Pe_switch && !sys.zero_shear) { // hydro units
 			internal_unit_scales = "hydro";
-			sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers["hydro/thermal"]);
-			sys.set_shear_rate(1);
 		} else { // low Peclet mode
 			internal_unit_scales = "thermal";
-			sys.amplitudes.sqrt_temperature = 1;
-			sys.set_shear_rate(dimensionless_numbers["hydro/thermal"]);
 			setLowPeclet();
 		}
 	} else {
 		internal_unit_scales = "hydro";
-		sys.set_shear_rate(1);
 	}
+	sys.set_shear_rate(dimensionless_numbers["hydro/"+internal_unit_scales]);
 }
 
 void Simulation::setUnitScaleMagnetic()
@@ -424,24 +410,27 @@ void Simulation::exportForceAmplitudes()
 	/**
 	 \brief Copy the input_force_values in the ForceAmplitude struct of the System class
 	 */
+	string indent = "  Simulation::\t";
+	cout << indent+"Forces used:" << endl;
+	indent += "\t";
 
 	bool is_repulsive = input_force_values.find("repulsive") != input_force_values.end();
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
 		sys.amplitudes.repulsion = input_force_values["repulsive"];
-		cout << " Repulsive force (in \"" << input_force_units["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
+		cout << indent+"Repulsive force (in \"" << input_force_units["repulsive"] << "\" units): " << sys.amplitudes.repulsion << endl;
 	}
 	bool is_critical_load = input_force_values.find("critical_load") != input_force_values.end();
 	if (is_critical_load) {
 		sys.critical_load = true;
 		sys.amplitudes.critical_normal_force = input_force_values["critical_load"];
-		cout << " Critical Load (in \"" << input_force_units["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		cout << indent+"Critical Load (in \"" << input_force_units["critical_load"] << "\" units): " << sys.amplitudes.critical_normal_force << endl;
 	}
 	bool is_cohesive = input_force_values.find("cohesive") != input_force_values.end();
 	if (is_cohesive) {
 		sys.cohesion = true;
 		sys.amplitudes.cohesion = input_force_values["cohesive"];
-		cout << " Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
+		cout << indent+"Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
 	//	bool is_magnetic = values.find("magnetic") != values.end();
 	//	if (is_magnetic) {
@@ -454,7 +443,15 @@ void Simulation::exportForceAmplitudes()
 	bool is_ft_max = input_force_values.find("ft") != input_force_values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = input_force_values["ft"];
-		cout << " Max tangential load (in \"" << input_force_units["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+		cout << indent+"Max tangential load (in \"" << input_force_units["ft"] << "\" units): " << sys.amplitudes.ft_max << endl;
+	}
+
+	bool is_brownian = input_force_values.find("thermal") != input_force_values.end();
+	if (is_brownian) {
+		sys.brownian = true;
+		p.brownian_amplitude = input_force_values["thermal"];
+		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers[internal_unit_scales+"/thermal"]);
+		cout << indent+"Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers[internal_unit_scales+"/thermal"] << endl;
 	}
 }
 
@@ -486,7 +483,8 @@ void Simulation::convertInputValues(string new_unit)
 				}
 			}
 		}
-		cout << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+		string indent = "  Simulation::\t";
+		cout << indent << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -500,7 +498,6 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 	input_scale = unit_longname[input_scale];
 	if (control_var == "rate") {
 		input_rate = dimensionlessnumber; // @@@ Renaming is required?
-		input_rate_unit = input_scale; // @@@ Not used
 	}
 	if (control_var == "rate") {
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
@@ -514,8 +511,10 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 		error_str  << " Error: unknown control variable \"" << control_var 	<< "\"" << endl;
 		throw runtime_error(error_str.str());
 	}
+
 	exportForceAmplitudes();
-	cerr << "internal_unit_scales = " << internal_unit_scales << endl;
+	string indent = "  Simulation::\t";
+	cout << indent << "internal_unit_scales = " << internal_unit_scales << endl;
 	sys.ratio_unit_time = &dimensionless_numbers[input_scale+"/"+internal_unit_scales];
 	convertInputValues(internal_unit_scales);
 	output_unit_scales = input_scale;
@@ -532,7 +531,8 @@ void Simulation::setupSimulation(string in_args,
 
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
-
+	string indent = "  Simulation::\t";
+	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
 
@@ -597,10 +597,8 @@ void Simulation::setupSimulation(string in_args,
 			if (inv.unit == "strain") {
 				time_end = -1;
 				strain_end = p.time_end;
-				cout << "  strain_end = " << strain_end << endl;
 			} else {
 				time_end = p.time_end;
-				cout << "  time_end = " << time_end << endl;
 			}
 		}
 	}
@@ -618,20 +616,16 @@ void Simulation::setupSimulation(string in_args,
 				if (inv.unit == "strain") {
 					time_interval_output_data = -1;
 					strain_interval_output_data = p.time_interval_output_data;
-					cout << "  strain_interval_output_data = " << strain_interval_output_data << endl;
 				} else {
 					time_interval_output_data = p.time_interval_output_data;
-					cout << "  time_interval_output_data = " << time_interval_output_data << endl;
 				}
 			}
 			if (inv.name == "time_interval_output_config") {
 				if (inv.unit == "strain") {
 					time_interval_output_config = -1;
 					strain_interval_output_config = p.time_interval_output_config;
-					cout << "  strain_interval_output_config = " << strain_interval_output_config << endl;
 				} else {
 					time_interval_output_config = p.time_interval_output_config;
-					cout << "  time_interval_output_config = " << time_interval_output_config << endl;
 				}
 			}
 		}
@@ -645,6 +639,7 @@ void Simulation::setupSimulation(string in_args,
 
 	openOutputFiles(binary_conf, filename_import_positions, filename_parameters, string_control_parameters.str());
 	echoInputFiles(in_args, input_files);
+	cout << indent << "Simulation setup [ok]" << endl;
 }
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
@@ -1198,5 +1193,6 @@ void Simulation::prepareSimulationName(bool binary_conf,
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters;
 	sys.simu_name = ss_simu_name.str();
-	cout << "filename: " << sys.simu_name << endl;
+	string indent = "  Simulation::\t";
+	cout << indent << "filename: " << sys.simu_name << endl;
 }

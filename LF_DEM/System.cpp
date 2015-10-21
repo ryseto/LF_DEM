@@ -169,7 +169,6 @@ void System::allocateRessources()
 		double particle_volume = 4*M_PI/3;
 		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
 	}
-	cout << "maxnb_interactionpair_per_particle = " << maxnb_interactionpair_per_particle << endl;
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
@@ -276,7 +275,7 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	/**
 		\brief Set positions of the particles for initialization.
 	 */
-
+	string indent = "  System::\t";
 	set_np(initial_positions.size());
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
@@ -290,6 +289,8 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 		twodimension = false;
 	}
 	if (twodimension) {
+		// @@@ this is arbitrary. Is it really necessary?
+		// @@@ In particular, the stress calculation uses the system volume, and most users expect the volume to be lx*lz in this case.
 		/* [note]
 		 * The depth of mono-layer is the diameter of the largest particles.e
 		 * The sample needs to be labeled from smaller particles to larger particles
@@ -305,7 +306,7 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 		particle_volume += (4*M_PI/3)*pow(radius[i],3);
 	}
 	volume_fraction = particle_volume/system_volume;
-	cout << "volume_fraction = " << volume_fraction << endl;
+	cout << indent << "volume_fraction = " << volume_fraction << endl;
 }
 
 void System::setContacts(const vector <struct contact_state> &cs)
@@ -443,7 +444,8 @@ void System::setupSystem(string control)
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	 */
-
+	string indent = "  System::\t";
+	cout << indent << "Setting up System... " << endl;
 	if (control != "magnetic") {
 		if (control == "rate") {
 			rate_controlled = true;
@@ -463,7 +465,7 @@ void System::setupSystem(string control)
 		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
 	} else {
 		ostringstream error_str;
-		error_str << "integration_method = " << p.integration_method << endl << "The integration method is not impremented yet." << endl;
+		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
 	if (p.lubrication_model == 1) {
@@ -471,7 +473,7 @@ void System::setupSystem(string control)
 	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		throw runtime_error("lubrication_model = 0 is not implemented yet.\n");
+		throw runtime_error(indent+"lubrication_model = 0 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -482,34 +484,34 @@ void System::setupSystem(string control)
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
+
 	if (p.friction_model == 0) {
-		cout << "friction_model = 0" << endl;
+		cout << indent+"friction model: no friction" << endl;
 		p.mu_static = 0;
 		friction = false;
 	} else if (p.friction_model == 1) {
-		cout << "friction_model = 1" << endl;
+		cout << indent+"friction model: Coulomb" << endl;
 		friction = true;
 	} else if (p.friction_model == 2 || p.friction_model == 3) {
-		cout << "friction_model " << p.friction_model << endl;
+		cout << indent+"friction model: Coulomb + Critical Load" << endl;
 		friction = true;
-		cout << "critical_normal_force = " << amplitudes.critical_normal_force << endl;
 	} else if (p.friction_model == 5) {
-		cout << "friction_model = 5: ft_max" << endl;
+		cout << indent+"friction_model: Max tangential force" << endl;
 		friction = true;
 	} else if (p.friction_model == 6) {
-		cout << "friction_model = 6: Coulomb law + ft_max" << endl;
+		cout << indent+"friction_model: Coulomb law + Max tangential force" << endl;
 		friction = true;
 	} else {
-		throw runtime_error("Error: unknown friction model\n");
+		throw runtime_error(indent+"Error: unknown friction model\n");
 	}
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
 		if (friction == false) {
-			throw runtime_error("Error: Rolling friction without sliding friction?\n");
+			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
 		}
 	}
 	if (p.lub_max_gap >= 1) {
-		throw runtime_error("lub_max_gap must be smaller than 1\n");
+		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
 	}
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
@@ -554,7 +556,7 @@ void System::setupSystem(string control)
 		kn_master = p.kn;
 		kt_master = p.kt;
 		kr_master = p.kr;
-		cout << " kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
+		// cout << indent+" kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
 	}
 	if (p.contact_relaxation_time < 0) {
 		// 1/(h+c) --> 1/c
@@ -589,10 +591,10 @@ void System::setupSystem(string control)
 	if (p.unscaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
-	cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	cout << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
-	cout << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
-	cout << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
+	// cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
+	// cout << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
+	// cout << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
+	// cout << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	if (brownian) {
 #ifdef DEV
 		/* In developing and debugging phases,
@@ -670,6 +672,7 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
 	}
+	cout << indent << "Setting up System... [ok]" << endl;
 }
 
 void System::initializeBoxing()
@@ -1008,7 +1011,7 @@ bool System::keepRunning(const string & time_or_strain, const double & value_end
 void System::timeEvolution(const string & time_or_strain, const double &  value_end)
 {
 	/**
-	 \brief Main time evolution routine: evolves the system untile time_end
+	 \brief Main time evolution routine: evolves the system until time_end
 
 	 This method essentially loops the appropriate one time step
 	 method method, according to the Euler vs predictor-corrector or
@@ -1049,41 +1052,6 @@ void System::timeEvolution(const string & time_or_strain, const double &  value_
 	}
 }
 
-// void System::timeEvolution(double time_end) // @@@ DEPRECATED, USE ABOVE
-// {
-// 	/**
-// 	 \brief Main time evolution routine: evolves the system untile time_end
-//
-// 	 This method essentially loops the appropriate one time step
-// 	 method method, according to the Euler vs predictor-corrector or
-// 	 strain rate vs stress controlled choices. On the last time step,
-// 	 the stress is computed.
-// 	 (In the case of low Peclet simulations, the stress is computed at every time step.)
-// 	 r
-// 	 \param time_end Time to reach.
-// 	 */
-// 	static bool firsttime = true;
-// 	in_predictor = false;
-// 	in_corrector = false;
-// 	if (firsttime) {
-// 		checkNewInteraction();
-// 		updateInteractions();
-// 		firsttime = false;
-// 	}
-// 	bool calc_stress = false;
-// 	if (lowPeclet) {
-// 		calc_stress = true;
-// 	}
-//
-// 	while (get_time() < time_end-dt) { // integrate until strain_next
-// 		(this->*timeEvolutionDt)(calc_stress); // no stress computation except at low Peclet
-// 	};
-// 	(this->*timeEvolutionDt)(true); // last time step, compute the stress
-// 	if (p.auto_determine_knkt && shear_strain>p.start_adjust){
-// 		adjustContactModelParameters();
-// 	}
-// }
-
 void System::checkNewInteraction()
 {
 	/**
@@ -1115,6 +1083,9 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
+						if (nb_interaction >= maxnb_interactionpair){
+							throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
+						}
 						interaction[interaction_new].activate(i, j, scaled_interaction_range);
 					}
 				}
@@ -1644,14 +1615,6 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
 	}
-	// cout << " strain " << shear_strain << endl;
-	// cout << " matrix " << endl;
-	// stokes_solver.printResistanceMatrix(cout, "sparse");
-	// cout << endl;
-	// cout << " rhs " << endl;
-	// stokes_solver.printRHS();
-	// cout << endl;
-	// getchar();
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
@@ -2090,12 +2053,13 @@ void System::calcMagneticEnergy()
 
 void System::setSystemVolume(double depth)
 {
+	string indent = "  System::\t";
 	if (twodimension) {
 		system_volume = lx*lz*depth;
-		cout << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
+		cout << indent << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
 	} else {
 		system_volume = lx*ly*lz;
-		cout << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
+		cout << indent << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
 	}
 }
 

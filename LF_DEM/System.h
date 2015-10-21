@@ -324,7 +324,6 @@ private:
 		ly_half = 0.5*ly;
 		lz = lz_;
 		lz_half = 0.5*lz;
-		std::cerr << "box: " << lx << ' ' << ly << ' ' << lz << std::endl;
 	}
 
 	unsigned int getTotalNumberOfContacts()

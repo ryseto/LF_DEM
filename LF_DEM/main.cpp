@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cout << "Stress control: " << dimensionless_number << endl;
+					// cout << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
 				}
@@ -76,13 +76,13 @@ int main(int argc, char **argv)
 				rheology_control = "stress";
 				seq_filename = optarg;
 				seq_type = "s";
-				cout << "Stress sequence, file " << seq_filename << endl;
+				// cout << "Stress sequence, file " << seq_filename << endl;
 				break;
 			case 't':
 				rheology_control = "stress";
 				if (getSuffix(optarg, numeral, suffix)) {
 					dimensionless_number = atof(numeral.c_str());
-					cout << "Stress control: " << dimensionless_number << endl;
+					// cout << "Stress control: " << dimensionless_number << endl;
 				} else {
 					errorNoSuffix("shear stress");
 				}
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 				} else {
 					errorNoSuffix("magnetic field");
 				}
-				cerr << "Magnetic simulation" << endl;
+				cout << "Magnetic simulation" << endl;
 				break;
 			case 'k':
 				knkt_filename = optarg;
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 				break;
 			case 'M':
 				rheology_control = "magnetic";
-				cerr << "Magnetic simulation" << endl;
+				cout << "Magnetic simulation" << endl;
 				break;
  			case 'n':
 				binary_conf = true;
