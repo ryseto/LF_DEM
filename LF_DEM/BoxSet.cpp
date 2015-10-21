@@ -45,9 +45,9 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		box_xsize = sys->get_lx()/x_box_nb;
 		box_ysize = sys->get_ly()/y_box_nb;
 		box_zsize = sys->get_lz()/z_box_nb;
-		int m1p1 [2] = {-1,1};
-		for (int a : m1p1 ) {
-			for (int b : m1p1 ) {
+		int m1p1[2] = {-1, 1};
+		for (int a : m1p1) {
+			for (int b : m1p1) {
 				vec3d far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
 				top_probing_positions.push_back(far_corner);
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
@@ -74,7 +74,7 @@ void BoxSet::allocateBoxes()
 {
 	box_nb = x_box_nb*y_box_nb*z_box_nb;
 
-	for (int i=0; i<box_nb;i++) {
+	for (int i=0; i<box_nb; i++) {
 		Boxes.insert(new Box());
 	}
 	box_labels.resize(box_nb);
@@ -112,12 +112,10 @@ void BoxSet::positionBoxes()
 					bx->is_bottom(true);
 					BottomBoxes.insert(bx);
 				}
-
 				if (iz == z_box_nb-1 && iz > 0) {//top box
 					bx->is_top(true);
 					TopBoxes.insert(bx);
 				}
-
 				if (iz == 0 && iz == z_box_nb-1) {// bottom box
 					bx->is_bottom(true);
 					bx->is_top(true);
@@ -135,7 +133,7 @@ void BoxSet::positionBoxes()
 
 void BoxSet::assignNeighborsBulk()
 {
-	for (auto & bx : BulkBoxes) {
+	for (auto& bx : BulkBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
 		int m10p1 [3] = {-1,0,1};
@@ -154,14 +152,13 @@ void BoxSet::assignNeighborsBulk()
 
 void BoxSet::assignNeighborsBottom()
 {
-	for (auto & bx : BottomBoxes) {
+	for (auto& bx : BottomBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
-
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
-		int m10p1 [3] = {-1,0,1};
-		int p10 [2] = {0,1};
-		for (const auto & a : m10p1) {
+		int m10p1[3] = {-1, 0, 1};
+		int p10[2] = {0, 1};
+		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
@@ -171,8 +168,7 @@ void BoxSet::assignNeighborsBottom()
 				}
 			}
 		}
-
-		for (const auto& delta_prob : bottom_probing_positions){
+		for (const auto& delta_prob : bottom_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
@@ -180,13 +176,12 @@ void BoxSet::assignNeighborsBottom()
 
 void BoxSet::assignNeighborsTop()
 {
-	for (auto & bx : TopBoxes) {
+	for (auto& bx : TopBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
-
 		// boxes  at same level and bottom first: these are fixed once and for all in the simulation
-		int m10p1 [3] = {-1,0,1};
-		int m10 [2] = {-1,0};
+		int m10p1[3] = {-1, 0, 1};
+		int m10[2] = {-1, 0};
 		for (const auto & a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -197,23 +192,21 @@ void BoxSet::assignNeighborsTop()
 				}
 			}
 		}
-
-		for (const auto& delta_prob : top_probing_positions){
+		for (const auto& delta_prob : top_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
 }
 
-
 void BoxSet::assignNeighborsTopBottom()
 {
-	for (auto & bx : TopBottomBoxes) {
+	for (auto& bx : TopBottomBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
 
 		// boxes at same level first: these are fixed once and for all in the simulation
 		int m10p1 [3] = {-1,0,1};
-		for (const auto & a : m10p1) {
+		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
@@ -222,10 +215,10 @@ void BoxSet::assignNeighborsTopBottom()
 			}
 		}
 
-		for (const auto& delta_prob : top_probing_positions){
+		for (const auto& delta_prob : top_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
-		for (const auto& delta_prob : bottom_probing_positions){
+		for (const auto& delta_prob : bottom_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
@@ -269,10 +262,10 @@ void BoxSet::updateNeighbors()
 		To be called when the boundary conditions have changed.
 	 **/
 
-	for (auto & bx : TopBoxes) {
+	for (auto& bx : TopBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
-		for (const auto& delta_prob : top_probing_positions){
+		for (const auto& delta_prob : top_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
@@ -280,18 +273,18 @@ void BoxSet::updateNeighbors()
 	for (auto & bx : BottomBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
-		for (const auto& delta_prob : bottom_probing_positions){
+		for (const auto& delta_prob : bottom_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
 
-	for (auto & bx : TopBottomBoxes) {
+	for (auto& bx : TopBottomBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
-		for (const auto& delta_prob : top_probing_positions){
+		for (const auto& delta_prob : top_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
-		for (const auto& delta_prob : bottom_probing_positions){
+		for (const auto& delta_prob : bottom_probing_positions) {
 			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
 		}
 	}
@@ -303,7 +296,7 @@ void BoxSet::update()
 	if (is_boxed()) {
 		updateNeighbors();
 	}
-	for (const auto & bx : Boxes) {
+	for (const auto& bx : Boxes) {
 		bx->build_neighborhood_container();
 	}
 
@@ -337,7 +330,6 @@ Box* BoxSet::WhichBox(vec3d *pos)
 	}
 	int iz = (int)(pos->z/box_zsize);
 	int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
-
 	return box_labels[label];
 }
 
@@ -369,8 +361,8 @@ vector<int>::iterator BoxSet::neighborhood_end(int i)
 
 void BoxSet::printBoxNetwork()
 {
-	for (const auto & bx : Boxes) {
-		const auto & neighbors = bx->neighbors();
+	for (const auto& bx : Boxes) {
+		const auto& neighbors = bx->neighbors();
 		for (const auto & neighbor_box : neighbors) {
 			cerr << " "  << neighbors.size() << " " << bx->position << " ";
 			cerr << neighbor_box->position << " " << bx->is_top() << " ";
@@ -381,7 +373,7 @@ void BoxSet::printBoxNetwork()
 
 void BoxSet::printBoxContainers()
 {
-	for (const auto & bx : Boxes) {
+	for (const auto& bx : Boxes) {
 		for(const auto& j : bx->container){
 			cerr << bx->position << " " << j << endl;
 		}
@@ -390,7 +382,7 @@ void BoxSet::printBoxContainers()
 
 void BoxSet::printNeighborhoodContainers()
 {
-	for (const auto & bx : Boxes) {
+	for (const auto& bx : Boxes) {
 		for(const auto& j : bx->neighborhood_container){
 			cerr << bx->position << " " << j << endl;
 		}

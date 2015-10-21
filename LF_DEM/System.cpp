@@ -291,6 +291,14 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	if (twodimension) {
 		// @@@ this is arbitrary. Is it really necessary?
 		// @@@ In particular, the stress calculation uses the system volume, and most users expect the volume to be lx*lz in this case.
+		// @@@-----------------------------------------------------------------------
+		// @@@ I see. I though monolayer system including spheres is easier to switch between 2D and 3D simulations.
+		// @@@ But, I agree keeping such useless dimension looks bit awkward.
+		// @@@ Since I considered 2D version is useful just for visual demos, I did not care about this part.
+		// @@@ Please check consistency of 2D rheology.
+		// @@@ I don't expect clyinders instead of spheres.
+		// @@@ Probably We can remove the 2.5 phi term vfrom both 2D and 3D versions.
+		//
 		/* [note]
 		 * The depth of mono-layer is the diameter of the largest particles.e
 		 * The sample needs to be labeled from smaller particles to larger particles
@@ -1083,7 +1091,7 @@ void System::checkNewInteraction()
 							deactivated_interaction.pop();
 						}
 						// new interaction
-						if (nb_interaction >= maxnb_interactionpair){
+						if (nb_interaction >= maxnb_interactionpair) {
 							throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 						}
 						interaction[interaction_new].activate(i, j, scaled_interaction_range);
