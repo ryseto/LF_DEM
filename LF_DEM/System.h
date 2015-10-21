@@ -429,7 +429,7 @@ private:
 
 	std::tuple<double,double> getCosSinShearAngle()
 	{
-		return std::make_tuple(costheta_shear,sintheta_shear);
+		return std::make_tuple(costheta_shear, sintheta_shear);
 	}
 	struct ForceAmplitudes amplitudes;
 };

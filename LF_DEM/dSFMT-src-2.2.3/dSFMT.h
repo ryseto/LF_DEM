@@ -25,7 +25,7 @@
  typedef unsigned long long uint64_t
  #define PRIu64 "llu"
  #define PRIx64 "llx"
-@endverbatim
+@enreeffdverbatim
  * uint32_t must be exactly 32-bit unsigned integer type (no more, no
  * less), and uint64_t must be exactly 64-bit unsigned integer type.
  * PRIu64 and PRIx64 are used for printf function to print 64-bit

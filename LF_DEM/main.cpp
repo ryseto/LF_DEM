@@ -174,8 +174,7 @@ int main(int argc, char **argv)
 			cerr << usage << endl;
 			exit(1);
 		}
-		vector <string> input_files;
-		input_files.resize(5);
+		vector <string> input_files(5);
 		input_files[0] = config_filename;
 		input_files[1] = param_filename;
 		input_files[2] = knkt_filename;
@@ -190,15 +189,12 @@ int main(int argc, char **argv)
 											  dimensionless_number, suffix, rheology_control);
 
 		} else if (seq_filename == "not_given") {
-			try
-			{
+			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
-			}
-			catch(runtime_error& e)
-			{
+			} catch(runtime_error& e) {
 				cerr << e.what() << endl;
-      	return 1;
+				return 1;
 			}
 		} else {
 		  cerr << " User def sequence temporarily disabled " << endl;

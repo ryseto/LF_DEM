@@ -453,10 +453,9 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 
 		In the current implementation, it stores particle positions, x and y strain, and contact states.
 	*/
-	vector< vector<double> > pos;
 	int np = sys.get_np();
+	vector< vector<double> > pos(np);
 	int dims = 4;
-	pos.resize(np);
 	for (int i=0; i<np; i++) {
 		pos[i].resize(dims);
 		pos[i][0] = sys.position[i].x;
@@ -751,11 +750,9 @@ void Simulation::outputDataHeader(ofstream &fout)
 
 void Simulation::outputConfigurationData()
 {
-	vector<vec3d> pos;
-	vector<vec3d> vel;
 	int np = sys.get_np();
-	pos.resize(np);
-	vel.resize(np);
+	vector<vec3d> pos(np);
+	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
 		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
 								   sys.position[i].y-sys.Ly_half(),

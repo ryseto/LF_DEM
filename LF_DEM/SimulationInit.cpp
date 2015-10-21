@@ -108,7 +108,8 @@ void Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
+void Simulation::echoInputFiles(string in_args,
+								vector<string> &input_files)
 {
 	/**
 	\brief Print the entire information needed to reproduce the simulation in Simulation::fout_input
@@ -204,7 +205,9 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 	}
 }
 
-void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
+void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
+													string rate_unit)
+{
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
 
@@ -251,7 +254,8 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 // Command option -r indicate "rate controlled" simulation.
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
-void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string input_scale)
+void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
+												  string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -305,7 +309,8 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 // -m [val]b  ---> val = F_M0/F_B0
 // -m [val]r  ---> val = F_M0/F_R0
 //
-void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit)
+void Simulation::convertInputForcesMagnetic(double dimensionlessnumber,
+											string rate_unit)
 {
 	/* We plan to implement both non-Brownian and Brownian simulations.
 	 * Currently only Brownian simulation is implemented.
@@ -460,7 +465,6 @@ void Simulation::convertInputValues(string new_unit)
 
 		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
 	 */
-
 	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
@@ -486,7 +490,8 @@ void Simulation::convertInputValues(string new_unit)
 	}
 }
 
-void Simulation::setupNonDimensionalization(double dimensionlessnumber, string input_scale){
+void Simulation::setupNonDimensionalization(double dimensionlessnumber,
+											string input_scale){
 	/**
 	 \brief Non-dimensionalize the simulation.
 
@@ -673,7 +678,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		suffix = unit_longname[suffix];
 		input_force_units["thermal"] = suffix;
 		input_force_values["thermal"] = atof(numeral.c_str());
-	} else if (keyword == "critical_load_amplitude") {
+	 } else if (keyword == "critical_load_amplitude") {
 		caught_suffix = getSuffix(value, numeral, suffix);
 		suffix = unit_longname[suffix];
 		input_force_units["critical_load"] = suffix;
@@ -960,29 +965,32 @@ void Simulation::setDefaultParameters()
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
-void Simulation::openOutputFiles(bool binary_conf, const string & filename_import_positions, const string & filename_parameters, const string & string_control_parameters)
+void Simulation::openOutputFiles(bool binary_conf,
+								 const string & filename_import_positions,
+								 const string & filename_parameters,
+								 const string & string_control_parameters)
 {
 	/**
 	  \brief Set up the output files
-
+	 
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
 	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters, string_control_parameters);
 	stringstream data_header;
 	createDataHeader(data_header);
 
-	outdata.setFile("data_" + sys.simu_name + ".dat", data_header.str());
-	outdata_st.setFile("st_" +sys.simu_name + ".dat", data_header.str());
+	outdata.setFile("data_"+sys.simu_name+".dat", data_header.str());
+	outdata_st.setFile("st_"+sys.simu_name+".dat", data_header.str());
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setFile("pst_" +sys.simu_name + ".dat", data_header.str());
+		outdata_pst.setFile("pst_"+sys.simu_name+".dat", data_header.str());
 	}
-	string time_filename = "t_" + sys.simu_name + ".dat";
+	string time_filename = "t_"+sys.simu_name+".dat";
 	fout_time.open(time_filename.c_str());
-	string input_filename = "input_" + sys.simu_name + ".dat";
+	string input_filename = "input_"+sys.simu_name+".dat";
 	fout_input.open(input_filename.c_str());
 
 	if (p.out_data_particle) {
-		string particle_filename = "par_" + sys.simu_name + ".dat";
+		string particle_filename = "par_"+sys.simu_name+".dat";
 		fout_particle.open(particle_filename.c_str());
 		outputDataHeader(fout_particle);
 		//
@@ -1088,7 +1096,8 @@ void Simulation::importConfiguration(const string & filename_import_positions)
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary(ifstream &file_import, const string & filename_import_positions)
+void Simulation::importConfigurationBinary(ifstream &file_import,
+										   const string & filename_import_positions)
 {
 	/**
 	  \brief Read a binary file input configuration.
@@ -1125,7 +1134,6 @@ void Simulation::importConfigurationBinary(ifstream &file_import, const string &
 		radius.push_back(r_);
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-
 }
 
 void Simulation::importContactsBinary(ifstream &file_import)
@@ -1159,7 +1167,10 @@ void Simulation::importContactsBinary(ifstream &file_import)
 	sys.setContacts(cont_states);
 }
 
-void Simulation::prepareSimulationName(bool binary_conf, const string & filename_import_positions, const string & filename_parameters, const string & string_control_parameters)
+void Simulation::prepareSimulationName(bool binary_conf,
+									   const string & filename_import_positions,
+									   const string & filename_parameters,
+									   const string & string_control_parameters)
 {
 	/**
 	  \brief Determine simulation name.
