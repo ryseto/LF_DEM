@@ -96,7 +96,7 @@ public:
 	 * - check breakup of static friction
 	 * - State (deactivation, contact)
 	 */
-	void updateState(bool &deactivated);
+	void updateState(bool& deactivated);
 	void updateContactState();
 	void activate(unsigned short i, unsigned short j,
 				  double interaction_range_);
@@ -126,7 +126,7 @@ public:
 	{
 		return (i == p0 ? p1 : p0);
 	}
-	inline void	get_par_num(unsigned short &i, unsigned short &j)
+	inline void	get_par_num(unsigned short& i, unsigned short& j)
 	{
 		i = p0, j = p1;
 	}

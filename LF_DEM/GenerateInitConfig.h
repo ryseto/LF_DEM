@@ -88,7 +88,7 @@ private:
 	void outputPositionData();
 
 public:
-	GenerateInitConfig(): sys(System(p,events)) {};
+	GenerateInitConfig(): sys(System(p, events)) {};
 	int generate(int rand_seed_, bool magnetic_config);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

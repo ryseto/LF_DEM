@@ -25,7 +25,7 @@
 
 using namespace std;
 
-System::System(ParameterSet &ps, list <Event> &ev):
+System::System(ParameterSet& ps, list <Event>& ev):
 events(ev),
 p(ps),
 brownian(false),
@@ -268,8 +268,8 @@ void System::allocatePositionRadius()
 	radius = new double [np];
 }
 
-void System::setConfiguration(const vector <vec3d> &initial_positions,
-							  const vector <double> &radii,
+void System::setConfiguration(const vector <vec3d>& initial_positions,
+							  const vector <double>& radii,
 							  double lx_, double ly_, double lz_)
 {
 	/**
@@ -317,14 +317,14 @@ void System::setConfiguration(const vector <vec3d> &initial_positions,
 	cout << indent << "volume_fraction = " << volume_fraction << endl;
 }
 
-void System::setContacts(const vector <struct contact_state> &cs)
+void System::setContacts(const vector <struct contact_state>& cs)
 {
 	/**
 		\brief Set a list of contacts with their state variables.
 
 		Used to restart the simulation from a given state.
 	 */
-	for (const auto &c : cs) {
+	for (const auto& c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
 			interaction[k].get_par_num(p0, p1);
@@ -335,7 +335,7 @@ void System::setContacts(const vector <struct contact_state> &cs)
 	}
 }
 
-void System::getContacts(vector <struct contact_state> &cs)
+void System::getContacts(vector <struct contact_state>& cs)
 {
 	/**
 		\brief Get the list of contacts with their state variables.
@@ -363,8 +363,8 @@ void System::setMagneticMomentZero()
 	}
 }
 
-void System::setMagneticConfiguration(const vector <vec3d> &magnetic_moment_,
-									  const vector <double> &magnetic_susceptibility_)
+void System::setMagneticConfiguration(const vector <vec3d>& magnetic_moment_,
+									  const vector <double>& magnetic_susceptibility_)
 {
 	magnetic_susceptibility.resize(np);
 	magnetic_moment = new vec3d [np];
@@ -750,7 +750,9 @@ void System::eventShearJamming(){
 	}
 }
 
-void System::timeEvolutionEulersMethod(bool calc_stress, const string & time_or_strain, const double & value_end)
+void System::timeEvolutionEulersMethod(bool calc_stress,
+									   const string& time_or_strain,
+									   const double& value_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -778,7 +780,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress, const string & time_or_
  ******************************************** Mid-Point Scheme ***************************************
  ****************************************************************************************************/
 
-void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,  const string & time_or_strain, const double & value_end)
+void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
+												   const string& time_or_strain,
+												   const double& value_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -872,7 +876,8 @@ void System::adaptTimeStep()
 	}
 }
 
-void System::adaptTimeStep(const string & time_or_strain, const double & value_end)
+void System::adaptTimeStep(const string& time_or_strain,
+						   const double& value_end)
 {
 	/**
 	\brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
@@ -889,7 +894,8 @@ void System::adaptTimeStep(const string & time_or_strain, const double & value_e
 	}
 }
 
-void System::timeStepMove(const string & time_or_strain, const double & value_end)
+void System::timeStepMove(const string& time_or_strain,
+						  const double& value_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
@@ -931,7 +937,8 @@ void System::timeStepMove(const string & time_or_strain, const double & value_en
 	updateInteractions();
 }
 
-void System::timeStepMovePredictor(const string & time_or_strain, const double & value_end)
+void System::timeStepMovePredictor(const string& time_or_strain,
+								   const double& value_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
@@ -1006,7 +1013,9 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-bool System::keepRunning(const string & time_or_strain, const double & value_end){
+bool System::keepRunning(const string& time_or_strain,
+						 const double& value_end)
+{
 	bool keep_running;
 	if (time_or_strain == "strain") {
 		keep_running = (fabs(get_shear_strain()) < value_end-1e-8) && events.empty();
@@ -1016,7 +1025,8 @@ bool System::keepRunning(const string & time_or_strain, const double & value_end
 	return keep_running;
 }
 
-void System::timeEvolution(const string & time_or_strain, const double &  value_end)
+void System::timeEvolution(const string& time_or_strain,
+						   const double&  value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system until time_end
@@ -1071,7 +1081,7 @@ void System::checkNewInteraction()
 	int zshift;
 	double sq_dist;
 	for (int i=0; i<np-1; i++) {
-		for (const int &j : boxset.neighborhood(i)) {
+		for (const int& j : boxset.neighborhood(i)) {
 			if (j > i) {
 				if (interaction_partners[i].find(j) == interaction_partners[i].end()) {
 					pos_diff = position[j]-position[i];
@@ -1262,7 +1272,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-						const vec3d &nr_vec = inter->nvec;
+						const vec3d& nr_vec = inter->nvec;
 						inter->lubrication.calcXFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i,
 													 inter->lubrication.scaledXA0(), 0, 0, 0);
@@ -1303,7 +1313,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-						const vec3d &nr_vec = inter->nvec;
+						const vec3d& nr_vec = inter->nvec;
 						inter->lubrication.calcXYFunctions();
 						stokes_solver.addToDiagBlock(nr_vec, i,
 													 inter->lubrication.scaledXA0(),
@@ -1417,7 +1427,7 @@ void System::setMagneticForceToParticle()
 				magnetic_torque[i] = cross(magnetic_moment[i], external_magnetic_field);
 			}
 		}
-		for (const auto & mf : magnetic_force_stored) {
+		for (const auto& mf : magnetic_force_stored) {
 			magnetic_force[mf.second.first] += mf.first;
 			magnetic_force[mf.second.second] -= mf.first;
 		}
@@ -1425,7 +1435,7 @@ void System::setMagneticForceToParticle()
 		for (int i=0; i<np; i++) {
 			magnetic_force[i].reset();
 		}
-		for (const auto & mf : magnetic_force_stored) {
+		for (const auto& mf : magnetic_force_stored) {
 			magnetic_force[mf.second.first] += mf.first;
 			magnetic_force[mf.second.second] -= mf.first;
 		}
@@ -1691,7 +1701,7 @@ void System::computeVelocities(bool divided_velocities)
 	stokes_solver.solvingIsDone();
 }
 
-void System::displacement(int i, const vec3d &dr)
+void System::displacement(int i, const vec3d& dr)
 {
 	position[i] += dr;
 	int z_shift = periodize(position[i]);
@@ -1707,7 +1717,7 @@ void System::displacement(int i, const vec3d &dr)
 }
 
 // [0,l]
-int System::periodize(vec3d &pos)
+int System::periodize(vec3d& pos)
 {
 	/* Lees-Edwards boundary condition
 	 *
@@ -1740,7 +1750,7 @@ int System::periodize(vec3d &pos)
 }
 
 // periodize + give z_shift= number of boundaries crossed in z-direction
-void System::periodize_diff(vec3d &pos_diff, int &zshift)
+void System::periodize_diff(vec3d& pos_diff, int& zshift)
 {
 	/* Lees-Edwards boundary condition
 	 * The displacement of the second particle along z direction
@@ -1772,7 +1782,7 @@ void System::periodize_diff(vec3d &pos_diff, int &zshift)
 	}
 }
 
-void System::periodize_diff(vec3d &pos_diff)
+void System::periodize_diff(vec3d& pos_diff)
 {
 	/* Used in simple periodic boundary condition
 	 * (not Lees-Edwards boundary condition)

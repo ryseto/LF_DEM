@@ -200,7 +200,7 @@ double GenerateInitConfig::computeGradient()
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();
 			rcont = sys.interaction[k].get_ro();
-			const vec3d &nr_vec = sys.interaction[k].nvec;
+			const vec3d& nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
@@ -307,11 +307,11 @@ void GenerateInitConfig::putRandom()
 void GenerateInitConfig::updateInteractions(int i)
 {
 	vector <Interaction*> inter_list;
-	for (auto && inter : sys.interaction_list[i]){
+	for (auto&& inter : sys.interaction_list[i]){
 		inter_list.push_back(inter);
 	}
 
-	for (auto &il : inter_list) {
+	for (auto& il : inter_list) {
 		if (il->is_active()) {
 			bool desactivated = false;
 			il->updateState(desactivated);

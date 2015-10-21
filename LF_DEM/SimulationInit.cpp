@@ -111,14 +111,14 @@ void Simulation::importPreSimulationData(string filename)
 }
 
 void Simulation::echoInputFiles(string in_args,
-								vector<string> &input_files)
+								vector<string>& input_files)
 {
 	/**
 	\brief Print the entire information needed to reproduce the simulation in Simulation::fout_input
 	*/
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
-	for (const string &in_file : input_files) {
+	for (const string& in_file : input_files) {
 		ifstream in_f;
 		string line;
 		in_f.open(in_file.c_str());
@@ -521,7 +521,7 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 }
 
 void Simulation::setupSimulation(string in_args,
-								 vector<string> &input_files,
+								 vector<string>& input_files,
 								 bool binary_conf,
 								 double dimensionlessnumber,
 								 string input_scale)
@@ -582,7 +582,6 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		importConfiguration(filename_import_positions);
 	}
-
 
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
@@ -801,7 +800,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	}
 }
 
-void Simulation::readParameterFile(const string & filename_parameters)
+void Simulation::readParameterFile(const string& filename_parameters)
 {
 	/**
 	 \brief Read and parse the parameter file
@@ -851,7 +850,6 @@ void Simulation::readParameterFile(const string & filename_parameters)
 	fin.close();
 	return;
 }
-
 
 void Simulation::setDefaultParameters()
 {
@@ -961,9 +959,9 @@ void Simulation::setDefaultParameters()
 }
 
 void Simulation::openOutputFiles(bool binary_conf,
-								 const string & filename_import_positions,
-								 const string & filename_parameters,
-								 const string & string_control_parameters)
+								 const string& filename_import_positions,
+								 const string& filename_parameters,
+								 const string& string_control_parameters)
 {
 	/**
 	  \brief Set up the output files
@@ -1034,7 +1032,7 @@ void Simulation::openOutputFiles(bool binary_conf,
 	}
 }
 
-void Simulation::importConfiguration(const string & filename_import_positions)
+void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
 	  \brief Read a text file input configuration.
@@ -1091,8 +1089,8 @@ void Simulation::importConfiguration(const string & filename_import_positions)
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary(ifstream &file_import,
-										   const string & filename_import_positions)
+void Simulation::importConfigurationBinary(ifstream& file_import,
+										   const string& filename_import_positions)
 {
 	/**
 	  \brief Read a binary file input configuration.
@@ -1163,9 +1161,9 @@ void Simulation::importContactsBinary(ifstream &file_import)
 }
 
 void Simulation::prepareSimulationName(bool binary_conf,
-									   const string & filename_import_positions,
-									   const string & filename_parameters,
-									   const string & string_control_parameters)
+									   const string& filename_import_positions,
+									   const string& filename_parameters,
+									   const string& string_control_parameters)
 {
 	/**
 	  \brief Determine simulation name.

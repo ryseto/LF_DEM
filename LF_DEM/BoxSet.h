@@ -100,7 +100,7 @@ public:
 	 *****/
 	std::vector<int>::iterator neighborhood_begin(int i);
 	std::vector<int>::iterator neighborhood_end(int i);
-	std::vector <int> & neighborhood(int i);
+	std::vector <int>& neighborhood(int i);
 	void printBoxNetwork();
 	void printBoxContainers();
 	void printNeighborhoodContainers();

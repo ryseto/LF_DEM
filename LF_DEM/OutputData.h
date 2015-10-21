@@ -39,7 +39,7 @@ private:
 	int getLineNumber() 
 	{
 		unsigned int line_nb = 0;
-		for (const auto & col : output_data) {
+		for (const auto& col : output_data) {
 			if ( line_nb == 0 && col.size() > 0 ) {
 				line_nb = col.size();
 			}
@@ -52,11 +52,12 @@ private:
 	}
 
 public:
-	OutputData():	first_time(true) {}
+	OutputData(): first_time(true) {}
 	~OutputData() {
 		fout.close();
 	}
-	void setFile (const std::string & fname, const std::string & data_header) 
+	void setFile (const std::string& fname,
+				  const std::string& data_header)
 	{
 		fout.open(fname.c_str());
 		fout << data_header;
@@ -70,13 +71,13 @@ public:
 			output_data.resize(number_of_data);
 			output_data_name.resize(number_of_data);
 			output_data_type.resize(number_of_data);
-			for (auto &od : output_data) {
+			for (auto& od : output_data) {
 				od.clear();
 			}
-			for (std::string &odn : output_data_name) {
+			for (std::string& odn : output_data_name) {
 				odn = "blank";
 			}
-			for (std::string &odt : output_data_type) {
+			for (std::string& odt : output_data_type) {
 				odt = "none";
 			}
 		}
@@ -132,7 +133,7 @@ public:
 			first_time = false;
 		}
 		for (int i=0; i<line_nb; i++) {
-			for (const auto & od : output_data) {
+			for (const auto& od : output_data) {
 				if (!od.empty()) {
 					fout << od[i] << " ";
 				} else {
@@ -141,7 +142,7 @@ public:
 			}
 			fout << std::endl;
 		}
-		for (auto & od : output_data) {
+		for (auto& od : output_data) {
 			od.clear();
 		}
 	}

@@ -11,7 +11,7 @@
 #include "Interaction.h"
 #include "System.h"
 
-Lubrication::Lubrication(Interaction *int_)
+Lubrication::Lubrication(Interaction* int_)
 {
 	interaction = int_;
 	nvec = &(interaction->nvec);
@@ -336,10 +336,10 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 // ie fills :
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
-void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-										const vec3d &oi, const vec3d &oj,
-										StressTensor &stresslet_i,
-										StressTensor &stresslet_j)
+void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
+										const vec3d& oi, const vec3d& oj,
+										StressTensor& stresslet_i,
+										StressTensor& stresslet_j)
 {
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
@@ -432,8 +432,8 @@ void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	stresslet_j += YHO_j;
 }
 
-void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
-									  StressTensor &stresslet_j)
+void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
+									  StressTensor& stresslet_j)
 {
 	/**
 		\brief The \f$ M:\hat{E}^{\infty} \f$ component of the stress.

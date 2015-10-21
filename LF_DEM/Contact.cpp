@@ -7,7 +7,7 @@
 #include "Interaction.h"
 #include "System.h"
 
-void Contact::init(System *sys_, Interaction *interaction_)
+void Contact::init(System* sys_, Interaction* interaction_)
 {
 	sys = sys_;
 	interaction = interaction_;
@@ -32,7 +32,7 @@ void Contact::init(System *sys_, Interaction *interaction_)
 
 void Contact::setSpringConstants()
 {
-	const double &ro_12 = interaction->ro_12;
+	const double& ro_12 = interaction->ro_12;
 	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	if (sys->friction) {
 		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled

@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 											 dimensionless_number, suffix, rheology_control);
-			} catch(runtime_error& e) {
+			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;
 			}

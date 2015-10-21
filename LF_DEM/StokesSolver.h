@@ -220,7 +220,7 @@ private:
 	 to blocks [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 */
-    void setRow(const vec3d &nvec, int ii, int jj,
+    void setRow(const vec3d& nvec, int ii, int jj,
 				double scaledXA, double scaledYA, double scaledYBtilde,	double scaledYB, double scaledYC);
     /*
      setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
@@ -230,7 +230,7 @@ private:
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int jj,
+    void setColumn(const vec3d& nvec, int jj,
 				   double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
@@ -253,8 +253,8 @@ public:
 	{
 		return _iterative;
 	}
-	void printResistanceMatrix(std::ostream &, std::string);
-	void printFactor(std::ostream &);
+	void printResistanceMatrix(std::ostream&, std::string);
+	void printFactor(std::ostream&);
 	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
@@ -276,7 +276,7 @@ public:
 	 - scaledYB * e_ijk nvec_k on TU part
 	 - scaledYC *(1 - |nvec><nvec|) on TW part
 	 */
-    void addToDiagBlock(const vec3d &nvec, int ii,
+    void addToDiagBlock(const vec3d& nvec, int ii,
 						double scaledXA, double scaledYA, double scaledYB, double scaledYC);
     /*
      setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYC) :
@@ -292,7 +292,7 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void setOffDiagBlock(const vec3d &nvec, int ii, int jj,
+    void setOffDiagBlock(const vec3d& nvec, int ii, int jj,
 						 double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC);
 	/*
 	 doneBlocks(int i) :
@@ -318,12 +318,12 @@ public:
 	void resetRHStorque();
     void addToRHS(double*);
     void addToRHSForce(int, double *);
-    void addToRHSForce(int, const vec3d &);
+    void addToRHSForce(int, const vec3d&);
     void addToRHSTorque(int, double *);
-    void addToRHSTorque(int, const vec3d &);
+    void addToRHSTorque(int, const vec3d&);
     void setRHS(double*);
-    void setRHSForce(int, const vec3d &);
-    void setRHSTorque(int, const vec3d &);
+    void setRHSForce(int, const vec3d&);
+    void setRHSTorque(int, const vec3d&);
     void getRHS(double*);
     /*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :

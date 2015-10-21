@@ -124,7 +124,7 @@ void StokesSolver::initialize()
 //}
 
 // Diagonal Blocks Terms, FT/UW version
-void StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC)
+void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC)
 {
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
@@ -165,7 +165,7 @@ void StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, do
 #ifdef TRILINOS
 	if (iterative()) {
 		int iidof = dof*ii;
-		cerr << " Error : StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYB, double scaledYC) not implemented for TRILINOS yet ! " << endl;
+		cerr << " Error : StokesSolver::addToDiagBlock(const vec3d& nvec, int ii, double scaledXA, double scaledYB, double scaledYC) not implemented for TRILINOS yet ! " << endl;
 		exit(1);
 		values[iidof  ][0] += scaledXA*n0n0; // 00
 		values[iidof  ][1] += scaledXA*n0n1; // 01
@@ -181,7 +181,7 @@ void StokesSolver::addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, do
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
-void StokesSolver::setOffDiagBlock(const vec3d &nvec, int ii, int jj,
+void StokesSolver::setOffDiagBlock(const vec3d& nvec, int ii, int jj,
 								   double scaledXA,
 								   double scaledYA, double scaledYB,
 								   double scaledYBtilde, double scaledYC)
@@ -509,7 +509,7 @@ void StokesSolver::addToRHSForce(int i, double *force_i)
 #endif
 }
 
-void StokesSolver::addToRHSForce(int i, const vec3d &force_i)
+void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 {
 	int i6 = 6*i;
 	if (direct()) {
@@ -544,7 +544,7 @@ void StokesSolver::addToRHSTorque(int i, double *torque_i)
 #endif
 }
 
-void StokesSolver::addToRHSTorque(int i, const vec3d &torque_i)
+void StokesSolver::addToRHSTorque(int i, const vec3d& torque_i)
 {
 	int i6_3 = 6*i+3;
 	if (direct()) {
@@ -590,7 +590,7 @@ void StokesSolver::setRHS(double* rhs)
 	}
 }
 
-void StokesSolver::setRHSForce(int i, const vec3d &force_i)
+void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 {
 	int i6 = 6*i;
 	if (direct()) {
@@ -600,13 +600,13 @@ void StokesSolver::setRHSForce(int i, const vec3d &force_i)
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-		cerr << " Error : StokesSolver:: setRHSForce(int i, const vec3d &force_i) not implemented for TRILINOS yet ! " << endl;
+		cerr << " Error : StokesSolver:: setRHSForce(int i, const vec3d& force_i) not implemented for TRILINOS yet ! " << endl;
 		exit(1);
 	}
 #endif
 }
 
-void StokesSolver::setRHSTorque(int i, const vec3d &torque_i)
+void StokesSolver::setRHSTorque(int i, const vec3d& torque_i)
 {
 	int i6_3 = 6*i+3;
 	if (direct()) {
@@ -616,7 +616,7 @@ void StokesSolver::setRHSTorque(int i, const vec3d &torque_i)
 	}
 #ifdef TRILINOS
 	if (iterative()) {
-		cerr << " Error : StokesSolver:: setRHSTorque(int i, const vec3d &torque_i) not implemented for TRILINOS yet ! " << endl;
+		cerr << " Error : StokesSolver:: setRHSTorque(int i, const vec3d& torque_i) not implemented for TRILINOS yet ! " << endl;
 		exit(1);		
 	}
 #endif
@@ -792,8 +792,8 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 	chol_solution = cholmod_solve (CHOLMOD_A, chol_L, chol_rhs, &chol_c) ;
 	cholmod_dense *r;
    	r = cholmod_copy_dense(chol_rhs, &chol_c);
-	double one [2] = {1,0}; 
-	double zero [2] = {0,0}; 
+	double one [2] = {1, 0};
+	double zero [2] = {0, 0};
 	cholmod_sdmult(chol_res_matrix,0,one,zero, chol_solution, r, &chol_c);
 	for (int i=0; i<res_matrix_linear_size; i++) {
 			vec[i] = ((double*)r->x)[i];
@@ -810,8 +810,8 @@ void StokesSolver::multiplyByResMat(double* vec)
 		((double*)r->x)[i] = vec[i];
 	}
 
-	double one [2] = {1,0}; 
-	double zero [2] = {0,0}; 
+	double one [2] = {1, 0};
+	double zero [2] = {0, 0};
 	cholmod_sdmult(chol_res_matrix,0,one,zero, r, r, &chol_c);
 	for (int i=0; i<res_matrix_linear_size; i++) {
 			vec[i] = ((double*)r->x)[i];

@@ -46,7 +46,7 @@ Simulation::~Simulation()
 bool Simulation::keepRunning()
 {
 	/** \brief Determine if we reached the end of the simulation.
-
+	 
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
 	if (time_end == -1) {
@@ -59,7 +59,7 @@ bool Simulation::keepRunning()
 void Simulation::setupEvents()
 {
 	/** \brief Set up the types of events to be watched by the System class.
-
+	 
 		Links System::eventLookUp to a specialized function according to the value of ParameterSet::event_handler .
 	 */
 	if (p.event_handler == "shear_jamming") {
@@ -76,11 +76,11 @@ void Simulation::setupEvents()
 void Simulation::handleEventsShearJamming()
 {
 	/** \brief Event handler to test for shear jamming
-
+	 
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto &ev : events) {
+	for (const auto& ev : events) {
 		if (ev.type == "negative_shear_rate") {
 			cout << " negative rate " << endl;
 			p.disp_max /= 1.1;
@@ -99,11 +99,11 @@ void Simulation::handleEventsShearJamming()
 void Simulation::handleEventsFragility()
 {
 	/** \brief Event handler to test for shear jamming
-
+	 
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto &ev : events) {
+	for (const auto& ev : events) {
 		if (ev.type == "negative_shear_rate") {
 			cout << " negative rate " << endl;
 			p.disp_max /= 1.1;
@@ -119,7 +119,7 @@ void Simulation::handleEventsFragility()
 void Simulation::handleEvents()
 {
 	/** \brief Handle the list of events that appears in the previous time step
-
+	 
 		This function dispatches to specialized handlers according to the value of ParameterSet::event_handler .
 	 */
 	if (p.event_handler == "shear_jamming") {
@@ -131,7 +131,9 @@ void Simulation::handleEvents()
 	events.clear();
 }
 
-void Simulation::generateOutput(double &next_output_data, double &next_output_config, int &binconf_counter)
+void Simulation::generateOutput(double& next_output_data,
+								double& next_output_config,
+								int& binconf_counter)
 {
 	/******************** OUTPUT DATA ********************/
 	evaluateData();
@@ -161,10 +163,10 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 			next_output_config +=  time_interval_output_config;
 		}
 	}
-/*****************************************************/
+	/*****************************************************/
 }
 
-void Simulation::timeEvolution(double &next_output_data)
+void Simulation::timeEvolution(double& next_output_data)
 {
 	if (time_interval_output_data == -1) {
 		next_output_data += strain_interval_output_data;
@@ -178,7 +180,7 @@ void Simulation::timeEvolution(double &next_output_data)
  * Main simulation
  */
 void Simulation::simulationSteadyShear(string in_args,
-									   vector<string> &input_files,
+									   vector<string>& input_files,
 									   bool binary_conf,
 									   double dimensionless_number,
 									   string input_scale,
@@ -201,21 +203,21 @@ void Simulation::simulationSteadyShear(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
+	
 	setupEvents();
-
+	
 	string indent = "  Simulation::\t";
 	cout << indent << "Time evolution started" << endl << endl;
-
+	
 	double next_output_data = 0;
 	double next_output_config = 0;
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		timeEvolution(next_output_data);
 		handleEvents();
-
+		
 		generateOutput(next_output_data, next_output_config, binconf_counter);
-
+		
 		if (time_end != -1) {
 			cout << "time: " << sys.get_time_in_simulation_units() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
 		} else {
@@ -245,7 +247,7 @@ void Simulation::simulationSteadyShear(string in_args,
 }
 
 void Simulation::simulationInverseYield(string in_args,
-										vector<string> &input_files,
+										vector<string>& input_files,
 										bool binary_conf,
 										double dimensionless_number,
 										string input_scale,
@@ -253,7 +255,7 @@ void Simulation::simulationInverseYield(string in_args,
 {
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
-
+	
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
 	} else {
@@ -270,10 +272,10 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
-
+	
 	double next_output_data = 0;
 	double next_output_config = 0;
-
+	
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
@@ -282,7 +284,7 @@ void Simulation::simulationInverseYield(string in_args,
 			next_output_data +=  time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
-
+		
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputData(); // new
@@ -299,7 +301,7 @@ void Simulation::simulationInverseYield(string in_args,
 			}
 		}
 		/*****************************************************/
-
+		
 		cout << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
 			&& abs(sys.get_shear_rate()) < p.rest_threshold) {
@@ -324,12 +326,12 @@ void Simulation::simulationInverseYield(string in_args,
 			timestep_1 = sys.get_total_num_timesteps();
 		}
 	}
-
+	
 	now = time(NULL);
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
-
+	
 	string	filename_parameters = input_files[1];
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
@@ -337,12 +339,12 @@ void Simulation::simulationInverseYield(string in_args,
 		 * Here is just to export the position data.
 		 */
 		string filename_configuration = input_files[0];
- 		outputFinalConfiguration(filename_configuration);
+		outputFinalConfiguration(filename_configuration);
 	}
 }
 
 void Simulation::simulationMagnetic(string in_args,
-									vector<string> &input_files,
+									vector<string>& input_files,
 									bool binary_conf,
 									double dimensionless_number,
 									string input_scale,
@@ -409,7 +411,7 @@ void Simulation::simulationMagnetic(string in_args,
 		 * Here is just to export the position data.
 		 */
 		string filename_configuration = input_files[0];
- 		outputFinalConfiguration(filename_configuration);
+		outputFinalConfiguration(filename_configuration);
 	}
 }
 
@@ -431,7 +433,7 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	inv.type = type;
 	inv.name = keyword;
 	inv.value = value_ptr;
-
+	
 	string numeral, suffix;
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
@@ -439,7 +441,7 @@ void Simulation::catchSuffixedValue(string type, string keyword, string value_st
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
 	input_values.push_back(inv);
-
+	
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
@@ -457,9 +459,9 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 {
 	/**
 		\brief Saves the current configuration of the system in a binary file.
-
+	 
 		In the current implementation, it stores particle positions, x and y strain, and contact states.
-	*/
+	 */
 	int np = sys.get_np();
 	vector< vector<double> > pos(np);
 	int dims = 4;
@@ -520,11 +522,11 @@ void Simulation::evaluateData()
 {
 	/**
 	 \brief Get rheological data from the System class.
-
+	 
 	 In this method we keep the internal units. There is no conversion to output units at this stage
-
+	 
 	 */
-
+	
 	sys.analyzeState();
 	sys.calcStress();
 	sys.calcLubricationForce();
@@ -534,16 +536,16 @@ void Simulation::outputData()
 {
 	/**
 	 \brief Output data.
-
+	 
 	 Stress data are converted in units of
 	 \f$\eta_0\dot\gamma\f$. Other data are output in the units used
 	 in the System class (these can be hydrodynamic, Brownian or
 	 repulsive force units).
-
+	 
 	 \b NOTE: this behavior should be changed
 	 and made more consistent in the future.
 	 */
-
+	
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		ostringstream error_str;
@@ -551,17 +553,17 @@ void Simulation::outputData()
 		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
+	
 	outdata.init(37, output_unit_scales);
-
+	
 	double sr = sys.get_shear_rate();
-
+	
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
-
+	
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
-
+	
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
 	outdata.entryData(6, "Viscosity(lub)", "viscosity", shearStressComponent(sys.total_hydro_stress,p.theta_shear)/sr);
 	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressXF,p.theta_shear)/sr);
@@ -608,12 +610,12 @@ void Simulation::outputData()
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
 	outdata.writeToFile();
-
+	
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
+	
 	outdata_st.init(8, output_unit_scales);
-
+	
 	outdata_st.entryData(1, "time", "time", sys.get_time());
 	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
@@ -623,13 +625,13 @@ void Simulation::outputData()
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stressXF+sys.total_repulsive_stressGU);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.writeToFile();
-
+	
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
+		
 		int nb_of_fields = strlen(p.out_particle_stress.c_str());
 		outdata_pst.init(nb_of_fields, output_unit_scales);
-
+		
 		for (int i=0; i<sys.get_np(); i++) {
 			int field_index = 0;
 			if (p.out_particle_stress.find('t') != string::npos) {
@@ -661,7 +663,7 @@ void Simulation::outputData()
 	}
 }
 
-void Simulation::getSnapshotHeader(stringstream &snapshot_header){
+void Simulation::getSnapshotHeader(stringstream& snapshot_header){
 	snapshot_header << "# " << sys.get_shear_strain() << ' ';
 	snapshot_header << sys.shear_disp.x << ' ';
 	snapshot_header << getRate() << ' ';
@@ -738,7 +740,7 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	return vec3d(x,y,z);
 }
 
-void Simulation::createDataHeader(stringstream &data_header)
+void Simulation::createDataHeader(stringstream& data_header)
 {
 	data_header << "# LF_DEM version " << GIT_VERSION << endl;
 	data_header << "# np " << sys.get_np() << endl;
@@ -748,7 +750,7 @@ void Simulation::createDataHeader(stringstream &data_header)
 	data_header << "# Lz " << sys.get_lz() << endl;
 }
 
-void Simulation::outputDataHeader(ofstream &fout)
+void Simulation::outputDataHeader(ofstream& fout)
 {
 	stringstream data_header;
 	createDataHeader(data_header);
@@ -790,11 +792,11 @@ void Simulation::outputConfigurationData()
 			fout_particle << sys.angle_external_magnetic_field;
 		}
 		fout_particle << endl;
-
+		
 		for (int i=0; i<np; i++) {
-			const vec3d &r = pos[i];
-			const vec3d &v = vel[i];
-			const vec3d &o = sys.ang_velocity[i];
+			const vec3d& r = pos[i];
+			const vec3d& v = vel[i];
+			const vec3d& o = sys.ang_velocity[i];
 			double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
 			double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
 			double brownian_xzstressGU = 0;
@@ -878,7 +880,7 @@ void Simulation::outputConfigurationData()
 	}
 }
 
-void Simulation::outputFinalConfiguration(const string & filename_import_positions)
+void Simulation::outputFinalConfiguration(const string& filename_import_positions)
 {
 	cout << "Output final configuration" << endl;
 	ofstream fout_finalconfig;

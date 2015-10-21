@@ -80,13 +80,13 @@ void Box::build_neighborhood_container()
 	neighborhood_container.resize(size);
 	int j = 0;
 	// own box
-	for (const int &k : container) {
+	for (const int& k : container) {
 		neighborhood_container[j] = k;
 		j++;
 	}
 	// neighboring boxes
 	for (const auto& box : _neighbors) {
-		for (const int &k : box->container) {
+		for (const int& k : box->container) {
 			neighborhood_container[j] = k;
 			j++;
 		}

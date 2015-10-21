@@ -136,7 +136,7 @@ void BoxSet::assignNeighborsBulk()
 	for (auto& bx : BulkBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
-		int m10p1 [3] = {-1,0,1};
+		int m10p1[3] = {-1, 0, 1};
 		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -205,7 +205,7 @@ void BoxSet::assignNeighborsTopBottom()
 		vec3d delta;
 
 		// boxes at same level first: these are fixed once and for all in the simulation
-		int m10p1 [3] = {-1,0,1};
+		int m10p1[3] = {-1, 0, 1};
 		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -234,7 +234,6 @@ void BoxSet::assignNeighbors()
 	assignNeighborsTop();
 	// top/bottom boxes
 	assignNeighborsTopBottom();
-
 }
 
 BoxSet::~BoxSet()
@@ -270,7 +269,7 @@ void BoxSet::updateNeighbors()
 		}
 	}
 
-	for (auto & bx : BottomBoxes) {
+	for (auto& bx : BottomBoxes) {
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : bottom_probing_positions) {
@@ -363,7 +362,7 @@ void BoxSet::printBoxNetwork()
 {
 	for (const auto& bx : Boxes) {
 		const auto& neighbors = bx->neighbors();
-		for (const auto & neighbor_box : neighbors) {
+		for (const auto& neighbor_box : neighbors) {
 			cerr << " "  << neighbors.size() << " " << bx->position << " ";
 			cerr << neighbor_box->position << " " << bx->is_top() << " ";
 			cerr << bx->is_bottom() << endl;
@@ -374,7 +373,7 @@ void BoxSet::printBoxNetwork()
 void BoxSet::printBoxContainers()
 {
 	for (const auto& bx : Boxes) {
-		for(const auto& j : bx->container){
+		for (const auto& j : bx->container) {
 			cerr << bx->position << " " << j << endl;
 		}
 	}
@@ -383,7 +382,7 @@ void BoxSet::printBoxContainers()
 void BoxSet::printNeighborhoodContainers()
 {
 	for (const auto& bx : Boxes) {
-		for(const auto& j : bx->neighborhood_container){
+		for (const auto& j : bx->neighborhood_container) {
 			cerr << bx->position << " " << j << endl;
 		}
 	}

@@ -105,7 +105,7 @@ System::calcStressPerParticle()
 		vec3d pos_diff;
 		StressTensor magstressXF;
 		magneticstressXF.clear();
-		for (const auto & mf : magnetic_force_stored) {
+		for (const auto& mf : magnetic_force_stored) {
 			/* mf.first = force0
 			 */
 			pos_diff = position[mf.second.second]-position[mf.second.first];
@@ -200,7 +200,7 @@ System::calcStress()
 	if (magnetic) {
 		// XF contribution
 		total_magnetic_stressXF.reset();
-		for (const auto &ms : magneticstressXF) {
+		for (const auto& ms : magneticstressXF) {
 			total_magnetic_stressXF += ms;
 		}
 		total_magnetic_stressXF /= system_volume;
