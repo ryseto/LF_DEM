@@ -78,11 +78,13 @@ private:
 	void openOutputFiles(bool binary_conf,
 						 const std::string& filename_import_positions,
 						 const std::string& filename_parameters,
-						 const std::string& string_control_parameters);
+						 const std::string& string_control_parameters,
+						 const std::string& simu_identifier);
 	void prepareSimulationName(bool binary_conf,
 							   const std::string& filename_import_positions,
 							   const std::string& filename_parameters,
-							   const std::string& string_control_parameters);
+							   const std::string& string_control_parameters,
+							   const std::string& simu_identifier);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void autoSetParameters(const std::string& keyword,
@@ -143,7 +145,8 @@ public:
 							   bool binary_conf,
 							   double dimensionless_number,
 							   std::string input_scale,
-							   std::string control_variable);
+							   std::string control_variable,
+							   std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 	
 	void simulationInverseYield(std::string in_args,
@@ -151,20 +154,23 @@ public:
 								bool binary_conf,
 								double dimensionless_number,
 								std::string input_scale,
-								std::string control_variable);
+								std::string control_variable,
+								std::string simu_identifier);
 	
 	void simulationMagnetic(std::string in_args,
 							std::vector<std::string>& input_files,
 							bool binary_conf,
 							double dimensionless_number,
 							std::string input_scale,
-							std::string control_variable);
+							std::string control_variable,
+							std::string simu_identifier);
 	
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
 						 double dimensionlessnumber,
-						 std::string input_scale);
+						 std::string input_scale,
+						 std::string simu_identifier);
 	
 	void setControlVariable(const std::string& var)
 	{

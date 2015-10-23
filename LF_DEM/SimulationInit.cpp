@@ -524,7 +524,8 @@ void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
 								 double dimensionlessnumber,
-								 string input_scale)
+								 string input_scale,
+								 string simu_identifier)
 {
 	/**
 	 \brief Set up the simulation.
@@ -636,7 +637,8 @@ void Simulation::setupSimulation(string in_args,
 	}
 	p_initial = p;
 
-	openOutputFiles(binary_conf, filename_import_positions, filename_parameters, string_control_parameters.str());
+	openOutputFiles(binary_conf, filename_import_positions, filename_parameters,
+					string_control_parameters.str(), simu_identifier);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -961,14 +963,16 @@ void Simulation::setDefaultParameters()
 void Simulation::openOutputFiles(bool binary_conf,
 								 const string& filename_import_positions,
 								 const string& filename_parameters,
-								 const string& string_control_parameters)
+								 const string& string_control_parameters,
+								 const string& simu_identifier)
 {
 	/**
 	  \brief Set up the output files
 	 
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters, string_control_parameters);
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+						  string_control_parameters, simu_identifier);
 	stringstream data_header;
 	createDataHeader(data_header);
 
@@ -1163,7 +1167,8 @@ void Simulation::importContactsBinary(ifstream &file_import)
 void Simulation::prepareSimulationName(bool binary_conf,
 									   const string& filename_import_positions,
 									   const string& filename_parameters,
-									   const string& string_control_parameters)
+									   const string& string_control_parameters,
+									   const string& simu_identifier)
 {
 	/**
 	  \brief Determine simulation name.
@@ -1190,6 +1195,10 @@ void Simulation::prepareSimulationName(bool binary_conf,
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters;
+	if (simu_identifier != "") {
+		ss_simu_name << "_";
+		ss_simu_name << simu_identifier;
+	}
 	sys.simu_name = ss_simu_name.str();
 	string indent = "  Simulation::\t";
 	cout << indent << "filename: " << sys.simu_name << endl;

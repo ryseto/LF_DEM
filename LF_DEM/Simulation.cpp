@@ -184,10 +184,11 @@ void Simulation::simulationSteadyShear(string in_args,
 									   bool binary_conf,
 									   double dimensionless_number,
 									   string input_scale,
-									   string control_variable)
+									   string control_variable,
+									   string simu_identifier)
 {
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
 	} else {
@@ -251,10 +252,11 @@ void Simulation::simulationInverseYield(string in_args,
 										bool binary_conf,
 										double dimensionless_number,
 										string input_scale,
-										string control_variable)
+										string control_variable,
+										string simu_identifier)
 {
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
@@ -348,14 +350,16 @@ void Simulation::simulationMagnetic(string in_args,
 									bool binary_conf,
 									double dimensionless_number,
 									string input_scale,
-									string control_variable)
+									string control_variable,
+									string simu_identifier)
 {
 	/* Monolayer: Particles are confined in y = 0 plane.
 	 *
 	 *
 	 */
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	setupSimulation(in_args, input_files, binary_conf,
+					dimensionless_number, input_scale, simu_identifier);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double time_output_data = 0;
