@@ -140,15 +140,13 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	std::list <Event>& events;
-
 	/*
 	 * Simulation for magnetic particles
 	 */
 	double sq_magnetic_interaction_range;
 	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
 	std::vector<std::vector<int> > magnetic_pair;
-	bool fixed_particle_test;
-	std::vector<int> fixed_particles;
+	std::vector<bool> movable; // displacement() acts only if movable[i] is true.
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
 

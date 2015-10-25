@@ -42,8 +42,7 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-magnetic_rotation_active(false),
-fixed_particle_test(false)
+magnetic_rotation_active(false)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -399,21 +398,14 @@ void System::randomSelectFixParticles()
 		return;
 	}
 	int num_fixed_particle = (int)(np*p.fixed_particle_fraction);
+	int counter = 0;
 	do {
-		bool not_selected_yet = true;
 		int picked_particle = (int)(drand48()*np);
-		for (const int i : fixed_particles) {
-			if (i == picked_particle) {
-				not_selected_yet = false;
-				break;
-			}
-			
+		if (movable[picked_particle] == true) {
+			movable[picked_particle] = false;
+			counter++;
 		}
-		if (not_selected_yet) {
-			fixed_particles.push_back(picked_particle);
-		}
-	} while (fixed_particles.size() < num_fixed_particle);
-	fixed_particle_test = true;
+	} while (counter < num_fixed_particle);
 }
 
 void System::updateUnscaledContactmodel()
@@ -682,6 +674,13 @@ void System::setupSystem(string control)
 	initializeBoxing();
 
 	checkNewInteraction();
+	
+	/* When movable[i] is false, the particle movement is forbidden.
+	 */
+	movable.resize(np);
+	for (int i=0; i<np; i++) {
+		movable[i] = true;
+	}
 	/* Pre-calculation
 	 */
 	/* einstein_stress may be affected by sd_coeff.
@@ -1727,20 +1726,19 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::displacement(int i, const vec3d& dr)
 {
-	if (fixed_particle_test) {
-		/* This part is for a test in magnetic crystalzation work.
+	if (movable[i]) {
+		position[i] += dr;
+		int z_shift = periodize(position[i]);
+		/* Note:
+		 * When the position of the particle is periodized,
+		 * we need to modify the velocity, which was already evaluated.
+		 * The position and velocity will be used to calculate the contact forces.
 		 */
-		for (const int j : fixed_particles) {if (i == j) {return;}}
-	}
-	position[i] += dr;
-	int z_shift = periodize(position[i]);
-	/* Note:
-	 * When the position of the particle is periodized,
-	 * we need to modify the velocity, which was already evaluated.
-	 * The position and velocity will be used to calculate the contact forces.
-	 */
-	if (z_shift != 0) {
-		velocity[i] += z_shift*vel_difference;
+		if (z_shift != 0) {
+			velocity[i] += z_shift*vel_difference;
+		}
+	} else {
+		velocity[i].reset();
 	}
 	boxset.box(i);
 }
