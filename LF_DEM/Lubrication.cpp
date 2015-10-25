@@ -27,7 +27,7 @@ void Lubrication::getGeometry()
 	nznz = (interaction->nvec).z*(interaction->nvec).z;
 	if (sys->p.cross_shear) {
 		double costheta, sintheta;
-		std::tie( costheta, sintheta ) = sys->getCosSinShearAngle();
+		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		// nnE = nynz;
 		nnE = costheta*nxnz + sintheta*nynz;
 	} else {
@@ -356,7 +356,7 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	XGU_j *= cXG_j;
 	stresslet_i = XGU_i;
 	stresslet_j = XGU_j;
-	if (sys->p.lubrication_model == 1){
+	if (sys->p.lubrication_model == 1) {
 		return;
 	}
 	StressTensor YGU_i;

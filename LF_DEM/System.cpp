@@ -1651,6 +1651,7 @@ void System::computeVelocities(bool divided_velocities)
 			buildMagneticForceTerms(false);
 		}
 		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
+		// @@@ I may need to use the force version: stokes_solver.solve(na_velocity) for magnetic work.
 	}
 	if (brownian) {
 		if (in_predictor) {
