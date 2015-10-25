@@ -245,6 +245,10 @@ void System::allocateRessources()
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
+	movable.resize(np);
+	for (int i=0; i<np; i++) {
+		movable[i] = true;
+	}
 }
 
 void System::setInteractions_GenerateInitConfig()
@@ -672,15 +676,7 @@ void System::setupSystem(string control)
 	stokes_solver.initialize();
 	dt = p.dt;
 	initializeBoxing();
-
 	checkNewInteraction();
-	
-	/* When movable[i] is false, the particle movement is forbidden.
-	 */
-	movable.resize(np);
-	for (int i=0; i<np; i++) {
-		movable[i] = true;
-	}
 	/* Pre-calculation
 	 */
 	/* einstein_stress may be affected by sd_coeff.
