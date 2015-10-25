@@ -146,7 +146,6 @@ private:
 	double sq_magnetic_interaction_range;
 	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
 	std::vector<std::vector<int> > magnetic_pair;
-	std::vector<bool> movable; // displacement() acts only if movable[i] is true.
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
 
@@ -201,7 +200,8 @@ private:
 	vec3d *magnetic_moment;
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
-	std::vector <double> magnetic_susceptibility;
+	std::vector<double> magnetic_susceptibility;
+	std::vector<bool> movable; // displacement() acts only if movable[i] is true.
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // per particle

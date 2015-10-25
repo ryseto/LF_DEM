@@ -827,7 +827,11 @@ void Simulation::outputConfigurationData()
 					fout_particle << ' ' << sys.magnetic_moment[i].y;
 					fout_particle << ' ' << sys.magnetic_moment[i].z;
 				} else {
-					fout_particle << ' ' << sys.magnetic_susceptibility[i];
+					if (sys.movable[i]) {
+						fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
+					} else {
+						fout_particle << ' ' << sys.magnetic_susceptibility[i]+100; // 101: fixed magnetic 100: fixed non-magnetic
+					}
 				}
 			}
 			fout_particle << endl;
