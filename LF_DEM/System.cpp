@@ -42,7 +42,8 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-magnetic_rotation_active(false)
+magnetic_rotation_active(false),
+fixed_particle_test(false)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -390,6 +391,29 @@ void System::setMagneticConfiguration(const vector <vec3d>& magnetic_moment_,
 			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
 		}
 	}
+}
+
+void System::randomSelectFixParticles()
+{
+	if (p.fixed_particle_fraction == 0) {
+		return;
+	}
+	int num_fixed_particle = (int)(np*p.fixed_particle_fraction);
+	do {
+		bool not_selected_yet = true;
+		int picked_particle = (int)(drand48()*np);
+		for (const int i : fixed_particles) {
+			if (i == picked_particle) {
+				not_selected_yet = false;
+				break;
+			}
+			
+		}
+		if (not_selected_yet) {
+			fixed_particles.push_back(picked_particle);
+		}
+	} while (fixed_particles.size() < num_fixed_particle);
+	fixed_particle_test = true;
 }
 
 void System::updateUnscaledContactmodel()
@@ -1703,6 +1727,11 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::displacement(int i, const vec3d& dr)
 {
+	if (fixed_particle_test) {
+		/* This part is for a test in magnetic crystalzation work.
+		 */
+		for (const int j : fixed_particles) {if (i == j) {return;}}
+	}
 	position[i] += dr;
 	int z_shift = periodize(position[i]);
 	/* Note:

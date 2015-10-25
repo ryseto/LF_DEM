@@ -787,6 +787,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
 	} else if (keyword == "time_init_relax") {
 		catchSuffixedValue("time", keyword, value, &p.time_init_relax);
+	} else if (keyword == "fixed_particle_fraction") {
+		p.fixed_particle_fraction = atof(value.c_str());
 	} else if (keyword == "out_particle_stress") {
 		p.out_particle_stress = value;
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());

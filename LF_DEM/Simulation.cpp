@@ -391,6 +391,7 @@ void Simulation::simulationMagnetic(string in_args,
 	while (keepRunning()) {
 		if (initial_relax && sys.get_time() >= 0) {
 			sys.setInducedMagneticMoment();
+			sys.randomSelectFixParticles();			
 			initial_relax = false;
 		}
 		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;

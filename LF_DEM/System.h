@@ -147,6 +147,8 @@ private:
 	double sq_magnetic_interaction_range;
 	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
 	std::vector<std::vector<int> > magnetic_pair;
+	bool fixed_particle_test;
+	std::vector<int> fixed_particles;
 	void updateMagneticPair();
 	double time_update_magnetic_pair;
 
@@ -316,6 +318,7 @@ private:
 	void setInducedMagneticMoment();
 	void setMagneticMomentZero();
 	void calcMagneticEnergy();
+	void randomSelectFixParticles();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
