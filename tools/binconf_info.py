@@ -5,7 +5,7 @@ import tty, sys, termios
 
 def misuse():
     misuse_string = """
-          Utilisation: 
+          Utilisation:
            %s conf_file_in_binary_fmt
 """
     print(misuse_string % (sys.argv[0]))
@@ -70,13 +70,13 @@ if ch=="y":
         print(x,y,z,r)
 
 
-    nc = struct.unpack("=I",conf[loc:isize])[0]
+    nc = struct.unpack("I",conf[loc:loc+isize])[0]
     loc += isize
-
+    print(nc)
     for i in range(nc):
-        p0 = struct.unpack("i",conf[loc:uisize])[0]
+        p0 = struct.unpack("H",conf[loc:loc+uisize])[0]
         loc += uisize
-        p1 = truct.unpack("i",conf[loc:uisize])[0]
+        p1 = struct.unpack("H",conf[loc:loc+uisize])[0]
         loc += uisize
         dtx = struct.unpack("d",conf[loc:loc+dsize])[0]
         loc += dsize
@@ -90,5 +90,5 @@ if ch=="y":
         loc += dsize
         drz = struct.unpack("d",conf[loc:loc+dsize])[0]
         loc += dsize
-        
+
         print(p0,p1,dtx,dty,dtz,drx,dry,drz)
