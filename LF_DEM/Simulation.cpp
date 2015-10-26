@@ -144,7 +144,7 @@ void Simulation::generateOutput(double& next_output_data,
 	if (time_interval_output_config == -1) {
 		if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
 			if(p.out_binary_conf){
-				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+				string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
 				outputConfigurationBinary(binconf_filename);
 			} else {
 				outputConfigurationData();
@@ -155,12 +155,12 @@ void Simulation::generateOutput(double& next_output_data,
 		if (sys.get_time() >= next_output_config-1e-8) {
 			outputConfigurationData();
 			if(p.out_binary_conf){
-				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+				string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
 				outputConfigurationBinary(binconf_filename);
 			} else {
 				outputConfigurationData();
 			}
-			next_output_config +=  time_interval_output_config;
+			next_output_config += time_interval_output_config;
 		}
 	}
 	/*****************************************************/
@@ -172,7 +172,7 @@ void Simulation::timeEvolution(double& next_output_data)
 		next_output_data += strain_interval_output_data;
 		sys.timeEvolution("strain", next_output_data);
 	} else {
-		next_output_data +=  time_interval_output_data;
+		next_output_data += time_interval_output_data;
 		sys.timeEvolution("time", next_output_data);
 	}
 }
@@ -222,7 +222,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		if (time_end != -1) {
 			cout << "time: " << sys.get_time_in_simulation_units() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
 		} else {
-			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
+			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
 		}
 		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
@@ -283,7 +283,7 @@ void Simulation::simulationInverseYield(string in_args,
 			next_output_data += strain_interval_output_data;
 			sys.timeEvolution("strain", next_output_data);
 		} else{
-			next_output_data +=  time_interval_output_data;
+			next_output_data += time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
 		
@@ -299,7 +299,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			if (sys.get_time() >= next_output_config-1e-8) {
 				outputConfigurationData();
-				next_output_config +=  time_interval_output_config;
+				next_output_config += time_interval_output_config;
 			}
 		}
 		/*****************************************************/
@@ -456,7 +456,7 @@ void Simulation::outputConfigurationBinary()
 {
 	string conf_filename;
 	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
-	conf_filename =  "conf_" + sys.simu_name + ".dat";
+	conf_filename = "conf_" + sys.simu_name + ".dat";
 	outputConfigurationBinary(conf_filename);
 }
 
@@ -688,7 +688,7 @@ void Simulation::outputDataMagnetic()
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		ostringstream error_str;
-		error_str  << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);

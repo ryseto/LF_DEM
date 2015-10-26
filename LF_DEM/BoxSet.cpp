@@ -2,7 +2,7 @@
 #include "System.h"
 using namespace std;
 
-void BoxSet::init(double interaction_dist, System *sys_)
+void BoxSet::init(double interaction_dist, System* sys_)
 {
 	string indent = "  BoxSet::\t";
 	cout << indent << "Setting up Cell List System ... ";
@@ -26,7 +26,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 	if (z_box_nb == 0) {
 		z_box_nb = 1;
 	}
-	if (x_box_nb < 4 && y_box_nb < 4 && z_box_nb < 4) { // boxing useless: a neighborhood is the whole system
+	if (x_box_nb<4 && y_box_nb<4 && z_box_nb<4) { // boxing useless: a neighborhood is the whole system
 		_is_boxed = false;
 		box_xsize = sys->get_lx();
 		box_ysize = sys->get_ly();
@@ -45,7 +45,7 @@ void BoxSet::init(double interaction_dist, System *sys_)
 		box_xsize = sys->get_lx()/x_box_nb;
 		box_ysize = sys->get_ly()/y_box_nb;
 		box_zsize = sys->get_lz()/z_box_nb;
-		int m1p1[2] = {-1, 1};
+		int m1p1[] = {-1, 1};
 		for (int a : m1p1) {
 			for (int b : m1p1) {
 				vec3d far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
@@ -136,7 +136,7 @@ void BoxSet::assignNeighborsBulk()
 	for (auto& bx : BulkBoxes) {
 		vec3d pos = bx->position;
 		vec3d delta;
-		int m10p1[3] = {-1, 0, 1};
+		int m10p1[] = {-1, 0, 1};
 		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -156,8 +156,8 @@ void BoxSet::assignNeighborsBottom()
 		vec3d pos = bx->position;
 		vec3d delta;
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
-		int m10p1[3] = {-1, 0, 1};
-		int p10[2] = {0, 1};
+		int m10p1[] = {-1, 0, 1};
+		int p10[] = {0, 1};
 		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -180,8 +180,8 @@ void BoxSet::assignNeighborsTop()
 		vec3d pos = bx->position;
 		vec3d delta;
 		// boxes  at same level and bottom first: these are fixed once and for all in the simulation
-		int m10p1[3] = {-1, 0, 1};
-		int m10[2] = {-1, 0};
+		int m10p1[] = {-1, 0, 1};
+		int m10[] = {-1, 0};
 		for (const auto & a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -205,7 +205,7 @@ void BoxSet::assignNeighborsTopBottom()
 		vec3d delta;
 
 		// boxes at same level first: these are fixed once and for all in the simulation
-		int m10p1[3] = {-1, 0, 1};
+		int m10p1[] = {-1, 0, 1};
 		for (const auto& a : m10p1) {
 			delta.x = a*box_xsize;
 			for (const auto& b : m10p1) {
@@ -298,7 +298,6 @@ void BoxSet::update()
 	for (const auto& bx : Boxes) {
 		bx->build_neighborhood_container();
 	}
-
 	// if(sys->get_shear_strain()>0.237){
 	// 	printBoxNetwork();exit(1);
 	// }
@@ -317,7 +316,7 @@ Box* BoxSet::WhichBox(vec3d pos)
 	return WhichBox(&pos);
 }
 
-Box* BoxSet::WhichBox(vec3d *pos)
+Box* BoxSet::WhichBox(vec3d* pos)
 {
 	sys->periodize(*pos);
 	int ix = (int)(pos->x/box_xsize);
@@ -334,7 +333,7 @@ Box* BoxSet::WhichBox(vec3d *pos)
 
 void BoxSet::box(int i)
 {
-	Box *b = WhichBox(sys->position[i]);
+	Box* b = WhichBox(sys->position[i]);
 	if (b != boxMap[i]) {
 		b->add(i);
 		if (boxMap[i] != NULL) {
@@ -344,7 +343,7 @@ void BoxSet::box(int i)
 	}
 }
 
-vector <int> & BoxSet::neighborhood(int i){
+vector<int>& BoxSet::neighborhood(int i){
 	return (boxMap[i])->neighborhood_container;
 }
 

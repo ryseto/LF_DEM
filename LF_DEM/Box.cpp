@@ -1,12 +1,14 @@
 #include "Box.h"
 using namespace std;
 
-Box::Box(){
+Box::Box()
+{
 	_is_top = false;
 	_is_bottom = false;
 }
 
-Box::~Box(){
+Box::~Box()
+{
 	_neighbors.clear();
 	_moving_neighbors.clear();
 }

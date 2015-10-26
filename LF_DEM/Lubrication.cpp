@@ -29,7 +29,7 @@ void Lubrication::getGeometry()
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		// nnE = nynz;
-		nnE = costheta*nxnz + sintheta*nynz;
+		nnE = costheta*nxnz+sintheta*nynz;
 	} else {
 		nnE = nxnz;
 	}
@@ -291,12 +291,12 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
 	if (!sys->p.cross_shear) {
-		GEi[0] =  (cGE_i*nvec->x+YG0_YG2*nvec->z);
+		GEi[0] = (cGE_i*nvec->x+YG0_YG2*nvec->z);
 		GEi[1] =  cGE_i*nvec->y;
-		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->x);
-		GEj[0] =  (cGE_j*nvec->x+YG1_YG3*nvec->z);
+		GEi[2] = (cGE_i*nvec->z+YG0_YG2*nvec->x);
+		GEj[0] = (cGE_j*nvec->x+YG1_YG3*nvec->z);
 		GEj[1] =  cGE_j*nvec->y;
-		GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->x);
+		GEj[2] = (cGE_j*nvec->z+YG1_YG3*nvec->x);
 		double nxnx_nznz = nxnx-nznz;
 		HEi[0] =  cHE_i*nxny;
 		HEi[1] = -cHE_i*nxnx_nznz;

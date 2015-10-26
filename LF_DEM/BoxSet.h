@@ -39,7 +39,7 @@ private:
 	std::set <Box*> BottomBoxes;
 	std::set <Box*> TopBottomBoxes;
 	std::vector <Box*> box_labels;
-	System *sys;
+	System* sys;
 	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
 	Box* WhichBox(vec3d*);
 	void updateNeighbors();
@@ -51,10 +51,9 @@ private:
 	void assignNeighborsTop();
 	void assignNeighborsBottom();
 	void assignNeighborsTopBottom();
-	Box ** boxMap;
-
-	std::vector <vec3d> top_probing_positions;
-	std::vector <vec3d> bottom_probing_positions;
+	Box** boxMap;
+	std::vector<vec3d> top_probing_positions;
+	std::vector<vec3d> bottom_probing_positions;
 public:
 	BoxSet(){;}
 	~BoxSet();

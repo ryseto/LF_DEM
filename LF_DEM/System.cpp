@@ -78,7 +78,7 @@ System::hash( time_t t, clock_t c )
 	 Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
 	*/
 
-	static unsigned long differ = 0;  // guarantee time-based seeds will change
+	static unsigned long differ = 0; // guarantee time-based seeds will change
 
 	unsigned long h1 = 0;
 	unsigned char *pp = (unsigned char *) &t;
@@ -870,7 +870,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setMagneticForceToParticle();
 	computeVelocities(calc_stress);
 	if (calc_stress) {
-		calcStressPerParticle();  // stress compornents
+		calcStressPerParticle(); // stress compornents
 	}
 	if (lowPeclet) {
 		// Comupute total stress every time steps for better averaging
@@ -1011,7 +1011,7 @@ void System::timeStepMoveCorrector()
 	 \brief Moves particle positions according to previously computed velocities, corrector step.
 	 */
 	for (int i=0; i<np; i++) {
-		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]);  // real velocity, in predictor and in corrector
+		velocity[i] = 0.5*(velocity[i]+velocity_predictor[i]); // real velocity, in predictor and in corrector
 		ang_velocity[i] = 0.5*(ang_velocity[i]+ang_velocity_predictor[i]);
 	}
 	for (int i=0; i<np; i++) {
@@ -1045,7 +1045,7 @@ bool System::keepRunning(const string& time_or_strain,
 }
 
 void System::timeEvolution(const string& time_or_strain,
-						   const double&  value_end)
+						   const double& value_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system until time_end
@@ -1255,11 +1255,12 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
-
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-		stokes_solver.resetResistanceMatrix("direct", nb_of_active_interactions, resistance_matrix_dblock);
+		stokes_solver.resetResistanceMatrix("direct",
+											nb_of_active_interactions,
+											resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
 		 * which is calculated at the beginning.
@@ -1303,7 +1304,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 					if (rhs) {
 						double GEi[3];
 						double GEj[3];
-						inter->lubrication.calcGE(GEi, GEj);  // G*E_\infty term
+						inter->lubrication.calcGE(GEi, GEj); // G*E_\infty term
 						if (shearrate_is_1 == false) {
 							for (int u=0; u<3; u++) {
 								GEi[u] *= shear_rate;
@@ -1356,7 +1357,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 						double GEj[3];
 						double HEi[3];
 						double HEj[3];
-						inter->lubrication.calcGEHE(GEi, GEj, HEi, HEj);  // G*E_\infty term
+						inter->lubrication.calcGEHE(GEi, GEj, HEi, HEj); // G*E_\infty term
 						if (shearrate_is_1 == false) {
 							for (int u=0; u<3; u++) {
 								GEi[u] *= shear_rate;
@@ -1467,12 +1468,16 @@ void System::buildContactTerms(bool set_or_add)
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
-			stokes_solver.setRHSTorque(i, contact_torque[i]);
+			if (friction) {
+				stokes_solver.setRHSTorque(i, contact_torque[i]);
+			}
 		}
 	} else {
 		for (int i=0; i<np; i++) {
 			stokes_solver.addToRHSForce(i, contact_force[i]);
-			stokes_solver.addToRHSTorque(i, contact_torque[i]);
+			if (friction) {
+				stokes_solver.addToRHSTorque(i, contact_torque[i]);
+			}
 		}
 	}
 }
@@ -2098,10 +2103,10 @@ void System::setSystemVolume(double depth)
 	string indent = "  System::\t";
 	if (twodimension) {
 		system_volume = lx*lz*depth;
-		cout << indent << "lx = " << lx << " lz = " << lz << " ly = "  << depth << endl;
+		cout << indent << "lx = " << lx << " lz = " << lz << " ly = " << depth << endl;
 	} else {
 		system_volume = lx*ly*lz;
-		cout << indent << "lx = " << lx << " lz = " << lz << " ly = "  << ly << endl;
+		cout << indent << "lx = " << lx << " lz = " << lz << " ly = " << ly << endl;
 	}
 }
 
