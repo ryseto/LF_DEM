@@ -40,10 +40,10 @@ private:
 	{
 		unsigned int line_nb = 0;
 		for (const auto& col : output_data) {
-			if ( line_nb == 0 && col.size() > 0 ) {
+			if (line_nb == 0 && col.size() > 0) {
 				line_nb = col.size();
 			}
-			if ( col.size() > 0 && col.size() != line_nb ) {
+			if (col.size() > 0 && col.size() != line_nb) {
 				std::cerr << " Error: inconsistent output. Number of lines to output is heterogeneous." << std::endl;
 				exit(1);
 			} 

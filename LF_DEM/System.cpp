@@ -512,7 +512,6 @@ void System::setupSystem(string control)
 	} else {
 		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
-
 	if (p.friction_model == 0) {
 		cout << indent+"friction model: no friction" << endl;
 		p.mu_static = 0;

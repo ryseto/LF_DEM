@@ -428,8 +428,8 @@ void StokesSolver::resetResistanceMatrix(string solver_type,
 		odblocks[4].resize(4*odblocks_nb);
 		odblocks[5].resize(2*odblocks_nb);
 		for (int k=0; k<6; k++) {
-			for (unsigned int i=0; i<odblocks[k].size(); i++) {
-				odblocks[k][i] = 0;
+			for (double& odb: odblocks[k]) {
+				odb = 0;
 			}
 			current_index_positions[k] = 0;
 		}
@@ -893,7 +893,7 @@ void StokesSolver::allocateRessources()
 	}
 #endif
     dblocks = new double [dblocks_size];
-    odblocks = new vector <double> [6];
+    odblocks = new vector<double> [6];
 	current_index_positions = new int [6];
     odbrows_table = new int [np+1];
     cholmod_start(&chol_c);

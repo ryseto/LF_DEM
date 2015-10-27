@@ -593,7 +593,6 @@
 		D995351F180716B100FC99C9 /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
 		D99535211807276D00FC99C9 /* StrainSnapShot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrainSnapShot.cpp; sourceTree = "<group>"; };
 		D99535221807276D00FC99C9 /* StrainSnapShot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrainSnapShot.h; sourceTree = "<group>"; };
-		D99EBE1D167914C2003AC4C9 /* note.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = note.rtf; sourceTree = "<group>"; };
 		D9A80BF31B1A9BA700F4BFD3 /* nondimensionalization.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = nondimensionalization.pdf; sourceTree = "<group>"; };
 		D9A80BF41B1A9BA700F4BFD3 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
 		D9A80BF51B1A9BC200F4BFD3 /* nondimensionalization.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = nondimensionalization.tex; sourceTree = "<group>"; };
@@ -1290,7 +1289,6 @@
 				D9278EA61A93050700ABCD87 /* Averager.h */,
 				D988E399165443C10009949F /* vec3d.h */,
 				D92F19C21676450800411650 /* MersenneTwister.h */,
-				D99EBE1D167914C2003AC4C9 /* note.rtf */,
 				D988E38F165441750009949F /* LF_DEM.1 */,
 			);
 			path = LF_DEM;
@@ -2088,6 +2086,7 @@
 				D9EA97A01BBCF2560041B4B0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D9EA97A91BBCF29C0041B4B0 /* Build configuration list for PBXNativeTarget "analyzeLFDEM" */ = {
 			isa = XCConfigurationList;
@@ -2096,6 +2095,7 @@
 				D9EA97AB1BBCF29C0041B4B0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
