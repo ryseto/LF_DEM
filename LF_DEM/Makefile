@@ -14,13 +14,13 @@ DSFMT_RNG = no
 
 # Compiler
 ifeq ($(OS_version),SI)
-	CXX=icc
+	CXX=icpc
 endif
 ifeq ($(OS_version),UCam)
-	CXX=icc
+	CXX=icpc
 endif
 ifeq ($(OS_version),OIST)
-	CXX=icc
+	CXX=icpc
 endif
 ifeq ($(OS_version),Linux)
 	CXX=g++
@@ -52,7 +52,7 @@ ifeq ($(CXX),$(filter $(CXX),g++ clang++))
 endif
 
 ICC_Warnings = -Wall
-ifeq ($(CXX),icc)
+ifeq ($(CXX),icpc)
 	CXXFLAGS_optimized += $(ICC_Warnings)
 	CXXFLAGS_debug += -pg $(ICC_Warnings)
 	CXXFLAGS_dev += $(ICC_Warnings)
