@@ -31,7 +31,7 @@ class GenerateInitConfig{
 private:
 	System sys;
 	ParameterSet p;
-	std::list <Event> events;
+	std::list<Event> events;
 
 	char disperse_type;
 	double volume_fraction;
@@ -48,8 +48,8 @@ private:
 	double lz_half;
 	double a1;
 	double a2;
-	vec3d *grad;
-	vec3d *prev_grad;
+	vec3d* grad;
+	vec3d* prev_grad;
 	double gradientDescent();
 	double computeGradient();
 	void moveAlongGradient(vec3d*, int);
@@ -88,7 +88,7 @@ private:
 	void outputPositionData();
 
 public:
-	GenerateInitConfig(): sys(System(p,events)) {};
+	GenerateInitConfig(): sys(System(p, events)) {};
 	int generate(int rand_seed_, bool magnetic_config);
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

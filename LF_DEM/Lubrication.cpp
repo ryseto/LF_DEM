@@ -11,7 +11,7 @@
 #include "Interaction.h"
 #include "System.h"
 
-Lubrication::Lubrication(Interaction *int_)
+Lubrication::Lubrication(Interaction* int_)
 {
 	interaction = int_;
 	nvec = &(interaction->nvec);
@@ -27,9 +27,9 @@ void Lubrication::getGeometry()
 	nznz = (interaction->nvec).z*(interaction->nvec).z;
 	if (sys->p.cross_shear) {
 		double costheta, sintheta;
-		std::tie( costheta, sintheta ) = sys->getCosSinShearAngle();
+		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		// nnE = nynz;
-		nnE = costheta*nxnz + sintheta*nynz;
+		nnE = costheta*nxnz+sintheta*nynz;
 	} else {
 		nnE = nxnz;
 	}
@@ -291,12 +291,12 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	double cHE_i = scaledYH0()+scaledYH2();
 	double cHE_j = scaledYH3()+scaledYH1();
 	if (!sys->p.cross_shear) {
-		GEi[0] =  (cGE_i*nvec->x+YG0_YG2*nvec->z);
+		GEi[0] = (cGE_i*nvec->x+YG0_YG2*nvec->z);
 		GEi[1] =  cGE_i*nvec->y;
-		GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->x);
-		GEj[0] =  (cGE_j*nvec->x+YG1_YG3*nvec->z);
+		GEi[2] = (cGE_i*nvec->z+YG0_YG2*nvec->x);
+		GEj[0] = (cGE_j*nvec->x+YG1_YG3*nvec->z);
 		GEj[1] =  cGE_j*nvec->y;
-		GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->x);
+		GEj[2] = (cGE_j*nvec->z+YG1_YG3*nvec->x);
 		double nxnx_nznz = nxnx-nznz;
 		HEi[0] =  cHE_i*nxny;
 		HEi[1] = -cHE_i*nxnx_nznz;
@@ -336,10 +336,10 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 // ie fills :
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
-void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-										const vec3d &oi, const vec3d &oj,
-										StressTensor &stresslet_i,
-										StressTensor &stresslet_j)
+void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
+										const vec3d& oi, const vec3d& oj,
+										StressTensor& stresslet_i,
+										StressTensor& stresslet_j)
 {
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
@@ -356,7 +356,7 @@ void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	XGU_j *= cXG_j;
 	stresslet_i = XGU_i;
 	stresslet_j = XGU_j;
-	if (sys->p.lubrication_model == 1){
+	if (sys->p.lubrication_model == 1) {
 		return;
 	}
 	StressTensor YGU_i;
@@ -432,8 +432,8 @@ void Lubrication::pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
 	stresslet_j += YHO_j;
 }
 
-void Lubrication::pairStrainStresslet(StressTensor &stresslet_i,
-									  StressTensor &stresslet_j)
+void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
+									  StressTensor& stresslet_j)
 {
 	/**
 		\brief The \f$ M:\hat{E}^{\infty} \f$ component of the stress.

@@ -49,7 +49,7 @@ while (1) {
 	$d21, $d22, $d23, $d24, $d25, $d26, $d27, $d28, $d29, $d30,
 	$d31, $d32, $d33, $d34, $d35, $d36, $d37, $d38, $d39, $d40) = split(/\s+/, $line);
 	last unless defined $line;
-	if ($d1 > 2){
+	if ($d1 > 2) {
 		${sum_fmax} += $d29;
 		${cnt} ++;
 	}
@@ -560,7 +560,8 @@ sub OutYaplotData{
 		#		}
 		if ($mag) {
 			if ($switch == 0 &&
-				$magsusceptibility[$i] <= 0){
+				($magsusceptibility[$i] == -1
+				|| $magsusceptibility[$i] == 99)) {
 					printf OUT "@ 8\n";
 					$switch = 1;
 				}
@@ -577,6 +578,18 @@ sub OutYaplotData{
 		#			printf OUT "@ $col\n";
 		#		}
 		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+	}
+	
+	if ($mag) {
+		printf OUT "y 3\n";
+		printf OUT "r 0.5\n";
+		printf OUT "@ 0\n";
+		for ($i = 0; $i < $np; $i ++){
+			if ($magsusceptibility[$i] == 99
+				|| $magsusceptibility[$i] == 101) {
+					printf OUT "c $posx[$i] -0.02 $posz[$i] \n";
+				}
+		}
 	}
 	
 	if (0) {

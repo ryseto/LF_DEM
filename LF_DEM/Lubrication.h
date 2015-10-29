@@ -21,7 +21,6 @@
 #include "vec3d.h"
 #include "StressTensor.h"
 
-
 class System;
 class Interaction;
 
@@ -131,10 +130,10 @@ private:
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
 	void addHydroStress();
-	void pairVelocityStresslet(const vec3d &vi, const vec3d &vj,
-							   const vec3d &oi, const vec3d &oj,
-							   StressTensor &stresslet_i, StressTensor &stresslet_j);
-	void pairStrainStresslet(StressTensor &stresslet_i, StressTensor &stresslet_j);
+	void pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
+							   const vec3d& oi, const vec3d& oj,
+							   StressTensor& stresslet_i, StressTensor& stresslet_j);
+	void pairStrainStresslet(StressTensor& stresslet_i, StressTensor& stresslet_j);
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	void setResistanceCoeffTang(double tangent_rc);

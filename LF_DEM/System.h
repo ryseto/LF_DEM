@@ -78,16 +78,21 @@ private:
 	double costheta_shear;
 	double sintheta_shear;
 	/* data */
-	bool keepRunning(const std::string & time_or_strain, const double & value_end);
+	bool keepRunning(const std::string& time_or_strain, const double& value_end);
 	void (System::*timeEvolutionDt)(bool, const std::string&, const double&);
-	void timeEvolutionEulersMethod(bool calc_stress, const std::string & time_or_strain, const double & value_end);
-	void timeEvolutionPredictorCorrectorMethod(bool calc_stress, const std::string & time_or_strain, const double & value_end);
-	void timeStepMove(const std::string & time_or_strain, const double & value_end);
+	void timeEvolutionEulersMethod(bool calc_stress, const std::string& time_or_strain, const double& value_end);
+	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
+											   const std::string& time_or_strain,
+											   const double& value_end);
+	void timeStepMove(const std::string& time_or_strain,
+					  const double& value_end);
 	void timeStepMoveCorrector();
-	void timeStepMovePredictor(const std::string & time_or_strain, const double & value_end);
+	void timeStepMovePredictor(const std::string& time_or_strain,
+							   const double& value_end);
 	void timeStepBoxing(const double strain_increment);
 	void adaptTimeStep();
-	void adaptTimeStep(const std::string & time_or_strain, const double & value_end);
+	void adaptTimeStep(const std::string& time_or_strain,
+					   const double& value_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -134,8 +139,7 @@ private:
 	Averager<double> *kt_avg;
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
-	std::list <Event> &events;
-
+	std::list <Event>& events;
 	/*
 	 * Simulation for magnetic particles
 	 */
@@ -147,10 +151,10 @@ private:
 
  protected:
  public:
-	System(ParameterSet &ps, std::list <Event> &ev);
+	System(ParameterSet& ps, std::list <Event>& ev);
 	~System();
 
-	ParameterSet &p;
+	ParameterSet& p;
 	// Interaction types
 	bool brownian;
 	bool friction;
@@ -196,7 +200,8 @@ private:
 	vec3d *magnetic_moment;
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
-	std::vector <double> magnetic_susceptibility;
+	std::vector<double> magnetic_susceptibility;
+	std::vector<bool> movable; // displacement() acts only if movable[i] is true.
 	double *brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // per particle
@@ -272,25 +277,26 @@ private:
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	void setSystemVolume(double depth = 0);
-	void setConfiguration(const std::vector <vec3d> &initial_positions,
-						  const std::vector <double> &radii,
+	void setConfiguration(const std::vector <vec3d>& initial_positions,
+						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);
-	void setContacts(const std::vector <struct contact_state> &cs);
-	void getContacts(std::vector <struct contact_state> &cs);
+	void setContacts(const std::vector <struct contact_state>& cs);
+	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
 	void setupSystem(std::string control);
 	void allocatePositionRadius();
 	void allocateRessources();
-	void timeEvolution(const std::string & time_or_strain, const double & value_end);
+	void timeEvolution(const std::string& time_or_strain,
+					   const double& value_end);
 //	void timeEvolution(double value_end); // @@@ DEPRECATED
-	void displacement(int i, const vec3d &dr);
+	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
-	int periodize(vec3d &);
-	void periodize_diff(vec3d &, int &);
-	void periodize_diff(vec3d &);
+	int periodize(vec3d&);
+	void periodize_diff(vec3d&, int&);
+	void periodize_diff(vec3d&);
 	void calcStress();
 	void calcStressPerParticle();
 	void analyzeState();
@@ -305,11 +311,12 @@ private:
 	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
 	double angle_external_magnetic_field;
 	vec3d external_magnetic_field;
-	void setMagneticConfiguration(const std::vector <vec3d> &magnetic_moment,
-								  const std::vector <double> &magnetic_susceptibility);
+	void setMagneticConfiguration(const std::vector <vec3d>& magnetic_moment,
+								  const std::vector <double>& magnetic_susceptibility);
 	void setInducedMagneticMoment();
 	void setMagneticMomentZero();
 	void calcMagneticEnergy();
+	void randomSelectFixParticles();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
@@ -428,7 +435,7 @@ private:
 
 	std::tuple<double,double> getCosSinShearAngle()
 	{
-		return std::make_tuple(costheta_shear,sintheta_shear);
+		return std::make_tuple(costheta_shear, sintheta_shear);
 	}
 	struct ForceAmplitudes amplitudes;
 };

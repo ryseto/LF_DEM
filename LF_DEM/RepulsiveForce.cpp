@@ -7,7 +7,7 @@
 #include "Interaction.h"
 #include "System.h"
 
-void RepulsiveForce::init(System *sys_, Interaction *interaction_)
+void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 {
 	sys = sys_;
 	interaction = interaction_;

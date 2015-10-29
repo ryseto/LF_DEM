@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void Interaction::init(System *sys_)
+void Interaction::init(System* sys_)
 {
 	sys = sys_;
 	active = false;
@@ -102,7 +102,7 @@ void Interaction::deactivate()
 	sys->interaction_partners[p1].erase(p0);
 }
 
-void Interaction::updateState(bool &deactivated)
+void Interaction::updateState(bool& deactivated)
 {
 	if (is_contact()) {
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC

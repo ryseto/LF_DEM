@@ -4,7 +4,6 @@
 # load Makefile inputs
 makeconfig = config/Makefile_config.mk
 gotconfig = 0
-
 ifneq ("$(wildcard $(makeconfig))","")
 	include $(makeconfig)
 	gotconfig = 1
@@ -23,7 +22,7 @@ ifeq ($(CXX),$(filter $(CXX),g++ clang++))
 endif
 
 ICC_Warnings = -Wall
-ifeq ($(CXX),icc)
+ifeq ($(CXX),icpc)
 	CXXFLAGS_optimized += $(ICC_Warnings)
 	CXXFLAGS_debug += -pg $(ICC_Warnings)
 	CXXFLAGS_dev += $(ICC_Warnings)
@@ -83,7 +82,7 @@ hasconfig:
 	@(if [ $(gotconfig) -ne 1 ]; then \
 		echo "\n no config/Makefile_config.mk \n \n";\
 	fi)
-	
+
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ) hasconfig
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
