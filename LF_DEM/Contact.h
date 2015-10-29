@@ -70,7 +70,7 @@ public:
 	//======= internal state =====================//
 	Contact(){};
 	Contact(const Contact& obj);
-	void init(System *sys_, Interaction *int_);
+	void init(System* sys_, Interaction* int_);
 	void setInteractionData();
 	void setSpringConstants();
 	void activate();
@@ -126,7 +126,7 @@ public:
 		cs.disp_rolling = disp_rolling;
 		return cs;
 	};
-	void setState(const struct contact_state &cs){
+	void setState(const struct contact_state& cs){
 		p0 = cs.p0;
 		p1 = cs.p1;
 		disp_tan = cs.disp_tan;

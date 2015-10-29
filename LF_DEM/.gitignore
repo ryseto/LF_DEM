@@ -47,3 +47,6 @@ VersionInfo.h
 
 # text files
 *.txt
+
+# local make inputs
+config/Makefile_config.mk

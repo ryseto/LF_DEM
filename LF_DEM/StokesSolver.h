@@ -43,7 +43,6 @@ typedef Epetra_MultiVector VEC;
 typedef Epetra_Operator MAT;
 #endif
 
-
 class StokesSolver{
 	/*
 	  This class provides solver for the "Stokes" equation, which is an equation of motion of the type:
@@ -166,16 +165,16 @@ private:
 	bool _iterative;
 	bool _direct;
 	// Cholmod variables
-    cholmod_factor *chol_L ;
+    cholmod_factor* chol_L ;
     cholmod_common chol_c ;
-    cholmod_dense *chol_rhs;
-    cholmod_sparse *chol_res_matrix;
-    cholmod_dense *chol_solution;
-    cholmod_dense *chol_PTsolution;
-    cholmod_dense *chol_Psolution;
-    cholmod_dense *chol_v_nonBrownian;
-    cholmod_dense *chol_v_Brownian_init;
-    cholmod_dense *chol_v_Brownian_mid;
+    cholmod_dense* chol_rhs;
+    cholmod_sparse* chol_res_matrix;
+    cholmod_dense* chol_solution;
+    cholmod_dense* chol_PTsolution;
+    cholmod_dense* chol_Psolution;
+    cholmod_dense* chol_v_nonBrownian;
+    cholmod_dense* chol_v_Brownian_init;
+    cholmod_dense* chol_v_Brownian_mid;
 	bool chol_init;
     int stype;
     int sorted;
@@ -183,7 +182,7 @@ private:
     int xtype;
 	bool chol_L_to_be_freed;
     // resistance matrix building
-    double *dblocks;
+    double* dblocks;
     std::vector <double> *odblocks;
     std::vector <int> odbrows;
 	int *odbrows_table;
@@ -212,7 +211,7 @@ private:
     int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
     int* columns_nb; // nb of non-zero elements in each row
     int columns_max_nb; // max nb of non-zero elements per row
-    double **values; // values corresponding to 'columns' array coordinates
+    double** values; // values corresponding to 'columns' array coordinates
     /*
      setRow(const vec3d &nvec, int ii, int jj, double alpha) :
 	 - TRILINOS ONLY
@@ -220,7 +219,7 @@ private:
 	 to blocks [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
 	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
 	 */
-    void setRow(const vec3d &nvec, int ii, int jj,
+    void setRow(const vec3d& nvec, int ii, int jj,
 				double scaledXA, double scaledYA, double scaledYBtilde,	double scaledYB, double scaledYC);
     /*
      setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
@@ -230,8 +229,9 @@ private:
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int jj,
-				   double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC);
+    void setColumn(const vec3d& nvec, int jj,
+				   double scaledXA, double scaledYA,
+				   double scaledYB, double scaledYBtilde, double scaledYC);
     void allocateResistanceMatrix();
     void completeResistanceMatrix_cholmod();
     void completeResistanceMatrix_trilinos();
@@ -253,8 +253,8 @@ public:
 	{
 		return _iterative;
 	}
-	void printResistanceMatrix(std::ostream &, std::string);
-	void printFactor(std::ostream &);
+	void printResistanceMatrix(std::ostream&, std::string);
+	void printFactor(std::ostream&);
 	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
@@ -264,7 +264,8 @@ public:
 	 - possible solver_type: "direct" or "iterative"
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
-    void resetResistanceMatrix(std::string solver_type, int nb_of_interactions, double *resetResistanceMatrix);
+    void resetResistanceMatrix(std::string solver_type, int nb_of_interactions,
+							   double* resetResistanceMatrix);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii 
@@ -276,8 +277,9 @@ public:
 	 - scaledYB * e_ijk nvec_k on TU part
 	 - scaledYC *(1 - |nvec><nvec|) on TW part
 	 */
-    void addToDiagBlock(const vec3d &nvec, int ii,
-						double scaledXA, double scaledYA, double scaledYB, double scaledYC);
+    void addToDiagBlock(const vec3d& nvec, int ii,
+						double scaledXA, double scaledYA,
+						double scaledYB, double scaledYC);
     /*
      setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYC) :
 	 Sets (ii,jj) block with:
@@ -292,8 +294,9 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void setOffDiagBlock(const vec3d &nvec, int ii, int jj,
-						 double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC);
+	void setOffDiagBlock(const vec3d& nvec, int ii, int jj,
+						 double scaledXA, double scaledYA, double scaledYB,
+						 double scaledYBtilde, double scaledYC);
 	/*
 	 doneBlocks(int i) :
 	 - to be called when all terms involving particle i have been added,
@@ -317,13 +320,13 @@ public:
     void resetRHS();
 	void resetRHStorque();
     void addToRHS(double*);
-    void addToRHSForce(int, double *);
-    void addToRHSForce(int, const vec3d &);
-    void addToRHSTorque(int, double *);
-    void addToRHSTorque(int, const vec3d &);
+    void addToRHSForce(int, double*);
+    void addToRHSForce(int, const vec3d&);
+    void addToRHSTorque(int, double*);
+    void addToRHSTorque(int, const vec3d&);
     void setRHS(double*);
-    void setRHSForce(int, const vec3d &);
-    void setRHSTorque(int, const vec3d &);
+    void setRHSForce(int, const vec3d&);
+    void setRHSTorque(int, const vec3d&);
     void getRHS(double*);
     /*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :

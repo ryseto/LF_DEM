@@ -34,7 +34,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 	sys.p.integration_method = 0;
 	putRandom();
 	double inflate_ratio = 1.03;
-	for (int i=0; i<np;i++) {
+	for (int i=0; i<np; i++) {
 		sys.radius[i] *= inflate_ratio;
 	}
 	sys.setInteractions_GenerateInitConfig();
@@ -67,14 +67,14 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 		cerr << energy << endl;
 		diff_energy = energy-energy_previous;
 		energy_previous = energy;
-		if (count % 100 == 0) {
+		if (count%100 == 0) {
 			fout << count << ' ' << energy << ' ' <<  diff_energy << endl;
 		}
 		count ++;
 		cerr << "diff = " << abs(diff_energy) << endl;
 	} while (abs(diff_energy) > 1e-10);
 	//deflate
-	for (int i=0; i < np; i++) {
+	for (int i=0; i<np; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;
 		} else {
@@ -131,7 +131,7 @@ void GenerateInitConfig::outputPositionData()
 		}
 	}
 	vector<double> magnetic_susceptibility;
-	for (int i=0; i< np; i++) {
+	for (int i=0; i<np; i++) {
 		if (i < np1) {
 			magnetic_susceptibility.push_back(1);
 		} else {
@@ -148,7 +148,7 @@ void GenerateInitConfig::outputPositionData()
 	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 	fout << lx << ' ' << ly << ' ' << lz << ' ';
 	fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
-	for (int i = 0; i < np; i++) {
+	for (int i = 0; i<np; i++) {
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
 		fout << position[i].z << ' ';
@@ -170,7 +170,7 @@ void GenerateInitConfig::outputPositionData()
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
 	for (int k=0; k<sys.nb_interaction; k++) {
-		unsigned short i,j;
+		unsigned short i, j;
 		sys.interaction[k].get_par_num(i, j);
 		vec3d d_pos = position[i]-position[j];
 		if (d_pos.norm() < 10){
@@ -191,7 +191,7 @@ double GenerateInitConfig::computeGradient()
 	for(int i=0; i<np; i++) {
 		grad[i].reset();
 	}
-	unsigned short i,j;
+	unsigned short i, j;
 	double r, rcont;
 	double amp, amp2;
 	double energy = 0;
@@ -200,7 +200,7 @@ double GenerateInitConfig::computeGradient()
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].get_r();
 			rcont = sys.interaction[k].get_ro();
-			const vec3d &nr_vec = sys.interaction[k].nvec;
+			const vec3d& nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
@@ -211,18 +211,18 @@ double GenerateInitConfig::computeGradient()
 	return energy;
 }
 
-void GenerateInitConfig::moveAlongGradient(vec3d *g, int dir)
+void GenerateInitConfig::moveAlongGradient(vec3d* g, int dir)
 {
 	double grad_norm;
 	double gradient_power = 0.5;
 	vec3d step;
 	grad_norm = 0;
-	for (int i=0; i<np;i++) {
+	for (int i=0; i<np; i++) {
 		grad_norm += g[i].sq_norm();
 	}
 	if (grad_norm != 0) {
 		double rescale = pow(grad_norm, gradient_power);
-		for (int i=0; i<np;i++) {
+		for (int i=0; i<np; i++) {
 			step = -dir*g[i]*step_size/rescale;
 			sys.displacement(i, step);
 		}
@@ -288,7 +288,7 @@ void GenerateInitConfig::putRandom()
 #ifdef USE_DSFMT
 	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
-	for (int i=0; i < np; i++) {
+	for (int i=0; i<np; i++) {
 		sys.position[i].x = lx*RANDOM;
 		sys.position[i].z = lz*RANDOM;
 		if (sys.twodimension) {
@@ -307,11 +307,11 @@ void GenerateInitConfig::putRandom()
 void GenerateInitConfig::updateInteractions(int i)
 {
 	vector <Interaction*> inter_list;
-	for (auto && inter : sys.interaction_list[i]){
+	for (auto&& inter : sys.interaction_list[i]){
 		inter_list.push_back(inter);
 	}
 
-	for (auto &il : inter_list) {
+	for (auto& il : inter_list) {
 		if (il->is_active()) {
 			bool desactivated = false;
 			il->updateState(desactivated);
@@ -458,7 +458,7 @@ void GenerateInitConfig::setParameters()
 	if (disperse_type == 'b') {
 		cerr << "a1 = 1.0" << endl;
 		do {
-			a2 = readStdinDefault(1.4 , "a2 (a2>a1)");
+			a2 = readStdinDefault(1.4, "a2 (a2>a1)");
 		} while (a2 < a1);
 		do {
 			vf_ratio = readStdinDefault(0.5, "volume fraction ratio of smaller particle (If negative, number ratio)");
@@ -515,7 +515,7 @@ void GenerateInitConfig::setParameters()
 			double pvolume2_ = lx*ly*lz*volume_fraction2;
 			np1 = (int)(pvolume1_/pvolume1+0.5);
 			np2 = (int)(pvolume2_/pvolume2+0.5);
-			np = np1 + np2;
+			np = np1+np2;
 		}
 	} else {
 		double nf_ratio = -vf_ratio;

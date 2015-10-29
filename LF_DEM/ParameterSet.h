@@ -31,7 +31,7 @@ struct ParameterSet
 	double external_magnetic_field_ang_theta;  ///< angle from the vertical axis
 	double external_magnetic_field_ang_phi;  ///< Initial angle of external magnetic field
 	double timeinterval_update_magnetic_pair; ///< [0.02] Interval to check magnetic interaction
-
+	double fixed_particle_fraction;             ///< rate of fixed particles (
 	/*******************************************************
 	 HYDRODYNAMICS
 	********************************************************/

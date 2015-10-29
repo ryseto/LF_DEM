@@ -24,9 +24,10 @@ using namespace std;
 int main(int argc, char **argv)
 {
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
-	string usage = "(1) Simulation\n $ LF_DEM [-r Rate ] [-s Stress ] \
-	[-R Rate_Sequence ] [-S Stress_Sequence ] [-m ?] [-k kn_kt_File] [-i Provisional_Data] [-n] \
-	Configuration_File Parameter_File \n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed\n";
+	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
+	[-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
+ Configuration_File Parameter_File \
+	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed [-M]\n";
 
 	double dimensionless_number = 0;
 	string numeral, suffix;
@@ -43,6 +44,7 @@ int main(int argc, char **argv)
 	string seq_filename = "not_given";
 	string seq_type;
 	string rheology_control = "rate";
+	string simu_identifier = "";
 	const struct option longopts[] = {
 		{"rate-controlled", required_argument, 0, 'r'},
 		{"rate-infty", required_argument, 0, '8'},
@@ -54,13 +56,14 @@ int main(int argc, char **argv)
 		{"generate", required_argument, 0, 'g'},
 		{"kn-kt-file", required_argument, 0, 'k'},
 		{"binary", no_argument, 0, 'n'},
+		{"identifier", required_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
 		{0,0,0,0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hnM8m:g:s:S:t:r:R:k:i:h:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hnM8m:g:s:S:t:r:R:k:i:v:h:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -145,6 +148,9 @@ int main(int argc, char **argv)
  			case 'n':
 				binary_conf = true;
 				break;
+			case 'v':
+				simu_identifier = optarg;
+				break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -174,8 +180,7 @@ int main(int argc, char **argv)
 			cerr << usage << endl;
 			exit(1);
 		}
-		vector <string> input_files;
-		input_files.resize(5);
+		vector <string> input_files(5);
 		input_files[0] = config_filename;
 		input_files[1] = param_filename;
 		input_files[2] = knkt_filename;
@@ -184,21 +189,18 @@ int main(int argc, char **argv)
 		Simulation simulation;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
-										  dimensionless_number, suffix, rheology_control);
+										  dimensionless_number, suffix, rheology_control, simu_identifier);
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
-											  dimensionless_number, suffix, rheology_control);
+											  dimensionless_number, suffix, rheology_control, simu_identifier);
 
 		} else if (seq_filename == "not_given") {
-			try
-			{
+			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 dimensionless_number, suffix, rheology_control);
-			}
-			catch(runtime_error& e)
-			{
+											 dimensionless_number, suffix, rheology_control, simu_identifier);
+			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
-      	return 1;
+				return 1;
 			}
 		} else {
 		  cerr << " User def sequence temporarily disabled " << endl;

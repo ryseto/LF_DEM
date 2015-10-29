@@ -39,6 +39,7 @@ if ($pos != -1) {
 } else {
 	$mag = 0;
 }
+$mag = 0;
 if ($mag) {
 	$outputmp = "magprofile_$name.dat";
 	open (OUTMAGPROF, "> $outputmp");
@@ -632,7 +633,7 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#    }
-	$force_factor = 0.0002;
+	$force_factor = 0.06;
 	#	$force_factor = 0.02;
 #		printf OUT "y 3\n";
 #		printf OUT "@ 6\n";
