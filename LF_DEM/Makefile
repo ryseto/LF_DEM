@@ -2,11 +2,13 @@
 
 
 # load Makefile inputs
-mymake = config/Makefile_config.mk
-ifneq ("$(wildcard $(mymake))","")
-include $(mymake)
-endif
+makeconfig = config/Makefile_config.mk
+gotconfig = 0
 
+ifneq ("$(wildcard $(makeconfig))","")
+	include $(makeconfig)
+	gotconfig = 1
+endif
 
 # Compilation Flags
 CXXFLAGS_optimized = -O3 -std=c++11
@@ -34,7 +36,7 @@ CXXFLAGS_optimized += $(CXXFLAGS_EXTRA)
 
 ifeq ($(DSFMT_RNG),yes)
 	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
-	CXXFLAGS_debug += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	CXXFLAGS_debug += -DUSE_DSFMT= "$DSFMT_RNG" -DDSFMT_MEXP=19937
 	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
 endif
 
@@ -77,7 +79,12 @@ dev:	$(OUT_CODE)
 check:
 	(cd check;	make test)
 
-$(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
+hasconfig:
+	@(if [ $(gotconfig) -ne 1 ]; then \
+		echo "\n no config/Makefile_config.mk \n \n";\
+	fi)
+	
+$(OUT_CODE): $(OBJ) $(DSFMT_OBJ) hasconfig
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
 $(OBJ): $(SRC)
