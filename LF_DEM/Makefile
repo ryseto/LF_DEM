@@ -5,8 +5,8 @@
 #=======================================#
 
 
-# OS_version: OSX or Linux or SI or UCam or OIST
-OS_version = OSX
+# OS_version: OSX or Linux or SI or HPCCam or OIST
+OS_version = Linux
 # install directory
 install_dir = ~/bin/
 
@@ -16,7 +16,7 @@ DSFMT_RNG = no
 ifeq ($(OS_version),SI)
 	CXX=icc
 endif
-ifeq ($(OS_version),UCam)
+ifeq ($(OS_version),HPCCam)
 	CXX=icc
 endif
 ifeq ($(OS_version),OIST)
@@ -36,13 +36,10 @@ include $(mymake)
 endif
 
 
-CXXFLAGS_optimized = -O3
-CXXFLAGS_debug = -g -DDEV="1"
-CXXFLAGS_dev = -O3 -DDEV="1"
-
-CXXFLAGS_optimized += -std=c++11
-CXXFLAGS_debug += -std=c++11
-CXXFLAGS_dev += -std=c++11
+# Compilation Flags
+CXXFLAGS_optimized = -O3 -std=c++11
+CXXFLAGS_debug = -g -DDEV="1" -std=c++11
+CXXFLAGS_dev = -O3 -DDEV="1" -std=c++11
 
 GPP_Warnings = -Wall
 ifeq ($(CXX),$(filter $(CXX),g++ clang++))
@@ -57,7 +54,11 @@ ifeq ($(CXX),icc)
 	CXXFLAGS_debug += -pg $(ICC_Warnings)
 	CXXFLAGS_dev += $(ICC_Warnings)
 endif
+ifeq ($(CXX),gcc)
+	CXXFLAGS_debug += -pg
+endif
 
+# Dealing with git versioning
 is_git_repo := $(shell if [ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1; then echo true;fi)
 ifeq ($(is_git_repo),true)
 	VERSION := $(shell git describe --dirty --always)
@@ -66,11 +67,8 @@ ifeq ($(is_git_repo),true)
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
-ifeq ($(OS_version),Linux)
-	CXXFLAGS_debug += -pg
-endif
-ifeq ($(OS_version),UCam)
-	CXXFLAGS_optimized += -xSSE4.2 -axAVX 
+ifeq ($(OS_version),HPCCam)
+	CXXFLAGS_optimized += $CXXFLAGS_EXTRA
 endif
 
 ifeq ($(DSFMT_RNG),yes)
@@ -86,11 +84,11 @@ UseMetis=no
 Cholmod_include_path_OSX     = /usr/local/include/
 Cholmod_include_path_Linux   = /usr/include/suitesparse/
 Cholmod_include_path_SI  = ~/usr/include/
-Cholmod_include_path_UCam  = ~/usr/include/
+Cholmod_include_path_HPCCam  = ~/usr/include/
 Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
 
 Cholmod_path = $(Cholmod_include_path_$(OS_version))
-Metis_path = /opt/local/lib/
+#Metis_path = /opt/local/lib/
 
 # Includes
 Includes = -I $(Cholmod_path)
@@ -109,7 +107,7 @@ ifeq ($(OS_version), OIST)
 	Blas_Linking_Flags = -mkl -lrt
 	Lapack_Linking_Flags =
 endif
-ifeq ($(OS_version), UCam)
+ifeq ($(OS_version), HPCCam)
 	Blas_Linking_Flags = -mkl -lrt
 	Lapack_Linking_Flags =
 endif
@@ -149,7 +147,7 @@ ifeq ($(OS_version), SI)
        endif
 endif
 
-ifeq ($(OS_version), UCam)
+ifeq ($(OS_version), HPCCam)
        Cholmod_lib_path=$(Cholmod_path:include/=lib/)
        Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
        ifeq ($(UseMetis),yes)
