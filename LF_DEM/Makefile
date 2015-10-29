@@ -1,36 +1,8 @@
 #Makefile LF_DEM, Romain Mari
 
-#=======================================#
-#    Parameters to provide              #
-#=======================================#
 
-
-# OS_version: OSX or Linux or SI or HPCCam or OIST
-OS_version = Linux
-# install directory
-install_dir = ~/bin/
-
-DSFMT_RNG = no
-
-# Compiler
-ifeq ($(OS_version),SI)
-	CXX=icc
-endif
-ifeq ($(OS_version),HPCCam)
-	CXX=icc
-endif
-ifeq ($(OS_version),OIST)
-	CXX=icc
-endif
-ifeq ($(OS_version),Linux)
-	CXX=g++
-endif
-ifeq ($(OS_version),OSX)
-	CXX=clang++
-endif
-
-# can define your own variables in a Makefile.in without having to commit every time, e.g. "OS_version = Linux"
-mymake = MyMakefile.in
+# load Makefile inputs
+mymake = config/Makefile_config.mk
 ifneq ("$(wildcard $(mymake))","")
 include $(mymake)
 endif
@@ -58,6 +30,15 @@ ifeq ($(CXX),gcc)
 	CXXFLAGS_debug += -pg
 endif
 
+CXXFLAGS_optimized += $(CXXFLAGS_EXTRA)
+
+ifeq ($(DSFMT_RNG),yes)
+	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	CXXFLAGS_debug += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
+endif
+
+
 # Dealing with git versioning
 is_git_repo := $(shell if [ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1; then echo true;fi)
 ifeq ($(is_git_repo),true)
@@ -67,102 +48,15 @@ ifeq ($(is_git_repo),true)
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
-ifeq ($(OS_version),HPCCam)
-	CXXFLAGS_optimized += $CXXFLAGS_EXTRA
-endif
-
-ifeq ($(DSFMT_RNG),yes)
-	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
-	CXXFLAGS_debug += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
-	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
-endif
-
-# Enable use of Metis library ( yes / no )
-UseMetis=no
 
 #======== Include Paths =============
-Cholmod_include_path_OSX     = /usr/local/include/
-Cholmod_include_path_Linux   = /usr/include/suitesparse/
-Cholmod_include_path_SI  = ~/usr/include/
-Cholmod_include_path_HPCCam  = ~/usr/include/
-Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
-
-Cholmod_path = $(Cholmod_include_path_$(OS_version))
+Cholmod_path = $(SUITESPARSE_ROOT)/include/
+Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
+Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
 #Metis_path = /opt/local/lib/
 
 # Includes
 Includes = -I $(Cholmod_path)
-
-#======== Linking ==================
-# Blas and Lapack
-Blas_Linking_Flags = -lblas
-Lapack_Linking_Flags = -llapack
-
-ifeq ($(OS_version), SI)
-	Blas_Linking_Flags = -mkl -lrt
-	Lapack_Linking_Flags =
-endif
-
-ifeq ($(OS_version), OIST)
-	Blas_Linking_Flags = -mkl -lrt
-	Lapack_Linking_Flags =
-endif
-ifeq ($(OS_version), HPCCam)
-	Blas_Linking_Flags = -mkl -lrt
-	Lapack_Linking_Flags =
-endif
-
-# Cholmod
-
-Cholmod_Linking_Flags =
-ifeq ($(OS_version), Linux)
-Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
-endif
-
-ifeq ($(OS_version), SI)
-    Cholmod_Linking_Flags  =
-endif
-
-ifeq ($(OS_version), OIST)
-	Cholmod_Linking_Flags  =
-	ifeq ($(UseMetis),yes)
-		Cholmod_Linking_Flags += -lmetis
-	endif
-endif
-
-# extra linking flags for cholmod on Mac OSX
-ifeq ($(OS_version),OSX)
-	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
-	ifeq ($(UseMetis),yes)
-		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
-	endif
-endif
-
-ifeq ($(OS_version), SI)
-       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
-       ifeq ($(UseMetis),yes)
-			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
-       endif
-endif
-
-ifeq ($(OS_version), HPCCam)
-       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
-       ifeq ($(UseMetis),yes)
-			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
-       endif
-endif
-
-ifeq ($(OS_version), OIST)
-       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a $(Cholmod_lib_path)/libcamd.a  $(Cholmod_lib_path)/libccolamd.a  $(Cholmod_lib_path)/libsuitesparseconfig.a
-       ifeq ($(UseMetis),yes)
-             Cholmod_Linking_Flags += $(Cholmod_lib_path)/libmetis.a
-       endif
-endif
-
 
 OUT_CODE=LF_DEM
 SRC=$(shell ls *.cpp)
@@ -184,7 +78,7 @@ check:
 	(cd check;	make test)
 
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
