@@ -960,6 +960,7 @@ void Simulation::setDefaultParameters()
 	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
+	p.fixed_particle_fraction = 0;
 }
 
 void Simulation::openOutputFiles(bool binary_conf,
