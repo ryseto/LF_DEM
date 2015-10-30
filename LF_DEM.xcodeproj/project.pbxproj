@@ -538,6 +538,12 @@
 		D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = RepulsiveForce.h; sourceTree = "<group>"; };
 		D9278EA61A93050700ABCD87 /* Averager.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Averager.h; sourceTree = "<group>"; };
 		D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = RepulsiveForce.cpp; sourceTree = "<group>"; };
+		D92A7C1A1BE3C9BD000092DF /* Makefile_config_generic.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_generic.mk; sourceTree = "<group>"; };
+		D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_oist.mk; sourceTree = "<group>"; };
+		D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_HPCCam.mk; sourceTree = "<group>"; };
+		D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Ucam.mk; sourceTree = "<group>"; };
+		D92A7C1E1BE3C9BD000092DF /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D92A7C1F1BE3C9BD000092DF /* Makefile.old */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.old; sourceTree = "<group>"; };
 		D92EAA0B17E39D5100C903F5 /* Contact.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Contact.cpp; sourceTree = "<group>"; };
 		D92EAA0C17E39D5100C903F5 /* Contact.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Contact.h; sourceTree = "<group>"; };
 		D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lubrication.cpp; sourceTree = "<group>"; };
@@ -1128,6 +1134,17 @@
 			path = analyze_data_LF_DEM;
 			sourceTree = "<group>";
 		};
+		D92A7C191BE3C9BD000092DF /* config */ = {
+			isa = PBXGroup;
+			children = (
+				D92A7C1A1BE3C9BD000092DF /* Makefile_config_generic.mk */,
+				D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */,
+				D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */,
+				D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */,
+			);
+			path = config;
+			sourceTree = "<group>";
+		};
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
@@ -1250,6 +1267,9 @@
 				D932B8DE16C2EA1B00AD6E85 /* lib */,
 				D9CD258916E54DFF00A8E397 /* parameter_template.txt */,
 				D988AC3D1857666D00C9637A /* Makefile */,
+				D92A7C191BE3C9BD000092DF /* config */,
+				D92A7C1E1BE3C9BD000092DF /* Makefile */,
+				D92A7C1F1BE3C9BD000092DF /* Makefile.old */,
 				D9CE1B431B066B4200E052D9 /* dSFMT.h */,
 				D9CE1B411B066B3400E052D9 /* dSFMT.c */,
 				D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */,
