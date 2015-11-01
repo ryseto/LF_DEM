@@ -229,7 +229,7 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-	void setOffDiagBlock(const vec3d& nvec, int ii, int jj,
+	void setOffDiagBlock(const vec3d& nvec, int jj,
 						 double scaledXA, double scaledYA, double scaledYB,
 						 double scaledYBtilde, double scaledYC);
 	/*

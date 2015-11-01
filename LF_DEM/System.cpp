@@ -1296,7 +1296,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 													 inter->lubrication.scaledXA0(), 0, 0, 0);
 						stokes_solver.addToDiagBlock(nr_vec, j,
 													 inter->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+						stokes_solver.setOffDiagBlock(nr_vec, j,
 													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
 					if (rhs) {
@@ -1343,7 +1343,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 													 inter->lubrication.scaledYA3(),
 													 inter->lubrication.scaledYB3(),
 													 inter->lubrication.scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+						stokes_solver.setOffDiagBlock(nr_vec, j,
 													  inter->lubrication.scaledXA1(),
 													  inter->lubrication.scaledYA1(),
 													  inter->lubrication.scaledYB2(),

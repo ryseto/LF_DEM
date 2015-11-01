@@ -66,19 +66,6 @@ void StokesSolver::initialize()
 
 /************* Matrix filling methods **********************/
 
-//// Diagonal Terms, FT/UW version
-//void
-//StokesSolver::addToDiag(int ii, double FUvalue, double TWvalue){
-//	if (direct()) {
-//		int ii18 = 18*ii;
-//		dblocks[ii18   ] += FUvalue;
-//		dblocks[ii18+6 ] += FUvalue;
-//		dblocks[ii18+10] += FUvalue;
-//		dblocks[ii18+12] += TWvalue;
-//		dblocks[ii18+15] += TWvalue;
-//		dblocks[ii18+17] += TWvalue;
-//	}
-
 // Diagonal Blocks Terms, FT/UW version
 void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
 								  double scaledXA, double scaledYA,
@@ -122,14 +109,13 @@ void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
-void StokesSolver::setOffDiagBlock(const vec3d& nvec, int ii, int jj,
+void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 								   double scaledXA,
 								   double scaledYA, double scaledYB,
 								   double scaledYBtilde, double scaledYC)
 {
 	setColumn(nvec, jj, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	return;
-	ii = 0; // prevents gcc warning when compiled without TRILINOS
 }
 
 /*************** Cholmod Matrix Filling *************
