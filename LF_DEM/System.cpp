@@ -1257,8 +1257,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-		stokes_solver.resetResistanceMatrix("direct",
-											nb_of_active_interactions,
+		stokes_solver.resetResistanceMatrix(nb_of_active_interactions,
 											resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
