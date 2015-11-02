@@ -550,7 +550,7 @@ void StokesSolver::allocateRessources()
     cholmod_start(&chol_c);
 	chol_init = true;
     chol_rhs = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c);
-	chol_Psolution  = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c); // used for Brownian motion
+	chol_Psolution = cholmod_allocate_dense(np6, 1, np6, xtype, &chol_c); // used for Brownian motion
 	for (int i=0; i<np6; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
@@ -697,8 +697,8 @@ void StokesSolver::printFactor(ostream &out)
 	cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 	cholmod_sparse* chol_L_sparse = cholmod_transpose(cholmod_factor_to_sparse(chol_L_copy, &chol_c), 1, &chol_c);
 	cholmod_dense* chol_L_dense = cholmod_sparse_to_dense(chol_L_sparse, &chol_c);
-	//		cholmod_sparse* chol_PTL_sparse = cholmod_dense_to_sparse(cholmod_solve(CHOLMOD_Pt, chol_L, chol_L_dense, &chol_c), 1, &chol_c) ; // chol_solution = P^T*chol_Psolution
-	//		cholmod_dense* chol_LT_dense = cholmod_sparse_to_dense(cholmod_transpose(chol_L_sparse, 1, &chol_c), &chol_c);
+	//	cholmod_sparse* chol_PTL_sparse = cholmod_dense_to_sparse(cholmod_solve(CHOLMOD_Pt, chol_L, chol_L_dense, &chol_c), 1, &chol_c) ; // chol_solution = P^T*chol_Psolution
+	//	cholmod_dense* chol_LT_dense = cholmod_sparse_to_dense(cholmod_transpose(chol_L_sparse, 1, &chol_c), &chol_c);
 	int transpose = 1;
 	double alpha[] = {1, 0};
 	double beta[] = {0, 0};

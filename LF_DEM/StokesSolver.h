@@ -175,11 +175,11 @@ private:
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d& nvec, int jj,
+	void setColumn(const vec3d& nvec, int jj,
 				   double scaledXA, double scaledYA,
 				   double scaledYB, double scaledYBtilde, double scaledYC);
-    void allocateResistanceMatrix();
-    void allocateRessources();
+	void allocateResistanceMatrix();
+	void allocateRessources();
     void setDiagBlockPreconditioner();
     void setIncCholPreconditioner();
     void setSpInvPreconditioner();

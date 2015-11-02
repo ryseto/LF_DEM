@@ -544,6 +544,7 @@
 		D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Ucam.mk; sourceTree = "<group>"; };
 		D92A7C1E1BE3C9BD000092DF /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D92A7C1F1BE3C9BD000092DF /* Makefile.old */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.old; sourceTree = "<group>"; };
+		D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_oist_gpu.mk; sourceTree = "<group>"; };
 		D92EAA0B17E39D5100C903F5 /* Contact.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Contact.cpp; sourceTree = "<group>"; };
 		D92EAA0C17E39D5100C903F5 /* Contact.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Contact.h; sourceTree = "<group>"; };
 		D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Lubrication.cpp; sourceTree = "<group>"; };
@@ -1141,6 +1142,7 @@
 				D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */,
 				D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */,
 				D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */,
+				D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */,
 			);
 			path = config;
 			sourceTree = "<group>";
