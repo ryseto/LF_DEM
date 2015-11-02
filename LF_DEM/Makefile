@@ -84,7 +84,7 @@ hasconfig:
 	fi)
 
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ) hasconfig
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)

@@ -1257,8 +1257,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
 		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-		stokes_solver.resetResistanceMatrix("direct",
-											nb_of_active_interactions,
+		stokes_solver.resetResistanceMatrix(nb_of_active_interactions,
 											resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
@@ -1297,7 +1296,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 													 inter->lubrication.scaledXA0(), 0, 0, 0);
 						stokes_solver.addToDiagBlock(nr_vec, j,
 													 inter->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+						stokes_solver.setOffDiagBlock(nr_vec, j,
 													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
 					if (rhs) {
@@ -1344,7 +1343,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 													 inter->lubrication.scaledYA3(),
 													 inter->lubrication.scaledYB3(),
 													 inter->lubrication.scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, i, j,
+						stokes_solver.setOffDiagBlock(nr_vec, j,
 													  inter->lubrication.scaledXA1(),
 													  inter->lubrication.scaledYA1(),
 													  inter->lubrication.scaledYB2(),
