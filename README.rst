@@ -77,7 +77,7 @@ because it contains variables that will depend on your environment.
 You can create  ``Makefile_config.mk`` by modifying the example configurations provided in the
 ``LF_DEM/config/`` folder.
 
-Once those changes to Makefile saved, you can simply compile in a
+Once you created ``Makefile_config.mk``, you can simply compile in a
 terminal via:
 
 ::
