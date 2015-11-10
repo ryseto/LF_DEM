@@ -100,7 +100,7 @@ clean:
 	rm -f  $(OBJ)
 
 doc:
-	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
+	doxygen Doxyfile
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)
