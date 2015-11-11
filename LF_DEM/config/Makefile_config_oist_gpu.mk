@@ -21,7 +21,7 @@ CXX = icpc
 
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
-CXXFLAGS_EXTRA = -lcuda -L${CUDA_HOME}/lib
+CXXFLAGS_EXTRA = -L${CUDA_HOME}/lib -lcuda -L/usr/lib64/nvidia/
 Cholmod_GPU_libpath = $(SUITESPARSE_ROOT)/lib/
 Cholmod_GPU = $(Cholmod_GPU_libpath)libSuiteSparse_GPURuntime.a $(Cholmod_GPU_libpath)libGPUQREngine.a
 
