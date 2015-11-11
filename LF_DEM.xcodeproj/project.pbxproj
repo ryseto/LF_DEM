@@ -1139,9 +1139,9 @@
 			isa = PBXGroup;
 			children = (
 				D92A7C1A1BE3C9BD000092DF /* Makefile_config_generic.mk */,
-				D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */,
 				D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */,
 				D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */,
+				D92A7C1B1BE3C9BD000092DF /* Makefile_config_oist.mk */,
 				D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */,
 			);
 			path = config;
