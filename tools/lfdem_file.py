@@ -33,7 +33,7 @@ def read_snapshot_file(in_file, field_nb=None):
     """
     field_nb_d = {'par': 15, 'int': 17}
     if field_nb is None:
-        file_type = in_file[:infile.lfind('_')]
+        file_type = in_file[in_file.rfind('/')+1:in_file.find('_')]
         field_nb = field_nb_d[file_type]
 
     names = [str(i) for i in range(1,field_nb+1)]
