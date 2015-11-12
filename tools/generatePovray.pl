@@ -247,24 +247,40 @@ sub OutPovrayFile{
 		$rr = $radius[$i];
 		printf OUT "S(<$x, $y, $z>, $rr)\n";
 	}
+	
+	$max_force = 0;
 	for ($k = 0; $k < $num_interaction; $k ++){
-		$r = 0.0005*$force[$k];
-		if ($r > 0.6) {
-			printf "r = $r\n";
-			$r = 0.6;
+		if ($max_force < $force[$k]){
+			$max_force = $force[$k];
 		}
-		if ($contactstate[$k] != 0 && $r > 0.01) {
+	}
+	
+	for ($k = 0; $k < $num_interaction; $k ++){
+		$r = 0.3*$force[$k]/$max_force;
+
+		if ($contactstate[$k] != 0 && $r > 0) {
 			&OutStringPovray($int0[$k], $int1[$k], $r);
 		}
 	}
 }
 
 sub OutBondPov{
-	($xi, $yi, $zi, $xj, $yj, $zj, $f) = @_;
-
-	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2;
-	if (sqrt($sq_dist) < 4){
-		printf OUT  "B(<$xi, $yi, $zi>, <$xj, $yj, $zj>, $f)\n";
+	($xs, $ys, $zs, $xe, $ye, $ze, $f, $rs) = @_;
+	
+	$dist = sqrt(($xs-$xe)**2 + ($ys-$ye)**2 + ($zs-$ze)**2);
+	
+	if ($dist < 4 && $dist > 0 ){
+		$dx = ($xe - $xs)*$rs/$dist;
+		$dy = ($ye - $ys)*$rs/$dist;
+		$dz = ($ze - $zs)*$rs/$dist;
+		
+		$xe = $xs + $dx;
+		$ye = $ys + $dy;
+		$ze = $zs + $dz;
+		printf "$dx $dy $dz\n";
+		if ($xs != $xe) {
+			printf OUT  "B(<$xs, $ys, $zs>, <$xe, $ye, $ze>, $f)\n";
+		}
 	}
 }
 
@@ -281,32 +297,31 @@ sub OutStringPovray{
 		printf OUT  "B(<$xi, $yi, $zi>, <$xj, $yj, $zj>, $f)\n";
 	} else {
 		if ($xi > $xj+6) {
-			&OutBondPov($xi-$Lx, $yi, $zi, $xj    , $yj, $zj, $f);
-			&OutBondPov($xi    , $yi, $zi, $xj+$Lx, $yj, $zj, $f);
+			
+			&OutBondPov($xj, $yj, $zj, $xi-$Lx, $yi, $zi, $f, $radius[$j]);
+			&OutBondPov($xi, $yi, $zi, $xj+$Lx, $yj, $zj, $f, $radius[$i]);
 		}
 		if ($xj > $xi+6) {
-			&OutBondPov($xi+$Lx, $yi, $zi, $xj    , $yj, $zj, $f);
-			&OutBondPov($xi    , $yi, $zi, $xj-$Lx, $yj, $zj, $f);
+			&OutBondPov($xj, $yj, $zj, $xi+$Lx, $yi, $zi, $f, $radius[$j]);
+			&OutBondPov($xi, $yi, $zi, $xj-$Lx, $yj, $zj, $f, $radius[$i]);
 		}
 		
 		if ($yi > $yj+6 && abs($xi-$xj) < 6 && abs($zi-$zj) < 6) {
-			&OutBondPov($xi, $yi-$Ly, $zi, $xj, $yj, $zj, $f);
-			&OutBondPov($xi, $yi, $zi, $xj, $yj+$Ly , $zj, $f);
+			&OutBondPov($xj, $yj, $zj, $xi, $yi-$Ly, $zi, $f, $radius[$j]);
+			&OutBondPov($xi, $yi, $zi, $xj, $yj+$Ly, $zj, $f, $radius[$i]);
 		}
 		if ($yj > $yi+6 && abs($xi-$xj) < 6 && abs($zi-$zj) < 6) {
-			&OutBondPov($xi, $yi+$Ly, $zi, $xj, $yj, $zj, $f);
-			&OutBondPov($xi, $yi, $zi, $xj, $yj-$Ly , $zj, $f);
+			&OutBondPov($xj, $yj, $zj, $xi, $yi+$Ly, $zi, $f, $radius[$j]);
+			&OutBondPov($xi, $yi, $zi, $xj, $yj-$Ly, $zj, $f, $radius[$i]);
 		}
 		if ($zi > $zj+6 && abs($xi-$xj) < 6 && abs($yi-$yj) < 6) {
-			&OutBondPov($xi, $yi, $zi-$Lz, $xj, $yj, $zj, $f);
-			&OutBondPov($xi, $yi, $zi, $xj, $yj , $zj+$Lz, $f);
+			&OutBondPov($xj, $yj, $zj, $xi, $yi, $zi-$Lz, $f, $radius[$j]);
+			&OutBondPov($xi, $yi, $zi, $xj, $yj, $zj+$Lz, $f, $radius[$i]);
 		}
 		if ($zj > $zi+6 && abs($xi-$xj) < 6 && abs($yi-$yj) < 6) {
-			&OutBondPov($xi, $yi, $zi+$Lz, $xj, $yj, $zj, $f);
-			&OutBondPov($xi, $yi, $zi, $xj, $yj , $zj-$Lz, $f);
+			&OutBondPov($xj, $yj, $zj, $xi, $yi, $zi+$Lz, $f, $radius[$j]);
+			&OutBondPov($xi, $yi, $zi, $xj, $yj, $zj-$Lz, $f, $radius[$i]);
 		}
-		
-		
 		#		if ($yj > $yi+6) {
 		#			printf OUT "B(<$xi, $yi+$Ly, $zi>, <$xj, $yj, $zj>, $f)\n";
 		#			printf OUT "B(<$xi, $yi, $zi>, <$xj, $yj-$Ly, $zj>, $f)\n";
@@ -336,6 +351,13 @@ sub printHead
 	#include \"metals.inc\"\n";
 	
 	printf OUT "
+#	camera {
+#		location <15, 30, 10>
+#		right <21/22.5, 0, 0>
+#		sky      <0, 0, 1>
+#		look_at  <-1, 0, -1.5>
+#		angle 45
+#	}
 	camera {
 		location <0, 40, 0>
 		right <21/22.5, 0, 0>
@@ -354,9 +376,9 @@ sub printHead
 	#macro S(p, r)
 	sphere{ 0, r
 		texture {
-			pigment{ color rgbft <1,1,1,.3,.5> }
-			finish { phong 1 reflection {0.1 metallic 0.2} }}
-		interior {ior 1.7}
+			pigment{ color rgbft <1,1,1,.3, 0.5> }
+			finish { phong 1 reflection {0 metallic 0} }}
+		interior {ior 1}
 		translate p
 	}
 	#end
@@ -365,7 +387,7 @@ sub printHead
 	printf OUT "
 	#macro B(p1, p2, r)
 	object{
-		cylinder{p1, p2 , r}
+		cylinder{p1, p2, r}
 		pigment{ color rgbf <1,1,0,0.2> }
 		finish {
 			phong 1
