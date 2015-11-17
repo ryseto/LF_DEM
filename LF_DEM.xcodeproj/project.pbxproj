@@ -12,6 +12,7 @@
 		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
+		D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */; };
 		D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */; };
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
@@ -533,6 +534,7 @@
 		D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = analyze_data_LF_DEM.1; sourceTree = "<group>"; };
 		D921A0C7175C0041002F64B1 /* SystemParticles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemParticles.cpp; sourceTree = "<group>"; };
 		D921A0C8175C0041002F64B1 /* SystemParticles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemParticles.h; sourceTree = "<group>"; };
+		D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SystemHelperFunctions.cpp; sourceTree = "<group>"; };
 		D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = RepulsiveForce.h; sourceTree = "<group>"; };
 		D9278EA61A93050700ABCD87 /* Averager.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Averager.h; sourceTree = "<group>"; };
 		D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = RepulsiveForce.cpp; sourceTree = "<group>"; };
@@ -1234,6 +1236,7 @@
 				D9A80BF61B1C87D000F4BFD3 /* OutputData.h */,
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
+				D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D90B4F681A70942500C51ACD /* ParameterSet.h */,
 				D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */,
@@ -1539,6 +1542,7 @@
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,
 				D9878877165545680047A87E /* Simulation.cpp in Sources */,
 				D9573FB216797A000081E903 /* Box.cpp in Sources */,
+				D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */,
 				D9573FB316797A000081E903 /* BoxSet.cpp in Sources */,
 				CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */,
 				D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */,
