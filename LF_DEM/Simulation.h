@@ -114,6 +114,8 @@ private:
 							std::string keyword,
 							std::string value_str,
 							double* value_ptr);
+	void catchSuffixedForce(const std::string &keyword,
+							const std::string &value);
 	/*
 	 * For outputs
 	 */
@@ -131,11 +133,11 @@ private:
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();
 	bool kill;
-	
+
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
-	
+
 public:
 	/* For DEMsystem*/
 	Simulation();
@@ -148,7 +150,7 @@ public:
 							   std::string control_variable,
 							   std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
-	
+
 	void simulationInverseYield(std::string in_args,
 								std::vector<std::string>& input_files,
 								bool binary_conf,
@@ -156,7 +158,7 @@ public:
 								std::string input_scale,
 								std::string control_variable,
 								std::string simu_identifier);
-	
+
 	void simulationMagnetic(std::string in_args,
 							std::vector<std::string>& input_files,
 							bool binary_conf,
@@ -164,14 +166,14 @@ public:
 							std::string input_scale,
 							std::string control_variable,
 							std::string simu_identifier);
-	
+
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
 						 double dimensionlessnumber,
 						 std::string input_scale,
 						 std::string simu_identifier);
-	
+
 	void setControlVariable(const std::string& var)
 	{
 		control_var = var;

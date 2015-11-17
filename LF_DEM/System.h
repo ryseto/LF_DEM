@@ -300,6 +300,7 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void analyzeState();
+	double evaluateAvgContactGap();
 	StokesSolver stokes_solver;
 	void initializeBoxing();
 	void calcLubricationForce(); // for visualization of force chains
@@ -362,22 +363,22 @@ private:
 	{
 		return lz;
 	}
-	
+
 	inline double Lx_half()
 	{
 		return lx_half;
 	}
-	
+
 	inline double Ly_half()
 	{
 		return ly_half;
 	}
-	
+
 	inline double Lz_half()
 	{
 		return lz_half;
 	}
-	
+
 	double get_time_in_simulation_units()
 	{
 		return time_in_simulation_units;
@@ -397,7 +398,7 @@ private:
 	{
 		shear_rate = sr;
 	}
-	
+
 	inline void set_np(int val)
 	{
 		np = val;
