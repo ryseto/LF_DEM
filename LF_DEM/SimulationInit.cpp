@@ -229,10 +229,10 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 		throw runtime_error(" Error: please give a stress in non-hydro units.");
 		/*
 		 Note:
-		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
+		 Although it is in some cases possible to run under stress control with hydro units,
 		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
 
-		 With only hydro, the problem is that the target stress \f$\tilde{S}\f$ cannot take any possible value, as
+		 With hydro units, the problem is that the target stress \f$\tilde{S}\f$ cannot take any possible value, as
 		\f$\tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0\f$
 		 --> It is limited to the available range of viscosity.
 		 If you give a \f$\tilde{S}\f$ outside this range (for example \f$\tilde{S}=0.5\f$), you run into troubles.
@@ -451,8 +451,14 @@ void Simulation::exportForceAmplitudes()
 		sys.brownian = true;
 		p.brownian_amplitude = input_force_values["thermal"];
 		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers[internal_unit_scales+"/thermal"]);
-		cout << indent+"Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers[internal_unit_scales+"/thermal"] << endl;
+		cout << indent+"Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers["thermal/"+internal_unit_scales] << endl;
 	}
+	p.kn = input_force_values["normal_stiffness"];
+	cout << indent+"Normal contact stiffness (in \"" << input_force_units["normal_stiffness"] << "\" units): " << dimensionless_numbers["normal_stiffness/"+internal_unit_scales] << endl;
+	p.kt = input_force_values["tan_stiffness"];
+	cout << indent+"Sliding contact stiffness (in \"" << input_force_units["tan_stiffness"] << "\" units): " << dimensionless_numbers["tan_stiffness/"+internal_unit_scales] << endl;
+	p.kr = input_force_values["roll_stiffness"];
+	cout << indent+"Rolling contact stiffness (in \"" << input_force_units["roll_stiffness"] << "\" units): " << dimensionless_numbers["roll_stiffness/"+internal_unit_scales] << endl;
 }
 
 void Simulation::convertInputValues(string new_unit)
@@ -469,10 +475,6 @@ void Simulation::convertInputValues(string new_unit)
 				ostringstream error_str;
 				error_str  << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
 				throw runtime_error(error_str.str());
-			}
-			if (inv.type == "stiffness") {
-				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
-				inv.unit = new_unit;
 			}
 			if (inv.type == "time") {
 				if (old_unit == "hydro") { // = it is a strain, better keeping it that way
@@ -503,7 +505,6 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
-		p.unscaled_contactmodel = true;
 	} else if (control_var == "magnetic") {
 		convertInputForcesMagnetic(dimensionlessnumber, input_scale);
 	} else {
@@ -649,7 +650,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	 \brief Parse an input parameter
 	 */
 	string numeral, suffix;
-	bool caught_suffix = true;
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
@@ -659,26 +659,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 			p.friction_model = atoi(value.c_str());
 		}
 	} else if (keyword == "repulsion_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		p.repulsion_amplitude = atof(numeral.c_str());
-		input_force_units["repulsive"] = suffix;
-		input_force_values["repulsive"] = atof(numeral.c_str());
+		catchSuffixedForce("repulsive", value);
 	} else if (keyword == "cohesion_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["cohesive"] = suffix;
-		input_force_values["cohesive"] = atof(numeral.c_str());
+		catchSuffixedForce("cohesive", value);
 	} else if (keyword == "brownian_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["thermal"] = suffix;
-		input_force_values["thermal"] = atof(numeral.c_str());
+		catchSuffixedForce("thermal", value);
 	 } else if (keyword == "critical_load_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["critical_load"] = suffix;
-		input_force_values["critical_load"] = atof(numeral.c_str());
+	 	catchSuffixedForce("critical_load", value);
 	} else if (keyword == "magnetic_amplitude") {
 		//		caught_suffix = getSuffix(value, numeral, suffix);
 		//		suffix = unit_longname[suffix];
@@ -713,11 +700,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		catchSuffixedValue("stiffness", keyword, value, &p.kn);
+		catchSuffixedForce("normal_stiffness", value);
 	} else if (keyword == "kt") {
-		catchSuffixedValue("stiffness", keyword, value, &p.kt);
+		catchSuffixedForce("tan_stiffness", value);
 	} else if (keyword == "kr") {
-		catchSuffixedValue("stiffness", keyword, value, &p.kr);
+		catchSuffixedForce("roll_stiffness", value);
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
@@ -761,10 +748,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["ft"] = suffix;
-		input_force_values["ft"] = atof(numeral.c_str());
+		catchSuffixedForce("ft", value);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
@@ -798,9 +782,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		ostringstream error_str;
 		error_str  << "keyword " << keyword << " is not associated with an parameter" << endl;
 		throw runtime_error(error_str.str());
-	}
-	if (!caught_suffix) {
-		errorNoSuffix(keyword);
 	}
 }
 
@@ -971,7 +952,7 @@ void Simulation::openOutputFiles(bool binary_conf,
 {
 	/**
 	  \brief Set up the output files
-	 
+
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
 	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,

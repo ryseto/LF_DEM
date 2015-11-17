@@ -30,6 +30,10 @@ target_stress_input(0)
 	unit_longname["cl"] = "critical_load";
 	unit_longname["m"] = "magnetic";
 	unit_longname["ft"] = "ft";
+	unit_longname["kn"] = "normal_stiffness";
+	unit_longname["kt"] = "tan_stiffness";
+	unit_longname["kr"] = "roll_stiffness";
+
 	kill = false;
 };
 
@@ -430,6 +434,18 @@ void Simulation::outputComputationTime()
 	fout_time << time_from_1 << ' ';
 	fout_time << timestep_end << ' ';
 	fout_time << timestep_from_1 << endl;
+}
+
+void Simulation::catchSuffixedForce(const string &keyword, const string &value){
+	string numeral, suffix;
+	bool caught_suffix = getSuffix(value, numeral, suffix);
+	suffix = unit_longname[suffix];
+	input_force_units[keyword] = suffix;
+	input_force_values[keyword] = atof(numeral.c_str());
+
+	if (!caught_suffix) {
+		errorNoSuffix(keyword);
+	}
 }
 
 void Simulation::catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr){
