@@ -117,19 +117,23 @@ by appending a literal suffix to the numeral value. The list of
 suffixes corresponding to the forces currently implemented in LF\_DEM is
 the following:
 
-+-------------------+----------+
-| Set of unit       | Suffix   |
-+===================+==========+
-| Repulsive force   | "r"      |
-+-------------------+----------+
-| Brownian force    | "b"      |
-+-------------------+----------+
-| Cohesion          | "c"      |
-+-------------------+----------+
-| Critical Load     | "cl"     |
-+-------------------+----------+
-| Magnetic          | "m"      |
-+-------------------+----------+
++---------------------------------+----------+
+| Set of unit                     | Suffix   |
++=================================+==========+
+| Repulsive force                 | "r"      |
++---------------------------------+----------+
+| Brownian force                  | "b"      |
++---------------------------------+----------+
+| Cohesion                        | "c"      |
++---------------------------------+----------+
+| Critical Load                   | "cl"     |
++---------------------------------+----------+
+| Normal contact stiffness        | "kn"     |
++---------------------------------+----------+
+| Tangential contact stiffness    | "kt"     |
++---------------------------------+----------+
+| Rolling contact stiffness       | "kr"     |
++---------------------------------+----------+
 
 For example, if using repulsive force and a Brownian force, one can
 specify in the ``Parameter_File``:
