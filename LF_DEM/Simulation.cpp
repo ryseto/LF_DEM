@@ -33,7 +33,6 @@ target_stress_input(0)
 	unit_longname["kn"] = "normal_stiffness";
 	unit_longname["kt"] = "tan_stiffness";
 	unit_longname["kr"] = "roll_stiffness";
-
 	kill = false;
 };
 
@@ -436,7 +435,9 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_from_1 << endl;
 }
 
-void Simulation::catchSuffixedForce(const string &keyword, const string &value){
+void Simulation::catchSuffixedForce(const string& keyword,
+									const string& value)
+{
 	string numeral, suffix;
 	bool caught_suffix = getSuffix(value, numeral, suffix);
 	suffix = unit_longname[suffix];
@@ -448,7 +449,9 @@ void Simulation::catchSuffixedForce(const string &keyword, const string &value){
 	}
 }
 
-void Simulation::catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr){
+void Simulation::catchSuffixedValue(string type, string keyword,
+									string value_str, double *value_ptr)
+{
 	InputValue inv;
 	inv.type = type;
 	inv.name = keyword;
@@ -683,7 +686,8 @@ void Simulation::outputData()
 	}
 }
 
-void Simulation::getSnapshotHeader(stringstream& snapshot_header){
+void Simulation::getSnapshotHeader(stringstream& snapshot_header)
+{
 	snapshot_header << "# " << sys.get_shear_strain() << ' ';
 	snapshot_header << sys.shear_disp.x << ' ';
 	snapshot_header << getRate() << ' ';

@@ -239,6 +239,26 @@ sub OutPovrayFile{
 	$r = $yap_radius*$radius[0];
 	$switch = 0;
 	&printHead;
+	$xshift = 0;
+	$yshift = -0.5;
+	for ($i = 0; $i < $np; $i ++) {
+		$posy[$i] += $xshift;
+		if ($posx[$i] > $Ly/2) {
+			$posx[$i] -= $Lx;
+		} elsif ($posx[$i] < -$Lx/2) {
+			$posx[$i] += $Lx;
+		}
+
+		$posy[$i] += $yshift;
+		if ($posy[$i] > $Ly/2) {
+			$posy[$i] -= $Ly;
+		} elsif ($posy[$i] < -$Ly/2) {
+			$posy[$i] += $Ly;
+		}
+
+		
+	}
+
 	
 	for ($i = 0; $i < $np; $i ++) {
 		$x = $posx[$i];
@@ -371,13 +391,14 @@ sub printHead
 	}
 	background{color rgb <5/255,8/255,42/255>}
 	";
-	
+	#	background{color rgb <0/255,0/255,0/255>}
+
 	printf OUT "
 	#macro S(p, r)
 	sphere{ 0, r
 		texture {
-			pigment{ color rgbft <1,1,1,.3, 0.5> }
-			finish { phong 1 reflection {0 metallic 0} }}
+			pigment{ color rgbft <1,1,1, 0.3, 0.5> }
+			finish { phong 1 reflection {0.3 metallic 0} }}
 		interior {ior 1}
 		translate p
 	}
@@ -388,12 +409,12 @@ sub printHead
 	#macro B(p1, p2, r)
 	object{
 		cylinder{p1, p2, r}
-		pigment{ color rgbf <1,1,0,0.2> }
+		pigment{ color rgbf <1,1,0,0.1> }
 		finish {
 			phong 1
-			ambient 0.5
+			ambient 0.3
 		}}
-	#end
+	#end	v
 	";
 	
 	#	printf OUT "

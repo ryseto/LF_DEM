@@ -114,8 +114,8 @@ private:
 							std::string keyword,
 							std::string value_str,
 							double* value_ptr);
-	void catchSuffixedForce(const std::string &keyword,
-							const std::string &value);
+	void catchSuffixedForce(const std::string& keyword,
+							const std::string& value);
 	/*
 	 * For outputs
 	 */
