@@ -1,48 +1,18 @@
 #Makefile LF_DEM, Romain Mari
 
-#=======================================#
-#    Parameters to provide              #
-#=======================================#
 
-
-# OS_version: OSX or Linux or SI or UCam or OIST
-OS_version = OSX
-# install directory
-install_dir = ~/bin/
-
-DSFMT_RNG = no
-
-# Compiler
-ifeq ($(OS_version),SI)
-	CXX=icc
-endif
-ifeq ($(OS_version),UCam)
-	CXX=icc
-endif
-ifeq ($(OS_version),OIST)
-	CXX=icc
-endif
-ifeq ($(OS_version),Linux)
-	CXX=g++
-endif
-ifeq ($(OS_version),OSX)
-	CXX=clang++
+# load Makefile inputs
+makeconfig = config/Makefile_config.mk
+gotconfig = 0
+ifneq ("$(wildcard $(makeconfig))","")
+	include $(makeconfig)
+	gotconfig = 1
 endif
 
-# can define your own variables in a Makefile.in without having to commit every time, e.g. "OS_version = Linux"
-mymake = MyMakefile.in
-ifneq ("$(wildcard $(mymake))","")
-include $(mymake)
-endif
-
-
-CXXFLAGS_optimized = -O3
-CXXFLAGS_debug = -g -DDEV="1"
-CXXFLAGS_dev = -O3 -DDEV="1"
-
-CXXFLAGS_optimized += -std=c++11
-CXXFLAGS_debug += -std=c++11
-CXXFLAGS_dev += -std=c++11
+# Compilation Flags
+CXXFLAGS_optimized = -O3 -std=c++11
+CXXFLAGS_debug = -g -DDEV="1" -std=c++11
+CXXFLAGS_dev = -O3 -DDEV="1" -std=c++11
 
 GPP_Warnings = -Wall
 ifeq ($(CXX),$(filter $(CXX),g++ clang++))
@@ -52,12 +22,25 @@ ifeq ($(CXX),$(filter $(CXX),g++ clang++))
 endif
 
 ICC_Warnings = -Wall
-ifeq ($(CXX),icc)
+ifeq ($(CXX),icpc)
 	CXXFLAGS_optimized += $(ICC_Warnings)
 	CXXFLAGS_debug += -pg $(ICC_Warnings)
 	CXXFLAGS_dev += $(ICC_Warnings)
 endif
+ifeq ($(CXX),gcc)
+	CXXFLAGS_debug += -pg
+endif
 
+CXXFLAGS_optimized += $(CXXFLAGS_EXTRA)
+
+ifeq ($(DSFMT_RNG),yes)
+	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
+	CXXFLAGS_debug += -DUSE_DSFMT= "$DSFMT_RNG" -DDSFMT_MEXP=19937
+	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
+endif
+
+
+# Dealing with git versioning
 is_git_repo := $(shell if [ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1; then echo true;fi)
 ifeq ($(is_git_repo),true)
 	VERSION := $(shell git describe --dirty --always)
@@ -66,105 +49,15 @@ ifeq ($(is_git_repo),true)
 	CXXFLAGS_dev += -DGIT_VERSION="\"$(VERSION)\""
 endif
 
-ifeq ($(OS_version),Linux)
-	CXXFLAGS_debug += -pg
-endif
-ifeq ($(OS_version),UCam)
-	CXXFLAGS_optimized += -xSSE4.2 -axAVX 
-endif
-
-ifeq ($(DSFMT_RNG),yes)
-	CXXFLAGS_optimized += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
-	CXXFLAGS_debug += -DUSE_DSFMT="$DSFMT_RNG" -DDSFMT_MEXP=19937
-	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
-endif
-
-# Enable use of Metis library ( yes / no )
-UseMetis=no
 
 #======== Include Paths =============
-Cholmod_include_path_OSX     = /usr/local/include/
-Cholmod_include_path_Linux   = /usr/include/suitesparse/
-Cholmod_include_path_SI  = ~/usr/include/
-Cholmod_include_path_UCam  = ~/usr/include/
-Cholmod_include_path_OIST  = $(SUITESPARSE_ROOT)/include/
-
-Cholmod_path = $(Cholmod_include_path_$(OS_version))
-Metis_path = /opt/local/lib/
+Cholmod_path = $(SUITESPARSE_ROOT)/include/
+Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
+Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
+#Metis_path = /opt/local/lib/
 
 # Includes
 Includes = -I $(Cholmod_path)
-
-#======== Linking ==================
-# Blas and Lapack
-Blas_Linking_Flags = -lblas
-Lapack_Linking_Flags = -llapack
-
-ifeq ($(OS_version), SI)
-	Blas_Linking_Flags = -mkl -lrt
-	Lapack_Linking_Flags =
-endif
-
-ifeq ($(OS_version), OIST)
-	Blas_Linking_Flags = -mkl -lrt
-	Lapack_Linking_Flags =
-endif
-ifeq ($(OS_version), UCam)
-	Blas_Linking_Flags = -mkl -lrt
-	Lapack_Linking_Flags =
-endif
-
-# Cholmod
-
-Cholmod_Linking_Flags =
-ifeq ($(OS_version), Linux)
-Cholmod_Linking_Flags = -lcholmod -lamd -lcamd -lcolamd -lccolamd
-endif
-
-ifeq ($(OS_version), SI)
-    Cholmod_Linking_Flags  =
-endif
-
-ifeq ($(OS_version), OIST)
-	Cholmod_Linking_Flags  =
-	ifeq ($(UseMetis),yes)
-		Cholmod_Linking_Flags += -lmetis
-	endif
-endif
-
-# extra linking flags for cholmod on Mac OSX
-ifeq ($(OS_version),OSX)
-	Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-	Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
-	ifeq ($(UseMetis),yes)
-		Cholmod_Linking_Flags += $(Metis_path)/libmetis.dylib
-	endif
-endif
-
-ifeq ($(OS_version), SI)
-       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
-       ifeq ($(UseMetis),yes)
-			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
-       endif
-endif
-
-ifeq ($(OS_version), UCam)
-       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a
-       ifeq ($(UseMetis),yes)
-			Cholmod_Linking_Flags += $(Cholmod_lib_path)/libccolamd.a $(Cholmod_lib_path)/libcamd.a $(Cholmod_lib_path)/libmetis.a
-       endif
-endif
-
-ifeq ($(OS_version), OIST)
-       Cholmod_lib_path=$(Cholmod_path:include/=lib/)
-       Cholmod_Linking_Flags += $(Cholmod_lib_path)/libcholmod.a $(Cholmod_lib_path)/libamd.a $(Cholmod_lib_path)/libcolamd.a $(Cholmod_lib_path)/libsuitesparseconfig.a $(Cholmod_lib_path)/libcamd.a  $(Cholmod_lib_path)/libccolamd.a  $(Cholmod_lib_path)/libsuitesparseconfig.a
-       ifeq ($(UseMetis),yes)
-             Cholmod_Linking_Flags += $(Cholmod_lib_path)/libmetis.a
-       endif
-endif
-
 
 OUT_CODE=LF_DEM
 SRC=$(shell ls *.cpp)
@@ -185,8 +78,13 @@ dev:	$(OUT_CODE)
 check:
 	(cd check;	make test)
 
-$(OUT_CODE): $(OBJ) $(DSFMT_OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  -lstdc++ -lm $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Cholmod_Linking_Flags)
+hasconfig:
+	@(if [ $(gotconfig) -ne 1 ]; then \
+		echo "\n no config/Makefile_config.mk \n \n";\
+	fi)
+
+$(OUT_CODE): $(OBJ) $(DSFMT_OBJ) hasconfig
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
@@ -202,7 +100,7 @@ clean:
 	rm -f  $(OBJ)
 
 doc:
-	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
+	doxygen Doxyfile
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)

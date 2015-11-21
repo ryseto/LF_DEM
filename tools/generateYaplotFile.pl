@@ -39,6 +39,7 @@ if ($pos != -1) {
 } else {
 	$mag = 0;
 }
+$mag = 0;
 if ($mag) {
 	$outputmp = "magprofile_$name.dat";
 	open (OUTMAGPROF, "> $outputmp");
@@ -632,7 +633,7 @@ sub OutYaplotData{
 	#			}
 	#		}
 	#    }
-	$force_factor = 0.0002;
+	$force_factor = 0.06;
 	#	$force_factor = 0.02;
 #		printf OUT "y 3\n";
 #		printf OUT "@ 6\n";
@@ -1124,6 +1125,92 @@ sub OutMagMoment {
 		printf OUT "s $xa $ya $za $xb $yb $zb\n";
 	}
 }
+
+
+
+
+
+
+sub printHead
+{
+	printf OUT "
+	#include \"colors.inc\"
+	#include \"shapes.inc\"
+	#include \"skies.inc\"
+	#include \"glass.inc\"
+	#include \"woods.inc\"
+	#include \"stones.inc\"
+	#include \"metals.inc\"
+	";
+	
+	#  right <-1, 0, 0>
+	printf OUT "
+	camera {
+  location <15, -40, 15>
+  right <-1.33, 0, 0>
+  sky      <0, 0, 1>
+  look_at  <0, 0, 0>
+  angle 45
+	}
+	";
+	
+	printf OUT "
+	#macro S(p, rx, ry, rz)
+	sphere{ 0, 1
+  pigment{checker White, Blue scale 1}
+  rotate x*rx
+  rotate y*ry
+  rotate z*rz
+		translate p
+	}
+	#end
+	";
+	
+	printf OUT "
+	light_source{
+  <0, 0 , 100>
+  color rgb <1, 1, 1>
+  parallel
+  point_at <0, 0, 0>
+	}
+	light_source{
+  <100, -100 , 30>
+  color rgb <1, 1, 1>
+  parallel
+  point_at <0, 0, 0>
+	}
+	
+	light_source{
+  <0, -100 , 0>
+  color rgb <1, 1, 1>
+  parallel
+  point_at <0, 0, 0>
+	}
+	
+	background {color rgb <0.02, 0.08, 0.15>}
+	
+	object {
+		cylinder { <-50, 0, 0>, <50, 0, 0>, 0.1 }
+		texture { pigment { rgbf <1, 1, 1, 0.2> } }
+	}
+	
+	object {
+		cylinder { <0, -50, 0>, <0, 50, 0>, 0.1 }
+		texture { pigment { rgbf <1, 1, 1, 0.2> } }
+	}
+	
+	object {
+		cylinder { <0, 0, -50>, <0, 0, 50>, 0.1 }
+		texture { pigment { rgbf <1, 1, 1, 0.2> } }
+	}
+	
+	
+	";
+}
+
+
+
+
 
 
 

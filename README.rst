@@ -69,15 +69,15 @@ Download from here (bitbucket.org) by clicking the download icon
 Installation
 ------------
 
-In the ``LF_DEM`` folder, edit the Makefile and change the variables
-``OS_version`` to "OSX" or "Linux" depending on your environment. This
-variable controls the compiler, the include paths and flags to be used
-to compile. This has been tested on very few machines, and is probably
-not generic. If you want to install ``LF_DEM`` to a specific location
-listed in your ``$PATH``, you can set the variable ``install_dir`` in
-the Makefile.
+The compilation is done with ``make``. The ``Makefile`` is in the ``LF_DEM/`` folder.
+This file uses some environment variables (defining the compiler, the include paths and flags to be used
+to compile) that you have to provide in ``LF_DEM/config/Makefile_config.mk``.
+The file ``Makefile_config.mk`` is not provided in the sources
+because it contains variables that will depend on your environment.
+You can create  ``Makefile_config.mk`` by modifying the example configurations provided in the
+``LF_DEM/config/`` folder.
 
-Once those changes to Makefile saved, you can simply compile in a
+Once you created ``Makefile_config.mk``, you can simply compile in a
 terminal via:
 
 ::
@@ -113,30 +113,34 @@ Input of units
 
 LF\_DEM is designed to work with several unit scales, each based on a
 force scale. As a consequence the user must specify the units in input,
-by appending a litteral suffix to the numeral value. The list of
+by appending a literal suffix to the numeral value. The list of
 suffixes corresponding to the forces currently implemented in LF\_DEM is
 the following:
 
-+-------------------+----------+
-| Set of unit       | Suffix   |
-+===================+==========+
-| Repulsive force   | "r"      |
-+-------------------+----------+
-| Brownian force    | "b"      |
-+-------------------+----------+
-| Cohesion          | "c"      |
-+-------------------+----------+
-| Critical Load     | "cl"     |
-+-------------------+----------+
-| Magnetic          | "m"      |
-+-------------------+----------+
++---------------------------------+----------+
+| Set of unit                     | Suffix   |
++=================================+==========+
+| Repulsive force                 | "r"      |
++---------------------------------+----------+
+| Brownian force                  | "b"      |
++---------------------------------+----------+
+| Cohesion                        | "c"      |
++---------------------------------+----------+
+| Critical Load                   | "cl"     |
++---------------------------------+----------+
+| Normal contact stiffness        | "kn"     |
++---------------------------------+----------+
+| Tangential contact stiffness    | "kt"     |
++---------------------------------+----------+
+| Rolling contact stiffness       | "kr"     |
++---------------------------------+----------+
 
 For example, if using repulsive force and a Brownian force, one can
-specify in the ``Parameter_File``: 
+specify in the ``Parameter_File``:
 
 ``
 repulsion_amplitude = 3.2b;
-`` 
+``
 
 which
 will tell LF\_DEM to work with an repulsive force with amplitude :math:`3.2kT/a` at contact (with :math:`kT` the temperature and :math:`a` the typical radius of a particle).
@@ -147,15 +151,15 @@ must input ``LF_DEM -r 5b``, to work with a stress of :math:`4F_R^{\ast}/a^2`, y
 
 
 Note that the suffix notation is not limited to forces. For example, the simulation
-length can be set with 
+length can be set with
 
-``time_end = 100b;`` 
+``time_end = 100b;``
 
 in which case the simulation
-will run for :math:`100\times 6\pi\eta_0 a^3/kT`, or with 
+will run for :math:`100\times 6\pi\eta_0 a^3/kT`, or with
 
 ``time = 100h;``
-  
+
 in which case it will run for :math:`100 \dot\gamma^{-1}`, ie :math:`100` strain units.
 
 
@@ -221,6 +225,16 @@ parameter dependant filename ``D*N*VF*.dat``. An extra
 ``D*N*VF*.dat.yap`` is also generated to visualize the generated
 configuration with `yaplot <https://github.com/vitroid/Yaplot>`__ or
 `homer <https://github.com/rmari/homer>`__.
+
+
+Python wrapper
+~~~~~~~~~~~~~~
+
+There is a `Python wrapper <https://github.com/rmari/pyLF_DEM>`__
+for ``LF_DEM`` that can be used to control the protocol
+(e.g. to impose a complex strain rate protocol) with the flexibility
+of a Python script.
+
 
 Complementary documentation
 ---------------------------

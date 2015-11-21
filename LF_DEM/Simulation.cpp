@@ -30,6 +30,9 @@ target_stress_input(0)
 	unit_longname["cl"] = "critical_load";
 	unit_longname["m"] = "magnetic";
 	unit_longname["ft"] = "ft";
+	unit_longname["kn"] = "normal_stiffness";
+	unit_longname["kt"] = "tan_stiffness";
+	unit_longname["kr"] = "roll_stiffness";
 	kill = false;
 };
 
@@ -80,7 +83,7 @@ void Simulation::handleEventsShearJamming()
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto &ev : events) {
+	for (const auto& ev : events) {
 		if (ev.type == "negative_shear_rate") {
 			cout << " negative rate " << endl;
 			p.disp_max /= 1.1;
@@ -103,7 +106,7 @@ void Simulation::handleEventsFragility()
 		When a negative_shear_rate event is thrown, p.disp_max is decreased.
 	 If p.disp_max is below a minimal value, the shear direction is switched to y-shear.
 	 */
-	for (const auto &ev : events) {
+	for (const auto& ev : events) {
 		if (ev.type == "negative_shear_rate") {
 			cout << " negative rate " << endl;
 			p.disp_max /= 1.1;
@@ -131,7 +134,9 @@ void Simulation::handleEvents()
 	events.clear();
 }
 
-void Simulation::generateOutput(double &next_output_data, double &next_output_config, int &binconf_counter)
+void Simulation::generateOutput(double& next_output_data,
+								double& next_output_config,
+								int& binconf_counter)
 {
 	/******************** OUTPUT DATA ********************/
 	evaluateData();
@@ -145,7 +150,7 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 	if (time_interval_output_config == -1) {
 		if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
 			if(p.out_binary_conf){
-				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+				string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
 				outputConfigurationBinary(binconf_filename);
 			} else {
 				outputConfigurationData();
@@ -154,26 +159,25 @@ void Simulation::generateOutput(double &next_output_data, double &next_output_co
 		}
 	} else {
 		if (sys.get_time() >= next_output_config-1e-8) {
-			outputConfigurationData();
 			if(p.out_binary_conf){
-				string binconf_filename =  "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
+				string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
 				outputConfigurationBinary(binconf_filename);
 			} else {
 				outputConfigurationData();
 			}
-			next_output_config +=  time_interval_output_config;
+			next_output_config += time_interval_output_config;
 		}
 	}
-/*****************************************************/
+	/*****************************************************/
 }
 
-void Simulation::timeEvolution(double &next_output_data)
+void Simulation::timeEvolution(double& next_output_data)
 {
 	if (time_interval_output_data == -1) {
 		next_output_data += strain_interval_output_data;
 		sys.timeEvolution("strain", next_output_data);
 	} else {
-		next_output_data +=  time_interval_output_data;
+		next_output_data += time_interval_output_data;
 		sys.timeEvolution("time", next_output_data);
 	}
 }
@@ -181,14 +185,15 @@ void Simulation::timeEvolution(double &next_output_data)
  * Main simulation
  */
 void Simulation::simulationSteadyShear(string in_args,
-									   vector<string> &input_files,
+									   vector<string>& input_files,
 									   bool binary_conf,
 									   double dimensionless_number,
 									   string input_scale,
-									   string control_variable)
+									   string control_variable,
+									   string simu_identifier)
 {
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
 	} else {
@@ -211,7 +216,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution started" << endl << endl;
 
 	double next_output_data = 0;
-	double next_output_config = 0;
+	double next_output_config = strain_interval_output_config;
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		timeEvolution(next_output_data);
@@ -222,7 +227,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		if (time_end != -1) {
 			cout << "time: " << sys.get_time_in_simulation_units() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
 		} else {
-			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain()  << " / " << strain_end << endl;
+			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
 		}
 		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
@@ -248,14 +253,15 @@ void Simulation::simulationSteadyShear(string in_args,
 }
 
 void Simulation::simulationInverseYield(string in_args,
-										vector<string> &input_files,
+										vector<string>& input_files,
 										bool binary_conf,
 										double dimensionless_number,
 										string input_scale,
-										string control_variable)
+										string control_variable,
+										string simu_identifier)
 {
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
@@ -282,7 +288,7 @@ void Simulation::simulationInverseYield(string in_args,
 			next_output_data += strain_interval_output_data;
 			sys.timeEvolution("strain", next_output_data);
 		} else{
-			next_output_data +=  time_interval_output_data;
+			next_output_data += time_interval_output_data;
 			sys.timeEvolution("time", next_output_data);
 		}
 
@@ -298,7 +304,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			if (sys.get_time() >= next_output_config-1e-8) {
 				outputConfigurationData();
-				next_output_config +=  time_interval_output_config;
+				next_output_config += time_interval_output_config;
 			}
 		}
 		/*****************************************************/
@@ -340,23 +346,25 @@ void Simulation::simulationInverseYield(string in_args,
 		 * Here is just to export the position data.
 		 */
 		string filename_configuration = input_files[0];
- 		outputFinalConfiguration(filename_configuration);
+		outputFinalConfiguration(filename_configuration);
 	}
 }
 
 void Simulation::simulationMagnetic(string in_args,
-									vector<string> &input_files,
+									vector<string>& input_files,
 									bool binary_conf,
 									double dimensionless_number,
 									string input_scale,
-									string control_variable)
+									string control_variable,
+									string simu_identifier)
 {
 	/* Monolayer: Particles are confined in y = 0 plane.
 	 *
 	 *
 	 */
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale);
+	setupSimulation(in_args, input_files, binary_conf,
+					dimensionless_number, input_scale, simu_identifier);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double time_output_data = 0;
@@ -388,6 +396,7 @@ void Simulation::simulationMagnetic(string in_args,
 	while (keepRunning()) {
 		if (initial_relax && sys.get_time() >= 0) {
 			sys.setInducedMagneticMoment();
+			sys.randomSelectFixParticles();
 			initial_relax = false;
 		}
 		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
@@ -412,7 +421,7 @@ void Simulation::simulationMagnetic(string in_args,
 		 * Here is just to export the position data.
 		 */
 		string filename_configuration = input_files[0];
- 		outputFinalConfiguration(filename_configuration);
+		outputFinalConfiguration(filename_configuration);
 	}
 }
 
@@ -429,7 +438,23 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_from_1 << endl;
 }
 
-void Simulation::catchSuffixedValue(string type, string keyword, string value_str, double *value_ptr){
+void Simulation::catchSuffixedForce(const string& keyword,
+									const string& value)
+{
+	string numeral, suffix;
+	bool caught_suffix = getSuffix(value, numeral, suffix);
+	suffix = unit_longname[suffix];
+	input_force_units[keyword] = suffix;
+	input_force_values[keyword] = atof(numeral.c_str());
+
+	if (!caught_suffix) {
+		errorNoSuffix(keyword);
+	}
+}
+
+void Simulation::catchSuffixedValue(string type, string keyword,
+									string value_str, double *value_ptr)
+{
 	InputValue inv;
 	inv.type = type;
 	inv.name = keyword;
@@ -452,7 +477,7 @@ void Simulation::outputConfigurationBinary()
 {
 	string conf_filename;
 	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
-	conf_filename =  "conf_" + sys.simu_name + ".dat";
+	conf_filename = "conf_" + sys.simu_name + ".dat";
 	outputConfigurationBinary(conf_filename);
 }
 
@@ -462,11 +487,10 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 		\brief Saves the current configuration of the system in a binary file.
 
 		In the current implementation, it stores particle positions, x and y strain, and contact states.
-	*/
-	vector< vector<double> > pos;
+	 */
 	int np = sys.get_np();
+	vector< vector<double> > pos(np);
 	int dims = 4;
-	pos.resize(np);
 	for (int i=0; i<np; i++) {
 		pos[i].resize(dims);
 		pos[i][0] = sys.position[i].x;
@@ -665,7 +689,8 @@ void Simulation::outputData()
 	}
 }
 
-void Simulation::getSnapshotHeader(stringstream &snapshot_header){
+void Simulation::getSnapshotHeader(stringstream& snapshot_header)
+{
 	snapshot_header << "# " << sys.get_shear_strain() << ' ';
 	snapshot_header << sys.shear_disp.x << ' ';
 	snapshot_header << getRate() << ' ';
@@ -685,7 +710,7 @@ void Simulation::outputDataMagnetic()
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
 		ostringstream error_str;
-		error_str  << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
@@ -742,7 +767,7 @@ vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 	return vec3d(x,y,z);
 }
 
-void Simulation::createDataHeader(stringstream &data_header)
+void Simulation::createDataHeader(stringstream& data_header)
 {
 	data_header << "# LF_DEM version " << GIT_VERSION << endl;
 	data_header << "# np " << sys.get_np() << endl;
@@ -752,7 +777,7 @@ void Simulation::createDataHeader(stringstream &data_header)
 	data_header << "# Lz " << sys.get_lz() << endl;
 }
 
-void Simulation::outputDataHeader(ofstream &fout)
+void Simulation::outputDataHeader(ofstream& fout)
 {
 	stringstream data_header;
 	createDataHeader(data_header);
@@ -761,11 +786,9 @@ void Simulation::outputDataHeader(ofstream &fout)
 
 void Simulation::outputConfigurationData()
 {
-	vector<vec3d> pos;
-	vector<vec3d> vel;
 	int np = sys.get_np();
-	pos.resize(np);
-	vel.resize(np);
+	vector<vec3d> pos(np);
+	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
 		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
 								   sys.position[i].y-sys.Ly_half(),
@@ -798,9 +821,9 @@ void Simulation::outputConfigurationData()
 		fout_particle << endl;
 
 		for (int i=0; i<np; i++) {
-			const vec3d &r = pos[i];
-			const vec3d &v = vel[i];
-			const vec3d &o = sys.ang_velocity[i];
+			const vec3d& r = pos[i];
+			const vec3d& v = vel[i];
+			const vec3d& o = sys.ang_velocity[i];
 			double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
 			double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
 			double brownian_xzstressGU = 0;
@@ -826,7 +849,11 @@ void Simulation::outputConfigurationData()
 					fout_particle << ' ' << sys.magnetic_moment[i].y;
 					fout_particle << ' ' << sys.magnetic_moment[i].z;
 				} else {
-					fout_particle << ' ' << sys.magnetic_susceptibility[i];
+					if (sys.movable[i]) {
+						fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
+					} else {
+						fout_particle << ' ' << sys.magnetic_susceptibility[i]+100; // 101: fixed magnetic 100: fixed non-magnetic
+					}
 				}
 			}
 			fout_particle << endl;
@@ -884,7 +911,7 @@ void Simulation::outputConfigurationData()
 	}
 }
 
-void Simulation::outputFinalConfiguration(const string & filename_import_positions)
+void Simulation::outputFinalConfiguration(const string& filename_import_positions)
 {
 	cout << "Output final configuration" << endl;
 	ofstream fout_finalconfig;

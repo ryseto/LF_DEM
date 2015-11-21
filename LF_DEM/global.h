@@ -23,19 +23,19 @@
  *   -----------------------------------
  *   and the code uses VersionInfo.h
  *
- * When NOT in a git repo, the code tries to import VersionInfo.h. 
+ * When NOT in a git repo, the code tries to import VersionInfo.h.
  * VersionInfo.h is created upon creation of a source tarball with `make tar` from a git repo.
- * 
+ *
  */
 #include "VersionInfo.h"
 #endif
 
-inline void removeBlank(std::string &str)
+inline void removeBlank(std::string& str)
 {
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
 }
 
-inline bool getSuffix(const std::string &str, std::string &value, std::string &suffix)
+inline bool getSuffix(const std::string& str, std::string& value, std::string& suffix)
 {
 	size_t suffix_pos = str.find_first_of("abcdfghijklmnopqrstuvwxyz"); // omission of "e" is intended, to allow for scientific notation like "1e5h"
 	value = str.substr(0, suffix_pos);
@@ -52,7 +52,7 @@ inline void errorNoSuffix(std::string quantity)
 	std::cerr << "Error : no unit scale (suffix) provided for " << quantity << std::endl; exit(1);
 }
 
-inline bool str2bool(const std::string &value)
+inline bool str2bool(const std::string& value)
 {
 	if (value == "true") {
 		return true;
@@ -64,7 +64,7 @@ inline bool str2bool(const std::string &value)
 	}
 }
 
-inline vec3d str2vec3d(const std::string &value)
+inline vec3d str2vec3d(const std::string& value)
 {
 	std::string::size_type l1 = value.find("(", 0);
 	if (l1 == std::string::npos) {
@@ -88,9 +88,9 @@ inline vec3d str2vec3d(const std::string &value)
 	return vec3d(vx,vy,vz);
 }
 
-inline void Str2KeyValue(const std::string &str_parameter,
-				  std::string &keyword,
-				  std::string &value)
+inline void Str2KeyValue(const std::string& str_parameter,
+						 std::string& keyword,
+						 std::string& value)
 {
 	std::string::size_type pos_equal = str_parameter.find("=");
 	keyword = str_parameter.substr(0, pos_equal);

@@ -1,12 +1,14 @@
 #include "Box.h"
 using namespace std;
 
-Box::Box(){
+Box::Box()
+{
 	_is_top = false;
 	_is_bottom = false;
 }
 
-Box::~Box(){
+Box::~Box()
+{
 	_neighbors.clear();
 	_moving_neighbors.clear();
 }
@@ -80,13 +82,13 @@ void Box::build_neighborhood_container()
 	neighborhood_container.resize(size);
 	int j = 0;
 	// own box
-	for (const int &k : container) {
+	for (const int& k : container) {
 		neighborhood_container[j] = k;
 		j++;
 	}
 	// neighboring boxes
 	for (const auto& box : _neighbors) {
-		for (const int &k : box->container) {
+		for (const int& k : box->container) {
 			neighborhood_container[j] = k;
 			j++;
 		}

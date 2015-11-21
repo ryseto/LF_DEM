@@ -28,7 +28,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile_seto.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/generateYaplotFile.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/generateSimpleData.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/LeesEdwards.pl $HOME/bin/&#10;#cp ${PROJECT_DIR}/LF_DEM/extractConfigdata.pl $HOME/bin/&#10;">
+               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile_seto.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generatePovray.pl $HOME/bin/">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
@@ -83,7 +83,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/data/simulation/mag_crystalization5"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/mag_gb1"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -100,7 +100,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m 1b D2N200VF0.5Bidi1_nr0.5Square_1.dat test4000.txt"
+            argument = "-m 16b D2N200VF0.68Bidi1_nr0.5Square_1.dat magbinary.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -111,7 +111,8 @@
       buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
-      useCustomWorkingDirectory = "NO"
+      useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/mag_gb1"
       debugDocumentVersioning = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">

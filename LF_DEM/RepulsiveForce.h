@@ -26,8 +26,8 @@ class Interaction;
 
 class RepulsiveForce{
 private:
-	System *sys;
-	Interaction *interaction;
+	System* sys;
+	Interaction* interaction;
 	unsigned short p0;
 	unsigned short p1;
 	//===== forces and stresses ==================== //
@@ -44,7 +44,7 @@ private:
 public:
 	RepulsiveForce(): force_norm(0) {};
 	~RepulsiveForce(){};
-	void init(System *sys_, Interaction *int_);
+	void init(System* sys_, Interaction* int_);
 	void activate();
 	//===== forces/stresses  ========================== //
 	void calcForce();

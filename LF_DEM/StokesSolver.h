@@ -15,7 +15,6 @@
 #ifndef __LF_DEM__StokesSolver__
 #define __LF_DEM__StokesSolver__
 //#define CHOLMOD_EXTRA
-//#define TRILINOS
 #include <vector>
 #include "vec3d.h"
 #include "cholmod.h"
@@ -24,25 +23,6 @@ extern "C" {
 #include "cholmod_extra.h"
 }
 #endif
-#ifdef TRILINOS
-#include "Epetra_SerialComm.h"
-#include "Epetra_SerialDenseVector.h"
-#include "Epetra_CrsMatrix.h"
-#include "BelosSolverFactory.hpp"
-#include "BelosEpetraAdapter.hpp"
-#include "Teuchos_RCP.hpp" // ref counting pointer
-//#include "Ifpack2_Preconditioner.hpp" // incomplete Cholesky preconditioner
-//#include "Ifpack_CrsIct.h"
-#include "Ifpack_IC.h"
-using Teuchos::RCP;
-using Teuchos::rcp;
-using Teuchos::ParameterList;
-using Teuchos::parameterList;
-typedef double SCAL;
-typedef Epetra_MultiVector VEC;
-typedef Epetra_Operator MAT;
-#endif
-
 
 class StokesSolver{
 	/*
@@ -91,7 +71,7 @@ class StokesSolver{
 	 - dblocks ("diagonal") contain the contributions to the force/torque acting on particle i 
 	   coming from particle i's velocity/angular velocity itself: they are the Stokes drag terms ("self"-terms) 
 	   on the diagonal, plus parts of the interaction terms coming from lubrication or contact dashpots. 
-	 - odblocks ("off-diagonal") contain the contributions to the force (torque) acting on particle i 
+	 - odblocks ("off-diagonal") contain the contributions to the force (torque) acting on particle i
 	   coming from other particles velocities and angular velocities.
 
 	  ============================
@@ -163,19 +143,17 @@ private:
     int res_matrix_linear_size;
 	int odblocks_nb;
 	int dblocks_size;
-	bool _iterative;
-	bool _direct;
 	// Cholmod variables
-    cholmod_factor *chol_L ;
+    cholmod_factor* chol_L ;
     cholmod_common chol_c ;
-    cholmod_dense *chol_rhs;
-    cholmod_sparse *chol_res_matrix;
-    cholmod_dense *chol_solution;
-    cholmod_dense *chol_PTsolution;
-    cholmod_dense *chol_Psolution;
-    cholmod_dense *chol_v_nonBrownian;
-    cholmod_dense *chol_v_Brownian_init;
-    cholmod_dense *chol_v_Brownian_mid;
+    cholmod_dense* chol_rhs;
+    cholmod_sparse* chol_res_matrix;
+    cholmod_dense* chol_solution;
+    cholmod_dense* chol_PTsolution;
+    cholmod_dense* chol_Psolution;
+    cholmod_dense* chol_v_nonBrownian;
+    cholmod_dense* chol_v_Brownian_init;
+    cholmod_dense* chol_v_Brownian_mid;
 	bool chol_init;
     int stype;
     int sorted;
@@ -183,45 +161,12 @@ private:
     int xtype;
 	bool chol_L_to_be_freed;
     // resistance matrix building
-    double *dblocks;
+    double* dblocks;
     std::vector <double> *odblocks;
     std::vector <int> odbrows;
 	int *odbrows_table;
 	int *current_index_positions;
     void factorizeResistanceMatrix();
-#ifdef TRILINOS
-    int MyPID;
-    /* #ifdef EPETRA_MPI */
-    /* 	// Initialize MPI */
-    /* 	MPI_Init(&argc,&argv); */
-    /* 	Epetra_MpiComm Comm(MPI_COMM_WORLD); */
-    /* 	MyPID = Comm.MyPID(); */
-    /* #else */
-    Epetra_SerialComm Comm;
-    //#endif
-    RCP < Epetra_Map > Map;
-    RCP < Epetra_Vector > tril_solution;
-    RCP < Epetra_Vector > tril_rhs;
-    Epetra_CrsMatrix *tril_res_matrix;
-    Epetra_CrsMatrix *tril_l_precond;
-	RCP < Belos::LinearProblem < SCAL, VEC, MAT > > tril_stokes_equation;
-    RCP < Belos::SolverManager < SCAL, VEC, MAT > > tril_solver;
-    Belos::SolverFactory<SCAL, VEC, MAT> tril_factory;
-#endif
-    // resistance matrix building for Trilinos
-    int** columns;  // diagonal block stored first, then off-diag columns, with no particular order
-    int* columns_nb; // nb of non-zero elements in each row
-    int columns_max_nb; // max nb of non-zero elements per row
-    double **values; // values corresponding to 'columns' array coordinates
-    /*
-     setRow(const vec3d &nvec, int ii, int jj, double alpha) :
-	 - TRILINOS ONLY
-	 - appends alpha * |nvec><nvec| and corresponding indices
-	 to blocks [ 3*ii, 3*ii+1, 3*ii+2 ][ 3*jj, 3*jj+1, 3*jj+2 ]
-	 AND symmetric [ 3*jj, 3*jj+1, 3*jj+2 ][ 3*ii, 3*ii+1, 3*ii+2 ].
-	 */
-    void setRow(const vec3d &nvec, int ii, int jj,
-				double scaledXA, double scaledYA, double scaledYBtilde,	double scaledYB, double scaledYC);
     /*
      setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
 	 - CHOLMOD ONLY
@@ -230,12 +175,11 @@ private:
 	 odblocks and odFrows_table
 	 - this must be called with order, according to LT filling
 	 */
-    void setColumn(const vec3d &nvec, int jj,
-				   double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC);
-    void allocateResistanceMatrix();
-    void completeResistanceMatrix_cholmod();
-    void completeResistanceMatrix_trilinos();
-    void allocateRessources();
+	void setColumn(const vec3d& nvec, int jj,
+				   double scaledXA, double scaledYA,
+				   double scaledYB, double scaledYBtilde, double scaledYC);
+	void allocateResistanceMatrix();
+	void allocateRessources();
     void setDiagBlockPreconditioner();
     void setIncCholPreconditioner();
     void setSpInvPreconditioner();
@@ -245,26 +189,18 @@ public:
     ~StokesSolver();
 	void init(int np);
     void initialize();
-	bool direct()
-	{
-		return _direct;
-	}
-	bool iterative()
-	{
-		return _iterative;
-	}
-	void printResistanceMatrix(std::ostream &, std::string);
-	void printFactor(std::ostream &);
+	void printResistanceMatrix(std::ostream&, std::string);
+	void printFactor(std::ostream&);
 	void printRHS();
 	void convertDirectToIterative();
     // R_FU filling methods
     /* resetResistanceMatrix(string solver_type, int nb_of_interactions) :
 	 - initialize arrays/vectors used for building
 	 - to be called before adding elements
-	 - possible solver_type: "direct" or "iterative"
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
-    void resetResistanceMatrix(std::string solver_type, int nb_of_interactions, double *resetResistanceMatrix);
+    void resetResistanceMatrix(int nb_of_interactions,
+							   double* resetResistanceMatrix);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii 
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii 
@@ -276,8 +212,9 @@ public:
 	 - scaledYB * e_ijk nvec_k on TU part
 	 - scaledYC *(1 - |nvec><nvec|) on TW part
 	 */
-    void addToDiagBlock(const vec3d &nvec, int ii,
-						double scaledXA, double scaledYA, double scaledYB, double scaledYC);
+    void addToDiagBlock(const vec3d& nvec, int ii,
+						double scaledXA, double scaledYA,
+						double scaledYB, double scaledYC);
     /*
      setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYC) :
 	 Sets (ii,jj) block with:
@@ -292,8 +229,9 @@ public:
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-    void setOffDiagBlock(const vec3d &nvec, int ii, int jj,
-						 double scaledXA, double scaledYA, double scaledYB, double scaledYBtilde, double scaledYC);
+	void setOffDiagBlock(const vec3d& nvec, int jj,
+						 double scaledXA, double scaledYA, double scaledYB,
+						 double scaledYBtilde, double scaledYC);
 	/*
 	 doneBlocks(int i) :
 	 - to be called when all terms involving particle i have been added,
@@ -317,13 +255,13 @@ public:
     void resetRHS();
 	void resetRHStorque();
     void addToRHS(double*);
-    void addToRHSForce(int, double *);
-    void addToRHSForce(int, const vec3d &);
-    void addToRHSTorque(int, double *);
-    void addToRHSTorque(int, const vec3d &);
+    void addToRHSForce(int, double*);
+    void addToRHSForce(int, const vec3d&);
+    void addToRHSTorque(int, double*);
+    void addToRHSTorque(int, const vec3d&);
     void setRHS(double*);
-    void setRHSForce(int, const vec3d &);
-    void setRHSTorque(int, const vec3d &);
+    void setRHSForce(int, const vec3d&);
+    void setRHSTorque(int, const vec3d&);
     void getRHS(double*);
     /*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :

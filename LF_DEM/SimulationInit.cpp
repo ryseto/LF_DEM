@@ -16,11 +16,11 @@ using namespace std;
 void Simulation::contactForceParameter(string filename)
 {
 	/**
-	\brief Load a file containing spring constants and time steps as functions of the volume fraction.
-
-	Input file must be formatted as:
-	phi kn kt dt
-	*/
+	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
+	 
+	 Input file must be formatted as:
+	 phi kn kt dt
+	 */
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
 	if (!fin_knktdt) {
@@ -28,7 +28,6 @@ void Simulation::contactForceParameter(string filename)
 		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
 		throw runtime_error(error_str.str());
 	}
-
 	// temporal variables to keep imported values.
 	double phi_, kn_, kt_, dt_;
 	// To find parameters for considered volume fraction phi.
@@ -40,7 +39,6 @@ void Simulation::contactForceParameter(string filename)
 		}
 	}
 	fin_knktdt.close();
-
 	if (found) {
 		// Set the parameter object
 		p.kn = kn_, p.kt = kt_, p.dt = dt_;
@@ -56,10 +54,10 @@ void Simulation::contactForceParameter(string filename)
 void Simulation::contactForceParameterBrownian(string filename)
 {
 	/**
-	\brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
-
-	Input file must be formatted as:
-	phi peclet kn kt dt
+	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
+	 
+	 Input file must be formatted as:
+	 phi peclet kn kt dt
 	 */
 	ifstream fin_knktdt;
 	fin_knktdt.open(filename.c_str());
@@ -68,7 +66,6 @@ void Simulation::contactForceParameterBrownian(string filename)
 		error_str  << " Contact parameter file '" << filename << "' not found." << endl;
 		throw runtime_error(error_str.str());
 	}
-
 	// temporal variables to keep imported values.
 	double phi_, peclet_, kn_, kt_, dt_;
 	bool found = false;
@@ -100,7 +97,6 @@ void Simulation::importPreSimulationData(string filename)
 		error_str  << " Pre-simulation data file '" << filename << "' not found." << endl;
 		throw runtime_error(error_str.str());
 	}
-
 	double stress_, shear_rate_;
 	while (fin_PreSimulationData >> stress_ >> shear_rate_) {
 		if (stress_ == target_stress_input) {
@@ -110,14 +106,15 @@ void Simulation::importPreSimulationData(string filename)
 	shear_rate_expectation = shear_rate_;
 }
 
-void Simulation::echoInputFiles(string in_args, vector<string> &input_files)
+void Simulation::echoInputFiles(string in_args,
+								vector<string>& input_files)
 {
 	/**
-	\brief Print the entire information needed to reproduce the simulation in Simulation::fout_input
-	*/
+	 \brief Print the entire information needed to reproduce the simulation in Simulation::fout_input
+	 */
 	fout_input << "# LF_DEM version " << GIT_VERSION << ", called with:" << endl;
 	fout_input << in_args << endl << endl;
-	for (const string &in_file : input_files) {
+	for (const string& in_file : input_files) {
 		ifstream in_f;
 		string line;
 		in_f.open(in_file.c_str());
@@ -138,24 +135,23 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 {
 	/**
 		\brief Check force units consistency, expresses all input forces in unit given as a parameter.
-
+	 
 		In input, forces are given with suffixes. This function checks that we can make sense of these suffixes, and if so, it converts all the forces in the unit given as a parameter.
-
+	 
 		It does it iteratively, ie:
 		1. I know that unit_force = 1*unit_force
 		2. I know the value of any force f1 that has been given in unit_force in input as
-			f1 = value*unit_force
+	 f1 = value*unit_force
 		3. I can determine the value of any force f2 expressed as f2 = x*f1
- 		4. I can then determine the value of any force f3 expressed as f3 = y*f2
+	 4. I can then determine the value of any force f3 expressed as f3 = y*f2
 		5. etc
-
+	 
 		If there is any force undetermined at the end of this algorithm, the force unit system is inconsistent/incomplete.
-
+	 
 		If the force unit system is consistent, this function determines the dimensionless numbers, i.e., the ratios F_A/F_B for any pair of force scales present in the system.
-
+	 
 		\b Note: a priori, we could determine force A from force B if A is defined in B units or if B is defined in A units: for example in the step 3 of the above algorithm we could determine f2 knowing f1 if f1 is defined as f1=x^{-1}f2. However this is \b not implemented and will fail with the current implementation.
-	*/
-
+	 */
 	// we keep the forces for which we can convert in unit_force units in a set.
 	set <string> resolved_forces;
 	resolved_forces.clear();
@@ -181,7 +177,6 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 		}
 		resolved = resolved_forces.size();
 	} while (previous_resolved < resolved);
-
 	// check we found everyone
 	if (resolved < input_force_units.size()) {
 		ostringstream error_str;
@@ -194,7 +189,6 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 		}
 		throw runtime_error(error_str.str());
 	}
-
 	// determine the dimensionless_numbers
 	for (const auto& f1: input_force_units) {
 		string force1_type = f1.first;
@@ -206,31 +200,31 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 	}
 }
 
-void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, string rate_unit){
+void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
+													string rate_unit)
+{
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
-
+	 
 	 The strategy is the following:
 	 1. Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie:
 		a. w = 1w
 		b. y = mw
 		c. z = oy = omw
 		d. etc...
-
+	 
 	 In the future, we may allow other unit scale than the one given by the input stress.
 	 */
-
 	string force_type = rate_unit; // our force defining the shear rate
-
 	if (force_type == "hydro") {
 		throw runtime_error(" Error: please give a stress in non-hydro units.");
 		/*
 		 Note:
-		 Although it is in some cases possible to run under stress control without any non-hydro force scale,
+		 Although it is in some cases possible to run under stress control with hydro units,
 		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
-
-		 With only hydro, the problem is that the target stress \f$\tilde{S}\f$ cannot take any possible value, as
-		\f$\tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0\f$
+		 
+		 With hydro units, the problem is that the target stress \f$\tilde{S}\f$ cannot take any possible value, as
+		 \f$\tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0\f$
 		 --> It is limited to the available range of viscosity.
 		 If you give a \f$\tilde{S}\f$ outside this range (for example \f$\tilde{S}=0.5\f$), you run into troubles.
 		 */
@@ -238,14 +232,12 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 	if (force_type == "thermal") {
 		throw runtime_error(" Error: stress controlled Brownian simulations are not yet implemented.");
 	}
-
 	sys.set_shear_rate(1);
 	// we take as a unit scale the one given by the user with the stress
 	// TODO: other choices may be better when several forces are used.
 	internal_unit_scales = force_type;
 	target_stress_input = dimensionlessnumber;
 	sys.target_stress = target_stress_input/6/M_PI;
-
 	// convert all other forces to internal_unit_scales
 	resolveUnitSystem(internal_unit_scales);
 }
@@ -253,11 +245,12 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber, 
 // Command option -r indicates "rate controlled" simulation.
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
-void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, string input_scale)
+void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
+												  string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
-
+	 
 	 The strategy is the following:
 	 1. Convert all the forces in hydro force unit, ie the value for force f1 is f1/F_H
 	 2. Decide the unit force F_W for the simulation
@@ -272,21 +265,18 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 	/* Switch this force in hydro units.
 	 The dimensionlessnumber in input is the shear rate in "force_type" units,
  	i.e.  is the ratio between the hydrodynamic force and the "force_type" force.
-	So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
-	*/
+	 So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
+	 */
 	if (dimensionlessnumber == 0) {
 		throw runtime_error("Vanishing rate not handled... yet! ");
 	}
 	input_force_values[force_type] = 1/dimensionlessnumber;
 	input_force_units[force_type] = "hydro";
-
 	// convert all other forces to hydro
 	resolveUnitSystem("hydro");
-
 	// chose simulation unit
 	// the chosen unit is called internal_unit_scales
 	setUnitScaleRateControlled();
-
 	// convert from hydro scale to chosen scale
 	convertForceValues(internal_unit_scales);
 }
@@ -295,7 +285,8 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber, st
 // -m [val]b  ---> val = F_M0/F_B0
 // -m [val]r  ---> val = F_M0/F_R0
 //
-void Simulation::convertInputForcesMagnetic(double dimensionlessnumber, string rate_unit)
+void Simulation::convertInputForcesMagnetic(double dimensionlessnumber,
+											string rate_unit)
 {
 	/* We plan to implement both non-Brownian and Brownian simulations.
 	 * Currently only Brownian simulation is implemented.
@@ -343,7 +334,7 @@ void Simulation::convertForceValues(string new_unit)
 {
 	/**
 	 \brief Convert all the input forces to the unit given in parameter.
-
+	 
 		The input forces velues can be expressed in any units, but these units must be known before calling this function (e.g. by calling Simulation::resolveUnitSystem(string unit_force) beforehand).
 	 */
 	for (auto& f: input_force_units) {
@@ -360,7 +351,7 @@ void Simulation::setUnitScaleRateControlled()
 {
 	/**
 	 \brief Determine the best internal force scale to run the simulation (rate controlled case).
-
+	 
 		If the system is non-Brownian, the hydrodynamic force unit is taken (\b note: this will change in the future). If the system is Brownian, the Brownian force unit is selected at low Peclet (i.e., Peclet numbers smaller that ParameterSet::Pe_switch) and the hydrodynamic force unit is selected at high Peclet.
 	 */
 	bool is_brownian;
@@ -389,7 +380,6 @@ void Simulation::setUnitScaleMagnetic()
 	 * When Pe_magnetic is large
 	 * internal_unit_scales should be "magnetic"
 	 */
-
 	internal_unit_scales = "thermal";
 	sys.amplitudes.sqrt_temperature = 1;
 	if (p.magnetic_type == 2) {
@@ -408,7 +398,6 @@ void Simulation::exportForceAmplitudes()
 	string indent = "  Simulation::\t";
 	cout << indent+"Forces used:" << endl;
 	indent += "\t";
-
 	bool is_repulsive = input_force_values.find("repulsive") != input_force_values.end();
 	if (is_repulsive) {
 		sys.repulsiveforce = true;
@@ -446,18 +435,23 @@ void Simulation::exportForceAmplitudes()
 		sys.brownian = true;
 		p.brownian_amplitude = input_force_values["thermal"];
 		sys.amplitudes.sqrt_temperature = 1/sqrt(dimensionless_numbers[internal_unit_scales+"/thermal"]);
-		cout << indent+"Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers[internal_unit_scales+"/thermal"] << endl;
+		cout << indent+"Brownian force (in \"" << input_force_units["thermal"] << "\" units): " << dimensionless_numbers["thermal/"+internal_unit_scales] << endl;
 	}
+	p.kn = input_force_values["normal_stiffness"];
+	cout << indent+"Normal contact stiffness (in \"" << input_force_units["normal_stiffness"] << "\" units): " << dimensionless_numbers["normal_stiffness/"+internal_unit_scales] << endl;
+	p.kt = input_force_values["tan_stiffness"];
+	cout << indent+"Sliding contact stiffness (in \"" << input_force_units["tan_stiffness"] << "\" units): " << dimensionless_numbers["tan_stiffness/"+internal_unit_scales] << endl;
+	p.kr = input_force_values["roll_stiffness"];
+	cout << indent+"Rolling contact stiffness (in \"" << input_force_units["roll_stiffness"] << "\" units): " << dimensionless_numbers["roll_stiffness/"+internal_unit_scales] << endl;
 }
 
 void Simulation::convertInputValues(string new_unit)
 {
 	/**
 	 \brief Convert all the non-force input parameters given with units to the unit given in parameter.
-
+	 
 		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
 	 */
-
 	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
 		if (old_unit != new_unit) {
@@ -465,10 +459,6 @@ void Simulation::convertInputValues(string new_unit)
 				ostringstream error_str;
 				error_str  << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
 				throw runtime_error(error_str.str());
-			}
-			if (inv.type == "stiffness") {
-				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
-				inv.unit = new_unit;
 			}
 			if (inv.type == "time") {
 				if (old_unit == "hydro") { // = it is a strain, better keeping it that way
@@ -484,10 +474,11 @@ void Simulation::convertInputValues(string new_unit)
 	}
 }
 
-void Simulation::setupNonDimensionalization(double dimensionlessnumber, string input_scale){
+void Simulation::setupNonDimensionalization(double dimensionlessnumber,
+											string input_scale){
 	/**
 	 \brief Non-dimensionalize the simulation.
-
+	 
 		This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
 	 */
 	input_scale = unit_longname[input_scale];
@@ -498,7 +489,6 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
-		p.unscaled_contactmodel = true;
 	} else if (control_var == "magnetic") {
 		convertInputForcesMagnetic(dimensionlessnumber, input_scale);
 	} else {
@@ -506,7 +496,6 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 		error_str  << " Error: unknown control variable \"" << control_var 	<< "\"" << endl;
 		throw runtime_error(error_str.str());
 	}
-
 	exportForceAmplitudes();
 	string indent = "  Simulation::\t";
 	cout << indent << "internal_unit_scales = " << internal_unit_scales << endl;
@@ -516,14 +505,15 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber, string i
 }
 
 void Simulation::setupSimulation(string in_args,
-								 vector<string> &input_files,
+								 vector<string>& input_files,
 								 bool binary_conf,
 								 double dimensionlessnumber,
-								 string input_scale)
+								 string input_scale,
+								 string simu_identifier)
 {
 	/**
 	 \brief Set up the simulation.
-
+	 
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
 	string indent = "  Simulation::\t";
@@ -546,9 +536,7 @@ void Simulation::setupSimulation(string in_args,
 		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
 	}
 	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
-
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
-
 	/*
 	 * Simulate parameters
 	 */
@@ -577,7 +565,6 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		importConfiguration(filename_import_positions);
 	}
-
 
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
@@ -632,7 +619,8 @@ void Simulation::setupSimulation(string in_args,
 	}
 	p_initial = p;
 
-	openOutputFiles(binary_conf, filename_import_positions, filename_parameters, string_control_parameters.str());
+	openOutputFiles(binary_conf, filename_import_positions, filename_parameters,
+					string_control_parameters.str(), simu_identifier);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -643,7 +631,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	 \brief Parse an input parameter
 	 */
 	string numeral, suffix;
-	bool caught_suffix = true;
 	if (keyword == "lubrication_model") {
 		p.lubrication_model = atoi(value.c_str());
 	} else if (keyword == "friction_model") {
@@ -653,26 +640,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 			p.friction_model = atoi(value.c_str());
 		}
 	} else if (keyword == "repulsion_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		p.repulsion_amplitude = atof(numeral.c_str());
-		input_force_units["repulsive"] = suffix;
-		input_force_values["repulsive"] = atof(numeral.c_str());
+		catchSuffixedForce("repulsive", value);
 	} else if (keyword == "cohesion_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["cohesive"] = suffix;
-		input_force_values["cohesive"] = atof(numeral.c_str());
+		catchSuffixedForce("cohesive", value);
 	} else if (keyword == "brownian_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["thermal"] = suffix;
-		input_force_values["thermal"] = atof(numeral.c_str());
+		catchSuffixedForce("thermal", value);
 	} else if (keyword == "critical_load_amplitude") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["critical_load"] = suffix;
-		input_force_values["critical_load"] = atof(numeral.c_str());
+		catchSuffixedForce("critical_load", value);
 	} else if (keyword == "magnetic_amplitude") {
 		//		caught_suffix = getSuffix(value, numeral, suffix);
 		//		suffix = unit_longname[suffix];
@@ -707,11 +681,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		catchSuffixedValue("stiffness", keyword, value, &p.kn);
+		catchSuffixedForce("normal_stiffness", value);
 	} else if (keyword == "kt") {
-		catchSuffixedValue("stiffness", keyword, value, &p.kt);
+		catchSuffixedForce("tan_stiffness", value);
 	} else if (keyword == "kr") {
-		catchSuffixedValue("stiffness", keyword, value, &p.kr);
+		catchSuffixedForce("roll_stiffness", value);
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
@@ -755,10 +729,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
-		caught_suffix = getSuffix(value, numeral, suffix);
-		suffix = unit_longname[suffix];
-		input_force_units["ft"] = suffix;
-		input_force_values["ft"] = atof(numeral.c_str());
+		catchSuffixedForce("ft", value);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "magnetic_type") {
@@ -781,6 +752,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
 	} else if (keyword == "time_init_relax") {
 		catchSuffixedValue("time", keyword, value, &p.time_init_relax);
+	} else if (keyword == "fixed_particle_fraction") {
+		p.fixed_particle_fraction = atof(value.c_str());
 	} else if (keyword == "out_particle_stress") {
 		p.out_particle_stress = value;
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
@@ -791,17 +764,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		error_str  << "keyword " << keyword << " is not associated with an parameter" << endl;
 		throw runtime_error(error_str.str());
 	}
-	if (!caught_suffix) {
-		errorNoSuffix(keyword);
-	}
 }
 
-void Simulation::readParameterFile(const string & filename_parameters)
+void Simulation::readParameterFile(const string& filename_parameters)
 {
 	/**
 	 \brief Read and parse the parameter file
 	 */
-
 	ifstream fin;
 	fin.open(filename_parameters.c_str());
 	if (!fin) {
@@ -847,12 +816,11 @@ void Simulation::readParameterFile(const string & filename_parameters)
 	return;
 }
 
-
 void Simulation::setDefaultParameters()
 {
 	/**
-	  \brief Set default values for ParameterSet parameters.
-	*/
+	 \brief Set default values for ParameterSet parameters.
+	 */
 	p.brownian_amplitude = 0;
 	p.repulsion_amplitude = 0;
 	p.cohesion_amplitude = 0;
@@ -953,31 +921,37 @@ void Simulation::setDefaultParameters()
 	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
+	p.fixed_particle_fraction = 0;
 }
 
-void Simulation::openOutputFiles(bool binary_conf, const string & filename_import_positions, const string & filename_parameters, const string & string_control_parameters)
+void Simulation::openOutputFiles(bool binary_conf,
+								 const string& filename_import_positions,
+								 const string& filename_parameters,
+								 const string& string_control_parameters,
+								 const string& simu_identifier)
 {
 	/**
-	  \brief Set up the output files
-
+	 \brief Set up the output files
+	 
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters, string_control_parameters);
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+						  string_control_parameters, simu_identifier);
 	stringstream data_header;
 	createDataHeader(data_header);
 
-	outdata.setFile("data_" + sys.simu_name + ".dat", data_header.str());
-	outdata_st.setFile("st_" +sys.simu_name + ".dat", data_header.str());
+	outdata.setFile("data_"+sys.simu_name+".dat", data_header.str());
+	outdata_st.setFile("st_"+sys.simu_name+".dat", data_header.str());
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setFile("pst_" +sys.simu_name + ".dat", data_header.str());
+		outdata_pst.setFile("pst_"+sys.simu_name+".dat", data_header.str());
 	}
-	string time_filename = "t_" + sys.simu_name + ".dat";
+	string time_filename = "t_"+sys.simu_name+".dat";
 	fout_time.open(time_filename.c_str());
-	string input_filename = "input_" + sys.simu_name + ".dat";
+	string input_filename = "input_"+sys.simu_name+".dat";
 	fout_input.open(input_filename.c_str());
 
 	if (p.out_data_particle) {
-		string particle_filename = "par_" + sys.simu_name + ".dat";
+		string particle_filename = "par_"+sys.simu_name+".dat";
 		fout_particle.open(particle_filename.c_str());
 		outputDataHeader(fout_particle);
 		//
@@ -1026,11 +1000,11 @@ void Simulation::openOutputFiles(bool binary_conf, const string & filename_impor
 	}
 }
 
-void Simulation::importConfiguration(const string & filename_import_positions)
+void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
-	  \brief Read a text file input configuration.
-	*/
+	 \brief Read a text file input configuration.
+	 */
 	fstream file_import;
 	file_import.open(filename_import_positions.c_str());
 	if (!file_import) {
@@ -1079,16 +1053,15 @@ void Simulation::importConfiguration(const string & filename_import_positions)
 		sys.setConfiguration(initial_position, radius, lx, ly, lz);
 		sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
 	}
-
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary(ifstream &file_import, const string & filename_import_positions)
+void Simulation::importConfigurationBinary(ifstream& file_import,
+										   const string& filename_import_positions)
 {
 	/**
-	  \brief Read a binary file input configuration.
-	*/
-
+	 \brief Read a binary file input configuration.
+	 */
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
@@ -1120,18 +1093,16 @@ void Simulation::importConfigurationBinary(ifstream &file_import, const string &
 		radius.push_back(r_);
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-
 }
 
 void Simulation::importContactsBinary(ifstream &file_import)
 {
 	/**
-	  \brief Read a binary file input contacts.
-	*/
-
+	 \brief Read a binary file input contacts.
+	 */
 	int ncont;
 	unsigned short p0, p1;
- 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
+	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
 	for (int i=0; i<ncont; i++) {
@@ -1154,11 +1125,15 @@ void Simulation::importContactsBinary(ifstream &file_import)
 	sys.setContacts(cont_states);
 }
 
-void Simulation::prepareSimulationName(bool binary_conf, const string & filename_import_positions, const string & filename_parameters, const string & string_control_parameters)
+void Simulation::prepareSimulationName(bool binary_conf,
+									   const string& filename_import_positions,
+									   const string& filename_parameters,
+									   const string& string_control_parameters,
+									   const string& simu_identifier)
 {
 	/**
-	  \brief Determine simulation name.
-	*/
+	 \brief Determine simulation name.
+	 */
 	ostringstream ss_simu_name;
 	string::size_type pos_name_end = filename_import_positions.find_last_of(".");
 	string::size_type param_name_end = filename_parameters.find_last_of(".");
@@ -1181,6 +1156,10 @@ void Simulation::prepareSimulationName(bool binary_conf, const string & filename
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
 	ss_simu_name << string_control_parameters;
+	if (simu_identifier != "") {
+		ss_simu_name << "_";
+		ss_simu_name << simu_identifier;
+	}
 	sys.simu_name = ss_simu_name.str();
 	string indent = "  Simulation::\t";
 	cout << indent << "filename: " << sys.simu_name << endl;
