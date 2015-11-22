@@ -62,13 +62,10 @@ def read_data_file(fname):
 
             Examples include data_ and st_ files.
     Parameters:
-        in_file: the filename, or anything that can be taken as a first argument to np.genfromtxt
-        field_nb: the number of fields (columns) in a snapshot. If not provided, the field nb is guessed from the file name.
+        fname: the filename, or anything that can be taken as a first argument to np.genfromtxt
 
     Returning values:
-        frames: a list of snapshots
-        strains_: the associated strains
-        shear_rates_: the associated strain rates
+        A numpy array containing the data
     """
     dat = np.genfromtxt(fname)
     return dat
