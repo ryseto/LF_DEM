@@ -27,6 +27,7 @@ using namespace std;
 
 System::System(ParameterSet& ps, list <Event>& ev):
 events(ev),
+eventLookUp(NULL),
 p(ps),
 brownian(false),
 friction(false),
@@ -436,19 +437,21 @@ void System::updateUnscaledContactmodel()
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
-	if (p.lubrication_model == 1) {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 0;
-	} else if (p.lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
-		/* [Note]
-		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
-		 * So log_lub_coeff_contact_tan_dashpot = 0;
-		 */
-		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-	} else {
-		throw runtime_error("Error: lubrication_model>2 ???");
+	if (p.lubrication_model > 0) {
+		if (p.lubrication_model == 1) {
+			log_lub_coeff_contact_tan_lubrication = 0;
+			log_lub_coeff_contact_tan_dashpot = 0;
+		} else if (p.lubrication_model == 2) {
+			log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
+			/* [Note]
+			 * We finally do not introduce a dashpot for the sliding mode.
+			 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
+			 * So log_lub_coeff_contact_tan_dashpot = 0;
+			 */
+			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
+		} else {
+			throw runtime_error("Error: lubrication_model>2 ???");
+		}
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	for (int k=0; k<nb_interaction; k++) {
@@ -501,7 +504,7 @@ void System::setupSystem(string control)
 	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		throw runtime_error(indent+"lubrication_model = 0 is not implemented yet.\n");
+		//throw runtime_error(indent+"lubrication_model = 0 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -612,7 +615,7 @@ void System::setupSystem(string control)
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 	} else {
-		throw runtime_error("lubrication_model must be smaller than 3\n");
+		//throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	if (p.unscaled_contactmodel) {
@@ -779,11 +782,14 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	 */
 	in_predictor = true;
 	in_corrector = true;
-
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	computeVelocities(calc_stress);
+	if (p.lubrication_model == 0) {
+		computeVelocitiesStokesDrag();
+	} else {
+		computeVelocities(calc_stress);
+	}
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
@@ -792,6 +798,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL){
 		(this->*eventLookUp)();
 	}
+	
 }
 
 /****************************************************************************************************
@@ -1722,6 +1729,99 @@ void System::computeVelocities(bool divided_velocities)
 		}
 	}
 	stokes_solver.solvingIsDone();
+}
+
+void System::computeVelocitiesStokesDrag()
+{
+	for (int i=0; i<np; i++) {
+		na_velocity[i] = contact_force[i];
+		na_ang_velocity[i] = contact_torque[i];
+	}
+	if (repulsiveforce) {
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += repulsive_force[i];
+		}
+	}
+	if (magnetic) {
+		if (p.magnetic_type == 1) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += magnetic_force[i];
+				na_ang_velocity[i] += magnetic_torque[i];
+			}
+		} else if (p.magnetic_type == 2) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += magnetic_force[i];
+			}
+		}
+	}
+	
+	if (brownian) {
+		if (in_predictor) {
+			/* generate new F_B only in predictor
+			 * Resistance matrix is used.
+			 */
+			//generateBrownianForces();
+			double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
+			for (int i=0; i<linalg_size; i++) {
+				brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A (force and torque)
+			}
+		}
+		for (int i=0; i<np; i++) {
+			int i6 = 6*i;
+			vel_brownian[i].x = brownian_force[i6];
+			vel_brownian[i].y = brownian_force[i6+1];
+			vel_brownian[i].z = brownian_force[i6+2];
+			ang_vel_brownian[i].x = brownian_force[i6+3];
+			ang_vel_brownian[i].y = brownian_force[i6+4];
+			ang_vel_brownian[i].z = brownian_force[i6+5];
+		}
+		if (twodimension) {
+			if (p.monolayer) {
+				/* Particle (3D sphere) cannot move along y-direction.
+				 * All other degrees of freedom exist.
+				 */
+				for (int i=0; i<np; i++) {
+					vel_brownian[i].y = 0; // @@ To be checked
+				}
+			} else {
+				/* Particle (2D disk) can rotate only along y-axis.
+				 */
+				for (int i=0; i<np; i++) {
+					vel_brownian[i].y = 0; // @@ To be checked
+					ang_vel_brownian[i].x = 0;
+					ang_vel_brownian[i].z = 0;
+				}
+			}
+		}
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += vel_brownian[i];
+			na_ang_velocity[i] += ang_vel_brownian[i];
+		}
+	}
+	if (!zero_shear) {
+		for (int i=0; i<np; i++) {
+			if (!p.cross_shear) {
+				velocity[i].x += shear_rate*position[i].z;
+				ang_velocity[i].y += 0.5*shear_rate;
+			} else {
+				velocity[i].x += costheta_shear*shear_rate*position[i].z;
+				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
+				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
+				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
+			}
+		}
+		if (!p.cross_shear) {
+			vel_difference.x = shear_rate*lz;
+		} else {
+			vel_difference.x = costheta_shear*shear_rate*lz;
+			vel_difference.y = sintheta_shear*shear_rate*lz;
+		}
+	} else {
+		for (int i=0; i<np; i++) {
+			velocity[i] = na_velocity[i];
+			ang_velocity[i] = na_ang_velocity[i];
+		}
+	}
 }
 
 void System::displacement(int i, const vec3d& dr)

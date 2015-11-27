@@ -105,10 +105,9 @@ private:
 	void buildRepulsiveForceTerms(bool);
 	void buildMagneticForceTerms(bool);
 	void computeVelocities(bool divided_velocities);
+	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
 	void computeShearRate();
-	void forceReset();
-	void torqueReset();
 	void stressReset();
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(const int&, const int&);
@@ -218,11 +217,9 @@ private:
 	StressTensor total_contact_stressGU;
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
-//	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
 	StressTensor total_magnetic_stressXF;
 	StressTensor total_magnetic_stressGU;
-	//StressTensor total_magnetic_stress;
 	Averager<StressTensor> *stress_avg;
 	double dt;
 	/* double kn; */

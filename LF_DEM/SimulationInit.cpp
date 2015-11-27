@@ -542,7 +542,8 @@ void Simulation::setupSimulation(string in_args,
 	 */
 	// test for incompatibilities
 	if (sys.brownian == true) {
-		if (p.integration_method != 1) {
+		if (p.lubrication_model > 0
+			&& p.integration_method != 1) {
 			ostringstream error_str;
 			error_str  << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
 			error_str  << "Modify the parameter file: " << filename_parameters << endl;
