@@ -174,6 +174,10 @@ void System::allocateRessources()
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
 	resistance_matrix_dblock = new double [18*np];
+	if (p.lubrication_model == 0) {
+		stokesdrag_coeff_f = new double [np];
+		stokesdrag_coeff_t = new double [np];
+	}
 	// Configuration
 	if (twodimension) {
 		angle = new double [np];
@@ -700,6 +704,10 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+12] = TWvalue;
 		resistance_matrix_dblock[i18+15] = TWvalue;
 		resistance_matrix_dblock[i18+17] = TWvalue;
+		if (p.lubrication_model == 0) {
+			stokesdrag_coeff_f[i] = FUvalue;
+			stokesdrag_coeff_t[i] = TWvalue;
+		}
 	}
 	cout << indent << "Setting up System... [ok]" << endl;
 }
@@ -863,7 +871,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	computeVelocities(calc_stress);
+	if (p.lubrication_model == 0) {
+		computeVelocitiesStokesDrag();
+	} else {
+		computeVelocities(calc_stress);
+	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 	}
@@ -874,7 +886,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	computeVelocities(calc_stress);
+	if (p.lubrication_model == 0) {
+		computeVelocitiesStokesDrag();
+	} else {
+		computeVelocities(calc_stress);
+	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 	}
@@ -1734,23 +1750,23 @@ void System::computeVelocities(bool divided_velocities)
 void System::computeVelocitiesStokesDrag()
 {
 	for (int i=0; i<np; i++) {
-		na_velocity[i] = contact_force[i];
-		na_ang_velocity[i] = contact_torque[i];
+		na_velocity[i] = contact_force[i]/stokesdrag_coeff_f[i];
+		na_ang_velocity[i] = contact_torque[i]/stokesdrag_coeff_t[i];
 	}
 	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
-			na_velocity[i] += repulsive_force[i];
+			na_velocity[i] += repulsive_force[i]/stokesdrag_coeff_f[i];
 		}
 	}
 	if (magnetic) {
 		if (p.magnetic_type == 1) {
 			for (int i=0; i<np; i++) {
-				na_velocity[i] += magnetic_force[i];
-				na_ang_velocity[i] += magnetic_torque[i];
+				na_velocity[i] += magnetic_force[i]/stokesdrag_coeff_f[i];
+				na_ang_velocity[i] += magnetic_torque[i]/stokesdrag_coeff_t[i];
 			}
 		} else if (p.magnetic_type == 2) {
 			for (int i=0; i<np; i++) {
-				na_velocity[i] += magnetic_force[i];
+				na_velocity[i] += magnetic_force[i]/stokesdrag_coeff_f[i];
 			}
 		}
 	}
@@ -1768,12 +1784,12 @@ void System::computeVelocitiesStokesDrag()
 		}
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
-			vel_brownian[i].x = brownian_force[i6];
-			vel_brownian[i].y = brownian_force[i6+1];
-			vel_brownian[i].z = brownian_force[i6+2];
-			ang_vel_brownian[i].x = brownian_force[i6+3];
-			ang_vel_brownian[i].y = brownian_force[i6+4];
-			ang_vel_brownian[i].z = brownian_force[i6+5];
+			vel_brownian[i].x = brownian_force[i6]/stokesdrag_coeff_f[i];
+			vel_brownian[i].y = brownian_force[i6+1]/stokesdrag_coeff_f[i];
+			vel_brownian[i].z = brownian_force[i6+2]/stokesdrag_coeff_f[i];
+			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t[i];
+			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t[i];
+			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t[i];
 		}
 		if (twodimension) {
 			if (p.monolayer) {

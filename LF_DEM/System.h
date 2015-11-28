@@ -133,6 +133,8 @@ private:
 #endif
 	double *radius_cubed;
 	double *radius_squared;
+	double *stokesdrag_coeff_f;
+	double *stokesdrag_coeff_t;
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;
@@ -177,6 +179,7 @@ private:
 	double *radius;
 	double *angle; // for 2D visualization
 	double *resistance_matrix_dblock;
+	
 	vec3d *velocity;
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
