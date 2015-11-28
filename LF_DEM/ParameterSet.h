@@ -49,9 +49,10 @@ struct ParameterSet
 	* 0 no lubrication
 	* 1 1/xi lubrication (only squeeze mode)
 	* 2 log(1/xi) lubrication
-	* 3 ???
+	* 3 dashpot in the contact model (not yet implemented)
+	*   In this case lub_max_gap should be automatically zero. (not yet implemented)
 	*/
-	int lubrication_model;                   ///< Lubrication type. 0: no lubrication, 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication. [2]
+	int lubrication_model;                   ///< Lubrication type. 0: no lubrication (no dashpot), 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication, 3: only dashpot [2]
 	/*
 	* Leading term of lubrication force is 1/reduced_gap,
 	* with reduced_gap the gap

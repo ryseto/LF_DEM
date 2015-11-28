@@ -27,7 +27,6 @@ using namespace std;
 
 System::System(ParameterSet& ps, list <Event>& ev):
 events(ev),
-eventLookUp(NULL),
 p(ps),
 brownian(false),
 friction(false),
@@ -43,7 +42,8 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-magnetic_rotation_active(false)
+magnetic_rotation_active(false),
+eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
