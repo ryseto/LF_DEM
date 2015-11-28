@@ -524,7 +524,7 @@
 		D90AF4C51AF9FFBB00E15C7E /* vec3d_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = vec3d_8h_source.html; sourceTree = "<group>"; };
 		D90AF4C61AFA000900E15C7E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D90B4F681A70942500C51ACD /* ParameterSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = ParameterSet.h; sourceTree = "<group>"; };
-		D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.6.a; path = ../../../../../usr/local/lib/libcholmod.3.0.6.a; sourceTree = "<group>"; };
+		D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.6.a; path = /usr/local/lib/libcholmod.3.0.6.a; sourceTree = "<absolute>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D918BA0A1AE0FD4F007CB291 /* MagneticForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagneticForce.cpp; sourceTree = "<group>"; };
@@ -621,7 +621,6 @@
 		D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params.h"; path = "dSFMT-src-2.2.3/dSFMT-params.h"; sourceTree = "<group>"; };
 		D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params19937.h"; path = "dSFMT-src-2.2.3/dSFMT-params19937.h"; sourceTree = "<group>"; };
 		D9D712161A995E36009CC269 /* libamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.4.1.a; path = /usr/local/lib/libamd.2.4.1.a; sourceTree = "<absolute>"; };
-		D9D7121A1A995E36009CC269 /* libcholmod.3.0.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.5.a; path = /usr/local/lib/libcholmod.3.0.5.a; sourceTree = "<absolute>"; };
 		D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.9.1.a; path = /usr/local/lib/libcolamd.2.9.1.a; sourceTree = "<absolute>"; };
 		D9D712211A995E36009CC269 /* libsuitesparseconfig.4.4.3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.3.a; path = /usr/local/lib/libsuitesparseconfig.4.4.3.a; sourceTree = "<absolute>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
@@ -1141,7 +1140,7 @@
 			isa = PBXGroup;
 			children = (
 				D9D712161A995E36009CC269 /* libamd.2.4.1.a */,
-				D9D7121A1A995E36009CC269 /* libcholmod.3.0.5.a */,
+				D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */,
 				D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */,
 				D9D712211A995E36009CC269 /* libsuitesparseconfig.4.4.3.a */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
@@ -1185,7 +1184,6 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
-				D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */,
 				D90AF4C61AFA000900E15C7E /* README.md */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D90AF33B1AF9FFBA00E15C7E /* html */,
