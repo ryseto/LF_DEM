@@ -886,10 +886,10 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	if (p.lubrication_model == 0) {
-		computeVelocitiesStokesDrag();
-	} else {
+	if (p.lubrication_model > 0) {
 		computeVelocities(calc_stress);
+	} else {
+		computeVelocitiesStokesDrag();
 	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
@@ -1421,8 +1421,10 @@ void System::generateBrownianForces()
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A (force and torque)
 	}
-	stokes_solver.setRHS(brownian_force);
-	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+	if (p.lubrication_model > 0) {
+		stokes_solver.setRHS(brownian_force);
+		stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+	}
 }
 
 void System::setContactForceToParticle()
@@ -1686,26 +1688,7 @@ void System::computeVelocities(bool divided_velocities)
 			 */
 			generateBrownianForces();
 		}
-		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
-		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-		if (twodimension) {
-			if (p.monolayer) {
-				/* Particle (3D sphere) cannot move along y-direction.
-				 * All other degrees of freedom exist.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_brownian[i].y = 0; // @@ To be checked
-				}
-			} else {
-				/* Particle (2D disk) can rotate only along y-axis.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_brownian[i].y = 0; // @@ To be checked
-					ang_vel_brownian[i].x = 0;
-					ang_vel_brownian[i].z = 0;
-				}
-			}
-		}
+		computeBrownianVelocities();
 		for (int i=0; i<np; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
@@ -1718,32 +1701,7 @@ void System::computeVelocities(bool divided_velocities)
 	if (!p.fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
-	if (!zero_shear) {
-		for (int i=0; i<np; i++) {
-			velocity[i] = na_velocity[i];
-			ang_velocity[i] = na_ang_velocity[i];
-			if (!p.cross_shear) {
-				velocity[i].x += shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*shear_rate;
-			} else {
-				velocity[i].x += costheta_shear*shear_rate*position[i].z;
-				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
-				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
-			}
-		}
-		if (!p.cross_shear) {
-			vel_difference.x = shear_rate*lz;
-		} else {
-			vel_difference.x = costheta_shear*shear_rate*lz;
-			vel_difference.y = sintheta_shear*shear_rate*lz;
-		}
-	} else {
-		for (int i=0; i<np; i++) {
-			velocity[i] = na_velocity[i];
-			ang_velocity[i] = na_ang_velocity[i];
-		}
-	}
+	adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	stokes_solver.solvingIsDone();
 }
 
@@ -1770,18 +1728,28 @@ void System::computeVelocitiesStokesDrag()
 			}
 		}
 	}
-	
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
 			 * Resistance matrix is used.
 			 */
-			//generateBrownianForces();
-			double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
-			for (int i=0; i<linalg_size; i++) {
-				brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A (force and torque)
-			}
+			generateBrownianForces();
 		}
+		computeBrownianVelocities();
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += vel_brownian[i];
+			na_ang_velocity[i] += ang_vel_brownian[i];
+		}
+	}
+	adjustVelocitiesLeesEdwardsPeriodicBoundary();
+}
+
+void System::computeBrownianVelocities()
+{
+	if (p.lubrication_model > 0) {
+		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
+		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+	} else {
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
 			vel_brownian[i].x = brownian_force[i6]/stokesdrag_coeff_f[i];
@@ -1791,51 +1759,54 @@ void System::computeVelocitiesStokesDrag()
 			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t[i];
 			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t[i];
 		}
-		if (twodimension) {
-			if (p.monolayer) {
-				/* Particle (3D sphere) cannot move along y-direction.
-				 * All other degrees of freedom exist.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_brownian[i].y = 0; // @@ To be checked
-				}
-			} else {
-				/* Particle (2D disk) can rotate only along y-axis.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_brownian[i].y = 0; // @@ To be checked
-					ang_vel_brownian[i].x = 0;
-					ang_vel_brownian[i].z = 0;
-				}
-			}
-		}
-		for (int i=0; i<np; i++) {
-			na_velocity[i] += vel_brownian[i];
-			na_ang_velocity[i] += ang_vel_brownian[i];
-		}
+	}
+	if (twodimension) {
+		rushWorkFor2DBrownian();
+	}
+}
+
+void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
+{
+	for (int i=0; i<np; i++) {
+		velocity[i] = na_velocity[i];
+		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		for (int i=0; i<np; i++) {
-			if (!p.cross_shear) {
+		if (!p.cross_shear) {
+			for (int i=0; i<np; i++) {
 				velocity[i].x += shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*shear_rate;
-			} else {
+			}
+			vel_difference.x = shear_rate*lz;
+		} else {
+			for (int i=0; i<np; i++) {
 				velocity[i].x += costheta_shear*shear_rate*position[i].z;
 				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
 				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
 			}
-		}
-		if (!p.cross_shear) {
-			vel_difference.x = shear_rate*lz;
-		} else {
 			vel_difference.x = costheta_shear*shear_rate*lz;
 			vel_difference.y = sintheta_shear*shear_rate*lz;
 		}
-	} else {
+	}
+}
+
+void System::rushWorkFor2DBrownian()
+{
+	if (p.monolayer) {
+		/* Particle (3D sphere) cannot move along y-direction.
+		 * All other degrees of freedom exist.
+		 */
 		for (int i=0; i<np; i++) {
-			velocity[i] = na_velocity[i];
-			ang_velocity[i] = na_ang_velocity[i];
+			vel_brownian[i].y = 0; // @@ To be checked
+		}
+	} else {
+		/* Particle (2D disk) can rotate only along y-axis.
+		 */
+		for (int i=0; i<np; i++) {
+			vel_brownian[i].y = 0; // @@ To be checked
+			ang_vel_brownian[i].x = 0;
+			ang_vel_brownian[i].z = 0;
 		}
 	}
 }

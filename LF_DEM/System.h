@@ -107,6 +107,9 @@ private:
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
+	void computeBrownianVelocities();
+	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
 	void stressReset();
 	void computeMaxNAVelocity();
