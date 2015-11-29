@@ -84,7 +84,6 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	} else {
 		contact.deactivate();
 	}
-
 	contact_state_changed_after_predictor = false;
 	lubrication.getInteractionData();
 	lubrication.updateResistanceCoeff();

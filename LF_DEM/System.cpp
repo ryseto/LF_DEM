@@ -80,7 +80,6 @@ System::hash( time_t t, clock_t c )
 	*/
 
 	static unsigned long differ = 0; // guarantee time-based seeds will change
-
 	unsigned long h1 = 0;
 	unsigned char *pp = (unsigned char *) &t;
 	for( size_t i = 0; i < sizeof(t); ++i )
@@ -176,7 +175,9 @@ void System::allocateRessources()
 	resistance_matrix_dblock = new double [18*np];
 	if (p.lubrication_model == 0) {
 		stokesdrag_coeff_f = new double [np];
+		stokesdrag_coeff_f_sqrt = new double [np];
 		stokesdrag_coeff_t = new double [np];
+		stokesdrag_coeff_t_sqrt =  new double [np];
 	}
 	// Configuration
 	if (twodimension) {
@@ -706,7 +707,9 @@ void System::setupSystem(string control)
 		resistance_matrix_dblock[i18+17] = TWvalue;
 		if (p.lubrication_model == 0) {
 			stokesdrag_coeff_f[i] = FUvalue;
+			stokesdrag_coeff_f_sqrt[i] = sqrt(FUvalue);
 			stokesdrag_coeff_t[i] = TWvalue;
+			stokesdrag_coeff_t_sqrt[i] = sqrt(FUvalue);
 		}
 	}
 	cout << indent << "Setting up System... [ok]" << endl;
@@ -1419,11 +1422,28 @@ void System::generateBrownianForces()
 	 */
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
 	for (int i=0; i<linalg_size; i++) {
-		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A (force and torque)
+		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
 	}
 	if (p.lubrication_model > 0) {
+		/* L*L^T = RFU
+		 */
 		stokes_solver.setRHS(brownian_force);
 		stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+	} else {
+		/*
+		 *  F_B = \sqrt(2kT/dt) * L^T * A
+		 *  U_B = (RFU)^{-1} F_B
+		 *  In Stokes drag simulation 
+		 *  F_B = \sqrt(2kT/dt) * sqrt(RFU) * A
+		 *  U_B = (RFU)^{-1} F_B 
+		 *	    = (RFU)^{-1} \sqrt(2kT/dt) * sqrt(RFU) * A
+		 *      = \sqrt(2kT/dt) * A / sqrt(RFU)
+		 *  In order to reduce trivial calculations,
+		 *  Here, sqrt(RFU) is not included in F_B
+		 *  F_B = \sqrt(2kT/dt) * A
+		 *  In the function computeBrownianVelocities(), 
+		 *  U_B = F_B / sqrt(RFU)
+		 */
 	}
 }
 
@@ -1602,10 +1622,8 @@ void System::computeShearRate()
 	 */
 	calcStressPerParticle();
 	calcStress();
-
 	double shearstress_con;
 	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
-
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
@@ -1614,14 +1632,12 @@ void System::computeShearRate()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
-
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-
 	for (int i=0; i<np; i++) {
 		vel_hydro[i] *= shear_rate;
 		ang_vel_hydro[i] *= shear_rate;
@@ -1637,9 +1653,7 @@ void System::computeVelocities(bool divided_velocities)
 	 (hydro, contacts, Brownian, ...). (Note that in Brownian
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
-
 	stokes_solver.resetRHS();
-
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
@@ -1707,6 +1721,12 @@ void System::computeVelocities(bool divided_velocities)
 
 void System::computeVelocitiesStokesDrag()
 {
+	/**
+	 \brief Compute velocities in Stokes-drag simulation.
+
+	 Note: Velocities of particles are simply proportional to the total forces acting on respective particles.
+	 When the contact model includes dashpots, Stokes-drag simulation cannot be used.
+	 */
 	for (int i=0; i<np; i++) {
 		na_velocity[i] = contact_force[i]/stokesdrag_coeff_f[i];
 		na_ang_velocity[i] = contact_torque[i]/stokesdrag_coeff_t[i];
@@ -1750,14 +1770,16 @@ void System::computeBrownianVelocities()
 		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 	} else {
+		/* See the comment given in generateBrownianForces()
+		 */
 		for (int i=0; i<np; i++) {
 			int i6 = 6*i;
-			vel_brownian[i].x = brownian_force[i6]/stokesdrag_coeff_f[i];
-			vel_brownian[i].y = brownian_force[i6+1]/stokesdrag_coeff_f[i];
-			vel_brownian[i].z = brownian_force[i6+2]/stokesdrag_coeff_f[i];
-			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t[i];
-			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t[i];
-			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t[i];
+			vel_brownian[i].x = brownian_force[i6]/stokesdrag_coeff_f_sqrt[i];
+			vel_brownian[i].y = brownian_force[i6+1]/stokesdrag_coeff_f_sqrt[i];
+			vel_brownian[i].z = brownian_force[i6+2]/stokesdrag_coeff_f_sqrt[i];
+			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t_sqrt[i];
+			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t_sqrt[i];
+			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t_sqrt[i];
 		}
 	}
 	if (twodimension) {
@@ -1793,6 +1815,10 @@ void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
 
 void System::rushWorkFor2DBrownian()
 {
+	/* [note] 
+	 * Native 2D simulation is not implemented yet.
+	 * As a quick implementation, the velocity elements for extra dimension are set to zero
+	 */
 	if (p.monolayer) {
 		/* Particle (3D sphere) cannot move along y-direction.
 		 * All other degrees of freedom exist.
@@ -1919,7 +1945,6 @@ void System::periodize_diff(vec3d& pos_diff)
 		}
 	}
 }
-
 
 void System::setSystemVolume(double depth)
 {

@@ -20,7 +20,7 @@ struct ParameterSet
 	double brownian_amplitude;				///< Amplitude of the Brownian force [0]
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
-	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, magnetic force, etc.). If -1, lub_max_gap is used as cutoff [-1]
+	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
 
 	/* magnetic */
 	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
@@ -46,10 +46,10 @@ struct ParameterSet
 	double sd_coeff;                         ///< Stokes drag coeffient. Full drag is 1. [1]
 	/*
 	* Lubrication model
-	* 0 no lubrication
+	* 0 no lubrication (no dashpot as well)
 	* 1 1/xi lubrication (only squeeze mode)
 	* 2 log(1/xi) lubrication
-	* 3 dashpot in the contact model (not yet implemented)
+	* 3 dashpot in the contact model (not implemented yet)
 	*   In this case lub_max_gap should be automatically zero. (not yet implemented)
 	*/
 	int lubrication_model;                   ///< Lubrication type. 0: no lubrication (no dashpot), 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication, 3: only dashpot [2]

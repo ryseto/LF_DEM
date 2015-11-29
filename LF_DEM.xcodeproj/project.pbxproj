@@ -19,10 +19,10 @@
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
 		D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */; };
-		D94AEF011C0AA3790061C679 /* libsuitesparseconfig.4.4.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D94AEF001C0AA3790061C679 /* libsuitesparseconfig.4.4.5.a */; };
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
+		D95885601C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D958855F1C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a */; };
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
@@ -551,13 +551,13 @@
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Lubrication.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
-		D94AEF001C0AA3790061C679 /* libsuitesparseconfig.4.4.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.5.a; path = ../../../../usr/local/lib/libsuitesparseconfig.4.4.5.a; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9532ADF1B9412FC0014831F /* CalcOrderParameter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CalcOrderParameter; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Box.cpp; sourceTree = "<group>"; };
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = BoxSet.cpp; sourceTree = "<group>"; };
 		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = BoxSet.h; sourceTree = "<group>"; };
+		D958855F1C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.5.a; path = /usr/local/lib/libsuitesparseconfig.4.4.5.a; sourceTree = "<absolute>"; };
 		D96731B117A042AD005D02F8 /* percolation_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = percolation_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96731B317A042AD005D02F8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
@@ -657,7 +657,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D94AEF011C0AA3790061C679 /* libsuitesparseconfig.4.4.5.a in Frameworks */,
+				D95885601C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a in Frameworks */,
 				D91372D91C09ADC500EA5817 /* libcholmod.3.0.6.a in Frameworks */,
 				D9D712231A995E36009CC269 /* libamd.2.4.1.a in Frameworks */,
 				D9D712281A995E36009CC269 /* libcolamd.2.9.1.a in Frameworks */,
@@ -1139,6 +1139,7 @@
 			isa = PBXGroup;
 			children = (
 				D9D712161A995E36009CC269 /* libamd.2.4.1.a */,
+				D958855F1C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a */,
 				D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */,
 				D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
@@ -1182,7 +1183,6 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
-				D94AEF001C0AA3790061C679 /* libsuitesparseconfig.4.4.5.a */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D90AF33B1AF9FFBA00E15C7E /* html */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,

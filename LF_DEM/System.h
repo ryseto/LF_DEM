@@ -138,6 +138,8 @@ private:
 	double *radius_squared;
 	double *stokesdrag_coeff_f;
 	double *stokesdrag_coeff_t;
+	double *stokesdrag_coeff_f_sqrt;
+	double *stokesdrag_coeff_t_sqrt;
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;
