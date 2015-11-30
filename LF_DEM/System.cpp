@@ -719,7 +719,7 @@ void System::setupSystem(string control)
 			stokesdrag_coeff_f[i] = FUvalue;
 			stokesdrag_coeff_f_sqrt[i] = sqrt(FUvalue);
 			stokesdrag_coeff_t[i] = TWvalue;
-			stokesdrag_coeff_t_sqrt[i] = sqrt(FUvalue);
+			stokesdrag_coeff_t_sqrt[i] = sqrt(TWvalue);
 		} else {
 			resistance_matrix_dblock[i18   ] = FUvalue;
 			resistance_matrix_dblock[i18+6 ] = FUvalue;
@@ -1458,7 +1458,7 @@ void System::generateBrownianForces()
 		 *  In order to reduce trivial calculations,
 		 *  Here, sqrt(RFU) is not included in F_B
 		 *  F_B = \sqrt(2kT/dt) * A
-		 *  In the function computeBrownianVelocities(), 
+		 *  In the function computeBrownianVelocities(),
 		 *  U_B = F_B / sqrt(RFU)
 		 */
 	}
@@ -1797,6 +1797,7 @@ void System::computeBrownianVelocities()
 			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t_sqrt[i];
 			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t_sqrt[i];
 			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t_sqrt[i];
+			cerr << stokesdrag_coeff_f_sqrt[i] << ' '<< stokesdrag_coeff_t_sqrt[i] << endl;
 		}
 	}
 	if (twodimension) {
