@@ -1797,7 +1797,6 @@ void System::computeBrownianVelocities()
 			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t_sqrt[i];
 			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t_sqrt[i];
 			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t_sqrt[i];
-			cerr << stokesdrag_coeff_f_sqrt[i] << ' '<< stokesdrag_coeff_t_sqrt[i] << endl;
 		}
 	}
 	if (twodimension) {
