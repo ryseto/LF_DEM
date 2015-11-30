@@ -134,6 +134,7 @@ private:
 	dsfmt_t rand_gen;
 	unsigned long hash(time_t, clock_t);
 #endif
+	bool angle_output;
 	double *radius_cubed;
 	double *radius_squared;
 	double *stokesdrag_coeff_f;

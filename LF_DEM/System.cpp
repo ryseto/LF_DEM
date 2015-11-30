@@ -729,6 +729,13 @@ void System::setupSystem(string control)
 			resistance_matrix_dblock[i18+17] = TWvalue;
 		}
 	}
+	angle_output = false;
+	if (twodimension) {
+		if (magnetic == false ||
+			magnetic_rotation_active) {
+			angle_output = true;
+		}
+	}
 	cout << indent << "Setting up System... [ok]" << endl;
 }
 
@@ -891,10 +898,10 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	if (p.lubrication_model == 0) {
-		computeVelocitiesStokesDrag();
-	} else {
+	if (p.lubrication_model > 0) {
 		computeVelocities(calc_stress);
+	} else {
+		computeVelocitiesStokesDrag();
 	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
@@ -989,7 +996,7 @@ void System::timeStepMove(const string& time_or_strain,
 			//magnetic_moment[i] *= magnetic_moment_norm[i]
 		}
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -1027,7 +1034,7 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -1059,7 +1066,7 @@ void System::timeStepMoveCorrector()
 	for (int i=0; i<np; i++) {
 		displacement(i, (velocity[i]-velocity_predictor[i])*dt);
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
 		}
