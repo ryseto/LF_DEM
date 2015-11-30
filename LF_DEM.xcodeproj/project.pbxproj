@@ -551,6 +551,7 @@
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Lubrication.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
+		D94AEF021C0BCEAC0061C679 /* README.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.rst; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9532ADF1B9412FC0014831F /* CalcOrderParameter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CalcOrderParameter; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9573FAE16797A000081E903 /* Box.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Box.cpp; sourceTree = "<group>"; };
@@ -1183,6 +1184,7 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
+				D94AEF021C0BCEAC0061C679 /* README.rst */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D90AF33B1AF9FFBA00E15C7E /* html */,
 				D9DA50D51678F61E00E864E4 /* note_LF_DEM */,

@@ -100,7 +100,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m 1b D2N200VF0.68Bidi1_nr0.5Square_1.dat magbinary.txt"
+            argument = "-m 15b D2N200VF0.68Bidi1_nr0.5Square_1.dat magbinary0.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -52,10 +52,17 @@ void Lubrication::getInteractionData()
 
 bool Lubrication::is_active()
 {
-	if (interaction->is_contact()) {
-		return true;
+	if (sys->p.lubrication_model > 0) {
+		if (interaction->is_contact()) {
+			return true;
+		} else {
+			return interaction->r < range; // h < lub_max_gap
+		}
 	} else {
-		return interaction->r < range;
+		/* lubrication_model = 0 is Stokes drag simulation
+		 * Always lubrication is zero.
+		 */
+		return false;
 	}
 }
 

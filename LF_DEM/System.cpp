@@ -172,12 +172,14 @@ void System::allocateRessources()
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
-	resistance_matrix_dblock = new double [18*np];
-	if (p.lubrication_model == 0) {
+	if (p.lubrication_model > 0) {
+		resistance_matrix_dblock = new double [18*np];
+	} else {
+		// Stokes-drag simulation
 		stokesdrag_coeff_f = new double [np];
 		stokesdrag_coeff_f_sqrt = new double [np];
 		stokesdrag_coeff_t = new double [np];
-		stokesdrag_coeff_t_sqrt =  new double [np];
+		stokesdrag_coeff_t_sqrt = new double [np];
 	}
 	// Configuration
 	if (twodimension) {
@@ -237,7 +239,9 @@ void System::allocateRessources()
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	stokes_solver.init(np);
+	if (p.lubrication_model > 0) {
+		stokes_solver.init(np);
+	}
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
@@ -504,12 +508,16 @@ void System::setupSystem(string control)
 		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
-	if (p.lubrication_model == 1) {
+	if (p.lubrication_model == 0) {
+		/* Stokes drag simulation
+		 * Resistance matrix is constant.
+		 */
+	} else if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
 	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		//throw runtime_error(indent+"lubrication_model = 0 is not implemented yet.\n");
+		throw runtime_error(indent+"lubrication_model >= 3 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -608,9 +616,13 @@ void System::setupSystem(string control)
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
 	 *
 	 */
-	if (p.lubrication_model == 1) {
+	if (p.lubrication_model == 0) {
+		/* Stokes drag simulation
+		 */
+	} else if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
+		log_lub_coeff_contact_tan_total = 0;
 	} else if (p.lubrication_model == 2) {
 		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
 		/* [Note]
@@ -619,10 +631,11 @@ void System::setupSystem(string control)
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
+		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	} else {
-		//throw runtime_error("lubrication_model must be smaller than 3\n");
+		throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
-	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+	
 	if (p.unscaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
@@ -691,25 +704,29 @@ void System::setupSystem(string control)
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
-
-	for (int i=0; i<18*np; i++) {
-		resistance_matrix_dblock[i] = 0;
+	
+	if (p.lubrication_model > 0) {
+		for (int i=0; i<18*np; i++) {
+			resistance_matrix_dblock[i] = 0;
+		}
 	}
 	for (int i=0; i<np; i++) {
 		int i18 = 18*i;
 		double FUvalue = p.sd_coeff*radius[i];
 		double TWvalue = p.sd_coeff*radius_cubed[i]*4.0/3;
-		resistance_matrix_dblock[i18   ] = FUvalue;
-		resistance_matrix_dblock[i18+6 ] = FUvalue;
-		resistance_matrix_dblock[i18+10] = FUvalue;
-		resistance_matrix_dblock[i18+12] = TWvalue;
-		resistance_matrix_dblock[i18+15] = TWvalue;
-		resistance_matrix_dblock[i18+17] = TWvalue;
 		if (p.lubrication_model == 0) {
+			// Stokes drag simulation
 			stokesdrag_coeff_f[i] = FUvalue;
 			stokesdrag_coeff_f_sqrt[i] = sqrt(FUvalue);
 			stokesdrag_coeff_t[i] = TWvalue;
 			stokesdrag_coeff_t_sqrt[i] = sqrt(FUvalue);
+		} else {
+			resistance_matrix_dblock[i18   ] = FUvalue;
+			resistance_matrix_dblock[i18+6 ] = FUvalue;
+			resistance_matrix_dblock[i18+10] = FUvalue;
+			resistance_matrix_dblock[i18+12] = TWvalue;
+			resistance_matrix_dblock[i18+15] = TWvalue;
+			resistance_matrix_dblock[i18+17] = TWvalue;
 		}
 	}
 	cout << indent << "Setting up System... [ok]" << endl;
