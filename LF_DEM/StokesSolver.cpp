@@ -14,14 +14,8 @@ StokesSolver::~StokesSolver()
     if (!dblocks) {
 		delete [] dblocks;
 	}
-	if (!odblocks) {
-		delete [] odblocks;
-	}
 	if (!odbrows_table) {
 		delete [] odbrows_table;
-	}
-    if (!current_index_positions) {
-		delete [] current_index_positions;
 	}
 	if (!chol_solution) {
 		cholmod_free_dense(&chol_solution, &chol_c);
@@ -118,16 +112,17 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 	return;
 }
 
+
 /*************** Cholmod Matrix Filling *************
  Cholmod matrices we are using are defined in column major order (index j is column index)
- 
+
  Cholmod matrices are defined as follows:
  - all values are stored in array x ( size nzmax )
  - locations of values are encoded in array p ( size np ):
  values corresponding to column j are x[ p[j] ]  to x[ p[j+1] - 1 ]
  - corresponding rows are stored in array i ( size nzmax ):
  rows corresponding to column j are i[ p[j] ]  to i[ p[j+1] - 1 ]
- 
+
  Hence:
  with p[j]-1 < a < p[j+1]
         . . . . j . . . . . .
@@ -137,12 +132,13 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
  i[a] | . . . .x[a]          |
      .|                      |
      .|                      |
- 
- 
+
+
  *****************************************************/
+
 void StokesSolver::completeResistanceMatrix()
 {
-	// this function is commented, but you are strongly advised to read 
+	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
 
     // declare the last 2 values of odbrows_table
@@ -171,7 +167,7 @@ void StokesSolver::completeResistanceMatrix()
 		((int*)chol_res_matrix->p)[j6+2] = ((int*)chol_res_matrix->p)[j6+1] + 5 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+4] = ((int*)chol_res_matrix->p)[j6+3] + 3 + od_nzero_nb;
-		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + od_nzero_nb;	
+		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + od_nzero_nb;
 		int pj6   = ((int*)chol_res_matrix->p)[j6];
 		int pj6_1 = ((int*)chol_res_matrix->p)[j6+1];
 		int pj6_2 = ((int*)chol_res_matrix->p)[j6+2];
@@ -204,7 +200,7 @@ void StokesSolver::completeResistanceMatrix()
 		((double*)chol_res_matrix->x)[pj6  ] = dblocks[j18];   // column j6
 		((double*)chol_res_matrix->x)[pj6+1] = dblocks[j18+1];
 		((double*)chol_res_matrix->x)[pj6+2] = dblocks[j18+2];
-		((double*)chol_res_matrix->x)[pj6+3] = dblocks[j18+3]; 
+		((double*)chol_res_matrix->x)[pj6+3] = dblocks[j18+3];
 		((double*)chol_res_matrix->x)[pj6+4] = dblocks[j18+4];
 		((double*)chol_res_matrix->x)[pj6+5] = dblocks[j18+5];
 		((double*)chol_res_matrix->x)[pj6_1  ] = dblocks[j18+6];   // column j6+1
@@ -225,7 +221,7 @@ void StokesSolver::completeResistanceMatrix()
 		/*****  2  : off-diagonal blocks row indices and values ***********/
 		// 36 non-zero elements per block
 		for (int k = odbrows_table[j]; k<odbrows_table[j+1]; k++) {
-			int u = 6*(k-odbrows_table[j]); 
+			int u = 6*(k-odbrows_table[j]);
 			// we are filling the "k-odbFrows_table[j]"th off-diag block of the column.
 			// For column j6, for exemple, the indices of the non-zero values are:
 			// pj6 for all non-zero elements before column j6,
@@ -240,65 +236,55 @@ void StokesSolver::completeResistanceMatrix()
 				((int*)chol_res_matrix->i)[pj6_4+2 + u +s] = odbrows[k]+s;
 				((int*)chol_res_matrix->i)[pj6_5+1 + u +s] = odbrows[k]+s;
 			}
-			int k6 = 6*k;
-			int k4 = 4*k;
-			int k2 = 2*k;
-			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[0][k6  ]; // A   // column j6
-			((double*)chol_res_matrix->x)[pj6+6 + u +1]   = odblocks[0][k6+1];
-			((double*)chol_res_matrix->x)[pj6+6 + u +2]   = odblocks[0][k6+2];
-			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = odblocks[0][k6+3]; // B
-			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[0][k6+4];
-			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[0][k6+5];
+
+			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[k].values_col0[0]; // A   // column j6
+			((double*)chol_res_matrix->x)[pj6+6 + u +1]   = odblocks[k].values_col0[1];
+			((double*)chol_res_matrix->x)[pj6+6 + u +2]   = odblocks[k].values_col0[2];
+			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = odblocks[k].values_col0[3]; // B
+			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[k].values_col0[4];
+			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[k].values_col0[5];
 			//
-			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[0][k6+1]; // A  // column j6+1
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[1][k4  ];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[1][k4+1];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[0][k6+4]; // B
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = odblocks[1][k4+2];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[1][k4+3];
+			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[k].values_col0[1]; // A  // column j6+1
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[k].values_col1[0];
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[k].values_col1[1];
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[k].values_col0[4]; // B
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = odblocks[k].values_col1[2];
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[k].values_col1[3];
 			//
-			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[0][k6+2]; // A // column j6+2
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[1][k4+1];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[2][k2  ];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[0][k6+5]; // B
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[1][k4+3];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = odblocks[2][k2+1];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[k].values_col0[2]; // A // column j6+2
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[k].values_col1[1];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[k].values_col2[0];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[k].values_col0[5]; // B
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[k].values_col1[3];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = odblocks[k].values_col2[1];
 			//
-			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[3][k6  ]; // Btilde   // column j6+3
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[3][k6+1];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[3][k6+2];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[3][k6+3]; // C
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[3][k6+4];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[3][k6+5];
-			
-			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[3][k6+1]; // Btilde // column j6+4
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = odblocks[4][k4  ];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[4][k4+1];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[3][k6+4]; // C
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[4][k4+2];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[4][k4+3];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[k].values_col3[0]; // Btilde   // column j6+3
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[k].values_col3[1];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[k].values_col3[2];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[k].values_col3[3]; // C
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[k].values_col3[4];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[k].values_col3[5];
+
+			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[k].values_col3[1]; // Btilde // column j6+4
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = odblocks[k].values_col4[0];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[k].values_col4[1];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[k].values_col3[4]; // C
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[k].values_col4[2];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[k].values_col4[3];
 			//
-			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[3][k6+2]; // Btilde // column j6+5
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[4][k4+1];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[5][k2  ];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[3][k6+5]; // C
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[4][k4+3];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[5][k2+1];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[k].values_col3[2]; // Btilde // column j6+5
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[k].values_col4[1];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[k].values_col5[0];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[k].values_col3[5]; // C
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[k].values_col4[3];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[k].values_col5[1];
 		}
 	}
     ((int*)chol_res_matrix->p)[np6] = ((int*)chol_res_matrix->p)[np6-1]+1;
 	factorizeResistanceMatrix();
 }
 
-/*************** Epetra_CrsMatrix Filling *************
- Epetra_CrsMatrix we are using are defined in row major order.
- 
- Epetra_CrsMatrix must be stored completely.
- 
- Epetra_CrsMatrix elements are not accessed directly for filling.
- Instead we use user friendly methods, that take one row at a time.
- 
- *****************************************************/
+
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
 										 double *reset_resmat_dblocks)
@@ -310,18 +296,11 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
 		dblocks[k] = reset_resmat_dblocks[k];
 	}
 	odbrows.clear();
-	odblocks[0].resize(6*odblocks_nb);
-	odblocks[1].resize(4*odblocks_nb);
-	odblocks[2].resize(2*odblocks_nb);
-	odblocks[3].resize(6*odblocks_nb);
-	odblocks[4].resize(4*odblocks_nb);
-	odblocks[5].resize(2*odblocks_nb);
-	for (int k=0; k<6; k++) {
-		for (double& odb: odblocks[k]) {
-			odb = 0;
-		}
-		current_index_positions[k] = 0;
-	}
+  odblocks.resize(odblocks_nb);
+  for(auto &b: odblocks){
+    resetODBlock(b);
+  }
+
 	odbrows_table[0] = 0;
 }
 
@@ -418,9 +397,9 @@ void StokesSolver::compute_LTRHS(double* X)
 	/*
 	 Cholmod gives a factorizationof a permutated resistance
 	 matrix Lc*Lc^T = P*RFU*P^T
-	 
+
 	 That means P*L = Lc, with  L*L^T = RFU
-	 
+
 	 So for a rhs Y:
 	 X = L*Y = P^T*Lc*Y
 		*/
@@ -544,8 +523,6 @@ void StokesSolver::solvingIsDone()
 void StokesSolver::allocateRessources()
 {
     dblocks = new double [dblocks_size];
-    odblocks = new vector<double> [6];
-	current_index_positions = new int [6];
     odbrows_table = new int [np+1];
     cholmod_start(&chol_c);
 	chol_init = true;
@@ -573,7 +550,7 @@ void StokesSolver::doneBlocks(int i)
 }
 
 // odblocks fillings, for FT/UW version
-void StokesSolver::setColumn(const vec3d &nvec, int jj,
+struct ODBlock StokesSolver::buildODBlock(const vec3d &nvec,
 							 double scaledXA,
 							 double scaledYA, double scaledYB,
 							 double scaledYBtilde, double scaledYC)
@@ -587,47 +564,45 @@ void StokesSolver::setColumn(const vec3d &nvec, int jj,
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-	
+  struct ODBlock block;
+
+	block.values_col0[0] = scaledXA*n0n0+scaledYA*one_n0n0; // column 0
+	block.values_col0[1] = (scaledXA-scaledYA)*n0n1;
+	block.values_col0[2] = (scaledXA-scaledYA)*n0n2;
+	block.values_col0[3] = 0;
+	block.values_col0[4] = -scaledYB*nvec.z;
+	block.values_col0[5] = scaledYB*nvec.y;
+	block.values_col1[0] = scaledXA*n1n1+scaledYA*one_n1n1; // column 1
+	block.values_col1[1] = (scaledXA-scaledYA)*n1n2;
+	block.values_col1[2] = 0;
+	block.values_col1[3] = -scaledYB*nvec.x;
+	block.values_col2[0] = scaledXA*n2n2+scaledYA*one_n2n2; // column 2
+	block.values_col2[1] = 0;
+	block.values_col3[0] = 0; // column 3
+	block.values_col3[1] = scaledYBtilde*nvec.z;
+	block.values_col3[2] = -scaledYBtilde*nvec.y;
+	block.values_col3[3] = scaledYC*one_n0n0;
+	block.values_col3[4] = -scaledYC*n0n1;
+	block.values_col3[5] = -scaledYC*n0n2;
+	block.values_col4[0] = 0; // column 4
+	block.values_col4[1] = scaledYBtilde*nvec.x;
+	block.values_col4[2] = scaledYC*one_n1n1;
+	block.values_col4[3] = -scaledYC*n1n2;
+	block.values_col5[0] = 0; // column 5
+	block.values_col5[1] = scaledYC*one_n2n2;
+
+  return block;
+}
+
+
+// odblocks fillings, for FT/UW version
+void StokesSolver::setColumn(const vec3d &nvec, int jj,
+							 double scaledXA,
+							 double scaledYA, double scaledYB,
+							 double scaledYBtilde, double scaledYC)
+{
 	odbrows.push_back(6*jj);
-
-	int i0 = current_index_positions[0];
-	int i1 = current_index_positions[1];
-	int i2 = current_index_positions[2];
-	int i3 = current_index_positions[3];
-	int i4 = current_index_positions[4];
-	int i5 = current_index_positions[5];
-
-	odblocks[0][i0  ] = scaledXA*n0n0+scaledYA*one_n0n0; // column 0
-	odblocks[0][i0+1] = (scaledXA-scaledYA)*n0n1;
-	odblocks[0][i0+2] = (scaledXA-scaledYA)*n0n2;
-	odblocks[0][i0+3] = 0;
-	odblocks[0][i0+4] = -scaledYB*nvec.z;
-	odblocks[0][i0+5] = scaledYB*nvec.y;
-	odblocks[1][i1  ] = scaledXA*n1n1+scaledYA*one_n1n1; // column 1
-	odblocks[1][i1+1] = (scaledXA-scaledYA)*n1n2;
-	odblocks[1][i1+2] = 0;
-	odblocks[1][i1+3] = -scaledYB*nvec.x;
-	odblocks[2][i2  ] = scaledXA*n2n2+scaledYA*one_n2n2; // column 2
-	odblocks[2][i2+1] = 0;
-	odblocks[3][i3  ] = 0; // column 3
-	odblocks[3][i3+1] = scaledYBtilde*nvec.z;
-	odblocks[3][i3+2] = -scaledYBtilde*nvec.y;
-	odblocks[3][i3+3] = scaledYC*one_n0n0;
-	odblocks[3][i3+4] = -scaledYC*n0n1;
-	odblocks[3][i3+5] = -scaledYC*n0n2;
-	odblocks[4][i4  ] = 0; // column 4
-	odblocks[4][i4+1] = scaledYBtilde*nvec.x;
-	odblocks[4][i4+2] = scaledYC*one_n1n1;
-	odblocks[4][i4+3] = -scaledYC*n1n2;
-	odblocks[5][i5  ] = 0; // column 5
-	odblocks[5][i5+1] = scaledYC*one_n2n2;
-	
-	current_index_positions[0] += 6;
-	current_index_positions[1] += 4;
-	current_index_positions[2] += 2;
-	current_index_positions[3] += 6;
-	current_index_positions[4] += 4;
-	current_index_positions[5] += 2;
+  odblocks[odbrows.size()-1] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 }
 
 void StokesSolver::factorizeResistanceMatrix()
@@ -653,7 +628,7 @@ void StokesSolver::factorizeResistanceMatrix()
  setSpInvPreconditioner() :
  A sparse inverse (left-)preconditioner.
  cholmod-extra routine by Jaakko Luttinen
- 
+
  */
 void StokesSolver::setSpInvPreconditioner()
 {
