@@ -1457,9 +1457,9 @@ void System::generateBrownianForces()
 		/*
 		 *  F_B = \sqrt(2kT/dt) * L^T * A
 		 *  U_B = (RFU)^{-1} F_B
-		 *  In Stokes drag simulation 
+		 *  In Stokes drag simulation
 		 *  F_B = \sqrt(2kT/dt) * sqrt(RFU) * A
-		 *  U_B = (RFU)^{-1} F_B 
+		 *  U_B = (RFU)^{-1} F_B
 		 *	    = (RFU)^{-1} \sqrt(2kT/dt) * sqrt(RFU) * A
 		 *      = \sqrt(2kT/dt) * A / sqrt(RFU)
 		 *  In order to reduce trivial calculations,

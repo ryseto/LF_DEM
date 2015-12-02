@@ -173,7 +173,6 @@ void Interaction::updateContactState()
 	}
 }
 
-
 /* Relative velocity of particle 1 from particle 0.
  *
  * Use:
