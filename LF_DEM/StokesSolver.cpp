@@ -324,13 +324,13 @@ void StokesSolver::completeResistanceMatrix()
 
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
-										 double *reset_resmat_dblocks)
+										 const vector<struct DBlock> &reset_resmat_dblocks)
 {
 	//setSolverType(solver_type);
 	odblocks_nb = nb_of_interactions;
 
-	for(auto &b: dblocks){
-		resetDBlock(b, reset_resmat_dblocks);
+	for(unsigned int i=0; i<dblocks.size(); i++){
+		dblocks[i] = reset_resmat_dblocks[i];
 	}
 	odbrows.clear();
   odblocks.resize(odblocks_nb);
@@ -350,8 +350,8 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
 	odbrows_table_mf[0] = 0;
 
 	// for the mixed problem
-	for(auto &b: dblocks_ff){
-		resetDBlock(b, reset_resmat_dblocks);
+	for(unsigned int i=0; i<dblocks_ff.size(); i++){
+		dblocks[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
 	int odblocks_ff_nb = 0;
   odbrows_ff.clear();

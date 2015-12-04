@@ -53,35 +53,14 @@ struct DBlock{
 		std::array<double,1> col5;
 };
 
-inline void resetDBlock(struct DBlock &b, double* reset_resmat_dblocks){
-	b.col0[0] = reset_resmat_dblocks[0];
-	b.col0[1] = reset_resmat_dblocks[1];
-	b.col0[2] = reset_resmat_dblocks[2];
-	b.col0[3] = reset_resmat_dblocks[3];
-	b.col0[4] = reset_resmat_dblocks[4];
-	b.col0[5] = reset_resmat_dblocks[5];
-	b.col1[0] = reset_resmat_dblocks[6];
-	b.col1[1] = reset_resmat_dblocks[7];
-	b.col1[2] = reset_resmat_dblocks[8];
-	b.col1[3] = reset_resmat_dblocks[8];
-	b.col2[0] = reset_resmat_dblocks[9];
-	b.col2[1] = reset_resmat_dblocks[10];
-	b.col3[0] = reset_resmat_dblocks[11];
-	b.col3[1] = reset_resmat_dblocks[12];
-	b.col3[2] = reset_resmat_dblocks[13];
-	b.col4[0] = reset_resmat_dblocks[14];
-	b.col4[1] = reset_resmat_dblocks[15];
-	b.col5[0] = reset_resmat_dblocks[16];
+inline void resetDBlock(struct DBlock &b){
+	b.col0.fill(0);
+	b.col1.fill(0);
+	b.col2.fill(0);
+	b.col3.fill(0);
+	b.col4.fill(0);
+	b.col5.fill(0);
 }
-
-// inline void resetDBlock(struct DBlock &b){
-// 	b.col0.fill(0);
-// 	b.col1.fill(0);
-// 	b.col2.fill(0);
-// 	b.col3.fill(0);
-// 	b.col4.fill(0);
-// 	b.col5.fill(0);
-// }
 
 class StokesSolver{
 	/*
@@ -275,7 +254,7 @@ public:
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
     void resetResistanceMatrix(int nb_of_interactions,
-							   double* resetResistanceMatrix);
+							   const std::vector<struct DBlock> &reset_resmat_dblocks);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii

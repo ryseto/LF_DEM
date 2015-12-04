@@ -184,8 +184,8 @@ private:
 	BoxSet boxset;
 	double *radius;
 	double *angle; // for 2D visualization
-	double *resistance_matrix_dblock;
-	
+	std::vector <struct DBlock> resistance_matrix_dblock;
+
 	vec3d *velocity;
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
