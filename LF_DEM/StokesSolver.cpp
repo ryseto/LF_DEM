@@ -55,7 +55,7 @@ void StokesSolver::initialize()
 	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	xtype = CHOLMOD_REAL;
 	// resistance matrix characteristics (see header for matrix description)
-	dblocks_size = 18*np;
+	dblocks_size = 18*mobile_particle_nb;
 	allocateRessources();
 	chol_L_to_be_freed = false;
 }
@@ -316,6 +316,8 @@ void StokesSolver::completeResistanceMatrix()
 		}
 	}
   ((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
+
+	// printResistanceMatrix(cout, "dense");getchar();
 	factorizeResistanceMatrix();
 }
 
@@ -500,8 +502,9 @@ void StokesSolver::solve_LT(vec3d* X, vec3d* ang_X)
 {
 	chol_PTsolution = cholmod_solve(CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
 	chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
-	for (int i=0; i<np; i++) {
-		int i6 = 6*i;
+	int size = chol_solution->nrow/6;
+	for (int i=0; i<size; i++) {
+		int i6 =6*i;
 		X[i].x = ((double*)chol_solution->x)[i6];
 		X[i].y = ((double*)chol_solution->x)[i6+1];
 		X[i].z = ((double*)chol_solution->x)[i6+2];
@@ -516,8 +519,9 @@ void StokesSolver::solve_LT(vec3d* X, vec3d* ang_X)
 void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 {
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-	for (int i=0; i<np; i++) {
-		int i6 = 6*i;
+	int size = chol_solution->nrow/6;
+	for (int i=0; i<size; i++) {
+		int i6 =6*i;
 		velocity[i].x = ((double*)chol_solution->x)[i6];
 		velocity[i].y = ((double*)chol_solution->x)[i6+1];
 		velocity[i].z = ((double*)chol_solution->x)[i6+2];
