@@ -131,11 +131,14 @@ void GenerateInitConfig::outputPositionData()
 		}
 	}
 	vector<double> magnetic_susceptibility;
-	for (int i=0; i<np; i++) {
-		if (i < np1) {
-			magnetic_susceptibility.push_back(1);
-		} else {
-			magnetic_susceptibility.push_back(-1);
+	if (magnetic_config) {
+		for (int i=0; i<np; i++) {
+			if (i < np/2) {
+				magnetic_susceptibility.push_back(1);
+			} else {
+				double size_factor = radius[i]*radius[i]*radius[i];
+				magnetic_susceptibility.push_back(-1*size_factor);
+			}
 		}
 	}
 	
