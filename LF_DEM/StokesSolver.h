@@ -16,6 +16,7 @@
 #define __LF_DEM__StokesSolver__
 //#define CHOLMOD_EXTRA
 #include <vector>
+#include <array>
 #include "vec3d.h"
 #include "cholmod.h"
 #ifdef CHOLMOD_EXTRA
@@ -25,27 +26,40 @@ extern "C" {
 #endif
 
 struct ODBlock{
-		double values_col0 [6];
-		double values_col1 [4];
-		double values_col2 [2];
-		double values_col3 [6];
-		double values_col4 [4];
-		double values_col5 [2];
+		std::array<double,6> col0;
+		std::array<double,4> col1;
+		std::array<double,2> col2;
+		std::array<double,6> col3;
+		std::array<double,4> col4;
+		std::array<double,2> col5;
+		int bla;
 };
 
 inline void resetODBlock(struct ODBlock &b){
-	for(int k=0; k<6; k++){
-		b.values_col0[k] = 0;
-		b.values_col3[k] = 0;
-	}
-	for(int k=0; k<4; k++){
-		b.values_col1[k] = 0;
-		b.values_col4[k] = 0;
-	}
-	for(int k=0; k<2; k++){
-		b.values_col2[k] = 0;
-		b.values_col5[k] = 0;
-	}
+	b.col0.fill(0);
+	b.col1.fill(0);
+	b.col2.fill(0);
+	b.col3.fill(0);
+	b.col4.fill(0);
+	b.col5.fill(0);
+}
+
+struct DBlock{
+		std::array<double,6> col0;
+		std::array<double,4> col1;
+		std::array<double,2> col2;
+		std::array<double,3> col3;
+		std::array<double,2> col4;
+		std::array<double,1> col5;
+};
+
+inline void resetDBlock(struct DBlock &b){
+	b.col0.fill(0);
+	b.col1.fill(0);
+	b.col2.fill(0);
+	b.col3.fill(0);
+	b.col4.fill(0);
+	b.col5.fill(0);
 }
 
 class StokesSolver{
@@ -128,7 +142,7 @@ class StokesSolver{
 	  - odblocks: 24 independent elements per block.
 	              Organization is much closer to compressed-column form.
 				  All the odblocks values are stored in a vector of struct ODBlock.
-					A ODBlock contains 6 arrays called values_col0, values_col1, etc, each of them for a column in the block.
+					A ODBlock contains 6 arrays called col0, col1, etc, each of them for a column in the block.
 				  The corresponding locations in the ResistanceMatrix are stored in a vector* called odrows
                   and an array called odrows_table.
 
@@ -161,12 +175,12 @@ class StokesSolver{
 
 private:
 	int np;
-	int np6;
 	int mobile_particle_nb;
 
-	int res_matrix_linear_size;
 	int odblocks_nb;
 	int dblocks_size;
+
+	bool mobile_matrix_done;
 	// Cholmod variables
 	cholmod_factor* chol_L ;
 	cholmod_common chol_c ;
@@ -187,11 +201,17 @@ private:
 	int xtype;
 	bool chol_L_to_be_freed;
 	// resistance matrix building
-	double* dblocks;
+	std::vector <struct DBlock> dblocks;
 	std::vector <struct ODBlock> odblocks;
 	std::vector <int> odbrows;
 	int *odbrows_table;
-	int *current_index_positions;
+	std::vector <struct ODBlock> odblocks_mf;
+	std::vector <int> odbrows_mf;
+	int *odbrows_table_mf;
+	std::vector <struct DBlock> dblocks_ff;
+	std::vector <struct ODBlock> odblocks_ff;
+	std::vector <int> odbrows_ff;
+	int *odbrows_table_ff;
 	void factorizeResistanceMatrix();
     /*
      setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
@@ -208,6 +228,10 @@ private:
 				 							 double scaledXA,
 				 							 double scaledYA, double scaledYB,
 				 							 double scaledYBtilde, double scaledYC);
+	void addToDBlock(struct DBlock &b, const vec3d& nvec,
+												double scaledXA, double scaledYA,
+			 								  double scaledYB, double scaledYC);
+
 	void allocateResistanceMatrix();
 	void allocateRessources();
 	void setDiagBlockPreconditioner();
@@ -230,7 +254,7 @@ public:
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
     void resetResistanceMatrix(int nb_of_interactions,
-							   double* resetResistanceMatrix);
+							   const std::vector<struct DBlock> &reset_resmat_dblocks);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii
