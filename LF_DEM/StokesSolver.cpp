@@ -76,17 +76,14 @@ void StokesSolver::addToDBlock(struct DBlock &b, const vec3d& nvec,
 	b.col0[0] += scaledXA*n0n0 + scaledYA*one_n0n0; // 00 element of the dblock
 	b.col0[1] += (scaledXA-scaledYA)*n0n1; // 10
 	b.col0[2] += (scaledXA-scaledYA)*n0n2; // 20
-	b.col0[3] += 0;                    // 30  // @@@@
-	b.col0[4] += -scaledYB*nvec.z;     // 40
-	b.col0[5] += +scaledYB*nvec.y;      // 50
+	b.col0[3] += -scaledYB*nvec.z;     // 40
+	b.col0[4] += +scaledYB*nvec.y;      // 50
 	// (*,1)
 	b.col1[0] += scaledXA*n1n1 + scaledYA*one_n1n1;        // 11
 	b.col1[1] += (scaledXA-scaledYA)*n1n2;        // 21
-	b.col1[2] += 0;                    // 41  // @@@@
-	b.col1[3] += -scaledYB*nvec.x;     // 51
+	b.col1[2] += -scaledYB*nvec.x;     // 51
 	// (*,2)
 	b.col2[0] += scaledXA*n2n2 + scaledYA*one_n2n2;        // 22
-	b.col2[1] += 0;                    // 32  // @@@@
 	// (*,3)
 	b.col3[0] += scaledYC*one_n0n0;    // 33
 	b.col3[1] += -scaledYC*n0n1;       // 43
@@ -134,18 +131,15 @@ void StokesSolver::fillCholmodFromDBlock(double *chol_x, const vector<int> &inde
 	chol_x[pcol0  ] = b.col0[0];   // column j6
 	chol_x[pcol0+1] = b.col0[1];
 	chol_x[pcol0+2] = b.col0[2];
-	chol_x[pcol0+3] = b.col0[3];  // @@@@
+	chol_x[pcol0+3] = b.col0[3];
 	chol_x[pcol0+4] = b.col0[4];
-	chol_x[pcol0+5] = b.col0[5];
 	chol_x[pcol1  ] = b.col1[0];   // column j6+1
 	chol_x[pcol1+1] = b.col1[1];
-	chol_x[pcol1+2] = -b.col0[4];  // anti-symmetry
-	chol_x[pcol1+3] = b.col1[2];  // @@@@
-	chol_x[pcol1+4] = b.col1[3];
+	chol_x[pcol1+2] = -b.col0[3];  // anti-symmetry
+	chol_x[pcol1+3] = b.col1[2];
 	chol_x[pcol2  ] = b.col2[0];   // column j6+2
-	chol_x[pcol2+1] = -b.col0[5];   // anti-symmetry
-	chol_x[pcol2+2] = -b.col1[3];   // anti-symmetry
-	chol_x[pcol2+3] = b.col2[1];  // @@@@
+	chol_x[pcol2+1] = -b.col0[4];   // anti-symmetry
+	chol_x[pcol2+2] = -b.col1[2];   // anti-symmetry
 	chol_x[pcol3  ] = b.col3[0];   // column j6+3
 	chol_x[pcol3+1] = b.col3[1];
 	chol_x[pcol3+2] = b.col3[2];
@@ -240,7 +234,19 @@ void StokesSolver::completeResistanceMatrix()
 	odb_layout[3] = vector<int>({1,2,3,4,5});
 	odb_layout[4] = vector<int>({0,2,3,4,5});
 	odb_layout[5] = vector<int>({0,1,3,4,5});
-	vector <int> dblocks_cntnonzero = vector<int>({6,5,4,3,2,1});
+	vector <vector <int> > db_layout;
+	db_layout.resize(6);
+	db_layout[0] = vector<int>({0,1,2,4,5});
+	db_layout[1] = vector<int>({1,2,3,5});
+	db_layout[2] = vector<int>({2,3,4});
+	db_layout[3] = vector<int>({3,4,5});
+	db_layout[4] = vector<int>({4,5});
+	db_layout[5] = vector<int>({5});
+
+	vector <int> dblocks_cntnonzero (6);
+	for(int i=0; i<6;i++){
+		dblocks_cntnonzero[i] = db_layout[i].size();
+	}
 	vector <int> index_chol_ix;
 	index_chol_ix.resize(6);
 
@@ -249,32 +255,28 @@ void StokesSolver::completeResistanceMatrix()
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
 		int j6 = 6*j;
-		int j21 = 21*j;
 		// the number of non-zero elements before column 6j is:
-		// - 21*j from j diagonal blocks
+		// - 18*j from j diagonal blocks
 		// - 30*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
 		//
 		// the number of non-zero elements before column 6j+1 is:
 		// - number of non-zero before column 6j + number of non-zero in column 6*j
-		// (in 6j: 6 elements in diagonal block, plus 5*(odbrows_table[j+1]-odbrows_table[j])
+		// (in 6j: dblocks_cntnonzero[0] elements in diagonal block, plus 5*(odbrows_table[j+1]-odbrows_table[j])
 		//
 		// for 6j+2 --> 6j+5: same idea
 		int od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
-		((int*)chol_res_matrix->p)[j6  ] = j21   + 30*odbrows_table[j];
-		((int*)chol_res_matrix->p)[j6+1] = ((int*)chol_res_matrix->p)[j6] + 6 + od_nzero_nb;
-		((int*)chol_res_matrix->p)[j6+2] = ((int*)chol_res_matrix->p)[j6+1] + 5 + od_nzero_nb;
-		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + od_nzero_nb;
-		((int*)chol_res_matrix->p)[j6+4] = ((int*)chol_res_matrix->p)[j6+3] + 3 + od_nzero_nb;
-		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + od_nzero_nb;
-
+		((int*)chol_res_matrix->p)[j6  ] = 18*j   + 30*odbrows_table[j];
+		for(int s=1; s<6; s++) {
+			((int*)chol_res_matrix->p)[j6+s] = ((int*)chol_res_matrix->p)[j6+s-1] + dblocks_cntnonzero[s-1] + od_nzero_nb; // nb before previous + elements in previous
+		}
 
 		for (int col=0; col<6; col++) { // set the starting indices for cols 0-5
 			index_chol_ix[col] = ((int*)chol_res_matrix->p)[j6+col];
 		}
 		// diagonal block row indices (21)
 		for(int col=0; col<6; col++){
-			for(int line=col; line<6; line++){
-				((int*)chol_res_matrix->i)[index_chol_ix[col]+line-col] = j6+line;
+			for(int s=0; s<dblocks_cntnonzero[col]; s++){
+				((int*)chol_res_matrix->i)[index_chol_ix[col]+s] = j6 + db_layout[col][s];
 			}
 		}
 
@@ -582,7 +584,7 @@ void StokesSolver::allocateResistanceMatrix()
 	// allocate
 	int nzmax; // non-zero values
 	int size = 6*dblocks.size();
-	nzmax = 21*dblocks.size(); // diagonal blocks
+	nzmax = 18*dblocks.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb;  // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(size, size, nzmax, sorted, packed, stype, xtype, &chol_c);
 }

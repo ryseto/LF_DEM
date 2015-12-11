@@ -40,9 +40,9 @@ inline void resetODBlock(struct ODBlock &b){
 }
 
 struct DBlock{
-		std::array<double,6> col0;
-		std::array<double,4> col1;
-		std::array<double,2> col2;
+		std::array<double,5> col0;
+		std::array<double,3> col1;
+		std::array<double,1> col2;
 		std::array<double,3> col3;
 		std::array<double,2> col4;
 		std::array<double,1> col5;
@@ -126,13 +126,13 @@ class StokesSolver{
 				 (subblocks names according to "Jeffrey" (Brady) ):
 
 
-										| 18*i      .        .        .         .         .     |
-"A11" subblock (FU)	 | 18*i+1   18*i+6    .        .         .         .     |
-                     | 18*i+2   18*i+7   18*i+10   .         .         .     |
-					 				 	| 18*i+3    .        .       18*i+12    .         .     |
-"B11" subblock (TU)	 | 18*i+4   18*i+8    .       18*i+13   18*i+15    .     |
-				     				| 18*i+5   18*i+9   18*i+11  18*i+14   18*i+16  18*i+17 |
-                                                     "C11" subblock (TW)
+				 | dblocks[i].col0[0]    .                   .                 .                     .                    .               	|
+"A11"(FU)| dblocks[i].col0[1]  dblocks[i].col1[0]     .                .                     .                    .               	|
+				 | dblocks[i].col0[2]  dblocks[i].col1[1]  dblocks[i].col2[0]  .                     .                    .               	|
+				 | 0                      .                   .                dblocks[i].col3[0]    .                    .               	|
+"B11"(TU)| dblocks[i].col0[3]  0                     .                 dblocks[i].col3[1]	 dblocks[i].col4[0]     .                 |
+				 | dblocks[i].col0[4]  dblocks[i].col1[2]  0                   dblocks[i].col3[2]  dblocks[i].col4[1]  	odblocks[t].col5[0] |
+				 																																	"C11" subblock (TW)
 
 	  - odblocks: 24 independent elements per block.
 	              Organization is much closer to compressed-column form.
