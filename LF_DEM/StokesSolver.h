@@ -229,6 +229,12 @@ private:
 	void setIncCholPreconditioner();
 	void setSpInvPreconditioner();
 	void setSolverType(std::string);
+	void fillCholmodFromDBlock(double *chol_x,
+														const std::vector<int> &index_chol_ix,
+														const struct DBlock &b);
+	void fillCholmodFromODBlock(double *chol_x,
+														const std::vector<int> &index_chol_ix,
+														const struct ODBlock &b);
 
 public:
   ~StokesSolver();
