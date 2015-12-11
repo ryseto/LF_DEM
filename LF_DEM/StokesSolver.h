@@ -17,17 +17,16 @@
 //#define CHOLMOD_EXTRA
 #include <vector>
 #include <array>
-#include <memory>
 #include "vec3d.h"
 #include "cholmod.h"
 
 struct ODBlock{
-		std::array<double,6> col0;
-		std::array<double,4> col1;
-		std::array<double,2> col2;
-		std::array<double,6> col3;
-		std::array<double,4> col4;
-		std::array<double,2> col5;
+		std::array<double,5> col0;
+		std::array<double,3> col1;
+		std::array<double,1> col2;
+		std::array<double,5> col3;
+		std::array<double,3> col4;
+		std::array<double,1> col5;
 		int bla;
 };
 
@@ -148,23 +147,23 @@ class StokesSolver{
 				  odbrows[odbrows_table[i]+m] = j, and the elements are accessed via:
 
 				  (only stored elements are shown)                                "\tilde B21"
-					| odblocks[t].col0[0]    .                   .                 	odblocks[t].col3[0]    .                   .               	 	|
-"A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]     .                odblocks[t].col3[1]  odblocks[t].col4[0]    .                	|
-					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0] odblocks[t].col3[2]  odblocks[t].col4[1]  odblocks[t].col5[0]	|
-					| odblocks[t].col0[3]    .                   .                 	odblocks[t].col3[3]   .                   .                		|
-"B21"			| odblocks[t].col0[4]  odblocks[t].col1[2]   .                	odblocks[t].col3[4]	 odblocks[t].col4[2]    .                	|
-					| odblocks[t].col0[5]  odblocks[t].col1[3]  odblocks[t].col2[1] odblocks[t].col3[5]  odblocks[t].col4[3]  odblocks[t].col5[1] |
+					| odblocks[t].col0[0]    .                   .                 	0                     .                    .               	 	|
+"A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]     .                odblocks[t].col3[0]  0                     .                	|
+					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0] odblocks[t].col3[1]  odblocks[t].col4[0]  0                 	|
+					| 0                      .                   .                 	odblocks[t].col3[2]   .                    .               		|
+"B21"			| odblocks[t].col0[3]  0                     .                	odblocks[t].col3[3]	 odblocks[t].col4[1]   .                 	|
+					| odblocks[t].col0[4]  odblocks[t].col1[2]  0                   odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col5[0] |
 		                                                                          "C21"
 	  with t=odbrows_table[i]+m
 
 				Thanks to the symmetries of the resistance matrix, we can recover all the elements as:
 	             (all elements)                                                   "\tilde B21"
-					| odblocks[t].col0[0]  odblocks[t].col0[1]  odblocks[t].col0[2]  odblocks[t].col3[0] -odblocks[t].col3[1] -odblocks[t].col3[2] |
-"A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]  odblocks[t].col1[1]  odblocks[t].col3[1]  odblocks[t].col4[0] -odblocks[t].col4[1] |
-					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0]	 odblocks[t].col3[2]  odblocks[t].col4[1]  odblocks[t].col5[0] |
-					| odblocks[t].col0[3] -odblocks[t].col0[4] -odblocks[t].col0[5]  odblocks[t].col3[3] 	odblocks[t].col3[4]  odblocks[t].col3[5] |
-"B21"			| odblocks[t].col0[4]  odblocks[t].col1[2] -odblocks[t].col1[3]  odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col4[3] |
-					| odblocks[t].col0[5]  odblocks[t].col1[3]  odblocks[t].col2[1]  odblocks[t].col3[5]  odblocks[t].col4[3]  odblocks[t].col5[1] |
+					| odblocks[t].col0[0]  odblocks[t].col0[1]  odblocks[t].col0[2]  0                   -odblocks[t].col3[0] -odblocks[t].col3[1] |
+"A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]  odblocks[t].col1[1]  odblocks[t].col3[0]  0                   -odblocks[t].col4[0] |
+					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0]	 odblocks[t].col3[1]  odblocks[t].col4[0]  0                   |
+					| 0                   -odblocks[t].col0[3] -odblocks[t].col0[4]  odblocks[t].col3[2] 	odblocks[t].col3[3]  odblocks[t].col3[4] |
+"B21"			| odblocks[t].col0[3]  0                   -odblocks[t].col1[2]  odblocks[t].col3[3]  odblocks[t].col4[1]  odblocks[t].col4[2] |
+					| odblocks[t].col0[4]  odblocks[t].col1[2]  0                    odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col5[0] |
 		                                                                          "C21"
 	  with t=odbrows_table[i]+m
 	 */
@@ -181,7 +180,7 @@ private:
 	cholmod_dense* chol_rhs;
 	cholmod_sparse* chol_res_matrix;
 	cholmod_sparse* chol_res_matrix_MF;
-	cholmod_sparse* chol_res_matrix_FM;
+	cholmod_sparse* chol_res_matrix_FF;
 	cholmod_dense* chol_solution;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;

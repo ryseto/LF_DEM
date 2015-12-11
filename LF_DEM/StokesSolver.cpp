@@ -75,17 +75,17 @@ void StokesSolver::addToDBlock(struct DBlock &b, const vec3d& nvec,
 	b.col0[0] += scaledXA*n0n0 + scaledYA*one_n0n0; // 00 element of the dblock
 	b.col0[1] += (scaledXA-scaledYA)*n0n1; // 10
 	b.col0[2] += (scaledXA-scaledYA)*n0n2; // 20
-	b.col0[3] += 0;                    // 30
+	b.col0[3] += 0;                    // 30  // @@@@
 	b.col0[4] += -scaledYB*nvec.z;     // 40
 	b.col0[5] += +scaledYB*nvec.y;      // 50
 	// (*,1)
 	b.col1[0] += scaledXA*n1n1 + scaledYA*one_n1n1;        // 11
 	b.col1[1] += (scaledXA-scaledYA)*n1n2;        // 21
-	b.col1[2] += 0;                    // 41
+	b.col1[2] += 0;                    // 41  // @@@@
 	b.col1[3] += -scaledYB*nvec.x;     // 51
 	// (*,2)
 	b.col2[0] += scaledXA*n2n2 + scaledYA*one_n2n2;        // 22
-	b.col2[1] += 0;                    // 32
+	b.col2[1] += 0;                    // 32  // @@@@
 	// (*,3)
 	b.col3[0] += scaledYC*one_n0n0;    // 33
 	b.col3[1] += -scaledYC*n0n1;       // 43
@@ -208,18 +208,18 @@ void StokesSolver::completeResistanceMatrix()
 		((double*)chol_res_matrix->x)[pj6  ] = dblocks[j].col0[0];   // column j6
 		((double*)chol_res_matrix->x)[pj6+1] = dblocks[j].col0[1];
 		((double*)chol_res_matrix->x)[pj6+2] = dblocks[j].col0[2];
-		((double*)chol_res_matrix->x)[pj6+3] = dblocks[j].col0[3];
+		((double*)chol_res_matrix->x)[pj6+3] = dblocks[j].col0[3];  // @@@@
 		((double*)chol_res_matrix->x)[pj6+4] = dblocks[j].col0[4];
 		((double*)chol_res_matrix->x)[pj6+5] = dblocks[j].col0[5];
 		((double*)chol_res_matrix->x)[pj6_1  ] = dblocks[j].col1[0];   // column j6+1
 		((double*)chol_res_matrix->x)[pj6_1+1] = dblocks[j].col1[1];
 		((double*)chol_res_matrix->x)[pj6_1+2] = -dblocks[j].col0[4];  // anti-symmetry
-		((double*)chol_res_matrix->x)[pj6_1+3] = dblocks[j].col1[2];
+		((double*)chol_res_matrix->x)[pj6_1+3] = dblocks[j].col1[2];  // @@@@
 		((double*)chol_res_matrix->x)[pj6_1+4] = dblocks[j].col1[3];
 		((double*)chol_res_matrix->x)[pj6_2  ] = dblocks[j].col2[0];   // column j6+2
 		((double*)chol_res_matrix->x)[pj6_2+1] = -dblocks[j].col0[5];   // anti-symmetry
 		((double*)chol_res_matrix->x)[pj6_2+2] = -dblocks[j].col1[3];   // anti-symmetry
-		((double*)chol_res_matrix->x)[pj6_2+3] = dblocks[j].col2[1];
+		((double*)chol_res_matrix->x)[pj6_2+3] = dblocks[j].col2[1];  // @@@@
 		((double*)chol_res_matrix->x)[pj6_3  ] = dblocks[j].col3[0];   // column j6+3
 		((double*)chol_res_matrix->x)[pj6_3+1] = dblocks[j].col3[1];
 		((double*)chol_res_matrix->x)[pj6_3+2] = dblocks[j].col3[2];
@@ -248,44 +248,44 @@ void StokesSolver::completeResistanceMatrix()
 			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[k].col0[0]; // A   // column j6
 			((double*)chol_res_matrix->x)[pj6+6 + u +1]   = odblocks[k].col0[1];
 			((double*)chol_res_matrix->x)[pj6+6 + u +2]   = odblocks[k].col0[2];
-			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = odblocks[k].col0[3]; // B
-			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[k].col0[4];
-			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[k].col0[5];
+			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = 0; // B  // @@@@
+			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[k].col0[3]; // B
+			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[k].col0[4];
 			//
 			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[k].col0[1]; // A  // column j6+1
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[k].col1[0];
 			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[k].col1[1];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[k].col0[4]; // B
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = odblocks[k].col1[2];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[k].col1[3];
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[k].col0[3]; // B
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = 0;  // @@@@
+			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[k].col1[2];
 			//
 			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[k].col0[2]; // A // column j6+2
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[k].col1[1];
 			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[k].col2[0];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[k].col0[5]; // B
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[k].col1[3];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = odblocks[k].col2[1];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[k].col0[4]; // B
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[k].col1[2];
+			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = 0;  // @@@@
 			//
-			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = odblocks[k].col3[0]; // Btilde   // column j6+3
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[k].col3[1];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[k].col3[2];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[k].col3[3]; // C
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[k].col3[4];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[k].col3[5];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = 0; // Btilde   // column j6+3   // @@@@
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[k].col3[0];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[k].col3[1];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[k].col3[2]; // C
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[k].col3[3];
+			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[k].col3[4];
 
-			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[k].col3[1]; // Btilde // column j6+4
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = odblocks[k].col4[0];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[k].col4[1];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[k].col3[4]; // C
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[k].col4[2];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[k].col4[3];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[k].col3[0]; // Btilde // column j6+4
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = 0;  // @@@@
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[k].col4[0];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[k].col3[3]; // C
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[k].col4[1];
+			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[k].col4[2];
 			//
-			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[k].col3[2]; // Btilde // column j6+5
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[k].col4[1];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = odblocks[k].col5[0];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[k].col3[5]; // C
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[k].col4[3];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[k].col5[1];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[k].col3[1]; // Btilde // column j6+5
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[k].col4[0];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = 0;  // @@@@
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[k].col3[4]; // C
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[k].col4[2];
+			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[k].col5[0];
 		}
 	}
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
@@ -605,27 +605,21 @@ struct ODBlock StokesSolver::buildODBlock(const vec3d &nvec,
 	block.col0[0] = scaledXA*n0n0+scaledYA*one_n0n0; // column 0
 	block.col0[1] = (scaledXA-scaledYA)*n0n1;
 	block.col0[2] = (scaledXA-scaledYA)*n0n2;
-	block.col0[3] = 0;
-	block.col0[4] = -scaledYB*nvec.z;
-	block.col0[5] = scaledYB*nvec.y;
+	block.col0[3] = -scaledYB*nvec.z;
+	block.col0[4] = scaledYB*nvec.y;
 	block.col1[0] = scaledXA*n1n1+scaledYA*one_n1n1; // column 1
 	block.col1[1] = (scaledXA-scaledYA)*n1n2;
-	block.col1[2] = 0;
-	block.col1[3] = -scaledYB*nvec.x;
+	block.col1[2] = -scaledYB*nvec.x;
 	block.col2[0] = scaledXA*n2n2+scaledYA*one_n2n2; // column 2
-	block.col2[1] = 0;
-	block.col3[0] = 0; // column 3
-	block.col3[1] = scaledYBtilde*nvec.z;
-	block.col3[2] = -scaledYBtilde*nvec.y;
-	block.col3[3] = scaledYC*one_n0n0;
-	block.col3[4] = -scaledYC*n0n1;
-	block.col3[5] = -scaledYC*n0n2;
-	block.col4[0] = 0; // column 4
-	block.col4[1] = scaledYBtilde*nvec.x;
-	block.col4[2] = scaledYC*one_n1n1;
-	block.col4[3] = -scaledYC*n1n2;
-	block.col5[0] = 0; // column 5
-	block.col5[1] = scaledYC*one_n2n2;
+	block.col3[0] = scaledYBtilde*nvec.z; // column 3
+	block.col3[1] = -scaledYBtilde*nvec.y;
+	block.col3[2] = scaledYC*one_n0n0;
+	block.col3[3] = -scaledYC*n0n1;
+	block.col3[4] = -scaledYC*n0n2;
+	block.col4[0] = scaledYBtilde*nvec.x; // column 4
+	block.col4[1] = scaledYC*one_n1n1;
+	block.col4[2] = -scaledYC*n1n2;
+	block.col5[0] = scaledYC*one_n2n2; // column 5
 	return block;
 }
 
