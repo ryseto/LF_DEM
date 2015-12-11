@@ -236,7 +236,7 @@ void System::calcPotentialEnergy()
 			if (interaction[k].is_contact()){
 				total_energy += interaction[k].contact.calcEnergy();
 			}
-			if (repulsive_force) {
+			if (repulsiveforce) {
 				total_energy += interaction[k].repulsion.calcEnergy();
 			}
 		}
