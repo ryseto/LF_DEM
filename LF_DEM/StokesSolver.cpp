@@ -56,11 +56,9 @@ void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
 	}
 }
 
-
 // Diagonal Blocks Terms, FT/UW version
-void StokesSolver::addToDBlock(struct DBlock &b, const vec3d& nvec,
-								  double scaledXA, double scaledYA,
-								  double scaledYB, double scaledYC)
+void StokesSolver::addToDBlock(struct DBlock& b, const vec3d& nvec,
+							   double scaledXA, double scaledYA,double scaledYB, double scaledYC)
 {
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
@@ -119,8 +117,10 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 	return;
 }
 
-void StokesSolver::fillCholmodFromDBlock(double *chol_x, const vector<int> &index_chol_ix, const struct DBlock &b){
-
+void StokesSolver::fillCholmodFromDBlock(double *chol_x,
+										 const vector<int>& index_chol_ix,
+										 const struct DBlock& b)
+{
 	int pcol0 = index_chol_ix[0];
 	int pcol1 = index_chol_ix[1];
 	int pcol2 = index_chol_ix[2];
@@ -148,7 +148,10 @@ void StokesSolver::fillCholmodFromDBlock(double *chol_x, const vector<int> &inde
 	chol_x[pcol5  ] = b.col5[0];   // column j6+5
 }
 
-void StokesSolver::fillCholmodFromODBlock(double *chol_x, const vector<int> &index_chol_ix, const struct ODBlock &b){
+void StokesSolver::fillCholmodFromODBlock(double *chol_x,
+										  const vector<int>& index_chol_ix,
+										  const struct ODBlock& b)
+{
 	int start_index = index_chol_ix[0];
 	chol_x[start_index  ]   = b.col0[0]; // A   // column j6
 	chol_x[start_index +1]   = b.col0[1];
@@ -226,7 +229,7 @@ void StokesSolver::completeResistanceMatrix()
 	odbrows_table[size] = (unsigned int)odbrows.size();
 	allocateResistanceMatrix();
 
-	vector <vector <int> > odb_layout;
+	vector<vector <int> > odb_layout;
 	odb_layout.resize(6);
 	odb_layout[0] = vector<int>({0,1,2,4,5});
 	odb_layout[1] = vector<int>({0,1,2,3,5});
@@ -234,7 +237,7 @@ void StokesSolver::completeResistanceMatrix()
 	odb_layout[3] = vector<int>({1,2,3,4,5});
 	odb_layout[4] = vector<int>({0,2,3,4,5});
 	odb_layout[5] = vector<int>({0,1,3,4,5});
-	vector <vector <int> > db_layout;
+	vector<vector <int> > db_layout;
 	db_layout.resize(6);
 	db_layout[0] = vector<int>({0,1,2,4,5});
 	db_layout[1] = vector<int>({1,2,3,5});
@@ -243,11 +246,11 @@ void StokesSolver::completeResistanceMatrix()
 	db_layout[4] = vector<int>({4,5});
 	db_layout[5] = vector<int>({5});
 
-	vector <int> dblocks_cntnonzero (6);
-	for(int i=0; i<6;i++){
+	vector<int> dblocks_cntnonzero (6);
+	for (int i=0; i<6; i++) {
 		dblocks_cntnonzero[i] = db_layout[i].size();
 	}
-	vector <int> index_chol_ix;
+	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
 
 	// fill
@@ -265,17 +268,17 @@ void StokesSolver::completeResistanceMatrix()
 		//
 		// for 6j+2 --> 6j+5: same idea
 		int od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
-		((int*)chol_res_matrix->p)[j6  ] = 18*j   + 30*odbrows_table[j];
-		for(int s=1; s<6; s++) {
-			((int*)chol_res_matrix->p)[j6+s] = ((int*)chol_res_matrix->p)[j6+s-1] + dblocks_cntnonzero[s-1] + od_nzero_nb; // nb before previous + elements in previous
+		((int*)chol_res_matrix->p)[j6] = 18*j+30*odbrows_table[j];
+		for (int s=1; s<6; s++) {
+			((int*)chol_res_matrix->p)[j6+s] = ((int*)chol_res_matrix->p)[j6+s-1]+dblocks_cntnonzero[s-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
 
 		for (int col=0; col<6; col++) { // set the starting indices for cols 0-5
 			index_chol_ix[col] = ((int*)chol_res_matrix->p)[j6+col];
 		}
 		// diagonal block row indices (21)
-		for(int col=0; col<6; col++){
-			for(int s=0; s<dblocks_cntnonzero[col]; s++){
+		for (int col=0; col<6; col++) {
+			for (int s=0; s<dblocks_cntnonzero[col]; s++) {
 				((int*)chol_res_matrix->i)[index_chol_ix[col]+s] = j6 + db_layout[col][s];
 			}
 		}
@@ -299,7 +302,7 @@ void StokesSolver::completeResistanceMatrix()
 			for (int col=0; col<6; col++) {
 				index_chol_ix[col] += 5*(k-odbrows_table[j]);// 5 non-zero elements per columns in odblocks
 			}
-			for (int col=0; col<6; col++){
+			for (int col=0; col<6; col++) {
 				for (int s=0; s<5; s++) {
 					((int*)chol_res_matrix->i)[index_chol_ix[col] +s] = odbrows[k] + odb_layout[col][s];
 				}
@@ -601,7 +604,6 @@ void StokesSolver::doneBlocks(int i)
 		odbrows_table[i+1] = (unsigned int)odbrows.size();
 		odbrows_table_mf[i+1] = (unsigned int)odbrows_mf.size();
 	}
-
 }
 
 // odblocks fillings, for FT/UW version
@@ -706,7 +708,7 @@ void StokesSolver::printResistanceMatrix(ostream& out, string sparse_or_dense)
 	}
 }
 
-void StokesSolver::printFactor(ostream &out)
+void StokesSolver::printFactor(ostream& out)
 {
 	cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 	cholmod_sparse* chol_L_sparse = cholmod_transpose(cholmod_factor_to_sparse(chol_L_copy, &chol_c), 1, &chol_c);

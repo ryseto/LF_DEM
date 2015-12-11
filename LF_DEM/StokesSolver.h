@@ -20,17 +20,18 @@
 #include "vec3d.h"
 #include "cholmod.h"
 
-struct ODBlock{
-		std::array<double,5> col0;
-		std::array<double,3> col1;
-		std::array<double,1> col2;
-		std::array<double,5> col3;
-		std::array<double,3> col4;
-		std::array<double,1> col5;
-		int bla;
+struct ODBlock {
+	std::array<double, 5> col0;
+	std::array<double, 3> col1;
+	std::array<double, 1> col2;
+	std::array<double, 5> col3;
+	std::array<double, 3> col4;
+	std::array<double, 1> col5;
+	int bla;
 };
 
-inline void resetODBlock(struct ODBlock &b){
+inline void resetODBlock(struct ODBlock &b)
+{
 	b.col0.fill(0);
 	b.col1.fill(0);
 	b.col2.fill(0);
@@ -39,16 +40,17 @@ inline void resetODBlock(struct ODBlock &b){
 	b.col5.fill(0);
 }
 
-struct DBlock{
-		std::array<double,5> col0;
-		std::array<double,3> col1;
-		std::array<double,1> col2;
-		std::array<double,3> col3;
-		std::array<double,2> col4;
-		std::array<double,1> col5;
+struct DBlock {
+	std::array<double, 5> col0;
+	std::array<double, 3> col1;
+	std::array<double, 1> col2;
+	std::array<double, 3> col3;
+	std::array<double, 2> col4;
+	std::array<double, 1> col5;
 };
 
-inline void resetDBlock(struct DBlock &b){
+inline void resetDBlock(struct DBlock& b)
+{
 	b.col0.fill(0);
 	b.col1.fill(0);
 	b.col2.fill(0);
@@ -192,16 +194,16 @@ private:
 	// resistance matrix building
 	int odblocks_nb;
 	int dblocks_size;
-	std::vector <struct DBlock> dblocks;
-	std::vector <struct ODBlock> odblocks;
-	std::vector <int> odbrows;
+	std::vector<struct DBlock> dblocks;
+	std::vector<struct ODBlock> odblocks;
+	std::vector<int> odbrows;
 	std::vector<int> odbrows_table;
-	std::vector <struct ODBlock> odblocks_mf;
-	std::vector <int> odbrows_mf;
+	std::vector<struct ODBlock> odblocks_mf;
+	std::vector<int> odbrows_mf;
 	std::vector<int> odbrows_table_mf;
-	std::vector <struct DBlock> dblocks_ff;
-	std::vector <struct ODBlock> odblocks_ff;
-	std::vector <int> odbrows_ff;
+	std::vector<struct DBlock> dblocks_ff;
+	std::vector<struct ODBlock> odblocks_ff;
+	std::vector<int> odbrows_ff;
 	std::vector<int> odbrows_table_ff;
 	void factorizeResistanceMatrix();
     /*
@@ -230,12 +232,12 @@ private:
 	void setSpInvPreconditioner();
 	void setSolverType(std::string);
 	void fillCholmodFromDBlock(double *chol_x,
-														const std::vector<int> &index_chol_ix,
-														const struct DBlock &b);
+							   const std::vector<int>& index_chol_ix,
+							   const struct DBlock& b);
 	void fillCholmodFromODBlock(double *chol_x,
-														const std::vector<int> &index_chol_ix,
-														const struct ODBlock &b);
-
+								const std::vector<int>& index_chol_ix,
+								const struct ODBlock& b);
+	
 public:
   ~StokesSolver();
 	void init(int np);
@@ -250,7 +252,7 @@ public:
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
     void resetResistanceMatrix(int nb_of_interactions,
-							   const std::vector<struct DBlock> &reset_resmat_dblocks);
+							   const std::vector<struct DBlock>& reset_resmat_dblocks);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii
@@ -300,8 +302,8 @@ public:
 	   Right-hand vector access methods
 	*/
     void resetRHS();
-		void resetRHStorque();
-    void addToRHS(double*);
+	void resetRHStorque();
+	void addToRHS(double*);
     void addToRHSForce(int, double*);
     void addToRHSForce(int, const vec3d&);
     void addToRHSTorque(int, double*);
@@ -345,11 +347,9 @@ public:
 	 is done. If matrix changes, solve() must be followed by
 	 solvingIsDone()
 	 */
-    void solvingIsDone();
-		void multiplyByResMat(double *vec);
-		void multiplySolutionByResMat(double *vec);
+	void solvingIsDone();
+	void multiplyByResMat(double *vec);
+	void multiplySolutionByResMat(double *vec);
 };
-
-
 
 #endif /* defined(__LF_DEM__StokesSolver__) */
