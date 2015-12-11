@@ -317,7 +317,7 @@ void Simulation::convertInputForcesMagnetic(double dimensionlessnumber,
 	//	chose simulation unit
 	setUnitScaleMagnetic();
 	convertForceValues(internal_unit_scales);
-	cerr << "Magnetic, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
+	cout << "Magnetic, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
 }
 
 void Simulation::setLowPeclet()
@@ -384,7 +384,7 @@ void Simulation::setUnitScaleMagnetic()
 	sys.amplitudes.sqrt_temperature = 1;
 	if (p.magnetic_type == 2) {
 		sys.amplitudes.magnetic = dimensionless_numbers["magnetic/thermal"];
-		cerr << "amplitudes.magnetic = Pe = " << sys.amplitudes.magnetic << endl;
+		cout << "amplitudes.magnetic = Pe = " << sys.amplitudes.magnetic << endl;
 	} else {
 		throw runtime_error("not implemented yet @ setUnitScaleMagnetic");
 	}
@@ -522,7 +522,7 @@ void Simulation::setupSimulation(string in_args,
 	string filename_parameters = input_files[1];
 
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
-		cerr << "init_relax" << endl;
+		cout << "init_relax" << endl;
 		sys.zero_shear = true;
 	} else if (control_var == "magnetic") {
 		sys.zero_shear = true;
@@ -586,7 +586,6 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 	if (control_var == "magnetic") {
-		cerr << "time_end " << time_end  << " "<< p.time_end << endl;
 		time_end = p.time_end;
 	}
 	if (input_files[3] != "not_given") {

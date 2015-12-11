@@ -104,7 +104,6 @@ System::~System()
 	DELETE(radius);
 	DELETE(radius_squared);
 	DELETE(radius_cubed);
-	DELETE(resistance_matrix_dblock);
 	if (twodimension) {
 		DELETE(angle);
 	}
@@ -172,9 +171,7 @@ void System::allocateRessources()
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
-	if (p.lubrication_model > 0) {
-		resistance_matrix_dblock = new double [18*np];
-	} else {
+	if (p.lubrication_model == 0) {
 		// Stokes-drag simulation
 		stokesdrag_coeff_f = new double [np];
 		stokesdrag_coeff_f_sqrt = new double [np];
@@ -239,9 +236,7 @@ void System::allocateRessources()
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	if (p.lubrication_model > 0) {
-		stokes_solver.init(np);
-	}
+
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
@@ -635,7 +630,7 @@ void System::setupSystem(string control)
 	} else {
 		throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
-	
+
 	if (p.unscaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
@@ -693,7 +688,9 @@ void System::setupSystem(string control)
 		vel_difference.x = costheta_shear*shear_rate*lz;
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
-	stokes_solver.initialize();
+	if (p.lubrication_model > 0) {
+		stokes_solver.init(np);
+	}
 	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
@@ -704,14 +701,14 @@ void System::setupSystem(string control)
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
-	
+
 	if (p.lubrication_model > 0) {
-		for (int i=0; i<18*np; i++) {
-			resistance_matrix_dblock[i] = 0;
+		resistance_matrix_dblock.resize(np);
+		for (int i=0; i<np; i++) {
+			resetDBlock(resistance_matrix_dblock[i]);
 		}
 	}
 	for (int i=0; i<np; i++) {
-		int i18 = 18*i;
 		double FUvalue = p.sd_coeff*radius[i];
 		double TWvalue = p.sd_coeff*radius_cubed[i]*4.0/3;
 		if (p.lubrication_model == 0) {
@@ -721,12 +718,12 @@ void System::setupSystem(string control)
 			stokesdrag_coeff_t[i] = TWvalue;
 			stokesdrag_coeff_t_sqrt[i] = sqrt(TWvalue);
 		} else {
-			resistance_matrix_dblock[i18   ] = FUvalue;
-			resistance_matrix_dblock[i18+6 ] = FUvalue;
-			resistance_matrix_dblock[i18+10] = FUvalue;
-			resistance_matrix_dblock[i18+12] = TWvalue;
-			resistance_matrix_dblock[i18+15] = TWvalue;
-			resistance_matrix_dblock[i18+17] = TWvalue;
+			resistance_matrix_dblock[i].col0[0] = FUvalue;
+			resistance_matrix_dblock[i].col1[0] = FUvalue;
+			resistance_matrix_dblock[i].col2[0] = FUvalue;
+			resistance_matrix_dblock[i].col3[0] = TWvalue;
+			resistance_matrix_dblock[i].col4[0] = TWvalue;
+			resistance_matrix_dblock[i].col5[0] = TWvalue;
 		}
 	}
 	angle_output = false;
@@ -833,7 +830,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL){
 		(this->*eventLookUp)();
 	}
-	
+
 }
 
 /****************************************************************************************************
@@ -1298,7 +1295,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 
 	 @param build_res_mat Build the resistance matrix
 	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_s∫tokesian_1988 notations) and set it as the current
+	 brady_stokesian_1988 notations) and set it as the current
 	 resistance in the StokesSolver. If false, the resistance in the
 	 StokesSolver is untouched, it is not reset.
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
@@ -1457,9 +1454,9 @@ void System::generateBrownianForces()
 		/*
 		 *  F_B = \sqrt(2kT/dt) * L^T * A
 		 *  U_B = (RFU)^{-1} F_B
-		 *  In Stokes drag simulation 
+		 *  In Stokes drag simulation
 		 *  F_B = \sqrt(2kT/dt) * sqrt(RFU) * A
-		 *  U_B = (RFU)^{-1} F_B 
+		 *  U_B = (RFU)^{-1} F_B
 		 *	    = (RFU)^{-1} \sqrt(2kT/dt) * sqrt(RFU) * A
 		 *      = \sqrt(2kT/dt) * A / sqrt(RFU)
 		 *  In order to reduce trivial calculations,
@@ -1839,7 +1836,7 @@ void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
 
 void System::rushWorkFor2DBrownian()
 {
-	/* [note] 
+	/* [note]
 	 * Native 2D simulation is not implemented yet.
 	 * As a quick implementation, the velocity elements for extra dimension are set to zero
 	 */

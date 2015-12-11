@@ -579,7 +579,9 @@ sub OutYaplotData{
 		#			$col = $i/100 + 2;
 		#			printf OUT "@ $col\n";
 		#		}
-		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+		
+		printf OUT "r $radius[$i]\n";
+ 		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 	}
 	
 	if ($mag) {
