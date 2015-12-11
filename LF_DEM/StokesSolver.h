@@ -17,13 +17,9 @@
 //#define CHOLMOD_EXTRA
 #include <vector>
 #include <array>
+#include <memory>
 #include "vec3d.h"
 #include "cholmod.h"
-#ifdef CHOLMOD_EXTRA
-extern "C" {
-#include "cholmod_extra.h"
-}
-#endif
 
 struct ODBlock{
 		std::array<double,6> col0;
@@ -177,10 +173,8 @@ private:
 	int np;
 	int mobile_particle_nb;
 
-	int odblocks_nb;
-	int dblocks_size;
-
 	bool mobile_matrix_done;
+
 	// Cholmod variables
 	cholmod_factor* chol_L ;
 	cholmod_common chol_c ;
@@ -189,29 +183,27 @@ private:
 	cholmod_sparse* chol_res_matrix_MF;
 	cholmod_sparse* chol_res_matrix_FM;
 	cholmod_dense* chol_solution;
-	cholmod_dense* chol_PTsolution;
+	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
-	cholmod_dense* chol_v_nonBrownian;
-	cholmod_dense* chol_v_Brownian_init;
-	cholmod_dense* chol_v_Brownian_mid;
-	bool chol_init;
 	int stype;
 	int sorted;
 	int packed;
 	int xtype;
 	bool chol_L_to_be_freed;
 	// resistance matrix building
+	int odblocks_nb;
+	int dblocks_size;
 	std::vector <struct DBlock> dblocks;
 	std::vector <struct ODBlock> odblocks;
 	std::vector <int> odbrows;
-	int *odbrows_table;
+	std::vector<int> odbrows_table;
 	std::vector <struct ODBlock> odblocks_mf;
 	std::vector <int> odbrows_mf;
-	int *odbrows_table_mf;
+	std::vector<int> odbrows_table_mf;
 	std::vector <struct DBlock> dblocks_ff;
 	std::vector <struct ODBlock> odblocks_ff;
 	std::vector <int> odbrows_ff;
-	int *odbrows_table_ff;
+	std::vector<int> odbrows_table_ff;
 	void factorizeResistanceMatrix();
     /*
      setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
@@ -240,9 +232,8 @@ private:
 	void setSolverType(std::string);
 
 public:
-    ~StokesSolver();
+  ~StokesSolver();
 	void init(int np);
-    void initialize();
 	void printResistanceMatrix(std::ostream&, std::string);
 	void printFactor(std::ostream&);
 	void printRHS();
@@ -304,7 +295,7 @@ public:
 	   Right-hand vector access methods
 	*/
     void resetRHS();
-	void resetRHStorque();
+		void resetRHStorque();
     void addToRHS(double*);
     void addToRHSForce(int, double*);
     void addToRHSForce(int, const vec3d&);
@@ -350,8 +341,8 @@ public:
 	 solvingIsDone()
 	 */
     void solvingIsDone();
-	void multiplyByResMat(double *vec);
-	void multiplySolutionByResMat(double *vec);
+		void multiplyByResMat(double *vec);
+		void multiplySolutionByResMat(double *vec);
 };
 
 

@@ -236,9 +236,7 @@ void System::allocateRessources()
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	if (p.lubrication_model > 0) {
-		stokes_solver.init(np);
-	}
+
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
@@ -690,7 +688,9 @@ void System::setupSystem(string control)
 		vel_difference.x = costheta_shear*shear_rate*lz;
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
-	stokes_solver.initialize();
+	if (p.lubrication_model > 0) {
+		stokes_solver.init(np);
+	}
 	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
