@@ -1,5 +1,6 @@
-#include "fstream"
+#include <fstream>
 #include "StokesSolver.h"
+
 using namespace std;
 
 /******************************************************
@@ -121,6 +122,7 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 	return;
 }
 
+
 /*************** Cholmod Matrix Filling *************
  Cholmod matrices we are using are defined in column major order (index j is column index)
 
@@ -154,6 +156,19 @@ void StokesSolver::completeResistanceMatrix()
 	odbrows_table[size-1] = (unsigned int)odbrows.size();
 	odbrows_table[size] = (unsigned int)odbrows.size();
 	allocateResistanceMatrix();
+
+	vector <vector <int> > odb_layout;
+	odb_layout.resize(6);
+	odb_layout[0] = vector<int>({0,1,2,4,5});
+	odb_layout[1] = vector<int>({0,1,2,3,5});
+	odb_layout[2] = vector<int>({0,1,2,3,4});
+	odb_layout[3] = vector<int>({1,2,3,4,5});
+	odb_layout[4] = vector<int>({0,2,3,4,5});
+	odb_layout[5] = vector<int>({0,1,3,4,5});
+	vector <int> dblocks_cntnonzero = vector<int>({6,5,4,3,2,1});
+	vector <int> index_chol_ix;
+	index_chol_ix.resize(6);
+
 	// fill
 	for (int j=0; j<size; j++) {
 		// associated with particle j are 6 columns in the matrix:
@@ -162,48 +177,40 @@ void StokesSolver::completeResistanceMatrix()
 		int j21 = 21*j;
 		// the number of non-zero elements before column 6j is:
 		// - 21*j from j diagonal blocks
-		// - 36*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
+		// - 30*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
 		//
 		// the number of non-zero elements before column 6j+1 is:
 		// - number of non-zero before column 6j + number of non-zero in column 6*j
-		// (in 6j: 6 elements in diagonal block, plus 6*(odbrows_table[j+1]-odbrows_table[j])
+		// (in 6j: 6 elements in diagonal block, plus 5*(odbrows_table[j+1]-odbrows_table[j])
 		//
 		// for 6j+2 --> 6j+5: same idea
-		int od_nzero_nb = 6*(odbrows_table[j+1]-odbrows_table[j]);
-		((int*)chol_res_matrix->p)[j6  ] = j21   + 36*odbrows_table[j];
+		int od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
+		((int*)chol_res_matrix->p)[j6  ] = j21   + 30*odbrows_table[j];
 		((int*)chol_res_matrix->p)[j6+1] = ((int*)chol_res_matrix->p)[j6] + 6 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+2] = ((int*)chol_res_matrix->p)[j6+1] + 5 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+3] = ((int*)chol_res_matrix->p)[j6+2] + 4 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+4] = ((int*)chol_res_matrix->p)[j6+3] + 3 + od_nzero_nb;
 		((int*)chol_res_matrix->p)[j6+5] = ((int*)chol_res_matrix->p)[j6+4] + 2 + od_nzero_nb;
+
+
+		for (int col=0; col<6; col++) { // set the starting indices for cols 0-5
+			index_chol_ix[col] = ((int*)chol_res_matrix->p)[j6+col];
+		}
+		// diagonal block row indices (21)
+		for(int col=0; col<6; col++){
+			for(int line=col; line<6; line++){
+				((int*)chol_res_matrix->i)[index_chol_ix[col]+line-col] = j6+line;
+			}
+		}
+
+
+		// @@@ following blocks to be improved
 		int pj6   = ((int*)chol_res_matrix->p)[j6];
 		int pj6_1 = ((int*)chol_res_matrix->p)[j6+1];
 		int pj6_2 = ((int*)chol_res_matrix->p)[j6+2];
 		int pj6_3 = ((int*)chol_res_matrix->p)[j6+3];
 		int pj6_4 = ((int*)chol_res_matrix->p)[j6+4];
 		int pj6_5 = ((int*)chol_res_matrix->p)[j6+5];
-		// diagonal block row indices (21)
-		((int*)chol_res_matrix->i)[pj6  ] = j6;   // column j6
-		((int*)chol_res_matrix->i)[pj6+1] = j6+1;
-		((int*)chol_res_matrix->i)[pj6+2] = j6+2;
-		((int*)chol_res_matrix->i)[pj6+3] = j6+3;
-		((int*)chol_res_matrix->i)[pj6+4] = j6+4;
-		((int*)chol_res_matrix->i)[pj6+5] = j6+5;
-		((int*)chol_res_matrix->i)[pj6_1  ] = j6+1;    // column j6+1
-		((int*)chol_res_matrix->i)[pj6_1+1] = j6+2;
-		((int*)chol_res_matrix->i)[pj6_1+2] = j6+3;
-		((int*)chol_res_matrix->i)[pj6_1+3] = j6+4;
-		((int*)chol_res_matrix->i)[pj6_1+4] = j6+5;
-		((int*)chol_res_matrix->i)[pj6_2  ] = j6+2;    // column j6+2
-		((int*)chol_res_matrix->i)[pj6_2+1] = j6+3;
-		((int*)chol_res_matrix->i)[pj6_2+2] = j6+4;
-		((int*)chol_res_matrix->i)[pj6_2+3] = j6+5;
-		((int*)chol_res_matrix->i)[pj6_3  ] = j6+3;    // column j6+3
-		((int*)chol_res_matrix->i)[pj6_3+1] = j6+4;
-		((int*)chol_res_matrix->i)[pj6_3+2] = j6+5;
-		((int*)chol_res_matrix->i)[pj6_4  ] = j6+4;    // column j6+4
-		((int*)chol_res_matrix->i)[pj6_4+1] = j6+5;
-		((int*)chol_res_matrix->i)[pj6_5  ] = j6+5;    // column j6+5
 		// diagonal blocks row values (21)
 		((double*)chol_res_matrix->x)[pj6  ] = dblocks[j].col0[0];   // column j6
 		((double*)chol_res_matrix->x)[pj6+1] = dblocks[j].col0[1];
@@ -226,66 +233,70 @@ void StokesSolver::completeResistanceMatrix()
 		((double*)chol_res_matrix->x)[pj6_4  ] = dblocks[j].col4[0];   // column j6+4
 		((double*)chol_res_matrix->x)[pj6_4+1] = dblocks[j].col4[1];
 		((double*)chol_res_matrix->x)[pj6_5  ] = dblocks[j].col5[0];   // column j6+5
+
+		for (int col=0; col<6; col++) {
+			index_chol_ix[col] +=  dblocks_cntnonzero[col];
+		}
+
 		/*****  2  : off-diagonal blocks row indices and values ***********/
 		// 36 non-zero elements per block
 		for (int k = odbrows_table[j]; k<odbrows_table[j+1]; k++) {
-			int u = 6*(k-odbrows_table[j]);
 			// we are filling the "k-odbFrows_table[j]"th off-diag block of the column.
 			// For column j6, for exemple, the indices of the non-zero values are:
 			// pj6 for all non-zero elements before column j6,
 			// + 6 for the diagonal block of column j6
-			// + u (=6*(k-odbFrows_table[j])) for the off-diag blocks of j6
+			// + 5*(k-odbFrows_table[j]) for the off-diag blocks of j6
 			// + index inside the current block
-			for (int s=0; s<6; s++) {
-				((int*)chol_res_matrix->i)[pj6+6 + u +s] = odbrows[k]+s;
-				((int*)chol_res_matrix->i)[pj6_1+5 + u +s] = odbrows[k]+s;
-				((int*)chol_res_matrix->i)[pj6_2+4 + u +s] = odbrows[k]+s;
-				((int*)chol_res_matrix->i)[pj6_3+3 + u +s] = odbrows[k]+s;
-				((int*)chol_res_matrix->i)[pj6_4+2 + u +s] = odbrows[k]+s;
-				((int*)chol_res_matrix->i)[pj6_5+1 + u +s] = odbrows[k]+s;
+
+			for (int col=0; col<6; col++) {
+				index_chol_ix[col] += 5*(k-odbrows_table[j]);// 5 non-zero elements per columns in odblocks
 			}
-
-			((double*)chol_res_matrix->x)[pj6+6 + u   ]   = odblocks[k].col0[0]; // A   // column j6
-			((double*)chol_res_matrix->x)[pj6+6 + u +1]   = odblocks[k].col0[1];
-			((double*)chol_res_matrix->x)[pj6+6 + u +2]   = odblocks[k].col0[2];
-			((double*)chol_res_matrix->x)[pj6+6 + u +3]   = 0; // B  // @@@@
-			((double*)chol_res_matrix->x)[pj6+6 + u +4]   = odblocks[k].col0[3]; // B
-			((double*)chol_res_matrix->x)[pj6+6 + u +5]   = odblocks[k].col0[4];
+			for (int col=0; col<6; col++){
+				for (int s=0; s<5; s++) {
+					((int*)chol_res_matrix->i)[index_chol_ix[col] +s] = odbrows[k] + odb_layout[col][s];
+				}
+			}
+			int start_index = index_chol_ix[0];
+			((double*)chol_res_matrix->x)[start_index  ]   = odblocks[k].col0[0]; // A   // column j6
+			((double*)chol_res_matrix->x)[start_index +1]   = odblocks[k].col0[1];
+			((double*)chol_res_matrix->x)[start_index +2]   = odblocks[k].col0[2];
+			((double*)chol_res_matrix->x)[start_index +3]   = odblocks[k].col0[3]; // B
+			((double*)chol_res_matrix->x)[start_index +4]   = odblocks[k].col0[4];
 			//
-			((double*)chol_res_matrix->x)[pj6_1+5 + u   ] = odblocks[k].col0[1]; // A  // column j6+1
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +1] = odblocks[k].col1[0];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +2] = odblocks[k].col1[1];
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +3] = -odblocks[k].col0[3]; // B
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +4] = 0;  // @@@@
-			((double*)chol_res_matrix->x)[pj6_1+5 + u +5] = odblocks[k].col1[2];
+			start_index = index_chol_ix[1];
+			((double*)chol_res_matrix->x)[start_index   ] = odblocks[k].col0[1]; // A  // column j6+1
+			((double*)chol_res_matrix->x)[start_index +1] = odblocks[k].col1[0];
+			((double*)chol_res_matrix->x)[start_index +2] = odblocks[k].col1[1];
+			((double*)chol_res_matrix->x)[start_index +3] = -odblocks[k].col0[3]; // B
+			((double*)chol_res_matrix->x)[start_index +4] = odblocks[k].col1[2];
 			//
-			((double*)chol_res_matrix->x)[pj6_2+4 + u   ] = odblocks[k].col0[2]; // A // column j6+2
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +1] = odblocks[k].col1[1];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +2] = odblocks[k].col2[0];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +3] = -odblocks[k].col0[4]; // B
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +4] = -odblocks[k].col1[2];
-			((double*)chol_res_matrix->x)[pj6_2+4 + u +5] = 0;  // @@@@
+			start_index = index_chol_ix[2];
+			((double*)chol_res_matrix->x)[start_index   ] = odblocks[k].col0[2]; // A // column j6+2
+			((double*)chol_res_matrix->x)[start_index +1] = odblocks[k].col1[1];
+			((double*)chol_res_matrix->x)[start_index +2] = odblocks[k].col2[0];
+			((double*)chol_res_matrix->x)[start_index +3] = -odblocks[k].col0[4]; // B
+			((double*)chol_res_matrix->x)[start_index +4] = -odblocks[k].col1[2];
 			//
-			((double*)chol_res_matrix->x)[pj6_3+3 + u   ] = 0; // Btilde   // column j6+3   // @@@@
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +1] = odblocks[k].col3[0];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +2] = odblocks[k].col3[1];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +3] = odblocks[k].col3[2]; // C
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +4] = odblocks[k].col3[3];
-			((double*)chol_res_matrix->x)[pj6_3+3 + u +5] = odblocks[k].col3[4];
-
-			((double*)chol_res_matrix->x)[pj6_4+2 + u   ] = -odblocks[k].col3[0]; // Btilde // column j6+4
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +1] = 0;  // @@@@
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +2] = odblocks[k].col4[0];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +3] = odblocks[k].col3[3]; // C
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +4] = odblocks[k].col4[1];
-			((double*)chol_res_matrix->x)[pj6_4+2 + u +5] = odblocks[k].col4[2];
+			start_index = index_chol_ix[3];
+			((double*)chol_res_matrix->x)[start_index   ] = odblocks[k].col3[0];// Btilde   // column j6+3
+			((double*)chol_res_matrix->x)[start_index +1] = odblocks[k].col3[1];
+			((double*)chol_res_matrix->x)[start_index +2] = odblocks[k].col3[2]; // C
+			((double*)chol_res_matrix->x)[start_index +3] = odblocks[k].col3[3];
+			((double*)chol_res_matrix->x)[start_index +4] = odblocks[k].col3[4];
 			//
-			((double*)chol_res_matrix->x)[pj6_5+1 + u   ] = -odblocks[k].col3[1]; // Btilde // column j6+5
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +1] = -odblocks[k].col4[0];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +2] = 0;  // @@@@
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +3] = odblocks[k].col3[4]; // C
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +4] = odblocks[k].col4[2];
-			((double*)chol_res_matrix->x)[pj6_5+1 + u +5] = odblocks[k].col5[0];
+			start_index = index_chol_ix[4];
+			((double*)chol_res_matrix->x)[start_index   ] = -odblocks[k].col3[0]; // Btilde // column j6+4
+			((double*)chol_res_matrix->x)[start_index +1] = odblocks[k].col4[0];
+			((double*)chol_res_matrix->x)[start_index +2] = odblocks[k].col3[3]; // C
+			((double*)chol_res_matrix->x)[start_index +3] = odblocks[k].col4[1];
+			((double*)chol_res_matrix->x)[start_index +4] = odblocks[k].col4[2];
+			//
+			start_index = index_chol_ix[5];
+			((double*)chol_res_matrix->x)[start_index   ] = -odblocks[k].col3[1]; // Btilde // column j6+5
+			((double*)chol_res_matrix->x)[start_index +1] = -odblocks[k].col4[0];
+			((double*)chol_res_matrix->x)[start_index +2] = odblocks[k].col3[4]; // C
+			((double*)chol_res_matrix->x)[start_index +3] = odblocks[k].col4[2];
+			((double*)chol_res_matrix->x)[start_index +4] = odblocks[k].col5[0];
 		}
 	}
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
@@ -566,7 +577,7 @@ void StokesSolver::allocateResistanceMatrix()
 	int nzmax; // non-zero values
 	int size = 6*dblocks.size();
 	nzmax = 21*dblocks.size(); // diagonal blocks
-	nzmax += 36*odblocks_nb;  // off-diagonal
+	nzmax += 30*odblocks_nb;  // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(size, size, nzmax, sorted, packed, stype, xtype, &chol_c);
 }
 
