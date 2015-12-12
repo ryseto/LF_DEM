@@ -154,7 +154,9 @@ while (1){
 		$output = 1;
 	}
 	if ($output == 1) {
-		&OutYaplotData;
+		if ($time > 0) {
+			&OutYaplotData;
+		}
 		#		&OutputTxtFile;
 	}
 	$cnt_interval ++;
@@ -294,7 +296,7 @@ sub outputColorTable {
 	printf OUT "\@1 50 100 205 \n";
 	#printf OUT "\@1 255 255 255 \n";
 	printf OUT "\@2 200 200 200 \n";
-	printf OUT "\@3 255 255 0\n";
+	printf OUT "\@3 255 127 0\n";
 	printf OUT "\@4 50 200 50\n";
 	printf OUT "\@5 255 100 100\n";
 	printf OUT "\@6 50 150 255\n";
@@ -577,7 +579,9 @@ sub OutYaplotData{
 		#			$col = $i/100 + 2;
 		#			printf OUT "@ $col\n";
 		#		}
-		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+		
+		printf OUT "r $radius[$i]\n";
+ 		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 	}
 	
 	if ($mag) {

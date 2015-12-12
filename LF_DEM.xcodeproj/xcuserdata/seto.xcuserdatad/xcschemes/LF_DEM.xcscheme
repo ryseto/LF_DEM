@@ -83,7 +83,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/seto/Documents/data/simulation/mag_gb1"
+      customWorkingDirectory = "/Users/seto/Documents/data/simulation/mag_gb15"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -100,7 +100,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-m 16b D2N200VF0.68Bidi1_nr0.5Square_1.dat magbinary.txt"
+            argument = "-m 15b D2N200VF0.68Bidi1.5_nr0.98Square_1.dat magbinary0.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

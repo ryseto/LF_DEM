@@ -105,10 +105,12 @@ private:
 	void buildRepulsiveForceTerms(bool);
 	void buildMagneticForceTerms(bool);
 	void computeVelocities(bool divided_velocities);
+	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
+	void computeBrownianVelocities();
+	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
-	void forceReset();
-	void torqueReset();
 	void stressReset();
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(const int&, const int&);
@@ -132,8 +134,13 @@ private:
 	dsfmt_t rand_gen;
 	unsigned long hash(time_t, clock_t);
 #endif
+	bool angle_output;
 	double *radius_cubed;
 	double *radius_squared;
+	double *stokesdrag_coeff_f;
+	double *stokesdrag_coeff_t;
+	double *stokesdrag_coeff_f_sqrt;
+	double *stokesdrag_coeff_t_sqrt;
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;
@@ -177,7 +184,8 @@ private:
 	BoxSet boxset;
 	double *radius;
 	double *angle; // for 2D visualization
-	double *resistance_matrix_dblock;
+	std::vector <struct DBlock> resistance_matrix_dblock;
+
 	vec3d *velocity;
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
@@ -218,11 +226,9 @@ private:
 	StressTensor total_contact_stressGU;
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
-//	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
 	StressTensor total_magnetic_stressXF;
 	StressTensor total_magnetic_stressGU;
-	//StressTensor total_magnetic_stress;
 	Averager<StressTensor> *stress_avg;
 	double dt;
 	/* double kn; */

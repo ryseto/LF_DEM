@@ -370,7 +370,7 @@ sub printHead
 	#include \"stones.inc\"
 	#include \"metals.inc\"\n";
 	
-	printf OUT "
+
 #	camera {
 #		location <15, 30, 10>
 #		right <21/22.5, 0, 0>
@@ -378,6 +378,7 @@ sub printHead
 #		look_at  <-1, 0, -1.5>
 #		angle 45
 #	}
+	printf OUT "
 	camera {
 		location <0, 40, 0>
 		right <21/22.5, 0, 0>
@@ -397,9 +398,9 @@ sub printHead
 	#macro S(p, r)
 	sphere{ 0, r
 		texture {
-			pigment{ color rgbft <1,1,1, 0.3, 0.5> }
+			pigment{ color rgbft <0.9, 1, 1, 0.3, 0.5> }
 			finish { phong 1 reflection {0.3 metallic 0} }}
-		interior {ior 1}
+		interior {ior 1.2}
 		translate p
 	}
 	#end
@@ -414,7 +415,7 @@ sub printHead
 			phong 1
 			ambient 0.3
 		}}
-	#end	v
+	#end
 	";
 	
 	#	printf OUT "

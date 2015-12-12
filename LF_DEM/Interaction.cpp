@@ -84,11 +84,12 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	} else {
 		contact.deactivate();
 	}
-
 	contact_state_changed_after_predictor = false;
-	lubrication.getInteractionData();
-	lubrication.updateResistanceCoeff();
-	lubrication.calcLubConstants();
+	if (sys->p.lubrication_model > 0) {
+		lubrication.getInteractionData();
+		lubrication.updateResistanceCoeff();
+		lubrication.calcLubConstants();
+	}
 }
 
 void Interaction::deactivate()
@@ -171,7 +172,6 @@ void Interaction::updateContactState()
 		}
 	}
 }
-
 
 /* Relative velocity of particle 1 from particle 0.
  *

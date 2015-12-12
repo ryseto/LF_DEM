@@ -42,7 +42,8 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-magnetic_rotation_active(false)
+magnetic_rotation_active(false),
+eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -79,7 +80,6 @@ System::hash( time_t t, clock_t c )
 	*/
 
 	static unsigned long differ = 0; // guarantee time-based seeds will change
-
 	unsigned long h1 = 0;
 	unsigned char *pp = (unsigned char *) &t;
 	for( size_t i = 0; i < sizeof(t); ++i )
@@ -104,7 +104,6 @@ System::~System()
 	DELETE(radius);
 	DELETE(radius_squared);
 	DELETE(radius_cubed);
-	DELETE(resistance_matrix_dblock);
 	if (twodimension) {
 		DELETE(angle);
 	}
@@ -172,7 +171,13 @@ void System::allocateRessources()
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
-	resistance_matrix_dblock = new double [18*np];
+	if (p.lubrication_model == 0) {
+		// Stokes-drag simulation
+		stokesdrag_coeff_f = new double [np];
+		stokesdrag_coeff_f_sqrt = new double [np];
+		stokesdrag_coeff_t = new double [np];
+		stokesdrag_coeff_t_sqrt = new double [np];
+	}
 	// Configuration
 	if (twodimension) {
 		angle = new double [np];
@@ -231,7 +236,7 @@ void System::allocateRessources()
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new set <int> [np];
-	stokes_solver.init(np);
+
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
@@ -436,19 +441,21 @@ void System::updateUnscaledContactmodel()
 	if (lowPeclet) {
 		lub_coeff_contact *= p.Pe_switch;
 	}
-	if (p.lubrication_model == 1) {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 0;
-	} else if (p.lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
-		/* [Note]
-		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
-		 * So log_lub_coeff_contact_tan_dashpot = 0;
-		 */
-		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-	} else {
-		throw runtime_error("Error: lubrication_model>2 ???");
+	if (p.lubrication_model > 0) {
+		if (p.lubrication_model == 1) {
+			log_lub_coeff_contact_tan_lubrication = 0;
+			log_lub_coeff_contact_tan_dashpot = 0;
+		} else if (p.lubrication_model == 2) {
+			log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
+			/* [Note]
+			 * We finally do not introduce a dashpot for the sliding mode.
+			 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
+			 * So log_lub_coeff_contact_tan_dashpot = 0;
+			 */
+			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
+		} else {
+			throw runtime_error("Error: lubrication_model>2 ???");
+		}
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	for (int k=0; k<nb_interaction; k++) {
@@ -496,12 +503,16 @@ void System::setupSystem(string control)
 		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
-	if (p.lubrication_model == 1) {
+	if (p.lubrication_model == 0) {
+		/* Stokes drag simulation
+		 * Resistance matrix is constant.
+		 */
+	} else if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
 	} else if (p.lubrication_model == 2) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		throw runtime_error(indent+"lubrication_model = 0 is not implemented yet.\n");
+		throw runtime_error(indent+"lubrication_model >= 3 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -600,9 +611,13 @@ void System::setupSystem(string control)
 	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
 	 *
 	 */
-	if (p.lubrication_model == 1) {
+	if (p.lubrication_model == 0) {
+		/* Stokes drag simulation
+		 */
+	} else if (p.lubrication_model == 1) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 0;
+		log_lub_coeff_contact_tan_total = 0;
 	} else if (p.lubrication_model == 2) {
 		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
 		/* [Note]
@@ -611,10 +626,11 @@ void System::setupSystem(string control)
 		 * So log_lub_coeff_contact_tan_dashpot = 0;
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
+		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	} else {
 		throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
-	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+
 	if (p.unscaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
@@ -672,7 +688,9 @@ void System::setupSystem(string control)
 		vel_difference.x = costheta_shear*shear_rate*lz;
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
-	stokes_solver.initialize();
+	if (p.lubrication_model > 0) {
+		stokes_solver.init(np);
+	}
 	dt = p.dt;
 	initializeBoxing();
 	checkNewInteraction();
@@ -684,19 +702,36 @@ void System::setupSystem(string control)
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
 
-	for (int i=0; i<18*np; i++) {
-		resistance_matrix_dblock[i] = 0;
+	if (p.lubrication_model > 0) {
+		resistance_matrix_dblock.resize(np);
+		for (int i=0; i<np; i++) {
+			resetDBlock(resistance_matrix_dblock[i]);
+		}
 	}
 	for (int i=0; i<np; i++) {
-		int i18 = 18*i;
 		double FUvalue = p.sd_coeff*radius[i];
 		double TWvalue = p.sd_coeff*radius_cubed[i]*4.0/3;
-		resistance_matrix_dblock[i18   ] = FUvalue;
-		resistance_matrix_dblock[i18+6 ] = FUvalue;
-		resistance_matrix_dblock[i18+10] = FUvalue;
-		resistance_matrix_dblock[i18+12] = TWvalue;
-		resistance_matrix_dblock[i18+15] = TWvalue;
-		resistance_matrix_dblock[i18+17] = TWvalue;
+		if (p.lubrication_model == 0) {
+			// Stokes drag simulation
+			stokesdrag_coeff_f[i] = FUvalue;
+			stokesdrag_coeff_f_sqrt[i] = sqrt(FUvalue);
+			stokesdrag_coeff_t[i] = TWvalue;
+			stokesdrag_coeff_t_sqrt[i] = sqrt(TWvalue);
+		} else {
+			resistance_matrix_dblock[i].col0[0] = FUvalue;
+			resistance_matrix_dblock[i].col1[0] = FUvalue;
+			resistance_matrix_dblock[i].col2[0] = FUvalue;
+			resistance_matrix_dblock[i].col3[0] = TWvalue;
+			resistance_matrix_dblock[i].col4[0] = TWvalue;
+			resistance_matrix_dblock[i].col5[0] = TWvalue;
+		}
+	}
+	angle_output = false;
+	if (twodimension) {
+		if (magnetic == false ||
+			magnetic_rotation_active) {
+			angle_output = true;
+		}
 	}
 	cout << indent << "Setting up System... [ok]" << endl;
 }
@@ -779,11 +814,14 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	 */
 	in_predictor = true;
 	in_corrector = true;
-
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	computeVelocities(calc_stress);
+	if (p.lubrication_model == 0) {
+		computeVelocitiesStokesDrag();
+	} else {
+		computeVelocities(calc_stress);
+	}
 	if (calc_stress) {
 		calcStressPerParticle();
 	}
@@ -792,6 +830,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL){
 		(this->*eventLookUp)();
 	}
+
 }
 
 /****************************************************************************************************
@@ -856,7 +895,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	computeVelocities(calc_stress);
+	if (p.lubrication_model > 0) {
+		computeVelocities(calc_stress);
+	} else {
+		computeVelocitiesStokesDrag();
+	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 	}
@@ -867,7 +910,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-	computeVelocities(calc_stress);
+	if (p.lubrication_model > 0) {
+		computeVelocities(calc_stress);
+	} else {
+		computeVelocitiesStokesDrag();
+	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 	}
@@ -946,7 +993,7 @@ void System::timeStepMove(const string& time_or_strain,
 			//magnetic_moment[i] *= magnetic_moment_norm[i]
 		}
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -984,7 +1031,7 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
 		}
@@ -1016,7 +1063,7 @@ void System::timeStepMoveCorrector()
 	for (int i=0; i<np; i++) {
 		displacement(i, (velocity[i]-velocity_predictor[i])*dt);
 	}
-	if (twodimension) {
+	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += (ang_velocity[i].y-ang_velocity_predictor[i].y)*dt; // no cross_shear in 2d
 		}
@@ -1248,7 +1295,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 
 	 @param build_res_mat Build the resistance matrix
 	 \f$R_{\mathrm{FU}}\f$ (in Bossis and Brady \cite
-	 brady_s∫tokesian_1988 notations) and set it as the current
+	 brady_stokesian_1988 notations) and set it as the current
 	 resistance in the StokesSolver. If false, the resistance in the
 	 StokesSolver is untouched, it is not reset.
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
@@ -1396,10 +1443,29 @@ void System::generateBrownianForces()
 	 */
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
 	for (int i=0; i<linalg_size; i++) {
-		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // random vector A (force and torque)
+		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
 	}
-	stokes_solver.setRHS(brownian_force);
-	stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+	if (p.lubrication_model > 0) {
+		/* L*L^T = RFU
+		 */
+		stokes_solver.setRHS(brownian_force);
+		stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+	} else {
+		/*
+		 *  F_B = \sqrt(2kT/dt) * L^T * A
+		 *  U_B = (RFU)^{-1} F_B
+		 *  In Stokes drag simulation
+		 *  F_B = \sqrt(2kT/dt) * sqrt(RFU) * A
+		 *  U_B = (RFU)^{-1} F_B
+		 *	    = (RFU)^{-1} \sqrt(2kT/dt) * sqrt(RFU) * A
+		 *      = \sqrt(2kT/dt) * A / sqrt(RFU)
+		 *  In order to reduce trivial calculations,
+		 *  Here, sqrt(RFU) is not included in F_B
+		 *  F_B = \sqrt(2kT/dt) * A
+		 *  In the function computeBrownianVelocities(),
+		 *  U_B = F_B / sqrt(RFU)
+		 */
+	}
 }
 
 void System::setContactForceToParticle()
@@ -1577,10 +1643,8 @@ void System::computeShearRate()
 	 */
 	calcStressPerParticle();
 	calcStress();
-
 	double shearstress_con;
 	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
-
 	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
@@ -1589,14 +1653,12 @@ void System::computeShearRate()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
-
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-
 	for (int i=0; i<np; i++) {
 		vel_hydro[i] *= shear_rate;
 		ang_vel_hydro[i] *= shear_rate;
@@ -1612,9 +1674,7 @@ void System::computeVelocities(bool divided_velocities)
 	 (hydro, contacts, Brownian, ...). (Note that in Brownian
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
-
 	stokes_solver.resetRHS();
-
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
@@ -1663,26 +1723,7 @@ void System::computeVelocities(bool divided_velocities)
 			 */
 			generateBrownianForces();
 		}
-		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
-		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-		if (twodimension) {
-			if (p.monolayer) {
-				/* Particle (3D sphere) cannot move along y-direction.
-				 * All other degrees of freedom exist.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_brownian[i].y = 0; // @@ To be checked
-				}
-			} else {
-				/* Particle (2D disk) can rotate only along y-axis.
-				 */
-				for (int i=0; i<np; i++) {
-					vel_brownian[i].y = 0; // @@ To be checked
-					ang_vel_brownian[i].x = 0;
-					ang_vel_brownian[i].z = 0;
-				}
-			}
-		}
+		computeBrownianVelocities();
 		for (int i=0; i<np; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
@@ -1695,33 +1736,126 @@ void System::computeVelocities(bool divided_velocities)
 	if (!p.fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
-	if (!zero_shear) {
+	adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	stokes_solver.solvingIsDone();
+}
+
+void System::computeVelocitiesStokesDrag()
+{
+	/**
+	 \brief Compute velocities in Stokes-drag simulation.
+
+	 Note: Velocities of particles are simply proportional to the total forces acting on respective particles.
+	 When the contact model includes dashpots, Stokes-drag simulation cannot be used.
+	 */
+	for (int i=0; i<np; i++) {
+		na_velocity[i] = contact_force[i]/stokesdrag_coeff_f[i];
+		na_ang_velocity[i] = contact_torque[i]/stokesdrag_coeff_t[i];
+	}
+	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
-			velocity[i] = na_velocity[i];
-			ang_velocity[i] = na_ang_velocity[i];
-			if (!p.cross_shear) {
+			na_velocity[i] += repulsive_force[i]/stokesdrag_coeff_f[i];
+		}
+	}
+	if (magnetic) {
+		if (p.magnetic_type == 1) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += magnetic_force[i]/stokesdrag_coeff_f[i];
+				na_ang_velocity[i] += magnetic_torque[i]/stokesdrag_coeff_t[i];
+			}
+		} else if (p.magnetic_type == 2) {
+			for (int i=0; i<np; i++) {
+				na_velocity[i] += magnetic_force[i]/stokesdrag_coeff_f[i];
+			}
+		}
+	}
+	if (brownian) {
+		if (in_predictor) {
+			/* generate new F_B only in predictor
+			 * Resistance matrix is used.
+			 */
+			generateBrownianForces();
+		}
+		computeBrownianVelocities();
+		for (int i=0; i<np; i++) {
+			na_velocity[i] += vel_brownian[i];
+			na_ang_velocity[i] += ang_vel_brownian[i];
+		}
+	}
+	adjustVelocitiesLeesEdwardsPeriodicBoundary();
+}
+
+void System::computeBrownianVelocities()
+{
+	if (p.lubrication_model > 0) {
+		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
+		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
+	} else {
+		/* See the comment given in generateBrownianForces()
+		 */
+		for (int i=0; i<np; i++) {
+			int i6 = 6*i;
+			vel_brownian[i].x = brownian_force[i6]/stokesdrag_coeff_f_sqrt[i];
+			vel_brownian[i].y = brownian_force[i6+1]/stokesdrag_coeff_f_sqrt[i];
+			vel_brownian[i].z = brownian_force[i6+2]/stokesdrag_coeff_f_sqrt[i];
+			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t_sqrt[i];
+			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t_sqrt[i];
+			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t_sqrt[i];
+		}
+	}
+	if (twodimension) {
+		rushWorkFor2DBrownian();
+	}
+}
+
+void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
+{
+	for (int i=0; i<np; i++) {
+		velocity[i] = na_velocity[i];
+		ang_velocity[i] = na_ang_velocity[i];
+	}
+	if (!zero_shear) {
+		if (!p.cross_shear) {
+			for (int i=0; i<np; i++) {
 				velocity[i].x += shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*shear_rate;
-			} else {
+			}
+			vel_difference.x = shear_rate*lz;
+		} else {
+			for (int i=0; i<np; i++) {
 				velocity[i].x += costheta_shear*shear_rate*position[i].z;
 				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
 				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
 				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
 			}
-		}
-		if (!p.cross_shear) {
-			vel_difference.x = shear_rate*lz;
-		} else {
 			vel_difference.x = costheta_shear*shear_rate*lz;
 			vel_difference.y = sintheta_shear*shear_rate*lz;
 		}
-	} else {
+	}
+}
+
+void System::rushWorkFor2DBrownian()
+{
+	/* [note]
+	 * Native 2D simulation is not implemented yet.
+	 * As a quick implementation, the velocity elements for extra dimension are set to zero
+	 */
+	if (p.monolayer) {
+		/* Particle (3D sphere) cannot move along y-direction.
+		 * All other degrees of freedom exist.
+		 */
 		for (int i=0; i<np; i++) {
-			velocity[i] = na_velocity[i];
-			ang_velocity[i] = na_ang_velocity[i];
+			vel_brownian[i].y = 0; // @@ To be checked
+		}
+	} else {
+		/* Particle (2D disk) can rotate only along y-axis.
+		 */
+		for (int i=0; i<np; i++) {
+			vel_brownian[i].y = 0; // @@ To be checked
+			ang_vel_brownian[i].x = 0;
+			ang_vel_brownian[i].z = 0;
 		}
 	}
-	stokes_solver.solvingIsDone();
 }
 
 void System::displacement(int i, const vec3d& dr)
@@ -1832,7 +1966,6 @@ void System::periodize_diff(vec3d& pos_diff)
 		}
 	}
 }
-
 
 void System::setSystemVolume(double depth)
 {

@@ -555,7 +555,9 @@ void Simulation::evaluateData()
 
 	sys.analyzeState();
 	sys.calcStress();
-	sys.calcLubricationForce();
+	if (sys.p.lubrication_model > 0) {
+		sys.calcLubricationForce();
+	}
 }
 
 void Simulation::outputData()
