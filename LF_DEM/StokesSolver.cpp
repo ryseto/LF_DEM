@@ -225,8 +225,6 @@ void StokesSolver::completeResistanceMatrix()
 
 	// declare the last 2 values of odbrows_table
 	int size = mobile_particle_nb; // temporary
-	odbrows_table[size-1] = (unsigned int)odbrows.size();
-	odbrows_table[size] = (unsigned int)odbrows.size();
 	allocateResistanceMatrix();
 
 	vector<vector <int> > odb_layout;
@@ -314,6 +312,7 @@ void StokesSolver::completeResistanceMatrix()
 
 	// printResistanceMatrix(cout, "dense");getchar();
 	factorizeResistanceMatrix();
+	// printResistanceMatrix(cout, "sparse");
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions,

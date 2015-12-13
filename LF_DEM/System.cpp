@@ -1364,6 +1364,8 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		}
 		stokes_solver.doneBlocks(i);
 	}
+	stokes_solver.doneBlocks(np-1);
+	stokes_solver.doneBlocks(np);
 }
 
 void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)

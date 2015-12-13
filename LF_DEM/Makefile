@@ -51,13 +51,18 @@ endif
 
 
 #======== Include Paths =============
-Cholmod_path = $(SUITESPARSE_ROOT)/include/
-Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
-Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
+ifeq ($(override_default_cholmod), false)
+	Cholmod_path = -I $(SUITESPARSE_ROOT)/include/
+	Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
+	Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
+endif
+
+
+
 #Metis_path = /opt/local/lib/
 
 # Includes
-Includes = -I $(Cholmod_path)
+Includes = $(Cholmod_path)
 
 OUT_CODE=LF_DEM
 SRC=$(shell ls *.cpp)
