@@ -250,7 +250,6 @@ void StokesSolver::completeResistanceMatrix()
 	}
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
-
 	// fill
 	for (int j=0; j<size; j++) {
 		// associated with particle j are 6 columns in the matrix:
@@ -298,21 +297,19 @@ void StokesSolver::completeResistanceMatrix()
 			// + index inside the current block
 
 			for (int col=0; col<6; col++) {
-				index_chol_ix[col] += 5*(k-odbrows_table[j]);// 5 non-zero elements per columns in odblocks
-			}
-			for (int col=0; col<6; col++) {
 				for (int s=0; s<5; s++) {
 					((int*)chol_res_matrix->i)[index_chol_ix[col] +s] = odbrows[k] + odb_layout[col][s];
 				}
 			}
 			fillCholmodFromODBlock((double*)chol_res_matrix->x, index_chol_ix, odblocks[k]);
+
+			for (int col=0; col<6; col++) {
+				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
+			}
 		}
 	}
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
-
-	// printResistanceMatrix(cout, "dense");getchar();
 	factorizeResistanceMatrix();
-	// printResistanceMatrix(cout, "sparse");
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
