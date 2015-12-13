@@ -235,7 +235,7 @@ void System::allocateRessources()
 	//
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
-	interaction_partners = new set <int> [np];
+	interaction_partners = new unordered_set <int> [np];
 
 	//
 	if (p.auto_determine_knkt) {

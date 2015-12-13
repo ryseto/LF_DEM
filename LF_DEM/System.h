@@ -245,7 +245,7 @@ private:
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
 	std::set <Interaction*> *interaction_list;
-	std::set <int> *interaction_partners;
+	std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
 	double *ratio_unit_time; // to convert System time in Simulation time
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
