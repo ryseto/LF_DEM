@@ -3,6 +3,7 @@ var class_simulation =
     [ "Simulation", "class_simulation.html#a5b224cc5b36bcc8eb29689aff223de41", null ],
     [ "~Simulation", "class_simulation.html#a80fad3f57dfaf195a36f7bc49bc88279", null ],
     [ "autoSetParameters", "class_simulation.html#a33c595bfa3912a6e7d129c949dd6cb85", null ],
+    [ "catchSuffixedForce", "class_simulation.html#ad0143f963d662d60740939654bc04198", null ],
     [ "catchSuffixedValue", "class_simulation.html#a73bf1e0902f00a68d3b7d547a6206f89", null ],
     [ "contactForceParameter", "class_simulation.html#a02db39dac79a8197839e02c753bf8340", null ],
     [ "contactForceParameterBrownian", "class_simulation.html#a94d2b9ca02cb1687348d36f8a2776760", null ],

@@ -10,6 +10,7 @@ var searchData=
   ['setupsimulation',['setupSimulation',['../class_simulation.html#a1dc92fad0b8a9e483499aad6c8fcc31c',1,'Simulation']]],
   ['setupsystem',['setupSystem',['../class_system.html#a4daacacb59afa0f0a4bf2107685a03f1',1,'System']]],
   ['simulation',['Simulation',['../class_simulation.html',1,'']]],
+  ['span',['span',['../classgsl_1_1span.html',1,'gsl']]],
   ['start_5fadjust',['start_adjust',['../struct_parameter_set.html#ac53858a21f1981835b6a1f1b1610c43d',1,'ParameterSet']]],
   ['stokessolver',['StokesSolver',['../class_stokes_solver.html',1,'']]],
   ['stressreset',['stressReset',['../class_system.html#a60c98fd8b54e66526a2c413a4a443557',1,'System']]],
