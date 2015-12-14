@@ -275,8 +275,10 @@ void StokesSolver::completeResistanceMatrix()
 		}
 		// diagonal block row indices (21)
 		for (int col=0; col<6; col++) {
-			for (int s=0; s<dblocks_cntnonzero[col]; s++) {
-				((int*)chol_res_matrix->i)[index_chol_ix[col]+s] = j6 + db_layout[col][s];
+			int slim = dblocks_cntnonzero[col];
+			int index_start = index_chol_ix[col];
+			for (int s=0; s<slim; s++) {
+				((int*)chol_res_matrix->i)[index_start+s] = j6 + db_layout[col][s];
 			}
 		}
 
@@ -295,10 +297,12 @@ void StokesSolver::completeResistanceMatrix()
 			// + 6 for the diagonal block of column j6
 			// + 5*(k-odbFrows_table[j]) for the off-diag blocks of j6
 			// + index inside the current block
-
+			int block_top_row = odbrows[k];
 			for (int col=0; col<6; col++) {
+				int index_start = index_chol_ix[col];
+				vector<int> &layout = odb_layout[col];
 				for (int s=0; s<5; s++) {
-					((int*)chol_res_matrix->i)[index_chol_ix[col] +s] = odbrows[k] + odb_layout[col][s];
+					((int*)chol_res_matrix->i)[index_start +s] = block_top_row + layout[s];
 				}
 			}
 			fillCholmodFromODBlock((double*)chol_res_matrix->x, index_chol_ix, odblocks[k]);
