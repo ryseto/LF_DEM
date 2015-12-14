@@ -1,5 +1,6 @@
 #Makefile LF_DEM, Romain Mari
 
+override_default_cholmod = false
 
 # load Makefile inputs
 makeconfig = config/Makefile_config.mk
