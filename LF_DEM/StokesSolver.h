@@ -231,26 +231,31 @@ private:
 
 	void allocateResistanceMatrix();
 	void allocateRessources();
-	void setDiagBlockPreconditioner();
-	void setIncCholPreconditioner();
-	void setSpInvPreconditioner();
-	void setSolverType(std::string);
-	void fillCholmodFromDBlock(double *chol_x,
-							   const std::vector<int>& index_chol_ix,
-							   const struct DBlock& b);
-	void fillCholmodFromODBlock(double *chol_x,
-								const std::vector<int>& index_chol_ix,
-								const struct ODBlock& b);
 	void completeResistanceMatrix_MobileMobile();
 	void completeResistanceMatrix_MobileFixed();
 	void completeResistanceMatrix_FixedFixed();
-	void fillCholmodDiag(cholmod_sparse *matrix,
-									const struct DBlock &diagblock,
-									int left_col_nb,
-									std::vector<int> &index_chol_ix);
-	void setMatrixPforBlockColumn(int *matrix_p, const std::vector<int> &pvalues);
-	void setMatrixIforDiagBlock(int *matrix_i, const std::vector<int> &index_values, int top_row_nb);
-
+	void insertODBlock(cholmod_sparse *matrix,
+										const std::vector<int> &index_chol_ix,
+										int top_row_nb,
+										const struct ODBlock &offdiagblock);
+	void insertDBlock(cholmod_sparse *matrix,
+										const std::vector<int> &index_chol_ix,
+										int top_row_nb,
+										const struct DBlock &diagblock);
+	void insertODBlockRows(int *matrix_i,
+										const std::vector<int> &index_values,
+										int top_row_nb);
+	void insertDBlockRows(int *matrix_i,
+										const std::vector<int> &index_values,
+										int top_row_nb);
+	void insertBlockColumnIndices(int *matrix_p,
+										const std::vector<int> &pvalues);
+	void insertODBlockValues(double *matrix_x,
+											  const std::vector<int>& index_chol_ix,
+											  const struct ODBlock& b);
+	void insertDBlockValues(double *matrix_x,
+											 const std::vector<int>& index_chol_ix,
+											 const struct DBlock& b);
 
 public:
   ~StokesSolver();

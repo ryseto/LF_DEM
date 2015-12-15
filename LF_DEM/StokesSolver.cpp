@@ -137,7 +137,7 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 	return;
 }
 
-void StokesSolver::fillCholmodFromDBlock(double *chol_x,
+void StokesSolver::insertDBlockValues(double *matrix_x,
 										 const vector<int>& index_chol_ix,
 										 const struct DBlock& b)
 {
@@ -148,72 +148,139 @@ void StokesSolver::fillCholmodFromDBlock(double *chol_x,
 	int pcol4 = index_chol_ix[4];
 	int pcol5 = index_chol_ix[5];
 	// diagonal blocks row values (21)
-	chol_x[pcol0  ] = b.col0[0];   // column j6
-	chol_x[pcol0+1] = b.col0[1];
-	chol_x[pcol0+2] = b.col0[2];
-	chol_x[pcol0+3] = b.col0[3];
-	chol_x[pcol0+4] = b.col0[4];
-	chol_x[pcol1  ] = b.col1[0];   // column j6+1
-	chol_x[pcol1+1] = b.col1[1];
-	chol_x[pcol1+2] = -b.col0[3];  // anti-symmetry
-	chol_x[pcol1+3] = b.col1[2];
-	chol_x[pcol2  ] = b.col2[0];   // column j6+2
-	chol_x[pcol2+1] = -b.col0[4];   // anti-symmetry
-	chol_x[pcol2+2] = -b.col1[2];   // anti-symmetry
-	chol_x[pcol3  ] = b.col3[0];   // column j6+3
-	chol_x[pcol3+1] = b.col3[1];
-	chol_x[pcol3+2] = b.col3[2];
-	chol_x[pcol4  ] = b.col4[0];   // column j6+4
-	chol_x[pcol4+1] = b.col4[1];
-	chol_x[pcol5  ] = b.col5[0];   // column j6+5
+	matrix_x[pcol0  ] = b.col0[0];   // column j6
+	matrix_x[pcol0+1] = b.col0[1];
+	matrix_x[pcol0+2] = b.col0[2];
+	matrix_x[pcol0+3] = b.col0[3];
+	matrix_x[pcol0+4] = b.col0[4];
+	matrix_x[pcol1  ] = b.col1[0];   // column j6+1
+	matrix_x[pcol1+1] = b.col1[1];
+	matrix_x[pcol1+2] = -b.col0[3];  // anti-symmetry
+	matrix_x[pcol1+3] = b.col1[2];
+	matrix_x[pcol2  ] = b.col2[0];   // column j6+2
+	matrix_x[pcol2+1] = -b.col0[4];   // anti-symmetry
+	matrix_x[pcol2+2] = -b.col1[2];   // anti-symmetry
+	matrix_x[pcol3  ] = b.col3[0];   // column j6+3
+	matrix_x[pcol3+1] = b.col3[1];
+	matrix_x[pcol3+2] = b.col3[2];
+	matrix_x[pcol4  ] = b.col4[0];   // column j6+4
+	matrix_x[pcol4+1] = b.col4[1];
+	matrix_x[pcol5  ] = b.col5[0];   // column j6+5
 }
 
-void StokesSolver::fillCholmodFromODBlock(double *chol_x,
+void StokesSolver::insertODBlockValues(double *matrix_x,
 										  const vector<int>& index_chol_ix,
 										  const struct ODBlock& b)
 {
 	int start_index = index_chol_ix[0];
-	chol_x[start_index  ]   = b.col0[0]; // A   // column j6
-	chol_x[start_index +1]   = b.col0[1];
-	chol_x[start_index +2]   = b.col0[2];
-	chol_x[start_index +3]   = b.col0[3]; // B
-	chol_x[start_index +4]   = b.col0[4];
+	matrix_x[start_index  ]   = b.col0[0]; // A   // column j6
+	matrix_x[start_index +1]   = b.col0[1];
+	matrix_x[start_index +2]   = b.col0[2];
+	matrix_x[start_index +3]   = b.col0[3]; // B
+	matrix_x[start_index +4]   = b.col0[4];
 	//
 	start_index = index_chol_ix[1];
-	chol_x[start_index   ] = b.col0[1]; // A  // column j6+1
-	chol_x[start_index +1] = b.col1[0];
-	chol_x[start_index +2] = b.col1[1];
-	chol_x[start_index +3] = -b.col0[3]; // B
-	chol_x[start_index +4] = b.col1[2];
+	matrix_x[start_index   ] = b.col0[1]; // A  // column j6+1
+	matrix_x[start_index +1] = b.col1[0];
+	matrix_x[start_index +2] = b.col1[1];
+	matrix_x[start_index +3] = -b.col0[3]; // B
+	matrix_x[start_index +4] = b.col1[2];
 	//
 	start_index = index_chol_ix[2];
-	chol_x[start_index   ] = b.col0[2]; // A // column j6+2
-	chol_x[start_index +1] = b.col1[1];
-	chol_x[start_index +2] = b.col2[0];
-	chol_x[start_index +3] = -b.col0[4]; // B
-	chol_x[start_index +4] = -b.col1[2];
+	matrix_x[start_index   ] = b.col0[2]; // A // column j6+2
+	matrix_x[start_index +1] = b.col1[1];
+	matrix_x[start_index +2] = b.col2[0];
+	matrix_x[start_index +3] = -b.col0[4]; // B
+	matrix_x[start_index +4] = -b.col1[2];
 	//
 	start_index = index_chol_ix[3];
-	chol_x[start_index   ] = b.col3[0];// Btilde   // column j6+3
-	chol_x[start_index +1] = b.col3[1];
-	chol_x[start_index +2] = b.col3[2]; // C
-	chol_x[start_index +3] = b.col3[3];
-	chol_x[start_index +4] = b.col3[4];
+	matrix_x[start_index   ] = b.col3[0];// Btilde   // column j6+3
+	matrix_x[start_index +1] = b.col3[1];
+	matrix_x[start_index +2] = b.col3[2]; // C
+	matrix_x[start_index +3] = b.col3[3];
+	matrix_x[start_index +4] = b.col3[4];
 	//
 	start_index = index_chol_ix[4];
-	chol_x[start_index   ] = -b.col3[0]; // Btilde // column j6+4
-	chol_x[start_index +1] = b.col4[0];
-	chol_x[start_index +2] = b.col3[3]; // C
-	chol_x[start_index +3] = b.col4[1];
-	chol_x[start_index +4] = b.col4[2];
+	matrix_x[start_index   ] = -b.col3[0]; // Btilde // column j6+4
+	matrix_x[start_index +1] = b.col4[0];
+	matrix_x[start_index +2] = b.col3[3]; // C
+	matrix_x[start_index +3] = b.col4[1];
+	matrix_x[start_index +4] = b.col4[2];
 	//
 	start_index = index_chol_ix[5];
-	chol_x[start_index   ] = -b.col3[1]; // Btilde // column j6+5
-	chol_x[start_index +1] = -b.col4[0];
-	chol_x[start_index +2] = b.col3[4]; // C
-	chol_x[start_index +3] = b.col4[2];
-	chol_x[start_index +4] = b.col5[0];
+	matrix_x[start_index   ] = -b.col3[1]; // Btilde // column j6+5
+	matrix_x[start_index +1] = -b.col4[0];
+	matrix_x[start_index +2] = b.col3[4]; // C
+	matrix_x[start_index +3] = b.col4[2];
+	matrix_x[start_index +4] = b.col5[0];
 }
+
+void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int> &pvalues){
+	/**
+			Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array.
+			You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
+	*/
+	for (int col=0; col<6; col++) {
+		matrix_p[col] = pvalues[col];
+	}
+}
+
+
+void StokesSolver::insertDBlockRows(int *matrix_i, const vector<int> &index_values, int top_row_nb){
+	/**
+			Insert row numbers for the diagonal block with top row top_row_nb in a cholmod_sparse::i array.
+			You need to provide the location of the 6 columns of the block in the cholmod_sparse::i array
+			through a vector of indices index_values.
+	*/
+	for (int col=0; col<6; col++) {
+		int slim = dblocks_cntnonzero[col];
+		int index_start = index_values[col];
+		for (int s=0; s<slim; s++) {
+			matrix_i[index_start+s] = top_row_nb + db_layout[col][s];
+		}
+	}
+}
+
+void StokesSolver::insertODBlockRows(int *matrix_i, const vector<int> &index_values, int top_row_nb)
+{
+	/**
+			Insert row numbers for an off-diagonal block with top row top_row_nb in a cholmod_sparse::i array.
+			You need to provide the location of the 6 columns of the block in the cholmod_sparse::i array
+			through a vector of indices index_values.
+	*/
+	for (int col=0; col<6; col++) {
+		int index_start = index_values[col];
+		vector<int> &layout = odb_layout[col];
+		for (int s=0; s<5; s++) {
+			matrix_i[index_start+s] = top_row_nb + layout[s];
+		}
+	}
+}
+
+void StokesSolver::insertDBlock(cholmod_sparse *matrix, const vector<int> &index_chol_ix, int top_row_nb, const struct DBlock &diagblock)
+{
+	/**
+			Insert the DBlock diagblock in a cholmod_sparse matrix.
+			You must provide the location of the 6 columns of the block in the cholmod_sparse::i array
+			through a vector of indices index_chol_ix, and the nb of the topmost row (equivalently leftmost column) of the block.
+	*/
+	insertBlockColumnIndices((int*)matrix->p+top_row_nb, index_chol_ix);
+	insertDBlockRows((int*)matrix->i, index_chol_ix, top_row_nb); // left_col_nb is also the top row nb on a diag block
+	insertDBlockValues((double*)matrix->x, index_chol_ix, diagblock);
+
+}
+void StokesSolver::insertODBlock(cholmod_sparse *matrix, const vector<int> &index_chol_ix, int top_row_nb, const struct ODBlock &offdiagblock)
+{
+	/**
+			Insert the ODBlock offdiagblock in a cholmod_sparse matrix.
+			You must provide the location of the 6 columns of the block in the cholmod_sparse::i array
+			through a vector of indices index_chol_ix, and the nb of of the topmost row of the block.
+	*/
+	insertODBlockRows((int*)matrix->i, index_chol_ix, top_row_nb);
+	insertODBlockValues((double*)matrix->x, index_chol_ix, offdiagblock);
+
+}
+
 
 void StokesSolver::completeResistanceMatrix(){
 	allocateResistanceMatrix();
@@ -256,10 +323,13 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 
 	int size = mobile_particle_nb;
 
+// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
-	// fill
+
+
 	for (int j=0; j<size; j++) {
+		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
 		// the number of non-zero elements before column 6j is:
@@ -279,28 +349,14 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
 
-
-		fillCholmodDiag(chol_res_matrix, dblocks[j], j6, index_chol_ix);
-
-		/*****  2  : off-diagonal blocks row indices and values ***********/
-		// 36 non-zero elements per block
+		/********* 1: Insert the diagonal blocks elements *********/
+		insertDBlock(chol_res_matrix, index_chol_ix, j6, dblocks[j]);
+		for (int col=0; col<6; col++) {
+			index_chol_ix[col] +=  dblocks_cntnonzero[col];
+		}
+		/********  2  : off-diagonal blocks blocks elements ***********/
 		for (int k = odbrows_table[j]; k<odbrows_table[j+1]; k++) {
-			// we are filling the "k-odbFrows_table[j]"th off-diag block of the column.
-			// For column j6, for exemple, the indices of the non-zero values are:
-			// pj6 for all non-zero elements before column j6,
-			// + 6 for the diagonal block of column j6
-			// + 5*(k-odbFrows_table[j]) for the off-diag blocks of j6
-			// + index inside the current block
-			int block_top_row = odbrows[k];
-			for (int col=0; col<6; col++) {
-				int index_start = index_chol_ix[col];
-				vector<int> &layout = odb_layout[col];
-				for (int s=0; s<5; s++) {
-					((int*)chol_res_matrix->i)[index_start +s] = block_top_row + layout[s];
-				}
-			}
-			fillCholmodFromODBlock((double*)chol_res_matrix->x, index_chol_ix, odblocks[k]);
-
+			insertODBlock(chol_res_matrix, index_chol_ix, odbrows[k], odblocks[k]);
 			for (int col=0; col<6; col++) {
 				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
 			}
@@ -309,99 +365,12 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
 }
 
-void StokesSolver::completeResistanceMatrix_MobileFixed()
-{
-	// this function is commented, but you are strongly advised to read
-	// the description of storage in the header file first :)
-
-	int size = mobile_particle_nb;
-	int line_nb = np - mobile_particle_nb;
-
-	vector<int> index_chol_ix;
-	index_chol_ix.resize(6);
-	// fill
-	for (int j=0; j<size; j++) {
-		// associated with particle j are 6 columns in the matrix:
-		// { 6j, ... , 6j+5 }
-		int j6 = 6*j;
-		// the number of non-zero elements before column 6j is:
-		// - 30*odbrows_table_mf[j] from odbrows_table_mf[j]
-		//
-		// the number of non-zero elements before column 6j+1 is:
-		// - number of non-zero before column 6j + number of non-zero in column 6*j
-		// (in 6j: 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j])
-		//
-		// for 6j+2 --> 6j+5: same idea
-		int od_nzero_nb = 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j]);
-		((int*)chol_res_matrix_mf->p)[j6] = 30*odbrows_table_mf[j];
-		for (int s=1; s<6; s++) {
-			((int*)chol_res_matrix_mf->p)[j6+s] = ((int*)chol_res_matrix_mf->p)[j6+s-1]+od_nzero_nb; // nb before previous + elements in previous
-		}
-
-		for (int col=0; col<6; col++) { // set the starting indices for cols 0-5
-			index_chol_ix[col] = ((int*)chol_res_matrix_mf->p)[j6+col];
-		}
-
-		// 36 non-zero elements per block
-		for (int k = odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
-			// we are filling the "k-odbFrows_table_mf[j]"th off-diag block of the column.
-			// For column j6, for exemple, the indices of the non-zero values are:
-			// pj6 for all non-zero elements before column j6,
-			// + 6 for the diagonal block of column j6
-			// + 5*(k-odbFrows_table[j]) for the off-diag blocks of j6
-			// + index inside the current block
-			int block_top_row = odbrows_mf[k];
-			for (int col=0; col<6; col++) {
-				int index_start = index_chol_ix[col];
-				vector<int> &layout = odb_layout[col];
-				for (int s=0; s<5; s++) {
-					((int*)chol_res_matrix_mf->i)[index_start +s] = block_top_row + layout[s];
-				}
-			}
-			fillCholmodFromODBlock((double*)chol_res_matrix_mf->x, index_chol_ix, odblocks_mf[k]);
-
-			for (int col=0; col<6; col++) {
-				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
-			}
-		}
-	}
-	((int*)chol_res_matrix_mf->p)[6*size] = ((int*)chol_res_matrix_mf->p)[6*size-1]+1;
-}
 
 
-void StokesSolver::setMatrixPforBlockColumn(int *matrix_p, const vector<int> &pvalues){
-	for (int col=0; col<6; col++) {
-		matrix_p[col] = pvalues[col];
-	}
-}
-
-void StokesSolver::setMatrixIforDiagBlock(int *matrix_i, const vector<int> &index_values, int top_row_nb){
-	for (int col=0; col<6; col++) {
-		int slim = dblocks_cntnonzero[col];
-		int index_start = index_values[col];
-		for (int s=0; s<slim; s++) {
-			matrix_i[index_start+s] = top_row_nb + db_layout[col][s];
-		}
-	}
-}
-
-void StokesSolver::fillCholmodDiag(cholmod_sparse *matrix, const struct DBlock &diagblock, int left_col_nb, vector<int> &index_chol_ix)
-{
-		setMatrixPforBlockColumn((int*)matrix->p+left_col_nb, index_chol_ix);
-
-		setMatrixIforDiagBlock((int*)matrix->i, index_chol_ix, left_col_nb); // left_col_nb is also the top row nb on a diag block
-
-		fillCholmodFromDBlock((double*)matrix->x, index_chol_ix, diagblock);
-
-		for (int col=0; col<6; col++) {
-			index_chol_ix[col] +=  dblocks_cntnonzero[col];
-		}
-}
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
 										 const vector<struct DBlock> &reset_resmat_dblocks)
 {
-	//setSolverType(solver_type);
 	odblocks_nb = nb_of_interactions;
 
 	for (unsigned int i=0; i<dblocks.size(); i++) {
