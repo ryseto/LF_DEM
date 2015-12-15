@@ -181,7 +181,7 @@ private:
 	cholmod_common chol_c ;
 	cholmod_dense* chol_rhs;
 	cholmod_sparse* chol_res_matrix;
-	cholmod_sparse* chol_res_matrix_MF;
+	cholmod_sparse* chol_res_matrix_mf;
 	cholmod_sparse* chol_res_matrix_FF;
 	cholmod_dense* chol_solution;
 	// cholmod_dense* chol_PTsolution;
@@ -205,6 +205,10 @@ private:
 	std::vector<struct ODBlock> odblocks_ff;
 	std::vector<int> odbrows_ff;
 	std::vector<int> odbrows_table_ff;
+	std::vector<std::vector <int> > odb_layout;
+	std::vector<std::vector <int> > db_layout;
+	std::vector<int> dblocks_cntnonzero;
+
 	void factorizeResistanceMatrix();
     /*
      setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
@@ -237,7 +241,17 @@ private:
 	void fillCholmodFromODBlock(double *chol_x,
 								const std::vector<int>& index_chol_ix,
 								const struct ODBlock& b);
-	
+	void completeResistanceMatrix_MobileMobile();
+	void completeResistanceMatrix_MobileFixed();
+	void completeResistanceMatrix_FixedFixed();
+	void fillCholmodDiag(cholmod_sparse *matrix,
+									const struct DBlock &diagblock,
+									int left_col_nb,
+									std::vector<int> &index_chol_ix);
+	void setMatrixPforBlockColumn(int *matrix_p, const std::vector<int> &pvalues);
+	void setMatrixIforDiagBlock(int *matrix_i, const std::vector<int> &index_values, int top_row_nb);
+
+
 public:
   ~StokesSolver();
 	void init(int np);
@@ -297,7 +311,8 @@ public:
 	 - must be called before solving the linear algebra problem
 	 - must be called after all terms are added
 	 */
-    void completeResistanceMatrix();
+	void completeResistanceMatrix();
+
 	/*
 	   Right-hand vector access methods
 	*/

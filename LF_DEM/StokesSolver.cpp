@@ -37,6 +37,26 @@ void StokesSolver::init(int n)
 	dblocks_size = 18*mobile_particle_nb;
 	allocateRessources();
 	chol_L_to_be_freed = false;
+
+	odb_layout.resize(6);
+	odb_layout[0] = vector<int>({0,1,2,4,5});
+	odb_layout[1] = vector<int>({0,1,2,3,5});
+	odb_layout[2] = vector<int>({0,1,2,3,4});
+	odb_layout[3] = vector<int>({1,2,3,4,5});
+	odb_layout[4] = vector<int>({0,2,3,4,5});
+	odb_layout[5] = vector<int>({0,1,3,4,5});
+	db_layout.resize(6);
+	db_layout[0] = vector<int>({0,1,2,4,5});
+	db_layout[1] = vector<int>({1,2,3,5});
+	db_layout[2] = vector<int>({2,3,4});
+	db_layout[3] = vector<int>({3,4,5});
+	db_layout[4] = vector<int>({4,5});
+	db_layout[5] = vector<int>({5});
+
+	dblocks_cntnonzero.resize(6);
+	for (int i=0; i<6; i++) {
+		dblocks_cntnonzero[i] = db_layout[i].size();
+	}
 }
 
 /************* Matrix filling methods **********************/
@@ -195,6 +215,17 @@ void StokesSolver::fillCholmodFromODBlock(double *chol_x,
 	chol_x[start_index +4] = b.col5[0];
 }
 
+void StokesSolver::completeResistanceMatrix(){
+	allocateResistanceMatrix();
+
+	completeResistanceMatrix_MobileMobile();
+	factorizeResistanceMatrix();
+
+	// completeResistanceMatrix_MobileFixed();
+	// completeResistanceMatrix_FixedFixed();
+}
+
+
 /*************** Cholmod Matrix Filling *************
  Cholmod matrices we are using are defined in column major order (index j is column index)
 
@@ -218,43 +249,19 @@ void StokesSolver::fillCholmodFromODBlock(double *chol_x,
 
  *****************************************************/
 
-void StokesSolver::completeResistanceMatrix()
+void StokesSolver::completeResistanceMatrix_MobileMobile()
 {
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
 
-	// declare the last 2 values of odbrows_table
-	int size = mobile_particle_nb; // temporary
-	allocateResistanceMatrix();
+	int size = mobile_particle_nb;
 
-	vector<vector <int> > odb_layout;
-	odb_layout.resize(6);
-	odb_layout[0] = vector<int>({0,1,2,4,5});
-	odb_layout[1] = vector<int>({0,1,2,3,5});
-	odb_layout[2] = vector<int>({0,1,2,3,4});
-	odb_layout[3] = vector<int>({1,2,3,4,5});
-	odb_layout[4] = vector<int>({0,2,3,4,5});
-	odb_layout[5] = vector<int>({0,1,3,4,5});
-	vector<vector <int> > db_layout;
-	db_layout.resize(6);
-	db_layout[0] = vector<int>({0,1,2,4,5});
-	db_layout[1] = vector<int>({1,2,3,5});
-	db_layout[2] = vector<int>({2,3,4});
-	db_layout[3] = vector<int>({3,4,5});
-	db_layout[4] = vector<int>({4,5});
-	db_layout[5] = vector<int>({5});
-
-	vector<int> dblocks_cntnonzero (6);
-	for (int i=0; i<6; i++) {
-		dblocks_cntnonzero[i] = db_layout[i].size();
-	}
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
 	// fill
 	for (int j=0; j<size; j++) {
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
-		int j6 = 6*j;
 		// the number of non-zero elements before column 6j is:
 		// - 18*j from j diagonal blocks
 		// - 30*odbrows_table[j] from odbrows_table[j] off-diagonal blocks
@@ -264,29 +271,16 @@ void StokesSolver::completeResistanceMatrix()
 		// (in 6j: dblocks_cntnonzero[0] elements in diagonal block, plus 5*(odbrows_table[j+1]-odbrows_table[j])
 		//
 		// for 6j+2 --> 6j+5: same idea
+
+		int j6 = 6*j;
 		int od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
-		((int*)chol_res_matrix->p)[j6] = 18*j+30*odbrows_table[j];
-		for (int s=1; s<6; s++) {
-			((int*)chol_res_matrix->p)[j6+s] = ((int*)chol_res_matrix->p)[j6+s-1]+dblocks_cntnonzero[s-1]+od_nzero_nb; // nb before previous + elements in previous
+		index_chol_ix[0] = 18*j+30*odbrows_table[j];
+		for (int col=1; col<6; col++) { // set the starting indices for cols 0-5
+			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
 
-		for (int col=0; col<6; col++) { // set the starting indices for cols 0-5
-			index_chol_ix[col] = ((int*)chol_res_matrix->p)[j6+col];
-		}
-		// diagonal block row indices (21)
-		for (int col=0; col<6; col++) {
-			int slim = dblocks_cntnonzero[col];
-			int index_start = index_chol_ix[col];
-			for (int s=0; s<slim; s++) {
-				((int*)chol_res_matrix->i)[index_start+s] = j6 + db_layout[col][s];
-			}
-		}
 
-		fillCholmodFromDBlock((double*)chol_res_matrix->x, index_chol_ix, dblocks[j]);
-
-		for (int col=0; col<6; col++) {
-			index_chol_ix[col] +=  dblocks_cntnonzero[col];
-		}
+		fillCholmodDiag(chol_res_matrix, dblocks[j], j6, index_chol_ix);
 
 		/*****  2  : off-diagonal blocks row indices and values ***********/
 		// 36 non-zero elements per block
@@ -313,7 +307,95 @@ void StokesSolver::completeResistanceMatrix()
 		}
 	}
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
-	factorizeResistanceMatrix();
+}
+
+void StokesSolver::completeResistanceMatrix_MobileFixed()
+{
+	// this function is commented, but you are strongly advised to read
+	// the description of storage in the header file first :)
+
+	int size = mobile_particle_nb;
+	int line_nb = np - mobile_particle_nb;
+
+	vector<int> index_chol_ix;
+	index_chol_ix.resize(6);
+	// fill
+	for (int j=0; j<size; j++) {
+		// associated with particle j are 6 columns in the matrix:
+		// { 6j, ... , 6j+5 }
+		int j6 = 6*j;
+		// the number of non-zero elements before column 6j is:
+		// - 30*odbrows_table_mf[j] from odbrows_table_mf[j]
+		//
+		// the number of non-zero elements before column 6j+1 is:
+		// - number of non-zero before column 6j + number of non-zero in column 6*j
+		// (in 6j: 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j])
+		//
+		// for 6j+2 --> 6j+5: same idea
+		int od_nzero_nb = 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j]);
+		((int*)chol_res_matrix_mf->p)[j6] = 30*odbrows_table_mf[j];
+		for (int s=1; s<6; s++) {
+			((int*)chol_res_matrix_mf->p)[j6+s] = ((int*)chol_res_matrix_mf->p)[j6+s-1]+od_nzero_nb; // nb before previous + elements in previous
+		}
+
+		for (int col=0; col<6; col++) { // set the starting indices for cols 0-5
+			index_chol_ix[col] = ((int*)chol_res_matrix_mf->p)[j6+col];
+		}
+
+		// 36 non-zero elements per block
+		for (int k = odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
+			// we are filling the "k-odbFrows_table_mf[j]"th off-diag block of the column.
+			// For column j6, for exemple, the indices of the non-zero values are:
+			// pj6 for all non-zero elements before column j6,
+			// + 6 for the diagonal block of column j6
+			// + 5*(k-odbFrows_table[j]) for the off-diag blocks of j6
+			// + index inside the current block
+			int block_top_row = odbrows_mf[k];
+			for (int col=0; col<6; col++) {
+				int index_start = index_chol_ix[col];
+				vector<int> &layout = odb_layout[col];
+				for (int s=0; s<5; s++) {
+					((int*)chol_res_matrix_mf->i)[index_start +s] = block_top_row + layout[s];
+				}
+			}
+			fillCholmodFromODBlock((double*)chol_res_matrix_mf->x, index_chol_ix, odblocks_mf[k]);
+
+			for (int col=0; col<6; col++) {
+				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
+			}
+		}
+	}
+	((int*)chol_res_matrix_mf->p)[6*size] = ((int*)chol_res_matrix_mf->p)[6*size-1]+1;
+}
+
+
+void StokesSolver::setMatrixPforBlockColumn(int *matrix_p, const vector<int> &pvalues){
+	for (int col=0; col<6; col++) {
+		matrix_p[col] = pvalues[col];
+	}
+}
+
+void StokesSolver::setMatrixIforDiagBlock(int *matrix_i, const vector<int> &index_values, int top_row_nb){
+	for (int col=0; col<6; col++) {
+		int slim = dblocks_cntnonzero[col];
+		int index_start = index_values[col];
+		for (int s=0; s<slim; s++) {
+			matrix_i[index_start+s] = top_row_nb + db_layout[col][s];
+		}
+	}
+}
+
+void StokesSolver::fillCholmodDiag(cholmod_sparse *matrix, const struct DBlock &diagblock, int left_col_nb, vector<int> &index_chol_ix)
+{
+		setMatrixPforBlockColumn((int*)matrix->p+left_col_nb, index_chol_ix);
+
+		setMatrixIforDiagBlock((int*)matrix->i, index_chol_ix, left_col_nb); // left_col_nb is also the top row nb on a diag block
+
+		fillCholmodFromDBlock((double*)matrix->x, index_chol_ix, diagblock);
+
+		for (int col=0; col<6; col++) {
+			index_chol_ix[col] +=  dblocks_cntnonzero[col];
+		}
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
