@@ -17,7 +17,7 @@ void Simulation::contactForceParameter(string filename)
 {
 	/**
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
-	 
+
 	 Input file must be formatted as:
 	 phi kn kt dt
 	 */
@@ -55,7 +55,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 {
 	/**
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
-	 
+
 	 Input file must be formatted as:
 	 phi peclet kn kt dt
 	 */
@@ -135,9 +135,9 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 {
 	/**
 		\brief Check force units consistency, expresses all input forces in unit given as a parameter.
-	 
+
 		In input, forces are given with suffixes. This function checks that we can make sense of these suffixes, and if so, it converts all the forces in the unit given as a parameter.
-	 
+
 		It does it iteratively, ie:
 		1. I know that unit_force = 1*unit_force
 		2. I know the value of any force f1 that has been given in unit_force in input as
@@ -145,11 +145,11 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 		3. I can determine the value of any force f2 expressed as f2 = x*f1
 	 4. I can then determine the value of any force f3 expressed as f3 = y*f2
 		5. etc
-	 
+
 		If there is any force undetermined at the end of this algorithm, the force unit system is inconsistent/incomplete.
-	 
+
 		If the force unit system is consistent, this function determines the dimensionless numbers, i.e., the ratios F_A/F_B for any pair of force scales present in the system.
-	 
+
 		\b Note: a priori, we could determine force A from force B if A is defined in B units or if B is defined in A units: for example in the step 3 of the above algorithm we could determine f2 knowing f1 if f1 is defined as f1=x^{-1}f2. However this is \b not implemented and will fail with the current implementation.
 	 */
 	// we keep the forces for which we can convert in unit_force units in a set.
@@ -205,14 +205,14 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 {
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
-	 
+
 	 The strategy is the following:
 	 1. Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie:
 		a. w = 1w
 		b. y = mw
 		c. z = oy = omw
 		d. etc...
-	 
+
 	 In the future, we may allow other unit scale than the one given by the input stress.
 	 */
 	string force_type = rate_unit; // our force defining the shear rate
@@ -222,7 +222,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 		 Note:
 		 Although it is in some cases possible to run under stress control with hydro units,
 		 it is not always possible and as a consequence it is a bit dangerous to let the user do so.
-		 
+
 		 With hydro units, the problem is that the target stress \f$\tilde{S}\f$ cannot take any possible value, as
 		 \f$\tilde{S} = S/(\eta_0 \dot \gamma) = \eta/\eta_0\f$
 		 --> It is limited to the available range of viscosity.
@@ -250,7 +250,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
-	 
+
 	 The strategy is the following:
 	 1. Convert all the forces in hydro force unit, ie the value for force f1 is f1/F_H
 	 2. Decide the unit force F_W for the simulation
@@ -334,7 +334,7 @@ void Simulation::convertForceValues(string new_unit)
 {
 	/**
 	 \brief Convert all the input forces to the unit given in parameter.
-	 
+
 		The input forces velues can be expressed in any units, but these units must be known before calling this function (e.g. by calling Simulation::resolveUnitSystem(string unit_force) beforehand).
 	 */
 	for (auto& f: input_force_units) {
@@ -351,7 +351,7 @@ void Simulation::setUnitScaleRateControlled()
 {
 	/**
 	 \brief Determine the best internal force scale to run the simulation (rate controlled case).
-	 
+
 		If the system is non-Brownian, the hydrodynamic force unit is taken (\b note: this will change in the future). If the system is Brownian, the Brownian force unit is selected at low Peclet (i.e., Peclet numbers smaller that ParameterSet::Pe_switch) and the hydrodynamic force unit is selected at high Peclet.
 	 */
 	bool is_brownian;
@@ -449,7 +449,7 @@ void Simulation::convertInputValues(string new_unit)
 {
 	/**
 	 \brief Convert all the non-force input parameters given with units to the unit given in parameter.
-	 
+
 		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
 	 */
 	for (auto& inv: input_values) {
@@ -478,7 +478,7 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 											string input_scale){
 	/**
 	 \brief Non-dimensionalize the simulation.
-	 
+
 		This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
 	 */
 	input_scale = unit_longname[input_scale];
@@ -513,7 +513,7 @@ void Simulation::setupSimulation(string in_args,
 {
 	/**
 	 \brief Set up the simulation.
-	 
+
 		This function is intended to be generically used to set up the simulation. It processes the input parameters, non-dimensionalizes the system and starts up a System class with the relevant parameters.
 	 */
 	string indent = "  Simulation::\t";
@@ -759,6 +759,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
 	} else if (keyword == "out_binary_conf") {
 		p.out_binary_conf = str2bool(value);
+	} else if (keyword == "fixed_nb") {
+		p.fixed_nb = atoi(value.c_str());
 	} else {
 		ostringstream error_str;
 		error_str  << "keyword " << keyword << " is not associated with an parameter" << endl;
@@ -922,6 +924,8 @@ void Simulation::setDefaultParameters()
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
 	p.fixed_particle_fraction = 0;
+
+	p.fixed_nb = 0;
 }
 
 void Simulation::openOutputFiles(bool binary_conf,
@@ -932,7 +936,7 @@ void Simulation::openOutputFiles(bool binary_conf,
 {
 	/**
 	 \brief Set up the output files
-	 
+
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
 	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,

@@ -21,7 +21,7 @@ struct ParameterSet
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
-
+	int fixed_nb;
 	/* magnetic */
 	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
 	int magnetic_type;						///< Magnetic, 1: parmanent magnetic dipole (Ferromagnetic), 2: induced dipole (Paramagnetic)

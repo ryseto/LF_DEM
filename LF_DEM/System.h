@@ -57,9 +57,13 @@ struct ForceAmplitudes
 class System{
 private:
 	int np; ///< nb of particles
+	int nmobile;
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
-	int nb_of_active_interactions;
+	int nb_of_active_interactions_mm;
+	int nb_of_active_interactions_mf;
+	int nb_of_active_interactions_ff;
+
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
@@ -427,7 +431,7 @@ private:
 
 	inline double get_nb_of_active_interactions()
 	{
-		return nb_of_active_interactions;
+		return nb_of_active_interactions_mm + nb_of_active_interactions_mf + nb_of_active_interactions_ff;
 	}
 
 	int get_total_num_timesteps()

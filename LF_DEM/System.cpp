@@ -169,6 +169,10 @@ void System::allocateRessources()
 		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
 	}
 	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
+	nb_of_active_interactions_mf = 0;
+	nb_of_active_interactions_ff = 0;
+	nb_of_active_interactions_mm = 0;
+
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
 	if (p.lubrication_model == 0) {
@@ -286,6 +290,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	 */
 	string indent = "  System::\t";
 	set_np(initial_positions.size());
+	nmobile = np-p.fixed_nb;
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
@@ -689,7 +694,7 @@ void System::setupSystem(string control)
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	if (p.lubrication_model > 0) {
-		stokes_solver.init(np);
+		stokes_solver.init(np, nmobile);
 	}
 	dt = p.dt;
 	initializeBoxing();
@@ -1170,6 +1175,13 @@ void System::checkNewInteraction()
 							throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 						}
 						interaction[interaction_new].activate(i, j, scaled_interaction_range);
+						if (j<nmobile) {
+							nb_of_active_interactions_mm++;
+						} else if (i>=nmobile) {
+							nb_of_active_interactions_ff++;
+						} else {
+							nb_of_active_interactions_mf++;
+						}
 					}
 				}
 			}
@@ -1218,6 +1230,15 @@ void System::updateInteractions()
 			interaction[k].updateState(deactivated);
 			if (deactivated) {
 				deactivated_interaction.push(k);
+				unsigned short p0, p1;
+				interaction[k].get_par_num(p0, p1);
+				if (p1<nmobile) {
+					nb_of_active_interactions_mm--;
+				} else if (p0>nmobile) {
+					nb_of_active_interactions_ff--;
+				} else {
+				 nb_of_active_interactions_mf--;
+			 }
 			}
 			if (interaction[k].is_contact()) {
 				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
@@ -1303,8 +1324,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 */
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
-		nb_of_active_interactions = nb_interaction-deactivated_interaction.size();
-		stokes_solver.resetResistanceMatrix(nb_of_active_interactions, 0, 0,
+		stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm, nb_of_active_interactions_mf, nb_of_active_interactions_ff,
 											resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
@@ -1316,6 +1336,13 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	} else {
 		// add GE in the rhs
 		(this->*buildLubricationTerms)(false, build_force_GE);
+	}
+	if (build_force_GE && nmobile<np) {
+		vector<double> force_from_fixed (6*nmobile);
+		vector<double> fixed_velocities;
+		fixed_velocities.assign(6*(np-nmobile),0);
+		stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
+		stokes_solver.addToRHS(force_from_fixed.data());
 	}
 }
 
@@ -1445,6 +1472,9 @@ void System::generateBrownianForces()
 
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
+	if(nmobile<np){
+		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
+	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
 	for (int i=0; i<linalg_size; i++) {
 		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
@@ -1687,18 +1717,18 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			computeShearRate();
 		}
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<nmobile; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
 		}
 		if (repulsiveforce) {
-			for (int i=0; i<np; i++) {
+			for (int i=0; i<nmobile; i++) {
 				na_velocity[i] += vel_repulsive[i];
 				na_ang_velocity[i] += ang_vel_repulsive[i];
 			}
 		}
 		if (magnetic) {
-			for (int i=0; i<np; i++) {
+			for (int i=0; i<nmobile; i++) {
 				na_velocity[i] += vel_magnetic[i];
 				na_ang_velocity[i] += ang_vel_magnetic[i];
 			}
@@ -1728,10 +1758,14 @@ void System::computeVelocities(bool divided_velocities)
 			generateBrownianForces();
 		}
 		computeBrownianVelocities();
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<nmobile; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
+	}
+	for (int i=nmobile; i<np; i++) { // temporary: particles perfectly advected
+		na_velocity[i].reset();
+		na_ang_velocity[i].reset();
 	}
 	/*
 	 * The max velocity is used to find dt from max displacement

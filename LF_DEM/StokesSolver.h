@@ -14,7 +14,6 @@
 
 #ifndef __LF_DEM__StokesSolver__
 #define __LF_DEM__StokesSolver__
-//#define CHOLMOD_EXTRA
 #include <vector>
 #include <array>
 #include "vec3d.h"
@@ -259,7 +258,7 @@ private:
 
 public:
   ~StokesSolver();
-	void init(int np);
+	void init(int n_total, int n_mobile);
 	void printResistanceMatrix(std::ostream&, std::string);
 	void printFactor(std::ostream&);
 	void printRHS();
