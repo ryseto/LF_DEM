@@ -17,6 +17,12 @@ StokesSolver::~StokesSolver()
 	if (!chol_rhs) {
 		cholmod_free_dense(&chol_rhs, &chol_c);
 	}
+	if (!chol_vec) {
+		cholmod_free_dense(&chol_vec, &chol_c);
+	}
+	if (!chol_force) {
+		cholmod_free_dense(&chol_vec, &chol_c);
+	}
 	if (!chol_res_matrix) {
 		cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	}
@@ -624,37 +630,6 @@ void StokesSolver::compute_LTRHS(double* X)
 	cholmod_free_factor(&chol_L_copy, &chol_c);
 }
 
-// // Finds solutions to L^T X = RHS
-// void StokesSolver::solve_LT(double* X)
-// {
-// 	chol_PTsolution = cholmod_solve(CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
-// 	chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
-// 	int size = chol_solution->nrow;
-// 	for (int i=0; i<size; i++) {
-// 		X[i] = ((double*)chol_solution->x)[i];
-// 	}
-// 	cholmod_free_dense(&chol_solution, &chol_c);
-// 	cholmod_free_dense(&chol_PTsolution, &chol_c);
-// }
-//
-// void StokesSolver::solve_LT(vec3d* X, vec3d* ang_X)
-// {
-// 	chol_PTsolution = cholmod_solve(CHOLMOD_Lt, chol_L, chol_rhs, &chol_c) ;
-// 	chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_PTsolution, &chol_c) ;
-// 	int size = chol_solution->nrow/6;
-// 	for (int i=0; i<size; i++) {
-// 		int i6 =6*i;
-// 		X[i].x = ((double*)chol_solution->x)[i6];
-// 		X[i].y = ((double*)chol_solution->x)[i6+1];
-// 		X[i].z = ((double*)chol_solution->x)[i6+2];
-// 		ang_X[i].x = ((double*)chol_solution->x)[i6+3];
-// 		ang_X[i].y = ((double*)chol_solution->x)[i6+4];
-// 		ang_X[i].z = ((double*)chol_solution->x)[i6+5];
-// 	}
-// 	cholmod_free_dense(&chol_solution, &chol_c);
-// 	cholmod_free_dense(&chol_PTsolution, &chol_c);
-// }
-
 void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 {
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
@@ -679,6 +654,18 @@ void StokesSolver::solve(double* velocity)
 		velocity[i] = ((double*)chol_solution->x)[i];
 	}
 	cholmod_free_dense(&chol_solution, &chol_c);
+}
+
+void StokesSolver::multiply_by_RFU_mf(vector<double> &velocity, vector<double> &force)
+{
+	double one[] = {1, 0};
+	double zero[] = {0, 0};
+
+	chol_vec->x = velocity.data(); // @@@ is this evil?
+	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
+	for(unsigned int i=0; i<force.size(); i++){
+		force[i] = ((double*)chol_force->x)[i];
+	}
 }
 
 // testing function, don't use it in production code, very slow and unclean
@@ -714,7 +701,6 @@ void StokesSolver::solvingIsDone()
 
 void StokesSolver::allocateRessources()
 {
-	int xtype = CHOLMOD_REAL;
 
 	dblocks.resize(mobile_particle_nb);
 	odbrows_table.resize(mobile_particle_nb+1);
@@ -723,8 +709,10 @@ void StokesSolver::allocateRessources()
 	dblocks_ff.resize(np-mobile_particle_nb);
 	cholmod_start(&chol_c);
 	int size = 6*mobile_particle_nb;
-	chol_rhs = cholmod_allocate_dense(size, 1, size, xtype, &chol_c);
-	chol_Psolution = cholmod_allocate_dense(size, 1, size, xtype, &chol_c); // used for Brownian motion
+	chol_rhs = cholmod_allocate_dense(size, 1, size, CHOLMOD_REAL, &chol_c);
+	chol_vec = cholmod_allocate_dense(np-mobile_particle_nb, 1, np-mobile_particle_nb, CHOLMOD_REAL, &chol_c);
+	chol_force = cholmod_allocate_dense(mobile_particle_nb, 1, mobile_particle_nb, CHOLMOD_REAL, &chol_c);
+	chol_Psolution = cholmod_allocate_dense(size, 1, size, CHOLMOD_REAL, &chol_c); // used for Brownian motion
 	for (int i=0; i<size; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
@@ -831,19 +819,6 @@ void StokesSolver::factorizeResistanceMatrix()
 	}
 }
 
-#ifdef CHOLMOD_EXTRA
-/*
- setSpInvPreconditioner() :
- A sparse inverse (left-)preconditioner.
- cholmod-extra routine by Jaakko Luttinen
-
- */
-void StokesSolver::setSpInvPreconditioner()
-{
-	cholmod_sparse* sparse_inv = cholmod_spinv(chol_L, &chol_c);
-	cholmod_free_sparse(&sparse_inv, &chol_c);
-}
-#endif
 
 // testing
 void StokesSolver::printResistanceMatrix(ostream& out, string sparse_or_dense)

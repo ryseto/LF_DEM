@@ -184,6 +184,8 @@ private:
 	cholmod_sparse* chol_res_matrix_mf;
 	cholmod_sparse* chol_res_matrix_ff;
 	cholmod_dense* chol_solution;
+	cholmod_dense *chol_vec;
+	cholmod_dense *chol_force;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
 	bool chol_L_to_be_freed;
@@ -368,6 +370,8 @@ public:
 	 solvingIsDone()
 	 */
 	void solvingIsDone();
+	void multiply_by_RFU_mf(std::vector<double> &velocity, std::vector<double> &force);
+
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);
 };
