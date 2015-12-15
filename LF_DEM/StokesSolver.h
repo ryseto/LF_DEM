@@ -182,18 +182,16 @@ private:
 	cholmod_dense* chol_rhs;
 	cholmod_sparse* chol_res_matrix;
 	cholmod_sparse* chol_res_matrix_mf;
-	cholmod_sparse* chol_res_matrix_FF;
+	cholmod_sparse* chol_res_matrix_ff;
 	cholmod_dense* chol_solution;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
-	int stype;
-	int sorted;
-	int packed;
-	int xtype;
 	bool chol_L_to_be_freed;
 	// resistance matrix building
-	int odblocks_nb;
 	int dblocks_size;
+	int odblocks_nb;
+	int odblocks_nb_mf;
+	int odblocks_nb_ff;
 	std::vector<struct DBlock> dblocks;
 	std::vector<struct ODBlock> odblocks;
 	std::vector<int> odbrows;
@@ -270,8 +268,10 @@ public:
 	 - to be called before adding elements
 	 - nb_of_interactions is the number of odblocks in the matrix
      */
-    void resetResistanceMatrix(int nb_of_interactions,
-							   const std::vector<struct DBlock>& reset_resmat_dblocks);
+    void resetResistanceMatrix(int nb_of_interactions_mm,
+													int nb_of_interactions_mf,
+													int nb_of_interactions_ff,
+													const std::vector<struct DBlock>& reset_resmat_dblocks);
     /* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii

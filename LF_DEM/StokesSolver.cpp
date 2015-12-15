@@ -20,6 +20,12 @@ StokesSolver::~StokesSolver()
 	if (!chol_res_matrix) {
 		cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	}
+	if (!chol_res_matrix_mf) {
+		cholmod_free_sparse(&chol_res_matrix_mf, &chol_c);
+	}
+	if (!chol_res_matrix_ff) {
+		cholmod_free_sparse(&chol_res_matrix_ff, &chol_c);
+	}
 	cholmod_finish(&chol_c);
 }
 
@@ -28,11 +34,7 @@ void StokesSolver::init(int n)
 	np = n;
 	mobile_particle_nb = np;
 
-	// CHOLMOD parameters
-	stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
-	sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
-	packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
-	xtype = CHOLMOD_REAL;
+
 	// resistance matrix characteristics (see header for matrix description)
 	dblocks_size = 18*mobile_particle_nb;
 	allocateRessources();
@@ -288,8 +290,8 @@ void StokesSolver::completeResistanceMatrix(){
 	completeResistanceMatrix_MobileMobile();
 	factorizeResistanceMatrix();
 
-	// completeResistanceMatrix_MobileFixed();
-	// completeResistanceMatrix_FixedFixed();
+	completeResistanceMatrix_MobileFixed();
+	completeResistanceMatrix_FixedFixed();
 }
 
 
@@ -345,7 +347,7 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 		int j6 = 6*j;
 		int od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
 		index_chol_ix[0] = 18*j+30*odbrows_table[j];
-		for (int col=1; col<6; col++) { // set the starting indices for cols 0-5
+		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
 
@@ -366,12 +368,105 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 }
 
 
-
-
-void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
-										 const vector<struct DBlock> &reset_resmat_dblocks)
+void StokesSolver::completeResistanceMatrix_FixedFixed()
 {
-	odblocks_nb = nb_of_interactions;
+	// this function is commented, but you are strongly advised to read
+	// the description of storage in the header file first :)
+
+	int size = np-mobile_particle_nb;
+
+// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
+	vector<int> index_chol_ix;
+	index_chol_ix.resize(6);
+
+
+	for (int j=0; j<size; j++) {
+		/******* Initialize index_chol_ix for this column of blocks **************/
+		// associated with particle j are 6 columns in the matrix:
+		// { 6j, ... , 6j+5 }
+		// the number of non-zero elements before column 6j is:
+		// - 18*j from j diagonal blocks
+		// - 30*odbrows_table_ff[j] from odbrows_table_ff[j] off-diagonal blocks
+		//
+		// the number of non-zero elements before column 6j+1 is:
+		// - number of non-zero before column 6j + number of non-zero in column 6*j
+		// (in 6j: dblocks_cntnonzero[0] elements in diagonal block, plus 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j])
+		//
+		// for 6j+2 --> 6j+5: same idea
+
+		int j6 = 6*j;
+		int od_nzero_nb = 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j]);
+		index_chol_ix[0] = 18*j+30*odbrows_table_ff[j];
+		for (int col=1; col<6; col++) {
+			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
+		}
+
+		/********* 1: Insert the diagonal blocks elements *********/
+		insertDBlock(chol_res_matrix_ff, index_chol_ix, j6, dblocks_ff[j]);
+		for (int col=0; col<6; col++) {
+			index_chol_ix[col] +=  dblocks_cntnonzero[col];
+		}
+		/********  2  : off-diagonal blocks blocks elements ***********/
+		for (int k = odbrows_table_ff[j]; k<odbrows_table_ff[j+1]; k++) {
+			insertODBlock(chol_res_matrix_ff, index_chol_ix, odbrows_ff[k], odblocks_ff[k]);
+			for (int col=0; col<6; col++) {
+				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
+			}
+		}
+	}
+	((int*)chol_res_matrix_ff->p)[6*size] = ((int*)chol_res_matrix_ff->p)[6*size-1]+1;
+}
+
+
+void StokesSolver::completeResistanceMatrix_MobileFixed()
+{
+	// this function is commented, but you are strongly advised to read
+	// the description of storage in the header file first :)
+
+	int col_nb = mobile_particle_nb;
+
+// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
+	vector<int> index_chol_ix;
+	index_chol_ix.resize(6);
+
+
+	for (int j=0; j<col_nb; j++) {
+		/******* Initialize index_chol_ix for this column of blocks **************/
+		// associated with particle j are 6 columns in the matrix:
+		// { 6j, ... , 6j+5 }
+		// the number of non-zero elements before column 6j is:
+		// - 30*odbrows_table_mf[j] from odbrows_table_mf[j] off-diagonal blocks
+		//
+		// the number of non-zero elements before column 6j+1 is:
+		// - number of non-zero before column 6j + number of non-zero in column 6*j
+		// (in 6j: 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j])
+		//
+		// for 6j+2 --> 6j+5: same idea
+
+		int od_nzero_nb = 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j]);
+		index_chol_ix[0] = 30*odbrows_table_mf[j];
+		for (int col=1; col<6; col++) {
+			index_chol_ix[col] = index_chol_ix[col-1]+od_nzero_nb; // nb before previous + elements in previous
+		}
+
+		for (int k = odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
+			insertODBlock(chol_res_matrix_mf, index_chol_ix, odbrows_mf[k], odblocks_mf[k]);
+			for (int col=0; col<6; col++) {
+				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
+			}
+		}
+	}
+	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
+}
+
+
+
+void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
+											int nb_of_interactions_mf,
+											int nb_of_interactions_ff,
+											const vector<struct DBlock> &reset_resmat_dblocks)
+{
+	odblocks_nb = nb_of_interactions_mm;
 
 	for (unsigned int i=0; i<dblocks.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i];
@@ -385,21 +480,22 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions,
 	mobile_matrix_done = false;
 
 	// for the mixed problem
-	int odblocks_mf_nb = 0;
+	odblocks_nb_mf = nb_of_interactions_mf;
 	odbrows_mf.clear();
-	odblocks_mf.resize(odblocks_mf_nb);
+	odblocks_mf.resize(odblocks_nb_mf);
 	for (auto &b: odblocks_mf) {
 		resetODBlock(b);
 	}
 	odbrows_table_mf[0] = 0;
 
 	// for the mixed problem
+	odblocks_nb_ff = nb_of_interactions_ff;
+
 	for (unsigned int i=0; i<dblocks_ff.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
-	int odblocks_ff_nb = 0;
 	odbrows_ff.clear();
-	odblocks_ff.resize(odblocks_ff_nb);
+	odblocks_ff.resize(odblocks_nb_ff);
 	for (auto &b: odblocks_ff) {
 		resetODBlock(b);
 	}
@@ -618,6 +714,8 @@ void StokesSolver::solvingIsDone()
 
 void StokesSolver::allocateRessources()
 {
+	int xtype = CHOLMOD_REAL;
+
 	dblocks.resize(mobile_particle_nb);
 	odbrows_table.resize(mobile_particle_nb+1);
 	odbrows_table_mf.resize(mobile_particle_nb+1);
@@ -635,12 +733,32 @@ void StokesSolver::allocateRessources()
 
 void StokesSolver::allocateResistanceMatrix()
 {
+
+	// CHOLMOD parameters
+	int stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
+	int sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
+	int packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
+	int xtype = CHOLMOD_REAL;
+
 	// allocate
 	int nzmax; // non-zero values
-	int size = 6*dblocks.size();
+	int size_mm = 6*dblocks.size();
 	nzmax = 18*dblocks.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb;  // off-diagonal
-	chol_res_matrix = cholmod_allocate_sparse(size, size, nzmax, sorted, packed, stype, xtype, &chol_c);
+	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, xtype, &chol_c);
+
+	int col_nb = 6*mobile_particle_nb;
+	int row_nb = 6*(np-mobile_particle_nb);
+	nzmax = 30*odblocks_nb_mf;  // off-diagonal
+	int stype_mf = 0; // non-symmetric matrix
+	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, xtype, &chol_c);
+
+	col_nb = 6*(np-mobile_particle_nb);
+	row_nb = col_nb;
+	nzmax = 18*odblocks_ff.size(); // diagonal blocks
+	nzmax += 30*odblocks_nb_ff;  // off-diagonal
+	chol_res_matrix_ff = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype, xtype, &chol_c);
+
 }
 
 void StokesSolver::doneBlocks(int i)
