@@ -132,7 +132,6 @@ System::~System()
 	if (brownian) {
 		DELETE(vel_brownian);
 		DELETE(ang_vel_brownian);
-		DELETE(brownian_force);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
 	}
@@ -227,7 +226,6 @@ void System::allocateRessources()
 		}
 	}
 	if (brownian) {
-		brownian_force = new double [linalg_size];
 		brownianstressGU = new StressTensor [np];
 		brownianstressGU_predictor = new StressTensor [np];
 	}
@@ -1487,8 +1485,10 @@ void System::generateBrownianForces()
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
-	for (int i=0; i<linalg_size; i++) {
-		brownian_force[i] = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
+	for (unsigned int i=0; i<brownian_force.size(); i++) {
+		brownian_force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
+		brownian_force[i].y = sqrt_2_dt_amp*GRANDOM;
+		brownian_force[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
 	if (p.lubrication_model > 0) {
 		/* L*L^T = RFU
@@ -1843,13 +1843,9 @@ void System::computeBrownianVelocities()
 		/* See the comment given in generateBrownianForces()
 		 */
 		for (int i=0; i<np; i++) {
-			int i6 = 6*i;
-			vel_brownian[i].x = brownian_force[i6]/stokesdrag_coeff_f_sqrt[i];
-			vel_brownian[i].y = brownian_force[i6+1]/stokesdrag_coeff_f_sqrt[i];
-			vel_brownian[i].z = brownian_force[i6+2]/stokesdrag_coeff_f_sqrt[i];
-			ang_vel_brownian[i].x = brownian_force[i6+3]/stokesdrag_coeff_t_sqrt[i];
-			ang_vel_brownian[i].y = brownian_force[i6+4]/stokesdrag_coeff_t_sqrt[i];
-			ang_vel_brownian[i].z = brownian_force[i6+5]/stokesdrag_coeff_t_sqrt[i];
+			int i2 = 2*i;
+			vel_brownian[i] = brownian_force[i2]/stokesdrag_coeff_f_sqrt[i];
+			ang_vel_brownian[i] = brownian_force[i2+1]/stokesdrag_coeff_t_sqrt[i];
 		}
 	}
 	if (twodimension) {

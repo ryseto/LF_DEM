@@ -214,7 +214,7 @@ private:
 	vec3d *magnetic_torque;
 	std::vector<double> magnetic_susceptibility;
 	std::vector<bool> movable; // displacement() acts only if movable[i] is true.
-	double *brownian_force;
+	std::vector<vec3d> brownian_force;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // per particle
 	StressTensor* contactstressXF; // per particle

@@ -323,16 +323,15 @@ public:
 	   Right-hand vector access methods
 	*/
     void resetRHS();
-	void resetRHStorque();
-	void addToRHS(double*);
+		void resetRHStorque();
+		void addToRHS(double*);
     void addToRHSForce(int, double*);
     void addToRHSForce(int, const vec3d&);
     void addToRHSTorque(int, double*);
     void addToRHSTorque(int, const vec3d&);
-    void setRHS(double*);
+    void setRHS(const std::vector<vec3d>&);
     void setRHSForce(int, const vec3d&);
     void setRHSTorque(int, const vec3d&);
-    void getRHS(double*);
     /*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :
 	 - once the resistance matrix and the RHS vector are built
@@ -340,17 +339,6 @@ public:
 	 - solves Resistance * velocity = RHS, and stores it in velocity array
 	 */
     void solve(vec3d* velocity, vec3d* ang_velocity);
-    void solve(double* velocity);
-    /*
-	 solve_LT(double* X) :
-	 - once the resistance matrix and the RHS vector are built
-	 ( completeResistanceMatrix() must have been called )
-	 - solves L^t * X = RHS, and stores it in X array,
-	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
-	 - works only for direct solver, as we need the Cholesky factor
-	 */
-    void solve_LT(double* X);
-    void solve_LT(vec3d* X, vec3d* ang_X);
     /*
 	 compute_LTRHS(double* X) :
 	 - once the resistance matrix and the RHS vector are built
@@ -359,7 +347,7 @@ public:
 	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
-    void compute_LTRHS(double* X);
+    void compute_LTRHS(std::vector<vec3d>&);
     /*
 	 solvingIsDone(bool free_Cholesky_factor) :
 	 - deletes resistance matrix and some other arrays
@@ -371,6 +359,7 @@ public:
 	void solvingIsDone();
 	void multiply_by_RFU_mf(std::vector<double> &velocity, std::vector<double> &force);
 
+// testing functions
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);
 };
