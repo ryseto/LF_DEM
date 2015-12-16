@@ -1205,7 +1205,6 @@ void System::checkNewInteraction()
 			}
 		}
 	}
-	cout << nb_interaction << " " << nb_interaction-deactivated_interaction.size() << endl;
 
 	if (magnetic) {
 		if (get_time() > time_update_magnetic_pair) {
