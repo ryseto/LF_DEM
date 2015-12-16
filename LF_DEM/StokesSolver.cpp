@@ -74,7 +74,7 @@ void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
 								  double scaledYB, double scaledYC)
 {
 
-	if (ii > mobile_particle_nb) {
+	if (ii >= mobile_particle_nb) {
 		// FF matrix
 		addToDBlock(dblocks_ff[ii-mobile_particle_nb], nvec, scaledXA, scaledYA, scaledYB, scaledYC);
 	} else {
@@ -379,7 +379,9 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	// the description of storage in the header file first :)
 
 	int size = np-mobile_particle_nb;
-
+	if(size==0){
+		return;
+	}
 // the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
@@ -429,7 +431,9 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	// the description of storage in the header file first :)
 
 	int col_nb = mobile_particle_nb;
-
+	if(col_nb==np){
+		return;
+	}
 // the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
@@ -764,15 +768,15 @@ void StokesSolver::allocateResistanceMatrix()
 
 void StokesSolver::doneBlocks(int i)
 {
-	if (i==mobile_particle_nb) {
-		mobile_matrix_done = true;
-	}
 	if (mobile_matrix_done) {
 		i -= mobile_matrix_done;
 		odbrows_table_ff[i+1] = (unsigned int)odbrows_ff.size();
 	} else {
 		odbrows_table[i+1] = (unsigned int)odbrows.size();
 		odbrows_table_mf[i+1] = (unsigned int)odbrows_mf.size();
+	}
+	if (i==mobile_particle_nb-1) {
+		mobile_matrix_done = true;
 	}
 }
 

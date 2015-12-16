@@ -21,10 +21,12 @@ ifeq ($(CXX),$(filter $(CXX),g++ clang++))
 	CXXFLAGS_debug += -pg $(GPP_Warnings) -Wextra -Wshadow
 	CXXFLAGS_dev += $(GPP_Warnings) -Wextra -Wshadow
 endif
+# ifeq ($(CXX),g++)
+# 	CXXFLAGS_debug += -fprofile-arcs -ftest-coverage # profiling
+# endif
 ifeq ($(CXX),g++)
-	CXXFLAGS_debug += -fprofile-arcs -ftest-coverage # profiling
+	CXXFLAGS_debug += -fno-inline
 endif
-
 ICC_Warnings = -Wall
 ifeq ($(CXX),icpc)
 	CXXFLAGS_optimized += $(ICC_Warnings)

@@ -1140,6 +1140,45 @@ void System::timeEvolution(const string& time_or_strain,
 	}
 }
 
+void System::createNewInteraction(int i, int j, double scaled_interaction_range){
+
+	int interaction_new;
+	if (deactivated_interaction.empty()) {
+		// add an interaction object.
+		interaction_new = nb_interaction;
+		nb_interaction ++;
+	} else {
+		// fill a deactivated interaction object.
+		interaction_new = deactivated_interaction.front();
+		deactivated_interaction.pop();
+	}
+	// new interaction
+	if (nb_interaction >= maxnb_interactionpair) {
+		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
+	}
+	interaction[interaction_new].activate(i, j, scaled_interaction_range);
+	if (j<nmobile) { // i and j mobile
+		nb_of_active_interactions_mm++;
+	} else if (i>=nmobile) { // i and j fixed
+		nb_of_active_interactions_ff++;
+	} else {
+		nb_of_active_interactions_mf++;
+	}
+}
+void System::destroyInteraction(int k){
+
+	deactivated_interaction.push(k);
+	unsigned short p0, p1;
+	interaction[k].get_par_num(p0, p1);
+	if (p1<nmobile) {
+		nb_of_active_interactions_mm--;
+	} else if (p0>=nmobile) {
+		nb_of_active_interactions_ff--;
+	} else {
+		nb_of_active_interactions_mf--;
+	}
+}
+
 void System::checkNewInteraction()
 {
 	/**
@@ -1160,33 +1199,14 @@ void System::checkNewInteraction()
 					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
 					if (sq_dist < sq_dist_lim) {
-						int interaction_new;
-						if (deactivated_interaction.empty()) {
-							// add an interaction object.
-							interaction_new = nb_interaction;
-							nb_interaction ++;
-						} else {
-							// fill a deactivated interaction object.
-							interaction_new = deactivated_interaction.front();
-							deactivated_interaction.pop();
-						}
-						// new interaction
-						if (nb_interaction >= maxnb_interactionpair) {
-							throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
-						}
-						interaction[interaction_new].activate(i, j, scaled_interaction_range);
-						if (j<nmobile) {
-							nb_of_active_interactions_mm++;
-						} else if (i>=nmobile) {
-							nb_of_active_interactions_ff++;
-						} else {
-							nb_of_active_interactions_mf++;
-						}
+						createNewInteraction(i,j, scaled_interaction_range);
 					}
 				}
 			}
 		}
 	}
+	cout << nb_interaction << " " << nb_interaction-deactivated_interaction.size() << endl;
+
 	if (magnetic) {
 		if (get_time() > time_update_magnetic_pair) {
 			updateMagneticPair();
@@ -1213,6 +1233,7 @@ void System::updateMagneticPair()
 	}
 }
 
+
 void System::updateInteractions()
 {
 	/**
@@ -1229,16 +1250,7 @@ void System::updateInteractions()
 			bool deactivated = false;
 			interaction[k].updateState(deactivated);
 			if (deactivated) {
-				deactivated_interaction.push(k);
-				unsigned short p0, p1;
-				interaction[k].get_par_num(p0, p1);
-				if (p1<nmobile) {
-					nb_of_active_interactions_mm--;
-				} else if (p0>nmobile) {
-					nb_of_active_interactions_ff--;
-				} else {
-				 nb_of_active_interactions_mf--;
-			 }
+				destroyInteraction(k);
 			}
 			if (interaction[k].is_contact()) {
 				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
