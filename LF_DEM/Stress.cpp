@@ -242,5 +242,4 @@ System::calcStress()
 		total_stress.elm[2] += costheta_shear*einstein_stress;
 		total_stress.elm[3] += sintheta_shear*einstein_stress;
 	}
-
 }

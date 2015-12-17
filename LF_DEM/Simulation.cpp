@@ -393,6 +393,8 @@ void Simulation::simulationMagnetic(string in_args,
 	bool initial_relax = true;
 	// Main simulation loop
 	double initial_time = sys.get_time();
+	string indent = "  Simulation::\t";
+	cout << indent << "Time evolution started" << endl << endl;
 	while (keepRunning()) {
 		if (initial_relax && sys.get_time() >= 0) {
 			sys.setInducedMagneticMoment();
@@ -552,7 +554,6 @@ void Simulation::evaluateData()
 	 In this method we keep the internal units. There is no conversion to output units at this stage
 
 	 */
-
 	sys.analyzeState();
 	sys.calcStress();
 	if (sys.p.lubrication_model > 0) {

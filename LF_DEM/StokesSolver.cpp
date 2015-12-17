@@ -222,7 +222,8 @@ void StokesSolver::insertODBlockValues(double *matrix_x,
 	matrix_x[start_index +4] = b.col5[0];
 }
 
-void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int> &pvalues){
+void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int>& pvalues)
+{
 	/**
 			Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array.
 			You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
@@ -232,8 +233,8 @@ void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int> &pv
 	}
 }
 
-
-void StokesSolver::insertDBlockRows(int *matrix_i, const vector<int> &index_values, int top_row_nb){
+void StokesSolver::insertDBlockRows(int *matrix_i, const vector<int>& index_values, int top_row_nb)
+{
 	/**
 			Insert row numbers for the diagonal block with top row top_row_nb in a cholmod_sparse::i array.
 			You need to provide the location of the 6 columns of the block in the cholmod_sparse::i array
@@ -248,7 +249,7 @@ void StokesSolver::insertDBlockRows(int *matrix_i, const vector<int> &index_valu
 	}
 }
 
-void StokesSolver::insertODBlockRows(int *matrix_i, const vector<int> &index_values, int top_row_nb)
+void StokesSolver::insertODBlockRows(int *matrix_i, const vector<int>& index_values, int top_row_nb)
 {
 	/**
 			Insert row numbers for an off-diagonal block with top row top_row_nb in a cholmod_sparse::i array.
@@ -264,7 +265,8 @@ void StokesSolver::insertODBlockRows(int *matrix_i, const vector<int> &index_val
 	}
 }
 
-void StokesSolver::insertDBlock(cholmod_sparse *matrix, const vector<int> &index_chol_ix, int top_row_nb, const struct DBlock &diagblock)
+void StokesSolver::insertDBlock(cholmod_sparse *matrix, const vector<int>& index_chol_ix,
+								int top_row_nb, const struct DBlock& diagblock)
 {
 	/**
 			Insert the DBlock diagblock in a cholmod_sparse matrix.
@@ -274,8 +276,8 @@ void StokesSolver::insertDBlock(cholmod_sparse *matrix, const vector<int> &index
 	insertBlockColumnIndices((int*)matrix->p+top_row_nb, index_chol_ix);
 	insertDBlockRows((int*)matrix->i, index_chol_ix, top_row_nb); // left_col_nb is also the top row nb on a diag block
 	insertDBlockValues((double*)matrix->x, index_chol_ix, diagblock);
-
 }
+
 void StokesSolver::insertODBlock(cholmod_sparse *matrix, const vector<int> &index_chol_ix, int top_row_nb, const struct ODBlock &offdiagblock)
 {
 	/**
@@ -285,11 +287,10 @@ void StokesSolver::insertODBlock(cholmod_sparse *matrix, const vector<int> &inde
 	*/
 	insertODBlockRows((int*)matrix->i, index_chol_ix, top_row_nb);
 	insertODBlockValues((double*)matrix->x, index_chol_ix, offdiagblock);
-
 }
 
-
-void StokesSolver::completeResistanceMatrix(){
+void StokesSolver::completeResistanceMatrix()
+{
 	allocateResistanceMatrix();
 
 	completeResistanceMatrix_MobileMobile();
@@ -298,7 +299,6 @@ void StokesSolver::completeResistanceMatrix(){
 	completeResistanceMatrix_MobileFixed();
 	completeResistanceMatrix_FixedFixed();
 }
-
 
 /*************** Cholmod Matrix Filling *************
  Cholmod matrices we are using are defined in column major order (index j is column index)
@@ -330,10 +330,9 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 
 	int size = mobile_particle_nb;
 
-// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
+	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
-
 
 	for (int j=0; j<size; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
@@ -372,20 +371,18 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
 }
 
-
 void StokesSolver::completeResistanceMatrix_FixedFixed()
 {
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
 
 	int size = np-mobile_particle_nb;
-	if(size==0){
+	if (size == 0) {
 		return;
 	}
-// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
+	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
-
 
 	for (int j=0; j<size; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
@@ -424,20 +421,18 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	((int*)chol_res_matrix_ff->p)[6*size] = ((int*)chol_res_matrix_ff->p)[6*size-1]+1;
 }
 
-
 void StokesSolver::completeResistanceMatrix_MobileFixed()
 {
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
 
 	int col_nb = mobile_particle_nb;
-	if(col_nb==np){
+	if (col_nb == np) {
 		return;
 	}
-// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
+	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix;
 	index_chol_ix.resize(6);
-
 
 	for (int j=0; j<col_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
@@ -467,8 +462,6 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	}
 	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
 }
-
-
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 											int nb_of_interactions_mf,
@@ -531,7 +524,7 @@ void StokesSolver::resetRHStorque()
 
 void StokesSolver::addToRHSForce(int i, double* force_i)
 {
-	if(i<mobile_particle_nb){
+	if (i < mobile_particle_nb) {
 		int i6 = 6*i;
 		for (int u=0; u<3; u++) {
 			((double*)chol_rhs->x)[i6+u] += force_i[u];
@@ -541,7 +534,7 @@ void StokesSolver::addToRHSForce(int i, double* force_i)
 
 void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 {
-	if(i<mobile_particle_nb){
+	if (i < mobile_particle_nb) {
 		int i6 = 6*i;
 		((double*)chol_rhs->x)[i6] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
@@ -551,7 +544,7 @@ void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 
 void StokesSolver::addToRHSTorque(int i, double* torque_i)
 {
-	if(i<mobile_particle_nb){
+	if (i < mobile_particle_nb) {
 		int i6_3 = 6*i+3;
 		for (int u=0; u<3; u++) {
 			((double*)chol_rhs->x)[i6_3+u] += torque_i[u];
@@ -561,7 +554,7 @@ void StokesSolver::addToRHSTorque(int i, double* torque_i)
 
 void StokesSolver::addToRHSTorque(int i, const vec3d& torque_i)
 {
-	if(i<mobile_particle_nb){
+	if (i < mobile_particle_nb) {
 		int i6_3 = 6*i+3;
 		((double*)chol_rhs->x)[i6_3] += torque_i.x;
 		((double*)chol_rhs->x)[i6_3+1] += torque_i.y;
@@ -577,10 +570,10 @@ void StokesSolver::addToRHS(double* rhs)
 	}
 }
 
-void StokesSolver::setRHS(const vector<vec3d> &force_and_torque)
+void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 {
 	unsigned int size = 2*mobile_particle_nb;
-	if(force_and_torque.size() != size){
+	if (force_and_torque.size() != size) {
 		throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
 	}
 	for (unsigned int i=0; i<size; i++) {
@@ -590,9 +583,10 @@ void StokesSolver::setRHS(const vector<vec3d> &force_and_torque)
 		((double*)chol_rhs->x)[i3+2] = force_and_torque[i].z;
 	}
 }
+
 void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 {
-	if(i<mobile_particle_nb){
+	if (i < mobile_particle_nb) {
 		int i6 = 6*i;
 		((double*)chol_rhs->x)[i6] = force_i.x;
 		((double*)chol_rhs->x)[i6+1] = force_i.y;
@@ -602,7 +596,7 @@ void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 
 void StokesSolver::setRHSTorque(int i, const vec3d& torque_i)
 {
-	if(i<mobile_particle_nb){
+	if (i < mobile_particle_nb) {
 		int i6_3 = 6*i+3;
 		((double*)chol_rhs->x)[i6_3] = torque_i.x;
 		((double*)chol_rhs->x)[i6_3+1] = torque_i.y;
@@ -661,7 +655,7 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 	cholmod_free_dense(&chol_solution, &chol_c);
 }
 
-void StokesSolver::multiply_by_RFU_mf(vector<double> &velocity, vector<double> &force)
+void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& force)
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
@@ -691,7 +685,6 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 	cholmod_free_dense(&chol_solution, &chol_c);
 }
 
-
 void StokesSolver::solvingIsDone()
 {
 	cholmod_free_factor(&chol_L, &chol_c);
@@ -707,7 +700,6 @@ void StokesSolver::solvingIsDone()
 
 void StokesSolver::allocateRessources()
 {
-
 	dblocks.resize(mobile_particle_nb);
 	odbrows_table.resize(mobile_particle_nb+1);
 	odbrows_table_mf.resize(mobile_particle_nb+1);
@@ -729,7 +721,6 @@ void StokesSolver::allocateRessources()
 
 void StokesSolver::allocateResistanceMatrix()
 {
-
 	// CHOLMOD parameters
 	int stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
 	int sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
@@ -753,7 +744,6 @@ void StokesSolver::allocateResistanceMatrix()
 	nzmax = 18*odblocks_ff.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb_ff;  // off-diagonal
 	chol_res_matrix_ff = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
-
 }
 
 void StokesSolver::doneBlocks(int i)
@@ -765,13 +755,13 @@ void StokesSolver::doneBlocks(int i)
 		odbrows_table[i+1] = (unsigned int)odbrows.size();
 		odbrows_table_mf[i+1] = (unsigned int)odbrows_mf.size();
 	}
-	if (i==mobile_particle_nb-1) {
+	if (i == mobile_particle_nb-1) {
 		mobile_matrix_done = true;
 	}
 }
 
 // odblocks fillings, for FT/UW version
-struct ODBlock StokesSolver::buildODBlock(const vec3d &nvec,
+struct ODBlock StokesSolver::buildODBlock(const vec3d& nvec,
 										  double scaledXA,
 										  double scaledYA, double scaledYB,
 										  double scaledYBtilde, double scaledYC)
@@ -825,7 +815,6 @@ void StokesSolver::factorizeResistanceMatrix()
 		chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	}
 }
-
 
 // testing
 void StokesSolver::printResistanceMatrix(ostream& out, string sparse_or_dense)
