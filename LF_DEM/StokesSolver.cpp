@@ -85,7 +85,8 @@ void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
 
 // Diagonal Blocks Terms, FT/UW version
 void StokesSolver::addToDBlock(struct DBlock& b, const vec3d& nvec,
-							   double scaledXA, double scaledYA,double scaledYB, double scaledYC)
+							   double scaledXA, double scaledYA,
+							   double scaledYB, double scaledYC)
 {
 	double n0n0 = nvec.x*nvec.x;
 	double n0n1 = nvec.x*nvec.y;
@@ -96,28 +97,27 @@ void StokesSolver::addToDBlock(struct DBlock& b, const vec3d& nvec,
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-
 	// (*,0)
-	b.col0[0] += scaledXA*n0n0 + scaledYA*one_n0n0; // 00 element of the dblock
-	b.col0[1] += (scaledXA-scaledYA)*n0n1; // 10
-	b.col0[2] += (scaledXA-scaledYA)*n0n2; // 20
-	b.col0[3] += -scaledYB*nvec.z;     // 40
-	b.col0[4] += +scaledYB*nvec.y;      // 50
+	b.col0[0] +=  scaledXA*n0n0 + scaledYA*one_n0n0; // 00 element of the dblock
+	b.col0[1] += (scaledXA-scaledYA)*n0n1;           // 10
+	b.col0[2] += (scaledXA-scaledYA)*n0n2;           // 20
+	b.col0[3] += -scaledYB*nvec.z;                   // 40
+	b.col0[4] +=  scaledYB*nvec.y;                   // 50
 	// (*,1)
-	b.col1[0] += scaledXA*n1n1 + scaledYA*one_n1n1;        // 11
-	b.col1[1] += (scaledXA-scaledYA)*n1n2;        // 21
-	b.col1[2] += -scaledYB*nvec.x;     // 51
+	b.col1[0] +=  scaledXA*n1n1 + scaledYA*one_n1n1; // 11
+	b.col1[1] += (scaledXA-scaledYA)*n1n2;           // 21
+	b.col1[2] += -scaledYB*nvec.x;                   // 51
 	// (*,2)
-	b.col2[0] += scaledXA*n2n2 + scaledYA*one_n2n2;        // 22
+	b.col2[0] +=  scaledXA*n2n2 + scaledYA*one_n2n2; // 22
 	// (*,3)
-	b.col3[0] += scaledYC*one_n0n0;    // 33
-	b.col3[1] += -scaledYC*n0n1;       // 43
-	b.col3[2] += -scaledYC*n0n2;       // 53
+	b.col3[0] +=  scaledYC*one_n0n0;                 // 33
+	b.col3[1] += -scaledYC*n0n1;                     // 43
+	b.col3[2] += -scaledYC*n0n2;                     // 53
 	// (*,4)
-	b.col4[0] += scaledYC*one_n1n1;    // 44
-	b.col4[1] += -scaledYC*n1n2;       // 54
+	b.col4[0] +=  scaledYC*one_n1n1;                 // 44
+	b.col4[1] += -scaledYC*n1n2;                     // 54
 	// (*,5)
-	b.col5[0] += scaledYC*one_n2n2;    // 55
+	b.col5[0] +=  scaledYC*one_n2n2;                 // 55
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
@@ -145,8 +145,8 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 }
 
 void StokesSolver::insertDBlockValues(double *matrix_x,
-										 const vector<int>& index_chol_ix,
-										 const struct DBlock& b)
+									  const vector<int>& index_chol_ix,
+									  const struct DBlock& b)
 {
 	int pcol0 = index_chol_ix[0];
 	int pcol1 = index_chol_ix[1];
@@ -155,71 +155,71 @@ void StokesSolver::insertDBlockValues(double *matrix_x,
 	int pcol4 = index_chol_ix[4];
 	int pcol5 = index_chol_ix[5];
 	// diagonal blocks row values (21)
-	matrix_x[pcol0  ] = b.col0[0];   // column j6
-	matrix_x[pcol0+1] = b.col0[1];
-	matrix_x[pcol0+2] = b.col0[2];
-	matrix_x[pcol0+3] = b.col0[3];
-	matrix_x[pcol0+4] = b.col0[4];
-	matrix_x[pcol1  ] = b.col1[0];   // column j6+1
-	matrix_x[pcol1+1] = b.col1[1];
+	matrix_x[pcol0  ] =  b.col0[0];   // column j6
+	matrix_x[pcol0+1] =  b.col0[1];
+	matrix_x[pcol0+2] =  b.col0[2];
+	matrix_x[pcol0+3] =  b.col0[3];
+	matrix_x[pcol0+4] =  b.col0[4];
+	matrix_x[pcol1  ] =  b.col1[0];   // column j6+1
+	matrix_x[pcol1+1] =  b.col1[1];
 	matrix_x[pcol1+2] = -b.col0[3];  // anti-symmetry
-	matrix_x[pcol1+3] = b.col1[2];
-	matrix_x[pcol2  ] = b.col2[0];   // column j6+2
+	matrix_x[pcol1+3] =  b.col1[2];
+	matrix_x[pcol2  ] =  b.col2[0];   // column j6+2
 	matrix_x[pcol2+1] = -b.col0[4];   // anti-symmetry
 	matrix_x[pcol2+2] = -b.col1[2];   // anti-symmetry
-	matrix_x[pcol3  ] = b.col3[0];   // column j6+3
-	matrix_x[pcol3+1] = b.col3[1];
-	matrix_x[pcol3+2] = b.col3[2];
-	matrix_x[pcol4  ] = b.col4[0];   // column j6+4
-	matrix_x[pcol4+1] = b.col4[1];
-	matrix_x[pcol5  ] = b.col5[0];   // column j6+5
+	matrix_x[pcol3  ] =  b.col3[0];   // column j6+3
+	matrix_x[pcol3+1] =  b.col3[1];
+	matrix_x[pcol3+2] =  b.col3[2];
+	matrix_x[pcol4  ] =  b.col4[0];   // column j6+4
+	matrix_x[pcol4+1] =  b.col4[1];
+	matrix_x[pcol5  ] =  b.col5[0];   // column j6+5
 }
 
 void StokesSolver::insertODBlockValues(double *matrix_x,
-										  const vector<int>& index_chol_ix,
-										  const struct ODBlock& b)
+									   const vector<int>& index_chol_ix,
+									   const struct ODBlock& b)
 {
 	int start_index = index_chol_ix[0];
-	matrix_x[start_index  ]   = b.col0[0]; // A   // column j6
-	matrix_x[start_index +1]   = b.col0[1];
-	matrix_x[start_index +2]   = b.col0[2];
-	matrix_x[start_index +3]   = b.col0[3]; // B
-	matrix_x[start_index +4]   = b.col0[4];
+	matrix_x[start_index   ] =  b.col0[0]; // A   // column j6
+	matrix_x[start_index +1] =  b.col0[1];
+	matrix_x[start_index +2] =  b.col0[2];
+	matrix_x[start_index +3] =  b.col0[3]; // B
+	matrix_x[start_index +4] =  b.col0[4];
 	//
 	start_index = index_chol_ix[1];
-	matrix_x[start_index   ] = b.col0[1]; // A  // column j6+1
-	matrix_x[start_index +1] = b.col1[0];
-	matrix_x[start_index +2] = b.col1[1];
+	matrix_x[start_index   ] =  b.col0[1]; // A  // column j6+1
+	matrix_x[start_index +1] =  b.col1[0];
+	matrix_x[start_index +2] =  b.col1[1];
 	matrix_x[start_index +3] = -b.col0[3]; // B
-	matrix_x[start_index +4] = b.col1[2];
+	matrix_x[start_index +4] =  b.col1[2];
 	//
 	start_index = index_chol_ix[2];
-	matrix_x[start_index   ] = b.col0[2]; // A // column j6+2
-	matrix_x[start_index +1] = b.col1[1];
-	matrix_x[start_index +2] = b.col2[0];
+	matrix_x[start_index   ] =  b.col0[2]; // A // column j6+2
+	matrix_x[start_index +1] =  b.col1[1];
+	matrix_x[start_index +2] =  b.col2[0];
 	matrix_x[start_index +3] = -b.col0[4]; // B
 	matrix_x[start_index +4] = -b.col1[2];
 	//
 	start_index = index_chol_ix[3];
-	matrix_x[start_index   ] = b.col3[0];// Btilde   // column j6+3
-	matrix_x[start_index +1] = b.col3[1];
-	matrix_x[start_index +2] = b.col3[2]; // C
-	matrix_x[start_index +3] = b.col3[3];
-	matrix_x[start_index +4] = b.col3[4];
+	matrix_x[start_index   ] =  b.col3[0];// Btilde   // column j6+3
+	matrix_x[start_index +1] =  b.col3[1];
+	matrix_x[start_index +2] =  b.col3[2]; // C
+	matrix_x[start_index +3] =  b.col3[3];
+	matrix_x[start_index +4] =  b.col3[4];
 	//
 	start_index = index_chol_ix[4];
 	matrix_x[start_index   ] = -b.col3[0]; // Btilde // column j6+4
-	matrix_x[start_index +1] = b.col4[0];
-	matrix_x[start_index +2] = b.col3[3]; // C
-	matrix_x[start_index +3] = b.col4[1];
-	matrix_x[start_index +4] = b.col4[2];
+	matrix_x[start_index +1] =  b.col4[0];
+	matrix_x[start_index +2] =  b.col3[3]; // C
+	matrix_x[start_index +3] =  b.col4[1];
+	matrix_x[start_index +4] =  b.col4[2];
 	//
 	start_index = index_chol_ix[5];
 	matrix_x[start_index   ] = -b.col3[1]; // Btilde // column j6+5
 	matrix_x[start_index +1] = -b.col4[0];
-	matrix_x[start_index +2] = b.col3[4]; // C
-	matrix_x[start_index +3] = b.col4[2];
-	matrix_x[start_index +4] = b.col5[0];
+	matrix_x[start_index +2] =  b.col3[4]; // C
+	matrix_x[start_index +3] =  b.col4[2];
+	matrix_x[start_index +4] =  b.col5[0];
 }
 
 void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int>& pvalues)
@@ -278,7 +278,8 @@ void StokesSolver::insertDBlock(cholmod_sparse *matrix, const vector<int>& index
 	insertDBlockValues((double*)matrix->x, index_chol_ix, diagblock);
 }
 
-void StokesSolver::insertODBlock(cholmod_sparse *matrix, const vector<int> &index_chol_ix, int top_row_nb, const struct ODBlock &offdiagblock)
+void StokesSolver::insertODBlock(cholmod_sparse *matrix, const vector<int>& index_chol_ix,
+								 int top_row_nb, const struct ODBlock& offdiagblock)
 {
 	/**
 			Insert the ODBlock offdiagblock in a cholmod_sparse matrix.
@@ -358,7 +359,7 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 		/********* 1: Insert the diagonal blocks elements *********/
 		insertDBlock(chol_res_matrix, index_chol_ix, j6, dblocks[j]);
 		for (int col=0; col<6; col++) {
-			index_chol_ix[col] +=  dblocks_cntnonzero[col];
+			index_chol_ix[col] += dblocks_cntnonzero[col];
 		}
 		/********  2  : off-diagonal blocks blocks elements ***********/
 		for (int k = odbrows_table[j]; k<odbrows_table[j+1]; k++) {
@@ -464,9 +465,9 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
-											int nb_of_interactions_mf,
-											int nb_of_interactions_ff,
-											const vector<struct DBlock> &reset_resmat_dblocks)
+										 int nb_of_interactions_mf,
+										 int nb_of_interactions_ff,
+										 const vector<struct DBlock> &reset_resmat_dblocks)
 {
 	odblocks_nb = nb_of_interactions_mm;
 
@@ -516,7 +517,7 @@ void StokesSolver::resetRHStorque()
 {
 	int size = chol_rhs->nrow;
 	for (int i=3; i<size; i+=6) {
-		((double*)chol_rhs->x)[i] = 0;
+		((double*)chol_rhs->x)[i  ] = 0;
 		((double*)chol_rhs->x)[i+1] = 0;
 		((double*)chol_rhs->x)[i+2] = 0;
 	}
@@ -536,7 +537,7 @@ void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
 		int i6 = 6*i;
-		((double*)chol_rhs->x)[i6] += force_i.x;
+		((double*)chol_rhs->x)[i6  ] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
 		((double*)chol_rhs->x)[i6+2] += force_i.z;
 	}
@@ -556,7 +557,7 @@ void StokesSolver::addToRHSTorque(int i, const vec3d& torque_i)
 {
 	if (i < mobile_particle_nb) {
 		int i6_3 = 6*i+3;
-		((double*)chol_rhs->x)[i6_3] += torque_i.x;
+		((double*)chol_rhs->x)[i6_3  ] += torque_i.x;
 		((double*)chol_rhs->x)[i6_3+1] += torque_i.y;
 		((double*)chol_rhs->x)[i6_3+2] += torque_i.z;
 	}
@@ -588,7 +589,7 @@ void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
 		int i6 = 6*i;
-		((double*)chol_rhs->x)[i6] = force_i.x;
+		((double*)chol_rhs->x)[i6  ] = force_i.x;
 		((double*)chol_rhs->x)[i6+1] = force_i.y;
 		((double*)chol_rhs->x)[i6+2] = force_i.z;
 	}
@@ -598,7 +599,7 @@ void StokesSolver::setRHSTorque(int i, const vec3d& torque_i)
 {
 	if (i < mobile_particle_nb) {
 		int i6_3 = 6*i+3;
-		((double*)chol_rhs->x)[i6_3] = torque_i.x;
+		((double*)chol_rhs->x)[i6_3  ] = torque_i.x;
 		((double*)chol_rhs->x)[i6_3+1] = torque_i.y;
 		((double*)chol_rhs->x)[i6_3+2] = torque_i.z;
 	}
@@ -644,10 +645,10 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
 	int size = chol_solution->nrow/6;
 	for (int i=0; i<size; i++) {
-		int i6 =6*i;
-		velocity[i].x = ((double*)chol_solution->x)[i6];
-		velocity[i].y = ((double*)chol_solution->x)[i6+1];
-		velocity[i].z = ((double*)chol_solution->x)[i6+2];
+		int i6 = 6*i;
+		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
+		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
+		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
 		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
 		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
 		ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
@@ -660,10 +661,10 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
 
-	chol_vec->x = velocity.data(); // @@@ is this evil?
+	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature.
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
-	for(unsigned int i=0; i<force.size(); i++){
+	for (unsigned int i=0; i<force.size(); i++){
 	 	force[i] = ((double*)chol_force->x)[i];
 	}
 }
@@ -674,7 +675,7 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
 	cholmod_dense* r;
 	r = cholmod_copy_dense(chol_rhs, &chol_c);
-	double one[] = {1, 0};
+	double one[]  = {1, 0};
 	double zero[] = {0, 0};
 	cholmod_sdmult(chol_res_matrix, 0, one, zero, chol_solution, r, &chol_c);
 	int size = r->nrow;
@@ -777,24 +778,24 @@ struct ODBlock StokesSolver::buildODBlock(const vec3d& nvec,
 	double one_n2n2 = 1-n2n2;
 	struct ODBlock block;
 
-	block.col0[0] = scaledXA*n0n0+scaledYA*one_n0n0; // column 0
-	block.col0[1] = (scaledXA-scaledYA)*n0n1;
-	block.col0[2] = (scaledXA-scaledYA)*n0n2;
+	block.col0[0] =  scaledXA*n0n0 + scaledYA*one_n0n0; // column 0
+	block.col0[1] = (scaledXA - scaledYA)*n0n1;
+	block.col0[2] = (scaledXA - scaledYA)*n0n2;
 	block.col0[3] = -scaledYB*nvec.z;
-	block.col0[4] = scaledYB*nvec.y;
-	block.col1[0] = scaledXA*n1n1+scaledYA*one_n1n1; // column 1
-	block.col1[1] = (scaledXA-scaledYA)*n1n2;
+	block.col0[4] =  scaledYB*nvec.y;
+	block.col1[0] =  scaledXA*n1n1 + scaledYA*one_n1n1; // column 1
+	block.col1[1] = (scaledXA - scaledYA)*n1n2;
 	block.col1[2] = -scaledYB*nvec.x;
-	block.col2[0] = scaledXA*n2n2+scaledYA*one_n2n2; // column 2
-	block.col3[0] = scaledYBtilde*nvec.z; // column 3
+	block.col2[0] =  scaledXA*n2n2 + scaledYA*one_n2n2; // column 2
+	block.col3[0] =  scaledYBtilde*nvec.z; // column 3
 	block.col3[1] = -scaledYBtilde*nvec.y;
-	block.col3[2] = scaledYC*one_n0n0;
+	block.col3[2] =  scaledYC*one_n0n0;
 	block.col3[3] = -scaledYC*n0n1;
 	block.col3[4] = -scaledYC*n0n2;
-	block.col4[0] = scaledYBtilde*nvec.x; // column 4
-	block.col4[1] = scaledYC*one_n1n1;
+	block.col4[0] =  scaledYBtilde*nvec.x; // column 4
+	block.col4[1] =  scaledYC*one_n1n1;
 	block.col4[2] = -scaledYC*n1n2;
-	block.col5[0] = scaledYC*one_n2n2; // column 5
+	block.col5[0] =  scaledYC*one_n2n2; // column 5
 	return block;
 }
 
@@ -884,7 +885,7 @@ void StokesSolver::printFactor(ostream& out)
 		// 	out << endl;
 		// }
 		for (int j=0; j<size; j++) {
-			out <<setprecision(3) << ((double*)dense_res->x)[i+j*size] << "\t" ;
+			out << setprecision(3) << ((double*)dense_res->x)[i+j*size] << "\t" ;
 		}
 		out << endl;
 	}
