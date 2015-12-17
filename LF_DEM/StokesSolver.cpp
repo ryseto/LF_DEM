@@ -742,7 +742,7 @@ void StokesSolver::allocateResistanceMatrix()
 
 	col_nb = 6*(np-mobile_particle_nb);
 	row_nb = col_nb;
-	nzmax = 18*odblocks_ff.size(); // diagonal blocks
+	nzmax = 18*dblocks_ff.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb_ff;  // off-diagonal
 	chol_res_matrix_ff = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 }
