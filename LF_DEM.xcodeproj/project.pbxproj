@@ -1706,19 +1706,27 @@
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GCC_WARN_SHADOW = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = "";
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"-std=c++11",
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+					"-DUSE_DSFMT=\"SFMT_RNG\"",
+					"-DDSFMT_MEXP=19937",
+				);
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 			};
@@ -1737,18 +1745,25 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = fast;
+				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = NO;
 				GCC_WARN_SHADOW = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_PROFILING_CODE = NO;
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = "";
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_CPLUSPLUSFLAGS = (
+					"-std=c++11",
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+					"-DUSE_DSFMT=\"SFMT_RNG\"",
+					"-DDSFMT_MEXP=19937",
+				);
 				SDKROOT = macosx;
 				VALID_ARCHS = x86_64;
 			};
@@ -1758,6 +1773,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_WARN_CXX0X_EXTENSIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_VERSION = "";
@@ -1766,13 +1782,10 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = (
-					"-Wall",
-					"-Wextra",
-					"-Wshadow",
 					"-std=c++11",
-					"-DUSE_DSFMT=\"SFMT_RNG\"",
-					"-DDSFMT_MEXP=19937",
+					"-Wall",
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1786,6 +1799,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
+				CLANG_WARN_CXX0X_EXTENSIONS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_VERSION = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -1793,13 +1807,10 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				LD_DYLIB_INSTALL_NAME = "";
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = (
-					"-Wall",
-					"-Wextra",
-					"-Wshadow",
 					"-std=c++11",
-					"-DUSE_DSFMT=\"SFMT_RNG\"",
-					"-DDSFMT_MEXP=19937",
+					"-Wall",
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";

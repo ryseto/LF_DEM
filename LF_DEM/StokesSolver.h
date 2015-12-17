@@ -322,9 +322,9 @@ public:
 	/*
 	   Right-hand vector access methods
 	*/
-    void resetRHS();
-		void resetRHStorque();
-		void addToRHS(double*);
+	void resetRHS();
+	void resetRHStorque();
+	void addToRHS(double*);
     void addToRHSForce(int, double*);
     void addToRHSForce(int, const vec3d&);
     void addToRHSTorque(int, double*);

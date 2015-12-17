@@ -664,8 +664,8 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature.
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
-	for (unsigned int i=0; i<force.size(); i++){
-	 	force[i] = ((double*)chol_force->x)[i];
+	for (unsigned int i=0; i<force.size(); i++) {
+		force[i] = ((double*)chol_force->x)[i];
 	}
 }
 
@@ -710,9 +710,9 @@ void StokesSolver::allocateRessources()
 	int size_mm = 6*mobile_particle_nb;
 	int size_ff = 6*(np-mobile_particle_nb);
 
-	chol_rhs = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
-	chol_vec = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
-	chol_force = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
+	chol_rhs       = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
+	chol_vec       = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
+	chol_force     = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
 	chol_Psolution = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c); // used for Brownian motion
 	for (int i=0; i<size_mm; i++) {
 		((double*)chol_rhs->x)[i] = 0;

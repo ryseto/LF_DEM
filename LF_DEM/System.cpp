@@ -1346,10 +1346,10 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		// add GE in the rhs
 		(this->*buildLubricationTerms)(false, build_force_GE);
 	}
-	if (build_force_GE && nmobile<np) {
+	if (build_force_GE && nmobile < np) {
 		vector<double> force_from_fixed (6*nmobile);
 		vector<double> fixed_velocities;
-		fixed_velocities.assign(6*(np-nmobile),0);
+		fixed_velocities.assign(6*(np-nmobile), 0);
 		stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
 		stokes_solver.addToRHS(force_from_fixed.data());
 	}
