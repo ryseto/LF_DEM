@@ -252,10 +252,6 @@ void System::allocateRessources()
 			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
 		}
 	}
-	movable.resize(np);
-	for (int i=0; i<np; i++) {
-		movable[i] = true;
-	}
 }
 
 void System::setInteractions_GenerateInitConfig()
@@ -402,22 +398,6 @@ void System::setMagneticConfiguration(const vector <vec3d>& magnetic_moment_,
 			magnetic_susceptibility[i] = magnetic_susceptibility_[i];
 		}
 	}
-}
-
-void System::randomSelectFixParticles()
-{
-	if (p.fixed_particle_fraction == 0) {
-		return;
-	}
-	int num_fixed_particle = (int)(np*p.fixed_particle_fraction);
-	int counter = 0;
-	do {
-		int picked_particle = (int)(drand48()*np);
-		if (movable[picked_particle] == true) {
-			movable[picked_particle] = false;
-			counter++;
-		}
-	} while (counter < num_fixed_particle);
 }
 
 void System::updateUnscaledContactmodel()
@@ -830,7 +810,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 	timeStepMove(time_or_strain, value_end);
 
-	if (eventLookUp != NULL){
+	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
 
@@ -1133,13 +1113,13 @@ void System::timeEvolution(const string& time_or_strain,
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
-		&& shear_strain > p.start_adjust){
+		&& shear_strain > p.start_adjust) {
 		adjustContactModelParameters();
 	}
 }
 
-void System::createNewInteraction(int i, int j, double scaled_interaction_range){
-
+void System::createNewInteraction(int i, int j, double scaled_interaction_range)
+{
 	int interaction_new;
 	if (deactivated_interaction.empty()) {
 		// add an interaction object.
@@ -1155,22 +1135,23 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
-	if (j<nmobile) { // i and j mobile
+	if (j < nmobile) { // i and j mobile
 		nb_of_active_interactions_mm++;
-	} else if (i>=nmobile) { // i and j fixed
+	} else if (i >= nmobile) { // i and j fixed
 		nb_of_active_interactions_ff++;
 	} else {
 		nb_of_active_interactions_mf++;
 	}
 }
-void System::destroyInteraction(int k){
 
+void System::destroyInteraction(int k)
+{
 	deactivated_interaction.push(k);
 	unsigned short p0, p1;
 	interaction[k].get_par_num(p0, p1);
-	if (p1<nmobile) {
+	if (p1 < nmobile) {
 		nb_of_active_interactions_mm--;
-	} else if (p0>=nmobile) {
+	} else if (p0 >= nmobile) {
 		nb_of_active_interactions_ff--;
 	} else {
 		nb_of_active_interactions_mf--;
@@ -1481,7 +1462,7 @@ void System::generateBrownianForces()
 
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
-	if(nmobile<np){
+	if (nmobile < np) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
@@ -1905,19 +1886,15 @@ void System::rushWorkFor2DBrownian()
 
 void System::displacement(int i, const vec3d& dr)
 {
-	if (movable[i]) {
-		position[i] += dr;
-		int z_shift = periodize(position[i]);
-		/* Note:
-		 * When the position of the particle is periodized,
-		 * we need to modify the velocity, which was already evaluated.
-		 * The position and velocity will be used to calculate the contact forces.
-		 */
-		if (z_shift != 0) {
-			velocity[i] += z_shift*vel_difference;
-		}
-	} else {
-		velocity[i].reset();
+	position[i] += dr;
+	int z_shift = periodize(position[i]);
+	/* Note:
+	 * When the position of the particle is periodized,
+	 * we need to modify the velocity, which was already evaluated.
+	 * The position and velocity will be used to calculate the contact forces.
+	 */
+	if (z_shift != 0) {
+		velocity[i] += z_shift*vel_difference;
 	}
 	boxset.box(i);
 }

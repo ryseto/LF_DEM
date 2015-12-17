@@ -398,7 +398,6 @@ void Simulation::simulationMagnetic(string in_args,
 	while (keepRunning()) {
 		if (initial_relax && sys.get_time() >= 0) {
 			sys.setInducedMagneticMoment();
-			sys.randomSelectFixParticles();
 			initial_relax = false;
 		}
 		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
@@ -852,11 +851,7 @@ void Simulation::outputConfigurationData()
 					fout_particle << ' ' << sys.magnetic_moment[i].y;
 					fout_particle << ' ' << sys.magnetic_moment[i].z;
 				} else {
-					if (sys.movable[i]) {
-						fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
-					} else {
-						fout_particle << ' ' << sys.magnetic_susceptibility[i]+100; // 101: fixed magnetic 100: fixed non-magnetic
-					}
+					fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
 				}
 			}
 			fout_particle << endl;
