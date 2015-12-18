@@ -1718,7 +1718,9 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		na_velocity[np_mobile].x = 1; // @@@@ for test
+		for (int i=np_mobile; i<np; i++) {
+			na_velocity[i].x = 1; // @@@@ for test
+		}
 	}
 
 	if (divided_velocities || stress_controlled) {
