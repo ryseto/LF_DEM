@@ -690,6 +690,9 @@ void StokesSolver::solvingIsDone()
 {
 	cholmod_free_factor(&chol_L, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix, &chol_c);
+	cholmod_free_sparse(&chol_res_matrix_mf, &chol_c);
+	cholmod_free_sparse(&chol_res_matrix_ff, &chol_c);
+
 	//	cholmod_free_dense(&chol_rhs, &chol_c);
 }
 
