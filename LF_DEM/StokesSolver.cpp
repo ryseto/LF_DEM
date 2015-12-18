@@ -35,10 +35,10 @@ StokesSolver::~StokesSolver()
 	cholmod_finish(&chol_c);
 }
 
-void StokesSolver::init(int n_total, int n_mobile)
+void StokesSolver::init(int np_total, int np_mobile)
 {
-	np = n_total;
-	mobile_particle_nb = n_mobile;
+	np = np_total;
+	mobile_particle_nb = np_mobile;
 
 	// resistance matrix characteristics (see header for matrix description)
 	dblocks_size = 18*mobile_particle_nb;
@@ -73,7 +73,6 @@ void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
 								  double scaledXA, double scaledYA,
 								  double scaledYB, double scaledYC)
 {
-
 	if (ii >= mobile_particle_nb) {
 		// FF matrix
 		addToDBlock(dblocks_ff[ii-mobile_particle_nb], nvec, scaledXA, scaledYA, scaledYB, scaledYC);

@@ -258,7 +258,7 @@ private:
 	
 public:
 	~StokesSolver();
-	void init(int n_total, int n_mobile);
+	void init(int np_total, int np_mobile);
 	void printResistanceMatrix(std::ostream&, std::string);
 	void printFactor(std::ostream&);
 	void printRHS();
