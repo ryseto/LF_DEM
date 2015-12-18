@@ -660,7 +660,7 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
 
-	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature.
+	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :)
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
 	for (unsigned int i=0; i<force.size(); i++) {
