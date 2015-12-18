@@ -164,8 +164,8 @@ private:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
 	~System();
-
 	ParameterSet& p;
+	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
 	// Interaction types
 	bool brownian;
 	bool friction;

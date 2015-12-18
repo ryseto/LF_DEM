@@ -28,6 +28,7 @@ using namespace std;
 System::System(ParameterSet& ps, list <Event>& ev):
 events(ev),
 p(ps),
+test_simulation(0),
 brownian(false),
 friction(false),
 rolling_friction(false),
@@ -1701,6 +1702,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
+	
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
@@ -1758,6 +1760,9 @@ void System::computeVelocities(bool divided_velocities)
 	for (int i=nmobile; i<np; i++) { // temporary: particles perfectly advected
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
+	}
+	if (test_simulation == 1) {
+		na_velocity[nmobile].x = 1; // @@@@ for test
 	}
 	/*
 	 * The max velocity is used to find dt from max displacement

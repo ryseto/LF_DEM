@@ -183,8 +183,8 @@ private:
 	cholmod_sparse* chol_res_matrix_mf;
 	cholmod_sparse* chol_res_matrix_ff;
 	cholmod_dense* chol_solution;
-	cholmod_dense *chol_vec;
-	cholmod_dense *chol_force;
+	cholmod_dense* chol_vec;
+	cholmod_dense* chol_force;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
 	bool chol_L_to_be_freed;
@@ -217,16 +217,16 @@ private:
 	 - this must be called with order, according to LT filling
 	 */
 	void setColumn(const vec3d& nvec, int jj,
-			   double scaledXA, double scaledYA,
-			   double scaledYB, double scaledYBtilde, double scaledYC);
-
+				   double scaledXA, double scaledYA,
+				   double scaledYB, double scaledYBtilde, double scaledYC);
+	
 	struct ODBlock buildODBlock(const vec3d &nvec,
-				 							 double scaledXA,
-				 							 double scaledYA, double scaledYB,
-				 							 double scaledYBtilde, double scaledYC);
+								double scaledXA,
+								double scaledYA, double scaledYB,
+								double scaledYBtilde, double scaledYC);
 	void addToDBlock(struct DBlock &b, const vec3d& nvec,
-												double scaledXA, double scaledYA,
-			 								  double scaledYB, double scaledYC);
+					 double scaledXA, double scaledYA,
+					 double scaledYB, double scaledYC);
 
 	void allocateResistanceMatrix();
 	void allocateRessources();
@@ -234,30 +234,30 @@ private:
 	void completeResistanceMatrix_MobileFixed();
 	void completeResistanceMatrix_FixedFixed();
 	void insertODBlock(cholmod_sparse *matrix,
-										const std::vector<int> &index_chol_ix,
-										int top_row_nb,
-										const struct ODBlock &offdiagblock);
+					   const std::vector<int> &index_chol_ix,
+					   int top_row_nb,
+					   const struct ODBlock &offdiagblock);
 	void insertDBlock(cholmod_sparse *matrix,
-										const std::vector<int> &index_chol_ix,
-										int top_row_nb,
-										const struct DBlock &diagblock);
+					  const std::vector<int> &index_chol_ix,
+					  int top_row_nb,
+					  const struct DBlock &diagblock);
 	void insertODBlockRows(int *matrix_i,
-										const std::vector<int> &index_values,
-										int top_row_nb);
+						   const std::vector<int> &index_values,
+						   int top_row_nb);
 	void insertDBlockRows(int *matrix_i,
-										const std::vector<int> &index_values,
-										int top_row_nb);
+						  const std::vector<int> &index_values,
+						  int top_row_nb);
 	void insertBlockColumnIndices(int *matrix_p,
 										const std::vector<int> &pvalues);
 	void insertODBlockValues(double *matrix_x,
-											  const std::vector<int>& index_chol_ix,
-											  const struct ODBlock& b);
+							 const std::vector<int>& index_chol_ix,
+							 const struct ODBlock& b);
 	void insertDBlockValues(double *matrix_x,
-											 const std::vector<int>& index_chol_ix,
-											 const struct DBlock& b);
-
+							const std::vector<int>& index_chol_ix,
+							const struct DBlock& b);
+	
 public:
-  ~StokesSolver();
+	~StokesSolver();
 	void init(int n_total, int n_mobile);
 	void printResistanceMatrix(std::ostream&, std::string);
 	void printFactor(std::ostream&);
@@ -268,12 +268,12 @@ public:
 	 - initialize arrays/vectors used for building
 	 - to be called before adding elements
 	 - nb_of_interactions is the number of odblocks in the matrix
-     */
-    void resetResistanceMatrix(int nb_of_interactions_mm,
-													int nb_of_interactions_mf,
-													int nb_of_interactions_ff,
-													const std::vector<struct DBlock>& reset_resmat_dblocks);
-    /* addToDiag(int ii, double FUvalue, TWvalue) :
+	 */
+	void resetResistanceMatrix(int nb_of_interactions_mm,
+							   int nb_of_interactions_mf,
+							   int nb_of_interactions_ff,
+							   const std::vector<struct DBlock>& reset_resmat_dblocks);
+	/* addToDiag(int ii, double FUvalue, TWvalue) :
 	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii
 	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii
 	 */
@@ -332,7 +332,7 @@ public:
     void setRHS(const std::vector<vec3d>&);
     void setRHSForce(int, const vec3d&);
     void setRHSTorque(int, const vec3d&);
-    /*
+	/*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :
 	 - once the resistance matrix and the RHS vector are built
 	 ( completeResistanceMatrix() must have been called )
@@ -358,8 +358,8 @@ public:
 	 */
 	void solvingIsDone();
 	void multiply_by_RFU_mf(std::vector<double> &velocity, std::vector<double> &force);
-
-// testing functions
+	
+	// testing functions
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);
 };

@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
- Configuration_File Parameter_File \
+	Configuration_File Parameter_File \
 	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed [-M]\n";
 
 	double dimensionless_number = 0;
@@ -34,7 +34,6 @@ int main(int argc, char **argv)
 
 	bool generate_init = false;
 	int random_seed = 1;
-
 	bool binary_conf = false;
 
 	string config_filename = "not_given";
@@ -193,11 +192,11 @@ int main(int argc, char **argv)
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
 											  dimensionless_number, suffix, rheology_control, simu_identifier);
-
+			
 		} else if (seq_filename == "not_given") {
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 dimensionless_number, suffix, rheology_control, simu_identifier);
+												 dimensionless_number, suffix, rheology_control, simu_identifier);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;
