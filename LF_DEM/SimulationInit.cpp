@@ -529,9 +529,9 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	if (sys.test_simulation == 1) {
-		sys.zero_shear = true;
-	}
+	// if (sys.test_simulation == 1) {
+	// 	sys.zero_shear = true;
+	// }
 	setDefaultParameters();
 	readParameterFile(filename_parameters);
 	ostringstream string_control_parameters;

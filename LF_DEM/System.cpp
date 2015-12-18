@@ -1333,8 +1333,8 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 				fixed_velocities[i6  ] = na_velocity[i+np_mobile].x;
 				fixed_velocities[i6+1] = na_velocity[i+np_mobile].y;
 				fixed_velocities[i6+2] = na_velocity[i+np_mobile].z;
-				fixed_velocities[i6+3] = na_ang_velocity[i+np_mobile].z;
-				fixed_velocities[i6+4] = na_ang_velocity[i+np_mobile].z;
+				fixed_velocities[i6+3] = na_ang_velocity[i+np_mobile].x;
+				fixed_velocities[i6+4] = na_ang_velocity[i+np_mobile].y;
 				fixed_velocities[i6+5] = na_ang_velocity[i+np_mobile].z;
 			}
 			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
@@ -1718,7 +1718,7 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		na_velocity[np_mobile].x = 1; // @@@@ for test
+		na_velocity[np_mobile].x = 10; // @@@@ for test
 	}
 
 	if (divided_velocities || stress_controlled) {

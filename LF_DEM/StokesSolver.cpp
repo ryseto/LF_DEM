@@ -354,7 +354,6 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
-
 		/********* 1: Insert the diagonal blocks elements *********/
 		insertDBlock(chol_res_matrix, index_chol_ix, j6, dblocks[j]);
 		for (int col=0; col<6; col++) {
@@ -452,6 +451,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
+		insertBlockColumnIndices((int*)chol_res_matrix_mf->p+6*j, index_chol_ix);
 
 		for (int k = odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
 			insertODBlock(chol_res_matrix_mf, index_chol_ix, odbrows_mf[k], odblocks_mf[k]);
@@ -676,7 +676,7 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 	r = cholmod_copy_dense(chol_rhs, &chol_c);
 	double one[]  = {1, 0};
 	double zero[] = {0, 0};
-	cholmod_sdmult(chol_res_matrix, 0, one, zero, chol_solution, r, &chol_c);
+	cholmod_sdmult(chol_res_matrix, 1, one, zero, chol_solution, r, &chol_c);
 	int size = r->nrow;
 	for (int i=0; i<size; i++) {
 		vec[i] = ((double*)r->x)[i];
@@ -752,8 +752,7 @@ void StokesSolver::allocateResistanceMatrix()
 void StokesSolver::doneBlocks(int i)
 {
 	if (mobile_matrix_done) {
-		i -= mobile_matrix_done;
-		odbrows_table_ff[i+1] = (unsigned int)odbrows_ff.size();
+		odbrows_table_ff[i-mobile_particle_nb+1] = (unsigned int)odbrows_ff.size();
 	} else {
 		odbrows_table[i+1] = (unsigned int)odbrows.size();
 		odbrows_table_mf[i+1] = (unsigned int)odbrows_mf.size();
