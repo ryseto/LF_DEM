@@ -67,7 +67,7 @@ vec3d System::randUniformSphere(double r)
 
 #ifdef USE_DSFMT
 unsigned long
-System::hash( time_t t, clock_t c )
+System::hash(time_t t, clock_t c)
 {
 	/**
 		\brief Utility function to start up the DSFMT RNG with a nice seed.
@@ -83,19 +83,17 @@ System::hash( time_t t, clock_t c )
 	static unsigned long differ = 0; // guarantee time-based seeds will change
 	unsigned long h1 = 0;
 	unsigned char *pp = (unsigned char *) &t;
-	for( size_t i = 0; i < sizeof(t); ++i )
-	{
+	for (size_t i=0; i<sizeof(t); ++i){
 		h1 *= UCHAR_MAX + 2U;
 		h1 += pp[i];
 	}
 	unsigned long h2 = 0;
 	pp = (unsigned char *) &c;
-	for( size_t j = 0; j < sizeof(c); ++j )
-	{
+	for (size_t j=0; j<sizeof(c); ++j) {
 		h2 *= UCHAR_MAX + 2U;
 		h2 += pp[j];
 	}
-	return ( h1 + differ++ ) ^ h2;
+	return (h1 + differ++)^h2;
 }
 #endif
 
@@ -285,7 +283,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	 */
 	string indent = "  System::\t";
 	set_np(initial_positions.size());
-	nmobile = np-p.fixed_nb;
+	np_mobile = np-p.fixed_nb;
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
@@ -320,7 +318,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	double particle_volume = 0;
 	for (int i=0; i<np; i++) {
-		particle_volume += (4*M_PI/3)*pow(radius[i],3);
+		particle_volume += (4*M_PI/3)*pow(radius[i], 3);
 	}
 	volume_fraction = particle_volume/system_volume;
 	cout << indent << "volume_fraction = " << volume_fraction << endl;
@@ -673,7 +671,7 @@ void System::setupSystem(string control)
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	if (p.lubrication_model > 0) {
-		stokes_solver.init(np, nmobile);
+		stokes_solver.init(np, np_mobile);
 	}
 	dt = p.dt;
 	initializeBoxing();
@@ -1136,9 +1134,9 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
-	if (j < nmobile) { // i and j mobile
+	if (j < np_mobile) { // i and j mobile
 		nb_of_active_interactions_mm++;
-	} else if (i >= nmobile) { // i and j fixed
+	} else if (i >= np_mobile) { // i and j fixed
 		nb_of_active_interactions_ff++;
 	} else {
 		nb_of_active_interactions_mf++;
@@ -1150,9 +1148,9 @@ void System::destroyInteraction(int k)
 	deactivated_interaction.push(k);
 	unsigned short p0, p1;
 	interaction[k].get_par_num(p0, p1);
-	if (p1 < nmobile) {
+	if (p1 < np_mobile) {
 		nb_of_active_interactions_mm--;
-	} else if (p0 >= nmobile) {
+	} else if (p0 >= np_mobile) {
 		nb_of_active_interactions_ff--;
 	} else {
 		nb_of_active_interactions_mf--;
@@ -1211,7 +1209,6 @@ void System::updateMagneticPair()
 		}
 	}
 }
-
 
 void System::updateInteractions()
 {
@@ -1315,7 +1312,9 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 */
 	if (build_res_mat) {
 		// create a new resistance matrix in stokes_solver
-		stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm, nb_of_active_interactions_mf, nb_of_active_interactions_ff,
+		stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm,
+											nb_of_active_interactions_mf,
+											nb_of_active_interactions_ff,
 											resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
@@ -1328,10 +1327,14 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		// add GE in the rhs
 		(this->*buildLubricationTerms)(false, build_force_GE);
 	}
-	if (build_force_GE && nmobile < np) {
-		vector<double> force_from_fixed (6*nmobile);
+	if (build_force_GE && np_mobile < np) {
+		vector<double> force_from_fixed(6*np_mobile);
 		vector<double> fixed_velocities;
-		fixed_velocities.assign(6*(np-nmobile), 0);
+		if (test_simulation) {
+			fixed_velocities.assign(6*(np-np_mobile), 1);
+		} else {
+			fixed_velocities.assign(6*(np-np_mobile), 0);
+		}
 		stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
 		stokes_solver.addToRHS(force_from_fixed.data());
 	}
@@ -1463,7 +1466,7 @@ void System::generateBrownianForces()
 
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
-	if (nmobile < np) {
+	if (np_mobile < np) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
@@ -1711,18 +1714,18 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			computeShearRate();
 		}
-		for (int i=0; i<nmobile; i++) {
+		for (int i=0; i<np_mobile; i++) {
 			na_velocity[i] = vel_hydro[i]+vel_contact[i];
 			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
 		}
 		if (repulsiveforce) {
-			for (int i=0; i<nmobile; i++) {
+			for (int i=0; i<np_mobile; i++) {
 				na_velocity[i] += vel_repulsive[i];
 				na_ang_velocity[i] += ang_vel_repulsive[i];
 			}
 		}
 		if (magnetic) {
-			for (int i=0; i<nmobile; i++) {
+			for (int i=0; i<np_mobile; i++) {
 				na_velocity[i] += vel_magnetic[i];
 				na_ang_velocity[i] += ang_vel_magnetic[i];
 			}
@@ -1752,17 +1755,19 @@ void System::computeVelocities(bool divided_velocities)
 			generateBrownianForces();
 		}
 		computeBrownianVelocities();
-		for (int i=0; i<nmobile; i++) {
+		for (int i=0; i<np_mobile; i++) {
 			na_velocity[i] += vel_brownian[i];
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-	for (int i=nmobile; i<np; i++) { // temporary: particles perfectly advected
+	for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	if (test_simulation == 1) {
-		na_velocity[nmobile].x = 1; // @@@@ for test
+	if (test_simulation == 1) { // @@@@ for test
+		for (int i=np_mobile; i<np; i++) {
+			na_velocity[i].x = 1;
+		}
 	}
 	/*
 	 * The max velocity is used to find dt from max displacement
