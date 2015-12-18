@@ -1324,17 +1324,28 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		// add GE in the rhs and lubrication terms in the resistance matrix
 		(this->*buildLubricationTerms)(true, build_force_GE);
 		stokes_solver.completeResistanceMatrix();
+		if (build_force_GE && nmobile < np) {
+			vector<double> force_from_fixed (6*nmobile);
+			int fixed_vel_size = 6*(np-nmobile);
+			// @@@@ TODO: avoid copy of the velocities
+			vector<double> fixed_velocities (fixed_vel_size);
+			for(int i=0; i<np-nmobile; i++){
+				int i6 = 6*i;
+				fixed_velocities[i6  ] = na_velocity[i+nmobile].x;
+				fixed_velocities[i6+1] = na_velocity[i+nmobile].y;
+				fixed_velocities[i6+2] = na_velocity[i+nmobile].z;
+				fixed_velocities[i6+3] = na_ang_velocity[i+nmobile].z;
+				fixed_velocities[i6+4] = na_ang_velocity[i+nmobile].z;
+				fixed_velocities[i6+5] = na_ang_velocity[i+nmobile].z;
+			}
+			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
+			stokes_solver.addToRHS(force_from_fixed.data());
+		}
 	} else {
 		// add GE in the rhs
 		(this->*buildLubricationTerms)(false, build_force_GE);
 	}
-	if (build_force_GE && nmobile < np) {
-		vector<double> force_from_fixed (6*nmobile);
-		vector<double> fixed_velocities;
-		fixed_velocities.assign(6*(np-nmobile), 0);
-		stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
-		stokes_solver.addToRHS(force_from_fixed.data());
-	}
+
 }
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
@@ -1702,7 +1713,15 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	
+
+	for (int i=nmobile; i<np; i++) { // temporary: particles perfectly advected
+		na_velocity[i].reset();
+		na_ang_velocity[i].reset();
+	}
+	if (test_simulation == 1) {
+		na_velocity[nmobile].x = 1; // @@@@ for test
+	}
+
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
@@ -1757,13 +1776,7 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-	for (int i=nmobile; i<np; i++) { // temporary: particles perfectly advected
-		na_velocity[i].reset();
-		na_ang_velocity[i].reset();
-	}
-	if (test_simulation == 1) {
-		na_velocity[nmobile].x = 1; // @@@@ for test
-	}
+
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.

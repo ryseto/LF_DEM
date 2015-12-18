@@ -78,7 +78,6 @@ private:
 	double shear_strain;
 	double total_energy;
 	int linalg_size;
-	int dof;
 	double costheta_shear;
 	double sintheta_shear;
 	/* data */
