@@ -195,7 +195,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	control_var = control_variable;
 	if (simu_identifier == "test") {
 		sys.test_simulation = 1;
+	} else if (simu_identifier == "test2") {
+		sys.test_simulation = 2;
+	} else if (simu_identifier == "test3") {
+		sys.test_simulation = 3;
 	}
+	
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.

@@ -738,7 +738,7 @@ void StokesSolver::allocateResistanceMatrix()
 	int row_nb = 6*(np-mobile_particle_nb);
 	nzmax = 30*odblocks_nb_mf;  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
-	int packed_mf = 0; // @@@@ TO BE CHECKED.
+	int packed_mf = 1; // @@@@ TO BE CHECKED.
 	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed_mf, stype_mf, CHOLMOD_REAL, &chol_c);
 
 	col_nb = 6*(np-mobile_particle_nb);
