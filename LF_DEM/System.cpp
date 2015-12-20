@@ -204,6 +204,7 @@ void System::allocateRessources()
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
+		brownian_force.resize(2*np);
 	}
 	if (magnetic) {
 		vel_magnetic = new vec3d [np];
@@ -1723,7 +1724,7 @@ void System::computeVelocities(bool divided_velocities)
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	
+
 	if (test_simulation == 1) {
 		na_velocity[np_mobile].x = 1; // @@@@ for test
 	} else if (test_simulation == 2) {
