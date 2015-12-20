@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 		{"binary", no_argument, 0, 'n'},
 		{"identifier", required_argument, 0, 'v'},
 		{"help", no_argument, 0, 'h'},
-		{0,0,0,0},
+		{0, 0, 0, 0},
 	};
 
 	int index;

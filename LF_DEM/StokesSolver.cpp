@@ -659,8 +659,7 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
-
-	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :)
+	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
 	for (unsigned int i=0; i<force.size(); i++) {
@@ -674,7 +673,7 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
 	cholmod_dense* r;
 	r = cholmod_copy_dense(chol_rhs, &chol_c);
-	double one[]  = {1, 0};
+	double one[] = {1, 0};
 	double zero[] = {0, 0};
 	cholmod_sdmult(chol_res_matrix, 1, one, zero, chol_solution, r, &chol_c);
 	int size = r->nrow;
@@ -691,7 +690,6 @@ void StokesSolver::solvingIsDone()
 	cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_mf, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_ff, &chol_c);
-
 	//	cholmod_free_dense(&chol_rhs, &chol_c);
 }
 
@@ -740,7 +738,8 @@ void StokesSolver::allocateResistanceMatrix()
 	int row_nb = 6*(np-mobile_particle_nb);
 	nzmax = 30*odblocks_nb_mf;  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
-	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
+	int packed_mf = 0; // @@@@ TO BE CHECKED.
+	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed_mf, stype_mf, CHOLMOD_REAL, &chol_c);
 
 	col_nb = 6*(np-mobile_particle_nb);
 	row_nb = col_nb;

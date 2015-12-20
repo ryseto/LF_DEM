@@ -1183,7 +1183,6 @@ void System::checkNewInteraction()
 			}
 		}
 	}
-
 	if (magnetic) {
 		if (get_time() > time_update_magnetic_pair) {
 			updateMagneticPair();
@@ -1718,7 +1717,7 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		na_velocity[np_mobile].x = 10; // @@@@ for test
+		na_velocity[np_mobile].x = 1; // @@@@ for test
 	}
 
 	if (divided_velocities || stress_controlled) {
