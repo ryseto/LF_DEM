@@ -1324,28 +1324,22 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		(this->*buildLubricationTerms)(true, build_force_GE);
 		stokes_solver.completeResistanceMatrix();
 		if (build_force_GE && np_mobile < np) {
-			vector<double> force_from_fixed (6*np_mobile);
+			vector<double> force_torque_from_fixed (6*np_mobile);
 			int fixed_vel_size = 6*(np-np_mobile);
-			// @@@@ TODO: avoid copy of the velocities
+			// @@ TODO: avoid copy of the velocities
 			vector<double> fixed_velocities (fixed_vel_size);
 			for(int i=0; i<np-np_mobile; i++){
 				int i6 = 6*i;
-				fixed_velocities[i6  ] = na_velocity[i+np_mobile].x;
-				fixed_velocities[i6+1] = na_velocity[i+np_mobile].y;
-				fixed_velocities[i6+2] = na_velocity[i+np_mobile].z;
-				fixed_velocities[i6+3] = na_ang_velocity[i+np_mobile].x;
-				fixed_velocities[i6+4] = na_ang_velocity[i+np_mobile].y;
-				fixed_velocities[i6+5] = na_ang_velocity[i+np_mobile].z;
+				int i_fixed = i+np_mobile;
+				fixed_velocities[i6  ] = na_velocity[i_fixed].x;
+				fixed_velocities[i6+1] = na_velocity[i_fixed].y;
+				fixed_velocities[i6+2] = na_velocity[i_fixed].z;
+				fixed_velocities[i6+3] = na_ang_velocity[i_fixed].x;
+				fixed_velocities[i6+4] = na_ang_velocity[i_fixed].y;
+				fixed_velocities[i6+5] = na_ang_velocity[i_fixed].z;
 			}
-			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_from_fixed);
-//			for(int i=0; i<np_mobile; i++){
-//				int i6 = 6*i;
-//				for (int k=0; k<6; k++) {
-//					cerr << force_from_fixed[i6+k] << ' ';
-//				}
-//				cerr << endl;
-//			}
-			stokes_solver.addToRHS(force_from_fixed.data());
+			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
+			stokes_solver.addToRHS(force_torque_from_fixed.data());
 			//stokes_solver.addToRHS(force_from_fixed);
 		}
 	} else {
@@ -1726,11 +1720,11 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		na_velocity[np_mobile].x = 1; // @@@@ for test
+		na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
 	} else if (test_simulation == 2) {
 		na_ang_velocity[np_mobile].y = -0.5*shear_rate;
 	} else if (test_simulation == 3) {
-		na_ang_velocity[np_mobile].y = -2*shear_rate;
+		na_ang_velocity[np_mobile].y = +10*shear_rate;
 	}
 
 	if (divided_velocities || stress_controlled) {

@@ -128,16 +128,19 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 	if (mobile_matrix_done) {
 		// FF Matrix
 		odbrows_ff.push_back(6*(jj-mobile_particle_nb));
-		odblocks_ff[odbrows_ff.size()-1] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+		int i = (int)odbrows_ff.size()-1;
+		odblocks_ff[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	} else {
 		if (jj < mobile_particle_nb) {
 			// MM matrix
 			odbrows.push_back(6*jj);
-			odblocks[odbrows.size()-1] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+			int i = (int)odbrows.size()-1;
+			odblocks[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 		} else {
 			// MF matrix
 			odbrows_mf.push_back(6*(jj-mobile_particle_nb));
-			odblocks_mf[odbrows_mf.size()-1] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+			int i = (int)odbrows_mf.size()-1;
+			odblocks_mf[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 		}
 	}
 	return;
@@ -669,9 +672,9 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	double zero[] = {0, 0};
 	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
-//	for (int i=0; i<velocity.size(); i++) {
-//		((double*)chol_vec->x)[i] = velocity[i];
-//	}
+	//	for (int i=0; i<velocity.size(); i++) {
+	//		((double*)chol_vec->x)[i] = velocity[i];
+	//	}
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i] = ((double*)chol_force->x)[i];
@@ -788,25 +791,30 @@ struct ODBlock StokesSolver::buildODBlock(const vec3d& nvec,
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
 	struct ODBlock block;
-
-	block.col0[0] =  scaledXA*n0n0 + scaledYA*one_n0n0; // column 0
+	// column 0
+	block.col0[0] =  scaledXA*n0n0 + scaledYA*one_n0n0;
 	block.col0[1] = (scaledXA - scaledYA)*n0n1;
 	block.col0[2] = (scaledXA - scaledYA)*n0n2;
 	block.col0[3] = -scaledYB*nvec.z;
 	block.col0[4] =  scaledYB*nvec.y;
-	block.col1[0] =  scaledXA*n1n1 + scaledYA*one_n1n1; // column 1
+	// column 1
+	block.col1[0] =  scaledXA*n1n1 + scaledYA*one_n1n1;
 	block.col1[1] = (scaledXA - scaledYA)*n1n2;
 	block.col1[2] = -scaledYB*nvec.x;
-	block.col2[0] =  scaledXA*n2n2 + scaledYA*one_n2n2; // column 2
-	block.col3[0] =  scaledYBtilde*nvec.z; // column 3
+	// column 2
+	block.col2[0] =  scaledXA*n2n2 + scaledYA*one_n2n2;
+	// column 3
+	block.col3[0] =  scaledYBtilde*nvec.z;
 	block.col3[1] = -scaledYBtilde*nvec.y;
 	block.col3[2] =  scaledYC*one_n0n0;
 	block.col3[3] = -scaledYC*n0n1;
 	block.col3[4] = -scaledYC*n0n2;
-	block.col4[0] =  scaledYBtilde*nvec.x; // column 4
+	// column 4
+	block.col4[0] =  scaledYBtilde*nvec.x;
 	block.col4[1] =  scaledYC*one_n1n1;
 	block.col4[2] = -scaledYC*n1n2;
-	block.col5[0] =  scaledYC*one_n2n2; // column 5
+	// column 5
+	block.col5[0] =  scaledYC*one_n2n2;
 	return block;
 }
 
