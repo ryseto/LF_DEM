@@ -1345,6 +1345,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 //				cerr << endl;
 //			}
 			stokes_solver.addToRHS(force_from_fixed.data());
+			//stokes_solver.addToRHS(force_from_fixed);
 		}
 	} else {
 		// add GE in the rhs
@@ -1723,7 +1724,6 @@ void System::computeVelocities(bool divided_velocities)
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	
 	if (test_simulation == 1) {
 		na_velocity[np_mobile].x = 1; // @@@@ for test
 	} else if (test_simulation == 2) {

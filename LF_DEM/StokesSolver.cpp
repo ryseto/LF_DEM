@@ -570,6 +570,14 @@ void StokesSolver::addToRHS(double* rhs)
 	}
 }
 
+void StokesSolver::addToRHS(vector<double>& force)
+{
+	//int size = chol_rhs->nrow;
+	for (int i=0; i<force.size(); i++) {
+		((double*)chol_rhs->x)[i] += force[i];
+	}
+}
+
 void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 {
 	unsigned int size = 2*mobile_particle_nb;
@@ -661,6 +669,9 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	double zero[] = {0, 0};
 	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
+//	for (int i=0; i<velocity.size(); i++) {
+//		((double*)chol_vec->x)[i] = velocity[i];
+//	}
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i] = ((double*)chol_force->x)[i];
