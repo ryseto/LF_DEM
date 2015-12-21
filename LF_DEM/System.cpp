@@ -204,7 +204,7 @@ void System::allocateRessources()
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
-		brownian_force.resize(2*np);
+		brownian_force_torque.resize(2*np);
 	}
 	if (magnetic) {
 		vel_magnetic = new vec3d [np];
@@ -1485,16 +1485,16 @@ void System::generateBrownianForces()
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
-	for (unsigned int i=0; i<brownian_force.size(); i++) {
-		brownian_force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
-		brownian_force[i].y = sqrt_2_dt_amp*GRANDOM;
-		brownian_force[i].z = sqrt_2_dt_amp*GRANDOM;
+	for (unsigned int i=0; i<brownian_force_torque.size(); i++) {
+		brownian_force_torque[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
+		brownian_force_torque[i].y = sqrt_2_dt_amp*GRANDOM;
+		brownian_force_torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
 	if (p.lubrication_model > 0) {
 		/* L*L^T = RFU
 		 */
-		stokes_solver.setRHS(brownian_force);
-		stokes_solver.compute_LTRHS(brownian_force); // F_B = \sqrt(2kT/dt) * L^T * A
+		stokes_solver.setRHS(brownian_force_torque);
+		stokes_solver.compute_LTRHS(brownian_force_torque); // F_B = \sqrt(2kT/dt) * L^T * A
 	} else {
 		/*
 		 *  F_B = \sqrt(2kT/dt) * L^T * A
@@ -1847,15 +1847,15 @@ void System::computeVelocitiesStokesDrag()
 void System::computeBrownianVelocities()
 {
 	if (p.lubrication_model > 0) {
-		stokes_solver.setRHS(brownian_force); // set rhs = F_B (force and torque)
+		stokes_solver.setRHS(brownian_force_torque); // set rhs = F_B (force and torque)
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 	} else {
 		/* See the comment given in generateBrownianForces()
 		 */
 		for (int i=0; i<np; i++) {
 			int i2 = 2*i;
-			vel_brownian[i] = brownian_force[i2]/stokesdrag_coeff_f_sqrt[i];
-			ang_vel_brownian[i] = brownian_force[i2+1]/stokesdrag_coeff_t_sqrt[i];
+			vel_brownian[i] = brownian_force_torque[i2]/stokesdrag_coeff_f_sqrt[i];
+			ang_vel_brownian[i] = brownian_force_torque[i2+1]/stokesdrag_coeff_t_sqrt[i];
 		}
 	}
 	if (twodimension) {

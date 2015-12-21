@@ -212,7 +212,7 @@ private:
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
 	std::vector<double> magnetic_susceptibility;
-	std::vector<vec3d> brownian_force;
+	std::vector<vec3d> brownian_force_torque;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // per particle
 	StressTensor* contactstressXF; // per particle
