@@ -1331,12 +1331,12 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 			for(int i=0; i<np-np_mobile; i++){
 				int i6 = 6*i;
 				int i_fixed = i+np_mobile;
-				fixed_velocities[i6  ] = na_velocity[i_fixed].x;
-				fixed_velocities[i6+1] = na_velocity[i_fixed].y;
-				fixed_velocities[i6+2] = na_velocity[i_fixed].z;
-				fixed_velocities[i6+3] = na_ang_velocity[i_fixed].x;
-				fixed_velocities[i6+4] = na_ang_velocity[i_fixed].y;
-				fixed_velocities[i6+5] = na_ang_velocity[i_fixed].z;
+				fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+				fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+				fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+				fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+				fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+				fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
 			}
 			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
 			stokes_solver.addToRHS(force_torque_from_fixed.data());
@@ -1722,9 +1722,9 @@ void System::computeVelocities(bool divided_velocities)
 	if (test_simulation == 1) {
 		na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
 	} else if (test_simulation == 2) {
-		na_ang_velocity[np_mobile].y = -0.5*shear_rate;
+		na_ang_velocity[np_mobile].y = -2*shear_rate;
 	} else if (test_simulation == 3) {
-		na_ang_velocity[np_mobile].y = +10*shear_rate;
+		na_ang_velocity[np_mobile].y = 2*shear_rate;
 	}
 
 	if (divided_velocities || stress_controlled) {
