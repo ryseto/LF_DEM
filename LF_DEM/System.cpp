@@ -1728,7 +1728,6 @@ void System::computeVelocities(bool divided_velocities)
 	}
 
 	if (divided_velocities || stress_controlled) {
-		exit(1);
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
