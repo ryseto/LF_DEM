@@ -300,7 +300,8 @@ private:
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
-	void destroyInteraction(int k);
+	//void destroyInteraction(int k);
+	void updateNumberOfInteraction(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();

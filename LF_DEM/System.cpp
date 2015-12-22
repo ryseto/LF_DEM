@@ -1135,28 +1135,22 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
-	if (j < np_mobile) { // i and j mobile
-		nb_of_active_interactions_mm++;
-	} else if (i >= np_mobile) { // i and j fixed
-		nb_of_active_interactions_ff++;
-	} else {
-		nb_of_active_interactions_mf++;
-	}
 }
 
-void System::destroyInteraction(int k)
-{
-	deactivated_interaction.push(k);
-	unsigned short p0, p1;
-	interaction[k].get_par_num(p0, p1);
-	if (p1 < np_mobile) {
-		nb_of_active_interactions_mm--;
-	} else if (p0 >= np_mobile) {
-		nb_of_active_interactions_ff--;
-	} else {
-		nb_of_active_interactions_mf--;
-	}
-}
+//void System::destroyInteraction(int k)
+//{
+////	deactivated_interaction.push(k);
+////	unsigned short p0, p1;
+////	interaction[k].get_par_num(p0, p1);
+////	if (p1 < np_mobile) {
+////		nb_of_active_interactions_mm--;
+////	} else if (p0 >= np_mobile) {
+////		nb_of_active_interactions_ff--;
+////	} else {
+////		nb_of_active_interactions_mf--;
+////		cerr << "@@" << in_predictor << ' ' << in_corrector << endl;
+////	}
+//}
 
 void System::checkNewInteraction()
 {
@@ -1226,7 +1220,7 @@ void System::updateInteractions()
 			bool deactivated = false;
 			interaction[k].updateState(deactivated);
 			if (deactivated) {
-				destroyInteraction(k);
+				deactivated_interaction.push(k);
 			}
 			if (interaction[k].is_contact()) {
 				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
@@ -1243,6 +1237,18 @@ void System::updateInteractions()
 		} else {
 			exit(1); // not yet
 		}
+	}
+}
+
+void System::updateNumberOfInteraction(int p0, int p1, int val)
+{
+	if (p1 < np_mobile) { // i and j mobile
+		nb_of_active_interactions_mm += val;
+	} else if (p0 >= np_mobile) { // i and j fixed
+		nb_of_active_interactions_ff += val;
+	} else {
+		nb_of_active_interactions_mf += val;
+		cerr << "@" << val  << ' ' << nb_of_active_interactions_mf << endl;
 	}
 }
 
@@ -1346,7 +1352,6 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		// add GE in the rhs
 		(this->*buildLubricationTerms)(false, build_force_GE);
 	}
-
 }
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
@@ -2096,6 +2101,7 @@ void System::calcLubricationForce()
 	/*
 	 * Calculate lubrication force to output
 	 */
+	cerr << "calcLubricationForce" << endl;
 	stokes_solver.resetRHS();
 	if (!zero_shear) {
 		buildHydroTerms(true, true);

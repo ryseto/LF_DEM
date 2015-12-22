@@ -433,9 +433,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 		return;
 	}
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
-	vector<int> index_chol_ix;
-	index_chol_ix.resize(6);
-
+	vector<int> index_chol_ix(6);
 	for (int j=0; j<col_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
@@ -472,7 +470,6 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 										 const vector<struct DBlock> &reset_resmat_dblocks)
 {
 	odblocks_nb = nb_of_interactions_mm;
-
 	for (unsigned int i=0; i<dblocks.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i];
 	}
@@ -495,7 +492,6 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 
 	// for the mixed problem
 	odblocks_nb_ff = nb_of_interactions_ff;
-
 	for (unsigned int i=0; i<dblocks_ff.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
@@ -740,7 +736,6 @@ void StokesSolver::allocateResistanceMatrix()
 	int stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
 	int sorted = 0;		/* TRUE if columns sorted, FALSE otherwise */
 	int packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
-
 	// allocate
 	int nzmax; // non-zero values
 	int size_mm = 6*dblocks.size();
@@ -752,8 +747,7 @@ void StokesSolver::allocateResistanceMatrix()
 	int row_nb = 6*(np-mobile_particle_nb);
 	nzmax = 30*odblocks_nb_mf;  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
-	int packed_mf = 1; // @@@@ TO BE CHECKED.
-	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed_mf, stype_mf, CHOLMOD_REAL, &chol_c);
+	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
 
 	col_nb = 6*(np-mobile_particle_nb);
 	row_nb = col_nb;
