@@ -738,14 +738,14 @@ void StokesSolver::allocateResistanceMatrix()
 {
 	// CHOLMOD parameters
 	int stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
-	int sorted = 0;		/* TRUE if columns sorted, FALSE otherwise*/
+	int sorted = 0;		/* TRUE if columns sorted, FALSE otherwise */
 	int packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 
 	// allocate
 	int nzmax; // non-zero values
 	int size_mm = 6*dblocks.size();
 	nzmax = 18*dblocks.size(); // diagonal blocks
-	nzmax += 30*odblocks_nb;  // off-diagonal
+	nzmax += 30*odblocks_nb;   // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 
 	int col_nb = 6*mobile_particle_nb;

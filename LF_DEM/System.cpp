@@ -1323,7 +1323,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		// add GE in the rhs and lubrication terms in the resistance matrix
 		(this->*buildLubricationTerms)(true, build_force_GE);
 		stokes_solver.completeResistanceMatrix();
-		if (build_force_GE && np_mobile < np) {
+		if (np_mobile < np) {
 			vector<double> force_torque_from_fixed (6*np_mobile);
 			int fixed_vel_size = 6*(np-np_mobile);
 			// @@ TODO: avoid copy of the velocities
@@ -1728,6 +1728,7 @@ void System::computeVelocities(bool divided_velocities)
 	}
 
 	if (divided_velocities || stress_controlled) {
+		exit(1);
 		if (stress_controlled) {
 			shear_rate = 1;
 		}

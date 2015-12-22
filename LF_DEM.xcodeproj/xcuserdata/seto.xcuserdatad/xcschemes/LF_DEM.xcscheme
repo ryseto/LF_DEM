@@ -100,7 +100,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-8 D2N3.dat fix_test.txt"
+            argument = "-8 D2N3.dat fix_test.txt -v test"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
