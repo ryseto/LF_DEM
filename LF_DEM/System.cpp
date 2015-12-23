@@ -996,7 +996,6 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 			adaptTimeStep(time_or_strain, value_end);
 		}
 	}
-
 	time += dt;
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
@@ -1731,11 +1730,12 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		if (time < 60){
+		if (time <= 100){
 			na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
 		} else {
 			na_velocity[np_mobile].x = -1; // @ TODO: test (to be removed)
 		}
+		na_ang_velocity[np_mobile].y = -1;
 	} else if (test_simulation == 2) {
 		na_ang_velocity[np_mobile].y = -2*shear_rate;
 	} else if (test_simulation == 3) {

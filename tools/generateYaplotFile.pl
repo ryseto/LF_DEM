@@ -15,12 +15,16 @@ my $yap_radius = 1;
 my $force_factor = 0.001;
 my $output_interval = 1;
 my $xz_shift = 0;
+my $axis = 0;
 
-GetOptions('forcefactor=f' => \$force_factor, 'interval=i' => \$output_interval, 'shift=f' => \$xz_shift);
+GetOptions('forcefactor=f' => \$force_factor, 'interval=i' => \$output_interval, 'shift=f' => \$xz_shift, 'axis' => \$axis);
+
+
 
 printf "force_factor = $force_factor\n";
 printf "output_interval = $output_interval\n";
 printf "xz_shift = $xz_shift\n";
+printf "axis = $axis\n";
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -334,6 +338,14 @@ sub OutBoundaryBox {
 		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
 	}
+	
+	if ($axis) {
+		printf OUT "l -$lx2 0 0 $lx2 0 0\n";
+		printf OUT "l 0 0 -$lz2 0 0 $lz2\n";
+		
+		
+	}
+	
 }
 
 sub OutString_width {
