@@ -78,7 +78,7 @@
       </AdditionalOptions>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -100,7 +100,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "-8 D2N3.dat fix_test.txt -v test"
+            argument = "-8 D2N5.dat fix_test.txt -v test"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

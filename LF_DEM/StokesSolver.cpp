@@ -334,8 +334,7 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	int size = mobile_particle_nb;
 
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
-	vector<int> index_chol_ix;
-	index_chol_ix.resize(6);
+	vector<int> index_chol_ix(6);
 
 	for (int j=0; j<size; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
@@ -377,14 +376,12 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 {
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
-
-	int size = np-mobile_particle_nb;
-	if (size == 0) {
+	if (mobile_particle_nb == np) {
 		return;
 	}
+	int size = np-mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
-	vector<int> index_chol_ix;
-	index_chol_ix.resize(6);
+	vector<int> index_chol_ix(6);
 
 	for (int j=0; j<size; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
@@ -400,7 +397,7 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 		//
 		// for 6j+2 --> 6j+5: same idea
 
-		int j6 = 6*j;
+		//int j6 = 6*j;
 		int od_nzero_nb = 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j]);
 		index_chol_ix[0] = 18*j+30*odbrows_table_ff[j];
 		for (int col=1; col<6; col++) {
@@ -408,7 +405,7 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 		}
 
 		/********* 1: Insert the diagonal blocks elements *********/
-		insertDBlock(chol_res_matrix_ff, index_chol_ix, j6, dblocks_ff[j]);
+		insertDBlock(chol_res_matrix_ff, index_chol_ix, 6*j, dblocks_ff[j]);
 		for (int col=0; col<6; col++) {
 			index_chol_ix[col] +=  dblocks_cntnonzero[col];
 		}
@@ -427,11 +424,10 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 {
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
-
-	int col_nb = mobile_particle_nb;
-	if (col_nb == np) {
+	if (mobile_particle_nb == np) {
 		return;
 	}
+	int col_nb = mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 	for (int j=0; j<col_nb; j++) {
@@ -668,9 +664,9 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	double zero[] = {0, 0};
 	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
 	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
-	//	for (int i=0; i<velocity.size(); i++) {
-	//		((double*)chol_vec->x)[i] = velocity[i];
-	//	}
+//	for (int i=0; i<velocity.size(); i++) {
+//		((double*)chol_vec->x)[i] = velocity[i];
+//	}
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i] = ((double*)chol_force->x)[i];

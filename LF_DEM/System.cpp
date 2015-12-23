@@ -1248,7 +1248,13 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 		nb_of_active_interactions_ff += val;
 	} else {
 		nb_of_active_interactions_mf += val;
-		cerr << "@" << val  << ' ' << nb_of_active_interactions_mf << endl;
+		if (val == 1) {
+			cerr << "@+ " << nb_of_active_interactions_mf << endl;
+		} else if (val == -1) {
+			cerr << "@- " << nb_of_active_interactions_mf << endl;
+		} else {
+			exit(1);
+		}
 	}
 }
 
@@ -1346,7 +1352,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 			}
 			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
 			stokes_solver.addToRHS(force_torque_from_fixed.data());
-			//stokes_solver.addToRHS(force_from_fixed);
+			//stokes_solver.addToRHS(force_torque_from_fixed);
 		}
 	} else {
 		// add GE in the rhs
@@ -1725,7 +1731,11 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
+		if (time < 60){
+			na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
+		} else {
+			na_velocity[np_mobile].x = -1; // @ TODO: test (to be removed)
+		}
 	} else if (test_simulation == 2) {
 		na_ang_velocity[np_mobile].y = -2*shear_rate;
 	} else if (test_simulation == 3) {
@@ -2101,7 +2111,6 @@ void System::calcLubricationForce()
 	/*
 	 * Calculate lubrication force to output
 	 */
-	cerr << "calcLubricationForce" << endl;
 	stokes_solver.resetRHS();
 	if (!zero_shear) {
 		buildHydroTerms(true, true);
