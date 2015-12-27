@@ -448,6 +448,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
+
 		insertBlockColumnIndices((int*)chol_res_matrix_mf->p+6*j, index_chol_ix);
 
 		for (int k = odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {

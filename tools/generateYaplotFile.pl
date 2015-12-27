@@ -17,14 +17,19 @@ my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
 
-GetOptions('forcefactor=f' => \$force_factor, 'interval=i' => \$output_interval, 'shift=f' => \$xz_shift, 'axis' => \$axis);
-
+GetOptions(
+'forcefactor=f' => \$force_factor,
+'interval=i' => \$output_interval,
+'shift=f' => \$xz_shift,
+'axis' => \$axis,
+'reversibility' => \$draw_initial_config);
 
 
 printf "force_factor = $force_factor\n";
 printf "output_interval = $output_interval\n";
 printf "xz_shift = $xz_shift\n";
 printf "axis = $axis\n";
+printf "reversibility = $draw_initial_config\n";
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -53,6 +58,12 @@ while (1) {
 	&InParticles;
 	last unless defined $line;
 	&InInteractions;
+	
+	if ($first) {
+		&keepInitialConfig;
+	}
+	
+	
 	if ($output == 1) {
 		&OutYaplotData;
 	}
@@ -63,6 +74,16 @@ close (IN_particle);
 close (IN_interaction);
 
 ##################################################################
+sub keepInitialConfig {
+	for ($i = 0; $i < $np; $i ++){
+		$posx_init[$i] = $posx[$i];
+		$posz_init[$i] = $posz[$i];
+		$ang_init[$i] = $ang[$i];
+		$radius_init[$i] = $radius[$i];
+	}
+	
+	
+}
 
 sub readHeader {
 	$line = <IN_particle>;
@@ -297,7 +318,25 @@ sub OutYaplotData{
 			OutCross($i);
 		}
 	}
+	if ($draw_initial_config) {
+		printf OUT "y 5\n";
+		printf OUT "@ 0\n";
+		$r = $radius_init[0];
+		printf OUT "r $r\n";
+		for ($i = 0; $i < $np; $i++) {
+			if ($i >= 1 && $radius_init[$i] != $radius_init[$i-1]) {
+				$r = $yap_radius*$radius_init[$i];
+				printf OUT "r $r\n";
+			}
+			printf OUT "c $posx_init[$i] 0.01 $posz_init[$i] \n";
+		}
+	}
+	
+	
 	&OutBoundaryBox;
+	
+	
+	
 }
 
 sub OutBoundaryBox {
