@@ -1733,14 +1733,19 @@ void System::computeVelocities(bool divided_velocities)
 			na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
 		} else {
 			na_velocity[np_mobile].x = -1; // @ TODO: test (to be removed)
+			//na_ang_velocity[np_mobile].y = -1;
 		}
-		//na_ang_velocity[np_mobile].y = -1;
 	} else if (test_simulation == 2) {
 		na_ang_velocity[np_mobile].y = -2*shear_rate;
 	} else if (test_simulation == 3) {
 		na_ang_velocity[np_mobile].y = 2*shear_rate;
+	} else if (test_simulation == 4) {
+		if (time <= p.time_end/2) {
+			shear_rate = 1;
+		} else {
+			shear_rate = -1;
+		}
 	}
-
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;

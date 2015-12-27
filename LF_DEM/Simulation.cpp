@@ -199,6 +199,8 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.test_simulation = 2;
 	} else if (simu_identifier == "test3") {
 		sys.test_simulation = 3;
+	} else if (simu_identifier == "reverse") {
+		sys.test_simulation = 4;
 	}
 	
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);

@@ -76,8 +76,8 @@ class StokesSolver{
 	  ============================
 	  The ResistanceMatrix has the following structure (all blocks are 6x6 if UW/FT version, 3x3 if U/F version):
 
-	                    ================== 6N ==================
-	                     .........        ..........
+                         ================== 6N ==================
+                         .........        ..........
                     ||  |  6x6   .        . 6x6    .            | ||
                     ||  | dblock .   0    .odblock .            | ||
                     ||  |        .        .        .            | ||
@@ -90,13 +90,13 @@ class StokesSolver{
                     ||  |odblock .             .                | ||
                     ||  |        .               .              | ||
                     ||  |.........                 .            | ||
-										||  |                            .          | ||
-										||  | 						       .........| ||
+                    ||  |                            .          | ||
+                    ||  |                              .........| ||
                     ||  |                              .        | ||
                     ||  |                              . dblock | ||
                     ||  |                              .        | ||
-					                                   .........
-	                    =================== 6N =================
+                                                       .........
+                        =================== 6N =================
 
 	 This matrix is symmetric, so we only store its lower part. This implies dblocks themselves are symmetric.
 	 odblocks however are antisymmetric.
@@ -127,12 +127,12 @@ class StokesSolver{
 				 (subblocks names according to "Jeffrey" (Brady) ):
 
 
-				 | dblocks[i].col0[0]    .                   .                 .                     .                    .               	|
-"A11"(FU)| dblocks[i].col0[1]  dblocks[i].col1[0]     .                .                     .                    .               	|
-				 | dblocks[i].col0[2]  dblocks[i].col1[1]  dblocks[i].col2[0]  .                     .                    .               	|
-				 | 0                      .                   .                dblocks[i].col3[0]    .                    .               	|
-"B11"(TU)| dblocks[i].col0[3]  0                     .                 dblocks[i].col3[1]	 dblocks[i].col4[0]     .                 |
-				 | dblocks[i].col0[4]  dblocks[i].col1[2]  0                   dblocks[i].col3[2]  dblocks[i].col4[1]  	odblocks[t].col5[0] |
+				 | dblocks[i].col0[0]  .                   .                   .                     .                    .               	  |
+		"A11"(FU)| dblocks[i].col0[1]  dblocks[i].col1[0]  .                   .                     .                    .               	  |
+				 | dblocks[i].col0[2]  dblocks[i].col1[1]  dblocks[i].col2[0]  .                     .                    .               	  |
+				 | 0                   .                   .                   dblocks[i].col3[0]    .                    .                   |
+		"B11"(TU)| dblocks[i].col0[3]  0                   .                   dblocks[i].col3[1]	 dblocks[i].col4[0]   .                   |
+				 | dblocks[i].col0[4]  dblocks[i].col1[2]  0                   dblocks[i].col3[2]    dblocks[i].col4[1]   odblocks[t].col5[0] |
 				 																																	"C11" subblock (TW)
 
 	  - odblocks: 24 independent elements per block.
@@ -148,11 +148,11 @@ class StokesSolver{
 				  odbrows[odbrows_table[i]+m] = j, and the elements are accessed via:
 
 				  (only stored elements are shown)                                "\tilde B21"
-					| odblocks[t].col0[0]    .                   .                 	0                     .                    .               	 	|
-"A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]     .                odblocks[t].col3[0]  0                     .                	|
-					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0] odblocks[t].col3[1]  odblocks[t].col4[0]  0                 	|
-					| 0                      .                   .                 	odblocks[t].col3[2]   .                    .               		|
-"B21"			| odblocks[t].col0[3]  0                     .                	odblocks[t].col3[3]	 odblocks[t].col4[1]   .                 	|
+					| odblocks[t].col0[0]    .                   .                 	0                     .                    .                    |
+	 "A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]     .                odblocks[t].col3[0]  0                     .                    |
+					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0] odblocks[t].col3[1]  odblocks[t].col4[0]  0                     |
+					| 0                      .                   .                  odblocks[t].col3[2]   .                    .                    |
+	 "B21"			| odblocks[t].col0[3]  0                     .                  odblocks[t].col3[3]  odblocks[t].col4[1]   .                    |
 					| odblocks[t].col0[4]  odblocks[t].col1[2]  0                   odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col5[0] |
 		                                                                          "C21"
 	  with t=odbrows_table[i]+m
@@ -160,10 +160,10 @@ class StokesSolver{
 				Thanks to the symmetries of the resistance matrix, we can recover all the elements as:
 	             (all elements)                                                   "\tilde B21"
 					| odblocks[t].col0[0]  odblocks[t].col0[1]  odblocks[t].col0[2]  0                   -odblocks[t].col3[0] -odblocks[t].col3[1] |
-"A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]  odblocks[t].col1[1]  odblocks[t].col3[0]  0                   -odblocks[t].col4[0] |
+	 "A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]  odblocks[t].col1[1]  odblocks[t].col3[0]  0                   -odblocks[t].col4[0] |
 					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0]	 odblocks[t].col3[1]  odblocks[t].col4[0]  0                   |
-					| 0                   -odblocks[t].col0[3] -odblocks[t].col0[4]  odblocks[t].col3[2] 	odblocks[t].col3[3]  odblocks[t].col3[4] |
-"B21"			| odblocks[t].col0[3]  0                   -odblocks[t].col1[2]  odblocks[t].col3[3]  odblocks[t].col4[1]  odblocks[t].col4[2] |
+					| 0                   -odblocks[t].col0[3] -odblocks[t].col0[4]  odblocks[t].col3[2]  odblocks[t].col3[3]  odblocks[t].col3[4] |
+	 "B21"			| odblocks[t].col0[3]  0                   -odblocks[t].col1[2]  odblocks[t].col3[3]  odblocks[t].col4[1]  odblocks[t].col4[2] |
 					| odblocks[t].col0[4]  odblocks[t].col1[2]  0                    odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col5[0] |
 		                                                                          "C21"
 	  with t=odbrows_table[i]+m
