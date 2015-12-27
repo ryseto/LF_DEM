@@ -160,7 +160,7 @@ void System::allocateRessources()
 	if (twodimension) {
 		interaction_volume = M_PI*pow(p.interaction_range, 2);
 		double particle_volume = M_PI;
-		maxnb_interactionpair_per_particle = interaction_volume/particle_volume;
+		maxnb_interactionpair_per_particle = interaction_volume/particle_volume*2;
 	} else {
 		interaction_volume = (4*M_PI/3)*pow(p.interaction_range, 3);
 		double particle_volume = 4*M_PI/3;
@@ -570,6 +570,14 @@ void System::setupSystem(string control)
 			vel_magnetic[i].reset();
 			ang_vel_magnetic[i].reset();
 		}
+	}
+	if (test_simulation == 2) {
+		origin_of_rotation.set(lx_half, 0, lz_half);
+		for (int i=np_mobile; i<np; i++) {
+			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
+							  position[i].x-origin_of_rotation.x);
+		}
+
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -1130,6 +1138,7 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 	}
 	// new interaction
 	if (nb_interaction >= maxnb_interactionpair) {
+		cerr << nb_interaction << endl;
 		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
@@ -1170,7 +1179,7 @@ void System::checkNewInteraction()
 					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
 					if (sq_dist < sq_dist_lim) {
-						createNewInteraction(i,j, scaled_interaction_range);
+						createNewInteraction(i, j, scaled_interaction_range);
 					}
 				}
 			}
@@ -1733,7 +1742,9 @@ void System::computeVelocities(bool divided_velocities)
 	} else if (test_simulation == 2) {
 		double omega = 0.1;
 		for (int i=np_mobile+9; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega*(position[i].z-10), 0, omega*(position[i].x-10));
+			na_velocity[i].set(-omega*(position[i].z-origin_of_rotation.z),
+							   0,
+							   omega*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -1*omega, 0);
 		}
 	} else if (test_simulation == 3) {

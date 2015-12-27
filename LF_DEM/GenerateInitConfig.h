@@ -64,6 +64,13 @@ private:
 	 * The others have magnetic susceptibility -1.
 	 */
 	bool magnetic_config;
+	bool circular_wide_gap;
+	double radius_in;
+	double radius_out;
+	int np_in;
+	int np_out;
+	int np_fix;
+	int np_movable;
 #ifndef USE_DSFMT
 	MTRand rand_gen;
 #endif
@@ -88,7 +95,14 @@ private:
 	void outputPositionData();
 
 public:
-	GenerateInitConfig(): sys(System(p, events)) {};
-	int generate(int rand_seed_, bool magnetic_config);
+	GenerateInitConfig():
+	magnetic_config(false),
+	circular_wide_gap(false),
+	sys(System(p, events)) {};
+	int generate(int rand_seed_, int config_type);
+	/* config_type = 1 -- noraml
+	 * config_type = 2 -- circular wide gap
+	 * config_type = 3 -- magnetic
+	 */
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */
