@@ -380,11 +380,11 @@ sub printHead
 #	}
 	printf OUT "
 	camera {
-		location <0, 40, 0>
+		location <0, 20, 0>
 		right <21/22.5, 0, 0>
 		sky      <0, 0, 1>
 		look_at  <0, 0, 0>
-		angle 36
+		angle 45
 	}
 	light_source {
 		100
@@ -398,9 +398,9 @@ sub printHead
 	#macro S(p, r)
 	sphere{ 0, r
 		texture {
-			pigment{ color rgbft <0.9, 1, 1, 0.3, 0.5> }
+			pigment{ color rgbft <1, 1, 1, 0.3, 0.5> }
 			finish { phong 1 reflection {0.3 metallic 0} }}
-		interior {ior 1.2}
+		interior {ior 1.4}
 		translate p
 	}
 	#end

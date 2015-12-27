@@ -489,7 +489,7 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 	// for the mixed problem
 	odblocks_nb_ff = nb_of_interactions_ff;
 	for (unsigned int i=0; i<dblocks_ff.size(); i++) {
-		dblocks[i] = reset_resmat_dblocks[i+mobile_particle_nb];
+		dblocks_ff[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
 	odbrows_ff.clear();
 	odblocks_ff.resize(odblocks_nb_ff);
