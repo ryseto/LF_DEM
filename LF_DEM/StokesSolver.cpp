@@ -431,6 +431,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 	for (int j=0; j<col_nb; j++) {
+		
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -457,7 +458,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 			}
 		}
 	}
-	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
+//	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
