@@ -62,6 +62,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 	fout.open("energy_decay.dat");
 	double energy_previous = 0;
 	double diff_energy = 99999;
+	int cnt = 0;
 	do {
 		energy = zeroTMonteCarloSweep();
 		cerr << energy << endl;
@@ -72,7 +73,12 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 		}
 		count ++;
 		cerr << "diff = " << abs(diff_energy) << endl;
-	} while (abs(diff_energy) > 1e-10);
+		if (abs(diff_energy) < 1e-10) {
+			cnt++;
+		} else {
+			cnt = 0;
+		}
+	} while (cnt < 10);
 	//deflate
 	for (int i=0; i<np; i++) {
 		if (i < np1) {
@@ -169,6 +175,11 @@ void GenerateInitConfig::outputPositionData()
 		fout_yap << position[i].x << ' ';
 		fout_yap << position[i].y << ' ';
 		fout_yap << position[i].z << endl;
+		fout_yap << "t ";
+		fout_yap << position[i].x << ' ';
+		fout_yap << position[i].y << ' ';
+		fout_yap << position[i].z << ' ';
+		fout_yap << i << endl;
 	}
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";

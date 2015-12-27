@@ -1246,13 +1246,6 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 		nb_of_active_interactions_ff += val;
 	} else {
 		nb_of_active_interactions_mf += val;
-		if (val == 1) {
-			cerr << "@+ " << nb_of_active_interactions_mf << endl;
-		} else if (val == -1) {
-			cerr << "@- " << nb_of_active_interactions_mf << endl;
-		} else {
-			exit(1);
-		}
 	}
 }
 
@@ -1729,14 +1722,20 @@ void System::computeVelocities(bool divided_velocities)
 		na_ang_velocity[i].reset();
 	}
 	if (test_simulation == 1) {
-		if (time <= 100){
-			na_velocity[np_mobile].x = 1; // @ TODO: test (to be removed)
-		} else {
-			na_velocity[np_mobile].x = -1; // @ TODO: test (to be removed)
-			//na_ang_velocity[np_mobile].y = -1;
+		static double time_next = 16;
+		static double direction = 1;
+		if (time > time_next) {
+			direction *= -1;
+			time_next += 16;
+			cerr << direction << endl;
 		}
+		na_velocity[np_mobile].x = direction; // @ TODO: test (to be removed)
 	} else if (test_simulation == 2) {
-		na_ang_velocity[np_mobile].y = -2*shear_rate;
+		double omega = 0.1;
+		for (int i=np_mobile+9; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(-omega*(position[i].z-10), 0, omega*(position[i].x-10));
+			na_ang_velocity[i].set(0, -1*omega, 0);
+		}
 	} else if (test_simulation == 3) {
 		na_ang_velocity[np_mobile].y = 2*shear_rate;
 	} else if (test_simulation == 4) {
@@ -1746,6 +1745,8 @@ void System::computeVelocities(bool divided_velocities)
 			shear_rate = -1;
 		}
 	}
+	
+	
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
