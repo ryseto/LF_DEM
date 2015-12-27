@@ -813,7 +813,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
-
 }
 
 /****************************************************************************************************
