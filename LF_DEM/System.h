@@ -284,8 +284,12 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
-	// temporal wide gap setup
+	/* temporal wide gap setup **************/
 	vec3d origin_of_rotation;
+	bool circular_widegap;
+	int np_in;
+	int np_out;
+	/****************************************/
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,

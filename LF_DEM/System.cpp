@@ -44,6 +44,7 @@ init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
 magnetic_rotation_active(false),
+circular_widegap(false),
 eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
@@ -572,6 +573,10 @@ void System::setupSystem(string control)
 		}
 	}
 	if (test_simulation == 2) {
+		cerr << np << ' ' << np_mobile << endl;
+		p.fixed_nb = np_in+np_out;
+		np_mobile = np-p.fixed_nb;
+		cerr << np << ' ' << np_mobile << endl;
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
@@ -1741,7 +1746,7 @@ void System::computeVelocities(bool divided_velocities)
 		na_velocity[np_mobile].x = direction; // @ TODO: test (to be removed)
 	} else if (test_simulation == 2) {
 		double omega = 0.1;
-		for (int i=np_mobile+9; i<np; i++) { // temporary: particles perfectly advected
+		for (int i=np_mobile+np_in; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega*(position[i].z-origin_of_rotation.z),
 							   0,
 							   omega*(position[i].x-origin_of_rotation.x));
