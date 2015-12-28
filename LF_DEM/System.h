@@ -284,7 +284,7 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
-	/* temporal wide gap setup **************/
+	/**** temporal wide gap setup ***********/
 	vec3d origin_of_rotation;
 	bool circular_widegap;
 	int np_in;
@@ -302,11 +302,9 @@ private:
 	void allocateRessources();
 	void timeEvolution(const std::string& time_or_strain,
 					   const double& value_end);
-//	void timeEvolution(double value_end); // @@@ DEPRECATED
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
-	//void destroyInteraction(int k);
 	void updateNumberOfInteraction(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();

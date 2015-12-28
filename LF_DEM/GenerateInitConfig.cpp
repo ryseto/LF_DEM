@@ -37,9 +37,9 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_fix = np_out+np_in;
 		np += np_fix;
 		cerr << "np " << np << endl;
+	} else {
+		np_movable = np;
 	}
-
-	
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
@@ -50,7 +50,6 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.setSystemVolume(2*a2);
 	sys.in_predictor = false;
 	sys.p.integration_method = 0;
-	np_fix = 0;
 	putRandom();
 	double inflate_ratio = 1.03;
 	for (int i=0; i<np; i++) {

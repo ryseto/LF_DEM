@@ -48,6 +48,9 @@ open (IN_interaction, "< ${interaction_data}");
 
 $cnt_interval = 0;
 $first = 1;
+$checkpoint = 0;
+$shear_strain_previous = 0;
+$shearrate_positive = 1;
 while (1) {
 	if ($cnt_interval == 0 ||
 		$cnt_interval % $output_interval == 0) {
@@ -57,12 +60,27 @@ while (1) {
 	}
 	&InParticles;
 	last unless defined $line;
+	
+	if ($shearrate_positive > 0) {
+		if ($shear_strain < $shear_strain_previous) {
+			$shearrate_positive = -1;
+		}
+		$checkpoint = 0;
+	} else {
+		if ($shear_strain > $shear_strain_previous) {
+			$shearrate_positive = 1;
+			$checkpoint = 1;
+		} else {
+			$checkpoint = 0;
+		}
+	}
+	$shear_strain_previous = $shear_strain;
 	&InInteractions;
 	
-	if ($first) {
+	if ($first || $checkpoint == 1) {
 		&keepInitialConfig;
 	}
-	
+
 	
 	if ($output == 1) {
 		&OutYaplotData;
@@ -81,8 +99,6 @@ sub keepInitialConfig {
 		$ang_init[$i] = $ang[$i];
 		$radius_init[$i] = $radius[$i];
 	}
-	
-	
 }
 
 sub readHeader {
@@ -156,7 +172,7 @@ sub InParticles {
 		# 5 sys.get_time()
 		# 6 sys.angle_external_magnetic_field
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
-
+		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
 			if ($output == 1) {

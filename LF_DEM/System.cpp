@@ -161,7 +161,7 @@ void System::allocateRessources()
 	if (twodimension) {
 		interaction_volume = M_PI*pow(p.interaction_range, 2);
 		double particle_volume = M_PI;
-		maxnb_interactionpair_per_particle = interaction_volume/particle_volume*2;
+		maxnb_interactionpair_per_particle = interaction_volume/particle_volume;
 	} else {
 		interaction_volume = (4*M_PI/3)*pow(p.interaction_range, 3);
 		double particle_volume = 4*M_PI/3;
@@ -582,7 +582,6 @@ void System::setupSystem(string control)
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
-
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -1143,7 +1142,6 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 	}
 	// new interaction
 	if (nb_interaction >= maxnb_interactionpair) {
-		cerr << nb_interaction << endl;
 		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
@@ -1755,14 +1753,13 @@ void System::computeVelocities(bool divided_velocities)
 	} else if (test_simulation == 3) {
 		na_ang_velocity[np_mobile].y = 2*shear_rate;
 	} else if (test_simulation == 4) {
-		if (time <= p.time_end/2) {
-			shear_rate = 1;
-		} else {
-			shear_rate = -1;
+		static double time_next = 3;
+		if (time > time_next) {
+			shear_rate *= -1;
+			time_next += 3;
 		}
 	}
-	
-	
+
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
