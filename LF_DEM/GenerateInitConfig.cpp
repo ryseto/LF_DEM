@@ -58,7 +58,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
-	step_size = 10;
+	step_size = 5;
 	gradientDescent();
 	step_size /= 4.;
 	gradientDescent();
@@ -98,12 +98,15 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		}
 	} while (cnt < 3);
 	//deflate
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;
 		} else {
 			sys.radius[i] = a2;
 		}
+	}
+	for (int i=np_movable; i<np; i++) {
+		sys.radius[i] = a1;
 	}
 	position.resize(np);
 	radius.resize(np);

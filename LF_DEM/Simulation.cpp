@@ -193,15 +193,22 @@ void Simulation::simulationSteadyShear(string in_args,
 									   string simu_identifier)
 {
 	control_var = control_variable;
-	if (simu_identifier == "test") {
+	/***************  This part is temporal ********************/
+	// TODO 
+	if (simu_identifier == "mtest1") {
+		cerr << "Test simulation for reversibility in mixed problem" << endl;
 		sys.test_simulation = 1;
-	} else if (simu_identifier == "test2") {
+	} else if (simu_identifier == "ctest") {
+		cerr << "Test simulation for circular wide gap" << endl;
 		sys.test_simulation = 2;
-	} else if (simu_identifier == "test3") {
+	} else if (simu_identifier == "mtest2") {
+		cerr << "Test simulation for a mixed problem" << endl;
 		sys.test_simulation = 3;
-	} else if (simu_identifier == "reverse") {
+	} else if (simu_identifier == "rtest") {
+		cerr << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 4;
 	}
+	/*************************************************************/
 	
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {

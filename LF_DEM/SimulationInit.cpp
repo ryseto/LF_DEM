@@ -1045,9 +1045,12 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	} else {
 		header_2nd_line >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz;
 		int np_in, np_out;
-		header_2nd_line >> np_in >> np_out;
+		double radius_in, radius_out;
+		header_2nd_line >> np_in >> np_out >> radius_in >> radius_out;
 		sys.np_in = np_in;
 		sys.np_out = np_out;
+		sys.radius_in = radius_in;
+		sys.radius_out = radius_out;
 	}	
 	vector<vec3d> initial_position;
 	vector <double> radius;

@@ -582,6 +582,9 @@ void System::setupSystem(string control)
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
+		omega_circular_widegap = (radius_out-radius_in)*shear_rate/radius_out;
+		cerr << "shear_rate = " << shear_rate << endl;
+		cerr << "omega_circular_widegap = " << omega_circular_widegap << endl;
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -1718,6 +1721,35 @@ void System::computeShearRate()
 	}
 }
 
+void System::tmpMixedProblemSetVelocities()
+{
+	if (test_simulation == 1) {
+		static double time_next = 16;
+		static double direction = 1;
+		if (time > time_next) {
+			direction *= -1;
+			time_next += 16;
+			cerr << direction << endl;
+		}
+		na_velocity[np_mobile].x = direction; // @ TODO: test (to be removed)
+	} else if (test_simulation == 2) {
+		for (int i=np_mobile+np_in; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(-omega_circular_widegap*(position[i].z-origin_of_rotation.z),
+							   0,
+							   omega_circular_widegap*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_circular_widegap, 0);
+		}
+	} else if (test_simulation == 3) {
+		na_ang_velocity[np_mobile].y = 2*shear_rate;
+	} else if (test_simulation == 4) {
+		static double time_next = 3;
+		if (time > time_next) {
+			shear_rate *= -1;
+			time_next += 3;
+		}
+	}
+}
+
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
@@ -1733,33 +1765,9 @@ void System::computeVelocities(bool divided_velocities)
 		na_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	if (test_simulation == 1) {
-		static double time_next = 16;
-		static double direction = 1;
-		if (time > time_next) {
-			direction *= -1;
-			time_next += 16;
-			cerr << direction << endl;
-		}
-		na_velocity[np_mobile].x = direction; // @ TODO: test (to be removed)
-	} else if (test_simulation == 2) {
-		double omega = 0.1;
-		for (int i=np_mobile+np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -1*omega, 0);
-		}
-	} else if (test_simulation == 3) {
-		na_ang_velocity[np_mobile].y = 2*shear_rate;
-	} else if (test_simulation == 4) {
-		static double time_next = 3;
-		if (time > time_next) {
-			shear_rate *= -1;
-			time_next += 3;
-		}
+	if (test_simulation > 0) {
+		tmpMixedProblemSetVelocities();
 	}
-
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;

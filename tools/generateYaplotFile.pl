@@ -16,20 +16,24 @@ my $force_factor = 0.001;
 my $output_interval = 1;
 my $xz_shift = 0;
 my $axis = 0;
+my $reversibility_test = 0;
+my $monodisperse = 0;
 
 GetOptions(
 'forcefactor=f' => \$force_factor,
 'interval=i' => \$output_interval,
 'shift=f' => \$xz_shift,
 'axis' => \$axis,
-'reversibility' => \$draw_initial_config);
+'reversibility' => \$reversibility_test,
+'monodisperse' => \$monodisperse);
 
 
 printf "force_factor = $force_factor\n";
 printf "output_interval = $output_interval\n";
 printf "xz_shift = $xz_shift\n";
 printf "axis = $axis\n";
-printf "reversibility = $draw_initial_config\n";
+printf "reversibility = $reversibility_test\n";
+printf "monodisperse = $monodisperse\n";
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -48,9 +52,10 @@ open (IN_interaction, "< ${interaction_data}");
 
 $cnt_interval = 0;
 $first = 1;
-$checkpoint = 0;
+$checkpoint = 1;
 $shear_strain_previous = 0;
 $shearrate_positive = 1;
+
 while (1) {
 	if ($cnt_interval == 0 ||
 		$cnt_interval % $output_interval == 0) {
@@ -77,10 +82,11 @@ while (1) {
 	$shear_strain_previous = $shear_strain;
 	&InInteractions;
 	
-	if ($first || $checkpoint == 1) {
-		&keepInitialConfig;
+	if ($reversibility_test) {
+		if ($first || $checkpoint == 1) {
+			&keepInitialConfig;
+		}
 	}
-
 	
 	if ($output == 1) {
 		&OutYaplotData;
@@ -95,6 +101,7 @@ close (IN_interaction);
 sub keepInitialConfig {
 	for ($i = 0; $i < $np; $i ++){
 		$posx_init[$i] = $posx[$i];
+		$posy_init[$i] = $posy[$i];
 		$posz_init[$i] = $posz[$i];
 		$ang_init[$i] = $ang[$i];
 		$radius_init[$i] = $radius[$i];
@@ -292,12 +299,16 @@ sub OutYaplotData{
 	printf OUT "r $r\n";
 	$switch = 0;
 	## visualize particles
-	for ($i = 0; $i < $np; $i++) {
-		if ($i >= 1 && $radius[$i] != $radius[$i-1]) {
-			$r = $yap_radius*$radius[$i];
-			printf OUT "r $r\n";
+	if ($monodisperse) {
+		printf OUT "r $radius[0]\n";
+		for ($i = 0; $i < $np; $i++) {
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
-		printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+	} else {
+		for ($i = 0; $i < $np; $i++) {
+			printf OUT "r $radius[$i]\n";
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+		}
 	}
 	## visualize contact network
 	printf OUT "y 2\n";
@@ -334,9 +345,9 @@ sub OutYaplotData{
 			OutCross($i);
 		}
 	}
-	if ($draw_initial_config) {
+	if ($reversibility_test) {
 		printf OUT "y 5\n";
-		printf OUT "@ 0\n";
+		printf OUT "@ 7\n";
 		$r = $radius_init[0];
 		printf OUT "r $r\n";
 		for ($i = 0; $i < $np; $i++) {
@@ -344,7 +355,11 @@ sub OutYaplotData{
 				$r = $yap_radius*$radius_init[$i];
 				printf OUT "r $r\n";
 			}
-			printf OUT "c $posx_init[$i] 0.01 $posz_init[$i] \n";
+			if ($Ly == 0) {
+				printf OUT "c $posx_init[$i] 0.01 $posz_init[$i] \n";
+			} else {
+				printf OUT "c $posx_init[$i] $posy_init[$i] $posz_init[$i] \n";
+			}
 		}
 	}
 	

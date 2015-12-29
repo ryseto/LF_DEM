@@ -111,6 +111,7 @@ private:
 	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
 	void computeBrownianVelocities();
+	void tmpMixedProblemSetVelocities();
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
@@ -287,8 +288,11 @@ private:
 	/**** temporal wide gap setup ***********/
 	vec3d origin_of_rotation;
 	bool circular_widegap;
+	double omega_circular_widegap;
 	int np_in;
 	int np_out;
+	double radius_in;
+	double radius_out;
 	/****************************************/
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
