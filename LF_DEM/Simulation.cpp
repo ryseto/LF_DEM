@@ -242,7 +242,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		generateOutput(next_output_data, next_output_config, binconf_counter);
 
 		if (time_end != -1) {
-			cout << "time: " << sys.get_time_in_simulation_units() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
+			cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
 		} else {
 			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
 		}

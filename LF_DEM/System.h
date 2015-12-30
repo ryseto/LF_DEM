@@ -92,7 +92,7 @@ private:
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(const std::string& time_or_strain,
 							   const double& value_end);
-	void timeStepBoxing(const double strain_increment);
+	void timeStepBoxing();
 	void adaptTimeStep();
 	void adaptTimeStep(const std::string& time_or_strain,
 					   const double& value_end);

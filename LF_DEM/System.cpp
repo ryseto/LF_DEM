@@ -758,12 +758,13 @@ void System::initializeBoxing()
 	boxset.update();
 }
 
-void System::timeStepBoxing(const double strain_increment)
+void System::timeStepBoxing()
 {
 	/**
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
+		double strain_increment = dt*shear_rate;
 		shear_strain += strain_increment;
 		if (!p.cross_shear) {
 			shear_disp.x += strain_increment*lz;
@@ -785,6 +786,10 @@ void System::timeStepBoxing(const double strain_increment)
 				m--;
 			}
 			shear_disp.y = shear_disp.y-m*ly;
+		}
+	} else {
+		if (circular_widegap) {
+			shear_strain += dt*shear_rate;
 		}
 	}
 	boxset.update();
@@ -972,12 +977,7 @@ void System::timeStepMove(const string& time_or_strain,
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
 	/* evolve PBC */
-	double strain_increment = 0;
-	if (!zero_shear) {
-		strain_increment = dt*shear_rate;
-	}
-
-	timeStepBoxing(strain_increment);
+	timeStepBoxing();
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -1013,16 +1013,11 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 	time += dt;
 	time_in_simulation_units += dt*(*ratio_unit_time);
 	total_num_timesteps ++;
-	/* evolve PBC */
-	double strain_increment = 0;
-	if (!zero_shear) {
-		strain_increment = dt*shear_rate;
-	}
-
-	/* The periodic boundary condition is updated in predictor.
+	/* evolve PBC
+	 * The periodic boundary condition is updated in predictor.
 	 * It must not be updated in corrector.
 	 */
-	timeStepBoxing(strain_increment);
+	timeStepBoxing();
 
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
