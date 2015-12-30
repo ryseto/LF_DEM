@@ -227,9 +227,9 @@ void StokesSolver::insertODBlockValues(double *matrix_x,
 void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int>& pvalues)
 {
 	/**
-			Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array.
-			You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
-	*/
+	 Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array.
+	 You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
+	 */
 	for (int col=0; col<6; col++) {
 		matrix_p[col] = pvalues[col];
 	}
@@ -449,17 +449,17 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
-
 		insertBlockColumnIndices((int*)chol_res_matrix_mf->p+6*j, index_chol_ix);
 
-		for (int k = odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
+		for (int k=odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
 			insertODBlock(chol_res_matrix_mf, index_chol_ix, odbrows_mf[k], odblocks_mf[k]);
 			for (int col=0; col<6; col++) {
 				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
 			}
 		}
 	}
-//	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
+	//@@ [original] ((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
+	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1];
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
