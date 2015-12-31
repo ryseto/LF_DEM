@@ -24,11 +24,11 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		magnetic_config = true;
 	} else if (config_type == 3) {
 		cerr << "generate wide gap configuration" <<endl;
-		circular_wide_gap = true;
+		circular_widegap = true;
 	}
 	setParameters();
 	rand_seed = rand_seed_;
-	if (circular_wide_gap) {
+	if (circular_widegap) {
 		np_out = (radius_out*2*M_PI)/2;
 		np_in = (radius_in*2*M_PI)/2;
 		cerr << "np_out = " << np_out << endl;
@@ -37,9 +37,9 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_fix = np_out+np_in;
 		np += np_fix;
 		cerr << "np " << np << endl;
+	} else {
+		np_movable = np;
 	}
-
-	
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
@@ -50,7 +50,6 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.setSystemVolume(2*a2);
 	sys.in_predictor = false;
 	sys.p.integration_method = 0;
-	np_fix = 0;
 	putRandom();
 	double inflate_ratio = 1.03;
 	for (int i=0; i<np; i++) {
@@ -59,7 +58,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
-	step_size = 20;
+	step_size = 5;
 	gradientDescent();
 	step_size /= 4.;
 	gradientDescent();
@@ -99,12 +98,15 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		}
 	} while (cnt < 3);
 	//deflate
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;
 		} else {
 			sys.radius[i] = a2;
 		}
+	}
+	for (int i=np_movable; i<np; i++) {
+		sys.radius[i] = a1;
 	}
 	position.resize(np);
 	radius.resize(np);
@@ -172,10 +174,19 @@ void GenerateInitConfig::outputPositionData()
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-	fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
-	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
-	fout << lx << ' ' << ly << ' ' << lz << ' ';
-	fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+	if (circular_widegap == false) {
+		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+	} else {
+		fout << "# np1 np2 vf lx ly lz np_in np_out radius_in radius_out" << endl;
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << np_in << ' ' << np_out << ' ';
+		fout << radius_in << ' ' << radius_out << endl;
+	}
+	
 	for (int i = 0; i<np; i++) {
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
@@ -321,7 +332,7 @@ void GenerateInitConfig::putRandom()
 #ifdef USE_DSFMT
 	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
-	if (!circular_wide_gap) {
+	if (!circular_widegap) {
 		for (int i=0; i<np_movable; i++) {
 			sys.position[i].x = lx*RANDOM;
 			sys.position[i].z = lz*RANDOM;
@@ -338,12 +349,12 @@ void GenerateInitConfig::putRandom()
 		}
 	} else {
 		//for (int i=0; i<np_movable; i++) {
-		vec3d r_center(lx/2+0.05, 0, lz/2+0.05);
+		vec3d r_center(lx/2, 0, lz/2);
 		int i = 0;
 		while (i < np_movable) {
 			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
 			double r = (pos-r_center).norm();
-			if (r > radius_in+1 && r < radius_out-1) {
+			if (r > radius_in+2 && r < radius_out-2) {
 				sys.position[i] = pos;
 				if (i < np1) {
 					sys.radius[i] = a1;
@@ -353,13 +364,14 @@ void GenerateInitConfig::putRandom()
 				i++;
 			}
 		}
-		for (int i=0; i<np_in; i++){
+		
+		for (i=0; i<np_in; i++){
 			double t = i*(2*M_PI/np_in);
 			vec3d pos = r_center + radius_in*vec3d(cos(t), 0, sin(t));
 			sys.position[i+np_movable] = pos;
 			sys.radius[i+np_movable] = 1;
 		}
-		for (int i=0; i<np_out; i++){
+		for (i=0; i<np_out; i++){
 			double t = i*(2*M_PI/np_out);
 			vec3d pos = r_center + radius_out*vec3d(cos(t), 0, sin(t));
 			sys.position[i+np_movable+np_in] = pos;
@@ -599,7 +611,7 @@ void GenerateInitConfig::setParameters()
 		}
 	}
 
-	if (circular_wide_gap) {
+	if (circular_widegap) {
 		double area_particle = np1*pvolume1+np2*pvolume2;
 		double area_gap = area_particle/volume_fraction;
 		cerr << "area_particle = " << area_particle << endl;
@@ -611,9 +623,9 @@ void GenerateInitConfig::setParameters()
 		radius_out = rr*radius_in;
 		cerr << radius_in << endl;
 		cerr << radius_out << endl;
-		lx = 2*radius_out+0.1;
+		lx = 2*radius_out+1;
 		ly = 0;
-		lz = 2*radius_out+0.1;
+		lz = 2*radius_out+1;
 		//radius_out =  readStdinDefault(10, "outer radius");
 		//radius_in =  readStdinDefault(3, "inner radius");
 	}

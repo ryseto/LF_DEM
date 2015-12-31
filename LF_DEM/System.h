@@ -92,7 +92,7 @@ private:
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(const std::string& time_or_strain,
 							   const double& value_end);
-	void timeStepBoxing(const double strain_increment);
+	void timeStepBoxing();
 	void adaptTimeStep();
 	void adaptTimeStep(const std::string& time_or_strain,
 					   const double& value_end);
@@ -111,6 +111,7 @@ private:
 	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
 	void computeBrownianVelocities();
+	void tmpMixedProblemSetVelocities();
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
@@ -284,8 +285,15 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
-	// temporal wide gap setup
+	/**** temporal wide gap setup ***********/
 	vec3d origin_of_rotation;
+	bool circular_widegap;
+	double omega_circular_widegap;
+	int np_in;
+	int np_out;
+	double radius_in;
+	double radius_out;
+	/****************************************/
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
@@ -298,11 +306,9 @@ private:
 	void allocateRessources();
 	void timeEvolution(const std::string& time_or_strain,
 					   const double& value_end);
-//	void timeEvolution(double value_end); // @@@ DEPRECATED
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
-	//void destroyInteraction(int k);
 	void updateNumberOfInteraction(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();
