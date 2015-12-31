@@ -28,7 +28,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile_seto.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generatePovray.pl $HOME/bin/">
+               scriptText = "cp ${BUILT_PRODUCTS_DIR}/LF_DEM $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile_seto.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generateYaplotFile.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/generatePovray.pl $HOME/bin/&#10;cp ${PROJECT_DIR}/tools/analyseCircularWideGap.pl $HOME/bin/&#10;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
