@@ -1,8 +1,15 @@
 .DS_Store
 *~
 SuiteSparse_?PUcompilation.txt
+
+wiki/
+
+# Xcode
+xcuserdata
+*.xcuserstate
 **/*.xcodeproj/*
 !**/*.xcodeproj/project.pbxproj
 !*.xcodeproj/default.*
 !**/*.xcodeproj/default.*
-wiki/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
