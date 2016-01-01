@@ -551,7 +551,7 @@
 		D92EAA0E17E39D5100C903F5 /* Lubrication.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Lubrication.h; sourceTree = "<group>"; };
 		D92F19C21676450800411650 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = StokesSolver.h; sourceTree = "<group>"; };
-		D93C105A1C34197200460301 /* analyseCircularWideGap.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = analyseCircularWideGap.pl; path = tools/analyseCircularWideGap.pl; sourceTree = SOURCE_ROOT; };
+		D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = analyzeCircularWideGap.pl; path = tools/analyzeCircularWideGap.pl; sourceTree = SOURCE_ROOT; };
 		D94AEF021C0BCEAC0061C679 /* README.rst */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.rst; sourceTree = "<group>"; };
 		D9506B9116D81A7C00A52CFF /* Stress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Stress.cpp; sourceTree = "<group>"; };
 		D9532ADF1B9412FC0014831F /* CalcOrderParameter */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CalcOrderParameter; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1166,7 +1166,7 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
-				D93C105A1C34197200460301 /* analyseCircularWideGap.pl */,
+				D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */,
 				D9A906671BF331EF00BE8640 /* generatePovray.pl */,
 				D9A906641BF331EF00BE8640 /* calc_contact_fraction.pl */,
 				D9A906651BF331EF00BE8640 /* extractConfigdata.pl */,

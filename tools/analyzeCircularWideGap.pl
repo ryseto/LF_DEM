@@ -9,6 +9,7 @@
 use Math::Trig;
 use IO::Handle;
 use Getopt::Long;
+use POSIX;
 
 my $particle_data = $ARGV[0];
 
@@ -17,6 +18,22 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
+$j = index($name, 'e_', 1);
+$initconfig = substr($name, 0, $j+3);
+
+printf "$initconfig\n";
+
+open (IN_CONFIG, "< ${initconfig}.dat");
+$line = <IN_CONFIG>;
+$line = <IN_CONFIG>;
+($buf, $np1, $np2, $vf, $lx, $ly, $lz, $np_in, $np_out, $radius_in, $radius_out) = split(/\s+/, $line);
+
+$np_mov = $np1+$np2;
+
+printf "$radius_in $radius_out\n";
+# np1 np2 vf lx ly lz np_in np_out radius_in radius_out
+close(IN_CONFIG);
+#exit;
 # Create output file name
 
 $output = "CWGdata_$name.dat";
@@ -25,23 +42,28 @@ printf "$output\n";
 open (OUT, "> ${output}");
 open (IN_particle, "< ${particle_data}");
 
+
 &readHeader;
 
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 5;
+$shear_strain_steady_state = 20;
 
-$kmax = 10;
-$r_in = 22.8447 + 1;
-$r_out = 45.6894 - 1;
+$kmax = 15;
+$r_in = $radius_in+sqrt(3)/2;
+$r_out = $radius_out-sqrt(3)/2;
 $rdiff = ${r_out}-${r_in};
+
 $dr = $rdiff/$kmax;
 
-for ($k = 0; $k <= $kmax; $k++) {
+printf "$radius_in $radius_out $rdiff $dr \n";
+#exit;
+for ($k = 0; $k < $kmax; $k++) {
 	$average[$k] = 0;
 	$radialposition[$k] = 0;
 	$cnt[$k] = 0;
+	$particlearea[$k] = 0;
 }
 
 while (1) {
@@ -50,13 +72,13 @@ while (1) {
 }
 
 
-for ($k = 0; $k <= $kmax; $k++) {
+for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
 		$ave_v_tan = $average_v[$k]/$cnt[$k];
 		$r = $r_in + $dr*$k;
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
-		$density = (pi*$cnt[$k]/$cnt_data)/$area;
+		$density = ($particlearea[$k]/$cnt_data)/$area;
 		
 		printf OUT "$r $ave_v_tan $density\n";
 	}
@@ -98,58 +120,48 @@ sub InParticles {
 		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
-			if ($output == 1) {
-				# 1: number of the particle
-				# 2: radius
-				# 3, 4, 5: position
-				# 6, 7, 8: velocity
-				# 9, 10, 11: angular velocity
-				# 12: viscosity contribution of lubrication
-				# 13: viscosity contributon of contact GU xz
-				# 14: viscosity contributon of brownian xz
-				# (15: angle for 2D simulation)
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-				$ang[$i] = $angle;
-				$radius[$i] = $a;
-				if ($xz_shift) {
-					$x += $xz_shift;
-					$z += $xz_shift;
-					if ($x > $Lx/2) {
-						$x -= $Lx;
-					}
-					if ($z > $Lz/2) {
-						$z -= $Lz;
-					}
+			# 1: number of the particle
+			# 2: radius
+			# 3, 4, 5: position
+			# 6, 7, 8: velocity
+			# 9, 10, 11: angular velocity
+			# 12: viscosity contribution of lubrication
+			# 13: viscosity contributon of contact GU xz
+			# 14: viscosity contributon of brownian xz
+			# (15: angle for 2D simulation)
+			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			$ang[$i] = $angle;
+			$radius[$i] = $a;
+			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
+				$pos_r2 = $x*$x + $z*$z;
+				$pos_r = sqrt($pos_r2);
+				$v_tan = (-$vx*$z + $vz*$x)/$pos_r;
+				$f_rpos = ($pos_r - $r_in)/$dr;
+				$i_rpos = floor($f_rpos);
+				if ($i_rpos >= 0 && $i_rpos < $kmax) {
+					$average_v[$i_rpos] += $v_tan;
+					$cnt[$i_rpos] ++;
+					$particlearea[$i_rpos] += pi*$a*$a;
+				} else {
+					printf "@ $i_rpos   $pos_r\n";
+					exit;
 				}
-				if ($shear_strain > $shear_strain_steady_state) {
-					$pos_r[$i] = sqrt($x*$x + $z*$z);
-					$v_dot_rvec = $vx*$x + $vz*$z;
-					$v_tan_x = $vx - ${v_dot_rvec} * $x /$pos_r[$i];
-					$v_tan_z = $vz - ${v_dot_rvec} * $z /$pos_r[$i];
-					$v_tan[$i] = sqrt($v_tan_x*$v_tan_x+ $v_tan_z*$v_tan_z);
-
-					$i_rpos = int(($pos_r[$i] - $r_in)/$dr);
-					if ($i_rpos > 0 && $i_rpos <= $kmax) {
-						$average_v[$i_rpos] += $v_tan[$i];
-						$cnt[$i_rpos] ++;
-					}
-				}
-				#$posx[$i] = $x;
-				#$posy[$i] = $y;
-				#$posz[$i] = $z;
-				#$velx[$i] = $vx;
-				#$vely[$i] = $vy;
-				#$velz[$i] = $vz;
-				#$omegax[$i] = $ox;
-				#$omegay[$i] = $oy;
-				#$omegaz[$i] = $oz;
-				#$omegay[$i] = $oy;
 			}
+			#$posx[$i] = $x;
+			#$posy[$i] = $y;
+			#$posz[$i] = $z;
+			#$velx[$i] = $vx;
+			#$vely[$i] = $vy;
+			#$velz[$i] = $vz;
+			#$omegax[$i] = $ox;
+			#$omegay[$i] = $oy;
+			#$omegaz[$i] = $oz;
+			#$omegay[$i] = $oy;
 		}
-		if ($shear_strain > $shear_strain_steady_state) {
-			$cnt_data ++;
-		}
-		
+	}
+	if ($shear_strain > $shear_strain_steady_state) {
+		$cnt_data ++;
+		#		exit;
 	}
 }

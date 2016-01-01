@@ -307,18 +307,21 @@ sub OutYaplotData{
 	} else {
 		for ($i = 0; $i < $np; $i++) {
 			printf OUT "r $radius[$i]\n";
+					if ($i == $np-1) {
+				printf OUT "@ 4\n";
+			}
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
 	}
 	## visualize contact network
-	printf OUT "y 2\n";
-	printf OUT "r 0.2\n";
-	printf OUT "@ 2\n"; # static
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		if ($contactstate[$k] == 2) {
-			&OutString2($int0[$k], $int1[$k]);
-		}
-	}
+#	printf OUT "y 2\n";
+#	printf OUT "r 0.2\n";
+#	printf OUT "@ 2\n"; # static
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		if ($contactstate[$k] == 2) {
+#			&OutString2($int0[$k], $int1[$k]);
+#		}
+#	}
 	## visualize force chain network
 	printf OUT "y 4\n";
 	printf OUT "@ 7\n";
@@ -328,23 +331,23 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k]);
 		}
 	}
-	printf OUT "y 3\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] < 0) {
-			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k]);
-		}
-	}
-	
+#	printf OUT "y 3\n";
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($force[$k] < 0) {
+#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k]);
+#		}
+#	}
+#	
 	## visualize rotation in 2D
-	if ($Ly == 0) {
-		printf OUT "y 6\n";
-		printf OUT "@ 1\n";
-		for ($i = 0; $i < $np; $i++) {
-			OutCross($i);
-		}
-	}
+#	if ($Ly == 0) {
+#		printf OUT "y 6\n";
+#		printf OUT "@ 1\n";
+#		for ($i = 0; $i < $np; $i++) {
+#			OutCross($i);
+#		}
+#	}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";
@@ -364,10 +367,7 @@ sub OutYaplotData{
 	}
 	
 	
-	&OutBoundaryBox;
-	
-	
-	
+	#	&OutBoundaryBox;
 }
 
 sub OutBoundaryBox {
