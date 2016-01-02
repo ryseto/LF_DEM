@@ -573,10 +573,8 @@ void System::setupSystem(string control)
 		}
 	}
 	if (test_simulation == 2) {
-		cerr << np << ' ' << np_mobile << endl;
 		p.fixed_nb = np_in+np_out;
 		np_mobile = np-p.fixed_nb;
-		cerr << np << ' ' << np_mobile << endl;
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
@@ -1762,7 +1760,7 @@ void System::computeVelocities(bool divided_velocities)
 	}
 	if (test_simulation > 0) {
 		tmpMixedProblemSetVelocities();
-	}
+	}	
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;

@@ -369,7 +369,9 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 			}
 		}
 	}
+	//cerr << "mm " << ((int*)chol_res_matrix->p)[6*size];
 	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
+	//cerr << " --> " << ((int*)chol_res_matrix->p)[6*size] << endl;
 }
 
 void StokesSolver::completeResistanceMatrix_FixedFixed()
@@ -459,7 +461,9 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 		}
 	}
 	//@@ [original] ((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
+	//	cerr << "mf " << ((int*)chol_res_matrix_mf->p)[6*col_nb];
 	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1];
+	//	cerr << " --> " << ((int*)chol_res_matrix_mf->p)[6*col_nb] << endl;
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
