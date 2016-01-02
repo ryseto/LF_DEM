@@ -21,14 +21,8 @@ LF_DEM
 # object files
 *.o
 
-# pdf's
-*.pdf
-
 # tests
 ./test*
-
-# local bash scripts
-*.sh
 
 #subdirectories
 LF_DEM.dSYM/
@@ -45,5 +39,3 @@ VersionInfo.h
 *.bz2
 *.tz2
 
-# text files
-*.txt
