@@ -529,8 +529,7 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	if (sys.test_simulation == 1 ||
-		sys.test_simulation == 2) {
+	if (sys.test_simulation > 0 && sys.test_simulation < 20) {
 		sys.zero_shear = true;
 	}
 	setDefaultParameters();

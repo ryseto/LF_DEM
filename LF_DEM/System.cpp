@@ -572,7 +572,7 @@ void System::setupSystem(string control)
 			ang_vel_magnetic[i].reset();
 		}
 	}
-	if (test_simulation == 2) {
+	if (test_simulation > 10 && test_simulation <= 20) {
 		p.fixed_nb = np_in+np_out;
 		np_mobile = np-p.fixed_nb;
 		origin_of_rotation.set(lx_half, 0, lz_half);
@@ -580,7 +580,11 @@ void System::setupSystem(string control)
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
-		omega_circular_widegap = (radius_out-radius_in)*shear_rate/radius_out;
+		if (test_simulation == 11) {
+			omega_circular_widegap = (radius_out-radius_in)*shear_rate/radius_out;
+		} else if (test_simulation == 12) {
+			omega_circular_widegap = -(radius_out-radius_in)*shear_rate/radius_in;
+		}
 		cerr << "shear_rate = " << shear_rate << endl;
 		cerr << "omega_circular_widegap = " << omega_circular_widegap << endl;
 	}
@@ -1724,17 +1728,24 @@ void System::tmpMixedProblemSetVelocities()
 			time_next += 16;
 			cerr << direction << endl;
 		}
-		na_velocity[np_mobile].x = direction; // @ TODO: test (to be removed)
+		na_velocity[np_mobile].x = direction;
 	} else if (test_simulation == 2) {
+			na_ang_velocity[np_mobile].y = 2*shear_rate;
+	} else if (test_simulation == 11) {
 		for (int i=np_mobile+np_in; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega_circular_widegap*(position[i].z-origin_of_rotation.z),
 							   0,
 							   omega_circular_widegap*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_circular_widegap, 0);
 		}
-	} else if (test_simulation == 3) {
-		na_ang_velocity[np_mobile].y = 2*shear_rate;
-	} else if (test_simulation == 4) {
+	} else if (test_simulation == 12) {
+		for (int i=np_mobile; i<np_mobile+np_in; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(-omega_circular_widegap*(position[i].z-origin_of_rotation.z),
+							   0,
+							   omega_circular_widegap*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_circular_widegap, 0);
+		}
+	} else if (test_simulation == 21) {
 		static double time_next = 3;
 		if (time > time_next) {
 			shear_rate *= -1;
