@@ -24,11 +24,11 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		magnetic_config = true;
 	} else if (config_type == 3) {
 		cerr << "generate wide gap configuration" <<endl;
-		circular_widegap = true;
+		circulargap_config = true;
 	}
 	setParameters();
 	rand_seed = rand_seed_;
-	if (circular_widegap) {
+	if (circulargap_config) {
 		np_out = (radius_out*2*M_PI)/2;
 		np_in = (radius_in*2*M_PI)/2;
 		cerr << "np_out = " << np_out << endl;
@@ -144,7 +144,7 @@ void GenerateInitConfig::outputPositionData()
 		cerr << "disperse_type is wrong." << endl;
 		exit(1);
 	}
-	if (circular_widegap == false) {
+	if (circulargap_config == false) {
 		if (sys.twodimension) {
 			if (lx_lz == 1) {
 				ss_posdatafilename << "Square"; // square
@@ -178,7 +178,7 @@ void GenerateInitConfig::outputPositionData()
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-	if (circular_widegap == false) {
+	if (circulargap_config == false) {
 		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
 		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 		fout << lx << ' ' << ly << ' ' << lz << ' ';
@@ -336,7 +336,7 @@ void GenerateInitConfig::putRandom()
 #ifdef USE_DSFMT
 	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
-	if (!circular_widegap) {
+	if (!circulargap_config) {
 		for (int i=0; i<np_movable; i++) {
 			sys.position[i].x = lx*RANDOM;
 			sys.position[i].z = lz*RANDOM;
@@ -517,7 +517,7 @@ void GenerateInitConfig::setParameters()
 	 *
 	 */
 	np = readStdinDefault(500, "number of particle");
-	if (circular_widegap == false) {
+	if (circulargap_config == false) {
 		int dimension = readStdinDefault(2, "dimension (2 or 3)");
 		if (dimension == 2) {
 			sys.twodimension = true;
@@ -532,7 +532,7 @@ void GenerateInitConfig::setParameters()
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
-	if (circular_widegap == false) {
+	if (circulargap_config == false) {
 		lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
 		if (!sys.twodimension) {
 			ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
@@ -623,7 +623,7 @@ void GenerateInitConfig::setParameters()
 		}
 	}
 
-	if (circular_widegap) {
+	if (circulargap_config) {
 		double area_particle = np1*pvolume1+np2*pvolume2;
 		double area_gap = area_particle/volume_fraction;
 		cerr << "area_particle = " << area_particle << endl;

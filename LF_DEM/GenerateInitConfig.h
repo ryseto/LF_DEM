@@ -64,7 +64,7 @@ private:
 	 * The others have magnetic susceptibility -1.
 	 */
 	bool magnetic_config;
-	bool circular_widegap;
+	bool circulargap_config;
 	double radius_in;
 	double radius_out;
 	int np_in;
@@ -96,9 +96,10 @@ private:
 
 public:
 	GenerateInitConfig():
+	sys(System(p, events)),
 	magnetic_config(false),
-	circular_widegap(false),
-	sys(System(p, events)) {};
+	circulargap_config(false){};
+	
 	int generate(int rand_seed_, int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap

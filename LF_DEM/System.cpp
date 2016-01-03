@@ -43,8 +43,8 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
+circulargap(false),
 magnetic_rotation_active(false),
-circular_widegap(false),
 eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
@@ -581,12 +581,12 @@ void System::setupSystem(string control)
 							  position[i].x-origin_of_rotation.x);
 		}
 		if (test_simulation == 11) {
-			omega_circular_widegap = (radius_out-radius_in)*shear_rate/radius_out;
+			omega_circulargap = (radius_out-radius_in)*shear_rate/radius_out;
 		} else if (test_simulation == 12) {
-			omega_circular_widegap = -(radius_out-radius_in)*shear_rate/radius_in;
+			omega_circulargap = -(radius_out-radius_in)*shear_rate/radius_out;
 		}
 		cerr << "shear_rate = " << shear_rate << endl;
-		cerr << "omega_circular_widegap = " << omega_circular_widegap << endl;
+		cerr << "omega_circulargap = " << omega_circulargap << endl;
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -790,7 +790,7 @@ void System::timeStepBoxing()
 			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
-		if (circular_widegap) {
+		if (circulargap) {
 			shear_strain += dt*shear_rate;
 		}
 	}
@@ -1728,22 +1728,40 @@ void System::tmpMixedProblemSetVelocities()
 			time_next += 16;
 			cerr << direction << endl;
 		}
+		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
 		na_velocity[np_mobile].x = direction;
 	} else if (test_simulation == 2) {
-			na_ang_velocity[np_mobile].y = 2*shear_rate;
+		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
+		na_ang_velocity[np_mobile].y = 2*shear_rate;
 	} else if (test_simulation == 11) {
-		for (int i=np_mobile+np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_circular_widegap*(position[i].z-origin_of_rotation.z),
+		int i_np_in = np_mobile+np_in;
+		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
+		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(-omega_circulargap*(position[i].z-origin_of_rotation.z),
 							   0,
-							   omega_circular_widegap*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_circular_widegap, 0);
+							   omega_circulargap*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_circulargap, 0);
 		}
 	} else if (test_simulation == 12) {
-		for (int i=np_mobile; i<np_mobile+np_in; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_circular_widegap*(position[i].z-origin_of_rotation.z),
+		int i_np_in = np_mobile+np_in;
+		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(-omega_circulargap*(position[i].z-origin_of_rotation.z),
 							   0,
-							   omega_circular_widegap*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_circular_widegap, 0);
+							   omega_circulargap*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_circulargap, 0);
+		}
+		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
 		}
 	} else if (test_simulation == 21) {
 		static double time_next = 3;
@@ -1764,14 +1782,16 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-
-	for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
-		na_velocity[i].reset();
-		na_ang_velocity[i].reset();
-	}
-	if (test_simulation > 0) {
+	
+	if (test_simulation == 0) {
+		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
+	} else if (test_simulation > 0) {
 		tmpMixedProblemSetVelocities();
-	}	
+	}
+	
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;

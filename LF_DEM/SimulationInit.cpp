@@ -1029,10 +1029,10 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	stringstream header_1st_line(header_imported_configulation[0]);
 	
 	if (header_1st_line.str().find("np_in") != string::npos) {
-		sys.circular_widegap = true;
+		sys.circulargap = true;
 	}
 	stringstream header_2nd_line(header_imported_configulation[1]);
-	if (sys.circular_widegap == false) {
+	if (sys.circulargap == false) {
 		header_2nd_line >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp.x;
 		double initial_lees_edwards_disp_y;
 		if (header_2nd_line >> initial_lees_edwards_disp_y) {
