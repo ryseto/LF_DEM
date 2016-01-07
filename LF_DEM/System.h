@@ -111,6 +111,7 @@ private:
 	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
 	void sumUpVelocityComponents();
+	void setFixedParticleVelocities();
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();

@@ -1783,6 +1783,18 @@ void System::sumUpVelocityComponents()
 	}
 }
 
+void System::setFixedParticleVelocities()
+{
+	if (test_simulation == 0) {
+		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
+	} else if (test_simulation > 0) {
+		tmpMixedProblemSetVelocities();
+	}
+}
+
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
@@ -1794,14 +1806,7 @@ void System::computeVelocities(bool divided_velocities)
 	 */
 	stokes_solver.resetRHS();
 
-	if (test_simulation == 0) {
-		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
-	} else if (test_simulation > 0) {
-		tmpMixedProblemSetVelocities();
-	}
+	setFixedParticleVelocities();
 
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
