@@ -1680,6 +1680,14 @@ void System::computeVelocityComponents()
 	}
 }
 
+void System::rescaleVelHydroStressControlled()
+{
+	for (int i=0; i<np; i++) {
+		vel_hydro[i] *= shear_rate;
+		ang_vel_hydro[i] *= shear_rate;
+	}
+}
+
 void System::computeShearRate()
 {
 	/**
@@ -1703,10 +1711,7 @@ void System::computeShearRate()
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-	for (int i=0; i<np; i++) {
-		vel_hydro[i] *= shear_rate;
-		ang_vel_hydro[i] *= shear_rate;
-	}
+
 }
 
 void System::tmpMixedProblemSetVelocities()
@@ -1815,6 +1820,7 @@ void System::computeVelocities(bool divided_velocities)
 		computeVelocityComponents();
 		if (stress_controlled) {
 			computeShearRate();
+			rescaleVelHydroStressControlled();
 		}
 		sumUpVelocityComponents();
 	} else {

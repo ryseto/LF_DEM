@@ -117,6 +117,7 @@ private:
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
+	void rescaleVelHydroStressControlled();
 	void stressReset();
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(const int&, const int&);
