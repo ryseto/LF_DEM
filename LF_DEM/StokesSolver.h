@@ -326,9 +326,7 @@ public:
 	void resetRHStorque();
 	void addToRHS(double*);
 	void addToRHS(const std::vector<double>&);
-    void addToRHSForce(int, double*);
     void addToRHSForce(int, const vec3d&);
-    void addToRHSTorque(int, double*);
     void addToRHSTorque(int, const vec3d&);
     void setRHS(const std::vector<vec3d>&);
     void setRHSForce(int, const vec3d&);

@@ -525,16 +525,6 @@ void StokesSolver::resetRHStorque()
 	}
 }
 
-void StokesSolver::addToRHSForce(int i, double* force_i)
-{
-	if (i < mobile_particle_nb) {
-		int i6 = 6*i;
-		for (int u=0; u<3; u++) {
-			((double*)chol_rhs->x)[i6+u] += force_i[u];
-		}
-	}
-}
-
 void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
@@ -542,16 +532,6 @@ void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 		((double*)chol_rhs->x)[i6  ] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
 		((double*)chol_rhs->x)[i6+2] += force_i.z;
-	}
-}
-
-void StokesSolver::addToRHSTorque(int i, double* torque_i)
-{
-	if (i < mobile_particle_nb) {
-		int i6_3 = 6*i+3;
-		for (int u=0; u<3; u++) {
-			((double*)chol_rhs->x)[i6_3+u] += torque_i[u];
-		}
 	}
 }
 
