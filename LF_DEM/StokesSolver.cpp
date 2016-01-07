@@ -331,12 +331,10 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
 
-	int size = mobile_particle_nb;
-
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
-	for (int j=0; j<size; j++) {
+	for (int j=0; j<mobile_particle_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -372,7 +370,7 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	// tell cholmod where the last column stops
 	// nb of non-zero elements in column col_nb-1 is 1 (it is the last element of the diagonal)
 	int nzero_nb_last_col = 1;
-	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+nzero_nb_last_col;
+	((int*)chol_res_matrix->p)[6*mobile_particle_nb] = ((int*)chol_res_matrix->p)[6*mobile_particle_nb-1]+nzero_nb_last_col;
 }
 
 void StokesSolver::completeResistanceMatrix_FixedFixed()
@@ -382,11 +380,11 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	if (mobile_particle_nb == np) {
 		return;
 	}
-	int size = np-mobile_particle_nb;
+	int fixed_particle_nb = np-mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
-	for (int j=0; j<size; j++) {
+	for (int j=0; j<fixed_particle_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -423,7 +421,7 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	// tell cholmod where the last column stops
 	// nb of non-zero elements in column col_nb-1 is 1 (it is the last element of the diagonal)
 	int nzero_nb_last_col = 1;
-	((int*)chol_res_matrix_ff->p)[6*size] = ((int*)chol_res_matrix_ff->p)[6*size-1]+nzero_nb_last_col;
+	((int*)chol_res_matrix_ff->p)[6*fixed_particle_nb] = ((int*)chol_res_matrix_ff->p)[6*fixed_particle_nb-1]+nzero_nb_last_col;
 }
 
 void StokesSolver::completeResistanceMatrix_MobileFixed()
@@ -433,10 +431,9 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	if (mobile_particle_nb == np) {
 		return;
 	}
-	int col_nb = mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
-	for (int j=0; j<col_nb; j++) {
+	for (int j=0; j<mobile_particle_nb; j++) {
 
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
@@ -466,9 +463,9 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	}
 	// tell cholmod where the last column stops
 	// nb of non-zero elements in column col_nb-1 is 5*(odbrows_table_mf[col_nb]-odbrows_table_mf[col_nb-1]) (as it is an off diagonal matrix)
-	int nzero_nb_last_col = 5*(odbrows_table_mf[col_nb]-odbrows_table_mf[col_nb-1]);
+	int nzero_nb_last_col = 5*(odbrows_table_mf[mobile_particle_nb]-odbrows_table_mf[mobile_particle_nb-1]);
 	// so the last element in chol_res_matrix_mf->p must be
-	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1] + nzero_nb_last_col;
+	((int*)chol_res_matrix_mf->p)[6*mobile_particle_nb] = ((int*)chol_res_matrix_mf->p)[6*mobile_particle_nb-1] + nzero_nb_last_col;
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
