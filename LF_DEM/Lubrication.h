@@ -113,7 +113,7 @@ private:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
 	bool is_active();
- 
+
 	void getInteractionData();
 	void getGeometry();
 	void calcLubConstants();
@@ -140,8 +140,8 @@ private:
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
-	void calcGE(double *GEi, double *GEj);
-	void calcGEHE(double *GEi, double *GEj, double *HEi, double *HEj);
+	std::tuple<vec3d,vec3d> calcGE();
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE();
 	void calcXFunctions();
 	void calcXYFunctions();
 	inline double scaledXA0(){return a0*XA[0];}

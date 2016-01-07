@@ -1354,8 +1354,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 				fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
 			}
 			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
-			stokes_solver.addToRHS(force_torque_from_fixed.data());
-			//stokes_solver.addToRHS(force_torque_from_fixed);
+			stokes_solver.addToRHS(force_torque_from_fixed);
 		}
 	} else {
 		// add GE in the rhs
@@ -1391,14 +1390,11 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
 					if (rhs) {
-						double GEi[3];
-						double GEj[3];
-						inter->lubrication.calcGE(GEi, GEj); // G*E_\infty term
+						vec3d GEi, GEj;
+						std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
 						if (shearrate_is_1 == false) {
-							for (int u=0; u<3; u++) {
-								GEi[u] *= shear_rate;
-								GEj[u] *= shear_rate;
-							}
+							GEi *= shear_rate;
+							GEj *= shear_rate;
 						}
 						stokes_solver.addToRHSForce(i, GEi);
 						stokes_solver.addToRHSForce(j, GEj);
@@ -1444,18 +1440,13 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 													  inter->lubrication.scaledYC1());
 					}
 					if (rhs) {
-						double GEi[3];
-						double GEj[3];
-						double HEi[3];
-						double HEj[3];
-						inter->lubrication.calcGEHE(GEi, GEj, HEi, HEj); // G*E_\infty term
+						vec3d GEi, GEj, HEi, HEj;
+						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE(); // G*E_\infty term
 						if (shearrate_is_1 == false) {
-							for (int u=0; u<3; u++) {
-								GEi[u] *= shear_rate;
-								GEj[u] *= shear_rate;
-								HEi[u] *= shear_rate;
-								HEj[u] *= shear_rate;
-							}
+								GEi *= shear_rate;
+								GEj *= shear_rate;
+								HEi *= shear_rate;
+								HEj *= shear_rate;
 						}
 						stokes_solver.addToRHSForce(i, GEi);
 						stokes_solver.addToRHSForce(j, GEj);
@@ -1782,7 +1773,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	
+
 	if (test_simulation == 0) {
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
@@ -1791,7 +1782,7 @@ void System::computeVelocities(bool divided_velocities)
 	} else if (test_simulation > 0) {
 		tmpMixedProblemSetVelocities();
 	}
-	
+
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;

@@ -573,7 +573,7 @@ void StokesSolver::addToRHS(double* rhs)
 	}
 }
 
-void StokesSolver::addToRHS(vector<double>& force)
+void StokesSolver::addToRHS(const vector<double>& force)
 {
 	for (unsigned int i=0; i<force.size(); i++) {
 		((double*)chol_rhs->x)[i] += force[i];
