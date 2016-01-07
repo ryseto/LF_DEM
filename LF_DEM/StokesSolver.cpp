@@ -433,7 +433,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 	for (int j=0; j<col_nb; j++) {
-		
+
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -573,8 +573,7 @@ void StokesSolver::addToRHS(double* rhs)
 
 void StokesSolver::addToRHS(vector<double>& force)
 {
-	//int size = chol_rhs->nrow;
-	for (int i=0; i<force.size(); i++) {
+	for (unsigned int i=0; i<force.size(); i++) {
 		((double*)chol_rhs->x)[i] += force[i];
 	}
 }
