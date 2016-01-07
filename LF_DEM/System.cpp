@@ -1763,6 +1763,26 @@ void System::tmpMixedProblemSetVelocities()
 	}
 }
 
+void System::sumUpVelocityComponents()
+{
+	for (int i=0; i<np_mobile; i++) {
+		na_velocity[i] = vel_hydro[i]+vel_contact[i];
+		na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+	}
+	if (repulsiveforce) {
+		for (int i=0; i<np_mobile; i++) {
+			na_velocity[i] += vel_repulsive[i];
+			na_ang_velocity[i] += ang_vel_repulsive[i];
+		}
+	}
+	if (magnetic) {
+		for (int i=0; i<np_mobile; i++) {
+			na_velocity[i] += vel_magnetic[i];
+			na_ang_velocity[i] += ang_vel_magnetic[i];
+		}
+	}
+}
+
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
@@ -1791,22 +1811,7 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			computeShearRate();
 		}
-		for (int i=0; i<np_mobile; i++) {
-			na_velocity[i] = vel_hydro[i]+vel_contact[i];
-			na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
-		}
-		if (repulsiveforce) {
-			for (int i=0; i<np_mobile; i++) {
-				na_velocity[i] += vel_repulsive[i];
-				na_ang_velocity[i] += ang_vel_repulsive[i];
-			}
-		}
-		if (magnetic) {
-			for (int i=0; i<np_mobile; i++) {
-				na_velocity[i] += vel_magnetic[i];
-				na_ang_velocity[i] += ang_vel_magnetic[i];
-			}
-		}
+		sumUpVelocityComponents();
 	} else {
 		if (!zero_shear) {
 			buildHydroTerms(true, true); // build matrix and rhs force GE

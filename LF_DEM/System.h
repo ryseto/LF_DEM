@@ -110,6 +110,7 @@ private:
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
 	void computeVelocityComponents();
+	void sumUpVelocityComponents();
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
