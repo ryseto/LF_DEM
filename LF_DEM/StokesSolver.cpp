@@ -369,9 +369,10 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 			}
 		}
 	}
-	//cerr << "mm " << ((int*)chol_res_matrix->p)[6*size];
-	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
-	//cerr << " --> " << ((int*)chol_res_matrix->p)[6*size] << endl;
+	// tell cholmod where the last column stops
+	// nb of non-zero elements in column col_nb-1 is 1 (it is the last element of the diagonal)
+	int nzero_nb_last_col = 1;
+	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+nzero_nb_last_col;
 }
 
 void StokesSolver::completeResistanceMatrix_FixedFixed()
@@ -419,7 +420,10 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 			}
 		}
 	}
-	((int*)chol_res_matrix_ff->p)[6*size] = ((int*)chol_res_matrix_ff->p)[6*size-1]+1;
+	// tell cholmod where the last column stops
+	// nb of non-zero elements in column col_nb-1 is 1 (it is the last element of the diagonal)
+	int nzero_nb_last_col = 1;
+	((int*)chol_res_matrix_ff->p)[6*size] = ((int*)chol_res_matrix_ff->p)[6*size-1]+nzero_nb_last_col;
 }
 
 void StokesSolver::completeResistanceMatrix_MobileFixed()
@@ -460,10 +464,11 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 			}
 		}
 	}
-	//@@ [original] ((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
-	//	cerr << "mf " << ((int*)chol_res_matrix_mf->p)[6*col_nb];
-	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1];
-	//	cerr << " --> " << ((int*)chol_res_matrix_mf->p)[6*col_nb] << endl;
+	// tell cholmod where the last column stops
+	// nb of non-zero elements in column col_nb-1 is 5*(odbrows_table_mf[col_nb]-odbrows_table_mf[col_nb-1]) (as it is an off diagonal matrix)
+	int nzero_nb_last_col = 5*(odbrows_table_mf[col_nb]-odbrows_table_mf[col_nb-1]);
+	// so the last element in chol_res_matrix_mf->p must be
+	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1] + nzero_nb_last_col;
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
