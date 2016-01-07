@@ -1662,12 +1662,13 @@ void System::computeVelocityComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
+
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
 		buildHydroTerms(true, false); // zero shear-rate
 	}
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 	if (repulsiveforce) {
@@ -1689,6 +1690,32 @@ void System::rescaleVelHydroStressControlled()
 }
 
 void System::computeShearRate()
+{
+	/**
+	 \brief Compute the shear rate under stress control conditions.
+	 */
+	calcStressPerParticle();
+	calcStress();
+	double shearstress_con;
+	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
+	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
+	double shearstress_rep = 0;
+	if (repulsiveforce) {
+		shearstress_rep = shearStressComponent(total_repulsive_stressXF+total_repulsive_stressGU, p.theta_shear);
+		shearstress_hyd -= shearstress_rep;
+	}
+	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
+	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
+	shear_rate = shearstress_hyd/viscosity_hyd;
+	if (shear_strain < init_strain_shear_rate_limit) {
+		if (shear_rate > init_shear_rate_limit) {
+			shear_rate = init_shear_rate_limit;
+		}
+	}
+
+}
+
+void System::computeShearRateFixedParticles()
 {
 	/**
 	 \brief Compute the shear rate under stress control conditions.
