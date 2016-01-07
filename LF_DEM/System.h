@@ -103,13 +103,16 @@ private:
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
 	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
+	void buildHydroTermsFromFixedParticles();
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
 	void buildMagneticForceTerms(bool);
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
-	void computeVelocityComponents();
+	void computeVelocityWithoutComponents();
+	void computeVelocityByComponents();
+	void computeVelocityByComponentsFixedParticles();
 	void sumUpVelocityComponents();
 	void setFixedParticleVelocities();
 	void computeBrownianVelocities();
@@ -117,6 +120,7 @@ private:
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
+	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
 	void stressReset();
 	void computeMaxNAVelocity();

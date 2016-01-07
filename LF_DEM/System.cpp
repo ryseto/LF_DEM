@@ -1338,24 +1338,6 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		// add GE in the rhs and lubrication terms in the resistance matrix
 		(this->*buildLubricationTerms)(true, build_force_GE);
 		stokes_solver.completeResistanceMatrix();
-		if (np_mobile < np) {
-			vector<double> force_torque_from_fixed (6*np_mobile);
-			int fixed_vel_size = 6*(np-np_mobile);
-			// @@ TODO: avoid copy of the velocities
-			vector<double> fixed_velocities (fixed_vel_size);
-			for(int i=0; i<np-np_mobile; i++){
-				int i6 = 6*i;
-				int i_fixed = i+np_mobile;
-				fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
-				fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
-				fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
-				fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
-				fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
-				fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
-			}
-			stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
-			stokes_solver.addToRHS(force_torque_from_fixed);
-		}
 	} else {
 		// add GE in the rhs
 		(this->*buildLubricationTerms)(false, build_force_GE);
@@ -1460,6 +1442,28 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 	}
 	stokes_solver.doneBlocks(np-1);
 	// stokes_solver.doneBlocks(np);
+}
+
+void System::buildHydroTermsFromFixedParticles()
+{
+
+	vector<double> force_torque_from_fixed (6*np_mobile);
+	int fixed_vel_size = 6*(np-np_mobile);
+	// @@ TODO: avoid copy of the velocities
+	vector<double> fixed_velocities (fixed_vel_size);
+	for(int i=0; i<np-np_mobile; i++){
+		int i6 = 6*i;
+		int i_fixed = i+np_mobile;
+		fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+		fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+		fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+		fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+		fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+		fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
+	}
+	stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
+	stokes_solver.addToRHS(force_torque_from_fixed);
+
 }
 
 void System::generateBrownianForces()
@@ -1657,7 +1661,31 @@ void System::computeMaxNAVelocity()
 	max_velocity = sqrt(sq_max_na_velocity);
 }
 
-void System::computeVelocityComponents()
+
+void System::computeVelocityWithoutComponents()
+{
+	if (!zero_shear) {
+		buildHydroTerms(true, true); // build matrix and rhs force GE
+	} else {
+		buildHydroTerms(true, false); // zero shear-rate
+	}
+	if (np_mobile < np) {
+		buildHydroTermsFromFixedParticles();
+	}
+	// for most of the time evolution
+	buildContactTerms(false); // add rhs += F_C
+	if (repulsiveforce) {
+		buildRepulsiveForceTerms(false); // add rhs += F_repulsive
+	}
+	if (magnetic) {
+		buildMagneticForceTerms(false);
+	}
+	stokes_solver.solve(na_velocity, na_ang_velocity); // get V
+	// @@@ I may need to use the force version: stokes_solver.solve(na_velocity) for magnetic work.
+}
+
+
+void System::computeVelocityByComponents()
 {
 	/**
 	 \brief Compute velocities component by component.
@@ -1680,6 +1708,33 @@ void System::computeVelocityComponents()
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
 }
+
+void System::computeVelocityByComponentsFixedParticles()
+{
+	/**
+	 \brief Compute velocities component by component.
+	 */
+	 throw runtime_error("computeVelocityByComponentsFixedParticles(): This is not implemented yet");
+
+	if (!zero_shear) {
+		buildHydroTerms(true, true); // build matrix and rhs force GE
+	} else {
+		buildHydroTerms(true, false); // zero shear-rate
+	}
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
+	buildContactTerms(true); // set rhs = F_C
+	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
+	if (repulsiveforce) {
+		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
+		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
+	}
+	if (magnetic) {
+		buildMagneticForceTerms(true);
+		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
+	}
+}
+
+
 
 void System::rescaleVelHydroStressControlled()
 {
@@ -1715,11 +1770,12 @@ void System::computeShearRate()
 
 }
 
-void System::computeShearRateFixedParticles()
+void System::computeVelocityCoeffFixedParticles()
 {
 	/**
-	 \brief Compute the shear rate under stress control conditions.
+	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
 	 */
+	throw runtime_error("computeVelocityCoeffFixedParticles(): This is not implemented yet");
 	calcStressPerParticle();
 	calcStress();
 	double shearstress_con;
@@ -1844,28 +1900,14 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
-		computeVelocityComponents();
+		computeVelocityByComponents();
 		if (stress_controlled) {
 			computeShearRate();
 			rescaleVelHydroStressControlled();
 		}
 		sumUpVelocityComponents();
 	} else {
-		if (!zero_shear) {
-			buildHydroTerms(true, true); // build matrix and rhs force GE
-		} else {
-			buildHydroTerms(true, false); // zero shear-rate
-		}
-		// for most of the time evolution
-		buildContactTerms(false); // add rhs += F_C
-		if (repulsiveforce) {
-			buildRepulsiveForceTerms(false); // add rhs += F_repulsive
-		}
-		if (magnetic) {
-			buildMagneticForceTerms(false);
-		}
-		stokes_solver.solve(na_velocity, na_ang_velocity); // get V
-		// @@@ I may need to use the force version: stokes_solver.solve(na_velocity) for magnetic work.
+		computeVelocityWithoutComponents();
 	}
 	if (brownian) {
 		if (in_predictor) {
