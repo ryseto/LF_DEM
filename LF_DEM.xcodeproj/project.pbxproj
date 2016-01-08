@@ -577,6 +577,7 @@
 		D988E39A1654A18D0009949F /* System.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = System.cpp; sourceTree = "<group>"; };
 		D988E39B1654A18D0009949F /* System.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = System.h; sourceTree = "<group>"; };
 		D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = LubricationFunctions.h; sourceTree = "<group>"; };
+		D992FCDB1C3F454300D2F1DC /* circularrheo.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; path = circularrheo.pl; sourceTree = "<group>"; };
 		D9953512180713FB00FC99C9 /* cluster_life */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = cluster_life; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9953514180713FB00FC99C9 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D9953516180713FB00FC99C9 /* cluster_life.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cluster_life.1; sourceTree = "<group>"; };
@@ -1166,6 +1167,7 @@
 			children = (
 				D9A906691BF331EF00BE8640 /* generateYaplotFile_seto.pl */,
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
+				D992FCDB1C3F454300D2F1DC /* circularrheo.pl */,
 				D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */,
 				D9A906671BF331EF00BE8640 /* generatePovray.pl */,
 				D9A906641BF331EF00BE8640 /* calc_contact_fraction.pl */,

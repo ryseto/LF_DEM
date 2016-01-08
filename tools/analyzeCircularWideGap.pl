@@ -18,10 +18,11 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'e_', 1);
-$initconfig = substr($name, 0, $j+3);
+$j = index($name, 'ders_', 1);
+$initconfig = substr($name, 0, $j+6);
 
 printf "$initconfig\n";
+
 
 open (IN_CONFIG, "< ${initconfig}.dat");
 $line = <IN_CONFIG>;
@@ -42,18 +43,20 @@ printf "$output\n";
 open (OUT, "> ${output}");
 open (IN_particle, "< ${particle_data}");
 
-
 &readHeader;
 
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 20;
+$shear_strain_steady_state = 5;
 
 $kmax = 15;
 $r_in = $radius_in+sqrt(3)/2;
 $r_out = $radius_out-sqrt(3)/2;
 $rdiff = ${r_out}-${r_in};
+
+$v_out = ($radius_out-$radius_in)*1;
+
 
 $dr = $rdiff/$kmax;
 
@@ -69,18 +72,32 @@ for ($k = 0; $k < $kmax; $k++) {
 while (1) {
 	&InParticles;
 	last unless defined $line;
+	if ($shear_strain > 200) {
+		last;
+	}
+}
+
+for ($k = 0; $k < $kmax; $k++) {
+	if ($cnt[$k] != 0) {
+		$ave_v_tan[$k] = $average_v[$k]/$cnt[$k];
+	}
 }
 
 
 for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
 		$ave_v_tan = $average_v[$k]/$cnt[$k];
+		if ($k < $kmax -1) {
+			$gradient_v_tan = ($ave_v_tan[$k+1]-$ave_v_tan[$k])/$dr;
+		} else {
+			$gradient_v_tan = 0;
+		}
 		$r = $r_in + $dr*$k;
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
 		
-		printf OUT "$r $ave_v_tan $density\n";
+		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density\n";
 	}
 }
 
@@ -136,7 +153,7 @@ sub InParticles {
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
 				$pos_r2 = $x*$x + $z*$z;
 				$pos_r = sqrt($pos_r2);
-				$v_tan = (-$vx*$z + $vz*$x)/$pos_r;
+				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r)/$v_out;
 				$f_rpos = ($pos_r - $r_in)/$dr;
 				$i_rpos = floor($f_rpos);
 				if ($i_rpos >= 0 && $i_rpos < $kmax) {
@@ -147,8 +164,7 @@ sub InParticles {
 					printf "@ $i_rpos   $pos_r\n";
 					exit;
 				}
-			}
-			#$posx[$i] = $x;
+			} 			#$posx[$i] = $x;
 			#$posy[$i] = $y;
 			#$posz[$i] = $z;
 			#$velx[$i] = $vx;
@@ -160,6 +176,7 @@ sub InParticles {
 			#$omegay[$i] = $oy;
 		}
 	}
+	
 	if ($shear_strain > $shear_strain_steady_state) {
 		$cnt_data ++;
 		#		exit;

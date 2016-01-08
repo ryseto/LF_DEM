@@ -18,6 +18,17 @@ my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
+my $rotatingobserver = 1;
+#my $np_movable = 3000;
+#my $rout = 84.4391;
+my $np_movable = 6000;
+my $rout = 118.562;
+my $rin = $rout/2;
+my $calcrheology = 0;
+
+if ($calcrheology == 1) {
+	$rotatingobserver = 0;
+}
 
 GetOptions(
 'forcefactor=f' => \$force_factor,
@@ -41,14 +52,22 @@ $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
 $interaction_data = "int_${name}.dat";
-$output = "y_$name.yap";
 
-open (OUT, "> ${output}");
-open (IN_particle, "< ${particle_data}");
-open (IN_interaction, "< ${interaction_data}");
+if ($calcrheology == 0) {
+	$output = "y_$name.yap";
+	open(OUT, "> ${output}");
+} else {
+	$output = "CGrheo_$name.dat";
+	open(OUT, "> ${output}");
+}
+open(IN_particle, "< ${particle_data}");
+open(IN_interaction, "< ${interaction_data}");
+
 
 &readHeader;
-&yaplotColor;
+if ($calcrheology == 0) {
+	&yaplotColor;
+}
 
 $cnt_interval = 0;
 $first = 1;
@@ -59,10 +78,10 @@ $shearrate_positive = 1;
 while (1) {
 	if ($cnt_interval == 0 ||
 		$cnt_interval % $output_interval == 0) {
-		$output = 1;
-	} else {
-		$output = 0;
-	}
+			$output = 1;
+		} else {
+			$output = 0;
+		}
 	&InParticles;
 	last unless defined $line;
 	if ($shearrate_positive > 0) {
@@ -79,15 +98,23 @@ while (1) {
 		}
 	}
 	$shear_strain_previous = $shear_strain;
+	$force_in = 0;
+	$force_out = 0;
 	&InInteractions;
 	if ($reversibility_test) {
 		if ($first || $checkpoint == 1) {
 			&keepInitialConfig;
 		}
 	}
-	
-	if ($output == 1) {
-		&OutYaplotData;
+	if ($calcrheology == 0) {
+		if ($output == 1) {
+			&OutYaplotData;
+		}
+	} else {
+		printf "$shear_strain_i $shear_strain \n";
+		$viscosity_in =  3*$force_in/(2*$rin);
+		$viscosity = 3*$force_out/(2*$rout);
+		printf OUT "$shear_strain $shear_rate $viscosity $viscosity_in\n";
 	}
 	$cnt_interval ++;
 }
@@ -172,7 +199,7 @@ sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
 	if (defined $line) {
-
+		
 		# 1 sys.get_shear_strain()
 		# 2 sys.shear_disp
 		# 3 getRate()
@@ -180,7 +207,7 @@ sub InParticles {
 		# 5 sys.get_time()
 		# 6 sys.angle_external_magnetic_field
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
-
+		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
 			if ($output == 1) {
@@ -195,7 +222,7 @@ sub InParticles {
 				# (15: angle for 2D simulation)
 				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 				$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-
+				
 				#
 				$ang[$i] = $angle;
 				$radius[$i] = $a;
@@ -209,9 +236,15 @@ sub InParticles {
 						$z -= $Lz;
 					}
 				}
-				$posx[$i] = $x;
-				$posy[$i] = $y;
-				$posz[$i] = $z;
+				if ($rotatingobserver) {
+					$posxtmp[$i] = $x;
+					$posy[$i] = $y;
+					$posztmp[$i] = $z;
+				} else {
+					$posx[$i] = $x;
+					$posy[$i] = $y;
+					$posz[$i] = $z;
+				}
 				$velx[$i] = $vx;
 				$vely[$i] = $vy;
 				$velz[$i] = $vz;
@@ -222,6 +255,18 @@ sub InParticles {
 				if ($radius_max < $a) {
 					$radius_max = $a;
 				}
+			}
+		}
+		if ($rotatingobserver) {
+			if ($first) {
+				$rout = sqrt($posxtmp[$np-1]*$posxtmp[$np-1] + $posztmp[$np-1]*$posztmp[$np-1]);
+				#printf "$rout\n";
+			}
+			$theta = -0.5*$shear_strain;
+			#printf "$theta, $shear_strain, $rout\n";
+			for ($i = 0; $i < $np; $i ++){
+				$posx[$i] = $posxtmp[$i]*cos($theta)-$posztmp[$i]*sin($theta);
+				$posz[$i] = $posxtmp[$i]*sin($theta)+$posztmp[$i]*cos($theta);
 			}
 		}
 	}
@@ -263,38 +308,41 @@ sub InInteractions {
 		#		"#15: tangential part of the contact force, z\n"
 		#		"#16: norm of the normal repulsive force\n"
 		#		"#17: Viscosity contribution of contact xF\n";
-		if ($output == 1) {
+		#if ($output == 1) {
+		($i, $j, $contact, $nx, $ny, $nz, #1---6
+		$gap, $f_lub_norm, # 7, 8
+		$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
+		$fc_norm, # 12
+		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
+		$fr_norm, $s_xF) = split(/\s+/, $line);
+		
+		$int0[$k] = $i;
+		$int1[$k] = $j;
+		$contactstate[$k] = $contact;
+		$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+		$F_lub[$k] = $f_lub_norm;
+		$Fc_n[$k] = $fc_norm;
+		$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
+		$S_bf[$k] =  $s_xF;
+		$nrvec_x[$k] = $nx;
+		$nrvec_y[$k] = $ny;
+		$nrvec_z[$k] = $nz;
+		$Gap[$k] = $gap;
+		if ($i < $np_movable && $j >= $np_movable) {
+			#			$fx = $f_lub_tan_x + $fc_tan_x + $force[$k]*$nx;
+			#$fz = $f_lub_tan_z + $fc_tan_z + $force[$k]*$nz;
+			$fx = $force[$k]*$nx;
+			$fz = $force[$k]*$nz;
 			
-			($i, $j, $contact, $nx, $ny, $nz, #1---6
-			$gap, $f_lub_norm, # 7, 8
-			$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
-			$fc_norm, # 12
-			$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
-			$fr_norm, $s_xF) = split(/\s+/, $line);
-			
-			$int0[$k] = $i;
-			$int1[$k] = $j;
-			$contactstate[$k] = $contact;
-			if ($contact > 0) {
-				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-				
+			$posr = sqrt($posx[$j]*$posx[$j] + $posz[$j]*$posz[$j]);
+			$nrx = $posx[$j]/$posr;
+			$nrz = $posz[$j]/$posr;
+			$f_tan = -$fx*$nrz + $fz*$nrx;
+			if ($posr/$rout > 0.9) {
+				$force_out += $f_tan;
 			} else {
-				$force[$k] = $f_lub_norm + $fr_norm;
+				$force_in += $f_tan;
 			}
-			
-			if (abs($force[$k]) > 20) {
-				printf "$fc_norm + $f_lub_norm + $fr_norm \n";
-			}
-
-			
-			$F_lub[$k] = $f_lub_norm;
-			$Fc_n[$k] = $fc_norm;
-			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
-			$S_bf[$k] =  $s_xF;
-			$nrvec_x[$k] = $nx;
-			$nrvec_y[$k] = $ny;
-			$nrvec_z[$k] = $nz;
-			$Gap[$k] = $gap;
 		}
 	}
 }
@@ -326,40 +374,44 @@ sub OutYaplotData{
 		}
 	}
 	## visualize contact network
-#	printf OUT "y 2\n";
-#	printf OUT "r 0.2\n";
-#	printf OUT "@ 2\n"; # static
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		if ($contactstate[$k] == 2) {
-#			&OutString2($int0[$k], $int1[$k]);
-#		}
-#	}
+	#	printf OUT "y 2\n";
+	#	printf OUT "r 0.2\n";
+	#	printf OUT "@ 2\n"; # static
+	#	for ($k = 0; $k < $num_interaction; $k ++) {
+	#		if ($contactstate[$k] == 2) {
+	#			&OutString2($int0[$k], $int1[$k]);
+	#		}
+	#	}
 	## visualize force chain network
 	printf OUT "y 4\n";
 	printf OUT "@ 7\n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] >= 0) {
-			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-		}
+		if ($int0[$k] < $np_movable ||
+			$int1[$k] < $np_movable) {
+				
+				if ($force[$k] > 0) {
+					&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k]);
+				}
+			}
 	}
-	printf OUT "y 3\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] < 0) {
-			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
-		}
-	}
-	
+	#	printf OUT "y 3\n";
+	#	printf OUT "@ 5\n";
+	#	for ($k = 0; $k < $num_interaction; $k ++) {
+	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+	#		if ($force[$k] < 0) {
+	#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k]);
+	#		}
+	#	}
+	#
 	## visualize rotation in 2D
-#	if ($Ly == 0) {
-#		printf OUT "y 6\n";
-#		printf OUT "@ 1\n";
-#		for ($i = 0; $i < $np; $i++) {
-#			OutCross($i);
-#		}
-#	}
+	#	if ($Ly == 0) {
+	#		printf OUT "y 6\n";
+	#		printf OUT "@ 1\n";
+	#		for ($i = 0; $i < $np; $i++) {
+	#			OutCross($i);
+	#		}
+	#	}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";
@@ -390,10 +442,10 @@ sub OutBoundaryBox {
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
-
+	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
-
+	
 	if ($Ly == 0) {
 		$lx2 = $Lx/2;
 		$ly2 = $Ly/2;
@@ -431,12 +483,12 @@ sub OutBoundaryBox {
 }
 
 sub OutString_width {
-	($i, $j, $w, $delta) = @_;
+	($i, $j, $w) = @_;
 	$xi = $posx[$i];
-	$yi = $posy[$i] - $delta;
+	$yi = $posy[$i] - 0.01;
 	$zi = $posz[$i];
 	$xj = $posx[$j];
-	$yj = $posy[$j] - $delta;
+	$yj = $posy[$j] - 0.01;
 	$zj = $posz[$j];
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2 ;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1) {

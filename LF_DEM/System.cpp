@@ -1156,21 +1156,6 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
 }
 
-//void System::destroyInteraction(int k)
-//{
-////	deactivated_interaction.push(k);
-////	unsigned short p0, p1;
-////	interaction[k].get_par_num(p0, p1);
-////	if (p1 < np_mobile) {
-////		nb_of_active_interactions_mm--;
-////	} else if (p0 >= np_mobile) {
-////		nb_of_active_interactions_ff--;
-////	} else {
-////		nb_of_active_interactions_mf--;
-////		cerr << "@@" << in_predictor << ' ' << in_corrector << endl;
-////	}
-//}
-
 void System::checkNewInteraction()
 {
 	/**
@@ -1406,7 +1391,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
@@ -1679,7 +1664,6 @@ void System::computeMaxNAVelocity()
 	max_velocity = sqrt(sq_max_na_velocity);
 }
 
-
 void System::computeVelocityWithoutComponents()
 {
 	if (!zero_shear) {
@@ -1702,17 +1686,20 @@ void System::computeVelocityWithoutComponents()
 	// @@@ I may need to use the force version: stokes_solver.solve(na_velocity) for magnetic work.
 }
 
-
 void System::computeVelocityByComponents()
 {
 	/**
 	 \brief Compute velocities component by component.
 	 */
-
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
+		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
-		buildHydroTerms(true, false); // zero shear-rate
+		buildHydroTerms(true, false); // zero shear-rate (= no GE rhs)
+		for (int i=0; i<np; i++) {
+			vel_hydro[i].reset();
+			ang_vel_hydro[i].reset();
+		}
 	}
 	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 
@@ -1723,7 +1710,6 @@ void System::computeVelocityByComponents()
 		stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
 		stokes_solver.solve(vel_hydro_from_fixed, ang_vel_hydro_from_fixed);
 	}
-
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 	if (repulsiveforce) {
@@ -1768,7 +1754,6 @@ void System::computeShearRate()
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-
 }
 
 void System::computeVelocityCoeffFixedParticles()
@@ -1795,7 +1780,6 @@ void System::computeVelocityCoeffFixedParticles()
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-
 }
 
 void System::tmpMixedProblemSetVelocities()
@@ -1819,6 +1803,12 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_ang_velocity[np_mobile].y = 2*shear_rate;
+	} else if (test_simulation == 3) {
+		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
+		na_velocity[np_mobile].x = 1;
 	} else if (test_simulation == 11) {
 		int i_np_in = np_mobile+np_in;
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
@@ -1952,7 +1942,6 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
@@ -2272,6 +2261,9 @@ void System::calcLubricationForce()
 		buildHydroTerms(true, true);
 	} else {
 		buildHydroTerms(true, false); // no GE
+	}
+	if (np_mobile < np) {
+		buildHydroTermsFromFixedParticles();
 	}
 	setContactForceToParticle();
 	buildContactTerms(false);
