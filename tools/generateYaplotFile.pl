@@ -275,7 +275,8 @@ sub InInteractions {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
-			$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+			#			$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+			$force[$k] = $fc_norm ;
 			$F_lub[$k] = $f_lub_norm;
 			$Fc_n[$k] = $fc_norm;
 			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
@@ -328,13 +329,9 @@ sub OutYaplotData{
 	printf OUT "@ 7\n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($int0[$k] < $np_movable ||
-			$int1[$k] < $np_movable) {
-				
-				if ($force[$k] > 0) {
-					&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k]);
-				}
-			}
+		if ($force[$k] > 0) {
+			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k]);
+		}
 	}
 #	printf OUT "y 3\n";
 #	printf OUT "@ 5\n";

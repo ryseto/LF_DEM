@@ -80,16 +80,14 @@ void Contact::deactivate()
 {
 	// r > a0 + a1
 	state = 0;
-	// @@ I think the followings are not required.
-	// @@ To be sure, I remain this masage here.
-	//	f_contact_normal_norm = 0;
-	//	f_contact_normal.reset();
-	//	if (sys->friction) {
-	//		disp_tan.reset();
-	//		disp_rolling.reset();
-	//		f_contact_tan.reset();
-	//	}
-	//	f_contact.reset();
+	f_contact_normal_norm = 0;
+	f_contact_normal.reset();
+	if (sys->friction) {
+		disp_tan.reset();
+		disp_rolling.reset();
+		f_contact_tan.reset();
+	}
+	f_contact.reset();
 }
 
 /*********************************
