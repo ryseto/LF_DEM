@@ -1147,21 +1147,6 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
 }
 
-//void System::destroyInteraction(int k)
-//{
-////	deactivated_interaction.push(k);
-////	unsigned short p0, p1;
-////	interaction[k].get_par_num(p0, p1);
-////	if (p1 < np_mobile) {
-////		nb_of_active_interactions_mm--;
-////	} else if (p0 >= np_mobile) {
-////		nb_of_active_interactions_ff--;
-////	} else {
-////		nb_of_active_interactions_mf--;
-////		cerr << "@@" << in_predictor << ' ' << in_corrector << endl;
-////	}
-//}
-
 void System::checkNewInteraction()
 {
 	/**
@@ -1397,7 +1382,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
@@ -1446,12 +1431,11 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 
 void System::buildHydroTermsFromFixedParticles()
 {
-
 	vector<double> force_torque_from_fixed (6*np_mobile);
 	int fixed_vel_size = 6*(np-np_mobile);
 	// @@ TODO: avoid copy of the velocities
 	vector<double> fixed_velocities (fixed_vel_size);
-	for(int i=0; i<np-np_mobile; i++){
+	for(int i=0; i<np-np_mobile; i++) {
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
 		fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1463,7 +1447,6 @@ void System::buildHydroTermsFromFixedParticles()
 	}
 	stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
 	stokes_solver.addToRHS(force_torque_from_fixed);
-
 }
 
 void System::generateBrownianForces()
@@ -1661,7 +1644,6 @@ void System::computeMaxNAVelocity()
 	max_velocity = sqrt(sq_max_na_velocity);
 }
 
-
 void System::computeVelocityWithoutComponents()
 {
 	if (!zero_shear) {
@@ -1684,19 +1666,17 @@ void System::computeVelocityWithoutComponents()
 	// @@@ I may need to use the force version: stokes_solver.solve(na_velocity) for magnetic work.
 }
 
-
 void System::computeVelocityByComponents()
 {
 	/**
 	 \brief Compute velocities component by component.
 	 */
-
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
 		buildHydroTerms(true, false); // zero shear-rate
 	}
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
+	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true? @@@ I don't think we need. We may split buildHydroTerms to two parts building resistance matrix and GE rhs?
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 	if (repulsiveforce) {
@@ -1714,8 +1694,8 @@ void System::computeVelocityByComponentsFixedParticles()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	 throw runtime_error("computeVelocityByComponentsFixedParticles(): This is not implemented yet");
-
+	throw runtime_error("computeVelocityByComponentsFixedParticles(): This is not implemented yet");
+	
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
@@ -1733,8 +1713,6 @@ void System::computeVelocityByComponentsFixedParticles()
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
 }
-
-
 
 void System::rescaleVelHydroStressControlled()
 {
@@ -1767,7 +1745,6 @@ void System::computeShearRate()
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-
 }
 
 void System::computeVelocityCoeffFixedParticles()
@@ -1794,7 +1771,6 @@ void System::computeVelocityCoeffFixedParticles()
 			shear_rate = init_shear_rate_limit;
 		}
 	}
-
 }
 
 void System::tmpMixedProblemSetVelocities()
@@ -1922,7 +1898,6 @@ void System::computeVelocities(bool divided_velocities)
 			na_ang_velocity[i] += ang_vel_brownian[i];
 		}
 	}
-
 	/*
 	 * The max velocity is used to find dt from max displacement
 	 * at each time step.
