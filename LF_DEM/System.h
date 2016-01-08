@@ -104,6 +104,7 @@ private:
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
 	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
 	void buildHydroTermsFromFixedParticles();
+	std::vector<double> computeForceFromFixedParticles();
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
@@ -213,6 +214,8 @@ private:
 	vec3d *ang_vel_brownian;
 	vec3d *vel_magnetic;
 	vec3d *ang_vel_magnetic;
+	std::vector<vec3d> vel_hydro_from_fixed;
+	std::vector<vec3d> ang_vel_hydro_from_fixed;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
@@ -229,6 +232,7 @@ private:
 	StressTensor* brownianstressGU; // per particle
 	StressTensor* brownianstressGU_predictor; // per particle
 	StressTensor* magneticstressGU; // per particle
+	std::vector<StressTensor> hydrofromfixedstressGU; // per particle
 	std::vector<StressTensor> magneticstressXF;
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;
@@ -239,6 +243,7 @@ private:
 	StressTensor total_brownian_stressGU;
 	StressTensor total_magnetic_stressXF;
 	StressTensor total_magnetic_stressGU;
+	StressTensor total_hydrofromfixed_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt;
 	/* double kn; */

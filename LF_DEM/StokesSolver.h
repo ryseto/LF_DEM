@@ -326,6 +326,8 @@ public:
 	void resetRHStorque();
 	void addToRHS(double*);
 	void addToRHS(const std::vector<double>&);
+	void addToRHS(int, const std::vector<double>&);
+
     void addToRHSForce(int, const vec3d&);
     void addToRHSTorque(int, const vec3d&);
     void setRHS(const std::vector<vec3d>&);
@@ -337,7 +339,9 @@ public:
 	 ( completeResistanceMatrix() must have been called )
 	 - solves Resistance * velocity = RHS, and stores it in velocity array
 	 */
-    void solve(vec3d* velocity, vec3d* ang_velocity);
+	 void solve(vec3d* velocity, vec3d* ang_velocity);
+	 void solve(std::vector<vec3d> &velocity, std::vector<vec3d> &ang_velocity);
+
     /*
 	 compute_LTRHS(double* X) :
 	 - once the resistance matrix and the RHS vector are built

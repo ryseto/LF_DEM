@@ -213,6 +213,13 @@ System::calcStress()
 		}
 		total_magnetic_stressGU /= system_volume;
 	}
+	if (np_mobile<np) {
+		total_hydrofromfixed_stressGU.reset();
+		for (int i=0; i<np; i++) {
+			total_hydrofromfixed_stressGU += hydrofromfixedstressGU[i];
+		}
+		total_hydrofromfixed_stressGU /= system_volume;
+	}
 	//
 	total_stress = total_hydro_stress;
 	total_stress += total_contact_stressXF;
@@ -234,6 +241,11 @@ System::calcStress()
 		total_stress += total_magnetic_stressXF;
 		total_stress += total_magnetic_stressGU;
 	}
+
+	if (np_mobile<np) {
+		total_stress += total_hydrofromfixed_stressGU;
+	}
+
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
 
 	if (!p.cross_shear) {

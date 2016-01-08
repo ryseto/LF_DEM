@@ -619,6 +619,15 @@ void Lubrication::addHydroStress()
 		sys->magneticstressGU[p0] += stersslet_magnetic_GU_i;
 		sys->magneticstressGU[p1] += stersslet_magnetic_GU_j;
 	}
+	if (sys->vel_hydro_from_fixed.size()) {
+		StressTensor stersslet_fixed_GU_i;
+		StressTensor stersslet_fixed_GU_j;
+		pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->vel_hydro_from_fixed[p1],
+							  sys->ang_vel_hydro_from_fixed[p0], sys->ang_vel_hydro_from_fixed[p1],
+							  stersslet_fixed_GU_i, stersslet_fixed_GU_j);
+		sys->hydrofromfixedstressGU[p0] += stersslet_fixed_GU_i;
+		sys->hydrofromfixedstressGU[p1] += stersslet_fixed_GU_j;
+	}
 }
 
 void Lubrication::updateResistanceCoeff()

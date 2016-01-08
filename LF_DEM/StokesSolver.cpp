@@ -560,6 +560,14 @@ void StokesSolver::addToRHS(const vector<double>& force)
 	}
 }
 
+void StokesSolver::addToRHS(int first_particle, const vector<double>& force)
+{
+	int shift = 6*first_particle;
+	for (unsigned int i=0; i<force.size(); i++) {
+		((double*)chol_rhs->x)[i+shift] += force[i];
+	}
+}
+
 void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 {
 	unsigned int size = 2*mobile_particle_nb;
@@ -644,6 +652,22 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 	}
 	cholmod_free_dense(&chol_solution, &chol_c);
 }
+
+void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
+{
+	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
+	for (unsigned int i=0; i<velocity.size(); i++) {
+		int i6 = 6*i;
+		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
+		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
+		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
+		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
+		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
+		ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+	}
+	cholmod_free_dense(&chol_solution, &chol_c);
+}
+
 
 void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& force)
 {

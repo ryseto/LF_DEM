@@ -211,6 +211,10 @@ void System::allocateRessources()
 		vel_magnetic = new vec3d [np];
 		ang_vel_magnetic = new vec3d [np];
 	}
+	if(np_mobile<np){
+		vel_hydro_from_fixed.resize(np);
+		ang_vel_hydro_from_fixed.resize(np);
+	}
 	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
@@ -234,6 +238,9 @@ void System::allocateRessources()
 		magnetic_force = new vec3d [np];
 		magnetic_torque = new vec3d [np];
 		magneticstressGU = new StressTensor [np];
+	}
+	if(np_mobile<np){
+		hydrofromfixedstressGU.resize(np);
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
@@ -571,6 +578,8 @@ void System::setupSystem(string control)
 			vel_magnetic[i].reset();
 			ang_vel_magnetic[i].reset();
 		}
+		vel_hydro_from_fixed[i].reset();
+		ang_vel_hydro_from_fixed[i].reset();
 	}
 	if (test_simulation > 10 && test_simulation <= 20) {
 		p.fixed_nb = np_in+np_out;
@@ -1444,26 +1453,35 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 	// stokes_solver.doneBlocks(np);
 }
 
-void System::buildHydroTermsFromFixedParticles()
+vector<double> System::computeForceFromFixedParticles()
 {
-
 	vector<double> force_torque_from_fixed (6*np_mobile);
 	int fixed_vel_size = 6*(np-np_mobile);
 	// @@ TODO: avoid copy of the velocities
-	vector<double> fixed_velocities (fixed_vel_size);
+	vector<double> minus_fixed_velocities (fixed_vel_size);
 	for(int i=0; i<np-np_mobile; i++){
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
-		fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
-		fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
-		fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
-		fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
-		fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
-		fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
+		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+		minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+		minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+		minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+		minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+		minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
 	}
-	stokes_solver.multiply_by_RFU_mf(fixed_velocities, force_torque_from_fixed);
-	stokes_solver.addToRHS(force_torque_from_fixed);
+	stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed); // -R_FU^mf*fixed_velocities
+	return force_torque_from_fixed;
+}
 
+void System::buildHydroTermsFromFixedParticles()
+{
+	vector<double> force_torque_from_fixed = computeForceFromFixedParticles();
+	// previous version of the lines below was stokes_solver.addToRHS(force_torque_from_fixed)
+	// it is ok but it is relying a bit too implicetely
+	// on an asumption that might change, namely that the mobile particles are indices from 0 to np_mobile.
+	// Hence this quite verbose solution.
+	int first_mobile_index = 0;
+	stokes_solver.addToRHS(first_mobile_index,force_torque_from_fixed);
 }
 
 void System::generateBrownianForces()
@@ -1697,6 +1715,15 @@ void System::computeVelocityByComponents()
 		buildHydroTerms(true, false); // zero shear-rate
 	}
 	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
+
+	if (np_mobile<np) {
+		vector<double> force_torque_from_fixed = computeForceFromFixedParticles();
+		stokes_solver.resetRHS();
+		int first_mobile_index = 0;
+		stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
+		stokes_solver.solve(vel_hydro_from_fixed, ang_vel_hydro_from_fixed);
+	}
+
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 	if (repulsiveforce) {
@@ -1708,32 +1735,6 @@ void System::computeVelocityByComponents()
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
 }
-
-void System::computeVelocityByComponentsFixedParticles()
-{
-	/**
-	 \brief Compute velocities component by component.
-	 */
-	 throw runtime_error("computeVelocityByComponentsFixedParticles(): This is not implemented yet");
-
-	if (!zero_shear) {
-		buildHydroTerms(true, true); // build matrix and rhs force GE
-	} else {
-		buildHydroTerms(true, false); // zero shear-rate
-	}
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
-	buildContactTerms(true); // set rhs = F_C
-	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-	if (repulsiveforce) {
-		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
-		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
-	}
-	if (magnetic) {
-		buildMagneticForceTerms(true);
-		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
-	}
-}
-
 
 
 void System::rescaleVelHydroStressControlled()
@@ -1869,6 +1870,12 @@ void System::sumUpVelocityComponents()
 			na_ang_velocity[i] += ang_vel_magnetic[i];
 		}
 	}
+	if (np_mobile<np) {
+		for (int i=0; i<np_mobile; i++) {
+			na_velocity[i] += vel_hydro_from_fixed[i];
+			na_ang_velocity[i] += ang_vel_hydro_from_fixed[i];
+		}
+	}
 }
 
 void System::setFixedParticleVelocities()
@@ -1880,6 +1887,29 @@ void System::setFixedParticleVelocities()
 		}
 	} else if (test_simulation > 0) {
 		tmpMixedProblemSetVelocities();
+	}
+	for (int i=np_mobile; i<np; i++){
+		// have to set the fixed particles velocity components to zero (except vel_hydro_from_fixed)
+		// to compute the stress correctly.
+		// set vel_hydro_from_fixed = na_velocity (and same for the angular part)
+		// (this is an abuse of vel_hydro_from_fixed,
+		// which normally stores the velocity of the mobile particles
+		// coming from hydro interactions with the fixed particles).
+		// We should find a neater way to do that.
+		vel_contact[i].reset();
+		ang_vel_contact[i].reset();
+		vel_hydro[i].reset();
+		ang_vel_hydro[i].reset();
+		if (repulsiveforce) {
+			vel_repulsive[i].reset();
+			ang_vel_repulsive[i].reset();
+		}
+		if (magnetic) {
+			vel_magnetic[i].reset();
+			ang_vel_magnetic[i].reset();
+		}
+		vel_hydro_from_fixed[i] = na_velocity[i];
+		ang_vel_hydro_from_fixed[i] = na_ang_velocity[i];
 	}
 }
 
