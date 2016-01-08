@@ -1673,10 +1673,14 @@ void System::computeVelocityByComponents()
 	 */
 	if (!zero_shear) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
+		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
-		buildHydroTerms(true, false); // zero shear-rate
+		buildHydroTerms(true, false); // zero shear-rate (= no GE rhs)
+		for (int i=0; i<np; i++) {
+			vel_hydro[i].reset();
+			ang_vel_hydro[i].reset();
+		}
 	}
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true? @@@ I don't think we need. We may split buildHydroTerms to two parts building resistance matrix and GE rhs?
 	buildContactTerms(true); // set rhs = F_C
 	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
 	if (repulsiveforce) {
@@ -2223,6 +2227,9 @@ void System::calcLubricationForce()
 		buildHydroTerms(true, true);
 	} else {
 		buildHydroTerms(true, false); // no GE
+	}
+	if (np_mobile < np) {
+		buildHydroTermsFromFixedParticles();
 	}
 	setContactForceToParticle();
 	buildContactTerms(false);

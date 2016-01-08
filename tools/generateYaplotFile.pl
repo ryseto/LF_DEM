@@ -275,8 +275,18 @@ sub InInteractions {
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
-			#			$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
-			$force[$k] = $fc_norm ;
+			if ($contact > 0) {
+				$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+				
+			} else {
+				$force[$k] = $f_lub_norm + $fr_norm;
+			}
+			
+			if (abs($force[$k]) > 20) {
+				printf "$fc_norm + $f_lub_norm + $fr_norm \n";
+			}
+
+			
 			$F_lub[$k] = $f_lub_norm;
 			$Fc_n[$k] = $fc_norm;
 			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
@@ -329,19 +339,19 @@ sub OutYaplotData{
 	printf OUT "@ 7\n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] > 0) {
-			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k]);
+		if ($force[$k] >= 0) {
+			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		}
 	}
-#	printf OUT "y 3\n";
-#	printf OUT "@ 5\n";
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-#		if ($force[$k] < 0) {
-#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k]);
-#		}
-#	}
-#	
+	printf OUT "y 3\n";
+	printf OUT "@ 5\n";
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		if ($force[$k] < 0) {
+			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
+		}
+	}
+	
 	## visualize rotation in 2D
 #	if ($Ly == 0) {
 #		printf OUT "y 6\n";
@@ -421,12 +431,12 @@ sub OutBoundaryBox {
 }
 
 sub OutString_width {
-	($i, $j, $w) = @_;
+	($i, $j, $w, $delta) = @_;
 	$xi = $posx[$i];
-	$yi = $posy[$i] - 0.01;
+	$yi = $posy[$i] - $delta;
 	$zi = $posz[$i];
 	$xj = $posx[$j];
-	$yj = $posy[$j] - 0.01;
+	$yj = $posy[$j] - $delta;
 	$zj = $posz[$j];
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2 ;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1) {
