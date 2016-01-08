@@ -260,7 +260,7 @@ void Lubrication::calcXYFunctionsStress()
 	}
 }
 
-void Lubrication::calcGE(double *GEi, double *GEj)
+std::tuple<vec3d,vec3d> Lubrication::calcGE()
 {
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
@@ -273,16 +273,17 @@ void Lubrication::calcGE(double *GEi, double *GEj)
 	 */
 	double cGE_p0 = (scaledXG0()+scaledXG2())*nnE;
 	double cGE_p1 = (scaledXG1()+scaledXG3())*nnE;
-	GEi[0] = cGE_p0*nvec->x;
-	GEi[1] = cGE_p0*nvec->y;
-	GEi[2] = cGE_p0*nvec->z;
-	GEj[0] = cGE_p1*nvec->x;
-	GEj[1] = cGE_p1*nvec->y;
-	GEj[2] = cGE_p1*nvec->z;
+	vec3d GEi, GEj;
+	GEi.x = cGE_p0*nvec->x;
+	GEi.y = cGE_p0*nvec->y;
+	GEi.z = cGE_p0*nvec->z;
+	GEj.x = cGE_p1*nvec->x;
+	GEj.y = cGE_p1*nvec->y;
+	GEj.z = cGE_p1*nvec->z;
+	return std::make_tuple(GEi, GEj);
 }
 
-void Lubrication::calcGEHE(double *GEi, double *GEj,
-						   double *HEi, double *HEj)
+std::tuple<vec3d,vec3d,vec3d,vec3d> Lubrication::calcGEHE()
 {
 	/*
 	 * lubrication_model = 2
@@ -297,45 +298,49 @@ void Lubrication::calcGEHE(double *GEi, double *GEj,
 	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
 	double cHE_i =  scaledYH0()+scaledYH2();
 	double cHE_j =  scaledYH3()+scaledYH1();
+
+	vec3d GEi, GEj, HEi, HEj;
 	if (!sys->p.cross_shear) {
-		GEi[0] =  cGE_i*nvec->x+YG0_YG2*nvec->z;
-		GEi[1] =  cGE_i*nvec->y;
-		GEi[2] =  cGE_i*nvec->z+YG0_YG2*nvec->x;
-		GEj[0] =  cGE_j*nvec->x+YG1_YG3*nvec->z;
-		GEj[1] =  cGE_j*nvec->y;
-		GEj[2] =  cGE_j*nvec->z+YG1_YG3*nvec->x;
+		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
+		GEi.y =  cGE_i*nvec->y;
+		GEi.z =  cGE_i*nvec->z+YG0_YG2*nvec->x;
+		GEj.x =  cGE_j*nvec->x+YG1_YG3*nvec->z;
+		GEj.y =  cGE_j*nvec->y;
+		GEj.z =  cGE_j*nvec->z+YG1_YG3*nvec->x;
 		double nxnx_nznz = nxnx-nznz;
-		HEi[0] =  cHE_i*nxny;
-		HEi[1] = -cHE_i*nxnx_nznz;
-		HEi[2] = -cHE_i*nynz;
-		HEj[0] =  cHE_j*nxny;
-		HEj[1] = -cHE_j*nxnx_nznz;
-		HEj[2] = -cHE_j*nynz;
+		HEi.x =  cHE_i*nxny;
+		HEi.y = -cHE_i*nxnx_nznz;
+		HEi.z = -cHE_i*nynz;
+		HEj.x =  cHE_j*nxny;
+		HEj.y = -cHE_j*nxnx_nznz;
+		HEj.z = -cHE_j*nynz;
 	} else {
-		// GEi[0] =  cGE_i*nvec->x;
-		// GEi[1] =  (cGE_i*nvec->y+YG0_YG2*nvec->z);
-		// GEi[2] =  (cGE_i*nvec->z+YG0_YG2*nvec->y);
-		// GEj[0] =  cGE_j*nvec->x;
-		// GEj[1] =  (cGE_j*nvec->y+YG1_YG3*nvec->z);
-		// GEj[2] =  (cGE_j*nvec->z+YG1_YG3*nvec->y);
+		// GEi.x =  cGE_i*nvec->x;
+		// GEi.y =  (cGE_i*nvec->y+YG0_YG2*nvec->z);
+		// GEi.z =  (cGE_i*nvec->z+YG0_YG2*nvec->y);
+		// GEj.x =  cGE_j*nvec->x;
+		// GEj.y =  (cGE_j*nvec->y+YG1_YG3*nvec->z);
+		// GEj.z =  (cGE_j*nvec->z+YG1_YG3*nvec->y);
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		double costheta_nx_sintheta_ny = costheta*nvec->x+sintheta*nvec->y;
-		GEi[0] =  cGE_i*nvec->x+YG0_YG2*costheta*nvec->z;
-		GEi[1] =  cGE_i*nvec->y+YG0_YG2*sintheta*nvec->z;
-		GEi[2] =  cGE_i*nvec->z+YG0_YG2*costheta_nx_sintheta_ny;
-		GEj[0] =  cGE_j*nvec->x+YG1_YG3*costheta*nvec->z;
-		GEj[1] =  cGE_j*nvec->y+YG1_YG3*sintheta*nvec->z;
-		GEj[2] =  cGE_j*nvec->z+YG1_YG3*costheta_nx_sintheta_ny;
+		GEi.x =  cGE_i*nvec->x+YG0_YG2*costheta*nvec->z;
+		GEi.y =  cGE_i*nvec->y+YG0_YG2*sintheta*nvec->z;
+		GEi.z =  cGE_i*nvec->z+YG0_YG2*costheta_nx_sintheta_ny;
+		GEj.x =  cGE_j*nvec->x+YG1_YG3*costheta*nvec->z;
+		GEj.y =  cGE_j*nvec->y+YG1_YG3*sintheta*nvec->z;
+		GEj.z =  cGE_j*nvec->z+YG1_YG3*costheta_nx_sintheta_ny;
 		double nyny_nznz = nyny-nznz;
 		double nxnx_nznz = nxnx-nznz;
-		HEi[0] =  cHE_i*( costheta*nxny      + sintheta*nyny_nznz);
-		HEi[1] = -cHE_i*( costheta*nxnx_nznz + sintheta*nxny);
-		HEi[2] =  cHE_i*(-costheta*nynz      + sintheta*nxnz);
-		HEj[0] =  cHE_j*( costheta*nxny      + sintheta*nyny_nznz);
-		HEj[1] = -cHE_j*( costheta*nxnx_nznz + sintheta*nxny);
-		HEj[2] =  cHE_j*(-costheta*nynz      + sintheta*nxnz);
+		HEi.x =  cHE_i*( costheta*nxny      + sintheta*nyny_nznz);
+		HEi.y = -cHE_i*( costheta*nxnx_nznz + sintheta*nxny);
+		HEi.z =  cHE_i*(-costheta*nynz      + sintheta*nxnz);
+		HEj.x =  cHE_j*( costheta*nxny      + sintheta*nyny_nznz);
+		HEj.y = -cHE_j*( costheta*nxnx_nznz + sintheta*nxny);
+		HEj.z =  cHE_j*(-costheta*nynz      + sintheta*nxnz);
 	}
+
+	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
 
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]

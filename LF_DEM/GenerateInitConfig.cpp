@@ -24,11 +24,11 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		magnetic_config = true;
 	} else if (config_type == 3) {
 		cerr << "generate wide gap configuration" <<endl;
-		circular_widegap = true;
+		circulargap_config = true;
 	}
 	setParameters();
 	rand_seed = rand_seed_;
-	if (circular_widegap) {
+	if (circulargap_config) {
 		np_out = (radius_out*2*M_PI)/2;
 		np_in = (radius_in*2*M_PI)/2;
 		cerr << "np_out = " << np_out << endl;
@@ -144,18 +144,22 @@ void GenerateInitConfig::outputPositionData()
 		cerr << "disperse_type is wrong." << endl;
 		exit(1);
 	}
-	if (sys.twodimension) {
-		if (lx_lz == 1) {
-			ss_posdatafilename << "Square"; // square
+	if (circulargap_config == false) {
+		if (sys.twodimension) {
+			if (lx_lz == 1) {
+				ss_posdatafilename << "Square"; // square
+			} else {
+				ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
+			}
 		} else {
-			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
+			if (lx_lz == 1 && ly_lz == 1) {
+				ss_posdatafilename << "Cubic"; //
+			} else {
+				ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
+			}
 		}
 	} else {
-		if (lx_lz == 1 && ly_lz == 1) {
-			ss_posdatafilename << "Cubic"; //
-		} else {
-			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
-		}
+		ss_posdatafilename << "cylinders"; // square
 	}
 	vector<double> magnetic_susceptibility;
 	if (magnetic_config) {
@@ -174,7 +178,7 @@ void GenerateInitConfig::outputPositionData()
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-	if (circular_widegap == false) {
+	if (circulargap_config == false) {
 		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
 		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
 		fout << lx << ' ' << ly << ' ' << lz << ' ';
@@ -332,7 +336,7 @@ void GenerateInitConfig::putRandom()
 #ifdef USE_DSFMT
 	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
-	if (!circular_widegap) {
+	if (!circulargap_config) {
 		for (int i=0; i<np_movable; i++) {
 			sys.position[i].x = lx*RANDOM;
 			sys.position[i].z = lz*RANDOM;
@@ -513,20 +517,28 @@ void GenerateInitConfig::setParameters()
 	 *
 	 */
 	np = readStdinDefault(500, "number of particle");
-	int dimension = readStdinDefault(2, "dimension (2 or 3)");
-	if (dimension == 2) {
-		sys.twodimension = true;
+	if (circulargap_config == false) {
+		int dimension = readStdinDefault(2, "dimension (2 or 3)");
+		if (dimension == 2) {
+			sys.twodimension = true;
+		} else {
+			sys.twodimension = false;
+		}
 	} else {
-		sys.twodimension = false;
+		sys.twodimension = true;
 	}
 	if (sys.twodimension) {
 		volume_fraction = readStdinDefault(0.78, "volume_fraction");
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
-	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
-	if (!sys.twodimension) {
-		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
+	if (circulargap_config == false) {
+		lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
+		if (!sys.twodimension) {
+			ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
+		}
+	} else {
+		lx_lz = 1.0;
 	}
 	disperse_type = readStdinDefault('b' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
@@ -611,7 +623,7 @@ void GenerateInitConfig::setParameters()
 		}
 	}
 
-	if (circular_widegap) {
+	if (circulargap_config) {
 		double area_particle = np1*pvolume1+np2*pvolume2;
 		double area_gap = area_particle/volume_fraction;
 		cerr << "area_particle = " << area_particle << endl;
@@ -623,9 +635,9 @@ void GenerateInitConfig::setParameters()
 		radius_out = rr*radius_in;
 		cerr << radius_in << endl;
 		cerr << radius_out << endl;
-		lx = 2*radius_out+1;
+		lz = 2*radius_out+5;
+		lx = lz*lx_lz;
 		ly = 0;
-		lz = 2*radius_out+1;
 		//radius_out =  readStdinDefault(10, "outer radius");
 		//radius_in =  readStdinDefault(3, "inner radius");
 	}

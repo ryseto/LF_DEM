@@ -331,12 +331,10 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
 
-	int size = mobile_particle_nb;
-
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
-	for (int j=0; j<size; j++) {
+	for (int j=0; j<mobile_particle_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -369,7 +367,10 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 			}
 		}
 	}
-	((int*)chol_res_matrix->p)[6*size] = ((int*)chol_res_matrix->p)[6*size-1]+1;
+	// tell cholmod where the last column stops
+	// nb of non-zero elements in column col_nb-1 is 1 (it is the last element of the diagonal)
+	int nzero_nb_last_col = 1;
+	((int*)chol_res_matrix->p)[6*mobile_particle_nb] = ((int*)chol_res_matrix->p)[6*mobile_particle_nb-1]+nzero_nb_last_col;
 }
 
 void StokesSolver::completeResistanceMatrix_FixedFixed()
@@ -379,11 +380,11 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	if (mobile_particle_nb == np) {
 		return;
 	}
-	int size = np-mobile_particle_nb;
+	int fixed_particle_nb = np-mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
-	for (int j=0; j<size; j++) {
+	for (int j=0; j<fixed_particle_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -417,7 +418,10 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 			}
 		}
 	}
-	((int*)chol_res_matrix_ff->p)[6*size] = ((int*)chol_res_matrix_ff->p)[6*size-1]+1;
+	// tell cholmod where the last column stops
+	// nb of non-zero elements in column col_nb-1 is 1 (it is the last element of the diagonal)
+	int nzero_nb_last_col = 1;
+	((int*)chol_res_matrix_ff->p)[6*fixed_particle_nb] = ((int*)chol_res_matrix_ff->p)[6*fixed_particle_nb-1]+nzero_nb_last_col;
 }
 
 void StokesSolver::completeResistanceMatrix_MobileFixed()
@@ -427,11 +431,10 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	if (mobile_particle_nb == np) {
 		return;
 	}
-	int col_nb = mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
-	for (int j=0; j<col_nb; j++) {
-		
+	for (int j=0; j<mobile_particle_nb; j++) {
+
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -458,8 +461,11 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 			}
 		}
 	}
-	//@@ [original] ((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1]+1;
-	((int*)chol_res_matrix_mf->p)[6*col_nb] = ((int*)chol_res_matrix_mf->p)[6*col_nb-1];
+	// tell cholmod where the last column stops
+	// nb of non-zero elements in column col_nb-1 is 5*(odbrows_table_mf[col_nb]-odbrows_table_mf[col_nb-1]) (as it is an off diagonal matrix)
+	int nzero_nb_last_col = 5*(odbrows_table_mf[mobile_particle_nb]-odbrows_table_mf[mobile_particle_nb-1]);
+	// so the last element in chol_res_matrix_mf->p must be
+	((int*)chol_res_matrix_mf->p)[6*mobile_particle_nb] = ((int*)chol_res_matrix_mf->p)[6*mobile_particle_nb-1] + nzero_nb_last_col;
 }
 
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
@@ -519,16 +525,6 @@ void StokesSolver::resetRHStorque()
 	}
 }
 
-void StokesSolver::addToRHSForce(int i, double* force_i)
-{
-	if (i < mobile_particle_nb) {
-		int i6 = 6*i;
-		for (int u=0; u<3; u++) {
-			((double*)chol_rhs->x)[i6+u] += force_i[u];
-		}
-	}
-}
-
 void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
@@ -536,16 +532,6 @@ void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 		((double*)chol_rhs->x)[i6  ] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
 		((double*)chol_rhs->x)[i6+2] += force_i.z;
-	}
-}
-
-void StokesSolver::addToRHSTorque(int i, double* torque_i)
-{
-	if (i < mobile_particle_nb) {
-		int i6_3 = 6*i+3;
-		for (int u=0; u<3; u++) {
-			((double*)chol_rhs->x)[i6_3+u] += torque_i[u];
-		}
 	}
 }
 
@@ -567,10 +553,9 @@ void StokesSolver::addToRHS(double* rhs)
 	}
 }
 
-void StokesSolver::addToRHS(vector<double>& force)
+void StokesSolver::addToRHS(const vector<double>& force)
 {
-	//int size = chol_rhs->nrow;
-	for (int i=0; i<force.size(); i++) {
+	for (unsigned int i=0; i<force.size(); i++) {
 		((double*)chol_rhs->x)[i] += force[i];
 	}
 }

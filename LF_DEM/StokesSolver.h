@@ -219,7 +219,7 @@ private:
 	void setColumn(const vec3d& nvec, int jj,
 				   double scaledXA, double scaledYA,
 				   double scaledYB, double scaledYBtilde, double scaledYC);
-	
+
 	struct ODBlock buildODBlock(const vec3d &nvec,
 								double scaledXA,
 								double scaledYA, double scaledYB,
@@ -255,7 +255,7 @@ private:
 	void insertDBlockValues(double *matrix_x,
 							const std::vector<int>& index_chol_ix,
 							const struct DBlock& b);
-	
+
 public:
 	~StokesSolver();
 	void init(int np_total, int np_mobile);
@@ -325,10 +325,8 @@ public:
 	void resetRHS();
 	void resetRHStorque();
 	void addToRHS(double*);
-	void addToRHS(std::vector<double>&);
-    void addToRHSForce(int, double*);
+	void addToRHS(const std::vector<double>&);
     void addToRHSForce(int, const vec3d&);
-    void addToRHSTorque(int, double*);
     void addToRHSTorque(int, const vec3d&);
     void setRHS(const std::vector<vec3d>&);
     void setRHSForce(int, const vec3d&);
@@ -359,7 +357,7 @@ public:
 	 */
 	void solvingIsDone();
 	void multiply_by_RFU_mf(std::vector<double> &velocity, std::vector<double> &force);
-	
+
 	// testing functions
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);
