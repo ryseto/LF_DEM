@@ -17,7 +17,7 @@ my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
-my $rotatingobserver = 1;
+my $rotatingobserver = 0;
 #my $np_movable = 3000;
 #my $rout = 84.4391;
 #my $np_movable = 6000;
@@ -408,13 +408,13 @@ sub OutYaplotData{
 	#	}
 	#
 	## visualize rotation in 2D
-	#	if ($Ly == 0) {
-	#		printf OUT "y 6\n";
-	#		printf OUT "@ 1\n";
-	#		for ($i = 0; $i < $np; $i++) {
-	#			OutCross($i);
-	#		}
-	#	}
+		if ($Ly == 0) {
+			printf OUT "y 6\n";
+			printf OUT "@ 1\n";
+			for ($i = 0; $i < $np; $i++) {
+				OutCross($i);
+			}
+		}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";

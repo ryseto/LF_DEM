@@ -592,14 +592,17 @@ void System::setupSystem(string control)
 							  position[i].x-origin_of_rotation.x);
 		}
 		if (test_simulation == 11) {
-			omega_circulargap = (radius_out-radius_in)*shear_rate/radius_out;
+			omega_wheel_out = (radius_out-radius_in)*shear_rate/radius_out;
+			omega_wheel_in = 0;
 		} else if (test_simulation == 12) {
-			omega_circulargap = -(radius_out-radius_in)*shear_rate/radius_out;
+			omega_wheel_out = 0;
+			omega_wheel_in = -(radius_out-radius_in)*shear_rate/radius_out;
 		} else if (test_simulation == 13) {
-			omega_circulargap = 0.5*(radius_out-radius_in)*shear_rate/radius_out;
-		} else
-		cerr << "shear_rate = " << shear_rate << endl;
-		cerr << "omega_circulargap = " << omega_circulargap << endl;
+			double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
+			double v_diff = omega_wheel*radius_out; // (radius_out-radius_in)*shear_rate
+			omega_wheel_out = v_diff/(2*radius_out);
+			omega_wheel_in = -v_diff/(2*radius_in);
+		}
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
@@ -1813,43 +1816,21 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = 1;
-	} else if (test_simulation == 11) {
+	} else if (test_simulation >= 11 && test_simulation < 20) {
 		int i_np_in = np_mobile+np_in;
+		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
+			na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation.z),
+							   0,
+							   omega_wheel_in*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_wheel_in, 0);
 		}
+		// outer wheel
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_circulargap*(position[i].z-origin_of_rotation.z),
+			na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation.z),
 							   0,
-							   omega_circulargap*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_circulargap, 0);
-		}
-	} else if (test_simulation == 12) {
-		int i_np_in = np_mobile+np_in;
-		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_circulargap*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega_circulargap*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_circulargap, 0);
-		}
-		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].reset();
-			na_ang_velocity[i].reset();
-		}
-	} else if (test_simulation == 13) {
-		int i_np_in = np_mobile+np_in;
-		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(omega_circulargap*(position[i].z-origin_of_rotation.z),
-							   0,
-							   -omega_circulargap*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_circulargap, 0);
-		}
-		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_circulargap*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega_circulargap*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_circulargap, 0);
+							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
 	} else if (test_simulation == 21) {
 		static double time_next = 3;

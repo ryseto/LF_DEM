@@ -300,7 +300,8 @@ private:
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
 	bool circulargap;
-	double omega_circulargap;
+	double omega_wheel_in;
+	double omega_wheel_out;
 	int np_in;
 	int np_out;
 	double radius_in;
