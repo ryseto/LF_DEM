@@ -19,8 +19,6 @@ $i = index($name, 'N', 0)+1;
 $j = index($name, 'VF', $i-1);
 $number = substr($name, $i, $j-$i) ;
 printf "num = $number \n";
-
-
 printf "$name\n";
 
 $output = "confrac_$name.dat";

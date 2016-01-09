@@ -9,7 +9,6 @@
 use Math::Trig;
 use IO::Handle;
 use Getopt::Long;
-
 my $particle_data = $ARGV[0];
 my $yap_radius = 1;
 my $force_factor = 0.001;
@@ -21,8 +20,12 @@ my $monodisperse = 0;
 my $rotatingobserver = 1;
 #my $np_movable = 3000;
 #my $rout = 84.4391;
-my $np_movable = 6000;
-my $rout = 118.562;
+#my $np_movable = 6000;
+#my $rout = 118.562;
+
+my $np_movable = 500;
+my $rout = 37.5726;
+
 my $rin = $rout/2;
 my $calcrheology = 0;
 
@@ -262,7 +265,7 @@ sub InParticles {
 				$rout = sqrt($posxtmp[$np-1]*$posxtmp[$np-1] + $posztmp[$np-1]*$posztmp[$np-1]);
 				#printf "$rout\n";
 			}
-			$theta = -0.5*$shear_strain;
+			$theta = -0.25*$shear_strain;
 			#printf "$theta, $shear_strain, $rout\n";
 			for ($i = 0; $i < $np; $i ++){
 				$posx[$i] = $posxtmp[$i]*cos($theta)-$posztmp[$i]*sin($theta);

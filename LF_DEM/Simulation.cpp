@@ -210,7 +210,11 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.test_simulation = 11;//ctest1
 	} else if (simu_identifier == "ctest2") {
 		cerr << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
-		sys.test_simulation = 12;//ctest1
+		sys.test_simulation = 12;//ctest2
+	} else if (simu_identifier == "ctest3") {
+		cerr << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+		sys.test_simulation = 13;//ctest3
+
 	} else if (simu_identifier == "rtest1") {
 		cerr << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1

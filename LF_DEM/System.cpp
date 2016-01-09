@@ -595,7 +595,9 @@ void System::setupSystem(string control)
 			omega_circulargap = (radius_out-radius_in)*shear_rate/radius_out;
 		} else if (test_simulation == 12) {
 			omega_circulargap = -(radius_out-radius_in)*shear_rate/radius_out;
-		}
+		} else if (test_simulation == 13) {
+			omega_circulargap = 0.5*(radius_out-radius_in)*shear_rate/radius_out;
+		} else
 		cerr << "shear_rate = " << shear_rate << endl;
 		cerr << "omega_circulargap = " << omega_circulargap << endl;
 	}
@@ -1834,6 +1836,20 @@ void System::tmpMixedProblemSetVelocities()
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
+		}
+	} else if (test_simulation == 13) {
+		int i_np_in = np_mobile+np_in;
+		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(omega_circulargap*(position[i].z-origin_of_rotation.z),
+							   0,
+							   -omega_circulargap*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_circulargap, 0);
+		}
+		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
+			na_velocity[i].set(-omega_circulargap*(position[i].z-origin_of_rotation.z),
+							   0,
+							   omega_circulargap*(position[i].x-origin_of_rotation.x));
+			na_ang_velocity[i].set(0, -omega_circulargap, 0);
 		}
 	} else if (test_simulation == 21) {
 		static double time_next = 3;
