@@ -591,17 +591,16 @@ void System::setupSystem(string control)
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
+		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
 		if (test_simulation == 11) {
-			omega_wheel_out = (radius_out-radius_in)*shear_rate/radius_out;
-			omega_wheel_in = 0;
+			omega_wheel_in  = 0;
+			omega_wheel_out = omega_wheel;
 		} else if (test_simulation == 12) {
+			omega_wheel_in  = -omega_wheel;
 			omega_wheel_out = 0;
-			omega_wheel_in = -(radius_out-radius_in)*shear_rate/radius_out;
 		} else if (test_simulation == 13) {
-			double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
-			double v_diff = omega_wheel*radius_out; // (radius_out-radius_in)*shear_rate
-			omega_wheel_out = v_diff/(2*radius_out);
-			omega_wheel_in = -v_diff/(2*radius_in);
+			omega_wheel_in  = -0.5*omega_wheel;
+			omega_wheel_out =  0.5*omega_wheel;
 		}
 	}
 	shear_strain = 0;
