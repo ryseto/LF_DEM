@@ -549,6 +549,10 @@ void System::setupSystem(string control)
 	costheta_shear = cos(p.theta_shear);
 	sintheta_shear = sin(p.theta_shear);
 
+	if (test_simulation > 10 && test_simulation <= 20) {
+		p.fixed_nb = np_in+np_out;
+		np_mobile = np-p.fixed_nb;
+	}
 	// Memory
 	allocateRessources();
 	//
@@ -582,8 +586,6 @@ void System::setupSystem(string control)
 		ang_vel_hydro_from_fixed[i].reset();
 	}
 	if (test_simulation > 10 && test_simulation <= 20) {
-		p.fixed_nb = np_in+np_out;
-		np_mobile = np-p.fixed_nb;
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
