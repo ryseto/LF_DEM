@@ -39,7 +39,7 @@ void StokesSolver::init(int np_total, int np_mobile)
 {
 	np = np_total;
 	mobile_particle_nb = np_mobile;
-
+	fixed_particle_nb = np_total-mobile_particle_nb;
 	// resistance matrix characteristics (see header for matrix description)
 	dblocks_size = 18*mobile_particle_nb;
 	allocateRessources();
@@ -380,7 +380,6 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	if (mobile_particle_nb == np) {
 		return;
 	}
-	int fixed_particle_nb = np-mobile_particle_nb;
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
@@ -428,7 +427,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 {
 	// this function is commented, but you are strongly advised to read
 	// the description of storage in the header file first :)
-	if (mobile_particle_nb == np) {
+	if (fixed_particle_nb == 0) {
 		return;
 	}
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
@@ -721,11 +720,11 @@ void StokesSolver::allocateRessources()
 	dblocks.resize(mobile_particle_nb);
 	odbrows_table.resize(mobile_particle_nb+1);
 	odbrows_table_mf.resize(mobile_particle_nb+1);
-	odbrows_table_ff.resize(np-mobile_particle_nb+1);
-	dblocks_ff.resize(np-mobile_particle_nb);
+	odbrows_table_ff.resize(fixed_particle_nb+1);
+	dblocks_ff.resize(fixed_particle_nb);
 	cholmod_start(&chol_c);
 	int size_mm = 6*mobile_particle_nb;
-	int size_ff = 6*(np-mobile_particle_nb);
+	int size_ff = 6*fixed_particle_nb;
 
 	chol_rhs       = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
 	chol_vec       = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
@@ -751,12 +750,12 @@ void StokesSolver::allocateResistanceMatrix()
 	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 
 	int col_nb = 6*mobile_particle_nb;
-	int row_nb = 6*(np-mobile_particle_nb);
+	int row_nb = 6*fixed_particle_nb;
 	nzmax = 30*odblocks_nb_mf;  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
 	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
 
-	col_nb = 6*(np-mobile_particle_nb);
+	col_nb = 6*fixed_particle_nb;
 	row_nb = col_nb;
 	nzmax = 18*dblocks_ff.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb_ff;  // off-diagonal

@@ -22,6 +22,11 @@ void System::stressReset()
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 	}
+	if (mobile_fixed) {
+		for (int i=0; i<np; i++) {
+			hydrofromfixedstressGU[i].reset();
+		}
+	}
 	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
 			repulsivestressGU[i].reset();
@@ -213,7 +218,7 @@ System::calcStress()
 		}
 		total_magnetic_stressGU /= system_volume;
 	}
-	if (np_mobile<np) {
+	if (mobile_fixed) {
 		total_hydrofromfixed_stressGU.reset();
 		for (int i=0; i<np; i++) {
 			total_hydrofromfixed_stressGU += hydrofromfixedstressGU[i];
@@ -241,13 +246,10 @@ System::calcStress()
 		total_stress += total_magnetic_stressXF;
 		total_stress += total_magnetic_stressGU;
 	}
-
-	if (np_mobile<np) {
+	if (mobile_fixed) {
 		total_stress += total_hydrofromfixed_stressGU;
 	}
-
 	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
-
 	if (!p.cross_shear) {
 		total_stress.elm[2] += einstein_stress;
 	} else {

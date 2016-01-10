@@ -172,7 +172,7 @@ class StokesSolver{
 private:
 	int np;
 	int mobile_particle_nb;
-
+	int fixed_particle_nb;
 	bool mobile_matrix_done;
 
 	// Cholmod variables

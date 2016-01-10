@@ -39,6 +39,7 @@ critical_load(false),
 lowPeclet(false),
 twodimension(false),
 zero_shear(false),
+mobile_fixed(false),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -211,7 +212,7 @@ void System::allocateRessources()
 		vel_magnetic = new vec3d [np];
 		ang_vel_magnetic = new vec3d [np];
 	}
-	if(np_mobile<np){
+	if (mobile_fixed) {
 		vel_hydro_from_fixed.resize(np);
 		ang_vel_hydro_from_fixed.resize(np);
 	}
@@ -239,7 +240,7 @@ void System::allocateRessources()
 		magnetic_torque = new vec3d [np];
 		magneticstressGU = new StressTensor [np];
 	}
-	if(np_mobile<np){
+	if (mobile_fixed) {
 		hydrofromfixedstressGU.resize(np);
 	}
 	//
@@ -292,7 +293,10 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	 */
 	string indent = "  System::\t";
 	set_np(initial_positions.size());
-	np_mobile = np-p.fixed_nb;
+	np_mobile = np-p.np_fixed;
+	if (p.np_fixed > 0) {
+		mobile_fixed = true;
+	}
 	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
@@ -548,11 +552,6 @@ void System::setupSystem(string control)
 	}
 	costheta_shear = cos(p.theta_shear);
 	sintheta_shear = sin(p.theta_shear);
-
-	if (test_simulation > 10 && test_simulation <= 20) {
-		p.fixed_nb = np_in+np_out;
-		np_mobile = np-p.fixed_nb;
-	}
 	// Memory
 	allocateRessources();
 	//
@@ -1035,7 +1034,6 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 	 * It must not be updated in corrector.
 	 */
 	timeStepBoxing();
-
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
@@ -1447,10 +1445,10 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 vector<double> System::computeForceFromFixedParticles()
 {
 	vector<double> force_torque_from_fixed (6*np_mobile);
-	int fixed_vel_size = 6*(np-np_mobile);
+	int fixed_vel_size = 6*p.np_fixed;
 	// @@ TODO: avoid copy of the velocities
 	vector<double> minus_fixed_velocities (fixed_vel_size);
-	for(int i=0; i<np-np_mobile; i++){
+	for(int i=0; i<p.np_fixed; i++){
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
 		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1493,7 +1491,7 @@ void System::generateBrownianForces()
 
 	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
-	if (np_mobile < np) {
+	if (mobile_fixed) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
@@ -1677,7 +1675,7 @@ void System::computeVelocityWithoutComponents()
 	} else {
 		buildHydroTerms(true, false); // zero shear-rate
 	}
-	if (np_mobile < np) {
+	if (mobile_fixed) {
 		buildHydroTermsFromFixedParticles();
 	}
 	// for most of the time evolution
@@ -1709,7 +1707,7 @@ void System::computeVelocityByComponents()
 	}
 	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 
-	if (np_mobile<np) {
+	if (mobile_fixed) {
 		vector<double> force_torque_from_fixed = computeForceFromFixedParticles();
 		stokes_solver.resetRHS();
 		int first_mobile_index = 0;
@@ -1858,7 +1856,7 @@ void System::sumUpVelocityComponents()
 			na_ang_velocity[i] += ang_vel_magnetic[i];
 		}
 	}
-	if (np_mobile<np) {
+	if (mobile_fixed) {
 		for (int i=0; i<np_mobile; i++) {
 			na_velocity[i] += vel_hydro_from_fixed[i];
 			na_ang_velocity[i] += ang_vel_hydro_from_fixed[i];
@@ -2260,7 +2258,7 @@ void System::calcLubricationForce()
 	} else {
 		buildHydroTerms(true, false); // no GE
 	}
-	if (np_mobile < np) {
+	if (mobile_fixed) {
 		buildHydroTermsFromFixedParticles();
 	}
 	setContactForceToParticle();

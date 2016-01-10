@@ -755,15 +755,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
 	} else if (keyword == "time_init_relax") {
 		catchSuffixedValue("time", keyword, value, &p.time_init_relax);
-	} else if (keyword == "fixed_particle_fraction") {
-		p.fixed_particle_fraction = atof(value.c_str());
 	} else if (keyword == "out_particle_stress") {
 		p.out_particle_stress = value;
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
 	} else if (keyword == "out_binary_conf") {
 		p.out_binary_conf = str2bool(value);
-	} else if (keyword == "fixed_nb") {
-		p.fixed_nb = atoi(value.c_str());
+	} else if (keyword == "np_fixed") {
+		p.np_fixed = atoi(value.c_str());
 	} else {
 		ostringstream error_str;
 		error_str  << "keyword " << keyword << " is not associated with an parameter" << endl;
@@ -836,6 +834,7 @@ void Simulation::setDefaultParameters()
 	p.monolayer = false;
 	p.rest_threshold = 1e-4;
 	p.integration_method = 1;
+	p.np_fixed = 0;
 	/*
 	 * Stokes drag coeffient
 	 */
@@ -926,9 +925,6 @@ void Simulation::setDefaultParameters()
 	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
-	p.fixed_particle_fraction = 0;
-
-	p.fixed_nb = 0;
 }
 
 void Simulation::openOutputFiles(bool binary_conf,
@@ -1048,9 +1044,10 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 		header_2nd_line >> np_in >> np_out >> radius_in >> radius_out;
 		sys.np_in = np_in;
 		sys.np_out = np_out;
+		sys.p.np_fixed = np_in+np_out;
 		sys.radius_in = radius_in;
 		sys.radius_out = radius_out;
-	}	
+	}
 	vector<vec3d> initial_position;
 	vector <double> radius;
 	if (sys.p.magnetic_type == 0) {
