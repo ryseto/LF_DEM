@@ -39,6 +39,21 @@ public:
 			elm[i] = a;
 		}
 	}
+	
+	inline StressTensor(const double& _xx,
+						const double& _xy,
+						const double& _xz,
+						const double& _yz,
+						const double& _yy,
+						const double& _zz)
+	{
+		elm[0] = _xx;
+		elm[1] = _xy;
+		elm[2] = _xz;
+		elm[3] = _yz;
+		elm[4] = _yy;
+		elm[5] = _zz;
+	}
 
 	// output stream operator
 	inline friend std::ostream& operator << (std::ostream& out,
@@ -62,22 +77,7 @@ public:
 		elm[4] = v1.y*v2.y;
 		elm[5] = v1.z*v2.z;
 	}
-
-	inline StressTensor(const double& _xx,
-						const double& _xy,
-						const double& _xz,
-						const double& _yz,
-						const double& _yy,
-						const double& _zz)
-	{
-		elm[0] = _xx;
-		elm[1] = _xy;
-		elm[2] = _xz;
-		elm[3] = _yz;
-		elm[4] = _yy;
-		elm[5] = _zz;
-	}
-
+	
 	inline friend StressTensor operator + (const StressTensor& a1,
 										   const StressTensor& a2)
 	{

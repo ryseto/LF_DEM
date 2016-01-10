@@ -260,7 +260,7 @@ void Lubrication::calcXYFunctionsStress()
 	}
 }
 
-std::tuple<vec3d,vec3d> Lubrication::calcGE()
+std::tuple<vec3d, vec3d> Lubrication::calcGE()
 {
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
@@ -283,7 +283,7 @@ std::tuple<vec3d,vec3d> Lubrication::calcGE()
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d,vec3d,vec3d,vec3d> Lubrication::calcGEHE()
+std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE()
 {
 	/*
 	 * lubrication_model = 2

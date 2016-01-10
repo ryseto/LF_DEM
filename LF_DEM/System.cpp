@@ -40,18 +40,17 @@ lowPeclet(false),
 twodimension(false),
 zero_shear(false),
 mobile_fixed(false),
+kn_master(0),
+kt_master(0),
+kr_master(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
 circulargap(false),
 magnetic_rotation_active(false),
-kn_master(0),
-kt_master(0),
-kr_master(0),
 magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
-
 eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
