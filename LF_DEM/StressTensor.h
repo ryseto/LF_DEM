@@ -26,7 +26,7 @@ public:
 	 */
 	double elm[6];
 
-	inline StressTensor()
+	inline StressTensor(void)
 	{
 		for (int i=0; i<6; i++) {
 			elm[i] = 0;

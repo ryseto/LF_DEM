@@ -56,8 +56,8 @@ struct ForceAmplitudes
 
 class System{
 private:
-	int np; ///< nb of particles
-	int np_mobile;
+	int np; ///< number of particles
+	int np_mobile; ///< number of mobile particles
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions_mm;

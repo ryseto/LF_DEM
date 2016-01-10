@@ -621,15 +621,15 @@ void Simulation::outputData()
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
 
 	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
-	outdata.entryData(6, "Viscosity(lub)", "viscosity", shearStressComponent(sys.total_hydro_stress,p.theta_shear)/sr);
-	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressXF,p.theta_shear)/sr);
-	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressGU,p.theta_shear)/sr);
+	outdata.entryData(6, "Viscosity(lub)", "viscosity", shearStressComponent(sys.total_hydro_stress, p.theta_shear)/sr);
+	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressXF, p.theta_shear)/sr);
+	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressGU, p.theta_shear)/sr);
 	if (sys.repulsiveforce) {
-		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", shearStressComponent(sys.total_repulsive_stressXF,p.theta_shear)/sr);
-		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", shearStressComponent(sys.total_repulsive_stressGU,p.theta_shear)/sr);
+		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", shearStressComponent(sys.total_repulsive_stressXF, p.theta_shear)/sr);
+		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", shearStressComponent(sys.total_repulsive_stressGU, p.theta_shear)/sr);
 	}
 	if (sys.brownian) {
-		outdata.entryData(11, "Viscosity(brownian)", "viscosity", shearStressComponent(sys.total_brownian_stressGU,p.theta_shear)/sr);
+		outdata.entryData(11, "Viscosity(brownian)", "viscosity", shearStressComponent(sys.total_brownian_stressGU, p.theta_shear)/sr);
 	}
 	/*
 	 * Stress

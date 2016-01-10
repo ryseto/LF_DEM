@@ -44,8 +44,7 @@ void System::stressReset()
 	}
 }
 
-void
-System::calcStressPerParticle()
+void System::calcStressPerParticle()
 {
 	/**
 	   This method computes the stresses per particle, split by components (hydro, contact, ...).
@@ -123,8 +122,7 @@ System::calcStressPerParticle()
 	}
 }
 
-void
-System::calcStress()
+void System::calcStress()
 {
 	// Lubrication stress
 	total_hydro_stress.reset();
