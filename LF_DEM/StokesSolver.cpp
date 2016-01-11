@@ -655,7 +655,8 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-	for (unsigned int i=0; i<velocity.size(); i++) {
+	int size = chol_solution->nrow/6;
+	for (int i=0; i<size; i++) {
 		int i6 = 6*i;
 		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
 		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
