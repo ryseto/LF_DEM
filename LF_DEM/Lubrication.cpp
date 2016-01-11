@@ -611,22 +611,22 @@ void Lubrication::addHydroStress()
 		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
 	}
 	if (sys->magnetic) {
-		StressTensor stersslet_magnetic_GU_i;
-		StressTensor stersslet_magnetic_GU_j;
+		StressTensor stresslet_magnetic_GU_i;
+		StressTensor stresslet_magnetic_GU_j;
 		pairVelocityStresslet(sys->vel_magnetic[p0], sys->vel_magnetic[p1],
 							  sys->ang_vel_magnetic[p0], sys->ang_vel_magnetic[p1],
-							  stersslet_magnetic_GU_i, stersslet_magnetic_GU_j);
-		sys->magneticstressGU[p0] += stersslet_magnetic_GU_i;
-		sys->magneticstressGU[p1] += stersslet_magnetic_GU_j;
+							  stresslet_magnetic_GU_i, stresslet_magnetic_GU_j);
+		sys->magneticstressGU[p0] += stresslet_magnetic_GU_i;
+		sys->magneticstressGU[p1] += stresslet_magnetic_GU_j;
 	}
 	if (sys->vel_hydro_from_fixed.size()) {
-		StressTensor stersslet_fixed_GU_i;
-		StressTensor stersslet_fixed_GU_j;
+		StressTensor stresslet_fixed_GU_i;
+		StressTensor stresslet_fixed_GU_j;
 		pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->vel_hydro_from_fixed[p1],
 							  sys->ang_vel_hydro_from_fixed[p0], sys->ang_vel_hydro_from_fixed[p1],
-							  stersslet_fixed_GU_i, stersslet_fixed_GU_j);
-		sys->hydrofromfixedstressGU[p0] += stersslet_fixed_GU_i;
-		sys->hydrofromfixedstressGU[p1] += stersslet_fixed_GU_j;
+							  stresslet_fixed_GU_i, stresslet_fixed_GU_j);
+		sys->hydrofromfixedstressGU[p0] += stresslet_fixed_GU_i;
+		sys->hydrofromfixedstressGU[p1] += stresslet_fixed_GU_j;
 	}
 }
 
