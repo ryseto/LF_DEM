@@ -17,14 +17,14 @@ my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
-my $rotatingobserver = 0;
-#my $np_movable = 3000;
-#my $rout = 84.4391;
+my $rotatingobserver = 1;
+my $np_movable = 3000;
+my $rout = 84.4391;
 #my $np_movable = 6000;
 #my $rout = 118.562;
 
-my $np_movable = 500;
-my $rout = 37.5726;
+#my $np_movable = 500;
+#my $rout = 37.5726;
 
 my $rin = $rout/2;
 my $calcrheology = 0;
@@ -390,31 +390,29 @@ sub OutYaplotData{
 	printf OUT "@ 7\n";
 	for ($k = 0; $k < $num_interaction; $k ++) {
 		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($int0[$k] < $np_movable ||
-			$int1[$k] < $np_movable) {
-				
-				if ($force[$k] > 0) {
-					&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k]);
-				}
-			}
-	}
-	#	printf OUT "y 3\n";
-	#	printf OUT "@ 5\n";
-	#	for ($k = 0; $k < $num_interaction; $k ++) {
-	#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-	#		if ($force[$k] < 0) {
-	#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k]);
-	#		}
-	#	}
-	#
-	## visualize rotation in 2D
-		if ($Ly == 0) {
-			printf OUT "y 6\n";
-			printf OUT "@ 1\n";
-			for ($i = 0; $i < $np; $i++) {
-				OutCross($i);
+		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
+			if ($force[$k] > 0) {
+				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], -0.01);
 			}
 		}
+	}
+	printf OUT "y 3\n";
+	printf OUT "@ 5\n";
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		if ($force[$k] < 0) {
+			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], -0.02);
+		}
+	}
+	#
+	## visualize rotation in 2D
+#		if ($Ly == 0) {
+#			printf OUT "y 6\n";
+#			printf OUT "@ 1\n";
+#			for ($i = 0; $i < $np; $i++) {
+#				OutCross($i);
+#			}
+#		}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";
@@ -486,12 +484,12 @@ sub OutBoundaryBox {
 }
 
 sub OutString_width {
-	($i, $j, $w) = @_;
+	($i, $j, $w, $delta) = @_;
 	$xi = $posx[$i];
-	$yi = $posy[$i] - 0.01;
+	$yi = $posy[$i] - $delta;
 	$zi = $posz[$i];
 	$xj = $posx[$j];
-	$yj = $posy[$j] - 0.01;
+	$yj = $posy[$j] - $delta;
 	$zj = $posz[$j];
 	$sq_dist = ($xi-$xj)**2 + ($yi-$yj)**2 + ($zi-$zj)**2 ;
 	if (sqrt($sq_dist) < $radius[$i] + $radius[$j]+1) {

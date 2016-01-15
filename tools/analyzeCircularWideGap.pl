@@ -48,7 +48,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 5;
+$shear_strain_steady_state = 10;
 
 $kmax = 15;
 $r_in = $radius_in+sqrt(3)/2;
