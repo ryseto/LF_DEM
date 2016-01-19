@@ -204,7 +204,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else if (simu_identifier == "mtest3") {
 		cerr << "Test simulation for a mixed problem" << endl;
 		sys.test_simulation = 3;//mtest2
-
 	} else if (simu_identifier == "ctest1") {
 		cerr << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
 		sys.test_simulation = 11;//ctest1

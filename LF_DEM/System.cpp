@@ -587,8 +587,10 @@ void System::setupSystem(string control)
 			vel_magnetic[i].reset();
 			ang_vel_magnetic[i].reset();
 		}
-		vel_hydro_from_fixed[i].reset();
-		ang_vel_hydro_from_fixed[i].reset();
+		if (mobile_fixed) {
+			vel_hydro_from_fixed[i].reset();
+			ang_vel_hydro_from_fixed[i].reset();
+		}
 	}
 	if (test_simulation > 10 && test_simulation <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
