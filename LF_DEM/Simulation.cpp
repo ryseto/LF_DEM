@@ -266,7 +266,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_end = now;
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
-	string	filename_parameters = input_files[1];
+	string filename_parameters = input_files[1];
 	if (filename_parameters.find("init_relax", 0)) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.

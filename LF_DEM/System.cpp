@@ -956,7 +956,11 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
         // @@@ Force balance check
         for (int i=0; i<np; i++) {
             forcecheck[i] += contact_force[i];
-            forcecheck[i] += repulsive_force[i];
+        }
+        if (repulsiveforce) {
+            for (int i=0; i<np; i++) {
+                forcecheck[i] += repulsive_force[i];
+            }
         }
     }
 	if (p.lubrication_model > 0) {
@@ -965,7 +969,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		computeVelocitiesStokesDrag();
 	}
     if (calc_stress) {
-		calcStressPerParticle(); // stress compornents
         /*
          * calculate lubrication force from na_velocity
          */
@@ -982,6 +985,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
         //        for (int i=0; i<np_mobile; i++) {
         //            forcecheck[i].cerr();
         //        }
+        calcStressPerParticle(); // stress compornents
     }
 	timeStepMovePredictor(time_or_strain, value_end);
 	/* corrector */
