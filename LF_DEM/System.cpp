@@ -300,6 +300,9 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	string indent = "  System::\t";
 	set_np(initial_positions.size());
 	np_mobile = np-p.np_fixed;
+	if (np_mobile <= 0) {
+		throw runtime_error("np_fixed>=np");
+	}
 	if (p.np_fixed > 0) {
 		mobile_fixed = true;
 	}
