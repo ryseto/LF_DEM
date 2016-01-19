@@ -322,11 +322,12 @@ sub InInteractions {
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$contactstate[$k] = $contact;
-		$force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+        $force[$k] = $fc_norm + $f_lub_norm + $fr_norm;
+        #$force[$k] = $f_lub_norm + $fr_norm;
 		$F_lub[$k] = $f_lub_norm;
 		$Fc_n[$k] = $fc_norm;
 		$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);
-		$S_bf[$k] =  $s_xF;
+		$S_bf[$k] = $s_xF;
 		$nrvec_x[$k] = $nx;
 		$nrvec_y[$k] = $ny;
 		$nrvec_z[$k] = $nz;

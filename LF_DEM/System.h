@@ -192,7 +192,8 @@ private:
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
-	vec3d *position;
+    vec3d *position;
+    std::vector<vec3d> forcecheck;
 	Interaction *interaction;
 	BoxSet boxset;
 	double *radius;
@@ -336,7 +337,7 @@ private:
 	double evaluateAvgContactGap();
 	StokesSolver stokes_solver;
 	void initializeBoxing();
-	void calcLubricationForce(); // for visualization of force chains
+    //void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
 	/*
 	 * Simulation for magnetic particles

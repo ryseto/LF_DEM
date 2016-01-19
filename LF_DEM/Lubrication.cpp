@@ -527,27 +527,30 @@ void Lubrication::calcLubricationForce()
 	vec3d vi(sys->na_velocity[p0]);
 	vec3d vj(sys->na_velocity[p1]);
 	vec3d oi(sys->na_ang_velocity[p0]);
-	vec3d oj(sys->na_ang_velocity[p1]);
+    vec3d oj(sys->na_ang_velocity[p1]);
 	if (sys->p.lubrication_model == 1) {
 		calcXFunctions();
 	} else if (sys->p.lubrication_model == 2) {
 		calcXYFunctions();
 	}
 	vec3d XAU_i = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*(*nvec);
-	vec3d XGE_i =  sr*(scaledXG0()+scaledXG2())*nxnz*(*nvec);
+    vec3d XGE_i;
+    if (!sys->zero_shear) {
+        XGE_i =  sr*(scaledXG0()+scaledXG2())*nxnz*(*nvec);
+    }
 	if (sys->p.lubrication_model == 1) {
-		if (!sys->zero_shear) {
+        if (!sys->zero_shear) {
 			lubforce_p0 = XAU_i+XGE_i;
 		} else {
 			lubforce_p0 = XAU_i;
 		}
 		return;
 	}
-	vec3d YAU_i = -scaledYA0()*(vi-(*nvec)*dot(nvec,vi))-scaledYA1()*(vj-(*nvec)*dot(nvec,vj));
-	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)          -scaledYB1()*cross(nvec, oj);
-	vec3d vec_z_x(nvec->z, 0, nvec->x);
-	vec3d YGE_i = sr*(scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*(*nvec));
+	vec3d YAU_i = -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
+	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)            - scaledYB1()*cross(nvec, oj);
 	if (!sys->zero_shear) {
+        vec3d vec_z_x(nvec->z, 0, nvec->x);
+        vec3d YGE_i = sr*(scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*(*nvec));
 		lubforce_p0 = XAU_i+YAU_i+YBO_i+XGE_i+YGE_i;
 	} else {
 		lubforce_p0 = XAU_i+YAU_i+YBO_i;

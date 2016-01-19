@@ -8,8 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
+		D900E3D11C4544F500349E01 /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3CD1C4544F500349E01 /* libamd.2.4.1.a */; };
+		D900E3D21C4544F500349E01 /* libcholmod.3.0.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3CE1C4544F500349E01 /* libcholmod.3.0.6.a */; };
+		D900E3D31C4544F500349E01 /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3CF1C4544F500349E01 /* libcolamd.2.9.1.a */; };
+		D900E3D41C4544F500349E01 /* libsuitesparseconfig.4.4.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3D01C4544F500349E01 /* libsuitesparseconfig.4.4.6.a */; };
 		D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */; };
-		D91372D91C09ADC500EA5817 /* libcholmod.3.0.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */; };
 		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
@@ -22,7 +25,6 @@
 		D9506B9216D81A7C00A52CFF /* Stress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9506B9116D81A7C00A52CFF /* Stress.cpp */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
-		D95885601C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D958855F1C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a */; };
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
@@ -41,8 +43,6 @@
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
-		D9D712231A995E36009CC269 /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D712161A995E36009CC269 /* libamd.2.4.1.a */; };
-		D9D712281A995E36009CC269 /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
@@ -128,6 +128,10 @@
 
 /* Begin PBXFileReference section */
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = StokesSolver.cpp; sourceTree = "<group>"; };
+		D900E3CD1C4544F500349E01 /* libamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.4.1.a; path = /opt/local/lib/libamd.2.4.1.a; sourceTree = "<absolute>"; };
+		D900E3CE1C4544F500349E01 /* libcholmod.3.0.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.6.a; path = /opt/local/lib/libcholmod.3.0.6.a; sourceTree = "<absolute>"; };
+		D900E3CF1C4544F500349E01 /* libcolamd.2.9.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.9.1.a; path = /opt/local/lib/libcolamd.2.9.1.a; sourceTree = "<absolute>"; };
+		D900E3D01C4544F500349E01 /* libsuitesparseconfig.4.4.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.6.a; path = /opt/local/lib/libsuitesparseconfig.4.4.6.a; sourceTree = "<absolute>"; };
 		D9032D731B79D1A00062A6F3 /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
 		D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
 		D90AF33D1AF9FFBA00E15C7E /* _averager_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _averager_8h_source.html; sourceTree = "<group>"; };
@@ -523,7 +527,6 @@
 		D90AF4C41AF9FFBB00E15C7E /* tabs.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = tabs.css; sourceTree = "<group>"; };
 		D90AF4C51AF9FFBB00E15C7E /* vec3d_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = vec3d_8h_source.html; sourceTree = "<group>"; };
 		D90B4F681A70942500C51ACD /* ParameterSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = ParameterSet.h; sourceTree = "<group>"; };
-		D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.6.a; path = /usr/local/lib/libcholmod.3.0.6.a; sourceTree = "<absolute>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D918BA0A1AE0FD4F007CB291 /* MagneticForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagneticForce.cpp; sourceTree = "<group>"; };
@@ -559,7 +562,6 @@
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = BoxSet.cpp; sourceTree = "<group>"; };
 		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = BoxSet.h; sourceTree = "<group>"; };
-		D958855F1C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.5.a; path = /usr/local/lib/libsuitesparseconfig.4.4.5.a; sourceTree = "<absolute>"; };
 		D96731B117A042AD005D02F8 /* percolation_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = percolation_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96731B317A042AD005D02F8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
@@ -623,8 +625,6 @@
 		D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-common.h"; path = "dSFMT-src-2.2.3/dSFMT-common.h"; sourceTree = "<group>"; };
 		D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params.h"; path = "dSFMT-src-2.2.3/dSFMT-params.h"; sourceTree = "<group>"; };
 		D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params19937.h"; path = "dSFMT-src-2.2.3/dSFMT-params19937.h"; sourceTree = "<group>"; };
-		D9D712161A995E36009CC269 /* libamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.4.1.a; path = /usr/local/lib/libamd.2.4.1.a; sourceTree = "<absolute>"; };
-		D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.9.1.a; path = /usr/local/lib/libcolamd.2.9.1.a; sourceTree = "<absolute>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
@@ -660,10 +660,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D95885601C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a in Frameworks */,
-				D91372D91C09ADC500EA5817 /* libcholmod.3.0.6.a in Frameworks */,
-				D9D712231A995E36009CC269 /* libamd.2.4.1.a in Frameworks */,
-				D9D712281A995E36009CC269 /* libcolamd.2.9.1.a in Frameworks */,
+				D900E3D11C4544F500349E01 /* libamd.2.4.1.a in Frameworks */,
+				D900E3D21C4544F500349E01 /* libcholmod.3.0.6.a in Frameworks */,
+				D900E3D31C4544F500349E01 /* libcolamd.2.9.1.a in Frameworks */,
+				D900E3D41C4544F500349E01 /* libsuitesparseconfig.4.4.6.a in Frameworks */,
 				D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1141,10 +1141,10 @@
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				D9D712161A995E36009CC269 /* libamd.2.4.1.a */,
-				D958855F1C0AE06900C6C378 /* libsuitesparseconfig.4.4.5.a */,
-				D91372D81C09ADC500EA5817 /* libcholmod.3.0.6.a */,
-				D9D7121B1A995E36009CC269 /* libcolamd.2.9.1.a */,
+				D900E3CD1C4544F500349E01 /* libamd.2.4.1.a */,
+				D900E3CE1C4544F500349E01 /* libcholmod.3.0.6.a */,
+				D900E3CF1C4544F500349E01 /* libcolamd.2.9.1.a */,
+				D900E3D01C4544F500349E01 /* libsuitesparseconfig.4.4.6.a */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
 			);
 			name = lib;
@@ -1783,9 +1783,15 @@
 				GCC_VERSION = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				HEADER_SEARCH_PATHS = /usr/local/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/opt/local/include,
+				);
 				LD_DYLIB_INSTALL_NAME = "";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/opt/local/lib,
+				);
 				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = (
 					"-std=c++11",
@@ -1808,9 +1814,15 @@
 				GCC_VERSION = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				HEADER_SEARCH_PATHS = /usr/local/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					/opt/local/include,
+				);
 				LD_DYLIB_INSTALL_NAME = "";
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					/opt/local/lib,
+				);
 				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = (
 					"-std=c++11",
