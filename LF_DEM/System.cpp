@@ -1984,7 +1984,7 @@ void System::computeVelocities(bool divided_velocities)
 	setFixedParticleVelocities();
 
 	if (divided_velocities || stress_controlled) {
-        if (stress_controlled) {
+		if (stress_controlled) {
 			shear_rate = 1;
 		}
 		computeVelocityByComponents();

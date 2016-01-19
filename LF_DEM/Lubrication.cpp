@@ -547,7 +547,7 @@ void Lubrication::calcLubricationForce()
 		return;
 	}
 	vec3d YAU_i = -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
-	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)            - scaledYB1()*cross(nvec, oj);
+	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)            + scaledYB1()*cross(nvec, oj);
 	if (!sys->zero_shear) {
         vec3d vec_z_x(nvec->z, 0, nvec->x);
         vec3d YGE_i = sr*(scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*(*nvec));
