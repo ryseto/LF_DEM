@@ -72,10 +72,10 @@ void Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_)
 	log_lub_coeff = log_lub_coeff_; // tangential
 }
 
-void Lubrication::setResistanceCoeffTang(double tangent_rc)
-{
-	log_lub_coeff = tangent_rc;
-}
+//void Lubrication::setResistanceCoeffTang(double tangent_rc)
+//{
+//	log_lub_coeff = tangent_rc;
+//}
 
 /*********************************
  *                                *
@@ -479,7 +479,7 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
 	double cYM_j = (1.0/2)*(scaledYM2()+scaledYM3());
 
 	StressTensor YME_i;
-	if(!sys->p.cross_shear) {
+	if (!sys->p.cross_shear) {
 		YME_i.elm[0] = 2*nxnz     -4*nxnx*nnE;
 		YME_i.elm[1] =   nynz     -4*nxny*nnE;
 		YME_i.elm[2] =   nxnx+nznz-4*nxnz*nnE;
@@ -487,7 +487,7 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
 		YME_i.elm[4] =            -4*nyny*nnE;
 		YME_i.elm[5] = 2*nxnz     -4*nznz*nnE;
 	}
-	if(sys->p.cross_shear) {
+	if (sys->p.cross_shear) {
 		double costheta, sintheta;
 		std::tie( costheta, sintheta ) = sys->getCosSinShearAngle();
 		YME_i.elm[0] = 2*costheta*nxnz                             -4*nxnx*nnE;
@@ -536,7 +536,7 @@ void Lubrication::calcLubricationForce()
 	vec3d XAU_i = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*(*nvec);
     vec3d XGE_i;
     if (!sys->zero_shear) {
-        XGE_i =  sr*(scaledXG0()+scaledXG2())*nxnz*(*nvec);
+        XGE_i = sr*(scaledXG0()+scaledXG2())*nxnz*(*nvec);
     }
 	if (sys->p.lubrication_model == 1) {
         if (!sys->zero_shear) {
@@ -546,14 +546,24 @@ void Lubrication::calcLubricationForce()
 		}
 		return;
 	}
+    // @@@@@@
+    // YAU_i = - a0*YA[0]*(vi - n n.vi)    - (1/2)*(a0+a1)*YA[1]*(vj-n n.vj)
+    // YBO_i = - (2/3)*a0a0*YB[0]*(n x oi) + (1/6)*(a0+a1)^2*YB[1]*(n x oj)
+    // lambda = a0/a1
+    // func_g2_YA(double lamb) = (4./15)*lamb*(2+lamb+2*lamb*lamb)/(lamb_p_1*lamb_p_1*lamb_p_1);
+    // cYA[0] = func_g2_YA(lambda);
+    // cYA[1] = (-2/lambda_p_1)*func_g2_YA(lambda);
+    // func_g2_YB(double lamb) = -(1./5)*lamb*(4+lamb)/(lamb_p_1*lamb_p_1);
+    // cYB[0] = func_g2_YB(lambda);
+    // cYB[1] = -4/lambda_p_1_square*func_g2_YB(lambda);
+    // @@@@@@
 	vec3d YAU_i = -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
 	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)            + scaledYB1()*cross(nvec, oj);
+    lubforce_p0 = XAU_i+YAU_i+YBO_i;
 	if (!sys->zero_shear) {
         vec3d vec_z_x(nvec->z, 0, nvec->x);
         vec3d YGE_i = sr*(scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*(*nvec));
-		lubforce_p0 = XAU_i+YAU_i+YBO_i+XGE_i+YGE_i;
-	} else {
-		lubforce_p0 = XAU_i+YAU_i+YBO_i;
+		lubforce_p0 += XGE_i+YGE_i;
 	}
 }
 
