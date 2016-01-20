@@ -98,4 +98,5 @@ inline void Str2KeyValue(const std::string& str_parameter,
 	return;
 }
 
+
 #endif /* defined(__LF_DEM__global__) */

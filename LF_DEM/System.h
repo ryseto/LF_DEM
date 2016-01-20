@@ -54,6 +54,7 @@ struct ForceAmplitudes
 	double ft_max;
 };
 
+
 class System{
 private:
 	int np; ///< number of particles
@@ -136,14 +137,11 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
-	vec3d randUniformSphere(double);
 #ifndef USE_DSFMT
 	MTRand *r_gen;
-	MTRand rand_gen;
 #endif
 #ifdef USE_DSFMT
 	dsfmt_t r_gen;
-	dsfmt_t rand_gen;
 	unsigned long hash(time_t, clock_t);
 #endif
 	bool angle_output;
@@ -154,7 +152,7 @@ private:
 	double *stokesdrag_coeff_f_sqrt;
 	double *stokesdrag_coeff_t_sqrt;
 	std::vector <struct DBlock> resistance_matrix_dblock;
-	
+
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;

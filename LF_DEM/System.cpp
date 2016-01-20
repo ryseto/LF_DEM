@@ -16,11 +16,9 @@
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
-#define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 #endif
 #ifdef USE_DSFMT
 #define GRANDOM  ( sqrt( -2.0 * log( 1.0 - dsfmt_genrand_open_open(&r_gen) ) ) * cos(2.0 * 3.14159265358979323846264338328 * dsfmt_genrand_close_open(&r_gen) ) ) // RNG gaussian with mean 0. and variance 1.
-#define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
 #endif
 
 using namespace std;
@@ -51,6 +49,7 @@ circulargap(false),
 magnetic_rotation_active(false),
 magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
+ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
@@ -64,13 +63,7 @@ eventLookUp(NULL)
 	max_disp_rolling = 0;
 }
 
-vec3d System::randUniformSphere(double r)
-{
-	double z = 2*RANDOM-1;
-	double phi = 2*M_PI*RANDOM;
-	double sin_theta = sqrt(1-z*z);
-	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
-}
+
 
 #ifdef USE_DSFMT
 unsigned long
@@ -157,6 +150,9 @@ System::~System()
 
 void System::allocateRessources()
 {
+	if(np<=0){
+		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
+	}
 	linalg_size = 6*np;
 	double interaction_volume;
 	if (twodimension) {
@@ -670,7 +666,6 @@ void System::setupSystem(string control)
 #endif
 #ifdef USE_DSFMT
 		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
-		dsfmt_init_gen_rand(&rand_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #endif
 
@@ -680,7 +675,6 @@ void System::setupSystem(string control)
 #endif
 #ifdef USE_DSFMT
 		dsfmt_init_gen_rand(&r_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
-		dsfmt_init_gen_rand(&rand_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
 	}
@@ -853,7 +847,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
         // @@@ Force balance check
         for (int i=0; i<np; i++) {
             forcecheck[i] += contact_force[i];
+						if(repulsiveforce){
             forcecheck[i] += repulsive_force[i];
+					}
         }
     }
 	if (p.lubrication_model == 0) {
@@ -861,6 +857,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
+
 	if (calc_stress) {
 		calcStressPerParticle();
         // @@@ Force balance check
@@ -1055,14 +1052,20 @@ void System::timeStepMove(const string& time_or_strain,
 	}
 
 	time += dt;
-	time_in_simulation_units += dt*(*ratio_unit_time);
+	if(ratio_unit_time!=NULL){
+		time_in_simulation_units += dt*(*ratio_unit_time);
+	} else {
+		time_in_simulation_units += dt;
+	}
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+
 	if (magnetic_rotation_active) {
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
@@ -1076,6 +1079,7 @@ void System::timeStepMove(const string& time_or_strain,
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -1092,7 +1096,11 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 		}
 	}
 	time += dt;
-	time_in_simulation_units += dt*(*ratio_unit_time);
+	if(ratio_unit_time!=NULL){
+		time_in_simulation_units += dt*(*ratio_unit_time);
+	} else {
+		time_in_simulation_units += dt;
+	}
 	total_num_timesteps ++;
 	/* evolve PBC
 	 * The periodic boundary condition is updated in predictor.
@@ -1196,10 +1204,12 @@ void System::timeEvolution(const string& time_or_strain,
 	while (keepRunning(time_or_strain, value_end)) {
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
 	};
+
 	if (events.empty()) {
 		calc_stress = true;
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
+
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust) {
 		adjustContactModelParameters();
