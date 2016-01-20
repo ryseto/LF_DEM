@@ -106,13 +106,8 @@ System::hash(time_t t, clock_t c)
 
 System::~System()
 {
-	DELETE(position);
-	DELETE(radius);
 	DELETE(radius_squared);
 	DELETE(radius_cubed);
-	if (twodimension) {
-		DELETE(angle);
-	}
 	DELETE(velocity);
 	DELETE(ang_velocity);
 	DELETE(na_velocity);
@@ -189,7 +184,7 @@ void System::allocateRessources()
 	}
 	// Configuration
 	if (twodimension) {
-		angle = new double [np];
+		angle.resize(np);
 	}
 	// Velocity
 	velocity = new vec3d [np];
@@ -286,8 +281,9 @@ void System::setInteractions_GenerateInitConfig()
 
 void System::allocatePositionRadius()
 {
-	position = new vec3d [np];
-	radius = new double [np];
+	// position = new vec3d [np];
+	position.resize(np);
+	radius.resize(np);
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,

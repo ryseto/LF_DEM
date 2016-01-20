@@ -153,6 +153,8 @@ private:
 	double *stokesdrag_coeff_t;
 	double *stokesdrag_coeff_f_sqrt;
 	double *stokesdrag_coeff_t_sqrt;
+	std::vector <struct DBlock> resistance_matrix_dblock;
+	
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;
@@ -192,13 +194,12 @@ private:
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
-    vec3d *position;
-    std::vector<vec3d> forcecheck;
+	std::vector<vec3d> position;
+  std::vector<vec3d> forcecheck;
 	Interaction *interaction;
 	BoxSet boxset;
-	double *radius;
-	double *angle; // for 2D visualization
-	std::vector <struct DBlock> resistance_matrix_dblock;
+	std::vector<double> radius;
+	std::vector<double> angle; // for 2D visualization
 
 	vec3d *velocity;
 	vec3d *velocity_predictor;
