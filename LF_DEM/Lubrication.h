@@ -136,7 +136,7 @@ private:
 	void pairStrainStresslet(StressTensor& stresslet_i, StressTensor& stresslet_j);
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
-	void setResistanceCoeffTang(double tangent_rc);
+    //void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
@@ -148,7 +148,7 @@ private:
 	inline double scaledXA1(){return ro_12*XA[1];}
 	inline double scaledXA2(){return ro_12*XA[2];}
 	inline double scaledXA3(){return a1*XA[3];}
-	inline double scaledYA0(){return a0*YA[0];}
+    inline double scaledYA0(){return a0*YA[0];}
 	inline double scaledYA1(){return ro_12*YA[1];}
 	inline double scaledYA2(){return ro_12*YA[2];}
 	inline double scaledYA3(){return a1*YA[3];}

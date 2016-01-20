@@ -1006,8 +1006,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		calcStress();
 	}
 	timeStepMoveCorrector();
-    //	stokes_solver.solve(na_velocity, na_ang_velocity);
-    //	stokes_solver.solvingIsDone();
 }
 
 void System::adaptTimeStep()
@@ -1391,9 +1389,9 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
 	if (build_res_mat) {
-		// create a new resistance matrix in stokes_solver
-		stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm,
-											nb_of_active_interactions_mf,
+        // create a new resistance matrix in stokes_solver
+        stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm,
+                                            nb_of_active_interactions_mf,
 											nb_of_active_interactions_ff,
 											resistance_matrix_dblock);
 		/* [note]
