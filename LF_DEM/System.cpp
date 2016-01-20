@@ -49,6 +49,7 @@ circulargap(false),
 magnetic_rotation_active(false),
 magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
+ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
@@ -846,7 +847,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
         // @@@ Force balance check
         for (int i=0; i<np; i++) {
             forcecheck[i] += contact_force[i];
+						if(repulsiveforce){
             forcecheck[i] += repulsive_force[i];
+					}
         }
     }
 	if (p.lubrication_model == 0) {
@@ -854,6 +857,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
+
 	if (calc_stress) {
 		calcStressPerParticle();
         // @@@ Force balance check
@@ -1048,14 +1052,20 @@ void System::timeStepMove(const string& time_or_strain,
 	}
 
 	time += dt;
-	time_in_simulation_units += dt*(*ratio_unit_time);
+	if(ratio_unit_time!=NULL){
+		time_in_simulation_units += dt*(*ratio_unit_time);
+	} else {
+		time_in_simulation_units += dt;
+	}
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
+
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+
 	if (magnetic_rotation_active) {
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
@@ -1069,6 +1079,7 @@ void System::timeStepMove(const string& time_or_strain,
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
+
 	checkNewInteraction();
 	updateInteractions();
 }
@@ -1085,7 +1096,11 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 		}
 	}
 	time += dt;
-	time_in_simulation_units += dt*(*ratio_unit_time);
+	if(ratio_unit_time!=NULL){
+		time_in_simulation_units += dt*(*ratio_unit_time);
+	} else {
+		time_in_simulation_units += dt;
+	}
 	total_num_timesteps ++;
 	/* evolve PBC
 	 * The periodic boundary condition is updated in predictor.
@@ -1189,10 +1204,12 @@ void System::timeEvolution(const string& time_or_strain,
 	while (keepRunning(time_or_strain, value_end)) {
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
 	};
+
 	if (events.empty()) {
 		calc_stress = true;
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
+
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust) {
 		adjustContactModelParameters();
