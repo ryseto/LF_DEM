@@ -16,11 +16,9 @@
 #define DELETE(x) if(x){delete [] x; x = NULL;}
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
-#define RANDOM ( rand_gen.rand() ) // RNG uniform [0,1]
 #endif
 #ifdef USE_DSFMT
 #define GRANDOM  ( sqrt( -2.0 * log( 1.0 - dsfmt_genrand_open_open(&r_gen) ) ) * cos(2.0 * 3.14159265358979323846264338328 * dsfmt_genrand_close_open(&r_gen) ) ) // RNG gaussian with mean 0. and variance 1.
-#define RANDOM ( dsfmt_genrand_close_open(&rand_gen) ) // RNG uniform [0,1]
 #endif
 
 using namespace std;
@@ -64,13 +62,7 @@ eventLookUp(NULL)
 	max_disp_rolling = 0;
 }
 
-vec3d System::randUniformSphere(double r)
-{
-	double z = 2*RANDOM-1;
-	double phi = 2*M_PI*RANDOM;
-	double sin_theta = sqrt(1-z*z);
-	return vec3d(r*sin_theta*cos(phi), r*sin_theta*sin(phi), r*z);
-}
+
 
 #ifdef USE_DSFMT
 unsigned long
@@ -670,7 +662,6 @@ void System::setupSystem(string control)
 #endif
 #ifdef USE_DSFMT
 		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
-		dsfmt_init_gen_rand(&rand_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #endif
 
@@ -680,7 +671,6 @@ void System::setupSystem(string control)
 #endif
 #ifdef USE_DSFMT
 		dsfmt_init_gen_rand(&r_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
-		dsfmt_init_gen_rand(&rand_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
 	}

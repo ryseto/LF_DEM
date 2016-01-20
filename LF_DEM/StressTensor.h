@@ -39,7 +39,7 @@ public:
 			elm[i] = a;
 		}
 	}
-	
+
 	inline StressTensor(const double& _xx,
 						const double& _xy,
 						const double& _xz,
@@ -77,7 +77,7 @@ public:
 		elm[4] = v1.y*v2.y;
 		elm[5] = v1.z*v2.z;
 	}
-	
+
 	inline friend StressTensor operator + (const StressTensor& a1,
 										   const StressTensor& a2)
 	{
@@ -301,17 +301,6 @@ public:
 		}
 	}
 
-	inline friend StressTensor tensor_prod (const vec3d& v1,
-											const vec3d& v2)
-	{
-		return StressTensor(v1.x*v2.x,
-							0.5*(v1.x*v2.y+v1.y*v2.x),
-							0.5*(v1.x*v2.z+v1.z*v2.x),
-							0.5*(v1.y*v2.z+v1.z*v2.y),
-							v1.y*v2.y,
-							v1.z*v2.z);
-	}
-
 	/*	N1 = Sxx-Szz;
 	 */
 	double getNormalStress1()
@@ -330,7 +319,7 @@ public:
 	{
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
-	
+
 	//	void cerr()
 	//	{
 	//		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
