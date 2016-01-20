@@ -149,6 +149,9 @@ System::~System()
 
 void System::allocateRessources()
 {
+	if(np<=0){
+		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
+	}
 	linalg_size = 6*np;
 	double interaction_volume;
 	if (twodimension) {
