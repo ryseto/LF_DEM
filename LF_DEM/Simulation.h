@@ -149,6 +149,14 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
+	std::map<std::string,std::string> getConfMetaData(const std::string &,
+																										const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &,
+															std::string &,
+															const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &,
+															std::string &);
+	void importMetaParameters(std::fstream &);
 	void importConfiguration(const std::string&);
 	void importConfigurationBinary(std::ifstream& file_import, const std::string&);
 	void importContactsBinary(std::ifstream& file_import);

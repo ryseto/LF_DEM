@@ -1003,6 +1003,36 @@ void Simulation::openOutputFiles(bool binary_conf,
 	}
 }
 
+map<string,string> Simulation::getConfMetaData(const string &line1, const string &line2){
+	vector<string> l1_split = splitString(line1);
+	vector<string> l2_split = splitString(line2);
+	if(l1_split.size() != l2_split.size()){
+		throw runtime_error("System:: Ill-formed header in the configuration file.\n");
+	}
+	map<string,string> meta_data;
+	for(unsigned int i=1; i<l1_split.size(); i++){
+		meta_data[l1_split[i]] = l2_split[i];
+	}
+	return meta_data;
+}
+
+string Simulation::getMetaParameter(map<string,string> &meta_data, string &key){
+		if ( meta_data.find(key)!=meta_data.end() ) {
+			return meta_data[key];
+		} else {
+			ostringstream error_str;
+			error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
+			throw runtime_error(error_str.str());
+		}
+}
+string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, const string &default_val){
+		if ( meta_data.find(key)!=meta_data.end() ) {
+			return meta_data[key];
+		} else {
+			return default_val;
+		}
+}
+
 void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
@@ -1015,39 +1045,64 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-	char buf;
-	int n1, n2;
-	double lx, ly, lz, vf1, vf2;
+
+	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
-	stringstream header_1st_line(header_imported_configulation[0]);
-	
-	if (header_1st_line.str().find("np_in") != string::npos) {
+
+	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	string key, def;
+	key = "np_fixed";
+	def = "0";
+	sys.p.np_fixed = atoi(getMetaParameter(meta_data, key, def).c_str());
+	key = "lx";
+	lx = atof((getMetaParameter(meta_data, key)).c_str());
+	key = "ly";
+	ly = atof(getMetaParameter(meta_data, key).c_str());
+	key = "lz";
+	lz = atof(getMetaParameter(meta_data, key).c_str());
+	// key = "vf1";
+	// def = "0";
+	// vf1 = atof(getMetaParameter(meta_data, key, def).c_str());
+	// key = "vf2";
+	// def = "0";
+	// vf2 = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "vf";
+	volume_or_area_fraction = atof(getMetaParameter(meta_data, key).c_str());
+	// key = "np1";
+	// def = "0";
+	// n1 = atoi(getMetaParameter(meta_data, key, def).c_str());
+	// key = "np2";
+	// def = "0";
+	// n2 = atoi(getMetaParameter(meta_data, key, def).c_str());
+	key = "dispx";
+	def = "0";
+	initial_lees_edwards_disp.x = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "dispy";
+	def = "0";
+	initial_lees_edwards_disp.y = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "np_in";
+	def = "-1";
+	sys.np_in = atoi(getMetaParameter(meta_data, key, def).c_str());
+	key = "np_out";
+	def = "-1";
+	sys.np_out = atoi(getMetaParameter(meta_data, key, def).c_str());
+	key = "radius_in";
+	def = "0";
+	sys.radius_in = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "radius_out";
+	def = "0";
+	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
+
+	if(sys.np_in>-1){
 		sys.circulargap = true;
 	}
-	stringstream header_2nd_line(header_imported_configulation[1]);
-	if (sys.circulargap == false) {
-		header_2nd_line >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz >> vf1 >> vf2 >> initial_lees_edwards_disp.x;
-		double initial_lees_edwards_disp_y;
-		if (header_2nd_line >> initial_lees_edwards_disp_y) {
-			initial_lees_edwards_disp.y = initial_lees_edwards_disp_y;
-		} else {
-			initial_lees_edwards_disp.y = 0;
-		}
-		sys.shear_disp = initial_lees_edwards_disp;
-	} else {
-		header_2nd_line >> buf >> n1 >> n2 >> volume_or_area_fraction >> lx >> ly >> lz;
-		int np_in, np_out;
-		double radius_in, radius_out;
-		header_2nd_line >> np_in >> np_out >> radius_in >> radius_out;
-		sys.np_in = np_in;
-		sys.np_out = np_out;
-		sys.p.np_fixed = np_in+np_out;
-		sys.radius_in = radius_in;
-		sys.radius_out = radius_out;
-	}
+
+	sys.shear_disp = initial_lees_edwards_disp;
+
+
 	vector<vec3d> initial_position;
 	vector <double> radius;
 	if (sys.p.magnetic_type == 0) {
