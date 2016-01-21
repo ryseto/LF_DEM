@@ -69,3 +69,20 @@ def read_data_file(fname):
     """
     dat = np.genfromtxt(fname)
     return dat
+
+def read_conf_file(fname):
+    """
+    Purpose:
+        Read any LF_DEM conf file (usually D?N?VF?_*.dat files)
+
+    Parameters:
+        fname: the filename, or anything that can be taken as a first argument to np.genfromtxt
+
+    Returning values:
+        Two arrays: positions, radii
+    """
+    dat = np.genfromtxt(fname)
+    pos = dat[:,:3].astype(np.float)
+    rad = dat[:,3].astype(np.float)
+
+    return pos, rad
