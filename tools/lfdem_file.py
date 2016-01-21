@@ -81,8 +81,15 @@ def read_conf_file(fname):
     Returning values:
         Two arrays: positions, radii
     """
+    with open(fname,"r") as conf_file:
+        line1 = conf_file.readline()
+        line2 = conf_file.readline()
+    meta_fields = line1.split()[1:]
+    meta_values = line2.split()[1:]
+    meta_data = dict(zip(meta_fields, meta_values))
+
     dat = np.genfromtxt(fname)
     pos = dat[:,:3].astype(np.float)
     rad = dat[:,3].astype(np.float)
 
-    return pos, rad
+    return pos, rad, meta_data
