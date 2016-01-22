@@ -338,6 +338,11 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	cout << indent << "volume_fraction = " << volume_fraction << endl;
 }
 
+void System::setFixedVelocities(const vector <vec3d>& vel)
+{
+	fixed_velocities = vel;
+}
+
 void System::setContacts(const vector <struct contact_state>& cs)
 {
 	/**
@@ -1909,6 +1914,11 @@ void System::tmpMixedProblemSetVelocities()
 		if (time > time_next) {
 			shear_rate *= -1;
 			time_next += 3;
+		}
+	} else if (test_simulation == 31) {
+		for (int i=np_mobile; i<np; i++) {
+			na_velocity[i] = shear_rate*fixed_velocities[i-np_mobile];
+			na_ang_velocity[i].reset();
 		}
 	}
 }

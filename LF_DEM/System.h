@@ -217,6 +217,7 @@ private:
 	vec3d *ang_vel_magnetic;
 	std::vector<vec3d> vel_hydro_from_fixed;
 	std::vector<vec3d> ang_vel_hydro_from_fixed;
+	std::vector<vec3d> fixed_velocities;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
@@ -312,6 +313,7 @@ private:
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);
+	void setFixedVelocities(const std::vector <vec3d>& vel);						
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();

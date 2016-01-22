@@ -529,7 +529,7 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	if (sys.test_simulation > 0 && sys.test_simulation < 20) {
+	if (sys.test_simulation > 0 && (sys.test_simulation < 20 || sys.test_simulation > 30) ) {
 		sys.zero_shear = true;
 	}
 	setDefaultParameters();
@@ -1104,14 +1104,37 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 
 
 	vector<vec3d> initial_position;
+	vector<vec3d> fixed_velocities;
 	vector <double> radius;
 	if (sys.p.magnetic_type == 0) {
-		double x_, y_, z_, a_;
-		while (file_import >> x_ >> y_ >> z_ >> a_) {
-			initial_position.push_back(vec3d(x_, y_, z_));
-			radius.push_back(a_);
+		if (sys.test_simulation != 31) {
+			double x_, y_, z_, a_;
+			while (file_import >> x_ >> y_ >> z_ >> a_) {
+				initial_position.push_back(vec3d(x_, y_, z_));
+				radius.push_back(a_);
+				sys.setConfiguration(initial_position, radius, lx, ly, lz);
+			}
+		} else {
+			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
+			double x_, y_, z_, a_, vx_, vy_, vz_;
+			string line;
+			while(getline(file_import, line)) {
+				istringstream is;
+				is.str(line);
+				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
+					is.str(line);
+					is >> x_ >> y_ >> z_ >> a_;
+					initial_position.push_back(vec3d(x_, y_, z_));
+					radius.push_back(a_);
+				} else {
+					initial_position.push_back(vec3d(x_, y_, z_));
+					radius.push_back(a_);
+					fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
+				}
+			}
+			sys.setConfiguration(initial_position, radius, lx, ly, lz);
+			sys.setFixedVelocities(fixed_velocities);
 		}
-		sys.setConfiguration(initial_position, radius, lx, ly, lz);
 	} else {
 		double x_, y_, z_, a_, mx_, my_, mz_, sus_;
 		vector<vec3d> magnetic_moment;
