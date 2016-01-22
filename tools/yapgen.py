@@ -155,7 +155,7 @@ def filter_interactions_crossing_PBC(f,r1r2):
 
 
 
-def snaps2yap(pos_fname):
+def snaps2yap(pos_fname, force_factor):
     forces_fname = pos_fname.replace("par_", "int_")
     positions, forces, strains, shear_rates = read_data(pos_fname, forces_fname)
 
@@ -171,8 +171,7 @@ def snaps2yap(pos_fname):
         # display a line joining the center of interacting particles
         # with a thickness proportional to the normal force
         normal_forces = (f[:,7]+f[:,11]+f[:,15]).astype(np.float)
-        force_factor = 0.00001 # to convert the force to a thickness. case-by-case.
-        normal_forces = force_factor*np.abs(normal_forces)
+        normal_forces = force_factor*np.abs(normal_forces) # to convert the force to a thickness. case-by-case.
         yap_out = get_interactions_yaparray(r1r2, normal_forces)
 
         # display a circle for every particle
@@ -207,12 +206,17 @@ def conf2yap(conf_fname):
     yap_file.write("\n".encode('utf-8'))
     yap_file.close()
 
-if len(sys.argv) != 2:
-    print(sys.argv[0], " par_or_conf_file\n")
+if len(sys.argv) < 2:
+    print(sys.argv[0], " par_or_conf_file [force_factor]\n")
     exit(1)
 
 pos_fname = sys.argv[1]
+
 if pos_fname.find("par_") > -1:
-    snaps2yap(pos_fname)
+    if len(sys.argv)>2:
+        force_factor = float(sys.argv[2])
+    else:
+        force_factor = 0.01
+    snaps2yap(pos_fname, force_factor)
 else:
     conf2yap(pos_fname)
