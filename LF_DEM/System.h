@@ -122,8 +122,10 @@ private:
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
+	void computeShearRateWalls();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
+	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(const int&, const int&);
@@ -313,7 +315,7 @@ private:
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);
-	void setFixedVelocities(const std::vector <vec3d>& vel);						
+	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();

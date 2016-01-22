@@ -1788,10 +1788,8 @@ void System::computeVelocityByComponents()
 	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 
 	if (mobile_fixed) {
-		vector<double> force_torque_from_fixed = computeForceFromFixedParticles();
 		stokes_solver.resetRHS();
-		int first_mobile_index = 0;
-		stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
+		buildHydroTermsFromFixedParticles();
 		stokes_solver.solve(vel_hydro_from_fixed, ang_vel_hydro_from_fixed);
 	}
 	buildContactTerms(true); // set rhs = F_C
@@ -1812,6 +1810,14 @@ void System::rescaleVelHydroStressControlled()
 	for (int i=0; i<np; i++) {
 		vel_hydro[i] *= shear_rate;
 		ang_vel_hydro[i] *= shear_rate;
+	}
+}
+
+void System::rescaleVelHydroStressControlledFixed()
+{
+	for (int i=0; i<np; i++) {
+		vel_hydro_from_fixed[i] *= shear_rate;
+		ang_vel_hydro_from_fixed[i] *= shear_rate;
 	}
 }
 
@@ -1840,25 +1846,26 @@ void System::computeShearRate()
 	}
 }
 
-void System::computeVelocityCoeffFixedParticles()
+void System::computeShearRateWalls()
 {
 	/**
 	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
 	 */
-	throw runtime_error("computeVelocityCoeffFixedParticles(): This is not implemented yet");
+
+	// TODO: generalize to arbitrary direction: here, theta_shear is unrelated to the fixed velocity directions
 	calcStressPerParticle();
 	calcStress();
 	double shearstress_con;
 	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
-	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
+	double shearstress_from_fixed = target_stress-shearstress_con; // the target_stress minus all the other stresses
 	double shearstress_rep = 0;
 	if (repulsiveforce) {
 		shearstress_rep = shearStressComponent(total_repulsive_stressXF+total_repulsive_stressGU, p.theta_shear);
-		shearstress_hyd -= shearstress_rep;
+		shearstress_from_fixed -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
-	shear_rate = shearstress_hyd/viscosity_hyd;
+	double viscosity_from_fixed = shearStressComponent(total_hydrofromfixed_stressGU, p.theta_shear);
+	shear_rate = shearstress_from_fixed/viscosity_from_fixed;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
@@ -2003,8 +2010,12 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		computeVelocityByComponents();
 		if (stress_controlled) {
-			computeShearRate();
-			rescaleVelHydroStressControlled();
+			if (test_simulation!=31) {
+				computeShearRate();
+				rescaleVelHydroStressControlled();
+			} else {
+				computeShearRateWalls();
+			}
 		}
 		sumUpVelocityComponents();
 	} else {
