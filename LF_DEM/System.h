@@ -191,6 +191,7 @@ private:
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
 	bool mobile_fixed;
+    bool check_force_balance;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;

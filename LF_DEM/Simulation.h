@@ -85,7 +85,8 @@ public:
 							   double dimensionless_number,
 							   std::string input_scale,
 							   std::string control_variable,
-							   std::string simu_identifier);
+							   std::string simu_identifier,
+                               bool check_force_balance);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
 	void simulationInverseYield(std::string in_args,

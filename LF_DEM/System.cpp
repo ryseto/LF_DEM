@@ -838,11 +838,10 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	setContactForceToParticle();
     setRepulsiveForceToParticle();
     setMagneticForceToParticle();
-    if (calc_stress) {
+    if (calc_stress && check_force_balance) {
         // @@@ Force balance check
         for (int i=0; i<np; i++) {
             forcecheck[i] = contact_force[i];
-            contact_force[i].cerr();
         }
         if (repulsiveforce) {
             for (int i=0; i<np; i++) {
@@ -861,15 +860,21 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
         for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
                 interaction[k].lubrication.calcLubricationForce();
-                unsigned short p0, p1;
-                interaction[k].get_par_num(p0, p1);
-                forcecheck[p0] += interaction[k].lubrication.lubforce_p0;
-                forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
             }
         }
-//        for (int i=0; i<np_mobile; i++) {
-//            forcecheck[i].cerr();
-//        }
+        if (check_force_balance) {
+            for (int k=0; k<nb_interaction; k++) {
+                if (interaction[k].is_active()) {
+                    unsigned short p0, p1;
+                    interaction[k].get_par_num(p0, p1);
+                    forcecheck[p0] += interaction[k].lubrication.lubforce_p0;
+                    forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
+                }
+            }
+            for (int i=0; i<np_mobile; i++) {
+                forcecheck[i].cerr();
+            }
+        }
 	}
 	timeStepMove(time_or_strain, value_end);
 	if (eventLookUp != NULL) {
@@ -939,8 +944,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-    if (calc_stress) {
-        // @@@ Force balance check
+    if (calc_stress && check_force_balance) { // @@@ Force balance check
         for (int i=0; i<np; i++) {
             forcecheck[i] = contact_force[i];
         }
@@ -959,18 +963,23 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
         /*
          * calculate lubrication force from na_velocity
          */
-        // @@@ Force balance check
         for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
                 interaction[k].lubrication.calcLubricationForce();
-                unsigned short p0, p1;
-                interaction[k].get_par_num(p0, p1);
-                forcecheck[p0] += interaction[k].lubrication.lubforce_p0;
-                forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
             }
         }
-        for (int i=0; i<np_mobile; i++) {
-            forcecheck[i].cerr();
+        if (check_force_balance) { // @@@ Force balance check
+            for (int k=0; k<nb_interaction; k++) {
+                if (interaction[k].is_active()) {
+                    unsigned short p0, p1;
+                    interaction[k].get_par_num(p0, p1);
+                    forcecheck[p0] += interaction[k].lubrication.lubforce_p0;
+                    forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
+                }
+            }
+            for (int i=0; i<np_mobile; i++) {
+                forcecheck[i].cerr();
+            }
         }
         calcStressPerParticle(); // stress compornents
     }
@@ -1420,7 +1429,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
-		for (auto& inter : interaction_list[i]){
+		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication

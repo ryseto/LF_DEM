@@ -190,7 +190,8 @@ void Simulation::simulationSteadyShear(string in_args,
 									   double dimensionless_number,
 									   string input_scale,
 									   string control_variable,
-									   string simu_identifier)
+									   string simu_identifier,
+                                       bool check_force_balance)
 {
 	control_var = control_variable;
 	/***************  This part is temporal ********************/
@@ -221,7 +222,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.test_simulation = 31;//wtest1
 	}
 	/*************************************************************/
-
+    sys.check_force_balance = check_force_balance;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
