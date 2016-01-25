@@ -190,11 +190,12 @@ void Simulation::simulationSteadyShear(string in_args,
 									   double dimensionless_number,
 									   string input_scale,
 									   string control_variable,
-									   string simu_identifier)
+									   string simu_identifier,
+                                       bool check_force_balance)
 {
 	control_var = control_variable;
 	/***************  This part is temporal ********************/
-	// TODO 
+	// TODO
 	if (simu_identifier == "mtest1") {
 		cerr << "Test simulation for reversibility in mixed problem" << endl;
 		sys.test_simulation = 1;//mtest1
@@ -216,9 +217,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else if (simu_identifier == "rtest1") {
 		cerr << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1
+	} else if (simu_identifier == "wtest1") {
+		cerr << "Test simulation, simple shear with walls" << endl;
+		sys.test_simulation = 31;//wtest1
 	}
 	/*************************************************************/
-	
+    sys.check_force_balance = check_force_balance;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.

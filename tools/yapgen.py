@@ -11,45 +11,8 @@
 import sys
 import pandas as pd
 import numpy as np
+import lfdem_file as lf
 
-def read_lf_dem_snapshots(in_file, field_nb):
-    """
-    Purpose:
-        Read any LF_DEM file that has a "snapshot" structure, i.e. made of the following:
-            a header (x lines starting with #)
-            an empty line
-            a line starting with #, containing meta-info for a snapshot (strain, strain rate, etc)
-            a bunch of lines describing a snapshot
-            an empty line
-            a line starting with #, containing meta-info for a snapshot (strain, strain rate, etc)
-            a bunch of lines describing a snapshot
-            ...
-
-    Parameters:
-        in_file: the filename, or anything that can be taken as a first argument to pd.read_table
-        field_nb: the number of fields (columns) in a snapshot
-
-    Returning values:
-        frames: a list of snapshots
-        strains_: the associated strains
-        shear_rates_: the associated strain rates
-    """
-    names = [str(i) for i in range(1,field_nb+1)]
-    frames = pd.read_table(in_file, delim_whitespace=True, names=names, skiprows=field_nb+6)
-
-    framebreaks = np.nonzero((frames['1'] == '#').as_matrix())[0] # locate empty lines
-    frames = frames.as_matrix()
-    frame_metadata = frames[framebreaks][:,1:].astype(np.float)
-    shear_rates_ = frame_metadata[:,2]
-    strains_ = frame_metadata[:,0]
-    framebreaks = framebreaks[1:]
-    frames = np.split(frames, framebreaks)
-
-    for i in range(len(frames)):
-        frames[i] = frames[i][1:]
-#    frames = [ frame[1:] for frame in frames ] # remove header
-#    print frames
-    return frames, strains_, shear_rates_
 
 def read_data(posfile, intfile):
     """
@@ -65,11 +28,11 @@ def read_data(posfile, intfile):
     field_nb = 15
 
     # load with pandas read_table
-    pos_frames, strains, shear_rates = read_lf_dem_snapshots(posfile, field_nb)
+    pos_frames, strains, shear_rates = lf.read_snapshot_file(posfile, field_nb)
 
     # load with pandas read_table
     field_nb = 17
-    int_frames, strains, shear_rates = read_lf_dem_snapshots(intfile, field_nb)
+    int_frames, strains, shear_rates = lf.read_snapshot_file(intfile, field_nb)
 #    print pos_frames[:3], int_frames[:3]
     return pos_frames, int_frames, strains, shear_rates
 
@@ -130,17 +93,45 @@ def pair_cmd_and_switch(cmd, switch):
     return np.reshape(np.column_stack((switch,cmd)),(2*switch.shape[0], switch.shape[1]))
 
 
+def get_particles_yaparray(pos, rad):
+    """
+        Get yaplot commands (as an aray of strinfs) to display circles
+        for each particle defined in p.
+        p must contain positions and radii of particles.
+    """
 
-pos_fname = sys.argv[1]
-forces_fname = pos_fname.replace("par_", "int_")
-positions, forces, strains, shear_rates = read_data(pos_fname, forces_fname)
+    yap_out = layer_switch(3)
+    yap_out = add_color_switch(yap_out,3)
 
-yap_filename = pos_fname.replace("par_", "y_")
-yap_file = open(yap_filename,'wb')
+    particle_circle_positions = cmd('c', pos)
+    particle_circle_radius = cmd('r', rad)
+    particle_out = pair_cmd_and_switch(particle_circle_positions, particle_circle_radius)
+    yap_out = np.row_stack((yap_out, particle_out))
 
-nb_of_frames = len(strains)
-i = 0
-for f,p,strain,rate in zip(forces,positions, strains, shear_rates):
+    return yap_out
+
+def get_interactions_yaparray(r1r2, thicknesses):
+    """
+        Get yaplot commands (as an aray of strings) to display sticks
+        for each interactions with end points in r1r2.
+        thicknesses contains the width of the sticks.
+    """
+    yap_out = layer_switch(2)
+    yap_out = add_color_switch(yap_out,4)
+
+    interaction_sticks = cmd('s', r1r2.astype(np.str))
+    interaction_widths = cmd('r', thicknesses)
+    interaction_out = pair_cmd_and_switch(interaction_sticks, interaction_widths)
+    yap_out = np.row_stack((yap_out, interaction_out))
+    return yap_out
+
+def get_interaction_end_points(f,p):
+    """
+        For each interaction in f, get the position of the particles involved.
+        Positions of every particle given in p.
+
+        Returns an array containing x1,y1,z1,x2,y2,z2 for each interaction.
+    """
     # for each interaction: the particle indices
     part1 = f[:,0].astype(np.int)
     part2 = f[:,1].astype(np.int)
@@ -149,41 +140,83 @@ for f,p,strain,rate in zip(forces,positions, strains, shear_rates):
     r1 = p[part1,2:5].astype(np.float)
     r2 = p[part2,2:5].astype(np.float)
 
-    # exclude interactions across the boundaries
+    return np.hstack((r1, r2))
+
+def filter_interactions_crossing_PBC(f,r1r2):
+    """
+        Exclude interactions across the boundaries
+    """
+    r1 = r1r2[:,:3]
+    r2 = r1r2[:,3:]
     keep = np.linalg.norm(r2-r1,axis=1) < 4.
-    r1 = r1[keep]
-    r2 = r2[keep]
+    r1r2 = r1r2[keep]
     f = f[keep]
+    return f, r1r2
 
 
-    # display a line joining the center of interacting particles
-    # with a thickness proportional to the normal force
-    normal_forces = (f[:,7]+f[:,11]+f[:,15]).astype(np.float)
-    r1r2 = np.hstack((r1,r2)).astype(np.str)
-    yap_out = layer_switch(2)
-    yap_out = add_color_switch(yap_out,4)
 
-    force_factor = 0.00001 # to convert the force to a thickness. case-by-case.
-    interaction_sticks = cmd('s', r1r2)
-    interaction_widths = cmd('r', force_factor*np.abs(normal_forces)) # this
-    interaction_out = pair_cmd_and_switch(interaction_sticks, interaction_widths)
-    yap_out = np.row_stack((yap_out, interaction_out))
+def snaps2yap(pos_fname, force_factor):
+    forces_fname = pos_fname.replace("par_", "int_")
+    positions, forces, strains, shear_rates = read_data(pos_fname, forces_fname)
 
-    # display a circle for every particle
-    yap_out = add_layer_switch(yap_out, 3)
-    yap_out = add_color_switch(yap_out,3)
-    r = p[:,2:5].astype(np.float)
-    rad = p[:,1].astype(np.float)
-    particle_circle_positions = cmd('c', r)
-    particle_circle_radius = cmd('r', rad)
-    particle_out = pair_cmd_and_switch(particle_circle_positions, particle_circle_radius)
-    yap_out = np.row_stack((yap_out, particle_out))
+    yap_filename = pos_fname.replace("par_", "y_")
+    yap_file = open(yap_filename,'wb')
 
-    yap_out = add_layer_switch(yap_out, 5)
+    nb_of_frames = len(strains)
+    i = 0
+    for f,p,strain,rate in zip(forces,positions, strains, shear_rates):
+        r1r2 = get_interaction_end_points(f,p)
+        f, r1r2 = filter_interactions_crossing_PBC(f,r1r2)
 
-    yap_out = np.row_stack((yap_out, ['t',str(10.),str(0.),str(10.),'strain='+str(strain),'','']))
+        # display a line joining the center of interacting particles
+        # with a thickness proportional to the normal force
+        normal_forces = (f[:,7]+f[:,11]+f[:,15]).astype(np.float)
+        normal_forces = force_factor*np.abs(normal_forces) # to convert the force to a thickness. case-by-case.
+        yap_out = get_interactions_yaparray(r1r2, normal_forces)
+
+        # display a circle for every particle
+        pos = p[:,2:5].astype(np.float)
+        rad = p[:,1].astype(np.float)
+        yap_out = np.row_stack((yap_out, get_particles_yaparray(pos, rad)))
+
+        yap_out = add_layer_switch(yap_out, 5)
+
+        # display strain
+        yap_out = np.row_stack((yap_out, ['t',str(10.),str(0.),str(10.),'strain='+str(strain),'','']))
+
+        # output
+        np.savetxt(yap_file, yap_out, fmt="%s "*7)
+        yap_file.write("\n".encode('utf-8'))
+        i += 1
+        print("\rframe "+str(i)+"/"+str(nb_of_frames),end="",flush=True)
+    yap_file.close()
+
+def conf2yap(conf_fname):
+    yap_filename = pos_fname.replace(".dat", ".yap")
+    yap_file = open(yap_filename,'wb')
+
+    positions, radii, meta = lf.read_conf_file(conf_fname)
+    positions[:,0] -= float(meta['lx'])/2
+    positions[:,1] -= float(meta['ly'])/2
+    positions[:,2] -= float(meta['lz'])/2
+
+    yap_out = get_particles_yaparray(positions, radii)
+    # print(yap_out)
     np.savetxt(yap_file, yap_out, fmt="%s "*7)
     yap_file.write("\n".encode('utf-8'))
-    i += 1
-    print("\rframe "+str(i)+"/"+str(nb_of_frames),end="",flush=True)
-yap_file.close()
+    yap_file.close()
+
+if len(sys.argv) < 2:
+    print(sys.argv[0], " par_or_conf_file [force_factor]\n")
+    exit(1)
+
+pos_fname = sys.argv[1]
+
+if pos_fname.find("par_") > -1:
+    if len(sys.argv)>2:
+        force_factor = float(sys.argv[2])
+    else:
+        force_factor = 0.01
+    snaps2yap(pos_fname, force_factor)
+else:
+    conf2yap(pos_fname)

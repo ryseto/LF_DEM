@@ -85,7 +85,8 @@ public:
 							   double dimensionless_number,
 							   std::string input_scale,
 							   std::string control_variable,
-							   std::string simu_identifier);
+							   std::string simu_identifier,
+                               bool check_force_balance);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
 	void simulationInverseYield(std::string in_args,
@@ -149,6 +150,13 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
+	std::map<std::string,std::string> getConfMetaData(const std::string &,
+																										const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &,
+															std::string &,
+															const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &,
+															std::string &);
 	void importConfiguration(const std::string&);
 	void importConfigurationBinary(std::ifstream& file_import, const std::string&);
 	void importContactsBinary(std::ifstream& file_import);

@@ -122,8 +122,10 @@ private:
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
+	void computeShearRateWalls();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
+	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(const int&, const int&);
@@ -189,6 +191,7 @@ private:
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
 	bool mobile_fixed;
+    bool check_force_balance;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
@@ -217,6 +220,7 @@ private:
 	vec3d *ang_vel_magnetic;
 	std::vector<vec3d> vel_hydro_from_fixed;
 	std::vector<vec3d> ang_vel_hydro_from_fixed;
+	std::vector<vec3d> fixed_velocities;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
@@ -312,6 +316,7 @@ private:
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);
+	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
