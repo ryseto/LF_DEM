@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <ostream>
+#include <vector>
 #include "vec3d.h"
 
 #ifndef GIT_VERSION

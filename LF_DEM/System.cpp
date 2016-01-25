@@ -63,8 +63,6 @@ eventLookUp(NULL)
 	max_disp_rolling = 0;
 }
 
-
-
 #ifdef USE_DSFMT
 unsigned long
 System::hash(time_t t, clock_t c)
@@ -150,7 +148,7 @@ System::~System()
 
 void System::allocateRessources()
 {
-	if(np<=0){
+	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
 	}
 	linalg_size = 6*np;
@@ -244,7 +242,6 @@ void System::allocateRessources()
 	interaction = new Interaction [maxnb_interactionpair];
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new unordered_set <int> [np];
-
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
@@ -277,7 +274,6 @@ void System::setInteractions_GenerateInitConfig()
 
 void System::allocatePositionRadius()
 {
-	// position = new vec3d [np];
 	position.resize(np);
 	radius.resize(np);
 }
@@ -839,22 +835,19 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	 */
 	in_predictor = true;
 	in_corrector = true;
-    if (calc_stress) {
-        // @@@ Force balance check
-        for (int i=0; i<np; i++) {
-            forcecheck[i].reset();
-        }
-    }
 	setContactForceToParticle();
-	setRepulsiveForceToParticle();
+    setRepulsiveForceToParticle();
     setMagneticForceToParticle();
     if (calc_stress) {
         // @@@ Force balance check
         for (int i=0; i<np; i++) {
-            forcecheck[i] += contact_force[i];
-						if(repulsiveforce){
-            forcecheck[i] += repulsive_force[i];
-					}
+            forcecheck[i] = contact_force[i];
+            contact_force[i].cerr();
+        }
+        if (repulsiveforce) {
+            for (int i=0; i<np; i++) {
+                forcecheck[i] += repulsive_force[i];
+            }
         }
     }
 	if (p.lubrication_model == 0) {
@@ -862,7 +855,6 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
-
 	if (calc_stress) {
 		calcStressPerParticle();
         // @@@ Force balance check
@@ -944,19 +936,13 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	/* predictor */
 	in_predictor = true;
 	in_corrector = false;
-    if (calc_stress) {
-        // @@@ Force balance check
-        for (int i=0; i<np; i++) {
-            forcecheck[i].reset();
-        }
-    }
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
     if (calc_stress) {
         // @@@ Force balance check
         for (int i=0; i<np; i++) {
-            forcecheck[i] += contact_force[i];
+            forcecheck[i] = contact_force[i];
         }
         if (repulsiveforce) {
             for (int i=0; i<np; i++) {
@@ -983,9 +969,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
                 forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
             }
         }
-        //        for (int i=0; i<np_mobile; i++) {
-        //            forcecheck[i].cerr();
-        //        }
+        for (int i=0; i<np_mobile; i++) {
+            forcecheck[i].cerr();
+        }
         calcStressPerParticle(); // stress compornents
     }
 	timeStepMovePredictor(time_or_strain, value_end);
@@ -1057,7 +1043,7 @@ void System::timeStepMove(const string& time_or_strain,
 	}
 
 	time += dt;
-	if(ratio_unit_time!=NULL){
+	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
 		time_in_simulation_units += dt;
@@ -1065,7 +1051,6 @@ void System::timeStepMove(const string& time_or_strain,
 	total_num_timesteps ++;
 	/* evolve PBC */
 	timeStepBoxing();
-
 	/* move particles */
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
@@ -1101,7 +1086,7 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 		}
 	}
 	time += dt;
-	if(ratio_unit_time!=NULL){
+	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
 		time_in_simulation_units += dt;
@@ -2010,7 +1995,7 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		computeVelocityByComponents();
 		if (stress_controlled) {
-			if (test_simulation!=31) {
+			if (test_simulation != 31) {
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {

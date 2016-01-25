@@ -17,14 +17,16 @@ my $xz_shift = 0;
 my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
-my $rotatingobserver = 1;
-my $np_movable = 3000;
-my $rout = 84.4391;
+my $rotatingobserver = 0;
+#my $np_movable = 3000;
+#my $rout = 84.4391;
 #my $np_movable = 6000;
 #my $rout = 118.562;
 
-#my $np_movable = 500;
+my $np_movable = 500;
 #my $rout = 37.5726;
+my $rout = 31.8812;
+
 
 my $rin = $rout/2;
 my $calcrheology = 0;

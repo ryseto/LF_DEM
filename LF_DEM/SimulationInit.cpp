@@ -1095,14 +1095,11 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	key = "radius_out";
 	def = "0";
 	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
-
-	if(sys.np_in>-1){
-		sys.circulargap = true;
+	if (sys.np_in > -1) {
+        sys.circulargap = true;
+        sys.p.np_fixed = sys.np_in+sys.np_out;
 	}
-
 	sys.shear_disp = initial_lees_edwards_disp;
-
-
 	vector<vec3d> initial_position;
 	vector<vec3d> fixed_velocities;
 	vector <double> radius;
@@ -1112,8 +1109,8 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 			while (file_import >> x_ >> y_ >> z_ >> a_) {
 				initial_position.push_back(vec3d(x_, y_, z_));
 				radius.push_back(a_);
-				sys.setConfiguration(initial_position, radius, lx, ly, lz);
-			}
+            }
+            sys.setConfiguration(initial_position, radius, lx, ly, lz);
 		} else {
 			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
 			double x_, y_, z_, a_, vx_, vy_, vz_;
