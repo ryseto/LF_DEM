@@ -1789,7 +1789,7 @@ void System::computeVelocityByComponents()
 			ang_vel_hydro[i].reset();
 		}
 	}
-	stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
+    stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 
 	if (mobile_fixed) {
 		stokes_solver.resetRHS();
