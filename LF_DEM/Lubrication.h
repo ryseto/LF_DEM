@@ -113,7 +113,6 @@ private:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
 	bool is_active();
-
 	void getInteractionData();
 	void getGeometry();
 	void calcLubConstants();
@@ -144,41 +143,50 @@ private:
 	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE();
 	void calcXFunctions();
 	void calcXYFunctions();
-	inline double scaledXA0(){return a0*XA[0];}
+    // XA
+	inline double scaledXA0(){return    a0*XA[0];}
 	inline double scaledXA1(){return ro_12*XA[1];}
 	inline double scaledXA2(){return ro_12*XA[2];}
-	inline double scaledXA3(){return a1*XA[3];}
-    inline double scaledYA0(){return a0*YA[0];}
+	inline double scaledXA3(){return    a1*XA[3];}
+    // YA
+    inline double scaledYA0(){return    a0*YA[0];}
 	inline double scaledYA1(){return ro_12*YA[1];}
 	inline double scaledYA2(){return ro_12*YA[2];}
-	inline double scaledYA3(){return a1*YA[3];}
+	inline double scaledYA3(){return    a1*YA[3];}
+    // YB
 	inline double scaledYB0(){return a0a0_23*YB[0];}
 	inline double scaledYB1(){return roro_16*YB[1];}
 	inline double scaledYB2(){return roro_16*YB[2];}
 	inline double scaledYB3(){return a1a1_23*YB[3];}
+    // YC
 	inline double scaledYC0(){return a0a0a0_43*YC[0];}
 	inline double scaledYC1(){return rororo_16*YC[1];}
 	inline double scaledYC2(){return rororo_16*YC[2];}
 	inline double scaledYC3(){return a1a1a1_43*YC[3];}
+    // XG
 	inline double scaledXG0(){return a0a0_23*XG[0];}
-	inline double scaledYG0(){return a0a0_23*YG[0];}
-	inline double scaledXG1(){return roro_16*XG[1];}
+    inline double scaledXG1(){return roro_16*XG[1];}
+    inline double scaledXG2(){return roro_16*XG[2];}
+    inline double scaledXG3(){return a1a1_23*XG[3];}
+    // YG
+    inline double scaledYG0(){return a0a0_23*YG[0];}
 	inline double scaledYG1(){return roro_16*YG[1];}
-	inline double scaledXG2(){return roro_16*XG[2];}
 	inline double scaledYG2(){return roro_16*YG[2];}
-	inline double scaledXG3(){return a1a1_23*XG[3];}
 	inline double scaledYG3(){return a1a1_23*YG[3];}
+    // YH
 	inline double scaledYH0(){return a0a0a0_43*YH[0];}
 	inline double scaledYH1(){return rororo_16*YH[1];}
 	inline double scaledYH2(){return rororo_16*YH[2];}
 	inline double scaledYH3(){return a1a1a1_43*YH[3];}
+    // XM
 	inline double scaledXM0(){return a0a0a0_109*XM[0];}
+    inline double scaledXM1(){return rororo_536*XM[1];}
+    inline double scaledXM2(){return rororo_536*XM[2];}
+    inline double scaledXM3(){return a1a1a1_109*XM[3];}
+    // YM
 	inline double scaledYM0(){return a0a0a0_109*YM[0];}
-	inline double scaledXM1(){return rororo_536*XM[1];}
 	inline double scaledYM1(){return rororo_536*YM[1];}
-	inline double scaledXM2(){return rororo_536*XM[2];}
 	inline double scaledYM2(){return rororo_536*YM[2];}
-	inline double scaledXM3(){return a1a1a1_109*XM[3];}
 	inline double scaledYM3(){return a1a1a1_109*YM[3];}
 };
 #endif /* defined(__LF_DEM__Lubrication__) */

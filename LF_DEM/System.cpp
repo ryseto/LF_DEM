@@ -871,9 +871,14 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
                     forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
                 }
             }
+            double max_total_force = 0;
             for (int i=0; i<np_mobile; i++) {
                 forcecheck[i].cerr();
+                if (max_total_force > forcecheck[i].sq_norm()){
+                    max_total_force = forcecheck[i].sq_norm();
+                }
             }
+            cerr << "max = " << sqrt(max_total_force) << endl;
         }
 	}
 	timeStepMove(time_or_strain, value_end);
@@ -977,9 +982,14 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
                     forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
                 }
             }
+            double max_total_force = 0;
             for (int i=0; i<np_mobile; i++) {
                 forcecheck[i].cerr();
+                if (max_total_force < forcecheck[i].sq_norm()){
+                    max_total_force = forcecheck[i].sq_norm();
+                }
             }
+            cerr << "max = " << sqrt(max_total_force) << endl;
         }
         calcStressPerParticle(); // stress compornents
     }
@@ -1464,7 +1474,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 
 void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 {
-	bool shearrate_is_1 = true;
+    bool shearrate_is_1 = true;
 	if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
@@ -2002,7 +2012,7 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
-		computeVelocityByComponents();
+        computeVelocityByComponents();
 		if (stress_controlled) {
 			if (test_simulation != 31) {
 				computeShearRate();
@@ -2013,7 +2023,7 @@ void System::computeVelocities(bool divided_velocities)
 		}
 		sumUpVelocityComponents();
 	} else {
-		computeVelocityWithoutComponents();
+        computeVelocityWithoutComponents();
 	}
 	if (brownian) {
 		if (in_predictor) {
