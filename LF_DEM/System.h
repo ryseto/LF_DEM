@@ -128,6 +128,7 @@ private:
 	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
+    void forceBalanceCheckLubricationForce();
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();

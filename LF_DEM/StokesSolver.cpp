@@ -17,9 +17,12 @@ StokesSolver::~StokesSolver()
 	if (!chol_rhs) {
 		cholmod_free_dense(&chol_rhs, &chol_c);
 	}
-	if (!chol_vec) {
-		cholmod_free_dense(&chol_vec, &chol_c);
+	if (!chol_vel_mob) {
+		cholmod_free_dense(&chol_vel_mob, &chol_c);
 	}
+    if (!chol_vel_fix) {
+        cholmod_free_dense(&chol_vel_fix, &chol_c);
+    }
 	if (!chol_force) {
 		cholmod_free_dense(&chol_force, &chol_c);
 	}
@@ -668,18 +671,29 @@ void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 	cholmod_free_dense(&chol_solution, &chol_c);
 }
 
+void StokesSolver::multiply_by_RFU_mm(vector<double>& velocity, vector<double>& force)
+{
+    double one[] = {1, 0};
+    double zero[] = {0, 0};
+    chol_vel_mob->x = velocity.data();
+    cholmod_sdmult(chol_res_matrix, 1, one, zero, chol_vel_mob, chol_force, &chol_c);
+    for (unsigned int i=0; i<force.size(); i++) {
+        force[i] = ((double*)chol_force->x)[i];
+    }
+}
 
 void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& force)
 {
-	double one[] = {1, 0};
-	double zero[] = {0, 0};
-	chol_vec->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
-	// cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
-//	for (int i=0; i<velocity.size(); i++) {
-//		((double*)chol_vec->x)[i] = velocity[i];
-//	}
-	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vec, chol_force, &chol_c);
-	for (unsigned int i=0; i<force.size(); i++) {
+    double one[] = {1, 0};
+    double zero[] = {0, 0};
+    chol_vel_fix->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
+    // cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
+    //	for (int i=0; i<velocity.size(); i++) {
+    //		((double*)chol_vec->x)[i] = velocity[i];
+    //	}
+
+    cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vel_fix, chol_force, &chol_c);
+    for (unsigned int i=0; i<force.size(); i++) {
 		force[i] = ((double*)chol_force->x)[i];
 	}
 }
@@ -726,9 +740,9 @@ void StokesSolver::allocateRessources()
 	cholmod_start(&chol_c);
 	int size_mm = 6*mobile_particle_nb;
 	int size_ff = 6*fixed_particle_nb;
-
 	chol_rhs       = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
-	chol_vec       = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
+    chol_vel_mob   = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
+    chol_vel_fix   = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
 	chol_force     = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
 	chol_Psolution = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c); // used for Brownian motion
 	for (int i=0; i<size_mm; i++) {
