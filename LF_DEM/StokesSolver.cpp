@@ -121,9 +121,9 @@ void StokesSolver::addToDBlock(struct DBlock& b, const vec3d& nvec,
 
 // Off-Diagonal Blocks Terms, FT/UW version
 void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
-								   double scaledXA,
-								   double scaledYA, double scaledYB,
-								   double scaledYBtilde, double scaledYC)
+                                   double scaledXA,
+                                   double scaledYA, double scaledYB,
+                                   double scaledYBtilde, double scaledYC)
 {
 	if (mobile_matrix_done) {
 		// FF Matrix

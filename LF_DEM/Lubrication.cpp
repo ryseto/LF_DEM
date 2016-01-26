@@ -113,7 +113,7 @@ void Lubrication::calcLubConstants()
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
-	g1_XA = func_g1_XA(lambda);
+	g1_XA     = func_g1_XA(lambda);
 	g1_inv_XA = func_g1_XA(invlambda);
 	cXA[0] = g1_XA;
 	cXA[1] = (-2/lambda_p_1)*g1_XA;
@@ -124,7 +124,7 @@ void Lubrication::calcLubConstants()
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
-	g2_YA = func_g2_YA(lambda);
+	g2_YA     = func_g2_YA(lambda);
 	g2_inv_YA = func_g2_YA(invlambda);
 	cYA[0] = g2_YA;
 	cYA[1] = (-2/lambda_p_1)*g2_YA;
@@ -135,7 +135,7 @@ void Lubrication::calcLubConstants()
 	 * Y21(l) = -Y12(1/l)
 	 * Y22(l) = -Y11(1/l)
 	 */
-	g2_YB = func_g2_YB(lambda);
+	g2_YB     = func_g2_YB(lambda);
 	g2_inv_YB = func_g2_YB(invlambda);
 	cYB[0] = g2_YB;
 	cYB[1] = -4/lambda_p_1_square*g2_YB;
@@ -146,9 +146,9 @@ void Lubrication::calcLubConstants()
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
-	g2_YC = func_g2_YC(lambda);
+	g2_YC     = func_g2_YC(lambda);
 	g2_inv_YC = func_g2_YC(invlambda);
-	g4_YC = func_g4_YC(lambda);
+	g4_YC     = func_g4_YC(lambda);
 	cYC[0] = g2_YC;
 	cYC[1] = g4_YC;
 	cYC[2] = cYC[1];
@@ -158,7 +158,7 @@ void Lubrication::calcLubConstants()
 	 * X21(l) = -X12(1/l)
 	 * X22(l) = -X11(1/l)
 	 */
-	g1_XG = func_g1_XG(lambda);
+	g1_XG     = func_g1_XG(lambda);
 	g1_inv_XG = func_g1_XG(invlambda);
 	cXG[0] = g1_XG;
 	cXG[1] = -4/lambda_p_1_square*g1_XG;
@@ -169,7 +169,7 @@ void Lubrication::calcLubConstants()
 	 * Y21(l) = -Y12(1/l)
 	 * Y22(l) = -Y11(1/l)
 	 */
-	g2_YG = func_g2_YG(lambda);
+	g2_YG     = func_g2_YG(lambda);
 	g2_inv_YG = func_g2_YG(invlambda);
 	cYG[0] = g2_YG;
 	cYG[1] = -(4/lambda_p_1_square)*g2_YG;
@@ -180,9 +180,9 @@ void Lubrication::calcLubConstants()
 	 * Y21(l) = Y12(1/l)
 	 * Y22(l) = Y11(1/l)
 	 */
-	g2_YH = func_g2_YH(lambda);
+	g2_YH     = func_g2_YH(lambda);
 	g2_inv_YH = func_g2_YH(invlambda);
-	g5_YH = func_g5_YH(lambda);
+	g5_YH     = func_g5_YH(lambda);
 	g5_inv_YH = func_g5_YH(invlambda);
 	cYH[0] = g2_YH;
 	cYH[1] = (8/lambda_p_1_cubic)*g5_YH;
@@ -193,9 +193,9 @@ void Lubrication::calcLubConstants()
 	 * X21(l) = X12(l)
 	 * X22(l) = X11(1/l)
 	 */
-	g1_XM = func_g1_XM(lambda);
+	g1_XM     = func_g1_XM(lambda);
 	g1_inv_XM = func_g1_XM(invlambda);
-	g4_XM = func_g4_XM(lambda);
+	g4_XM     = func_g4_XM(lambda);
 	cXM[0] = g1_XM;
 	cXM[1] = (8/lambda_p_1_cubic)*g4_XM;
 	cXM[2] = cXM[1];
@@ -205,9 +205,9 @@ void Lubrication::calcLubConstants()
 	 * Y21(l) = Y12(l)
 	 * Y22(l) = Y11(1/l)
 	 */
-	g2_YM = func_g2_YM(lambda);
+	g2_YM     = func_g2_YM(lambda);
 	g2_inv_YM = func_g2_YM(invlambda);
-	g5_YM = func_g5_YM(lambda);
+	g5_YM     = func_g5_YM(lambda);
 	cYM[0] = g2_YM;
 	cYM[1] = (8/lambda_p_1_cubic)*g5_YM;
 	cYM[2] = cYM[1];
@@ -297,8 +297,7 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE()
 	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nnE;
 	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
 	double cHE_i =  scaledYH0()+scaledYH2();
-	double cHE_j =  scaledYH3()+scaledYH1();
-
+	double cHE_j =  scaledYH1()+scaledYH3();
 	vec3d GEi, GEj, HEi, HEj;
 	if (!sys->p.cross_shear) {
 		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
@@ -307,7 +306,7 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE()
 		GEj.x =  cGE_j*nvec->x+YG1_YG3*nvec->z;
 		GEj.y =  cGE_j*nvec->y;
 		GEj.z =  cGE_j*nvec->z+YG1_YG3*nvec->x;
-		double nxnx_nznz = nxnx-nznz;
+        double nxnx_nznz = nxnx-nznz;
 		HEi.x =  cHE_i*nxny;
 		HEi.y = -cHE_i*nxnx_nznz;
 		HEi.z = -cHE_i*nynz;
@@ -339,7 +338,6 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE()
 		HEj.y = -cHE_j*( costheta*nxnx_nznz + sintheta*nxny);
 		HEj.z =  cHE_j*(-costheta*nynz      + sintheta*nxnz);
 	}
-
 	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
 
@@ -524,47 +522,33 @@ void Lubrication::calcLubricationForce()
 	 *
 	 */
 	double sr = sys->get_shear_rate();
-	vec3d vi(sys->na_velocity[p0]);
-	vec3d vj(sys->na_velocity[p1]);
-	vec3d oi(sys->na_ang_velocity[p0]);
-    vec3d oj(sys->na_ang_velocity[p1]);
+    vec3d vi(sys->na_velocity[p0]);
+    vec3d vj(sys->na_velocity[p1]);
 	if (sys->p.lubrication_model == 1) {
 		calcXFunctions();
 	} else if (sys->p.lubrication_model == 2) {
 		calcXYFunctions();
 	}
-	vec3d XAU_i = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*(*nvec);
-    vec3d XGE_i;
-    if (!sys->zero_shear) {
-        XGE_i = sr*(scaledXG0()+scaledXG2())*nxnz*(*nvec);
-    }
-	if (sys->p.lubrication_model == 1) {
-        if (!sys->zero_shear) {
-			lubforce_p0 = XAU_i+XGE_i;
-		} else {
-			lubforce_p0 = XAU_i;
-		}
-		return;
-	}
-    // @@@@@@
-    // YAU_i = - a0*YA[0]*(vi - n n.vi)    - (1/2)*(a0+a1)*YA[1]*(vj-n n.vj)
-    // YBO_i = - (2/3)*a0a0*YB[0]*(n x oi) + (1/6)*(a0+a1)^2*YB[1]*(n x oj)
-    // lambda = a0/a1
-    // func_g2_YA(double lamb) = (4./15)*lamb*(2+lamb+2*lamb*lamb)/(lamb_p_1*lamb_p_1*lamb_p_1);
-    // cYA[0] = func_g2_YA(lambda);
-    // cYA[1] = (-2/lambda_p_1)*func_g2_YA(lambda);
-    // func_g2_YB(double lamb) = -(1./5)*lamb*(4+lamb)/(lamb_p_1*lamb_p_1);
-    // cYB[0] = func_g2_YB(lambda);
-    // cYB[1] = -4/lambda_p_1_square*func_g2_YB(lambda);
-    // @@@@@@
-	vec3d YAU_i = -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
-	vec3d YBO_i = -scaledYB0()*cross(nvec, oi)            + scaledYB1()*cross(nvec, oj);
-    lubforce_p0 = XAU_i+YAU_i+YBO_i;
+	/* XAU_i */
+	lubforce_p0 = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*(*nvec);
 	if (!sys->zero_shear) {
-        vec3d vec_z_x(nvec->z, 0, nvec->x);
-        vec3d YGE_i = sr*(scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*(*nvec));
-		lubforce_p0 += XGE_i+YGE_i;
+		/* XGE_i */
+		lubforce_p0 += sr*(scaledXG0()+scaledXG2())*nxnz*(*nvec);
 	}
+	if (sys->p.lubrication_model == 2) {
+        vec3d oi(sys->na_ang_velocity[p0]);
+        vec3d oj(sys->na_ang_velocity[p1]);
+        /* YAU_i */
+        lubforce_p0 += -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
+        /* YBO_i */
+        lubforce_p0 += -scaledYB0()*cross(nvec, oi)            + scaledYB1()*cross(nvec, oj);
+        if (!sys->zero_shear) {
+            vec3d vec_z_x(nvec->z, 0, nvec->x);
+            /* YGE_i */
+            lubforce_p0 += sr*(scaledYG0()+scaledYG2())*(vec_z_x-2*nxnz*(*nvec));
+        }
+    }
+    return;
 }
 
 void Lubrication::addHydroStress()
