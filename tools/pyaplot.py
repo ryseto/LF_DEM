@@ -106,13 +106,13 @@ def get_interaction_end_points(f,p):
 
     return np.hstack((r1, r2))
 
-def filter_interactions_crossing_PBC(f,r1r2):
+def filter_interactions_crossing_PBC(f,r1r2,cutoff=4):
     """
         Exclude interactions across the boundaries
     """
     r1 = r1r2[:,:3]
     r2 = r1r2[:,3:]
-    keep = np.linalg.norm(r2-r1,axis=1) < 4.
+    keep = np.linalg.norm(r2-r1,axis=1) < cutoff
     r1r2 = r1r2[keep]
     f = f[keep]
     return f, r1r2
