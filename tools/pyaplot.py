@@ -108,7 +108,8 @@ def get_interaction_end_points(f,p):
 
 def filter_interactions_crossing_PBC(f,r1r2,cutoff=4):
     """
-        Exclude interactions across the boundaries
+        Exclude interactions across the boundaries.
+        Return values of f and r1r2 where norm(r1r2[:,3:]-r1r2[:,:3])<cutoff.
     """
     r1 = r1r2[:,:3]
     r2 = r1r2[:,3:]
@@ -116,3 +117,12 @@ def filter_interactions_crossing_PBC(f,r1r2,cutoff=4):
     r1r2 = r1r2[keep]
     f = f[keep]
     return f, r1r2
+
+def savetxt(fname, yaplot_cmd_array):
+    """
+        Ouptut yaplot_cmd_array in file fname.
+    """
+    yap_file = open(fname,'wb')
+    np.savetxt(yap_file, yaplot_cmd_array, fmt="%s "*7)
+    yap_file.write("\n".encode('utf-8'))
+    yap_file.close()

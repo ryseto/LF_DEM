@@ -75,7 +75,6 @@ def snaps2yap(pos_fname, force_factor):
 
 def conf2yap(conf_fname):
     yap_filename = pos_fname.replace(".dat", ".yap")
-    yap_file = open(yap_filename,'wb')
 
     positions, radii, meta = lf.read_conf_file(conf_fname)
     positions[:,0] -= float(meta['lx'])/2
@@ -83,10 +82,8 @@ def conf2yap(conf_fname):
     positions[:,2] -= float(meta['lz'])/2
 
     yap_out = pyp.get_particles_yaparray(positions, radii)
-    # print(yap_out)
-    np.savetxt(yap_file, yap_out, fmt="%s "*7)
-    yap_file.write("\n".encode('utf-8'))
-    yap_file.close()
+    
+    pyp.savetxt(yap_filename, yap_out)
 
 if len(sys.argv) < 2:
     print(sys.argv[0], " par_or_conf_file [force_factor]\n")
