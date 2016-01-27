@@ -686,12 +686,7 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 {
     double one[] = {1, 0};
     double zero[] = {0, 0};
-    chol_vel_fix->x = velocity.data(); // @@@ is this evil? --> We can use C++11 feature. If you know a c++11 feature that does this in a safe way, that's great :) @@ It looks ok. But I will check this usage of data() is expected way or not.
-    // cout << chol_res_matrix_mf->xtype << " " << chol_vec->xtype <<  " " << chol_force->xtype << endl;
-    //	for (int i=0; i<velocity.size(); i++) {
-    //		((double*)chol_vec->x)[i] = velocity[i];
-    //	}
-
+    chol_vel_fix->x = velocity.data();
     cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vel_fix, chol_force, &chol_c);
     for (unsigned int i=0; i<force.size(); i++) {
 		force[i] = ((double*)chol_force->x)[i];
