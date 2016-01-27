@@ -118,7 +118,7 @@ private:
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
 	vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
-	void calcLubricationForce();
+	void calcPairwiseForce();
 	double get_lubforce_normal()
 	{
 		// positive for compression

@@ -511,7 +511,7 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
  *
  * See sys->calcLubricationForce()
  */
-void Lubrication::calcLubricationForce()
+void Lubrication::calcPairwiseForce()
 {
 	/*
 	 *  First: -A*(U-Uinf) term
