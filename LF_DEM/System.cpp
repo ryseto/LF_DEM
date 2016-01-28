@@ -2106,23 +2106,25 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	setFixedParticleVelocities();
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
-        computeVelocityByComponents();
+		setFixedParticleVelocities();
+    computeVelocityByComponents();
 		if (stress_controlled) {
 			if (test_simulation != 31) {
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
 				computeShearRateWalls();
+				rescaleVelHydroStressControlledFixed();
 			}
 		}
 		sumUpVelocityComponents();
 	} else {
-        computeVelocityWithoutComponents();
+		setFixedParticleVelocities();
+    computeVelocityWithoutComponents();
 	}
     if (divided_velocities && check_force_balance) {
         if (in_predictor) {
