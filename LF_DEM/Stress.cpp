@@ -247,11 +247,13 @@ void System::calcStress()
 	if (mobile_fixed) {
 		total_stress += total_hydrofromfixed_stressGU;
 	}
-	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
-	if (!p.cross_shear) {
-		total_stress.elm[2] += einstein_stress;
-	} else {
-		total_stress.elm[2] += costheta_shear*einstein_stress;
-		total_stress.elm[3] += sintheta_shear*einstein_stress;
+	if (!mobile_fixed) { // @@@ for the moment I remove the Einstein stress with walls. Should think if it's necessary.
+		einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
+		if (!p.cross_shear) {
+			total_stress.elm[2] += einstein_stress;
+		} else {
+			total_stress.elm[2] += costheta_shear*einstein_stress;
+			total_stress.elm[3] += sintheta_shear*einstein_stress;
+		}
 	}
 }
