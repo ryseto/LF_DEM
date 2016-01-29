@@ -141,6 +141,9 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
+    void forceBalanceCheckSetForce();
+    void forceBalanceCheckOutput();
+
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
