@@ -608,7 +608,7 @@ void System::setupSystem(string control)
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
-	if (p.unscaled_contactmodel) {
+	if (p.stress_scaled_contactmodel) {
 		kn_master = p.kn;
 		kt_master = p.kt;
 		kr_master = p.kr;
@@ -649,7 +649,7 @@ void System::setupSystem(string control)
 		throw runtime_error("lubrication_model must be smaller than 3\n");
 	}
 
-	if (p.unscaled_contactmodel) {
+	if (p.stress_scaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
 	// cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
