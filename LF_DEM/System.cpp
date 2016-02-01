@@ -1885,7 +1885,7 @@ void System::computeVelocityByComponents()
 			ang_vel_hydro[i].reset();
 		}
 	}
-    stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
+  stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 
 	if (mobile_fixed) {
 		stokes_solver.resetRHS();
@@ -2052,6 +2052,10 @@ void System::sumUpVelocityComponents()
 		for (int i=0; i<np_mobile; i++) {
 			na_velocity[i] += vel_hydro_from_fixed[i];
 			na_ang_velocity[i] += ang_vel_hydro_from_fixed[i];
+		}
+		for (int i=np_mobile; i<np; i++) {
+			na_velocity[i] = vel_hydro_from_fixed[i];
+			na_ang_velocity[i] = ang_vel_hydro_from_fixed[i];
 		}
 	}
 }
