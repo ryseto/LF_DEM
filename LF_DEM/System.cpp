@@ -809,6 +809,10 @@ void System::timeStepBoxing()
 		if (circulargap) {
 			shear_strain += dt*shear_rate;
 		}
+		if (test_simulation==31) {
+			shear_strain += dt*shear_rate;
+			// cout << shear_strain << endl;
+		}
 	}
 	boxset.update();
 }
