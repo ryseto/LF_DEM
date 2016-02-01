@@ -1,5 +1,11 @@
-INSTALL_DIR = ~/bin/
-ANACONDA_DIR = ~/data/anaconda3/lib/python3.5/site-packages
+# load Makefile inputs
+makeconfig = config/Makefile_config.mk
+gotconfig = 0
+ifneq ("$(wildcard $(makeconfig))","")
+        include $(makeconfig)
+        gotconfig = 1
+endif
+
 install:
 	cp generateYaplotFile.pl $(INSTALL_DIR)
 	cp lfdem_file.py $(INSTALL_DIR)

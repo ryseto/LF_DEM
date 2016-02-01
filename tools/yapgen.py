@@ -8,6 +8,7 @@
 #
 #  Romain Mari, 2015
 
+from __future__ import print_function
 import sys
 import pandas as pd
 import numpy as np
@@ -74,7 +75,10 @@ def snaps2yap(pos_fname, force_factor):
         np.savetxt(yap_file, yap_out, fmt="%s "*7)
         yap_file.write("\n".encode('utf-8'))
         i += 1
-        print("\rframe "+str(i)+"/"+str(nb_of_frames),end="",flush=True)
+        try:
+            print("\rframe "+str(i)+"/"+str(nb_of_frames),end="",flush=True)
+        except TypeError: # to work with Python 2.7.* importing print_function without flush arg
+            print("\rframe "+str(i)+"/"+str(nb_of_frames),end="")
     yap_file.close()
 
 def conf2yap(conf_fname):

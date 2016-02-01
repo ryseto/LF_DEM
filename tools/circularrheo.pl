@@ -25,8 +25,8 @@ my $rotatingobserver = 0;
 
 my $np_movable = 500;
 #my $rout = 37.5726;
-my $rout = 31.8812;
-
+#my $rout = 31.8812;
+my $rout = 40.4141;
 
 my $rin = $rout/2;
 my $calcrheology = 0;

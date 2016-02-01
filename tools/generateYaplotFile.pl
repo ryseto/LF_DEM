@@ -264,14 +264,12 @@ sub InInteractions {
 		#		"#16: norm of the normal repulsive force\n"
 		#		"#17: Viscosity contribution of contact xF\n";
 		if ($output == 1) {
-			
 			($i, $j, $contact, $nx, $ny, $nz, #1---6
 			$gap, $f_lub_norm, # 7, 8
 			$f_lub_tan_x, $f_lub_tan_y, $f_lub_tan_z, # 9, 10, 11
 			$fc_norm, # 12
 			$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
 			$fr_norm, $s_xF) = split(/\s+/, $line);
-			
 			$int0[$k] = $i;
 			$int1[$k] = $j;
 			$contactstate[$k] = $contact;
@@ -281,12 +279,6 @@ sub InInteractions {
 			} else {
 				$force[$k] = $f_lub_norm + $fr_norm;
 			}
-			
-			if (abs($force[$k]) > 20) {
-				printf "$fc_norm + $f_lub_norm + $fr_norm \n";
-			}
-
-			
 			$F_lub[$k] = $f_lub_norm;
 			$Fc_n[$k] = $fc_norm;
 			$Fc_t[$k] = sqrt($fc_tan_x**2+$fc_tan_y**2+$fc_tan_z**2);

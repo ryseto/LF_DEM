@@ -813,7 +813,8 @@ void System::timeStepBoxing()
 	boxset.update();
 }
 
-void System::eventShearJamming(){
+void System::eventShearJamming()
+{
 	/**
 	 \brief Create an event when the shear rate is negative
 	*/
@@ -822,6 +823,34 @@ void System::eventShearJamming(){
 		ev.type = "negative_shear_rate";
 		events.push_back(Event(ev));
 	}
+}
+
+void System::forceBalanceCheckSetForce()
+{
+    if (check_force_balance) {
+        for (int i=0; i<np; i++) {
+            forcecheck[i] = contact_force[i];
+        }
+        if (repulsiveforce) {
+            for (int i=0; i<np; i++) {
+                forcecheck[i] += repulsive_force[i];
+            }
+        }
+    }
+}
+
+void System::forceBalanceCheckOutput()
+{
+    if (check_force_balance) {
+        double max_total_force = 0;
+        for (int i=0; i<np_mobile; i++) {
+            //forcecheck[i].cerr();
+            if (max_total_force < forcecheck[i].sq_norm()){
+                max_total_force = forcecheck[i].sq_norm();
+            }
+        }
+        cerr << "force balance: " << sqrt(max_total_force) << endl;
+    }
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
@@ -838,49 +867,23 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	setContactForceToParticle();
     setRepulsiveForceToParticle();
     setMagneticForceToParticle();
-    if (calc_stress && check_force_balance) {
-        // @@@ Force balance check
-        for (int i=0; i<np; i++) {
-            forcecheck[i] = contact_force[i];
-        }
-        if (repulsiveforce) {
-            for (int i=0; i<np; i++) {
-                forcecheck[i] += repulsive_force[i];
-            }
-        }
+    if (calc_stress) {
+        forceBalanceCheckSetForce(); // @@@ Force balance check
     }
 	if (p.lubrication_model == 0) {
 		computeVelocitiesStokesDrag();
 	} else {
 		computeVelocities(calc_stress);
 	}
-	if (calc_stress) {
-		calcStressPerParticle();
-        // @@@ Force balance check
+    if (calc_stress) {
         for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
-                interaction[k].lubrication.calcLubricationForce();
+                interaction[k].lubrication.calcPairwiseForce();
             }
         }
-        if (check_force_balance) {
-            for (int k=0; k<nb_interaction; k++) {
-                if (interaction[k].is_active()) {
-                    unsigned short p0, p1;
-                    interaction[k].get_par_num(p0, p1);
-                    forcecheck[p0] += interaction[k].lubrication.lubforce_p0;
-                    forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
-                }
-            }
-            double max_total_force = 0;
-            for (int i=0; i<np_mobile; i++) {
-                forcecheck[i].cerr();
-                if (max_total_force > forcecheck[i].sq_norm()){
-                    max_total_force = forcecheck[i].sq_norm();
-                }
-            }
-            cerr << "max = " << sqrt(max_total_force) << endl;
-        }
-	}
+        calcStressPerParticle();
+        forceBalanceCheckOutput(); // @@@ Force balance check
+    }
 	timeStepMove(time_or_strain, value_end);
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
@@ -949,15 +952,8 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
-    if (calc_stress && check_force_balance) { // @@@ Force balance check
-        for (int i=0; i<np; i++) {
-            forcecheck[i] = contact_force[i];
-        }
-        if (repulsiveforce) {
-            for (int i=0; i<np; i++) {
-                forcecheck[i] += repulsive_force[i];
-            }
-        }
+    if (calc_stress) {
+        forceBalanceCheckSetForce(); // @@@ Force balance check
     }
 	if (p.lubrication_model > 0) {
         computeVelocities(calc_stress); // divided velocities for stress calculation
@@ -965,33 +961,13 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		computeVelocitiesStokesDrag();
 	}
     if (calc_stress) {
-        /*
-         * calculate lubrication force from na_velocity
-         */
         for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
-                interaction[k].lubrication.calcLubricationForce();
+                interaction[k].lubrication.calcPairwiseForce();
             }
-        }
-        if (check_force_balance) { // @@@ Force balance check
-            for (int k=0; k<nb_interaction; k++) {
-                if (interaction[k].is_active()) {
-                    unsigned short p0, p1;
-                    interaction[k].get_par_num(p0, p1);
-                    forcecheck[p0] += interaction[k].lubrication.lubforce_p0;
-                    forcecheck[p1] -= interaction[k].lubrication.lubforce_p0;
-                }
-            }
-            double max_total_force = 0;
-            for (int i=0; i<np_mobile; i++) {
-                forcecheck[i].cerr();
-                if (max_total_force < forcecheck[i].sq_norm()){
-                    max_total_force = forcecheck[i].sq_norm();
-                }
-            }
-            cerr << "max = " << sqrt(max_total_force) << endl;
         }
         calcStressPerParticle(); // stress compornents
+        forceBalanceCheckOutput(); // @@@ Force balance check
     }
 	timeStepMovePredictor(time_or_strain, value_end);
 	/* corrector */
@@ -1002,7 +978,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setMagneticForceToParticle();
 	if (p.lubrication_model > 0) {
 		computeVelocities(calc_stress);
-	} else {
+    } else {
 		computeVelocitiesStokesDrag();
 	}
     if (calc_stress) {
@@ -1529,9 +1505,8 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 vector<double> System::computeForceFromFixedParticles()
 {
 	vector<double> force_torque_from_fixed (6*np_mobile);
-	int fixed_vel_size = 6*p.np_fixed;
 	// @@ TODO: avoid copy of the velocities
-	vector<double> minus_fixed_velocities (fixed_vel_size);
+	vector<double> minus_fixed_velocities (6*p.np_fixed);
 	for(int i=0; i<p.np_fixed; i++){
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
@@ -1555,6 +1530,123 @@ void System::buildHydroTermsFromFixedParticles()
 	// Hence this quite verbose solution.
 	int first_mobile_index = 0;
 	stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
+}
+
+void System::forceBalanceCheckLubricationForce()
+{
+    /* Only F = R_FU U is calculated, but R_FE E is not implemented yet.
+     * So, we cannot check the force balance with E^{inf} yet.
+     */
+    /*
+     *  F^{M} = R_FU^{MM} U^{M}
+     */
+    vector<double> force_torque_from_mobile (6*np_mobile);
+    vector<double> minus_mobile_velocities (6*np_mobile);
+    for(int i=0; i<np_mobile; i++){
+        int i6 = 6*i;
+        minus_mobile_velocities[i6  ] = -na_velocity[i].x;
+        minus_mobile_velocities[i6+1] = -na_velocity[i].y;
+        minus_mobile_velocities[i6+2] = -na_velocity[i].z;
+        minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
+        minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
+        minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
+    }
+    stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_from_mobile);
+    for(int i=0; i<np_mobile; i++){
+        int i6 = 6*i;
+        forcecheck[i].x += force_torque_from_mobile[i6];
+        forcecheck[i].y += force_torque_from_mobile[i6+1];
+        forcecheck[i].z += force_torque_from_mobile[i6+2];
+    }
+    /*
+     *  F^{M} += R_FU^{MF} U^{F}
+     */
+    if (mobile_fixed) {
+        vector<double> force_torque_from_fixed (6*np_mobile);
+        vector<double> minus_fixed_velocities (6*p.np_fixed);
+        for(int i=0; i<p.np_fixed; i++){
+            int i6 = 6*i;
+            int i_fixed = i+np_mobile;
+            minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+            minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+            minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+            minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+            minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+            minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
+        }
+        stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed);
+        for(int i=0; i<np_mobile; i++){
+            int i6 = 6*i;
+            forcecheck[i].x += force_torque_from_fixed[i6];
+            forcecheck[i].y += force_torque_from_fixed[i6+1];
+            forcecheck[i].z += force_torque_from_fixed[i6+2];
+        }
+    }
+}
+
+void System::calcPairwiseLubricationForce()
+{
+    /* @@@ It does not work yet.
+     * Alternative way to calculate lubforce_p0
+     */
+    vec3d lubforce;
+    for (int k=0; k<nb_interaction; k++) {
+        if (interaction[k].is_active()) {
+            unsigned short p0, p1;
+            interaction[k].get_par_num(p0, p1);
+            if (p1 < np_mobile) {
+                // mm
+                vector<double> force (6*np_mobile);
+                vector<double> minus_mobile_velocities (6*np_mobile, 0);
+                int i6 = 6*p0;
+                minus_mobile_velocities[i6  ] = -na_velocity[p0].x;
+                minus_mobile_velocities[i6+1] = -na_velocity[p0].y;
+                minus_mobile_velocities[i6+2] = -na_velocity[p0].z;
+                minus_mobile_velocities[i6+3] = -na_ang_velocity[p0].x;
+                minus_mobile_velocities[i6+4] = -na_ang_velocity[p0].y;
+                minus_mobile_velocities[i6+5] = -na_ang_velocity[p0].z;
+                i6 = 6*p1;
+                minus_mobile_velocities[i6  ] = -na_velocity[p1].x;
+                minus_mobile_velocities[i6+1] = -na_velocity[p1].y;
+                minus_mobile_velocities[i6+2] = -na_velocity[p1].z;
+                minus_mobile_velocities[i6+3] = -na_ang_velocity[p1].x;
+                minus_mobile_velocities[i6+4] = -na_ang_velocity[p1].y;
+                minus_mobile_velocities[i6+5] = -na_ang_velocity[p1].z;
+                stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force);
+                i6 = 6*p0;
+                lubforce.set(force[i6], force[i6+1], force[i6+2]);
+            } else if (p0 >= np_mobile) {
+                // ff
+            } else {
+                // p0 < np_mobile
+                // p1 >= np_mobile
+                // mf
+                vector<double> force (6*np_mobile);
+                vector<double> minus_mobile_velocities (6*np_mobile, 0);
+                int p0_6 = 6*p0;
+                minus_mobile_velocities[p0_6  ] = -na_velocity[p0].x;
+                minus_mobile_velocities[p0_6+1] = -na_velocity[p0].y;
+                minus_mobile_velocities[p0_6+2] = -na_velocity[p0].z;
+                minus_mobile_velocities[p0_6+3] = -na_ang_velocity[p0].x;
+                minus_mobile_velocities[p0_6+4] = -na_ang_velocity[p0].y;
+                minus_mobile_velocities[p0_6+5] = -na_ang_velocity[p0].z;
+                stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force);
+                lubforce.set(force[p0_6], force[p0_6+1], force[p0_6+2]);
+                //
+                vector<double> minus_fixed_velocities (6*p.np_fixed, 0);
+                int p1_6 = 6*(p1-np_mobile);
+                minus_fixed_velocities[p1_6  ] = -na_velocity[p1].x;
+                minus_fixed_velocities[p1_6+1] = -na_velocity[p1].y;
+                minus_fixed_velocities[p1_6+2] = -na_velocity[p1].z;
+                minus_fixed_velocities[p1_6+3] = -na_ang_velocity[p1].x;
+                minus_fixed_velocities[p1_6+4] = -na_ang_velocity[p1].y;
+                minus_fixed_velocities[p1_6+5] = -na_ang_velocity[p1].z;
+                stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force);
+                lubforce.add(force[p0_6], force[p0_6+1], force[p0_6+2]);
+            }
+        }
+        interaction[k].lubrication.lubforce_p0_test = lubforce;
+    }
 }
 
 void System::generateBrownianForces()
@@ -2005,26 +2097,36 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-
-	setFixedParticleVelocities();
-
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
-        computeVelocityByComponents();
+		setFixedParticleVelocities();
+    computeVelocityByComponents();
 		if (stress_controlled) {
 			if (test_simulation != 31) {
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
 				computeShearRateWalls();
+				rescaleVelHydroStressControlledFixed();
 			}
 		}
 		sumUpVelocityComponents();
 	} else {
-        computeVelocityWithoutComponents();
+		setFixedParticleVelocities();
+    computeVelocityWithoutComponents();
 	}
+    if (divided_velocities && check_force_balance) {
+        if (in_predictor) {
+            forceBalanceCheckLubricationForce();
+        }
+    }
+    //    if (divided_velocities && check_force_balance) {
+    //        if (in_predictor) {
+    //            calcPairwiseLubricationForce(); //@@ alternative way to calculate lubforce_p0
+    //        }
+    //    }
 	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor

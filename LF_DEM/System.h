@@ -128,6 +128,8 @@ private:
 	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
+    void forceBalanceCheckLubricationForce();
+    void calcPairwiseLubricationForce();
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
@@ -139,6 +141,9 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
+    void forceBalanceCheckSetForce();
+    void forceBalanceCheckOutput();
+
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
