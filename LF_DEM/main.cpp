@@ -26,16 +26,18 @@ int main(int argc, char **argv)
 	cout << endl << "LF_DEM version " << GIT_VERSION << endl << endl;
 	string usage = "(1) Simulation\n $ LF_DEM [-r Rate] [-s Stress] [-R Rate_Sequence] [-S Stress_Sequence]\
 	[-m ?] [-k kn_kt_File] [-v Simulation_Identifier] [-i Provisional_Data] [-n]\
- Configuration_File Parameter_File \
+	Configuration_File Parameter_File \
 	\n\n OR \n\n(2) Generate initial configuration\n $ LF_DEM -g Random_Seed [-M]\n";
 
 	double dimensionless_number = 0;
 	string numeral, suffix;
 
-	bool generate_init = false;
+	int generate_init = 0;
+	string type_init_config = "normal";
+	
 	int random_seed = 1;
-
-	bool binary_conf = false;
+    bool binary_conf = false;
+    bool check_force_balance = false;
 
 	string config_filename = "not_given";
 	string param_filename = "not_given";
@@ -46,24 +48,24 @@ int main(int argc, char **argv)
 	string rheology_control = "rate";
 	string simu_identifier = "";
 	const struct option longopts[] = {
-		{"rate-controlled", required_argument, 0, 'r'},
-		{"rate-infty", required_argument, 0, '8'},
-		{"rate-seq-file", required_argument, 0, 'R'},
+		{"rate-controlled",   required_argument, 0, 'r'},
+		{"rate-infty",        required_argument, 0, '8'},
+		{"rate-seq-file",     required_argument, 0, 'R'},
 		{"stress-controlled", required_argument, 0, 's'},
-		{"stress-seq-file", required_argument, 0, 'S'},
-		{"magnetic", required_argument, 0, 'm'},
-		{"magnetic", no_argument, 0, 'M'},
-		{"generate", required_argument, 0, 'g'},
-		{"kn-kt-file", required_argument, 0, 'k'},
-		{"binary", no_argument, 0, 'n'},
-		{"identifier", required_argument, 0, 'v'},
-		{"help", no_argument, 0, 'h'},
-		{0,0,0,0},
+		{"stress-seq-file",   required_argument, 0, 'S'},
+		{"magnetic",          required_argument, 0, 'm'},
+		{"generate",          optional_argument, 0, 'g'},
+		{"kn-kt-file",        required_argument, 0, 'k'},
+		{"binary",            no_argument,       0, 'n'},
+		{"identifier",        required_argument, 0, 'v'},
+        {"force-balance",     no_argument,       0, 'f'},
+        {"help",              no_argument,       0, 'h'},
+		{0, 0, 0, 0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hnM8m:g:s:S:t:r:R:k:i:v:h:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8fm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -137,13 +139,18 @@ int main(int argc, char **argv)
 			case 'i':
 				stress_rate_filename = optarg;
 				break;
- 			case 'g':
-				generate_init = true;
-				random_seed = atoi(optarg);
+			case 'g':
+				generate_init = 1; // normal
+				if (optarg) {
+					if (optarg[0] == 'm') {
+						generate_init = 2; // magnetic
+					} else if (optarg[0] == 'c') {
+						generate_init = 3; // circular wide gap
+					}
+				}
 				break;
-			case 'M':
-				rheology_control = "magnetic";
-				cout << "Magnetic simulation" << endl;
+			case 'a':
+				random_seed = atoi(optarg);
 				break;
  			case 'n':
 				binary_conf = true;
@@ -151,6 +158,9 @@ int main(int argc, char **argv)
 			case 'v':
 				simu_identifier = optarg;
 				break;
+            case 'f':
+                check_force_balance = true;
+                break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -165,13 +175,9 @@ int main(int argc, char **argv)
 	for (int i=0; i<argc; i++) {
 		in_args << argv[i] << " ";
 	}
-	if (generate_init) {
+	if (generate_init >= 1) {
 		GenerateInitConfig generate_init_config;
-		bool magnetic_config = false;
-		if (rheology_control == "magnetic") {
-			magnetic_config = true;
-		}
-		generate_init_config.generate(random_seed, magnetic_config);
+		generate_init_config.generate(random_seed, generate_init);
 	} else {
 		if (optind == argc-2) {
 			config_filename = argv[optind++];
@@ -193,11 +199,12 @@ int main(int argc, char **argv)
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
 											  dimensionless_number, suffix, rheology_control, simu_identifier);
-
+			
 		} else if (seq_filename == "not_given") {
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
-											 dimensionless_number, suffix, rheology_control, simu_identifier);
+												 dimensionless_number, suffix, rheology_control,
+                                                 simu_identifier, check_force_balance);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;

@@ -17,11 +17,29 @@
 #endif
 using namespace std;
 
-int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
+int GenerateInitConfig::generate(int rand_seed_, int config_type)
 {
+	if (config_type == 2) {
+		cerr << "generate magnetic configuration" <<endl;
+		magnetic_config = true;
+	} else if (config_type == 3) {
+		cerr << "generate wide gap configuration" <<endl;
+		circulargap_config = true;
+	}
 	setParameters();
 	rand_seed = rand_seed_;
-	magnetic_config = magnetic_config_;
+	if (circulargap_config) {
+		np_out = (radius_out*2*M_PI)/2;
+		np_in = (radius_in*2*M_PI)/2;
+		cerr << "np_out = " << np_out << endl;
+		cerr << "np_in = " << np_in << endl;
+		np_movable = np;
+		np_fix = np_out+np_in;
+		np += np_fix;
+		cerr << "np " << np << endl;
+	} else {
+		np_movable = np;
+	}
 	sys.set_np(np);
 	sys.friction = false;
 	sys.repulsiveforce = false;
@@ -40,7 +58,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 	sys.setInteractions_GenerateInitConfig();
 	grad = new vec3d [np];
 	prev_grad = new vec3d [np];
-	step_size = 20;
+	step_size = 5;
 	gradientDescent();
 	step_size /= 4.;
 	gradientDescent();
@@ -62,6 +80,7 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 	fout.open("energy_decay.dat");
 	double energy_previous = 0;
 	double diff_energy = 99999;
+	int cnt = 0;
 	do {
 		energy = zeroTMonteCarloSweep();
 		cerr << energy << endl;
@@ -72,14 +91,22 @@ int GenerateInitConfig::generate(int rand_seed_, bool magnetic_config_)
 		}
 		count ++;
 		cerr << "diff = " << abs(diff_energy) << endl;
-	} while (abs(diff_energy) > 1e-10);
+		if (abs(diff_energy) < 1e-10) {
+			cnt++;
+		} else {
+			cnt = 0;
+		}
+	} while (cnt < 3);
 	//deflate
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
 			sys.radius[i] = a1;
 		} else {
 			sys.radius[i] = a2;
 		}
+	}
+	for (int i=np_movable; i<np; i++) {
+		sys.radius[i] = a1;
 	}
 	position.resize(np);
 	radius.resize(np);
@@ -117,25 +144,32 @@ void GenerateInitConfig::outputPositionData()
 		cerr << "disperse_type is wrong." << endl;
 		exit(1);
 	}
-	if (sys.twodimension) {
-		if (lx_lz == 1) {
-			ss_posdatafilename << "Square"; // square
+	if (circulargap_config == false) {
+		if (sys.twodimension) {
+			if (lx_lz == 1) {
+				ss_posdatafilename << "Square"; // square
+			} else {
+				ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
+			}
 		} else {
-			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << 10;
+			if (lx_lz == 1 && ly_lz == 1) {
+				ss_posdatafilename << "Cubic"; //
+			} else {
+				ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
+			}
 		}
 	} else {
-		if (lx_lz == 1 && ly_lz == 1) {
-			ss_posdatafilename << "Cubic"; //
-		} else {
-			ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
-		}
+		ss_posdatafilename << "cylinders"; // square
 	}
 	vector<double> magnetic_susceptibility;
-	for (int i=0; i<np; i++) {
-		if (i < np1) {
-			magnetic_susceptibility.push_back(1);
-		} else {
-			magnetic_susceptibility.push_back(-1);
+	if (magnetic_config) {
+		for (int i=0; i<np; i++) {
+			if (i < np/2) {
+				magnetic_susceptibility.push_back(1);
+			} else {
+				double size_factor = radius[i]*radius[i]*radius[i];
+				magnetic_susceptibility.push_back(-1*size_factor);
+			}
 		}
 	}
 	
@@ -144,10 +178,19 @@ void GenerateInitConfig::outputPositionData()
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-	fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
-	fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
-	fout << lx << ' ' << ly << ' ' << lz << ' ';
-	fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+	if (circulargap_config == false) {
+		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+	} else {
+		fout << "# np1 np2 vf lx ly lz np_in np_out radius_in radius_out" << endl;
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << np_in << ' ' << np_out << ' ';
+		fout << radius_in << ' ' << radius_out << endl;
+	}
+	
 	for (int i = 0; i<np; i++) {
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
@@ -166,6 +209,11 @@ void GenerateInitConfig::outputPositionData()
 		fout_yap << position[i].x << ' ';
 		fout_yap << position[i].y << ' ';
 		fout_yap << position[i].z << endl;
+//		fout_yap << "t ";
+//		fout_yap << position[i].x << ' ';
+//		fout_yap << position[i].y << ' ';
+//		fout_yap << position[i].z << ' ';
+//		fout_yap << i << endl;
 	}
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
@@ -217,12 +265,12 @@ void GenerateInitConfig::moveAlongGradient(vec3d* g, int dir)
 	double gradient_power = 0.5;
 	vec3d step;
 	grad_norm = 0;
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_movable; i++) {
 		grad_norm += g[i].sq_norm();
 	}
 	if (grad_norm != 0) {
 		double rescale = pow(grad_norm, gradient_power);
-		for (int i=0; i<np; i++) {
+		for (int i=0; i<np_movable; i++) {
 			step = -dir*g[i]*step_size/rescale;
 			sys.displacement(i, step);
 		}
@@ -288,19 +336,52 @@ void GenerateInitConfig::putRandom()
 #ifdef USE_DSFMT
 	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
-	for (int i=0; i<np; i++) {
-		sys.position[i].x = lx*RANDOM;
-		sys.position[i].z = lz*RANDOM;
-		if (sys.twodimension) {
-			sys.position[i].y = ly_half;
-		} else {
-			sys.position[i].y = ly*RANDOM;
+	if (!circulargap_config) {
+		for (int i=0; i<np_movable; i++) {
+			sys.position[i].x = lx*RANDOM;
+			sys.position[i].z = lz*RANDOM;
+			if (sys.twodimension) {
+				sys.position[i].y = ly_half;
+			} else {
+				sys.position[i].y = ly*RANDOM;
+			}
+			if (i < np1) {
+				sys.radius[i] = a1;
+			} else {
+				sys.radius[i] = a2;
+			}
 		}
-		if (i < np1) {
-			sys.radius[i] = a1;
-		} else {
-			sys.radius[i] = a2;
+	} else {
+		//for (int i=0; i<np_movable; i++) {
+		vec3d r_center(lx/2, 0, lz/2);
+		int i = 0;
+		while (i < np_movable) {
+			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
+			double r = (pos-r_center).norm();
+			if (r > radius_in+2 && r < radius_out-2) {
+				sys.position[i] = pos;
+				if (i < np1) {
+					sys.radius[i] = a1;
+				} else {
+					sys.radius[i] = a2;
+				}
+				i++;
+			}
 		}
+		
+		for (i=0; i<np_in; i++){
+			double t = i*(2*M_PI/np_in);
+			vec3d pos = r_center + radius_in*vec3d(cos(t), 0, sin(t));
+			sys.position[i+np_movable] = pos;
+			sys.radius[i+np_movable] = 1;
+		}
+		for (i=0; i<np_out; i++){
+			double t = i*(2*M_PI/np_out);
+			vec3d pos = r_center + radius_out*vec3d(cos(t), 0, sin(t));
+			sys.position[i+np_movable+np_in] = pos;
+			sys.radius[i+np_movable+np_in] = 1;
+		}
+		cerr << np_in << ' ' << np_out << endl;
 	}
 }
 
@@ -352,15 +433,15 @@ double GenerateInitConfig::zeroTMonteCarloSweep()
 	int steps = 0;
 	int init_overlaps = 0;
 	double init_energy = 0;
-	for(int i=0; i<np; i++) {
+	for(int i=0; i<np_movable; i++) {
 	 	init_overlaps += overlapNumber(i);
 	}
-	for(int i=0; i<np; i++) {
+	for(int i=0; i<np_movable; i++) {
 	 	init_energy += particleEnergy(i);
 	}
 	double dx = 0.04;
-	while (steps < np) {
-		int moved_part = (int)(RANDOM*np);
+	while (steps < np_movable) {
+		int moved_part = (int)(RANDOM*np_movable);
 		//		int overlap_pre_move = overlapNumber(moved_part);
 		double energy_pre_move = particleEnergy(moved_part);
 		vec3d trial_move;
@@ -388,10 +469,10 @@ double GenerateInitConfig::zeroTMonteCarloSweep()
 	sys.updateInteractions();
 	int final_overlaps = 0;
 	double final_energy = 0;
-	for(int i=0; i<np; i++) {
+	for(int i=0; i<np_movable; i++) {
 		final_overlaps += overlapNumber(i);
 	}
-	for(int i=0; i<np; i++) {
+	for(int i=0; i<np_movable; i++) {
 	 	final_energy += particleEnergy(i);
 	}
 	cerr << " MC sweep : init energy " << init_energy/np << " final energy " << final_energy/np;
@@ -436,20 +517,28 @@ void GenerateInitConfig::setParameters()
 	 *
 	 */
 	np = readStdinDefault(500, "number of particle");
-	int dimension = readStdinDefault(2, "dimension (2 or 3)");
-	if (dimension == 2) {
-		sys.twodimension = true;
+	if (circulargap_config == false) {
+		int dimension = readStdinDefault(2, "dimension (2 or 3)");
+		if (dimension == 2) {
+			sys.twodimension = true;
+		} else {
+			sys.twodimension = false;
+		}
 	} else {
-		sys.twodimension = false;
+		sys.twodimension = true;
 	}
 	if (sys.twodimension) {
 		volume_fraction = readStdinDefault(0.78, "volume_fraction");
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
-	lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
-	if (!sys.twodimension) {
-		ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
+	if (circulargap_config == false) {
+		lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
+		if (!sys.twodimension) {
+			ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
+		}
+	} else {
+		lx_lz = 1.0;
 	}
 	disperse_type = readStdinDefault('b' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
@@ -466,6 +555,7 @@ void GenerateInitConfig::setParameters()
 	} else {
 		vf_ratio = 1;
 	}
+	
 	//rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
@@ -533,6 +623,24 @@ void GenerateInitConfig::setParameters()
 		}
 	}
 
+	if (circulargap_config) {
+		double area_particle = np1*pvolume1+np2*pvolume2;
+		double area_gap = area_particle/volume_fraction;
+		cerr << "area_particle = " << area_particle << endl;
+		cerr << "area_gap = " << area_gap << endl;
+		
+		double rr = readStdinDefault(2, "radius ratio");
+		
+		radius_in = ((rr+1) + sqrt((rr+1)*(rr+1) + (rr*rr-1)*area_gap/M_PI))/(rr*rr-1);
+		radius_out = rr*radius_in;
+		cerr << radius_in << endl;
+		cerr << radius_out << endl;
+		lz = 2*radius_out+5;
+		lx = lz*lx_lz;
+		ly = 0;
+		//radius_out =  readStdinDefault(10, "outer radius");
+		//radius_in =  readStdinDefault(3, "inner radius");
+	}
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;

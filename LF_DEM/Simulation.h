@@ -73,6 +73,64 @@ private:
 	/*
 	 * For inputs
 	 */
+
+
+public:
+	/* For DEMsystem*/
+	Simulation();
+	~Simulation();
+	void simulationSteadyShear(std::string in_args,
+							   std::vector<std::string>& input_files,
+							   bool binary_conf,
+							   double dimensionless_number,
+							   std::string input_scale,
+							   std::string control_variable,
+							   std::string simu_identifier,
+                               bool check_force_balance);
+	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
+
+	void simulationInverseYield(std::string in_args,
+								std::vector<std::string>& input_files,
+								bool binary_conf,
+								double dimensionless_number,
+								std::string input_scale,
+								std::string control_variable,
+								std::string simu_identifier);
+
+	void simulationMagnetic(std::string in_args,
+							std::vector<std::string>& input_files,
+							bool binary_conf,
+							double dimensionless_number,
+							std::string input_scale,
+							std::string control_variable,
+							std::string simu_identifier);
+
+	void setupSimulation(std::string in_args,
+						 std::vector<std::string>& input_files,
+						 bool binary_conf,
+						 double dimensionlessnumber,
+						 std::string input_scale,
+						 std::string simu_identifier);
+
+	void setControlVariable(const std::string& var)
+	{
+		control_var = var;
+	};
+	ParameterSet p;
+	bool keepRunning();
+	void timeEvolution(double& next_output_data);
+	void generateOutput(double& next_output_data,
+						double& next_output_config,
+						int& binconf_counter);
+	/*********** Events  ************/
+	std::list <Event> events;
+	void setupEvents();
+	void handleEvents();
+	System &getSys()
+	{
+		return sys;
+	}
+
 	void setDefaultParameters();
 	void readParameterFile(const std::string& filename_parameters);
 	void openOutputFiles(bool binary_conf,
@@ -92,6 +150,13 @@ private:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
+	std::map<std::string,std::string> getConfMetaData(const std::string &,
+																										const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &,
+															std::string &,
+															const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &,
+															std::string &);
 	void importConfiguration(const std::string&);
 	void importConfigurationBinary(std::ifstream& file_import, const std::string&);
 	void importContactsBinary(std::ifstream& file_import);
@@ -114,6 +179,8 @@ private:
 							std::string keyword,
 							std::string value_str,
 							double* value_ptr);
+	void catchSuffixedForce(const std::string& keyword,
+							const std::string& value);
 	/*
 	 * For outputs
 	 */
@@ -131,64 +198,9 @@ private:
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();
 	bool kill;
-	
+
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
-	
-public:
-	/* For DEMsystem*/
-	Simulation();
-	~Simulation();
-	void simulationSteadyShear(std::string in_args,
-							   std::vector<std::string>& input_files,
-							   bool binary_conf,
-							   double dimensionless_number,
-							   std::string input_scale,
-							   std::string control_variable,
-							   std::string simu_identifier);
-	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
-	
-	void simulationInverseYield(std::string in_args,
-								std::vector<std::string>& input_files,
-								bool binary_conf,
-								double dimensionless_number,
-								std::string input_scale,
-								std::string control_variable,
-								std::string simu_identifier);
-	
-	void simulationMagnetic(std::string in_args,
-							std::vector<std::string>& input_files,
-							bool binary_conf,
-							double dimensionless_number,
-							std::string input_scale,
-							std::string control_variable,
-							std::string simu_identifier);
-	
-	void setupSimulation(std::string in_args,
-						 std::vector<std::string>& input_files,
-						 bool binary_conf,
-						 double dimensionlessnumber,
-						 std::string input_scale,
-						 std::string simu_identifier);
-	
-	void setControlVariable(const std::string& var)
-	{
-		control_var = var;
-	};
-	ParameterSet p;
-	bool keepRunning();
-	void timeEvolution(double& next_output_data);
-	void generateOutput(double& next_output_data,
-						double& next_output_config,
-						int& binconf_counter);
-	/*********** Events  ************/
-	std::list <Event> events;
-	void setupEvents();
-	void handleEvents();
-	System &getSys()
-	{
-		return sys;
-	}
 };
 #endif /* defined(__LF_DEM__Simulation__) */

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['generateinitconfig',['GenerateInitConfig',['../class_generate_init_config.html',1,'']]]
+  ['final_5fact',['Final_act',['../classgsl_1_1_final__act.html',1,'gsl']]],
+  ['forceamplitudes',['ForceAmplitudes',['../struct_force_amplitudes.html',1,'']]]
 ];

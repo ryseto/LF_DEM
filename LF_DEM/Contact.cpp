@@ -36,9 +36,9 @@ void Contact::setSpringConstants()
 	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
 	if (sys->friction) {
 		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
-	}
-	if (sys->rolling_friction) {
-		kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+		if (sys->rolling_friction) {
+			kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+		}
 	}
 }
 
@@ -80,11 +80,13 @@ void Contact::deactivate()
 {
 	// r > a0 + a1
 	state = 0;
-	disp_tan.reset();
-	disp_rolling.reset();
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
-	f_contact_tan.reset();
+	if (sys->friction) {
+		disp_tan.reset();
+		disp_rolling.reset();
+		f_contact_tan.reset();
+	}
 	f_contact.reset();
 }
 

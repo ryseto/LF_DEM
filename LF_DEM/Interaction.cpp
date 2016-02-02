@@ -54,6 +54,9 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	// tell them their new partner
 	sys->interaction_partners[i].insert(j);
 	sys->interaction_partners[j].insert(i);
+	//
+	sys->updateNumberOfInteraction(p0, p1, 1);
+	//
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
 	/* [note]
@@ -84,11 +87,12 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	} else {
 		contact.deactivate();
 	}
-
 	contact_state_changed_after_predictor = false;
-	lubrication.getInteractionData();
-	lubrication.updateResistanceCoeff();
-	lubrication.calcLubConstants();
+	if (sys->p.lubrication_model > 0) {
+		lubrication.getInteractionData();
+		lubrication.updateResistanceCoeff();
+		lubrication.calcLubConstants();
+	}
 }
 
 void Interaction::deactivate()
@@ -100,6 +104,7 @@ void Interaction::deactivate()
 	sys->interaction_list[p1].erase(this);
 	sys->interaction_partners[p0].erase(p1);
 	sys->interaction_partners[p1].erase(p0);
+	sys->updateNumberOfInteraction(p0, p1, -1);
 }
 
 void Interaction::updateState(bool& deactivated)
@@ -171,7 +176,6 @@ void Interaction::updateContactState()
 		}
 	}
 }
-
 
 /* Relative velocity of particle 1 from particle 0.
  *

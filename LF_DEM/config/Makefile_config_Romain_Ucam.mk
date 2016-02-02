@@ -16,7 +16,7 @@ CXX=g++
 # Libraries
 #
 # SuiteSparse library install folder
-SUITESPARSE_ROOT = /data/septal/rjm238/suitesparse/
+SUITESPARSE_ROOT = /alt/applic/user-maint/rjm238/suitesparse/
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
 CXXFLAGS_EXTRA =

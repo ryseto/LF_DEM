@@ -22,6 +22,11 @@ void System::stressReset()
 		lubstress[i].reset();
 		contactstressGU[i].reset();
 	}
+	if (mobile_fixed) {
+		for (int i=0; i<np; i++) {
+			hydrofromfixedstressGU[i].reset();
+		}
+	}
 	if (repulsiveforce) {
 		for (int i=0; i<np; i++) {
 			repulsivestressGU[i].reset();
@@ -39,8 +44,7 @@ void System::stressReset()
 	}
 }
 
-void
-System::calcStressPerParticle()
+void System::calcStressPerParticle()
 {
 	/**
 	   This method computes the stresses per particle, split by components (hydro, contact, ...).
@@ -71,16 +75,18 @@ System::calcStressPerParticle()
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			if (p.lubrication_model == 1) {
-				interaction[k].lubrication.calcXFunctionsStress();
-			} else if (p.lubrication_model == 2) {
-				interaction[k].lubrication.calcXYFunctionsStress();
-			} else {
-				ostringstream error_str;
-				error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model = 3 is not implemented" << endl;
-				throw runtime_error(error_str.str());
+			if (p.lubrication_model > 0) {
+				if (p.lubrication_model == 1) {
+					interaction[k].lubrication.calcXFunctionsStress();
+				} else if (p.lubrication_model == 2) {
+					interaction[k].lubrication.calcXYFunctionsStress();
+				} else {
+					ostringstream error_str;
+					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model = 3 is not implemented" << endl;
+					throw runtime_error(error_str.str());
+				}
+				interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			}
-			interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {
 				interaction[k].repulsion.calcStressXF(); // - rF_rep
@@ -116,8 +122,7 @@ System::calcStressPerParticle()
 	}
 }
 
-void
-System::calcStress()
+void System::calcStress()
 {
 	// Lubrication stress
 	total_hydro_stress.reset();
@@ -211,6 +216,13 @@ System::calcStress()
 		}
 		total_magnetic_stressGU /= system_volume;
 	}
+	if (mobile_fixed) {
+		total_hydrofromfixed_stressGU.reset();
+		for (int i=0; i<np; i++) {
+			total_hydrofromfixed_stressGU += hydrofromfixedstressGU[i];
+		}
+		total_hydrofromfixed_stressGU /= system_volume;
+	}
 	//
 	total_stress = total_hydro_stress;
 	total_stress += total_contact_stressXF;
@@ -232,13 +244,16 @@ System::calcStress()
 		total_stress += total_magnetic_stressXF;
 		total_stress += total_magnetic_stressGU;
 	}
-	einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
-
-	if (!p.cross_shear) {
-		total_stress.elm[2] += einstein_stress;
-	} else {
-		total_stress.elm[2] += costheta_shear*einstein_stress;
-		total_stress.elm[3] += sintheta_shear*einstein_stress;
+	if (mobile_fixed) {
+		total_stress += total_hydrofromfixed_stressGU;
 	}
-
+	if (!mobile_fixed) { // @@@ for the moment I remove the Einstein stress with walls. Should think if it's necessary.
+		einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
+		if (!p.cross_shear) {
+			total_stress.elm[2] += einstein_stress;
+		} else {
+			total_stress.elm[2] += costheta_shear*einstein_stress;
+			total_stress.elm[3] += sintheta_shear*einstein_stress;
+		}
+	}
 }

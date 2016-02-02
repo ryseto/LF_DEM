@@ -54,12 +54,17 @@ struct ForceAmplitudes
 	double ft_max;
 };
 
+
 class System{
 private:
-	int np; ///< nb of particles
+	int np; ///< number of particles
+	int np_mobile; ///< number of mobile particles
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
-	int nb_of_active_interactions;
+	int nb_of_active_interactions_mm;
+	int nb_of_active_interactions_mf;
+	int nb_of_active_interactions_ff;
+
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
@@ -74,7 +79,6 @@ private:
 	double shear_strain;
 	double total_energy;
 	int linalg_size;
-	int dof;
 	double costheta_shear;
 	double sintheta_shear;
 	/* data */
@@ -89,7 +93,7 @@ private:
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(const std::string& time_or_strain,
 							   const double& value_end);
-	void timeStepBoxing(const double strain_increment);
+	void timeStepBoxing();
 	void adaptTimeStep();
 	void adaptTimeStep(const std::string& time_or_strain,
 					   const double& value_end);
@@ -100,17 +104,32 @@ private:
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
 	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
+	void buildHydroTermsFromFixedParticles();
+	std::vector<double> computeForceFromFixedParticles();
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
 	void buildMagneticForceTerms(bool);
 	void computeVelocities(bool divided_velocities);
-	void computeVelocityComponents();
+	void computeVelocitiesStokesDrag();
+	void computeVelocityWithoutComponents();
+	void computeVelocityByComponents();
+	void computeVelocityByComponentsFixedParticles();
+	void sumUpVelocityComponents();
+	void setFixedParticleVelocities();
+	void computeBrownianVelocities();
+	void tmpMixedProblemSetVelocities();
+	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
-	void forceReset();
-	void torqueReset();
+	void computeShearRateWalls();
+	void computeVelocityCoeffFixedParticles();
+	void rescaleVelHydroStressControlled();
+	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
+    void forceBalanceCheckLubricationForce();
+    void calcPairwiseLubricationForce();
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
@@ -122,18 +141,25 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
-	vec3d randUniformSphere(double);
+    void forceBalanceCheckSetForce();
+    void forceBalanceCheckOutput();
+
 #ifndef USE_DSFMT
 	MTRand *r_gen;
-	MTRand rand_gen;
 #endif
 #ifdef USE_DSFMT
 	dsfmt_t r_gen;
-	dsfmt_t rand_gen;
 	unsigned long hash(time_t, clock_t);
 #endif
+	bool angle_output;
 	double *radius_cubed;
 	double *radius_squared;
+	double *stokesdrag_coeff_f;
+	double *stokesdrag_coeff_t;
+	double *stokesdrag_coeff_f_sqrt;
+	double *stokesdrag_coeff_t_sqrt;
+	std::vector <struct DBlock> resistance_matrix_dblock;
+
 	void adjustContactModelParameters();
 	Averager<double> *kn_avg;
 	Averager<double> *kt_avg;
@@ -153,8 +179,8 @@ private:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
 	~System();
-
 	ParameterSet& p;
+	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
 	// Interaction types
 	bool brownian;
 	bool friction;
@@ -169,15 +195,18 @@ private:
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
+	bool mobile_fixed;
+    bool check_force_balance;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
-	vec3d *position;
+	std::vector<vec3d> position;
+  std::vector<vec3d> forcecheck;
 	Interaction *interaction;
 	BoxSet boxset;
-	double *radius;
-	double *angle; // for 2D visualization
-	double *resistance_matrix_dblock;
+	std::vector<double> radius;
+	std::vector<double> angle; // for 2D visualization
+
 	vec3d *velocity;
 	vec3d *velocity_predictor;
 	vec3d *na_velocity;
@@ -194,6 +223,9 @@ private:
 	vec3d *ang_vel_brownian;
 	vec3d *vel_magnetic;
 	vec3d *ang_vel_magnetic;
+	std::vector<vec3d> vel_hydro_from_fixed;
+	std::vector<vec3d> ang_vel_hydro_from_fixed;
+	std::vector<vec3d> fixed_velocities;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
@@ -201,8 +233,7 @@ private:
 	vec3d *magnetic_force;
 	vec3d *magnetic_torque;
 	std::vector<double> magnetic_susceptibility;
-	std::vector<bool> movable; // displacement() acts only if movable[i] is true.
-	double *brownian_force;
+	std::vector<vec3d> brownian_force_torque;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // per particle
 	StressTensor* contactstressXF; // per particle
@@ -211,6 +242,7 @@ private:
 	StressTensor* brownianstressGU; // per particle
 	StressTensor* brownianstressGU_predictor; // per particle
 	StressTensor* magneticstressGU; // per particle
+	std::vector<StressTensor> hydrofromfixedstressGU; // per particle
 	std::vector<StressTensor> magneticstressXF;
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;
@@ -218,11 +250,10 @@ private:
 	StressTensor total_contact_stressGU;
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
-//	StressTensor total_repulsive_stress;
 	StressTensor total_brownian_stressGU;
 	StressTensor total_magnetic_stressXF;
 	StressTensor total_magnetic_stressGU;
-	//StressTensor total_magnetic_stress;
+	StressTensor total_hydrofromfixed_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt;
 	/* double kn; */
@@ -239,7 +270,7 @@ private:
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
 	std::set <Interaction*> *interaction_list;
-	std::set <int> *interaction_partners;
+	std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
 	double *ratio_unit_time; // to convert System time in Simulation time
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
@@ -276,10 +307,21 @@ private:
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
+	/**** temporal circular gap setup ***********/
+	vec3d origin_of_rotation;
+	bool circulargap;
+	double omega_wheel_in;
+	double omega_wheel_out;
+	int np_in;
+	int np_out;
+	double radius_in;
+	double radius_out;
+	/****************************************/
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);
+	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
@@ -288,9 +330,10 @@ private:
 	void allocateRessources();
 	void timeEvolution(const std::string& time_or_strain,
 					   const double& value_end);
-//	void timeEvolution(double value_end); // @@@ DEPRECATED
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
+	void createNewInteraction(int i, int j, double scaled_interaction_range);
+	void updateNumberOfInteraction(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
@@ -300,9 +343,10 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void analyzeState();
+	double evaluateAvgContactGap();
 	StokesSolver stokes_solver;
 	void initializeBoxing();
-	void calcLubricationForce(); // for visualization of force chains
+    //void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
 	/*
 	 * Simulation for magnetic particles
@@ -316,7 +360,6 @@ private:
 	void setInducedMagneticMoment();
 	void setMagneticMomentZero();
 	void calcMagneticEnergy();
-	void randomSelectFixParticles();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);
@@ -362,22 +405,22 @@ private:
 	{
 		return lz;
 	}
-	
+
 	inline double Lx_half()
 	{
 		return lx_half;
 	}
-	
+
 	inline double Ly_half()
 	{
 		return ly_half;
 	}
-	
+
 	inline double Lz_half()
 	{
 		return lz_half;
 	}
-	
+
 	double get_time_in_simulation_units()
 	{
 		return time_in_simulation_units;
@@ -397,7 +440,7 @@ private:
 	{
 		shear_rate = sr;
 	}
-	
+
 	inline void set_np(int val)
 	{
 		np = val;
@@ -420,7 +463,7 @@ private:
 
 	inline double get_nb_of_active_interactions()
 	{
-		return nb_of_active_interactions;
+		return nb_of_active_interactions_mm + nb_of_active_interactions_mf + nb_of_active_interactions_ff;
 	}
 
 	int get_total_num_timesteps()

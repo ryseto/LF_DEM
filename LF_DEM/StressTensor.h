@@ -18,16 +18,18 @@
 #include "vec3d.h"
 #include <iostream>
 #include <iomanip>
+#include <vector>
 
 class StressTensor {
 public:
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
 	 */
-	double elm[6];
+	std::vector <double> elm;
 
-	inline StressTensor()
+	inline StressTensor(void)
 	{
+		elm.resize(6);
 		for (int i=0; i<6; i++) {
 			elm[i] = 0;
 		}
@@ -35,9 +37,26 @@ public:
 
 	inline StressTensor(double a)
 	{
+		elm.resize(6);
 		for (int i=0; i<6; i++) {
 			elm[i] = a;
 		}
+	}
+
+	inline StressTensor(const double& _xx,
+						const double& _xy,
+						const double& _xz,
+						const double& _yz,
+						const double& _yy,
+						const double& _zz)
+	{
+		elm.resize(6);
+		elm[0] = _xx;
+		elm[1] = _xy;
+		elm[2] = _xz;
+		elm[3] = _yz;
+		elm[4] = _yy;
+		elm[5] = _zz;
 	}
 
 	// output stream operator
@@ -55,27 +74,13 @@ public:
 
 	inline StressTensor(const vec3d& v1, const vec3d& v2)
 	{
+		elm.resize(6);
 		elm[0] = v1.x*v2.x;
 		elm[1] = 0.5*(v1.x*v2.y+v1.y*v2.x);
 		elm[2] = 0.5*(v1.x*v2.z+v1.z*v2.x);
 		elm[3] = 0.5*(v1.y*v2.z+v1.z*v2.y);
 		elm[4] = v1.y*v2.y;
 		elm[5] = v1.z*v2.z;
-	}
-
-	inline StressTensor(const double& _xx,
-						const double& _xy,
-						const double& _xz,
-						const double& _yz,
-						const double& _yy,
-						const double& _zz)
-	{
-		elm[0] = _xx;
-		elm[1] = _xy;
-		elm[2] = _xz;
-		elm[3] = _yz;
-		elm[4] = _yy;
-		elm[5] = _zz;
 	}
 
 	inline friend StressTensor operator + (const StressTensor& a1,
@@ -301,17 +306,6 @@ public:
 		}
 	}
 
-	inline friend StressTensor tensor_prod (const vec3d& v1,
-											const vec3d& v2)
-	{
-		return StressTensor(v1.x*v2.x,
-							0.5*(v1.x*v2.y+v1.y*v2.x),
-							0.5*(v1.x*v2.z+v1.z*v2.x),
-							0.5*(v1.y*v2.z+v1.z*v2.y),
-							v1.y*v2.y,
-							v1.z*v2.z);
-	}
-
 	/*	N1 = Sxx-Szz;
 	 */
 	double getNormalStress1()
@@ -330,7 +324,7 @@ public:
 	{
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
-	
+
 	//	void cerr()
 	//	{
 	//		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;

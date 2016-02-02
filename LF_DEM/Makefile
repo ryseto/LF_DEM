@@ -1,5 +1,6 @@
 #Makefile LF_DEM, Romain Mari
 
+override_default_cholmod = false
 
 # load Makefile inputs
 makeconfig = config/Makefile_config.mk
@@ -20,7 +21,12 @@ ifeq ($(CXX),$(filter $(CXX),g++ clang++))
 	CXXFLAGS_debug += -pg $(GPP_Warnings) -Wextra -Wshadow
 	CXXFLAGS_dev += $(GPP_Warnings) -Wextra -Wshadow
 endif
-
+# ifeq ($(CXX),g++)
+# 	CXXFLAGS_debug += -fprofile-arcs -ftest-coverage # profiling
+# endif
+ifeq ($(CXX),g++)
+	CXXFLAGS_debug += -fno-inline
+endif
 ICC_Warnings = -Wall
 ifeq ($(CXX),icpc)
 	CXXFLAGS_optimized += $(ICC_Warnings)
@@ -51,13 +57,18 @@ endif
 
 
 #======== Include Paths =============
-Cholmod_path = $(SUITESPARSE_ROOT)/include/
-Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
-Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
+ifeq ($(override_default_cholmod), false)
+	Cholmod_path = -I $(SUITESPARSE_ROOT)/include/
+	Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
+	Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
+endif
+
+
+
 #Metis_path = /opt/local/lib/
 
 # Includes
-Includes = -I $(Cholmod_path)
+Includes = $(Cholmod_path)
 
 OUT_CODE=LF_DEM
 SRC=$(shell ls *.cpp)
@@ -84,7 +95,7 @@ hasconfig:
 	fi)
 
 $(OUT_CODE): $(OBJ) $(DSFMT_OBJ) hasconfig
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ) $(DSFMT_OBJ)  $(Cholmod_Linking_Flags) $(Cholmod_GPU) $(Lapack_Linking_Flags) $(Blas_Linking_Flags) $(Extra_Linking_Flags) -lstdc++ -lm
 
 $(OBJ): $(SRC)
 	$(CXX) $(CXXFLAGS) $(Includes) -c $(@:.o=.cpp)
@@ -100,7 +111,7 @@ clean:
 	rm -f  $(OBJ)
 
 doc:
-	/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile
+	doxygen Doxyfile
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)

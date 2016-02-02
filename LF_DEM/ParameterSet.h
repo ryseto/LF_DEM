@@ -20,8 +20,8 @@ struct ParameterSet
 	double brownian_amplitude;				///< Amplitude of the Brownian force [0]
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
-	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, magnetic force, etc.). If -1, lub_max_gap is used as cutoff [-1]
-
+	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
+	int np_fixed;
 	/* magnetic */
 	double magnetic_amplitude;				///< Amplitude of the magnetic force [0]
 	int magnetic_type;						///< Magnetic, 1: parmanent magnetic dipole (Ferromagnetic), 2: induced dipole (Paramagnetic)
@@ -31,7 +31,6 @@ struct ParameterSet
 	double external_magnetic_field_ang_theta;  ///< angle from the vertical axis
 	double external_magnetic_field_ang_phi;  ///< Initial angle of external magnetic field
 	double timeinterval_update_magnetic_pair; ///< [0.02] Interval to check magnetic interaction
-	double fixed_particle_fraction;             ///< rate of fixed particles (
 	/*******************************************************
 	 HYDRODYNAMICS
 	********************************************************/
@@ -46,12 +45,13 @@ struct ParameterSet
 	double sd_coeff;                         ///< Stokes drag coeffient. Full drag is 1. [1]
 	/*
 	* Lubrication model
-	* 0 no lubrication
+	* 0 no lubrication (no dashpot as well)
 	* 1 1/xi lubrication (only squeeze mode)
 	* 2 log(1/xi) lubrication
-	* 3 ???
+	* 3 dashpot in the contact model (not implemented yet)
+	*   In this case lub_max_gap should be automatically zero. (not yet implemented)
 	*/
-	int lubrication_model;                   ///< Lubrication type. 0: no lubrication, 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication. [2]
+	int lubrication_model;                   ///< Lubrication type. 0: no lubrication (no dashpot), 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication, 3: only dashpot [2]
 	/*
 	* Leading term of lubrication force is 1/reduced_gap,
 	* with reduced_gap the gap
@@ -83,7 +83,7 @@ struct ParameterSet
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	bool unscaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
+	bool stress_scaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
 	double kn;                               ///< Particle stiffness: normal spring constant [2000 under stress control, 10000 under rate control]
 	double kt;                               ///< Particle stiffness: tangential spring constant [1000 under stress control, 6000 under rate control]
 	double kr;                               ///< Particle stiffness: rolling spring constant [1000 under stress control, 6000 under rate control]

@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <ostream>
+#include <vector>
 #include "vec3d.h"
 
 #ifndef GIT_VERSION
@@ -96,6 +97,31 @@ inline void Str2KeyValue(const std::string& str_parameter,
 	keyword = str_parameter.substr(0, pos_equal);
 	value = str_parameter.substr(pos_equal+1);
 	return;
+}
+
+inline std::vector<std::string> splitString(const std::string& str){
+	std::string stripped_str = str;
+	std::size_t brk = 0;
+
+	std::vector<std::string> elements;
+
+	while ( stripped_str.length()>0 ) {
+		brk = stripped_str.find(" ");
+		std::string first_part;
+		if (brk < std::string::npos) {
+			brk += 1;
+			first_part = stripped_str.substr(0, brk);
+			stripped_str = stripped_str.substr(brk, std::string::npos);
+		} else {
+			first_part = stripped_str.substr(0, brk);
+			stripped_str = "";
+		}
+		removeBlank(first_part);
+		if ( first_part.length()>0 ) {
+			elements.push_back(first_part);
+		}
+	}
+	return elements;
 }
 
 #endif /* defined(__LF_DEM__global__) */

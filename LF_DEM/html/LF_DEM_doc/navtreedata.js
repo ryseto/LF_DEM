@@ -2,8 +2,9 @@ var NAVTREE =
 [
   [ "Documentation for LF_DEM", "index.html", [
     [ "Bibliography", "citelist.html", null ],
-    [ "Classes", null, [
-      [ "Class List", "annotated.html", "annotated" ],
+    [ "Classes", "annotated.html", [
+      [ "Class List", "annotated.html", "annotated_dup" ],
+      [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", null ],
         [ "Functions", "functions_func.html", null ],
@@ -15,11 +16,11 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-"annotated.html",
-"class_lubrication.html#a1a2b61f1058cc5798891844577082b59",
-"class_simulation.html#ad914639de89090fed18b19c3c742bb1b",
-"class_system.html#a861a9a150ac6f7a22f3f2f0927159885",
-"structcontact__state.html"
+".html",
+"class_lubrication.html#a1d26687d8db0f7a45835fa3822280687",
+"class_simulation.html#ae743025e878f5e05bb6016ccae1ffb4e",
+"class_system.html#a89ae91d4484ba766a83d54762a3ef996",
+"functions.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -11,6 +11,7 @@ var searchData=
   ['computemaxnavelocity',['computeMaxNAVelocity',['../class_system.html#a34a5f1e6790979deae33cb9e7fef029a',1,'System']]],
   ['computeshearrate',['computeShearRate',['../class_system.html#ad726330ebec27152a7d124e773c0b9f9',1,'System']]],
   ['computevelocities',['computeVelocities',['../class_system.html#aafa87b69481dbd17f8d3dc67c940a0f9',1,'System']]],
+  ['computevelocitiesstokesdrag',['computeVelocitiesStokesDrag',['../class_system.html#ad1688f0c8e35b85ac9d0962cdb098837',1,'System']]],
   ['computevelocitycomponents',['computeVelocityComponents',['../class_system.html#a82bd46fc5da6765556e39b020454b6d2',1,'System']]],
   ['contactforceparameter',['contactForceParameter',['../class_simulation.html#a02db39dac79a8197839e02c753bf8340',1,'Simulation']]],
   ['contactforceparameterbrownian',['contactForceParameterBrownian',['../class_simulation.html#a94d2b9ca02cb1687348d36f8a2776760',1,'Simulation']]],
