@@ -1123,11 +1123,14 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 					is >> x_ >> y_ >> z_ >> a_;
 					initial_position.push_back(vec3d(x_, y_, z_));
 					radius.push_back(a_);
-				} else {
 					initial_position.push_back(vec3d(x_, y_, z_));
 					radius.push_back(a_);
+				} else {
 					fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 				}
+			}
+			if ( sys.p.np_fixed != (int)fixed_velocities.size() ) {
+					throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
 			}
 			sys.setConfiguration(initial_position, radius, lx, ly, lz);
 			sys.setFixedVelocities(fixed_velocities);
