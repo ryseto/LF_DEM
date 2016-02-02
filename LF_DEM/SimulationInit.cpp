@@ -1123,9 +1123,9 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 					is >> x_ >> y_ >> z_ >> a_;
 					initial_position.push_back(vec3d(x_, y_, z_));
 					radius.push_back(a_);
+				} else {
 					initial_position.push_back(vec3d(x_, y_, z_));
 					radius.push_back(a_);
-				} else {
 					fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 				}
 			}
