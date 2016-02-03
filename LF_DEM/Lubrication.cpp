@@ -265,7 +265,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE()
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
 	 *
-	 * lubrication_model = 1
+	 * lubrication_model = 1 or 3
 	 * 1/xi level
 	 *
 	 * GE1 = (nvecnvec:E)*(XG11+XG21)*nvec
@@ -366,7 +366,7 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	XGU_j *= cXG_j;
 	stresslet_i = XGU_i;
 	stresslet_j = XGU_j;
-	if (sys->p.lubrication_model == 1) {
+	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
 		return;
 	}
 	StressTensor YGU_i;
@@ -470,7 +470,7 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
 	XME_j *= cXM_j;
 	stresslet_i = XME_i;
 	stresslet_j = XME_j;
-	if (sys->p.lubrication_model == 1) {
+	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
 		return;
 	}
 	double cYM_i = (1.0/2)*(scaledYM0()+scaledYM1());
@@ -524,7 +524,7 @@ void Lubrication::calcPairwiseForce()
 	double sr = sys->get_shear_rate();
     vec3d vi(sys->na_velocity[p0]);
     vec3d vj(sys->na_velocity[p1]);
-	if (sys->p.lubrication_model == 1) {
+	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
 		calcXFunctions();
 	} else if (sys->p.lubrication_model == 2) {
 		calcXYFunctions();

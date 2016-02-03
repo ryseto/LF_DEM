@@ -76,13 +76,13 @@ void System::calcStressPerParticle()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (p.lubrication_model > 0) {
-				if (p.lubrication_model == 1) {
+				if (p.lubrication_model == 1 || p.lubrication_model == 3) {
 					interaction[k].lubrication.calcXFunctionsStress();
 				} else if (p.lubrication_model == 2) {
 					interaction[k].lubrication.calcXYFunctionsStress();
 				} else {
 					ostringstream error_str;
-					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model = 3 is not implemented" << endl;
+					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model > 3 is not implemented" << endl;
 					throw runtime_error(error_str.str());
 				}
 				interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
