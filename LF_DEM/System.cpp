@@ -166,6 +166,9 @@ void System::allocateRessources()
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
+	nb_of_contacts_mf = 0;
+	nb_of_contacts_ff = 0;
+	nb_of_contacts_mm = 0;
 
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
@@ -654,7 +657,7 @@ void System::setupSystem(string control)
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 		if (p.friction_model>0 && p.contact_relaxation_time_tan==0) {
-			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");		
+			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");
 		}
 		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
 	}	else {
@@ -1335,6 +1338,17 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 	}
 }
 
+void System::updateNumberOfContacts(int p0, int p1, int val)
+{
+	if (p1 < np_mobile) { // i and j mobile
+		nb_of_contacts_mm += val;
+	} else if (p0 >= np_mobile) { // i and j fixed
+		nb_of_contacts_ff += val;
+	} else {
+		nb_of_contacts_mf += val;
+	}
+}
+
 void System::updateMagneticInteractions()
 {
 	/**
@@ -1399,12 +1413,22 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
+	int size_mm, size_mf, size_ff;
+	if (p.lubrication_model!=3) {
+		size_mm = nb_of_active_interactions_mm;
+		size_mf = nb_of_active_interactions_mf;
+		size_ff = nb_of_active_interactions_ff;
+	} else {
+		size_mm = nb_of_contacts_mm;
+		size_mf = nb_of_contacts_mf;
+		size_ff = nb_of_contacts_ff;
+	}
 	if (build_res_mat) {
         // create a new resistance matrix in stokes_solver
-        stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm,
-                                            nb_of_active_interactions_mf,
-											nb_of_active_interactions_ff,
-											resistance_matrix_dblock);
+        stokes_solver.resetResistanceMatrix(size_mm,
+                                            size_mf,
+																						size_ff,
+																						resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
 		 * which is calculated at the beginning.

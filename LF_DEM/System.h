@@ -64,7 +64,9 @@ private:
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
-
+	int nb_of_contacts_mm;
+	int nb_of_contacts_mf;
+	int nb_of_contacts_ff;
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
@@ -343,6 +345,7 @@ private:
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void updateNumberOfInteraction(int p0, int p1, int val);
+	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
