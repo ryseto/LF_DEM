@@ -118,7 +118,6 @@ private:
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
     vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
-    vec3d lubforce_p0_test;
 	void calcPairwiseForce();
 	double get_lubforce_normal()
 	{

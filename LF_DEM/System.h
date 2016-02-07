@@ -129,7 +129,6 @@ private:
 	void stressReset();
 	void computeMaxNAVelocity();
     void forceBalanceCheckLubricationForce();
-    void calcPairwiseLubricationForce();
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
