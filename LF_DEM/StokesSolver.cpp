@@ -657,12 +657,12 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
-	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-	int size = chol_solution->nrow/6;
-	for (int i=0; i<size; i++) {
-		int i6 = 6*i;
-		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
-		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
+    chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
+    int size = chol_solution->nrow/6;
+    for (int i=0; i<size; i++) {
+        int i6 = 6*i;
+        velocity[i].x     = ((double*)chol_solution->x)[i6  ];
+        velocity[i].y     = ((double*)chol_solution->x)[i6+1];
 		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
 		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
 		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
@@ -692,6 +692,19 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 		force[i] = ((double*)chol_force->x)[i];
 	}
 }
+
+void StokesSolver::multiply_by_RFU_fm(vector<double>& velocity, vector<double>& force)
+{
+    double one[] = {1, 0};
+    double zero[] = {0, 0};
+    chol_vel_mob->x = velocity.data();
+    cholmod_sdmult(chol_res_matrix_mf, 0, one, zero, chol_vel_mob, chol_force, &chol_c);
+    for (unsigned int i=0; i<force.size(); i++) {
+        force[i] = ((double*)chol_force->x)[i];
+    }
+}
+
+
 
 // testing function, don't use it in production code, very slow and unclean
 void StokesSolver::multiplySolutionByResMat(double* vec)

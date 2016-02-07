@@ -363,7 +363,7 @@ public:
 	void solvingIsDone();
     void multiply_by_RFU_mm(std::vector<double>& velocity, std::vector<double>& force);
 	void multiply_by_RFU_mf(std::vector<double>& velocity, std::vector<double>& force);
-
+    void multiply_by_RFU_fm(std::vector<double>& velocity, std::vector<double>& force);
 	// testing functions
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);

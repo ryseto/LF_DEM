@@ -612,8 +612,11 @@ void Simulation::outputData()
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
-	outdata.init(37, output_unit_scales);
-
+    int number_of_data = 37;
+    if (sys.test_simulation > 10 && sys.test_simulation <= 20) {
+        number_of_data = 38;
+    }
+    outdata.init(number_of_data, output_unit_scales);
 	double sr = sys.get_shear_rate();
 
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
@@ -667,6 +670,11 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", "none", p.kr);
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
+    
+    if (sys.test_simulation > 10 && sys.test_simulation <= 20) {
+        outdata.entryData(37, "force inner wheel", "none", sys.total_force_in);
+        outdata.entryData(38, "force outer wheel", "none", sys.total_force_out);
+    }
 	outdata.writeToFile();
 
 	/****************************   Stress Tensor Output *****************/

@@ -869,6 +869,22 @@ void System::forceBalanceCheckOutput()
             }
         }
         cerr << "force balance: " << sqrt(max_total_force) << endl;
+        int i_np_in = np_mobile+np_in;
+        total_force_in = 0;
+        for (int i=np_mobile; i<i_np_in; i++) { //inner
+            vec3d normal_vec = position[i]/position[i].norm_xz();
+            vec3d tang_vec(-normal_vec.z, 0, normal_vec.x);
+            total_force_in += dot(forcecheck[i], tang_vec);
+        }
+        // outer wheel
+        total_force_out = 0;
+        for (int i=i_np_in; i<np; i++) { //outer
+            vec3d normal_vec = position[i]/position[i].norm_xz();
+            vec3d tang_vec(-normal_vec.z, 0, normal_vec.x);
+            total_force_out += dot(forcecheck[i], tang_vec);
+        }
+        cerr << total_force_in << ' ' << total_force_out << endl;
+        
     }
 }
 
@@ -1580,29 +1596,31 @@ void System::forceBalanceCheckLubricationForce()
     /*
      *  F^{M} = R_FU^{MM} U^{M}
      */
-    vector<double> force_torque_from_mobile (6*np_mobile);
-    vector<double> minus_mobile_velocities (6*np_mobile);
-    for(int i=0; i<np_mobile; i++){
-        int i6 = 6*i;
-        minus_mobile_velocities[i6  ] = -na_velocity[i].x;
-        minus_mobile_velocities[i6+1] = -na_velocity[i].y;
-        minus_mobile_velocities[i6+2] = -na_velocity[i].z;
-        minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
-        minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
-        minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
-    }
-    stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_from_mobile);
-    for(int i=0; i<np_mobile; i++){
-        int i6 = 6*i;
-        forcecheck[i].x += force_torque_from_mobile[i6];
-        forcecheck[i].y += force_torque_from_mobile[i6+1];
-        forcecheck[i].z += force_torque_from_mobile[i6+2];
+    if (true) {
+        vector<double> force_torque_m_to_m (6*np_mobile);
+        vector<double> minus_mobile_velocities (6*np_mobile);
+        for(int i=0; i<np_mobile; i++){
+            int i6 = 6*i;
+            minus_mobile_velocities[i6  ] = -na_velocity[i].x;
+            minus_mobile_velocities[i6+1] = -na_velocity[i].y;
+            minus_mobile_velocities[i6+2] = -na_velocity[i].z;
+            minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
+            minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
+            minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
+        }
+        stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_m_to_m);
+        for(int i=0; i<np_mobile; i++){
+            int i6 = 6*i;
+            forcecheck[i].x += force_torque_m_to_m[i6];
+            forcecheck[i].y += force_torque_m_to_m[i6+1];
+            forcecheck[i].z += force_torque_m_to_m[i6+2];
+        }
     }
     /*
      *  F^{M} += R_FU^{MF} U^{F}
      */
     if (mobile_fixed) {
-        vector<double> force_torque_from_fixed (6*np_mobile);
+        vector<double> force_torque_f_to_m (6*np_mobile);
         vector<double> minus_fixed_velocities (6*p.np_fixed);
 		for (int i=0; i<p.np_fixed; i++) {
             int i6 = 6*i;
@@ -1614,12 +1632,36 @@ void System::forceBalanceCheckLubricationForce()
             minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
             minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
         }
-        stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed);
+        stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_f_to_m);
 		for (int i=0; i<np_mobile; i++) {
             int i6 = 6*i;
-            forcecheck[i].x += force_torque_from_fixed[i6];
-            forcecheck[i].y += force_torque_from_fixed[i6+1];
-            forcecheck[i].z += force_torque_from_fixed[i6+2];
+            forcecheck[i].x += force_torque_f_to_m[i6];
+            forcecheck[i].y += force_torque_f_to_m[i6+1];
+            forcecheck[i].z += force_torque_f_to_m[i6+2];
+        }
+    }
+    
+    /*
+     *  F^{F} += R_FU^{FM} U^{B}
+     */
+    if (mobile_fixed) {
+        vector<double> force_m_to_f (6*p.np_fixed);
+        vector<double> minus_mobile_velocities (6*np_mobile);
+        for (int i=0; i<np_mobile; i++) {
+            int i6 = 6*i;
+            minus_mobile_velocities[i6  ] = -na_velocity[i].x;
+            minus_mobile_velocities[i6+1] = -na_velocity[i].y;
+            minus_mobile_velocities[i6+2] = -na_velocity[i].z;
+            minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
+            minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
+            minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
+        }
+        stokes_solver.multiply_by_RFU_fm(minus_mobile_velocities, force_m_to_f);
+        for (int i=np_mobile; i<np; i++) {
+           int i6 = 6*(i-np_mobile);
+            forcecheck[i].x += force_m_to_f[i6];
+            forcecheck[i].y += force_m_to_f[i6+1];
+            forcecheck[i].z += force_m_to_f[i6+2];
         }
     }
 }

@@ -316,6 +316,9 @@ private:
 	int np_out;
 	double radius_in;
 	double radius_out;
+    double total_force_in;
+    double total_force_out;
+    
 	/*
 	 * Simulation for magnetic particles
 	 */
