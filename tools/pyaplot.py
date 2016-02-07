@@ -64,13 +64,9 @@ def get_particles_yaparray(pos, rad):
         pos and rad must contain positions and radii of particles.
     """
 
-    yap_out = layer_switch(3)
-    yap_out = add_color_switch(yap_out,3)
-
     particle_circle_positions = cmd('c', pos)
     particle_circle_radius = cmd('r', rad)
-    particle_out = pair_cmd_and_switch(particle_circle_positions, particle_circle_radius)
-    yap_out = np.row_stack((yap_out, particle_out))
+    yap_out = pair_cmd_and_switch(particle_circle_positions, particle_circle_radius)
 
     return yap_out
 
@@ -80,13 +76,11 @@ def get_interactions_yaparray(r1r2, thicknesses):
         for each interactions with end points in r1r2.
         thicknesses contains the width of the sticks.
     """
-    yap_out = layer_switch(2)
-    yap_out = add_color_switch(yap_out,4)
 
     interaction_sticks = cmd('s', r1r2.astype(np.str))
     interaction_widths = cmd('r', thicknesses)
-    interaction_out = pair_cmd_and_switch(interaction_sticks, interaction_widths)
-    yap_out = np.row_stack((yap_out, interaction_out))
+    yap_out = pair_cmd_and_switch(interaction_sticks, interaction_widths)
+    
     return yap_out
 
 def get_interaction_end_points(f,p):
@@ -106,13 +100,30 @@ def get_interaction_end_points(f,p):
 
     return np.hstack((r1, r2))
 
-def filter_interactions_crossing_PBC(f,r1r2):
+def filter_interactions_crossing_PBC(f,r1r2,cutoff=4):
     """
-        Exclude interactions across the boundaries
+        Exclude interactions across the boundaries.
+        Return values of f and r1r2 where norm(r1r2[:,3:]-r1r2[:,:3])<cutoff.
     """
     r1 = r1r2[:,:3]
     r2 = r1r2[:,3:]
-    keep = np.linalg.norm(r2-r1,axis=1) < 4.
+    keep = np.linalg.norm(r2-r1,axis=1) < cutoff
     r1r2 = r1r2[keep]
     f = f[keep]
     return f, r1r2
+
+def savetxt(outfile, yaplot_cmd_array, mode="w"):
+    """
+        Ouptut yaplot_cmd_array in file fname.
+    """
+    openedfile = True
+    try:
+        yap_file = open(outfile,mode+"b")
+    except TypeError:
+        yap_file = outfile
+        openedfile = False
+
+    np.savetxt(yap_file, yaplot_cmd_array, fmt="%s "*7)
+    yap_file.write("\n".encode('utf-8'))
+    if openedfile:
+        yap_file.close()

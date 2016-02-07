@@ -659,8 +659,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		throw runtime_error("magnetic_amplitude ??");
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
-	} else if (keyword == "unscaled_contactmodel") {
-		p.unscaled_contactmodel = str2bool(value);
+	} else if (keyword == "stress_scaled_contactmodel") {
+		p.stress_scaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
 		p.repulsive_length = atof(value.c_str());
 	} else if (keyword == "repulsive_max_length") {
@@ -876,17 +876,17 @@ void Simulation::setDefaultParameters()
 	p.contact_relaxation_time = 1e-3;
 	p.contact_relaxation_time_tan = 0;
 	if (control_var == "stress") {
-		p.unscaled_contactmodel = true;
+		p.stress_scaled_contactmodel = true;
 		p.kn = 2000;
 		p.kt = 1000;
 		p.kr = 1000;
 	} else if (control_var == "rate") {
-		p.unscaled_contactmodel = false;
+		p.stress_scaled_contactmodel = false;
 		p.kn = 10000;
 		p.kt = 6000;
 		p.kr = 6000;
 	} else if (control_var == "magnetic") {
-		p.unscaled_contactmodel = true;
+		p.stress_scaled_contactmodel = true;
 		p.kn = 2000;
 		p.kt = 1000;
 		p.kr = 1000;
@@ -1128,6 +1128,9 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 					radius.push_back(a_);
 					fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 				}
+			}
+			if ( sys.p.np_fixed != (int)fixed_velocities.size() ) {
+					throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
 			}
 			sys.setConfiguration(initial_position, radius, lx, ly, lz);
 			sys.setFixedVelocities(fixed_velocities);

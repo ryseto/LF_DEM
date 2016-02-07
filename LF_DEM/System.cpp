@@ -166,6 +166,9 @@ void System::allocateRessources()
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
+	nb_of_contacts_mf = 0;
+	nb_of_contacts_ff = 0;
+	nb_of_contacts_mm = 0;
 
 	radius_cubed = new double [np];
 	radius_squared = new double [np];
@@ -450,8 +453,13 @@ void System::updateUnscaledContactmodel()
 			 * So log_lub_coeff_contact_tan_dashpot = 0;
 			 */
 			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		} else {
-			throw runtime_error("Error: lubrication_model>2 ???");
+		} else if (p.lubrication_model == 3) {
+			log_lub_coeff_contact_tan_lubrication = 0;
+			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
+			log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+		}
+		else {
+			throw runtime_error("Error: lubrication_model>3 ???");
 		}
 	}
 	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
@@ -506,10 +514,10 @@ void System::setupSystem(string control)
 		 */
 	} else if (p.lubrication_model == 1) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (p.lubrication_model == 2) {
+	} else if (p.lubrication_model == 2 || p.lubrication_model == 3) {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		throw runtime_error(indent+"lubrication_model >= 3 is not implemented yet.\n");
+		throw runtime_error(indent+"lubrication_model > 3 is not implemented yet.\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -608,7 +616,7 @@ void System::setupSystem(string control)
 	}
 	shear_strain = 0;
 	nb_interaction = 0;
-	if (p.unscaled_contactmodel) {
+	if (p.stress_scaled_contactmodel) {
 		kn_master = p.kn;
 		kt_master = p.kt;
 		kr_master = p.kr;
@@ -645,11 +653,18 @@ void System::setupSystem(string control)
 		 */
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	} else {
-		throw runtime_error("lubrication_model must be smaller than 3\n");
+	}  else if (p.lubrication_model == 3) {
+		log_lub_coeff_contact_tan_lubrication = 0;
+		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
+		if (p.friction_model>0 && p.contact_relaxation_time_tan==0) {
+			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");
+		}
+		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
+	}	else {
+		throw runtime_error("lubrication_model must be smaller than 4\n");
 	}
 
-	if (p.unscaled_contactmodel) {
+	if (p.stress_scaled_contactmodel) {
 		updateUnscaledContactmodel();
 	}
 	// cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
@@ -808,6 +823,10 @@ void System::timeStepBoxing()
 	} else {
 		if (circulargap) {
 			shear_strain += dt*shear_rate;
+		}
+		if (test_simulation==31) {
+			shear_strain += dt*shear_rate;
+			// cout << shear_strain << endl;
 		}
 	}
 	boxset.update();
@@ -1319,6 +1338,17 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 	}
 }
 
+void System::updateNumberOfContacts(int p0, int p1, int val)
+{
+	if (p1 < np_mobile) { // i and j mobile
+		nb_of_contacts_mm += val;
+	} else if (p0 >= np_mobile) { // i and j fixed
+		nb_of_contacts_ff += val;
+	} else {
+		nb_of_contacts_mf += val;
+	}
+}
+
 void System::updateMagneticInteractions()
 {
 	/**
@@ -1383,12 +1413,22 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
+	int size_mm, size_mf, size_ff;
+	if (p.lubrication_model!=3) {
+		size_mm = nb_of_active_interactions_mm;
+		size_mf = nb_of_active_interactions_mf;
+		size_ff = nb_of_active_interactions_ff;
+	} else {
+		size_mm = nb_of_contacts_mm;
+		size_mf = nb_of_contacts_mf;
+		size_ff = nb_of_contacts_ff;
+	}
 	if (build_res_mat) {
         // create a new resistance matrix in stokes_solver
-        stokes_solver.resetResistanceMatrix(nb_of_active_interactions_mm,
-                                            nb_of_active_interactions_mf,
-											nb_of_active_interactions_ff,
-											resistance_matrix_dblock);
+        stokes_solver.resetResistanceMatrix(size_mm,
+                                            size_mf,
+																						size_ff,
+																						resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
 		 * which is calculated at the beginning.
@@ -1405,7 +1445,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
  * This method computes:
  *  - elements of the resistance matrix if 'mat' is true
- *       (only terms diverging as 1/h if lubrication_model == 1, terms in 1/h and log(1/h) for lubrication_model>1 )
+ *       (only terms diverging as 1/h if lubrication_model == 1,3, terms in 1/h and log(1/h) for lubrication_model==2 )
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
 void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
@@ -1781,7 +1821,7 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	if (!zero_shear) {
+	if (!zero_shear && p.lubrication_model!=3) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
 		buildHydroTerms(true, false); // zero shear-rate
@@ -1806,7 +1846,7 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	if (!zero_shear) {
+	if (!zero_shear && p.lubrication_model!=3) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
@@ -1816,7 +1856,6 @@ void System::computeVelocityByComponents()
 			ang_vel_hydro[i].reset();
 		}
 	}
-    stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H // @@@ do we need to do that when zero_shear is true?
 
 	if (mobile_fixed) {
 		stokes_solver.resetRHS();
@@ -1983,6 +2022,10 @@ void System::sumUpVelocityComponents()
 		for (int i=0; i<np_mobile; i++) {
 			na_velocity[i] += vel_hydro_from_fixed[i];
 			na_ang_velocity[i] += ang_vel_hydro_from_fixed[i];
+		}
+		for (int i=np_mobile; i<np; i++) {
+			na_velocity[i] = vel_hydro_from_fixed[i];
+			na_ang_velocity[i] = ang_vel_hydro_from_fixed[i];
 		}
 	}
 }
@@ -2386,11 +2429,15 @@ double System::calcInteractionRangeDefault(const int& i, const int& j)
 
 double System::calcLubricationRange(const int& i, const int& j)
 {
-	double rad_ratio = radius[i]/radius[j];
-	if (rad_ratio < 2 && rad_ratio > 0.5) {
-		return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
+	if (p.lubrication_model == 3) {
+		return radius[i]+radius[j];
 	} else {
-		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-		return radius[i]+radius[j]+p.lub_max_gap*minradius;
+		double rad_ratio = radius[i]/radius[j];
+		if (rad_ratio < 2 && rad_ratio > 0.5) {
+			return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
+		} else {
+			double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+			return radius[i]+radius[j]+p.lub_max_gap*minradius;
+		}
 	}
 }

@@ -53,11 +53,15 @@ def snaps2yap(pos_fname, force_factor):
 
         # display a line joining the center of interacting particles
         # with a thickness proportional to the normal force
+        yap_out = pyp.layer_switch(2)
+        yap_out = pyp.add_color_switch(yap_out,4)
         normal_forces = (f[:,7]+f[:,11]+f[:,15]).astype(np.float)
         normal_forces = force_factor*np.abs(normal_forces) # to convert the force to a thickness. case-by-case.
-        yap_out = pyp.get_interactions_yaparray(r1r2, normal_forces)
+        yap_out = np.row_stack((yap_out,pyp.get_interactions_yaparray(r1r2, normal_forces)))
 
         # display a circle for every particle
+        yap_out = pyp.add_layer_switch(yap_out,3)
+        yap_out = pyp.add_color_switch(yap_out,3)
         pos = p[:,2:5].astype(np.float)
         rad = p[:,1].astype(np.float)
         yap_out = np.row_stack((yap_out, pyp.get_particles_yaparray(pos, rad)))
@@ -79,18 +83,16 @@ def snaps2yap(pos_fname, force_factor):
 
 def conf2yap(conf_fname):
     yap_filename = pos_fname.replace(".dat", ".yap")
-    yap_file = open(yap_filename,'wb')
 
     positions, radii, meta = lf.read_conf_file(conf_fname)
     positions[:,0] -= float(meta['lx'])/2
     positions[:,1] -= float(meta['ly'])/2
     positions[:,2] -= float(meta['lz'])/2
+    yap_out = pyp.layer_switch(3)
+    yap_out = pyp.add_color_switch(yap_out,3)
+    yap_out = np.row_stack((yap_out, pyp.get_particles_yaparray(positions, radii)))
 
-    yap_out = pyp.get_particles_yaparray(positions, radii)
-    # print(yap_out)
-    np.savetxt(yap_file, yap_out, fmt="%s "*7)
-    yap_file.write("\n".encode('utf-8'))
-    yap_file.close()
+    pyp.savetxt(yap_filename, yap_out)
 
 if len(sys.argv) < 2:
     print(sys.argv[0], " par_or_conf_file [force_factor]\n")

@@ -64,7 +64,9 @@ private:
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
-
+	int nb_of_contacts_mm;
+	int nb_of_contacts_mf;
+	int nb_of_contacts_ff;
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
@@ -271,7 +273,6 @@ private:
 	std::set <Interaction*> *interaction_list;
 	std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
-	double *ratio_unit_time; // to convert System time in Simulation time
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -315,6 +316,16 @@ private:
 	int np_out;
 	double radius_in;
 	double radius_out;
+	/*
+	 * Simulation for magnetic particles
+	 */
+	bool magnetic_rotation_active;
+	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
+	double angle_external_magnetic_field;
+	vec3d external_magnetic_field;
+
+	double *ratio_unit_time; // to convert System time in Simulation time
+
 	/****************************************/
 	void setSystemVolume(double depth = 0);
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
@@ -333,6 +344,7 @@ private:
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void updateNumberOfInteraction(int p0, int p1, int val);
+	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
@@ -350,10 +362,6 @@ private:
 	/*
 	 * Simulation for magnetic particles
 	 */
-	bool magnetic_rotation_active;
-	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
-	double angle_external_magnetic_field;
-	vec3d external_magnetic_field;
 	void setMagneticConfiguration(const std::vector <vec3d>& magnetic_moment,
 								  const std::vector <double>& magnetic_susceptibility);
 	void setInducedMagneticMoment();
