@@ -190,8 +190,7 @@ void Simulation::simulationSteadyShear(string in_args,
 									   double dimensionless_number,
 									   string input_scale,
 									   string control_variable,
-									   string simu_identifier,
-                                       bool check_force_balance)
+									   string simu_identifier)
 {
 	control_var = control_variable;
 	/***************  This part is temporal ********************/
@@ -207,12 +206,15 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.test_simulation = 3;//mtest2
 	} else if (simu_identifier == "ctest1") {
 		cerr << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
+		sys.concentric_cylinder = true;
 		sys.test_simulation = 11;//ctest1
 	} else if (simu_identifier == "ctest2") {
 		cerr << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
+		sys.concentric_cylinder = true;
 		sys.test_simulation = 12;//ctest2
 	} else if (simu_identifier == "ctest3") {
 		cerr << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+		sys.concentric_cylinder = true;
 		sys.test_simulation = 13;//ctest3
 	} else if (simu_identifier == "rtest1") {
 		cerr << "Test simulation for shear reversibility" << endl;
@@ -222,7 +224,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.test_simulation = 31;//wtest1
 	}
 	/*************************************************************/
-    sys.check_force_balance = check_force_balance;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
 		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
@@ -613,8 +614,8 @@ void Simulation::outputData()
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
     int number_of_data = 37;
-    if (sys.test_simulation > 10 && sys.test_simulation <= 20) {
-        number_of_data = 38;
+    if (sys.concentric_cylinder) {
+        number_of_data = 40;
     }
     outdata.init(number_of_data, output_unit_scales);
 	double sr = sys.get_shear_rate();
@@ -670,10 +671,11 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", "none", p.kr);
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
-    
-    if (sys.test_simulation > 10 && sys.test_simulation <= 20) {
-        outdata.entryData(37, "force inner wheel", "none", sys.total_force_in);
-        outdata.entryData(38, "force outer wheel", "none", sys.total_force_out);
+    if (sys.concentric_cylinder) {
+        outdata.entryData(37, "force tang inner wheel", "none", sys.force_tang_inwheel);
+        outdata.entryData(38, "force tang outer wheel", "none", sys.force_tang_outwheel);
+		outdata.entryData(39, "force normal inner wheel", "none", sys.force_normal_inwheel);
+		outdata.entryData(40, "force normal outer wheel", "none", sys.force_normal_outwheel);
     }
 	outdata.writeToFile();
 

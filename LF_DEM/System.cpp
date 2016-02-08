@@ -37,6 +37,7 @@ critical_load(false),
 lowPeclet(false),
 twodimension(false),
 zero_shear(false),
+concentric_cylinder(false),
 mobile_fixed(false),
 kn_master(0),
 kt_master(0),
@@ -846,7 +847,7 @@ void System::eventShearJamming()
 
 void System::forceBalanceCheckSetForce()
 {
-    if (check_force_balance) {
+    if (concentric_cylinder) {
         for (int i=0; i<np; i++) {
             forcecheck[i] = contact_force[i];
         }
@@ -860,7 +861,7 @@ void System::forceBalanceCheckSetForce()
 
 void System::forceBalanceCheckOutput()
 {
-    if (check_force_balance) {
+    if (concentric_cylinder) {
         double max_total_force = 0;
         for (int i=0; i<np_mobile; i++) {
             //forcecheck[i].cerr();
@@ -870,24 +871,30 @@ void System::forceBalanceCheckOutput()
         }
         cerr << "force balance: " << sqrt(max_total_force) << endl;
         int i_np_in = np_mobile+np_in;
-        total_force_in = 0;
-		for (int i=np_mobile; i<i_np_in; i++) { //inner
+		// inner wheel
+		force_tang_inwheel = 0;
+		force_normal_inwheel = 0;
+		for (int i=np_mobile; i<i_np_in; i++) {
 			vec3d unitvec_out = position[i]-origin_of_rotation;
 			unitvec_out.y = 0;
 			unitvec_out.unitvector();
 			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-			total_force_in += dot(forcecheck[i], tang_vec);
+			force_tang_inwheel += dot(forcecheck[i], tang_vec);
+			force_normal_inwheel += dot(forcecheck[i], unitvec_out);
+			
         }
         // outer wheel
-        total_force_out = 0;
-        for (int i=i_np_in; i<np; i++) { //outer
+		force_tang_outwheel = 0;
+		force_normal_outwheel = 0;
+        for (int i=i_np_in; i<np; i++) {
 			vec3d unitvec_out = position[i]-origin_of_rotation;
 			unitvec_out.y = 0;
 			unitvec_out.unitvector();
 			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-            total_force_out += dot(forcecheck[i], tang_vec);
+			force_tang_outwheel += dot(forcecheck[i], tang_vec);
+			force_normal_outwheel += dot(forcecheck[i], unitvec_out);
         }
-        cerr << total_force_in << ' ' << total_force_out << endl;
+        cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
         
     }
 }
@@ -907,7 +914,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
     setRepulsiveForceToParticle();
     setMagneticForceToParticle();
     if (calc_stress) {
-        forceBalanceCheckSetForce(); // @@@ Force balance check
+        forceBalanceCheckSetForce();
     }
 	if (p.lubrication_model == 0) {
 		computeVelocitiesStokesDrag();
@@ -917,11 +924,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
     if (calc_stress) {
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-               interaction[k].lubrication.calcPairwiseForce();
+				interaction[k].lubrication.calcPairwiseForce();
             }
         }
         calcStressPerParticle();
-        forceBalanceCheckOutput(); // @@@ Force balance check
+        forceBalanceCheckOutput();
     }
 	timeStepMove(time_or_strain, value_end);
 	if (eventLookUp != NULL) {
@@ -1644,7 +1651,6 @@ void System::forceBalanceCheckLubricationForce()
             forcecheck[i].z += force_torque_f_to_m[i6+2];
         }
     }
-    
     /*
      *  F^{F} += R_FU^{FM} U^{B}
      */
@@ -2162,7 +2168,7 @@ void System::computeVelocities(bool divided_velocities)
 		computeMaxNAVelocity();
 	}
 	adjustVelocitiesLeesEdwardsPeriodicBoundary();
-	if (divided_velocities && check_force_balance) {
+	if (divided_velocities && concentric_cylinder) {
 		if (in_predictor) {
 			forceBalanceCheckLubricationForce();
 		}

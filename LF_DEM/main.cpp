@@ -37,7 +37,6 @@ int main(int argc, char **argv)
 	
 	int random_seed = 1;
     bool binary_conf = false;
-    bool check_force_balance = false;
 
 	string config_filename = "not_given";
 	string param_filename = "not_given";
@@ -58,7 +57,6 @@ int main(int argc, char **argv)
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
 		{"identifier",        required_argument, 0, 'v'},
-        {"force-balance",     no_argument,       0, 'f'},
         {"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
@@ -158,9 +156,6 @@ int main(int argc, char **argv)
 			case 'v':
 				simu_identifier = optarg;
 				break;
-            case 'f':
-                check_force_balance = true;
-                break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -204,7 +199,7 @@ int main(int argc, char **argv)
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 												 dimensionless_number, suffix, rheology_control,
-                                                 simu_identifier, check_force_balance);
+                                                 simu_identifier);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;

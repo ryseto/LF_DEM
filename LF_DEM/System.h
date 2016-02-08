@@ -196,8 +196,8 @@ private:
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
+	bool concentric_cylinder;
 	bool mobile_fixed;
-    bool check_force_balance;
 	double volume_fraction;
 	bool in_predictor;
 	bool in_corrector;
@@ -316,9 +316,10 @@ private:
 	int np_out;
 	double radius_in;
 	double radius_out;
-    double total_force_in;
-    double total_force_out;
-    
+	double force_tang_inwheel;
+	double force_normal_inwheel;
+	double force_tang_outwheel;
+	double force_normal_outwheel;
 	/*
 	 * Simulation for magnetic particles
 	 */
