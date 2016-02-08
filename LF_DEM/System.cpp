@@ -871,16 +871,20 @@ void System::forceBalanceCheckOutput()
         cerr << "force balance: " << sqrt(max_total_force) << endl;
         int i_np_in = np_mobile+np_in;
         total_force_in = 0;
-        for (int i=np_mobile; i<i_np_in; i++) { //inner
-            vec3d normal_vec = position[i]/position[i].norm_xz();
-            vec3d tang_vec(-normal_vec.z, 0, normal_vec.x);
-            total_force_in += dot(forcecheck[i], tang_vec);
+		for (int i=np_mobile; i<i_np_in; i++) { //inner
+			vec3d unitvec_out = position[i]-origin_of_rotation;
+			unitvec_out.y = 0;
+			unitvec_out.unitvector();
+			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
+			total_force_in += dot(forcecheck[i], tang_vec);
         }
         // outer wheel
         total_force_out = 0;
         for (int i=i_np_in; i<np; i++) { //outer
-            vec3d normal_vec = position[i]/position[i].norm_xz();
-            vec3d tang_vec(-normal_vec.z, 0, normal_vec.x);
+			vec3d unitvec_out = position[i]-origin_of_rotation;
+			unitvec_out.y = 0;
+			unitvec_out.unitvector();
+			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
             total_force_out += dot(forcecheck[i], tang_vec);
         }
         cerr << total_force_in << ' ' << total_force_out << endl;

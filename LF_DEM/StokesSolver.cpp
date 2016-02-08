@@ -698,9 +698,9 @@ void StokesSolver::multiply_by_RFU_fm(vector<double>& velocity, vector<double>& 
     double one[] = {1, 0};
     double zero[] = {0, 0};
     chol_vel_mob->x = velocity.data();
-    cholmod_sdmult(chol_res_matrix_mf, 0, one, zero, chol_vel_mob, chol_force, &chol_c);
+    cholmod_sdmult(chol_res_matrix_mf, 0, one, zero, chol_vel_mob, chol_force_fix, &chol_c);
     for (unsigned int i=0; i<force.size(); i++) {
-        force[i] = ((double*)chol_force->x)[i];
+        force[i] = ((double*)chol_force_fix->x)[i];
     }
 }
 
@@ -752,6 +752,7 @@ void StokesSolver::allocateRessources()
     chol_vel_mob   = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
     chol_vel_fix   = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
 	chol_force     = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
+	chol_force_fix = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
 	chol_Psolution = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c); // used for Brownian motion
 	for (int i=0; i<size_mm; i++) {
 		((double*)chol_rhs->x)[i] = 0;

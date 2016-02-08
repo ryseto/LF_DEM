@@ -186,6 +186,7 @@ private:
     cholmod_dense* chol_vel_mob;
     cholmod_dense* chol_vel_fix;
 	cholmod_dense* chol_force;
+	cholmod_dense* chol_force_fix;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
 	bool chol_L_to_be_freed;
