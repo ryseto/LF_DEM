@@ -1003,34 +1003,38 @@ void Simulation::openOutputFiles(bool binary_conf,
 	}
 }
 
-map<string,string> Simulation::getConfMetaData(const string &line1, const string &line2){
-	vector<string> l1_split = splitString(line1);
-	vector<string> l2_split = splitString(line2);
-	if(l1_split.size() != l2_split.size()){
+map<string,string> Simulation::getConfMetaData(const string &line1, const string &line2)
+{
+    vector<string> l1_split = splitString(line1);
+    vector<string> l2_split = splitString(line2);
+	if (l1_split.size() != l2_split.size()) {
 		throw runtime_error("System:: Ill-formed header in the configuration file.\n");
 	}
 	map<string,string> meta_data;
-	for(unsigned int i=1; i<l1_split.size(); i++){
+    for (unsigned int i=1; i<l1_split.size(); i++) {
 		meta_data[l1_split[i]] = l2_split[i];
 	}
 	return meta_data;
 }
 
-string Simulation::getMetaParameter(map<string,string> &meta_data, string &key){
-		if ( meta_data.find(key)!=meta_data.end() ) {
-			return meta_data[key];
-		} else {
-			ostringstream error_str;
-			error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
-			throw runtime_error(error_str.str());
-		}
+string Simulation::getMetaParameter(map<string,string> &meta_data, string &key)
+{
+    if (meta_data.find(key) != meta_data.end()) {
+        return meta_data[key];
+    } else {
+        ostringstream error_str;
+        error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
+        throw runtime_error(error_str.str());
+    }
 }
-string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, const string &default_val){
-		if ( meta_data.find(key)!=meta_data.end() ) {
-			return meta_data[key];
-		} else {
-			return default_val;
-		}
+
+string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, const string &default_val)
+{
+    if (meta_data.find(key) != meta_data.end()) {
+        return meta_data[key];
+    } else {
+        return default_val;
+    }
 }
 
 void Simulation::importConfiguration(const string& filename_import_positions)
@@ -1045,13 +1049,11 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-
 	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
-
 	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	string key, def;
 	key = "np_fixed";
@@ -1093,8 +1095,15 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	def = "0";
 	sys.radius_in = atof(getMetaParameter(meta_data, key, def).c_str());
 	key = "radius_out";
-	def = "0";
-	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
+    def = "0";
+    sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
+    key = "z_bot";
+    def = "-1";
+    sys.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
+    key = "z_top";
+    def = "-1";
+    sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
+    
 	if (sys.np_in > -1) {
         sys.circulargap = true;
         sys.p.np_fixed = sys.np_in+sys.np_out;

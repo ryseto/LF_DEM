@@ -316,10 +316,10 @@ void Contact::frictionlaw_coulomb_max()
 
 void Contact::addUpContactForceTorque()
 {
-	/* Force
+    /* Force
 	 */
 	if (state <=1) {
-		f_contact = f_contact_normal;
+        f_contact = f_contact_normal;
 	} else {
 		f_contact = f_contact_normal+f_contact_tan;
 	}

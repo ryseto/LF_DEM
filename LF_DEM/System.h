@@ -58,7 +58,6 @@ struct ForceAmplitudes
 class System{
 private:
 	int np; ///< number of particles
-	int np_mobile; ///< number of mobile particles
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions_mm;
@@ -183,6 +182,7 @@ private:
 	System(ParameterSet& ps, std::list <Event>& ev);
 	~System();
 	ParameterSet& p;
+    int np_mobile; ///< number of mobile particles
 	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
 	// Interaction types
 	bool brownian;
@@ -198,7 +198,7 @@ private:
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
-	bool concentric_cylinder;
+    bool wall_rheology;
 	bool mobile_fixed;
 	double volume_fraction;
 	bool in_predictor;
@@ -322,6 +322,8 @@ private:
 	double force_normal_inwheel;
 	double force_tang_outwheel;
 	double force_normal_outwheel;
+    double z_bot;
+    double z_top;
 	/*
 	 * Simulation for magnetic particles
 	 */
@@ -458,6 +460,11 @@ private:
 	{
 		np = val;
 	}
+    
+    inline void set_np_mobile(int val)
+    {
+        np_mobile = val;
+    }
 
 	inline int get_np()
 	{

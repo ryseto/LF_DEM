@@ -206,15 +206,15 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.test_simulation = 3;//mtest2
 	} else if (simu_identifier == "ctest1") {
 		cerr << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
-		sys.concentric_cylinder = true;
+		sys.wall_rheology = true;
 		sys.test_simulation = 11;//ctest1
 	} else if (simu_identifier == "ctest2") {
 		cerr << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
-		sys.concentric_cylinder = true;
+		sys.wall_rheology = true;
 		sys.test_simulation = 12;//ctest2
 	} else if (simu_identifier == "ctest3") {
 		cerr << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-		sys.concentric_cylinder = true;
+		sys.wall_rheology = true;
 		sys.test_simulation = 13;//ctest3
 	} else if (simu_identifier == "rtest1") {
 		cerr << "Test simulation for shear reversibility" << endl;
@@ -222,7 +222,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else if (simu_identifier == "wtest1") {
 		cerr << "Test simulation, simple shear with walls" << endl;
 		sys.test_simulation = 31;//wtest1
-	}
+    } else if (simu_identifier == "wtestA") {
+        cerr << "Test simulation, simple shear with walls" << endl;
+        sys.wall_rheology = true;
+        sys.test_simulation = 41;//wtestA
+    }
+    
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	if (sys.cohesion) {
@@ -614,7 +619,7 @@ void Simulation::outputData()
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
     int number_of_data = 37;
-    if (sys.concentric_cylinder) {
+    if (sys.wall_rheology) {
         number_of_data = 40;
     }
     outdata.init(number_of_data, output_unit_scales);
@@ -671,7 +676,7 @@ void Simulation::outputData()
 	outdata.entryData(34, "kr", "none", p.kr);
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
-    if (sys.concentric_cylinder) {
+    if (sys.wall_rheology) {
         outdata.entryData(37, "force tang inner wheel", "none", sys.force_tang_inwheel);
         outdata.entryData(38, "force tang outer wheel", "none", sys.force_tang_outwheel);
 		outdata.entryData(39, "force normal inner wheel", "none", sys.force_normal_inwheel);

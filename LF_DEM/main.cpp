@@ -140,11 +140,13 @@ int main(int argc, char **argv)
 			case 'g':
 				generate_init = 1; // normal
 				if (optarg) {
-					if (optarg[0] == 'm') {
-						generate_init = 2; // magnetic
-					} else if (optarg[0] == 'c') {
-						generate_init = 3; // circular wide gap
-					}
+                    if (optarg[0] == 'c') {
+                        generate_init = 2; // circular wide gap
+                    } else if (optarg[0] == 's') {
+                        generate_init = 3; // simple shear with wall
+                    } else if (optarg[0] == 'm') {
+                        generate_init = 10; // magnetic
+                    }
 				}
 				break;
 			case 'a':

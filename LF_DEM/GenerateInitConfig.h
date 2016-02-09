@@ -46,6 +46,8 @@ private:
 	double lx_half;
 	double ly_half;
 	double lz_half;
+    double z_top;
+    double z_bot;
 	double a1;
 	double a2;
 	vec3d* grad;
@@ -65,6 +67,7 @@ private:
 	 */
 	bool magnetic_config;
 	bool circulargap_config;
+    bool parallel_wall_config;
 	double radius_in;
 	double radius_out;
 	int np_in;
@@ -98,12 +101,14 @@ public:
 	GenerateInitConfig():
 	sys(System(p, events)),
 	magnetic_config(false),
-	circulargap_config(false){};
+	circulargap_config(false),
+    parallel_wall_config(false) {};
 	
 	int generate(int rand_seed_, int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap
-	 * config_type = 3 -- magnetic
+     * config_type = 3 -- simple shear with wall
+     * config_type = 10 -- magnetic
 	 */
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

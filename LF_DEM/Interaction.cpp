@@ -42,7 +42,7 @@ void Interaction::calcNormalVectorDistanceGap()
 void Interaction::activate(unsigned short i, unsigned short j,
 						   double interaction_range_)
 {
-	active = true;
+    active = true;
 	if (j > i) {
 		p0 = i, p1 = j;
 	} else {

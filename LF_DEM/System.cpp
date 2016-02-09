@@ -37,7 +37,7 @@ critical_load(false),
 lowPeclet(false),
 twodimension(false),
 zero_shear(false),
-concentric_cylinder(false),
+wall_rheology(false),
 mobile_fixed(false),
 kn_master(0),
 kt_master(0),
@@ -599,7 +599,7 @@ void System::setupSystem(string control)
 	}
 	if (test_simulation > 10 && test_simulation <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
-		for (int i=np_mobile; i<np; i++) {
+        for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
@@ -614,7 +614,7 @@ void System::setupSystem(string control)
 			omega_wheel_in  = -0.5*omega_wheel;
 			omega_wheel_out =  0.5*omega_wheel;
 		}
-	}
+    }
 	shear_strain = 0;
 	nb_interaction = 0;
 	if (p.stress_scaled_contactmodel) {
@@ -825,7 +825,7 @@ void System::timeStepBoxing()
 		if (circulargap) {
 			shear_strain += dt*shear_rate;
 		}
-		if (test_simulation == 31) {
+		if (test_simulation == 31 || test_simulation == 41) {
 			shear_strain += dt*shear_rate;
 			// cout << shear_strain << endl;
 		}
@@ -847,7 +847,7 @@ void System::eventShearJamming()
 
 void System::forceResultantInterpaticleForces()
 {
-    if (concentric_cylinder) {
+    if (wall_rheology) {
         for (int i=0; i<np; i++) {
             forceResultant[i] += contact_force[i];
         }
@@ -861,7 +861,7 @@ void System::forceResultantInterpaticleForces()
 
 void System::wallForces()
 {
-    if (concentric_cylinder) {
+    if (wall_rheology) {
         double max_total_force = 0;
         for (int i=0; i<np_mobile; i++) {
             //forcecheck[i].cerr();
@@ -870,31 +870,50 @@ void System::wallForces()
             }
         }
         cerr << "force balance: " << sqrt(max_total_force) << endl;
-        int i_np_in = np_mobile+np_in;
-		// inner wheel
-		force_tang_inwheel = 0;
-		force_normal_inwheel = 0;
-		for (int i=np_mobile; i<i_np_in; i++) {
-			vec3d unitvec_out = position[i]-origin_of_rotation;
-			unitvec_out.y = 0;
-			unitvec_out.unitvector();
-			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-			force_tang_inwheel += dot(forceResultant[i], tang_vec);
-			force_normal_inwheel += dot(forceResultant[i], unitvec_out);
-			
+        if (test_simulation > 10 && test_simulation <= 20) {
+            int i_np_in = np_mobile+np_in;
+            // inner wheel
+            force_tang_inwheel = 0;
+            force_normal_inwheel = 0;
+            for (int i=np_mobile; i<i_np_in; i++) {
+                vec3d unitvec_out = position[i]-origin_of_rotation;
+                unitvec_out.y = 0;
+                unitvec_out.unitvector();
+                vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
+                force_tang_inwheel += dot(forceResultant[i], tang_vec);
+                force_normal_inwheel += dot(forceResultant[i], unitvec_out);
+                
+            }
+            // outer wheel
+            force_tang_outwheel = 0;
+            force_normal_outwheel = 0;
+            for (int i=i_np_in; i<np; i++) {
+                vec3d unitvec_out = position[i]-origin_of_rotation;
+                unitvec_out.y = 0;
+                unitvec_out.unitvector();
+                vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
+                force_tang_outwheel += dot(forceResultant[i], tang_vec);
+                force_normal_outwheel += dot(forceResultant[i], unitvec_out);
+            }
+            cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
+        } else if (test_simulation == 41) {
+            int i_np_in = np_mobile+np_in;
+            // bottom wall
+            force_tang_inwheel = 0;
+            force_normal_inwheel = 0;
+            for (int i=np_mobile; i<i_np_in; i++) { // bottom
+                force_tang_inwheel   += forceResultant[i].x;
+                force_normal_inwheel += forceResultant[i].z;
+            }
+            // top wall
+            force_tang_outwheel = 0;
+            force_normal_outwheel = 0;
+            for (int i=i_np_in; i<np; i++) {
+                force_tang_outwheel   += forceResultant[i].x;
+                force_normal_outwheel += forceResultant[i].z;
+            }
+            cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
         }
-        // outer wheel
-		force_tang_outwheel = 0;
-		force_normal_outwheel = 0;
-        for (int i=i_np_in; i<np; i++) {
-			vec3d unitvec_out = position[i]-origin_of_rotation;
-			unitvec_out.y = 0;
-			unitvec_out.unitvector();
-			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-			force_tang_outwheel += dot(forceResultant[i], tang_vec);
-			force_normal_outwheel += dot(forceResultant[i], unitvec_out);
-        }
-        cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
     }
 }
 
@@ -904,8 +923,6 @@ void System::forceResultantReset()
         forceResultant[i].reset();
     }
 }
-
-
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
 									   const string& time_or_strain,
@@ -923,6 +940,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
     setMagneticForceToParticle();
     if (calc_stress) {
         forceResultantReset();
+        forceResultantInterpaticleForces();
     }
 	if (p.lubrication_model == 0) {
 		computeVelocitiesStokesDrag();
@@ -930,19 +948,18 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		computeVelocities(calc_stress);
 	}
     if (calc_stress) {
+        wallForces();
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
 				interaction[k].lubrication.calcPairwiseForce();
             }
         }
         calcStressPerParticle();
-        forceResultantInterpaticleForces();
-        wallForces();
     }
-	timeStepMove(time_or_strain, value_end);
-	if (eventLookUp != NULL) {
-		(this->*eventLookUp)();
-	}
+    timeStepMove(time_or_strain, value_end);
+    if (eventLookUp != NULL) {
+        (this->*eventLookUp)();
+    }
 }
 
 /****************************************************************************************************
@@ -1009,6 +1026,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setMagneticForceToParticle();
     if (calc_stress) {
         forceResultantReset();
+        forceResultantInterpaticleForces();
     }
 	if (p.lubrication_model > 0) {
         computeVelocities(calc_stress); // divided velocities for stress calculation
@@ -1022,7 +1040,6 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 			}
 		}
         calcStressPerParticle(); // stress compornents
-        forceResultantInterpaticleForces();
         wallForces();
     }
 	timeStepMovePredictor(time_or_strain, value_end);
@@ -1286,7 +1303,7 @@ void System::checkNewInteraction()
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
-	for (int i=0; i<np-1; i++) {
+	for (int i=0; i<np_mobile-1; i++) { //@@@@ TO BE CHECKED
 		for (const int& j : boxset.neighborhood(i)) {
 			if (j > i) {
 				if (interaction_partners[i].find(j) == interaction_partners[i].end()) {
@@ -1646,7 +1663,7 @@ void System::forceResultantLubricationForce()
 		for (int i=0; i<p.np_fixed; i++) {
             int i6 = 6*i;
             int i_fixed = i+np_mobile;
-            minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+                minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
             minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
             minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
             minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
@@ -1662,7 +1679,7 @@ void System::forceResultantLubricationForce()
         }
     }
     /*
-     *  F^{F} += R_FU^{FM} U^{B}
+     *  F^{F} += R_FU^{FM} U^{M}
      */
     if (mobile_fixed) {
         vector<double> force_m_to_f (6*p.np_fixed);
@@ -1678,7 +1695,7 @@ void System::forceResultantLubricationForce()
         }
         stokes_solver.multiply_by_RFU_fm(minus_mobile_velocities, force_m_to_f);
         for (int i=np_mobile; i<np; i++) {
-           int i6 = 6*(i-np_mobile);
+            int i6 = 6*(i-np_mobile);
             forceResultant[i].x += force_m_to_f[i6];
             forceResultant[i].y += force_m_to_f[i6+1];
             forceResultant[i].z += force_m_to_f[i6+2];
@@ -1743,22 +1760,22 @@ void System::setContactForceToParticle()
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
-			interaction[k].contact.addUpContactForceTorque();
-		}
-	}
+        if (interaction[k].is_contact()) {
+            interaction[k].contact.addUpContactForceTorque();
+        }
+    }
 }
 
 void System::setRepulsiveForceToParticle()
 {
-	if (repulsiveforce) {
-		for (int i=0; i<np; i++) {
+    if (repulsiveforce) {
+        for (int i=0; i<np; i++) {
 			repulsive_force[i].reset();
 		}
         for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
                 interaction[k].repulsion.addUpForce();
-			}
+            }
 		}
 	}
 }
@@ -2054,12 +2071,23 @@ void System::tmpMixedProblemSetVelocities()
 			shear_rate *= -1;
 			time_next += 3;
 		}
-	} else if (test_simulation == 31) {
+    } else if (test_simulation == 31) {
 		for (int i=np_mobile; i<np; i++) {
 			na_velocity[i] = shear_rate*fixed_velocities[i-np_mobile];
 			na_ang_velocity[i].reset();
 		}
-	}
+    } else if (test_simulation == 41) {
+        int i_np_in = np_mobile+np_in;
+        double height = z_top-z_bot;
+        for (int i=np_mobile; i<i_np_in; i++) {
+            na_velocity[i].set(-shear_rate*height/2, 0, 0);
+            na_ang_velocity[i].reset();
+        }
+        for (int i=i_np_in; i<np; i++) {
+            na_velocity[i].set(shear_rate*height/2, 0, 0);
+            na_ang_velocity[i].reset();
+        }
+    }
 }
 
 void System::sumUpVelocityComponents()
@@ -2094,7 +2122,7 @@ void System::sumUpVelocityComponents()
 
 void System::setFixedParticleVelocities()
 {
-	if (test_simulation == 0) {
+    if (test_simulation == 0) {
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
@@ -2178,7 +2206,7 @@ void System::computeVelocities(bool divided_velocities)
 		computeMaxNAVelocity();
 	}
 	adjustVelocitiesLeesEdwardsPeriodicBoundary();
-	if (divided_velocities && concentric_cylinder) {
+	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
 			forceResultantLubricationForce();
 		}
