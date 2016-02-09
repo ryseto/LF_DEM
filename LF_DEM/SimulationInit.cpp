@@ -504,6 +504,68 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 	output_unit_scales = input_scale;
 }
 
+void Simulation::assertParameterCompatibility()
+{
+	// test for incompatibilities
+	if (sys.brownian == true) {
+		if (p.lubrication_model > 0
+			&& p.integration_method != 1) {
+			ostringstream error_str;
+			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
+			error_str << "Modify the parameter file." << endl;
+			throw runtime_error(error_str.str());
+		}
+	}
+	if (control_var == "stress") {
+		if (p.integration_method != 0) {
+			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
+		}
+		//p.integration_method = 0;
+	}
+	if (sys.critical_load) {
+		p.friction_model = 2;
+		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
+	}
+
+}
+
+void Simulation::resolveTimeOrStrainParameters(){
+
+	for (const auto& inv: input_values) {
+		if (inv.name == "time_end") {
+			if (inv.unit == "strain") {
+				time_end = -1;
+				strain_end = p.time_end;
+			} else {
+				time_end = p.time_end;
+			}
+		}
+	}
+	if (control_var == "magnetic") {
+		time_end = p.time_end;
+	}
+
+	for (const auto& inv: input_values) {
+		if (inv.name == "time_interval_output_data") {
+			if (inv.unit == "strain") {
+				time_interval_output_data = -1;
+				strain_interval_output_data = p.time_interval_output_data;
+			} else {
+				time_interval_output_data = p.time_interval_output_data;
+			}
+		}
+		if (inv.name == "time_interval_output_config") {
+			if (inv.unit == "strain") {
+				time_interval_output_config = -1;
+				strain_interval_output_config = p.time_interval_output_config;
+			} else {
+				time_interval_output_config = p.time_interval_output_config;
+			}
+		}
+	}
+
+}
+
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
@@ -534,34 +596,10 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters();
 	readParameterFile(filename_parameters);
-	ostringstream string_control_parameters;
-	for (const auto& f: input_force_units) {
-		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
-	}
-	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
+
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
-	/*
-	 * Simulate parameters
-	 */
-	// test for incompatibilities
-	if (sys.brownian == true) {
-		if (p.lubrication_model > 0
-			&& p.integration_method != 1) {
-			ostringstream error_str;
-			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
-			error_str << "Modify the parameter file: " << filename_parameters << endl;
-			throw runtime_error(error_str.str());
-		}
-	}
-	if (control_var == "stress") {
-		if (p.integration_method != 0) {
-			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
-		}
-		//p.integration_method = 0;
-	}
-	if (sys.critical_load) {
-		p.friction_model = 2;
-	}
+
+	assertParameterCompatibility();
 
 	ifstream in_binary_conf;
 	if (binary_conf) {
@@ -577,53 +615,19 @@ void Simulation::setupSimulation(string in_args,
 			contactForceParameter(input_files[2]);
 		}
 	}
-
-	for (const auto& inv: input_values) {
-		if (inv.name == "time_end") {
-			if (inv.unit == "strain") {
-				time_end = -1;
-				strain_end = p.time_end;
-			} else {
-				time_end = p.time_end;
-			}
-		}
-	}
-	if (control_var == "magnetic") {
-		time_end = p.time_end;
-	}
 	if (input_files[3] != "not_given") {
-		importPreSimulationData(input_files[3]);
-		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
-		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
-	} else {
-		for (const auto& inv: input_values) {
-			if (inv.name == "time_interval_output_data") {
-				if (inv.unit == "strain") {
-					time_interval_output_data = -1;
-					strain_interval_output_data = p.time_interval_output_data;
-				} else {
-					time_interval_output_data = p.time_interval_output_data;
-				}
-			}
-			if (inv.name == "time_interval_output_config") {
-				if (inv.unit == "strain") {
-					time_interval_output_config = -1;
-					strain_interval_output_config = p.time_interval_output_config;
-				} else {
-					time_interval_output_config = p.time_interval_output_config;
-				}
-			}
-		}
+		throw runtime_error("pre-simulation data deprecated?");
 	}
+	resolveTimeOrStrainParameters();
 
 	sys.setupSystem(control_var);
 	if (binary_conf) {
 		importContactsBinary(in_binary_conf);
 	}
 	p_initial = p;
-
-	openOutputFiles(binary_conf, filename_import_positions, filename_parameters,
-					string_control_parameters.str(), simu_identifier);
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+												simu_identifier, dimensionlessnumber, input_scale);
+	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -927,19 +931,14 @@ void Simulation::setDefaultParameters()
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
-void Simulation::openOutputFiles(bool binary_conf,
-								 const string& filename_import_positions,
-								 const string& filename_parameters,
-								 const string& string_control_parameters,
-								 const string& simu_identifier)
+void Simulation::openOutputFiles()
 {
 	/**
 	 \brief Set up the output files
 
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-						  string_control_parameters, simu_identifier);
+
 	stringstream data_header;
 	createDataHeader(data_header);
 
@@ -952,7 +951,7 @@ void Simulation::openOutputFiles(bool binary_conf,
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_"+sys.simu_name+".dat";
 	fout_input.open(input_filename.c_str());
-
+	cout<< p.out_data_particle << endl;
 	if (p.out_data_particle) {
 		string particle_filename = "par_"+sys.simu_name+".dat";
 		fout_particle.open(particle_filename.c_str());
@@ -1103,7 +1102,7 @@ void Simulation::importConfiguration(const string& filename_import_positions)
     key = "z_top";
     def = "-1";
     sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
-    
+
 	if (sys.np_in > -1) {
         sys.circulargap = true;
         sys.p.np_fixed = sys.np_in+sys.np_out;
@@ -1232,8 +1231,9 @@ void Simulation::importContactsBinary(ifstream &file_import)
 void Simulation::prepareSimulationName(bool binary_conf,
 									   const string& filename_import_positions,
 									   const string& filename_parameters,
-									   const string& string_control_parameters,
-									   const string& simu_identifier)
+									   const string& simu_identifier,
+										 double dimensionlessnumber,
+										 const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.
@@ -1259,7 +1259,14 @@ void Simulation::prepareSimulationName(bool binary_conf,
 	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
-	ss_simu_name << string_control_parameters;
+
+	ostringstream string_control_parameters;
+	for (const auto& f: input_force_units) {
+		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
+	}
+	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
+
+	ss_simu_name << string_control_parameters.str();
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
