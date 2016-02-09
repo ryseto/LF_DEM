@@ -311,7 +311,6 @@ private:
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
-	bool circulargap;
 	double omega_wheel_in;
 	double omega_wheel_out;
 	int np_in;

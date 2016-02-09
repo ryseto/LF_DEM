@@ -39,11 +39,11 @@
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
+		D9DCB0AF1C6AA886005A583A /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0A71C68BD02005A583A /* libamd.2.4.1.a */; };
+		D9DCB0B01C6AA886005A583A /* libcholmod.3.0.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0A81C68BD02005A583A /* libcholmod.3.0.6.a */; };
+		D9DCB0B11C6AA886005A583A /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0A91C68BD02005A583A /* libcolamd.2.9.1.a */; };
+		D9DCB0B21C6AA886005A583A /* libsuitesparseconfig.4.4.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0AA1C68BD02005A583A /* libsuitesparseconfig.4.4.5.a */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
-		D9FE930D1C6979BF003668E5 /* libcholmod.3.0.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE93091C6979BF003668E5 /* libcholmod.3.0.9.dylib */; };
-		D9FE930E1C6979BF003668E5 /* libcolamd.2.9.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE930A1C6979BF003668E5 /* libcolamd.2.9.4.dylib */; };
-		D9FE930F1C6979BF003668E5 /* libamd.2.4.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE930B1C6979BF003668E5 /* libamd.2.4.4.dylib */; };
-		D9FE93101C6979BF003668E5 /* libsuitesparseconfig.4.5.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE930C1C6979BF003668E5 /* libsuitesparseconfig.4.5.1.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -664,10 +664,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9FE930D1C6979BF003668E5 /* libcholmod.3.0.9.dylib in Frameworks */,
-				D9FE930E1C6979BF003668E5 /* libcolamd.2.9.4.dylib in Frameworks */,
-				D9FE930F1C6979BF003668E5 /* libamd.2.4.4.dylib in Frameworks */,
-				D9FE93101C6979BF003668E5 /* libsuitesparseconfig.4.5.1.dylib in Frameworks */,
+				D9DCB0AF1C6AA886005A583A /* libamd.2.4.1.a in Frameworks */,
+				D9DCB0B01C6AA886005A583A /* libcholmod.3.0.6.a in Frameworks */,
+				D9DCB0B11C6AA886005A583A /* libcolamd.2.9.1.a in Frameworks */,
+				D9DCB0B21C6AA886005A583A /* libsuitesparseconfig.4.4.5.a in Frameworks */,
 				D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

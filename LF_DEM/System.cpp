@@ -46,7 +46,6 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-circulargap(false),
 magnetic_rotation_active(false),
 magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
@@ -832,10 +831,9 @@ void System::timeStepBoxing()
 			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
-		if (circulargap) {
+		if (wall_rheology) {
 			shear_strain += dt*shear_rate;
-		}
-		if (test_simulation == 31 || test_simulation > 40) {
+		} else if (test_simulation == 31) {
 			shear_strain += dt*shear_rate;
 			// cout << shear_strain << endl;
 		}

@@ -1182,8 +1182,15 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	key = "radius_out";
 	def = "0";
 	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
-	if (sys.np_in > -1) {
-        sys.circulargap = true;
+	// @@ This is temporally used for wtestA and wtestB
+	key = "z_bot";
+	def = "-1";
+	sys.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "z_top";
+	def = "-1";
+	sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
+	//
+	if (sys.np_in != -1) {
         sys.p.np_fixed = sys.np_in+sys.np_out;
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
