@@ -957,7 +957,6 @@ void Simulation::openOutputFiles()
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_"+sys.simu_name+".dat";
 	fout_input.open(input_filename.c_str());
-	cout<< p.out_data_particle << endl;
 	if (p.out_data_particle) {
 		string particle_filename = "par_"+sys.simu_name+".dat";
 		fout_particle.open(particle_filename.c_str());
