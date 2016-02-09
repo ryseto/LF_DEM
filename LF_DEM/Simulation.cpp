@@ -226,6 +226,10 @@ void Simulation::simulationSteadyShear(string in_args,
         cerr << "Test simulation, simple shear with walls" << endl;
         sys.wall_rheology = true;
         sys.test_simulation = 41;//wtestA
+    } else if (simu_identifier == "wtestB") {
+        cerr << "Test simulation, simple shear with walls" << endl;
+        sys.wall_rheology = true;
+        sys.test_simulation = 42;//wtestB
     }
     
 	/*************************************************************/

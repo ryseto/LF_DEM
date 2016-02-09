@@ -825,7 +825,7 @@ void System::timeStepBoxing()
 		if (circulargap) {
 			shear_strain += dt*shear_rate;
 		}
-		if (test_simulation == 31 || test_simulation == 41) {
+		if (test_simulation == 31 || test_simulation > 40) {
 			shear_strain += dt*shear_rate;
 			// cout << shear_strain << endl;
 		}
@@ -896,7 +896,7 @@ void System::wallForces()
                 force_normal_outwheel += dot(forceResultant[i], unitvec_out);
             }
             cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
-        } else if (test_simulation == 41) {
+        } else if (test_simulation > 40) {
             int i_np_in = np_mobile+np_in;
             // bottom wall
             force_tang_inwheel = 0;
@@ -1468,7 +1468,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
 	int size_mm, size_mf, size_ff;
-	if (p.lubrication_model!=3) {
+	if (p.lubrication_model != 3) {
 		size_mm = nb_of_active_interactions_mm;
 		size_mf = nb_of_active_interactions_mf;
 		size_ff = nb_of_active_interactions_ff;
@@ -1504,37 +1504,37 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
  */
 void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 {
-	bool shearrate_is_1 = true;
-	if (shear_rate != 1) {
+    bool shearrate_is_1 = true;
+    if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
-	for (int i=0; i<np-1; i ++) {
-		for (auto& inter : interaction_list[i]) {
-			int j = inter->partner(i);
-			if (j > i) {
-				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
-					if (mat) {
-						const vec3d& nr_vec = inter->nvec;
-						inter->lubrication.calcXFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 inter->lubrication.scaledXA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 inter->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, j,
-													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
-					}
-					if (rhs) {
-						vec3d GEi, GEj;
-						std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
-						if (shearrate_is_1 == false) {
-							GEi *= shear_rate;
-							GEj *= shear_rate;
-						}
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-					}
-				}
-			}
+    for (int i=0; i<np-1; i ++) {
+        for (auto& inter : interaction_list[i]) {
+            int j = inter->partner(i);
+            if (j > i) {
+                if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
+                    if (mat) {
+                        const vec3d& nr_vec = inter->nvec;
+                        inter->lubrication.calcXFunctions();
+                        stokes_solver.addToDiagBlock(nr_vec, i,
+                                                     inter->lubrication.scaledXA0(), 0, 0, 0);
+                        stokes_solver.addToDiagBlock(nr_vec, j,
+                                                     inter->lubrication.scaledXA3(), 0, 0, 0);
+                        stokes_solver.setOffDiagBlock(nr_vec, j,
+                                                      inter->lubrication.scaledXA2(), 0, 0, 0, 0);
+                    }
+                    if (rhs) {
+                        vec3d GEi, GEj;
+                        std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
+                        if (shearrate_is_1 == false) {
+                            GEi *= shear_rate;
+                            GEj *= shear_rate;
+                        }
+                        stokes_solver.addToRHSForce(i, GEi);
+                        stokes_solver.addToRHSForce(j, GEj);
+                    }
+                }
+            }
 		}
 		stokes_solver.doneBlocks(i);
 	}
@@ -2085,6 +2085,17 @@ void System::tmpMixedProblemSetVelocities()
         }
         for (int i=i_np_in; i<np; i++) {
             na_velocity[i].set(shear_rate*height/2, 0, 0);
+            na_ang_velocity[i].reset();
+        }
+    } else if (test_simulation == 42) {
+        int i_np_in = np_mobile+np_in;
+        double height = z_top-z_bot;
+        for (int i=np_mobile; i<i_np_in; i++) {
+            na_velocity[i].reset();
+            na_ang_velocity[i].reset();
+        }
+        for (int i=i_np_in; i<np; i++) {
+            na_velocity[i].set(shear_rate*height, 0, 0);
             na_ang_velocity[i].reset();
         }
     }
