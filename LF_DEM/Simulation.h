@@ -155,9 +155,12 @@ public:
 															const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &,
 															std::string &);
+	bool isTwoDimension(const std::string&);
+	bool isTwoDimensionBinary(const std::string&);
+	int get_np(const std::string&);
+	int get_np_Binary(const std::string&);
 	void importConfiguration(const std::string&);
-	void importConfigurationBinary(std::ifstream& file_import, const std::string&);
-	void importContactsBinary(std::ifstream& file_import);
+	void importConfigurationBinary(const std::string&);
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void convertForceValues(std::string new_long_unit);

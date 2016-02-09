@@ -343,7 +343,8 @@ private:
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
-	void setupSystem(std::string control);
+	void setupSystemPreConfiguration(std::string control, bool is2d);
+	void setupSystemPostConfiguration();
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(const std::string& time_or_strain,
@@ -460,7 +461,7 @@ private:
 	{
 		np = val;
 	}
-    
+
     inline void set_np_mobile(int val)
     {
         np_mobile = val;

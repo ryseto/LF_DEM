@@ -601,13 +601,6 @@ void Simulation::setupSimulation(string in_args,
 
 	assertParameterCompatibility();
 
-	ifstream in_binary_conf;
-	if (binary_conf) {
-		importConfigurationBinary(in_binary_conf, filename_import_positions);
-	} else {
-		importConfiguration(filename_import_positions);
-	}
-
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
@@ -620,10 +613,23 @@ void Simulation::setupSimulation(string in_args,
 	}
 	resolveTimeOrStrainParameters();
 
-	sys.setupSystem(control_var);
+	bool is2d;
 	if (binary_conf) {
-		importContactsBinary(in_binary_conf);
+		sys.set_np(get_np_Binary(filename_import_positions));
+		is2d = isTwoDimensionBinary(filename_import_positions);
+	} else {
+		sys.set_np(get_np(filename_import_positions));
+		is2d = isTwoDimension(filename_import_positions);
 	}
+	sys.setupSystemPreConfiguration(control_var, is2d);
+
+	if (binary_conf) {
+		importConfigurationBinary(filename_import_positions);
+	} else {
+		importConfiguration(filename_import_positions);
+	}
+	sys.setupSystemPostConfiguration();
+
 	p_initial = p;
 	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 												simu_identifier, dimensionlessnumber, input_scale);
@@ -1036,6 +1042,85 @@ string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, 
     }
 }
 
+int Simulation::get_np(const string& filename_import_positions)
+{
+	/**
+	 \brief Read np from a text file input configuration.
+	 */
+	fstream file_import;
+	file_import.open(filename_import_positions.c_str());
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	string line;
+	getline(file_import, line);
+	getline(file_import, line);
+	int np = 0;
+	while (getline(file_import, line)) {
+		np++;
+	}
+	file_import.close();
+	return np;
+}
+
+bool Simulation::isTwoDimension(const string& filename_import_positions)
+{
+	fstream file_import;
+	file_import.open(filename_import_positions.c_str());
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	double ly;
+	getline(file_import, header_imported_configulation[0]);
+	getline(file_import, header_imported_configulation[1]);
+	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	string key;
+	key = "ly";
+	ly = atof(getMetaParameter(meta_data, key).c_str());
+	file_import.close();
+	return ly==0;
+}
+
+bool Simulation::isTwoDimensionBinary(const string& filename_import_positions)
+{
+	ifstream file_import;
+	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	int idumb;
+	double ddumb, ly;
+	file_import.read((char*)&idumb, sizeof(int));
+	file_import.read((char*)&ddumb, sizeof(double));
+	file_import.read((char*)&ddumb, sizeof(double));
+	file_import.read((char*)&ly, sizeof(double));
+	return ly==0;
+}
+
+int Simulation::get_np_Binary(const string& filename_import_positions)
+{
+	/**
+	 \brief Read np from binary file input configuration.
+	 */
+	ifstream file_import;
+	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	int np;
+	file_import.read((char*)&np, sizeof(int));
+	file_import.close();
+	return np;
+}
+
 void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
@@ -1048,11 +1133,13 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
+
 	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
+
 	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	string key, def;
 	key = "np_fixed";
@@ -1094,15 +1181,8 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	def = "0";
 	sys.radius_in = atof(getMetaParameter(meta_data, key, def).c_str());
 	key = "radius_out";
-    def = "0";
-    sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
-    key = "z_bot";
-    def = "-1";
-    sys.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
-    key = "z_top";
-    def = "-1";
-    sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
-
+	def = "0";
+	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
 	if (sys.np_in > -1) {
         sys.circulargap = true;
         sys.p.np_fixed = sys.np_in+sys.np_out;
@@ -1123,10 +1203,10 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
 			double x_, y_, z_, a_, vx_, vy_, vz_;
 			string line;
-			while (getline(file_import, line)) {
+			while(getline(file_import, line)) {
 				istringstream is;
 				is.str(line);
-				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_)) {
+				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
 					is.str(line);
 					is >> x_ >> y_ >> z_ >> a_;
 					initial_position.push_back(vec3d(x_, y_, z_));
@@ -1159,14 +1239,16 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary(ifstream& file_import,
-										   const string& filename_import_positions)
+void Simulation::importConfigurationBinary(const string& filename_import_positions)
 {
 	/**
 	 \brief Read a binary file input configuration.
 	 */
+
+	// first positions
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
+	ifstream file_import;
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
 		ostringstream error_str;
@@ -1196,13 +1278,8 @@ void Simulation::importConfigurationBinary(ifstream& file_import,
 		radius.push_back(r_);
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-}
 
-void Simulation::importContactsBinary(ifstream &file_import)
-{
-	/**
-	 \brief Read a binary file input contacts.
-	 */
+// now contacts
 	int ncont;
 	unsigned short p0, p1;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
