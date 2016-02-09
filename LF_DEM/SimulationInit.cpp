@@ -1115,10 +1115,10 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
 			double x_, y_, z_, a_, vx_, vy_, vz_;
 			string line;
-			while(getline(file_import, line)) {
+			while (getline(file_import, line)) {
 				istringstream is;
 				is.str(line);
-				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
+				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_)) {
 					is.str(line);
 					is >> x_ >> y_ >> z_ >> a_;
 					initial_position.push_back(vec3d(x_, y_, z_));

@@ -217,7 +217,7 @@ void System::allocateRessources()
 	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
-    forcecheck.resize(np);
+    forceResultant.resize(np);
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
 	if (!p.out_particle_stress.empty()) {
@@ -825,7 +825,7 @@ void System::timeStepBoxing()
 		if (circulargap) {
 			shear_strain += dt*shear_rate;
 		}
-		if (test_simulation==31) {
+		if (test_simulation == 31) {
 			shear_strain += dt*shear_rate;
 			// cout << shear_strain << endl;
 		}
@@ -845,28 +845,28 @@ void System::eventShearJamming()
 	}
 }
 
-void System::forceBalanceCheckSetForce()
+void System::forceResultantInterpaticleForces()
 {
     if (concentric_cylinder) {
         for (int i=0; i<np; i++) {
-            forcecheck[i] = contact_force[i];
+            forceResultant[i] += contact_force[i];
         }
         if (repulsiveforce) {
             for (int i=0; i<np; i++) {
-                forcecheck[i] += repulsive_force[i];
+                forceResultant[i] += repulsive_force[i];
             }
         }
     }
 }
 
-void System::forceBalanceCheckOutput()
+void System::wallForces()
 {
     if (concentric_cylinder) {
         double max_total_force = 0;
         for (int i=0; i<np_mobile; i++) {
             //forcecheck[i].cerr();
-            if (max_total_force < forcecheck[i].sq_norm()){
-                max_total_force = forcecheck[i].sq_norm();
+            if (max_total_force < forceResultant[i].sq_norm()){
+                max_total_force = forceResultant[i].sq_norm();
             }
         }
         cerr << "force balance: " << sqrt(max_total_force) << endl;
@@ -879,8 +879,8 @@ void System::forceBalanceCheckOutput()
 			unitvec_out.y = 0;
 			unitvec_out.unitvector();
 			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-			force_tang_inwheel += dot(forcecheck[i], tang_vec);
-			force_normal_inwheel += dot(forcecheck[i], unitvec_out);
+			force_tang_inwheel += dot(forceResultant[i], tang_vec);
+			force_normal_inwheel += dot(forceResultant[i], unitvec_out);
 			
         }
         // outer wheel
@@ -891,13 +891,21 @@ void System::forceBalanceCheckOutput()
 			unitvec_out.y = 0;
 			unitvec_out.unitvector();
 			vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-			force_tang_outwheel += dot(forcecheck[i], tang_vec);
-			force_normal_outwheel += dot(forcecheck[i], unitvec_out);
+			force_tang_outwheel += dot(forceResultant[i], tang_vec);
+			force_normal_outwheel += dot(forceResultant[i], unitvec_out);
         }
         cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
-        
     }
 }
+
+void System::forceResultantReset()
+{
+    for (int i=0; i<np; i++) {
+        forceResultant[i].reset();
+    }
+}
+
+
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
 									   const string& time_or_strain,
@@ -914,7 +922,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
     setRepulsiveForceToParticle();
     setMagneticForceToParticle();
     if (calc_stress) {
-        forceBalanceCheckSetForce();
+        forceResultantReset();
     }
 	if (p.lubrication_model == 0) {
 		computeVelocitiesStokesDrag();
@@ -928,7 +936,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
             }
         }
         calcStressPerParticle();
-        forceBalanceCheckOutput();
+        forceResultantInterpaticleForces();
+        wallForces();
     }
 	timeStepMove(time_or_strain, value_end);
 	if (eventLookUp != NULL) {
@@ -999,7 +1008,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	setRepulsiveForceToParticle();
 	setMagneticForceToParticle();
     if (calc_stress) {
-        forceBalanceCheckSetForce(); // @@@ Force balance check
+        forceResultantReset();
     }
 	if (p.lubrication_model > 0) {
         computeVelocities(calc_stress); // divided velocities for stress calculation
@@ -1013,7 +1022,8 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 			}
 		}
         calcStressPerParticle(); // stress compornents
-        forceBalanceCheckOutput(); // @@@ Force balance check
+        forceResultantInterpaticleForces();
+        wallForces();
     }
 	timeStepMovePredictor(time_or_strain, value_end);
 	/* corrector */
@@ -1599,7 +1609,7 @@ void System::buildHydroTermsFromFixedParticles()
 	stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
 }
 
-void System::forceBalanceCheckLubricationForce()
+void System::forceResultantLubricationForce()
 {
     /* Only F = R_FU U is calculated, but R_FE E is not implemented yet.
      * So, we cannot check the force balance with E^{inf} yet.
@@ -1622,9 +1632,9 @@ void System::forceBalanceCheckLubricationForce()
         stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_m_to_m);
         for(int i=0; i<np_mobile; i++){
             int i6 = 6*i;
-            forcecheck[i].x += force_torque_m_to_m[i6];
-            forcecheck[i].y += force_torque_m_to_m[i6+1];
-            forcecheck[i].z += force_torque_m_to_m[i6+2];
+            forceResultant[i].x += force_torque_m_to_m[i6];
+            forceResultant[i].y += force_torque_m_to_m[i6+1];
+            forceResultant[i].z += force_torque_m_to_m[i6+2];
         }
     }
     /*
@@ -1646,9 +1656,9 @@ void System::forceBalanceCheckLubricationForce()
         stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_f_to_m);
 		for (int i=0; i<np_mobile; i++) {
             int i6 = 6*i;
-            forcecheck[i].x += force_torque_f_to_m[i6];
-            forcecheck[i].y += force_torque_f_to_m[i6+1];
-            forcecheck[i].z += force_torque_f_to_m[i6+2];
+            forceResultant[i].x += force_torque_f_to_m[i6];
+            forceResultant[i].y += force_torque_f_to_m[i6+1];
+            forceResultant[i].z += force_torque_f_to_m[i6+2];
         }
     }
     /*
@@ -1669,9 +1679,9 @@ void System::forceBalanceCheckLubricationForce()
         stokes_solver.multiply_by_RFU_fm(minus_mobile_velocities, force_m_to_f);
         for (int i=np_mobile; i<np; i++) {
            int i6 = 6*(i-np_mobile);
-            forcecheck[i].x += force_m_to_f[i6];
-            forcecheck[i].y += force_m_to_f[i6+1];
-            forcecheck[i].z += force_m_to_f[i6+2];
+            forceResultant[i].x += force_m_to_f[i6];
+            forceResultant[i].y += force_m_to_f[i6+1];
+            forceResultant[i].z += force_m_to_f[i6+2];
         }
     }
 }
@@ -2145,7 +2155,7 @@ void System::computeVelocities(bool divided_velocities)
 		sumUpVelocityComponents();
 	} else {
 		setFixedParticleVelocities();
-    computeVelocityWithoutComponents();
+        computeVelocityWithoutComponents();
 	}
   	if (brownian) {
 		if (in_predictor) {
@@ -2170,7 +2180,7 @@ void System::computeVelocities(bool divided_velocities)
 	adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	if (divided_velocities && concentric_cylinder) {
 		if (in_predictor) {
-			forceBalanceCheckLubricationForce();
+			forceResultantLubricationForce();
 		}
 	}
 	stokes_solver.solvingIsDone();

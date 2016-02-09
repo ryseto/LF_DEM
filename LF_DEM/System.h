@@ -130,7 +130,6 @@ private:
 	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
-    void forceBalanceCheckLubricationForce();
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
@@ -142,8 +141,11 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
-    void forceBalanceCheckSetForce();
-    void forceBalanceCheckOutput();
+    void forceResultantReset();
+    void forceResultantLubricationForce();
+    void forceResultantInterpaticleForces();
+
+    void wallForces();
 
 #ifndef USE_DSFMT
 	MTRand *r_gen;
@@ -202,7 +204,7 @@ private:
 	bool in_predictor;
 	bool in_corrector;
 	std::vector<vec3d> position;
-  std::vector<vec3d> forcecheck;
+    std::vector<vec3d> forceResultant;
 	Interaction *interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
