@@ -709,13 +709,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	dt = p.dt;
-	/* Pre-calculation
-	 */
-	/* einstein_stress may be affected by sd_coeff.
-	 * However, the reason to set value of sd_coeff is not very certain for the moment.
-	 * This is why we limit sd_coeff dependence only the diagonal constant.
-	 */
-	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
 
 	angle_output = false;
 	if (twodimension) {
@@ -780,6 +773,13 @@ void System::setupSystemPostConfiguration(){
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
 	}
+
+	/* einstein_stress may be affected by sd_coeff.
+	 * However, the reason to set value of sd_coeff is not very certain for the moment.
+	 * This is why we limit sd_coeff dependence only the diagonal constant.
+	 */
+	 einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
+
 }
 void System::initializeBoxing()
 {
