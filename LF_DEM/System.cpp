@@ -238,6 +238,7 @@ void System::allocateRessources()
 		magnetic_torque = new vec3d [np];
 		magneticstressGU = new StressTensor [np];
 	}
+
 	if (mobile_fixed) {
 		hydrofromfixedstressGU.resize(np);
 	}
@@ -713,8 +714,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 	angle_output = false;
 	if (twodimension) {
-		if (magnetic == false ||
-			magnetic_rotation_active) {
+		if (magnetic == false || magnetic_rotation_active) {
 			angle_output = true;
 		}
 	}
