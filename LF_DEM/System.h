@@ -54,7 +54,6 @@ struct ForceAmplitudes
 	double ft_max;
 };
 
-
 class System{
 private:
 	int np; ///< number of particles
@@ -76,7 +75,6 @@ private:
 	double lx_half; // =lx/2
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
-	double system_volume;
 	double shear_strain;
 	double total_energy;
 	int linalg_size;
@@ -201,6 +199,7 @@ private:
     bool wall_rheology;
 	bool mobile_fixed;
 	double volume_fraction;
+	double system_height;
 	bool in_predictor;
 	bool in_corrector;
 	std::vector<vec3d> position;
@@ -266,6 +265,7 @@ private:
 	double kt_master;
 	double kr_master;
 	double lub_coeff_contact;
+	double system_volume;
 	double einstein_stress;
 	double einstein_viscosity;
 	// resistance coeffient for normal mode
@@ -311,7 +311,6 @@ private:
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
-	bool circulargap;
 	double omega_wheel_in;
 	double omega_wheel_out;
 	int np_in;
@@ -335,7 +334,7 @@ private:
 	double *ratio_unit_time; // to convert System time in Simulation time
 
 	/****************************************/
-	void setSystemVolume(double depth = 0);
+	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);

@@ -42,8 +42,8 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np += np_fix;
 		cerr << "np " << np << endl;
     } else if (parallel_wall_config) {
-        np_out = lx/2.0+1;
-        np_in = lx/2.0+1;
+        np_out = lx/1.5+1;
+        np_in = lx/1.5+1;
         np_movable = np;
         np_fix = np_in+np_out;
         np += np_fix;
@@ -59,7 +59,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.allocateRessources();
 
 	sys.setBoxSize(lx, ly, lz);
-	sys.setSystemVolume(2*a2);
+	sys.setSystemVolume();
 	sys.in_predictor = false;
 	sys.p.integration_method = 0;
 	putRandom();
@@ -688,8 +688,8 @@ void GenerateInitConfig::setParameters()
 		//radius_in =  readStdinDefault(3, "inner radius");
     } else if (parallel_wall_config) {
         lz += 10;
-        z_bot = 5;
-        z_top = lz-5;
+        z_bot = 4;
+        z_top = lz-4;
     }
 	lx_half = lx/2;
 	ly_half = ly/2;

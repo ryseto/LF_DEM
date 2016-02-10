@@ -585,15 +585,16 @@ void Simulation::setupSimulation(string in_args,
 
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
-		sys.zero_shear = true;
-	} else if (control_var == "magnetic") {
+        sys.zero_shear = true;
+    } else if (control_var == "magnetic") {
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
 	}
 	if (sys.test_simulation > 0 && (sys.test_simulation < 20 || sys.test_simulation > 30) ) {
 		sys.zero_shear = true;
-	}
+        sys.mobile_fixed = true;
+    }
 	setDefaultParameters();
 	readParameterFile(filename_parameters);
 
@@ -621,6 +622,7 @@ void Simulation::setupSimulation(string in_args,
 		sys.set_np(get_np(filename_import_positions));
 		is2d = isTwoDimension(filename_import_positions);
 	}
+    
 	sys.setupSystemPreConfiguration(control_var, is2d);
 
 	if (binary_conf) {
@@ -631,10 +633,10 @@ void Simulation::setupSimulation(string in_args,
 	sys.setupSystemPostConfiguration();
 
 	p_initial = p;
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-												simu_identifier, dimensionlessnumber, input_scale);
-	openOutputFiles();
-	echoInputFiles(in_args, input_files);
+    prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+                          simu_identifier, dimensionlessnumber, input_scale);
+    openOutputFiles();
+    echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -1126,13 +1128,12 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	 \brief Read a text file input configuration.
 	 */
 	fstream file_import;
-	file_import.open(filename_import_positions.c_str());
+    file_import.open(filename_import_positions.c_str());
 	if (!file_import) {
 		ostringstream error_str;
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-
 	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
@@ -1182,8 +1183,15 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	key = "radius_out";
 	def = "0";
 	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
-	if (sys.np_in > -1) {
-        sys.circulargap = true;
+	// @@ This is temporally used for wtestA and wtestB
+	key = "z_bot";
+	def = "-1";
+	sys.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "z_top";
+	def = "-1";
+	sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
+	//
+	if (sys.np_in != -1) {
         sys.p.np_fixed = sys.np_in+sys.np_out;
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
