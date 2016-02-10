@@ -1346,7 +1346,9 @@ void Simulation::prepareSimulationName(bool binary_conf,
 
 	ostringstream string_control_parameters;
 	for (const auto& f: input_force_units) {
-		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
+		if (f.first.find("stiffness")==std::string::npos) {
+			string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
+		}
 	}
 	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
 
