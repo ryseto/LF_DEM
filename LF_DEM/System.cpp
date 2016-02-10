@@ -336,6 +336,9 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	volume_fraction = particle_volume/system_volume;
 	cout << indent << "volume_fraction = " << volume_fraction << endl;
+	initializeBoxing();
+  checkNewInteraction();
+
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -350,6 +353,7 @@ void System::setContacts(const vector <struct contact_state>& cs)
 
 		Used to restart the simulation from a given state.
 	 */
+
 	for (const auto& c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned short p0, p1;
@@ -359,6 +363,7 @@ void System::setContacts(const vector <struct contact_state>& cs)
 			}
 		}
 	}
+
 }
 
 void System::getContacts(vector <struct contact_state>& cs)
@@ -772,8 +777,6 @@ void System::setupSystemPostConfiguration(){
 			omega_wheel_out =  0.5*omega_wheel;
 		}
 	}
-	initializeBoxing();
-	checkNewInteraction();
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
 	}
