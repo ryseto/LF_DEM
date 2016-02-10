@@ -318,7 +318,7 @@ void Contact::addUpContactForceTorque()
 {
     /* Force
 	 */
-	if (state <=1) {
+	if (state <= 1) {
         f_contact = f_contact_normal;
 	} else {
 		f_contact = f_contact_normal+f_contact_tan;

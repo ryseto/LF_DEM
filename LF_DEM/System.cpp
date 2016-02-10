@@ -920,7 +920,10 @@ void System::wallForces()
                 force_tang_outwheel   += forceResultant[i].x;
                 force_normal_outwheel += forceResultant[i].z;
             }
-            cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
+            cerr << "Ft @ wall 1 = " << force_tang_inwheel << endl;
+            cerr << "Ft @ wall 2 = " << force_tang_outwheel << endl;
+            cerr << "Fn @ wall 1 = " << force_normal_inwheel << endl;
+            cerr << "Fn @ wall 2 = " << force_normal_outwheel << endl;
         }
     }
 }
@@ -956,12 +959,16 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		computeVelocities(calc_stress);
 	}
     if (calc_stress) {
-        wallForces();
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].lubrication.calcPairwiseForce();
+        for (int k=0; k<nb_interaction; k++) {
+            if (interaction[k].is_active()) {
+                interaction[k].lubrication.calcPairwiseForce();
+                unsigned short p0, p1;
+                interaction[k].get_par_num(p0, p1);
+                forceResultant[p0] += interaction[k].lubrication.lubforce_p0;
+                forceResultant[p1] -= interaction[k].lubrication.lubforce_p0;
             }
         }
+        wallForces();
         calcStressPerParticle();
     }
     timeStepMove(time_or_strain, value_end);
@@ -1642,36 +1649,34 @@ void System::forceResultantLubricationForce()
     /*
      *  F^{M} = R_FU^{MM} U^{M}
      */
-    if (true) {
-        vector<double> force_torque_m_to_m (6*np_mobile);
-        vector<double> minus_mobile_velocities (6*np_mobile);
-        for(int i=0; i<np_mobile; i++){
-            int i6 = 6*i;
-            minus_mobile_velocities[i6  ] = -na_velocity[i].x;
-            minus_mobile_velocities[i6+1] = -na_velocity[i].y;
-            minus_mobile_velocities[i6+2] = -na_velocity[i].z;
-            minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
-            minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
-            minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
-        }
-        stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_m_to_m);
-        for(int i=0; i<np_mobile; i++){
-            int i6 = 6*i;
-            forceResultant[i].x += force_torque_m_to_m[i6];
-            forceResultant[i].y += force_torque_m_to_m[i6+1];
-            forceResultant[i].z += force_torque_m_to_m[i6+2];
-        }
+    vector<double> force_torque_m_to_m (6*np_mobile);
+    vector<double> minus_mobile_velocities (6*np_mobile);
+    for(int i=0; i<np_mobile; i++){
+        int i6 = 6*i;
+        minus_mobile_velocities[i6  ] = -na_velocity[i].x;
+        minus_mobile_velocities[i6+1] = -na_velocity[i].y;
+        minus_mobile_velocities[i6+2] = -na_velocity[i].z;
+        minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
+        minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
+        minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
     }
-    /*
-     *  F^{M} += R_FU^{MF} U^{F}
-     */
+    stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_m_to_m);
+    for(int i=0; i<np_mobile; i++){
+        int i6 = 6*i;
+        forceResultant[i].x += force_torque_m_to_m[i6];
+        forceResultant[i].y += force_torque_m_to_m[i6+1];
+        forceResultant[i].z += force_torque_m_to_m[i6+2];
+    }
     if (mobile_fixed) {
+        /*
+         *  F^{M} += R_FU^{MF} U^{F}
+         */
         vector<double> force_torque_f_to_m (6*np_mobile);
         vector<double> minus_fixed_velocities (6*p.np_fixed);
 		for (int i=0; i<p.np_fixed; i++) {
             int i6 = 6*i;
             int i_fixed = i+np_mobile;
-                minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+            minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
             minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
             minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
             minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
@@ -1685,13 +1690,10 @@ void System::forceResultantLubricationForce()
             forceResultant[i].y += force_torque_f_to_m[i6+1];
             forceResultant[i].z += force_torque_f_to_m[i6+2];
         }
-    }
-    /*
-     *  F^{F} += R_FU^{FM} U^{M}
-     */
-    if (mobile_fixed) {
+        /*
+         *  F^{F} += R_FU^{FM} U^{M}
+         */
         vector<double> force_m_to_f (6*p.np_fixed);
-        vector<double> minus_mobile_velocities (6*np_mobile);
         for (int i=0; i<np_mobile; i++) {
             int i6 = 6*i;
             minus_mobile_velocities[i6  ] = -na_velocity[i].x;
@@ -1933,7 +1935,7 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	if (!zero_shear && p.lubrication_model!=3) {
+	if (!zero_shear && p.lubrication_model != 3) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
@@ -1943,7 +1945,6 @@ void System::computeVelocityByComponents()
 			ang_vel_hydro[i].reset();
 		}
 	}
-
 	if (mobile_fixed) {
 		stokes_solver.resetRHS();
 		buildHydroTermsFromFixedParticles();
@@ -1960,7 +1961,6 @@ void System::computeVelocityByComponents()
 		stokes_solver.solve(vel_magnetic, ang_vel_magnetic); // get V_repulsive
 	}
 }
-
 
 void System::rescaleVelHydroStressControlled()
 {
@@ -2184,7 +2184,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-	if (divided_velocities || stress_controlled) {
+    if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
@@ -2227,7 +2227,7 @@ void System::computeVelocities(bool divided_velocities)
 	adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
-			forceResultantLubricationForce();
+            //		forceResultantLubricationForce(); @@@@
 		}
 	}
 	stokes_solver.solvingIsDone();

@@ -779,11 +779,10 @@ void StokesSolver::allocateResistanceMatrix()
 	int stype_mf = 0; // non-symmetric matrix
 	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
 
-	col_nb = 6*fixed_particle_nb;
-	row_nb = col_nb;
+	int size_ff = 6*fixed_particle_nb;
 	nzmax = 18*dblocks_ff.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb_ff;  // off-diagonal
-	chol_res_matrix_ff = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
+	chol_res_matrix_ff = cholmod_allocate_sparse(size_ff, size_ff, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 }
 
 void StokesSolver::doneBlocks(int i)

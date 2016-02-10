@@ -54,7 +54,6 @@ struct ForceAmplitudes
 	double ft_max;
 };
 
-
 class System{
 private:
 	int np; ///< number of particles
