@@ -232,7 +232,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 	if (force_type == "thermal") {
 		throw runtime_error(" Error: stress controlled Brownian simulations are not yet implemented.");
 	}
-	sys.set_shear_rate(1);
+	sys.set_shear_rate(0);
 	// we take as a unit scale the one given by the user with the stress
 	// TODO: other choices may be better when several forces are used.
 	internal_unit_scales = force_type;
@@ -622,7 +622,7 @@ void Simulation::setupSimulation(string in_args,
 		sys.set_np(get_np(filename_import_positions));
 		is2d = isTwoDimension(filename_import_positions);
 	}
-    
+
 	sys.setupSystemPreConfiguration(control_var, is2d);
 
 	if (binary_conf) {
