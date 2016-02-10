@@ -504,6 +504,68 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 	output_unit_scales = input_scale;
 }
 
+void Simulation::assertParameterCompatibility()
+{
+	// test for incompatibilities
+	if (sys.brownian == true) {
+		if (p.lubrication_model > 0
+			&& p.integration_method != 1) {
+			ostringstream error_str;
+			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
+			error_str << "Modify the parameter file." << endl;
+			throw runtime_error(error_str.str());
+		}
+	}
+	if (control_var == "stress") {
+		if (p.integration_method != 0) {
+			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
+		}
+		//p.integration_method = 0;
+	}
+	if (sys.critical_load) {
+		p.friction_model = 2;
+		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
+	}
+
+}
+
+void Simulation::resolveTimeOrStrainParameters(){
+
+	for (const auto& inv: input_values) {
+		if (inv.name == "time_end") {
+			if (inv.unit == "strain") {
+				time_end = -1;
+				strain_end = p.time_end;
+			} else {
+				time_end = p.time_end;
+			}
+		}
+	}
+	if (control_var == "magnetic") {
+		time_end = p.time_end;
+	}
+
+	for (const auto& inv: input_values) {
+		if (inv.name == "time_interval_output_data") {
+			if (inv.unit == "strain") {
+				time_interval_output_data = -1;
+				strain_interval_output_data = p.time_interval_output_data;
+			} else {
+				time_interval_output_data = p.time_interval_output_data;
+			}
+		}
+		if (inv.name == "time_interval_output_config") {
+			if (inv.unit == "strain") {
+				time_interval_output_config = -1;
+				strain_interval_output_config = p.time_interval_output_config;
+			} else {
+				time_interval_output_config = p.time_interval_output_config;
+			}
+		}
+	}
+
+}
+
 void Simulation::setupSimulation(string in_args,
 								 vector<string>& input_files,
 								 bool binary_conf,
@@ -534,41 +596,10 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters();
 	readParameterFile(filename_parameters);
-	ostringstream string_control_parameters;
-	for (const auto& f: input_force_units) {
-		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
-	}
-	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
-	setupNonDimensionalization(dimensionlessnumber, input_scale);
-	/*
-	 * Simulate parameters
-	 */
-	// test for incompatibilities
-	if (sys.brownian == true) {
-		if (p.lubrication_model > 0
-			&& p.integration_method != 1) {
-			ostringstream error_str;
-			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
-			error_str << "Modify the parameter file: " << filename_parameters << endl;
-			throw runtime_error(error_str.str());
-		}
-	}
-	if (control_var == "stress") {
-		if (p.integration_method != 0) {
-			cerr << "Warning : use of the Predictor-Corrector method for the stress controlled simulation is experimental." << endl;
-		}
-		//p.integration_method = 0;
-	}
-	if (sys.critical_load) {
-		p.friction_model = 2;
-	}
 
-	ifstream in_binary_conf;
-	if (binary_conf) {
-		importConfigurationBinary(in_binary_conf, filename_import_positions);
-	} else {
-		importConfiguration(filename_import_positions);
-	}
+	setupNonDimensionalization(dimensionlessnumber, input_scale);
+
+	assertParameterCompatibility();
 
 	if (input_files[2] != "not_given") {
 		if (sys.brownian && !p.auto_determine_knkt) {
@@ -577,53 +608,32 @@ void Simulation::setupSimulation(string in_args,
 			contactForceParameter(input_files[2]);
 		}
 	}
-
-	for (const auto& inv: input_values) {
-		if (inv.name == "time_end") {
-			if (inv.unit == "strain") {
-				time_end = -1;
-				strain_end = p.time_end;
-			} else {
-				time_end = p.time_end;
-			}
-		}
-	}
-	if (control_var == "magnetic") {
-		time_end = p.time_end;
-	}
 	if (input_files[3] != "not_given") {
-		importPreSimulationData(input_files[3]);
-		time_interval_output_data = p.time_interval_output_data/shear_rate_expectation;
-		time_interval_output_config = p.time_interval_output_config/shear_rate_expectation;
-	} else {
-		for (const auto& inv: input_values) {
-			if (inv.name == "time_interval_output_data") {
-				if (inv.unit == "strain") {
-					time_interval_output_data = -1;
-					strain_interval_output_data = p.time_interval_output_data;
-				} else {
-					time_interval_output_data = p.time_interval_output_data;
-				}
-			}
-			if (inv.name == "time_interval_output_config") {
-				if (inv.unit == "strain") {
-					time_interval_output_config = -1;
-					strain_interval_output_config = p.time_interval_output_config;
-				} else {
-					time_interval_output_config = p.time_interval_output_config;
-				}
-			}
-		}
+		throw runtime_error("pre-simulation data deprecated?");
 	}
+	resolveTimeOrStrainParameters();
 
-	sys.setupSystem(control_var);
+	bool is2d;
 	if (binary_conf) {
-		importContactsBinary(in_binary_conf);
+		sys.set_np(get_np_Binary(filename_import_positions));
+		is2d = isTwoDimensionBinary(filename_import_positions);
+	} else {
+		sys.set_np(get_np(filename_import_positions));
+		is2d = isTwoDimension(filename_import_positions);
 	}
-	p_initial = p;
+	sys.setupSystemPreConfiguration(control_var, is2d);
 
-	openOutputFiles(binary_conf, filename_import_positions, filename_parameters,
-					string_control_parameters.str(), simu_identifier);
+	if (binary_conf) {
+		importConfigurationBinary(filename_import_positions);
+	} else {
+		importConfiguration(filename_import_positions);
+	}
+	sys.setupSystemPostConfiguration();
+
+	p_initial = p;
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+												simu_identifier, dimensionlessnumber, input_scale);
+	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -927,19 +937,14 @@ void Simulation::setDefaultParameters()
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
-void Simulation::openOutputFiles(bool binary_conf,
-								 const string& filename_import_positions,
-								 const string& filename_parameters,
-								 const string& string_control_parameters,
-								 const string& simu_identifier)
+void Simulation::openOutputFiles()
 {
 	/**
 	 \brief Set up the output files
 
 		This function determines a simulation name from the parameters, opens the output files with the corresponding name and prints their header.
 	 */
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-						  string_control_parameters, simu_identifier);
+
 	stringstream data_header;
 	createDataHeader(data_header);
 
@@ -952,7 +957,6 @@ void Simulation::openOutputFiles(bool binary_conf,
 	fout_time.open(time_filename.c_str());
 	string input_filename = "input_"+sys.simu_name+".dat";
 	fout_input.open(input_filename.c_str());
-
 	if (p.out_data_particle) {
 		string particle_filename = "par_"+sys.simu_name+".dat";
 		fout_particle.open(particle_filename.c_str());
@@ -1037,6 +1041,85 @@ string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, 
     }
 }
 
+int Simulation::get_np(const string& filename_import_positions)
+{
+	/**
+	 \brief Read np from a text file input configuration.
+	 */
+	fstream file_import;
+	file_import.open(filename_import_positions.c_str());
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	string line;
+	getline(file_import, line);
+	getline(file_import, line);
+	int np = 0;
+	while (getline(file_import, line)) {
+		np++;
+	}
+	file_import.close();
+	return np;
+}
+
+bool Simulation::isTwoDimension(const string& filename_import_positions)
+{
+	fstream file_import;
+	file_import.open(filename_import_positions.c_str());
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	double ly;
+	getline(file_import, header_imported_configulation[0]);
+	getline(file_import, header_imported_configulation[1]);
+	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	string key;
+	key = "ly";
+	ly = atof(getMetaParameter(meta_data, key).c_str());
+	file_import.close();
+	return ly==0;
+}
+
+bool Simulation::isTwoDimensionBinary(const string& filename_import_positions)
+{
+	ifstream file_import;
+	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	int idumb;
+	double ddumb, ly;
+	file_import.read((char*)&idumb, sizeof(int));
+	file_import.read((char*)&ddumb, sizeof(double));
+	file_import.read((char*)&ddumb, sizeof(double));
+	file_import.read((char*)&ly, sizeof(double));
+	return ly==0;
+}
+
+int Simulation::get_np_Binary(const string& filename_import_positions)
+{
+	/**
+	 \brief Read np from binary file input configuration.
+	 */
+	ifstream file_import;
+	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+	int np;
+	file_import.read((char*)&np, sizeof(int));
+	file_import.close();
+	return np;
+}
+
 void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
@@ -1049,11 +1132,13 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
+
 	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
+
 	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	string key, def;
 	key = "np_fixed";
@@ -1095,17 +1180,17 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	def = "0";
 	sys.radius_in = atof(getMetaParameter(meta_data, key, def).c_str());
 	key = "radius_out";
-    def = "0";
-    sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
-    key = "z_bot";
-    def = "-1";
-    sys.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
-    key = "z_top";
-    def = "-1";
-    sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
-    
-	if (sys.np_in > -1) {
-        sys.circulargap = true;
+	def = "0";
+	sys.radius_out = atof(getMetaParameter(meta_data, key, def).c_str());
+	// @@ This is temporally used for wtestA and wtestB
+	key = "z_bot";
+	def = "-1";
+	sys.z_bot = atof(getMetaParameter(meta_data, key, def).c_str());
+	key = "z_top";
+	def = "-1";
+	sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
+	//
+	if (sys.np_in != -1) {
         sys.p.np_fixed = sys.np_in+sys.np_out;
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
@@ -1124,10 +1209,10 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
 			double x_, y_, z_, a_, vx_, vy_, vz_;
 			string line;
-			while (getline(file_import, line)) {
+			while(getline(file_import, line)) {
 				istringstream is;
 				is.str(line);
-				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_)) {
+				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
 					is.str(line);
 					is >> x_ >> y_ >> z_ >> a_;
 					initial_position.push_back(vec3d(x_, y_, z_));
@@ -1160,14 +1245,16 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	file_import.close();
 }
 
-void Simulation::importConfigurationBinary(ifstream& file_import,
-										   const string& filename_import_positions)
+void Simulation::importConfigurationBinary(const string& filename_import_positions)
 {
 	/**
 	 \brief Read a binary file input configuration.
 	 */
+
+	// first positions
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
+	ifstream file_import;
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
 		ostringstream error_str;
@@ -1197,13 +1284,8 @@ void Simulation::importConfigurationBinary(ifstream& file_import,
 		radius.push_back(r_);
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
-}
 
-void Simulation::importContactsBinary(ifstream &file_import)
-{
-	/**
-	 \brief Read a binary file input contacts.
-	 */
+// now contacts
 	int ncont;
 	unsigned short p0, p1;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
@@ -1232,8 +1314,9 @@ void Simulation::importContactsBinary(ifstream &file_import)
 void Simulation::prepareSimulationName(bool binary_conf,
 									   const string& filename_import_positions,
 									   const string& filename_parameters,
-									   const string& string_control_parameters,
-									   const string& simu_identifier)
+									   const string& simu_identifier,
+										 double dimensionlessnumber,
+										 const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.
@@ -1259,7 +1342,14 @@ void Simulation::prepareSimulationName(bool binary_conf,
 	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
-	ss_simu_name << string_control_parameters;
+
+	ostringstream string_control_parameters;
+	for (const auto& f: input_force_units) {
+		string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
+	}
+	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
+
+	ss_simu_name << string_control_parameters.str();
 	if (simu_identifier != "") {
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;

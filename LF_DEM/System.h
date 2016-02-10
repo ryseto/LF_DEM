@@ -311,7 +311,6 @@ private:
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
-	bool circulargap;
 	double omega_wheel_in;
 	double omega_wheel_out;
 	int np_in;
@@ -343,7 +342,8 @@ private:
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
-	void setupSystem(std::string control);
+	void setupSystemPreConfiguration(std::string control, bool is2d);
+	void setupSystemPostConfiguration();
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(const std::string& time_or_strain,
@@ -460,7 +460,7 @@ private:
 	{
 		np = val;
 	}
-    
+
     inline void set_np_mobile(int val)
     {
         np_mobile = val;

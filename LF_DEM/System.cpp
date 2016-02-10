@@ -46,7 +46,6 @@ target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
 new_contact_gap(0),
-circulargap(false),
 magnetic_rotation_active(false),
 magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
@@ -471,7 +470,7 @@ void System::updateUnscaledContactmodel()
 	}
 }
 
-void System::setupSystem(string control)
+void System::setupSystemPreConfiguration(string control, bool is2d)
 {
 	/**
 		\brief Initialize the system class for the simulation.
@@ -487,6 +486,7 @@ void System::setupSystem(string control)
 	 */
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
+	twodimension = is2d;
 	if (control != "magnetic") {
 		if (control == "rate") {
 			rate_controlled = true;
@@ -570,9 +570,8 @@ void System::setupSystem(string control)
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
+
 	for (int i=0; i<np; i++) {
-		radius_squared[i] = pow(radius[i], 2);
-		radius_cubed[i] = pow(radius[i], 3);
 		if (twodimension) {
 			angle[i] = 0;
 		}
@@ -597,24 +596,7 @@ void System::setupSystem(string control)
 			ang_vel_hydro_from_fixed[i].reset();
 		}
 	}
-	if (test_simulation > 10 && test_simulation <= 20) {
-		origin_of_rotation.set(lx_half, 0, lz_half);
-        for (int i=np_mobile; i<np; i++) {
-			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
-							  position[i].x-origin_of_rotation.x);
-		}
-		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
-		if (test_simulation == 11) {
-			omega_wheel_in  = 0;
-			omega_wheel_out = omega_wheel;
-		} else if (test_simulation == 12) {
-			omega_wheel_in  = -omega_wheel;
-			omega_wheel_out = 0;
-		} else if (test_simulation == 13) {
-			omega_wheel_in  = -0.5*omega_wheel;
-			omega_wheel_out =  0.5*omega_wheel;
-		}
-    }
+
 	shear_strain = 0;
 	nb_interaction = 0;
 	if (p.stress_scaled_contactmodel) {
@@ -720,12 +702,7 @@ void System::setupSystem(string control)
 		vel_difference.x = costheta_shear*shear_rate*lz;
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
-	if (p.lubrication_model > 0) {
-		stokes_solver.init(np, np_mobile);
-	}
 	dt = p.dt;
-	initializeBoxing();
-	checkNewInteraction();
 	/* Pre-calculation
 	 */
 	/* einstein_stress may be affected by sd_coeff.
@@ -733,6 +710,23 @@ void System::setupSystem(string control)
 	 * This is why we limit sd_coeff dependence only the diagonal constant.
 	 */
 	einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
+
+	angle_output = false;
+	if (twodimension) {
+		if (magnetic == false ||
+			magnetic_rotation_active) {
+			angle_output = true;
+		}
+	}
+	cout << indent << "Setting up System... [ok]" << endl;
+}
+
+void System::setupSystemPostConfiguration(){
+
+	for (int i=0; i<np; i++) {
+		radius_squared[i] = pow(radius[i], 2);
+		radius_cubed[i] = pow(radius[i], 3);
+	}
 
 	if (p.lubrication_model > 0) {
 		resistance_matrix_dblock.resize(np);
@@ -758,16 +752,31 @@ void System::setupSystem(string control)
 			resistance_matrix_dblock[i].col5[0] = TWvalue;
 		}
 	}
-	angle_output = false;
-	if (twodimension) {
-		if (magnetic == false ||
-			magnetic_rotation_active) {
-			angle_output = true;
+
+	if (test_simulation > 10 && test_simulation <= 20) {
+		origin_of_rotation.set(lx_half, 0, lz_half);
+				for (int i=np_mobile; i<np; i++) {
+			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
+								position[i].x-origin_of_rotation.x);
+		}
+		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
+		if (test_simulation == 11) {
+			omega_wheel_in  = 0;
+			omega_wheel_out = omega_wheel;
+		} else if (test_simulation == 12) {
+			omega_wheel_in  = -omega_wheel;
+			omega_wheel_out = 0;
+		} else if (test_simulation == 13) {
+			omega_wheel_in  = -0.5*omega_wheel;
+			omega_wheel_out =  0.5*omega_wheel;
 		}
 	}
-	cout << indent << "Setting up System... [ok]" << endl;
+	initializeBoxing();
+	checkNewInteraction();
+	if (p.lubrication_model > 0) {
+		stokes_solver.init(np, np_mobile);
+	}
 }
-
 void System::initializeBoxing()
 {
 	/**
@@ -822,10 +831,9 @@ void System::timeStepBoxing()
 			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
-		if (circulargap) {
+		if (wall_rheology) {
 			shear_strain += dt*shear_rate;
-		}
-		if (test_simulation == 31 || test_simulation > 40) {
+		} else if (test_simulation == 31) {
 			shear_strain += dt*shear_rate;
 			// cout << shear_strain << endl;
 		}
@@ -882,7 +890,7 @@ void System::wallForces()
                 vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
                 force_tang_inwheel += dot(forceResultant[i], tang_vec);
                 force_normal_inwheel += dot(forceResultant[i], unitvec_out);
-                
+
             }
             // outer wheel
             force_tang_outwheel = 0;

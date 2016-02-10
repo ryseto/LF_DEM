@@ -130,18 +130,16 @@ public:
 		return sys;
 	}
 
+	void assertParameterCompatibility();
 	void setDefaultParameters();
 	void readParameterFile(const std::string& filename_parameters);
-	void openOutputFiles(bool binary_conf,
-						 const std::string& filename_import_positions,
-						 const std::string& filename_parameters,
-						 const std::string& string_control_parameters,
-						 const std::string& simu_identifier);
+	void openOutputFiles();
 	void prepareSimulationName(bool binary_conf,
 							   const std::string& filename_import_positions,
 							   const std::string& filename_parameters,
-							   const std::string& string_control_parameters,
-							   const std::string& simu_identifier);
+							   const std::string& simu_identifier,
+								 double dimensionlessnumber,
+								 const std::string& input_scale);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void autoSetParameters(const std::string& keyword,
@@ -149,6 +147,7 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
+	void resolveTimeOrStrainParameters();
 	std::map<std::string,std::string> getConfMetaData(const std::string &,
 																										const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &,
@@ -156,9 +155,12 @@ public:
 															const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &,
 															std::string &);
+	bool isTwoDimension(const std::string&);
+	bool isTwoDimensionBinary(const std::string&);
+	int get_np(const std::string&);
+	int get_np_Binary(const std::string&);
 	void importConfiguration(const std::string&);
-	void importConfigurationBinary(std::ifstream& file_import, const std::string&);
-	void importContactsBinary(std::ifstream& file_import);
+	void importConfigurationBinary(const std::string&);
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void convertForceValues(std::string new_long_unit);
