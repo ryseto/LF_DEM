@@ -681,10 +681,31 @@ void Simulation::outputData()
 	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
 	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
     if (sys.wall_rheology) {
-        outdata.entryData(37, "force tang inner wheel", "none", sys.force_tang_inwheel);
-        outdata.entryData(38, "force tang outer wheel", "none", sys.force_tang_outwheel);
-		outdata.entryData(39, "force normal inner wheel", "none", sys.force_normal_inwheel);
-		outdata.entryData(40, "force normal outer wheel", "none", sys.force_normal_outwheel);
+
+		double wall_shearstress1;
+		double wall_shearstress2;
+		double wall_normalstress1;
+		double wall_normalstress2;
+		if (sys.z_top != -1) {
+			double wall_area;
+			wall_area = sys.get_lx();
+			wall_shearstress1 = sys.force_tang_inwheel/wall_area;
+			wall_shearstress2 = sys.force_tang_outwheel/wall_area;
+			wall_normalstress1 = sys.force_normal_inwheel/wall_area;
+			wall_normalstress2 = sys.force_normal_outwheel/wall_area;
+		} else {
+			double wall_area1 = M_PI*2*sys.radius_in;
+			double wall_area2 = M_PI*2*sys.radius_out;
+			wall_shearstress1 = sys.force_tang_inwheel/wall_area1;
+			wall_shearstress2 = sys.force_tang_outwheel/wall_area2;
+			wall_normalstress1 = sys.force_normal_inwheel/wall_area1;
+			wall_normalstress2 = sys.force_normal_outwheel/wall_area2;
+
+		}
+        outdata.entryData(37, "shear stress wall 1", "none", wall_shearstress1);
+        outdata.entryData(38, "shear stress wall 2", "none", wall_shearstress2);
+		outdata.entryData(39, "normal stress wall 1", "none", wall_normalstress1);
+		outdata.entryData(40, "normal stress wall 2", "none", wall_normalstress2);
     }
 	outdata.writeToFile();
 

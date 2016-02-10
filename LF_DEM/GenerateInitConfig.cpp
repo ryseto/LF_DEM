@@ -59,7 +59,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.allocateRessources();
 
 	sys.setBoxSize(lx, ly, lz);
-	sys.setSystemVolume(2*a2);
+	sys.setSystemVolume();
 	sys.in_predictor = false;
 	sys.p.integration_method = 0;
 	putRandom();
