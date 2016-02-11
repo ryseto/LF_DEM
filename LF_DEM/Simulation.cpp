@@ -173,14 +173,15 @@ void Simulation::generateOutput(double& next_output_data,
 
 void Simulation::timeEvolution(double& next_output_data)
 {
-	if (time_interval_output_data == -1) {
-		next_output_data += strain_interval_output_data;
-		sys.timeEvolution("strain", next_output_data);
-	} else {
-		next_output_data += time_interval_output_data;
-		sys.timeEvolution("time", next_output_data);
-	}
+    if (time_interval_output_data == -1) {
+        next_output_data += strain_interval_output_data;
+        sys.timeEvolution("strain", next_output_data);
+    } else {
+        next_output_data += time_interval_output_data;
+        sys.timeEvolution("time", next_output_data);
+    }
 }
+
 /*
  * Main simulation
  */
@@ -234,11 +235,6 @@ void Simulation::simulationSteadyShear(string in_args,
     
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
-	if (sys.cohesion) {
-		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
-	} else {
-		sys.new_contact_gap = 0; //@@ To be changed to a better way.
-	}
 	time_t now;
 	time_strain_1 = 0;
 	now = time(NULL);
@@ -269,7 +265,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		} else {
 			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
 		}
-		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -303,11 +298,6 @@ void Simulation::simulationInverseYield(string in_args,
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 
-	if (sys.cohesion) {
-		sys.new_contact_gap = 0.02; //@@ To be changed to a better way.
-	} else {
-		sys.new_contact_gap = 0; //@@ To be changed to a better way.
-	}
 	int jammed = 0;
 	time_t now;
 	time_strain_1 = 0;
@@ -366,7 +356,6 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			jammed = 0;
 		}
-		sys.new_contact_gap = 0; //@@ To be changed to a better way.
 		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -403,47 +392,47 @@ void Simulation::simulationMagnetic(string in_args,
 	 *
 	 */
 	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf,
-					dimensionless_number, input_scale, simu_identifier);
-	int cnt_simu_loop = 1;
-	int cnt_config_out = 1;
-	double time_output_data = 0;
-	double time_output_config = 0;
-	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
-	outputDataMagnetic();
-	outputConfigurationBinary();
-	outputConfigurationData();
-	/*************************************************************/
-	if (sys.p.magnetic_field_type == 0) {
-		// Field direction is fixed
-		sys.external_magnetic_field.set(0, 1, 0);
-	} else if (sys.p.magnetic_field_type == 1) {
-		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
-										cos(sys.angle_external_magnetic_field),
-										0);
-		throw runtime_error("magnetic_field_type == 1 not yet implemented");// @not yet
-	} else if (sys.p.magnetic_field_type == 2) {
-		sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
-										0,
-										sin(sys.angle_external_magnetic_field));
-		throw runtime_error("magnetic_field_type == 2 not yet implemented");// @not yet
-	}
-	sys.setMagneticMomentZero();
-	bool initial_relax = true;
-	// Main simulation loop
-	double initial_time = sys.get_time();
-	string indent = "  Simulation::\t";
-	cout << indent << "Time evolution started" << endl << endl;
-	while (keepRunning()) {
-		if (initial_relax && sys.get_time() >= 0) {
-			sys.setInducedMagneticMoment();
-			initial_relax = false;
-		}
-		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
-		time_output_config = initial_time+cnt_config_out*time_interval_output_config;
-		sys.timeEvolution("time", time_output_data); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
-		cnt_simu_loop ++;
+    setupSimulation(in_args, input_files, binary_conf,
+                    dimensionless_number, input_scale, simu_identifier);
+    int cnt_simu_loop = 1;
+    int cnt_config_out = 1;
+    double time_output_data = 0;
+    double time_output_config = 0;
+    /******************** OUTPUT INITIAL DATA ********************/
+    evaluateData();
+    outputDataMagnetic();
+    outputConfigurationBinary();
+    outputConfigurationData();
+    /*************************************************************/
+    if (sys.p.magnetic_field_type == 0) {
+        // Field direction is fixed
+        sys.external_magnetic_field.set(0, 1, 0);
+    } else if (sys.p.magnetic_field_type == 1) {
+        sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
+                                        cos(sys.angle_external_magnetic_field),
+                                        0);
+        throw runtime_error("magnetic_field_type == 1 not yet implemented");// @not yet
+    } else if (sys.p.magnetic_field_type == 2) {
+        sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
+                                        0,
+                                        sin(sys.angle_external_magnetic_field));
+        throw runtime_error("magnetic_field_type == 2 not yet implemented");// @not yet
+    }
+    sys.setMagneticMomentZero();
+    bool initial_relax = true;
+    // Main simulation loop
+    double initial_time = sys.get_time();
+    string indent = "  Simulation::\t";
+    cout << indent << "Time evolution started" << endl << endl;
+    while (keepRunning()) {
+        if (initial_relax && sys.get_time() >= 0) {
+            sys.setInducedMagneticMoment();
+            initial_relax = false;
+        }
+        time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
+        time_output_config = initial_time+cnt_config_out*time_interval_output_config;
+        sys.timeEvolution("time", time_output_data); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
+        cnt_simu_loop ++;
 		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputDataMagnetic();

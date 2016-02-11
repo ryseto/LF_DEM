@@ -1047,25 +1047,25 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 
 void System::adaptTimeStep()
 {
-	/**
-	\brief Adapt the time step so that the maximum relative displacement is p.disp_max .
-	*/
+    /**
+     \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
+     */
 	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
-		if (max_velocity > max_sliding_velocity) {
-			dt = p.disp_max/max_velocity;
-		} else {
-			dt = p.disp_max/max_sliding_velocity;
-		}
-	} else {
-		dt = p.disp_max/shear_rate;
-	}
+        if (max_velocity > max_sliding_velocity) {
+            dt = p.disp_max/max_velocity;
+        } else {
+            dt = p.disp_max/max_sliding_velocity;
+        }
+    } else {
+        dt = p.disp_max/shear_rate;
+    }
 }
 
 void System::adaptTimeStep(const string& time_or_strain,
-						   const double& value_end)
+                           const double& value_end)
 {
-	/**
-	\brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
+    /**
+     \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
 	*/
 	adaptTimeStep();
 	if (time_or_strain == "strain") {
@@ -1073,8 +1073,8 @@ void System::adaptTimeStep(const string& time_or_strain,
 			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
 		}
 	} else {
-		if (dt > (value_end-get_time())) {
-			dt = (value_end-get_time());
+		if (get_time() + dt > value_end) {
+            dt = value_end-get_time(); //  @@ dt becomes zero....
 		}
 	}
 }
@@ -1082,7 +1082,7 @@ void System::adaptTimeStep(const string& time_or_strain,
 void System::timeStepMove(const string& time_or_strain,
 						  const double& value_end)
 {
-	/**
+    /**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
 
@@ -1090,7 +1090,6 @@ void System::timeStepMove(const string& time_or_strain,
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_or_strain, value_end);
 	}
-
 	time += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);

@@ -526,11 +526,14 @@ void Simulation::assertParameterCompatibility()
 		p.friction_model = 2;
 		cerr << "Warning : critical load simulation -> switched to friction_model=2" << endl;
 	}
-
 }
 
-void Simulation::resolveTimeOrStrainParameters(){
-
+void Simulation::resolveTimeOrStrainParameters()
+{
+    /* @ Please explain this part.
+     * @ I don't know how to output with a strain interval.
+     */
+    
 	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
@@ -563,7 +566,6 @@ void Simulation::resolveTimeOrStrainParameters(){
 			}
 		}
 	}
-
 }
 
 void Simulation::setupSimulation(string in_args,
