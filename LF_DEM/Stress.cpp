@@ -247,13 +247,19 @@ void System::calcStress()
 	if (mobile_fixed) {
 		total_stress += total_hydrofromfixed_stressGU;
 	}
-	if (!mobile_fixed) { // @@@ for the moment I remove the Einstein stress with walls. Should think if it's necessary.
-		einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
-		if (!p.cross_shear) {
-			total_stress.elm[2] += einstein_stress;
-		} else {
-			total_stress.elm[2] += costheta_shear*einstein_stress;
-			total_stress.elm[3] += sintheta_shear*einstein_stress;
-		}
-	}
+    if (wall_rheology) {
+        if (z_top != -1) {
+            shearstress_wall1 = force_tang_wall1/lx;
+            shearstress_wall2 = force_tang_wall2/lx;
+            normalstress_wall1 = force_normal_wall1/lx;
+            normalstress_wall2 = force_normal_wall2/lx;
+        } else {
+            double wall_area1 = M_PI*2*radius_in;
+            double wall_area2 = M_PI*2*radius_out;
+            shearstress_wall1 = force_tang_wall1/wall_area1;
+            shearstress_wall2 = force_tang_wall2/wall_area2;
+            normalstress_wall1 = force_normal_wall1/wall_area1;
+            normalstress_wall2 = force_normal_wall2/wall_area2;
+        }
+    }
 }

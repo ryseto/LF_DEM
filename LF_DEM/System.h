@@ -198,7 +198,7 @@ private:
 	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
     bool wall_rheology;
 	bool mobile_fixed;
-	double volume_fraction;
+    //	double volume_fraction;
 	double system_height;
 	bool in_predictor;
 	bool in_corrector;
@@ -266,8 +266,6 @@ private:
 	double kr_master;
 	double lub_coeff_contact;
 	double system_volume;
-	double einstein_stress;
-	double einstein_viscosity;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
@@ -313,16 +311,20 @@ private:
 	vec3d origin_of_rotation;
 	double omega_wheel_in;
 	double omega_wheel_out;
-	int np_in;
-	int np_out;
+	int np_wall1;
+	int np_wall2;
 	double radius_in;
 	double radius_out;
-	double force_tang_inwheel;
-	double force_normal_inwheel;
-	double force_tang_outwheel;
-	double force_normal_outwheel;
     double z_bot;
     double z_top;
+	double force_tang_wall1;
+    double force_tang_wall2;
+	double force_normal_wall1;
+	double force_normal_wall2;
+    double shearstress_wall1;
+    double shearstress_wall2;
+    double normalstress_wall1;
+    double normalstress_wall2;
 	/*
 	 * Simulation for magnetic particles
 	 */

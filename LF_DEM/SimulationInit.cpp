@@ -1171,12 +1171,12 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	key = "dispy";
 	def = "0";
 	initial_lees_edwards_disp.y = atof(getMetaParameter(meta_data, key, def).c_str());
-	key = "np_in";
+	key = "np_wall1";
 	def = "-1";
-	sys.np_in = atoi(getMetaParameter(meta_data, key, def).c_str());
-	key = "np_out";
+	sys.np_wall1 = atoi(getMetaParameter(meta_data, key, def).c_str());
+	key = "np_wall2";
 	def = "-1";
-	sys.np_out = atoi(getMetaParameter(meta_data, key, def).c_str());
+	sys.np_wall2 = atoi(getMetaParameter(meta_data, key, def).c_str());
 	key = "radius_in";
 	def = "0";
 	sys.radius_in = atof(getMetaParameter(meta_data, key, def).c_str());
@@ -1191,8 +1191,8 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	def = "-1";
 	sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
 	//
-	if (sys.np_in != -1) {
-        sys.p.np_fixed = sys.np_in+sys.np_out;
+	if (sys.np_wall1 != -1) {
+        sys.p.np_fixed = sys.np_wall1+sys.np_wall2;
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
 	vector<vec3d> initial_position;

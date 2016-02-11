@@ -83,13 +83,13 @@ public:
 		}
 	}
 	
-	void setDimensionlessNumber(double dimensionless_number)
-	// dimensionless_number = internal_force_unit/output_force_unit
-	{
-		if (dimensionless_number == 0) {
-			std::cerr << "dimensionless_number (internal_force_unit/output_force_unit) = " << dimensionless_number << std::endl;
-			dimensionless_number = 1; // @@@@ To be checked.
-		}
+    void setDimensionlessNumber(double dimensionless_number)
+    // dimensionless_number = internal_force_unit/output_force_unit
+    {
+        if (dimensionless_number == 0) {
+            std::cerr << "dimensionless_number (internal_force_unit/output_force_unit) = " << dimensionless_number << std::endl;
+            dimensionless_number = 1; // @@@@ To be checked.
+        }
 		converter["none"] = 1;
 		converter["viscosity"] = 6*M_PI;
 		converter["stress"] = dimensionless_number;
@@ -98,16 +98,16 @@ public:
 		converter["velocity"] = dimensionless_number;
 	}
 	
-	template<typename T>
-	void entryData(int num,
-				   std::string name,
-				   std::string type,
-				   T value)
-	{
-		int index = num-1;
-		std::ostringstream str_value;
-		str_value << converter[output_data_type[index]]*value;
-		if (first_time) {
+    template<typename T>
+    void entryData(int num,
+                   std::string name,
+                   std::string type,
+                   T value)
+    {
+        int index = num-1;
+        std::ostringstream str_value;
+        str_value << converter[output_data_type[index]]*value;
+        if (first_time) {
 			output_data_name[index] = name;
 			output_data_type[index] = type;
 		}		

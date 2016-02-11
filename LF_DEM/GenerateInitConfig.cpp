@@ -33,8 +33,9 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	setParameters();
 	rand_seed = rand_seed_;
 	if (circulargap_config) {
-		np_out = (radius_out*2*M_PI)/2;
-		np_in = (radius_in*2*M_PI)/2;
+        np_in = (radius_in*2*M_PI)/2;
+        np_out = (radius_out*2*M_PI)/2;
+		
 		cerr << "np_out = " << np_out << endl;
 		cerr << "np_in = " << np_in << endl;
 		np_movable = np;
@@ -194,13 +195,13 @@ void GenerateInitConfig::outputPositionData()
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
     if (circulargap_config) {
-        fout << "# np1 np2 vf lx ly lz np_in np_out radius_in radius_out" << endl;
+        fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 radius_in radius_out" << endl;
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << np_in << ' ' << np_out << ' ';
         fout << radius_in << ' ' << radius_out << endl;
     } else if (parallel_wall_config) {
-        fout << "# np1 np2 vf lx ly lz np_in np_out z_bot z_top" << endl;
+        fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 z_bot z_top" << endl;
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << np_in << ' ' << np_out << ' ';

@@ -309,16 +309,9 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	} else {
 		twodimension = false;
 	}
-	setSystemVolume();
-	double particle_volume = 0;
-	for (int i=0; i<np; i++) {
-		particle_volume += (4*M_PI/3)*pow(radius[i], 3);
-	}
-	volume_fraction = particle_volume/system_volume;
-	cout << indent << "volume_fraction = " << volume_fraction << endl;
-	initializeBoxing();
-  checkNewInteraction();
-
+    setSystemVolume();
+    initializeBoxing();
+    checkNewInteraction();
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -699,8 +692,8 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	cout << indent << "Setting up System... [ok]" << endl;
 }
 
-void System::setupSystemPostConfiguration(){
-
+void System::setupSystemPostConfiguration()
+{
 	for (int i=0; i<np; i++) {
 		radius_squared[i] = pow(radius[i], 2);
 		radius_cubed[i] = pow(radius[i], 3);
@@ -752,14 +745,8 @@ void System::setupSystemPostConfiguration(){
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
 	}
-
-	/* einstein_stress may be affected by sd_coeff.
-	 * However, the reason to set value of sd_coeff is not very certain for the moment.
-	 * This is why we limit sd_coeff dependence only the diagonal constant.
-	 */
-	 einstein_viscosity = (1+2.5*volume_fraction)/(6*M_PI); // 6M_PI because  6\pi eta_0/T_0 = F_0/L_0^2. In System, stresses are in F_0/L_0^2
-
 }
+
 void System::initializeBoxing()
 {
 	/**
@@ -855,56 +842,54 @@ void System::wallForces()
     if (wall_rheology) {
         double max_total_force = 0;
         for (int i=0; i<np_mobile; i++) {
-            //forcecheck[i].cerr();
             if (max_total_force < forceResultant[i].sq_norm()){
                 max_total_force = forceResultant[i].sq_norm();
             }
         }
         cerr << "force balance: " << sqrt(max_total_force) << endl;
         if (test_simulation > 10 && test_simulation <= 20) {
-            int i_np_in = np_mobile+np_in;
+            int i_np_in = np_mobile+np_wall1;
             // inner wheel
-            force_tang_inwheel = 0;
-            force_normal_inwheel = 0;
+            force_tang_wall1 = 0;
+            force_normal_wall1 = 0;
             for (int i=np_mobile; i<i_np_in; i++) {
                 vec3d unitvec_out = position[i]-origin_of_rotation;
                 unitvec_out.y = 0;
                 unitvec_out.unitvector();
                 vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-                force_tang_inwheel += dot(forceResultant[i], tang_vec);
-                force_normal_inwheel += dot(forceResultant[i], unitvec_out);
-
+                force_tang_wall1 += dot(forceResultant[i], tang_vec);
+                force_normal_wall1 += dot(forceResultant[i], unitvec_out);
             }
             // outer wheel
-            force_tang_outwheel = 0;
-            force_normal_outwheel = 0;
+            force_tang_wall2 = 0;
+            force_normal_wall2 = 0;
             for (int i=i_np_in; i<np; i++) {
                 vec3d unitvec_out = position[i]-origin_of_rotation;
                 unitvec_out.y = 0;
                 unitvec_out.unitvector();
                 vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-                force_tang_outwheel += dot(forceResultant[i], tang_vec);
-                force_normal_outwheel += dot(forceResultant[i], unitvec_out);
+                force_tang_wall2 += dot(forceResultant[i], tang_vec);
+                force_normal_wall2 += dot(forceResultant[i], unitvec_out);
             }
-            cerr << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
+            cerr << force_tang_wall1 << ' ' << force_tang_wall2 << endl;
         } else if (test_simulation > 40) {
-            int i_np_in = np_mobile+np_in;
+            int i_np_in = np_mobile+np_wall1;
             // bottom wall
-            force_tang_inwheel = 0;
-            force_normal_inwheel = 0;
+            force_tang_wall1 = 0;
+            force_normal_wall1 = 0;
             for (int i=np_mobile; i<i_np_in; i++) { // bottom
-                force_tang_inwheel   += forceResultant[i].x;
-                force_normal_inwheel += forceResultant[i].z;
+                force_tang_wall1   += forceResultant[i].x;
+                force_normal_wall1 += forceResultant[i].z;
             }
             // top wall
-            force_tang_outwheel = 0;
-            force_normal_outwheel = 0;
+            force_tang_wall2 = 0;
+            force_normal_wall2 = 0;
             for (int i=i_np_in; i<np; i++) {
-                force_tang_outwheel   += forceResultant[i].x;
-                force_normal_outwheel += forceResultant[i].z;
+                force_tang_wall2   += forceResultant[i].x;
+                force_normal_wall2 += forceResultant[i].z;
             }
-			cerr << "Ft " << force_tang_inwheel << ' ' << force_tang_outwheel << endl;
-			cerr << "Fn " << force_normal_inwheel << ' ' << force_normal_outwheel << endl;
+			cerr << "Ft " <<   force_tang_wall1 << ' ' <<   force_tang_wall2 << endl;
+			cerr << "Fn " << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
         }
     }
 }
@@ -1475,10 +1460,8 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	}
 	if (build_res_mat) {
         // create a new resistance matrix in stokes_solver
-        stokes_solver.resetResistanceMatrix(size_mm,
-                                            size_mf,
-																						size_ff,
-																						resistance_matrix_dblock);
+        stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
+                                            resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
 		 * which is calculated at the beginning.
@@ -1975,7 +1958,7 @@ void System::computeShearRate()
 		shearstress_hyd -= shearstress_rep;
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = einstein_viscosity+shearStressComponent(total_hydro_stress, p.theta_shear);
+	double viscosity_hyd = shearStressComponent(total_hydro_stress, p.theta_shear);
 	shear_rate = shearstress_hyd/viscosity_hyd;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
@@ -2039,7 +2022,7 @@ void System::tmpMixedProblemSetVelocities()
 		}
 		na_velocity[np_mobile].x = 1;
 	} else if (test_simulation >= 11 && test_simulation < 20) {
-		int i_np_in = np_mobile+np_in;
+		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation.z),
@@ -2066,7 +2049,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
     } else if (test_simulation == 41) {
-        int i_np_in = np_mobile+np_in;
+        int i_np_in = np_mobile+np_wall1;
         double height = z_top-z_bot;
         for (int i=np_mobile; i<i_np_in; i++) {
             na_velocity[i].set(-shear_rate*height/2, 0, 0);
@@ -2077,14 +2060,13 @@ void System::tmpMixedProblemSetVelocities()
             na_ang_velocity[i].reset();
         }
     } else if (test_simulation == 42) {
-        int i_np_in = np_mobile+np_in;
-        double height = z_top-z_bot;
+        int i_np_in = np_mobile+np_wall1;
         for (int i=np_mobile; i<i_np_in; i++) {
             na_velocity[i].reset();
             na_ang_velocity[i].reset();
         }
         for (int i=i_np_in; i<np; i++) {
-            na_velocity[i].set(shear_rate*height, 0, 0);
+            na_velocity[i].set(shear_rate*system_height, 0, 0);
             na_ang_velocity[i].reset();
         }
     }
@@ -2436,11 +2418,16 @@ void System::periodize_diff(vec3d& pos_diff)
 void System::setSystemVolume()
 {
 	string indent = "  System::\t";
+    if (z_top == -1) {
+        system_height = lz;
+    } else {
+        system_height = z_top-z_bot-2; // size of wall particles = 1
+    }
 	if (twodimension) {
-		system_volume = lx*lz;
-		cout << indent << "lx = " << lx << " lz = " << lz << endl;
+        system_volume = lx*system_height;
+		cout << indent << "lx = " << lx << " lz = " << lz << " system_height = " << system_height << endl;
 	} else {
-		system_volume = lx*ly*lz;
+		system_volume = lx*ly*system_height;
 		cout << indent << "lx = " << lx << " lz = " << lz << " ly = " << ly << endl;
 	}
 }

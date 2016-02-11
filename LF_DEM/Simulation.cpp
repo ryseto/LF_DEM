@@ -594,10 +594,10 @@ void Simulation::evaluateData()
 
 	 */
 	sys.analyzeState();
-	sys.calcStress();
-//	if (sys.p.lubrication_model > 0) {
-//		sys.calcLubricationForce();
-//	}
+    sys.calcStress();
+    //	if (sys.p.lubrication_model > 0) {
+    //		sys.calcLubricationForce();
+    //	}
 }
 
 void Simulation::outputData()
@@ -628,7 +628,6 @@ void Simulation::outputData()
     }
     outdata.init(number_of_data, output_unit_scales);
 	double sr = sys.get_shear_rate();
-
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 
 	outdata.entryData(1, "time", "time", sys.get_time());
@@ -678,42 +677,18 @@ void Simulation::outputData()
 	outdata.entryData(32, "kn", "none", p.kn);
 	outdata.entryData(33, "kt", "none", p.kt);
 	outdata.entryData(34, "kr", "none", p.kr);
-	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
-	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
+    outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
+    outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
     if (sys.wall_rheology) {
-
-		double wall_shearstress1;
-		double wall_shearstress2;
-		double wall_normalstress1;
-		double wall_normalstress2;
-		if (sys.z_top != -1) {
-			double wall_area;
-			wall_area = sys.get_lx();
-			wall_shearstress1 = sys.force_tang_inwheel/wall_area;
-			wall_shearstress2 = sys.force_tang_outwheel/wall_area;
-			wall_normalstress1 = sys.force_normal_inwheel/wall_area;
-			wall_normalstress2 = sys.force_normal_outwheel/wall_area;
-		} else {
-			double wall_area1 = M_PI*2*sys.radius_in;
-			double wall_area2 = M_PI*2*sys.radius_out;
-			wall_shearstress1 = sys.force_tang_inwheel/wall_area1;
-			wall_shearstress2 = sys.force_tang_outwheel/wall_area2;
-			wall_normalstress1 = sys.force_normal_inwheel/wall_area1;
-			wall_normalstress2 = sys.force_normal_outwheel/wall_area2;
-
-		}
-        outdata.entryData(37, "shear stress wall 1", "none", wall_shearstress1);
-        outdata.entryData(38, "shear stress wall 2", "none", wall_shearstress2);
-		outdata.entryData(39, "normal stress wall 1", "none", wall_normalstress1);
-		outdata.entryData(40, "normal stress wall 2", "none", wall_normalstress2);
+        outdata.entryData(37, "shear viscosity wall 1", "viscosity", sys.shearstress_wall1/sr);
+        outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
+		outdata.entryData(39, "normal stress/rate wall 1", "viscosity", sys.normalstress_wall1/sr);
+		outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
     }
 	outdata.writeToFile();
-
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
 	outdata_st.init(8, output_unit_scales);
-
 	outdata_st.entryData(1, "time", "time", sys.get_time());
 	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
@@ -843,7 +818,7 @@ void Simulation::createDataHeader(stringstream& data_header)
 {
 	data_header << "# LF_DEM version " << GIT_VERSION << endl;
 	data_header << "# np " << sys.get_np() << endl;
-	data_header << "# VF " << sys.volume_fraction << endl;
+	data_header << "# VF " << volume_or_area_fraction << endl;
 	data_header << "# Lx " << sys.get_lx() << endl;
 	data_header << "# Ly " << sys.get_ly() << endl;
 	data_header << "# Lz " << sys.get_lz() << endl;

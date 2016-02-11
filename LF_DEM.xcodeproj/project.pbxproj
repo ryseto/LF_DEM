@@ -13,7 +13,6 @@
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
 		D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */; };
-		D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */; };
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
@@ -24,10 +23,6 @@
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
-		D9705A791C6B74A600EE8461 /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0A71C68BD02005A583A /* libamd.2.4.1.a */; };
-		D9705A7A1C6B74A600EE8461 /* libcholmod.3.0.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0A81C68BD02005A583A /* libcholmod.3.0.6.a */; };
-		D9705A7B1C6B74A600EE8461 /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0A91C68BD02005A583A /* libcolamd.2.9.1.a */; };
-		D9705A7C1C6B74A600EE8461 /* libsuitesparseconfig.4.4.5.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DCB0AA1C68BD02005A583A /* libsuitesparseconfig.4.4.5.a */; };
 		D98003291AE490CA0066B99F /* MagneticForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D918BA0A1AE0FD4F007CB291 /* MagneticForce.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
@@ -43,6 +38,11 @@
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
+		D9DF2D9C1C6C071000FEC18C /* libcholmod.3.0.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE93091C6979BF003668E5 /* libcholmod.3.0.9.dylib */; };
+		D9DF2D9D1C6C071000FEC18C /* libcolamd.2.9.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE930A1C6979BF003668E5 /* libcolamd.2.9.4.dylib */; };
+		D9DF2D9E1C6C071000FEC18C /* libamd.2.4.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE930B1C6979BF003668E5 /* libamd.2.4.4.dylib */; };
+		D9DF2D9F1C6C071000FEC18C /* libsuitesparseconfig.4.5.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9FE930C1C6979BF003668E5 /* libsuitesparseconfig.4.5.1.dylib */; };
+		D9DF2DA01C6C072100FEC18C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
@@ -664,11 +664,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9705A791C6B74A600EE8461 /* libamd.2.4.1.a in Frameworks */,
-				D9705A7A1C6B74A600EE8461 /* libcholmod.3.0.6.a in Frameworks */,
-				D9705A7B1C6B74A600EE8461 /* libcolamd.2.9.1.a in Frameworks */,
-				D9705A7C1C6B74A600EE8461 /* libsuitesparseconfig.4.4.5.a in Frameworks */,
-				D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */,
+				D9DF2DA01C6C072100FEC18C /* Accelerate.framework in Frameworks */,
+				D9DF2D9C1C6C071000FEC18C /* libcholmod.3.0.9.dylib in Frameworks */,
+				D9DF2D9D1C6C071000FEC18C /* libcolamd.2.9.4.dylib in Frameworks */,
+				D9DF2D9E1C6C071000FEC18C /* libamd.2.4.4.dylib in Frameworks */,
+				D9DF2D9F1C6C071000FEC18C /* libsuitesparseconfig.4.5.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
