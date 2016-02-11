@@ -258,6 +258,8 @@ private:
 	StressTensor total_hydrofromfixed_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt;
+	double avg_dt;
+	int avg_dt_nb;
 	/* double kn; */
 	/* double kt; */
 	/* double kr; */
