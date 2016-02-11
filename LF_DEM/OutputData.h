@@ -57,8 +57,20 @@ public:
 		fout.close();
 	}
 	void setFile (const std::string& fname,
-				  const std::string& data_header)
+				  const std::string& data_header,
+				  const bool force_to_run)
 	{
+		if (force_to_run == false) {
+			std::ifstream file_test(fname.c_str());
+			if (file_test.good()) {
+				file_test.close();
+				std::cerr << "The file '" << fname << "' already exists." << std::endl;
+				std::cerr << "You need -f option to overwrite." << std::endl;
+				exit(1);
+			} else {
+				file_test.close();
+			}
+		}
 		fout.open(fname.c_str());
 		fout << data_header;
 	}

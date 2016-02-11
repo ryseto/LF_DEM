@@ -77,7 +77,7 @@ private:
 
 public:
 	/* For DEMsystem*/
-	Simulation();
+	Simulation(bool force_to_run_);
 	~Simulation();
 	void simulationSteadyShear(std::string in_args,
 							   std::vector<std::string>& input_files,
@@ -199,6 +199,7 @@ public:
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();
 	bool kill;
+	bool force_to_run;
 
 	/*********** Events  ************/
 	void handleEventsShearJamming();
