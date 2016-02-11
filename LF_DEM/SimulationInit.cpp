@@ -454,21 +454,21 @@ void Simulation::convertInputValues(string new_unit)
 	 */
 	for (auto& inv: input_values) {
 		string old_unit = inv.unit;
-		if (old_unit != new_unit) {
+		if (old_unit == "hydro" && control_var == "stress") {
+			throw runtime_error ("Simulation:: "+inv.name+" cannot be given in hydro units for stress controlled simulations (non-constant hydro unit of time)");
+		}
+		if (old_unit != new_unit && old_unit!="strain") {
 			if (old_unit != "hydro" && input_force_values.find(old_unit) == input_force_values.end()) {
 				ostringstream error_str;
 				error_str  << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
 				throw runtime_error(error_str.str());
 			}
 			if (inv.type == "time") {
-				if (old_unit == "hydro") { // = it is a strain, better keeping it that way
-					inv.unit = "strain";
-				} else {
 					*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
 					inv.unit = new_unit;
-				}
 			}
 		}
+
 		string indent = "  Simulation::\t";
 		cout << indent << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
@@ -528,6 +528,34 @@ void Simulation::assertParameterCompatibility()
 	}
 }
 
+void Simulation::tagStrainParameters()
+{
+	/**
+	\brief Tag some time parameters like time_end given strain units (suffix h)
+
+		In stress controlled simulations, hydro time units are ill-defined
+		as the rate is changing in time. If times are given with these units, LF_DEM will
+		throw a runtime_error if run under stress controlled conditions.
+		However, there are some parameters for which giving strain units make sense,
+		like time_end, etc. Here we tag those special parameters as having explicit
+		"strain" units, which will later go through unaffected.
+
+		Note that the System class must be aware that those parameters are strains
+		to be compared with System::shear_strain() (as opposed to times to be compared
+		with System::time()). The mechanism to declare those parameters to System is
+		implemented in Simulation::resolveTimeOrStrainParameters().
+	*/
+	for (auto& inv: input_values) {
+		if (inv.name == "time_interval_output_data"
+				|| inv.name == "time_interval_output_config"
+				|| inv.name == "time_end") {
+			if (inv.unit == "hydro") {
+				inv.unit = "strain";
+			}
+		}
+	}
+}
+
 void Simulation::resolveTimeOrStrainParameters()
 {
   /**
@@ -551,8 +579,8 @@ void Simulation::resolveTimeOrStrainParameters()
 
 		Because these 2 cases lead to 2 different tests, we have to inform
 		the System class which test to perform. If time_end > 0, System tests with
-		sys.time()==time_end. If time_end==-1, the test is done with
-		sys.shear_strain()==strain_end.
+		System::time()==time_end. If time_end==-1, the test is done with
+		System::shear_strain()==strain_end.
 
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
@@ -620,9 +648,9 @@ void Simulation::setupSimulation(string in_args,
 		sys.zero_shear = true;
         sys.mobile_fixed = true;
     }
-	setDefaultParameters();
+	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
-
+	tagStrainParameters();
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();
@@ -705,9 +733,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "lub_reduce_parameter") {
 		p.lub_reduce_parameter = atof(value.c_str());
 	} else if (keyword == "contact_relaxation_time") {
-		p.contact_relaxation_time = atof(value.c_str());
+		catchSuffixedValue("time", keyword, value, &p.contact_relaxation_time);
 	} else if (keyword == "contact_relaxation_time_tan"){
-		p.contact_relaxation_time_tan = atof(value.c_str());
+		catchSuffixedValue("time", keyword, value, &p.contact_relaxation_time_tan);
 	} else if (keyword == "disp_max") {
 		p.disp_max = atof(value.c_str());
 	} else if (keyword == "time_end") {
@@ -856,7 +884,7 @@ void Simulation::readParameterFile(const string& filename_parameters)
 	return;
 }
 
-void Simulation::setDefaultParameters()
+void Simulation::setDefaultParameters(string input_scale)
 {
 	/**
 	 \brief Set default values for ParameterSet parameters.
@@ -910,8 +938,8 @@ void Simulation::setDefaultParameters()
 	 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 	 *
 	 */
-	p.contact_relaxation_time = 1e-3;
-	p.contact_relaxation_time_tan = 0;
+	catchSuffixedValue("time", "contact_relaxation_time", "1e-3"+input_scale, &p.contact_relaxation_time);
+	catchSuffixedValue("time", "contact_relaxation_time_tan", "0"+input_scale, &p.contact_relaxation_time_tan);
 	if (control_var == "stress") {
 		p.stress_scaled_contactmodel = true;
 		p.kn = 2000;
@@ -1039,7 +1067,7 @@ map<string,string> Simulation::getConfMetaData(const string &line1, const string
     vector<string> l1_split = splitString(line1);
     vector<string> l2_split = splitString(line2);
 	if (l1_split.size() != l2_split.size()) {
-		throw runtime_error("System:: Ill-formed header in the configuration file.\n");
+		throw runtime_error("Simulation:: Ill-formed header in the configuration file.\n");
 	}
 	map<string,string> meta_data;
     for (unsigned int i=1; i<l1_split.size(); i++) {

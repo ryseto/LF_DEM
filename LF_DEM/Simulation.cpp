@@ -232,7 +232,7 @@ void Simulation::simulationSteadyShear(string in_args,
         sys.wall_rheology = true;
         sys.test_simulation = 42;//wtestB
     }
-    
+
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	time_t now;
@@ -496,8 +496,19 @@ void Simulation::catchSuffixedValue(string type, string keyword,
 	suffix = unit_longname[suffix];
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
-	input_values.push_back(inv);
 
+	// replace in input_values if already present
+	bool included = false;
+	for (auto &existing_inv : input_values) {
+		if(existing_inv.name == inv.name) { // replace if already present
+			existing_inv = inv;
+			included = true;
+		}
+	}
+	// otherwise add it to input_values	
+	if (!included) {
+		input_values.push_back(inv);
+	}
 	if (!caught_suffix) {
 		errorNoSuffix(keyword);
 	}
