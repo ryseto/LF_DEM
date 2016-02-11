@@ -32,10 +32,10 @@ private:
 	System *sys;
 	Interaction *interaction;
 	//======= particles data  ====================//
-	unsigned short p0;
-	unsigned short p1;
-	unsigned short p0_6;
-	unsigned short p1_6;
+	unsigned int p0;
+	unsigned int p1;
+	unsigned int p0_6;
+	unsigned int p1_6;
 	double range;
 	vec3d *nvec;
 	double nxnx;

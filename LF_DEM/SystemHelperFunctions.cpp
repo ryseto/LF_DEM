@@ -104,7 +104,7 @@ double System::evaluateMaxAngVelocity()
 double System::evaluateMinGap()
 {
 	double _min_reduced_gap = p.lub_max_gap;
-	unsigned short p0, p1;
+	unsigned int p0, p1;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].get_par_num(p0, p1);

@@ -25,8 +25,8 @@ class System;
 class Interaction;
 
 struct contact_state {
-	unsigned short p0;
-	unsigned short p1;
+	unsigned int p0;
+	unsigned int p1;
 	vec3d disp_tan;
 	vec3d disp_rolling;
 };
@@ -39,8 +39,8 @@ private:
 	System *sys;
 	Interaction *interaction;
 	void (Contact::*frictionlaw)();
-	unsigned short p0;
-	unsigned short p1;
+	unsigned int p0;
+	unsigned int p1;
 	//===== forces and stresses ==================== //
 	double kt_scaled;
 	double kr_scaled;
@@ -62,7 +62,6 @@ private:
 	double ft_max; // friction_model = 5;
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
-
 public:
 	/*********************************
 	 *       Public Methods          *

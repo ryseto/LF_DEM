@@ -151,9 +151,9 @@ void System::calcStress()
 			total_contact_stressXF += interaction[k].contact.getContactStressXF();
 			if (cstress_per_particle) {
 				StressTensor sc = interaction[k].contact.getContactStressXF();
-				unsigned short i, j;
+				unsigned int i, j;
 				interaction[k].get_par_num(i,j);
-				double r_ij = interaction[k].get_ro();
+                double r_ij = interaction[k].ro;
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
 				contactstressXF[j] += (radius[j]/r_ij)*sc;
 			}
@@ -178,7 +178,7 @@ void System::calcStress()
 					As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
 				*/
 				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
-				unsigned short i, j;
+				unsigned int i, j;
 				interaction[k].get_par_num(i,j);
 				repulsivestressXF[i] += sc;
 				repulsivestressXF[j] += sc;

@@ -1286,15 +1286,15 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 
-// now contacts
-	int ncont;
-	unsigned short p0, p1;
+    // now contacts
+    int ncont;
+	unsigned int p0, p1;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
 	for (int i=0; i<ncont; i++) {
-		file_import.read((char*)&p0, sizeof(unsigned short));
-		file_import.read((char*)&p1, sizeof(unsigned short));
+		file_import.read((char*)&p0, sizeof(unsigned int));
+		file_import.read((char*)&p1, sizeof(unsigned int));
 		file_import.read((char*)&dt_x, sizeof(double));
 		file_import.read((char*)&dt_y, sizeof(double));
 		file_import.read((char*)&dt_z, sizeof(double));
@@ -1314,10 +1314,10 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 
 void Simulation::prepareSimulationName(bool binary_conf,
 									   const string& filename_import_positions,
-									   const string& filename_parameters,
-									   const string& simu_identifier,
-										 double dimensionlessnumber,
-										 const string& input_scale)
+                                       const string& filename_parameters,
+                                       const string& simu_identifier,
+                                       double dimensionlessnumber,
+                                       const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.

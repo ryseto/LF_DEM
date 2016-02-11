@@ -32,14 +32,14 @@ void Contact::init(System* sys_, Interaction* interaction_)
 
 void Contact::setSpringConstants()
 {
-	const double& ro_12 = interaction->ro_12;
-	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
-	if (sys->friction) {
-		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
-		if (sys->rolling_friction) {
-			kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
-		}
-	}
+    const double& ro_12 = interaction->ro_12;
+    kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
+    if (sys->friction) {
+        kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+        if (sys->rolling_friction) {
+            kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+        }
+    }
 }
 
 void Contact::setInteractionData()
@@ -155,10 +155,10 @@ void Contact::calcContactInteraction()
 	 *
 	 *
 	 reduced_gap is negative,
-	 positive. */
-	f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
-	f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-	if (sys->friction) {
+     positive. */
+    f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
+    f_contact_normal = -f_contact_normal_norm*interaction->nvec;
+    if (sys->friction) {
 		disp_tan.vertical_projection(interaction->nvec);
 		f_contact_tan = kt_scaled*disp_tan;
 		if (sys->rolling_friction) {

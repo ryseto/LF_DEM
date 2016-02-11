@@ -329,7 +329,7 @@ void System::setContacts(const vector <struct contact_state>& cs)
 
 	for (const auto& c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
-			unsigned short p0, p1;
+			unsigned int p0, p1;
 			interaction[k].get_par_num(p0, p1);
 			if (p0 == c.p0 && p1 == c.p1) {
 				interaction[k].contact.setState(c);
@@ -928,7 +928,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
         for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
                 interaction[k].lubrication.calcPairwiseForce();
-                unsigned short p0, p1;
+                unsigned int p0, p1;
                 interaction[k].get_par_num(p0, p1);
                 forceResultant[p0] += interaction[k].lubrication.lubforce_p0;
                 forceResultant[p1] -= interaction[k].lubrication.lubforce_p0;

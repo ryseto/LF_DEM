@@ -240,7 +240,7 @@ void GenerateInitConfig::outputPositionData()
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
 	for (int k=0; k<sys.nb_interaction; k++) {
-		unsigned short i, j;
+		unsigned int i, j;
 		sys.interaction[k].get_par_num(i, j);
 		vec3d d_pos = position[i]-position[j];
 		if (d_pos.norm() < 10){
@@ -261,15 +261,15 @@ double GenerateInitConfig::computeGradient()
 	for(int i=0; i<np; i++) {
 		grad[i].reset();
 	}
-	unsigned short i, j;
+	unsigned int i, j;
 	double r, rcont;
 	double amp, amp2;
 	double energy = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_contact()) {
 			sys.interaction[k].get_par_num(i, j);
-			r = sys.interaction[k].get_r();
-			rcont = sys.interaction[k].get_ro();
+			r = sys.interaction[k].r;
+            rcont = sys.interaction[k].ro;
 			const vec3d& nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
@@ -468,10 +468,8 @@ double GenerateInitConfig::particleEnergy(int i)
 	double energy = 0;
 	for (auto&& inter : sys.interaction_list[i]){
 		if (inter->is_overlap()) {
-			double r = inter->get_r();
-			double rcont = inter->get_ro();
-			double amp = inter->get_a_reduced()*(1/rcont-1/r); // negative
-			energy += r*amp*amp;
+			double amp = inter->get_a_reduced()*(1/inter->ro-1/inter->r); // negative
+			energy += inter->r*amp*amp;
 		}
 	}
 	return energy;

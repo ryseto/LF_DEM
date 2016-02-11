@@ -556,19 +556,19 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	}
 	vector <struct contact_state> cs;
 	sys.getContacts(cs);
-	int ncont = cs.size();
-	conf_export.write((char*)&ncont, sizeof(unsigned int));
-	for (int i=0; i<ncont; i++) {
-		conf_export.write((char*)&(cs[i].p0), sizeof(unsigned short));
-		conf_export.write((char*)&(cs[i].p1), sizeof(unsigned short));
-		conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_tan.y), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_tan.z), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_rolling.x), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
-		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
-	}
-	//	conf_export.write((char*)&(sys.dt), sizeof(double));
+    int ncont = cs.size();
+    conf_export.write((char*)&ncont, sizeof(unsigned int));
+    for (int i=0; i<ncont; i++) {
+        conf_export.write((char*)&(cs[i].p0), sizeof(unsigned int));
+        conf_export.write((char*)&(cs[i].p1), sizeof(unsigned int));
+        conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
+        conf_export.write((char*)&(cs[i].disp_tan.y), sizeof(double));
+        conf_export.write((char*)&(cs[i].disp_tan.z), sizeof(double));
+        conf_export.write((char*)&(cs[i].disp_rolling.x), sizeof(double));
+        conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
+        conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
+    }
+    //	conf_export.write((char*)&(sys.dt), sizeof(double));
 	conf_export.close();
 }
 
@@ -702,7 +702,7 @@ void Simulation::outputData()
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
-		int nb_of_fields = strlen(p.out_particle_stress.c_str());
+        int nb_of_fields = strlen(p.out_particle_stress.c_str());
 		outdata_pst.init(nb_of_fields, output_unit_scales);
 
 		for (int i=0; i<sys.get_np(); i++) {
@@ -915,7 +915,7 @@ void Simulation::outputConfigurationData()
 		fout_interaction << endl;
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
-				unsigned short i, j;
+				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
 				vec3d& nr_vec = sys.interaction[k].nvec;
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();

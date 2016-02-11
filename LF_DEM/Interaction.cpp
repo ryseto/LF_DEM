@@ -39,7 +39,7 @@ void Interaction::calcNormalVectorDistanceGap()
 /* Activate interaction between particles i and j.
  * Always j>i is satisfied.
  */
-void Interaction::activate(unsigned short i, unsigned short j,
+void Interaction::activate(unsigned int i, unsigned int j,
 						   double interaction_range_)
 {
     active = true;
