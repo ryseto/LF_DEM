@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	
 	int random_seed = 1;
     bool binary_conf = false;
-
+	bool force_to_run = false;
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -57,7 +57,8 @@ int main(int argc, char **argv)
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
 		{"identifier",        required_argument, 0, 'v'},
-        {"help",              no_argument,       0, 'h'},
+		{"force-to-run",      no_argument,       0, 'f'},
+		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
 
@@ -158,6 +159,9 @@ int main(int argc, char **argv)
 			case 'v':
 				simu_identifier = optarg;
 				break;
+			case 'f':
+				force_to_run = true;
+				break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -189,7 +193,7 @@ int main(int argc, char **argv)
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
-		Simulation simulation;
+		Simulation simulation(force_to_run);
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
 										  dimensionless_number, suffix, rheology_control, simu_identifier);

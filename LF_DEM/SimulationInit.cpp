@@ -1002,11 +1002,10 @@ void Simulation::openOutputFiles()
 
 	stringstream data_header;
 	createDataHeader(data_header);
-
-	outdata.setFile("data_"+sys.simu_name+".dat", data_header.str());
-	outdata_st.setFile("st_"+sys.simu_name+".dat", data_header.str());
+	outdata.setFile("data_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+	outdata_st.setFile("st_"+sys.simu_name+".dat", data_header.str(), force_to_run);
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setFile("pst_"+sys.simu_name+".dat", data_header.str());
+		outdata_pst.setFile("pst_"+sys.simu_name+".dat", data_header.str(), force_to_run);
 	}
 	string time_filename = "t_"+sys.simu_name+".dat";
 	fout_time.open(time_filename.c_str());
