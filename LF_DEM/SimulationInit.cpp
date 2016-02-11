@@ -530,10 +530,33 @@ void Simulation::assertParameterCompatibility()
 
 void Simulation::resolveTimeOrStrainParameters()
 {
-    /* @ Please explain this part.
-     * @ I don't know how to output with a strain interval.
-     */
-    
+  /**
+		\brief Interpret time units.
+
+		We have to treat times as a special case, because we sometimes want to
+		use times expressed in units of inverse shear rate (i.e. time=strain).
+		Because the shear rate might change in the simulation, it is not possible
+		to perform a simple change of unit at any time in the simulation.
+
+		Ex 1: I am running a stress controlled simulation in repulsive time units.
+		I set kn = 100r and time_end = 1kn;
+		Then I know that I need to stop the simulation when sys.time()==1/100
+		(i.e. when the time expressed in repulsive units reaches 1/100)
+
+		Ex 2: I am running a stress controlled simulation in repulsive time units.
+		I set kn = 100r but this time time_end = 1h;
+		There is no way to know what 1h corresponds to in repulsive units,
+		as the shear rate is evolving with time (stopping at sys.time()==???).
+		The only way is to stop when sys.shear_strain()==1.
+
+		Because these 2 cases lead to 2 different tests, we have to inform
+		the System class which test to perform. If time_end > 0, System tests with
+		sys.time()==time_end. If time_end==-1, the test is done with
+		sys.shear_strain()==strain_end.
+
+		We have to do this not only for time_end, but also for every time defined
+		in the parameters.
+  */
 	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
