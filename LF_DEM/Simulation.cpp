@@ -135,9 +135,7 @@ void Simulation::handleEvents()
 	events.clear();
 }
 
-void Simulation::generateOutput(double& next_output_data,
-								double& next_output_config,
-								int& binconf_counter)
+void Simulation::generateOutput(double& next_output_config, int& binconf_counter)
 {
 	/******************** OUTPUT DATA ********************/
 	evaluateData();
@@ -259,7 +257,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		timeEvolution(next_output_data);
 		handleEvents();
 
-		generateOutput(next_output_data, next_output_config, binconf_counter);
+		generateOutput(next_output_config, binconf_counter);
 
 		if (time_end != -1) {
 			cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
@@ -506,7 +504,7 @@ void Simulation::catchSuffixedValue(string type, string keyword,
 			included = true;
 		}
 	}
-	// otherwise add it to input_values	
+	// otherwise add it to input_values
 	if (!included) {
 		input_values.push_back(inv);
 	}
@@ -674,7 +672,7 @@ void Simulation::outputData()
 	outdata.entryData(30, "max angular velocity", "velocity", sys.max_ang_velocity);
 	/* simulation parameter
 	 */
-	outdata.entryData(31, "dt", "time", sys.dt);
+	outdata.entryData(31, "dt", "time", sys.avg_dt);
 	outdata.entryData(32, "kn", "none", p.kn);
 	outdata.entryData(33, "kt", "none", p.kt);
 	outdata.entryData(34, "kr", "none", p.kr);

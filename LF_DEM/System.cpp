@@ -1073,7 +1073,7 @@ void System::adaptTimeStep(const string& time_or_strain,
 			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
 		}
 	} else {
-		if (get_time() + dt > value_end) {
+		if (get_time() + dt > value_end) { // @@ this is to be sure you output data exactly when you want
             dt = value_end-get_time(); //  @@ dt becomes zero....
 		}
 	}
@@ -1238,16 +1238,20 @@ void System::timeEvolution(const string& time_or_strain,
 	if (lowPeclet) {
 		calc_stress = true;
 	}
-
+	
+	avg_dt = 0;
+	avg_dt_nb = 0;
 	while (keepRunning(time_or_strain, value_end)) {
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
+		avg_dt += dt;
+		avg_dt_nb++;
 	};
+	avg_dt /= avg_dt_nb;
 
 	if (events.empty()) {
 		calc_stress = true;
 		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
 	}
-
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust) {
 		adjustContactModelParameters();
