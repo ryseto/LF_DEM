@@ -39,8 +39,8 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   r = radius_out + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-        np_wall1 = ((radius_in-1)*2*M_PI)/1.5;
-        np_wall2 = ((radius_out+1)*2*M_PI)/1.5;
+        np_wall1 = ((cg_radius_in-1)*2*M_PI)/1.5;
+        np_wall2 = ((cg_radius_out+1)*2*M_PI)/1.5;
 		cerr << "np_in = " << np_wall1 << endl;
 		cerr << "np_out = " << np_wall2 << endl;
 		np_movable = np;
@@ -155,7 +155,7 @@ void GenerateInitConfig::outputPositionData()
 	} else {
 		ss_posdatafilename << "D3";
 	}
-	ss_posdatafilename << "N" << np;
+	ss_posdatafilename << "N" << np_movable;
 	ss_posdatafilename << "VF" << volume_fraction;
 	if (disperse_type == 'm') {
 		ss_posdatafilename << "Mono";
@@ -170,7 +170,7 @@ void GenerateInitConfig::outputPositionData()
 		exit(1);
 	}
     if (circulargap_config) {
-        ss_posdatafilename << "cylinders"; // square
+        ss_posdatafilename << "cylinders" << cg_ratio_radii; // square
     } else if (parallel_wall_config) {
         ss_posdatafilename << "shearwalls"; // square
     } else {
@@ -210,7 +210,7 @@ void GenerateInitConfig::outputPositionData()
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << np_wall1 << ' ' << np_wall2 << ' ';
-        fout << radius_in << ' ' << radius_out << endl;
+        fout << cg_radius_in << ' ' << cg_radius_out << endl;
     } else if (parallel_wall_config) {
 		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 z_bot z_top" << endl;
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
@@ -376,7 +376,7 @@ void GenerateInitConfig::putRandom()
         while (i < np_movable) {
             vec3d pos(lx*RANDOM, 0, lz*RANDOM);
             double r = (pos-r_center).norm();
-            if (r > radius_in+2 && r < radius_out-2) {
+            if (r > cg_radius_in+2 && r < cg_radius_out-2) {
                 sys.position[i] = pos;
                 if (i < np1) {
                     sys.radius[i] = a1;
@@ -388,13 +388,13 @@ void GenerateInitConfig::putRandom()
         }
         for (i=0; i<np_wall1; i++){
             double t = i*(2*M_PI/np_wall1);
-            vec3d pos = r_center + (radius_in-1)*vec3d(cos(t), 0, sin(t));
+            vec3d pos = r_center + (cg_radius_in-1)*vec3d(cos(t), 0, sin(t));
             sys.position[i+np_movable] = pos;
             sys.radius[i+np_movable] = 1;
         }
         for (i=0; i<np_wall2; i++){
             double t = i*(2*M_PI/np_wall2);
-            vec3d pos = r_center + (radius_out+1)*vec3d(cos(t), 0, sin(t));
+            vec3d pos = r_center + (cg_radius_out+1)*vec3d(cos(t), 0, sin(t));
             sys.position[i+np_movable+np_wall1] = pos;
             sys.radius[i+np_movable+np_wall1] = 1;
         }
@@ -688,17 +688,14 @@ void GenerateInitConfig::setParameters()
 		double area_gap = area_particle/volume_fraction;
 		cerr << "area_particle = " << area_particle << endl;
 		cerr << "area_gap = " << area_gap << endl;
-		double rr = readStdinDefault(2, "radius ratio");
-		//radius_in = ((rr+1) + sqrt((rr+1)*(rr+1) + (rr*rr-1)*area_gap/M_PI))/(rr*rr-1);
-		radius_in = sqrt(area_gap/(M_PI*(rr*rr-1)));
-		radius_out = rr*radius_in;
-		cerr << radius_in << endl;
-		cerr << radius_out << endl;
-		lz = 2*radius_out+5;
+		cg_ratio_radii = readStdinDefault(0.5, "radius ratio (R_in/R_out)");
+		cg_radius_out = sqrt(area_gap/(M_PI*(1-cg_ratio_radii*cg_ratio_radii)));
+		cg_radius_in = cg_ratio_radii*cg_radius_out;
+		cerr << cg_radius_in << endl;
+		cerr << cg_radius_out << endl;
+		lz = 2*cg_radius_out+5;
 		lx = lz*lx_lz;
 		ly = 0;
-		//radius_out =  readStdinDefault(10, "outer radius");
-		//radius_in =  readStdinDefault(3, "inner radius");
     } else if (parallel_wall_config) {
         lz += 10;
         z_bot = 4;

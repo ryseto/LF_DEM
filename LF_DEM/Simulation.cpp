@@ -17,7 +17,7 @@
 
 using namespace std;
 
-Simulation::Simulation(bool force_to_run_):
+Simulation::Simulation():
 sys(System(p, events)),
 shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
@@ -34,7 +34,6 @@ target_stress_input(0)
 	unit_longname["kt"] = "tan_stiffness";
 	unit_longname["kr"] = "roll_stiffness";
 	kill = false;
-	force_to_run = force_to_run_;
 };
 
 Simulation::~Simulation()
