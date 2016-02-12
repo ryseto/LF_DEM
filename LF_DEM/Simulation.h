@@ -118,9 +118,7 @@ public:
 	ParameterSet p;
 	bool keepRunning();
 	void timeEvolution(double& next_output_data);
-	void generateOutput(double& next_output_data,
-						double& next_output_config,
-						int& binconf_counter);
+	void generateOutput(double& next_output_config, int& binconf_counter);
 	/*********** Events  ************/
 	std::list <Event> events;
 	void setupEvents();
@@ -131,7 +129,7 @@ public:
 	}
 
 	void assertParameterCompatibility();
-	void setDefaultParameters();
+	void setDefaultParameters(std::string input_scale);
 	void readParameterFile(const std::string& filename_parameters);
 	void openOutputFiles();
 	void prepareSimulationName(bool binary_conf,
@@ -147,6 +145,7 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
+	void tagStrainParameters();
 	void resolveTimeOrStrainParameters();
 	std::map<std::string,std::string> getConfMetaData(const std::string &,
 																										const std::string &);
