@@ -1700,8 +1700,6 @@ void System::forceResultantLubricationForce()
 			forceResultant[i].y += force_f_to_f[i6+1];
 			forceResultant[i].z += force_f_to_f[i6+2];
 		}
-
-		
     }
 }
 
@@ -2077,24 +2075,25 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
     } else if (test_simulation == 41) {
-        int i_np_in = np_mobile+np_wall1;
-        double height = z_top-z_bot;
-        for (int i=np_mobile; i<i_np_in; i++) {
-            na_velocity[i].set(-shear_rate*height/2, 0, 0);
+        int i_np_wall1 = np_mobile+np_wall1;
+		double wall_velocity = shear_rate*system_height;
+        for (int i=np_mobile; i<i_np_wall1; i++) {
+            na_velocity[i].set(-wall_velocity/2, 0, 0);
             na_ang_velocity[i].reset();
         }
-        for (int i=i_np_in; i<np; i++) {
-            na_velocity[i].set(shear_rate*height/2, 0, 0);
+        for (int i=i_np_wall1; i<np; i++) {
+            na_velocity[i].set(wall_velocity/2, 0, 0);
             na_ang_velocity[i].reset();
         }
     } else if (test_simulation == 42) {
-        int i_np_in = np_mobile+np_wall1;
-        for (int i=np_mobile; i<i_np_in; i++) {
+        int i_np_wall1 = np_mobile+np_wall1;
+		double wall_velocity = shear_rate*system_height;
+        for (int i=np_mobile; i<i_np_wall1; i++) {
             na_velocity[i].reset();
             na_ang_velocity[i].reset();
         }
-        for (int i=i_np_in; i<np; i++) {
-            na_velocity[i].set(shear_rate*system_height, 0, 0);
+        for (int i=i_np_wall1; i<np; i++) {
+            na_velocity[i].set(wall_velocity, 0, 0);
             na_ang_velocity[i].reset();
         }
     }
@@ -2449,7 +2448,9 @@ void System::setSystemVolume()
     if (z_top == -1) {
         system_height = lz;
     } else {
-        system_height = z_top-z_bot-2; // size of wall particles = 1
+		/* wall particles are at z = z_bot - a and z_top + a
+		 */
+		system_height = z_top-z_bot;
     }
 	if (twodimension) {
         system_volume = lx*system_height;

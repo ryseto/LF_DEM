@@ -33,20 +33,31 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	setParameters();
 	rand_seed = rand_seed_;
 	if (circulargap_config) {
-        np_in = (radius_in*2*M_PI)/2;
-        np_out = (radius_out*2*M_PI)/2;
-		
-		cerr << "np_out = " << np_out << endl;
-		cerr << "np_in = " << np_in << endl;
+		/* Note:
+		 * Wall particles are placed at
+		 *   r = radius_in - a
+		 *   r = radius_out + a;
+		 * Mobile partilces can be in radius_in < r < radius_out
+		 */
+        np_wall1 = ((radius_in-1)*2*M_PI)/1.5;
+        np_wall2 = ((radius_out+1)*2*M_PI)/1.5;
+		cerr << "np_in = " << np_wall1 << endl;
+		cerr << "np_out = " << np_wall2 << endl;
 		np_movable = np;
-		np_fix = np_out+np_in;
+		np_fix = np_wall1+np_wall2;
 		np += np_fix;
 		cerr << "np " << np << endl;
     } else if (parallel_wall_config) {
-        np_out = lx/1.5+1;
-        np_in = lx/1.5+1;
+		/* Note:
+		 * Wall particles are placed at
+		 *   z = z_bot - a
+		 *   z = z_top + a;
+		 * Mobile partilces can be in radius_in < r < radius_out
+		 */
+        np_wall1 = lx/1.5;
+        np_wall2 = lx/1.5;
         np_movable = np;
-        np_fix = np_in+np_out;
+        np_fix = np_wall1+np_wall2;
         np += np_fix;
 	} else {
 		np_movable = np;
@@ -195,16 +206,16 @@ void GenerateInitConfig::outputPositionData()
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
     if (circulargap_config) {
-        fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 radius_in radius_out" << endl;
+		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 radius_in radius_out" << endl;
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
-        fout << np_in << ' ' << np_out << ' ';
+        fout << np_wall1 << ' ' << np_wall2 << ' ';
         fout << radius_in << ' ' << radius_out << endl;
     } else if (parallel_wall_config) {
-        fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 z_bot z_top" << endl;
+		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 z_bot z_top" << endl;
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
-        fout << np_in << ' ' << np_out << ' ';
+        fout << np_wall1 << ' ' << np_wall1 << ' ';
         fout << z_bot << ' ' << z_top  << endl;
 	} else {
         fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
@@ -375,47 +386,49 @@ void GenerateInitConfig::putRandom()
                 i++;
             }
         }
-        for (i=0; i<np_in; i++){
-            double t = i*(2*M_PI/np_in);
-            vec3d pos = r_center + radius_in*vec3d(cos(t), 0, sin(t));
+        for (i=0; i<np_wall1; i++){
+            double t = i*(2*M_PI/np_wall1);
+            vec3d pos = r_center + (radius_in-1)*vec3d(cos(t), 0, sin(t));
             sys.position[i+np_movable] = pos;
             sys.radius[i+np_movable] = 1;
         }
-        for (i=0; i<np_out; i++){
-            double t = i*(2*M_PI/np_out);
-            vec3d pos = r_center + radius_out*vec3d(cos(t), 0, sin(t));
-            sys.position[i+np_movable+np_in] = pos;
-            sys.radius[i+np_movable+np_in] = 1;
+        for (i=0; i<np_wall2; i++){
+            double t = i*(2*M_PI/np_wall2);
+            vec3d pos = r_center + (radius_out+1)*vec3d(cos(t), 0, sin(t));
+            sys.position[i+np_movable+np_wall1] = pos;
+            sys.radius[i+np_movable+np_wall1] = 1;
         }
-        cerr << np_in << ' ' << np_out << endl;
+        cerr << np_wall1 << ' ' << np_wall2 << endl;
     } else if (parallel_wall_config) {
         int i = 0;
         while (i < np_movable) {
             vec3d pos(lx*RANDOM, 0, lz*RANDOM);
-            if (pos.z > z_bot+2 && pos.z < z_top-2) {
-                pos.cerr();
-                sys.position[i] = pos;
-                if (i < np1) {
-                    sys.radius[i] = a1;
-                } else {
-                    sys.radius[i] = a2;
-                }
-                i++;
+			double a;
+			if (i < np1) {
+				a = a1;
+			} else {
+				a = a2;
+			}
+            if (pos.z > z_bot+a && pos.z < z_top-a) {
+				pos.cerr();
+				sys.position[i] = pos;
+				sys.radius[i] = a;
+				i++;
             }
         }
-        double delta_x = lx/np_in;
-        for (i=0; i<np_in; i++){
-            vec3d pos(1+delta_x*i, 0, z_bot);
+        double delta_x = lx/np_wall1;
+        for (i=0; i<np_wall1; i++){
+            vec3d pos(1+delta_x*i, 0, z_bot-1);
             sys.position[i+np_movable] = pos;
             sys.radius[i+np_movable] = 1;
         }
-        for (i=0; i<np_out; i++){
-            vec3d pos(1+delta_x*i, 0, z_top);
-            sys.position[i+np_movable+np_in] = pos;
-            sys.radius[i+np_movable+np_in] = 1;
+        for (i=0; i<np_wall2; i++){
+            vec3d pos(1+delta_x*i, 0, z_top+1);
+            sys.position[i+np_movable+np_wall1] = pos;
+            sys.radius[i+np_movable+np_wall1] = 1;
         }
         cerr << "*" << endl;
-        cerr << np_in << ' ' << np_out << endl;
+        cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else {
         for (int i=0; i<np_movable; i++) {
             sys.position[i].x = lx*RANDOM;
@@ -676,7 +689,8 @@ void GenerateInitConfig::setParameters()
 		cerr << "area_particle = " << area_particle << endl;
 		cerr << "area_gap = " << area_gap << endl;
 		double rr = readStdinDefault(2, "radius ratio");
-		radius_in = ((rr+1) + sqrt((rr+1)*(rr+1) + (rr*rr-1)*area_gap/M_PI))/(rr*rr-1);
+		//radius_in = ((rr+1) + sqrt((rr+1)*(rr+1) + (rr*rr-1)*area_gap/M_PI))/(rr*rr-1);
+		radius_in = sqrt(area_gap/(M_PI*(rr*rr-1)));
 		radius_out = rr*radius_in;
 		cerr << radius_in << endl;
 		cerr << radius_out << endl;
