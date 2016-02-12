@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 	int random_seed = 1;
     bool binary_conf = false;
 	bool force_to_run = false;
+	bool long_file_name = false;
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -58,13 +59,14 @@ int main(int argc, char **argv)
 		{"binary",            no_argument,       0, 'n'},
 		{"identifier",        required_argument, 0, 'v'},
 		{"force-to-run",      no_argument,       0, 'f'},
+		{"long-file-name",    no_argument,       0, 'l'},
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8fm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8flm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -162,6 +164,8 @@ int main(int argc, char **argv)
 			case 'f':
 				force_to_run = true;
 				break;
+			case 'l':
+				long_file_name = true;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -193,7 +197,9 @@ int main(int argc, char **argv)
 		input_files[2] = knkt_filename;
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
-		Simulation simulation(force_to_run);
+		Simulation simulation;
+		simulation.force_to_run = force_to_run;
+		simulation.long_file_name = long_file_name;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
 										  dimensionless_number, suffix, rheology_control, simu_identifier);

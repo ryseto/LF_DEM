@@ -1395,15 +1395,15 @@ void Simulation::prepareSimulationName(bool binary_conf,
 	ss_simu_name << filename_import_positions.substr(pos_name_start, pos_name_end-pos_name_start);
 	ss_simu_name << "_";
 	ss_simu_name << filename_parameters.substr(param_name_start, param_name_end-param_name_start);
-
 	ostringstream string_control_parameters;
-	for (const auto& f: input_force_units) {
-		if (f.first.find("stiffness")==std::string::npos) {
-			string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
+	if (long_file_name) {
+		for (const auto& f: input_force_units) {
+			if (f.first.find("stiffness") == std::string::npos) {
+				string_control_parameters << "_" << f.first << input_force_values[f.first] << f.second;
+			}
 		}
 	}
 	string_control_parameters << "_" << control_var << dimensionlessnumber << input_scale;
-
 	ss_simu_name << string_control_parameters.str();
 	if (simu_identifier != "") {
 		ss_simu_name << "_";

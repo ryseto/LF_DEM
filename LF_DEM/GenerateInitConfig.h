@@ -68,8 +68,9 @@ private:
 	bool magnetic_config;
 	bool circulargap_config;
     bool parallel_wall_config;
-	double radius_in;
-	double radius_out;
+	double cg_radius_in;
+	double cg_radius_out;
+	double cg_ratio_radii;
 	int np_wall1;
 	int np_wall2;
 	int np_fix;
