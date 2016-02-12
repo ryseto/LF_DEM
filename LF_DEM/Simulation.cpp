@@ -221,14 +221,14 @@ void Simulation::simulationSteadyShear(string in_args,
 		cout << indent << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1
 	} else if (simu_identifier == "wtest1") {
-		cout << indent << "Test simulation, simple shear with walls" << endl;
+		cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 		sys.test_simulation = 31;//wtest1
     } else if (simu_identifier == "wtestA") {
-        cout << indent << "Test simulation, simple shear with walls" << endl;
+        cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
         sys.wall_rheology = true;
         sys.test_simulation = 41;//wtestA
     } else if (simu_identifier == "wtestB") {
-        cout << indent << "Test simulation, simple shear with walls" << endl;
+        cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
         sys.wall_rheology = true;
         sys.test_simulation = 42;//wtestB
     }

@@ -726,9 +726,9 @@ void System::setupSystemPostConfiguration()
 
 	if (test_simulation > 10 && test_simulation <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
-				for (int i=np_mobile; i<np; i++) {
+		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
-								position[i].x-origin_of_rotation.x);
+							  position[i].x-origin_of_rotation.x);
 		}
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
 		if (test_simulation == 11) {
