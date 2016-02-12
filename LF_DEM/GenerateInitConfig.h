@@ -70,8 +70,8 @@ private:
     bool parallel_wall_config;
 	double radius_in;
 	double radius_out;
-	int np_in;
-	int np_out;
+	int np_wall1;
+	int np_wall2;
 	int np_fix;
 	int np_movable;
 #ifndef USE_DSFMT
