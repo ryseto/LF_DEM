@@ -194,42 +194,43 @@ void Simulation::simulationSteadyShear(string in_args,
 									   string control_variable,
 									   string simu_identifier)
 {
+	string indent = "  Simulation::\t";
 	control_var = control_variable;
 	/***************  This part is temporal ********************/
 	// TODO
 	if (simu_identifier == "mtest1") {
-		cerr << "Test simulation for reversibility in mixed problem" << endl;
+		cout << indent << "Test simulation for reversibility in mixed problem" << endl;
 		sys.test_simulation = 1;//mtest1
 	} else if (simu_identifier == "mtest2") {
-		cerr << "Test simulation for a mixed problem" << endl;
+		cout << indent << "Test simulation for a mixed problem" << endl;
 		sys.test_simulation = 2;//mtest2
 	} else if (simu_identifier == "mtest3") {
-		cerr << "Test simulation for a mixed problem" << endl;
+		cout << indent << "Test simulation for a mixed problem" << endl;
 		sys.test_simulation = 3;//mtest2
 	} else if (simu_identifier == "ctest1") {
-		cerr << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
+		cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
 		sys.wall_rheology = true;
 		sys.test_simulation = 11;//ctest1
 	} else if (simu_identifier == "ctest2") {
-		cerr << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
+		cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
 		sys.wall_rheology = true;
 		sys.test_simulation = 12;//ctest2
 	} else if (simu_identifier == "ctest3") {
-		cerr << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
 		sys.wall_rheology = true;
 		sys.test_simulation = 13;//ctest3
 	} else if (simu_identifier == "rtest1") {
-		cerr << "Test simulation for shear reversibility" << endl;
+		cout << indent << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1
 	} else if (simu_identifier == "wtest1") {
-		cerr << "Test simulation, simple shear with walls" << endl;
+		cout << indent << "Test simulation, simple shear with walls" << endl;
 		sys.test_simulation = 31;//wtest1
     } else if (simu_identifier == "wtestA") {
-        cerr << "Test simulation, simple shear with walls" << endl;
+        cout << indent << "Test simulation, simple shear with walls" << endl;
         sys.wall_rheology = true;
         sys.test_simulation = 41;//wtestA
     } else if (simu_identifier == "wtestB") {
-        cerr << "Test simulation, simple shear with walls" << endl;
+        cout << indent << "Test simulation, simple shear with walls" << endl;
         sys.wall_rheology = true;
         sys.test_simulation = 42;//wtestB
     }
@@ -249,7 +250,6 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	setupEvents();
 
-	string indent = "  Simulation::\t";
 	cout << indent << "Time evolution started" << endl << endl;
 
 	double next_output_data = 0;
