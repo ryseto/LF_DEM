@@ -185,7 +185,7 @@ private:
 	cholmod_dense* chol_solution;
     cholmod_dense* chol_vel_mob;
     cholmod_dense* chol_vel_fix;
-	cholmod_dense* chol_force;
+	cholmod_dense* chol_force_mob;
 	cholmod_dense* chol_force_fix;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
@@ -364,7 +364,9 @@ public:
 	void solvingIsDone();
     void multiply_by_RFU_mm(std::vector<double>& velocity, std::vector<double>& force);
 	void multiply_by_RFU_mf(std::vector<double>& velocity, std::vector<double>& force);
-    void multiply_by_RFU_fm(std::vector<double>& velocity, std::vector<double>& force);
+	void multiply_by_RFU_fm(std::vector<double>& velocity, std::vector<double>& force);
+	void multiply_by_RFU_ff(std::vector<double>& velocity, std::vector<double>& force);
+
 	// testing functions
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);

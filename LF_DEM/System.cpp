@@ -848,11 +848,11 @@ void System::wallForces()
         }
         cerr << "force balance: " << sqrt(max_total_force) << endl;
         if (test_simulation > 10 && test_simulation <= 20) {
-            int i_np_in = np_mobile+np_wall1;
+            int i_np_1 = np_mobile+np_wall1;
             // inner wheel
             force_tang_wall1 = 0;
             force_normal_wall1 = 0;
-            for (int i=np_mobile; i<i_np_in; i++) {
+            for (int i=np_mobile; i<i_np_1; i++) {
                 vec3d unitvec_out = position[i]-origin_of_rotation;
                 unitvec_out.y = 0;
                 unitvec_out.unitvector();
@@ -863,7 +863,7 @@ void System::wallForces()
             // outer wheel
             force_tang_wall2 = 0;
             force_normal_wall2 = 0;
-            for (int i=i_np_in; i<np; i++) {
+            for (int i=i_np_1; i<np; i++) {
                 vec3d unitvec_out = position[i]-origin_of_rotation;
                 unitvec_out.y = 0;
                 unitvec_out.unitvector();
@@ -873,18 +873,18 @@ void System::wallForces()
             }
             cerr << force_tang_wall1 << ' ' << force_tang_wall2 << endl;
         } else if (test_simulation > 40) {
-            int i_np_in = np_mobile+np_wall1;
+            int i_np_1 = np_mobile+np_wall1;
             // bottom wall
             force_tang_wall1 = 0;
             force_normal_wall1 = 0;
-            for (int i=np_mobile; i<i_np_in; i++) { // bottom
+            for (int i=np_mobile; i<i_np_1; i++) { // bottom
                 force_tang_wall1   += forceResultant[i].x;
                 force_normal_wall1 += forceResultant[i].z;
             }
             // top wall
             force_tang_wall2 = 0;
             force_normal_wall2 = 0;
-            for (int i=i_np_in; i<np; i++) {
+            for (int i=i_np_1; i<np; i++) {
                 force_tang_wall2   += forceResultant[i].x;
                 force_normal_wall2 += forceResultant[i].z;
             }
@@ -925,13 +925,13 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		computeVelocities(calc_stress);
 	}
     if (calc_stress) {
-        for (int k=0; k<nb_interaction; k++) {
+		for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
                 interaction[k].lubrication.calcPairwiseForce();
-                unsigned int p0, p1;
-                interaction[k].get_par_num(p0, p1);
-                forceResultant[p0] += interaction[k].lubrication.lubforce_p0;
-                forceResultant[p1] -= interaction[k].lubrication.lubforce_p0;
+//                unsigned int p0, p1;
+//                interaction[k].get_par_num(p0, p1);
+//                forceResultant[p0] += interaction[k].lubrication.lubforce_p0;
+//                forceResultant[p1] -= interaction[k].lubrication.lubforce_p0;
             }
         }
         wallForces();
@@ -1073,8 +1073,10 @@ void System::adaptTimeStep(const string& time_or_strain,
 			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
 		}
 	} else {
-		if (get_time() + dt > value_end) { // @@ this is to be sure you output data exactly when you want
-            dt = value_end-get_time(); //  @@ dt becomes zero....
+		if (get_time() + dt > value_end) {
+			/* To pass trough exactaly on t = value_end
+			 */
+            dt = value_end-get_time();
 		}
 	}
 }
@@ -1616,7 +1618,7 @@ void System::forceResultantLubricationForce()
     /*
      *  F^{M} = R_FU^{MM} U^{M}
      */
-    vector<double> force_torque_m_to_m (6*np_mobile);
+    vector<double> force_m_to_m (6*np_mobile);
     vector<double> minus_mobile_velocities (6*np_mobile);
     for(int i=0; i<np_mobile; i++){
         int i6 = 6*i;
@@ -1627,18 +1629,18 @@ void System::forceResultantLubricationForce()
         minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
         minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
     }
-    stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_torque_m_to_m);
+    stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_m_to_m);
     for(int i=0; i<np_mobile; i++){
         int i6 = 6*i;
-        forceResultant[i].x += force_torque_m_to_m[i6];
-        forceResultant[i].y += force_torque_m_to_m[i6+1];
-        forceResultant[i].z += force_torque_m_to_m[i6+2];
+        forceResultant[i].x += force_m_to_m[i6];
+        forceResultant[i].y += force_m_to_m[i6+1];
+        forceResultant[i].z += force_m_to_m[i6+2];
     }
     if (mobile_fixed) {
         /*
          *  F^{M} += R_FU^{MF} U^{F}
          */
-        vector<double> force_torque_f_to_m (6*np_mobile);
+        vector<double> force_f_to_m (6*np_mobile);
         vector<double> minus_fixed_velocities (6*p.np_fixed);
 		for (int i=0; i<p.np_fixed; i++) {
             int i6 = 6*i;
@@ -1650,17 +1652,17 @@ void System::forceResultantLubricationForce()
             minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
             minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
         }
-        stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_f_to_m);
+        stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_f_to_m);
 		for (int i=0; i<np_mobile; i++) {
             int i6 = 6*i;
-            forceResultant[i].x += force_torque_f_to_m[i6];
-            forceResultant[i].y += force_torque_f_to_m[i6+1];
-            forceResultant[i].z += force_torque_f_to_m[i6+2];
+            forceResultant[i].x += force_f_to_m[i6];
+            forceResultant[i].y += force_f_to_m[i6+1];
+            forceResultant[i].z += force_f_to_m[i6+2];
         }
         /*
          *  F^{F} += R_FU^{FM} U^{M}
          */
-        vector<double> force_m_to_f (6*p.np_fixed);
+		vector<double> force_m_to_f (6*p.np_fixed);
         for (int i=0; i<np_mobile; i++) {
             int i6 = 6*i;
             minus_mobile_velocities[i6  ] = -na_velocity[i].x;
@@ -1677,6 +1679,29 @@ void System::forceResultantLubricationForce()
             forceResultant[i].y += force_m_to_f[i6+1];
             forceResultant[i].z += force_m_to_f[i6+2];
         }
+		/*
+		 *  F^{F} += R_FU^{FF} U^{F}
+		 */
+		vector<double> force_f_to_f (6*p.np_fixed);
+		for (int i=0; i<p.np_fixed; i++) {
+			int i6 = 6*i;
+			int i_fixed = i+np_mobile;
+			minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+			minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+			minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+			minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+			minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+			minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
+		}
+		stokes_solver.multiply_by_RFU_ff(minus_fixed_velocities, force_f_to_f);
+		for (int i=np_mobile; i<np; i++) {
+			int i6 = 6*(i-np_mobile);
+			forceResultant[i].x += force_f_to_f[i6];
+			forceResultant[i].y += force_f_to_f[i6+1];
+			forceResultant[i].z += force_f_to_f[i6+2];
+		}
+
+		
     }
 }
 
@@ -2193,7 +2218,7 @@ void System::computeVelocities(bool divided_velocities)
 	adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
-            //		forceResultantLubricationForce(); @@@@
+			forceResultantLubricationForce();
 		}
 	}
 	stokes_solver.solvingIsDone();
