@@ -64,7 +64,6 @@ struct ParameterSet
 	*/
 	double lub_reduce_parameter;             ///< Lubrication regularization length ("roughness length") [1e-3]
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance) [0.5]
-
 	/*******************************************************
 	 CONTACTS
 	********************************************************/

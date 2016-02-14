@@ -607,6 +607,7 @@
 		D9A9066F1BF331EF00BE8640 /* reduce_rheodata.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = reduce_rheodata.pl; path = tools/reduce_rheodata.pl; sourceTree = SOURCE_ROOT; };
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
+		D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = analyzeWallShear.pl; path = tools/analyzeWallShear.pl; sourceTree = SOURCE_ROOT; };
 		D9BC20971AAD607B0033D4A8 /* algorithm.graffle */ = {isa = PBXFileReference; lastKnownFileType = file; path = algorithm.graffle; sourceTree = "<group>"; };
 		D9BC20981AAD60900033D4A8 /* fig.graffle */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = fig.graffle; sourceTree = "<group>"; };
 		D9BC20991AAD60AB0033D4A8 /* kumars_Rfu0.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = kumars_Rfu0.pdf; sourceTree = "<group>"; };
@@ -1168,6 +1169,7 @@
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
 				D9825AF01C410E4B000AF86E /* circularrheo.pl */,
 				D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */,
+				D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */,
 				D9A906671BF331EF00BE8640 /* generatePovray.pl */,
 				D9A906641BF331EF00BE8640 /* calc_contact_fraction.pl */,
 				D9A906651BF331EF00BE8640 /* extractConfigdata.pl */,

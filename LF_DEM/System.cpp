@@ -1576,7 +1576,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 vector<double> System::computeForceFromFixedParticles()
 {
 	vector<double> force_torque_from_fixed (6*np_mobile);
-	// @@ TODO: avoid copy of the velocities
+	  // @@ TODO: avoid copy of the velocities
 	vector<double> minus_fixed_velocities (6*p.np_fixed);
 	for(int i=0; i<p.np_fixed; i++){
 		int i6 = 6*i;
@@ -1899,6 +1899,7 @@ void System::computeVelocityWithoutComponents()
 		buildHydroTerms(true, false); // zero shear-rate
 	}
 	if (mobile_fixed) {
+		// add rhs += R_mf U_f
 		buildHydroTermsFromFixedParticles();
 	}
 	// for most of the time evolution

@@ -18,7 +18,7 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'ders_', 1);
+$j = index($name, 'alls_1', 1);
 $initconfig = substr($name, 0, $j+6);
 
 printf "$initconfig\n";
@@ -27,17 +27,17 @@ printf "$initconfig\n";
 open (IN_CONFIG, "< ${initconfig}.dat");
 $line = <IN_CONFIG>;
 $line = <IN_CONFIG>;
-($buf, $np1, $np2, $vf, $lx, $ly, $lz, $np_in, $np_out, $radius_in, $radius_out) = split(/\s+/, $line);
+($buf, $np1, $np2, $vf, $lx, $ly, $lz, $np_in, $np_out, $z_bot, $z_top) = split(/\s+/, $line);
 
 $np_mov = $np1+$np2;
+printf "$z_bot $z_top\n";
 
-printf "$radius_in $radius_out\n";
 # np1 np2 vf lx ly lz np_in np_out radius_in radius_out
 close(IN_CONFIG);
 #exit;
 # Create output file name
 
-$output = "CWGdata_$name.dat";
+$output = "WRdata_$name.dat";
 printf "$output\n";
 
 open (OUT, "> ${output}");
@@ -50,21 +50,14 @@ $output = 1;
 $cnt_data = 0;
 $shear_strain_steady_state = 1;
 
-$kmax = 15;
-$r_in = $radius_in+sqrt(3)/2;
-$r_out = $radius_out-sqrt(3)/2;
-$rdiff = ${r_out}-${r_in};
+$kmax = 20;
+$zdiff = ${z_top}-${z_bot};
+$v_out = $zdiff*1;
+$dz = $zdiff/$kmax;
 
-$v_out = ($radius_out-$radius_in)*1;
-
-
-$dr = $rdiff/$kmax;
-
-printf "$radius_in $radius_out $rdiff $dr \n";
-#exit;
 for ($k = 0; $k < $kmax; $k++) {
 	$average[$k] = 0;
-	$radialposition[$k] = 0;
+	$zposition[$k] = 0;
 	$cnt[$k] = 0;
 	$particlearea[$k] = 0;
 }
@@ -83,21 +76,21 @@ for ($k = 0; $k < $kmax; $k++) {
 	}
 }
 
-
 for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
 		$ave_v_tan = $average_v[$k]/$cnt[$k];
 		if ($k < $kmax -1) {
-			$gradient_v_tan = ($ave_v_tan[$k+1]-$ave_v_tan[$k])/$dr;
+			$gradient_v_tan = ($ave_v_tan[$k+1]-$ave_v_tan[$k])/$dz;
 		} else {
 			$gradient_v_tan = 0;
 		}
-		$r = $r_in + $dr*$k;
-		$rn = $r + $dr;
-		$area = pi*($rn*$rn - $r*$r);
+		$z = $z_bot + $dz*$k;
+		
+		$area = $dz*$lx;
 		$density = ($particlearea[$k]/$cnt_data)/$area;
 		
-		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density\n";
+		$zz = ($z - $z_bot)/$zdiff;
+		printf OUT "$z  $zz $ave_v_tan[$k] $gradient_v_tan $density $k $particlearea[$k] $cnt_data $area\n";
 	}
 }
 
@@ -125,6 +118,7 @@ sub readHeader {
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
+	printf "$line";
 	if (defined $line) {
 		# 1 sys.get_shear_strain()
 		# 2 sys.shear_disp
@@ -151,20 +145,18 @@ sub InParticles {
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
-				$pos_r2 = $x*$x + $z*$z;
-				$pos_r = sqrt($pos_r2);
-				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r)/$v_out;
-				$f_rpos = ($pos_r - $r_in)/$dr;
-				$i_rpos = floor($f_rpos);
-				if ($i_rpos >= 0 && $i_rpos < $kmax) {
-					$average_v[$i_rpos] += $v_tan;
-					$cnt[$i_rpos] ++;
-					$particlearea[$i_rpos] += pi*$a*$a;
-				} else {
-					printf "@ $i_rpos   $pos_r\n";
-					exit;
+				$z += $lz/2;
+				$v_tan = $vx;
+				$f_zpos = ($z - $z_bot)/$dz;
+				
+				$i_zpos = floor($f_zpos);
+				if ($i_zpos >= 0 && $i_zpos < $kmax) {
+					$average_v[$i_zpos] += $v_tan;
+					$cnt[$i_zpos] ++;
+					$particlearea[$i_zpos] += pi*$a*$a;
 				}
-			} 			#$posx[$i] = $x;
+			}
+			#$posx[$i] = $x;
 			#$posy[$i] = $y;
 			#$posz[$i] = $z;
 			#$velx[$i] = $vx;

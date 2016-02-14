@@ -195,7 +195,7 @@ private:
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;
-	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
+	bool zero_shear;
     bool wall_rheology;
 	bool mobile_fixed;
     //	double volume_fraction;
