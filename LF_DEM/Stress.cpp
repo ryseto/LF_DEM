@@ -223,7 +223,6 @@ void System::calcStress()
 		}
 		total_hydrofromfixed_stressGU /= system_volume;
 	}
-	//
 	total_stress = total_hydro_stress;
 	total_stress += total_contact_stressXF;
 	total_stress += total_contact_stressGU; // added (Aug 15 2013)
