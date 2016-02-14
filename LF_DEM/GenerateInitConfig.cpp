@@ -698,8 +698,8 @@ void GenerateInitConfig::setParameters()
 		ly = 0;
     } else if (parallel_wall_config) {
         lz += 10;
-        z_bot = 4;
-        z_top = lz-4;
+        z_bot = 5;
+        z_top = lz-5;
     }
 	lx_half = lx/2;
 	ly_half = ly/2;
