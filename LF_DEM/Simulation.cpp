@@ -881,7 +881,7 @@ void Simulation::outputConfigurationData()
 			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
-			fout_interaction << setprecision(6);
+			fout_particle << setprecision(6);
 			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
 			fout_particle << setprecision(output_precision) << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			if (control_var != "magnetic") {
