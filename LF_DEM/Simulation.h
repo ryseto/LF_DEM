@@ -200,6 +200,7 @@ public:
 	bool kill;
 	bool force_to_run;
 	bool long_file_name;
+	bool diminish_output;
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();

@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     bool binary_conf = false;
 	bool force_to_run = false;
 	bool long_file_name = false;
+	bool diminish_output = false;
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -60,13 +61,14 @@ int main(int argc, char **argv)
 		{"identifier",        required_argument, 0, 'v'},
 		{"force-to-run",      no_argument,       0, 'f'},
 		{"long-file-name",    no_argument,       0, 'l'},
+		{"diminish-output",   no_argument,       0, 'd'},
 		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8flm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8fldm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -166,6 +168,10 @@ int main(int argc, char **argv)
 				break;
 			case 'l':
 				long_file_name = true;
+				break;
+			case 'd':
+				diminish_output = true;
+				break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -200,6 +206,7 @@ int main(int argc, char **argv)
 		Simulation simulation;
 		simulation.force_to_run = force_to_run;
 		simulation.long_file_name = long_file_name;
+		simulation.diminish_output = diminish_output;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
 										  dimensionless_number, suffix, rheology_control, simu_identifier);

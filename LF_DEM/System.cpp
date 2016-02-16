@@ -801,11 +801,8 @@ void System::timeStepBoxing()
 			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
-		if (wall_rheology) {
+		if (wall_rheology || test_simulation == 31) {
 			shear_strain += dt*shear_rate;
-		} else if (test_simulation == 31) {
-			shear_strain += dt*shear_rate;
-			// cout << shear_strain << endl;
 		}
 	}
 	boxset.update();
@@ -925,16 +922,12 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		computeVelocities(calc_stress);
 	}
     if (calc_stress) {
+		wallForces();
 		for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
                 interaction[k].lubrication.calcPairwiseForce();
-//                unsigned int p0, p1;
-//                interaction[k].get_par_num(p0, p1);
-//                forceResultant[p0] += interaction[k].lubrication.lubforce_p0;
-//                forceResultant[p1] -= interaction[k].lubrication.lubforce_p0;
             }
         }
-        wallForces();
         calcStressPerParticle();
     }
     timeStepMove(time_or_strain, value_end);
@@ -1015,13 +1008,13 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		computeVelocitiesStokesDrag();
 	}
     if (calc_stress) {
+		wallForces();
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
 				interaction[k].lubrication.calcPairwiseForce();
 			}
 		}
         calcStressPerParticle(); // stress compornents
-        wallForces();
     }
 	timeStepMovePredictor(time_or_strain, value_end);
 	/* corrector */
@@ -1492,12 +1485,12 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
     if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
-    for (int i=0; i<np-1; i ++) {
-        for (auto& inter : interaction_list[i]) {
-            int j = inter->partner(i);
-            if (j > i) {
-                if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
-                    if (mat) {
+	for (int i=0; i<np-1; i ++) {
+		for (auto& inter : interaction_list[i]) {
+			int j = inter->partner(i);
+			if (j > i) {
+				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
+					if (mat) {
                         const vec3d& nr_vec = inter->nvec;
                         inter->lubrication.calcXFunctions();
                         stokes_solver.addToDiagBlock(nr_vec, i,
@@ -1900,7 +1893,7 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	if (!zero_shear && p.lubrication_model!=3) {
+	if (!zero_shear && p.lubrication_model != 3) {
 		buildHydroTerms(true, true); // build matrix and rhs force GE
 	} else {
 		buildHydroTerms(true, false); // zero shear-rate

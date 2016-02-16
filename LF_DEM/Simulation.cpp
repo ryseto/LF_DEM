@@ -627,7 +627,6 @@ void Simulation::outputData()
     outdata.init(number_of_data, output_unit_scales);
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
-
 	outdata.entryData(1, "time", "time", sys.get_time());
 	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
 	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
@@ -832,6 +831,11 @@ void Simulation::outputDataHeader(ofstream& fout)
 void Simulation::outputConfigurationData()
 {
 	int np = sys.get_np();
+	int output_precision = 6;
+	if (diminish_output) {
+		output_precision = 3;
+	}
+	
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
@@ -878,12 +882,16 @@ void Simulation::outputConfigurationData()
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
 			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
-			fout_particle << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
+			fout_particle << setprecision(output_precision) << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			if (control_var != "magnetic") {
 				fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
-				fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
-				fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
-				fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
+				if (diminish_output == false) {
+					fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
+					fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
+					fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
+				} else {
+					fout_particle << " d d d";
+				}
 				if (sys.twodimension) {
 					fout_particle << ' ' << sys.angle[i]; // 15
 				}
@@ -907,6 +915,9 @@ void Simulation::outputConfigurationData()
 		}
 	}
 	if (p.out_data_interaction) {
+
+		
+		
 		fout_interaction << "# " << sys.get_shear_strain();
 		fout_interaction << ' ' << cnt_interaction;
 		fout_interaction << ' ' << sys.get_time();
@@ -925,10 +936,14 @@ void Simulation::outputConfigurationData()
 				 * 3 Sliding
 				 */
 				fout_interaction << sys.interaction[k].contact.state << ' '; //3
-				fout_interaction << nr_vec.x << ' '; // 4
-				fout_interaction << nr_vec.y << ' '; // 5
-				fout_interaction << nr_vec.z << ' '; // 6
-				fout_interaction << sys.interaction[k].get_reduced_gap() << ' '; // 7
+				if (diminish_output == false) {
+					fout_interaction << nr_vec.x << ' '; // 4
+					fout_interaction << nr_vec.y << ' '; // 5
+					fout_interaction << nr_vec.z << ' '; // 6
+					fout_interaction << sys.interaction[k].get_reduced_gap() << ' '; // 7
+				} else {
+					fout_interaction << "d d d d ";
+				}
 				/* [NOTE]
 				 * Lubrication forces are reference values
 				 * in the Brownian case. The force balancing
@@ -937,15 +952,20 @@ void Simulation::outputConfigurationData()
 				 * It seems there is no better way to visualize
 				 * the lubrication forces.
 				 */
-				fout_interaction << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
-				fout_interaction << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9, 10, 11
+				fout_interaction << setprecision(output_precision) << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
+				fout_interaction << setprecision(output_precision) << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9, 10, 11
 				/*
 				 * Contact forces include only spring forces.
 				 */
-				fout_interaction << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
-				fout_interaction << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
-				fout_interaction << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-				fout_interaction << 6*M_PI*shearStressComponent(stress_contact, p.theta_shear) << ' '; // 17
+				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
+				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
+				fout_interaction << setprecision(output_precision) << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
+				
+				if (diminish_output == false) {
+					fout_interaction << 6*M_PI*shearStressComponent(stress_contact, p.theta_shear) << ' '; // 17
+				} else {
+					fout_interaction << "d";
+				}
 				fout_interaction << endl;
 			}
 		}

@@ -108,7 +108,7 @@ double System::evaluateMinGap()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].get_par_num(p0, p1);
-			if (p0 < np_mobile && // exclude fixed-fixed
+			if ((int)p0 < np_mobile && // exclude fixed-fixed
 				interaction[k].get_reduced_gap() < _min_reduced_gap) {
 				_min_reduced_gap = interaction[k].get_reduced_gap();
 			}
