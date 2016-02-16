@@ -833,7 +833,7 @@ void Simulation::outputConfigurationData()
 	int np = sys.get_np();
 	int output_precision = 6;
 	if (diminish_output) {
-		output_precision = 3;
+		output_precision = 4;
 	}
 	
 	vector<vec3d> pos(np);
@@ -881,6 +881,7 @@ void Simulation::outputConfigurationData()
 			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
+			fout_interaction << setprecision(6);
 			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
 			fout_particle << setprecision(output_precision) << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			if (control_var != "magnetic") {
@@ -928,6 +929,7 @@ void Simulation::outputConfigurationData()
 				sys.interaction[k].get_par_num(i, j);
 				vec3d& nr_vec = sys.interaction[k].nvec;
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
+				fout_interaction << setprecision(6);
 				fout_interaction << i << ' ' << j << ' '; // 1, 2
 				/* contact.state:
 				 * 0 no contact
