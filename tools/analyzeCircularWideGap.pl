@@ -18,8 +18,8 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'ders_', 1);
-$initconfig = substr($name, 0, $j+6);
+$j = index($name, 'cylinders0.5_', 1);
+$initconfig = substr($name, 0, $j+14);
 
 printf "$initconfig\n";
 
@@ -51,8 +51,8 @@ $cnt_data = 0;
 $shear_strain_steady_state = 1;
 
 $kmax = 15;
-$r_in = $radius_in+sqrt(3)/2;
-$r_out = $radius_out-sqrt(3)/2;
+$r_in = $radius_in;
+$r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
 
 $v_out = ($radius_out-$radius_in)*1;
@@ -175,10 +175,12 @@ sub InParticles {
 			#$omegaz[$i] = $oz;
 			#$omegay[$i] = $oy;
 		}
+		
+		if ($shear_strain > $shear_strain_steady_state) {
+			$cnt_data ++;
+			#		exit;
+		}
+
 	}
 	
-	if ($shear_strain > $shear_strain_steady_state) {
-		$cnt_data ++;
-		#		exit;
-	}
 }
