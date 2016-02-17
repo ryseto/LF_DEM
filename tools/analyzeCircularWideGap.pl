@@ -48,9 +48,9 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 1;
+$shear_strain_steady_state = 5;
 
-$kmax = 15;
+$kmax = 8;
 $r_in = $radius_in;
 $r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
@@ -92,12 +92,13 @@ for ($k = 0; $k < $kmax; $k++) {
 		} else {
 			$gradient_v_tan = 0;
 		}
-		$r = $r_in + $dr*$k;
+		$r = $r_in + $dr*$k + 0.5*$dr;
+		$rnorm = ($r - $r_in)/($r_out - $r_in);
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
 		
-		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density\n";
+		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density $rnorm\n";
 	}
 }
 
@@ -161,8 +162,8 @@ sub InParticles {
 					$cnt[$i_rpos] ++;
 					$particlearea[$i_rpos] += pi*$a*$a;
 				} else {
-					printf "@ $i_rpos   $pos_r\n";
-					exit;
+					printf "@ $i $i_rpos   $pos_r\n";
+					#exit;
 				}
 			} 			#$posx[$i] = $x;
 			#$posy[$i] = $y;

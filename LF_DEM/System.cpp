@@ -1282,7 +1282,7 @@ void System::checkNewInteraction()
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
-	for (int i=0; i<np_mobile-1; i++) { //@@@@ TO BE CHECKED
+	for (int i=0; i<np_mobile; i++) {
 		for (const int& j : boxset.neighborhood(i)) {
 			if (j > i) {
 				if (interaction_partners[i].find(j) == interaction_partners[i].end()) {

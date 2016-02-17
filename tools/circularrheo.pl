@@ -19,7 +19,9 @@ my $reversibility_test = 0;
 my $monodisperse = 0;
 my $rotatingobserver = 0;
 my $np_movable = 3000;
-my $rout = 84.4391;
+my $rout = 81.3781; # 0.80
+#my $rout = 82.4148; # 0.78
+
 #my $np_movable = 6000;
 #my $rout = 118.562;
 
@@ -399,14 +401,14 @@ sub OutYaplotData{
 			}
 		}
 	}
-	printf OUT "y 3\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] < 0) {
-			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], -0.02);
-		}
-	}
+#	printf OUT "y 3\n";
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($force[$k] < 0) {
+#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], -0.02);
+#		}
+#	}
 	#
 	## visualize rotation in 2D
 #		if ($Ly == 0) {
