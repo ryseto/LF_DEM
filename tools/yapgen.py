@@ -82,12 +82,13 @@ def snaps2yap(pos_fname, force_factor):
         np.savetxt(yap_file, yap_out, fmt="%s "*7)
         yap_file.write("\n".encode('utf-8'))
         i += 1
-        out_str = "\r "+yap_filename+" - frame "+str(i)+"/"+str(nb_of_frames)
+        out_str = "\r frame "+str(i)+"/"+str(nb_of_frames)+" - "+yap_filename
         try:
             print(out_str, end="", flush=True)
         except TypeError:
             # to work with Python 2.7.* importing print_function without flush
             print(out_str, end="")
+    print("")
     yap_file.close()
 
 
