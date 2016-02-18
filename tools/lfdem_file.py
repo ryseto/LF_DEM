@@ -1,10 +1,42 @@
 # lfdem_file.py, part of LF_DEM
 #
 #  Romain Mari, 2015
-"""lfdem_file is a module providing functions to read output files from lf_dem"""
+"""lfdem_file is a module providing functions
+    to read output files from lf_dem"""
 
 import pandas as pd
 import numpy as np
+
+
+def get_file_metadata(fname):
+    """
+    Purpose:
+        Get the metadata of a file (the data contained in the header,
+        lines starting with '#').
+    """
+    try:
+        in_file = open(fname, "r")
+    except TypeError:
+        in_file = fname
+
+    file_metadata = {}
+    file_metadata['column def'] = str()
+
+    while True:
+        line = in_file.readline()
+        if line[0] != '#':
+            break
+
+        data_list = line.split()
+
+        if data_list[0] == '#':
+            file_metadata[data_list[1]] = data_list[2:]
+        else:
+            file_metadata['column def'] += line
+
+    in_file.seek(0, 0)
+
+    return file_metadata
 
 
 def read_snapshot_file(fname, field_nb=None):
@@ -41,23 +73,7 @@ def read_snapshot_file(fname, field_nb=None):
     except TypeError:
         in_file = fname
 
-    line = in_file.readline()
-    file_metadata = {}
-    file_metadata['column def'] = str()
-
-    while True:
-        line = in_file.readline()
-        if line[0] != '#':
-            break
-
-        data_list = line.split()
-
-        if data_list[0] == '#':
-            file_metadata[data_list[1]] = data_list[2:]
-        else:
-            file_metadata['column def'] += line
-
-    in_file.seek(0, 0)
+    file_metadata = get_file_metadata(in_file)
 
     field_nb_d = {'par': 15, 'int': 17}
     if field_nb is None:
@@ -99,10 +115,12 @@ def read_data_file(fname):
                to np.genfromtxt
 
     Returning values:
-        A numpy array containing the data
+        data: a numpy array containing the data
+        metadata: the files metadata
     """
-    dat = np.genfromtxt(fname)
-    return dat
+    metadata = get_file_metadata(fname)
+    data = np.genfromtxt(fname)
+    return data, metadata
 
 
 def read_conf_file(fname):
@@ -115,7 +133,7 @@ def read_conf_file(fname):
                to np.genfromtxt
 
     Returning values:
-        Two arrays: positions, radii
+        positions, radii, metadata
     """
     openedfile = True
     try:
