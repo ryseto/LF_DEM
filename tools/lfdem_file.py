@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 
-def read_snapshot_file(in_file, field_nb=None):
+def read_snapshot_file(fname, field_nb=None):
     """
     Purpose:
         Read any LF_DEM file that has a "snapshot" structure, i.e. made of
@@ -25,8 +25,7 @@ def read_snapshot_file(in_file, field_nb=None):
         Examples include par_ and int_ files.
 
     Parameters:
-        in_file: the filename, or anything that can be taken as
-                 a first argument to pd.read_table
+        fname: the filename, or a file like object
         field_nb: the number of fields (columns) in a snapshot.
                   If not provided, the field nb is guessed from the file name.
 
@@ -34,7 +33,32 @@ def read_snapshot_file(in_file, field_nb=None):
         frames: a list of snapshots
         strains_: the associated strains
         shear_rates_: the associated strain rates
+        frame_metadata: the metadata for each snapshot
+        file_metadata: the metadata of the whole file
     """
+    try:
+        in_file = open(fname, "r")
+    except TypeError:
+        in_file = fname
+
+    line = in_file.readline()
+    file_metadata = {}
+    file_metadata['column def'] = str()
+
+    while True:
+        line = in_file.readline()
+        if line[0] != '#':
+            break
+
+        data_list = line.split()
+
+        if data_list[0] == '#':
+            file_metadata[data_list[1]] = data_list[2:]
+        else:
+            file_metadata['column def'] += line
+
+    in_file.seek(0, 0)
+
     field_nb_d = {'par': 15, 'int': 17}
     if field_nb is None:
         file_type = in_file[in_file.rfind('/')+1:in_file.find('_')]
@@ -58,7 +82,7 @@ def read_snapshot_file(in_file, field_nb=None):
     for i in range(len(frames)):
         frames[i] = frames[i][1:]
 
-    return frames, strains_, shear_rates_, frame_metadata
+    return frames, strains_, shear_rates_, frame_metadata, file_metadata
 
 
 def read_data_file(fname):
@@ -93,15 +117,22 @@ def read_conf_file(fname):
     Returning values:
         Two arrays: positions, radii
     """
-    with open(fname, "r") as conf_file:
-        line1 = conf_file.readline()
-        line2 = conf_file.readline()
+    openedfile = True
+    try:
+        in_file = open(fname, "r")
+    except TypeError:
+        in_file = fname
+        openedfile = False
+
+    line1 = in_file.readline()
+    line2 = in_file.readline()
     meta_fields = line1.split()[1:]
     meta_values = line2.split()[1:]
     meta_data = dict(zip(meta_fields, meta_values))
 
     dat = np.genfromtxt(fname)
-    pos = dat[:,:3].astype(np.float)
+    pos = dat[:, :3].astype(np.float)
     rad = dat[:, 3].astype(np.float)
-
+    if openedfile:
+        in_file.close()
     return pos, rad, meta_data
