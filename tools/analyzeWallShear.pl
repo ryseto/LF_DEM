@@ -48,9 +48,9 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 1;
+$shear_strain_steady_state = 5;
 
-$kmax = 20;
+$kmax = 15;
 $zdiff = ${z_top}-${z_bot};
 $v_out = $zdiff*1;
 $dz = $zdiff/$kmax;
@@ -76,23 +76,35 @@ for ($k = 0; $k < $kmax; $k++) {
 	}
 }
 
+
+$total_area = 0;
+$total_particle_area = 0;
+$velo_wall = $zdiff;
 for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
 		$ave_v_tan = $average_v[$k]/$cnt[$k];
 		if ($k < $kmax -1) {
 			$gradient_v_tan = ($ave_v_tan[$k+1]-$ave_v_tan[$k])/$dz;
 		} else {
-			$gradient_v_tan = 0;
+			$gradient_v_tan = ($velo_wall-$ave_v_tan[$k])/$dz;
 		}
+
 		$z = $z_bot + $dz*$k;
 		
 		$area = $dz*$lx;
 		$density = ($particlearea[$k]/$cnt_data)/$area;
-		
+		$total_particle_area += $particlearea[$k]/$cnt_data;
 		$zz = ($z - $z_bot)/$zdiff;
 		printf OUT "$z  $zz $ave_v_tan[$k] $gradient_v_tan $density $k $particlearea[$k] $cnt_data $area\n";
+		$total_area += $area;
 	}
 }
+$phi_check = $total_particle_area/$total_area;
+printf "$total_area $phi_check\n";
+
+$calctotal_area=$lx*$zdiff;
+printf "$calctotal_area $lx $zdiff \n";
+
 
 
 close (OUT);
@@ -128,7 +140,7 @@ sub InParticles {
 		# 6 sys.angle_external_magnetic_field
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
 		printf "$shear_strain\n";
-		
+		$count_particle = 0;
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
 			# 1: number of the particle
@@ -144,6 +156,7 @@ sub InParticles {
 			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
+
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
 				$z += $lz/2;
 				$v_tan = $vx;
@@ -153,7 +166,8 @@ sub InParticles {
 				if ($i_zpos >= 0 && $i_zpos < $kmax) {
 					$average_v[$i_zpos] += $v_tan;
 					$cnt[$i_zpos] ++;
-					$particlearea[$i_zpos] += pi*$a*$a;
+					$particlearea[$i_zpos] += pi*$radius[$i]*$radius[$i];
+					$count_particle ++;
 				}
 			}
 			#$posx[$i] = $x;
@@ -167,10 +181,14 @@ sub InParticles {
 			#$omegaz[$i] = $oz;
 			#$omegay[$i] = $oy;
 		}
+		printf "particle = $count_particle\n";
+	
+		if ($shear_strain > $shear_strain_steady_state) {
+			$cnt_data ++;
+			#		exit;
+		}
+
 	}
 	
-	if ($shear_strain > $shear_strain_steady_state) {
-		$cnt_data ++;
-		#		exit;
-	}
+	
 }

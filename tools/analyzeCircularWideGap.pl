@@ -18,8 +18,8 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'ders_', 1);
-$initconfig = substr($name, 0, $j+6);
+$j = index($name, 'cylinders0.5_', 1);
+$initconfig = substr($name, 0, $j+14);
 
 printf "$initconfig\n";
 
@@ -48,11 +48,11 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 1;
+$shear_strain_steady_state = 5;
 
-$kmax = 15;
-$r_in = $radius_in+sqrt(3)/2;
-$r_out = $radius_out-sqrt(3)/2;
+$kmax = 8;
+$r_in = $radius_in;
+$r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
 
 $v_out = ($radius_out-$radius_in)*1;
@@ -92,12 +92,13 @@ for ($k = 0; $k < $kmax; $k++) {
 		} else {
 			$gradient_v_tan = 0;
 		}
-		$r = $r_in + $dr*$k;
+		$r = $r_in + $dr*$k + 0.5*$dr;
+		$rnorm = ($r - $r_in)/($r_out - $r_in);
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
 		
-		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density\n";
+		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density $rnorm\n";
 	}
 }
 
@@ -161,8 +162,8 @@ sub InParticles {
 					$cnt[$i_rpos] ++;
 					$particlearea[$i_rpos] += pi*$a*$a;
 				} else {
-					printf "@ $i_rpos   $pos_r\n";
-					exit;
+					printf "@ $i $i_rpos   $pos_r\n";
+					#exit;
 				}
 			} 			#$posx[$i] = $x;
 			#$posy[$i] = $y;
@@ -175,10 +176,12 @@ sub InParticles {
 			#$omegaz[$i] = $oz;
 			#$omegay[$i] = $oy;
 		}
+		
+		if ($shear_strain > $shear_strain_steady_state) {
+			$cnt_data ++;
+			#		exit;
+		}
+
 	}
 	
-	if ($shear_strain > $shear_strain_steady_state) {
-		$cnt_data ++;
-		#		exit;
-	}
 }

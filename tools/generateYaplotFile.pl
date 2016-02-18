@@ -299,9 +299,6 @@ sub OutYaplotData{
 	}
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
-	$r = $yap_radius*$radius[0];
-	printf OUT "r $r\n";
-	$switch = 0;
 	## visualize particles
 	if ($monodisperse) {
 		printf OUT "r $radius[0]\n";
@@ -310,7 +307,8 @@ sub OutYaplotData{
 		}
 	} else {
 		for ($i = 0; $i < $np; $i++) {
-			printf OUT "r $radius[$i]\n";
+			$rr = $yap_radius*$radius[$i];
+			printf OUT "r $rr\n";
 			#			if ($i == $np-1) {
 			#				printf OUT "@ 4\n";
 			#			}
@@ -335,14 +333,14 @@ sub OutYaplotData{
 			&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 		}
 	}
-	printf OUT "y 3\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] < 0) {
-			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
-		}
-	}
+#	printf OUT "y 3\n";
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($force[$k] < 0) {
+#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], 0.02);
+#		}
+#	}
 	
 	## visualize rotation in 2D
 #	if ($Ly == 0) {
