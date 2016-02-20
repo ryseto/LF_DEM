@@ -38,6 +38,10 @@
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
+		D9D53ED81C7806AC007A2D2E /* libcholmod.3.0.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED41C7806AC007A2D2E /* libcholmod.3.0.9.dylib */; };
+		D9D53ED91C7806AC007A2D2E /* libcolamd.2.9.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED51C7806AC007A2D2E /* libcolamd.2.9.4.dylib */; };
+		D9D53EDA1C7806AC007A2D2E /* libamd.2.4.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED61C7806AC007A2D2E /* libamd.2.4.4.dylib */; };
+		D9D53EDB1C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED71C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib */; };
 		D9DF2DA01C6C072100FEC18C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
@@ -618,6 +622,10 @@
 		D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-common.h"; path = "dSFMT-src-2.2.3/dSFMT-common.h"; sourceTree = "<group>"; };
 		D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params.h"; path = "dSFMT-src-2.2.3/dSFMT-params.h"; sourceTree = "<group>"; };
 		D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params19937.h"; path = "dSFMT-src-2.2.3/dSFMT-params19937.h"; sourceTree = "<group>"; };
+		D9D53ED41C7806AC007A2D2E /* libcholmod.3.0.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.9.dylib; path = ../../../../../../usr/local/lib/libcholmod.3.0.9.dylib; sourceTree = "<group>"; };
+		D9D53ED51C7806AC007A2D2E /* libcolamd.2.9.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.4.dylib; path = ../../../../../../usr/local/lib/libcolamd.2.9.4.dylib; sourceTree = "<group>"; };
+		D9D53ED61C7806AC007A2D2E /* libamd.2.4.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.4.dylib; path = ../../../../../../usr/local/lib/libamd.2.4.4.dylib; sourceTree = "<group>"; };
+		D9D53ED71C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.4.5.1.dylib; path = ../../../../../../usr/local/lib/libsuitesparseconfig.4.5.1.dylib; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
@@ -653,6 +661,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9D53ED81C7806AC007A2D2E /* libcholmod.3.0.9.dylib in Frameworks */,
+				D9D53ED91C7806AC007A2D2E /* libcolamd.2.9.4.dylib in Frameworks */,
+				D9D53EDA1C7806AC007A2D2E /* libamd.2.4.4.dylib in Frameworks */,
+				D9D53EDB1C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib in Frameworks */,
 				D9DF2DA01C6C072100FEC18C /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1174,6 +1186,10 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
+				D9D53ED41C7806AC007A2D2E /* libcholmod.3.0.9.dylib */,
+				D9D53ED51C7806AC007A2D2E /* libcolamd.2.9.4.dylib */,
+				D9D53ED61C7806AC007A2D2E /* libamd.2.4.4.dylib */,
+				D9D53ED71C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib */,
 				D94AEF021C0BCEAC0061C679 /* README.rst */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D90AF33B1AF9FFBA00E15C7E /* html */,
