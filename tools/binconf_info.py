@@ -9,7 +9,10 @@
 
 from __future__ import print_function
 import struct
-import tty, sys, termios
+import tty
+import sys
+import termios
+
 
 def misuse():
     misuse_string = """
@@ -19,8 +22,7 @@ def misuse():
     print(misuse_string % (sys.argv[0]))
     sys.exit(1)
 
-
-if len(sys.argv) < 2 :
+if len(sys.argv) < 2:
     misuse()
 
 run_through = False
@@ -36,20 +38,20 @@ with open(filename, mode='rb') as f:
 uisize = 2
 isize = 4
 dsize = 8
-loc=0
-np = struct.unpack("i",conf[loc:isize])[0]
+loc = 0
+np = struct.unpack("i", buffer=conf[loc:isize])[0]
 loc += isize
-vf = struct.unpack("d",conf[loc:loc+dsize])[0]
+vf = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
-lx = struct.unpack("d",conf[loc:loc+dsize])[0]
+lx = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
-ly = struct.unpack("d",conf[loc:loc+dsize])[0]
+ly = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
-lz = struct.unpack("d",conf[loc:loc+dsize])[0]
+lz = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
-lees_x = struct.unpack("d",conf[loc:loc+dsize])[0]
+lees_x = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
-lees_y = struct.unpack("d",conf[loc:loc+dsize])[0]
+lees_y = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
 
 print("Particle number : ", np)
@@ -72,40 +74,40 @@ if not run_through:
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
-if ch!="y":
+if ch != "y":
     exit(0)
 
 for i in range(np):
-    x = struct.unpack("d",conf[loc:loc+dsize])[0]
+    x = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    y = struct.unpack("d",conf[loc:loc+dsize])[0]
+    y = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    z = struct.unpack("d",conf[loc:loc+dsize])[0]
+    z = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    r = struct.unpack("d",conf[loc:loc+dsize])[0]
+    r = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    print(x,y,z,r)
+    print(x, y, z, r)
 
 
-nc = struct.unpack("I",conf[loc:loc+isize])[0]
+nc = struct.unpack("I", conf[loc:loc+isize])[0]
 loc += isize
 print(nc)
 for i in range(nc):
-    p0 = struct.unpack("H",conf[loc:loc+uisize])[0]
+    p0 = struct.unpack("H", conf[loc:loc+uisize])[0]
     loc += uisize
-    p1 = struct.unpack("H",conf[loc:loc+uisize])[0]
+    p1 = struct.unpack("H", conf[loc:loc+uisize])[0]
     loc += uisize
-    dtx = struct.unpack("d",conf[loc:loc+dsize])[0]
+    dtx = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    dty = struct.unpack("d",conf[loc:loc+dsize])[0]
+    dty = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    dtz = struct.unpack("d",conf[loc:loc+dsize])[0]
+    dtz = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    drx = struct.unpack("d",conf[loc:loc+dsize])[0]
+    drx = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    dry = struct.unpack("d",conf[loc:loc+dsize])[0]
+    dry = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
-    drz = struct.unpack("d",conf[loc:loc+dsize])[0]
+    drz = struct.unpack("d", conf[loc:loc+dsize])[0]
     loc += dsize
 
-    print(p0,p1,dtx,dty,dtz,drx,dry,drz)
+    print(p0, p1, dtx, dty, dtz, drx, dry, drz)

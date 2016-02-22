@@ -70,6 +70,7 @@ def get_particles_yaparray(pos, rad):
 
     return yap_out
 
+
 def get_interactions_yaparray(r1r2, thicknesses):
     """
         Get yaplot commands (as an aray of strings) to display sticks
@@ -80,8 +81,9 @@ def get_interactions_yaparray(r1r2, thicknesses):
     interaction_sticks = cmd('s', r1r2.astype(np.str))
     interaction_widths = cmd('r', thicknesses)
     yap_out = pair_cmd_and_switch(interaction_sticks, interaction_widths)
-    
+
     return yap_out
+
 
 def get_interaction_end_points(f,p):
     """
@@ -91,26 +93,28 @@ def get_interaction_end_points(f,p):
         Returns an array containing x1,y1,z1,x2,y2,z2 for each interaction.
     """
     # for each interaction: the particle indices
-    part1 = f[:,0].astype(np.int)
-    part2 = f[:,1].astype(np.int)
+    part1 = f[:, 0].astype(np.int)
+    part2 = f[:, 1].astype(np.int)
 
     # for each interaction: the particle positions
-    r1 = p[part1,2:5].astype(np.float)
-    r2 = p[part2,2:5].astype(np.float)
+    r1 = p[part1, 2:5].astype(np.float)
+    r2 = p[part2, 2:5].astype(np.float)
 
     return np.hstack((r1, r2))
 
-def filter_interactions_crossing_PBC(f,r1r2,cutoff=4):
+
+def filter_interactions_crossing_PBC(f, r1r2, cutoff=4):
     """
         Exclude interactions across the boundaries.
         Return values of f and r1r2 where norm(r1r2[:,3:]-r1r2[:,:3])<cutoff.
     """
-    r1 = r1r2[:,:3]
-    r2 = r1r2[:,3:]
-    keep = np.linalg.norm(r2-r1,axis=1) < cutoff
+    r1 = r1r2[:, :3]
+    r2 = r1r2[:, 3:]
+    keep = np.linalg.norm(r2-r1, axis=1) < cutoff
     r1r2 = r1r2[keep]
     f = f[keep]
     return f, r1r2
+
 
 def savetxt(outfile, yaplot_cmd_array, mode="w"):
     """
@@ -118,7 +122,7 @@ def savetxt(outfile, yaplot_cmd_array, mode="w"):
     """
     openedfile = True
     try:
-        yap_file = open(outfile,mode+"b")
+        yap_file = open(outfile, mode+"b")
     except TypeError:
         yap_file = outfile
         openedfile = False

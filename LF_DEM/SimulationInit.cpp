@@ -1339,14 +1339,22 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 
-    // now contacts
-    int ncont;
-	unsigned int p0, p1;
+  // now contacts
+  int ncont;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
+	std::iostream::pos_type file_pos = file_import.tellg();
+	bool old_file_type = false;
 	for (int i=0; i<ncont; i++) {
+		unsigned int p0, p1;
 		file_import.read((char*)&p0, sizeof(unsigned int));
+// hacky thing to guess if this is an old format with particle numbers as unsigned short
+		if((int)p0>sys.get_np()){
+			old_file_type = true;
+			file_import.seekg(file_pos);
+			break;
+		}
 		file_import.read((char*)&p1, sizeof(unsigned int));
 		file_import.read((char*)&dt_x, sizeof(double));
 		file_import.read((char*)&dt_y, sizeof(double));
@@ -1360,6 +1368,26 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
 		cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
 		cont_states.push_back(cs);
+	}
+	if (old_file_type) {
+		for (int i=0; i<ncont; i++) {
+			unsigned short p0, p1;
+
+			file_import.read((char*)&p0, sizeof(unsigned short));
+			file_import.read((char*)&p1, sizeof(unsigned short));
+			file_import.read((char*)&dt_x, sizeof(double));
+			file_import.read((char*)&dt_y, sizeof(double));
+			file_import.read((char*)&dt_z, sizeof(double));
+			file_import.read((char*)&dr_x, sizeof(double));
+			file_import.read((char*)&dr_y, sizeof(double));
+			file_import.read((char*)&dr_z, sizeof(double));
+			struct contact_state cs;
+			cs.p0 = (int)p0;
+			cs.p1 = (int)p1;
+			cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
+			cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
+			cont_states.push_back(cs);
+		}
 	}
 	file_import.close();
 	sys.setContacts(cont_states);
