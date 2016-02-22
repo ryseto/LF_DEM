@@ -18,7 +18,7 @@ integration_method = 1;
  * shear_strain: total strain (length of simulation)
  */
 
-time_end = 0.01h;
+time_end = 4e-3h;
 
 /*
  * 1 Linear friction law Ft < mu Fn
@@ -61,7 +61,7 @@ lub_max_gap = 0.5;
  * lub_reduce_parameter: gives reduced lubrication (maximum coeeffient).
  */
 
-lub_reduce_parameter = 1e-3;
+lub_reduce_parameter = 1e-2;
 
 /*
  * contact_relaxation_time: to determine the coeffient of the dashpot
@@ -85,7 +85,7 @@ repulsiveforce_length = 0.05;
  * Output interval
  */
 
-time_interval_output_config = 1e-1h;
+time_interval_output_config = 3e-3h;
 
 /*
  *  Data output
@@ -96,12 +96,11 @@ time_interval_output_data = 1e-3h;
  * position and interaction data
  */
 
-out_data_particle = false;
-out_data_interaction = false;
+out_data_particle = true;
+out_data_interaction = true;
 
 /*
  * The middle height of the simulation box is set to the flow zero level.
  */
 
 origin_zero_flow = true;
-
