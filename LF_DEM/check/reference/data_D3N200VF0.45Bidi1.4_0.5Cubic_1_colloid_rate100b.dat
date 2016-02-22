@@ -1,0 +1,49 @@
+# LF_DEM version v2.0-391-g1c468a8-dirty
+# np 200
+# VF 0.45
+# Lx 13.9626
+# Ly 13.9626
+# Lz 13.9626
+# data in thermal units.
+#1: time
+#2: shear strain
+#3: shear rate
+#4: blank
+#5: viscosity
+#6: Viscosity(lub)
+#7: Viscosity(xF_contact part)
+#8: Viscosity(GU_contact part)
+#9: blank
+#10: blank
+#11: Viscosity(brownian)
+#12: blank
+#13: blank
+#14: shear stress
+#15: N1 viscosity
+#16: N2 viscosity
+#17: particle pressure
+#18: particle pressure contact
+#19: blank
+#20: blank
+#21: energy
+#22: min gap
+#23: max gap(cohesion)
+#24: max tangential displacement
+#25: max rolling displacement
+#26: contact number
+#27: frictional contact number
+#28: number of interaction
+#29: max velocity
+#30: max angular velocity
+#31: dt
+#32: kn
+#33: kt
+#34: kr
+#35: shear displacement x
+#36: shear displacement y
+#37: blank
+0 0 1 n 0 0 0 0 n n 0 n n 0 0 0 -0 -0 n n 0 0.0573391 0 0 0 0 0 745 0 0.5 0 10000 6000 0 0.0418878 0 n 
+2e-06 0.0002 100 n 3.95033 3.94634 0 0 n n 0.00399195 n n 20.9571 -0.0309946 -0.121341 1.11071 -0 n n 0 0.0562485 0 0 0 0 0 745 2655.6 2867.42 1e-06 10000 6000 0 0.0446803 0 n 
+3e-06 0.0003 100 n 3.94226 3.94705 0 0 n n -0.00478794 n n 20.9143 -0.0284736 -0.111604 1.14049 -0 n n 0 0.0556221 0 0 0 0 0 745 2668.24 2657.89 -nan 10000 6000 0 0.0460766 0 n 
+4e-06 0.0004 100 n 3.94587 3.94674 0 0 n n -0.000869875 n n 20.9335 -0.0361954 -0.109012 1.0889 -0 n n 0 0.0559849 0 0 0 0 0 747 2353.57 3195.85 -nan 10000 6000 0 0.0474728 0 n 
+5e-06 0.0005 100 n 3.94565 3.94623 0 0 n n -0.000575734 n n 20.9323 -0.00884192 -0.121906 1.17361 -0 n n 0 0.0561166 0 0 0 0 0 747 2281.08 2607.72 -nan 10000 6000 0 0.0488691 0 n 

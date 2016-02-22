@@ -1,0 +1,49 @@
+# LF_DEM version v2.0-391-g1c468a8-dirty
+# np 200
+# VF 0.45
+# Lx 13.9626
+# Ly 13.9626
+# Lz 13.9626
+# data in repulsive units.
+#1: time
+#2: shear strain
+#3: shear rate
+#4: blank
+#5: viscosity
+#6: Viscosity(lub)
+#7: Viscosity(xF_contact part)
+#8: Viscosity(GU_contact part)
+#9: Viscosity(repulsive force XF)
+#10: Viscosity(repulsive force GU)
+#11: blank
+#12: blank
+#13: blank
+#14: shear stress
+#15: N1 viscosity
+#16: N2 viscosity
+#17: particle pressure
+#18: particle pressure contact
+#19: blank
+#20: blank
+#21: energy
+#22: min gap
+#23: max gap(cohesion)
+#24: max tangential displacement
+#25: max rolling displacement
+#26: contact number
+#27: frictional contact number
+#28: number of interaction
+#29: max velocity
+#30: max angular velocity
+#31: dt
+#32: kn
+#33: kt
+#34: kr
+#35: shear displacement x
+#36: shear displacement y
+#37: blank
+0 0 0 n -nan -nan -nan -nan -nan -nan n n n 0 -nan -nan -0 -0 n n 1.94858 0.0575972 0 0 0 0 0 745 0 0 0 530.516 265.258 0 0 0 n 
+0.000789084 0.001 1.26702 n 3.94626 3.94623 0 0 -0.000502238 0.000530115 n n n 0.265258 -0.0291191 -0.103273 0.0157997 -0 n n 1.9483 0.0575295 0 0 0 0 0 745 1.18035 0.407305 0.000789084 530.516 265.258 0 0.0139626 0 n 
+0.00157834 0.002 1.26674 n 3.94715 3.9465 0 0 0.000471223 0.000175016 n n n 0.265258 -0.0278195 -0.108642 0.0163688 -0 n n 1.94813 0.0574612 0 0 0 0 0 745 1.17837 0.407556 0.000789252 530.516 265.258 0 0.0279252 0 n 
+0.00236776 0.003 1.26644 n 3.94808 3.94682 0 0 0.00144477 -0.000180032 n n n 0.265258 -0.0265157 -0.114011 0.0169374 -0 n n 1.94807 0.0572314 0 0 0 0 0 745 1.1764 0.407805 0.00078943 530.516 265.258 0 0.0418878 0 n 
+0.00315738 0.004 1.26612 n 3.94907 3.94718 0 0 0.00241847 -0.000535107 n n n 0.265258 -0.0252073 -0.119381 0.0175057 -0 n n 1.94812 0.0569148 0 0 0 0 0 745 1.17444 0.408054 0.000789617 530.516 265.258 0 0.0558504 0 n 

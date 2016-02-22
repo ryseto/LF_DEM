@@ -3,14 +3,12 @@ test:
 		(cd .. ; make -B dev)
 
 		@echo "\n Running test simulations...\n"
-		../LF_DEM -r 10b -k knkt_mu1.dat -n confs/D3N500VF0.45Bidi1.4_0.5Cubic_1_colloid_determine_knkt_0.04_p10.bin colloid_determine_knkt_0.04.txt > knkt_det.log 2>&1
-		../LF_DEM -r 0.2r -n confs/D3N500VF0.45Bidi1.4_0.5Cubic_1_repulsive_r0.2.bin -k knkt_mu1.dat repulsive.txt > repulsive_rate.log 2>&1
-		../LF_DEM -s 5r -k knkt_mu1.dat -n confs/D3N500VF0.45Bidi1.4_0.5Cubic_1_repulsive_s5.bin repulsive_stress.txt > repulsive_stress.log 2>&1
-		../LF_DEM -r 100b -k knkt_mu1_peclet_ov0.02.txt -n confs/D3N500VF0.45Bidi1.4_0.5Cubic_1_colloid_p100.bin colloid.txt > brownian.log 2>&1
-		../LF_DEM -r 0.1b -k knkt_mu1_peclet_ov0.02.txt -n confs/D3N500VF0.45Bidi1.4_0.5Cubic_1_colloid_p0.1.bin colloid.txt > brownian_lowPe.log 2>&1
+		../LF_DEM -f -r 0.2r -n confs/D3N200VF0.45Bidi1.4_0.5Cubic_1.bin repulsive.txt > repulsive_rate.log 2>&1
+		../LF_DEM -f -s 5r 	 confs/D3N200VF0.45Bidi1.4_0.5Cubic_1.dat repulsive_stress.txt > repulsive_stress.log 2>&1
+		../LF_DEM -f -r 100b -n confs/D3N200VF0.45Bidi1.4_0.5Cubic_1.bin colloid.txt > brownian.log 2>&1
+		../LF_DEM -f -r 0.1b  confs/D3N200VF0.45Bidi1.4_0.5Cubic_1.dat colloid.txt > brownian_lowPe.log 2>&1
 		@echo "\n Diffing...\n"
-		@for f in rheo*; do \
+		@for f in *.dat; do \
 			echo "diff $$f reference/$$f"; \
 			diff  -I '^# LF_DEM.*' $$f reference/$$f; \
 		done
-
