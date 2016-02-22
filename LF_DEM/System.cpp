@@ -725,7 +725,7 @@ void System::setupSystemPostConfiguration()
 		}
 	}
 
-	if ((test_simulation > 10 && test_simulation <= 20) || test_simulation == 51) {
+	if (test_simulation > 10 && test_simulation <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
@@ -741,10 +741,11 @@ void System::setupSystemPostConfiguration()
 		} else if (test_simulation == 13) {
 			omega_wheel_in  = -0.5*omega_wheel;
 			omega_wheel_out =  0.5*omega_wheel;
-		} else if (test_simulation == 51) {
-			omega_wheel_out = -omega_wheel;
-			omega_wheel_in  = omega_wheel*radius_out/radius_in;
 		}
+	} else if (test_simulation == 51) {
+		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
+		omega_wheel_out = -omega_wheel;
+		omega_wheel_in  = omega_wheel*radius_out/radius_in;
 	}
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
