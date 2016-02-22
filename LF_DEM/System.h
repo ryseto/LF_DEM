@@ -141,8 +141,7 @@ private:
     void forceResultantReset();
     void forceResultantLubricationForce();
     void forceResultantInterpaticleForces();
-
-    void wallForces();
+	void wallForces();
 
 #ifndef USE_DSFMT
 	MTRand *r_gen;

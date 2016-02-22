@@ -1148,6 +1148,7 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+
 	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
@@ -2098,15 +2099,18 @@ void System::tmpMixedProblemSetVelocities()
 	} else if (test_simulation == 51) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
-		vec3d origin_of_rotation2(lx/2, 0, lz);
+		double l = lx/2;
+		vec3d origin_of_rotation2(lx/2, 0, l);
 		vec3d origin_of_rotation3(  lx, 0, 0);
+		double x1 = l/sqrt(2);
+		double x2 = x1+radius_in*sqrt(2);
 		for (int i=i_np_in; i<np; i++) {
-			if (position[i].x < lz/sqrt(2)) {
+			if (position[i].x < x1) {
 				na_velocity[i].set(-omega_wheel_out*(position[i].z),
 								   0,
 								   omega_wheel_out*(position[i].x));
 				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
-			} else if (position[i].x < lz/sqrt(2)+radius_in*sqrt(2)) {
+			} else if (position[i].x < x2) {
 				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
 								   0,
 								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
