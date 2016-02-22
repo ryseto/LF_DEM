@@ -724,7 +724,7 @@ void System::setupSystemPostConfiguration()
 		}
 	}
 
-	if (test_simulation > 10 && test_simulation <= 20) {
+	if ((test_simulation > 10 && test_simulation <= 20) || test_simulation == 51) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
@@ -740,11 +740,15 @@ void System::setupSystemPostConfiguration()
 		} else if (test_simulation == 13) {
 			omega_wheel_in  = -0.5*omega_wheel;
 			omega_wheel_out =  0.5*omega_wheel;
+		} else if (test_simulation == 51) {
+			omega_wheel_out = -omega_wheel;
+			omega_wheel_in  = omega_wheel*radius_out/radius_in;
 		}
 	}
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
 	}
+		
 }
 
 void System::initializeBoxing()
@@ -2089,8 +2093,32 @@ void System::tmpMixedProblemSetVelocities()
         for (int i=i_np_wall1; i<np; i++) {
             na_velocity[i].set(wall_velocity, 0, 0);
             na_ang_velocity[i].reset();
-        }
-    }
+		}
+	} else if (test_simulation == 51) {
+		int i_np_in = np_mobile+np_wall1;
+		// inner wheel
+		vec3d origin_of_rotation2(lx/2, 0, lz);
+		vec3d origin_of_rotation3(  lx, 0, 0);
+		for (int i=i_np_in; i<np; i++) {
+			if (position[i].x < lz/sqrt(2)) {
+				na_velocity[i].set(-omega_wheel_out*(position[i].z),
+								   0,
+								   omega_wheel_out*(position[i].x));
+				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+			} else if (position[i].x < lz/sqrt(2)+radius_in*sqrt(2)) {
+				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
+								   0,
+								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
+				na_ang_velocity[i].set(0, -omega_wheel_in, 0);
+
+			} else {
+				na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
+								   0,
+								    omega_wheel_out*(position[i].x-origin_of_rotation3.x));
+				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+			}
+		}
+	}
 }
 
 void System::sumUpVelocityComponents()

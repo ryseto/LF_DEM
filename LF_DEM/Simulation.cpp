@@ -230,7 +230,12 @@ void Simulation::simulationSteadyShear(string in_args,
         cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
         sys.wall_rheology = true;
         sys.test_simulation = 42;//wtestB
-    }
+	} else if (simu_identifier == "stest1") {
+		cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+		sys.wall_rheology = true;
+		sys.test_simulation = 51;//stest1
+	}
+	
 
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
@@ -698,10 +703,8 @@ void Simulation::outputData()
 
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
         int nb_of_fields = strlen(p.out_particle_stress.c_str());
 		outdata_pst.init(nb_of_fields, output_unit_scales);
-
 		for (int i=0; i<sys.get_np(); i++) {
 			int field_index = 0;
 			if (p.out_particle_stress.find('t') != string::npos) {
