@@ -742,10 +742,15 @@ void System::setupSystemPostConfiguration()
 			omega_wheel_in  = -0.5*omega_wheel;
 			omega_wheel_out =  0.5*omega_wheel;
 		}
+	} else if (test_simulation == 51) {
+		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
+		omega_wheel_out = -omega_wheel;
+		omega_wheel_in  = omega_wheel*radius_out/radius_in;
 	}
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
 	}
+		
 }
 
 void System::initializeBoxing()
@@ -1144,6 +1149,7 @@ void System::timeStepMovePredictor(const string& time_or_strain,
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
+
 	if (angle_output) {
 		for (int i=0; i<np; i++) {
 			angle[i] += ang_velocity[i].y*dt;
@@ -2090,8 +2096,35 @@ void System::tmpMixedProblemSetVelocities()
         for (int i=i_np_wall1; i<np; i++) {
             na_velocity[i].set(wall_velocity, 0, 0);
             na_ang_velocity[i].reset();
-        }
-    }
+		}
+	} else if (test_simulation == 51) {
+		int i_np_in = np_mobile+np_wall1;
+		// inner wheel
+		double l = lx/2;
+		vec3d origin_of_rotation2(lx/2, 0, l);
+		vec3d origin_of_rotation3(  lx, 0, 0);
+		double x1 = l/sqrt(2);
+		double x2 = x1+radius_in*sqrt(2);
+		for (int i=i_np_in; i<np; i++) {
+			if (position[i].x < x1) {
+				na_velocity[i].set(-omega_wheel_out*(position[i].z),
+								   0,
+								   omega_wheel_out*(position[i].x));
+				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+			} else if (position[i].x < x2) {
+				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
+								   0,
+								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
+				na_ang_velocity[i].set(0, -omega_wheel_in, 0);
+
+			} else {
+				na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
+								   0,
+								    omega_wheel_out*(position[i].x-origin_of_rotation3.x));
+				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+			}
+		}
+	}
 }
 
 void System::sumUpVelocityComponents()

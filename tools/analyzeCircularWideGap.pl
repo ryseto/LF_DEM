@@ -38,9 +38,11 @@ close(IN_CONFIG);
 # Create output file name
 
 $output = "CWGdata_$name.dat";
+$output_pos = "pos_$name.dat";
 printf "$output\n";
 
 open (OUT, "> ${output}");
+open (OUTpos, "> ${output_pos}");
 open (IN_particle, "< ${particle_data}");
 
 &readHeader;
@@ -50,7 +52,13 @@ $output = 1;
 $cnt_data = 0;
 $shear_strain_steady_state = 5;
 
-$kmax = 8;
+if ($np_mov <= 3000) {
+	$kmax = 8;
+} elsif ($np_mov <= 6000) {
+	$kmax = 10;
+} elsif ($np_mov <= 9000) {
+	$kmax = 12;
+}
 $r_in = $radius_in;
 $r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
@@ -92,18 +100,25 @@ for ($k = 0; $k < $kmax; $k++) {
 		} else {
 			$gradient_v_tan = 0;
 		}
-		$r = $r_in + $dr*$k + 0.5*$dr;
-		$rnorm = ($r - $r_in)/($r_out - $r_in);
+		$r = $r_in + $dr*$k;
+		$rmid = $r + 0.5*$dr;
+		$rnorm = ($rmid - $r_in)/($r_out - $r_in);
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
 		
-		printf OUT "$r $ave_v_tan[$k] $gradient_v_tan $density $rnorm\n";
+		printf OUT "$rmid $ave_v_tan[$k] $gradient_v_tan $density $rnorm\n";
 	}
 }
 
 
+for ($i = 0; $i < $np; $i ++){
+	printf OUTpos "$posx[$i] $posz[$i] $radius[$i]\n";
+}
+
+
 close (OUT);
+close (OUTpos);
 close (IN_particle);
 
 ##################################################################
@@ -163,11 +178,11 @@ sub InParticles {
 					$particlearea[$i_rpos] += pi*$a*$a;
 				} else {
 					printf "@ $i $i_rpos   $pos_r\n";
-					#exit;
+					exit;
 				}
 			} 			#$posx[$i] = $x;
-			#$posy[$i] = $y;
-			#$posz[$i] = $z;
+			$posx[$i] = $x;
+			$posz[$i] = $z;
 			#$velx[$i] = $vx;
 			#$vely[$i] = $vy;
 			#$velz[$i] = $vz;

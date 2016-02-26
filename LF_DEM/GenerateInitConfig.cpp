@@ -23,13 +23,15 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		cerr << "generate magnetic configuration" <<endl;
 		magnetic_config = true;
 	} else if (config_type == 2) {
-		cerr << "generate wide gap configuration" <<endl;
+		cerr << "generate circular wide gap " <<endl;
 		circulargap_config = true;
+	} else if (config_type == 4) {
+		cerr << "generate winding walls" <<endl;
+		winding_wall_config = true;
 	} else if (config_type == 3) {
-        cerr << "generate wide gap configuration" <<endl;
+        cerr << "generate flat walls" <<endl;
         parallel_wall_config = true;
     }
-
 	setParameters();
 	rand_seed = rand_seed_;
 	if (circulargap_config) {
@@ -47,7 +49,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
 		cerr << "np " << np << endl;
-    } else if (parallel_wall_config) {
+	} else if (parallel_wall_config) {
 		/* Note:
 		 * Wall particles are placed at
 		 *   z = z_bot - a
@@ -57,8 +59,14 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
         np_wall1 = lx/1.5;
         np_wall2 = lx/1.5;
         np_movable = np;
-        np_fix = np_wall1+np_wall2;
-        np += np_fix;
+		np_fix = np_wall1+np_wall2;
+		np += np_fix;
+	} else if (winding_wall_config) {
+		np_wall1 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
+		np_wall2 = (cg_radius_out+cg_radius_in)*M_PI/2/1.5+1;
+		np_movable = np;
+		np_fix = np_wall1+np_wall2;
+		np += np_fix;
 	} else {
 		np_movable = np;
 	}
@@ -76,19 +84,22 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.p.integration_method = 0;
 	putRandom();
 	double inflate_ratio = 1.03;
+	bool relax = true;
     cerr << "@" << endl;
 	for (int i=0; i<np; i++) {
 		sys.radius[i] *= inflate_ratio;
 	}
 	sys.setInteractions_GenerateInitConfig();
-	grad = new vec3d [np];
-	prev_grad = new vec3d [np];
-	step_size = 5;
-	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
-	step_size /= 4.;
-	gradientDescent();
+	if (relax) {
+		grad = new vec3d [np];
+		prev_grad = new vec3d [np];
+		step_size = 5;
+		gradientDescent();
+		step_size /= 4.;
+		gradientDescent();
+		step_size /= 4.;
+		gradientDescent();
+	}
 	// step_size /= 4.;
 	// gradientDescent();
 	// step_size /= 4.;
@@ -106,22 +117,25 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	double energy_previous = 0;
 	double diff_energy = 99999;
 	int cnt = 0;
-	do {
-		energy = zeroTMonteCarloSweep();
-		cerr << energy << endl;
-		diff_energy = energy-energy_previous;
-		energy_previous = energy;
-		if (count%100 == 0) {
-			fout << count << ' ' << energy << ' ' <<  diff_energy << endl;
-		}
-		count ++;
-		cerr << "diff = " << abs(diff_energy) << endl;
-		if (abs(diff_energy) < 1e-10) {
-			cnt++;
-		} else {
-			cnt = 0;
-		}
-	} while (cnt < 3);
+
+	if (relax) {
+		do {
+			energy = zeroTMonteCarloSweep();
+			cerr << energy << endl;
+			diff_energy = energy-energy_previous;
+			energy_previous = energy;
+			if (count%100 == 0) {
+				fout << count << ' ' << energy << ' ' <<  diff_energy << endl;
+			}
+			count ++;
+			cerr << "diff = " << abs(diff_energy) << endl;
+			if (abs(diff_energy) < 1e-10) {
+				cnt++;
+			} else {
+				cnt = 0;
+			}
+		} while (cnt < 3);
+	}
 	//deflate
 	for (int i=0; i<np_movable; i++) {
 		if (i < np1) {
@@ -172,8 +186,12 @@ void GenerateInitConfig::outputPositionData()
     if (circulargap_config) {
         ss_posdatafilename << "cylinders" << cg_ratio_radii; // square
     } else if (parallel_wall_config) {
-        ss_posdatafilename << "shearwalls"; // square
-    } else {
+		ss_posdatafilename << "shearwalls"; // square
+	} else if (winding_wall_config) {
+		ss_posdatafilename << "windingwalls"; // square
+		
+		
+	} else {
 		if (sys.twodimension) {
 			if (lx_lz == 1) {
 				ss_posdatafilename << "Square"; // square
@@ -205,7 +223,7 @@ void GenerateInitConfig::outputPositionData()
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-    if (circulargap_config) {
+    if (circulargap_config || winding_wall_config) {
 		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 radius_in radius_out" << endl;
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
@@ -429,6 +447,104 @@ void GenerateInitConfig::putRandom()
         }
         cerr << "*" << endl;
         cerr << np_wall1 << ' ' << np_wall2 << endl;
+	} else if (winding_wall_config) {
+		int i = 0;
+		vec3d r_center1(0, 0, 0);
+		vec3d r_center2(lx/2, 0, lx/2);
+		vec3d r_center3(lx, 0, 0);
+		while (i < np_movable) {
+			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
+			double a;
+			if (i < np1) {
+				a = a1;
+			} else {
+				a = a2;
+			}
+			double r;
+			if (pos.z > pos.x) {
+				r = (pos-r_center1).norm();
+			} else if (pos.z < -pos.x + lx) {
+				r = (pos-r_center2).norm();
+			} else {
+				r = (pos-r_center3).norm();
+			}
+			if (r > cg_radius_in+2 && r < cg_radius_out-2) {
+				sys.position[i] = pos;
+				if (i < np1) {
+					sys.radius[i] = a1;
+				} else {
+					sys.radius[i] = a2;
+				}
+				i++;
+			}
+		}
+
+		double dl = (cg_radius_in+cg_radius_out)*M_PI/2/np_wall1;
+		double l;
+		
+		l = 0;
+		while (l + dl < cg_radius_in*M_PI/2) {
+			double theta = l/cg_radius_in;
+			double theta0 = 3*M_PI/4;
+			vec3d u_vec(cos(theta0-theta), 0, sin(theta0-theta));
+			sys.position[i] = r_center3+cg_radius_in*u_vec;
+			if (sys.position[i].x > lx) {
+				sys.position[i].x -= lx;
+			}
+			sys.radius[i] = 1;
+			l += dl;
+			i++;
+		}
+		//l -= dl;
+		while (l + dl<= (cg_radius_out+cg_radius_in)*M_PI/2) {
+			
+			double l1 = cg_radius_in*M_PI/2;
+			double theta = (l-l1)/cg_radius_out;
+			double theta0 = 5*M_PI/4;
+			vec3d u_vec(cos(theta0+theta), 0, sin(theta0+theta));
+			sys.position[i] = r_center2+cg_radius_out*u_vec;
+			if (sys.position[i].x > lx) {
+				sys.position[i].x -= lx;
+			}
+			sys.radius[i] = 1;
+			l += dl;
+			i++;
+		}
+
+		
+		l = 0;
+		while (l + dl < cg_radius_out*M_PI/2) {
+
+			double theta = l/cg_radius_out;
+			double theta0 = 3*M_PI/4;
+			vec3d u_vec(cos(theta0-theta), 0, sin(theta0-theta));
+			sys.position[i] = r_center3+cg_radius_out*u_vec;
+			if (sys.position[i].x > lx) {
+				sys.position[i].x -= lx;
+			}
+			sys.radius[i] = 1;
+			l += dl;
+			i++;
+		}
+		//l -= dl;
+		while (l + dl <= (cg_radius_out+cg_radius_in)*M_PI/2) {
+
+			double l1 = cg_radius_out*M_PI/2;
+			double theta = (l-l1)/cg_radius_in;
+			double theta0 = 5*M_PI/4;
+			vec3d u_vec(cos(theta0+theta), 0, sin(theta0+theta));
+			sys.position[i] = r_center2+cg_radius_in*u_vec;
+			if (sys.position[i].x > lx) {
+				sys.position[i].x -= lx;
+			}
+			sys.radius[i] = 1;
+			l += dl;
+			i++;
+		}
+		cerr << np_wall1 << " " << np_wall2<< endl;
+		cerr << np << endl;
+		cerr << sys.position.size() << endl;
+
 	} else {
         for (int i=0; i<np_movable; i++) {
             sys.position[i].x = lx*RANDOM;
@@ -439,7 +555,7 @@ void GenerateInitConfig::putRandom()
                 sys.position[i].y = ly*RANDOM;
             }
             if (i < np1) {
-                sys.radius[i] = a1;
+				sys.radius[i] = a1;
             } else {
                 sys.radius[i] = a2;
             }
@@ -593,7 +709,9 @@ void GenerateInitConfig::setParameters()
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
     if (circulargap_config || parallel_wall_config) {
-        lx_lz = 1.0;
+		lx_lz = 1.0;
+	} else if (winding_wall_config) {
+		lx_lz = 0.5;
     } else {
         lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
         if (!sys.twodimension) {
@@ -696,6 +814,24 @@ void GenerateInitConfig::setParameters()
 		lz = 2*cg_radius_out+5;
 		lx = lz*lx_lz;
 		ly = 0;
+	} else if (winding_wall_config) {
+		double area_particle = np1*pvolume1+np2*pvolume2;
+		//double area_gap = area_particle/volume_fraction;
+		double rout = readStdinDefault(1, "r_out (>sqrt{2}/2)");
+		double width = rout - sqrt(2)/2;
+		double a = 1;
+		//lz = (-sqrt(2)*a+sqrt(2*a*a + 4*sqrt(2)*width*area_particle/(M_PI*volume_fraction)))/(2*sqrt(2)*width);
+		lz = (a+sqrt(a*a+4*width*area_particle/(M_PI*volume_fraction*sqrt(2))))/(2*width);
+		lx = 2*lz;
+		cg_radius_out = lz*(sqrt(2)/2+width);
+		cg_radius_in = lz*(sqrt(2)/2-width);
+		lz += 2;
+		cerr << "lz = " << lz << endl;
+		cerr << "cg_radius_out = " << cg_radius_out << endl;
+		cerr << "cg_radius_in = " << cg_radius_in << endl;
+		double area1 = M_PI*(cg_radius_out-a)*(cg_radius_out-a)/2;
+		double area2 = M_PI*(cg_radius_in+a)*(cg_radius_in+a)/2;
+		cerr << " area fraction = " << area_particle/(area1-area2);
     } else if (parallel_wall_config) {
         lz += 10;
         z_bot = 5;

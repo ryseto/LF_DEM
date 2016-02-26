@@ -67,7 +67,8 @@ private:
 	 */
 	bool magnetic_config;
 	bool circulargap_config;
-    bool parallel_wall_config;
+	bool parallel_wall_config;
+	bool winding_wall_config;
 	double cg_radius_in;
 	double cg_radius_out;
 	double cg_ratio_radii;
@@ -103,7 +104,8 @@ public:
 	sys(System(p, events)),
 	magnetic_config(false),
 	circulargap_config(false),
-    parallel_wall_config(false) {};
+    parallel_wall_config(false),
+	winding_wall_config(false) {};
 	
 	int generate(int rand_seed_, int config_type);
 	/* config_type = 1 -- noraml
