@@ -68,18 +68,25 @@ def read_snapshot_file(fname, field_nb=None):
         frame_metadata: the metadata for each snapshot
         file_metadata: the metadata of the whole file
     """
+
+    openedfile = True
     try:
         in_file = open(fname, "r")
     except TypeError:
         in_file = fname
+        openedfile = False
 
     file_metadata = get_file_metadata(in_file)
 
-    field_nb_d = {'par': 15, 'int': 17}
     if field_nb is None:
-        file_type = in_file[in_file.rfind('/')+1:in_file.find('_')]
-        field_nb = field_nb_d[file_type]
-
+        if openedfile:
+            field_nb_d = {'par': 15, 'int': 17}
+            file_type = fname[fname.rfind('/')+1:fname.find('_')]
+            field_nb = field_nb_d[file_type]
+        else:
+            field_nb = 15
+            print("Warning, using default field_nb=15")
+            
     names = [str(i) for i in range(1, field_nb+1)]
     frames = pd.read_table(in_file, delim_whitespace=True,
                            names=names, skiprows=field_nb+6)
