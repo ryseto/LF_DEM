@@ -1961,6 +1961,9 @@ void System::computeShearRateWalls()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_from_fixed = shearStressComponent(total_hydrofromfixed_stressGU, p.theta_shear);
+	if (viscosity_from_fixed == 0) {
+		throw runtime_error("System:: computeShearRateWalls: velocity from fixed particles is zero. Probably the input fixed velocities are zero.");
+	}
 	shear_rate = shearstress_from_fixed/viscosity_from_fixed;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
