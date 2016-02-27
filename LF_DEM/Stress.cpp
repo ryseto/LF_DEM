@@ -76,13 +76,13 @@ void System::calcStressPerParticle()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			if (p.lubrication_model > 0) {
-				if (p.lubrication_model == 1) {
+				if (p.lubrication_model == 1 || p.lubrication_model == 3) {
 					interaction[k].lubrication.calcXFunctionsStress();
 				} else if (p.lubrication_model == 2) {
 					interaction[k].lubrication.calcXYFunctionsStress();
 				} else {
 					ostringstream error_str;
-					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model = 3 is not implemented" << endl;
+					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model > 3 is not implemented" << endl;
 					throw runtime_error(error_str.str());
 				}
 				interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
@@ -151,9 +151,9 @@ void System::calcStress()
 			total_contact_stressXF += interaction[k].contact.getContactStressXF();
 			if (cstress_per_particle) {
 				StressTensor sc = interaction[k].contact.getContactStressXF();
-				unsigned short i, j;
+				unsigned int i, j;
 				interaction[k].get_par_num(i,j);
-				double r_ij = interaction[k].get_ro();
+                double r_ij = interaction[k].ro;
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
 				contactstressXF[j] += (radius[j]/r_ij)*sc;
 			}
@@ -178,7 +178,7 @@ void System::calcStress()
 					As the repulsive force is not a contact force, there is an ambiguity defining the stress per particle. Here we make the choice of attributing 1/2 of the interaction stress to each particle.
 				*/
 				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
-				unsigned short i, j;
+				unsigned int i, j;
 				interaction[k].get_par_num(i,j);
 				repulsivestressXF[i] += sc;
 				repulsivestressXF[j] += sc;
@@ -223,7 +223,6 @@ void System::calcStress()
 		}
 		total_hydrofromfixed_stressGU /= system_volume;
 	}
-	//
 	total_stress = total_hydro_stress;
 	total_stress += total_contact_stressXF;
 	total_stress += total_contact_stressGU; // added (Aug 15 2013)
@@ -247,13 +246,19 @@ void System::calcStress()
 	if (mobile_fixed) {
 		total_stress += total_hydrofromfixed_stressGU;
 	}
-	if (!mobile_fixed) { // @@@ for the moment I remove the Einstein stress with walls. Should think if it's necessary.
-		einstein_stress = einstein_viscosity*shear_rate; // should we include that in the hydro_stress definition?
-		if (!p.cross_shear) {
-			total_stress.elm[2] += einstein_stress;
-		} else {
-			total_stress.elm[2] += costheta_shear*einstein_stress;
-			total_stress.elm[3] += sintheta_shear*einstein_stress;
-		}
-	}
+    if (wall_rheology) {
+        if (z_top != -1) {
+            shearstress_wall1 = force_tang_wall1/lx;
+            shearstress_wall2 = force_tang_wall2/lx;
+            normalstress_wall1 = force_normal_wall1/lx;
+            normalstress_wall2 = force_normal_wall2/lx;
+        } else {
+            double wall_area1 = M_PI*2*radius_in;
+            double wall_area2 = M_PI*2*radius_out;
+            shearstress_wall1 = force_tang_wall1/wall_area1;
+            shearstress_wall2 = force_tang_wall2/wall_area2;
+            normalstress_wall1 = force_normal_wall1/wall_area1;
+            normalstress_wall2 = force_normal_wall2/wall_area2;
+        }
+    }
 }

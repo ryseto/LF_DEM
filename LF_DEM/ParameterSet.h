@@ -64,7 +64,6 @@ struct ParameterSet
 	*/
 	double lub_reduce_parameter;             ///< Lubrication regularization length ("roughness length") [1e-3]
 	double lub_max_gap;                          ///< Lubrication range (in interparticle gap distance) [0.5]
-
 	/*******************************************************
 	 CONTACTS
 	********************************************************/
@@ -83,7 +82,7 @@ struct ParameterSet
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	bool unscaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
+	bool stress_scaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
 	double kn;                               ///< Particle stiffness: normal spring constant [2000 under stress control, 10000 under rate control]
 	double kt;                               ///< Particle stiffness: tangential spring constant [1000 under stress control, 6000 under rate control]
 	double kr;                               ///< Particle stiffness: rolling spring constant [1000 under stress control, 6000 under rate control]

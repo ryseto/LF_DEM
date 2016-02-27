@@ -39,16 +39,14 @@ private:
 	System *sys;
 	double a0; // radii
 	double a1; // second raddi > a0
-	double ro; // ro = a0+a1;
 	double ro_12; // ro_12 = ro/2
 	double a_reduced; // 1/a_reduced = 1/a0 + 1/a1
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
-	unsigned short p0; // @@@ is there a real gain to use short over int?
-	unsigned short p1;
+	unsigned int p0;
+	unsigned int p1;
 	//======= relative position/velocity data  =========//
-	double r; // center-center distance
 	int zshift;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	vec3d relative_velocity;
@@ -79,6 +77,8 @@ public:
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
 	vec3d relative_surface_velocity;
+    double ro; // ro = a0+a1;
+    double r; // center-center distance
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 
@@ -98,8 +98,7 @@ public:
 	 */
 	void updateState(bool& deactivated);
 	void updateContactState();
-	void activate(unsigned short i, unsigned short j,
-				  double interaction_range_);
+	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
 
 	inline vec3d relative_surface_velocity_direction() {
@@ -126,7 +125,7 @@ public:
 	{
 		return (i == p0 ? p1 : p0);
 	}
-	inline void	get_par_num(unsigned short& i, unsigned short& j)
+	inline void	get_par_num(unsigned int& i, unsigned int& j)
 	{
 		i = p0, j = p1;
 	}
@@ -138,19 +137,15 @@ public:
 	{
 		return label;
 	}
-	inline double get_ro()
-	{
-		return ro;
-	}
 	inline double get_a_reduced()
 	{
 		return a_reduced;
 	}
 	//======= relative position/velocity  ========//
-	inline double get_r()
-	{
-		return r;
-	}
+    inline double get_ro_r()
+    {
+        return ro/r;
+    }
 	inline double get_reduced_gap()
 	{
 		return reduced_gap;

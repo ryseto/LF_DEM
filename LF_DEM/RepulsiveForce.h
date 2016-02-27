@@ -28,8 +28,8 @@ class RepulsiveForce{
 private:
 	System* sys;
 	Interaction* interaction;
-	unsigned short p0;
-	unsigned short p1;
+	unsigned int p0;
+	unsigned int p1;
 	//===== forces and stresses ==================== //
 	double geometric_factor;
 	double screening_length;

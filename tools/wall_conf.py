@@ -9,10 +9,11 @@ if len(sys.argv) != 2:
 fname = sys.argv[1]
 pos, rad, meta = lf.read_conf_file(fname)
 # get the top and bottom layers
-ztop = pos[:,2]+1.5*rad
+
+ztop = pos[:, 2]+1.5*rad
 top_particles = ztop > float(meta['lz'])
 
-zbottom = pos[:,2]-1.5*rad
+zbottom = pos[:, 2]-1.5*rad
 bottom_particles = zbottom < 0
 
 # freeze them
@@ -22,7 +23,7 @@ fixed_part = np.logical_or(bottom_particles, top_particles)
 # and putting particles in the middle of this extended box,
 zextension = 4*np.amax(rad)
 meta['lz'] = str(float(meta['lz']) + zextension)
-pos[:,2] += zextension/2
+pos[:, 2] += zextension/2
 
 # separate frozen from mobile particles
 fixed_rad = rad[fixed_part]

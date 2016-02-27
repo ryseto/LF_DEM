@@ -280,6 +280,11 @@ public:
 	{
 		return sqrt(sq_norm());
 	}
+    
+    inline double norm_xz()
+    {
+        return sqrt(sq_norm_xz());
+    }
 
 	inline friend double dist(const vec3d& a1, const vec3d& a2)
 	{

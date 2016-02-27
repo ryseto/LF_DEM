@@ -54,17 +54,17 @@ struct ForceAmplitudes
 	double ft_max;
 };
 
-
 class System{
 private:
 	int np; ///< number of particles
-	int np_mobile; ///< number of mobile particles
 	int maxnb_interactionpair;
 	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
-
+	int nb_of_contacts_mm;
+	int nb_of_contacts_mf;
+	int nb_of_contacts_ff;
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
@@ -75,7 +75,6 @@ private:
 	double lx_half; // =lx/2
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
-	double system_volume;
 	double shear_strain;
 	double total_energy;
 	int linalg_size;
@@ -128,8 +127,6 @@ private:
 	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
-    void forceBalanceCheckLubricationForce();
-    void calcPairwiseLubricationForce();
 	double (System::*calcInteractionRange)(const int&, const int&);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
@@ -141,8 +138,10 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
-    void forceBalanceCheckSetForce();
-    void forceBalanceCheckOutput();
+    void forceResultantReset();
+    void forceResultantLubricationForce();
+    void forceResultantInterpaticleForces();
+	void wallForces();
 
 #ifndef USE_DSFMT
 	MTRand *r_gen;
@@ -180,6 +179,7 @@ private:
 	System(ParameterSet& ps, std::list <Event>& ev);
 	~System();
 	ParameterSet& p;
+    int np_mobile; ///< number of mobile particles
 	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
 	// Interaction types
 	bool brownian;
@@ -194,14 +194,15 @@ private:
 	bool twodimension;
 	bool rate_controlled;
 	bool stress_controlled;
-	bool zero_shear; ///< To be used for relaxation to generate initial configuration.
+	bool zero_shear;
+    bool wall_rheology;
 	bool mobile_fixed;
-    bool check_force_balance;
-	double volume_fraction;
+    //	double volume_fraction;
+	double system_height;
 	bool in_predictor;
 	bool in_corrector;
 	std::vector<vec3d> position;
-  std::vector<vec3d> forcecheck;
+    std::vector<vec3d> forceResultant;
 	Interaction *interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
@@ -256,6 +257,8 @@ private:
 	StressTensor total_hydrofromfixed_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt;
+	double avg_dt;
+	int avg_dt_nb;
 	/* double kn; */
 	/* double kt; */
 	/* double kr; */
@@ -263,8 +266,7 @@ private:
 	double kt_master;
 	double kr_master;
 	double lub_coeff_contact;
-	double einstein_stress;
-	double einstein_viscosity;
+	double system_volume;
 	// resistance coeffient for normal mode
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
@@ -272,7 +274,6 @@ private:
 	std::set <Interaction*> *interaction_list;
 	std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
-	double *ratio_unit_time; // to convert System time in Simulation time
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -309,15 +310,34 @@ private:
 	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
-	bool circulargap;
 	double omega_wheel_in;
 	double omega_wheel_out;
-	int np_in;
-	int np_out;
+	int np_wall1;
+	int np_wall2;
 	double radius_in;
 	double radius_out;
+    double z_bot;
+    double z_top;
+	double force_tang_wall1;
+    double force_tang_wall2;
+	double force_normal_wall1;
+	double force_normal_wall2;
+    double shearstress_wall1;
+    double shearstress_wall2;
+    double normalstress_wall1;
+    double normalstress_wall2;
+	/*
+	 * Simulation for magnetic particles
+	 */
+	bool magnetic_rotation_active;
+	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
+	double angle_external_magnetic_field;
+	vec3d external_magnetic_field;
+
+	double *ratio_unit_time; // to convert System time in Simulation time
+
 	/****************************************/
-	void setSystemVolume(double depth = 0);
+	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
 						  const std::vector <double>& radii,
 						  double lx_, double ly_, double lz_);
@@ -325,7 +345,8 @@ private:
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
-	void setupSystem(std::string control);
+	void setupSystemPreConfiguration(std::string control, bool is2d);
+	void setupSystemPostConfiguration();
 	void allocatePositionRadius();
 	void allocateRessources();
 	void timeEvolution(const std::string& time_or_strain,
@@ -334,6 +355,7 @@ private:
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void updateNumberOfInteraction(int p0, int p1, int val);
+	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 	void updateMagneticInteractions();
 	void updateUnscaledContactmodel();
@@ -351,10 +373,6 @@ private:
 	/*
 	 * Simulation for magnetic particles
 	 */
-	bool magnetic_rotation_active;
-	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
-	double angle_external_magnetic_field;
-	vec3d external_magnetic_field;
 	void setMagneticConfiguration(const std::vector <vec3d>& magnetic_moment,
 								  const std::vector <double>& magnetic_susceptibility);
 	void setInducedMagneticMoment();
@@ -445,6 +463,11 @@ private:
 	{
 		np = val;
 	}
+
+    inline void set_np_mobile(int val)
+    {
+        np_mobile = val;
+    }
 
 	inline int get_np()
 	{

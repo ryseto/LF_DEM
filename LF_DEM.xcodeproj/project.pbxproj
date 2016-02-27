@@ -8,16 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		CDE4695A16BC4CB800923139 /* StokesSolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CDE4695916BC4CB800923139 /* StokesSolver.cpp */; };
-		D900E3D11C4544F500349E01 /* libamd.2.4.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3CD1C4544F500349E01 /* libamd.2.4.1.a */; };
-		D900E3D21C4544F500349E01 /* libcholmod.3.0.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3CE1C4544F500349E01 /* libcholmod.3.0.6.a */; };
-		D900E3D31C4544F500349E01 /* libcolamd.2.9.1.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3CF1C4544F500349E01 /* libcolamd.2.9.1.a */; };
-		D900E3D41C4544F500349E01 /* libsuitesparseconfig.4.4.6.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D900E3D01C4544F500349E01 /* libsuitesparseconfig.4.4.6.a */; };
 		D9032D751B79DFE60062A6F3 /* SimulationInit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */; };
 		D921A0C1175BF90D002F64B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C0175BF90D002F64B1 /* main.cpp */; };
 		D921A0C3175BF90D002F64B1 /* analyze_data_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */; };
 		D921A0C9175C0041002F64B1 /* SystemParticles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D921A0C7175C0041002F64B1 /* SystemParticles.cpp */; };
 		D92244841BFBF08700F46233 /* SystemHelperFunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */; };
-		D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */; };
 		D92EAA0F17E39D5100C903F5 /* Contact.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0B17E39D5100C903F5 /* Contact.cpp */; };
 		D92EAA1017E39D5100C903F5 /* Lubrication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */; };
@@ -43,6 +38,11 @@
 		D9BE3B71178CB35E00937C5C /* Bond.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B6F178CB35E00937C5C /* Bond.cpp */; };
 		D9BE3B74178CB8A800937C5C /* Cluster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9BE3B72178CB8A800937C5C /* Cluster.cpp */; };
 		D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */ = {isa = PBXBuildFile; fileRef = D9CE1B411B066B3400E052D9 /* dSFMT.c */; };
+		D9D53ED81C7806AC007A2D2E /* libcholmod.3.0.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED41C7806AC007A2D2E /* libcholmod.3.0.9.dylib */; };
+		D9D53ED91C7806AC007A2D2E /* libcolamd.2.9.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED51C7806AC007A2D2E /* libcolamd.2.9.4.dylib */; };
+		D9D53EDA1C7806AC007A2D2E /* libamd.2.4.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED61C7806AC007A2D2E /* libamd.2.4.4.dylib */; };
+		D9D53EDB1C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D9D53ED71C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib */; };
+		D9DF2DA01C6C072100FEC18C /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D91B041D166EF0A600DC63CA /* Accelerate.framework */; };
 		D9FAAA301960685B00E601A9 /* Interaction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9FAAA2F1960685B00E601A9 /* Interaction.cpp */; };
 /* End PBXBuildFile section */
 
@@ -128,10 +128,6 @@
 
 /* Begin PBXFileReference section */
 		CDE4695916BC4CB800923139 /* StokesSolver.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = StokesSolver.cpp; sourceTree = "<group>"; };
-		D900E3CD1C4544F500349E01 /* libamd.2.4.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libamd.2.4.1.a; path = /opt/local/lib/libamd.2.4.1.a; sourceTree = "<absolute>"; };
-		D900E3CE1C4544F500349E01 /* libcholmod.3.0.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcholmod.3.0.6.a; path = /opt/local/lib/libcholmod.3.0.6.a; sourceTree = "<absolute>"; };
-		D900E3CF1C4544F500349E01 /* libcolamd.2.9.1.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcolamd.2.9.1.a; path = /opt/local/lib/libcolamd.2.9.1.a; sourceTree = "<absolute>"; };
-		D900E3D01C4544F500349E01 /* libsuitesparseconfig.4.4.6.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuitesparseconfig.4.4.6.a; path = /opt/local/lib/libsuitesparseconfig.4.4.6.a; sourceTree = "<absolute>"; };
 		D9032D731B79D1A00062A6F3 /* Events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Events.h; sourceTree = "<group>"; };
 		D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimulationInit.cpp; sourceTree = "<group>"; };
 		D90AF33D1AF9FFBA00E15C7E /* _averager_8h_source.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = _averager_8h_source.html; sourceTree = "<group>"; };
@@ -605,6 +601,7 @@
 		D9A9066F1BF331EF00BE8640 /* reduce_rheodata.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = reduce_rheodata.pl; path = tools/reduce_rheodata.pl; sourceTree = SOURCE_ROOT; };
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
+		D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = analyzeWallShear.pl; path = tools/analyzeWallShear.pl; sourceTree = SOURCE_ROOT; };
 		D9BC20971AAD607B0033D4A8 /* algorithm.graffle */ = {isa = PBXFileReference; lastKnownFileType = file; path = algorithm.graffle; sourceTree = "<group>"; };
 		D9BC20981AAD60900033D4A8 /* fig.graffle */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = fig.graffle; sourceTree = "<group>"; };
 		D9BC20991AAD60AB0033D4A8 /* kumars_Rfu0.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = kumars_Rfu0.pdf; sourceTree = "<group>"; };
@@ -625,6 +622,10 @@
 		D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-common.h"; path = "dSFMT-src-2.2.3/dSFMT-common.h"; sourceTree = "<group>"; };
 		D9CE1B451B066B5E00E052D9 /* dSFMT-params.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params.h"; path = "dSFMT-src-2.2.3/dSFMT-params.h"; sourceTree = "<group>"; };
 		D9CE1B461B066B5E00E052D9 /* dSFMT-params19937.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-params19937.h"; path = "dSFMT-src-2.2.3/dSFMT-params19937.h"; sourceTree = "<group>"; };
+		D9D53ED41C7806AC007A2D2E /* libcholmod.3.0.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcholmod.3.0.9.dylib; path = ../../../../../../usr/local/lib/libcholmod.3.0.9.dylib; sourceTree = "<group>"; };
+		D9D53ED51C7806AC007A2D2E /* libcolamd.2.9.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcolamd.2.9.4.dylib; path = ../../../../../../usr/local/lib/libcolamd.2.9.4.dylib; sourceTree = "<group>"; };
+		D9D53ED61C7806AC007A2D2E /* libamd.2.4.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libamd.2.4.4.dylib; path = ../../../../../../usr/local/lib/libamd.2.4.4.dylib; sourceTree = "<group>"; };
+		D9D53ED71C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsuitesparseconfig.4.5.1.dylib; path = ../../../../../../usr/local/lib/libsuitesparseconfig.4.5.1.dylib; sourceTree = "<group>"; };
 		D9DA50D71678F61E00E864E4 /* note_LF_DEM.bbl */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.bbl; sourceTree = "<group>"; };
 		D9DA50DA1678F61E00E864E4 /* note_LF_DEM.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = note_LF_DEM.pdf; sourceTree = "<group>"; };
 		D9DA50DC1678F61E00E864E4 /* note_LF_DEM.tex */ = {isa = PBXFileReference; lastKnownFileType = text; path = note_LF_DEM.tex; sourceTree = "<group>"; };
@@ -660,11 +661,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D900E3D11C4544F500349E01 /* libamd.2.4.1.a in Frameworks */,
-				D900E3D21C4544F500349E01 /* libcholmod.3.0.6.a in Frameworks */,
-				D900E3D31C4544F500349E01 /* libcolamd.2.9.1.a in Frameworks */,
-				D900E3D41C4544F500349E01 /* libsuitesparseconfig.4.4.6.a in Frameworks */,
-				D92636391A4D31310050E29A /* Accelerate.framework in Frameworks */,
+				D9D53ED81C7806AC007A2D2E /* libcholmod.3.0.9.dylib in Frameworks */,
+				D9D53ED91C7806AC007A2D2E /* libcolamd.2.9.4.dylib in Frameworks */,
+				D9D53EDA1C7806AC007A2D2E /* libamd.2.4.4.dylib in Frameworks */,
+				D9D53EDB1C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib in Frameworks */,
+				D9DF2DA01C6C072100FEC18C /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1141,10 +1142,6 @@
 		D932B8DE16C2EA1B00AD6E85 /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				D900E3CD1C4544F500349E01 /* libamd.2.4.1.a */,
-				D900E3CE1C4544F500349E01 /* libcholmod.3.0.6.a */,
-				D900E3CF1C4544F500349E01 /* libcolamd.2.9.1.a */,
-				D900E3D01C4544F500349E01 /* libsuitesparseconfig.4.4.6.a */,
 				D91B041D166EF0A600DC63CA /* Accelerate.framework */,
 			);
 			name = lib;
@@ -1169,6 +1166,7 @@
 				D9A9066A1BF331EF00BE8640 /* generateYaplotFile.pl */,
 				D9825AF01C410E4B000AF86E /* circularrheo.pl */,
 				D93C105A1C34197200460301 /* analyzeCircularWideGap.pl */,
+				D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */,
 				D9A906671BF331EF00BE8640 /* generatePovray.pl */,
 				D9A906641BF331EF00BE8640 /* calc_contact_fraction.pl */,
 				D9A906651BF331EF00BE8640 /* extractConfigdata.pl */,
@@ -1188,6 +1186,10 @@
 		D988E37E165441750009949F = {
 			isa = PBXGroup;
 			children = (
+				D9D53ED41C7806AC007A2D2E /* libcholmod.3.0.9.dylib */,
+				D9D53ED51C7806AC007A2D2E /* libcolamd.2.9.4.dylib */,
+				D9D53ED61C7806AC007A2D2E /* libamd.2.4.4.dylib */,
+				D9D53ED71C7806AC007A2D2E /* libsuitesparseconfig.4.5.1.dylib */,
 				D94AEF021C0BCEAC0061C679 /* README.rst */,
 				D988E38C165441750009949F /* LF_DEM */,
 				D90AF33B1AF9FFBA00E15C7E /* html */,

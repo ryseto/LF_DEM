@@ -31,8 +31,8 @@
 //	System *sys;
 //	Interaction *interaction;
 //	bool active;
-//	unsigned short p0;
-//	unsigned short p1;
+//	unsigned int p0;
+//	unsigned int p1;
 //	//===== forces and stresses ==================== //
 //	vec3d force_vector0; // normal contact force
 //	vec3d torque0;

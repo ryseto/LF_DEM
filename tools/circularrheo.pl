@@ -18,15 +18,17 @@ my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
 my $rotatingobserver = 0;
-#my $np_movable = 3000;
-#my $rout = 84.4391;
+my $np_movable = 9000;
+#my $rout = 81.3781; # 0.80
+#my $rout = 82.4148; # 0.78
+my $rout = 142.741;
 #my $np_movable = 6000;
 #my $rout = 118.562;
 
-my $np_movable = 500;
+#my $np_movable = 500;
 #my $rout = 37.5726;
 #my $rout = 31.8812;
-my $rout = 40.4141;
+#my $rout = 40.4141;
 
 my $rin = $rout/2;
 my $calcrheology = 0;
@@ -371,12 +373,15 @@ sub OutYaplotData{
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
 	} else {
+		printf OUT "@ 8\n";
 		for ($i = 0; $i < $np; $i++) {
 			printf OUT "r $radius[$i]\n";
-			#			if ($i == $np-1) {
-			#				printf OUT "@ 4\n";
-			#			}
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+		}
+		printf OUT "r 1\n";
+		printf OUT "@ 0\n";
+		for ($i = $np_movable; $i < $np; $i+=10) {
+			printf OUT "c $posx[$i] -0.01 $posz[$i] \n";
 		}
 	}
 	## visualize contact network
@@ -389,33 +394,32 @@ sub OutYaplotData{
 	#		}
 	#	}
 	## visualize force chain network
-	printf OUT "y 4\n";
-	printf OUT "@ 7\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
-			if ($force[$k] > 0) {
-				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], -0.01);
-			}
-		}
-	}
-	printf OUT "y 3\n";
-	printf OUT "@ 5\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($force[$k] < 0) {
-			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], -0.02);
-		}
-	}
-	#
-	## visualize rotation in 2D
-#		if ($Ly == 0) {
-#			printf OUT "y 6\n";
-#			printf OUT "@ 1\n";
-#			for ($i = 0; $i < $np; $i++) {
-#				OutCross($i);
+#	printf OUT "y 4\n";
+#	printf OUT "@ 7\n";
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
+#			if ($force[$k] > 0) {
+#				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
 #			}
 #		}
+#	}
+#	printf OUT "y 3\n";
+#	printf OUT "@ 5\n";
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($force[$k] < 0) {
+#			&OutString_width($int0[$k], $int1[$k], -$force_factor*$force[$k], -0.02);
+#		}
+#	}
+	#
+	## visualize rotation in 2D
+	
+#	printf OUT "y 6\n";
+#	printf OUT "@ 0\n";
+#	for ($i = 0; $i < $np_movable; $i++) {
+#		OutCross($i);
+#	}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";
@@ -532,7 +536,7 @@ sub OutString {
 }
 
 sub OutCross {
-	$offset1 = -0.01;
+	$offset1 = 0.01;
 	($i) = @_;
 	$a = $radius[$i];
 	$xi = $posx[$i];

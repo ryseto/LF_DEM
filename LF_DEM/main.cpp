@@ -37,8 +37,9 @@ int main(int argc, char **argv)
 	
 	int random_seed = 1;
     bool binary_conf = false;
-    bool check_force_balance = false;
-
+	bool force_to_run = false;
+	bool long_file_name = false;
+	bool diminish_output = false;
 	string config_filename = "not_given";
 	string param_filename = "not_given";
 	string knkt_filename = "not_given";
@@ -58,14 +59,16 @@ int main(int argc, char **argv)
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
 		{"identifier",        required_argument, 0, 'v'},
-        {"force-balance",     no_argument,       0, 'f'},
-        {"help",              no_argument,       0, 'h'},
+		{"force-to-run",      no_argument,       0, 'f'},
+		{"long-file-name",    no_argument,       0, 'l'},
+		{"diminish-output",   no_argument,       0, 'd'},
+		{"help",              no_argument,       0, 'h'},
 		{0, 0, 0, 0},
 	};
 
 	int index;
 	int c;
-	while ((c = getopt_long(argc, argv, "hn8fm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "hn8fldm:s:S:t:r:R:g::a:k:i:v:", longopts, &index)) != -1) {
 		switch (c) {
 			case 's':
 				rheology_control = "stress";
@@ -142,11 +145,15 @@ int main(int argc, char **argv)
 			case 'g':
 				generate_init = 1; // normal
 				if (optarg) {
-					if (optarg[0] == 'm') {
-						generate_init = 2; // magnetic
-					} else if (optarg[0] == 'c') {
-						generate_init = 3; // circular wide gap
-					}
+                    if (optarg[0] == 'c') {
+                        generate_init = 2; // circular wide gap
+                    } else if (optarg[0] == 'w') {
+                        generate_init = 3; // simple shear with wall
+					} else if (optarg[0] == 's') {
+						generate_init = 4; // winding 
+                    } else if (optarg[0] == 'm') {
+                        generate_init = 10; // magnetic
+                    }
 				}
 				break;
 			case 'a':
@@ -158,9 +165,15 @@ int main(int argc, char **argv)
 			case 'v':
 				simu_identifier = optarg;
 				break;
-            case 'f':
-                check_force_balance = true;
-                break;
+			case 'f':
+				force_to_run = true;
+				break;
+			case 'l':
+				long_file_name = true;
+				break;
+			case 'd':
+				diminish_output = true;
+				break;
 			case 'h':
 				cerr << usage << endl;
 				exit(1);
@@ -193,6 +206,9 @@ int main(int argc, char **argv)
 		input_files[3] = stress_rate_filename;
 		input_files[4] = seq_filename;
 		Simulation simulation;
+		simulation.force_to_run = force_to_run;
+		simulation.long_file_name = long_file_name;
+		simulation.diminish_output = diminish_output;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
 										  dimensionless_number, suffix, rheology_control, simu_identifier);
@@ -204,7 +220,7 @@ int main(int argc, char **argv)
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 												 dimensionless_number, suffix, rheology_control,
-                                                 simu_identifier, check_force_balance);
+                                                 simu_identifier);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;

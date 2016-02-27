@@ -32,10 +32,10 @@ private:
 	System *sys;
 	Interaction *interaction;
 	//======= particles data  ====================//
-	unsigned short p0;
-	unsigned short p1;
-	unsigned short p0_6;
-	unsigned short p1_6;
+	unsigned int p0;
+	unsigned int p1;
+	unsigned int p0_6;
+	unsigned int p1_6;
 	double range;
 	vec3d *nvec;
 	double nxnx;
@@ -118,7 +118,6 @@ private:
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
     vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
-    vec3d lubforce_p0_test;
 	void calcPairwiseForce();
 	double get_lubforce_normal()
 	{
@@ -137,7 +136,7 @@ private:
 	void pairStrainStresslet(StressTensor& stresslet_i, StressTensor& stresslet_j);
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
-    //void setResistanceCoeffTang(double tangent_rc);
+//void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();

@@ -39,10 +39,10 @@ void Interaction::calcNormalVectorDistanceGap()
 /* Activate interaction between particles i and j.
  * Always j>i is satisfied.
  */
-void Interaction::activate(unsigned short i, unsigned short j,
+void Interaction::activate(unsigned int i, unsigned int j,
 						   double interaction_range_)
 {
-	active = true;
+    active = true;
 	if (j > i) {
 		p0 = i, p1 = j;
 	} else {
@@ -84,8 +84,10 @@ void Interaction::activate(unsigned short i, unsigned short j,
 	contact.setInteractionData();
 	if (reduced_gap <= 0) {
 		contact.activate();
+		sys->updateNumberOfContacts(p0, p1, 1);
 	} else {
 		contact.deactivate();
+		sys->updateNumberOfContacts(p0, p1, -1);
 	}
 	contact_state_changed_after_predictor = false;
 	if (sys->p.lubrication_model > 0) {
@@ -159,6 +161,7 @@ void Interaction::updateContactState()
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
+			sys->updateNumberOfContacts(p0, p1, -1);
 		}
 	} else {
 		// not contacting in previous step
@@ -173,6 +176,7 @@ void Interaction::updateContactState()
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
+			sys->updateNumberOfContacts(p0, p1, 1);
 		}
 	}
 }

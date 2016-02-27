@@ -85,8 +85,7 @@ public:
 							   double dimensionless_number,
 							   std::string input_scale,
 							   std::string control_variable,
-							   std::string simu_identifier,
-                               bool check_force_balance);
+							   std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
 	void simulationInverseYield(std::string in_args,
@@ -119,9 +118,7 @@ public:
 	ParameterSet p;
 	bool keepRunning();
 	void timeEvolution(double& next_output_data);
-	void generateOutput(double& next_output_data,
-						double& next_output_config,
-						int& binconf_counter);
+	void generateOutput(double& next_output_config, int& binconf_counter);
 	/*********** Events  ************/
 	std::list <Event> events;
 	void setupEvents();
@@ -131,18 +128,16 @@ public:
 		return sys;
 	}
 
-	void setDefaultParameters();
+	void assertParameterCompatibility();
+	void setDefaultParameters(std::string input_scale);
 	void readParameterFile(const std::string& filename_parameters);
-	void openOutputFiles(bool binary_conf,
-						 const std::string& filename_import_positions,
-						 const std::string& filename_parameters,
-						 const std::string& string_control_parameters,
-						 const std::string& simu_identifier);
+	void openOutputFiles();
 	void prepareSimulationName(bool binary_conf,
 							   const std::string& filename_import_positions,
 							   const std::string& filename_parameters,
-							   const std::string& string_control_parameters,
-							   const std::string& simu_identifier);
+							   const std::string& simu_identifier,
+								 double dimensionlessnumber,
+								 const std::string& input_scale);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void autoSetParameters(const std::string& keyword,
@@ -150,6 +145,8 @@ public:
 	void contactForceParameter(std::string filename);
 	void contactForceParameterBrownian(std::string filename);
 	void importPreSimulationData(std::string filename);
+	void tagStrainParameters();
+	void resolveTimeOrStrainParameters();
 	std::map<std::string,std::string> getConfMetaData(const std::string &,
 																										const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &,
@@ -157,9 +154,12 @@ public:
 															const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &,
 															std::string &);
+	bool isTwoDimension(const std::string&);
+	bool isTwoDimensionBinary(const std::string&);
+	int get_np(const std::string&);
+	int get_np_Binary(const std::string&);
 	void importConfiguration(const std::string&);
-	void importConfigurationBinary(std::ifstream& file_import, const std::string&);
-	void importContactsBinary(std::ifstream& file_import);
+	void importConfigurationBinary(const std::string&);
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void convertForceValues(std::string new_long_unit);
@@ -198,7 +198,9 @@ public:
 	vec3d shiftUpCoordinate(double x, double y, double z);
 	void outputComputationTime();
 	bool kill;
-
+	bool force_to_run;
+	bool long_file_name;
+	bool diminish_output;
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
