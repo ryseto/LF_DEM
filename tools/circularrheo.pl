@@ -18,13 +18,6 @@ my $axis = 0;
 my $reversibility_test = 0;
 my $monodisperse = 0;
 my $rotatingobserver = 0;
-my $np_movable = 9000;
-#my $rout = 81.3781; # 0.80
-#my $rout = 82.4148; # 0.78
-my $rout = 142.741;
-#my $np_movable = 6000;
-#my $rout = 118.562;
-
 #my $np_movable = 500;
 #my $rout = 37.5726;
 #my $rout = 31.8812;
@@ -57,6 +50,26 @@ printf "monodisperse = $monodisperse\n";
 $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
+
+$j = index($name, 'cylinders0.5_', 1);
+$initconfig = substr($name, 0, $j+14);
+
+open (IN_CONFIG, "< ${initconfig}.dat");
+$line = <IN_CONFIG>;
+$line = <IN_CONFIG>;
+($buf, $np1, $np2, $vf, $lx, $ly, $lz, $np_in, $np_out, $rin, $rout) = split(/\s+/, $line);
+
+my $np_movable = $np1+$np2;
+
+$int_tracer = 10;
+for ($k=5; $k<30; $k++){
+	$tmp = $np_in % $k;
+	printf "$np_in $k = $tmp \n";
+	if ($np_in % $k == 0) {
+		$int_tracer = $k;
+		last;
+	}
+}
 
 $interaction_data = "int_${name}.dat";
 
@@ -374,14 +387,23 @@ sub OutYaplotData{
 		}
 	} else {
 		printf OUT "@ 8\n";
-		for ($i = 0; $i < $np; $i++) {
+		for ($i = 0; $i < $np_movable; $i++) {
 			printf OUT "r $radius[$i]\n";
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
-		printf OUT "r 1\n";
-		printf OUT "@ 0\n";
-		for ($i = $np_movable; $i < $np; $i+=10) {
-			printf OUT "c $posx[$i] -0.01 $posz[$i] \n";
+		printf OUT "y 5\n";
+		
+		for ($i = $np_movable; $i < $np; $i++) {
+			printf OUT "r $radius[$i]\n";
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+		}
+		printf OUT "@ 8\n";
+		printf OUT "r 0.5\n";
+		$xo = $Lx/2;
+		$zo = $Lz/2;
+		$np_in_end = $np_in + $np_movable;
+		for ($i = $np_movable; $i < $np_in_end; $i += $int_tracer) {
+			printf OUT "s 0 -0.01 0 $posx[$i] -0.01 $posz[$i] \n";
 		}
 	}
 	## visualize contact network
@@ -394,16 +416,16 @@ sub OutYaplotData{
 	#		}
 	#	}
 	## visualize force chain network
-#	printf OUT "y 4\n";
-#	printf OUT "@ 7\n";
-#	for ($k = 0; $k < $num_interaction; $k ++) {
-#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-#		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
-#			if ($force[$k] > 0) {
-#				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-#			}
-#		}
-#	}
+	printf OUT "y 4\n";
+	printf OUT "@ 7\n";
+	for ($k = 0; $k < $num_interaction; $k ++) {
+		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
+			if ($force[$k] > 0) {
+				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+			}
+		}
+	}
 #	printf OUT "y 3\n";
 #	printf OUT "@ 5\n";
 #	for ($k = 0; $k < $num_interaction; $k ++) {
