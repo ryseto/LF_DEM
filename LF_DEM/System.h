@@ -202,7 +202,8 @@ private:
 	bool in_predictor;
 	bool in_corrector;
 	std::vector<vec3d> position;
-    std::vector<vec3d> forceResultant;
+	std::vector<vec3d> forceResultant;
+	std::vector<vec3d> torqueResultant;
 	Interaction *interaction;
 	BoxSet boxset;
 	std::vector<double> radius;

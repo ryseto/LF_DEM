@@ -225,24 +225,28 @@ void GenerateInitConfig::outputPositionData()
 	fout_yap.open(ss_posdatafilename.str().c_str());
     if (circulargap_config || winding_wall_config) {
 		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 radius_in radius_out" << endl;
+		fout << std::setprecision(15);
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << np_wall1 << ' ' << np_wall2 << ' ';
         fout << cg_radius_in << ' ' << cg_radius_out << endl;
     } else if (parallel_wall_config) {
 		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 z_bot z_top" << endl;
+		fout << std::setprecision(15);
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << np_wall1 << ' ' << np_wall1 << ' ';
         fout << z_bot << ' ' << z_top  << endl;
 	} else {
         fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
+		fout << std::setprecision(15);
         fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
     }
 	
 	for (int i = 0; i<np; i++) {
+		fout << std::setprecision(15);
 		fout << position[i].x << ' ';
 		fout << position[i].y << ' ';
 		fout << position[i].z << ' ';
