@@ -620,7 +620,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}  else if (p.lubrication_model == 3) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		if (p.friction_model>0 && p.contact_relaxation_time_tan==0) {
+		if (p.friction_model > 0 && p.contact_relaxation_time_tan == 0) {
 			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");
 		}
 		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
@@ -1845,9 +1845,9 @@ void System::buildContactTerms(bool set_or_add)
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
-			if (friction) {
-				stokes_solver.setRHSTorque(i, contact_torque[i]);
-			}
+			//if (friction) {
+			stokes_solver.setRHSTorque(i, contact_torque[i]);
+			//}
 		}
 	} else {
 		for (int i=0; i<np; i++) {

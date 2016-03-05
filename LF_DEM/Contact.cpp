@@ -21,7 +21,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 		} else if (sys->p.friction_model == 3) {
 			frictionlaw = &Contact::frictionlaw_criticalload_mu_inf;
 		} else if (sys->p.friction_model == 5) {
-	 	frictionlaw = &Contact::frictionlaw_ft_max;
+			frictionlaw = &Contact::frictionlaw_ft_max;
 			ft_max = sys->p.ft_max;
 		} else if (sys->p.friction_model == 6) {
 			frictionlaw = &Contact::frictionlaw_coulomb_max;
