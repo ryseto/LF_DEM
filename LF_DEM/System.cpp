@@ -1845,9 +1845,7 @@ void System::buildContactTerms(bool set_or_add)
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
-			//if (friction) {
-			stokes_solver.setRHSTorque(i, contact_torque[i]);
-			//}
+			stokes_solver.setRHSTorque(i, contact_torque[i]);// Need to be set zero even friction = false.
 		}
 	} else {
 		for (int i=0; i<np; i++) {
