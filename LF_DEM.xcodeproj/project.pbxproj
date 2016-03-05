@@ -542,7 +542,6 @@
 		D92A7C1C1BE3C9BD000092DF /* Makefile_config_Romain_HPCCam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_HPCCam.mk; sourceTree = "<group>"; };
 		D92A7C1D1BE3C9BD000092DF /* Makefile_config_Romain_Ucam.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_Romain_Ucam.mk; sourceTree = "<group>"; };
 		D92A7C1E1BE3C9BD000092DF /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		D92A7C1F1BE3C9BD000092DF /* Makefile.old */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile.old; sourceTree = "<group>"; };
 		D92A7C211BE75862000092DF /* Makefile_config_oist_gpu.mk */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile_config_oist_gpu.mk; sourceTree = "<group>"; };
 		D92EAA0B17E39D5100C903F5 /* Contact.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Contact.cpp; sourceTree = "<group>"; };
 		D92EAA0C17E39D5100C903F5 /* Contact.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Contact.h; sourceTree = "<group>"; };
@@ -568,7 +567,6 @@
 		D9825AF01C410E4B000AF86E /* circularrheo.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = circularrheo.pl; path = tools/circularrheo.pl; sourceTree = SOURCE_ROOT; };
 		D9878875165545680047A87E /* Simulation.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Simulation.cpp; sourceTree = "<group>"; };
 		D9878876165545680047A87E /* Simulation.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Simulation.h; sourceTree = "<group>"; };
-		D988AC3D1857666D00C9637A /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D988E389165441750009949F /* LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D988E38D165441750009949F /* main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D988E38F165441750009949F /* LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = LF_DEM.1; sourceTree = "<group>"; };
@@ -616,7 +614,6 @@
 		D9BE3B70178CB35E00937C5C /* Bond.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Bond.h; sourceTree = "<group>"; };
 		D9BE3B72178CB8A800937C5C /* Cluster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Cluster.cpp; sourceTree = "<group>"; };
 		D9BE3B73178CB8A800937C5C /* Cluster.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Cluster.h; sourceTree = "<group>"; };
-		D9CD258916E54DFF00A8E397 /* parameter_template.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = parameter_template.txt; path = ../parameter_template.txt; sourceTree = "<group>"; };
 		D9CE1B411B066B3400E052D9 /* dSFMT.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dSFMT.c; path = "dSFMT-src-2.2.3/dSFMT.c"; sourceTree = "<group>"; };
 		D9CE1B431B066B4200E052D9 /* dSFMT.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dSFMT.h; path = "dSFMT-src-2.2.3/dSFMT.h"; sourceTree = "<group>"; };
 		D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dSFMT-common.h"; path = "dSFMT-src-2.2.3/dSFMT-common.h"; sourceTree = "<group>"; };
@@ -1223,11 +1220,8 @@
 			isa = PBXGroup;
 			children = (
 				D932B8DE16C2EA1B00AD6E85 /* lib */,
-				D9CD258916E54DFF00A8E397 /* parameter_template.txt */,
-				D988AC3D1857666D00C9637A /* Makefile */,
 				D92A7C191BE3C9BD000092DF /* config */,
 				D92A7C1E1BE3C9BD000092DF /* Makefile */,
-				D92A7C1F1BE3C9BD000092DF /* Makefile.old */,
 				D9CE1B431B066B4200E052D9 /* dSFMT.h */,
 				D9CE1B411B066B3400E052D9 /* dSFMT.c */,
 				D9CE1B441B066B5E00E052D9 /* dSFMT-common.h */,
