@@ -9,6 +9,7 @@ if len(sys.argv) != 2:
 fname = sys.argv[1]
 pos, rad, meta = lf.read_conf_file(fname)
 # get the top and bottom layers
+
 ztop = pos[:, 2]+1.5*rad
 top_particles = ztop > float(meta['lz'])
 

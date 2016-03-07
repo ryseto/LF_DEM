@@ -253,8 +253,8 @@ void System::calcStress()
             normalstress_wall1 = force_normal_wall1/lx;
             normalstress_wall2 = force_normal_wall2/lx;
         } else {
-            double wall_area1 = M_PI*2*radius_in;
-            double wall_area2 = M_PI*2*radius_out;
+            double wall_area1 = M_PI*2*(radius_in-1);
+            double wall_area2 = M_PI*2*(radius_out+1);
             shearstress_wall1 = force_tang_wall1/wall_area1;
             shearstress_wall2 = force_tang_wall2/wall_area2;
             normalstress_wall1 = force_normal_wall1/wall_area1;

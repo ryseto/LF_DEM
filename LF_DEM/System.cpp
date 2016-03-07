@@ -217,7 +217,8 @@ void System::allocateRessources()
 	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
-    forceResultant.resize(np);
+	forceResultant.resize(np);
+	torqueResultant.resize(np);
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
 	if (!p.out_particle_stress.empty()) {
@@ -619,7 +620,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}  else if (p.lubrication_model == 3) {
 		log_lub_coeff_contact_tan_lubrication = 0;
 		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		if (p.friction_model>0 && p.contact_relaxation_time_tan==0) {
+		if (p.friction_model > 0 && p.contact_relaxation_time_tan == 0) {
 			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");
 		}
 		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
@@ -829,9 +830,14 @@ void System::eventShearJamming()
 void System::forceResultantInterpaticleForces()
 {
     if (wall_rheology) {
-        for (int i=0; i<np; i++) {
+		for (int i=0; i<np; i++) {
             forceResultant[i] += contact_force[i];
-        }
+		}
+		if (friction) {
+			for (int i=0; i<np; i++) {
+				torqueResultant[i] += contact_torque[i];
+			}
+		}
         if (repulsiveforce) {
             for (int i=0; i<np; i++) {
                 forceResultant[i] += repulsive_force[i];
@@ -843,38 +849,47 @@ void System::forceResultantInterpaticleForces()
 void System::wallForces()
 {
     if (wall_rheology) {
-        double max_total_force = 0;
+		double max_total_force = 0;
+		double max_total_torque = 0;
         for (int i=0; i<np_mobile; i++) {
             if (max_total_force < forceResultant[i].sq_norm()){
                 max_total_force = forceResultant[i].sq_norm();
             }
+			if (max_total_torque < torqueResultant[i].sq_norm()){
+				max_total_torque = torqueResultant[i].sq_norm();
+			}
         }
-        cerr << "force balance: " << sqrt(max_total_force) << endl;
+		cerr << "force balance: " << sqrt(max_total_force) << endl;
+		cerr << "torque balance: " << sqrt(max_total_torque) << endl;
         if (test_simulation > 10 && test_simulation <= 20) {
             int i_np_1 = np_mobile+np_wall1;
             // inner wheel
-            force_tang_wall1 = 0;
-            force_normal_wall1 = 0;
-            for (int i=np_mobile; i<i_np_1; i++) {
-                vec3d unitvec_out = position[i]-origin_of_rotation;
-                unitvec_out.y = 0;
-                unitvec_out.unitvector();
-                vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-                force_tang_wall1 += dot(forceResultant[i], tang_vec);
+			// Positions of wall particles are at r =
+			force_normal_wall1 = 0;
+			double torque_wall1 = 0;
+			for (int i=np_mobile; i<i_np_1; i++) {
+				vec3d unitvec_out = origin_of_rotation-position[i];
+				unitvec_out.y = 0;
+				unitvec_out.unitvector();
                 force_normal_wall1 += dot(forceResultant[i], unitvec_out);
+				vec3d torque_tmp = cross(position[i]-origin_of_rotation, forceResultant[i]);
+				torque_wall1 += torque_tmp.y+torqueResultant[i].y;
             }
+			force_tang_wall1 = torque_wall1/(radius_in-1);
             // outer wheel
-            force_tang_wall2 = 0;
-            force_normal_wall2 = 0;
+			force_normal_wall2 = 0;
+			double torque_wall2 = 0;
             for (int i=i_np_1; i<np; i++) {
                 vec3d unitvec_out = position[i]-origin_of_rotation;
-                unitvec_out.y = 0;
+				unitvec_out.y = 0;
                 unitvec_out.unitvector();
-                vec3d tang_vec(-unitvec_out.z, 0, unitvec_out.x);
-                force_tang_wall2 += dot(forceResultant[i], tang_vec);
                 force_normal_wall2 += dot(forceResultant[i], unitvec_out);
+				vec3d torque_tmp = cross(position[i]-origin_of_rotation, forceResultant[i]);
+				torque_wall2 += torque_tmp.y+torqueResultant[i].y;
             }
-            cerr << force_tang_wall1 << ' ' << force_tang_wall2 << endl;
+			force_tang_wall2 = torque_wall2/(radius_out+1);
+			cerr << " normal:" << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
+			cerr << " tangential:" << force_tang_wall1 << ' ' << force_tang_wall2 << ' ' << torque_wall1 << ' ' << torque_wall2 << endl;
         } else if (test_simulation > 40) {
             int i_np_1 = np_mobile+np_wall1;
             // bottom wall
@@ -901,6 +916,7 @@ void System::forceResultantReset()
 {
     for (int i=0; i<np; i++) {
         forceResultant[i].reset();
+		torqueResultant[i].reset();
     }
 }
 
@@ -1635,6 +1651,9 @@ void System::forceResultantLubricationForce()
         forceResultant[i].x += force_m_to_m[i6];
         forceResultant[i].y += force_m_to_m[i6+1];
         forceResultant[i].z += force_m_to_m[i6+2];
+		torqueResultant[i].x += force_m_to_m[i6+3];
+		torqueResultant[i].y += force_m_to_m[i6+4];
+		torqueResultant[i].z += force_m_to_m[i6+5];
     }
     if (mobile_fixed) {
         /*
@@ -1658,6 +1677,9 @@ void System::forceResultantLubricationForce()
             forceResultant[i].x += force_f_to_m[i6];
             forceResultant[i].y += force_f_to_m[i6+1];
             forceResultant[i].z += force_f_to_m[i6+2];
+			torqueResultant[i].x += force_f_to_m[i6+3];
+			torqueResultant[i].y += force_f_to_m[i6+4];
+			torqueResultant[i].z += force_f_to_m[i6+5];
         }
         /*
          *  F^{F} += R_FU^{FM} U^{M}
@@ -1678,6 +1700,9 @@ void System::forceResultantLubricationForce()
             forceResultant[i].x += force_m_to_f[i6];
             forceResultant[i].y += force_m_to_f[i6+1];
             forceResultant[i].z += force_m_to_f[i6+2];
+			torqueResultant[i].x += force_m_to_f[i6+3];
+			torqueResultant[i].y += force_m_to_f[i6+4];
+			torqueResultant[i].z += force_m_to_f[i6+5];
         }
 		/*
 		 *  F^{F} += R_FU^{FF} U^{F}
@@ -1699,6 +1724,9 @@ void System::forceResultantLubricationForce()
 			forceResultant[i].x += force_f_to_f[i6];
 			forceResultant[i].y += force_f_to_f[i6+1];
 			forceResultant[i].z += force_f_to_f[i6+2];
+			torqueResultant[i].x += force_f_to_f[i6+3];
+			torqueResultant[i].y += force_f_to_f[i6+4];
+			torqueResultant[i].z += force_f_to_f[i6+5];
 		}
     }
 }
@@ -1817,9 +1845,7 @@ void System::buildContactTerms(bool set_or_add)
 	if (set_or_add) {
 		for (int i=0; i<np; i++) {
 			stokes_solver.setRHSForce(i, contact_force[i]);
-			if (friction) {
-				stokes_solver.setRHSTorque(i, contact_torque[i]);
-			}
+			stokes_solver.setRHSTorque(i, contact_torque[i]);// Need to be set zero even friction = false.
 		}
 	} else {
 		for (int i=0; i<np; i++) {
@@ -2013,6 +2039,9 @@ void System::computeShearRateWalls()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_from_fixed = shearStressComponent(total_hydrofromfixed_stressGU, p.theta_shear);
+	if (viscosity_from_fixed == 0) {
+		throw runtime_error("System:: computeShearRateWalls: velocity from fixed particles is zero. Probably the input fixed velocities are zero.");
+	}
 	shear_rate = shearstress_from_fixed/viscosity_from_fixed;
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {

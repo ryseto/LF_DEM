@@ -50,7 +50,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 5;
+$shear_strain_steady_state = 2;
 
 if ($np_mov <= 3000) {
 	$kmax = 8;
