@@ -21,7 +21,8 @@ Simulation::Simulation():
 sys(System(p, events)),
 shear_rate_expectation(-1),
 internal_unit_scales("hydro"),
-target_stress_input(0)
+target_stress_input(0),
+diminish_output(false)
 {
 	unit_longname["h"] = "hydro";
 	unit_longname["r"] = "repulsive";
@@ -235,7 +236,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.wall_rheology = true;
 		sys.test_simulation = 51;//stest1
 	}
-	
+
 
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
@@ -838,7 +839,7 @@ void Simulation::outputConfigurationData()
 	if (diminish_output) {
 		output_precision = 4;
 	}
-	
+
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
@@ -920,8 +921,8 @@ void Simulation::outputConfigurationData()
 	}
 	if (p.out_data_interaction) {
 
-		
-		
+
+
 		fout_interaction << "# " << sys.get_shear_strain();
 		fout_interaction << ' ' << cnt_interaction;
 		fout_interaction << ' ' << sys.get_time();
@@ -965,7 +966,7 @@ void Simulation::outputConfigurationData()
 				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
 				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
 				fout_interaction << setprecision(output_precision) << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-				
+
 				if (diminish_output == false) {
 					fout_interaction << 6*M_PI*shearStressComponent(stress_contact, p.theta_shear) << ' '; // 17
 				} else {
