@@ -39,6 +39,7 @@ twodimension(false),
 zero_shear(false),
 wall_rheology(false),
 mobile_fixed(false),
+couette_stress(false),
 kn_master(0),
 kt_master(0),
 kr_master(0),
@@ -116,7 +117,7 @@ System::~System()
 	DELETE(contact_torque);
 	DELETE(lubstress);
 	DELETE(contactstressGU);
-	if (!p.out_particle_stress.empty()) {
+	if (!p.out_particle_stress.empty() || couette_stress) {
 		DELETE(contactstressXF);
 	}
 	DELETE(interaction);
@@ -131,7 +132,7 @@ System::~System()
 	if (repulsiveforce) {
 		DELETE(repulsive_force);
 		DELETE(repulsivestressGU);
-		if (!p.out_particle_stress.empty()) {
+		if (!p.out_particle_stress.empty() || couette_stress) {
 			DELETE(repulsivestressXF);
 		}
 		DELETE(vel_repulsive);
@@ -147,7 +148,7 @@ System::~System()
 	}
 };
 
-void System::allocateRessources()
+void System::allocateRessourcesPreConfiguration()
 {
 	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
@@ -204,7 +205,6 @@ void System::allocateRessources()
 	if (brownian) {
 		vel_brownian = new vec3d [np];
 		ang_vel_brownian = new vec3d [np];
-		brownian_force_torque.resize(2*np);
 	}
 	if (magnetic) {
 		vel_magnetic = new vec3d [np];
@@ -214,20 +214,42 @@ void System::allocateRessources()
 		vel_hydro_from_fixed.resize(np);
 		ang_vel_hydro_from_fixed.resize(np);
 	}
+	//
+	interaction = new Interaction [maxnb_interactionpair];
+	interaction_list = new set <Interaction*> [np];
+	interaction_partners = new unordered_set <int> [np];
+	//
+	if (p.auto_determine_knkt) {
+		kn_avg = new Averager<double>(p.memory_strain_avg);
+		kt_avg = new Averager<double>(p.memory_strain_avg);
+		overlap_avg = new Averager<double>(p.memory_strain_avg);
+		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
+	}
+}
+
+void System::allocateRessourcesPostConfiguration()
+{
+	
 	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
+	if (brownian) {
+		brownian_force_torque.resize(2*np);
+	}
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
+	
+	total_stress_pp = new StressTensor [np];
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
-	if (!p.out_particle_stress.empty()) {
+	
+	if (!p.out_particle_stress.empty() || couette_stress) {
 		contactstressXF = new StressTensor [np];
 	}
 	if (repulsiveforce) {
 		repulsive_force = new vec3d [np];
 		repulsivestressGU = new StressTensor [np];
-		if (!p.out_particle_stress.empty()) {
+		if (!p.out_particle_stress.empty() || couette_stress) {
 			repulsivestressXF = new StressTensor [np];
 		}
 	}
@@ -240,20 +262,8 @@ void System::allocateRessources()
 		magnetic_torque = new vec3d [np];
 		magneticstressGU = new StressTensor [np];
 	}
-
 	if (mobile_fixed) {
 		hydrofromfixedstressGU.resize(np);
-	}
-	//
-	interaction = new Interaction [maxnb_interactionpair];
-	interaction_list = new set <Interaction*> [np];
-	interaction_partners = new unordered_set <int> [np];
-	//
-	if (p.auto_determine_knkt) {
-		kn_avg = new Averager<double>(p.memory_strain_avg);
-		kt_avg = new Averager<double>(p.memory_strain_avg);
-		overlap_avg = new Averager<double>(p.memory_strain_avg);
-		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
 	}
 	if (brownian) {
 		if (lowPeclet) {
@@ -545,7 +555,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	costheta_shear = cos(p.theta_shear);
 	sintheta_shear = sin(p.theta_shear);
 	// Memory
-	allocateRessources();
+	allocateRessourcesPreConfiguration();
 	//
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
@@ -696,6 +706,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 void System::setupSystemPostConfiguration()
 {
+	
 	for (int i=0; i<np; i++) {
 		radius_squared[i] = pow(radius[i], 2);
 		radius_cubed[i] = pow(radius[i], 3);
@@ -726,7 +737,7 @@ void System::setupSystemPostConfiguration()
 		}
 	}
 
-	if (test_simulation > 10 && test_simulation <= 20) {
+	if (test_simulation >= 10 && test_simulation <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
@@ -742,7 +753,11 @@ void System::setupSystemPostConfiguration()
 		} else if (test_simulation == 13) {
 			omega_wheel_in  = -0.5*omega_wheel;
 			omega_wheel_out =  0.5*omega_wheel;
+		} else if (test_simulation == 10) {
+			omega_wheel_in  = 0;
+			omega_wheel_out = 0;
 		}
+		couette_stress = true; // output stress per perticle
 	} else if (test_simulation == 51) {
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
 		omega_wheel_out = -omega_wheel;
@@ -751,7 +766,7 @@ void System::setupSystemPostConfiguration()
 	if (p.lubrication_model > 0) {
 		stokes_solver.init(np, np_mobile);
 	}
-		
+	allocateRessourcesPostConfiguration();
 }
 
 void System::initializeBoxing()
@@ -861,7 +876,7 @@ void System::wallForces()
         }
 		cerr << "force balance: " << sqrt(max_total_force) << endl;
 		cerr << "torque balance: " << sqrt(max_total_torque) << endl;
-        if (test_simulation > 10 && test_simulation <= 20) {
+        if (test_simulation >= 10 && test_simulation <= 20) {
             int i_np_1 = np_mobile+np_wall1;
             // inner wheel
 			// Positions of wall particles are at r =
@@ -943,7 +958,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	} else {
 		computeVelocities(calc_stress);
 	}
-    if (calc_stress) {
+	if (calc_stress) {
 		wallForces();
 		for (int k=0; k<nb_interaction; k++) {
             if (interaction[k].is_active()) {
@@ -951,6 +966,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
             }
         }
         calcStressPerParticle();
+//		calcStress();
+//		calcTotalStressPerParticle();
     }
     timeStepMove(time_or_strain, value_end);
     if (eventLookUp != NULL) {
@@ -1050,8 +1067,10 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
     } else {
 		computeVelocitiesStokesDrag();
 	}
-    if (calc_stress) {
+	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
+		calcStress();
+		calcTotalStressPerParticle();
 	}
 	if (lowPeclet) {
 		// Comupute total stress every time steps for better averaging
@@ -2077,7 +2096,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = 1;
-	} else if (test_simulation >= 11 && test_simulation < 20) {
+	} else if (test_simulation >= 10 && test_simulation < 20) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected

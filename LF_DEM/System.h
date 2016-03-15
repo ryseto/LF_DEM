@@ -197,6 +197,7 @@ private:
 	bool zero_shear;
     bool wall_rheology;
 	bool mobile_fixed;
+	bool couette_stress;
     //	double volume_fraction;
 	double system_height;
 	bool in_predictor;
@@ -244,6 +245,7 @@ private:
 	StressTensor* brownianstressGU; // per particle
 	StressTensor* brownianstressGU_predictor; // per particle
 	StressTensor* magneticstressGU; // per particle
+	StressTensor* total_stress_pp; // per particle
 	std::vector<StressTensor> hydrofromfixedstressGU; // per particle
 	std::vector<StressTensor> magneticstressXF;
 	StressTensor total_stress;
@@ -349,7 +351,8 @@ private:
 	void setupSystemPreConfiguration(std::string control, bool is2d);
 	void setupSystemPostConfiguration();
 	void allocatePositionRadius();
-	void allocateRessources();
+	void allocateRessourcesPreConfiguration();
+	void allocateRessourcesPostConfiguration();
 	void timeEvolution(const std::string& time_or_strain,
 					   const double& value_end);
 	void displacement(int i, const vec3d& dr);
@@ -365,6 +368,7 @@ private:
 	void periodize_diff(vec3d&);
 	void calcStress();
 	void calcStressPerParticle();
+	void calcTotalStressPerParticle();
 	void analyzeState();
 	double evaluateAvgContactGap();
 	StokesSolver stokes_solver;

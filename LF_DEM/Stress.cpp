@@ -122,8 +122,24 @@ void System::calcStressPerParticle()
 	}
 }
 
+void System::calcTotalStressPerParticle()
+{
+	for (int i=0; i<np_mobile; i++) {
+		total_stress_pp[i] = lubstress[i];
+		total_stress_pp[i] += contactstressXF[i];
+		total_stress_pp[i] += contactstressGU[i];
+		if (mobile_fixed) {
+			total_stress_pp[i] += hydrofromfixedstressGU[i];
+		}
+		if (repulsiveforce) {
+			total_stress_pp[i] += repulsivestressXF[i]+repulsivestressGU[i];
+		}
+	}
+}
+
 void System::calcStress()
 {
+	cerr << "calcStress" << endl;
 	// Lubrication stress
 	total_hydro_stress.reset();
 	for (int i=0; i<np; i++) {

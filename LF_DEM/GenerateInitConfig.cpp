@@ -76,7 +76,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.repulsiveforce = false;
 	sys.p.interaction_range = 2.5;
 	sys.p.lub_max_gap = 0.5;
-	sys.allocateRessources();
+	sys.allocateRessourcesPreConfiguration();
 
 	sys.setBoxSize(lx, ly, lz);
 	sys.setSystemVolume();
@@ -85,7 +85,6 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	putRandom();
 	double inflate_ratio = 1.03;
 	bool relax = true;
-    cerr << "@" << endl;
 	for (int i=0; i<np; i++) {
 		sys.radius[i] *= inflate_ratio;
 	}

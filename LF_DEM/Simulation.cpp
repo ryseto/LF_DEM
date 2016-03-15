@@ -217,6 +217,10 @@ void Simulation::simulationSteadyShear(string in_args,
 		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
 		sys.wall_rheology = true;
 		sys.test_simulation = 13;//ctest3
+	} else if (simu_identifier == "ctest0") {
+		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+		sys.wall_rheology = true;
+		sys.test_simulation = 10;//ctest3
 	} else if (simu_identifier == "rtest1") {
 		cout << indent << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1
