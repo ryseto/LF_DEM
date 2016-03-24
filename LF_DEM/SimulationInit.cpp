@@ -246,7 +246,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
-												  string input_scale)
+													string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -264,7 +264,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
 	}
 	/* Switch this force in hydro units.
 	 The dimensionlessnumber in input is the shear rate in "force_type" units,
- 	i.e.  is the ratio between the hydrodynamic force and the "force_type" force.
+	 i.e.  is the ratio between the hydrodynamic force and the "force_type" force.
 	 So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
 	 */
 	if (dimensionlessnumber == 0) {
@@ -558,7 +558,7 @@ void Simulation::tagStrainParameters()
 
 void Simulation::resolveTimeOrStrainParameters()
 {
-  /**
+	/**
 		\brief Interpret time units.
 
 		We have to treat times as a special case, because we sometimes want to
@@ -584,7 +584,7 @@ void Simulation::resolveTimeOrStrainParameters()
 
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
-  */
+	*/
 	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
@@ -638,16 +638,16 @@ void Simulation::setupSimulation(string in_args,
 
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
-        sys.zero_shear = true;
-    } else if (control_var == "magnetic") {
+			sys.zero_shear = true;
+		} else if (control_var == "magnetic") {
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
 	}
 	if (sys.test_simulation > 0 && (sys.test_simulation < 20 || sys.test_simulation > 30) ) {
 		sys.zero_shear = true;
-        sys.mobile_fixed = true;
-    }
+		sys.mobile_fixed = true;
+	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
 	tagStrainParameters();
@@ -686,10 +686,10 @@ void Simulation::setupSimulation(string in_args,
 	sys.setupSystemPostConfiguration();
 
 	p_initial = p;
-    prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-                          simu_identifier, dimensionlessnumber, input_scale);
-    openOutputFiles();
-    echoInputFiles(in_args, input_files);
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+													simu_identifier, dimensionlessnumber, input_scale);
+	openOutputFiles();
+	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
 
@@ -1063,13 +1063,13 @@ void Simulation::openOutputFiles()
 
 map<string,string> Simulation::getConfMetaData(const string &line1, const string &line2)
 {
-    vector<string> l1_split = splitString(line1);
-    vector<string> l2_split = splitString(line2);
+	vector<string> l1_split = splitString(line1);
+	vector<string> l2_split = splitString(line2);
 	if (l1_split.size() != l2_split.size()) {
 		throw runtime_error("Simulation:: Ill-formed header in the configuration file.\n");
 	}
 	map<string,string> meta_data;
-    for (unsigned int i=1; i<l1_split.size(); i++) {
+		for (unsigned int i=1; i<l1_split.size(); i++) {
 		meta_data[l1_split[i]] = l2_split[i];
 	}
 	return meta_data;
@@ -1077,22 +1077,22 @@ map<string,string> Simulation::getConfMetaData(const string &line1, const string
 
 string Simulation::getMetaParameter(map<string,string> &meta_data, string &key)
 {
-    if (meta_data.find(key) != meta_data.end()) {
-        return meta_data[key];
-    } else {
-        ostringstream error_str;
-        error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
-        throw runtime_error(error_str.str());
-    }
+	if (meta_data.find(key) != meta_data.end()) {
+		return meta_data[key];
+	} else {
+		ostringstream error_str;
+		error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
+		throw runtime_error(error_str.str());
+	}
 }
 
 string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, const string &default_val)
 {
-    if (meta_data.find(key) != meta_data.end()) {
-        return meta_data[key];
-    } else {
-        return default_val;
-    }
+	if (meta_data.find(key) != meta_data.end()) {
+		return meta_data[key];
+	} else {
+		return default_val;
+	}
 }
 
 int Simulation::get_np(const string& filename_import_positions)
@@ -1180,7 +1180,7 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	 \brief Read a text file input configuration.
 	 */
 	fstream file_import;
-    file_import.open(filename_import_positions.c_str());
+	file_import.open(filename_import_positions.c_str());
 	if (!file_import) {
 		ostringstream error_str;
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
@@ -1245,7 +1245,7 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	cerr << "sys.radius_in = " << sys.radius_in << endl;
 	//
 	if (sys.np_wall1 != -1) {
-        sys.p.np_fixed = sys.np_wall1+sys.np_wall2;
+		sys.p.np_fixed = sys.np_wall1+sys.np_wall2;
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
 	vector<vec3d> initial_position;
@@ -1257,8 +1257,8 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 			while (file_import >> x_ >> y_ >> z_ >> a_) {
 				initial_position.push_back(vec3d(x_, y_, z_));
 				radius.push_back(a_);
-            }
-            sys.setConfiguration(initial_position, radius, lx, ly, lz);
+			}
+			sys.setConfiguration(initial_position, radius, lx, ly, lz);
 		} else {
 			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
 			double x_, y_, z_, a_, vx_, vy_, vz_;
@@ -1278,7 +1278,7 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 				}
 			}
 			if ( sys.p.np_fixed != (int)fixed_velocities.size() ) {
-					throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
+				throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
 			}
 			sys.setConfiguration(initial_position, radius, lx, ly, lz);
 			sys.setFixedVelocities(fixed_velocities);
@@ -1339,8 +1339,8 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	}
 	sys.setConfiguration(initial_position, radius, lx, ly, lz);
 
-  // now contacts
-  int ncont;
+	// now contacts
+	int ncont;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
@@ -1394,11 +1394,11 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 }
 
 void Simulation::prepareSimulationName(bool binary_conf,
-									   const string& filename_import_positions,
-                                       const string& filename_parameters,
-                                       const string& simu_identifier,
-                                       double dimensionlessnumber,
-                                       const string& input_scale)
+										 const string& filename_import_positions,
+																			 const string& filename_parameters,
+																			 const string& simu_identifier,
+																			 double dimensionlessnumber,
+																			 const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.
