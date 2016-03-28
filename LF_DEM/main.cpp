@@ -34,9 +34,9 @@ int main(int argc, char **argv)
 
 	int generate_init = 0;
 	string type_init_config = "normal";
-	
+
 	int random_seed = 1;
-    bool binary_conf = false;
+	bool binary_conf = false;
 	bool force_to_run = false;
 	bool long_file_name = false;
 	bool diminish_output = false;
@@ -145,21 +145,21 @@ int main(int argc, char **argv)
 			case 'g':
 				generate_init = 1; // normal
 				if (optarg) {
-                    if (optarg[0] == 'c') {
-                        generate_init = 2; // circular wide gap
-                    } else if (optarg[0] == 'w') {
-                        generate_init = 3; // simple shear with wall
+					if (optarg[0] == 'c') {
+						generate_init = 2; // circular wide gap
+					} else if (optarg[0] == 'w') {
+						generate_init = 3; // simple shear with wall
 					} else if (optarg[0] == 's') {
-						generate_init = 4; // winding 
-                    } else if (optarg[0] == 'm') {
-                        generate_init = 10; // magnetic
-                    }
+						generate_init = 4; // winding
+					} else if (optarg[0] == 'm') {
+						generate_init = 10; // magnetic
+					}
 				}
 				break;
 			case 'a':
 				random_seed = atoi(optarg);
 				break;
- 			case 'n':
+			 case 'n':
 				binary_conf = true;
 				break;
 			case 'v':
@@ -211,23 +211,23 @@ int main(int argc, char **argv)
 		simulation.diminish_output = diminish_output;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
-										  dimensionless_number, suffix, rheology_control, simu_identifier);
+											dimensionless_number, suffix, rheology_control, simu_identifier);
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
-											  dimensionless_number, suffix, rheology_control, simu_identifier);
-			
+												dimensionless_number, suffix, rheology_control, simu_identifier);
+
 		} else if (seq_filename == "not_given") {
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 												 dimensionless_number, suffix, rheology_control,
-                                                 simu_identifier);
+																								 simu_identifier);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;
 			}
 		} else {
-		  cerr << " User def sequence temporarily disabled " << endl;
-		  //		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
+			cerr << " User def sequence temporarily disabled " << endl;
+			//		  simulation.simulationUserDefinedSequence(seq_type, in_args.str(), input_files, binary_conf, rheology_control);
 		}
 	}
 	return 0;
