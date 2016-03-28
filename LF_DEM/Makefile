@@ -115,4 +115,3 @@ doc:
 
 install:
 	cp -p $(OUT_CODE) $(install_dir)
-	(if [ "$(OS_version)" == "OIST" ]; then cp -p generateYaplotFile.pl $(install_dir); fi)
