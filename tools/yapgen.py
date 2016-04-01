@@ -29,7 +29,7 @@ def read_data(posfile, intfile):
     field_nb = 15
 
     # load with pandas read_table
-    pos_frames, strains, shear_rates, dumb, dumb2 =\
+    pos_frames, strains, shear_rates, dumb, meta =\
         lf.read_snapshot_file(posfile, field_nb)
 
     # load with pandas read_table
@@ -37,12 +37,12 @@ def read_data(posfile, intfile):
     int_frames, strains, shear_rates, dumb, dumb2 =\
         lf.read_snapshot_file(intfile, field_nb)
 #    print pos_frames[:3], int_frames[:3]
-    return pos_frames, int_frames, strains, shear_rates
+    return pos_frames, int_frames, strains, shear_rates, meta
 
 
 def snaps2yap(pos_fname, force_factor):
     forces_fname = pos_fname.replace("par_", "int_")
-    positions, forces, strains, shear_rates =\
+    positions, forces, strains, shear_rates, meta =\
         read_data(pos_fname, forces_fname)
 
     yap_filename = pos_fname.replace("par_", "y_")
@@ -69,7 +69,16 @@ def snaps2yap(pos_fname, force_factor):
         yap_out = pyp.add_color_switch(yap_out, 3)
         pos = p[:, 2:5].astype(np.float)
         rad = p[:, 1].astype(np.float)
-        yap_out = np.row_stack((yap_out, pyp.get_particles_yaparray(pos, rad)))
+        if float(meta['Ly'][0]) == 0:
+            angle = p[:, 14].astype(np.float)
+            particles, crosses = \
+                pyp.get_particles_yaparray(pos, rad, angles=angle)
+            yap_out = np.row_stack((yap_out, particles))
+            yap_out = pyp.add_color_switch(yap_out, 1)
+            yap_out = np.row_stack((yap_out, crosses))
+        else:
+            yap_out = np.row_stack((yap_out,
+                                    pyp.get_particles_yaparray(pos, rad)))
 
         yap_out = pyp.add_layer_switch(yap_out, 5)
 
@@ -99,6 +108,7 @@ def conf2yap(conf_fname):
     positions[:, 0] -= float(meta['lx'])/2
     positions[:, 1] -= float(meta['ly'])/2
     positions[:, 2] -= float(meta['lz'])/2
+
     yap_out = pyp.layer_switch(3)
     yap_out = pyp.add_color_switch(yap_out, 3)
     yap_out = np.row_stack(

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def hfill_array(cmd_array):
     """
         Purpose:
@@ -8,41 +9,53 @@ def hfill_array(cmd_array):
     """
     fill_nb = 7 - cmd_array.shape[1]
     height = cmd_array.shape[0]
-    filler = np.tile([''], (height,fill_nb))
-    return np.column_stack((cmd_array,filler))
+    filler = np.tile([''], (height, fill_nb))
+    return np.column_stack((cmd_array, filler))
+
 
 def cmd(switch_type, switch_value):
     """
         Purpose:
-            Get an array of strings for commands of type switch_type taking values
-            switch_value.
+            Get an array of strings for commands of type switch_type taking
+            values switch_value.
     """
-    sval = np.array(switch_value, dtype = np.str,ndmin=1)
-    switch_cmd = np.empty(sval.shape[0], dtype = np.str)
+
+    sval = np.array(switch_value, dtype=np.str, ndmin=1)
+    switch_cmd = np.empty(sval.shape[0], dtype=np.str)
     switch_cmd[:] = switch_type
     cmd = np.column_stack((switch_cmd, sval))
     return hfill_array(cmd)
 
+
 def add_cmd(yap_array, switch_type, switch_value):
     """
         Purpose:
-            Append to yap_array an array of strings for commands of type switch_type taking values
-            switch_value.
+            Append to yap_array an array of strings for commands of
+            type switch_type taking values switch_value.
     """
     return np.row_stack((yap_array, cmd(switch_type, switch_value)))
 
+
 def layer_switch(value):
     return cmd('y', value)
+
+
 def add_layer_switch(yap_array, value):
     return add_cmd(yap_array, 'y', value)
 
+
 def color_switch(value):
     return cmd('@', value)
+
+
 def add_color_switch(yap_array, value):
     return add_cmd(yap_array, '@', value)
 
+
 def radius_switch(value):
     return cmd('r', value)
+
+
 def add_radius_switch(yap_array, value):
     return add_cmd(yap_array, 'r', value)
 
@@ -50,14 +63,16 @@ def add_radius_switch(yap_array, value):
 def pair_cmd_and_switch(cmd, switch):
     """
     Purpose:
-        Common use case: you want to change state (e.g. width) for every object.
-        You can do that in an array-like fashion, generating cmd and switch arrays separately,
-        and blending them afterwards. This is what this function is for.
+        Use case: you want to change state (e.g. width) for every object.
+        You can do that in an array-like fashion, generating cmd and switch
+        arrays separately, and blending them afterwards.
+        This is what this function is for.
     """
-    return np.reshape(np.column_stack((switch,cmd)),(2*switch.shape[0], switch.shape[1]))
+    return np.reshape(np.column_stack((switch, cmd)),
+                      (2*switch.shape[0], switch.shape[1]))
 
 
-def get_particles_yaparray(pos, rad):
+def get_particles_yaparray(pos, rad, angles=None):
     """
         Get yaplot commands (as an aray of strinfs) to display circles
         for each particle defined in (pos, rad).
@@ -66,9 +81,22 @@ def get_particles_yaparray(pos, rad):
 
     particle_circle_positions = cmd('c', pos)
     particle_circle_radius = cmd('r', rad)
-    yap_out = pair_cmd_and_switch(particle_circle_positions, particle_circle_radius)
-
-    return yap_out
+    yap_out = pair_cmd_and_switch(particle_circle_positions,
+                                  particle_circle_radius)
+    if angles is None:
+        return yap_out
+    else:
+        # add crosses in 2d
+        u1 = -np.ones(pos.shape)   # so that they appear in front
+        u2 = -np.ones(pos.shape)
+        u1[:, 0] = np.cos(angles)
+        u1[:, 2] = np.sin(angles)
+        u1 *= rad[:, np.newaxis]
+        u2[:, 0] = -u1[:, 2]
+        u2[:, 2] = u1[:, 0]
+        crosses = cmd('l', np.row_stack((np.hstack((pos+u1, pos-u1)),
+                                         np.hstack((pos+u2, pos-u2)))))
+        return yap_out, crosses
 
 
 def get_interactions_yaparray(r1r2, thicknesses):
@@ -85,7 +113,7 @@ def get_interactions_yaparray(r1r2, thicknesses):
     return yap_out
 
 
-def get_interaction_end_points(f,p):
+def get_interaction_end_points(f, p):
     """
         For each interaction in f, get the position of the particles involved.
         Positions of every particle given in p.
