@@ -52,7 +52,8 @@ magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
 ratio_unit_time(NULL),
 z_top(-1),
-eventLookUp(NULL)
+eventLookUp(NULL),
+avg_dt(0)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;

@@ -169,7 +169,7 @@ void System::calcStress()
 				StressTensor sc = interaction[k].contact.getContactStressXF();
 				unsigned int i, j;
 				interaction[k].get_par_num(i,j);
-                double r_ij = interaction[k].ro;
+				double r_ij = interaction[k].ro;
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
 				contactstressXF[j] += (radius[j]/r_ij)*sc;
 			}
