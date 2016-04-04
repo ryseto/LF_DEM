@@ -9,7 +9,7 @@
 #include "Lubrication.h"
 #include "LubricationFunctions.h"
 #include "Interaction.h"
-#include "System.h"
+#include "../System/System.h"
 
 Lubrication::Lubrication(Interaction* int_)
 {
@@ -619,9 +619,19 @@ void Lubrication::addHydroStress()
 	if (sys->vel_hydro_from_fixed.size()) {
 		StressTensor stresslet_fixed_GU_i;
 		StressTensor stresslet_fixed_GU_j;
-		pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->vel_hydro_from_fixed[p1],
-							  sys->ang_vel_hydro_from_fixed[p0], sys->ang_vel_hydro_from_fixed[p1],
-							  stresslet_fixed_GU_i, stresslet_fixed_GU_j);
+		if (p1 < sys->np_mobile) { // p0 and p1 mobile
+			pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->vel_hydro_from_fixed[p1],
+														sys->ang_vel_hydro_from_fixed[p0], sys->ang_vel_hydro_from_fixed[p1],
+								  					stresslet_fixed_GU_i, stresslet_fixed_GU_j);
+		} else if (p0 >= sys->np_mobile) { // p0 and p1 fixed
+			pairVelocityStresslet(sys->na_velocity[p0], sys->na_velocity[p1],
+														sys->na_ang_velocity[p0], sys->na_ang_velocity[p1],
+														stresslet_fixed_GU_i, stresslet_fixed_GU_j);
+		} else { // p0 mobile and p1 fixed
+			pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->na_velocity[p1],
+														sys->ang_vel_hydro_from_fixed[p0], sys->na_ang_velocity[p1],
+								  					stresslet_fixed_GU_i, stresslet_fixed_GU_j);
+		}
 		sys->hydrofromfixedstressGU[p0] += stresslet_fixed_GU_i;
 		sys->hydrofromfixedstressGU[p1] += stresslet_fixed_GU_j;
 	}

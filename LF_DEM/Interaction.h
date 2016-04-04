@@ -77,8 +77,8 @@ public:
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
 	vec3d relative_surface_velocity;
-    double ro; // ro = a0+a1;
-    double r; // center-center distance
+	double ro; // ro = a0+a1;
+	double r; // center-center distance
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 

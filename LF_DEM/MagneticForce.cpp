@@ -7,7 +7,7 @@
 //
 
 #include "MagneticForce.h"
-#include "Interaction.h"
+#include "../Interactions/Interaction.h"
 //
 //void MagneticForce::init(System *sys_, Interaction *interaction_)
 //{
