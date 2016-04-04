@@ -110,10 +110,6 @@ System::~System()
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
 	}
-	DELETE(vel_contact);
-	DELETE(ang_vel_contact);
-	DELETE(vel_hydro);
-	DELETE(ang_vel_hydro);
 	DELETE(contact_force);
 	DELETE(contact_torque);
 	DELETE(lubstress);
@@ -125,8 +121,6 @@ System::~System()
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
 	if (brownian) {
-		DELETE(vel_brownian);
-		DELETE(ang_vel_brownian);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
 	}
@@ -136,15 +130,11 @@ System::~System()
 		if (!p.out_particle_stress.empty() || couette_stress) {
 			DELETE(repulsivestressXF);
 		}
-		DELETE(vel_repulsive);
-		DELETE(ang_vel_repulsive);
 	}
 	if (magnetic) {
 		DELETE(magnetic_moment);
 		DELETE(magnetic_force);
 		DELETE(magnetic_torque);
-		DELETE(vel_magnetic);
-		DELETE(ang_vel_magnetic);
 		DELETE(magneticstressGU);
 	}
 };
@@ -1081,7 +1071,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 		calcStress();
-		calcTotalStressPerParticle();
+		if (!p.out_particle_stress.empty() || couette_stress) {
+			calcTotalStressPerParticle();
+		}
 	}
 	if (lowPeclet) {
 		// Comupute total stress every time steps for better averaging

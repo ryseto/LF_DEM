@@ -5,7 +5,7 @@
 //
 #include "Contact.h"
 #include "Interaction.h"
-#include "../System/System.h"
+#include "System.h"
 
 void Contact::init(System* sys_, Interaction* interaction_)
 {

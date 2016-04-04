@@ -6,7 +6,7 @@
 //  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #include "Interaction.h"
-#include "../System/System.h"
+#include "System.h"
 
 using namespace std;
 

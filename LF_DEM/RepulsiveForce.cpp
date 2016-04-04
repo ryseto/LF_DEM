@@ -5,7 +5,7 @@
 //
 #include "RepulsiveForce.h"
 #include "Interaction.h"
-#include "../System/System.h"
+#include "System.h"
 
 void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 {

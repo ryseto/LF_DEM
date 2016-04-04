@@ -672,7 +672,11 @@ void Simulation::setupSimulation(string in_args,
 		sys.set_np(get_np_Binary(filename_import_positions));
 		is2d = isTwoDimensionBinary(filename_import_positions);
 	} else {
-		sys.set_np(get_np(filename_import_positions));
+		pair<int,int> np_np_fixed = get_np(filename_import_positions);
+		sys.set_np(np_np_fixed.first);
+		if (np_np_fixed.second>0){
+			p.np_fixed = np_np_fixed.second;
+		}
 		is2d = isTwoDimension(filename_import_positions);
 	}
 
@@ -692,6 +696,7 @@ void Simulation::setupSimulation(string in_args,
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
+
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
@@ -1391,7 +1396,8 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		initial_position.push_back(vec3d(x_,y_,z_));
 		radius.push_back(r_);
 	}
-	sys.setConfiguration(initial_position, radius, lx, ly, lz);
+	sys.setBoxSize(lx,ly,lz);
+	sys.setConfiguration(initial_position, radius);
 
 	// now contacts
 	int ncont;

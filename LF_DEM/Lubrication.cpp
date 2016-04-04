@@ -9,7 +9,7 @@
 #include "Lubrication.h"
 #include "LubricationFunctions.h"
 #include "Interaction.h"
-#include "../System/System.h"
+#include "System.h"
 
 Lubrication::Lubrication(Interaction* int_)
 {
