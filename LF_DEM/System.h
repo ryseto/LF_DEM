@@ -122,6 +122,8 @@ private:
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
 	void computeShearRateWalls();
+	void computeShearRateWalls_2();
+	void computeHydroForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
 	void rescaleVelHydroStressControlledFixed();
@@ -138,9 +140,9 @@ private:
 	double evaluateMaxVelocity();
 	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
-    void forceResultantReset();
-    void forceResultantLubricationForce();
-    void forceResultantInterpaticleForces();
+	void forceResultantReset();
+	void forceResultantLubricationForce();
+	void forceResultantInterpaticleForces();
 	void wallForces();
 
 #ifndef USE_DSFMT
@@ -205,6 +207,8 @@ private:
 	std::vector<vec3d> position;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
+	std::vector<vec3d> wall_hydro_force;
+	std::vector<vec3d> wall_hydro_torque;
 	Interaction *interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
@@ -216,16 +220,16 @@ private:
 	vec3d *ang_velocity;
 	vec3d *ang_velocity_predictor;
 	vec3d *na_ang_velocity;
-	vec3d *vel_repulsive;
-	vec3d *ang_vel_repulsive;
-	vec3d *vel_contact;
-	vec3d *ang_vel_contact;
-	vec3d *vel_hydro;
-	vec3d *ang_vel_hydro;
-	vec3d *vel_brownian;
-	vec3d *ang_vel_brownian;
-	vec3d *vel_magnetic;
-	vec3d *ang_vel_magnetic;
+	std::vector<vec3d> vel_repulsive;
+	std::vector<vec3d> ang_vel_repulsive;
+	std::vector<vec3d> vel_contact;
+	std::vector<vec3d> ang_vel_contact;
+	std::vector<vec3d> vel_hydro;
+	std::vector<vec3d> ang_vel_hydro;
+	std::vector<vec3d> vel_brownian;
+	std::vector<vec3d> ang_vel_brownian;
+	std::vector<vec3d> vel_magnetic;
+	std::vector<vec3d> ang_vel_magnetic;
 	std::vector<vec3d> vel_hydro_from_fixed;
 	std::vector<vec3d> ang_vel_hydro_from_fixed;
 	std::vector<vec3d> fixed_velocities;
@@ -342,8 +346,7 @@ private:
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
-						  const std::vector <double>& radii,
-						  double lx_, double ly_, double lz_);
+						  const std::vector <double>& radii);
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
