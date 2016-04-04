@@ -362,11 +362,21 @@ public:
 	 solvingIsDone()
 	 */
 	void solvingIsDone();
-    void multiply_by_RFU_mm(std::vector<double>& velocity, std::vector<double>& force);
+	void doubleToVec3d(double *a, std::vector<vec3d>& b, std::vector<vec3d>& c);
+	void vec3dToDouble(double *a, const std::vector<vec3d>& b, const std::vector<vec3d>& c);
+
+	void multiply_by_RFU_mm(std::vector<double>& velocity, std::vector<double>& force);
 	void multiply_by_RFU_mf(std::vector<double>& velocity, std::vector<double>& force);
 	void multiply_by_RFU_fm(std::vector<double>& velocity, std::vector<double>& force);
+	void multiply_by_RFU_fm(std::vector<vec3d>& velocity,
+													std::vector<vec3d>& ang_velocity,
+													std::vector<vec3d>& force,
+													std::vector<vec3d>& torque);
 	void multiply_by_RFU_ff(std::vector<double>& velocity, std::vector<double>& force);
-
+	void multiply_by_RFU_ff(std::vector<vec3d>& velocity,
+													std::vector<vec3d>& ang_velocity,
+													std::vector<vec3d>& force,
+													std::vector<vec3d>& torque);
 	// testing functions
 	void multiplyByResMat(double *vec);
 	void multiplySolutionByResMat(double *vec);
