@@ -39,7 +39,51 @@ def get_file_metadata(fname):
     return file_metadata
 
 
-def read_snapshot_file(fname, field_nb=None):
+def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
+    # read col0 separately to determine frame breaks
+    col0 = np.genfromtxt(in_file, comments=' ', skip_header=field_nb+6)
+    framebreaks_col0 = np.nonzero(np.isnan(col0))[0]
+
+    col0 = col0[np.logical_not(np.isnan(col0))].astype(np.float)
+
+    # now read cols>0
+    in_file.seek(0, 0)
+    cols = np.genfromtxt(in_file, skip_header=field_nb+6, usecols=usecols)
+    # merge it with col0 if necessary
+    if usecols[0] == 0:  # assume ordered
+        cols = np.column_stack((col0, cols))
+    # get the frame breaks
+    framebreaks_cols = framebreaks_col0 - np.arange(len(framebreaks_col0))
+    framebreaks_cols = framebreaks_cols[1:]  # 1st break is line 0
+
+    # split the data as a list of frames
+    cols = np.split(cols, framebreaks_cols)
+    return cols
+
+
+def __read_snapshot_file_with_framemeta(in_file, field_nb, usecols):
+    names = [str(i) for i in range(1, field_nb+1)]
+    frames = pd.read_table(in_file, delim_whitespace=True,
+                           names=names, skiprows=field_nb+6)
+
+    # locate empty lines
+    framebreaks = np.nonzero((frames['1'] == '#').as_matrix())[0]
+    frames = frames.as_matrix()
+
+    frame_metadata = frames[framebreaks][:, 1:].astype(np.float)
+
+    shear_rates_ = frame_metadata[:, 2]
+    strains_ = frame_metadata[:, 0]
+    framebreaks = framebreaks[1:]
+    frames = np.split(frames, framebreaks)
+
+    for i in range(len(frames)):
+        frames[i] = frames[i][1:]
+
+    return (frames, strains_, shear_rates_, frame_metadata)
+
+
+def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
     """
     Purpose:
         Read any LF_DEM file that has a "snapshot" structure, i.e. made of
@@ -62,11 +106,14 @@ def read_snapshot_file(fname, field_nb=None):
                   If not provided, the field nb is guessed from the file name.
 
     Returning values:
-        frames: a list of snapshots
-        strains_: the associated strains
-        shear_rates_: the associated strain rates
-        frame_metadata: the metadata for each snapshot
-        file_metadata: the metadata of the whole file
+        if frame_meta == False:
+            frames: a list of snapshots
+        else:
+            frames: a list of snapshots
+            strains_: the associated strains
+            shear_rates_: the associated strain rates
+            frame_metadata: the metadata for each snapshot
+            file_metadata: the metadata of the whole file
     """
 
     openedfile = True
@@ -77,6 +124,11 @@ def read_snapshot_file(fname, field_nb=None):
         openedfile = False
 
     file_metadata = get_file_metadata(in_file)
+    in_file.close()
+    if frame_meta:
+        in_file = open(fname, "r")
+    else:
+        in_file = open(fname, "rb")  # for genfromtxt
 
     if field_nb is None:
         if openedfile:
@@ -86,26 +138,17 @@ def read_snapshot_file(fname, field_nb=None):
         else:
             field_nb = 15
             print("Warning, using default field_nb=15")
-            
-    names = [str(i) for i in range(1, field_nb+1)]
-    frames = pd.read_table(in_file, delim_whitespace=True,
-                           names=names, skiprows=field_nb+6)
 
-    # locate empty lines
-    framebreaks = np.nonzero((frames['1'] == '#').as_matrix())[0]
-    frames = frames.as_matrix()
-
-    frame_metadata = frames[framebreaks][:, 1:].astype(np.float)
-
-    shear_rates_ = frame_metadata[:, 2]
-    strains_ = frame_metadata[:, 0]
-    framebreaks = framebreaks[1:]
-    frames = np.split(frames, framebreaks)
-
-    for i in range(len(frames)):
-        frames[i] = frames[i][1:]
-
-    return frames, strains_, shear_rates_, frame_metadata, file_metadata
+    if frame_meta:
+        return __read_snapshot_file_with_framemeta(in_file,
+                                                   field_nb,
+                                                   usecols)\
+                + (file_metadata,)
+    else:
+        return __read_snapshot_file_no_framemeta(in_file,
+                                                 field_nb,
+                                                 usecols=usecols),\
+                file_metadata
 
 
 def read_data_file(fname):
