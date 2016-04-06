@@ -880,12 +880,6 @@ void Simulation::outputConfigurationData()
 			const vec3d& r = pos[i];
 			const vec3d& v = vel[i];
 			const vec3d& o = sys.ang_velocity[i];
-			double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
-			double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
-			double brownian_xzstressGU = 0;
-			if (sys.brownian) {
-				brownian_xzstressGU = shearStressComponent(sys.brownianstressGU[i], p.theta_shear);
-			}
 			fout_particle << i; //1: number
 			fout_particle << ' ' << sys.radius[i]; //2: radius
 			fout_particle << setprecision(6);
@@ -893,12 +887,24 @@ void Simulation::outputConfigurationData()
 			fout_particle << setprecision(output_precision) << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			if (control_var != "magnetic") {
 				fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
-				if (diminish_output == false) {
-					fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
-					fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
-					fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
+				if (sys.couette_stress) {
+					double stress_rr, stress_thetatheta, stress_rtheta;
+					sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
+					fout_particle << ' ' << stress_rr << ' ' << stress_thetatheta << ' ' << stress_rtheta;
 				} else {
-					fout_particle << " d d d";
+					if (diminish_output == false) {
+						double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
+						double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
+						double brownian_xzstressGU = 0;
+						if (sys.brownian) {
+							brownian_xzstressGU = shearStressComponent(sys.brownianstressGU[i], p.theta_shear);
+						}
+						fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
+						fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
+						fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
+					} else {
+						fout_particle << " d d d";
+					}
 				}
 				if (sys.twodimension) {
 					fout_particle << ' ' << sys.angle[i]; // 15
