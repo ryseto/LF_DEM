@@ -185,12 +185,12 @@ void Simulation::timeEvolution(double& next_output_data)
  * Main simulation
  */
 void Simulation::simulationSteadyShear(string in_args,
-										 vector<string>& input_files,
-										 bool binary_conf,
-										 double dimensionless_number,
-										 string input_scale,
-										 string control_variable,
-										 string simu_identifier)
+									   vector<string>& input_files,
+									   bool binary_conf,
+									   double dimensionless_number,
+									   string input_scale,
+									   string control_variable,
+									   string simu_identifier)
 {
 	string indent = "  Simulation::\t";
 	control_var = control_variable;
@@ -240,7 +240,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		sys.wall_rheology = true;
 		sys.test_simulation = 51;//stest1
 	}
-
 
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
@@ -401,7 +400,7 @@ void Simulation::simulationMagnetic(string in_args,
 	 */
 	control_var = control_variable;
 	setupSimulation(in_args, input_files, binary_conf,
-									dimensionless_number, input_scale, simu_identifier);
+					dimensionless_number, input_scale, simu_identifier);
 	int cnt_simu_loop = 1;
 	int cnt_config_out = 1;
 	double time_output_data = 0;
@@ -413,18 +412,18 @@ void Simulation::simulationMagnetic(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 	if (sys.p.magnetic_field_type == 0) {
-			// Field direction is fixed
-			sys.external_magnetic_field.set(0, 1, 0);
+		// Field direction is fixed
+		sys.external_magnetic_field.set(0, 1, 0);
 	} else if (sys.p.magnetic_field_type == 1) {
-			sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
-																			cos(sys.angle_external_magnetic_field),
-																			0);
-			throw runtime_error("magnetic_field_type == 1 not yet implemented");// @not yet
+		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
+										cos(sys.angle_external_magnetic_field),
+										0);
+		throw runtime_error("magnetic_field_type == 1 not yet implemented");// @not yet
 	} else if (sys.p.magnetic_field_type == 2) {
-			sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
-																			0,
-																			sin(sys.angle_external_magnetic_field));
-			throw runtime_error("magnetic_field_type == 2 not yet implemented");// @not yet
+		sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
+										0,
+										sin(sys.angle_external_magnetic_field));
+		throw runtime_error("magnetic_field_type == 2 not yet implemented");// @not yet
 	}
 	sys.setMagneticMomentZero();
 	bool initial_relax = true;
@@ -441,7 +440,7 @@ void Simulation::simulationMagnetic(string in_args,
 		time_output_config = initial_time+cnt_config_out*time_interval_output_config;
 		sys.timeEvolution("time", time_output_data); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
 		cnt_simu_loop ++;
-	/******************** OUTPUT DATA ********************/
+		/******************** OUTPUT DATA ********************/
 		evaluateData();
 		outputDataMagnetic();
 		outputConfigurationBinary();
@@ -564,19 +563,19 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	}
 	vector <struct contact_state> cs;
 	sys.getContacts(cs);
-		int ncont = cs.size();
-		conf_export.write((char*)&ncont, sizeof(unsigned int));
-		for (int i=0; i<ncont; i++) {
-				conf_export.write((char*)&(cs[i].p0), sizeof(unsigned int));
-				conf_export.write((char*)&(cs[i].p1), sizeof(unsigned int));
-				conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
-				conf_export.write((char*)&(cs[i].disp_tan.y), sizeof(double));
-				conf_export.write((char*)&(cs[i].disp_tan.z), sizeof(double));
-				conf_export.write((char*)&(cs[i].disp_rolling.x), sizeof(double));
-				conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
-				conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
-		}
-		//	conf_export.write((char*)&(sys.dt), sizeof(double));
+	int ncont = cs.size();
+	conf_export.write((char*)&ncont, sizeof(unsigned int));
+	for (int i=0; i<ncont; i++) {
+		conf_export.write((char*)&(cs[i].p0), sizeof(unsigned int));
+		conf_export.write((char*)&(cs[i].p1), sizeof(unsigned int));
+		conf_export.write((char*)&(cs[i].disp_tan.x), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_tan.y), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_tan.z), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_rolling.x), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_rolling.y), sizeof(double));
+		conf_export.write((char*)&(cs[i].disp_rolling.z), sizeof(double));
+	}
+	//	conf_export.write((char*)&(sys.dt), sizeof(double));
 	conf_export.close();
 }
 
@@ -602,10 +601,10 @@ void Simulation::evaluateData()
 
 	 */
 	sys.analyzeState();
-		sys.calcStress();
-		//	if (sys.p.lubrication_model > 0) {
-		//		sys.calcLubricationForce();
-		//	}
+	sys.calcStress();
+	//	if (sys.p.lubrication_model > 0) {
+	//		sys.calcLubricationForce();
+	//	}
 }
 
 void Simulation::outputData()
@@ -629,12 +628,12 @@ void Simulation::outputData()
 		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-
-		int number_of_data = 37;
-		if (sys.wall_rheology) {
-				number_of_data = 40;
-		}
-		outdata.init(number_of_data, output_unit_scales);
+	
+	int number_of_data = 37;
+	if (sys.wall_rheology) {
+		number_of_data = 40;
+	}
+	outdata.init(number_of_data, output_unit_scales);
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 	outdata.entryData(1, "time", "time", sys.get_time());
@@ -684,14 +683,14 @@ void Simulation::outputData()
 	outdata.entryData(32, "kn", "none", p.kn);
 	outdata.entryData(33, "kt", "none", p.kt);
 	outdata.entryData(34, "kr", "none", p.kr);
-		outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
-		outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
-		if (sys.wall_rheology) {
-				outdata.entryData(37, "shear viscosity wall 1", "viscosity", sys.shearstress_wall1/sr);
-				outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
+	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
+	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
+	if (sys.wall_rheology) {
+		outdata.entryData(37, "shear viscosity wall 1", "viscosity", sys.shearstress_wall1/sr);
+		outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
 		outdata.entryData(39, "normal stress/rate wall 1", "viscosity", sys.normalstress_wall1/sr);
 		outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
-		}
+	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
@@ -705,10 +704,10 @@ void Simulation::outputData()
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stressXF+sys.total_repulsive_stressGU);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.writeToFile();
-
+	
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-				int nb_of_fields = strlen(p.out_particle_stress.c_str());
+		int nb_of_fields = strlen(p.out_particle_stress.c_str());
 		outdata_pst.init(nb_of_fields, output_unit_scales);
 		for (int i=0; i<sys.get_np(); i++) {
 			int field_index = 0;
@@ -843,13 +842,13 @@ void Simulation::outputConfigurationData()
 	if (diminish_output) {
 		output_precision = 4;
 	}
-
+	
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
 		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
-									 sys.position[i].y-sys.Ly_half(),
-									 sys.position[i].z-sys.Lz_half());
+								   sys.position[i].y-sys.Ly_half(),
+								   sys.position[i].z-sys.Lz_half());
 	}
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.

@@ -74,7 +74,6 @@ private:
 	 * For inputs
 	 */
 
-
 public:
 	/* For DEMsystem*/
 	Simulation();
@@ -136,8 +135,8 @@ public:
 							   const std::string& filename_import_positions,
 							   const std::string& filename_parameters,
 							   const std::string& simu_identifier,
-								 double dimensionlessnumber,
-								 const std::string& input_scale);
+							   double dimensionlessnumber,
+							   const std::string& input_scale);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void autoSetParameters(const std::string& keyword,
@@ -147,13 +146,9 @@ public:
 	void importPreSimulationData(std::string filename);
 	void tagStrainParameters();
 	void resolveTimeOrStrainParameters();
-	std::map<std::string,std::string> getConfMetaData(const std::string &,
-																										const std::string &);
-	std::string getMetaParameter(std::map<std::string,std::string> &,
-															std::string &,
-															const std::string &);
-	std::string getMetaParameter(std::map<std::string,std::string> &,
-															std::string &);
+	std::map<std::string,std::string> getConfMetaData(const std::string &, const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &, const std::string &);
+	std::string getMetaParameter(std::map<std::string,std::string> &, std::string &);
 	bool isTwoDimension(const std::string&);
 	bool isTwoDimensionBinary(const std::string&);
 	std::pair<int,int> get_np(const std::string&);
@@ -164,7 +159,6 @@ public:
 	void readPositionsMagnetic(std::fstream &file_import);
 	void readPositions(std::fstream &file_import);
 	void setMetadata(std::fstream &file_import);
-
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void convertForceValues(std::string new_long_unit);
