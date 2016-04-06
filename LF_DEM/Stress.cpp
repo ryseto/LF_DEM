@@ -137,9 +137,19 @@ void System::calcTotalStressPerParticle()
 	}
 }
 
+void System::getStressCouette(int i,
+							  double &stress_rr,
+							  double &stress_thetatheta,
+							  double &stress_rtheta)
+{
+	vec3d pos_normal = position[i]-origin_of_rotation;
+	
+}
+
+
+
 void System::calcStress()
 {
-	cerr << "calcStress" << endl;
 	// Lubrication stress
 	total_hydro_stress.reset();
 	for (int i=0; i<np; i++) {

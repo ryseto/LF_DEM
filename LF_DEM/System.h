@@ -369,6 +369,10 @@ private:
 	void calcStress();
 	void calcStressPerParticle();
 	void calcTotalStressPerParticle();
+	void getStressCouette(int i,
+						  double &stress_rr,
+						  double &stress_thetatheta,
+						  double &stress_rtheta);
 	void analyzeState();
 	double evaluateAvgContactGap();
 	StokesSolver stokes_solver;

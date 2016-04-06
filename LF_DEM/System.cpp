@@ -216,6 +216,10 @@ void System::allocateRessourcesPreConfiguration()
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
+	for (int k=0; k<maxnb_interactionpair; k++) {
+		interaction[k].init(this);
+		interaction[k].set_label(k);
+	}
 	interaction_list = new set <Interaction*> [np];
 	interaction_partners = new unordered_set <int> [np];
 	//
@@ -556,11 +560,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	sintheta_shear = sin(p.theta_shear);
 	// Memory
 	allocateRessourcesPreConfiguration();
-	//
-	for (int k=0; k<maxnb_interactionpair; k++) {
-		interaction[k].init(this);
-		interaction[k].set_label(k);
-	}
 
 	for (int i=0; i<np; i++) {
 		if (twodimension) {
@@ -966,9 +965,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
             }
         }
         calcStressPerParticle();
-//		calcStress();
-//		calcTotalStressPerParticle();
-    }
+		calcStress();
+		calcTotalStressPerParticle();
+   }
     timeStepMove(time_or_strain, value_end);
     if (eventLookUp != NULL) {
         (this->*eventLookUp)();
