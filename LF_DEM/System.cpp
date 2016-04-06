@@ -52,7 +52,8 @@ magnetic_dd_energy(0),
 angle_external_magnetic_field(0),
 ratio_unit_time(NULL),
 z_top(-1),
-eventLookUp(NULL)
+eventLookUp(NULL),
+avg_dt(0)
 {
 	amplitudes.repulsion = 0;
 	amplitudes.sqrt_temperature = 0;
@@ -109,10 +110,6 @@ System::~System()
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
 	}
-	DELETE(vel_contact);
-	DELETE(ang_vel_contact);
-	DELETE(vel_hydro);
-	DELETE(ang_vel_hydro);
 	DELETE(contact_force);
 	DELETE(contact_torque);
 	DELETE(lubstress);
@@ -124,8 +121,6 @@ System::~System()
 	DELETE(interaction_list);
 	DELETE(interaction_partners);
 	if (brownian) {
-		DELETE(vel_brownian);
-		DELETE(ang_vel_brownian);
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
 	}
@@ -135,15 +130,11 @@ System::~System()
 		if (!p.out_particle_stress.empty() || couette_stress) {
 			DELETE(repulsivestressXF);
 		}
-		DELETE(vel_repulsive);
-		DELETE(ang_vel_repulsive);
 	}
 	if (magnetic) {
 		DELETE(magnetic_moment);
 		DELETE(magnetic_force);
 		DELETE(magnetic_torque);
-		DELETE(vel_magnetic);
-		DELETE(ang_vel_magnetic);
 		DELETE(magneticstressGU);
 	}
 };
@@ -194,25 +185,27 @@ void System::allocateRessourcesPreConfiguration()
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
 	}
-	vel_contact = new vec3d [np];
-	ang_vel_contact = new vec3d [np];
-	vel_hydro = new vec3d [np];
-	ang_vel_hydro = new vec3d [np];
+	vel_contact.resize(np_mobile);
+	ang_vel_contact.resize(np_mobile);
+	vel_hydro.resize(np_mobile);
+	ang_vel_hydro.resize(np_mobile);
 	if (repulsiveforce) {
-		vel_repulsive = new vec3d [np];
-		ang_vel_repulsive = new vec3d [np];
+		vel_repulsive.resize(np_mobile);
+		ang_vel_repulsive.resize(np_mobile);
 	}
 	if (brownian) {
-		vel_brownian = new vec3d [np];
-		ang_vel_brownian = new vec3d [np];
+		vel_brownian.resize(np_mobile);
+		ang_vel_brownian.resize(np_mobile);
 	}
 	if (magnetic) {
-		vel_magnetic = new vec3d [np];
-		ang_vel_magnetic = new vec3d [np];
+		vel_magnetic.resize(np_mobile);
+		ang_vel_magnetic.resize(np_mobile);
 	}
 	if (mobile_fixed) {
-		vel_hydro_from_fixed.resize(np);
-		ang_vel_hydro_from_fixed.resize(np);
+		vel_hydro_from_fixed.resize(np_mobile);
+		ang_vel_hydro_from_fixed.resize(np_mobile);
+		wall_hydro_force.resize(p.np_fixed);
+		wall_hydro_torque.resize(p.np_fixed);
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
@@ -233,7 +226,7 @@ void System::allocateRessourcesPreConfiguration()
 
 void System::allocateRessourcesPostConfiguration()
 {
-	
+
 	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
@@ -242,11 +235,11 @@ void System::allocateRessourcesPostConfiguration()
 	}
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
-	
+
 	total_stress_pp = new StressTensor [np];
 	lubstress = new StressTensor [np];
 	contactstressGU = new StressTensor [np];
-	
+
 	if (!p.out_particle_stress.empty() || couette_stress) {
 		contactstressXF = new StressTensor [np];
 	}
@@ -299,8 +292,7 @@ void System::allocatePositionRadius()
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,
-							  const vector <double>& radii,
-							  double lx_, double ly_, double lz_)
+							  const vector <double>& radii)
 {
 	/**
 		\brief Set positions of the particles for initialization.
@@ -314,13 +306,12 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	if (p.np_fixed > 0) {
 		mobile_fixed = true;
 	}
-	setBoxSize(lx_, ly_, lz_);
 	allocatePositionRadius();
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
 	}
-	if (ly_ == 0) {
+	if (ly == 0) {
 		twodimension = true;
 	} else {
 		twodimension = false;
@@ -478,7 +469,8 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	 *
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
-	 */
+	*/
+	np_mobile = np - p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
 	twodimension = is2d;
@@ -569,6 +561,8 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		na_velocity[i].reset();
 		ang_velocity[i].reset();
 		na_ang_velocity[i].reset();
+	}
+	for (int i=0; i<np_mobile; i++) {
 		vel_contact[i].reset();
 		ang_vel_contact[i].reset();
 		vel_hydro[i].reset();
@@ -581,9 +575,15 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 			vel_magnetic[i].reset();
 			ang_vel_magnetic[i].reset();
 		}
-		if (mobile_fixed) {
+	}
+	if (mobile_fixed) {
+		for (int i=0; i<np_mobile; i++) {
 			vel_hydro_from_fixed[i].reset();
 			ang_vel_hydro_from_fixed[i].reset();
+		}
+		for (int i=0; i<p.np_fixed; i++) {
+			wall_hydro_force[i].reset();
+			wall_hydro_torque[i].reset();
 		}
 	}
 
@@ -705,7 +705,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 void System::setupSystemPostConfiguration()
 {
-	
+
 	for (int i=0; i<np; i++) {
 		radius_squared[i] = pow(radius[i], 2);
 		radius_cubed[i] = pow(radius[i], 3);
@@ -791,6 +791,7 @@ void System::initializeBoxing()
 	}
 	boxset.update();
 }
+
 
 void System::timeStepBoxing()
 {
@@ -1069,7 +1070,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
 		calcStress();
-		calcTotalStressPerParticle();
+		if (!p.out_particle_stress.empty() || couette_stress) {
+			calcTotalStressPerParticle();
+		}
 	}
 	if (lowPeclet) {
 		// Comupute total stress every time steps for better averaging
@@ -1617,7 +1620,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 vector<double> System::computeForceFromFixedParticles()
 {
 	vector<double> force_torque_from_fixed (6*np_mobile);
-	  // @@ TODO: avoid copy of the velocities
+	// @@ TODO: avoid copy of the velocities
 	vector<double> minus_fixed_velocities (6*p.np_fixed);
 	for(int i=0; i<p.np_fixed; i++){
 		int i6 = 6*i;
@@ -1642,6 +1645,33 @@ void System::buildHydroTermsFromFixedParticles()
 	// Hence this quite verbose solution.
 	int first_mobile_index = 0;
 	stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
+}
+
+
+void System::computeHydroForcesOnWallParticles()
+{
+
+	/// UNFINISHED
+	vector<vec3d> force (p.np_fixed);
+	vector<vec3d> torque (p.np_fixed);
+
+	stokes_solver.multiply_by_RFU_fm(vel_hydro, ang_vel_hydro, force, torque);
+	for (int i=0; i<p.np_fixed; i++) {
+		wall_hydro_force[i] = -force[i];
+		wall_hydro_torque[i] = -torque[i];
+	}
+
+	vector<vec3d> na_velocity_fixed (p.np_fixed);
+	vector<vec3d> na_ang_velocity_fixed (p.np_fixed);
+	for (int i=0; i<p.np_fixed; i++) {
+		na_velocity_fixed[i] = na_velocity[i+np_mobile];
+		na_ang_velocity_fixed[i] = na_ang_velocity[i+np_mobile];
+	}
+	stokes_solver.multiply_by_RFU_ff(na_velocity_fixed, na_ang_velocity_fixed, force, torque);
+	for (int i=0; i<p.np_fixed; i++) {
+		wall_hydro_force[i] -= force[i];
+		wall_hydro_torque[i] -= torque[i];
+	}
 }
 
 void System::forceResultantLubricationForce()
@@ -1975,7 +2005,7 @@ void System::computeVelocityByComponents()
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
 		buildHydroTerms(true, false); // zero shear-rate (= no GE rhs)
-		for (int i=0; i<np; i++) {
+		for (unsigned int i=0; i<vel_hydro.size(); i++) {
 			vel_hydro[i].reset();
 			ang_vel_hydro[i].reset();
 		}
@@ -2007,11 +2037,16 @@ void System::rescaleVelHydroStressControlled()
 
 void System::rescaleVelHydroStressControlledFixed()
 {
-	for (int i=0; i<np; i++) {
+	for (int i=0; i<np_mobile; i++) {
 		vel_hydro_from_fixed[i] *= shear_rate;
 		ang_vel_hydro_from_fixed[i] *= shear_rate;
 	}
+	for (int i=np_mobile; i<np; i++) {
+		na_velocity[i] *= shear_rate;
+		na_ang_velocity[i] *= shear_rate;
+	}
 }
+
 
 void System::computeShearRate()
 {
@@ -2061,6 +2096,44 @@ void System::computeShearRateWalls()
 		throw runtime_error("System:: computeShearRateWalls: velocity from fixed particles is zero. Probably the input fixed velocities are zero.");
 	}
 	shear_rate = shearstress_from_fixed/viscosity_from_fixed;
+	if (shear_strain < init_strain_shear_rate_limit) {
+		if (shear_rate > init_shear_rate_limit) {
+			shear_rate = init_shear_rate_limit;
+		}
+	}
+}
+
+void System::computeShearRateWalls_2()
+{
+	/**
+	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
+	*/
+
+	computeHydroForcesOnWallParticles();
+
+	double total_hydro_wall_shear_stress = 0;
+	double total_nonhydro_wall_shear_stress = 0;
+
+	for (int i=np_mobile; i<np; i++) {
+		total_hydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile], wall_hydro_force[i-np_mobile]);
+		total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],contact_force[i]);
+		if (repulsiveforce) {
+			total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],repulsive_force[i]);
+		}
+	}
+	double wall_surface;
+	if (twodimension) {
+		wall_surface = lx;
+	} else {
+		wall_surface = lx*ly;
+	}
+
+	total_hydro_wall_shear_stress /= wall_surface;
+	total_nonhydro_wall_shear_stress /= wall_surface;
+
+	// the total_hydro_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
+	shear_rate = (target_stress - total_nonhydro_wall_shear_stress)/total_hydro_wall_shear_stress;
+
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
@@ -2176,7 +2249,7 @@ void System::tmpMixedProblemSetVelocities()
 
 void System::sumUpVelocityComponents()
 {
-    for (int i=0; i<np_mobile; i++) {
+	for (int i=0; i<np_mobile; i++) {
 		na_velocity[i] = vel_hydro[i]+vel_contact[i];
 		na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
 	}
@@ -2197,10 +2270,6 @@ void System::sumUpVelocityComponents()
 			na_velocity[i] += vel_hydro_from_fixed[i];
 			na_ang_velocity[i] += ang_vel_hydro_from_fixed[i];
 		}
-		for (int i=np_mobile; i<np; i++) {
-			na_velocity[i] = vel_hydro_from_fixed[i];
-			na_ang_velocity[i] = ang_vel_hydro_from_fixed[i];
-		}
 	}
 }
 
@@ -2214,29 +2283,27 @@ void System::setFixedParticleVelocities()
 	} else if (test_simulation > 0) {
 		tmpMixedProblemSetVelocities();
 	}
-	for (int i=np_mobile; i<np; i++){
-		// have to set the fixed particles velocity components to zero (except vel_hydro_from_fixed)
-		// to compute the stress correctly.
-		// set vel_hydro_from_fixed = na_velocity (and same for the angular part)
-		// (this is an abuse of vel_hydro_from_fixed,
-		// which normally stores the velocity of the mobile particles
-		// coming from hydro interactions with the fixed particles).
-		// We should find a neater way to do that.
-		vel_contact[i].reset();
-		ang_vel_contact[i].reset();
-		vel_hydro[i].reset();
-		ang_vel_hydro[i].reset();
-		if (repulsiveforce) {
-			vel_repulsive[i].reset();
-			ang_vel_repulsive[i].reset();
-		}
-		if (magnetic) {
-			vel_magnetic[i].reset();
-			ang_vel_magnetic[i].reset();
-		}
-		vel_hydro_from_fixed[i] = na_velocity[i];
-		ang_vel_hydro_from_fixed[i] = na_ang_velocity[i];
-	}
+	// for (int i=np_mobile; i<np; i++){
+	// 	// have to set the fixed particles velocity components to zero (except vel_hydro_from_fixed)
+	// 	// to compute the stress correctly.
+	// 	// set vel_hydro_from_fixed = na_velocity (and same for the angular part)
+	// 	// (this is an abuse of vel_hydro_from_fixed,
+	// 	// which normally stores the velocity of the mobile particles
+	// 	// coming from hydro interactions with the fixed particles).
+	// 	// We should find a neater way to do that.
+	// 	vel_contact[i].reset();
+	// 	ang_vel_contact[i].reset();
+	// 	vel_hydro[i].reset();
+	// 	ang_vel_hydro[i].reset();
+	// 	if (repulsiveforce) {
+	// 		vel_repulsive[i].reset();
+	// 		ang_vel_repulsive[i].reset();
+	// 	}
+	// 	if (magnetic) {
+	// 		vel_magnetic[i].reset();
+	// 		ang_vel_magnetic[i].reset();
+	// 	}
+	// }
 }
 
 void System::computeVelocities(bool divided_velocities)
@@ -2517,6 +2584,7 @@ void System::periodize_diff(vec3d& pos_diff)
 	}
 }
 
+
 void System::setSystemVolume()
 {
 	string indent = "  System::\t";
@@ -2535,6 +2603,7 @@ void System::setSystemVolume()
 		cout << indent << "lx = " << lx << " lz = " << lz << " ly = " << ly << endl;
 	}
 }
+
 
 void System::adjustContactModelParameters()
 {

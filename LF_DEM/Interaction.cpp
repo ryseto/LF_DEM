@@ -17,6 +17,7 @@ void Interaction::init(System* sys_)
 	lubrication.init(sys);
 	contact.init(sys, this);
 	repulsion.init(sys, this);
+	r = 0;
 }
 
 /* Make a normal vector
@@ -31,9 +32,6 @@ void Interaction::calcNormalVectorDistanceGap()
 	r = rvec.norm();
 	nvec = rvec/r;
 	reduced_gap = r/ro_12-2;
-	if (lubrication.is_active()) {
-		lubrication.getGeometry();
-	}
 }
 
 /* Activate interaction between particles i and j.
@@ -42,7 +40,7 @@ void Interaction::calcNormalVectorDistanceGap()
 void Interaction::activate(unsigned int i, unsigned int j,
 						   double interaction_range_)
 {
-    active = true;
+	active = true;
 	if (j > i) {
 		p0 = i, p1 = j;
 	} else {
@@ -94,6 +92,9 @@ void Interaction::activate(unsigned int i, unsigned int j,
 		lubrication.getInteractionData();
 		lubrication.updateResistanceCoeff();
 		lubrication.calcLubConstants();
+		if (lubrication.is_active()) {
+			lubrication.getGeometry();
+		}
 	}
 }
 
@@ -128,6 +129,7 @@ void Interaction::updateState(bool& deactivated)
 	updateContactState();
 
 	if (lubrication.is_active()) {
+		lubrication.getGeometry();
 		lubrication.updateResistanceCoeff();
 	}
 	if (contact.state > 0) {

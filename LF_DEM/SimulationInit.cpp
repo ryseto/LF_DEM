@@ -246,7 +246,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
-												  string input_scale)
+													string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -264,7 +264,7 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
 	}
 	/* Switch this force in hydro units.
 	 The dimensionlessnumber in input is the shear rate in "force_type" units,
- 	i.e.  is the ratio between the hydrodynamic force and the "force_type" force.
+	 i.e.  is the ratio between the hydrodynamic force and the "force_type" force.
 	 So in hydrodynamic force units, the value of the "force_type" force is 1/dimensionlessnumber.
 	 */
 	if (dimensionlessnumber == 0) {
@@ -558,7 +558,7 @@ void Simulation::tagStrainParameters()
 
 void Simulation::resolveTimeOrStrainParameters()
 {
-  /**
+	/**
 		\brief Interpret time units.
 
 		We have to treat times as a special case, because we sometimes want to
@@ -584,7 +584,7 @@ void Simulation::resolveTimeOrStrainParameters()
 
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
-  */
+	*/
 	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
@@ -638,16 +638,16 @@ void Simulation::setupSimulation(string in_args,
 
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
-        sys.zero_shear = true;
-    } else if (control_var == "magnetic") {
+			sys.zero_shear = true;
+		} else if (control_var == "magnetic") {
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
 	}
 	if (sys.test_simulation > 0 && (sys.test_simulation < 20 || sys.test_simulation > 30) ) {
 		sys.zero_shear = true;
-        sys.mobile_fixed = true;
-    }
+		sys.mobile_fixed = true;
+	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
 	tagStrainParameters();
@@ -672,7 +672,11 @@ void Simulation::setupSimulation(string in_args,
 		sys.set_np(get_np_Binary(filename_import_positions));
 		is2d = isTwoDimensionBinary(filename_import_positions);
 	} else {
-		sys.set_np(get_np(filename_import_positions));
+		pair<int,int> np_np_fixed = get_np(filename_import_positions);
+		sys.set_np(np_np_fixed.first);
+		if (np_np_fixed.second>0){
+			p.np_fixed = np_np_fixed.second;
+		}
 		is2d = isTwoDimension(filename_import_positions);
 	}
 
@@ -686,12 +690,13 @@ void Simulation::setupSimulation(string in_args,
 	sys.setupSystemPostConfiguration();
 
 	p_initial = p;
-    prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-                          simu_identifier, dimensionlessnumber, input_scale);
-    openOutputFiles();
-    echoInputFiles(in_args, input_files);
+	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+													simu_identifier, dimensionlessnumber, input_scale);
+	openOutputFiles();
+	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
+
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
@@ -1063,13 +1068,13 @@ void Simulation::openOutputFiles()
 
 map<string,string> Simulation::getConfMetaData(const string &line1, const string &line2)
 {
-    vector<string> l1_split = splitString(line1);
-    vector<string> l2_split = splitString(line2);
+	vector<string> l1_split = splitString(line1);
+	vector<string> l2_split = splitString(line2);
 	if (l1_split.size() != l2_split.size()) {
 		throw runtime_error("Simulation:: Ill-formed header in the configuration file.\n");
 	}
 	map<string,string> meta_data;
-    for (unsigned int i=1; i<l1_split.size(); i++) {
+		for (unsigned int i=1; i<l1_split.size(); i++) {
 		meta_data[l1_split[i]] = l2_split[i];
 	}
 	return meta_data;
@@ -1077,25 +1082,25 @@ map<string,string> Simulation::getConfMetaData(const string &line1, const string
 
 string Simulation::getMetaParameter(map<string,string> &meta_data, string &key)
 {
-    if (meta_data.find(key) != meta_data.end()) {
-        return meta_data[key];
-    } else {
-        ostringstream error_str;
-        error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
-        throw runtime_error(error_str.str());
-    }
+	if (meta_data.find(key) != meta_data.end()) {
+		return meta_data[key];
+	} else {
+		ostringstream error_str;
+		error_str  << " Simulation:: parameter '" << key << "' not found in the header of the configuration file." <<endl;
+		throw runtime_error(error_str.str());
+	}
 }
 
 string Simulation::getMetaParameter(map<string,string> &meta_data, string &key, const string &default_val)
 {
-    if (meta_data.find(key) != meta_data.end()) {
-        return meta_data[key];
-    } else {
-        return default_val;
-    }
+	if (meta_data.find(key) != meta_data.end()) {
+		return meta_data[key];
+	} else {
+		return default_val;
+	}
 }
 
-int Simulation::get_np(const string& filename_import_positions)
+std::pair<int,int> Simulation::get_np(const string& filename_import_positions)
 {
 	/**
 	 \brief Read np from a text file input configuration.
@@ -1107,15 +1112,25 @@ int Simulation::get_np(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
+
+	int np, np_fixed;
+
+	getline(file_import, header_imported_configulation[0]);
+	getline(file_import, header_imported_configulation[1]);
+	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
+	string key, def;
+	key = "np_fixed";
+	def = "0";
+	np_fixed = atoi(getMetaParameter(meta_data, key, def).c_str());
+
 	string line;
-	getline(file_import, line);
-	getline(file_import, line);
-	int np = 0;
+	np = 0;
 	while (getline(file_import, line)) {
 		np++;
 	}
 	file_import.close();
-	return np;
+
+	return make_pair(np, np_fixed);
 }
 
 bool Simulation::isTwoDimension(const string& filename_import_positions)
@@ -1174,18 +1189,8 @@ int Simulation::get_np_Binary(const string& filename_import_positions)
 	return np;
 }
 
-void Simulation::importConfiguration(const string& filename_import_positions)
-{
-	/**
-	 \brief Read a text file input configuration.
-	 */
-	fstream file_import;
-    file_import.open(filename_import_positions.c_str());
-	if (!file_import) {
-		ostringstream error_str;
-		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
-		throw runtime_error(error_str.str());
-	}
+void Simulation::setMetadata(fstream &file_import){
+
 	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
@@ -1194,29 +1199,18 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 
 	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
 	string key, def;
-	key = "np_fixed";
-	def = "0";
-	sys.p.np_fixed = atoi(getMetaParameter(meta_data, key, def).c_str());
+	// key = "np_fixed";
+	// def = "0";
+	// sys.p.np_fixed = atoi(getMetaParameter(meta_data, key, def).c_str());
 	key = "lx";
 	lx = atof(getMetaParameter(meta_data, key).c_str());
 	key = "ly";
 	ly = atof(getMetaParameter(meta_data, key).c_str());
 	key = "lz";
 	lz = atof(getMetaParameter(meta_data, key).c_str());
-	// key = "vf1";
-	// def = "0";
-	// vf1 = atof(getMetaParameter(meta_data, key, def).c_str());
-	// key = "vf2";
-	// def = "0";
-	// vf2 = atof(getMetaParameter(meta_data, key, def).c_str());
+	sys.setBoxSize(lx, ly, lz);
 	key = "vf";
 	volume_or_area_fraction = atof(getMetaParameter(meta_data, key).c_str());
-	// key = "np1";
-	// def = "0";
-	// n1 = atoi(getMetaParameter(meta_data, key, def).c_str());
-	// key = "np2";
-	// def = "0";
-	// n2 = atoi(getMetaParameter(meta_data, key, def).c_str());
 	key = "dispx";
 	def = "0";
 	initial_lees_edwards_disp.x = atof(getMetaParameter(meta_data, key, def).c_str());
@@ -1245,59 +1239,124 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	cerr << "sys.radius_in = " << sys.radius_in << endl;
 	//
 	if (sys.np_wall1 != -1) {
-        sys.p.np_fixed = sys.np_wall1+sys.np_wall2;
+		sys.p.np_fixed = sys.np_wall1+sys.np_wall2;
 	}
 	sys.shear_disp = initial_lees_edwards_disp;
+}
+
+void Simulation::readPositions(fstream &file_import){
+	/**
+		\brief Import a regular text file configuration.
+
+		File format:
+		# header
+
+		x y z radius
+		...
+	*/
+	double x_, y_, z_, a_;
+	vector<vec3d> initial_position;
+	vector <double> radius;
+	while (file_import >> x_ >> y_ >> z_ >> a_) {
+		initial_position.push_back(vec3d(x_, y_, z_));
+		radius.push_back(a_);
+	}
+	sys.setConfiguration(initial_position, radius);
+}
+
+
+void Simulation::readPositionsImposedVelocity(fstream &file_import){
+	/**
+		\brief Import a text file configuration with imposed velocity particles.
+
+		File format:
+		# header
+
+		x y z radius
+		...
+		x y z radius vx vy vz
+		...
+	*/
+	// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
+	double x_, y_, z_, a_, vx_, vy_, vz_;
 	vector<vec3d> initial_position;
 	vector<vec3d> fixed_velocities;
 	vector <double> radius;
-	if (sys.p.magnetic_type == 0) {
-		if (sys.test_simulation != 31) {
-			double x_, y_, z_, a_;
-			while (file_import >> x_ >> y_ >> z_ >> a_) {
-				initial_position.push_back(vec3d(x_, y_, z_));
-				radius.push_back(a_);
-            }
-            sys.setConfiguration(initial_position, radius, lx, ly, lz);
-		} else {
-			// http://stackoverflow.com/questions/743191/how-to-parse-lines-with-differing-number-of-fields-in-c
-			double x_, y_, z_, a_, vx_, vy_, vz_;
-			string line;
-			while(getline(file_import, line)) {
-				istringstream is;
-				is.str(line);
-				if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
-					is.str(line);
-					is >> x_ >> y_ >> z_ >> a_;
-					initial_position.push_back(vec3d(x_, y_, z_));
-					radius.push_back(a_);
-				} else {
-					initial_position.push_back(vec3d(x_, y_, z_));
-					radius.push_back(a_);
-					fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
-				}
-			}
-			if ( sys.p.np_fixed != (int)fixed_velocities.size() ) {
-					throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
-			}
-			sys.setConfiguration(initial_position, radius, lx, ly, lz);
-			sys.setFixedVelocities(fixed_velocities);
-		}
-	} else {
-		double x_, y_, z_, a_, mx_, my_, mz_, sus_;
-		vector<vec3d> magnetic_moment;
-		vector<double> magnetic_susceptibility;
-		while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ >> sus_) {
+	string line;
+	while(getline(file_import, line)) {
+		istringstream is;
+		is.str(line);
+		if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
+			is.str(line);
+			is >> x_ >> y_ >> z_ >> a_;
 			initial_position.push_back(vec3d(x_, y_, z_));
 			radius.push_back(a_);
-			magnetic_moment.push_back(vec3d(mx_, my_, mz_));
-			magnetic_susceptibility.push_back(sus_);
+		} else {
+			initial_position.push_back(vec3d(x_, y_, z_));
+			radius.push_back(a_);
+			fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 		}
-		sys.setConfiguration(initial_position, radius, lx, ly, lz);
-		sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
+	}
+	if ( sys.p.np_fixed != (int)fixed_velocities.size() ) {
+		throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
+	}
+	sys.setConfiguration(initial_position, radius);
+	sys.setFixedVelocities(fixed_velocities);
+}
+
+void Simulation::readPositionsMagnetic(fstream &file_import){
+	/**
+		\brief Import a text file configuration with magnetic moments and susceptibility.
+
+		File format:
+		# header
+
+		x y z radius mx my mz susceptibility
+	*/
+
+	double x_, y_, z_, a_, mx_, my_, mz_, sus_;
+	vector<vec3d> magnetic_moment;
+	vector<double> magnetic_susceptibility;
+	vector<vec3d> initial_position;
+	vector <double> radius;
+	while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ >> sus_) {
+		initial_position.push_back(vec3d(x_, y_, z_));
+		radius.push_back(a_);
+		magnetic_moment.push_back(vec3d(mx_, my_, mz_));
+		magnetic_susceptibility.push_back(sus_);
+	}
+	sys.setConfiguration(initial_position, radius);
+	sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
+}
+
+
+void Simulation::importConfiguration(const string& filename_import_positions)
+{
+	/**
+	 \brief Read a text file input configuration.
+	 */
+	fstream file_import;
+	file_import.open(filename_import_positions.c_str());
+	if (!file_import) {
+		ostringstream error_str;
+		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+		throw runtime_error(error_str.str());
+	}
+
+	setMetadata(file_import);
+
+	if (sys.p.magnetic_type == 0) {
+		if (sys.test_simulation != 31) {
+			readPositions(file_import);
+		} else {
+			readPositionsImposedVelocity(file_import);
+		}
+	} else {
+		readPositionsMagnetic(file_import);
 	}
 	file_import.close();
 }
+
 
 void Simulation::importConfigurationBinary(const string& filename_import_positions)
 {
@@ -1337,10 +1396,11 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		initial_position.push_back(vec3d(x_,y_,z_));
 		radius.push_back(r_);
 	}
-	sys.setConfiguration(initial_position, radius, lx, ly, lz);
+	sys.setBoxSize(lx,ly,lz);
+	sys.setConfiguration(initial_position, radius);
 
-  // now contacts
-  int ncont;
+	// now contacts
+	int ncont;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
@@ -1394,11 +1454,11 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 }
 
 void Simulation::prepareSimulationName(bool binary_conf,
-									   const string& filename_import_positions,
-                                       const string& filename_parameters,
-                                       const string& simu_identifier,
-                                       double dimensionlessnumber,
-                                       const string& input_scale)
+										 const string& filename_import_positions,
+																			 const string& filename_parameters,
+																			 const string& simu_identifier,
+																			 double dimensionlessnumber,
+																			 const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.
