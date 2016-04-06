@@ -104,8 +104,6 @@ System::~System()
 	DELETE(radius_cubed);
 	DELETE(velocity);
 	DELETE(ang_velocity);
-	DELETE(na_velocity);
-	DELETE(na_ang_velocity);
 	if (p.integration_method == 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
@@ -179,8 +177,8 @@ void System::allocateRessourcesPreConfiguration()
 	// Velocity
 	velocity = new vec3d [np];
 	ang_velocity = new vec3d [np];
-	na_velocity = new vec3d [np];
-	na_ang_velocity = new vec3d [np];
+	na_velocity.resize(np);
+	na_ang_velocity.resize(np);
 	if (p.integration_method == 1) {
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
@@ -204,8 +202,10 @@ void System::allocateRessourcesPreConfiguration()
 	if (mobile_fixed) {
 		vel_hydro_from_fixed.resize(np_mobile);
 		ang_vel_hydro_from_fixed.resize(np_mobile);
-		wall_hydro_force.resize(p.np_fixed);
-		wall_hydro_torque.resize(p.np_fixed);
+		non_rate_proportional_wall_force.resize(p.np_fixed);
+		non_rate_proportional_wall_torque.resize(p.np_fixed);
+		rate_proportional_wall_force.resize(p.np_fixed);
+		rate_proportional_wall_torque.resize(p.np_fixed);
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
@@ -582,8 +582,10 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 			ang_vel_hydro_from_fixed[i].reset();
 		}
 		for (int i=0; i<p.np_fixed; i++) {
-			wall_hydro_force[i].reset();
-			wall_hydro_torque[i].reset();
+			non_rate_proportional_wall_force[i].reset();
+			non_rate_proportional_wall_torque[i].reset();
+			rate_proportional_wall_force[i].reset();
+			rate_proportional_wall_torque[i].reset();
 		}
 	}
 
@@ -1655,10 +1657,35 @@ void System::computeHydroForcesOnWallParticles()
 	vector<vec3d> force (p.np_fixed);
 	vector<vec3d> torque (p.np_fixed);
 
-	stokes_solver.multiply_by_RFU_fm(vel_hydro, ang_vel_hydro, force, torque);
+	stokes_solver.multiply_by_RFU_fm(na_velocity, na_ang_velocity, force, torque);
 	for (int i=0; i<p.np_fixed; i++) {
-		wall_hydro_force[i] = -force[i];
-		wall_hydro_torque[i] = -torque[i];
+		non_rate_proportional_wall_force[i] = -force[i];
+		non_rate_proportional_wall_torque[i] = -torque[i];
+		non_rate_proportional_wall_force[i] += contact_force[i+np_mobile];
+		non_rate_proportional_wall_torque[i] += contact_torque[i+np_mobile];
+		if (repulsiveforce) {
+			non_rate_proportional_wall_force[i] += repulsive_force[i+np_mobile];
+		}
+		if (magnetic) {
+			throw runtime_error(" No stress-control with walls with magnetic forces.\n");
+		}
+	}
+
+	vector<vec3d> na_velocity_mobile (np_mobile);
+	vector<vec3d> na_ang_velocity_mobile (np_mobile);
+	for (int i=0; i<np_mobile; i++) {
+		na_velocity_mobile[i] = vel_hydro_from_fixed[i];
+		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
+	}
+	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
+	for (int i=0; i<p.np_fixed; i++) {
+		non_rate_proportional_wall_force[i] += force[i];
+		non_rate_proportional_wall_torque[i] += torque[i];
+	}
+
+	for (int i=0; i<p.np_fixed; i++) {
+		rate_proportional_wall_force[i] = -force[i];
+		rate_proportional_wall_torque[i] = -torque[i];
 	}
 
 	vector<vec3d> na_velocity_fixed (p.np_fixed);
@@ -1669,8 +1696,8 @@ void System::computeHydroForcesOnWallParticles()
 	}
 	stokes_solver.multiply_by_RFU_ff(na_velocity_fixed, na_ang_velocity_fixed, force, torque);
 	for (int i=0; i<p.np_fixed; i++) {
-		wall_hydro_force[i] -= force[i];
-		wall_hydro_torque[i] -= torque[i];
+		rate_proportional_wall_force[i] -= force[i];
+		rate_proportional_wall_torque[i] -= torque[i];
 	}
 }
 
@@ -2114,31 +2141,31 @@ void System::computeShearRateWalls_2()
 	double total_hydro_wall_shear_stress = 0;
 	double total_nonhydro_wall_shear_stress = 0;
 
-	for (int i=np_mobile; i<np; i++) {
-		total_hydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile], wall_hydro_force[i-np_mobile]);
-		total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],contact_force[i]);
-		if (repulsiveforce) {
-			total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],repulsive_force[i]);
-		}
-	}
-	double wall_surface;
-	if (twodimension) {
-		wall_surface = lx;
-	} else {
-		wall_surface = lx*ly;
-	}
-
-	total_hydro_wall_shear_stress /= wall_surface;
-	total_nonhydro_wall_shear_stress /= wall_surface;
-
-	// the total_hydro_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (target_stress - total_nonhydro_wall_shear_stress)/total_hydro_wall_shear_stress;
-
-	if (shear_strain < init_strain_shear_rate_limit) {
-		if (shear_rate > init_shear_rate_limit) {
-			shear_rate = init_shear_rate_limit;
-		}
-	}
+	// for (int i=np_mobile; i<np; i++) {
+	// 	total_hydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile], wall_hydro_force[i-np_mobile]);
+	// 	total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],contact_force[i]);
+	// 	if (repulsiveforce) {
+	// 		total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],repulsive_force[i]);
+	// 	}
+	// }
+	// double wall_surface;
+	// if (twodimension) {
+	// 	wall_surface = lx;
+	// } else {
+	// 	wall_surface = lx*ly;
+	// }
+	//
+	// total_hydro_wall_shear_stress /= wall_surface;
+	// total_nonhydro_wall_shear_stress /= wall_surface;
+	//
+	// // the total_hydro_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
+	// shear_rate = (target_stress - total_nonhydro_wall_shear_stress)/total_hydro_wall_shear_stress;
+	//
+	// if (shear_strain < init_strain_shear_rate_limit) {
+	// 	if (shear_rate > init_shear_rate_limit) {
+	// 		shear_rate = init_shear_rate_limit;
+	// 	}
+	// }
 }
 
 void System::tmpMixedProblemSetVelocities()

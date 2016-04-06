@@ -207,8 +207,13 @@ private:
 	std::vector<vec3d> position;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
-	std::vector<vec3d> wall_hydro_force;
-	std::vector<vec3d> wall_hydro_torque;
+	// std::vector<vec3d> wall_hydro_force;
+	// std::vector<vec3d> wall_hydro_torque;
+	std::vector<vec3d> non_rate_proportional_wall_force;
+	std::vector<vec3d> non_rate_proportional_wall_torque;
+	std::vector<vec3d> rate_proportional_wall_force;
+	std::vector<vec3d> rate_proportional_wall_torque;
+
 	Interaction *interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
@@ -216,10 +221,10 @@ private:
 
 	vec3d *velocity;
 	vec3d *velocity_predictor;
-	vec3d *na_velocity;
+	std::vector<vec3d> na_velocity;
 	vec3d *ang_velocity;
 	vec3d *ang_velocity_predictor;
-	vec3d *na_ang_velocity;
+	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> vel_repulsive;
 	std::vector<vec3d> ang_vel_repulsive;
 	std::vector<vec3d> vel_contact;
