@@ -151,7 +151,7 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
                 file_metadata
 
 
-def read_data_file(fname):
+def read_data_file(fname, usecols=None):
     """
     Purpose:
         Read any LF_DEM file that has a one-time-step-one-line structure, i.e:
@@ -169,7 +169,7 @@ def read_data_file(fname):
         metadata: the files metadata
     """
     metadata = get_file_metadata(fname)
-    data = np.genfromtxt(fname)
+    data = np.genfromtxt(fname, usecols=usecols)
     return data, metadata
 
 
