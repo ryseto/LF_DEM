@@ -1203,7 +1203,7 @@ void Simulation::setMetadata(fstream &file_import){
 	// def = "0";
 	// sys.p.np_fixed = atoi(getMetaParameter(meta_data, key, def).c_str());
 	key = "lx";
-	lx = atof((getMetaParameter(meta_data, key)).c_str());
+	lx = atof(getMetaParameter(meta_data, key).c_str());
 	key = "ly";
 	ly = atof(getMetaParameter(meta_data, key).c_str());
 	key = "lz";

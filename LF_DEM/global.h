@@ -18,7 +18,7 @@
  *   by the following script in the Pre-Action of Build.
  *   -----------------------------------
  *   git=/usr/bin/git
- *   cd ${PROJECT_DIR}/LF_DEM
+ *   cd ${PROJECT_DIR}/${TARGETNAME}
  *   version=`$git describe --dirty`
  *   echo "#define GIT_VERSION \"$version\"" > VersionInfo.h
  *   -----------------------------------

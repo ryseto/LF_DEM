@@ -148,7 +148,7 @@ public:
 	void tagStrainParameters();
 	void resolveTimeOrStrainParameters();
 	std::map<std::string,std::string> getConfMetaData(const std::string &,
-																										const std::string &);
+													  const std::string &);
 	std::string getMetaParameter(std::map<std::string,std::string> &,
 															std::string &,
 															const std::string &);
