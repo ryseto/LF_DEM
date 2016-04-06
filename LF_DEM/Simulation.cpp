@@ -684,14 +684,14 @@ void Simulation::outputData()
 	outdata.entryData(32, "kn", "none", p.kn);
 	outdata.entryData(33, "kt", "none", p.kt);
 	outdata.entryData(34, "kr", "none", p.kr);
-		outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
-		outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
-		if (sys.wall_rheology) {
-				outdata.entryData(37, "shear viscosity wall 1", "viscosity", sys.shearstress_wall1/sr);
-				outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
-		outdata.entryData(39, "normal stress/rate wall 1", "viscosity", sys.normalstress_wall1/sr);
-		outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
-		}
+	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
+	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
+	if (sys.wall_rheology) {
+		outdata.entryData(37, "shear viscosity wall 1", "viscosity", sys.shearstress_wall1/sr);
+		outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
+	outdata.entryData(39, "normal stress/rate wall 1", "viscosity", sys.normalstress_wall1/sr);
+	outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
+	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
@@ -918,6 +918,29 @@ void Simulation::outputConfigurationData()
 					fout_particle << ' ' << sys.magnetic_moment[i].z;
 				} else {
 					fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
+				}
+			}
+			if (p.out_data_vel_components) {
+				fout_particle << setprecision(output_precision);
+				fout_particle << ' ' << sys.vel_hydro[i];
+				fout_particle << ' ' << sys.ang_vel_hydro[i];
+				fout_particle << ' ' << sys.vel_contact[i];
+				fout_particle << ' ' << sys.ang_vel_contact[i];
+				if (sys.repulsiveforce) {
+					fout_particle << ' ' << sys.vel_repulsive[i];
+					fout_particle << ' ' << sys.ang_vel_repulsive[i];
+				}
+				if (sys.brownian) {
+					fout_particle << ' ' << sys.vel_brownian[i];
+					fout_particle << ' ' << sys.ang_vel_brownian[i];
+				}
+				if (sys.magnetic) {
+					fout_particle << ' ' << sys.vel_magnetic[i];
+					fout_particle << ' ' << sys.ang_vel_magnetic[i];
+				}
+				if (sys.mobile_fixed) {
+					fout_particle << ' ' << sys.vel_hydro_from_fixed[i];
+					fout_particle << ' ' << sys.ang_vel_hydro_from_fixed[i];
 				}
 			}
 			fout_particle << endl;

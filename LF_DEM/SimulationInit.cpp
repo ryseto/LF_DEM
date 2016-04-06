@@ -777,6 +777,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		p.out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
 		p.out_data_interaction = str2bool(value);
+	} else if (keyword == "out_data_vel_components") {
+		p.out_data_vel_components = str2bool(value);
 	} else if (keyword == "origin_zero_flow") {
 		p.origin_zero_flow = str2bool(value);
 	} else if (keyword == "auto_determine_knkt") {
@@ -983,6 +985,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.out_data_interaction = true;
 	p.out_particle_stress = "";
 	p.out_binary_conf = false;
+	p.out_data_vel_components = true;
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;
@@ -995,6 +998,24 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
+}
+
+inline string columnDefinition(int &cnb, const string &type, const string &name)
+{
+	stringstream defs;
+	if (type=="vec3d") {
+		array<string,3> xyz = {"x", "y", "z"};
+		for (auto &u : xyz){
+			stringstream col_def_complement;
+			defs << "#" << cnb << ": "<< name << " " << u << "\n";
+			cnb ++;
+		}
+	} else if (type=="scalar") {
+		defs << "#" << cnb << ": "<< name << "\n";
+	} else {
+		throw runtime_error(" unknown type for column def\n");
+	}
+	return defs.str();
 }
 
 void Simulation::openOutputFiles()
@@ -1037,6 +1058,32 @@ void Simulation::openOutputFiles()
 		"#13: viscosity contributon of contact GU xz\n"
 		"#14: viscosity contributon of brownian xz\n"
 		"#15: angle (for 2D simulation only)\n";
+		if (p.out_data_vel_components) {
+			int cnb = 16;
+			stringstream col_def_complement;
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_hydro_vel");
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_hydro_vel");
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_contact_vel");
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_contact_vel");
+			if (sys.repulsiveforce) {
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_repulsive_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_repulsive_vel");
+			}
+			if (sys.brownian) {
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_brownian_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_brownian_vel");
+			}
+			if (sys.magnetic) {
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_magnetic_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_magnetic_vel");
+			}
+			if (sys.mobile_fixed) {
+				throw runtime_error(" Simulation:: velocity components with fixed particles not yet implemented (implementation needs to output differently mobile and fixed)\n");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_from_fixed_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_from_fixed_vel");
+			}
+			fout_par_col_def += col_def_complement.str();
+		}
 		//
 		fout_particle << fout_par_col_def << endl;
 	}
