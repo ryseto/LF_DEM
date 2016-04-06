@@ -143,10 +143,7 @@ void System::getStressCouette(int i,
 							  double &stress_rtheta)
 {
 	vec3d pos_normal = position[i]-origin_of_rotation;
-	
 }
-
-
 
 void System::calcStress()
 {
