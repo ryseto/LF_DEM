@@ -46,3 +46,5 @@ VersionInfo.h
 # local make inputs
 config/Makefile_config.mk
 
+# temporary file
+.nfs*
