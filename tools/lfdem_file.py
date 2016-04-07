@@ -22,6 +22,7 @@ def get_file_metadata(fname):
     file_metadata = {}
     file_metadata['column def'] = str()
 
+    header_len = 0
     while True:
         line = in_file.readline()
         if line[0] != '#':
@@ -33,29 +34,34 @@ def get_file_metadata(fname):
             file_metadata[data_list[1]] = data_list[2:]
         else:
             file_metadata['column def'] += line
+        header_len += 1
 
     in_file.seek(0, 0)
 
-    return file_metadata
+    return file_metadata, header_len
 
 
 def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     # read col0 separately to determine frame breaks
-    col0 = np.genfromtxt(in_file, comments=' ', skip_header=field_nb+6)
+    header_len = field_nb+6
+    col0 = np.genfromtxt(in_file, comments=' ', skip_header=header_len)
     framebreaks_col0 = np.nonzero(np.isnan(col0))[0]
 
     col0 = col0[np.logical_not(np.isnan(col0))].astype(np.float)
 
     # now read cols>0
     in_file.seek(0, 0)
-    cols = np.genfromtxt(in_file, skip_header=field_nb+6, usecols=usecols)
     # merge it with col0 if necessary
     if usecols[0] == 0:  # assume ordered
+        cols = np.genfromtxt(in_file, skip_header=header_len,
+                             usecols=usecols[1:])
         cols = np.column_stack((col0, cols))
+    else:
+        cols = np.genfromtxt(in_file, skip_header=header_len,
+                             usecols=usecols)
     # get the frame breaks
     framebreaks_cols = framebreaks_col0 - np.arange(len(framebreaks_col0))
     framebreaks_cols = framebreaks_cols[1:]  # 1st break is line 0
-
     # split the data as a list of frames
     cols = np.split(cols, framebreaks_cols)
     return cols
@@ -108,6 +114,7 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
     Returning values:
         if frame_meta == False:
             frames: a list of snapshots
+            file_metadata: the metadata of the whole file
         else:
             frames: a list of snapshots
             strains_: the associated strains
@@ -116,14 +123,12 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
             file_metadata: the metadata of the whole file
     """
 
-    openedfile = True
     try:
         in_file = open(fname, "r")
     except TypeError:
         in_file = fname
-        openedfile = False
 
-    file_metadata = get_file_metadata(in_file)
+    file_metadata, header_len = get_file_metadata(in_file)
     in_file.close()
     if frame_meta:
         in_file = open(fname, "r")
@@ -131,13 +136,8 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
         in_file = open(fname, "rb")  # for genfromtxt
 
     if field_nb is None:
-        if openedfile:
-            field_nb_d = {'par': 15, 'int': 17}
-            file_type = fname[fname.rfind('/')+1:fname.find('_')]
-            field_nb = field_nb_d[file_type]
-        else:
-            field_nb = 15
-            print("Warning, using default field_nb=15")
+        field_nb = 0
+        field_nb += header_len - 6
 
     if frame_meta:
         return __read_snapshot_file_with_framemeta(in_file,
@@ -168,7 +168,7 @@ def read_data_file(fname, usecols=None):
         data: a numpy array containing the data
         metadata: the files metadata
     """
-    metadata = get_file_metadata(fname)
+    metadata, header_len = get_file_metadata(fname)
     data = np.genfromtxt(fname, usecols=usecols)
     return data, metadata
 
