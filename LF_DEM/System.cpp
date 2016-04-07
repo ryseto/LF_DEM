@@ -2138,34 +2138,31 @@ void System::computeShearRateWalls_2()
 
 	computeHydroForcesOnWallParticles();
 
-	double total_hydro_wall_shear_stress = 0;
-	double total_nonhydro_wall_shear_stress = 0;
+	double total_rate_dep_wall_shear_stress = 0;
+	double total_rate_indep_wall_shear_stress = 0;
 
-	// for (int i=np_mobile; i<np; i++) {
-	// 	total_hydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile], wall_hydro_force[i-np_mobile]);
-	// 	total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],contact_force[i]);
-	// 	if (repulsiveforce) {
-	// 		total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],repulsive_force[i]);
-	// 	}
-	// }
-	// double wall_surface;
-	// if (twodimension) {
-	// 	wall_surface = lx;
-	// } else {
-	// 	wall_surface = lx*ly;
-	// }
-	//
-	// total_hydro_wall_shear_stress /= wall_surface;
-	// total_nonhydro_wall_shear_stress /= wall_surface;
-	//
-	// // the total_hydro_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	// shear_rate = (target_stress - total_nonhydro_wall_shear_stress)/total_hydro_wall_shear_stress;
-	//
-	// if (shear_strain < init_strain_shear_rate_limit) {
-	// 	if (shear_rate > init_shear_rate_limit) {
-	// 		shear_rate = init_shear_rate_limit;
-	// 	}
-	// }
+	for (int i=0; i<p.np_fixed; i++) {
+		total_rate_dep_wall_shear_stress += dot(fixed_velocities[i], rate_proportional_wall_force[i]);
+		total_rate_indep_wall_shear_stress += dot(fixed_velocities[i], non_rate_proportional_wall_force[i]);
+	}
+	double wall_surface;
+	if (twodimension) {
+		wall_surface = lx;
+	} else {
+		wall_surface = lx*ly;
+	}
+
+	total_rate_dep_wall_shear_stress /= wall_surface;
+	total_rate_indep_wall_shear_stress /= wall_surface;
+
+	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
+	shear_rate = (target_stress - total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
+
+	if (shear_strain < init_strain_shear_rate_limit) {
+		if (shear_rate > init_shear_rate_limit) {
+			shear_rate = init_shear_rate_limit;
+		}
+	}
 }
 
 void System::tmpMixedProblemSetVelocities()
@@ -2354,7 +2351,7 @@ void System::computeVelocities(bool divided_velocities)
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
-				computeShearRateWalls();
+				computeShearRateWalls_2();
 				rescaleVelHydroStressControlledFixed();
 			}
 		}
