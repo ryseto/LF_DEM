@@ -909,6 +909,8 @@ void Simulation::outputConfigurationData()
 				}
 				if (sys.twodimension) {
 					fout_particle << ' ' << sys.angle[i]; // 15
+				} else {
+					fout_particle << ' ' << 0; // 15
 				}
 			} else {
 				if (sys.p.magnetic_type == 1) {

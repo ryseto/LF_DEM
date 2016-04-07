@@ -2361,9 +2361,9 @@ void System::computeVelocities(bool divided_velocities)
 		sumUpVelocityComponents();
 	} else {
 		setFixedParticleVelocities();
-        computeVelocityWithoutComponents();
+		computeVelocityWithoutComponents();
 	}
-  	if (brownian) {
+	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
 			 * Resistance matrix is used.
