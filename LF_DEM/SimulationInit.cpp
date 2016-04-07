@@ -985,7 +985,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.out_data_interaction = true;
 	p.out_particle_stress = "";
 	p.out_binary_conf = false;
-	p.out_data_vel_components = true;
+	p.out_data_vel_components = false;
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;
