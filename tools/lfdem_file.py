@@ -52,7 +52,7 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     # now read cols>0
     in_file.seek(0, 0)
     # merge it with col0 if necessary
-    if usecols[0] == 0:  # assume ordered
+    if usecols is not None and usecols[0] == 0:  # assume ordered
         cols = np.genfromtxt(in_file, skip_header=header_len,
                              usecols=usecols[1:])
         cols = np.column_stack((col0, cols))
