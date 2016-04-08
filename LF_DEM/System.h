@@ -123,7 +123,7 @@ private:
 	void computeShearRate();
 	void computeShearRateWalls();
 	void computeShearRateWalls_2();
-	void computeHydroForcesOnWallParticles();
+	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
 	void rescaleVelHydroStressControlledFixed();

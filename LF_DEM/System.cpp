@@ -1652,14 +1652,43 @@ void System::buildHydroTermsFromFixedParticles()
 }
 
 
-void System::computeHydroForcesOnWallParticles()
+void System::computeForcesOnWallParticles()
 {
+	/**
+		\brief This method computes the force (and torque, for now, but it might be dropped)
+		on the fixed particles.
 
-	/// UNFINISHED
+		It is designed with simple shear with walls under stress controlled conditions in mind,
+		so it decomposes the force in a rate-proportional part and a rate-independent part.
+
+		*/
+
+	if (magnetic) {
+		throw runtime_error(" No stress-control with walls with magnetic forces.\n");
+	}
+	if (!zero_shear) {
+		throw runtime_error(" Stress-control with walls requires zero_shear==true .\n");
+	}
 	vector<vec3d> force (p.np_fixed);
 	vector<vec3d> torque (p.np_fixed);
 
-	stokes_solver.multiply_by_RFU_fm(na_velocity, na_ang_velocity, force, torque);
+	// Compute the part of the velocity of mobile particles
+	// that is not coming from the wall velocities
+	vector<vec3d> na_velocity_mobile (np_mobile);
+	vector<vec3d> na_ang_velocity_mobile (np_mobile);
+	for (int i=0; i<np_mobile; i++) {
+		na_velocity_mobile[i] = vel_contact[i];
+		na_ang_velocity_mobile[i] = ang_vel_contact[i];
+		if (repulsiveforce) {
+			na_velocity_mobile[i] += vel_repulsive[i];
+			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
+		}
+
+	}
+	// from this, we can compute the hydro force on the wall that does *not* depend on the wall velocity
+	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
+
+	// Now we sum up this hydro part with the other non-rate dependent forces (contact, etc)
 	for (int i=0; i<p.np_fixed; i++) {
 		non_rate_proportional_wall_force[i] = -force[i];
 		non_rate_proportional_wall_torque[i] = -torque[i];
@@ -1673,23 +1702,23 @@ void System::computeHydroForcesOnWallParticles()
 		}
 	}
 
-	vector<vec3d> na_velocity_mobile (np_mobile);
-	vector<vec3d> na_ang_velocity_mobile (np_mobile);
+	// Now the part proportional to the wall speed
+
+	// From the mobile particles
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_hydro_from_fixed[i];
 		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
 	}
 	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
 	for (int i=0; i<p.np_fixed; i++) {
-		non_rate_proportional_wall_force[i] += force[i];
-		non_rate_proportional_wall_torque[i] += torque[i];
-	}
-
-	for (int i=0; i<p.np_fixed; i++) {
 		rate_proportional_wall_force[i] = -force[i];
 		rate_proportional_wall_torque[i] = -torque[i];
 	}
 
+	// From the fixed particles themselves. This should be zero if these particles form a wall
+	// (i.e. they move with zero relative velocity) and if the Stokes drag is zero (which is controlled by sd_coeff)
+	// As we do not want to make too many assumptions here (especially regarding the Stokes drag)
+	// we compute it. [Probably a p.no_stokes_drag should be introduced at some point.]
 	vector<vec3d> na_velocity_fixed (p.np_fixed);
 	vector<vec3d> na_ang_velocity_fixed (p.np_fixed);
 	for (int i=0; i<p.np_fixed; i++) {
@@ -2138,7 +2167,7 @@ void System::computeShearRateWalls_2()
 	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
 	*/
 
-	computeHydroForcesOnWallParticles();
+	computeForcesOnWallParticles();
 
 	double total_rate_dep_wall_shear_stress = 0;
 	double total_rate_indep_wall_shear_stress = 0;
