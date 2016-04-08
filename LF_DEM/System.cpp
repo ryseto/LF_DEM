@@ -963,13 +963,15 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (calc_stress) {
 		wallForces();
 		for (int k=0; k<nb_interaction; k++) {
-            if (interaction[k].is_active()) {
-                interaction[k].lubrication.calcPairwiseForce();
-            }
-        }
-        calcStressPerParticle();
+			if (interaction[k].is_active()) {
+				interaction[k].lubrication.calcPairwiseForce();
+			}
+		}
+		calcStressPerParticle();
 		calcStress();
-		calcTotalStressPerParticle();
+		if (!p.out_particle_stress.empty() || couette_stress) {
+			calcTotalStressPerParticle();
+		}
    }
     timeStepMove(time_or_strain, value_end);
     if (eventLookUp != NULL) {
