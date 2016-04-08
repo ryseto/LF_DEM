@@ -10,10 +10,10 @@ fname = sys.argv[1]
 pos, rad, meta = lf.read_conf_file(fname)
 # get the top and bottom layers
 
-ztop = pos[:, 2]+1.5*rad
+ztop = pos[:, 2]+2*rad
 top_particles = ztop > float(meta['lz'])
 
-zbottom = pos[:, 2]-1.5*rad
+zbottom = pos[:, 2]-2*rad
 bottom_particles = zbottom < 0
 
 # freeze them
