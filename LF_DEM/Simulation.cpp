@@ -154,7 +154,11 @@ void Simulation::generateOutput(double& next_output_config, int& binconf_counter
 			} else {
 				outputConfigurationData();
 			}
-			next_output_config += strain_interval_output_config;
+			if(p.log_time_interval) {
+				next_output_config = exp(log(next_output_config)+strain_interval_output_config);
+			} else {
+				next_output_config += strain_interval_output_config;
+			}
 		}
 	} else {
 		if (sys.get_time() >= next_output_config-1e-8) {
@@ -164,7 +168,11 @@ void Simulation::generateOutput(double& next_output_config, int& binconf_counter
 			} else {
 				outputConfigurationData();
 			}
-			next_output_config += time_interval_output_config;
+			if(p.log_time_interval) {
+				next_output_config = exp(log(next_output_config)+time_interval_output_config);
+			} else {
+				next_output_config += time_interval_output_config;
+			}
 		}
 	}
 	/*****************************************************/
@@ -173,10 +181,18 @@ void Simulation::generateOutput(double& next_output_config, int& binconf_counter
 void Simulation::timeEvolution(double& next_output_data)
 {
 	if (time_interval_output_data == -1) {
-		next_output_data += strain_interval_output_data;
+		if(p.log_time_interval) {
+			next_output_data = exp(log(next_output_data)+strain_interval_output_data);
+		} else {
+			next_output_data += strain_interval_output_data;
+		}
 		sys.timeEvolution("strain", next_output_data);
 	} else {
-		next_output_data += time_interval_output_data;
+		if(p.log_time_interval) {
+			next_output_data = exp(log(next_output_data)+time_interval_output_data);
+		} else {
+			next_output_data += time_interval_output_data;
+		}
 		sys.timeEvolution("time", next_output_data);
 	}
 }
@@ -259,8 +275,18 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	cout << indent << "Time evolution started" << endl << endl;
 
-	double next_output_data = 0;
-	double next_output_config = strain_interval_output_config;
+	double next_output_data;
+	if (p.log_time_interval) {
+		next_output_data = p.initial_log_time;
+	} else {
+		next_output_data = 0;
+	}
+	double next_output_config;
+	if (p.log_time_interval) {
+		next_output_config = p.initial_log_time;
+	} else {
+		next_output_config = strain_interval_output_config;
+	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		timeEvolution(next_output_data);

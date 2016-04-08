@@ -548,7 +548,8 @@ void Simulation::tagStrainParameters()
 	for (auto& inv: input_values) {
 		if (inv.name == "time_interval_output_data"
 				|| inv.name == "time_interval_output_config"
-				|| inv.name == "time_end") {
+				|| inv.name == "time_end"
+				|| inv.name == "initial_log_time") {
 			if (inv.unit == "hydro") {
 				inv.unit = "strain";
 			}
@@ -599,21 +600,50 @@ void Simulation::resolveTimeOrStrainParameters()
 		time_end = p.time_end;
 	}
 
-	for (const auto& inv: input_values) {
-		if (inv.name == "time_interval_output_data") {
-			if (inv.unit == "strain") {
-				time_interval_output_data = -1;
-				strain_interval_output_data = p.time_interval_output_data;
-			} else {
-				time_interval_output_data = p.time_interval_output_data;
+	if (p.log_time_interval) {
+		string unit_time_end;
+		string unit_initial_log_time;
+		for (const auto& inv: input_values) {
+			if (inv.name == "time_end") {
+				unit_time_end = inv.unit;
+			}
+			if (inv.name == "initial_log_time") {
+				unit_initial_log_time = inv.unit;
 			}
 		}
-		if (inv.name == "time_interval_output_config") {
-			if (inv.unit == "strain") {
-				time_interval_output_config = -1;
-				strain_interval_output_config = p.time_interval_output_config;
-			} else {
-				time_interval_output_config = p.time_interval_output_config;
+		if (unit_time_end != unit_initial_log_time &&
+			 	(unit_time_end == "strain" || unit_initial_log_time== "strain" ) ) {
+			throw runtime_error(" If one of time_end or unit_initial_log_time is a strain (\"h\" unit), than both must be.\n");
+		}
+		if (unit_time_end == "strain") {
+			// log strain intervals
+			time_interval_output_data = -1;
+			time_interval_output_config = -1;
+			strain_interval_output_data = (log(strain_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
+			strain_interval_output_config = (log(strain_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
+		} else {
+			// time strain intervals
+			time_interval_output_data = (log(time_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
+			time_interval_output_config = (log(time_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
+		}
+	}
+	else {// linear time/strain intervals
+		for (const auto& inv: input_values) {
+			if (inv.name == "time_interval_output_data") {
+				if (inv.unit == "strain") {
+					time_interval_output_data = -1;
+					strain_interval_output_data = p.time_interval_output_data;
+				} else {
+					time_interval_output_data = p.time_interval_output_data;
+				}
+			}
+			if (inv.name == "time_interval_output_config") {
+				if (inv.unit == "strain") {
+					time_interval_output_config = -1;
+					strain_interval_output_config = p.time_interval_output_config;
+				} else {
+					time_interval_output_config = p.time_interval_output_config;
+				}
 			}
 		}
 	}
@@ -773,6 +803,14 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		catchSuffixedValue("time", keyword, value, &p.time_interval_output_config);
 	} else if (keyword == "time_interval_output_data") {
 		catchSuffixedValue("time", keyword, value, &p.time_interval_output_data);
+	} else if (keyword == "log_time_interval") {
+		p.log_time_interval = str2bool(value);
+	} else if (keyword == "initial_log_time") {
+		catchSuffixedValue("time", keyword, value, &p.initial_log_time);
+	} else if (keyword == "nb_output_data_log_time") {
+		p.nb_output_data_log_time = atoi(value.c_str());
+	} else if (keyword == "nb_output_config_log_time") {
+		p.nb_output_config_log_time = atoi(value.c_str());
 	} else if (keyword == "out_data_particle") {
 		p.out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
@@ -926,7 +964,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
 	p.friction_model = 1;
-	p.time_end = 10;
+	catchSuffixedValue("time", "time_end", "10h", &p.time_end);
 	p.time_init_relax = 0;
 	p.lub_max_gap = 0.5;
 	/* This is cutoff distance (center-to-center) for interactions (repulsive force, magnetic force, etc.).
@@ -980,6 +1018,10 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.mu_rolling = 0;
 	p.time_interval_output_data = 0.01;
 	p.time_interval_output_config = 0.1;
+	p.log_time_interval = false;
+	catchSuffixedValue("time", "initial_log_time", "1e-4h", &p.initial_log_time);
+	p.nb_output_data_log_time = 100;
+	p.nb_output_config_log_time = 100;
 	p.origin_zero_flow = true;
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
