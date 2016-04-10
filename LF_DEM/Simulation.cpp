@@ -179,24 +179,24 @@ void Simulation::generateOutput(double& next_output_config, int& binconf_counter
 	/*****************************************************/
 }
 
-void Simulation::timeEvolution(double& next_output_data)
-{
-	if (time_interval_output_data == -1) {
-		if(p.log_time_interval) {
-			next_output_data = exp(log(next_output_data)+strain_interval_output_data);
-		} else {
-			next_output_data += strain_interval_output_data;
-		}
-		sys.timeEvolution("strain", next_output_data);
-	} else {
-		if(p.log_time_interval) {
-			next_output_data = exp(log(next_output_data)+time_interval_output_data);
-		} else {
-			next_output_data += time_interval_output_data;
-		}
-		sys.timeEvolution("time", next_output_data);
-	}
-}
+// void Simulation::timeEvolution(double& next_output_data)
+// {
+// 	if (time_interval_output_data == -1) {
+// 		if(p.log_time_interval) {
+// 			next_output_data = exp(log(next_output_data)+strain_interval_output_data);
+// 		} else {
+// 			next_output_data += strain_interval_output_data;
+// 		}
+// 		sys.timeEvolution("strain", next_output_data);
+// 	} else {
+// 		if(p.log_time_interval) {
+// 			next_output_data = exp(log(next_output_data)+time_interval_output_data);
+// 		} else {
+// 			next_output_data += time_interval_output_data;
+// 		}
+// 		sys.timeEvolution("time", next_output_data);
+// 	}
+// }
 
 /*
  * Main simulation
@@ -277,25 +277,48 @@ void Simulation::simulationSteadyShear(string in_args,
 	cout << indent << "Time evolution started" << endl << endl;
 
 	TimeKeeper tk;
-	double next_output_data;
 	if (p.log_time_interval) {
-		tk.addClock(LogClock(p.initial_log_time, time_end, p.nb_output_data_log_time, false), "data");
-		next_output_data = p.initial_log_time;
+		tk.addClock("data", LogClock(p.initial_log_time,
+												 				 time_end,
+																 p.nb_output_data_log_time,
+																 input_values["time_end"].unit == "strain"));
 	} else {
-		tk.addClock(LinearClock(time_end, p.time_interval_output_data, false), "data");
-		next_output_data = 0;
+		tk.addClock("data", LinearClock(time_end,
+																 		p.time_interval_output_data,
+																 		input_values["time_end"].unit == "strain"));
 	}
 	double next_output_config;
 	if (p.log_time_interval) {
+		tk.addClock("config", LogClock(p.initial_log_time,
+												 				 time_end,
+																 p.nb_output_config_log_time,
+																 input_values["time_end"].unit == "strain"));
 		next_output_config = p.initial_log_time;
 	} else {
+		tk.addClock("config", LinearClock(time_end,
+																 			p.time_interval_output_config,
+																 			input_values["time_end"].unit == "strain"));
 		next_output_config = strain_interval_output_config;
 	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
-		timeEvolution(next_output_data);
+		tk.updateClocks(sys.get_time(), sys.get_shear_strain());
+		pair<double, string> t = tk.nextTime();
+		pair<double, string> s = tk.nextStrain();
+		if (t.second.empty()) { // no next time
+			sys.timeEvolution(-1, s.first);
+		} else if (s.second.empty()) { // no next strain
+			sys.timeEvolution(t.first, -1);
+		} else { // either next time or next strain
+			sys.timeEvolution(t.first, s.first);
+		}
+		// timeEvolution(next_output_data);
 		handleEvents();
 
+		// For now we assume that the next event is a data output,
+		// but it will be relaxed in the future.
+		// The new TimeKeeper keeps track of what event comes first,
+		// so we will use this at some point.
 		generateOutput(next_output_config, binconf_counter);
 
 		if (time_end != -1) {
@@ -354,10 +377,10 @@ void Simulation::simulationInverseYield(string in_args,
 	while (keepRunning()) {
 		if (time_interval_output_data == -1) {
 			next_output_data += strain_interval_output_data;
-			sys.timeEvolution("strain", next_output_data);
+			sys.timeEvolution(-1, next_output_data);
 		} else{
 			next_output_data += time_interval_output_data;
-			sys.timeEvolution("time", next_output_data);
+			sys.timeEvolution(next_output_data, -1);
 		}
 
 		/******************** OUTPUT DATA ********************/
@@ -469,7 +492,7 @@ void Simulation::simulationMagnetic(string in_args,
 		}
 		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
 		time_output_config = initial_time+cnt_config_out*time_interval_output_config;
-		sys.timeEvolution("time", time_output_data); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
+		sys.timeEvolution(time_output_data, -1); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
 		cnt_simu_loop ++;
 	/******************** OUTPUT DATA ********************/
 		evaluateData();

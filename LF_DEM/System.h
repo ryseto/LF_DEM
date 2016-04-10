@@ -81,21 +81,21 @@ private:
 	double costheta_shear;
 	double sintheta_shear;
 	/* data */
+	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
-	void (System::*timeEvolutionDt)(bool, const std::string&, const double&);
-	void timeEvolutionEulersMethod(bool calc_stress, const std::string& time_or_strain, const double& value_end);
+	void (System::*timeEvolutionDt)(bool, double, double);
+	void timeEvolutionEulersMethod(bool calc_stress,
+																 double time_end,
+																 double strain_end);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-											   const std::string& time_or_strain,
-											   const double& value_end);
-	void timeStepMove(const std::string& time_or_strain,
-					  const double& value_end);
+											   										 double time_end,
+																						 double strain_end);
+	void timeStepMove(double time_end, double strain_end);
 	void timeStepMoveCorrector();
-	void timeStepMovePredictor(const std::string& time_or_strain,
-							   const double& value_end);
+	void timeStepMovePredictor(double time_end, double strain_end);
 	void timeStepBoxing();
 	void adaptTimeStep();
-	void adaptTimeStep(const std::string& time_or_strain,
-					   const double& value_end);
+	void adaptTimeStep(double time_end, double strain_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -361,8 +361,7 @@ private:
 	void allocatePositionRadius();
 	void allocateRessourcesPreConfiguration();
 	void allocateRessourcesPostConfiguration();
-	void timeEvolution(const std::string& time_or_strain,
-					   const double& value_end);
+	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);

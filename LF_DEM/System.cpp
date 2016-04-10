@@ -938,8 +938,8 @@ void System::forceResultantReset()
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
-									   const string& time_or_strain,
-									   const double& value_end)
+									   									 double time_end,
+																			 double strain_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -973,7 +973,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 			calcTotalStressPerParticle();
 		}
    }
-    timeStepMove(time_or_strain, value_end);
+    timeStepMove(time_end, strain_end);
     if (eventLookUp != NULL) {
         (this->*eventLookUp)();
     }
@@ -984,8 +984,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
  ****************************************************************************************************/
 
 void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-												   const string& time_or_strain,
-												   const double& value_end)
+												   												 double time_end,
+																									 double strain_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -1059,7 +1059,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
         calcStressPerParticle(); // stress compornents
     }
-	timeStepMovePredictor(time_or_strain, value_end);
+	timeStepMovePredictor(time_end, strain_end);
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
@@ -1101,28 +1101,29 @@ void System::adaptTimeStep()
     }
 }
 
-void System::adaptTimeStep(const string& time_or_strain,
-                           const double& value_end)
+void System::adaptTimeStep(double time_end,
+                           double strain_end)
 {
     /**
      \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
 	*/
 	adaptTimeStep();
-	if (time_or_strain == "strain") {
-		if (fabs(dt*shear_rate) > value_end-fabs(get_shear_strain())) {
-			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
+
+	// To stop exactly at t == time_end or strain == strain_end,
+	// whatever comes first
+	if (strain_end >= 0) {
+		if (fabs(dt*shear_rate) > strain_end-fabs(get_shear_strain())) {
+			dt = fabs((strain_end-fabs(get_shear_strain()))/shear_rate);
 		}
-	} else {
-		if (get_time() + dt > value_end) {
-			/* To pass trough exactaly on t = value_end
-			 */
-            dt = value_end-get_time();
+	}
+	if (time_end >= 0) {
+		if (get_time() + dt > time_end) {
+      dt = time_end-get_time();
 		}
 	}
 }
 
-void System::timeStepMove(const string& time_or_strain,
-						  const double& value_end)
+void System::timeStepMove(double time_end, double strain_end)
 {
     /**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
@@ -1130,7 +1131,7 @@ void System::timeStepMove(const string& time_or_strain,
 
 	/* Adapt dt to get desired p.disp_max	 */
 	if (!p.fixed_dt) {
-		adaptTimeStep(time_or_strain, value_end);
+		adaptTimeStep(time_end, strain_end);
 	}
 	time += dt;
 	if (ratio_unit_time != NULL) {
@@ -1164,15 +1165,14 @@ void System::timeStepMove(const string& time_or_strain,
 	updateInteractions();
 }
 
-void System::timeStepMovePredictor(const string& time_or_strain,
-								   const double& value_end)
+void System::timeStepMovePredictor(double time_end, double strain_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		if (!p.fixed_dt) {
-			adaptTimeStep(time_or_strain, value_end);
+			adaptTimeStep(time_end, strain_end);
 		}
 	}
 	time += dt;
@@ -1238,20 +1238,23 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-bool System::keepRunning(const string& time_or_strain,
-						 const double& value_end)
+
+bool System::keepRunning(double time_end, double strain_end)
 {
-	bool keep_running;
-	if (time_or_strain == "strain") {
-		keep_running = (fabs(get_shear_strain()) < value_end-1e-8) && events.empty();
-	} else {
-		keep_running = (get_time() < value_end-1e-8) && events.empty();
+	if (fabs(get_shear_strain()) > strain_end-1e-8) {
+		return false;
 	}
-	return keep_running;
+ 	if (get_time() > time_end-1e-8) {
+		return false;
+	}
+	if (!events.empty()) {
+		return false;
+	}
+	return true;
 }
 
-void System::timeEvolution(const string& time_or_strain,
-						   const double& value_end)
+
+void System::timeEvolution(double time_end, double strain_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system until time_end
@@ -1284,8 +1287,8 @@ void System::timeEvolution(const string& time_or_strain,
 
 	avg_dt = 0;
 	avg_dt_nb = 0;
-	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
+	while (keepRunning(time_end, strain_end)) {
+		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // no stress computation except at low Peclet
 		avg_dt += dt;
 		avg_dt_nb++;
 	};
@@ -1293,7 +1296,7 @@ void System::timeEvolution(const string& time_or_strain,
 
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust) {

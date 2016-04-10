@@ -23,16 +23,16 @@ class Clock
 protected:
   double next_time;
   double time_step;
-  bool strain;
+  bool _strain;
 public:
-  Clock(bool is_strain):
-  strain(is_strain) {};
+  Clock(bool strain):
+  _strain(strain) {};
 
   double nextTime() {
     return next_time;
   }
   bool is_strain(){
-    return strain;
+    return _strain;
   }
   virtual void tick() {};
 };
@@ -42,14 +42,14 @@ class LinearClock : public Clock
 private:
 
 public:
-  LinearClock(double stop, double time_step, bool strain_units)
+  LinearClock(double stop, double step, bool strain_units)
   : Clock(strain_units)
   {
     next_time = 0;
-    time_step = time_step;
+    time_step = step;
   }
   virtual void tick() {
-    next_time = exp(log(next_time)+time_step);
+    next_time += time_step;
   }
 };
 
@@ -75,23 +75,23 @@ class TimeKeeper
 private:
   std::map <std::string, std::unique_ptr<Clock>> clocks;
 public:
-  void addClock(LinearClock c, std::string label){
+  void addClock(std::string label, LinearClock c){
     clocks[label] = std::unique_ptr<Clock>(new LinearClock(c));
   }
-  void addClock(LogClock c, std::string label){
+  void addClock(std::string label, LogClock c){
     clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
   }
 
-  std::pair<double,std::string> nextTime(double current_time) {
+  std::pair<double,std::string> nextTime() {
     if (clocks.size()==0) {
       throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");
     }
-    double next_t = current_time;
+    double next_t = -1;
     std::string next_name = "";
     for (const auto &c : clocks) {
       const auto &label = c.first;
       const auto &clock = c.second;
-      if (!clock->is_strain() && clock->nextTime() < next_t) {
+      if (!clock->is_strain() && (clock->nextTime() < next_t || next_t < 0)) {
         next_t = clock->nextTime();
         next_name = label;
       }
@@ -99,19 +99,16 @@ public:
     return std::make_pair(next_t,next_name);
   }
 
-  std::pair<double,std::string> nextStrain(double current_strain) {
+  std::pair<double,std::string> nextStrain() {
     if (clocks.size()==0) {
       throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");
     }
-    if (current_strain<0) {
-      throw std::runtime_error( " TimeKeeper::nextStrain() : current_strain must be >0");
-    }
-    double next_t = current_strain;
+    double next_t = -1;
     std::string next_name = "";
     for (const auto &c : clocks) {
       const auto &label = c.first;
       const auto &clock = c.second;
-      if (clock->is_strain() && clock->nextTime() < next_t) {
+      if (clock->is_strain() && (clock->nextTime() < next_t || next_t < 0)) {
         next_t = clock->nextTime();
         next_name = label;
       }
