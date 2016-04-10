@@ -14,6 +14,7 @@
 #include <sstream>
 #include <cctype>
 #include <stdexcept>
+#include "Timer.h"
 
 using namespace std;
 
@@ -275,10 +276,13 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	cout << indent << "Time evolution started" << endl << endl;
 
+	TimeKeeper tk;
 	double next_output_data;
 	if (p.log_time_interval) {
+		tk.addClock(LogClock(p.initial_log_time, time_end, p.nb_output_data_log_time, "data"));
 		next_output_data = p.initial_log_time;
 	} else {
+		tk.addClock(LinearClock(time_end, p.time_interval_output_data, "data"));
 		next_output_data = 0;
 	}
 	double next_output_config;

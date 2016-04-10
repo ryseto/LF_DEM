@@ -9,7 +9,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 11/15/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2016 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #ifndef __LF_DEM__Simulation__
 #define __LF_DEM__Simulation__

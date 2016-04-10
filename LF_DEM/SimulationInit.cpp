@@ -613,7 +613,7 @@ void Simulation::resolveTimeOrStrainParameters()
 		}
 		if (unit_time_end != unit_initial_log_time &&
 			 	(unit_time_end == "strain" || unit_initial_log_time== "strain" ) ) {
-			throw runtime_error(" If one of time_end or unit_initial_log_time is a strain (\"h\" unit), than both must be.\n");
+			throw runtime_error(" If one of time_end or initial_log_time is a strain (\"h\" unit), than both must be.\n");
 		}
 		if (unit_time_end == "strain") {
 			// log strain intervals
