@@ -452,15 +452,17 @@ void Simulation::convertInputValues(string new_unit)
 
 		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
 	 */
-	for (auto& inv: input_values) {
+	for (auto& inval: input_values) {
+		auto &inv = inval.second;
+		string name = inval.first;
 		string old_unit = inv.unit;
 		if (old_unit == "hydro" && control_var == "stress") {
-			throw runtime_error ("Simulation:: "+inv.name+" cannot be given in hydro units for stress controlled simulations (non-constant hydro unit of time)");
+			throw runtime_error ("Simulation:: "+name+" cannot be given in hydro units for stress controlled simulations (non-constant hydro unit of time)");
 		}
 		if (old_unit != new_unit && old_unit!="strain") {
 			if (old_unit != "hydro" && input_force_values.find(old_unit) == input_force_values.end()) {
 				ostringstream error_str;
-				error_str  << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
+				error_str  << " Error: trying to convert " << name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
 				throw runtime_error(error_str.str());
 			}
 			if (inv.type == "time") {
@@ -470,7 +472,7 @@ void Simulation::convertInputValues(string new_unit)
 		}
 
 		string indent = "  Simulation::\t";
-		cout << indent << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+		cout << indent << name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -545,14 +547,13 @@ void Simulation::tagStrainParameters()
 		with System::time()). The mechanism to declare those parameters to System is
 		implemented in Simulation::resolveTimeOrStrainParameters().
 	*/
-	for (auto& inv: input_values) {
-		if (inv.name == "time_interval_output_data"
-				|| inv.name == "time_interval_output_config"
-				|| inv.name == "time_end"
-				|| inv.name == "initial_log_time") {
-			if (inv.unit == "hydro") {
-				inv.unit = "strain";
-			}
+	for (auto& name: {"time_interval_output_data",
+								 		"time_interval_output_config",
+								 		"time_end",
+										"initial_log_time"}) {
+		auto &inv =  input_values[name];
+		if (inv.unit == "hydro") {
+			inv.unit = "strain";
 		}
 	}
 }
@@ -586,36 +587,23 @@ void Simulation::resolveTimeOrStrainParameters()
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
 	*/
-	for (const auto& inv: input_values) {
-		if (inv.name == "time_end") {
-			if (inv.unit == "strain") {
-				time_end = -1;
-				strain_end = p.time_end;
-			} else {
-				time_end = p.time_end;
-			}
-		}
+	if (input_values["time_end"].unit == "strain") {
+		time_end = -1;
+		strain_end = p.time_end;
+	} else {
+		time_end = p.time_end;
 	}
+
 	if (control_var == "magnetic") {
 		time_end = p.time_end;
 	}
 
 	if (p.log_time_interval) {
-		string unit_time_end;
-		string unit_initial_log_time;
-		for (const auto& inv: input_values) {
-			if (inv.name == "time_end") {
-				unit_time_end = inv.unit;
-			}
-			if (inv.name == "initial_log_time") {
-				unit_initial_log_time = inv.unit;
-			}
-		}
-		if (unit_time_end != unit_initial_log_time &&
-			 	(unit_time_end == "strain" || unit_initial_log_time== "strain" ) ) {
+		if (input_values["time_end"].unit != input_values["initial_log_time"].unit &&
+			 	(input_values["time_end"].unit == "strain" || input_values["initial_log_time"].unit == "strain" ) ) {
 			throw runtime_error(" If one of time_end or initial_log_time is a strain (\"h\" unit), than both must be.\n");
 		}
-		if (unit_time_end == "strain") {
+		if (input_values["time_end"].unit == "strain") {
 			// log strain intervals
 			time_interval_output_data = -1;
 			time_interval_output_config = -1;
@@ -628,23 +616,17 @@ void Simulation::resolveTimeOrStrainParameters()
 		}
 	}
 	else {// linear time/strain intervals
-		for (const auto& inv: input_values) {
-			if (inv.name == "time_interval_output_data") {
-				if (inv.unit == "strain") {
-					time_interval_output_data = -1;
-					strain_interval_output_data = p.time_interval_output_data;
-				} else {
-					time_interval_output_data = p.time_interval_output_data;
-				}
-			}
-			if (inv.name == "time_interval_output_config") {
-				if (inv.unit == "strain") {
-					time_interval_output_config = -1;
-					strain_interval_output_config = p.time_interval_output_config;
-				} else {
-					time_interval_output_config = p.time_interval_output_config;
-				}
-			}
+		if (input_values["time_interval_output_data"].unit == "strain") {
+			time_interval_output_data = -1;
+			strain_interval_output_data = p.time_interval_output_data;
+		} else {
+			time_interval_output_data = p.time_interval_output_data;
+		}
+		if (input_values["time_interval_output_config"].unit == "strain") {
+			time_interval_output_config = -1;
+			strain_interval_output_config = p.time_interval_output_config;
+		} else {
+			time_interval_output_config = p.time_interval_output_config;
 		}
 	}
 }

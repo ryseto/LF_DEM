@@ -525,31 +525,19 @@ void Simulation::catchSuffixedValue(string type, string keyword,
 {
 	InputValue inv;
 	inv.type = type;
-	inv.name = keyword;
 	inv.value = value_ptr;
 
 	string numeral, suffix;
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
+	if (!caught_suffix) {
+		errorNoSuffix(keyword);
+	}
 	suffix = unit_longname[suffix];
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
 
-	// replace in input_values if already present
-	bool included = false;
-	for (auto &existing_inv : input_values) {
-		if(existing_inv.name == inv.name) { // replace if already present
-			existing_inv = inv;
-			included = true;
-		}
-	}
-	// otherwise add it to input_values
-	if (!included) {
-		input_values.push_back(inv);
-	}
-	if (!caught_suffix) {
-		errorNoSuffix(keyword);
-	}
+	input_values[keyword] = inv;
 }
 
 void Simulation::outputConfigurationBinary()
