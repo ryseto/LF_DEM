@@ -15,7 +15,7 @@
 #define __LF_DEM__Timer__
 #include <memory>
 #include <string>
-#include <vector>
+#include <map>
 #include <stdexcept>
 
 class Clock
@@ -23,12 +23,11 @@ class Clock
 protected:
   double next_time;
   double time_step;
-  std::string _label;
   bool strain;
 public:
-  std::string label() {
-    return _label;
-  }
+  Clock(bool is_strain):
+  strain(is_strain) {};
+
   double nextTime() {
     return next_time;
   }
@@ -43,11 +42,11 @@ class LinearClock : public Clock
 private:
 
 public:
-  LinearClock(double stop, double time_step, std::string label)
+  LinearClock(double stop, double time_step, bool strain_units)
+  : Clock(strain_units)
   {
     next_time = 0;
     time_step = time_step;
-    _label = label;
   }
   virtual void tick() {
     next_time = exp(log(next_time)+time_step);
@@ -59,11 +58,11 @@ class LogClock : public Clock
 private:
 
 public:
-  LogClock(double start, double stop, double nb_step, std::string label)
+  LogClock(double start, double stop, double nb_step, bool strain_units)
+  : Clock(strain_units)
   {
     next_time = start;
     time_step = (log(stop) - log(start))/nb_step;
-    _label = label;
   }
   virtual void tick() {
     next_time = exp(log(next_time)+time_step);
@@ -74,13 +73,13 @@ public:
 class TimeKeeper
 {
 private:
-  std::vector <std::unique_ptr<Clock>> clocks;
+  std::map <std::string, std::unique_ptr<Clock>> clocks;
 public:
-  void addClock(LinearClock c){
-    clocks.push_back(std::unique_ptr<Clock>(new LinearClock(c)));
+  void addClock(LinearClock c, std::string label){
+    clocks[label] = std::unique_ptr<Clock>(new LinearClock(c));
   }
-  void addClock(LogClock c){
-    clocks.push_back(std::unique_ptr<Clock>(new LogClock(c)));
+  void addClock(LogClock c, std::string label){
+    clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
   }
 
   std::pair<double,std::string> nextTime(double current_time) {
@@ -89,10 +88,12 @@ public:
     }
     double next_t = current_time;
     std::string next_name = "";
-    for (auto &c : clocks) {
-      if (!c->is_strain() && c->nextTime() < next_t) {
-        next_t = c->nextTime();
-        next_name = c->label();
+    for (const auto &c : clocks) {
+      const auto &label = c.first;
+      const auto &clock = c.second;
+      if (!clock->is_strain() && clock->nextTime() < next_t) {
+        next_t = clock->nextTime();
+        next_name = label;
       }
     }
     return std::make_pair(next_t,next_name);
@@ -107,19 +108,28 @@ public:
     }
     double next_t = current_strain;
     std::string next_name = "";
-    for (auto &c : clocks) {
-      if (c->is_strain() && c->nextTime() < next_t) {
-        next_t = c->nextTime();
-        next_name = c->label();
+    for (const auto &c : clocks) {
+      const auto &label = c.first;
+      const auto &clock = c.second;
+      if (clock->is_strain() && clock->nextTime() < next_t) {
+        next_t = clock->nextTime();
+        next_name = label;
       }
     }
     return std::make_pair(next_t,next_name);
   }
 
-  void updateClocks(double time) {
+  void updateClocks(double time, double strain) {
     for (auto &c : clocks) {
-      if (c->nextTime() <= time) {
-        c->tick();
+      auto &clock = c.second;
+      if (clock->is_strain()) {
+        if (clock->nextTime() <= strain) {
+          clock->tick();
+        }
+      } else {
+        if (clock->nextTime() <= time) {
+          clock->tick();
+        }
       }
     }
   }
