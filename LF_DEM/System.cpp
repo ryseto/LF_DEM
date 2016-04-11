@@ -1236,10 +1236,10 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (fabs(get_shear_strain()) > strain_end-1e-8) {
+	if (fabs(get_shear_strain()) > strain_end-1e-8 && strain_end>=0) {
 		return false;
 	}
-	if (get_time() > time_end-1e-8) {
+	if (get_time() > time_end-1e-8 && time_end>=0) {
 		return false;
 	}
 	if (!events.empty()) {
