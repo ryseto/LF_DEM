@@ -221,7 +221,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
-	
+
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
 	TimeKeeper tk;
@@ -235,23 +235,21 @@ void Simulation::simulationSteadyShear(string in_args,
 										p.time_interval_output_data,
 										input_values["time_end"].unit == "strain"));
 	}
-	double next_output_config;
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
 									   time_end,
 									   p.nb_output_config_log_time,
 									   input_values["time_end"].unit == "strain"));
-		next_output_config = p.initial_log_time;
 	} else {
 		tk.addClock("config", LinearClock(time_end,
 										  p.time_interval_output_config,
 										  input_values["time_end"].unit == "strain"));
-		next_output_config = strain_interval_output_config;
 	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();
 		pair<double, string> s = tk.nextStrain();
+		cout << " next " << t.first << endl;
 		if (t.second.empty()) { // no next time
 			sys.timeEvolution(-1, s.first);
 		} else if (s.second.empty()) { // no next strain
@@ -318,34 +316,28 @@ void Simulation::simulationInverseYield(string in_args,
 	outputConfigurationData();
 	/*************************************************************/
 
-	double next_output_data = 0;
-	double next_output_config = 0;
-
+	TimeKeeper tk;
+	tk.addClock("data", LinearClock(time_end,
+									p.time_interval_output_data,
+									input_values["time_end"].unit == "strain"));
+	tk.addClock("config", LinearClock(time_end,
+										p.time_interval_output_config,
+										input_values["time_end"].unit == "strain"));
+	int binconf_counter = 0;									
 	while (keepRunning()) {
-		if (time_interval_output_data == -1) {
-			next_output_data += strain_interval_output_data;
-			sys.timeEvolution(-1, next_output_data);
-		} else{
-			next_output_data += time_interval_output_data;
-			sys.timeEvolution(next_output_data, -1);
-		}
+		pair<double, string> t = tk.nextTime();
+		pair<double, string> s = tk.nextStrain();
 
-		/******************** OUTPUT DATA ********************/
-		evaluateData();
-		outputData(); // new
-		outputConfigurationBinary();
-		if (time_interval_output_config == -1) {
-			if (sys.get_shear_strain() >= next_output_config-1e-8) {
-				outputConfigurationData();
-				next_output_config += strain_interval_output_config;
-			}
-		} else {
-			if (sys.get_time() >= next_output_config-1e-8) {
-				outputConfigurationData();
-				next_output_config += time_interval_output_config;
-			}
+		if (t.second.empty()) { // no next time
+			sys.timeEvolution(-1, s.first);
+		} else if (s.second.empty()) { // no next strain
+			sys.timeEvolution(t.first, -1);
+		} else { // either next time or next strain
+			sys.timeEvolution(t.first, s.first);
 		}
-		/*****************************************************/
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_shear_strain());
+		generateOutput(output_events, binconf_counter);
+
 
 		cout << "time: " << sys.get_time() << " / " << p.time_end << endl;
 		if (!sys.zero_shear
@@ -437,8 +429,8 @@ void Simulation::simulationMagnetic(string in_args,
 			sys.setInducedMagneticMoment();
 			initial_relax = false;
 		}
-		time_output_data = initial_time+cnt_simu_loop*time_interval_output_data;
-		time_output_config = initial_time+cnt_config_out*time_interval_output_config;
+		time_output_data = initial_time+cnt_simu_loop*p.time_interval_output_data;
+		time_output_config = initial_time+cnt_config_out*p.time_interval_output_config;
 		sys.timeEvolution(time_output_data, -1); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
 		cnt_simu_loop ++;
 		/******************** OUTPUT DATA ********************/

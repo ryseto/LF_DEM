@@ -43,10 +43,6 @@ private:
 	std::string header_imported_configulation[2];
 	std::string control_var;
 	double shear_rate_expectation;
-	double time_interval_output_data;
-	double time_interval_output_config;
-	double strain_interval_output_data;
-	double strain_interval_output_config;
 	double strain_end;
 	double time_end;
 	/*

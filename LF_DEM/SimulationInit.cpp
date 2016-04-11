@@ -598,30 +598,6 @@ void Simulation::resolveTimeOrStrainParameters()
 			(input_values["time_end"].unit == "strain" || input_values["initial_log_time"].unit == "strain")) {
 			throw runtime_error(" If one of time_end or initial_log_time is a strain (\"h\" unit), than both must be.\n");
 		}
-		if (input_values["time_end"].unit == "strain") {
-			// log strain intervals
-			time_interval_output_data = -1;
-			time_interval_output_config = -1;
-			strain_interval_output_data = (log(strain_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
-			strain_interval_output_config = (log(strain_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
-		} else {
-			// time strain intervals
-			time_interval_output_data = (log(time_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
-			time_interval_output_config = (log(time_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
-		}
-	} else {// linear time/strain intervals
-		if (input_values["time_interval_output_data"].unit == "strain") {
-			time_interval_output_data = -1;
-			strain_interval_output_data = p.time_interval_output_data;
-		} else {
-			time_interval_output_data = p.time_interval_output_data;
-		}
-		if (input_values["time_interval_output_config"].unit == "strain") {
-			time_interval_output_config = -1;
-			strain_interval_output_config = p.time_interval_output_config;
-		} else {
-			time_interval_output_config = p.time_interval_output_config;
-		}
 	}
 }
 
@@ -641,7 +617,7 @@ void Simulation::setupSimulation(string in_args,
 	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
-	
+
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
 		sys.zero_shear = true;
@@ -1189,7 +1165,7 @@ std::pair<int,int> Simulation::get_np(const string& filename_import_positions)
 		np++;
 	}
 	file_import.close();
-	
+
 	return make_pair(np, np_fixed);
 }
 
@@ -1455,7 +1431,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	}
 	sys.setBoxSize(lx,ly,lz);
 	sys.setConfiguration(initial_position, radius);
-	
+
 	// now contacts
 	int ncont;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;

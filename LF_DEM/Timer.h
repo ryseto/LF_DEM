@@ -57,16 +57,21 @@ public:
 class LogClock : public Clock
 {
 private:
-
+  double first_non_zero;
 public:
   LogClock(double start, double stop, double nb_step, bool strain_units)
   : Clock(strain_units)
   {
-    next_time = start;
+    next_time = 0; // to allow for init actions
     time_step = (log(stop) - log(start))/nb_step;
+    first_non_zero = start;
   }
   virtual void tick() {
-    next_time = exp(log(next_time)+time_step);
+    if (next_time>0) {
+      next_time = exp(log(next_time)+time_step);
+    } else {
+      next_time = first_non_zero;
+    }
   }
 };
 
