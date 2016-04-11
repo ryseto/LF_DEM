@@ -246,7 +246,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
-													string input_scale)
+												  string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -584,7 +584,7 @@ void Simulation::resolveTimeOrStrainParameters()
 
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
-	*/
+	 */
 	for (const auto& inv: input_values) {
 		if (inv.name == "time_end") {
 			if (inv.unit == "strain") {
@@ -635,11 +635,11 @@ void Simulation::setupSimulation(string in_args,
 	cout << indent << "Simulation setup starting... " << endl;
 	string filename_import_positions = input_files[0];
 	string filename_parameters = input_files[1];
-
+	
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
-			sys.zero_shear = true;
-		} else if (control_var == "magnetic") {
+		sys.zero_shear = true;
+	} else if (control_var == "magnetic") {
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
@@ -691,12 +691,11 @@ void Simulation::setupSimulation(string in_args,
 
 	p_initial = p;
 	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-													simu_identifier, dimensionlessnumber, input_scale);
+						  simu_identifier, dimensionlessnumber, input_scale);
 	openOutputFiles();
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
-
 
 void Simulation::autoSetParameters(const string &keyword, const string &value)
 {
@@ -1074,7 +1073,7 @@ map<string,string> Simulation::getConfMetaData(const string &line1, const string
 		throw runtime_error("Simulation:: Ill-formed header in the configuration file.\n");
 	}
 	map<string,string> meta_data;
-		for (unsigned int i=1; i<l1_split.size(); i++) {
+	for (unsigned int i=1; i<l1_split.size(); i++) {
 		meta_data[l1_split[i]] = l2_split[i];
 	}
 	return meta_data;
@@ -1112,9 +1111,7 @@ std::pair<int,int> Simulation::get_np(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-
 	int np, np_fixed;
-
 	getline(file_import, header_imported_configulation[0]);
 	getline(file_import, header_imported_configulation[1]);
 	map<string,string> meta_data = getConfMetaData(header_imported_configulation[0], header_imported_configulation[1]);
@@ -1129,7 +1126,7 @@ std::pair<int,int> Simulation::get_np(const string& filename_import_positions)
 		np++;
 	}
 	file_import.close();
-
+	
 	return make_pair(np, np_fixed);
 }
 
@@ -1264,7 +1261,6 @@ void Simulation::readPositions(fstream &file_import){
 	sys.setConfiguration(initial_position, radius);
 }
 
-
 void Simulation::readPositionsImposedVelocity(fstream &file_import){
 	/**
 		\brief Import a text file configuration with imposed velocity particles.
@@ -1329,7 +1325,6 @@ void Simulation::readPositionsMagnetic(fstream &file_import){
 	sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
 }
 
-
 void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
@@ -1356,7 +1351,6 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	}
 	file_import.close();
 }
-
 
 void Simulation::importConfigurationBinary(const string& filename_import_positions)
 {
@@ -1398,7 +1392,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	}
 	sys.setBoxSize(lx,ly,lz);
 	sys.setConfiguration(initial_position, radius);
-
+	
 	// now contacts
 	int ncont;
 	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
@@ -1409,7 +1403,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	for (int i=0; i<ncont; i++) {
 		unsigned int p0, p1;
 		file_import.read((char*)&p0, sizeof(unsigned int));
-// hacky thing to guess if this is an old format with particle numbers as unsigned short
+		// hacky thing to guess if this is an old format with particle numbers as unsigned short
 		if((int)p0>sys.get_np()){
 			old_file_type = true;
 			file_import.seekg(file_pos);
@@ -1454,11 +1448,11 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 }
 
 void Simulation::prepareSimulationName(bool binary_conf,
-										 const string& filename_import_positions,
-																			 const string& filename_parameters,
-																			 const string& simu_identifier,
-																			 double dimensionlessnumber,
-																			 const string& input_scale)
+									   const string& filename_import_positions,
+									   const string& filename_parameters,
+									   const string& simu_identifier,
+									   double dimensionlessnumber,
+									   const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.
