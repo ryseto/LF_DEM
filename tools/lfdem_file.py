@@ -6,6 +6,7 @@
 
 import pandas as pd
 import numpy as np
+import struct
 
 
 def get_file_metadata(fname):
@@ -204,3 +205,66 @@ def read_conf_file(fname):
     if openedfile:
         in_file.close()
     return pos, rad, meta_data
+
+
+def read_binary_conf_file(fname):
+
+    with open(fname, mode='rb') as f:
+        conf = f.read()
+
+    uisize = 2
+    isize = 4
+    dsize = 8
+    loc = 0
+
+    meta_data = {}
+    meta_data["np"] = struct.unpack("i", buffer=conf[loc:isize])[0]
+    loc += isize
+    meta_data["vf"] = struct.unpack("d", conf[loc:loc+dsize])[0]
+    loc += dsize
+    meta_data["lx"] = struct.unpack("d", conf[loc:loc+dsize])[0]
+    loc += dsize
+    meta_data["ly"] = struct.unpack("d", conf[loc:loc+dsize])[0]
+    loc += dsize
+    meta_data["lz"] = struct.unpack("d", conf[loc:loc+dsize])[0]
+    loc += dsize
+    meta_data["disp_x"] = struct.unpack("d", conf[loc:loc+dsize])[0]
+    loc += dsize
+    meta_data["disp_y"] = struct.unpack("d", conf[loc:loc+dsize])[0]
+    loc += dsize
+
+    positions = np.empty((meta_data["np"], 4))
+    for i in range(np):
+        x = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        y = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        z = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        r = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        positions[i] = np.array([x, y, z, r])
+
+    nc = struct.unpack("I", conf[loc:loc+isize])[0]
+    interactions = np.empty((nc, 8))
+    loc += isize
+    print(nc)
+    for i in range(nc):
+        p0 = struct.unpack("H", conf[loc:loc+uisize])[0]
+        loc += uisize
+        p1 = struct.unpack("H", conf[loc:loc+uisize])[0]
+        loc += uisize
+        dtx = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        dty = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        dtz = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        drx = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        dry = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        drz = struct.unpack("d", conf[loc:loc+dsize])[0]
+        loc += dsize
+        interactions[i] = np.array([p0, p1, dtx, dty, dtz, drx, dry, drz])
+    return positions, interactions, meta_data
