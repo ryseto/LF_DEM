@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <set>
 #include <stdexcept>
 
 class Clock
@@ -116,19 +117,23 @@ public:
     return std::make_pair(next_t,next_name);
   }
 
-  void updateClocks(double time, double strain) {
+  std::set<std::string> getElapsedClocks(double time, double strain) {
+    std::set<std::string> elapsed_clocks;
     for (auto &c : clocks) {
       auto &clock = c.second;
       if (clock->is_strain()) {
         if (clock->nextTime() <= strain) {
           clock->tick();
+          elapsed_clocks.insert(c.first);
         }
       } else {
         if (clock->nextTime() <= time) {
           clock->tick();
+          elapsed_clocks.insert(c.first);
         }
       }
     }
+    return elapsed_clocks;
   }
 
   // TimeKeeper();

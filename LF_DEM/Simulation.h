@@ -20,6 +20,7 @@
 #include <string>
 #include <ctime>
 #include <map>
+#include <set>
 #include <algorithm>
 #include "global.h"
 #include "System.h"
@@ -117,7 +118,7 @@ public:
 	ParameterSet p;
 	bool keepRunning();
 	// void timeEvolution(double& next_output_data);
-	void generateOutput(double& next_output_config, int& binconf_counter);
+	void generateOutput(const std::set<std::string> &output_events, int& binconf_counter);
 	/*********** Events  ************/
 	std::list <Event> events;
 	void setupEvents();

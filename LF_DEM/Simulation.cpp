@@ -136,67 +136,24 @@ void Simulation::handleEvents()
 	events.clear();
 }
 
-void Simulation::generateOutput(double& next_output_config, int& binconf_counter)
+void Simulation::generateOutput(const set<string> &output_events, int& binconf_counter)
 {
-	/******************** OUTPUT DATA ********************/
-	evaluateData();
-	//@@@ if(fabs(sys.get_shear_strain()) >= next_output_data-1e-8)
-	//@@@ missing for outputData?
-
-	//@@@ --> the asumption is that generateOutput is called when strain == next_output_data (or time == next_output_data)
-	//@@@ but this might be a bad design I agree. Maybe we could improve that.
-	outputData();
 	outputConfigurationBinary(); // generic, for recovery if crash
-	if (time_interval_output_config == -1) {
-		if (fabs(sys.get_shear_strain()) >= next_output_config-1e-8) {
-			if(p.out_binary_conf){
-				string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(++binconf_counter) + ".bin";
-				outputConfigurationBinary(binconf_filename);
-			} else {
-				outputConfigurationData();
-			}
-			if (p.log_time_interval) {
-				next_output_config = exp(log(next_output_config)+strain_interval_output_config);
-			} else {
-				next_output_config += strain_interval_output_config;
-			}
-		}
-	} else {
-		if (sys.get_time() >= next_output_config-1e-8) {
-			if(p.out_binary_conf){
-				string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(static_cast<unsigned long long>(++binconf_counter)) + ".bin"; // cast for icc 13 stdlib, which does not overload to_string for int args (!)
-				outputConfigurationBinary(binconf_filename);
-			} else {
-				outputConfigurationData();
-			}
-			if (p.log_time_interval) {
-				next_output_config = exp(log(next_output_config)+time_interval_output_config);
-			} else {
-				next_output_config += time_interval_output_config;
-			}
+	if(output_events.find("data") != output_events.end()) {
+		evaluateData();
+		outputData();
+	}
+
+	if(output_events.find("config") != output_events.end()) {
+		if(p.out_binary_conf){
+			string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(++binconf_counter) + ".bin";
+			outputConfigurationBinary(binconf_filename);
+		} else {
+			outputConfigurationData();
 		}
 	}
-	/*****************************************************/
 }
 
-// void Simulation::timeEvolution(double& next_output_data)
-// {
-// 	if (time_interval_output_data == -1) {
-// 		if(p.log_time_interval) {
-// 			next_output_data = exp(log(next_output_data)+strain_interval_output_data);
-// 		} else {
-// 			next_output_data += strain_interval_output_data;
-// 		}
-// 		sys.timeEvolution("strain", next_output_data);
-// 	} else {
-// 		if(p.log_time_interval) {
-// 			next_output_data = exp(log(next_output_data)+time_interval_output_data);
-// 		} else {
-// 			next_output_data += time_interval_output_data;
-// 		}
-// 		sys.timeEvolution("time", next_output_data);
-// 	}
-// }
 
 /*
  * Main simulation
@@ -264,13 +221,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	time_strain_1 = 0;
 	now = time(NULL);
 	time_strain_0 = now;
-	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
-	outputData();
-	outputConfigurationBinary();
-	outputConfigurationData();
-	/*************************************************************/
-
+	
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
 	TimeKeeper tk;
@@ -299,7 +250,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
-		tk.updateClocks(sys.get_time(), sys.get_shear_strain());
 		pair<double, string> t = tk.nextTime();
 		pair<double, string> s = tk.nextStrain();
 		if (t.second.empty()) { // no next time
@@ -309,14 +259,14 @@ void Simulation::simulationSteadyShear(string in_args,
 		} else { // either next time or next strain
 			sys.timeEvolution(t.first, s.first);
 		}
-		// timeEvolution(next_output_data);
 		handleEvents();
 
 		// For now we assume that the next event is a data output,
 		// but it will be relaxed in the future.
 		// The new TimeKeeper keeps track of what event comes first,
 		// so we will use this at some point.
-		generateOutput(next_output_config, binconf_counter);
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_shear_strain());
+		generateOutput(output_events, binconf_counter);
 
 		if (time_end != -1) {
 			cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
@@ -666,7 +616,7 @@ void Simulation::outputData()
 		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	
+
 	int number_of_data = 37;
 	if (sys.wall_rheology) {
 		number_of_data = 40;
@@ -742,7 +692,7 @@ void Simulation::outputData()
 	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stressXF+sys.total_repulsive_stressGU);
 	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
 	outdata_st.writeToFile();
-	
+
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 		int nb_of_fields = strlen(p.out_particle_stress.c_str());
@@ -880,7 +830,7 @@ void Simulation::outputConfigurationData()
 	if (diminish_output) {
 		output_precision = 4;
 	}
-	
+
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
