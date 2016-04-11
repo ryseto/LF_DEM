@@ -546,11 +546,8 @@ void Simulation::tagStrainParameters()
 		to be compared with System::shear_strain() (as opposed to times to be compared
 		with System::time()). The mechanism to declare those parameters to System is
 		implemented in Simulation::resolveTimeOrStrainParameters().
-	*/
-	for (auto& name: {"time_interval_output_data",
-								 		"time_interval_output_config",
-								 		"time_end",
-										"initial_log_time"}) {
+	 */
+	for (auto& name: {"time_interval_output_data", "time_interval_output_config", "time_end", "initial_log_time"}) {
 		auto &inv =  input_values[name];
 		if (inv.unit == "hydro") {
 			inv.unit = "strain";
@@ -587,24 +584,18 @@ void Simulation::resolveTimeOrStrainParameters()
 		We have to do this not only for time_end, but also for every time defined
 		in the parameters.
 	 */
-	for (const auto& inv: input_values) {
-		if (inv.name == "time_end") {
-			if (inv.unit == "strain") {
-				time_end = -1;
-				strain_end = p.time_end;
-			} else {
-				time_end = p.time_end;
-			}
-		}
+	if (input_values["time_end"].unit == "strain") {
+		time_end = -1;
+		strain_end = p.time_end;
+	} else {
+		time_end = p.time_end;
 	}
-
 	if (control_var == "magnetic") {
 		time_end = p.time_end;
 	}
-
 	if (p.log_time_interval) {
 		if (input_values["time_end"].unit != input_values["initial_log_time"].unit &&
-			 	(input_values["time_end"].unit == "strain" || input_values["initial_log_time"].unit == "strain" ) ) {
+			(input_values["time_end"].unit == "strain" || input_values["initial_log_time"].unit == "strain")) {
 			throw runtime_error(" If one of time_end or initial_log_time is a strain (\"h\" unit), than both must be.\n");
 		}
 		if (input_values["time_end"].unit == "strain") {
@@ -618,8 +609,7 @@ void Simulation::resolveTimeOrStrainParameters()
 			time_interval_output_data = (log(time_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
 			time_interval_output_config = (log(time_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
 		}
-	}
-	else {// linear time/strain intervals
+	} else {// linear time/strain intervals
 		if (input_values["time_interval_output_data"].unit == "strain") {
 			time_interval_output_data = -1;
 			strain_interval_output_data = p.time_interval_output_data;
@@ -690,21 +680,19 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		pair<int,int> np_np_fixed = get_np(filename_import_positions);
 		sys.set_np(np_np_fixed.first);
-		if (np_np_fixed.second>0){
+		if (np_np_fixed.second > 0){
 			p.np_fixed = np_np_fixed.second;
 		}
 		is2d = isTwoDimension(filename_import_positions);
 	}
 
 	sys.setupSystemPreConfiguration(control_var, is2d);
-
 	if (binary_conf) {
 		importConfigurationBinary(filename_import_positions);
 	} else {
 		importConfiguration(filename_import_positions);
 	}
 	sys.setupSystemPostConfiguration();
-
 	p_initial = p;
 	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 						  simu_identifier, dimensionlessnumber, input_scale);
@@ -1357,7 +1345,7 @@ void Simulation::readPositionsImposedVelocity(fstream &file_import){
 	while(getline(file_import, line)) {
 		istringstream is;
 		is.str(line);
-		if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_) ) {
+		if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_)) {
 			is.str(line);
 			is >> x_ >> y_ >> z_ >> a_;
 			initial_position.push_back(vec3d(x_, y_, z_));
@@ -1368,7 +1356,7 @@ void Simulation::readPositionsImposedVelocity(fstream &file_import){
 			fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
 		}
 	}
-	if ( sys.p.np_fixed != (int)fixed_velocities.size() ) {
+	if (sys.p.np_fixed != (int)fixed_velocities.size()) {
 		throw runtime_error(" Simulation:: ill-formed input configuration, np_fixed != fixed_velocities.size()");
 	}
 	sys.setConfiguration(initial_position, radius);
@@ -1389,7 +1377,7 @@ void Simulation::readPositionsMagnetic(fstream &file_import){
 	vector<vec3d> magnetic_moment;
 	vector<double> magnetic_susceptibility;
 	vector<vec3d> initial_position;
-	vector <double> radius;
+	vector<double> radius;
 	while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ >> sus_) {
 		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);

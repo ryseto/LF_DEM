@@ -226,7 +226,6 @@ void System::allocateRessourcesPreConfiguration()
 
 void System::allocateRessourcesPostConfiguration()
 {
-
 	// Forces and Stress
 	contact_force = new vec3d [np];
 	contact_torque = new vec3d [np];
@@ -470,7 +469,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	*/
-	np_mobile = np - p.np_fixed;
+	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
 	twodimension = is2d;
@@ -707,7 +706,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 void System::setupSystemPostConfiguration()
 {
-
 	for (int i=0; i<np; i++) {
 		radius_squared[i] = pow(radius[i], 2);
 		radius_cubed[i] = pow(radius[i], 3);
@@ -793,7 +791,6 @@ void System::initializeBoxing()
 	}
 	boxset.update();
 }
-
 
 void System::timeStepBoxing()
 {
@@ -938,8 +935,8 @@ void System::forceResultantReset()
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
-									   									 double time_end,
-																			 double strain_end)
+									   double time_end,
+									   double strain_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -972,11 +969,11 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		if (!p.out_particle_stress.empty() || couette_stress) {
 			calcTotalStressPerParticle();
 		}
-   }
-    timeStepMove(time_end, strain_end);
-    if (eventLookUp != NULL) {
-        (this->*eventLookUp)();
-    }
+	}
+	timeStepMove(time_end, strain_end);
+	if (eventLookUp != NULL) {
+		(this->*eventLookUp)();
+	}
 }
 
 /****************************************************************************************************
@@ -984,8 +981,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
  ****************************************************************************************************/
 
 void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-												   												 double time_end,
-																									 double strain_end)
+												   double time_end,
+												   double strain_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -1102,13 +1099,12 @@ void System::adaptTimeStep()
 }
 
 void System::adaptTimeStep(double time_end,
-                           double strain_end)
+						   double strain_end)
 {
     /**
      \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
 	*/
 	adaptTimeStep();
-
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
 	if (strain_end >= 0) {
@@ -1117,8 +1113,8 @@ void System::adaptTimeStep(double time_end,
 		}
 	}
 	if (time_end >= 0) {
-		if (get_time() + dt > time_end) {
-      dt = time_end-get_time();
+		if (get_time()+dt > time_end) {
+			dt = time_end-get_time();
 		}
 	}
 }
@@ -1238,13 +1234,12 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-
 bool System::keepRunning(double time_end, double strain_end)
 {
 	if (fabs(get_shear_strain()) > strain_end-1e-8) {
 		return false;
 	}
- 	if (get_time() > time_end-1e-8) {
+	if (get_time() > time_end-1e-8) {
 		return false;
 	}
 	if (!events.empty()) {
@@ -1252,7 +1247,6 @@ bool System::keepRunning(double time_end, double strain_end)
 	}
 	return true;
 }
-
 
 void System::timeEvolution(double time_end, double strain_end)
 {
@@ -1629,7 +1623,7 @@ vector<double> System::computeForceFromFixedParticles()
 	vector<double> force_torque_from_fixed (6*np_mobile);
 	// @@ TODO: avoid copy of the velocities
 	vector<double> minus_fixed_velocities (6*p.np_fixed);
-	for(int i=0; i<p.np_fixed; i++){
+	for(int i=0; i<p.np_fixed; i++) {
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
 		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1653,7 +1647,6 @@ void System::buildHydroTermsFromFixedParticles()
 	int first_mobile_index = 0;
 	stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
 }
-
 
 void System::computeForcesOnWallParticles()
 {
@@ -1686,7 +1679,6 @@ void System::computeForcesOnWallParticles()
 			na_velocity_mobile[i] += vel_repulsive[i];
 			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
 		}
-
 	}
 	// from this, we can compute the hydro force on the wall that does *not* depend on the wall velocity
 	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
@@ -1745,7 +1737,7 @@ void System::forceResultantLubricationForce()
      */
     vector<double> force_m_to_m (6*np_mobile);
     vector<double> minus_mobile_velocities (6*np_mobile);
-    for(int i=0; i<np_mobile; i++){
+	for (int i=0; i<np_mobile; i++) {
         int i6 = 6*i;
         minus_mobile_velocities[i6  ] = -na_velocity[i].x;
         minus_mobile_velocities[i6+1] = -na_velocity[i].y;
@@ -1755,7 +1747,7 @@ void System::forceResultantLubricationForce()
         minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
     }
     stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_m_to_m);
-    for(int i=0; i<np_mobile; i++){
+    for (int i=0; i<np_mobile; i++) {
         int i6 = 6*i;
         forceResultant[i].x += force_m_to_m[i6];
         forceResultant[i].y += force_m_to_m[i6+1];
@@ -2108,7 +2100,6 @@ void System::rescaleVelHydroStressControlledFixed()
 	}
 }
 
-
 void System::computeShearRate()
 {
 	/**
@@ -2168,7 +2159,7 @@ void System::computeShearRateWalls_2()
 {
 	/**
 	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
-	*/
+	 */
 
 	computeForcesOnWallParticles();
 
@@ -2190,7 +2181,7 @@ void System::computeShearRateWalls_2()
 	total_rate_indep_wall_shear_stress /= wall_surface;
 
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (target_stress - total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
+	shear_rate = (target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
 
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
@@ -2374,7 +2365,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
-    if (divided_velocities || stress_controlled) {
+	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
@@ -2642,7 +2633,6 @@ void System::periodize_diff(vec3d& pos_diff)
 	}
 }
 
-
 void System::setSystemVolume()
 {
 	string indent = "  System::\t";
@@ -2661,7 +2651,6 @@ void System::setSystemVolume()
 		cout << indent << "lx = " << lx << " lz = " << lz << " ly = " << ly << endl;
 	}
 }
-
 
 void System::adjustContactModelParameters()
 {

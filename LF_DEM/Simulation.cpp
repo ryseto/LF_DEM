@@ -155,7 +155,7 @@ void Simulation::generateOutput(double& next_output_config, int& binconf_counter
 			} else {
 				outputConfigurationData();
 			}
-			if(p.log_time_interval) {
+			if (p.log_time_interval) {
 				next_output_config = exp(log(next_output_config)+strain_interval_output_config);
 			} else {
 				next_output_config += strain_interval_output_config;
@@ -169,7 +169,7 @@ void Simulation::generateOutput(double& next_output_config, int& binconf_counter
 			} else {
 				outputConfigurationData();
 			}
-			if(p.log_time_interval) {
+			if (p.log_time_interval) {
 				next_output_config = exp(log(next_output_config)+time_interval_output_config);
 			} else {
 				next_output_config += time_interval_output_config;
@@ -272,31 +272,29 @@ void Simulation::simulationSteadyShear(string in_args,
 	/*************************************************************/
 
 	setupEvents();
-
 	cout << indent << "Time evolution started" << endl << endl;
-
 	TimeKeeper tk;
 	if (p.log_time_interval) {
 		tk.addClock("data", LogClock(p.initial_log_time,
-												 				 time_end,
-																 p.nb_output_data_log_time,
-																 input_values["time_end"].unit == "strain"));
+									 time_end,
+									 p.nb_output_data_log_time,
+									 input_values["time_end"].unit == "strain"));
 	} else {
 		tk.addClock("data", LinearClock(time_end,
-																 		p.time_interval_output_data,
-																 		input_values["time_end"].unit == "strain"));
+										p.time_interval_output_data,
+										input_values["time_end"].unit == "strain"));
 	}
 	double next_output_config;
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
-												 				 time_end,
-																 p.nb_output_config_log_time,
-																 input_values["time_end"].unit == "strain"));
+									   time_end,
+									   p.nb_output_config_log_time,
+									   input_values["time_end"].unit == "strain"));
 		next_output_config = p.initial_log_time;
 	} else {
 		tk.addClock("config", LinearClock(time_end,
-																 			p.time_interval_output_config,
-																 			input_values["time_end"].unit == "strain"));
+										  p.time_interval_output_config,
+										  input_values["time_end"].unit == "strain"));
 		next_output_config = strain_interval_output_config;
 	}
 	int binconf_counter = 0;
@@ -558,7 +556,6 @@ void Simulation::catchSuffixedValue(string type, string keyword,
 	suffix = unit_longname[suffix];
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
-
 	input_values[keyword] = inv;
 }
 

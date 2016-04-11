@@ -117,7 +117,7 @@ public:
 		return contact_stresslet_XF;
 	}
 	double calcEnergy();
-	struct contact_state getState(){
+	struct contact_state getState() {
 		struct contact_state cs;
 		cs.p0 = p0;
 		cs.p1 = p1;
@@ -125,7 +125,7 @@ public:
 		cs.disp_rolling = disp_rolling;
 		return cs;
 	};
-	void setState(const struct contact_state& cs){
+	void setState(const struct contact_state& cs) {
 		p0 = cs.p0;
 		p1 = cs.p1;
 		disp_tan = cs.disp_tan;

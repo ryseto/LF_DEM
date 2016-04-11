@@ -725,7 +725,6 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	// using chol_vel_fix->x, chaos...
 	// [ Note that this very function is fine as it will reassign a valid pointer to chol_vel_fix->x,
 	// but other functions will not (that's how I noticed it was evil :)) ]
-
 	int size = chol_vel_fix->nrow;
 	for (int i=0; i<size; i++) {
 		((double*)chol_vel_fix->x)[i] = velocity[i];
@@ -751,9 +750,9 @@ void StokesSolver::multiply_by_RFU_fm(vector<double>& velocity, vector<double>& 
 	}
 }
 void StokesSolver::multiply_by_RFU_fm(vector<vec3d>& velocity,
-																			vector<vec3d>& ang_velocity,
-																			vector<vec3d>& force,
-																			vector<vec3d>& torque)
+									  vector<vec3d>& ang_velocity,
+									  vector<vec3d>& force,
+									  vector<vec3d>& torque)
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};

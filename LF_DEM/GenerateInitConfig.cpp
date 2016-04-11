@@ -457,12 +457,6 @@ void GenerateInitConfig::putRandom()
 		vec3d r_center3(lx, 0, 0);
 		while (i < np_movable) {
 			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
-			double a;
-			if (i < np1) {
-				a = a1;
-			} else {
-				a = a2;
-			}
 			double r;
 			if (pos.z > pos.x) {
 				r = (pos-r_center1).norm();

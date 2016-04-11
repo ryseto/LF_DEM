@@ -159,7 +159,7 @@ int main(int argc, char **argv)
 			case 'a':
 				random_seed = atoi(optarg);
 				break;
-			 case 'n':
+			case 'n':
 				binary_conf = true;
 				break;
 			case 'v':
@@ -211,16 +211,16 @@ int main(int argc, char **argv)
 		simulation.diminish_output = diminish_output;
 		if (rheology_control == "magnetic") {
 			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
-											dimensionless_number, suffix, rheology_control, simu_identifier);
+										  dimensionless_number, suffix, rheology_control, simu_identifier);
 		} else if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
-												dimensionless_number, suffix, rheology_control, simu_identifier);
-
+											  dimensionless_number, suffix, rheology_control, simu_identifier);
+			
 		} else if (seq_filename == "not_given") {
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,
 												 dimensionless_number, suffix, rheology_control,
-																								 simu_identifier);
+												 simu_identifier);
 			} catch (runtime_error& e) {
 				cerr << e.what() << endl;
 				return 1;
