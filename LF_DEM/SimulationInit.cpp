@@ -452,15 +452,17 @@ void Simulation::convertInputValues(string new_unit)
 
 		\b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
 	 */
-	for (auto& inv: input_values) {
+	for (auto& inval: input_values) {
+		auto &inv = inval.second;
+		string name = inval.first;
 		string old_unit = inv.unit;
 		if (old_unit == "hydro" && control_var == "stress") {
-			throw runtime_error ("Simulation:: "+inv.name+" cannot be given in hydro units for stress controlled simulations (non-constant hydro unit of time)");
+			throw runtime_error ("Simulation:: "+name+" cannot be given in hydro units for stress controlled simulations (non-constant hydro unit of time)");
 		}
 		if (old_unit != new_unit && old_unit!="strain") {
 			if (old_unit != "hydro" && input_force_values.find(old_unit) == input_force_values.end()) {
 				ostringstream error_str;
-				error_str  << " Error: trying to convert " << inv.name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
+				error_str  << " Error: trying to convert " << name << " from an unknown unit \"" << inv.unit 	<< "\"" << endl;
 				throw runtime_error(error_str.str());
 			}
 			if (inv.type == "time") {
@@ -470,7 +472,7 @@ void Simulation::convertInputValues(string new_unit)
 		}
 
 		string indent = "  Simulation::\t";
-		cout << indent << inv.name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
+		cout << indent << name << " (in \"" << inv.unit << "\" units): " << *(inv.value) << endl;
 	}
 }
 
@@ -545,13 +547,13 @@ void Simulation::tagStrainParameters()
 		with System::time()). The mechanism to declare those parameters to System is
 		implemented in Simulation::resolveTimeOrStrainParameters().
 	*/
-	for (auto& inv: input_values) {
-		if (inv.name == "time_interval_output_data"
-				|| inv.name == "time_interval_output_config"
-				|| inv.name == "time_end") {
-			if (inv.unit == "hydro") {
-				inv.unit = "strain";
-			}
+	for (auto& name: {"time_interval_output_data",
+								 		"time_interval_output_config",
+								 		"time_end",
+										"initial_log_time"}) {
+		auto &inv =  input_values[name];
+		if (inv.unit == "hydro") {
+			inv.unit = "strain";
 		}
 	}
 }
@@ -595,26 +597,40 @@ void Simulation::resolveTimeOrStrainParameters()
 			}
 		}
 	}
+
 	if (control_var == "magnetic") {
 		time_end = p.time_end;
 	}
 
-	for (const auto& inv: input_values) {
-		if (inv.name == "time_interval_output_data") {
-			if (inv.unit == "strain") {
-				time_interval_output_data = -1;
-				strain_interval_output_data = p.time_interval_output_data;
-			} else {
-				time_interval_output_data = p.time_interval_output_data;
-			}
+	if (p.log_time_interval) {
+		if (input_values["time_end"].unit != input_values["initial_log_time"].unit &&
+			 	(input_values["time_end"].unit == "strain" || input_values["initial_log_time"].unit == "strain" ) ) {
+			throw runtime_error(" If one of time_end or initial_log_time is a strain (\"h\" unit), than both must be.\n");
 		}
-		if (inv.name == "time_interval_output_config") {
-			if (inv.unit == "strain") {
-				time_interval_output_config = -1;
-				strain_interval_output_config = p.time_interval_output_config;
-			} else {
-				time_interval_output_config = p.time_interval_output_config;
-			}
+		if (input_values["time_end"].unit == "strain") {
+			// log strain intervals
+			time_interval_output_data = -1;
+			time_interval_output_config = -1;
+			strain_interval_output_data = (log(strain_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
+			strain_interval_output_config = (log(strain_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
+		} else {
+			// time strain intervals
+			time_interval_output_data = (log(time_end)-log(p.initial_log_time))/p.nb_output_data_log_time;
+			time_interval_output_config = (log(time_end)-log(p.initial_log_time))/p.nb_output_config_log_time;
+		}
+	}
+	else {// linear time/strain intervals
+		if (input_values["time_interval_output_data"].unit == "strain") {
+			time_interval_output_data = -1;
+			strain_interval_output_data = p.time_interval_output_data;
+		} else {
+			time_interval_output_data = p.time_interval_output_data;
+		}
+		if (input_values["time_interval_output_config"].unit == "strain") {
+			time_interval_output_config = -1;
+			strain_interval_output_config = p.time_interval_output_config;
+		} else {
+			time_interval_output_config = p.time_interval_output_config;
 		}
 	}
 }
@@ -772,10 +788,20 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		catchSuffixedValue("time", keyword, value, &p.time_interval_output_config);
 	} else if (keyword == "time_interval_output_data") {
 		catchSuffixedValue("time", keyword, value, &p.time_interval_output_data);
+	} else if (keyword == "log_time_interval") {
+		p.log_time_interval = str2bool(value);
+	} else if (keyword == "initial_log_time") {
+		catchSuffixedValue("time", keyword, value, &p.initial_log_time);
+	} else if (keyword == "nb_output_data_log_time") {
+		p.nb_output_data_log_time = atoi(value.c_str());
+	} else if (keyword == "nb_output_config_log_time") {
+		p.nb_output_config_log_time = atoi(value.c_str());
 	} else if (keyword == "out_data_particle") {
 		p.out_data_particle = str2bool(value);
 	} else if (keyword == "out_data_interaction") {
 		p.out_data_interaction = str2bool(value);
+	} else if (keyword == "out_data_vel_components") {
+		p.out_data_vel_components = str2bool(value);
 	} else if (keyword == "origin_zero_flow") {
 		p.origin_zero_flow = str2bool(value);
 	} else if (keyword == "auto_determine_knkt") {
@@ -923,7 +949,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	 * 3 Threshold friction without repulsion + mu inf
 	 */
 	p.friction_model = 1;
-	p.time_end = 10;
+	catchSuffixedValue("time", "time_end", "10h", &p.time_end);
 	p.time_init_relax = 0;
 	p.lub_max_gap = 0.5;
 	/* This is cutoff distance (center-to-center) for interactions (repulsive force, magnetic force, etc.).
@@ -977,11 +1003,16 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.mu_rolling = 0;
 	p.time_interval_output_data = 0.01;
 	p.time_interval_output_config = 0.1;
+	p.log_time_interval = false;
+	catchSuffixedValue("time", "initial_log_time", "1e-4h", &p.initial_log_time);
+	p.nb_output_data_log_time = 100;
+	p.nb_output_config_log_time = 100;
 	p.origin_zero_flow = true;
 	p.out_data_particle = true;
 	p.out_data_interaction = true;
 	p.out_particle_stress = "";
 	p.out_binary_conf = false;
+	p.out_data_vel_components = false;
 	p.ft_max = 1;
 	p.fixed_dt = false;
 	p.cross_shear = false;
@@ -994,6 +1025,24 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
 	p.timeinterval_update_magnetic_pair = 0.02;
+}
+
+inline string columnDefinition(int &cnb, const string &type, const string &name)
+{
+	stringstream defs;
+	if (type=="vec3d") {
+		array<string,3> xyz = {"x", "y", "z"};
+		for (auto &u : xyz){
+			stringstream col_def_complement;
+			defs << "#" << cnb << ": "<< name << " " << u << "\n";
+			cnb ++;
+		}
+	} else if (type=="scalar") {
+		defs << "#" << cnb << ": "<< name << "\n";
+	} else {
+		throw runtime_error(" unknown type for column def\n");
+	}
+	return defs.str();
 }
 
 void Simulation::openOutputFiles()
@@ -1036,6 +1085,32 @@ void Simulation::openOutputFiles()
 		"#13: viscosity contributon of contact GU xz\n"
 		"#14: viscosity contributon of brownian xz\n"
 		"#15: angle (for 2D simulation only)\n";
+		if (p.out_data_vel_components) {
+			int cnb = 16;
+			stringstream col_def_complement;
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_hydro_vel");
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_hydro_vel");
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_contact_vel");
+			col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_contact_vel");
+			if (sys.repulsiveforce) {
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_repulsive_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_repulsive_vel");
+			}
+			if (sys.brownian) {
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_brownian_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_brownian_vel");
+			}
+			if (sys.magnetic) {
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_magnetic_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_magnetic_vel");
+			}
+			if (sys.mobile_fixed) {
+				throw runtime_error(" Simulation:: velocity components with fixed particles not yet implemented (implementation needs to output differently mobile and fixed)\n");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_from_fixed_vel");
+				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_from_fixed_vel");
+			}
+			fout_par_col_def += col_def_complement.str();
+		}
 		//
 		fout_particle << fout_par_col_def << endl;
 	}

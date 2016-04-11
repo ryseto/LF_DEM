@@ -104,8 +104,6 @@ System::~System()
 	DELETE(radius_cubed);
 	DELETE(velocity);
 	DELETE(ang_velocity);
-	DELETE(na_velocity);
-	DELETE(na_ang_velocity);
 	if (p.integration_method == 1) {
 		DELETE(velocity_predictor);
 		DELETE(ang_velocity_predictor);
@@ -179,8 +177,8 @@ void System::allocateRessourcesPreConfiguration()
 	// Velocity
 	velocity = new vec3d [np];
 	ang_velocity = new vec3d [np];
-	na_velocity = new vec3d [np];
-	na_ang_velocity = new vec3d [np];
+	na_velocity.resize(np);
+	na_ang_velocity.resize(np);
 	if (p.integration_method == 1) {
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
@@ -204,8 +202,10 @@ void System::allocateRessourcesPreConfiguration()
 	if (mobile_fixed) {
 		vel_hydro_from_fixed.resize(np_mobile);
 		ang_vel_hydro_from_fixed.resize(np_mobile);
-		wall_hydro_force.resize(p.np_fixed);
-		wall_hydro_torque.resize(p.np_fixed);
+		non_rate_proportional_wall_force.resize(p.np_fixed);
+		non_rate_proportional_wall_torque.resize(p.np_fixed);
+		rate_proportional_wall_force.resize(p.np_fixed);
+		rate_proportional_wall_torque.resize(p.np_fixed);
 	}
 	//
 	interaction = new Interaction [maxnb_interactionpair];
@@ -582,8 +582,10 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 			ang_vel_hydro_from_fixed[i].reset();
 		}
 		for (int i=0; i<p.np_fixed; i++) {
-			wall_hydro_force[i].reset();
-			wall_hydro_torque[i].reset();
+			non_rate_proportional_wall_force[i].reset();
+			non_rate_proportional_wall_torque[i].reset();
+			rate_proportional_wall_force[i].reset();
+			rate_proportional_wall_torque[i].reset();
 		}
 	}
 
@@ -936,8 +938,8 @@ void System::forceResultantReset()
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
-									   const string& time_or_strain,
-									   const double& value_end)
+									   									 double time_end,
+																			 double strain_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -961,15 +963,17 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (calc_stress) {
 		wallForces();
 		for (int k=0; k<nb_interaction; k++) {
-            if (interaction[k].is_active()) {
-                interaction[k].lubrication.calcPairwiseForce();
-            }
-        }
-        calcStressPerParticle();
+			if (interaction[k].is_active()) {
+				interaction[k].lubrication.calcPairwiseForce();
+			}
+		}
+		calcStressPerParticle();
 		calcStress();
-		calcTotalStressPerParticle();
+		if (!p.out_particle_stress.empty() || couette_stress) {
+			calcTotalStressPerParticle();
+		}
    }
-    timeStepMove(time_or_strain, value_end);
+    timeStepMove(time_end, strain_end);
     if (eventLookUp != NULL) {
         (this->*eventLookUp)();
     }
@@ -980,8 +984,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
  ****************************************************************************************************/
 
 void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-												   const string& time_or_strain,
-												   const double& value_end)
+												   												 double time_end,
+																									 double strain_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -1055,7 +1059,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
         calcStressPerParticle(); // stress compornents
     }
-	timeStepMovePredictor(time_or_strain, value_end);
+	timeStepMovePredictor(time_end, strain_end);
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
@@ -1097,28 +1101,29 @@ void System::adaptTimeStep()
     }
 }
 
-void System::adaptTimeStep(const string& time_or_strain,
-                           const double& value_end)
+void System::adaptTimeStep(double time_end,
+                           double strain_end)
 {
     /**
      \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
 	*/
 	adaptTimeStep();
-	if (time_or_strain == "strain") {
-		if (fabs(dt*shear_rate) > value_end-fabs(get_shear_strain())) {
-			dt = fabs((value_end-fabs(get_shear_strain()))/shear_rate);
+
+	// To stop exactly at t == time_end or strain == strain_end,
+	// whatever comes first
+	if (strain_end >= 0) {
+		if (fabs(dt*shear_rate) > strain_end-fabs(get_shear_strain())) {
+			dt = fabs((strain_end-fabs(get_shear_strain()))/shear_rate);
 		}
-	} else {
-		if (get_time() + dt > value_end) {
-			/* To pass trough exactaly on t = value_end
-			 */
-            dt = value_end-get_time();
+	}
+	if (time_end >= 0) {
+		if (get_time() + dt > time_end) {
+      dt = time_end-get_time();
 		}
 	}
 }
 
-void System::timeStepMove(const string& time_or_strain,
-						  const double& value_end)
+void System::timeStepMove(double time_end, double strain_end)
 {
     /**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
@@ -1126,7 +1131,7 @@ void System::timeStepMove(const string& time_or_strain,
 
 	/* Adapt dt to get desired p.disp_max	 */
 	if (!p.fixed_dt) {
-		adaptTimeStep(time_or_strain, value_end);
+		adaptTimeStep(time_end, strain_end);
 	}
 	time += dt;
 	if (ratio_unit_time != NULL) {
@@ -1160,15 +1165,14 @@ void System::timeStepMove(const string& time_or_strain,
 	updateInteractions();
 }
 
-void System::timeStepMovePredictor(const string& time_or_strain,
-								   const double& value_end)
+void System::timeStepMovePredictor(double time_end, double strain_end)
 {
 	/**
 	 \brief Moves particle positions according to previously computed velocities, predictor step.
 	 */
 	if (!brownian) { // adaptative time-step for non-Brownian cases
 		if (!p.fixed_dt) {
-			adaptTimeStep(time_or_strain, value_end);
+			adaptTimeStep(time_end, strain_end);
 		}
 	}
 	time += dt;
@@ -1234,20 +1238,23 @@ void System::timeStepMoveCorrector()
 	updateInteractions();
 }
 
-bool System::keepRunning(const string& time_or_strain,
-						 const double& value_end)
+
+bool System::keepRunning(double time_end, double strain_end)
 {
-	bool keep_running;
-	if (time_or_strain == "strain") {
-		keep_running = (fabs(get_shear_strain()) < value_end-1e-8) && events.empty();
-	} else {
-		keep_running = (get_time() < value_end-1e-8) && events.empty();
+	if (fabs(get_shear_strain()) > strain_end-1e-8) {
+		return false;
 	}
-	return keep_running;
+ 	if (get_time() > time_end-1e-8) {
+		return false;
+	}
+	if (!events.empty()) {
+		return false;
+	}
+	return true;
 }
 
-void System::timeEvolution(const string& time_or_strain,
-						   const double& value_end)
+
+void System::timeEvolution(double time_end, double strain_end)
 {
 	/**
 	 \brief Main time evolution routine: evolves the system until time_end
@@ -1280,8 +1287,8 @@ void System::timeEvolution(const string& time_or_strain,
 
 	avg_dt = 0;
 	avg_dt_nb = 0;
-	while (keepRunning(time_or_strain, value_end)) {
-		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // no stress computation except at low Peclet
+	while (keepRunning(time_end, strain_end)) {
+		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // no stress computation except at low Peclet
 		avg_dt += dt;
 		avg_dt_nb++;
 	};
@@ -1289,7 +1296,7 @@ void System::timeEvolution(const string& time_or_strain,
 
 	if (events.empty()) {
 		calc_stress = true;
-		(this->*timeEvolutionDt)(calc_stress, time_or_strain, value_end); // last time step, compute the stress
+		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
 		&& shear_strain > p.start_adjust) {
@@ -1648,19 +1655,73 @@ void System::buildHydroTermsFromFixedParticles()
 }
 
 
-void System::computeHydroForcesOnWallParticles()
+void System::computeForcesOnWallParticles()
 {
+	/**
+		\brief This method computes the force (and torque, for now, but it might be dropped)
+		on the fixed particles.
 
-	/// UNFINISHED
+		It is designed with simple shear with walls under stress controlled conditions in mind,
+		so it decomposes the force in a rate-proportional part and a rate-independent part.
+
+		*/
+
+	if (magnetic) {
+		throw runtime_error(" No stress-control with walls with magnetic forces.\n");
+	}
+	if (!zero_shear) {
+		throw runtime_error(" Stress-control with walls requires zero_shear==true .\n");
+	}
 	vector<vec3d> force (p.np_fixed);
 	vector<vec3d> torque (p.np_fixed);
 
-	stokes_solver.multiply_by_RFU_fm(vel_hydro, ang_vel_hydro, force, torque);
+	// Compute the part of the velocity of mobile particles
+	// that is not coming from the wall velocities
+	vector<vec3d> na_velocity_mobile (np_mobile);
+	vector<vec3d> na_ang_velocity_mobile (np_mobile);
+	for (int i=0; i<np_mobile; i++) {
+		na_velocity_mobile[i] = vel_contact[i];
+		na_ang_velocity_mobile[i] = ang_vel_contact[i];
+		if (repulsiveforce) {
+			na_velocity_mobile[i] += vel_repulsive[i];
+			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
+		}
+
+	}
+	// from this, we can compute the hydro force on the wall that does *not* depend on the wall velocity
+	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
+
+	// Now we sum up this hydro part with the other non-rate dependent forces (contact, etc)
 	for (int i=0; i<p.np_fixed; i++) {
-		wall_hydro_force[i] = -force[i];
-		wall_hydro_torque[i] = -torque[i];
+		non_rate_proportional_wall_force[i] = -force[i];
+		non_rate_proportional_wall_torque[i] = -torque[i];
+		non_rate_proportional_wall_force[i] += contact_force[i+np_mobile];
+		non_rate_proportional_wall_torque[i] += contact_torque[i+np_mobile];
+		if (repulsiveforce) {
+			non_rate_proportional_wall_force[i] += repulsive_force[i+np_mobile];
+		}
+		if (magnetic) {
+			throw runtime_error(" No stress-control with walls with magnetic forces.\n");
+		}
 	}
 
+	// Now the part proportional to the wall speed
+
+	// From the mobile particles
+	for (int i=0; i<np_mobile; i++) {
+		na_velocity_mobile[i] = vel_hydro_from_fixed[i];
+		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
+	}
+	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
+	for (int i=0; i<p.np_fixed; i++) {
+		rate_proportional_wall_force[i] = -force[i];
+		rate_proportional_wall_torque[i] = -torque[i];
+	}
+
+	// From the fixed particles themselves. This should be zero if these particles form a wall
+	// (i.e. they move with zero relative velocity) and if the Stokes drag is zero (which is controlled by sd_coeff)
+	// As we do not want to make too many assumptions here (especially regarding the Stokes drag)
+	// we compute it. [Probably a p.no_stokes_drag should be introduced at some point.]
 	vector<vec3d> na_velocity_fixed (p.np_fixed);
 	vector<vec3d> na_ang_velocity_fixed (p.np_fixed);
 	for (int i=0; i<p.np_fixed; i++) {
@@ -1669,8 +1730,8 @@ void System::computeHydroForcesOnWallParticles()
 	}
 	stokes_solver.multiply_by_RFU_ff(na_velocity_fixed, na_ang_velocity_fixed, force, torque);
 	for (int i=0; i<p.np_fixed; i++) {
-		wall_hydro_force[i] -= force[i];
-		wall_hydro_torque[i] -= torque[i];
+		rate_proportional_wall_force[i] -= force[i];
+		rate_proportional_wall_torque[i] -= torque[i];
 	}
 }
 
@@ -2109,17 +2170,14 @@ void System::computeShearRateWalls_2()
 	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
 	*/
 
-	computeHydroForcesOnWallParticles();
+	computeForcesOnWallParticles();
 
-	double total_hydro_wall_shear_stress = 0;
-	double total_nonhydro_wall_shear_stress = 0;
+	double total_rate_dep_wall_shear_stress = 0;
+	double total_rate_indep_wall_shear_stress = 0;
 
-	for (int i=np_mobile; i<np; i++) {
-		total_hydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile], wall_hydro_force[i-np_mobile]);
-		total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],contact_force[i]);
-		if (repulsiveforce) {
-			total_nonhydro_wall_shear_stress += dot(fixed_velocities[i-np_mobile],repulsive_force[i]);
-		}
+	for (int i=0; i<p.np_fixed; i++) {
+		total_rate_dep_wall_shear_stress += dot(fixed_velocities[i], rate_proportional_wall_force[i]);
+		total_rate_indep_wall_shear_stress += dot(fixed_velocities[i], non_rate_proportional_wall_force[i]);
 	}
 	double wall_surface;
 	if (twodimension) {
@@ -2128,11 +2186,11 @@ void System::computeShearRateWalls_2()
 		wall_surface = lx*ly;
 	}
 
-	total_hydro_wall_shear_stress /= wall_surface;
-	total_nonhydro_wall_shear_stress /= wall_surface;
+	total_rate_dep_wall_shear_stress /= wall_surface;
+	total_rate_indep_wall_shear_stress /= wall_surface;
 
-	// the total_hydro_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (target_stress - total_nonhydro_wall_shear_stress)/total_hydro_wall_shear_stress;
+	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
+	shear_rate = (target_stress - total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
 
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
@@ -2327,16 +2385,16 @@ void System::computeVelocities(bool divided_velocities)
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
-				computeShearRateWalls();
+				computeShearRateWalls_2();
 				rescaleVelHydroStressControlledFixed();
 			}
 		}
 		sumUpVelocityComponents();
 	} else {
 		setFixedParticleVelocities();
-        computeVelocityWithoutComponents();
+		computeVelocityWithoutComponents();
 	}
-  	if (brownian) {
+	if (brownian) {
 		if (in_predictor) {
 			/* generate new F_B only in predictor
 			 * Resistance matrix is used.

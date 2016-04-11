@@ -9,7 +9,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 11/15/12.
-//  Copyright (c) 2012 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2016 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #ifndef __LF_DEM__Simulation__
 #define __LF_DEM__Simulation__
@@ -37,7 +37,7 @@ private:
 	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
 	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
 	std::map <std::string, std::string> unit_longname;
-	std::list <InputValue> input_values;
+	std::map <std::string, InputValue> input_values;
 	double volume_or_area_fraction;
 	std::string header_imported_configulation[2];
 	std::string control_var;
@@ -116,7 +116,7 @@ public:
 	};
 	ParameterSet p;
 	bool keepRunning();
-	void timeEvolution(double& next_output_data);
+	// void timeEvolution(double& next_output_data);
 	void generateOutput(double& next_output_config, int& binconf_counter);
 	/*********** Events  ************/
 	std::list <Event> events;

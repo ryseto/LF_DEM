@@ -81,21 +81,21 @@ private:
 	double costheta_shear;
 	double sintheta_shear;
 	/* data */
+	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
-	void (System::*timeEvolutionDt)(bool, const std::string&, const double&);
-	void timeEvolutionEulersMethod(bool calc_stress, const std::string& time_or_strain, const double& value_end);
+	void (System::*timeEvolutionDt)(bool, double, double);
+	void timeEvolutionEulersMethod(bool calc_stress,
+																 double time_end,
+																 double strain_end);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-											   const std::string& time_or_strain,
-											   const double& value_end);
-	void timeStepMove(const std::string& time_or_strain,
-					  const double& value_end);
+											   										 double time_end,
+																						 double strain_end);
+	void timeStepMove(double time_end, double strain_end);
 	void timeStepMoveCorrector();
-	void timeStepMovePredictor(const std::string& time_or_strain,
-							   const double& value_end);
+	void timeStepMovePredictor(double time_end, double strain_end);
 	void timeStepBoxing();
 	void adaptTimeStep();
-	void adaptTimeStep(const std::string& time_or_strain,
-					   const double& value_end);
+	void adaptTimeStep(double time_end, double strain_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
 	void setMagneticForceToParticle();
@@ -123,7 +123,7 @@ private:
 	void computeShearRate();
 	void computeShearRateWalls();
 	void computeShearRateWalls_2();
-	void computeHydroForcesOnWallParticles();
+	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
 	void rescaleVelHydroStressControlledFixed();
@@ -207,8 +207,13 @@ private:
 	std::vector<vec3d> position;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
-	std::vector<vec3d> wall_hydro_force;
-	std::vector<vec3d> wall_hydro_torque;
+	// std::vector<vec3d> wall_hydro_force;
+	// std::vector<vec3d> wall_hydro_torque;
+	std::vector<vec3d> non_rate_proportional_wall_force;
+	std::vector<vec3d> non_rate_proportional_wall_torque;
+	std::vector<vec3d> rate_proportional_wall_force;
+	std::vector<vec3d> rate_proportional_wall_torque;
+
 	Interaction *interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
@@ -216,10 +221,10 @@ private:
 
 	vec3d *velocity;
 	vec3d *velocity_predictor;
-	vec3d *na_velocity;
+	std::vector<vec3d> na_velocity;
 	vec3d *ang_velocity;
 	vec3d *ang_velocity_predictor;
-	vec3d *na_ang_velocity;
+	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> vel_repulsive;
 	std::vector<vec3d> ang_vel_repulsive;
 	std::vector<vec3d> vel_contact;
@@ -356,8 +361,7 @@ private:
 	void allocatePositionRadius();
 	void allocateRessourcesPreConfiguration();
 	void allocateRessourcesPostConfiguration();
-	void timeEvolution(const std::string& time_or_strain,
-					   const double& value_end);
+	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
