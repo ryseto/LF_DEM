@@ -227,7 +227,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	TimeKeeper tk;
 	if (p.log_time_interval) {
 		tk.addClock("data", LogClock(p.initial_log_time,
-									 time_end,
+									 p.time_end,
 									 p.nb_output_data_log_time,
 									 input_values["time_end"].unit == "strain"));
 	} else {
@@ -237,7 +237,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	}
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
-									   time_end,
+									   p.time_end,
 									   p.nb_output_config_log_time,
 									   input_values["time_end"].unit == "strain"));
 	} else {
@@ -249,7 +249,6 @@ void Simulation::simulationSteadyShear(string in_args,
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();
 		pair<double, string> s = tk.nextStrain();
-		cout << " next " << t.first << endl;
 		if (t.second.empty()) { // no next time
 			sys.timeEvolution(-1, s.first);
 		} else if (s.second.empty()) { // no next strain
@@ -323,7 +322,7 @@ void Simulation::simulationInverseYield(string in_args,
 	tk.addClock("config", LinearClock(time_end,
 										p.time_interval_output_config,
 										input_values["time_end"].unit == "strain"));
-	int binconf_counter = 0;									
+	int binconf_counter = 0;
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();
 		pair<double, string> s = tk.nextStrain();
