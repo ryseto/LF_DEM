@@ -258,10 +258,6 @@ void Simulation::simulationSteadyShear(string in_args,
 		}
 		handleEvents();
 
-		// For now we assume that the next event is a data output,
-		// but it will be relaxed in the future.
-		// The new TimeKeeper keeps track of what event comes first,
-		// so we will use this at some point.
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_shear_strain());
 		generateOutput(output_events, binconf_counter);
 
