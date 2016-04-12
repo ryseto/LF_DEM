@@ -994,9 +994,9 @@ void Simulation::setDefaultParameters(string input_scale)
 inline string columnDefinition(int &cnb, const string &type, const string &name)
 {
 	stringstream defs;
-	if (type=="vec3d") {
-		array<string,3> xyz = {"x", "y", "z"};
-		for (auto &u : xyz){
+	if (type == "vec3d") {
+		array<string, 3> xyz = {"x", "y", "z"};
+		for (auto &u : xyz) {
 			stringstream col_def_complement;
 			defs << "#" << cnb << ": "<< name << " " << u << "\n";
 			cnb ++;
