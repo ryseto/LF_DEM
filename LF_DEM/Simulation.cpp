@@ -258,7 +258,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		}
 		handleEvents();
 
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_shear_strain());
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
 		generateOutput(output_events, binconf_counter);
 
 		if (time_end != -1) {
@@ -330,7 +330,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else { // either next time or next strain
 			sys.timeEvolution(t.first, s.first);
 		}
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_shear_strain());
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
 		generateOutput(output_events, binconf_counter);
 
 
