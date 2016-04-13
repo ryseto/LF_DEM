@@ -1098,8 +1098,7 @@ void System::adaptTimeStep()
     }
 }
 
-void System::adaptTimeStep(double time_end,
-						   double strain_end)
+void System::adaptTimeStep(double time_end, double strain_end)
 {
     /**
      \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.

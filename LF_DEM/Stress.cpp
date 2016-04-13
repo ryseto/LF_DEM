@@ -139,10 +139,20 @@ void System::calcTotalStressPerParticle()
 
 void System::getStressCouette(int i,
 							  double &stress_rr,
-							  double &stress_thetatheta,
-							  double &stress_rtheta)
+							  double &stress_tt,
+							  double &stress_rt)
 {
+	// (0 xx, 1 xy, 2 xz, 3 yz, 4 yy, 5 zz)
 	vec3d pos_normal = position[i]-origin_of_rotation;
+	double r_dist = pos_normal.norm();
+	double ctheta = pos_normal.x/r_dist;
+	double stheta = pos_normal.z/r_dist;
+	double cc = ctheta*ctheta;
+	double ss = stheta*stheta;
+	double cs = ctheta*stheta;
+	stress_rr =  cc*total_stress_pp[i].elm[0]+   2*cs*total_stress_pp[i].elm[2]+ss*total_stress_pp[i].elm[5];
+	stress_tt =  ss*total_stress_pp[i].elm[0]-   2*cs*total_stress_pp[i].elm[2]+cc*total_stress_pp[i].elm[5];
+	stress_rt = -cs*total_stress_pp[i].elm[0]+(cc-ss)*total_stress_pp[i].elm[2]+cs*total_stress_pp[i].elm[5];
 }
 
 void System::calcStress()

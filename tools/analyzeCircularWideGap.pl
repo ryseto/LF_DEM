@@ -23,7 +23,6 @@ $initconfig = substr($name, 0, $j+14);
 
 printf "$initconfig\n";
 
-
 open (IN_CONFIG, "< ${initconfig}.dat");
 $line = <IN_CONFIG>;
 $line = <IN_CONFIG>;
@@ -50,7 +49,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 2;
+$shear_strain_steady_state = 1;
 
 if ($np_mov <= 3000) {
 	$kmax = 8;
@@ -62,10 +61,7 @@ if ($np_mov <= 3000) {
 $r_in = $radius_in;
 $r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
-
 $v_out = ($radius_out-$radius_in)*1;
-
-
 $dr = $rdiff/$kmax;
 
 printf "$radius_in $radius_out $rdiff $dr \n";
@@ -84,17 +80,20 @@ while (1) {
 		last;
 	}
 }
-
-for ($k = 0; $k < $kmax; $k++) {
-	if ($cnt[$k] != 0) {
-		$ave_v_tan[$k] = $average_v[$k]/$cnt[$k];
-	}
-}
-
+#
+#for ($k = 0; $k < $kmax; $k++) {
+#	if ($cnt[$k] != 0) {
+#		$ave_v_tan[$k] = $average_v[$k]/$cnt[$k];
+#		$ave_stress_rr[$k] = $average_stress_rr[$k]/$cnt[$k];
+#	}
+#}
 
 for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
 		$ave_v_tan = $average_v[$k]/$cnt[$k];
+		$ave_stress_rr = $average_stress_rr[$k]/$cnt[$k];
+		$ave_stress_tt = $average_stress_tt[$k]/$cnt[$k];
+		$ave_stress_rt = $average_stress_rt[$k]/$cnt[$k];
 		if ($k < $kmax -1) {
 			$gradient_v_tan = ($ave_v_tan[$k+1]-$ave_v_tan[$k])/$dr;
 		} else {
@@ -106,23 +105,17 @@ for ($k = 0; $k < $kmax; $k++) {
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
-		
-		printf OUT "$rmid $ave_v_tan[$k] $gradient_v_tan $density $rnorm\n";
+		printf OUT "$rmid $ave_v_tan $gradient_v_tan $density $rnorm $ave_stress_rr $ave_stress_tt $ave_stress_rt \n";
 	}
 }
-
 
 for ($i = 0; $i < $np; $i ++){
 	printf OUTpos "$posx[$i] $posz[$i] $radius[$i]\n";
 }
-
-
 close (OUT);
 close (OUTpos);
 close (IN_particle);
-
 ##################################################################
-
 sub readHeader {
 	$line = <IN_particle>;
 	$line = <IN_particle>; ($buf, $buf, $np) = split(/\s+/, $line);
@@ -150,7 +143,6 @@ sub InParticles {
 		# 6 sys.angle_external_magnetic_field
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
 		printf "$shear_strain\n";
-		
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
 			# 1: number of the particle
@@ -163,7 +155,7 @@ sub InParticles {
 			# 14: viscosity contributon of brownian xz
 			# (15: angle for 2D simulation)
 			($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-			$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+			$stress_rr, $stress_tt, $stress_rt, $angle) = split(/\s+/, $line);
 			$ang[$i] = $angle;
 			$radius[$i] = $a;
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
@@ -174,8 +166,13 @@ sub InParticles {
 				$i_rpos = floor($f_rpos);
 				if ($i_rpos >= 0 && $i_rpos < $kmax) {
 					$average_v[$i_rpos] += $v_tan;
-					$cnt[$i_rpos] ++;
+					$average_stress_rr[$i_rpos] += $stress_rr;
+					$average_stress_tt[$i_rpos] += $stress_tt;
+					$average_stress_rt[$i_rpos] += $stress_rt;
 					$particlearea[$i_rpos] += pi*$a*$a;
+
+					$cnt[$i_rpos] ++;
+					
 				} else {
 					printf "@ $i $i_rpos   $pos_r\n";
 					exit;
@@ -191,12 +188,9 @@ sub InParticles {
 			#$omegaz[$i] = $oz;
 			#$omegay[$i] = $oy;
 		}
-		
 		if ($shear_strain > $shear_strain_steady_state) {
 			$cnt_data ++;
 			#		exit;
 		}
-
 	}
-	
 }

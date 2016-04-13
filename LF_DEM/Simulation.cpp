@@ -154,7 +154,6 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 	}
 }
 
-
 /*
  * Main simulation
  */
@@ -554,7 +553,8 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	conf_export.close();
 }
 
-double Simulation::getRate(){
+double Simulation::getRate()
+{
 	/**
 	 \brief The shear rate in the input units
 	 */

@@ -1033,22 +1033,61 @@ void Simulation::openOutputFiles()
 		fout_particle.open(particle_filename.c_str());
 		outputDataHeader(fout_particle);
 		//
-		string fout_par_col_def =
-		"#1: number of the particle\n"
-		"#2: radius\n"
-		"#3: position x\n"
-		"#4: position y\n"
-		"#5: position z\n"
-		"#6: velocity x\n"
-		"#7: velocity y\n"
-		"#8: velocity z\n"
-		"#9: angular velocity x\n"
-		"#10: angular velocity y\n"
-		"#11: angular velocity z\n"
-		"#12: viscosity contribution of lubrication\n"
-		"#13: viscosity contributon of contact GU xz\n"
-		"#14: viscosity contributon of brownian xz\n"
-		"#15: angle (for 2D simulation only)\n";
+		string fout_par_col_def;
+		if (control_var != "magnetic") {
+			if (sys.couette_stress) {
+				fout_par_col_def =
+				"#1: number of the particle\n"
+				"#2: radius\n"
+				"#3: position x\n"
+				"#4: position y\n"
+				"#5: position z\n"
+				"#6: velocity x\n"
+				"#7: velocity y\n"
+				"#8: velocity z\n"
+				"#9: angular velocity x\n"
+				"#10: angular velocity y\n"
+				"#11: angular velocity z\n"
+				"#12: stress_rr\n"
+				"#13: stress_thetatheta\n"
+				"#14: stress_rtheta\n"
+				"#15: angle (for 2D simulation only)\n";
+			} else {
+				fout_par_col_def =
+				"#1: number of the particle\n"
+				"#2: radius\n"
+				"#3: position x\n"
+				"#4: position y\n"
+				"#5: position z\n"
+				"#6: velocity x\n"
+				"#7: velocity y\n"
+				"#8: velocity z\n"
+				"#9: angular velocity x\n"
+				"#10: angular velocity y\n"
+				"#11: angular velocity z\n"
+				"#12: viscosity contribution of lubrication\n"
+				"#13: viscosity contributon of contact GU xz\n"
+				"#14: viscosity contributon of brownian xz\n"
+				"#15: angle (for 2D simulation only)\n";
+			}
+		} else {
+			fout_par_col_def =
+			"#1: number of the particle\n"
+			"#2: radius\n"
+			"#3: position x\n"
+			"#4: position y\n"
+			"#5: position z\n"
+			"#6: velocity x\n"
+			"#7: velocity y\n"
+			"#8: velocity z\n"
+			"#9: angular velocity x\n"
+			"#10: angular velocity y\n"
+			"#11: angular velocity z\n"
+			"#12: magnetic moment x\n"
+			"#13: magnetic moment y\n"
+			"#14: magnetic moment z\n"
+			"#15: angle (for 2D simulation only)\n";
+		}
 		if (p.out_data_vel_components) {
 			int cnb = 16;
 			stringstream col_def_complement;
@@ -1225,8 +1264,8 @@ int Simulation::get_np_Binary(const string& filename_import_positions)
 	return np;
 }
 
-void Simulation::setMetadata(fstream &file_import){
-
+void Simulation::setMetadata(fstream &file_import)
+{
 	double lx, ly, lz;
 	vec3d initial_lees_edwards_disp;
 	initial_lees_edwards_disp.reset();
@@ -1280,7 +1319,8 @@ void Simulation::setMetadata(fstream &file_import){
 	sys.shear_disp = initial_lees_edwards_disp;
 }
 
-void Simulation::readPositions(fstream &file_import){
+void Simulation::readPositions(fstream &file_import)
+{
 	/**
 		\brief Import a regular text file configuration.
 
@@ -1300,7 +1340,8 @@ void Simulation::readPositions(fstream &file_import){
 	sys.setConfiguration(initial_position, radius);
 }
 
-void Simulation::readPositionsImposedVelocity(fstream &file_import){
+void Simulation::readPositionsImposedVelocity(fstream &file_import)
+{
 	/**
 		\brief Import a text file configuration with imposed velocity particles.
 
@@ -1339,7 +1380,8 @@ void Simulation::readPositionsImposedVelocity(fstream &file_import){
 	sys.setFixedVelocities(fixed_velocities);
 }
 
-void Simulation::readPositionsMagnetic(fstream &file_import){
+void Simulation::readPositionsMagnetic(fstream &file_import)
+{
 	/**
 		\brief Import a text file configuration with magnetic moments and susceptibility.
 

@@ -118,7 +118,7 @@ void Interaction::updateState(bool& deactivated)
 	}
 
 	calcNormalVectorDistanceGap();
-
+	
 	if (r > interaction_range) {
 		/* all interactions are switched off. */
 		deactivate();
