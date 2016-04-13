@@ -183,21 +183,21 @@ void System::allocateRessourcesPreConfiguration()
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
 	}
-	vel_contact.resize(np_mobile);
-	ang_vel_contact.resize(np_mobile);
-	vel_hydro.resize(np_mobile);
-	ang_vel_hydro.resize(np_mobile);
+	vel_contact.resize(np);
+	ang_vel_contact.resize(np);
+	vel_hydro.resize(np);
+	ang_vel_hydro.resize(np);
 	if (repulsiveforce) {
-		vel_repulsive.resize(np_mobile);
-		ang_vel_repulsive.resize(np_mobile);
+		vel_repulsive.resize(np);
+		ang_vel_repulsive.resize(np);
 	}
 	if (brownian) {
-		vel_brownian.resize(np_mobile);
-		ang_vel_brownian.resize(np_mobile);
+		vel_brownian.resize(np);
+		ang_vel_brownian.resize(np);
 	}
 	if (magnetic) {
-		vel_magnetic.resize(np_mobile);
-		ang_vel_magnetic.resize(np_mobile);
+		vel_magnetic.resize(np);
+		ang_vel_magnetic.resize(np);
 	}
 	if (mobile_fixed) {
 		vel_hydro_from_fixed.resize(np_mobile);
@@ -561,7 +561,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		ang_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	for (int i=0; i<np_mobile; i++) {
+	for (int i=0; i<np; i++) {
 		vel_contact[i].reset();
 		ang_vel_contact[i].reset();
 		vel_hydro[i].reset();
