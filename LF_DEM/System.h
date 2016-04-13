@@ -399,6 +399,7 @@ private:
 	double calcLubricationRange(const int& i, const int& j);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
+	std::pair<double,double> checkForceOnWalls();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{

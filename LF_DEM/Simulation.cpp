@@ -608,6 +608,9 @@ void Simulation::outputData()
 	if (sys.wall_rheology) {
 		number_of_data = 40;
 	}
+	if (sys.test_simulation==31) {
+		number_of_data = 39;
+	}
 	outdata.init(number_of_data, output_unit_scales);
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
@@ -665,6 +668,11 @@ void Simulation::outputData()
 		outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
 		outdata.entryData(39, "normal stress/rate wall 1", "viscosity", sys.normalstress_wall1/sr);
 		outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
+	}
+	if (sys.test_simulation == 31) {
+		pair<double, double> fw = sys.checkForceOnWalls();
+		outdata.entryData(37, "force top wall", "force", fw.first);
+		outdata.entryData(38, "force bottom wall", "force", fw.second);
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/

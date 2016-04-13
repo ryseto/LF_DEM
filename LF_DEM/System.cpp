@@ -2154,6 +2154,24 @@ void System::computeShearRateWalls()
 	}
 }
 
+pair<double, double> System::checkForceOnWalls()
+{
+	computeForcesOnWallParticles();
+
+	double total_force_up = 0;
+	double total_force_down = 0;
+
+	for (int i=0; i<p.np_fixed; i++) {
+		if (fixed_velocities[i].x>0) {
+			total_force_up += rate_proportional_wall_force[i].x;
+		}
+		else {
+			total_force_down += rate_proportional_wall_force[i].x;
+		}
+	}
+	return make_pair(total_force_up, total_force_down);
+}
+
 void System::computeShearRateWalls_2()
 {
 	/**
