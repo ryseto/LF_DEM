@@ -670,9 +670,8 @@ void Simulation::outputData()
 		outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
 	}
 	if (sys.test_simulation == 31) {
-		pair<double, double> fw = sys.checkForceOnWalls();
-		outdata.entryData(37, "force top wall", "force", fw.first);
-		outdata.entryData(38, "force bottom wall", "force", fw.second);
+		outdata.entryData(37, "force top wall", "force", sys.force_upwall);
+		outdata.entryData(38, "force bottom wall", "force", sys.force_downwall);
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
