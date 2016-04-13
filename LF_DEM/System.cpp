@@ -2168,7 +2168,7 @@ void System::computeShearRateWalls()
 	total_rate_indep_wall_shear_stress /= wall_surface;
 
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
+	shear_rate = (-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
 
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
