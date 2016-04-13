@@ -199,7 +199,7 @@ def read_conf_file(fname):
     meta_values = line2.split()[1:]
     meta_data = dict(zip(meta_fields, meta_values))
 
-    dat = np.genfromtxt(fname)
+    dat = np.genfromtxt(fname, usecols=np.arange(4))
     pos = dat[:, :3].astype(np.float)
     rad = dat[:, 3].astype(np.float)
     if openedfile:

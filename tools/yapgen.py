@@ -103,7 +103,7 @@ def snaps2yap(pos_fname, force_factor):
 
 def conf2yap(conf_fname):
     yap_filename = pos_fname.replace(".dat", ".yap")
-
+    print("Yap file : ", yap_filename)
     positions, radii, meta = lf.read_conf_file(conf_fname)
     positions[:, 0] -= float(meta['lx'])/2
     positions[:, 1] -= float(meta['ly'])/2
@@ -113,7 +113,6 @@ def conf2yap(conf_fname):
     yap_out = pyp.add_color_switch(yap_out, 3)
     yap_out = np.row_stack(
                     (yap_out, pyp.get_particles_yaparray(positions, radii)))
-
     pyp.savetxt(yap_filename, yap_out)
 
 if len(sys.argv) < 2:
