@@ -240,8 +240,7 @@ sub InParticles {
 				# 13: viscosity contributon of contact GU xz
 				# 14: viscosity contributon of brownian xz
 				# (15: angle for 2D simulation)
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $s_rr, $s_tt, $s_rt, $angle) = split(/\s+/, $line);
 				
 				#
 				$ang[$i] = $angle;
@@ -272,6 +271,7 @@ sub InParticles {
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
 				$omegay[$i] = $oy;
+				$stress_rr[$i] = $s_rr;
 				if ($radius_max < $a) {
 					$radius_max = $a;
 				}
@@ -386,13 +386,22 @@ sub OutYaplotData{
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
 	} else {
-		printf OUT "@ 8\n";
+		#printf OUT "@ 8\n";
 		for ($i = 0; $i < $np_movable; $i++) {
-			printf OUT "r $radius[$i]\n";
+			#printf OUT "r $radius[$i]\n";
+			if ($stress_rr[$i] > 0) {
+				printf OUT "@ 8\n";
+				$rrr =  0.0001*$stress_rr[$i];
+				printf OUT "r $rrr\n"
+			} else {
+				printf OUT "@ 3\n";
+				$rrr = -0.0001*$stress_rr[$i];
+				printf OUT "r $rrr\n"
+			}
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
 		printf OUT "y 5\n";
-		
+		printf OUT "@ 8\n";
 		for ($i = $np_movable; $i < $np; $i++) {
 			printf OUT "r $radius[$i]\n";
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
