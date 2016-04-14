@@ -117,7 +117,6 @@ System::~System()
 	}
 	DELETE(interaction);
 	DELETE(interaction_list);
-	DELETE(interaction_partners);
 	if (brownian) {
 		DELETE(brownianstressGU);
 		DELETE(brownianstressGU_predictor);
@@ -214,7 +213,7 @@ void System::allocateRessourcesPreConfiguration()
 		interaction[k].set_label(k);
 	}
 	interaction_list = new set <Interaction*> [np];
-	interaction_partners = new unordered_set <int> [np];
+	interaction_partners.resize(np);
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg = new Averager<double>(p.memory_strain_avg);
@@ -1316,6 +1315,40 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
 }
 
+bool System::hasNeighbor(int i, int j){
+	// return interaction_partners[i].find(j) != interaction_partners[i].end();
+	for (int k : interaction_partners[i]){
+		if (j==k) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void System::removeNeighbors(int i, int j){
+	// return interaction_partners[i].find(j) != interaction_partners[i].end();
+	vector<int> &neighi = interaction_partners[i];
+	vector<int> &neighj = interaction_partners[j];
+
+	int l = neighi[neighi.size()-1];
+	for (unsigned int k=0; k<neighi.size(); k++){
+		if (neighi[k]==j) {
+			neighi[k] = l;
+			break;
+		}
+	}
+	neighi.pop_back();
+	l = neighj[neighj.size()-1];
+	for (unsigned int k=0; k<neighj.size(); k++){
+		if (neighj[k]==i) {
+			neighj[k] = l;
+			break;
+		}
+	}
+	neighj.pop_back();
+}
+
 void System::checkNewInteraction()
 {
 	/**
@@ -1329,7 +1362,7 @@ void System::checkNewInteraction()
 	for (int i=0; i<np_mobile; i++) {
 		for (const int& j : boxset.neighborhood(i)) {
 			if (j > i) {
-				if (interaction_partners[i].find(j) == interaction_partners[i].end()) {
+				if (!hasNeighbor(i, j)) {
 					pos_diff = position[j]-position[i];
 					periodize_diff(pos_diff, zshift);
 					sq_dist = pos_diff.sq_norm();

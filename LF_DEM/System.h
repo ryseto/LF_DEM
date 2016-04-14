@@ -143,6 +143,7 @@ private:
 	void forceResultantLubricationForce();
 	void forceResultantInterpaticleForces();
 	void wallForces();
+	bool hasNeighbor(int i, int j);
 
 #ifndef USE_DSFMT
 	MTRand *r_gen;
@@ -283,7 +284,8 @@ private:
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
 	std::set <Interaction*> *interaction_list;
-	std::unordered_set <int> *interaction_partners;
+	std::vector < std::vector<int> > interaction_partners;
+	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
@@ -367,6 +369,7 @@ private:
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
+	void removeNeighbors(int i, int j);
 	void updateNumberOfInteraction(int p0, int p1, int val);
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
