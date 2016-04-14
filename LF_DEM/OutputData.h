@@ -35,8 +35,8 @@ private:
 	std::vector <std::string> output_data_type;
 	std::map <std::string, double> converter;
 	std::ofstream fout;
-	
-	int getLineNumber() 
+
+	int getLineNumber()
 	{
 		unsigned int line_nb = 0;
 		for (const auto& col : output_data) {
@@ -46,7 +46,7 @@ private:
 			if (col.size() > 0 && col.size() != line_nb) {
 				std::cerr << " Error: inconsistent output. Number of lines to output is heterogeneous." << std::endl;
 				exit(1);
-			} 
+			}
 		}
 		return line_nb;
 	}
@@ -74,8 +74,8 @@ public:
 		fout.open(fname.c_str());
 		fout << data_header;
 	}
-	
-	void init(int number_of_data_, std::string output_unit) 
+
+	void init(int number_of_data_, std::string output_unit)
 	{
 		if (first_time) {
 			out_unit = output_unit;
@@ -94,7 +94,7 @@ public:
 			}
 		}
 	}
-	
+
     void setDimensionlessNumber(double dimensionless_number)
     // dimensionless_number = internal_force_unit/output_force_unit
     {
@@ -105,11 +105,12 @@ public:
 		converter["none"] = 1;
 		converter["viscosity"] = 6*M_PI;
 		converter["stress"] = dimensionless_number;
+		converter["force"] = dimensionless_number;
 		converter["time"] = 1/dimensionless_number;
 		converter["rate"] = dimensionless_number;
 		converter["velocity"] = dimensionless_number;
 	}
-	
+
     template<typename T>
     void entryData(int num,
                    std::string name,
@@ -122,11 +123,11 @@ public:
         if (first_time) {
 			output_data_name[index] = name;
 			output_data_type[index] = type;
-		}		
+		}
 		output_data[index].push_back(str_value.str());
 	}
-	
-	void writeToFile(std::string header) 
+
+	void writeToFile(std::string header)
 	{
 		fout << header;
 		writeToFile();
@@ -136,7 +137,7 @@ public:
 	{
 		int line_nb = getLineNumber();
 		if (first_time) {
-			fout << "# data in " << out_unit << " units." << std::endl;	
+			fout << "# data in " << out_unit << " units." << std::endl;
 			for (int i=0; i<number_of_data; i++) {
 				fout << "#" << i+1 << ": ";
 				fout << output_data_name[i];

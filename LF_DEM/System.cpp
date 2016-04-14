@@ -183,21 +183,21 @@ void System::allocateRessourcesPreConfiguration()
 		velocity_predictor = new vec3d [np];
 		ang_velocity_predictor = new vec3d [np];
 	}
-	vel_contact.resize(np_mobile);
-	ang_vel_contact.resize(np_mobile);
-	vel_hydro.resize(np_mobile);
-	ang_vel_hydro.resize(np_mobile);
+	vel_contact.resize(np);
+	ang_vel_contact.resize(np);
+	vel_hydro.resize(np);
+	ang_vel_hydro.resize(np);
 	if (repulsiveforce) {
-		vel_repulsive.resize(np_mobile);
-		ang_vel_repulsive.resize(np_mobile);
+		vel_repulsive.resize(np);
+		ang_vel_repulsive.resize(np);
 	}
 	if (brownian) {
-		vel_brownian.resize(np_mobile);
-		ang_vel_brownian.resize(np_mobile);
+		vel_brownian.resize(np);
+		ang_vel_brownian.resize(np);
 	}
 	if (magnetic) {
-		vel_magnetic.resize(np_mobile);
-		ang_vel_magnetic.resize(np_mobile);
+		vel_magnetic.resize(np);
+		ang_vel_magnetic.resize(np);
 	}
 	if (mobile_fixed) {
 		vel_hydro_from_fixed.resize(np_mobile);
@@ -561,7 +561,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		ang_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	for (int i=0; i<np_mobile; i++) {
+	for (int i=0; i<np; i++) {
 		vel_contact[i].reset();
 		ang_vel_contact[i].reset();
 		vel_hydro[i].reset();
@@ -2124,37 +2124,25 @@ void System::computeShearRate()
 	}
 }
 
+// pair<vec3d, vec3d> System::checkForceOnWalls()
+// {
+// 	computeForcesOnWallParticles();
+//
+// 	vec3d total_force_up = 0;
+// 	vec3d total_force_down = 0;
+//
+// 	for (int i=0; i<p.np_fixed; i++) {
+// 		if (fixed_velocities[i].x>0) {
+// 			total_force_up += rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
+// 		}
+// 		if (fixed_velocities[i].x<0) {
+// 			total_force_down += rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
+// 		}
+// 	}
+// 	return make_pair(total_force_up, total_force_down);
+// }
+
 void System::computeShearRateWalls()
-{
-	/**
-	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
-	 */
-
-	// TODO: generalize to arbitrary direction: here, theta_shear is unrelated to the fixed velocity directions
-	calcStressPerParticle();
-	calcStress();
-	double shearstress_con;
-	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
-	double shearstress_from_fixed = target_stress-shearstress_con; // the target_stress minus all the other stresses
-	double shearstress_rep = 0;
-	if (repulsiveforce) {
-		shearstress_rep = shearStressComponent(total_repulsive_stressXF+total_repulsive_stressGU, p.theta_shear);
-		shearstress_from_fixed -= shearstress_rep;
-	}
-	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_from_fixed = shearStressComponent(total_hydrofromfixed_stressGU, p.theta_shear);
-	if (viscosity_from_fixed == 0) {
-		throw runtime_error("System:: computeShearRateWalls: velocity from fixed particles is zero. Probably the input fixed velocities are zero.");
-	}
-	shear_rate = shearstress_from_fixed/viscosity_from_fixed;
-	if (shear_strain < init_strain_shear_rate_limit) {
-		if (shear_rate > init_shear_rate_limit) {
-			shear_rate = init_shear_rate_limit;
-		}
-	}
-}
-
-void System::computeShearRateWalls_2()
 {
 	/**
 	 \brief Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.
@@ -2180,11 +2168,23 @@ void System::computeShearRateWalls_2()
 	total_rate_indep_wall_shear_stress /= wall_surface;
 
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
+	shear_rate = (-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
 
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			shear_rate = init_shear_rate_limit;
+		}
+	}
+	if(test_simulation == 31){
+		force_upwall.reset();
+		force_downwall.reset();
+		for (int i=0; i<p.np_fixed; i++) {
+			if (fixed_velocities[i].x>0) {
+				force_upwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
+			}
+			if (fixed_velocities[i].x<0) {
+				force_downwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
+			}
 		}
 	}
 }
@@ -2331,27 +2331,6 @@ void System::setFixedParticleVelocities()
 	} else if (test_simulation > 0) {
 		tmpMixedProblemSetVelocities();
 	}
-	// for (int i=np_mobile; i<np; i++){
-	// 	// have to set the fixed particles velocity components to zero (except vel_hydro_from_fixed)
-	// 	// to compute the stress correctly.
-	// 	// set vel_hydro_from_fixed = na_velocity (and same for the angular part)
-	// 	// (this is an abuse of vel_hydro_from_fixed,
-	// 	// which normally stores the velocity of the mobile particles
-	// 	// coming from hydro interactions with the fixed particles).
-	// 	// We should find a neater way to do that.
-	// 	vel_contact[i].reset();
-	// 	ang_vel_contact[i].reset();
-	// 	vel_hydro[i].reset();
-	// 	ang_vel_hydro[i].reset();
-	// 	if (repulsiveforce) {
-	// 		vel_repulsive[i].reset();
-	// 		ang_vel_repulsive[i].reset();
-	// 	}
-	// 	if (magnetic) {
-	// 		vel_magnetic[i].reset();
-	// 		ang_vel_magnetic[i].reset();
-	// 	}
-	// }
 }
 
 void System::computeVelocities(bool divided_velocities)
@@ -2375,7 +2354,7 @@ void System::computeVelocities(bool divided_velocities)
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
-				computeShearRateWalls_2();
+				computeShearRateWalls();
 				rescaleVelHydroStressControlledFixed();
 			}
 		}

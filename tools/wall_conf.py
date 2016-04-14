@@ -3,17 +3,19 @@ import numpy as np
 import sys
 import lfdem_file as lf
 
-if len(sys.argv) != 2:
-    print(sys.argv[0], " conf\n")
-
+if len(sys.argv) != 3:
+    print(" Usage: ", sys.argv[0], " conf wall_thickness\n")
+    exit(1)
 fname = sys.argv[1]
+wall_thickness = float(sys.argv[2])
+
 pos, rad, meta = lf.read_conf_file(fname)
 # get the top and bottom layers
 
-ztop = pos[:, 2]+2*rad
+ztop = pos[:, 2]+wall_thickness*rad
 top_particles = ztop > float(meta['lz'])
 
-zbottom = pos[:, 2]-2*rad
+zbottom = pos[:, 2]-wall_thickness*rad
 bottom_particles = zbottom < 0
 
 # freeze them

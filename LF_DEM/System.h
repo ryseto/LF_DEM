@@ -122,7 +122,6 @@ private:
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
 	void computeShearRate();
 	void computeShearRateWalls();
-	void computeShearRateWalls_2();
 	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
@@ -338,6 +337,9 @@ private:
     double shearstress_wall2;
     double normalstress_wall1;
     double normalstress_wall2;
+	vec3d force_upwall;
+	vec3d force_downwall;
+
 	/*
 	 * Simulation for magnetic particles
 	 */
@@ -399,6 +401,7 @@ private:
 	double calcLubricationRange(const int& i, const int& j);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
+	// std::pair<vec3d,vec3d> checkForceOnWalls();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
