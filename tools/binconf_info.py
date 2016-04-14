@@ -39,7 +39,7 @@ uisize = 2
 isize = 4
 dsize = 8
 loc = 0
-np = struct.unpack("i", buffer=conf[loc:isize])[0]
+np = struct.unpack("i", conf[loc:isize])[0]
 loc += isize
 vf = struct.unpack("d", conf[loc:loc+dsize])[0]
 loc += dsize
