@@ -125,14 +125,14 @@ void System::calcStressPerParticle()
 void System::calcTotalStressPerParticle()
 {
 	for (int i=0; i<np_mobile; i++) {
-		total_stress_pp[i] = lubstress[i];
-		total_stress_pp[i] += contactstressXF[i];
-		total_stress_pp[i] += contactstressGU[i];
+		total_stress_pp[i].reset();
+		total_stress_pp[i] += lubstress[i];
+		total_stress_pp[i] += (contactstressXF[i]+contactstressGU[i]);
 		if (mobile_fixed) {
 			total_stress_pp[i] += hydrofromfixedstressGU[i];
 		}
 		if (repulsiveforce) {
-			total_stress_pp[i] += repulsivestressXF[i]+repulsivestressGU[i];
+			total_stress_pp[i] += (repulsivestressXF[i]+repulsivestressGU[i]);
 		}
 	}
 }

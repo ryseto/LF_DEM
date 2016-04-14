@@ -29,10 +29,7 @@ public:
 
 	inline StressTensor(void)
 	{
-		elm.resize(6);
-		for (int i=0; i<6; i++) {
-			elm[i] = 0;
-		}
+		elm.resize(6, 0);
 	}
 
 	inline StressTensor(double a)

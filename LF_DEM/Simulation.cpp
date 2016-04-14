@@ -139,13 +139,13 @@ void Simulation::handleEvents()
 void Simulation::generateOutput(const set<string> &output_events, int& binconf_counter)
 {
 	outputConfigurationBinary(); // generic, for recovery if crash
-	if(output_events.find("data") != output_events.end()) {
+	if (output_events.find("data") != output_events.end()) {
 		evaluateData();
 		outputData();
 	}
 
-	if(output_events.find("config") != output_events.end()) {
-		if(p.out_binary_conf){
+	if (output_events.find("config") != output_events.end()) {
+		if (p.out_binary_conf) {
 			string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(++binconf_counter) + ".bin";
 			outputConfigurationBinary(binconf_filename);
 		} else {
