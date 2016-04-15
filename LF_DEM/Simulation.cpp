@@ -48,6 +48,10 @@ Simulation::~Simulation()
 	}
 };
 
+string Simulation::gitVersion(){
+	return GIT_VERSION;
+}
+
 bool Simulation::keepRunning()
 {
 	/** \brief Determine if we reached the end of the simulation.

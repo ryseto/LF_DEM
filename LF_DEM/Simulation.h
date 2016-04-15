@@ -200,5 +200,6 @@ public:
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
+	std::string gitVersion();
 };
 #endif /* defined(__LF_DEM__Simulation__) */
