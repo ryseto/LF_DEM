@@ -1315,32 +1315,32 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
 }
 
-bool System::hasNeighbor(int i, int j){
+bool System::hasNeighbor(int i, int j)
+{
 	// return interaction_partners[i].find(j) != interaction_partners[i].end();
-	for (int k : interaction_partners[i]){
-		if (j==k) {
+	for (int k : interaction_partners[i]) {
+		if (j == k) {
 			return true;
 		}
 	}
 	return false;
 }
 
-
-void System::removeNeighbors(int i, int j){
+void System::removeNeighbors(int i, int j)
+{
 	// return interaction_partners[i].find(j) != interaction_partners[i].end();
 	vector<int> &neighi = interaction_partners[i];
 	vector<int> &neighj = interaction_partners[j];
-
 	int l = neighi[neighi.size()-1];
-	for (unsigned int k=0; k<neighi.size(); k++){
-		if (neighi[k]==j) {
+	for (unsigned int k=0; k<neighi.size(); k++) {
+		if (neighi[k] == j) {
 			neighi[k] = l;
 			break;
 		}
 	}
 	neighi.pop_back();
 	l = neighj[neighj.size()-1];
-	for (unsigned int k=0; k<neighj.size(); k++){
+	for (unsigned int k=0; k<neighj.size(); k++) {
 		if (neighj[k]==i) {
 			neighj[k] = l;
 			break;
