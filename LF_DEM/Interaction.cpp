@@ -50,8 +50,8 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
 	// tell them their new partner
-	sys->interaction_partners[i].insert(j);
-	sys->interaction_partners[j].insert(i);
+	sys->interaction_partners[i].push_back(j);
+	sys->interaction_partners[j].push_back(i);
 	//
 	sys->updateNumberOfInteraction(p0, p1, 1);
 	//
@@ -105,8 +105,9 @@ void Interaction::deactivate()
 	active = false;
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);
-	sys->interaction_partners[p0].erase(p1);
-	sys->interaction_partners[p1].erase(p0);
+	// sys->interaction_partners[p0].erase(p1);
+	// sys->interaction_partners[p1].erase(p0);
+	sys->removeNeighbors(p0,p1);
 	sys->updateNumberOfInteraction(p0, p1, -1);
 }
 
@@ -118,7 +119,7 @@ void Interaction::updateState(bool& deactivated)
 	}
 
 	calcNormalVectorDistanceGap();
-	
+
 	if (r > interaction_range) {
 		/* all interactions are switched off. */
 		deactivate();
