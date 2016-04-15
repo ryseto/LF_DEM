@@ -109,10 +109,27 @@ def conf2yap(conf_fname):
     positions[:, 1] -= float(meta['ly'])/2
     positions[:, 2] -= float(meta['lz'])/2
 
-    yap_out = pyp.layer_switch(3)
-    yap_out = pyp.add_color_switch(yap_out, 3)
-    yap_out = np.row_stack(
+    if 'np_fixed' in meta:
+        # for conf with fixed particles
+        split_line = len(positions) - int(meta['np_fixed'])
+        pos_mobile, pos_fixed = np.split(positions, [split_line])
+        rad_mobile, rad_fixed = np.split(radii, [split_line])
+        yap_out = pyp.layer_switch(3)
+        yap_out = pyp.add_color_switch(yap_out, 3)
+        yap_out = np.row_stack((yap_out,
+                                pyp.get_particles_yaparray(pos_mobile,
+                                                           rad_mobile)))
+        yap_out = pyp.add_layer_switch(yap_out, 4)
+        yap_out = pyp.add_color_switch(yap_out, 4)
+        yap_out = np.row_stack((yap_out,
+                                pyp.get_particles_yaparray(pos_fixed,
+                                                           rad_fixed)))
+    else:
+        yap_out = pyp.layer_switch(3)
+        yap_out = pyp.add_color_switch(yap_out, 3)
+        yap_out = np.row_stack(
                     (yap_out, pyp.get_particles_yaparray(positions, radii)))
+
     pyp.savetxt(yap_filename, yap_out)
 
 if len(sys.argv) < 2:
