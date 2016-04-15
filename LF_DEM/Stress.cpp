@@ -173,7 +173,7 @@ void System::calcStress()
 	// XF contribution
 	total_contact_stressXF.reset();
 	bool cstress_per_particle = false;
-	if (p.out_particle_stress.find('c') != string::npos) {
+	if (p.out_particle_stress.find('c') != string::npos || couette_stress) {
 		cstress_per_particle = true;
 		for (int i=0; i<np; i++) {
 			contactstressXF[i].reset();
@@ -198,7 +198,7 @@ void System::calcStress()
 		// XF contribution
 		total_repulsive_stressXF.reset();
 		bool rstress_per_particle = false;
- 		if (p.out_particle_stress.find('r') != string::npos){
+ 		if (p.out_particle_stress.find('r') != string::npos || couette_stress){
 			rstress_per_particle = true;
 			for (int i=0; i<np; i++) {
 				repulsivestressXF[i] = 0;
