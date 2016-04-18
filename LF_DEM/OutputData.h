@@ -149,27 +149,17 @@ public:
 			if (width == 1) {
 				fout << "#" << i << ": ";
 			} else {
-				fout << "#" << i << "-" << i+width << ": ";
+				fout << "#" << i << "-" << i+width-1 << ": ";
 			}
 			i += width;
 			fout << name;
 			fout << std::endl;
 		}
+		fout << std::endl;
 	}
 
-	void writeToFile(std::string header)
-	{
-		fout << header;
-		writeToFile();
-	}
-
-	void writeToFile()
-	{
+	void writeColsToFile() {
 		int line_nb = getLineNumber();
-		if (first_time) {
-			writeFileHeader();
-			first_time = false;
-		}
 		for (int i=0; i<line_nb; i++) {
 			for (const auto& name : insert_order) {
 				const auto &col = output_data[name];
@@ -184,6 +174,26 @@ public:
 		for (auto& od : output_data) {
 			od.second.clear();
 		}
+	}
+
+
+	void writeToFile(std::string header)
+	{
+		if (first_time) {
+			writeFileHeader();
+			first_time = false;
+		}
+		fout << header;
+		writeColsToFile();
+	}
+
+	void writeToFile()
+	{
+		if (first_time) {
+			writeFileHeader();
+			first_time = false;
+		}
+		writeColsToFile();
 	}
 };
 #endif

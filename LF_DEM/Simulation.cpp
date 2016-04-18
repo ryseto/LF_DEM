@@ -949,7 +949,7 @@ void Simulation::outputConfigurationData()
 				outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
 				                      sys.interaction[k].repulsion.getForceNorm());
 				if (diminish_output == false) {
-					outdata_int.entryData("Viscosity contribution of contact xF", "stress", 3, \
+					outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
 					                      shearStressComponent(stress_contact, p.theta_shear));
 				}
 			}
