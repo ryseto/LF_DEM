@@ -24,12 +24,9 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <stdexcept>
-
 
 class OutputData {
 private:
-	int number_of_data;
 	bool first_time;
 	std::string out_unit;
 	std::map <std::string, std::vector<std::string> > output_data;
@@ -39,6 +36,7 @@ private:
 	std::map <std::string, double> converter;
 	std::map <std::string, int> output_data_width;
 	std::ofstream fout;
+	int default_precision;
 
 	int getLineNumber()
 	{
@@ -61,7 +59,7 @@ private:
 							 int width)
 	{
 		if (output_data.find(name) != output_data.end()) {
-			throw std::runtime_error(" OutputData:: not allowed to redefine data outputs.");
+			return;
 		}
 		std::vector <std::string> col;
 		col.clear();
@@ -73,7 +71,7 @@ private:
 	}
 
 public:
-	OutputData(): first_time(true) {}
+	OutputData(): first_time(true), default_precision(6) {}
 	~OutputData() {
 		fout.close();
 	}
@@ -101,7 +99,10 @@ public:
 		out_unit = output_unit;
 	}
 
-
+	void setDefaultPrecision(int precision)
+	{
+		default_precision = precision;
+	}
 
 	void setDimensionlessNumber(double dimensionless_number)
 	// dimensionless_number = internal_force_unit/output_force_unit
@@ -112,7 +113,7 @@ public:
 		}
 		converter["none"] = 1;
 		converter["viscosity"] = 6*M_PI;
-		converter["stress"] = dimensionless_number;
+		converter["stress"] = 6*M_PI*dimensionless_number;
 		converter["force"] = dimensionless_number;
 		converter["time"] = 1/dimensionless_number;
 		converter["rate"] = dimensionless_number;
@@ -123,13 +124,20 @@ public:
 	void entryData(std::string name,
 								 std::string physical_dimension,
 								 int width,
-								 T value)
+								 T value,
+								 int precision=-1)
 	{
 		if (first_time) {
 			initCol(name, physical_dimension, width);
 		}
+		int output_precision;
+		if (precision>0) {
+			output_precision = precision;
+		} else {
+			output_precision = default_precision;
+		}
 		std::ostringstream str_value;
-		str_value << converter[output_data_type[name]]*value;
+		str_value << std::setprecision(output_precision) << converter[output_data_type[name]]*value;
 		output_data[name].push_back(str_value.str());
 	}
 

@@ -38,15 +38,7 @@ diminish_output(false)
 	kill = false;
 };
 
-Simulation::~Simulation()
-{
-	if (fout_particle.is_open()) {
-		fout_particle.close();
-	}
-	if (fout_interaction.is_open()) {
-		fout_interaction.close();
-	}
-};
+Simulation::~Simulation(){};
 
 string Simulation::gitVersion(){
 	return GIT_VERSION;
@@ -815,10 +807,13 @@ void Simulation::outputDataHeader(ofstream& fout)
 void Simulation::outputConfigurationData()
 {
 	int np = sys.get_np();
+
 	int output_precision = 6;
 	if (diminish_output) {
 		output_precision = 4;
 	}
+	outdata_par.setDefaultPrecision(output_precision);
+	outdata_int.setDefaultPrecision(output_precision);
 
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
@@ -838,91 +833,69 @@ void Simulation::outputConfigurationData()
 			}
 		}
 	}
-	/*
-	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
-	 */
+
+	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
+	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+		ostringstream error_str;
+		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		throw runtime_error(error_str.str());
+	}
 	if (p.out_data_particle) {
 		cout << "   out config: " << sys.get_shear_strain() << endl;
-		fout_particle << "# " << sys.get_shear_strain() << ' ';
-		fout_particle << sys.shear_disp.x << ' ';
-		fout_particle << getRate() << ' ';
-		fout_particle << target_stress_input << ' ';
-		fout_particle << sys.get_time() << ' ';
-		if (p.magnetic_type != 0) {
-			fout_particle << sys.angle_external_magnetic_field;
-		}
-		fout_particle << endl;
+		outdata_par.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+		outdata_par.setUnit(output_unit_scales);
+		for (int i=0; i<sys.get_np(); i++) {
+			outdata_par.entryData("particle index", "none", 1, i);
+			outdata_par.entryData("radius", "none", 1, sys.radius[i]);
+			outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
+			outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
 
-		for (int i=0; i<np; i++) {
-			const vec3d& r = pos[i];
-			const vec3d& v = vel[i];
-			const vec3d& o = sys.ang_velocity[i];
-			fout_particle << i; //1: number
-			fout_particle << ' ' << sys.radius[i]; //2: radius
-			fout_particle << setprecision(6);
-			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
-			fout_particle << setprecision(output_precision) << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			if (control_var != "magnetic") {
-				fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
+				outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
 				if (sys.couette_stress) {
 					double stress_rr, stress_thetatheta, stress_rtheta;
 					sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-					fout_particle << ' ' << stress_rr << ' ' << stress_thetatheta << ' ' << stress_rtheta;
-				} else {
-					if (diminish_output == false) {
-						double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
-						double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
-						double brownian_xzstressGU = 0;
-						if (sys.brownian) {
-							brownian_xzstressGU = shearStressComponent(sys.brownianstressGU[i], p.theta_shear);
-						}
-						fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
-						fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
-						fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
-					} else {
-						fout_particle << " d d d";
-					}
+					outdata_par.entryData("stress_rr", "stress", 1, stress_rr);
+					outdata_par.entryData("stress_thetatheta", "stress", 1, stress_thetatheta);
+					outdata_par.entryData("stress_rtheta", "stress", 1, stress_rtheta);
 				}
 				if (sys.twodimension) {
-					fout_particle << ' ' << sys.angle[i]; // 15
-				} else {
-					fout_particle << ' ' << 0; // 15
+					outdata_par.entryData("angle", "none", 1, sys.angle[i]);
 				}
 			} else {
 				if (sys.p.magnetic_type == 1) {
-					fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
-					fout_particle << ' ' << sys.magnetic_moment[i].x;
-					fout_particle << ' ' << sys.magnetic_moment[i].y;
-					fout_particle << ' ' << sys.magnetic_moment[i].z;
+					outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
+					outdata_par.entryData("magnetic moment (x, y, z)", "none", 3, sys.magnetic_moment[i]);
 				} else {
-					fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
+					outdata_par.entryData("magnetic susceptibility", "none", 1, sys.magnetic_susceptibility[i]);
 				}
 			}
 			if (p.out_data_vel_components) {
-				fout_particle << setprecision(output_precision);
-				fout_particle << ' ' << sys.vel_hydro[i];
-				fout_particle << ' ' << sys.ang_vel_hydro[i];
-				fout_particle << ' ' << sys.vel_contact[i];
-				fout_particle << ' ' << sys.ang_vel_contact[i];
+				outdata_par.entryData("non-affine hydro velocity (x, y, z)", "velocity", 3, sys.vel_hydro[i]);
+				outdata_par.entryData("non-affine hydro angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro[i]);
+				outdata_par.entryData("non-affine contact velocity (x, y, z)", "velocity", 3, sys.vel_contact[i]);
+				outdata_par.entryData("non-affine contact angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_contact[i]);
 				if (sys.repulsiveforce) {
-					fout_particle << ' ' << sys.vel_repulsive[i];
-					fout_particle << ' ' << sys.ang_vel_repulsive[i];
+					outdata_par.entryData("non-affine repulsive velocity (x, y, z)", "velocity", 3, sys.vel_repulsive[i]);
+					outdata_par.entryData("non-affine repulsive angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_repulsive[i]);
 				}
 				if (sys.brownian) {
-					fout_particle << ' ' << sys.vel_brownian[i];
-					fout_particle << ' ' << sys.ang_vel_brownian[i];
+					outdata_par.entryData("non-affine brownian velocity (x, y, z)", "velocity", 3, sys.vel_brownian[i]);
+					outdata_par.entryData("non-affine brownian angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_brownian[i]);
 				}
 				if (sys.magnetic) {
-					fout_particle << ' ' << sys.vel_magnetic[i];
-					fout_particle << ' ' << sys.ang_vel_magnetic[i];
+					outdata_par.entryData("non-affine magnetic velocity (x, y, z)", "velocity", 3, sys.vel_magnetic[i]);
+					outdata_par.entryData("non-affine magnetic angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_magnetic[i]);
 				}
 				if (sys.mobile_fixed) {
-					fout_particle << ' ' << sys.vel_hydro_from_fixed[i];
-					fout_particle << ' ' << sys.ang_vel_hydro_from_fixed[i];
+					outdata_par.entryData("non-affine hydro_from_fixed velocity (x, y, z)", "velocity", 3, sys.vel_hydro_from_fixed[i]);
+					outdata_par.entryData("non-affine hydro_from_fixed angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro_from_fixed[i]);
 				}
 			}
-			fout_particle << endl;
 		}
+		stringstream snapshot_header;
+		getSnapshotHeader(snapshot_header);
+		outdata_par.writeToFile(snapshot_header.str());
 	}
 	int cnt_interaction = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
@@ -931,32 +904,28 @@ void Simulation::outputConfigurationData()
 		}
 	}
 	if (p.out_data_interaction) {
-		fout_interaction << "# " << sys.get_shear_strain();
-		fout_interaction << ' ' << cnt_interaction;
-		fout_interaction << ' ' << sys.get_time();
-		fout_interaction << endl;
+		outdata_int.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+		outdata_int.setUnit(output_unit_scales);
+		stringstream snapshot_header;
+		getSnapshotHeader(snapshot_header);
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d& nr_vec = sys.interaction[k].nvec;
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
-				fout_interaction << setprecision(6);
-				fout_interaction << i << ' ' << j << ' '; // 1, 2
-				/* contact.state:
-				 * 0 no contact
-				 * 1 Friction is not activated (critical load model)
-				 * 2 Static friction
-				 * 3 Sliding
-				 */
-				fout_interaction << sys.interaction[k].contact.state << ' '; //3
+				outdata_int.entryData("particle 1 label", "none", 1, i);
+				outdata_int.entryData("particle 2 label", "none", 1, j);
+				outdata_int.entryData("contact state "
+				                      "(0 = no contact, "
+				                      "1 = frictionless contact, "
+				                      "2 = non-sliding frictional, "
+				                      "3 = sliding frictional)",
+				                      "none", 1, sys.interaction[k].contact.state);
 				if (diminish_output == false) {
-					fout_interaction << nr_vec.x << ' '; // 4
-					fout_interaction << nr_vec.y << ' '; // 5
-					fout_interaction << nr_vec.z << ' '; // 6
-					fout_interaction << sys.interaction[k].get_reduced_gap() << ' '; // 7
-				} else {
-					fout_interaction << "d d d d ";
+					outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
+					                      "none", 3, sys.interaction[k].nvec);
+					outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
+					                      "none", 1,  sys.interaction[k].get_reduced_gap());
 				}
 				/* [NOTE]
 				 * Lubrication forces are reference values
@@ -966,23 +935,26 @@ void Simulation::outputConfigurationData()
 				 * It seems there is no better way to visualize
 				 * the lubrication forces.
 				 */
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9, 10, 11
+				outdata_int.entryData("normal part of the lubrication force", "force", 1, \
+				                      sys.interaction[k].lubrication.get_lubforce_normal());
+				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
+				                      sys.interaction[k].lubrication.get_lubforce_tan());
 				/*
 				 * Contact forces include only spring forces.
 				 */
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-
+				outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
+				                      sys.interaction[k].contact.get_f_contact_normal_norm());
+				outdata_int.entryData("tangential part of the contact force", "force", 3, \
+				                      sys.interaction[k].contact.get_f_contact_tan());
+				outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
+				                      sys.interaction[k].repulsion.getForceNorm());
 				if (diminish_output == false) {
-					fout_interaction << 6*M_PI*shearStressComponent(stress_contact, p.theta_shear) << ' '; // 17
-				} else {
-					fout_interaction << "d";
+					outdata_int.entryData("Viscosity contribution of contact xF", "stress", 3, \
+					                      shearStressComponent(stress_contact, p.theta_shear));
 				}
-				fout_interaction << endl;
 			}
 		}
+		outdata_int.writeToFile(snapshot_header.str());
 	}
 }
 
