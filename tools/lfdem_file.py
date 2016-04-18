@@ -23,7 +23,6 @@ def get_file_metadata(fname):
     file_metadata = {}
     file_metadata['column def'] = str()
 
-    header_len = 0
     while True:
         line = in_file.readline()
         if line[0] != '#':
@@ -35,11 +34,14 @@ def get_file_metadata(fname):
             file_metadata[data_list[1]] = data_list[2:]
         else:
             file_metadata['column def'] += line
-        header_len += 1
+            c = data_list[0]
+            c = c[c.find("#")+1:c.find(":")]
+            col_nb = c.split("-")
+            col_nb = int(col_nb[-1])
 
     in_file.seek(0, 0)
 
-    return file_metadata, header_len
+    return file_metadata, col_nb
 
 
 def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
@@ -53,7 +55,7 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     # now read cols>0
     in_file.seek(0, 0)
     # merge it with col0 if necessary
-    if usecols is not None and usecols[0] == 0:  # assume ordered
+    if usecols != "all" and usecols[0] == 0:  # assume ordered
         cols = np.genfromtxt(in_file, skip_header=header_len,
                              usecols=usecols[1:])
         cols = np.column_stack((col0, cols))
@@ -68,7 +70,7 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     return cols
 
 
-def __read_snapshot_file_with_framemeta(in_file, field_nb, usecols):
+def __read_snapshot_file_with_framemeta(in_file, field_nb):
     names = [str(i) for i in range(1, field_nb+1)]
     frames = pd.read_table(in_file, delim_whitespace=True,
                            names=names, skiprows=field_nb+6)
@@ -90,7 +92,7 @@ def __read_snapshot_file_with_framemeta(in_file, field_nb, usecols):
     return (frames, strains_, shear_rates_, frame_metadata)
 
 
-def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
+def read_snapshot_file(fname, usecols="all", frame_meta=True):
     """
     Purpose:
         Read any LF_DEM file that has a "snapshot" structure, i.e. made of
@@ -109,9 +111,10 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
 
     Parameters:
         fname: the filename, or a file like object
-        field_nb: the number of fields (columns) in a snapshot.
-                  If not provided, the field nb is guessed from the file name.
-
+        usecols: which columns to read, optional (default all columns)
+        frame_meta: get the metadata of each frame, optional (default True)
+                    [Note that for large files getting the metadata
+                     can be very memory consuming]
     Returning values:
         if frame_meta == False:
             frames: a list of snapshots
@@ -129,21 +132,16 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
     except TypeError:
         in_file = fname
 
-    file_metadata, header_len = get_file_metadata(in_file)
+    file_metadata, field_nb = get_file_metadata(in_file)
     in_file.close()
     if frame_meta:
         in_file = open(fname, "r")
     else:
         in_file = open(fname, "rb")  # for genfromtxt
 
-    if field_nb is None:
-        field_nb = 0
-        field_nb += header_len - 6
-
     if frame_meta:
         return __read_snapshot_file_with_framemeta(in_file,
-                                                   field_nb,
-                                                   usecols)\
+                                                   field_nb)\
                 + (file_metadata,)
     else:
         return __read_snapshot_file_no_framemeta(in_file,
@@ -152,7 +150,7 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
                 file_metadata
 
 
-def read_data_file(fname, usecols=None):
+def read_data_file(fname, usecols="all"):
     """
     Purpose:
         Read any LF_DEM file that has a one-time-step-one-line structure, i.e:
@@ -164,13 +162,17 @@ def read_data_file(fname, usecols=None):
     Parameters:
         fname: the filename, or anything that can be taken as a first argument
                to np.genfromtxt
+        usecols: which columns to read, optional (default all columns)
 
     Returning values:
         data: a numpy array containing the data
         metadata: the files metadata
     """
-    metadata, header_len = get_file_metadata(fname)
-    data = np.genfromtxt(fname, usecols=usecols)
+    metadata, col_nb = get_file_metadata(fname)
+    if usecols == "all":
+        data = np.genfromtxt(fname)
+    else:
+        data = np.genfromtxt(fname, usecols=usecols)
     return data, metadata
 
 
