@@ -9,6 +9,30 @@ import numpy as np
 import struct
 
 
+def parse_file_metafield(key, value):
+    if key == 'data':
+        value = " ".join([key]+value)
+        key = 'units'
+    elif key == 'np':
+        value = int(value[0])
+    elif len(key) == 2 and key[0] == 'L':
+        value = float(value[0])
+    elif key == 'VF':
+        value = float(value[0])
+    elif key == 'LF_DEM':
+        key = 'LF_DEM version'
+        value = value[-1]
+    return key, value
+
+
+def parse_column_def(col_label_string, col_def):
+    c = col_label_string
+    c = c[c.find("#")+1:c.find(":")]
+    col_def = " ".join(col_def)
+
+    return col_def, c
+
+
 def get_file_metadata(fname):
     """
     Purpose:
@@ -21,7 +45,7 @@ def get_file_metadata(fname):
         in_file = fname
 
     file_metadata = {}
-    file_metadata['column def'] = str()
+    file_metadata['column def'] = {}
 
     while True:
         line = in_file.readline()
@@ -31,17 +55,36 @@ def get_file_metadata(fname):
         data_list = line.split()
 
         if data_list[0] == '#':
-            file_metadata[data_list[1]] = data_list[2:]
+            key, value = parse_file_metafield(data_list[1], data_list[2:])
+            file_metadata[key] = value
         else:
-            file_metadata['column def'] += line
-            c = data_list[0]
-            c = c[c.find("#")+1:c.find(":")]
-            col_nb = c.split("-")
-            col_nb = int(col_nb[-1])
+            key, value = parse_column_def(data_list[0], data_list[1:])
+            file_metadata['column def'][key] = value
 
+    cols = convert_columndef_to_indices(file_metadata['column def'])
+    col_nb = 0
+    for k in cols:
+        value = cols[k]
+        try:
+            if col_nb < value.stop:
+                col_nb = value.stop
+        except AttributeError:
+            if col_nb < value + 1:
+                col_nb = value + 1
     in_file.seek(0, 0)
 
     return file_metadata, col_nb
+
+
+def convert_columndef_to_indices(columndef_dict):
+    c = dict(columndef_dict)
+    for k in c:
+        c[k] = c[k].split("-")
+        if len(c[k]) > 1:
+            c[k] = slice(int(c[k][0])-1, int(c[k][1]))
+        else:
+            c[k] = int(c[k][0])-1
+    return c
 
 
 def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
