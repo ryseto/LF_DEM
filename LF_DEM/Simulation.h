@@ -150,7 +150,7 @@ public:
 	bool isTwoDimension(const std::string&);
 	bool isTwoDimensionBinary(const std::string&);
 	std::pair<int,int> get_np(const std::string&);
-	int get_np_Binary(const std::string&);
+	std::pair<int,int> get_np_Binary(const std::string&);
 	void importConfiguration(const std::string&);
 	void importConfigurationBinary(const std::string&);
 	void readPositionsImposedVelocity(std::fstream &file_import);

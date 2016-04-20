@@ -504,7 +504,25 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	/**
 		\brief Saves the current configuration of the system in a binary file.
 
-		In the current implementation, it stores particle positions, x and y strain, and contact states.
+		Depending on the type of simulation, we store the data differently, defined by
+ 	 binary format version numbers:
+ 	 v1 : no version number field
+ 	      metadata : np, vf, lx, ly, lz, disp_x, disp_y
+ 	      particle data : [x, y, z, radius]*np
+ 	      interaction data : nb_interactions,
+ 	      [p0, p1, dtx, dty, dtz, drx, dry, drz]*nb_interactions
+ 				(with p0, p1 unsigned short)
+
+ 	 v2 : no version number field
+ 	      metadata : same as v1
+ 	      particle data : as v1
+ 	      interaction data : as v1, except that p0 and p1 are unsigned int
+
+ 	 v3 : (fixed wall particle case)
+ 	      version nb: -1, 3  (-1 to distinguish from v1:np or v2:np)
+ 	      metadata : np, np_fixed, vf, lx, ly, lz, disp_x, disp_y
+ 	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
+ 				interaction data : as v2
 	 */
 	int np = sys.get_np();
 	vector< vector<double> > pos(np);
@@ -521,7 +539,20 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
+
+	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
+	int binary_conf_format = 2; // v2 as default. v1 deprecated.
+	if (sys.test_simulation == 31) {
+		binary_conf_format = 3;
+	}
+	conf_export.write((char*)&conf_switch, sizeof(int));
+	conf_export.write((char*)&binary_conf_format, sizeof(int));
+
 	conf_export.write((char*)&np, sizeof(int));
+	if (binary_conf_format == 3) {
+		int np_fixed = sys.get_np() - sys.np_mobile;
+		conf_export.write((char*)&np_fixed, sizeof(int));
+	}
 	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
 	conf_export.write((char*)&lx, sizeof(double));
 	conf_export.write((char*)&ly, sizeof(double));
@@ -530,6 +561,19 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
+	}
+	if (binary_conf_format == 3) {
+		int np_fixed = sys.get_np() - sys.np_mobile;
+		vector< vector<double> > vel(np_fixed);
+		for (int i=0; i<np_fixed; i++) {
+			vel[i].resize(3);
+			vel[i][0] = sys.fixed_velocities[i].x;
+			vel[i][1] = sys.fixed_velocities[i].y;
+			vel[i][2] = sys.fixed_velocities[i].z;
+		}
+		for (int i=0; i<np_fixed; i++) {
+			conf_export.write((char*)&vel[i][0], 3*sizeof(double));
+		}
 	}
 	vector <struct contact_state> cs;
 	sys.getContacts(cs);

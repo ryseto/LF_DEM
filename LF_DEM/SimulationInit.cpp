@@ -650,16 +650,17 @@ void Simulation::setupSimulation(string in_args,
 	resolveTimeOrStrainParameters();
 
 	bool is2d;
+	pair<int,int> np_np_fixed;
 	if (binary_conf) {
-		sys.set_np(get_np_Binary(filename_import_positions));
+		np_np_fixed = get_np_Binary(filename_import_positions);
 		is2d = isTwoDimensionBinary(filename_import_positions);
 	} else {
-		pair<int,int> np_np_fixed = get_np(filename_import_positions);
-		sys.set_np(np_np_fixed.first);
-		if (np_np_fixed.second > 0){
-			p.np_fixed = np_np_fixed.second;
-		}
+		np_np_fixed = get_np(filename_import_positions);
 		is2d = isTwoDimension(filename_import_positions);
+	}
+	sys.set_np(np_np_fixed.first);
+	if (np_np_fixed.second > 0){
+		p.np_fixed = np_np_fixed.second;
 	}
 
 	sys.setupSystemPreConfiguration(control_var, is2d);
@@ -1130,16 +1131,23 @@ bool Simulation::isTwoDimensionBinary(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-	int idumb;
 	double ddumb, ly;
-	file_import.read((char*)&idumb, sizeof(int));
-	file_import.read((char*)&ddumb, sizeof(double));
-	file_import.read((char*)&ddumb, sizeof(double));
+	int np = 0;
+	file_import.read((char*)&np, sizeof(int));
+	if (np == -1) {
+		int binary_format_version;
+		int np_fixed = 0;
+		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&np, sizeof(int));
+		file_import.read((char*)&np_fixed, sizeof(int));
+	}
+	file_import.read((char*)&ddumb, sizeof(double)); // vf
+	file_import.read((char*)&ddumb, sizeof(double)); // lx
 	file_import.read((char*)&ly, sizeof(double));
 	return ly==0;
 }
 
-int Simulation::get_np_Binary(const string& filename_import_positions)
+std::pair<int,int> Simulation::get_np_Binary(const string& filename_import_positions)
 {
 	/**
 	 \brief Read np from binary file input configuration.
@@ -1151,10 +1159,17 @@ int Simulation::get_np_Binary(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-	int np;
+	int np = 0;
+	int np_fixed = 0;
 	file_import.read((char*)&np, sizeof(int));
+	if (np == -1) {
+		int binary_format_version;
+		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&np, sizeof(int));
+		file_import.read((char*)&np_fixed, sizeof(int));
+	}
 	file_import.close();
-	return np;
+	return make_pair(np, np_fixed);
 }
 
 void Simulation::setMetadata(fstream &file_import)
@@ -1330,7 +1345,28 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 {
 	/**
 	 \brief Read a binary file input configuration.
+
+	 Depending on the type of simulation, we store the data differently, defined by
+	 binary format version numbers:
+	 v1 : no version number field
+	      metadata : np, vf, lx, ly, lz, disp_x, disp_y
+	      particle data : [x, y, z, radius]*np
+	      interaction data : nb_interactions,
+	      [p0, p1, dtx, dty, dtz, drx, dry, drz]*nb_interactions
+				(with p0, p1 unsigned short)
+
+	 v2 : no version number field
+	      metadata : same as v1
+	      particle data : as v1
+	      interaction data : as v1, except that p0 and p1 are unsigned int
+
+	 v3 : (fixed wall particle case)
+	      version nb: -1, 3  (-1 to distinguish from v1:np or v2:np)
+	      metadata : np, np_fixed, vf, lx, ly, lz, disp_x, disp_y
+	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
+				interaction data : as v2
 	 */
+
 
 	// first positions
 	vec3d initial_lees_edwards_disp;
@@ -1342,9 +1378,21 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
+
+	int binary_format_version;
 	int np;
+	int np_fixed;
 	double lx, ly, lz;
 	file_import.read((char*)&np, sizeof(int));
+	if (np == -1) {
+		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&np, sizeof(int));
+	} else {
+		binary_format_version = 2; // may also be 1, but will be determined later
+	}
+	if (binary_format_version == 3) {
+		file_import.read((char*)&np_fixed, sizeof(int));
+	}
 	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
 	file_import.read((char*)&lx, sizeof(double));
 	file_import.read((char*)&ly, sizeof(double));
@@ -1364,8 +1412,21 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		initial_position.push_back(vec3d(x_,y_,z_));
 		radius.push_back(r_);
 	}
+
 	sys.setBoxSize(lx,ly,lz);
 	sys.setConfiguration(initial_position, radius);
+
+	if (binary_format_version == 3) {
+		vector<vec3d> fixed_velocities;
+		double vx_, vy_, vz_;
+		for (int i=0; i<np_fixed; i++) {
+			file_import.read((char*)&vx_, sizeof(double));
+			file_import.read((char*)&vy_, sizeof(double));
+			file_import.read((char*)&vz_, sizeof(double));
+			fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
+		}
+		sys.setFixedVelocities(fixed_velocities);
+	}
 
 	// now contacts
 	int ncont;
@@ -1373,13 +1434,12 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
 	std::iostream::pos_type file_pos = file_import.tellg();
-	bool old_file_type = false;
 	for (int i=0; i<ncont; i++) {
 		unsigned int p0, p1;
 		file_import.read((char*)&p0, sizeof(unsigned int));
 		// hacky thing to guess if this is an old format with particle numbers as unsigned short
 		if((int)p0>sys.get_np()){
-			old_file_type = true;
+			binary_format_version = 1;
 			file_import.seekg(file_pos);
 			break;
 		}
@@ -1397,7 +1457,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
 		cont_states.push_back(cs);
 	}
-	if (old_file_type) {
+	if (binary_format_version == 1) {
 		for (int i=0; i<ncont; i++) {
 			unsigned short p0, p1;
 
