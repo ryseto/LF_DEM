@@ -252,64 +252,63 @@ def read_conf_file(fname):
     return pos, rad, meta_data
 
 
+def popValue(t, f_and_loc):
+    f = f_and_loc[0]
+    if t == "i":
+        size = 4
+    elif t == "I":
+        size = 4
+    elif t == "H":
+        size = 2
+    elif t == "d":
+        size = 8
+    loc = f_and_loc[1]
+    popped = struct.unpack(t, f[loc:loc+size])[0]
+    f_and_loc[1] += size
+    return popped
+
+
 def read_binary_conf_file(fname):
 
     with open(fname, mode='rb') as f:
         conf = f.read()
 
-    uisize = 2
-    isize = 4
-    dsize = 8
     loc = 0
-
     meta_data = {}
-    meta_data["np"] = struct.unpack("i", buffer=conf[loc:isize])[0]
-    loc += isize
-    meta_data["vf"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["lx"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["ly"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["lz"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["disp_x"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["disp_y"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-
+    cloc = [conf, loc]
+    i = popValue("i", cloc)
+    if i == -1:
+        meta_data["format"] = popValue("i", cloc)
+        meta_data["np"] = popValue("i", cloc)
+        meta_data["np_fixed"] = popValue("i", cloc)
+    else:
+        meta_data["np"] = i
+        meta_data["format"] = 2
+    meta_data["vf"] = popValue("d", cloc)
+    meta_data["lx"] = popValue("d", cloc)
+    meta_data["ly"] = popValue("d", cloc)
+    meta_data["lz"] = popValue("d", cloc)
+    meta_data["disp_x"] = popValue("d", cloc)
+    meta_data["disp_y"] = popValue("d", cloc)
     positions = np.empty((meta_data["np"], 4))
-    for i in range(np):
-        x = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        y = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        z = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        r = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
+    for i in range(meta_data["np"]):
+        x = popValue("d", cloc)
+        y = popValue("d", cloc)
+        z = popValue("d", cloc)
+        r = popValue("d", cloc)
         positions[i] = np.array([x, y, z, r])
 
-    nc = struct.unpack("I", conf[loc:loc+isize])[0]
+    nc = popValue("I", cloc)
     interactions = np.empty((nc, 8))
-    loc += isize
     print(nc)
     for i in range(nc):
-        p0 = struct.unpack("H", conf[loc:loc+uisize])[0]
-        loc += uisize
-        p1 = struct.unpack("H", conf[loc:loc+uisize])[0]
-        loc += uisize
-        dtx = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        dty = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        dtz = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        drx = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        dry = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        drz = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
+        p0 = popValue("I", cloc)
+        p1 = popValue("I", cloc)
+        dtx = popValue("d", cloc)
+        dty = popValue("d", cloc)
+        dtz = popValue("d", cloc)
+        drx = popValue("d", cloc)
+        dry = popValue("d", cloc)
+        drz = popValue("d", cloc)
         interactions[i] = np.array([p0, p1, dtx, dty, dtz, drx, dry, drz])
     return positions, interactions, meta_data
