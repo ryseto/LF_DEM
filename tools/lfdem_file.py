@@ -252,81 +252,67 @@ def read_conf_file(fname):
     return pos, rad, meta_data
 
 
-def popValue(t, f_and_loc):
-    f = f_and_loc[0]
-    if t == "i":
-        size = 4
-    elif t == "I":
-        size = 4
-    elif t == "H":
-        size = 2
-    elif t == "d":
-        size = 8
-    loc = f_and_loc[1]
-    popped = struct.unpack(t, f[loc:loc+size])[0]
-    f_and_loc[1] += size
-    return popped
+def popValue(t, stream):
+    size = struct.calcsize(t)
+    buf = stream.read(size)
+    return struct.unpack(t, buf)[0]
 
 
 def read_binary_conf_file(fname):
 
-    with open(fname, mode='rb') as f:
-        conf = f.read()
-
-    loc = 0
+    stream = open(fname, mode='rb')
     meta_data = {}
-    cloc = [conf, loc]
     config = {}
 
     # determine the format
-    i = popValue("i", cloc)
+    i = popValue("i", stream)
     if i == -1:
-        meta_data["format"] = popValue("i", cloc)
+        meta_data["format"] = popValue("i", stream)
         if meta_data["format"] > 3:
             print(" unknown LF_DEM binary format : ", meta_data["format"])
             exit(1)
-        meta_data["np"] = popValue("i", cloc)
+        meta_data["np"] = popValue("i", stream)
         if meta_data["format"] == 3:
-            meta_data["np_fixed"] = popValue("i", cloc)
+            meta_data["np_fixed"] = popValue("i", stream)
     else:
         meta_data["np"] = i
         meta_data["format"] = 2
-    meta_data["vf"] = popValue("d", cloc)
-    meta_data["lx"] = popValue("d", cloc)
-    meta_data["ly"] = popValue("d", cloc)
-    meta_data["lz"] = popValue("d", cloc)
-    meta_data["disp_x"] = popValue("d", cloc)
-    meta_data["disp_y"] = popValue("d", cloc)
-
+    meta_data["vf"] = popValue("d", stream)
+    meta_data["lx"] = popValue("d", stream)
+    meta_data["ly"] = popValue("d", stream)
+    meta_data["lz"] = popValue("d", stream)
+    meta_data["disp_x"] = popValue("d", stream)
+    meta_data["disp_y"] = popValue("d", stream)
     config['metadata'] = meta_data
 
     config['positions'] = np.empty((meta_data["np"], 4))
     for i in range(meta_data["np"]):
-        x = popValue("d", cloc)
-        y = popValue("d", cloc)
-        z = popValue("d", cloc)
-        r = popValue("d", cloc)
+        x = popValue("d", stream)
+        y = popValue("d", stream)
+        z = popValue("d", stream)
+        r = popValue("d", stream)
         config['positions'][i] = np.array([x, y, z, r])
 
     if meta_data["format"] == 3:
         config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
         for i in range(meta_data["np_fixed"]):
-            vx = popValue("d", cloc)
-            vy = popValue("d", cloc)
-            vz = popValue("d", cloc)
+            vx = popValue("d", stream)
+            vy = popValue("d", stream)
+            vz = popValue("d", stream)
             config['fixed_velocities'][i] = np.array([vx, vy, vz])
 
-    nc = popValue("I", cloc)
+    nc = popValue("I", stream)
     config['contacts'] = np.empty((nc, 8))
     for i in range(nc):
-        p0 = popValue("I", cloc)
-        p1 = popValue("I", cloc)
-        dtx = popValue("d", cloc)
-        dty = popValue("d", cloc)
-        dtz = popValue("d", cloc)
-        drx = popValue("d", cloc)
-        dry = popValue("d", cloc)
-        drz = popValue("d", cloc)
+        p0 = popValue("I", stream)
+        p1 = popValue("I", stream)
+        dtx = popValue("d", stream)
+        dty = popValue("d", stream)
+        dtz = popValue("d", stream)
+        drx = popValue("d", stream)
+        dry = popValue("d", stream)
+        drz = popValue("d", stream)
+
         config['contacts'][i] = np.array([p0, p1,
                                           dtx, dty, dtz,
                                           drx, dry, drz])
