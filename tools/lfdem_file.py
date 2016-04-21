@@ -276,11 +276,18 @@ def read_binary_conf_file(fname):
     loc = 0
     meta_data = {}
     cloc = [conf, loc]
+    config = {}
+
+    # determine the format
     i = popValue("i", cloc)
     if i == -1:
         meta_data["format"] = popValue("i", cloc)
+        if meta_data["format"] > 3:
+            print(" unknown LF_DEM binary format : ", meta_data["format"])
+            exit(1)
         meta_data["np"] = popValue("i", cloc)
-        meta_data["np_fixed"] = popValue("i", cloc)
+        if meta_data["format"] == 3:
+            meta_data["np_fixed"] = popValue("i", cloc)
     else:
         meta_data["np"] = i
         meta_data["format"] = 2
@@ -290,17 +297,27 @@ def read_binary_conf_file(fname):
     meta_data["lz"] = popValue("d", cloc)
     meta_data["disp_x"] = popValue("d", cloc)
     meta_data["disp_y"] = popValue("d", cloc)
-    positions = np.empty((meta_data["np"], 4))
+
+    config['metadata'] = meta_data
+
+    config['positions'] = np.empty((meta_data["np"], 4))
     for i in range(meta_data["np"]):
         x = popValue("d", cloc)
         y = popValue("d", cloc)
         z = popValue("d", cloc)
         r = popValue("d", cloc)
-        positions[i] = np.array([x, y, z, r])
+        config['positions'][i] = np.array([x, y, z, r])
+
+    if meta_data["format"] == 3:
+        config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
+        for i in range(meta_data["np_fixed"]):
+            vx = popValue("d", cloc)
+            vy = popValue("d", cloc)
+            vz = popValue("d", cloc)
+            config['fixed_velocities'][i] = np.array([vx, vy, vz])
 
     nc = popValue("I", cloc)
-    interactions = np.empty((nc, 8))
-    print(nc)
+    config['contacts'] = np.empty((nc, 8))
     for i in range(nc):
         p0 = popValue("I", cloc)
         p1 = popValue("I", cloc)
@@ -310,5 +327,8 @@ def read_binary_conf_file(fname):
         drx = popValue("d", cloc)
         dry = popValue("d", cloc)
         drz = popValue("d", cloc)
-        interactions[i] = np.array([p0, p1, dtx, dty, dtz, drx, dry, drz])
-    return positions, interactions, meta_data
+        config['contacts'][i] = np.array([p0, p1,
+                                          dtx, dty, dtz,
+                                          drx, dry, drz])
+
+    return config

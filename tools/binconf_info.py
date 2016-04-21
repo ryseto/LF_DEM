@@ -32,16 +32,16 @@ if sys.argv[1] == "-y":
 else:
     filename = sys.argv[1]
 
-positions, contacts, meta_data = lf.read_binary_conf_file(filename)
+config = lf.read_binary_conf_file(filename)
 
-
-print("Meta data:\n", meta_data)
+meta_data = config['metadata']
+print("Meta data:\n")
 for k in meta_data:
     print(k+":", meta_data[k])
 
 ch = "y"
 if not run_through:
-    print("Print full configuration (y/n)?")
+    print("\nPrint full configuration (y/n)?")
 
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -55,11 +55,18 @@ if not run_through:
 if ch != "y":
     exit(0)
 
+positions = config['positions']
 print("\nPositions:")
 for pos in positions:
-    print(pos)
+    print(" ".join(map(str, pos)))
 
+if meta_data["format"] == 3:
+    fixed_velocities = config['fixed_velocities']
+    print("\nFixed velocities:")
+    for vel in fixed_velocities:
+        print(" ".join(map(str, vel)))
+
+contacts = config['contacts']
 print("\nContacts:")
-
 for c in contacts:
-    print(c)
+    print(" ".join(map(str, c)))
