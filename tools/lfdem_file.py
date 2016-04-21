@@ -255,7 +255,7 @@ def read_conf_file(fname):
 def popValue(t, stream):
     size = struct.calcsize(t)
     buf = stream.read(size)
-    return struct.unpack(t, buf)[0]
+    return struct.unpack(t, buf)
 
 
 def read_binary_conf_file(fname):
@@ -265,56 +265,33 @@ def read_binary_conf_file(fname):
     config = {}
 
     # determine the format
-    i = popValue("i", stream)
+    i = popValue("i", stream)[0]
     if i == -1:
-        meta_data["format"] = popValue("i", stream)
+        meta_data["format"], meta_data["np"] = popValue("2i", stream)
         if meta_data["format"] > 3:
             print(" unknown LF_DEM binary format : ", meta_data["format"])
             exit(1)
-        meta_data["np"] = popValue("i", stream)
         if meta_data["format"] == 3:
-            meta_data["np_fixed"] = popValue("i", stream)
+            meta_data["np_fixed"] = popValue("i", stream)[0]
     else:
         meta_data["np"] = i
         meta_data["format"] = 2
-    meta_data["vf"] = popValue("d", stream)
-    meta_data["lx"] = popValue("d", stream)
-    meta_data["ly"] = popValue("d", stream)
-    meta_data["lz"] = popValue("d", stream)
-    meta_data["disp_x"] = popValue("d", stream)
-    meta_data["disp_y"] = popValue("d", stream)
+    meta_data["vf"] = popValue("d", stream)[0]
+    meta_data["lx"], meta_data["ly"], meta_data["lz"] = popValue("3d", stream)
+    meta_data["disp_x"], meta_data["disp_y"] = popValue("2d", stream)
     config['metadata'] = meta_data
-
     config['positions'] = np.empty((meta_data["np"], 4))
     for i in range(meta_data["np"]):
-        x = popValue("d", stream)
-        y = popValue("d", stream)
-        z = popValue("d", stream)
-        r = popValue("d", stream)
-        config['positions'][i] = np.array([x, y, z, r])
+        config['positions'][i] = np.array(popValue("4d", stream))
 
     if meta_data["format"] == 3:
         config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
         for i in range(meta_data["np_fixed"]):
-            vx = popValue("d", stream)
-            vy = popValue("d", stream)
-            vz = popValue("d", stream)
-            config['fixed_velocities'][i] = np.array([vx, vy, vz])
+            config['fixed_velocities'][i] = np.array(popValue("3d", stream))
 
-    nc = popValue("I", stream)
+    nc = popValue("I", stream)[0]
     config['contacts'] = np.empty((nc, 8))
     for i in range(nc):
-        p0 = popValue("I", stream)
-        p1 = popValue("I", stream)
-        dtx = popValue("d", stream)
-        dty = popValue("d", stream)
-        dtz = popValue("d", stream)
-        drx = popValue("d", stream)
-        dry = popValue("d", stream)
-        drz = popValue("d", stream)
-
-        config['contacts'][i] = np.array([p0, p1,
-                                          dtx, dty, dtz,
-                                          drx, dry, drz])
+        config['contacts'][i] = np.array(popValue("2I6d", stream))
 
     return config
