@@ -1351,20 +1351,20 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	 v1 : no version number field
 	      metadata : np, vf, lx, ly, lz, disp_x, disp_y
 	      particle data : [x, y, z, radius]*np
-	      interaction data : nb_interactions,
+	      contact data : nb_interactions,
 	      [p0, p1, dtx, dty, dtz, drx, dry, drz]*nb_interactions
 				(with p0, p1 unsigned short)
 
 	 v2 : no version number field
 	      metadata : same as v1
 	      particle data : as v1
-	      interaction data : as v1, except that p0 and p1 are unsigned int
+	      contact data : as v1, except that p0 and p1 are unsigned int
 
 	 v3 : (fixed wall particle case)
 	      version nb: -1, 3  (-1 to distinguish from v1:np or v2:np)
 	      metadata : np, np_fixed, vf, lx, ly, lz, disp_x, disp_y
 	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
-				interaction data : as v2
+				contact data : as v2
 	 */
 
 
