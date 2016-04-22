@@ -271,7 +271,7 @@ sub InParticles {
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
 				$omegay[$i] = $oy;
-				$stress_rr[$i] = $s_rr;
+				$stress_rr[$i] = $s_tt;
 				if ($radius_max < $a) {
 					$radius_max = $a;
 				}
@@ -391,11 +391,11 @@ sub OutYaplotData{
 			#printf OUT "r $radius[$i]\n";
 			if ($stress_rr[$i] > 0) {
 				printf OUT "@ 8\n";
-				$rrr =  0.0001*$stress_rr[$i];
+				$rrr =  0.001*$stress_rr[$i];
 				printf OUT "r $rrr\n"
 			} else {
-				printf OUT "@ 3\n";
-				$rrr = -0.0001*$stress_rr[$i];
+				printf OUT "@ 7\n";
+				$rrr = -0.001*$stress_rr[$i];
 				printf OUT "r $rrr\n"
 			}
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
