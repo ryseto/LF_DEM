@@ -9,6 +9,30 @@ import numpy as np
 import struct
 
 
+def parse_file_metafield(key, value):
+    if key == 'data':
+        value = " ".join([key]+value)
+        key = 'units'
+    elif key == 'np':
+        value = int(value[0])
+    elif len(key) == 2 and key[0] == 'L':
+        value = float(value[0])
+    elif key == 'VF':
+        value = float(value[0])
+    elif key == 'LF_DEM':
+        key = 'LF_DEM version'
+        value = value[-1]
+    return key, value
+
+
+def parse_column_def(col_label_string, col_def):
+    c = col_label_string
+    c = c[c.find("#")+1:c.find(":")]
+    col_def = " ".join(col_def)
+
+    return col_def, c
+
+
 def get_file_metadata(fname):
     """
     Purpose:
@@ -21,9 +45,8 @@ def get_file_metadata(fname):
         in_file = fname
 
     file_metadata = {}
-    file_metadata['column def'] = str()
+    file_metadata['column def'] = {}
 
-    header_len = 0
     while True:
         line = in_file.readline()
         if line[0] != '#':
@@ -32,14 +55,36 @@ def get_file_metadata(fname):
         data_list = line.split()
 
         if data_list[0] == '#':
-            file_metadata[data_list[1]] = data_list[2:]
+            key, value = parse_file_metafield(data_list[1], data_list[2:])
+            file_metadata[key] = value
         else:
-            file_metadata['column def'] += line
-        header_len += 1
+            key, value = parse_column_def(data_list[0], data_list[1:])
+            file_metadata['column def'][key] = value
 
+    cols = convert_columndef_to_indices(file_metadata['column def'])
+    col_nb = 0
+    for k in cols:
+        value = cols[k]
+        try:
+            if col_nb < value.stop:
+                col_nb = value.stop
+        except AttributeError:
+            if col_nb < value + 1:
+                col_nb = value + 1
     in_file.seek(0, 0)
 
-    return file_metadata, header_len
+    return file_metadata, col_nb
+
+
+def convert_columndef_to_indices(columndef_dict):
+    c = dict(columndef_dict)
+    for k in c:
+        c[k] = c[k].split("-")
+        if len(c[k]) > 1:
+            c[k] = slice(int(c[k][0])-1, int(c[k][1]))
+        else:
+            c[k] = int(c[k][0])-1
+    return c
 
 
 def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
@@ -53,7 +98,7 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     # now read cols>0
     in_file.seek(0, 0)
     # merge it with col0 if necessary
-    if usecols is not None and usecols[0] == 0:  # assume ordered
+    if usecols != "all" and usecols[0] == 0:  # assume ordered
         cols = np.genfromtxt(in_file, skip_header=header_len,
                              usecols=usecols[1:])
         cols = np.column_stack((col0, cols))
@@ -68,7 +113,7 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     return cols
 
 
-def __read_snapshot_file_with_framemeta(in_file, field_nb, usecols):
+def __read_snapshot_file_with_framemeta(in_file, field_nb):
     names = [str(i) for i in range(1, field_nb+1)]
     frames = pd.read_table(in_file, delim_whitespace=True,
                            names=names, skiprows=field_nb+6)
@@ -90,7 +135,7 @@ def __read_snapshot_file_with_framemeta(in_file, field_nb, usecols):
     return (frames, strains_, shear_rates_, frame_metadata)
 
 
-def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
+def read_snapshot_file(fname, usecols="all", frame_meta=True):
     """
     Purpose:
         Read any LF_DEM file that has a "snapshot" structure, i.e. made of
@@ -109,9 +154,10 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
 
     Parameters:
         fname: the filename, or a file like object
-        field_nb: the number of fields (columns) in a snapshot.
-                  If not provided, the field nb is guessed from the file name.
-
+        usecols: which columns to read, optional (default all columns)
+        frame_meta: get the metadata of each frame, optional (default True)
+                    [Note that for large files getting the metadata
+                     can be very memory consuming]
     Returning values:
         if frame_meta == False:
             frames: a list of snapshots
@@ -129,21 +175,16 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
     except TypeError:
         in_file = fname
 
-    file_metadata, header_len = get_file_metadata(in_file)
+    file_metadata, field_nb = get_file_metadata(in_file)
     in_file.close()
     if frame_meta:
         in_file = open(fname, "r")
     else:
         in_file = open(fname, "rb")  # for genfromtxt
 
-    if field_nb is None:
-        field_nb = 0
-        field_nb += header_len - 6
-
     if frame_meta:
         return __read_snapshot_file_with_framemeta(in_file,
-                                                   field_nb,
-                                                   usecols)\
+                                                   field_nb)\
                 + (file_metadata,)
     else:
         return __read_snapshot_file_no_framemeta(in_file,
@@ -152,7 +193,7 @@ def read_snapshot_file(fname, field_nb=None, usecols=None, frame_meta=True):
                 file_metadata
 
 
-def read_data_file(fname, usecols=None):
+def read_data_file(fname, usecols="all"):
     """
     Purpose:
         Read any LF_DEM file that has a one-time-step-one-line structure, i.e:
@@ -164,13 +205,17 @@ def read_data_file(fname, usecols=None):
     Parameters:
         fname: the filename, or anything that can be taken as a first argument
                to np.genfromtxt
+        usecols: which columns to read, optional (default all columns)
 
     Returning values:
         data: a numpy array containing the data
         metadata: the files metadata
     """
-    metadata, header_len = get_file_metadata(fname)
-    data = np.genfromtxt(fname, usecols=usecols)
+    metadata, col_nb = get_file_metadata(fname)
+    if usecols == "all":
+        data = np.genfromtxt(fname)
+    else:
+        data = np.genfromtxt(fname, usecols=usecols)
     return data, metadata
 
 
@@ -207,64 +252,46 @@ def read_conf_file(fname):
     return pos, rad, meta_data
 
 
+def popValue(t, stream):
+    size = struct.calcsize(t)
+    buf = stream.read(size)
+    return struct.unpack(t, buf)
+
+
 def read_binary_conf_file(fname):
 
-    with open(fname, mode='rb') as f:
-        conf = f.read()
-
-    uisize = 2
-    isize = 4
-    dsize = 8
-    loc = 0
-
+    stream = open(fname, mode='rb')
     meta_data = {}
-    meta_data["np"] = struct.unpack("i", buffer=conf[loc:isize])[0]
-    loc += isize
-    meta_data["vf"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["lx"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["ly"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["lz"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["disp_x"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    meta_data["disp_y"] = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
+    config = {}
 
-    positions = np.empty((meta_data["np"], 4))
-    for i in range(np):
-        x = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        y = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        z = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        r = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        positions[i] = np.array([x, y, z, r])
+    # determine the format
+    i = popValue("i", stream)[0]
+    if i == -1:
+        meta_data["format"], meta_data["np"] = popValue("2i", stream)
+        if meta_data["format"] > 3:
+            print(" unknown LF_DEM binary format : ", meta_data["format"])
+            exit(1)
+        if meta_data["format"] == 3:
+            meta_data["np_fixed"] = popValue("i", stream)[0]
+    else:
+        meta_data["np"] = i
+        meta_data["format"] = 2
+    meta_data["vf"] = popValue("d", stream)[0]
+    meta_data["lx"], meta_data["ly"], meta_data["lz"] = popValue("3d", stream)
+    meta_data["disp_x"], meta_data["disp_y"] = popValue("2d", stream)
+    config['metadata'] = meta_data
+    config['positions'] = np.empty((meta_data["np"], 4))
+    for i in range(meta_data["np"]):
+        config['positions'][i] = np.array(popValue("4d", stream))
 
-    nc = struct.unpack("I", conf[loc:loc+isize])[0]
-    interactions = np.empty((nc, 8))
-    loc += isize
-    print(nc)
+    if meta_data["format"] == 3:
+        config['fixed_velocities'] = np.empty((meta_data["np_fixed"], 3))
+        for i in range(meta_data["np_fixed"]):
+            config['fixed_velocities'][i] = np.array(popValue("3d", stream))
+
+    nc = popValue("I", stream)[0]
+    config['contacts'] = np.empty((nc, 8))
     for i in range(nc):
-        p0 = struct.unpack("H", conf[loc:loc+uisize])[0]
-        loc += uisize
-        p1 = struct.unpack("H", conf[loc:loc+uisize])[0]
-        loc += uisize
-        dtx = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        dty = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        dtz = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        drx = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        dry = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        drz = struct.unpack("d", conf[loc:loc+dsize])[0]
-        loc += dsize
-        interactions[i] = np.array([p0, p1, dtx, dty, dtz, drx, dry, drz])
-    return positions, interactions, meta_data
+        config['contacts'][i] = np.array(popValue("2I6d", stream))
+
+    return config

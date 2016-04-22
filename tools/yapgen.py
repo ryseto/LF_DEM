@@ -26,29 +26,29 @@ def read_data(posfile, intfile):
         strains: the associated strains
         shear_rates: the associated strain rates
     """
-    field_nb = 15
+    # load with pandas read_table
+    pos_frames, strains, shear_rates, dumb, meta_pos =\
+        lf.read_snapshot_file(posfile)
 
     # load with pandas read_table
-    pos_frames, strains, shear_rates, dumb, meta =\
-        lf.read_snapshot_file(posfile, field_nb)
-
-    # load with pandas read_table
-    field_nb = 17
-    int_frames, strains, shear_rates, dumb, dumb2 =\
-        lf.read_snapshot_file(intfile, field_nb)
+    int_frames, strains, shear_rates, dumb, meta_int =\
+        lf.read_snapshot_file(intfile)
 #    print pos_frames[:3], int_frames[:3]
-    return pos_frames, int_frames, strains, shear_rates, meta
+    return pos_frames, int_frames, strains, shear_rates, meta_pos, meta_int
 
 
 def snaps2yap(pos_fname, force_factor):
     forces_fname = pos_fname.replace("par_", "int_")
-    positions, forces, strains, shear_rates, meta =\
+    positions, forces, strains, shear_rates, meta_pos, meta_int =\
         read_data(pos_fname, forces_fname)
+    pcols = lf.convert_columndef_to_indices(meta_pos['column def'])
+    icols = lf.convert_columndef_to_indices(meta_int['column def'])
 
     yap_filename = pos_fname.replace("par_", "y_")
     yap_file = open(yap_filename, 'wb')
 
     nb_of_frames = len(strains)
+    is2d = meta_pos['Ly'] == 0
     i = 0
     for f, p, strain, rate in zip(forces, positions, strains, shear_rates):
         r1r2 = pyp.get_interaction_end_points(f, p)
@@ -58,7 +58,10 @@ def snaps2yap(pos_fname, force_factor):
         # with a thickness proportional to the normal force
         yap_out = pyp.layer_switch(2)
         yap_out = pyp.add_color_switch(yap_out, 4)
-        normal_forces = (f[:, 7]+f[:, 11]+f[:, 15]).astype(np.float)
+        normal_forces = (f[:, icols['normal part of the lubrication force']] +
+                         f[:, icols['norm of the normal part of the contact force']] +
+                         f[:, icols['norm of the normal repulsive force']])\
+                        .astype(np.float)
         #  convert the force to a thickness. case-by-case.
         normal_forces = force_factor*np.abs(normal_forces)
         yap_out = np.row_stack(
@@ -67,9 +70,13 @@ def snaps2yap(pos_fname, force_factor):
         # display a circle for every particle
         yap_out = pyp.add_layer_switch(yap_out, 3)
         yap_out = pyp.add_color_switch(yap_out, 3)
-        pos = p[:, 2:5].astype(np.float)
-        rad = p[:, 1].astype(np.float)
-        if float(meta['Ly'][0]) == 0:
+        if 'position (x, y, z)' in pcols:
+            pos = p[:, pcols['position (x, y, z)']].astype(np.float)
+        else:
+            pos = p[:, pcols['position x']:pcols['position z']+1]\
+                    .astype(np.float)
+        rad = p[:, pcols['radius']].astype(np.float)
+        if is2d:
             angle = p[:, 14].astype(np.float)
             particles, crosses = \
                 pyp.get_particles_yaparray(pos, rad, angles=angle)
@@ -109,10 +116,27 @@ def conf2yap(conf_fname):
     positions[:, 1] -= float(meta['ly'])/2
     positions[:, 2] -= float(meta['lz'])/2
 
-    yap_out = pyp.layer_switch(3)
-    yap_out = pyp.add_color_switch(yap_out, 3)
-    yap_out = np.row_stack(
+    if 'np_fixed' in meta:
+        # for conf with fixed particles
+        split_line = len(positions) - int(meta['np_fixed'])
+        pos_mobile, pos_fixed = np.split(positions, [split_line])
+        rad_mobile, rad_fixed = np.split(radii, [split_line])
+        yap_out = pyp.layer_switch(3)
+        yap_out = pyp.add_color_switch(yap_out, 3)
+        yap_out = np.row_stack((yap_out,
+                                pyp.get_particles_yaparray(pos_mobile,
+                                                           rad_mobile)))
+        yap_out = pyp.add_layer_switch(yap_out, 4)
+        yap_out = pyp.add_color_switch(yap_out, 4)
+        yap_out = np.row_stack((yap_out,
+                                pyp.get_particles_yaparray(pos_fixed,
+                                                           rad_fixed)))
+    else:
+        yap_out = pyp.layer_switch(3)
+        yap_out = pyp.add_color_switch(yap_out, 3)
+        yap_out = np.row_stack(
                     (yap_out, pyp.get_particles_yaparray(positions, radii)))
+
     pyp.savetxt(yap_filename, yap_out)
 
 if len(sys.argv) < 2:

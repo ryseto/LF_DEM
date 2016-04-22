@@ -8,10 +8,10 @@
 #  Romain Mari, 2014-2015
 
 from __future__ import print_function
-import struct
 import tty
 import sys
 import termios
+import lfdem_file as lf
 
 
 def misuse():
@@ -32,38 +32,16 @@ if sys.argv[1] == "-y":
 else:
     filename = sys.argv[1]
 
-with open(filename, mode='rb') as f:
-    conf = f.read()
+config = lf.read_binary_conf_file(filename)
 
-uisize = 2
-isize = 4
-dsize = 8
-loc = 0
-np = struct.unpack("i", conf[loc:isize])[0]
-loc += isize
-vf = struct.unpack("d", conf[loc:loc+dsize])[0]
-loc += dsize
-lx = struct.unpack("d", conf[loc:loc+dsize])[0]
-loc += dsize
-ly = struct.unpack("d", conf[loc:loc+dsize])[0]
-loc += dsize
-lz = struct.unpack("d", conf[loc:loc+dsize])[0]
-loc += dsize
-lees_x = struct.unpack("d", conf[loc:loc+dsize])[0]
-loc += dsize
-lees_y = struct.unpack("d", conf[loc:loc+dsize])[0]
-loc += dsize
-
-print("Particle number : ", np)
-print("Volume/Area fraction : ", vf)
-print("lx : ", lx)
-print("ly : ", ly)
-print("lz : ", lz)
-print("shear displacement (x,y): ", lees_x, ",", lees_y, "\n")
+meta_data = config['metadata']
+print("Meta data:\n")
+for k in meta_data:
+    print(k+":", meta_data[k])
 
 ch = "y"
 if not run_through:
-    print("Print full configuration (y/n)?")
+    print("\nPrint full configuration (y/n)?")
 
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -77,37 +55,18 @@ if not run_through:
 if ch != "y":
     exit(0)
 
-for i in range(np):
-    x = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    y = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    z = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    r = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    print(x, y, z, r)
+positions = config['positions']
+print("\nPositions:")
+for pos in positions:
+    print(" ".join(map(str, pos)))
 
+if meta_data["format"] == 3:
+    fixed_velocities = config['fixed_velocities']
+    print("\nFixed velocities:")
+    for vel in fixed_velocities:
+        print(" ".join(map(str, vel)))
 
-nc = struct.unpack("I", conf[loc:loc+isize])[0]
-loc += isize
-print(nc)
-for i in range(nc):
-    p0 = struct.unpack("H", conf[loc:loc+uisize])[0]
-    loc += uisize
-    p1 = struct.unpack("H", conf[loc:loc+uisize])[0]
-    loc += uisize
-    dtx = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    dty = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    dtz = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    drx = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    dry = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-    drz = struct.unpack("d", conf[loc:loc+dsize])[0]
-    loc += dsize
-
-    print(p0, p1, dtx, dty, dtz, drx, dry, drz)
+contacts = config['contacts']
+print("\nContacts:")
+for c in contacts:
+    print(" ".join(map(str, c)))

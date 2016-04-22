@@ -650,16 +650,17 @@ void Simulation::setupSimulation(string in_args,
 	resolveTimeOrStrainParameters();
 
 	bool is2d;
+	pair<int,int> np_np_fixed;
 	if (binary_conf) {
-		sys.set_np(get_np_Binary(filename_import_positions));
+		np_np_fixed = get_np_Binary(filename_import_positions);
 		is2d = isTwoDimensionBinary(filename_import_positions);
 	} else {
-		pair<int,int> np_np_fixed = get_np(filename_import_positions);
-		sys.set_np(np_np_fixed.first);
-		if (np_np_fixed.second > 0){
-			p.np_fixed = np_np_fixed.second;
-		}
+		np_np_fixed = get_np(filename_import_positions);
 		is2d = isTwoDimension(filename_import_positions);
+	}
+	sys.set_np(np_np_fixed.first);
+	if (np_np_fixed.second > 0){
+		p.np_fixed = np_np_fixed.second;
 	}
 
 	sys.setupSystemPreConfiguration(control_var, is2d);
@@ -1029,117 +1030,10 @@ void Simulation::openOutputFiles()
 	string input_filename = "input_"+sys.simu_name+".dat";
 	fout_input.open(input_filename.c_str());
 	if (p.out_data_particle) {
-		string particle_filename = "par_"+sys.simu_name+".dat";
-		fout_particle.open(particle_filename.c_str());
-		outputDataHeader(fout_particle);
-		//
-		string fout_par_col_def;
-		if (control_var != "magnetic") {
-			if (sys.couette_stress) {
-				fout_par_col_def =
-				"#1: number of the particle\n"
-				"#2: radius\n"
-				"#3: position x\n"
-				"#4: position y\n"
-				"#5: position z\n"
-				"#6: velocity x\n"
-				"#7: velocity y\n"
-				"#8: velocity z\n"
-				"#9: angular velocity x\n"
-				"#10: angular velocity y\n"
-				"#11: angular velocity z\n"
-				"#12: stress_rr\n"
-				"#13: stress_thetatheta\n"
-				"#14: stress_rtheta\n"
-				"#15: angle (for 2D simulation only)\n";
-			} else {
-				fout_par_col_def =
-				"#1: number of the particle\n"
-				"#2: radius\n"
-				"#3: position x\n"
-				"#4: position y\n"
-				"#5: position z\n"
-				"#6: velocity x\n"
-				"#7: velocity y\n"
-				"#8: velocity z\n"
-				"#9: angular velocity x\n"
-				"#10: angular velocity y\n"
-				"#11: angular velocity z\n"
-				"#12: viscosity contribution of lubrication\n"
-				"#13: viscosity contributon of contact GU xz\n"
-				"#14: viscosity contributon of brownian xz\n"
-				"#15: angle (for 2D simulation only)\n";
-			}
-		} else {
-			fout_par_col_def =
-			"#1: number of the particle\n"
-			"#2: radius\n"
-			"#3: position x\n"
-			"#4: position y\n"
-			"#5: position z\n"
-			"#6: velocity x\n"
-			"#7: velocity y\n"
-			"#8: velocity z\n"
-			"#9: angular velocity x\n"
-			"#10: angular velocity y\n"
-			"#11: angular velocity z\n"
-			"#12: magnetic moment x\n"
-			"#13: magnetic moment y\n"
-			"#14: magnetic moment z\n"
-			"#15: angle (for 2D simulation only)\n";
-		}
-		if (p.out_data_vel_components) {
-			int cnb = 16;
-			stringstream col_def_complement;
-			col_def_complement << columnDefinition(cnb, "vec3d", "na_hydro_vel");
-			col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_hydro_vel");
-			col_def_complement << columnDefinition(cnb, "vec3d", "na_contact_vel");
-			col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_contact_vel");
-			if (sys.repulsiveforce) {
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_repulsive_vel");
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_repulsive_vel");
-			}
-			if (sys.brownian) {
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_brownian_vel");
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_brownian_vel");
-			}
-			if (sys.magnetic) {
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_magnetic_vel");
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_magnetic_vel");
-			}
-			if (sys.mobile_fixed) {
-				throw runtime_error(" Simulation:: velocity components with fixed particles not yet implemented (implementation needs to output differently mobile and fixed)\n");
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_from_fixed_vel");
-				col_def_complement << columnDefinition(cnb, "vec3d", "na_ang_from_fixed_vel");
-			}
-			fout_par_col_def += col_def_complement.str();
-		}
-		//
-		fout_particle << fout_par_col_def << endl;
+		outdata_par.setFile("par_"+sys.simu_name+".dat", data_header.str(), force_to_run);
 	}
 	if (p.out_data_interaction) {
-		string interaction_filename = "int_" + sys.simu_name + ".dat";
-		fout_interaction.open(interaction_filename.c_str());
-		outputDataHeader(fout_interaction);
-		string fout_int_col_def =
-		"#1: particle 1 label\n"
-		"#2: particle 2 label\n"
-		"#3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)\n"
-		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
-		"#5: normal vector, oriented from particle 1 to particle 2 y\n"
-		"#6: normal vector, oriented from particle 1 to particle 2 z\n"
-		"#7: dimensionless gap = s-2, s = 2r/(a1+a2)\n"
-		"#8: normal part of the lubrication force\n"
-		"#9: tangential part of the lubrication force x\n"
-		"#10: tangential part of the lubrication force y\n"
-		"#11: tangential part of the lubrication force z\n"
-		"#12: norm of the normal part of the contact force\n"
-		"#13: tangential part of the contact force, x\n"
-		"#14: tangential part of the contact force, y\n"
-		"#15: tangential part of the contact force, z\n"
-		"#16: norm of the normal repulsive force\n"
-		"#17: Viscosity contribution of contact xF\n";
-		fout_interaction << fout_int_col_def << endl;
+		outdata_int.setFile("int_"+sys.simu_name+".dat", data_header.str(), force_to_run);
 	}
 }
 
@@ -1237,16 +1131,23 @@ bool Simulation::isTwoDimensionBinary(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-	int idumb;
 	double ddumb, ly;
-	file_import.read((char*)&idumb, sizeof(int));
-	file_import.read((char*)&ddumb, sizeof(double));
-	file_import.read((char*)&ddumb, sizeof(double));
+	int np = 0;
+	file_import.read((char*)&np, sizeof(int));
+	if (np == -1) {
+		int binary_format_version;
+		int np_fixed = 0;
+		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&np, sizeof(int));
+		file_import.read((char*)&np_fixed, sizeof(int));
+	}
+	file_import.read((char*)&ddumb, sizeof(double)); // vf
+	file_import.read((char*)&ddumb, sizeof(double)); // lx
 	file_import.read((char*)&ly, sizeof(double));
 	return ly==0;
 }
 
-int Simulation::get_np_Binary(const string& filename_import_positions)
+std::pair<int,int> Simulation::get_np_Binary(const string& filename_import_positions)
 {
 	/**
 	 \brief Read np from binary file input configuration.
@@ -1258,10 +1159,17 @@ int Simulation::get_np_Binary(const string& filename_import_positions)
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
-	int np;
+	int np = 0;
+	int np_fixed = 0;
 	file_import.read((char*)&np, sizeof(int));
+	if (np == -1) {
+		int binary_format_version;
+		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&np, sizeof(int));
+		file_import.read((char*)&np_fixed, sizeof(int));
+	}
 	file_import.close();
-	return np;
+	return make_pair(np, np_fixed);
 }
 
 void Simulation::setMetadata(fstream &file_import)
@@ -1437,7 +1345,28 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 {
 	/**
 	 \brief Read a binary file input configuration.
+
+	 Depending on the type of simulation, we store the data differently, defined by
+	 binary format version numbers:
+	 v1 : no version number field
+	      metadata : np, vf, lx, ly, lz, disp_x, disp_y
+	      particle data : [x, y, z, radius]*np
+	      contact data : nb_interactions,
+	      [p0, p1, dtx, dty, dtz, drx, dry, drz]*nb_interactions
+				(with p0, p1 unsigned short)
+
+	 v2 : no version number field
+	      metadata : same as v1
+	      particle data : as v1
+	      contact data : as v1, except that p0 and p1 are unsigned int
+
+	 v3 : (fixed wall particle case)
+	      version nb: -1, 3  (-1 to distinguish from v1:np or v2:np)
+	      metadata : np, np_fixed, vf, lx, ly, lz, disp_x, disp_y
+	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
+				contact data : as v2
 	 */
+
 
 	// first positions
 	vec3d initial_lees_edwards_disp;
@@ -1449,9 +1378,21 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
 		throw runtime_error(error_str.str());
 	}
+
+	int binary_format_version;
 	int np;
+	int np_fixed;
 	double lx, ly, lz;
 	file_import.read((char*)&np, sizeof(int));
+	if (np == -1) {
+		file_import.read((char*)&binary_format_version, sizeof(int));
+		file_import.read((char*)&np, sizeof(int));
+	} else {
+		binary_format_version = 2; // may also be 1, but will be determined later
+	}
+	if (binary_format_version == 3) {
+		file_import.read((char*)&np_fixed, sizeof(int));
+	}
 	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
 	file_import.read((char*)&lx, sizeof(double));
 	file_import.read((char*)&ly, sizeof(double));
@@ -1471,8 +1412,21 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		initial_position.push_back(vec3d(x_,y_,z_));
 		radius.push_back(r_);
 	}
+
 	sys.setBoxSize(lx,ly,lz);
 	sys.setConfiguration(initial_position, radius);
+
+	if (binary_format_version == 3) {
+		vector<vec3d> fixed_velocities;
+		double vx_, vy_, vz_;
+		for (int i=0; i<np_fixed; i++) {
+			file_import.read((char*)&vx_, sizeof(double));
+			file_import.read((char*)&vy_, sizeof(double));
+			file_import.read((char*)&vz_, sizeof(double));
+			fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
+		}
+		sys.setFixedVelocities(fixed_velocities);
+	}
 
 	// now contacts
 	int ncont;
@@ -1480,13 +1434,12 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	vector <struct contact_state> cont_states;
 	file_import.read((char*)&ncont, sizeof(unsigned int));
 	std::iostream::pos_type file_pos = file_import.tellg();
-	bool old_file_type = false;
 	for (int i=0; i<ncont; i++) {
 		unsigned int p0, p1;
 		file_import.read((char*)&p0, sizeof(unsigned int));
 		// hacky thing to guess if this is an old format with particle numbers as unsigned short
 		if((int)p0>sys.get_np()){
-			old_file_type = true;
+			binary_format_version = 1;
 			file_import.seekg(file_pos);
 			break;
 		}
@@ -1504,7 +1457,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
 		cont_states.push_back(cs);
 	}
-	if (old_file_type) {
+	if (binary_format_version == 1) {
 		for (int i=0; i<ncont; i++) {
 			unsigned short p0, p1;
 

@@ -60,13 +60,14 @@ private:
 	/*
 	 * For output data.
 	 */
-	std::ofstream fout_particle;
-	std::ofstream fout_interaction;
 	std::ofstream fout_time;
 	std::ofstream fout_input;
 	OutputData outdata;
 	OutputData outdata_st;
 	OutputData outdata_pst;
+	OutputData outdata_par;
+	OutputData outdata_int;
+
 	/*
 	 * For inputs
 	 */
@@ -149,7 +150,7 @@ public:
 	bool isTwoDimension(const std::string&);
 	bool isTwoDimensionBinary(const std::string&);
 	std::pair<int,int> get_np(const std::string&);
-	int get_np_Binary(const std::string&);
+	std::pair<int,int> get_np_Binary(const std::string&);
 	void importConfiguration(const std::string&);
 	void importConfigurationBinary(const std::string&);
 	void readPositionsImposedVelocity(std::fstream &file_import);
@@ -200,5 +201,6 @@ public:
 	/*********** Events  ************/
 	void handleEventsShearJamming();
 	void handleEventsFragility();
+	std::string gitVersion();
 };
 #endif /* defined(__LF_DEM__Simulation__) */

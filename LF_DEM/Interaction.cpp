@@ -171,11 +171,11 @@ void Interaction::updateContactState()
 		if (reduced_gap <= sys->new_contact_gap) {
 			// now contact
 			contact.activate();
-			if (reduced_gap < -0.1){
-				cerr << "new contact may have problem\n";
-				cerr << "gap = " << reduced_gap << endl;
+			// if (reduced_gap < -0.1){ // @@@@ Ryohei, do you mind if we remove this?
+				// cerr << "new contact may have problem\n";
+				// cerr << "gap = " << reduced_gap << endl;
 				//exit(1);
-			}
+			// }
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}

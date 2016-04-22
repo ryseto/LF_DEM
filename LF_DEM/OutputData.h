@@ -27,19 +27,22 @@
 
 class OutputData {
 private:
-	int number_of_data;
 	bool first_time;
 	std::string out_unit;
-	std::vector < std::vector<std::string> > output_data;
+	std::map <std::string, std::vector<std::string> > output_data;
+	std::vector <std::string> insert_order;
 	std::vector <std::string> output_data_name;
-	std::vector <std::string> output_data_type;
+	std::map <std::string, std::string> output_data_type;
 	std::map <std::string, double> converter;
+	std::map <std::string, int> output_data_width;
 	std::ofstream fout;
+	int default_precision;
 
 	int getLineNumber()
 	{
 		unsigned int line_nb = 0;
-		for (const auto& col : output_data) {
+		for (const auto& data : output_data) {
+			const auto &col = data.second;
 			if (line_nb == 0 && col.size() > 0) {
 				line_nb = col.size();
 			}
@@ -51,14 +54,30 @@ private:
 		return line_nb;
 	}
 
+	void initCol(std::string name,
+							 std::string physical_dimension,
+							 int width)
+	{
+		if (output_data.find(name) != output_data.end()) {
+			return;
+		}
+		std::vector <std::string> col;
+		col.clear();
+		output_data[name] = col;
+		output_data_name.push_back(name);
+		output_data_type[name] = physical_dimension;
+		output_data_width[name] = width;
+		insert_order.push_back(name);
+	}
+
 public:
-	OutputData(): first_time(true) {}
+	OutputData(): first_time(true), default_precision(6) {}
 	~OutputData() {
 		fout.close();
 	}
 	void setFile (const std::string& fname,
-				  const std::string& data_header,
-				  const bool force_to_run)
+					const std::string& data_header,
+					const bool force_to_run)
 	{
 		if (force_to_run == false) {
 			std::ifstream file_test(fname.c_str());
@@ -75,80 +94,77 @@ public:
 		fout << data_header;
 	}
 
-	void init(int number_of_data_, std::string output_unit)
+	void setUnit(std::string output_unit)
 	{
-		if (first_time) {
-			out_unit = output_unit;
-			number_of_data = number_of_data_;
-			output_data.resize(number_of_data);
-			output_data_name.resize(number_of_data);
-			output_data_type.resize(number_of_data);
-			for (auto& od : output_data) {
-				od.clear();
-			}
-			for (std::string& odn : output_data_name) {
-				odn = "blank";
-			}
-			for (std::string& odt : output_data_type) {
-				odt = "none";
-			}
-		}
+		out_unit = output_unit;
 	}
 
-    void setDimensionlessNumber(double dimensionless_number)
-    // dimensionless_number = internal_force_unit/output_force_unit
-    {
-        if (dimensionless_number == 0) {
-            std::cerr << "dimensionless_number (internal_force_unit/output_force_unit) = " << dimensionless_number << std::endl;
-            dimensionless_number = 1; // @@@@ To be checked.
-        }
+	void setDefaultPrecision(int precision)
+	{
+		default_precision = precision;
+	}
+
+	void setDimensionlessNumber(double dimensionless_number)
+	// dimensionless_number = internal_force_unit/output_force_unit
+	{
+		if (dimensionless_number == 0) {
+			std::cerr << "dimensionless_number (internal_force_unit/output_force_unit) = " << dimensionless_number << std::endl;
+			dimensionless_number = 1; // @@@@ To be checked.
+		}
 		converter["none"] = 1;
 		converter["viscosity"] = 6*M_PI;
-		converter["stress"] = dimensionless_number;
+		converter["stress"] = 6*M_PI*dimensionless_number;
 		converter["force"] = dimensionless_number;
 		converter["time"] = 1/dimensionless_number;
 		converter["rate"] = dimensionless_number;
 		converter["velocity"] = dimensionless_number;
 	}
 
-    template<typename T>
-    void entryData(int num,
-                   std::string name,
-                   std::string type,
-                   T value)
-    {
-        int index = num-1;
-        std::ostringstream str_value;
-        str_value << converter[output_data_type[index]]*value;
-        if (first_time) {
-			output_data_name[index] = name;
-			output_data_type[index] = type;
-		}
-		output_data[index].push_back(str_value.str());
-	}
-
-	void writeToFile(std::string header)
+	template<typename T>
+	void entryData(std::string name,
+								 std::string physical_dimension,
+								 int width,
+								 T value,
+								 int precision=-1)
 	{
-		fout << header;
-		writeToFile();
-	}
-
-	void writeToFile()
-	{
-		int line_nb = getLineNumber();
 		if (first_time) {
-			fout << "# data in " << out_unit << " units." << std::endl;
-			for (int i=0; i<number_of_data; i++) {
-				fout << "#" << i+1 << ": ";
-				fout << output_data_name[i];
-				fout << std::endl;
-			}
-			first_time = false;
+			initCol(name, physical_dimension, width);
 		}
+		int output_precision;
+		if (precision>0) {
+			output_precision = precision;
+		} else {
+			output_precision = default_precision;
+		}
+		std::ostringstream str_value;
+		str_value << std::setprecision(output_precision) << converter[output_data_type[name]]*value;
+		output_data[name].push_back(str_value.str());
+	}
+
+	void writeFileHeader() {
+		fout << "# data in " << out_unit << " units." << std::endl;
+		int i = 1;
+		for (const auto &name : insert_order) {
+			int width = output_data_width[name];
+			if (width == 1) {
+				fout << "#" << i << ": ";
+			} else {
+				fout << "#" << i << "-" << i+width-1 << ": ";
+			}
+			i += width;
+			fout << name;
+			fout << std::endl;
+		}
+		fout << std::endl;
+	}
+
+	void writeColsToFile() {
+		int line_nb = getLineNumber();
 		for (int i=0; i<line_nb; i++) {
-			for (const auto& od : output_data) {
-				if (!od.empty()) {
-					fout << od[i] << " ";
+			for (const auto& name : insert_order) {
+				const auto &col = output_data[name];
+				if (!col.empty()) {
+					fout << col[i] << " ";
 				} else {
 					fout << "n ";
 				}
@@ -156,8 +172,28 @@ public:
 			fout << std::endl;
 		}
 		for (auto& od : output_data) {
-			od.clear();
+			od.second.clear();
 		}
+	}
+
+
+	void writeToFile(std::string header)
+	{
+		if (first_time) {
+			writeFileHeader();
+			first_time = false;
+		}
+		fout << header;
+		writeColsToFile();
+	}
+
+	void writeToFile()
+	{
+		if (first_time) {
+			writeFileHeader();
+			first_time = false;
+		}
+		writeColsToFile();
 	}
 };
 #endif

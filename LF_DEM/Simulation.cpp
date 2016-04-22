@@ -38,15 +38,11 @@ diminish_output(false)
 	kill = false;
 };
 
-Simulation::~Simulation()
-{
-	if (fout_particle.is_open()) {
-		fout_particle.close();
-	}
-	if (fout_interaction.is_open()) {
-		fout_interaction.close();
-	}
-};
+Simulation::~Simulation(){};
+
+string Simulation::gitVersion(){
+	return GIT_VERSION;
+}
 
 bool Simulation::keepRunning()
 {
@@ -508,7 +504,25 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	/**
 		\brief Saves the current configuration of the system in a binary file.
 
-		In the current implementation, it stores particle positions, x and y strain, and contact states.
+		Depending on the type of simulation, we store the data differently, defined by
+ 	 binary format version numbers:
+ 	 v1 : no version number field
+ 	      metadata : np, vf, lx, ly, lz, disp_x, disp_y
+ 	      particle data : [x, y, z, radius]*np
+ 	      contact data : nb_interactions,
+ 	      [p0, p1, dtx, dty, dtz, drx, dry, drz]*nb_interactions
+ 				(with p0, p1 unsigned short)
+
+ 	 v2 : no version number field
+ 	      metadata : same as v1
+ 	      particle data : as v1
+ 	      contact data : as v1, except that p0 and p1 are unsigned int
+
+ 	 v3 : (fixed wall particle case)
+ 	      version nb: -1, 3  (-1 to distinguish from v1:np or v2:np)
+ 	      metadata : np, np_fixed, vf, lx, ly, lz, disp_x, disp_y
+ 	      particle data : [x, y, z, radius]*np, [vx, vy, vz]*np_fixed
+ 				contact data : as v2
 	 */
 	int np = sys.get_np();
 	vector< vector<double> > pos(np);
@@ -525,7 +539,20 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	double ly = sys.get_ly();
 	double lz = sys.get_lz();
 	conf_export.open(conf_filename.c_str(), ios::binary | ios::out);
+
+	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
+	int binary_conf_format = 2; // v2 as default. v1 deprecated.
+	if (sys.test_simulation == 31) {
+		binary_conf_format = 3;
+	}
+	conf_export.write((char*)&conf_switch, sizeof(int));
+	conf_export.write((char*)&binary_conf_format, sizeof(int));
+
 	conf_export.write((char*)&np, sizeof(int));
+	if (binary_conf_format == 3) {
+		int np_fixed = sys.get_np() - sys.np_mobile;
+		conf_export.write((char*)&np_fixed, sizeof(int));
+	}
 	conf_export.write((char*)&volume_or_area_fraction, sizeof(double));
 	conf_export.write((char*)&lx, sizeof(double));
 	conf_export.write((char*)&ly, sizeof(double));
@@ -534,6 +561,19 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 	conf_export.write((char*)&(sys.shear_disp.y), sizeof(double));
 	for (int i=0; i<np; i++) {
 		conf_export.write((char*)&pos[i][0], dims*sizeof(double));
+	}
+	if (binary_conf_format == 3) {
+		int np_fixed = sys.get_np() - sys.np_mobile;
+		vector< vector<double> > vel(np_fixed);
+		for (int i=0; i<np_fixed; i++) {
+			vel[i].resize(3);
+			vel[i][0] = sys.fixed_velocities[i].x;
+			vel[i][1] = sys.fixed_velocities[i].y;
+			vel[i][2] = sys.fixed_velocities[i].z;
+		}
+		for (int i=0; i<np_fixed; i++) {
+			conf_export.write((char*)&vel[i][0], 3*sizeof(double));
+		}
 	}
 	vector <struct contact_state> cs;
 	sys.getContacts(cs);
@@ -604,95 +644,86 @@ void Simulation::outputData()
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 
-	int number_of_data = 37;
-	if (sys.wall_rheology) {
-		number_of_data = 40;
-	}
-	if (sys.test_simulation==31) {
-		number_of_data = 39;
-	}
-	outdata.init(number_of_data, output_unit_scales);
+	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
-	outdata.entryData(1, "time", "time", sys.get_time());
-	outdata.entryData(2, "shear strain", "none", sys.get_shear_strain());
-	outdata.entryData(3, "shear rate", "rate", sys.get_shear_rate());
+	outdata.entryData("time", "time", 1, sys.get_time());
+	outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
+	outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 
-	outdata.entryData(5, "viscosity", "viscosity", shear_stress/sr);
-	outdata.entryData(6, "Viscosity(lub)", "viscosity", shearStressComponent(sys.total_hydro_stress, p.theta_shear)/sr);
-	outdata.entryData(7, "Viscosity(xF_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressXF, p.theta_shear)/sr);
-	outdata.entryData(8, "Viscosity(GU_contact part)", "viscosity", shearStressComponent(sys.total_contact_stressGU, p.theta_shear)/sr);
+	outdata.entryData("viscosity", "viscosity", 1, shear_stress/sr);
+	outdata.entryData("Viscosity(lub)", "viscosity", 1, shearStressComponent(sys.total_hydro_stress, p.theta_shear)/sr);
+	outdata.entryData("Viscosity(xF_contact part)", "viscosity", 1, shearStressComponent(sys.total_contact_stressXF, p.theta_shear)/sr);
+	outdata.entryData("Viscosity(GU_contact part)", "viscosity", 1, shearStressComponent(sys.total_contact_stressGU, p.theta_shear)/sr);
 	if (sys.repulsiveforce) {
-		outdata.entryData(9, "Viscosity(repulsive force XF)", "viscosity", shearStressComponent(sys.total_repulsive_stressXF, p.theta_shear)/sr);
-		outdata.entryData(10, "Viscosity(repulsive force GU)", "viscosity", shearStressComponent(sys.total_repulsive_stressGU, p.theta_shear)/sr);
+		outdata.entryData("Viscosity(repulsive force XF)", "viscosity", 1, shearStressComponent(sys.total_repulsive_stressXF, p.theta_shear)/sr);
+		outdata.entryData("Viscosity(repulsive force GU)", "viscosity", 1, shearStressComponent(sys.total_repulsive_stressGU, p.theta_shear)/sr);
 	}
 	if (sys.brownian) {
-		outdata.entryData(11, "Viscosity(brownian)", "viscosity", shearStressComponent(sys.total_brownian_stressGU, p.theta_shear)/sr);
+		outdata.entryData("Viscosity(brownian)", "viscosity", 1, shearStressComponent(sys.total_brownian_stressGU, p.theta_shear)/sr);
 	}
 	/*
 	 * Stress
 	 */
-	outdata.entryData(14, "shear stress", "stress", shear_stress);
-	outdata.entryData(15, "N1 viscosity", "viscosity", sys.total_stress.getNormalStress1()/sr);
-	outdata.entryData(16, "N2 viscosity", "viscosity", sys.total_stress.getNormalStress2()/sr);
-	outdata.entryData(17, "particle pressure", "stress", sys.total_stress.getParticlePressure());
-	outdata.entryData(18, "particle pressure contact", "stress", sys.total_contact_stressXF.getParticlePressure());
+	outdata.entryData("shear stress", "stress", 1, shear_stress);
+	outdata.entryData("N1 viscosity", "viscosity", 1, sys.total_stress.getNormalStress1()/sr);
+	outdata.entryData("N2 viscosity", "viscosity", 1, sys.total_stress.getNormalStress2()/sr);
+	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
+	outdata.entryData("particle pressure contact", "stress", 1, sys.total_contact_stressXF.getParticlePressure());
 	/* energy
 	 */
-	outdata.entryData(21, "energy", "none", sys.get_total_energy());
+	outdata.entryData("energy", "none", 1, sys.get_total_energy());
 	/* maximum deformation of contact bond
 	 */
-	outdata.entryData(22, "min gap", "none", sys.min_reduced_gap);
-	outdata.entryData(23, "max gap(cohesion)", "none", sys.max_contact_gap);
-	outdata.entryData(24, "max tangential displacement", "none", sys.max_disp_tan);
-	outdata.entryData(25, "max rolling displacement", "none", sys.max_disp_rolling);
+	outdata.entryData("min gap", "none", 1, sys.min_reduced_gap);
+	outdata.entryData("max gap(cohesion)", "none", 1, sys.max_contact_gap);
+	outdata.entryData("max tangential displacement", "none", 1, sys.max_disp_tan);
+	outdata.entryData("max rolling displacement", "none", 1, sys.max_disp_rolling);
 	/* contact number
 	 */
-	outdata.entryData(26, "contact number", "none", sys.getContactNumber());
-	outdata.entryData(27, "frictional contact number", "none", sys.getFrictionalContactNumber());
-	outdata.entryData(28, "number of interaction", "none", sys.get_nb_of_active_interactions());
+	outdata.entryData("contact number", "none", 1, sys.getContactNumber());
+	outdata.entryData("frictional contact number", "none", 1, sys.getFrictionalContactNumber());
+	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
 	/* maximum velocity
 	 */
-	outdata.entryData(29, "max velocity", "velocity", sys.max_velocity);
-	outdata.entryData(30, "max angular velocity", "velocity", sys.max_ang_velocity);
+	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
+	outdata.entryData("max angular velocity", "velocity", 1, sys.max_ang_velocity);
 	/* simulation parameter
 	 */
-	outdata.entryData(31, "dt", "time", sys.avg_dt);
-	outdata.entryData(32, "kn", "none", p.kn);
-	outdata.entryData(33, "kt", "none", p.kt);
-	outdata.entryData(34, "kr", "none", p.kr);
-	outdata.entryData(35, "shear displacement x", "none", sys.shear_disp.x);
-	outdata.entryData(36, "shear displacement y", "none", sys.shear_disp.y);
+	outdata.entryData("dt", "time", 1, sys.avg_dt);
+	outdata.entryData("kn", "none", 1, p.kn);
+	outdata.entryData("kt", "none", 1, p.kt);
+	outdata.entryData("kr", "none", 1, p.kr);
+	outdata.entryData("shear displacement x", "none", 1, sys.shear_disp.x);
+	outdata.entryData("shear displacement y", "none", 1, sys.shear_disp.y);
 	if (sys.wall_rheology) {
-		outdata.entryData(37, "shear viscosity wall 1", "viscosity", sys.shearstress_wall1/sr);
-		outdata.entryData(38, "shear viscosity wall 2", "viscosity", sys.shearstress_wall2/sr);
-		outdata.entryData(39, "normal stress/rate wall 1", "viscosity", sys.normalstress_wall1/sr);
-		outdata.entryData(40, "normal stress/rate wall 2", "viscosity", sys.normalstress_wall2/sr);
+		outdata.entryData("shear viscosity wall 1", "viscosity", 1, sys.shearstress_wall1/sr);
+		outdata.entryData("shear viscosity wall 2", "viscosity", 1, sys.shearstress_wall2/sr);
+		outdata.entryData("normal stress/rate wall 1", "viscosity", 1, sys.normalstress_wall1/sr);
+		outdata.entryData("normal stress/rate wall 2", "viscosity", 1, sys.normalstress_wall2/sr);
 	}
 	if (sys.test_simulation == 31) {
-		outdata.entryData(37, "force top wall", "force", sys.force_upwall);
-		outdata.entryData(38, "force bottom wall", "force", sys.force_downwall);
+		outdata.entryData("force top wall", "force", 3, sys.force_upwall);
+		outdata.entryData("force bottom wall", "force", 3, sys.force_downwall);
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
 	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	outdata_st.init(8, output_unit_scales);
-	outdata_st.entryData(1, "time", "time", sys.get_time());
-	outdata_st.entryData(2, "shear strain", "none", sys.get_shear_strain());
-	outdata_st.entryData(3, "shear rate", "rate", sys.get_shear_rate());
-	outdata_st.entryData(4, "total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_stress);
-	outdata_st.entryData(5, "hydro stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_hydro_stress);
-	outdata_st.entryData(6, "contact stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_contact_stressXF+sys.total_contact_stressGU);
-	outdata_st.entryData(7, "repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_repulsive_stressXF+sys.total_repulsive_stressGU);
-	outdata_st.entryData(8, "brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", sys.total_brownian_stressGU);
+	outdata_st.setUnit(output_unit_scales);
+	outdata_st.entryData("time", "time", 1, sys.get_time());
+	outdata_st.entryData("shear strain", "none", 1, sys.get_shear_strain());
+	outdata_st.entryData("shear rate", "rate", 1, sys.get_shear_rate());
+	outdata_st.entryData("total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_stress);
+	outdata_st.entryData("hydro stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_hydro_stress);
+	outdata_st.entryData("contact stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_contact_stressXF+sys.total_contact_stressGU);
+	outdata_st.entryData("repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_repulsive_stressXF+sys.total_repulsive_stressGU);
+	outdata_st.entryData("brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_brownian_stressGU);
 	outdata_st.writeToFile();
 
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-		int nb_of_fields = strlen(p.out_particle_stress.c_str());
-		outdata_pst.init(nb_of_fields, output_unit_scales);
+		outdata_pst.setUnit(output_unit_scales);
 		for (int i=0; i<sys.get_np(); i++) {
-			int field_index = 0;
 			if (p.out_particle_stress.find('t') != string::npos) {
 				StressTensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
 				if (sys.brownian) {
@@ -701,19 +732,19 @@ void Simulation::outputData()
 				if (sys.repulsiveforce) {
 					s += sys.repulsivestressGU[i]+sys.repulsivestressXF[i];
 				}
-				outdata_pst.entryData(++field_index, "total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", s);
+				outdata_pst.entryData("total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", 6, s);
 			}
 			if (p.out_particle_stress.find('l') != string::npos) {
-				outdata_pst.entryData(++field_index, "lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", sys.lubstress[i]);
+				outdata_pst.entryData("lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.lubstress[i]);
 			}
 			if (p.out_particle_stress.find('c') != string::npos) {
-				outdata_pst.entryData(++field_index, "contact stress (xx, xy, xz, yz, yy, zz)", "stress", sys.contactstressXF[i] + sys.contactstressGU[i]);
+				outdata_pst.entryData("contact stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.contactstressXF[i] + sys.contactstressGU[i]);
 			}
 			if (sys.brownian && p.out_particle_stress.find('b') != string::npos ) {
-				outdata_pst.entryData(++field_index, "Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", sys.brownianstressGU[i]);
+				outdata_pst.entryData("Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.brownianstressGU[i]);
 			}
 			if (sys.repulsiveforce && p.out_particle_stress.find('r') != string::npos ) {
-				outdata_pst.entryData(++field_index, "repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
+				outdata_pst.entryData("repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
 			}
 		}
 		stringstream snapshot_header;
@@ -747,36 +778,36 @@ void Simulation::outputDataMagnetic()
 		throw runtime_error(error_str.str());
 	}
 	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	outdata.init(27, output_unit_scales);
-	outdata.entryData(1, "time", "time", sys.get_time());
+	outdata.setUnit(output_unit_scales);
+	outdata.entryData("time", "time", 1, sys.get_time());
 	/* energy */
-	outdata.entryData(3, "energy", "none", sys.get_total_energy());
-	outdata.entryData(4, "magnetic energy", "none", sys.magnetic_dd_energy);
+	outdata.entryData("energy", "none", 1, sys.get_total_energy());
+	outdata.entryData("magnetic energy", "none", 1, sys.magnetic_dd_energy);
 	/* contact number */
-	outdata.entryData(5, "contact number", "none", sys.getContactNumber());
-	outdata.entryData(6, "frictional contact number", "none", sys.getFrictionalContactNumber());
-	outdata.entryData(7, "number of interaction", "none", sys.get_nb_of_active_interactions());
+	outdata.entryData("contact number", "none", 1, sys.getContactNumber());
+	outdata.entryData("frictional contact number", "none", 1, sys.getFrictionalContactNumber());
+	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
 	/* maximum deformation of contact bond */
-	outdata.entryData(8, "min gap", "none", sys.min_reduced_gap);
-	outdata.entryData(9, "max gap(cohesion)", "none", sys.max_contact_gap);
-	outdata.entryData(10, "magnetic field strength", "none", sys.p.external_magnetic_field_norm);
-	outdata.entryData(11, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_theta);
-	outdata.entryData(12, "magnetic field angle", "none", sys.p.external_magnetic_field_ang_phi);
+	outdata.entryData("min gap", "none", 1, sys.min_reduced_gap);
+	outdata.entryData("max gap(cohesion)", "none", 1, sys.max_contact_gap);
+	outdata.entryData("magnetic field strength", "none", 1, sys.p.external_magnetic_field_norm);
+	outdata.entryData("magnetic field angle", "none", 1, sys.p.external_magnetic_field_ang_theta);
+	outdata.entryData("magnetic field angle", "none", 1, sys.p.external_magnetic_field_ang_phi);
 	/* pressure */
-	outdata.entryData(13, "particle pressure", "stress", sys.total_stress.getParticlePressure());
-	outdata.entryData(14, "particle pressure contact XF", "stress", sys.total_contact_stressXF.getParticlePressure());
-	outdata.entryData(15, "particle pressure contact GU", "stress", sys.total_contact_stressGU.getParticlePressure());
-	outdata.entryData(16, "particle pressure brownian", "stress", sys.total_brownian_stressGU.getParticlePressure());
-	outdata.entryData(17, "particle pressure magnetic XF", "stress", sys.total_magnetic_stressXF.getParticlePressure());
-	outdata.entryData(18, "particle pressure magnetic GU", "stress", sys.total_magnetic_stressGU.getParticlePressure());
+	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
+	outdata.entryData("particle pressure contact XF", "stress", 1, sys.total_contact_stressXF.getParticlePressure());
+	outdata.entryData("particle pressure contact GU", "stress", 1, sys.total_contact_stressGU.getParticlePressure());
+	outdata.entryData("particle pressure brownian", "stress", 1, sys.total_brownian_stressGU.getParticlePressure());
+	outdata.entryData("particle pressure magnetic XF", "stress", 1, sys.total_magnetic_stressXF.getParticlePressure());
+	outdata.entryData("particle pressure magnetic GU", "stress", 1, sys.total_magnetic_stressGU.getParticlePressure());
 	/* maximum velocity */
-	outdata.entryData(20, "max velocity", "velocity", sys.max_velocity);
-	outdata.entryData(21, "max angular velocity", "velocity", sys.max_ang_velocity);
+	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
+	outdata.entryData("max angular velocity", "velocity", 1, sys.max_ang_velocity);
 	/* simulation parameter */
-	outdata.entryData(22, "dt", "none", sys.dt);
-	outdata.entryData(23, "kn", "none", sys.p.kn);
-	outdata.entryData(24, "kt", "none", sys.p.kt);
-	outdata.entryData(25, "kr", "none", sys.p.kr);
+	outdata.entryData("dt", "none", 1, sys.dt);
+	outdata.entryData("kn", "none", 1, sys.p.kn);
+	outdata.entryData("kt", "none", 1, sys.p.kt);
+	outdata.entryData("kr", "none", 1, sys.p.kr);
 	/* misc */
 	outdata.writeToFile();
 }
@@ -820,10 +851,13 @@ void Simulation::outputDataHeader(ofstream& fout)
 void Simulation::outputConfigurationData()
 {
 	int np = sys.get_np();
+
 	int output_precision = 6;
 	if (diminish_output) {
 		output_precision = 4;
 	}
+	outdata_par.setDefaultPrecision(output_precision);
+	outdata_int.setDefaultPrecision(output_precision);
 
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
@@ -843,91 +877,69 @@ void Simulation::outputConfigurationData()
 			}
 		}
 	}
-	/*
-	 * shear_disp = sys.strain() - (int)(sys.strain()/Lx)*Lx
-	 */
+
+	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
+	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+		ostringstream error_str;
+		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
+		throw runtime_error(error_str.str());
+	}
 	if (p.out_data_particle) {
 		cout << "   out config: " << sys.get_shear_strain() << endl;
-		fout_particle << "# " << sys.get_shear_strain() << ' ';
-		fout_particle << sys.shear_disp.x << ' ';
-		fout_particle << getRate() << ' ';
-		fout_particle << target_stress_input << ' ';
-		fout_particle << sys.get_time() << ' ';
-		if (p.magnetic_type != 0) {
-			fout_particle << sys.angle_external_magnetic_field;
-		}
-		fout_particle << endl;
+		outdata_par.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+		outdata_par.setUnit(output_unit_scales);
+		for (int i=0; i<sys.get_np(); i++) {
+			outdata_par.entryData("particle index", "none", 1, i);
+			outdata_par.entryData("radius", "none", 1, sys.radius[i]);
+			outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
+			outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
 
-		for (int i=0; i<np; i++) {
-			const vec3d& r = pos[i];
-			const vec3d& v = vel[i];
-			const vec3d& o = sys.ang_velocity[i];
-			fout_particle << i; //1: number
-			fout_particle << ' ' << sys.radius[i]; //2: radius
-			fout_particle << setprecision(6);
-			fout_particle << ' ' << r.x << ' ' << r.y << ' ' << r.z; //3, 4, 5: position
-			fout_particle << setprecision(output_precision) << ' ' << v.x << ' ' << v.y << ' ' << v.z; //6, 7, 8: velocity
 			if (control_var != "magnetic") {
-				fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
+				outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
 				if (sys.couette_stress) {
 					double stress_rr, stress_thetatheta, stress_rtheta;
 					sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-					fout_particle << ' ' << stress_rr << ' ' << stress_thetatheta << ' ' << stress_rtheta;
-				} else {
-					if (diminish_output == false) {
-						double lub_xzstress = shearStressComponent(sys.lubstress[i], p.theta_shear);
-						double contact_xzstressGU = shearStressComponent(sys.contactstressGU[i], p.theta_shear);
-						double brownian_xzstressGU = 0;
-						if (sys.brownian) {
-							brownian_xzstressGU = shearStressComponent(sys.brownianstressGU[i], p.theta_shear);
-						}
-						fout_particle << ' ' << 6*M_PI*lub_xzstress; //12: xz stress contributions //@@@ remove?
-						fout_particle << ' ' << 6*M_PI*contact_xzstressGU; //13: xz stress contributions //@@@ remove?
-						fout_particle << ' ' << 6*M_PI*brownian_xzstressGU; //14: xz stress contributions //@@@ remove?
-					} else {
-						fout_particle << " d d d";
-					}
+					outdata_par.entryData("stress_rr", "stress", 1, stress_rr);
+					outdata_par.entryData("stress_thetatheta", "stress", 1, stress_thetatheta);
+					outdata_par.entryData("stress_rtheta", "stress", 1, stress_rtheta);
 				}
 				if (sys.twodimension) {
-					fout_particle << ' ' << sys.angle[i]; // 15
-				} else {
-					fout_particle << ' ' << 0; // 15
+					outdata_par.entryData("angle", "none", 1, sys.angle[i]);
 				}
 			} else {
 				if (sys.p.magnetic_type == 1) {
-					fout_particle << ' ' << o.x << ' ' << o.y << ' ' << o.z; //9, 10, 11: angular velocity
-					fout_particle << ' ' << sys.magnetic_moment[i].x;
-					fout_particle << ' ' << sys.magnetic_moment[i].y;
-					fout_particle << ' ' << sys.magnetic_moment[i].z;
+					outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
+					outdata_par.entryData("magnetic moment (x, y, z)", "none", 3, sys.magnetic_moment[i]);
 				} else {
-					fout_particle << ' ' << sys.magnetic_susceptibility[i]; // 1: magnetic 0: non-magnetic
+					outdata_par.entryData("magnetic susceptibility", "none", 1, sys.magnetic_susceptibility[i]);
 				}
 			}
 			if (p.out_data_vel_components) {
-				fout_particle << setprecision(output_precision);
-				fout_particle << ' ' << sys.vel_hydro[i];
-				fout_particle << ' ' << sys.ang_vel_hydro[i];
-				fout_particle << ' ' << sys.vel_contact[i];
-				fout_particle << ' ' << sys.ang_vel_contact[i];
+				outdata_par.entryData("non-affine hydro velocity (x, y, z)", "velocity", 3, sys.vel_hydro[i]);
+				outdata_par.entryData("non-affine hydro angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro[i]);
+				outdata_par.entryData("non-affine contact velocity (x, y, z)", "velocity", 3, sys.vel_contact[i]);
+				outdata_par.entryData("non-affine contact angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_contact[i]);
 				if (sys.repulsiveforce) {
-					fout_particle << ' ' << sys.vel_repulsive[i];
-					fout_particle << ' ' << sys.ang_vel_repulsive[i];
+					outdata_par.entryData("non-affine repulsive velocity (x, y, z)", "velocity", 3, sys.vel_repulsive[i]);
+					outdata_par.entryData("non-affine repulsive angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_repulsive[i]);
 				}
 				if (sys.brownian) {
-					fout_particle << ' ' << sys.vel_brownian[i];
-					fout_particle << ' ' << sys.ang_vel_brownian[i];
+					outdata_par.entryData("non-affine brownian velocity (x, y, z)", "velocity", 3, sys.vel_brownian[i]);
+					outdata_par.entryData("non-affine brownian angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_brownian[i]);
 				}
 				if (sys.magnetic) {
-					fout_particle << ' ' << sys.vel_magnetic[i];
-					fout_particle << ' ' << sys.ang_vel_magnetic[i];
+					outdata_par.entryData("non-affine magnetic velocity (x, y, z)", "velocity", 3, sys.vel_magnetic[i]);
+					outdata_par.entryData("non-affine magnetic angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_magnetic[i]);
 				}
 				if (sys.mobile_fixed) {
-					fout_particle << ' ' << sys.vel_hydro_from_fixed[i];
-					fout_particle << ' ' << sys.ang_vel_hydro_from_fixed[i];
+					outdata_par.entryData("non-affine hydro_from_fixed velocity (x, y, z)", "velocity", 3, sys.vel_hydro_from_fixed[i]);
+					outdata_par.entryData("non-affine hydro_from_fixed angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro_from_fixed[i]);
 				}
 			}
-			fout_particle << endl;
 		}
+		stringstream snapshot_header;
+		getSnapshotHeader(snapshot_header);
+		outdata_par.writeToFile(snapshot_header.str());
 	}
 	int cnt_interaction = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
@@ -936,32 +948,28 @@ void Simulation::outputConfigurationData()
 		}
 	}
 	if (p.out_data_interaction) {
-		fout_interaction << "# " << sys.get_shear_strain();
-		fout_interaction << ' ' << cnt_interaction;
-		fout_interaction << ' ' << sys.get_time();
-		fout_interaction << endl;
+		outdata_int.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+		outdata_int.setUnit(output_unit_scales);
+		stringstream snapshot_header;
+		getSnapshotHeader(snapshot_header);
 		for (int k=0; k<sys.nb_interaction; k++) {
 			if (sys.interaction[k].is_active()) {
 				unsigned int i, j;
 				sys.interaction[k].get_par_num(i, j);
-				vec3d& nr_vec = sys.interaction[k].nvec;
 				StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
-				fout_interaction << setprecision(6);
-				fout_interaction << i << ' ' << j << ' '; // 1, 2
-				/* contact.state:
-				 * 0 no contact
-				 * 1 Friction is not activated (critical load model)
-				 * 2 Static friction
-				 * 3 Sliding
-				 */
-				fout_interaction << sys.interaction[k].contact.state << ' '; //3
+				outdata_int.entryData("particle 1 label", "none", 1, i);
+				outdata_int.entryData("particle 2 label", "none", 1, j);
+				outdata_int.entryData("contact state "
+				                      "(0 = no contact, "
+				                      "1 = frictionless contact, "
+				                      "2 = non-sliding frictional, "
+				                      "3 = sliding frictional)",
+				                      "none", 1, sys.interaction[k].contact.state);
 				if (diminish_output == false) {
-					fout_interaction << nr_vec.x << ' '; // 4
-					fout_interaction << nr_vec.y << ' '; // 5
-					fout_interaction << nr_vec.z << ' '; // 6
-					fout_interaction << sys.interaction[k].get_reduced_gap() << ' '; // 7
-				} else {
-					fout_interaction << "d d d d ";
+					outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
+					                      "none", 3, sys.interaction[k].nvec);
+					outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
+					                      "none", 1,  sys.interaction[k].get_reduced_gap());
 				}
 				/* [NOTE]
 				 * Lubrication forces are reference values
@@ -971,23 +979,26 @@ void Simulation::outputConfigurationData()
 				 * It seems there is no better way to visualize
 				 * the lubrication forces.
 				 */
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].lubrication.get_lubforce_normal() << ' '; // 8
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].lubrication.get_lubforce_tan() << ' '; // 9, 10, 11
+				outdata_int.entryData("normal part of the lubrication force", "force", 1, \
+				                      sys.interaction[k].lubrication.get_lubforce_normal());
+				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
+				                      sys.interaction[k].lubrication.get_lubforce_tan());
 				/*
 				 * Contact forces include only spring forces.
 				 */
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_normal_norm() << ' '; // 12
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].contact.get_f_contact_tan() << ' '; // 13, 14, 15
-				fout_interaction << setprecision(output_precision) << sys.interaction[k].repulsion.getForceNorm() << ' '; // 16
-
+				outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
+				                      sys.interaction[k].contact.get_f_contact_normal_norm());
+				outdata_int.entryData("tangential part of the contact force", "force", 3, \
+				                      sys.interaction[k].contact.get_f_contact_tan());
+				outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
+				                      sys.interaction[k].repulsion.getForceNorm());
 				if (diminish_output == false) {
-					fout_interaction << 6*M_PI*shearStressComponent(stress_contact, p.theta_shear) << ' '; // 17
-				} else {
-					fout_interaction << "d";
+					outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
+					                      shearStressComponent(stress_contact, p.theta_shear));
 				}
-				fout_interaction << endl;
 			}
 		}
+		outdata_int.writeToFile(snapshot_header.str());
 	}
 }
 
