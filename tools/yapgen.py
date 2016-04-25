@@ -63,6 +63,8 @@ def snaps2yap(pos_fname, force_factor):
                          f[:, icols['norm of the normal repulsive force']])\
                         .astype(np.float)
         #  convert the force to a thickness. case-by-case.
+        if force_factor is None:
+            force_factor = 1/np.max(np.abs(normal_forces))
         normal_forces = force_factor*np.abs(normal_forces)
         yap_out = np.row_stack(
                  (yap_out, pyp.get_interactions_yaparray(r1r2, normal_forces)))
@@ -98,7 +100,9 @@ def snaps2yap(pos_fname, force_factor):
         np.savetxt(yap_file, yap_out, fmt="%s "*7)
         yap_file.write("\n".encode('utf-8'))
         i += 1
-        out_str = "\r frame "+str(i)+"/"+str(nb_of_frames)+" - "+yap_filename
+        out_str = "\r frame " + str(i) + "/"+str(nb_of_frames) +\
+                  " - " + yap_filename + \
+                  "   [force factor " + str(force_factor) + "]"
         try:
             print(out_str, end="", flush=True)
         except TypeError:
@@ -149,7 +153,7 @@ if pos_fname.find("par_") > -1:
     if len(sys.argv) > 2:
         force_factor = float(sys.argv[2])
     else:
-        force_factor = 0.01
+        force_factor = None
     snaps2yap(pos_fname, force_factor)
 else:
     conf2yap(pos_fname)

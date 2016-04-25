@@ -47,6 +47,8 @@ def get_file_metadata(fname):
     file_metadata = {}
     file_metadata['column def'] = {}
 
+    header_len = 0
+
     while True:
         line = in_file.readline()
         if line[0] != '#':
@@ -60,7 +62,9 @@ def get_file_metadata(fname):
         else:
             key, value = parse_column_def(data_list[0], data_list[1:])
             file_metadata['column def'][key] = value
+        header_len += 1
 
+    header_len += 1
     cols = convert_columndef_to_indices(file_metadata['column def'])
     col_nb = 0
     for k in cols:
@@ -73,7 +77,7 @@ def get_file_metadata(fname):
                 col_nb = value + 1
     in_file.seek(0, 0)
 
-    return file_metadata, col_nb
+    return file_metadata, col_nb, header_len
 
 
 def convert_columndef_to_indices(columndef_dict):
@@ -87,9 +91,8 @@ def convert_columndef_to_indices(columndef_dict):
     return c
 
 
-def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
+def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols, header_len):
     # read col0 separately to determine frame breaks
-    header_len = field_nb+1
     col0 = np.genfromtxt(in_file, comments=' ', skip_header=header_len)
     framebreaks_col0 = np.nonzero(np.isnan(col0))[0]
 
@@ -116,10 +119,10 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     return cols
 
 
-def __read_snapshot_file_with_framemeta(in_file, field_nb):
+def __read_snapshot_file_with_framemeta(in_file, field_nb, header_len):
     names = [str(i) for i in range(1, field_nb+1)]
     frames = pd.read_table(in_file, delim_whitespace=True,
-                           names=names, skiprows=field_nb+1)
+                           names=names, skiprows=header_len)
 
     # locate empty lines
     framebreaks = np.nonzero((frames['1'] == '#').as_matrix())[0]
@@ -178,7 +181,7 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
     except TypeError:
         in_file = fname
 
-    file_metadata, field_nb = get_file_metadata(in_file)
+    file_metadata, field_nb, header_len = get_file_metadata(in_file)
     in_file.close()
     if frame_meta:
         in_file = open(fname, "r")
@@ -187,11 +190,13 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
 
     if frame_meta:
         return __read_snapshot_file_with_framemeta(in_file,
-                                                   field_nb)\
+                                                   field_nb,
+                                                   header_len)\
                 + (file_metadata,)
     else:
         return __read_snapshot_file_no_framemeta(in_file,
                                                  field_nb,
+                                                 header_len,
                                                  usecols=usecols),\
                 file_metadata
 
