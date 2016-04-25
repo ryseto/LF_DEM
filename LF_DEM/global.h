@@ -18,9 +18,13 @@
  *   by the following script in the Pre-Action of Build.
  *   -----------------------------------
  *   git=/usr/bin/git
- *   cd ${PROJECT_DIR}/${TARGETNAME}
+ *   cd "${PROJECT_DIR}/${TARGETNAME}"
  *   version=`$git describe --dirty`
  *   echo "#define GIT_VERSION \"$version\"" > VersionInfo.h
+ *   cp -p "${PROJECT_DIR}/tools/circularrheo.pl" ~/bin/
+ *   cp -p "${PROJECT_DIR}/tools/analyzeCircularWideGap.pl" ~/bin/
+ *   -----------------------------------
+ *   cp ${BUILT_PRODUCTS_DIR}/${TARGETNAME} $HOME/bin/
  *   -----------------------------------
  *   and the code uses VersionInfo.h
  *
