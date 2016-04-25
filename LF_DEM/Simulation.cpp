@@ -311,8 +311,8 @@ void Simulation::simulationInverseYield(string in_args,
 									p.time_interval_output_data,
 									input_values["time_end"].unit == "strain"));
 	tk.addClock("config", LinearClock(time_end,
-										p.time_interval_output_config,
-										input_values["time_end"].unit == "strain"));
+									  p.time_interval_output_config,
+									  input_values["time_end"].unit == "strain"));
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();
@@ -389,10 +389,10 @@ void Simulation::simulationMagnetic(string in_args,
 	double time_output_data = 0;
 	double time_output_config = 0;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
-	outputDataMagnetic();
-	outputConfigurationBinary();
-	outputConfigurationData();
+	//	evaluateData();
+	//outputDataMagnetic();
+	//outputConfigurationBinary();
+	//	outputConfigurationData();
 	/*************************************************************/
 	if (sys.p.magnetic_field_type == 0) {
 		// Field direction is fixed
@@ -791,8 +791,8 @@ void Simulation::outputDataMagnetic()
 	outdata.entryData("min gap", "none", 1, sys.min_reduced_gap);
 	outdata.entryData("max gap(cohesion)", "none", 1, sys.max_contact_gap);
 	outdata.entryData("magnetic field strength", "none", 1, sys.p.external_magnetic_field_norm);
-	outdata.entryData("magnetic field angle", "none", 1, sys.p.external_magnetic_field_ang_theta);
-	outdata.entryData("magnetic field angle", "none", 1, sys.p.external_magnetic_field_ang_phi);
+	outdata.entryData("field angle theta", "none", 1, sys.p.external_magnetic_field_ang_theta);
+	outdata.entryData("field angle phi", "none", 1, sys.p.external_magnetic_field_ang_phi);
 	/* pressure */
 	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
 	outdata.entryData("particle pressure contact XF", "stress", 1, sys.total_contact_stressXF.getParticlePressure());

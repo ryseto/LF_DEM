@@ -741,7 +741,7 @@ void System::setupSystemPostConfiguration()
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
-		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
+		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out; // shear_rate_out = (R2/R1)*shear_rate_in  
 		if (test_simulation == 11) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = omega_wheel;

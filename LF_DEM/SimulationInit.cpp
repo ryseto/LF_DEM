@@ -994,6 +994,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.magnetic_type = 0;
 	p.magnetic_field_type = 0;
 	p.magnetic_interaction_range = 20;
+	p.external_magnetic_field_ang_phi = 0;
 	p.timeinterval_update_magnetic_pair = 0.02;
 }
 

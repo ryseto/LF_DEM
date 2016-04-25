@@ -49,7 +49,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 1;
+$shear_strain_steady_state = 3;
 
 if ($np_mov <= 3000) {
 	$kmax = 8;
@@ -61,7 +61,7 @@ if ($np_mov <= 3000) {
 $r_in = $radius_in;
 $r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
-$v_out = ($radius_out-$radius_in)*1;
+$v_in = $radius_in; ### rate is 1?
 $dr = $rdiff/$kmax;
 
 printf "$radius_in $radius_out $rdiff $dr \n";
@@ -88,12 +88,16 @@ while (1) {
 #	}
 #}
 
+$stress_in = $average_stress_rt[0]/$cnt[0];
+
 for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
 		$ave_v_tan = $average_v[$k]/$cnt[$k];
 		$ave_stress_rr = $average_stress_rr[$k]/$cnt[$k];
 		$ave_stress_tt = $average_stress_tt[$k]/$cnt[$k];
 		$ave_stress_rt = $average_stress_rt[$k]/$cnt[$k];
+		$ave_stress_N1 = $average_stress_N1[$k]/$cnt[$k];
+		$ave_stress_PP = $average_stress_pp[$k]/$cnt[$k];
 		if ($k < $kmax -1) {
 			$gradient_v_tan = ($ave_v_tan[$k+1]-$ave_v_tan[$k])/$dr;
 		} else {
@@ -105,7 +109,8 @@ for ($k = 0; $k < $kmax; $k++) {
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
-		printf OUT "$rmid $ave_v_tan $gradient_v_tan $density $rnorm $ave_stress_rr $ave_stress_tt $ave_stress_rt \n";
+		$norm_shear_stress = $ave_stress_rt/$stress_in;
+		printf OUT "$rmid $ave_v_tan $gradient_v_tan $density $rnorm $ave_stress_rr $ave_stress_tt $ave_stress_rt $ave_stress_N1 $ave_stress_PP $norm_shear_stress\n";
 	}
 }
 
@@ -161,7 +166,7 @@ sub InParticles {
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
 				$pos_r2 = $x*$x + $z*$z;
 				$pos_r = sqrt($pos_r2);
-				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r)/$v_out;
+				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r);
 				$f_rpos = ($pos_r - $r_in)/$dr;
 				$i_rpos = floor($f_rpos);
 				if ($i_rpos >= 0 && $i_rpos < $kmax) {
@@ -169,6 +174,8 @@ sub InParticles {
 					$average_stress_rr[$i_rpos] += $stress_rr;
 					$average_stress_tt[$i_rpos] += $stress_tt;
 					$average_stress_rt[$i_rpos] += $stress_rt;
+					$average_stress_pp[$i_rpos] += 0.5*(-$stress_rr-$stress_tt);
+					$average_stress_N1[$i_rpos] += ($stress_tt-$stress_rr);
 					$particlearea[$i_rpos] += pi*$a*$a;
 
 					$cnt[$i_rpos] ++;
