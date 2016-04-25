@@ -15,7 +15,6 @@
 
 #ifndef LF_DEM_OutputData_h
 #define LF_DEM_OutputData_h
-
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <fstream>
@@ -55,8 +54,8 @@ private:
 	}
 
 	void initCol(std::string name,
-							 std::string physical_dimension,
-							 int width)
+				 std::string physical_dimension,
+				 int width)
 	{
 		if (output_data.find(name) != output_data.end()) {
 			return;
@@ -72,7 +71,8 @@ private:
 
 public:
 	OutputData(): first_time(true), default_precision(6) {}
-	~OutputData() {
+	~OutputData()
+	{
 		fout.close();
 	}
 	void setFile (const std::string& fname,
@@ -122,16 +122,16 @@ public:
 
 	template<typename T>
 	void entryData(std::string name,
-								 std::string physical_dimension,
-								 int width,
-								 T value,
-								 int precision=-1)
+				   std::string physical_dimension,
+				   int width,
+				   T value,
+				   int precision=-1)
 	{
 		if (first_time) {
 			initCol(name, physical_dimension, width);
 		}
 		int output_precision;
-		if (precision>0) {
+		if (precision > 0) {
 			output_precision = precision;
 		} else {
 			output_precision = default_precision;
@@ -175,7 +175,6 @@ public:
 			od.second.clear();
 		}
 	}
-
 
 	void writeToFile(std::string header)
 	{

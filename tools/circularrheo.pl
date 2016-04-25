@@ -64,7 +64,7 @@ my $np_movable = $np1+$np2;
 $int_tracer = 10;
 for ($k=5; $k<30; $k++){
 	$tmp = $np_in % $k;
-	printf "$np_in $k = $tmp \n";
+	printf "$np_in $k = $tmp\n";
 	if ($np_in % $k == 0) {
 		$int_tracer = $k;
 		last;
@@ -86,7 +86,8 @@ open(IN_interaction, "< ${interaction_data}");
 
 &readHeader;
 if ($calcrheology == 0) {
-	&yaplotColor;
+	#### &yaplotColor;
+	&yaplotColorGradient;
 }
 
 $cnt_interval = 0;
@@ -131,7 +132,7 @@ while (1) {
 			&OutYaplotData;
 		}
 	} else {
-		printf "$shear_strain_i $shear_strain \n";
+		printf "$shear_strain_i $shear_strain\n";
 		$viscosity_in =  3*$force_in/(2*$rin);
 		$viscosity = 3*$force_out/(2*$rout);
 		printf OUT "$shear_strain $shear_rate $viscosity $viscosity_in\n";
@@ -171,55 +172,182 @@ sub readHeader {
 }
 
 sub yaplotColor {
-	printf OUT "\@0 0 0 0 \n";
-	#printf OUT "\@1 50 100 205 \n";
-	printf OUT "\@1 25 50 102 \n";
-	#printf OUT "\@1 255 255 255 \n";
-	printf OUT "\@2 200 200 200 \n";
-	printf OUT "\@3 50 150 255 \n";
-	printf OUT "\@4 50 200 50 \n";
-	printf OUT "\@5 255 100 100 \n";
-	printf OUT "\@6 50 200 50 \n";
-	printf OUT "\@7 255 255 0 \n";
+	printf OUT "\@0 0 0 0\n";
+	#printf OUT "\@1 50 100 205\n";
+	printf OUT "\@1 25 50 102\n";
+	#printf OUT "\@1 255 255 255\n";
+	printf OUT "\@2 200 200 200\n";
+	printf OUT "\@3 50 150 255\n";
+	printf OUT "\@4 50 200 50\n";
+	printf OUT "\@5 255 100 100\n";
+	printf OUT "\@6 50 200 50\n";
+	printf OUT "\@7 255 255 0\n";
 	printf OUT "\@8 255 255 255\n";
 	printf OUT "\@9 150 150 150\n";
-	#printf OUT "\@8 224 143 0 \n";
-	#printf OUT "\@9 67 163 230 \n";
-	#printf OUT "\@8 253 105 6 \n";
-	#printf OUT "\@9 109 109 109 \n";
-	printf OUT "\@10 250 250 250 \n";
-	printf OUT "\@11 240 240 240 \n";
-	printf OUT "\@12 230 230 230 \n";
-	printf OUT "\@13 220 220 220 \n";
-	printf OUT "\@14 210 210 210 \n";
-	printf OUT "\@15 200 200 200 \n";
-	printf OUT "\@16 190 190 190 \n";
-	printf OUT "\@17 180 180 180 \n";
-	printf OUT "\@18 170 170 170 \n";
-	printf OUT "\@19 160 160 160 \n";
-	printf OUT "\@20 150 150 150 \n";
-	printf OUT "\@21 140 140 140 \n";
-	printf OUT "\@22 130 130 130 \n";
-	printf OUT "\@23 120 120 120 \n";
-	printf OUT "\@24 110 110 110 \n";
-	printf OUT "\@25 100 100 100 \n";
-	printf OUT "\@26 90 90 90 \n";
-	printf OUT "\@27 80 90 90 \n";
+	#printf OUT "\@8 224 143 0\n";
+	#printf OUT "\@9 67 163 230\n";
+	#printf OUT "\@8 253 105 6\n";
+	#printf OUT "\@9 109 109 109\n";
+	printf OUT "\@10 250 250 250\n";
+	printf OUT "\@11 240 240 240\n";
+	printf OUT "\@12 230 230 230\n";
+	printf OUT "\@13 220 220 220\n";
+	printf OUT "\@14 210 210 210\n";
+	printf OUT "\@15 200 200 200\n";
+	printf OUT "\@16 190 190 190\n";
+	printf OUT "\@17 180 180 180\n";
+	printf OUT "\@18 170 170 170\n";
+	printf OUT "\@19 160 160 160\n";
+	printf OUT "\@20 150 150 150\n";
+	printf OUT "\@21 140 140 140\n";
+	printf OUT "\@22 130 130 130\n";
+	printf OUT "\@23 120 120 120\n";
+	printf OUT "\@24 110 110 110\n";
+	printf OUT "\@25 100 100 100\n";
+	printf OUT "\@26 90 90 90\n";
+	printf OUT "\@27 80 90 90\n";
 	printf OUT "\@28 70 70 70\n";
-	printf OUT "\@29 60 60 60 \n";
-	printf OUT "\@30 50 50 50 \n";
-	printf OUT "\@31 40 40 40 \n";
-	printf OUT "\@32 30 30 30 \n";
-	printf OUT "\@33 20 20 20 \n";
-	printf OUT "\@34 10 10 10 \n";
-	printf OUT "\@35 0 0 0 \n";
+	printf OUT "\@29 60 60 60\n";
+	printf OUT "\@30 50 50 50\n";
+	printf OUT "\@31 40 40 40\n";
+	printf OUT "\@32 30 30 30\n";
+	printf OUT "\@33 20 20 20\n";
+	printf OUT "\@34 10 10 10\n";
+	printf OUT "\@35 0 0 0\n";
+}
+
+sub yaplotColorGradient {
+	printf OUT "\@0 0 0 0\n";
+	#printf OUT "\@1 50 100 205\n";
+	printf OUT "\@1 25 50 102\n";
+	#printf OUT "\@1 255 255 255\n";
+	printf OUT "\@2 200 200 200\n";
+	printf OUT "\@6 42 71 238\n";
+	printf OUT "\@7 45 77 238\n";
+	printf OUT "\@8 49 83 239\n";
+	printf OUT "\@9 53 88 239\n";
+	printf OUT "\@10 56 94 239\n";
+	printf OUT "\@11 60 99 239\n";
+	printf OUT "\@12 64 105 240\n";
+	printf OUT "\@13 67 111 240\n";
+	printf OUT "\@14 71 116 240\n";
+	printf OUT "\@15 75 122 240\n";
+	printf OUT "\@16 79 127 241\n";
+	printf OUT "\@17 82 133 241\n";
+	printf OUT "\@18 86 138 241\n";
+	printf OUT "\@19 90 144 241\n";
+	printf OUT "\@20 93 149 242\n";
+	printf OUT "\@21 97 153 242\n";
+	printf OUT "\@22 100 157 242\n";
+	printf OUT "\@23 104 161 243\n";
+	printf OUT "\@24 108 165 243\n";
+	printf OUT "\@25 111 169 243\n";
+	printf OUT "\@26 115 173 244\n";
+	printf OUT "\@27 118 177 244\n";
+	printf OUT "\@28 122 181 244\n";
+	printf OUT "\@29 126 185 245\n";
+	printf OUT "\@30 129 189 245\n";
+	printf OUT "\@31 133 193 245\n";
+	printf OUT "\@32 136 197 246\n";
+	printf OUT "\@33 140 200 246\n";
+	printf OUT "\@34 143 203 246\n";
+	printf OUT "\@35 146 206 247\n";
+	printf OUT "\@36 149 208 247\n";
+	printf OUT "\@37 153 211 247\n";
+	printf OUT "\@38 156 214 248\n";
+	printf OUT "\@39 159 216 248\n";
+	printf OUT "\@40 162 219 248\n";
+	printf OUT "\@41 166 222 248\n";
+	printf OUT "\@42 169 225 249\n";
+	printf OUT "\@43 172 227 249\n";
+	printf OUT "\@44 175 230 249\n";
+	printf OUT "\@45 178 233 250\n";
+	printf OUT "\@46 182 235 250\n";
+	printf OUT "\@47 184 237 250\n";
+	printf OUT "\@48 187 238 250\n";
+	printf OUT "\@49 190 239 250\n";
+	printf OUT "\@50 193 241 251\n";
+	printf OUT "\@51 196 242 251\n";
+	printf OUT "\@52 199 243 251\n";
+	printf OUT "\@53 202 245 251\n";
+	printf OUT "\@54 205 246 251\n";
+	printf OUT "\@55 208 247 252\n";
+	printf OUT "\@56 211 249 252\n";
+	printf OUT "\@57 214 250 252\n";
+	printf OUT "\@58 216 252 252\n";
+	printf OUT "\@59 219 253 252\n";
+	printf OUT "\@60 222 253 250\n";
+	printf OUT "\@61 225 253 247\n";
+	printf OUT "\@62 227 253 244\n";
+	printf OUT "\@63 230 253 241\n";
+	printf OUT "\@64 232 253 238\n";
+	printf OUT "\@65 235 253 234\n";
+	printf OUT "\@66 237 253 231\n";
+	printf OUT "\@67 240 253 228\n";
+	printf OUT "\@68 242 253 225\n";
+	printf OUT "\@69 245 253 222\n";
+	printf OUT "\@70 247 253 219\n";
+	printf OUT "\@71 250 253 215\n";
+	printf OUT "\@72 252 253 212\n";
+	printf OUT "\@73 254 253 209\n";
+	printf OUT "\@74 253 252 206\n";
+	printf OUT "\@75 253 251 202\n";
+	printf OUT "\@76 253 250 199\n";
+	printf OUT "\@77 253 249 196\n";
+	printf OUT "\@78 252 248 193\n";
+	printf OUT "\@79 252 247 189\n";
+	printf OUT "\@80 252 246 186\n";
+	printf OUT "\@81 251 245 183\n";
+	printf OUT "\@82 251 244 180\n";
+	printf OUT "\@83 251 243 176\n";
+	printf OUT "\@84 250 243 173\n";
+	printf OUT "\@85 250 242 170\n";
+	printf OUT "\@86 250 241 167\n";
+	printf OUT "\@87 249 238 163\n";
+	printf OUT "\@88 248 236 160\n";
+	printf OUT "\@89 248 233 156\n";
+	printf OUT "\@90 247 231 153\n";
+	printf OUT "\@91 246 229 150\n";
+	printf OUT "\@92 245 226 146\n";
+	printf OUT "\@93 245 224 143\n";
+	printf OUT "\@94 244 221 140\n";
+	printf OUT "\@95 243 219 136\n";
+	printf OUT "\@96 242 216 133\n";
+	printf OUT "\@97 242 214 130\n";
+	printf OUT "\@98 241 212 126\n";
+	printf OUT "\@99 240 209 123\n";
+	printf OUT "\@100 239 206 120\n";
+	printf OUT "\@101 238 202 116\n";
+	printf OUT "\@102 238 198 113\n";
+	printf OUT "\@103 237 195 110\n";
+	printf OUT "\@104 236 191 107\n";
+	printf OUT "\@105 235 187 103\n";
+	printf OUT "\@106 234 183 100\n";
+	printf OUT "\@107 233 180 97\n";
+	printf OUT "\@108 232 176 94\n";
+	printf OUT "\@109 231 172 91\n";
+	printf OUT "\@110 230 168 87\n";
+	printf OUT "\@111 229 165 84\n";
+	printf OUT "\@112 228 161 81\n";
+	printf OUT "\@113 227 157 78\n";
+	printf OUT "\@114 226 152 76\n";
+	printf OUT "\@115 225 147 73\n";
+	printf OUT "\@116 225 142 71\n";
+	printf OUT "\@117 224 137 69\n";
+	printf OUT "\@118 223 132 67\n";
+	printf OUT "\@119 222 128 64\n";
+	printf OUT "\@120 221 123 62\n";
+	printf OUT "\@121 220 118 60\n";
+	printf OUT "\@122 219 113 57\n";
+	printf OUT "\@123 218 108 55\n";
+	printf OUT "\@124 217 103 53\n";
+	printf OUT "\@125 216 99 51\n";
 }
 
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
 	if (defined $line) {
-		
 		# 1 sys.get_shear_strain()
 		# 2 sys.shear_disp
 		# 3 getRate()
@@ -227,7 +355,8 @@ sub InParticles {
 		# 5 sys.get_time()
 		# 6 sys.angle_external_magnetic_field
 		($buf, $shear_strain, $shear_disp, $shear_rate, $shear_stress) = split(/\s+/, $line);
-		
+		$max_stress = 0;
+		$min_stress = 0;
 		for ($i = 0; $i < $np; $i ++){
 			$line = <IN_particle>;
 			if ($output == 1) {
@@ -241,7 +370,6 @@ sub InParticles {
 				# 14: viscosity contributon of brownian xz
 				# (15: angle for 2D simulation)
 				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $s_rr, $s_tt, $s_rt, $angle) = split(/\s+/, $line);
-				
 				#
 				$ang[$i] = $angle;
 				$radius[$i] = $a;
@@ -271,19 +399,26 @@ sub InParticles {
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
 				$omegay[$i] = $oy;
-				$stress_rr[$i] = $s_tt;
+				$stress_rr[$i] = $s_tt + $s_rr;
+				if ($max_stress < $s_tt) {
+					$max_stress = $s_tt;
+				}
+				if ($min_stress > $s_tt) {
+					$min_stress = $s_tt;
+				}
 				if ($radius_max < $a) {
 					$radius_max = $a;
 				}
 			}
 		}
+		printf "$min_stress $max_stress \n";
 		if ($rotatingobserver) {
 			if ($first) {
 				$rout = sqrt($posxtmp[$np-1]*$posxtmp[$np-1] + $posztmp[$np-1]*$posztmp[$np-1]);
-				#printf "$rout\n";
+				#printf "$rout \n";
 			}
 			$theta = -0.25*$shear_strain;
-			#printf "$theta, $shear_strain, $rout\n";
+			#printf "$theta, $shear_strain, $rout \n";
 			for ($i = 0; $i < $np; $i ++){
 				$posx[$i] = $posxtmp[$i]*cos($theta)-$posztmp[$i]*sin($theta);
 				$posz[$i] = $posxtmp[$i]*sin($theta)+$posztmp[$i]*cos($theta);
@@ -335,7 +470,6 @@ sub InInteractions {
 		$fc_norm, # 12
 		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
 		$fr_norm, $s_xF) = split(/\s+/, $line);
-		
 		$int0[$k] = $i;
 		$int1[$k] = $j;
 		$contactstate[$k] = $contact;
@@ -354,7 +488,6 @@ sub InInteractions {
 			#$fz = $f_lub_tan_z + $fc_tan_z + $force[$k]*$nz;
 			$fx = $force[$k]*$nx;
 			$fz = $force[$k]*$nz;
-			
 			$posr = sqrt($posx[$j]*$posx[$j] + $posz[$j]*$posz[$j]);
 			$nrx = $posx[$j]/$posr;
 			$nrz = $posz[$j]/$posr;
@@ -383,36 +516,37 @@ sub OutYaplotData{
 	if ($monodisperse) {
 		printf OUT "r $radius[0]\n";
 		for ($i = 0; $i < $np; $i++) {
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i]\n";
 		}
 	} else {
-		#printf OUT "@ 8\n";
+		printf "@ 8\n";
 		for ($i = 0; $i < $np_movable; $i++) {
-			#printf OUT "r $radius[$i]\n";
-			if ($stress_rr[$i] > 0) {
-				printf OUT "@ 8\n";
-				$rrr =  0.001*$stress_rr[$i];
-				printf OUT "r $rrr\n"
-			} else {
-				printf OUT "@ 7\n";
-				$rrr = -0.001*$stress_rr[$i];
-				printf OUT "r $rrr\n"
-			}
-			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
-		}
-		printf OUT "y 5\n";
-		printf OUT "@ 8\n";
-		for ($i = $np_movable; $i < $np; $i++) {
 			printf OUT "r $radius[$i]\n";
+			$normalized_stress = -$stress_rr[$i]/1000;
+			if ($normalized_stress > 1) {
+				$normalized_stress = 1;
+			} elsif ($normalized_stress < -1) {
+				$normalized_stress = -1;
+			}
+			#			if ($normalized_stress > 0) {
+			$istress =  int(60*$normalized_stress);
+			$color = 65 + $istress;
+			printf OUT "@ $color \n";
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
-		printf OUT "@ 8\n";
+		printf OUT "y 2\n";
+		printf OUT "@ 2\n";
+		printf OUT "r $radius[$np_movable]\n";
+		for ($i = $np_movable; $i < $np; $i++) {
+			printf OUT "c $posx[$i] $posy[$i] $posz[$i]\n";
+		}
+		printf OUT "@ 2\n";
 		printf OUT "r 0.5\n";
 		$xo = $Lx/2;
 		$zo = $Lz/2;
 		$np_in_end = $np_in + $np_movable;
 		for ($i = $np_movable; $i < $np_in_end; $i += $int_tracer) {
-			printf OUT "s 0 -0.01 0 $posx[$i] -0.01 $posz[$i] \n";
+			printf OUT "s 0 -0.01 0 $posx[$i] -0.01 $posz[$i]\n";
 		}
 	}
 	## visualize contact network
@@ -425,16 +559,16 @@ sub OutYaplotData{
 	#		}
 	#	}
 	## visualize force chain network
-	printf OUT "y 4\n";
-	printf OUT "@ 7\n";
-	for ($k = 0; $k < $num_interaction; $k ++) {
-		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
-		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
-			if ($force[$k] > 0) {
-				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
-			}
-		}
-	}
+#	printf OUT "y 4\n";
+#	printf OUT "@ 7\n";
+#	for ($k = 0; $k < $num_interaction; $k ++) {
+#		#$force = $F_lub[$k] + $Fc_n[$k] + $Fcol[$k];
+#		if ($int0[$k] < $np_movable || $int1[$k] < $np_movable) {
+#			if ($force[$k] > 0) {
+#				&OutString_width($int0[$k], $int1[$k], $force_factor*$force[$k], 0.01);
+#			}
+#		}
+#	}
 #	printf OUT "y 3\n";
 #	printf OUT "@ 5\n";
 #	for ($k = 0; $k < $num_interaction; $k ++) {
@@ -445,7 +579,6 @@ sub OutYaplotData{
 #	}
 	#
 	## visualize rotation in 2D
-	
 #	printf OUT "y 6\n";
 #	printf OUT "@ 0\n";
 #	for ($i = 0; $i < $np_movable; $i++) {
@@ -462,14 +595,12 @@ sub OutYaplotData{
 				printf OUT "r $r\n";
 			}
 			if ($Ly == 0) {
-				printf OUT "c $posx_init[$i] 0.01 $posz_init[$i] \n";
+				printf OUT "c $posx_init[$i] 0.01 $posz_init[$i]\n";
 			} else {
-				printf OUT "c $posx_init[$i] $posy_init[$i] $posz_init[$i] \n";
+				printf OUT "c $posx_init[$i] $posy_init[$i] $posz_init[$i]\n";
 			}
 		}
 	}
-	
-	
 	#	&OutBoundaryBox;
 }
 
@@ -481,19 +612,17 @@ sub OutBoundaryBox {
 	$z2 = 0;
 	$x3 = $Lx/2 - $shear_disp / 2;
 	$z3 = -$Lz/2;
-	
 	printf OUT "y 7\n";
 	printf OUT "@ 6\n";
-	
 	if ($Ly == 0) {
 		$lx2 = $Lx/2;
 		$ly2 = $Ly/2;
 		$lz2 = $Lz/2;
-		#printf OUT "p 4 -$lx2 $yb $lz2 $lx2 $yb $lz2 $lx2 $yb -$lz2 -$lx2 $yb -$lz2\n";
-		printf OUT "l -$lx2 0 $lz2    $lx2 0 $lz2\n";
-		printf OUT "l -$lx2 0 -$lz2   $lx2 0 -$lz2\n";
-		printf OUT "l -$lx2 0 -$lz2  -$lx2 0 $lz2\n";
-		printf OUT "l $lx2 0 $lz2   $lx2 0 -$lz2\n";
+		#printf OUT "p 4 -$lx2 $yb $lz2 $lx2 $yb $lz2 $lx2 $yb -$lz2 -$lx2 $yb -$lz2 \n";
+		printf OUT "l -$lx2 0  $lz2  $lx2 0  $lz2\n";
+		printf OUT "l -$lx2 0 -$lz2  $lx2 0 -$lz2\n";
+		printf OUT "l -$lx2 0 -$lz2 -$lx2 0  $lz2\n";
+		printf OUT "l  $lx2 0  $lz2  $lx2 0 -$lz2\n";
 	} else {
 		$lx2 = $Lx/2;
 		$ly2 = $Ly/2;
@@ -511,14 +640,10 @@ sub OutBoundaryBox {
 		printf OUT "l $lx2 $ly2 -$lz2    $lx2 -$ly2 -$lz2\n";
 		printf OUT "l -$lx2 $ly2 -$lz2    -$lx2 -$ly2 -$lz2\n";
 	}
-	
 	if ($axis) {
 		printf OUT "l -$lx2 0 0 $lx2 0 0\n";
 		printf OUT "l 0 0 -$lz2 0 0 $lz2\n";
-		
-		
 	}
-	
 }
 
 sub OutString_width {

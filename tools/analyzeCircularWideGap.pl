@@ -49,7 +49,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 5;
+$shear_strain_steady_state = 3;
 
 if ($np_mov <= 3000) {
 	$kmax = 8;
@@ -61,7 +61,7 @@ if ($np_mov <= 3000) {
 $r_in = $radius_in;
 $r_out = $radius_out;
 $rdiff = ${r_out}-${r_in};
-$v_out = ($radius_out-$radius_in)*1;
+$v_in = $radius_in; ### rate is 1?
 $dr = $rdiff/$kmax;
 
 printf "$radius_in $radius_out $rdiff $dr \n";
@@ -166,7 +166,7 @@ sub InParticles {
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
 				$pos_r2 = $x*$x + $z*$z;
 				$pos_r = sqrt($pos_r2);
-				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r)/$v_out;
+				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r);
 				$f_rpos = ($pos_r - $r_in)/$dr;
 				$i_rpos = floor($f_rpos);
 				if ($i_rpos >= 0 && $i_rpos < $kmax) {
