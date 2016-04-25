@@ -189,6 +189,8 @@ public:
 	void outputDataMagnetic();
 	void outputConfigurationData();
 	void outputFinalConfiguration(const std::string&);
+	void outputIntFileTxt();
+	void outputParFileTxt();
 	void outputConfigurationBinary();
 	void outputConfigurationBinary(std::string);
 	double getRate();

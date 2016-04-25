@@ -466,8 +466,13 @@ void Simulation::convertInputValues(string new_unit)
 				throw runtime_error(error_str.str());
 			}
 			if (inv.type == "time") {
-					*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
-					inv.unit = new_unit;
+				*(inv.value) *= dimensionless_numbers[new_unit+'/'+old_unit];
+				inv.unit = new_unit;
+			} else if (inv.type == "force") {
+				*(inv.value) *= dimensionless_numbers[old_unit+'/'+new_unit];
+				inv.unit = new_unit;
+			} else {
+				throw runtime_error ("Simulation:: do not know how to convert value of type "+inv.type);
 			}
 		}
 
@@ -782,13 +787,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "start_adjust") {
 		p.start_adjust = atof(value.c_str());
 	} else if (keyword == "min_kn") {
-		p.min_kn = atof(value.c_str());
+		catchSuffixedValue("force", keyword, value, &p.min_kn);
 	} else if (keyword == "max_kn") {
-		p.max_kn = atof(value.c_str());
+		catchSuffixedValue("force", keyword, value, &p.max_kn);
 	} else if (keyword == "min_kt") {
-		p.min_kt = atof(value.c_str());
+		catchSuffixedValue("force", keyword, value, &p.min_kt);
 	} else if (keyword == "max_kt") {
-		p.max_kt = atof(value.c_str());
+		catchSuffixedValue("force", keyword, value, &p.max_kt);
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
