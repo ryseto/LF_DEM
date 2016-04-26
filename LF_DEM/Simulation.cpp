@@ -904,9 +904,10 @@ void Simulation::outputParFileTxt()
 			if (sys.couette_stress) {
 				double stress_rr, stress_thetatheta, stress_rtheta;
 				sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-				outdata_par.entryData("stress_rr", "stress", 1, stress_rr);
-				outdata_par.entryData("stress_thetatheta", "stress", 1, stress_thetatheta);
-				outdata_par.entryData("stress_rtheta", "stress", 1, stress_rtheta);
+				double sr = sys.get_shear_rate();
+				outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
+				outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
+				outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
 			}
 			if (sys.twodimension) {
 				outdata_par.entryData("angle", "none", 1, sys.angle[i]);
@@ -914,17 +915,7 @@ void Simulation::outputParFileTxt()
 		} else {
 			if (sys.p.magnetic_type == 1) {
 				outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
-				if (sys.couette_stress) {
-					double stress_rr, stress_thetatheta, stress_rtheta;
-					sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-					double sr = sys.get_shear_rate();
-					outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
-					outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
-					outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
-				}
-				if (sys.twodimension) {
-					outdata_par.entryData("angle", "none", 1, sys.angle[i]);
-				}
+				outdata_par.entryData("magnetic moment (x, y, z)", "none", 3, sys.magnetic_moment[i]);
 			} else {
 				outdata_par.entryData("magnetic susceptibility", "none", 1, sys.magnetic_susceptibility[i]);
 			}
