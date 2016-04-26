@@ -89,7 +89,7 @@ def convert_columndef_to_indices(columndef_dict):
 
 def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     # read col0 separately to determine frame breaks
-    header_len = field_nb+6
+    header_len = field_nb+1
     col0 = np.genfromtxt(in_file, comments=' ', skip_header=header_len)
     framebreaks_col0 = np.nonzero(np.isnan(col0))[0]
 
@@ -98,13 +98,16 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
     # now read cols>0
     in_file.seek(0, 0)
     # merge it with col0 if necessary
-    if usecols != "all" and usecols[0] == 0:  # assume ordered
-        cols = np.genfromtxt(in_file, skip_header=header_len,
-                             usecols=usecols[1:])
-        cols = np.column_stack((col0, cols))
+    if usecols != "all":
+        if usecols[0] == 0:  # assume ordered
+            cols = np.genfromtxt(in_file, skip_header=header_len,
+                                 usecols=usecols[1:])
+            cols = np.column_stack((col0, cols))
+        else:
+            cols = np.genfromtxt(in_file, skip_header=header_len,
+                                 usecols=usecols)
     else:
-        cols = np.genfromtxt(in_file, skip_header=header_len,
-                             usecols=usecols)
+        cols = np.genfromtxt(in_file, skip_header=header_len)
     # get the frame breaks
     framebreaks_cols = framebreaks_col0 - np.arange(len(framebreaks_col0))
     framebreaks_cols = framebreaks_cols[1:]  # 1st break is line 0
@@ -116,7 +119,7 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols):
 def __read_snapshot_file_with_framemeta(in_file, field_nb):
     names = [str(i) for i in range(1, field_nb+1)]
     frames = pd.read_table(in_file, delim_whitespace=True,
-                           names=names, skiprows=field_nb+6)
+                           names=names, skiprows=field_nb+1)
 
     # locate empty lines
     framebreaks = np.nonzero((frames['1'] == '#').as_matrix())[0]
