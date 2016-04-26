@@ -1241,7 +1241,7 @@ void Simulation::readPositions(fstream &file_import)
 	*/
 	double x_, y_, z_, a_;
 	vector<vec3d> initial_position;
-	vector <double> radius;
+	vector<double> radius;
 	while (file_import >> x_ >> y_ >> z_ >> a_) {
 		initial_position.push_back(vec3d(x_, y_, z_));
 		radius.push_back(a_);

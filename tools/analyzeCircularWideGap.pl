@@ -49,7 +49,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 3;
+$shear_strain_steady_state = 5;
 
 if ($np_mov <= 3000) {
 	$kmax = 8;
@@ -89,6 +89,19 @@ while (1) {
 #}
 
 $stress_in = $average_stress_rt[0]/$cnt[0];
+$r1 = $radius_in-1;
+$r2 = $radius_out+1;
+
+printf OUT "# R_in = $r1\n";
+printf OUT "# R_out = $r2\n";
+printf OUT "#1 radial position\n";
+printf OUT "#2 velocity_theta \n";
+printf OUT "#3 area fraction\n";
+printf OUT "#4 stress tensor r-r\n";
+printf OUT "#5 stress tensor theta-theta\n";
+printf OUT "#6 stress tensor r-theta\n";
+printf OUT "#7 N1 = s_tt - s_rr\n";
+printf OUT "#8 P = -(1/2)*(s_tt + s_rr)\n";
 
 for ($k = 0; $k < $kmax; $k++) {
 	if ($cnt[$k] != 0) {
@@ -109,8 +122,7 @@ for ($k = 0; $k < $kmax; $k++) {
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
-		$norm_shear_stress = $ave_stress_rt/$stress_in;
-		printf OUT "$rmid $ave_v_tan $gradient_v_tan $density $rnorm $ave_stress_rr $ave_stress_tt $ave_stress_rt $ave_stress_N1 $ave_stress_PP $norm_shear_stress\n";
+		printf OUT "$rmid $ave_v_tan $density  $ave_stress_rr $ave_stress_tt $ave_stress_rt $ave_stress_N1 $ave_stress_PP \n";
 	}
 }
 

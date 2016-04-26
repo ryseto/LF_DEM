@@ -648,9 +648,15 @@ void Simulation::outputData()
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 	outdata.entryData("time", "time", 1, sys.get_time());
-	outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
-	outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
-
+	if (sys.get_omega_wheel() == 0) {
+		// Simple shear geometry
+		outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
+		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
+	} else {
+		// Rotary Couette geometry
+		outdata.entryData("rotation angle", "none", 1, sys.get_angle_wheel());
+		outdata.entryData("omega wheel", "rate", 1, sys.get_omega_wheel());
+	}
 	outdata.entryData("viscosity", "viscosity", 1, shear_stress/sr);
 	outdata.entryData("Viscosity(lub)", "viscosity", 1, shearStressComponent(sys.total_hydro_stress, p.theta_shear)/sr);
 	outdata.entryData("Viscosity(xF_contact part)", "viscosity", 1, shearStressComponent(sys.total_contact_stressXF, p.theta_shear)/sr);
@@ -899,9 +905,10 @@ void Simulation::outputConfigurationData()
 				if (sys.couette_stress) {
 					double stress_rr, stress_thetatheta, stress_rtheta;
 					sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-					outdata_par.entryData("stress_rr", "stress", 1, stress_rr);
-					outdata_par.entryData("stress_thetatheta", "stress", 1, stress_thetatheta);
-					outdata_par.entryData("stress_rtheta", "stress", 1, stress_rtheta);
+					double sr = sys.get_shear_rate();
+					outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
+					outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
+					outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
 				}
 				if (sys.twodimension) {
 					outdata_par.entryData("angle", "none", 1, sys.angle[i]);

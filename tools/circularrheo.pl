@@ -51,10 +51,12 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'cylinders0.5_', 1);
-$initconfig = substr($name, 0, $j+14);
+$j = index($name, 'cylinders', 1);
+$initconfig = substr($name, 0, $j+15);
 
 open (IN_CONFIG, "< ${initconfig}.dat");
+
+
 $line = <IN_CONFIG>;
 $line = <IN_CONFIG>;
 ($buf, $np1, $np2, $vf, $lx, $ly, $lz, $np_in, $np_out, $rin, $rout) = split(/\s+/, $line);
@@ -121,7 +123,7 @@ while (1) {
 	$shear_strain_previous = $shear_strain;
 	$force_in = 0;
 	$force_out = 0;
-	&InInteractions;
+	# &InInteractions;
 	if ($reversibility_test) {
 		if ($first || $checkpoint == 1) {
 			&keepInitialConfig;
@@ -163,9 +165,9 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	for ($i = 0; $i<16; $i++) {
+	for ($i = 0; $i<11; $i++) {
 		$line = <IN_particle>;
-	}
+	}	
 	for ($i = 0; $i<24; $i++) {
 		$line = <IN_interaction>;
 	}
@@ -522,7 +524,7 @@ sub OutYaplotData{
 		printf "@ 8\n";
 		for ($i = 0; $i < $np_movable; $i++) {
 			printf OUT "r $radius[$i]\n";
-			$normalized_stress = -$stress_rr[$i]/1000;
+			$normalized_stress = -$stress_rr[$i]/5000;
 			if ($normalized_stress > 1) {
 				$normalized_stress = 1;
 			} elsif ($normalized_stress < -1) {

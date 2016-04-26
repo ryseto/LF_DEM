@@ -76,6 +76,7 @@ private:
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
 	double shear_strain;
+	double angle_wheel; // rotational angle of rotary couette geometory
 	double total_energy;
 	int linalg_size;
 	double costheta_shear;
@@ -85,11 +86,11 @@ private:
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
 	void (System::*timeEvolutionDt)(bool, double, double);
 	void timeEvolutionEulersMethod(bool calc_stress,
-																 double time_end,
-																 double strain_end);
+								   double time_end,
+								   double strain_end);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-											   										 double time_end,
-																						 double strain_end);
+											   double time_end,
+											   double strain_end);
 	void timeStepMove(double time_end, double strain_end);
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(double time_end, double strain_end);
@@ -197,18 +198,15 @@ private:
 	bool rate_controlled;
 	bool stress_controlled;
 	bool zero_shear;
-    bool wall_rheology;
+	bool wall_rheology;
 	bool mobile_fixed;
 	bool couette_stress;
-    //	double volume_fraction;
 	double system_height;
 	bool in_predictor;
 	bool in_corrector;
 	std::vector<vec3d> position;
 	std::vector<vec3d> forceResultant;
 	std::vector<vec3d> torqueResultant;
-	// std::vector<vec3d> wall_hydro_force;
-	// std::vector<vec3d> wall_hydro_torque;
 	std::vector<vec3d> non_rate_proportional_wall_force;
 	std::vector<vec3d> non_rate_proportional_wall_torque;
 	std::vector<vec3d> rate_proportional_wall_force;
@@ -327,8 +325,9 @@ private:
 	double omega_wheel_out;
 	int np_wall1;
 	int np_wall2;
-	double radius_in;
-	double radius_out;
+	double radius_wall_particle;
+	double radius_in;  // wall particles are at r = radius_in - radius_wall_particle;
+	double radius_out; // wall particles are at r = radius_out + radius_wall_particle;
     double z_bot;
     double z_top;
 	double force_tang_wall1;
@@ -500,7 +499,17 @@ private:
 	{
 		return shear_strain;
 	}
+	
+	inline double get_angle_wheel()
+	{
+		return angle_wheel;
+	}
 
+	inline double get_omega_wheel()
+	{
+		return omega_wheel_in-omega_wheel_out;
+	}
+	
 	inline void set_dt(double val)
 	{
 		dt = val;
