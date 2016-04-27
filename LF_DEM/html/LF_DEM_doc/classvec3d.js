@@ -8,6 +8,7 @@ var classvec3d =
     [ "is_not_zero", "classvec3d.html#a5b3534bd44b71fdbe1f5203e2bb24d5c", null ],
     [ "is_zero", "classvec3d.html#ae11c826f3b5021840161ccbcd5b6a64f", null ],
     [ "norm", "classvec3d.html#a715cd63ea9b688d355847649cb182829", null ],
+    [ "norm_xz", "classvec3d.html#ac449312c1e34b6551fbc9618322973bc", null ],
     [ "operator*=", "classvec3d.html#aa4dbae6209c9f1824eeee1397dd50230", null ],
     [ "operator*=", "classvec3d.html#a3d1ae15b955933018d8eb6400e5db103", null ],
     [ "operator+=", "classvec3d.html#a6774fc636b626ed375b3efb90b2e5dcc", null ],

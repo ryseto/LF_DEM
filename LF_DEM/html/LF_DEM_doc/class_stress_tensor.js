@@ -1,9 +1,9 @@
 var class_stress_tensor =
 [
-    [ "StressTensor", "class_stress_tensor.html#a2b53b925b77e71145190596b57bd91b1", null ],
+    [ "StressTensor", "class_stress_tensor.html#a32a40575a123251d3d2f94a3e179b86a", null ],
     [ "StressTensor", "class_stress_tensor.html#aa0c08b90f1d09876e571e4d90a471712", null ],
-    [ "StressTensor", "class_stress_tensor.html#ac6b755df17cc700f39dfb752d9fcd80d", null ],
     [ "StressTensor", "class_stress_tensor.html#a58ec8e656351a73c36118c46b37bd7c7", null ],
+    [ "StressTensor", "class_stress_tensor.html#ac6b755df17cc700f39dfb752d9fcd80d", null ],
     [ "getNormalStress1", "class_stress_tensor.html#a2ccf483b66bf9f6e91e9908079fdbcaa", null ],
     [ "getNormalStress2", "class_stress_tensor.html#a1c83f075db052d69adaac5455bcb06f0", null ],
     [ "getParticlePressure", "class_stress_tensor.html#a314c3738fd82f205acb7d3357b976078", null ],
@@ -30,6 +30,5 @@ var class_stress_tensor =
     [ "operator/", "class_stress_tensor.html#a7613f5bc2e407c844757477bbadaff78", null ],
     [ "operator/", "class_stress_tensor.html#a5d162025967ae21e87d22d3f1f6c9ce8", null ],
     [ "operator<<", "class_stress_tensor.html#a2775d9971f0f5f36c2dfdbbe0a307752", null ],
-    [ "tensor_prod", "class_stress_tensor.html#a777d895794b5f2061d90c00db6b69cae", null ],
-    [ "elm", "class_stress_tensor.html#a6c109d4bbfc24cfc52433a8918551fb5", null ]
+    [ "elm", "class_stress_tensor.html#a936ee5ffa496056cf0e8d6e989d586b5", null ]
 ];

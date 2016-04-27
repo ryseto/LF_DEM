@@ -158,10 +158,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aa56cb54de4be81513aa320e98aa4ae99">timeinterval_update_magnetic_pair</a></td></tr>
 <tr class="memdesc:aa56cb54de4be81513aa320e98aa4ae99"><td class="mdescLeft">&#160;</td><td class="mdescRight">[0.02] Interval to check magnetic interaction <br /></td></tr>
 <tr class="separator:aa56cb54de4be81513aa320e98aa4ae99"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2ad51ca7475957d3edf4145c7477c6b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2ad51ca7475957d3edf4145c7477c6b"></a>
-double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aa2ad51ca7475957d3edf4145c7477c6b">fixed_particle_fraction</a></td></tr>
-<tr class="memdesc:aa2ad51ca7475957d3edf4145c7477c6b"><td class="mdescLeft">&#160;</td><td class="mdescRight">rate of fixed particles ( <br /></td></tr>
-<tr class="separator:aa2ad51ca7475957d3edf4145c7477c6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaab168f5c31818ce0064adaabeab4c8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaab168f5c31818ce0064adaabeab4c8c"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aaab168f5c31818ce0064adaabeab4c8c">sd_coeff</a></td></tr>
 <tr class="memdesc:aaab168f5c31818ce0064adaabeab4c8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stokes drag coeffient. Full drag is 1. [1]. <br /></td></tr>
@@ -198,10 +194,10 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a036ed6b0aa537b7bee59fe7f0be34027">ft_max</a></td></tr>
 <tr class="memdesc:a036ed6b0aa537b7bee59fe7f0be34027"><td class="mdescLeft">&#160;</td><td class="mdescRight">max tangential force in friction_model = 5 [1] <br /></td></tr>
 <tr class="separator:a036ed6b0aa537b7bee59fe7f0be34027"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92089dbcc54265ae7e2b325fd694fbe5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92089dbcc54265ae7e2b325fd694fbe5"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a92089dbcc54265ae7e2b325fd694fbe5">unscaled_contactmodel</a></td></tr>
-<tr class="memdesc:a92089dbcc54265ae7e2b325fd694fbe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale the particles' stiffness with force scale [true under stress control, false under rate control]. <br /></td></tr>
-<tr class="separator:a92089dbcc54265ae7e2b325fd694fbe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38a5c63335e058cc525cdbe5be449b3a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38a5c63335e058cc525cdbe5be449b3a"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a38a5c63335e058cc525cdbe5be449b3a">stress_scaled_contactmodel</a></td></tr>
+<tr class="memdesc:a38a5c63335e058cc525cdbe5be449b3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale the particles' stiffness with force scale [true under stress control, false under rate control]. <br /></td></tr>
+<tr class="separator:a38a5c63335e058cc525cdbe5be449b3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44d27130189d0b9c986078c3d3828ecb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a44d27130189d0b9c986078c3d3828ecb"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a44d27130189d0b9c986078c3d3828ecb">kn</a></td></tr>
 <tr class="memdesc:a44d27130189d0b9c986078c3d3828ecb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Particle stiffness: normal spring constant [2000 under stress control, 10000 under rate control]. <br /></td></tr>
@@ -250,6 +246,22 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#afb7c7058e4d69bc74a3e2f315c7f755c">time_interval_output_config</a></td></tr>
 <tr class="memdesc:afb7c7058e4d69bc74a3e2f315c7f755c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output interval for outputing int_* and par_* files [0.1 time unit]. <br /></td></tr>
 <tr class="separator:afb7c7058e4d69bc74a3e2f315c7f755c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa16ae2ed40d87a9f9f806d0470f31327"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa16ae2ed40d87a9f9f806d0470f31327"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#aa16ae2ed40d87a9f9f806d0470f31327">log_time_interval</a></td></tr>
+<tr class="memdesc:aa16ae2ed40d87a9f9f806d0470f31327"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output in logarithmic time [false]. <br /></td></tr>
+<tr class="separator:aa16ae2ed40d87a9f9f806d0470f31327"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15a882b74665d83896b45a0471c5f4cf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15a882b74665d83896b45a0471c5f4cf"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a15a882b74665d83896b45a0471c5f4cf">initial_log_time</a></td></tr>
+<tr class="memdesc:a15a882b74665d83896b45a0471c5f4cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initial output time in log time mode [1e-4]. <br /></td></tr>
+<tr class="separator:a15a882b74665d83896b45a0471c5f4cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae34ddae3176bbb04f613e8c2b7a3559c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae34ddae3176bbb04f613e8c2b7a3559c"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ae34ddae3176bbb04f613e8c2b7a3559c">nb_output_data_log_time</a></td></tr>
+<tr class="memdesc:ae34ddae3176bbb04f613e8c2b7a3559c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Nb of data output in log time mode [100]. <br /></td></tr>
+<tr class="separator:ae34ddae3176bbb04f613e8c2b7a3559c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47732d3b881afdd97c442f66c1b0fd91"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a47732d3b881afdd97c442f66c1b0fd91"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a47732d3b881afdd97c442f66c1b0fd91">nb_output_config_log_time</a></td></tr>
+<tr class="memdesc:a47732d3b881afdd97c442f66c1b0fd91"><td class="mdescLeft">&#160;</td><td class="mdescRight">Nb of config output in log time mode (must be &lt;= nb_output_data_log_time) [100]. <br /></td></tr>
+<tr class="separator:a47732d3b881afdd97c442f66c1b0fd91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab5b0e1b44afe6ca3f45125767fd75742"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5b0e1b44afe6ca3f45125767fd75742"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#ab5b0e1b44afe6ca3f45125767fd75742">origin_zero_flow</a></td></tr>
 <tr class="memdesc:ab5b0e1b44afe6ca3f45125767fd75742"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output: the middle height of the simulation box is set to the flow zero level. [true]. <br /></td></tr>
@@ -270,6 +282,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a8530ea5aa01b347a5b0b2dba22d746da">out_particle_stress</a></td></tr>
 <tr class="memdesc:a8530ea5aa01b347a5b0b2dba22d746da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output stress per particle in pst_* file, indicating which component ("c" for contact, "r" for repulsion, "b" for Brownian, "t" for total, "l" for lubrication) by a string, e.g "tc" for total stress and contact stress [""]. <br /></td></tr>
 <tr class="separator:a8530ea5aa01b347a5b0b2dba22d746da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b91b9996e7fd0411b7c8611182b0224"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b91b9996e7fd0411b7c8611182b0224"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a4b91b9996e7fd0411b7c8611182b0224">out_data_vel_components</a></td></tr>
+<tr class="memdesc:a4b91b9996e7fd0411b7c8611182b0224"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output velocity components in the par* file [false]. <br /></td></tr>
+<tr class="separator:a4b91b9996e7fd0411b7c8611182b0224"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a09dbfc1705548a3cb6b6d95de578d43e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a09dbfc1705548a3cb6b6d95de578d43e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_parameter_set.html#a09dbfc1705548a3cb6b6d95de578d43e">auto_determine_knkt</a></td></tr>
 <tr class="memdesc:a09dbfc1705548a3cb6b6d95de578d43e"><td class="mdescLeft">&#160;</td><td class="mdescRight">auto-determine stiffnesses knowing overlap and tangential displacement targets, see <a class="el" href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">System::adjustContactModelParameters</a> for details [false] <br /></td></tr>
@@ -348,7 +364,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="struct_parameter_set.html">ParameterSet</a></li>
-    <li class="footer">Generated on Mon Dec 14 2015 18:39:57 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Apr 27 2016 15:21:51 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>
