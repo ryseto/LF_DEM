@@ -41,8 +41,8 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   r = radius_out + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-        np_wall1 = ((cg_radius_in-1)*2*M_PI)/1.5;
-        np_wall2 = ((cg_radius_out+1)*2*M_PI)/1.5;
+        np_wall1 = ((cg_radius_in-radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
+		np_wall2 = ((cg_radius_out+radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		cerr << "np_in = " << np_wall1 << endl;
 		cerr << "np_out = " << np_wall2 << endl;
 		np_movable = np;
@@ -56,8 +56,8 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   z = z_top + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-        np_wall1 = lx/1.5;
-        np_wall2 = lx/1.5;
+        np_wall1 = lx/(2*radius_wall_particle);
+		np_wall2 = lx/(2*radius_wall_particle);
         np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
@@ -144,14 +144,14 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		}
 	}
 	for (int i=np_movable; i<np; i++) {
-		sys.radius[i] = a1;
+		sys.radius[i] = radius_wall_particle;
 	}
-	position.resize(np);
-	radius.resize(np);
-	for (int i=0; i<sys.get_np(); i++) {
-		position[i] = sys.position[i];
-		radius[i] = sys.radius[i];
-	}
+//	position.resize(np);
+//	radius.resize(np);
+//	for (int i=0; i<sys.get_np(); i++) {
+//		position[i] = sys.position[i];
+//		radius[i] = sys.radius[i];
+//	}
 	outputPositionData();
 	delete [] grad;
 	delete [] prev_grad;
@@ -188,8 +188,6 @@ void GenerateInitConfig::outputPositionData()
 		ss_posdatafilename << "shearwalls"; // square
 	} else if (winding_wall_config) {
 		ss_posdatafilename << "windingwalls"; // square
-		
-		
 	} else {
 		if (sys.twodimension) {
 			if (lx_lz == 1) {
@@ -211,13 +209,13 @@ void GenerateInitConfig::outputPositionData()
 			if (i < np/2) {
 				magnetic_susceptibility.push_back(1);
 			} else {
-				double size_factor = radius[i]*radius[i]*radius[i];
+				double size_factor = sys.radius[i]*sys.radius[i]*sys.radius[i];
 				magnetic_susceptibility.push_back(-1*size_factor);
 			}
 		}
 	}
 	
-	ss_posdatafilename << "_" << rand_seed << ".dat";
+	ss_posdatafilename << "_" << rand_seed << "_.dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
@@ -246,10 +244,10 @@ void GenerateInitConfig::outputPositionData()
 	
 	for (int i = 0; i<np; i++) {
 		fout << std::setprecision(15);
-		fout << position[i].x << ' ';
-		fout << position[i].y << ' ';
-		fout << position[i].z << ' ';
-		fout << radius[i] << ' ';
+		fout << sys.position[i].x << ' ';
+		fout << sys.position[i].y << ' ';
+		fout << sys.position[i].z << ' ';
+		fout << sys.radius[i] << ' ';
 		if (magnetic_config) {
 			fout << 0 << ' ';
 			fout << 0 << ' ';
@@ -258,11 +256,11 @@ void GenerateInitConfig::outputPositionData()
 		}
 		fout << endl;
 		fout_yap << "r ";
-		fout_yap << radius[i] << endl;
+		fout_yap << sys.radius[i] << endl;
 		fout_yap << "c ";
-		fout_yap << position[i].x << ' ';
-		fout_yap << position[i].y << ' ';
-		fout_yap << position[i].z << endl;
+		fout_yap << sys.position[i].x << ' ';
+		fout_yap << sys.position[i].y << ' ';
+		fout_yap << sys.position[i].z << endl;
 //		fout_yap << "t ";
 //		fout_yap << position[i].x << ' ';
 //		fout_yap << position[i].y << ' ';
@@ -274,15 +272,15 @@ void GenerateInitConfig::outputPositionData()
 	for (int k=0; k<sys.nb_interaction; k++) {
 		unsigned int i, j;
 		sys.interaction[k].get_par_num(i, j);
-		vec3d d_pos = position[i]-position[j];
+		vec3d d_pos = sys.position[i]-sys.position[j];
 		if (d_pos.norm() < 10){
 			fout_yap << "l ";
-			fout_yap << position[i].x << ' ';
-			fout_yap << position[i].y << ' ';
-			fout_yap << position[i].z << ' ';
-			fout_yap << position[j].x << ' ';
-			fout_yap << position[j].y << ' ';
-			fout_yap << position[j].z << endl;
+			fout_yap << sys.position[i].x << ' ';
+			fout_yap << sys.position[i].y << ' ';
+			fout_yap << sys.position[i].z << ' ';
+			fout_yap << sys.position[j].x << ' ';
+			fout_yap << sys.position[j].y << ' ';
+			fout_yap << sys.position[j].z << endl;
 		}
 	}
 	fout.close();
@@ -390,14 +388,13 @@ void GenerateInitConfig::putRandom()
 #ifdef USE_DSFMT
     dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
-    if (circulargap_config) {
-        //for (int i=0; i<np_movable; i++) {
-        vec3d r_center(lx/2, 0, lz/2);
+	if (circulargap_config) {
+		vec3d r_center(lx/2, 0, lz/2);
         int i = 0;
         while (i < np_movable) {
             vec3d pos(lx*RANDOM, 0, lz*RANDOM);
             double r = (pos-r_center).norm();
-            if (r > cg_radius_in+2 && r < cg_radius_out-2) {
+            if (r > cg_radius_in+2*radius_wall_particle && r < cg_radius_out-2*radius_wall_particle) {
                 sys.position[i] = pos;
                 if (i < np1) {
                     sys.radius[i] = a1;
@@ -409,15 +406,15 @@ void GenerateInitConfig::putRandom()
         }
         for (i=0; i<np_wall1; i++){
             double t = i*(2*M_PI/np_wall1);
-            vec3d pos = r_center + (cg_radius_in-1)*vec3d(cos(t), 0, sin(t));
+            vec3d pos = r_center + (cg_radius_in-radius_wall_particle)*vec3d(cos(t), 0, sin(t));
             sys.position[i+np_movable] = pos;
-            sys.radius[i+np_movable] = 1;
+            sys.radius[i+np_movable] = radius_wall_particle;
         }
         for (i=0; i<np_wall2; i++){
             double t = i*(2*M_PI/np_wall2);
-            vec3d pos = r_center + (cg_radius_out+1)*vec3d(cos(t), 0, sin(t));
+            vec3d pos = r_center + (cg_radius_out+radius_wall_particle)*vec3d(cos(t), 0, sin(t));
             sys.position[i+np_movable+np_wall1] = pos;
-            sys.radius[i+np_movable+np_wall1] = 1;
+            sys.radius[i+np_movable+np_wall1] = radius_wall_particle;
         }
         cerr << np_wall1 << ' ' << np_wall2 << endl;
     } else if (parallel_wall_config) {
@@ -439,14 +436,14 @@ void GenerateInitConfig::putRandom()
         }
         double delta_x = lx/np_wall1;
         for (i=0; i<np_wall1; i++){
-            vec3d pos(1+delta_x*i, 0, z_bot-1);
+            vec3d pos(1+delta_x*i, 0, z_bot-radius_wall_particle);
             sys.position[i+np_movable] = pos;
-            sys.radius[i+np_movable] = 1;
+            sys.radius[i+np_movable] = radius_wall_particle;
         }
         for (i=0; i<np_wall2; i++){
-            vec3d pos(1+delta_x*i, 0, z_top+1);
+            vec3d pos(1+delta_x*i, 0, z_top+radius_wall_particle);
             sys.position[i+np_movable+np_wall1] = pos;
-            sys.radius[i+np_movable+np_wall1] = 1;
+            sys.radius[i+np_movable+np_wall1] = radius_wall_particle;
         }
         cerr << "*" << endl;
         cerr << np_wall1 << ' ' << np_wall2 << endl;
@@ -465,7 +462,7 @@ void GenerateInitConfig::putRandom()
 			} else {
 				r = (pos-r_center3).norm();
 			}
-			if (r > cg_radius_in+2 && r < cg_radius_out-2) {
+			if (r > cg_radius_in+2*radius_wall_particle && r < cg_radius_out-2*radius_wall_particle) {
 				sys.position[i] = pos;
 				if (i < np1) {
 					sys.radius[i] = a1;
@@ -488,7 +485,7 @@ void GenerateInitConfig::putRandom()
 			if (sys.position[i].x > lx) {
 				sys.position[i].x -= lx;
 			}
-			sys.radius[i] = 1;
+			sys.radius[i] = radius_wall_particle;
 			l += dl;
 			i++;
 		}
@@ -503,7 +500,7 @@ void GenerateInitConfig::putRandom()
 			if (sys.position[i].x > lx) {
 				sys.position[i].x -= lx;
 			}
-			sys.radius[i] = 1;
+			sys.radius[i] = radius_wall_particle;
 			l += dl;
 			i++;
 		}
@@ -519,7 +516,7 @@ void GenerateInitConfig::putRandom()
 			if (sys.position[i].x > lx) {
 				sys.position[i].x -= lx;
 			}
-			sys.radius[i] = 1;
+			sys.radius[i] = radius_wall_particle;
 			l += dl;
 			i++;
 		}
@@ -534,14 +531,13 @@ void GenerateInitConfig::putRandom()
 			if (sys.position[i].x > lx) {
 				sys.position[i].x -= lx;
 			}
-			sys.radius[i] = 1;
+			sys.radius[i] = radius_wall_particle;
 			l += dl;
 			i++;
 		}
 		cerr << np_wall1 << " " << np_wall2<< endl;
 		cerr << np << endl;
 		cerr << sys.position.size() << endl;
-
 	} else {
         for (int i=0; i<np_movable; i++) {
             sys.position[i].x = lx*RANDOM;
@@ -808,6 +804,7 @@ void GenerateInitConfig::setParameters()
 		cg_radius_in = cg_ratio_radii*cg_radius_out;
 		cerr << cg_radius_in << endl;
 		cerr << cg_radius_out << endl;
+		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
 		lz = 2*cg_radius_out+5;
 		lx = lz*lx_lz;
 		ly = 0;
@@ -831,6 +828,8 @@ void GenerateInitConfig::setParameters()
 		cerr << " area fraction = " << area_particle/(area1-area2);
     } else if (parallel_wall_config) {
         lz += 10;
+		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
+
         z_bot = 5;
         z_top = lz-5;
     }
@@ -842,4 +841,5 @@ void GenerateInitConfig::setParameters()
 	cerr << "vf1 = " << volume_fraction << endl;
 	cerr << "vf2 = " << volume_fraction2 << endl;
 	cerr << "box =" << lx << ' ' << ly << ' ' << lz << endl;
+	cerr << "radius_wall_particle =" << radius_wall_particle << endl;
 }

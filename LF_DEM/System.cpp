@@ -309,6 +309,7 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
 	}
+	radius_wall_particle = radius[np-1];
 	if (ly == 0) {
 		twodimension = true;
 	} else {
@@ -741,16 +742,16 @@ void System::setupSystemPostConfiguration()
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
-		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out; // shear_rate_out = (R2/R1)*shear_rate_in  
+		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_in;
 		if (test_simulation == 11) {
 			omega_wheel_in  = 0;
-			omega_wheel_out = omega_wheel;
+			omega_wheel_out = -omega_wheel;
 		} else if (test_simulation == 12) {
-			omega_wheel_in  = -omega_wheel;
+			omega_wheel_in  = omega_wheel;
 			omega_wheel_out = 0;
 		} else if (test_simulation == 13) {
-			omega_wheel_in  = -0.5*omega_wheel;
-			omega_wheel_out =  0.5*omega_wheel;
+			omega_wheel_in  = 0.5*omega_wheel;
+			omega_wheel_out = -0.5*omega_wheel;
 		} else if (test_simulation == 10) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = 0;
@@ -823,6 +824,7 @@ void System::timeStepBoxing()
 	} else {
 		if (wall_rheology || test_simulation == 31) {
 			shear_strain += dt*shear_rate;
+			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
 	boxset.update();
@@ -888,7 +890,7 @@ void System::wallForces()
 				vec3d torque_tmp = cross(position[i]-origin_of_rotation, forceResultant[i]);
 				torque_wall1 += torque_tmp.y+torqueResultant[i].y;
             }
-			force_tang_wall1 = torque_wall1/(radius_in-1);
+			force_tang_wall1 = torque_wall1/(radius_in-radius_wall_particle);
             // outer wheel
 			force_normal_wall2 = 0;
 			double torque_wall2 = 0;
@@ -900,7 +902,7 @@ void System::wallForces()
 				vec3d torque_tmp = cross(position[i]-origin_of_rotation, forceResultant[i]);
 				torque_wall2 += torque_tmp.y+torqueResultant[i].y;
             }
-			force_tang_wall2 = torque_wall2/(radius_out+1);
+			force_tang_wall2 = torque_wall2/(radius_out+radius_wall_particle);
 			cerr << " normal:" << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
 			cerr << " tangential:" << force_tang_wall1 << ' ' << force_tang_wall2 << ' ' << torque_wall1 << ' ' << torque_wall2 << endl;
         } else if (test_simulation > 40) {
@@ -1119,7 +1121,7 @@ void System::adaptTimeStep(double time_end, double strain_end)
 
 void System::timeStepMove(double time_end, double strain_end)
 {
-    /**
+	/**
 	 \brief Moves particle positions according to previously computed velocities, Euler method step.
 	 */
 
@@ -1140,7 +1142,6 @@ void System::timeStepMove(double time_end, double strain_end)
 	for (int i=0; i<np; i++) {
 		displacement(i, velocity[i]*dt);
 	}
-
 	if (magnetic_rotation_active) {
 		for (int i=0; i<np; i++) {
 			magnetic_moment[i] += cross(ang_velocity[i], magnetic_moment[i])*dt;
@@ -1154,7 +1155,6 @@ void System::timeStepMove(double time_end, double strain_end)
 			angle[i] += ang_velocity[i].y*dt;
 		}
 	}
-
 	checkNewInteraction();
 	updateInteractions();
 }

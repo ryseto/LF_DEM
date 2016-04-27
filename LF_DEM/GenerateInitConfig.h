@@ -76,6 +76,7 @@ private:
 	int np_wall2;
 	int np_fix;
 	int np_movable;
+	double radius_wall_particle;
 #ifndef USE_DSFMT
 	MTRand rand_gen;
 #endif
@@ -86,8 +87,8 @@ private:
 	int overlapNumber(int);
 	double particleEnergy(int);
 	void updateInteractions(int);
-	std::vector<vec3d> position;
-	std::vector<double> radius;
+	//std::vector<vec3d> position;
+	//std::vector<double> radius;
 	int np;
 	int np1;
 	int np2;
