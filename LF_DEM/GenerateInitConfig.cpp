@@ -215,7 +215,7 @@ void GenerateInitConfig::outputPositionData()
 		}
 	}
 	
-	ss_posdatafilename << "_" << rand_seed << ".dat";
+	ss_posdatafilename << "_" << rand_seed << "_.dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";

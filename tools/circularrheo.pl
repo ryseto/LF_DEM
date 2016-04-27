@@ -51,8 +51,9 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'cylinders', 1);
-$initconfig = substr($name, 0, $j+15);
+$j = index($name, '_fric', 1);## not flexible...
+$initconfig = substr($name, 0, $j);
+printf "$initconfig\n";
 
 open (IN_CONFIG, "< ${initconfig}.dat");
 
@@ -524,7 +525,7 @@ sub OutYaplotData{
 		printf "@ 8\n";
 		for ($i = 0; $i < $np_movable; $i++) {
 			printf OUT "r $radius[$i]\n";
-			$normalized_stress = -$stress_rr[$i]/5000;
+			$normalized_stress = -$stress_rr[$i]/50000;
 			if ($normalized_stress > 1) {
 				$normalized_stress = 1;
 			} elsif ($normalized_stress < -1) {
