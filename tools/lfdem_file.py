@@ -196,8 +196,8 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
     else:
         return __read_snapshot_file_no_framemeta(in_file,
                                                  field_nb,
-                                                 header_len,
-                                                 usecols=usecols),\
+                                                 usecols,
+                                                 header_len),\
                 file_metadata
 
 
@@ -219,7 +219,7 @@ def read_data_file(fname, usecols="all"):
         data: a numpy array containing the data
         metadata: the files metadata
     """
-    metadata, col_nb = get_file_metadata(fname)
+    metadata, _, _ = get_file_metadata(fname)
     if usecols == "all":
         data = np.genfromtxt(fname)
     else:
