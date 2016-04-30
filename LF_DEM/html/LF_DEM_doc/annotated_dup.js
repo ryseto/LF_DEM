@@ -1,15 +1,9 @@
 var annotated_dup =
 [
-    [ "gsl", null, [
-      [ "Final_act", "classgsl_1_1_final__act.html", "classgsl_1_1_final__act" ],
-      [ "narrowing_error", "structgsl_1_1narrowing__error.html", null ],
-      [ "not_null", "classgsl_1_1not__null.html", "classgsl_1_1not__null" ],
-      [ "owner", "structgsl_1_1owner.html", "structgsl_1_1owner" ],
-      [ "span", "classgsl_1_1span.html", "classgsl_1_1span" ]
-    ] ],
     [ "Averager", "class_averager.html", "class_averager" ],
     [ "Box", "class_box.html", "class_box" ],
     [ "BoxSet", "class_box_set.html", "class_box_set" ],
+    [ "Clock", "class_clock.html", "class_clock" ],
     [ "Contact", "class_contact.html", "class_contact" ],
     [ "contact_state", "structcontact__state.html", "structcontact__state" ],
     [ "DBlock", "struct_d_block.html", "struct_d_block" ],
@@ -18,6 +12,8 @@ var annotated_dup =
     [ "GenerateInitConfig", "class_generate_init_config.html", "class_generate_init_config" ],
     [ "InputValue", "struct_input_value.html", "struct_input_value" ],
     [ "Interaction", "class_interaction.html", "class_interaction" ],
+    [ "LinearClock", "class_linear_clock.html", "class_linear_clock" ],
+    [ "LogClock", "class_log_clock.html", "class_log_clock" ],
     [ "Lubrication", "class_lubrication.html", "class_lubrication" ],
     [ "MagneticForce", "class_magnetic_force.html", null ],
     [ "ODBlock", "struct_o_d_block.html", "struct_o_d_block" ],
@@ -28,5 +24,6 @@ var annotated_dup =
     [ "StokesSolver", "class_stokes_solver.html", "class_stokes_solver" ],
     [ "StressTensor", "class_stress_tensor.html", "class_stress_tensor" ],
     [ "System", "class_system.html", "class_system" ],
+    [ "TimeKeeper", "class_time_keeper.html", "class_time_keeper" ],
     [ "vec3d", "classvec3d.html", "classvec3d" ]
 ];

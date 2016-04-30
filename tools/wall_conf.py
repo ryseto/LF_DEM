@@ -12,7 +12,7 @@ wall_thickness = float(sys.argv[2])
 pos, rad, meta = lf.read_conf_file(fname)
 # get the top and bottom layers
 
-ztop = pos[:, 2]+wall_thickness*rad
+ztop = pos[:, 2]+wall_thickness
 top_particles = ztop > float(meta['lz'])
 
 zbottom = pos[:, 2]-wall_thickness*rad

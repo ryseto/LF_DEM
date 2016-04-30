@@ -106,16 +106,16 @@ $(document).ready(function(){initNavTree('class_system.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a711e57caa49e1870f4bb1f88ce59555d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a711e57caa49e1870f4bb1f88ce59555d">setConfiguration</a> (const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;initial_positions, const std::vector&lt; double &gt; &amp;radii, double lx_, double ly_, double lz_)</td></tr>
-<tr class="separator:a711e57caa49e1870f4bb1f88ce59555d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2a3e5cdfb37425738f5410ceb361f00"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ad2a3e5cdfb37425738f5410ceb361f00">setConfiguration</a> (const std::vector&lt; <a class="el" href="classvec3d.html">vec3d</a> &gt; &amp;initial_positions, const std::vector&lt; double &gt; &amp;radii)</td></tr>
+<tr class="separator:ad2a3e5cdfb37425738f5410ceb361f00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bfae3fe7224b08b98faca7f665670be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a1bfae3fe7224b08b98faca7f665670be">setContacts</a> (const std::vector&lt; struct <a class="el" href="structcontact__state.html">contact_state</a> &gt; &amp;cs)</td></tr>
 <tr class="separator:a1bfae3fe7224b08b98faca7f665670be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc17621ae7c6e8771ae6b1140dfc7c7d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">getContacts</a> (std::vector&lt; struct <a class="el" href="structcontact__state.html">contact_state</a> &gt; &amp;cs)</td></tr>
 <tr class="separator:abc17621ae7c6e8771ae6b1140dfc7c7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4daacacb59afa0f0a4bf2107685a03f1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a4daacacb59afa0f0a4bf2107685a03f1">setupSystem</a> (std::string control)</td></tr>
-<tr class="separator:a4daacacb59afa0f0a4bf2107685a03f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad8ed40727e529e018f060935164588a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ad8ed40727e529e018f060935164588a8">timeEvolution</a> (const std::string &amp;time_or_strain, const double &amp;value_end)</td></tr>
-<tr class="separator:ad8ed40727e529e018f060935164588a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15565a1d76bc7b6d135b58b61d3a1280"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a15565a1d76bc7b6d135b58b61d3a1280">setupSystemPreConfiguration</a> (std::string control, bool is2d)</td></tr>
+<tr class="separator:a15565a1d76bc7b6d135b58b61d3a1280"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d74c69db1d1254da7f50acfff6b298c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a7d74c69db1d1254da7f50acfff6b298c">timeEvolution</a> (double time_end, double strain_end)</td></tr>
+<tr class="separator:a7d74c69db1d1254da7f50acfff6b298c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b996040c1a70b94c531562532c56f0c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a3b996040c1a70b94c531562532c56f0c">checkNewInteraction</a> ()</td></tr>
 <tr class="separator:a3b996040c1a70b94c531562532c56f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaeb82ed6465c89cd08b4b4f94eca617e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">updateInteractions</a> ()</td></tr>
@@ -131,27 +131,29 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:af8c62edec403a8e2b0e64ebde3f4985e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8c62edec403a8e2b0e64ebde3f4985e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#af8c62edec403a8e2b0e64ebde3f4985e">zero_shear</a></td></tr>
-<tr class="memdesc:af8c62edec403a8e2b0e64ebde3f4985e"><td class="mdescLeft">&#160;</td><td class="mdescRight">To be used for relaxation to generate initial configuration. <br /></td></tr>
-<tr class="separator:af8c62edec403a8e2b0e64ebde3f4985e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9bea7b3f203f6afae7d9019ef3bf67f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9bea7b3f203f6afae7d9019ef3bf67f"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#aa9bea7b3f203f6afae7d9019ef3bf67f">np_mobile</a></td></tr>
+<tr class="memdesc:aa9bea7b3f203f6afae7d9019ef3bf67f"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of mobile particles <br /></td></tr>
+<tr class="separator:aa9bea7b3f203f6afae7d9019ef3bf67f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
-<tr class="memitem:a2791a795f031424c24418caf58deaca2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a2791a795f031424c24418caf58deaca2">timeEvolutionEulersMethod</a> (bool calc_stress, const std::string &amp;time_or_strain, const double &amp;value_end)</td></tr>
-<tr class="separator:a2791a795f031424c24418caf58deaca2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35a3ea47138e232a839dd64f242525b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a35a3ea47138e232a839dd64f242525b6">timeEvolutionPredictorCorrectorMethod</a> (bool calc_stress, const std::string &amp;time_or_strain, const double &amp;value_end)</td></tr>
-<tr class="separator:a35a3ea47138e232a839dd64f242525b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02f126f2a425cc78cf4a1ef458464739"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a02f126f2a425cc78cf4a1ef458464739">timeStepMove</a> (const std::string &amp;time_or_strain, const double &amp;value_end)</td></tr>
-<tr class="separator:a02f126f2a425cc78cf4a1ef458464739"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf45aebd6344da8e321f0c900040e478"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#abf45aebd6344da8e321f0c900040e478">timeEvolutionEulersMethod</a> (bool calc_stress, double time_end, double strain_end)</td></tr>
+<tr class="separator:abf45aebd6344da8e321f0c900040e478"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac517e5bc0bb026ae127c94a871f97c77"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ac517e5bc0bb026ae127c94a871f97c77">timeEvolutionPredictorCorrectorMethod</a> (bool calc_stress, double time_end, double strain_end)</td></tr>
+<tr class="separator:ac517e5bc0bb026ae127c94a871f97c77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6cd21330525d70be4b8c5c03bdd7c41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ab6cd21330525d70be4b8c5c03bdd7c41">timeStepMove</a> (double time_end, double strain_end)</td></tr>
+<tr class="separator:ab6cd21330525d70be4b8c5c03bdd7c41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa42c0d51099a3340ee386feb61d0e67"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#aaa42c0d51099a3340ee386feb61d0e67">timeStepMoveCorrector</a> ()</td></tr>
 <tr class="separator:aaa42c0d51099a3340ee386feb61d0e67"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa44d61aae536477a62438937921e9eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#afa44d61aae536477a62438937921e9eb">timeStepMovePredictor</a> (const std::string &amp;time_or_strain, const double &amp;value_end)</td></tr>
-<tr class="separator:afa44d61aae536477a62438937921e9eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0a62c00b7fc82494a12afaff6ebf759"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ab0a62c00b7fc82494a12afaff6ebf759">timeStepBoxing</a> (const double strain_increment)</td></tr>
-<tr class="separator:ab0a62c00b7fc82494a12afaff6ebf759"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90f9d2693d0b7fc13b968ade7b843699"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a90f9d2693d0b7fc13b968ade7b843699">timeStepMovePredictor</a> (double time_end, double strain_end)</td></tr>
+<tr class="separator:a90f9d2693d0b7fc13b968ade7b843699"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48770291555a2e7889ebb7f783bb4f32"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a48770291555a2e7889ebb7f783bb4f32">timeStepBoxing</a> ()</td></tr>
+<tr class="separator:a48770291555a2e7889ebb7f783bb4f32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6501f2e972a2ad760162cf4dd34ac225"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a6501f2e972a2ad760162cf4dd34ac225">adaptTimeStep</a> ()</td></tr>
 <tr class="separator:a6501f2e972a2ad760162cf4dd34ac225"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba74ec32d2288860952b3c60814f7851"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#aba74ec32d2288860952b3c60814f7851">adaptTimeStep</a> (double time_end, double strain_end)</td></tr>
+<tr class="separator:aba74ec32d2288860952b3c60814f7851"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a78fc03133650a0632cd9d975e13ee402"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a78fc03133650a0632cd9d975e13ee402">buildHydroTerms</a> (bool, bool)</td></tr>
 <tr class="separator:a78fc03133650a0632cd9d975e13ee402"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59d8c192e1395d9f6637d2506bb82443"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a59d8c192e1395d9f6637d2506bb82443">generateBrownianForces</a> ()</td></tr>
@@ -160,10 +162,14 @@ Private Member Functions</h2></td></tr>
 <tr class="separator:aafa87b69481dbd17f8d3dc67c940a0f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1688f0c8e35b85ac9d0962cdb098837"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ad1688f0c8e35b85ac9d0962cdb098837">computeVelocitiesStokesDrag</a> ()</td></tr>
 <tr class="separator:ad1688f0c8e35b85ac9d0962cdb098837"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82bd46fc5da6765556e39b020454b6d2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a82bd46fc5da6765556e39b020454b6d2">computeVelocityComponents</a> ()</td></tr>
-<tr class="separator:a82bd46fc5da6765556e39b020454b6d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad10e6a840ae09e387565c2f30e8df19f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ad10e6a840ae09e387565c2f30e8df19f">computeVelocityByComponents</a> ()</td></tr>
+<tr class="separator:ad10e6a840ae09e387565c2f30e8df19f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad726330ebec27152a7d124e773c0b9f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#ad726330ebec27152a7d124e773c0b9f9">computeShearRate</a> ()</td></tr>
 <tr class="separator:ad726330ebec27152a7d124e773c0b9f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c1381e3ea26c86e0a01be29af10284f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a6c1381e3ea26c86e0a01be29af10284f">computeShearRateWalls</a> ()</td></tr>
+<tr class="separator:a6c1381e3ea26c86e0a01be29af10284f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03bad3a6dbb328ee214927151103ddd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a03bad3a6dbb328ee214927151103ddd4">computeForcesOnWallParticles</a> ()</td></tr>
+<tr class="separator:a03bad3a6dbb328ee214927151103ddd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60c98fd8b54e66526a2c413a4a443557"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a60c98fd8b54e66526a2c413a4a443557">stressReset</a> ()</td></tr>
 <tr class="separator:a60c98fd8b54e66526a2c413a4a443557"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34a5f1e6790979deae33cb9e7fef029a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a34a5f1e6790979deae33cb9e7fef029a">computeMaxNAVelocity</a> ()</td></tr>
@@ -175,7 +181,7 @@ Private Member Functions</h2></td></tr>
 Private Attributes</h2></td></tr>
 <tr class="memitem:a656572d1d416ffee7d049db18c12967c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a656572d1d416ffee7d049db18c12967c"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#a656572d1d416ffee7d049db18c12967c">np</a></td></tr>
-<tr class="memdesc:a656572d1d416ffee7d049db18c12967c"><td class="mdescLeft">&#160;</td><td class="mdescRight">nb of particles <br /></td></tr>
+<tr class="memdesc:a656572d1d416ffee7d049db18c12967c"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of particles <br /></td></tr>
 <tr class="separator:a656572d1d416ffee7d049db18c12967c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9e002a5f2f169e37c545b76ee67e724"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9e002a5f2f169e37c545b76ee67e724"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_system.html#aa9e002a5f2f169e37c545b76ee67e724">time</a></td></tr>
@@ -213,6 +219,41 @@ Romain Mari </dd></dl>
 </table>
 </div><div class="memdoc">
 <p>Adapt the time step so that the maximum relative displacement is p.disp_max .</p>
+
+</div>
+</div>
+<a class="anchor" id="aba74ec32d2288860952b3c60814f7851"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::adaptTimeStep </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>time_end</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>strain_end</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.</p>
 
 </div>
 </div>
@@ -304,7 +345,7 @@ Romain Mari </dd></dl>
 <p>For the hydrodynamic component, it also gets the <img class="formulaInl" alt="$ M E_{\infty}$" src="form_13.png"/> term ( <img class="formulaInl" alt="$R_{\mathrm{SE}} E_{\infty}$" src="form_14.png"/> is B&amp;B notations), so that all in all <img class="formulaInl" alt="$ S_{\mathrm{H}} = - GV_{\mathrm{H}} + M E_{\infty}$" src="form_15.png"/>.</p>
 <p>For the point forces, it also gets the <img class="formulaInl" alt="$ -xF_{\mathrm{I}} $" src="form_16.png"/> term, so that <img class="formulaInl" alt="$ S_{\mathrm{I}} = - GV_{\mathrm{I}} - xF_{\mathrm{I}} $" src="form_17.png"/>.</p>
 <p>For the Brownian forces, it computes (in B&amp;B notations) <img class="formulaInl" alt="$ S_{\mathrm{B}} = - kT \nabla\dot (R_{\mathrm{SU}}.R_{\mathrm{FU}}^{-1}) $" src="form_18.png"/> with the mid-step algorithm of Banchio and Brady <a class="el" href="citelist.html#CITEREF_banchio_accelerated_2003">[2]</a> with <img class="formulaInl" alt="$ n=1 $" src="form_19.png"/>.</p>
-<p>In the Brownian mode, because of the mid-point scheme for the Brownian stress, you should be careful when calling this method from outside of the <a class="el" href="class_system.html#a35a3ea47138e232a839dd64f242525b6">System::timeEvolutionPredictorCorrectorMethod</a> method.</p>
+<p>In the Brownian mode, because of the mid-point scheme for the Brownian stress, you should be careful when calling this method from outside of the <a class="el" href="class_system.html#ac517e5bc0bb026ae127c94a871f97c77">System::timeEvolutionPredictorCorrectorMethod</a> method.</p>
 
 </div>
 </div>
@@ -322,6 +363,31 @@ Romain Mari </dd></dl>
 </div><div class="memdoc">
 <p>Checks if there are new pairs of interacting particles. If so, creates and sets up the corresponding <a class="el" href="class_interaction.html" title="Interaction object, master class holding any interaction between two particles. ">Interaction</a> objects.</p>
 <p>To be called after particle moved.</p>
+
+</div>
+</div>
+<a class="anchor" id="a03bad3a6dbb328ee214927151103ddd4"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::computeForcesOnWallParticles </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>This method computes the force (and torque, for now, but it might be dropped) on the fixed particles.</p>
+<p>It is designed with simple shear with walls under stress controlled conditions in mind, so it decomposes the force in a rate-proportional part and a rate-independent part.</p>
 
 </div>
 </div>
@@ -371,6 +437,30 @@ Romain Mari </dd></dl>
 </table>
 </div><div class="memdoc">
 <p>Compute the shear rate under stress control conditions.</p>
+
+</div>
+</div>
+<a class="anchor" id="a6c1381e3ea26c86e0a01be29af10284f"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void System::computeShearRateWalls </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Compute the coefficient to give to the velocity of the fixed particles under stress control conditions.</p>
 
 </div>
 </div>
@@ -430,7 +520,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a82bd46fc5da6765556e39b020454b6d2"></a>
+<a class="anchor" id="ad10e6a840ae09e387565c2f30e8df19f"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -438,7 +528,7 @@ Romain Mari </dd></dl>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void System::computeVelocityComponents </td>
+          <td class="memname">void System::computeVelocityByComponents </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -532,7 +622,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a711e57caa49e1870f4bb1f88ce59555d"></a>
+<a class="anchor" id="ad2a3e5cdfb37425738f5410ceb361f00"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -546,25 +636,7 @@ Romain Mari </dd></dl>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; double &gt; &amp;&#160;</td>
-          <td class="paramname"><em>radii</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>lx_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>ly_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>lz_</em>&#160;</td>
+          <td class="paramname"><em>radii</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -595,16 +667,26 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a4daacacb59afa0f0a4bf2107685a03f1"></a>
+<a class="anchor" id="a15565a1d76bc7b6d135b58b61d3a1280"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void System::setupSystem </td>
+          <td class="memname">void System::setupSystemPreConfiguration </td>
           <td>(</td>
           <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>control</em></td><td>)</td>
+          <td class="paramname"><em>control</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>is2d</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -637,21 +719,21 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ad8ed40727e529e018f060935164588a8"></a>
+<a class="anchor" id="a7d74c69db1d1254da7f50acfff6b298c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void System::timeEvolution </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>time_or_strain</em>, </td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>time_end</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double &amp;&#160;</td>
-          <td class="paramname"><em>value_end</em>&#160;</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>strain_end</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -670,7 +752,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a2791a795f031424c24418caf58deaca2"></a>
+<a class="anchor" id="abf45aebd6344da8e321f0c900040e478"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -686,14 +768,14 @@ Romain Mari </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>time_or_strain</em>, </td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>time_end</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double &amp;&#160;</td>
-          <td class="paramname"><em>value_end</em>&#160;</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>strain_end</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -712,7 +794,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a35a3ea47138e232a839dd64f242525b6"></a>
+<a class="anchor" id="ac517e5bc0bb026ae127c94a871f97c77"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -728,14 +810,14 @@ Romain Mari </dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>time_or_strain</em>, </td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>time_end</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double &amp;&#160;</td>
-          <td class="paramname"><em>value_end</em>&#160;</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>strain_end</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -779,7 +861,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ab0a62c00b7fc82494a12afaff6ebf759"></a>
+<a class="anchor" id="a48770291555a2e7889ebb7f783bb4f32"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -789,8 +871,7 @@ Romain Mari </dd></dl>
         <tr>
           <td class="memname">void System::timeStepBoxing </td>
           <td>(</td>
-          <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>strain_increment</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -804,7 +885,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a02f126f2a425cc78cf4a1ef458464739"></a>
+<a class="anchor" id="ab6cd21330525d70be4b8c5c03bdd7c41"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -814,14 +895,14 @@ Romain Mari </dd></dl>
         <tr>
           <td class="memname">void System::timeStepMove </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>time_or_strain</em>, </td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>time_end</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double &amp;&#160;</td>
-          <td class="paramname"><em>value_end</em>&#160;</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>strain_end</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -863,7 +944,7 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="afa44d61aae536477a62438937921e9eb"></a>
+<a class="anchor" id="a90f9d2693d0b7fc13b968ade7b843699"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -873,14 +954,14 @@ Romain Mari </dd></dl>
         <tr>
           <td class="memname">void System::timeStepMovePredictor </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>time_or_strain</em>, </td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>time_end</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const double &amp;&#160;</td>
-          <td class="paramname"><em>value_end</em>&#160;</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>strain_end</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -946,7 +1027,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_system.html">System</a></li>
-    <li class="footer">Generated on Mon Dec 14 2015 18:39:57 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Apr 27 2016 15:21:51 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

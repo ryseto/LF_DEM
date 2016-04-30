@@ -108,6 +108,16 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
+<tr class="memitem:a6456c479b671f217a0e748dd22beb483"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_stokes_solver.html#a6456c479b671f217a0e748dd22beb483">insertODBlock</a> (cholmod_sparse *matrix, const std::vector&lt; int &gt; &amp;index_chol_ix, int top_row_nb, const struct <a class="el" href="struct_o_d_block.html">ODBlock</a> &amp;offdiagblock)</td></tr>
+<tr class="separator:a6456c479b671f217a0e748dd22beb483"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a520c873ec5a0dc2d48a1e4efa319a425"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_stokes_solver.html#a520c873ec5a0dc2d48a1e4efa319a425">insertDBlock</a> (cholmod_sparse *matrix, const std::vector&lt; int &gt; &amp;index_chol_ix, int top_row_nb, const struct <a class="el" href="struct_d_block.html">DBlock</a> &amp;diagblock)</td></tr>
+<tr class="separator:a520c873ec5a0dc2d48a1e4efa319a425"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9db12950eacf28186983b5514c166697"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_stokes_solver.html#a9db12950eacf28186983b5514c166697">insertODBlockRows</a> (int *matrix_i, const std::vector&lt; int &gt; &amp;index_values, int top_row_nb)</td></tr>
+<tr class="separator:a9db12950eacf28186983b5514c166697"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e8f91cd009fd2c7d457c398bbdc0b61"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_stokes_solver.html#a1e8f91cd009fd2c7d457c398bbdc0b61">insertDBlockRows</a> (int *matrix_i, const std::vector&lt; int &gt; &amp;index_values, int top_row_nb)</td></tr>
+<tr class="separator:a1e8f91cd009fd2c7d457c398bbdc0b61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa25f204f96f4bfe6a3a1e2bc139c6295"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_stokes_solver.html#aa25f204f96f4bfe6a3a1e2bc139c6295">insertBlockColumnIndices</a> (int *matrix_p, const std::vector&lt; int &gt; &amp;pvalues)</td></tr>
+<tr class="separator:aa25f204f96f4bfe6a3a1e2bc139c6295"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -117,7 +127,219 @@ Private Attributes</h2></td></tr>
 <dl class="section author"><dt>Author</dt><dd>Ryohei Seto </dd>
 <dd>
 Romain Mari </dd></dl>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="aa25f204f96f4bfe6a3a1e2bc139c6295"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StokesSolver::insertBlockColumnIndices </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>matrix_p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>pvalues</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array. You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, <em>not</em> the bare cholmod_sparse::p</p>
+
+</div>
+</div>
+<a class="anchor" id="a520c873ec5a0dc2d48a1e4efa319a425"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StokesSolver::insertDBlock </td>
+          <td>(</td>
+          <td class="paramtype">cholmod_sparse *&#160;</td>
+          <td class="paramname"><em>matrix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>index_chol_ix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>top_row_nb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct <a class="el" href="struct_d_block.html">DBlock</a> &amp;&#160;</td>
+          <td class="paramname"><em>diagblock</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Insert the <a class="el" href="struct_d_block.html">DBlock</a> diagblock in a cholmod_sparse matrix. You must provide the location of the 6 columns of the block in the cholmod_sparse::i array through a vector of indices index_chol_ix, and the nb of the topmost row (equivalently leftmost column) of the block.</p>
+
+</div>
+</div>
+<a class="anchor" id="a1e8f91cd009fd2c7d457c398bbdc0b61"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StokesSolver::insertDBlockRows </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>matrix_i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>index_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>top_row_nb</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Insert row numbers for the diagonal block with top row top_row_nb in a cholmod_sparse::i array. You need to provide the location of the 6 columns of the block in the cholmod_sparse::i array through a vector of indices index_values.</p>
+
+</div>
+</div>
+<a class="anchor" id="a6456c479b671f217a0e748dd22beb483"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StokesSolver::insertODBlock </td>
+          <td>(</td>
+          <td class="paramtype">cholmod_sparse *&#160;</td>
+          <td class="paramname"><em>matrix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>index_chol_ix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>top_row_nb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const struct <a class="el" href="struct_o_d_block.html">ODBlock</a> &amp;&#160;</td>
+          <td class="paramname"><em>offdiagblock</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Insert the <a class="el" href="struct_o_d_block.html">ODBlock</a> offdiagblock in a cholmod_sparse matrix. You must provide the location of the 6 columns of the block in the cholmod_sparse::i array through a vector of indices index_chol_ix, and the nb of of the topmost row of the block.</p>
+
+</div>
+</div>
+<a class="anchor" id="a9db12950eacf28186983b5514c166697"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void StokesSolver::insertODBlockRows </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>matrix_i</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramname"><em>index_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>top_row_nb</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Insert row numbers for an off-diagonal block with top row top_row_nb in a cholmod_sparse::i array. You need to provide the location of the 6 columns of the block in the cholmod_sparse::i array through a vector of indices index_values.</p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_stokes_solver_8h_source.html">StokesSolver.h</a></li>
 <li>StokesSolver.cpp</li>
 </ul>
@@ -127,7 +349,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_stokes_solver.html">StokesSolver</a></li>
-    <li class="footer">Generated on Mon Dec 14 2015 18:39:57 for Documentation for LF_DEM by
+    <li class="footer">Generated on Wed Apr 27 2016 15:21:51 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>
