@@ -18,10 +18,9 @@ $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'cylinders0.5_', 1);
-$initconfig = substr($name, 0, $j+14);
+$j = index($name, '__', 1);
+$initconfig = substr($name, 0, $j+1);
 
-printf "$initconfig\n";
 
 open (IN_CONFIG, "< ${initconfig}.dat");
 $line = <IN_CONFIG>;
@@ -49,7 +48,7 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 5;
+$shear_strain_steady_state = 3;
 
 if ($np_mov <= 3000) {
 	$kmax = 8;
@@ -140,10 +139,10 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	for ($i = 0; $i<16; $i++) {
+	for ($i = 0; $i<11; $i++) {
 		$line = <IN_particle>;
 	}
-	for ($i = 0; $i<24; $i++) {
+	for ($i = 0; $i<16; $i++) {
 		$line = <IN_interaction>;
 	}
 }
