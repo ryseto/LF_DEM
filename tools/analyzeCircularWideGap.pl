@@ -10,11 +10,11 @@ use Math::Trig;
 use IO::Handle;
 use Getopt::Long;
 use POSIX;
-my $margin = 0;
+
 my $particle_data = $ARGV[0];
-if (@ARGV == 2) {
-	$margin = $ARGV[1];
-}
+my $margin = $ARGV[1];
+my $kmax = $ARGV[2];
+
 
 printf "margine $margin\n";
 
@@ -55,13 +55,6 @@ $output = 1;
 $cnt_data = 0;
 $shear_strain_steady_state = 3;
 
-if ($np_mov <= 3000) {
-	$kmax = 8;
-} elsif ($np_mov <= 6000) {
-	$kmax = 10;
-} elsif ($np_mov <= 9000) {
-	$kmax = 12;
-}
 $r_in = $radius_in;
 $r_out = $radius_out;
 $rmargin = $margin*($r_out - $r_in);
