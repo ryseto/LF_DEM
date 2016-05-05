@@ -14,7 +14,7 @@ use POSIX;
 my $particle_data = $ARGV[0];
 my $margin = $ARGV[1];
 my $kmax = $ARGV[2];
-
+my $shear_strain_steady_state = $ARGV[3];
 
 printf "margine $margin\n";
 
@@ -53,7 +53,6 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 3;
 
 $r_in = $radius_in;
 $r_out = $radius_out;
@@ -120,7 +119,6 @@ for ($k = 0; $k < $kmax; $k++) {
 		}
 		$r = $r_range_in + $dr*$k;
 		$rmid = $r + 0.5*$dr;
-		$rnorm = ($rmid - $r_in)/($r_out - $r_in);
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
@@ -180,7 +178,6 @@ sub InParticles {
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
 				$pos_r2 = $x*$x + $z*$z;
 				$pos_r = sqrt($pos_r2);
-				
 				if ( $pos_r > $r_range_in && $pos_r < $r_range_out ) {
 					$v_tan = ((-$vx*$z + $vz*$x)/$pos_r);
 					$f_rpos = ($pos_r - $r_range_in)/$dr;
@@ -193,9 +190,7 @@ sub InParticles {
 						$average_stress_pp[$i_rpos] += 0.5*(-$stress_rr-$stress_tt);
 						$average_stress_N1[$i_rpos] += ($stress_tt-$stress_rr);
 						$particlearea[$i_rpos] += pi*$a*$a;
-						
 						$cnt[$i_rpos] ++;
-						
 					} else {
 						printf "@ $i $i_rpos   $pos_r\n";
 						exit;
