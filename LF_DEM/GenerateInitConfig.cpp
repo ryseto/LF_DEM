@@ -406,7 +406,7 @@ void GenerateInitConfig::putRandom()
         }
         for (i=0; i<np_wall1; i++){
             double t = i*(2*M_PI/np_wall1);
-            vec3d pos = r_center + (cg_radius_in-radius_wall_particle)*vec3d(cos(t), 0, sin(t));
+            vec3d pos = r_center+(cg_radius_in-radius_wall_particle)*vec3d(cos(t), 0, sin(t));
             sys.position[i+np_movable] = pos;
             sys.radius[i+np_movable] = radius_wall_particle;
         }

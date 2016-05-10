@@ -717,7 +717,6 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
-
 	// chol_vel_fix->x = velocity.data();
 	// yes, it is evil!!! :). If you call this with a function having vector<double> velocity
 	// as a local variable, when the function returns velocity is freed and so chol_vel_fix->x is.
@@ -749,6 +748,7 @@ void StokesSolver::multiply_by_RFU_fm(vector<double>& velocity, vector<double>& 
 		force[i] = ((double*)chol_force_fix->x)[i];
 	}
 }
+
 void StokesSolver::multiply_by_RFU_fm(vector<vec3d>& velocity,
 									  vector<vec3d>& ang_velocity,
 									  vector<vec3d>& force,
@@ -777,11 +777,10 @@ void StokesSolver::multiply_by_RFU_ff(vector<double>& velocity, vector<double>& 
 	}
 }
 
-
 void StokesSolver::multiply_by_RFU_ff(vector<vec3d>& velocity,
-																			vector<vec3d>& ang_velocity,
-																			vector<vec3d>& force,
-																			vector<vec3d>& torque)
+									  vector<vec3d>& ang_velocity,
+									  vector<vec3d>& force,
+									  vector<vec3d>& torque)
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};

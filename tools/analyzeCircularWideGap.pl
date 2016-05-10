@@ -12,16 +12,20 @@ use Getopt::Long;
 use POSIX;
 
 my $particle_data = $ARGV[0];
+my $margin = $ARGV[1];
+my $kmax = $ARGV[2];
+my $shear_strain_steady_state = $ARGV[3];
+
+printf "margine $margin\n";
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
 $j = index($particle_data, '.dat', $i-1);
 $name = substr($particle_data, $i, $j-$i);
 
-$j = index($name, 'cylinders0.5_', 1);
-$initconfig = substr($name, 0, $j+14);
+$j = index($name, '__', 1);
+$initconfig = substr($name, 0, $j+1);
 
-printf "$initconfig\n";
 
 open (IN_CONFIG, "< ${initconfig}.dat");
 $line = <IN_CONFIG>;
@@ -49,23 +53,20 @@ open (IN_particle, "< ${particle_data}");
 $first = 1;
 $output = 1;
 $cnt_data = 0;
-$shear_strain_steady_state = 5;
 
-if ($np_mov <= 3000) {
-	$kmax = 8;
-} elsif ($np_mov <= 6000) {
-	$kmax = 10;
-} elsif ($np_mov <= 9000) {
-	$kmax = 12;
-}
 $r_in = $radius_in;
 $r_out = $radius_out;
-$rdiff = ${r_out}-${r_in};
-$v_in = $radius_in; ### rate is 1?
+$rmargin = $margin*($r_out - $r_in);
+$r_range_in = $r_in + $rmargin/2;
+$r_range_out = $r_out - $rmargin/2;
+$rdiff = ${r_range_out}-${r_range_in};
 $dr = $rdiff/$kmax;
+$v_in = $radius_in;
 
-printf "$radius_in $radius_out $rdiff $dr \n";
-#exit;
+printf "$r_in $r_out\n";
+printf "$r_range_in $r_range_out\n";
+printf "dr = $dr \n";
+
 for ($k = 0; $k < $kmax; $k++) {
 	$average[$k] = 0;
 	$radialposition[$k] = 0;
@@ -89,11 +90,11 @@ while (1) {
 #}
 
 $stress_in = $average_stress_rt[0]/$cnt[0];
-$r1 = $radius_in-1;
-$r2 = $radius_out+1;
-
-printf OUT "# R_in = $r1\n";
-printf OUT "# R_out = $r2\n";
+printf OUT "# R_in = ${r_in}\n";
+printf OUT "# R_out = ${r_out}\n";
+printf OUT "# Rrange0 = $r_range_in\n";
+printf OUT "# Rrange1 = $r_range_out\n";
+printf OUT "# kmax = $kmax\n";
 printf OUT "#1 radial position\n";
 printf OUT "#2 velocity_theta \n";
 printf OUT "#3 area fraction\n";
@@ -116,9 +117,8 @@ for ($k = 0; $k < $kmax; $k++) {
 		} else {
 			$gradient_v_tan = 0;
 		}
-		$r = $r_in + $dr*$k;
+		$r = $r_range_in + $dr*$k;
 		$rmid = $r + 0.5*$dr;
-		$rnorm = ($rmid - $r_in)/($r_out - $r_in);
 		$rn = $r + $dr;
 		$area = pi*($rn*$rn - $r*$r);
 		$density = ($particlearea[$k]/$cnt_data)/$area;
@@ -140,10 +140,10 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	for ($i = 0; $i<16; $i++) {
+	for ($i = 0; $i<11; $i++) {
 		$line = <IN_particle>;
 	}
-	for ($i = 0; $i<24; $i++) {
+	for ($i = 0; $i<16; $i++) {
 		$line = <IN_interaction>;
 	}
 }
@@ -178,23 +178,23 @@ sub InParticles {
 			if ($shear_strain > $shear_strain_steady_state && $i < $np_mov) {
 				$pos_r2 = $x*$x + $z*$z;
 				$pos_r = sqrt($pos_r2);
-				$v_tan = ((-$vx*$z + $vz*$x)/$pos_r);
-				$f_rpos = ($pos_r - $r_in)/$dr;
-				$i_rpos = floor($f_rpos);
-				if ($i_rpos >= 0 && $i_rpos < $kmax) {
-					$average_v[$i_rpos] += $v_tan;
-					$average_stress_rr[$i_rpos] += $stress_rr;
-					$average_stress_tt[$i_rpos] += $stress_tt;
-					$average_stress_rt[$i_rpos] += $stress_rt;
-					$average_stress_pp[$i_rpos] += 0.5*(-$stress_rr-$stress_tt);
-					$average_stress_N1[$i_rpos] += ($stress_tt-$stress_rr);
-					$particlearea[$i_rpos] += pi*$a*$a;
-
-					$cnt[$i_rpos] ++;
-					
-				} else {
-					printf "@ $i $i_rpos   $pos_r\n";
-					exit;
+				if ( $pos_r > $r_range_in && $pos_r < $r_range_out ) {
+					$v_tan = ((-$vx*$z + $vz*$x)/$pos_r);
+					$f_rpos = ($pos_r - $r_range_in)/$dr;
+					$i_rpos = floor($f_rpos);
+					if ($i_rpos >= 0 && $i_rpos < $kmax) {
+						$average_v[$i_rpos] += $v_tan;
+						$average_stress_rr[$i_rpos] += $stress_rr;
+						$average_stress_tt[$i_rpos] += $stress_tt;
+						$average_stress_rt[$i_rpos] += $stress_rt;
+						$average_stress_pp[$i_rpos] += 0.5*(-$stress_rr-$stress_tt);
+						$average_stress_N1[$i_rpos] += ($stress_tt-$stress_rr);
+						$particlearea[$i_rpos] += pi*$a*$a;
+						$cnt[$i_rpos] ++;
+					} else {
+						printf "@ $i $i_rpos   $pos_r\n";
+						exit;
+					}
 				}
 			} 			#$posx[$i] = $x;
 			$posx[$i] = $x;
