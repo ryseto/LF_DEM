@@ -80,6 +80,21 @@ def get_file_metadata(fname):
     return file_metadata, col_nb, header_len
 
 
+def strdict_get(d, substr):
+    """ Find the items of a string-key based dictionary
+        matching with a substring."""
+    key = None
+    val = None
+    for k in d:
+        if k.find(substr) >= 0:
+            if key is not None:
+                return -1, None
+            else:
+                key = k
+                val = d[k]
+    return key, val
+
+
 def convert_columndef_to_indices(columndef_dict):
     c = dict(columndef_dict)
     for k in c:

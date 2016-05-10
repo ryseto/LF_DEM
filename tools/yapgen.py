@@ -56,18 +56,32 @@ def snaps2yap(pos_fname, force_factor):
 
         # display a line joining the center of interacting particles
         # with a thickness proportional to the normal force
-        yap_out = pyp.layer_switch(2)
-        yap_out = pyp.add_color_switch(yap_out, 4)
-        normal_forces = (f[:, icols['normal part of the lubrication force']] +
-                         f[:, icols['norm of the normal part of the contact force']] +
-                         f[:, icols['norm of the normal repulsive force']])\
-                        .astype(np.float)
+        lub_force = f[:, icols['normal part of the lubrication force']]
+        contact_force =\
+            f[:, icols['norm of the normal part of the contact force']] +\
+            f[:, icols['norm of the normal repulsive force']]
+
+        normal_forces = (lub_force + contact_force).astype(np.float32)
         #  convert the force to a thickness. case-by-case.
         if force_factor is None:
             force_factor = 1/np.max(np.abs(normal_forces))
         normal_forces = force_factor*np.abs(normal_forces)
-        yap_out = np.row_stack(
-                 (yap_out, pyp.get_interactions_yaparray(r1r2, normal_forces)))
+
+        contact_state = f[:, lf.strdict_get(icols, 'contact state')[1]]
+
+        yap_out = pyp.layer_switch(1)
+        yap_out = pyp.add_color_switch(yap_out, 4)
+        contact_bonds =\
+            pyp.get_interactions_yaparray(r1r2[contact_state > 0],
+                                          normal_forces[contact_state > 0])
+        yap_out = np.row_stack((yap_out, contact_bonds))
+
+        yap_out = pyp.add_layer_switch(yap_out, 2)
+        yap_out = pyp.add_color_switch(yap_out, 5)
+        non_contact_bonds =\
+            pyp.get_interactions_yaparray(r1r2[contact_state == 0],
+                                          normal_forces[contact_state == 0])
+        yap_out = np.row_stack((yap_out, non_contact_bonds))
 
         # display a circle for every particle
         yap_out = pyp.add_layer_switch(yap_out, 3)
