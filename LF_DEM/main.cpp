@@ -54,7 +54,6 @@ int main(int argc, char **argv)
 		{"rate-seq-file",     required_argument, 0, 'R'},
 		{"stress-controlled", required_argument, 0, 's'},
 		{"stress-seq-file",   required_argument, 0, 'S'},
-		{"magnetic",          required_argument, 0, 'm'},
 		{"generate",          optional_argument, 0, 'g'},
 		{"kn-kt-file",        required_argument, 0, 'k'},
 		{"binary",            no_argument,       0, 'n'},
@@ -118,24 +117,6 @@ int main(int argc, char **argv)
 				suffix = "h";
 				cout << "Rate control, infinite shear rate (hydro + hard contacts only)" << endl;
 				break;
-			case 'm':
-				/*
-				 * magnetic moment m
-				 * Typical magnetic force: (3 mu m^2)/(4 pi (2a)^4)
-				 * Typical Brownian force: kT/a
-				 * Dimensionless_number (Pe number) can be defined as the ratio between these two forces:
-				 * Typical magnetic force/Typical Brownian force
-				 * dimensionless_number = Pe_M = (3 mu m^2) / (64 pi kT a^3)
-				 */
-				rheology_control = "magnetic";
-				if (getSuffix(optarg, numeral, suffix)) {
-					dimensionless_number = atof(numeral.c_str());
-					cout << "Magnetic field control: " << dimensionless_number << endl;
-				} else {
-					errorNoSuffix("magnetic field");
-				}
-				cout << "Magnetic simulation" << endl;
-				break;
 			case 'k':
 				knkt_filename = optarg;
 				break;
@@ -151,8 +132,6 @@ int main(int argc, char **argv)
 						generate_init = 3; // simple shear with wall
 					} else if (optarg[0] == 's') {
 						generate_init = 4; // winding
-					} else if (optarg[0] == 'm') {
-						generate_init = 10; // magnetic
 					}
 				}
 				break;
@@ -209,10 +188,8 @@ int main(int argc, char **argv)
 		simulation.force_to_run = force_to_run;
 		simulation.long_file_name = long_file_name;
 		simulation.diminish_output = diminish_output;
-		if (rheology_control == "magnetic") {
-			simulation.simulationMagnetic(in_args.str(), input_files, binary_conf,
-										  dimensionless_number, suffix, rheology_control, simu_identifier);
-		} else if (seq_type == "iy") {
+		
+		if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
 											  dimensionless_number, suffix, rheology_control, simu_identifier);
 			

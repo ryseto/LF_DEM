@@ -281,45 +281,6 @@ void Simulation::convertInputForcesRateControlled(double dimensionlessnumber,
 	convertForceValues(internal_unit_scales);
 }
 
-// Command option -m indicate "magnetic-field controlled" simulation.
-// -m [val]b  ---> val = F_M0/F_B0
-// -m [val]r  ---> val = F_M0/F_R0
-//
-void Simulation::convertInputForcesMagnetic(double dimensionlessnumber,
-											string rate_unit)
-{
-	/* We plan to implement both non-Brownian and Brownian simulations.
-	 * Currently only Brownian simulation is implemented.
-	 */
-	string force_type = rate_unit;
-	if (force_type != "thermal") {
-		ostringstream error_str;
-		error_str  << "Non-Brownian simulation for magnetic particles is not implemented yet." << endl;
-		error_str  << "You need to give the dimensionless parameter with suffix b, i.e., -m [value]b" << endl;
-		throw runtime_error(error_str.str());
-	}
-	if (input_force_values[force_type] > 0) {
-		ostringstream error_str;
-		error_str  << "Error: redefinition of the magnetic force ratio (given both in the command line and in the parameter file with \"" << force_type << "\" force)" << endl;
-		throw runtime_error(error_str.str());
-	}
-	sys.brownian = true;
-	// switch this force in magnetic units
-	// Pe_M is F_M0/F_B0.
-	// so F_B = F_M/Pe_M
-	// in magnetic units, that is F_B/F_M = 1/Pe_M
-	if (dimensionlessnumber == 0) {
-		throw runtime_error("Vanishing rate not handled... yet! "); // @@ What is the correct way to handle this case?
-	}
-	input_force_values[force_type] = 1/dimensionlessnumber;
-	input_force_units[force_type] = "magnetic";
-	resolveUnitSystem("magnetic");
-	//	chose simulation unit
-	setUnitScaleMagnetic();
-	convertForceValues(internal_unit_scales);
-	cout << "Magnetic, Peclet number " << dimensionless_numbers["magnetic/thermal"] << endl;
-}
-
 void Simulation::setLowPeclet()
 {
 	sys.lowPeclet = true;
@@ -355,8 +316,7 @@ void Simulation::setUnitScaleRateControlled()
 		If the system is non-Brownian, the hydrodynamic force unit is taken (\b note: this will change in the future). If the system is Brownian, the Brownian force unit is selected at low Peclet (i.e., Peclet numbers smaller that ParameterSet::Pe_switch) and the hydrodynamic force unit is selected at high Peclet.
 	 */
 	bool is_brownian;
-	if (dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end()
-		|| dimensionless_numbers.find("magnetic/thermal") != dimensionless_numbers.end()) {
+	if (dimensionless_numbers.find("hydro/thermal") != dimensionless_numbers.end()) {
 		is_brownian = true;
 	} else {
 		is_brownian = false;
@@ -372,22 +332,6 @@ void Simulation::setUnitScaleRateControlled()
 		internal_unit_scales = "hydro";
 	}
 	sys.set_shear_rate(dimensionless_numbers["hydro/"+internal_unit_scales]);
-}
-
-void Simulation::setUnitScaleMagnetic()
-{
-	/* [todo]
-	 * When Pe_magnetic is large
-	 * internal_unit_scales should be "magnetic"
-	 */
-	internal_unit_scales = "thermal";
-	sys.amplitudes.sqrt_temperature = 1;
-	if (p.magnetic_type == 2) {
-		sys.amplitudes.magnetic = dimensionless_numbers["magnetic/thermal"];
-		cout << "amplitudes.magnetic = Pe = " << sys.amplitudes.magnetic << endl;
-	} else {
-		throw runtime_error("not implemented yet @ setUnitScaleMagnetic");
-	}
 }
 
 void Simulation::exportForceAmplitudes()
@@ -416,14 +360,6 @@ void Simulation::exportForceAmplitudes()
 		sys.amplitudes.cohesion = input_force_values["cohesive"];
 		cout << indent+"Cohesion (in \"" << input_force_units["cohesive"] << "\" units): " << sys.amplitudes.cohesion << endl;
 	}
-	//	bool is_magnetic = values.find("magnetic") != values.end();
-	//	if (is_magnetic) {
-	//		sys.amplitudes.magnetic = values["magnetic"];
-	//
-	//
-	//		cout << " Magnetic force (in \"" << suffixes["m"] << "\" units): " << p.magnetic_amplitude << endl; // unused now, should map to a quantity in sys.amplitudes
-	//		cout << " values[m] = "  << values["magnetic"] << endl;
-	//	}
 	bool is_ft_max = input_force_values.find("ft") != input_force_values.end();
 	if (is_ft_max) {
 		sys.amplitudes.ft_max = input_force_values["ft"];
@@ -496,8 +432,6 @@ void Simulation::setupNonDimensionalization(double dimensionlessnumber,
 		convertInputForcesRateControlled(dimensionlessnumber, input_scale);
 	} else if (control_var == "stress") {
 		convertInputForcesStressControlled(dimensionlessnumber, input_scale);
-	} else if (control_var == "magnetic") {
-		convertInputForcesMagnetic(dimensionlessnumber, input_scale);
 	} else {
 		ostringstream error_str;
 		error_str  << " Error: unknown control variable \"" << control_var 	<< "\"" << endl;
@@ -595,9 +529,6 @@ void Simulation::resolveTimeOrStrainParameters()
 	} else {
 		time_end = p.time_end;
 	}
-	if (control_var == "magnetic") {
-		time_end = p.time_end;
-	}
 	if (p.log_time_interval) {
 		if (input_values["time_end"].unit != input_values["initial_log_time"].unit &&
 			(input_values["time_end"].unit == "strain" || input_values["initial_log_time"].unit == "strain")) {
@@ -625,8 +556,6 @@ void Simulation::setupSimulation(string in_args,
 
 	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		cout << "init_relax" << endl;
-		sys.zero_shear = true;
-	} else if (control_var == "magnetic") {
 		sys.zero_shear = true;
 	} else {
 		sys.zero_shear = false;
@@ -705,13 +634,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		catchSuffixedForce("thermal", value);
 	} else if (keyword == "critical_load_amplitude") {
 		catchSuffixedForce("critical_load", value);
-	} else if (keyword == "magnetic_amplitude") {
-		//		caught_suffix = getSuffix(value, numeral, suffix);
-		//		suffix = unit_longname[suffix];
-		//		suffixes["magnetic"] = suffix;
-		//		values["magnetic"] = atof(numeral.c_str());
-		//		cerr << "Need to confirm the implementation for magnetic_amplitude"  << endl;
-		throw runtime_error("magnetic_amplitude ??");
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "stress_scaled_contactmodel") {
@@ -800,16 +722,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		catchSuffixedForce("ft", value);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
-	} else if (keyword == "magnetic_type") {
-		p.magnetic_type = atoi(value.c_str());
-	} else if (keyword == "magnetic_field_type") {
-		p.magnetic_field_type = atoi(value.c_str());
-	} else if (keyword == "external_magnetic_field_ang_theta") {
-		p.external_magnetic_field_ang_theta = atof(value.c_str());
-	} else if (keyword == "external_magnetic_field_ang_phi") {
-		p.external_magnetic_field_ang_phi = atof(value.c_str());
-	} else if (keyword == "magnetic_interaction_range") {
-		p.magnetic_interaction_range = atof(value.c_str());
 	} else if (keyword == "cross_shear") {
 		p.cross_shear = str2bool(value);
 	} else if (keyword == "theta_shear") {
@@ -922,7 +834,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	catchSuffixedValue("time", "time_end", "10h", &p.time_end);
 	p.time_init_relax = 0;
 	p.lub_max_gap = 0.5;
-	/* This is cutoff distance (center-to-center) for interactions (repulsive force, magnetic force, etc.).
+	/* This is cutoff distance (center-to-center) for interactions (repulsive force, etc.).
 	 * If interaction_range is not indicated, this value will be set from lub_max_gap.
 	 */
 	p.interaction_range = -1;
@@ -950,11 +862,6 @@ void Simulation::setDefaultParameters(string input_scale)
 		p.kn = 10000;
 		p.kt = 6000;
 		p.kr = 6000;
-	} else if (control_var == "magnetic") {
-		p.stress_scaled_contactmodel = true;
-		p.kn = 2000;
-		p.kt = 1000;
-		p.kr = 1000;
 	}
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
@@ -988,14 +895,6 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.cross_shear = false;
 	p.theta_shear = 0;
 	p.event_handler = "";
-	/*
-	 * Parameters for magnetic colloid simulation.
-	 */
-	p.magnetic_type = 0;
-	p.magnetic_field_type = 0;
-	p.magnetic_interaction_range = 20;
-	p.external_magnetic_field_ang_phi = 0;
-	p.timeinterval_update_magnetic_pair = 0.02;
 }
 
 inline string columnDefinition(int &cnb, const string &type, const string &name)
@@ -1294,32 +1193,6 @@ void Simulation::readPositionsImposedVelocity(fstream &file_import)
 	sys.setFixedVelocities(fixed_velocities);
 }
 
-void Simulation::readPositionsMagnetic(fstream &file_import)
-{
-	/**
-		\brief Import a text file configuration with magnetic moments and susceptibility.
-
-		File format:
-		# header
-
-		x y z radius mx my mz susceptibility
-	*/
-
-	double x_, y_, z_, a_, mx_, my_, mz_, sus_;
-	vector<vec3d> magnetic_moment;
-	vector<double> magnetic_susceptibility;
-	vector<vec3d> initial_position;
-	vector<double> radius;
-	while (file_import >> x_ >> y_ >> z_ >> a_ >> mx_ >> my_ >> mz_ >> sus_) {
-		initial_position.push_back(vec3d(x_, y_, z_));
-		radius.push_back(a_);
-		magnetic_moment.push_back(vec3d(mx_, my_, mz_));
-		magnetic_susceptibility.push_back(sus_);
-	}
-	sys.setConfiguration(initial_position, radius);
-	sys.setMagneticConfiguration(magnetic_moment, magnetic_susceptibility);
-}
-
 void Simulation::importConfiguration(const string& filename_import_positions)
 {
 	/**
@@ -1334,16 +1207,12 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	}
 
 	setMetadata(file_import);
-
-	if (sys.p.magnetic_type == 0) {
-		if (sys.test_simulation != 31) {
-			readPositions(file_import);
-		} else {
-			readPositionsImposedVelocity(file_import);
-		}
+	if (sys.test_simulation != 31) {
+		readPositions(file_import);
 	} else {
-		readPositionsMagnetic(file_import);
+		readPositionsImposedVelocity(file_import);
 	}
+
 	file_import.close();
 }
 

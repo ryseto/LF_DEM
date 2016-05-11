@@ -49,7 +49,6 @@ struct ForceAmplitudes
 	double sqrt_temperature;
 	double contact;
 	double cohesion;
-	double magnetic;
 	double critical_normal_force;
 	double ft_max;
 };
@@ -99,7 +98,6 @@ private:
 	void adaptTimeStep(double time_end, double strain_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
-	void setMagneticForceToParticle();
 	void buildHydroTerms(bool, bool);
 	void (System::*buildLubricationTerms)(bool, bool);
 	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
@@ -109,7 +107,6 @@ private:
 	void generateBrownianForces();
 	void buildContactTerms(bool);
 	void buildRepulsiveForceTerms(bool);
-	void buildMagneticForceTerms(bool);
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
 	void computeVelocityWithoutComponents();
@@ -168,16 +165,8 @@ private:
 	Averager<double> *overlap_avg;
 	Averager<double> *max_disp_tan_avg;
 	std::list <Event>& events;
-	/*
-	 * Simulation for magnetic particles
-	 */
-	double sq_magnetic_interaction_range;
-	std::vector<std::pair<vec3d, std::pair<int,int> > > magnetic_force_stored;
-	std::vector<std::vector<int> > magnetic_pair;
-	void updateMagneticPair();
-	double time_update_magnetic_pair;
 
- protected:
+protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
 	~System();
@@ -189,7 +178,6 @@ private:
 	bool friction;
 	bool rolling_friction;
 	bool repulsiveforce;
-	bool magnetic;
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
@@ -231,18 +219,12 @@ private:
 	std::vector<vec3d> ang_vel_hydro;
 	std::vector<vec3d> vel_brownian;
 	std::vector<vec3d> ang_vel_brownian;
-	std::vector<vec3d> vel_magnetic;
-	std::vector<vec3d> ang_vel_magnetic;
 	std::vector<vec3d> vel_hydro_from_fixed;
 	std::vector<vec3d> ang_vel_hydro_from_fixed;
 	std::vector<vec3d> fixed_velocities;
 	vec3d *contact_force;
 	vec3d *contact_torque;
 	vec3d *repulsive_force;
-	vec3d *magnetic_moment;
-	vec3d *magnetic_force;
-	vec3d *magnetic_torque;
-	std::vector<double> magnetic_susceptibility;
 	std::vector<vec3d> brownian_force_torque;
 	StressTensor* lubstress; // G U + M E
 	StressTensor* contactstressGU; // per particle
@@ -251,10 +233,8 @@ private:
 	StressTensor* repulsivestressXF; // per particle
 	StressTensor* brownianstressGU; // per particle
 	StressTensor* brownianstressGU_predictor; // per particle
-	StressTensor* magneticstressGU; // per particle
 	StressTensor* total_stress_pp; // per particle
 	std::vector<StressTensor> hydrofromfixedstressGU; // per particle
-	std::vector<StressTensor> magneticstressXF;
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;
 	StressTensor total_contact_stressXF;
@@ -262,8 +242,6 @@ private:
 	StressTensor total_repulsive_stressXF;
 	StressTensor total_repulsive_stressGU;
 	StressTensor total_brownian_stressGU;
-	StressTensor total_magnetic_stressXF;
-	StressTensor total_magnetic_stressGU;
 	StressTensor total_hydrofromfixed_stressGU;
 	Averager<StressTensor> *stress_avg;
 	double dt;
@@ -341,13 +319,6 @@ private:
 	vec3d force_upwall;
 	vec3d force_downwall;
 
-	/*
-	 * Simulation for magnetic particles
-	 */
-	bool magnetic_rotation_active;
-	double magnetic_dd_energy; // Magnetic dipole-dipole energy per particle
-	double angle_external_magnetic_field;
-	vec3d external_magnetic_field;
 
 	double *ratio_unit_time; // to convert System time in Simulation time
 
@@ -372,7 +343,7 @@ private:
 	void updateNumberOfInteraction(int p0, int p1, int val);
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
-	void updateMagneticInteractions();
+
 	void updateUnscaledContactmodel();
 	int periodize(vec3d&);
 	void periodize_diff(vec3d&, int&);
@@ -390,14 +361,6 @@ private:
 	void initializeBoxing();
     //void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
-	/*
-	 * Simulation for magnetic particles
-	 */
-	void setMagneticConfiguration(const std::vector <vec3d>& magnetic_moment,
-								  const std::vector <double>& magnetic_susceptibility);
-	void setInducedMagneticMoment();
-	void setMagneticMomentZero();
-	void calcMagneticEnergy();
 	/*************************************************************/
 	double calcInteractionRangeDefault(const int&, const int&);
 	double calcLubricationRange(const int& i, const int& j);

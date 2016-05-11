@@ -30,7 +30,6 @@ diminish_output(false)
 	unit_longname["b"] = "thermal";
 	unit_longname["c"] = "cohesive";
 	unit_longname["cl"] = "critical_load";
-	unit_longname["m"] = "magnetic";
 	unit_longname["ft"] = "ft";
 	unit_longname["kn"] = "normal_stiffness";
 	unit_longname["kt"] = "tan_stiffness";
@@ -369,82 +368,6 @@ void Simulation::simulationInverseYield(string in_args,
 	}
 }
 
-void Simulation::simulationMagnetic(string in_args,
-									vector<string>& input_files,
-									bool binary_conf,
-									double dimensionless_number,
-									string input_scale,
-									string control_variable,
-									string simu_identifier)
-{
-	/* Monolayer: Particles are confined in y = 0 plane.
-	 *
-	 *
-	 */
-	control_var = control_variable;
-	setupSimulation(in_args, input_files, binary_conf,
-					dimensionless_number, input_scale, simu_identifier);
-	int cnt_simu_loop = 1;
-	int cnt_config_out = 1;
-	double time_output_data = 0;
-	double time_output_config = 0;
-	/******************** OUTPUT INITIAL DATA ********************/
-	//	evaluateData();
-	//outputDataMagnetic();
-	//outputConfigurationBinary();
-	//	outputConfigurationData();
-	/*************************************************************/
-	if (sys.p.magnetic_field_type == 0) {
-		// Field direction is fixed
-		sys.external_magnetic_field.set(0, 1, 0);
-	} else if (sys.p.magnetic_field_type == 1) {
-		sys.external_magnetic_field.set(sin(sys.angle_external_magnetic_field),
-										cos(sys.angle_external_magnetic_field),
-										0);
-		throw runtime_error("magnetic_field_type == 1 not yet implemented");// @not yet
-	} else if (sys.p.magnetic_field_type == 2) {
-		sys.external_magnetic_field.set(cos(sys.angle_external_magnetic_field),
-										0,
-										sin(sys.angle_external_magnetic_field));
-		throw runtime_error("magnetic_field_type == 2 not yet implemented");// @not yet
-	}
-	sys.setMagneticMomentZero();
-	bool initial_relax = true;
-	// Main simulation loop
-	double initial_time = sys.get_time();
-	string indent = "  Simulation::\t";
-	cout << indent << "Time evolution started" << endl << endl;
-	while (keepRunning()) {
-		if (initial_relax && sys.get_time() >= 0) {
-			sys.setInducedMagneticMoment();
-			initial_relax = false;
-		}
-		time_output_data = initial_time+cnt_simu_loop*p.time_interval_output_data;
-		time_output_config = initial_time+cnt_config_out*p.time_interval_output_config;
-		sys.timeEvolution(time_output_data, -1); // @@@ I changed to new timeEvolution method, is that ok? The old one is not as flexible so I would like to deprecate it
-		cnt_simu_loop ++;
-		/******************** OUTPUT DATA ********************/
-		evaluateData();
-		outputDataMagnetic();
-		outputConfigurationBinary();
-		if (sys.get_time() >= time_output_config-1e-8) {
-			outputConfigurationData();
-			cnt_config_out ++;
-		}
-		cout << "time: " << sys.get_time() << " / " << time_end << endl;
-	}
-	outputComputationTime();
-	string	filename_parameters = input_files[1];
-	if (filename_parameters.find("init_relax", 0) < filename_parameters.size()) {
-		/* To prepare relaxed initial configuration,
-		 * we can use Brownian simulation for a short interval.
-		 * Here is just to export the position data.
-		 */
-		string filename_configuration = input_files[0];
-		outputFinalConfiguration(filename_configuration);
-	}
-}
-
 void Simulation::outputComputationTime()
 {
 	int time_from_1 = time_strain_end-time_strain_1;
@@ -766,56 +689,7 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 	snapshot_header << getRate() << ' ';
 	snapshot_header << target_stress_input << ' ';
 	snapshot_header << sys.get_time() << ' ';
-	if (p.magnetic_type != 0) {
-		snapshot_header << sys.angle_external_magnetic_field;
-	}
 	snapshot_header << endl;
-}
-
-void Simulation::outputDataMagnetic()
-{
-	/**
-	 \brief Output data for magnetic colloid work
-	 */
-	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
-		ostringstream error_str;
-		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
-		throw runtime_error(error_str.str());
-	}
-	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
-	outdata.setUnit(output_unit_scales);
-	outdata.entryData("time", "time", 1, sys.get_time());
-	/* energy */
-	outdata.entryData("energy", "none", 1, sys.get_total_energy());
-	outdata.entryData("magnetic energy", "none", 1, sys.magnetic_dd_energy);
-	/* contact number */
-	outdata.entryData("contact number", "none", 1, sys.getContactNumber());
-	outdata.entryData("frictional contact number", "none", 1, sys.getFrictionalContactNumber());
-	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
-	/* maximum deformation of contact bond */
-	outdata.entryData("min gap", "none", 1, sys.min_reduced_gap);
-	outdata.entryData("max gap(cohesion)", "none", 1, sys.max_contact_gap);
-	outdata.entryData("magnetic field strength", "none", 1, sys.p.external_magnetic_field_norm);
-	outdata.entryData("field angle theta", "none", 1, sys.p.external_magnetic_field_ang_theta);
-	outdata.entryData("field angle phi", "none", 1, sys.p.external_magnetic_field_ang_phi);
-	/* pressure */
-	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
-	outdata.entryData("particle pressure contact XF", "stress", 1, sys.total_contact_stressXF.getParticlePressure());
-	outdata.entryData("particle pressure contact GU", "stress", 1, sys.total_contact_stressGU.getParticlePressure());
-	outdata.entryData("particle pressure brownian", "stress", 1, sys.total_brownian_stressGU.getParticlePressure());
-	outdata.entryData("particle pressure magnetic XF", "stress", 1, sys.total_magnetic_stressXF.getParticlePressure());
-	outdata.entryData("particle pressure magnetic GU", "stress", 1, sys.total_magnetic_stressGU.getParticlePressure());
-	/* maximum velocity */
-	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
-	outdata.entryData("max angular velocity", "velocity", 1, sys.max_ang_velocity);
-	/* simulation parameter */
-	outdata.entryData("dt", "none", 1, sys.dt);
-	outdata.entryData("kn", "none", 1, sys.p.kn);
-	outdata.entryData("kt", "none", 1, sys.p.kt);
-	outdata.entryData("kr", "none", 1, sys.p.kr);
-	/* misc */
-	outdata.writeToFile();
 }
 
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
@@ -899,27 +773,20 @@ void Simulation::outputParFileTxt()
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
 
-		if (control_var != "magnetic") {
-			outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
-			if (sys.couette_stress) {
-				double stress_rr, stress_thetatheta, stress_rtheta;
-				sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
-				double sr = sys.get_shear_rate();
-				outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
-				outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
-				outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
-			}
-			if (sys.twodimension) {
-				outdata_par.entryData("angle", "none", 1, sys.angle[i]);
-			}
-		} else {
-			if (sys.p.magnetic_type == 1) {
-				outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
-				outdata_par.entryData("magnetic moment (x, y, z)", "none", 3, sys.magnetic_moment[i]);
-			} else {
-				outdata_par.entryData("magnetic susceptibility", "none", 1, sys.magnetic_susceptibility[i]);
-			}
+		
+		outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
+		if (sys.couette_stress) {
+			double stress_rr, stress_thetatheta, stress_rtheta;
+			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
+			double sr = sys.get_shear_rate();
+			outdata_par.entryData("stress_rr", "viscosity", 1, stress_rr/sr);
+			outdata_par.entryData("stress_thetatheta", "viscosity", 1, stress_thetatheta/sr);
+			outdata_par.entryData("stress_rtheta", "viscosity", 1, stress_rtheta/sr);
 		}
+		if (sys.twodimension) {
+			outdata_par.entryData("angle", "none", 1, sys.angle[i]);
+		}
+
 		if (p.out_data_vel_components) {
 			outdata_par.entryData("non-affine hydro velocity (x, y, z)", "velocity", 3, sys.vel_hydro[i]);
 			outdata_par.entryData("non-affine hydro angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro[i]);
@@ -932,10 +799,6 @@ void Simulation::outputParFileTxt()
 			if (sys.brownian) {
 				outdata_par.entryData("non-affine brownian velocity (x, y, z)", "velocity", 3, sys.vel_brownian[i]);
 				outdata_par.entryData("non-affine brownian angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_brownian[i]);
-			}
-			if (sys.magnetic) {
-				outdata_par.entryData("non-affine magnetic velocity (x, y, z)", "velocity", 3, sys.vel_magnetic[i]);
-				outdata_par.entryData("non-affine magnetic angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_magnetic[i]);
 			}
 			if (sys.mobile_fixed) {
 				outdata_par.entryData("non-affine hydro_from_fixed velocity (x, y, z)", "velocity", 3, sys.vel_hydro_from_fixed[i]);
@@ -1031,29 +894,11 @@ void Simulation::outputFinalConfiguration(const string& filename_import_position
 	fout_finalconfig << header_imported_configulation[0] << endl;
 	fout_finalconfig << header_imported_configulation[1] << endl;
 	int np = sys.get_np();
-	if (control_var != "magnetic") {
-		for (int i=0; i<np; i++) {
-			fout_finalconfig << sys.position[i].x << ' ';
-			fout_finalconfig << sys.position[i].y << ' ';
-			fout_finalconfig << sys.position[i].z << ' ';
-			fout_finalconfig << sys.radius[i] << endl;
-		}
-	} else {
-		for (int i=0; i<np; i++) {
-			fout_finalconfig << sys.position[i].x << ' ';
-			fout_finalconfig << sys.position[i].y << ' ';
-			fout_finalconfig << sys.position[i].z << ' ';
-			fout_finalconfig << sys.radius[i] << ' ';
-			if (sys.p.magnetic_type == 1) {
-				fout_finalconfig << sys.magnetic_moment[i].x << ' ';
-				fout_finalconfig << sys.magnetic_moment[i].y << ' ';
-				fout_finalconfig << sys.magnetic_moment[i].z << ' ';
-				fout_finalconfig << sys.magnetic_susceptibility[i] << endl;
-			} else if (sys.p.magnetic_type == 2) {
-				fout_finalconfig << "0 0 0 ";
-				fout_finalconfig << sys.magnetic_susceptibility[i] << endl;
-			}
-		}
+	for (int i=0; i<np; i++) {
+		fout_finalconfig << sys.position[i].x << ' ';
+		fout_finalconfig << sys.position[i].y << ' ';
+		fout_finalconfig << sys.position[i].z << ' ';
+		fout_finalconfig << sys.radius[i] << endl;
 	}
 	string filename_bin = filename_final_configuration;
 	string ext = ".dat";

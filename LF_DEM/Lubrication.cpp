@@ -607,15 +607,6 @@ void Lubrication::addHydroStress()
 		sys->brownianstressGU[p0] += stresslet_brownian_GU_i;
 		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
 	}
-	if (sys->magnetic) {
-		StressTensor stresslet_magnetic_GU_i;
-		StressTensor stresslet_magnetic_GU_j;
-		pairVelocityStresslet(sys->vel_magnetic[p0], sys->vel_magnetic[p1],
-							  sys->ang_vel_magnetic[p0], sys->ang_vel_magnetic[p1],
-							  stresslet_magnetic_GU_i, stresslet_magnetic_GU_j);
-		sys->magneticstressGU[p0] += stresslet_magnetic_GU_i;
-		sys->magneticstressGU[p1] += stresslet_magnetic_GU_j;
-	}
 	if (sys->vel_hydro_from_fixed.size()) {
 		StressTensor stresslet_fixed_GU_i;
 		StressTensor stresslet_fixed_GU_j;
