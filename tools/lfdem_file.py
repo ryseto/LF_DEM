@@ -80,6 +80,21 @@ def get_file_metadata(fname):
     return file_metadata, col_nb, header_len
 
 
+def strdict_get(d, substr):
+    """ Find the items of a string-key based dictionary
+        matching with a substring."""
+    key = None
+    val = None
+    for k in d:
+        if k.find(substr) >= 0:
+            if key is not None:
+                return -1, None
+            else:
+                key = k
+                val = d[k]
+    return key, val
+
+
 def convert_columndef_to_indices(columndef_dict):
     c = dict(columndef_dict)
     for k in c:
@@ -196,8 +211,8 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
     else:
         return __read_snapshot_file_no_framemeta(in_file,
                                                  field_nb,
-                                                 header_len,
-                                                 usecols=usecols),\
+                                                 usecols,
+                                                 header_len),\
                 file_metadata
 
 
@@ -219,7 +234,7 @@ def read_data_file(fname, usecols="all"):
         data: a numpy array containing the data
         metadata: the files metadata
     """
-    metadata, col_nb = get_file_metadata(fname)
+    metadata, _, _ = get_file_metadata(fname)
     if usecols == "all":
         data = np.genfromtxt(fname)
     else:
