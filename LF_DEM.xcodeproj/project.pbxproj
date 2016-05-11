@@ -23,7 +23,6 @@
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
-		D98003291AE490CA0066B99F /* MagneticForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D918BA0A1AE0FD4F007CB291 /* MagneticForce.cpp */; };
 		D9878877165545680047A87E /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9878875165545680047A87E /* Simulation.cpp */; };
 		D988E38E165441750009949F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D988E38D165441750009949F /* main.cpp */; };
 		D988E390165441750009949F /* LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D988E38F165441750009949F /* LF_DEM.1 */; };
@@ -525,8 +524,6 @@
 		D90B4F681A70942500C51ACD /* ParameterSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = ParameterSet.h; sourceTree = "<group>"; };
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = GenerateInitConfig.h; sourceTree = "<group>"; };
-		D918BA0A1AE0FD4F007CB291 /* MagneticForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MagneticForce.cpp; sourceTree = "<group>"; };
-		D918BA0B1AE0FD4F007CB291 /* MagneticForce.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = MagneticForce.h; sourceTree = "<group>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze_data_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D921A0C0175BF90D002F64B1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -1247,8 +1244,6 @@
 				D92EAA0B17E39D5100C903F5 /* Contact.cpp */,
 				D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */,
 				D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */,
-				D918BA0B1AE0FD4F007CB291 /* MagneticForce.h */,
-				D918BA0A1AE0FD4F007CB291 /* MagneticForce.cpp */,
 				D92EAA0E17E39D5100C903F5 /* Lubrication.h */,
 				D92EAA0D17E39D5100C903F5 /* Lubrication.cpp */,
 				D98B3CCD17CCF057002B2A4D /* LubricationFunctions.h */,
@@ -1534,7 +1529,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D98003291AE490CA0066B99F /* MagneticForce.cpp in Sources */,
 				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
 				D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,

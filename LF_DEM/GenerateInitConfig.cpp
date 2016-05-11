@@ -19,10 +19,7 @@ using namespace std;
 
 int GenerateInitConfig::generate(int rand_seed_, int config_type)
 {
-	if (config_type == 10) {
-		cerr << "generate magnetic configuration" <<endl;
-		magnetic_config = true;
-	} else if (config_type == 2) {
+	if (config_type == 2) {
 		cerr << "generate circular wide gap " <<endl;
 		circulargap_config = true;
 	} else if (config_type == 4) {
@@ -203,18 +200,6 @@ void GenerateInitConfig::outputPositionData()
 			}
 		}
     }
-	vector<double> magnetic_susceptibility;
-	if (magnetic_config) {
-		for (int i=0; i<np; i++) {
-			if (i < np/2) {
-				magnetic_susceptibility.push_back(1);
-			} else {
-				double size_factor = sys.radius[i]*sys.radius[i]*sys.radius[i];
-				magnetic_susceptibility.push_back(-1*size_factor);
-			}
-		}
-	}
-	
 	ss_posdatafilename << "_" << rand_seed << "_.dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
@@ -248,12 +233,6 @@ void GenerateInitConfig::outputPositionData()
 		fout << sys.position[i].y << ' ';
 		fout << sys.position[i].z << ' ';
 		fout << sys.radius[i] << ' ';
-		if (magnetic_config) {
-			fout << 0 << ' ';
-			fout << 0 << ' ';
-			fout << 0 << ' ';
-			fout << magnetic_susceptibility[i];
-		}
 		fout << endl;
 		fout_yap << "r ";
 		fout_yap << sys.radius[i] << endl;

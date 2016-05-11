@@ -37,11 +37,6 @@ void System::stressReset()
 			brownianstressGU[i].reset();
 		}
 	}
-	if (magnetic) {
-		for (int i=0; i<np; i++) {
-			magneticstressGU[i].reset();
-		}
-	}
 }
 
 void System::calcStressPerParticle()
@@ -105,19 +100,6 @@ void System::calcStressPerParticle()
 				 */
 				brownianstressGU[i] = 0.5*(brownianstressGU[i]-brownianstressGU_predictor[i]);
 			}
-		}
-	}
-	if (magnetic) {
-		vec3d pos_diff;
-		StressTensor magstressXF;
-		magneticstressXF.clear();
-		for (const auto& mf : magnetic_force_stored) {
-			/* mf.first = force0
-			 */
-			pos_diff = position[mf.second.second]-position[mf.second.first];
-			periodize_diff(pos_diff);
-			magstressXF.set(pos_diff, mf.first);
-			magneticstressXF.push_back(magstressXF);
 		}
 	}
 }
@@ -234,21 +216,6 @@ void System::calcStress()
 		}
 		total_brownian_stressGU /= system_volume;
 	}
-	// Stress from magnetic force
-	if (magnetic) {
-		// XF contribution
-		total_magnetic_stressXF.reset();
-		for (const auto& ms : magneticstressXF) {
-			total_magnetic_stressXF += ms;
-		}
-		total_magnetic_stressXF /= system_volume;
-		// GU contribution
-		total_magnetic_stressGU.reset();
-		for (int i=0; i<np; i++) {
-			total_magnetic_stressGU += magneticstressGU[i];
-		}
-		total_magnetic_stressGU /= system_volume;
-	}
 	if (mobile_fixed) {
 		total_hydrofromfixed_stressGU.reset();
 		for (int i=0; i<np; i++) {
@@ -270,11 +237,6 @@ void System::calcStress()
 			stress_avg->update(total_stress, get_time());
 			total_stress = stress_avg->get();
 		}
-	}
-	if (magnetic) {
-		//total_magnetic_stress =
-		total_stress += total_magnetic_stressXF;
-		total_stress += total_magnetic_stressGU;
 	}
 	if (mobile_fixed) {
 		total_stress += total_hydrofromfixed_stressGU;

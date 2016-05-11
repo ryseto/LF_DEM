@@ -62,10 +62,7 @@ private:
 	 * This can generate monodisperse or binary configurations consisting of two types of 
 	 * particles. 
 	 * It is indicated by "bidisperse" option.
-	 * Ones have magnetic susceptibility 1
-	 * The others have magnetic susceptibility -1.
 	 */
-	bool magnetic_config;
 	bool circulargap_config;
 	bool parallel_wall_config;
 	bool winding_wall_config;
@@ -103,7 +100,6 @@ private:
 public:
 	GenerateInitConfig():
 	sys(System(p, events)),
-	magnetic_config(false),
 	circulargap_config(false),
     parallel_wall_config(false),
 	winding_wall_config(false) {};
@@ -112,7 +108,6 @@ public:
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap
      * config_type = 3 -- simple shear with wall
-     * config_type = 10 -- magnetic
 	 */
 };
 #endif /* defined(__LF_DEM__GenerateInitConfig__) */

@@ -93,14 +93,6 @@ public:
 								std::string control_variable,
 								std::string simu_identifier);
 
-	void simulationMagnetic(std::string in_args,
-							std::vector<std::string>& input_files,
-							bool binary_conf,
-							double dimensionless_number,
-							std::string input_scale,
-							std::string control_variable,
-							std::string simu_identifier);
-
 	void setupSimulation(std::string in_args,
 						 std::vector<std::string>& input_files,
 						 bool binary_conf,
@@ -154,7 +146,6 @@ public:
 	void importConfiguration(const std::string&);
 	void importConfigurationBinary(const std::string&);
 	void readPositionsImposedVelocity(std::fstream &file_import);
-	void readPositionsMagnetic(std::fstream &file_import);
 	void readPositions(std::fstream &file_import);
 	void setMetadata(std::fstream &file_import);
 	void exportForceAmplitudes();
@@ -163,15 +154,12 @@ public:
 	void convertInputValues(std::string new_long_unit);
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
-	void setUnitScaleMagnetic();
 	void setupNonDimensionalization(double dimensionlessnumber,
 									std::string input_scale);
 	void convertInputForcesRateControlled(double dimensionlessnumber,
 										  std::string input_scale);
 	void convertInputForcesStressControlled(double dimensionlessnumber,
 											std::string input_scale);
-	void convertInputForcesMagnetic(double dimensionlessnumber,
-									std::string rate_unit);
 	void catchSuffixedValue(std::string type,
 							std::string keyword,
 							std::string value_str,
@@ -186,7 +174,6 @@ public:
 	void outputDataHeader(std::ofstream& fout);
 	void getSnapshotHeader(std::stringstream& snapshot_header);
 	void outputData();
-	void outputDataMagnetic();
 	void outputConfigurationData();
 	void outputFinalConfiguration(const std::string&);
 	void outputIntFileTxt();
