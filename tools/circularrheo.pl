@@ -325,6 +325,7 @@ sub OutYaplotData{
 	} else {
 		$first = 0;
 		$theta0 = atan2($posz[$np_movable], $posx[$np_movable]);
+		$rwheel = sqrt($posz[$np_movable]*$posz[$np_movable] + $posx[$np_movable]*$posx[$np_movable]);
 	}
 	printf OUT "y 1\n";
 	printf OUT "@ 8\n";
@@ -366,8 +367,8 @@ sub OutYaplotData{
 		$np_in_end = $np_in + $np_movable;
 		$theta = atan2($posz[$np_movable], $posx[$np_movable]) - $theta0;
 		for ($j = 0; $j < 4; $j++) {
-			$xcross = cos($theta+$j*pi/2);
-			$zcross = sin($theta+$j*pi/2);
+			$xcross = $rwheel*cos($theta+$j*pi/2);
+			$zcross = $rwheel*sin($theta+$j*pi/2);
 			printf OUT "s 0 -0.01 0 $xcross -0.01 $zcross\n";
 		}
 	}
