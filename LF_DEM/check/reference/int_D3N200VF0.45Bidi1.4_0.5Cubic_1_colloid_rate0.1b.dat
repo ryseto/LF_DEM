@@ -1,28 +1,23 @@
-# LF_DEM version v2.0-476-g5b678e2-dirty
+# LF_DEM version v2.0-525-gc482fc8
 # np 200
 # VF 0.45
 # Lx 13.9626
 # Ly 13.9626
 # Lz 13.9626
+# data in thermal units.
 #1: particle 1 label
 #2: particle 2 label
 #3: contact state (0 = no contact, 1 = frictionless contact, 2 = non-sliding frictional, 3 = sliding frictional)
-#4: normal vector, oriented from particle 1 to particle 2 x
-#5: normal vector, oriented from particle 1 to particle 2 y
-#6: normal vector, oriented from particle 1 to particle 2 z
+#4-6: normal vector, oriented from particle 1 to particle 2
 #7: dimensionless gap = s-2, s = 2r/(a1+a2)
 #8: normal part of the lubrication force
-#9: tangential part of the lubrication force x
-#10: tangential part of the lubrication force y
-#11: tangential part of the lubrication force z
+#9-11: tangential part of the lubrication force
 #12: norm of the normal part of the contact force
-#13: tangential part of the contact force, x
-#14: tangential part of the contact force, y
-#15: tangential part of the contact force, z
+#13-15: tangential part of the contact force
 #16: norm of the normal repulsive force
 #17: Viscosity contribution of contact xF
 
-# 5e-05 748 0.0005
+# 5e-05 0.00069813 0.1 0 0.0005 
 0 65 0 -0.99367 0.106239 0.036511 0.0502647 168.697 1.21395 7.05259 12.517 0 0 0 0 0 0 
 0 69 0 -0.0580823 0.158888 -0.985587 0.150258 16.0468 -22.0624 -37.4065 -4.7302 0 0 0 0 0 0 
 0 84 0 0.286364 0.958031 -0.0131491 0.0689641 -66.6775 10.9399 -3.40322 -9.70432 0 0 0 0 0 0 
@@ -771,7 +766,7 @@
 45 96 0 0.949349 0.311396 0.0420566 0.491675 -0 0 0 0 0 0 0 0 0 0 
 62 77 0 -0.24011 -0.76169 -0.60181 0.495176 0 0 0 0 0 0 0 0 0 0 
 127 136 0 0.101341 -0.871131 0.48048 0.496154 -0 0 0 0 0 0 0 0 0 0 
-# 0.00045 752 0.0045
+# 0.00045 0.00628317 0.1 0 0.0045 
 0 65 0 -0.996251 0.0840943 0.0203019 0.0670435 82.7124 -1.07125 -24.0333 46.9823 0 0 0 0 0 0 
 0 69 0 -0.131855 0.142524 -0.980969 0.118459 41.2154 -2.85185 -1.33244 0.189738 0 0 0 0 0 0 
 0 84 0 0.302355 0.952652 -0.0321757 0.0322855 105.715 6.93016 -2.40033 -5.94579 0 0 0 0 0 0 

@@ -1,4 +1,4 @@
-# LF_DEM version v2.0-476-g5b678e2-dirty
+# LF_DEM version v2.0-525-gc482fc8
 # np 200
 # VF 0.45
 # Lx 13.9626
@@ -8,42 +8,35 @@
 #1: time
 #2: shear strain
 #3: shear rate
-#4: blank
-#5: viscosity
-#6: Viscosity(lub)
-#7: Viscosity(xF_contact part)
-#8: Viscosity(GU_contact part)
-#9: blank
-#10: blank
-#11: Viscosity(brownian)
-#12: blank
-#13: blank
-#14: shear stress
-#15: N1 viscosity
-#16: N2 viscosity
-#17: particle pressure
-#18: particle pressure contact
-#19: blank
-#20: blank
-#21: energy
-#22: min gap
-#23: max gap(cohesion)
-#24: max tangential displacement
-#25: max rolling displacement
-#26: contact number
-#27: frictional contact number
-#28: number of interaction
-#29: max velocity
-#30: max angular velocity
-#31: dt
-#32: kn
-#33: kt
-#34: kr
-#35: shear displacement x
-#36: shear displacement y
-#37: blank
-0.0001 0.0001 1 n 0.209457 0.20939 0 0 n n 6.63781e-05 n n 0.209457 -0.00233258 -0.00559871 0.0113742 -0 n n 0 0.0570355 0 0 0 0 0 745 27.6591 27.6372 -nan 10000 6000 0 0.0432841 0 n 
-2e-06 0.0002 100 n 3.95033 3.94634 0 0 n n 0.00399195 n n 20.9571 -0.0309946 -0.121341 1.11071 -0 n n 0 0.0562485 0 0 0 0 0 745 2655.6 2867.42 -nan 10000 6000 0 0.0446803 0 n 
-3e-06 0.0003 100 n 3.94226 3.94705 0 0 n n -0.00478794 n n 20.9143 -0.0284736 -0.111604 1.14049 -0 n n 0 0.0556221 0 0 0 0 0 745 2668.24 2657.89 -nan 10000 6000 0 0.0460766 0 n 
-4e-06 0.0004 100 n 3.94587 3.94674 0 0 n n -0.000869875 n n 20.9335 -0.0361954 -0.109012 1.0889 -0 n n 0 0.0559849 0 0 0 0 0 747 2353.57 3195.85 -nan 10000 6000 0 0.0474728 0 n 
-5e-06 0.0005 100 n 3.94565 3.94623 0 0 n n -0.000575734 n n 20.9323 -0.00884192 -0.121906 1.17361 -0 n n 0 0.0561166 0 0 0 0 0 747 2281.08 2607.72 -nan 10000 6000 0 0.0488691 0 n 
+#4: viscosity
+#5: Viscosity(lub)
+#6: Viscosity(xF_contact part)
+#7: Viscosity(GU_contact part)
+#8: Viscosity(brownian)
+#9: shear stress
+#10: N1 viscosity
+#11: N2 viscosity
+#12: particle pressure
+#13: particle pressure contact
+#14: energy
+#15: min gap
+#16: max gap(cohesion)
+#17: max tangential displacement
+#18: max rolling displacement
+#19: contact number
+#20: frictional contact number
+#21: number of interaction
+#22: max velocity
+#23: max angular velocity
+#24: dt
+#25: kn
+#26: kt
+#27: kr
+#28: shear displacement x
+#29: shear displacement y
+
+1e-06 0.0001 100 3.94816 3.94691 0 0 0.0012512 394.816 -0.0439681 -0.105533 21.4399 -0 0 0.0570355 0 0 0 0 0 745 2765.91 2763.72 -nan 10000 6000 0 0.0432841 0 
+2e-06 0.0002 100 3.95033 3.94634 0 0 0.00399195 395.033 -0.0309946 -0.121341 20.9363 -0 0 0.0562485 0 0 0 0 0 745 2655.6 2867.42 -nan 10000 6000 0 0.0446803 0 
+3e-06 0.0003 100 3.94226 3.94705 0 0 -0.00478794 394.226 -0.0284736 -0.111604 21.4978 -0 0 0.0556221 0 0 0 0 0 745 2668.24 2657.89 -nan 10000 6000 0 0.0460766 0 
+4e-06 0.0004 100 3.94587 3.94674 0 0 -0.000869875 394.587 -0.0361954 -0.109012 20.5253 -0 0 0.0559849 0 0 0 0 0 747 2353.57 3195.85 -nan 10000 6000 0 0.0474728 0 
+5e-06 0.0005 100 3.94565 3.94623 0 0 -0.000575734 394.565 -0.00884192 -0.121906 22.122 -0 0 0.0561166 0 0 0 0 0 747 2281.08 2607.72 -nan 10000 6000 0 0.0488691 0 
