@@ -270,7 +270,7 @@ void System::allocatePositionRadius()
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,
-								const vector <double>& radii)
+							  const vector <double>& radii)
 {
 	/**
 		\brief Set positions of the particles for initialization.
@@ -295,9 +295,9 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	} else {
 		twodimension = false;
 	}
-		setSystemVolume();
-		initializeBoxing();
-		checkNewInteraction();
+	setSystemVolume();
+	initializeBoxing();
+	checkNewInteraction();
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -322,7 +322,6 @@ void System::setContacts(const vector <struct contact_state>& cs)
 			}
 		}
 	}
-
 }
 
 void System::getContacts(vector <struct contact_state>& cs)
@@ -658,7 +657,7 @@ void System::setupSystemPostConfiguration()
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
-								position[i].x-origin_of_rotation.x);
+							  position[i].x-origin_of_rotation.x);
 		}
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_in;
 		if (test_simulation == 11) {
@@ -847,15 +846,15 @@ void System::wallForces()
 
 void System::forceResultantReset()
 {
-		for (int i=0; i<np; i++) {
-			forceResultant[i].reset();
-			torqueResultant[i].reset();
-		}
+	for (int i=0; i<np; i++) {
+		forceResultant[i].reset();
+		torqueResultant[i].reset();
+	}
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
-										 double time_end,
-										 double strain_end)
+									   double time_end,
+									   double strain_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -899,8 +898,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
  ****************************************************************************************************/
 
 void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-                                                   double time_end,
-                                                   double strain_end)
+												   double time_end,
+												   double strain_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -1001,8 +1000,8 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 void System::adaptTimeStep()
 {
 	/**
- 	 \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
- */
+	 \brief Adapt the time step so that the maximum relative displacement is p.disp_max .
+	 */
 	if (max_velocity > 0 || max_sliding_velocity > 0) { // small density system can have na_velocity=0
 		if (max_velocity > max_sliding_velocity) {
 			dt = p.disp_max/max_velocity;
@@ -1016,9 +1015,9 @@ void System::adaptTimeStep()
 
 void System::adaptTimeStep(double time_end, double strain_end)
 {
-		/**
-		 \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
-	*/
+	/**
+	 \brief Adapt the time step so that (a) the maximum relative displacement is p.disp_max, and (b) time or strain does not get passed the end value.
+	 */
 	adaptTimeStep();
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
@@ -1348,9 +1347,9 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		size_ff = nb_of_contacts_ff;
 	}
 	if (build_res_mat) {
-				// create a new resistance matrix in stokes_solver
-				stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
-																						resistance_matrix_dblock);
+		// create a new resistance matrix in stokes_solver
+		stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
+											resistance_matrix_dblock);
 		/* [note]
 		 * The resistance matrix is reset with resistance_matrix_dblock,
 		 * which is calculated at the beginning.
@@ -1372,8 +1371,8 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
  */
 void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 {
-		bool shearrate_is_1 = true;
-		if (shear_rate != 1) {
+	bool shearrate_is_1 = true;
+	if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
@@ -1382,27 +1381,27 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-												const vec3d& nr_vec = inter->nvec;
-												inter->lubrication.calcXFunctions();
-												stokes_solver.addToDiagBlock(nr_vec, i,
-																										 inter->lubrication.scaledXA0(), 0, 0, 0);
-												stokes_solver.addToDiagBlock(nr_vec, j,
-																										 inter->lubrication.scaledXA3(), 0, 0, 0);
-												stokes_solver.setOffDiagBlock(nr_vec, j,
-																											inter->lubrication.scaledXA2(), 0, 0, 0, 0);
-										}
-										if (rhs) {
-												vec3d GEi, GEj;
-												std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
-												if (shearrate_is_1 == false) {
-														GEi *= shear_rate;
-														GEj *= shear_rate;
-												}
-												stokes_solver.addToRHSForce(i, GEi);
-												stokes_solver.addToRHSForce(j, GEj);
-										}
-								}
+						const vec3d& nr_vec = inter->nvec;
+						inter->lubrication.calcXFunctions();
+						stokes_solver.addToDiagBlock(nr_vec, i,
+													 inter->lubrication.scaledXA0(), 0, 0, 0);
+						stokes_solver.addToDiagBlock(nr_vec, j,
+													 inter->lubrication.scaledXA3(), 0, 0, 0);
+						stokes_solver.setOffDiagBlock(nr_vec, j,
+													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
+					}
+					if (rhs) {
+						vec3d GEi, GEj;
+						std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
+						if (shearrate_is_1 == false) {
+							GEi *= shear_rate;
+							GEj *= shear_rate;
 						}
+						stokes_solver.addToRHSForce(i, GEi);
+						stokes_solver.addToRHSForce(j, GEj);
+					}
+				}
+			}
 		}
 		stokes_solver.doneBlocks(i);
 	}
@@ -1412,7 +1411,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 
 void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 {
-		bool shearrate_is_1 = true;
+	bool shearrate_is_1 = true;
 	if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
@@ -1435,11 +1434,11 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 													 inter->lubrication.scaledYB3(),
 													 inter->lubrication.scaledYC3());
 						stokes_solver.setOffDiagBlock(nr_vec, j,
-														inter->lubrication.scaledXA1(),
-														inter->lubrication.scaledYA1(),
-														inter->lubrication.scaledYB2(),
-														inter->lubrication.scaledYB1(),
-														inter->lubrication.scaledYC1());
+													  inter->lubrication.scaledXA1(),
+													  inter->lubrication.scaledYA1(),
+													  inter->lubrication.scaledYB2(),
+													  inter->lubrication.scaledYB1(),
+													  inter->lubrication.scaledYC1());
 					}
 					if (rhs) {
 						vec3d GEi, GEj, HEi, HEj;
@@ -1568,82 +1567,82 @@ void System::computeForcesOnWallParticles()
 
 void System::forceResultantLubricationForce()
 {
-		/* Only F = R_FU U is calculated, but R_FE E is not implemented yet.
-		 * So, we cannot check the force balance with E^{inf} yet.
-		 */
-		/*
-		 *  F^{M} = R_FU^{MM} U^{M}
-		 */
-		vector<double> force_m_to_m (6*np_mobile);
-		vector<double> minus_mobile_velocities (6*np_mobile);
+	/* Only F = R_FU U is calculated, but R_FE E is not implemented yet.
+	 * So, we cannot check the force balance with E^{inf} yet.
+	 */
+	/*
+	 *  F^{M} = R_FU^{MM} U^{M}
+	 */
+	vector<double> force_m_to_m (6*np_mobile);
+	vector<double> minus_mobile_velocities (6*np_mobile);
 	for (int i=0; i<np_mobile; i++) {
-				int i6 = 6*i;
-				minus_mobile_velocities[i6  ] = -na_velocity[i].x;
-				minus_mobile_velocities[i6+1] = -na_velocity[i].y;
-				minus_mobile_velocities[i6+2] = -na_velocity[i].z;
-				minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
-				minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
-				minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
-		}
-		stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_m_to_m);
-		for (int i=0; i<np_mobile; i++) {
-				int i6 = 6*i;
-				forceResultant[i].x += force_m_to_m[i6];
-				forceResultant[i].y += force_m_to_m[i6+1];
-				forceResultant[i].z += force_m_to_m[i6+2];
+		int i6 = 6*i;
+		minus_mobile_velocities[i6  ] = -na_velocity[i].x;
+		minus_mobile_velocities[i6+1] = -na_velocity[i].y;
+		minus_mobile_velocities[i6+2] = -na_velocity[i].z;
+		minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
+		minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
+		minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
+	}
+	stokes_solver.multiply_by_RFU_mm(minus_mobile_velocities, force_m_to_m);
+	for (int i=0; i<np_mobile; i++) {
+		int i6 = 6*i;
+		forceResultant[i].x += force_m_to_m[i6];
+		forceResultant[i].y += force_m_to_m[i6+1];
+		forceResultant[i].z += force_m_to_m[i6+2];
 		torqueResultant[i].x += force_m_to_m[i6+3];
 		torqueResultant[i].y += force_m_to_m[i6+4];
 		torqueResultant[i].z += force_m_to_m[i6+5];
-		}
-		if (mobile_fixed) {
-				/*
-				 *  F^{M} += R_FU^{MF} U^{F}
-				 */
-				vector<double> force_f_to_m (6*np_mobile);
-				vector<double> minus_fixed_velocities (6*p.np_fixed);
+	}
+	if (mobile_fixed) {
+		/*
+		 *  F^{M} += R_FU^{MF} U^{F}
+		 */
+		vector<double> force_f_to_m (6*np_mobile);
+		vector<double> minus_fixed_velocities (6*p.np_fixed);
 		for (int i=0; i<p.np_fixed; i++) {
-						int i6 = 6*i;
-						int i_fixed = i+np_mobile;
-						minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
-						minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
-						minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
-						minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
-						minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
-						minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
-				}
-				stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_f_to_m);
+			int i6 = 6*i;
+			int i_fixed = i+np_mobile;
+			minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+			minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+			minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+			minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+			minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+			minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
+		}
+		stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_f_to_m);
 		for (int i=0; i<np_mobile; i++) {
-						int i6 = 6*i;
-						forceResultant[i].x += force_f_to_m[i6];
-						forceResultant[i].y += force_f_to_m[i6+1];
-						forceResultant[i].z += force_f_to_m[i6+2];
+			int i6 = 6*i;
+			forceResultant[i].x += force_f_to_m[i6];
+			forceResultant[i].y += force_f_to_m[i6+1];
+			forceResultant[i].z += force_f_to_m[i6+2];
 			torqueResultant[i].x += force_f_to_m[i6+3];
 			torqueResultant[i].y += force_f_to_m[i6+4];
 			torqueResultant[i].z += force_f_to_m[i6+5];
-				}
-				/*
-				 *  F^{F} += R_FU^{FM} U^{M}
-				 */
+		}
+		/*
+		 *  F^{F} += R_FU^{FM} U^{M}
+		 */
 		vector<double> force_m_to_f (6*p.np_fixed);
-				for (int i=0; i<np_mobile; i++) {
-						int i6 = 6*i;
-						minus_mobile_velocities[i6  ] = -na_velocity[i].x;
-						minus_mobile_velocities[i6+1] = -na_velocity[i].y;
-						minus_mobile_velocities[i6+2] = -na_velocity[i].z;
-						minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
-						minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
-						minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
-				}
-				stokes_solver.multiply_by_RFU_fm(minus_mobile_velocities, force_m_to_f);
-				for (int i=np_mobile; i<np; i++) {
-						int i6 = 6*(i-np_mobile);
-						forceResultant[i].x += force_m_to_f[i6];
-						forceResultant[i].y += force_m_to_f[i6+1];
-						forceResultant[i].z += force_m_to_f[i6+2];
+		for (int i=0; i<np_mobile; i++) {
+			int i6 = 6*i;
+			minus_mobile_velocities[i6  ] = -na_velocity[i].x;
+			minus_mobile_velocities[i6+1] = -na_velocity[i].y;
+			minus_mobile_velocities[i6+2] = -na_velocity[i].z;
+			minus_mobile_velocities[i6+3] = -na_ang_velocity[i].x;
+			minus_mobile_velocities[i6+4] = -na_ang_velocity[i].y;
+			minus_mobile_velocities[i6+5] = -na_ang_velocity[i].z;
+		}
+		stokes_solver.multiply_by_RFU_fm(minus_mobile_velocities, force_m_to_f);
+		for (int i=np_mobile; i<np; i++) {
+			int i6 = 6*(i-np_mobile);
+			forceResultant[i].x += force_m_to_f[i6];
+			forceResultant[i].y += force_m_to_f[i6+1];
+			forceResultant[i].z += force_m_to_f[i6+2];
 			torqueResultant[i].x += force_m_to_f[i6+3];
 			torqueResultant[i].y += force_m_to_f[i6+4];
 			torqueResultant[i].z += force_m_to_f[i6+5];
-				}
+		}
 		/*
 		 *  F^{F} += R_FU^{FF} U^{F}
 		 */
@@ -1668,7 +1667,7 @@ void System::forceResultantLubricationForce()
 			torqueResultant[i].y += force_f_to_f[i6+4];
 			torqueResultant[i].z += force_f_to_f[i6+5];
 		}
-		}
+	}
 }
 
 void System::generateBrownianForces()
@@ -1728,22 +1727,22 @@ void System::setContactForceToParticle()
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-				if (interaction[k].is_contact()) {
-						interaction[k].contact.addUpContactForceTorque();
-				}
+		if (interaction[k].is_contact()) {
+			interaction[k].contact.addUpContactForceTorque();
 		}
+	}
 }
 
 void System::setRepulsiveForceToParticle()
 {
-		if (repulsiveforce) {
-				for (int i=0; i<np; i++) {
+	if (repulsiveforce) {
+		for (int i=0; i<np; i++) {
 			repulsive_force[i].reset();
 		}
-				for (int k=0; k<nb_interaction; k++) {
-						if (interaction[k].is_active()) {
-								interaction[k].repulsion.addUpForce();
-						}
+		for (int k=0; k<nb_interaction; k++) {
+			if (interaction[k].is_active()) {
+				interaction[k].repulsion.addUpForce();
+			}
 		}
 	}
 }
@@ -1995,15 +1994,15 @@ void System::tmpMixedProblemSetVelocities()
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation.z),
-								 0,
-								 omega_wheel_in*(position[i].x-origin_of_rotation.x));
+							   0,
+							   omega_wheel_in*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_wheel_in, 0);
 		}
 		// outer wheel
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation.z),
-								 0,
-								 omega_wheel_out*(position[i].x-origin_of_rotation.x));
+							   0,
+							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
 	} else if (test_simulation == 21) {
@@ -2012,32 +2011,32 @@ void System::tmpMixedProblemSetVelocities()
 			shear_rate *= -1;
 			time_next += 3;
 		}
-		} else if (test_simulation == 31) {
+	} else if (test_simulation == 31) {
 		for (int i=np_mobile; i<np; i++) {
 			na_velocity[i] = shear_rate*fixed_velocities[i-np_mobile];
 			na_ang_velocity[i].reset();
 		}
-		} else if (test_simulation == 41) {
-				int i_np_wall1 = np_mobile+np_wall1;
+	} else if (test_simulation == 41) {
+		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
-				for (int i=np_mobile; i<i_np_wall1; i++) {
-						na_velocity[i].set(-wall_velocity/2, 0, 0);
-						na_ang_velocity[i].reset();
-				}
-				for (int i=i_np_wall1; i<np; i++) {
-						na_velocity[i].set(wall_velocity/2, 0, 0);
-						na_ang_velocity[i].reset();
-				}
-		} else if (test_simulation == 42) {
-				int i_np_wall1 = np_mobile+np_wall1;
+		for (int i=np_mobile; i<i_np_wall1; i++) {
+			na_velocity[i].set(-wall_velocity/2, 0, 0);
+			na_ang_velocity[i].reset();
+		}
+		for (int i=i_np_wall1; i<np; i++) {
+			na_velocity[i].set(wall_velocity/2, 0, 0);
+			na_ang_velocity[i].reset();
+		}
+	} else if (test_simulation == 42) {
+		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
-				for (int i=np_mobile; i<i_np_wall1; i++) {
-						na_velocity[i].reset();
-						na_ang_velocity[i].reset();
-				}
-				for (int i=i_np_wall1; i<np; i++) {
-						na_velocity[i].set(wall_velocity, 0, 0);
-						na_ang_velocity[i].reset();
+		for (int i=np_mobile; i<i_np_wall1; i++) {
+			na_velocity[i].reset();
+			na_ang_velocity[i].reset();
+		}
+		for (int i=i_np_wall1; i<np; i++) {
+			na_velocity[i].set(wall_velocity, 0, 0);
+			na_ang_velocity[i].reset();
 		}
 	} else if (test_simulation == 51) {
 		int i_np_in = np_mobile+np_wall1;
@@ -2050,19 +2049,18 @@ void System::tmpMixedProblemSetVelocities()
 		for (int i=i_np_in; i<np; i++) {
 			if (position[i].x < x1) {
 				na_velocity[i].set(-omega_wheel_out*(position[i].z),
-									 0,
-									 omega_wheel_out*(position[i].x));
+								   0,
+								   omega_wheel_out*(position[i].x));
 				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 			} else if (position[i].x < x2) {
 				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
-									 0,
-									 omega_wheel_in*(position[i].x-origin_of_rotation2.x));
+								   0,
+								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
 				na_ang_velocity[i].set(0, -omega_wheel_in, 0);
-
 			} else {
 				na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
-									 0,
-										omega_wheel_out*(position[i].x-origin_of_rotation3.x));
+								   0,
+								   omega_wheel_out*(position[i].x-origin_of_rotation3.x));
 				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 			}
 		}
@@ -2091,7 +2089,7 @@ void System::sumUpVelocityComponents()
 
 void System::setFixedParticleVelocities()
 {
-		if (test_simulation == 0) {
+	if (test_simulation == 0) {
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
@@ -2370,15 +2368,15 @@ void System::periodize_diff(vec3d& pos_diff)
 void System::setSystemVolume()
 {
 	string indent = "  System::\t";
-		if (z_top == -1) {
-				system_height = lz;
-		} else {
+	if (z_top == -1) {
+		system_height = lz;
+	} else {
 		/* wall particles are at z = z_bot - a and z_top + a
 		 */
 		system_height = z_top-z_bot;
-		}
+	}
 	if (twodimension) {
-				system_volume = lx*system_height;
+		system_volume = lx*system_height;
 		cout << indent << "lx = " << lx << " lz = " << lz << " system_height = " << system_height << endl;
 	} else {
 		system_volume = lx*ly*system_height;
