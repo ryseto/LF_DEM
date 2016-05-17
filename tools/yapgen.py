@@ -93,7 +93,7 @@ def snaps2yap(pos_fname, force_factor):
                     .astype(np.float)
         rad = p[:, pcols['radius']].astype(np.float)
         if is2d:
-            angle = p[:, 14].astype(np.float)
+            angle = p[:, pcols['angle']].astype(np.float)
             particles, crosses = \
                 pyp.get_particles_yaparray(pos, rad, angles=angle)
             yap_out = np.row_stack((yap_out, particles))
