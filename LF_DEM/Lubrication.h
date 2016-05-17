@@ -129,6 +129,10 @@ private:
 	{
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
+	vec3d get_lubforce()
+	{
+		return lubforce_p0;
+	}
 	void addHydroStress();
 	void pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 							   const vec3d& oi, const vec3d& oj,

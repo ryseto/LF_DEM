@@ -230,6 +230,11 @@ void System::analyzeState()
 	max_fc_tan = evaluateMaxFcTangential();
 	countNumberOfContact();
 	calcPotentialEnergy();
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			interaction[k].lubrication.calcPairwiseForce();
+		}
+	}
 }
 
 void System::calcPotentialEnergy()

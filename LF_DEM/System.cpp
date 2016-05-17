@@ -614,6 +614,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}
 	dt = p.dt;
 
+	if (test_simulation == 31) {
+		p.sd_coeff = 1e-4;
+	}
 	angle_output = false;
 	if (twodimension) {
 		angle_output = true;
@@ -761,7 +764,6 @@ void System::eventShearJamming()
 
 void System::forceResultantInterpaticleForces()
 {
-	if (wall_rheology) {
 		for (int i=0; i<np; i++) {
 			forceResultant[i] += contact_force[i];
 		}
@@ -775,7 +777,7 @@ void System::forceResultantInterpaticleForces()
 				forceResultant[i] += repulsive_force[i];
 			}
 		}
-	}
+
 }
 
 void System::wallForces()
@@ -852,6 +854,26 @@ void System::forceResultantReset()
 	}
 }
 
+void System::checkForceBalance()
+{
+	// 1st way: does not work: forceResultand != 0
+	forceResultantReset();
+	forceResultantInterpaticleForces();
+	unsigned int i, j;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].is_active()) {
+			interaction[k].lubrication.calcPairwiseForce();
+			interaction[k].get_par_num(i, j);
+			forceResultant[i] += interaction[k].lubrication.get_lubforce();
+			forceResultant[j] -= interaction[k].lubrication.get_lubforce();
+		}
+	}
+	// 2nd way: works
+	forceResultantReset();
+	forceResultantInterpaticleForces();
+	forceResultantLubricationForce();
+}
+
 void System::timeEvolutionEulersMethod(bool calc_stress,
 										 double time_end,
 										 double strain_end)
@@ -865,7 +887,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
-	if (calc_stress) {
+	if (wall_rheology && calc_stress) {
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
@@ -958,20 +980,22 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_corrector = false;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
-		if (calc_stress) {
-				forceResultantReset();
-				forceResultantInterpaticleForces();
-		}
+	if (wall_rheology && calc_stress) {
+		forceResultantReset();
+		forceResultantInterpaticleForces();
+	}
 	if (p.lubrication_model > 0) {
 		computeVelocities(calc_stress); // divided velocities for stress calculation
 	} else {
 		computeVelocitiesStokesDrag();
 	}
 	if (calc_stress) {
-		wallForces();
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].lubrication.calcPairwiseForce();
+		if (wall_rheology) {
+			wallForces();
+			for (int k=0; k<nb_interaction; k++) {
+				if (interaction[k].is_active()) {
+					interaction[k].lubrication.calcPairwiseForce();
+				}
 			}
 		}
 		calcStressPerParticle(); // stress compornents
@@ -989,14 +1013,12 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	}
 	if (calc_stress) {
 		calcStressPerParticle(); // stress compornents
-		calcStress();
+		if (wall_rheology || lowPeclet) {
+			calcStress();
+		}
 		if (!p.out_particle_stress.empty() || couette_stress) {
 			calcTotalStressPerParticle();
 		}
-	}
-	if (lowPeclet) {
-		// Comupute total stress every time steps for better averaging
-		calcStress();
 	}
 	timeStepMoveCorrector();
 }
@@ -2129,6 +2151,7 @@ void System::computeVelocities(bool divided_velocities)
 			}
 		}
 		sumUpVelocityComponents();
+		// checkForceBalance();
 	} else {
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();

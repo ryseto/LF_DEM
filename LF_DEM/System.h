@@ -140,6 +140,7 @@ private:
 	void forceResultantReset();
 	void forceResultantLubricationForce();
 	void forceResultantInterpaticleForces();
+	void checkForceBalance();
 	void wallForces();
 	bool hasNeighbor(int i, int j);
 
@@ -462,7 +463,7 @@ protected:
 	{
 		return shear_strain;
 	}
-	
+
 	inline double get_angle_wheel()
 	{
 		return angle_wheel;
@@ -472,7 +473,7 @@ protected:
 	{
 		return omega_wheel_in-omega_wheel_out;
 	}
-	
+
 	inline void set_dt(double val)
 	{
 		dt = val;
