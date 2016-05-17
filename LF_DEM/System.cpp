@@ -615,7 +615,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	dt = p.dt;
 
 	if (test_simulation == 31) {
-		p.sd_coeff = 1e-4;
+		p.sd_coeff = 1e-6;
 	}
 	angle_output = false;
 	if (twodimension) {
