@@ -1071,7 +1071,9 @@ std::pair<int,int> Simulation::get_np_Binary(const string& filename_import_posit
 		int binary_format_version;
 		file_import.read((char*)&binary_format_version, sizeof(int));
 		file_import.read((char*)&np, sizeof(int));
-		file_import.read((char*)&np_fixed, sizeof(int));
+		if (binary_format_version == 3) {
+			file_import.read((char*)&np_fixed, sizeof(int));
+		}
 	}
 	file_import.close();
 	return make_pair(np, np_fixed);
