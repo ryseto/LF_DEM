@@ -11,6 +11,7 @@
 from __future__ import print_function
 import sys
 import numpy as np
+import argparse
 import lfdem_file as lf
 import pyaplot as pyp
 
@@ -37,14 +38,27 @@ def read_data(posfile, intfile):
     return pos_frames, int_frames, strains, shear_rates, meta_pos, meta_int
 
 
-def snaps2yap(pos_fname, force_factor):
+def get_normal_force(interactions, coldef_dict):
+    lub_loc = coldef_dict['normal part of the lubrication force']
+    lub_force = interactions[:, lub_loc]
+    cont_loc = coldef_dict['norm of the normal part of the contact force']
+    contact_force = interactions[:, cont_loc]
+    rep_loc = coldef_dict['norm of the normal repulsive force']
+    repulsive_force = interactions[:, rep_loc]
+    return (lub_force + contact_force + repulsive_force).astype(np.float32)
+
+
+def snaps2yap(pos_fname, force_factor=None, force_chain_threshold=None):
+    if force_chain_threshold is None:
+        force_chain_threshold = 0
+
     forces_fname = pos_fname.replace("par_", "int_")
     positions, forces, strains, shear_rates, meta_pos, meta_int =\
         read_data(pos_fname, forces_fname)
     pcols = lf.convert_columndef_to_indices(meta_pos['column def'])
     icols = lf.convert_columndef_to_indices(meta_int['column def'])
 
-    yap_filename = pos_fname.replace("par_", "y_")
+    yap_filename = pos_fname.replace("par_", "y_").replace(".dat", ".yap")
     yap_file = open(yap_filename, 'wb')
 
     nb_of_frames = len(strains)
@@ -56,31 +70,32 @@ def snaps2yap(pos_fname, force_factor):
 
         # display a line joining the center of interacting particles
         # with a thickness proportional to the normal force
-        lub_force = f[:, icols['normal part of the lubrication force']]
-        contact_force =\
-            f[:, icols['norm of the normal part of the contact force']] +\
-            f[:, icols['norm of the normal repulsive force']]
-
-        normal_forces = (lub_force + contact_force).astype(np.float32)
+        normal_forces = get_normal_force(f, icols)
         #  convert the force to a thickness. case-by-case.
         if force_factor is None:
-            force_factor = 1/np.max(np.abs(normal_forces))
+            force_factor = 0.5/np.max(np.abs(normal_forces))
         normal_forces = force_factor*np.abs(normal_forces)
+        avg_force = np.mean(np.abs(normal_forces))
+        large_forces = normal_forces > force_chain_threshold * avg_force
 
         contact_state = f[:, lf.strdict_get(icols, 'contact state')[1]]
 
+        # contacts
+        keep = np.logical_and(contact_state > 0, large_forces)
         yap_out = pyp.layer_switch(1)
         yap_out = pyp.add_color_switch(yap_out, 4)
         contact_bonds =\
-            pyp.get_interactions_yaparray(r1r2[contact_state > 0],
-                                          normal_forces[contact_state > 0])
+            pyp.get_interactions_yaparray(r1r2[keep],
+                                          normal_forces[keep])
         yap_out = np.row_stack((yap_out, contact_bonds))
 
+        # non contacts
+        keep = np.logical_and(contact_state == 0, large_forces)
         yap_out = pyp.add_layer_switch(yap_out, 2)
         yap_out = pyp.add_color_switch(yap_out, 5)
         non_contact_bonds =\
-            pyp.get_interactions_yaparray(r1r2[contact_state == 0],
-                                          normal_forces[contact_state == 0])
+            pyp.get_interactions_yaparray(r1r2[keep],
+                                          normal_forces[keep])
         yap_out = np.row_stack((yap_out, non_contact_bonds))
 
         # display a circle for every particle
@@ -157,17 +172,16 @@ def conf2yap(conf_fname):
 
     pyp.savetxt(yap_filename, yap_out)
 
-if len(sys.argv) < 2:
-    print(sys.argv[0], " par_or_conf_file [force_factor]\n")
-    exit(1)
+parser = argparse.ArgumentParser()
+parser.add_argument('-ff', '--force-factor', type=float)
+parser.add_argument('-ft', '--force-threshold', type=float)
+parser.add_argument('file')
 
-pos_fname = sys.argv[1]
+args = vars(parser.parse_args(sys.argv[1:]))
 
-if pos_fname.find("par_") > -1:
-    if len(sys.argv) > 2:
-        force_factor = float(sys.argv[2])
-    else:
-        force_factor = None
-    snaps2yap(pos_fname, force_factor)
+if args['file'].find("par_") > -1:
+    snaps2yap(args['file'],
+              force_factor=args['force_factor'],
+              force_chain_threshold=args['force_threshold'])
 else:
-    conf2yap(pos_fname)
+    conf2yap(args['file'])
