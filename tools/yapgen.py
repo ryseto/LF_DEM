@@ -48,7 +48,10 @@ def get_normal_force(interactions, coldef_dict):
     return (lub_force + contact_force + repulsive_force).astype(np.float32)
 
 
-def snaps2yap(pos_fname, force_factor=None, force_chain_threshold=None):
+def snaps2yap(pos_fname,
+              yap_file,
+              force_factor=None,
+              force_chain_threshold=None):
     if force_chain_threshold is None:
         force_chain_threshold = 0
 
@@ -58,8 +61,7 @@ def snaps2yap(pos_fname, force_factor=None, force_chain_threshold=None):
     pcols = lf.convert_columndef_to_indices(meta_pos['column def'])
     icols = lf.convert_columndef_to_indices(meta_int['column def'])
 
-    yap_filename = pos_fname.replace("par_", "y_").replace(".dat", ".yap")
-    yap_file = open(yap_filename, 'wb')
+
 
     nb_of_frames = len(strains)
     is2d = meta_pos['Ly'] == 0
@@ -138,11 +140,9 @@ def snaps2yap(pos_fname, force_factor=None, force_chain_threshold=None):
             # to work with Python 2.7.* importing print_function without flush
             print(out_str, end="")
     print("")
-    yap_file.close()
 
 
-def conf2yap(conf_fname):
-    yap_filename = pos_fname.replace(".dat", ".yap")
+def conf2yap(conf_fname, yap_filename):
     print("Yap file : ", yap_filename)
     positions, radii, meta = lf.read_conf_file(conf_fname)
     positions[:, 0] -= float(meta['lx'])/2
@@ -175,13 +175,27 @@ def conf2yap(conf_fname):
 parser = argparse.ArgumentParser()
 parser.add_argument('-ff', '--force-factor', type=float)
 parser.add_argument('-ft', '--force-threshold', type=float)
+parser.add_argument('-o', '--output')
 parser.add_argument('file')
 
 args = vars(parser.parse_args(sys.argv[1:]))
 
 if args['file'].find("par_") > -1:
+    if args['output'] is None:
+        yap_filename =\
+            args['file'].replace("par_", "y_").replace(".dat", ".yap")
+    else:
+        yap_filename = args['output']
+    yap_file = open(yap_filename, 'wb')
     snaps2yap(args['file'],
+              yap_file,
               force_factor=args['force_factor'],
               force_chain_threshold=args['force_threshold'])
+    yap_file.close()
+
 else:
-    conf2yap(args['file'])
+    if args['output'] is None:
+        yap_filename = args['file'].replace(".dat", ".yap")
+    else:
+        yap_filename = args['output']
+    conf2yap(args['file'], yap_filename)
