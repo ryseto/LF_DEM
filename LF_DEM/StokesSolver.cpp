@@ -573,9 +573,9 @@ void StokesSolver::addToRHS(int first_particle, const vector<double>& force)
 void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 {
 	auto size = 2*mobile_particle_nb;
-	if (force_and_torque.size() != size) {
-		throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
-	}
+	// if (force_and_torque.size() != size) {
+	// 	throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
+	// }
 	for (auto i=0u; i<size; i++) {
 		auto i3 = 3*i;
 		((double*)chol_rhs->x)[i3  ] = force_and_torque[i].x;
