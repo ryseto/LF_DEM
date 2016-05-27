@@ -65,7 +65,7 @@ void StokesSolver::init(int np_total, int np_mobile)
 
 	dblocks_cntnonzero.resize(6);
 	for (int i=0; i<6; i++) {
-		dblocks_cntnonzero[i] = db_layout[i].size();
+		dblocks_cntnonzero[i] = (int)db_layout[i].size();
 	}
 }
 
@@ -131,18 +131,18 @@ void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
 	if (mobile_matrix_done) {
 		// FF Matrix
 		odbrows_ff.push_back(6*(jj-mobile_particle_nb));
-		int i = (int)odbrows_ff.size()-1;
+		auto i = odbrows_ff.size()-1;
 		odblocks_ff[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 	} else {
 		if (jj < mobile_particle_nb) {
 			// MM matrix
 			odbrows.push_back(6*jj);
-			int i = (int)odbrows.size()-1;
+			auto i = odbrows.size()-1;
 			odblocks[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 		} else {
 			// MF matrix
 			odbrows_mf.push_back(6*(jj-mobile_particle_nb));
-			int i = (int)odbrows_mf.size()-1;
+			auto i = odbrows_mf.size()-1;
 			odblocks_mf[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
 		}
 	}
@@ -153,12 +153,12 @@ void StokesSolver::insertDBlockValues(double *matrix_x,
 									  const vector<int>& index_chol_ix,
 									  const struct DBlock& b)
 {
-	int pcol0 = index_chol_ix[0];
-	int pcol1 = index_chol_ix[1];
-	int pcol2 = index_chol_ix[2];
-	int pcol3 = index_chol_ix[3];
-	int pcol4 = index_chol_ix[4];
-	int pcol5 = index_chol_ix[5];
+	auto pcol0 = index_chol_ix[0];
+	auto pcol1 = index_chol_ix[1];
+	auto pcol2 = index_chol_ix[2];
+	auto pcol3 = index_chol_ix[3];
+	auto pcol4 = index_chol_ix[4];
+	auto pcol5 = index_chol_ix[5];
 	// diagonal blocks row values (21)
 	matrix_x[pcol0  ] =  b.col0[0];   // column j6
 	matrix_x[pcol0+1] =  b.col0[1];
@@ -184,7 +184,7 @@ void StokesSolver::insertODBlockValues(double *matrix_x,
 									   const vector<int>& index_chol_ix,
 									   const struct ODBlock& b)
 {
-	int start_index = index_chol_ix[0];
+	auto start_index = index_chol_ix[0];
 	matrix_x[start_index   ] =  b.col0[0]; // A   // column j6
 	matrix_x[start_index +1] =  b.col0[1];
 	matrix_x[start_index +2] =  b.col0[2];
@@ -246,9 +246,9 @@ void StokesSolver::insertDBlockRows(int *matrix_i, const vector<int>& index_valu
 	 through a vector of indices index_values.
 	 */
 	for (int col=0; col<6; col++) {
-		int slim = dblocks_cntnonzero[col];
-		int index_start = index_values[col];
-		for (int s=0; s<slim; s++) {
+		auto slim = dblocks_cntnonzero[col];
+		auto index_start = index_values[col];
+		for (decltype(slim) s=0; s<slim; s++) {
 			matrix_i[index_start+s] = top_row_nb + db_layout[col][s];
 		}
 	}
@@ -262,8 +262,8 @@ void StokesSolver::insertODBlockRows(int *matrix_i, const vector<int>& index_val
 	 through a vector of indices index_values.
 	 */
 	for (int col=0; col<6; col++) {
-		int index_start = index_values[col];
-		vector<int> &layout = odb_layout[col];
+		auto index_start = index_values[col];
+		auto &layout = odb_layout[col];
 		for (int s=0; s<5; s++) {
 			matrix_i[index_start+s] = top_row_nb + layout[s];
 		}
@@ -337,7 +337,7 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
-	for (int j=0; j<mobile_particle_nb; j++) {
+	for (decltype(mobile_particle_nb) j=0; j<mobile_particle_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -351,8 +351,8 @@ void StokesSolver::completeResistanceMatrix_MobileMobile()
 		//
 		// for 6j+2 --> 6j+5: same idea
 
-		int j6 = 6*j;
-		int od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
+		auto j6 = 6*j;
+		auto od_nzero_nb = 5*(odbrows_table[j+1]-odbrows_table[j]);
 		index_chol_ix[0] = 18*j+30*odbrows_table[j];
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
@@ -386,7 +386,7 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
 
-	for (int j=0; j<fixed_particle_nb; j++) {
+	for (decltype(fixed_particle_nb) j=0; j<fixed_particle_nb; j++) {
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
 		// { 6j, ... , 6j+5 }
@@ -401,7 +401,7 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 		// for 6j+2 --> 6j+5: same idea
 
 		//int j6 = 6*j;
-		int od_nzero_nb = 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j]);
+		auto od_nzero_nb = 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j]);
 		index_chol_ix[0] = 18*j+30*odbrows_table_ff[j];
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+dblocks_cntnonzero[col-1]+od_nzero_nb; // nb before previous + elements in previous
@@ -413,7 +413,7 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 			index_chol_ix[col] +=  dblocks_cntnonzero[col];
 		}
 		/********  2  : off-diagonal blocks blocks elements ***********/
-		for (int k = odbrows_table_ff[j]; k<odbrows_table_ff[j+1]; k++) {
+		for (auto k = odbrows_table_ff[j]; k<odbrows_table_ff[j+1]; k++) {
 			insertODBlock(chol_res_matrix_ff, index_chol_ix, odbrows_ff[k], odblocks_ff[k]);
 			for (int col=0; col<6; col++) {
 				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
@@ -435,7 +435,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	}
 	// the vector index_chol_ix tracks the indices in the i and x arrays of the cholmod matrix for the 6 columns
 	vector<int> index_chol_ix(6);
-	for (int j=0; j<mobile_particle_nb; j++) {
+	for (decltype(mobile_particle_nb) j=0; j<mobile_particle_nb; j++) {
 
 		/******* Initialize index_chol_ix for this column of blocks **************/
 		// associated with particle j are 6 columns in the matrix:
@@ -449,14 +449,14 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 		//
 		// for 6j+2 --> 6j+5: same idea
 
-		int od_nzero_nb = 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j]);
+		auto od_nzero_nb = 5*(odbrows_table_mf[j+1]-odbrows_table_mf[j]);
 		index_chol_ix[0] = 30*odbrows_table_mf[j];
 		for (int col=1; col<6; col++) {
 			index_chol_ix[col] = index_chol_ix[col-1]+od_nzero_nb; // nb before previous + elements in previous
 		}
 		insertBlockColumnIndices((int*)chol_res_matrix_mf->p+6*j, index_chol_ix);
 
-		for (int k=odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
+		for (auto k=odbrows_table_mf[j]; k<odbrows_table_mf[j+1]; k++) {
 			insertODBlock(chol_res_matrix_mf, index_chol_ix, odbrows_mf[k], odblocks_mf[k]);
 			for (int col=0; col<6; col++) {
 				index_chol_ix[col] += 5;// 5 non-zero elements per columns in odblocks
@@ -465,7 +465,7 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 	}
 	// tell cholmod where the last column stops
 	// nb of non-zero elements in column col_nb-1 is 5*(odbrows_table_mf[col_nb]-odbrows_table_mf[col_nb-1]) (as it is an off diagonal matrix)
-	int nzero_nb_last_col = 5*(odbrows_table_mf[mobile_particle_nb]-odbrows_table_mf[mobile_particle_nb-1]);
+	auto nzero_nb_last_col = 5*(odbrows_table_mf[mobile_particle_nb]-odbrows_table_mf[mobile_particle_nb-1]);
 	// so the last element in chol_res_matrix_mf->p must be
 	((int*)chol_res_matrix_mf->p)[6*mobile_particle_nb] = ((int*)chol_res_matrix_mf->p)[6*mobile_particle_nb-1] + nzero_nb_last_col;
 }
@@ -476,7 +476,7 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 										 const vector<struct DBlock> &reset_resmat_dblocks)
 {
 	odblocks_nb = nb_of_interactions_mm;
-	for (unsigned int i=0; i<dblocks.size(); i++) {
+	for (auto i=0u; i<dblocks.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i];
 	}
 	odbrows.clear();
@@ -498,7 +498,7 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 
 	// for the mixed problem
 	odblocks_nb_ff = nb_of_interactions_ff;
-	for (unsigned int i=0; i<dblocks_ff.size(); i++) {
+	for (auto i=0u; i<dblocks_ff.size(); i++) {
 		dblocks_ff[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
 	odbrows_ff.clear();
@@ -511,16 +511,16 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 
 void StokesSolver::resetRHS()
 {
-	int size = chol_rhs->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_rhs->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
 }
 
 void StokesSolver::resetRHStorque()
 {
-	int size = chol_rhs->nrow;
-	for (int i=3; i<size; i+=6) {
+	auto size = chol_rhs->nrow;
+	for (decltype(size) i=3; i<size; i+=6) {
 		((double*)chol_rhs->x)[i  ] = 0;
 		((double*)chol_rhs->x)[i+1] = 0;
 		((double*)chol_rhs->x)[i+2] = 0;
@@ -530,7 +530,7 @@ void StokesSolver::resetRHStorque()
 void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
-		int i6 = 6*i;
+		auto i6 = 6*i;
 		((double*)chol_rhs->x)[i6  ] += force_i.x;
 		((double*)chol_rhs->x)[i6+1] += force_i.y;
 		((double*)chol_rhs->x)[i6+2] += force_i.z;
@@ -540,7 +540,7 @@ void StokesSolver::addToRHSForce(int i, const vec3d& force_i)
 void StokesSolver::addToRHSTorque(int i, const vec3d& torque_i)
 {
 	if (i < mobile_particle_nb) {
-		int i6_3 = 6*i+3;
+		auto i6_3 = 6*i+3;
 		((double*)chol_rhs->x)[i6_3  ] += torque_i.x;
 		((double*)chol_rhs->x)[i6_3+1] += torque_i.y;
 		((double*)chol_rhs->x)[i6_3+2] += torque_i.z;
@@ -549,35 +549,35 @@ void StokesSolver::addToRHSTorque(int i, const vec3d& torque_i)
 
 void StokesSolver::addToRHS(double* rhs)
 {
-	int size = chol_rhs->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_rhs->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		((double*)chol_rhs->x)[i] += rhs[i];
 	}
 }
 
 void StokesSolver::addToRHS(const vector<double>& force)
 {
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (auto i=0u; i<force.size(); i++) {
 		((double*)chol_rhs->x)[i] += force[i];
 	}
 }
 
 void StokesSolver::addToRHS(int first_particle, const vector<double>& force)
 {
-	int shift = 6*first_particle;
-	for (unsigned int i=0; i<force.size(); i++) {
+	auto shift = 6*first_particle;
+	for (auto i=0u; i<force.size(); i++) {
 		((double*)chol_rhs->x)[i+shift] += force[i];
 	}
 }
 
 void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 {
-	unsigned int size = 2*mobile_particle_nb;
+	auto size = 2*mobile_particle_nb;
 	if (force_and_torque.size() != size) {
 		throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
 	}
-	for (unsigned int i=0; i<size; i++) {
-		int i3 = 3*i;
+	for (auto i=0u; i<size; i++) {
+		auto i3 = 3*i;
 		((double*)chol_rhs->x)[i3  ] = force_and_torque[i].x;
 		((double*)chol_rhs->x)[i3+1] = force_and_torque[i].y;
 		((double*)chol_rhs->x)[i3+2] = force_and_torque[i].z;
@@ -587,7 +587,7 @@ void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
-		int i6 = 6*i;
+		auto i6 = 6*i;
 		((double*)chol_rhs->x)[i6  ] = force_i.x;
 		((double*)chol_rhs->x)[i6+1] = force_i.y;
 		((double*)chol_rhs->x)[i6+2] = force_i.z;
@@ -597,7 +597,7 @@ void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 void StokesSolver::setRHSTorque(int i, const vec3d& torque_i)
 {
 	if (i < mobile_particle_nb) {
-		int i6_3 = 6*i+3;
+		auto i6_3 = 6*i+3;
 		((double*)chol_rhs->x)[i6_3  ] = torque_i.x;
 		((double*)chol_rhs->x)[i6_3+1] = torque_i.y;
 		((double*)chol_rhs->x)[i6_3+2] = torque_i.z;
@@ -627,9 +627,9 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &X)
 	cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c); // chol_Psolution = Lc*Y
 	chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_Psolution, &chol_c); // chol_solution = P^T*chol_Psolution
 
-	int size = chol_solution->nrow/3;
-	for (int i=0; i<size; i++) {
-		int i3 = 3*i;
+	auto size = chol_solution->nrow/3;
+	for (decltype(size) i=0; i<size; i++) {
+		auto i3 = 3*i;
 		X[i].x = ((double*)chol_solution->x)[i3  ];
 		X[i].y = ((double*)chol_solution->x)[i3+1];
 		X[i].z = ((double*)chol_solution->x)[i3+2];
@@ -642,9 +642,9 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &X)
 void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 {
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-	int size = chol_solution->nrow/6;
-	for (int i=0; i<size; i++) {
-		int i6 = 6*i;
+	auto size = chol_solution->nrow/6;
+	for (decltype(size) i=0; i<size; i++) {
+		auto i6 = 6*i;
 		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
 		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
 		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
@@ -658,9 +658,9 @@ void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-	int size = chol_solution->nrow/6;
-	for (int i=0; i<size; i++) {
-		int i6 = 6*i;
+	auto size = chol_solution->nrow/6;
+	for (decltype(size) i=0; i<size; i++) {
+		auto i6 = 6*i;
 		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
 		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
 		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
@@ -673,8 +673,8 @@ void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 
 void StokesSolver::vec3dToDouble(double *a, const vector<vec3d>& b, const vector<vec3d>& c)
 {
-	for (unsigned int i=0; i<b.size(); i++) {
-		int i6 = 6*i;
+	for (auto i=0u; i<b.size(); i++) {
+		auto i6 = 6*i;
 		a[i6  ] = b[i].x;
 		a[i6+1] = b[i].y;
 		a[i6+2] = b[i].z;
@@ -686,8 +686,8 @@ void StokesSolver::vec3dToDouble(double *a, const vector<vec3d>& b, const vector
 
 void StokesSolver::doubleToVec3d(double *a, vector<vec3d>& b, vector<vec3d>& c)
 {
-	for (unsigned int i=0; i<b.size(); i++) {
-		int i6 = 6*i;
+	for (auto i=0u; i<b.size(); i++) {
+		auto i6 = 6*i;
 		b[i].x = a[i6  ];
 		b[i].y = a[i6+1];
 		b[i].z = a[i6+2];
@@ -703,12 +703,12 @@ void StokesSolver::multiply_by_RFU_mm(vector<double>& velocity, vector<double>& 
 	double zero[] = {0, 0};
 	// chol_vel_mob->x = velocity.data();
 	// see multiply_by_RFU_mf for the rationale about copying the data, not the pointer
-	int size = chol_vel_mob->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_vel_mob->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		((double*)chol_vel_mob->x)[i] = velocity[i];
 	}
 	cholmod_sdmult(chol_res_matrix, 1, one, zero, chol_vel_mob, chol_force_mob, &chol_c);
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (auto i=0u; i<force.size(); i++) {
 		force[i] = ((double*)chol_force_mob->x)[i];
 	}
 }
@@ -724,12 +724,12 @@ void StokesSolver::multiply_by_RFU_mf(vector<double>& velocity, vector<double>& 
 	// using chol_vel_fix->x, chaos...
 	// [ Note that this very function is fine as it will reassign a valid pointer to chol_vel_fix->x,
 	// but other functions will not (that's how I noticed it was evil :)) ]
-	int size = chol_vel_fix->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_vel_fix->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		((double*)chol_vel_fix->x)[i] = velocity[i];
 	}
 	cholmod_sdmult(chol_res_matrix_mf, 1, one, zero, chol_vel_fix, chol_force_mob, &chol_c);
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (auto i=0u; i<force.size(); i++) {
 		force[i] = ((double*)chol_force_mob->x)[i];
 	}
 }
@@ -739,12 +739,12 @@ void StokesSolver::multiply_by_RFU_fm(vector<double>& velocity, vector<double>& 
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
 	// chol_vel_mob->x = velocity.data(); // see multiply_by_RFU_mf for the rationale about copying the data, not the pointer
-	int size = chol_vel_mob->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_vel_mob->nrow;
+	for (decltype(size) i=0u; i<size; i++) {
 		((double*)chol_vel_mob->x)[i] = velocity[i];
 	}
 	cholmod_sdmult(chol_res_matrix_mf, 0, one, zero, chol_vel_mob, chol_force_fix, &chol_c);
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (auto i=0u; i<force.size(); i++) {
 		force[i] = ((double*)chol_force_fix->x)[i];
 	}
 }
@@ -767,12 +767,12 @@ void StokesSolver::multiply_by_RFU_ff(vector<double>& velocity, vector<double>& 
 	double zero[] = {0, 0};
 	// chol_vel_fix->x = velocity.data();
 	// see multiply_by_RFU_mf for the rationale about copying the data, not the pointer
-	int size = chol_vel_fix->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_vel_fix->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		((double*)chol_vel_fix->x)[i] = velocity[i];
 	}
 	cholmod_sdmult(chol_res_matrix_ff, 1, one, zero, chol_vel_fix, chol_force_fix, &chol_c);
-	for (unsigned int i=0; i<force.size(); i++) {
+	for (auto i=0u; i<force.size(); i++) {
 		force[i] = ((double*)chol_force_fix->x)[i];
 	}
 }
@@ -798,8 +798,8 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
 	cholmod_sdmult(chol_res_matrix, 1, one, zero, chol_solution, r, &chol_c);
-	int size = r->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = r->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		vec[i] = ((double*)r->x)[i];
 	}
 	cholmod_free_dense(&r, &chol_c);
@@ -829,15 +829,15 @@ void StokesSolver::allocateRessources()
 	odbrows_table_ff.resize(fixed_particle_nb+1);
 	dblocks_ff.resize(fixed_particle_nb);
 	cholmod_start(&chol_c);
-	int size_mm = 6*mobile_particle_nb;
-	int size_ff = 6*fixed_particle_nb;
+	auto size_mm = 6*mobile_particle_nb;
+	auto size_ff = 6*fixed_particle_nb;
 	chol_rhs       = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
 	chol_vel_mob   = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
 	chol_vel_fix   = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
 	chol_force_mob = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c);
 	chol_force_fix = cholmod_allocate_dense(size_ff, 1, size_ff, CHOLMOD_REAL, &chol_c);
 	chol_Psolution = cholmod_allocate_dense(size_mm, 1, size_mm, CHOLMOD_REAL, &chol_c); // used for Brownian motion
-	for (int i=0; i<size_mm; i++) {
+	for (decltype(size_mm) i=0; i<size_mm; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
 	chol_L = NULL;
@@ -851,19 +851,19 @@ void StokesSolver::allocateResistanceMatrix()
 	int packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	// allocate
 	int nzmax; // non-zero values
-	int size_mm = 6*dblocks.size();
-	nzmax = 18*dblocks.size(); // diagonal blocks
+	auto size_mm = 6*dblocks.size();
+	nzmax = 18*(int)dblocks.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb;   // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 
-	int col_nb = 6*mobile_particle_nb;
-	int row_nb = 6*fixed_particle_nb;
+	auto col_nb = 6*mobile_particle_nb;
+	auto row_nb = 6*fixed_particle_nb;
 	nzmax = 30*odblocks_nb_mf;  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
 	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
 
-	int size_ff = 6*fixed_particle_nb;
-	nzmax = 18*dblocks_ff.size(); // diagonal blocks
+	auto size_ff = 6*fixed_particle_nb;
+	nzmax = 18*(int)dblocks_ff.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb_ff;  // off-diagonal
 	chol_res_matrix_ff = cholmod_allocate_sparse(size_ff, size_ff, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 }
@@ -947,24 +947,24 @@ void StokesSolver::printResistanceMatrix(ostream& out, string sparse_or_dense)
 {
 	if (sparse_or_dense == "sparse") {
 		//		out << endl<< " chol res " << endl;
-		int size = chol_res_matrix->nrow;
-		for (int i = 0; i<size; i++) {
-			for (int k =((int*)chol_res_matrix->p)[i]; k<((int*)chol_res_matrix->p)[i+1]; k++) {
+		auto size = chol_res_matrix->nrow;
+		for (decltype(size) i = 0; i<size; i++) {
+			for (auto k =((int*)chol_res_matrix->p)[i]; k<((int*)chol_res_matrix->p)[i+1]; k++) {
 				out << i << " " << ((int*)chol_res_matrix->i)[k] << " " << ((double*)chol_res_matrix->x)[k] << endl;
 			}
 		}
 	}
 	if (sparse_or_dense == "dense") {
 		cholmod_dense* dense_res = cholmod_sparse_to_dense(chol_res_matrix, &chol_c);
-		int size = chol_res_matrix->nrow;
-		for (int i = 0; i<size; i++) {
+		auto size = chol_res_matrix->nrow;
+		for (decltype(size) i = 0; i<size; i++) {
 			// if(i==0){
 			// 	for (int j = 0; j < size/6; j++) {
 			// 		out << j << "\t \t \t \t \t \t" ;
 			// 	}
 			// 	out << endl;
 			// }
-			for (int j = 0; j<size; j++) {
+			for (decltype(size) j = 0; j<size; j++) {
 				out << setprecision(3) << ((double*)dense_res->x)[i+j*size] << "\t" ;
 			}
 			out << endl;
@@ -986,7 +986,7 @@ void StokesSolver::printFactor(ostream& out)
 	double beta[] = {0, 0};
 	cholmod_dense *dense_res = cholmod_sparse_to_dense(chol_res_matrix, &chol_c);
 	cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_L_dense, dense_res, &chol_c);
-	int size = chol_res_matrix->nrow;
+	auto size = chol_res_matrix->nrow;
 	// out << " Cholesky factor" << endl;
 	// for (int i = 0; i < size; i++) {
 	// 		// if(i==0){
@@ -1002,14 +1002,14 @@ void StokesSolver::printFactor(ostream& out)
 	// }
 	// out << endl;
 	//		out << " Cholesky squared  " << endl;
-	for (int i = 0; i<size; i++) {
+	for (decltype(size) i = 0; i<size; i++) {
 		// if(i==0){
 		// 	for (int j = 0; j < size/6; j++) {
 		// 		out << j << "\t \t \t \t \t \t" ;
 		// 	}
 		// 	out << endl;
 		// }
-		for (int j=0; j<size; j++) {
+		for (decltype(size) j=0; j<size; j++) {
 			out << setprecision(3) << ((double*)dense_res->x)[i+j*size] << "\t" ;
 		}
 		out << endl;
@@ -1025,8 +1025,8 @@ void StokesSolver::printFactor(ostream& out)
 // testing
 void StokesSolver::printRHS()
 {
-	int size = chol_rhs->nrow;
-	for (int i=0; i<size; i++) {
+	auto size = chol_rhs->nrow;
+	for (decltype(size) i=0; i<size; i++) {
 		cout << i << " (part " << " " << (i-i%6)/6 << " )  " << ((double*)chol_rhs->x)[i] << endl;
 	}
 }
