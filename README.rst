@@ -8,6 +8,8 @@ LF\_DEM
 Requirements
 ------------
 
+LF\_DEM needs a C++11 compatible compiler.
+
 LF\_DEM requires the sparse linear algebra software `SuiteSparse
 <http://faculty.cse.tamu.edu/davis/suitesparse.html>`__ to be
 installed. SuiteSparse is easy to compile from sources. For Ubuntu
@@ -15,22 +17,17 @@ users, there is a SuiteSparse package `libsuitesparse-dev` which is
 not the latest SuiteSparse version, but is the simplest possible
 installation.
 
-To install SuiteSparse on CUNY-HPPC, see `these
-instructions <./SuiteSparse_Install.md>`__.
+To install SuiteSparse (prior to version 4.5) on CUNY-HPPC, see `these
+instructions <./SuiteSparse_Install.md>`__. Later versions of SuiteSparse
+have a different build process (see below), untested so far on CUNY-HPPC.
 
-You also need a C++ compiler compatible with at least part of the C++11
-standard (at the moment ``auto`` type and range-based ``for`` loops).
-The following compilers should be fine:
-
-+------------+-----------+
-| compiler   | version   |
-+============+===========+
-| gcc        | >= 4.6    |
-+------------+-----------+
-| icc        | >= 13.0   |
-+------------+-----------+
-| clang      | >= 3.0    |
-+------------+-----------+
+Be aware that SuiteSparse switched from building a static
+library to building a dynamic library from version 4.5.3.
+In the latter case, keep in mind that you have to access the shared version
+of the library at runtime, so SuiteSparse must be installed in a
+default library folder (e.g. ``/usr/local/`` on GNU/Linux)
+or you must append SuiteSparse install folder to your LD path
+(usually via ``LD_LIBRARY_PATH`` on GNU/Linux).
 
 Getting the code
 ----------------
@@ -52,13 +49,8 @@ You can get the code by typing in a terminal:
 
 This will download the current sources (and also the past sources).
 
-If at any point in the future you want the latest sources of the code:
-
-::
-
-    $ git pull
-
-and that's it!
+Intro to git `short <https://try.github.io/levels/1/challenges/1>`__,
+or `more complete <https://git-scm.com/docs/gittutorial>`__.
 
 By direct download
 ~~~~~~~~~~~~~~~~~~
@@ -75,7 +67,9 @@ to compile) that you have to provide in ``LF_DEM/config/Makefile_config.mk``.
 The file ``Makefile_config.mk`` is not provided in the sources
 because it contains variables that will depend on your environment.
 You can create  ``Makefile_config.mk`` by modifying the example configurations provided in the
-``LF_DEM/config/`` folder.
+``LF_DEM/config/`` folder. There is a bunch of ``Makefile_config.mk`` examples
+under the names ``LF_DEM/config/Makefile_config_*``, from which you can cook
+your own.
 
 Once you created ``Makefile_config.mk``, you can simply compile in a
 terminal via:
@@ -102,7 +96,7 @@ files. The general syntax is:
     $ LF_DEM [-r shear_rate ] [-s shear_stress ] [-k kn_kt_File] Configuration_File Parameter_File
 
 where ``Configuration_File`` contains the initial positions and
-``Parameter_File`` the (many) simulation parameters. Either the shea
+``Parameter_File`` the (many) simulation parameters. Either the shear
 rate or the shear stress must be given in input (but not both). You must
 enter them with their units as a suffix (see below). The ``kn_kt_File``
 is an optional file which specifies the contact stiffnesses as a
@@ -200,15 +194,7 @@ unit too). It does not work in the Brownian case.
 Other options
 ^^^^^^^^^^^^^
 
-+---------------------------+---------------------------------------------------------------------------------------------+
-| Option                    | Role                                                                                        |
-+===========================+=============================================================================================+
-| ``-k  kn_kt_File``        | list of ``volume_fraction kn kt dtmax`` to use volume fraction dependent spring constants   |
-+---------------------------+---------------------------------------------------------------------------------------------+
-| ``-i Provisional_Data``   | expected shear rates in stress-controlled mode to tune the output frequency                 |
-+---------------------------+---------------------------------------------------------------------------------------------+
-| ``-S Stress_Sequence``    | a sequence of ``strain stress`` to be followed by LF\_DEM                                   |
-+---------------------------+---------------------------------------------------------------------------------------------+
+No documentation for this yet. Many options are temporary.
 
 Initial configurations
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -226,6 +212,9 @@ parameter dependant filename ``D*N*VF*.dat``. An extra
 configuration with `yaplot <https://github.com/vitroid/Yaplot>`__ or
 `homer <https://github.com/rmari/homer>`__.
 
+Alternatively, you can generate initial configurations with the
+`LFDEM_confgen.py <https://github.com/rmari/pyLF_DEM_toolbox>`__ utility built
+upon `pyLF_DEM <https://github.com/rmari/pyLF_DEM>`__ (see below).
 
 Python wrapper
 ~~~~~~~~~~~~~~
