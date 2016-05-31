@@ -270,7 +270,7 @@ void System::allocatePositionRadius()
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,
-								const vector <double>& radii)
+							  const vector <double>& radii)
 {
 	/**
 		\brief Set positions of the particles for initialization.
@@ -660,7 +660,7 @@ void System::setupSystemPostConfiguration()
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
-								position[i].x-origin_of_rotation.x);
+							  position[i].x-origin_of_rotation.x);
 		}
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_in;
 		if (test_simulation == 11) {
@@ -764,20 +764,19 @@ void System::eventShearJamming()
 
 void System::forceResultantInterpaticleForces()
 {
+	for (int i=0; i<np; i++) {
+		forceResultant[i] += contact_force[i];
+	}
+	if (friction) {
 		for (int i=0; i<np; i++) {
-			forceResultant[i] += contact_force[i];
+			torqueResultant[i] += contact_torque[i];
 		}
-		if (friction) {
-			for (int i=0; i<np; i++) {
-				torqueResultant[i] += contact_torque[i];
-			}
+	}
+	if (repulsiveforce) {
+		for (int i=0; i<np; i++) {
+			forceResultant[i] += repulsive_force[i];
 		}
-		if (repulsiveforce) {
-			for (int i=0; i<np; i++) {
-				forceResultant[i] += repulsive_force[i];
-			}
-		}
-
+	}
 }
 
 void System::wallForces()
@@ -875,8 +874,8 @@ void System::checkForceBalance()
 }
 
 void System::timeEvolutionEulersMethod(bool calc_stress,
-										 double time_end,
-										 double strain_end)
+									   double time_end,
+									   double strain_end)
 {
 	/**
 	 \brief One full time step, Euler's method.
@@ -924,8 +923,8 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
  ****************************************************************************************************/
 
 void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-													 double time_end,
-													 double strain_end)
+												   double time_end,
+												   double strain_end)
 {
 	/**
 	 \brief One full time step, predictor-corrector method.
@@ -1414,7 +1413,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 						stokes_solver.addToDiagBlock(nr_vec, j,
 													 inter->lubrication.scaledXA3(), 0, 0, 0);
 						stokes_solver.setOffDiagBlock(nr_vec, j,
-														inter->lubrication.scaledXA2(), 0, 0, 0, 0);
+													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
 					}
 					if (rhs) {
 						vec3d GEi, GEj;
@@ -1460,11 +1459,11 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 													 inter->lubrication.scaledYB3(),
 													 inter->lubrication.scaledYC3());
 						stokes_solver.setOffDiagBlock(nr_vec, j,
-														inter->lubrication.scaledXA1(),
-														inter->lubrication.scaledYA1(),
-														inter->lubrication.scaledYB2(),
-														inter->lubrication.scaledYB1(),
-														inter->lubrication.scaledYC1());
+													  inter->lubrication.scaledXA1(),
+													  inter->lubrication.scaledYA1(),
+													  inter->lubrication.scaledYB2(),
+													  inter->lubrication.scaledYB1(),
+													  inter->lubrication.scaledYC1());
 					}
 					if (rhs) {
 						vec3d GEi, GEj, HEi, HEj;
@@ -2020,15 +2019,15 @@ void System::tmpMixedProblemSetVelocities()
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation.z),
-								 0,
-								 omega_wheel_in*(position[i].x-origin_of_rotation.x));
+							   0,
+							   omega_wheel_in*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_wheel_in, 0);
 		}
 		// outer wheel
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation.z),
-								 0,
-								 omega_wheel_out*(position[i].x-origin_of_rotation.x));
+							   0,
+							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
 	} else if (test_simulation == 21) {
@@ -2075,18 +2074,18 @@ void System::tmpMixedProblemSetVelocities()
 		for (int i=i_np_in; i<np; i++) {
 			if (position[i].x < x1) {
 				na_velocity[i].set(-omega_wheel_out*(position[i].z),
-									 0,
-									 omega_wheel_out*(position[i].x));
+								   0,
+								   omega_wheel_out*(position[i].x));
 				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 			} else if (position[i].x < x2) {
 				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
-									 0,
-									 omega_wheel_in*(position[i].x-origin_of_rotation2.x));
+								   0,
+								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
 				na_ang_velocity[i].set(0, -omega_wheel_in, 0);
 			} else {
 				na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
-									 0,
-									 omega_wheel_out*(position[i].x-origin_of_rotation3.x));
+								   0,
+								   omega_wheel_out*(position[i].x-origin_of_rotation3.x));
 				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 			}
 		}
