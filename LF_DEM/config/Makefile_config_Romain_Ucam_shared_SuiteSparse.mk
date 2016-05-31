@@ -16,11 +16,7 @@ CXX=g++
 # Libraries
 #
 # SuiteSparse library install folder
-override_default_cholmod = true
-SUITESPARSE_ROOT = ~/usr/
-Cholmod_path = -I $(SUITESPARSE_ROOT)/include/
-Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
-Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.so.3
+SUITESPARSE_ROOT = /home/rjm238/usr/
 
 # Extra flags to the compiler, if needed (e.g. optimization flags)
 CXXFLAGS_EXTRA = -march=native
