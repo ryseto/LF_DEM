@@ -60,7 +60,11 @@ endif
 ifeq ($(override_default_cholmod), false)
 	Cholmod_path = -I $(SUITESPARSE_ROOT)/include/
 	Cholmod_libpath = $(SUITESPARSE_ROOT)/lib/
+ifneq ("$(wildcard $(Cholmod_libpath)libcholmod.so)","")
+	Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.so -Wl,-rpath=$(Cholmod_libpath)
+else
 	Cholmod_Linking_Flags = $(Cholmod_libpath)libcholmod.a $(Cholmod_libpath)libamd.a  $(Cholmod_libpath)libcolamd.a $(Cholmod_libpath)libsuitesparseconfig.a
+endif
 endif
 
 
