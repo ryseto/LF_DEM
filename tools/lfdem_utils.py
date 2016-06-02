@@ -19,7 +19,7 @@ def periodize(x, box_lim, lees_edwards_strain, gradient_direction=2):
     box_max = np.array(box_lim[:, 1])
     box_size = box_max - box_min
 
-    lees_edwards_disp = lees_edwards_strain * box_size
+    lees_edwards_disp = np.array(lees_edwards_strain) * box_size[g]
 
     # start by the gradient direction, easier
     gcrossing_shift = np.array(lees_edwards_disp)
