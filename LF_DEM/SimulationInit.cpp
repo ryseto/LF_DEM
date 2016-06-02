@@ -162,8 +162,8 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 	resolved_forces.insert(unit_force);
 
 	// now resolve the other force units, iterativley
-	unsigned int resolved = resolved_forces.size();
-	unsigned int previous_resolved;
+	auto resolved = resolved_forces.size();
+	auto previous_resolved = resolved;
 	do {
 		previous_resolved = resolved;
 		for (const auto& f: input_force_units) {
