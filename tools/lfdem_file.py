@@ -201,7 +201,7 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
                 file_metadata
 
 
-def read_data_file(fname, usecols="all"):
+def read_data_file(fname, usecols="all", **genfromtxt_kwargs):
     """
     Purpose:
         Read any LF_DEM file that has a one-time-step-one-line structure, i.e:
@@ -221,9 +221,9 @@ def read_data_file(fname, usecols="all"):
     """
     metadata, _, _ = get_file_metadata(fname)
     if usecols == "all":
-        data = np.genfromtxt(fname)
+        data = np.genfromtxt(fname, **genfromtxt_kwargs)
     else:
-        data = np.genfromtxt(fname, usecols=usecols)
+        data = np.genfromtxt(fname, usecols=usecols, **genfromtxt_kwargs)
     return data, metadata
 
 
