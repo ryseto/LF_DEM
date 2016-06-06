@@ -99,7 +99,8 @@ def __read_snapshot_file_no_framemeta(in_file,
     # read col0 separately to determine frame breaks
     col0 = np.genfromtxt(in_file,
                          comments=' ',
-                         skip_header=header_len)
+                         skip_header=header_len,
+                         **genfromtxt_kwargs)
     framebreaks_col0 = np.nonzero(np.isnan(col0))[0]
 
     col0 = col0[np.logical_not(np.isnan(col0))].astype(np.float)
