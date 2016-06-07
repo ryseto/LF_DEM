@@ -72,34 +72,7 @@ def pair_cmd_and_switch(cmd, switch):
                       (2*switch.shape[0], switch.shape[1]))
 
 
-def get_particles_yaparray(pos, rad, angles=None):
-    """
-        Get yaplot commands (as an aray of strinfs) to display circles
-        for each particle defined in (pos, rad).
-        pos and rad must contain positions and radii of particles.
-    """
-
-    particle_circle_positions = cmd('c', pos)
-    particle_circle_radius = cmd('r', rad)
-    yap_out = pair_cmd_and_switch(particle_circle_positions,
-                                  particle_circle_radius)
-    if angles is None:
-        return yap_out
-    else:
-        # add crosses in 2d
-        u1 = -np.ones(pos.shape)   # so that they appear in front
-        u2 = -np.ones(pos.shape)
-        u1[:, 0] = np.cos(angles)
-        u1[:, 2] = np.sin(angles)
-        u1[:, [0, 2]] *= rad[:, np.newaxis]
-        u2[:, 0] = -u1[:, 2]
-        u2[:, 2] = u1[:, 0]
-        crosses = cmd('l', np.row_stack((np.hstack((pos+u1, pos-u1)),
-                                         np.hstack((pos+u2, pos-u2)))))
-        return yap_out, crosses
-
-
-def get_interactions_yaparray(r1r2, thicknesses):
+def sticks_yaparray(r1r2, thicknesses):
     """
         Get yaplot commands (as an aray of strings) to display sticks
         for each interactions with end points in r1r2.
@@ -111,37 +84,6 @@ def get_interactions_yaparray(r1r2, thicknesses):
     yap_out = pair_cmd_and_switch(interaction_sticks, interaction_widths)
 
     return yap_out
-
-
-def get_interaction_end_points(f, p):
-    """
-        For each interaction in f, get the position of the particles involved.
-        Positions of every particle given in p.
-
-        Returns an array containing x1,y1,z1,x2,y2,z2 for each interaction.
-    """
-    # for each interaction: the particle indices
-    part1 = f[:, 0].astype(np.int)
-    part2 = f[:, 1].astype(np.int)
-
-    # for each interaction: the particle positions
-    r1 = p[part1, 2:5].astype(np.float)
-    r2 = p[part2, 2:5].astype(np.float)
-
-    return np.hstack((r1, r2))
-
-
-def filter_interactions_crossing_PBC(f, r1r2, cutoff=4):
-    """
-        Exclude interactions across the boundaries.
-        Return values of f and r1r2 where norm(r1r2[:,3:]-r1r2[:,:3])<cutoff.
-    """
-    r1 = r1r2[:, :3]
-    r2 = r1r2[:, 3:]
-    keep = np.linalg.norm(r2-r1, axis=1) < cutoff
-    r1r2 = r1r2[keep]
-    f = f[keep]
-    return f, r1r2
 
 
 def savetxt(outfile, yaplot_cmd_array, mode="w"):

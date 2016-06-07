@@ -1,5 +1,5 @@
 import numpy as np
-
+import dict_utils as du
 
 def periodize(x, box_lim, lees_edwards_strain, gradient_direction=2):
     """ Periodize x according to Lees-Edwards in a box with limits box_lim.
@@ -69,3 +69,28 @@ def pdist(x,  box_lim, lees_edwards_strain, gradient_direction=2):
               lees_edwards_strain,
               gradient_direction)
     return np.linalg.norm(pairwise_separation, axis=-1)
+
+
+def get_interaction_end_points(int_snapshot,
+                               par_snapshot,
+                               int_cols,
+                               par_cols):
+    """
+        For each interaction in f, get the position of the particles involved.
+        Positions of every particle given in p. Return is NOT periodized.
+
+        Returns an array containing x1,y1,z1,x2,y2,z2 for each interaction.
+    """
+    p1_idx = du.matching_uniq(int_cols, ['label', '1'])[1]
+    p2_idx = du.matching_uniq(int_cols, ['label', '2'])[1]
+    pos_idx = du.matching_uniq(par_cols, 'position')[1]
+
+    # for each interaction: the particle indices
+    part1 = int_snapshot[:, p1_idx].astype(np.int)
+    part2 = int_snapshot[:, p2_idx].astype(np.int)
+
+    # for each interaction: the particle positions
+    r1 = par_snapshot[part1, pos_idx].astype(np.float)
+    r2 = par_snapshot[part2, pos_idx].astype(np.float)
+
+    return np.hstack((r1, r2))

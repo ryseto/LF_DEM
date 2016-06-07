@@ -13,6 +13,8 @@ import sys
 import numpy as np
 import argparse
 import lfdem_file as lf
+import lfdem_utils as lfu
+import dict_utils as du
 import pyaplot as pyp
 
 
@@ -38,6 +40,19 @@ def read_data(posfile, intfile):
     return pos_frames, int_frames, strains, shear_rates, meta_pos, meta_int
 
 
+def filter_interactions_crossing_PBC(f, r1r2, cutoff=4):
+    """
+        Exclude interactions across the boundaries.
+        Return values of f and r1r2 where norm(r1r2[:,3:]-r1r2[:,:3])<cutoff.
+    """
+    r1 = r1r2[..., :3]
+    r2 = r1r2[..., 3:]
+    keep = np.linalg.norm(r2-r1, axis=-1) < cutoff
+    r1r2 = r1r2[keep]
+    f = f[keep]
+    return f, r1r2
+
+
 def get_normal_force(interactions, coldef_dict):
     lub_loc = coldef_dict['normal part of the lubrication force']
     lub_force = interactions[:, lub_loc]
@@ -48,12 +63,83 @@ def get_normal_force(interactions, coldef_dict):
     return (lub_force + contact_force + repulsive_force).astype(np.float32)
 
 
+def particles_yaparray(pos, rad, angles=None):
+    """
+        Get yaplot commands (as an aray of strings) to display circles
+        for each particle defined in (pos, rad).
+        pos and rad must contain positions and radii of particles.
+    """
+
+    particle_circle_positions = pyp.cmd('c', pos)
+    particle_circle_radius = pyp.cmd('r', rad)
+    yap_out = pyp.pair_cmd_and_switch(particle_circle_positions,
+                                      particle_circle_radius)
+    if angles is None:
+        return yap_out
+    else:
+        # add crosses in 2d
+        u1 = -np.ones(pos.shape)   # so that they appear in front
+        u2 = -np.ones(pos.shape)
+        u1[:, 0] = np.cos(angles)
+        u1[:, 2] = np.sin(angles)
+        u1[:, [0, 2]] *= rad[:, np.newaxis]
+        u2[:, 0] = -u1[:, 2]
+        u2[:, 2] = u1[:, 0]
+        crosses = pyp.cmd('l', np.row_stack((np.hstack((pos+u1, pos-u1)),
+                                             np.hstack((pos+u2, pos-u2)))))
+        return yap_out, crosses
+
+
+def interactions_bonds_yaparray(int_snapshot,
+                                par_snapshot,
+                                icols,
+                                pcols,
+                                f_factor=None,
+                                f_chain_thresh=None,
+                                layer_contacts=1,
+                                layer_noncontacts=2,
+                                color_contacts=1,
+                                color_noncontacts=2):
+    if f_chain_thresh is None:
+        f_chain_thresh = 0
+
+    r1r2 = lfu.get_interaction_end_points(int_snapshot, par_snapshot,
+                                          icols, pcols)
+    f, r1r2 = filter_interactions_crossing_PBC(int_snapshot, r1r2)
+
+    # display a line joining the center of interacting particles
+    # with a thickness proportional to the normal force
+    normal_forces = get_normal_force(f, icols)
+    #  convert the force to a thickness. case-by-case.
+    if f_factor is None:
+        f_factor = 0.5/np.max(np.abs(normal_forces))
+    normal_forces = f_factor*np.abs(normal_forces)
+    avg_force = np.mean(np.abs(normal_forces))
+    large_forces = normal_forces > f_chain_thresh * avg_force
+
+    contact_state = f[:, du.matching_uniq(icols, 'contact state')[1]]
+
+    # contacts
+    keep = np.logical_and(contact_state > 0, large_forces)
+    yap_out = pyp.layer_switch(1)
+    yap_out = pyp.add_color_switch(yap_out, 4)
+    contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
+    yap_out = np.row_stack((yap_out, contact_bonds))
+
+    # non contacts
+    keep = np.logical_and(contact_state == 0, large_forces)
+    yap_out = pyp.add_layer_switch(yap_out, 2)
+    yap_out = pyp.add_color_switch(yap_out, 5)
+    non_contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
+    yap_out = np.row_stack((yap_out, non_contact_bonds))
+
+    return yap_out, f_factor
+
+
 def snaps2yap(pos_fname,
               yap_file,
-              force_factor=None,
-              force_chain_threshold=None):
-    if force_chain_threshold is None:
-        force_chain_threshold = 0
+              f_factor=None,
+              f_chain_thresh=None):
 
     forces_fname = pos_fname.replace("par_", "int_")
     positions, forces, strains, shear_rates, meta_pos, meta_int =\
@@ -61,44 +147,18 @@ def snaps2yap(pos_fname,
     pcols = lf.convert_columndef_to_indices(meta_pos['column def'])
     icols = lf.convert_columndef_to_indices(meta_int['column def'])
 
-
-
     nb_of_frames = len(strains)
     is2d = meta_pos['Ly'] == 0
     i = 0
     for f, p, strain, rate in zip(forces, positions, strains, shear_rates):
-        r1r2 = pyp.get_interaction_end_points(f, p)
-        f, r1r2 = pyp.filter_interactions_crossing_PBC(f, r1r2)
-
-        # display a line joining the center of interacting particles
-        # with a thickness proportional to the normal force
-        normal_forces = get_normal_force(f, icols)
-        #  convert the force to a thickness. case-by-case.
-        if force_factor is None:
-            force_factor = 0.5/np.max(np.abs(normal_forces))
-        normal_forces = force_factor*np.abs(normal_forces)
-        avg_force = np.mean(np.abs(normal_forces))
-        large_forces = normal_forces > force_chain_threshold * avg_force
-
-        contact_state = f[:, lf.strdict_get(icols, 'contact state')[1]]
-
-        # contacts
-        keep = np.logical_and(contact_state > 0, large_forces)
-        yap_out = pyp.layer_switch(1)
-        yap_out = pyp.add_color_switch(yap_out, 4)
-        contact_bonds =\
-            pyp.get_interactions_yaparray(r1r2[keep],
-                                          normal_forces[keep])
-        yap_out = np.row_stack((yap_out, contact_bonds))
-
-        # non contacts
-        keep = np.logical_and(contact_state == 0, large_forces)
-        yap_out = pyp.add_layer_switch(yap_out, 2)
-        yap_out = pyp.add_color_switch(yap_out, 5)
-        non_contact_bonds =\
-            pyp.get_interactions_yaparray(r1r2[keep],
-                                          normal_forces[keep])
-        yap_out = np.row_stack((yap_out, non_contact_bonds))
+        yap_out, f_factor =\
+            interactions_bonds_yaparray(f, p, icols, pcols,
+                                        f_factor=f_factor,
+                                        f_chain_thresh=f_chain_thresh,
+                                        layer_contacts=1,
+                                        layer_noncontacts=2,
+                                        color_contacts=4,
+                                        color_noncontacts=5)
 
         # display a circle for every particle
         yap_out = pyp.add_layer_switch(yap_out, 3)
@@ -111,14 +171,12 @@ def snaps2yap(pos_fname,
         rad = p[:, pcols['radius']].astype(np.float)
         if is2d:
             angle = p[:, pcols['angle']].astype(np.float)
-            particles, crosses = \
-                pyp.get_particles_yaparray(pos, rad, angles=angle)
+            particles, crosses = particles_yaparray(pos, rad, angles=angle)
             yap_out = np.row_stack((yap_out, particles))
             yap_out = pyp.add_color_switch(yap_out, 1)
             yap_out = np.row_stack((yap_out, crosses))
         else:
-            yap_out = np.row_stack((yap_out,
-                                    pyp.get_particles_yaparray(pos, rad)))
+            yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
 
         yap_out = pyp.add_layer_switch(yap_out, 5)
 
@@ -133,7 +191,7 @@ def snaps2yap(pos_fname,
         i += 1
         out_str = "\r frame " + str(i) + "/"+str(nb_of_frames) +\
                   " - " + yap_filename + \
-                  "   [force factor " + str(force_factor) + "]"
+                  "   [force factor " + str(f_factor) + "]"
         try:
             print(out_str, end="", flush=True)
         except TypeError:
@@ -157,18 +215,16 @@ def conf2yap(conf_fname, yap_filename):
         yap_out = pyp.layer_switch(3)
         yap_out = pyp.add_color_switch(yap_out, 3)
         yap_out = np.row_stack((yap_out,
-                                pyp.get_particles_yaparray(pos_mobile,
-                                                           rad_mobile)))
+                                particles_yaparray(pos_mobile, rad_mobile)))
         yap_out = pyp.add_layer_switch(yap_out, 4)
         yap_out = pyp.add_color_switch(yap_out, 4)
         yap_out = np.row_stack((yap_out,
-                                pyp.get_particles_yaparray(pos_fixed,
-                                                           rad_fixed)))
+                                particles_yaparray(pos_fixed, rad_fixed)))
     else:
         yap_out = pyp.layer_switch(3)
         yap_out = pyp.add_color_switch(yap_out, 3)
-        yap_out = np.row_stack(
-                    (yap_out, pyp.get_particles_yaparray(positions, radii)))
+        yap_out = np.row_stack((yap_out,
+                                particles_yaparray(positions, radii)))
 
     pyp.savetxt(yap_filename, yap_out)
 
@@ -189,8 +245,8 @@ if args['file'].find("par_") > -1:
     yap_file = open(yap_filename, 'wb')
     snaps2yap(args['file'],
               yap_file,
-              force_factor=args['force_factor'],
-              force_chain_threshold=args['force_threshold'])
+              f_factor=args['force_factor'],
+              f_chain_thresh=args['force_threshold'])
     yap_file.close()
 
 else:
