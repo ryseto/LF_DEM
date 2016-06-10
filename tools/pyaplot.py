@@ -72,6 +72,31 @@ def pair_cmd_and_switch(cmd, switch):
                       (2*switch.shape[0], switch.shape[1]))
 
 
+def interleave(array_tuple):
+    """
+    Purpose:
+
+        Use case: you want to change state (e.g. width) for every object.
+        You can do that in an array-like fashion, generating cmd and switch
+        arrays separately, and blending them afterwards.
+        This is what this function is for.
+
+    Returns:
+        [array_tuple[0][0]
+         array_tuple[1][0]
+         ...
+         array_tuple[n][0]
+         array_tuple[0][1]
+         array_tuple[1][1]
+         ...
+         array_tuple[n][N]]
+    """
+    array_height = len(array_tuple)*array_tuple[0].shape[0]
+    array_width = array_tuple[0].shape[1]
+    return np.reshape(np.column_stack(array_tuple),
+                      (array_height, array_width))
+
+
 def sticks_yaparray(r1r2, thicknesses):
     """
         Get yaplot commands (as an aray of strings) to display sticks

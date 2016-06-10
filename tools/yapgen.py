@@ -121,15 +121,15 @@ def interactions_bonds_yaparray(int_snapshot,
 
     # contacts
     keep = np.logical_and(contact_state > 0, large_forces)
-    yap_out = pyp.layer_switch(1)
-    yap_out = pyp.add_color_switch(yap_out, 4)
+    yap_out = pyp.layer_switch(layer_contacts)
+    yap_out = pyp.add_color_switch(yap_out, color_contacts)
     contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
     yap_out = np.row_stack((yap_out, contact_bonds))
 
     # non contacts
     keep = np.logical_and(contact_state == 0, large_forces)
-    yap_out = pyp.add_layer_switch(yap_out, 2)
-    yap_out = pyp.add_color_switch(yap_out, 5)
+    yap_out = pyp.add_layer_switch(yap_out, layer_noncontacts)
+    yap_out = pyp.add_color_switch(yap_out, color_noncontacts)
     non_contact_bonds = pyp.sticks_yaparray(r1r2[keep], normal_forces[keep])
     yap_out = np.row_stack((yap_out, non_contact_bonds))
 
@@ -228,30 +228,31 @@ def conf2yap(conf_fname, yap_filename):
 
     pyp.savetxt(yap_filename, yap_out)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-ff', '--force-factor', type=float)
-parser.add_argument('-ft', '--force-threshold', type=float)
-parser.add_argument('-o', '--output')
-parser.add_argument('file')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-ff', '--force-factor', type=float)
+    parser.add_argument('-ft', '--force-threshold', type=float)
+    parser.add_argument('-o', '--output')
+    parser.add_argument('file')
 
-args = vars(parser.parse_args(sys.argv[1:]))
+    args = vars(parser.parse_args(sys.argv[1:]))
 
-if args['file'].find("par_") > -1:
-    if args['output'] is None:
-        yap_filename =\
-            args['file'].replace("par_", "y_").replace(".dat", ".yap")
+    if args['file'].find("par_") > -1:
+        if args['output'] is None:
+            yap_filename =\
+                args['file'].replace("par_", "y_").replace(".dat", ".yap")
+        else:
+            yap_filename = args['output']
+        yap_file = open(yap_filename, 'wb')
+        snaps2yap(args['file'],
+                  yap_file,
+                  f_factor=args['force_factor'],
+                  f_chain_thresh=args['force_threshold'])
+        yap_file.close()
+
     else:
-        yap_filename = args['output']
-    yap_file = open(yap_filename, 'wb')
-    snaps2yap(args['file'],
-              yap_file,
-              f_factor=args['force_factor'],
-              f_chain_thresh=args['force_threshold'])
-    yap_file.close()
-
-else:
-    if args['output'] is None:
-        yap_filename = args['file'].replace(".dat", ".yap")
-    else:
-        yap_filename = args['output']
-    conf2yap(args['file'], yap_filename)
+        if args['output'] is None:
+            yap_filename = args['file'].replace(".dat", ".yap")
+        else:
+            yap_filename = args['output']
+        conf2yap(args['file'], yap_filename)
