@@ -163,11 +163,12 @@ def snaps2yap(pos_fname,
         # display a circle for every particle
         yap_out = pyp.add_layer_switch(yap_out, 3)
         yap_out = pyp.add_color_switch(yap_out, 3)
+
         if 'position (x, y, z)' in pcols:
-            pos = p[:, pcols['position (x, y, z)']].astype(np.float)
+            pos_slice = pcols['position (x, y, z)']
         else:
-            pos = p[:, pcols['position x']:pcols['position z']+1]\
-                    .astype(np.float)
+            pos_slice = slice(pcols['position x'], pcols['position z']+1)
+        pos = p[:, pos_slice].astype(np.float)
         rad = p[:, pcols['radius']].astype(np.float)
         if is2d:
             angle = p[:, pcols['angle']].astype(np.float)
@@ -178,9 +179,30 @@ def snaps2yap(pos_fname,
         else:
             yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
 
-        yap_out = pyp.add_layer_switch(yap_out, 5)
+        # display bounding box
+        if not is2d:
+            yap_out = pyp.add_layer_switch(yap_out, 4)
+            yap_out = pyp.add_color_switch(yap_out, 4)
+            lx2 = meta_pos['Lx']/2
+            ly2 = meta_pos['Ly']/2
+            lz2 = meta_pos['Lz']/2
+            corners = np.array([[lx2, ly2, lz2, lx2, ly2, -lz2],
+                                [lx2, ly2, lz2, lx2, -ly2, lz2],
+                                [lx2, ly2, lz2, -lx2, ly2, lz2],
+                                [lx2, -ly2, -lz2, lx2, -ly2, lz2],
+                                [lx2, -ly2, -lz2, lx2, ly2, -lz2],
+                                [lx2, -ly2, -lz2, -lx2, -ly2, -lz2],
+                                [-lx2, ly2, -lz2, -lx2, ly2, lz2],
+                                [-lx2, ly2, -lz2, -lx2, -ly2, -lz2],
+                                [-lx2, ly2, -lz2, lx2, ly2, -lz2],
+                                [-lx2, -ly2, lz2, -lx2, -ly2, -lz2],
+                                [-lx2, -ly2, lz2, -lx2, ly2, lz2],
+                                [-lx2, -ly2, lz2, lx2, -ly2, lz2]])
+            yap_out = pyp.add_cmd(yap_out, 'l', corners)
 
         # display strain
+        yap_out = pyp.add_layer_switch(yap_out, 5)
+        yap_out = pyp.add_color_switch(yap_out, 1)
         yap_out = np.row_stack((yap_out,
                                 ['t', str(10.), str(0.), str(10.),
                                     'strain='+str(strain), '', '']))
