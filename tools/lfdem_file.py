@@ -91,9 +91,16 @@ def convert_columndef_to_indices(columndef_dict):
     return c
 
 
-def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols, header_len):
+def __read_snapshot_file_no_framemeta(in_file,
+                                      field_nb,
+                                      usecols,
+                                      header_len,
+                                      **genfromtxt_kwargs):
     # read col0 separately to determine frame breaks
-    col0 = np.genfromtxt(in_file, comments=' ', skip_header=header_len)
+    col0 = np.genfromtxt(in_file,
+                         comments=' ',
+                         skip_header=header_len,
+                         **genfromtxt_kwargs)
     framebreaks_col0 = np.nonzero(np.isnan(col0))[0]
 
     col0 = col0[np.logical_not(np.isnan(col0))].astype(np.float)
@@ -103,14 +110,20 @@ def __read_snapshot_file_no_framemeta(in_file, field_nb, usecols, header_len):
     # merge it with col0 if necessary
     if usecols != "all":
         if usecols[0] == 0:  # assume ordered
-            cols = np.genfromtxt(in_file, skip_header=header_len,
-                                 usecols=usecols[1:])
+            cols = np.genfromtxt(in_file,
+                                 skip_header=header_len,
+                                 usecols=usecols[1:],
+                                 **genfromtxt_kwargs)
             cols = np.column_stack((col0, cols))
         else:
-            cols = np.genfromtxt(in_file, skip_header=header_len,
-                                 usecols=usecols)
+            cols = np.genfromtxt(in_file,
+                                 skip_header=header_len,
+                                 usecols=usecols,
+                                 **genfromtxt_kwargs)
     else:
-        cols = np.genfromtxt(in_file, skip_header=header_len)
+        cols = np.genfromtxt(in_file,
+                             skip_header=header_len,
+                             **genfromtxt_kwargs)
     # get the frame breaks
     framebreaks_cols = framebreaks_col0 - np.arange(len(framebreaks_col0))
     framebreaks_cols = framebreaks_cols[1:]  # 1st break is line 0
@@ -141,7 +154,8 @@ def __read_snapshot_file_with_framemeta(in_file, field_nb, header_len):
     return (frames, strains_, shear_rates_, frame_metadata)
 
 
-def read_snapshot_file(fname, usecols="all", frame_meta=True):
+def read_snapshot_file(fname, usecols="all",
+                       frame_meta=True, **genfromtxt_kwargs):
     """
     Purpose:
         Read any LF_DEM file that has a "snapshot" structure, i.e. made of
@@ -159,11 +173,15 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
         Examples include par_ and int_ files.
 
     Parameters:
-        fname: the filename, or a file like object
-        usecols: which columns to read, optional (default all columns)
-        frame_meta: get the metadata of each frame, optional (default True)
-                    [Note that for large files getting the metadata
-                     can be very memory consuming]
+        fname:         the filename, or a file like object
+        usecols:       which columns to read, optional (default all columns),
+                       only works with frame_meta==False
+        frame_meta:    get the metadata of each frame, optional (default True)
+                       [Note that for large files getting the metadata
+                       can be very memory consuming]
+        genfromtxt_kwargs: kwargs to pass to numpy.genfromtxt,
+                           only works with frame_meta==False
+
     Returning values:
         if frame_meta == False:
             frames: a list of snapshots
@@ -197,11 +215,12 @@ def read_snapshot_file(fname, usecols="all", frame_meta=True):
         return __read_snapshot_file_no_framemeta(in_file,
                                                  field_nb,
                                                  usecols,
-                                                 header_len),\
+                                                 header_len,
+                                                 **genfromtxt_kwargs),\
                 file_metadata
 
 
-def read_data_file(fname, usecols="all"):
+def read_data_file(fname, usecols="all", **genfromtxt_kwargs):
     """
     Purpose:
         Read any LF_DEM file that has a one-time-step-one-line structure, i.e:
@@ -221,9 +240,9 @@ def read_data_file(fname, usecols="all"):
     """
     metadata, _, _ = get_file_metadata(fname)
     if usecols == "all":
-        data = np.genfromtxt(fname)
+        data = np.genfromtxt(fname, **genfromtxt_kwargs)
     else:
-        data = np.genfromtxt(fname, usecols=usecols)
+        data = np.genfromtxt(fname, usecols=usecols, **genfromtxt_kwargs)
     return data, metadata
 
 

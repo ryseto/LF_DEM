@@ -878,8 +878,8 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.mu_static = 1;
 	p.mu_dynamic = -1;
 	p.mu_rolling = 0;
-	p.time_interval_output_data = 0.01;
-	p.time_interval_output_config = 0.1;
+	catchSuffixedValue("time", "time_interval_output_data", "1e-2h", &p.time_interval_output_data);
+	catchSuffixedValue("time", "time_interval_output_config", "1e-1h", &p.time_interval_output_config);
 	p.log_time_interval = false;
 	catchSuffixedValue("time", "initial_log_time", "1e-4h", &p.initial_log_time);
 	p.nb_output_data_log_time = 100;
