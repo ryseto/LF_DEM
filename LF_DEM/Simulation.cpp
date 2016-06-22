@@ -571,7 +571,7 @@ void Simulation::outputData()
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 	outdata.entryData("time", "time", 1, sys.get_time());
-	if (sys.get_omega_wheel() == 0) {
+	if (sys.get_omega_wheel() != 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
 		outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());

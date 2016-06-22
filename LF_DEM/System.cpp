@@ -656,6 +656,8 @@ void System::setupSystemPostConfiguration()
 		}
 	}
 
+	omega_wheel_in  = 0;
+	omega_wheel_out = 0;
 	if (test_simulation >= 10 && test_simulation <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
