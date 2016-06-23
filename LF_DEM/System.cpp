@@ -2032,12 +2032,12 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
 	} else if (test_simulation == 21) {
-		static double time_next = 1;
+		static double time_next = p.strain_reversal;
 		if (time > time_next) {
 			p.theta_shear += M_PI;
 			costheta_shear = cos(p.theta_shear);
 			sintheta_shear = sin(p.theta_shear);
-			time_next += 1;
+			time_next += p.strain_reversal;
 		}
 	} else if (test_simulation == 31) {
 		for (int i=np_mobile; i<np; i++) {
