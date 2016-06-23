@@ -81,15 +81,19 @@ class TimeKeeper
 private:
 	std::map <std::string, std::unique_ptr<Clock>> clocks;
 public:
-	void addClock(std::string label, LinearClock c){
+	void addClock(std::string label, LinearClock c)
+	{
 		clocks[label] = std::unique_ptr<Clock>(new LinearClock(c));
 	}
-	void addClock(std::string label, LogClock c){
+	
+	void addClock(std::string label, LogClock c)
+	{
 		clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
 	}
 	
-	std::pair<double,std::string> nextTime() {
-		if (clocks.size()==0) {
+	std::pair<double,std::string> nextTime()
+	{
+		if (clocks.size() == 0) {
 			throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");
 		}
 		double next_t = -1;
@@ -105,8 +109,9 @@ public:
 		return std::make_pair(next_t,next_name);
 	}
 	
-	std::pair<double,std::string> nextStrain() {
-		if (clocks.size()==0) {
+	std::pair<double,std::string> nextStrain()
+	{
+		if (clocks.size() == 0) {
 			throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");
 		}
 		double next_t = -1;
@@ -122,7 +127,8 @@ public:
 		return std::make_pair(next_t,next_name);
 	}
 	
-	std::set<std::string> getElapsedClocks(double time, double strain) {
+	std::set<std::string> getElapsedClocks(double time, double strain)
+	{
 		std::set<std::string> elapsed_clocks;
 		for (auto &c : clocks) {
 			auto &clock = c.second;

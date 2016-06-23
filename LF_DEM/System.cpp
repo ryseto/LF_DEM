@@ -655,7 +655,6 @@ void System::setupSystemPostConfiguration()
 			resistance_matrix_dblock[i].col5[0] = TWvalue;
 		}
 	}
-
 	omega_wheel_in  = 0;
 	omega_wheel_out = 0;
 	if (test_simulation >= 10 && test_simulation <= 20) {
@@ -2033,10 +2032,12 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
 	} else if (test_simulation == 21) {
-		static double time_next = 3;
+		static double time_next = 1;
 		if (time > time_next) {
-			shear_rate *= -1;
-			time_next += 3;
+			p.theta_shear += M_PI;
+			costheta_shear = cos(p.theta_shear);
+			sintheta_shear = sin(p.theta_shear);
+			time_next += 1;
 		}
 	} else if (test_simulation == 31) {
 		for (int i=np_mobile; i<np; i++) {

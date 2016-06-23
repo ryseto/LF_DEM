@@ -192,6 +192,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else if (simu_identifier == "rtest1") {
 		cout << indent << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1
+		sys.p.cross_shear = true;
 	} else if (simu_identifier == "wtest1") {
 		cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 		sys.test_simulation = 31;//wtest1
