@@ -192,6 +192,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	} else if (simu_identifier == "rtest1") {
 		cout << indent << "Test simulation for shear reversibility" << endl;
 		sys.test_simulation = 21;//rtest1
+		sys.p.cross_shear = true;
 	} else if (simu_identifier == "wtest1") {
 		cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
 		sys.test_simulation = 31;//wtest1
@@ -571,7 +572,7 @@ void Simulation::outputData()
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 	outdata.entryData("time", "time", 1, sys.get_time());
-	if (sys.get_omega_wheel() == 0) {
+	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
 		outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());

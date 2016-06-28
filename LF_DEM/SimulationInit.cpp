@@ -162,8 +162,8 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 	resolved_forces.insert(unit_force);
 
 	// now resolve the other force units, iterativley
-	unsigned int resolved = resolved_forces.size();
-	unsigned int previous_resolved;
+	auto resolved = resolved_forces.size();
+	auto previous_resolved = resolved;
 	do {
 		previous_resolved = resolved;
 		for (const auto& f: input_force_units) {
@@ -727,6 +727,8 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "theta_shear") {
 		p.theta_shear = atof(value.c_str());
 		p.theta_shear *= M_PI/180;  // convert in radians
+	} else if (keyword == "strain_reversal") {
+		p.strain_reversal = atof(value.c_str());
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());

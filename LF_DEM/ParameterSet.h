@@ -142,6 +142,7 @@ struct ParameterSet
  	bool cross_shear;        ///< Allow arbitrary shear in xy plane (actual direction set by theta_shear) [false]
 	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 	double time_init_relax;  ///< Initial relaxa
+	double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 };
 
 #endif/* defined(__LF_DEM__ParameterSet__) */
