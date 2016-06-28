@@ -83,8 +83,11 @@ def get_interaction_end_points(int_snapshot,
     """
     p1_idx = du.matching_uniq(int_cols, ['label', '1'])[1]
     p2_idx = du.matching_uniq(int_cols, ['label', '2'])[1]
-    pos_idx = du.matching_uniq(par_cols, 'position')[1]
-
+    try:
+        pos_idx = du.matching_uniq(par_cols, 'position')[1]
+    except Exception:
+        pos_idx = slice(du.matching_uniq(par_cols, ['position', 'x'])[1],
+                        du.matching_uniq(par_cols, ['position', 'z'])[1]+1)
     # for each interaction: the particle indices
     part1 = int_snapshot[:, p1_idx].astype(np.int)
     part2 = int_snapshot[:, p2_idx].astype(np.int)

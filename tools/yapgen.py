@@ -81,7 +81,7 @@ def particles_yaparray(pos, rad, angles=None):
         u1 = -np.ones(pos.shape)   # so that they appear in front
         u2 = -np.ones(pos.shape)
         u1[:, 0] = np.cos(angles)
-        u1[:, 2] = np.sin(angles)
+        u1[:, 2] = -np.sin(angles)
         u1[:, [0, 2]] *= rad[:, np.newaxis]
         u2[:, 0] = -u1[:, 2]
         u2[:, 2] = u1[:, 0]
@@ -180,12 +180,12 @@ def snaps2yap(pos_fname,
             yap_out = np.row_stack((yap_out, particles_yaparray(pos, rad)))
 
         # display bounding box
+        yap_out = pyp.add_layer_switch(yap_out, 4)
+        yap_out = pyp.add_color_switch(yap_out, 0)
+        lx2 = meta_pos['Lx']/2
+        ly2 = meta_pos['Ly']/2
+        lz2 = meta_pos['Lz']/2
         if not is2d:
-            yap_out = pyp.add_layer_switch(yap_out, 4)
-            yap_out = pyp.add_color_switch(yap_out, 4)
-            lx2 = meta_pos['Lx']/2
-            ly2 = meta_pos['Ly']/2
-            lz2 = meta_pos['Lz']/2
             corners = np.array([[lx2, ly2, lz2, lx2, ly2, -lz2],
                                 [lx2, ly2, lz2, lx2, -ly2, lz2],
                                 [lx2, ly2, lz2, -lx2, ly2, lz2],
@@ -198,7 +198,13 @@ def snaps2yap(pos_fname,
                                 [-lx2, -ly2, lz2, -lx2, -ly2, -lz2],
                                 [-lx2, -ly2, lz2, -lx2, ly2, lz2],
                                 [-lx2, -ly2, lz2, lx2, -ly2, lz2]])
-            yap_out = pyp.add_cmd(yap_out, 'l', corners)
+        else:
+            corners = np.array([[lx2, 0, lz2, lx2, 0, -lz2],
+                                [lx2, 0, lz2, -lx2, 0, lz2],
+                                [-lx2, 0, -lz2, -lx2, 0, lz2],
+                                [-lx2, 0, -lz2, lx2, 0, -lz2]])
+
+        yap_out = pyp.add_cmd(yap_out, 'l', corners)
 
         # display strain
         yap_out = pyp.add_layer_switch(yap_out, 5)
