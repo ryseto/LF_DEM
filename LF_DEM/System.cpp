@@ -1418,7 +1418,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 					}
 					if (rhs) {
 						vec3d GEi, GEj;
-						std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
+						std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
 						if (shearrate_is_1 == false) {
 							GEi *= shear_rate;
 							GEj *= shear_rate;
@@ -1468,7 +1468,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 					}
 					if (rhs) {
 						vec3d GEi, GEj, HEi, HEj;
-						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE(); // G*E_\infty term
+						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term
 						if (shearrate_is_1 == false) {
 								GEi *= shear_rate;
 								GEj *= shear_rate;

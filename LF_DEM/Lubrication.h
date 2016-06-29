@@ -144,8 +144,9 @@ private:
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
-	std::tuple<vec3d,vec3d> calcGE();
-	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE();
+	std::tuple<vec3d,vec3d> calcGE_squeeze();
+	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential();
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential();
 	void calcXFunctions();
 	void calcXYFunctions();
     // XA
