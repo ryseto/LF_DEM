@@ -158,6 +158,7 @@ private:
 	int odblocks_nb;
 	int odblocks_nb_mf;
 	int odblocks_nb_ff;
+	unsigned int current_column;
 	std::vector<struct DBlock> dblocks;
 	std::vector<struct ODBlock> odblocks;
 	std::vector<int> odbrows;
@@ -255,6 +256,8 @@ public:
 	 - to be called when all terms involving particle i have been added,
 	 ie blocks in row i and column i are completed
 	 */
+	void startNewColumn();
+	void matrixFillingDone();
 	void doneBlocks(int i);
 	/*
 	 completeResistanceMatrix() :

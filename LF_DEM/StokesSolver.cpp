@@ -449,7 +449,6 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 	for (auto &b: odblocks) {
 		resetODBlock(b);
 	}
-	odbrows_table[0] = 0;
 	mobile_matrix_done = false;
 
 	// for the mixed problem
@@ -459,7 +458,6 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 	for (auto &b: odblocks_mf) {
 		resetODBlock(b);
 	}
-	odbrows_table_mf[0] = 0;
 
 	// for the mixed problem
 	odblocks_nb_ff = nb_of_interactions_ff;
@@ -471,7 +469,7 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 	for (auto &b: odblocks_ff) {
 		resetODBlock(b);
 	}
-	odbrows_table_ff[0] = 0;
+	current_column = 0;
 }
 
 void StokesSolver::resetRHS()
@@ -831,6 +829,34 @@ void StokesSolver::allocateResistanceMatrix()
 	nzmax = 18*(int)dblocks_ff.size(); // diagonal blocks
 	nzmax += 30*odblocks_nb_ff;  // off-diagonal
 	chol_res_matrix_ff = cholmod_allocate_sparse(size_ff, size_ff, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
+}
+
+void StokesSolver::startNewColumn()
+{
+	if (mobile_matrix_done) {
+		odbrows_table_ff[current_column-mobile_particle_nb] = (unsigned int)odbrows_ff.size();
+	} else {
+		odbrows_table[current_column] = (unsigned int)odbrows.size();
+		odbrows_table_mf[current_column] = (unsigned int)odbrows_mf.size();
+	}
+	current_column++;
+	if (current_column == mobile_particle_nb) {
+		mobile_matrix_done = true;
+		odbrows_table[current_column] = (unsigned int)odbrows.size();
+		odbrows_table_mf[current_column] = (unsigned int)odbrows_mf.size();
+	}
+}
+
+void StokesSolver::matrixFillingDone()
+{
+	for (auto i=current_column; i<odbrows_table.size(); i++) {
+		odbrows_table[i] = (unsigned int)odbrows.size();
+		odbrows_table_mf[i] = (unsigned int)odbrows_mf.size();
+	}
+	mobile_matrix_done = true;
+	for (auto i=current_column; i<odbrows_table_ff.size(); i++) {
+		odbrows_table_ff[i] = (unsigned int)odbrows_ff.size();
+	}
 }
 
 void StokesSolver::doneBlocks(int i)

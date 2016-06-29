@@ -1402,6 +1402,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
+		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
@@ -1424,10 +1425,8 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 				}
 			}
 		}
-		stokes_solver.doneBlocks(i);
 	}
-	stokes_solver.doneBlocks(np-1);
-	// stokes_solver.doneBlocks(np);
+	stokes_solver.matrixFillingDone();
 }
 
 void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
@@ -1437,6 +1436,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		shearrate_is_1 = false;
 	}
 	for (int i=0; i<np-1; i ++) {
+		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
@@ -1463,10 +1463,8 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 				}
 			}
 		}
-		stokes_solver.doneBlocks(i);
 	}
-	stokes_solver.doneBlocks(np-1);
-	// stokes_solver.doneBlocks(np);
+	stokes_solver.matrixFillingDone();	
 }
 
 vector<double> System::computeForceFromFixedParticles()
