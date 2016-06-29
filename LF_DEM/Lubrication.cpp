@@ -541,7 +541,7 @@ void Lubrication::calcPairwiseForce()
         /* YAU_i */
         lubforce_p0 += -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
         /* YBO_i */
-        lubforce_p0 += -scaledYB0()*cross(nvec, oi)            + scaledYB1()*cross(nvec, oj);
+        lubforce_p0 += -scaledYB0()*cross(nvec, oi)            - scaledYB2()*cross(nvec, oj);
         if (!sys->zero_shear) {
             vec3d vec_z_x(nvec->z, 0, nvec->x);
             /* YGE_i */
