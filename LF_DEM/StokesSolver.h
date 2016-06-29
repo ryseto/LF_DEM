@@ -17,46 +17,9 @@
 #include <vector>
 #include <array>
 #include "vec3d.h"
+#include "MatrixBlocks.h"
 #include "cholmod.h"
 
-struct ODBlock {
-	std::array<double, 5> col0;
-	std::array<double, 3> col1;
-	std::array<double, 1> col2;
-	std::array<double, 5> col3;
-	std::array<double, 3> col4;
-	std::array<double, 1> col5;
-	int bla;
-};
-
-inline void resetODBlock(struct ODBlock &b)
-{
-	b.col0.fill(0);
-	b.col1.fill(0);
-	b.col2.fill(0);
-	b.col3.fill(0);
-	b.col4.fill(0);
-	b.col5.fill(0);
-}
-
-struct DBlock {
-	std::array<double, 5> col0;
-	std::array<double, 3> col1;
-	std::array<double, 1> col2;
-	std::array<double, 3> col3;
-	std::array<double, 2> col4;
-	std::array<double, 1> col5;
-};
-
-inline void resetDBlock(struct DBlock& b)
-{
-	b.col0.fill(0);
-	b.col1.fill(0);
-	b.col2.fill(0);
-	b.col3.fill(0);
-	b.col4.fill(0);
-	b.col5.fill(0);
-}
 
 class StokesSolver{
 	/*
@@ -275,35 +238,18 @@ public:
 							   int nb_of_interactions_mf,
 							   int nb_of_interactions_ff,
 							   const std::vector<struct DBlock>& reset_resmat_dblocks);
-	/* addToDiag(int ii, double FUvalue, TWvalue) :
-	 - adds FUvalue to diagonal elements to diagonal elements of FU matrix for particle ii
-	 - adds TWvalue to diagonal elements to diagonal elements of TW matrix for particle ii
-	 */
-	//void addToDiag(int ii, double FUvalue, double TWvalue);
-    /* addToDiagBlock(const vec3d &nvec, int ii, double scaledXA, double scaledYA, double scaledYB, double scaledYC);
-	  Adds to block (ii, ii):
-	 - scaledXA * |nvec><nvec| + scaledYA(1-|nvec><nvec|) on FU part
-	 - scaledYB * e_ijk nvec_k on TU part
-	 - scaledYC *(1 - |nvec><nvec|) on TW part
-	 */
-    void addToDiagBlock(const vec3d& nvec, int ii,
-						double scaledXA, double scaledYA,
-						double scaledYB, double scaledYC);
-    /*
-     setOffDiagBlock(const vec3d &nvec, int ii, int jj, double scaledXA, double scaledYB, double scaledYC) :
-	 Sets (ii,jj) block with:
-     -  scaledXA * |nvec><nvec| for FU part
-	 -  scaledYB * e_ijk nvec_ij for TU part ( scaledYB is scaledYB_12(lambda) in Jeffrey & Onishi's notations)
-	 -  scaledYBtilde * e_ijk nvec_ij    ( scaledYBtilde is scaledYB_12(1/lambda) in Jeffrey & Onishi's notations)
-	 -  scaledYC *(1 - |nvec><nvec|) for TW part
+	void addToDiagBlocks(int ii,
+	                     int jj,
+	                     const std::pair<struct DBlock, struct DBlock> &DBiDBj);
+  void addToDiagBlock(int ii, const struct DBlock &b);
 
+	/*
 	 This must be called with order (ii < jj),
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-	void setOffDiagBlock(const vec3d& nvec, int jj,
-						 double scaledXA, double scaledYA, double scaledYB,
-						 double scaledYBtilde, double scaledYC);
+	void setOffDiagBlock(int jj, const struct ODBlock& b);
+
 	/*
 	 doneBlocks(int i) :
 	 - to be called when all terms involving particle i have been added,

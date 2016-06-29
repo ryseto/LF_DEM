@@ -20,6 +20,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
+#include "MatrixBlocks.h"
 
 class System;
 class Interaction;
@@ -147,6 +148,11 @@ private:
 	std::tuple<vec3d,vec3d> calcGE_squeeze();
 	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential();
 	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential();
+	struct ODBlock RFU_ODBlock_squeeze_tangential();
+	struct ODBlock RFU_ODBlock_squeeze();
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze_tangential();
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze();
+
 	void calcXFunctions();
 	void calcXYFunctions();
     // XA

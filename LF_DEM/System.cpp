@@ -1407,14 +1407,9 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-						const vec3d& nr_vec = inter->nvec;
 						inter->lubrication.calcXFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 inter->lubrication.scaledXA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 inter->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, j,
-													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
+						stokes_solver.addToDiagBlocks(i, j, inter->lubrication.RFU_DBlocks_squeeze());
+						stokes_solver.setOffDiagBlock(j, inter->lubrication.RFU_ODBlock_squeeze());
 					}
 					if (rhs) {
 						vec3d GEi, GEj;
@@ -1447,24 +1442,9 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			if (j > i) {
 				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-						const vec3d& nr_vec = inter->nvec;
 						inter->lubrication.calcXYFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 inter->lubrication.scaledXA0(),
-													 inter->lubrication.scaledYA0(),
-													 inter->lubrication.scaledYB0(),
-													 inter->lubrication.scaledYC0());
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 inter->lubrication.scaledXA3(),
-													 inter->lubrication.scaledYA3(),
-													 inter->lubrication.scaledYB3(),
-													 inter->lubrication.scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, j,
-													  inter->lubrication.scaledXA1(),
-													  inter->lubrication.scaledYA1(),
-													  inter->lubrication.scaledYB2(),
-													  inter->lubrication.scaledYB1(),
-													  inter->lubrication.scaledYC1());
+						stokes_solver.addToDiagBlocks(i, j, inter->lubrication.RFU_DBlocks_squeeze_tangential());
+						stokes_solver.setOffDiagBlock(j, inter->lubrication.RFU_ODBlock_squeeze_tangential());
 					}
 					if (rhs) {
 						vec3d GEi, GEj, HEi, HEj;

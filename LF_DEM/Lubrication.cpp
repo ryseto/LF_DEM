@@ -370,6 +370,213 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
 
+// for FT/UW version
+struct ODBlock Lubrication::RFU_ODBlock_squeeze()
+{
+	double n0n0 = nvec->x*nvec->x;
+	double n0n1 = nvec->x*nvec->y;
+	double n0n2 = nvec->x*nvec->z;
+	double n1n1 = nvec->y*nvec->y;
+	double n1n2 = nvec->y*nvec->z;
+	double n2n2 = nvec->z*nvec->z;
+
+	struct ODBlock block;
+	// column 0
+	block.col0[0] =  scaledXA1()*n0n0;
+	block.col0[1] = scaledXA1()*n0n1;
+	block.col0[2] = scaledXA1()*n0n2;
+	block.col0[3] = 0;
+	block.col0[4] =  0;
+	// column 1
+	block.col1[0] =  scaledXA1()*n1n1;
+	block.col1[1] = scaledXA1()*n1n2;
+	block.col1[2] = 0;
+	// column 2
+	block.col2[0] =  scaledXA1()*n2n2;
+	// column 3
+	block.col3[0] =  0;
+	block.col3[1] =  0;
+	block.col3[2] =  0;
+	block.col3[3] =  0;
+	block.col3[4] =  0;
+	// column 4
+	block.col4[0] =  0;
+	block.col4[1] =  0;
+	block.col4[2] = -0;
+	// column 5
+	block.col5[0] =  0;
+	return block;
+}
+
+// for FT/UW version
+struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential()
+{
+	double n0n0 = nvec->x*nvec->x;
+	double n0n1 = nvec->x*nvec->y;
+	double n0n2 = nvec->x*nvec->z;
+	double n1n1 = nvec->y*nvec->y;
+	double n1n2 = nvec->y*nvec->z;
+	double n2n2 = nvec->z*nvec->z;
+	double one_n0n0 = 1-n0n0;
+	double one_n1n1 = 1-n1n1;
+	double one_n2n2 = 1-n2n2;
+	double scaledXA1mYA1 = scaledXA1() - scaledYA1();
+	struct ODBlock block;
+	// column 0
+	block.col0[0] =  scaledXA1()*n0n0 + scaledYA1()*one_n0n0;
+	block.col0[1] = scaledXA1mYA1*n0n1;
+	block.col0[2] = scaledXA1mYA1*n0n2;
+	block.col0[3] = -scaledYB2()*nvec->z;
+	block.col0[4] =  scaledYB2()*nvec->y;
+	// column 1
+	block.col1[0] =  scaledXA1()*n1n1 + scaledYA1()*one_n1n1;
+	block.col1[1] = scaledXA1mYA1*n1n2;
+	block.col1[2] = -scaledYB2()*nvec->x;
+	// column 2
+	block.col2[0] =  scaledXA1()*n2n2 + scaledYA1()*one_n2n2;
+	// column 3
+	block.col3[0] =  scaledYB1()*nvec->z;
+	block.col3[1] = -scaledYB1()*nvec->y;
+	block.col3[2] =  scaledYC1()*one_n0n0;
+	block.col3[3] = -scaledYC1()*n0n1;
+	block.col3[4] = -scaledYC1()*n0n2;
+	// column 4
+	block.col4[0] =  scaledYB1()*nvec->x;
+	block.col4[1] =  scaledYC1()*one_n1n1;
+	block.col4[2] = -scaledYC1()*n1n2;
+	// column 5
+	block.col5[0] =  scaledYC1()*one_n2n2;
+	return block;
+}
+
+// Diagonal Blocks Terms, F/U version
+std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze()
+{
+	struct DBlock b0;
+	struct DBlock b1;
+
+	double n0n0 = nvec->x*nvec->x;
+	double n0n1 = nvec->x*nvec->y;
+	double n0n2 = nvec->x*nvec->z;
+	double n1n1 = nvec->y*nvec->y;
+	double n1n2 = nvec->y*nvec->z;
+	double n2n2 = nvec->z*nvec->z;
+
+	// (*,0)
+	b0.col0[0] = scaledXA0()*n0n0; // 00 element of the dblock
+	b0.col0[1] = scaledXA0()*n0n1;           // 10
+	b0.col0[2] = scaledXA0()*n0n2;           // 20
+	b0.col0[3] = 0;                   // 40
+	b0.col0[4] = 0;                   // 50
+	// (*,1)
+	b0.col1[0] = scaledXA0()*n1n1; // 11
+	b0.col1[1] = scaledXA0()*n1n2;           // 21
+	b0.col1[2] = 0;                   // 51
+	// (*,2)
+	b0.col2[0] = scaledXA0()*n2n2 ; // 22
+	// (*,3)
+	b0.col3[0] = 0;                 // 33
+	b0.col3[1] = 0;                     // 43
+	b0.col3[2] = 0;                     // 53
+	// (*,4)
+	b0.col4[0] = 0;                 // 44
+	b0.col4[1] = 0;                     // 54
+	// (*,5)
+	b0.col5[0] = 0;                 // 55
+
+	 // (*,0)
+ 	b1.col0[0] = scaledXA3()*n0n0; // 00 element of the dblock
+ 	b1.col0[1] = scaledXA3()*n0n1;           // 10
+ 	b1.col0[2] = scaledXA3()*n0n2;           // 20
+ 	b1.col0[3] = 0;                   // 40
+ 	b1.col0[4] = 0;                   // 50
+ 	// (*,1)
+ 	b1.col1[0] = scaledXA3()*n1n1; // 11
+ 	b1.col1[1] = scaledXA3()*n1n2;           // 21
+ 	b1.col1[2] = 0;                   // 51
+ 	// (*,2)
+ 	b1.col2[0] = scaledXA3()*n2n2; // 22
+ 	// (*,3)
+ 	b1.col3[0] = 0;                 // 33
+ 	b1.col3[1] = 0;                     // 43
+ 	b1.col3[2] = 0;                     // 53
+ 	// (*,4)
+ 	b1.col4[0] = 0;                 // 44
+ 	b1.col4[1] = 0;                     // 54
+ 	// (*,5)
+ 	b1.col5[0] = 0;                 // 55
+
+	return std::make_pair(b0, b1);
+}
+
+// Diagonal Blocks Terms, FT/UW version
+std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangential()
+{
+	struct DBlock b0;
+	struct DBlock b1;
+
+	double n0n0 = nvec->x*nvec->x;
+	double n0n1 = nvec->x*nvec->y;
+	double n0n2 = nvec->x*nvec->z;
+	double n1n1 = nvec->y*nvec->y;
+	double n1n2 = nvec->y*nvec->z;
+	double n2n2 = nvec->z*nvec->z;
+	double one_n0n0 = 1-n0n0;
+	double one_n1n1 = 1-n1n1;
+	double one_n2n2 = 1-n2n2;
+
+	double scaledXA0mYA0 = scaledXA0() - scaledYA0();
+
+	// (*,0)
+	b0.col0[0] =  scaledXA0()*n0n0 + scaledYA0()*one_n0n0; // 00 element of the dblock
+	b0.col0[1] = scaledXA0mYA0*n0n1;           // 10
+	b0.col0[2] = scaledXA0mYA0*n0n2;           // 20
+	b0.col0[3] = -scaledYB0()*nvec->z;                   // 40
+	b0.col0[4] =  scaledYB0()*nvec->y;                   // 50
+	// (*,1)
+	b0.col1[0] =  scaledXA0()*n1n1 + scaledYA0()*one_n1n1; // 11
+	b0.col1[1] = scaledXA0mYA0*n1n2;           // 21
+	b0.col1[2] = -scaledYB0()*nvec->x;                   // 51
+	// (*,2)
+	b0.col2[0] =  scaledXA0()*n2n2 + scaledYA0()*one_n2n2; // 22
+	// (*,3)
+	b0.col3[0] =  scaledYC0()*one_n0n0;                 // 33
+	b0.col3[1] = -scaledYC0()*n0n1;                     // 43
+	b0.col3[2] = -scaledYC0()*n0n2;                     // 53
+	// (*,4)
+	b0.col4[0] =  scaledYC0()*one_n1n1;                 // 44
+	b0.col4[1] = -scaledYC0()*n1n2;                     // 54
+	// (*,5)
+	b0.col5[0] =  scaledYC0()*one_n2n2;                 // 55
+
+	double scaledXA3mYA3 = scaledXA3() - scaledYA3();
+	 // (*,0)
+ 	b1.col0[0] =  scaledXA3()*n0n0 + scaledYA3()*one_n0n0; // 00 element of the dblock
+ 	b1.col0[1] = scaledXA3mYA3*n0n1;           // 10
+ 	b1.col0[2] = scaledXA3mYA3*n0n2;           // 20
+ 	b1.col0[3] = -scaledYB3()*nvec->z;                   // 40
+ 	b1.col0[4] =  scaledYB3()*nvec->y;                   // 50
+ 	// (*,1)
+ 	b1.col1[0] =  scaledXA3()*n1n1 + scaledYA3()*one_n1n1; // 11
+ 	b1.col1[1] = scaledXA3mYA3*n1n2;           // 21
+ 	b1.col1[2] = -scaledYB3()*nvec->x;                   // 51
+ 	// (*,2)
+ 	b1.col2[0] =  scaledXA3()*n2n2 + scaledYA3()*one_n2n2; // 22
+ 	// (*,3)
+ 	b1.col3[0] =  scaledYC3()*one_n0n0;                 // 33
+ 	b1.col3[1] = -scaledYC3()*n0n1;                     // 43
+ 	b1.col3[2] = -scaledYC3()*n0n2;                     // 53
+ 	// (*,4)
+ 	b1.col4[0] =  scaledYC3()*one_n1n1;                 // 44
+ 	b1.col4[1] = -scaledYC3()*n1n2;                     // 54
+ 	// (*,5)
+ 	b1.col5[0] =  scaledYC3()*one_n2n2;                 // 55
+
+	return std::make_pair(b0, b1);
+}
+
+
+
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
 // from pair (i,j).
 // ie fills :

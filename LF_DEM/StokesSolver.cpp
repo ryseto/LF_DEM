@@ -71,79 +71,44 @@ void StokesSolver::init(int np_total, int np_mobile)
 
 /************* Matrix filling methods **********************/
 
-// Diagonal Blocks Terms, FT/UW version
-void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
-								  double scaledXA, double scaledYA,
-								  double scaledYB, double scaledYC)
+void StokesSolver::addToDiagBlock(int ii, const struct DBlock &b)
 {
 	if (ii >= mobile_particle_nb) {
 		// FF matrix
-		addToDBlock(dblocks_ff[ii-mobile_particle_nb], nvec, scaledXA, scaledYA, scaledYB, scaledYC);
+		dblocks_ff[ii-mobile_particle_nb] += b;
 	} else {
 		// MM matrix
-		addToDBlock(dblocks[ii], nvec, scaledXA, scaledYA, scaledYB, scaledYC);
+		dblocks[ii] += b;
 	}
 }
 
-// Diagonal Blocks Terms, FT/UW version
-void StokesSolver::addToDBlock(struct DBlock& b, const vec3d& nvec,
-							   double scaledXA, double scaledYA,
-							   double scaledYB, double scaledYC)
+void StokesSolver::addToDiagBlocks(int ii,
+                                   int jj,
+                                   const std::pair<struct DBlock, struct DBlock> &DBiDBj)
 {
-	double n0n0 = nvec.x*nvec.x;
-	double n0n1 = nvec.x*nvec.y;
-	double n0n2 = nvec.x*nvec.z;
-	double n1n1 = nvec.y*nvec.y;
-	double n1n2 = nvec.y*nvec.z;
-	double n2n2 = nvec.z*nvec.z;
-	double one_n0n0 = 1-n0n0;
-	double one_n1n1 = 1-n1n1;
-	double one_n2n2 = 1-n2n2;
-	// (*,0)
-	b.col0[0] +=  scaledXA*n0n0 + scaledYA*one_n0n0; // 00 element of the dblock
-	b.col0[1] += (scaledXA-scaledYA)*n0n1;           // 10
-	b.col0[2] += (scaledXA-scaledYA)*n0n2;           // 20
-	b.col0[3] += -scaledYB*nvec.z;                   // 40
-	b.col0[4] +=  scaledYB*nvec.y;                   // 50
-	// (*,1)
-	b.col1[0] +=  scaledXA*n1n1 + scaledYA*one_n1n1; // 11
-	b.col1[1] += (scaledXA-scaledYA)*n1n2;           // 21
-	b.col1[2] += -scaledYB*nvec.x;                   // 51
-	// (*,2)
-	b.col2[0] +=  scaledXA*n2n2 + scaledYA*one_n2n2; // 22
-	// (*,3)
-	b.col3[0] +=  scaledYC*one_n0n0;                 // 33
-	b.col3[1] += -scaledYC*n0n1;                     // 43
-	b.col3[2] += -scaledYC*n0n2;                     // 53
-	// (*,4)
-	b.col4[0] +=  scaledYC*one_n1n1;                 // 44
-	b.col4[1] += -scaledYC*n1n2;                     // 54
-	// (*,5)
-	b.col5[0] +=  scaledYC*one_n2n2;                 // 55
+	addToDiagBlock(ii, DBiDBj.first);
+	addToDiagBlock(jj, DBiDBj.second);
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
-void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
-								   double scaledXA,
-								   double scaledYA, double scaledYB,
-								   double scaledYBtilde, double scaledYC)
+void StokesSolver::setOffDiagBlock(int jj, const struct ODBlock& b)
 {
 	if (mobile_matrix_done) {
 		// FF Matrix
 		odbrows_ff.push_back(6*(jj-mobile_particle_nb));
 		auto i = odbrows_ff.size()-1;
-		odblocks_ff[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+		odblocks_ff[i] = b;
 	} else {
 		if (jj < mobile_particle_nb) {
 			// MM matrix
 			odbrows.push_back(6*jj);
 			auto i = odbrows.size()-1;
-			odblocks[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+			odblocks[i] = b;
 		} else {
 			// MF matrix
 			odbrows_mf.push_back(6*(jj-mobile_particle_nb));
 			auto i = odbrows_mf.size()-1;
-			odblocks_mf[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+			odblocks_mf[i] = b;
 		}
 	}
 	return;
@@ -879,49 +844,6 @@ void StokesSolver::doneBlocks(int i)
 	if (i == mobile_particle_nb-1) {
 		mobile_matrix_done = true;
 	}
-}
-
-// odblocks fillings, for FT/UW version
-struct ODBlock StokesSolver::buildODBlock(const vec3d& nvec,
-										  double scaledXA,
-										  double scaledYA, double scaledYB,
-										  double scaledYBtilde, double scaledYC)
-{
-	double n0n0 = nvec.x*nvec.x;
-	double n0n1 = nvec.x*nvec.y;
-	double n0n2 = nvec.x*nvec.z;
-	double n1n1 = nvec.y*nvec.y;
-	double n1n2 = nvec.y*nvec.z;
-	double n2n2 = nvec.z*nvec.z;
-	double one_n0n0 = 1-n0n0;
-	double one_n1n1 = 1-n1n1;
-	double one_n2n2 = 1-n2n2;
-	struct ODBlock block;
-	// column 0
-	block.col0[0] =  scaledXA*n0n0 + scaledYA*one_n0n0;
-	block.col0[1] = (scaledXA - scaledYA)*n0n1;
-	block.col0[2] = (scaledXA - scaledYA)*n0n2;
-	block.col0[3] = -scaledYB*nvec.z;
-	block.col0[4] =  scaledYB*nvec.y;
-	// column 1
-	block.col1[0] =  scaledXA*n1n1 + scaledYA*one_n1n1;
-	block.col1[1] = (scaledXA - scaledYA)*n1n2;
-	block.col1[2] = -scaledYB*nvec.x;
-	// column 2
-	block.col2[0] =  scaledXA*n2n2 + scaledYA*one_n2n2;
-	// column 3
-	block.col3[0] =  scaledYBtilde*nvec.z;
-	block.col3[1] = -scaledYBtilde*nvec.y;
-	block.col3[2] =  scaledYC*one_n0n0;
-	block.col3[3] = -scaledYC*n0n1;
-	block.col3[4] = -scaledYC*n0n2;
-	// column 4
-	block.col4[0] =  scaledYBtilde*nvec.x;
-	block.col4[1] =  scaledYC*one_n1n1;
-	block.col4[2] = -scaledYC*n1n2;
-	// column 5
-	block.col5[0] =  scaledYC*one_n2n2;
-	return block;
 }
 
 void StokesSolver::factorizeResistanceMatrix()
