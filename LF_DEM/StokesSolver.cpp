@@ -859,19 +859,6 @@ void StokesSolver::matrixFillingDone()
 	}
 }
 
-void StokesSolver::doneBlocks(int i)
-{
-	if (mobile_matrix_done) {
-		odbrows_table_ff[i-mobile_particle_nb+1] = (unsigned int)odbrows_ff.size();
-	} else {
-		odbrows_table[i+1] = (unsigned int)odbrows.size();
-		odbrows_table_mf[i+1] = (unsigned int)odbrows_mf.size();
-	}
-	if (i == mobile_particle_nb-1) {
-		mobile_matrix_done = true;
-	}
-}
-
 void StokesSolver::factorizeResistanceMatrix()
 {
 	/*reference code */
