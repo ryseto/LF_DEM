@@ -67,15 +67,6 @@ private:
 	double YH[4]; // ii ij ji jj
 	double XM[4]; // ii ij ji jj
 	double YM[4]; // ii ij ji jj
-	double scaledXA[4]; // ii ij ji jj
-	double scaledYA[4]; // ii ij ji jj
-	double scaledYB[4]; // ii ij ji jj
-	double scaledYC[4]; // ii ij ji jj
-	double scaledXG[4]; // ii ij ji jj
-	double scaledYG[4]; // ii ij ji jj
-	double scaledYH[4]; // ii ij ji jj
-	double scaledXM[4]; // ii ij ji jj
-	double scaledYM[4]; // ii ij ji jj
 	double cXA[4];
 	double cYA[4];
 	double cYB[4];
