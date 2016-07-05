@@ -221,43 +221,85 @@ void Lubrication::calcXFunctions()
 		XA[j] = cXA[j]*lub_coeff;
 		XG[j] = cXG[j]*lub_coeff;
 	}
+
+	scaledXA[0] = a0*XA[0];
+	scaledXA[1] = ro_12*XA[1];
+	scaledXA[2] = ro_12*XA[2];
+	scaledXA[3] = a1*XA[3];
+
+	scaledXG[0] = a0a0_23*XG[0];
+	scaledXG[1] = roro_16*XG[1];
+	scaledXG[2] = roro_16*XG[2];
+	scaledXG[3] = a1a1_23*XG[3];
 }
 
 void Lubrication::calcXFunctionsStress()
 {
+	calcXFunctions();
 	for (int j=0; j<4; j++) {
-		XA[j] = cXA[j]*lub_coeff;
-		XG[j] = cXG[j]*lub_coeff;
 		XM[j] = cXM[j]*lub_coeff;
 	}
+	scaledXM[0] = a0a0a0_109*XM[0];
+	scaledXM[1] = rororo_536*XM[1];
+	scaledXM[2] = rororo_536*XM[2];
+	scaledXM[3] = a1a1a1_109*XM[3];
 }
 
 void Lubrication::calcXYFunctions()
 {
+	calcXFunctions();
+
 	for (int j=0; j<4; j++) {
-		XA[j] = cXA[j]*lub_coeff;
 		YA[j] = cYA[j]*log_lub_coeff;
 		YB[j] = cYB[j]*log_lub_coeff;
 		YC[j] = cYC[j]*log_lub_coeff;
-		XG[j] = cXG[j]*lub_coeff;
 		YG[j] = cYG[j]*log_lub_coeff;
 		YH[j] = cYH[j]*log_lub_coeff;
 	}
+
+	scaledYA[0] = a0*YA[0];
+	scaledYA[1] = ro_12*YA[1];
+	scaledYA[2] = ro_12*YA[2];
+	scaledYA[3] = a1*YA[3];
+
+	scaledYB[0] = a0a0_23*YB[0];
+	scaledYB[1] = roro_16*YB[1];
+	scaledYB[2] = roro_16*YB[2];
+	scaledYB[3] = a1a1_23*YB[3];
+
+	scaledYC[0] = a0a0a0_43*YC[0];
+	scaledYC[1] = rororo_16*YC[1];
+	scaledYC[2] = rororo_16*YC[2];
+	scaledYC[3] = a1a1a1_43*YC[3];
+
+
+	scaledYG[0] = a0a0_23*YG[0];
+	scaledYG[1] = roro_16*YG[1];
+	scaledYG[2] = roro_16*YG[2];
+	scaledYG[3] = a1a1_23*YG[3];
+
+	scaledYH[0] = a0a0a0_43*YH[0];
+	scaledYH[1] = rororo_16*YH[1];
+	scaledYH[2] = rororo_16*YH[2];
+	scaledYH[3] = a1a1a1_43*YH[3];
 }
 
 void Lubrication::calcXYFunctionsStress()
 {
+	calcXYFunctions();
 	for (int j=0; j<4; j++) {
-		XA[j] = cXA[j]*lub_coeff;
-		YA[j] = cYA[j]*log_lub_coeff;
-		YB[j] = cYB[j]*log_lub_coeff;
-		YC[j] = cYC[j]*log_lub_coeff;
-		XG[j] = cXG[j]*lub_coeff;
-		YG[j] = cYG[j]*log_lub_coeff;
-		YH[j] = cYH[j]*log_lub_coeff;
 		XM[j] = cXM[j]*lub_coeff;
 		YM[j] = cYM[j]*log_lub_coeff;
 	}
+	scaledXM[0] = a0a0a0_109*XM[0];
+	scaledXM[1] = rororo_536*XM[1];
+	scaledXM[2] = rororo_536*XM[2];
+	scaledXM[3] = a1a1a1_109*XM[3];
+
+	scaledYM[0] = a0a0a0_109*YM[0];
+	scaledYM[1] = rororo_536*YM[1];
+	scaledYM[2] = rororo_536*YM[2];
+	scaledYM[3] = a1a1a1_109*YM[3];
 }
 
 std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze()
@@ -271,8 +313,8 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze()
 	 * GE1 = (nvecnvec:E)*(XG11+XG21)*nvec
 	 * GE2 = (nvecnvec:E)*(XG12+XG22)*nvec
 	 */
-	double cGE_p0 = (scaledXG0()+scaledXG2())*nnE;
-	double cGE_p1 = (scaledXG1()+scaledXG3())*nnE;
+	double cGE_p0 = (scaledXG[0]+scaledXG[2])*nnE;
+	double cGE_p1 = (scaledXG[1]+scaledXG[3])*nnE;
 	vec3d GEi, GEj;
 	GEi.x = cGE_p0*nvec->x;
 	GEi.y = cGE_p0*nvec->y;
@@ -292,10 +334,10 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-	double YG0_YG2 = scaledYG0()+scaledYG2();
-	double YG1_YG3 = scaledYG1()+scaledYG3();
-	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nnE;
-	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
+	double YG0_YG2 = scaledYG[0]+scaledYG[2];
+	double YG1_YG3 = scaledYG[1]+scaledYG[3];
+	double cGE_i = (scaledXG[0]+scaledXG[2]-2*YG0_YG2)*nnE;
+	double cGE_j = (scaledXG[1]+scaledXG[3]-2*YG1_YG3)*nnE;
 	vec3d GEi, GEj;
 	if (!sys->p.cross_shear) {
 		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
@@ -327,12 +369,12 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-	double YG0_YG2 = scaledYG0()+scaledYG2();
-	double YG1_YG3 = scaledYG1()+scaledYG3();
-	double cGE_i = (scaledXG0()+scaledXG2()-2*YG0_YG2)*nnE;
-	double cGE_j = (scaledXG1()+scaledXG3()-2*YG1_YG3)*nnE;
-	double cHE_i =  scaledYH0()+scaledYH2();
-	double cHE_j =  scaledYH1()+scaledYH3();
+	double YG0_YG2 = scaledYG[0]+scaledYG[2];
+	double YG1_YG3 = scaledYG[1]+scaledYG[3];
+	double cGE_i = (scaledXG[0]+scaledXG[2]-2*YG0_YG2)*nnE;
+	double cGE_j = (scaledXG[1]+scaledXG[3]-2*YG1_YG3)*nnE;
+	double cHE_i =  scaledYH[0]+scaledYH[2];
+	double cHE_j =  scaledYH[1]+scaledYH[3];
 	vec3d GEi, GEj, HEi, HEj;
 	if (!sys->p.cross_shear) {
 		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
@@ -382,17 +424,17 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze()
 
 	struct ODBlock block;
 	// column 0
-	block.col0[0] =  scaledXA1()*n0n0;
-	block.col0[1] = scaledXA1()*n0n1;
-	block.col0[2] = scaledXA1()*n0n2;
+	block.col0[0] = scaledXA[1]*n0n0;
+	block.col0[1] = scaledXA[1]*n0n1;
+	block.col0[2] = scaledXA[1]*n0n2;
 	block.col0[3] = 0;
 	block.col0[4] =  0;
 	// column 1
-	block.col1[0] =  scaledXA1()*n1n1;
-	block.col1[1] = scaledXA1()*n1n2;
+	block.col1[0] =  scaledXA[1]*n1n1;
+	block.col1[1] = scaledXA[1]*n1n2;
 	block.col1[2] = 0;
 	// column 2
-	block.col2[0] =  scaledXA1()*n2n2;
+	block.col2[0] =  scaledXA[1]*n2n2;
 	// column 3
 	block.col3[0] =  0;
 	block.col3[1] =  0;
@@ -420,32 +462,32 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential()
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-	double scaledXA1mYA1 = scaledXA1() - scaledYA1();
+	double scaledXA1mYA1 = scaledXA[1] - scaledYA[1];
 	struct ODBlock block;
 	// column 0
-	block.col0[0] =  scaledXA1()*n0n0 + scaledYA1()*one_n0n0;
+	block.col0[0] =  scaledXA[1]*n0n0 + scaledYA[1]*one_n0n0;
 	block.col0[1] = scaledXA1mYA1*n0n1;
 	block.col0[2] = scaledXA1mYA1*n0n2;
-	block.col0[3] = -scaledYB2()*nvec->z;
-	block.col0[4] =  scaledYB2()*nvec->y;
+	block.col0[3] = -scaledYB[2]*nvec->z;
+	block.col0[4] =  scaledYB[2]*nvec->y;
 	// column 1
-	block.col1[0] =  scaledXA1()*n1n1 + scaledYA1()*one_n1n1;
+	block.col1[0] =  scaledXA[1]*n1n1 + scaledYA[1]*one_n1n1;
 	block.col1[1] = scaledXA1mYA1*n1n2;
-	block.col1[2] = -scaledYB2()*nvec->x;
+	block.col1[2] = -scaledYB[2]*nvec->x;
 	// column 2
-	block.col2[0] =  scaledXA1()*n2n2 + scaledYA1()*one_n2n2;
+	block.col2[0] =  scaledXA[1]*n2n2 + scaledYA[1]*one_n2n2;
 	// column 3
-	block.col3[0] =  scaledYB1()*nvec->z;
-	block.col3[1] = -scaledYB1()*nvec->y;
-	block.col3[2] =  scaledYC1()*one_n0n0;
-	block.col3[3] = -scaledYC1()*n0n1;
-	block.col3[4] = -scaledYC1()*n0n2;
+	block.col3[0] =  scaledYB[1]*nvec->z;
+	block.col3[1] = -scaledYB[1]*nvec->y;
+	block.col3[2] =  scaledYC[1]*one_n0n0;
+	block.col3[3] = -scaledYC[1]*n0n1;
+	block.col3[4] = -scaledYC[1]*n0n2;
 	// column 4
-	block.col4[0] =  scaledYB1()*nvec->x;
-	block.col4[1] =  scaledYC1()*one_n1n1;
-	block.col4[2] = -scaledYC1()*n1n2;
+	block.col4[0] =  scaledYB[1]*nvec->x;
+	block.col4[1] =  scaledYC[1]*one_n1n1;
+	block.col4[2] = -scaledYC[1]*n1n2;
 	// column 5
-	block.col5[0] =  scaledYC1()*one_n2n2;
+	block.col5[0] =  scaledYC[1]*one_n2n2;
 	return block;
 }
 
@@ -463,17 +505,17 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze()
 	double n2n2 = nvec->z*nvec->z;
 
 	// (*,0)
-	b0.col0[0] = scaledXA0()*n0n0; // 00 element of the dblock
-	b0.col0[1] = scaledXA0()*n0n1;           // 10
-	b0.col0[2] = scaledXA0()*n0n2;           // 20
+	b0.col0[0] = scaledXA[0]*n0n0; // 00 element of the dblock
+	b0.col0[1] = scaledXA[0]*n0n1;           // 10
+	b0.col0[2] = scaledXA[0]*n0n2;           // 20
 	b0.col0[3] = 0;                   // 40
 	b0.col0[4] = 0;                   // 50
 	// (*,1)
-	b0.col1[0] = scaledXA0()*n1n1; // 11
-	b0.col1[1] = scaledXA0()*n1n2;           // 21
+	b0.col1[0] = scaledXA[0]*n1n1; // 11
+	b0.col1[1] = scaledXA[0]*n1n2;           // 21
 	b0.col1[2] = 0;                   // 51
 	// (*,2)
-	b0.col2[0] = scaledXA0()*n2n2 ; // 22
+	b0.col2[0] = scaledXA[0]*n2n2 ; // 22
 	// (*,3)
 	b0.col3[0] = 0;                 // 33
 	b0.col3[1] = 0;                     // 43
@@ -485,17 +527,17 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze()
 	b0.col5[0] = 0;                 // 55
 
 	 // (*,0)
- 	b1.col0[0] = scaledXA3()*n0n0; // 00 element of the dblock
- 	b1.col0[1] = scaledXA3()*n0n1;           // 10
- 	b1.col0[2] = scaledXA3()*n0n2;           // 20
+ 	b1.col0[0] = scaledXA[3]*n0n0; // 00 element of the dblock
+ 	b1.col0[1] = scaledXA[3]*n0n1;           // 10
+ 	b1.col0[2] = scaledXA[3]*n0n2;           // 20
  	b1.col0[3] = 0;                   // 40
  	b1.col0[4] = 0;                   // 50
  	// (*,1)
- 	b1.col1[0] = scaledXA3()*n1n1; // 11
- 	b1.col1[1] = scaledXA3()*n1n2;           // 21
+ 	b1.col1[0] = scaledXA[3]*n1n1; // 11
+ 	b1.col1[1] = scaledXA[3]*n1n2;           // 21
  	b1.col1[2] = 0;                   // 51
  	// (*,2)
- 	b1.col2[0] = scaledXA3()*n2n2; // 22
+ 	b1.col2[0] = scaledXA[3]*n2n2; // 22
  	// (*,3)
  	b1.col3[0] = 0;                 // 33
  	b1.col3[1] = 0;                     // 43
@@ -525,52 +567,52 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
 
-	double scaledXA0mYA0 = scaledXA0() - scaledYA0();
+	double scaledXA0mYA0 = scaledXA[0] - scaledYA[0];
 
 	// (*,0)
-	b0.col0[0] =  scaledXA0()*n0n0 + scaledYA0()*one_n0n0; // 00 element of the dblock
+	b0.col0[0] =  scaledXA[0]*n0n0 + scaledYA[0]*one_n0n0; // 00 element of the dblock
 	b0.col0[1] = scaledXA0mYA0*n0n1;           // 10
 	b0.col0[2] = scaledXA0mYA0*n0n2;           // 20
-	b0.col0[3] = -scaledYB0()*nvec->z;                   // 40
-	b0.col0[4] =  scaledYB0()*nvec->y;                   // 50
+	b0.col0[3] = -scaledYB[0]*nvec->z;                   // 40
+	b0.col0[4] =  scaledYB[0]*nvec->y;                   // 50
 	// (*,1)
-	b0.col1[0] =  scaledXA0()*n1n1 + scaledYA0()*one_n1n1; // 11
+	b0.col1[0] =  scaledXA[0]*n1n1 + scaledYA[0]*one_n1n1; // 11
 	b0.col1[1] = scaledXA0mYA0*n1n2;           // 21
-	b0.col1[2] = -scaledYB0()*nvec->x;                   // 51
+	b0.col1[2] = -scaledYB[0]*nvec->x;                   // 51
 	// (*,2)
-	b0.col2[0] =  scaledXA0()*n2n2 + scaledYA0()*one_n2n2; // 22
+	b0.col2[0] =  scaledXA[0]*n2n2 + scaledYA[0]*one_n2n2; // 22
 	// (*,3)
-	b0.col3[0] =  scaledYC0()*one_n0n0;                 // 33
-	b0.col3[1] = -scaledYC0()*n0n1;                     // 43
-	b0.col3[2] = -scaledYC0()*n0n2;                     // 53
+	b0.col3[0] =  scaledYC[0]*one_n0n0;                 // 33
+	b0.col3[1] = -scaledYC[0]*n0n1;                     // 43
+	b0.col3[2] = -scaledYC[0]*n0n2;                     // 53
 	// (*,4)
-	b0.col4[0] =  scaledYC0()*one_n1n1;                 // 44
-	b0.col4[1] = -scaledYC0()*n1n2;                     // 54
+	b0.col4[0] =  scaledYC[0]*one_n1n1;                 // 44
+	b0.col4[1] = -scaledYC[0]*n1n2;                     // 54
 	// (*,5)
-	b0.col5[0] =  scaledYC0()*one_n2n2;                 // 55
+	b0.col5[0] =  scaledYC[0]*one_n2n2;                 // 55
 
-	double scaledXA3mYA3 = scaledXA3() - scaledYA3();
+	double scaledXA3mYA3 = scaledXA[3] - scaledYA[3];
 	 // (*,0)
- 	b1.col0[0] =  scaledXA3()*n0n0 + scaledYA3()*one_n0n0; // 00 element of the dblock
+ 	b1.col0[0] =  scaledXA[3]*n0n0 + scaledYA[3]*one_n0n0; // 00 element of the dblock
  	b1.col0[1] = scaledXA3mYA3*n0n1;           // 10
  	b1.col0[2] = scaledXA3mYA3*n0n2;           // 20
- 	b1.col0[3] = -scaledYB3()*nvec->z;                   // 40
- 	b1.col0[4] =  scaledYB3()*nvec->y;                   // 50
+ 	b1.col0[3] = -scaledYB[3]*nvec->z;                   // 40
+ 	b1.col0[4] =  scaledYB[3]*nvec->y;                   // 50
  	// (*,1)
- 	b1.col1[0] =  scaledXA3()*n1n1 + scaledYA3()*one_n1n1; // 11
+ 	b1.col1[0] =  scaledXA[3]*n1n1 + scaledYA[3]*one_n1n1; // 11
  	b1.col1[1] = scaledXA3mYA3*n1n2;           // 21
- 	b1.col1[2] = -scaledYB3()*nvec->x;                   // 51
+ 	b1.col1[2] = -scaledYB[3]*nvec->x;                   // 51
  	// (*,2)
- 	b1.col2[0] =  scaledXA3()*n2n2 + scaledYA3()*one_n2n2; // 22
+ 	b1.col2[0] =  scaledXA[3]*n2n2 + scaledYA[3]*one_n2n2; // 22
  	// (*,3)
- 	b1.col3[0] =  scaledYC3()*one_n0n0;                 // 33
- 	b1.col3[1] = -scaledYC3()*n0n1;                     // 43
- 	b1.col3[2] = -scaledYC3()*n0n2;                     // 53
+ 	b1.col3[0] =  scaledYC[3]*one_n0n0;                 // 33
+ 	b1.col3[1] = -scaledYC[3]*n0n1;                     // 43
+ 	b1.col3[2] = -scaledYC[3]*n0n2;                     // 53
  	// (*,4)
- 	b1.col4[0] =  scaledYC3()*one_n1n1;                 // 44
- 	b1.col4[1] = -scaledYC3()*n1n2;                     // 54
+ 	b1.col4[0] =  scaledYC[3]*one_n1n1;                 // 44
+ 	b1.col4[1] = -scaledYC[3]*n1n2;                     // 54
  	// (*,5)
- 	b1.col5[0] =  scaledYC3()*one_n2n2;                 // 55
+ 	b1.col5[0] =  scaledYC[3]*one_n2n2;                 // 55
 
 	return std::make_pair(b0, b1);
 }
@@ -594,8 +636,8 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	 *         = - vec{n}.(XG11*v1+XG12*v2)*(ninj-(1/3)*delta_{ij})
 	 *
 	 */
-	double cXG_i = -dot(nvec, scaledXG0()*vi+scaledXG1()*vj);
-	double cXG_j = -dot(nvec, scaledXG2()*vi+scaledXG3()*vj);
+	double cXG_i = -dot(nvec, scaledXG[0]*vi+scaledXG[1]*vj);
+	double cXG_j = -dot(nvec, scaledXG[2]*vi+scaledXG[3]*vj);
 	StressTensor XGU_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	StressTensor XGU_j = XGU_i;
 	XGU_i *= cXG_i;
@@ -609,35 +651,35 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	StressTensor YGU_j;
 	double cYGUi_xx = nvec->x*vi.x+nvec->x*vi.x-2*nvec->x*nvec->x*dot(nvec, vi);
 	double cYGUj_xx = nvec->x*vj.x+nvec->x*vj.x-2*nvec->x*nvec->x*dot(nvec, vj);
-	YGU_i.elm[0] = -scaledYG0()*cYGUi_xx-scaledYG1()*cYGUj_xx;
-	YGU_j.elm[0] = -scaledYG2()*cYGUi_xx-scaledYG3()*cYGUj_xx;
+	YGU_i.elm[0] = -scaledYG[0]*cYGUi_xx-scaledYG[1]*cYGUj_xx;
+	YGU_j.elm[0] = -scaledYG[2]*cYGUi_xx-scaledYG[3]*cYGUj_xx;
 
 	double cYGUi_xy = nvec->x*vi.y+nvec->y*vi.x-2*nvec->x*nvec->y*dot(nvec, vi);
 	double cYGUj_xy = nvec->x*vj.y+nvec->y*vj.x-2*nvec->x*nvec->y*dot(nvec, vj);
-	YGU_i.elm[1] = -scaledYG0()*cYGUi_xy-scaledYG1()*cYGUj_xy;
-	YGU_j.elm[1] = -scaledYG2()*cYGUi_xy-scaledYG3()*cYGUj_xy;
+	YGU_i.elm[1] = -scaledYG[0]*cYGUi_xy-scaledYG[1]*cYGUj_xy;
+	YGU_j.elm[1] = -scaledYG[2]*cYGUi_xy-scaledYG[3]*cYGUj_xy;
 
 	double cYGUi_xz = nvec->x*vi.z+nvec->z*vi.x-2*nvec->x*nvec->z*dot(nvec, vi);
 	double cYGUj_xz = nvec->x*vj.z+nvec->z*vj.x-2*nvec->x*nvec->z*dot(nvec, vj);
-	YGU_i.elm[2] = -scaledYG0()*cYGUi_xz-scaledYG1()*cYGUj_xz;
-	YGU_j.elm[2] = -scaledYG2()*cYGUi_xz-scaledYG3()*cYGUj_xz;
+	YGU_i.elm[2] = -scaledYG[0]*cYGUi_xz-scaledYG[1]*cYGUj_xz;
+	YGU_j.elm[2] = -scaledYG[2]*cYGUi_xz-scaledYG[3]*cYGUj_xz;
 
 	double cYGUi_yz = nvec->y*vi.z+nvec->z*vi.y-2*nvec->y*nvec->z*dot(nvec, vi);
 	double cYGUj_yz = nvec->y*vj.z+nvec->z*vj.y-2*nvec->y*nvec->z*dot(nvec, vj);
-	YGU_i.elm[3] = -scaledYG0()*cYGUi_yz-scaledYG1()*cYGUj_yz;
-	YGU_j.elm[3] = -scaledYG2()*cYGUi_yz-scaledYG3()*cYGUj_yz;
+	YGU_i.elm[3] = -scaledYG[0]*cYGUi_yz-scaledYG[1]*cYGUj_yz;
+	YGU_j.elm[3] = -scaledYG[2]*cYGUi_yz-scaledYG[3]*cYGUj_yz;
 
 	double cYGUi_yy = nvec->y*vi.y+nvec->y*vi.y-2*nvec->y*nvec->y*dot(nvec, vi);
 	double cYGUj_yy = nvec->y*vj.y+nvec->y*vj.y-2*nvec->y*nvec->y*dot(nvec, vj);
 
-	YGU_i.elm[4] = -scaledYG0()*cYGUi_yy-scaledYG1()*cYGUj_yy;
-	YGU_j.elm[4] = -scaledYG2()*cYGUi_yy-scaledYG3()*cYGUj_yy;
+	YGU_i.elm[4] = -scaledYG[0]*cYGUi_yy-scaledYG[1]*cYGUj_yy;
+	YGU_j.elm[4] = -scaledYG[2]*cYGUi_yy-scaledYG[3]*cYGUj_yy;
 
 	double cYGUi_zz = nvec->z*vi.z+nvec->z*vi.z-2*nvec->z*nvec->z*dot(nvec, vi);
 	double cYGUj_zz = nvec->z*vj.z+nvec->z*vj.z-2*nvec->z*nvec->z*dot(nvec, vj);
 
-	YGU_i.elm[5] = -scaledYG0()*cYGUi_zz-scaledYG1()*cYGUj_zz;
-	YGU_j.elm[5] = -scaledYG2()*cYGUi_zz-scaledYG3()*cYGUj_zz;
+	YGU_i.elm[5] = -scaledYG[0]*cYGUi_zz-scaledYG[1]*cYGUj_zz;
+	YGU_j.elm[5] = -scaledYG[2]*cYGUi_zz-scaledYG[3]*cYGUj_zz;
 
 	stresslet_i += YGU_i;
 	stresslet_j += YGU_j;
@@ -646,33 +688,33 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	StressTensor YHO_j;
 	double cYHOi_xx = nxnz*oi.y-nxny*oi.z;
 	double cYHOj_xx = nxnz*oj.y-nxny*oj.z;
-	YHO_i.elm[0] = -2*(scaledYM0()*cYHOi_xx+scaledYM1()*cYHOj_xx);
-	YHO_j.elm[0] = -2*(scaledYM2()*cYHOi_xx+scaledYM3()*cYHOj_xx);
+	YHO_i.elm[0] = -2*(scaledYM[0]*cYHOi_xx+scaledYM[1]*cYHOj_xx);
+	YHO_j.elm[0] = -2*(scaledYM[2]*cYHOi_xx+scaledYM[3]*cYHOj_xx);
 
 	double cYHOi_xy = nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z;
 	double cYHOj_xy = nxnx*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z;
-	YHO_i.elm[1] = -scaledYM0()*cYHOi_xy-scaledYM1()*cYHOj_xy;
-	YHO_j.elm[1] = -scaledYM2()*cYHOi_xy-scaledYM3()*cYHOj_xy;
+	YHO_i.elm[1] = -scaledYM[0]*cYHOi_xy-scaledYM[1]*cYHOj_xy;
+	YHO_j.elm[1] = -scaledYM[2]*cYHOi_xy-scaledYM[3]*cYHOj_xy;
 
 	double cYHOi_xz = nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z;
 	double cYHOj_xz = nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z;
-	YHO_i.elm[2] = -scaledYM0()*cYHOi_xz-scaledYM1()*cYHOj_xz;
-	YHO_j.elm[2] = -scaledYM2()*cYHOi_xz-scaledYM3()*cYHOj_xz;
+	YHO_i.elm[2] = -scaledYM[0]*cYHOi_xz-scaledYM[1]*cYHOj_xz;
+	YHO_j.elm[2] = -scaledYM[2]*cYHOi_xz-scaledYM[3]*cYHOj_xz;
 
 	double cYHOi_yz = nyny*oi.x-nxny*oi.y+nxnz*oi.z-nznz*oi.x;
 	double cYHOj_yz = nyny*oj.x-nxny*oj.y+nxnz*oj.z-nznz*oj.x;
-	YHO_i.elm[3] = -scaledYM0()*cYHOi_yz-scaledYM1()*cYHOj_yz;
-	YHO_j.elm[3] = -scaledYM2()*cYHOi_yz-scaledYM3()*cYHOj_yz;
+	YHO_i.elm[3] = -scaledYM[0]*cYHOi_yz-scaledYM[1]*cYHOj_yz;
+	YHO_j.elm[3] = -scaledYM[2]*cYHOi_yz-scaledYM[3]*cYHOj_yz;
 
 	double cYHOi_yy = nxny*oi.z-nynz*oi.x;
 	double cYHOj_yy = nxny*oj.z-nynz*oj.x;
-	YHO_i.elm[4] = -2*(scaledYM0()*cYHOi_yy+scaledYM1()*cYHOj_yy);
-	YHO_j.elm[4] = -2*(scaledYM2()*cYHOi_yy+scaledYM3()*cYHOj_yy);
+	YHO_i.elm[4] = -2*(scaledYM[0]*cYHOi_yy+scaledYM[1]*cYHOj_yy);
+	YHO_j.elm[4] = -2*(scaledYM[2]*cYHOi_yy+scaledYM[3]*cYHOj_yy);
 
 	double cYHOi_zz = nynz*oi.x-nxnz*oi.y;
 	double cYHOj_zz = nynz*oj.x-nxnz*oj.y;
-	YHO_i.elm[5] = -2*(scaledYM0()*cYHOi_zz+scaledYM1()*cYHOj_zz);
-	YHO_j.elm[5] = -2*(scaledYM2()*cYHOi_zz+scaledYM3()*cYHOj_zz);
+	YHO_i.elm[5] = -2*(scaledYM[0]*cYHOi_zz+scaledYM[1]*cYHOj_zz);
+	YHO_j.elm[5] = -2*(scaledYM[2]*cYHOi_zz+scaledYM[3]*cYHOj_zz);
 
 	stresslet_i += YHO_i;
 	stresslet_j += YHO_j;
@@ -698,8 +740,8 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
 		\f$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} \f$
 
 	 */
-	double cXM_i = (3.0/2)*(scaledXM0()+scaledXM1())*nnE;
-	double cXM_j = (3.0/2)*(scaledXM2()+scaledXM3())*nnE;
+	double cXM_i = (3.0/2)*(scaledXM[0]+scaledXM[1])*nnE;
+	double cXM_j = (3.0/2)*(scaledXM[2]+scaledXM[3])*nnE;
 	StressTensor XME_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	StressTensor XME_j = XME_i;
 	XME_i *= cXM_i;
@@ -709,8 +751,8 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
 	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
 		return;
 	}
-	double cYM_i = (1.0/2)*(scaledYM0()+scaledYM1());
-	double cYM_j = (1.0/2)*(scaledYM2()+scaledYM3());
+	double cYM_i = (1.0/2)*(scaledYM[0]+scaledYM[1]);
+	double cYM_j = (1.0/2)*(scaledYM[2]+scaledYM[3]);
 
 	StressTensor YME_i;
 	if (!sys->p.cross_shear) {
@@ -766,14 +808,14 @@ void Lubrication::calcPairwiseForce()
 		calcXYFunctions();
 	}
 	/* XAU_i */
-	lubforce_p0 = -dot(scaledXA0()*vi+scaledXA1()*vj, nvec)*(*nvec);
+	lubforce_p0 = -dot(scaledXA[0]*vi+scaledXA[1]*vj, nvec)*(*nvec);
 	if (sys->p.lubrication_model == 2) {
 		vec3d oi(sys->na_ang_velocity[p0]);
 		vec3d oj(sys->na_ang_velocity[p1]);
 		/* YAU_i */
-		lubforce_p0 += -scaledYA0()*(vi-(*nvec)*dot(nvec, vi)) - scaledYA1()*(vj-(*nvec)*dot(nvec, vj));
+		lubforce_p0 += -scaledYA[0]*(vi-(*nvec)*dot(nvec, vi)) - scaledYA[1]*(vj-(*nvec)*dot(nvec, vj));
 		/* YBO_i */
-		lubforce_p0 += -scaledYB0()*cross(nvec, oi)            - scaledYB2()*cross(nvec, oj);
+		lubforce_p0 += -scaledYB[0]*cross(nvec, oi)            - scaledYB[2]*cross(nvec, oj);
 	}
 	if (!sys->zero_shear) {
 		vec3d GEi, GEj;
