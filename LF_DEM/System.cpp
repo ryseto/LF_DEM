@@ -145,6 +145,9 @@ void System::allocateRessourcesPreConfiguration()
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
+	nb_of_active_lubrications_mf = 0;
+	nb_of_active_lubrications_ff = 0;
+	nb_of_active_lubrications_mm = 0;
 	nb_of_contacts_mf = 0;
 	nb_of_contacts_ff = 0;
 	nb_of_contacts_mm = 0;
@@ -332,7 +335,7 @@ void System::getContacts(vector <struct contact_state>& cs)
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
+		if (interaction[k].contact.is_active()) {
 			cs.push_back(interaction[k].contact.getState());
 		}
 	}
@@ -1316,7 +1319,7 @@ void System::updateInteractions()
 			if (deactivated) {
 				deactivated_interaction.push(k);
 			}
-			if (interaction[k].is_contact()) {
+			if (interaction[k].contact.is_active()) {
 				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
 				if (sq_sliding_velocity > sq_max_sliding_velocity) {
 					sq_max_sliding_velocity = sq_sliding_velocity;
@@ -1335,6 +1338,17 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 		nb_of_active_interactions_ff += val;
 	} else {
 		nb_of_active_interactions_mf += val;
+	}
+}
+
+void System::updateNumberOfLubricationInteractions(int p0, int p1, int val)
+{
+	if (p1 < np_mobile) { // i and j mobile
+		nb_of_active_lubrications_mm += val;
+	} else if (p0 >= np_mobile) { // i and j fixed
+		nb_of_active_lubrications_ff += val;
+	} else {
+		nb_of_active_lubrications_mf += val;
 	}
 }
 
@@ -1364,9 +1378,9 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 */
 	int size_mm, size_mf, size_ff;
 	if (p.lubrication_model != 3) {
-		size_mm = nb_of_active_interactions_mm;
-		size_mf = nb_of_active_interactions_mf;
-		size_ff = nb_of_active_interactions_ff;
+		size_mm = nb_of_active_lubrications_mm;
+		size_mf = nb_of_active_lubrications_mf;
+		size_ff = nb_of_active_lubrications_ff;
 	} else {
 		size_mm = nb_of_contacts_mm;
 		size_mf = nb_of_contacts_mf;
@@ -1464,7 +1478,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			}
 		}
 	}
-	stokes_solver.matrixFillingDone();	
+	stokes_solver.matrixFillingDone();
 }
 
 vector<double> System::computeForceFromFixedParticles()
@@ -1731,7 +1745,7 @@ void System::setContactForceToParticle()
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
+		if (interaction[k].contact.is_active()) {
 			interaction[k].contact.addUpContactForceTorque();
 		}
 	}
@@ -2458,12 +2472,12 @@ void System::adjustContactModelParameters()
 	}
 }
 
-double System::calcInteractionRangeDefault(const int& i, const int& j)
+double System::calcInteractionRangeDefault(int i, int j)
 {
 	return p.interaction_range*0.5*(radius[i]+radius[j]);
 }
 
-double System::calcLubricationRange(const int& i, const int& j)
+double System::calcLubricationRange(int i, int j)
 {
 	if (p.lubrication_model == 3) {
 		return radius[i]+radius[j];

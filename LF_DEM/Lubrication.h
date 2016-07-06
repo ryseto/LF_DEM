@@ -32,12 +32,16 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
+	bool _active;
+	inline void activate();
+	inline void deactivate();
+	double range;
+
 	//======= particles data  ====================//
 	unsigned int p0;
 	unsigned int p1;
 	unsigned int p0_6;
 	unsigned int p1_6;
-	double range;
 	vec3d *nvec;
 	double nxnx;
 	double nxny;
@@ -110,11 +114,11 @@ private:
 	double g2_inv_YM;
 	double g5_YM;
 
-
  public:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
-	bool is_active();
+	inline bool is_active() {return _active;};
+	void updateActivationState();
 	void getInteractionData();
 	void getGeometry();
 	void calcLubConstants();

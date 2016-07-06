@@ -162,7 +162,7 @@ void System::calcStress()
 		}
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
+		if (interaction[k].contact.is_active()) {
 			total_contact_stressXF += interaction[k].contact.getContactStressXF();
 			if (cstress_per_particle) {
 				StressTensor sc = interaction[k].contact.getContactStressXF();

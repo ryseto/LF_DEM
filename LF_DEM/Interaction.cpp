@@ -113,7 +113,7 @@ void Interaction::deactivate()
 
 void Interaction::updateState(bool& deactivated)
 {
-	if (is_contact()) {
+	if (contact.is_active()) {
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
@@ -128,14 +128,16 @@ void Interaction::updateState(bool& deactivated)
 	}
 
 	updateContactState();
+	if (contact.is_active() > 0) {
+		contact.calcContactInteraction();
+	}
 
+	lubrication.updateActivationState();
 	if (lubrication.is_active()) {
 		lubrication.getGeometry();
 		lubrication.updateResistanceCoeff();
 	}
-	if (contact.state > 0) {
-		contact.calcContactInteraction();
-	}
+
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
 	}
@@ -171,11 +173,6 @@ void Interaction::updateContactState()
 		if (reduced_gap <= sys->new_contact_gap) {
 			// now contact
 			contact.activate();
-			// if (reduced_gap < -0.1){ // @@@@ Ryohei, do you mind if we remove this?
-				// cerr << "new contact may have problem\n";
-				// cerr << "gap = " << reduced_gap << endl;
-				//exit(1);
-			// }
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}

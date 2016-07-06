@@ -23,7 +23,7 @@ void System::evaluateMaxContactVelocity()
 	int cnt_contact = 0;
 	int cnt_sliding = 0;
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
+		if (interaction[k].contact.is_active()) {
 			cnt_contact++;
 			sum_contact_velo_tan += interaction[k].getContactVelocity();
 			sum_contact_velo_normal += abs(interaction[k].getNormalVelocity());
@@ -174,7 +174,7 @@ double System::evaluateMaxFcNormal()
 	double max_fc_normal_ = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].is_contact() &&
+			interaction[k].contact.is_active() &&
 			interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal_) {
 			max_fc_normal_ = interaction[k].contact.get_f_contact_normal_norm();
 		}
@@ -187,7 +187,7 @@ double System::evaluateMaxFcTangential()
 	double max_fc_tan_ = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].is_contact() &&
+			interaction[k].contact.is_active() &&
 			interaction[k].contact.get_f_contact_tan_norm() > max_fc_tan_) {
 			max_fc_tan_ = interaction[k].contact.get_f_contact_tan_norm();
 		}
@@ -201,9 +201,9 @@ void System::countNumberOfContact()
 	fric_contact_nb = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].is_contact()) {
+			interaction[k].contact.is_active()) {
 			contact_nb ++;
-			if (interaction[k].is_friccontact()) {
+			if (interaction[k].contact.is_frictional()) {
 				fric_contact_nb ++;
 			}
 		}
@@ -242,7 +242,7 @@ void System::calcPotentialEnergy()
 	total_energy = 0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			if (interaction[k].is_contact()){
+			if (interaction[k].contact.is_active()){
 				total_energy += interaction[k].contact.calcEnergy();
 			}
 			if (repulsiveforce) {

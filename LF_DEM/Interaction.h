@@ -66,6 +66,8 @@ private:
 	void calcRelativeVelocities();
 	void calcRollingVelocities();
 	void integrateStress();
+	void updateContactState();
+
 	//===== forces/stresses  ========================== //
 	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.
@@ -97,7 +99,6 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool& deactivated);
-	void updateContactState();
 	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
 
@@ -107,14 +108,6 @@ public:
 	inline bool is_overlap()
 	{
 		return r < ro;
-	}
-	inline bool is_contact()
-	{
-		return contact.state >= 1;
-	}
-	inline bool is_friccontact()
-	{
-		return contact.state >= 2;
 	}
 	inline bool is_active()
 	{

@@ -226,7 +226,7 @@ void GenerateInitConfig::outputPositionData()
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
     }
-	
+
 	for (int i = 0; i<np; i++) {
 		fout << std::setprecision(15);
 		fout << sys.position[i].x << ' ';
@@ -275,7 +275,7 @@ double GenerateInitConfig::computeGradient()
 	double amp, amp2;
 	double energy = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].is_contact()) {
+		if (sys.interaction[k].contact.is_active()) {
 			sys.interaction[k].get_par_num(i, j);
 			r = sys.interaction[k].r;
             rcont = sys.interaction[k].ro;
@@ -454,7 +454,7 @@ void GenerateInitConfig::putRandom()
 
 		double dl = (cg_radius_in+cg_radius_out)*M_PI/2/np_wall1;
 		double l;
-		
+
 		l = 0;
 		while (l + dl < cg_radius_in*M_PI/2) {
 			double theta = l/cg_radius_in;
@@ -470,7 +470,7 @@ void GenerateInitConfig::putRandom()
 		}
 		//l -= dl;
 		while (l + dl<= (cg_radius_out+cg_radius_in)*M_PI/2) {
-			
+
 			double l1 = cg_radius_in*M_PI/2;
 			double theta = (l-l1)/cg_radius_out;
 			double theta0 = 5*M_PI/4;
@@ -484,7 +484,7 @@ void GenerateInitConfig::putRandom()
 			i++;
 		}
 
-		
+
 		l = 0;
 		while (l + dl < cg_radius_out*M_PI/2) {
 
@@ -705,12 +705,12 @@ void GenerateInitConfig::setParameters()
 	} else {
 		vf_ratio = 1;
 	}
-	
+
 	//rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
-	
+
 	double total_volume;
 	double pvolume1, pvolume2;
 	if (sys.twodimension) {
@@ -720,7 +720,7 @@ void GenerateInitConfig::setParameters()
 		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
 		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
 	}
-	
+
 	if (vf_ratio > 0) {
 		volume_fraction1 = volume_fraction*vf_ratio;
 		if (disperse_type == 'b') {

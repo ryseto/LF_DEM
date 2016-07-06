@@ -131,5 +131,13 @@ public:
 		disp_tan = cs.disp_tan;
 		disp_rolling = cs.disp_rolling;
 	}
+	inline bool is_active()
+	{
+		return state >= 1;
+	}
+	inline bool is_frictional()
+	{
+		return state >= 2;
+	}
 };
 #endif /* defined(__LF_DEM__Contact__) */

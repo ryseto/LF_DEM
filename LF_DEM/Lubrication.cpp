@@ -11,10 +11,27 @@
 #include "Interaction.h"
 #include "System.h"
 
-Lubrication::Lubrication(Interaction* int_)
+Lubrication::Lubrication(Interaction* int_):
+_active(false)
 {
 	interaction = int_;
 	nvec = &(interaction->nvec);
+}
+
+
+void Lubrication::init(System *sys_)
+{
+	sys = sys_;
+	getGeometry();
+}
+
+void Lubrication::getInteractionData()
+{
+	p0 = interaction->p0;
+	p1 = interaction->p1;
+	p0_6 = 6*p0;
+	p1_6 = 6*p1;
+	range = sys->calcLubricationRange(p0, p1);
 }
 
 void Lubrication::getGeometry()
@@ -35,34 +52,27 @@ void Lubrication::getGeometry()
 	}
 }
 
-void Lubrication::init(System *sys_)
+void Lubrication::activate()
 {
-	sys = sys_;
-	getGeometry();
+	_active = true;
+	sys->updateNumberOfLubricationInteractions(p0, p1, +1);
 }
 
-void Lubrication::getInteractionData()
+void Lubrication::deactivate()
 {
-	p0 = interaction->p0;
-	p1 = interaction->p1;
-	p0_6 = 6*p0;
-	p1_6 = 6*p1;
-	range = sys->calcLubricationRange(p0, p1);
+	_active = false;
+	sys->updateNumberOfLubricationInteractions(p0, p1, -1);
 }
 
-bool Lubrication::is_active()
+void Lubrication::updateActivationState()
 {
 	if (sys->p.lubrication_model > 0) {
-		if (interaction->is_contact()) {
-			return true;
-		} else {
-			return interaction->r < range; // h < lub_max_gap
+		if (!is_active() && (interaction->contact.is_active() || interaction->r < range)) {
+			activate();
 		}
-	} else {
-		/* lubrication_model = 0 is Stokes drag simulation
-		 * Always lubrication is zero.
-		 */
-		return false;
+		if (is_active() && (!interaction->contact.is_active() && interaction->r > range)) {
+			deactivate();
+		}
 	}
 }
 
@@ -854,7 +864,7 @@ void Lubrication::addHydroStress()
 	sys->lubstress[p1] += stresslet_hydro_GU_j+stresslet_ME_j;
 	// Add term G*V_cont
 	/* [note]
-	 * We don't need interaction->is_contact() condition,
+	 * We must not check for interaction->contact.is_active() condition,
 	 * because the contact velocities of p0 and p1 can be non-zero
 	 * even when they are not in contact.
 	 */
@@ -908,7 +918,7 @@ void Lubrication::addHydroStress()
 
 void Lubrication::updateResistanceCoeff()
 {
-	if (interaction->is_contact()) {
+	if (interaction->contact.is_active()) {
 		if (!interaction->contact_state_changed_after_predictor) {
 			setResistanceCoeff(sys->lub_coeff_contact,
 							   sys->log_lub_coeff_contact_tan_total);

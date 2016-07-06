@@ -61,6 +61,9 @@ private:
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
+	int nb_of_active_lubrications_mm;
+	int nb_of_active_lubrications_mf;
+	int nb_of_active_lubrications_ff;
 	int nb_of_contacts_mm;
 	int nb_of_contacts_mf;
 	int nb_of_contacts_ff;
@@ -126,7 +129,7 @@ private:
 	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
 	void computeMaxNAVelocity();
-	double (System::*calcInteractionRange)(const int&, const int&);
+	double (System::*calcInteractionRange)(int, int);
 	double evaluateMinGap();
 	double evaluateMaxContactGap();
 	double evaluateMaxDispTan();
@@ -342,6 +345,7 @@ protected:
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void removeNeighbors(int i, int j);
 	void updateNumberOfInteraction(int p0, int p1, int val);
+	void updateNumberOfLubricationInteractions(int p0, int p1, int val);
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 
@@ -363,8 +367,8 @@ protected:
     //void calcLubricationForce(); // for visualization of force chains
 	void calcPotentialEnergy();
 	/*************************************************************/
-	double calcInteractionRangeDefault(const int&, const int&);
-	double calcLubricationRange(const int& i, const int& j);
+	double calcInteractionRangeDefault(int, int);
+	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
 	// std::pair<vec3d,vec3d> checkForceOnWalls();
