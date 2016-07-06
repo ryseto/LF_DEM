@@ -164,10 +164,10 @@ private:
 	std::vector <struct DBlock> resistance_matrix_dblock;
 
 	void adjustContactModelParameters();
-	Averager<double> *kn_avg;
-	Averager<double> *kt_avg;
-	Averager<double> *overlap_avg;
-	Averager<double> *max_disp_tan_avg;
+	Averager<double> kn_avg;
+	Averager<double> kt_avg;
+	Averager<double> overlap_avg;
+	Averager<double> max_disp_tan_avg;
 	std::list <Event>& events;
 
 protected:
@@ -247,7 +247,7 @@ protected:
 	StressTensor total_repulsive_stressGU;
 	StressTensor total_brownian_stressGU;
 	StressTensor total_hydrofromfixed_stressGU;
-	Averager<StressTensor> *stress_avg;
+	Averager<StressTensor> stress_avg;
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;

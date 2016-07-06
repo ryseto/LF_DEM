@@ -9,11 +9,11 @@
 /**
  \class Averager
  \brief Small class computing and storing observable averages with an exponential memory kernel.
- 
+
  The average x_avg of quantity x is defined as:
  \f$x_{avg}(\gamma_n) = C_n \sum_{i=1}^n x(\gamma_i)e^{(\gamma_n-\gamma_i)/\gamma_{avg}} \f$
- 
- 
+
+
  \author Ryohei Seto
  \author Romain Mari
  */
@@ -28,7 +28,7 @@ private:
 	double previous_kernel_norm;
 	double relaxation_time;
 	double previous_time;
-	
+
 public:
 	void update(XType x, double time)
 	{
@@ -64,21 +64,23 @@ public:
 		previous_kernel_norm = inv_kernel_norm;
 		previous_time = time;
 	};
-	
+
 	/**
 	 \brief Creates an Averager instance.
-	 
+
 	 \param rtime  Relaxation "time". It does not have to be a time, it can be e.g. a strain. If rtime=0, there is no averaging and the average is equal to the last instantaneous value provided in the update method.
 	 */
-	Averager(double rtime):
+	Averager():
 	x_avg(0),
 	previous_kernel_norm(1),
-	relaxation_time(rtime),
+	relaxation_time(0),
 	previous_time(0)
 	{};
-	
-	~Averager();
-	
+
+	~Averager(){};
+
+	void setRelaxationTime(double rtime){relaxation_time = rtime;};
+
 	XType get()
 	{
 		return x_avg;

@@ -177,10 +177,10 @@ void System::allocateRessourcesPreConfiguration()
 	interaction_partners.resize(np);
 	//
 	if (p.auto_determine_knkt) {
-		kn_avg = new Averager<double>(p.memory_strain_avg);
-		kt_avg = new Averager<double>(p.memory_strain_avg);
-		overlap_avg = new Averager<double>(p.memory_strain_avg);
-		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
+		kn_avg.setRelaxationTime(p.memory_strain_avg);
+		kt_avg.setRelaxationTime(p.memory_strain_avg);
+		overlap_avg.setRelaxationTime(p.memory_strain_avg);
+		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
 	}
 }
 
@@ -219,7 +219,7 @@ void System::allocateRessourcesPostConfiguration()
 	if (brownian) {
 		if (lowPeclet) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
-			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
+			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
 		}
 	}
 }
@@ -2407,14 +2407,14 @@ void System::adjustContactModelParameters()
 	analyzeState();
 
 	double overlap = -min_reduced_gap;
-	overlap_avg->update(overlap, shear_strain);
-	max_disp_tan_avg->update(max_disp_tan, shear_strain);
-	kn_avg->update(p.kn, shear_strain);
-	kt_avg->update(p.kt, shear_strain);
+	overlap_avg.update(overlap, shear_strain);
+	max_disp_tan_avg.update(max_disp_tan, shear_strain);
+	kn_avg.update(p.kn, shear_strain);
+	kt_avg.update(p.kt, shear_strain);
 
 	static double previous_shear_strain = 0;
 	double deltagamma = (shear_strain-previous_shear_strain);
-	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
+	double kn_target = kn_avg.get()*overlap_avg.get()/p.overlap_target;
 	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
 
 	p.kn += dkn;
@@ -2424,7 +2424,7 @@ void System::adjustContactModelParameters()
 	if (p.kn > p.max_kn) {
 		p.kn = p.max_kn;
 	}
-	double kt_target = kt_avg->get()*max_disp_tan_avg->get()/p.disp_tan_target;
+	double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p.disp_tan_target;
 	double dkt = (kt_target-p.kt)*deltagamma/p.memory_strain_k;
 	p.kt += dkt;
 	if (p.kt < p.min_kt) {
