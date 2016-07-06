@@ -197,9 +197,11 @@ sub InParticles {
 				# 13: viscosity contributon of contact GU xz
 				# 14: viscosity contributon of brownian xz
 				# (15: angle for 2D simulation)
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+				#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+				#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
 
+				
 				#
 				$ang[$i] = $angle;
 				$radius[$i] = $a;
@@ -358,13 +360,13 @@ sub OutYaplotData{
 #	}
 	
 	## visualize rotation in 2D
-#	if ($Ly == 0) {
-#		printf OUT "y 6\n";
-#		printf OUT "@ 1\n";
-#		for ($i = 0; $i < $np; $i++) {
-#			OutCross($i);
-#		}
-#	}
+	if ($Ly == 0) {
+		printf OUT "y 6\n";
+		printf OUT "@ 1\n";
+		for ($i = 0; $i < $np; $i++) {
+			OutCross($i);
+		}
+	}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";
