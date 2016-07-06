@@ -116,7 +116,13 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	for ($i = 0; $i<7; $i++) {
+	
+	if ($Ly==0) {
+		$number_of_header = 8;
+	} else {
+		$number_of_header = 7;
+	}
+	for ($i = 0; $i<$number_of_header; $i++) {
 		$line = <IN_particle>;
 		printf "$line";
 	}
