@@ -155,12 +155,12 @@ private:
 	unsigned long hash(time_t, clock_t);
 #endif
 	bool angle_output;
-	double *radius_cubed;
-	double *radius_squared;
-	double *stokesdrag_coeff_f;
-	double *stokesdrag_coeff_t;
-	double *stokesdrag_coeff_f_sqrt;
-	double *stokesdrag_coeff_t_sqrt;
+	std::vector<double> radius_cubed;
+	std::vector<double> radius_squared;
+	std::vector<double> stokesdrag_coeff_f;
+	std::vector<double> stokesdrag_coeff_t;
+	std::vector<double> stokesdrag_coeff_f_sqrt;
+	std::vector<double> stokesdrag_coeff_t_sqrt;
 	std::vector <struct DBlock> resistance_matrix_dblock;
 
 	void adjustContactModelParameters();
@@ -209,11 +209,11 @@ protected:
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
 
-	vec3d *velocity;
-	vec3d *velocity_predictor;
+	std::vector<vec3d>velocity;
+	std::vector<vec3d>velocity_predictor;
 	std::vector<vec3d> na_velocity;
-	vec3d *ang_velocity;
-	vec3d *ang_velocity_predictor;
+	std::vector<vec3d>ang_velocity;
+	std::vector<vec3d>ang_velocity_predictor;
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> vel_repulsive;
 	std::vector<vec3d> ang_vel_repulsive;
@@ -226,18 +226,18 @@ protected:
 	std::vector<vec3d> vel_hydro_from_fixed;
 	std::vector<vec3d> ang_vel_hydro_from_fixed;
 	std::vector<vec3d> fixed_velocities;
-	vec3d *contact_force;
-	vec3d *contact_torque;
-	vec3d *repulsive_force;
+	std::vector<vec3d>contact_force;
+	std::vector<vec3d>contact_torque;
+	std::vector<vec3d>repulsive_force;
 	std::vector<vec3d> brownian_force_torque;
-	StressTensor* lubstress; // G U + M E
-	StressTensor* contactstressGU; // per particle
-	StressTensor* contactstressXF; // per particle
-	StressTensor* repulsivestressGU; // per particle
-	StressTensor* repulsivestressXF; // per particle
-	StressTensor* brownianstressGU; // per particle
-	StressTensor* brownianstressGU_predictor; // per particle
-	StressTensor* total_stress_pp; // per particle
+	std::vector<StressTensor> lubstress; // G U + M E
+	std::vector<StressTensor> contactstressGU; // per particle
+	std::vector<StressTensor> contactstressXF; // per particle
+	std::vector<StressTensor> repulsivestressGU; // per particle
+	std::vector<StressTensor> repulsivestressXF; // per particle
+	std::vector<StressTensor> brownianstressGU; // per particle
+	std::vector<StressTensor> brownianstressGU_predictor; // per particle
+	std::vector<StressTensor> total_stress_pp; // per particle
 	std::vector<StressTensor> hydrofromfixedstressGU; // per particle
 	StressTensor total_stress;
 	StressTensor total_hydro_stress;
@@ -263,7 +263,7 @@ protected:
 	double log_lub_coeff_contact_tan_dashpot;
 	double log_lub_coeff_contact_tan_lubrication;
 	double log_lub_coeff_contact_tan_total;
-	std::set <Interaction*> *interaction_list;
+	std::vector < std::set <Interaction*> > interaction_list;
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;

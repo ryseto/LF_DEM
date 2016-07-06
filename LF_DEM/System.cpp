@@ -95,34 +95,7 @@ System::hash(time_t t, clock_t c)
 
 System::~System()
 {
-	DELETE(radius_squared);
-	DELETE(radius_cubed);
-	DELETE(velocity);
-	DELETE(ang_velocity);
-	if (p.integration_method == 1) {
-		DELETE(velocity_predictor);
-		DELETE(ang_velocity_predictor);
-	}
-	DELETE(contact_force);
-	DELETE(contact_torque);
-	DELETE(lubstress);
-	DELETE(contactstressGU);
-	if (!p.out_particle_stress.empty() || couette_stress) {
-		DELETE(contactstressXF);
-	}
 	DELETE(interaction);
-	DELETE(interaction_list);
-	if (brownian) {
-		DELETE(brownianstressGU);
-		DELETE(brownianstressGU_predictor);
-	}
-	if (repulsiveforce) {
-		DELETE(repulsive_force);
-		DELETE(repulsivestressGU);
-		if (!p.out_particle_stress.empty() || couette_stress) {
-			DELETE(repulsivestressXF);
-		}
-	}
 };
 
 void System::allocateRessourcesPreConfiguration()
@@ -152,27 +125,27 @@ void System::allocateRessourcesPreConfiguration()
 	nb_of_contacts_ff = 0;
 	nb_of_contacts_mm = 0;
 
-	radius_cubed = new double [np];
-	radius_squared = new double [np];
+	radius_cubed.resize(np);
+	radius_squared.resize(np);
 	if (p.lubrication_model == 0) {
 		// Stokes-drag simulation
-		stokesdrag_coeff_f = new double [np];
-		stokesdrag_coeff_f_sqrt = new double [np];
-		stokesdrag_coeff_t = new double [np];
-		stokesdrag_coeff_t_sqrt = new double [np];
+		stokesdrag_coeff_f.resize(np);
+		stokesdrag_coeff_f_sqrt.resize(np);
+		stokesdrag_coeff_t.resize(np);
+		stokesdrag_coeff_t_sqrt.resize(np);
 	}
 	// Configuration
 	if (twodimension) {
 		angle.resize(np);
 	}
 	// Velocity
-	velocity = new vec3d [np];
-	ang_velocity = new vec3d [np];
+	velocity.resize(np);
+	ang_velocity.resize(np);
 	na_velocity.resize(np);
 	na_ang_velocity.resize(np);
 	if (p.integration_method == 1) {
-		velocity_predictor = new vec3d [np];
-		ang_velocity_predictor = new vec3d [np];
+		velocity_predictor.resize(np);
+		ang_velocity_predictor.resize(np);
 	}
 	vel_contact.resize(np);
 	ang_vel_contact.resize(np);
@@ -200,7 +173,7 @@ void System::allocateRessourcesPreConfiguration()
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
-	interaction_list = new set <Interaction*> [np];
+	interaction_list.resize(np);
 	interaction_partners.resize(np);
 	//
 	if (p.auto_determine_knkt) {
@@ -214,31 +187,31 @@ void System::allocateRessourcesPreConfiguration()
 void System::allocateRessourcesPostConfiguration()
 {
 	// Forces and Stress
-	contact_force = new vec3d [np];
-	contact_torque = new vec3d [np];
+	contact_force.resize(np);
+	contact_torque.resize(np);
 	if (brownian) {
 		brownian_force_torque.resize(2*np);
 	}
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
 
-	total_stress_pp = new StressTensor [np];
-	lubstress = new StressTensor [np];
-	contactstressGU = new StressTensor [np];
+	total_stress_pp.resize(np);
+	lubstress.resize(np);
+	contactstressGU.resize(np);
 
 	if (!p.out_particle_stress.empty() || couette_stress) {
-		contactstressXF = new StressTensor [np];
+		contactstressXF.resize(np);
 	}
 	if (repulsiveforce) {
-		repulsive_force = new vec3d [np];
-		repulsivestressGU = new StressTensor [np];
+		repulsive_force.resize(np);
+		repulsivestressGU.resize(np);
 		if (!p.out_particle_stress.empty() || couette_stress) {
-			repulsivestressXF = new StressTensor [np];
+			repulsivestressXF.resize(np);
 		}
 	}
 	if (brownian) {
-		brownianstressGU = new StressTensor [np];
-		brownianstressGU_predictor = new StressTensor [np];
+		brownianstressGU.resize(np);
+		brownianstressGU_predictor.resize(np);
 	}
 	if (mobile_fixed) {
 		hydrofromfixedstressGU.resize(np);
