@@ -92,6 +92,7 @@ void Interaction::activate(unsigned int i, unsigned int j,
 		lubrication.getInteractionData();
 		lubrication.updateResistanceCoeff();
 		lubrication.calcLubConstants();
+		lubrication.updateActivationState();
 		if (lubrication.is_active()) {
 			lubrication.getGeometry();
 		}
@@ -102,6 +103,7 @@ void Interaction::deactivate()
 {
 	// r > interaction_range
 	contact.deactivate();
+	lubrication.deactivate();
 	active = false;
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);
@@ -146,7 +148,7 @@ void Interaction::updateState(bool& deactivated)
 void Interaction::updateContactState()
 {
 	contact_state_changed_after_predictor = false;
-	if (contact.state > 0) {
+	if (contact.is_active() > 0) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
@@ -166,7 +168,6 @@ void Interaction::updateContactState()
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-			sys->updateNumberOfContacts(p0, p1, -1);
 		}
 	} else {
 		// not contacting in previous step
@@ -176,7 +177,6 @@ void Interaction::updateContactState()
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-			sys->updateNumberOfContacts(p0, p1, 1);
 		}
 	}
 }
@@ -230,7 +230,7 @@ void Interaction::calcRollingVelocities()
 /* observation */
 double Interaction::getContactVelocity()
 {
-	if (contact.state == 0) {
+	if (!contact.is_active() == 0) {
 		return 0;
 	}
 	return relative_surface_velocity.norm();

@@ -33,8 +33,6 @@ private:
 	System *sys;
 	Interaction *interaction;
 	bool _active;
-	inline void activate();
-	inline void deactivate();
 	double range;
 
 	//======= particles data  ====================//
@@ -118,6 +116,8 @@ private:
 	Lubrication(Interaction *int_);
 	void init(System *sys_);
 	inline bool is_active() {return _active;};
+	void activate();
+	void deactivate();
 	void updateActivationState();
 	void getInteractionData();
 	void getGeometry();

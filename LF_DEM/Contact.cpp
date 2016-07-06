@@ -77,6 +77,7 @@ void Contact::activate()
 	} else {
 		state = 1;
 	}
+	sys->updateNumberOfContacts(p0, p1, 1);
 }
 
 void Contact::deactivate()
@@ -91,6 +92,7 @@ void Contact::deactivate()
 		f_contact_tan.reset();
 	}
 	f_contact.reset();
+	sys->updateNumberOfContacts(p0, p1, -1);
 }
 
 /*********************************
