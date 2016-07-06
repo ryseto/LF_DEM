@@ -251,14 +251,8 @@ public:
 	 */
 	void setOffDiagBlock(int jj, const struct ODBlock& b);
 
-	/*
-	 doneBlocks(int i) :
-	 - to be called when all terms involving particle i have been added,
-	 ie blocks in row i and column i are completed
-	 */
 	void startNewColumn();
 	void matrixFillingDone();
-	void doneBlocks(int i);
 	/*
 	 completeResistanceMatrix() :
 	 - transforms temporary arrays/vectors used to build resistance
