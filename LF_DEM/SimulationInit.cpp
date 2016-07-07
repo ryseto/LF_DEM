@@ -1128,8 +1128,7 @@ void Simulation::setMetadata(fstream &file_import)
 	key = "z_top";
 	def = "-1";
 	sys.z_top = atof(getMetaParameter(meta_data, key, def).c_str());
-	cerr << "sys.radius_in = " << sys.radius_in << endl;
-	//
+
 	if (sys.np_wall1 != -1) {
 		sys.p.np_fixed = sys.np_wall1+sys.np_wall2;
 	}

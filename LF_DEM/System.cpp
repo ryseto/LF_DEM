@@ -354,8 +354,7 @@ void System::updateUnscaledContactmodel()
 			log_lub_coeff_contact_tan_lubrication = 0;
 			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
 			log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-		}
-		else {
+		} else {
 			throw runtime_error("Error: lubrication_model>3 ???");
 		}
 	}
@@ -448,7 +447,10 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
 		}
 	}
-	if (p.lub_max_gap >= 1) {
+	if (p.lubrication_model == 2 && p.lub_max_gap >= 1) {
+		/* The tangential part of lubrication is approximated as log(1/h).
+		 * To keep log(1/h) > 0, h needs to be less than 1.
+		 */
 		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
 	}
 	if (p.repulsive_length <= 0) {
