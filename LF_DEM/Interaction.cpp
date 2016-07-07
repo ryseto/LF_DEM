@@ -98,8 +98,12 @@ void Interaction::activate(unsigned int i, unsigned int j,
 void Interaction::deactivate()
 {
 	// r > interaction_range
-	contact.deactivate();
-	lubrication.deactivate();
+	if (contact.is_active()) {
+		contact.deactivate();
+	}
+	if (lubrication.is_active()) {
+		lubrication.deactivate();
+	}
 	active = false;
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);

@@ -124,6 +124,7 @@ void StokesSolver::insertDBlockValues(double *matrix_x,
 	auto pcol3 = index_chol_ix[3];
 	auto pcol4 = index_chol_ix[4];
 	auto pcol5 = index_chol_ix[5];
+
 	// diagonal blocks row values (21)
 	matrix_x[pcol0  ] =  b.col0[0];   // column j6
 	matrix_x[pcol0+1] =  b.col0[1];
@@ -440,32 +441,29 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 										 int nb_of_interactions_ff,
 										 const vector<struct DBlock> &reset_resmat_dblocks)
 {
-	odblocks_nb = nb_of_interactions_mm;
 	for (auto i=0u; i<dblocks.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i];
 	}
 	odbrows.clear();
-	odblocks.resize(odblocks_nb);
+	odblocks.resize(nb_of_interactions_mm);
 	for (auto &b: odblocks) {
 		resetODBlock(b);
 	}
 	mobile_matrix_done = false;
 
 	// for the mixed problem
-	odblocks_nb_mf = nb_of_interactions_mf;
 	odbrows_mf.clear();
-	odblocks_mf.resize(odblocks_nb_mf);
+	odblocks_mf.resize(nb_of_interactions_mf);
 	for (auto &b: odblocks_mf) {
 		resetODBlock(b);
 	}
 
 	// for the mixed problem
-	odblocks_nb_ff = nb_of_interactions_ff;
 	for (auto i=0u; i<dblocks_ff.size(); i++) {
 		dblocks_ff[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
 	odbrows_ff.clear();
-	odblocks_ff.resize(odblocks_nb_ff);
+	odblocks_ff.resize(nb_of_interactions_ff);
 	for (auto &b: odblocks_ff) {
 		resetODBlock(b);
 	}
@@ -816,18 +814,18 @@ void StokesSolver::allocateResistanceMatrix()
 	int nzmax; // non-zero values
 	auto size_mm = 6*dblocks.size();
 	nzmax = 18*(int)dblocks.size(); // diagonal blocks
-	nzmax += 30*odblocks_nb;   // off-diagonal
+	nzmax += 30*(int)odblocks.size();   // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 
 	auto col_nb = 6*mobile_particle_nb;
 	auto row_nb = 6*fixed_particle_nb;
-	nzmax = 30*odblocks_nb_mf;  // off-diagonal
+	nzmax = 30*(int)odblocks_mf.size();  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
 	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
 
 	auto size_ff = 6*fixed_particle_nb;
 	nzmax = 18*(int)dblocks_ff.size(); // diagonal blocks
-	nzmax += 30*odblocks_nb_ff;  // off-diagonal
+	nzmax += 30*(int)odblocks_ff.size();  // off-diagonal
 	chol_res_matrix_ff = cholmod_allocate_sparse(size_ff, size_ff, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 }
 
@@ -842,8 +840,8 @@ void StokesSolver::startNewColumn()
 	current_column++;
 	if (current_column == mobile_particle_nb) {
 		mobile_matrix_done = true;
-		odbrows_table[current_column] = (unsigned int)odbrows.size();
-		odbrows_table_mf[current_column] = (unsigned int)odbrows_mf.size();
+		odbrows_table[mobile_particle_nb] = (unsigned int)odbrows.size();
+		odbrows_table_mf[mobile_particle_nb] = (unsigned int)odbrows_mf.size();
 	}
 }
 
