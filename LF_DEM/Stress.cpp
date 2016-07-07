@@ -145,6 +145,7 @@ void System::calcStress()
 		total_hydro_stress += lubstress[i];
 	}
 	total_hydro_stress /= system_volume;
+	total_hydro_stress += shear_rate/6./M_PI; // suspending fluid viscosity
 	// Stress from contact force
 	// GU contribution
 	total_contact_stressGU.reset();
