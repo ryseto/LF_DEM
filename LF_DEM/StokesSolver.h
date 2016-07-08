@@ -172,24 +172,6 @@ private:
 	std::vector<int> dblocks_cntnonzero;
 
 	void factorizeResistanceMatrix();
-    /*
-     setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
-	 - appends alpha * |nvec><nvec| and corresponding indices
-	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
-	 odblocks and odFrows_table
-	 - this must be called with order, according to LT filling
-	 */
-	void setColumn(const vec3d& nvec, int jj,
-				   double scaledXA, double scaledYA,
-				   double scaledYB, double scaledYBtilde, double scaledYC);
-
-	struct ODBlock buildODBlock(const vec3d &nvec,
-								double scaledXA,
-								double scaledYA, double scaledYB,
-								double scaledYBtilde, double scaledYC);
-	void addToDBlock(struct DBlock &b, const vec3d& nvec,
-					 double scaledXA, double scaledYA,
-					 double scaledYB, double scaledYC);
 
 	void allocateResistanceMatrix();
 	void allocateRessources();
@@ -218,6 +200,8 @@ private:
 	void insertDBlockValues(double *matrix_x,
 							const std::vector<int>& index_chol_ix,
 							const struct DBlock& b);
+	void setOffDiagBlock(int jj, const struct ODBlock& b);
+	void addToDiagBlock(int ii, const struct DBlock &b);
 
 public:
 	~StokesSolver();
@@ -236,17 +220,15 @@ public:
 							   int nb_of_interactions_mf,
 							   int nb_of_interactions_ff,
 							   const std::vector<struct DBlock>& reset_resmat_dblocks);
-	void addToDiagBlocks(int ii,
-	                     int jj,
-	                     const std::pair<struct DBlock, struct DBlock> &DBiDBj);
-  void addToDiagBlock(int ii, const struct DBlock &b);
-
+	void addResistanceBlocks(int i,
+                           int j,
+                           const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+                           const struct ODBlock& ODBlock_ij);
 	/*
 	 This must be called with order (ii < jj),
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-	void setOffDiagBlock(int jj, const struct ODBlock& b);
 
 	void startNewColumn();
 	void matrixFillingDone();

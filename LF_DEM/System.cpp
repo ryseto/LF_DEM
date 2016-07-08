@@ -13,7 +13,6 @@
 #ifdef USE_DSFMT
 #include <time.h>
 #endif
-#define DELETE(x) if(x){delete [] x; x = NULL;}
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 #endif
@@ -46,7 +45,6 @@ kr_master(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
-new_contact_gap(0),
 z_top(-1),
 ratio_unit_time(NULL),
 eventLookUp(NULL)
@@ -95,7 +93,6 @@ System::hash(time_t t, clock_t c)
 
 System::~System()
 {
-	DELETE(interaction);
 };
 
 void System::allocateRessourcesPreConfiguration()
@@ -118,9 +115,9 @@ void System::allocateRessourcesPreConfiguration()
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
-	nb_of_active_lubrications_mf = 0;
-	nb_of_active_lubrications_ff = 0;
-	nb_of_active_lubrications_mm = 0;
+	nb_of_pairwise_resistances_mf = 0;
+	nb_of_pairwise_resistances_ff = 0;
+	nb_of_pairwise_resistances_mm = 0;
 	nb_of_contacts_mf = 0;
 	nb_of_contacts_ff = 0;
 	nb_of_contacts_mm = 0;
@@ -167,8 +164,7 @@ void System::allocateRessourcesPreConfiguration()
 		rate_proportional_wall_force.resize(p.np_fixed);
 		rate_proportional_wall_torque.resize(p.np_fixed);
 	}
-	//
-	interaction = new Interaction [maxnb_interactionpair];
+	interaction.resize(maxnb_interactionpair);
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -227,6 +223,7 @@ void System::allocateRessourcesPostConfiguration()
 void System::setInteractions_GenerateInitConfig()
 {
 	calcInteractionRange = &System::calcLubricationRange;
+	interaction.resize(maxnb_interactionpair);
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -292,7 +289,7 @@ void System::setContacts(const vector <struct contact_state>& cs)
 	for (const auto& c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned int p0, p1;
-			interaction[k].get_par_num(p0, p1);
+			std::tie(p0, p1) = interaction[k].get_par_num();
 			if (p0 == c.p0 && p1 == c.p1) {
 				interaction[k].contact.setState(c);
 			}
@@ -841,7 +838,7 @@ void System::checkForceBalance()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
 			interaction[k].lubrication.calcPairwiseForce();
-			interaction[k].get_par_num(i, j);
+			std::tie(i, j) = interaction[k].get_par_num();
 			forceResultant[i] += interaction[k].lubrication.get_lubforce();
 			forceResultant[j] -= interaction[k].lubrication.get_lubforce();
 		}
@@ -1208,8 +1205,11 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 		deactivated_interaction.pop();
 	}
 	// new interaction
-	if (nb_interaction >= maxnb_interactionpair) {
-		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
+	if (nb_interaction > interaction.size()) {
+		Interaction inter;
+		inter.init(this);
+		interaction.push_back(inter);
+		interaction[interaction_new].set_label(interaction_new);
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
 }
@@ -1316,14 +1316,14 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 	}
 }
 
-void System::updateNumberOfLubricationInteractions(int p0, int p1, int val)
+void System::updateNumberOfPairwiseResistances(int p0, int p1, int val)
 {
 	if (p1 < np_mobile) { // i and j mobile
-		nb_of_active_lubrications_mm += val;
+		nb_of_pairwise_resistances_mm += val;
 	} else if (p0 >= np_mobile) { // i and j fixed
-		nb_of_active_lubrications_ff += val;
+		nb_of_pairwise_resistances_ff += val;
 	} else {
-		nb_of_active_lubrications_mf += val;
+		nb_of_pairwise_resistances_mf += val;
 	}
 }
 
@@ -1353,9 +1353,9 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 */
 	int size_mm, size_mf, size_ff;
 	if (p.lubrication_model != 3) {
-		size_mm = nb_of_active_lubrications_mm;
-		size_mf = nb_of_active_lubrications_mf;
-		size_ff = nb_of_active_lubrications_ff;
+		size_mm = nb_of_pairwise_resistances_mm;
+		size_mf = nb_of_pairwise_resistances_mf;
+		size_ff = nb_of_pairwise_resistances_ff;
 	} else {
 		size_mm = nb_of_contacts_mm;
 		size_mf = nb_of_contacts_mf;
@@ -1395,11 +1395,11 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
+				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-						inter->lubrication.calcXFunctions();
-						stokes_solver.addToDiagBlocks(i, j, inter->lubrication.RFU_DBlocks_squeeze());
-						stokes_solver.setOffDiagBlock(j, inter->lubrication.RFU_ODBlock_squeeze());
+						stokes_solver.addResistanceBlocks(i, j,
+							                                inter->RFU_DBlocks(),
+							                                inter->RFU_ODBlock());
 					}
 					if (rhs) {
 						vec3d GEi, GEj;
@@ -1429,15 +1429,15 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
+				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
 					if (mat) {
-						inter->lubrication.calcXYFunctions();
-						stokes_solver.addToDiagBlocks(i, j, inter->lubrication.RFU_DBlocks_squeeze_tangential());
-						stokes_solver.setOffDiagBlock(j, inter->lubrication.RFU_ODBlock_squeeze_tangential());
+						stokes_solver.addResistanceBlocks(i, j,
+					                                    inter->RFU_DBlocks(),
+					                                    inter->RFU_ODBlock());
 					}
 					if (rhs) {
 						vec3d GEi, GEj, HEi, HEj;
-						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term
+						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
 						if (shearrate_is_1 == false) {
 								GEi *= shear_rate;
 								GEj *= shear_rate;

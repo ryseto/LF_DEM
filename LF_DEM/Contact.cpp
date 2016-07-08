@@ -11,6 +11,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 {
 	sys = sys_;
 	interaction = interaction_;
+	dashpot.init(sys_, interaction_);
 	state = 0;
 	f_contact_normal_norm = 0;
 	f_contact_normal.reset();
@@ -45,7 +46,7 @@ void Contact::setSpringConstants()
 
 void Contact::setInteractionData()
 {
-	interaction->get_par_num(p0, p1);
+	std::tie(p0, p1) = interaction->get_par_num();
 	setSpringConstants();
 	if (sys->friction) {
 		mu_static = sys->p.mu_static;
@@ -54,6 +55,8 @@ void Contact::setInteractionData()
 			mu_rolling = sys->p.mu_rolling;
 		}
 	}
+	dashpot.setParticleData();
+	dashpot.setDashpotResistanceCoeffs(sys->lub_coeff_contact, sys->log_lub_coeff_contact_tan_total);
 }
 
 void Contact::activate()
@@ -77,6 +80,7 @@ void Contact::activate()
 	} else {
 		state = 1;
 	}
+	dashpot.activate();
 	sys->updateNumberOfContacts(p0, p1, 1);
 }
 
@@ -92,6 +96,7 @@ void Contact::deactivate()
 		f_contact_tan.reset();
 	}
 	f_contact.reset();
+	dashpot.deactivate();
 	sys->updateNumberOfContacts(p0, p1, -1);
 }
 
@@ -143,7 +148,7 @@ void Contact::incrementDisplacements()
 	}
 }
 
-void Contact::calcContactInteraction()
+void Contact::calcContactSpringForce()
 {
 	/**
 		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.

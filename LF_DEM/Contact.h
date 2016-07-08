@@ -20,6 +20,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
+#include "ContactDashpot.h"
 
 class System;
 class Interaction;
@@ -38,6 +39,7 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
+
 	void (Contact::*frictionlaw)();
 	unsigned int p0;
 	unsigned int p1;
@@ -68,8 +70,8 @@ public:
 	 *********************************/
 	//======= internal state =====================//
 	Contact(){};
-	Contact(const Contact& obj);
 	void init(System* sys_, Interaction* int_);
+	ContactDashpot dashpot;
 	void setInteractionData();
 	void setSpringConstants();
 	void activate();
@@ -93,7 +95,7 @@ public:
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
 	//===== forces/stresses  ========================== //
-	void calcContactInteraction();
+	void calcContactSpringForce();
 	void addUpContactForceTorque();
 	inline double get_f_contact_normal_norm()
 	{

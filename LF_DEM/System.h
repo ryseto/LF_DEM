@@ -40,7 +40,7 @@
 #endif
 
 class Simulation;
-class Interaction;
+// class Interaction;
 class BoxSet;
 
 struct ForceAmplitudes
@@ -61,9 +61,9 @@ private:
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
-	int nb_of_active_lubrications_mm;
-	int nb_of_active_lubrications_mf;
-	int nb_of_active_lubrications_ff;
+	int nb_of_pairwise_resistances_mm;
+	int nb_of_pairwise_resistances_mf;
+	int nb_of_pairwise_resistances_ff;
 	int nb_of_contacts_mm;
 	int nb_of_contacts_mf;
 	int nb_of_contacts_ff;
@@ -204,7 +204,7 @@ protected:
 	std::vector<vec3d> rate_proportional_wall_force;
 	std::vector<vec3d> rate_proportional_wall_torque;
 
-	Interaction *interaction;
+	std::vector<Interaction> interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
@@ -300,7 +300,6 @@ protected:
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
-	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
 	double omega_wheel_in;
@@ -345,7 +344,7 @@ protected:
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void removeNeighbors(int i, int j);
 	void updateNumberOfInteraction(int p0, int p1, int val);
-	void updateNumberOfLubricationInteractions(int p0, int p1, int val);
+	void updateNumberOfPairwiseResistances(int p0, int p1, int val);
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 

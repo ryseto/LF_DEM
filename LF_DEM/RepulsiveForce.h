@@ -42,9 +42,9 @@ private:
 	void calcReducedForceNorm();
 	void calcScaledForce();
 public:
-	RepulsiveForce(): force_norm(0) {};
-	~RepulsiveForce(){};
+	RepulsiveForce(){};
 	void init(System* sys_, Interaction* int_);
+	~RepulsiveForce(){};
 	void activate();
 	//===== forces/stresses  ========================== //
 	void calcForce();

@@ -168,7 +168,7 @@ void System::calcStress()
 			if (cstress_per_particle) {
 				StressTensor sc = interaction[k].contact.getContactStressXF();
 				unsigned int i, j;
-				interaction[k].get_par_num(i,j);
+				std::tie(i, j) = interaction[k].get_par_num();
 				double r_ij = interaction[k].ro;
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
 				contactstressXF[j] += (radius[j]/r_ij)*sc;
@@ -195,7 +195,7 @@ void System::calcStress()
 				*/
 				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
 				unsigned int i, j;
-				interaction[k].get_par_num(i,j);
+				std::tie(i, j) = interaction[k].get_par_num();
 				repulsivestressXF[i] += sc;
 				repulsivestressXF[j] += sc;
 			}

@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 12/10/12.
-//  Copyright (c) 2012-2014 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2016 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 /**
@@ -30,8 +30,8 @@ private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
-	System *sys;
 	Interaction *interaction;
+	System *sys;
 	bool _active;
 	double range;
 
@@ -41,13 +41,6 @@ private:
 	unsigned int p0_6;
 	unsigned int p1_6;
 	vec3d *nvec;
-	double nxnx;
-	double nxny;
-	double nxnz;
-	double nynz;
-	double nyny;
-	double nznz;
-	double nnE;
 	double lub_coeff;
 	double log_lub_coeff;
 	double a0;
@@ -112,15 +105,16 @@ private:
 	double g2_inv_YM;
 	double g5_YM;
 
+
  public:
-	Lubrication(Interaction *int_);
-	void init(System *sys_);
+	Lubrication(){};
+	void init(System *sys_, Interaction *int_);
+	void setParent(Interaction *int_){interaction = int_;};
 	inline bool is_active() {return _active;};
 	void activate();
 	void deactivate();
 	void updateActivationState();
-	void getInteractionData();
-	void getGeometry();
+	void setParticleData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
     vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
@@ -153,13 +147,13 @@ private:
 	std::tuple<vec3d,vec3d> calcGE_squeeze();
 	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential();
 	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential();
+
 	struct ODBlock RFU_ODBlock_squeeze_tangential();
 	struct ODBlock RFU_ODBlock_squeeze();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze_tangential();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze();
-
 	void calcXFunctions();
 	void calcXYFunctions();
-
 };
+
 #endif /* defined(__LF_DEM__Lubrication__) */

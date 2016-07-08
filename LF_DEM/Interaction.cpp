@@ -7,17 +7,25 @@
 //
 #include "Interaction.h"
 #include "System.h"
+#define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
 using namespace std;
 
 void Interaction::init(System* sys_)
 {
 	sys = sys_;
-	active = false;
-	lubrication.init(sys);
 	contact.init(sys, this);
+	lubrication.init(sys, this);
 	repulsion.init(sys, this);
+	active = false;
 	r = 0;
+	if (sys->p.lubrication_model == 1) {
+	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze;
+		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze;
+	} else if (sys->p.lubrication_model == 2) {
+	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
+		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
+	}
 }
 
 /* Make a normal vector
@@ -85,12 +93,10 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	}
 	contact_state_changed_after_predictor = false;
 	if (sys->p.lubrication_model > 0) {
-		lubrication.getInteractionData();
-		lubrication.updateResistanceCoeff();
-		lubrication.calcLubConstants();
+		lubrication.setParticleData();
 		lubrication.updateActivationState();
 		if (lubrication.is_active()) {
-			lubrication.getGeometry();
+			lubrication.updateResistanceCoeff();
 		}
 	}
 }
@@ -107,8 +113,6 @@ void Interaction::deactivate()
 	active = false;
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);
-	// sys->interaction_partners[p0].erase(p1);
-	// sys->interaction_partners[p1].erase(p0);
 	sys->removeNeighbors(p0,p1);
 	sys->updateNumberOfInteraction(p0, p1, -1);
 }
@@ -131,12 +135,12 @@ void Interaction::updateState(bool& deactivated)
 
 	updateContactState();
 	if (contact.is_active() > 0) {
-		contact.calcContactInteraction();
+		contact.calcContactSpringForce();
 	}
 
 	lubrication.updateActivationState();
 	if (lubrication.is_active()) {
-		lubrication.getGeometry();
+		// tell the lubrication about the new gap
 		lubrication.updateResistanceCoeff();
 	}
 
@@ -152,12 +156,14 @@ void Interaction::updateContactState()
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
+			// no cohesion: breakup based on distance
 			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
 			/*
 			 * Checking cohesive bond breaking.
+			 * breakup based on force
 			 */
 			if (contact.get_normal_load() < 0) {
 				breakup_contact_bond = true;
@@ -171,7 +177,7 @@ void Interaction::updateContactState()
 		}
 	} else {
 		// not contacting in previous step
-		if (reduced_gap <= sys->new_contact_gap) {
+		if (reduced_gap <= 0) {
 			// now contact
 			contact.activate();
 			if (sys->in_predictor && sys->brownian) {
@@ -180,6 +186,56 @@ void Interaction::updateContactState()
 		}
 	}
 }
+
+bool Interaction::hasPairwiseResistance()
+{
+	return contact.dashpot.is_active() || lubrication.is_active();
+}
+
+struct ODBlock Interaction::RFU_ODBlock()
+{
+	if (contact.dashpot.is_active()) {
+		if (!contact_state_changed_after_predictor) {
+			return contact.dashpot.RFU_ODBlock();
+		} else {
+			/*
+			 * Brownian ONLY (contact_state_changed_after_predictor == false in other cases):
+			 * we take the resistance provided by the lubrication, i.e. the resistance as it was
+			 * BEFORE the first step (predictor) of the mid-point algorithm).
+			 * This is to avoid a discontinuous change of the resistance between the two steps of the
+			 * midpoint algo if the contact state changed during the first step.
+			 * A discontinuous change has to be avoided because the Brownian force contains div(Mobility),
+			 * and this is estimated as a difference in the resistance between the two steps.
+			 * Allowing a discontinuity here would lead to a non-physical drift.
+			 */
+			 return (lubrication.*RFU_ODBlock_lub)();
+		}
+	}
+	if (lubrication.is_active()) {
+		if (!contact_state_changed_after_predictor) {
+			return (lubrication.*RFU_ODBlock_lub)();
+		} else {
+			/*
+			 * Brownian ONLY (contact_state_changed_after_predictor == false in other cases):
+			 * we take the resistance provided by the contact dashpot, i.e. the resistance as it was
+			 * BEFORE the first step (predictor) of the mid-point algorithm).
+			 * See above for rationale.
+			 */
+			return contact.dashpot.RFU_ODBlock();
+		}
+	}
+}
+
+std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
+{
+	if (lubrication.is_active()) {
+		return (lubrication.*RFU_DBlocks_lub)();
+	}
+	if (contact.dashpot.is_active()) {
+		return contact.dashpot.RFU_DBlocks();
+	}
+}
+
 
 /* Relative velocity of particle 1 from particle 0.
  *

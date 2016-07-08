@@ -774,7 +774,7 @@ void Simulation::outputParFileTxt()
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
 
-		
+
 		outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
 		if (sys.couette_stress) {
 			double stress_rr, stress_thetatheta, stress_rtheta;
@@ -822,7 +822,7 @@ void Simulation::outputIntFileTxt()
 		}
 	}
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	
+
 	outdata_int.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
@@ -830,7 +830,7 @@ void Simulation::outputIntFileTxt()
 	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_active()) {
 			unsigned int i, j;
-			sys.interaction[k].get_par_num(i, j);
+			std::tie(i, j) = sys.interaction[k].get_par_num();
 			StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
 			outdata_int.entryData("particle 1 label", "none", 1, i);
 			outdata_int.entryData("particle 2 label", "none", 1, j);

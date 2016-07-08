@@ -82,12 +82,14 @@ void StokesSolver::addToDiagBlock(int ii, const struct DBlock &b)
 	}
 }
 
-void StokesSolver::addToDiagBlocks(int ii,
-                                   int jj,
-                                   const std::pair<struct DBlock, struct DBlock> &DBiDBj)
+void StokesSolver::addResistanceBlocks(int i,
+                                       int j,
+                                       const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+                                       const struct ODBlock& ODBlock_ij)
 {
-	addToDiagBlock(ii, DBiDBj.first);
-	addToDiagBlock(jj, DBiDBj.second);
+	addToDiagBlock(i, DiagBlocks_i_and_j.first);
+	addToDiagBlock(j, DiagBlocks_i_and_j.second);
+	setOffDiagBlock(j, ODBlock_ij);
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version

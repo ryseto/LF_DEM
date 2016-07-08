@@ -67,7 +67,8 @@ private:
 	void calcRollingVelocities();
 	void integrateStress();
 	void updateContactState();
-
+	struct ODBlock (Lubrication::*RFU_ODBlock_lub)();
+	std::pair<struct DBlock, struct DBlock> (Lubrication::*RFU_DBlocks_lub)();
 	//===== forces/stresses  ========================== //
 	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.
@@ -87,7 +88,7 @@ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	Interaction(): contact(), lubrication(Lubrication(this)) {}
+	Interaction(){};
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
@@ -102,13 +103,6 @@ public:
 	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
 
-	inline vec3d relative_surface_velocity_direction() {
-		return relative_surface_velocity/relative_surface_velocity.norm();
-	}
-	inline bool is_overlap()
-	{
-		return r < ro;
-	}
 	inline bool is_active()
 	{
 		return active;
@@ -118,9 +112,9 @@ public:
 	{
 		return (i == p0 ? p1 : p0);
 	}
-	inline void	get_par_num(unsigned int& i, unsigned int& j)
+	inline std::pair<unsigned int, unsigned int>	get_par_num()
 	{
-		i = p0, j = p1;
+		return std::make_pair(p0, p1);
 	}
 	inline void set_label(unsigned int val)
 	{
@@ -134,11 +128,6 @@ public:
 	{
 		return a_reduced;
 	}
-	//======= relative position/velocity  ========//
-    inline double get_ro_r()
-    {
-        return ro/r;
-    }
 	inline double get_reduced_gap()
 	{
 		return reduced_gap;
@@ -147,11 +136,16 @@ public:
 	{
 		return r-ro;
 	}
+	bool hasPairwiseResistance();
 	double getNormalVelocity();
 	double getRelativeVelocity()
 	{
 		return relative_velocity.norm();
 	}
 	double getContactVelocity();
+	struct ODBlock RFU_ODBlock();
+
+
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();
 };
 #endif /* defined(__LF_DEM__Interaction__) */
