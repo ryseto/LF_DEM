@@ -833,6 +833,11 @@ void StokesSolver::allocateResistanceMatrix()
 
 void StokesSolver::startNewColumn()
 {
+	if (current_column == mobile_particle_nb) {
+		mobile_matrix_done = true;
+		odbrows_table[mobile_particle_nb] = (unsigned int)odbrows.size();
+		odbrows_table_mf[mobile_particle_nb] = (unsigned int)odbrows_mf.size();
+	}
 	if (mobile_matrix_done) {
 		odbrows_table_ff[current_column-mobile_particle_nb] = (unsigned int)odbrows_ff.size();
 	} else {
@@ -840,11 +845,6 @@ void StokesSolver::startNewColumn()
 		odbrows_table_mf[current_column] = (unsigned int)odbrows_mf.size();
 	}
 	current_column++;
-	if (current_column == mobile_particle_nb) {
-		mobile_matrix_done = true;
-		odbrows_table[mobile_particle_nb] = (unsigned int)odbrows.size();
-		odbrows_table_mf[mobile_particle_nb] = (unsigned int)odbrows_mf.size();
-	}
 }
 
 void StokesSolver::matrixFillingDone()

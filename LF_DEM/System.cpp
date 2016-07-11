@@ -1258,8 +1258,8 @@ void System::checkNewInteraction()
 	vec3d pos_diff;
 	int zshift;
 	double sq_dist;
-	for (int i=0; i<np_mobile; i++) {
-		for (const int& j : boxset.neighborhood(i)) {
+	for (int i=0; i<np-1; i++) {
+		for (auto j : boxset.neighborhood(i)) {
 			if (j > i) {
 				if (!hasNeighbor(i, j)) {
 					pos_diff = position[j]-position[i];
