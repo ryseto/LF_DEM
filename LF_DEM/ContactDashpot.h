@@ -53,7 +53,7 @@ private:
 	void calcDashpotResistances();
 
  public:
-	ContactDashpot(){};
+	 ContactDashpot();
 	void init(System *sys_, Interaction *int_);
 	inline bool is_active() {return _active;};
 	void activate();

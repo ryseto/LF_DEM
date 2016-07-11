@@ -31,9 +31,11 @@ public:
 	/* constructor/destructor */
 	inline vec3d (void): x(0), y(0), z(0){}
 
-	inline vec3d (const double& _x,
-				  const double& _y,
-				  const double& _z): x(_x), y(_y), z(_z) {}
+	inline vec3d (double _x,
+                double _y,
+                double _z): x(_x), y(_y), z(_z) {}
+
+	inline vec3d (double a): x(a), y(a), z(a) {}
 
 	inline friend bool operator == (const vec3d &v1,
 									const vec3d &v2)
@@ -280,7 +282,7 @@ public:
 	{
 		return sqrt(sq_norm());
 	}
-    
+
     inline double norm_xz()
     {
         return sqrt(sq_norm_xz());

@@ -12,12 +12,86 @@
 #include "Interaction.h"
 #include "System.h"
 
+Lubrication::Lubrication():
+ro_12(0), // = ro/2
+a0a0_23(0),
+a1a1_23(0),
+roro_16(0),
+a0a0a0_43(0),
+a1a1a1_43(0),
+rororo_16(0),
+a0a0a0_109(0),
+a1a1a1_109(0),
+rororo_536(0),
+g1_XA(0),
+g1_inv_XA(0),
+g2_YA(0),
+g2_inv_YA(0),
+g2_YB(0),
+g2_inv_YB(0),
+g2_YC(0),
+g2_inv_YC(0),
+g4_YC(0),
+g1_XG(0),
+g1_inv_XG(0),
+g2_YG(0),
+g2_inv_YG(0),
+g2_YH(0),
+g2_inv_YH(0),
+g5_YH(0),
+g5_inv_YH(0),
+g1_XM(0),
+g1_inv_XM(0),
+g4_XM(0),
+g2_YM(0),
+g2_inv_YM(0),
+g5_YM(0),
+lub_coeff(0),
+log_lub_coeff(0),
+a0(0),
+a1(0),
+ro(0),
+lambda(0),
+invlambda(0),
+lambda_square(0),
+lambda_cubic(0),
+lambda_p_1(0),
+lambda_p_1_square(0),
+lambda_p_1_cubic(0),
+_active(false),
+range(0),
+p0(0),
+p1(0),
+p0_6(0),
+p1_6(0)
+{
+	for (int i=0; i<4; i++) {
+		XA[i] = 0;
+		YA[i] = 0;
+		YB[i] = 0;
+		YC[i] = 0;
+		XG[i] = 0;
+		YG[i] = 0;
+		YH[i] = 0;
+		XM[i] = 0;
+		YM[i] = 0;
+		cXA[i] = 0;
+		cYA[i] = 0;
+		cYB[i] = 0;
+		cYC[i] = 0;
+		cXG[i] = 0;
+		cYG[i] = 0;
+		cYH[i] = 0;
+		cXM[i] = 0;
+		cYM[i] = 0;
+	}
+}
+
 void Lubrication::init(System *sys_, Interaction* int_)
 {
 	interaction = int_;
 	sys = sys_;
 	nvec = &(interaction->nvec);
-	_active =false;
 }
 
 void Lubrication::setParticleData()

@@ -107,7 +107,7 @@ private:
 
 
  public:
-	Lubrication(){};
+	Lubrication();
 	void init(System *sys_, Interaction *int_);
 	void setParent(Interaction *int_){interaction = int_;};
 	inline bool is_active() {return _active;};

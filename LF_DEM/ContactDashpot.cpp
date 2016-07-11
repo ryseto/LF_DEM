@@ -11,12 +11,33 @@
 #include "Interaction.h"
 #include "System.h"
 
+ContactDashpot::ContactDashpot():
+p0(0),
+p1(0),
+p0_6(0),
+p1_6(0),
+a0(0),
+a1(0),
+ro(0),
+ro_12(0),
+_active(false),
+range(0),
+normal_coeff(0),
+tangential_coeff(0)
+{
+	for (int i=0; i<4; i++) {
+		XA[i] = 0;
+		YA[i] = 0;
+		YB[i] = 0;
+		YC[i] = 0;
+	}
+}
+
 void ContactDashpot::init(System *sys_, Interaction* int_)
 {
 	sys = sys_;
 	interaction = int_;
 	nvec = &(interaction->nvec);
-	_active = false;
 }
 
 void ContactDashpot::setParticleData()

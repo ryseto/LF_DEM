@@ -69,7 +69,24 @@ public:
 	 *       Public Methods          *
 	 *********************************/
 	//======= internal state =====================//
-	Contact(){};
+	Contact():
+	p0(0),
+	p1(0),
+	kt_scaled(0),
+	kr_scaled(0),
+	kn_scaled(0),
+	mu_static(0),
+	mu_dynamic(0),
+	mu_rolling(0),
+	f_contact_normal_norm(0),
+	normal_load(0),
+	f_contact_normal(0),
+	f_contact_tan(0),
+	f_contact(0),
+	f_rolling(0),
+	ft_max(0)
+	{};
+	
 	void init(System* sys_, Interaction* int_);
 	ContactDashpot dashpot;
 	void setInteractionData();
