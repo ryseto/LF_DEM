@@ -95,9 +95,10 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	if (sys->p.lubrication_model > 0) {
 		lubrication.setParticleData();
 		lubrication.updateActivationState();
-		if (lubrication.is_active()) {
-			lubrication.updateResistanceCoeff();
-		}
+		// NOTE: we still have to update the resistance coeff
+		// even if lubrication is inactive, as we want to keep the GE/HE
+		// terms of the force/torque
+		lubrication.updateResistanceCoeff();
 	}
 }
 
@@ -139,10 +140,11 @@ void Interaction::updateState(bool& deactivated)
 	}
 
 	lubrication.updateActivationState();
-	if (lubrication.is_active()) {
-		// tell the lubrication about the new gap
-		lubrication.updateResistanceCoeff();
-	}
+	// tell the lubrication about the new gap
+	// NOTE: we still have to update the resistance coeff
+	// even if lubrication is inactive, as we want to keep the GE/HE
+	// terms of the force/torque
+	lubrication.updateResistanceCoeff();
 
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();

@@ -863,7 +863,6 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
  * This part is used for ouput data.
  * lubforce_p1 = -lubforce_p0
  *
- * See sys->calcLubricationForce()
  */
 void Lubrication::calcPairwiseForce()
 {
@@ -985,6 +984,10 @@ void Lubrication::addHydroStress()
 
 void Lubrication::updateResistanceCoeff()
 {
-	double coeff = 1/(interaction->reduced_gap+sys->p.lub_reduce_parameter);
-	setResistanceCoeff(coeff, log(coeff));
+	if (interaction->reduced_gap > 0) {
+		double coeff = 1/(interaction->reduced_gap+sys->p.lub_reduce_parameter);
+		setResistanceCoeff(coeff, log(coeff));
+	} else {
+		setResistanceCoeff(sys->lub_coeff_contact, sys->log_lub_coeff_contact_tan_total);
+	}
 }

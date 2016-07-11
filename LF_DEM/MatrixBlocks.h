@@ -9,7 +9,6 @@ struct ODBlock {
 	std::array<double, 5> col3;
 	std::array<double, 3> col4;
 	std::array<double, 1> col5;
-	int bla;
 };
 
 inline void resetODBlock(struct ODBlock &b)

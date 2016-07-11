@@ -7,7 +7,12 @@
 
 /**
  \class ContactDashpot
- \brief ContactDashpot interaction, to be called from an Interaction object
+ \brief ContactDashpot interaction, to be called from a Contact object
+
+	Contains both normal and tangential dashpots.
+	As for the force, it formally acts as a distance independant Lubrication object.
+	The stresses, however, have to be computed as -xF, from the Contact object.
+	
  \author Ryohei Seto
  \author Romain Mari
  */
@@ -53,31 +58,15 @@ private:
 	void calcDashpotResistances();
 
  public:
-	 ContactDashpot();
+	ContactDashpot();
 	void init(System *sys_, Interaction *int_);
 	inline bool is_active() {return _active;};
 	void activate();
 	void deactivate();
 	void setParticleData();
-	//===== forces/stresses  ========================== //
-    vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
-	void calcPairwiseForce();
-	double get_lubforce_normal()
-	{
-		// positive for compression
-        //lubforce_p0.cerr();
-		return -dot(lubforce_p0, nvec);
-	}
-	vec3d get_lubforce_tan()
-	{
-		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
-	}
-	vec3d get_lubforce()
-	{
-		return lubforce_p0;
-	}
+	//===== forces/stresses  ==========================
+	vec3d calcPairwiseForce();
 	void setDashpotResistanceCoeffs(double normal_rc, double tangent_rc);
-//void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	struct ODBlock RFU_ODBlock();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();

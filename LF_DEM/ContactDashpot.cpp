@@ -257,15 +257,14 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
 
 
 
-/* Lubriction force between two particles is calculated.
- * Note that only the Brownian component of the velocity is NOT included here (IS THAT TRUE?).
- *     @@@@ na_velocity includes Brownian component(??)
- * This part is used for ouput data.
- * lubforce_p1 = -lubforce_p0
+/* Resistance force acting on particle p0.
+ * This part is used to output data only.
+ * The dynamics never uses this function, as the dashpot force is actually
+ * the unknown of the resistance problem solved at every time step.
+ * force_p1 = -force_p0
  *
- * See sys->calcLubricationForce()
- */
-void ContactDashpot::calcPairwiseForce()
+*/
+vec3d ContactDashpot::calcPairwiseForce()
 {
 	/*
 	 *  First: -A*(U-Uinf) term
@@ -278,13 +277,13 @@ void ContactDashpot::calcPairwiseForce()
 	vec3d vi(sys->na_velocity[p0]);
 	vec3d vj(sys->na_velocity[p1]);
 	/* XAU_i */
-	lubforce_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
+	vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 
 	vec3d oi(sys->na_ang_velocity[p0]);
 	vec3d oj(sys->na_ang_velocity[p1]);
 		/* YAU_i */
-	lubforce_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
+	force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
 	/* YBO_i */
-	lubforce_p0 += -YB[0]*cross(nvec, oi)            - YB[2]*cross(nvec, oj);
-	return;
+	force_p0 += -YB[0]*cross(nvec, oi)            - YB[2]*cross(nvec, oj);
+	return force_p0;
 }

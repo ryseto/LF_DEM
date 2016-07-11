@@ -68,6 +68,7 @@ void Contact::activate()
 	 * In critical load model, the value can take 1 as well.
 	 */
 	if (sys->friction) {
+		std::cout << " activating contact " << std::endl;
 		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
 			state = 1; // critical load model
 		} else {
@@ -363,7 +364,7 @@ void Contact::calcContactStress()
 	 * This symmetry is expected in the average ensemble.
 	 * I'm not sure this is allowed or not.
 	 */
-	if (state > 0) {
+	if (is_active() > 0) {
 		/*
 		 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
 		 * Fc_normal = -Fc_normal_norm*nvec;
