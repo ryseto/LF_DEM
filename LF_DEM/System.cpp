@@ -588,7 +588,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	dt = p.dt;
-
+	if (p.fixed_dt) {
+		avg_dt = dt;
+	}
 	if (test_simulation == 31) {
 		p.sd_coeff = 1e-6;
 	}
@@ -1180,7 +1182,11 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt += dt;
 		avg_dt_nb++;
 	};
-	avg_dt /= avg_dt_nb;
+	if (avg_dt_nb > 0) {
+		avg_dt /= avg_dt_nb;
+	} else {
+		avg_dt = dt;
+	}
 
 	if (events.empty()) {
 		calc_stress = true;
