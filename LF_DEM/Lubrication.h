@@ -133,7 +133,8 @@ private:
 	{
 		return lubforce_p0;
 	}
-	void addHydroStress();
+	void addStressME();
+	void addStressesGU();
 	void pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 							   const vec3d& oi, const vec3d& oj,
 							   StressTensor& stresslet_i, StressTensor& stresslet_j);

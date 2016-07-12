@@ -12,7 +12,7 @@
 	Contains both normal and tangential dashpots.
 	As for the force, it formally acts as a distance independant Lubrication object.
 	The stresses, however, have to be computed as -xF, from the Contact object.
-	
+
  \author Ryohei Seto
  \author Romain Mari
  */
@@ -65,7 +65,7 @@ private:
 	void deactivate();
 	void setParticleData();
 	//===== forces/stresses  ==========================
-	vec3d calcPairwiseForce();
+	vec3d getPairwiseForce();
 	void setDashpotResistanceCoeffs(double normal_rc, double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	struct ODBlock RFU_ODBlock();

@@ -352,28 +352,12 @@ void Contact::addUpContactForceTorque()
 
 void Contact::calcContactStress()
 {
-	/*
-	 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
-	 * Fc_normal = -Fc_normal_norm*nvec;
-	 * This force acts on particle 1.
-	 * stress1 is a0*nvec[*]force.
-	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
-	 */
-	/* When we compose stress tensor,
-	 * even individual level, this part calculates symmetric tensor.
-	 * This symmetry is expected in the average ensemble.
-	 * I'm not sure this is allowed or not.
+	/**
+	 * The "xF" contact stress.
+	 * The contact force F includes both the spring force and the dashpot force.
 	 */
 	if (is_active() > 0) {
-		/*
-		 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
-		 * Fc_normal = -Fc_normal_norm*nvec;
-		 * This force acts on particle 1.
-		 * stress1 is a0*nvec[*]force.
-		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
-		 * stress1 + stress2 = (a1+a2)*nvec[*]force
-		 */
-		contact_stresslet_XF.set(interaction->rvec, f_contact);
+		contact_stresslet_XF.set(interaction->rvec, f_contact+dashpot.getPairwiseForce());
 	} else {
 		contact_stresslet_XF.reset();
 	}

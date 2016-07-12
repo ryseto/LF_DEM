@@ -80,7 +80,10 @@ void System::calcStressPerParticle()
 					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model > 3 is not implemented" << endl;
 					throw runtime_error(error_str.str());
 				}
-				interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
+				interaction[k].lubrication.addStressME(); // R_SE:Einf-R_SU*v
+				if (interaction[k].lubrication.is_active()) {
+					interaction[k].lubrication.addStressesGU(); // R_SE:Einf-R_SU*v
+				}
 			}
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {

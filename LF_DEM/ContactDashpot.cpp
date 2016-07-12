@@ -264,7 +264,7 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
  * force_p1 = -force_p0
  *
 */
-vec3d ContactDashpot::calcPairwiseForce()
+vec3d ContactDashpot::getPairwiseForce()
 {
 	/*
 	 *  First: -A*(U-Uinf) term

@@ -905,7 +905,23 @@ void Lubrication::calcPairwiseForce()
 	return;
 }
 
-void Lubrication::addHydroStress()
+void Lubrication::addStressME()
+{
+	/** Stress from the M*Einf term (see Jeffrey 1991)
+	*/
+	StressTensor stresslet_ME_i;
+	StressTensor stresslet_ME_j;
+	if (!sys->zero_shear) {
+		pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
+		double sr = sys->get_shear_rate();
+		stresslet_ME_i *= sr;
+		stresslet_ME_j *= sr;
+	}
+	sys->lubstress[p0] += stresslet_ME_i;
+	sys->lubstress[p1] += stresslet_ME_j;
+}
+
+void Lubrication::addStressesGU()
 {
 	/*
 	 *  First: -G*(U-Uinf) term
@@ -915,19 +931,7 @@ void Lubrication::addHydroStress()
 	pairVelocityStresslet(sys->vel_hydro[p0], sys->vel_hydro[p1],
 						  sys->ang_vel_hydro[p0], sys->ang_vel_hydro[p1],
 						  stresslet_hydro_GU_i, stresslet_hydro_GU_j);
-	/*
-	 *  Second: +M*Einf term
-	 */
-	StressTensor stresslet_ME_i;
-	StressTensor stresslet_ME_j;
-	if (!sys->zero_shear) {
-		pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-		double sr = sys->get_shear_rate();
-		stresslet_ME_i *= sr;
-		stresslet_ME_j *= sr;
-	}
-	sys->lubstress[p0] += stresslet_hydro_GU_i+stresslet_ME_i;
-	sys->lubstress[p1] += stresslet_hydro_GU_j+stresslet_ME_j;
+
 	// Add term G*V_cont
 	/* [note]
 	 * We must not check for interaction->contact.is_active() condition,
