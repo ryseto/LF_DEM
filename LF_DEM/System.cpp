@@ -263,11 +263,6 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 		radius[i] = radii[i];
 	}
 	radius_wall_particle = radius[np-1];
-	if (ly == 0) {
-		twodimension = true;
-	} else {
-		twodimension = false;
-	}
 	setSystemVolume();
 	initializeBoxing();
 	checkNewInteraction();

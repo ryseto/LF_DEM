@@ -1041,12 +1041,14 @@ bool Simulation::isTwoDimensionBinary(const string& filename_import_positions)
 	double ddumb, ly;
 	int np = 0;
 	file_import.read((char*)&np, sizeof(int));
+	int binary_format_version;
 	if (np == -1) {
-		int binary_format_version;
 		int np_fixed = 0;
 		file_import.read((char*)&binary_format_version, sizeof(int));
 		file_import.read((char*)&np, sizeof(int));
-		file_import.read((char*)&np_fixed, sizeof(int));
+		if (binary_format_version == 3) {
+			file_import.read((char*)&np_fixed, sizeof(int));
+		}
 	}
 	file_import.read((char*)&ddumb, sizeof(double)); // vf
 	file_import.read((char*)&ddumb, sizeof(double)); // lx
