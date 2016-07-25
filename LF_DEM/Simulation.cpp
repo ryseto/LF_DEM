@@ -371,8 +371,8 @@ void Simulation::simulationInverseYield(string in_args,
 
 void Simulation::outputComputationTime()
 {
-	int time_from_1 = time_strain_end-time_strain_1;
-	int time_from_0 = time_strain_end-time_strain_0;
+	time_t time_from_1 = time_strain_end-time_strain_1;
+	time_t time_from_0 = time_strain_end-time_strain_0;
 	int timestep_from_1 = timestep_end-timestep_1;
 	fout_time << "# np time_from_0 time_from_1 timestep_end timestep_from_1" << endl;
 	fout_time << sys.get_np() << ' ';

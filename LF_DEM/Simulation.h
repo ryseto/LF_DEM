@@ -52,9 +52,9 @@ private:
 	std::string output_unit_scales;
 	double target_stress_input;
 	double input_rate;
-	int time_strain_0;
-	int time_strain_1;
-	int time_strain_end;
+	time_t time_strain_0;
+	time_t time_strain_1;
+	time_t time_strain_end;
 	int timestep_1;
 	int timestep_end;
 	/*
