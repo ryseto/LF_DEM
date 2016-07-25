@@ -931,7 +931,8 @@ void Lubrication::addStressesGU()
 	pairVelocityStresslet(sys->vel_hydro[p0], sys->vel_hydro[p1],
 						  sys->ang_vel_hydro[p0], sys->ang_vel_hydro[p1],
 						  stresslet_hydro_GU_i, stresslet_hydro_GU_j);
-
+	sys->lubstress[p0] += stresslet_hydro_GU_i;
+	sys->lubstress[p1] += stresslet_hydro_GU_j;
 	// Add term G*V_cont
 	/* [note]
 	 * We must not check for interaction->contact.is_active() condition,
