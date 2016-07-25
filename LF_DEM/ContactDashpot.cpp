@@ -257,19 +257,21 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
 
 
 
-/* Resistance force acting on particle p0.
- * This part is used to output data only.
- * The dynamics never uses this function, as the dashpot force is actually
- * the unknown of the resistance problem solved at every time step.
- * force_p1 = -force_p0
- *
-*/
+
 vec3d ContactDashpot::getPairwiseForce()
 {
+	/** \brief Resistance force acting on particle p0.
+	 *
+	 * This part is used to output data only.
+	 * The dynamics never uses this function, as the dashpot force is actually
+	 * the unknown of the resistance problem solved at every time step.
+	 * force_p1 = -force_p0
+	 *
+	*/
+
 	/*
 	 *  First: -A*(U-Uinf) term
-	 */
-	/* Eq. (1.6a) in Jeffrey&Onishi 1984
+ 	 * Eq. (1.6a) in Jeffrey&Onishi 1984
 	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *

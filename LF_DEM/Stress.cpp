@@ -82,7 +82,7 @@ void System::calcStressPerParticle()
 				}
 				interaction[k].lubrication.addStressME(); // R_SE:Einf-R_SU*v
 				if (interaction[k].lubrication.is_active()) {
-					interaction[k].lubrication.addStressesGU(); // R_SE:Einf-R_SU*v
+					interaction[k].lubrication.addStressesGU(); // -R_SU*v
 				}
 			}
 			interaction[k].contact.calcContactStress(); // - rF_cont
@@ -148,7 +148,14 @@ void System::calcStress()
 		total_hydro_stress += lubstress[i];
 	}
 	total_hydro_stress /= system_volume;
-	total_hydro_stress += shear_rate/6./M_PI; // suspending fluid viscosity
+
+	// suspending fluid viscosity
+	if (p.cross_shear) {
+		total_hydro_stress.elm[2] += costheta_shear*shear_rate/6./M_PI;
+		total_hydro_stress.elm[3] += sintheta_shear*shear_rate/6./M_PI;
+	}	else {
+		total_hydro_stress.elm[2] += shear_rate/6./M_PI;
+	}
 	// Stress from contact force
 	// GU contribution
 	total_contact_stressGU.reset();

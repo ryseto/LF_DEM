@@ -185,7 +185,7 @@ void Lubrication::calcLubConstants()
 	g1_inv_XA = func_g1_XA(invlambda);
 	cXA[0] = a0*g1_XA;
 	cXA[1] = ro_12*(-2/lambda_p_1)*g1_XA;
-	cXA[2] = ro_12*cXA[1];
+	cXA[2] = cXA[1];
 	cXA[3] = a1*g1_inv_XA;
 	/* YA
 	 * Y_{a,b}(l) = Y_{b,a}(l) = Y_{3-a,3-b}(1/l)
@@ -196,7 +196,7 @@ void Lubrication::calcLubConstants()
 	g2_inv_YA = func_g2_YA(invlambda);
 	cYA[0] = a0*g2_YA;
 	cYA[1] = ro_12*(-2/lambda_p_1)*g2_YA;
-	cYA[2] = ro_12*cYA[1];
+	cYA[2] = cYA[1];
 	cYA[3] = a1*g2_inv_YA;
 	/* YB
 	 * Y_{a,b}(l) = -Y_{3-a,3-b}(1/l)
@@ -219,7 +219,7 @@ void Lubrication::calcLubConstants()
 	g4_YC     = func_g4_YC(lambda);
 	cYC[0] = a0a0a0_43*g2_YC;
 	cYC[1] = rororo_16*g4_YC;
-	cYC[2] = rororo_16*cYC[1];
+	cYC[2] = cYC[1];
 	cYC[3] = a1a1a1_43*g2_inv_YC;
 	/* XG
 	 * X_{a,b}(l) = -X_{3-a,3-b}(1/l)
@@ -266,7 +266,7 @@ void Lubrication::calcLubConstants()
 	g4_XM     = func_g4_XM(lambda);
 	cXM[0] = a0a0a0_109*g1_XM;
 	cXM[1] = rororo_536*(8/lambda_p_1_cubic)*g4_XM;
-	cXM[2] = rororo_536*cXM[1];
+	cXM[2] = cXM[1];
 	cXM[3] = a1a1a1_109*g1_inv_XM;
 	/* YM
 	 * Y_{a,b}(l) = Y_{b,a}(l)= Y_{3-a,3-b}(1/l)
@@ -278,7 +278,7 @@ void Lubrication::calcLubConstants()
 	g5_YM     = func_g5_YM(lambda);
 	cYM[0] = a0a0a0_109*g2_YM;
 	cYM[1] = rororo_536*(8/lambda_p_1_cubic)*g5_YM;
-	cYM[2] = rororo_536*cYM[1];
+	cYM[2] = cYM[1];
 	cYM[3] = a1a1a1_109*g2_inv_YM;
 }
 
