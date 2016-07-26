@@ -133,12 +133,14 @@ private:
 	{
 		return lubforce_p0;
 	}
-	void addStressME();
-	void addStressesGU();
-	void pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
-							   const vec3d& oi, const vec3d& oj,
-							   StressTensor& stresslet_i, StressTensor& stresslet_j);
-	void pairStrainStresslet(StressTensor& stresslet_i, StressTensor& stresslet_j);
+	void addMEStresslet(double cos_theta_shear,
+	                    double sin_theta_shear,
+	                    double shear_rate,
+	                    StressTensor& stresslet_i,
+	                    StressTensor& stresslet_j);
+	void addGUStresslet(const vec3d& vi, const vec3d& vj,
+                      const vec3d& oi, const vec3d& oj,
+                      StressTensor& stresslet_i, StressTensor& stresslet_j);
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 //void setResistanceCoeffTang(double tangent_rc);

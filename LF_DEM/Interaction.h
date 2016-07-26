@@ -103,16 +103,16 @@ public:
 	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
 
-	inline bool is_active()
+	inline bool is_active() const
 	{
 		return active;
 	}
 	//======= particles data  ====================//
-	inline int partner(unsigned int i)
+	inline int partner(unsigned int i) const
 	{
 		return (i == p0 ? p1 : p0);
 	}
-	inline std::pair<unsigned int, unsigned int>	get_par_num()
+	inline std::pair<unsigned int, unsigned int>	get_par_num() const
 	{
 		return std::make_pair(p0, p1);
 	}
@@ -120,19 +120,19 @@ public:
 	{
 		label = val;
 	}
-	inline unsigned int get_label()
+	inline unsigned int get_label() const
 	{
 		return label;
 	}
-	inline double get_a_reduced()
+	inline double get_a_reduced() const
 	{
 		return a_reduced;
 	}
-	inline double get_reduced_gap()
+	inline double get_reduced_gap() const
 	{
 		return reduced_gap;
 	}
-	inline double get_gap()
+	inline double get_gap() const
 	{
 		return r-ro;
 	}

@@ -678,10 +678,10 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 // ie fills :
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
-void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
-										const vec3d& oi, const vec3d& oj,
-										StressTensor& stresslet_i,
-										StressTensor& stresslet_j)
+void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
+                                 const vec3d& oi, const vec3d& oj,
+                                 StressTensor& stresslet_i,
+                                 StressTensor& stresslet_j)
 {
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
@@ -703,8 +703,8 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	StressTensor XGU_j = XGU_i;
 	XGU_i *= cXG_i;
 	XGU_j *= cXG_j;
-	stresslet_i = XGU_i;
-	stresslet_j = XGU_j;
+	stresslet_i += XGU_i;
+	stresslet_j += XGU_j;
 	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
 		return;
 	}
@@ -781,8 +781,11 @@ void Lubrication::pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
 	stresslet_j += YHO_j;
 }
 
-void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
-									  StressTensor& stresslet_j)
+void Lubrication::addMEStresslet(double cos_theta_shear,
+                                 double sin_theta_shear,
+                                 double shear_rate,
+                                 StressTensor& stresslet_i,
+                                 StressTensor& stresslet_j)
 {
 	/**
 		\brief The \f$ M:\hat{E}^{\infty} \f$ component of the stress.
@@ -801,6 +804,7 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
 		\f$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} \f$
 
 	 */
+	bool shear_along_x = sin_theta_shear == 0.;
 	double nxnx = nvec->x*nvec->x;
  	double nxny = nvec->x*nvec->y;
  	double nxnz = nvec->x*nvec->z;
@@ -808,53 +812,49 @@ void Lubrication::pairStrainStresslet(StressTensor& stresslet_i,
  	double nyny = nvec->y*nvec->y;
  	double nznz = nvec->z*nvec->z;
 	double nnE;
- 	if (sys->p.cross_shear) {
- 		double costheta, sintheta;
- 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
- 		// nnE = nynz;
- 		nnE = costheta*nxnz+sintheta*nynz;
- 	} else {
- 		nnE = nxnz;
+ 	if (shear_along_x) {
+		nnE = nxnz;
+	} else {
+ 		nnE = cos_theta_shear*nxnz + sin_theta_shear*nynz; // this is not including the shear rate
  	}
+
 	double cXM_i = (3.0/2)*(XM[0]+XM[1])*nnE;
 	double cXM_j = (3.0/2)*(XM[2]+XM[3])*nnE;
 	StressTensor XME_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
 	StressTensor XME_j = XME_i;
-	XME_i *= cXM_i;
-	XME_j *= cXM_j;
-	stresslet_i = XME_i;
-	stresslet_j = XME_j;
-	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
-		return;
-	}
-	double cYM_i = (1.0/2)*(YM[0]+YM[1]);
-	double cYM_j = (1.0/2)*(YM[2]+YM[3]);
+	XME_i *= shear_rate*cXM_i;
+	XME_j *= shear_rate*cXM_j;
 
-	StressTensor YME_i;
-	if (!sys->p.cross_shear) {
-		YME_i.elm[0] = 2*nxnz     -4*nxnx*nnE;
-		YME_i.elm[1] =   nynz     -4*nxny*nnE;
-		YME_i.elm[2] =   nxnx+nznz-4*nxnz*nnE;
-		YME_i.elm[3] =   nxny     -4*nynz*nnE;
-		YME_i.elm[4] =            -4*nyny*nnE;
-		YME_i.elm[5] = 2*nxnz     -4*nznz*nnE;
-	}
-	if (sys->p.cross_shear) {
-		double costheta, sintheta;
-		std::tie( costheta, sintheta ) = sys->getCosSinShearAngle();
-		YME_i.elm[0] = 2*costheta*nxnz                             -4*nxnx*nnE;
-		YME_i.elm[1] =   costheta*nynz        +sintheta*nxnz       -4*nxny*nnE;
-		YME_i.elm[2] =   costheta*(nxnx+nznz) +sintheta*nxny       -4*nxnz*nnE;
-		YME_i.elm[3] =   costheta*nxny        +sintheta*(nyny+nznz)-4*nynz*nnE;
-		YME_i.elm[4] = 2*sintheta*nynz                             -4*nyny*nnE;
-		YME_i.elm[5] = 2*costheta*nxnz        +2*sintheta*nynz     -4*nznz*nnE;
-	}
+	stresslet_i += XME_i;
+	stresslet_j += XME_j;
 
-	StressTensor YME_j = YME_i;
-	YME_i *= cYM_i;
-	YME_j *= cYM_j;
-	stresslet_i += YME_i;
-	stresslet_j += YME_j;
+	if (sys->p.lubrication_model == 2) {
+		double cYM_i = (1.0/2)*(YM[0]+YM[1]);
+		double cYM_j = (1.0/2)*(YM[2]+YM[3]);
+
+		StressTensor YME_i;
+		if (shear_along_x) {
+			YME_i.elm[0] = 2*nxnz     -4*nxnx*nnE;
+			YME_i.elm[1] =   nynz     -4*nxny*nnE;
+			YME_i.elm[2] =   nxnx+nznz-4*nxnz*nnE;
+			YME_i.elm[3] =   nxny     -4*nynz*nnE;
+			YME_i.elm[4] =            -4*nyny*nnE;
+			YME_i.elm[5] = 2*nxnz     -4*nznz*nnE;
+		} else {
+			YME_i.elm[0] = 2*cos_theta_shear*nxnz                             -4*nxnx*nnE;
+			YME_i.elm[1] =   cos_theta_shear*nynz        +sin_theta_shear*nxnz       -4*nxny*nnE;
+			YME_i.elm[2] =   cos_theta_shear*(nxnx+nznz) +sin_theta_shear*nxny       -4*nxnz*nnE;
+			YME_i.elm[3] =   cos_theta_shear*nxny        +sin_theta_shear*(nyny+nznz)-4*nynz*nnE;
+			YME_i.elm[4] = 2*sin_theta_shear*nynz                             -4*nyny*nnE;
+			YME_i.elm[5] = 2*cos_theta_shear*nxnz        +2*sin_theta_shear*nynz     -4*nznz*nnE;
+		}
+
+		StressTensor YME_j = YME_i;
+		YME_i *= shear_rate*cYM_i;
+		YME_j *= shear_rate*cYM_j;
+		stresslet_i += YME_i;
+		stresslet_j += YME_j;
+	}
 }
 
 /* Lubriction force between two particles is calculated.
@@ -905,87 +905,6 @@ void Lubrication::calcPairwiseForce()
 	return;
 }
 
-void Lubrication::addStressME()
-{
-	/** Stress from the M*Einf term (see Jeffrey 1991)
-	*/
-	StressTensor stresslet_ME_i;
-	StressTensor stresslet_ME_j;
-	if (!sys->zero_shear) {
-		pairStrainStresslet(stresslet_ME_i, stresslet_ME_j);
-		double sr = sys->get_shear_rate();
-		stresslet_ME_i *= sr;
-		stresslet_ME_j *= sr;
-	}
-	sys->lubstress[p0] += stresslet_ME_i;
-	sys->lubstress[p1] += stresslet_ME_j;
-}
-
-void Lubrication::addStressesGU()
-{
-	/*
-	 *  First: -G*(U-Uinf) term
-	 */
-	StressTensor stresslet_hydro_GU_i;
-	StressTensor stresslet_hydro_GU_j;
-	pairVelocityStresslet(sys->vel_hydro[p0], sys->vel_hydro[p1],
-						  sys->ang_vel_hydro[p0], sys->ang_vel_hydro[p1],
-						  stresslet_hydro_GU_i, stresslet_hydro_GU_j);
-	sys->lubstress[p0] += stresslet_hydro_GU_i;
-	sys->lubstress[p1] += stresslet_hydro_GU_j;
-	// Add term G*V_cont
-	/* [note]
-	 * We must not check for interaction->contact.is_active() condition,
-	 * because the contact velocities of p0 and p1 can be non-zero
-	 * even when they are not in contact.
-	 */
-	StressTensor stresslet_contact_GU_i;
-	StressTensor stresslet_contact_GU_j;
-	pairVelocityStresslet(sys->vel_contact[p0], sys->vel_contact[p1],
-						  sys->ang_vel_contact[p0], sys->ang_vel_contact[p1],
-						  stresslet_contact_GU_i, stresslet_contact_GU_j);
-	sys->contactstressGU[p0] += stresslet_contact_GU_i;
-	sys->contactstressGU[p1] += stresslet_contact_GU_j;
-	// Add term G*V_repulsive
-	if (sys->repulsiveforce) {
-		StressTensor stresslet_repulsive_GU_i;
-		StressTensor stresslet_repulsive_GU_j;
-		pairVelocityStresslet(sys->vel_repulsive[p0], sys->vel_repulsive[p1],
-							  sys->ang_vel_repulsive[p0], sys->ang_vel_repulsive[p1],
-							  stresslet_repulsive_GU_i, stresslet_repulsive_GU_j);
-		sys->repulsivestressGU[p0] += stresslet_repulsive_GU_i;
-		sys->repulsivestressGU[p1] += stresslet_repulsive_GU_j;
-	}
-	// Add term G*V_brownian
-	if (sys->brownian) {
-		StressTensor stresslet_brownian_GU_i;
-		StressTensor stresslet_brownian_GU_j;
-		pairVelocityStresslet(sys->vel_brownian[p0], sys->vel_brownian[p1],
-							  sys->ang_vel_brownian[p0], sys->ang_vel_brownian[p1],
-							  stresslet_brownian_GU_i, stresslet_brownian_GU_j);
-		sys->brownianstressGU[p0] += stresslet_brownian_GU_i;
-		sys->brownianstressGU[p1] += stresslet_brownian_GU_j;
-	}
-	if (sys->vel_hydro_from_fixed.size()) {
-		StressTensor stresslet_fixed_GU_i;
-		StressTensor stresslet_fixed_GU_j;
-		if (p1 < sys->np_mobile) { // p0 and p1 mobile
-			pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->vel_hydro_from_fixed[p1],
-								  sys->ang_vel_hydro_from_fixed[p0], sys->ang_vel_hydro_from_fixed[p1],
-								  stresslet_fixed_GU_i, stresslet_fixed_GU_j);
-		} else if (p0 >= sys->np_mobile) { // p0 and p1 fixed
-			pairVelocityStresslet(sys->na_velocity[p0], sys->na_velocity[p1],
-								  sys->na_ang_velocity[p0], sys->na_ang_velocity[p1],
-								  stresslet_fixed_GU_i, stresslet_fixed_GU_j);
-		} else { // p0 mobile and p1 fixed
-			pairVelocityStresslet(sys->vel_hydro_from_fixed[p0], sys->na_velocity[p1],
-								  sys->ang_vel_hydro_from_fixed[p0], sys->na_ang_velocity[p1],
-								  stresslet_fixed_GU_i, stresslet_fixed_GU_j);
-		}
-		sys->hydrofromfixedstressGU[p0] += stresslet_fixed_GU_i;
-		sys->hydrofromfixedstressGU[p1] += stresslet_fixed_GU_j;
-	}
-}
 
 void Lubrication::updateResistanceCoeff()
 {
