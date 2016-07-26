@@ -53,12 +53,14 @@ void System::addLubricationStress(Interaction &inter)
 		error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model > 3 is not implemented" << endl;
 		throw runtime_error(error_str.str());
 	}
-	inter.lubrication.addMEStresslet(costheta_shear,
-                                   sintheta_shear,
-                                   shear_rate,
-                                   lubstress[i], lubstress[j]); // R_SE:Einf-R_SU*v
+
 
  	if (inter.lubrication.is_active()) {
+		inter.lubrication.addMEStresslet(costheta_shear,
+	                                   sintheta_shear,
+	                                   shear_rate,
+	                                   lubstress[i], lubstress[j]); // R_SE:Einf-R_SU*v
+
 		// -R_SU*U_H
 		inter.lubrication.addGUStresslet(vel_hydro[i], vel_hydro[j],
                                      ang_vel_hydro[i], ang_vel_hydro[j],
@@ -101,6 +103,10 @@ void System::addLubricationStress(Interaction &inter)
 void System::calcStressPerParticle()
 {
 	/**
+		@@@@ This method does not do what it says, neither in its name nor in its doc.
+		     It does a mix of two things (particlewise stress and interactionwise stress)
+				 so we should rename/refactor this to improve clarity.
+
 	   This method computes the stresses per particle, split by components (hydro, contact, ...).
 
 	   From velocities \f$ V_{\mathrm{I}}\f$ associated with

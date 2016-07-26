@@ -1402,7 +1402,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 							                                inter->RFU_DBlocks(),
 							                                inter->RFU_ODBlock());
 					}
-					if (rhs) {
+					if (rhs && inter->lubrication.is_active()) {
 						vec3d GEi, GEj;
 						std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
 						if (shearrate_is_1 == false) {
@@ -1436,7 +1436,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 					                                    inter->RFU_DBlocks(),
 					                                    inter->RFU_ODBlock());
 					}
-					if (rhs) {
+					if (rhs && inter->lubrication.is_active()) {
 						vec3d GEi, GEj, HEi, HEj;
 						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
 						if (shearrate_is_1 == false) {

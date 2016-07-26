@@ -226,6 +226,9 @@ struct ODBlock Interaction::RFU_ODBlock()
 			return contact.dashpot.RFU_ODBlock();
 		}
 	}
+	struct ODBlock b;
+	resetODBlock(b);
+	return b;
 }
 
 std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
@@ -236,6 +239,9 @@ std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 	if (contact.dashpot.is_active()) {
 		return contact.dashpot.RFU_DBlocks();
 	}
+	struct DBlock b;
+	resetDBlock(b);
+	return std::make_pair(b, b);
 }
 
 
