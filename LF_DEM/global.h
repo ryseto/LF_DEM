@@ -35,6 +35,10 @@
 #include "VersionInfo.h"
 #endif
 
+#ifdef USE_DSFMT
+#include <limits.h>
+#endif
+
 inline void removeBlank(std::string& str)
 {
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());
@@ -127,5 +131,37 @@ inline std::vector<std::string> splitString(const std::string& str){
 	}
 	return elements;
 }
+
+#ifdef USE_DSFMT
+inline unsigned long
+hash(time_t t, clock_t c)
+{
+	/**
+		\brief Utility function to start up the DSFMT RNG with a nice seed.
+
+	 From MersenneTwister v1.0 by Richard J. Wagner
+	 comments below are from the original code.
+
+	 Get a unsigned long from t and c
+	 Better than unsigned long(x) in case x is floating point in [0,1]
+	 Based on code by Lawrence Kirby (fred@genesis.demon.co.uk)
+	*/
+
+	static unsigned long differ = 0; // guarantee time-based seeds will change
+	unsigned long h1 = 0;
+	unsigned char *pp = (unsigned char *) &t;
+	for (size_t i=0; i<sizeof(t); ++i){
+		h1 *= UCHAR_MAX + 2U;
+		h1 += pp[i];
+	}
+	unsigned long h2 = 0;
+	pp = (unsigned char *) &c;
+	for (size_t j=0; j<sizeof(c); ++j) {
+		h2 *= UCHAR_MAX + 2U;
+		h2 += pp[j];
+	}
+	return (h1 + differ++)^h2;
+}
+#endif
 
 #endif /* defined(__LF_DEM__global__) */

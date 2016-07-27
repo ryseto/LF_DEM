@@ -153,7 +153,6 @@ private:
 #endif
 #ifdef USE_DSFMT
 	dsfmt_t r_gen;
-	unsigned long hash(time_t, clock_t);
 #endif
 	bool angle_output;
 	std::vector<double> radius_cubed;
