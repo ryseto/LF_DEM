@@ -66,7 +66,8 @@ private:
 	void setParticleData();
 	//===== forces/stresses  ==========================
 	vec3d getPairwiseForce();
-	void setDashpotResistanceCoeffs(double normal_rc, double tangent_rc);
+	void setDashpotResistanceCoeffs(double kn, double kt,
+                                  double rtime_normal, double rtime_tan);
 	//=============  Resistance Matrices ====================/
 	struct ODBlock RFU_ODBlock();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();

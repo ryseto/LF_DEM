@@ -160,6 +160,7 @@ public:
 										  std::string input_scale);
 	void convertInputForcesStressControlled(double dimensionlessnumber,
 											std::string input_scale);
+	void catchForcesInStressUnits(const std::string &stress_unit);
 	void catchSuffixedValue(std::string type,
 							std::string keyword,
 							std::string value_str,

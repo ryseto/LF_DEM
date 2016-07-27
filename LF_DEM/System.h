@@ -173,7 +173,7 @@ private:
 protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
-	~System();
+	~System(){};
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
 	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.

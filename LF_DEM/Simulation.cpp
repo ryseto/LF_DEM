@@ -34,6 +34,7 @@ diminish_output(false)
 	unit_longname["kn"] = "normal_stiffness";
 	unit_longname["kt"] = "tan_stiffness";
 	unit_longname["kr"] = "roll_stiffness";
+	unit_longname["s"] = "stress";
 	kill = false;
 };
 
@@ -339,7 +340,8 @@ void Simulation::simulationInverseYield(string in_args,
 				cout << "target_stress = " << target_stress_input << endl;
 				target_stress_input *= 0.95;
 				sys.target_stress = target_stress_input/6/M_PI;
-				sys.updateUnscaledContactmodel();
+				throw runtime_error("use of updateUnscaledContactmodel() invalid");
+				// sys.updateUnscaledContactmodel();
 				cout << "new target_stress = " << target_stress_input << endl;
 				jammed = 0;
 			}

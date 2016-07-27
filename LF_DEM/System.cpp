@@ -36,9 +36,6 @@ wall_rheology(false),
 mobile_fixed(false),
 couette_stress(false),
 avg_dt(0),
-kn_master(0),
-kt_master(0),
-kr_master(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -55,11 +52,6 @@ eventLookUp(NULL)
 	max_contact_gap = 0;
 	max_disp_rolling = 0;
 }
-
-
-System::~System()
-{
-};
 
 void System::allocateRessourcesPreConfiguration()
 {
@@ -272,58 +264,6 @@ void System::getContacts(vector <struct contact_state>& cs)
 	}
 }
 
-void System::updateUnscaledContactmodel()
-{
-	if (abs(target_stress) != 0) {
-		/* What is the reasonable way
-		 * when the target stress is changed during a simulation?
-		 *
-		 * [temporally change]
-		 * For destressing tests, the spring constants are fixed at the previous values.
-		 */
-		if (!cohesion) {
-			p.kn = kn_master*abs(target_stress);
-			p.kt = kt_master*abs(target_stress);
-			p.kr = kr_master*abs(target_stress);
-		} else {
-			p.kn = kn_master;
-			p.kt = kt_master;
-			p.kr = kr_master;
-		}
-		cout << " kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
-	}
-	lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
-	if (lowPeclet) {
-		lub_coeff_contact *= p.Pe_switch;
-	}
-	if (p.lubrication_model > 0) {
-		if (p.lubrication_model == 1) {
-			log_lub_coeff_contact_tan_lubrication = 0;
-			log_lub_coeff_contact_tan_dashpot = 0;
-		} else if (p.lubrication_model == 2) {
-			log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
-			/* [Note]
-			 * We finally do not introduce a dashpot for the sliding mode.
-			 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
-			 * So log_lub_coeff_contact_tan_dashpot = 0;
-			 */
-			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		} else if (p.lubrication_model == 3) {
-			log_lub_coeff_contact_tan_lubrication = 0;
-			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-			log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-		} else {
-			throw runtime_error("Error: lubrication_model>3 ???");
-		}
-	}
-	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			interaction[k].contact.setInteractionData();
-		}
-	}
-}
-
 void System::setupSystemPreConfiguration(string control, bool is2d)
 {
 	/**
@@ -454,61 +394,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 	shear_strain = 0;
 	nb_interaction = 0;
-	if (p.stress_scaled_contactmodel) {
-		kn_master = p.kn;
-		kt_master = p.kt;
-		kr_master = p.kr;
-		// cout << indent+" kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
-	}
-	if (p.contact_relaxation_time < 0) {
-		// 1/(h+c) --> 1/c
-		lub_coeff_contact = 1/p.lub_reduce_parameter;
-	} else {
-		/* t = beta/kn
-		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
-		 */
-		lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
-	}
-	/* If a contact is in sliding mode,
-	 * lubrication and dashpot forces are activated.
-	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
-	 *
-	 */
-	if (p.lubrication_model == 0) {
-		/* Stokes drag simulation
-		 */
-	} else if (p.lubrication_model == 1) {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 0;
-		log_lub_coeff_contact_tan_total = 0;
-	} else if (p.lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
-		/* [Note]
-		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
-		 * So log_lub_coeff_contact_tan_dashpot = 0;
-		 */
-		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	}  else if (p.lubrication_model == 3) {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		if (p.friction_model > 0 && p.contact_relaxation_time_tan == 0) {
-			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");
-		}
-		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	}	else {
-		throw runtime_error("lubrication_model must be smaller than 4\n");
-	}
 
-	if (p.stress_scaled_contactmodel) {
-		updateUnscaledContactmodel();
-	}
-	// cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	// cout << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
-	// cout << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
-	// cout << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	if (brownian) {
 #ifdef DEV
 		/* In developing and debugging phases,

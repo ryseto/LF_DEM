@@ -73,10 +73,9 @@ struct ParameterSet
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	bool stress_scaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
-	double kn;                               ///< Particle stiffness: normal spring constant [2000 under stress control, 10000 under rate control]
-	double kt;                               ///< Particle stiffness: tangential spring constant [1000 under stress control, 6000 under rate control]
-	double kr;                               ///< Particle stiffness: rolling spring constant [1000 under stress control, 6000 under rate control]
+	double kn;                               ///< Particle stiffness: normal spring constant [2000input_units]
+	double kt;                               ///< Particle stiffness: tangential spring constant [0.5kn]
+	double kr;                               ///< Particle stiffness: rolling spring constant [0.5kn]
 		/*
 		 * contact_relaxation_factor:
 		 *
@@ -84,8 +83,8 @@ struct ParameterSet
 		 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 		 *
 		 */
-	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model (in units of p.dt) [1e-3]
-	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model (in units of p.dt) [0]
+	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model. Sets the normal dashpot. If <0, use normal lubrication at contact as normal dashpot. [1e-3input_unit]
+	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model. Sets the tangential dashpot. If <0, use tangential lubrication at contact as tangential dashpot. [-1input_unit]
 
 	/*******************************************************
 	 INTEGRATOR

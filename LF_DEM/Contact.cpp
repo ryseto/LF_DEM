@@ -56,7 +56,8 @@ void Contact::setInteractionData()
 		}
 	}
 	dashpot.setParticleData();
-	dashpot.setDashpotResistanceCoeffs(sys->lub_coeff_contact, sys->log_lub_coeff_contact_tan_total);
+	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
+		                                 sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
 void Contact::activate()

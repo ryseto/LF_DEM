@@ -15,7 +15,7 @@ using namespace std;
 
 void Simulation::contactForceParameter(string filename)
 {
-	/**
+	/** @@@ DEPRECATED?
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction.
 
 	 Input file must be formatted as:
@@ -53,7 +53,7 @@ void Simulation::contactForceParameter(string filename)
 
 void Simulation::contactForceParameterBrownian(string filename)
 {
-	/**
+	/** @@@ DEPRECATED?
 	 \brief Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.
 
 	 Input file must be formatted as:
@@ -90,6 +90,7 @@ void Simulation::contactForceParameterBrownian(string filename)
 
 void Simulation::importPreSimulationData(string filename)
 {
+	// @@@ DEPRECATED?
 	ifstream fin_PreSimulationData;
 	fin_PreSimulationData.open(filename.c_str());
 	if (!fin_PreSimulationData) {
@@ -131,17 +132,19 @@ void Simulation::echoInputFiles(string in_args,
 	fout_input.close();
 }
 
-void Simulation::resolveUnitSystem(string unit_force) // can we express all forces in unit "unit"?
+void Simulation::resolveUnitSystem(string unit_force)
 {
 	/**
-		\brief Check force units consistency, expresses all input forces in unit given as a parameter.
+		\brief Check force units consistency, expresses all input forces in the unit "unit_force".
 
-		In input, forces are given with suffixes. This function checks that we can make sense of these suffixes, and if so, it converts all the forces in the unit given as a parameter.
+		In input, forces are given with suffixes.
+		This function checks that we can make sense of these suffixes, and if so,
+		it converts all the forces in the unit given as a parameter.
 
 		It does it iteratively, ie:
 		1. I know that unit_force = 1*unit_force
 		2. I know the value of any force f1 that has been given in unit_force in input as
-	 f1 = value*unit_force
+	      f1 = value*unit_force
 		3. I can determine the value of any force f2 expressed as f2 = x*f1
 	 4. I can then determine the value of any force f3 expressed as f3 = y*f2
 		5. etc
@@ -152,6 +155,7 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 
 		\b Note: a priori, we could determine force A from force B if A is defined in B units or if B is defined in A units: for example in the step 3 of the above algorithm we could determine f2 knowing f1 if f1 is defined as f1=x^{-1}f2. However this is \b not implemented and will fail with the current implementation.
 	 */
+
 	// we keep the forces for which we can convert in unit_force units in a set.
 	set <string> resolved_forces;
 	resolved_forces.clear();
@@ -162,10 +166,9 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 	resolved_forces.insert(unit_force);
 
 	// now resolve the other force units, iterativley
-	auto resolved = resolved_forces.size();
-	auto previous_resolved = resolved;
+	auto previous_resolved = resolved_forces.size();
 	do {
-		previous_resolved = resolved;
+		previous_resolved = resolved_forces.size();
 		for (const auto& f: input_force_units) {
 			string force_type = f.first;
 			string unit = f.second;
@@ -175,10 +178,10 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 				resolved_forces.insert(force_type);
 			}
 		}
-		resolved = resolved_forces.size();
-	} while (previous_resolved < resolved);
+	} while (previous_resolved < resolved_forces.size());
+
 	// check we found everyone
-	if (resolved < input_force_units.size()) {
+	if (resolved_forces.size() < input_force_units.size()) {
 		ostringstream error_str;
 		for (const auto& f: input_force_units) {
 			string force_type = f.first;
@@ -200,8 +203,18 @@ void Simulation::resolveUnitSystem(string unit_force) // can we express all forc
 	}
 }
 
+void Simulation::catchForcesInStressUnits(const string &stress_unit)
+{
+	for (const auto& f: input_force_units) {
+		if (f.second == "stress") {
+			input_force_units[f.first] = stress_unit;
+			input_force_values[f.first] *= abs(sys.target_stress);
+		}
+	}
+}
+
 void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
-													string rate_unit)
+                                                    string stress_unit)
 {
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
@@ -215,7 +228,7 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 
 	 In the future, we may allow other unit scale than the one given by the input stress.
 	 */
-	string force_type = rate_unit; // our force defining the shear rate
+	string force_type = stress_unit; // our force defining the shear rate
 	if (force_type == "hydro") {
 		throw runtime_error(" Error: please give a stress in non-hydro units.");
 		/*
@@ -238,6 +251,10 @@ void Simulation::convertInputForcesStressControlled(double dimensionlessnumber,
 	internal_unit_scales = force_type;
 	target_stress_input = dimensionlessnumber;
 	sys.target_stress = target_stress_input/6/M_PI;
+
+	// convert the forces expressed in "s" units, i.e. proportional to the stress
+	catchForcesInStressUnits(stress_unit);
+
 	// convert all other forces to internal_unit_scales
 	resolveUnitSystem(internal_unit_scales);
 }
@@ -296,7 +313,9 @@ void Simulation::convertForceValues(string new_unit)
 	/**
 	 \brief Convert all the input forces to the unit given in parameter.
 
-		The input forces velues can be expressed in any units, but these units must be known before calling this function (e.g. by calling Simulation::resolveUnitSystem(string unit_force) beforehand).
+		The input forces velues can be expressed in any units,
+		but these units must be known before calling this function
+		(e.g. by calling Simulation::resolveUnitSystem(string unit_force) beforehand).
 	 */
 	for (auto& f: input_force_units) {
 		string force_type = f.first;
@@ -636,8 +655,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		catchSuffixedForce("critical_load", value);
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
-	} else if (keyword == "stress_scaled_contactmodel") {
-		p.stress_scaled_contactmodel = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
 		p.repulsive_length = atof(value.c_str());
 	} else if (keyword == "repulsive_max_length") {
@@ -853,18 +870,10 @@ void Simulation::setDefaultParameters(string input_scale)
 	 *
 	 */
 	catchSuffixedValue("time", "contact_relaxation_time", "1e-3"+input_scale, &p.contact_relaxation_time);
-	catchSuffixedValue("time", "contact_relaxation_time_tan", "0"+input_scale, &p.contact_relaxation_time_tan);
-	if (control_var == "stress") {
-		p.stress_scaled_contactmodel = true;
-		p.kn = 2000;
-		p.kt = 1000;
-		p.kr = 1000;
-	} else if (control_var == "rate") {
-		p.stress_scaled_contactmodel = false;
-		p.kn = 10000;
-		p.kt = 6000;
-		p.kr = 6000;
-	}
+	catchSuffixedValue("time", "contact_relaxation_time_tan", "-1"+input_scale, &p.contact_relaxation_time_tan);
+	catchSuffixedValue("force", "kn", "2000"+input_scale, &p.kn);
+	catchSuffixedValue("force", "kt", "0.5kn", &p.kt);
+	catchSuffixedValue("force", "kr", "0.5kn", &p.kr);
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;

@@ -65,11 +65,27 @@ void ContactDashpot::deactivate()
 }
 
 
-void ContactDashpot::setDashpotResistanceCoeffs(double normal_dashpot,
-                                                double tangential_dashpot)
+void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
+                                                double rtime_normal, double rtime_tan)
 {
-	normal_coeff = normal_dashpot; // normal
-	tangential_coeff = tangential_dashpot; // tangential
+
+	if (rtime_normal <= 0) { // take the same resistance as lubrication
+		// 1/(h+c) --> 1/c
+		normal_coeff = 1/sys->p.lub_reduce_parameter;
+	} else {
+		/* t = beta/kn
+		 *  beta = t*kn
+		 * normal_coeff = 4*beta = 4*kn*rtime_normal
+		 */
+		normal_coeff = 4*kn*rtime_normal;
+	}
+
+	if (rtime_tan <= 0) { // take the same resistance as lubrication
+		// 1/(h+c) --> 1/c
+		tangential_coeff = log(1/sys->p.lub_reduce_parameter);
+	} else {
+		tangential_coeff = 6*kt*rtime_tan;
+	}
 	calcDashpotResistances();
 }
 
