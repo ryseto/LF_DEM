@@ -21,7 +21,6 @@ a1(0),
 ro(0),
 ro_12(0),
 _active(false),
-range(0),
 normal_coeff(0),
 tangential_coeff(0)
 {
@@ -49,7 +48,6 @@ void ContactDashpot::setParticleData()
 	a1 = sys->radius[p1];
 	ro = a0+a1;
 	ro_12 = ro/2;
-	range = ro;
 }
 
 void ContactDashpot::activate()

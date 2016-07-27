@@ -82,7 +82,7 @@ void System::allocateRessourcesPreConfiguration()
 
 	radius_cubed.resize(np);
 	radius_squared.resize(np);
-	if (p.lubrication_model == 0) {
+	if (!pairwise_resistance) {
 		// Stokes-drag simulation
 		stokesdrag_coeff_f.resize(np);
 		stokesdrag_coeff_f_sqrt.resize(np);
@@ -300,16 +300,20 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
-	if (p.lubrication_model == 0) {
+
+	lubrication = p.lubrication_model != "none";
+	pairwise_resistance = lubrication || p.mu_static > 0;
+
+	if (!pairwise_resistance) {
 		/* Stokes drag simulation
 		 * Resistance matrix is constant.
 		 */
-	} else if (p.lubrication_model == 1) {
+	} else if (p.lubrication_model == "normal") {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (p.lubrication_model == 2 || p.lubrication_model == 3) {
+	} else if (p.lubrication_model == "tangential") {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		throw runtime_error(indent+"lubrication_model > 3 is not implemented yet.\n");
+		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -345,7 +349,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
 		}
 	}
-	if (p.lubrication_model == 2 && p.lub_max_gap >= 1) {
+	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
 		/* The tangential part of lubrication is approximated as log(1/h).
 		 * To keep log(1/h) > 0, h needs to be less than 1.
 		 */
@@ -455,7 +459,7 @@ void System::setupSystemPostConfiguration()
 		radius_cubed[i] = pow(radius[i], 3);
 	}
 
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		resistance_matrix_dblock.resize(np);
 		for (int i=0; i<np; i++) {
 			resetDBlock(resistance_matrix_dblock[i]);
@@ -464,7 +468,7 @@ void System::setupSystemPostConfiguration()
 	for (int i=0; i<np; i++) {
 		double FUvalue = p.sd_coeff*radius[i];
 		double TWvalue = p.sd_coeff*radius_cubed[i]*4.0/3;
-		if (p.lubrication_model == 0) {
+		if (!pairwise_resistance) {
 			// Stokes drag simulation
 			stokesdrag_coeff_f[i] = FUvalue;
 			stokesdrag_coeff_f_sqrt[i] = sqrt(FUvalue);
@@ -507,7 +511,7 @@ void System::setupSystemPostConfiguration()
 		omega_wheel_out = -omega_wheel;
 		omega_wheel_in  = omega_wheel*radius_out/radius_in;
 	}
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
 	allocateRessourcesPostConfiguration();
@@ -715,7 +719,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
-	if (p.lubrication_model == 0) {
+	if (!pairwise_resistance) {
 		computeVelocitiesStokesDrag();
 	} else {
 		computeVelocities(calc_stress);
@@ -808,7 +812,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		computeVelocities(calc_stress); // divided velocities for stress calculation
 	} else {
 		computeVelocitiesStokesDrag();
@@ -830,7 +834,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		computeVelocities(calc_stress);
 	} else {
 		computeVelocitiesStokesDrag();
@@ -1205,15 +1209,10 @@ void System::buildHydroTerms(bool build_force_GE)
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
 	int size_mm, size_mf, size_ff;
-	if (p.lubrication_model != 3) {
-		size_mm = nb_of_pairwise_resistances_mm;
-		size_mf = nb_of_pairwise_resistances_mf;
-		size_ff = nb_of_pairwise_resistances_ff;
-	} else {
-		size_mm = nb_of_contacts_mm;
-		size_mf = nb_of_contacts_mf;
-		size_ff = nb_of_contacts_ff;
-	}
+	size_mm = nb_of_pairwise_resistances_mm;
+	size_mf = nb_of_pairwise_resistances_mf;
+	size_ff = nb_of_pairwise_resistances_ff;
+
 	// create a new resistance matrix in stokes_solver
 	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
 										resistance_matrix_dblock);
@@ -1228,7 +1227,7 @@ void System::buildHydroTerms(bool build_force_GE)
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
  * This method computes:
  *  - elements of the resistance matrix if 'mat' is true
- *       (only terms diverging as 1/h if lubrication_model == 1,3, terms in 1/h and log(1/h) for lubrication_model==2 )
+ *       (only terms diverging as 1/h if lubrication_model == "normal", terms in 1/h and log(1/h) for lubrication_model=="tangential")
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
 void System::buildLubricationTerms_squeeze(bool rhs)
@@ -1533,7 +1532,7 @@ void System::generateBrownianForces()
 		brownian_force_torque[i].y = sqrt_2_dt_amp*GRANDOM;
 		brownian_force_torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		/* L*L^T = RFU
 		 */
 		stokes_solver.setRHS(brownian_force_torque);
@@ -1643,7 +1642,7 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	if (!zero_shear && p.lubrication_model != 3) {
+	if (!zero_shear) {
 		buildHydroTerms(true); // build matrix and rhs force GE
 	} else {
 		buildHydroTerms(false); // zero shear-rate, don't build force GE
@@ -1665,7 +1664,7 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	if (!zero_shear && p.lubrication_model != 3) {
+	if (!zero_shear) {
 		buildHydroTerms(true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
@@ -2032,7 +2031,7 @@ void System::computeVelocitiesStokesDrag()
 
 void System::computeBrownianVelocities()
 {
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		stokes_solver.setRHS(brownian_force_torque); // set rhs = F_B (force and torque)
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 	} else {
@@ -2297,15 +2296,11 @@ double System::calcInteractionRangeDefault(int i, int j)
 
 double System::calcLubricationRange(int i, int j)
 {
-	if (p.lubrication_model == 3) {
-		return radius[i]+radius[j];
+	double rad_ratio = radius[i]/radius[j];
+	if (rad_ratio < 2 && rad_ratio > 0.5) {
+		return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
 	} else {
-		double rad_ratio = radius[i]/radius[j];
-		if (rad_ratio < 2 && rad_ratio > 0.5) {
-			return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
-		} else {
-			double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-			return radius[i]+radius[j]+p.lub_max_gap*minradius;
-		}
+		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+		return radius[i]+radius[j]+p.lub_max_gap*minradius;
 	}
 }

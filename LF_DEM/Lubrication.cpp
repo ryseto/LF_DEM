@@ -7,12 +7,16 @@
 //
 #include <tuple>
 #include <stdexcept>
+#include <sstream>
 #include "Lubrication.h"
 #include "LubricationFunctions.h"
 #include "Interaction.h"
 #include "System.h"
 
+using namespace std;
+
 Lubrication::Lubrication():
+tangential(true),
 ro_12(0), // = ro/2
 a0a0_23(0),
 a1a1_23(0),
@@ -92,6 +96,18 @@ void Lubrication::init(System *sys_, Interaction* int_)
 	interaction = int_;
 	sys = sys_;
 	nvec = &(interaction->nvec);
+	if (!sys->lubrication) {
+		throw runtime_error("Lubrication::init called but sys->lubrication is set to false.");
+	}
+	if (sys->p.lubrication_model == "normal") {
+		tangential = false;
+	} else if (sys->p.lubrication_model == "tangential") {
+		tangential = true;
+	} else {
+		ostringstream error_str;
+		error_str << "Unknown lubrication_model " << sys->p.lubrication_model << endl;
+		throw runtime_error(error_str.str());
+	}
 }
 
 void Lubrication::setParticleData()
@@ -122,14 +138,12 @@ void Lubrication::deactivate()
 
 void Lubrication::updateActivationState()
 {
-	if (sys->p.lubrication_model > 0) {
-		bool in_range = interaction->r < range && interaction->r > ro;
-		if (!is_active() && in_range) {
-			activate();
-		}
-		if (is_active() && !in_range) {
-			deactivate();
-		}
+	bool in_range = interaction->r < range && interaction->r > ro;
+	if (!is_active() && in_range) {
+		activate();
+	}
+	if (is_active() && !in_range) {
+		deactivate();
 	}
 }
 
@@ -137,10 +151,9 @@ void Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_)
 {
 	lub_coeff = lub_coeff_; // normal
 	log_lub_coeff = log_lub_coeff_; // tangential
-	if (sys->p.lubrication_model == 1){
+	if (!tangential){
 		calcXFunctions();
-	}
-	if (sys->p.lubrication_model == 2){
+	} else {
 		calcXYFunctions();
 	}
 }
@@ -326,7 +339,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze()
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
 	 *
-	 * lubrication_model = 1 or 3
+	 * mode normal
 	 * 1/xi level
 	 *
 	 * GE1 = (nvecnvec:E)*(XG11+XG21)*nvec
@@ -356,7 +369,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze()
 std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()
 {
 	/*
-	 * lubrication_model = 2
+	* mode normal+tangential
 	 * upto log(1/xi) level
 	 *
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
@@ -400,7 +413,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()
 std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential()
 {
 	/*
-	 * lubrication_model = 2
+	 * mode normal+tangential
 	 * upto log(1/xi) level
 	 *
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
@@ -705,7 +718,7 @@ void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
 	XGU_j *= cXG_j;
 	stresslet_i += XGU_i;
 	stresslet_j += XGU_j;
-	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
+	if (!tangential) {
 		return;
 	}
 	StressTensor YGU_i;
@@ -828,7 +841,7 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
 	stresslet_i += XME_i;
 	stresslet_j += XME_j;
 
-	if (sys->p.lubrication_model == 2) {
+	if (tangential) {
 		double cYM_i = (1.0/2)*(YM[0]+YM[1]);
 		double cYM_j = (1.0/2)*(YM[2]+YM[3]);
 
@@ -877,14 +890,14 @@ void Lubrication::calcPairwiseForce()
 	double sr = sys->get_shear_rate();
 	vec3d vi(sys->na_velocity[p0]);
 	vec3d vj(sys->na_velocity[p1]);
-	if (sys->p.lubrication_model == 1 || sys->p.lubrication_model == 3) {
+	if (!tangential) {
 		calcXFunctions();
-	} else if (sys->p.lubrication_model == 2) {
+	} else {
 		calcXYFunctions();
 	}
 	/* XAU_i */
 	lubforce_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
-	if (sys->p.lubrication_model == 2) {
+	if (tangential) {
 		vec3d oi(sys->na_ang_velocity[p0]);
 		vec3d oj(sys->na_ang_velocity[p1]);
 		/* YAU_i */
@@ -894,7 +907,7 @@ void Lubrication::calcPairwiseForce()
 	}
 	if (!sys->zero_shear) {
 		vec3d GEi, GEj;
-		if (sys->p.lubrication_model == 1) {
+		if (!tangential) {
 			std::tie(GEi, GEj) = calcGE_squeeze();
 		} else {
 			std::tie(GEi, GEj) = calcGE_squeeze_tangential();

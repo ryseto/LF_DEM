@@ -15,17 +15,21 @@ void Interaction::init(System* sys_)
 {
 	sys = sys_;
 	contact.init(sys, this);
-	lubrication.init(sys, this);
-	repulsion.init(sys, this);
+	if (sys->lubrication) {
+		lubrication.init(sys, this);
+		if (!lubrication.tangential) {
+		 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze;
+			RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze;
+		} else {
+		 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
+			RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
+		}
+	}
+	if (sys->repulsiveforce) {
+		repulsion.init(sys, this);
+	}
 	active = false;
 	r = 0;
-	if (sys->p.lubrication_model == 1) {
-	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze;
-		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze;
-	} else if (sys->p.lubrication_model == 2) {
-	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
-		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
-	}
 }
 
 /* Make a normal vector
@@ -92,13 +96,12 @@ void Interaction::activate(unsigned int i, unsigned int j,
 		contact.activate();
 	}
 	contact_state_changed_after_predictor = false;
-	if (sys->p.lubrication_model > 0) {
+	if (sys->lubrication) {
 		lubrication.setParticleData();
 		lubrication.updateActivationState();
-		// NOTE: we still have to update the resistance coeff
-		// even if lubrication is inactive, as we want to keep the GE/HE
-		// terms of the force/torque
-		lubrication.updateResistanceCoeff();
+		if (lubrication.is_active()) {
+			lubrication.updateResistanceCoeff();
+		}
 	}
 }
 
@@ -108,8 +111,10 @@ void Interaction::deactivate()
 	if (contact.is_active()) {
 		contact.deactivate();
 	}
-	if (lubrication.is_active()) {
-		lubrication.deactivate();
+	if (sys->lubrication) {
+		if (lubrication.is_active()) {
+			lubrication.deactivate();
+		}
 	}
 	active = false;
 	sys->interaction_list[p0].erase(this);
@@ -138,14 +143,12 @@ void Interaction::updateState(bool& deactivated)
 	if (contact.is_active() > 0) {
 		contact.calcContactSpringForce();
 	}
-
-	lubrication.updateActivationState();
-	// tell the lubrication about the new gap
-	// NOTE: we still have to update the resistance coeff
-	// even if lubrication is inactive, as we want to keep the GE/HE
-	// terms of the force/torque
-	lubrication.updateResistanceCoeff();
-
+	if (sys->lubrication) {
+		lubrication.updateActivationState();
+		if (lubrication.is_active()) {
+			lubrication.updateResistanceCoeff();
+		}
+	}
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
 	}
@@ -191,11 +194,19 @@ void Interaction::updateContactState()
 
 bool Interaction::hasPairwiseResistance()
 {
-	return contact.dashpot.is_active() || lubrication.is_active();
+	if (sys->lubrication) {
+		return contact.dashpot.is_active() || lubrication.is_active();
+	} else {
+		return contact.dashpot.is_active();
+	}
 }
 
 struct ODBlock Interaction::RFU_ODBlock()
 {
+	// This is a bit complex to read, we should find a better way to write a piece of code doing the same thing.
+	if (!sys->lubrication && contact.dashpot.is_active()) {
+		return contact.dashpot.RFU_ODBlock();
+	}
 	if (contact.dashpot.is_active()) {
 		if (!contact_state_changed_after_predictor) {
 			return contact.dashpot.RFU_ODBlock();
@@ -233,11 +244,23 @@ struct ODBlock Interaction::RFU_ODBlock()
 
 std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 {
-	if (lubrication.is_active()) {
-		return (lubrication.*RFU_DBlocks_lub)();
+	// This is a bit complex to read, we should find a better way to write a piece of code doing the same thing.
+	if (!sys->lubrication && contact.dashpot.is_active()) {
+		return contact.dashpot.RFU_DBlocks();
 	}
 	if (contact.dashpot.is_active()) {
-		return contact.dashpot.RFU_DBlocks();
+		if (!contact_state_changed_after_predictor) { // used in Brownian only see above for rationale
+			return contact.dashpot.RFU_DBlocks();
+		} else {
+			return (lubrication.*RFU_DBlocks_lub)();
+		}
+	}
+	if (lubrication.is_active()) {
+		if (!contact_state_changed_after_predictor) { // used in Brownian only see above for rationale
+			return (lubrication.*RFU_DBlocks_lub)();
+		} else {
+			return contact.dashpot.RFU_DBlocks();
+		}
 	}
 	struct DBlock b;
 	resetDBlock(b);

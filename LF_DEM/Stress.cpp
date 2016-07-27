@@ -44,58 +44,50 @@ void System::addLubricationStress(Interaction &inter)
 {
 	unsigned int i, j;
 	std::tie(i, j) = inter.get_par_num();
-	if (p.lubrication_model == 1 || p.lubrication_model == 3) {
+	if (!inter.lubrication.tangential) {
 		inter.lubrication.calcXFunctionsStress();
-	} else if (p.lubrication_model == 2) {
-		inter.lubrication.calcXYFunctionsStress();
 	} else {
-		ostringstream error_str;
-		error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model > 3 is not implemented" << endl;
-		throw runtime_error(error_str.str());
+		inter.lubrication.calcXYFunctionsStress();
 	}
 
-
- 	if (inter.lubrication.is_active()) {
-		inter.lubrication.addMEStresslet(costheta_shear,
-	                                   sintheta_shear,
-	                                   shear_rate,
-	                                   lubstress[i], lubstress[j]); // R_SE:Einf-R_SU*v
-
-		// -R_SU*U_H
-		inter.lubrication.addGUStresslet(vel_hydro[i], vel_hydro[j],
-                                     ang_vel_hydro[i], ang_vel_hydro[j],
-                                     lubstress[i], lubstress[j]);
-		// -R_SU*U_C
-		inter.lubrication.addGUStresslet(vel_contact[i], vel_contact[j],
-                                     ang_vel_contact[i], ang_vel_contact[j],
-                                     contactstressGU[i], contactstressGU[j]);
-		// -R_SU*U_R
-		if (repulsiveforce) {
-			inter.lubrication.addGUStresslet(vel_repulsive[i], vel_repulsive[j],
-                                       ang_vel_repulsive[i], ang_vel_repulsive[j],
-                                       repulsivestressGU[i], repulsivestressGU[j]);
-		}
-		// -R_SU*U_B
-		if (brownian) {
-			inter.lubrication.addGUStresslet(vel_brownian[i], vel_brownian[j],
-                                       ang_vel_brownian[i], ang_vel_brownian[j],
-                                       brownianstressGU[i], brownianstressGU[j]);
-		}
-		// -R_SU*U_F
-		if (mobile_fixed) {
-			if (j < np_mobile) { // i and j mobile
-				inter.lubrication.addGUStresslet(vel_hydro_from_fixed[i], vel_hydro_from_fixed[j],
-                                         ang_vel_hydro_from_fixed[i], ang_vel_hydro_from_fixed[j],
-                                         hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
-			} else if (i >= np_mobile) { // i and j fixed
-				inter.lubrication.addGUStresslet(na_velocity[i], na_velocity[j],
-                                         na_ang_velocity[i], na_ang_velocity[j],
-                                         hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
-			} else { // i mobile and j fixed
-				inter.lubrication.addGUStresslet(vel_hydro_from_fixed[i], na_velocity[j],
-                                         ang_vel_hydro_from_fixed[i], na_ang_velocity[j],
-                                         hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
-			}
+	inter.lubrication.addMEStresslet(costheta_shear,
+                                   sintheta_shear,
+                                   shear_rate,
+                                   lubstress[i], lubstress[j]); // R_SE:Einf-R_SU*v
+	// -R_SU*U_H
+	inter.lubrication.addGUStresslet(vel_hydro[i], vel_hydro[j],
+                                   ang_vel_hydro[i], ang_vel_hydro[j],
+                                   lubstress[i], lubstress[j]);
+	// -R_SU*U_C
+	inter.lubrication.addGUStresslet(vel_contact[i], vel_contact[j],
+                                   ang_vel_contact[i], ang_vel_contact[j],
+                                   contactstressGU[i], contactstressGU[j]);
+	// -R_SU*U_R
+	if (repulsiveforce) {
+		inter.lubrication.addGUStresslet(vel_repulsive[i], vel_repulsive[j],
+                                     ang_vel_repulsive[i], ang_vel_repulsive[j],
+                                     repulsivestressGU[i], repulsivestressGU[j]);
+	}
+	// -R_SU*U_B
+	if (brownian) {
+		inter.lubrication.addGUStresslet(vel_brownian[i], vel_brownian[j],
+                                     ang_vel_brownian[i], ang_vel_brownian[j],
+                                     brownianstressGU[i], brownianstressGU[j]);
+	}
+	// -R_SU*U_F
+	if (mobile_fixed) {
+		if (j < np_mobile) { // i and j mobile
+			inter.lubrication.addGUStresslet(vel_hydro_from_fixed[i], vel_hydro_from_fixed[j],
+                                       ang_vel_hydro_from_fixed[i], ang_vel_hydro_from_fixed[j],
+                                       hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
+		} else if (i >= np_mobile) { // i and j fixed
+			inter.lubrication.addGUStresslet(na_velocity[i], na_velocity[j],
+                                       na_ang_velocity[i], na_ang_velocity[j],
+                                       hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
+		} else { // i mobile and j fixed
+			inter.lubrication.addGUStresslet(vel_hydro_from_fixed[i], na_velocity[j],
+                                       ang_vel_hydro_from_fixed[i], na_ang_velocity[j],
+                                       hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
 		}
 	}
 }
@@ -137,8 +129,10 @@ void System::calcStressPerParticle()
 		if (interaction[k].is_active()) {
 			unsigned int i, j;
 			std::tie(i, j) = interaction[k].get_par_num();
-			if (p.lubrication_model > 0) {
-				addLubricationStress(interaction[k]);
+			if (lubrication) {
+				if (interaction[k].lubrication.is_active()) {
+					addLubricationStress(interaction[k]);
+				}
 			}
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {

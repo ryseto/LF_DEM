@@ -37,7 +37,6 @@ private:
 	System *sys;
 	Interaction *interaction;
 	bool _active;
-	double range;
 
 	//======= particles data  ====================//
 	unsigned int p0;

@@ -468,7 +468,7 @@ void Simulation::assertParameterCompatibility()
 {
 	// test for incompatibilities
 	if (sys.brownian == true) {
-		if (p.lubrication_model > 0
+		if ((p.lubrication_model != "none" || p.mu_static > 0)
 			&& p.integration_method != 1) {
 			ostringstream error_str;
 			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
@@ -638,7 +638,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	 */
 	string numeral, suffix;
 	if (keyword == "lubrication_model") {
-		p.lubrication_model = atoi(value.c_str());
+		p.lubrication_model = value;
 	} else if (keyword == "friction_model") {
 		if (p.friction_model == 2) {
 			cerr << "!!Neglected friction_model in parameter file!!" << endl;
@@ -842,7 +842,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	 * 2 log(1/xi) lubrication
 	 * 3 ???
 	 */
-	p.lubrication_model = 2;
+	p.lubrication_model = "tangential";
 	/*
 	 * 0 No friction
 	 * 1 Linear friction law Ft < mu Fn
