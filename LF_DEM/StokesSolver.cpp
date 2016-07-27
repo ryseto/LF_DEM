@@ -857,6 +857,7 @@ void StokesSolver::matrixFillingDone()
 	for (auto i=current_column; i<odbrows_table_ff.size(); i++) {
 		odbrows_table_ff[i] = (unsigned int)odbrows_ff.size();
 	}
+	completeResistanceMatrix();
 }
 
 void StokesSolver::factorizeResistanceMatrix()

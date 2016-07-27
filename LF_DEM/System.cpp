@@ -1339,7 +1339,7 @@ void System::updateNumberOfContacts(int p0, int p1, int val)
 	}
 }
 
-void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
+void System::buildHydroTerms(bool build_force_GE)
 {
 	/**
 	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
@@ -1362,21 +1362,15 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 		size_mf = nb_of_contacts_mf;
 		size_ff = nb_of_contacts_ff;
 	}
-	if (build_res_mat) {
-		// create a new resistance matrix in stokes_solver
-		stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
-											resistance_matrix_dblock);
-		/* [note]
-		 * The resistance matrix is reset with resistance_matrix_dblock,
-		 * which is calculated at the beginning.
-		 */
-		// add GE in the rhs and lubrication terms in the resistance matrix
-		(this->*buildLubricationTerms)(true, build_force_GE);
-		stokes_solver.completeResistanceMatrix();
-	} else {
-		// add GE in the rhs
-		(this->*buildLubricationTerms)(false, build_force_GE);
-	}
+	// create a new resistance matrix in stokes_solver
+	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
+										resistance_matrix_dblock);
+	/* [note]
+	 * The resistance matrix is reset with resistance_matrix_dblock,
+	 * which is calculated at the beginning.
+	 */
+	// add GE in the rhs and lubrication terms in the resistance matrix
+	(this->*buildLubricationTerms)(build_force_GE);
 }
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
@@ -1385,7 +1379,7 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
  *       (only terms diverging as 1/h if lubrication_model == 1,3, terms in 1/h and log(1/h) for lubrication_model==2 )
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
-void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
+void System::buildLubricationTerms_squeeze(bool rhs)
 {
 	bool shearrate_is_1 = true;
 	if (shear_rate != 1) {
@@ -1397,11 +1391,9 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
-					if (mat) {
-						stokes_solver.addResistanceBlocks(i, j,
-							                                inter->RFU_DBlocks(),
-							                                inter->RFU_ODBlock());
-					}
+					stokes_solver.addResistanceBlocks(i, j,
+						                                inter->RFU_DBlocks(),
+						                                inter->RFU_ODBlock());
 					if (rhs && inter->lubrication.is_active()) {
 						vec3d GEi, GEj;
 						std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
@@ -1419,7 +1411,7 @@ void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
 	stokes_solver.matrixFillingDone();
 }
 
-void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
+void System::buildLubricationTerms_squeeze_tangential(bool rhs)
 {
 	bool shearrate_is_1 = true;
 	if (shear_rate != 1) {
@@ -1431,11 +1423,9 @@ void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
 			int j = inter->partner(i);
 			if (j > i) {
 				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
-					if (mat) {
-						stokes_solver.addResistanceBlocks(i, j,
-					                                    inter->RFU_DBlocks(),
-					                                    inter->RFU_ODBlock());
-					}
+					stokes_solver.addResistanceBlocks(i, j,
+				                                    inter->RFU_DBlocks(),
+				                                    inter->RFU_ODBlock());
 					if (rhs && inter->lubrication.is_active()) {
 						vec3d GEi, GEj, HEi, HEj;
 						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
@@ -1802,9 +1792,9 @@ void System::computeMaxNAVelocity()
 void System::computeVelocityWithoutComponents()
 {
 	if (!zero_shear && p.lubrication_model != 3) {
-		buildHydroTerms(true, true); // build matrix and rhs force GE
+		buildHydroTerms(true); // build matrix and rhs force GE
 	} else {
-		buildHydroTerms(true, false); // zero shear-rate
+		buildHydroTerms(false); // zero shear-rate, don't build force GE
 	}
 	if (mobile_fixed) {
 		// add rhs += R_mf U_f
@@ -1824,10 +1814,10 @@ void System::computeVelocityByComponents()
 	 \brief Compute velocities component by component.
 	 */
 	if (!zero_shear && p.lubrication_model != 3) {
-		buildHydroTerms(true, true); // build matrix and rhs force GE
+		buildHydroTerms(true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
-		buildHydroTerms(true, false); // zero shear-rate (= no GE rhs)
+		buildHydroTerms(false); // zero shear-rate (= no GE rhs)
 		for (unsigned int i=0; i<vel_hydro.size(); i++) {
 			vel_hydro[i].reset();
 			ang_vel_hydro[i].reset();

@@ -101,10 +101,10 @@ private:
 	void adaptTimeStep(double time_end, double strain_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
-	void buildHydroTerms(bool, bool);
-	void (System::*buildLubricationTerms)(bool, bool);
-	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
-	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
+	void buildHydroTerms(bool);
+	void (System::*buildLubricationTerms)(bool);
+	void buildLubricationTerms_squeeze(bool rhs); // lubrication_model = 1
+	void buildLubricationTerms_squeeze_tangential(bool rhs); // lubrication_model = 2
 	void buildHydroTermsFromFixedParticles();
 	std::vector<double> computeForceFromFixedParticles();
 	void generateBrownianForces();
