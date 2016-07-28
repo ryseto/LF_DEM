@@ -133,12 +133,12 @@ public:
 		for (auto &c : clocks) {
 			auto &clock = c.second;
 			if (clock->is_strain()) {
-				if (clock->nextTime() <= strain) {
+				if (clock->nextTime() <= strain+1e-8) {
 					clock->tick();
 					elapsed_clocks.insert(c.first);
 				}
 			} else {
-				if (clock->nextTime() <= time) {
+				if (clock->nextTime() <= time+1e-8) {
 					clock->tick();
 					elapsed_clocks.insert(c.first);
 				}
