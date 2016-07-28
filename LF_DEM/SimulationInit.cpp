@@ -460,8 +460,7 @@ void Simulation::assertParameterCompatibility()
 {
 	// test for incompatibilities
 	if (sys.brownian == true) {
-		if ((p.lubrication_model != "none" || p.mu_static > 0)
-			&& p.integration_method != 1) {
+		if (sys.pairwise_resistance && p.integration_method != 1) {
 			ostringstream error_str;
 			error_str << "Brownian simulation needs to use the Predictor-Corrector method." << endl;
 			error_str << "Modify the parameter file." << endl;

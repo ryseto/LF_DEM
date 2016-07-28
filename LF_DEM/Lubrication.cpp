@@ -133,6 +133,7 @@ void Lubrication::activate()
 void Lubrication::deactivate()
 {
 	_active = false;
+	lubforce_p0.reset();
 	sys->updateNumberOfPairwiseResistances(p0, p1, -1);
 }
 

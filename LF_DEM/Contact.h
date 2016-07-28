@@ -55,11 +55,12 @@ private:
 	 *********************************/
 	//===== forces and stresses computations =====//
 	StressTensor contact_stresslet_XF; //stress tensor of contact force
-	double f_contact_normal_norm; // normal contact force
+	double f_spring_normal_norm; // normal contact force
 	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
-	vec3d f_contact_normal; // normal contact force
-	vec3d f_contact_tan; // tangential contact force
-	vec3d f_contact;
+	vec3d f_spring_normal; // normal contact force, spring only
+	vec3d f_spring_tan; // tangential contact force, spring only
+	vec3d f_spring_total; // spring only
+	vec3d f_contact_total; // including dashpot
 	vec3d f_rolling;
 	double ft_max; // friction_model = 5;
 	void incrementTangentialDisplacement();
@@ -78,15 +79,16 @@ public:
 	mu_static(0),
 	mu_dynamic(0),
 	mu_rolling(0),
-	f_contact_normal_norm(0),
+	f_spring_normal_norm(0),
 	normal_load(0),
-	f_contact_normal(0),
-	f_contact_tan(0),
-	f_contact(0),
+	f_spring_normal(0),
+	f_spring_tan(0),
+	f_spring_total(0),
+	f_contact_total(0),
 	f_rolling(0),
 	ft_max(0)
 	{};
-	
+
 	void init(System* sys_, Interaction* int_);
 	ContactDashpot dashpot;
 	void setInteractionData();
@@ -114,22 +116,11 @@ public:
 	//===== forces/stresses  ========================== //
 	void calcContactSpringForce();
 	void addUpContactForceTorque();
-	inline double get_f_contact_normal_norm()
-	{
-		return f_contact_normal_norm;
-	}
-	inline double get_normal_load()
-	{
-		return normal_load;
-	}
-	vec3d get_f_contact_tan()
-	{
-		return f_contact_tan;
-	}
-	inline double get_f_contact_tan_norm()
-	{
-		return f_contact_tan.norm();
-	}
+	void calcTotalForce(); // only for output
+	double get_f_normal_norm();
+	double get_normal_load();
+	vec3d get_f_tan();
+	double get_f_tan_norm();
 	void calcContactStress();
 	StressTensor getContactStressXF()
 	{

@@ -297,16 +297,20 @@ vec3d ContactDashpot::getPairwiseForce()
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
 	 *
 	 */
-	vec3d vi(sys->na_velocity[p0]);
-	vec3d vj(sys->na_velocity[p1]);
-	/* XAU_i */
-	vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
+	if (is_active()) {
+		vec3d vi(sys->na_velocity[p0]);
+		vec3d vj(sys->na_velocity[p1]);
+		/* XAU_i */
+		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 
-	vec3d oi(sys->na_ang_velocity[p0]);
-	vec3d oj(sys->na_ang_velocity[p1]);
-		/* YAU_i */
-	force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
-	/* YBO_i */
-	force_p0 += -YB[0]*cross(nvec, oi)            - YB[2]*cross(nvec, oj);
-	return force_p0;
+		vec3d oi(sys->na_ang_velocity[p0]);
+		vec3d oj(sys->na_ang_velocity[p1]);
+			/* YAU_i */
+		force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
+		/* YBO_i */
+		force_p0 += -YB[0]*cross(nvec, oi)            - YB[2]*cross(nvec, oj);
+		return force_p0;
+	} else {
+		return vec3d();
+	}
 }

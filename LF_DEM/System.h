@@ -83,7 +83,6 @@ private:
 	int linalg_size;
 	double costheta_shear;
 	double sintheta_shear;
-	bool pairwise_resistance;
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -187,6 +186,7 @@ protected:
 	bool critical_load;
 	bool lowPeclet;
 	bool lubrication;
+	bool pairwise_resistance;
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;

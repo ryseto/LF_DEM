@@ -303,13 +303,13 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}
 
 	lubrication = p.lubrication_model != "none";
-	pairwise_resistance = lubrication || p.mu_static > 0;
+	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
 	if (!pairwise_resistance) {
 		/* Stokes drag simulation
 		 * Resistance matrix is constant.
 		 */
-	} else if (p.lubrication_model == "normal") {
+	} else if (p.lubrication_model == "normal" || p.lubrication_model == "none") {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
 	} else if (p.lubrication_model == "tangential") {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;

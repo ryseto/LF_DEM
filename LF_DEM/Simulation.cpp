@@ -851,17 +851,19 @@ void Simulation::outputIntFileTxt()
 			 * It seems there is no better way to visualize
 			 * the lubrication forces.
 			 */
-			outdata_int.entryData("normal part of the lubrication force", "force", 1, \
-			                      sys.interaction[k].lubrication.get_lubforce_normal());
-			outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
-			                      sys.interaction[k].lubrication.get_lubforce_tan());
+			if (sys.lubrication) {
+				outdata_int.entryData("normal part of the lubrication force", "force", 1, \
+				                      sys.interaction[k].lubrication.get_lubforce_normal());
+				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
+				                      sys.interaction[k].lubrication.get_lubforce_tan());
+			}
 			/*
 			 * Contact forces include only spring forces.
 			 */
 			outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
-			                      sys.interaction[k].contact.get_f_contact_normal_norm());
+			                      sys.interaction[k].contact.get_f_normal_norm());
 			outdata_int.entryData("tangential part of the contact force", "force", 3, \
-			                      sys.interaction[k].contact.get_f_contact_tan());
+			                      sys.interaction[k].contact.get_f_tan());
 			outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
 			                      sys.interaction[k].repulsion.getForceNorm());
 			if (diminish_output == false) {
