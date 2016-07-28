@@ -43,17 +43,17 @@ private:
 	unsigned int p1;
 	unsigned int p0_6;
 	unsigned int p1_6;
-	vec3d *nvec;
-	double normal_coeff;
-	double tangential_coeff;
 	double a0;
 	double a1;
 	double ro;
+	double ro_12; // = ro/2
+	vec3d *nvec;
+	double normal_coeff;
+	double tangential_coeff;
 	double XA[4]; // ii ij ji jj
 	double YA[4]; // ii ij ji jj
 	double YB[4]; // ii ij ji jj
 	double YC[4]; // ii ij ji jj
-	double ro_12; // = ro/2
 	void calcDashpotResistances();
 
  public:

@@ -539,7 +539,7 @@ void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 	// if (force_and_torque.size() != size) {
 	// 	throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
 	// }
-	for (auto i=0u; i<size; i++) {
+	for (decltype(size) i=0; i<size; i++) {
 		auto i3 = 3*i;
 		((double*)chol_rhs->x)[i3  ] = force_and_torque[i].x;
 		((double*)chol_rhs->x)[i3+1] = force_and_torque[i].y;
@@ -849,12 +849,12 @@ void StokesSolver::startNewColumn()
 
 void StokesSolver::matrixFillingDone()
 {
-	for (auto i=current_column; i<odbrows_table.size(); i++) {
+	for (unsigned int i=current_column; i<odbrows_table.size(); i++) {
 		odbrows_table[i] = (unsigned int)odbrows.size();
 		odbrows_table_mf[i] = (unsigned int)odbrows_mf.size();
 	}
 	mobile_matrix_done = true;
-	for (auto i=current_column; i<odbrows_table_ff.size(); i++) {
+	for (unsigned int i=current_column; i<odbrows_table_ff.size(); i++) {
 		odbrows_table_ff[i] = (unsigned int)odbrows_ff.size();
 	}
 	completeResistanceMatrix();

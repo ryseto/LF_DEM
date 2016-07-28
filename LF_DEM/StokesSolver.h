@@ -129,7 +129,7 @@ private:
 	bool chol_L_to_be_freed;
 	// resistance matrix building
 	int dblocks_size;
-	unsigned int current_column;
+	int current_column;
 	std::vector<struct DBlock> dblocks;
 	std::vector<struct ODBlock> odblocks;
 	std::vector<int> odbrows;

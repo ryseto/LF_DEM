@@ -46,6 +46,16 @@ private:
 	double a0;
 	double a1;
 	double ro;
+	double ro_12; // = ro/2
+	double a0a0_23;
+	double a1a1_23;
+	double roro_16;
+	double a0a0a0_43;
+	double a1a1a1_43;
+	double rororo_16;
+	double a0a0a0_109;
+	double a1a1a1_109;
+	double rororo_536;
 	double lambda;
 	double invlambda;
 	double lambda_square;
@@ -71,16 +81,6 @@ private:
 	double cYH[4];
 	double cXM[4];
 	double cYM[4];
-	double ro_12; // = ro/2
-	double a0a0_23;
-	double a1a1_23;
-	double roro_16;
-	double a0a0a0_43;
-	double a1a1a1_43;
-	double rororo_16;
-	double a0a0a0_109;
-	double a1a1a1_109;
-	double rororo_536;
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -104,7 +104,6 @@ private:
 	double g2_YM;
 	double g2_inv_YM;
 	double g5_YM;
-
 
  public:
 	Lubrication();

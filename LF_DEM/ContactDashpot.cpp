@@ -12,6 +12,7 @@
 #include "System.h"
 
 ContactDashpot::ContactDashpot():
+_active(false),
 p0(0),
 p1(0),
 p0_6(0),
@@ -20,7 +21,6 @@ a0(0),
 a1(0),
 ro(0),
 ro_12(0),
-_active(false),
 normal_coeff(0),
 tangential_coeff(0)
 {
