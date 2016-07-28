@@ -10,7 +10,7 @@ Again, that means that this works for sure in this version, but only maybe in th
 
 **ONLY IN CONTROLLED STRESS MODE**
 
-Tested in commit 9e2db52.
+Tested in commit c87fa13.
 
 You can achieve this by setting the contact spring constants proportional to the stress, with the help of the stress unit suffix "s". A convenient way to do it is to set in the parameter file (given here in arbitrary values):
 ```
