@@ -401,7 +401,7 @@ void Simulation::catchSuffixedForce(const string& keyword,
 void Simulation::catchSuffixedValue(string type, string keyword,
 									string value_str, double *value_ptr)
 {
-	InputValue inv;
+	DimensionalValue inv;
 	inv.type = type;
 	inv.value = value_ptr;
 
