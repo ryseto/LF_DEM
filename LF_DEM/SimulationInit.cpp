@@ -871,9 +871,9 @@ void Simulation::setDefaultParameters(string input_scale)
 	 */
 	catchSuffixedValue("time", "contact_relaxation_time", "1e-3"+input_scale, &p.contact_relaxation_time);
 	catchSuffixedValue("time", "contact_relaxation_time_tan", "-1"+input_scale, &p.contact_relaxation_time_tan);
-	catchSuffixedValue("force", "kn", "2000"+input_scale, &p.kn);
-	catchSuffixedValue("force", "kt", "0.5kn", &p.kt);
-	catchSuffixedValue("force", "kr", "0.5kn", &p.kr);
+	catchSuffixedForce("kn", "2000"+input_scale);
+	catchSuffixedForce("kt", "0.5kn");
+	catchSuffixedForce("kr", "0.5kn");
 	p.auto_determine_knkt = false;
 	p.overlap_target = 0.05;
 	p.disp_tan_target = 0.05;

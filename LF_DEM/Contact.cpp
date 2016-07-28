@@ -34,7 +34,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 
 void Contact::setSpringConstants()
 {
-    const double& ro_12 = interaction->ro_12;
+    double ro_12 = interaction->ro_12;
     kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
     if (sys->friction) {
         kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -56,7 +56,7 @@ void Contact::setInteractionData()
 		}
 	}
 	dashpot.setParticleData();
-	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
+	dashpot.setDashpotResistanceCoeffs(kn_scaled, kt_scaled,
 		                                 sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
