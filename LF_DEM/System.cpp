@@ -44,6 +44,7 @@ ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
 	amplitudes.repulsion = 0;
+	amplitudes.temperature = 0;
 	amplitudes.sqrt_temperature = 0;
 	amplitudes.contact = 0;
 	amplitudes.cohesion = 0;
@@ -400,6 +401,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	nb_interaction = 0;
 
 	if (brownian) {
+		amplitudes.sqrt_temperature = sqrt(amplitudes.temperature);
 #ifdef DEV
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.

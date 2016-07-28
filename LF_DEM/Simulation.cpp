@@ -26,15 +26,25 @@ target_stress_input(0),
 diminish_output(false)
 {
 	unit_longname["h"] = "hydro";
-	unit_longname["r"] = "repulsive";
-	unit_longname["b"] = "thermal";
-	unit_longname["c"] = "cohesive";
+	unit_longname["r"] = "repulsion";
+	unit_longname["b"] = "brownian";
+	unit_longname["c"] = "cohesion";
 	unit_longname["cl"] = "critical_load";
-	unit_longname["ft"] = "ft";
-	unit_longname["kn"] = "normal_stiffness";
-	unit_longname["kt"] = "tan_stiffness";
-	unit_longname["kr"] = "roll_stiffness";
+	unit_longname["ft"] = "ft_max";
+	unit_longname["kn"] = "kn";
+	unit_longname["kt"] = "kt";
+	unit_longname["kr"] = "kr";
 	unit_longname["s"] = "stress";
+
+	force_value_ptr["hydro"] = &sys.shear_rate; // the dimensionless hydrodynamic force is also the dimensionless shear rate
+	force_value_ptr["repulsion"] = &sys.amplitudes.repulsion;
+	force_value_ptr["critical_load"] = &sys.amplitudes.critical_normal_force;
+	force_value_ptr["cohesion"] = &sys.amplitudes.cohesion;
+	force_value_ptr["ft_max"] = &sys.amplitudes.ft_max;
+	force_value_ptr["brownian"] = &sys.amplitudes.temperature;
+	force_value_ptr["kn"] = &sys.p.kn;
+	force_value_ptr["kt"] = &sys.p.kt;
+	force_value_ptr["kr"] = &sys.p.kr;
 	kill = false;
 };
 
@@ -227,9 +237,8 @@ void Simulation::simulationSteadyShear(string in_args,
 									 p.nb_output_data_log_time,
 									 input_values["time_end"].unit == "strain"));
 	} else {
-		tk.addClock("data", LinearClock(time_end,
-										p.time_interval_output_data,
-										input_values["time_end"].unit == "strain"));
+		tk.addClock("data", LinearClock(p.time_interval_output_data,
+                                    input_values["time_interval_output_data"].unit == "strain"));
 	}
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
@@ -237,9 +246,8 @@ void Simulation::simulationSteadyShear(string in_args,
 									   p.nb_output_config_log_time,
 									   input_values["time_end"].unit == "strain"));
 	} else {
-		tk.addClock("config", LinearClock(time_end,
-										  p.time_interval_output_config,
-										  input_values["time_end"].unit == "strain"));
+		tk.addClock("config", LinearClock(p.time_interval_output_config,
+                                      input_values["time_interval_output_config"].unit == "strain"));
 	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
@@ -308,12 +316,10 @@ void Simulation::simulationInverseYield(string in_args,
 	/*************************************************************/
 
 	TimeKeeper tk;
-	tk.addClock("data", LinearClock(time_end,
-									p.time_interval_output_data,
-									input_values["time_end"].unit == "strain"));
-	tk.addClock("config", LinearClock(time_end,
-									  p.time_interval_output_config,
-									  input_values["time_end"].unit == "strain"));
+	tk.addClock("data", LinearClock(p.time_interval_output_data,
+	                                input_values["time_interval_output_data"].unit == "strain"));
+	tk.addClock("config", LinearClock(p.time_interval_output_config,
+	                                  input_values["time_interval_output_config"].unit == "strain"));
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();
@@ -384,22 +390,10 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_from_1 << endl;
 }
 
-void Simulation::catchSuffixedForce(const string& keyword,
-									const string& value)
-{
-	string numeral, suffix;
-	bool caught_suffix = getSuffix(value, numeral, suffix);
-	suffix = unit_longname[suffix];
-	input_force_units[keyword] = suffix;
-	input_force_values[keyword] = atof(numeral.c_str());
-
-	if (!caught_suffix) {
-		errorNoSuffix(keyword);
-	}
-}
-
-void Simulation::catchSuffixedValue(string type, string keyword,
-									string value_str, double *value_ptr)
+DimensionalValue Simulation::str2DimensionalValue(string type,
+                                                  string name,
+                                                  string value_str,
+                                                  double *value_ptr)
 {
 	DimensionalValue inv;
 	inv.type = type;
@@ -409,13 +403,14 @@ void Simulation::catchSuffixedValue(string type, string keyword,
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
 	if (!caught_suffix) {
-		errorNoSuffix(keyword);
+		errorNoSuffix(name);
 	}
 	suffix = unit_longname[suffix];
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
-	input_values[keyword] = inv;
+	return inv;
 }
+
 
 void Simulation::outputConfigurationBinary()
 {
@@ -563,12 +558,12 @@ void Simulation::outputData()
 	 */
 
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+	if (force_ratios.find(dimless_nb_label) == force_ratios.end()) {
 		ostringstream error_str;
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
-	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 
 	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
@@ -640,7 +635,7 @@ void Simulation::outputData()
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
-	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata_st.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_st.setUnit(output_unit_scales);
 	outdata_st.entryData("time", "time", 1, sys.get_time());
 	outdata_st.entryData("shear strain", "none", 1, sys.get_shear_strain());
@@ -653,7 +648,7 @@ void Simulation::outputData()
 	outdata_st.writeToFile();
 
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+		outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 		outdata_pst.setUnit(output_unit_scales);
 		for (int i=0; i<sys.get_np(); i++) {
 			if (p.out_particle_stress.find('t') != string::npos) {
@@ -762,13 +757,13 @@ void Simulation::outputParFileTxt()
 	}
 
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+	if (force_ratios.find(dimless_nb_label) == force_ratios.end()) {
 		ostringstream error_str;
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
 	cout << "   out config: " << sys.get_shear_strain() << endl;
-	outdata_par.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", "none", 1, i);
@@ -825,7 +820,7 @@ void Simulation::outputIntFileTxt()
 	}
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 
-	outdata_int.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata_int.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);

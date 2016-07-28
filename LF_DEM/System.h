@@ -46,6 +46,7 @@ class BoxSet;
 struct ForceAmplitudes
 {
 	double repulsion;
+	double temperature;
 	double sqrt_temperature;
 	double contact;
 	double cohesion;
@@ -70,7 +71,6 @@ private:
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
-	double shear_rate;
 	double lx;
 	double ly;
 	double lz;
@@ -269,6 +269,7 @@ protected:
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
+	double shear_rate;
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)

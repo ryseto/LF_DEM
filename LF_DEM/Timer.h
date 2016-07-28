@@ -28,7 +28,7 @@ protected:
 public:
 	Clock(bool strain):
 	_strain(strain) {};
-	
+
 	double nextTime() {
 		return next_time;
 	}
@@ -41,9 +41,9 @@ public:
 class LinearClock : public Clock
 {
 private:
-	
+
 public:
-	LinearClock(double stop, double step, bool strain_units)
+	LinearClock(double step, bool strain_units)
 	: Clock(strain_units)
 	{
 		next_time = 0;
@@ -85,16 +85,16 @@ public:
 	{
 		clocks[label] = std::unique_ptr<Clock>(new LinearClock(c));
 	}
-	
+
 	void addClock(std::string label, LogClock c)
 	{
 		clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
 	}
-	
+
 	std::pair<double,std::string> nextTime()
 	{
 		if (clocks.size() == 0) {
-			throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");
+			throw std::runtime_error( " TimeKeeper::nextTime() : No clocks! ");
 		}
 		double next_t = -1;
 		std::string next_name = "";
@@ -106,9 +106,9 @@ public:
 				next_name = label;
 			}
 		}
-		return std::make_pair(next_t,next_name);
+		return std::make_pair(next_t, next_name);
 	}
-	
+
 	std::pair<double,std::string> nextStrain()
 	{
 		if (clocks.size() == 0) {
@@ -124,9 +124,9 @@ public:
 				next_name = label;
 			}
 		}
-		return std::make_pair(next_t,next_name);
+		return std::make_pair(next_t, next_name);
 	}
-	
+
 	std::set<std::string> getElapsedClocks(double time, double strain)
 	{
 		std::set<std::string> elapsed_clocks;
@@ -146,7 +146,7 @@ public:
 		}
 		return elapsed_clocks;
 	}
-	
+
 	// TimeKeeper();
 	// ~TimeKeeper();
 };
