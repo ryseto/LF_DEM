@@ -66,23 +66,30 @@ void ContactDashpot::deactivate()
 void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
                                                 double rtime_normal, double rtime_tan)
 {
-
-	if (rtime_normal <= 0) { // take the same resistance as lubrication
-		// 1/(h+c) --> 1/c
-		normal_coeff = 1/sys->p.lub_reduce_parameter;
-	} else {
+	if (rtime_normal >= 0) {
 		/* t = beta/kn
 		 *  beta = t*kn
 		 * normal_coeff = 4*beta = 4*kn*rtime_normal
 		 */
 		normal_coeff = 4*kn*rtime_normal;
+	} else {
+		if (sys->lubrication) {// take the same resistance as lubrication
+			// 1/(h+c) --> 1/c
+			normal_coeff = 1/sys->p.lub_reduce_parameter;
+		} else {
+			throw std::runtime_error(" ContactDashpot:: Error: normal relaxation time set negative, but no lubrication.");
+		}
 	}
 
-	if (rtime_tan <= 0) { // take the same resistance as lubrication
-		// 1/(h+c) --> 1/c
-		tangential_coeff = log(1/sys->p.lub_reduce_parameter);
-	} else {
+	if (rtime_tan >= 0) {
 		tangential_coeff = 6*kt*rtime_tan;
+	} else {
+		if (sys->lubrication) {// take the same resistance as lubrication
+			// 1/(h+c) --> 1/c
+			tangential_coeff = log(1/sys->p.lub_reduce_parameter);
+		} else {
+			throw std::runtime_error(" ContactDashpot:: Error: tangential relaxation time set negative, but no lubrication.");
+		}
 	}
 	calcDashpotResistances();
 }

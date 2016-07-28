@@ -921,10 +921,6 @@ void Lubrication::calcPairwiseForce()
 
 void Lubrication::updateResistanceCoeff()
 {
-	if (interaction->reduced_gap > 0) {
-		double coeff = 1/(interaction->reduced_gap+sys->p.lub_reduce_parameter);
-		setResistanceCoeff(coeff, log(coeff));
-	} else {
-		setResistanceCoeff(sys->lub_coeff_contact, sys->log_lub_coeff_contact_tan_total);
-	}
+	double coeff = 1/(interaction->reduced_gap+sys->p.lub_reduce_parameter);
+	setResistanceCoeff(coeff, log(coeff));
 }

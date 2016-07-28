@@ -7,7 +7,6 @@
 //
 #include "Interaction.h"
 #include "System.h"
-#define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
 using namespace std;
 
