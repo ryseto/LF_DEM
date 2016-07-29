@@ -29,14 +29,11 @@ def read_data(posfile, intfile):
         strains: the associated strains
         shear_rates: the associated strain rates
     """
-    # load with pandas read_table
     pos_frames, strains, shear_rates, dumb, meta_pos =\
         lf.read_snapshot_file(posfile)
 
-    # load with pandas read_table
     int_frames, strains, shear_rates, dumb, meta_int =\
         lf.read_snapshot_file(intfile)
-#    print pos_frames[:3], int_frames[:3]
     return pos_frames, int_frames, strains, shear_rates, meta_pos, meta_int
 
 
@@ -54,13 +51,13 @@ def filter_interactions_crossing_PBC(f, r1r2, cutoff=4):
 
 
 def get_normal_force(interactions, coldef_dict):
-    lub_loc = coldef_dict['normal part of the lubrication force']
-    lub_force = interactions[:, lub_loc]
-    cont_loc = coldef_dict['norm of the normal part of the contact force']
-    contact_force = interactions[:, cont_loc]
-    rep_loc = coldef_dict['norm of the normal repulsive force']
-    repulsive_force = interactions[:, rep_loc]
-    return (lub_force + contact_force + repulsive_force).astype(np.float32)
+    normal_forces_loc =\
+        [a[1] for a in du.matching(coldef_dict, ["normal", "force"])]
+    total_force = np.zeros(len(interactions), dtype=np.float32)
+    for f in normal_forces_loc:
+        total_force += interactions[:, f].astype(np.float32)
+
+    return total_force
 
 
 def particles_yaparray(pos, rad, angles=None):
