@@ -337,6 +337,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}
 
 	lubrication = p.lubrication_model != "none";
+	if (lub_max_gap < 0) {
+		throw runtime_error("indent lub_max_gap<0 is forbidden.")
+	}
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
 	if (!pairwise_resistance) {
