@@ -133,6 +133,28 @@ def interactions_bonds_yaparray(int_snapshot,
     return yap_out, f_factor
 
 
+def cuboid(lx2, ly2, lz2):
+    return np.array([[lx2, ly2, lz2, lx2, ly2, -lz2],
+                     [lx2, ly2, lz2, lx2, -ly2, lz2],
+                     [lx2, ly2, lz2, -lx2, ly2, lz2],
+                     [lx2, -ly2, -lz2, lx2, -ly2, lz2],
+                     [lx2, -ly2, -lz2, lx2, ly2, -lz2],
+                     [lx2, -ly2, -lz2, -lx2, -ly2, -lz2],
+                     [-lx2, ly2, -lz2, -lx2, ly2, lz2],
+                     [-lx2, ly2, -lz2, -lx2, -ly2, -lz2],
+                     [-lx2, ly2, -lz2, lx2, ly2, -lz2],
+                     [-lx2, -ly2, lz2, -lx2, -ly2, -lz2],
+                     [-lx2, -ly2, lz2, -lx2, ly2, lz2],
+                     [-lx2, -ly2, lz2, lx2, -ly2, lz2]])
+
+
+def rectangle(lx2, lz2):
+    return np.array([[lx2, 0, lz2, lx2, 0, -lz2],
+                     [lx2, 0, lz2, -lx2, 0, lz2],
+                     [-lx2, 0, -lz2, -lx2, 0, lz2],
+                     [-lx2, 0, -lz2, lx2, 0, -lz2]])
+
+
 def snaps2yap(pos_fname,
               yap_file,
               f_factor=None,
@@ -183,25 +205,9 @@ def snaps2yap(pos_fname,
         ly2 = meta_pos['Ly']/2
         lz2 = meta_pos['Lz']/2
         if not is2d:
-            corners = np.array([[lx2, ly2, lz2, lx2, ly2, -lz2],
-                                [lx2, ly2, lz2, lx2, -ly2, lz2],
-                                [lx2, ly2, lz2, -lx2, ly2, lz2],
-                                [lx2, -ly2, -lz2, lx2, -ly2, lz2],
-                                [lx2, -ly2, -lz2, lx2, ly2, -lz2],
-                                [lx2, -ly2, -lz2, -lx2, -ly2, -lz2],
-                                [-lx2, ly2, -lz2, -lx2, ly2, lz2],
-                                [-lx2, ly2, -lz2, -lx2, -ly2, -lz2],
-                                [-lx2, ly2, -lz2, lx2, ly2, -lz2],
-                                [-lx2, -ly2, lz2, -lx2, -ly2, -lz2],
-                                [-lx2, -ly2, lz2, -lx2, ly2, lz2],
-                                [-lx2, -ly2, lz2, lx2, -ly2, lz2]])
+            yap_out = pyp.add_cmd(yap_out, 'l', cuboid(lx2, ly2, lz2))
         else:
-            corners = np.array([[lx2, 0, lz2, lx2, 0, -lz2],
-                                [lx2, 0, lz2, -lx2, 0, lz2],
-                                [-lx2, 0, -lz2, -lx2, 0, lz2],
-                                [-lx2, 0, -lz2, lx2, 0, -lz2]])
-
-        yap_out = pyp.add_cmd(yap_out, 'l', corners)
+            yap_out = pyp.add_cmd(yap_out, 'l', rectangle(lx2, lz2))
 
         # display strain
         yap_out = pyp.add_layer_switch(yap_out, 5)
