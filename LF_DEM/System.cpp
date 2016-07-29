@@ -344,6 +344,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	} else {
 		throw runtime_error(indent+"Error: unknown friction model\n");
 	}
+	if (p.mu_dynamic < 0) {
+		p.mu_dynamic = p.mu_static;
+	}
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
 		if (friction == false) {
