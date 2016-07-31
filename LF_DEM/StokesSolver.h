@@ -23,113 +23,87 @@
 
 class StokesSolver{
 	/*
-	  This class provides solver for the "Stokes" equation, which is an equation of motion of the type:
+	  This class provides solver for the resistance problem, which is solving for the Velocities
+		in an equation of motion of the type:
 
-	  ResistanceMatrix*Velocity = SomeForces
+	  ResistanceMatrix*Velocities = SomeForces
 
-	  Here, Velocity can be either translational velocity (U) alone (a 3N vector, F/U case),
-	  or more generally translational and rotational velocities (U and W) (a 6N vector, FT/UW case).
-	  In the latter case it is stored as (U_1, W_1, U_2, W_2, ...., U_N, W_N).
-	  Accordingly, Forces are either forces alone (F) or torques and forces ( F and T, stored as (F_1, T_1,  ..., F_N, T_N) ).
+	  Here, Velocities are translational and rotational velocities (U and W) (a 6N vector, FT/UW case).
+	  It is stored as (U_1, W_1, U_2, W_2, ...., U_N, W_N).
+	  Accordingly, Forces are forces and torques ( F and T, stored as (F_1, T_1,  ..., F_N, T_N) ).
 	  This solver handles the case for which the ResistanceMatrix is made of two-body short range interactions, i.e. is sparse.
 
-	  The descriptions given here are a priori written for the FT/UW case. Adaptation to the F/U case is straightforward.
+		This solver can also handle the case of a "mixed problem", i. e. a problem in which some velocities are prescribed,
+		and only the remaining velocities are unknowns of the resistance problem.
+
+		Internally, it mainly acts as a wrapper around the Cholmod solver of the SuiteSparse library by Tim Davis.
 
 	  ============================
 	  ============================
-	  The ResistanceMatrix has the following structure (all blocks are 6x6 if UW/FT version, 3x3 if U/F version):
+	  The ResistanceMatrix has the following structure (all blocks are 6x6 if UW/FT version):
 
                          ================== 6N ==================
                          .........        ..........
                     ||  |  6x6   .        . 6x6    .            | ||
-                    ||  | dblock .   0    .odblock .            | ||
+                    ||  |ODBlock .   0    . DBlock .            | ||
                     ||  |        .        .        .            | ||
                     ||  |...........................            | ||
                     ||  |        .        .                     | ||
-                    ||  |     0  . dblock .                     | ||
+                    ||  |     0  . DBlock .                     | ||
                     6N  |        .        .                     | 6N
  ResistanceMatrix = ||  |..................                     | ||
                     ||  |        .           .                  | ||
-                    ||  |odblock .             .                | ||
+                    ||  |ODBlock .             .                | ||
                     ||  |        .               .              | ||
                     ||  |.........                 .            | ||
                     ||  |                            .          | ||
                     ||  |                              .........| ||
                     ||  |                              .        | ||
-                    ||  |                              . dblock | ||
+                    ||  |                              . DBlock | ||
                     ||  |                              .        | ||
                                                        .........
                         =================== 6N =================
 
-	 This matrix is symmetric, so we only store its lower part. This implies dblocks themselves are symmetric.
-	 odblocks however are antisymmetric.
+	 This matrix is symmetric, so we only store its lower part. This implies DBlocks themselves are symmetric.
+	 ODBlocks however are antisymmetric.
 
 	 The non-zero 6x6 blocks are of two kinds:
-	 - dblocks ("diagonal") contain the contributions to the force/torque acting on particle i
+	 - DBlock's ("diagonal") contain the contributions to the force/torque acting on particle i
 	   coming from particle i's velocity/angular velocity itself: they are the Stokes drag terms ("self"-terms)
 	   on the diagonal, plus parts of the interaction terms coming from lubrication or contact dashpots.
-	 - odblocks ("off-diagonal") contain the contributions to the force (torque) acting on particle i
+	 - ODBlock's ("off-diagonal") contain the contributions to the force (torque) acting on particle i
 	   coming from other particles velocities and angular velocities.
 
 	  ============================
-	  ============================
-	  Technical details on the storage of matrix elements:
+		How to use
+		============================
 
-	  Elements are stored differently depending on which library is used.
-
-	  * CHOLMOD storage:
 	  With cholmod library, the storage is first done in the "natural" block structures presented above.
 	  At the end of filling, the storage is converted to the compressed-column form used by cholmod.
 
-	  Natural form is done as follows
-	  - dblocks: Due to symmetries (dblocks are symmetric, and their "B" subblocks are antisymmetric)
-	             each dblock has 18 independent elements (6 diagonal terms and 12 off diagonal).
-	             There are np such blocks.
-	             They are all stored in 'double *dblocks', which is allocated with size 6*np.
-				 Labeling in block associated with particle i is the following:
-				 (subblocks names according to "Jeffrey" (Brady) ):
+		For technical details on the storage of matrix elements in the DBlock's and ODBlock's, #
+		see the MatrixBlocks.h header.
 
+		Solving the resistance problem is done in two steps:
+		1. Building the resistance matrix
+		2. Build the rhs (the forces)
+		3. Actually solving the linear algebra problem
+		(Steps 1 and 2 can be interchanged, but in any case resetResistanceMatrix must be called before anything else).
 
-				 | dblocks[i].col0[0]  .                   .                   .                     .                    .               	  |
-		"A11"(FU)| dblocks[i].col0[1]  dblocks[i].col1[0]  .                   .                     .                    .               	  |
-				 | dblocks[i].col0[2]  dblocks[i].col1[1]  dblocks[i].col2[0]  .                     .                    .               	  |
-				 | 0                   .                   .                   dblocks[i].col3[0]    .                    .                   |
-		"B11"(TU)| dblocks[i].col0[3]  0                   .                   dblocks[i].col3[1]	 dblocks[i].col4[0]   .                   |
-				 | dblocks[i].col0[4]  dblocks[i].col1[2]  0                   dblocks[i].col3[2]    dblocks[i].col4[1]   odblocks[t].col5[0] |
-				 																																	"C11" subblock (TW)
+		Detail of step 1, building the resistance matrix and the RHS
+			a. start a new instance of resistance matrix with the method resetResistanceMatrix.
+			b. filling it. The resistance matrix is filled columns by columns, from column 0 up, IN ORDER.
+			    Declare the beginning of a new column with startNewColumn, and add the terms linked
+			    to a pair interaction with addResistanceBlocks.
+					NOTE: within a column, you do not need to fill the rows in order.
+			c. call matrixFillingDone. This exports the temporary data storage into cholmod format,
+			   and factorizes the matrix. Therefore, after calling this method, you cannot modify
+			   the resistance matrix anymore.
 
-	  - odblocks: 24 independent elements per block.
-	              Organization is much closer to compressed-column form.
-				  All the odblocks values are stored in a vector of struct ODBlock.
-					A ODBlock contains 6 arrays called col0, col1, etc, each of them for a column in the block.
-				  The corresponding locations in the ResistanceMatrix are stored in a vector* called odrows
-                  and an array called odrows_table.
-
-				  This works as follows:
-				  Particle i interacts with particle j (i<j), we have 1 associated odblock in
-				  the ResistanceMatrix. Say j appears as the m^th interaction involving i. Then:
-				  odbrows[odbrows_table[i]+m] = j, and the elements are accessed via:
-
-				  (only stored elements are shown)                                "\tilde B21"
-					| odblocks[t].col0[0]    .                   .                 	0                     .                    .                    |
-	 "A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]     .                odblocks[t].col3[0]  0                     .                    |
-					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0] odblocks[t].col3[1]  odblocks[t].col4[0]  0                     |
-					| 0                      .                   .                  odblocks[t].col3[2]   .                    .                    |
-	 "B21"			| odblocks[t].col0[3]  0                     .                  odblocks[t].col3[3]  odblocks[t].col4[1]   .                    |
-					| odblocks[t].col0[4]  odblocks[t].col1[2]  0                   odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col5[0] |
-		                                                                          "C21"
-	  with t=odbrows_table[i]+m
-
-				Thanks to the symmetries of the resistance matrix, we can recover all the elements as:
-	             (all elements)                                                   "\tilde B21"
-					| odblocks[t].col0[0]  odblocks[t].col0[1]  odblocks[t].col0[2]  0                   -odblocks[t].col3[0] -odblocks[t].col3[1] |
-	 "A21"			| odblocks[t].col0[1]  odblocks[t].col1[0]  odblocks[t].col1[1]  odblocks[t].col3[0]  0                   -odblocks[t].col4[0] |
-					| odblocks[t].col0[2]  odblocks[t].col1[1]  odblocks[t].col2[0]	 odblocks[t].col3[1]  odblocks[t].col4[0]  0                   |
-					| 0                   -odblocks[t].col0[3] -odblocks[t].col0[4]  odblocks[t].col3[2]  odblocks[t].col3[3]  odblocks[t].col3[4] |
-	 "B21"			| odblocks[t].col0[3]  0                   -odblocks[t].col1[2]  odblocks[t].col3[3]  odblocks[t].col4[1]  odblocks[t].col4[2] |
-					| odblocks[t].col0[4]  odblocks[t].col1[2]  0                    odblocks[t].col3[4]  odblocks[t].col4[2]  odblocks[t].col5[0] |
-		                                                                          "C21"
-	  with t=odbrows_table[i]+m
+		Step 2 is done with the *RHS* methods.
+		Step 3 is done with the solve methods. After solving, solvingIsDone must be called.
+		Once solvingIsDone has been called, the cholmod matrix object has been freed,
+		so you cannot use the solver anymore without starting the process all over from step 1.
 	 */
 
 private:
@@ -146,8 +120,8 @@ private:
 	cholmod_sparse* chol_res_matrix_mf;
 	cholmod_sparse* chol_res_matrix_ff;
 	cholmod_dense* chol_solution;
-    cholmod_dense* chol_vel_mob;
-    cholmod_dense* chol_vel_fix;
+	cholmod_dense* chol_vel_mob;
+	cholmod_dense* chol_vel_fix;
 	cholmod_dense* chol_force_mob;
 	cholmod_dense* chol_force_fix;
 	// cholmod_dense* chol_PTsolution;
@@ -155,7 +129,7 @@ private:
 	bool chol_L_to_be_freed;
 	// resistance matrix building
 	int dblocks_size;
-	unsigned int current_column;
+	int current_column;
 	std::vector<struct DBlock> dblocks;
 	std::vector<struct ODBlock> odblocks;
 	std::vector<int> odbrows;
@@ -172,24 +146,6 @@ private:
 	std::vector<int> dblocks_cntnonzero;
 
 	void factorizeResistanceMatrix();
-    /*
-     setColumn(const vec3d &nvec, int jj, double scaledXA, double scaledYB, double scaledYBtilde, double scaledYC) :
-	 - appends alpha * |nvec><nvec| and corresponding indices
-	 [ 3*jj, 3*jj+1, 3*jj+2 ] to column storage vectors
-	 odblocks and odFrows_table
-	 - this must be called with order, according to LT filling
-	 */
-	void setColumn(const vec3d& nvec, int jj,
-				   double scaledXA, double scaledYA,
-				   double scaledYB, double scaledYBtilde, double scaledYC);
-
-	struct ODBlock buildODBlock(const vec3d &nvec,
-								double scaledXA,
-								double scaledYA, double scaledYB,
-								double scaledYBtilde, double scaledYC);
-	void addToDBlock(struct DBlock &b, const vec3d& nvec,
-					 double scaledXA, double scaledYA,
-					 double scaledYB, double scaledYC);
 
 	void allocateResistanceMatrix();
 	void allocateRessources();
@@ -218,6 +174,18 @@ private:
 	void insertDBlockValues(double *matrix_x,
 							const std::vector<int>& index_chol_ix,
 							const struct DBlock& b);
+	void setOffDiagBlock(int jj, const struct ODBlock& b);
+	void addToDiagBlock(int ii, const struct DBlock &b);
+	/*
+	 completeResistanceMatrix() :
+	 - transforms temporary arrays/vectors used to build resistance
+	 matrix into Cholmod objects really used by
+	 the solvers
+	 - also performs Cholesky factorization
+	 - must be called before solving the linear algebra problem
+	 - must be called after all terms are added
+	 */
+	void completeResistanceMatrix();
 
 public:
 	~StokesSolver();
@@ -236,30 +204,19 @@ public:
 							   int nb_of_interactions_mf,
 							   int nb_of_interactions_ff,
 							   const std::vector<struct DBlock>& reset_resmat_dblocks);
-	void addToDiagBlocks(int ii,
-	                     int jj,
-	                     const std::pair<struct DBlock, struct DBlock> &DBiDBj);
-  void addToDiagBlock(int ii, const struct DBlock &b);
-
+	void addResistanceBlocks(int i,
+                           int j,
+                           const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+                           const struct ODBlock& ODBlock_ij);
 	/*
 	 This must be called with order (ii < jj),
 	 because we have to fill according to the lower-triangular
 	 storage.
 	 */
-	void setOffDiagBlock(int jj, const struct ODBlock& b);
 
 	void startNewColumn();
 	void matrixFillingDone();
-	/*
-	 completeResistanceMatrix() :
-	 - transforms temporary arrays/vectors used to build resistance
-	 matrix into Cholmod objects really used by
-	 the solvers
-	 - also performs Cholesky factorization
-	 - must be called before solving the linear algebra problem
-	 - must be called after all terms are added
-	 */
-	void completeResistanceMatrix();
+
 
 	/*
 	   Right-hand vector access methods
@@ -270,11 +227,11 @@ public:
 	void addToRHS(const std::vector<double>&);
 	void addToRHS(int, const std::vector<double>&);
 
-    void addToRHSForce(int, const vec3d&);
-    void addToRHSTorque(int, const vec3d&);
-    void setRHS(const std::vector<vec3d>&);
-    void setRHSForce(int, const vec3d&);
-    void setRHSTorque(int, const vec3d&);
+	void addToRHSForce(int, const vec3d&);
+	void addToRHSTorque(int, const vec3d&);
+	void setRHS(const std::vector<vec3d>&);
+	void setRHSForce(int, const vec3d&);
+	void setRHSTorque(int, const vec3d&);
 	/*
 	 solve(vec3d* velocity, vec3d* ang_velocity) :
 	 - once the resistance matrix and the RHS vector are built
@@ -292,8 +249,8 @@ public:
 	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
-    void compute_LTRHS(std::vector<vec3d>&);
-    /*
+	 void compute_LTRHS(std::vector<vec3d>&);
+	 /*
 	 solvingIsDone(bool free_Cholesky_factor) :
 	 - deletes resistance matrix and some other arrays
 	 (preconditionner, Cholesky factors, ...) used for solving

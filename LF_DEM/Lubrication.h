@@ -3,7 +3,7 @@
 //  LF_DEM
 //
 //  Created by Ryohei Seto and Romain Mari on 12/10/12.
-//  Copyright (c) 2012-2014 Ryohei Seto and Romain Mari. All rights reserved.
+//  Copyright (c) 2012-2016 Ryohei Seto and Romain Mari. All rights reserved.
 //
 
 /**
@@ -30,8 +30,8 @@ private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
-	System *sys;
 	Interaction *interaction;
+	System *sys;
 	bool _active;
 	double range;
 
@@ -41,18 +41,21 @@ private:
 	unsigned int p0_6;
 	unsigned int p1_6;
 	vec3d *nvec;
-	double nxnx;
-	double nxny;
-	double nxnz;
-	double nynz;
-	double nyny;
-	double nznz;
-	double nnE;
 	double lub_coeff;
 	double log_lub_coeff;
 	double a0;
 	double a1;
 	double ro;
+	double ro_12; // = ro/2
+	double a0a0_23;
+	double a1a1_23;
+	double roro_16;
+	double a0a0a0_43;
+	double a1a1a1_43;
+	double rororo_16;
+	double a0a0a0_109;
+	double a1a1a1_109;
+	double rororo_536;
 	double lambda;
 	double invlambda;
 	double lambda_square;
@@ -78,16 +81,6 @@ private:
 	double cYH[4];
 	double cXM[4];
 	double cYM[4];
-	double ro_12; // = ro/2
-	double a0a0_23;
-	double a1a1_23;
-	double roro_16;
-	double a0a0a0_43;
-	double a1a1a1_43;
-	double rororo_16;
-	double a0a0a0_109;
-	double a1a1a1_109;
-	double rororo_536;
 	double g1_XA;
 	double g1_inv_XA;
 	double g2_YA;
@@ -113,14 +106,15 @@ private:
 	double g5_YM;
 
  public:
-	Lubrication(Interaction *int_);
-	void init(System *sys_);
+	Lubrication();
+	bool tangential; // 1: normal; 2: normal+tangential
+	void init(System *sys_, Interaction *int_);
+	void setParent(Interaction *int_){interaction = int_;};
 	inline bool is_active() {return _active;};
 	void activate();
 	void deactivate();
 	void updateActivationState();
-	void getInteractionData();
-	void getGeometry();
+	void setParticleData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
     vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
@@ -139,11 +133,14 @@ private:
 	{
 		return lubforce_p0;
 	}
-	void addHydroStress();
-	void pairVelocityStresslet(const vec3d& vi, const vec3d& vj,
-							   const vec3d& oi, const vec3d& oj,
-							   StressTensor& stresslet_i, StressTensor& stresslet_j);
-	void pairStrainStresslet(StressTensor& stresslet_i, StressTensor& stresslet_j);
+	void addMEStresslet(double cos_theta_shear,
+	                    double sin_theta_shear,
+	                    double shear_rate,
+	                    StressTensor& stresslet_i,
+	                    StressTensor& stresslet_j);
+	void addGUStresslet(const vec3d& vi, const vec3d& vj,
+                      const vec3d& oi, const vec3d& oj,
+                      StressTensor& stresslet_i, StressTensor& stresslet_j);
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 //void setResistanceCoeffTang(double tangent_rc);
@@ -153,13 +150,13 @@ private:
 	std::tuple<vec3d,vec3d> calcGE_squeeze();
 	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential();
 	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential();
+
 	struct ODBlock RFU_ODBlock_squeeze_tangential();
 	struct ODBlock RFU_ODBlock_squeeze();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze_tangential();
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze();
-
 	void calcXFunctions();
 	void calcXYFunctions();
-
 };
+
 #endif /* defined(__LF_DEM__Lubrication__) */

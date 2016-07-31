@@ -39,9 +39,66 @@ void System::stressReset()
 	}
 }
 
+
+void System::addLubricationStress(Interaction &inter)
+{
+	unsigned int i, j;
+	std::tie(i, j) = inter.get_par_num();
+	if (!inter.lubrication.tangential) {
+		inter.lubrication.calcXFunctionsStress();
+	} else {
+		inter.lubrication.calcXYFunctionsStress();
+	}
+
+	inter.lubrication.addMEStresslet(costheta_shear,
+                                   sintheta_shear,
+                                   shear_rate,
+                                   lubstress[i], lubstress[j]); // R_SE:Einf-R_SU*v
+	// -R_SU*U_H
+	inter.lubrication.addGUStresslet(vel_hydro[i], vel_hydro[j],
+                                   ang_vel_hydro[i], ang_vel_hydro[j],
+                                   lubstress[i], lubstress[j]);
+	// -R_SU*U_C
+	inter.lubrication.addGUStresslet(vel_contact[i], vel_contact[j],
+                                   ang_vel_contact[i], ang_vel_contact[j],
+                                   contactstressGU[i], contactstressGU[j]);
+	// -R_SU*U_R
+	if (repulsiveforce) {
+		inter.lubrication.addGUStresslet(vel_repulsive[i], vel_repulsive[j],
+                                     ang_vel_repulsive[i], ang_vel_repulsive[j],
+                                     repulsivestressGU[i], repulsivestressGU[j]);
+	}
+	// -R_SU*U_B
+	if (brownian) {
+		inter.lubrication.addGUStresslet(vel_brownian[i], vel_brownian[j],
+                                     ang_vel_brownian[i], ang_vel_brownian[j],
+                                     brownianstressGU[i], brownianstressGU[j]);
+	}
+	// -R_SU*U_F
+	if (mobile_fixed) {
+		if (j < np_mobile) { // i and j mobile
+			inter.lubrication.addGUStresslet(vel_hydro_from_fixed[i], vel_hydro_from_fixed[j],
+                                       ang_vel_hydro_from_fixed[i], ang_vel_hydro_from_fixed[j],
+                                       hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
+		} else if (i >= np_mobile) { // i and j fixed
+			inter.lubrication.addGUStresslet(na_velocity[i], na_velocity[j],
+                                       na_ang_velocity[i], na_ang_velocity[j],
+                                       hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
+		} else { // i mobile and j fixed
+			inter.lubrication.addGUStresslet(vel_hydro_from_fixed[i], na_velocity[j],
+                                       ang_vel_hydro_from_fixed[i], na_ang_velocity[j],
+                                       hydrofromfixedstressGU[i], hydrofromfixedstressGU[j]);
+		}
+	}
+}
+
 void System::calcStressPerParticle()
 {
 	/**
+		@@@@ This method does not do what it says, neither in its name nor in its doc.
+		     It does a mix of two things (particlewise stress and interactionwise stress)
+				 so we should rename/refactor this to improve clarity.
+
 	   This method computes the stresses per particle, split by components (hydro, contact, ...).
 
 	   From velocities \f$ V_{\mathrm{I}}\f$ associated with
@@ -70,17 +127,12 @@ void System::calcStressPerParticle()
 	stressReset();
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			if (p.lubrication_model > 0) {
-				if (p.lubrication_model == 1 || p.lubrication_model == 3) {
-					interaction[k].lubrication.calcXFunctionsStress();
-				} else if (p.lubrication_model == 2) {
-					interaction[k].lubrication.calcXYFunctionsStress();
-				} else {
-					ostringstream error_str;
-					error_str << "lubrication_model = " << p.lubrication_model << endl << "lubrication_model > 3 is not implemented" << endl;
-					throw runtime_error(error_str.str());
+			unsigned int i, j;
+			std::tie(i, j) = interaction[k].get_par_num();
+			if (lubrication) {
+				if (interaction[k].lubrication.is_active()) {
+					addLubricationStress(interaction[k]);
 				}
-				interaction[k].lubrication.addHydroStress(); // R_SE:Einf-R_SU*v
 			}
 			interaction[k].contact.calcContactStress(); // - rF_cont
 			if (repulsiveforce) {
@@ -145,6 +197,14 @@ void System::calcStress()
 		total_hydro_stress += lubstress[i];
 	}
 	total_hydro_stress /= system_volume;
+
+	// suspending fluid viscosity
+	if (p.cross_shear) {
+		total_hydro_stress.elm[2] += costheta_shear*shear_rate/6./M_PI;
+		total_hydro_stress.elm[3] += sintheta_shear*shear_rate/6./M_PI;
+	}	else {
+		total_hydro_stress.elm[2] += shear_rate/6./M_PI;
+	}
 	// Stress from contact force
 	// GU contribution
 	total_contact_stressGU.reset();
@@ -167,7 +227,7 @@ void System::calcStress()
 			if (cstress_per_particle) {
 				StressTensor sc = interaction[k].contact.getContactStressXF();
 				unsigned int i, j;
-				interaction[k].get_par_num(i,j);
+				std::tie(i, j) = interaction[k].get_par_num();
 				double r_ij = interaction[k].ro;
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
 				contactstressXF[j] += (radius[j]/r_ij)*sc;
@@ -194,7 +254,7 @@ void System::calcStress()
 				*/
 				StressTensor sc = 0.5*interaction[k].repulsion.getStressXF();
 				unsigned int i, j;
-				interaction[k].get_par_num(i,j);
+				std::tie(i, j) = interaction[k].get_par_num();
 				repulsivestressXF[i] += sc;
 				repulsivestressXF[j] += sc;
 			}

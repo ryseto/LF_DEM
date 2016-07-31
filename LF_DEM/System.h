@@ -40,12 +40,13 @@
 #endif
 
 class Simulation;
-class Interaction;
+// class Interaction;
 class BoxSet;
 
 struct ForceAmplitudes
 {
 	double repulsion;
+	double temperature;
 	double sqrt_temperature;
 	double contact;
 	double cohesion;
@@ -61,16 +62,15 @@ private:
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
-	int nb_of_active_lubrications_mm;
-	int nb_of_active_lubrications_mf;
-	int nb_of_active_lubrications_ff;
+	int nb_of_pairwise_resistances_mm;
+	int nb_of_pairwise_resistances_mf;
+	int nb_of_pairwise_resistances_ff;
 	int nb_of_contacts_mm;
 	int nb_of_contacts_mf;
 	int nb_of_contacts_ff;
 	int total_num_timesteps;
 	double time; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
-	double shear_rate;
 	double lx;
 	double ly;
 	double lz;
@@ -101,10 +101,10 @@ private:
 	void adaptTimeStep(double time_end, double strain_end);
 	void setContactForceToParticle();
 	void setRepulsiveForceToParticle();
-	void buildHydroTerms(bool, bool);
-	void (System::*buildLubricationTerms)(bool, bool);
-	void buildLubricationTerms_squeeze(bool mat, bool rhs); // lubrication_model = 1
-	void buildLubricationTerms_squeeze_tangential(bool mat, bool rhs); // lubrication_model = 2
+	void buildHydroTerms(bool);
+	void (System::*buildLubricationTerms)(bool);
+	void buildLubricationTerms_squeeze(bool rhs); // lubrication_model = 1
+	void buildLubricationTerms_squeeze_tangential(bool rhs); // lubrication_model = 2
 	void buildHydroTermsFromFixedParticles();
 	std::vector<double> computeForceFromFixedParticles();
 	void generateBrownianForces();
@@ -128,6 +128,7 @@ private:
 	void rescaleVelHydroStressControlled();
 	void rescaleVelHydroStressControlledFixed();
 	void stressReset();
+	void addLubricationStress(Interaction &);
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(int, int);
 	double evaluateMinGap();
@@ -152,7 +153,6 @@ private:
 #endif
 #ifdef USE_DSFMT
 	dsfmt_t r_gen;
-	unsigned long hash(time_t, clock_t);
 #endif
 	bool angle_output;
 	std::vector<double> radius_cubed;
@@ -173,7 +173,7 @@ private:
 protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
-	~System();
+	~System(){};
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
 	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
@@ -185,6 +185,8 @@ protected:
 	bool cohesion;
 	bool critical_load;
 	bool lowPeclet;
+	bool lubrication;
+	bool pairwise_resistance;
 	// Simulation parameters
 	bool twodimension;
 	bool rate_controlled;
@@ -204,7 +206,7 @@ protected:
 	std::vector<vec3d> rate_proportional_wall_force;
 	std::vector<vec3d> rate_proportional_wall_torque;
 
-	Interaction *interaction;
+	std::vector<Interaction> interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
@@ -267,6 +269,7 @@ protected:
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
+	double shear_rate;
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -300,7 +303,6 @@ protected:
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
-	double new_contact_gap; // When gel structure is imported it needs to be larger than 0 at the begining.
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
 	double omega_wheel_in;
@@ -345,7 +347,7 @@ protected:
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void removeNeighbors(int i, int j);
 	void updateNumberOfInteraction(int p0, int p1, int val);
-	void updateNumberOfLubricationInteractions(int p0, int p1, int val);
+	void updateNumberOfPairwiseResistances(int p0, int p1, int val);
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 

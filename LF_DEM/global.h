@@ -35,6 +35,10 @@
 #include "VersionInfo.h"
 #endif
 
+#ifdef USE_DSFMT
+#include <limits.h>
+#endif
+
 inline void removeBlank(std::string& str)
 {
 	str.erase(remove_if(str.begin(), str.end(), (int(*)(int))isspace), str.end());

@@ -82,12 +82,14 @@ void StokesSolver::addToDiagBlock(int ii, const struct DBlock &b)
 	}
 }
 
-void StokesSolver::addToDiagBlocks(int ii,
-                                   int jj,
-                                   const std::pair<struct DBlock, struct DBlock> &DBiDBj)
+void StokesSolver::addResistanceBlocks(int i,
+                                       int j,
+                                       const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+                                       const struct ODBlock& ODBlock_ij)
 {
-	addToDiagBlock(ii, DBiDBj.first);
-	addToDiagBlock(jj, DBiDBj.second);
+	addToDiagBlock(i, DiagBlocks_i_and_j.first);
+	addToDiagBlock(j, DiagBlocks_i_and_j.second);
+	setOffDiagBlock(j, ODBlock_ij);
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
@@ -537,7 +539,7 @@ void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 	// if (force_and_torque.size() != size) {
 	// 	throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
 	// }
-	for (auto i=0u; i<size; i++) {
+	for (decltype(size) i=0; i<size; i++) {
 		auto i3 = 3*i;
 		((double*)chol_rhs->x)[i3  ] = force_and_torque[i].x;
 		((double*)chol_rhs->x)[i3+1] = force_and_torque[i].y;
@@ -831,6 +833,11 @@ void StokesSolver::allocateResistanceMatrix()
 
 void StokesSolver::startNewColumn()
 {
+	if (current_column == mobile_particle_nb) {
+		mobile_matrix_done = true;
+		odbrows_table[mobile_particle_nb] = (unsigned int)odbrows.size();
+		odbrows_table_mf[mobile_particle_nb] = (unsigned int)odbrows_mf.size();
+	}
 	if (mobile_matrix_done) {
 		odbrows_table_ff[current_column-mobile_particle_nb] = (unsigned int)odbrows_ff.size();
 	} else {
@@ -838,23 +845,19 @@ void StokesSolver::startNewColumn()
 		odbrows_table_mf[current_column] = (unsigned int)odbrows_mf.size();
 	}
 	current_column++;
-	if (current_column == mobile_particle_nb) {
-		mobile_matrix_done = true;
-		odbrows_table[mobile_particle_nb] = (unsigned int)odbrows.size();
-		odbrows_table_mf[mobile_particle_nb] = (unsigned int)odbrows_mf.size();
-	}
 }
 
 void StokesSolver::matrixFillingDone()
 {
-	for (auto i=current_column; i<odbrows_table.size(); i++) {
+	for (unsigned int i=current_column; i<odbrows_table.size(); i++) {
 		odbrows_table[i] = (unsigned int)odbrows.size();
 		odbrows_table_mf[i] = (unsigned int)odbrows_mf.size();
 	}
 	mobile_matrix_done = true;
-	for (auto i=current_column; i<odbrows_table_ff.size(); i++) {
+	for (unsigned int i=current_column; i<odbrows_table_ff.size(); i++) {
 		odbrows_table_ff[i] = (unsigned int)odbrows_ff.size();
 	}
+	completeResistanceMatrix();
 }
 
 void StokesSolver::factorizeResistanceMatrix()

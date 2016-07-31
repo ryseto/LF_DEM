@@ -11,11 +11,12 @@ void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 {
 	sys = sys_;
 	interaction = interaction_;
+	force_norm = 0;
 }
 
 void RepulsiveForce::activate()
 {
-	interaction->get_par_num(p0, p1);
+	std::tie(p0, p1) = interaction->get_par_num();
 	/*
 	 * The size dependence of repulsive force:
 	 * a0*a1/(a1+a2)/2

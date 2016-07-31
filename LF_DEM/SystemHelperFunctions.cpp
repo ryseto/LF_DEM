@@ -107,7 +107,7 @@ double System::evaluateMinGap()
 	unsigned int p0, p1;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].get_par_num(p0, p1);
+			std::tie(p0, p1) = interaction[k].get_par_num();
 			if ((int)p0 < np_mobile && // exclude fixed-fixed
 				interaction[k].get_reduced_gap() < _min_reduced_gap) {
 				_min_reduced_gap = interaction[k].get_reduced_gap();
@@ -175,8 +175,8 @@ double System::evaluateMaxFcNormal()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
 			interaction[k].contact.is_active() &&
-			interaction[k].contact.get_f_contact_normal_norm() > max_fc_normal_) {
-			max_fc_normal_ = interaction[k].contact.get_f_contact_normal_norm();
+			interaction[k].contact.get_f_normal_norm() > max_fc_normal_) {
+				max_fc_normal_ = interaction[k].contact.get_f_normal_norm();
 		}
 	}
 	return max_fc_normal_;
@@ -188,8 +188,8 @@ double System::evaluateMaxFcTangential()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
 			interaction[k].contact.is_active() &&
-			interaction[k].contact.get_f_contact_tan_norm() > max_fc_tan_) {
-			max_fc_tan_ = interaction[k].contact.get_f_contact_tan_norm();
+			interaction[k].contact.get_f_tan_norm() > max_fc_tan_) {
+			max_fc_tan_ = interaction[k].contact.get_f_tan_norm();
 		}
 	}
 	return max_fc_tan_;
@@ -231,8 +231,11 @@ void System::analyzeState()
 	countNumberOfContact();
 	calcPotentialEnergy();
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
+		if (interaction[k].lubrication.is_active()) {
 			interaction[k].lubrication.calcPairwiseForce();
+		}
+		if (interaction[k].contact.is_active()) {
+			interaction[k].contact.calcTotalForce();
 		}
 	}
 }

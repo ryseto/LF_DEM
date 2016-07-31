@@ -250,7 +250,7 @@ void GenerateInitConfig::outputPositionData()
 	fout_yap << "y 4 \n";
 	for (int k=0; k<sys.nb_interaction; k++) {
 		unsigned int i, j;
-		sys.interaction[k].get_par_num(i, j);
+		std::tie(i, j) = sys.interaction[k].get_par_num();
 		vec3d d_pos = sys.position[i]-sys.position[j];
 		if (d_pos.norm() < 10){
 			fout_yap << "l ";
@@ -276,7 +276,7 @@ double GenerateInitConfig::computeGradient()
 	double energy = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].contact.is_active()) {
-			sys.interaction[k].get_par_num(i, j);
+			std::tie(i, j) = sys.interaction[k].get_par_num();
 			r = sys.interaction[k].r;
             rcont = sys.interaction[k].ro;
 			const vec3d& nr_vec = sys.interaction[k].nvec;
@@ -557,7 +557,7 @@ int GenerateInitConfig::overlapNumber(int i)
 {
 	int overlaps = 0;
 	for (auto&& inter : sys.interaction_list[i]){
-		if (inter->is_overlap()) {
+		if (inter->contact.is_active()) {
 			overlaps++;
 		}
 	}
@@ -568,7 +568,7 @@ double GenerateInitConfig::particleEnergy(int i)
 {
 	double energy = 0;
 	for (auto&& inter : sys.interaction_list[i]){
-		if (inter->is_overlap()) {
+		if (inter->contact.is_active()) {
 			double amp = inter->get_a_reduced()*(1/inter->ro-1/inter->r); // negative
 			energy += inter->r*amp*amp;
 		}

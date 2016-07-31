@@ -25,7 +25,7 @@
 #include "global.h"
 #include "System.h"
 #include "ParameterSet.h"
-#include "InputValue.h"
+#include "DimensionalValue.h"
 #include "OutputData.h"
 #include "Events.h"
 
@@ -34,11 +34,10 @@ class Simulation
 private:
 	System sys;
 	ParameterSet p_initial;
-	std::map <std::string, std::string> input_force_units;   // pairs: (force_type, unit)
-	std::map <std::string, double> input_force_values;   // pairs: (force_type, value)
-	std::map <std::string, double> dimensionless_numbers; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
+	std::map <std::string, double> force_ratios; // pairs: (force_type_1/force_type_2, force_value_1/force_value_2)
 	std::map <std::string, std::string> unit_longname;
-	std::map <std::string, InputValue> input_values;
+	std::map <std::string, DimensionalValue> input_values;
+	std::map <std::string, double*> force_value_ptr;
 	double volume_or_area_fraction;
 	std::string header_imported_configulation[2];
 	std::string control_var;
@@ -150,22 +149,23 @@ public:
 	void setMetadata(std::fstream &file_import);
 	void exportForceAmplitudes();
 	void setLowPeclet();
-	void convertForceValues(std::string new_long_unit);
-	void convertInputValues(std::string new_long_unit);
+	void changeUnit(DimensionalValue &x, std::string new_unit);
+	void changeUnitsInputValues(std::string new_unit);
+	void buildFullSetOfForceRatios();
+
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
 	void setupNonDimensionalization(double dimensionlessnumber,
 									std::string input_scale);
-	void convertInputForcesRateControlled(double dimensionlessnumber,
+	void setupNonDimensionalizationRateControlled(double dimensionlessnumber,
 										  std::string input_scale);
-	void convertInputForcesStressControlled(double dimensionlessnumber,
+	void setupNonDimensionalizationStressControlled(double dimensionlessnumber,
 											std::string input_scale);
-	void catchSuffixedValue(std::string type,
-							std::string keyword,
-							std::string value_str,
-							double* value_ptr);
-	void catchSuffixedForce(const std::string& keyword,
-							const std::string& value);
+	void catchForcesInStressUnits(const std::string &stress_unit);
+	DimensionalValue str2DimensionalValue(std::string type,
+                                        std::string keyword,
+                                        std::string value_str,
+                                        double* value_ptr);
 	/*
 	 * For outputs
 	 */
