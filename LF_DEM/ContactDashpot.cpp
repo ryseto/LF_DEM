@@ -276,9 +276,6 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
 	return std::make_pair(b0, b1);
 }
 
-
-
-
 vec3d ContactDashpot::getPairwiseForce()
 {
 	/** \brief Resistance force acting on particle p0.
@@ -305,7 +302,7 @@ vec3d ContactDashpot::getPairwiseForce()
 
 		vec3d oi(sys->na_ang_velocity[p0]);
 		vec3d oj(sys->na_ang_velocity[p1]);
-			/* YAU_i */
+		/* YAU_i */
 		force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
 		/* YBO_i */
 		force_p0 += -YB[0]*cross(nvec, oi)            - YB[2]*cross(nvec, oj);

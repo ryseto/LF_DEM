@@ -24,6 +24,7 @@
 		D956FA7C1D34E33B0011C0E7 /* libsuitesparseconfig.4.5.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D956FA781D34E33B0011C0E7 /* libsuitesparseconfig.4.5.3.dylib */; };
 		D9573FB216797A000081E903 /* Box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FAE16797A000081E903 /* Box.cpp */; };
 		D9573FB316797A000081E903 /* BoxSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9573FB016797A000081E903 /* BoxSet.cpp */; };
+		D95FE80A1D4E2E40004D2C8A /* ContactDashpot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */; };
 		D96731B417A042AD005D02F8 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731B317A042AD005D02F8 /* main.cpp */; };
 		D96731B617A042AD005D02F8 /* percolation_LF_DEM.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */; };
 		D96731BC17A042D1005D02F8 /* System.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96731BA17A042D1005D02F8 /* System.cpp */; };
@@ -558,6 +559,8 @@
 		D9573FAF16797A000081E903 /* Box.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Box.h; sourceTree = "<group>"; };
 		D9573FB016797A000081E903 /* BoxSet.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = BoxSet.cpp; sourceTree = "<group>"; };
 		D9573FB116797A000081E903 /* BoxSet.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = BoxSet.h; sourceTree = "<group>"; };
+		D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ContactDashpot.cpp; sourceTree = "<group>"; };
+		D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactDashpot.h; sourceTree = "<group>"; };
 		D96731B117A042AD005D02F8 /* percolation_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = percolation_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96731B317A042AD005D02F8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
@@ -1245,6 +1248,8 @@
 				D9FAAA2F1960685B00E601A9 /* Interaction.cpp */,
 				D92EAA0C17E39D5100C903F5 /* Contact.h */,
 				D92EAA0B17E39D5100C903F5 /* Contact.cpp */,
+				D95FE8081D4E2E40004D2C8A /* ContactDashpot.cpp */,
+				D95FE8091D4E2E40004D2C8A /* ContactDashpot.h */,
 				D9278EA51A9304F300ABCD87 /* RepulsiveForce.h */,
 				D9278EA71A93056E00ABCD87 /* RepulsiveForce.cpp */,
 				D92EAA0E17E39D5100C903F5 /* Lubrication.h */,
@@ -1535,6 +1540,7 @@
 			files = (
 				D932B8DC16C2E98000AD6E85 /* GenerateInitConfig.cpp in Sources */,
 				D9278EA81A93056E00ABCD87 /* RepulsiveForce.cpp in Sources */,
+				D95FE80A1D4E2E40004D2C8A /* ContactDashpot.cpp in Sources */,
 				D988E38E165441750009949F /* main.cpp in Sources */,
 				D9CE1B421B066B3400E052D9 /* dSFMT.c in Sources */,
 				D988E39C1654A18D0009949F /* System.cpp in Sources */,

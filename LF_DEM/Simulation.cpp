@@ -281,7 +281,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
 	string filename_parameters = input_files[1];
-	if (filename_parameters.find("init_relax", 0)) {
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
@@ -367,7 +367,7 @@ void Simulation::simulationInverseYield(string in_args,
 	outputComputationTime();
 
 	string	filename_parameters = input_files[1];
-	if (filename_parameters.find("init_relax", 0)) {
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
