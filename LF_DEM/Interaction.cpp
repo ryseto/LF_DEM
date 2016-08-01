@@ -27,8 +27,6 @@ void Interaction::init(System* sys_)
 	if (sys->repulsiveforce) {
 		repulsion.init(sys, this);
 	}
-	active = false;
-	r = 0;
 }
 
 /* Make a normal vector

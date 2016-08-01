@@ -68,16 +68,22 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
+	f_spring_normal_norm = 0;
+	f_spring_normal.reset();
+	normal_load = 0;
+	f_spring_total.reset();
+	f_contact_total.reset();
 	if (sys->friction) {
 		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
 			state = 1; // critical load model
 		} else {
 			state = 2; // static friction
 		}
-		f_spring_normal_norm = 0;
-		f_spring_normal.reset();
 		disp_tan.reset();
 		disp_rolling.reset();
+		prev_disp_tan.reset();
+		prev_disp_rolling.reset();
+		f_rolling.reset();
 	} else {
 		state = 1;
 	}

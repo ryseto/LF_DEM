@@ -88,7 +88,26 @@ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	Interaction(){};
+	Interaction():
+	a0(0),
+	a1(0), // second raddi > a0
+	ro_12(0),
+	a_reduced(0),
+	active(false),
+	label(0),
+	p0(0),
+	p1(0),
+	zshift(0),
+	reduced_gap(0),
+	relative_velocity(0),
+	rolling_velocity(0),
+	interaction_range(0),
+	relative_surface_velocity(0),
+	ro(0),
+	r(0),
+	rvec(0),
+	nvec(0)
+	{};
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:

@@ -50,6 +50,7 @@ public:
 	max_length(0),
 	cutoff_roundlength(0),
 	force_vector(0),
+	force_norm(0),
 	reduced_force_norm(0),
 	stresslet_XF(0)
 	{};

@@ -69,7 +69,7 @@ private:
 	int nb_of_contacts_mf;
 	int nb_of_contacts_ff;
 	int total_num_timesteps;
-	double time; ///< time elapsed since beginning of the time evolution.
+	double time_; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
 	double lx;
 	double ly;
@@ -437,7 +437,7 @@ protected:
 
 	double get_time()
 	{
-		return time;
+		return time_;
 	}
 
 	inline double get_shear_rate()

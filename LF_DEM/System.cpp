@@ -69,7 +69,11 @@ zero_shear(false),
 wall_rheology(false),
 mobile_fixed(false),
 couette_stress(false),
+dt(0),
 avg_dt(0),
+shear_rate(0),
+shear_disp(0),
+vel_difference(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -86,6 +90,20 @@ eventLookUp(NULL)
 	max_sliding_velocity = 0;
 	max_contact_gap = 0;
 	max_disp_rolling = 0;
+	max_disp_tan = 0;
+	total_stress = 0;
+	total_hydro_stress = 0;
+	total_contact_stressXF = 0;
+	total_contact_stressGU = 0;
+	total_repulsive_stressXF = 0;
+	total_repulsive_stressGU = 0;
+	total_brownian_stressGU = 0;
+	total_hydrofromfixed_stressGU = 0;
+	lx = 0;
+	ly = 0;
+	lz = 0;
+	costheta_shear = 0;
+	sintheta_shear = 0;
 }
 
 void System::allocateRessourcesPreConfiguration()
@@ -130,7 +148,13 @@ void System::allocateRessourcesPreConfiguration()
 	}
 	// Velocity
 	velocity.resize(np);
+	for (auto &v: velocity) {
+		v.reset();
+	}
 	ang_velocity.resize(np);
+	for (auto &v: ang_velocity) {
+		v.reset();
+	}
 	na_velocity.resize(np);
 	na_ang_velocity.resize(np);
 	if (p.integration_method == 1) {
@@ -465,10 +489,10 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 #endif
 	}
 	if (p.time_init_relax > 0) {
-		time = -p.time_init_relax;
+		time_ = -p.time_init_relax;
 		time_in_simulation_units = -p.time_init_relax*(*ratio_unit_time);
 	} else {
-		time = 0;
+		time_ = 0;
 		time_in_simulation_units = 0;
 	}
 	total_num_timesteps = 0;
@@ -939,7 +963,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_end, strain_end);
 	}
-	time += dt;
+	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
@@ -971,7 +995,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 			adaptTimeStep(time_end, strain_end);
 		}
 	}
-	time += dt;
+	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
@@ -1826,7 +1850,7 @@ void System::tmpMixedProblemSetVelocities()
 	if (test_simulation == 1) {
 		static double time_next = 16;
 		static double direction = 1;
-		if (time > time_next) {
+		if (time_ > time_next) {
 			direction *= -1;
 			time_next += 16;
 			cerr << direction << endl;
@@ -1866,7 +1890,7 @@ void System::tmpMixedProblemSetVelocities()
 		}
 	} else if (test_simulation == 21) {
 		static double time_next = p.strain_reversal;
-		if (time > time_next) {
+		if (time_ > time_next) {
 			p.theta_shear += M_PI;
 			costheta_shear = cos(p.theta_shear);
 			sintheta_shear = sin(p.theta_shear);

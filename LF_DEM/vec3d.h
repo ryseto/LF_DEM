@@ -29,13 +29,12 @@ public:
 	double z;
 
 	/* constructor/destructor */
-	inline vec3d (void): x(0), y(0), z(0){}
+	vec3d (): x(0), y(0), z(0){}
+	vec3d (double _x,
+         double _y,
+         double _z): x(_x), y(_y), z(_z) {}
 
-	inline vec3d (double _x,
-                double _y,
-                double _z): x(_x), y(_y), z(_z) {}
-
-	inline vec3d (double a): x(a), y(a), z(a) {}
+	vec3d (double a): x(a), y(a), z(a) {}
 
 	inline friend bool operator == (const vec3d &v1,
 									const vec3d &v2)
