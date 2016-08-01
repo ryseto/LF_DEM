@@ -337,8 +337,8 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}
 
 	lubrication = p.lubrication_model != "none";
-	if (lub_max_gap < 0) {
-		throw runtime_error("indent lub_max_gap<0 is forbidden.")
+	if (p.lub_max_gap < 0) {
+		throw runtime_error("indent lub_max_gap<0 is forbidden.");
 	}
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
@@ -1773,24 +1773,6 @@ void System::computeShearRate()
 		}
 	}
 }
-
-// pair<vec3d, vec3d> System::checkForceOnWalls()
-// {
-// 	computeForcesOnWallParticles();
-//
-// 	vec3d total_force_up = 0;
-// 	vec3d total_force_down = 0;
-//
-// 	for (int i=0; i<p.np_fixed; i++) {
-// 		if (fixed_velocities[i].x>0) {
-// 			total_force_up += rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
-// 		}
-// 		if (fixed_velocities[i].x<0) {
-// 			total_force_down += rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
-// 		}
-// 	}
-// 	return make_pair(total_force_up, total_force_down);
-// }
 
 void System::computeShearRateWalls()
 {
