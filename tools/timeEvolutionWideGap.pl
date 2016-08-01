@@ -12,11 +12,9 @@ use Getopt::Long;
 use POSIX;
 
 my $particle_data = $ARGV[0];
-my $margin = $ARGV[1];
-my $kmax = $ARGV[2];
-my $shear_strain_steady_state = $ARGV[3];
-
-printf "margine $margin\n";
+my $kmax = $ARGV[1];
+my $d_strain = $ARGV[2];
+my $strain_end = $ARGV[3];
 
 # Create output file name
 $i = index($particle_data, 'par_', 0)+4;
@@ -25,7 +23,6 @@ $name = substr($particle_data, $i, $j-$i);
 
 $j = index($name, '__', 1);
 $initconfig = substr($name, 0, $j+1);
-
 
 open (IN_CONFIG, "< ${initconfig}.dat");
 $line = <IN_CONFIG>;
@@ -40,19 +37,18 @@ close(IN_CONFIG);
 #exit;
 # Create output file name
 
-$output = "CWGdata_$name.dat";
-$output_pos = "pos_$name.dat";
+
+#$output_pos = "pos_$name.dat";
 printf "$output\n";
 
-open (OUT, "> ${output}");
-open (OUTpos, "> ${output_pos}");
+#open (OUTpos, "> ${output_pos}");
 open (IN_particle, "< ${particle_data}");
 
 &readHeader;
 
 $first = 1;
 $output = 1;
-$cnt_data = 0;
+
 
 $r_in = $radius_in;
 $r_out = $radius_out;
@@ -67,19 +63,29 @@ printf "$r_in $r_out\n";
 printf "$r_range_in $r_range_out\n";
 printf "dr = $dr \n";
 
-for ($k = 0; $k < $kmax; $k++) {
-	$average[$k] = 0;
-	$radialposition[$k] = 0;
-	$cnt[$k] = 0;
-	$particlearea[$k] = 0;
-}
+## $stress_in = $average_stress_rt[0]/$cnt[0];
 
+
+&resetAverage;
+
+$shear_strain_next = $d_strain;
+$cnt = 0;
 while (1) {
 	&InParticles;
 	last unless defined $line;
-	if ($shear_strain > 200) {
+	if ($shear_strain > $shear_strain_next) {
+		$output = "CWGdata_${name}_${cnt}.dat";
+		open (OUT, "> ${output}");
+		&outputAverage;
+		close (OUT);
+		&resetAverage;
+		$shear_strain_next += $d_strain;
+		${cnt} += 1;
+	}
+	if ($shear_strain > ${strain_end}) {
 		last;
 	}
+
 }
 #
 #for ($k = 0; $k < $kmax; $k++) {
@@ -88,46 +94,64 @@ while (1) {
 #		$ave_stress_rr[$k] = $average_stress_rr[$k]/$cnt[$k];
 #	}
 #}
+#close (OUTpos);
+close (IN_particle);
+##################################################################
 
-$stress_in = $average_stress_rt[0]/$cnt[0];
-printf OUT "# R_in = ${r_in}\n";
-printf OUT "# R_out = ${r_out}\n";
-printf OUT "# Rrange0 = $r_range_in\n";
-printf OUT "# Rrange1 = $r_range_out\n";
-printf OUT "# kmax = $kmax\n";
-printf OUT "#1 radial position\n";
-printf OUT "#2 velocity_theta \n";
-printf OUT "#3 area fraction\n";
-printf OUT "#4 stress tensor r-r\n";
-printf OUT "#5 stress tensor theta-theta\n";
-printf OUT "#6 stress tensor r-theta\n";
-printf OUT "#7 N1 = s_tt - s_rr\n";
-printf OUT "#8 P = -(1/2)*(s_tt + s_rr)\n";
+sub resetAverage {
+	$cnt_data = 0;
 
-for ($k = 0; $k < $kmax; $k++) {
-	if ($cnt[$k] != 0) {
-		$ave_v_tan = $average_v[$k]/$cnt[$k];
-		$r = $r_range_in + $dr*$k;
-		$rmid = $r + 0.5*$dr;
-		$rn = $r + $dr;
-		$area = pi*($rn*$rn - $r*$r);
-		$areafraction = ($particlearea[$k]/$cnt_data)/$area;
-		$ave_stress_rr = $areafraction*$average_stress_rr[$k]/$cnt[$k];
-		$ave_stress_tt = $areafraction*$average_stress_tt[$k]/$cnt[$k];
-		$ave_stress_rt = $areafraction*$average_stress_rt[$k]/$cnt[$k];
-		$ave_stress_N1 = $areafraction*$average_stress_N1[$k]/$cnt[$k];
-		$ave_stress_PP = $areafraction*$average_stress_pp[$k]/$cnt[$k];
-		printf OUT "$rmid $ave_v_tan $areafraction $ave_stress_rr $ave_stress_tt $ave_stress_rt $ave_stress_N1 $ave_stress_PP \n";
+	for ($k = 0; $k < $kmax; $k++) {
+		$average[$k] = 0;
+		$radialposition[$k] = 0;
+		$cnt[$k] = 0;
+		$particlearea[$k] = 0;
+		
+		$average_stress_rr[$k] = 0;
+		$average_stress_tt[$k] = 0;
+		$average_stress_rt[$k] = 0;
+		$average_stress_N1[$k] = 0;
+		$average_stress_pp[$k] = 0;
+		
 	}
 }
 
-for ($i = 0; $i < $np; $i ++){
-	printf OUTpos "$posx[$i] $posz[$i] $radius[$i]\n";
+sub outputAverage {
+	printf OUT "# strain = $shear_strain\n";
+	printf OUT "# R_in = ${r_in}\n";
+	printf OUT "# R_out = ${r_out}\n";
+	printf OUT "# Rrange0 = $r_range_in\n";
+	printf OUT "# Rrange1 = $r_range_out\n";
+	printf OUT "# kmax = $kmax\n";
+	printf OUT "#1 radial position\n";
+	printf OUT "#2 velocity_theta \n";
+	printf OUT "#3 area fraction\n";
+	printf OUT "#4 stress tensor r-r\n";
+	printf OUT "#5 stress tensor theta-theta\n";
+	printf OUT "#6 stress tensor r-theta\n";
+	printf OUT "#7 N1 = s_tt - s_rr\n";
+	printf OUT "#8 P = -(1/2)*(s_tt + s_rr)\n";
+
+	for ($k = 0; $k < $kmax; $k++) {
+		if ($cnt[$k] != 0) {
+			$ave_v_tan = $average_v[$k]/$cnt[$k];
+			$r = $r_range_in + $dr*$k;
+			$rmid = $r + 0.5*$dr;
+			$rn = $r + $dr;
+			$area = pi*($rn*$rn - $r*$r);
+			$areafraction = ($particlearea[$k]/$cnt_data)/$area;
+			$ave_stress_rr = $areafraction*$average_stress_rr[$k]/$cnt[$k];
+			$ave_stress_tt = $areafraction*$average_stress_tt[$k]/$cnt[$k];
+			$ave_stress_rt = $areafraction*$average_stress_rt[$k]/$cnt[$k];
+			$ave_stress_N1 = $areafraction*$average_stress_N1[$k]/$cnt[$k];
+			$ave_stress_PP = $areafraction*$average_stress_pp[$k]/$cnt[$k];
+			printf OUT "$rmid $ave_v_tan $areafraction $ave_stress_rr $ave_stress_tt $ave_stress_rt $ave_stress_N1 $ave_stress_PP \n";
+		}
+	}
 }
-close (OUT);
-close (OUTpos);
-close (IN_particle);
-##################################################################
+
+
+
 sub readHeader {
 	$line = <IN_particle>;
 	$line = <IN_particle>; ($buf, $buf, $np) = split(/\s+/, $line);

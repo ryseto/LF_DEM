@@ -740,8 +740,6 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "event_handler") {
 		p.event_handler = value;
 		p.event_handler.erase(remove(p.event_handler.begin(), p.event_handler.end(), '\"' ), p.event_handler.end());
-	} else if (keyword == "time_init_relax") {
-		input_values[keyword] = str2DimensionalValue("time", keyword, value, &p.time_init_relax);
 	} else if (keyword == "out_particle_stress") {
 		p.out_particle_stress = value;
 		p.out_particle_stress.erase(remove(p.out_particle_stress.begin(), p.out_particle_stress.end(), '\"' ), p.out_particle_stress.end());
@@ -839,7 +837,6 @@ void Simulation::setDefaultParameters(string input_scale)
 	 */
 	p.friction_model = 1;
 	input_values["time_end"] = str2DimensionalValue("time", "time_end", "10h", &p.time_end);
-	p.time_init_relax = 0;
 	p.lub_max_gap = 0.5;
 	/* This is cutoff distance (center-to-center) for interactions (repulsive force, etc.).
 	 * If interaction_range is not indicated, this value will be set from lub_max_gap.
