@@ -362,7 +362,10 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 	lubrication = p.lubrication_model != "none";
 	if (p.lub_max_gap < 0) {
-		throw runtime_error("indent lub_max_gap<0 is forbidden.");
+		throw runtime_error(indent+"lub_max_gap<0 is forbidden.");
+	}
+	if (p.lub_reduce_parameter > 1) {
+		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
 	}
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 

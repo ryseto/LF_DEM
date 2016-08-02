@@ -82,11 +82,18 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 	}
 
 	if (rtime_tan > 0) {
+		if (sys->lubrication) { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
+			throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
+		}
 		tangential_coeff = 6*kt*rtime_tan;
 	} else {
 		if (sys->lubrication) {// take the same resistance as lubrication
 			// 1/(h+c) --> 1/c
-			tangential_coeff = log(1/sys->p.lub_reduce_parameter);
+			if (sys->p.lub_reduce_parameter < 1) {
+				tangential_coeff = log(1/sys->p.lub_reduce_parameter);
+			} else {
+				tangential_coeff = 0;
+			}
 		} else {
 			throw std::runtime_error(" ContactDashpot:: Error: tangential relaxation time set negative, but no lubrication.");
 		}
