@@ -66,7 +66,7 @@ void ContactDashpot::deactivate()
 void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
                                                 double rtime_normal, double rtime_tan)
 {
-	if (rtime_normal >= 0) {
+	if (rtime_normal > 0) {
 		/* t = beta/kn
 		 *  beta = t*kn
 		 * normal_coeff = 4*beta = 4*kn*rtime_normal
@@ -81,7 +81,7 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 		}
 	}
 
-	if (rtime_tan >= 0) {
+	if (rtime_tan > 0) {
 		tangential_coeff = 6*kt*rtime_tan;
 	} else {
 		if (sys->lubrication) {// take the same resistance as lubrication
