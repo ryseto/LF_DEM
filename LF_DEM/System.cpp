@@ -929,6 +929,9 @@ void System::adaptTimeStep()
 	} else {
 		dt = p.disp_max/shear_rate;
 	}
+	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
+		dt = p.disp_max/shear_rate;
+	}
 }
 
 void System::adaptTimeStep(double time_end, double strain_end)
