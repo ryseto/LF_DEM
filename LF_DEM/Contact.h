@@ -123,11 +123,10 @@ public:
 	//===== forces/stresses  ========================== //
 	void calcContactSpringForce();
 	void addUpContactForceTorque();
-	vec3d getTotalForce(); // only for output
-	double get_f_normal_norm();
+	vec3d getTotalForce();
+	vec3d getNormalForce();
+	vec3d getTangentialForce();
 	double get_normal_load();
-	vec3d get_f_tan();
-	double get_f_tan_norm();
 	void calcContactStress();
 	StressTensor getContactStressXF()
 	{

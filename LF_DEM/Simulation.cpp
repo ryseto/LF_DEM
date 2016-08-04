@@ -852,18 +852,19 @@ void Simulation::outputIntFileTxt()
 			 * the lubrication forces.
 			 */
 			if (sys.lubrication) {
-				outdata_int.entryData("normal part of the lubrication force", "force", 1, \
-				                      sys.interaction[k].lubrication.get_lubforce_normal());
+				double normal_part = -dot(sys.interaction[k].lubrication.getTotalForce(), sys.interaction[k].nvec);
+				outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
+				                      normal_part);
 				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
-				                      sys.interaction[k].lubrication.get_lubforce_tan());
+				                      sys.interaction[k].lubrication.getTangentialForce());
 			}
 			/*
 			 * Contact forces include only spring forces.
 			 */
 			outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
-			                      sys.interaction[k].contact.get_f_normal_norm());
+			                      sys.interaction[k].contact.getNormalForce().norm());
 			outdata_int.entryData("tangential part of the contact force", "force", 3, \
-			                      sys.interaction[k].contact.get_f_tan());
+			                      sys.interaction[k].contact.getTangentialForce());
 			outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
 			                      sys.interaction[k].repulsion.getForceNorm());
 			if (diminish_output == false) {

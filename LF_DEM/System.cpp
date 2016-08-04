@@ -54,6 +54,8 @@ wagnerhash(time_t t, clock_t c)
 
 
 System::System(ParameterSet& ps, list <Event>& ev):
+vel_difference(0),
+omega_inf(0),
 events(ev),
 p(ps),
 test_simulation(0),
@@ -73,8 +75,6 @@ dt(0),
 avg_dt(0),
 shear_rate(0),
 shear_disp(0),
-vel_difference(0),
-omega_inf(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -764,8 +764,8 @@ void System::checkForceBalance()
 		if (interaction[k].is_active()) {
 			interaction[k].lubrication.calcPairwiseForce();
 			std::tie(i, j) = interaction[k].get_par_num();
-			forceResultant[i] += interaction[k].lubrication.get_lubforce();
-			forceResultant[j] -= interaction[k].lubrication.get_lubforce();
+			forceResultant[i] += interaction[k].lubrication.getTotalForce();
+			forceResultant[j] -= interaction[k].lubrication.getTotalForce();
 		}
 	}
 	// 2nd way: works

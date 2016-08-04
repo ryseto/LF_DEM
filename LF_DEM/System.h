@@ -219,11 +219,11 @@ protected:
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
 
-	std::vector<vec3d>velocity;
-	std::vector<vec3d>velocity_predictor;
+	std::vector<vec3d> velocity;
+	std::vector<vec3d> velocity_predictor;
 	std::vector<vec3d> na_velocity;
-	std::vector<vec3d>ang_velocity;
-	std::vector<vec3d>ang_velocity_predictor;
+	std::vector<vec3d> ang_velocity;
+	std::vector<vec3d> ang_velocity_predictor;
 	std::vector<vec3d> na_ang_velocity;
 	std::vector<vec3d> vel_repulsive;
 	std::vector<vec3d> ang_vel_repulsive;
@@ -236,9 +236,9 @@ protected:
 	std::vector<vec3d> vel_hydro_from_fixed;
 	std::vector<vec3d> ang_vel_hydro_from_fixed;
 	std::vector<vec3d> fixed_velocities;
-	std::vector<vec3d>contact_force;
-	std::vector<vec3d>contact_torque;
-	std::vector<vec3d>repulsive_force;
+	std::vector<vec3d> contact_force;
+	std::vector<vec3d> contact_torque;
+	std::vector<vec3d> repulsive_force;
 	std::vector<vec3d> brownian_force_torque;
 	std::vector<StressTensor> lubstress; // G U + M E
 	std::vector<StressTensor> contactstressGU; // per particle

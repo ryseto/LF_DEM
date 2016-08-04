@@ -431,9 +431,9 @@ double Contact::calcEnergy()
 	return energy;
 }
 
-double Contact::get_f_normal_norm()
+vec3d Contact::getNormalForce()
 {
-	return abs(dot(interaction->nvec, getTotalForce()));
+	return dot(interaction->nvec, getTotalForce())*interaction->nvec;
 }
 
 double Contact::get_normal_load()
@@ -441,13 +441,8 @@ double Contact::get_normal_load()
 	return normal_load;
 }
 
-vec3d Contact::get_f_tan()
+vec3d Contact::getTangentialForce()
 {
 	vec3d total_force = getTotalForce();
 	return total_force - dot(interaction->nvec, total_force)*interaction->nvec;
-}
-
-double Contact::get_f_tan_norm()
-{
-	return get_f_tan().norm();
 }

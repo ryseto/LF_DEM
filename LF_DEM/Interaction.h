@@ -28,8 +28,6 @@
 class System;
 
 class Interaction{
-	friend class Contact;
-	friend class ContactDashpot;
 
 private:
 	/*********************************
@@ -43,7 +41,6 @@ private:
 	unsigned int p1;
 	double ro; // ro = a0+a1;
 	//======= relative position/velocity data  =========//
-	vec3d vel_offset;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
 	double r; // center-center distance
 
@@ -74,6 +71,7 @@ public:
 	RepulsiveForce repulsion;
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
+	vec3d vel_offset;
 
 	/*********************************
 	 *       Public Methods          *

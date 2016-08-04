@@ -119,17 +119,11 @@ private:
 	//===== forces/stresses  ========================== //
     vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
 	void calcPairwiseForce();
-	double get_lubforce_normal()
-	{
-		// positive for compression
-        //lubforce_p0.cerr();
-		return -dot(lubforce_p0, nvec);
-	}
-	vec3d get_lubforce_tan()
+	vec3d getTangentialForce()
 	{
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
-	vec3d get_lubforce()
+	vec3d getTotalForce()
 	{
 		return lubforce_p0;
 	}
