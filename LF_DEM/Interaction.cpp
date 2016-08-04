@@ -14,18 +14,16 @@ void Interaction::init(System* sys_)
 {
 	sys = sys_;
 	contact.init(sys, this);
-	if (sys->lubrication) {
-		lubrication.init(sys, this);
-		if (!lubrication.tangential) {
-		 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze;
-			RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze;
-		} else {
-		 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
-			RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
-		}
-	}
+	lubrication.init(sys, this);
 	if (sys->repulsiveforce) {
 		repulsion.init(sys, this);
+	}
+	if (sys->p.lubrication_model == "normal") {
+	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze;
+		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze;
+	} else if (sys->p.lubrication_model == "tangential") {
+	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
+		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
 	}
 }
 
@@ -37,10 +35,10 @@ void Interaction::init(System* sys_)
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	sys->periodize_diff(rvec, zshift);
+	sys->periodize_diff(rvec, vel_offset);
 	r = rvec.norm();
 	nvec = rvec/r;
-	reduced_gap = r/ro_12-2;
+	reduced_gap = 2*r/ro-2;
 }
 
 /* Activate interaction between particles i and j.
@@ -61,20 +59,9 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	// tell them their new partner
 	sys->interaction_partners[i].push_back(j);
 	sys->interaction_partners[j].push_back(i);
-	//
 	sys->updateNumberOfInteraction(p0, p1, 1);
-	//
-	a0 = sys->radius[p0];
-	a1 = sys->radius[p1];
-	/* [note]
-	 * The reduced (or effective) radius is defined as
-	 * 1/a_reduced = 1/a0 + 1/a1
-	 * This definition comes from sphere vs half-plane geometory of contact mechanics.
-	 * If sphere contacts with a half-plane (a1 = infinity), a_reduced = a0.
-	 * For equal sized spheres, a_reduced = 0.5*a0 = 0.5*a1
-	 */
-	a_reduced = a0*a1/(a0+a1);
-	set_ro(a0+a1); // ro=a0+a1
+
+	set_ro(sys->radius[p0]+sys->radius[p1]); // ro=a0+a1
 	interaction_range = interaction_range_;
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
@@ -264,68 +251,9 @@ std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 	return std::make_pair(b, b);
 }
 
-
-/* Relative velocity of particle 1 from particle 0.
- *
- * Use:
- *  sys->velocity and ang_velocity
- *
- */
-void Interaction::calcRelativeVelocities()
-{
-	/* relative velocity particle 1 from particle 0.
-	 * [note]
-	 * velocity[] = velocity_predictor[] in predictor
-	 * and
-	 * velocity[] = 0.5*(velocity_predictor[]+velocity_corrector[]) in corrector.
-	 * Therefore, relative_velocity and relative_surface_velocity
-	 * are true velocities.
-	 * relative_surface_velocity is used to update `disp_tan' in contact object.
-	 *
-	 */
-	/*
-	 * v1' = v1 - Lz = v1 - zshift*lz;
-	 */
-	/******************************************************
-	 * if p1 is upper, zshift = -1.
-	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
-	 *
-	 ******************************************************/
-	relative_velocity = sys->velocity[p1]-sys->velocity[p0]; //true velocity, in predictor and in corrector
-	if (zshift != 0) {
-		relative_velocity += zshift*sys->vel_difference;
-	}
-	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
-	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
-}
-
-void Interaction::calcRollingVelocities()
-{
-	/**
-	 Calculate rolling velocity
-	 We follow Luding(2008).
-	 The factor 2 is added.
-	 cf. Book by Marshall and Li
-	 equation 3.6.13 ??
-	 */
-	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], nvec);
-}
-
-/* observation */
-double Interaction::getContactVelocity()
-{
-	if (!contact.is_active() == 0) {
-		return 0;
-	}
-	return relative_surface_velocity.norm();
-}
-
 /* observation */
 double Interaction::getNormalVelocity()
 {
-	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0];
-	if (zshift != 0) {
-		d_velocity += zshift*sys->vel_difference;
-	}
+	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0] + vel_offset;
 	return dot(d_velocity, nvec);
 }

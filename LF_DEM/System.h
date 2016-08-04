@@ -83,6 +83,13 @@ private:
 	int linalg_size;
 	double costheta_shear;
 	double sintheta_shear;
+	/* Velocity difference between top and bottom
+	 * in Lees-Edwards boundary condition
+	 * vel_difference = shear_rate * lz
+	 */
+	vec3d vel_difference;
+	vec3d omega_inf;
+	std::vector <vec3d> u_inf;
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -121,6 +128,7 @@ private:
 	void tmpMixedProblemSetVelocities();
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
 	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
+	void computeUInf();
 	void computeShearRate();
 	void computeShearRateWalls();
 	void computeForcesOnWallParticles();
@@ -276,13 +284,7 @@ protected:
 	 * For Brownian suspension, it should be Peclet number
 	 */
 	//	double dimensionless_number;
-	/* Velocity difference between top and bottom
-	 * in Lees-Edwards boundary condition
-	 * vel_difference = shear_rate * lz
-	 */
-	vec3d vel_difference;
 	double max_velocity;
-	double max_relative_velocity;
 	double max_sliding_velocity;
 	double max_ang_velocity;
 	double min_reduced_gap;
@@ -353,7 +355,7 @@ protected:
 
 	void updateUnscaledContactmodel();
 	int periodize(vec3d&);
-	void periodize_diff(vec3d&, int&);
+	void periodize_diff(vec3d&, vec3d&);
 	void periodize_diff(vec3d&);
 	void calcStress();
 	void calcStressPerParticle();

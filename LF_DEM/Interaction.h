@@ -29,28 +29,24 @@ class System;
 
 class Interaction{
 	friend class Contact;
-	friend class RepulsiveForce;
-	friend class Lubrication;
+	friend class ContactDashpot;
 
 private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
 	System *sys;
-	double a0; // radii
-	double a1; // second raddi > a0
-	double ro_12; // ro_12 = ro/2
-	double a_reduced; // 1/a_reduced = 1/a0 + 1/a1
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
 	unsigned int p0;
 	unsigned int p1;
+	double ro; // ro = a0+a1;
 	//======= relative position/velocity data  =========//
-	int zshift;
+	vec3d vel_offset;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	vec3d relative_velocity;
-	vec3d rolling_velocity;
+	double r; // center-center distance
+
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
 	/*********************************
@@ -60,11 +56,8 @@ private:
 	inline void set_ro(double val)
 	{
 		ro = val; // ro = a0 + a1
-		ro_12 = ro/2;
 	};
 	void calcNormalVectorDistanceGap();
-	void calcRelativeVelocities();
-	void calcRollingVelocities();
 	void integrateStress();
 	void updateContactState();
 	struct ODBlock (Lubrication::*RFU_ODBlock_lub)();
@@ -79,9 +72,6 @@ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
-	vec3d relative_surface_velocity;
-	double ro; // ro = a0+a1;
-	double r; // center-center distance
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
 
@@ -89,29 +79,21 @@ public:
 	 *       Public Methods          *
 	 *********************************/
 	Interaction():
-	a0(0),
-	a1(0), // second raddi > a0
-	ro_12(0),
-	a_reduced(0),
 	active(false),
 	label(0),
 	p0(0),
 	p1(0),
-	zshift(0),
-	reduced_gap(0),
-	relative_velocity(0),
-	rolling_velocity(0),
-	interaction_range(0),
-	relative_surface_velocity(0),
 	ro(0),
+	reduced_gap(0),
 	r(0),
+	interaction_range(0),
 	rvec(0),
 	nvec(0)
 	{};
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
-	 * - r_vec, zshift, _r, and nr_vec
+	 * - r_vec, vel_offset, _r, and nr_vec
 	 * - contact_velocity_tan
 	 * - disp_tan
 	 * - Fc_normal and Fc_tan
@@ -121,6 +103,11 @@ public:
 	void updateState(bool& deactivated);
 	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
+
+	double separation_distance()
+	{
+		return r;
+	}
 
 	inline bool is_active() const
 	{
@@ -143,10 +130,6 @@ public:
 	{
 		return label;
 	}
-	inline double get_a_reduced() const
-	{
-		return a_reduced;
-	}
 	inline double get_reduced_gap() const
 	{
 		return reduced_gap;
@@ -157,11 +140,6 @@ public:
 	}
 	bool hasPairwiseResistance();
 	double getNormalVelocity();
-	double getRelativeVelocity()
-	{
-		return relative_velocity.norm();
-	}
-	double getContactVelocity();
 	struct ODBlock RFU_ODBlock();
 
 

@@ -19,9 +19,11 @@ void RepulsiveForce::activate()
 	std::tie(p0, p1) = interaction->get_par_num();
 	/*
 	 * The size dependence of repulsive force:
-	 * a0*a1/(a1+a2)/2
+	 * a0*a1/(a1+a2)
 	 */
-	geometric_factor = interaction->a0*interaction->a1/interaction->ro;
+	double a0 = sys->radius[p0];
+	double a1 = sys->radius[p1];
+	geometric_factor = a0*a1/(a0+a1);
 	screening_length = sys->p.repulsive_length;
 	max_length = sys->p.repulsive_max_length;
 	force_vector.reset();

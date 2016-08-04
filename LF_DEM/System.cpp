@@ -74,6 +74,7 @@ avg_dt(0),
 shear_rate(0),
 shear_disp(0),
 vel_difference(0),
+omega_inf(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
@@ -160,6 +161,10 @@ void System::allocateRessourcesPreConfiguration()
 	if (p.integration_method == 1) {
 		velocity_predictor.resize(np);
 		ang_velocity_predictor.resize(np);
+	}
+	u_inf.resize(np);
+	for (auto &v: u_inf) {
+		v.reset();
 	}
 	vel_contact.resize(np);
 	ang_vel_contact.resize(np);
@@ -380,6 +385,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	} else {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
+	lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
+	log_lub_coeff_contact_tan_total = log(1/p.lub_reduce_parameter);
+
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
 		 * interaction object is created at the lubrication cutoff.
@@ -1180,14 +1188,13 @@ void System::checkNewInteraction()
 	 To be called after particle moved.
 	 */
 	vec3d pos_diff;
-	int zshift;
 	double sq_dist;
 	for (int i=0; i<np-1; i++) {
 		for (auto j : boxset.neighborhood(i)) {
 			if (j > i) {
 				if (!hasNeighbor(i, j)) {
 					pos_diff = position[j]-position[i];
-					periodize_diff(pos_diff, zshift);
+					periodize_diff(pos_diff);
 					sq_dist = pos_diff.sq_norm();
 					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
@@ -1219,7 +1226,7 @@ void System::updateInteractions()
 				deactivated_interaction.push(k);
 			}
 			if (interaction[k].contact.is_active()) {
-				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
+				double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
 				if (sq_sliding_velocity > sq_max_sliding_velocity) {
 					sq_max_sliding_velocity = sq_sliding_velocity;
 				}
@@ -1303,6 +1310,7 @@ void System::buildLubricationTerms_squeeze(bool rhs)
 	if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
+	vec3d GEi, GEj, HEi, HEj;
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
@@ -1312,15 +1320,23 @@ void System::buildLubricationTerms_squeeze(bool rhs)
 					stokes_solver.addResistanceBlocks(i, j,
 						                                inter->RFU_DBlocks(),
 						                                inter->RFU_ODBlock());
-					if (rhs && inter->lubrication.is_active()) {
-						vec3d GEi, GEj;
-						std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
-						if (shearrate_is_1 == false) {
-							GEi *= shear_rate;
-							GEj *= shear_rate;
+					if (rhs) {
+						if (inter->lubrication.is_active()) {
+							std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
+							if (shearrate_is_1 == false) {
+								GEi *= shear_rate;
+								GEj *= shear_rate;
+							}
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
 						}
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
+						if (inter->contact.dashpot.is_active()) {
+							std::tie(GEi, GEj, HEi, HEj) = inter->contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
+						}
 					}
 				}
 			}
@@ -1335,6 +1351,7 @@ void System::buildLubricationTerms_squeeze_tangential(bool rhs)
 	if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
+	vec3d GEi, GEj, HEi, HEj;
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
@@ -1344,19 +1361,27 @@ void System::buildLubricationTerms_squeeze_tangential(bool rhs)
 					stokes_solver.addResistanceBlocks(i, j,
 				                                    inter->RFU_DBlocks(),
 				                                    inter->RFU_ODBlock());
-					if (rhs && inter->lubrication.is_active()) {
-						vec3d GEi, GEj, HEi, HEj;
-						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
-						if (shearrate_is_1 == false) {
-								GEi *= shear_rate;
-								GEj *= shear_rate;
-								HEi *= shear_rate;
-								HEj *= shear_rate;
+					if (rhs) {
+						if (inter->lubrication.is_active()) {
+							std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
+							if (shearrate_is_1 == false) {
+									GEi *= shear_rate;
+									GEj *= shear_rate;
+									HEi *= shear_rate;
+									HEj *= shear_rate;
+							}
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
 						}
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-						stokes_solver.addToRHSTorque(i, HEi);
-						stokes_solver.addToRHSTorque(j, HEj);
+						if (inter->contact.dashpot.is_active()) {
+							std::tie(GEi, GEj, HEi, HEj) = inter->contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
+						}
 					}
 				}
 			}
@@ -1999,6 +2024,7 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			shear_rate = 1;
 		}
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (stress_controlled) {
@@ -2013,6 +2039,7 @@ void System::computeVelocities(bool divided_velocities)
 		sumUpVelocityComponents();
 		// checkForceBalance();
 	} else {
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
 	}
@@ -2097,26 +2124,48 @@ void System::computeBrownianVelocities()
 	}
 }
 
+void System::computeUInf()
+{
+	for (int i=0; i<np; i++) {
+		u_inf[i].reset();
+	}
+	omega_inf.reset();
+	if (!zero_shear) {
+		if (!p.cross_shear) {
+			for (int i=0; i<np; i++) {
+				u_inf[i].x = shear_rate*position[i].z;
+			}
+			omega_inf.y = 0.5*shear_rate;
+		} else {
+			for (int i=0; i<np; i++) {
+				u_inf[i].x = costheta_shear*shear_rate*position[i].z;
+				u_inf[i].y = sintheta_shear*shear_rate*position[i].z;
+				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
+				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
+			}
+			omega_inf.y =  0.5*costheta_shear*shear_rate;
+			omega_inf.x = -0.5*sintheta_shear*shear_rate;
+		}
+	}
+}
+
 void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
 {
+	if (stress_controlled) { // in rate control it is already done in computeVelocities()
+		computeUInf();
+	}
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
+		for (int i=0; i<np; i++) {
+			velocity[i] += u_inf[i];
+			ang_velocity[i] += omega_inf;
+		}
 		if (!p.cross_shear) {
-			for (int i=0; i<np; i++) {
-				velocity[i].x += shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*shear_rate;
-			}
 			vel_difference.x = shear_rate*lz;
 		} else {
-			for (int i=0; i<np; i++) {
-				velocity[i].x += costheta_shear*shear_rate*position[i].z;
-				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
-				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
-			}
 			vel_difference.x = costheta_shear*shear_rate*lz;
 			vel_difference.y = sintheta_shear*shear_rate*lz;
 		}
@@ -2195,14 +2244,14 @@ int System::periodize(vec3d& pos)
 	return z_shift;
 }
 
-// periodize + give z_shift= number of boundaries crossed in z-direction
-void System::periodize_diff(vec3d& pos_diff, int& zshift)
+void System::periodize_diff(vec3d& pos_diff, vec3d& velocity_offset)
 {
-	/* Lees-Edwards boundary condition
-	 * The displacement of the second particle along z direction
-	 * is zshift * lz;
+	/** Periodize a separation vector with Lees-Edwards boundary condition
+
+		On return pos_diff is the separation vector corresponding to the closest copies,
+		and velocity_offset contains the velocity difference produced by Lees-Edwards between the 2 points.
 	 */
-	zshift = 0;
+	int zshift = 0;
 	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff -= shear_disp;
@@ -2226,31 +2275,38 @@ void System::periodize_diff(vec3d& pos_diff, int& zshift)
 			pos_diff.y += ly;
 		}
 	}
+	velocity_offset = zshift*vel_difference;
 }
 
 void System::periodize_diff(vec3d& pos_diff)
 {
-	/* Used in simple periodic boundary condition
-	 * (not Lees-Edwards boundary condition)
+	/** Periodize a separation vector with Lees-Edwards boundary condition
+
+		On return pos_diff is the separation vector corresponding to the closest copies.
 	 */
 	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
+		pos_diff -= shear_disp;
 	} else if (pos_diff.z < -lz_half) {
 		pos_diff.z += lz;
+		pos_diff += shear_disp;
 	}
-	if (pos_diff.x > lx_half) {
+	while (pos_diff.x > lx_half) {
 		pos_diff.x -= lx;
-	} else if (pos_diff.x < -lx_half) {
+	}
+	while (pos_diff.x < -lx_half) {
 		pos_diff.x += lx;
 	}
 	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
+		while (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
+		}
+		while (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
 	}
 }
+
 
 void System::setSystemVolume()
 {

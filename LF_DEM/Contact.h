@@ -43,6 +43,9 @@ private:
 	void (Contact::*frictionlaw)();
 	unsigned int p0;
 	unsigned int p1;
+	double a0; // radii
+	double a1;
+	double a_reduced;
 	//===== forces and stresses ==================== //
 	double kt_scaled;
 	double kr_scaled;
@@ -60,47 +63,13 @@ private:
 	vec3d f_spring_normal; // normal contact force, spring only
 	vec3d f_spring_tan; // tangential contact force, spring only
 	vec3d f_spring_total; // spring only
-	vec3d f_contact_total; // including dashpot
 	vec3d f_rolling;
 	double ft_max; // friction_model = 5;
+	vec3d rolling_velocity;
+	void calcRollingVelocities();
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
-public:
-	/*********************************
-	 *       Public Methods          *
-	 *********************************/
-	//======= internal state =====================//
-	Contact():
-	p0(0),
-	p1(0),
-	kt_scaled(0),
-	kr_scaled(0),
-	kn_scaled(0),
-	mu_static(0),
-	mu_dynamic(0),
-	mu_rolling(0),
-	f_spring_normal_norm(0),
-	normal_load(0),
-	f_spring_normal(0),
-	f_spring_tan(0),
-	f_spring_total(0),
-	f_contact_total(0),
-	f_rolling(0),
-	ft_max(0)
-	{};
 
-	void init(System* sys_, Interaction* int_);
-	ContactDashpot dashpot;
-	void setInteractionData();
-	void setSpringConstants();
-	void activate();
-	void deactivate();
-	vec3d disp_tan; // tangential displacement
-	vec3d disp_rolling;
-	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
-	vec3d prev_disp_rolling;
-	void incrementDisplacements();
-	int state;
 	/* state:
 	 * 0 No contact
 	 * 1 Friction is not activated (critical load model)
@@ -113,10 +82,48 @@ public:
 	void frictionlaw_standard();
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
+
+public:
+	/*********************************
+	 *       Public Methods          *
+	 *********************************/
+	//======= internal state =====================//
+	Contact():
+	mu_static(0),
+	mu_dynamic(0),
+	mu_rolling(0),
+	f_spring_normal_norm(0),
+	normal_load(0),
+	f_spring_normal(0),
+	f_spring_tan(0),
+	f_spring_total(0),
+	f_rolling(0),
+	ft_max(0),
+	rolling_velocity(0),
+	relative_surface_velocity_sqnorm(0)
+	{};
+
+	void init(System* sys_, Interaction* int_);
+	ContactDashpot dashpot;
+	void setInteractionData();
+	void setSpringConstants();
+	void activate();
+	void deactivate();
+	vec3d disp_tan; // tangential displacement
+	vec3d disp_rolling;
+	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
+	vec3d prev_disp_rolling;
+	double relative_surface_velocity_sqnorm;
+	void incrementDisplacements();
+	int state;
+	double get_rcontact()
+	{
+			return a0 + a1;
+	}
 	//===== forces/stresses  ========================== //
 	void calcContactSpringForce();
 	void addUpContactForceTorque();
-	void calcTotalForce(); // only for output
+	vec3d getTotalForce(); // only for output
 	double get_f_normal_norm();
 	double get_normal_load();
 	vec3d get_f_tan();

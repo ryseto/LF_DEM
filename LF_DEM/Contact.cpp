@@ -34,7 +34,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 
 void Contact::setSpringConstants()
 {
-    double ro_12 = interaction->ro_12;
+    double ro_12 = (a0+a1)/2;
     kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
     if (sys->friction) {
         kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -47,6 +47,16 @@ void Contact::setSpringConstants()
 void Contact::setInteractionData()
 {
 	std::tie(p0, p1) = interaction->get_par_num();
+	a0 = sys->radius[p0];
+	a1 = sys->radius[p1];
+	/* [note]
+	 * The reduced (or effective) radius is defined as
+	 * 1/a_reduced = 1/a0 + 1/a1
+	 * This definition comes from sphere vs half-plane geometory of contact mechanics.
+	 * If sphere contacts with a half-plane (a1 = infinity), a_reduced = a0.
+	 * For equal sized spheres, a_reduced = 0.5*a0 = 0.5*a1
+	 */
+	a_reduced = a0*a1/(a0+a1);
 	setSpringConstants();
 	if (sys->friction) {
 		mu_static = sys->p.mu_static;
@@ -56,7 +66,7 @@ void Contact::setInteractionData()
 		}
 	}
 	dashpot.setParticleData();
-	dashpot.setDashpotResistanceCoeffs(kn_scaled, kt_scaled,
+	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
 		                                 sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
@@ -72,7 +82,6 @@ void Contact::activate()
 	f_spring_normal.reset();
 	normal_load = 0;
 	f_spring_total.reset();
-	f_contact_total.reset();
 	if (sys->friction) {
 		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
 			state = 1; // critical load model
@@ -98,7 +107,6 @@ void Contact::deactivate()
 	f_spring_normal_norm = 0;
 	f_spring_normal.reset();
 	f_spring_total.reset();
-	f_contact_total.reset();
 	if (sys->friction) {
 		disp_tan.reset();
 		disp_rolling.reset();
@@ -113,8 +121,26 @@ void Contact::deactivate()
  *	   Contact Forces Methods    *
  *                                *
  *********************************/
+
 void Contact::incrementTangentialDisplacement()
 {
+	/** Computes the tangential surface velocity difference between the two particles as
+	delta_v = (surface_velo_p1 - surface_velo_p0).(Identity - nvec nvec),
+	and increments the tangential spring stretch xi += delta_v*dt
+
+	The surface velocity of p1 must be computed taking into account the Lees-Edwards periodic
+	boundary conditions.
+
+	 if p1 is upper, zshift = -1.
+	 zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
+
+	******************************************************/
+	vec3d translational_deltav = sys->velocity[p1] - sys->velocity[p0] + interaction->vel_offset;
+	vec3d rotational_deltav = - cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
+
+	vec3d relative_surface_velocity = translational_deltav + rotational_deltav;
+ 	relative_surface_velocity -= dot(relative_surface_velocity, interaction->nvec)*interaction->nvec;
+	relative_surface_velocity_sqnorm = relative_surface_velocity.sq_norm();
 	if (sys->in_predictor) {
 		/*
 		 * relative_surface_velocity is true velocity in predictor and corrector.
@@ -122,19 +148,27 @@ void Contact::incrementTangentialDisplacement()
 		 */
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+	disp_tan = prev_disp_tan + relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+}
+
+void Contact::calcRollingVelocities()
+{
+	/**
+	 Calculate rolling velocity
+	 We follow Luding(2008).
+	 The factor 2 is added.
+	 cf. Book by Marshall and Li
+	 equation 3.6.13 ??
+	 */
+	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], interaction->nvec);
 }
 
 void Contact::incrementRollingDisplacement()
 {
 	if (sys->in_predictor) {
-		/*
-		 * relative_surface_velocity is true velocity in predictor and corrector.
-		 * Thus, previous disp_tan is saved to use in corrector.
-		 */
 		prev_disp_rolling = disp_rolling;
 	}
-	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+	disp_rolling = prev_disp_rolling+rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void Contact::incrementDisplacements()
@@ -147,10 +181,9 @@ void Contact::incrementDisplacements()
 	   This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
 	 */
 	if (sys->friction) {
-		interaction->calcRelativeVelocities();
 		incrementTangentialDisplacement();
 		if (sys->rolling_friction) {
-			interaction->calcRollingVelocities();
+			calcRollingVelocities();
 			incrementRollingDisplacement();
 		}
 	}
@@ -181,10 +214,14 @@ void Contact::calcContactSpringForce()
 		}
 		(this->*frictionlaw)();
 	}
-	//	calcScaledForce();
+	if (state <= 1) {
+    f_spring_total = f_spring_normal;
+	} else {
+		f_spring_total = f_spring_normal+f_spring_tan;
+	}
 }
 
-void Contact::calcTotalForce()
+vec3d Contact::getTotalForce()
 {
 	/**
 		\brief Compute the total contact forces (spring+dashpot).
@@ -192,7 +229,10 @@ void Contact::calcTotalForce()
 		(This contains the dashpot, it is NOT only a static force.)
 		*/
 	calcContactSpringForce();
-	f_contact_total = f_spring_normal + f_spring_tan + dashpot.getPairwiseForce();
+	return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],
+                                               sys->velocity[p1],
+                                               sys->ang_velocity[p0],
+                                               sys->ang_velocity[p1]);
 }
 
 void Contact::frictionlaw_standard()
@@ -344,23 +384,18 @@ void Contact::addUpContactForceTorque()
 {
     /* Force
 	 */
-	if (state <= 1) {
-    f_spring_total = f_spring_normal;
-	} else {
-		f_spring_total = f_spring_normal+f_spring_tan;
-	}
 	sys->contact_force[p0] += f_spring_total;
 	sys->contact_force[p1] -= f_spring_total;
 	/* Torque
 	 */
 	if (state >= 2) {
 		vec3d t_ij = cross(interaction->nvec, f_spring_tan);
-		sys->contact_torque[p0] += interaction->a0*t_ij;
-		sys->contact_torque[p1] += interaction->a1*t_ij;
+		sys->contact_torque[p0] += a0*t_ij;
+		sys->contact_torque[p1] += a1*t_ij;
 		if (sys->rolling_friction) {
 			vec3d t_rolling = cross(interaction->nvec, f_rolling);
-			sys->contact_torque[p0] += interaction->a0*t_rolling;
-			sys->contact_torque[p1] -= interaction->a1*t_rolling;
+			sys->contact_torque[p0] += a0*t_rolling;
+			sys->contact_torque[p1] -= a1*t_rolling;
 		}
 	}
 }
@@ -372,7 +407,7 @@ void Contact::calcContactStress()
 	 * The contact force F includes both the spring force and the dashpot force.
 	 */
 	if (is_active() > 0) {
-		contact_stresslet_XF.set(interaction->rvec, f_spring_total + dashpot.getPairwiseForce());
+		contact_stresslet_XF.set(interaction->rvec, getTotalForce());
 	} else {
 		contact_stresslet_XF.reset();
 	}
@@ -398,7 +433,7 @@ double Contact::calcEnergy()
 
 double Contact::get_f_normal_norm()
 {
-	return abs(dot(interaction->nvec, f_contact_total));
+	return abs(dot(interaction->nvec, getTotalForce()));
 }
 
 double Contact::get_normal_load()
@@ -408,7 +443,8 @@ double Contact::get_normal_load()
 
 vec3d Contact::get_f_tan()
 {
-	return f_contact_total - dot(interaction->nvec, f_contact_total)*interaction->nvec;
+	vec3d total_force = getTotalForce();
+	return total_force - dot(interaction->nvec, total_force)*interaction->nvec;
 }
 
 double Contact::get_f_tan_norm()

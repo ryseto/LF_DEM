@@ -283,15 +283,19 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
 	return std::make_pair(b0, b1);
 }
 
-vec3d ContactDashpot::getPairwiseForce()
+vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
+                                   const vec3d &vel_p1,
+                                   const vec3d &ang_vel_p0,
+                                   const vec3d &ang_vel_p1)
 {
 	/** \brief Resistance force acting on particle p0.
-	 *
-	 * This part is used to output data only.
-	 * The dynamics never uses this function, as the dashpot force is actually
-	 * the unknown of the resistance problem solved at every time step.
-	 * force_p1 = -force_p0
-	 *
+
+			Used by the dynamics to get the R_FU*U_inf force term and by the output data.
+
+			vel_p0 (ang_vel_p0) is the TOTAL (angular) velocity of p0 (not the non-affine part),
+			vel_p1 (ang_vel_p1) is the total (angular) velocity of p1.
+			This method deals with Lees-Edwards PBC by itself, so vel_p0 and vel_p1
+			are the actual velocities in System.
 	*/
 
 	/*
@@ -302,19 +306,33 @@ vec3d ContactDashpot::getPairwiseForce()
 	 *
 	 */
 	if (is_active()) {
-		vec3d vi(sys->na_velocity[p0]);
-		vec3d vj(sys->na_velocity[p1]);
+		vec3d vi(vel_p0);
+		vec3d vj(vel_p1);
+		vj += interaction->vel_offset;
 		/* XAU_i */
 		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 
-		vec3d oi(sys->na_ang_velocity[p0]);
-		vec3d oj(sys->na_ang_velocity[p1]);
 		/* YAU_i */
 		force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
 		/* YBO_i */
-		force_p0 += -YB[0]*cross(nvec, oi)            - YB[2]*cross(nvec, oj);
+		force_p0 += -YB[0]*cross(nvec, ang_vel_p0)    - YB[2]*cross(nvec, ang_vel_p1);
 		return force_p0;
 	} else {
 		return vec3d();
+	}
+}
+
+
+std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &u_inf_p0,
+                                                                   const vec3d &u_inf_p1,
+                                                                   const vec3d &omega_inf)
+{
+	/** \brief */
+	if (is_active()) {
+		vec3d force_p0 = getForceOnP0(u_inf_p0, u_inf_p1, omega_inf, omega_inf);
+		vec3d torque_p0 = cross((*nvec)*a0, force_p0);
+		return std::make_tuple(force_p0, -force_p0, torque_p0, (a1/a0)*torque_p0);
+	} else {
+		return std::make_tuple(vec3d(), vec3d(), vec3d(), vec3d());
 	}
 }

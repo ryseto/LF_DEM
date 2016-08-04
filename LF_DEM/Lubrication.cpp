@@ -116,8 +116,7 @@ void Lubrication::setParticleData()
 	 	Set things having to do with particle index and radii.
 		No position, velocity or force data is used here.
 		**/
-	p0 = interaction->p0;
-	p1 = interaction->p1;
+	tie(p0, p1) = interaction->get_par_num();
 	p0_6 = 6*p0;
 	p1_6 = 6*p1;
 	calcLubConstants();
@@ -139,7 +138,7 @@ void Lubrication::deactivate()
 
 void Lubrication::updateActivationState()
 {
-	bool in_range = interaction->r < range && interaction->r > ro;
+	bool in_range = interaction->separation_distance() < range && interaction->separation_distance() > ro;
 	if (!is_active() && in_range) {
 		activate();
 	}
@@ -167,10 +166,10 @@ void Lubrication::setResistanceCoeff(double lub_coeff_, double log_lub_coeff_)
 
 void Lubrication::calcLubConstants()
 {
-	a0 = interaction->a0;
-	a1 = interaction->a1;
-	ro = interaction->ro;
-	ro_12 = interaction->ro_12;
+	a0 = sys->radius[p0];
+	a1 = sys->radius[p1];
+	ro = a0 + a1;
+	ro_12 = ro/2;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
 	lambda_square = lambda*lambda;
@@ -922,10 +921,14 @@ void Lubrication::calcPairwiseForce()
 
 void Lubrication::updateResistanceCoeff()
 {
-	double coeff = 1/(interaction->reduced_gap+sys->p.lub_reduce_parameter);
-	if (coeff>1.) {
-		setResistanceCoeff(coeff, log(coeff));
+	if (interaction->get_reduced_gap() > 0) {
+		double coeff = 1/(interaction->get_reduced_gap()+sys->p.lub_reduce_parameter);
+		if (coeff>1.) {
+			setResistanceCoeff(coeff, log(coeff));
+		} else {
+			setResistanceCoeff(coeff, 0.);
+		}
 	} else {
-		setResistanceCoeff(coeff, 0.);
+		setResistanceCoeff(sys->lub_coeff_contact, sys->log_lub_coeff_contact_tan_total);
 	}
 }

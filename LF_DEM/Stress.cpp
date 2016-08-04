@@ -228,7 +228,7 @@ void System::calcStress()
 				StressTensor sc = interaction[k].contact.getContactStressXF();
 				unsigned int i, j;
 				std::tie(i, j) = interaction[k].get_par_num();
-				double r_ij = interaction[k].ro;
+				double r_ij = interaction[k].contact.get_rcontact();
 				contactstressXF[i] += (radius[i]/r_ij)*sc;
 				contactstressXF[j] += (radius[j]/r_ij)*sc;
 			}

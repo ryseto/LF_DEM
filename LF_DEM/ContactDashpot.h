@@ -64,7 +64,13 @@ private:
 	void deactivate();
 	void setParticleData();
 	//===== forces/stresses  ==========================
-	vec3d getPairwiseForce();
+	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Uinf(const vec3d &u_inf_p0,
+	                                                   const vec3d &u_inf_p1,
+	                                                   const vec3d &omega_inf);
+	vec3d getForceOnP0(const vec3d &vel_p0,
+	                   const vec3d &vel_p1,
+	                   const vec3d &ang_vel_p0,
+	                   const vec3d &ang_vel_p1);
 	void setDashpotResistanceCoeffs(double kn, double kt,
                                   double rtime_normal, double rtime_tan);
 	//=============  Resistance Matrices ====================/

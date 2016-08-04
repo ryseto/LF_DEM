@@ -277,8 +277,8 @@ double GenerateInitConfig::computeGradient()
 	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].contact.is_active()) {
 			std::tie(i, j) = sys.interaction[k].get_par_num();
-			r = sys.interaction[k].r;
-            rcont = sys.interaction[k].ro;
+			r = sys.interaction[k].separation_distance();
+			rcont = sys.radius[i] + sys.radius[j];
 			const vec3d& nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
@@ -569,8 +569,12 @@ double GenerateInitConfig::particleEnergy(int i)
 	double energy = 0;
 	for (auto&& inter : sys.interaction_list[i]){
 		if (inter->contact.is_active()) {
-			double amp = inter->get_a_reduced()*(1/inter->ro-1/inter->r); // negative
-			energy += inter->r*amp*amp;
+			unsigned int p0, p1;
+			std::tie(p0, p1) = inter->get_par_num();
+			double a_reduced = sys.radius[p0]*sys.radius[p1]/(sys.radius[p0]+sys.radius[p1]);
+			double ro = sys.radius[p0]+sys.radius[p1];
+			double amp = a_reduced*(1/ro-1/inter->separation_distance()); // negative
+			energy += inter->separation_distance()*amp*amp;
 		}
 	}
 	return energy;

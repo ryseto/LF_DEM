@@ -16,7 +16,6 @@ void System::evaluateMaxContactVelocity()
 {
 	max_contact_velo_tan = 0;
 	max_contact_velo_normal = 0;
-	max_relative_velocity = 0;
 	double sum_contact_velo_tan = 0;
 	double sum_contact_velo_normal = 0;
 	double sum_sliding_velocity = 0;
@@ -25,24 +24,23 @@ void System::evaluateMaxContactVelocity()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].contact.is_active()) {
 			cnt_contact++;
-			sum_contact_velo_tan += interaction[k].getContactVelocity();
-			sum_contact_velo_normal += abs(interaction[k].getNormalVelocity());
-			if (interaction[k].getContactVelocity() > max_contact_velo_tan) {
+			double contact_velo_tan = sqrt(interaction[k].contact.relative_surface_velocity_sqnorm);
+			double contact_velo_norm = abs(interaction[k].getNormalVelocity());
+			sum_contact_velo_tan += contact_velo_tan;
+			sum_contact_velo_normal += contact_velo_norm;
+			if (contact_velo_tan > max_contact_velo_tan) {
 				// relative_surface_velocity for both static friction and sliding state.
-				max_contact_velo_tan = interaction[k].getContactVelocity();
+				max_contact_velo_tan = contact_velo_tan;
 			}
-			if (abs(interaction[k].getNormalVelocity()) > max_contact_velo_normal) {
-				max_contact_velo_normal = abs(interaction[k].getNormalVelocity());
-			}
-			if (interaction[k].getRelativeVelocity() > max_relative_velocity) {
-				max_relative_velocity = interaction[k].getRelativeVelocity();
+			if (contact_velo_norm > max_contact_velo_normal) {
+				max_contact_velo_normal = contact_velo_norm;
 			}
 			if (interaction[k].contact.state == 3) {
 				/*
 				 * relative_surface_velocity for only sliding state.
 				 */
 				cnt_sliding++;
-				sum_sliding_velocity += interaction[k].getContactVelocity();
+				sum_sliding_velocity += contact_velo_tan;
 			}
 		}
 	}
@@ -233,9 +231,6 @@ void System::analyzeState()
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].lubrication.is_active()) {
 			interaction[k].lubrication.calcPairwiseForce();
-		}
-		if (interaction[k].contact.is_active()) {
-			interaction[k].contact.calcTotalForce();
 		}
 	}
 }
