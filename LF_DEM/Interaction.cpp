@@ -14,7 +14,9 @@ void Interaction::init(System* sys_)
 {
 	sys = sys_;
 	contact.init(sys, this);
-	lubrication.init(sys, this);
+	if (sys->lubrication) {
+		lubrication.init(sys, this);
+	}
 	if (sys->repulsiveforce) {
 		repulsion.init(sys, this);
 	}
@@ -124,7 +126,7 @@ void Interaction::updateState(bool& deactivated)
 	}
 
 	updateContactState();
-	if (contact.is_active() > 0) {
+	if (contact.is_active()) {
 		contact.calcContactSpringForce();
 	}
 	if (sys->lubrication) {
@@ -141,7 +143,7 @@ void Interaction::updateState(bool& deactivated)
 void Interaction::updateContactState()
 {
 	contact_state_changed_after_predictor = false;
-	if (contact.is_active() > 0) {
+	if (contact.is_active()) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {

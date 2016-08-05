@@ -45,8 +45,7 @@ void RepulsiveForce::calcReducedForceNorm()
 		This method returns an amplitude \f$ \hat{f}_{R} = \exp(-h/\lambda)\f$.
 	*/
 	double gap = interaction->get_gap();
-	if (interaction->contact.state == 0) { // why not testing for gap? When particles separate, there is a time step for which gap>0 and contact.state>0, is that the reason?
-		// ---> I forgot why I did so:-)
+	if (gap > 0) {
 		/* separating */
 		if (max_length == -1) {
 			reduced_force_norm = geometric_factor*exp(-gap/screening_length);
@@ -110,7 +109,7 @@ double RepulsiveForce::calcEnergy()
 {
 	double energy;
 	double gap = interaction->get_gap();
-	if (interaction->contact.state == 0) {
+	if (gap > 0) {
 		/* separating */
 		if (max_length == -1) {
 			energy = geometric_factor*screening_length*exp(-gap/screening_length);

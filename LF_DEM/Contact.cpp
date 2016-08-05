@@ -78,6 +78,7 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
+	active = true;
 	f_spring_normal_norm = 0;
 	f_spring_normal.reset();
 	normal_load = 0;
@@ -104,6 +105,7 @@ void Contact::deactivate()
 {
 	// r > a0 + a1
 	state = 0;
+	active = false;
 	f_spring_normal_norm = 0;
 	f_spring_normal.reset();
 	f_spring_total.reset();
@@ -204,6 +206,9 @@ void Contact::calcContactSpringForce()
 	 * h > 0
 	 * f_spring_normal_norm < 0 ..... attractive force
 	 */
+	if (!is_active()) {
+		return;
+	}
 	f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap();
 	f_spring_normal = -f_spring_normal_norm*interaction->nvec;
 	if (sys->friction) {
@@ -228,11 +233,16 @@ vec3d Contact::getTotalForce()
 		!!! Needs to have the correct velocities in the System class!
 		(This contains the dashpot, it is NOT only a static force.)
 		*/
-	calcContactSpringForce();
-	return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],
+	if (is_active()) {
+		calcContactSpringForce();
+		return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],
                                                sys->velocity[p1],
                                                sys->ang_velocity[p0],
                                                sys->ang_velocity[p1]);
+	} else {
+		return vec3d();
+	}
+
 }
 
 void Contact::frictionlaw_standard()
@@ -406,7 +416,7 @@ void Contact::calcContactStress()
 	 * The "xF" contact stress.
 	 * The contact force F includes both the spring force and the dashpot force.
 	 */
-	if (is_active() > 0) {
+	if (is_active()) {
 		contact_stresslet_XF.set(interaction->rvec, getTotalForce());
 	} else {
 		contact_stresslet_XF.reset();

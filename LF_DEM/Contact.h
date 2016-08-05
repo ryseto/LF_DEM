@@ -41,6 +41,7 @@ private:
 	Interaction *interaction;
 
 	void (Contact::*frictionlaw)();
+	bool active;
 	unsigned int p0;
 	unsigned int p1;
 	double a0; // radii
@@ -66,6 +67,8 @@ private:
 	vec3d f_rolling;
 	double ft_max; // friction_model = 5;
 	vec3d rolling_velocity;
+	int state;
+
 	void calcRollingVelocities();
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
@@ -89,6 +92,7 @@ public:
 	 *********************************/
 	//======= internal state =====================//
 	Contact():
+	active(false),
 	mu_static(0),
 	mu_dynamic(0),
 	mu_rolling(0),
@@ -115,7 +119,6 @@ public:
 	vec3d prev_disp_rolling;
 	double relative_surface_velocity_sqnorm;
 	void incrementDisplacements();
-	int state;
 	double get_rcontact()
 	{
 			return a0 + a1;
@@ -149,11 +152,15 @@ public:
 	}
 	inline bool is_active()
 	{
-		return state >= 1;
+		return active;
 	}
 	inline bool is_frictional()
 	{
 		return state >= 2;
+	}
+	int getFrictionState()
+	{
+		return state;
 	}
 };
 #endif /* defined(__LF_DEM__Contact__) */

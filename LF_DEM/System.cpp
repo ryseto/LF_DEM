@@ -2388,7 +2388,7 @@ void System::adjustContactModelParameters()
 	previous_shear_strain = shear_strain;
 
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active() && interaction[k].contact.state>0 ) {
+		if (interaction[k].is_active() && interaction[k].contact.is_active() ) {
 			interaction[k].contact.setSpringConstants();
 		}
 	}

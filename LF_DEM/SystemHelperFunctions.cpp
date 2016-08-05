@@ -35,7 +35,7 @@ void System::evaluateMaxContactVelocity()
 			if (contact_velo_norm > max_contact_velo_normal) {
 				max_contact_velo_normal = contact_velo_norm;
 			}
-			if (interaction[k].contact.state == 3) {
+			if (interaction[k].contact.getFrictionState() == 3) {
 				/*
 				 * relative_surface_velocity for only sliding state.
 				 */
@@ -121,7 +121,7 @@ double System::evaluateAvgContactGap()
 	int nb=0;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].contact.state > 0) {
+			interaction[k].contact.is_active()) {
 			_avg_reduced_gap += interaction[k].get_reduced_gap();
 			nb++;
 		}
@@ -135,7 +135,7 @@ double System::evaluateMaxContactGap()
 	double _max_contact_gap = 0;
 	for (int k= 0; k<nb_interaction; k++) {
 		if (interaction[k].is_active() &&
-			interaction[k].contact.state > 0 &&
+			interaction[k].contact.is_active() &&
 			interaction[k].get_reduced_gap() > _max_contact_gap) {
 			_max_contact_gap = interaction[k].get_reduced_gap();
 		}

@@ -836,7 +836,7 @@ void Simulation::outputIntFileTxt()
 			                      "1 = frictionless contact, "
 			                      "2 = non-sliding frictional, "
 			                      "3 = sliding frictional)",
-			                      "none", 1, sys.interaction[k].contact.state);
+			                      "none", 1, sys.interaction[k].contact.getFrictionState());
 			if (diminish_output == false) {
 				outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
 				                      "none", 3, sys.interaction[k].nvec);
