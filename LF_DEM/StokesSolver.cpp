@@ -113,7 +113,6 @@ void StokesSolver::setOffDiagBlock(int jj, const struct ODBlock& b)
 			odblocks_mf[i] = b;
 		}
 	}
-	return;
 }
 
 void StokesSolver::insertDBlockValues(double *matrix_x,
@@ -199,7 +198,7 @@ void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int>& pv
 {
 	/**
 	 Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array.
-	 You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
+	 You must give a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
 	 */
 	for (int col=0; col<6; col++) {
 		matrix_p[col] = pvalues[col];
@@ -368,7 +367,6 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 		//
 		// for 6j+2 --> 6j+5: same idea
 
-		//int j6 = 6*j;
 		auto od_nzero_nb = 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j]);
 		index_chol_ix[0] = 18*j+30*odbrows_table_ff[j];
 		for (int col=1; col<6; col++) {
