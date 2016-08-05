@@ -222,7 +222,7 @@ void Simulation::resolveUnitSystem(string unit_force)
 		for (const auto& x: input_values) {
 			string value_name = x.first;
 			string unit = x.second.unit;
-			if (unit != unit_force) {
+			if (unit != unit_force && unit != "strain") {
 				error_str << "Error: input value \"" << value_name << "\" has an unknown unit \"" << unit << "\"" << endl;
 			}
 		}
