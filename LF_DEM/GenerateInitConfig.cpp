@@ -362,7 +362,8 @@ double GenerateInitConfig::gradientDescent()
 
 void GenerateInitConfig::putRandom()
 {
-    sys.allocatePositionRadius();
+	sys.position.resize(np);
+	sys.radius.resize(np);
 #ifndef USE_DSFMT
     rand_gen.seed(rand_seed);
 #endif

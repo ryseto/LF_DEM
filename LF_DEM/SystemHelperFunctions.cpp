@@ -78,14 +78,14 @@ double System::evaluateMaxVelocity()
 	return sqrt(sq_max_velocity);
 }
 
-double System::evaluateMaxAngVelocity()
+double evaluateMaxAngVelocity(const System & sys)
 {
 	double _max_ang_velocity = 0;
-	for (int i = 0; i < np; i++) {
-		vec3d na_ang_velocity_tmp = ang_velocity[i];
-		if (!zero_shear) {
-			if (!p.cross_shear) {
-				na_ang_velocity_tmp.y -= 0.5*shear_rate;
+	for (int i = 0; i < sys.np; i++) {
+		vec3d na_ang_velocity_tmp = sys.ang_velocity[i];
+		if (!sys.zero_shear) {
+			if (!sys.p.cross_shear) {
+				na_ang_velocity_tmp.y -= 0.5*sys.get_shear_rate();
 			}
 			else {
 				na_ang_velocity_tmp.y -= 0.5*costheta_shear*shear_rate;

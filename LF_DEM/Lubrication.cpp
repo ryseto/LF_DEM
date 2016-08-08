@@ -928,7 +928,5 @@ void Lubrication::updateResistanceCoeff()
 		} else {
 			setResistanceCoeff(coeff, 0.);
 		}
-	} else {
-		setResistanceCoeff(sys->lub_coeff_contact, sys->log_lub_coeff_contact_tan_total);
 	}
 }

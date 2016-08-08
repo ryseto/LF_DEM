@@ -149,7 +149,6 @@ private:
 	double evaluateMaxFcTangential();
 	void evaluateMaxContactVelocity();
 	double evaluateMaxVelocity();
-	double evaluateMaxAngVelocity();
 	void countNumberOfContact();
 	void forceResultantReset();
 	void forceResultantLubricationForce();
@@ -263,18 +262,7 @@ protected:
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;
-	/* double kn; */
-	/* double kt; */
-	/* double kr; */
-	double kn_master;
-	double kt_master;
-	double kr_master;
-	double lub_coeff_contact;
 	double system_volume;
-	// resistance coeffient for normal mode
-	double log_lub_coeff_contact_tan_dashpot;
-	double log_lub_coeff_contact_tan_lubrication;
-	double log_lub_coeff_contact_tan_total;
 	std::vector < std::set <Interaction*> > interaction_list;
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
@@ -287,7 +275,6 @@ protected:
 	//	double dimensionless_number;
 	double max_velocity;
 	double max_sliding_velocity;
-	double max_ang_velocity;
 	double min_reduced_gap;
 	double max_contact_gap;
 	double max_disp_tan;
@@ -341,7 +328,6 @@ protected:
 	void setInteractions_GenerateInitConfig();
 	void setupSystemPreConfiguration(std::string control, bool is2d);
 	void setupSystemPostConfiguration();
-	void allocatePositionRadius();
 	void allocateRessourcesPreConfiguration();
 	void allocateRessourcesPostConfiguration();
 	void timeEvolution(double time_end, double strain_end);

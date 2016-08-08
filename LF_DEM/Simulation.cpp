@@ -614,7 +614,7 @@ void Simulation::outputData()
 	/* maximum velocity
 	 */
 	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
-	outdata.entryData("max angular velocity", "velocity", 1, sys.max_ang_velocity);
+	outdata.entryData("max angular velocity", "velocity", 1, sys.evaluateMaxAngVelocity());
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", "time", 1, sys.avg_dt);

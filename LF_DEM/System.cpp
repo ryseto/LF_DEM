@@ -258,12 +258,6 @@ void System::setInteractions_GenerateInitConfig()
 	checkNewInteraction();
 }
 
-void System::allocatePositionRadius()
-{
-	position.resize(np);
-	radius.resize(np);
-}
-
 void System::setConfiguration(const vector <vec3d>& initial_positions,
 							  const vector <double>& radii)
 {
@@ -279,7 +273,8 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	if (p.np_fixed > 0) {
 		mobile_fixed = true;
 	}
-	allocatePositionRadius();
+	position.resize(np);
+	radius.resize(np);
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
@@ -385,8 +380,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	} else {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
-	lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
-	log_lub_coeff_contact_tan_total = log(1/p.lub_reduce_parameter);
 
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
@@ -2151,8 +2144,6 @@ void System::computeUInf()
 			for (int i=0; i<np; i++) {
 				u_inf[i].x = costheta_shear*shear_rate*position[i].z;
 				u_inf[i].y = sintheta_shear*shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
-				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
 			}
 			omega_inf.y =  0.5*costheta_shear*shear_rate;
 			omega_inf.x = -0.5*sintheta_shear*shear_rate;
