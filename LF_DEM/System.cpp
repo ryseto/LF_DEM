@@ -1898,6 +1898,22 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = 1;
+	} else if (test_simulation == 4) {
+		static double time_next = 10;
+		if (time_ > time_next) {
+			if (zero_shear == true) {
+				zero_shear = false;
+			} else {
+				zero_shear = true;
+			}
+			time_next += 10;
+		}
+		if (zero_shear) {
+			for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+				na_velocity[i].reset();
+				na_ang_velocity[i].reset();
+			}
+		}
 	} else if (test_simulation >= 10 && test_simulation < 20) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel

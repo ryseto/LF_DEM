@@ -73,6 +73,8 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.repulsiveforce = false;
 	sys.p.interaction_range = 2.5;
 	sys.p.lub_max_gap = 0.5;
+	sys.p.contact_relaxation_time = 1e-3;
+	sys.p.contact_relaxation_time_tan = 1e-3;
 	sys.allocateRessourcesPreConfiguration();
 
 	sys.setBoxSize(lx, ly, lz);
