@@ -6,7 +6,6 @@
 //  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#include "Simulation.h"
 #include <cmath>
 #include <map>
 #include <string>
@@ -14,7 +13,9 @@
 #include <sstream>
 #include <cctype>
 #include <stdexcept>
+#include "Simulation.h"
 #include "Timer.h"
+#include "SystemHelperFunctions.h"
 
 using namespace std;
 
@@ -99,7 +100,7 @@ void Simulation::handleEventsShearJamming()
 	}
 	if (p.disp_max < 1e-6) {
 		cout << "jammed" << endl;
-		evaluateData();
+		sys.calcStress();
 		outputData(); // new
 		outputConfigurationBinary();
 		outputConfigurationData();
@@ -146,7 +147,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 {
 	outputConfigurationBinary(); // generic, for recovery if crash
 	if (output_events.find("data") != output_events.end()) {
-		evaluateData();
+		sys.calcStress();
 		outputData();
 	}
 
@@ -309,7 +310,7 @@ void Simulation::simulationInverseYield(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
+	sys.calcStress();
 	outputData(); // new
 	outputConfigurationBinary();
 	outputConfigurationData();
@@ -528,21 +529,6 @@ double Simulation::getRate()
 	}
 }
 
-void Simulation::evaluateData()
-{
-	/**
-	 \brief Get rheological data from the System class.
-
-	 In this method we keep the internal units. There is no conversion to output units at this stage
-
-	 */
-	sys.analyzeState();
-	sys.calcStress();
-	//	if (sys.p.lubrication_model > 0) {
-	//		sys.calcLubricationForce();
-	//	}
-}
-
 void Simulation::outputData()
 {
 	/**
@@ -599,22 +585,28 @@ void Simulation::outputData()
 	outdata.entryData("particle pressure contact", "stress", 1, sys.total_contact_stressXF.getParticlePressure());
 	/* energy
 	 */
-	outdata.entryData("energy", "none", 1, sys.get_total_energy());
+	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
 	/* maximum deformation of contact bond
 	 */
-	outdata.entryData("min gap", "none", 1, sys.min_reduced_gap);
-	outdata.entryData("max gap(cohesion)", "none", 1, sys.max_contact_gap);
-	outdata.entryData("max tangential displacement", "none", 1, sys.max_disp_tan);
-	outdata.entryData("max rolling displacement", "none", 1, sys.max_disp_rolling);
+	outdata.entryData("min gap", "none", 1, evaluateMinGap(sys));
+	if (sys.cohesion) {
+		outdata.entryData("max gap(cohesion)", "none", 1, evaluateMaxContactGap(sys));
+	}
+	outdata.entryData("max tangential displacement", "none", 1, evaluateMaxDispTan(sys));
+	outdata.entryData("max rolling displacement", "none", 1, evaluateMaxDispRolling(sys));
 	/* contact number
 	 */
-	outdata.entryData("contact number", "none", 1, sys.getContactNumber());
-	outdata.entryData("frictional contact number", "none", 1, sys.getFrictionalContactNumber());
+	unsigned int contact_nb, frictional_contact_nb;
+	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
+	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
+	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
+	outdata.entryData("contact number", "none", 1, contact_nb_per_particle);
+	outdata.entryData("frictional contact number", "none", 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
 	/* maximum velocity
 	 */
 	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
-	outdata.entryData("max angular velocity", "velocity", 1, sys.evaluateMaxAngVelocity());
+	outdata.entryData("max angular velocity", "velocity", 1, evaluateMaxAngVelocity(sys));
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", "time", 1, sys.avg_dt);

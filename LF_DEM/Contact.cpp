@@ -227,7 +227,7 @@ void Contact::calcContactSpringForce()
 	}
 }
 
-vec3d Contact::getTotalForce()
+vec3d Contact::getTotalForce() const
 {
 	/**
 		\brief Compute the total contact forces (spring+dashpot).
@@ -235,7 +235,6 @@ vec3d Contact::getTotalForce()
 		(This contains the dashpot, it is NOT only a static force.)
 		*/
 	if (is_active()) {
-		calcContactSpringForce();
 		return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],
                                                sys->velocity[p1],
                                                sys->ang_velocity[p0],
@@ -290,7 +289,7 @@ void Contact::frictionlaw_criticalload()
 {
 	/* Since reduced_gap < 0, f_spring_normal_norm is always positive.
 	 * f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
-	 * F_normal = f_spring_normal_norm(positive) + lubforce_p0_normal
+	 * F_normal = f_spring_normal_norm(positive) + dashpot_force_p0_normal
 	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
@@ -318,7 +317,7 @@ void Contact::frictionlaw_criticalload_mu_inf()
 {
 	/* Since reduced_gap < 0, f_spring_normal_norm is always positive.
 	 * f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
-	 * F_normal = f_spring_normal_norm(positive) + lubforce_p0_normal
+	 * F_normal = f_spring_normal_norm(positive) + dashpot_force_p0_normal
 	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
@@ -424,7 +423,7 @@ void Contact::calcContactStress()
 	}
 }
 
-double Contact::calcEnergy()
+double Contact::calcEnergy() const
 {
 	double overlap = -interaction->get_reduced_gap();
 	double sq_tan_norm = disp_tan.sq_norm();
@@ -442,17 +441,17 @@ double Contact::calcEnergy()
 	return energy;
 }
 
-vec3d Contact::getNormalForce()
+vec3d Contact::getNormalForce() const
 {
 	return dot(interaction->nvec, getTotalForce())*interaction->nvec;
 }
 
-double Contact::get_normal_load()
+double Contact::get_normal_load() const
 {
 	return normal_load;
 }
 
-vec3d Contact::getTangentialForce()
+vec3d Contact::getTangentialForce() const
 {
 	vec3d total_force = getTotalForce();
 	return total_force - dot(interaction->nvec, total_force)*interaction->nvec;

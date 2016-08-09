@@ -170,7 +170,6 @@ public:
 	/*
 	 * For outputs
 	 */
-	void evaluateData();
 	void createDataHeader(std::stringstream& data_header);
 	void outputDataHeader(std::ofstream& fout);
 	void getSnapshotHeader(std::stringstream& snapshot_header);

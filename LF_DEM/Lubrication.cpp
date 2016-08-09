@@ -132,7 +132,6 @@ void Lubrication::activate()
 void Lubrication::deactivate()
 {
 	_active = false;
-	lubforce_p0.reset();
 	sys->updateNumberOfPairwiseResistances(p0, p1, -1);
 }
 
@@ -877,11 +876,13 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
  * lubforce_p1 = -lubforce_p0
  *
  */
-void Lubrication::calcPairwiseForce()
+vec3d Lubrication::getTotalForce()
 {
-	/*
-	 *  First: -A*(U-Uinf) term
-	 */
+	/**
+	* \brief The total lubrication force acting on p0.
+	* NOTE: the velocities must be computed first by the System class.
+	*/
+
 	/* Eq. (1.6a) in Jeffrey&Onishi 1984
 	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
 	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
@@ -896,7 +897,7 @@ void Lubrication::calcPairwiseForce()
 		calcXYFunctions();
 	}
 	/* XAU_i */
-	lubforce_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
+	vec3d lubforce_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 	if (tangential) {
 		vec3d oi(sys->na_ang_velocity[p0]);
 		vec3d oj(sys->na_ang_velocity[p1]);
@@ -915,7 +916,7 @@ void Lubrication::calcPairwiseForce()
 		/* XGE_i */
 		lubforce_p0 += sr*GEi;
 	}
-	return;
+	return lubforce_p0;
 }
 
 

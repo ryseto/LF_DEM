@@ -119,24 +119,25 @@ public:
 	vec3d prev_disp_rolling;
 	double relative_surface_velocity_sqnorm;
 	void incrementDisplacements();
-	double get_rcontact()
+	double get_rcontact() const
 	{
 			return a0 + a1;
 	}
 	//===== forces/stresses  ========================== //
 	void calcContactSpringForce();
 	void addUpContactForceTorque();
-	vec3d getTotalForce();
-	vec3d getNormalForce();
-	vec3d getTangentialForce();
-	double get_normal_load();
+	vec3d getTotalForce() const;
+	vec3d getNormalForce() const;
+	vec3d getTangentialForce() const;
+	double get_normal_load() const;
 	void calcContactStress();
-	StressTensor getContactStressXF()
+	StressTensor getContactStressXF() const
 	{
 		return contact_stresslet_XF;
 	}
-	double calcEnergy();
-	struct contact_state getState() {
+	double calcEnergy() const;
+	struct contact_state getState() const
+	{
 		struct contact_state cs;
 		cs.p0 = p0;
 		cs.p1 = p1;
@@ -144,21 +145,22 @@ public:
 		cs.disp_rolling = disp_rolling;
 		return cs;
 	};
-	void setState(const struct contact_state& cs) {
+	void setState(const struct contact_state& cs)
+	{
 		p0 = cs.p0;
 		p1 = cs.p1;
 		disp_tan = cs.disp_tan;
 		disp_rolling = cs.disp_rolling;
 	}
-	inline bool is_active()
+	bool is_active() const
 	{
 		return active;
 	}
-	inline bool is_frictional()
+	bool is_frictional() const
 	{
 		return state >= 2;
 	}
-	int getFrictionState()
+	int getFrictionState() const
 	{
 		return state;
 	}

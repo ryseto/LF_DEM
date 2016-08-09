@@ -10,6 +10,8 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
+#include "SystemHelperFunctions.h"
+
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 #endif
@@ -89,9 +91,6 @@ eventLookUp(NULL)
 	amplitudes.cohesion = 0;
 	amplitudes.critical_normal_force = 0;
 	max_sliding_velocity = 0;
-	max_contact_gap = 0;
-	max_disp_rolling = 0;
-	max_disp_tan = 0;
 	total_stress = 0;
 	total_hydro_stress = 0;
 	total_contact_stressXF = 0;
@@ -755,10 +754,10 @@ void System::checkForceBalance()
 	unsigned int i, j;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].lubrication.calcPairwiseForce();
 			std::tie(i, j) = interaction[k].get_par_num();
-			forceResultant[i] += interaction[k].lubrication.getTotalForce();
-			forceResultant[j] -= interaction[k].lubrication.getTotalForce();
+			vec3d lubforce_i = interaction[k].lubrication.getTotalForce();
+			forceResultant[i] += lubforce_i;
+			forceResultant[j] -= lubforce_i;
 		}
 	}
 	// 2nd way: works
@@ -792,11 +791,12 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (calc_stress) {
 		if (wall_rheology) {
 			wallForces();
-			for (int k=0; k<nb_interaction; k++) {
-				if (interaction[k].is_active()) {
-					interaction[k].lubrication.calcPairwiseForce();
-				}
-			}
+			// @@@ lubforce_p0 never used
+			// for (int k=0; k<nb_interaction; k++) {
+			// 	if (interaction[k].is_active()) {
+			// 		interaction[k].lubrication.calcPairwiseForce();
+			// 	}
+			// }
 		}
 		calcStressPerParticle();
 		if (wall_rheology) {
@@ -885,11 +885,12 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	if (calc_stress) {
 		if (wall_rheology) {
 			wallForces();
-			for (int k=0; k<nb_interaction; k++) {
-				if (interaction[k].is_active()) {
-					interaction[k].lubrication.calcPairwiseForce();
-				}
-			}
+			// @@@ lubforce_p0 never used
+			// for (int k=0; k<nb_interaction; k++) {
+			// 	if (interaction[k].is_active()) {
+			// 		interaction[k].lubrication.calcPairwiseForce();
+			// 	}
+			// }
 		}
 		calcStressPerParticle(); // stress compornents
 	}
@@ -2319,10 +2320,9 @@ void System::adjustContactModelParameters()
 	 * Additionally, this routine estimates the time step dt.
 	 */
 
-	analyzeState();
-
-	double overlap = -min_reduced_gap;
+	double overlap = -evaluateMinGap(*this);
 	overlap_avg.update(overlap, shear_strain);
+	double max_disp_tan = evaluateMaxDispTan(*this);
 	max_disp_tan_avg.update(max_disp_tan, shear_strain);
 	kn_avg.update(p.kn, shear_strain);
 	kt_avg.update(p.kt, shear_strain);

@@ -105,7 +105,7 @@ void RepulsiveForce::calcStressXF()
 	stresslet_XF.set(interaction->rvec, force_vector);
 }
 
-double RepulsiveForce::calcEnergy()
+double RepulsiveForce::calcEnergy() const
 {
 	double energy;
 	double gap = interaction->get_gap();

@@ -59,22 +59,22 @@ private:
  public:
 	ContactDashpot();
 	void init(System *sys_, Interaction *int_);
-	inline bool is_active() {return _active;};
+	bool is_active() const {return _active;};
 	void activate();
 	void deactivate();
 	void setParticleData();
 	//===== forces/stresses  ==========================
 	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Uinf(const vec3d &u_inf_p0,
 	                                                   const vec3d &u_inf_p1,
-	                                                   const vec3d &omega_inf);
+	                                                   const vec3d &omega_inf) const;
 	vec3d getForceOnP0(const vec3d &vel_p0,
 	                   const vec3d &vel_p1,
 	                   const vec3d &ang_vel_p0,
-	                   const vec3d &ang_vel_p1);
+	                   const vec3d &ang_vel_p1) const;
 	void setDashpotResistanceCoeffs(double kn, double kt,
                                   double rtime_normal, double rtime_tan);
 	//=============  Resistance Matrices ====================/
-	struct ODBlock RFU_ODBlock();
-	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();
+	struct ODBlock RFU_ODBlock() const;
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks() const;
 };
 #endif /* defined(__LF_DEM__ContactDashpot__) */

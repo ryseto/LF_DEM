@@ -73,7 +73,7 @@ public:
 	{
 		return stresslet_XF;
 	}
-	double calcEnergy();
+	double calcEnergy() const;
 
 };
 #endif /* defined(__LF_DEM__RepulsiveForce__) */

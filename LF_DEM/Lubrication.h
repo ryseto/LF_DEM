@@ -110,23 +110,20 @@ private:
 	bool tangential; // 1: normal; 2: normal+tangential
 	void init(System *sys_, Interaction *int_);
 	void setParent(Interaction *int_){interaction = int_;};
-	inline bool is_active() {return _active;};
+	inline bool is_active() const {return _active;};
 	void activate();
 	void deactivate();
 	void updateActivationState();
 	void setParticleData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
-    vec3d lubforce_p0; // lubforce_p1 = - lubforce_p0
-	void calcPairwiseForce();
 	vec3d getTangentialForce()
 	{
+		vec3d lubforce_p0 = getTotalForce();
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
-	vec3d getTotalForce()
-	{
-		return lubforce_p0;
-	}
+	vec3d getTotalForce();
+
 	void addMEStresslet(double cos_theta_shear,
 	                    double sin_theta_shear,
 	                    double shear_rate,

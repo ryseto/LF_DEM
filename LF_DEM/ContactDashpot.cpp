@@ -177,7 +177,7 @@ void ContactDashpot::calcDashpotResistances()
 }
 
 // for FT/UW version
-struct ODBlock ContactDashpot::RFU_ODBlock()
+struct ODBlock ContactDashpot::RFU_ODBlock() const
 {
 	double n0n0 = nvec->x*nvec->x;
 	double n0n1 = nvec->x*nvec->y;
@@ -218,7 +218,7 @@ struct ODBlock ContactDashpot::RFU_ODBlock()
 }
 
 // Diagonal Blocks Terms, FT/UW version
-std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
+std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks() const
 {
 	struct DBlock b0;
 	struct DBlock b1;
@@ -286,7 +286,7 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks()
 vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
                                    const vec3d &vel_p1,
                                    const vec3d &ang_vel_p0,
-                                   const vec3d &ang_vel_p1)
+                                   const vec3d &ang_vel_p1) const
 {
 	/** \brief Resistance force acting on particle p0.
 
@@ -325,7 +325,7 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 
 std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &u_inf_p0,
                                                                    const vec3d &u_inf_p1,
-                                                                   const vec3d &omega_inf)
+                                                                   const vec3d &omega_inf) const
 {
 	/** \brief */
 	if (is_active()) {

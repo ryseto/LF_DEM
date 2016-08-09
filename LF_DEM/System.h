@@ -79,7 +79,6 @@ private:
 	double lz_half; // =lz/2
 	double shear_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
-	double total_energy;
 	int linalg_size;
 	double costheta_shear;
 	double sintheta_shear;
@@ -141,15 +140,6 @@ private:
 	void addLubricationStress(Interaction &);
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(int, int);
-	double evaluateMinGap();
-	double evaluateMaxContactGap();
-	double evaluateMaxDispTan();
-	double evaluateMaxDispRolling();
-	double evaluateMaxFcNormal();
-	double evaluateMaxFcTangential();
-	void evaluateMaxContactVelocity();
-	double evaluateMaxVelocity();
-	void countNumberOfContact();
 	void forceResultantReset();
 	void forceResultantLubricationForce();
 	void forceResultantInterpaticleForces();
@@ -275,20 +265,7 @@ protected:
 	//	double dimensionless_number;
 	double max_velocity;
 	double max_sliding_velocity;
-	double min_reduced_gap;
-	double max_contact_gap;
-	double max_disp_tan;
-	double max_disp_rolling;
 	std::queue<int> deactivated_interaction;
-	double max_contact_velo_tan;
-	double max_contact_velo_normal;
-	double ave_contact_velo_tan;
-	double ave_contact_velo_normal;
-	double ave_sliding_velocity;
-	int contact_nb; // gap < 0
-	int fric_contact_nb; // fn > f* in the critical load model
-	double max_fc_normal;
-	double max_fc_tan;
 	std::string simu_name;
 	double target_stress;
 	double init_strain_shear_rate_limit;
@@ -350,8 +327,6 @@ protected:
 						  double &stress_rr,
 						  double &stress_thetatheta,
 						  double &stress_rtheta);
-	void analyzeState();
-	double evaluateAvgContactGap();
 	StokesSolver stokes_solver;
 	void initializeBoxing();
     //void calcLubricationForce(); // for visualization of force chains
@@ -373,21 +348,6 @@ protected:
 		lz_half = 0.5*lz;
 	}
 
-	unsigned int getTotalNumberOfContacts()
-	{
-		return contact_nb;
-	}
-
-	double getContactNumber()
-	{
-		return (double)2*contact_nb/np;
-	}
-
-	double getFrictionalContactNumber()
-	{
-		return (double)2*fric_contact_nb/np;
-	}
-
 	double get_lx()
 	{
 		return lx;
@@ -398,22 +358,22 @@ protected:
 		return ly;
 	}
 
-	inline double get_lz()
+	double get_lz()
 	{
 		return lz;
 	}
 
-	inline double Lx_half()
+	double Lx_half()
 	{
 		return lx_half;
 	}
 
-	inline double Ly_half()
+	double Ly_half()
 	{
 		return ly_half;
 	}
 
-	inline double Lz_half()
+	double Lz_half()
 	{
 		return lz_half;
 	}
@@ -428,7 +388,7 @@ protected:
 		return time_;
 	}
 
-	inline double get_shear_rate()
+	double get_shear_rate()
 	{
 		return shear_rate;
 	}
@@ -440,42 +400,42 @@ protected:
 		return vel_difference;
 	}
 
-	inline void set_np(int val)
+	void set_np(int val)
 	{
 		np = val;
 	}
 
-    inline void set_np_mobile(int val)
-    {
-        np_mobile = val;
-    }
+	void set_np_mobile(int val)
+	{
+		np_mobile = val;
+	}
 
-	inline int get_np()
+	int get_np() const
 	{
 		return np;
 	}
 
-	inline double get_shear_strain()
+	double get_shear_strain()
 	{
 		return shear_strain;
 	}
 
-	inline double get_angle_wheel()
+	double get_angle_wheel()
 	{
 		return angle_wheel;
 	}
 
-	inline double get_omega_wheel()
+	double get_omega_wheel()
 	{
 		return omega_wheel_in-omega_wheel_out;
 	}
 
-	inline void set_dt(double val)
+	void set_dt(double val)
 	{
 		dt = val;
 	}
 
-	inline double get_nb_of_active_interactions()
+	double get_nb_of_active_interactions()
 	{
 		return nb_of_active_interactions_mm + nb_of_active_interactions_mf + nb_of_active_interactions_ff;
 	}
@@ -483,11 +443,6 @@ protected:
 	int get_total_num_timesteps()
 	{
 		return total_num_timesteps;
-	}
-
-	double get_total_energy()
-	{
-		return total_energy;
 	}
 
 	std::tuple<double,double> getCosSinShearAngle()
