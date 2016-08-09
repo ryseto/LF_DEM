@@ -83,6 +83,8 @@ private:
 	int linalg_size;
 	double costheta_shear;
 	double sintheta_shear;
+	double shear_rate;
+
 	/* Velocity difference between top and bottom
 	 * in Lees-Edwards boundary condition
 	 * vel_difference = shear_rate * lz
@@ -277,7 +279,6 @@ protected:
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
-	double shear_rate;
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	/* For non-Brownian suspension:
 	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
@@ -355,8 +356,7 @@ protected:
 
 	void updateUnscaledContactmodel();
 	int periodize(vec3d&);
-	void periodize_diff(vec3d&, vec3d&);
-	void periodize_diff(vec3d&);
+	int periodize_diff(vec3d&);
 	void calcStress();
 	void calcStressPerParticle();
 	void calcTotalStressPerParticle();
@@ -447,9 +447,11 @@ protected:
 		return shear_rate;
 	}
 
-	inline void set_shear_rate(double sr)
+	void set_shear_rate(double sr);
+
+	vec3d get_vel_difference()
 	{
-		shear_rate = sr;
+		return vel_difference;
 	}
 
 	inline void set_np(int val)

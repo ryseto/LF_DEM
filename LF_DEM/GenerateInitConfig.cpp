@@ -68,10 +68,12 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_movable = np;
 	}
 	sys.set_np(np);
-    sys.set_np_mobile(np_movable);
+  sys.set_np_mobile(np_movable);
 	sys.friction = false;
 	sys.repulsiveforce = false;
 	sys.p.interaction_range = 2.5;
+	sys.p.lubrication_model = "tangential";
+	sys.lubrication = true;
 	sys.p.lub_max_gap = 0.5;
 	sys.p.contact_relaxation_time = 1e-3;
 	sys.p.contact_relaxation_time_tan = 1e-3;

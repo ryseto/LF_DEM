@@ -51,6 +51,7 @@ private:
 	std::string output_unit_scales;
 	double target_stress_input;
 	double input_rate;
+	double dimensionless_rate;
 	time_t time_strain_0;
 	time_t time_strain_1;
 	time_t time_strain_end;

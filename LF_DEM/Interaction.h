@@ -71,7 +71,7 @@ public:
 	RepulsiveForce repulsion;
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
-	vec3d vel_offset;
+	int z_offset;
 
 	/*********************************
 	 *       Public Methods          *
@@ -86,12 +86,13 @@ public:
 	r(0),
 	interaction_range(0),
 	rvec(0),
-	nvec(0)
+	nvec(0),
+	z_offset(0)
 	{};
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
-	 * - r_vec, vel_offset, _r, and nr_vec
+	 * - r_vec, z_offset, _r, and nr_vec
 	 * - contact_velocity_tan
 	 * - disp_tan
 	 * - Fc_normal and Fc_tan

@@ -54,6 +54,7 @@ wagnerhash(time_t t, clock_t c)
 
 
 System::System(ParameterSet& ps, list <Event>& ev):
+shear_rate(0),
 vel_difference(0),
 omega_inf(0),
 events(ev),
@@ -73,7 +74,6 @@ mobile_fixed(false),
 couette_stress(false),
 dt(0),
 avg_dt(0),
-shear_rate(0),
 shear_disp(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
@@ -1799,6 +1799,17 @@ void System::rescaleVelHydroStressControlledFixed()
 	}
 }
 
+void System::set_shear_rate(double sr)
+{
+	shear_rate = sr;
+	if (!p.cross_shear) {
+		vel_difference.x = shear_rate*lz;
+	} else {
+		vel_difference.x = costheta_shear*shear_rate*lz;
+		vel_difference.y = sintheta_shear*shear_rate*lz;
+	}
+}
+
 void System::computeShearRate()
 {
 	/**
@@ -1816,10 +1827,10 @@ void System::computeShearRate()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = shearStressComponent(total_hydro_stress, p.theta_shear);
-	shear_rate = shearstress_hyd/viscosity_hyd;
+	set_shear_rate(shearstress_hyd/viscosity_hyd);
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
-			shear_rate = init_shear_rate_limit;
+			set_shear_rate(init_shear_rate_limit);
 		}
 	}
 }
@@ -1850,11 +1861,11 @@ void System::computeShearRateWalls()
 	total_rate_indep_wall_shear_stress /= wall_surface;
 
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
+	set_shear_rate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
 
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
-			shear_rate = init_shear_rate_limit;
+			set_shear_rate(init_shear_rate_limit);
 		}
 	}
 	if(test_simulation == 31){
@@ -2038,7 +2049,7 @@ void System::computeVelocities(bool divided_velocities)
 	stokes_solver.resetRHS();
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
-			shear_rate = 1;
+			set_shear_rate(1);
 		}
 		computeUInf();
 		setFixedParticleVelocities();
@@ -2179,12 +2190,6 @@ void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
 			velocity[i] += u_inf[i];
 			ang_velocity[i] += omega_inf;
 		}
-		if (!p.cross_shear) {
-			vel_difference.x = shear_rate*lz;
-		} else {
-			vel_difference.x = costheta_shear*shear_rate*lz;
-			vel_difference.y = sintheta_shear*shear_rate*lz;
-		}
 	}
 }
 
@@ -2260,7 +2265,7 @@ int System::periodize(vec3d& pos)
 	return z_shift;
 }
 
-void System::periodize_diff(vec3d& pos_diff, vec3d& velocity_offset)
+int System::periodize_diff(vec3d& pos_diff)
 {
 	/** Periodize a separation vector with Lees-Edwards boundary condition
 
@@ -2291,38 +2296,8 @@ void System::periodize_diff(vec3d& pos_diff, vec3d& velocity_offset)
 			pos_diff.y += ly;
 		}
 	}
-	velocity_offset = zshift*vel_difference;
+	return zshift;
 }
-
-void System::periodize_diff(vec3d& pos_diff)
-{
-	/** Periodize a separation vector with Lees-Edwards boundary condition
-
-		On return pos_diff is the separation vector corresponding to the closest copies.
-	 */
-	if (pos_diff.z > lz_half) {
-		pos_diff.z -= lz;
-		pos_diff -= shear_disp;
-	} else if (pos_diff.z < -lz_half) {
-		pos_diff.z += lz;
-		pos_diff += shear_disp;
-	}
-	while (pos_diff.x > lx_half) {
-		pos_diff.x -= lx;
-	}
-	while (pos_diff.x < -lx_half) {
-		pos_diff.x += lx;
-	}
-	if (!twodimension) {
-		while (pos_diff.y > ly_half) {
-			pos_diff.y -= ly;
-		}
-		while (pos_diff.y < -ly_half) {
-			pos_diff.y += ly;
-		}
-	}
-}
-
 
 void System::setSystemVolume()
 {

@@ -37,7 +37,7 @@ void Interaction::init(System* sys_)
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	sys->periodize_diff(rvec, vel_offset);
+	z_offset = sys->periodize_diff(rvec);
 	r = rvec.norm();
 	nvec = rvec/r;
 	reduced_gap = 2*r/ro-2;
@@ -256,6 +256,7 @@ std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 /* observation */
 double Interaction::getNormalVelocity()
 {
+	vec3d vel_offset = z_offset*sys->get_vel_difference();
 	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0] + vel_offset;
 	return dot(d_velocity, nvec);
 }
