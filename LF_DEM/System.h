@@ -146,6 +146,7 @@ private:
 	void checkForceBalance();
 	void wallForces();
 	bool hasNeighbor(int i, int j);
+	void setVelocityDifference();
 
 #ifndef USE_DSFMT
 	MTRand *r_gen;

@@ -579,6 +579,9 @@ void System::setupSystemPostConfiguration()
 		stokes_solver.init(np, np_mobile);
 	}
 	allocateRessourcesPostConfiguration();
+	if (!stress_controlled) {
+		setVelocityDifference();
+	}
 }
 
 void System::initializeBoxing()
@@ -1793,15 +1796,20 @@ void System::rescaleVelHydroStressControlledFixed()
 	}
 }
 
-void System::set_shear_rate(double sr)
+void System::setVelocityDifference()
 {
-	shear_rate = sr;
 	if (!p.cross_shear) {
 		vel_difference.x = shear_rate*lz;
 	} else {
 		vel_difference.x = costheta_shear*shear_rate*lz;
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
+}
+
+void System::set_shear_rate(double sr)
+{
+	shear_rate = sr;
+	setVelocityDifference();
 }
 
 void System::computeShearRate()
