@@ -49,7 +49,7 @@ private:
 	//======= relative position/velocity data  =========//
 	int zshift;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
-	vec3d relative_velocity;
+
 	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
@@ -63,7 +63,7 @@ private:
 		ro_12 = ro/2;
 	};
 	void calcNormalVectorDistanceGap();
-	void calcRelativeVelocities();
+
 	void calcRollingVelocities();
 	void integrateStress();
 	//===== forces/stresses  ========================== //
@@ -77,6 +77,7 @@ public:
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
 	vec3d relative_surface_velocity;
+	vec3d relative_velocity;
 	double ro; // ro = a0+a1;
 	double r; // center-center distance
 	vec3d rvec; // vector center to center
@@ -100,7 +101,7 @@ public:
 	void updateContactState();
 	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
-
+	void calcRelativeVelocities();
 	inline vec3d relative_surface_velocity_direction() {
 		return relative_surface_velocity/relative_surface_velocity.norm();
 	}

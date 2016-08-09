@@ -864,6 +864,9 @@ void Simulation::outputIntFileTxt()
 			                      sys.interaction[k].contact.get_f_contact_normal_norm());
 			outdata_int.entryData("tangential part of the contact force", "force", 3, \
 			                      sys.interaction[k].contact.get_f_contact_tan());
+			sys.interaction[k].calcRelativeVelocities();
+			outdata_int.entryData("relative velocity", "velocity", 3, \
+			                      sys.interaction[k].relative_velocity);
 			outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
 			                      sys.interaction[k].repulsion.getForceNorm());
 			if (diminish_output == false) {
