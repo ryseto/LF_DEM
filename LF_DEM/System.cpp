@@ -56,6 +56,7 @@ wagnerhash(time_t t, clock_t c)
 
 
 System::System(ParameterSet& ps, list <Event>& ev):
+pairwise_resistance_changed(true),
 shear_rate(0),
 vel_difference(0),
 omega_inf(0),
@@ -1253,6 +1254,7 @@ void System::updateNumberOfPairwiseResistances(int p0, int p1, int val)
 	} else {
 		nb_of_pairwise_resistances_mf += val;
 	}
+	pairwise_resistance_changed = true;
 }
 
 void System::updateNumberOfContacts(int p0, int p1, int val)
@@ -1286,7 +1288,8 @@ void System::buildHydroTerms(bool build_force_GE)
 
 	// create a new resistance matrix in stokes_solver
 	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
-										resistance_matrix_dblock);
+										resistance_matrix_dblock, pairwise_resistance_changed);
+	pairwise_resistance_changed = false;
 	/* [note]
 	 * The resistance matrix is reset with resistance_matrix_dblock,
 	 * which is calculated at the beginning.

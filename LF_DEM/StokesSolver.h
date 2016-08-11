@@ -111,6 +111,7 @@ private:
 	int mobile_particle_nb;
 	int fixed_particle_nb;
 	bool mobile_matrix_done;
+	bool to_be_factorized;
 
 	// Cholmod variables
 	cholmod_factor* chol_L ;
@@ -126,7 +127,6 @@ private:
 	cholmod_dense* chol_force_fix;
 	// cholmod_dense* chol_PTsolution;
 	cholmod_dense* chol_Psolution;
-	bool chol_L_to_be_freed;
 	// resistance matrix building
 	int dblocks_size;
 	int current_column;
@@ -203,7 +203,8 @@ public:
 	void resetResistanceMatrix(int nb_of_interactions_mm,
 							   int nb_of_interactions_mf,
 							   int nb_of_interactions_ff,
-							   const std::vector<struct DBlock>& reset_resmat_dblocks);
+							   const std::vector<struct DBlock>& reset_resmat_dblocks,
+							 bool matrix_pattern_changed);
 	void addResistanceBlocks(int i,
                            int j,
                            const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,

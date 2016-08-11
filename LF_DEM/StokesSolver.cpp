@@ -45,8 +45,8 @@ void StokesSolver::init(int np_total, int np_mobile)
 	fixed_particle_nb = np_total-mobile_particle_nb;
 	// resistance matrix characteristics (see header for matrix description)
 	dblocks_size = 18*mobile_particle_nb;
+	to_be_factorized = true;
 	allocateRessources();
-	chol_L_to_be_freed = false;
 
 	odb_layout.resize(6);
 	odb_layout[0] = vector<int>({0,1,2,4,5});
@@ -268,7 +268,6 @@ void StokesSolver::completeResistanceMatrix()
 
 	completeResistanceMatrix_MobileMobile();
 	factorizeResistanceMatrix();
-
 	completeResistanceMatrix_MobileFixed();
 	completeResistanceMatrix_FixedFixed();
 }
@@ -439,7 +438,8 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 										 int nb_of_interactions_mf,
 										 int nb_of_interactions_ff,
-										 const vector<struct DBlock> &reset_resmat_dblocks)
+										 const vector<struct DBlock> &reset_resmat_dblocks,
+										 bool matrix_pattern_changed)
 {
 	for (auto i=0u; i<dblocks.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i];
@@ -468,6 +468,7 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 		resetODBlock(b);
 	}
 	current_column = 0;
+	to_be_factorized = matrix_pattern_changed;
 }
 
 void StokesSolver::resetRHS()
@@ -769,7 +770,6 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 
 void StokesSolver::solvingIsDone()
 {
-	cholmod_free_factor(&chol_L, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_mf, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_ff, &chol_c);
@@ -801,7 +801,10 @@ void StokesSolver::allocateRessources()
 	for (decltype(size_mm) i=0; i<size_mm; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
-	chol_L = NULL;
+	if (to_be_factorized) {
+		cholmod_free_factor(&chol_L, &chol_c);
+		chol_L = NULL;
+	}
 }
 
 void StokesSolver::allocateResistanceMatrix()
@@ -862,14 +865,19 @@ void StokesSolver::factorizeResistanceMatrix()
 {
 	/*reference code */
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
-	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+	if (to_be_factorized) {
+		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+	}
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 	if (chol_c.status) {
-		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
-		// It is very often enough to force another preconditioner to solve the problem.
+		// This should not happen if the matrix is sym-pos-def.
+		// If this is used, then it is most probably the sign
+		// that the matrix you are passing is not what you think it is.
 		cerr << " factorization failed. forcing simplicial algorithm... " << endl;
 		chol_c.supernodal = CHOLMOD_SIMPLICIAL;
-		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+		if (to_be_factorized) {
+			chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+		}
 		cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 		cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " << chol_c.final_ll <<endl;
 		chol_c.supernodal = CHOLMOD_SUPERNODAL;
