@@ -469,6 +469,9 @@ void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 	}
 	current_column = 0;
 	to_be_factorized = matrix_pattern_changed;
+	if (to_be_factorized && chol_L != NULL) {
+		cholmod_free_factor(&chol_L, &chol_c);
+	}
 }
 
 void StokesSolver::resetRHS()
@@ -801,10 +804,7 @@ void StokesSolver::allocateRessources()
 	for (decltype(size_mm) i=0; i<size_mm; i++) {
 		((double*)chol_rhs->x)[i] = 0;
 	}
-	if (to_be_factorized) {
-		cholmod_free_factor(&chol_L, &chol_c);
-		chol_L = NULL;
-	}
+	chol_L = NULL;
 }
 
 void StokesSolver::allocateResistanceMatrix()
@@ -867,7 +867,11 @@ void StokesSolver::factorizeResistanceMatrix()
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	if (to_be_factorized) {
 		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+		cout << "analyzed" << endl;
+	} else {
+		cout << "not analyzed" << endl;	
 	}
+
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 	if (chol_c.status) {
 		// This should not happen if the matrix is sym-pos-def.
