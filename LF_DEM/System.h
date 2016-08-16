@@ -254,7 +254,7 @@ protected:
 	double avg_dt;
 	int avg_dt_nb;
 	double system_volume;
-	std::vector < std::set <Interaction*> > interaction_list;
+	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
