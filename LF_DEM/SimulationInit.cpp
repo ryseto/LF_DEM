@@ -248,7 +248,7 @@ void Simulation::catchForcesInStressUnits(const string &stress_unit)
 }
 
 void Simulation::setupNonDimensionalizationStressControlled(double dimensionlessnumber,
-                                                    string stress_unit)
+															string stress_unit)
 {
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
@@ -296,7 +296,7 @@ void Simulation::setupNonDimensionalizationStressControlled(double dimensionless
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnumber,
-												  string input_scale)
+														  string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).

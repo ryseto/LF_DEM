@@ -1318,8 +1318,8 @@ void System::buildLubricationTerms_squeeze(bool rhs)
 			if (j > i) {
 				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
 					stokes_solver.addResistanceBlocks(i, j,
-						                                inter->RFU_DBlocks(),
-						                                inter->RFU_ODBlock());
+													  inter->RFU_DBlocks(),
+													  inter->RFU_ODBlock());
 					if (rhs) {
 						if (inter->lubrication.is_active()) {
 							std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
@@ -1359,8 +1359,8 @@ void System::buildLubricationTerms_squeeze_tangential(bool rhs)
 			if (j > i) {
 				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
 					stokes_solver.addResistanceBlocks(i, j,
-				                                    inter->RFU_DBlocks(),
-				                                    inter->RFU_ODBlock());
+													  inter->RFU_DBlocks(),
+													  inter->RFU_ODBlock());
 					if (rhs) {
 						if (inter->lubrication.is_active()) {
 							std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot

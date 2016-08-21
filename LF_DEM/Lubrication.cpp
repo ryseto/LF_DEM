@@ -167,7 +167,7 @@ void Lubrication::calcLubConstants()
 {
 	a0 = sys->radius[p0];
 	a1 = sys->radius[p1];
-	ro = a0 + a1;
+	ro = a0+a1;
 	ro_12 = ro/2;
 	lambda = a1/a0;
 	invlambda = 1/lambda;
@@ -494,25 +494,25 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze()
 	block.col0[1] = XA[1]*n0n1;
 	block.col0[2] = XA[1]*n0n2;
 	block.col0[3] = 0;
-	block.col0[4] =  0;
+	block.col0[4] = 0;
 	// column 1
-	block.col1[0] =  XA[1]*n1n1;
+	block.col1[0] = XA[1]*n1n1;
 	block.col1[1] = XA[1]*n1n2;
 	block.col1[2] = 0;
 	// column 2
-	block.col2[0] =  XA[1]*n2n2;
+	block.col2[0] = XA[1]*n2n2;
 	// column 3
-	block.col3[0] =  0;
-	block.col3[1] =  0;
-	block.col3[2] =  0;
-	block.col3[3] =  0;
-	block.col3[4] =  0;
+	block.col3[0] = 0;
+	block.col3[1] = 0;
+	block.col3[2] = 0;
+	block.col3[3] = 0;
+	block.col3[4] = 0;
 	// column 4
-	block.col4[0] =  0;
-	block.col4[1] =  0;
+	block.col4[0] = 0;
+	block.col4[1] = 0;
 	block.col4[2] = -0;
 	// column 5
-	block.col5[0] =  0;
+	block.col5[0] = 0;
 	return block;
 }
 
@@ -528,20 +528,20 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential()
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-	double XA1mYA1 = XA[1] - YA[1];
+	double XA1mYA1 = XA[1]-YA[1];
 	struct ODBlock block;
 	// column 0
-	block.col0[0] =  XA[1]*n0n0 + YA[1]*one_n0n0;
-	block.col0[1] = XA1mYA1*n0n1;
-	block.col0[2] = XA1mYA1*n0n2;
+	block.col0[0] =  XA[1]*n0n0+YA[1]*one_n0n0;
+	block.col0[1] =  XA1mYA1*n0n1;
+	block.col0[2] =  XA1mYA1*n0n2;
 	block.col0[3] = -YB[2]*nvec->z;
 	block.col0[4] =  YB[2]*nvec->y;
 	// column 1
-	block.col1[0] =  XA[1]*n1n1 + YA[1]*one_n1n1;
-	block.col1[1] = XA1mYA1*n1n2;
+	block.col1[0] =  XA[1]*n1n1+YA[1]*one_n1n1;
+	block.col1[1] =  XA1mYA1*n1n2;
 	block.col1[2] = -YB[2]*nvec->x;
 	// column 2
-	block.col2[0] =  XA[1]*n2n2 + YA[1]*one_n2n2;
+	block.col2[0] =  XA[1]*n2n2+YA[1]*one_n2n2;
 	// column 3
 	block.col3[0] =  YB[1]*nvec->z;
 	block.col3[1] = -YB[1]*nvec->y;
@@ -633,20 +633,20 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
 
-	double XA0mYA0 = XA[0] - YA[0];
+	double XA0mYA0 = XA[0]-YA[0];
 
 	// (*,0)
-	b0.col0[0] =  XA[0]*n0n0 + YA[0]*one_n0n0; // 00 element of the dblock
+	b0.col0[0] =  XA[0]*n0n0+YA[0]*one_n0n0; // 00 element of the dblock
 	b0.col0[1] = XA0mYA0*n0n1;           // 10
 	b0.col0[2] = XA0mYA0*n0n2;           // 20
 	b0.col0[3] = -YB[0]*nvec->z;                   // 40
 	b0.col0[4] =  YB[0]*nvec->y;                   // 50
 	// (*,1)
-	b0.col1[0] =  XA[0]*n1n1 + YA[0]*one_n1n1; // 11
+	b0.col1[0] =  XA[0]*n1n1+YA[0]*one_n1n1; // 11
 	b0.col1[1] = XA0mYA0*n1n2;           // 21
 	b0.col1[2] = -YB[0]*nvec->x;                   // 51
 	// (*,2)
-	b0.col2[0] =  XA[0]*n2n2 + YA[0]*one_n2n2; // 22
+	b0.col2[0] =  XA[0]*n2n2+YA[0]*one_n2n2; // 22
 	// (*,3)
 	b0.col3[0] =  YC[0]*one_n0n0;                 // 33
 	b0.col3[1] = -YC[0]*n0n1;                     // 43
@@ -657,19 +657,19 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 	// (*,5)
 	b0.col5[0] =  YC[0]*one_n2n2;                 // 55
 
-	double XA3mYA3 = XA[3] - YA[3];
+	double XA3mYA3 = XA[3]-YA[3];
 	 // (*,0)
- 	b1.col0[0] =  XA[3]*n0n0 + YA[3]*one_n0n0; // 00 element of the dblock
- 	b1.col0[1] = XA3mYA3*n0n1;           // 10
- 	b1.col0[2] = XA3mYA3*n0n2;           // 20
+ 	b1.col0[0] =  XA[3]*n0n0+YA[3]*one_n0n0; // 00 element of the dblock
+ 	b1.col0[1] =  XA3mYA3*n0n1;           // 10
+ 	b1.col0[2] =  XA3mYA3*n0n2;           // 20
  	b1.col0[3] = -YB[3]*nvec->z;                   // 40
  	b1.col0[4] =  YB[3]*nvec->y;                   // 50
  	// (*,1)
- 	b1.col1[0] =  XA[3]*n1n1 + YA[3]*one_n1n1; // 11
- 	b1.col1[1] = XA3mYA3*n1n2;           // 21
+ 	b1.col1[0] =  XA[3]*n1n1+YA[3]*one_n1n1; // 11
+ 	b1.col1[1] =  XA3mYA3*n1n2;           // 21
  	b1.col1[2] = -YB[3]*nvec->x;                   // 51
  	// (*,2)
- 	b1.col2[0] =  XA[3]*n2n2 + YA[3]*one_n2n2; // 22
+ 	b1.col2[0] =  XA[3]*n2n2+YA[3]*one_n2n2; // 22
  	// (*,3)
  	b1.col3[0] =  YC[3]*one_n0n0;                 // 33
  	b1.col3[1] = -YC[3]*n0n1;                     // 43
@@ -853,11 +853,11 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
 			YME_i.elm[4] =            -4*nyny*nnE;
 			YME_i.elm[5] = 2*nxnz     -4*nznz*nnE;
 		} else {
-			YME_i.elm[0] = 2*cos_theta_shear*nxnz                             -4*nxnx*nnE;
+			YME_i.elm[0] = 2*cos_theta_shear*nxnz                                    -4*nxnx*nnE;
 			YME_i.elm[1] =   cos_theta_shear*nynz        +sin_theta_shear*nxnz       -4*nxny*nnE;
 			YME_i.elm[2] =   cos_theta_shear*(nxnx+nznz) +sin_theta_shear*nxny       -4*nxnz*nnE;
 			YME_i.elm[3] =   cos_theta_shear*nxny        +sin_theta_shear*(nyny+nznz)-4*nynz*nnE;
-			YME_i.elm[4] = 2*sin_theta_shear*nynz                             -4*nyny*nnE;
+			YME_i.elm[4] = 2*sin_theta_shear*nynz                                    -4*nyny*nnE;
 			YME_i.elm[5] = 2*cos_theta_shear*nxnz        +2*sin_theta_shear*nynz     -4*nznz*nnE;
 		}
 
@@ -924,7 +924,7 @@ void Lubrication::updateResistanceCoeff()
 {
 	if (interaction->get_reduced_gap() > 0) {
 		double coeff = 1/(interaction->get_reduced_gap()+sys->p.lub_reduce_parameter);
-		if (coeff>1.) {
+		if (coeff > 1.) {
 			setResistanceCoeff(coeff, log(coeff));
 		} else {
 			setResistanceCoeff(coeff, 0.);

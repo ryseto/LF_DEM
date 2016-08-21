@@ -159,14 +159,14 @@ public:
 	void setupNonDimensionalization(double dimensionlessnumber,
 									std::string input_scale);
 	void setupNonDimensionalizationRateControlled(double dimensionlessnumber,
-										  std::string input_scale);
+												  std::string input_scale);
 	void setupNonDimensionalizationStressControlled(double dimensionlessnumber,
-											std::string input_scale);
+													std::string input_scale);
 	void catchForcesInStressUnits(const std::string &stress_unit);
 	DimensionalValue str2DimensionalValue(std::string type,
-                                        std::string keyword,
-                                        std::string value_str,
-                                        double* value_ptr);
+										  std::string keyword,
+										  std::string value_str,
+										  double* value_ptr);
 	/*
 	 * For outputs
 	 */

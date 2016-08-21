@@ -67,7 +67,7 @@ void Contact::setInteractionData()
 	}
 	dashpot.setParticleData();
 	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
-		                                 sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
+									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
 void Contact::activate()
@@ -138,10 +138,10 @@ void Contact::incrementTangentialDisplacement()
 
 	******************************************************/
 	vec3d vel_offset = interaction->z_offset*sys->get_vel_difference();
-	vec3d translational_deltav = sys->velocity[p1] - sys->velocity[p0] + vel_offset;
-	vec3d rotational_deltav = - cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
+	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
+	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
 
-	vec3d relative_surface_velocity = translational_deltav + rotational_deltav;
+	vec3d relative_surface_velocity = translational_deltav+rotational_deltav;
  	relative_surface_velocity -= dot(relative_surface_velocity, interaction->nvec)*interaction->nvec;
 	relative_surface_velocity_sqnorm = relative_surface_velocity.sq_norm();
 	if (sys->in_predictor) {
@@ -151,7 +151,7 @@ void Contact::incrementTangentialDisplacement()
 		 */
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan + relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+	disp_tan = prev_disp_tan+relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void Contact::calcRollingVelocities()
@@ -221,7 +221,7 @@ void Contact::calcContactSpringForce()
 		(this->*frictionlaw)();
 	}
 	if (state <= 1) {
-    f_spring_total = f_spring_normal;
+		f_spring_total = f_spring_normal;
 	} else {
 		f_spring_total = f_spring_normal+f_spring_tan;
 	}
@@ -454,5 +454,5 @@ double Contact::get_normal_load() const
 vec3d Contact::getTangentialForce() const
 {
 	vec3d total_force = getTotalForce();
-	return total_force - dot(interaction->nvec, total_force)*interaction->nvec;
+	return total_force-dot(interaction->nvec, total_force)*interaction->nvec;
 }
