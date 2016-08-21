@@ -867,9 +867,9 @@ void StokesSolver::factorizeResistanceMatrix()
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
 	if (to_be_factorized) {
 		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
-		cout << "analyzed" << endl;
+		//cout << "analyzed" << endl;
 	} else {
-		cout << "not analyzed" << endl;	
+		//cout << "not analyzed" << endl;
 	}
 
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
