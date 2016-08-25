@@ -576,10 +576,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
-	if (sys.p.simulation_mode > 0 && (sys.p.simulation_mode < 20 || sys.p.simulation_mode > 30) ) {
-		sys.zero_shear = true;
-		sys.mobile_fixed = true;
-	}
+	setupOptionalSimulation(indent);
 	tagStrainParameters();
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 

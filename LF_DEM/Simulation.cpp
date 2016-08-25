@@ -161,6 +161,91 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 	}
 }
 
+
+void Simulation::setupOptionalSimulation(string indent)
+{
+	cerr << indent << "simulation_mode = " << sys.p.simulation_mode << endl;
+	switch (sys.p.simulation_mode) {
+		case 0:
+			cout << indent << "basic simulation" << endl;
+			break;
+		case 1:
+			cout << indent << "Test simulation for reversibility in mixed problem" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 2:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 3:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 4:
+			cout << indent << "Test simulation for relax" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.p.cross_shear = false;
+			break;
+		case 11: //ctest1
+			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 12: // ctest2
+			cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 13: // ctest3
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 10:
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 21:
+			cout << indent << "Test simulation for shear reversibility" << endl;
+			sys.p.cross_shear = true;
+			break;
+		case 31:
+			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 41:
+			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 42:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 51:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		default:
+			break;
+	}
+}
+
 /*
  * Main simulation
  */
@@ -174,59 +259,6 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	string indent = "  Simulation::\t";
 	control_var = control_variable;
-	p.simulation_mode = 0; // temporary: p.simulation_mode is unset at this stage, so I do not understand the switch
-	switch (p.simulation_mode) {
-		case 0:
-			cout << indent << "basic simulation" << endl;
-			break;
-		case 1:
-			cout << indent << "Test simulation for reversibility in mixed problem" << endl;
-			break;
-		case 2:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			break;
-		case 3:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			break;
-		case 4:
-			cout << indent << "Test simulation for relax" << endl;
-			sys.p.cross_shear = false;
-			break;
-		case 11: //ctest1
-			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 12: // ctest2
-			cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 13: // ctest3
-			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 10:
-			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 21:
-			cout << indent << "Test simulation for shear reversibility" << endl;
-			sys.p.cross_shear = true;
-			break;
-		case 31:
-			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
-		case 41:
-			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-		case 42:
-			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-		case 51:
-			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-		default:
-			break;
-	}
-	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
