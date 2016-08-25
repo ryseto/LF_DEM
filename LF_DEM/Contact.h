@@ -20,6 +20,7 @@
 #include <fstream>
 #include "vec3d.h"
 #include "StressTensor.h"
+#include "ContactDashpot.h"
 
 class System;
 class Interaction;
@@ -38,9 +39,14 @@ private:
 	 *********************************/
 	System *sys;
 	Interaction *interaction;
+
 	void (Contact::*frictionlaw)();
+	bool active;
 	unsigned int p0;
 	unsigned int p1;
+	double a0; // radii
+	double a1;
+	double a_reduced;
 	//===== forces and stresses ==================== //
 	double kt_scaled;
 	double kr_scaled;
@@ -53,33 +59,20 @@ private:
 	 *********************************/
 	//===== forces and stresses computations =====//
 	StressTensor contact_stresslet_XF; //stress tensor of contact force
-	double f_contact_normal_norm; // normal contact force
+	double f_spring_normal_norm; // normal contact force
 	double normal_load; // compressive load + cohesion. If it is positive, particies are in cohesive contact state.
-	vec3d f_contact_normal; // normal contact force
-	vec3d f_contact_tan; // tangential contact force
-	vec3d f_contact;
+	vec3d f_spring_normal; // normal contact force, spring only
+	vec3d f_spring_tan; // tangential contact force, spring only
+	vec3d f_spring_total; // spring only
 	vec3d f_rolling;
 	double ft_max; // friction_model = 5;
+	vec3d rolling_velocity;
+	int state;
+
+	void calcRollingVelocities();
 	void incrementTangentialDisplacement();
 	void incrementRollingDisplacement();
-public:
-	/*********************************
-	 *       Public Methods          *
-	 *********************************/
-	//======= internal state =====================//
-	Contact(){};
-	Contact(const Contact& obj);
-	void init(System* sys_, Interaction* int_);
-	void setInteractionData();
-	void setSpringConstants();
-	void activate();
-	void deactivate();
-	vec3d disp_tan; // tangential displacement
-	vec3d disp_rolling;
-	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
-	vec3d prev_disp_rolling;
-	void incrementDisplacements();
-	int state;
+
 	/* state:
 	 * 0 No contact
 	 * 1 Friction is not activated (critical load model)
@@ -92,32 +85,59 @@ public:
 	void frictionlaw_standard();
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
+
+public:
+	/*********************************
+	 *       Public Methods          *
+	 *********************************/
+	//======= internal state =====================//
+	Contact():
+	active(false),
+	mu_static(0),
+	mu_dynamic(0),
+	mu_rolling(0),
+	f_spring_normal_norm(0),
+	normal_load(0),
+	f_spring_normal(0),
+	f_spring_tan(0),
+	f_spring_total(0),
+	f_rolling(0),
+	ft_max(0),
+	rolling_velocity(0),
+	relative_surface_velocity_sqnorm(0)
+	{};
+
+	void init(System* sys_, Interaction* int_);
+	ContactDashpot dashpot;
+	void setInteractionData();
+	void setSpringConstants();
+	void activate();
+	void deactivate();
+	vec3d disp_tan; // tangential displacement
+	vec3d disp_rolling;
+	vec3d prev_disp_tan; // useful for predictor-corrector method: disp_tan in the previous time step
+	vec3d prev_disp_rolling;
+	double relative_surface_velocity_sqnorm;
+	void incrementDisplacements();
+	double get_rcontact() const
+	{
+			return a0 + a1;
+	}
 	//===== forces/stresses  ========================== //
-	void calcContactInteraction();
+	void calcContactSpringForce();
 	void addUpContactForceTorque();
-	inline double get_f_contact_normal_norm()
-	{
-		return f_contact_normal_norm;
-	}
-	inline double get_normal_load()
-	{
-		return normal_load;
-	}
-	vec3d get_f_contact_tan()
-	{
-		return f_contact_tan;
-	}
-	inline double get_f_contact_tan_norm()
-	{
-		return f_contact_tan.norm();
-	}
+	vec3d getTotalForce() const;
+	vec3d getNormalForce() const;
+	vec3d getTangentialForce() const;
+	double get_normal_load() const;
 	void calcContactStress();
-	StressTensor getContactStressXF()
+	StressTensor getContactStressXF() const
 	{
 		return contact_stresslet_XF;
 	}
-	double calcEnergy();
-	struct contact_state getState() {
+	double calcEnergy() const;
+	struct contact_state getState() const
+	{
 		struct contact_state cs;
 		cs.p0 = p0;
 		cs.p1 = p1;
@@ -125,11 +145,24 @@ public:
 		cs.disp_rolling = disp_rolling;
 		return cs;
 	};
-	void setState(const struct contact_state& cs) {
+	void setState(const struct contact_state& cs)
+	{
 		p0 = cs.p0;
 		p1 = cs.p1;
 		disp_tan = cs.disp_tan;
 		disp_rolling = cs.disp_rolling;
+	}
+	bool is_active() const
+	{
+		return active;
+	}
+	bool is_frictional() const
+	{
+		return state >= 2;
+	}
+	int getFrictionState() const
+	{
+		return state;
 	}
 };
 #endif /* defined(__LF_DEM__Contact__) */

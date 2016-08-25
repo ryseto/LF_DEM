@@ -42,9 +42,20 @@ private:
 	void calcReducedForceNorm();
 	void calcScaledForce();
 public:
-	RepulsiveForce(): force_norm(0) {};
-	~RepulsiveForce(){};
+	RepulsiveForce():
+	p0(0),
+	p1(0),
+	geometric_factor(0),
+	screening_length(0),
+	max_length(0),
+	cutoff_roundlength(0),
+	force_vector(0),
+	force_norm(0),
+	reduced_force_norm(0),
+	stresslet_XF(0)
+	{};
 	void init(System* sys_, Interaction* int_);
+	~RepulsiveForce(){};
 	void activate();
 	//===== forces/stresses  ========================== //
 	void calcForce();
@@ -62,7 +73,7 @@ public:
 	{
 		return stresslet_XF;
 	}
-	double calcEnergy();
+	double calcEnergy() const;
 
 };
 #endif /* defined(__LF_DEM__RepulsiveForce__) */

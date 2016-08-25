@@ -68,11 +68,15 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_movable = np;
 	}
 	sys.set_np(np);
-    sys.set_np_mobile(np_movable);
+  sys.set_np_mobile(np_movable);
 	sys.friction = false;
 	sys.repulsiveforce = false;
 	sys.p.interaction_range = 2.5;
+	sys.p.lubrication_model = "tangential";
+	sys.lubrication = true;
 	sys.p.lub_max_gap = 0.5;
+	sys.p.contact_relaxation_time = 1e-3;
+	sys.p.contact_relaxation_time_tan = 0;
 	sys.allocateRessourcesPreConfiguration();
 
 	sys.setBoxSize(lx, ly, lz);
@@ -226,7 +230,7 @@ void GenerateInitConfig::outputPositionData()
         fout << lx << ' ' << ly << ' ' << lz << ' ';
         fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
     }
-	
+
 	for (int i = 0; i<np; i++) {
 		fout << std::setprecision(15);
 		fout << sys.position[i].x << ' ';
@@ -250,7 +254,7 @@ void GenerateInitConfig::outputPositionData()
 	fout_yap << "y 4 \n";
 	for (int k=0; k<sys.nb_interaction; k++) {
 		unsigned int i, j;
-		sys.interaction[k].get_par_num(i, j);
+		std::tie(i, j) = sys.interaction[k].get_par_num();
 		vec3d d_pos = sys.position[i]-sys.position[j];
 		if (d_pos.norm() < 10){
 			fout_yap << "l ";
@@ -275,10 +279,10 @@ double GenerateInitConfig::computeGradient()
 	double amp, amp2;
 	double energy = 0;
 	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].is_contact()) {
-			sys.interaction[k].get_par_num(i, j);
-			r = sys.interaction[k].r;
-            rcont = sys.interaction[k].ro;
+		if (sys.interaction[k].contact.is_active()) {
+			std::tie(i, j) = sys.interaction[k].get_par_num();
+			r = sys.interaction[k].separation_distance();
+			rcont = sys.radius[i] + sys.radius[j];
 			const vec3d& nr_vec = sys.interaction[k].nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
@@ -360,7 +364,8 @@ double GenerateInitConfig::gradientDescent()
 
 void GenerateInitConfig::putRandom()
 {
-    sys.allocatePositionRadius();
+	sys.position.resize(np);
+	sys.radius.resize(np);
 #ifndef USE_DSFMT
     rand_gen.seed(rand_seed);
 #endif
@@ -454,7 +459,7 @@ void GenerateInitConfig::putRandom()
 
 		double dl = (cg_radius_in+cg_radius_out)*M_PI/2/np_wall1;
 		double l;
-		
+
 		l = 0;
 		while (l + dl < cg_radius_in*M_PI/2) {
 			double theta = l/cg_radius_in;
@@ -470,7 +475,7 @@ void GenerateInitConfig::putRandom()
 		}
 		//l -= dl;
 		while (l + dl<= (cg_radius_out+cg_radius_in)*M_PI/2) {
-			
+
 			double l1 = cg_radius_in*M_PI/2;
 			double theta = (l-l1)/cg_radius_out;
 			double theta0 = 5*M_PI/4;
@@ -484,7 +489,7 @@ void GenerateInitConfig::putRandom()
 			i++;
 		}
 
-		
+
 		l = 0;
 		while (l + dl < cg_radius_out*M_PI/2) {
 
@@ -557,7 +562,7 @@ int GenerateInitConfig::overlapNumber(int i)
 {
 	int overlaps = 0;
 	for (auto&& inter : sys.interaction_list[i]){
-		if (inter->is_overlap()) {
+		if (inter->contact.is_active()) {
 			overlaps++;
 		}
 	}
@@ -568,9 +573,13 @@ double GenerateInitConfig::particleEnergy(int i)
 {
 	double energy = 0;
 	for (auto&& inter : sys.interaction_list[i]){
-		if (inter->is_overlap()) {
-			double amp = inter->get_a_reduced()*(1/inter->ro-1/inter->r); // negative
-			energy += inter->r*amp*amp;
+		if (inter->contact.is_active()) {
+			unsigned int p0, p1;
+			std::tie(p0, p1) = inter->get_par_num();
+			double a_reduced = sys.radius[p0]*sys.radius[p1]/(sys.radius[p0]+sys.radius[p1]);
+			double ro = sys.radius[p0]+sys.radius[p1];
+			double amp = a_reduced*(1/ro-1/inter->separation_distance()); // negative
+			energy += inter->separation_distance()*amp*amp;
 		}
 	}
 	return energy;
@@ -705,12 +714,12 @@ void GenerateInitConfig::setParameters()
 	} else {
 		vf_ratio = 1;
 	}
-	
+
 	//rand_seed = readStdinDefault(1, "random seed");
 	/*
 	 *  Calculate parameters
 	 */
-	
+
 	double total_volume;
 	double pvolume1, pvolume2;
 	if (sys.twodimension) {
@@ -720,7 +729,7 @@ void GenerateInitConfig::setParameters()
 		pvolume1 = (4.0/3)*M_PI*a1*a1*a1;
 		pvolume2 = (4.0/3)*M_PI*a2*a2*a2;
 	}
-	
+
 	if (vf_ratio > 0) {
 		volume_fraction1 = volume_fraction*vf_ratio;
 		if (disperse_type == 'b') {

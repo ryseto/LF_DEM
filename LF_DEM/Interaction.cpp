@@ -13,11 +13,20 @@ using namespace std;
 void Interaction::init(System* sys_)
 {
 	sys = sys_;
-	active = false;
-	lubrication.init(sys);
 	contact.init(sys, this);
-	repulsion.init(sys, this);
-	r = 0;
+	if (sys->lubrication) {
+		lubrication.init(sys, this);
+	}
+	if (sys->repulsiveforce) {
+		repulsion.init(sys, this);
+	}
+	if (sys->p.lubrication_model == "normal") {
+	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze;
+		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze;
+	} else if (sys->p.lubrication_model == "tangential") {
+	 	RFU_DBlocks_lub = &Lubrication::RFU_DBlocks_squeeze_tangential;
+		RFU_ODBlock_lub = &Lubrication::RFU_ODBlock_squeeze_tangential;
+	}
 }
 
 /* Make a normal vector
@@ -28,10 +37,10 @@ void Interaction::init(System* sys_)
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	sys->periodize_diff(rvec, zshift);
+	z_offset = sys->periodize_diff(rvec);
 	r = rvec.norm();
 	nvec = rvec/r;
-	reduced_gap = r/ro_12-2;
+	reduced_gap = 2*r/ro-2;
 }
 
 /* Activate interaction between particles i and j.
@@ -52,20 +61,9 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	// tell them their new partner
 	sys->interaction_partners[i].push_back(j);
 	sys->interaction_partners[j].push_back(i);
-	//
 	sys->updateNumberOfInteraction(p0, p1, 1);
-	//
-	a0 = sys->radius[p0];
-	a1 = sys->radius[p1];
-	/* [note]
-	 * The reduced (or effective) radius is defined as
-	 * 1/a_reduced = 1/a0 + 1/a1
-	 * This definition comes from sphere vs half-plane geometory of contact mechanics.
-	 * If sphere contacts with a half-plane (a1 = infinity), a_reduced = a0.
-	 * For equal sized spheres, a_reduced = 0.5*a0 = 0.5*a1
-	 */
-	a_reduced = a0*a1/(a0+a1);
-	set_ro(a0+a1); // ro=a0+a1
+
+	set_ro(sys->radius[p0]+sys->radius[p1]); // ro=a0+a1
 	interaction_range = interaction_range_;
 	/* NOTE:
 	 * lub_coeff_contact includes kn.
@@ -82,18 +80,13 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	contact.setInteractionData();
 	if (reduced_gap <= 0) {
 		contact.activate();
-		sys->updateNumberOfContacts(p0, p1, 1);
-	} else {
-		contact.deactivate();
-		sys->updateNumberOfContacts(p0, p1, -1);
 	}
 	contact_state_changed_after_predictor = false;
-	if (sys->p.lubrication_model > 0) {
-		lubrication.getInteractionData();
-		lubrication.updateResistanceCoeff();
-		lubrication.calcLubConstants();
+	if (sys->lubrication) {
+		lubrication.setParticleData();
+		lubrication.updateActivationState();
 		if (lubrication.is_active()) {
-			lubrication.getGeometry();
+			lubrication.updateResistanceCoeff();
 		}
 	}
 }
@@ -101,19 +94,24 @@ void Interaction::activate(unsigned int i, unsigned int j,
 void Interaction::deactivate()
 {
 	// r > interaction_range
-	contact.deactivate();
+	if (contact.is_active()) {
+		contact.deactivate();
+	}
+	if (sys->lubrication) {
+		if (lubrication.is_active()) {
+			lubrication.deactivate();
+		}
+	}
 	active = false;
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);
-	// sys->interaction_partners[p0].erase(p1);
-	// sys->interaction_partners[p1].erase(p0);
-	sys->removeNeighbors(p0,p1);
+	sys->removeNeighbors(p0, p1);
 	sys->updateNumberOfInteraction(p0, p1, -1);
 }
 
 void Interaction::updateState(bool& deactivated)
 {
-	if (is_contact()) {
+	if (contact.is_active()) {
 		// (VERY IMPORTANT): we increment displacements BEFORE updating the normal vector not to mess up with Lees-Edwards PBC
 		contact.incrementDisplacements();
 	}
@@ -128,13 +126,14 @@ void Interaction::updateState(bool& deactivated)
 	}
 
 	updateContactState();
-
-	if (lubrication.is_active()) {
-		lubrication.getGeometry();
-		lubrication.updateResistanceCoeff();
+	if (contact.is_active()) {
+		contact.calcContactSpringForce();
 	}
-	if (contact.state > 0) {
-		contact.calcContactInteraction();
+	if (sys->lubrication) {
+		lubrication.updateActivationState();
+		if (lubrication.is_active()) {
+			lubrication.updateResistanceCoeff();
+		}
 	}
 	if (sys->repulsiveforce) {
 		repulsion.calcForce();
@@ -144,16 +143,18 @@ void Interaction::updateState(bool& deactivated)
 void Interaction::updateContactState()
 {
 	contact_state_changed_after_predictor = false;
-	if (contact.state > 0) {
+	if (contact.is_active()) {
 		// contacting in previous step
 		bool breakup_contact_bond = false;
 		if (!sys->cohesion) {
+			// no cohesion: breakup based on distance
 			if (reduced_gap > 0) {
 				breakup_contact_bond = true;
 			}
 		} else {
 			/*
 			 * Checking cohesive bond breaking.
+			 * breakup based on force
 			 */
 			if (contact.get_normal_load() < 0) {
 				breakup_contact_bond = true;
@@ -164,87 +165,98 @@ void Interaction::updateContactState()
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-			sys->updateNumberOfContacts(p0, p1, -1);
 		}
 	} else {
 		// not contacting in previous step
-		if (reduced_gap <= sys->new_contact_gap) {
+		if (reduced_gap <= 0) {
 			// now contact
 			contact.activate();
-			// if (reduced_gap < -0.1){ // @@@@ Ryohei, do you mind if we remove this?
-				// cerr << "new contact may have problem\n";
-				// cerr << "gap = " << reduced_gap << endl;
-				//exit(1);
-			// }
 			if (sys->in_predictor && sys->brownian) {
 				contact_state_changed_after_predictor = true;
 			}
-			sys->updateNumberOfContacts(p0, p1, 1);
 		}
 	}
 }
 
-/* Relative velocity of particle 1 from particle 0.
- *
- * Use:
- *  sys->velocity and ang_velocity
- *
- */
-void Interaction::calcRelativeVelocities()
+bool Interaction::hasPairwiseResistance()
 {
-	/* relative velocity particle 1 from particle 0.
-	 * [note]
-	 * velocity[] = velocity_predictor[] in predictor
-	 * and
-	 * velocity[] = 0.5*(velocity_predictor[]+velocity_corrector[]) in corrector.
-	 * Therefore, relative_velocity and relative_surface_velocity
-	 * are true velocities.
-	 * relative_surface_velocity is used to update `disp_tan' in contact object.
-	 *
-	 */
-	/*
-	 * v1' = v1 - Lz = v1 - zshift*lz;
-	 */
-	/******************************************************
-	 * if p1 is upper, zshift = -1.
-	 * zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
-	 *
-	 ******************************************************/
-	relative_velocity = sys->velocity[p1]-sys->velocity[p0]; //true velocity, in predictor and in corrector
-	if (zshift != 0) {
-		relative_velocity += zshift*sys->vel_difference;
+	if (sys->lubrication) {
+		return contact.dashpot.is_active() || lubrication.is_active();
+	} else {
+		return contact.dashpot.is_active();
 	}
-	relative_surface_velocity = relative_velocity-cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], nvec);
-	relative_surface_velocity -= dot(relative_surface_velocity, nvec)*nvec;
 }
 
-void Interaction::calcRollingVelocities()
+struct ODBlock Interaction::RFU_ODBlock()
 {
-	/**
-	 Calculate rolling velocity
-	 We follow Luding(2008).
-	 The factor 2 is added.
-	 cf. Book by Marshall and Li
-	 equation 3.6.13 ??
-	 */
-	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], nvec);
+	// This is a bit complex to read, we should find a better way to write a piece of code doing the same thing.
+	if (!sys->lubrication && contact.dashpot.is_active()) {
+		return contact.dashpot.RFU_ODBlock();
+	}
+	if (contact.dashpot.is_active()) {
+		if (!contact_state_changed_after_predictor) {
+			return contact.dashpot.RFU_ODBlock();
+		} else {
+			/*
+			 * Brownian ONLY (contact_state_changed_after_predictor == false in other cases):
+			 * we take the resistance provided by the lubrication, i.e. the resistance as it was
+			 * BEFORE the first step (predictor) of the mid-point algorithm).
+			 * This is to avoid a discontinuous change of the resistance between the two steps of the
+			 * midpoint algo if the contact state changed during the first step.
+			 * A discontinuous change has to be avoided because the Brownian force contains div(Mobility),
+			 * and this is estimated as a difference in the resistance between the two steps.
+			 * Allowing a discontinuity here would lead to a non-physical drift.
+			 */
+			 return (lubrication.*RFU_ODBlock_lub)();
+		}
+	}
+	if (lubrication.is_active()) {
+		if (!contact_state_changed_after_predictor) {
+			return (lubrication.*RFU_ODBlock_lub)();
+		} else {
+			/*
+			 * Brownian ONLY (contact_state_changed_after_predictor == false in other cases):
+			 * we take the resistance provided by the contact dashpot, i.e. the resistance as it was
+			 * BEFORE the first step (predictor) of the mid-point algorithm).
+			 * See above for rationale.
+			 */
+			return contact.dashpot.RFU_ODBlock();
+		}
+	}
+	struct ODBlock b;
+	resetODBlock(b);
+	return b;
 }
 
-/* observation */
-double Interaction::getContactVelocity()
+std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 {
-	if (contact.state == 0) {
-		return 0;
+	// This is a bit complex to read, we should find a better way to write a piece of code doing the same thing.
+	if (!sys->lubrication && contact.dashpot.is_active()) {
+		return contact.dashpot.RFU_DBlocks();
 	}
-	return relative_surface_velocity.norm();
+	if (contact.dashpot.is_active()) {
+		if (!contact_state_changed_after_predictor) { // used in Brownian only see above for rationale
+			return contact.dashpot.RFU_DBlocks();
+		} else {
+			return (lubrication.*RFU_DBlocks_lub)();
+		}
+	}
+	if (lubrication.is_active()) {
+		if (!contact_state_changed_after_predictor) { // used in Brownian only see above for rationale
+			return (lubrication.*RFU_DBlocks_lub)();
+		} else {
+			return contact.dashpot.RFU_DBlocks();
+		}
+	}
+	struct DBlock b;
+	resetDBlock(b);
+	return std::make_pair(b, b);
 }
 
 /* observation */
 double Interaction::getNormalVelocity()
 {
-	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0];
-	if (zshift != 0) {
-		d_velocity += zshift*sys->vel_difference;
-	}
+	vec3d vel_offset = z_offset*sys->get_vel_difference();
+	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
 	return dot(d_velocity, nvec);
 }

@@ -116,7 +116,13 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lx) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Ly) = split(/\s+/, $line);
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
-	for ($i = 0; $i<8; $i++) {
+	
+	if ($Ly==0) {
+		$number_of_header = 8;
+	} else {
+		$number_of_header = 7;
+	}
+	for ($i = 0; $i<$number_of_header; $i++) {
 		$line = <IN_particle>;
 		printf "$line";
 	}
@@ -197,9 +203,11 @@ sub InParticles {
 				# 13: viscosity contributon of contact GU xz
 				# 14: viscosity contributon of brownian xz
 				# (15: angle for 2D simulation)
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
-				$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+				#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
+				#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
 
+				
 				#
 				$ang[$i] = $angle;
 				$radius[$i] = $a;
@@ -324,9 +332,9 @@ sub OutYaplotData{
 		for ($i = 0; $i < $np; $i++) {
 			$rr = $yap_radius*$radius[$i];
 			printf OUT "r $rr\n";
-			#			if ($i == $np-1) {
-			#				printf OUT "@ 4\n";
-			#			}
+			if ($i == $np-1) {
+				printf OUT "@ 4\n";
+			}
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
 	}
@@ -358,13 +366,13 @@ sub OutYaplotData{
 #	}
 	
 	## visualize rotation in 2D
-#	if ($Ly == 0) {
-#		printf OUT "y 6\n";
-#		printf OUT "@ 1\n";
-#		for ($i = 0; $i < $np; $i++) {
-#			OutCross($i);
-#		}
-#	}
+	if ($Ly == 0) {
+		printf OUT "y 6\n";
+		printf OUT "@ 1\n";
+		for ($i = 0; $i < $np; $i++) {
+			OutCross($i);
+		}
+	}
 	if ($reversibility_test) {
 		printf OUT "y 5\n";
 		printf OUT "@ 7\n";

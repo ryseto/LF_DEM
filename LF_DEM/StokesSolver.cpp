@@ -45,8 +45,8 @@ void StokesSolver::init(int np_total, int np_mobile)
 	fixed_particle_nb = np_total-mobile_particle_nb;
 	// resistance matrix characteristics (see header for matrix description)
 	dblocks_size = 18*mobile_particle_nb;
+	to_be_factorized = true;
 	allocateRessources();
-	chol_L_to_be_freed = false;
 
 	odb_layout.resize(6);
 	odb_layout[0] = vector<int>({0,1,2,4,5});
@@ -71,82 +71,48 @@ void StokesSolver::init(int np_total, int np_mobile)
 
 /************* Matrix filling methods **********************/
 
-// Diagonal Blocks Terms, FT/UW version
-void StokesSolver::addToDiagBlock(const vec3d& nvec, int ii,
-								  double scaledXA, double scaledYA,
-								  double scaledYB, double scaledYC)
+void StokesSolver::addToDiagBlock(int ii, const struct DBlock &b)
 {
 	if (ii >= mobile_particle_nb) {
 		// FF matrix
-		addToDBlock(dblocks_ff[ii-mobile_particle_nb], nvec, scaledXA, scaledYA, scaledYB, scaledYC);
+		dblocks_ff[ii-mobile_particle_nb] += b;
 	} else {
 		// MM matrix
-		addToDBlock(dblocks[ii], nvec, scaledXA, scaledYA, scaledYB, scaledYC);
+		dblocks[ii] += b;
 	}
 }
 
-// Diagonal Blocks Terms, FT/UW version
-void StokesSolver::addToDBlock(struct DBlock& b, const vec3d& nvec,
-							   double scaledXA, double scaledYA,
-							   double scaledYB, double scaledYC)
+void StokesSolver::addResistanceBlocks(int i,
+                                       int j,
+                                       const std::pair<struct DBlock, struct DBlock> &DiagBlocks_i_and_j,
+                                       const struct ODBlock& ODBlock_ij)
 {
-	double n0n0 = nvec.x*nvec.x;
-	double n0n1 = nvec.x*nvec.y;
-	double n0n2 = nvec.x*nvec.z;
-	double n1n1 = nvec.y*nvec.y;
-	double n1n2 = nvec.y*nvec.z;
-	double n2n2 = nvec.z*nvec.z;
-	double one_n0n0 = 1-n0n0;
-	double one_n1n1 = 1-n1n1;
-	double one_n2n2 = 1-n2n2;
-	// (*,0)
-	b.col0[0] +=  scaledXA*n0n0 + scaledYA*one_n0n0; // 00 element of the dblock
-	b.col0[1] += (scaledXA-scaledYA)*n0n1;           // 10
-	b.col0[2] += (scaledXA-scaledYA)*n0n2;           // 20
-	b.col0[3] += -scaledYB*nvec.z;                   // 40
-	b.col0[4] +=  scaledYB*nvec.y;                   // 50
-	// (*,1)
-	b.col1[0] +=  scaledXA*n1n1 + scaledYA*one_n1n1; // 11
-	b.col1[1] += (scaledXA-scaledYA)*n1n2;           // 21
-	b.col1[2] += -scaledYB*nvec.x;                   // 51
-	// (*,2)
-	b.col2[0] +=  scaledXA*n2n2 + scaledYA*one_n2n2; // 22
-	// (*,3)
-	b.col3[0] +=  scaledYC*one_n0n0;                 // 33
-	b.col3[1] += -scaledYC*n0n1;                     // 43
-	b.col3[2] += -scaledYC*n0n2;                     // 53
-	// (*,4)
-	b.col4[0] +=  scaledYC*one_n1n1;                 // 44
-	b.col4[1] += -scaledYC*n1n2;                     // 54
-	// (*,5)
-	b.col5[0] +=  scaledYC*one_n2n2;                 // 55
+	addToDiagBlock(i, DiagBlocks_i_and_j.first);
+	addToDiagBlock(j, DiagBlocks_i_and_j.second);
+	setOffDiagBlock(j, ODBlock_ij);
 }
 
 // Off-Diagonal Blocks Terms, FT/UW version
-void StokesSolver::setOffDiagBlock(const vec3d& nvec, int jj,
-								   double scaledXA,
-								   double scaledYA, double scaledYB,
-								   double scaledYBtilde, double scaledYC)
+void StokesSolver::setOffDiagBlock(int jj, const struct ODBlock& b)
 {
 	if (mobile_matrix_done) {
 		// FF Matrix
 		odbrows_ff.push_back(6*(jj-mobile_particle_nb));
 		auto i = odbrows_ff.size()-1;
-		odblocks_ff[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+		odblocks_ff[i] = b;
 	} else {
 		if (jj < mobile_particle_nb) {
 			// MM matrix
 			odbrows.push_back(6*jj);
 			auto i = odbrows.size()-1;
-			odblocks[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+			odblocks[i] = b;
 		} else {
 			// MF matrix
 			odbrows_mf.push_back(6*(jj-mobile_particle_nb));
 			auto i = odbrows_mf.size()-1;
-			odblocks_mf[i] = buildODBlock(nvec, scaledXA, scaledYA, scaledYB, scaledYBtilde, scaledYC);
+			odblocks_mf[i] = b;
 		}
 	}
-	return;
 }
 
 void StokesSolver::insertDBlockValues(double *matrix_x,
@@ -159,6 +125,7 @@ void StokesSolver::insertDBlockValues(double *matrix_x,
 	auto pcol3 = index_chol_ix[3];
 	auto pcol4 = index_chol_ix[4];
 	auto pcol5 = index_chol_ix[5];
+
 	// diagonal blocks row values (21)
 	matrix_x[pcol0  ] =  b.col0[0];   // column j6
 	matrix_x[pcol0+1] =  b.col0[1];
@@ -231,7 +198,7 @@ void StokesSolver::insertBlockColumnIndices(int *matrix_p, const vector<int>& pv
 {
 	/**
 	 Insert the starting indices (pvalues) for the 6 columns corresponding to a column of blocks in a cholmod_sparse::p array.
-	 You must to gives a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
+	 You must give a pointer to cholmod_sparse::p[first_column] as matrix_p, *not* the bare cholmod_sparse::p
 	 */
 	for (int col=0; col<6; col++) {
 		matrix_p[col] = pvalues[col];
@@ -301,7 +268,6 @@ void StokesSolver::completeResistanceMatrix()
 
 	completeResistanceMatrix_MobileMobile();
 	factorizeResistanceMatrix();
-
 	completeResistanceMatrix_MobileFixed();
 	completeResistanceMatrix_FixedFixed();
 }
@@ -400,7 +366,6 @@ void StokesSolver::completeResistanceMatrix_FixedFixed()
 		//
 		// for 6j+2 --> 6j+5: same idea
 
-		//int j6 = 6*j;
 		auto od_nzero_nb = 5*(odbrows_table_ff[j+1]-odbrows_table_ff[j]);
 		index_chol_ix[0] = 18*j+30*odbrows_table_ff[j];
 		for (int col=1; col<6; col++) {
@@ -473,40 +438,40 @@ void StokesSolver::completeResistanceMatrix_MobileFixed()
 void StokesSolver::resetResistanceMatrix(int nb_of_interactions_mm,
 										 int nb_of_interactions_mf,
 										 int nb_of_interactions_ff,
-										 const vector<struct DBlock> &reset_resmat_dblocks)
+										 const vector<struct DBlock> &reset_resmat_dblocks,
+										 bool matrix_pattern_changed)
 {
-	odblocks_nb = nb_of_interactions_mm;
 	for (auto i=0u; i<dblocks.size(); i++) {
 		dblocks[i] = reset_resmat_dblocks[i];
 	}
 	odbrows.clear();
-	odblocks.resize(odblocks_nb);
+	odblocks.resize(nb_of_interactions_mm);
 	for (auto &b: odblocks) {
 		resetODBlock(b);
 	}
-	odbrows_table[0] = 0;
 	mobile_matrix_done = false;
 
 	// for the mixed problem
-	odblocks_nb_mf = nb_of_interactions_mf;
 	odbrows_mf.clear();
-	odblocks_mf.resize(odblocks_nb_mf);
+	odblocks_mf.resize(nb_of_interactions_mf);
 	for (auto &b: odblocks_mf) {
 		resetODBlock(b);
 	}
-	odbrows_table_mf[0] = 0;
 
 	// for the mixed problem
-	odblocks_nb_ff = nb_of_interactions_ff;
 	for (auto i=0u; i<dblocks_ff.size(); i++) {
 		dblocks_ff[i] = reset_resmat_dblocks[i+mobile_particle_nb];
 	}
 	odbrows_ff.clear();
-	odblocks_ff.resize(odblocks_nb_ff);
+	odblocks_ff.resize(nb_of_interactions_ff);
 	for (auto &b: odblocks_ff) {
 		resetODBlock(b);
 	}
-	odbrows_table_ff[0] = 0;
+	current_column = 0;
+	to_be_factorized = matrix_pattern_changed;
+	if (to_be_factorized && chol_L != NULL) {
+		cholmod_free_factor(&chol_L, &chol_c);
+	}
 }
 
 void StokesSolver::resetRHS()
@@ -576,7 +541,7 @@ void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 	// if (force_and_torque.size() != size) {
 	// 	throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
 	// }
-	for (auto i=0u; i<size; i++) {
+	for (decltype(size) i=0; i<size; i++) {
 		auto i3 = 3*i;
 		((double*)chol_rhs->x)[i3  ] = force_and_torque[i].x;
 		((double*)chol_rhs->x)[i3+1] = force_and_torque[i].y;
@@ -808,7 +773,6 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 
 void StokesSolver::solvingIsDone()
 {
-	cholmod_free_factor(&chol_L, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_mf, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_ff, &chol_c);
@@ -853,89 +817,71 @@ void StokesSolver::allocateResistanceMatrix()
 	int nzmax; // non-zero values
 	auto size_mm = 6*dblocks.size();
 	nzmax = 18*(int)dblocks.size(); // diagonal blocks
-	nzmax += 30*odblocks_nb;   // off-diagonal
+	nzmax += 30*(int)odblocks.size();   // off-diagonal
 	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 
 	auto col_nb = 6*mobile_particle_nb;
 	auto row_nb = 6*fixed_particle_nb;
-	nzmax = 30*odblocks_nb_mf;  // off-diagonal
+	nzmax = 30*(int)odblocks_mf.size();  // off-diagonal
 	int stype_mf = 0; // non-symmetric matrix
 	chol_res_matrix_mf = cholmod_allocate_sparse(row_nb, col_nb, nzmax, sorted, packed, stype_mf, CHOLMOD_REAL, &chol_c);
 
 	auto size_ff = 6*fixed_particle_nb;
 	nzmax = 18*(int)dblocks_ff.size(); // diagonal blocks
-	nzmax += 30*odblocks_nb_ff;  // off-diagonal
+	nzmax += 30*(int)odblocks_ff.size();  // off-diagonal
 	chol_res_matrix_ff = cholmod_allocate_sparse(size_ff, size_ff, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
 }
 
-void StokesSolver::doneBlocks(int i)
+void StokesSolver::startNewColumn()
 {
-	if (mobile_matrix_done) {
-		odbrows_table_ff[i-mobile_particle_nb+1] = (unsigned int)odbrows_ff.size();
-	} else {
-		odbrows_table[i+1] = (unsigned int)odbrows.size();
-		odbrows_table_mf[i+1] = (unsigned int)odbrows_mf.size();
-	}
-	if (i == mobile_particle_nb-1) {
+	if (current_column == mobile_particle_nb) {
 		mobile_matrix_done = true;
+		odbrows_table[mobile_particle_nb] = (unsigned int)odbrows.size();
+		odbrows_table_mf[mobile_particle_nb] = (unsigned int)odbrows_mf.size();
 	}
+	if (mobile_matrix_done) {
+		odbrows_table_ff[current_column-mobile_particle_nb] = (unsigned int)odbrows_ff.size();
+	} else {
+		odbrows_table[current_column] = (unsigned int)odbrows.size();
+		odbrows_table_mf[current_column] = (unsigned int)odbrows_mf.size();
+	}
+	current_column++;
 }
 
-// odblocks fillings, for FT/UW version
-struct ODBlock StokesSolver::buildODBlock(const vec3d& nvec,
-										  double scaledXA,
-										  double scaledYA, double scaledYB,
-										  double scaledYBtilde, double scaledYC)
+void StokesSolver::matrixFillingDone()
 {
-	double n0n0 = nvec.x*nvec.x;
-	double n0n1 = nvec.x*nvec.y;
-	double n0n2 = nvec.x*nvec.z;
-	double n1n1 = nvec.y*nvec.y;
-	double n1n2 = nvec.y*nvec.z;
-	double n2n2 = nvec.z*nvec.z;
-	double one_n0n0 = 1-n0n0;
-	double one_n1n1 = 1-n1n1;
-	double one_n2n2 = 1-n2n2;
-	struct ODBlock block;
-	// column 0
-	block.col0[0] =  scaledXA*n0n0 + scaledYA*one_n0n0;
-	block.col0[1] = (scaledXA - scaledYA)*n0n1;
-	block.col0[2] = (scaledXA - scaledYA)*n0n2;
-	block.col0[3] = -scaledYB*nvec.z;
-	block.col0[4] =  scaledYB*nvec.y;
-	// column 1
-	block.col1[0] =  scaledXA*n1n1 + scaledYA*one_n1n1;
-	block.col1[1] = (scaledXA - scaledYA)*n1n2;
-	block.col1[2] = -scaledYB*nvec.x;
-	// column 2
-	block.col2[0] =  scaledXA*n2n2 + scaledYA*one_n2n2;
-	// column 3
-	block.col3[0] =  scaledYBtilde*nvec.z;
-	block.col3[1] = -scaledYBtilde*nvec.y;
-	block.col3[2] =  scaledYC*one_n0n0;
-	block.col3[3] = -scaledYC*n0n1;
-	block.col3[4] = -scaledYC*n0n2;
-	// column 4
-	block.col4[0] =  scaledYBtilde*nvec.x;
-	block.col4[1] =  scaledYC*one_n1n1;
-	block.col4[2] = -scaledYC*n1n2;
-	// column 5
-	block.col5[0] =  scaledYC*one_n2n2;
-	return block;
+	for (unsigned int i=current_column; i<odbrows_table.size(); i++) {
+		odbrows_table[i] = (unsigned int)odbrows.size();
+		odbrows_table_mf[i] = (unsigned int)odbrows_mf.size();
+	}
+	mobile_matrix_done = true;
+	for (unsigned int i=current_column; i<odbrows_table_ff.size(); i++) {
+		odbrows_table_ff[i] = (unsigned int)odbrows_ff.size();
+	}
+	completeResistanceMatrix();
 }
 
 void StokesSolver::factorizeResistanceMatrix()
 {
 	/*reference code */
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
-	chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+	if (to_be_factorized) {
+		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+		//cout << "analyzed" << endl;
+	} else {
+		//cout << "not analyzed" << endl;
+	}
+
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 	if (chol_c.status) {
-		// Cholesky decomposition has failed: usually because matrix is incorrectly found to be positive-definite
-		// It is very often enough to force another preconditioner to solve the problem.
+		// This should not happen if the matrix is sym-pos-def.
+		// If this is used, then it is most probably the sign
+		// that the matrix you are passing is not what you think it is.
 		cerr << " factorization failed. forcing simplicial algorithm... " << endl;
 		chol_c.supernodal = CHOLMOD_SIMPLICIAL;
-		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+		if (to_be_factorized) {
+			chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
+		}
 		cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
 		cerr << " factorization status " << chol_c.status << " final_ll ( 0 is LDL, 1 is LL ) " << chol_c.final_ll <<endl;
 		chol_c.supernodal = CHOLMOD_SUPERNODAL;

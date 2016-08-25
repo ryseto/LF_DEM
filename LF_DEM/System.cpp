@@ -10,10 +10,8 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
-#ifdef USE_DSFMT
-#include <time.h>
-#endif
-#define DELETE(x) if(x){delete [] x; x = NULL;}
+#include "SystemHelperFunctions.h"
+
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
 #endif
@@ -21,49 +19,12 @@
 #define GRANDOM  ( sqrt( -2.0 * log( 1.0 - dsfmt_genrand_open_open(&r_gen) ) ) * cos(2.0 * 3.14159265358979323846264338328 * dsfmt_genrand_close_open(&r_gen) ) ) // RNG gaussian with mean 0. and variance 1.
 #endif
 
+
 using namespace std;
 
-System::System(ParameterSet& ps, list <Event>& ev):
-events(ev),
-p(ps),
-test_simulation(0),
-brownian(false),
-friction(false),
-rolling_friction(false),
-repulsiveforce(false),
-cohesion(false),
-critical_load(false),
-lowPeclet(false),
-twodimension(false),
-zero_shear(false),
-wall_rheology(false),
-mobile_fixed(false),
-couette_stress(false),
-avg_dt(0),
-kn_master(0),
-kt_master(0),
-kr_master(0),
-target_stress(0),
-init_strain_shear_rate_limit(0),
-init_shear_rate_limit(999),
-new_contact_gap(0),
-z_top(-1),
-ratio_unit_time(NULL),
-eventLookUp(NULL)
-{
-	amplitudes.repulsion = 0;
-	amplitudes.sqrt_temperature = 0;
-	amplitudes.contact = 0;
-	amplitudes.cohesion = 0;
-	amplitudes.critical_normal_force = 0;
-	max_sliding_velocity = 0;
-	max_contact_gap = 0;
-	max_disp_rolling = 0;
-}
-
 #ifdef USE_DSFMT
-unsigned long
-System::hash(time_t t, clock_t c)
+inline unsigned long
+wagnerhash(time_t t, clock_t c)
 {
 	/**
 		\brief Utility function to start up the DSFMT RNG with a nice seed.
@@ -93,37 +54,57 @@ System::hash(time_t t, clock_t c)
 }
 #endif
 
-System::~System()
+
+System::System(ParameterSet& ps, list <Event>& ev):
+pairwise_resistance_changed(true),
+shear_rate(0),
+vel_difference(0),
+omega_inf(0),
+events(ev),
+p(ps),
+brownian(false),
+friction(false),
+rolling_friction(false),
+repulsiveforce(false),
+cohesion(false),
+critical_load(false),
+lowPeclet(false),
+twodimension(false),
+zero_shear(false),
+wall_rheology(false),
+mobile_fixed(false),
+couette_stress(false),
+dt(0),
+avg_dt(0),
+shear_disp(0),
+target_stress(0),
+init_strain_shear_rate_limit(0),
+init_shear_rate_limit(999),
+z_top(-1),
+ratio_unit_time(NULL),
+eventLookUp(NULL)
 {
-	DELETE(radius_squared);
-	DELETE(radius_cubed);
-	DELETE(velocity);
-	DELETE(ang_velocity);
-	if (p.integration_method == 1) {
-		DELETE(velocity_predictor);
-		DELETE(ang_velocity_predictor);
-	}
-	DELETE(contact_force);
-	DELETE(contact_torque);
-	DELETE(lubstress);
-	DELETE(contactstressGU);
-	if (!p.out_particle_stress.empty() || couette_stress) {
-		DELETE(contactstressXF);
-	}
-	DELETE(interaction);
-	DELETE(interaction_list);
-	if (brownian) {
-		DELETE(brownianstressGU);
-		DELETE(brownianstressGU_predictor);
-	}
-	if (repulsiveforce) {
-		DELETE(repulsive_force);
-		DELETE(repulsivestressGU);
-		if (!p.out_particle_stress.empty() || couette_stress) {
-			DELETE(repulsivestressXF);
-		}
-	}
-};
+	amplitudes.repulsion = 0;
+	amplitudes.temperature = 0;
+	amplitudes.sqrt_temperature = 0;
+	amplitudes.contact = 0;
+	amplitudes.cohesion = 0;
+	amplitudes.critical_normal_force = 0;
+	max_sliding_velocity = 0;
+	total_stress = 0;
+	total_hydro_stress = 0;
+	total_contact_stressXF = 0;
+	total_contact_stressGU = 0;
+	total_repulsive_stressXF = 0;
+	total_repulsive_stressGU = 0;
+	total_brownian_stressGU = 0;
+	total_hydrofromfixed_stressGU = 0;
+	lx = 0;
+	ly = 0;
+	lz = 0;
+	costheta_shear = 0;
+	sintheta_shear = 0;
+}
 
 void System::allocateRessourcesPreConfiguration()
 {
@@ -145,31 +126,44 @@ void System::allocateRessourcesPreConfiguration()
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
+	nb_of_pairwise_resistances_mf = 0;
+	nb_of_pairwise_resistances_ff = 0;
+	nb_of_pairwise_resistances_mm = 0;
 	nb_of_contacts_mf = 0;
 	nb_of_contacts_ff = 0;
 	nb_of_contacts_mm = 0;
 
-	radius_cubed = new double [np];
-	radius_squared = new double [np];
-	if (p.lubrication_model == 0) {
+	radius_cubed.resize(np);
+	radius_squared.resize(np);
+	if (!pairwise_resistance) {
 		// Stokes-drag simulation
-		stokesdrag_coeff_f = new double [np];
-		stokesdrag_coeff_f_sqrt = new double [np];
-		stokesdrag_coeff_t = new double [np];
-		stokesdrag_coeff_t_sqrt = new double [np];
+		stokesdrag_coeff_f.resize(np);
+		stokesdrag_coeff_f_sqrt.resize(np);
+		stokesdrag_coeff_t.resize(np);
+		stokesdrag_coeff_t_sqrt.resize(np);
 	}
 	// Configuration
 	if (twodimension) {
 		angle.resize(np);
 	}
 	// Velocity
-	velocity = new vec3d [np];
-	ang_velocity = new vec3d [np];
+	velocity.resize(np);
+	for (auto &v: velocity) {
+		v.reset();
+	}
+	ang_velocity.resize(np);
+	for (auto &v: ang_velocity) {
+		v.reset();
+	}
 	na_velocity.resize(np);
 	na_ang_velocity.resize(np);
 	if (p.integration_method == 1) {
-		velocity_predictor = new vec3d [np];
-		ang_velocity_predictor = new vec3d [np];
+		velocity_predictor.resize(np);
+		ang_velocity_predictor.resize(np);
+	}
+	u_inf.resize(np);
+	for (auto &v: u_inf) {
+		v.reset();
 	}
 	vel_contact.resize(np);
 	ang_vel_contact.resize(np);
@@ -191,51 +185,50 @@ void System::allocateRessourcesPreConfiguration()
 		rate_proportional_wall_force.resize(p.np_fixed);
 		rate_proportional_wall_torque.resize(p.np_fixed);
 	}
-	//
-	interaction = new Interaction [maxnb_interactionpair];
+	interaction.resize(maxnb_interactionpair);
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
 	}
-	interaction_list = new set <Interaction*> [np];
+	interaction_list.resize(np);
 	interaction_partners.resize(np);
 	//
 	if (p.auto_determine_knkt) {
-		kn_avg = new Averager<double>(p.memory_strain_avg);
-		kt_avg = new Averager<double>(p.memory_strain_avg);
-		overlap_avg = new Averager<double>(p.memory_strain_avg);
-		max_disp_tan_avg = new Averager<double>(p.memory_strain_avg);
+		kn_avg.setRelaxationTime(p.memory_strain_avg);
+		kt_avg.setRelaxationTime(p.memory_strain_avg);
+		overlap_avg.setRelaxationTime(p.memory_strain_avg);
+		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
 	}
 }
 
 void System::allocateRessourcesPostConfiguration()
 {
 	// Forces and Stress
-	contact_force = new vec3d [np];
-	contact_torque = new vec3d [np];
+	contact_force.resize(np);
+	contact_torque.resize(np);
 	if (brownian) {
 		brownian_force_torque.resize(2*np);
 	}
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
 
-	total_stress_pp = new StressTensor [np];
-	lubstress = new StressTensor [np];
-	contactstressGU = new StressTensor [np];
+	total_stress_pp.resize(np);
+	lubstress.resize(np);
+	contactstressGU.resize(np);
 
 	if (!p.out_particle_stress.empty() || couette_stress) {
-		contactstressXF = new StressTensor [np];
+		contactstressXF.resize(np);
 	}
 	if (repulsiveforce) {
-		repulsive_force = new vec3d [np];
-		repulsivestressGU = new StressTensor [np];
+		repulsive_force.resize(np);
+		repulsivestressGU.resize(np);
 		if (!p.out_particle_stress.empty() || couette_stress) {
-			repulsivestressXF = new StressTensor [np];
+			repulsivestressXF.resize(np);
 		}
 	}
 	if (brownian) {
-		brownianstressGU = new StressTensor [np];
-		brownianstressGU_predictor = new StressTensor [np];
+		brownianstressGU.resize(np);
+		brownianstressGU_predictor.resize(np);
 	}
 	if (mobile_fixed) {
 		hydrofromfixedstressGU.resize(np);
@@ -243,7 +236,7 @@ void System::allocateRessourcesPostConfiguration()
 	if (brownian) {
 		if (lowPeclet) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
-			stress_avg = new Averager<StressTensor>(stress_avg_relaxation_parameter);
+			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
 		}
 	}
 }
@@ -251,6 +244,7 @@ void System::allocateRessourcesPostConfiguration()
 void System::setInteractions_GenerateInitConfig()
 {
 	calcInteractionRange = &System::calcLubricationRange;
+	interaction.resize(maxnb_interactionpair);
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
 		interaction[k].set_label(k);
@@ -261,12 +255,6 @@ void System::setInteractions_GenerateInitConfig()
 	vel_difference.reset();
 	initializeBoxing();
 	checkNewInteraction();
-}
-
-void System::allocatePositionRadius()
-{
-	position.resize(np);
-	radius.resize(np);
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,
@@ -284,17 +272,13 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	if (p.np_fixed > 0) {
 		mobile_fixed = true;
 	}
-	allocatePositionRadius();
+	position.resize(np);
+	radius.resize(np);
 	for (int i=0; i<np; i++) {
 		position[i] = initial_positions[i];
 		radius[i] = radii[i];
 	}
 	radius_wall_particle = radius[np-1];
-	if (ly == 0) {
-		twodimension = true;
-	} else {
-		twodimension = false;
-	}
 	setSystemVolume();
 	initializeBoxing();
 	checkNewInteraction();
@@ -316,7 +300,7 @@ void System::setContacts(const vector <struct contact_state>& cs)
 	for (const auto& c : cs) {
 		for (int k=0; k<nb_interaction; k++) {
 			unsigned int p0, p1;
-			interaction[k].get_par_num(p0, p1);
+			std::tie(p0, p1) = interaction[k].get_par_num();
 			if (p0 == c.p0 && p1 == c.p1) {
 				interaction[k].contact.setState(c);
 			}
@@ -332,61 +316,8 @@ void System::getContacts(vector <struct contact_state>& cs)
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
+		if (interaction[k].contact.is_active()) {
 			cs.push_back(interaction[k].contact.getState());
-		}
-	}
-}
-
-void System::updateUnscaledContactmodel()
-{
-	if (abs(target_stress) != 0) {
-		/* What is the reasonable way
-		 * when the target stress is changed during a simulation?
-		 *
-		 * [temporally change]
-		 * For destressing tests, the spring constants are fixed at the previous values.
-		 */
-		if (!cohesion) {
-			p.kn = kn_master*abs(target_stress);
-			p.kt = kt_master*abs(target_stress);
-			p.kr = kr_master*abs(target_stress);
-		} else {
-			p.kn = kn_master;
-			p.kt = kt_master;
-			p.kr = kr_master;
-		}
-		cout << " kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
-	}
-	lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
-	if (lowPeclet) {
-		lub_coeff_contact *= p.Pe_switch;
-	}
-	if (p.lubrication_model > 0) {
-		if (p.lubrication_model == 1) {
-			log_lub_coeff_contact_tan_lubrication = 0;
-			log_lub_coeff_contact_tan_dashpot = 0;
-		} else if (p.lubrication_model == 2) {
-			log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
-			/* [Note]
-			 * We finally do not introduce a dashpot for the sliding mode.
-			 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
-			 * So log_lub_coeff_contact_tan_dashpot = 0;
-			 */
-			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		} else if (p.lubrication_model == 3) {
-			log_lub_coeff_contact_tan_lubrication = 0;
-			log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-			log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-		}
-		else {
-			throw runtime_error("Error: lubrication_model>3 ???");
-		}
-	}
-	log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			interaction[k].contact.setInteractionData();
 		}
 	}
 }
@@ -427,17 +358,28 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
-	if (p.lubrication_model == 0) {
+
+	lubrication = p.lubrication_model != "none";
+	if (p.lub_max_gap < 0) {
+		throw runtime_error(indent+"lub_max_gap<0 is forbidden.");
+	}
+	if (p.lub_reduce_parameter > 1) {
+		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
+	}
+	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
+
+	if (!pairwise_resistance) {
 		/* Stokes drag simulation
 		 * Resistance matrix is constant.
 		 */
-	} else if (p.lubrication_model == 1) {
+	} else if (p.lubrication_model == "normal" || p.lubrication_model == "none") {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (p.lubrication_model == 2 || p.lubrication_model == 3) {
+	} else if (p.lubrication_model == "tangential") {
 		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
 	} else {
-		throw runtime_error(indent+"lubrication_model > 3 is not implemented yet.\n");
+		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
+
 	if (p.interaction_range == -1) {
 		/* If interaction_range is not indicated,
 		 * interaction object is created at the lubrication cutoff.
@@ -466,13 +408,19 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	} else {
 		throw runtime_error(indent+"Error: unknown friction model\n");
 	}
+	if (p.mu_dynamic < 0) {
+		p.mu_dynamic = p.mu_static;
+	}
 	if (p.mu_rolling > 0) {
 		rolling_friction = true;
 		if (friction == false) {
 			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
 		}
 	}
-	if (p.lub_max_gap >= 1) {
+	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
+		/* The tangential part of lubrication is approximated as log(1/h).
+		 * To keep log(1/h) > 0, h needs to be less than 1.
+		 */
 		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
 	}
 	if (p.repulsive_length <= 0) {
@@ -518,62 +466,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 	shear_strain = 0;
 	nb_interaction = 0;
-	if (p.stress_scaled_contactmodel) {
-		kn_master = p.kn;
-		kt_master = p.kt;
-		kr_master = p.kr;
-		// cout << indent+" kn " << p.kn << "  kn_master " << kn_master << " target_stress "  << target_stress << endl;
-	}
-	if (p.contact_relaxation_time < 0) {
-		// 1/(h+c) --> 1/c
-		lub_coeff_contact = 1/p.lub_reduce_parameter;
-	} else {
-		/* t = beta/kn
-		 *  beta = t*kn
-		 * lub_coeff_contact = 4*beta = 4*kn*p.contact_relaxation_time
-		 */
-		lub_coeff_contact = 4*p.kn*p.contact_relaxation_time;
-	}
-	/* If a contact is in sliding mode,
-	 * lubrication and dashpot forces are activated.
-	 * `log_lub_coeff_contactlub' is the parameter for lubrication during dynamic friction.
-	 *
-	 */
-	if (p.lubrication_model == 0) {
-		/* Stokes drag simulation
-		 */
-	} else if (p.lubrication_model == 1) {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 0;
-		log_lub_coeff_contact_tan_total = 0;
-	} else if (p.lubrication_model == 2) {
-		log_lub_coeff_contact_tan_lubrication = log(1/p.lub_reduce_parameter);
-		/* [Note]
-		 * We finally do not introduce a dashpot for the sliding mode.
-		 * This is set in the parameter file, i.e. p.contact_relaxation_time_tan = 0
-		 * So log_lub_coeff_contact_tan_dashpot = 0;
-		 */
-		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	}  else if (p.lubrication_model == 3) {
-		log_lub_coeff_contact_tan_lubrication = 0;
-		log_lub_coeff_contact_tan_dashpot = 6*p.kt*p.contact_relaxation_time_tan;
-		if (p.friction_model > 0 && p.contact_relaxation_time_tan == 0) {
-			throw runtime_error("lubrication_model==3 and contact_relaxation_time_tan==0\n");
-		}
-		log_lub_coeff_contact_tan_total = log_lub_coeff_contact_tan_dashpot+log_lub_coeff_contact_tan_lubrication;
-	}	else {
-		throw runtime_error("lubrication_model must be smaller than 4\n");
-	}
 
-	if (p.stress_scaled_contactmodel) {
-		updateUnscaledContactmodel();
-	}
-	// cout << "lub_coeff_contact = " << lub_coeff_contact << endl;
-	// cout << "1/lub_reduce_parameter = " << 1/p.lub_reduce_parameter << endl;
-	// cout << "log_lub_coeff_contact_tan_lubrication = " << log_lub_coeff_contact_tan_total << endl;
-	// cout << "log_lub_coeff_contact_tan_dashpot = " << log_lub_coeff_contact_tan_dashpot << endl;
 	if (brownian) {
+		amplitudes.sqrt_temperature = sqrt(amplitudes.temperature);
 #ifdef DEV
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.
@@ -592,17 +487,12 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		r_gen = new MTRand;
 #endif
 #ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, hash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
+		dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
 	}
-	if (p.time_init_relax > 0) {
-		time = -p.time_init_relax;
-		time_in_simulation_units = -p.time_init_relax*(*ratio_unit_time);
-	} else {
-		time = 0;
-		time_in_simulation_units = 0;
-	}
+	time_ = 0;
+	time_in_simulation_units = 0;
 	total_num_timesteps = 0;
 
 	vel_difference.reset();
@@ -613,8 +503,10 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		vel_difference.y = sintheta_shear*shear_rate*lz;
 	}
 	dt = p.dt;
-
-	if (test_simulation == 31) {
+	if (p.fixed_dt) {
+		avg_dt = dt;
+	}
+	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
 	angle_output = false;
@@ -631,7 +523,7 @@ void System::setupSystemPostConfiguration()
 		radius_cubed[i] = pow(radius[i], 3);
 	}
 
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		resistance_matrix_dblock.resize(np);
 		for (int i=0; i<np; i++) {
 			resetDBlock(resistance_matrix_dblock[i]);
@@ -640,7 +532,7 @@ void System::setupSystemPostConfiguration()
 	for (int i=0; i<np; i++) {
 		double FUvalue = p.sd_coeff*radius[i];
 		double TWvalue = p.sd_coeff*radius_cubed[i]*4.0/3;
-		if (p.lubrication_model == 0) {
+		if (!pairwise_resistance) {
 			// Stokes drag simulation
 			stokesdrag_coeff_f[i] = FUvalue;
 			stokesdrag_coeff_f_sqrt[i] = sqrt(FUvalue);
@@ -655,37 +547,41 @@ void System::setupSystemPostConfiguration()
 			resistance_matrix_dblock[i].col5[0] = TWvalue;
 		}
 	}
-
-	if (test_simulation >= 10 && test_simulation <= 20) {
+	omega_wheel_in  = 0;
+	omega_wheel_out = 0;
+	if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_in;
-		if (test_simulation == 11) {
+		if (p.simulation_mode == 11) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = -omega_wheel;
-		} else if (test_simulation == 12) {
+		} else if (p.simulation_mode == 12) {
 			omega_wheel_in  = omega_wheel;
 			omega_wheel_out = 0;
-		} else if (test_simulation == 13) {
+		} else if (p.simulation_mode == 13) {
 			omega_wheel_in  = 0.5*omega_wheel;
 			omega_wheel_out = -0.5*omega_wheel;
-		} else if (test_simulation == 10) {
+		} else if (p.simulation_mode == 10) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = 0;
 		}
 		couette_stress = true; // output stress per perticle
-	} else if (test_simulation == 51) {
+	} else if (p.simulation_mode == 51) {
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
 		omega_wheel_out = -omega_wheel;
 		omega_wheel_in  = omega_wheel*radius_out/radius_in;
 	}
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
 	allocateRessourcesPostConfiguration();
+	if (!stress_controlled) {
+		setVelocityDifference();
+	}
 }
 
 void System::initializeBoxing()
@@ -742,7 +638,7 @@ void System::timeStepBoxing()
 			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
-		if (wall_rheology || test_simulation == 31) {
+		if (wall_rheology || p.simulation_mode == 31) {
 			shear_strain += dt*shear_rate;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
@@ -794,7 +690,7 @@ void System::wallForces()
 		}
 		cerr << "force balance: " << sqrt(max_total_force) << endl;
 		cerr << "torque balance: " << sqrt(max_total_torque) << endl;
-		if (test_simulation >= 10 && test_simulation <= 20) {
+		if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
 			int i_np_1 = np_mobile+np_wall1;
 			// inner wheel
 			// Positions of wall particles are at r =
@@ -823,7 +719,7 @@ void System::wallForces()
 			force_tang_wall2 = torque_wall2/(radius_out+radius_wall_particle);
 			cerr << " normal:" << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
 			cerr << " tangential:" << force_tang_wall1 << ' ' << force_tang_wall2 << ' ' << torque_wall1 << ' ' << torque_wall2 << endl;
-		} else if (test_simulation > 40) {
+		} else if (p.simulation_mode > 40) {
 			int i_np_1 = np_mobile+np_wall1;
 			// bottom wall
 			force_tang_wall1 = 0;
@@ -861,10 +757,10 @@ void System::checkForceBalance()
 	unsigned int i, j;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].is_active()) {
-			interaction[k].lubrication.calcPairwiseForce();
-			interaction[k].get_par_num(i, j);
-			forceResultant[i] += interaction[k].lubrication.get_lubforce();
-			forceResultant[j] -= interaction[k].lubrication.get_lubforce();
+			std::tie(i, j) = interaction[k].get_par_num();
+			vec3d lubforce_i = interaction[k].lubrication.getTotalForce();
+			forceResultant[i] += lubforce_i;
+			forceResultant[j] -= lubforce_i;
 		}
 	}
 	// 2nd way: works
@@ -890,7 +786,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
-	if (p.lubrication_model == 0) {
+	if (!pairwise_resistance) {
 		computeVelocitiesStokesDrag();
 	} else {
 		computeVelocities(calc_stress);
@@ -898,11 +794,12 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	if (calc_stress) {
 		if (wall_rheology) {
 			wallForces();
-			for (int k=0; k<nb_interaction; k++) {
-				if (interaction[k].is_active()) {
-					interaction[k].lubrication.calcPairwiseForce();
-				}
-			}
+			// @@@ lubforce_p0 never used
+			// for (int k=0; k<nb_interaction; k++) {
+			// 	if (interaction[k].is_active()) {
+			// 		interaction[k].lubrication.calcPairwiseForce();
+			// 	}
+			// }
 		}
 		calcStressPerParticle();
 		if (wall_rheology) {
@@ -983,7 +880,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		forceResultantReset();
 		forceResultantInterpaticleForces();
 	}
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		computeVelocities(calc_stress); // divided velocities for stress calculation
 	} else {
 		computeVelocitiesStokesDrag();
@@ -991,11 +888,12 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	if (calc_stress) {
 		if (wall_rheology) {
 			wallForces();
-			for (int k=0; k<nb_interaction; k++) {
-				if (interaction[k].is_active()) {
-					interaction[k].lubrication.calcPairwiseForce();
-				}
-			}
+			// @@@ lubforce_p0 never used
+			// for (int k=0; k<nb_interaction; k++) {
+			// 	if (interaction[k].is_active()) {
+			// 		interaction[k].lubrication.calcPairwiseForce();
+			// 	}
+			// }
 		}
 		calcStressPerParticle(); // stress compornents
 	}
@@ -1005,7 +903,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	in_corrector = true;
 	setContactForceToParticle();
 	setRepulsiveForceToParticle();
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		computeVelocities(calc_stress);
 	} else {
 		computeVelocitiesStokesDrag();
@@ -1034,6 +932,9 @@ void System::adaptTimeStep()
 			dt = p.disp_max/max_sliding_velocity;
 		}
 	} else {
+		dt = p.disp_max/shear_rate;
+	}
+	if (dt*shear_rate > p.disp_max) { // cases where na_velocity < \dotgamma*radius
 		dt = p.disp_max/shear_rate;
 	}
 }
@@ -1068,7 +969,7 @@ void System::timeStepMove(double time_end, double strain_end)
 	if (!p.fixed_dt) {
 		adaptTimeStep(time_end, strain_end);
 	}
-	time += dt;
+	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
@@ -1100,7 +1001,7 @@ void System::timeStepMovePredictor(double time_end, double strain_end)
 			adaptTimeStep(time_end, strain_end);
 		}
 	}
-	time += dt;
+	time_ += dt;
 	if (ratio_unit_time != NULL) {
 		time_in_simulation_units += dt*(*ratio_unit_time);
 	} else {
@@ -1204,7 +1105,11 @@ void System::timeEvolution(double time_end, double strain_end)
 		avg_dt += dt;
 		avg_dt_nb++;
 	};
-	avg_dt /= avg_dt_nb;
+	if (avg_dt_nb > 0) {
+		avg_dt /= avg_dt_nb;
+	} else {
+		avg_dt = dt;
+	}
 
 	if (events.empty()) {
 		calc_stress = true;
@@ -1229,8 +1134,11 @@ void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 		deactivated_interaction.pop();
 	}
 	// new interaction
-	if (nb_interaction >= maxnb_interactionpair) {
-		throw runtime_error("Too many interactions.\n"); // @@@ at some point we should lift this limitation
+	if (nb_interaction > interaction.size()) {
+		Interaction inter;
+		inter.init(this);
+		interaction.push_back(inter);
+		interaction[interaction_new].set_label(interaction_new);
 	}
 	interaction[interaction_new].activate(i, j, scaled_interaction_range);
 }
@@ -1277,14 +1185,13 @@ void System::checkNewInteraction()
 	 To be called after particle moved.
 	 */
 	vec3d pos_diff;
-	int zshift;
 	double sq_dist;
-	for (int i=0; i<np_mobile; i++) {
-		for (const int& j : boxset.neighborhood(i)) {
+	for (int i=0; i<np-1; i++) {
+		for (auto j : boxset.neighborhood(i)) {
 			if (j > i) {
 				if (!hasNeighbor(i, j)) {
 					pos_diff = position[j]-position[i];
-					periodize_diff(pos_diff, zshift);
+					periodize_diff(pos_diff);
 					sq_dist = pos_diff.sq_norm();
 					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
@@ -1315,8 +1222,8 @@ void System::updateInteractions()
 			if (deactivated) {
 				deactivated_interaction.push(k);
 			}
-			if (interaction[k].is_contact()) {
-				double sq_sliding_velocity = interaction[k].relative_surface_velocity.sq_norm();
+			if (interaction[k].contact.is_active()) {
+				double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
 				if (sq_sliding_velocity > sq_max_sliding_velocity) {
 					sq_max_sliding_velocity = sq_sliding_velocity;
 				}
@@ -1337,6 +1244,18 @@ void System::updateNumberOfInteraction(int p0, int p1, int val)
 	}
 }
 
+void System::updateNumberOfPairwiseResistances(int p0, int p1, int val)
+{
+	if (p1 < np_mobile) { // i and j mobile
+		nb_of_pairwise_resistances_mm += val;
+	} else if (p0 >= np_mobile) { // i and j fixed
+		nb_of_pairwise_resistances_ff += val;
+	} else {
+		nb_of_pairwise_resistances_mf += val;
+	}
+	pairwise_resistance_changed = true;
+}
+
 void System::updateNumberOfContacts(int p0, int p1, int val)
 {
 	if (p1 < np_mobile) { // i and j mobile
@@ -1348,7 +1267,7 @@ void System::updateNumberOfContacts(int p0, int p1, int val)
 	}
 }
 
-void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
+void System::buildHydroTerms(bool build_force_GE)
 {
 	/**
 	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
@@ -1362,130 +1281,112 @@ void System::buildHydroTerms(bool build_res_mat, bool build_force_GE)
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
 	int size_mm, size_mf, size_ff;
-	if (p.lubrication_model != 3) {
-		size_mm = nb_of_active_interactions_mm;
-		size_mf = nb_of_active_interactions_mf;
-		size_ff = nb_of_active_interactions_ff;
-	} else {
-		size_mm = nb_of_contacts_mm;
-		size_mf = nb_of_contacts_mf;
-		size_ff = nb_of_contacts_ff;
-	}
-	if (build_res_mat) {
-		// create a new resistance matrix in stokes_solver
-		stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
-											resistance_matrix_dblock);
-		/* [note]
-		 * The resistance matrix is reset with resistance_matrix_dblock,
-		 * which is calculated at the beginning.
-		 */
-		// add GE in the rhs and lubrication terms in the resistance matrix
-		(this->*buildLubricationTerms)(true, build_force_GE);
-		stokes_solver.completeResistanceMatrix();
-	} else {
-		// add GE in the rhs
-		(this->*buildLubricationTerms)(false, build_force_GE);
-	}
+	size_mm = nb_of_pairwise_resistances_mm;
+	size_mf = nb_of_pairwise_resistances_mf;
+	size_ff = nb_of_pairwise_resistances_ff;
+
+	// create a new resistance matrix in stokes_solver
+	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
+										resistance_matrix_dblock, pairwise_resistance_changed);
+	pairwise_resistance_changed = false;
+	/* [note]
+	 * The resistance matrix is reset with resistance_matrix_dblock,
+	 * which is calculated at the beginning.
+	 */
+	// add GE in the rhs and lubrication terms in the resistance matrix
+	(this->*buildLubricationTerms)(build_force_GE);
 }
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
  * This method computes:
  *  - elements of the resistance matrix if 'mat' is true
- *       (only terms diverging as 1/h if lubrication_model == 1,3, terms in 1/h and log(1/h) for lubrication_model==2 )
+ *       (only terms diverging as 1/h if lubrication_model == "normal", terms in 1/h and log(1/h) for lubrication_model=="tangential")
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
-void System::buildLubricationTerms_squeeze(bool mat, bool rhs)
+void System::buildLubricationTerms_squeeze(bool rhs)
 {
 	bool shearrate_is_1 = true;
 	if (shear_rate != 1) {
 		shearrate_is_1 = false;
 	}
+	vec3d GEi, GEj, HEi, HEj;
 	for (int i=0; i<np-1; i ++) {
+		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
 			int j = inter->partner(i);
 			if (j > i) {
-				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
-					if (mat) {
-						const vec3d& nr_vec = inter->nvec;
-						inter->lubrication.calcXFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 inter->lubrication.scaledXA0(), 0, 0, 0);
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 inter->lubrication.scaledXA3(), 0, 0, 0);
-						stokes_solver.setOffDiagBlock(nr_vec, j,
-													  inter->lubrication.scaledXA2(), 0, 0, 0, 0);
-					}
+				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
+					stokes_solver.addResistanceBlocks(i, j,
+													  inter->RFU_DBlocks(),
+													  inter->RFU_ODBlock());
 					if (rhs) {
-						vec3d GEi, GEj;
-						std::tie(GEi, GEj) = inter->lubrication.calcGE(); // G*E_\infty term
-						if (shearrate_is_1 == false) {
-							GEi *= shear_rate;
-							GEj *= shear_rate;
-						}
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-					}
-				}
-			}
-		}
-		stokes_solver.doneBlocks(i);
-	}
-	stokes_solver.doneBlocks(np-1);
-	// stokes_solver.doneBlocks(np);
-}
-
-void System::buildLubricationTerms_squeeze_tangential(bool mat, bool rhs)
-{
-	bool shearrate_is_1 = true;
-	if (shear_rate != 1) {
-		shearrate_is_1 = false;
-	}
-	for (int i=0; i<np-1; i ++) {
-		for (auto& inter : interaction_list[i]) {
-			int j = inter->partner(i);
-			if (j > i) {
-				if (inter->lubrication.is_active()) { // Range of interaction can be larger than range of lubrication
-					if (mat) {
-						const vec3d& nr_vec = inter->nvec;
-						inter->lubrication.calcXYFunctions();
-						stokes_solver.addToDiagBlock(nr_vec, i,
-													 inter->lubrication.scaledXA0(),
-													 inter->lubrication.scaledYA0(),
-													 inter->lubrication.scaledYB0(),
-													 inter->lubrication.scaledYC0());
-						stokes_solver.addToDiagBlock(nr_vec, j,
-													 inter->lubrication.scaledXA3(),
-													 inter->lubrication.scaledYA3(),
-													 inter->lubrication.scaledYB3(),
-													 inter->lubrication.scaledYC3());
-						stokes_solver.setOffDiagBlock(nr_vec, j,
-													  inter->lubrication.scaledXA1(),
-													  inter->lubrication.scaledYA1(),
-													  inter->lubrication.scaledYB2(),
-													  inter->lubrication.scaledYB1(),
-													  inter->lubrication.scaledYC1());
-					}
-					if (rhs) {
-						vec3d GEi, GEj, HEi, HEj;
-						std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE(); // G*E_\infty term
-						if (shearrate_is_1 == false) {
+						if (inter->lubrication.is_active()) {
+							std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
+							if (shearrate_is_1 == false) {
 								GEi *= shear_rate;
 								GEj *= shear_rate;
-								HEi *= shear_rate;
-								HEj *= shear_rate;
+							}
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
 						}
-						stokes_solver.addToRHSForce(i, GEi);
-						stokes_solver.addToRHSForce(j, GEj);
-						stokes_solver.addToRHSTorque(i, HEi);
-						stokes_solver.addToRHSTorque(j, HEj);
+						if (inter->contact.dashpot.is_active()) {
+							std::tie(GEi, GEj, HEi, HEj) = inter->contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
+						}
 					}
 				}
 			}
 		}
-		stokes_solver.doneBlocks(i);
 	}
-	stokes_solver.doneBlocks(np-1);
-	// stokes_solver.doneBlocks(np);
+	stokes_solver.matrixFillingDone();
+}
+
+void System::buildLubricationTerms_squeeze_tangential(bool rhs)
+{
+	bool shearrate_is_1 = true;
+	if (shear_rate != 1) {
+		shearrate_is_1 = false;
+	}
+	vec3d GEi, GEj, HEi, HEj;
+	for (int i=0; i<np-1; i ++) {
+		stokes_solver.startNewColumn();
+		for (auto& inter : interaction_list[i]) {
+			int j = inter->partner(i);
+			if (j > i) {
+				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
+					stokes_solver.addResistanceBlocks(i, j,
+													  inter->RFU_DBlocks(),
+													  inter->RFU_ODBlock());
+					if (rhs) {
+						if (inter->lubrication.is_active()) {
+							std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
+							if (shearrate_is_1 == false) {
+									GEi *= shear_rate;
+									GEj *= shear_rate;
+									HEi *= shear_rate;
+									HEj *= shear_rate;
+							}
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
+						}
+						if (inter->contact.dashpot.is_active()) {
+							std::tie(GEi, GEj, HEi, HEj) = inter->contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+							stokes_solver.addToRHSForce(i, GEi);
+							stokes_solver.addToRHSForce(j, GEj);
+							stokes_solver.addToRHSTorque(i, HEi);
+							stokes_solver.addToRHSTorque(j, HEj);
+						}
+					}
+				}
+			}
+		}
+	}
+	stokes_solver.matrixFillingDone();
 }
 
 vector<double> System::computeForceFromFixedParticles()
@@ -1722,7 +1623,7 @@ void System::generateBrownianForces()
 		brownian_force_torque[i].y = sqrt_2_dt_amp*GRANDOM;
 		brownian_force_torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		/* L*L^T = RFU
 		 */
 		stokes_solver.setRHS(brownian_force_torque);
@@ -1752,7 +1653,7 @@ void System::setContactForceToParticle()
 		contact_torque[i].reset();
 	}
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_contact()) {
+		if (interaction[k].contact.is_active()) {
 			interaction[k].contact.addUpContactForceTorque();
 		}
 	}
@@ -1832,10 +1733,10 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	if (!zero_shear && p.lubrication_model != 3) {
-		buildHydroTerms(true, true); // build matrix and rhs force GE
+	if (!zero_shear) {
+		buildHydroTerms(true); // build matrix and rhs force GE
 	} else {
-		buildHydroTerms(true, false); // zero shear-rate
+		buildHydroTerms(false); // zero shear-rate, don't build force GE
 	}
 	if (mobile_fixed) {
 		// add rhs += R_mf U_f
@@ -1854,11 +1755,11 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	if (!zero_shear && p.lubrication_model != 3) {
-		buildHydroTerms(true, true); // build matrix and rhs force GE
+	if (!zero_shear) {
+		buildHydroTerms(true); // build matrix and rhs force GE
 		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
 	} else {
-		buildHydroTerms(true, false); // zero shear-rate (= no GE rhs)
+		buildHydroTerms(false); // zero shear-rate (= no GE rhs)
 		for (unsigned int i=0; i<vel_hydro.size(); i++) {
 			vel_hydro[i].reset();
 			ang_vel_hydro[i].reset();
@@ -1897,6 +1798,22 @@ void System::rescaleVelHydroStressControlledFixed()
 	}
 }
 
+void System::setVelocityDifference()
+{
+	if (!p.cross_shear) {
+		vel_difference.x = shear_rate*lz;
+	} else {
+		vel_difference.x = costheta_shear*shear_rate*lz;
+		vel_difference.y = sintheta_shear*shear_rate*lz;
+	}
+}
+
+void System::set_shear_rate(double sr)
+{
+	shear_rate = sr;
+	setVelocityDifference();
+}
+
 void System::computeShearRate()
 {
 	/**
@@ -1914,31 +1831,13 @@ void System::computeShearRate()
 	}
 	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
 	double viscosity_hyd = shearStressComponent(total_hydro_stress, p.theta_shear);
-	shear_rate = shearstress_hyd/viscosity_hyd;
+	set_shear_rate(shearstress_hyd/viscosity_hyd);
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
-			shear_rate = init_shear_rate_limit;
+			set_shear_rate(init_shear_rate_limit);
 		}
 	}
 }
-
-// pair<vec3d, vec3d> System::checkForceOnWalls()
-// {
-// 	computeForcesOnWallParticles();
-//
-// 	vec3d total_force_up = 0;
-// 	vec3d total_force_down = 0;
-//
-// 	for (int i=0; i<p.np_fixed; i++) {
-// 		if (fixed_velocities[i].x>0) {
-// 			total_force_up += rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
-// 		}
-// 		if (fixed_velocities[i].x<0) {
-// 			total_force_down += rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
-// 		}
-// 	}
-// 	return make_pair(total_force_up, total_force_down);
-// }
 
 void System::computeShearRateWalls()
 {
@@ -1966,14 +1865,14 @@ void System::computeShearRateWalls()
 	total_rate_indep_wall_shear_stress /= wall_surface;
 
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
-	shear_rate = (-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress;
+	set_shear_rate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
 
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
-			shear_rate = init_shear_rate_limit;
+			set_shear_rate(init_shear_rate_limit);
 		}
 	}
-	if(test_simulation == 31){
+	if (p.simulation_mode == 31) {
 		force_upwall.reset();
 		force_downwall.reset();
 		for (int i=0; i<p.np_fixed; i++) {
@@ -1989,10 +1888,12 @@ void System::computeShearRateWalls()
 
 void System::tmpMixedProblemSetVelocities()
 {
-	if (test_simulation == 1) {
+	if (p.simulation_mode == 1) {
+		/* Shear reversal simulation
+		 */
 		static double time_next = 16;
 		static double direction = 1;
-		if (time > time_next) {
+		if (time_ > time_next) {
 			direction *= -1;
 			time_next += 16;
 			cerr << direction << endl;
@@ -2002,19 +1903,40 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = direction;
-	} else if (test_simulation == 2) {
+	} else if (p.simulation_mode == 2) {
+		/* ????
+		 */
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
 		}
 		na_ang_velocity[np_mobile].y = 2*shear_rate;
-	} else if (test_simulation == 3) {
+	} else if (p.simulation_mode == 3) {
+		/* ????
+		 */
+
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = 1;
-	} else if (test_simulation >= 10 && test_simulation < 20) {
+	} else if (p.simulation_mode == 4) {
+		static double time_next = 10;
+		if (time_ > time_next) {
+			if (zero_shear == true) {
+				zero_shear = false;
+			} else {
+				zero_shear = true;
+			}
+			time_next += 10;
+		}
+		if (zero_shear) {
+			for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
+				na_velocity[i].reset();
+				na_ang_velocity[i].reset();
+			}
+		}
+	} else if (p.simulation_mode >= 10 && p.simulation_mode < 20) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
@@ -2030,18 +1952,20 @@ void System::tmpMixedProblemSetVelocities()
 							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
-	} else if (test_simulation == 21) {
-		static double time_next = 3;
-		if (time > time_next) {
-			shear_rate *= -1;
-			time_next += 3;
+	} else if (p.simulation_mode == 21) {
+		static double time_next = p.strain_reversal;
+		if (time_ > time_next) {
+			p.theta_shear += M_PI;
+			costheta_shear = cos(p.theta_shear);
+			sintheta_shear = sin(p.theta_shear);
+			time_next += p.strain_reversal;
 		}
-	} else if (test_simulation == 31) {
+	} else if (p.simulation_mode == 31) {
 		for (int i=np_mobile; i<np; i++) {
 			na_velocity[i] = shear_rate*fixed_velocities[i-np_mobile];
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation == 41) {
+	} else if (p.simulation_mode == 41) {
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
 		for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -2052,7 +1976,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_velocity[i].set(wall_velocity/2, 0, 0);
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation == 42) {
+	} else if (p.simulation_mode == 42) {
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
 		for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -2063,7 +1987,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_velocity[i].set(wall_velocity, 0, 0);
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation == 51) {
+	} else if (p.simulation_mode == 51) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		double l = lx/2;
@@ -2114,12 +2038,12 @@ void System::sumUpVelocityComponents()
 
 void System::setFixedParticleVelocities()
 {
-	if (test_simulation == 0) {
+	if (p.simulation_mode == 0) {
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation > 0) {
+	} else if (p.simulation_mode > 0) {
 		tmpMixedProblemSetVelocities();
 	}
 }
@@ -2136,12 +2060,13 @@ void System::computeVelocities(bool divided_velocities)
 	stokes_solver.resetRHS();
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
-			shear_rate = 1;
+			set_shear_rate(1);
 		}
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (stress_controlled) {
-			if (test_simulation != 31) {
+			if (p.simulation_mode != 31) {
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
@@ -2152,6 +2077,7 @@ void System::computeVelocities(bool divided_velocities)
 		sumUpVelocityComponents();
 		// checkForceBalance();
 	} else {
+		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
 	}
@@ -2219,7 +2145,7 @@ void System::computeVelocitiesStokesDrag()
 
 void System::computeBrownianVelocities()
 {
-	if (p.lubrication_model > 0) {
+	if (pairwise_resistance) {
 		stokes_solver.setRHS(brownian_force_torque); // set rhs = F_B (force and torque)
 		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
 	} else {
@@ -2236,28 +2162,42 @@ void System::computeBrownianVelocities()
 	}
 }
 
+void System::computeUInf()
+{
+	for (int i=0; i<np; i++) {
+		u_inf[i].reset();
+	}
+	omega_inf.reset();
+	if (!zero_shear) {
+		if (!p.cross_shear) {
+			for (int i=0; i<np; i++) {
+				u_inf[i].x = shear_rate*position[i].z;
+			}
+			omega_inf.y = 0.5*shear_rate;
+		} else {
+			for (int i=0; i<np; i++) {
+				u_inf[i].x = costheta_shear*shear_rate*position[i].z;
+				u_inf[i].y = sintheta_shear*shear_rate*position[i].z;
+			}
+			omega_inf.y =  0.5*costheta_shear*shear_rate;
+			omega_inf.x = -0.5*sintheta_shear*shear_rate;
+		}
+	}
+}
+
 void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
 {
+	if (stress_controlled) { // in rate control it is already done in computeVelocities()
+		computeUInf();
+	}
 	for (int i=0; i<np; i++) {
 		velocity[i] = na_velocity[i];
 		ang_velocity[i] = na_ang_velocity[i];
 	}
 	if (!zero_shear) {
-		if (!p.cross_shear) {
-			for (int i=0; i<np; i++) {
-				velocity[i].x += shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*shear_rate;
-			}
-			vel_difference.x = shear_rate*lz;
-		} else {
-			for (int i=0; i<np; i++) {
-				velocity[i].x += costheta_shear*shear_rate*position[i].z;
-				velocity[i].y += sintheta_shear*shear_rate*position[i].z;
-				ang_velocity[i].y += 0.5*costheta_shear*shear_rate;
-				ang_velocity[i].x -= 0.5*sintheta_shear*shear_rate;
-			}
-			vel_difference.x = costheta_shear*shear_rate*lz;
-			vel_difference.y = sintheta_shear*shear_rate*lz;
+		for (int i=0; i<np; i++) {
+			velocity[i] += u_inf[i];
+			ang_velocity[i] += omega_inf;
 		}
 	}
 }
@@ -2334,14 +2274,14 @@ int System::periodize(vec3d& pos)
 	return z_shift;
 }
 
-// periodize + give z_shift= number of boundaries crossed in z-direction
-void System::periodize_diff(vec3d& pos_diff, int& zshift)
+int System::periodize_diff(vec3d& pos_diff)
 {
-	/* Lees-Edwards boundary condition
-	 * The displacement of the second particle along z direction
-	 * is zshift * lz;
+	/** Periodize a separation vector with Lees-Edwards boundary condition
+
+		On return pos_diff is the separation vector corresponding to the closest copies,
+		and velocity_offset contains the velocity difference produced by Lees-Edwards between the 2 points.
 	 */
-	zshift = 0;
+	int zshift = 0;
 	if (pos_diff.z > lz_half) {
 		pos_diff.z -= lz;
 		pos_diff -= shear_disp;
@@ -2365,30 +2305,7 @@ void System::periodize_diff(vec3d& pos_diff, int& zshift)
 			pos_diff.y += ly;
 		}
 	}
-}
-
-void System::periodize_diff(vec3d& pos_diff)
-{
-	/* Used in simple periodic boundary condition
-	 * (not Lees-Edwards boundary condition)
-	 */
-	if (pos_diff.z > lz_half) {
-		pos_diff.z -= lz;
-	} else if (pos_diff.z < -lz_half) {
-		pos_diff.z += lz;
-	}
-	if (pos_diff.x > lx_half) {
-		pos_diff.x -= lx;
-	} else if (pos_diff.x < -lx_half) {
-		pos_diff.x += lx;
-	}
-	if (!twodimension) {
-		if (pos_diff.y > ly_half) {
-			pos_diff.y -= ly;
-		} else if (pos_diff.y < -ly_half) {
-			pos_diff.y += ly;
-		}
-	}
+	return zshift;
 }
 
 void System::setSystemVolume()
@@ -2436,17 +2353,16 @@ void System::adjustContactModelParameters()
 	 * Additionally, this routine estimates the time step dt.
 	 */
 
-	analyzeState();
-
-	double overlap = -min_reduced_gap;
-	overlap_avg->update(overlap, shear_strain);
-	max_disp_tan_avg->update(max_disp_tan, shear_strain);
-	kn_avg->update(p.kn, shear_strain);
-	kt_avg->update(p.kt, shear_strain);
+	double overlap = -evaluateMinGap(*this);
+	overlap_avg.update(overlap, shear_strain);
+	double max_disp_tan = evaluateMaxDispTan(*this);
+	max_disp_tan_avg.update(max_disp_tan, shear_strain);
+	kn_avg.update(p.kn, shear_strain);
+	kt_avg.update(p.kt, shear_strain);
 
 	static double previous_shear_strain = 0;
 	double deltagamma = (shear_strain-previous_shear_strain);
-	double kn_target = kn_avg->get()*overlap_avg->get()/p.overlap_target;
+	double kn_target = kn_avg.get()*overlap_avg.get()/p.overlap_target;
 	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
 
 	p.kn += dkn;
@@ -2456,7 +2372,7 @@ void System::adjustContactModelParameters()
 	if (p.kn > p.max_kn) {
 		p.kn = p.max_kn;
 	}
-	double kt_target = kt_avg->get()*max_disp_tan_avg->get()/p.disp_tan_target;
+	double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p.disp_tan_target;
 	double dkt = (kt_target-p.kt)*deltagamma/p.memory_strain_k;
 	p.kt += dkt;
 	if (p.kt < p.min_kt) {
@@ -2471,28 +2387,24 @@ void System::adjustContactModelParameters()
 	previous_shear_strain = shear_strain;
 
 	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active() && interaction[k].contact.state>0 ) {
+		if (interaction[k].is_active() && interaction[k].contact.is_active() ) {
 			interaction[k].contact.setSpringConstants();
 		}
 	}
 }
 
-double System::calcInteractionRangeDefault(const int& i, const int& j)
+double System::calcInteractionRangeDefault(int i, int j)
 {
 	return p.interaction_range*0.5*(radius[i]+radius[j]);
 }
 
-double System::calcLubricationRange(const int& i, const int& j)
+double System::calcLubricationRange(int i, int j)
 {
-	if (p.lubrication_model == 3) {
-		return radius[i]+radius[j];
+	double rad_ratio = radius[i]/radius[j];
+	if (rad_ratio < 2 && rad_ratio > 0.5) {
+		return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
 	} else {
-		double rad_ratio = radius[i]/radius[j];
-		if (rad_ratio < 2 && rad_ratio > 0.5) {
-			return (2+p.lub_max_gap)*0.5*(radius[i]+radius[j]);
-		} else {
-			double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
-			return radius[i]+radius[j]+p.lub_max_gap*minradius;
-		}
+		double minradius = (radius[i]<radius[j] ? radius[i] : radius[j]);
+		return radius[i]+radius[j]+p.lub_max_gap*minradius;
 	}
 }

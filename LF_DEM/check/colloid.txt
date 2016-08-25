@@ -3,7 +3,6 @@
  *
  */
 
-dt = 1e-4;
 Pe_switch = 5;
 disp_max = 5e-3;
 
@@ -50,7 +49,7 @@ kt = 6000h;
  * 2 log(1/xi) lubrication
  */
 
-lubrication_model = 2;
+lubrication_model = tangential;
 
 /*
  * lub_max: reduced large cutoff distance for lubrication

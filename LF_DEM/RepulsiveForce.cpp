@@ -11,16 +11,19 @@ void RepulsiveForce::init(System* sys_, Interaction* interaction_)
 {
 	sys = sys_;
 	interaction = interaction_;
+	force_norm = 0;
 }
 
 void RepulsiveForce::activate()
 {
-	interaction->get_par_num(p0, p1);
+	std::tie(p0, p1) = interaction->get_par_num();
 	/*
 	 * The size dependence of repulsive force:
-	 * a0*a1/(a1+a2)/2
+	 * a0*a1/(a1+a2)
 	 */
-	geometric_factor = interaction->a0*interaction->a1/interaction->ro;
+	double a0 = sys->radius[p0];
+	double a1 = sys->radius[p1];
+	geometric_factor = a0*a1/(a0+a1);
 	screening_length = sys->p.repulsive_length;
 	max_length = sys->p.repulsive_max_length;
 	force_vector.reset();
@@ -42,8 +45,7 @@ void RepulsiveForce::calcReducedForceNorm()
 		This method returns an amplitude \f$ \hat{f}_{R} = \exp(-h/\lambda)\f$.
 	*/
 	double gap = interaction->get_gap();
-	if (interaction->contact.state == 0) { // why not testing for gap? When particles separate, there is a time step for which gap>0 and contact.state>0, is that the reason?
-		// ---> I forgot why I did so:-)
+	if (gap > 0) {
 		/* separating */
 		if (max_length == -1) {
 			reduced_force_norm = geometric_factor*exp(-gap/screening_length);
@@ -103,11 +105,11 @@ void RepulsiveForce::calcStressXF()
 	stresslet_XF.set(interaction->rvec, force_vector);
 }
 
-double RepulsiveForce::calcEnergy()
+double RepulsiveForce::calcEnergy() const
 {
 	double energy;
 	double gap = interaction->get_gap();
-	if (interaction->contact.state == 0) {
+	if (gap > 0) {
 		/* separating */
 		if (max_length == -1) {
 			energy = geometric_factor*screening_length*exp(-gap/screening_length);

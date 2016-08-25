@@ -10,14 +10,17 @@
 
 struct ParameterSet
 {
-
+	/*******************************************************
+	 SIMULATION
+	 *******************************************************/
+	int simulation_mode;
 	/*******************************************************
 	 INTERACTIONS
 	********************************************************/
-	double repulsion_amplitude;				///< Amplitude of the repulsive force [0]
-	double critical_load_amplitude;			///< Amplitude of the critical load [0]
-	double cohesion_amplitude;				///< Amplitude of the cohesion [0]
-	double brownian_amplitude;				///< Amplitude of the Brownian force [0]
+	double repulsion;				///< Amplitude of the repulsive force [0]
+	double critical_load;			///< Amplitude of the critical load [0]
+	double cohesion;				///< Amplitude of the cohesion [0]
+	double brownian;				///< Amplitude of the Brownian force [0]
 	double repulsive_length;				///< "Debye" screering length for the repulsive force [0.05]
 	double repulsive_max_length;            ///< Maximum length until which the repulsive force can reach. If -1, no limit. (e.g. length of polymer brush) [-1]
 	double interaction_range;		///< maximum range (center-to-center) for interactions (repulsive force, etc.). If -1, lub_max_gap is used as cutoff [-1]
@@ -42,7 +45,7 @@ struct ParameterSet
 	* 3 dashpot in the contact model (not implemented yet)
 	*   In this case lub_max_gap should be automatically zero. (not yet implemented)
 	*/
-	int lubrication_model;                   ///< Lubrication type. 0: no lubrication (no dashpot), 1: 1/xi lubrication (only squeeze mode), 2: log(1/xi) lubrication, 3: only dashpot [2]
+	std::string lubrication_model;                   ///< Lubrication type. "none": no lubrication, "normal": 1/xi lubrication (only squeeze mode), "tangential": "normal" plus log(1/xi) terms (shear and pump modes) ["tangential"]
 	/*
 	* Leading term of lubrication force is 1/reduced_gap,
 	* with reduced_gap the gap
@@ -73,10 +76,9 @@ struct ParameterSet
 	 * kn: normal spring constant
 	 * kt: tangential spring constant
 	 */
-	bool stress_scaled_contactmodel;              ///< Scale the particles' stiffness with force scale [true under stress control, false under rate control]
-	double kn;                               ///< Particle stiffness: normal spring constant [2000 under stress control, 10000 under rate control]
-	double kt;                               ///< Particle stiffness: tangential spring constant [1000 under stress control, 6000 under rate control]
-	double kr;                               ///< Particle stiffness: rolling spring constant [1000 under stress control, 6000 under rate control]
+	double kn;                               ///< Particle stiffness: normal spring constant [2000input_units]
+	double kt;                               ///< Particle stiffness: tangential spring constant [0.5kn]
+	double kr;                               ///< Particle stiffness: rolling spring constant [0.5kn]
 		/*
 		 * contact_relaxation_factor:
 		 *
@@ -84,8 +86,8 @@ struct ParameterSet
 		 * - If the value is negative, the value of 1/lub_reduce_parameter is used.
 		 *
 		 */
-	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model (in units of p.dt) [1e-3]
-	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model (in units of p.dt) [0]
+	double contact_relaxation_time;          ///< Relaxation time (normal) of the contact model. Sets the normal dashpot. If <0, use normal lubrication at contact as normal dashpot. [1e-3input_unit]
+	double contact_relaxation_time_tan;      ///< Relaxation time (tangential) of the contact model. Sets the tangential dashpot. If <0, use tangential lubrication at contact as tangential dashpot. [-1input_unit]
 
 	/*******************************************************
 	 INTEGRATOR
@@ -141,7 +143,7 @@ struct ParameterSet
 	std::string event_handler;  ///< Select event handler [""]
  	bool cross_shear;        ///< Allow arbitrary shear in xy plane (actual direction set by theta_shear) [false]
 	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
-	double time_init_relax;  ///< Initial relaxa
+	double strain_reversal;  ///< for test_simulation = 21 (rtest1)
 };
 
 #endif/* defined(__LF_DEM__ParameterSet__) */

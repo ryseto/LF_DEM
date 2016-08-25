@@ -6,7 +6,6 @@
 //  Copyright (c) 2012-2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
 #define _USE_MATH_DEFINES
-#include "Simulation.h"
 #include <cmath>
 #include <map>
 #include <string>
@@ -14,7 +13,9 @@
 #include <sstream>
 #include <cctype>
 #include <stdexcept>
+#include "Simulation.h"
 #include "Timer.h"
+#include "SystemHelperFunctions.h"
 
 using namespace std;
 
@@ -26,14 +27,25 @@ target_stress_input(0),
 diminish_output(false)
 {
 	unit_longname["h"] = "hydro";
-	unit_longname["r"] = "repulsive";
-	unit_longname["b"] = "thermal";
-	unit_longname["c"] = "cohesive";
+	unit_longname["r"] = "repulsion";
+	unit_longname["b"] = "brownian";
+	unit_longname["c"] = "cohesion";
 	unit_longname["cl"] = "critical_load";
-	unit_longname["ft"] = "ft";
-	unit_longname["kn"] = "normal_stiffness";
-	unit_longname["kt"] = "tan_stiffness";
-	unit_longname["kr"] = "roll_stiffness";
+	unit_longname["ft"] = "ft_max";
+	unit_longname["kn"] = "kn";
+	unit_longname["kt"] = "kt";
+	unit_longname["kr"] = "kr";
+	unit_longname["s"] = "stress";
+
+	force_value_ptr["hydro"] = &dimensionless_rate; // the dimensionless hydrodynamic force is also the dimensionless shear rate
+	force_value_ptr["repulsion"] = &sys.amplitudes.repulsion;
+	force_value_ptr["critical_load"] = &sys.amplitudes.critical_normal_force;
+	force_value_ptr["cohesion"] = &sys.amplitudes.cohesion;
+	force_value_ptr["ft_max"] = &sys.amplitudes.ft_max;
+	force_value_ptr["brownian"] = &sys.amplitudes.temperature;
+	force_value_ptr["kn"] = &sys.p.kn;
+	force_value_ptr["kt"] = &sys.p.kt;
+	force_value_ptr["kr"] = &sys.p.kr;
 	kill = false;
 };
 
@@ -88,7 +100,7 @@ void Simulation::handleEventsShearJamming()
 	}
 	if (p.disp_max < 1e-6) {
 		cout << "jammed" << endl;
-		evaluateData();
+		sys.calcStress();
 		outputData(); // new
 		outputConfigurationBinary();
 		outputConfigurationData();
@@ -135,7 +147,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 {
 	outputConfigurationBinary(); // generic, for recovery if crash
 	if (output_events.find("data") != output_events.end()) {
-		evaluateData();
+		sys.calcStress();
 		outputData();
 	}
 
@@ -162,53 +174,57 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	string indent = "  Simulation::\t";
 	control_var = control_variable;
-	/***************  This part is temporal ********************/
-	// TODO
-	if (simu_identifier == "mtest1") {
-		cout << indent << "Test simulation for reversibility in mixed problem" << endl;
-		sys.test_simulation = 1;//mtest1
-	} else if (simu_identifier == "mtest2") {
-		cout << indent << "Test simulation for a mixed problem" << endl;
-		sys.test_simulation = 2;//mtest2
-	} else if (simu_identifier == "mtest3") {
-		cout << indent << "Test simulation for a mixed problem" << endl;
-		sys.test_simulation = 3;//mtest2
-	} else if (simu_identifier == "ctest1") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 11;//ctest1
-	} else if (simu_identifier == "ctest2") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 12;//ctest2
-	} else if (simu_identifier == "ctest3") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 13;//ctest3
-	} else if (simu_identifier == "ctest0") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 10;//ctest3
-	} else if (simu_identifier == "rtest1") {
-		cout << indent << "Test simulation for shear reversibility" << endl;
-		sys.test_simulation = 21;//rtest1
-	} else if (simu_identifier == "wtest1") {
-		cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
-		sys.test_simulation = 31;//wtest1
-	} else if (simu_identifier == "wtestA") {
-		cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 41;//wtestA
-	} else if (simu_identifier == "wtestB") {
-		cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 42;//wtestB
-	} else if (simu_identifier == "stest1") {
-		cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 51;//stest1
+	switch (p.simulation_mode) {
+		case 0:
+			cout << indent << "basic simulation" << endl;
+			break;
+		case 1:
+			cout << indent << "Test simulation for reversibility in mixed problem" << endl;
+			break;
+		case 2:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			break;
+		case 3:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			break;
+		case 4:
+			cout << indent << "Test simulation for relax" << endl;
+			sys.p.cross_shear = false;
+			break;
+		case 11: //ctest1
+			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 12: // ctest2
+			cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 13: // ctest3
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 10:
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 21:
+			cout << indent << "Test simulation for shear reversibility" << endl;
+			sys.p.cross_shear = true;
+			break;
+		case 31:
+			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
+		case 41:
+			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+		case 42:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+		case 51:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+		default:
+			break;
 	}
-
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	time_t now;
@@ -225,9 +241,8 @@ void Simulation::simulationSteadyShear(string in_args,
 									 p.nb_output_data_log_time,
 									 input_values["time_end"].unit == "strain"));
 	} else {
-		tk.addClock("data", LinearClock(time_end,
-										p.time_interval_output_data,
-										input_values["time_end"].unit == "strain"));
+		tk.addClock("data", LinearClock(p.time_interval_output_data,
+                                    input_values["time_interval_output_data"].unit == "strain"));
 	}
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
@@ -235,9 +250,8 @@ void Simulation::simulationSteadyShear(string in_args,
 									   p.nb_output_config_log_time,
 									   input_values["time_end"].unit == "strain"));
 	} else {
-		tk.addClock("config", LinearClock(time_end,
-										  p.time_interval_output_config,
-										  input_values["time_end"].unit == "strain"));
+		tk.addClock("config", LinearClock(p.time_interval_output_config,
+                                      input_values["time_interval_output_config"].unit == "strain"));
 	}
 	int binconf_counter = 0;
 	while (keepRunning()) {
@@ -271,7 +285,7 @@ void Simulation::simulationSteadyShear(string in_args,
 	timestep_end = sys.get_total_num_timesteps();
 	outputComputationTime();
 	string filename_parameters = input_files[1];
-	if (filename_parameters.find("init_relax", 0)) {
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
@@ -299,19 +313,17 @@ void Simulation::simulationInverseYield(string in_args,
 	now = time(NULL);
 	time_strain_0 = now;
 	/******************** OUTPUT INITIAL DATA ********************/
-	evaluateData();
+	sys.calcStress();
 	outputData(); // new
 	outputConfigurationBinary();
 	outputConfigurationData();
 	/*************************************************************/
 
 	TimeKeeper tk;
-	tk.addClock("data", LinearClock(time_end,
-									p.time_interval_output_data,
-									input_values["time_end"].unit == "strain"));
-	tk.addClock("config", LinearClock(time_end,
-									  p.time_interval_output_config,
-									  input_values["time_end"].unit == "strain"));
+	tk.addClock("data", LinearClock(p.time_interval_output_data,
+	                                input_values["time_interval_output_data"].unit == "strain"));
+	tk.addClock("config", LinearClock(p.time_interval_output_config,
+	                                  input_values["time_interval_output_config"].unit == "strain"));
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();
@@ -338,7 +350,8 @@ void Simulation::simulationInverseYield(string in_args,
 				cout << "target_stress = " << target_stress_input << endl;
 				target_stress_input *= 0.95;
 				sys.target_stress = target_stress_input/6/M_PI;
-				sys.updateUnscaledContactmodel();
+				throw runtime_error("use of updateUnscaledContactmodel() invalid");
+				// sys.updateUnscaledContactmodel();
 				cout << "new target_stress = " << target_stress_input << endl;
 				jammed = 0;
 			}
@@ -358,7 +371,7 @@ void Simulation::simulationInverseYield(string in_args,
 	outputComputationTime();
 
 	string	filename_parameters = input_files[1];
-	if (filename_parameters.find("init_relax", 0)) {
+	if (filename_parameters.find("init_relax", 0) != string::npos) {
 		/* To prepare relaxed initial configuration,
 		 * we can use Brownian simulation for a short interval.
 		 * Here is just to export the position data.
@@ -370,8 +383,8 @@ void Simulation::simulationInverseYield(string in_args,
 
 void Simulation::outputComputationTime()
 {
-	int time_from_1 = time_strain_end-time_strain_1;
-	int time_from_0 = time_strain_end-time_strain_0;
+	time_t time_from_1 = time_strain_end-time_strain_1;
+	time_t time_from_0 = time_strain_end-time_strain_0;
 	int timestep_from_1 = timestep_end-timestep_1;
 	fout_time << "# np time_from_0 time_from_1 timestep_end timestep_from_1" << endl;
 	fout_time << sys.get_np() << ' ';
@@ -381,24 +394,12 @@ void Simulation::outputComputationTime()
 	fout_time << timestep_from_1 << endl;
 }
 
-void Simulation::catchSuffixedForce(const string& keyword,
-									const string& value)
+DimensionalValue Simulation::str2DimensionalValue(string type,
+                                                  string name,
+                                                  string value_str,
+                                                  double *value_ptr)
 {
-	string numeral, suffix;
-	bool caught_suffix = getSuffix(value, numeral, suffix);
-	suffix = unit_longname[suffix];
-	input_force_units[keyword] = suffix;
-	input_force_values[keyword] = atof(numeral.c_str());
-
-	if (!caught_suffix) {
-		errorNoSuffix(keyword);
-	}
-}
-
-void Simulation::catchSuffixedValue(string type, string keyword,
-									string value_str, double *value_ptr)
-{
-	InputValue inv;
+	DimensionalValue inv;
 	inv.type = type;
 	inv.value = value_ptr;
 
@@ -406,13 +407,14 @@ void Simulation::catchSuffixedValue(string type, string keyword,
 	bool caught_suffix = true;
 	caught_suffix = getSuffix(value_str, numeral, suffix);
 	if (!caught_suffix) {
-		errorNoSuffix(keyword);
+		errorNoSuffix(name);
 	}
 	suffix = unit_longname[suffix];
 	*(inv.value) = atof(numeral.c_str());
 	inv.unit = suffix;
-	input_values[keyword] = inv;
+	return inv;
 }
+
 
 void Simulation::outputConfigurationBinary()
 {
@@ -465,7 +467,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 
 	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
 	int binary_conf_format = 2; // v2 as default. v1 deprecated.
-	if (sys.test_simulation == 31) {
+	if (sys.p.simulation_mode == 31) {
 		binary_conf_format = 3;
 	}
 	conf_export.write((char*)&conf_switch, sizeof(int));
@@ -530,21 +532,6 @@ double Simulation::getRate()
 	}
 }
 
-void Simulation::evaluateData()
-{
-	/**
-	 \brief Get rheological data from the System class.
-
-	 In this method we keep the internal units. There is no conversion to output units at this stage
-
-	 */
-	sys.analyzeState();
-	sys.calcStress();
-	//	if (sys.p.lubrication_model > 0) {
-	//		sys.calcLubricationForce();
-	//	}
-}
-
 void Simulation::outputData()
 {
 	/**
@@ -560,18 +547,18 @@ void Simulation::outputData()
 	 */
 
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+	if (force_ratios.find(dimless_nb_label) == force_ratios.end()) {
 		ostringstream error_str;
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
-	outdata.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 
 	outdata.setUnit(output_unit_scales);
 	double sr = sys.get_shear_rate();
 	double shear_stress = shearStressComponent(sys.total_stress, p.theta_shear);
 	outdata.entryData("time", "time", 1, sys.get_time());
-	if (sys.get_omega_wheel() == 0) {
+	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
 		outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
@@ -601,22 +588,28 @@ void Simulation::outputData()
 	outdata.entryData("particle pressure contact", "stress", 1, sys.total_contact_stressXF.getParticlePressure());
 	/* energy
 	 */
-	outdata.entryData("energy", "none", 1, sys.get_total_energy());
+	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
 	/* maximum deformation of contact bond
 	 */
-	outdata.entryData("min gap", "none", 1, sys.min_reduced_gap);
-	outdata.entryData("max gap(cohesion)", "none", 1, sys.max_contact_gap);
-	outdata.entryData("max tangential displacement", "none", 1, sys.max_disp_tan);
-	outdata.entryData("max rolling displacement", "none", 1, sys.max_disp_rolling);
+	outdata.entryData("min gap", "none", 1, evaluateMinGap(sys));
+	if (sys.cohesion) {
+		outdata.entryData("max gap(cohesion)", "none", 1, evaluateMaxContactGap(sys));
+	}
+	outdata.entryData("max tangential displacement", "none", 1, evaluateMaxDispTan(sys));
+	outdata.entryData("max rolling displacement", "none", 1, evaluateMaxDispRolling(sys));
 	/* contact number
 	 */
-	outdata.entryData("contact number", "none", 1, sys.getContactNumber());
-	outdata.entryData("frictional contact number", "none", 1, sys.getFrictionalContactNumber());
+	unsigned int contact_nb, frictional_contact_nb;
+	std::tie(contact_nb, frictional_contact_nb) = countNumberOfContact(sys);
+	double contact_nb_per_particle = (double)2*contact_nb/sys.get_np();
+	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
+	outdata.entryData("contact number", "none", 1, contact_nb_per_particle);
+	outdata.entryData("frictional contact number", "none", 1, frictional_contact_nb_per_particle);
 	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
 	/* maximum velocity
 	 */
 	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
-	outdata.entryData("max angular velocity", "velocity", 1, sys.max_ang_velocity);
+	outdata.entryData("max angular velocity", "velocity", 1, evaluateMaxAngVelocity(sys));
 	/* simulation parameter
 	 */
 	outdata.entryData("dt", "time", 1, sys.avg_dt);
@@ -631,13 +624,13 @@ void Simulation::outputData()
 		outdata.entryData("normal stress/rate wall 1", "viscosity", 1, sys.normalstress_wall1/sr);
 		outdata.entryData("normal stress/rate wall 2", "viscosity", 1, sys.normalstress_wall2/sr);
 	}
-	if (sys.test_simulation == 31) {
+	if (sys.p.simulation_mode == 31) {
 		outdata.entryData("force top wall", "force", 3, sys.force_upwall);
 		outdata.entryData("force bottom wall", "force", 3, sys.force_downwall);
 	}
 	outdata.writeToFile();
 	/****************************   Stress Tensor Output *****************/
-	outdata_st.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata_st.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_st.setUnit(output_unit_scales);
 	outdata_st.entryData("time", "time", 1, sys.get_time());
 	outdata_st.entryData("shear strain", "none", 1, sys.get_shear_strain());
@@ -650,7 +643,7 @@ void Simulation::outputData()
 	outdata_st.writeToFile();
 
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+		outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 		outdata_pst.setUnit(output_unit_scales);
 		for (int i=0; i<sys.get_np(); i++) {
 			if (p.out_particle_stress.find('t') != string::npos) {
@@ -759,13 +752,13 @@ void Simulation::outputParFileTxt()
 	}
 
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	if (dimensionless_numbers.find(dimless_nb_label) == dimensionless_numbers.end()) {
+	if (force_ratios.find(dimless_nb_label) == force_ratios.end()) {
 		ostringstream error_str;
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
 	cout << "   out config: " << sys.get_shear_strain() << endl;
-	outdata_par.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", "none", 1, i);
@@ -773,7 +766,7 @@ void Simulation::outputParFileTxt()
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
 
-		
+
 		outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
 		if (sys.couette_stress) {
 			double stress_rr, stress_thetatheta, stress_rtheta;
@@ -821,15 +814,15 @@ void Simulation::outputIntFileTxt()
 		}
 	}
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
-	
-	outdata_int.setDimensionlessNumber(dimensionless_numbers[dimless_nb_label]);
+
+	outdata_int.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
 	for (int k=0; k<sys.nb_interaction; k++) {
 		if (sys.interaction[k].is_active()) {
 			unsigned int i, j;
-			sys.interaction[k].get_par_num(i, j);
+			std::tie(i, j) = sys.interaction[k].get_par_num();
 			StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
 			outdata_int.entryData("particle 1 label", "none", 1, i);
 			outdata_int.entryData("particle 2 label", "none", 1, j);
@@ -838,7 +831,7 @@ void Simulation::outputIntFileTxt()
 			                      "1 = frictionless contact, "
 			                      "2 = non-sliding frictional, "
 			                      "3 = sliding frictional)",
-			                      "none", 1, sys.interaction[k].contact.state);
+			                      "none", 1, sys.interaction[k].contact.getFrictionState());
 			if (diminish_output == false) {
 				outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
 				                      "none", 3, sys.interaction[k].nvec);
@@ -853,20 +846,20 @@ void Simulation::outputIntFileTxt()
 			 * It seems there is no better way to visualize
 			 * the lubrication forces.
 			 */
-			outdata_int.entryData("normal part of the lubrication force", "force", 1, \
-			                      sys.interaction[k].lubrication.get_lubforce_normal());
-			outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
-			                      sys.interaction[k].lubrication.get_lubforce_tan());
+			if (sys.lubrication) {
+				double normal_part = -dot(sys.interaction[k].lubrication.getTotalForce(), sys.interaction[k].nvec);
+				outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
+				                      normal_part);
+				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
+				                      sys.interaction[k].lubrication.getTangentialForce());
+			}
 			/*
 			 * Contact forces include only spring forces.
 			 */
 			outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
-			                      sys.interaction[k].contact.get_f_contact_normal_norm());
+			                      sys.interaction[k].contact.getNormalForce().norm());
 			outdata_int.entryData("tangential part of the contact force", "force", 3, \
-			                      sys.interaction[k].contact.get_f_contact_tan());
-			sys.interaction[k].calcRelativeVelocities();
-			outdata_int.entryData("relative velocity", "velocity", 3, \
-			                      sys.interaction[k].relative_velocity);
+			                      sys.interaction[k].contact.getTangentialForce());
 			outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
 			                      sys.interaction[k].repulsion.getForceNorm());
 			if (diminish_output == false) {

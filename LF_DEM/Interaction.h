@@ -28,29 +28,22 @@
 class System;
 
 class Interaction{
-	friend class Contact;
-	friend class RepulsiveForce;
-	friend class Lubrication;
 
 private:
 	/*********************************
 	 *        Members                *
 	 *********************************/
 	System *sys;
-	double a0; // radii
-	double a1; // second raddi > a0
-	double ro_12; // ro_12 = ro/2
-	double a_reduced; // 1/a_reduced = 1/a0 + 1/a1
 	//======= internal state =====================//
 	bool active;
 	unsigned int label;
 	unsigned int p0;
 	unsigned int p1;
+	double ro; // ro = a0+a1;
 	//======= relative position/velocity data  =========//
-	int zshift;
 	double reduced_gap; // gap between particles (dimensionless gap = s - 2, s = 2r/(a1+a2) )
+	double r; // center-center distance
 
-	vec3d rolling_velocity;
 	//===== forces and stresses ==================== //
 	double interaction_range;  // max distance
 	/*********************************
@@ -60,12 +53,12 @@ private:
 	inline void set_ro(double val)
 	{
 		ro = val; // ro = a0 + a1
-		ro_12 = ro/2;
 	};
 	void calcNormalVectorDistanceGap();
-
-	void calcRollingVelocities();
 	void integrateStress();
+	void updateContactState();
+	struct ODBlock (Lubrication::*RFU_ODBlock_lub)();
+	std::pair<struct DBlock, struct DBlock> (Lubrication::*RFU_DBlocks_lub)();
 	//===== forces/stresses  ========================== //
 	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.
@@ -76,21 +69,30 @@ public:
 	Contact contact;
 	Lubrication lubrication;
 	RepulsiveForce repulsion;
-	vec3d relative_surface_velocity;
-	vec3d relative_velocity;
-	double ro; // ro = a0+a1;
-	double r; // center-center distance
 	vec3d rvec; // vector center to center
 	vec3d nvec; // normal vector
+	int z_offset;
 
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	Interaction(): contact(), lubrication(Lubrication(this)) {}
+	Interaction():
+	active(false),
+	label(0),
+	p0(0),
+	p1(0),
+	ro(0),
+	reduced_gap(0),
+	r(0),
+	interaction_range(0),
+	rvec(0),
+	nvec(0),
+	z_offset(0)
+	{};
 	void init(System *sys_);
 	//======= state updates  ====================//
 	/* Update the follow items:
-	 * - r_vec, zshift, _r, and nr_vec
+	 * - r_vec, z_offset, _r, and nr_vec
 	 * - contact_velocity_tan
 	 * - disp_tan
 	 * - Fc_normal and Fc_tan
@@ -98,68 +100,47 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool& deactivated);
-	void updateContactState();
 	void activate(unsigned int i, unsigned int j, double interaction_range_);
 	void deactivate();
-	void calcRelativeVelocities();
-	inline vec3d relative_surface_velocity_direction() {
-		return relative_surface_velocity/relative_surface_velocity.norm();
-	}
-	inline bool is_overlap()
+	double separation_distance()
 	{
-		return r < ro;
+		return r;
 	}
-	inline bool is_contact()
-	{
-		return contact.state >= 1;
-	}
-	inline bool is_friccontact()
-	{
-		return contact.state >= 2;
-	}
-	inline bool is_active()
+
+	inline bool is_active() const
 	{
 		return active;
 	}
 	//======= particles data  ====================//
-	inline int partner(unsigned int i)
+	inline int partner(unsigned int i) const
 	{
 		return (i == p0 ? p1 : p0);
 	}
-	inline void	get_par_num(unsigned int& i, unsigned int& j)
+	inline std::pair<unsigned int, unsigned int>	get_par_num() const
 	{
-		i = p0, j = p1;
+		return std::make_pair(p0, p1);
 	}
 	inline void set_label(unsigned int val)
 	{
 		label = val;
 	}
-	inline unsigned int get_label()
+	inline unsigned int get_label() const
 	{
 		return label;
 	}
-	inline double get_a_reduced()
-	{
-		return a_reduced;
-	}
-	//======= relative position/velocity  ========//
-    inline double get_ro_r()
-    {
-        return ro/r;
-    }
-	inline double get_reduced_gap()
+	inline double get_reduced_gap() const
 	{
 		return reduced_gap;
 	}
-	inline double get_gap()
+	inline double get_gap() const
 	{
 		return r-ro;
 	}
+	bool hasPairwiseResistance();
 	double getNormalVelocity();
-	double getRelativeVelocity()
-	{
-		return relative_velocity.norm();
-	}
-	double getContactVelocity();
+	struct ODBlock RFU_ODBlock();
+
+
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();
 };
 #endif /* defined(__LF_DEM__Interaction__) */

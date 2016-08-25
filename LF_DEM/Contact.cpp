@@ -11,9 +11,10 @@ void Contact::init(System* sys_, Interaction* interaction_)
 {
 	sys = sys_;
 	interaction = interaction_;
+	dashpot.init(sys_, interaction_);
 	state = 0;
-	f_contact_normal_norm = 0;
-	f_contact_normal.reset();
+	f_spring_normal_norm = 0;
+	f_spring_normal.reset();
 	if (sys->p.friction_model != 0) {
 		if (sys->p.friction_model == 1) {
 			frictionlaw = &Contact::frictionlaw_standard;
@@ -33,7 +34,7 @@ void Contact::init(System* sys_, Interaction* interaction_)
 
 void Contact::setSpringConstants()
 {
-    const double& ro_12 = interaction->ro_12;
+    double ro_12 = (a0+a1)/2;
     kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
     if (sys->friction) {
         kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
@@ -45,7 +46,17 @@ void Contact::setSpringConstants()
 
 void Contact::setInteractionData()
 {
-	interaction->get_par_num(p0, p1);
+	std::tie(p0, p1) = interaction->get_par_num();
+	a0 = sys->radius[p0];
+	a1 = sys->radius[p1];
+	/* [note]
+	 * The reduced (or effective) radius is defined as
+	 * 1/a_reduced = 1/a0 + 1/a1
+	 * This definition comes from sphere vs half-plane geometory of contact mechanics.
+	 * If sphere contacts with a half-plane (a1 = infinity), a_reduced = a0.
+	 * For equal sized spheres, a_reduced = 0.5*a0 = 0.5*a1
+	 */
+	a_reduced = a0*a1/(a0+a1);
 	setSpringConstants();
 	if (sys->friction) {
 		mu_static = sys->p.mu_static;
@@ -54,6 +65,9 @@ void Contact::setInteractionData()
 			mu_rolling = sys->p.mu_rolling;
 		}
 	}
+	dashpot.setParticleData();
+	dashpot.setDashpotResistanceCoeffs(sys->p.kn, sys->p.kt,
+									   sys->p.contact_relaxation_time, sys->p.contact_relaxation_time_tan);
 }
 
 void Contact::activate()
@@ -64,33 +78,44 @@ void Contact::activate()
 	 * this value will be updated to 2 or 3 in friction law.
 	 * In critical load model, the value can take 1 as well.
 	 */
+	active = true;
+	f_spring_normal_norm = 0;
+	f_spring_normal.reset();
+	normal_load = 0;
+	f_spring_total.reset();
 	if (sys->friction) {
 		if (sys->p.friction_model == 2 || sys->p.friction_model == 3) {
 			state = 1; // critical load model
 		} else {
 			state = 2; // static friction
 		}
-		f_contact_normal_norm = 0;
-		f_contact_normal.reset();
 		disp_tan.reset();
 		disp_rolling.reset();
+		prev_disp_tan.reset();
+		prev_disp_rolling.reset();
+		f_rolling.reset();
 	} else {
 		state = 1;
 	}
+	dashpot.activate();
+	sys->updateNumberOfContacts(p0, p1, 1);
 }
 
 void Contact::deactivate()
 {
 	// r > a0 + a1
 	state = 0;
-	f_contact_normal_norm = 0;
-	f_contact_normal.reset();
+	active = false;
+	f_spring_normal_norm = 0;
+	f_spring_normal.reset();
+	f_spring_total.reset();
 	if (sys->friction) {
 		disp_tan.reset();
 		disp_rolling.reset();
-		f_contact_tan.reset();
+		f_spring_tan.reset();
 	}
-	f_contact.reset();
+	dashpot.deactivate();
+	sys->updateNumberOfContacts(p0, p1, -1);
 }
 
 /*********************************
@@ -98,8 +123,27 @@ void Contact::deactivate()
  *	   Contact Forces Methods    *
  *                                *
  *********************************/
+
 void Contact::incrementTangentialDisplacement()
 {
+	/** Computes the tangential surface velocity difference between the two particles as
+	delta_v = (surface_velo_p1 - surface_velo_p0).(Identity - nvec nvec),
+	and increments the tangential spring stretch xi += delta_v*dt
+
+	The surface velocity of p1 must be computed taking into account the Lees-Edwards periodic
+	boundary conditions.
+
+	 if p1 is upper, zshift = -1.
+	 zshift = -1; //  p1 (z ~ lz), p0 (z ~ 0)
+
+	******************************************************/
+	vec3d vel_offset = interaction->z_offset*sys->get_vel_difference();
+	vec3d translational_deltav = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
+	vec3d rotational_deltav = -cross(a0*sys->ang_velocity[p0]+a1*sys->ang_velocity[p1], interaction->nvec);
+
+	vec3d relative_surface_velocity = translational_deltav+rotational_deltav;
+ 	relative_surface_velocity -= dot(relative_surface_velocity, interaction->nvec)*interaction->nvec;
+	relative_surface_velocity_sqnorm = relative_surface_velocity.sq_norm();
 	if (sys->in_predictor) {
 		/*
 		 * relative_surface_velocity is true velocity in predictor and corrector.
@@ -107,19 +151,27 @@ void Contact::incrementTangentialDisplacement()
 		 */
 		prev_disp_tan = disp_tan;
 	}
-	disp_tan = prev_disp_tan+interaction->relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+	disp_tan = prev_disp_tan+relative_surface_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+}
+
+void Contact::calcRollingVelocities()
+{
+	/**
+	 Calculate rolling velocity
+	 We follow Luding(2008).
+	 The factor 2 is added.
+	 cf. Book by Marshall and Li
+	 equation 3.6.13 ??
+	 */
+	rolling_velocity = 2*a_reduced*cross(sys->ang_velocity[p1]-sys->ang_velocity[p0], interaction->nvec);
 }
 
 void Contact::incrementRollingDisplacement()
 {
 	if (sys->in_predictor) {
-		/*
-		 * relative_surface_velocity is true velocity in predictor and corrector.
-		 * Thus, previous disp_tan is saved to use in corrector.
-		 */
 		prev_disp_rolling = disp_rolling;
 	}
-	disp_rolling = prev_disp_rolling+interaction->rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
+	disp_rolling = prev_disp_rolling+rolling_velocity*sys->dt; // always disp(t+1) = disp(t) + v*dt, no predictor-corrector headache :)
 }
 
 void Contact::incrementDisplacements()
@@ -132,16 +184,15 @@ void Contact::incrementDisplacements()
 	   This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
 	 */
 	if (sys->friction) {
-		interaction->calcRelativeVelocities();
 		incrementTangentialDisplacement();
 		if (sys->rolling_friction) {
-			interaction->calcRollingVelocities();
+			calcRollingVelocities();
 			incrementRollingDisplacement();
 		}
 	}
 }
 
-void Contact::calcContactInteraction()
+void Contact::calcContactSpringForce()
 {
 	/**
 		\brief Compute the contact forces and apply friction law, by rescaling forces and stretches if necessary.
@@ -152,24 +203,46 @@ void Contact::calcContactInteraction()
 	 */
 
 	/* h < 0
-	 * f_contact_normal_norm > 0 ..... repulsive force
+	 * f_spring_normal_norm > 0 ..... repulsive force
 	 * h > 0
-	 * f_contact_normal_norm < 0 ..... attractive force
-	 *
-	 *
-	 reduced_gap is negative,
-     positive. */
-    f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap();
-    f_contact_normal = -f_contact_normal_norm*interaction->nvec;
-    if (sys->friction) {
+	 * f_spring_normal_norm < 0 ..... attractive force
+	 */
+	if (!is_active()) {
+		return;
+	}
+	f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap();
+	f_spring_normal = -f_spring_normal_norm*interaction->nvec;
+	if (sys->friction) {
 		disp_tan.vertical_projection(interaction->nvec);
-		f_contact_tan = kt_scaled*disp_tan;
+		f_spring_tan = kt_scaled*disp_tan;
 		if (sys->rolling_friction) {
 			f_rolling = kr_scaled*disp_rolling;
 		}
 		(this->*frictionlaw)();
 	}
-	//	calcScaledForce();
+	if (state <= 1) {
+		f_spring_total = f_spring_normal;
+	} else {
+		f_spring_total = f_spring_normal+f_spring_tan;
+	}
+}
+
+vec3d Contact::getTotalForce() const
+{
+	/**
+		\brief Compute the total contact forces (spring+dashpot).
+		!!! Needs to have the correct velocities in the System class!
+		(This contains the dashpot, it is NOT only a static force.)
+		*/
+	if (is_active()) {
+		return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],
+                                               sys->velocity[p1],
+                                               sys->ang_velocity[p0],
+                                               sys->ang_velocity[p1]);
+	} else {
+		return vec3d();
+	}
+
 }
 
 void Contact::frictionlaw_standard()
@@ -178,8 +251,8 @@ void Contact::frictionlaw_standard()
 	 \brief Friction law
 	 */
 	double supportable_tanforce = 0;
-	double sq_f_tan = f_contact_tan.sq_norm();
-	normal_load = f_contact_normal_norm;
+	double sq_f_tan = f_spring_tan.sq_norm();
+	normal_load = f_spring_normal_norm;
 	if (sys->cohesion) {
 		normal_load += sys->amplitudes.cohesion;
 	}
@@ -199,7 +272,7 @@ void Contact::frictionlaw_standard()
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
 		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_contact_tan = kt_scaled*disp_tan;
+		f_spring_tan = kt_scaled*disp_tan;
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
@@ -214,25 +287,25 @@ void Contact::frictionlaw_standard()
 
 void Contact::frictionlaw_criticalload()
 {
-	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
-	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
-	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
+	/* Since reduced_gap < 0, f_spring_normal_norm is always positive.
+	 * f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
+	 * F_normal = f_spring_normal_norm(positive) + dashpot_force_p0_normal
 	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_contact_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
+	double supportable_tanforce = f_spring_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
-		f_contact_tan.reset();
+		f_spring_tan.reset();
 	} else {
 		supportable_tanforce *= mu_static;
-		double sq_f_tan = f_contact_tan.sq_norm();
+		double sq_f_tan = f_spring_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 			state = 3; // sliding
 			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-			f_contact_tan = kt_scaled*disp_tan;
+			f_spring_tan = kt_scaled*disp_tan;
 		} else {
 			state = 2; // static friction
 		}
@@ -242,18 +315,18 @@ void Contact::frictionlaw_criticalload()
 
 void Contact::frictionlaw_criticalload_mu_inf()
 {
-	/* Since reduced_gap < 0, f_contact_normal_norm is always positive.
-	 * f_contact_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
-	 * F_normal = f_contact_normal_norm(positive) + lubforce_p0_normal
+	/* Since reduced_gap < 0, f_spring_normal_norm is always positive.
+	 * f_spring_normal_norm = -kn_scaled*interaction->get_reduced_gap(); > 0
+	 * F_normal = f_spring_normal_norm(positive) + dashpot_force_p0_normal
 	 *
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_contact_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
+	double supportable_tanforce = f_spring_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
-		f_contact_tan.reset();
+		f_spring_tan.reset();
 	} else {
 		// Never rescaled.
 		// [note]
@@ -268,11 +341,11 @@ void Contact::frictionlaw_ft_max()
  	/**
 	   \brief Friction law
 	*/
- 	double sq_f_tan = f_contact_tan.sq_norm();
+ 	double sq_f_tan = f_spring_tan.sq_norm();
  	if (sq_f_tan > ft_max*ft_max) {
  		state = 3; // dynamic friction
  		disp_tan *= ft_max/sqrt(sq_f_tan);
- 		f_contact_tan = kt_scaled*disp_tan;
+ 		f_spring_tan = kt_scaled*disp_tan;
  	} else {
  		state = 2; // static friction
  	}
@@ -293,7 +366,7 @@ void Contact::frictionlaw_coulomb_max()
 	 * The current implementation is quite confusing, and should be fixed.
 	 */
 	double supportable_tanforce = 0;
-	normal_load = f_contact_normal_norm;
+	normal_load = f_spring_normal_norm;
 	if (state == 2) {
 		// static friction in previous step
 		supportable_tanforce = mu_static*normal_load;
@@ -306,11 +379,11 @@ void Contact::frictionlaw_coulomb_max()
 	if (supportable_tanforce > ft_max) {
 	 	supportable_tanforce = ft_max;
 	}
-	double sq_f_tan = f_contact_tan.sq_norm();
+	double sq_f_tan = f_spring_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		state = 3; // dynamic friction
 		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_contact_tan = kt_scaled*disp_tan;
+		f_spring_tan = kt_scaled*disp_tan;
 	} else {
 		state = 2; // static friction
 	}
@@ -321,57 +394,36 @@ void Contact::addUpContactForceTorque()
 {
     /* Force
 	 */
-	if (state <= 1) {
-        f_contact = f_contact_normal;
-	} else {
-		f_contact = f_contact_normal+f_contact_tan;
-	}
-	sys->contact_force[p0] += f_contact;
-	sys->contact_force[p1] -= f_contact;
+	sys->contact_force[p0] += f_spring_total;
+	sys->contact_force[p1] -= f_spring_total;
 	/* Torque
 	 */
 	if (state >= 2) {
-		vec3d t_ij = cross(interaction->nvec, f_contact_tan);
-		sys->contact_torque[p0] += interaction->a0*t_ij;
-		sys->contact_torque[p1] += interaction->a1*t_ij;
+		vec3d t_ij = cross(interaction->nvec, f_spring_tan);
+		sys->contact_torque[p0] += a0*t_ij;
+		sys->contact_torque[p1] += a1*t_ij;
 		if (sys->rolling_friction) {
 			vec3d t_rolling = cross(interaction->nvec, f_rolling);
-			sys->contact_torque[p0] += interaction->a0*t_rolling;
-			sys->contact_torque[p1] -= interaction->a1*t_rolling;
+			sys->contact_torque[p0] += a0*t_rolling;
+			sys->contact_torque[p1] -= a1*t_rolling;
 		}
 	}
 }
 
 void Contact::calcContactStress()
 {
-	/*
-	 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
-	 * Fc_normal = -Fc_normal_norm*nvec;
-	 * This force acts on particle 1.
-	 * stress1 is a0*nvec[*]force.
-	 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
+	/**
+	 * The "xF" contact stress.
+	 * The contact force F includes both the spring force and the dashpot force.
 	 */
-	/* When we compose stress tensor,
-	 * even individual level, this part calculates symmetric tensor.
-	 * This symmetry is expected in the average ensemble.
-	 * I'm not sure this is allowed or not.
-	 */
-	if (state > 0) {
-		/*
-		 * Fc_normal_norm = -kn_scaled*reduced_gap; --> positive
-		 * Fc_normal = -Fc_normal_norm*nvec;
-		 * This force acts on particle 1.
-		 * stress1 is a0*nvec[*]force.
-		 * stress2 is (-a1*nvec)[*](-force) = a1*nvec[*]force
-		 * stress1 + stress2 = (a1+a2)*nvec[*]force
-		 */
-		contact_stresslet_XF.set(interaction->rvec, f_contact);
+	if (is_active()) {
+		contact_stresslet_XF.set(interaction->rvec, getTotalForce());
 	} else {
 		contact_stresslet_XF.reset();
 	}
 }
 
-double Contact::calcEnergy()
+double Contact::calcEnergy() const
 {
 	double overlap = -interaction->get_reduced_gap();
 	double sq_tan_norm = disp_tan.sq_norm();
@@ -387,4 +439,20 @@ double Contact::calcEnergy()
 		}
 	}
 	return energy;
+}
+
+vec3d Contact::getNormalForce() const
+{
+	return dot(interaction->nvec, getTotalForce())*interaction->nvec;
+}
+
+double Contact::get_normal_load() const
+{
+	return normal_load;
+}
+
+vec3d Contact::getTangentialForce() const
+{
+	vec3d total_force = getTotalForce();
+	return total_force-dot(interaction->nvec, total_force)*interaction->nvec;
 }
