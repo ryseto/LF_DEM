@@ -177,7 +177,6 @@ protected:
 	~System(){};
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
-	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
 	// Interaction types
 	bool brownian;
 	bool friction;

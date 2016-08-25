@@ -62,7 +62,6 @@ vel_difference(0),
 omega_inf(0),
 events(ev),
 p(ps),
-test_simulation(0),
 brownian(false),
 friction(false),
 rolling_friction(false),
@@ -507,7 +506,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	if (p.fixed_dt) {
 		avg_dt = dt;
 	}
-	if (test_simulation == 31) {
+	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
 	angle_output = false;
@@ -550,28 +549,28 @@ void System::setupSystemPostConfiguration()
 	}
 	omega_wheel_in  = 0;
 	omega_wheel_out = 0;
-	if (test_simulation >= 10 && test_simulation <= 20) {
+	if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
 		origin_of_rotation.set(lx_half, 0, lz_half);
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
 		}
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_in;
-		if (test_simulation == 11) {
+		if (p.simulation_mode == 11) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = -omega_wheel;
-		} else if (test_simulation == 12) {
+		} else if (p.simulation_mode == 12) {
 			omega_wheel_in  = omega_wheel;
 			omega_wheel_out = 0;
-		} else if (test_simulation == 13) {
+		} else if (p.simulation_mode == 13) {
 			omega_wheel_in  = 0.5*omega_wheel;
 			omega_wheel_out = -0.5*omega_wheel;
-		} else if (test_simulation == 10) {
+		} else if (p.simulation_mode == 10) {
 			omega_wheel_in  = 0;
 			omega_wheel_out = 0;
 		}
 		couette_stress = true; // output stress per perticle
-	} else if (test_simulation == 51) {
+	} else if (p.simulation_mode == 51) {
 		double omega_wheel = (radius_out-radius_in)*shear_rate/radius_out;
 		omega_wheel_out = -omega_wheel;
 		omega_wheel_in  = omega_wheel*radius_out/radius_in;
@@ -639,7 +638,7 @@ void System::timeStepBoxing()
 			shear_disp.y = shear_disp.y-m*ly;
 		}
 	} else {
-		if (wall_rheology || test_simulation == 31) {
+		if (wall_rheology || p.simulation_mode == 31) {
 			shear_strain += dt*shear_rate;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
@@ -691,7 +690,7 @@ void System::wallForces()
 		}
 		cerr << "force balance: " << sqrt(max_total_force) << endl;
 		cerr << "torque balance: " << sqrt(max_total_torque) << endl;
-		if (test_simulation >= 10 && test_simulation <= 20) {
+		if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
 			int i_np_1 = np_mobile+np_wall1;
 			// inner wheel
 			// Positions of wall particles are at r =
@@ -720,7 +719,7 @@ void System::wallForces()
 			force_tang_wall2 = torque_wall2/(radius_out+radius_wall_particle);
 			cerr << " normal:" << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
 			cerr << " tangential:" << force_tang_wall1 << ' ' << force_tang_wall2 << ' ' << torque_wall1 << ' ' << torque_wall2 << endl;
-		} else if (test_simulation > 40) {
+		} else if (p.simulation_mode > 40) {
 			int i_np_1 = np_mobile+np_wall1;
 			// bottom wall
 			force_tang_wall1 = 0;
@@ -1873,7 +1872,7 @@ void System::computeShearRateWalls()
 			set_shear_rate(init_shear_rate_limit);
 		}
 	}
-	if(test_simulation == 31){
+	if (p.simulation_mode == 31) {
 		force_upwall.reset();
 		force_downwall.reset();
 		for (int i=0; i<p.np_fixed; i++) {
@@ -1889,7 +1888,9 @@ void System::computeShearRateWalls()
 
 void System::tmpMixedProblemSetVelocities()
 {
-	if (test_simulation == 1) {
+	if (p.simulation_mode == 1) {
+		/* Shear reversal simulation
+		 */
 		static double time_next = 16;
 		static double direction = 1;
 		if (time_ > time_next) {
@@ -1902,19 +1903,24 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = direction;
-	} else if (test_simulation == 2) {
+	} else if (p.simulation_mode == 2) {
+		/* ????
+		 */
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
 		}
 		na_ang_velocity[np_mobile].y = 2*shear_rate;
-	} else if (test_simulation == 3) {
+	} else if (p.simulation_mode == 3) {
+		/* ????
+		 */
+
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
 		}
 		na_velocity[np_mobile].x = 1;
-	} else if (test_simulation == 4) {
+	} else if (p.simulation_mode == 4) {
 		static double time_next = 10;
 		if (time_ > time_next) {
 			if (zero_shear == true) {
@@ -1930,7 +1936,7 @@ void System::tmpMixedProblemSetVelocities()
 				na_ang_velocity[i].reset();
 			}
 		}
-	} else if (test_simulation >= 10 && test_simulation < 20) {
+	} else if (p.simulation_mode >= 10 && p.simulation_mode < 20) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
@@ -1946,7 +1952,7 @@ void System::tmpMixedProblemSetVelocities()
 							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
 			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
 		}
-	} else if (test_simulation == 21) {
+	} else if (p.simulation_mode == 21) {
 		static double time_next = p.strain_reversal;
 		if (time_ > time_next) {
 			p.theta_shear += M_PI;
@@ -1954,12 +1960,12 @@ void System::tmpMixedProblemSetVelocities()
 			sintheta_shear = sin(p.theta_shear);
 			time_next += p.strain_reversal;
 		}
-	} else if (test_simulation == 31) {
+	} else if (p.simulation_mode == 31) {
 		for (int i=np_mobile; i<np; i++) {
 			na_velocity[i] = shear_rate*fixed_velocities[i-np_mobile];
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation == 41) {
+	} else if (p.simulation_mode == 41) {
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
 		for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -1970,7 +1976,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_velocity[i].set(wall_velocity/2, 0, 0);
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation == 42) {
+	} else if (p.simulation_mode == 42) {
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
 		for (int i=np_mobile; i<i_np_wall1; i++) {
@@ -1981,7 +1987,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_velocity[i].set(wall_velocity, 0, 0);
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation == 51) {
+	} else if (p.simulation_mode == 51) {
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		double l = lx/2;
@@ -2032,12 +2038,12 @@ void System::sumUpVelocityComponents()
 
 void System::setFixedParticleVelocities()
 {
-	if (test_simulation == 0) {
+	if (p.simulation_mode == 0) {
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
 			na_ang_velocity[i].reset();
 		}
-	} else if (test_simulation > 0) {
+	} else if (p.simulation_mode > 0) {
 		tmpMixedProblemSetVelocities();
 	}
 }
@@ -2060,7 +2066,7 @@ void System::computeVelocities(bool divided_velocities)
 		setFixedParticleVelocities();
 		computeVelocityByComponents();
 		if (stress_controlled) {
-			if (test_simulation != 31) {
+			if (p.simulation_mode != 31) {
 				computeShearRate();
 				rescaleVelHydroStressControlled();
 			} else {
