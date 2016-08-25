@@ -318,7 +318,6 @@ protected:
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 
-	void updateUnscaledContactmodel();
 	int periodize(vec3d&);
 	int periodize_diff(vec3d&);
 	void calcStress();
@@ -330,14 +329,11 @@ protected:
 						  double &stress_rtheta);
 	StokesSolver stokes_solver;
 	void initializeBoxing();
-    //void calcLubricationForce(); // for visualization of force chains
-	void calcPotentialEnergy();
 	/*************************************************************/
 	double calcInteractionRangeDefault(int, int);
 	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
-	// std::pair<vec3d,vec3d> checkForceOnWalls();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{

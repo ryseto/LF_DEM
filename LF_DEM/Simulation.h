@@ -151,7 +151,6 @@ public:
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void changeUnit(DimensionalValue &x, std::string new_unit);
-	void changeUnitsInputValues(std::string new_unit);
 	void buildFullSetOfForceRatios();
 
 	void resolveUnitSystem(std::string long_unit);
