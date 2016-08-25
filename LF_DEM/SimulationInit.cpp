@@ -812,7 +812,7 @@ void Simulation::readParameterFile(const string& filename_parameters)
 
 void Simulation::setDefaultParameters(string input_scale)
 {
-	
+
 	/**
 	 \brief Set default values for ParameterSet parameters.
 	 */
@@ -903,6 +903,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.cross_shear = false;
 	p.theta_shear = 0;
 	p.event_handler = "";
+	p.simulation_mode = 0;
 }
 
 inline string columnDefinition(int &cnb, const string &type, const string &name)

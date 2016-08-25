@@ -174,6 +174,7 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	string indent = "  Simulation::\t";
 	control_var = control_variable;
+	p.simulation_mode = 0; // temporary: p.simulation_mode is unset at this stage, so I do not understand the switch
 	switch (p.simulation_mode) {
 		case 0:
 			cout << indent << "basic simulation" << endl;
