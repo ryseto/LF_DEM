@@ -72,6 +72,7 @@ private:
 	 * For inputs
 	 */
 
+	void setupOptionalSimulation(std::string indent);
 public:
 	/* For DEMsystem*/
 	Simulation();
