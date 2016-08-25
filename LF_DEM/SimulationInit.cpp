@@ -248,7 +248,7 @@ void Simulation::catchForcesInStressUnits(const string &stress_unit)
 }
 
 void Simulation::setupNonDimensionalizationStressControlled(double dimensionlessnumber,
-                                                    string stress_unit)
+															string stress_unit)
 {
 	/**
 	 \brief Chooses units for the simulation and convert the forces to this unit (stress controlled case).
@@ -296,7 +296,7 @@ void Simulation::setupNonDimensionalizationStressControlled(double dimensionless
 // -r [val]r  ---> val = F_H0/F_R0 = shear_rate/shear_rate_R0
 // -r [val]b  ---> val = F_H0/F_B0 = shear_rate/shear_rate_B0
 void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnumber,
-												  string input_scale)
+														  string input_scale)
 {
 	/**
 	 \brief Choose units for the simulation and convert the forces to this unit (rate controlled case).
@@ -574,12 +574,12 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		sys.zero_shear = false;
 	}
-	if (sys.test_simulation > 0 && (sys.test_simulation < 20 || sys.test_simulation > 30) ) {
+	setDefaultParameters(input_scale);
+	readParameterFile(filename_parameters);
+	if (sys.p.simulation_mode > 0 && (sys.p.simulation_mode < 20 || sys.p.simulation_mode > 30) ) {
 		sys.zero_shear = true;
 		sys.mobile_fixed = true;
 	}
-	setDefaultParameters(input_scale);
-	readParameterFile(filename_parameters);
 	tagStrainParameters();
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
@@ -632,7 +632,9 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	 \brief Parse an input parameter
 	 */
 	string numeral, suffix;
-	if (keyword == "lubrication_model") {
+	if (keyword == "simulation_mode") {
+		p.simulation_mode = atoi(value.c_str());
+	} else if (keyword == "lubrication_model") {
 		p.lubrication_model = value;
 	} else if (keyword == "friction_model") {
 		if (p.friction_model == 2) {
@@ -810,10 +812,10 @@ void Simulation::readParameterFile(const string& filename_parameters)
 
 void Simulation::setDefaultParameters(string input_scale)
 {
+	
 	/**
 	 \brief Set default values for ParameterSet parameters.
 	 */
-
 	p.Pe_switch = 5;
 	p.dt = 1e-4;
 	p.disp_max = 1e-3;
@@ -1179,9 +1181,9 @@ void Simulation::readPositionsImposedVelocity(fstream &file_import)
 	double x_, y_, z_, a_, vx_, vy_, vz_;
 	vector<vec3d> initial_position;
 	vector<vec3d> fixed_velocities;
-	vector <double> radius;
+	vector<double> radius;
 	string line;
-	while(getline(file_import, line)) {
+	while (getline(file_import, line)) {
 		istringstream is;
 		is.str(line);
 		if (!(is >> x_ >> y_ >> z_ >> a_ >> vx_ >> vy_ >> vz_)) {
@@ -1216,7 +1218,7 @@ void Simulation::importConfiguration(const string& filename_import_positions)
 	}
 
 	setMetadata(file_import);
-	if (sys.test_simulation != 31) {
+	if (sys.p.simulation_mode != 31) {
 		readPositions(file_import);
 	} else {
 		readPositionsImposedVelocity(file_import);

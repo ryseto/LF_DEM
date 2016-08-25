@@ -174,58 +174,57 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	string indent = "  Simulation::\t";
 	control_var = control_variable;
-	/***************  This part is temporal ********************/
-	// TODO
-	if (simu_identifier == "mtest1") {
-		cout << indent << "Test simulation for reversibility in mixed problem" << endl;
-		sys.test_simulation = 1;//mtest1
-	} else if (simu_identifier == "mtest2") {
-		cout << indent << "Test simulation for a mixed problem" << endl;
-		sys.test_simulation = 2;//mtest2
-	} else if (simu_identifier == "mtest3") {
-		cout << indent << "Test simulation for a mixed problem" << endl;
-		sys.test_simulation = 3;//mtest2
-	} else if (simu_identifier == "ctest1") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 11;//ctest1
-	} else if (simu_identifier == "ctest2") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 12;//ctest2
-	} else if (simu_identifier == "ctest3") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 13;//ctest3
-	} else if (simu_identifier == "ctest0") {
-		cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 10;//ctest3
-	} else if (simu_identifier == "rtest1") {
-		cout << indent << "Test simulation for shear reversibility" << endl;
-		sys.test_simulation = 21;//rtest1
-		sys.p.cross_shear = true;
-	} else if (simu_identifier == "relaxtest") {
-		cout << indent << "Test simulation for relax" << endl;
-		sys.test_simulation = 4;
-		sys.p.cross_shear = false;
-	} else if (simu_identifier == "wtest1") {
-		cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
-		sys.test_simulation = 31;//wtest1
-	} else if (simu_identifier == "wtestA") {
-		cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 41;//wtestA
-	} else if (simu_identifier == "wtestB") {
-		cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 42;//wtestB
-	} else if (simu_identifier == "stest1") {
-		cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-		sys.wall_rheology = true;
-		sys.test_simulation = 51;//stest1
+	switch (p.simulation_mode) {
+		case 0:
+			cout << indent << "basic simulation" << endl;
+			break;
+		case 1:
+			cout << indent << "Test simulation for reversibility in mixed problem" << endl;
+			break;
+		case 2:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			break;
+		case 3:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			break;
+		case 4:
+			cout << indent << "Test simulation for relax" << endl;
+			sys.p.cross_shear = false;
+			break;
+		case 11: //ctest1
+			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 12: // ctest2
+			cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 13: // ctest3
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 10:
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.wall_rheology = true;
+			break;
+		case 21:
+			cout << indent << "Test simulation for shear reversibility" << endl;
+			sys.p.cross_shear = true;
+			break;
+		case 31:
+			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
+		case 41:
+			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+		case 42:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+		case 51:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+		default:
+			break;
 	}
-
 	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	time_t now;
@@ -468,7 +467,7 @@ void Simulation::outputConfigurationBinary(string conf_filename)
 
 	int conf_switch = -1; // older formats did not have labels, -1 signs for a labeled binary
 	int binary_conf_format = 2; // v2 as default. v1 deprecated.
-	if (sys.test_simulation == 31) {
+	if (sys.p.simulation_mode == 31) {
 		binary_conf_format = 3;
 	}
 	conf_export.write((char*)&conf_switch, sizeof(int));
@@ -625,7 +624,7 @@ void Simulation::outputData()
 		outdata.entryData("normal stress/rate wall 1", "viscosity", 1, sys.normalstress_wall1/sr);
 		outdata.entryData("normal stress/rate wall 2", "viscosity", 1, sys.normalstress_wall2/sr);
 	}
-	if (sys.test_simulation == 31) {
+	if (sys.p.simulation_mode == 31) {
 		outdata.entryData("force top wall", "force", 3, sys.force_upwall);
 		outdata.entryData("force bottom wall", "force", 3, sys.force_downwall);
 	}

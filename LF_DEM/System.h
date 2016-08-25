@@ -68,6 +68,7 @@ private:
 	int nb_of_contacts_mm;
 	int nb_of_contacts_mf;
 	int nb_of_contacts_ff;
+	bool pairwise_resistance_changed;
 	int total_num_timesteps;
 	double time_; ///< time elapsed since beginning of the time evolution.
 	double time_in_simulation_units; ///< time elapsed since beginning of the time evolution. \b note: this is measured in Simulation (output) units, not in internal System units.
@@ -176,7 +177,6 @@ protected:
 	~System(){};
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
-	int test_simulation; //@@@ This test simulation may be temporal to debug the mix problem.
 	// Interaction types
 	bool brownian;
 	bool friction;

@@ -105,7 +105,7 @@ void Interaction::deactivate()
 	active = false;
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);
-	sys->removeNeighbors(p0,p1);
+	sys->removeNeighbors(p0, p1);
 	sys->updateNumberOfInteraction(p0, p1, -1);
 }
 
@@ -257,6 +257,6 @@ std::pair<struct DBlock, struct DBlock> Interaction::RFU_DBlocks()
 double Interaction::getNormalVelocity()
 {
 	vec3d vel_offset = z_offset*sys->get_vel_difference();
-	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0] + vel_offset;
+	vec3d d_velocity = sys->velocity[p1]-sys->velocity[p0]+vel_offset;
 	return dot(d_velocity, nvec);
 }
