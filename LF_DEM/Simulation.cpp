@@ -14,7 +14,6 @@
 #include <cctype>
 #include <stdexcept>
 #include "Simulation.h"
-#include "Timer.h"
 #include "SystemHelperFunctions.h"
 
 using namespace std;
@@ -267,25 +266,8 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
-	TimeKeeper tk;
-	if (p.log_time_interval) {
-		tk.addClock("data", LogClock(p.initial_log_time,
-									 p.time_end,
-									 p.nb_output_data_log_time,
-									 input_values["time_end"].unit == "strain"));
-	} else {
-		tk.addClock("data", LinearClock(p.time_interval_output_data,
-                                    input_values["time_interval_output_data"].unit == "strain"));
-	}
-	if (p.log_time_interval) {
-		tk.addClock("config", LogClock(p.initial_log_time,
-									   p.time_end,
-									   p.nb_output_config_log_time,
-									   input_values["time_end"].unit == "strain"));
-	} else {
-		tk.addClock("config", LinearClock(p.time_interval_output_config,
-                                      input_values["time_interval_output_config"].unit == "strain"));
-	}
+	TimeKeeper tk = initTimeKeeper();
+
 	int binconf_counter = 0;
 	while (keepRunning()) {
 		pair<double, string> t = tk.nextTime();

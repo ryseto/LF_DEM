@@ -1415,3 +1415,26 @@ string Simulation::prepareSimulationName(bool binary_conf,
 
 	return ss_simu_name.str();
 }
+
+TimeKeeper Simulation::initTimeKeeper() {
+	TimeKeeper tk;
+	if (p.log_time_interval) {
+		tk.addClock("data", LogClock(p.initial_log_time,
+									 p.time_end,
+									 p.nb_output_data_log_time,
+									 input_values["time_end"].unit == "strain"));
+	} else {
+		tk.addClock("data", LinearClock(p.time_interval_output_data,
+                                    input_values["time_interval_output_data"].unit == "strain"));
+	}
+	if (p.log_time_interval) {
+		tk.addClock("config", LogClock(p.initial_log_time,
+									   p.time_end,
+									   p.nb_output_config_log_time,
+									   input_values["time_end"].unit == "strain"));
+	} else {
+		tk.addClock("config", LinearClock(p.time_interval_output_config,
+                                      input_values["time_interval_output_config"].unit == "strain"));
+	}
+	return tk;
+}

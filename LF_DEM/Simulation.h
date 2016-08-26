@@ -28,6 +28,7 @@
 #include "DimensionalValue.h"
 #include "OutputData.h"
 #include "Events.h"
+#include "Timer.h"
 
 class Simulation
 {
@@ -100,6 +101,7 @@ public:
 	                     double dimensionlessnumber,
 	                     std::string input_scale,
 	                     std::string simu_identifier);
+	TimeKeeper initTimeKeeper();
 
 	void setControlVariable(const std::string& var)
 	{
