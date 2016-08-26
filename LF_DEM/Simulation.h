@@ -191,5 +191,6 @@ public:
 	void handleEventsShearJamming();
 	void handleEventsFragility();
 	std::string gitVersion();
+	std::string simu_name;
 };
 #endif /* defined(__LF_DEM__Simulation__) */

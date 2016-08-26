@@ -429,8 +429,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
-	costheta_shear = cos(p.theta_shear);
-	sintheta_shear = sin(p.theta_shear);
+	setShearDirection(p.theta_shear);
 	// Memory
 	allocateRessourcesPreConfiguration();
 

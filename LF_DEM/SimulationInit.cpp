@@ -616,8 +616,8 @@ void Simulation::setupSimulation(string in_args,
 	}
 	sys.setupSystemPostConfiguration();
 	p_initial = p;
-	string simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-                                           simu_identifier, dimensionlessnumber, input_scale);
+	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+                                    simu_identifier, dimensionlessnumber, input_scale);
 	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;

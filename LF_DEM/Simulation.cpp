@@ -153,7 +153,7 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 
 	if (output_events.find("config") != output_events.end()) {
 		if (p.out_binary_conf) {
-			string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(++binconf_counter) + ".bin";
+			string binconf_filename = "conf_" + simu_name + "_" + to_string(++binconf_counter) + ".bin";
 			outputConfigurationBinary(binconf_filename);
 		} else {
 			outputConfigurationData();
@@ -452,8 +452,7 @@ DimensionalValue Simulation::str2DimensionalValue(string type,
 void Simulation::outputConfigurationBinary()
 {
 	string conf_filename;
-	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
-	conf_filename = "conf_" + sys.simu_name + ".dat";
+	conf_filename = "conf_" + simu_name + ".dat";
 	outputConfigurationBinary(conf_filename);
 }
 
