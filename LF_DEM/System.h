@@ -267,7 +267,6 @@ protected:
 	double max_velocity;
 	double max_sliding_velocity;
 	std::queue<int> deactivated_interaction;
-	std::string simu_name;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;

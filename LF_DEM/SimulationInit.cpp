@@ -552,11 +552,11 @@ void Simulation::resolveTimeOrStrainParameters()
 }
 
 void Simulation::setupSimulation(string in_args,
-								 vector<string>& input_files,
-								 bool binary_conf,
-								 double dimensionlessnumber,
-								 string input_scale,
-								 string simu_identifier)
+                                 vector<string>& input_files,
+                                 bool binary_conf,
+                                 double dimensionlessnumber,
+                                 string input_scale,
+                                 string simu_identifier)
 {
 	/**
 	 \brief Set up the simulation.
@@ -616,9 +616,9 @@ void Simulation::setupSimulation(string in_args,
 	}
 	sys.setupSystemPostConfiguration();
 	p_initial = p;
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-						  simu_identifier, dimensionlessnumber, input_scale);
-	openOutputFiles();
+	string simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+                                           simu_identifier, dimensionlessnumber, input_scale);
+	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -921,7 +921,7 @@ inline string columnDefinition(int &cnb, const string &type, const string &name)
 	return defs.str();
 }
 
-void Simulation::openOutputFiles()
+void Simulation::openOutputFiles(string simu_name)
 {
 	/**
 	 \brief Set up the output files
@@ -931,20 +931,20 @@ void Simulation::openOutputFiles()
 
 	stringstream data_header;
 	createDataHeader(data_header);
-	outdata.setFile("data_"+sys.simu_name+".dat", data_header.str(), force_to_run);
-	outdata_st.setFile("st_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+	outdata.setFile("data_"+simu_name+".dat", data_header.str(), force_to_run);
+	outdata_st.setFile("st_"+simu_name+".dat", data_header.str(), force_to_run);
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setFile("pst_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+		outdata_pst.setFile("pst_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
-	string time_filename = "t_"+sys.simu_name+".dat";
+	string time_filename = "t_"+simu_name+".dat";
 	fout_time.open(time_filename.c_str());
-	string input_filename = "input_"+sys.simu_name+".dat";
+	string input_filename = "input_"+simu_name+".dat";
 	fout_input.open(input_filename.c_str());
 	if (p.out_data_particle) {
-		outdata_par.setFile("par_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+		outdata_par.setFile("par_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
 	if (p.out_data_interaction) {
-		outdata_int.setFile("int_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+		outdata_int.setFile("int_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
 }
 
@@ -1365,7 +1365,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	sys.setContacts(cont_states);
 }
 
-void Simulation::prepareSimulationName(bool binary_conf,
+string Simulation::prepareSimulationName(bool binary_conf,
 									   const string& filename_import_positions,
 									   const string& filename_parameters,
 									   const string& simu_identifier,
@@ -1410,7 +1410,8 @@ void Simulation::prepareSimulationName(bool binary_conf,
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
 	}
-	sys.simu_name = ss_simu_name.str();
 	string indent = "  Simulation::\t";
-	cout << indent << "filename: " << sys.simu_name << endl;
+	cout << indent << "filename: " << ss_simu_name.str() << endl;
+
+	return ss_simu_name.str();
 }
