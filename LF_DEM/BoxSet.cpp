@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <sstream>
 #include "BoxSet.h"
 #include "System.h"
 using namespace std;
@@ -298,12 +300,6 @@ void BoxSet::update()
 	for (const auto& bx : Boxes) {
 		bx->build_neighborhood_container();
 	}
-	// if(sys->get_shear_strain()>0.237){
-	// 	printBoxNetwork();exit(1);
-	// }
-	//	printBoxContainers(); exit(1);
-	//	printNeighborhoodContainers(); exit(1);
-	// printBoxMap(); exit(1);
 }
 
 bool BoxSet::is_boxed()
@@ -319,15 +315,20 @@ Box* BoxSet::WhichBox(vec3d pos)
 Box* BoxSet::WhichBox(vec3d* pos)
 {
 	sys->periodize(*pos);
-	int ix = (int)(pos->x/box_xsize);
-	int iy;
+	unsigned int ix = (unsigned int)(pos->x/box_xsize);
+	unsigned int iy;
 	if (sys->twodimension) {
 		iy = 0;
 	} else {
-		iy = (int)(pos->y/box_ysize);
+		iy = (unsigned int)(pos->y/box_ysize);
 	}
-	int iz = (int)(pos->z/box_zsize);
-	int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
+	unsigned int iz = (unsigned int)(pos->z/box_zsize);
+	unsigned int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
+	if (label>box_labels.size()-1) {
+		ostringstream error_str;
+		error_str  << " BoxSet: trying to box position out of boundaries \"" << *pos	<< "\"" << endl;
+		throw runtime_error(error_str.str());
+	}
 	return box_labels[label];
 }
 
