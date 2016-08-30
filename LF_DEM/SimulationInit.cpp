@@ -333,7 +333,7 @@ void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnu
 	setUnitScaleRateControlled();
 	// convert from hydro scale to chosen scale
 	for (auto& x: input_values) {
-		changeUnit(x.second, internal_unit_scales);
+			changeUnit(x.second, internal_unit_scales);
 	}
 }
 
@@ -355,14 +355,15 @@ void Simulation::changeUnit(DimensionalValue &x, string new_unit)
 	if (new_unit != x.unit) {
 		if (x.type == "force") {
 			*(x.value) *= force_ratios[x.unit+'/'+new_unit];
+			x.unit = new_unit;
 		} else if (x.type == "time") {
 			if (x.unit != "strain") {
 				*(x.value) /= force_ratios[x.unit+'/'+new_unit];
+				x.unit = new_unit;
 			}
 		} else {
 			throw runtime_error(" Simulation:: Don't know how to change unit for DimensionalValue of type "+x.type+"\n");
 		}
-		x.unit = new_unit;
 	}
 }
 
