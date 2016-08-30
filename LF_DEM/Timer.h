@@ -91,7 +91,7 @@ public:
 		clocks[label] = std::unique_ptr<Clock>(new LogClock(c));
 	}
 
-	std::pair<double,std::string> nextTime()
+	std::pair<double,std::string> nextTime() const
 	{
 		if (clocks.size() == 0) {
 			throw std::runtime_error( " TimeKeeper::nextTime() : No clocks! ");
@@ -109,7 +109,7 @@ public:
 		return std::make_pair(next_t, next_name);
 	}
 
-	std::pair<double,std::string> nextStrain()
+	std::pair<double,std::string> nextStrain() const
 	{
 		if (clocks.size() == 0) {
 			throw std::runtime_error( " TimeKeeper::nextStrain() : No clocks! ");

@@ -194,5 +194,7 @@ public:
 	void handleEventsFragility();
 	std::string gitVersion();
 	std::string simu_name;
+	void timeEvolutionUntilNextOutput(const TimeKeeper &tk);
+	void printProgress();
 };
 #endif /* defined(__LF_DEM__Simulation__) */
