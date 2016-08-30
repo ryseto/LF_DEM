@@ -449,6 +449,7 @@ protected:
 	void setShearDirection(double theta_shear){
 		costheta_shear = cos(theta_shear);
 		sintheta_shear = sin(theta_shear);
+		setVelocityDifference();
 	}
 	struct ForceAmplitudes amplitudes;
 };
