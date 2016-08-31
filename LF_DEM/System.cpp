@@ -2275,6 +2275,14 @@ int System::periodize(vec3d& pos)
 	return z_shift;
 }
 
+// [0,l]
+vec3d System::periodized(vec3d pos)
+{
+	vec3d periodized_pos = pos;
+	periodize(periodized_pos);
+	return periodized_pos;
+}
+
 int System::periodize_diff(vec3d& pos_diff)
 {
 	/** Periodize a separation vector with Lees-Edwards boundary condition
