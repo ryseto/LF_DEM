@@ -267,7 +267,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 	}
 
@@ -275,7 +275,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 	}
 
@@ -283,10 +283,10 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 	}
 }
