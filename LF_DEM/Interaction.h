@@ -143,4 +143,14 @@ public:
 
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();
 };
+
+struct compare_interaction {
+    bool operator() (Interaction *inter1, Interaction *inter2) const
+		{
+        auto ij1 = inter1->get_par_num();
+				auto ij2 = inter2->get_par_num();
+
+        return (ij1.first + ij1.second) < (ij2.first + ij2.second);
+    }
+};
 #endif /* defined(__LF_DEM__Interaction__) */

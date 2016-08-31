@@ -254,7 +254,7 @@ protected:
 	double avg_dt;
 	int avg_dt_nb;
 	double system_volume;
-	std::vector < std::set <Interaction*> > interaction_list;
+	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
 	std::vector < std::vector<int> > interaction_partners;
 	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
@@ -267,7 +267,6 @@ protected:
 	double max_velocity;
 	double max_sliding_velocity;
 	std::queue<int> deactivated_interaction;
-	std::string simu_name;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
@@ -318,7 +317,6 @@ protected:
 	void updateNumberOfContacts(int p0, int p1, int val);
 	void updateInteractions();
 
-	void updateUnscaledContactmodel();
 	int periodize(vec3d&);
 	int periodize_diff(vec3d&);
 	void calcStress();
@@ -330,14 +328,11 @@ protected:
 						  double &stress_rtheta);
 	StokesSolver stokes_solver;
 	void initializeBoxing();
-    //void calcLubricationForce(); // for visualization of force chains
-	void calcPotentialEnergy();
 	/*************************************************************/
 	double calcInteractionRangeDefault(int, int);
 	double calcLubricationRange(int, int);
 	void (System::*eventLookUp)();
 	void eventShearJamming();
-	// std::pair<vec3d,vec3d> checkForceOnWalls();
 
 	void setBoxSize(double lx_, double ly_, double lz_)
 	{
@@ -449,6 +444,12 @@ protected:
 	std::tuple<double,double> getCosSinShearAngle()
 	{
 		return std::make_tuple(costheta_shear, sintheta_shear);
+	}
+
+	void setShearDirection(double theta_shear){
+		costheta_shear = cos(theta_shear);
+		sintheta_shear = sin(theta_shear);
+		setVelocityDifference();
 	}
 	struct ForceAmplitudes amplitudes;
 };

@@ -70,6 +70,8 @@ cohesion(false),
 critical_load(false),
 lowPeclet(false),
 twodimension(false),
+rate_controlled(false),
+stress_controlled(false),
 zero_shear(false),
 wall_rheology(false),
 mobile_fixed(false),
@@ -427,8 +429,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
-	costheta_shear = cos(p.theta_shear);
-	sintheta_shear = sin(p.theta_shear);
+	setShearDirection(p.theta_shear);
 	// Memory
 	allocateRessourcesPreConfiguration();
 

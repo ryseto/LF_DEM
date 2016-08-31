@@ -41,7 +41,8 @@ private:
 	std::vector <Box*> box_labels;
 	System* sys;
 	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
-	Box* WhichBox(vec3d*);
+	Box* whichBox(vec3d*);
+	Box* whichBoxPeriodize(vec3d);
 	void updateNeighbors();
 	// init methods
 	void allocateBoxes();
@@ -85,7 +86,7 @@ public:
 	 
 	 returns a pointer on the box containg position pos
 	 *****/
-	Box* WhichBox(vec3d);
+	Box* whichBox(vec3d);
 	/*****
 	 box(int i)
 	 boxes particles i

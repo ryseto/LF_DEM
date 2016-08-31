@@ -14,7 +14,6 @@
 #include <cctype>
 #include <stdexcept>
 #include "Simulation.h"
-#include "Timer.h"
 #include "SystemHelperFunctions.h"
 
 using namespace std;
@@ -153,11 +152,119 @@ void Simulation::generateOutput(const set<string> &output_events, int& binconf_c
 
 	if (output_events.find("config") != output_events.end()) {
 		if (p.out_binary_conf) {
-			string binconf_filename = "conf_" + sys.simu_name + "_" + to_string(++binconf_counter) + ".bin";
+			string binconf_filename = "conf_" + simu_name + "_" + to_string(++binconf_counter) + ".bin";
 			outputConfigurationBinary(binconf_filename);
 		} else {
 			outputConfigurationData();
 		}
+	}
+}
+
+
+void Simulation::setupOptionalSimulation(string indent)
+{
+	cerr << indent << "simulation_mode = " << sys.p.simulation_mode << endl;
+	switch (sys.p.simulation_mode) {
+		case 0:
+			cout << indent << "basic simulation" << endl;
+			break;
+		case 1:
+			cout << indent << "Test simulation for reversibility in mixed problem" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 2:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 3:
+			cout << indent << "Test simulation for a mixed problem" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 4:
+			cout << indent << "Test simulation for relax" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.p.cross_shear = false;
+			break;
+		case 11: //ctest1
+			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 12: // ctest2
+			cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 13: // ctest3
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 10:
+			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			sys.wall_rheology = true;
+			break;
+		case 21:
+			cout << indent << "Test simulation for shear reversibility" << endl;
+			sys.p.cross_shear = true;
+			break;
+		case 31:
+			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 41:
+			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 42:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		case 51:
+			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
+			sys.wall_rheology = true;
+			sys.zero_shear = true;
+			sys.mobile_fixed = true;
+			break;
+		default:
+			break;
+	}
+}
+
+void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
+{
+	pair<double, string> t = tk.nextTime();
+	pair<double, string> s = tk.nextStrain();
+	if (t.second.empty()) { // no next time
+		sys.timeEvolution(-1, s.first);
+	} else if (s.second.empty()) { // no next strain
+		sys.timeEvolution(t.first, -1);
+	} else { // either next time or next strain
+		sys.timeEvolution(t.first, s.first);
+	}
+	handleEvents();
+}
+
+void Simulation::printProgress()
+{
+	if (time_end != -1) {
+				cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
+	} else {
+				cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
 	}
 }
 
@@ -174,58 +281,6 @@ void Simulation::simulationSteadyShear(string in_args,
 {
 	string indent = "  Simulation::\t";
 	control_var = control_variable;
-	switch (p.simulation_mode) {
-		case 0:
-			cout << indent << "basic simulation" << endl;
-			break;
-		case 1:
-			cout << indent << "Test simulation for reversibility in mixed problem" << endl;
-			break;
-		case 2:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			break;
-		case 3:
-			cout << indent << "Test simulation for a mixed problem" << endl;
-			break;
-		case 4:
-			cout << indent << "Test simulation for relax" << endl;
-			sys.p.cross_shear = false;
-			break;
-		case 11: //ctest1
-			cout << indent << "Test simulation with co-axial cylinders (rotate outer clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 12: // ctest2
-			cout << indent << "Test simulation with co-axial cylinders (rotate inner clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 13: // ctest3
-			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 10:
-			cout << indent << "Test simulation with co-axial cylinders (rotate both inner and outer clynder)" << endl;
-			sys.wall_rheology = true;
-			break;
-		case 21:
-			cout << indent << "Test simulation for shear reversibility" << endl;
-			sys.p.cross_shear = true;
-			break;
-		case 31:
-			cout << indent << "Test simulation (wtest1), simple shear with walls" << endl;
-		case 41:
-			cout << indent << "Test simulation (wtestA), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-		case 42:
-			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-		case 51:
-			cout << indent << "Test simulation (wtestB), simple shear with walls" << endl;
-			sys.wall_rheology = true;
-		default:
-			break;
-	}
-	/*************************************************************/
 	setupSimulation(in_args, input_files, binary_conf, dimensionless_number, input_scale, simu_identifier);
 	time_t now;
 	time_strain_1 = 0;
@@ -234,46 +289,17 @@ void Simulation::simulationSteadyShear(string in_args,
 
 	setupEvents();
 	cout << indent << "Time evolution started" << endl << endl;
-	TimeKeeper tk;
-	if (p.log_time_interval) {
-		tk.addClock("data", LogClock(p.initial_log_time,
-									 p.time_end,
-									 p.nb_output_data_log_time,
-									 input_values["time_end"].unit == "strain"));
-	} else {
-		tk.addClock("data", LinearClock(p.time_interval_output_data,
-                                    input_values["time_interval_output_data"].unit == "strain"));
-	}
-	if (p.log_time_interval) {
-		tk.addClock("config", LogClock(p.initial_log_time,
-									   p.time_end,
-									   p.nb_output_config_log_time,
-									   input_values["time_end"].unit == "strain"));
-	} else {
-		tk.addClock("config", LinearClock(p.time_interval_output_config,
-                                      input_values["time_interval_output_config"].unit == "strain"));
-	}
+	TimeKeeper tk = initTimeKeeper();
+
 	int binconf_counter = 0;
 	while (keepRunning()) {
-		pair<double, string> t = tk.nextTime();
-		pair<double, string> s = tk.nextStrain();
-		if (t.second.empty()) { // no next time
-			sys.timeEvolution(-1, s.first);
-		} else if (s.second.empty()) { // no next strain
-			sys.timeEvolution(t.first, -1);
-		} else { // either next time or next strain
-			sys.timeEvolution(t.first, s.first);
-		}
-		handleEvents();
+		timeEvolutionUntilNextOutput(tk);
 
 		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
 		generateOutput(output_events, binconf_counter);
 
-		if (time_end != -1) {
-			cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
-		} else {
-			cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
-		}
+		printProgress();
+		
 		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -419,8 +445,7 @@ DimensionalValue Simulation::str2DimensionalValue(string type,
 void Simulation::outputConfigurationBinary()
 {
 	string conf_filename;
-	//	conf_filename =  "conf_" + sys.simu_name + "_strain" + to_string(sys.get_shear_strain()) + ".dat";
-	conf_filename = "conf_" + sys.simu_name + ".dat";
+	conf_filename = "conf_" + simu_name + ".dat";
 	outputConfigurationBinary(conf_filename);
 }
 

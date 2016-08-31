@@ -28,6 +28,7 @@
 #include "DimensionalValue.h"
 #include "OutputData.h"
 #include "Events.h"
+#include "Timer.h"
 
 class Simulation
 {
@@ -72,33 +73,35 @@ private:
 	 * For inputs
 	 */
 
+	void setupOptionalSimulation(std::string indent);
 public:
 	/* For DEMsystem*/
 	Simulation();
 	~Simulation();
 	void simulationSteadyShear(std::string in_args,
-							   std::vector<std::string>& input_files,
-							   bool binary_conf,
-							   double dimensionless_number,
-							   std::string input_scale,
-							   std::string control_variable,
-							   std::string simu_identifier);
+	                           std::vector<std::string>& input_files,
+	                           bool binary_conf,
+	                           double dimensionless_number,
+	                           std::string input_scale,
+	                           std::string control_variable,
+	                           std::string simu_identifier);
 	// void simulationfinedSequence(std::string seq_type, std::string in_args, std::vector<std::string> &input_files, bool binary_conf, std::string control_variable);
 
 	void simulationInverseYield(std::string in_args,
-								std::vector<std::string>& input_files,
-								bool binary_conf,
-								double dimensionless_number,
-								std::string input_scale,
-								std::string control_variable,
-								std::string simu_identifier);
+	                            std::vector<std::string>& input_files,
+	                            bool binary_conf,
+	                            double dimensionless_number,
+	                            std::string input_scale,
+	                            std::string control_variable,
+	                            std::string simu_identifier);
 
 	void setupSimulation(std::string in_args,
-						 std::vector<std::string>& input_files,
-						 bool binary_conf,
-						 double dimensionlessnumber,
-						 std::string input_scale,
-						 std::string simu_identifier);
+	                     std::vector<std::string>& input_files,
+	                     bool binary_conf,
+	                     double dimensionlessnumber,
+	                     std::string input_scale,
+	                     std::string simu_identifier);
+	TimeKeeper initTimeKeeper();
 
 	void setControlVariable(const std::string& var)
 	{
@@ -120,13 +123,13 @@ public:
 	void assertParameterCompatibility();
 	void setDefaultParameters(std::string input_scale);
 	void readParameterFile(const std::string& filename_parameters);
-	void openOutputFiles();
-	void prepareSimulationName(bool binary_conf,
-							   const std::string& filename_import_positions,
-							   const std::string& filename_parameters,
-							   const std::string& simu_identifier,
-							   double dimensionlessnumber,
-							   const std::string& input_scale);
+	void openOutputFiles(std::string simu_name);
+	std::string prepareSimulationName(bool binary_conf,
+	                             const std::string& filename_import_positions,
+	                             const std::string& filename_parameters,
+	                             const std::string& simu_identifier,
+	                             double dimensionlessnumber,
+	                             const std::string& input_scale);
 	void echoInputFiles(std::string in_args,
 						std::vector<std::string>& input_files);
 	void autoSetParameters(const std::string& keyword,
@@ -151,22 +154,21 @@ public:
 	void exportForceAmplitudes();
 	void setLowPeclet();
 	void changeUnit(DimensionalValue &x, std::string new_unit);
-	void changeUnitsInputValues(std::string new_unit);
 	void buildFullSetOfForceRatios();
 
 	void resolveUnitSystem(std::string long_unit);
 	void setUnitScaleRateControlled();
 	void setupNonDimensionalization(double dimensionlessnumber,
-									std::string input_scale);
+	                                std::string input_scale);
 	void setupNonDimensionalizationRateControlled(double dimensionlessnumber,
-												  std::string input_scale);
+	                                              std::string input_scale);
 	void setupNonDimensionalizationStressControlled(double dimensionlessnumber,
-													std::string input_scale);
+	                                                std::string input_scale);
 	void catchForcesInStressUnits(const std::string &stress_unit);
 	DimensionalValue str2DimensionalValue(std::string type,
-										  std::string keyword,
-										  std::string value_str,
-										  double* value_ptr);
+	                                      std::string keyword,
+	                                      std::string value_str,
+	                                      double* value_ptr);
 	/*
 	 * For outputs
 	 */
@@ -191,5 +193,8 @@ public:
 	void handleEventsShearJamming();
 	void handleEventsFragility();
 	std::string gitVersion();
+	std::string simu_name;
+	void timeEvolutionUntilNextOutput(const TimeKeeper &tk);
+	void printProgress();
 };
 #endif /* defined(__LF_DEM__Simulation__) */

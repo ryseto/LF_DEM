@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <sstream>
 #include "BoxSet.h"
 #include "System.h"
 using namespace std;
@@ -143,7 +145,7 @@ void BoxSet::assignNeighborsBulk()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10p1) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox(pos+delta));
+					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 				}
 			}
 		}
@@ -164,12 +166,12 @@ void BoxSet::assignNeighborsBottom()
 				delta.y = b*box_ysize;
 				for (const auto& c : p10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox(pos+delta));
+					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 				}
 			}
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -188,12 +190,12 @@ void BoxSet::assignNeighborsTop()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox(pos+delta));
+					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 				}
 			}
 		}
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -211,15 +213,15 @@ void BoxSet::assignNeighborsTopBottom()
 			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
 				delta.z = 0;
-				bx->addStaticNeighbor(WhichBox(pos+delta));
+				bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 			}
 		}
 
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -265,7 +267,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 
@@ -273,7 +275,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 
@@ -281,10 +283,10 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -298,12 +300,6 @@ void BoxSet::update()
 	for (const auto& bx : Boxes) {
 		bx->build_neighborhood_container();
 	}
-	// if(sys->get_shear_strain()>0.237){
-	// 	printBoxNetwork();exit(1);
-	// }
-	//	printBoxContainers(); exit(1);
-	//	printNeighborhoodContainers(); exit(1);
-	// printBoxMap(); exit(1);
 }
 
 bool BoxSet::is_boxed()
@@ -311,29 +307,39 @@ bool BoxSet::is_boxed()
 	return _is_boxed;
 }
 
-Box* BoxSet::WhichBox(vec3d pos)
+Box* BoxSet::whichBox(vec3d pos)
 {
-	return WhichBox(&pos);
+	return whichBox(&pos);
 }
 
-Box* BoxSet::WhichBox(vec3d* pos)
+Box* BoxSet::whichBoxPeriodize(vec3d pos)
 {
-	sys->periodize(*pos);
-	int ix = (int)(pos->x/box_xsize);
-	int iy;
+	sys->periodize(pos);
+	return whichBox(&pos);
+}
+
+Box* BoxSet::whichBox(vec3d* pos)
+{
+	unsigned int ix = (unsigned int)(pos->x/box_xsize);
+	unsigned int iy;
 	if (sys->twodimension) {
 		iy = 0;
 	} else {
-		iy = (int)(pos->y/box_ysize);
+		iy = (unsigned int)(pos->y/box_ysize);
 	}
-	int iz = (int)(pos->z/box_zsize);
-	int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
+	unsigned int iz = (unsigned int)(pos->z/box_zsize);
+	unsigned int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
+	if (label > box_labels.size()-1) {
+		ostringstream error_str;
+		error_str  << " BoxSet: trying to box position out of boundaries \"" << *pos	<< "\"" << endl;
+		throw runtime_error(error_str.str());
+	}
 	return box_labels[label];
 }
 
 void BoxSet::box(int i)
 {
-	Box* b = WhichBox(sys->position[i]);
+	Box* b = whichBox(sys->position[i]);
 	if (b != boxMap[i]) {
 		b->add(i);
 		if (boxMap[i] != NULL) {

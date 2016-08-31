@@ -333,7 +333,7 @@ void Simulation::setupNonDimensionalizationRateControlled(double dimensionlessnu
 	setUnitScaleRateControlled();
 	// convert from hydro scale to chosen scale
 	for (auto& x: input_values) {
-		changeUnit(x.second, internal_unit_scales);
+			changeUnit(x.second, internal_unit_scales);
 	}
 }
 
@@ -355,14 +355,15 @@ void Simulation::changeUnit(DimensionalValue &x, string new_unit)
 	if (new_unit != x.unit) {
 		if (x.type == "force") {
 			*(x.value) *= force_ratios[x.unit+'/'+new_unit];
+			x.unit = new_unit;
 		} else if (x.type == "time") {
 			if (x.unit != "strain") {
 				*(x.value) /= force_ratios[x.unit+'/'+new_unit];
+				x.unit = new_unit;
 			}
 		} else {
 			throw runtime_error(" Simulation:: Don't know how to change unit for DimensionalValue of type "+x.type+"\n");
 		}
-		x.unit = new_unit;
 	}
 }
 
@@ -552,11 +553,11 @@ void Simulation::resolveTimeOrStrainParameters()
 }
 
 void Simulation::setupSimulation(string in_args,
-								 vector<string>& input_files,
-								 bool binary_conf,
-								 double dimensionlessnumber,
-								 string input_scale,
-								 string simu_identifier)
+                                 vector<string>& input_files,
+                                 bool binary_conf,
+                                 double dimensionlessnumber,
+                                 string input_scale,
+                                 string simu_identifier)
 {
 	/**
 	 \brief Set up the simulation.
@@ -576,10 +577,7 @@ void Simulation::setupSimulation(string in_args,
 	}
 	setDefaultParameters(input_scale);
 	readParameterFile(filename_parameters);
-	if (sys.p.simulation_mode > 0 && (sys.p.simulation_mode < 20 || sys.p.simulation_mode > 30) ) {
-		sys.zero_shear = true;
-		sys.mobile_fixed = true;
-	}
+	setupOptionalSimulation(indent);
 	tagStrainParameters();
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
@@ -619,9 +617,9 @@ void Simulation::setupSimulation(string in_args,
 	}
 	sys.setupSystemPostConfiguration();
 	p_initial = p;
-	prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-						  simu_identifier, dimensionlessnumber, input_scale);
-	openOutputFiles();
+	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
+                                    simu_identifier, dimensionlessnumber, input_scale);
+	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
 }
@@ -812,7 +810,7 @@ void Simulation::readParameterFile(const string& filename_parameters)
 
 void Simulation::setDefaultParameters(string input_scale)
 {
-	
+
 	/**
 	 \brief Set default values for ParameterSet parameters.
 	 */
@@ -903,6 +901,7 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.cross_shear = false;
 	p.theta_shear = 0;
 	p.event_handler = "";
+	p.simulation_mode = 0;
 }
 
 inline string columnDefinition(int &cnb, const string &type, const string &name)
@@ -923,7 +922,7 @@ inline string columnDefinition(int &cnb, const string &type, const string &name)
 	return defs.str();
 }
 
-void Simulation::openOutputFiles()
+void Simulation::openOutputFiles(string simu_name)
 {
 	/**
 	 \brief Set up the output files
@@ -933,20 +932,20 @@ void Simulation::openOutputFiles()
 
 	stringstream data_header;
 	createDataHeader(data_header);
-	outdata.setFile("data_"+sys.simu_name+".dat", data_header.str(), force_to_run);
-	outdata_st.setFile("st_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+	outdata.setFile("data_"+simu_name+".dat", data_header.str(), force_to_run);
+	outdata_st.setFile("st_"+simu_name+".dat", data_header.str(), force_to_run);
 	if (!p.out_particle_stress.empty()) {
-		outdata_pst.setFile("pst_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+		outdata_pst.setFile("pst_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
-	string time_filename = "t_"+sys.simu_name+".dat";
+	string time_filename = "t_"+simu_name+".dat";
 	fout_time.open(time_filename.c_str());
-	string input_filename = "input_"+sys.simu_name+".dat";
+	string input_filename = "input_"+simu_name+".dat";
 	fout_input.open(input_filename.c_str());
 	if (p.out_data_particle) {
-		outdata_par.setFile("par_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+		outdata_par.setFile("par_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
 	if (p.out_data_interaction) {
-		outdata_int.setFile("int_"+sys.simu_name+".dat", data_header.str(), force_to_run);
+		outdata_int.setFile("int_"+simu_name+".dat", data_header.str(), force_to_run);
 	}
 }
 
@@ -1367,7 +1366,7 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 	sys.setContacts(cont_states);
 }
 
-void Simulation::prepareSimulationName(bool binary_conf,
+string Simulation::prepareSimulationName(bool binary_conf,
 									   const string& filename_import_positions,
 									   const string& filename_parameters,
 									   const string& simu_identifier,
@@ -1412,7 +1411,31 @@ void Simulation::prepareSimulationName(bool binary_conf,
 		ss_simu_name << "_";
 		ss_simu_name << simu_identifier;
 	}
-	sys.simu_name = ss_simu_name.str();
 	string indent = "  Simulation::\t";
-	cout << indent << "filename: " << sys.simu_name << endl;
+	cout << indent << "filename: " << ss_simu_name.str() << endl;
+
+	return ss_simu_name.str();
+}
+
+TimeKeeper Simulation::initTimeKeeper() {
+	TimeKeeper tk;
+	if (p.log_time_interval) {
+		tk.addClock("data", LogClock(p.initial_log_time,
+									 p.time_end,
+									 p.nb_output_data_log_time,
+									 input_values["time_end"].unit == "strain"));
+	} else {
+		tk.addClock("data", LinearClock(p.time_interval_output_data,
+                                    input_values["time_interval_output_data"].unit == "strain"));
+	}
+	if (p.log_time_interval) {
+		tk.addClock("config", LogClock(p.initial_log_time,
+									   p.time_end,
+									   p.nb_output_config_log_time,
+									   input_values["time_end"].unit == "strain"));
+	} else {
+		tk.addClock("config", LinearClock(p.time_interval_output_config,
+                                      input_values["time_interval_output_config"].unit == "strain"));
+	}
+	return tk;
 }
