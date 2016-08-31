@@ -145,7 +145,7 @@ void BoxSet::assignNeighborsBulk()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10p1) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
+					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 				}
 			}
 		}
@@ -166,12 +166,12 @@ void BoxSet::assignNeighborsBottom()
 				delta.y = b*box_ysize;
 				for (const auto& c : p10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
+					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 				}
 			}
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -190,12 +190,12 @@ void BoxSet::assignNeighborsTop()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
+					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 				}
 			}
 		}
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -213,15 +213,15 @@ void BoxSet::assignNeighborsTopBottom()
 			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
 				delta.z = 0;
-				bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
+				bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
 			}
 		}
 
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -267,7 +267,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 
@@ -275,7 +275,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 
@@ -283,10 +283,10 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
 		}
 	}
 }
@@ -307,18 +307,18 @@ bool BoxSet::is_boxed()
 	return _is_boxed;
 }
 
-Box* BoxSet::WhichBox(vec3d pos)
+Box* BoxSet::whichBox(vec3d pos)
 {
-	return WhichBox(&pos);
+	return whichBox(&pos);
 }
 
-Box* BoxSet::WhichBox_periodize(vec3d pos)
+Box* BoxSet::whichBoxPeriodize(vec3d pos)
 {
 	sys->periodize(pos);
-	return WhichBox(&pos);
+	return whichBox(&pos);
 }
 
-Box* BoxSet::WhichBox(vec3d* pos)
+Box* BoxSet::whichBox(vec3d* pos)
 {
 	unsigned int ix = (unsigned int)(pos->x/box_xsize);
 	unsigned int iy;
@@ -339,7 +339,7 @@ Box* BoxSet::WhichBox(vec3d* pos)
 
 void BoxSet::box(int i)
 {
-	Box* b = WhichBox(sys->position[i]);
+	Box* b = whichBox(sys->position[i]);
 	if (b != boxMap[i]) {
 		b->add(i);
 		if (boxMap[i] != NULL) {
