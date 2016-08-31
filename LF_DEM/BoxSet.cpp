@@ -145,7 +145,7 @@ void BoxSet::assignNeighborsBulk()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10p1) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox(pos+delta));
+					bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
 				}
 			}
 		}
@@ -166,12 +166,12 @@ void BoxSet::assignNeighborsBottom()
 				delta.y = b*box_ysize;
 				for (const auto& c : p10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox(pos+delta));
+					bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
 				}
 			}
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 	}
 }
@@ -190,12 +190,12 @@ void BoxSet::assignNeighborsTop()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(WhichBox(pos+delta));
+					bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
 				}
 			}
 		}
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 	}
 }
@@ -213,15 +213,15 @@ void BoxSet::assignNeighborsTopBottom()
 			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
 				delta.z = 0;
-				bx->addStaticNeighbor(WhichBox(pos+delta));
+				bx->addStaticNeighbor(WhichBox_periodize(pos+delta));
 			}
 		}
 
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(WhichBox(pos+delta_prob));
+			bx->addMovingNeighbor(WhichBox_periodize(pos+delta_prob));
 		}
 	}
 }
@@ -312,9 +312,14 @@ Box* BoxSet::WhichBox(vec3d pos)
 	return WhichBox(&pos);
 }
 
+Box* BoxSet::WhichBox_periodize(vec3d pos)
+{
+	sys->periodize(pos);
+	return WhichBox(&pos);
+}
+
 Box* BoxSet::WhichBox(vec3d* pos)
 {
-	sys->periodize(*pos);
 	unsigned int ix = (unsigned int)(pos->x/box_xsize);
 	unsigned int iy;
 	if (sys->twodimension) {
@@ -324,7 +329,7 @@ Box* BoxSet::WhichBox(vec3d* pos)
 	}
 	unsigned int iz = (unsigned int)(pos->z/box_zsize);
 	unsigned int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
-	if (label>box_labels.size()-1) {
+	if (label > box_labels.size()-1) {
 		ostringstream error_str;
 		error_str  << " BoxSet: trying to box position out of boundaries \"" << *pos	<< "\"" << endl;
 		throw runtime_error(error_str.str());

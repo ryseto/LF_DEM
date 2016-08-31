@@ -42,6 +42,7 @@ private:
 	System* sys;
 	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
 	Box* WhichBox(vec3d*);
+	Box* WhichBox_periodize(vec3d);
 	void updateNeighbors();
 	// init methods
 	void allocateBoxes();
