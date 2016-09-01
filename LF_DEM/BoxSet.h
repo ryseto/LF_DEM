@@ -45,7 +45,7 @@ private:
 	 WhichBox(vec3d pos)
 	 returns a pointer on the box containg position pos
 	 *****/
-	Box* whichBox(vec3d);
+	Box* whichBox(const vec3d&);
 	void updateNeighbors();
 	// init methods
 	void allocateBoxes();

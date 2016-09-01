@@ -2276,7 +2276,7 @@ int System::periodize(vec3d& pos)
 }
 
 // [0,l]
-vec3d System::periodized(vec3d pos)
+vec3d System::periodized(const vec3d &pos)
 {
 	vec3d periodized_pos = pos;
 	periodize(periodized_pos);

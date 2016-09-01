@@ -319,7 +319,7 @@ protected:
 
 	int periodize(vec3d&);
 	int periodize_diff(vec3d&);
-	vec3d periodized(vec3d pos);
+	vec3d periodized(const vec3d&);
 	void calcStress();
 	void calcStressPerParticle();
 	void calcTotalStressPerParticle();
