@@ -85,6 +85,8 @@ private:
 	void frictionlaw_standard();
 	void frictionlaw_ft_max();
 	void frictionlaw_coulomb_max();
+	inline void setTangentialForceNorm(double, double);
+	inline void setRollingForceNorm(double, double);
 
 public:
 	/*********************************

@@ -271,18 +271,30 @@ void Contact::frictionlaw_standard()
 	}
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_spring_tan = kt_scaled*disp_tan;
+		setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
 		double sq_f_rolling = f_rolling.sq_norm();
 		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
-			f_rolling = kr_scaled*disp_rolling;
+			setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
 		}
 	}
 	return;
+}
+
+void Contact::setTangentialForceNorm(double current_force_norm,
+		                                 double new_force_norm)
+{
+	disp_tan *= new_force_norm/current_force_norm;
+	f_spring_tan = kt_scaled*disp_tan;
+}
+
+void Contact::setRollingForceNorm(double current_force_norm,
+                                  double new_force_norm)
+{
+	disp_rolling *= new_force_norm/current_force_norm;
+	f_rolling = kr_scaled*disp_rolling;
 }
 
 void Contact::frictionlaw_criticalload()
@@ -304,8 +316,7 @@ void Contact::frictionlaw_criticalload()
 		double sq_f_tan = f_spring_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 			state = 3; // sliding
-			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-			f_spring_tan = kt_scaled*disp_tan;
+			setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 		} else {
 			state = 2; // static friction
 		}
@@ -344,8 +355,7 @@ void Contact::frictionlaw_ft_max()
  	double sq_f_tan = f_spring_tan.sq_norm();
  	if (sq_f_tan > ft_max*ft_max) {
  		state = 3; // dynamic friction
- 		disp_tan *= ft_max/sqrt(sq_f_tan);
- 		f_spring_tan = kt_scaled*disp_tan;
+		setTangentialForceNorm(sqrt(sq_f_tan), ft_max);
  	} else {
  		state = 2; // static friction
  	}
@@ -382,8 +392,7 @@ void Contact::frictionlaw_coulomb_max()
 	double sq_f_tan = f_spring_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		state = 3; // dynamic friction
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_spring_tan = kt_scaled*disp_tan;
+		setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 	} else {
 		state = 2; // static friction
 	}
