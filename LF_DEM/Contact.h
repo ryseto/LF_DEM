@@ -21,7 +21,6 @@
 #include "vec3d.h"
 #include "StressTensor.h"
 #include "ContactDashpot.h"
-#include "PairwiseForce.h"
 
 class System;
 class Interaction;

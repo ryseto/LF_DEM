@@ -12,8 +12,8 @@ struct StressComponent
   std::vector<StressTensor> particle_stress;
 
   StressComponent(){};
-  StressComponent(std::size_t size,
-                  unsigned int _type,
+  StressComponent(unsigned int _type,
+                  std::size_t size,
                   unsigned int _rate_dependence,
                   const std::string &_group):
                   type(_type),

@@ -30,8 +30,7 @@ void System::declareStressComponents() {
 	if (lubrication) {
 		for (const auto &vc: velocity_components) {
 			if (vc.first != "brownian") {
-				std::string stress_key = "GU_"+vc.first;
-				stress_components[stress_key] = StressComponent(VELOCITY_STRESS,
+				stress_components[vc.first] = StressComponent(VELOCITY_STRESS,
 				                                                vc.second.vel.size(),
 			                                                  vc.second.rate_dependence,
 			                                                  vc.first);
@@ -41,9 +40,9 @@ void System::declareStressComponents() {
 
 	// Brownian
 	if (brownian) { // Brownian is different than other GU, needs predictor data too
-		stress_components["GU_brownian"] = StressComponent(BROWNIAN_STRESS,
+		stress_components["brownian"] = StressComponent(BROWNIAN_STRESS,
 		                                                   np, RATE_DEPENDENT, "brownian");// rate dependent for now
-		stress_components["GU_brownian_predictor"] = StressComponent(BROWNIAN_STRESS,
+		stress_components["brownian_predictor"] = StressComponent(BROWNIAN_STRESS,
 		                                                             np, RATE_DEPENDENT, "brownian");// rate dependent for now
 	}
 

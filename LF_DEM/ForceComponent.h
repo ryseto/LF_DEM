@@ -2,7 +2,6 @@
 #define __LF_DEM__ForceComponent__
 #include <vector>
 #include "vec3d.h"
-#include "PairwiseForce.h"
 
 class System;
 
