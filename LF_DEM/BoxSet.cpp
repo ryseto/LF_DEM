@@ -307,7 +307,7 @@ bool BoxSet::is_boxed()
 	return _is_boxed;
 }
 
-Box* BoxSet::whichBox(vec3d pos)
+Box* BoxSet::whichBox(const vec3d &pos)
 {
 	unsigned int ix = (unsigned int)(pos.x/box_xsize);
 	unsigned int iy;
