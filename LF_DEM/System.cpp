@@ -1861,7 +1861,7 @@ void System::tmpMixedProblemSetVelocities()
 		}
 		na_velocity[np_mobile].x = direction;
 	} else if (p.simulation_mode == 2) {
-		/* ????
+		/* ????, yeah what happened here and below?? Haha. I guess whoever created simulation_mode 2/3 does not use it often :)
 		 */
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
