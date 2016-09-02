@@ -392,9 +392,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		 * Resistance matrix is constant.
 		 */
 	} else if (p.lubrication_model == "normal" || p.lubrication_model == "none") {
-		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
+		buildResistanceMatrix = &System::buildResistanceMatrix_normal;
 	} else if (p.lubrication_model == "tangential") {
-		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
+		buildResistanceMatrix = &System::buildResistanceMatrix_tangential;
 	} else {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
@@ -1287,7 +1287,7 @@ void System::buildHydroTerms()
 	 * which is calculated at the beginning.
 	 */
 	// add GE in the rhs and lubrication terms in the resistance matrix
-	(this->*buildLubricationTerms)();
+	CALL_MEMBER_FN(*this, buildResistanceMatrix)();
 }
 
 /* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
@@ -1296,7 +1296,7 @@ void System::buildHydroTerms()
  *       (only terms diverging as 1/h if lubrication_model == "normal", terms in 1/h and log(1/h) for lubrication_model=="tangential")
  *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
  */
-void System::buildLubricationTerms_squeeze()
+void System::buildResistanceMatrix_normal()
 {
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
@@ -1314,7 +1314,7 @@ void System::buildLubricationTerms_squeeze()
 	stokes_solver.matrixFillingDone();
 }
 
-void System::buildLubricationTerms_squeeze_tangential()
+void System::buildResistanceMatrix_tangential()
 {
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();

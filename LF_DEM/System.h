@@ -119,9 +119,9 @@ private:
 	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void buildHydroTerms();
-	void (System::*buildLubricationTerms)();
-	void buildLubricationTerms_squeeze(); // lubrication_model = 1
-	void buildLubricationTerms_squeeze_tangential(); // lubrication_model = 2
+	void (System::*buildResistanceMatrix)();
+	void buildResistanceMatrix_normal(); // lubrication_model = 1
+	void buildResistanceMatrix_tangential(); // lubrication_model = 2
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
 	void addToSolverRHS(const ForceComponent &fc);
