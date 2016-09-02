@@ -27,11 +27,6 @@ struct ForceComponent
   {
     force.resize(size);
     torque.resize(size);
-    reset();
-  }
-
-  void reset()
-  {
     for(auto &f: force) {
       f.reset();
     }
@@ -40,13 +35,27 @@ struct ForceComponent
     }
   }
 
+  void reset()
+  {
+    for(auto &f: force) {
+      f.reset();
+    }
+    if (has_torque) {
+      for(auto &t: torque) {
+        t.reset();
+      }
+    }
+  }
+
   struct ForceComponent&	operator*=(double d)
 	{
     for(auto &f: force) {
       f *= d;
     }
-    for(auto &t: torque) {
-      t *= d;
+    if (has_torque) {
+      for(auto &t: torque) {
+        t *= d;
+      }
     }
 		return *this;
 	}

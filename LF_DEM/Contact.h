@@ -136,6 +136,7 @@ public:
 	double get_normal_load() const;
 	void calcContactStress();
 	void addUpStress(StressTensor &stress_p0, StressTensor &stress_p1);
+	void addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1);
 	StressTensor getContactStressXF() const
 	{
 		return contact_stresslet_XF;

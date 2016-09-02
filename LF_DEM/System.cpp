@@ -1650,10 +1650,6 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 void System::setContactForceToParticle(vector<vec3d> &force,
                                        vector<vec3d> &torque)
 {
-	for (unsigned int i=0; i<force.size(); i++) {
-		force[i].reset();
-		torque[i].reset();
-	}
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].contact.is_active()) {
 			interaction[k].contact.addUpForceTorque(force, torque);
@@ -1665,9 +1661,6 @@ void System::setRepulsiveForceToParticle(vector<vec3d> &force,
 	                                       vector<vec3d> &torque)
 {
 	if (repulsiveforce) {
-		for (unsigned int i=0; i<force.size(); i++) {
-			force[i].reset();
-		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
 				interaction[k].repulsion.addUpForce(force);
@@ -1701,6 +1694,13 @@ void System::setFixedParticleForceToParticle(vector<vec3d> &force,
 		torque[i].x = force_torque_from_fixed[i6+3];
 		torque[i].y = force_torque_from_fixed[i6+4];
 		torque[i].z = force_torque_from_fixed[i6+5];
+	}
+}
+
+void System::resetForceComponents()
+{
+	for (auto &fc: force_components) {
+		fc.second.reset();
 	}
 }
 
@@ -1811,7 +1811,9 @@ void System::computeShearRate()
 	 \brief Compute the shear rate under stress control conditions.
 	 */
 	calcStressPerParticle();
-	gatherRateDependences();
+	StressTensor rate_prop_stress;
+	StressTensor rate_indep_stress;
+	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
 	double newtonian_viscosity = shearStressComponent(rate_prop_stress, p.theta_shear); // computed with rate=1, o here it is also the viscosity.
 	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);
 
@@ -2050,6 +2052,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
+	resetForceComponents();
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			set_shear_rate(1);

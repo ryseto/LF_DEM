@@ -449,6 +449,14 @@ void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
 	stress_p1 += (a1/r_ij)*contact_stresslet_XF;
 }
 
+void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1)
+{
+	StressTensor spring_stress;
+	spring_stress.set(interaction->rvec, f_spring_total);
+	double r_ij = get_rcontact();
+	stress_p0 += (a0/r_ij)*spring_stress;
+	stress_p1 += (a1/r_ij)*spring_stress;
+}
 
 double Contact::calcEnergy() const
 {

@@ -125,6 +125,7 @@ private:
 	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
 	void setSolverRHS(const ForceComponent &fc);
 	void addToSolverRHS(const ForceComponent &fc);
+	void resetForceComponents();
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
 	void computeVelocityWithoutComponents();
@@ -227,9 +228,9 @@ protected:
 	std::vector<vec3d> fixed_velocities;
 	std::vector<StressTensor> total_stress_pp; // per particle
 	StressTensor total_stress;
-	StressTensor rate_prop_stress;
-	StressTensor rate_indep_stress;
-	void gatherRateDependences();
+
+	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
+	                                      StressTensor &rate_indep_stress);
 
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, StressTensor> total_stress_groups;
@@ -307,6 +308,11 @@ protected:
 	vec3d periodized(vec3d pos);
 	void calcStress();
 	void calcStressPerParticle();
+	void calcContactXFPerParticleStressControlled();
+	void gatherVelocitiesByRateDependencies(std::vector<vec3d> rateprop_vel,
+                                          std::vector<vec3d> rateprop_ang_vel,
+                                          std::vector<vec3d> rateindep_vel,
+                                          std::vector<vec3d> rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,

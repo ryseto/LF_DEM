@@ -71,6 +71,10 @@ private:
 	                   const vec3d &vel_p1,
 	                   const vec3d &ang_vel_p0,
 	                   const vec3d &ang_vel_p1) const;
+	vec3d getForceOnP0_nonaffine(const vec3d &na_vel_p0,
+	                             const vec3d &na_vel_p1,
+	                             const vec3d &na_ang_vel_p0,
+	                             const vec3d &na_ang_vel_p1) const;
 	void setDashpotResistanceCoeffs(double kn, double kt,
                                   double rtime_normal, double rtime_tan);
 	//=============  Resistance Matrices ====================/
