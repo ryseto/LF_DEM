@@ -299,7 +299,7 @@ void Simulation::simulationSteadyShear(string in_args,
 		generateOutput(output_events, binconf_counter);
 
 		printProgress();
-		
+
 		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
@@ -593,15 +593,9 @@ void Simulation::outputData()
 		outdata.entryData("omega wheel", "rate", 1, sys.get_omega_wheel());
 	}
 	outdata.entryData("viscosity", "viscosity", 1, shear_stress/sr);
-	outdata.entryData("Viscosity(lub)", "viscosity", 1, shearStressComponent(sys.total_hydro_stress, p.theta_shear)/sr);
-	outdata.entryData("Viscosity(xF_contact part)", "viscosity", 1, shearStressComponent(sys.total_contact_stressXF, p.theta_shear)/sr);
-	outdata.entryData("Viscosity(GU_contact part)", "viscosity", 1, shearStressComponent(sys.total_contact_stressGU, p.theta_shear)/sr);
-	if (sys.repulsiveforce) {
-		outdata.entryData("Viscosity(repulsive force XF)", "viscosity", 1, shearStressComponent(sys.total_repulsive_stressXF, p.theta_shear)/sr);
-		outdata.entryData("Viscosity(repulsive force GU)", "viscosity", 1, shearStressComponent(sys.total_repulsive_stressGU, p.theta_shear)/sr);
-	}
-	if (sys.brownian) {
-		outdata.entryData("Viscosity(brownian)", "viscosity", 1, shearStressComponent(sys.total_brownian_stressGU, p.theta_shear)/sr);
+	for (const auto &stress_comp: sys.total_stress_groups) {
+		string entry_name = "Viscosity("+stress_comp.first+")";
+		outdata.entryData(entry_name, "viscosity", 1, shearStressComponent(stress_comp.second, p.theta_shear)/sr);
 	}
 	/*
 	 * Stress
@@ -610,7 +604,7 @@ void Simulation::outputData()
 	outdata.entryData("N1 viscosity", "viscosity", 1, sys.total_stress.getNormalStress1()/sr);
 	outdata.entryData("N2 viscosity", "viscosity", 1, sys.total_stress.getNormalStress2()/sr);
 	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
-	outdata.entryData("particle pressure contact", "stress", 1, sys.total_contact_stressXF.getParticlePressure());
+	outdata.entryData("particle pressure contact", "stress", 1, sys.stress_components["xF_contact"].getTotalStress().getParticlePressure());
 	/* energy
 	 */
 	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
@@ -661,39 +655,41 @@ void Simulation::outputData()
 	outdata_st.entryData("shear strain", "none", 1, sys.get_shear_strain());
 	outdata_st.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	outdata_st.entryData("total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_stress);
-	outdata_st.entryData("hydro stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_hydro_stress);
-	outdata_st.entryData("contact stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_contact_stressXF+sys.total_contact_stressGU);
-	outdata_st.entryData("repulsive stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_repulsive_stressXF+sys.total_repulsive_stressGU);
-	outdata_st.entryData("brownian stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_brownian_stressGU);
+	for (const auto &stress_comp: sys.total_stress_groups) {
+		string entry_name = stress_comp.first+" stress tensor (xx, xy, xz, yz, yy, zz)";
+		outdata_st.entryData(entry_name, "stress", 6, stress_comp.second);
+	}
 	outdata_st.writeToFile();
 
 	if (!p.out_particle_stress.empty()) {
 		outdata_pst.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 		outdata_pst.setUnit(output_unit_scales);
-		for (int i=0; i<sys.get_np(); i++) {
-			if (p.out_particle_stress.find('t') != string::npos) {
-				StressTensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
-				if (sys.brownian) {
-					s += sys.brownianstressGU[i];
-				}
-				if (sys.repulsiveforce) {
-					s += sys.repulsivestressGU[i]+sys.repulsivestressXF[i];
-				}
-				outdata_pst.entryData("total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", 6, s);
-			}
-			if (p.out_particle_stress.find('l') != string::npos) {
-				outdata_pst.entryData("lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.lubstress[i]);
-			}
-			if (p.out_particle_stress.find('c') != string::npos) {
-				outdata_pst.entryData("contact stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.contactstressXF[i] + sys.contactstressGU[i]);
-			}
-			if (sys.brownian && p.out_particle_stress.find('b') != string::npos ) {
-				outdata_pst.entryData("Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.brownianstressGU[i]);
-			}
-			if (sys.repulsiveforce && p.out_particle_stress.find('r') != string::npos ) {
-				outdata_pst.entryData("repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
-			}
-		}
+
+		cerr << "Warning, particle stress data output temporarily disabled " << endl;
+		// for (int i=0; i<sys.get_np(); i++) {
+		// 	if (p.out_particle_stress.find('t') != string::npos) {
+		// 		StressTensor s = sys.lubstress[i]+sys.contactstressXF[i]+sys.contactstressGU[i];
+		// 		if (sys.brownian) {
+		// 			s += sys.brownianstressGU[i];
+		// 		}
+		// 		if (sys.repulsiveforce) {
+		// 			s += sys.repulsivestressGU[i]+sys.repulsivestressXF[i];
+		// 		}
+		// 		outdata_pst.entryData("total stress (xx, xy, xz, yz, yy, zz), excluding magnetic stress", "stress", 6, s);
+		// 	}
+		// 	if (p.out_particle_stress.find('l') != string::npos) {
+		// 		outdata_pst.entryData("lubrication stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.lubstress[i]);
+		// 	}
+		// 	if (p.out_particle_stress.find('c') != string::npos) {
+		// 		outdata_pst.entryData("contact stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.contactstressXF[i] + sys.contactstressGU[i]);
+		// 	}
+		// 	if (sys.brownian && p.out_particle_stress.find('b') != string::npos ) {
+		// 		outdata_pst.entryData("Brownian stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.brownianstressGU[i]);
+		// 	}
+		// 	if (sys.repulsiveforce && p.out_particle_stress.find('r') != string::npos ) {
+		// 		outdata_pst.entryData("repulsive stress (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.repulsivestressGU[i] + sys.repulsivestressXF[i]);
+		// 	}
+		// }
 		stringstream snapshot_header;
 		getSnapshotHeader(snapshot_header);
 		outdata_pst.writeToFile(snapshot_header.str());
@@ -806,21 +802,11 @@ void Simulation::outputParFileTxt()
 		}
 
 		if (p.out_data_vel_components) {
-			outdata_par.entryData("non-affine hydro velocity (x, y, z)", "velocity", 3, sys.vel_hydro[i]);
-			outdata_par.entryData("non-affine hydro angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro[i]);
-			outdata_par.entryData("non-affine contact velocity (x, y, z)", "velocity", 3, sys.vel_contact[i]);
-			outdata_par.entryData("non-affine contact angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_contact[i]);
-			if (sys.repulsiveforce) {
-				outdata_par.entryData("non-affine repulsive velocity (x, y, z)", "velocity", 3, sys.vel_repulsive[i]);
-				outdata_par.entryData("non-affine repulsive angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_repulsive[i]);
-			}
-			if (sys.brownian) {
-				outdata_par.entryData("non-affine brownian velocity (x, y, z)", "velocity", 3, sys.vel_brownian[i]);
-				outdata_par.entryData("non-affine brownian angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_brownian[i]);
-			}
-			if (sys.mobile_fixed) {
-				outdata_par.entryData("non-affine hydro_from_fixed velocity (x, y, z)", "velocity", 3, sys.vel_hydro_from_fixed[i]);
-				outdata_par.entryData("non-affine hydro_from_fixed angular velocity (x, y, z)", "velocity", 3, sys.ang_vel_hydro_from_fixed[i]);
+			for (const auto &vc: sys.velocity_components) {
+				string entry_name_vel = "non-affine "+vc.first+" velocity (x, y, z)";
+				string entry_name_ang_vel = "non-affine angular "+vc.first+" velocity (x, y, z)";
+				outdata_par.entryData(entry_name_vel, "velocity", 3, vc.second.vel[i]);
+				outdata_par.entryData(entry_name_ang_vel, "velocity", 3, vc.second.ang_vel[i]);
 			}
 		}
 	}

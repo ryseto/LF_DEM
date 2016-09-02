@@ -549,6 +549,24 @@ void StokesSolver::setRHS(const vector<vec3d>& force_and_torque)
 	}
 }
 
+void StokesSolver::setRHS(const vector<vec3d>& force,
+                          const vector<vec3d>& torque)
+{
+	auto size = mobile_particle_nb;
+	// if (force_and_torque.size() != size) {
+	// 	throw runtime_error("StokesSolver: setRHS with incompatible vector size\n");
+	// }
+	for (decltype(size) i=0; i<size; i++) {
+		auto i6 = 6*i;
+		((double*)chol_rhs->x)[i6  ] = force[i].x;
+		((double*)chol_rhs->x)[i6+1] = force[i].y;
+		((double*)chol_rhs->x)[i6+2] = force[i].z;
+		((double*)chol_rhs->x)[i6+3] = torque[i].x;
+		((double*)chol_rhs->x)[i6+4] = torque[i].y;
+		((double*)chol_rhs->x)[i6+5] = torque[i].z;
+	}
+}
+
 void StokesSolver::setRHSForce(int i, const vec3d& force_i)
 {
 	if (i < mobile_particle_nb) {
@@ -570,7 +588,7 @@ void StokesSolver::setRHSTorque(int i, const vec3d& torque_i)
 }
 
 // Computes X = L*RHS
-void StokesSolver::compute_LTRHS(vector<vec3d> &X)
+void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 {
 	/*
 	 Cholmod gives a factorizationof a permutated resistance
@@ -582,7 +600,7 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &X)
 	 X = L*Y = P^T*Lc*Y
 		*/
 	if (!chol_L->is_ll) {
-		cerr << " The factorization is LDL^T. compute_LTRHS(double* X) only works for LL^T factorization." << endl;
+		cerr << " The factorization is LDL^T. compute_LTRHS(F, T) only works for LL^T factorization." << endl;
 	}
 	double alpha[] = {1, 0};
 	double beta[] = {0, 0};
@@ -592,38 +610,46 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &X)
 	cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c); // chol_Psolution = Lc*Y
 	chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_Psolution, &chol_c); // chol_solution = P^T*chol_Psolution
 
-	auto size = chol_solution->nrow/3;
+	auto size = chol_solution->nrow/6;
 	for (decltype(size) i=0; i<size; i++) {
-		auto i3 = 3*i;
-		X[i].x = ((double*)chol_solution->x)[i3  ];
-		X[i].y = ((double*)chol_solution->x)[i3+1];
-		X[i].z = ((double*)chol_solution->x)[i3+2];
+		auto i6 = 6*i;
+		F[i].x = ((double*)chol_solution->x)[i6  ];
+		F[i].y = ((double*)chol_solution->x)[i6+1];
+		F[i].z = ((double*)chol_solution->x)[i6+2];
+		T[i].x = ((double*)chol_solution->x)[i6+3];
+		T[i].y = ((double*)chol_solution->x)[i6+4];
+		T[i].z = ((double*)chol_solution->x)[i6+5];
 	}
 	cholmod_free_sparse(&chol_L_sparse, &chol_c);
 	cholmod_free_dense(&chol_solution, &chol_c);
 	cholmod_free_factor(&chol_L_copy, &chol_c);
 }
 
-void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
-{
-	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-	auto size = chol_solution->nrow/6;
-	for (decltype(size) i=0; i<size; i++) {
-		auto i6 = 6*i;
-		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
-		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
-		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
-		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
-		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
-		ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
-	}
-	cholmod_free_dense(&chol_solution, &chol_c);
-}
+// void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
+// {
+// 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
+// 	auto size = chol_solution->nrow/6;
+// 	for (decltype(size) i=0; i<size; i++) {
+// 		auto i6 = 6*i;
+// 		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
+// 		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
+// 		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
+// 		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
+// 		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
+// 		ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+// 	}
+// 	cholmod_free_dense(&chol_solution, &chol_c);
+// }
 
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
 	auto size = chol_solution->nrow/6;
+	if (size>velocity.size() || size>ang_velocity.size()) {
+		// we don't try to resize things here, left to the caller
+		// In particular this is sometimes called with size < velo.size(), so no resizing is safer.
+		throw runtime_error(" StokesSolver::solve: allocated solution vector too small");
+	}
 	for (decltype(size) i=0; i<size; i++) {
 		auto i6 = 6*i;
 		velocity[i].x     = ((double*)chol_solution->x)[i6  ];

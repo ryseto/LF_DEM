@@ -21,6 +21,7 @@
 #include "vec3d.h"
 #include "StressTensor.h"
 #include "ContactDashpot.h"
+#include "PairwiseForce.h"
 
 class System;
 class Interaction;
@@ -32,7 +33,7 @@ struct contact_state {
 	vec3d disp_rolling;
 };
 
-class Contact{
+class Contact {
 private:
 	/*********************************
 	 *        Members                *
@@ -126,13 +127,16 @@ public:
 			return a0 + a1;
 	}
 	//===== forces/stresses  ========================== //
+	void addUpForceTorque(std::vector<vec3d> &force_per_particle,
+	                      std::vector<vec3d> &torque_per_particle);
+	void addUpForce(std::vector<vec3d> &force_per_particle);
 	void calcContactSpringForce();
-	void addUpContactForceTorque();
 	vec3d getTotalForce() const;
 	vec3d getNormalForce() const;
 	vec3d getTangentialForce() const;
 	double get_normal_load() const;
 	void calcContactStress();
+	void addUpStress(StressTensor &stress_p0, StressTensor &stress_p1);
 	StressTensor getContactStressXF() const
 	{
 		return contact_stresslet_XF;

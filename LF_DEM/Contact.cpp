@@ -399,22 +399,31 @@ void Contact::frictionlaw_coulomb_max()
 	return;
 }
 
-void Contact::addUpContactForceTorque()
+
+void Contact::addUpForce(std::vector<vec3d> &force_per_particle)
 {
     /* Force
 	 */
-	sys->contact_force[p0] += f_spring_total;
-	sys->contact_force[p1] -= f_spring_total;
+	force_per_particle[p0] += f_spring_total;
+	force_per_particle[p1] -= f_spring_total;
+}
+
+void Contact::addUpForceTorque(std::vector<vec3d> &force_per_particle,
+                                      std::vector<vec3d> &torque_per_particle)
+{
+    /* Force
+	 */
+	addUpForce(force_per_particle);
 	/* Torque
 	 */
 	if (state >= 2) {
 		vec3d t_ij = cross(interaction->nvec, f_spring_tan);
-		sys->contact_torque[p0] += a0*t_ij;
-		sys->contact_torque[p1] += a1*t_ij;
+		torque_per_particle[p0] += a0*t_ij;
+		torque_per_particle[p1] += a1*t_ij;
 		if (sys->rolling_friction) {
 			vec3d t_rolling = cross(interaction->nvec, f_rolling);
-			sys->contact_torque[p0] += a0*t_rolling;
-			sys->contact_torque[p1] -= a1*t_rolling;
+			torque_per_particle[p0] += a0*t_rolling;
+			torque_per_particle[p1] -= a1*t_rolling;
 		}
 	}
 }
@@ -431,6 +440,15 @@ void Contact::calcContactStress()
 		contact_stresslet_XF.reset();
 	}
 }
+
+void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
+{
+	calcContactStress();
+	double r_ij = get_rcontact();
+	stress_p0 += (a0/r_ij)*contact_stresslet_XF;
+	stress_p1 += (a1/r_ij)*contact_stresslet_XF;
+}
+
 
 double Contact::calcEnergy() const
 {
