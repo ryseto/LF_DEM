@@ -526,6 +526,7 @@
 		D91539E216718D3200FBD57E /* GenerateInitConfig.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = GenerateInitConfig.cpp; sourceTree = "<group>"; };
 		D91539E316718D3200FBD57E /* GenerateInitConfig.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = GenerateInitConfig.h; sourceTree = "<group>"; };
 		D91B041D166EF0A600DC63CA /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		D91EB7AA1D7B027C000868CE /* ForceComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForceComponent.h; sourceTree = "<group>"; };
 		D921A0BE175BF90D002F64B1 /* analyze_data_LF_DEM */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = analyze_data_LF_DEM; sourceTree = BUILT_PRODUCTS_DIR; };
 		D921A0C0175BF90D002F64B1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D921A0C2175BF90D002F64B1 /* analyze_data_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = analyze_data_LF_DEM.1; sourceTree = "<group>"; };
@@ -1233,6 +1234,7 @@
 				D988E38D165441750009949F /* main.cpp */,
 				D9752C881B18285100DDE5E4 /* global.h */,
 				D9032D731B79D1A00062A6F3 /* Events.h */,
+				D91EB7AA1D7B027C000868CE /* ForceComponent.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,

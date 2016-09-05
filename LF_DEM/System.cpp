@@ -1284,7 +1284,6 @@ void System::buildHydroTerms()
 	buildResistanceMatrix();
 }
 
-
 void System::buildResistanceMatrix()
 {
 	for (int i=0; i<np-1; i ++) {
