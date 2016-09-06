@@ -59,7 +59,6 @@ wagnerhash(time_t t, clock_t c)
 System::System(ParameterSet& ps, list <Event>& ev):
 pairwise_resistance_changed(true),
 shear_rate(0),
-vel_difference(0),
 omega_inf(0),
 events(ev),
 p(ps),
@@ -83,6 +82,7 @@ shear_disp(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
+vel_difference(0),
 z_top(-1),
 ratio_unit_time(NULL),
 eventLookUp(NULL)
@@ -1342,6 +1342,7 @@ void System::computeForcesOnWallParticles()
 		so it decomposes the force in a rate-proportional part and a rate-independent part.
 
 		*/
+	throw runtime_error(" Control stress with walls disabled for now .\n");
 	if (!zero_shear) {
 		throw runtime_error(" Stress-control with walls requires zero_shear==true .\n");
 	}

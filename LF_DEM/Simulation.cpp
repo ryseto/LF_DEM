@@ -767,7 +767,7 @@ void Simulation::outputParFileTxt()
 		vel[i] = sys.velocity[i];
 		if (p.origin_zero_flow) {
 			if (pos[i].z < 0) {
-				vel[i].x -= sys.get_shear_rate()*sys.get_lz();
+				vel[i] -= sys.vel_difference;
 			}
 		}
 	}

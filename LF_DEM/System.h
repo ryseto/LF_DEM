@@ -89,11 +89,6 @@ private:
 	double sintheta_shear;
 	double shear_rate;
 
-	/* Velocity difference between top and bottom
-	 * in Lees-Edwards boundary condition
-	 * vel_difference = shear_rate * lz
-	 */
-	vec3d vel_difference;
 	vec3d omega_inf;
 	std::vector <vec3d> u_inf;
 	/* data */
@@ -256,6 +251,11 @@ protected:
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
+	/* Velocity difference between top and bottom
+	 * in Lees-Edwards boundary condition
+	 * vel_difference = shear_rate * lz
+	 */
+	vec3d vel_difference;
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
 	double omega_wheel_in;
