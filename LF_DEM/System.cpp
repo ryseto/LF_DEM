@@ -387,15 +387,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
-	if (!pairwise_resistance) {
-		/* Stokes drag simulation
-		 * Resistance matrix is constant.
-		 */
-	} else if (p.lubrication_model == "normal" || p.lubrication_model == "none") {
-		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (p.lubrication_model == "tangential") {
-		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
-	} else {
+	if (p.lubrication_model != "normal" &&
+	    p.lubrication_model != "none" &&
+		  p.lubrication_model != "tangential") {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
 
@@ -1287,34 +1281,11 @@ void System::buildHydroTerms()
 	 * which is calculated at the beginning.
 	 */
 	// add GE in the rhs and lubrication terms in the resistance matrix
-	(this->*buildLubricationTerms)();
+	buildResistanceMatrix();
 }
 
-/* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
- * This method computes:
- *  - elements of the resistance matrix if 'mat' is true
- *       (only terms diverging as 1/h if lubrication_model == "normal", terms in 1/h and log(1/h) for lubrication_model=="tangential")
- *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
- */
-void System::buildLubricationTerms_squeeze()
-{
-	for (int i=0; i<np-1; i ++) {
-		stokes_solver.startNewColumn();
-		for (auto& inter : interaction_list[i]) {
-			int j = inter->partner(i);
-			if (j > i) {
-				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
-					stokes_solver.addResistanceBlocks(i, j,
-													  inter->RFU_DBlocks(),
-													  inter->RFU_ODBlock());
-				}
-			}
-		}
-	}
-	stokes_solver.matrixFillingDone();
-}
 
-void System::buildLubricationTerms_squeeze_tangential()
+void System::buildResistanceMatrix()
 {
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
@@ -1891,7 +1862,7 @@ void System::tmpMixedProblemSetVelocities()
 		}
 		na_velocity[np_mobile].x = direction;
 	} else if (p.simulation_mode == 2) {
-		/* ????
+		/* ????, yeah what happened here and below?? Haha. I guess whoever created simulation_mode 2/3 does not use it often :)
 		 */
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
