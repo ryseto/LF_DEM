@@ -68,7 +68,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		np_movable = np;
 	}
 	sys.set_np(np);
-  sys.set_np_mobile(np_movable);
+	sys.set_np_mobile(np_movable);
 	sys.friction = false;
 	sys.repulsiveforce = false;
 	sys.p.interaction_range = 2.5;
