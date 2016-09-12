@@ -41,8 +41,11 @@ private:
 	std::vector <Box*> box_labels;
 	System* sys;
 	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
-	Box* whichBox(vec3d*);
-	Box* whichBoxPeriodize(vec3d);
+	/*****
+	 WhichBox(vec3d pos)
+	 returns a pointer on the box containg position pos
+	 *****/
+	Box* whichBox(const vec3d&);
 	void updateNeighbors();
 	// init methods
 	void allocateBoxes();
@@ -61,7 +64,7 @@ public:
 	void init(double interaction_dist, System *sys_);
 	/*****
 	 update()
-	 
+
 	 To be called at each time step.
 	 It updates the neighborhood relations betwenn boxes.
 	 Those relations change at each time step for boxes on top or bottom
@@ -69,24 +72,19 @@ public:
 	void update();
 	/*****
 	 is_boxed()
-	 
+
 	 Can be called before calling an other method of BoxSet.
 	 If false, than calls to other method may usually be avoided.
 	 They can be performed anyway though, and they are normally safe (and useless)
-	 
+
 	 is_boxed() tells if the boxing is effective.
 	 If the system size is small, the neighborhood of a box may contain
 	 the whole system. If this happens, the boxing consists of only one box (as it
 	 is useless, if not ill defined, to do something else), and is_boxed() returns false.
-	 
+
 	 *****/
 	bool is_boxed();
-	/*****
-	 WhichBox(vec3d pos)
-	 
-	 returns a pointer on the box containg position pos
-	 *****/
-	Box* whichBox(vec3d);
+
 	/*****
 	 box(int i)
 	 boxes particles i

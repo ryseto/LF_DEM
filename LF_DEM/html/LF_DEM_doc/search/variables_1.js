@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['brownian_5famplitude',['brownian_amplitude',['../struct_parameter_set.html#a3ed856cafb8c48a021a80899e85e519f',1,'ParameterSet']]]
+  ['brownian',['brownian',['../struct_parameter_set.html#acaf25e2223f0bfc007254b2930960e9b',1,'ParameterSet']]]
 ];

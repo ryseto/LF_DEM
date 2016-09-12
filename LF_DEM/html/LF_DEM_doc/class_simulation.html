@@ -91,6 +91,7 @@ $(document).ready(function(){initNavTree('class_simulation.html','');});
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="class_simulation-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -117,10 +118,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a87f9f99745ef8d72191c75149cf4374a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c894ecd1fb6156d94f57fbc0768c861"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a7c894ecd1fb6156d94f57fbc0768c861">readParameterFile</a> (const std::string &amp;filename_parameters)</td></tr>
 <tr class="separator:a7c894ecd1fb6156d94f57fbc0768c861"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae892491b8f5e639646e792538d3287e0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#ae892491b8f5e639646e792538d3287e0">openOutputFiles</a> ()</td></tr>
-<tr class="separator:ae892491b8f5e639646e792538d3287e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c1c0e957297c10a09ccbdf2fee39b99"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a4c1c0e957297c10a09ccbdf2fee39b99">prepareSimulationName</a> (bool binary_conf, const std::string &amp;filename_import_positions, const std::string &amp;filename_parameters, const std::string &amp;simu_identifier, double dimensionlessnumber, const std::string &amp;input_scale)</td></tr>
-<tr class="separator:a4c1c0e957297c10a09ccbdf2fee39b99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1d85c60b5bcf3e3c70bc5cf1ba6c06b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#ae1d85c60b5bcf3e3c70bc5cf1ba6c06b">openOutputFiles</a> (std::string simu_name)</td></tr>
+<tr class="separator:ae1d85c60b5bcf3e3c70bc5cf1ba6c06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7aaa6afc231614712e0794b71b2ef78"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#ac7aaa6afc231614712e0794b71b2ef78">prepareSimulationName</a> (bool binary_conf, const std::string &amp;filename_import_positions, const std::string &amp;filename_parameters, const std::string &amp;simu_identifier, double dimensionlessnumber, const std::string &amp;input_scale)</td></tr>
+<tr class="separator:ac7aaa6afc231614712e0794b71b2ef78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a434707c081e7876872672d55728d56b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a434707c081e7876872672d55728d56b9">echoInputFiles</a> (std::string in_args, std::vector&lt; std::string &gt; &amp;input_files)</td></tr>
 <tr class="separator:a434707c081e7876872672d55728d56b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a33c595bfa3912a6e7d129c949dd6cb85"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a33c595bfa3912a6e7d129c949dd6cb85">autoSetParameters</a> (const std::string &amp;keyword, const std::string &amp;value)</td></tr>
@@ -143,32 +144,24 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a055bc1e931b8cb872ef87ff47b8a7f82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b500a9f9372d0a3d1fe1eaf8d90c9c4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a3b500a9f9372d0a3d1fe1eaf8d90c9c4">readPositionsImposedVelocity</a> (std::fstream &amp;file_import)</td></tr>
 <tr class="separator:a3b500a9f9372d0a3d1fe1eaf8d90c9c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecc86ad54d03b438bb33320ed15f4542"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#aecc86ad54d03b438bb33320ed15f4542">readPositionsMagnetic</a> (std::fstream &amp;file_import)</td></tr>
-<tr class="separator:aecc86ad54d03b438bb33320ed15f4542"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6855b603ee8983f2da157b8d8d66b6a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a6855b603ee8983f2da157b8d8d66b6a2">readPositions</a> (std::fstream &amp;file_import)</td></tr>
 <tr class="separator:a6855b603ee8983f2da157b8d8d66b6a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a19623ec0109f77e40e0848e0513fca41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a19623ec0109f77e40e0848e0513fca41">exportForceAmplitudes</a> ()</td></tr>
 <tr class="separator:a19623ec0109f77e40e0848e0513fca41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7a3b629d1193ff7be69dfe5d30c8a5c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#ad7a3b629d1193ff7be69dfe5d30c8a5c">convertForceValues</a> (std::string new_long_unit)</td></tr>
-<tr class="separator:ad7a3b629d1193ff7be69dfe5d30c8a5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa46fe5066cf757db5d894af3093378d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#aa46fe5066cf757db5d894af3093378d6">convertInputValues</a> (std::string new_long_unit)</td></tr>
-<tr class="separator:aa46fe5066cf757db5d894af3093378d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a307ad24ddc8dc46ed6f21d4ea92ec5b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a307ad24ddc8dc46ed6f21d4ea92ec5b3">changeUnit</a> (<a class="el" href="struct_dimensional_value.html">DimensionalValue</a> &amp;x, std::string new_unit)</td></tr>
+<tr class="separator:a307ad24ddc8dc46ed6f21d4ea92ec5b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae1172a4862aaca38e051974d9699549e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#ae1172a4862aaca38e051974d9699549e">resolveUnitSystem</a> (std::string long_unit)</td></tr>
 <tr class="separator:ae1172a4862aaca38e051974d9699549e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12286fd02cb452adf672a5a656798856"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a12286fd02cb452adf672a5a656798856">setUnitScaleRateControlled</a> ()</td></tr>
 <tr class="separator:a12286fd02cb452adf672a5a656798856"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa27087b828d9974682f50d45f5c4a1a4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#aa27087b828d9974682f50d45f5c4a1a4">setupNonDimensionalization</a> (double dimensionlessnumber, std::string input_scale)</td></tr>
 <tr class="separator:aa27087b828d9974682f50d45f5c4a1a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d49482a028c0a01251389e855a54dca"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a1d49482a028c0a01251389e855a54dca">convertInputForcesRateControlled</a> (double dimensionlessnumber, std::string input_scale)</td></tr>
-<tr class="separator:a1d49482a028c0a01251389e855a54dca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f620b3924dfb4eb8ef3e72b38c051d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a3f620b3924dfb4eb8ef3e72b38c051d4">convertInputForcesStressControlled</a> (double dimensionlessnumber, std::string input_scale)</td></tr>
-<tr class="separator:a3f620b3924dfb4eb8ef3e72b38c051d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">evaluateData</a> ()</td></tr>
-<tr class="separator:a2ed9b69cf273dbade9825e5c606c0e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bd7c8aeab6ae3d5ce70ab8c7dc8a6d8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a7bd7c8aeab6ae3d5ce70ab8c7dc8a6d8">setupNonDimensionalizationRateControlled</a> (double dimensionlessnumber, std::string input_scale)</td></tr>
+<tr class="separator:a7bd7c8aeab6ae3d5ce70ab8c7dc8a6d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36566d36695d1b4e8420a41b1b417965"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a36566d36695d1b4e8420a41b1b417965">setupNonDimensionalizationStressControlled</a> (double dimensionlessnumber, std::string input_scale)</td></tr>
+<tr class="separator:a36566d36695d1b4e8420a41b1b417965"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03b1b3a373aa202644584d5023ec50f9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a03b1b3a373aa202644584d5023ec50f9">outputData</a> ()</td></tr>
 <tr class="separator:a03b1b3a373aa202644584d5023ec50f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e36e14f1913faba6042bf7cd02e66ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#a9e36e14f1913faba6042bf7cd02e66ea">outputDataMagnetic</a> ()</td></tr>
-<tr class="separator:a9e36e14f1913faba6042bf7cd02e66ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acedd732cb47dbf6a218e59f6aeea7742"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#acedd732cb47dbf6a218e59f6aeea7742">getRate</a> ()</td></tr>
 <tr class="separator:acedd732cb47dbf6a218e59f6aeea7742"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9b47ef999353313373984efbff800cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_simulation.html#ae9b47ef999353313373984efbff800cc">handleEventsShearJamming</a> ()</td></tr>
@@ -178,6 +171,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
+Private Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -215,6 +211,33 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
+<a class="anchor" id="a307ad24ddc8dc46ed6f21d4ea92ec5b3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::changeUnit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_dimensional_value.html">DimensionalValue</a> &amp;&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>new_unit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Convert <a class="el" href="struct_dimensional_value.html">DimensionalValue</a> x from unit x.unit to unit new_unit.</p>
+
+</div>
+</div>
 <a class="anchor" id="a02db39dac79a8197839e02c753bf8340"></a>
 <div class="memitem">
 <div class="memproto">
@@ -228,7 +251,7 @@ Romain Mari </dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Load a file containing spring constants and time steps as functions of the volume fraction.</p>
+<p>@@ DEPRECATED? Load a file containing spring constants and time steps as functions of the volume fraction.</p>
 <p>Input file must be formatted as: phi kn kt dt</p>
 
 </div>
@@ -246,106 +269,9 @@ Romain Mari </dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.</p>
+<p>@@ DEPRECATED? Load a file containing spring constants and time steps as functions of the volume fraction and Peclet number.</p>
 <p>Input file must be formatted as: phi peclet kn kt dt</p>
 
-</div>
-</div>
-<a class="anchor" id="ad7a3b629d1193ff7be69dfe5d30c8a5c"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::convertForceValues </td>
-          <td>(</td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>new_long_unit</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Convert all the input forces to the unit given in parameter. </p><pre class="fragment">   The input forces velues can be expressed in any units, but these units must be known before calling this function (e.g. by calling Simulation::resolveUnitSystem(string unit_force) beforehand).
-</pre>
-</div>
-</div>
-<a class="anchor" id="a1d49482a028c0a01251389e855a54dca"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::convertInputForcesRateControlled </td>
-          <td>(</td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dimensionlessnumber</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>input_scale</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Choose units for the simulation and convert the forces to this unit (rate controlled case).</p>
-<p>The strategy is the following:</p><ol type="1">
-<li>Convert all the forces in hydro force unit, ie the value for force f1 is f1/F_H</li>
-<li>Decide the unit force F_W for the simulation</li>
-<li>Convert all the forces to this unit (by multiplying every force by F_H/F_W)</li>
-</ol>
-
-</div>
-</div>
-<a class="anchor" id="a3f620b3924dfb4eb8ef3e72b38c051d4"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::convertInputForcesStressControlled </td>
-          <td>(</td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dimensionlessnumber</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>input_scale</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Chooses units for the simulation and convert the forces to this unit (stress controlled case).</p>
-<p>The strategy is the following:</p><ol type="1">
-<li>Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie: a. w = 1w b. y = mw c. z = oy = omw d. etc...</li>
-</ol>
-<p>In the future, we may allow other unit scale than the one given by the input stress.</p>
-
-</div>
-</div>
-<a class="anchor" id="aa46fe5066cf757db5d894af3093378d6"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::convertInputValues </td>
-          <td>(</td>
-          <td class="paramtype">std::string&#160;</td>
-          <td class="paramname"><em>new_long_unit</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Convert all the non-force input parameters given with units to the unit given in parameter. </p><pre class="fragment">   \b Note Forces are treated with Simulation::convertForceValues(string new_unit) .
-</pre>
 </div>
 </div>
 <a class="anchor" id="a434707c081e7876872672d55728d56b9"></a>
@@ -375,23 +301,6 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a2ed9b69cf273dbade9825e5c606c0e0d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::evaluateData </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Get rheological data from the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class.</p>
-<p>In this method we keep the internal units. There is no conversion to output units at this stage</p>
-
-</div>
-</div>
 <a class="anchor" id="a19623ec0109f77e40e0848e0513fca41"></a>
 <div class="memitem">
 <div class="memproto">
@@ -404,7 +313,7 @@ Romain Mari </dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Copy the input_force_values in the ForceAmplitude struct of the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class</p>
+<p>Copy the input force alues in the ForceAmplitude struct of the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class</p>
 
 </div>
 </div>
@@ -562,14 +471,15 @@ Romain Mari </dd></dl>
 </pre>
 </div>
 </div>
-<a class="anchor" id="ae892491b8f5e639646e792538d3287e0"></a>
+<a class="anchor" id="ae1d85c60b5bcf3e3c70bc5cf1ba6c06b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void Simulation::openOutputFiles </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>simu_name</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -596,28 +506,12 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="a9e36e14f1913faba6042bf7cd02e66ea"></a>
+<a class="anchor" id="ac7aaa6afc231614712e0794b71b2ef78"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void Simulation::outputDataMagnetic </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Output data for magnetic colloid work</p>
-
-</div>
-</div>
-<a class="anchor" id="a4c1c0e957297c10a09ccbdf2fee39b99"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::prepareSimulationName </td>
+          <td class="memname">string Simulation::prepareSimulationName </td>
           <td>(</td>
           <td class="paramtype">bool&#160;</td>
           <td class="paramname"><em>binary_conf</em>, </td>
@@ -718,25 +612,6 @@ Romain Mari </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="aecc86ad54d03b438bb33320ed15f4542"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Simulation::readPositionsMagnetic </td>
-          <td>(</td>
-          <td class="paramtype">std::fstream &amp;&#160;</td>
-          <td class="paramname"><em>file_import</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Import a text file configuration with magnetic moments and susceptibility.</p>
-<p>File format: </p><h1>header</h1>
-<p>x y z radius mx my mz susceptibility</p>
-
-</div>
-</div>
 <a class="anchor" id="a7f313897c141c2f687fc33c6425289e8"></a>
 <div class="memitem">
 <div class="memproto">
@@ -753,7 +628,7 @@ Romain Mari </dd></dl>
 <p>We have to treat times as a special case, because we sometimes want to use times expressed in units of inverse shear rate (i.e. time=strain). Because the shear rate might change in the simulation, it is not possible to perform a simple change of unit at any time in the simulation.</p>
 <p>Ex 1: I am running a stress controlled simulation in repulsive time units. I set kn = 100r and time_end = 1kn; Then I know that I need to stop the simulation when sys.time()==1/100 (i.e. when the time expressed in repulsive units reaches 1/100)</p>
 <p>Ex 2: I am running a stress controlled simulation in repulsive time units. I set kn = 100r but this time time_end = 1h; There is no way to know what 1h corresponds to in repulsive units, as the shear rate is evolving with time (stopping at sys.time()==???). The only way is to stop when sys.shear_strain()==1.</p>
-<p>Because these 2 cases lead to 2 different tests, we have to inform the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class which test to perform. If time_end &gt; 0, <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> tests with <a class="el" href="class_system.html#aa9e002a5f2f169e37c545b76ee67e724" title="time elapsed since beginning of the time evolution. ">System::time()</a>==time_end. If time_end==-1, the test is done with System::shear_strain()==strain_end.</p>
+<p>Because these 2 cases lead to 2 different tests, we have to inform the <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> class which test to perform. If time_end &gt; 0, <a class="el" href="class_system.html" title="Central class holding the suspension&#39;s configuration and the methods to evolve the dynamics...">System</a> tests with System::time()==time_end. If time_end==-1, the test is done with System::shear_strain()==strain_end.</p>
 <p>We have to do this not only for time_end, but also for every time defined in the parameters.</p>
 
 </div>
@@ -771,20 +646,24 @@ Romain Mari </dd></dl>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Check force units consistency, expresses all input forces in unit given as a parameter. </p><pre class="fragment">   In input, forces are given with suffixes. This function checks that we can make sense of these suffixes, and if so, it converts all the forces in the unit given as a parameter.
+<p>Check force units consistency, expresses all input forces in the unit "unit_force". </p><pre class="fragment">   In input, forces are given with suffixes.
+   This function checks that we can make sense of these suffixes, and if so,
+   it converts all the forces in the unit given as a parameter.
 
    It does it iteratively, ie:
    1. I know that unit_force = 1*unit_force
    2. I know the value of any force f1 that has been given in unit_force in input as
-</pre><p> f1 = value*unit_force</p><ol type="1">
-<li>I can determine the value of any force f2 expressed as f2 = x*f1</li>
-</ol>
-<p>I can then determine the value of any force f3 expressed as f3 = y*f2</p><ol type="1">
+ f1 = value*unit_force
+   3. I can determine the value of any force f2 expressed as f2 = x*f1
+</pre><ol type="1">
+<li><p class="startli">I can then determine the value of any force f3 expressed as f3 = y*f2</p><ol type="a">
 <li>etc</li>
 </ol>
-<p>If there is any force undetermined at the end of this algorithm, the force unit system is inconsistent/incomplete.</p>
-<p>If the force unit system is consistent, this function determines the dimensionless numbers, i.e., the ratios F_A/F_B for any pair of force scales present in the system.</p>
-<p><b>Note:</b> a priori, we could determine force A from force B if A is defined in B units or if B is defined in A units: for example in the step 3 of the above algorithm we could determine f2 knowing f1 if f1 is defined as f1=x^{-1}f2. However this is <b>not</b> implemented and will fail with the current implementation.</p>
+<p class="startli">If there is any force undetermined at the end of this algorithm, the force unit system is inconsistent/incomplete.</p>
+<p class="startli">If the force unit system is consistent, this function determines the dimensionless numbers, i.e., the ratios F_A/F_B for any pair of force scales present in the system.</p>
+<p class="startli"><b>Note:</b> a priori, we could determine force A from force B if A is defined in B units or if B is defined in A units: for example in the step 3 of the above algorithm we could determine f2 knowing f1 if f1 is defined as f1=x^{-1}f2. However this is <b>not</b> implemented and will fail with the current implementation.</p>
+</li>
+</ol>
 
 </div>
 </div>
@@ -862,6 +741,69 @@ Romain Mari </dd></dl>
 </div><div class="memdoc">
 <p>Non-dimensionalize the simulation. </p><pre class="fragment">   This function determines the most appropriate unit scales to use in the System class depending on the input parameters (Brownian/non-Brownian, shear rate, stress/rate controlled), and converts all the input values in these units.
 </pre>
+</div>
+</div>
+<a class="anchor" id="a7bd7c8aeab6ae3d5ce70ab8c7dc8a6d8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::setupNonDimensionalizationRateControlled </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dimensionlessnumber</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>input_scale</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Choose units for the simulation and convert the forces to this unit (rate controlled case).</p>
+<p>The strategy is the following:</p><ol type="1">
+<li>Convert all the forces in hydro force unit, ie the value for force f1 is f1/F_H</li>
+<li>Decide the unit force F_W for the simulation</li>
+<li>Convert all the forces to this unit (by multiplying every force by F_H/F_W)</li>
+</ol>
+
+</div>
+</div>
+<a class="anchor" id="a36566d36695d1b4e8420a41b1b417965"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Simulation::setupNonDimensionalizationStressControlled </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dimensionlessnumber</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>input_scale</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Chooses units for the simulation and convert the forces to this unit (stress controlled case).</p>
+<p>The strategy is the following:</p><ol type="1">
+<li>Convert all the forces in the force unit "w" given by the input stress (LF_DEM -s a_numberw), by solving recursively, ie: a. w = 1w b. y = mw c. z = oy = omw d. etc...</li>
+</ol>
+<p>In the future, we may allow other unit scale than the one given by the input stress.</p>
+
 </div>
 </div>
 <a class="anchor" id="a1dc92fad0b8a9e483499aad6c8fcc31c"></a>
@@ -952,7 +894,7 @@ Romain Mari </dd></dl>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_simulation.html">Simulation</a></li>
-    <li class="footer">Generated on Wed Apr 27 2016 15:21:51 for Documentation for LF_DEM by
+    <li class="footer">Generated on Mon Sep 12 2016 11:56:01 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>

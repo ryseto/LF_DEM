@@ -80,21 +80,25 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 		}
 	}
 	
-	if (rtime_tan > 0) {
-		if (sys->lubrication) { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
-			throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
-		}
-		tangential_coeff = 6*kt*rtime_tan;
+	if (sys->friction == false && sys->p.lubrication_model != "tangential") {
+		tangential_coeff = 0;
 	} else {
-		if (sys->lubrication) {// take the same resistance as lubrication
-			// 1/(h+c) --> 1/c
-			if (sys->p.lub_reduce_parameter < 1) {
-				tangential_coeff = log(1/sys->p.lub_reduce_parameter);
-			} else {
-				tangential_coeff = 0;
+		if (rtime_tan > 0) {
+			if (sys->lubrication) { // the contact can get unstable if the tangential resistance difference is too big between with and wihout contact
+				throw std::runtime_error(" ContactDashpot:: Error: with lubrication, tangential relaxation time cannot be set positive.");
 			}
+			tangential_coeff = 6*kt*rtime_tan;
 		} else {
-			throw std::runtime_error(" ContactDashpot:: Error: tangential relaxation time set negative, but no lubrication.");
+			if (sys->lubrication) {// take the same resistance as lubrication
+				// 1/(h+c) --> 1/c
+				if (sys->p.lub_reduce_parameter < 1) {
+					tangential_coeff = log(1/sys->p.lub_reduce_parameter);
+				} else {
+					tangential_coeff = 0;
+				}
+			} else {
+				throw std::runtime_error(" ContactDashpot:: Error: tangential relaxation time set negative, but no lubrication.");
+			}
 		}
 	}
 	calcDashpotResistances();
@@ -278,25 +282,25 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks() const
 	b1.col4[1] = -YC[3]*n1n2;                     // 54
 	// (*,5)
 	b1.col5[0] =  YC[3]*one_n2n2;                 // 55
-	
+
 	return std::make_pair(b0, b1);
 }
 
 vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
-								   const vec3d &vel_p1,
-								   const vec3d &ang_vel_p0,
-								   const vec3d &ang_vel_p1) const
+                                   const vec3d &vel_p1,
+                                   const vec3d &ang_vel_p0,
+                                   const vec3d &ang_vel_p1) const
 {
 	/** \brief Resistance force acting on particle p0.
-	 
+
 	 Used by the dynamics to get the R_FU*U_inf force term and by the output data.
-	 
+
 	 vel_p0 (ang_vel_p0) is the TOTAL (angular) velocity of p0 (not the non-affine part),
 	 vel_p1 (ang_vel_p1) is the total (angular) velocity of p1.
 	 This method deals with Lees-Edwards PBC by itself, so vel_p0 and vel_p1
 	 are the actual velocities in System.
 	 */
-	
+
 	/*
 	 *  First: -A*(U-Uinf) term
 	 * Eq. (1.6a) in Jeffrey&Onishi 1984
@@ -310,7 +314,7 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 		vj += interaction->z_offset*sys->get_vel_difference();
 		/* XAU_i */
 		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
-		
+
 		/* YAU_i */
 		force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
 		/* YBO_i */
@@ -320,6 +324,46 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 		return vec3d();
 	}
 }
+
+
+vec3d ContactDashpot::getForceOnP0_nonaffine(const vec3d &na_vel_p0,
+					                                   const vec3d &na_vel_p1,
+					                                   const vec3d &na_ang_vel_p0,
+					                                   const vec3d &na_ang_vel_p1) const
+{
+	/** \brief Resistance force acting on particle p0.
+
+	 Used by the dynamics to get the R_FU*U_inf force term and by the output data.
+
+	 vel_p0 (ang_vel_p0) is the TOTAL (angular) velocity of p0 (not the non-affine part),
+	 vel_p1 (ang_vel_p1) is the total (angular) velocity of p1.
+	 This method deals with Lees-Edwards PBC by itself, so vel_p0 and vel_p1
+	 are the actual velocities in System.
+	 */
+
+	/*
+	 *  First: -A*(U-Uinf) term
+	 * Eq. (1.6a) in Jeffrey&Onishi 1984
+	 * A_{ij}^{ab} = XA_{ab}ni*nj + YA_{ab}(del_{ij}-ni*nj)
+	 * B~_{ji}^{ab} = YB_{ba}epsilon_{jik} nk
+	 *
+	 */
+	if (is_active()) {
+		/* XAU_i */
+		vec3d force_p0 = -dot(XA[0]*na_vel_p0+XA[1]*na_vel_p1, nvec)*(*nvec);
+
+		/* YAU_i */
+		force_p0 += - YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0))
+		            - YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
+		/* YBO_i */
+		force_p0 += - YB[0]*cross(nvec, na_ang_vel_p0)
+		            - YB[2]*cross(nvec, na_ang_vel_p1);
+		return force_p0;
+	} else {
+		return vec3d();
+	}
+}
+
 
 std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &u_inf_p0,
 																   const vec3d &u_inf_p1,

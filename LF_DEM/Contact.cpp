@@ -271,18 +271,30 @@ void Contact::frictionlaw_standard()
 	}
 	if (state == 3) {
 		// adjust the sliding spring for dynamic friction law
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_spring_tan = kt_scaled*disp_tan;
+		setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 	}
 	if (sys->rolling_friction) {
 		double supportable_rollingforce = mu_rolling*normal_load;
 		double sq_f_rolling = f_rolling.sq_norm();
 		if (sq_f_rolling > supportable_rollingforce*supportable_rollingforce) {
-			disp_rolling *= supportable_rollingforce/sqrt(sq_f_rolling);
-			f_rolling = kr_scaled*disp_rolling;
+			setRollingForceNorm(sqrt(sq_f_rolling), supportable_rollingforce);
 		}
 	}
 	return;
+}
+
+void Contact::setTangentialForceNorm(double current_force_norm,
+		                                 double new_force_norm)
+{
+	disp_tan *= new_force_norm/current_force_norm;
+	f_spring_tan = kt_scaled*disp_tan;
+}
+
+void Contact::setRollingForceNorm(double current_force_norm,
+                                  double new_force_norm)
+{
+	disp_rolling *= new_force_norm/current_force_norm;
+	f_rolling = kr_scaled*disp_rolling;
 }
 
 void Contact::frictionlaw_criticalload()
@@ -304,8 +316,7 @@ void Contact::frictionlaw_criticalload()
 		double sq_f_tan = f_spring_tan.sq_norm();
 		if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 			state = 3; // sliding
-			disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-			f_spring_tan = kt_scaled*disp_tan;
+			setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 		} else {
 			state = 2; // static friction
 		}
@@ -344,8 +355,7 @@ void Contact::frictionlaw_ft_max()
  	double sq_f_tan = f_spring_tan.sq_norm();
  	if (sq_f_tan > ft_max*ft_max) {
  		state = 3; // dynamic friction
- 		disp_tan *= ft_max/sqrt(sq_f_tan);
- 		f_spring_tan = kt_scaled*disp_tan;
+		setTangentialForceNorm(sqrt(sq_f_tan), ft_max);
  	} else {
  		state = 2; // static friction
  	}
@@ -382,30 +392,38 @@ void Contact::frictionlaw_coulomb_max()
 	double sq_f_tan = f_spring_tan.sq_norm();
 	if (sq_f_tan > supportable_tanforce*supportable_tanforce) {
 		state = 3; // dynamic friction
-		disp_tan *= supportable_tanforce/sqrt(sq_f_tan);
-		f_spring_tan = kt_scaled*disp_tan;
+		setTangentialForceNorm(sqrt(sq_f_tan), supportable_tanforce);
 	} else {
 		state = 2; // static friction
 	}
 	return;
 }
 
-void Contact::addUpContactForceTorque()
+
+void Contact::addUpForce(std::vector<vec3d> &force_per_particle)
 {
     /* Force
 	 */
-	sys->contact_force[p0] += f_spring_total;
-	sys->contact_force[p1] -= f_spring_total;
+	force_per_particle[p0] += f_spring_total;
+	force_per_particle[p1] -= f_spring_total;
+}
+
+void Contact::addUpForceTorque(std::vector<vec3d> &force_per_particle,
+                                      std::vector<vec3d> &torque_per_particle)
+{
+    /* Force
+	 */
+	addUpForce(force_per_particle);
 	/* Torque
 	 */
 	if (state >= 2) {
 		vec3d t_ij = cross(interaction->nvec, f_spring_tan);
-		sys->contact_torque[p0] += a0*t_ij;
-		sys->contact_torque[p1] += a1*t_ij;
+		torque_per_particle[p0] += a0*t_ij;
+		torque_per_particle[p1] += a1*t_ij;
 		if (sys->rolling_friction) {
 			vec3d t_rolling = cross(interaction->nvec, f_rolling);
-			sys->contact_torque[p0] += a0*t_rolling;
-			sys->contact_torque[p1] -= a1*t_rolling;
+			torque_per_particle[p0] += a0*t_rolling;
+			torque_per_particle[p1] -= a1*t_rolling;
 		}
 	}
 }
@@ -421,6 +439,23 @@ void Contact::calcContactStress()
 	} else {
 		contact_stresslet_XF.reset();
 	}
+}
+
+void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
+{
+	calcContactStress();
+	double r_ij = get_rcontact();
+	stress_p0 += (a0/r_ij)*contact_stresslet_XF;
+	stress_p1 += (a1/r_ij)*contact_stresslet_XF;
+}
+
+void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1)
+{
+	StressTensor spring_stress;
+	spring_stress.set(interaction->rvec, f_spring_total);
+	double r_ij = get_rcontact();
+	stress_p0 += (a0/r_ij)*spring_stress;
+	stress_p1 += (a1/r_ij)*spring_stress;
 }
 
 double Contact::calcEnergy() const

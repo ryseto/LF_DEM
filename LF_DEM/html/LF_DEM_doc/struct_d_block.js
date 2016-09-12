@@ -1,5 +1,6 @@
 var struct_d_block =
 [
+    [ "operator+=", "struct_d_block.html#a4130121abb53b4ee85d353c7aeff0cc2", null ],
     [ "col0", "struct_d_block.html#ae687705594e2fdeb0acfd7ba706cc923", null ],
     [ "col1", "struct_d_block.html#a302a056c9c7078113284cef450d9acd4", null ],
     [ "col2", "struct_d_block.html#a4a305b6242e99956647b36ad33e7ffa3", null ],

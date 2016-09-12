@@ -23,6 +23,7 @@
 #include <list>
 #include <string>
 #include <tuple>
+#include <map>
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
@@ -31,6 +32,9 @@
 #include "ParameterSet.h"
 #include "Averager.h"
 #include "Events.h"
+#include "StressComponent.h"
+#include "VelocityComponent.h"
+#include "ForceComponent.h"
 #include "cholmod.h"
 #ifndef USE_DSFMT
 #include "MersenneTwister.h"
@@ -85,11 +89,6 @@ private:
 	double sintheta_shear;
 	double shear_rate;
 
-	/* Velocity difference between top and bottom
-	 * in Lees-Edwards boundary condition
-	 * vel_difference = shear_rate * lz
-	 */
-	vec3d vel_difference;
 	vec3d omega_inf;
 	std::vector <vec3d> u_inf;
 	/* data */
@@ -108,17 +107,18 @@ private:
 	void timeStepBoxing();
 	void adaptTimeStep();
 	void adaptTimeStep(double time_end, double strain_end);
-	void setContactForceToParticle();
-	void setRepulsiveForceToParticle();
-	void buildHydroTerms(bool);
-	void (System::*buildLubricationTerms)(bool);
-	void buildLubricationTerms_squeeze(bool rhs); // lubrication_model = 1
-	void buildLubricationTerms_squeeze_tangential(bool rhs); // lubrication_model = 2
-	void buildHydroTermsFromFixedParticles();
-	std::vector<double> computeForceFromFixedParticles();
-	void generateBrownianForces();
-	void buildContactTerms(bool);
-	void buildRepulsiveForceTerms(bool);
+	void setContactForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setRepulsiveForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setFixedParticleForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setDashpotForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setHydroForceToParticle_squeeze(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setHydroForceToParticle_squeeze_tangential(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void buildHydroTerms();
+	void buildResistanceMatrix();
+	void setBrownianForceToParticle(std::vector<vec3d> &force, std::vector<vec3d> &torque);
+	void setSolverRHS(const ForceComponent &fc);
+	void addToSolverRHS(const ForceComponent &fc);
+	void resetForceComponents();
 	void computeVelocities(bool divided_velocities);
 	void computeVelocitiesStokesDrag();
 	void computeVelocityWithoutComponents();
@@ -129,16 +129,18 @@ private:
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
 	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
-	void rushWorkFor2DBrownian(); // We need to implement real 2D simulation.
+	void rushWorkFor2DBrownian(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel); // We need to implement real 2D simulation.
 	void computeUInf();
 	void computeShearRate();
 	void computeShearRateWalls();
 	void computeForcesOnWallParticles();
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
-	void rescaleVelHydroStressControlledFixed();
-	void stressReset();
-	void addLubricationStress(Interaction &);
+	void addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
+	                              const std::vector<vec3d> &non_affine_vel,
+	                              const std::vector<vec3d> &non_affine_ang_vel);
+	void addUpInteractionStressME(std::vector<StressTensor> &stress_comp);
+
 	void computeMaxNAVelocity();
 	double (System::*calcInteractionRange)(int, int);
 	void forceResultantReset();
@@ -148,7 +150,6 @@ private:
 	void wallForces();
 	bool hasNeighbor(int i, int j);
 	void setVelocityDifference();
-
 #ifndef USE_DSFMT
 	MTRand *r_gen;
 #endif
@@ -217,38 +218,22 @@ protected:
 	std::vector<vec3d> ang_velocity;
 	std::vector<vec3d> ang_velocity_predictor;
 	std::vector<vec3d> na_ang_velocity;
-	std::vector<vec3d> vel_repulsive;
-	std::vector<vec3d> ang_vel_repulsive;
-	std::vector<vec3d> vel_contact;
-	std::vector<vec3d> ang_vel_contact;
-	std::vector<vec3d> vel_hydro;
-	std::vector<vec3d> ang_vel_hydro;
-	std::vector<vec3d> vel_brownian;
-	std::vector<vec3d> ang_vel_brownian;
-	std::vector<vec3d> vel_hydro_from_fixed;
-	std::vector<vec3d> ang_vel_hydro_from_fixed;
 	std::vector<vec3d> fixed_velocities;
-	std::vector<vec3d> contact_force;
-	std::vector<vec3d> contact_torque;
-	std::vector<vec3d> repulsive_force;
-	std::vector<vec3d> brownian_force_torque;
-	std::vector<StressTensor> lubstress; // G U + M E
-	std::vector<StressTensor> contactstressGU; // per particle
-	std::vector<StressTensor> contactstressXF; // per particle
-	std::vector<StressTensor> repulsivestressGU; // per particle
-	std::vector<StressTensor> repulsivestressXF; // per particle
-	std::vector<StressTensor> brownianstressGU; // per particle
-	std::vector<StressTensor> brownianstressGU_predictor; // per particle
 	std::vector<StressTensor> total_stress_pp; // per particle
-	std::vector<StressTensor> hydrofromfixedstressGU; // per particle
 	StressTensor total_stress;
-	StressTensor total_hydro_stress;
-	StressTensor total_contact_stressXF;
-	StressTensor total_contact_stressGU;
-	StressTensor total_repulsive_stressXF;
-	StressTensor total_repulsive_stressGU;
-	StressTensor total_brownian_stressGU;
-	StressTensor total_hydrofromfixed_stressGU;
+
+	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
+	                                      StressTensor &rate_indep_stress);
+
+	std::map<std::string, ForceComponent> force_components;
+	std::map<std::string, StressTensor> total_stress_groups;
+	std::map<std::string, StressComponent> stress_components;
+	void declareStressComponents();
+	std::map<std::string, VelocityComponent> velocity_components;
+	void declareVelocityComponents();
+	void declareForceComponents();
+
+
 	Averager<StressTensor> stress_avg;
 	double dt;
 	double avg_dt;
@@ -256,20 +241,19 @@ protected:
 	double system_volume;
 	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
 	std::vector < std::vector<int> > interaction_partners;
-	// std::unordered_set <int> *interaction_partners;
 	int nb_interaction;
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
-	/* For non-Brownian suspension:
-	 * dimensionless_number = 6*pi*mu*a^2*shear_rate/F_repulsive(0)
-	 * For Brownian suspension, it should be Peclet number
-	 */
-	//	double dimensionless_number;
 	double max_velocity;
 	double max_sliding_velocity;
 	std::queue<int> deactivated_interaction;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
+	/* Velocity difference between top and bottom
+	 * in Lees-Edwards boundary condition
+	 * vel_difference = shear_rate * lz
+	 */
+	vec3d vel_difference;
 	/**** temporal circular gap setup ***********/
 	vec3d origin_of_rotation;
 	double omega_wheel_in;
@@ -319,8 +303,14 @@ protected:
 
 	int periodize(vec3d&);
 	int periodize_diff(vec3d&);
+	vec3d periodized(const vec3d&);
 	void calcStress();
 	void calcStressPerParticle();
+	void calcContactXFPerParticleStressControlled();
+	void gatherVelocitiesByRateDependencies(std::vector<vec3d> rateprop_vel,
+                                          std::vector<vec3d> rateprop_ang_vel,
+                                          std::vector<vec3d> rateindep_vel,
+                                          std::vector<vec3d> rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,

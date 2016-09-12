@@ -231,6 +231,7 @@ public:
 	void addToRHSForce(int, const vec3d&);
 	void addToRHSTorque(int, const vec3d&);
 	void setRHS(const std::vector<vec3d>&);
+	void setRHS(const std::vector<vec3d>&, const std::vector<vec3d>& torque);
 	void setRHSForce(int, const vec3d&);
 	void setRHSTorque(int, const vec3d&);
 	/*
@@ -250,7 +251,7 @@ public:
 	 where L^t is the transpose of the Cholesky factor ( ResistanceMatrix = L L^t )
 	 - works only for direct solver, as we need the Cholesky factor
 	 */
-	 void compute_LTRHS(std::vector<vec3d>&);
+	 void compute_LTRHS(std::vector<vec3d>&, std::vector<vec3d>&);
 	 /*
 	 solvingIsDone(bool free_Cholesky_factor) :
 	 - deletes resistance matrix and some other arrays

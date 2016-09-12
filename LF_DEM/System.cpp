@@ -11,6 +11,7 @@
 #include <cmath>
 #include <stdexcept>
 #include "SystemHelperFunctions.h"
+#include "global.h"
 
 #ifndef USE_DSFMT
 #define GRANDOM ( r_gen->randNorm(0., 1.) ) // RNG gaussian with mean 0. and variance 1.
@@ -58,7 +59,6 @@ wagnerhash(time_t t, clock_t c)
 System::System(ParameterSet& ps, list <Event>& ev):
 pairwise_resistance_changed(true),
 shear_rate(0),
-vel_difference(0),
 omega_inf(0),
 events(ev),
 p(ps),
@@ -82,6 +82,7 @@ shear_disp(0),
 target_stress(0),
 init_strain_shear_rate_limit(0),
 init_shear_rate_limit(999),
+vel_difference(0),
 z_top(-1),
 ratio_unit_time(NULL),
 eventLookUp(NULL)
@@ -94,13 +95,6 @@ eventLookUp(NULL)
 	amplitudes.critical_normal_force = 0;
 	max_sliding_velocity = 0;
 	total_stress = 0;
-	total_hydro_stress = 0;
-	total_contact_stressXF = 0;
-	total_contact_stressGU = 0;
-	total_repulsive_stressXF = 0;
-	total_repulsive_stressGU = 0;
-	total_brownian_stressGU = 0;
-	total_hydrofromfixed_stressGU = 0;
 	lx = 0;
 	ly = 0;
 	lz = 0;
@@ -167,26 +161,14 @@ void System::allocateRessourcesPreConfiguration()
 	for (auto &v: u_inf) {
 		v.reset();
 	}
-	vel_contact.resize(np);
-	ang_vel_contact.resize(np);
-	vel_hydro.resize(np);
-	ang_vel_hydro.resize(np);
-	if (repulsiveforce) {
-		vel_repulsive.resize(np);
-		ang_vel_repulsive.resize(np);
-	}
-	if (brownian) {
-		vel_brownian.resize(np);
-		ang_vel_brownian.resize(np);
-	}
 	if (mobile_fixed) {
-		vel_hydro_from_fixed.resize(np_mobile);
-		ang_vel_hydro_from_fixed.resize(np_mobile);
 		non_rate_proportional_wall_force.resize(p.np_fixed);
 		non_rate_proportional_wall_torque.resize(p.np_fixed);
 		rate_proportional_wall_force.resize(p.np_fixed);
 		rate_proportional_wall_torque.resize(p.np_fixed);
 	}
+	declareForceComponents();
+	declareVelocityComponents();
 	interaction.resize(maxnb_interactionpair);
 	for (int k=0; k<maxnb_interactionpair; k++) {
 		interaction[k].init(this);
@@ -203,38 +185,73 @@ void System::allocateRessourcesPreConfiguration()
 	}
 }
 
+void System::declareForceComponents()
+{
+	// Only declare in force components the forces on the rhs of
+	// R_FU*(U-U_inf) = RHS
+	// These forces will be used to compute the velocity_components,
+	// a set of components that must add up exactly to the total non-affine velocity
+
+	bool torque = true;
+
+	/******* Contact force, spring part ***********/
+	if (friction) {
+		force_components["contact"] = ForceComponent(np, RATE_INDEPENDENT, torque, &System::setContactForceToParticle);
+	} else {
+		force_components["contact"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setContactForceToParticle);
+	}
+
+	/******* Contact force, dashpot part ***********/
+	// note that we keep the torque on, as there is nothing else to prevent tangential motion when in contact
+	// (apart from Stokes drag, which can be set arbitrarily small)
+	force_components["dashpot"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setDashpotForceToParticle);
+
+	/*********** Hydro force, i.e.  R_FE:E_inf *****************/
+	if (!zero_shear) {
+		if (p.lubrication_model == "normal") {
+			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setHydroForceToParticle_squeeze);
+		}
+		if (p.lubrication_model == "tangential") {
+			force_components["hydro"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setHydroForceToParticle_squeeze_tangential);
+		}
+	}
+	if (repulsiveforce) {
+		force_components["repulsion"] = ForceComponent(np, RATE_INDEPENDENT, !torque, &System::setRepulsiveForceToParticle);
+	}
+	if (brownian) {
+		force_components["brownian"] = ForceComponent(np, RATE_DEPENDENT, torque, &System::setBrownianForceToParticle);// declared rate dependent for now
+	}
+
+	/********** Force R_FU^{mf}*(U^f-U^f_inf)  *************/
+	if (mobile_fixed) {
+		// rate proportional with walls, but this can change
+		if (p.lubrication_model != "normal") {
+			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, !torque, &System::setFixedParticleForceToParticle);
+		}
+		if (p.lubrication_model != "tangential") {
+			force_components["from_fixed"] = ForceComponent(np, RATE_PROPORTIONAL, torque, &System::setFixedParticleForceToParticle);
+		}
+	}
+}
+
+void System::declareVelocityComponents()
+{
+	// Only declare in velocity_components a set of components that add up
+	// exactly to the non-affine velocity
+	for (const auto &fc: force_components) {
+		velocity_components[fc.first] = VelocityComponent(fc.second.force.size(), fc.second.rate_dependence);
+	}
+}
+
 void System::allocateRessourcesPostConfiguration()
 {
 	// Forces and Stress
-	contact_force.resize(np);
-	contact_torque.resize(np);
-	if (brownian) {
-		brownian_force_torque.resize(2*np);
-	}
 	forceResultant.resize(np);
 	torqueResultant.resize(np);
 
-	total_stress_pp.resize(np);
-	lubstress.resize(np);
-	contactstressGU.resize(np);
+	declareStressComponents();
 
-	if (!p.out_particle_stress.empty() || couette_stress) {
-		contactstressXF.resize(np);
-	}
-	if (repulsiveforce) {
-		repulsive_force.resize(np);
-		repulsivestressGU.resize(np);
-		if (!p.out_particle_stress.empty() || couette_stress) {
-			repulsivestressXF.resize(np);
-		}
-	}
-	if (brownian) {
-		brownianstressGU.resize(np);
-		brownianstressGU_predictor.resize(np);
-	}
-	if (mobile_fixed) {
-		hydrofromfixedstressGU.resize(np);
-	}
+	total_stress_pp.resize(np);
 	if (brownian) {
 		if (lowPeclet) {
 			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
@@ -370,15 +387,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	}
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
-	if (!pairwise_resistance) {
-		/* Stokes drag simulation
-		 * Resistance matrix is constant.
-		 */
-	} else if (p.lubrication_model == "normal" || p.lubrication_model == "none") {
-		buildLubricationTerms = &System::buildLubricationTerms_squeeze;
-	} else if (p.lubrication_model == "tangential") {
-		buildLubricationTerms = &System::buildLubricationTerms_squeeze_tangential;
-	} else {
+	if (p.lubrication_model != "normal" &&
+	    p.lubrication_model != "none" &&
+		  p.lubrication_model != "tangential") {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
 
@@ -442,21 +453,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		ang_velocity[i].reset();
 		na_ang_velocity[i].reset();
 	}
-	for (int i=0; i<np; i++) {
-		vel_contact[i].reset();
-		ang_vel_contact[i].reset();
-		vel_hydro[i].reset();
-		ang_vel_hydro[i].reset();
-		if (repulsiveforce) {
-			vel_repulsive[i].reset();
-			ang_vel_repulsive[i].reset();
-		}
-	}
 	if (mobile_fixed) {
-		for (int i=0; i<np_mobile; i++) {
-			vel_hydro_from_fixed[i].reset();
-			ang_vel_hydro_from_fixed[i].reset();
-		}
 		for (int i=0; i<p.np_fixed; i++) {
 			non_rate_proportional_wall_force[i].reset();
 			non_rate_proportional_wall_torque[i].reset();
@@ -661,15 +658,18 @@ void System::eventShearJamming()
 
 void System::forceResultantInterpaticleForces()
 {
+	auto &contact_force = force_components["contact"].force;
 	for (int i=0; i<np; i++) {
 		forceResultant[i] += contact_force[i];
 	}
 	if (friction) {
+		auto &contact_torque = force_components["contact"].torque;
 		for (int i=0; i<np; i++) {
 			torqueResultant[i] += contact_torque[i];
 		}
 	}
 	if (repulsiveforce) {
+		auto &repulsive_force = force_components["repulsion"].force;
 		for (int i=0; i<np; i++) {
 			forceResultant[i] += repulsive_force[i];
 		}
@@ -781,26 +781,18 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	 */
 	in_predictor = true;
 	in_corrector = true;
-	setContactForceToParticle();
-	setRepulsiveForceToParticle();
-	if (wall_rheology && calc_stress) {
-		forceResultantReset();
-		forceResultantInterpaticleForces();
-	}
 	if (!pairwise_resistance) {
 		computeVelocitiesStokesDrag();
 	} else {
 		computeVelocities(calc_stress);
 	}
+	if (wall_rheology && calc_stress) {
+		forceResultantReset();
+		forceResultantInterpaticleForces();
+	}
 	if (calc_stress) {
 		if (wall_rheology) {
 			wallForces();
-			// @@@ lubforce_p0 never used
-			// for (int k=0; k<nb_interaction; k++) {
-			// 	if (interaction[k].is_active()) {
-			// 		interaction[k].lubrication.calcPairwiseForce();
-			// 	}
-			// }
 		}
 		calcStressPerParticle();
 		if (wall_rheology) {
@@ -843,7 +835,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	 - \f$ \bm{X}' = \bm{X}(t) + \bm{U}^{-}dt \f$
 
 	 - 2nd step:
-	 - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}^{-} ) \bm{F} ( \bm{X}^{-} )  \f$
+	 - \f$ \bm{U}^{+} = \bm{A}^{-1}( \bm{X}' ) \bm{F} ( \bm{X}' )  \f$
 	 - \f$ \bm{X}(t + dt) = \bm{X}(t) + \frac{1}{2}(\bm{U}^{+}+\bm{U}^{-})dt =  \bm{X}' + \frac{1}{2}(\bm{U}^{+}-\bm{U}^{-})dt \f$
 
 	 ### Brownian Case
@@ -875,35 +867,29 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	/* predictor */
 	in_predictor = true;
 	in_corrector = false;
-	setContactForceToParticle();
-	setRepulsiveForceToParticle();
-	if (wall_rheology && calc_stress) {
-		forceResultantReset();
-		forceResultantInterpaticleForces();
-	}
+
 	if (pairwise_resistance) {
 		computeVelocities(calc_stress); // divided velocities for stress calculation
 	} else {
 		computeVelocitiesStokesDrag();
 	}
+
+	if (wall_rheology && calc_stress) {
+		forceResultantReset();
+		forceResultantInterpaticleForces();
+	}
+
 	if (calc_stress) {
 		if (wall_rheology) {
 			wallForces();
-			// @@@ lubforce_p0 never used
-			// for (int k=0; k<nb_interaction; k++) {
-			// 	if (interaction[k].is_active()) {
-			// 		interaction[k].lubrication.calcPairwiseForce();
-			// 	}
-			// }
 		}
 		calcStressPerParticle(); // stress compornents
 	}
 	timeStepMovePredictor(time_end, strain_end);
+
 	/* corrector */
 	in_predictor = false;
 	in_corrector = true;
-	setContactForceToParticle();
-	setRepulsiveForceToParticle();
 	if (pairwise_resistance) {
 		computeVelocities(calc_stress);
 	} else {
@@ -1268,7 +1254,7 @@ void System::updateNumberOfContacts(int p0, int p1, int val)
 	}
 }
 
-void System::buildHydroTerms(bool build_force_GE)
+void System::buildHydroTerms()
 {
 	/**
 	 \brief Builds the hydrodynamic resistance matrix and hydrodynamic driving force.
@@ -1295,22 +1281,11 @@ void System::buildHydroTerms(bool build_force_GE)
 	 * which is calculated at the beginning.
 	 */
 	// add GE in the rhs and lubrication terms in the resistance matrix
-	(this->*buildLubricationTerms)(build_force_GE);
+	buildResistanceMatrix();
 }
 
-/* We solve A*(U-Uinf) = Gtilde*Einf ( in Jeffrey's notations )
- * This method computes:
- *  - elements of the resistance matrix if 'mat' is true
- *       (only terms diverging as 1/h if lubrication_model == "normal", terms in 1/h and log(1/h) for lubrication_model=="tangential")
- *  - vector Gtilde*Einf if 'rhs' is true (default behavior)
- */
-void System::buildLubricationTerms_squeeze(bool rhs)
+void System::buildResistanceMatrix()
 {
-	bool shearrate_is_1 = true;
-	if (shear_rate != 1) {
-		shearrate_is_1 = false;
-	}
-	vec3d GEi, GEj, HEi, HEj;
 	for (int i=0; i<np-1; i ++) {
 		stokes_solver.startNewColumn();
 		for (auto& inter : interaction_list[i]) {
@@ -1320,104 +1295,11 @@ void System::buildLubricationTerms_squeeze(bool rhs)
 					stokes_solver.addResistanceBlocks(i, j,
 													  inter->RFU_DBlocks(),
 													  inter->RFU_ODBlock());
-					if (rhs) {
-						if (inter->lubrication.is_active()) {
-							std::tie(GEi, GEj) = inter->lubrication.calcGE_squeeze(); // G*E_\infty term
-							if (shearrate_is_1 == false) {
-								GEi *= shear_rate;
-								GEj *= shear_rate;
-							}
-							stokes_solver.addToRHSForce(i, GEi);
-							stokes_solver.addToRHSForce(j, GEj);
-						}
-						if (inter->contact.dashpot.is_active()) {
-							std::tie(GEi, GEj, HEi, HEj) = inter->contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
-							stokes_solver.addToRHSForce(i, GEi);
-							stokes_solver.addToRHSForce(j, GEj);
-							stokes_solver.addToRHSTorque(i, HEi);
-							stokes_solver.addToRHSTorque(j, HEj);
-						}
-					}
 				}
 			}
 		}
 	}
 	stokes_solver.matrixFillingDone();
-}
-
-void System::buildLubricationTerms_squeeze_tangential(bool rhs)
-{
-	bool shearrate_is_1 = true;
-	if (shear_rate != 1) {
-		shearrate_is_1 = false;
-	}
-	vec3d GEi, GEj, HEi, HEj;
-	for (int i=0; i<np-1; i ++) {
-		stokes_solver.startNewColumn();
-		for (auto& inter : interaction_list[i]) {
-			int j = inter->partner(i);
-			if (j > i) {
-				if (inter->hasPairwiseResistance()) { // Range of interaction can be larger than range of lubrication
-					stokes_solver.addResistanceBlocks(i, j,
-													  inter->RFU_DBlocks(),
-													  inter->RFU_ODBlock());
-					if (rhs) {
-						if (inter->lubrication.is_active()) {
-							std::tie(GEi, GEj, HEi, HEj) = inter->lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
-							if (shearrate_is_1 == false) {
-									GEi *= shear_rate;
-									GEj *= shear_rate;
-									HEi *= shear_rate;
-									HEj *= shear_rate;
-							}
-							stokes_solver.addToRHSForce(i, GEi);
-							stokes_solver.addToRHSForce(j, GEj);
-							stokes_solver.addToRHSTorque(i, HEi);
-							stokes_solver.addToRHSTorque(j, HEj);
-						}
-						if (inter->contact.dashpot.is_active()) {
-							std::tie(GEi, GEj, HEi, HEj) = inter->contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
-							stokes_solver.addToRHSForce(i, GEi);
-							stokes_solver.addToRHSForce(j, GEj);
-							stokes_solver.addToRHSTorque(i, HEi);
-							stokes_solver.addToRHSTorque(j, HEj);
-						}
-					}
-				}
-			}
-		}
-	}
-	stokes_solver.matrixFillingDone();
-}
-
-vector<double> System::computeForceFromFixedParticles()
-{
-	vector<double> force_torque_from_fixed (6*np_mobile);
-	// @@ TODO: avoid copy of the velocities
-	vector<double> minus_fixed_velocities (6*p.np_fixed);
-	for(int i=0; i<p.np_fixed; i++) {
-		int i6 = 6*i;
-		int i_fixed = i+np_mobile;
-		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
-		minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
-		minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
-		minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
-		minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
-		minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
-	}
-	stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed); // -R_FU^mf*fixed_velocities
-	return force_torque_from_fixed;
-}
-
-void System::buildHydroTermsFromFixedParticles()
-{
-	vector<double> force_torque_from_fixed = computeForceFromFixedParticles();
-	// previous version of the lines below was stokes_solver.addToRHS(force_torque_from_fixed)
-	// it is ok but it is relying a bit too implicetely
-	// on an asumption that might change, namely that the mobile particles are indices from 0 to np_mobile.
-	// Hence this quite verbose solution.
-	int first_mobile_index = 0;
-	stokes_solver.addToRHS(first_mobile_index, force_torque_from_fixed);
 }
 
 void System::computeForcesOnWallParticles()
@@ -1430,6 +1312,7 @@ void System::computeForcesOnWallParticles()
 		so it decomposes the force in a rate-proportional part and a rate-independent part.
 
 		*/
+	throw runtime_error(" Control stress with walls disabled for now .\n");
 	if (!zero_shear) {
 		throw runtime_error(" Stress-control with walls requires zero_shear==true .\n");
 	}
@@ -1440,10 +1323,17 @@ void System::computeForcesOnWallParticles()
 	// that is not coming from the wall velocities
 	vector<vec3d> na_velocity_mobile (np_mobile);
 	vector<vec3d> na_ang_velocity_mobile (np_mobile);
+	const auto &vel_contact = velocity_components["contact"].vel;
+	const auto &ang_vel_contact = velocity_components["contact"].ang_vel;
+
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_contact[i];
 		na_ang_velocity_mobile[i] = ang_vel_contact[i];
-		if (repulsiveforce) {
+	}
+	if (repulsiveforce) {
+		const auto &vel_repulsive = velocity_components["repulsion"].vel;
+		const auto &ang_vel_repulsive = velocity_components["repulsion"].ang_vel;
+		for (int i=0; i<np_mobile; i++) {
 			na_velocity_mobile[i] += vel_repulsive[i];
 			na_ang_velocity_mobile[i] += ang_vel_repulsive[i];
 		}
@@ -1452,6 +1342,9 @@ void System::computeForcesOnWallParticles()
 	stokes_solver.multiply_by_RFU_fm(na_velocity_mobile, na_ang_velocity_mobile, force, torque);
 
 	// Now we sum up this hydro part with the other non-rate dependent forces (contact, etc)
+	const auto &contact_force = force_components["contact"].force;
+	const auto &contact_torque = force_components["contact"].torque;
+	const auto &repulsive_force = force_components["repulsion"].force;
 	for (int i=0; i<p.np_fixed; i++) {
 		non_rate_proportional_wall_force[i] = -force[i];
 		non_rate_proportional_wall_torque[i] = -torque[i];
@@ -1465,6 +1358,8 @@ void System::computeForcesOnWallParticles()
 	// Now the part proportional to the wall speed
 
 	// From the mobile particles
+	const auto &vel_hydro_from_fixed = velocity_components["from_fixed"].vel;
+	const auto &ang_vel_hydro_from_fixed = velocity_components["from_fixed"].ang_vel;
 	for (int i=0; i<np_mobile; i++) {
 		na_velocity_mobile[i] = vel_hydro_from_fixed[i];
 		na_ang_velocity_mobile[i] = ang_vel_hydro_from_fixed[i];
@@ -1597,7 +1492,8 @@ void System::forceResultantLubricationForce()
 	}
 }
 
-void System::generateBrownianForces()
+void System::setBrownianForceToParticle(vector<vec3d> &force,
+                                        vector<vec3d> &torque)
 {
 	/**
 	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
@@ -1611,24 +1507,29 @@ void System::generateBrownianForces()
 	 \cite brady_stokesian_1988 notations) is the current resistance matrix
 	 stored in the stokes_solver.
 
-	 Note that it \b sets the rhs of the solver as \f$ rhs = F_B \f$.
-
-	 \f$ F_B\f$ is also stored in sys->brownian_force.
 	 */
+	if(!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
+		return;
+	}
 	if (mobile_fixed) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
 	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
-	for (unsigned int i=0; i<brownian_force_torque.size(); i++) {
-		brownian_force_torque[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
-		brownian_force_torque[i].y = sqrt_2_dt_amp*GRANDOM;
-		brownian_force_torque[i].z = sqrt_2_dt_amp*GRANDOM;
+	for (unsigned int i=0; i<force.size(); i++) {
+		force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
+		force[i].y = sqrt_2_dt_amp*GRANDOM;
+		force[i].z = sqrt_2_dt_amp*GRANDOM;
+		torque[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
+		torque[i].y = sqrt_2_dt_amp*GRANDOM;
+		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
+
 	if (pairwise_resistance) {
 		/* L*L^T = RFU
 		 */
-		stokes_solver.setRHS(brownian_force_torque);
-		stokes_solver.compute_LTRHS(brownian_force_torque); // F_B = \sqrt(2kT/dt) * L^T * A
+		stokes_solver.setRHS(force, torque);
+		stokes_solver.compute_LTRHS(force, torque); // F_B = \sqrt(2kT/dt) * L^T * A
+		stokes_solver.resetRHS();
 	} else {
 		/*
 		 *  F_B = \sqrt(2kT/dt) * L^T * A
@@ -1641,68 +1542,164 @@ void System::generateBrownianForces()
 		 *  In order to reduce trivial calculations,
 		 *  Here, sqrt(RFU) is not included in F_B
 		 *  F_B = \sqrt(2kT/dt) * A
-		 *  In the function computeBrownianVelocities(),
+		 *  In the function computeVelocitiesStokesDrag(),
 		 *  U_B = F_B / sqrt(RFU)
 		 */
 	}
 }
 
-void System::setContactForceToParticle()
+
+void System::setDashpotForceToParticle(vector<vec3d> &force,
+                                       vector<vec3d> &torque)
 {
-	for (int i=0; i<np; i++) {
-		contact_force[i].reset();
-		contact_torque[i].reset();
-	}
+	vec3d GEi, GEj, HEi, HEj;
+	unsigned int i, j;
 	for (int k=0; k<nb_interaction; k++) {
 		if (interaction[k].contact.is_active()) {
-			interaction[k].contact.addUpContactForceTorque();
+			if (interaction[k].contact.dashpot.is_active()) {
+				std::tie(i, j) = interaction[k].get_par_num();
+				std::tie(GEi, GEj, HEi, HEj) = interaction[k].contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+				force[i] += GEi;
+				force[j] += GEj;
+				torque[i] += HEi;
+				torque[j] += HEj;
+			}
 		}
 	}
 }
 
-void System::setRepulsiveForceToParticle()
+void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
+                                             vector<vec3d> &torque)
+{
+	bool shearrate_is_1 = true;
+	if (shear_rate != 1) {
+		shearrate_is_1 = false;
+	}
+	vec3d GEi, GEj;
+	unsigned int i, j;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].lubrication.is_active()) {
+			std::tie(i, j) = interaction[k].get_par_num();
+			std::tie(GEi, GEj) = interaction[k].lubrication.calcGE_squeeze(); // G*E_\infty term
+			if (shearrate_is_1 == false) {
+				GEi *= shear_rate;
+				GEj *= shear_rate;
+			}
+			force[i] += GEi;
+			force[j] += GEj;
+		}
+	}
+}
+
+void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
+                                                        vector<vec3d> &torque)
+{
+	bool shearrate_is_1 = true;
+	if (shear_rate != 1) {
+		shearrate_is_1 = false;
+	}
+	vec3d GEi, GEj, HEi, HEj;
+	unsigned int i, j;
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].lubrication.is_active()) {
+			std::tie(i, j) = interaction[k].get_par_num();
+			std::tie(GEi, GEj, HEi, HEj) = interaction[k].lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
+			if (shearrate_is_1 == false) {
+					GEi *= shear_rate;
+					GEj *= shear_rate;
+					HEi *= shear_rate;
+					HEj *= shear_rate;
+			}
+			force[i] += GEi;
+			force[j] += GEj;
+			torque[i] += HEi;
+			torque[j] += HEj;
+		}
+	}
+}
+
+void System::setContactForceToParticle(vector<vec3d> &force,
+                                       vector<vec3d> &torque)
+{
+	for (int k=0; k<nb_interaction; k++) {
+		if (interaction[k].contact.is_active()) {
+			interaction[k].contact.addUpForceTorque(force, torque);
+		}
+	}
+}
+
+void System::setRepulsiveForceToParticle(vector<vec3d> &force,
+	                                       vector<vec3d> &torque)
 {
 	if (repulsiveforce) {
-		for (int i=0; i<np; i++) {
-			repulsive_force[i].reset();
-		}
 		for (int k=0; k<nb_interaction; k++) {
 			if (interaction[k].is_active()) {
-				interaction[k].repulsion.addUpForce();
+				interaction[k].repulsion.addUpForce(force);
 			}
 		}
 	}
 }
 
-void System::buildContactTerms(bool set_or_add)
+void System::setFixedParticleForceToParticle(vector<vec3d> &force,
+	                                           vector<vec3d> &torque)
 {
-	// sets or adds ( set_or_add = t or f resp) contact forces to the rhs of the stokes_solver.
-	if (set_or_add) {
+	vector<double> force_torque_from_fixed (6*np_mobile);
+	// @@ TODO: avoid copy of the velocities and forces
+	vector<double> minus_fixed_velocities (6*p.np_fixed);
+	for(int i=0; i<p.np_fixed; i++) {
+		int i6 = 6*i;
+		int i_fixed = i+np_mobile;
+		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
+		minus_fixed_velocities[i6+1] = -na_velocity[i_fixed].y;
+		minus_fixed_velocities[i6+2] = -na_velocity[i_fixed].z;
+		minus_fixed_velocities[i6+3] = -na_ang_velocity[i_fixed].x;
+		minus_fixed_velocities[i6+4] = -na_ang_velocity[i_fixed].y;
+		minus_fixed_velocities[i6+5] = -na_ang_velocity[i_fixed].z;
+	}
+	stokes_solver.multiply_by_RFU_mf(minus_fixed_velocities, force_torque_from_fixed); // -R_FU^mf*fixed_velocities
+	for (unsigned int i=0; i<force.size(); i++) {
+		auto i6 = 6*i;
+		force[i].x = force_torque_from_fixed[i6  ];
+		force[i].y = force_torque_from_fixed[i6+1];
+		force[i].z = force_torque_from_fixed[i6+2];
+		torque[i].x = force_torque_from_fixed[i6+3];
+		torque[i].y = force_torque_from_fixed[i6+4];
+		torque[i].z = force_torque_from_fixed[i6+5];
+	}
+}
+
+void System::resetForceComponents()
+{
+	for (auto &fc: force_components) {
+		fc.second.reset();
+	}
+}
+
+void System::setSolverRHS(const ForceComponent &fc)
+{
+	if (fc.has_torque) {
 		for (int i=0; i<np; i++) {
-			stokes_solver.setRHSForce(i, contact_force[i]);
-			stokes_solver.setRHSTorque(i, contact_torque[i]);// Need to be set zero even friction = false.
+			stokes_solver.setRHSForce(i, fc.force[i]);
+			stokes_solver.setRHSTorque(i, fc.torque[i]);
 		}
 	} else {
 		for (int i=0; i<np; i++) {
-			stokes_solver.addToRHSForce(i, contact_force[i]);
-			if (friction) {
-				stokes_solver.addToRHSTorque(i, contact_torque[i]);
-			}
-		}
-	}
-}
-
-void System::buildRepulsiveForceTerms(bool set_or_add)
-{
-	// sets or adds ( set_or_add = t or f resp) repulsive forces to the rhs of the stokes_solver.
-	if (set_or_add) {
-		for (int i=0; i<np; i++) {
-			stokes_solver.setRHSForce(i, repulsive_force[i]);
+			stokes_solver.setRHSForce(i, fc.force[i]);
 		}
 		stokes_solver.resetRHStorque();
+	}
+}
+
+void System::addToSolverRHS(const ForceComponent &fc)
+{
+	if (fc.has_torque) {
+		for (int i=0; i<np; i++) {
+			stokes_solver.addToRHSForce(i, fc.force[i]);
+			stokes_solver.addToRHSTorque(i, fc.torque[i]);
+		}
 	} else {
 		for (int i=0; i<np; i++) {
-			stokes_solver.addToRHSForce(i, repulsive_force[i]);
+			stokes_solver.addToRHSForce(i, fc.force[i]);
 		}
 	}
 }
@@ -1734,21 +1731,15 @@ void System::computeMaxNAVelocity()
 
 void System::computeVelocityWithoutComponents()
 {
-	if (!zero_shear) {
-		buildHydroTerms(true); // build matrix and rhs force GE
-	} else {
-		buildHydroTerms(false); // zero shear-rate, don't build force GE
-	}
-	if (mobile_fixed) {
-		// add rhs += R_mf U_f
-		buildHydroTermsFromFixedParticles();
-	}
-	// for most of the time evolution
-	buildContactTerms(false); // add rhs += F_C
-	if (repulsiveforce) {
-		buildRepulsiveForceTerms(false); // add rhs += F_repulsive
+	buildHydroTerms();
+	for (auto &fc: force_components) {
+		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		addToSolverRHS(fc.second);
 	}
 	stokes_solver.solve(na_velocity, na_ang_velocity); // get V
+	if (brownian && twodimension) {
+		rushWorkFor2DBrownian(na_velocity, na_ang_velocity);
+	}
 }
 
 void System::computeVelocityByComponents()
@@ -1756,46 +1747,16 @@ void System::computeVelocityByComponents()
 	/**
 	 \brief Compute velocities component by component.
 	 */
-	if (!zero_shear) {
-		buildHydroTerms(true); // build matrix and rhs force GE
-		stokes_solver.solve(vel_hydro, ang_vel_hydro); // get V_H
-	} else {
-		buildHydroTerms(false); // zero shear-rate (= no GE rhs)
-		for (unsigned int i=0; i<vel_hydro.size(); i++) {
-			vel_hydro[i].reset();
-			ang_vel_hydro[i].reset();
-		}
+	buildHydroTerms();
+	for (auto &fc: force_components) {
+		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		setSolverRHS(fc.second);
+		stokes_solver.solve(velocity_components[fc.first].vel,
+                        velocity_components[fc.first].ang_vel);
 	}
-	if (mobile_fixed) {
-		stokes_solver.resetRHS();
-		buildHydroTermsFromFixedParticles();
-		stokes_solver.solve(vel_hydro_from_fixed, ang_vel_hydro_from_fixed);
-	}
-	buildContactTerms(true); // set rhs = F_C
-	stokes_solver.solve(vel_contact, ang_vel_contact); // get V_C
-	if (repulsiveforce) {
-		buildRepulsiveForceTerms(true); // set rhs = F_repulsive
-		stokes_solver.solve(vel_repulsive, ang_vel_repulsive); // get V_repulsive
-	}
-}
-
-void System::rescaleVelHydroStressControlled()
-{
-	for (int i=0; i<np; i++) {
-		vel_hydro[i] *= shear_rate;
-		ang_vel_hydro[i] *= shear_rate;
-	}
-}
-
-void System::rescaleVelHydroStressControlledFixed()
-{
-	for (int i=0; i<np_mobile; i++) {
-		vel_hydro_from_fixed[i] *= shear_rate;
-		ang_vel_hydro_from_fixed[i] *= shear_rate;
-	}
-	for (int i=np_mobile; i<np; i++) {
-		na_velocity[i] *= shear_rate;
-		na_ang_velocity[i] *= shear_rate;
+	if (brownian && twodimension) {
+		rushWorkFor2DBrownian(velocity_components["brownian"].vel,
+		                      velocity_components["brownian"].ang_vel);
 	}
 }
 
@@ -1821,18 +1782,13 @@ void System::computeShearRate()
 	 \brief Compute the shear rate under stress control conditions.
 	 */
 	calcStressPerParticle();
-	calcStress();
-	double shearstress_con;
-	shearstress_con = shearStressComponent(total_contact_stressXF+total_contact_stressGU, p.theta_shear);
-	double shearstress_hyd = target_stress-shearstress_con; // the target_stress minus all the other stresses
-	double shearstress_rep = 0;
-	if (repulsiveforce) {
-		shearstress_rep = shearStressComponent(total_repulsive_stressXF+total_repulsive_stressGU, p.theta_shear);
-		shearstress_hyd -= shearstress_rep;
-	}
-	// the total_hydro_stress is computed above with shear_rate=1, so here it is also the viscosity.
-	double viscosity_hyd = shearStressComponent(total_hydro_stress, p.theta_shear);
-	set_shear_rate(shearstress_hyd/viscosity_hyd);
+	StressTensor rate_prop_stress;
+	StressTensor rate_indep_stress;
+	gatherStressesByRateDependencies(rate_prop_stress, rate_indep_stress);
+	double newtonian_viscosity = shearStressComponent(rate_prop_stress, p.theta_shear); // computed with rate=1, o here it is also the viscosity.
+	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);
+
+	set_shear_rate(newtonian_stress/newtonian_viscosity);
 	if (shear_strain < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
@@ -1905,7 +1861,7 @@ void System::tmpMixedProblemSetVelocities()
 		}
 		na_velocity[np_mobile].x = direction;
 	} else if (p.simulation_mode == 2) {
-		/* ????
+		/* ????, yeah what happened here and below?? Haha. I guess whoever created simulation_mode 2/3 does not use it often :)
 		 */
 		for (int i=np_mobile; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i].reset();
@@ -1962,9 +1918,12 @@ void System::tmpMixedProblemSetVelocities()
 			time_next += p.strain_reversal;
 		}
 	} else if (p.simulation_mode == 31) {
+		auto &vel_from_fixed = velocity_components["from_fixed"];
 		for (int i=np_mobile; i<np; i++) {
-			na_velocity[i] = shear_rate*fixed_velocities[i-np_mobile];
-			na_ang_velocity[i].reset();
+			vel_from_fixed.vel[i] = shear_rate*fixed_velocities[i-np_mobile];
+			vel_from_fixed.ang_vel[i].reset();
+			na_velocity[i] = vel_from_fixed.vel[i];
+			na_ang_velocity[i] = vel_from_fixed.ang_vel[i];
 		}
 	} else if (p.simulation_mode == 41) {
 		int i_np_wall1 = np_mobile+np_wall1;
@@ -2020,19 +1979,15 @@ void System::tmpMixedProblemSetVelocities()
 void System::sumUpVelocityComponents()
 {
 	for (int i=0; i<np_mobile; i++) {
-		na_velocity[i] = vel_hydro[i]+vel_contact[i];
-		na_ang_velocity[i] = ang_vel_hydro[i]+ang_vel_contact[i];
+		na_velocity[i].reset();
+		na_ang_velocity[i].reset();
 	}
-	if (repulsiveforce) {
+	for (const auto &vc: velocity_components) {
+		const auto &vel = vc.second.vel;
+		const auto &ang_vel = vc.second.ang_vel;
 		for (int i=0; i<np_mobile; i++) {
-			na_velocity[i] += vel_repulsive[i];
-			na_ang_velocity[i] += ang_vel_repulsive[i];
-		}
-	}
-	if (mobile_fixed) {
-		for (int i=0; i<np_mobile; i++) {
-			na_velocity[i] += vel_hydro_from_fixed[i];
-			na_ang_velocity[i] += ang_vel_hydro_from_fixed[i];
+			na_velocity[i] += vel[i];
+			na_ang_velocity[i] += ang_vel[i];
 		}
 	}
 }
@@ -2049,6 +2004,15 @@ void System::setFixedParticleVelocities()
 	}
 }
 
+void System::rescaleVelHydroStressControlled()
+{
+	for (auto &vc: velocity_components) {
+		if (vc.second.rate_dependence ==  RATE_PROPORTIONAL) {
+			vc.second *= shear_rate;
+		}
+	}
+}
+
 void System::computeVelocities(bool divided_velocities)
 {
 	/**
@@ -2059,6 +2023,7 @@ void System::computeVelocities(bool divided_velocities)
 	 simulations the Brownian component is always computed explicitely, independently of the values of divided_velocities.)
 	 */
 	stokes_solver.resetRHS();
+	resetForceComponents();
 	if (divided_velocities || stress_controlled) {
 		if (stress_controlled) {
 			set_shear_rate(1);
@@ -2069,11 +2034,10 @@ void System::computeVelocities(bool divided_velocities)
 		if (stress_controlled) {
 			if (p.simulation_mode != 31) {
 				computeShearRate();
-				rescaleVelHydroStressControlled();
 			} else {
 				computeShearRateWalls();
-				rescaleVelHydroStressControlledFixed();
 			}
+			rescaleVelHydroStressControlled();
 		}
 		sumUpVelocityComponents();
 		// checkForceBalance();
@@ -2081,19 +2045,6 @@ void System::computeVelocities(bool divided_velocities)
 		computeUInf();
 		setFixedParticleVelocities();
 		computeVelocityWithoutComponents();
-	}
-	if (brownian) {
-		if (in_predictor) {
-			/* generate new F_B only in predictor
-			 * Resistance matrix is used.
-			 */
-			generateBrownianForces();
-		}
-		computeBrownianVelocities();
-		for (int i=0; i<np_mobile; i++) {
-			na_velocity[i] += vel_brownian[i];
-			na_ang_velocity[i] += ang_vel_brownian[i];
-		}
 	}
 	/*
 	 * The max velocity is used to find dt from max displacement
@@ -2120,47 +2071,29 @@ void System::computeVelocitiesStokesDrag()
 	 When the contact model includes dashpots, Stokes-drag simulation cannot be used.
 	 */
 	for (int i=0; i<np; i++) {
-		na_velocity[i] = contact_force[i]/stokesdrag_coeff_f[i];
-		na_ang_velocity[i] = contact_torque[i]/stokesdrag_coeff_t[i];
+		na_velocity[i].reset();
+		na_ang_velocity[i].reset();
 	}
-	if (repulsiveforce) {
-		for (int i=0; i<np; i++) {
-			na_velocity[i] += repulsive_force[i]/stokesdrag_coeff_f[i];
+	for (auto &fc: force_components) {
+ 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		if (fc.first != "brownian") {
+			for (unsigned int i=0; i<na_velocity.size(); i++) {
+				na_velocity[i] += fc.second.force[i]/stokesdrag_coeff_f[i];
+				na_ang_velocity[i] += fc.second.torque[i]/stokesdrag_coeff_t[i];
+			}
+		} else {
+			for (unsigned int i=0; i<na_velocity.size(); i++) {
+				/* See the comment given in generateBrownianForces()
+				 */
+				na_velocity[i] += fc.second.force[i]/stokesdrag_coeff_f_sqrt[i];
+				na_ang_velocity[i] += fc.second.torque[i]/stokesdrag_coeff_t_sqrt[i];
+			}
 		}
 	}
-	if (brownian) {
-		if (in_predictor) {
-			/* generate new F_B only in predictor
-			 * Resistance matrix is used.
-			 */
-			generateBrownianForces();
-		}
-		computeBrownianVelocities();
-		for (int i=0; i<np; i++) {
-			na_velocity[i] += vel_brownian[i];
-			na_ang_velocity[i] += ang_vel_brownian[i];
-		}
+	if (brownian && twodimension) {
+		rushWorkFor2DBrownian(na_velocity, na_ang_velocity);
 	}
 	adjustVelocitiesLeesEdwardsPeriodicBoundary();
-}
-
-void System::computeBrownianVelocities()
-{
-	if (pairwise_resistance) {
-		stokes_solver.setRHS(brownian_force_torque); // set rhs = F_B (force and torque)
-		stokes_solver.solve(vel_brownian, ang_vel_brownian); // get V_B
-	} else {
-		/* See the comment given in generateBrownianForces()
-		 */
-		for (int i=0; i<np; i++) {
-			int i2 = 2*i;
-			vel_brownian[i] = brownian_force_torque[i2]/stokesdrag_coeff_f_sqrt[i];
-			ang_vel_brownian[i] = brownian_force_torque[i2+1]/stokesdrag_coeff_t_sqrt[i];
-		}
-	}
-	if (twodimension) {
-		rushWorkFor2DBrownian();
-	}
 }
 
 void System::computeUInf()
@@ -2203,7 +2136,7 @@ void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
 	}
 }
 
-void System::rushWorkFor2DBrownian()
+void System::rushWorkFor2DBrownian(vector<vec3d> &vel, vector<vec3d> &ang_vel)
 {
 	/* [note]
 	 * Native 2D simulation is not implemented yet.
@@ -2214,15 +2147,15 @@ void System::rushWorkFor2DBrownian()
 		 * All other degrees of freedom exist.
 		 */
 		for (int i=0; i<np; i++) {
-			vel_brownian[i].y = 0; // @@ To be checked
+			vel[i].y = 0; // @@ To be checked
 		}
 	} else {
 		/* Particle (2D disk) can rotate only along y-axis.
 		 */
 		for (int i=0; i<np; i++) {
-			vel_brownian[i].y = 0; // @@ To be checked
-			ang_vel_brownian[i].x = 0;
-			ang_vel_brownian[i].z = 0;
+			vel[i].y = 0; // @@ To be checked
+			ang_vel[i].x = 0;
+			ang_vel[i].z = 0;
 		}
 	}
 }
@@ -2273,6 +2206,14 @@ int System::periodize(vec3d& pos)
 		}
 	}
 	return z_shift;
+}
+
+// [0,l]
+vec3d System::periodized(const vec3d &pos)
+{
+	vec3d periodized_pos = pos;
+	periodize(periodized_pos);
+	return periodized_pos;
 }
 
 int System::periodize_diff(vec3d& pos_diff)

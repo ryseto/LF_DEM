@@ -145,7 +145,7 @@ void BoxSet::assignNeighborsBulk()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10p1) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
+					bx->addStaticNeighbor(whichBox(sys->periodized(pos+delta)));
 				}
 			}
 		}
@@ -166,12 +166,12 @@ void BoxSet::assignNeighborsBottom()
 				delta.y = b*box_ysize;
 				for (const auto& c : p10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
+					bx->addStaticNeighbor(whichBox(sys->periodized(pos+delta)));
 				}
 			}
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 }
@@ -190,12 +190,12 @@ void BoxSet::assignNeighborsTop()
 				delta.y = b*box_ysize;
 				for (const auto& c : m10) {
 					delta.z = c*box_zsize;
-					bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
+					bx->addStaticNeighbor(whichBox(sys->periodized(pos+delta)));
 				}
 			}
 		}
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 }
@@ -213,15 +213,15 @@ void BoxSet::assignNeighborsTopBottom()
 			for (const auto& b : m10p1) {
 				delta.y = b*box_ysize;
 				delta.z = 0;
-				bx->addStaticNeighbor(whichBoxPeriodize(pos+delta));
+				bx->addStaticNeighbor(whichBox(sys->periodized(pos+delta)));
 			}
 		}
 
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 }
@@ -267,7 +267,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 
@@ -275,7 +275,7 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 
@@ -283,10 +283,10 @@ void BoxSet::updateNeighbors()
 		bx->reset_moving_neighbors();
 		vec3d pos = bx->position;
 		for (const auto& delta_prob : top_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 		for (const auto& delta_prob : bottom_probing_positions) {
-			bx->addMovingNeighbor(whichBoxPeriodize(pos+delta_prob));
+			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 }
@@ -307,31 +307,20 @@ bool BoxSet::is_boxed()
 	return _is_boxed;
 }
 
-Box* BoxSet::whichBox(vec3d pos)
+Box* BoxSet::whichBox(const vec3d &pos)
 {
-	return whichBox(&pos);
-}
-
-Box* BoxSet::whichBoxPeriodize(vec3d pos)
-{
-	sys->periodize(pos);
-	return whichBox(&pos);
-}
-
-Box* BoxSet::whichBox(vec3d* pos)
-{
-	unsigned int ix = (unsigned int)(pos->x/box_xsize);
+	unsigned int ix = (unsigned int)(pos.x/box_xsize);
 	unsigned int iy;
 	if (sys->twodimension) {
 		iy = 0;
 	} else {
-		iy = (unsigned int)(pos->y/box_ysize);
+		iy = (unsigned int)(pos.y/box_ysize);
 	}
-	unsigned int iz = (unsigned int)(pos->z/box_zsize);
+	unsigned int iz = (unsigned int)(pos.z/box_zsize);
 	unsigned int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 	if (label > box_labels.size()-1) {
 		ostringstream error_str;
-		error_str  << " BoxSet: trying to box position out of boundaries \"" << *pos	<< "\"" << endl;
+		error_str  << " BoxSet: trying to box position out of boundaries \"" << pos	<< "\"" << endl;
 		throw runtime_error(error_str.str());
 	}
 	return box_labels[label];

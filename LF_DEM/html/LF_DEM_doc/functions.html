@@ -94,6 +94,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>adaptTimeStep()
 : <a class="el" href="class_system.html#a6501f2e972a2ad760162cf4dd34ac225">System</a>
 </li>
+<li>addMEStresslet()
+: <a class="el" href="class_lubrication.html#a4f4ad31d316425a7e3146babae25668e">Lubrication</a>
+</li>
 <li>adjustContactModelParameters()
 : <a class="el" href="class_system.html#a7b3733e4824baf06f73b0b919ab7cfb2">System</a>
 </li>
@@ -104,24 +107,27 @@ $(document).ready(function(){initNavTree('functions.html','');});
 : <a class="el" href="class_simulation.html#a33c595bfa3912a6e7d129c949dd6cb85">Simulation</a>
 </li>
 <li>Averager()
-: <a class="el" href="class_averager.html#ab8b0512d722f624b24adf352a9cff9ed">Averager&lt; XType &gt;</a>
+: <a class="el" href="class_averager.html#a7042ac6b23247e9cf2784e46117f9bbe">Averager&lt; XType &gt;</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_b"></a>- b -</h3><ul>
-<li>brownian_amplitude
-: <a class="el" href="struct_parameter_set.html#a3ed856cafb8c48a021a80899e85e519f">ParameterSet</a>
+<li>brownian
+: <a class="el" href="struct_parameter_set.html#acaf25e2223f0bfc007254b2930960e9b">ParameterSet</a>
 </li>
 <li>buildHydroTerms()
-: <a class="el" href="class_system.html#a78fc03133650a0632cd9d975e13ee402">System</a>
+: <a class="el" href="class_system.html#aaa233671622f340d9a5049fe6bdc97cb">System</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_c"></a>- c -</h3><ul>
-<li>calcContactInteraction()
-: <a class="el" href="class_contact.html#aca6315b88196cd3cdfce9f79f06de963">Contact</a>
+<li>calcContactSpringForce()
+: <a class="el" href="class_contact.html#add139b2a22d19b3e509f1d2c8600806c">Contact</a>
+</li>
+<li>calcContactStress()
+: <a class="el" href="class_contact.html#a9d3747d4e71b0a4d4d74671f0b19b909">Contact</a>
 </li>
 <li>calcForce()
 : <a class="el" href="class_repulsive_force.html#aabe69a720e7859ecfb580d4a811c0bf9">RepulsiveForce</a>
@@ -130,7 +136,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 : <a class="el" href="class_repulsive_force.html#a56255fb93621611c5de2ab49a2607889">RepulsiveForce</a>
 </li>
 <li>calcRollingVelocities()
-: <a class="el" href="class_interaction.html#aa6d1c13c4fca9c1e49f12953ba5708fb">Interaction</a>
+: <a class="el" href="class_contact.html#ac81cc800622a2d96fce27c83846d863d">Contact</a>
 </li>
 <li>calcScaledForce()
 : <a class="el" href="class_repulsive_force.html#aceeec27a0c869febbbb4762ebaee6d3f">RepulsiveForce</a>
@@ -141,11 +147,18 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>calcStressXF()
 : <a class="el" href="class_repulsive_force.html#ac220eda9cc505b188ce9bbf941efd543">RepulsiveForce</a>
 </li>
+<li>changeUnit()
+: <a class="el" href="class_simulation.html#a307ad24ddc8dc46ed6f21d4ea92ec5b3">Simulation</a>
+</li>
 <li>checkNewInteraction()
 : <a class="el" href="class_system.html#a3b996040c1a70b94c531562532c56f0c">System</a>
 </li>
-<li>cohesion_amplitude
-: <a class="el" href="struct_parameter_set.html#ac3e5e4d6832d1a6e6add805acb8e167d">ParameterSet</a>
+<li>cohesion
+: <a class="el" href="struct_parameter_set.html#ab02fec323c4849868d4ff4363928639f">ParameterSet</a>
+</li>
+<li>col0
+: <a class="el" href="struct_d_block.html#ae687705594e2fdeb0acfd7ba706cc923">DBlock</a>
+, <a class="el" href="struct_o_d_block.html#a571212427899dcb58e2aaed7317ea71e">ODBlock</a>
 </li>
 <li>computeForcesOnWallParticles()
 : <a class="el" href="class_system.html#a03bad3a6dbb328ee214927151103ddd4">System</a>
@@ -180,20 +193,8 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>contactForceParameterBrownian()
 : <a class="el" href="class_simulation.html#a94d2b9ca02cb1687348d36f8a2776760">Simulation</a>
 </li>
-<li>convertForceValues()
-: <a class="el" href="class_simulation.html#ad7a3b629d1193ff7be69dfe5d30c8a5c">Simulation</a>
-</li>
-<li>convertInputForcesRateControlled()
-: <a class="el" href="class_simulation.html#a1d49482a028c0a01251389e855a54dca">Simulation</a>
-</li>
-<li>convertInputForcesStressControlled()
-: <a class="el" href="class_simulation.html#a3f620b3924dfb4eb8ef3e72b38c051d4">Simulation</a>
-</li>
-<li>convertInputValues()
-: <a class="el" href="class_simulation.html#aa46fe5066cf757db5d894af3093378d6">Simulation</a>
-</li>
-<li>critical_load_amplitude
-: <a class="el" href="struct_parameter_set.html#a92f2b836a94c4fb8f61fc7870d84f1b9">ParameterSet</a>
+<li>critical_load
+: <a class="el" href="struct_parameter_set.html#af0e0a8c616467ae2f4fbd2262cc8037b">ParameterSet</a>
 </li>
 <li>cross_shear
 : <a class="el" href="struct_parameter_set.html#accba70bdbb7a22e8ed9606754ec4af9b">ParameterSet</a>
@@ -218,9 +219,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>echoInputFiles()
 : <a class="el" href="class_simulation.html#a434707c081e7876872672d55728d56b9">Simulation</a>
 </li>
-<li>evaluateData()
-: <a class="el" href="class_simulation.html#a2ed9b69cf273dbade9825e5c606c0e0d">Simulation</a>
-</li>
 <li>event_handler
 : <a class="el" href="struct_parameter_set.html#a8bcbac62b2ae3ee0484782c7cf0c8632">ParameterSet</a>
 </li>
@@ -229,15 +227,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>exportForceAmplitudes()
 : <a class="el" href="class_simulation.html#a19623ec0109f77e40e0848e0513fca41">Simulation</a>
-</li>
-<li>external_magnetic_field_ang_phi
-: <a class="el" href="struct_parameter_set.html#af0a16ae18bb5c8eea06b875352856596">ParameterSet</a>
-</li>
-<li>external_magnetic_field_ang_theta
-: <a class="el" href="struct_parameter_set.html#adf45919d0720e002fcb7c6635249d087">ParameterSet</a>
-</li>
-<li>external_magnetic_field_norm
-: <a class="el" href="struct_parameter_set.html#a273e0f3c223e7feb6abf37d21190ae1d">ParameterSet</a>
 </li>
 </ul>
 
@@ -265,8 +254,8 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a class="anchor" id="index_g"></a>- g -</h3><ul>
-<li>generateBrownianForces()
-: <a class="el" href="class_system.html#a59d8c192e1395d9f6637d2506bb82443">System</a>
+<li>gatherVelocitiesByRateDependencies()
+: <a class="el" href="class_system.html#ae3ee9079e6a6335edfaa83607e7c83e4">System</a>
 </li>
 <li>get_np()
 : <a class="el" href="class_simulation.html#afcc6867425fd9adff23e1417af6a88e9">Simulation</a>
@@ -277,8 +266,18 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>getContacts()
 : <a class="el" href="class_system.html#abc17621ae7c6e8771ae6b1140dfc7c7d">System</a>
 </li>
+<li>getForceOnP0()
+: <a class="el" href="class_contact_dashpot.html#a75e9dfe9c47cb109e418187215a63dc7">ContactDashpot</a>
+</li>
+<li>getForceOnP0_nonaffine()
+: <a class="el" href="class_contact_dashpot.html#ac6f457c67fdc4fe527c768baab803fa6">ContactDashpot</a>
+</li>
 <li>getRate()
 : <a class="el" href="class_simulation.html#acedd732cb47dbf6a218e59f6aeea7742">Simulation</a>
+</li>
+<li>getTotalForce()
+: <a class="el" href="class_contact.html#a8b21be2436bb78084d41dcb3c446d34e">Contact</a>
+, <a class="el" href="class_lubrication.html#ab40d5855c50967e110625d62c31a5262">Lubrication</a>
 </li>
 </ul>
 
@@ -305,6 +304,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>incrementDisplacements()
 : <a class="el" href="class_contact.html#a035503d61c0fd90011bae30e0b68eea4">Contact</a>
+</li>
+<li>incrementTangentialDisplacement()
+: <a class="el" href="class_contact.html#ae6036288e4de33351de102ae08049eb5">Contact</a>
 </li>
 <li>initial_log_time
 : <a class="el" href="struct_parameter_set.html#a15a882b74665d83896b45a0471c5f4cf">ParameterSet</a>
@@ -363,24 +365,12 @@ $(document).ready(function(){initNavTree('functions.html','');});
 : <a class="el" href="struct_parameter_set.html#a72f2ed681dafae96f563d91d1e978355">ParameterSet</a>
 </li>
 <li>lubrication_model
-: <a class="el" href="struct_parameter_set.html#a4fdc2f2c4c18f0a7a89dc966001ff949">ParameterSet</a>
+: <a class="el" href="struct_parameter_set.html#a5ea2177832c79992276e25109c29d662">ParameterSet</a>
 </li>
 </ul>
 
 
 <h3><a class="anchor" id="index_m"></a>- m -</h3><ul>
-<li>magnetic_amplitude
-: <a class="el" href="struct_parameter_set.html#accc8a9b8f225df484b0f5e99b8dab676">ParameterSet</a>
-</li>
-<li>magnetic_field_type
-: <a class="el" href="struct_parameter_set.html#a404df09596711788d6875c8bef015634">ParameterSet</a>
-</li>
-<li>magnetic_interaction_range
-: <a class="el" href="struct_parameter_set.html#ad5d0f77928b5f2693ee6084882cd1d19">ParameterSet</a>
-</li>
-<li>magnetic_type
-: <a class="el" href="struct_parameter_set.html#a34d86e60bffc2939f97590a305e17da3">ParameterSet</a>
-</li>
 <li>max_kn
 : <a class="el" href="struct_parameter_set.html#aae473a5d64d03fbd2baa004bb647a943">ParameterSet</a>
 </li>
@@ -432,7 +422,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 <h3><a class="anchor" id="index_o"></a>- o -</h3><ul>
 <li>openOutputFiles()
-: <a class="el" href="class_simulation.html#ae892491b8f5e639646e792538d3287e0">Simulation</a>
+: <a class="el" href="class_simulation.html#ae1d85c60b5bcf3e3c70bc5cf1ba6c06b">Simulation</a>
 </li>
 <li>origin_zero_flow
 : <a class="el" href="struct_parameter_set.html#ab5b0e1b44afe6ca3f45125767fd75742">ParameterSet</a>
@@ -455,9 +445,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>outputData()
 : <a class="el" href="class_simulation.html#a03b1b3a373aa202644584d5023ec50f9">Simulation</a>
 </li>
-<li>outputDataMagnetic()
-: <a class="el" href="class_simulation.html#a9e36e14f1913faba6042bf7cd02e66ea">Simulation</a>
-</li>
 <li>overlap_target
 : <a class="el" href="struct_parameter_set.html#a892cd33f6c89910724a7cc9e8c83546b">ParameterSet</a>
 </li>
@@ -465,14 +452,14 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a class="anchor" id="index_p"></a>- p -</h3><ul>
-<li>pairStrainStresslet()
-: <a class="el" href="class_lubrication.html#a1a2b61f1058cc5798891844577082b59">Lubrication</a>
-</li>
 <li>Pe_switch
 : <a class="el" href="struct_parameter_set.html#a3a33d766c925f5c3dc12bf9dab8d40b6">ParameterSet</a>
 </li>
+<li>periodize_diff()
+: <a class="el" href="class_system.html#aa757c969ef7d111449b366e828a95374">System</a>
+</li>
 <li>prepareSimulationName()
-: <a class="el" href="class_simulation.html#a4c1c0e957297c10a09ccbdf2fee39b99">Simulation</a>
+: <a class="el" href="class_simulation.html#ac7aaa6afc231614712e0794b71b2ef78">Simulation</a>
 </li>
 </ul>
 
@@ -487,11 +474,8 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>readPositionsImposedVelocity()
 : <a class="el" href="class_simulation.html#a3b500a9f9372d0a3d1fe1eaf8d90c9c4">Simulation</a>
 </li>
-<li>readPositionsMagnetic()
-: <a class="el" href="class_simulation.html#aecc86ad54d03b438bb33320ed15f4542">Simulation</a>
-</li>
-<li>repulsion_amplitude
-: <a class="el" href="struct_parameter_set.html#a5682fa5459ec2e39112b0a2b85e6fd57">ParameterSet</a>
+<li>repulsion
+: <a class="el" href="struct_parameter_set.html#a9d6a0b902228ceed8a6e9bb7d78ed508">ParameterSet</a>
 </li>
 <li>repulsive_length
 : <a class="el" href="struct_parameter_set.html#aacc3938f973065affb8502c1766f7562">ParameterSet</a>
@@ -515,6 +499,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>sd_coeff
 : <a class="el" href="struct_parameter_set.html#aaab168f5c31818ce0064adaabeab4c8c">ParameterSet</a>
 </li>
+<li>setBrownianForceToParticle()
+: <a class="el" href="class_system.html#a1fe0a4a13fbe93fd59e1810a6453c4d6">System</a>
+</li>
 <li>setConfiguration()
 : <a class="el" href="class_system.html#ad2a3e5cdfb37425738f5410ceb361f00">System</a>
 </li>
@@ -523,6 +510,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>setDefaultParameters()
 : <a class="el" href="class_simulation.html#a87f9f99745ef8d72191c75149cf4374a">Simulation</a>
+</li>
+<li>setParticleData()
+: <a class="el" href="class_lubrication.html#a7e3794e6aa3bff5f3f1581077a6158c0">Lubrication</a>
 </li>
 <li>setUnitScaleRateControlled()
 : <a class="el" href="class_simulation.html#a12286fd02cb452adf672a5a656798856">Simulation</a>
@@ -533,6 +523,12 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>setupNonDimensionalization()
 : <a class="el" href="class_simulation.html#aa27087b828d9974682f50d45f5c4a1a4">Simulation</a>
 </li>
+<li>setupNonDimensionalizationRateControlled()
+: <a class="el" href="class_simulation.html#a7bd7c8aeab6ae3d5ce70ab8c7dc8a6d8">Simulation</a>
+</li>
+<li>setupNonDimensionalizationStressControlled()
+: <a class="el" href="class_simulation.html#a36566d36695d1b4e8420a41b1b417965">Simulation</a>
+</li>
 <li>setupSimulation()
 : <a class="el" href="class_simulation.html#a1dc92fad0b8a9e483499aad6c8fcc31c">Simulation</a>
 </li>
@@ -542,11 +538,8 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>start_adjust
 : <a class="el" href="struct_parameter_set.html#ac53858a21f1981835b6a1f1b1610c43d">ParameterSet</a>
 </li>
-<li>stress_scaled_contactmodel
-: <a class="el" href="struct_parameter_set.html#a38a5c63335e058cc525cdbe5be449b3a">ParameterSet</a>
-</li>
-<li>stressReset()
-: <a class="el" href="class_system.html#a60c98fd8b54e66526a2c413a4a443557">System</a>
+<li>strain_reversal
+: <a class="el" href="struct_parameter_set.html#ac702b1ce6f60aff67f6ce6bd4196823e">ParameterSet</a>
 </li>
 </ul>
 
@@ -558,17 +551,14 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>theta_shear
 : <a class="el" href="struct_parameter_set.html#aae5b5b23291283cd814ccf3462c91e3d">ParameterSet</a>
 </li>
-<li>time
-: <a class="el" href="class_system.html#aa9e002a5f2f169e37c545b76ee67e724">System</a>
+<li>time_
+: <a class="el" href="class_system.html#a2a321fbff035d78063468cdb5f5041c3">System</a>
 </li>
 <li>time_end
 : <a class="el" href="struct_parameter_set.html#ad368e3977ec73cc10f3b60ccdd0c41d5">ParameterSet</a>
 </li>
 <li>time_in_simulation_units
 : <a class="el" href="class_system.html#ae8150cec4fd4f03e0bb130f022268af3">System</a>
-</li>
-<li>time_init_relax
-: <a class="el" href="struct_parameter_set.html#aa2105b7da506bffd39d0ed2384df27fa">ParameterSet</a>
 </li>
 <li>time_interval_output_config
 : <a class="el" href="struct_parameter_set.html#afb7c7058e4d69bc74a3e2f315c7f755c">ParameterSet</a>
@@ -584,9 +574,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>timeEvolutionPredictorCorrectorMethod()
 : <a class="el" href="class_system.html#ac517e5bc0bb026ae127c94a871f97c77">System</a>
-</li>
-<li>timeinterval_update_magnetic_pair
-: <a class="el" href="struct_parameter_set.html#aa56cb54de4be81513aa320e98aa4ae99">ParameterSet</a>
 </li>
 <li>timeStepBoxing()
 : <a class="el" href="class_system.html#a48770291555a2e7889ebb7f783bb4f32">System</a>
@@ -610,9 +597,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>updateInteractions()
 : <a class="el" href="class_system.html#aaeb82ed6465c89cd08b4b4f94eca617e">System</a>
 </li>
-<li>updateMagneticInteractions()
-: <a class="el" href="class_system.html#a06720e1cc7c9aa036a50242e1759ec99">System</a>
-</li>
 <li>updateNeighbors()
 : <a class="el" href="class_box_set.html#a730e1f303821ca8c69d5bfa4084adb4f">BoxSet</a>
 </li>
@@ -622,7 +606,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Wed Apr 27 2016 15:21:51 for Documentation for LF_DEM by
+    <li class="footer">Generated on Mon Sep 12 2016 11:56:01 for Documentation for LF_DEM by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.11 </li>
   </ul>
