@@ -34,7 +34,6 @@ var class_generate_init_config =
     [ "ly_lz", "class_generate_init_config.html#a7ab81513d0023cee23e8bbd384ee538a", null ],
     [ "lz", "class_generate_init_config.html#a12f5e03a9e4cf2f6ab861543f690c8b5", null ],
     [ "lz_half", "class_generate_init_config.html#ace10dab48fc1ecc6dad627d0b7340ca8", null ],
-    [ "magnetic_config", "class_generate_init_config.html#a8003e28c05d1dc9b1596983895095392", null ],
     [ "np", "class_generate_init_config.html#a23eee62d9277105e3be0149718956e1b", null ],
     [ "np1", "class_generate_init_config.html#acdf11a6443201b04458a6bd51754c0ac", null ],
     [ "np2", "class_generate_init_config.html#af014b9bd7c0e9900a0282426bdbcf7b2", null ],

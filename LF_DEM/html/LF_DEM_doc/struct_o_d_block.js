@@ -1,6 +1,5 @@
 var struct_o_d_block =
 [
-    [ "bla", "struct_o_d_block.html#aaa0c86925fce316acdec75c63eb1081e", null ],
     [ "col0", "struct_o_d_block.html#a571212427899dcb58e2aaed7317ea71e", null ],
     [ "col1", "struct_o_d_block.html#a94ede87ae2705424d70340fc2b5bb457", null ],
     [ "col2", "struct_o_d_block.html#ac1cb7b7702b36624b81393e46ec4cd5f", null ],

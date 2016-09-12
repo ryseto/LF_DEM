@@ -1,12 +1,14 @@
 var searchData=
 [
-  ['calccontactinteraction',['calcContactInteraction',['../class_contact.html#aca6315b88196cd3cdfce9f79f06de963',1,'Contact']]],
+  ['calccontactspringforce',['calcContactSpringForce',['../class_contact.html#add139b2a22d19b3e509f1d2c8600806c',1,'Contact']]],
+  ['calccontactstress',['calcContactStress',['../class_contact.html#a9d3747d4e71b0a4d4d74671f0b19b909',1,'Contact']]],
   ['calcforce',['calcForce',['../class_repulsive_force.html#aabe69a720e7859ecfb580d4a811c0bf9',1,'RepulsiveForce']]],
   ['calcreducedforcenorm',['calcReducedForceNorm',['../class_repulsive_force.html#a56255fb93621611c5de2ab49a2607889',1,'RepulsiveForce']]],
-  ['calcrollingvelocities',['calcRollingVelocities',['../class_interaction.html#aa6d1c13c4fca9c1e49f12953ba5708fb',1,'Interaction']]],
+  ['calcrollingvelocities',['calcRollingVelocities',['../class_contact.html#ac81cc800622a2d96fce27c83846d863d',1,'Contact']]],
   ['calcscaledforce',['calcScaledForce',['../class_repulsive_force.html#aceeec27a0c869febbbb4762ebaee6d3f',1,'RepulsiveForce']]],
   ['calcstressperparticle',['calcStressPerParticle',['../class_system.html#a05d663034ce639977969d04cc9d64e57',1,'System']]],
   ['calcstressxf',['calcStressXF',['../class_repulsive_force.html#ac220eda9cc505b188ce9bbf941efd543',1,'RepulsiveForce']]],
+  ['changeunit',['changeUnit',['../class_simulation.html#a307ad24ddc8dc46ed6f21d4ea92ec5b3',1,'Simulation']]],
   ['checknewinteraction',['checkNewInteraction',['../class_system.html#a3b996040c1a70b94c531562532c56f0c',1,'System']]],
   ['computeforcesonwallparticles',['computeForcesOnWallParticles',['../class_system.html#a03bad3a6dbb328ee214927151103ddd4',1,'System']]],
   ['computemaxnavelocity',['computeMaxNAVelocity',['../class_system.html#a34a5f1e6790979deae33cb9e7fef029a',1,'System']]],
@@ -16,9 +18,5 @@ var searchData=
   ['computevelocitiesstokesdrag',['computeVelocitiesStokesDrag',['../class_system.html#ad1688f0c8e35b85ac9d0962cdb098837',1,'System']]],
   ['computevelocitybycomponents',['computeVelocityByComponents',['../class_system.html#ad10e6a840ae09e387565c2f30e8df19f',1,'System']]],
   ['contactforceparameter',['contactForceParameter',['../class_simulation.html#a02db39dac79a8197839e02c753bf8340',1,'Simulation']]],
-  ['contactforceparameterbrownian',['contactForceParameterBrownian',['../class_simulation.html#a94d2b9ca02cb1687348d36f8a2776760',1,'Simulation']]],
-  ['convertforcevalues',['convertForceValues',['../class_simulation.html#ad7a3b629d1193ff7be69dfe5d30c8a5c',1,'Simulation']]],
-  ['convertinputforcesratecontrolled',['convertInputForcesRateControlled',['../class_simulation.html#a1d49482a028c0a01251389e855a54dca',1,'Simulation']]],
-  ['convertinputforcesstresscontrolled',['convertInputForcesStressControlled',['../class_simulation.html#a3f620b3924dfb4eb8ef3e72b38c051d4',1,'Simulation']]],
-  ['convertinputvalues',['convertInputValues',['../class_simulation.html#aa46fe5066cf757db5d894af3093378d6',1,'Simulation']]]
+  ['contactforceparameterbrownian',['contactForceParameterBrownian',['../class_simulation.html#a94d2b9ca02cb1687348d36f8a2776760',1,'Simulation']]]
 ];
