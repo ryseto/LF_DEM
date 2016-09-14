@@ -400,7 +400,7 @@ void Contact::frictionlaw_coulomb_max()
 }
 
 
-void Contact::addUpForce(std::vector<vec3d> &force_per_particle)
+void Contact::addUpForce(std::vector<vec3d> &force_per_particle) const
 {
     /* Force
 	 */
@@ -409,7 +409,7 @@ void Contact::addUpForce(std::vector<vec3d> &force_per_particle)
 }
 
 void Contact::addUpForceTorque(std::vector<vec3d> &force_per_particle,
-                                      std::vector<vec3d> &torque_per_particle)
+                               std::vector<vec3d> &torque_per_particle) const
 {
     /* Force
 	 */
@@ -449,7 +449,7 @@ void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
 	stress_p1 += (a1/r_ij)*contact_stresslet_XF;
 }
 
-void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1)
+void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1) const
 {
 	StressTensor spring_stress;
 	spring_stress.set(interaction->rvec, f_spring_total);

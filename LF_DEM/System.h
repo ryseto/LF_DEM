@@ -61,8 +61,6 @@ struct ForceAmplitudes
 class System{
 private:
 	int np; ///< number of particles
-	int maxnb_interactionpair;
-	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
@@ -207,7 +205,6 @@ protected:
 	std::vector<vec3d> rate_proportional_wall_force;
 	std::vector<vec3d> rate_proportional_wall_torque;
 
-	std::vector<Interaction> interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
@@ -221,6 +218,46 @@ protected:
 	std::vector<vec3d> fixed_velocities;
 	std::vector<StressTensor> total_stress_pp; // per particle
 	StressTensor total_stress;
+
+	/**************** Interaction machinery ***************************/
+	/* We hold the Interaction instances in a std::vector */
+	std::vector<Interaction> interaction;
+	/*
+	 * Interactions are used throughout the System class to access all the
+	 * data relative to pairwise forces. Most interaction operations are performed
+	 * as loops over the Interaction vector.
+	 * They are basically containing all the information relative to the forces
+	 * exchanged between a pair of particles i and j.
+	 * An Interaction contains typically a Lubrication object, a Contact object,
+	 * a RepulsiveForce object, etc.
+	 *
+	 * For some interaction operations, it is more convenient to loop over the particles
+	 * rather than the interactions (for instance to build the resistance matrix).
+	 * So we need to keep track of the set of Interaction instances each particle is involved in.
+	 * This is done by a vector of set of pointers to Interaction of size np, called interaction_list.
+	 * Each set is tied to a particle i.
+	 * It is convenient to order the sets of interaction with the label of the other particle involved,
+	 * so that the matrix filling in the StokesSolver can be made more efficiently.
+	 * That's the purpose of the custom comparator compare_interaction.
+	 */
+	 std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
+
+	 /*
+	 * These pointers are pointers to
+	 * elements of std::vector<Interaction> interaction defined above.
+	 * But here we have to be very careful, because the pointers need to keep track of what happens in the
+	 * vector<Interaction>. For instance, a interaction.push_bacK(inter) can trigger a reallocation of
+	 * the interaction container, in which case all the pointers in interaction_list are rendered invalid.
+	 * The solution to this problem is to give Interaction instances responsability for declaring themselved in
+	 * interaction_list, through appropriate constructor, destructor, copy constructor and assignment operator.
+	 * Note that the Interaction move constructor is explicitely deleted for now, to prevent
+	 * flawed implicit implementation by the compiler.
+	 */
+	 /* Besides the Interaction instances, the particles also more trivially know their neighbor.
+	 * This is not strictly necessary but can optimize some operations.
+	 * The responsability for the correctness of interaction_partners is left to System
+	 * (not delegated any more to Interaction, like it used to).*/
+	std::vector < std::vector<int> > interaction_partners;
 
 	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
 	                                      StressTensor &rate_indep_stress);
@@ -239,13 +276,10 @@ protected:
 	double avg_dt;
 	int avg_dt_nb;
 	double system_volume;
-	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
-	std::vector < std::vector<int> > interaction_partners;
-	int nb_interaction;
+
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	double max_velocity;
 	double max_sliding_velocity;
-	std::queue<int> deactivated_interaction;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;

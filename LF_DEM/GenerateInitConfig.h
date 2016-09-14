@@ -59,8 +59,8 @@ private:
 	double step_size;
 	int rand_seed;
 	/*
-	 * This can generate monodisperse or binary configurations consisting of two types of 
-	 * particles. 
+	 * This can generate monodisperse or binary configurations consisting of two types of
+	 * particles.
 	 * It is indicated by "bidisperse" option.
 	 */
 	bool circulargap_config;
@@ -96,14 +96,13 @@ private:
 	void putRandom();
 	void setParameters();
 	void outputPositionData();
-
 public:
 	GenerateInitConfig():
 	sys(System(p, events)),
 	circulargap_config(false),
     parallel_wall_config(false),
 	winding_wall_config(false) {};
-	
+
 	int generate(int rand_seed_, int config_type);
 	/* config_type = 1 -- noraml
 	 * config_type = 2 -- circular wide gap

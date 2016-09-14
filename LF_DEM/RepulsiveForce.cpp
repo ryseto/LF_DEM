@@ -84,7 +84,7 @@ void RepulsiveForce::calcForce()
 	calcScaledForce();
 }
 
-void RepulsiveForce::addUpForce(std::vector<vec3d> &force)
+void RepulsiveForce::addUpForce(std::vector<vec3d> &force) const
 {
 	force[p0] += force_vector;
 	force[p1] -= force_vector;

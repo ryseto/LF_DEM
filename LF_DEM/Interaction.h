@@ -35,8 +35,6 @@ private:
 	 *********************************/
 	System *sys;
 	//======= internal state =====================//
-	bool active;
-	unsigned int label;
 	unsigned int p0;
 	unsigned int p1;
 	double ro; // ro = a0+a1;
@@ -57,8 +55,13 @@ private:
 	void calcNormalVectorDistanceGap();
 	void integrateStress();
 	void updateContactState();
-	struct ODBlock (Lubrication::*RFU_ODBlock_lub)();
-	std::pair<struct DBlock, struct DBlock> (Lubrication::*RFU_DBlocks_lub)();
+	void activateForceMembers();
+	void deactivate();
+	void init();
+	void swap(Interaction& other); // used by assignment operator
+
+	struct ODBlock (Lubrication::*RFU_ODBlock_lub)() const;
+	std::pair<struct DBlock, struct DBlock> (Lubrication::*RFU_DBlocks_lub)() const;
 	//===== forces/stresses  ========================== //
 	/* To avoid discontinous change between predictor and corrector,
 	 * the change of contact state is informed in updateResiCoeff.
@@ -76,20 +79,16 @@ public:
 	/*********************************
 	 *       Public Methods          *
 	 *********************************/
-	Interaction():
-	active(false),
-	label(0),
-	p0(0),
-	p1(0),
-	ro(0),
-	reduced_gap(0),
-	r(0),
-	interaction_range(0),
-	rvec(0),
-	nvec(0),
-	z_offset(0)
-	{};
-	void init(System *sys_);
+	Interaction(System *sys_,
+	            unsigned int i,
+	            unsigned int j,
+	            double interaction_range_);
+	// copy ctor
+	Interaction (const Interaction &);
+	// delete move ctor to avoid implicit implementation that would not inform sys->interaction_list.
+	Interaction (Interaction &&) = delete;
+	~Interaction();
+	Interaction & operator = (const Interaction &inter); // assignement by copy-swap
 	//======= state updates  ====================//
 	/* Update the follow items:
 	 * - r_vec, z_offset, _r, and nr_vec
@@ -100,58 +99,35 @@ public:
 	 * - State (deactivation, contact)
 	 */
 	void updateState(bool& deactivated);
-	void activate(unsigned int i, unsigned int j, double interaction_range_);
-	void deactivate();
 
-	double separation_distance()
-	{
-		return r;
-	}
+	double separation_distance() const {return r;}
 
-	inline bool is_active() const
-	{
-		return active;
-	}
 	//======= particles data  ====================//
-	inline int partner(unsigned int i) const
-	{
-		return (i == p0 ? p1 : p0);
-	}
-	inline std::pair<unsigned int, unsigned int>	get_par_num() const
-	{
-		return std::make_pair(p0, p1);
-	}
-	inline void set_label(unsigned int val)
-	{
-		label = val;
-	}
-	inline unsigned int get_label() const
-	{
-		return label;
-	}
-	inline double get_reduced_gap() const
-	{
-		return reduced_gap;
-	}
-	inline double get_gap() const
-	{
-		return r-ro;
-	}
+	int partner(unsigned int i) const {return (i == p0 ? p1 : p0);}
+	std::pair<unsigned int, unsigned int>	get_par_num() const {return std::make_pair(p0, p1);}
+	double get_reduced_gap() const {return reduced_gap;}
+	double get_gap() const {return r-ro;}
+
 	bool hasPairwiseResistance();
 	double getNormalVelocity();
 	struct ODBlock RFU_ODBlock();
-
-
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks();
+
+	unsigned int label; // deprecated, only left for GenerateInitConfig, please don't use for new code
 };
 
 struct compare_interaction {
-    bool operator() (Interaction *inter1, Interaction *inter2) const
+	bool operator() (Interaction *inter1, Interaction *inter2) const
 		{
-        auto ij1 = inter1->get_par_num();
-				auto ij2 = inter2->get_par_num();
+			auto ij1 = inter1->get_par_num();
+			auto ij2 = inter2->get_par_num();
 
-        return (ij1.first + ij1.second) < (ij2.first + ij2.second);
-    }
+			bool equal = (ij1.first == ij2.first) && (ij1.second == ij2.second);
+			if (equal) {
+				return inter1 < inter2;
+			} else {
+				return (ij1.first + ij1.second) < (ij2.first + ij2.second);
+			}
+	}
 };
 #endif /* defined(__LF_DEM__Interaction__) */

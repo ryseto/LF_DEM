@@ -252,9 +252,9 @@ void GenerateInitConfig::outputPositionData()
 	}
 	fout_yap << "@ 4 \n";
 	fout_yap << "y 4 \n";
-	for (int k=0; k<sys.nb_interaction; k++) {
+	for (const auto &inter: sys.interaction) {
 		unsigned int i, j;
-		std::tie(i, j) = sys.interaction[k].get_par_num();
+		std::tie(i, j) = inter.get_par_num();
 		vec3d d_pos = sys.position[i]-sys.position[j];
 		if (d_pos.norm() < 10){
 			fout_yap << "l ";
@@ -278,12 +278,12 @@ double GenerateInitConfig::computeGradient()
 	double r, rcont;
 	double amp, amp2;
 	double energy = 0;
-	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].contact.is_active()) {
-			std::tie(i, j) = sys.interaction[k].get_par_num();
-			r = sys.interaction[k].separation_distance();
+	for (const auto &inter: sys.interaction) {
+		if (inter.contact.is_active()) {
+			std::tie(i, j) = inter.get_par_num();
+			r = inter.separation_distance();
 			rcont = sys.radius[i] + sys.radius[j];
-			const vec3d& nr_vec = sys.interaction[k].nvec;
+			const vec3d& nr_vec = inter.nvec;
 			amp = (1/rcont-1/r); // negative
 			amp2 = 4*amp/rcont;
 			grad[i] -= r*nr_vec*amp2;
@@ -548,12 +548,15 @@ void GenerateInitConfig::updateInteractions(int i)
 	}
 
 	for (auto& il : inter_list) {
-		if (il->is_active()) {
-			bool desactivated = false;
-			il->updateState(desactivated);
-			if (desactivated) {
-				sys.deactivated_interaction.push(il->get_label());
-			}
+		bool desactivated = false;
+		il->updateState(desactivated);
+		if (desactivated) {
+			auto ij = il->get_par_num();
+			sys.removeNeighbors(ij.first, ij.second);
+			auto k = il->label;
+			sys.interaction[k] = sys.interaction[sys.interaction.size()-1];
+			sys.interaction[k].label = k;
+			sys.interaction.pop_back();
 		}
 	}
 }

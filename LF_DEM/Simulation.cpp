@@ -604,7 +604,7 @@ void Simulation::outputData()
 	outdata.entryData("N1 viscosity", "viscosity", 1, sys.total_stress.getNormalStress1()/sr);
 	outdata.entryData("N2 viscosity", "viscosity", 1, sys.total_stress.getNormalStress2()/sr);
 	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
-	outdata.entryData("particle pressure contact", "stress", 1, sys.stress_components["xF_contact"].getTotalStress().getParticlePressure());
+	outdata.entryData("particle pressure contact", "stress", 1, sys.total_stress_groups["contact"].getParticlePressure());
 	/* energy
 	 */
 	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
@@ -817,66 +817,57 @@ void Simulation::outputParFileTxt()
 
 void Simulation::outputIntFileTxt()
 {
-
-	int cnt_interaction = 0;
-	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].is_active()) {
-			cnt_interaction ++;
-		}
-	}
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 
 	outdata_int.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
-	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].is_active()) {
-			unsigned int i, j;
-			std::tie(i, j) = sys.interaction[k].get_par_num();
-			StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
-			outdata_int.entryData("particle 1 label", "none", 1, i);
-			outdata_int.entryData("particle 2 label", "none", 1, j);
-			outdata_int.entryData("contact state "
-			                      "(0 = no contact, "
-			                      "1 = frictionless contact, "
-			                      "2 = non-sliding frictional, "
-			                      "3 = sliding frictional)",
-			                      "none", 1, sys.interaction[k].contact.getFrictionState());
-			if (diminish_output == false) {
-				outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
-				                      "none", 3, sys.interaction[k].nvec);
-				outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
-				                      "none", 1,  sys.interaction[k].get_reduced_gap());
-			}
-			/* [NOTE]
-			 * Lubrication forces are reference values
-			 * in the Brownian case. The force balancing
-			 * velocities are recalculated without
-			 * including the Brownian forces.
-			 * It seems there is no better way to visualize
-			 * the lubrication forces.
-			 */
-			if (sys.lubrication) {
-				double normal_part = -dot(sys.interaction[k].lubrication.getTotalForce(), sys.interaction[k].nvec);
-				outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
-				                      normal_part);
-				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
-				                      sys.interaction[k].lubrication.getTangentialForce());
-			}
-			/*
-			 * Contact forces include only spring forces.
-			 */
-			outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
-			                      sys.interaction[k].contact.getNormalForce().norm());
-			outdata_int.entryData("tangential part of the contact force", "force", 3, \
-			                      sys.interaction[k].contact.getTangentialForce());
-			outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
-			                      sys.interaction[k].repulsion.getForceNorm());
-			if (diminish_output == false) {
-				outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
-				                      shearStressComponent(stress_contact, p.theta_shear));
-			}
+	for (const auto &inter: sys.interaction) {
+		unsigned int i, j;
+		std::tie(i, j) = inter.get_par_num();
+		StressTensor stress_contact = inter.contact.getContactStressXF();
+		outdata_int.entryData("particle 1 label", "none", 1, i);
+		outdata_int.entryData("particle 2 label", "none", 1, j);
+		outdata_int.entryData("contact state "
+		                      "(0 = no contact, "
+		                      "1 = frictionless contact, "
+		                      "2 = non-sliding frictional, "
+		                      "3 = sliding frictional)",
+		                      "none", 1, inter.contact.getFrictionState());
+		if (diminish_output == false) {
+			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
+			                      "none", 3, inter.nvec);
+			outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
+			                      "none", 1,  inter.get_reduced_gap());
+		}
+		/* [NOTE]
+		 * Lubrication forces are reference values
+		 * in the Brownian case. The force balancing
+		 * velocities are recalculated without
+		 * including the Brownian forces.
+		 * It seems there is no better way to visualize
+		 * the lubrication forces.
+		 */
+		if (sys.lubrication) {
+			double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
+			outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
+			                      normal_part);
+			outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
+			                      inter.lubrication.getTangentialForce());
+		}
+		/*
+		 * Contact forces include only spring forces.
+		 */
+		outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
+		                      inter.contact.getNormalForce().norm());
+		outdata_int.entryData("tangential part of the contact force", "force", 3, \
+		                      inter.contact.getTangentialForce());
+		outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
+		                      inter.repulsion.getForceNorm());
+		if (diminish_output == false) {
+			outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
+			                      shearStressComponent(stress_contact, p.theta_shear));
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());

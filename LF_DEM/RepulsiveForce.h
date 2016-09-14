@@ -59,18 +59,18 @@ public:
 	void activate();
 	//===== forces/stresses  ========================== //
 	void calcForce();
-	void addUpForce(std::vector<vec3d> &force);
-	inline double getForceNorm()
+	void addUpForce(std::vector<vec3d> &force) const;
+	inline double getForceNorm() const
 	{
 		return force_norm;
 	}
-	vec3d getForceVector()
+	vec3d getForceVector() const
 	{
 		return force_vector;
 	}
 	void calcStressXF();
 	void addUpStressXF(StressTensor &stress_p0, StressTensor &stress_p1);
-	StressTensor getStressXF()
+	StressTensor getStressXF() const
 	{
 		return stresslet_XF;
 	}

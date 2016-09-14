@@ -10,9 +10,106 @@
 
 using namespace std;
 
-void Interaction::init(System* sys_)
+Interaction::Interaction(System* sys_,
+                         unsigned int i, unsigned int j,
+                         double interaction_range_):
+sys(sys_),
+reduced_gap(0),
+r(0),
+interaction_range(interaction_range_),
+contact_state_changed_after_predictor(false),
+rvec(0),
+nvec(0),
+z_offset(0)
 {
-	sys = sys_;
+	init();
+
+	if (j > i) {
+		p0 = i, p1 = j;
+	} else {
+		p0 = j, p1 = i;
+	}
+	set_ro(sys->radius[p0]+sys->radius[p1]); // ro=a0+a1
+
+	// tell it to particles i and j
+	sys->interaction_list[i].insert(this);
+	sys->interaction_list[j].insert(this);
+	sys->updateNumberOfInteraction(p0, p1, 1);
+
+	activateForceMembers();
+}
+
+Interaction::Interaction(const Interaction &other):
+sys(other.sys),
+p0(other.p0),
+p1(other.p1),
+ro(other.ro),
+reduced_gap(other.reduced_gap),
+r(other.r),
+interaction_range(other.interaction_range),
+contact_state_changed_after_predictor(other.contact_state_changed_after_predictor),
+rvec(other.rvec),
+nvec(other.nvec),
+z_offset(other.z_offset)
+{
+	init();
+	sys->interaction_list[p0].insert(this);
+	sys->interaction_list[p1].insert(this);
+	sys->updateNumberOfInteraction(p0, p1, 1);
+
+	activateForceMembers();
+}
+
+Interaction & Interaction::operator = (const Interaction &inter)
+{
+	Interaction tmp(inter);
+	swap(tmp);
+
+	init();
+	sys->interaction_list[p0].insert(this);
+	sys->interaction_list[p1].insert(this);
+	sys->updateNumberOfInteraction(p0, p1, 1);
+
+	activateForceMembers();
+	return *this;
+}
+
+Interaction::~Interaction()
+{
+	sys->interaction_list[p0].erase(this);
+	sys->interaction_list[p1].erase(this);
+	sys->updateNumberOfInteraction(p0, p1, -1);
+}
+
+void Interaction::swap(Interaction& other)
+{
+		sys->interaction_list[p0].erase(this);
+		sys->interaction_list[p1].erase(this);
+		sys->interaction_list[other.p0].erase(&other);
+		sys->interaction_list[other.p1].erase(&other);
+		std::swap(sys, other.sys);
+		std::swap(p0, other.p0);
+		std::swap(p1, other.p1);
+		std::swap(ro, other.ro);
+		std::swap(reduced_gap, other.reduced_gap);
+		std::swap(r, other.r);
+		std::swap(interaction_range, other.interaction_range);
+		std::swap(contact_state_changed_after_predictor, other.contact_state_changed_after_predictor);
+		std::swap(rvec, other.rvec);
+		std::swap(nvec, other.nvec);
+		std::swap(z_offset, other.z_offset);
+		std::swap(contact, other.contact);
+		std::swap(lubrication, other.lubrication);
+		std::swap(repulsion, other.repulsion);
+		std::swap(label, other.label);
+		sys->interaction_list[p0].insert(this);
+		sys->interaction_list[p1].insert(this);
+		sys->interaction_list[other.p0].insert(&other);
+		sys->interaction_list[other.p1].insert(&other);
+}
+
+void Interaction::init()
+{
 	contact.init(sys, this);
 	if (sys->lubrication) {
 		lubrication.init(sys, this);
@@ -43,35 +140,8 @@ void Interaction::calcNormalVectorDistanceGap()
 	reduced_gap = 2*r/ro-2;
 }
 
-/* Activate interaction between particles i and j.
- * Always j>i is satisfied.
- */
-void Interaction::activate(unsigned int i, unsigned int j,
-						   double interaction_range_)
+void Interaction::activateForceMembers()
 {
-	active = true;
-	if (j > i) {
-		p0 = i, p1 = j;
-	} else {
-		p0 = j, p1 = i;
-	}
-	// tell it to particles i and j
-	sys->interaction_list[i].insert(this);
-	sys->interaction_list[j].insert(this);
-	// tell them their new partner
-	sys->interaction_partners[i].push_back(j);
-	sys->interaction_partners[j].push_back(i);
-	sys->updateNumberOfInteraction(p0, p1, 1);
-
-	set_ro(sys->radius[p0]+sys->radius[p1]); // ro=a0+a1
-	interaction_range = interaction_range_;
-	/* NOTE:
-	 * lub_coeff_contact includes kn.
-	 * If the scaled kn is used there,
-	 * particle size dependence appears in the simulation.
-	 * I don't understand this point yet.
-	 * lub_coeff_contact_scaled = 4*kn_scaled*sys->contact_relaxation_time;
-	 */
 	if (sys->repulsiveforce) {
 		repulsion.activate();
 	}
@@ -91,6 +161,7 @@ void Interaction::activate(unsigned int i, unsigned int j,
 	}
 }
 
+
 void Interaction::deactivate()
 {
 	// r > interaction_range
@@ -102,11 +173,6 @@ void Interaction::deactivate()
 			lubrication.deactivate();
 		}
 	}
-	active = false;
-	sys->interaction_list[p0].erase(this);
-	sys->interaction_list[p1].erase(this);
-	sys->removeNeighbors(p0, p1);
-	sys->updateNumberOfInteraction(p0, p1, -1);
 }
 
 void Interaction::updateState(bool& deactivated)
@@ -119,7 +185,8 @@ void Interaction::updateState(bool& deactivated)
 	calcNormalVectorDistanceGap();
 
 	if (r > interaction_range) {
-		/* all interactions are switched off. */
+		/* all forces are switched off, but NOT the interaction itself
+		This has to be done by the caller, based on the value of deactivated */
 		deactivate();
 		deactivated = true;
 		return;
