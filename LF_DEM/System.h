@@ -94,11 +94,11 @@ private:
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
 	void (System::*timeEvolutionDt)(bool, double, double);
 	void timeEvolutionEulersMethod(bool calc_stress,
-								   double time_end,
-								   double strain_end);
+	                               double time_end,
+	                               double strain_end);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-											   double time_end,
-											   double strain_end);
+	                                           double time_end,
+	                                           double strain_end);
 	void timeStepMove(double time_end, double strain_end);
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(double time_end, double strain_end);
@@ -170,7 +170,11 @@ private:
 	Averager<double> max_disp_tan_avg;
 	std::list <Event>& events;
 
-protected:
+	void declareStressComponents();
+	void declareVelocityComponents();
+	void declareForceComponents();
+
+ protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
 	~System(){};
@@ -265,11 +269,7 @@ protected:
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, StressTensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
-	void declareStressComponents();
 	std::map<std::string, VelocityComponent> velocity_components;
-	void declareVelocityComponents();
-	void declareForceComponents();
-
 
 	Averager<StressTensor> stress_avg;
 	double dt;
@@ -297,16 +297,16 @@ protected:
 	double radius_wall_particle;
 	double radius_in;  // wall particles are at r = radius_in - radius_wall_particle;
 	double radius_out; // wall particles are at r = radius_out + radius_wall_particle;
-    double z_bot;
-    double z_top;
+	double z_bot;
+	double z_top;
 	double force_tang_wall1;
-    double force_tang_wall2;
+	double force_tang_wall2;
 	double force_normal_wall1;
 	double force_normal_wall2;
-    double shearstress_wall1;
-    double shearstress_wall2;
-    double normalstress_wall1;
-    double normalstress_wall2;
+	double shearstress_wall1;
+	double shearstress_wall2;
+	double normalstress_wall1;
+	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
 
@@ -316,7 +316,7 @@ protected:
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
-						  const std::vector <double>& radii);
+	                      const std::vector <double>& radii);
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
@@ -347,9 +347,9 @@ protected:
                                           std::vector<vec3d> rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
-						  double &stress_rr,
-						  double &stress_thetatheta,
-						  double &stress_rtheta);
+	                      double &stress_rr,
+	                      double &stress_thetatheta,
+	                      double &stress_rtheta);
 	StokesSolver stokes_solver;
 	void initializeBoxing();
 	/*************************************************************/
@@ -381,21 +381,6 @@ protected:
 	double get_lz()
 	{
 		return lz;
-	}
-
-	double Lx_half()
-	{
-		return lx_half;
-	}
-
-	double Ly_half()
-	{
-		return ly_half;
-	}
-
-	double Lz_half()
-	{
-		return lz_half;
 	}
 
 	double get_time_in_simulation_units()
@@ -448,11 +433,6 @@ protected:
 	double get_omega_wheel()
 	{
 		return omega_wheel_in-omega_wheel_out;
-	}
-
-	void set_dt(double val)
-	{
-		dt = val;
 	}
 
 	double get_nb_of_active_interactions()

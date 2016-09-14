@@ -709,14 +709,14 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 {
 	if (p.origin_zero_flow) {
-		z += sys.Lz_half();
-		if (z > sys.Lz_half()) {
+		z += 0.5*sys.get_lz();
+		if (z > 0.5*sys.get_lz()) {
 			x -= sys.shear_disp.x;
 			y -= sys.shear_disp.y;
-			if (x < -sys.Lx_half()) {
+			if (x < -0.5*sys.get_lx()) {
 				x += sys.get_lx();
 			}
-			if (y < -sys.Ly_half()) {
+			if (y < -0.5*sys.get_ly()) {
 				y += sys.get_ly();
 			}
 			z -= sys.get_lz();
@@ -756,9 +756,9 @@ void Simulation::outputParFileTxt()
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
-		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
-								   sys.position[i].y-sys.Ly_half(),
-								   sys.position[i].z-sys.Lz_half());
+		pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
+		                           sys.position[i].y-0.5*sys.get_ly(),
+		                           sys.position[i].z-0.5*sys.get_lz());
 	}
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
