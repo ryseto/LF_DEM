@@ -338,6 +338,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	*/
+
+	vec3d tests = {0, 2.1/2, 0.33};
+	cout << tests << endl; 
 	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
@@ -530,7 +533,7 @@ void System::setupSystemPostConfiguration()
 	omega_wheel_in  = 0;
 	omega_wheel_out = 0;
 	if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
-		origin_of_rotation.set(lx_half, 0, lz_half);
+		origin_of_rotation = {lx_half, 0, lz_half};
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
@@ -1863,17 +1866,17 @@ void System::tmpMixedProblemSetVelocities()
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega_wheel_in*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_wheel_in, 0);
+			na_velocity[i] = {-omega_wheel_in*(position[i].z-origin_of_rotation.z),
+			                  0,
+			                  omega_wheel_in*(position[i].x-origin_of_rotation.x)};
+			na_ang_velocity[i] = {0, -omega_wheel_in, 0};
 		}
 		// outer wheel
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+			na_velocity[i] = {-omega_wheel_out*(position[i].z-origin_of_rotation.z),
+			                  0,
+			                  omega_wheel_out*(position[i].x-origin_of_rotation.x)};
+			na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 		}
 	} else if (p.simulation_mode == 21) {
 		static double time_next = p.strain_reversal;
@@ -1895,11 +1898,11 @@ void System::tmpMixedProblemSetVelocities()
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
 		for (int i=np_mobile; i<i_np_wall1; i++) {
-			na_velocity[i].set(-wall_velocity/2, 0, 0);
+			na_velocity[i] = {-wall_velocity/2, 0, 0};
 			na_ang_velocity[i].reset();
 		}
 		for (int i=i_np_wall1; i<np; i++) {
-			na_velocity[i].set(wall_velocity/2, 0, 0);
+			na_velocity[i] = {wall_velocity/2, 0, 0};
 			na_ang_velocity[i].reset();
 		}
 	} else if (p.simulation_mode == 42) {
@@ -1910,7 +1913,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		for (int i=i_np_wall1; i<np; i++) {
-			na_velocity[i].set(wall_velocity, 0, 0);
+			na_velocity[i] = {wall_velocity, 0, 0};
 			na_ang_velocity[i].reset();
 		}
 	} else if (p.simulation_mode == 51) {
@@ -1923,20 +1926,20 @@ void System::tmpMixedProblemSetVelocities()
 		double x2 = x1+radius_in*sqrt(2);
 		for (int i=i_np_in; i<np; i++) {
 			if (position[i].x < x1) {
-				na_velocity[i].set(-omega_wheel_out*(position[i].z),
-								   0,
-								   omega_wheel_out*(position[i].x));
-				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+				na_velocity[i] = {-omega_wheel_out*(position[i].z),
+				                  0,
+				                  omega_wheel_out*(position[i].x)};
+				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			} else if (position[i].x < x2) {
-				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
-								   0,
-								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
-				na_ang_velocity[i].set(0, -omega_wheel_in, 0);
+				na_velocity[i] = {-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
+				                  0,
+				                  omega_wheel_in*(position[i].x-origin_of_rotation2.x)};
+				na_ang_velocity[i] = {0, -omega_wheel_in, 0};
 			} else {
-				na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
-								   0,
-								   omega_wheel_out*(position[i].x-origin_of_rotation3.x));
-				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+				na_velocity[i] = {-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
+				                  0,
+				                  omega_wheel_out*(position[i].x-origin_of_rotation3.x)};
+				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			}
 		}
 	}

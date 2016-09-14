@@ -36,56 +36,9 @@ public:
 
 	vec3d (double a): x(a), y(a), z(a) {}
 
-	friend bool operator == (const vec3d &v1,
-									const vec3d &v2)
-	{
-		if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z) {
-			return true;
-		}
-		return false;
-	}
-
-	bool is_zero()
-	{
-		if (x == 0 && y == 0 && z == 0) {
-			return true;
-		}
-		return false;
-	}
-
-	bool is_not_zero()
-	{
-		if (x != 0 || y != 0 || z != 0) {
-			return true;
-		}
-		return false;
-	}
-
-	friend bool operator != (const vec3d& v1,
-									const vec3d& v2)
-	{
-		if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z) {
-			return true;
-		}
-		return false;
-	}
-
-	friend vec3d operator + (const vec3d& a1,
-									const vec3d& a2)
-	{
-		return vec3d(a1.x+a2.x, a1.y+a2.y, a1.z+a2.z);
-	}
-
 	friend vec3d operator + (const vec3d& v)
 	{
 		return v;
-	}
-
-	/* subtraction */
-	friend vec3d	operator - (const vec3d& a1,
-									const vec3d& a2)
-	{
-		return vec3d(a1.x-a2.x, a1.y-a2.y, a1.z-a2.z);
 	}
 
 	friend vec3d	operator - (const vec3d& v)
@@ -93,95 +46,27 @@ public:
 		return vec3d(-v.x, -v.y, -v.z);
 	}
 
-	/* multiplication */
-	friend vec3d	operator * (const double& d,
-									const vec3d& v)
-	{
-		return vec3d(d*v.x, d*v.y, d*v.z);
-	}
-
-	friend vec3d	operator * (const vec3d& v,
-									const double& d)
-	{
-		return d*v;
-	}
-
-	friend vec3d	operator * (const int& i,
-									const vec3d& v)
-	{
-		return vec3d(i*v.x, i*v.y, i*v.z);
-	}
-
-	friend vec3d	operator * (const vec3d& v,
-									const int& i)
-	{
-		return vec3d(i*v.x, i*v.y, i*v.z);
-	}
-
-	/* scalar product */
-	friend double dot(const vec3d& a1,
-							 const vec3d& a2)
-	{
-		return a1.x*a2.x+a1.y*a2.y+a1.z*a2.z;
-	}
-
-	friend double dot(const vec3d* a1,
-							 const vec3d& a2)
-	{
-		return a1->x*a2.x+a1->y*a2.y+a1->z*a2.z;
-	}
-
-	friend double dot(const vec3d* a1,
-							 const vec3d* a2)
-	{
-		return a1->x*a2->x+a1->y*a2->y+a1->z*a2->z;
-	}
-
-	friend double dot(const vec3d& a1,
-							 const vec3d* a2)
-	{
-		return a1.x*a2->x+a1.y*a2->y+a1.z*a2->z;
-	}
-
-	/* vector product */
-	friend vec3d cross(const vec3d& v1,
-							  const vec3d& v2)
-	{
-		return vec3d(v1.y*v2.z - v1.z*v2.y,
-                     v1.z*v2.x - v1.x*v2.z,
-                     v1.x*v2.y - v1.y*v2.x);
-	}
-
-	friend vec3d	cross(const vec3d* v1,
-							  const vec3d& v2)
-	{
-		return vec3d(v1->y*v2.z - v1->z*v2.y,
-                     v1->z*v2.x - v1->x*v2.z,
-                     v1->x*v2.y - v1->y*v2.x);
-	}
-
-    /* vector product */
-	friend vec3d	cross_vec_array(const vec3d& v1,
-										const double* v2p)
-	{
-		return vec3d(v1.y*(*(v2p+2))-v1.z*(*(v2p+1)),
-                     v1.z*(*v2p)-v1.x*(*(v2p+2)),
-                     v1.x*(*(v2p+1))-v1.y*(*v2p));
-	}
-
 	/* division */
+	template <typename T>
 	friend vec3d	operator / (const vec3d& v,
-									const double& d)
+	                          const T& a)
 	{
-		double d_tmp = 1/d;
-		return d_tmp*v;
+		return vec3d(v.x/a, v.y/a, v.z/a);
 	}
 
-	friend vec3d	operator / (const vec3d& v,
-									const int& i)
+	template <typename T>
+	friend vec3d	operator * (const vec3d& v,
+	                          const T& a)
 	{
-		double d_tmp = 1./i;
-		return d_tmp*v;
+		return a*v;
+	}
+
+	/* multiplication */
+	template <typename T>
+	friend vec3d	operator * (const T& a,
+                            const vec3d& v)
+	{
+		return vec3d(a*v.x, a*v.y, a*v.z);
 	}
 
 	// assign operator
@@ -197,47 +82,18 @@ public:
 		return *this;
 	}
 
-	vec3d& operator *= (const double& d)
+	template <typename T>
+	vec3d& operator *= (const T& a)
 	{
-		x *= d, y *= d, z *= d;
+		x *= a, y *= a, z *= a;
 		return *this;
 	}
 
-	vec3d& operator *= (const int& i)
+	template <typename T>
+	vec3d& operator /= (const T& a)
 	{
-		x *= i, y *= i, z *= i;
-		return *this;
-	}
-
-	vec3d& operator /= (const double& d)
-	{
-		double d_tmp = 1/d;
-		x *= d_tmp, y *= d_tmp, z *= d_tmp;
+		x /= a, y /= a, z /= a;
 		return 	*this;
-	}
-
-	vec3d& operator /= (const int& i)
-	{
-		double d_tmp = 1./i;
-		x *= d_tmp, y *= d_tmp, z *= d_tmp;
-		return *this;
-	}
-
-	// output stream operator
-	friend std::ostream& operator << (std::ostream& out,
-											 const vec3d& v)
-	{
-		out << v.x << " " << v.y << " " << v.z;
-		return out;
-	}
-
-
-	/* utility */
-	void set(const double& _x,
-					const double& _y,
-					const double& _z)
-	{
-		x = _x, y = _y, z = _z;
 	}
 
 	void reset()
@@ -245,21 +101,9 @@ public:
 		x = 0, y = 0, z = 0;
 	}
 
-	void	add(const double& _dx,
-                    const double& _dy,
-					const double& _dz)
-	{
-		x += _dx, y += _dy, z += _dz;
-	}
-
 	void unitvector()
 	{
 		(*this) = (*this)/norm();
-	}
-
-	void	sign_reverse()
-	{
-		(*this) = -(*this);
 	}
 
 	double sq_norm() const
@@ -282,31 +126,14 @@ public:
 		return sqrt(sq_norm());
 	}
 
-    double norm_xz() const
-    {
-        return sqrt(sq_norm_xz());
-    }
-
-	friend double dist(const vec3d& a1, const vec3d& a2)
+	double norm_xz() const
 	{
-		return (a1-a2).norm();
+		return sqrt(sq_norm_xz());
 	}
 
-	friend double sq_dist(const vec3d& a1, const vec3d& a2)
-	{
-		return (a1-a2).sq_norm();
-	}
+	void rotateInfinitesimal(const vec3d& dphi);
 
-	void	rotateInfinitesimal(const vec3d& dphi)
-	{
-		/* dphi must be small vector. */
-		(*this) += cross(dphi, *this);
-	}
-
-	void	vertical_projection(const vec3d& v)
-	{
-		(*this) -= dot(*this, v)*v;
-	}
+	void vertical_projection(const vec3d& v);
 
 	vec3d product_rate_of_strain(double* E)
 	{
@@ -347,4 +174,123 @@ public:
 		std::cerr << x << ' '<< y << ' ' << z << std::endl;
 	}
 };
+
+
+/************ vec3d helping functions *******************/
+
+/*** Symmetric binary operators ***/
+inline bool operator == (const vec3d &v1,
+                  const vec3d &v2)
+{
+	if (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z) {
+		return true;
+	}
+	return false;
+}
+
+inline bool operator != (const vec3d& v1,
+                         const vec3d& v2)
+{
+	if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z) {
+		return true;
+	}
+	return false;
+}
+
+inline vec3d operator + (const vec3d& a1,
+                         const vec3d& a2)
+{
+	return vec3d(a1.x+a2.x, a1.y+a2.y, a1.z+a2.z);
+}
+
+/* subtraction */
+inline vec3d	operator - (const vec3d& a1,
+                          const vec3d& a2)
+{
+	return vec3d(a1.x-a2.x, a1.y-a2.y, a1.z-a2.z);
+}
+
+// output stream operator
+inline std::ostream& operator << (std::ostream& out,
+                                  const vec3d& v)
+{
+	out << v.x << " " << v.y << " " << v.z;
+	return out;
+}
+
+
+/******* Other, dist, dot, cross, etc **********/
+inline double dist(const vec3d& a1, const vec3d& a2)
+{
+	return (a1-a2).norm();
+}
+
+inline double sq_dist(const vec3d& a1, const vec3d& a2)
+{
+	return (a1-a2).sq_norm();
+}
+
+/* scalar product */
+inline double dot(const vec3d& a1,
+                  const vec3d& a2)
+{
+	return a1.x*a2.x+a1.y*a2.y+a1.z*a2.z;
+}
+
+inline double dot(const vec3d* a1,
+                  const vec3d& a2)
+{
+	return a1->x*a2.x+a1->y*a2.y+a1->z*a2.z;
+}
+
+inline double dot(const vec3d* a1,
+                  const vec3d* a2)
+{
+	return a1->x*a2->x+a1->y*a2->y+a1->z*a2->z;
+}
+
+inline double dot(const vec3d& a1,
+                  const vec3d* a2)
+{
+	return a1.x*a2->x+a1.y*a2->y+a1.z*a2->z;
+}
+
+/* vector product */
+inline vec3d cross(const vec3d& v1,
+                   const vec3d& v2)
+{
+	return vec3d(v1.y*v2.z - v1.z*v2.y,
+	             v1.z*v2.x - v1.x*v2.z,
+	             v1.x*v2.y - v1.y*v2.x);
+}
+
+inline vec3d	cross(const vec3d* v1,
+                    const vec3d& v2)
+{
+	return vec3d(v1->y*v2.z - v1->z*v2.y,
+	             v1->z*v2.x - v1->x*v2.z,
+	             v1->x*v2.y - v1->y*v2.x);
+}
+  /* vector product */
+inline vec3d	cross_vec_array(const vec3d& v1,
+                              const double* v2p)
+{
+	return vec3d(v1.y*(*(v2p+2))-v1.z*(*(v2p+1)),
+	             v1.z*(*v2p)-v1.x*(*(v2p+2)),
+	             v1.x*(*(v2p+1))-v1.y*(*v2p));
+}
+
+inline void
+vec3d::rotateInfinitesimal(const vec3d& dphi)
+{
+	/* dphi must be small vector. */
+	(*this) += cross(dphi, *this);
+}
+
+inline void
+vec3d::vertical_projection(const vec3d& v)
+{
+	(*this) -= dot(*this, v)*v;
+}
+
 #endif
