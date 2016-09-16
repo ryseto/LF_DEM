@@ -26,9 +26,9 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		cerr << "generate winding walls" <<endl;
 		winding_wall_config = true;
 	} else if (config_type == 3) {
-        cerr << "generate flat walls" <<endl;
-        parallel_wall_config = true;
-    }
+		cerr << "generate flat walls" <<endl;
+		parallel_wall_config = true;
+	}
 	setParameters();
 	rand_seed = rand_seed_;
 	if (circulargap_config) {
@@ -38,7 +38,7 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   r = radius_out + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-        np_wall1 = ((cg_radius_in-radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
+		np_wall1 = ((cg_radius_in-radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		np_wall2 = ((cg_radius_out+radius_wall_particle)*2*M_PI)/(2*radius_wall_particle);
 		cerr << "np_in = " << np_wall1 << endl;
 		cerr << "np_out = " << np_wall2 << endl;
@@ -53,9 +53,9 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 		 *   z = z_top + a;
 		 * Mobile partilces can be in radius_in < r < radius_out
 		 */
-        np_wall1 = lx/(2*radius_wall_particle);
+		np_wall1 = lx/(2*radius_wall_particle);
 		np_wall2 = lx/(2*radius_wall_particle);
-        np_movable = np;
+		np_movable = np;
 		np_fix = np_wall1+np_wall2;
 		np += np_fix;
 	} else if (winding_wall_config) {
@@ -183,9 +183,9 @@ void GenerateInitConfig::outputPositionData()
 		cerr << "disperse_type is wrong." << endl;
 		exit(1);
 	}
-    if (circulargap_config) {
-        ss_posdatafilename << "cylinders" << cg_ratio_radii; // square
-    } else if (parallel_wall_config) {
+	if (circulargap_config) {
+		ss_posdatafilename << "cylinders" << cg_ratio_radii; // square
+	} else if (parallel_wall_config) {
 		ss_posdatafilename << "shearwalls"; // square
 	} else if (winding_wall_config) {
 		ss_posdatafilename << "windingwalls"; // square
@@ -203,34 +203,34 @@ void GenerateInitConfig::outputPositionData()
 				ss_posdatafilename << "L" << (int)(10*lx_lz) << "_" << (int)(10*ly_lz) << "_" << 10;
 			}
 		}
-    }
+	}
 	ss_posdatafilename << "_" << rand_seed << "_.dat";
 	cerr << ss_posdatafilename.str() << endl;
 	fout.open(ss_posdatafilename.str().c_str());
 	ss_posdatafilename << ".yap";
 	fout_yap.open(ss_posdatafilename.str().c_str());
-    if (circulargap_config || winding_wall_config) {
+	if (circulargap_config || winding_wall_config) {
 		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 radius_in radius_out" << endl;
 		fout << std::setprecision(15);
-        fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
-        fout << lx << ' ' << ly << ' ' << lz << ' ';
-        fout << np_wall1 << ' ' << np_wall2 << ' ';
-        fout << cg_radius_in << ' ' << cg_radius_out << endl;
-    } else if (parallel_wall_config) {
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << np_wall1 << ' ' << np_wall2 << ' ';
+		fout << cg_radius_in << ' ' << cg_radius_out << endl;
+	} else if (parallel_wall_config) {
 		fout << "# np1 np2 vf lx ly lz np_wall1 np_wall2 z_bot z_top" << endl;
 		fout << std::setprecision(15);
-        fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
-        fout << lx << ' ' << ly << ' ' << lz << ' ';
-        fout << np_wall1 << ' ' << np_wall1 << ' ';
-        fout << z_bot << ' ' << z_top  << endl;
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << np_wall1 << ' ' << np_wall1 << ' ';
+		fout << z_bot << ' ' << z_top  << endl;
 	} else {
-        fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
+		fout << "# np1 np2 vf lx ly lz vf1 vf2 disp" << endl;
 		fout << std::setprecision(15);
-        fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
-        fout << lx << ' ' << ly << ' ' << lz << ' ';
-        fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
-    }
-
+		fout << "# " << np1 << ' ' << np2 << ' ' << volume_fraction << ' ';
+		fout << lx << ' ' << ly << ' ' << lz << ' ';
+		fout << volume_fraction1 << ' ' << volume_fraction2 << ' ' << 0 << endl;
+	}
+	
 	for (int i = 0; i<np; i++) {
 		fout << std::setprecision(15);
 		fout << sys.position[i].x << ' ';
@@ -367,70 +367,70 @@ void GenerateInitConfig::putRandom()
 	sys.position.resize(np);
 	sys.radius.resize(np);
 #ifndef USE_DSFMT
-    rand_gen.seed(rand_seed);
+	rand_gen.seed(rand_seed);
 #endif
 #ifdef USE_DSFMT
-    dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
+	dsfmt_init_gen_rand(&rand_gen, rand_seed) ; // hash of time and clock trick from MersenneTwister code v1.0 by Richard J. Wagner
 #endif
 	if (circulargap_config) {
 		vec3d r_center(lx/2, 0, lz/2);
-        int i = 0;
-        while (i < np_movable) {
-            vec3d pos(lx*RANDOM, 0, lz*RANDOM);
-            double r = (pos-r_center).norm();
-            if (r > cg_radius_in+2*radius_wall_particle && r < cg_radius_out-2*radius_wall_particle) {
-                sys.position[i] = pos;
-                if (i < np1) {
-                    sys.radius[i] = a1;
-                } else {
-                    sys.radius[i] = a2;
-                }
-                i++;
-            }
-        }
-        for (i=0; i<np_wall1; i++){
-            double t = i*(2*M_PI/np_wall1);
-            vec3d pos = r_center+(cg_radius_in-radius_wall_particle)*vec3d(cos(t), 0, sin(t));
-            sys.position[i+np_movable] = pos;
-            sys.radius[i+np_movable] = radius_wall_particle;
-        }
-        for (i=0; i<np_wall2; i++){
-            double t = i*(2*M_PI/np_wall2);
-            vec3d pos = r_center + (cg_radius_out+radius_wall_particle)*vec3d(cos(t), 0, sin(t));
-            sys.position[i+np_movable+np_wall1] = pos;
-            sys.radius[i+np_movable+np_wall1] = radius_wall_particle;
-        }
-        cerr << np_wall1 << ' ' << np_wall2 << endl;
-    } else if (parallel_wall_config) {
-        int i = 0;
-        while (i < np_movable) {
-            vec3d pos(lx*RANDOM, 0, lz*RANDOM);
+		int i = 0;
+		while (i < np_movable) {
+			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
+			double r = (pos-r_center).norm();
+			if (r > cg_radius_in+2*radius_wall_particle && r < cg_radius_out-2*radius_wall_particle) {
+				sys.position[i] = pos;
+				if (i < np1) {
+					sys.radius[i] = a1;
+				} else {
+					sys.radius[i] = a2;
+				}
+				i++;
+			}
+		}
+		for (i=0; i<np_wall1; i++){
+			double t = i*(2*M_PI/np_wall1);
+			vec3d pos = r_center+(cg_radius_in-radius_wall_particle)*vec3d(cos(t), 0, sin(t));
+			sys.position[i+np_movable] = pos;
+			sys.radius[i+np_movable] = radius_wall_particle;
+		}
+		for (i=0; i<np_wall2; i++){
+			double t = i*(2*M_PI/np_wall2);
+			vec3d pos = r_center + (cg_radius_out+radius_wall_particle)*vec3d(cos(t), 0, sin(t));
+			sys.position[i+np_movable+np_wall1] = pos;
+			sys.radius[i+np_movable+np_wall1] = radius_wall_particle;
+		}
+		cerr << np_wall1 << ' ' << np_wall2 << endl;
+	} else if (parallel_wall_config) {
+		int i = 0;
+		while (i < np_movable) {
+			vec3d pos(lx*RANDOM, 0, lz*RANDOM);
 			double a;
 			if (i < np1) {
 				a = a1;
 			} else {
 				a = a2;
 			}
-            if (pos.z > z_bot+a && pos.z < z_top-a) {
+			if (pos.z > z_bot+a && pos.z < z_top-a) {
 				pos.cerr();
 				sys.position[i] = pos;
 				sys.radius[i] = a;
 				i++;
-            }
-        }
-        double delta_x = lx/np_wall1;
-        for (i=0; i<np_wall1; i++){
-            vec3d pos(1+delta_x*i, 0, z_bot-radius_wall_particle);
-            sys.position[i+np_movable] = pos;
-            sys.radius[i+np_movable] = radius_wall_particle;
-        }
-        for (i=0; i<np_wall2; i++){
-            vec3d pos(1+delta_x*i, 0, z_top+radius_wall_particle);
-            sys.position[i+np_movable+np_wall1] = pos;
-            sys.radius[i+np_movable+np_wall1] = radius_wall_particle;
-        }
-        cerr << "*" << endl;
-        cerr << np_wall1 << ' ' << np_wall2 << endl;
+			}
+		}
+		double delta_x = lx/np_wall1;
+		for (i=0; i<np_wall1; i++){
+			vec3d pos(1+delta_x*i, 0, z_bot-radius_wall_particle);
+			sys.position[i+np_movable] = pos;
+			sys.radius[i+np_movable] = radius_wall_particle;
+		}
+		for (i=0; i<np_wall2; i++){
+			vec3d pos(1+delta_x*i, 0, z_top+radius_wall_particle);
+			sys.position[i+np_movable+np_wall1] = pos;
+			sys.radius[i+np_movable+np_wall1] = radius_wall_particle;
+		}
+		cerr << "*" << endl;
+		cerr << np_wall1 << ' ' << np_wall2 << endl;
 	} else if (winding_wall_config) {
 		int i = 0;
 		vec3d r_center1(0, 0, 0);
@@ -523,20 +523,20 @@ void GenerateInitConfig::putRandom()
 		cerr << np << endl;
 		cerr << sys.position.size() << endl;
 	} else {
-        for (int i=0; i<np_movable; i++) {
-            sys.position[i].x = lx*RANDOM;
-            sys.position[i].z = lz*RANDOM;
-            if (sys.twodimension) {
-                sys.position[i].y = ly_half;
-            } else {
-                sys.position[i].y = ly*RANDOM;
-            }
-            if (i < np1) {
+		for (int i=0; i<np_movable; i++) {
+			sys.position[i].x = lx*RANDOM;
+			sys.position[i].z = lz*RANDOM;
+			if (sys.twodimension) {
+				sys.position[i].y = ly_half;
+			} else {
+				sys.position[i].y = ly*RANDOM;
+			}
+			if (i < np1) {
 				sys.radius[i] = a1;
-            } else {
-                sys.radius[i] = a2;
-            }
-        }
+			} else {
+				sys.radius[i] = a2;
+			}
+		}
 	}
 }
 
@@ -677,31 +677,31 @@ void GenerateInitConfig::setParameters()
 	 *
 	 */
 	np = readStdinDefault(500, "number of particle");
-    if (circulargap_config || parallel_wall_config) {
-        sys.twodimension = true;
-    } else {
-        int dimension = readStdinDefault(2, "dimension (2 or 3)");
-        if (dimension == 2) {
-            sys.twodimension = true;
-        } else {
+	if (circulargap_config || parallel_wall_config) {
+		sys.twodimension = true;
+	} else {
+		int dimension = readStdinDefault(2, "dimension (2 or 3)");
+		if (dimension == 2) {
+			sys.twodimension = true;
+		} else {
 			sys.twodimension = false;
 		}
-    }
+	}
 	if (sys.twodimension) {
 		volume_fraction = readStdinDefault(0.78, "volume_fraction");
 	} else {
 		volume_fraction = readStdinDefault(0.5, "volume_fraction");
 	}
-    if (circulargap_config || parallel_wall_config) {
+	if (circulargap_config || parallel_wall_config) {
 		lx_lz = 1.0;
 	} else if (winding_wall_config) {
 		lx_lz = 0.5;
-    } else {
-        lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
-        if (!sys.twodimension) {
-            ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
-        }
-    }
+	} else {
+		lx_lz = readStdinDefault(1.0 , "Lx/Lz [1]: "); // default value needs to be float number.
+		if (!sys.twodimension) {
+			ly_lz = readStdinDefault(1.0 , "Ly/Lz [1]: "); // default value needs to be float number.
+		}
+	}
 	disperse_type = readStdinDefault('b' , "(m)onodisperse or (b)idisperse");
 	a1 = 1;
 	a2 = 1;
@@ -785,7 +785,7 @@ void GenerateInitConfig::setParameters()
 		}
 	}
 
-    if (circulargap_config) {
+	if (circulargap_config) {
 		double area_particle = np1*pvolume1+np2*pvolume2;
 		double area_gap = area_particle/volume_fraction;
 		cerr << "area_particle = " << area_particle << endl;
@@ -817,13 +817,13 @@ void GenerateInitConfig::setParameters()
 		double area1 = M_PI*(cg_radius_out-a)*(cg_radius_out-a)/2;
 		double area2 = M_PI*(cg_radius_in+a)*(cg_radius_in+a)/2;
 		cerr << " area fraction = " << area_particle/(area1-area2);
-    } else if (parallel_wall_config) {
-        lz += 10;
+	} else if (parallel_wall_config) {
+		lz += 10;
 		radius_wall_particle = readStdinDefault(1.0, "wall particle size");
-
-        z_bot = 5;
-        z_top = lz-5;
-    }
+		
+		z_bot = 5;
+		z_top = lz-5;
+	}
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;

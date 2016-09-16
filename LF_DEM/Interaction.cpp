@@ -11,8 +11,8 @@
 using namespace std;
 
 Interaction::Interaction(System* sys_,
-                         unsigned int i, unsigned int j,
-                         double interaction_range_):
+						 unsigned int i, unsigned int j,
+						 double interaction_range_):
 sys(sys_),
 reduced_gap(0),
 r(0),
@@ -29,7 +29,7 @@ z_offset(0)
 	} else {
 		p0 = j, p1 = i;
 	}
-	set_ro(sys->radius[p0]+sys->radius[p1]); // ro=a0+a1
+	ro = sys->radius[p0]+sys->radius[p1]; // ro=a0+a1
 
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
@@ -83,29 +83,29 @@ Interaction::~Interaction()
 
 void Interaction::swap(Interaction& other)
 {
-		sys->interaction_list[p0].erase(this);
-		sys->interaction_list[p1].erase(this);
-		sys->interaction_list[other.p0].erase(&other);
-		sys->interaction_list[other.p1].erase(&other);
-		std::swap(sys, other.sys);
-		std::swap(p0, other.p0);
-		std::swap(p1, other.p1);
-		std::swap(ro, other.ro);
-		std::swap(reduced_gap, other.reduced_gap);
-		std::swap(r, other.r);
-		std::swap(interaction_range, other.interaction_range);
-		std::swap(contact_state_changed_after_predictor, other.contact_state_changed_after_predictor);
-		std::swap(rvec, other.rvec);
-		std::swap(nvec, other.nvec);
-		std::swap(z_offset, other.z_offset);
-		std::swap(contact, other.contact);
-		std::swap(lubrication, other.lubrication);
-		std::swap(repulsion, other.repulsion);
-		std::swap(label, other.label);
-		sys->interaction_list[p0].insert(this);
-		sys->interaction_list[p1].insert(this);
-		sys->interaction_list[other.p0].insert(&other);
-		sys->interaction_list[other.p1].insert(&other);
+	sys->interaction_list[p0].erase(this);
+	sys->interaction_list[p1].erase(this);
+	sys->interaction_list[other.p0].erase(&other);
+	sys->interaction_list[other.p1].erase(&other);
+	std::swap(sys, other.sys);
+	std::swap(p0, other.p0);
+	std::swap(p1, other.p1);
+	std::swap(ro, other.ro);
+	std::swap(reduced_gap, other.reduced_gap);
+	std::swap(r, other.r);
+	std::swap(interaction_range, other.interaction_range);
+	std::swap(contact_state_changed_after_predictor, other.contact_state_changed_after_predictor);
+	std::swap(rvec, other.rvec);
+	std::swap(nvec, other.nvec);
+	std::swap(z_offset, other.z_offset);
+	std::swap(contact, other.contact);
+	std::swap(lubrication, other.lubrication);
+	std::swap(repulsion, other.repulsion);
+	std::swap(label, other.label);
+	sys->interaction_list[p0].insert(this);
+	sys->interaction_list[p1].insert(this);
+	sys->interaction_list[other.p0].insert(&other);
+	sys->interaction_list[other.p1].insert(&other);
 }
 
 void Interaction::init()
@@ -160,7 +160,6 @@ void Interaction::activateForceMembers()
 		}
 	}
 }
-
 
 void Interaction::deactivate()
 {

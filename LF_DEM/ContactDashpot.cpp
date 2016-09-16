@@ -287,9 +287,9 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks() const
 }
 
 vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
-                                   const vec3d &vel_p1,
-                                   const vec3d &ang_vel_p0,
-                                   const vec3d &ang_vel_p1) const
+								   const vec3d &vel_p1,
+								   const vec3d &ang_vel_p0,
+								   const vec3d &ang_vel_p1) const
 {
 	/** \brief Resistance force acting on particle p0.
 
@@ -327,9 +327,9 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 
 
 vec3d ContactDashpot::getForceOnP0_nonaffine(const vec3d &na_vel_p0,
-					                                   const vec3d &na_vel_p1,
-					                                   const vec3d &na_ang_vel_p0,
-					                                   const vec3d &na_ang_vel_p1) const
+											 const vec3d &na_vel_p1,
+											 const vec3d &na_ang_vel_p0,
+											 const vec3d &na_ang_vel_p1) const
 {
 	/** \brief Resistance force acting on particle p0.
 
@@ -353,11 +353,11 @@ vec3d ContactDashpot::getForceOnP0_nonaffine(const vec3d &na_vel_p0,
 		vec3d force_p0 = -dot(XA[0]*na_vel_p0+XA[1]*na_vel_p1, nvec)*(*nvec);
 
 		/* YAU_i */
-		force_p0 += - YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0))
-		            - YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
+		force_p0 += - YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0)) \
+					- YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
 		/* YBO_i */
-		force_p0 += - YB[0]*cross(nvec, na_ang_vel_p0)
-		            - YB[2]*cross(nvec, na_ang_vel_p1);
+		force_p0 += - YB[0]*cross(nvec, na_ang_vel_p0) \
+					- YB[2]*cross(nvec, na_ang_vel_p1);
 		return force_p0;
 	} else {
 		return vec3d();

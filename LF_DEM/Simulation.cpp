@@ -830,16 +830,16 @@ void Simulation::outputIntFileTxt()
 		outdata_int.entryData("particle 1 label", "none", 1, i);
 		outdata_int.entryData("particle 2 label", "none", 1, j);
 		outdata_int.entryData("contact state "
-		                      "(0 = no contact, "
-		                      "1 = frictionless contact, "
-		                      "2 = non-sliding frictional, "
-		                      "3 = sliding frictional)",
-		                      "none", 1, inter.contact.getFrictionState());
+							  "(0 = no contact, "
+							  "1 = frictionless contact, "
+							  "2 = non-sliding frictional, "
+							  "3 = sliding frictional)",
+							  "none", 1, inter.contact.getFrictionState());
 		if (diminish_output == false) {
 			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
-			                      "none", 3, inter.nvec);
+								  "none", 3, inter.nvec);
 			outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
-			                      "none", 1,  inter.get_reduced_gap());
+								  "none", 1,  inter.get_reduced_gap());
 		}
 		/* [NOTE]
 		 * Lubrication forces are reference values
@@ -852,22 +852,22 @@ void Simulation::outputIntFileTxt()
 		if (sys.lubrication) {
 			double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
 			outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
-			                      normal_part);
+								  normal_part);
 			outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
-			                      inter.lubrication.getTangentialForce());
+								  inter.lubrication.getTangentialForce());
 		}
 		/*
 		 * Contact forces include only spring forces.
 		 */
 		outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
-		                      inter.contact.getNormalForce().norm());
+							  inter.contact.getNormalForce().norm());
 		outdata_int.entryData("tangential part of the contact force", "force", 3, \
-		                      inter.contact.getTangentialForce());
+							  inter.contact.getTangentialForce());
 		outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
-		                      inter.repulsion.getForceNorm());
+							  inter.repulsion.getForceNorm());
 		if (diminish_output == false) {
 			outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
-			                      shearStressComponent(stress_contact, p.theta_shear));
+								  shearStressComponent(stress_contact, p.theta_shear));
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());

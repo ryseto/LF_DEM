@@ -317,7 +317,7 @@ void System::getContacts(vector <struct contact_state>& cs)
 
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
-	 for (const auto &inter: interaction) {
+	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
 			cs.push_back(inter.contact.getState());
 		}
@@ -1521,22 +1521,19 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	}
 }
 
-
 void System::setDashpotForceToParticle(vector<vec3d> &force,
                                        vector<vec3d> &torque)
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
 	for (const auto &inter: interaction) {
-		if (inter.contact.is_active()) {
-			if (inter.contact.dashpot.is_active()) {
-				std::tie(i, j) = inter.get_par_num();
-				std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
-				force[i] += GEi;
-				force[j] += GEj;
-				torque[i] += HEi;
-				torque[j] += HEj;
-			}
+		if (inter.contact.is_active() && inter.contact.dashpot.is_active()) {
+			std::tie(i, j) = inter.get_par_num();
+			std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+			force[i] += GEi;
+			force[j] += GEj;
+			torque[i] += HEi;
+			torque[j] += HEj;
 		}
 	}
 }
@@ -1602,7 +1599,7 @@ void System::setContactForceToParticle(vector<vec3d> &force,
 }
 
 void System::setRepulsiveForceToParticle(vector<vec3d> &force,
-	                                       vector<vec3d> &torque)
+										 vector<vec3d> &torque)
 {
 	for (const auto &inter: interaction) {
 		inter.repulsion.addUpForce(force);
@@ -1610,12 +1607,12 @@ void System::setRepulsiveForceToParticle(vector<vec3d> &force,
 }
 
 void System::setFixedParticleForceToParticle(vector<vec3d> &force,
-	                                           vector<vec3d> &torque)
+											 vector<vec3d> &torque)
 {
 	vector<double> force_torque_from_fixed (6*np_mobile);
 	// @@ TODO: avoid copy of the velocities and forces
 	vector<double> minus_fixed_velocities (6*p.np_fixed);
-	for(int i=0; i<p.np_fixed; i++) {
+	for (int i=0; i<p.np_fixed; i++) {
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
 		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1802,10 +1799,10 @@ void System::computeShearRateWalls()
 		force_upwall.reset();
 		force_downwall.reset();
 		for (int i=0; i<p.np_fixed; i++) {
-			if (fixed_velocities[i].x>0) {
+			if (fixed_velocities[i].x > 0) {
 				force_upwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
 			}
-			if (fixed_velocities[i].x<0) {
+			if (fixed_velocities[i].x < 0) {
 				force_downwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
 			}
 		}
@@ -1976,7 +1973,7 @@ void System::setFixedParticleVelocities()
 void System::rescaleVelHydroStressControlled()
 {
 	for (auto &vc: velocity_components) {
-		if (vc.second.rate_dependence ==  RATE_PROPORTIONAL) {
+		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
 			vc.second *= shear_rate;
 		}
 	}

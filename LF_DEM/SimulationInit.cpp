@@ -618,7 +618,7 @@ void Simulation::setupSimulation(string in_args,
 	sys.setupSystemPostConfiguration();
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-                                    simu_identifier, dimensionlessnumber, input_scale);
+									  simu_identifier, dimensionlessnumber, input_scale);
 	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
@@ -1426,7 +1426,7 @@ TimeKeeper Simulation::initTimeKeeper() {
 									 input_values["time_end"].unit == "strain"));
 	} else {
 		tk.addClock("data", LinearClock(p.time_interval_output_data,
-                                    input_values["time_interval_output_data"].unit == "strain"));
+										input_values["time_interval_output_data"].unit == "strain"));
 	}
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
@@ -1435,7 +1435,7 @@ TimeKeeper Simulation::initTimeKeeper() {
 									   input_values["time_end"].unit == "strain"));
 	} else {
 		tk.addClock("config", LinearClock(p.time_interval_output_config,
-                                      input_values["time_interval_output_config"].unit == "strain"));
+										  input_values["time_interval_output_config"].unit == "strain"));
 	}
 	return tk;
 }

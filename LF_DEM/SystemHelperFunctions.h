@@ -18,11 +18,11 @@ inline double evaluateMinGap(const System & sys)
 	double _min_reduced_gap = sys.p.interaction_range;
 	unsigned int p0, p1;
 	for (const auto &inter: sys.interaction) {
-			std::tie(p0, p1) = inter.get_par_num();
-			if ((int)p0 < sys.np_mobile && // exclude fixed-fixed
-				inter.get_reduced_gap() < _min_reduced_gap) {
-				_min_reduced_gap = inter.get_reduced_gap();
-			}
+		std::tie(p0, p1) = inter.get_par_num();
+		if ((int)p0 < sys.np_mobile && // exclude fixed-fixed
+			inter.get_reduced_gap() < _min_reduced_gap) {
+			_min_reduced_gap = inter.get_reduced_gap();
+		}
 	}
 	return _min_reduced_gap;
 }

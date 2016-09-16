@@ -244,8 +244,8 @@ private:
 	 * so that the matrix filling in the StokesSolver can be made more efficiently.
 	 * That's the purpose of the custom comparator compare_interaction.
 	 */
-	 std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
-
+	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
+	
 	 /*
 	 * These pointers are pointers to
 	 * elements of std::vector<Interaction> interaction defined above.
@@ -264,7 +264,7 @@ private:
 	std::vector < std::vector<int> > interaction_partners;
 
 	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
-	                                      StressTensor &rate_indep_stress);
+										  StressTensor &rate_indep_stress);
 
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, StressTensor> total_stress_groups;
@@ -310,7 +310,6 @@ private:
 	vec3d force_upwall;
 	vec3d force_downwall;
 
-
 	double *ratio_unit_time; // to convert System time in Simulation time
 
 	/****************************************/
@@ -342,14 +341,14 @@ private:
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
 	void gatherVelocitiesByRateDependencies(std::vector<vec3d> rateprop_vel,
-                                          std::vector<vec3d> rateprop_ang_vel,
-                                          std::vector<vec3d> rateindep_vel,
-                                          std::vector<vec3d> rateindep_ang_vel) const;
+											std::vector<vec3d> rateprop_ang_vel,
+											std::vector<vec3d> rateindep_vel,
+											std::vector<vec3d> rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
-	                      double &stress_rr,
-	                      double &stress_thetatheta,
-	                      double &stress_rtheta);
+						  double &stress_rr,
+						  double &stress_thetatheta,
+						  double &stress_rtheta);
 	StokesSolver stokes_solver;
 	void initializeBoxing();
 	/*************************************************************/
@@ -449,7 +448,7 @@ private:
 	{
 		return std::make_tuple(costheta_shear, sintheta_shear);
 	}
-
+	
 	void setShearDirection(double theta_shear){
 		costheta_shear = cos(theta_shear);
 		sintheta_shear = sin(theta_shear);
