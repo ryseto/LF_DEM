@@ -331,7 +331,7 @@ public:
 // Helper functions
 inline double shearStressComponent(const StressTensor& s, double theta_shear)
 {
-    return cos(theta_shear)*s.elm[2]+sin(theta_shear)*s.elm[3];
+	return cos(theta_shear)*s.elm[2]+sin(theta_shear)*s.elm[3];
 }
 
 #endif

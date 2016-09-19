@@ -125,16 +125,16 @@ private:
 	vec3d getTotalForce() const;
 
 	void addMEStresslet(double cos_theta_shear,
-	                    double sin_theta_shear,
-	                    double shear_rate,
-	                    StressTensor& stresslet_i,
-	                    StressTensor& stresslet_j) const;
+						double sin_theta_shear,
+						double shear_rate,
+						StressTensor& stresslet_i,
+						StressTensor& stresslet_j) const;
 	void addGUStresslet(const vec3d& vi, const vec3d& vj,
-                      const vec3d& oi, const vec3d& oj,
-                      StressTensor& stresslet_i, StressTensor& stresslet_j) const;
+						const vec3d& oi, const vec3d& oj,
+						StressTensor& stresslet_i, StressTensor& stresslet_j) const;
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
-//void setResistanceCoeffTang(double tangent_rc);
+	//void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();

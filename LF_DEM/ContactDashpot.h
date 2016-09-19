@@ -65,18 +65,18 @@ private:
 	void setParticleData();
 	//===== forces/stresses  ==========================
 	std::tuple<vec3d, vec3d, vec3d, vec3d> getRFU_Uinf(const vec3d &u_inf_p0,
-	                                                   const vec3d &u_inf_p1,
-	                                                   const vec3d &omega_inf) const;
+													   const vec3d &u_inf_p1,
+													   const vec3d &omega_inf) const;
 	vec3d getForceOnP0(const vec3d &vel_p0,
-	                   const vec3d &vel_p1,
-	                   const vec3d &ang_vel_p0,
-	                   const vec3d &ang_vel_p1) const;
+					   const vec3d &vel_p1,
+					   const vec3d &ang_vel_p0,
+					   const vec3d &ang_vel_p1) const;
 	vec3d getForceOnP0_nonaffine(const vec3d &na_vel_p0,
-	                             const vec3d &na_vel_p1,
-	                             const vec3d &na_ang_vel_p0,
-	                             const vec3d &na_ang_vel_p1) const;
+								 const vec3d &na_vel_p1,
+								 const vec3d &na_ang_vel_p0,
+								 const vec3d &na_ang_vel_p1) const;
 	void setDashpotResistanceCoeffs(double kn, double kt,
-                                  double rtime_normal, double rtime_tan);
+									double rtime_normal, double rtime_tan);
 	//=============  Resistance Matrices ====================/
 	struct ODBlock RFU_ODBlock() const;
 	std::pair<struct DBlock, struct DBlock> RFU_DBlocks() const;

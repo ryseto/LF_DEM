@@ -48,10 +48,6 @@ private:
 	 *       Private Methods         *
 	 *********************************/
 	//===== forces and stresses computations =====//
-	inline void set_ro(double val)
-	{
-		ro = val; // ro = a0 + a1
-	};
 	void calcNormalVectorDistanceGap();
 	void integrateStress();
 	void updateContactState();
@@ -80,9 +76,9 @@ public:
 	 *       Public Methods          *
 	 *********************************/
 	Interaction(System *sys_,
-	            unsigned int i,
-	            unsigned int j,
-	            double interaction_range_);
+				unsigned int i,
+				unsigned int j,
+				double interaction_range_);
 	// copy ctor
 	Interaction (const Interaction &);
 	// delete move ctor to avoid implicit implementation that would not inform sys->interaction_list.
@@ -118,16 +114,16 @@ public:
 
 struct compare_interaction {
 	bool operator() (Interaction *inter1, Interaction *inter2) const
-		{
-			auto ij1 = inter1->get_par_num();
-			auto ij2 = inter2->get_par_num();
-
-			bool equal = (ij1.first == ij2.first) && (ij1.second == ij2.second);
-			if (equal) {
-				return inter1 < inter2;
-			} else {
-				return (ij1.first + ij1.second) < (ij2.first + ij2.second);
-			}
+	{
+		auto ij1 = inter1->get_par_num();
+		auto ij2 = inter2->get_par_num();
+		
+		bool equal = (ij1.first == ij2.first) && (ij1.second == ij2.second);
+		if (equal) {
+			return inter1 < inter2;
+		} else {
+			return (ij1.first + ij1.second) < (ij2.first + ij2.second);
+		}
 	}
 };
 #endif /* defined(__LF_DEM__Interaction__) */

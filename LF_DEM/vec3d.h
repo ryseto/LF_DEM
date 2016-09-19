@@ -27,44 +27,44 @@ public:
 	double x;
 	double y;
 	double z;
-
+	
 	/* constructor/destructor */
 	vec3d (): x(0), y(0), z(0){}
 	vec3d (double _x,
-         double _y,
-         double _z): x(_x), y(_y), z(_z) {}
+		   double _y,
+		   double _z): x(_x), y(_y), z(_z) {}
 
 	vec3d (double a): x(a), y(a), z(a) {}
-
+	
 	friend vec3d operator + (const vec3d& v)
 	{
 		return v;
 	}
-
-	friend vec3d	operator - (const vec3d& v)
+	
+	friend vec3d operator - (const vec3d& v)
 	{
 		return vec3d(-v.x, -v.y, -v.z);
 	}
 
 	/* division */
 	template <typename T>
-	friend vec3d	operator / (const vec3d& v,
-	                          const T& a)
+	friend vec3d operator / (const vec3d& v,
+							 const T& a)
 	{
 		return vec3d(v.x/a, v.y/a, v.z/a);
 	}
 
 	template <typename T>
-	friend vec3d	operator * (const vec3d& v,
-	                          const T& a)
+	friend vec3d operator * (const vec3d& v,
+							 const T& a)
 	{
 		return a*v;
 	}
 
 	/* multiplication */
 	template <typename T>
-	friend vec3d	operator * (const T& a,
-                            const vec3d& v)
+	friend vec3d operator * (const T& a,
+							 const vec3d& v)
 	{
 		return vec3d(a*v.x, a*v.y, a*v.z);
 	}
@@ -175,7 +175,6 @@ public:
 	}
 };
 
-
 /************ vec3d helping functions *******************/
 
 /*** Symmetric binary operators ***/
@@ -189,7 +188,7 @@ inline bool operator == (const vec3d &v1,
 }
 
 inline bool operator != (const vec3d& v1,
-                         const vec3d& v2)
+						 const vec3d& v2)
 {
 	if (v1.x != v2.x || v1.y != v2.y || v1.z != v2.z) {
 		return true;
@@ -198,26 +197,25 @@ inline bool operator != (const vec3d& v1,
 }
 
 inline vec3d operator + (const vec3d& a1,
-                         const vec3d& a2)
+						 const vec3d& a2)
 {
 	return vec3d(a1.x+a2.x, a1.y+a2.y, a1.z+a2.z);
 }
 
 /* subtraction */
 inline vec3d	operator - (const vec3d& a1,
-                          const vec3d& a2)
+							const vec3d& a2)
 {
 	return vec3d(a1.x-a2.x, a1.y-a2.y, a1.z-a2.z);
 }
 
 // output stream operator
 inline std::ostream& operator << (std::ostream& out,
-                                  const vec3d& v)
+								  const vec3d& v)
 {
 	out << v.x << " " << v.y << " " << v.z;
 	return out;
 }
-
 
 /******* Other, dist, dot, cross, etc **********/
 inline double dist(const vec3d& a1, const vec3d& a2)
@@ -232,52 +230,52 @@ inline double sq_dist(const vec3d& a1, const vec3d& a2)
 
 /* scalar product */
 inline double dot(const vec3d& a1,
-                  const vec3d& a2)
+				  const vec3d& a2)
 {
 	return a1.x*a2.x+a1.y*a2.y+a1.z*a2.z;
 }
 
 inline double dot(const vec3d* a1,
-                  const vec3d& a2)
+				  const vec3d& a2)
 {
 	return a1->x*a2.x+a1->y*a2.y+a1->z*a2.z;
 }
 
 inline double dot(const vec3d* a1,
-                  const vec3d* a2)
+				  const vec3d* a2)
 {
 	return a1->x*a2->x+a1->y*a2->y+a1->z*a2->z;
 }
 
 inline double dot(const vec3d& a1,
-                  const vec3d* a2)
+				  const vec3d* a2)
 {
 	return a1.x*a2->x+a1.y*a2->y+a1.z*a2->z;
 }
 
 /* vector product */
 inline vec3d cross(const vec3d& v1,
-                   const vec3d& v2)
+				   const vec3d& v2)
 {
 	return vec3d(v1.y*v2.z - v1.z*v2.y,
-	             v1.z*v2.x - v1.x*v2.z,
-	             v1.x*v2.y - v1.y*v2.x);
+				 v1.z*v2.x - v1.x*v2.z,
+				 v1.x*v2.y - v1.y*v2.x);
 }
 
-inline vec3d	cross(const vec3d* v1,
-                    const vec3d& v2)
+inline vec3d cross(const vec3d* v1,
+				   const vec3d& v2)
 {
 	return vec3d(v1->y*v2.z - v1->z*v2.y,
-	             v1->z*v2.x - v1->x*v2.z,
-	             v1->x*v2.y - v1->y*v2.x);
+				 v1->z*v2.x - v1->x*v2.z,
+				 v1->x*v2.y - v1->y*v2.x);
 }
-  /* vector product */
-inline vec3d	cross_vec_array(const vec3d& v1,
-                              const double* v2p)
+/* vector product */
+inline vec3d cross_vec_array(const vec3d& v1,
+							 const double* v2p)
 {
 	return vec3d(v1.y*(*(v2p+2))-v1.z*(*(v2p+1)),
-	             v1.z*(*v2p)-v1.x*(*(v2p+2)),
-	             v1.x*(*(v2p+1))-v1.y*(*v2p));
+				 v1.z*(*v2p)-v1.x*(*(v2p+2)),
+				 v1.x*(*(v2p+1))-v1.y*(*v2p));
 }
 
 inline void

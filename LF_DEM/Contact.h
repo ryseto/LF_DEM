@@ -123,11 +123,11 @@ public:
 	void incrementDisplacements();
 	double get_rcontact() const
 	{
-			return a0 + a1;
+		return a0 + a1;
 	}
 	//===== forces/stresses  ========================== //
 	void addUpForceTorque(std::vector<vec3d> &force_per_particle,
-	                      std::vector<vec3d> &torque_per_particle) const;
+						  std::vector<vec3d> &torque_per_particle) const;
 	void addUpForce(std::vector<vec3d> &force_per_particle) const;
 	void calcContactSpringForce();
 	vec3d getTotalForce() const;

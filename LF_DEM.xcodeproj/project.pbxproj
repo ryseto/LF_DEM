@@ -600,6 +600,7 @@
 		D9A9066E1BF331EF00BE8640 /* particleconfig.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = particleconfig.pl; path = tools/particleconfig.pl; sourceTree = SOURCE_ROOT; };
 		D9A9066F1BF331EF00BE8640 /* reduce_rheodata.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = reduce_rheodata.pl; path = tools/reduce_rheodata.pl; sourceTree = SOURCE_ROOT; };
 		D9A906701BF331EF00BE8640 /* trajectory.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; name = trajectory.pl; path = tools/trajectory.pl; sourceTree = SOURCE_ROOT; };
+		D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SystemHelperFunctions.h; sourceTree = "<group>"; };
 		D9B0FF381D1A810C00FFCBFD /* Timer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Timer.h; sourceTree = "<group>"; };
 		D9B659F81998FD14003DA63E /* LF_DEM.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = LF_DEM.profdata; sourceTree = "<group>"; };
 		D9BA0B8B1C7010930077D0AC /* analyzeWallShear.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = analyzeWallShear.pl; path = tools/analyzeWallShear.pl; sourceTree = SOURCE_ROOT; };
@@ -1242,6 +1243,7 @@
 				D988E39B1654A18D0009949F /* System.h */,
 				D988E39A1654A18D0009949F /* System.cpp */,
 				D92244831BFBF08700F46233 /* SystemHelperFunctions.cpp */,
+				D9AD32F11D8CAD3D00819471 /* SystemHelperFunctions.h */,
 				D9506B9116D81A7C00A52CFF /* Stress.cpp */,
 				D90B4F681A70942500C51ACD /* ParameterSet.h */,
 				D932B8DF16C2EDCB00AD6E85 /* StokesSolver.h */,
