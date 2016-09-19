@@ -98,7 +98,7 @@ eventLookUp(NULL)
 	lx = 0;
 	ly = 0;
 	lz = 0;
-	costheta_shear = 0;
+	costheta_shear = 1;
 	sintheta_shear = 0;
 }
 
@@ -107,7 +107,6 @@ void System::allocateRessourcesPreConfiguration()
 	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
 	}
-	linalg_size = 6*np;
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
@@ -248,7 +247,7 @@ void System::setInteractions_GenerateInitConfig()
 {
 	calcInteractionRange = &System::calcLubricationRange;
 
-	shear_strain = 0;
+	shear_strain = {0, 0, 0};
 	shear_disp.reset();
 	vel_difference.reset();
 	initializeBoxing();
@@ -340,7 +339,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	*/
 
 	vec3d tests = {0, 2.1/2, 0.33};
-	cout << tests << endl; 
+	cout << tests << endl;
 	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
@@ -448,7 +447,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		}
 	}
 
-	shear_strain = 0;
+	shear_strain = {0, 0, 0};
 
 	if (brownian) {
 		amplitudes.sqrt_temperature = sqrt(amplitudes.temperature);
@@ -479,12 +478,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	total_num_timesteps = 0;
 
 	vel_difference.reset();
-	if (!p.cross_shear) {
-		vel_difference.x = shear_rate*lz;
-	} else {
-		vel_difference.x = costheta_shear*shear_rate*lz;
-		vel_difference.y = sintheta_shear*shear_rate*lz;
-	}
+	setVelocityDifference();
 	dt = p.dt;
 	if (p.fixed_dt) {
 		avg_dt = dt;
@@ -597,32 +591,27 @@ void System::timeStepBoxing()
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
-		double strain_increment = dt*shear_rate;
+		vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
+		strain_increment *= dt*shear_rate;
+		curvilinear_strain += strain_increment.norm();
 		shear_strain += strain_increment;
-		if (!p.cross_shear) {
-			shear_disp.x += strain_increment*lz;
-			int m = (int)(shear_disp.x/lx);
-			if (shear_disp.x < 0) {
-				m--;
-			}
-			shear_disp.x = shear_disp.x-m*lx;
-		} else {
-			shear_disp.x += costheta_shear*strain_increment*lz;
-			shear_disp.y += sintheta_shear*strain_increment*lz;
-			int m = (int)(shear_disp.x/lx);
-			if (shear_disp.x < 0) {
-				m--;
-			}
-			shear_disp.x = shear_disp.x-m*lx;
-			m = (int)(shear_disp.y/ly);
-			if (shear_disp.y < 0) {
-				m--;
-			}
-			shear_disp.y = shear_disp.y-m*ly;
+		shear_disp += strain_increment*lz;
+		int m = (int)(shear_disp.x/lx);
+		if (shear_disp.x < 0) {
+			m--;
 		}
+		shear_disp.x = shear_disp.x-m*lx;
+		m = (int)(shear_disp.y/ly);
+		if (shear_disp.y < 0) {
+			m--;
+		}
+		shear_disp.y = shear_disp.y-m*ly;
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
-			shear_strain += dt*shear_rate;
+			vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
+			strain_increment *= dt*shear_rate;
+			curvilinear_strain += strain_increment.norm();
+			shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
@@ -918,8 +907,8 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
 	if (strain_end >= 0) {
-		if (fabs(dt*shear_rate) > strain_end-fabs(get_shear_strain())) {
-			dt = fabs((strain_end-fabs(get_shear_strain()))/shear_rate);
+		if (fabs(dt*shear_rate) > strain_end-get_curvilinear_strain()) {
+			dt = fabs((strain_end-get_curvilinear_strain())/shear_rate);
 		}
 	}
 	if (time_end >= 0) {
@@ -1025,7 +1014,7 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (fabs(get_shear_strain()) > strain_end-1e-8 && strain_end>=0) {
+	if (get_curvilinear_strain() > strain_end-1e-8 && strain_end>=0) {
 		return false;
 	}
 	if (get_time() > time_end-1e-8 && time_end>=0) {
@@ -1086,7 +1075,7 @@ void System::timeEvolution(double time_end, double strain_end)
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
-		&& shear_strain > p.start_adjust) {
+		&& get_curvilinear_strain() > p.start_adjust) {
 		adjustContactModelParameters();
 	}
 }
@@ -1731,12 +1720,8 @@ void System::computeVelocityByComponents()
 
 void System::setVelocityDifference()
 {
-	if (!p.cross_shear) {
-		vel_difference.x = shear_rate*lz;
-	} else {
-		vel_difference.x = costheta_shear*shear_rate*lz;
-		vel_difference.y = sintheta_shear*shear_rate*lz;
-	}
+	vel_difference.x = costheta_shear*shear_rate*lz;
+	vel_difference.y = sintheta_shear*shear_rate*lz;
 }
 
 void System::set_shear_rate(double sr)
@@ -1758,7 +1743,7 @@ void System::computeShearRate()
 	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);
 
 	set_shear_rate(newtonian_stress/newtonian_viscosity);
-	if (shear_strain < init_strain_shear_rate_limit) {
+	if (get_curvilinear_strain() < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
 		}
@@ -1793,7 +1778,7 @@ void System::computeShearRateWalls()
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
 	set_shear_rate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
 
-	if (shear_strain < init_strain_shear_rate_limit) {
+	if (get_curvilinear_strain() < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
 		}
@@ -2265,14 +2250,14 @@ void System::adjustContactModelParameters()
 	 */
 
 	double overlap = -evaluateMinGap(*this);
-	overlap_avg.update(overlap, shear_strain);
+	overlap_avg.update(overlap, get_curvilinear_strain());
 	double max_disp_tan = evaluateMaxDispTan(*this);
-	max_disp_tan_avg.update(max_disp_tan, shear_strain);
-	kn_avg.update(p.kn, shear_strain);
-	kt_avg.update(p.kt, shear_strain);
+	max_disp_tan_avg.update(max_disp_tan, get_curvilinear_strain());
+	kn_avg.update(p.kn, get_curvilinear_strain());
+	kt_avg.update(p.kt, get_curvilinear_strain());
 
-	static double previous_shear_strain = 0;
-	double deltagamma = (shear_strain-previous_shear_strain);
+	static double previous_curvilinear_strain = 0;
+	double deltagamma = (get_curvilinear_strain()-previous_curvilinear_strain);
 	double kn_target = kn_avg.get()*overlap_avg.get()/p.overlap_target;
 	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
 
@@ -2295,7 +2280,7 @@ void System::adjustContactModelParameters()
 
 	adaptTimeStep();
 
-	previous_shear_strain = shear_strain;
+	previous_curvilinear_strain = get_curvilinear_strain();
 
 	for (auto &inter: interaction) {
 		if (inter.contact.is_active()) {

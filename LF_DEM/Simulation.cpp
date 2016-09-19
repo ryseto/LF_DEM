@@ -61,7 +61,7 @@ bool Simulation::keepRunning()
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
 	if (time_end == -1) {
-		return (fabs(sys.get_shear_strain()) < strain_end-1e-8) && !kill;
+		return (sys.get_curvilinear_strain() < strain_end-1e-8) && !kill;
 	} else {
 		return (sys.get_time() < time_end-1e-8) && !kill;
 	}
@@ -120,7 +120,7 @@ void Simulation::handleEventsFragility()
 			p.disp_max /= 1.1;
 		}
 	}
-	if (p.disp_max < 1e-6 || sys.get_shear_strain() > 3.) {
+	if (p.disp_max < 1e-6 || sys.get_curvilinear_strain() > 3.) {
 		p.cross_shear = true; //!p.cross_shear;
 		p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
@@ -262,9 +262,12 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 void Simulation::printProgress()
 {
 	if (time_end != -1) {
-				cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
+		cout << "time: " << sys.get_time_in_simulation_units() << " , "\
+		     << sys.get_time() << " / " << time_end\
+		     << " , strain: " << sys.get_curvilinear_strain() << endl;
 	} else {
-				cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
+		cout << "time: " << sys.get_time_in_simulation_units()\
+		     << " , strain: " << sys.get_curvilinear_strain() << " / " << strain_end << endl;
 	}
 }
 
@@ -295,12 +298,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
 
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_curvilinear_strain());
 		generateOutput(output_events, binconf_counter);
 
 		printProgress();
 
-		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
+		if (time_strain_1 == 0 && sys.get_curvilinear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
@@ -362,7 +365,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else { // either next time or next strain
 			sys.timeEvolution(t.first, s.first);
 		}
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_curvilinear_strain());
 		generateOutput(output_events, binconf_counter);
 
 
@@ -384,7 +387,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			jammed = 0;
 		}
-		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
+		if (time_strain_1 == 0 && sys.get_curvilinear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
@@ -585,7 +588,7 @@ void Simulation::outputData()
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
-		outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
+		outdata.entryData("curvilinear shear strain", "none", 1, sys.get_curvilinear_strain());
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	} else {
 		// Rotary Couette geometry
@@ -635,8 +638,12 @@ void Simulation::outputData()
 	outdata.entryData("kn", "none", 1, p.kn);
 	outdata.entryData("kt", "none", 1, p.kt);
 	outdata.entryData("kr", "none", 1, p.kr);
-	outdata.entryData("shear displacement x", "none", 1, sys.shear_disp.x);
-	outdata.entryData("shear displacement y", "none", 1, sys.shear_disp.y);
+	vec3d strain = sys.get_strain();
+	if(!p.cross_shear) {
+		outdata.entryData("shear strain", "none", 1, strain.x);
+	} else {
+		outdata.entryData("shear strain", "none", 3, strain);
+	}
 	if (sys.wall_rheology) {
 		outdata.entryData("shear viscosity wall 1", "viscosity", 1, sys.shearstress_wall1/sr);
 		outdata.entryData("shear viscosity wall 2", "viscosity", 1, sys.shearstress_wall2/sr);
@@ -652,7 +659,7 @@ void Simulation::outputData()
 	outdata_st.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_st.setUnit(output_unit_scales);
 	outdata_st.entryData("time", "time", 1, sys.get_time());
-	outdata_st.entryData("shear strain", "none", 1, sys.get_shear_strain());
+	outdata_st.entryData("shear strain", "none", 1, sys.get_curvilinear_strain());
 	outdata_st.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	outdata_st.entryData("total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_stress);
 	for (const auto &stress_comp: sys.total_stress_groups) {
@@ -698,7 +705,7 @@ void Simulation::outputData()
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 {
-	snapshot_header << "# " << sys.get_shear_strain() << ' ';
+	snapshot_header << "# " << sys.get_curvilinear_strain() << ' ';
 	snapshot_header << sys.shear_disp.x << ' ';
 	snapshot_header << getRate() << ' ';
 	snapshot_header << target_stress_input << ' ';
@@ -778,7 +785,7 @@ void Simulation::outputParFileTxt()
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
-	cout << "   out config: " << sys.get_shear_strain() << endl;
+	cout << "   out config: " << sys.get_curvilinear_strain() << endl;
 	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
 	for (int i=0; i<sys.get_np(); i++) {
