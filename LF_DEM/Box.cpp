@@ -17,7 +17,7 @@ Box::~Box()
  * important for top/bottom boxes, as the number of moving neighbors
  * can be smaller than _moving_neigh_nb
  */
-void Box::reset_moving_neighbors()
+void Box::resetMovingNeighbors()
 {
 	for (const auto& box : _moving_neighbors) {
 		_neighbors.erase(box);
@@ -72,12 +72,12 @@ void Box::remove(int i)
 	container.erase(i);
 }
 
-void Box::build_neighborhood_container()
+void Box::buildNeighborhoodContainer()
 {
 	neighborhood_container.clear();
-	size_t size = container_size();
+	size_t size = container.size();
 	for (const auto& box : _neighbors) {
-		size += box->container_size();
+		size += box->getContainer().size();
 	}
 	neighborhood_container.resize(size);
 	int j = 0;
