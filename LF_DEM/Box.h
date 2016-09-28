@@ -26,14 +26,12 @@ class Box{
 private:
 	std::set <Box*> _neighbors;
 	std::set <Box*> _moving_neighbors;
-	bool _is_bottom;
-	bool _is_top;
 	std::set <int> container;
 	std::vector <int> neighborhood_container;
 	vec3d position;
 
 public:
-	Box();
+	Box(){};
 	~Box();
 
 	void addStaticNeighbor(Box* neigh_box);
@@ -41,18 +39,18 @@ public:
 	void resetMovingNeighbors();
 	const std::set <Box*> & getNeighborBox(){return _neighbors;}
 
-	vec3d getPosition() {return position;}
-	void setPosition(vec3d pos){position = pos;}
-	void is_top(bool);
-	void is_bottom(bool);
-	bool is_top();
-	bool is_bottom();
+	vec3d getPosition() const {return position;}
+	void setPosition(vec3d pos) {position = pos;}
+	// void is_top(bool it) {_is_top = it;};
+	// void is_bottom(bool ib) {_is_bottom = ib;};
+	// bool is_top() const {return _is_top;};
+	// bool is_bottom() const {return _is_bottom;};
 
 	void add(int);
 	void remove(int);
 
-	const std::set <int> & getContainer(){return container;	}
-	const std::vector <int> & getNeighborhoodContainer(){return neighborhood_container;};
+	const std::set <int> & getContainer() const {return container;}
+	const std::vector <int> & getNeighborhoodContainer() const {return neighborhood_container;};
 	void buildNeighborhoodContainer();
 };
 

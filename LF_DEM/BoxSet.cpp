@@ -38,8 +38,6 @@ void BoxSet::init(double interaction_dist, System* sys_)
 		auto it = Boxes.insert(new Box());
 		Box* const b = (*it.first);
 		b->setPosition({0, 0, 0});
-		b->is_bottom(true);
-		b->is_top(true);
 		TopBottomBoxes.insert(b);
 		box_labels.push_back(b);
 	} else {
@@ -94,16 +92,12 @@ void BoxSet::positionBoxes()
 				int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 				box_labels[label] = bx;
 				if (iz == 0 && iz < z_box_nb-1) {// bottom box
-					bx->is_bottom(true);
 					BottomBoxes.insert(bx);
 				}
 				if (iz == z_box_nb-1 && iz > 0) {//top box
-					bx->is_top(true);
 					TopBoxes.insert(bx);
 				}
 				if (iz == 0 && iz == z_box_nb-1) {// bottom box
-					bx->is_bottom(true);
-					bx->is_top(true);
 					TopBottomBoxes.insert(bx);
 				}
 				if (iz > 0 && iz < z_box_nb-1) {// bulk box
@@ -331,8 +325,7 @@ void BoxSet::printBoxNetwork()
 		const auto& neighbors = bx->getNeighborBox();
 		for (const auto& neighbor_box : neighbors) {
 			cerr << " "  << neighbors.size() << " " << bx->getPosition() << " ";
-			cerr << neighbor_box->getPosition() << " " << bx->is_top() << " ";
-			cerr << bx->is_bottom() << endl;
+			cerr << neighbor_box->getPosition() << endl;
 		}
 	}
 }

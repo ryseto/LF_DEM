@@ -1,12 +1,6 @@
 #include "Box.h"
 using namespace std;
 
-Box::Box()
-{
-	_is_top = false;
-	_is_bottom = false;
-}
-
 Box::~Box()
 {
 	_neighbors.clear();
@@ -40,26 +34,6 @@ void Box::addMovingNeighbor(Box* neigh_box)
 	}
 	_neighbors.insert(neigh_box);
 	_moving_neighbors.insert(neigh_box);
-}
-
-void Box::is_top(bool it)
-{
-	_is_top = it;
-}
-
-void Box::is_bottom(bool ib)
-{
-	_is_bottom = ib;
-}
-
-bool Box::is_top()
-{
-	return _is_top;
-}
-
-bool Box::is_bottom()
-{
-	return _is_bottom;
 }
 
 void Box::add(int i)
