@@ -14,12 +14,12 @@ struct ForceComponent
 	std::vector<vec3d> force;
 	std::vector<vec3d> torque;
 	sysGetForceTorque getForceTorque;
-	
+
 	ForceComponent(){};
 	ForceComponent(std::size_t size,
-				   unsigned int _rate_dependence,
-				   bool _has_torque,
-				   sysGetForceTorque _getForceTorque):
+	               unsigned int _rate_dependence,
+	               bool _has_torque,
+	               sysGetForceTorque _getForceTorque):
 	rate_dependence(_rate_dependence),
 	has_torque(_has_torque),
 	getForceTorque(_getForceTorque)
@@ -33,7 +33,7 @@ struct ForceComponent
 			t.reset();
 		}
 	}
-	
+
 	void reset()
 	{
 		for(auto &f: force) {
@@ -45,15 +45,16 @@ struct ForceComponent
 			}
 		}
 	}
-	
-	struct ForceComponent&	operator*=(double d)
+
+	template <typename T>
+	struct ForceComponent&	operator*=(const T& a)
 	{
 		for(auto &f: force) {
-			f *= d;
+			f *= a;
 		}
 		if (has_torque) {
 			for(auto &t: torque) {
-				t *= d;
+				t *= a;
 			}
 		}
 		return *this;
