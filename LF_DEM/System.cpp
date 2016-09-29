@@ -149,6 +149,7 @@ void System::allocateRessourcesPreConfiguration()
 	for (auto &v: u_inf) {
 		v.reset();
 	}
+	na_disp.resize(np);
 	if (mobile_fixed) {
 		non_rate_proportional_wall_force.resize(p.np_fixed);
 		non_rate_proportional_wall_torque.resize(p.np_fixed);
@@ -775,6 +776,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 	}
 	timeStepMove(time_end, strain_end);
+	for (unsigned int i=0; i<np; i++) {
+		na_disp[i] += na_velocity[i];
+	}
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
@@ -877,6 +881,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
 	}
 	timeStepMoveCorrector();
+	for (unsigned int i=0; i<np; i++) {
+		na_disp[i] += na_velocity[i];
+	}
 }
 
 void System::adaptTimeStep()

@@ -89,6 +89,8 @@ private:
 
 	vec3d omega_inf;
 	std::vector <vec3d> u_inf;
+	std::vector <vec3d> na_disp;
+
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
@@ -245,7 +247,7 @@ private:
 	 * That's the purpose of the custom comparator compare_interaction.
 	 */
 	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
-	
+
 	 /*
 	 * These pointers are pointers to
 	 * elements of std::vector<Interaction> interaction defined above.
@@ -446,12 +448,13 @@ private:
 	{
 		return std::make_tuple(costheta_shear, sintheta_shear);
 	}
-	
+
 	void setShearDirection(double theta_shear){
 		costheta_shear = cos(theta_shear);
 		sintheta_shear = sin(theta_shear);
 		setVelocityDifference();
 	}
 	struct ForceAmplitudes amplitudes;
+	const std::vector <vec3d> & getNonAffineDisp() {return na_disp;}
 };
 #endif /* defined(__LF_DEM__System__) */

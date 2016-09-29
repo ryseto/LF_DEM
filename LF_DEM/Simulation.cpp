@@ -788,14 +788,15 @@ void Simulation::outputParFileTxt()
 	cout << "   out config: " << sys.get_curvilinear_strain() << endl;
 	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
+	auto na_disp = sys.getNonAffineDisp();
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", "none", 1, i);
 		outdata_par.entryData("radius", "none", 1, sys.radius[i]);
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, na_disp[i]);
+		outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 
-
-		outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
 		if (sys.couette_stress) {
 			double stress_rr, stress_thetatheta, stress_rtheta;
 			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
