@@ -777,7 +777,7 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 	}
 	timeStepMove(time_end, strain_end);
 	for (unsigned int i=0; i<np; i++) {
-		na_disp[i] += na_velocity[i];
+		na_disp[i] += na_velocity[i]*dt;
 	}
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
@@ -882,7 +882,7 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 	}
 	timeStepMoveCorrector();
 	for (unsigned int i=0; i<np; i++) {
-		na_disp[i] += na_velocity[i];
+		na_disp[i] += na_velocity[i]*dt;
 	}
 }
 
