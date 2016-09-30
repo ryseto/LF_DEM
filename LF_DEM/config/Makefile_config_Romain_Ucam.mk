@@ -5,7 +5,7 @@
 # Use DSFMT instead of MT as a RNG ( yes / no )
 DSFMT_RNG = no
 # Enable use of Metis library ( yes / no )
-UseMetis = no
+UseMetis = yes
 
 # the directory where LF_DEM will be copied on `make install`
 install_dir = ~/bin/

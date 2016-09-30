@@ -9,10 +9,32 @@ using namespace std;
  *                                                     *
  ******************************************************/
 
+StokesSolver::StokesSolver():
+chol_L(NULL),
+chol_rhs(NULL),
+chol_res_matrix(NULL),
+chol_res_matrix_mf(NULL),
+chol_res_matrix_ff(NULL),
+chol_solution(NULL),
+chol_solveE_workspace(NULL),
+chol_solveY_workspace(NULL),
+chol_vel_mob(NULL),
+chol_vel_fix(NULL),
+chol_force_mob(NULL),
+chol_force_fix(NULL),
+chol_Psolution(NULL)
+{}
+
 StokesSolver::~StokesSolver()
 {
 	if (!chol_solution) {
 		cholmod_free_dense(&chol_solution, &chol_c);
+	}
+	if (!chol_solveE_workspace) {
+		cholmod_free_dense(&chol_solveE_workspace, &chol_c);
+	}
+	if (!chol_solveY_workspace) {
+		cholmod_free_dense(&chol_solveY_workspace, &chol_c);
 	}
 	if (!chol_rhs) {
 		cholmod_free_dense(&chol_rhs, &chol_c);
@@ -608,7 +630,16 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 	cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 	cholmod_sparse* chol_L_sparse = cholmod_factor_to_sparse(chol_L_copy, &chol_c);
 	cholmod_sdmult(chol_L_sparse, transpose, alpha, beta, chol_rhs, chol_Psolution, &chol_c); // chol_Psolution = Lc*Y
-	chol_solution = cholmod_solve(CHOLMOD_Pt, chol_L, chol_Psolution, &chol_c); // chol_solution = P^T*chol_Psolution
+	// chol_solution = P^T*chol_Psolution
+	cholmod_solve2(CHOLMOD_Pt,                // solve chol_res_mat*chol_solution = chol_rhs
+								 chol_L,                   // Cholesky factor
+								 chol_Psolution,           // RHS
+								 NULL,                     // subpart of RHS, NULL means all
+								 &chol_solution,           // solution stored here
+								 NULL,                     // subpart of solution, NULL means all
+								 &chol_solveY_workspace,   // reusable workspace
+								 &chol_solveE_workspace,   // reusable workspace
+								 &chol_c);
 
 	auto size = chol_solution->nrow/6;
 	for (decltype(size) i=0; i<size; i++) {
@@ -621,45 +652,36 @@ void StokesSolver::compute_LTRHS(vector<vec3d> &F, vector<vec3d> &T)
 		T[i].z = ((double*)chol_solution->x)[i6+5];
 	}
 	cholmod_free_sparse(&chol_L_sparse, &chol_c);
-	cholmod_free_dense(&chol_solution, &chol_c);
 	cholmod_free_factor(&chol_L_copy, &chol_c);
 }
 
-// void StokesSolver::solve(vec3d* velocity, vec3d* ang_velocity)
-// {
-// 	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
-// 	auto size = chol_solution->nrow/6;
-// 	for (decltype(size) i=0; i<size; i++) {
-// 		auto i6 = 6*i;
-// 		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
-// 		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
-// 		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
-// 		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
-// 		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
-// 		ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
-// 	}
-// 	cholmod_free_dense(&chol_solution, &chol_c);
-// }
-
 void StokesSolver::solve(vector<vec3d> &velocity, vector<vec3d> &ang_velocity)
 {
-	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
+	cholmod_solve2(CHOLMOD_A,                // solve chol_res_mat*chol_solution = chol_rhs
+	               chol_L,                   // Cholesky factor
+	               chol_rhs,                 // RHS
+	               NULL,                     // subpart of RHS, NULL means all
+	               &chol_solution,           // solution stored here
+	               NULL,                     // subpart of solution, NULL means all
+	               &chol_solveY_workspace,   // reusable workspace
+	               &chol_solveE_workspace,   // reusable workspace
+								 &chol_c);
 	auto size = chol_solution->nrow/6;
 	if (size>velocity.size() || size>ang_velocity.size()) {
 		// we don't try to resize things here, left to the caller
 		// In particular this is sometimes called with size < velo.size(), so no resizing is safer.
 		throw runtime_error(" StokesSolver::solve: allocated solution vector too small");
 	}
+	double *solx = ((double*)chol_solution->x);
 	for (decltype(size) i=0; i<size; i++) {
 		auto i6 = 6*i;
-		velocity[i].x     = ((double*)chol_solution->x)[i6  ];
-		velocity[i].y     = ((double*)chol_solution->x)[i6+1];
-		velocity[i].z     = ((double*)chol_solution->x)[i6+2];
-		ang_velocity[i].x = ((double*)chol_solution->x)[i6+3];
-		ang_velocity[i].y = ((double*)chol_solution->x)[i6+4];
-		ang_velocity[i].z = ((double*)chol_solution->x)[i6+5];
+		velocity[i].x     = solx[i6  ];
+		velocity[i].y     = solx[i6+1];
+		velocity[i].z     = solx[i6+2];
+		ang_velocity[i].x = solx[i6+3];
+		ang_velocity[i].y = solx[i6+4];
+		ang_velocity[i].z = solx[i6+5];
 	}
-	cholmod_free_dense(&chol_solution, &chol_c);
 }
 
 void StokesSolver::vec3dToDouble(double *a, const vector<vec3d>& b, const vector<vec3d>& c)
@@ -769,9 +791,9 @@ void StokesSolver::multiply_by_RFU_ff(vector<double>& velocity, vector<double>& 
 }
 
 void StokesSolver::multiply_by_RFU_ff(vector<vec3d>& velocity,
-									  vector<vec3d>& ang_velocity,
-									  vector<vec3d>& force,
-									  vector<vec3d>& torque)
+                                      vector<vec3d>& ang_velocity,
+                                      vector<vec3d>& force,
+                                      vector<vec3d>& torque)
 {
 	double one[] = {1, 0};
 	double zero[] = {0, 0};
@@ -783,7 +805,15 @@ void StokesSolver::multiply_by_RFU_ff(vector<vec3d>& velocity,
 // testing function, don't use it in production code, very slow and unclean
 void StokesSolver::multiplySolutionByResMat(double* vec)
 {
-	chol_solution = cholmod_solve(CHOLMOD_A, chol_L, chol_rhs, &chol_c);
+	cholmod_solve2(CHOLMOD_A,                // solve chol_res_mat*chol_solution = chol_rhs
+	               chol_L,                   // Cholesky factor
+	               chol_rhs,                 // RHS
+	               NULL,                     // subpart of RHS, NULL means all
+	               &chol_solution,           // solution stored here
+	               NULL,                     // subpart of solution, NULL means all
+	               &chol_solveY_workspace,   // reusable workspace
+	               &chol_solveE_workspace,   // reusable workspace
+								 &chol_c);
 	cholmod_dense* r;
 	r = cholmod_copy_dense(chol_rhs, &chol_c);
 	double one[] = {1, 0};
@@ -794,15 +824,12 @@ void StokesSolver::multiplySolutionByResMat(double* vec)
 		vec[i] = ((double*)r->x)[i];
 	}
 	cholmod_free_dense(&r, &chol_c);
-	cholmod_free_dense(&chol_solution, &chol_c);
 }
 
 void StokesSolver::solvingIsDone()
 {
-	cholmod_free_sparse(&chol_res_matrix, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_mf, &chol_c);
 	cholmod_free_sparse(&chol_res_matrix_ff, &chol_c);
-	//	cholmod_free_dense(&chol_rhs, &chol_c);
 }
 
 /******************************************************
@@ -837,15 +864,22 @@ void StokesSolver::allocateResistanceMatrix()
 {
 	// CHOLMOD parameters
 	int stype = -1; // 1 is symmetric, stored upper triangular (UT), -1 is LT
-	int sorted = 0;		/* TRUE if columns sorted, FALSE otherwise */
+	int sorted = 1;		/* TRUE if columns sorted, FALSE otherwise */
 	int packed = 1;		/* TRUE if matrix packed, FALSE otherwise */
 	// allocate
-	int nzmax; // non-zero values
 	auto size_mm = 6*dblocks.size();
-	nzmax = 18*(int)dblocks.size(); // diagonal blocks
-	nzmax += 30*(int)odblocks.size();   // off-diagonal
-	chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
-
+	auto nzmax = 18*dblocks.size(); // diagonal blocks
+	nzmax += 30*odblocks.size();   // off-diagonal
+	if (chol_res_matrix == NULL) {
+		chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
+	}
+	if (size_mm != chol_res_matrix->nrow){
+		cholmod_free_sparse(&chol_res_matrix, &chol_c);
+		chol_res_matrix = cholmod_allocate_sparse(size_mm, size_mm, nzmax, sorted, packed, stype, CHOLMOD_REAL, &chol_c);
+	}
+	if (nzmax > chol_res_matrix->nzmax) {
+		cholmod_reallocate_sparse(nzmax, chol_res_matrix, &chol_c);
+	}
 	auto col_nb = 6*mobile_particle_nb;
 	auto row_nb = 6*fixed_particle_nb;
 	nzmax = 30*(int)odblocks_mf.size();  // off-diagonal
@@ -891,11 +925,14 @@ void StokesSolver::factorizeResistanceMatrix()
 {
 	/*reference code */
 	chol_c.supernodal = CHOLMOD_SUPERNODAL;
+
 	if (to_be_factorized) {
+#ifdef USE_METIS
+		chol_c.nmethods = 1;
+		// it is the best one on sizes of a few 1000 particles, but may be worth rechecking at some point
+		chol_c.method[0].ordering = CHOLMOD_METIS;
+#endif
 		chol_L = cholmod_analyze(chol_res_matrix, &chol_c);
-		//cout << "analyzed" << endl;
-	} else {
-		//cout << "not analyzed" << endl;
 	}
 
 	cholmod_factorize(chol_res_matrix, chol_L, &chol_c);
@@ -951,8 +988,6 @@ void StokesSolver::printFactor(ostream& out)
 	cholmod_factor* chol_L_copy = cholmod_copy_factor(chol_L, &chol_c);
 	cholmod_sparse* chol_L_sparse = cholmod_transpose(cholmod_factor_to_sparse(chol_L_copy, &chol_c), 1, &chol_c);
 	cholmod_dense* chol_L_dense = cholmod_sparse_to_dense(chol_L_sparse, &chol_c);
-	//	cholmod_sparse* chol_PTL_sparse = cholmod_dense_to_sparse(cholmod_solve(CHOLMOD_Pt, chol_L, chol_L_dense, &chol_c), 1, &chol_c) ; // chol_solution = P^T*chol_Psolution
-	//	cholmod_dense* chol_LT_dense = cholmod_sparse_to_dense(cholmod_transpose(chol_L_sparse, 1, &chol_c), &chol_c);
 	int transpose = 1;
 	double alpha[] = {1, 0};
 	double beta[] = {0, 0};

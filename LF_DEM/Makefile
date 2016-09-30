@@ -1,6 +1,7 @@
 #Makefile LF_DEM, Romain Mari
 
 override_default_cholmod = false
+UseMetis = no
 
 # load Makefile inputs
 makeconfig = config/Makefile_config.mk
@@ -45,6 +46,11 @@ ifeq ($(DSFMT_RNG),yes)
 	DSFMT_SRC = dSFMT-src-2.2.3/dSFMT.c
 endif
 
+ifeq ($(UseMetis),yes) 
+	CXXFLAGS_optimized += -DUSE_METIS
+	CXXFLAGS_debug += -DUSE_METIS
+	CXXFLAGS_dev += -DUSE_METIS
+endif
 
 # Dealing with git versioning
 is_git_repo := $(shell if [ -d .git ] || git rev-parse --git-dir > /dev/null 2>&1; then echo true;fi)
@@ -67,9 +73,6 @@ else
 endif
 endif
 
-
-
-#Metis_path = /opt/local/lib/
 
 # Includes
 Includes = $(Cholmod_path)

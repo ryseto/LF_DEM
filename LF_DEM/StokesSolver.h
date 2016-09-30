@@ -121,6 +121,8 @@ private:
 	cholmod_sparse* chol_res_matrix_mf;
 	cholmod_sparse* chol_res_matrix_ff;
 	cholmod_dense* chol_solution;
+	cholmod_dense* chol_solveE_workspace;
+	cholmod_dense* chol_solveY_workspace;
 	cholmod_dense* chol_vel_mob;
 	cholmod_dense* chol_vel_fix;
 	cholmod_dense* chol_force_mob;
@@ -188,6 +190,7 @@ private:
 	void completeResistanceMatrix();
 
 public:
+	StokesSolver();
 	~StokesSolver();
 	void init(int np_total, int np_mobile);
 	void printResistanceMatrix(std::ostream&, std::string);
