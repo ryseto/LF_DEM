@@ -102,6 +102,12 @@ eventLookUp(NULL)
 	sintheta_shear = 0;
 }
 
+System::~System()
+{
+	interaction.clear();
+	interaction_list.clear();
+}
+
 void System::allocateRessourcesPreConfiguration()
 {
 	if (np <= 0) {

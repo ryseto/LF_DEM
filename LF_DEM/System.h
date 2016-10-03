@@ -179,7 +179,7 @@ private:
  protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
-	~System(){};
+	~System();
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
 	// Interaction types

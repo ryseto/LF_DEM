@@ -29,7 +29,6 @@
 
 class GenerateInitConfig{
 private:
-	System sys;
 	ParameterSet p;
 	std::list<Event> events;
 
@@ -46,8 +45,8 @@ private:
 	double lx_half;
 	double ly_half;
 	double lz_half;
-    double z_top;
-    double z_bot;
+	double z_top;
+	double z_bot;
 	double a1;
 	double a2;
 	vec3d* grad;
@@ -93,12 +92,11 @@ private:
 	inline vec3d randUniformSphere(double r);
 	inline vec3d randUniformCircle(double r);
 	double sqContactDistance(int i, int j, double contact_distance);
-	void putRandom();
-	void setParameters();
-	void outputPositionData();
+	std::pair<std::vector<vec3d>, std::vector<double>>  putRandom(bool twodimension);
+	void setParameters(Simulation &simu);
+	void outputPositionData(const System &sys);
 public:
 	GenerateInitConfig():
-	sys(System(p, events)),
 	circulargap_config(false),
 	parallel_wall_config(false),
 	winding_wall_config(false) {};
