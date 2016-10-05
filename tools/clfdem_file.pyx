@@ -19,6 +19,7 @@ cdef extern from "lfdem_files.cpp":
         lf_file(string) except +
         map[string, string] get_meta_data()
         map[string, pair [int, int]] get_column_def()
+        void rewind()
 
     cdef cppclass lf_data_file(lf_file):
         lf_data_file(string) except +
@@ -44,7 +45,18 @@ cdef class generic_file:
         return self.thisptr.get_meta_data()
 
     def column_def(self):
-        return self.thisptr.get_column_def()
+        coldef_dict = dict(self.thisptr.get_column_def())
+        coldef_dict = dict(zip([a.decode() for a in coldef_dict], coldef_dict.values()))
+        for k in coldef_dict:
+            if coldef_dict[k][1]>coldef_dict[k][0]:
+                colslice = slice(coldef_dict[k][0]-1, coldef_dict[k][1])
+                coldef_dict[k] = colslice
+            else:
+                coldef_dict[k] = coldef_dict[k][0]
+        return coldef_dict
+
+    def rewind(self):
+        return self.thisptr.rewind()
 
 cdef class data_file(generic_file):
     cdef lf_data_file *derivedthisptr      # hold a C++ instance which we're wrapping
@@ -66,11 +78,14 @@ cdef class snapshot_file(generic_file):
         del self.derivedthisptr
 
     def __iter__(self):
+        self.derivedthisptr.rewind()
         return self
 
     def __next__(self):
         frame = self.derivedthisptr.next_frame()
         if len(frame.meta_data):
+            meta_dict = dict(frame.meta_data)
+            meta_dict = dict(zip([a.decode() for a in meta_dict], meta_dict.values()))
             return frame.meta_data, np.array(frame.data, dtype=np.float)
         else:
             raise StopIteration

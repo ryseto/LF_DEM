@@ -14,8 +14,8 @@ public:
 
   std::map < std::string, std::string > get_meta_data() const;
   std::map < std::string, std::pair<int, int> > get_column_def() const;
-
   int col_nb();
+  void rewind();
 
 protected:
   std::ifstream f;
@@ -24,6 +24,7 @@ private:
   std::map < std::string, std::string > meta_data;
   std::map < std::string, std::pair<int, int> > columns;
   int _col_nb;
+  std::streampos post_header_pos;
 
   std::pair<int, int> str2cols(const std::string &str);
   void parse_header();
@@ -52,9 +53,7 @@ public:
   struct Frame next_frame();
 
 private:
-  std::vector < std::streampos > frame_locations;
-  // struct Frame frame;
-
+  std::vector <std::streampos> frame_locations;
   bool read_frame_meta(struct Frame &frame);
   void read_frame_data(struct Frame &frame);
 };
@@ -105,7 +104,9 @@ inline std::string join(const std::vector<std::string>& str, const std::string& 
 
 /**** Public lf_file methods ***************/
 
-inline lf_file::lf_file(std::string fname) {
+inline lf_file::lf_file(std::string fname):
+post_header_pos(0)
+{
   f.open(fname.c_str(), std::ifstream::in);
   if (!f.is_open()) {
     throw std::runtime_error("Could not open file.\n ");
@@ -132,6 +133,13 @@ inline int lf_file::col_nb()
  return _col_nb;
 }
 
+inline void lf_file::rewind()
+{
+  if (post_header_pos>0) {
+    f.clear();
+    f.seekg(post_header_pos);
+  }
+}
 /**** Private lf_file methods ***************/
 inline std::pair<int, int> lf_file::str2cols(const std::string &str) {
   std::string sep = "-";
@@ -145,7 +153,7 @@ inline std::pair<int, int> lf_file::str2cols(const std::string &str) {
 
 inline void lf_file::parse_header()
 {
-  f.seekg(0);
+  f.seekg(f.beg);
   for (std::string line; std::getline(f, line); ) {
     if (line.empty() || f.eof()) {
       break;
@@ -178,6 +186,7 @@ inline void lf_file::parse_header()
       _col_nb = col_slice.second;
     }
   }
+  post_header_pos = f.tellg();
 }
 
 
