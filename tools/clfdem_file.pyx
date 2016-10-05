@@ -42,17 +42,21 @@ cdef class generic_file:
             del self.thisptr
 
     def meta_data(self):
-        return self.thisptr.get_meta_data()
+        meta_dict = dict(self.thisptr.get_meta_data())
+        meta_dict = dict(zip([a.decode() for a in meta_dict],
+                             [a.decode() for a in meta_dict.values()]))
+        return meta_dict
 
     def column_def(self):
         coldef_dict = dict(self.thisptr.get_column_def())
-        coldef_dict = dict(zip([a.decode() for a in coldef_dict], coldef_dict.values()))
+        coldef_dict = dict(zip([a.decode() for a in coldef_dict],
+                               coldef_dict.values()))
         for k in coldef_dict:
             if coldef_dict[k][1]>coldef_dict[k][0]:
                 colslice = slice(coldef_dict[k][0]-1, coldef_dict[k][1])
                 coldef_dict[k] = colslice
             else:
-                coldef_dict[k] = coldef_dict[k][0]
+                coldef_dict[k] = coldef_dict[k][0]-1
         return coldef_dict
 
     def rewind(self):
@@ -86,7 +90,7 @@ cdef class snapshot_file(generic_file):
         if len(frame.meta_data):
             meta_dict = dict(frame.meta_data)
             meta_dict = dict(zip([a.decode() for a in meta_dict], meta_dict.values()))
-            return frame.meta_data, np.array(frame.data, dtype=np.float)
+            return meta_dict, np.array(frame.data, dtype=np.float)
         else:
             raise StopIteration
 
