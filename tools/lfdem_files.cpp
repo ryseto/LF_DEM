@@ -53,12 +53,10 @@ public:
 
 private:
   std::vector < std::streampos > frame_locations;
-  struct Frame frame;
+  // struct Frame frame;
 
-  bool read_frame_meta();
-  void read_frame_data();
-  bool read_next_frame();
-  bool read_frame(std::size_t frame_nb);
+  bool read_frame_meta(struct Frame &frame);
+  void read_frame_data(struct Frame &frame);
 };
 
 
@@ -218,26 +216,34 @@ inline void lf_data_file::read_data() {
 inline lf_snapshot_file::lf_snapshot_file(std::string fname): lf_file(fname)
 {}
 
-inline struct Frame lf_snapshot_file::get_frame(std::size_t frame_nb) {
-  if(read_frame(frame_nb)) {
-    return frame;
-  } else {
-    struct Frame empty_frame;
-    return empty_frame;
+inline struct Frame lf_snapshot_file::next_frame() {
+  std::streampos pos = f.tellg();
+  struct Frame frame;
+  if (read_frame_meta(frame)) {
+    read_frame_data(frame);
+    if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
+      frame_locations.push_back(pos);
+    }
   }
+  return frame;
 }
 
-inline struct Frame lf_snapshot_file::next_frame() {
-  if(read_next_frame()) {
+inline struct Frame lf_snapshot_file::get_frame(std::size_t frame_nb) {
+  if (frame_locations.empty() || frame_nb > frame_locations.size()-1) {
+    struct Frame frame;
+    do {
+      frame = next_frame();
+    }  while (frame_nb > frame_locations.size()-1 && !frame.meta_data.empty());
     return frame;
   } else {
-    struct Frame empty_frame;
-    return empty_frame;
+    f.seekg(frame_locations[frame_nb]);
+    return next_frame();
   }
 }
 
 /********** Private lf_snapshot_file methods *************/
-inline bool lf_snapshot_file::read_frame_meta() {
+inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
+  frame.meta_data.clear();
   std::string line;
   while(getline(f, line)) {
     if (!line.empty()) {
@@ -259,7 +265,7 @@ inline bool lf_snapshot_file::read_frame_meta() {
   return true;
 }
 
-inline void lf_snapshot_file::read_frame_data() {
+inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
   frame.data.clear();
   std::string line;
   std::vector < double > record;
@@ -295,30 +301,4 @@ inline void lf_snapshot_file::read_frame_data() {
     getline(f, line);
   }
   f.seekg(pos);
-}
-
-inline bool lf_snapshot_file::read_next_frame() {
-  std::streampos pos = f.tellg();
-  if (read_frame_meta()) {
-    read_frame_data();
-    if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
-      frame_locations.push_back(pos);
-    }
-    return true;
-  } else {
-    return false;
-  }
-}
-
-inline bool lf_snapshot_file::read_frame(std::size_t frame_nb) {
-  if (frame_locations.empty() || frame_nb > frame_locations.size()-1) {
-    bool read = false;
-    do {
-      read = read_next_frame();
-    }  while (frame_nb > frame_locations.size()-1 && read);
-    return read;
-  } else {
-    f.seekg(frame_locations[frame_nb]);
-    return read_next_frame();
-  }
 }

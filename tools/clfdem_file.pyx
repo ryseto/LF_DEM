@@ -26,7 +26,7 @@ cdef extern from "lfdem_files.cpp":
 
     cdef cppclass lf_snapshot_file(lf_file):
         lf_snapshot_file(string) except +
-        Frame get_frame(unsigned int)
+        Frame get_frame(size_t)
         Frame next_frame()
 
 
@@ -55,7 +55,7 @@ cdef class data_file(generic_file):
         del self.derivedthisptr
 
     def data(self):
-      return np.array(self.derivedthisptr.get_data(), dtype=np.float)
+        return np.array(self.derivedthisptr.get_data(), dtype=np.float)
 
 cdef class snapshot_file(generic_file):
     cdef lf_snapshot_file *derivedthisptr      # hold a C++ instance which we're wrapping
@@ -65,6 +65,19 @@ cdef class snapshot_file(generic_file):
     def __dealloc__(self):
         del self.derivedthisptr
 
-    def next_frame(self):
+    def __iter__(self):
+        return self
+
+    def __next__(self):
         frame = self.derivedthisptr.next_frame()
-        return frame.meta_data, np.array(frame.data, dtype=np.float)
+        if len(frame.meta_data):
+            return frame.meta_data, np.array(frame.data, dtype=np.float)
+        else:
+            raise StopIteration
+
+    def __getitem__(self, index):
+        frame = self.derivedthisptr.get_frame(index)
+        if len(frame.meta_data):
+            return frame.meta_data, np.array(frame.data, dtype=np.float)
+        else:
+            raise IndexError
