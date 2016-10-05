@@ -17,7 +17,6 @@ public:
 
   int col_nb();
 
-
 protected:
   std::ifstream f;
 
@@ -29,6 +28,39 @@ private:
   std::pair<int, int> str2cols(const std::string &str);
   void parse_header();
 };
+
+class lf_data_file: public lf_file {
+public:
+  lf_data_file(std::string fname);
+  std::vector < std::vector < double > > get_data() const;
+
+private:
+  std::vector < std::vector < double > > data;
+  void read_data();
+};
+
+struct Frame {
+  std::map < std::string, double >  meta_data;
+  std::vector < std::vector < double > > data;
+};
+
+class lf_snapshot_file: public lf_file {
+public:
+  lf_snapshot_file(std::string fname);
+
+  struct Frame get_frame(std::size_t frame_nb);
+  struct Frame next_frame();
+
+private:
+  std::vector < std::streampos > frame_locations;
+  struct Frame frame;
+
+  bool read_frame_meta();
+  void read_frame_data();
+  bool read_next_frame();
+  bool read_frame(std::size_t frame_nb);
+};
+
 
 inline std::pair<std::string, std::string> split_first(const std::string& str, const std::string& sep) {
   auto found = str.find(sep);
@@ -69,11 +101,6 @@ inline std::string join(const std::vector<std::string>& str, const std::string& 
   }
   return joined.str();
 }
-
-struct Frame {
-  std::map < std::string, double >  meta_data;
-  std::vector < std::vector < double > > data;
-};
 
 
 
@@ -157,146 +184,141 @@ inline void lf_file::parse_header()
 
 
 
-class lf_data_file: public lf_file {
-public:
-  lf_data_file(std::string fname): lf_file(fname) {
-    read_data();
+
+/********** Public lf_data_file methods *************/
+inline lf_data_file::lf_data_file(std::string fname): lf_file(fname) {
+  read_data();
+}
+
+inline std::vector < std::vector < double > > lf_data_file::get_data() const {
+  return data;
+}
+
+/********** Private lf_data_file methods *************/
+inline void lf_data_file::read_data() {
+  std::string first_line;
+  do {
+    getline(f, first_line);
+  } while (first_line.empty());
+  auto fields = split(first_line, " ");
+  std::vector < double > record;
+  for (const auto &field: fields) {
+    record.push_back(stod(field));
   }
-  std::vector < std::vector < double > > get_data() const {
-    return data;
+  do {
+    data.push_back(record);
+    for (auto &r: record) {
+      f >> r;
+    }
+  } while (!f.eof());
+}
+
+
+/**** Public lf_snapshot_file methods ***************/
+inline lf_snapshot_file::lf_snapshot_file(std::string fname): lf_file(fname)
+{}
+
+inline struct Frame lf_snapshot_file::get_frame(std::size_t frame_nb) {
+  if(read_frame(frame_nb)) {
+    return frame;
+  } else {
+    struct Frame empty_frame;
+    return empty_frame;
   }
+}
 
-private:
-  std::vector < std::vector < double > > data;
-  void read_data() {
-    std::string first_line;
-    do {
-      getline(f, first_line);
-    } while (first_line.empty());
-    auto fields = split(first_line, " ");
-    std::vector < double > record;
-    for (const auto &field: fields) {
-      record.push_back(stod(field));
-    }
-    do {
-      data.push_back(record);
-      for (auto &r: record) {
-        f >> r;
-      }
-    } while (!f.eof());
+inline struct Frame lf_snapshot_file::next_frame() {
+  if(read_next_frame()) {
+    return frame;
+  } else {
+    struct Frame empty_frame;
+    return empty_frame;
   }
-};
+}
 
-
-class lf_snapshot_file: public lf_file {
-public:
-  lf_snapshot_file(std::string fname): lf_file(fname) {}
-
-  struct Frame get_frame(std::size_t frame_nb) {
-    if(read_frame(frame_nb)) {
-      return frame;
-    } else {
-      struct Frame empty_frame;
-      return empty_frame;
+/********** Private lf_snapshot_file methods *************/
+inline bool lf_snapshot_file::read_frame_meta() {
+  std::string line;
+  while(getline(f, line)) {
+    if (!line.empty()) {
+      break;
     }
-  }
-
-  struct Frame next_frame() {
-    if(read_next_frame()) {
-      return frame;
-    } else {
-      struct Frame empty_frame;
-      return empty_frame;
-    }
-  }
-
-private:
-  std::vector < std::streampos > frame_locations;
-  struct Frame frame;
-
-  bool read_frame_meta() {
-    std::string line;
-    while(getline(f, line)) {
-      if (!line.empty()) {
-        break;
-      }
-    };
-    if (line.empty()) {
-      return false;
-    }
-    auto frame_meta = split(line, " ");
-    if (frame_meta[0] != "#") {
-      throw std::runtime_error(" Ill-formed frame header.");
-    }
-    frame.meta_data["curvilinear strain"] = stod(frame_meta[1]);
-    frame.meta_data["shear disp x"] = stod(frame_meta[2]);
-    frame.meta_data["rate"] = stod(frame_meta[3]);
-    frame.meta_data["target stress"] = stod(frame_meta[4]);
-    frame.meta_data["time"] = stod(frame_meta[5]);
-    return true;
   };
+  if (line.empty()) {
+    return false;
+  }
+  auto frame_meta = split(line, " ");
+  if (frame_meta[0] != "#") {
+    throw std::runtime_error(" Ill-formed frame header.");
+  }
+  frame.meta_data["curvilinear strain"] = stod(frame_meta[1]);
+  frame.meta_data["shear disp x"] = stod(frame_meta[2]);
+  frame.meta_data["rate"] = stod(frame_meta[3]);
+  frame.meta_data["target stress"] = stod(frame_meta[4]);
+  frame.meta_data["time"] = stod(frame_meta[5]);
+  return true;
+}
 
-  void read_frame_data() {
-    frame.data.clear();
-    std::string line;
-    std::vector < double > record;
-    std::streampos pos;
+inline void lf_snapshot_file::read_frame_data() {
+  frame.data.clear();
+  std::string line;
+  std::vector < double > record;
+  std::streampos pos;
 
-    // first line
-    while(getline(f, line)) {
-      if (!line.empty()) {
-        break;
-      }
-    };
-    if (line.empty()) {
-      return;
+  // first line
+  while(getline(f, line)) {
+    if (!line.empty()) {
+      break;
     }
-    std::istringstream ss (line);
-    while(!ss.eof()) {
-      double field;
-      ss >> field;
-      record.push_back(field);
+  };
+  if (line.empty()) {
+    return;
+  }
+  std::istringstream ss (line);
+  while(!ss.eof()) {
+    double field;
+    ss >> field;
+    record.push_back(field);
+  }
+  frame.data.push_back(record);
+
+  pos = f.tellg();
+  getline(f, line);
+  while (line[0]!='#' && !f.eof()) {
+    std::istringstream ss2 (line);
+    ss2.str(line);
+    for (auto &r: record) {
+      ss2 >> r;
     }
     frame.data.push_back(record);
-
     pos = f.tellg();
     getline(f, line);
-    while (line[0]!='#' && !f.eof()) {
-      std::istringstream ss2 (line);
-      ss2.str(line);
-      for (auto &r: record) {
-        ss2 >> r;
-      }
-      frame.data.push_back(record);
-      pos = f.tellg();
-      getline(f, line);
-    }
-    f.seekg(pos);
-  };
+  }
+  f.seekg(pos);
+}
 
-  bool read_next_frame() {
-    std::streampos pos = f.tellg();
-    if (read_frame_meta()) {
-      read_frame_data();
-      if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
-        frame_locations.push_back(pos);
-      }
-      return true;
-    } else {
-      return false;
+inline bool lf_snapshot_file::read_next_frame() {
+  std::streampos pos = f.tellg();
+  if (read_frame_meta()) {
+    read_frame_data();
+    if (frame_locations.empty() || pos > frame_locations[frame_locations.size()-1]) {
+      frame_locations.push_back(pos);
     }
-  };
+    return true;
+  } else {
+    return false;
+  }
+}
 
-  bool read_frame(std::size_t frame_nb) {
-    if (frame_locations.empty() || frame_nb > frame_locations.size()-1) {
-      bool read = false;
-      do {
-        read = read_next_frame();
-      }  while (frame_nb > frame_locations.size()-1 && read);
-      return read;
-    } else {
-      f.seekg(frame_locations[frame_nb]);
-      return read_next_frame();
-    }
-  };
-};
+inline bool lf_snapshot_file::read_frame(std::size_t frame_nb) {
+  if (frame_locations.empty() || frame_nb > frame_locations.size()-1) {
+    bool read = false;
+    do {
+      read = read_next_frame();
+    }  while (frame_nb > frame_locations.size()-1 && read);
+    return read;
+  } else {
+    f.seekg(frame_locations[frame_nb]);
+    return read_next_frame();
+  }
+}
