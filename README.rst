@@ -64,8 +64,10 @@ of the library at runtime. Three ways to do it:
 
 - install SuiteSparse in a default library folder (e.g. ``/usr/local/`` on GNU/Linux),
 typically only possible if you have SU privileges on your machine,
+
 - compile LF_DEM by providing the path to ``libcholmod`` at linking stage
 (the Makefile should take care of that automatically on GNU/Linux, but probably not on other platforms)
+
 - append SuiteSparse install folder to your LD path
 (usually via ``LD_LIBRARY_PATH`` on GNU/Linux)
 
