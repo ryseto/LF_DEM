@@ -33,16 +33,16 @@ private:
 class lf_data_file: public lf_file {
 public:
   lf_data_file(std::string fname);
-  std::vector < std::vector < double > > get_data() const;
+  std::vector<std::vector<double>> get_data() const;
 
 private:
-  std::vector < std::vector < double > > data;
+  std::vector<std::vector<double>> data;
   void read_data();
 };
 
 struct Frame {
-  std::map < std::string, double >  meta_data;
-  std::vector < std::vector < double > > data;
+  std::map<std::string, double>  meta_data;
+  std::vector<std::vector<double>> data;
 };
 
 class lf_snapshot_file: public lf_file {
@@ -197,26 +197,18 @@ inline lf_data_file::lf_data_file(std::string fname): lf_file(fname) {
   read_data();
 }
 
-inline std::vector < std::vector < double > > lf_data_file::get_data() const {
+inline std::vector<std::vector<double>> lf_data_file::get_data() const {
   return data;
 }
 
 /********** Private lf_data_file methods *************/
 inline void lf_data_file::read_data() {
-  std::string first_line;
+  std::vector<double> record (col_nb());
   do {
-    getline(f, first_line);
-  } while (first_line.empty());
-  auto fields = split(first_line, " ");
-  std::vector < double > record;
-  for (const auto &field: fields) {
-    record.push_back(stod(field));
-  }
-  do {
-    data.push_back(record);
     for (auto &r: record) {
       f >> r;
     }
+    data.push_back(record);
   } while (!f.eof());
 }
 
@@ -277,7 +269,7 @@ inline bool lf_snapshot_file::read_frame_meta(struct Frame &frame) {
 inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
   frame.data.clear();
   std::string line;
-  std::vector < double > record;
+  std::vector<double> record (col_nb());
   std::streampos pos;
 
   // first line
@@ -286,24 +278,16 @@ inline void lf_snapshot_file::read_frame_data(struct Frame &frame) {
       break;
     }
   };
-  if (line.empty()) {
+  if (line.empty()) { // eof
     return;
   }
-  std::istringstream ss (line);
-  while(!ss.eof()) {
-    double field;
-    ss >> field;
-    record.push_back(field);
-  }
-  frame.data.push_back(record);
-
-  pos = f.tellg();
-  getline(f, line);
-  while (line[0]!='#' && !f.eof()) {
-    std::istringstream ss2 (line);
-    ss2.str(line);
+  while (!f.eof()) {
+    if (line[0]=='#') {
+      break;
+    }
+    std::istringstream ss (line);
     for (auto &r: record) {
-      ss2 >> r;
+      ss >> r;
     }
     frame.data.push_back(record);
     pos = f.tellg();
