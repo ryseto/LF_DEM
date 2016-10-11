@@ -51,7 +51,7 @@ Installation
 ------------
 
 SuiteSparse
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 To install SuiteSparse (prior to version 4.5) on CUNY-HPPC, see `these
 instructions <./SuiteSparse_Install.md>`__. Later versions of SuiteSparse
@@ -72,7 +72,7 @@ typically only possible if you have SU privileges on your machine,
 (usually via ``LD_LIBRARY_PATH`` on GNU/Linux)
 
 LF_DEM
-^^^^^^
+~~~~~~
 
 The compilation is done with ``make``. The ``Makefile`` is in the ``LF_DEM/`` folder.
 This file uses some environment variables (defining the compiler, the include paths and flags to be used
