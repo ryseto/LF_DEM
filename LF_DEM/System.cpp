@@ -87,12 +87,6 @@ z_top(-1),
 ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
-	amplitudes.repulsion = 0;
-	amplitudes.temperature = 0;
-	amplitudes.sqrt_temperature = 0;
-	amplitudes.contact = 0;
-	amplitudes.cohesion = 0;
-	amplitudes.critical_normal_force = 0;
 	max_sliding_velocity = 0;
 	total_stress = 0;
 	lx = 0;
@@ -457,7 +451,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	shear_strain = {0, 0, 0};
 
 	if (brownian) {
-		amplitudes.sqrt_temperature = sqrt(amplitudes.temperature);
 #ifdef DEV
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.
@@ -1489,7 +1482,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	if (mobile_fixed) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
-	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
+	double sqrt_2_dt_amp = sqrt(2*p.brownian/dt);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
 		force[i].y = sqrt_2_dt_amp*GRANDOM;

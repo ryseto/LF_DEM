@@ -47,17 +47,6 @@ class Simulation;
 // class Interaction;
 class BoxSet;
 
-struct ForceAmplitudes
-{
-	double repulsion;
-	double temperature;
-	double sqrt_temperature;
-	double contact;
-	double cohesion;
-	double critical_normal_force;
-	double ft_max;
-};
-
 class System{
 private:
 	int np; ///< number of particles
@@ -454,7 +443,6 @@ private:
 		sintheta_shear = sin(theta_shear);
 		setVelocityDifference();
 	}
-	struct ForceAmplitudes amplitudes;
 	const std::vector <vec3d> & getNonAffineDisp() {return na_disp;}
 };
 #endif /* defined(__LF_DEM__System__) */

@@ -178,7 +178,7 @@ void Contact::incrementDisplacements()
 {
 	/**
 	 \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
-	 
+
 	 This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction).
 	 This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
 	 This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
@@ -254,7 +254,7 @@ void Contact::frictionlaw_standard()
 	double sq_f_tan = f_spring_tan.sq_norm();
 	normal_load = f_spring_normal_norm;
 	if (sys->cohesion) {
-		normal_load += sys->amplitudes.cohesion;
+		normal_load += sys->p.cohesion;
 	}
 	if (state == 2) {
 		// static friction in previous step
@@ -306,7 +306,7 @@ void Contact::frictionlaw_criticalload()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_spring_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
+	double supportable_tanforce = f_spring_normal_norm-sys->p.critical_load; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
@@ -333,7 +333,7 @@ void Contact::frictionlaw_criticalload_mu_inf()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_spring_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
+	double supportable_tanforce = f_spring_normal_norm-sys->p.critical_load; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();

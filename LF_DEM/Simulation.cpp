@@ -37,11 +37,11 @@ diminish_output(false)
 	unit_longname["s"] = "stress";
 
 	force_value_ptr["hydro"] = &dimensionless_rate; // the dimensionless hydrodynamic force is also the dimensionless shear rate
-	force_value_ptr["repulsion"] = &sys.amplitudes.repulsion;
-	force_value_ptr["critical_load"] = &sys.amplitudes.critical_normal_force;
-	force_value_ptr["cohesion"] = &sys.amplitudes.cohesion;
-	force_value_ptr["ft_max"] = &sys.amplitudes.ft_max;
-	force_value_ptr["brownian"] = &sys.amplitudes.temperature;
+	force_value_ptr["repulsion"] = &sys.p.repulsion;
+	force_value_ptr["critical_load"] = &sys.p.critical_load;
+	force_value_ptr["cohesion"] = &sys.p.cohesion;
+	force_value_ptr["ft_max"] = &sys.p.ft_max;
+	force_value_ptr["brownian"] = &sys.p.brownian;
 	force_value_ptr["kn"] = &sys.p.kn;
 	force_value_ptr["kt"] = &sys.p.kt;
 	force_value_ptr["kr"] = &sys.p.kr;
