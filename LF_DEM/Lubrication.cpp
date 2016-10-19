@@ -331,7 +331,7 @@ void Lubrication::calcXYFunctionsStress()
 	}
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(double shear_rate) const
 {
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
@@ -351,8 +351,10 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
 	} else {
 		nnE = nvec->x*nvec->z;
 	}
+
 	double cGE_p0 = (XG[0]+XG[2])*nnE;
 	double cGE_p1 = (XG[1]+XG[3])*nnE;
+
 	vec3d GEi, GEj;
 	GEi.x = cGE_p0*nvec->x;
 	GEi.y = cGE_p0*nvec->y;
@@ -360,10 +362,15 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
 	GEj.x = cGE_p1*nvec->x;
 	GEj.y = cGE_p1*nvec->y;
 	GEj.z = cGE_p1*nvec->z;
+
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(double shear_rate)  const
 {
 	/*
 	* mode normal+tangential
@@ -381,10 +388,12 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
 	} else {
 		nnE = nvec->x*nvec->z;
 	}
+
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
 	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE;
 	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE;
+
 	vec3d GEi, GEj;
 	if (!sys->p.cross_shear) {
 		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
@@ -404,10 +413,15 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
 		GEj.y =  cGE_j*nvec->y+YG1_YG3*sintheta*nvec->z;
 		GEj.z =  cGE_j*nvec->z+YG1_YG3*costheta_nx_sintheta_ny;
 	}
+
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential() const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(double shear_rate) const
 {
 	/*
 	 * mode normal+tangential
@@ -432,13 +446,14 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	} else {
 		nnE = nxnz;
 	}
-	
+
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
 	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE;
 	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE;
 	double cHE_i =  YH[0]+YH[2];
 	double cHE_j =  YH[1]+YH[3];
+
 	vec3d GEi, GEj, HEi, HEj;
 	if (!sys->p.cross_shear) {
 		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
@@ -472,6 +487,13 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 		HEj.x =  cHE_j*( costheta*nxny      + sintheta*nyny_nznz);
 		HEj.y = -cHE_j*( costheta*nxnx_nznz + sintheta*nxny);
 		HEj.z =  cHE_j*(-costheta*nynz      + sintheta*nxnz);
+	}
+
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+		HEi *= shear_rate;
+		HEj *= shear_rate;
 	}
 	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
@@ -827,7 +849,7 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
 	} else {
 		nnE = cos_theta_shear*nxnz + sin_theta_shear*nynz; // this is not including the shear rate
 	}
-	
+
 	double cXM_i = (3.0/2)*(XM[0]+XM[1])*nnE;
 	double cXM_j = (3.0/2)*(XM[2]+XM[3])*nnE;
 	StressTensor XME_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
@@ -902,12 +924,12 @@ vec3d Lubrication::getTotalForce() const
 	if (!sys->zero_shear) {
 		vec3d GEi, GEj;
 		if (!tangential) {
-			std::tie(GEi, GEj) = calcGE_squeeze();
+			std::tie(GEi, GEj) = calcGE_squeeze(sr);
 		} else {
-			std::tie(GEi, GEj) = calcGE_squeeze_tangential();
+			std::tie(GEi, GEj) = calcGE_squeeze_tangential(sr);
 		}
 		/* XGE_i */
-		lubforce_p0 += sr*GEi;
+		lubforce_p0 += GEi;
 	}
 	return lubforce_p0;
 }

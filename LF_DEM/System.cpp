@@ -1539,20 +1539,13 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
                                              vector<vec3d> &torque)
 {
-	bool shearrate_is_1 = true;
-	if (shear_rate != 1) {
-		shearrate_is_1 = false;
-	}
 	vec3d GEi, GEj;
 	unsigned int i, j;
+	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(); // G*E_\infty term
-			if (shearrate_is_1 == false) {
-				GEi *= shear_rate;
-				GEj *= shear_rate;
-			}
+			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(sr); // G*E_\infty term
 			force[i] += GEi;
 			force[j] += GEj;
 		}
@@ -1562,22 +1555,13 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
                                                         vector<vec3d> &torque)
 {
-	bool shearrate_is_1 = true;
-	if (shear_rate != 1) {
-		shearrate_is_1 = false;
-	}
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
+	double sr = get_shear_rate();
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
-			if (shearrate_is_1 == false) {
-					GEi *= shear_rate;
-					GEj *= shear_rate;
-					HEi *= shear_rate;
-					HEj *= shear_rate;
-			}
+			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(sr); // G*E_\infty term, no gamma dot
 			force[i] += GEi;
 			force[j] += GEj;
 			torque[i] += HEi;
