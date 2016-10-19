@@ -92,6 +92,9 @@ eventLookUp(NULL)
 	lx = 0;
 	ly = 0;
 	lz = 0;
+	time_ = 0;
+  time_in_simulation_units = 0;
+	shear_strain = 0;
 	costheta_shear = 1;
 	sintheta_shear = 0;
 }
