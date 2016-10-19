@@ -323,3 +323,38 @@ def read_binary_conf_file(fname):
 
     stream.close()
     return config
+
+def pushValue(stream, fmt, *values):
+    stream.write(struct.pack(fmt, *values))
+
+def write_binary_conf_file(fname,
+                           config):
+    mandatory_fields = ['metadata', 'positions', 'contacts']
+    for field in mandatory_fields:
+        if field not in config:
+            raise RuntimeError("Config must contain a "+field+" field.")
+
+    with open(fname, "wb") as f:
+        meta_data = config["metadata"]
+        pushValue(f, "3i", -1, meta_data["format"], meta_data["np"])
+        if meta_data["format"] == 3:
+            pushValue(f, "i", meta_data["np_fixed"])
+        pushValue(f, "6d",
+                  meta_data["vf"],
+                  meta_data["lx"],
+                  meta_data["ly"],
+                  meta_data["lz"],
+                  meta_data["disp_x"],
+                  meta_data["disp_y"])
+
+        pos_size = str(config["positions"].size)
+        pushValue(f, pos_size+"d", *np.ravel(config["positions"]))
+
+        if meta_data["format"] == 3:
+            vel_size = str(config["fixed_velocities"].size)
+            pushValue(f, vel_size+"d", *np.ravel(config["fixed_velocities"]))
+
+        pushValue(f, "I", config['contacts'].shape[0])
+        for contact in config["contacts"]:
+            pushValue(f, "2I",*contact[:2].astype(np.int))
+            pushValue(f, "6d",*contact[2:])
