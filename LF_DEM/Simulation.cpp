@@ -627,7 +627,7 @@ void Simulation::outputData()
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
 	outdata.entryData("contact number", "none", 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", "none", 1, frictional_contact_nb_per_particle);
-	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
+	outdata.entryData("number of interaction", "none", 1, sys.get_nb_interactions());
 	/* maximum velocity
 	 */
 	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);

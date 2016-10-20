@@ -53,13 +53,13 @@ void ContactDashpot::setParticleData()
 void ContactDashpot::activate()
 {
 	_active = true;
-	sys->updateNumberOfPairwiseResistances(p0, p1, +1);
+	sys->declareResistance(p0, p1);
 }
 
 void ContactDashpot::deactivate()
 {
 	_active = false;
-	sys->updateNumberOfPairwiseResistances(p0, p1, -1);
+	sys->eraseResistance(p0, p1);
 }
 
 void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
@@ -79,7 +79,7 @@ void ContactDashpot::setDashpotResistanceCoeffs(double kn, double kt,
 			throw std::runtime_error(" ContactDashpot:: Error: normal relaxation time set negative, but no lubrication.");
 		}
 	}
-	
+
 	if (sys->friction == false && sys->p.lubrication_model != "tangential") {
 		tangential_coeff = 0;
 	} else {

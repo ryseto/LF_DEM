@@ -126,13 +126,13 @@ void Lubrication::setParticleData()
 void Lubrication::activate()
 {
 	_active = true;
-	sys->updateNumberOfPairwiseResistances(p0, p1, +1);
+	sys->declareResistance(p0, p1);
 }
 
 void Lubrication::deactivate()
 {
 	_active = false;
-	sys->updateNumberOfPairwiseResistances(p0, p1, -1);
+	sys->eraseResistance(p0, p1);
 }
 
 void Lubrication::updateActivationState()

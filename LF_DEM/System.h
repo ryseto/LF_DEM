@@ -50,12 +50,9 @@ class BoxSet;
 class System{
 private:
 	int np; ///< number of particles
-	int nb_of_active_interactions_mm;
-	int nb_of_active_interactions_mf;
-	int nb_of_active_interactions_ff;
-	int nb_of_pairwise_resistances_mm;
-	int nb_of_pairwise_resistances_mf;
-	int nb_of_pairwise_resistances_ff;
+	std::vector<unsigned int> nb_blocks_mm;
+	std::vector<unsigned int> nb_blocks_mf;
+	std::vector<unsigned int> nb_blocks_ff;
 	int nb_of_contacts_mm;
 	int nb_of_contacts_mf;
 	int nb_of_contacts_ff;
@@ -320,9 +317,8 @@ private:
 	void checkNewInteraction();
 	void createNewInteraction(int i, int j, double scaled_interaction_range);
 	void removeNeighbors(int i, int j);
-	void updateNumberOfInteraction(int p0, int p1, int val);
-	void updateNumberOfPairwiseResistances(int p0, int p1, int val);
-	void updateNumberOfContacts(int p0, int p1, int val);
+	void declareResistance(int p0, int p1);
+	void eraseResistance(int p0, int p1);
 	void updateInteractions();
 
 	int periodize(vec3d&);
@@ -423,9 +419,9 @@ private:
 		return omega_wheel_in-omega_wheel_out;
 	}
 
-	double get_nb_of_active_interactions()
+	std::size_t get_nb_interactions()
 	{
-		return nb_of_active_interactions_mm + nb_of_active_interactions_mf + nb_of_active_interactions_ff;
+		return interaction.size();
 	}
 
 	int get_total_num_timesteps()

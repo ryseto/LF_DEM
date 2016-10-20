@@ -34,8 +34,6 @@ z_offset(0)
 	// tell it to particles i and j
 	sys->interaction_list[i].insert(this);
 	sys->interaction_list[j].insert(this);
-	sys->updateNumberOfInteraction(p0, p1, 1);
-
 	activateForceMembers();
 }
 
@@ -55,8 +53,6 @@ z_offset(other.z_offset)
 	init();
 	sys->interaction_list[p0].insert(this);
 	sys->interaction_list[p1].insert(this);
-	sys->updateNumberOfInteraction(p0, p1, 1);
-
 	activateForceMembers();
 }
 
@@ -68,8 +64,6 @@ Interaction & Interaction::operator = (const Interaction &inter)
 	init();
 	sys->interaction_list[p0].insert(this);
 	sys->interaction_list[p1].insert(this);
-	sys->updateNumberOfInteraction(p0, p1, 1);
-
 	activateForceMembers();
 	return *this;
 }
@@ -78,7 +72,6 @@ Interaction::~Interaction()
 {
 	sys->interaction_list[p0].erase(this);
 	sys->interaction_list[p1].erase(this);
-	sys->updateNumberOfInteraction(p0, p1, -1);
 }
 
 void Interaction::swap(Interaction& other)

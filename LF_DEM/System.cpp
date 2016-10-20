@@ -110,16 +110,6 @@ void System::allocateRessourcesPreConfiguration()
 	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
 	}
-	nb_of_active_interactions_mf = 0;
-	nb_of_active_interactions_ff = 0;
-	nb_of_active_interactions_mm = 0;
-	nb_of_pairwise_resistances_mf = 0;
-	nb_of_pairwise_resistances_ff = 0;
-	nb_of_pairwise_resistances_mm = 0;
-	nb_of_contacts_mf = 0;
-	nb_of_contacts_ff = 0;
-	nb_of_contacts_mm = 0;
-
 	radius_cubed.resize(np);
 	radius_squared.resize(np);
 	if (!pairwise_resistance) {
@@ -163,6 +153,9 @@ void System::allocateRessourcesPreConfiguration()
 	declareVelocityComponents();
 	interaction_list.resize(np);
 	interaction_partners.resize(np);
+	nb_blocks_ff.resize(p.np_fixed, 0);
+	nb_blocks_mm.resize(np-p.np_fixed, 0);
+	nb_blocks_mf.resize(np-p.np_fixed, 0);
 	//
 	if (p.auto_determine_knkt) {
 		kn_avg.setRelaxationTime(p.memory_strain_avg);
@@ -1191,38 +1184,28 @@ void System::updateInteractions()
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
 }
 
-void System::updateNumberOfInteraction(int p0, int p1, int val)
+void System::declareResistance(int p0, int p1)
 {
 	if (p1 < np_mobile) { // i and j mobile
-		nb_of_active_interactions_mm += val;
+		nb_blocks_mm[p0]++;
 	} else if (p0 >= np_mobile) { // i and j fixed
-		nb_of_active_interactions_ff += val;
+		nb_blocks_ff[p0]++;
 	} else {
-		nb_of_active_interactions_mf += val;
-	}
-}
-
-void System::updateNumberOfPairwiseResistances(int p0, int p1, int val)
-{
-	if (p1 < np_mobile) { // i and j mobile
-		nb_of_pairwise_resistances_mm += val;
-	} else if (p0 >= np_mobile) { // i and j fixed
-		nb_of_pairwise_resistances_ff += val;
-	} else {
-		nb_of_pairwise_resistances_mf += val;
+		nb_blocks_mf[p0]++;
 	}
 	pairwise_resistance_changed = true;
 }
 
-void System::updateNumberOfContacts(int p0, int p1, int val)
+void System::eraseResistance(int p0, int p1)
 {
 	if (p1 < np_mobile) { // i and j mobile
-		nb_of_contacts_mm += val;
+		nb_blocks_mm[p0]--;
 	} else if (p0 >= np_mobile) { // i and j fixed
-		nb_of_contacts_ff += val;
+		nb_blocks_ff[p0]--;
 	} else {
-		nb_of_contacts_mf += val;
+		nb_blocks_mf[p0]--;
 	}
+	pairwise_resistance_changed = true;
 }
 
 void System::buildHydroTerms()
@@ -1238,10 +1221,18 @@ void System::buildHydroTerms()
 	 @param build_force_GE Build the \f$R_{\mathrm{FE}}:E_{\infty}\f$ force
 	 and \b add it to the right-hand-side of the StokesSolver
 	 */
-	int size_mm, size_mf, size_ff;
-	size_mm = nb_of_pairwise_resistances_mm;
-	size_mf = nb_of_pairwise_resistances_mf;
-	size_ff = nb_of_pairwise_resistances_ff;
+	unsigned int size_mm = 0;
+	for (auto bnb: nb_blocks_mm) {
+		size_mm += bnb;
+	}
+	unsigned int size_mf = 0;
+	for (auto bnb: nb_blocks_mf) {
+		size_mf += bnb;
+	}
+	unsigned int size_ff = 0;
+	for (auto bnb: nb_blocks_ff) {
+		size_ff += bnb;
+	}
 
 	// create a new resistance matrix in stokes_solver
 	stokes_solver.resetResistanceMatrix(size_mm, size_mf, size_ff,
