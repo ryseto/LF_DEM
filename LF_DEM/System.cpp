@@ -93,8 +93,9 @@ eventLookUp(NULL)
 	ly = 0;
 	lz = 0;
 	time_ = 0;
-  time_in_simulation_units = 0;
+	time_in_simulation_units = 0;
 	shear_strain = 0;
+	curvilinear_strain = 0;
 	costheta_shear = 1;
 	sintheta_shear = 0;
 }
@@ -370,8 +371,8 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
 	if (p.lubrication_model != "normal" &&
-	    p.lubrication_model != "none" &&
-		  p.lubrication_model != "tangential") {
+		p.lubrication_model != "none" &&
+		p.lubrication_model != "tangential") {
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
 
