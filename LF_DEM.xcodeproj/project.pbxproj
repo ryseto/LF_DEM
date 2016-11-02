@@ -563,6 +563,8 @@
 		D96731B517A042AD005D02F8 /* percolation_LF_DEM.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = percolation_LF_DEM.1; sourceTree = "<group>"; };
 		D96731BA17A042D1005D02F8 /* System.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = System.cpp; sourceTree = "<group>"; };
 		D96731BB17A042D1005D02F8 /* System.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = System.h; sourceTree = "<group>"; };
+		D972B3AB1DC785C400024381 /* StressComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StressComponent.h; sourceTree = "<group>"; };
+		D972B3AC1DC785C400024381 /* VelocityComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VelocityComponent.h; sourceTree = "<group>"; };
 		D9752C881B18285100DDE5E4 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
 		D97C3B08167690DC009A6BF0 /* Interaction.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Interaction.h; sourceTree = "<group>"; };
 		D97E6DFD1D3FA83300A3D747 /* timeEvolutionWideGap.pl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.perl; name = timeEvolutionWideGap.pl; path = tools/timeEvolutionWideGap.pl; sourceTree = SOURCE_ROOT; };
@@ -1236,6 +1238,8 @@
 				D9752C881B18285100DDE5E4 /* global.h */,
 				D9032D731B79D1A00062A6F3 /* Events.h */,
 				D91EB7AA1D7B027C000868CE /* ForceComponent.h */,
+				D972B3AB1DC785C400024381 /* StressComponent.h */,
+				D972B3AC1DC785C400024381 /* VelocityComponent.h */,
 				D9878876165545680047A87E /* Simulation.h */,
 				D9878875165545680047A87E /* Simulation.cpp */,
 				D9032D741B79DFE60062A6F3 /* SimulationInit.cpp */,

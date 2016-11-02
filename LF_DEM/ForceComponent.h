@@ -17,8 +17,8 @@ struct ForceComponent
 
 	ForceComponent(){};
 	ForceComponent(std::size_t size,
-	               unsigned int _rate_dependence,
-	               bool _has_torque,
+				   unsigned int _rate_dependence,
+				   bool _has_torque,
 	               sysGetForceTorque _getForceTorque):
 	rate_dependence(_rate_dependence),
 	has_torque(_has_torque),
