@@ -279,8 +279,6 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	radius_wall_particle = radius[np-1];
 	setSystemVolume();
-	initializeBoxing();
-	checkNewInteraction();
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -496,7 +494,6 @@ void System::setupSystemPostConfiguration()
 		radius_squared[i] = pow(radius[i], 2);
 		radius_cubed[i] = pow(radius[i], 3);
 	}
-
 	if (pairwise_resistance) {
 		resistance_matrix_dblock.resize(np);
 		for (int i=0; i<np; i++) {
@@ -556,6 +553,8 @@ void System::setupSystemPostConfiguration()
 	if (!stress_controlled) {
 		setVelocityDifference();
 	}
+	initializeBoxing();
+	checkNewInteraction();
 }
 
 void System::initializeBoxing()
