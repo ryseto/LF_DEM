@@ -24,8 +24,8 @@
 
 class Box{
 private:
-	std::set <Box*> _neighbors;
-	std::set <Box*> _moving_neighbors;
+	std::vector <Box*> static_neighbors;
+	std::vector <Box*> moving_neighbors;
 	std::set <int> container;
 	std::vector <int> neighborhood_container;
 	vec3d position;
@@ -37,7 +37,7 @@ public:
 	void addStaticNeighbor(Box* neigh_box);
 	void addMovingNeighbor(Box* neigh_box);
 	void resetMovingNeighbors();
-	const std::set <Box*> & getNeighborBox(){return _neighbors;}
+	const std::vector <Box*> & getNeighborBox(){return static_neighbors;}
 
 	vec3d getPosition() const {return position;}
 	void setPosition(vec3d pos) {position = pos;}
