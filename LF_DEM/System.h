@@ -67,7 +67,7 @@ private:
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
 	vec3d shear_strain;
-	double curvilinear_strain;
+	double cumulated_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double costheta_shear;
 	double sintheta_shear;
@@ -406,8 +406,14 @@ private:
 		return np;
 	}
 
-	vec3d get_strain() {return shear_strain;}
-	double get_curvilinear_strain() {return curvilinear_strain;};
+	vec3d get_shear_strain()
+	{
+		return shear_strain;
+	}
+	double get_cumulated_strain()
+	{
+		return cumulated_strain;
+	};
 
 	double get_angle_wheel()
 	{
