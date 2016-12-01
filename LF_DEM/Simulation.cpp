@@ -794,7 +794,7 @@ void Simulation::outputParFileTxt()
 		outdata_par.entryData("radius", "none", 1, sys.radius[i]);
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
-		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, na_disp[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, sys.ang_velocity[i]);
 		outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 
 		if (sys.couette_stress) {
