@@ -836,7 +836,7 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
 		\f$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} \f$
 
 	 */
-	bool shear_along_x = sin_theta_shear == 0.;
+	bool shear_along_x = (sin_theta_shear == 0. && cos_theta_shear == 1.);
 	double nxnx = nvec->x*nvec->x;
 	double nxny = nvec->x*nvec->y;
 	double nxnz = nvec->x*nvec->z;
