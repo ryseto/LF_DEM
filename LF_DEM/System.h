@@ -438,7 +438,7 @@ private:
 		costheta_shear = cos(theta_shear);
 		sintheta_shear = sin(theta_shear);
 		if(twodimension) {
-			if (abs(sintheta_shear)>1e-10) {
+			if (std::abs(sintheta_shear)>1e-10) {
 				throw std::runtime_error(" System:: Error: 2d simulation with sin(theta_shear) != 0");
 			} else{ // to avoid sintheta_shear = 1e-16, which takes particles out of plane after a while
 				sintheta_shear = 0;
