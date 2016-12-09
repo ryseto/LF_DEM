@@ -132,6 +132,9 @@ void ContactDashpot::calcDashpotResistances()
 		XA[j] *= normal_coeff;
 	}
 
+	if (tangential_coeff == 0) {
+		return;
+	}
 	/* YA
 	 * Y_{a,b}(l) = Y_{b,a}(l) = Y_{3-a,3-b}(1/l)
 	 * Y21(l) = Y12(l)
@@ -191,32 +194,59 @@ struct ODBlock ContactDashpot::RFU_ODBlock() const
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-	double XA1mYA1 = XA[1] - YA[1];
 	struct ODBlock block;
-	// column 0
-	block.col0[0] =  XA[1]*n0n0 + YA[1]*one_n0n0;
-	block.col0[1] = XA1mYA1*n0n1;
-	block.col0[2] = XA1mYA1*n0n2;
-	block.col0[3] = -YB[2]*nvec->z;
-	block.col0[4] =  YB[2]*nvec->y;
-	// column 1
-	block.col1[0] =  XA[1]*n1n1 + YA[1]*one_n1n1;
-	block.col1[1] = XA1mYA1*n1n2;
-	block.col1[2] = -YB[2]*nvec->x;
-	// column 2
-	block.col2[0] =  XA[1]*n2n2 + YA[1]*one_n2n2;
-	// column 3
-	block.col3[0] =  YB[1]*nvec->z;
-	block.col3[1] = -YB[1]*nvec->y;
-	block.col3[2] =  YC[1]*one_n0n0;
-	block.col3[3] = -YC[1]*n0n1;
-	block.col3[4] = -YC[1]*n0n2;
-	// column 4
-	block.col4[0] =  YB[1]*nvec->x;
-	block.col4[1] =  YC[1]*one_n1n1;
-	block.col4[2] = -YC[1]*n1n2;
-	// column 5
-	block.col5[0] =  YC[1]*one_n2n2;
+	if (tangential_coeff > 0) {
+		double XA1mYA1 = XA[1] - YA[1];
+		// column 0
+		block.col0[0] =  XA[1]*n0n0 + YA[1]*one_n0n0;
+		block.col0[1] = XA1mYA1*n0n1;
+		block.col0[2] = XA1mYA1*n0n2;
+		block.col0[3] = -YB[2]*nvec->z;
+		block.col0[4] =  YB[2]*nvec->y;
+		// column 1
+		block.col1[0] =  XA[1]*n1n1 + YA[1]*one_n1n1;
+		block.col1[1] = XA1mYA1*n1n2;
+		block.col1[2] = -YB[2]*nvec->x;
+		// column 2
+		block.col2[0] =  XA[1]*n2n2 + YA[1]*one_n2n2;
+		// column 3
+		block.col3[0] =  YB[1]*nvec->z;
+		block.col3[1] = -YB[1]*nvec->y;
+		block.col3[2] =  YC[1]*one_n0n0;
+		block.col3[3] = -YC[1]*n0n1;
+		block.col3[4] = -YC[1]*n0n2;
+		// column 4
+		block.col4[0] =  YB[1]*nvec->x;
+		block.col4[1] =  YC[1]*one_n1n1;
+		block.col4[2] = -YC[1]*n1n2;
+		// column 5
+		block.col5[0] =  YC[1]*one_n2n2;
+	} else {
+		// column 0
+		block.col0[0] = XA[1]*n0n0;
+		block.col0[1] = XA[1]*n0n1;
+		block.col0[2] = XA[1]*n0n2;
+		block.col0[3] = 0;
+		block.col0[4] = 0;
+		// column 1
+		block.col1[0] = XA[1]*n1n1;
+		block.col1[1] = XA[1]*n1n2;
+		block.col1[2] = 0;
+		// column 2
+		block.col2[0] =  XA[1]*n2n2;
+		// column 3
+		block.col3[0] = 0;
+		block.col3[1] = 0;
+		block.col3[2] = 0;
+		block.col3[3] = 0;
+		block.col3[4] = 0;
+		// column 4
+		block.col4[0] = 0;
+		block.col4[1] = 0;
+		block.col4[2] = 0;
+		// column 5
+		block.col5[0] = 0;
+	}
 	return block;
 }
 
@@ -235,54 +265,96 @@ std::pair<struct DBlock, struct DBlock> ContactDashpot::RFU_DBlocks() const
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-
-	double XA0mYA0 = XA[0] - YA[0];
-
-	// (*,0)
-	b0.col0[0] =  XA[0]*n0n0 + YA[0]*one_n0n0; // 00 element of the dblock
-	b0.col0[1] = XA0mYA0*n0n1;           // 10
-	b0.col0[2] = XA0mYA0*n0n2;           // 20
-	b0.col0[3] = -YB[0]*nvec->z;                   // 40
-	b0.col0[4] =  YB[0]*nvec->y;                   // 50
-	// (*,1)
-	b0.col1[0] =  XA[0]*n1n1 + YA[0]*one_n1n1; // 11
-	b0.col1[1] = XA0mYA0*n1n2;           // 21
-	b0.col1[2] = -YB[0]*nvec->x;                   // 51
-	// (*,2)
-	b0.col2[0] =  XA[0]*n2n2 + YA[0]*one_n2n2; // 22
-	// (*,3)
-	b0.col3[0] =  YC[0]*one_n0n0;                 // 33
-	b0.col3[1] = -YC[0]*n0n1;                     // 43
-	b0.col3[2] = -YC[0]*n0n2;                     // 53
-	// (*,4)
-	b0.col4[0] =  YC[0]*one_n1n1;                 // 44
-	b0.col4[1] = -YC[0]*n1n2;                     // 54
-	// (*,5)
-	b0.col5[0] =  YC[0]*one_n2n2;                 // 55
-
-	double XA3mYA3 = XA[3] - YA[3];
-// (*,0)
-	b1.col0[0] =  XA[3]*n0n0 + YA[3]*one_n0n0; // 00 element of the dblock
-	b1.col0[1] = XA3mYA3*n0n1;           // 10
-	b1.col0[2] = XA3mYA3*n0n2;           // 20
-	b1.col0[3] = -YB[3]*nvec->z;                   // 40
-	b1.col0[4] =  YB[3]*nvec->y;                   // 50
-	// (*,1)
-	b1.col1[0] =  XA[3]*n1n1 + YA[3]*one_n1n1; // 11
-	b1.col1[1] = XA3mYA3*n1n2;           // 21
-	b1.col1[2] = -YB[3]*nvec->x;                   // 51
-	// (*,2)
-	b1.col2[0] =  XA[3]*n2n2 + YA[3]*one_n2n2; // 22
-	// (*,3)
-	b1.col3[0] =  YC[3]*one_n0n0;                 // 33
-	b1.col3[1] = -YC[3]*n0n1;                     // 43
-	b1.col3[2] = -YC[3]*n0n2;                     // 53
-	// (*,4)
-	b1.col4[0] =  YC[3]*one_n1n1;                 // 44
-	b1.col4[1] = -YC[3]*n1n2;                     // 54
-	// (*,5)
-	b1.col5[0] =  YC[3]*one_n2n2;                 // 55
-
+	if (tangential_coeff > 0) {
+		double XA0mYA0 = XA[0] - YA[0];
+		// (*,0)
+		b0.col0[0] =  XA[0]*n0n0 + YA[0]*one_n0n0; // 00 element of the dblock
+		b0.col0[1] = XA0mYA0*n0n1;           // 10
+		b0.col0[2] = XA0mYA0*n0n2;           // 20
+		b0.col0[3] = -YB[0]*nvec->z;                   // 40
+		b0.col0[4] =  YB[0]*nvec->y;                   // 50
+		// (*,1)
+		b0.col1[0] =  XA[0]*n1n1 + YA[0]*one_n1n1; // 11
+		b0.col1[1] = XA0mYA0*n1n2;           // 21
+		b0.col1[2] = -YB[0]*nvec->x;                   // 51
+		// (*,2)
+		b0.col2[0] =  XA[0]*n2n2 + YA[0]*one_n2n2; // 22
+		// (*,3)
+		b0.col3[0] =  YC[0]*one_n0n0;                 // 33
+		b0.col3[1] = -YC[0]*n0n1;                     // 43
+		b0.col3[2] = -YC[0]*n0n2;                     // 53
+		// (*,4)
+		b0.col4[0] =  YC[0]*one_n1n1;                 // 44
+		b0.col4[1] = -YC[0]*n1n2;                     // 54
+		// (*,5)
+		b0.col5[0] =  YC[0]*one_n2n2;                 // 55
+		
+		double XA3mYA3 = XA[3] - YA[3];
+		// (*,0)
+		b1.col0[0] =  XA[3]*n0n0 + YA[3]*one_n0n0; // 00 element of the dblock
+		b1.col0[1] = XA3mYA3*n0n1;           // 10
+		b1.col0[2] = XA3mYA3*n0n2;           // 20
+		b1.col0[3] = -YB[3]*nvec->z;                   // 40
+		b1.col0[4] =  YB[3]*nvec->y;                   // 50
+		// (*,1)
+		b1.col1[0] =  XA[3]*n1n1 + YA[3]*one_n1n1; // 11
+		b1.col1[1] = XA3mYA3*n1n2;           // 21
+		b1.col1[2] = -YB[3]*nvec->x;                   // 51
+		// (*,2)
+		b1.col2[0] =  XA[3]*n2n2 + YA[3]*one_n2n2; // 22
+		// (*,3)
+		b1.col3[0] =  YC[3]*one_n0n0;                 // 33
+		b1.col3[1] = -YC[3]*n0n1;                     // 43
+		b1.col3[2] = -YC[3]*n0n2;                     // 53
+		// (*,4)
+		b1.col4[0] =  YC[3]*one_n1n1;                 // 44
+		b1.col4[1] = -YC[3]*n1n2;                     // 54
+		// (*,5)
+		b1.col5[0] =  YC[3]*one_n2n2;                 // 55
+	} else {
+		b0.col0[0] = XA[0]*n0n0; // 00 element of the dblock
+		b0.col0[1] = XA[0]*n0n1;           // 10
+		b0.col0[2] = XA[0]*n0n2;           // 20
+		b0.col0[3] = 0;                   // 40
+		b0.col0[4] = 0;                   // 50
+		// (*,1)
+		b0.col1[0] = XA[0]*n1n1; // 11
+		b0.col1[1] = XA[0]*n1n2;           // 21
+		b0.col1[2] = 0;                   // 51
+		// (*,2)
+		b0.col2[0] = XA[0]*n2n2; // 22
+		// (*,3)
+		b0.col3[0] = 0;                 // 33
+		b0.col3[1] = 0;                     // 43
+		b0.col3[2] = 0;                     // 53
+		// (*,4)
+		b0.col4[0] = 0;                 // 44
+		b0.col4[1] = 0;                     // 54
+		// (*,5)
+		b0.col5[0] = 0;                 // 55
+		
+		// (*,0)
+		b1.col0[0] = XA[3]*n0n0; // 00 element of the dblock
+		b1.col0[1] = XA[3]*n0n1;           // 10
+		b1.col0[2] = XA[3]*n0n2;           // 20
+		b1.col0[3] = 0;                   // 40
+		b1.col0[4] = 0;                   // 50
+		// (*,1)
+		b1.col1[0] = XA[3]*n1n1; // 11
+		b1.col1[1] = XA[3]*n1n2;           // 21
+		b1.col1[2] = 0;                   // 51
+		// (*,2)
+		b1.col2[0] = XA[3]*n2n2; // 22
+		// (*,3)
+		b1.col3[0] = 0;                 // 33
+		b1.col3[1] = 0;                     // 43
+		b1.col3[2] = 0;                     // 53
+		// (*,4)
+		b1.col4[0] = 0;                 // 44
+		b1.col4[1] = 0;                     // 54
+		// (*,5)
+		b1.col5[0] = 0;                 // 55
+	}
 	return std::make_pair(b0, b1);
 }
 
@@ -314,11 +386,12 @@ vec3d ContactDashpot::getForceOnP0(const vec3d &vel_p0,
 		vj += interaction->z_offset*sys->get_vel_difference();
 		/* XAU_i */
 		vec3d force_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
-
-		/* YAU_i */
-		force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
-		/* YBO_i */
-		force_p0 += -YB[0]*cross(nvec, ang_vel_p0)    - YB[2]*cross(nvec, ang_vel_p1);
+		if (tangential_coeff > 0) {
+			/* YAU_i */
+			force_p0 += -YA[0]*(vi-(*nvec)*dot(nvec, vi)) - YA[1]*(vj-(*nvec)*dot(nvec, vj));
+			/* YBO_i */
+			force_p0 += -YB[0]*cross(nvec, ang_vel_p0)    - YB[2]*cross(nvec, ang_vel_p1);
+		}
 		return force_p0;
 	} else {
 		return vec3d();
@@ -351,13 +424,14 @@ vec3d ContactDashpot::getForceOnP0_nonaffine(const vec3d &na_vel_p0,
 	if (is_active()) {
 		/* XAU_i */
 		vec3d force_p0 = -dot(XA[0]*na_vel_p0+XA[1]*na_vel_p1, nvec)*(*nvec);
-
-		/* YAU_i */
-		force_p0 += - YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0)) \
-					- YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
-		/* YBO_i */
-		force_p0 += - YB[0]*cross(nvec, na_ang_vel_p0) \
-					- YB[2]*cross(nvec, na_ang_vel_p1);
+		if (tangential_coeff > 0) {
+			/* YAU_i */
+			force_p0 += - YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0)) \
+			- YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
+			/* YBO_i */
+			force_p0 += - YB[0]*cross(nvec, na_ang_vel_p0) \
+			- YB[2]*cross(nvec, na_ang_vel_p1);
+		}
 		return force_p0;
 	} else {
 		return vec3d();
@@ -372,7 +446,11 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &
 	/** \brief */
 	if (is_active()) {
 		vec3d force_p0 = getForceOnP0(u_inf_p0, u_inf_p1, omega_inf, omega_inf);
-		vec3d torque_p0 = cross((*nvec)*a0, force_p0);
+		vec3d torque_p0;
+		if (tangential_coeff > 0) {
+			torque_p0 = cross((*nvec)*a0, force_p0);
+		}
+		torque_p0 = cross((*nvec)*a0, force_p0);
 		return std::make_tuple(force_p0, -force_p0, torque_p0, (a1/a0)*torque_p0);
 	} else {
 		return std::make_tuple(vec3d(), vec3d(), vec3d(), vec3d());

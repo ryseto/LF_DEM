@@ -3,8 +3,8 @@ using namespace std;
 
 Box::~Box()
 {
-	_neighbors.clear();
-	_moving_neighbors.clear();
+	static_neighbors.clear();
+	moving_neighbors.clear();
 }
 
 /* reset every moving neighbor:
@@ -13,10 +13,7 @@ Box::~Box()
  */
 void Box::resetMovingNeighbors()
 {
-	for (const auto& box : _moving_neighbors) {
-		_neighbors.erase(box);
-	}
-	_moving_neighbors.clear();
+	moving_neighbors.clear();
 }
 
 void Box::addStaticNeighbor(Box* neigh_box)
@@ -24,7 +21,7 @@ void Box::addStaticNeighbor(Box* neigh_box)
 	if (neigh_box == this) {
 		return;
 	}
-	_neighbors.insert(neigh_box);
+	static_neighbors.push_back(neigh_box);
 }
 
 void Box::addMovingNeighbor(Box* neigh_box)
@@ -32,8 +29,7 @@ void Box::addMovingNeighbor(Box* neigh_box)
 	if (neigh_box == this) {
 		return;
 	}
-	_neighbors.insert(neigh_box);
-	_moving_neighbors.insert(neigh_box);
+	moving_neighbors.push_back(neigh_box);
 }
 
 void Box::add(int i)
@@ -50,7 +46,10 @@ void Box::buildNeighborhoodContainer()
 {
 	neighborhood_container.clear();
 	size_t size = container.size();
-	for (const auto& box : _neighbors) {
+	for (const auto& box : static_neighbors) {
+		size += box->getContainer().size();
+	}
+	for (const auto& box : moving_neighbors) {
 		size += box->getContainer().size();
 	}
 	neighborhood_container.resize(size);
@@ -60,8 +59,15 @@ void Box::buildNeighborhoodContainer()
 		neighborhood_container[j] = k;
 		j++;
 	}
-	// neighboring boxes
-	for (const auto& box : _neighbors) {
+	// static neighboring boxes
+	for (const auto& box : static_neighbors) {
+		for (const int& k : box->container) {
+			neighborhood_container[j] = k;
+			j++;
+		}
+	}
+	// moving neighboring boxes
+	for (const auto& box : moving_neighbors) {
 		for (const int& k : box->container) {
 			neighborhood_container[j] = k;
 			j++;

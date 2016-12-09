@@ -301,8 +301,8 @@ void System::calcTotalStressPerParticle()
 	}
 	for (const auto &sc: stress_components) {
 		const auto &particle_stress = sc.second.particle_stress;
-		for (int i=0; i<np_mobile; i++) { // @@@@ np_mobile or total_stress_pp.size()??
-			total_stress_pp[i] + particle_stress[i];
+		for (unsigned int i=0; i<total_stress_pp.size(); i++) {
+			total_stress_pp[i] += particle_stress[i];
 		}
 	}
 }
