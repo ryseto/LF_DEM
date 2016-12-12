@@ -24,6 +24,7 @@ class Clock
 protected:
 	double next_time;
 	double time_step;
+	double first_non_zero;
 	bool _strain;
 public:
 	Clock(bool strain):
@@ -38,26 +39,38 @@ public:
 	virtual void tick() {};
 };
 
-class LinearClock : public Clock
-{
-private:
-
 public:
 	LinearClock(double step, bool strain_units)
 	: Clock(strain_units)
 	{
 		next_time = 0;
 		time_step = step;
+		first_non_zero = step;
+	}
+	LinearClock(double start, double step, bool strain_units)
+	: Clock(strain_units)
+	{
+		next_time = 0;
+		time_step = step;
+		if (start != 0) {
+			first_non_zero = start;
+		} else {
+			first_non_zero = step;
+		}
 	}
 	virtual void tick() {
-		next_time += time_step;
+		if (next_time!=0) {
+			next_time += time_step;
+		} else {
+			next_time = first_non_zero;
+		}
 	}
 };
 
 class LogClock : public Clock
 {
 private:
-	double first_non_zero;
+
 public:
 	LogClock(double start, double stop, double nb_step, bool strain_units)
 	: Clock(strain_units)
@@ -96,13 +109,13 @@ public:
 		if (clocks.size() == 0) {
 			throw std::runtime_error( " TimeKeeper::nextTime() : No clocks! ");
 		}
-		double next_t = -1;
+		double next_time = -1;
 		std::string next_name = "";
 		for (const auto &c : clocks) {
 			const auto &label = c.first;
 			const auto &clock = c.second;
-			if (!clock->is_strain() && (clock->nextTime() < next_t || next_t < 0)) {
-				next_t = clock->nextTime();
+			if (!clock->is_strain() && (clock->nextTime() < next_time || next_time < 0)) {
+				next_time = clock->nextTime();
 				next_name = label;
 			}
 		}
