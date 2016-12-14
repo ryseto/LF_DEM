@@ -728,6 +728,10 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.min_kt);
 	} else if (keyword == "max_kt") {
 		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.max_kt);
+	} else if (keyword == "min_dt") {
+		p.min_dt = atof(value.c_str());
+	} else if (keyword == "max_dt") {
+		p.max_dt = atof(value.c_str());
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
@@ -879,6 +883,8 @@ void Simulation::setDefaultParameters(string input_scale)
 	p.max_kn = 1000000;
 	p.min_kt = 1000;
 	p.max_kt = 1000000;
+	p.min_dt = 1e-7;
+	p.max_dt = 1e-3;
 	p.repulsive_length = 0.05;
 	p.repulsive_max_length = -1;
 	p.mu_static = 1;

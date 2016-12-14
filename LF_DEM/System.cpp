@@ -2258,9 +2258,13 @@ void System::adjustContactModelParameters()
 	if (p.kt > p.max_kt) {
 		p.kt = p.max_kt;
 	}
-
 	adaptTimeStep();
-
+	if (dt < p.min_dt) {
+		dt = p.min_dt;
+	}
+	if (dt > p.max_dt) {
+		dt = p.max_dt;
+	}
 	previous_cumulated_strain = cumulated_strain;
 
 	for (auto &inter: interaction) {
