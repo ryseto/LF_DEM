@@ -70,7 +70,7 @@ struct ParameterSet
 	double mu_static;                        ///< friction coefficient (static) [1]
 	double mu_dynamic;                        ///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 	double mu_rolling;                        ///< friction coefficient (rolling) [0]
-	double ft_max;							///< max tangential force in friction_model = 5 [1]
+	double ft_max;                            ///< max tangential force in friction_model = 5 [1]
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
