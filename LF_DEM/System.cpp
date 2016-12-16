@@ -549,6 +549,8 @@ void System::setupSystemPostConfiguration()
 	if (!stress_controlled) {
 		setVelocityDifference();
 	}
+	E_infinity.set(0, 2, shear_rate/2); //@@@
+	E_infinity.set(2, 0, shear_rate/2); //@@@
 	initializeBoxing();
 	checkNewInteraction();
 	dt = p.dt;

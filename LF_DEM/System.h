@@ -27,6 +27,7 @@
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
+#include "Matrix.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "ParameterSet.h"
@@ -250,7 +251,6 @@ private:
 	 * The responsability for the correctness of interaction_partners is left to System
 	 * (not delegated any more to Interaction, like it used to).*/
 	std::vector < std::vector<int> > interaction_partners;
-
 	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
 										  StressTensor &rate_indep_stress);
 
@@ -258,7 +258,6 @@ private:
 	std::map<std::string, StressTensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
 	std::map<std::string, VelocityComponent> velocity_components;
-
 	Averager<StressTensor> stress_avg;
 	double dt;
 	double avg_dt;
@@ -300,6 +299,8 @@ private:
 
 	double *ratio_unit_time; // to convert System time in Simulation time
 
+	matrix E_infinity;
+	matrix O_infinity;
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
@@ -410,6 +411,7 @@ private:
 	{
 		return shear_strain;
 	}
+	
 	double get_cumulated_strain()
 	{
 		return cumulated_strain;
@@ -453,6 +455,10 @@ private:
 		}
 		setVelocityDifference();
 	}
-	const std::vector <vec3d> & getNonAffineDisp() {return na_disp;}
+	
+	const std::vector <vec3d> & getNonAffineDisp()
+	{
+		return na_disp;
+	}
 };
 #endif /* defined(__LF_DEM__System__) */
