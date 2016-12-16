@@ -39,6 +39,10 @@ public:
 	virtual void tick() {};
 };
 
+class LinearClock : public Clock
+{
+private:
+
 public:
 	LinearClock(double step, bool strain_units)
 	: Clock(strain_units)
@@ -119,7 +123,7 @@ public:
 				next_name = label;
 			}
 		}
-		return std::make_pair(next_t, next_name);
+		return std::make_pair(next_time, next_name);
 	}
 
 	std::pair<double,std::string> nextStrain() const

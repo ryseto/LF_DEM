@@ -474,10 +474,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 
 	vel_difference.reset();
 	setVelocityDifference();
-	dt = p.dt;
-	if (p.fixed_dt) {
-		avg_dt = dt;
-	}
 	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
@@ -555,6 +551,10 @@ void System::setupSystemPostConfiguration()
 	}
 	initializeBoxing();
 	checkNewInteraction();
+	dt = p.dt;
+	if (p.fixed_dt) {
+		avg_dt = dt;
+	}
 }
 
 void System::initializeBoxing()

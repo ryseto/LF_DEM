@@ -46,7 +46,7 @@ void Simulation::contactForceParameter(string filename)
 		cout << indent << "Input for kn, kt, dt = " << phi_ << ' ' << kn_ << ' ' << kt_ << ' ' << dt_ << endl;
 	} else {
 		ostringstream error_str;
-		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << phi_ << endl;
+		error_str  << " Error: file " << filename.c_str() << " contains no data for vf = " << volume_or_area_fraction << endl;
 		throw runtime_error(error_str.str());
 	}
 }
@@ -582,14 +582,7 @@ void Simulation::setupSimulation(string in_args,
 	setupNonDimensionalization(dimensionlessnumber, input_scale);
 
 	assertParameterCompatibility();
-
-	if (input_files[2] != "not_given") {
-		if (sys.brownian && !p.auto_determine_knkt) {
-			contactForceParameterBrownian(input_files[2]);
-		} else {
-			contactForceParameter(input_files[2]);
-		}
-	}
+	
 	if (input_files[3] != "not_given") {
 		throw runtime_error("pre-simulation data deprecated?");
 	}
@@ -614,6 +607,14 @@ void Simulation::setupSimulation(string in_args,
 		importConfigurationBinary(filename_import_positions);
 	} else {
 		importConfiguration(filename_import_positions);
+	}
+	if (input_files[2] != "not_given") {
+		// Volume fraction needs to be set in advance.
+		if (sys.brownian && !p.auto_determine_knkt) {
+			contactForceParameterBrownian(input_files[2]);
+		} else {
+			contactForceParameter(input_files[2]);
+		}
 	}
 	sys.setupSystemPostConfiguration();
 	p_initial = p;
