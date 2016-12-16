@@ -608,14 +608,15 @@ void Simulation::setupSimulation(string in_args,
 	} else {
 		importConfiguration(filename_import_positions);
 	}
-	sys.setupSystemPostConfiguration();
 	if (input_files[2] != "not_given") {
+		// Volume fraction needs to be set in advance.
 		if (sys.brownian && !p.auto_determine_knkt) {
 			contactForceParameterBrownian(input_files[2]);
 		} else {
 			contactForceParameter(input_files[2]);
 		}
 	}
+	sys.setupSystemPostConfiguration();
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 									  simu_identifier, dimensionlessnumber, input_scale);
