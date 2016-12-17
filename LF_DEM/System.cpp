@@ -19,8 +19,6 @@
 #ifdef USE_DSFMT
 #define GRANDOM  ( sqrt( -2.0 * log( 1.0 - dsfmt_genrand_open_open(&r_gen) ) ) * cos(2.0 * 3.14159265358979323846264338328 * dsfmt_genrand_close_open(&r_gen) ) ) // RNG gaussian with mean 0. and variance 1.
 #endif
-
-
 using namespace std;
 
 #ifdef USE_DSFMT
@@ -1119,7 +1117,7 @@ void System::removeNeighbors(int i, int j)
 	neighi.pop_back();
 	l = neighj[neighj.size()-1];
 	for (unsigned int k=0; k<neighj.size(); k++) {
-		if (neighj[k]==i) {
+		if (neighj[k] == i) {
 			neighj[k] = l;
 			break;
 		}
@@ -2135,10 +2133,9 @@ int System::periodize(vec3d& pos)
 		pos.x += lx;
 	}
 	if (!twodimension) {
-		while (pos.y >= ly) {
+		if (pos.y >= ly) {
 			pos.y -= ly;
-		}
-		while (pos.y < 0) {
+		} else if (pos.y < 0) {
 			pos.y += ly;
 		}
 	}
@@ -2177,10 +2174,9 @@ int System::periodize_diff(vec3d& pos_diff)
 		pos_diff.x += lx;
 	}
 	if (!twodimension) {
-		while (pos_diff.y > ly_half) {
+		if (pos_diff.y > ly_half) {
 			pos_diff.y -= ly;
-		}
-		while (pos_diff.y < -ly_half) {
+		} else if (pos_diff.y < -ly_half) {
 			pos_diff.y += ly;
 		}
 	}

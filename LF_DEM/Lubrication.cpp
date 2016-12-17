@@ -354,10 +354,10 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(double shear_rate) const
 	GEj.x = cGE_p1*nvec->x;
 	GEj.y = cGE_p1*nvec->y;
 	GEj.z = cGE_p1*nvec->z;
-//	if (shear_rate != 1) { // @@ To be checked
-//		GEi *= shear_rate;
-//		GEj *= shear_rate;
-//	}
+	if (shear_rate != 1) { // @@ To be checked
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj);
 }
 
@@ -406,10 +406,10 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(double shear_rat
 		GEj.z =  cGE_j*nvec->z+YG1_YG3*costheta_nx_sintheta_ny;
 	}
 
-//	if (shear_rate != 1) { @@ To be checked
-//		GEi *= shear_rate;
-//		GEj *= shear_rate;
-//	}
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj);
 }
 
@@ -485,13 +485,13 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 		HEj.y = -cHE_j*( costheta*nxnx_nznz + sintheta*nxny);
 		HEj.z =  cHE_j*(-costheta*nynz      + sintheta*nxnz);
 	}
-// @@ To be chekced
-//	if (shear_rate != 1) {
-//		GEi *= shear_rate;
-//		GEj *= shear_rate;
-//		HEi *= shear_rate;
-//		HEj *= shear_rate;
-//	}
+
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+		HEi *= shear_rate;
+		HEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
 

@@ -233,7 +233,7 @@ struct ODBlock ContactDashpot::RFU_ODBlock() const
 		block.col1[1] = XA[1]*n1n2;
 		block.col1[2] = 0;
 		// column 2
-		block.col2[0] =  XA[1]*n2n2;
+		block.col2[0] = XA[1]*n2n2;
 		// column 3
 		block.col3[0] = 0;
 		block.col3[1] = 0;
@@ -426,18 +426,17 @@ vec3d ContactDashpot::getForceOnP0_nonaffine(const vec3d &na_vel_p0,
 		vec3d force_p0 = -dot(XA[0]*na_vel_p0+XA[1]*na_vel_p1, nvec)*(*nvec);
 		if (tangential_coeff > 0) {
 			/* YAU_i */
-			force_p0 += - YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0)) \
-			- YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
+			force_p0 += -YA[0]*(na_vel_p0-(*nvec)*dot(nvec, na_vel_p0)) \
+			-YA[1]*(na_vel_p1-(*nvec)*dot(nvec, na_vel_p1));
 			/* YBO_i */
-			force_p0 += - YB[0]*cross(nvec, na_ang_vel_p0) \
-			- YB[2]*cross(nvec, na_ang_vel_p1);
+			force_p0 += -YB[0]*cross(nvec, na_ang_vel_p0) \
+			-YB[2]*cross(nvec, na_ang_vel_p1);
 		}
 		return force_p0;
 	} else {
 		return vec3d();
 	}
 }
-
 
 std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &u_inf_p0,
 																   const vec3d &u_inf_p1,
@@ -450,7 +449,6 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> ContactDashpot::getRFU_Uinf(const vec3d &
 		if (tangential_coeff > 0) {
 			torque_p0 = cross((*nvec)*a0, force_p0);
 		}
-		torque_p0 = cross((*nvec)*a0, force_p0);
 		return std::make_tuple(force_p0, -force_p0, torque_p0, (a1/a0)*torque_p0);
 	} else {
 		return std::make_tuple(vec3d(), vec3d(), vec3d(), vec3d());

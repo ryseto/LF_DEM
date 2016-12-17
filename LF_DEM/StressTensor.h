@@ -15,6 +15,7 @@
 
 #ifndef LF_DEM_StressTensor_h
 #define LF_DEM_StressTensor_h
+#include "Matrix.h"
 #include "vec3d.h"
 #include <iostream>
 #include <iomanip>
@@ -322,6 +323,13 @@ public:
 		return -(1./3)*(elm[0]+elm[4]+elm[5]);
 	}
 
+	matrix getMatrix()
+	{
+		matrix m(elm[0], elm[1], elm[2],
+				 elm[1], elm[4], elm[3],
+				 elm[2], elm[3], elm[5]);
+		return m;
+	}
 	//	void cerr()
 	//	{
 	//		std::cerr << elm[0] << ' ' << elm[1] << ' '<< elm[2] << ' '<< elm[3] << ' '<< elm[4] << ' ' << elm[5] << std::endl;
