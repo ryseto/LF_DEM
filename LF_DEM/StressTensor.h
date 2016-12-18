@@ -81,6 +81,17 @@ public:
 		elm[5] = v1.z*v2.z;
 	}
 
+	inline StressTensor(const vec3d& v)
+	{
+		elm.resize(6);
+		elm[0] = v.x*v.x;
+		elm[1] = v.x*v.y;
+		elm[2] = v.x*v.z;
+		elm[3] = v.y*v.z;
+		elm[4] = v.y*v.y;
+		elm[5] = v.z*v.z;
+	}
+	
 	inline friend StressTensor operator + (const StressTensor& a1,
 										   const StressTensor& a2)
 	{

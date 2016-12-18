@@ -173,6 +173,16 @@ public:
 		
 	}
 	
+	friend vec3d operator * (const vec3d& v,
+							 const matrix& m)
+	{
+		return vec3d(m.elm[0]*v.x+m.elm[3]*v.y+m.elm[6]*v.z,
+					 m.elm[1]*v.x+m.elm[4]*v.y+m.elm[7]*v.z,
+					 m.elm[2]*v.x+m.elm[5]*v.y+m.elm[8]*v.z);
+		
+	}
+
+	
 	friend matrix operator * (const matrix& m1,
 							  const matrix& m2)
 	{
