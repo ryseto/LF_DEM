@@ -57,6 +57,20 @@ public:
 		elm[5] = _zz;
 	}
 
+	inline StressTensor(matrix m)
+	{
+		// 0(0,0) 1(0,1) 2(0,2)
+		// 3(1,0) 4(1,1) 5(1,2)
+		// 6(2,0) 7(2,1) 8(2,2)
+		elm.resize(6);
+		elm[0] = m.elm[0];
+		elm[1] = m.elm[1];
+		elm[2] = m.elm[2];
+		elm[3] = m.elm[5];
+		elm[4] = m.elm[4];
+		elm[5] = m.elm[8];
+	}
+
 	// output stream operator
 	inline friend std::ostream& operator << (std::ostream& out,
 											 const StressTensor& st)
@@ -73,12 +87,12 @@ public:
 	inline StressTensor(const vec3d& v1, const vec3d& v2)
 	{
 		elm.resize(6);
-		elm[0] = v1.x*v2.x;
-		elm[1] = 0.5*(v1.x*v2.y+v1.y*v2.x);
-		elm[2] = 0.5*(v1.x*v2.z+v1.z*v2.x);
-		elm[3] = 0.5*(v1.y*v2.z+v1.z*v2.y);
-		elm[4] = v1.y*v2.y;
-		elm[5] = v1.z*v2.z;
+		elm[0] = v1.x*v2.x; //xx
+		elm[1] = 0.5*(v1.x*v2.y+v1.y*v2.x); //xy
+		elm[2] = 0.5*(v1.x*v2.z+v1.z*v2.x); //xz
+		elm[3] = 0.5*(v1.y*v2.z+v1.z*v2.y); //yz
+		elm[4] = v1.y*v2.y; //yy
+		elm[5] = v1.z*v2.z; //zz
 	}
 
 	inline StressTensor(const vec3d& v)
