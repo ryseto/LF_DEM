@@ -96,6 +96,15 @@ public:
 		return 	*this;
 	}
 
+	bool is_nonzero()
+	{
+		if (x != 0 || z != 0 || y != 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	void reset()
 	{
 		x = 0, y = 0, z = 0;
@@ -143,6 +152,11 @@ public:
 		return product;
 	}
 
+	inline double angle_elevation_xz()
+	{
+		return atan2(z, x);
+	}
+	
 	void periodicBoundaryBox(const double& lx,
 							 const double& ly,
 							 const double& lz)
@@ -203,8 +217,8 @@ inline vec3d operator + (const vec3d& a1,
 }
 
 /* subtraction */
-inline vec3d	operator - (const vec3d& a1,
-							const vec3d& a2)
+inline vec3d operator - (const vec3d& a1,
+						 const vec3d& a2)
 {
 	return vec3d(a1.x-a2.x, a1.y-a2.y, a1.z-a2.z);
 }
@@ -269,6 +283,15 @@ inline vec3d cross(const vec3d* v1,
 				 v1->z*v2.x - v1->x*v2.z,
 				 v1->x*v2.y - v1->y*v2.x);
 }
+
+inline vec3d cross(const vec3d& v1,
+				   const vec3d* v2)
+{
+	return vec3d(v1.y*v2->z - v1.z*v2->y,
+				 v1.z*v2->x - v1.x*v2->z,
+				 v1.x*v2->y - v1.y*v2->x);
+}
+
 /* vector product */
 inline vec3d cross_vec_array(const vec3d& v1,
 							 const double* v2p)
