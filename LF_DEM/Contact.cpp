@@ -464,7 +464,7 @@ double Contact::calcEnergy() const
 	/* normal */
 	double energy = 0.5*kn_scaled*overlap*overlap;
 	if (state >= 2) {
-			/* sliding */
+		/* sliding */
 		energy += 0.5*kt_scaled*sq_tan_norm;
 		if (sys->rolling_friction) {
 			/* roling */

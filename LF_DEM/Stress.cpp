@@ -11,9 +11,7 @@
 #include "global.h"
 #include "StressComponent.h"
 
-
 using namespace std;
-
 
 void System::declareStressComponents() {
 	// It is essential that the stresses in stress_components sum up to the total stress.
@@ -93,8 +91,8 @@ void System::addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
 			inter.lubrication.addGUStresslet(non_affine_vel[i], non_affine_vel[j],
-		                                   non_affine_ang_vel[i], non_affine_ang_vel[j],
-		                                   stress_comp[i], stress_comp[j]);
+											 non_affine_ang_vel[i], non_affine_ang_vel[j],
+											 stress_comp[i], stress_comp[j]);
 		}
 	}
 }
@@ -109,9 +107,9 @@ void System::addUpInteractionStressME(std::vector<StressTensor> &stress_comp)
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
 			inter.lubrication.addMEStresslet(costheta_shear,
-			                                          sintheta_shear,
-			                                          shear_rate,
-			                                          stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
+											 sintheta_shear,
+											 shear_rate,
+											 stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
 		}
 	}
 }
@@ -370,7 +368,7 @@ void System::calcStress()
 		if (p.cross_shear) {
 			total_stress_groups["hydro"].elm[2] += costheta_shear*shear_rate/6./M_PI;
 			total_stress_groups["hydro"].elm[3] += sintheta_shear*shear_rate/6./M_PI;
-		}	else {
+		} else {
 			StressTensor stress_solvent((shear_rate/(6*M_PI))*E_infinity);
 			total_stress_groups["hydro"] += stress_solvent;
 		}
