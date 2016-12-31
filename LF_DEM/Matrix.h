@@ -50,6 +50,20 @@ public:
 		elm[3*i+j] = value;
 	}
 	
+	inline void setSymmetric(double e_00, double e_01, double e_02,
+							 double e_12, double e_11, double e_22)
+	{
+		// 0(0,0) 1(0,1) 2(0,2)
+		// 3(1,0) 4(1,1) 5(1,2)
+		// 6(2,0) 7(2,1) 8(2,2)
+		elm[0] = e_00;
+		elm[1] = elm[3] = e_01;
+		elm[2] = elm[6] = e_02;
+		elm[4] = e_11;
+		elm[5] = elm[7] = e_12;
+		elm[8] = e_22;
+	}
+	
 	inline void set_zero()
 	{
 		for (auto &elm_: elm) {
@@ -78,7 +92,6 @@ public:
 	
 	matrix inverse()
 	{
-		
 		// 00 11 22   048
 		// 10 21 02   372
 		// 20 01 12   615
@@ -122,15 +135,6 @@ public:
 			}
 		}
 		return m_unsym;
-	}
-	
-	vec3d antiSymVector()
-	{
-		// 0(0,0) 1(0,1) 2(0,2)
-		// 3(1,0) 4(1,1) 5(1,2)
-		// 6(2,0) 7(2,1) 8(2,2)
-		
-		return vec3d(elm[7], elm[2], elm[3]); //(21, 02, 10)
 	}
 	
 	vec3d getLine(int i)
@@ -181,7 +185,6 @@ public:
 					 m.elm[2]*v.x+m.elm[5]*v.y+m.elm[8]*v.z);
 		
 	}
-
 	
 	friend matrix operator * (const matrix& m1,
 							  const matrix& m2)
@@ -214,6 +217,7 @@ public:
 					  m.elm[3], a+m.elm[4], m.elm[5],
 					  m.elm[6], m.elm[7], a+m.elm[8]);
 	}
+	
 	void print()
 	{
 		std::cout << std::setw(10) << elm[0] << std::setw(10) << elm[1] << std::setw(10) <<  elm[2] << std::endl;

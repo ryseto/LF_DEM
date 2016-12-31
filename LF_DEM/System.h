@@ -115,7 +115,7 @@ private:
 	void setFixedParticleVelocities();
 	void computeBrownianVelocities();
 	void tmpMixedProblemSetVelocities();
-	void adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	void adjustVelocityPeriodicBoundary();
 	void rushWorkFor2DBrownian(std::vector<vec3d> &vel, std::vector<vec3d> &ang_vel); // We need to implement real 2D simulation.
 	void computeUInf();
 	void computeShearRate();
@@ -124,8 +124,8 @@ private:
 	void computeVelocityCoeffFixedParticles();
 	void rescaleVelHydroStressControlled();
 	void addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
-	                              const std::vector<vec3d> &non_affine_vel,
-	                              const std::vector<vec3d> &non_affine_ang_vel);
+								  const std::vector<vec3d> &non_affine_vel,
+								  const std::vector<vec3d> &non_affine_ang_vel);
 	void addUpInteractionStressME(std::vector<StressTensor> &stress_comp);
 
 	void computeMaxNAVelocity();
@@ -296,7 +296,6 @@ private:
 	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
-
 	double *ratio_unit_time; // to convert System time in Simulation time
 
 	matrix E_infinity;
@@ -321,9 +320,8 @@ private:
 	void declareResistance(int p0, int p1);
 	void eraseResistance(int p0, int p1);
 	void updateInteractions();
-
 	int periodize(vec3d&);
-	int periodize_diff(vec3d&);
+	int periodizeDiff(vec3d&);
 	vec3d periodized(const vec3d&);
 	void calcStress();
 	void calcStressPerParticle();

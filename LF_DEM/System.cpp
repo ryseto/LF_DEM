@@ -331,9 +331,6 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	*/
-
-	vec3d tests = {0, 2.1/2, 0.33};
-	cout << tests << endl;
 	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
@@ -703,8 +700,8 @@ void System::wallForces()
 			force_tang_wall2 = 0;
 			force_normal_wall2 = 0;
 			for (int i=i_np_1; i<np; i++) {
-					force_tang_wall2   += forceResultant[i].x;
-					force_normal_wall2 += forceResultant[i].z;
+				force_tang_wall2   += forceResultant[i].x;
+				force_normal_wall2 += forceResultant[i].z;
 			}
 			cerr << "Ft " <<   force_tang_wall1 << ' ' <<   force_tang_wall2 << endl;
 			cerr << "Fn " << force_normal_wall1 << ' ' << force_normal_wall2 << endl;
@@ -1107,19 +1104,23 @@ void System::removeNeighbors(int i, int j)
 	// return interaction_partners[i].find(j) != interaction_partners[i].end();
 	vector<int> &neighi = interaction_partners[i];
 	vector<int> &neighj = interaction_partners[j];
-	int l = neighi[neighi.size()-1];
-	for (unsigned int k=0; k<neighi.size(); k++) {
-		if (neighi[k] == j) {
-			neighi[k] = l;
-			break;
+	int l = neighi.back();
+	if (l != j) {
+		for (unsigned int k=0; k<neighi.size(); k++) {
+			if (neighi[k] == j) {
+				neighi[k] = l;
+				break;
+			}
 		}
 	}
 	neighi.pop_back();
-	l = neighj[neighj.size()-1];
-	for (unsigned int k=0; k<neighj.size(); k++) {
-		if (neighj[k] == i) {
-			neighj[k] = l;
-			break;
+	l = neighj.back();
+	if (l != i) {
+		for (unsigned int k=0; k<neighj.size(); k++) {
+			if (neighj[k] == i) {
+				neighj[k] = l;
+				break;
+			}
 		}
 	}
 	neighj.pop_back();
@@ -1139,7 +1140,7 @@ void System::checkNewInteraction()
 			if (j > i) {
 				if (!hasNeighbor(i, j)) {
 					pos_diff = position[j]-position[i];
-					periodize_diff(pos_diff);
+					periodizeDiff(pos_diff);
 					sq_dist = pos_diff.sq_norm();
 					double scaled_interaction_range = (this->*calcInteractionRange)(i, j);
 					double sq_dist_lim = scaled_interaction_range*scaled_interaction_range;
@@ -1166,14 +1167,12 @@ void System::updateInteractions()
 	for (unsigned int k=0; k<interaction.size(); k++) {
 		bool deactivated = false;
 		interaction[k].updateState(deactivated);
-
 		if (interaction[k].contact.is_active()) {
 			double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
 			if (sq_sliding_velocity > sq_max_sliding_velocity) {
 				sq_max_sliding_velocity = sq_sliding_velocity;
 			}
 		}
-
 		if (deactivated) {
 			auto ij = interaction[k].get_par_num();
 			removeNeighbors(ij.first, ij.second);
@@ -1269,10 +1268,10 @@ void System::computeForcesOnWallParticles()
 	/**
 		\brief This method computes the force (and torque, for now, but it might be dropped)
 		on the fixed particles.
-
+	 
 		It is designed with simple shear with walls under stress controlled conditions in mind,
 		so it decomposes the force in a rate-proportional part and a rate-independent part.
-
+	 
 		*/
 	throw runtime_error(" Control stress with walls disabled for now .\n");
 	if (!zero_shear) {
@@ -1455,11 +1454,11 @@ void System::forceResultantLubricationForce()
 }
 
 void System::setBrownianForceToParticle(vector<vec3d> &force,
-                                        vector<vec3d> &torque)
+										vector<vec3d> &torque)
 {
 	/**
 	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
-
+	 
 	 The generated Brownian force \f$F_B\f$ satisfies
 	 \f$ \langle F_\mathrm{B} \rangle = 0\f$
 	 and
@@ -1468,7 +1467,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	 jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady
 	 \cite brady_stokesian_1988 notations) is the current resistance matrix
 	 stored in the stokes_solver.
-
+	 
 	 */
 	if(!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
 		return;
@@ -1485,7 +1484,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		torque[i].y = sqrt_2_dt_amp*GRANDOM;
 		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
-
+	
 	if (pairwise_resistance) {
 		/* L*L^T = RFU
 		 */
@@ -1511,7 +1510,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 }
 
 void System::setDashpotForceToParticle(vector<vec3d> &force,
-                                       vector<vec3d> &torque)
+									   vector<vec3d> &torque)
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
@@ -1528,7 +1527,7 @@ void System::setDashpotForceToParticle(vector<vec3d> &force,
 }
 
 void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
-                                             vector<vec3d> &torque)
+											 vector<vec3d> &torque)
 {
 	vec3d GEi, GEj;
 	unsigned int i, j;
@@ -1544,7 +1543,7 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 }
 
 void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
-                                                        vector<vec3d> &torque)
+														vector<vec3d> &torque)
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
@@ -1562,7 +1561,7 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 }
 
 void System::setContactForceToParticle(vector<vec3d> &force,
-                                       vector<vec3d> &torque)
+									   vector<vec3d> &torque)
 {
 	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
@@ -1691,11 +1690,11 @@ void System::computeVelocityByComponents()
 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		setSolverRHS(fc.second);
 		stokes_solver.solve(velocity_components[fc.first].vel,
-                        velocity_components[fc.first].ang_vel);
+							velocity_components[fc.first].ang_vel);
 	}
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(velocity_components["brownian"].vel,
-		                      velocity_components["brownian"].ang_vel);
+							  velocity_components["brownian"].ang_vel);
 	}
 }
 
@@ -1833,15 +1832,15 @@ void System::tmpMixedProblemSetVelocities()
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
 			na_velocity[i] = {-omega_wheel_in*(position[i].z-origin_of_rotation.z),
-			                  0,
-			                  omega_wheel_in*(position[i].x-origin_of_rotation.x)};
+				0,
+				omega_wheel_in*(position[i].x-origin_of_rotation.x)};
 			na_ang_velocity[i] = {0, -omega_wheel_in, 0};
 		}
 		// outer wheel
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
 			na_velocity[i] = {-omega_wheel_out*(position[i].z-origin_of_rotation.z),
-			                  0,
-			                  omega_wheel_out*(position[i].x-origin_of_rotation.x)};
+				0,
+				omega_wheel_out*(position[i].x-origin_of_rotation.x)};
 			na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 		}
 	} else if (p.simulation_mode == 21) {
@@ -1893,18 +1892,18 @@ void System::tmpMixedProblemSetVelocities()
 		for (int i=i_np_in; i<np; i++) {
 			if (position[i].x < x1) {
 				na_velocity[i] = {-omega_wheel_out*(position[i].z),
-				                  0,
-				                  omega_wheel_out*(position[i].x)};
+					0,
+					omega_wheel_out*(position[i].x)};
 				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			} else if (position[i].x < x2) {
 				na_velocity[i] = {-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
-				                  0,
-				                  omega_wheel_in*(position[i].x-origin_of_rotation2.x)};
+					0,
+					omega_wheel_in*(position[i].x-origin_of_rotation2.x)};
 				na_ang_velocity[i] = {0, -omega_wheel_in, 0};
 			} else {
 				na_velocity[i] = {-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
-				                  0,
-				                  omega_wheel_out*(position[i].x-origin_of_rotation3.x)};
+					0,
+					omega_wheel_out*(position[i].x-origin_of_rotation3.x)};
 				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			}
 		}
@@ -1988,7 +1987,7 @@ void System::computeVelocities(bool divided_velocities)
 	if (!p.fixed_dt && in_predictor) {
 		computeMaxNAVelocity();
 	}
-	adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	adjustVelocityPeriodicBoundary();
 	if (divided_velocities && wall_rheology) {
 		if (in_predictor) {
 			forceResultantLubricationForce();
@@ -2010,7 +2009,7 @@ void System::computeVelocitiesStokesDrag()
 		na_ang_velocity[i].reset();
 	}
 	for (auto &fc: force_components) {
- 		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
+		CALL_MEMBER_FN(*this, fc.second.getForceTorque)(fc.second.force, fc.second.torque);
 		if (fc.first != "brownian") {
 			for (unsigned int i=0; i<na_velocity.size(); i++) {
 				na_velocity[i] += fc.second.force[i]/stokesdrag_coeff_f[i];
@@ -2028,7 +2027,7 @@ void System::computeVelocitiesStokesDrag()
 	if (brownian && twodimension) {
 		rushWorkFor2DBrownian(na_velocity, na_ang_velocity);
 	}
-	adjustVelocitiesLeesEdwardsPeriodicBoundary();
+	adjustVelocityPeriodicBoundary();
 }
 
 void System::computeUInf()
@@ -2054,7 +2053,7 @@ void System::computeUInf()
 	}
 }
 
-void System::adjustVelocitiesLeesEdwardsPeriodicBoundary()
+void System::adjustVelocityPeriodicBoundary()
 {
 	if (stress_controlled) { // in rate control it is already done in computeVelocities()
 		computeUInf();
@@ -2150,7 +2149,7 @@ vec3d System::periodized(const vec3d &pos)
 	return periodized_pos;
 }
 
-int System::periodize_diff(vec3d& pos_diff)
+int System::periodizeDiff(vec3d& pos_diff)
 {
 	/** Periodize a separation vector with Lees-Edwards boundary condition
 
@@ -2247,14 +2246,18 @@ void System::adjustContactModelParameters()
 	if (p.kn > p.max_kn) {
 		p.kn = p.max_kn;
 	}
-	double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p.disp_tan_target;
-	double dkt = (kt_target-p.kt)*deltagamma/p.memory_strain_k;
-	p.kt += dkt;
-	if (p.kt < p.min_kt) {
-		p.kt = p.min_kt;
-	}
-	if (p.kt > p.max_kt) {
-		p.kt = p.max_kt;
+	if (p.disp_tan_target != -1) {
+		double kt_target = kt_avg.get()*max_disp_tan_avg.get()/p.disp_tan_target;
+		double dkt = (kt_target-p.kt)*deltagamma/p.memory_strain_k;
+		p.kt += dkt;
+		if (p.kt < p.min_kt) {
+			p.kt = p.min_kt;
+		}
+		if (p.kt > p.max_kt) {
+			p.kt = p.max_kt;
+		}
+	} else {
+		p.kt = p.kn;
 	}
 	adaptTimeStep();
 	if (dt < p.min_dt) {
