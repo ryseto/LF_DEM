@@ -131,6 +131,8 @@ struct ParameterSet
 	double max_kn;                           ///< max normal spring constant when auto-determining stiffness [1000000]
 	double min_kt;                           ///< min tangential spring constant when auto-determining stiffness [1000]
 	double max_kt;                           ///< max tangential spring constant when auto-determining stiffness [1000000]
+	double min_dt;                           ///< min time step when auto-determining stiffness [1e-7]
+	double max_dt;                           ///< max time step when auto-determining stiffness [1e-3]
 	double start_adjust;                     ///< strain after which aut-determination of stiffnesses starts [0.2]
 
 

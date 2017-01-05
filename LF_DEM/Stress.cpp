@@ -371,7 +371,8 @@ void System::calcStress()
 			total_stress_groups["hydro"].elm[2] += costheta_shear*shear_rate/6./M_PI;
 			total_stress_groups["hydro"].elm[3] += sintheta_shear*shear_rate/6./M_PI;
 		}	else {
-			total_stress_groups["hydro"].elm[2] += shear_rate/6./M_PI;
+			StressTensor stress_solvent((shear_rate/(6*M_PI))*E_infinity);
+			total_stress_groups["hydro"] += stress_solvent;
 		}
 	}
 

@@ -879,8 +879,8 @@ void Simulation::outputIntFileTxt()
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());
-
 }
+
 void Simulation::outputConfigurationData()
 {
 	if (p.out_data_particle) {

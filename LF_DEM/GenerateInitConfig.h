@@ -88,6 +88,7 @@ private:
 	int np;
 	int np1;
 	int np2;
+	int max_iteration;
 	vec3d dr;
 	inline vec3d randUniformSphere(double r);
 	inline vec3d randUniformCircle(double r);

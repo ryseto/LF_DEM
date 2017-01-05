@@ -127,7 +127,7 @@ void Interaction::init()
 void Interaction::calcNormalVectorDistanceGap()
 {
 	rvec = sys->position[p1]-sys->position[p0];
-	z_offset = sys->periodize_diff(rvec);
+	z_offset = sys->periodizeDiff(rvec);
 	r = rvec.norm();
 	nvec = rvec/r;
 	reduced_gap = 2*r/ro-2;
