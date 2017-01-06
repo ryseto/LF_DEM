@@ -15,6 +15,10 @@
 #define XF_STRESS 2
 #define BROWNIAN_STRESS 3
 
+#define BIN_FORMAT_BASE_OLD 1
+#define BIN_FORMAT_BASE_NEW 2
+#define BIN_FORMAT_FIXED_VEL 3
+
 #define CALL_MEMBER_FN(object,ptrToMember)  ((object).*(ptrToMember))
 
 #ifndef GIT_VERSION

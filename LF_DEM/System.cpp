@@ -317,6 +317,163 @@ void System::getContacts(vector <struct contact_state>& cs)
 	}
 }
 
+void System::setupConfiguration(struct base_configuration conf, string control, bool is2d){
+	string indent = "  System::\t";
+	cout << indent << "Setting up System... " << endl;
+	np = conf.np;
+	np_mobile = np;
+	twodimension = is2d;
+
+	if (control == "rate") {
+		rate_controlled = true;
+	}
+	if (control == "stress") {
+		rate_controlled = false;
+	}
+	stress_controlled = !rate_controlled;
+
+	if (p.integration_method == 0) {
+		timeEvolutionDt = &System::timeEvolutionEulersMethod;
+	} else if (p.integration_method == 1) {
+		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
+	} else {
+		ostringstream error_str;
+		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
+		throw runtime_error(error_str.str());
+	}
+
+	lubrication = p.lubrication_model != "none";
+	if (p.lub_max_gap < 0) {
+		throw runtime_error(indent+"lub_max_gap<0 is forbidden.");
+	}
+	if (p.lub_reduce_parameter > 1) {
+		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
+	}
+	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
+
+	if (p.lubrication_model != "normal" &&
+		p.lubrication_model != "none" &&
+		p.lubrication_model != "tangential") {
+		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
+	}
+
+	if (p.interaction_range == -1) {
+		/* If interaction_range is not indicated,
+		 * interaction object is created at the lubrication cutoff.
+		 */
+		calcInteractionRange = &System::calcLubricationRange;
+		p.interaction_range = 2+p.lub_max_gap;
+	} else {
+		calcInteractionRange = &System::calcInteractionRangeDefault;
+	}
+	if (p.friction_model == 0) {
+		cout << indent+"friction model: no friction" << endl;
+		p.mu_static = 0;
+		friction = false;
+	} else if (p.friction_model == 1) {
+		cout << indent+"friction model: Coulomb" << endl;
+		friction = true;
+	} else if (p.friction_model == 2 || p.friction_model == 3) {
+		cout << indent+"friction model: Coulomb + Critical Load" << endl;
+		friction = true;
+	} else if (p.friction_model == 5) {
+		cout << indent+"friction_model: Max tangential force" << endl;
+		friction = true;
+	} else if (p.friction_model == 6) {
+		cout << indent+"friction_model: Coulomb law + Max tangential force" << endl;
+		friction = true;
+	} else {
+		throw runtime_error(indent+"Error: unknown friction model\n");
+	}
+	if (p.mu_dynamic < 0) {
+		p.mu_dynamic = p.mu_static;
+	}
+	if (p.mu_rolling > 0) {
+		rolling_friction = true;
+		if (friction == false) {
+			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
+		}
+	}
+	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
+		/* The tangential part of lubrication is approximated as log(1/h).
+		 * To keep log(1/h) > 0, h needs to be less than 1.
+		 */
+		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
+	}
+	if (p.repulsive_length <= 0) {
+		repulsiveforce = false;
+		p.repulsive_length = 0;
+	}
+	setShearDirection(p.theta_shear);
+	// Memory
+	allocateRessourcesPreConfiguration();
+
+	for (int i=0; i<np; i++) {
+		if (twodimension) {
+			angle[i] = 0;
+		}
+		velocity[i].reset();
+		na_velocity[i].reset();
+		ang_velocity[i].reset();
+		na_ang_velocity[i].reset();
+	}
+	if (mobile_fixed) {
+		for (int i=0; i<p.np_fixed; i++) {
+			non_rate_proportional_wall_force[i].reset();
+			non_rate_proportional_wall_torque[i].reset();
+			rate_proportional_wall_force[i].reset();
+			rate_proportional_wall_torque[i].reset();
+		}
+	}
+
+	shear_strain = {0, 0, 0};
+
+	if (brownian) {
+	#ifdef DEV
+		/* In developing and debugging phases,
+		 * we give a seed to generate the same series of random number.
+		 * DEV is defined as a preprocessor option in the Makefile
+		 */
+	#ifndef USE_DSFMT
+		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+	#endif
+	#ifdef USE_DSFMT
+		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+	#endif
+	#endif
+
+	#ifndef DEV
+	#ifndef USE_DSFMT
+		r_gen = new MTRand;
+	#endif
+	#ifdef USE_DSFMT
+		dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
+	#endif
+	#endif
+	}
+	time_ = 0;
+	time_in_simulation_units = 0;
+	total_num_timesteps = 0;
+
+	vel_difference.reset();
+	setVelocityDifference();
+	if (p.simulation_mode == 31) {
+		p.sd_coeff = 1e-6;
+	}
+	angle_output = false;
+	if (twodimension) {
+		angle_output = true;
+	}
+	cout << indent << "Setting up System... [ok]" << endl;
+
+	shear_disp = conf.initial_lees_edwards_disp;
+	setBoxSize(conf.lx,conf.ly,conf.lz);
+	setConfiguration(conf.initial_position, conf.radius);
+	setContacts(conf.contact_states);
+
+	setupSystemPostConfiguration();
+
+}
 void System::setupSystemPreConfiguration(string control, bool is2d)
 {
 	/**
@@ -331,9 +488,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	*/
-	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
+	np_mobile = np-p.np_fixed;
 	twodimension = is2d;
 
 	if (control == "rate") {
@@ -1268,10 +1425,10 @@ void System::computeForcesOnWallParticles()
 	/**
 		\brief This method computes the force (and torque, for now, but it might be dropped)
 		on the fixed particles.
-	 
+
 		It is designed with simple shear with walls under stress controlled conditions in mind,
 		so it decomposes the force in a rate-proportional part and a rate-independent part.
-	 
+
 		*/
 	throw runtime_error(" Control stress with walls disabled for now .\n");
 	if (!zero_shear) {
@@ -1458,7 +1615,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 {
 	/**
 	 \brief Generates a Brownian force realization and sets is as the RHS of the stokes_solver.
-	 
+
 	 The generated Brownian force \f$F_B\f$ satisfies
 	 \f$ \langle F_\mathrm{B} \rangle = 0\f$
 	 and
@@ -1467,7 +1624,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	 jeffrey_calculation_1992, that is \f$R_{\mathrm{FU}}\f$ in Bossis and Brady
 	 \cite brady_stokesian_1988 notations) is the current resistance matrix
 	 stored in the stokes_solver.
-	 
+
 	 */
 	if(!in_predictor) { // The Brownian force must be the same in the predictor and the corrector
 		return;
@@ -1484,7 +1641,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 		torque[i].y = sqrt_2_dt_amp*GRANDOM;
 		torque[i].z = sqrt_2_dt_amp*GRANDOM;
 	}
-	
+
 	if (pairwise_resistance) {
 		/* L*L^T = RFU
 		 */

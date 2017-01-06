@@ -10,6 +10,8 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include "Configuration.h"
+
 
 using namespace std;
 
@@ -617,6 +619,25 @@ void Simulation::setupSimulation(string in_args,
 		}
 	}
 	sys.setupSystemPostConfiguration();
+
+	if (binary_conf) {
+		int format = getBinaryConfigurationFileFormat(filename_import_positions);
+
+		ifstream file_import;
+		file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
+		if (!file_import) {
+			ostringstream error_str;
+			error_str  << " Position file '" << filename_import_positions << "' not found." <<endl;
+			throw runtime_error(error_str.str());
+		}
+
+		if (format == BIN_FORMAT_BASE_NEW) {
+			auto conf = readBaseConfiguration(file_import);
+			System s2(p, events);
+			s2.setupConfiguration(conf,control_var, is2d);
+		}
+	}
+
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
 									  simu_identifier, dimensionlessnumber, input_scale);
@@ -1229,8 +1250,8 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 
 
 	// first positions
-	vec3d initial_lees_edwards_disp;
-	initial_lees_edwards_disp.reset();
+	int format = getBinaryConfigurationFileFormat(filename_import_positions);
+
 	ifstream file_import;
 	file_import.open(filename_import_positions.c_str(), ios::binary | ios::in);
 	if (!file_import) {
@@ -1239,114 +1260,31 @@ void Simulation::importConfigurationBinary(const string& filename_import_positio
 		throw runtime_error(error_str.str());
 	}
 
-	int binary_format_version;
-	int np;
-	int np_fixed;
-	double lx, ly, lz;
-	file_import.read((char*)&np, sizeof(int));
-	if (np == -1) {
-		file_import.read((char*)&binary_format_version, sizeof(int));
-		file_import.read((char*)&np, sizeof(int));
+	if (format == BIN_FORMAT_BASE_NEW) {
+		auto conf = readBaseConfiguration(file_import);
+		sys.shear_disp = conf.initial_lees_edwards_disp;
+		sys.setBoxSize(conf.lx,conf.ly,conf.lz);
+		sys.setConfiguration(conf.initial_position, conf.radius);
+		sys.setContacts(conf.contact_states);
+	} else if (format == BIN_FORMAT_FIXED_VEL) {
+		auto conf = readFixedVeloConfiguration(file_import);
+		sys.shear_disp = conf.initial_lees_edwards_disp;
+		sys.setBoxSize(conf.lx,conf.ly,conf.lz);
+		sys.setConfiguration(conf.initial_position, conf.radius);
+		sys.setFixedVelocities(conf.fixed_velocities);
+		sys.setContacts(conf.contact_states);
 	} else {
-		binary_format_version = 2; // may also be 1, but will be determined later
-	}
-	if (binary_format_version == 3) {
-		file_import.read((char*)&np_fixed, sizeof(int));
-	}
-	file_import.read((char*)&volume_or_area_fraction, sizeof(double));
-	file_import.read((char*)&lx, sizeof(double));
-	file_import.read((char*)&ly, sizeof(double));
-	file_import.read((char*)&lz, sizeof(double));
-	file_import.read((char*)&initial_lees_edwards_disp.x, sizeof(double));
-	file_import.read((char*)&initial_lees_edwards_disp.y, sizeof(double));
-	sys.shear_disp = initial_lees_edwards_disp;
-
-	double x_, y_, z_, r_;
-	vector <vec3d> initial_position;
-	vector <double> radius;
-	for (int i=0; i<np; i++) {
-		file_import.read((char*)&x_, sizeof(double));
-		file_import.read((char*)&y_, sizeof(double));
-		file_import.read((char*)&z_, sizeof(double));
-		file_import.read((char*)&r_, sizeof(double));
-		initial_position.push_back(vec3d(x_,y_,z_));
-		radius.push_back(r_);
-	}
-
-	sys.setBoxSize(lx,ly,lz);
-	sys.setConfiguration(initial_position, radius);
-
-	if (binary_format_version == 3) {
-		vector<vec3d> fixed_velocities;
-		double vx_, vy_, vz_;
-		for (int i=0; i<np_fixed; i++) {
-			file_import.read((char*)&vx_, sizeof(double));
-			file_import.read((char*)&vy_, sizeof(double));
-			file_import.read((char*)&vz_, sizeof(double));
-			fixed_velocities.push_back(vec3d(vx_, vy_, vz_));
-		}
-		sys.setFixedVelocities(fixed_velocities);
-	}
-
-	// now contacts
-	int ncont;
-	double dt_x, dt_y, dt_z, dr_x, dr_y, dr_z;
-	vector <struct contact_state> cont_states;
-	file_import.read((char*)&ncont, sizeof(unsigned int));
-	std::iostream::pos_type file_pos = file_import.tellg();
-	for (int i=0; i<ncont; i++) {
-		unsigned int p0, p1;
-		file_import.read((char*)&p0, sizeof(unsigned int));
-		// hacky thing to guess if this is an old format with particle numbers as unsigned short
-		if((int)p0>sys.get_np()){
-			binary_format_version = 1;
-			file_import.seekg(file_pos);
-			break;
-		}
-		file_import.read((char*)&p1, sizeof(unsigned int));
-		file_import.read((char*)&dt_x, sizeof(double));
-		file_import.read((char*)&dt_y, sizeof(double));
-		file_import.read((char*)&dt_z, sizeof(double));
-		file_import.read((char*)&dr_x, sizeof(double));
-		file_import.read((char*)&dr_y, sizeof(double));
-		file_import.read((char*)&dr_z, sizeof(double));
-		struct contact_state cs;
-		cs.p0 = p0;
-		cs.p1 = p1;
-		cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
-		cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
-		cont_states.push_back(cs);
-	}
-	if (binary_format_version == 1) {
-		for (int i=0; i<ncont; i++) {
-			unsigned short p0, p1;
-
-			file_import.read((char*)&p0, sizeof(unsigned short));
-			file_import.read((char*)&p1, sizeof(unsigned short));
-			file_import.read((char*)&dt_x, sizeof(double));
-			file_import.read((char*)&dt_y, sizeof(double));
-			file_import.read((char*)&dt_z, sizeof(double));
-			file_import.read((char*)&dr_x, sizeof(double));
-			file_import.read((char*)&dr_y, sizeof(double));
-			file_import.read((char*)&dr_z, sizeof(double));
-			struct contact_state cs;
-			cs.p0 = (int)p0;
-			cs.p1 = (int)p1;
-			cs.disp_tan = vec3d(dt_x, dt_y, dt_z);
-			cs.disp_rolling = vec3d(dr_x, dr_y, dr_z);
-			cont_states.push_back(cs);
-		}
+		throw runtime_error("Simulation::importConfigurationBinary :: unknown configuration file format.");
 	}
 	file_import.close();
-	sys.setContacts(cont_states);
 }
 
 string Simulation::prepareSimulationName(bool binary_conf,
-									   const string& filename_import_positions,
-									   const string& filename_parameters,
-									   const string& simu_identifier,
-									   double dimensionlessnumber,
-									   const string& input_scale)
+                                         const string& filename_import_positions,
+                                         const string& filename_parameters,
+                                         const string& simu_identifier,
+                                         double dimensionlessnumber,
+                                         const string& input_scale)
 {
 	/**
 	 \brief Determine simulation name.

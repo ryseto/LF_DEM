@@ -24,6 +24,7 @@
 #include <string>
 #include <tuple>
 #include <map>
+#include "Configuration.h"
 #include "StressTensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
@@ -308,6 +309,7 @@ private:
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
 	void setInteractions_GenerateInitConfig();
+	void setupConfiguration(struct base_configuration c, std::string control, bool is2d);
 	void setupSystemPreConfiguration(std::string control, bool is2d);
 	void setupSystemPostConfiguration();
 	void allocateRessourcesPreConfiguration();
@@ -409,7 +411,7 @@ private:
 	{
 		return shear_strain;
 	}
-	
+
 	double get_cumulated_strain()
 	{
 		return cumulated_strain;
@@ -453,7 +455,7 @@ private:
 		}
 		setVelocityDifference();
 	}
-	
+
 	const std::vector <vec3d> & getNonAffineDisp()
 	{
 		return na_disp;
