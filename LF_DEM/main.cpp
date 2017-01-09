@@ -188,11 +188,11 @@ int main(int argc, char **argv)
 		simulation.force_to_run = force_to_run;
 		simulation.long_file_name = long_file_name;
 		simulation.diminish_output = diminish_output;
-		
+
 		if (seq_type == "iy") {
 			simulation.simulationInverseYield(in_args.str(), input_files, binary_conf,
 											  dimensionless_number, suffix, rheology_control, simu_identifier);
-			
+
 		} else if (seq_filename == "not_given") {
 			try {
 				simulation.simulationSteadyShear(in_args.str(), input_files, binary_conf,

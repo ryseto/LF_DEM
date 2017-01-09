@@ -146,6 +146,7 @@ struct ParameterSet
  	bool cross_shear;        ///< Allow arbitrary shear in xy plane (actual direction set by theta_shear) [false]
 	double theta_shear;  ///< Shear direction, in degress, 0 is shear along x, 90 is shear along y [0]
 	double strain_reversal;  ///< for test_simulation = 21 (rtest1)
+	bool keep_input_strain;  ///< Use as initial strain value the strain from initial Lees-Edwards displacement [false]
 };
 
 #endif/* defined(__LF_DEM__ParameterSet__) */

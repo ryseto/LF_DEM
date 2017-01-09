@@ -74,6 +74,7 @@ private:
 	double costheta_shear;
 	double sintheta_shear;
 	double shear_rate;
+	double particle_volume;
 
 	vec3d omega_inf;
 	std::vector <vec3d> u_inf;
@@ -163,6 +164,14 @@ private:
 	void declareStressComponents();
 	void declareVelocityComponents();
 	void declareForceComponents();
+
+	template<typename T> void setupGenericConfiguration(T conf, std::string control);
+	void setupBrownian();
+	void setupParameters();
+	void setupParametersContacts();
+	void setupParametersLubrication();
+	void setupParametersIntegrator();
+	void setupSystemPostConfiguration();
 
  protected:
  public:
@@ -307,13 +316,13 @@ private:
 	                      const std::vector <double>& radii);
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
-	void getContacts(std::vector <struct contact_state>& cs);
+	std::vector <struct contact_state> getContacts();
+	struct base_configuration getConfiguration();
 	void setInteractions_GenerateInitConfig();
-	void setupConfiguration(struct base_configuration c, std::string control, bool is2d);
-	void setupSystemPreConfiguration(std::string control, bool is2d);
-	void setupSystemPostConfiguration();
-	void allocateRessourcesPreConfiguration();
-	void allocateRessourcesPostConfiguration();
+	void setupConfiguration(struct base_configuration c, std::string control);
+	void setupConfiguration(struct fixed_velo_configuration c, std::string control);
+	void setupConfiguration(struct circular_couette_configuration c, std::string control);
+	void allocateRessources();
 	void timeEvolution(double time_end, double strain_end);
 	void displacement(int i, const vec3d& dr);
 	void checkNewInteraction();

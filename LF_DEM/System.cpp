@@ -104,7 +104,7 @@ System::~System()
 	interaction_list.clear();
 }
 
-void System::allocateRessourcesPreConfiguration()
+void System::allocateRessources()
 {
 	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
@@ -120,8 +120,9 @@ void System::allocateRessourcesPreConfiguration()
 	}
 	// Configuration
 	if (twodimension) {
-		angle.resize(np);
+		angle.resize(np, 0);
 	}
+
 	// Velocity
 	velocity.resize(np);
 	for (auto &v: velocity) {
@@ -156,12 +157,15 @@ void System::allocateRessourcesPreConfiguration()
 	nb_blocks_mm.resize(np-p.np_fixed, 0);
 	nb_blocks_mf.resize(np-p.np_fixed, 0);
 	//
-	if (p.auto_determine_knkt) {
-		kn_avg.setRelaxationTime(p.memory_strain_avg);
-		kt_avg.setRelaxationTime(p.memory_strain_avg);
-		overlap_avg.setRelaxationTime(p.memory_strain_avg);
-		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
-	}
+
+	// Forces and Stress
+	forceResultant.resize(np);
+	torqueResultant.resize(np);
+
+	declareStressComponents();
+
+	total_stress_pp.resize(np);
+
 }
 
 void System::declareForceComponents()
@@ -222,23 +226,6 @@ void System::declareVelocityComponents()
 	}
 }
 
-void System::allocateRessourcesPostConfiguration()
-{
-	// Forces and Stress
-	forceResultant.resize(np);
-	torqueResultant.resize(np);
-
-	declareStressComponents();
-
-	total_stress_pp.resize(np);
-	if (brownian) {
-		if (lowPeclet) {
-			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
-			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
-		}
-	}
-}
-
 void System::setInteractions_GenerateInitConfig()
 {
 	calcInteractionRange = &System::calcLubricationRange;
@@ -277,6 +264,19 @@ void System::setConfiguration(const vector <vec3d>& initial_positions,
 	}
 	radius_wall_particle = radius[np-1];
 	setSystemVolume();
+
+	particle_volume = 0;
+	if (twodimension) {
+		for(auto r: radius) {
+			particle_volume += r*r;
+		}
+		particle_volume *= M_PI;
+	} else {
+		for(auto r: radius) {
+			particle_volume += r*r*r;
+		}
+		particle_volume *= 4*M_PI/3.;
+	}
 }
 
 void System::setFixedVelocities(const vector <vec3d>& vel)
@@ -303,35 +303,25 @@ void System::setContacts(const vector <struct contact_state>& cs)
 	}
 }
 
-void System::getContacts(vector <struct contact_state>& cs)
+vector <struct contact_state> System::getContacts()
 {
 	/**
 		\brief Get the list of contacts with their state variables.
 
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
+ vector <struct contact_state> cs;
 	for (const auto &inter: interaction) {
 		if (inter.contact.is_active()) {
 			cs.push_back(inter.contact.getState());
 		}
 	}
+	return cs;
 }
 
-void System::setupConfiguration(struct base_configuration conf, string control, bool is2d){
+void System::setupParametersIntegrator()
+{
 	string indent = "  System::\t";
-	cout << indent << "Setting up System... " << endl;
-	np = conf.np;
-	np_mobile = np;
-	twodimension = is2d;
-
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
-		rate_controlled = false;
-	}
-	stress_controlled = !rate_controlled;
-
 	if (p.integration_method == 0) {
 		timeEvolutionDt = &System::timeEvolutionEulersMethod;
 	} else if (p.integration_method == 1) {
@@ -341,7 +331,11 @@ void System::setupConfiguration(struct base_configuration conf, string control, 
 		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
 		throw runtime_error(error_str.str());
 	}
+}
 
+void System::setupParametersLubrication()
+{
+	string indent = "  System::\t";
 	lubrication = p.lubrication_model != "none";
 	if (p.lub_max_gap < 0) {
 		throw runtime_error(indent+"lub_max_gap<0 is forbidden.");
@@ -349,7 +343,6 @@ void System::setupConfiguration(struct base_configuration conf, string control, 
 	if (p.lub_reduce_parameter > 1) {
 		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
 	}
-	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
 
 	if (p.lubrication_model != "normal" &&
 		p.lubrication_model != "none" &&
@@ -357,15 +350,17 @@ void System::setupConfiguration(struct base_configuration conf, string control, 
 		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
 	}
 
-	if (p.interaction_range == -1) {
-		/* If interaction_range is not indicated,
-		 * interaction object is created at the lubrication cutoff.
+	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
+		/* The tangential part of lubrication is approximated as log(1/h).
+		 * To keep log(1/h) > 0, h needs to be less than 1.
 		 */
-		calcInteractionRange = &System::calcLubricationRange;
-		p.interaction_range = 2+p.lub_max_gap;
-	} else {
-		calcInteractionRange = &System::calcInteractionRangeDefault;
+		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
 	}
+}
+
+void System::setupParametersContacts()
+{
+	string indent = "  System::\t";
 	if (p.friction_model == 0) {
 		cout << indent+"friction model: no friction" << endl;
 		p.mu_static = 0;
@@ -394,246 +389,147 @@ void System::setupConfiguration(struct base_configuration conf, string control, 
 			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
 		}
 	}
-	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
-		/* The tangential part of lubrication is approximated as log(1/h).
-		 * To keep log(1/h) > 0, h needs to be less than 1.
+}
+
+void System::setupParameters()
+{
+	setupParametersIntegrator();
+	setupParametersLubrication();
+	setupParametersContacts();
+	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
+
+	if (p.interaction_range == -1) {
+		/* If interaction_range is not indicated,
+		 * interaction object is created at the lubrication cutoff.
 		 */
-		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
+		calcInteractionRange = &System::calcLubricationRange;
+		p.interaction_range = 2+p.lub_max_gap;
+	} else {
+		calcInteractionRange = &System::calcInteractionRangeDefault;
 	}
+
+
 	if (p.repulsive_length <= 0) {
 		repulsiveforce = false;
 		p.repulsive_length = 0;
 	}
 	setShearDirection(p.theta_shear);
-	// Memory
-	allocateRessourcesPreConfiguration();
 
-	for (int i=0; i<np; i++) {
-		if (twodimension) {
-			angle[i] = 0;
-		}
-		velocity[i].reset();
-		na_velocity[i].reset();
-		ang_velocity[i].reset();
-		na_ang_velocity[i].reset();
+	if (p.auto_determine_knkt) {
+		kn_avg.setRelaxationTime(p.memory_strain_avg);
+		kt_avg.setRelaxationTime(p.memory_strain_avg);
+		overlap_avg.setRelaxationTime(p.memory_strain_avg);
+		max_disp_tan_avg.setRelaxationTime(p.memory_strain_avg);
 	}
-	if (mobile_fixed) {
-		for (int i=0; i<p.np_fixed; i++) {
-			non_rate_proportional_wall_force[i].reset();
-			non_rate_proportional_wall_torque[i].reset();
-			rate_proportional_wall_force[i].reset();
-			rate_proportional_wall_torque[i].reset();
-		}
-	}
-
-	shear_strain = {0, 0, 0};
 
 	if (brownian) {
-	#ifdef DEV
-		/* In developing and debugging phases,
-		 * we give a seed to generate the same series of random number.
-		 * DEV is defined as a preprocessor option in the Makefile
-		 */
-	#ifndef USE_DSFMT
-		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
-	#endif
-	#ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
-	#endif
-	#endif
-
-	#ifndef DEV
-	#ifndef USE_DSFMT
-		r_gen = new MTRand;
-	#endif
-	#ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
-	#endif
-	#endif
+		if (lowPeclet) {
+			double stress_avg_relaxation_parameter = 10*p.time_interval_output_data; // 0 --> no average
+			stress_avg.setRelaxationTime(stress_avg_relaxation_parameter);
+		}
 	}
-	time_ = 0;
-	time_in_simulation_units = 0;
-	total_num_timesteps = 0;
-
-	vel_difference.reset();
-	setVelocityDifference();
 	if (p.simulation_mode == 31) {
 		p.sd_coeff = 1e-6;
 	}
-	angle_output = false;
-	if (twodimension) {
-		angle_output = true;
-	}
-	cout << indent << "Setting up System... [ok]" << endl;
-
-	shear_disp = conf.initial_lees_edwards_disp;
-	setBoxSize(conf.lx,conf.ly,conf.lz);
-	setConfiguration(conf.initial_position, conf.radius);
-	setContacts(conf.contact_states);
-
-	setupSystemPostConfiguration();
-
 }
-void System::setupSystemPreConfiguration(string control, bool is2d)
+
+void System::setupBrownian()
 {
-	/**
-		\brief Initialize the system class for the simulation.
-	 */
 
-	/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	 * @ We have to consider p.contact_relaxation_time in Brownian case.
-	 * @ The resistance coeffient affects Brownian force.
-	 * @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	 *
-	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
-	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
-	*/
-	string indent = "  System::\t";
-	cout << indent << "Setting up System... " << endl;
-	np_mobile = np-p.np_fixed;
-	twodimension = is2d;
-
-	if (control == "rate") {
-		rate_controlled = true;
-	}
-	if (control == "stress") {
-		rate_controlled = false;
-	}
-	stress_controlled = !rate_controlled;
-
-	if (p.integration_method == 0) {
-		timeEvolutionDt = &System::timeEvolutionEulersMethod;
-	} else if (p.integration_method == 1) {
-		timeEvolutionDt = &System::timeEvolutionPredictorCorrectorMethod;
-	} else {
-		ostringstream error_str;
-		error_str << indent << "integration_method = " << p.integration_method << endl << indent << "The integration method is not impremented yet." << endl;
-		throw runtime_error(error_str.str());
-	}
-
-	lubrication = p.lubrication_model != "none";
-	if (p.lub_max_gap < 0) {
-		throw runtime_error(indent+"lub_max_gap<0 is forbidden.");
-	}
-	if (p.lub_reduce_parameter > 1) {
-		cout << indent+" p.lub_reduce_parameter>1, log terms in lubrication set to 0." << endl;
-	}
-	pairwise_resistance = lubrication || p.contact_relaxation_time != 0 || p.contact_relaxation_time_tan != 0;
-
-	if (p.lubrication_model != "normal" &&
-		p.lubrication_model != "none" &&
-		p.lubrication_model != "tangential") {
-		throw runtime_error(indent+"unknown lubrication_model "+p.lubrication_model+"\n");
-	}
-
-	if (p.interaction_range == -1) {
-		/* If interaction_range is not indicated,
-		 * interaction object is created at the lubrication cutoff.
-		 */
-		calcInteractionRange = &System::calcLubricationRange;
-		p.interaction_range = 2+p.lub_max_gap;
-	} else {
-		calcInteractionRange = &System::calcInteractionRangeDefault;
-	}
-	if (p.friction_model == 0) {
-		cout << indent+"friction model: no friction" << endl;
-		p.mu_static = 0;
-		friction = false;
-	} else if (p.friction_model == 1) {
-		cout << indent+"friction model: Coulomb" << endl;
-		friction = true;
-	} else if (p.friction_model == 2 || p.friction_model == 3) {
-		cout << indent+"friction model: Coulomb + Critical Load" << endl;
-		friction = true;
-	} else if (p.friction_model == 5) {
-		cout << indent+"friction_model: Max tangential force" << endl;
-		friction = true;
-	} else if (p.friction_model == 6) {
-		cout << indent+"friction_model: Coulomb law + Max tangential force" << endl;
-		friction = true;
-	} else {
-		throw runtime_error(indent+"Error: unknown friction model\n");
-	}
-	if (p.mu_dynamic < 0) {
-		p.mu_dynamic = p.mu_static;
-	}
-	if (p.mu_rolling > 0) {
-		rolling_friction = true;
-		if (friction == false) {
-			throw runtime_error(indent+"Error: Rolling friction without sliding friction?\n");
-		}
-	}
-	if (p.lubrication_model == "tangential" && p.lub_max_gap >= 1) {
-		/* The tangential part of lubrication is approximated as log(1/h).
-		 * To keep log(1/h) > 0, h needs to be less than 1.
-		 */
-		throw runtime_error(indent+"lub_max_gap must be smaller than 1\n");
-	}
-	if (p.repulsive_length <= 0) {
-		repulsiveforce = false;
-		p.repulsive_length = 0;
-	}
-	setShearDirection(p.theta_shear);
-	// Memory
-	allocateRessourcesPreConfiguration();
-
-	for (int i=0; i<np; i++) {
-		if (twodimension) {
-			angle[i] = 0;
-		}
-		velocity[i].reset();
-		na_velocity[i].reset();
-		ang_velocity[i].reset();
-		na_ang_velocity[i].reset();
-	}
-	if (mobile_fixed) {
-		for (int i=0; i<p.np_fixed; i++) {
-			non_rate_proportional_wall_force[i].reset();
-			non_rate_proportional_wall_torque[i].reset();
-			rate_proportional_wall_force[i].reset();
-			rate_proportional_wall_torque[i].reset();
-		}
-	}
-
-	shear_strain = {0, 0, 0};
-
-	if (brownian) {
 #ifdef DEV
-		/* In developing and debugging phases,
-		 * we give a seed to generate the same series of random number.
-		 * DEV is defined as a preprocessor option in the Makefile
-		 */
+	/* In developing and debugging phases,
+	 * we give a seed to generate the same series of random number.
+	 * DEV is defined as a preprocessor option in the Makefile
+	 */
 #ifndef USE_DSFMT
-		r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+	r_gen = new MTRand(17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
+	dsfmt_init_gen_rand(&r_gen, 17);	cerr << " WARNING : debug mode: hard coded seed is given to the RNG " << endl;
 #endif
 #endif
 
 #ifndef DEV
 #ifndef USE_DSFMT
-		r_gen = new MTRand;
+	r_gen = new MTRand;
 #endif
 #ifdef USE_DSFMT
-		dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
+	dsfmt_init_gen_rand(&r_gen, wagnerhash(std::time(NULL), clock()) ) ; // hash of time and clock trick from MersenneTwister v1.0 by Richard J. Wagner
 #endif
 #endif
+}
+
+template<typename T>
+void System::setupGenericConfiguration(T conf, string control){
+	string indent = "  System::\t";
+	cout << indent << "Setting up System... " << endl;
+	np = conf.position.size();
+	np_mobile = np - p.np_fixed;
+	twodimension = conf.ly == 0;
+
+	if (control == "rate") {
+		rate_controlled = true;
 	}
+	if (control == "stress") {
+		rate_controlled = false;
+	}
+	stress_controlled = !rate_controlled;
+
+	setupParameters();
+	// Memory
+	allocateRessources();
+
+	if (brownian) {
+		setupBrownian();
+	}
+
 	time_ = 0;
 	time_in_simulation_units = 0;
 	total_num_timesteps = 0;
 
 	vel_difference.reset();
 	setVelocityDifference();
-	if (p.simulation_mode == 31) {
-		p.sd_coeff = 1e-6;
-	}
+
 	angle_output = false;
 	if (twodimension) {
 		angle_output = true;
 	}
 	cout << indent << "Setting up System... [ok]" << endl;
+
+	shear_disp = conf.lees_edwards_disp;
+	if (p.keep_input_strain) {
+		shear_strain = shear_disp/lz;
+	} else {
+		shear_strain = {0, 0, 0};
+	}
+
+	setBoxSize(conf.lx,conf.ly,conf.lz);
+	setConfiguration(conf.position, conf.radius);
+	setContacts(conf.contact_states);
+	setupSystemPostConfiguration();
+}
+
+void System::setupConfiguration(struct base_configuration conf, string control)
+{
+	setupGenericConfiguration(conf, control);
+}
+
+void System::setupConfiguration(struct fixed_velo_configuration conf, string control)
+{
+	p.np_fixed = conf.fixed_velocities.size();
+	setupGenericConfiguration(conf, control);
+	setFixedVelocities(conf.fixed_velocities);
+}
+
+void System::setupConfiguration(struct circular_couette_configuration conf, string control)
+{
+	p.np_fixed = conf.np_wall1 + conf.np_wall2;
+	np_wall1 = conf.np_wall1;
+	np_wall2 = conf.np_wall2;
+	radius_in = conf.radius_in;
+	radius_out = conf.radius_out;
+
+	setupGenericConfiguration(conf, control);
 }
 
 void System::setupSystemPostConfiguration()
@@ -697,7 +593,6 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
-	allocateRessourcesPostConfiguration();
 	if (!stress_controlled) {
 		setVelocityDifference();
 	}
@@ -734,6 +629,25 @@ void System::initializeBoxing()
 	}
 	boxset.update();
 }
+
+struct base_configuration System::getConfiguration()
+{
+	struct base_configuration c;
+	c.lx = lx;
+	c.ly = ly;
+	c.lz = lz;
+	c.volume_or_area_fraction = particle_volume/system_volume;
+
+	c.position = position;
+	c.radius = radius;
+	if (twodimension) {
+		c.angle = angle;
+	}
+	c.lees_edwards_disp = shear_disp;
+	c.contact_states = getContacts();
+	return c;
+}
+
 
 void System::timeStepBoxing()
 {
