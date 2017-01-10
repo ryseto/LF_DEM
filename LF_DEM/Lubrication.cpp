@@ -12,7 +12,6 @@
 #include "LubricationFunctions.h"
 #include "Interaction.h"
 #include "System.h"
-
 using namespace std;
 
 Lubrication::Lubrication():
@@ -126,13 +125,13 @@ void Lubrication::setParticleData()
 void Lubrication::activate()
 {
 	_active = true;
-	sys->updateNumberOfPairwiseResistances(p0, p1, +1);
+	sys->declareResistance(p0, p1);
 }
 
 void Lubrication::deactivate()
 {
 	_active = false;
-	sys->updateNumberOfPairwiseResistances(p0, p1, -1);
+	sys->eraseResistance(p0, p1);
 }
 
 void Lubrication::updateActivationState()
@@ -313,7 +312,6 @@ void Lubrication::calcXFunctionsStress()
 void Lubrication::calcXYFunctions()
 {
 	calcXFunctions();
-
 	for (int j=0; j<4; j++) {
 		YA[j] = cYA[j]*log_lub_coeff;
 		YB[j] = cYB[j]*log_lub_coeff;
@@ -331,7 +329,7 @@ void Lubrication::calcXYFunctionsStress()
 	}
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(double shear_rate) const
 {
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
@@ -343,13 +341,12 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
 	 * GE2 = (nvecnvec:E)*(XG12+XG22)*nvec
 	 */
 	double nnE;
-	if (sys->p.cross_shear) {
+	if (!sys->p.cross_shear) {
+		nnE = dot(nvec, sys->E_infinity*(*nvec));
+	} else {
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
-		// nnE = nynz;
 		nnE = costheta*nvec->x*nvec->z+sintheta*nvec->y*nvec->z;
-	} else {
-		nnE = nvec->x*nvec->z;
 	}
 	double cGE_p0 = (XG[0]+XG[2])*nnE;
 	double cGE_p1 = (XG[1]+XG[3])*nnE;
@@ -360,10 +357,14 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
 	GEj.x = cGE_p1*nvec->x;
 	GEj.y = cGE_p1*nvec->y;
 	GEj.z = cGE_p1*nvec->z;
+	if (shear_rate != 1) { // @@ To be checked
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(double shear_rate)  const
 {
 	/*
 	* mode normal+tangential
@@ -373,13 +374,13 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
 	double nnE;
-	if (sys->p.cross_shear) {
+	if (!sys->p.cross_shear) {
+		nnE = dot(nvec, sys->E_infinity*(*nvec));
+	} else {
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		// nnE = nynz;
 		nnE = costheta*nvec->x*nvec->z+sintheta*nvec->y*nvec->z;
-	} else {
-		nnE = nvec->x*nvec->z;
 	}
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
@@ -387,27 +388,29 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
 	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE;
 	vec3d GEi, GEj;
 	if (!sys->p.cross_shear) {
-		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
-		GEi.y =  cGE_i*nvec->y;
-		GEi.z =  cGE_i*nvec->z+YG0_YG2*nvec->x;
-		GEj.x =  cGE_j*nvec->x+YG1_YG3*nvec->z;
-		GEj.y =  cGE_j*nvec->y;
-		GEj.z =  cGE_j*nvec->z+YG1_YG3*nvec->x;
+		vec3d Einf_nvec = sys->E_infinity*(*nvec);
+		GEi = cGE_i*(*nvec) + (YG0_YG2*2)*Einf_nvec;
+		GEj = cGE_j*(*nvec) + (YG1_YG3*2)*Einf_nvec;
 	} else {
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		double costheta_nx_sintheta_ny = costheta*nvec->x+sintheta*nvec->y;
-		GEi.x =  cGE_i*nvec->x+YG0_YG2*costheta*nvec->z;
-		GEi.y =  cGE_i*nvec->y+YG0_YG2*sintheta*nvec->z;
-		GEi.z =  cGE_i*nvec->z+YG0_YG2*costheta_nx_sintheta_ny;
-		GEj.x =  cGE_j*nvec->x+YG1_YG3*costheta*nvec->z;
-		GEj.y =  cGE_j*nvec->y+YG1_YG3*sintheta*nvec->z;
-		GEj.z =  cGE_j*nvec->z+YG1_YG3*costheta_nx_sintheta_ny;
+		GEi.x = cGE_i*nvec->x+YG0_YG2*costheta*nvec->z;
+		GEi.y = cGE_i*nvec->y+YG0_YG2*sintheta*nvec->z;
+		GEi.z = cGE_i*nvec->z+YG0_YG2*costheta_nx_sintheta_ny;
+		GEj.x = cGE_j*nvec->x+YG1_YG3*costheta*nvec->z;
+		GEj.y = cGE_j*nvec->y+YG1_YG3*sintheta*nvec->z;
+		GEj.z = cGE_j*nvec->z+YG1_YG3*costheta_nx_sintheta_ny;
+	}
+
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
 	}
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential() const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(double shear_rate) const
 {
 	/*
 	 * mode normal+tangential
@@ -416,45 +419,37 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-
-	double nxnx = nvec->x*nvec->x;
-	double nxny = nvec->x*nvec->y;
-	double nxnz = nvec->x*nvec->z;
-	double nynz = nvec->y*nvec->z;
-	double nyny = nvec->y*nvec->y;
-	double nznz = nvec->z*nvec->z;
 	double nnE;
-	if (sys->p.cross_shear) {
+	if (!sys->p.cross_shear) {
+		nnE = dot(nvec, sys->E_infinity*(*nvec));
+	} else {
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		// nnE = nynz;
-		nnE = costheta*nxnz+sintheta*nynz;
-	} else {
-		nnE = nxnz;
+		nnE = costheta*nvec->x*nvec->z+sintheta*nvec->y*nvec->z;
 	}
-	
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
 	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE;
 	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE;
-	double cHE_i =  YH[0]+YH[2];
-	double cHE_j =  YH[1]+YH[3];
+	double cHE_i = YH[0]+YH[2];
+	double cHE_j = YH[1]+YH[3];
 	vec3d GEi, GEj, HEi, HEj;
 	if (!sys->p.cross_shear) {
-		GEi.x =  cGE_i*nvec->x+YG0_YG2*nvec->z;
-		GEi.y =  cGE_i*nvec->y;
-		GEi.z =  cGE_i*nvec->z+YG0_YG2*nvec->x;
-		GEj.x =  cGE_j*nvec->x+YG1_YG3*nvec->z;
-		GEj.y =  cGE_j*nvec->y;
-		GEj.z =  cGE_j*nvec->z+YG1_YG3*nvec->x;
-		double nxnx_nznz = nxnx-nznz;
-		HEi.x =  cHE_i*nxny;
-		HEi.y = -cHE_i*nxnx_nznz;
-		HEi.z = -cHE_i*nynz;
-		HEj.x =  cHE_j*nxny;
-		HEj.y = -cHE_j*nxnx_nznz;
-		HEj.z = -cHE_j*nynz;
+		vec3d Einf_nvec = sys->E_infinity*(*nvec);
+		GEi = cGE_i*(*nvec) + (YG0_YG2*2)*Einf_nvec;
+		GEj = cGE_j*(*nvec) + (YG1_YG3*2)*Einf_nvec;
+		vec3d nvec_Einf = (*nvec)*sys->E_infinity;
+		vec3d nvec_Einf_x_nvec = cross(nvec_Einf, (*nvec));
+		HEi = -2*cHE_i*nvec_Einf_x_nvec;
+		HEj = -2*cHE_j*nvec_Einf_x_nvec;
 	} else {
+		double nxnx = nvec->x*nvec->x;
+		double nxny = nvec->x*nvec->y;
+		double nxnz = nvec->x*nvec->z;
+		double nynz = nvec->y*nvec->z;
+		double nyny = nvec->y*nvec->y;
+		double nznz = nvec->z*nvec->z;
 		double costheta, sintheta;
 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
 		double costheta_nx_sintheta_ny = costheta*nvec->x+sintheta*nvec->y;
@@ -473,32 +468,32 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 		HEj.y = -cHE_j*( costheta*nxnx_nznz + sintheta*nxny);
 		HEj.z =  cHE_j*(-costheta*nynz      + sintheta*nxnz);
 	}
+
+	if (shear_rate != 1) {
+		GEi *= shear_rate;
+		GEj *= shear_rate;
+		HEi *= shear_rate;
+		HEj *= shear_rate;
+	}
 	return std::make_tuple(GEi, GEj, HEi, HEj);
 }
 
 // for FT/UW version
 struct ODBlock Lubrication::RFU_ODBlock_squeeze() const
 {
-	double n0n0 = nvec->x*nvec->x;
-	double n0n1 = nvec->x*nvec->y;
-	double n0n2 = nvec->x*nvec->z;
-	double n1n1 = nvec->y*nvec->y;
-	double n1n2 = nvec->y*nvec->z;
-	double n2n2 = nvec->z*nvec->z;
-
 	struct ODBlock block;
 	// column 0
-	block.col0[0] = XA[1]*n0n0;
-	block.col0[1] = XA[1]*n0n1;
-	block.col0[2] = XA[1]*n0n2;
+	block.col0[0] = XA[1]*nvec->x*nvec->x;
+	block.col0[1] = XA[1]*nvec->x*nvec->y;
+	block.col0[2] = XA[1]*nvec->x*nvec->z;
 	block.col0[3] = 0;
 	block.col0[4] = 0;
 	// column 1
-	block.col1[0] = XA[1]*n1n1;
-	block.col1[1] = XA[1]*n1n2;
+	block.col1[0] = XA[1]*nvec->y*nvec->y;
+	block.col1[1] = XA[1]*nvec->y*nvec->z;
 	block.col1[2] = 0;
 	// column 2
-	block.col2[0] = XA[1]*n2n2;
+	block.col2[0] = XA[1]*nvec->z*nvec->z;
 	// column 3
 	block.col3[0] = 0;
 	block.col3[1] = 0;
@@ -517,41 +512,33 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze() const
 // for FT/UW version
 struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential() const
 {
-	double n0n0 = nvec->x*nvec->x;
-	double n0n1 = nvec->x*nvec->y;
-	double n0n2 = nvec->x*nvec->z;
-	double n1n1 = nvec->y*nvec->y;
-	double n1n2 = nvec->y*nvec->z;
-	double n2n2 = nvec->z*nvec->z;
-	double one_n0n0 = 1-n0n0;
-	double one_n1n1 = 1-n1n1;
-	double one_n2n2 = 1-n2n2;
-	double XA1mYA1 = XA[1]-YA[1];
+	double XA1_YA1 = XA[1]-YA[1];
 	struct ODBlock block;
 	// column 0
-	block.col0[0] =  XA[1]*n0n0+YA[1]*one_n0n0;
-	block.col0[1] =  XA1mYA1*n0n1;
-	block.col0[2] =  XA1mYA1*n0n2;
+	block.col0[0] =  YA[1] + XA1_YA1*nvec->x*nvec->x;
+	block.col0[1] =  XA1_YA1*nvec->x*nvec->y;
+	block.col0[2] =  XA1_YA1*nvec->x*nvec->z;
 	block.col0[3] = -YB[2]*nvec->z;
 	block.col0[4] =  YB[2]*nvec->y;
 	// column 1
-	block.col1[0] =  XA[1]*n1n1+YA[1]*one_n1n1;
-	block.col1[1] =  XA1mYA1*n1n2;
+	block.col1[0] =  YA[1] + XA1_YA1*nvec->y*nvec->y;
+	block.col1[1] =  XA1_YA1*nvec->y*nvec->z;
 	block.col1[2] = -YB[2]*nvec->x;
 	// column 2
-	block.col2[0] =  XA[1]*n2n2+YA[1]*one_n2n2;
+	block.col2[0] =  YA[1] + XA1_YA1*nvec->z*nvec->z;
 	// column 3
 	block.col3[0] =  YB[1]*nvec->z;
 	block.col3[1] = -YB[1]*nvec->y;
-	block.col3[2] =  YC[1]*one_n0n0;
-	block.col3[3] = -YC[1]*n0n1;
-	block.col3[4] = -YC[1]*n0n2;
+	block.col3[2] =  YC[1]*(1-nvec->x*nvec->x);
+
+	block.col3[3] = -YC[1]*nvec->x*nvec->y;
+	block.col3[4] = -YC[1]*nvec->x*nvec->z;
 	// column 4
 	block.col4[0] =  YB[1]*nvec->x;
-	block.col4[1] =  YC[1]*one_n1n1;
-	block.col4[2] = -YC[1]*n1n2;
+	block.col4[1] =  YC[1]*(1-nvec->y*nvec->y);
+	block.col4[2] = -YC[1]*nvec->y*nvec->z;
 	// column 5
-	block.col5[0] =  YC[1]*one_n2n2;
+	block.col5[0] =  YC[1]*(1-nvec->z*nvec->z);
 	return block;
 }
 
@@ -560,26 +547,18 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze() const
 {
 	struct DBlock b0;
 	struct DBlock b1;
-
-	double n0n0 = nvec->x*nvec->x;
-	double n0n1 = nvec->x*nvec->y;
-	double n0n2 = nvec->x*nvec->z;
-	double n1n1 = nvec->y*nvec->y;
-	double n1n2 = nvec->y*nvec->z;
-	double n2n2 = nvec->z*nvec->z;
-
 	// (*,0)
-	b0.col0[0] = XA[0]*n0n0; // 00 element of the dblock
-	b0.col0[1] = XA[0]*n0n1;           // 10
-	b0.col0[2] = XA[0]*n0n2;           // 20
+	b0.col0[0] = XA[0]*nvec->x*nvec->x; // 00 element of the dblock
+	b0.col0[1] = XA[0]*nvec->x*nvec->y;           // 10
+	b0.col0[2] = XA[0]*nvec->x*nvec->z;           // 20
 	b0.col0[3] = 0;                   // 40
 	b0.col0[4] = 0;                   // 50
 	// (*,1)
-	b0.col1[0] = XA[0]*n1n1; // 11
-	b0.col1[1] = XA[0]*n1n2;           // 21
+	b0.col1[0] = XA[0]*nvec->y*nvec->y; // 11
+	b0.col1[1] = XA[0]*nvec->y*nvec->z; // 21
 	b0.col1[2] = 0;                   // 51
 	// (*,2)
-	b0.col2[0] = XA[0]*n2n2 ; // 22
+	b0.col2[0] = XA[0]*nvec->z*nvec->z ; // 22
 	// (*,3)
 	b0.col3[0] = 0;                 // 33
 	b0.col3[1] = 0;                     // 43
@@ -589,19 +568,18 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze() const
 	b0.col4[1] = 0;                     // 54
 	// (*,5)
 	b0.col5[0] = 0;                 // 55
-
 	 // (*,0)
- 	b1.col0[0] = XA[3]*n0n0; // 00 element of the dblock
- 	b1.col0[1] = XA[3]*n0n1;           // 10
- 	b1.col0[2] = XA[3]*n0n2;           // 20
+ 	b1.col0[0] = XA[3]*nvec->x*nvec->x; // 00 element of the dblock
+ 	b1.col0[1] = XA[3]*nvec->x*nvec->y;           // 10
+ 	b1.col0[2] = XA[3]*nvec->x*nvec->z;           // 20
  	b1.col0[3] = 0;                   // 40
  	b1.col0[4] = 0;                   // 50
  	// (*,1)
- 	b1.col1[0] = XA[3]*n1n1; // 11
- 	b1.col1[1] = XA[3]*n1n2;           // 21
+ 	b1.col1[0] = XA[3]*nvec->y*nvec->y; // 11
+	b1.col1[1] = XA[3]*nvec->y*nvec->z; // 21
  	b1.col1[2] = 0;                   // 51
  	// (*,2)
- 	b1.col2[0] = XA[3]*n2n2; // 22
+	b1.col2[0] = XA[3]*nvec->z*nvec->z; // 22
  	// (*,3)
  	b1.col3[0] = 0;                 // 33
  	b1.col3[1] = 0;                     // 43
@@ -611,7 +589,6 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze() const
  	b1.col4[1] = 0;                     // 54
  	// (*,5)
  	b1.col5[0] = 0;                 // 55
-
 	return std::make_pair(b0, b1);
 }
 
@@ -620,7 +597,6 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 {
 	struct DBlock b0;
 	struct DBlock b1;
-
 	double n0n0 = nvec->x*nvec->x;
 	double n0n1 = nvec->x*nvec->y;
 	double n0n2 = nvec->x*nvec->z;
@@ -630,9 +606,7 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 	double one_n0n0 = 1-n0n0;
 	double one_n1n1 = 1-n1n1;
 	double one_n2n2 = 1-n2n2;
-
 	double XA0mYA0 = XA[0]-YA[0];
-
 	// (*,0)
 	b0.col0[0] =  XA[0]*n0n0+YA[0]*one_n0n0; // 00 element of the dblock
 	b0.col0[1] = XA0mYA0*n0n1;           // 10
@@ -681,8 +655,6 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 	return std::make_pair(b0, b1);
 }
 
-
-
 // computes the contribution to S = R_SU * V (in Brady's notations) [ S = G V in Jeffrey's ones ]
 // from pair (i,j).
 // ie fills :
@@ -700,100 +672,27 @@ void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
 	 *         = - vec{n}.(XG11*v1+XG12*v2)*(ninj-(1/3)*delta_{ij})
 	 *
 	 */
-	double nxnx = nvec->x*nvec->x;
-	double nxny = nvec->x*nvec->y;
-	double nxnz = nvec->x*nvec->z;
-	double nynz = nvec->y*nvec->z;
-	double nyny = nvec->y*nvec->y;
-	double nznz = nvec->z*nvec->z;
-
-	double cXG_i = -dot(nvec, XG[0]*vi+XG[1]*vj);
-	double cXG_j = -dot(nvec, XG[2]*vi+XG[3]*vj);
-	StressTensor XGU_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
-	StressTensor XGU_j = XGU_i;
-	XGU_i *= cXG_i;
-	XGU_j *= cXG_j;
-	stresslet_i += XGU_i;
-	stresslet_j += XGU_j;
+	double nvec_vi = dot(nvec, vi);
+	double nvec_vj = dot(nvec, vj);
+	StressTensor nvec_nvec(*nvec);
+	stresslet_i += -(XG[0]*nvec_vi+XG[1]*nvec_vj)*nvec_nvec; // XGU_i
+	stresslet_j += -(XG[2]*nvec_vi+XG[3]*nvec_vj)*nvec_nvec; // XGU_j
 	if (!tangential) {
 		return;
 	}
-	StressTensor YGU_i;
-	StressTensor YGU_j;
-	double cYGUi_xx = nvec->x*vi.x+nvec->x*vi.x-2*nxnx*dot(nvec, vi);
-	double cYGUj_xx = nvec->x*vj.x+nvec->x*vj.x-2*nxnx*dot(nvec, vj);
-	YGU_i.elm[0] = -YG[0]*cYGUi_xx-YG[1]*cYGUj_xx;
-	YGU_j.elm[0] = -YG[2]*cYGUi_xx-YG[3]*cYGUj_xx;
-
-	double cYGUi_xy = nvec->x*vi.y+nvec->y*vi.x-2*nxny*dot(nvec, vi);
-	double cYGUj_xy = nvec->x*vj.y+nvec->y*vj.x-2*nxny*dot(nvec, vj);
-	YGU_i.elm[1] = -YG[0]*cYGUi_xy-YG[1]*cYGUj_xy;
-	YGU_j.elm[1] = -YG[2]*cYGUi_xy-YG[3]*cYGUj_xy;
-
-	double cYGUi_xz = nvec->x*vi.z+nvec->z*vi.x-2*nxnz*dot(nvec, vi);
-	double cYGUj_xz = nvec->x*vj.z+nvec->z*vj.x-2*nxnz*dot(nvec, vj);
-	YGU_i.elm[2] = -YG[0]*cYGUi_xz-YG[1]*cYGUj_xz;
-	YGU_j.elm[2] = -YG[2]*cYGUi_xz-YG[3]*cYGUj_xz;
-
-	double cYGUi_yz = nvec->y*vi.z+nvec->z*vi.y-2*nynz*dot(nvec, vi);
-	double cYGUj_yz = nvec->y*vj.z+nvec->z*vj.y-2*nynz*dot(nvec, vj);
-	YGU_i.elm[3] = -YG[0]*cYGUi_yz-YG[1]*cYGUj_yz;
-	YGU_j.elm[3] = -YG[2]*cYGUi_yz-YG[3]*cYGUj_yz;
-
-	double cYGUi_yy = nvec->y*vi.y+nvec->y*vi.y-2*nyny*dot(nvec, vi);
-	double cYGUj_yy = nvec->y*vj.y+nvec->y*vj.y-2*nyny*dot(nvec, vj);
-
-	YGU_i.elm[4] = -YG[0]*cYGUi_yy-YG[1]*cYGUj_yy;
-	YGU_j.elm[4] = -YG[2]*cYGUi_yy-YG[3]*cYGUj_yy;
-
-	double cYGUi_zz = nvec->z*vi.z+nvec->z*vi.z-2*nznz*dot(nvec, vi);
-	double cYGUj_zz = nvec->z*vj.z+nvec->z*vj.z-2*nznz*dot(nvec, vj);
-
-	YGU_i.elm[5] = -YG[0]*cYGUi_zz-YG[1]*cYGUj_zz;
-	YGU_j.elm[5] = -YG[2]*cYGUi_zz-YG[3]*cYGUj_zz;
-
-	stresslet_i += YGU_i;
-	stresslet_j += YGU_j;
-
-	StressTensor YHO_i;
-	StressTensor YHO_j;
-	double cYHOi_xx = nxnz*oi.y-nxny*oi.z;
-	double cYHOj_xx = nxnz*oj.y-nxny*oj.z;
-	YHO_i.elm[0] = -2*(YM[0]*cYHOi_xx+YM[1]*cYHOj_xx);
-	YHO_j.elm[0] = -2*(YM[2]*cYHOi_xx+YM[3]*cYHOj_xx);
-
-	double cYHOi_xy = nxnx*oi.z-nxnz*oi.x+nynz*oi.y-nyny*oi.z;
-	double cYHOj_xy = nxnx*oj.z-nxnz*oj.x+nynz*oj.y-nyny*oj.z;
-	YHO_i.elm[1] = -YM[0]*cYHOi_xy-YM[1]*cYHOj_xy;
-	YHO_j.elm[1] = -YM[2]*cYHOi_xy-YM[3]*cYHOj_xy;
-
-	double cYHOi_xz = nxny*oi.x-nxnx*oi.y+nznz*oi.y-nynz*oi.z;
-	double cYHOj_xz = nxny*oj.x-nxnx*oj.y+nznz*oj.y-nynz*oj.z;
-	YHO_i.elm[2] = -YM[0]*cYHOi_xz-YM[1]*cYHOj_xz;
-	YHO_j.elm[2] = -YM[2]*cYHOi_xz-YM[3]*cYHOj_xz;
-
-	double cYHOi_yz = nyny*oi.x-nxny*oi.y+nxnz*oi.z-nznz*oi.x;
-	double cYHOj_yz = nyny*oj.x-nxny*oj.y+nxnz*oj.z-nznz*oj.x;
-	YHO_i.elm[3] = -YM[0]*cYHOi_yz-YM[1]*cYHOj_yz;
-	YHO_j.elm[3] = -YM[2]*cYHOi_yz-YM[3]*cYHOj_yz;
-
-	double cYHOi_yy = nxny*oi.z-nynz*oi.x;
-	double cYHOj_yy = nxny*oj.z-nynz*oj.x;
-	YHO_i.elm[4] = -2*(YM[0]*cYHOi_yy+YM[1]*cYHOj_yy);
-	YHO_j.elm[4] = -2*(YM[2]*cYHOi_yy+YM[3]*cYHOj_yy);
-
-	double cYHOi_zz = nynz*oi.x-nxnz*oi.y;
-	double cYHOj_zz = nynz*oj.x-nxnz*oj.y;
-	YHO_i.elm[5] = -2*(YM[0]*cYHOi_zz+YM[1]*cYHOj_zz);
-	YHO_j.elm[5] = -2*(YM[2]*cYHOi_zz+YM[3]*cYHOj_zz);
-
-	stresslet_i += YHO_i;
-	stresslet_j += YHO_j;
+	StressTensor tmp_i = StressTensor(*nvec, vi) - nvec_vi*nvec_nvec;
+	StressTensor tmp_j = StressTensor(*nvec, vj) - nvec_vj*nvec_nvec;
+	stresslet_i += -2*(YG[0]*tmp_i+YG[1]*tmp_j); // YGU_i
+	stresslet_j += -2*(YG[2]*tmp_i+YG[3]*tmp_j); // YGU_j
+	StressTensor tmp2_i(*nvec, cross(oi, *nvec));
+	StressTensor tmp2_j(*nvec, cross(oj, *nvec));
+	stresslet_i += -2*(YM[0]*tmp2_i+YM[1]*tmp2_j); // YHO_i
+	stresslet_j += -2*(YM[2]*tmp2_i+YM[3]*tmp2_j); // YHO_j
 }
 
 void Lubrication::addMEStresslet(double cos_theta_shear,
                                  double sin_theta_shear,
-                                 double shear_rate,
+                                 double rate,
                                  StressTensor& stresslet_i,
                                  StressTensor& stresslet_j) const
 {
@@ -814,56 +713,39 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
 		\f$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} \f$
 
 	 */
-	bool shear_along_x = sin_theta_shear == 0.;
-	double nxnx = nvec->x*nvec->x;
-	double nxny = nvec->x*nvec->y;
-	double nxnz = nvec->x*nvec->z;
-	double nynz = nvec->y*nvec->z;
-	double nyny = nvec->y*nvec->y;
-	double nznz = nvec->z*nvec->z;
+	bool shear_along_x = (sin_theta_shear == 0. && cos_theta_shear == 1.);
 	double nnE;
 	if (shear_along_x) {
-		nnE = nxnz;
+		nnE = dot(nvec, sys->E_infinity*(*nvec));
 	} else {
-		nnE = cos_theta_shear*nxnz + sin_theta_shear*nynz; // this is not including the shear rate
+		nnE = cos_theta_shear*nvec->x*nvec->z+sin_theta_shear*nvec->y*nvec->z; // this is not including the shear rate
 	}
-	
-	double cXM_i = (3.0/2)*(XM[0]+XM[1])*nnE;
-	double cXM_j = (3.0/2)*(XM[2]+XM[3])*nnE;
-	StressTensor XME_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
-	StressTensor XME_j = XME_i;
-	XME_i *= shear_rate*cXM_i;
-	XME_j *= shear_rate*cXM_j;
-
-	stresslet_i += XME_i;
-	stresslet_j += XME_j;
-
+	StressTensor nvec_nvec(*nvec);
+	double coeff = 1.5*nnE*rate;
+	stresslet_i += coeff*(XM[0]+XM[1])*nvec_nvec; // XME_i
+	stresslet_j += coeff*(XM[2]+XM[3])*nvec_nvec; // XME_j
 	if (tangential) {
-		double cYM_i = (1.0/2)*(YM[0]+YM[1]);
-		double cYM_j = (1.0/2)*(YM[2]+YM[3]);
-
-		StressTensor YME_i;
+		StressTensor nvec_Einf_nvec__nnE_nvec_nvec;
 		if (shear_along_x) {
-			YME_i.elm[0] = 2*nxnz     -4*nxnx*nnE;
-			YME_i.elm[1] =   nynz     -4*nxny*nnE;
-			YME_i.elm[2] =   nxnx+nznz-4*nxnz*nnE;
-			YME_i.elm[3] =   nxny     -4*nynz*nnE;
-			YME_i.elm[4] =            -4*nyny*nnE;
-			YME_i.elm[5] = 2*nxnz     -4*nznz*nnE;
+			vec3d Einf_nvec = sys->E_infinity*(*nvec);
+			StressTensor nvec_Einf_nvec(*nvec, Einf_nvec);
+			nvec_Einf_nvec__nnE_nvec_nvec = 2*(nvec_Einf_nvec-nnE*nvec_nvec);
 		} else {
-			YME_i.elm[0] = 2*cos_theta_shear*nxnz                                    -4*nxnx*nnE;
-			YME_i.elm[1] =   cos_theta_shear*nynz        +sin_theta_shear*nxnz       -4*nxny*nnE;
-			YME_i.elm[2] =   cos_theta_shear*(nxnx+nznz) +sin_theta_shear*nxny       -4*nxnz*nnE;
-			YME_i.elm[3] =   cos_theta_shear*nxny        +sin_theta_shear*(nyny+nznz)-4*nynz*nnE;
-			YME_i.elm[4] = 2*sin_theta_shear*nynz                                    -4*nyny*nnE;
-			YME_i.elm[5] = 2*cos_theta_shear*nxnz        +2*sin_theta_shear*nynz     -4*nznz*nnE;
+			double nxnx = nvec->x*nvec->x;
+			double nxny = nvec->x*nvec->y;
+			double nxnz = nvec->x*nvec->z;
+			double nynz = nvec->y*nvec->z;
+			double nyny = nvec->y*nvec->y;
+			double nznz = nvec->z*nvec->z;
+			nvec_Einf_nvec__nnE_nvec_nvec.elm[0] = cos_theta_shear*nxnz                                    -2*nxnx*nnE;
+			nvec_Einf_nvec__nnE_nvec_nvec.elm[1] = 0.5*(cos_theta_shear*nynz        +sin_theta_shear*nxnz) -2*nxny*nnE;
+			nvec_Einf_nvec__nnE_nvec_nvec.elm[2] = 0.5*(cos_theta_shear*(nxnx+nznz) +sin_theta_shear*nxny) -2*nxnz*nnE;
+			nvec_Einf_nvec__nnE_nvec_nvec.elm[3] = 0.5*(cos_theta_shear*nxny        +sin_theta_shear*(nyny+nznz))-2*nynz*nnE;
+			nvec_Einf_nvec__nnE_nvec_nvec.elm[4] = sin_theta_shear*nynz                                    -2*nyny*nnE;
+			nvec_Einf_nvec__nnE_nvec_nvec.elm[5] = cos_theta_shear*nxnz             +sin_theta_shear*nynz  -2*nznz*nnE;
 		}
-
-		StressTensor YME_j = YME_i;
-		YME_i *= shear_rate*cYM_i;
-		YME_j *= shear_rate*cYM_j;
-		stresslet_i += YME_i;
-		stresslet_j += YME_j;
+		stresslet_i += rate*(YM[0]+YM[1])*nvec_Einf_nvec__nnE_nvec_nvec; // YME_i
+		stresslet_j += rate*(YM[2]+YM[3])*nvec_Einf_nvec__nnE_nvec_nvec; // YME_j
 	}
 }
 
@@ -902,12 +784,12 @@ vec3d Lubrication::getTotalForce() const
 	if (!sys->zero_shear) {
 		vec3d GEi, GEj;
 		if (!tangential) {
-			std::tie(GEi, GEj) = calcGE_squeeze();
+			std::tie(GEi, GEj) = calcGE_squeeze(sr);
 		} else {
-			std::tie(GEi, GEj) = calcGE_squeeze_tangential();
+			std::tie(GEi, GEj) = calcGE_squeeze_tangential(sr);
 		}
 		/* XGE_i */
-		lubforce_p0 += sr*GEi;
+		lubforce_p0 += GEi;
 	}
 	return lubforce_p0;
 }

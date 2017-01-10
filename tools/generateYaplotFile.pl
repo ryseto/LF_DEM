@@ -80,7 +80,7 @@ while (1) {
 		}
 	}
 	$shear_strain_previous = $shear_strain;
-	&InInteractions;
+	#&InInteractions;
 	if ($reversibility_test) {
 		if ($first || $checkpoint == 1) {
 			&keepInitialConfig;
@@ -118,7 +118,7 @@ sub readHeader {
 	$line = <IN_particle>; ($buf, $buf, $Lz) = split(/\s+/, $line);
 	
 	if ($Ly==0) {
-		$number_of_header = 8;
+		$number_of_header = 9;
 	} else {
 		$number_of_header = 7;
 	}
@@ -126,7 +126,8 @@ sub readHeader {
 		$line = <IN_particle>;
 		printf "$line";
 	}
-	for ($i = 0; $i<19; $i++) {
+	printf "=====\n";
+	for ($i = 0; $i<18; $i++) {
 		$line = <IN_interaction>;
 		printf "$line";
 	}
@@ -181,6 +182,7 @@ sub yaplotColor {
 sub InParticles {
 	$radius_max = 0;
 	$line = <IN_particle>;
+	printf "$line\n" ;
 	if (defined $line) {
 
 		# 1 sys.get_shear_strain()
@@ -205,9 +207,7 @@ sub InParticles {
 				# (15: angle for 2D simulation)
 				#				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz,
 				#	$h_xzstress, $c_xzstressGU, $b_xzstress, $angle) = split(/\s+/, $line);
-				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $angle) = split(/\s+/, $line);
-
-				
+				($ip, $a, $x, $y, $z, $vx, $vy, $vz, $ox, $oy, $oz, $nax, $nay, $naz, $angle) = split(/\s+/, $line);
 				#
 				$ang[$i] = $angle;
 				$radius[$i] = $a;
@@ -230,7 +230,6 @@ sub InParticles {
 				$omegax[$i] = $ox;
 				$omegay[$i] = $oy;
 				$omegaz[$i] = $oz;
-				$omegay[$i] = $oy;
 				if ($radius_max < $a) {
 					$radius_max = $a;
 				}
@@ -248,10 +247,12 @@ sub InInteractions{
 		$first_int = 0;
 		$line = <IN_interaction>;
 		($buf, $buf1, $buf2, $buf3, $buf4) = split(/\s+/, $line);
+		printf "int: $line\n";
 	}
-	if ($buf != "#") {
-		exit(1);
-	}
+	exit(1);
+#	if ($buf neq '#') {
+#		exit(1);
+#	}
 	
 	# 1, 2: numbers of the interacting particles
 	# 3: 1=contact, 0=apart
@@ -272,10 +273,11 @@ sub InInteractions{
 		$fc_norm, # 12
 		$fc_tan_x, $fc_tan_y, $fc_tan_z, # 13, 14, 15
 		$fr_norm, $s_xF) = split(/\s+/, $line);
-		if ($i == "#") {
+		if ($i eq '#') {
 			last;
 		}
-		#		"#1: particle 1 label\n"
+
+				#		"#1: particle 1 label\n"
 		#		"#2: particle 2 label\n"
 		#		"#3: contact state (0 = no contact, 1 = frictionless contact, 1 = non-sliding frictional, 2 = sliding frictional)\n"
 		#		"#4: normal vector, oriented from particle 1 to particle 2 x\n"
@@ -332,9 +334,6 @@ sub OutYaplotData{
 		for ($i = 0; $i < $np; $i++) {
 			$rr = $yap_radius*$radius[$i];
 			printf OUT "r $rr\n";
-			if ($i == $np-1) {
-				printf OUT "@ 4\n";
-			}
 			printf OUT "c $posx[$i] $posy[$i] $posz[$i] \n";
 		}
 	}

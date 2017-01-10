@@ -70,7 +70,7 @@ struct ParameterSet
 	double mu_static;                        ///< friction coefficient (static) [1]
 	double mu_dynamic;                        ///< friction coefficient (dynamic). If -1, mu_dynamic = mu_static [-1]
 	double mu_rolling;                        ///< friction coefficient (rolling) [0]
-	double ft_max;							///< max tangential force in friction_model = 5 [1]
+	double ft_max;                            ///< max tangential force in friction_model = 5 [1]
 	/*
 	 * Contact force parameters
 	 * kn: normal spring constant
@@ -131,6 +131,8 @@ struct ParameterSet
 	double max_kn;                           ///< max normal spring constant when auto-determining stiffness [1000000]
 	double min_kt;                           ///< min tangential spring constant when auto-determining stiffness [1000]
 	double max_kt;                           ///< max tangential spring constant when auto-determining stiffness [1000000]
+	double min_dt;                           ///< min time step when auto-determining stiffness [1e-7]
+	double max_dt;                           ///< max time step when auto-determining stiffness [1e-3]
 	double start_adjust;                     ///< strain after which aut-determination of stiffnesses starts [0.2]
 
 

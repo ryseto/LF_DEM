@@ -138,9 +138,9 @@ private:
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
-	std::tuple<vec3d,vec3d> calcGE_squeeze() const;
-	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential() const;
-	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential() const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze(double shear_rate) const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(double shear_rate) const;
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(double shear_rate) const;
 
 	struct ODBlock RFU_ODBlock_squeeze_tangential() const;
 	struct ODBlock RFU_ODBlock_squeeze() const;

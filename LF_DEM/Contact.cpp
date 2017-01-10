@@ -98,7 +98,6 @@ void Contact::activate()
 		state = 1;
 	}
 	dashpot.activate();
-	sys->updateNumberOfContacts(p0, p1, 1);
 }
 
 void Contact::deactivate()
@@ -115,7 +114,6 @@ void Contact::deactivate()
 		f_spring_tan.reset();
 	}
 	dashpot.deactivate();
-	sys->updateNumberOfContacts(p0, p1, -1);
 }
 
 /*********************************

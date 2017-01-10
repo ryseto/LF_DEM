@@ -301,8 +301,8 @@ void System::calcTotalStressPerParticle()
 	}
 	for (const auto &sc: stress_components) {
 		const auto &particle_stress = sc.second.particle_stress;
-		for (int i=0; i<np_mobile; i++) { // @@@@ np_mobile or total_stress_pp.size()??
-			total_stress_pp[i] + particle_stress[i];
+		for (unsigned int i=0; i<total_stress_pp.size(); i++) {
+			total_stress_pp[i] += particle_stress[i];
 		}
 	}
 }
@@ -371,7 +371,8 @@ void System::calcStress()
 			total_stress_groups["hydro"].elm[2] += costheta_shear*shear_rate/6./M_PI;
 			total_stress_groups["hydro"].elm[3] += sintheta_shear*shear_rate/6./M_PI;
 		}	else {
-			total_stress_groups["hydro"].elm[2] += shear_rate/6./M_PI;
+			StressTensor stress_solvent((shear_rate/(6*M_PI))*E_infinity);
+			total_stress_groups["hydro"] += stress_solvent;
 		}
 	}
 

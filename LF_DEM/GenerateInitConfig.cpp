@@ -94,11 +94,16 @@ int GenerateInitConfig::generate(int rand_seed_, int config_type)
 	sys.checkNewInteraction();
 	sys.updateInteractions();
 	auto contact_nb = countNumberOfContact(sys);
-
+	int cnt_iteration = 0;
 	while(((double)contact_nb.first)/sys.get_np() > contact_ratio && evaluateMinGap(sys) < min_gap) {
 		sys.timeEvolution(sys.get_time()+2, -1);
-		std::cout << "." << std::flush;
+		std::cout << "." << cnt_iteration << std::flush;
 		contact_nb = countNumberOfContact(sys);
+		if (max_iteration > 0
+			&& cnt_iteration++ > max_iteration) {
+			std::cout << "max iteration " << std::flush;
+			break;
+		}
 	}
 
 	for (int i=0; i<np_movable; i++) {
@@ -602,6 +607,10 @@ void GenerateInitConfig::setParameters(Simulation &simu)
 	lx_half = lx/2;
 	ly_half = ly/2;
 	lz_half = lz/2;
+	
+	max_iteration = readStdinDefault(-1, "max iteration number");
+
+	
 	cerr << "np = " << np1+np2 << endl;
 	cerr << "np1 : np2 " << np1 << ":" << np2 << endl;
 	cerr << "vf1 = " << volume_fraction << endl;

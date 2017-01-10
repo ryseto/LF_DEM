@@ -61,7 +61,7 @@ bool Simulation::keepRunning()
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
 	if (time_end == -1) {
-		return (sys.get_curvilinear_strain() < strain_end-1e-8) && !kill;
+		return (sys.get_cumulated_strain() < strain_end-1e-8) && !kill;
 	} else {
 		return (sys.get_time() < time_end-1e-8) && !kill;
 	}
@@ -120,7 +120,7 @@ void Simulation::handleEventsFragility()
 			p.disp_max /= 1.1;
 		}
 	}
-	if (p.disp_max < 1e-6 || sys.get_curvilinear_strain() > 3.) {
+	if (p.disp_max < 1e-6 || sys.get_cumulated_strain() > 3.) {
 		p.cross_shear = true; //!p.cross_shear;
 		p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
@@ -264,10 +264,10 @@ void Simulation::printProgress()
 	if (time_end != -1) {
 		cout << "time: " << sys.get_time_in_simulation_units() << " , "\
 		     << sys.get_time() << " / " << time_end\
-		     << " , strain: " << sys.get_curvilinear_strain() << endl;
+		     << " , strain: " << sys.get_cumulated_strain() << endl;
 	} else {
 		cout << "time: " << sys.get_time_in_simulation_units()\
-		     << " , strain: " << sys.get_curvilinear_strain() << " / " << strain_end << endl;
+		     << " , strain: " << sys.get_cumulated_strain() << " / " << strain_end << endl;
 	}
 }
 
@@ -298,12 +298,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
 
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_curvilinear_strain());
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 		generateOutput(output_events, binconf_counter);
 
 		printProgress();
 
-		if (time_strain_1 == 0 && sys.get_curvilinear_strain() > 1) {
+		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
@@ -365,7 +365,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else { // either next time or next strain
 			sys.timeEvolution(t.first, s.first);
 		}
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_curvilinear_strain());
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_cumulated_strain());
 		generateOutput(output_events, binconf_counter);
 
 
@@ -387,7 +387,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			jammed = 0;
 		}
-		if (time_strain_1 == 0 && sys.get_curvilinear_strain() > 1) {
+		if (time_strain_1 == 0 && sys.get_cumulated_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
@@ -588,7 +588,7 @@ void Simulation::outputData()
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
-		outdata.entryData("curvilinear shear strain", "none", 1, sys.get_curvilinear_strain());
+		outdata.entryData("cumulated shear strain", "none", 1, sys.get_cumulated_strain());
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	} else {
 		// Rotary Couette geometry
@@ -627,7 +627,7 @@ void Simulation::outputData()
 	double frictional_contact_nb_per_particle = (double)2*frictional_contact_nb/sys.get_np();
 	outdata.entryData("contact number", "none", 1, contact_nb_per_particle);
 	outdata.entryData("frictional contact number", "none", 1, frictional_contact_nb_per_particle);
-	outdata.entryData("number of interaction", "none", 1, sys.get_nb_of_active_interactions());
+	outdata.entryData("number of interaction", "none", 1, sys.get_nb_interactions());
 	/* maximum velocity
 	 */
 	outdata.entryData("max velocity", "velocity", 1, sys.max_velocity);
@@ -638,11 +638,11 @@ void Simulation::outputData()
 	outdata.entryData("kn", "none", 1, p.kn);
 	outdata.entryData("kt", "none", 1, p.kt);
 	outdata.entryData("kr", "none", 1, p.kr);
-	vec3d strain = sys.get_strain();
+	vec3d shear_strain = sys.get_shear_strain();
 	if(!p.cross_shear) {
-		outdata.entryData("shear strain", "none", 1, strain.x);
+		outdata.entryData("shear strain", "none", 1, shear_strain.x);
 	} else {
-		outdata.entryData("shear strain", "none", 3, strain);
+		outdata.entryData("shear strain", "none", 3, shear_strain);
 	}
 	if (sys.wall_rheology) {
 		outdata.entryData("shear viscosity wall 1", "viscosity", 1, sys.shearstress_wall1/sr);
@@ -659,7 +659,7 @@ void Simulation::outputData()
 	outdata_st.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_st.setUnit(output_unit_scales);
 	outdata_st.entryData("time", "time", 1, sys.get_time());
-	outdata_st.entryData("shear strain", "none", 1, sys.get_curvilinear_strain());
+	outdata_st.entryData("cumulated strain", "none", 1, sys.get_cumulated_strain());
 	outdata_st.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	outdata_st.entryData("total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_stress);
 	for (const auto &stress_comp: sys.total_stress_groups) {
@@ -705,7 +705,7 @@ void Simulation::outputData()
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 {
-	snapshot_header << "# " << sys.get_curvilinear_strain() << ' ';
+	snapshot_header << "# " << sys.get_cumulated_strain() << ' ';
 	snapshot_header << sys.shear_disp.x << ' ';
 	snapshot_header << getRate() << ' ';
 	snapshot_header << target_stress_input << ' ';
@@ -785,7 +785,7 @@ void Simulation::outputParFileTxt()
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
-	cout << "   out config: " << sys.get_curvilinear_strain() << endl;
+	cout << "   out config: " << sys.get_cumulated_strain() << endl;
 	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
 	auto na_disp = sys.getNonAffineDisp();
@@ -794,7 +794,7 @@ void Simulation::outputParFileTxt()
 		outdata_par.entryData("radius", "none", 1, sys.radius[i]);
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
-		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, na_disp[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, sys.ang_velocity[i]);
 		outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 
 		if (sys.couette_stress) {
@@ -879,8 +879,8 @@ void Simulation::outputIntFileTxt()
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());
-
 }
+
 void Simulation::outputConfigurationData()
 {
 	if (p.out_data_particle) {
