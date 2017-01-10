@@ -34,14 +34,14 @@ void Contact::init(System* sys_, Interaction* interaction_)
 
 void Contact::setSpringConstants()
 {
-    double ro_12 = (a0+a1)/2;
-    kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
-    if (sys->friction) {
-        kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
-        if (sys->rolling_friction) {
-            kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
-        }
-    }
+	double ro_12 = (a0+a1)/2;
+	kn_scaled = ro_12*ro_12*sys->p.kn; // F = kn_scaled * _reduced_gap;  <-- gap is scaled @@@@ Why use reduced_gap? Why not gap?
+	if (sys->friction) {
+		kt_scaled = ro_12*sys->p.kt; // F = kt_scaled * disp_tan <-- disp is not scaled
+		if (sys->rolling_friction) {
+			kr_scaled = ro_12*sys->p.kr; // F = kt_scaled * disp_tan <-- disp is not scaled
+		}
+	}
 }
 
 void Contact::setInteractionData()
@@ -177,11 +177,11 @@ void Contact::incrementRollingDisplacement()
 void Contact::incrementDisplacements()
 {
 	/**
-	   \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
+	 \brief Increment the tangential and rolling spring stretches from relative velocities, @b without checking the friction laws.
 
-	   This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction).
-	   This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
-	   This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
+	 This should be called @b BEFORE updating the relative positions (ie normal and tangential vectors in the interaction).
+	 This is because it needs the relative velocities at time t, which depend on a variable zshift at time t which deals with Lees-Edwards PBC.
+	 This zshift is updated to their value at time t+1 whenever the relative positions are computed, so updating relative positions should be done after incrementing stretches.
 	 */
 	if (sys->friction) {
 		incrementTangentialDisplacement();
@@ -236,9 +236,9 @@ vec3d Contact::getTotalForce() const
 		*/
 	if (is_active()) {
 		return f_spring_total + dashpot.getForceOnP0(sys->velocity[p0],
-                                               sys->velocity[p1],
-                                               sys->ang_velocity[p0],
-                                               sys->ang_velocity[p1]);
+													 sys->velocity[p1],
+													 sys->ang_velocity[p0],
+													 sys->ang_velocity[p1]);
 	} else {
 		return vec3d();
 	}
@@ -254,7 +254,7 @@ void Contact::frictionlaw_standard()
 	double sq_f_tan = f_spring_tan.sq_norm();
 	normal_load = f_spring_normal_norm;
 	if (sys->cohesion) {
-		normal_load += sys->amplitudes.cohesion;
+		normal_load += sys->p.cohesion;
 	}
 	if (state == 2) {
 		// static friction in previous step
@@ -284,14 +284,14 @@ void Contact::frictionlaw_standard()
 }
 
 void Contact::setTangentialForceNorm(double current_force_norm,
-		                                 double new_force_norm)
+									 double new_force_norm)
 {
 	disp_tan *= new_force_norm/current_force_norm;
 	f_spring_tan = kt_scaled*disp_tan;
 }
 
 void Contact::setRollingForceNorm(double current_force_norm,
-                                  double new_force_norm)
+								  double new_force_norm)
 {
 	disp_rolling *= new_force_norm/current_force_norm;
 	f_rolling = kr_scaled*disp_rolling;
@@ -306,7 +306,7 @@ void Contact::frictionlaw_criticalload()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_spring_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
+	double supportable_tanforce = f_spring_normal_norm-sys->p.critical_load; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
@@ -333,7 +333,7 @@ void Contact::frictionlaw_criticalload_mu_inf()
 	 * supportable_tanforce = mu*(F_normal - critical_force)
 	 *
 	 */
-	double supportable_tanforce = f_spring_normal_norm-sys->amplitudes.critical_normal_force; // critical load model.
+	double supportable_tanforce = f_spring_normal_norm-sys->p.critical_load; // critical load model.
 	if (supportable_tanforce < 0) {
 		state = 1; // frictionless contact
 		disp_tan.reset();
@@ -349,17 +349,17 @@ void Contact::frictionlaw_criticalload_mu_inf()
 
 void Contact::frictionlaw_ft_max()
 {
- 	/**
-	   \brief Friction law
-	*/
- 	double sq_f_tan = f_spring_tan.sq_norm();
- 	if (sq_f_tan > ft_max*ft_max) {
- 		state = 3; // dynamic friction
+	/**
+	 \brief Friction law
+	 */
+	double sq_f_tan = f_spring_tan.sq_norm();
+	if (sq_f_tan > ft_max*ft_max) {
+		state = 3; // dynamic friction
 		setTangentialForceNorm(sqrt(sq_f_tan), ft_max);
- 	} else {
- 		state = 2; // static friction
- 	}
- 	return;
+	} else {
+		state = 2; // static friction
+	}
+	return;
 }
 
 void Contact::frictionlaw_coulomb_max()
@@ -400,18 +400,18 @@ void Contact::frictionlaw_coulomb_max()
 }
 
 
-void Contact::addUpForce(std::vector<vec3d> &force_per_particle)
+void Contact::addUpForce(std::vector<vec3d> &force_per_particle) const
 {
-    /* Force
+	/* Force
 	 */
 	force_per_particle[p0] += f_spring_total;
 	force_per_particle[p1] -= f_spring_total;
 }
 
 void Contact::addUpForceTorque(std::vector<vec3d> &force_per_particle,
-                                      std::vector<vec3d> &torque_per_particle)
+							   std::vector<vec3d> &torque_per_particle) const
 {
-    /* Force
+	/* Force
 	 */
 	addUpForce(force_per_particle);
 	/* Torque
@@ -449,7 +449,7 @@ void Contact::addUpStress(StressTensor &stress_p0, StressTensor &stress_p1)
 	stress_p1 += (a1/r_ij)*contact_stresslet_XF;
 }
 
-void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1)
+void Contact::addUpStressSpring(StressTensor &stress_p0, StressTensor &stress_p1) const
 {
 	StressTensor spring_stress;
 	spring_stress.set(interaction->rvec, f_spring_total);

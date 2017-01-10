@@ -26,57 +26,32 @@ class Box{
 private:
 	std::set <Box*> _neighbors;
 	std::set <Box*> _moving_neighbors;
-	bool _is_bottom;
-	bool _is_top;
-	
-public:
-	Box();
-	~Box();
-	vec3d position;
 	std::set <int> container;
+	std::vector <int> neighborhood_container;
+	vec3d position;
+
+public:
+	Box(){};
+	~Box();
+
 	void addStaticNeighbor(Box* neigh_box);
 	void addMovingNeighbor(Box* neigh_box);
-	void reset_moving_neighbors();
-	std::set <Box*> neighbors()
-	{
-		return _neighbors;
-	}
-	
-	void is_top(bool);
-	void is_bottom(bool);
-	bool is_top();
-	bool is_bottom();
+	void resetMovingNeighbors();
+	const std::set <Box*> & getNeighborBox(){return _neighbors;}
+
+	vec3d getPosition() const {return position;}
+	void setPosition(vec3d pos) {position = pos;}
+	// void is_top(bool it) {_is_top = it;};
+	// void is_bottom(bool ib) {_is_bottom = ib;};
+	// bool is_top() const {return _is_top;};
+	// bool is_bottom() const {return _is_bottom;};
+
 	void add(int);
 	void remove(int);
-	
-	std::set<int>::iterator begin()
-	{
-		return container.begin();
-	}
-	
-	std::set<int>::iterator end()
-	{
-		return container.end();
-	}
-	
-	std::vector<int>::iterator neighborhood_begin()
-	{
-		return neighborhood_container.begin();
-	}
-	
-	std::vector<int>::iterator neighborhood_end()
-	{
-		return neighborhood_container.end();
-	}
-	
-	std::vector <int> neighborhood_container;
-	
-	size_t container_size()
-	{
-		return container.size();
-	}
-	
-	void build_neighborhood_container();
+
+	const std::set <int> & getContainer() const {return container;}
+	const std::vector <int> & getNeighborhoodContainer() const {return neighborhood_container;};
+	void buildNeighborhoodContainer();
 };
 
 #endif /* defined(__LF_DEM__Box__) */

@@ -37,11 +37,11 @@ diminish_output(false)
 	unit_longname["s"] = "stress";
 
 	force_value_ptr["hydro"] = &dimensionless_rate; // the dimensionless hydrodynamic force is also the dimensionless shear rate
-	force_value_ptr["repulsion"] = &sys.amplitudes.repulsion;
-	force_value_ptr["critical_load"] = &sys.amplitudes.critical_normal_force;
-	force_value_ptr["cohesion"] = &sys.amplitudes.cohesion;
-	force_value_ptr["ft_max"] = &sys.amplitudes.ft_max;
-	force_value_ptr["brownian"] = &sys.amplitudes.temperature;
+	force_value_ptr["repulsion"] = &sys.p.repulsion;
+	force_value_ptr["critical_load"] = &sys.p.critical_load;
+	force_value_ptr["cohesion"] = &sys.p.cohesion;
+	force_value_ptr["ft_max"] = &sys.p.ft_max;
+	force_value_ptr["brownian"] = &sys.p.brownian;
 	force_value_ptr["kn"] = &sys.p.kn;
 	force_value_ptr["kt"] = &sys.p.kt;
 	force_value_ptr["kr"] = &sys.p.kr;
@@ -61,7 +61,7 @@ bool Simulation::keepRunning()
 		Returns true when ParameterSet::time_end is reached or if an event handler threw a kill signal.
 	 */
 	if (time_end == -1) {
-		return (fabs(sys.get_shear_strain()) < strain_end-1e-8) && !kill;
+		return (sys.get_curvilinear_strain() < strain_end-1e-8) && !kill;
 	} else {
 		return (sys.get_time() < time_end-1e-8) && !kill;
 	}
@@ -120,7 +120,7 @@ void Simulation::handleEventsFragility()
 			p.disp_max /= 1.1;
 		}
 	}
-	if (p.disp_max < 1e-6 || sys.get_shear_strain() > 3.) {
+	if (p.disp_max < 1e-6 || sys.get_curvilinear_strain() > 3.) {
 		p.cross_shear = true; //!p.cross_shear;
 		p.disp_max = p_initial.disp_max;
 		cout << "Event Fragility : starting cross shear" << endl;
@@ -262,9 +262,12 @@ void Simulation::timeEvolutionUntilNextOutput(const TimeKeeper &tk)
 void Simulation::printProgress()
 {
 	if (time_end != -1) {
-				cout << "time: " << sys.get_time_in_simulation_units() << " , " << sys.get_time() << " / " << time_end << " , strain: " << sys.get_shear_strain() << endl;
+		cout << "time: " << sys.get_time_in_simulation_units() << " , "\
+		     << sys.get_time() << " / " << time_end\
+		     << " , strain: " << sys.get_curvilinear_strain() << endl;
 	} else {
-				cout << "time: " << sys.get_time_in_simulation_units() << " , strain: " << sys.get_shear_strain() << " / " << strain_end << endl;
+		cout << "time: " << sys.get_time_in_simulation_units()\
+		     << " , strain: " << sys.get_curvilinear_strain() << " / " << strain_end << endl;
 	}
 }
 
@@ -295,12 +298,12 @@ void Simulation::simulationSteadyShear(string in_args,
 	while (keepRunning()) {
 		timeEvolutionUntilNextOutput(tk);
 
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_curvilinear_strain());
 		generateOutput(output_events, binconf_counter);
 
 		printProgress();
 
-		if (time_strain_1 == 0 && fabs(sys.get_shear_strain()) > 1) {
+		if (time_strain_1 == 0 && sys.get_curvilinear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
@@ -362,7 +365,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else { // either next time or next strain
 			sys.timeEvolution(t.first, s.first);
 		}
-		set<string> output_events = tk.getElapsedClocks(sys.get_time(), fabs(sys.get_shear_strain()));
+		set<string> output_events = tk.getElapsedClocks(sys.get_time(), sys.get_curvilinear_strain());
 		generateOutput(output_events, binconf_counter);
 
 
@@ -384,7 +387,7 @@ void Simulation::simulationInverseYield(string in_args,
 		} else {
 			jammed = 0;
 		}
-		if (time_strain_1 == 0 && sys.get_shear_strain() > 1) {
+		if (time_strain_1 == 0 && sys.get_curvilinear_strain() > 1) {
 			now = time(NULL);
 			time_strain_1 = now;
 			timestep_1 = sys.get_total_num_timesteps();
@@ -585,7 +588,7 @@ void Simulation::outputData()
 	outdata.entryData("time", "time", 1, sys.get_time());
 	if (sys.get_omega_wheel() == 0 || sys.wall_rheology == false) {
 		// Simple shear geometry
-		outdata.entryData("shear strain", "none", 1, sys.get_shear_strain());
+		outdata.entryData("curvilinear shear strain", "none", 1, sys.get_curvilinear_strain());
 		outdata.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	} else {
 		// Rotary Couette geometry
@@ -604,7 +607,7 @@ void Simulation::outputData()
 	outdata.entryData("N1 viscosity", "viscosity", 1, sys.total_stress.getNormalStress1()/sr);
 	outdata.entryData("N2 viscosity", "viscosity", 1, sys.total_stress.getNormalStress2()/sr);
 	outdata.entryData("particle pressure", "stress", 1, sys.total_stress.getParticlePressure());
-	outdata.entryData("particle pressure contact", "stress", 1, sys.stress_components["xF_contact"].getTotalStress().getParticlePressure());
+	outdata.entryData("particle pressure contact", "stress", 1, sys.total_stress_groups["contact"].getParticlePressure());
 	/* energy
 	 */
 	outdata.entryData("energy", "none", 1, getPotentialEnergy(sys));
@@ -635,8 +638,12 @@ void Simulation::outputData()
 	outdata.entryData("kn", "none", 1, p.kn);
 	outdata.entryData("kt", "none", 1, p.kt);
 	outdata.entryData("kr", "none", 1, p.kr);
-	outdata.entryData("shear displacement x", "none", 1, sys.shear_disp.x);
-	outdata.entryData("shear displacement y", "none", 1, sys.shear_disp.y);
+	vec3d strain = sys.get_strain();
+	if(!p.cross_shear) {
+		outdata.entryData("shear strain", "none", 1, strain.x);
+	} else {
+		outdata.entryData("shear strain", "none", 3, strain);
+	}
 	if (sys.wall_rheology) {
 		outdata.entryData("shear viscosity wall 1", "viscosity", 1, sys.shearstress_wall1/sr);
 		outdata.entryData("shear viscosity wall 2", "viscosity", 1, sys.shearstress_wall2/sr);
@@ -652,7 +659,7 @@ void Simulation::outputData()
 	outdata_st.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_st.setUnit(output_unit_scales);
 	outdata_st.entryData("time", "time", 1, sys.get_time());
-	outdata_st.entryData("shear strain", "none", 1, sys.get_shear_strain());
+	outdata_st.entryData("shear strain", "none", 1, sys.get_curvilinear_strain());
 	outdata_st.entryData("shear rate", "rate", 1, sys.get_shear_rate());
 	outdata_st.entryData("total stress tensor (xx, xy, xz, yz, yy, zz)", "stress", 6, sys.total_stress);
 	for (const auto &stress_comp: sys.total_stress_groups) {
@@ -698,7 +705,7 @@ void Simulation::outputData()
 
 void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 {
-	snapshot_header << "# " << sys.get_shear_strain() << ' ';
+	snapshot_header << "# " << sys.get_curvilinear_strain() << ' ';
 	snapshot_header << sys.shear_disp.x << ' ';
 	snapshot_header << getRate() << ' ';
 	snapshot_header << target_stress_input << ' ';
@@ -709,14 +716,14 @@ void Simulation::getSnapshotHeader(stringstream& snapshot_header)
 vec3d Simulation::shiftUpCoordinate(double x, double y, double z)
 {
 	if (p.origin_zero_flow) {
-		z += sys.Lz_half();
-		if (z > sys.Lz_half()) {
+		z += 0.5*sys.get_lz();
+		if (z > 0.5*sys.get_lz()) {
 			x -= sys.shear_disp.x;
 			y -= sys.shear_disp.y;
-			if (x < -sys.Lx_half()) {
+			if (x < -0.5*sys.get_lx()) {
 				x += sys.get_lx();
 			}
-			if (y < -sys.Ly_half()) {
+			if (y < -0.5*sys.get_ly()) {
 				y += sys.get_ly();
 			}
 			z -= sys.get_lz();
@@ -756,9 +763,9 @@ void Simulation::outputParFileTxt()
 	vector<vec3d> pos(np);
 	vector<vec3d> vel(np);
 	for (int i=0; i<np; i++) {
-		pos[i] = shiftUpCoordinate(sys.position[i].x-sys.Lx_half(),
-								   sys.position[i].y-sys.Ly_half(),
-								   sys.position[i].z-sys.Lz_half());
+		pos[i] = shiftUpCoordinate(sys.position[i].x-0.5*sys.get_lx(),
+		                           sys.position[i].y-0.5*sys.get_ly(),
+		                           sys.position[i].z-0.5*sys.get_lz());
 	}
 	/* If the origin is shifted,
 	 * we need to change the velocities of particles as well.
@@ -778,17 +785,18 @@ void Simulation::outputParFileTxt()
 		error_str << " Error : don't manage to convert from \"" << internal_unit_scales << "\" units to \"" << output_unit_scales << "\" units to output data." << endl;
 		throw runtime_error(error_str.str());
 	}
-	cout << "   out config: " << sys.get_shear_strain() << endl;
+	cout << "   out config: " << sys.get_curvilinear_strain() << endl;
 	outdata_par.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_par.setUnit(output_unit_scales);
+	auto na_disp = sys.getNonAffineDisp();
 	for (int i=0; i<sys.get_np(); i++) {
 		outdata_par.entryData("particle index", "none", 1, i);
 		outdata_par.entryData("radius", "none", 1, sys.radius[i]);
 		outdata_par.entryData("position (x, y, z)", "none", 3, pos[i], 6);
 		outdata_par.entryData("velocity (x, y, z)", "velocity", 3, vel[i]);
+		outdata_par.entryData("angular velocity (x, y, z)", "none", 3, na_disp[i]);
+		outdata_par.entryData("non affine displacement (x, y, z)", "none", 3, na_disp[i]);
 
-
-		outdata_par.entryData("angular velocity (x, y, z)", "velocity", 3, sys.ang_velocity[i]);
 		if (sys.couette_stress) {
 			double stress_rr, stress_thetatheta, stress_rtheta;
 			sys.getStressCouette(i, stress_rr, stress_thetatheta, stress_rtheta);
@@ -817,66 +825,57 @@ void Simulation::outputParFileTxt()
 
 void Simulation::outputIntFileTxt()
 {
-
-	int cnt_interaction = 0;
-	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].is_active()) {
-			cnt_interaction ++;
-		}
-	}
 	string dimless_nb_label = internal_unit_scales+"/"+output_unit_scales;
 
 	outdata_int.setDimensionlessNumber(force_ratios[dimless_nb_label]);
 	outdata_int.setUnit(output_unit_scales);
 	stringstream snapshot_header;
 	getSnapshotHeader(snapshot_header);
-	for (int k=0; k<sys.nb_interaction; k++) {
-		if (sys.interaction[k].is_active()) {
-			unsigned int i, j;
-			std::tie(i, j) = sys.interaction[k].get_par_num();
-			StressTensor stress_contact = sys.interaction[k].contact.getContactStressXF();
-			outdata_int.entryData("particle 1 label", "none", 1, i);
-			outdata_int.entryData("particle 2 label", "none", 1, j);
-			outdata_int.entryData("contact state "
-			                      "(0 = no contact, "
-			                      "1 = frictionless contact, "
-			                      "2 = non-sliding frictional, "
-			                      "3 = sliding frictional)",
-			                      "none", 1, sys.interaction[k].contact.getFrictionState());
-			if (diminish_output == false) {
-				outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
-				                      "none", 3, sys.interaction[k].nvec);
-				outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
-				                      "none", 1,  sys.interaction[k].get_reduced_gap());
-			}
-			/* [NOTE]
-			 * Lubrication forces are reference values
-			 * in the Brownian case. The force balancing
-			 * velocities are recalculated without
-			 * including the Brownian forces.
-			 * It seems there is no better way to visualize
-			 * the lubrication forces.
-			 */
-			if (sys.lubrication) {
-				double normal_part = -dot(sys.interaction[k].lubrication.getTotalForce(), sys.interaction[k].nvec);
-				outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
-				                      normal_part);
-				outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
-				                      sys.interaction[k].lubrication.getTangentialForce());
-			}
-			/*
-			 * Contact forces include only spring forces.
-			 */
-			outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
-			                      sys.interaction[k].contact.getNormalForce().norm());
-			outdata_int.entryData("tangential part of the contact force", "force", 3, \
-			                      sys.interaction[k].contact.getTangentialForce());
-			outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
-			                      sys.interaction[k].repulsion.getForceNorm());
-			if (diminish_output == false) {
-				outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
-				                      shearStressComponent(stress_contact, p.theta_shear));
-			}
+	for (const auto &inter: sys.interaction) {
+		unsigned int i, j;
+		std::tie(i, j) = inter.get_par_num();
+		StressTensor stress_contact = inter.contact.getContactStressXF();
+		outdata_int.entryData("particle 1 label", "none", 1, i);
+		outdata_int.entryData("particle 2 label", "none", 1, j);
+		outdata_int.entryData("contact state "
+							  "(0 = no contact, "
+							  "1 = frictionless contact, "
+							  "2 = non-sliding frictional, "
+							  "3 = sliding frictional)",
+							  "none", 1, inter.contact.getFrictionState());
+		if (diminish_output == false) {
+			outdata_int.entryData("normal vector, oriented from particle 1 to particle 2", \
+								  "none", 3, inter.nvec);
+			outdata_int.entryData("dimensionless gap = s-2, s = 2r/(a1+a2)", \
+								  "none", 1,  inter.get_reduced_gap());
+		}
+		/* [NOTE]
+		 * Lubrication forces are reference values
+		 * in the Brownian case. The force balancing
+		 * velocities are recalculated without
+		 * including the Brownian forces.
+		 * It seems there is no better way to visualize
+		 * the lubrication forces.
+		 */
+		if (sys.lubrication) {
+			double normal_part = -dot(inter.lubrication.getTotalForce(), inter.nvec);
+			outdata_int.entryData("normal part of the lubrication force (positive for compression)", "force", 1, \
+								  normal_part);
+			outdata_int.entryData("tangential part of the lubrication force", "force", 3, \
+								  inter.lubrication.getTangentialForce());
+		}
+		/*
+		 * Contact forces include only spring forces.
+		 */
+		outdata_int.entryData("norm of the normal part of the contact force", "force", 1, \
+							  inter.contact.getNormalForce().norm());
+		outdata_int.entryData("tangential part of the contact force", "force", 3, \
+							  inter.contact.getTangentialForce());
+		outdata_int.entryData("norm of the normal repulsive force", "force", 1, \
+							  inter.repulsion.getForceNorm());
+		if (diminish_output == false) {
+			outdata_int.entryData("Viscosity contribution of contact xF", "stress", 1, \
+								  shearStressComponent(stress_contact, p.theta_shear));
 		}
 	}
 	outdata_int.writeToFile(snapshot_header.str());

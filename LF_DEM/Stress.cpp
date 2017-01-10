@@ -84,35 +84,34 @@ void System::addUpInteractionStressGU(std::vector<StressTensor> &stress_comp,
                                       const std::vector<vec3d> &non_affine_vel,
                                       const std::vector<vec3d> &non_affine_ang_vel)
 {
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
+	if (!lubrication) {
+		return;
+	}
+
+	for (const auto &inter: interaction) {
+		if (inter.lubrication.is_active()) {
 			unsigned int i, j;
-			std::tie(i, j) = interaction[k].get_par_num();
-			if (lubrication) {
-				if (interaction[k].lubrication.is_active()) {
-					interaction[k].lubrication.addGUStresslet(non_affine_vel[i], non_affine_vel[j],
-				                                            non_affine_ang_vel[i], non_affine_ang_vel[j],
-				                                            stress_comp[i], stress_comp[j]);
-				}
-			}
+			std::tie(i, j) = inter.get_par_num();
+			inter.lubrication.addGUStresslet(non_affine_vel[i], non_affine_vel[j],
+		                                   non_affine_ang_vel[i], non_affine_ang_vel[j],
+		                                   stress_comp[i], stress_comp[j]);
 		}
 	}
 }
 
 void System::addUpInteractionStressME(std::vector<StressTensor> &stress_comp)
 {
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
+	if (!lubrication) {
+		return;
+	}
+	for (const auto &inter: interaction) {
+		if (inter.lubrication.is_active()) {
 			unsigned int i, j;
-			std::tie(i, j) = interaction[k].get_par_num();
-			if (lubrication) {
-				if (interaction[k].lubrication.is_active()) {
-					interaction[k].lubrication.addMEStresslet(costheta_shear,
-					                                          sintheta_shear,
-					                                          shear_rate,
-					                                          stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
-				}
-			}
+			std::tie(i, j) = inter.get_par_num();
+			inter.lubrication.addMEStresslet(costheta_shear,
+			                                          sintheta_shear,
+			                                          shear_rate,
+			                                          stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
 		}
 	}
 }
@@ -170,32 +169,30 @@ void System::calcContactXFPerParticleStressControlled()
 	auto &rateprop_XF = stress_components["xF_contact_rateprop"].particle_stress;
 	auto &rateindep_XF = stress_components["xF_contact_rateindep"].particle_stress;
 
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			unsigned int i, j;
-			std::tie(i, j) = interaction[k].get_par_num();
-			if (interaction[k].contact.is_active()) {
-				interaction[k].contact.addUpStressSpring(rateindep_XF[i], rateindep_XF[j]); // - rF_cont
-			}
-			if (interaction[k].contact.dashpot.is_active()) {
-				// rate_prop_vel is a full velocity (not non affine)
-				StressTensor rateprop_stress = StressTensor(interaction[k].rvec,
-				                                            interaction[k].contact.dashpot.getForceOnP0(rateprop_vel[i],
-				                                                                                        rateprop_vel[j],
-				                                                                                        rateprop_ang_vel[i],
-				                                                                                        rateprop_ang_vel[j]));
-				double r_ij = radius[i] + radius[j];
-				rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
-				rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
+	for (const auto &inter: interaction) {
+		unsigned int i, j;
+		std::tie(i, j) = inter.get_par_num();
+		if (inter.contact.is_active()) {
+			inter.contact.addUpStressSpring(rateindep_XF[i], rateindep_XF[j]); // - rF_cont
+		}
+		if (inter.contact.dashpot.is_active()) {
+			// rate_prop_vel is a full velocity (not non affine)
+			StressTensor rateprop_stress = StressTensor(inter.rvec,
+			                                            inter.contact.dashpot.getForceOnP0(rateprop_vel[i],
+			                                                                               rateprop_vel[j],
+			                                                                               rateprop_ang_vel[i],
+			                                                                               rateprop_ang_vel[j]));
+			double r_ij = radius[i] + radius[j];
+			rateprop_XF[i] += (radius[i]/r_ij)*rateprop_stress;
+			rateprop_XF[j] += (radius[j]/r_ij)*rateprop_stress;
 
-				StressTensor rateindep_stress = StressTensor(interaction[k].rvec,
-				                                             interaction[k].contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
-				                                                                                                   rateindep_vel[j],
-				                                                                                                   rateindep_ang_vel[i],
-				                                                                                                   rateindep_ang_vel[j]));
-				rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
-				rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
-			}
+			StressTensor rateindep_stress = StressTensor(inter.rvec,
+			                                             inter.contact.dashpot.getForceOnP0_nonaffine(rateindep_vel[i],
+			                                                                                          rateindep_vel[j],
+			                                                                                          rateindep_ang_vel[i],
+			                                                                                          rateindep_ang_vel[j]));
+			rateindep_XF[i] += (radius[i]/r_ij)*rateindep_stress;
+			rateindep_XF[j] += (radius[j]/r_ij)*rateindep_stress;
 		}
 	}
 }
@@ -229,13 +226,11 @@ void System::calcStressPerParticle()
 	   System::timeEvolutionPredictorCorrectorMethod method.
 	*/
 	if (lubrication) {
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				if (!interaction[k].lubrication.tangential) {
-					interaction[k].lubrication.calcXFunctionsStress();
-				} else {
-					interaction[k].lubrication.calcXYFunctionsStress();
-				}
+		for (auto &inter: interaction) {
+			if (!inter.lubrication.tangential) {
+				inter.lubrication.calcXFunctionsStress();
+			} else {
+				inter.lubrication.calcXYFunctionsStress();
 			}
 		}
 	}
@@ -258,13 +253,11 @@ void System::calcStressPerParticle()
 	}
 	if (rate_controlled) {
 		auto &cstress_XF = stress_components["xF_contact"].particle_stress;
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				if (interaction[k].contact.is_active()) {
-					unsigned int i, j;
-					std::tie(i, j) = interaction[k].get_par_num();
-					interaction[k].contact.addUpStress(cstress_XF[i], cstress_XF[j]); // - rF_cont
-				}
+		for (auto &inter: interaction) {
+			if (inter.contact.is_active()) {
+				unsigned int i, j;
+				std::tie(i, j) = inter.get_par_num();
+				inter.contact.addUpStress(cstress_XF[i], cstress_XF[j]); // - rF_cont
 			}
 		}
 	} else {
@@ -273,14 +266,10 @@ void System::calcStressPerParticle()
 
 	if (repulsiveforce) {
 		auto &rstress_XF = stress_components["xF_repulsion"].particle_stress;
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				unsigned int i, j;
-				std::tie(i, j) = interaction[k].get_par_num();
-				// if (interaction[k].repulsion.is_active()) {
-				interaction[k].repulsion.addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_rep
-				// }
-			}
+		for (auto &inter: interaction) {
+			unsigned int i, j;
+			std::tie(i, j) = inter.get_par_num();
+			inter.repulsion.addUpStressXF(rstress_XF[i], rstress_XF[j]); // - rF_rep
 		}
 	}
 

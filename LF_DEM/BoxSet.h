@@ -28,10 +28,10 @@ private:
 	double box_xsize;
 	double box_ysize;
 	double box_zsize;
-	int x_box_nb;
-	int y_box_nb;
-	int z_box_nb;
-	int box_nb;
+	std::size_t x_box_nb;
+	std::size_t y_box_nb;
+	std::size_t z_box_nb;
+	std::size_t box_nb;
 	bool _is_boxed;
 	std::set <Box*> Boxes;
 	std::set <Box*> BulkBoxes;
@@ -40,7 +40,6 @@ private:
 	std::set <Box*> TopBottomBoxes;
 	std::vector <Box*> box_labels;
 	System* sys;
-	int amax, bmax, cmax; // amax = min( x_box_nb, 3), bmax = min( y_box_nb, 3), cmax = min( z_box_nb, 3)
 	/*****
 	 WhichBox(vec3d pos)
 	 returns a pointer on the box containg position pos
@@ -96,9 +95,7 @@ public:
 	 gives iterators to beginning and ending point of the container including
 	 all particles in the box containing particle i and in the adjacent boxes.
 	 *****/
-	std::vector<int>::iterator neighborhood_begin(int i);
-	std::vector<int>::iterator neighborhood_end(int i);
-	std::vector <int>& neighborhood(int i);
+	const std::vector <int>& neighborhood(int i);
 	void printBoxNetwork();
 	void printBoxContainers();
 	void printNeighborhoodContainers();

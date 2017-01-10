@@ -1,12 +1,6 @@
 #include "Box.h"
 using namespace std;
 
-Box::Box()
-{
-	_is_top = false;
-	_is_bottom = false;
-}
-
 Box::~Box()
 {
 	_neighbors.clear();
@@ -17,7 +11,7 @@ Box::~Box()
  * important for top/bottom boxes, as the number of moving neighbors
  * can be smaller than _moving_neigh_nb
  */
-void Box::reset_moving_neighbors()
+void Box::resetMovingNeighbors()
 {
 	for (const auto& box : _moving_neighbors) {
 		_neighbors.erase(box);
@@ -42,26 +36,6 @@ void Box::addMovingNeighbor(Box* neigh_box)
 	_moving_neighbors.insert(neigh_box);
 }
 
-void Box::is_top(bool it)
-{
-	_is_top = it;
-}
-
-void Box::is_bottom(bool ib)
-{
-	_is_bottom = ib;
-}
-
-bool Box::is_top()
-{
-	return _is_top;
-}
-
-bool Box::is_bottom()
-{
-	return _is_bottom;
-}
-
 void Box::add(int i)
 {
 	container.insert(i);
@@ -72,12 +46,12 @@ void Box::remove(int i)
 	container.erase(i);
 }
 
-void Box::build_neighborhood_container()
+void Box::buildNeighborhoodContainer()
 {
 	neighborhood_container.clear();
-	size_t size = container_size();
+	size_t size = container.size();
 	for (const auto& box : _neighbors) {
-		size += box->container_size();
+		size += box->getContainer().size();
 	}
 	neighborhood_container.resize(size);
 	int j = 0;

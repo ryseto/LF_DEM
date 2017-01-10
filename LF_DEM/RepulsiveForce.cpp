@@ -63,7 +63,7 @@ void RepulsiveForce::calcScaledForce()
 	/**
 		\brief Computes the force in the System class from a previously computed reduced force.
 	*/
-	force_norm = sys->amplitudes.repulsion*reduced_force_norm;
+	force_norm = sys->p.repulsion*reduced_force_norm;
 	/* nvec is from particle 0 to particle 1.
 	 * force_vector is force acting on particle 0
 	 */
@@ -84,7 +84,7 @@ void RepulsiveForce::calcForce()
 	calcScaledForce();
 }
 
-void RepulsiveForce::addUpForce(std::vector<vec3d> &force)
+void RepulsiveForce::addUpForce(std::vector<vec3d> &force) const
 {
 	force[p0] += force_vector;
 	force[p1] -= force_vector;

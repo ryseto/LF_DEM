@@ -4,6 +4,6 @@
 #include <string>
 
 struct Event {
-    std::string type;
+	std::string type;
 };
 #endif

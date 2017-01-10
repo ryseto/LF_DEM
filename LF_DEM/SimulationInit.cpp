@@ -403,27 +403,27 @@ void Simulation::exportForceAmplitudes()
 
 	sys.repulsiveforce = input_values.find("repulsion") != input_values.end();
 	if (sys.repulsiveforce) {
-		cout << indent+"Repulsive force (in \"" << input_values["repulsion"].unit << "\" units): " << sys.amplitudes.repulsion << endl;
+		cout << indent+"Repulsive force (in \"" << input_values["repulsion"].unit << "\" units): " << sys.p.repulsion << endl;
 	}
 
 	sys.critical_load = input_values.find("critical_load") != input_values.end();
 	if (sys.critical_load) {
-		cout << indent+"Critical Load (in \"" << input_values["critical_load"].unit << "\" units): " << sys.amplitudes.critical_normal_force << endl;
+		cout << indent+"Critical Load (in \"" << input_values["critical_load"].unit << "\" units): " << sys.p.critical_load << endl;
 	}
 
 	sys.cohesion = input_values.find("cohesion") != input_values.end();
 	if (sys.cohesion) {
-		cout << indent+"Cohesion (in \"" << input_values["cohesion"].unit << "\" units): " << sys.amplitudes.cohesion << endl;
+		cout << indent+"Cohesion (in \"" << input_values["cohesion"].unit << "\" units): " << sys.p.cohesion << endl;
 	}
 
-	bool is_ft_max = input_values.find("ft") != input_values.end();
+	bool is_ft_max = input_values.find("ft_max") != input_values.end();
 	if (is_ft_max) {
-		cout << indent+"Max tangential load (in \"" << input_values["ft"].unit << "\" units): " << sys.amplitudes.ft_max << endl;
+		cout << indent+"Max tangential load (in \"" << input_values["ft_max"].unit << "\" units): " << sys.p.ft_max << endl;
 	}
 
 	sys.brownian = input_values.find("brownian") != input_values.end();
 	if (sys.brownian) {
-		cout << indent+"Brownian force (in \"" << input_values["brownian"].unit << "\" units): " << sys.amplitudes.temperature << endl;
+		cout << indent+"Brownian force (in \"" << input_values["brownian"].unit << "\" units): " << sys.p.brownian << endl;
 	}
 	cout << indent+"Normal contact stiffness (in \"" << input_values["kn"].unit << "\" units): " << p.kn << endl;
 	cout << indent+"Sliding contact stiffness (in \"" << input_values["kt"].unit << "\" units): " << p.kt << endl;
@@ -618,7 +618,7 @@ void Simulation::setupSimulation(string in_args,
 	sys.setupSystemPostConfiguration();
 	p_initial = p;
 	simu_name = prepareSimulationName(binary_conf, filename_import_positions, filename_parameters,
-                                    simu_identifier, dimensionlessnumber, input_scale);
+									  simu_identifier, dimensionlessnumber, input_scale);
 	openOutputFiles(simu_name);
 	echoInputFiles(in_args, input_files);
 	cout << indent << "Simulation setup [ok]" << endl;
@@ -641,13 +641,13 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 			p.friction_model = atoi(value.c_str());
 		}
 	} else if (keyword == "repulsion") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &sys.amplitudes.repulsion);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "cohesion") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &sys.amplitudes.cohesion);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "brownian") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &sys.amplitudes.temperature);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "critical_load") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &sys.amplitudes.critical_normal_force);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "monolayer") {
 		p.monolayer = str2bool(value);
 	} else if (keyword == "repulsiveforce_length") {
@@ -673,11 +673,11 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "sd_coeff") {
 		p.sd_coeff = atof(value.c_str());
 	} else if (keyword == "kn") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.kn);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "kt") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.kt);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "kr") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.kr);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "dt") {
 		p.dt = atof(value.c_str());
 	} else if (keyword == "Pe_switch") {
@@ -731,7 +731,7 @@ void Simulation::autoSetParameters(const string &keyword, const string &value)
 	} else if (keyword == "rest_threshold") {
 		p.rest_threshold = atof(value.c_str());
 	} else if (keyword == "ft_max") {
-		input_values[keyword] = str2DimensionalValue("force", keyword, value, &p.kn);
+		input_values[keyword] = str2DimensionalValue("force", keyword, value, force_value_ptr[keyword]);
 	} else if (keyword == "fixed_dt") {
 		p.fixed_dt = str2bool(value);
 	} else if (keyword == "cross_shear") {
@@ -1426,7 +1426,7 @@ TimeKeeper Simulation::initTimeKeeper() {
 									 input_values["time_end"].unit == "strain"));
 	} else {
 		tk.addClock("data", LinearClock(p.time_interval_output_data,
-                                    input_values["time_interval_output_data"].unit == "strain"));
+										input_values["time_interval_output_data"].unit == "strain"));
 	}
 	if (p.log_time_interval) {
 		tk.addClock("config", LogClock(p.initial_log_time,
@@ -1435,7 +1435,7 @@ TimeKeeper Simulation::initTimeKeeper() {
 									   input_values["time_end"].unit == "strain"));
 	} else {
 		tk.addClock("config", LinearClock(p.time_interval_output_config,
-                                      input_values["time_interval_output_config"].unit == "strain"));
+										  input_values["time_interval_output_config"].unit == "strain"));
 	}
 	return tk;
 }

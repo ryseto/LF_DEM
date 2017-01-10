@@ -47,22 +47,9 @@ class Simulation;
 // class Interaction;
 class BoxSet;
 
-struct ForceAmplitudes
-{
-	double repulsion;
-	double temperature;
-	double sqrt_temperature;
-	double contact;
-	double cohesion;
-	double critical_normal_force;
-	double ft_max;
-};
-
 class System{
 private:
 	int np; ///< number of particles
-	int maxnb_interactionpair;
-	int maxnb_interactionpair_per_particle;
 	int nb_of_active_interactions_mm;
 	int nb_of_active_interactions_mf;
 	int nb_of_active_interactions_ff;
@@ -82,25 +69,27 @@ private:
 	double lx_half; // =lx/2
 	double ly_half; // =ly/2
 	double lz_half; // =lz/2
-	double shear_strain;
+	vec3d shear_strain;
+	double curvilinear_strain;
 	double angle_wheel; // rotational angle of rotary couette geometory
-	int linalg_size;
 	double costheta_shear;
 	double sintheta_shear;
 	double shear_rate;
 
 	vec3d omega_inf;
 	std::vector <vec3d> u_inf;
+	std::vector <vec3d> na_disp;
+
 	/* data */
 	bool keepRunning(double time_end, double strain_end);
 	bool keepRunning(const std::string& time_or_strain, const double& value_end);
 	void (System::*timeEvolutionDt)(bool, double, double);
 	void timeEvolutionEulersMethod(bool calc_stress,
-								   double time_end,
-								   double strain_end);
+	                               double time_end,
+	                               double strain_end);
 	void timeEvolutionPredictorCorrectorMethod(bool calc_stress,
-											   double time_end,
-											   double strain_end);
+	                                           double time_end,
+	                                           double strain_end);
 	void timeStepMove(double time_end, double strain_end);
 	void timeStepMoveCorrector();
 	void timeStepMovePredictor(double time_end, double strain_end);
@@ -172,10 +161,14 @@ private:
 	Averager<double> max_disp_tan_avg;
 	std::list <Event>& events;
 
-protected:
+	void declareStressComponents();
+	void declareVelocityComponents();
+	void declareForceComponents();
+
+ protected:
  public:
 	System(ParameterSet& ps, std::list <Event>& ev);
-	~System(){};
+	~System();
 	ParameterSet& p;
 	int np_mobile; ///< number of mobile particles
 	// Interaction types
@@ -207,7 +200,6 @@ protected:
 	std::vector<vec3d> rate_proportional_wall_force;
 	std::vector<vec3d> rate_proportional_wall_torque;
 
-	std::vector<Interaction> interaction;
 	BoxSet boxset;
 	std::vector<double> radius;
 	std::vector<double> angle; // for 2D visualization
@@ -222,30 +214,63 @@ protected:
 	std::vector<StressTensor> total_stress_pp; // per particle
 	StressTensor total_stress;
 
+	/**************** Interaction machinery ***************************/
+	/* We hold the Interaction instances in a std::vector */
+	std::vector<Interaction> interaction;
+	/*
+	 * Interactions are used throughout the System class to access all the
+	 * data relative to pairwise forces. Most interaction operations are performed
+	 * as loops over the Interaction vector.
+	 * They are basically containing all the information relative to the forces
+	 * exchanged between a pair of particles i and j.
+	 * An Interaction contains typically a Lubrication object, a Contact object,
+	 * a RepulsiveForce object, etc.
+	 *
+	 * For some interaction operations, it is more convenient to loop over the particles
+	 * rather than the interactions (for instance to build the resistance matrix).
+	 * So we need to keep track of the set of Interaction instances each particle is involved in.
+	 * This is done by a vector of set of pointers to Interaction of size np, called interaction_list.
+	 * Each set is tied to a particle i.
+	 * It is convenient to order the sets of interaction with the label of the other particle involved,
+	 * so that the matrix filling in the StokesSolver can be made more efficiently.
+	 * That's the purpose of the custom comparator compare_interaction.
+	 */
+	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
+
+	 /*
+	 * These pointers are pointers to
+	 * elements of std::vector<Interaction> interaction defined above.
+	 * But here we have to be very careful, because the pointers need to keep track of what happens in the
+	 * vector<Interaction>. For instance, a interaction.push_bacK(inter) can trigger a reallocation of
+	 * the interaction container, in which case all the pointers in interaction_list are rendered invalid.
+	 * The solution to this problem is to give Interaction instances responsability for declaring themselved in
+	 * interaction_list, through appropriate constructor, destructor, copy constructor and assignment operator.
+	 * Note that the Interaction move constructor is explicitely deleted for now, to prevent
+	 * flawed implicit implementation by the compiler.
+	 */
+	 /* Besides the Interaction instances, the particles also more trivially know their neighbor.
+	 * This is not strictly necessary but can optimize some operations.
+	 * The responsability for the correctness of interaction_partners is left to System
+	 * (not delegated any more to Interaction, like it used to).*/
+	std::vector < std::vector<int> > interaction_partners;
+
 	void gatherStressesByRateDependencies(StressTensor &rate_prop_stress,
-	                                      StressTensor &rate_indep_stress);
+										  StressTensor &rate_indep_stress);
 
 	std::map<std::string, ForceComponent> force_components;
 	std::map<std::string, StressTensor> total_stress_groups;
 	std::map<std::string, StressComponent> stress_components;
-	void declareStressComponents();
 	std::map<std::string, VelocityComponent> velocity_components;
-	void declareVelocityComponents();
-	void declareForceComponents();
-
 
 	Averager<StressTensor> stress_avg;
 	double dt;
 	double avg_dt;
 	int avg_dt_nb;
 	double system_volume;
-	std::vector < std::set <Interaction*, compare_interaction> > interaction_list;
-	std::vector < std::vector<int> > interaction_partners;
-	int nb_interaction;
+
 	vec3d shear_disp; // lees-edwards shift between top and bottom. only shear_disp.x, shear_disp.y is used
 	double max_velocity;
 	double max_sliding_velocity;
-	std::queue<int> deactivated_interaction;
 	double target_stress;
 	double init_strain_shear_rate_limit;
 	double init_shear_rate_limit;
@@ -263,26 +288,25 @@ protected:
 	double radius_wall_particle;
 	double radius_in;  // wall particles are at r = radius_in - radius_wall_particle;
 	double radius_out; // wall particles are at r = radius_out + radius_wall_particle;
-    double z_bot;
-    double z_top;
+	double z_bot;
+	double z_top;
 	double force_tang_wall1;
-    double force_tang_wall2;
+	double force_tang_wall2;
 	double force_normal_wall1;
 	double force_normal_wall2;
-    double shearstress_wall1;
-    double shearstress_wall2;
-    double normalstress_wall1;
-    double normalstress_wall2;
+	double shearstress_wall1;
+	double shearstress_wall2;
+	double normalstress_wall1;
+	double normalstress_wall2;
 	vec3d force_upwall;
 	vec3d force_downwall;
-
 
 	double *ratio_unit_time; // to convert System time in Simulation time
 
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
-						  const std::vector <double>& radii);
+	                      const std::vector <double>& radii);
 	void setFixedVelocities(const std::vector <vec3d>& vel);
 	void setContacts(const std::vector <struct contact_state>& cs);
 	void getContacts(std::vector <struct contact_state>& cs);
@@ -308,9 +332,9 @@ protected:
 	void calcStressPerParticle();
 	void calcContactXFPerParticleStressControlled();
 	void gatherVelocitiesByRateDependencies(std::vector<vec3d> rateprop_vel,
-                                          std::vector<vec3d> rateprop_ang_vel,
-                                          std::vector<vec3d> rateindep_vel,
-                                          std::vector<vec3d> rateindep_ang_vel) const;
+											std::vector<vec3d> rateprop_ang_vel,
+											std::vector<vec3d> rateindep_vel,
+											std::vector<vec3d> rateindep_ang_vel) const;
 	void calcTotalStressPerParticle();
 	void getStressCouette(int i,
 						  double &stress_rr,
@@ -347,21 +371,6 @@ protected:
 	double get_lz()
 	{
 		return lz;
-	}
-
-	double Lx_half()
-	{
-		return lx_half;
-	}
-
-	double Ly_half()
-	{
-		return ly_half;
-	}
-
-	double Lz_half()
-	{
-		return lz_half;
 	}
 
 	double get_time_in_simulation_units()
@@ -401,10 +410,8 @@ protected:
 		return np;
 	}
 
-	double get_shear_strain()
-	{
-		return shear_strain;
-	}
+	vec3d get_strain() {return shear_strain;}
+	double get_curvilinear_strain() {return curvilinear_strain;};
 
 	double get_angle_wheel()
 	{
@@ -414,11 +421,6 @@ protected:
 	double get_omega_wheel()
 	{
 		return omega_wheel_in-omega_wheel_out;
-	}
-
-	void set_dt(double val)
-	{
-		dt = val;
 	}
 
 	double get_nb_of_active_interactions()
@@ -441,6 +443,6 @@ protected:
 		sintheta_shear = sin(theta_shear);
 		setVelocityDifference();
 	}
-	struct ForceAmplitudes amplitudes;
+	const std::vector <vec3d> & getNonAffineDisp() {return na_disp;}
 };
 #endif /* defined(__LF_DEM__System__) */

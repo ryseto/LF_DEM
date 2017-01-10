@@ -16,9 +16,9 @@ void BoxSet::init(double interaction_dist, System* sys_)
 	double xratio = sys->get_lx()/interaction_dist;
 	double yratio = sys->get_ly()/interaction_dist;
 	double zratio = sys->get_lz()/interaction_dist;
-	x_box_nb = (int)xratio;
-	y_box_nb = (int)yratio;
-	z_box_nb = (int)zratio;
+	x_box_nb = (unsigned int)xratio;
+	y_box_nb = (unsigned int)yratio;
+	z_box_nb = (unsigned int)zratio;
 	if (x_box_nb == 0) {
 		x_box_nb = 1;
 	}
@@ -37,9 +37,7 @@ void BoxSet::init(double interaction_dist, System* sys_)
 
 		auto it = Boxes.insert(new Box());
 		Box* const b = (*it.first);
-		b->position.reset();
-		b->is_bottom(true);
-		b->is_top(true);
+		b->setPosition({0, 0, 0});
 		TopBottomBoxes.insert(b);
 		box_labels.push_back(b);
 	} else {
@@ -50,7 +48,7 @@ void BoxSet::init(double interaction_dist, System* sys_)
 		int m1p1[] = {-1, 1};
 		for (int a : m1p1) {
 			for (int b : m1p1) {
-				vec3d far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
+				auto far_corner = 1.4999999*vec3d(a*box_xsize, b*box_ysize, box_zsize);
 				top_probing_positions.push_back(far_corner);
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, 0, 0));
 				top_probing_positions.push_back(far_corner-vec3d(a*box_xsize, b*box_ysize, 0));
@@ -63,6 +61,7 @@ void BoxSet::init(double interaction_dist, System* sys_)
 				bottom_probing_positions.push_back(far_corner-vec3d(0, b*box_ysize, 0));
 			}
 		}
+		box_nb = x_box_nb*y_box_nb*z_box_nb;
 		allocateBoxes();
 		// give them their position
 		positionBoxes();
@@ -74,9 +73,7 @@ void BoxSet::init(double interaction_dist, System* sys_)
 
 void BoxSet::allocateBoxes()
 {
-	box_nb = x_box_nb*y_box_nb*z_box_nb;
-
-	for (int i=0; i<box_nb; i++) {
+	for (unsigned int i=0; i<box_nb; i++) {
 		Boxes.insert(new Box());
 	}
 	box_labels.resize(box_nb);
@@ -84,43 +81,23 @@ void BoxSet::allocateBoxes()
 
 void BoxSet::positionBoxes()
 {
-	if (x_box_nb > 3) {
-		amax = 3;
-	} else {
-		amax = x_box_nb;
-	}
-	if (y_box_nb > 3) {
-		bmax = 3;
-	} else {
-		bmax = y_box_nb;
-	}
-	if (z_box_nb > 3) {
-		cmax = 3;
-	} else {
-		cmax = z_box_nb;
-	}
-
 	// position boxes
 	auto it = Boxes.begin();
 
-	for (int ix=0; ix<x_box_nb; ix++) {
-		for (int iy=0; iy<y_box_nb; iy++) {
-			for (int iz=0; iz<z_box_nb; iz++) {
+	for (unsigned int ix=0; ix<x_box_nb; ix++) {
+		for (unsigned int iy=0; iy<y_box_nb; iy++) {
+			for (unsigned int iz=0; iz<z_box_nb; iz++) {
 				Box* const bx = (*it);
-				bx->position = vec3d(box_xsize*(ix+0.5), box_ysize*(iy+0.5), box_zsize*(iz+0.5)); // the center of the box
+				bx->setPosition({box_xsize*(ix+0.5), box_ysize*(iy+0.5), box_zsize*(iz+0.5)}); // the center of the box
 				int label = ix*y_box_nb*z_box_nb+iy*z_box_nb+iz;
 				box_labels[label] = bx;
 				if (iz == 0 && iz < z_box_nb-1) {// bottom box
-					bx->is_bottom(true);
 					BottomBoxes.insert(bx);
 				}
 				if (iz == z_box_nb-1 && iz > 0) {//top box
-					bx->is_top(true);
 					TopBoxes.insert(bx);
 				}
 				if (iz == 0 && iz == z_box_nb-1) {// bottom box
-					bx->is_bottom(true);
-					bx->is_top(true);
 					TopBottomBoxes.insert(bx);
 				}
 				if (iz > 0 && iz < z_box_nb-1) {// bulk box
@@ -136,7 +113,7 @@ void BoxSet::positionBoxes()
 void BoxSet::assignNeighborsBulk()
 {
 	for (auto& bx : BulkBoxes) {
-		vec3d pos = bx->position;
+		auto pos = bx->getPosition();
 		vec3d delta;
 		int m10p1[] = {-1, 0, 1};
 		for (const auto& a : m10p1) {
@@ -155,7 +132,7 @@ void BoxSet::assignNeighborsBulk()
 void BoxSet::assignNeighborsBottom()
 {
 	for (auto& bx : BottomBoxes) {
-		vec3d pos = bx->position;
+		auto pos = bx->getPosition();
 		vec3d delta;
 		// boxes  at same level and above first: these are fixed once and for all in the simulation
 		int m10p1[] = {-1, 0, 1};
@@ -179,7 +156,7 @@ void BoxSet::assignNeighborsBottom()
 void BoxSet::assignNeighborsTop()
 {
 	for (auto& bx : TopBoxes) {
-		vec3d pos = bx->position;
+		auto pos = bx->getPosition();
 		vec3d delta;
 		// boxes  at same level and bottom first: these are fixed once and for all in the simulation
 		int m10p1[] = {-1, 0, 1};
@@ -203,7 +180,7 @@ void BoxSet::assignNeighborsTop()
 void BoxSet::assignNeighborsTopBottom()
 {
 	for (auto& bx : TopBottomBoxes) {
-		vec3d pos = bx->position;
+		auto pos = bx->getPosition();
 		vec3d delta;
 
 		// boxes at same level first: these are fixed once and for all in the simulation
@@ -264,24 +241,24 @@ void BoxSet::updateNeighbors()
 	 **/
 
 	for (auto& bx : TopBoxes) {
-		bx->reset_moving_neighbors();
-		vec3d pos = bx->position;
+		bx->resetMovingNeighbors();
+		auto pos = bx->getPosition();
 		for (const auto& delta_prob : top_probing_positions) {
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 
 	for (auto& bx : BottomBoxes) {
-		bx->reset_moving_neighbors();
-		vec3d pos = bx->position;
+		bx->resetMovingNeighbors();
+		auto pos = bx->getPosition();
 		for (const auto& delta_prob : bottom_probing_positions) {
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
 	}
 
 	for (auto& bx : TopBottomBoxes) {
-		bx->reset_moving_neighbors();
-		vec3d pos = bx->position;
+		bx->resetMovingNeighbors();
+		auto pos = bx->getPosition();
 		for (const auto& delta_prob : top_probing_positions) {
 			bx->addMovingNeighbor(whichBox(sys->periodized(pos+delta_prob)));
 		}
@@ -298,7 +275,7 @@ void BoxSet::update()
 		updateNeighbors();
 	}
 	for (const auto& bx : Boxes) {
-		bx->build_neighborhood_container();
+		bx->buildNeighborhoodContainer();
 	}
 }
 
@@ -338,28 +315,17 @@ void BoxSet::box(int i)
 	}
 }
 
-vector<int>& BoxSet::neighborhood(int i){
-	return (boxMap[i])->neighborhood_container;
-}
-
-vector<int>::iterator BoxSet::neighborhood_begin(int i)
-{
-	return (boxMap[i])->neighborhood_begin();
-}
-
-vector<int>::iterator BoxSet::neighborhood_end(int i)
-{
-	return (boxMap[i])->neighborhood_end();
+const vector<int>& BoxSet::neighborhood(int i){
+	return (boxMap[i])->getNeighborhoodContainer();
 }
 
 void BoxSet::printBoxNetwork()
 {
 	for (const auto& bx : Boxes) {
-		const auto& neighbors = bx->neighbors();
+		const auto& neighbors = bx->getNeighborBox();
 		for (const auto& neighbor_box : neighbors) {
-			cerr << " "  << neighbors.size() << " " << bx->position << " ";
-			cerr << neighbor_box->position << " " << bx->is_top() << " ";
-			cerr << bx->is_bottom() << endl;
+			cerr << " "  << neighbors.size() << " " << bx->getPosition() << " ";
+			cerr << neighbor_box->getPosition() << endl;
 		}
 	}
 }
@@ -367,8 +333,8 @@ void BoxSet::printBoxNetwork()
 void BoxSet::printBoxContainers()
 {
 	for (const auto& bx : Boxes) {
-		for (const auto& j : bx->container) {
-			cerr << bx->position << " " << j << endl;
+		for (const auto& j : bx->getContainer()) {
+			cerr << bx->getPosition() << " " << j << endl;
 		}
 	}
 }
@@ -376,8 +342,8 @@ void BoxSet::printBoxContainers()
 void BoxSet::printNeighborhoodContainers()
 {
 	for (const auto& bx : Boxes) {
-		for (const auto& j : bx->neighborhood_container) {
-			cerr << bx->position << " " << j << endl;
+		for (const auto& j : bx->getNeighborhoodContainer()) {
+			cerr << bx->getPosition() << " " << j << endl;
 		}
 	}
 }
@@ -385,6 +351,6 @@ void BoxSet::printNeighborhoodContainers()
 void BoxSet::printBoxMap()
 {
 	for (int i=0; i<sys->get_np(); i++) {
-		cerr << i << " " << boxMap[i]->position << endl;
+		cerr << i << " " << boxMap[i]->getPosition() << endl;
 	}
 }

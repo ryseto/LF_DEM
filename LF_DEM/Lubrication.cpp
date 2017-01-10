@@ -305,7 +305,6 @@ void Lubrication::calcXFunctions()
 
 void Lubrication::calcXFunctionsStress()
 {
-	calcXFunctions();
 	for (int j=0; j<4; j++) {
 		XM[j] = cXM[j]*lub_coeff;
 	}
@@ -326,14 +325,13 @@ void Lubrication::calcXYFunctions()
 
 void Lubrication::calcXYFunctionsStress()
 {
-	calcXYFunctions();
 	for (int j=0; j<4; j++) {
 		XM[j] = cXM[j]*lub_coeff;
 		YM[j] = cYM[j]*log_lub_coeff;
 	}
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze()
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze() const
 {
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
@@ -365,7 +363,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze()
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()  const
 {
 	/*
 	* mode normal+tangential
@@ -409,7 +407,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential()
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential()
+std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential() const
 {
 	/*
 	 * mode normal+tangential
@@ -420,21 +418,21 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	 */
 
 	double nxnx = nvec->x*nvec->x;
- 	double nxny = nvec->x*nvec->y;
- 	double nxnz = nvec->x*nvec->z;
- 	double nynz = nvec->y*nvec->z;
- 	double nyny = nvec->y*nvec->y;
- 	double nznz = nvec->z*nvec->z;
+	double nxny = nvec->x*nvec->y;
+	double nxnz = nvec->x*nvec->z;
+	double nynz = nvec->y*nvec->z;
+	double nyny = nvec->y*nvec->y;
+	double nznz = nvec->z*nvec->z;
 	double nnE;
- 	if (sys->p.cross_shear) {
- 		double costheta, sintheta;
- 		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
- 		// nnE = nynz;
- 		nnE = costheta*nxnz+sintheta*nynz;
- 	} else {
- 		nnE = nxnz;
- 	}
-
+	if (sys->p.cross_shear) {
+		double costheta, sintheta;
+		std::tie(costheta, sintheta) = sys->getCosSinShearAngle();
+		// nnE = nynz;
+		nnE = costheta*nxnz+sintheta*nynz;
+	} else {
+		nnE = nxnz;
+	}
+	
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
 	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE;
@@ -479,7 +477,7 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 }
 
 // for FT/UW version
-struct ODBlock Lubrication::RFU_ODBlock_squeeze()
+struct ODBlock Lubrication::RFU_ODBlock_squeeze() const
 {
 	double n0n0 = nvec->x*nvec->x;
 	double n0n1 = nvec->x*nvec->y;
@@ -517,7 +515,7 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze()
 }
 
 // for FT/UW version
-struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential()
+struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential() const
 {
 	double n0n0 = nvec->x*nvec->x;
 	double n0n1 = nvec->x*nvec->y;
@@ -558,7 +556,7 @@ struct ODBlock Lubrication::RFU_ODBlock_squeeze_tangential()
 }
 
 // Diagonal Blocks Terms, F/U version
-std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze()
+std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze() const
 {
 	struct DBlock b0;
 	struct DBlock b1;
@@ -618,7 +616,7 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze()
 }
 
 // Diagonal Blocks Terms, FT/UW version
-std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangential()
+std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangential() const
 {
 	struct DBlock b0;
 	struct DBlock b1;
@@ -691,9 +689,9 @@ std::pair<struct DBlock, struct DBlock> Lubrication::RFU_DBlocks_squeeze_tangent
 // stresslet_i = R_SU^{ii} * vi + R_SU^{ij} * vj
 // stresslet_j = R_SU^{ji} * vi + R_SU^{jj} * vj
 void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
-                                 const vec3d& oi, const vec3d& oj,
-                                 StressTensor& stresslet_i,
-                                 StressTensor& stresslet_j)
+								 const vec3d& oi, const vec3d& oj,
+								 StressTensor& stresslet_i,
+								 StressTensor& stresslet_j) const
 {
 	/*
 	 * (xx, xy, xz, yz, yy, zz)
@@ -797,7 +795,7 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
                                  double sin_theta_shear,
                                  double shear_rate,
                                  StressTensor& stresslet_i,
-                                 StressTensor& stresslet_j)
+                                 StressTensor& stresslet_j) const
 {
 	/**
 		\brief The \f$ M:\hat{E}^{\infty} \f$ component of the stress.
@@ -818,18 +816,18 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
 	 */
 	bool shear_along_x = sin_theta_shear == 0.;
 	double nxnx = nvec->x*nvec->x;
- 	double nxny = nvec->x*nvec->y;
- 	double nxnz = nvec->x*nvec->z;
- 	double nynz = nvec->y*nvec->z;
- 	double nyny = nvec->y*nvec->y;
- 	double nznz = nvec->z*nvec->z;
+	double nxny = nvec->x*nvec->y;
+	double nxnz = nvec->x*nvec->z;
+	double nynz = nvec->y*nvec->z;
+	double nyny = nvec->y*nvec->y;
+	double nznz = nvec->z*nvec->z;
 	double nnE;
- 	if (shear_along_x) {
+	if (shear_along_x) {
 		nnE = nxnz;
 	} else {
- 		nnE = cos_theta_shear*nxnz + sin_theta_shear*nynz; // this is not including the shear rate
- 	}
-
+		nnE = cos_theta_shear*nxnz + sin_theta_shear*nynz; // this is not including the shear rate
+	}
+	
 	double cXM_i = (3.0/2)*(XM[0]+XM[1])*nnE;
 	double cXM_j = (3.0/2)*(XM[2]+XM[3])*nnE;
 	StressTensor XME_i(nxnx, nxny, nxnz, nynz, nyny, nznz);
@@ -876,7 +874,7 @@ void Lubrication::addMEStresslet(double cos_theta_shear,
  * lubforce_p1 = -lubforce_p0
  *
  */
-vec3d Lubrication::getTotalForce()
+vec3d Lubrication::getTotalForce() const
 {
 	/**
 	* \brief The total lubrication force acting on p0.
@@ -891,11 +889,6 @@ vec3d Lubrication::getTotalForce()
 	double sr = sys->get_shear_rate();
 	vec3d vi(sys->na_velocity[p0]);
 	vec3d vj(sys->na_velocity[p1]);
-	if (!tangential) {
-		calcXFunctions();
-	} else {
-		calcXYFunctions();
-	}
 	/* XAU_i */
 	vec3d lubforce_p0 = -dot(XA[0]*vi+XA[1]*vj, nvec)*(*nvec);
 	if (tangential) {
@@ -918,7 +911,6 @@ vec3d Lubrication::getTotalForce()
 	}
 	return lubforce_p0;
 }
-
 
 void Lubrication::updateResistanceCoeff()
 {

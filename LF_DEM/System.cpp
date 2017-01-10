@@ -87,19 +87,19 @@ z_top(-1),
 ratio_unit_time(NULL),
 eventLookUp(NULL)
 {
-	amplitudes.repulsion = 0;
-	amplitudes.temperature = 0;
-	amplitudes.sqrt_temperature = 0;
-	amplitudes.contact = 0;
-	amplitudes.cohesion = 0;
-	amplitudes.critical_normal_force = 0;
 	max_sliding_velocity = 0;
 	total_stress = 0;
 	lx = 0;
 	ly = 0;
 	lz = 0;
-	costheta_shear = 0;
+	costheta_shear = 1;
 	sintheta_shear = 0;
+}
+
+System::~System()
+{
+	interaction.clear();
+	interaction_list.clear();
 }
 
 void System::allocateRessourcesPreConfiguration()
@@ -107,18 +107,6 @@ void System::allocateRessourcesPreConfiguration()
 	if (np <= 0) {
 		throw runtime_error("System::allocateRessources() :  np is 0 or negative, cannot allocate this.");
 	}
-	linalg_size = 6*np;
-	double interaction_volume;
-	if (twodimension) {
-		interaction_volume = M_PI*pow(p.interaction_range, 2);
-		double particle_volume = M_PI;
-		maxnb_interactionpair_per_particle = interaction_volume/particle_volume;
-	} else {
-		interaction_volume = (4*M_PI/3)*pow(p.interaction_range, 3);
-		double particle_volume = 4*M_PI/3;
-		maxnb_interactionpair_per_particle = 1*interaction_volume/particle_volume;
-	}
-	maxnb_interactionpair = maxnb_interactionpair_per_particle*np;
 	nb_of_active_interactions_mf = 0;
 	nb_of_active_interactions_ff = 0;
 	nb_of_active_interactions_mm = 0;
@@ -161,6 +149,7 @@ void System::allocateRessourcesPreConfiguration()
 	for (auto &v: u_inf) {
 		v.reset();
 	}
+	na_disp.resize(np);
 	if (mobile_fixed) {
 		non_rate_proportional_wall_force.resize(p.np_fixed);
 		non_rate_proportional_wall_torque.resize(p.np_fixed);
@@ -169,11 +158,6 @@ void System::allocateRessourcesPreConfiguration()
 	}
 	declareForceComponents();
 	declareVelocityComponents();
-	interaction.resize(maxnb_interactionpair);
-	for (int k=0; k<maxnb_interactionpair; k++) {
-		interaction[k].init(this);
-		interaction[k].set_label(k);
-	}
 	interaction_list.resize(np);
 	interaction_partners.resize(np);
 	//
@@ -263,17 +247,16 @@ void System::allocateRessourcesPostConfiguration()
 void System::setInteractions_GenerateInitConfig()
 {
 	calcInteractionRange = &System::calcLubricationRange;
-	interaction.resize(maxnb_interactionpair);
-	for (int k=0; k<maxnb_interactionpair; k++) {
-		interaction[k].init(this);
-		interaction[k].set_label(k);
-	}
-	nb_interaction = 0;
-	shear_strain = 0;
+
+	shear_strain = {0, 0, 0};
 	shear_disp.reset();
 	vel_difference.reset();
 	initializeBoxing();
 	checkNewInteraction();
+
+	for (unsigned int k=0; k<interaction.size(); k++) {
+		interaction[k].label = k;
+	}
 }
 
 void System::setConfiguration(const vector <vec3d>& initial_positions,
@@ -317,11 +300,11 @@ void System::setContacts(const vector <struct contact_state>& cs)
 	 */
 
 	for (const auto& c : cs) {
-		for (int k=0; k<nb_interaction; k++) {
+		for (auto &inter: interaction) {
 			unsigned int p0, p1;
-			std::tie(p0, p1) = interaction[k].get_par_num();
+			std::tie(p0, p1) = inter.get_par_num();
 			if (p0 == c.p0 && p1 == c.p1) {
-				interaction[k].contact.setState(c);
+				inter.contact.setState(c);
 			}
 		}
 	}
@@ -334,9 +317,9 @@ void System::getContacts(vector <struct contact_state>& cs)
 
 		Used to output a configuration including contact info. Useful if you want to restart from exact same configuration.
 	 */
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].contact.is_active()) {
-			cs.push_back(interaction[k].contact.getState());
+	for (const auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			cs.push_back(inter.contact.getState());
 		}
 	}
 }
@@ -355,6 +338,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	 * @@@ --> I agree. I want to make clear the best way to handle contacting hard-sphere Brownian aprticles.
 	 * @@@     The contact force parameters kn and contact_relaxation_time may need to depend on dt in Brownian simulation.
 	*/
+
+	vec3d tests = {0, 2.1/2, 0.33};
+	cout << tests << endl;
 	np_mobile = np-p.np_fixed;
 	string indent = "  System::\t";
 	cout << indent << "Setting up System... " << endl;
@@ -462,11 +448,9 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 		}
 	}
 
-	shear_strain = 0;
-	nb_interaction = 0;
+	shear_strain = {0, 0, 0};
 
 	if (brownian) {
-		amplitudes.sqrt_temperature = sqrt(amplitudes.temperature);
 #ifdef DEV
 		/* In developing and debugging phases,
 		 * we give a seed to generate the same series of random number.
@@ -494,12 +478,7 @@ void System::setupSystemPreConfiguration(string control, bool is2d)
 	total_num_timesteps = 0;
 
 	vel_difference.reset();
-	if (!p.cross_shear) {
-		vel_difference.x = shear_rate*lz;
-	} else {
-		vel_difference.x = costheta_shear*shear_rate*lz;
-		vel_difference.y = sintheta_shear*shear_rate*lz;
-	}
+	setVelocityDifference();
 	dt = p.dt;
 	if (p.fixed_dt) {
 		avg_dt = dt;
@@ -548,7 +527,7 @@ void System::setupSystemPostConfiguration()
 	omega_wheel_in  = 0;
 	omega_wheel_out = 0;
 	if (p.simulation_mode >= 10 && p.simulation_mode <= 20) {
-		origin_of_rotation.set(lx_half, 0, lz_half);
+		origin_of_rotation = {lx_half, 0, lz_half};
 		for (int i=np_mobile; i<np; i++) {
 			angle[i] = -atan2(position[i].z-origin_of_rotation.z,
 							  position[i].x-origin_of_rotation.x);
@@ -612,32 +591,27 @@ void System::timeStepBoxing()
 		\brief Apply a strain step to the boxing system.
 	 */
 	if (!zero_shear) {
-		double strain_increment = dt*shear_rate;
+		vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
+		strain_increment *= dt*shear_rate;
+		curvilinear_strain += strain_increment.norm();
 		shear_strain += strain_increment;
-		if (!p.cross_shear) {
-			shear_disp.x += strain_increment*lz;
-			int m = (int)(shear_disp.x/lx);
-			if (shear_disp.x < 0) {
-				m--;
-			}
-			shear_disp.x = shear_disp.x-m*lx;
-		} else {
-			shear_disp.x += costheta_shear*strain_increment*lz;
-			shear_disp.y += sintheta_shear*strain_increment*lz;
-			int m = (int)(shear_disp.x/lx);
-			if (shear_disp.x < 0) {
-				m--;
-			}
-			shear_disp.x = shear_disp.x-m*lx;
-			m = (int)(shear_disp.y/ly);
-			if (shear_disp.y < 0) {
-				m--;
-			}
-			shear_disp.y = shear_disp.y-m*ly;
+		shear_disp += strain_increment*lz;
+		int m = (int)(shear_disp.x/lx);
+		if (shear_disp.x < 0) {
+			m--;
 		}
+		shear_disp.x = shear_disp.x-m*lx;
+		m = (int)(shear_disp.y/ly);
+		if (shear_disp.y < 0) {
+			m--;
+		}
+		shear_disp.y = shear_disp.y-m*ly;
 	} else {
 		if (wall_rheology || p.simulation_mode == 31) {
-			shear_strain += dt*shear_rate;
+			vec3d strain_increment = {costheta_shear, sintheta_shear, 0};
+			strain_increment *= dt*shear_rate;
+			curvilinear_strain += strain_increment.norm();
+			shear_strain += strain_increment;
 			angle_wheel += dt*(omega_wheel_in-omega_wheel_out);
 		}
 	}
@@ -756,13 +730,11 @@ void System::checkForceBalance()
 	forceResultantReset();
 	forceResultantInterpaticleForces();
 	unsigned int i, j;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			std::tie(i, j) = interaction[k].get_par_num();
-			vec3d lubforce_i = interaction[k].lubrication.getTotalForce();
-			forceResultant[i] += lubforce_i;
-			forceResultant[j] -= lubforce_i;
-		}
+	for (const auto &inter: interaction) {
+		std::tie(i, j) = inter.get_par_num();
+		vec3d lubforce_i = inter.lubrication.getTotalForce();
+		forceResultant[i] += lubforce_i;
+		forceResultant[j] -= lubforce_i;
 	}
 	// 2nd way: works
 	forceResultantReset();
@@ -803,6 +775,9 @@ void System::timeEvolutionEulersMethod(bool calc_stress,
 		}
 	}
 	timeStepMove(time_end, strain_end);
+	for (unsigned int i=0; i<np; i++) {
+		na_disp[i] += na_velocity[i]*dt;
+	}
 	if (eventLookUp != NULL) {
 		(this->*eventLookUp)();
 	}
@@ -905,6 +880,9 @@ void System::timeEvolutionPredictorCorrectorMethod(bool calc_stress,
 		}
 	}
 	timeStepMoveCorrector();
+	for (unsigned int i=0; i<np; i++) {
+		na_disp[i] += na_velocity[i]*dt;
+	}
 }
 
 void System::adaptTimeStep()
@@ -935,8 +913,8 @@ void System::adaptTimeStep(double time_end, double strain_end)
 	// To stop exactly at t == time_end or strain == strain_end,
 	// whatever comes first
 	if (strain_end >= 0) {
-		if (fabs(dt*shear_rate) > strain_end-fabs(get_shear_strain())) {
-			dt = fabs((strain_end-fabs(get_shear_strain()))/shear_rate);
+		if (fabs(dt*shear_rate) > strain_end-get_curvilinear_strain()) {
+			dt = fabs((strain_end-get_curvilinear_strain())/shear_rate);
 		}
 	}
 	if (time_end >= 0) {
@@ -1042,7 +1020,7 @@ void System::timeStepMoveCorrector()
 
 bool System::keepRunning(double time_end, double strain_end)
 {
-	if (fabs(get_shear_strain()) > strain_end-1e-8 && strain_end>=0) {
+	if (get_curvilinear_strain() > strain_end-1e-8 && strain_end>=0) {
 		return false;
 	}
 	if (get_time() > time_end-1e-8 && time_end>=0) {
@@ -1103,36 +1081,23 @@ void System::timeEvolution(double time_end, double strain_end)
 		(this->*timeEvolutionDt)(calc_stress, time_end, strain_end); // last time step, compute the stress
 	}
 	if (p.auto_determine_knkt
-		&& shear_strain > p.start_adjust) {
+		&& get_curvilinear_strain() > p.start_adjust) {
 		adjustContactModelParameters();
 	}
 }
 
 void System::createNewInteraction(int i, int j, double scaled_interaction_range)
 {
-	int interaction_new;
-	if (deactivated_interaction.empty()) {
-		// add an interaction object.
-		interaction_new = nb_interaction;
-		nb_interaction ++;
-	} else {
-		// fill a deactivated interaction object.
-		interaction_new = deactivated_interaction.front();
-		deactivated_interaction.pop();
-	}
 	// new interaction
-	if (nb_interaction > interaction.size()) {
-		Interaction inter;
-		inter.init(this);
-		interaction.push_back(inter);
-		interaction[interaction_new].set_label(interaction_new);
-	}
-	interaction[interaction_new].activate(i, j, scaled_interaction_range);
+	Interaction inter(this, i, j, scaled_interaction_range);
+	interaction.push_back(inter); // could emplace_back if Interaction gets a move ctor
+	// tell i and j their new partner
+	interaction_partners[i].push_back(j);
+	interaction_partners[j].push_back(i);
 }
 
 bool System::hasNeighbor(int i, int j)
 {
-	// return interaction_partners[i].find(j) != interaction_partners[i].end();
 	for (int k : interaction_partners[i]) {
 		if (j == k) {
 			return true;
@@ -1202,19 +1167,22 @@ void System::updateInteractions()
 
 	 */
 	double sq_max_sliding_velocity = 0;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active()) {
-			bool deactivated = false;
-			interaction[k].updateState(deactivated);
-			if (deactivated) {
-				deactivated_interaction.push(k);
+	for (unsigned int k=0; k<interaction.size(); k++) {
+		bool deactivated = false;
+		interaction[k].updateState(deactivated);
+
+		if (interaction[k].contact.is_active()) {
+			double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
+			if (sq_sliding_velocity > sq_max_sliding_velocity) {
+				sq_max_sliding_velocity = sq_sliding_velocity;
 			}
-			if (interaction[k].contact.is_active()) {
-				double sq_sliding_velocity = interaction[k].contact.relative_surface_velocity_sqnorm;
-				if (sq_sliding_velocity > sq_max_sliding_velocity) {
-					sq_max_sliding_velocity = sq_sliding_velocity;
-				}
-			}
+		}
+
+		if (deactivated) {
+			auto ij = interaction[k].get_par_num();
+			removeNeighbors(ij.first, ij.second);
+			interaction[k] = interaction[interaction.size()-1];
+			interaction.pop_back();
 		}
 	}
 	max_sliding_velocity = sqrt(sq_max_sliding_velocity);
@@ -1514,7 +1482,7 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	if (mobile_fixed) {
 		throw runtime_error("Brownian algorithm with fixed particles not implemented yet.\n");
 	}
-	double sqrt_2_dt_amp = sqrt(2/dt)*amplitudes.sqrt_temperature;
+	double sqrt_2_dt_amp = sqrt(2*p.brownian/dt);
 	for (unsigned int i=0; i<force.size(); i++) {
 		force[i].x = sqrt_2_dt_amp*GRANDOM; // \sqrt(2kT/dt) * random vector A (force and torque)
 		force[i].y = sqrt_2_dt_amp*GRANDOM;
@@ -1548,22 +1516,19 @@ void System::setBrownianForceToParticle(vector<vec3d> &force,
 	}
 }
 
-
 void System::setDashpotForceToParticle(vector<vec3d> &force,
                                        vector<vec3d> &torque)
 {
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].contact.is_active()) {
-			if (interaction[k].contact.dashpot.is_active()) {
-				std::tie(i, j) = interaction[k].get_par_num();
-				std::tie(GEi, GEj, HEi, HEj) = interaction[k].contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
-				force[i] += GEi;
-				force[j] += GEj;
-				torque[i] += HEi;
-				torque[j] += HEj;
-			}
+	for (const auto &inter: interaction) {
+		if (inter.contact.is_active() && inter.contact.dashpot.is_active()) {
+			std::tie(i, j) = inter.get_par_num();
+			std::tie(GEi, GEj, HEi, HEj) = inter.contact.dashpot.getRFU_Uinf(u_inf[i], u_inf[j], omega_inf);
+			force[i] += GEi;
+			force[j] += GEj;
+			torque[i] += HEi;
+			torque[j] += HEj;
 		}
 	}
 }
@@ -1577,10 +1542,10 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 	}
 	vec3d GEi, GEj;
 	unsigned int i, j;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].lubrication.is_active()) {
-			std::tie(i, j) = interaction[k].get_par_num();
-			std::tie(GEi, GEj) = interaction[k].lubrication.calcGE_squeeze(); // G*E_\infty term
+	for (const auto &inter: interaction) {
+		if (inter.lubrication.is_active()) {
+			std::tie(i, j) = inter.get_par_num();
+			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(); // G*E_\infty term
 			if (shearrate_is_1 == false) {
 				GEi *= shear_rate;
 				GEj *= shear_rate;
@@ -1600,10 +1565,10 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 	}
 	vec3d GEi, GEj, HEi, HEj;
 	unsigned int i, j;
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].lubrication.is_active()) {
-			std::tie(i, j) = interaction[k].get_par_num();
-			std::tie(GEi, GEj, HEi, HEj) = interaction[k].lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
+	for (const auto &inter: interaction) {
+		if (inter.lubrication.is_active()) {
+			std::tie(i, j) = inter.get_par_num();
+			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(); // G*E_\infty term, no gamma dot
 			if (shearrate_is_1 == false) {
 					GEi *= shear_rate;
 					GEj *= shear_rate;
@@ -1621,32 +1586,28 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 void System::setContactForceToParticle(vector<vec3d> &force,
                                        vector<vec3d> &torque)
 {
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].contact.is_active()) {
-			interaction[k].contact.addUpForceTorque(force, torque);
+	for (const auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			inter.contact.addUpForceTorque(force, torque);
 		}
 	}
 }
 
 void System::setRepulsiveForceToParticle(vector<vec3d> &force,
-	                                       vector<vec3d> &torque)
+										 vector<vec3d> &torque)
 {
-	if (repulsiveforce) {
-		for (int k=0; k<nb_interaction; k++) {
-			if (interaction[k].is_active()) {
-				interaction[k].repulsion.addUpForce(force);
-			}
-		}
+	for (const auto &inter: interaction) {
+		inter.repulsion.addUpForce(force);
 	}
 }
 
 void System::setFixedParticleForceToParticle(vector<vec3d> &force,
-	                                           vector<vec3d> &torque)
+											 vector<vec3d> &torque)
 {
 	vector<double> force_torque_from_fixed (6*np_mobile);
 	// @@ TODO: avoid copy of the velocities and forces
 	vector<double> minus_fixed_velocities (6*p.np_fixed);
-	for(int i=0; i<p.np_fixed; i++) {
+	for (int i=0; i<p.np_fixed; i++) {
 		int i6 = 6*i;
 		int i_fixed = i+np_mobile;
 		minus_fixed_velocities[i6  ] = -na_velocity[i_fixed].x;
@@ -1762,12 +1723,8 @@ void System::computeVelocityByComponents()
 
 void System::setVelocityDifference()
 {
-	if (!p.cross_shear) {
-		vel_difference.x = shear_rate*lz;
-	} else {
-		vel_difference.x = costheta_shear*shear_rate*lz;
-		vel_difference.y = sintheta_shear*shear_rate*lz;
-	}
+	vel_difference.x = costheta_shear*shear_rate*lz;
+	vel_difference.y = sintheta_shear*shear_rate*lz;
 }
 
 void System::set_shear_rate(double sr)
@@ -1789,7 +1746,7 @@ void System::computeShearRate()
 	double newtonian_stress = target_stress - shearStressComponent(rate_indep_stress, p.theta_shear);
 
 	set_shear_rate(newtonian_stress/newtonian_viscosity);
-	if (shear_strain < init_strain_shear_rate_limit) {
+	if (get_curvilinear_strain() < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
 		}
@@ -1824,7 +1781,7 @@ void System::computeShearRateWalls()
 	// // the total_rate_dep_wall_shear_stress is computed above with shear_rate=1, so here it is also a viscosity.
 	set_shear_rate((-target_stress-total_rate_indep_wall_shear_stress)/total_rate_dep_wall_shear_stress);
 
-	if (shear_strain < init_strain_shear_rate_limit) {
+	if (get_curvilinear_strain() < init_strain_shear_rate_limit) {
 		if (shear_rate > init_shear_rate_limit) {
 			set_shear_rate(init_shear_rate_limit);
 		}
@@ -1833,10 +1790,10 @@ void System::computeShearRateWalls()
 		force_upwall.reset();
 		force_downwall.reset();
 		for (int i=0; i<p.np_fixed; i++) {
-			if (fixed_velocities[i].x>0) {
+			if (fixed_velocities[i].x > 0) {
 				force_upwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
 			}
-			if (fixed_velocities[i].x<0) {
+			if (fixed_velocities[i].x < 0) {
 				force_downwall += shear_rate*rate_proportional_wall_force[i]+non_rate_proportional_wall_force[i];
 			}
 		}
@@ -1897,17 +1854,17 @@ void System::tmpMixedProblemSetVelocities()
 		int i_np_in = np_mobile+np_wall1;
 		// inner wheel
 		for (int i=np_mobile; i<i_np_in; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega_wheel_in*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_wheel_in, 0);
+			na_velocity[i] = {-omega_wheel_in*(position[i].z-origin_of_rotation.z),
+			                  0,
+			                  omega_wheel_in*(position[i].x-origin_of_rotation.x)};
+			na_ang_velocity[i] = {0, -omega_wheel_in, 0};
 		}
 		// outer wheel
 		for (int i=i_np_in; i<np; i++) { // temporary: particles perfectly advected
-			na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation.z),
-							   0,
-							   omega_wheel_out*(position[i].x-origin_of_rotation.x));
-			na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+			na_velocity[i] = {-omega_wheel_out*(position[i].z-origin_of_rotation.z),
+			                  0,
+			                  omega_wheel_out*(position[i].x-origin_of_rotation.x)};
+			na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 		}
 	} else if (p.simulation_mode == 21) {
 		static double time_next = p.strain_reversal;
@@ -1929,11 +1886,11 @@ void System::tmpMixedProblemSetVelocities()
 		int i_np_wall1 = np_mobile+np_wall1;
 		double wall_velocity = shear_rate*system_height;
 		for (int i=np_mobile; i<i_np_wall1; i++) {
-			na_velocity[i].set(-wall_velocity/2, 0, 0);
+			na_velocity[i] = {-wall_velocity/2, 0, 0};
 			na_ang_velocity[i].reset();
 		}
 		for (int i=i_np_wall1; i<np; i++) {
-			na_velocity[i].set(wall_velocity/2, 0, 0);
+			na_velocity[i] = {wall_velocity/2, 0, 0};
 			na_ang_velocity[i].reset();
 		}
 	} else if (p.simulation_mode == 42) {
@@ -1944,7 +1901,7 @@ void System::tmpMixedProblemSetVelocities()
 			na_ang_velocity[i].reset();
 		}
 		for (int i=i_np_wall1; i<np; i++) {
-			na_velocity[i].set(wall_velocity, 0, 0);
+			na_velocity[i] = {wall_velocity, 0, 0};
 			na_ang_velocity[i].reset();
 		}
 	} else if (p.simulation_mode == 51) {
@@ -1957,20 +1914,20 @@ void System::tmpMixedProblemSetVelocities()
 		double x2 = x1+radius_in*sqrt(2);
 		for (int i=i_np_in; i<np; i++) {
 			if (position[i].x < x1) {
-				na_velocity[i].set(-omega_wheel_out*(position[i].z),
-								   0,
-								   omega_wheel_out*(position[i].x));
-				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+				na_velocity[i] = {-omega_wheel_out*(position[i].z),
+				                  0,
+				                  omega_wheel_out*(position[i].x)};
+				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			} else if (position[i].x < x2) {
-				na_velocity[i].set(-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
-								   0,
-								   omega_wheel_in*(position[i].x-origin_of_rotation2.x));
-				na_ang_velocity[i].set(0, -omega_wheel_in, 0);
+				na_velocity[i] = {-omega_wheel_in*(position[i].z-origin_of_rotation2.z),
+				                  0,
+				                  omega_wheel_in*(position[i].x-origin_of_rotation2.x)};
+				na_ang_velocity[i] = {0, -omega_wheel_in, 0};
 			} else {
-				na_velocity[i].set(-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
-								   0,
-								   omega_wheel_out*(position[i].x-origin_of_rotation3.x));
-				na_ang_velocity[i].set(0, -omega_wheel_out, 0);
+				na_velocity[i] = {-omega_wheel_out*(position[i].z-origin_of_rotation3.z),
+				                  0,
+				                  omega_wheel_out*(position[i].x-origin_of_rotation3.x)};
+				na_ang_velocity[i] = {0, -omega_wheel_out, 0};
 			}
 		}
 	}
@@ -2007,7 +1964,7 @@ void System::setFixedParticleVelocities()
 void System::rescaleVelHydroStressControlled()
 {
 	for (auto &vc: velocity_components) {
-		if (vc.second.rate_dependence ==  RATE_PROPORTIONAL) {
+		if (vc.second.rate_dependence == RATE_PROPORTIONAL) {
 			vc.second *= shear_rate;
 		}
 	}
@@ -2296,14 +2253,14 @@ void System::adjustContactModelParameters()
 	 */
 
 	double overlap = -evaluateMinGap(*this);
-	overlap_avg.update(overlap, shear_strain);
+	overlap_avg.update(overlap, get_curvilinear_strain());
 	double max_disp_tan = evaluateMaxDispTan(*this);
-	max_disp_tan_avg.update(max_disp_tan, shear_strain);
-	kn_avg.update(p.kn, shear_strain);
-	kt_avg.update(p.kt, shear_strain);
+	max_disp_tan_avg.update(max_disp_tan, get_curvilinear_strain());
+	kn_avg.update(p.kn, get_curvilinear_strain());
+	kt_avg.update(p.kt, get_curvilinear_strain());
 
-	static double previous_shear_strain = 0;
-	double deltagamma = (shear_strain-previous_shear_strain);
+	static double previous_curvilinear_strain = 0;
+	double deltagamma = (get_curvilinear_strain()-previous_curvilinear_strain);
 	double kn_target = kn_avg.get()*overlap_avg.get()/p.overlap_target;
 	double dkn = (kn_target-p.kn)*deltagamma/p.memory_strain_k;
 
@@ -2326,11 +2283,11 @@ void System::adjustContactModelParameters()
 
 	adaptTimeStep();
 
-	previous_shear_strain = shear_strain;
+	previous_curvilinear_strain = get_curvilinear_strain();
 
-	for (int k=0; k<nb_interaction; k++) {
-		if (interaction[k].is_active() && interaction[k].contact.is_active() ) {
-			interaction[k].contact.setSpringConstants();
+	for (auto &inter: interaction) {
+		if (inter.contact.is_active()) {
+			inter.contact.setSpringConstants();
 		}
 	}
 }

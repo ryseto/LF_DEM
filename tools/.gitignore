@@ -1,1 +1,4 @@
 *pyc
+clfdem_file*.so
+
+clfdem_file.cpp

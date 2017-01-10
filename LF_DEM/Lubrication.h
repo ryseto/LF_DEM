@@ -117,35 +117,35 @@ private:
 	void setParticleData();
 	void calcLubConstants();
 	//===== forces/stresses  ========================== //
-	vec3d getTangentialForce()
+	vec3d getTangentialForce() const
 	{
 		vec3d lubforce_p0 = getTotalForce();
 		return lubforce_p0-dot(lubforce_p0, nvec)*(*nvec);
 	}
-	vec3d getTotalForce();
+	vec3d getTotalForce() const;
 
 	void addMEStresslet(double cos_theta_shear,
-	                    double sin_theta_shear,
-	                    double shear_rate,
-	                    StressTensor& stresslet_i,
-	                    StressTensor& stresslet_j);
+						double sin_theta_shear,
+						double shear_rate,
+						StressTensor& stresslet_i,
+						StressTensor& stresslet_j) const;
 	void addGUStresslet(const vec3d& vi, const vec3d& vj,
-                      const vec3d& oi, const vec3d& oj,
-                      StressTensor& stresslet_i, StressTensor& stresslet_j);
+						const vec3d& oi, const vec3d& oj,
+						StressTensor& stresslet_i, StressTensor& stresslet_j) const;
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
-//void setResistanceCoeffTang(double tangent_rc);
+	//void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
-	std::tuple<vec3d,vec3d> calcGE_squeeze();
-	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential();
-	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential();
+	std::tuple<vec3d,vec3d> calcGE_squeeze() const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential() const;
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential() const;
 
-	struct ODBlock RFU_ODBlock_squeeze_tangential();
-	struct ODBlock RFU_ODBlock_squeeze();
-	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze_tangential();
-	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze();
+	struct ODBlock RFU_ODBlock_squeeze_tangential() const;
+	struct ODBlock RFU_ODBlock_squeeze() const;
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze_tangential() const;
+	std::pair<struct DBlock, struct DBlock> RFU_DBlocks_squeeze() const;
 	void calcXFunctions();
 	void calcXYFunctions();
 };
