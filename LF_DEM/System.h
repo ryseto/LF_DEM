@@ -73,10 +73,14 @@ private:
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double costheta_shear;
 	double sintheta_shear;
+	matrix Ehat_infinity; // E/shear_rate: "shape" of the flow
+	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
+	matrix E_infinity;
+	vec3d omega_inf;
+
 	double shear_rate;
 	double particle_volume;
 
-	vec3d omega_inf;
 	std::vector <vec3d> u_inf;
 	std::vector <vec3d> na_disp;
 
@@ -308,8 +312,7 @@ private:
 	vec3d force_downwall;
 	double *ratio_unit_time; // to convert System time in Simulation time
 
-	matrix E_infinity;
-	matrix O_infinity;
+
 	/****************************************/
 	void setSystemVolume();
 	void setConfiguration(const std::vector <vec3d>& initial_positions,
@@ -446,9 +449,9 @@ private:
 		return total_num_timesteps;
 	}
 
-	std::tuple<double,double> getCosSinShearAngle()
+	matrix getEinfty()
 	{
-		return std::make_tuple(costheta_shear, sintheta_shear);
+		return E_infinity;
 	}
 
 	void setShearDirection(double theta_shear)
@@ -462,6 +465,12 @@ private:
 				sintheta_shear = 0;
 			}
 		}
+		Ehat_infinity.set(0, 2, costheta_shear/2);
+		Ehat_infinity.set(2, 0, costheta_shear/2);
+		Ehat_infinity.set(1, 2, sintheta_shear/2);
+		Ehat_infinity.set(2, 1, sintheta_shear/2);
+		omegahat_inf.x = -0.5*sintheta_shear;
+		omegahat_inf.y =  0.5*costheta_shear;
 		setVelocityDifference();
 	}
 

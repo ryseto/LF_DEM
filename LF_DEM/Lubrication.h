@@ -124,23 +124,21 @@ private:
 	}
 	vec3d getTotalForce() const;
 
-	void addMEStresslet(double cos_theta_shear,
-						double sin_theta_shear,
-						double shear_rate,
-						StressTensor& stresslet_i,
-						StressTensor& stresslet_j) const;
+	void addMEStresslet(const matrix& E_inf,
+	                    StressTensor& stresslet_i,
+	                    StressTensor& stresslet_j) const;
 	void addGUStresslet(const vec3d& vi, const vec3d& vj,
-						const vec3d& oi, const vec3d& oj,
-						StressTensor& stresslet_i, StressTensor& stresslet_j) const;
+	                    const vec3d& oi, const vec3d& oj,
+	                    StressTensor& stresslet_i, StressTensor& stresslet_j) const;
 	void updateResistanceCoeff();
 	void setResistanceCoeff(double normal_rc, double tangent_rc);
 	//void setResistanceCoeffTang(double tangent_rc);
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
-	std::tuple<vec3d,vec3d> calcGE_squeeze(double shear_rate) const;
-	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(double shear_rate) const;
-	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(double shear_rate) const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze(const matrix& E_inf) const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(const matrix& E_inf) const;
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(const matrix& E_inf) const;
 
 	struct ODBlock RFU_ODBlock_squeeze_tangential() const;
 	struct ODBlock RFU_ODBlock_squeeze() const;

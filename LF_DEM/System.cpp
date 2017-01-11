@@ -487,9 +487,6 @@ void System::setupGenericConfiguration(T conf, string control){
 	time_in_simulation_units = 0;
 	total_num_timesteps = 0;
 
-	vel_difference.reset();
-	setVelocityDifference();
-
 	angle_output = false;
 	if (twodimension) {
 		angle_output = true;
@@ -593,11 +590,6 @@ void System::setupSystemPostConfiguration()
 	if (pairwise_resistance) {
 		stokes_solver.init(np, np_mobile);
 	}
-	if (!stress_controlled) {
-		setVelocityDifference();
-	}
-	E_infinity.set(0, 2, shear_rate/2); //@@@
-	E_infinity.set(2, 0, shear_rate/2); //@@@
 	initializeBoxing();
 	checkNewInteraction();
 	dt = p.dt;
@@ -1606,7 +1598,7 @@ void System::setHydroForceToParticle_squeeze(vector<vec3d> &force,
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(sr); // G*E_\infty term
+			std::tie(GEi, GEj) = inter.lubrication.calcGE_squeeze(E_infinity); // G*E_\infty term
 			force[i] += GEi;
 			force[j] += GEj;
 		}
@@ -1622,7 +1614,7 @@ void System::setHydroForceToParticle_squeeze_tangential(vector<vec3d> &force,
 	for (const auto &inter: interaction) {
 		if (inter.lubrication.is_active()) {
 			std::tie(i, j) = inter.get_par_num();
-			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(sr); // G*E_\infty term, no gamma dot
+			std::tie(GEi, GEj, HEi, HEj) = inter.lubrication.calcGEHE_squeeze_tangential(E_infinity); // G*E_\infty term, no gamma dot
 			force[i] += GEi;
 			force[j] += GEj;
 			torque[i] += HEi;
@@ -1771,8 +1763,9 @@ void System::computeVelocityByComponents()
 
 void System::setVelocityDifference()
 {
-	vel_difference.x = costheta_shear*shear_rate*lz;
-	vel_difference.y = sintheta_shear*shear_rate*lz;
+	vel_difference = {costheta_shear*shear_rate*lz,
+	                  sintheta_shear*shear_rate*lz,
+	                  0};
 }
 
 void System::set_shear_rate(double sr)
@@ -2108,18 +2101,10 @@ void System::computeUInf()
 	}
 	omega_inf.reset();
 	if (!zero_shear) {
-		if (!p.cross_shear) {
-			for (int i=0; i<np; i++) {
-				u_inf[i].x = shear_rate*position[i].z;
-			}
-			omega_inf.y = 0.5*shear_rate;
-		} else {
-			for (int i=0; i<np; i++) {
-				u_inf[i].x = costheta_shear*shear_rate*position[i].z;
-				u_inf[i].y = sintheta_shear*shear_rate*position[i].z;
-			}
-			omega_inf.y =  0.5*costheta_shear*shear_rate;
-			omega_inf.x = -0.5*sintheta_shear*shear_rate;
+		omega_inf = omegahat_inf*shear_rate;
+		E_infinity = Ehat_infinity*shear_rate;
+		for (int i=0; i<np; i++) {
+			u_inf[i] = E_infinity*position[i] + cross(omega_inf, position[i]);
 		}
 	}
 }

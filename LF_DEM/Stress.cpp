@@ -108,10 +108,9 @@ void System::addUpInteractionStressME(std::vector<StressTensor> &stress_comp)
 		if (inter.lubrication.is_active()) {
 			unsigned int i, j;
 			std::tie(i, j) = inter.get_par_num();
-			inter.lubrication.addMEStresslet(costheta_shear,
-			                                          sintheta_shear,
-			                                          shear_rate,
-			                                          stress_comp[i], stress_comp[j]); // R_SE:Einf-R_SU*v
+			inter.lubrication.addMEStresslet(E_infinity,
+			                                 stress_comp[i],
+			                                 stress_comp[j]); // R_SE:Einf-R_SU*v
 		}
 	}
 }
