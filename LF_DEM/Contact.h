@@ -18,6 +18,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
 #include "vec3d.h"
 #include "Sym2Tensor.h"
 #include "ContactDashpot.h"

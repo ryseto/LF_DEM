@@ -244,7 +244,7 @@ inline double sq_dist(const vec3d& a1, const vec3d& a2)
 
 /* scalar product */
 inline double dot(const vec3d& a1,
-                 const vec3d& a2)
+                  const vec3d& a2)
 {
 	return a1.x*a2.x+a1.y*a2.y+a1.z*a2.z;
 }
@@ -256,7 +256,7 @@ inline double dot(const vec3d* a1,
 }
 
 inline double dot(const vec3d* a1,
-				  const vec3d* a2)
+                  const vec3d* a2)
 {
 	return a1->x*a2->x+a1->y*a2->y+a1->z*a2->z;
 }
@@ -266,6 +266,7 @@ inline double dot(const vec3d& a1,
 {
 	return a1.x*a2->x+a1.y*a2->y+a1.z*a2->z;
 }
+
 
 /* vector product */
 inline vec3d cross(const vec3d& v1,

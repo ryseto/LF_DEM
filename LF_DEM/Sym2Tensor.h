@@ -15,7 +15,6 @@
 
 #ifndef LF_DEM_Sym2Tensor_h
 #define LF_DEM_Sym2Tensor_h
-#include "Matrix.h"
 #include "vec3d.h"
 #include <iostream>
 #include <iomanip>
@@ -77,16 +76,6 @@ public:
       elm[i] *= d_inv;
     }
     return *this;
-  }
-
-  inline void set(const matrix &m)
-  {
-    elm[0] = m.elm[0]; // xx
-    elm[1] = m.elm[1]; // xy
-    elm[2] = m.elm[2]; // xz
-    elm[3] = m.elm[5]; // yz
-    elm[4] = m.elm[4]; // yy
-    elm[5] = m.elm[8]; // zz
   }
 
   void reset() {
@@ -224,4 +213,18 @@ inline Sym2Tensor operator / (const Sym2Tensor& s,
           s.elm[5]/a};
 }
 
+inline vec3d dot(const Sym2Tensor& s,
+                 const vec3d& v)
+{
+	//  s = (xx, xy, xz, yz, yy, zz)
+	return {s.elm[0]*v.x + s.elm[1]*v.y + s.elm[2]*v.z,
+	        s.elm[1]*v.x + s.elm[4]*v.y + s.elm[3]*v.z,
+	        s.elm[2]*v.x + s.elm[3]*v.y + s.elm[5]*v.z};
+}
+
+inline vec3d dot(const vec3d& v,
+                 const Sym2Tensor& s)
+{
+	return dot(s, v);   // s is symmetric
+}
 #endif

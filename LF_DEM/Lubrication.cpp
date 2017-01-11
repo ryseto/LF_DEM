@@ -329,7 +329,7 @@ void Lubrication::calcXYFunctionsStress()
 	}
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(const matrix& E_inf) const
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(const Sym2Tensor& E_inf) const
 {
 	/* NOTE:
 	 * Calculation of XG and YG needs to be done before that.
@@ -341,7 +341,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(const matrix& E_inf) const
 	 * GE2 = (nvecnvec:E)*(XG12+XG22)*nvec
 	 */
 	double nnE;
-	nnE = dot(nvec, E_inf*(*nvec));
+	nnE = dot(nvec, dot(E_inf, *nvec));
 	double cGE_p0 = (XG[0]+XG[2])*nnE;
 	double cGE_p1 = (XG[1]+XG[3])*nnE;
 	vec3d GEi, GEj;
@@ -354,7 +354,7 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze(const matrix& E_inf) const
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(const matrix& E_inf)  const
+std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(const Sym2Tensor& E_inf)  const
 {
 	/*
 	* mode normal+tangential
@@ -363,19 +363,19 @@ std::tuple<vec3d, vec3d> Lubrication::calcGE_squeeze_tangential(const matrix& E_
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-	double nnE = dot(nvec, E_inf*(*nvec));
+	double nnE = dot(nvec, dot(E_inf, *nvec));
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
 	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE;
 	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE;
-	vec3d Einf_nvec = E_inf*(*nvec);
+	vec3d Einf_nvec = dot(E_inf, *nvec);
 	vec3d GEi = cGE_i*(*nvec) + (YG0_YG2*2)*Einf_nvec;
 	vec3d GEj = cGE_j*(*nvec) + (YG1_YG3*2)*Einf_nvec;
 
 	return std::make_tuple(GEi, GEj);
 }
 
-std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(const matrix& E_inf) const
+std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(const Sym2Tensor& E_inf) const
 {
 	/*
 	 * mode normal+tangential
@@ -384,17 +384,17 @@ std::tuple<vec3d, vec3d, vec3d, vec3d> Lubrication::calcGEHE_squeeze_tangential(
 	 * GE1 = (nvecnvec:E)*(XG11+XG21-2*(YG11+YG21))*nvec+(YG11+YG21)*(E+tE).nvec;
 	 * GE2 = (nvecnvec:E)*(XG12+XG22-2*(YG12+YG22))*nvec+(YG12+YG22)*(E+tE).nvec;
 	 */
-	double nnE = dot(nvec, E_inf*(*nvec));
+	double nnE = dot(nvec, dot(E_inf, *nvec));
 	double YG0_YG2 = YG[0]+YG[2];
 	double YG1_YG3 = YG[1]+YG[3];
 	double cGE_i = (XG[0]+XG[2]-2*YG0_YG2)*nnE;
 	double cGE_j = (XG[1]+XG[3]-2*YG1_YG3)*nnE;
 	double cHE_i = YH[0]+YH[2];
 	double cHE_j = YH[1]+YH[3];
-	vec3d Einf_nvec = E_inf*(*nvec);
+	vec3d Einf_nvec = dot(E_inf, *nvec);
 	vec3d GEi = cGE_i*(*nvec) + (YG0_YG2*2)*Einf_nvec;
 	vec3d GEj = cGE_j*(*nvec) + (YG1_YG3*2)*Einf_nvec;
-	vec3d nvec_Einf = (*nvec)*E_inf;
+	vec3d nvec_Einf = dot(*nvec, E_inf);
 	vec3d nvec_Einf_x_nvec = cross(nvec_Einf, (*nvec));
 	vec3d HEi = -2*cHE_i*nvec_Einf_x_nvec;
 	vec3d HEj = -2*cHE_j*nvec_Einf_x_nvec;
@@ -614,7 +614,7 @@ void Lubrication::addGUStresslet(const vec3d& vi, const vec3d& vj,
 	stresslet_j += -2*(YM[2]*tmp2_i+YM[3]*tmp2_j); // YHO_j
 }
 
-void Lubrication::addMEStresslet(const matrix& E_inf,
+void Lubrication::addMEStresslet(const Sym2Tensor& E_inf,
                                  Sym2Tensor& stresslet_i,
                                  Sym2Tensor& stresslet_j) const
 {
@@ -635,13 +635,13 @@ void Lubrication::addMEStresslet(const matrix& E_inf,
 		\f$ S_2 = (M_{21}+M_{22}):\hat{E}^{\infty} \f$
 
 	 */
-	double nnE = dot(nvec, E_inf*(*nvec));
+	double nnE = dot(nvec, dot(E_inf, *nvec));
 	Sym2Tensor nvec_nvec = outer(*nvec);
 	double coeff = 1.5*nnE;
 	stresslet_i += coeff*(XM[0]+XM[1])*nvec_nvec; // XME_i
 	stresslet_j += coeff*(XM[2]+XM[3])*nvec_nvec; // XME_j
 	if (tangential) {
-		vec3d Einf_nvec = E_inf*(*nvec);
+		vec3d Einf_nvec = dot(E_inf, *nvec);
 		Sym2Tensor nvec_Einf_nvec = outer_sym(*nvec, Einf_nvec);
 		Sym2Tensor nvec_Einf_nvec__nnE_nvec_nvec = 2*(nvec_Einf_nvec-nnE*nvec_nvec);
 		stresslet_i += (YM[0]+YM[1])*nvec_Einf_nvec__nnE_nvec_nvec; // YME_i

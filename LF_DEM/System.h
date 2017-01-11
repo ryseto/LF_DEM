@@ -28,7 +28,6 @@
 #include "Sym2Tensor.h"
 #include "Interaction.h"
 #include "vec3d.h"
-#include "Matrix.h"
 #include "BoxSet.h"
 #include "StokesSolver.h"
 #include "ParameterSet.h"
@@ -73,9 +72,9 @@ private:
 	double angle_wheel; // rotational angle of rotary couette geometory
 	double costheta_shear;
 	double sintheta_shear;
-	matrix Ehat_infinity; // E/shear_rate: "shape" of the flow
+	Sym2Tensor Ehat_infinity; // E/shear_rate: "shape" of the flow
 	vec3d omegahat_inf;  // omega/shear_rate: "shape" of the flow
-	matrix E_infinity;
+	Sym2Tensor E_infinity;
 	vec3d omega_inf;
 
 	double shear_rate;
@@ -449,7 +448,7 @@ private:
 		return total_num_timesteps;
 	}
 
-	matrix getEinfty()
+	Sym2Tensor getEinfty()
 	{
 		return E_infinity;
 	}
@@ -465,12 +464,8 @@ private:
 				sintheta_shear = 0;
 			}
 		}
-		Ehat_infinity.set(0, 2, costheta_shear/2);
-		Ehat_infinity.set(2, 0, costheta_shear/2);
-		Ehat_infinity.set(1, 2, sintheta_shear/2);
-		Ehat_infinity.set(2, 1, sintheta_shear/2);
-		omegahat_inf.x = -0.5*sintheta_shear;
-		omegahat_inf.y =  0.5*costheta_shear;
+		Ehat_infinity = {0, 0, costheta_shear/2, sintheta_shear/2, 0, 0};
+		omegahat_inf = {-0.5*sintheta_shear, 0.5*costheta_shear, 0};
 		setVelocityDifference();
 	}
 

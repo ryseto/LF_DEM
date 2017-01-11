@@ -371,7 +371,7 @@ void System::calcStress()
 			total_stress_groups["hydro"].elm[3] += sintheta_shear*shear_rate/6./M_PI;
 		}	else {
 			Sym2Tensor stress_solvent;
-			stress_solvent.set((shear_rate/(6*M_PI))*E_infinity);
+			stress_solvent = (shear_rate/(6*M_PI))*E_infinity;
 			total_stress_groups["hydro"] += stress_solvent;
 		}
 	}

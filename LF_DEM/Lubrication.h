@@ -124,7 +124,7 @@ private:
 	}
 	vec3d getTotalForce() const;
 
-	void addMEStresslet(const matrix& E_inf,
+	void addMEStresslet(const Sym2Tensor& E_inf,
 	                    Sym2Tensor& stresslet_i,
 	                    Sym2Tensor& stresslet_j) const;
 	void addGUStresslet(const vec3d& vi, const vec3d& vj,
@@ -136,9 +136,9 @@ private:
 	//=============  Resistance Matrices ====================/
 	void calcXFunctionsStress();
 	void calcXYFunctionsStress();
-	std::tuple<vec3d,vec3d> calcGE_squeeze(const matrix& E_inf) const;
-	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(const matrix& E_inf) const;
-	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(const matrix& E_inf) const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze(const Sym2Tensor& E_inf) const;
+	std::tuple<vec3d,vec3d> calcGE_squeeze_tangential(const Sym2Tensor& E_inf) const;
+	std::tuple<vec3d,vec3d,vec3d,vec3d> calcGEHE_squeeze_tangential(const Sym2Tensor& E_inf) const;
 
 	struct ODBlock RFU_ODBlock_squeeze_tangential() const;
 	struct ODBlock RFU_ODBlock_squeeze() const;

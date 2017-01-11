@@ -3,6 +3,7 @@
 //  Created by Ryohei Seto and Romain Mari on 02/11/15.
 //  Copyright (c) 2015 Ryohei Seto and Romain Mari. All rights reserved.
 //
+#include <vector>
 #include "RepulsiveForce.h"
 #include "Interaction.h"
 #include "System.h"

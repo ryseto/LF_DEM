@@ -2103,7 +2103,7 @@ void System::computeUInf()
 		omega_inf = omegahat_inf*shear_rate;
 		E_infinity = Ehat_infinity*shear_rate;
 		for (int i=0; i<np; i++) {
-			u_inf[i] = E_infinity*position[i] + cross(omega_inf, position[i]);
+			u_inf[i] = dot(E_infinity, position[i]) + cross(omega_inf, position[i]);
 		}
 	}
 }
